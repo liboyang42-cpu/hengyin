@@ -56,7 +56,9 @@
       <text class="sp-total-v">{{totalText}}</text>
     </view>
     <view class="sp-cta">
-      <cy-btn variant="primary" style="width:100%" disabled="{{!pickedTicketId}}" bindtap="onNext">下一步 · 去结算</cy-btn>
+      <!-- 俱乐部门卡时底栏直接给入会出口:空态里那颗按钮被吸底栏压住,玩家看不到(实走 B7) -->
+      <cy-btn wx:if="{{ticketsState === 'gate' && gateClubId}}" variant="primary" style="width:100%" bindtap="goGateClub">去加入俱乐部</cy-btn>
+      <cy-btn wx:else variant="primary" style="width:100%" disabled="{{!pickedTicketId}}" bindtap="onNext">下一步 · 去结算</cy-btn>
     </view>
   </view>
 </cy-sheet>

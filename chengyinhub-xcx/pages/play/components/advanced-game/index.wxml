@@ -4,7 +4,7 @@
   <view class="ag__grab"></view>
   <view class="ag__head"><view><text class="ag__title">{{node.gameTitle || node.name}}</text></view><view class="ag__close" bindtap="close" aria-role="button" aria-label="关闭高级玩法" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="44" /></view></view>
   <scroll-view scroll-y class="ag__scroll">
-    <view class="ag__loading" wx:if="{{loading}}">正在创建权威游戏状态…</view>
+    <view class="ag__loading" wx:if="{{loading}}">正在准备玩法…</view>
     <!-- unknown 不是失败：不给「重试」,只给「再核对一次」,否则用户一点就是重复写入 -->
     <view class="ag__status" wx:if="{{unknown}}" bindtap="resolveUnknown" aria-role="button" aria-label="{{unknownText}}" hover-class="ag__press" hover-stay-time="80">
       <view class="ag__status-dot"></view>

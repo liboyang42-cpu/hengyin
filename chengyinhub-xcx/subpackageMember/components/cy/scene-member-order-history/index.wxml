@@ -38,7 +38,12 @@
       <view class="orderbox_li_con" wx:if="{{item.cmsActivity!=null}}">
         <view class="orderbox_li_con_tu"><image lazy-load="true" class="moh-cover" src="{{item.cmsActivity.imgUrl}}" mode="aspectFill" /></view>
         <view class="orderbox_li_con_info">
-          <view class="order-mode-line">
+          <!-- 场次订单同样按 productType 出标签:自由探索场次曾被一律标成「城市定向」(实走 B13) -->
+          <view class="order-mode-line" wx:if="{{item.cmsActivity.productType == 2}}">
+            <text class="order-mode-tag green">自由探索</text>
+
+          </view>
+          <view class="order-mode-line" wx:else>
             <text class="order-mode-tag">城市定向</text>
 
           </view>

@@ -58,7 +58,7 @@ Component({
       }
       this._timers.push(setTimeout(() => {
         this.setData({ running: false, plus: '' });
-        if (d === n) this.setData({ win: true, msg: this.data.tone === 'free' ? '全部去完，宝箱已打开' : '全部章节完成，宝箱已打开' });
+        if (d === n) this.setData({ win: true, msg: this.data.tone === 'free' ? '全部到访，宝箱已打开' : '全部章节完成，宝箱已打开' });
       }, DUR + 60));
     },
   },

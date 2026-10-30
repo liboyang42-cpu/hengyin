@@ -1,6 +1,6 @@
 <!-- 判定屏只有两张:猜中了走 win,其余走 fail。凡是「猜中了」都走这一个,
      每个玩法自己发明一套的话,玩家会以为自己在玩不同的产品。 -->
-<view class="pv pv--{{kind}} {{rising ? 'pv--on' : ''}} {{reducedMotion ? 'pv--reduced' : ''}} {{closable ? 'pv--closable' : ''}}" wx:if="{{show}}"
+<view class="pv pv--{{kind}} {{neutral ? 'pv--neutral' : ''}} {{rising ? 'pv--on' : ''}} {{reducedMotion ? 'pv--reduced' : ''}} {{closable ? 'pv--closable' : ''}}" wx:if="{{show}}"
       aria-role="alert" aria-label="{{kind === 'win' ? ('通过。' + (text || '')) : word}}">
   <view class="pv__fill">
     <view class="pv__wave pv__wave--a"></view>

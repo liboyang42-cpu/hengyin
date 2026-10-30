@@ -538,6 +538,19 @@ test('故事玩法只在服务端确认完成后自动衔接，重复回包不�
   assert.equal(continued, 1)
 });
 
+test('抽卡首屏即可继续也不自动翻走:抽到的卡要留给玩家看(实走 A18)', async () => {
+  const node = { nodeId: 52, name: '老照片', vm: 0, hasAdvanced: true, done: false }
+  const page = makePage({ blocks: [{ type: 'node', nodeId: 52, locationRequired: false }] }, [node])
+  page.data.chapterFull = true
+  page._storyOpenNode = true
+  page.data.advancedPlay = { show: true, node }
+  let continued = 0
+  page.continueStoryGame = () => { continued++ }
+  page.onAdvancedSession({ detail: { nodeId: 52, readyForBase: true, playKit: { random: { title: '抽一张' } } } })
+  await new Promise(resolve => setTimeout(resolve, 950))
+  assert.equal(continued, 0)
+});
+
 test('关闭内嵌玩法错误面板后恢复开始入口，不留无法收尾的旧 kit', () => {
   const node = { nodeId: 51, name: '建档', vm: 0, hasAdvanced: true, done: false }
   const page = makePage({ blocks: [{ type: 'node', nodeId: 51, locationRequired: false }] }, [node])

@@ -33,6 +33,10 @@ function moveRow(list, from, to) {
   return next;
 }
 
+/** 通过时交上去的那份顺序,按题面签名记在模块里:倒计时等后续玩法会把本组件整个卸载再挂回来,
+ *  实例字段跟着丢,回来就又画成出题时的乱序却标着「排好了」(实走 A14)。 */
+const passedOrders = {};
+
 /** 有东西可排才能提交:空列表 = 配置还没来,按钮亮着也没东西可交。 */
 function canSubmit(rows) {
   return (rows || []).length > 0;
@@ -65,7 +69,9 @@ Component({
       if (signature === this._configSignature) return;
       this._configSignature = signature;
       this._dragTo = -1;
-      this.setData({ rows: paint(items), dragging: -1, dragOffset: 0, picked: -1, verdict: '' });
+      const kept = this.data.passed && passedOrders[signature];
+      const rows = kept ? kept.map((id) => paint(items).find((r) => r.id === id)).filter(Boolean) : paint(items);
+      this.setData({ rows, dragging: -1, dragOffset: 0, picked: -1, verdict: kept ? 'ok' : '' });
       const stage = this.selectComponent('#cy-play-stage');
       if (stage) stage.begin();
     },
@@ -73,6 +79,7 @@ Component({
     'attempts, passed, lastCorrect': function (attempts, passed) {
       if (!(attempts > 0)) return;
       const verdict = passed ? 'ok' : 'no';
+      if (passed && this._configSignature && this._submittedOrder) passedOrders[this._configSignature] = this._submittedOrder;
       if (verdict !== this.data.verdict) this.setData({ verdict });
       // 判错整列抖一下(原型 .phone.shake);不逐行标红 —— 服务端只给整体对错
       if (!passed) { const stage = this.selectComponent('#cy-play-stage'); if (stage && stage.nudge) stage.nudge(); }
@@ -148,10 +155,12 @@ Component({
     },
 
     onSubmit() {
-      if (!canSubmit(this.data.rows)) return;
+      // 已通过就不再交:再交一次服务端只会回「这一局排序已经结束了」并弹出待确认面板(实走 A15)
+      if (!canSubmit(this.data.rows) || this.data.verdict === 'ok' || this.data.passed) return;
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
       // ★ 只报顺序,不报对错 —— 对错在服务端
-      this.triggerEvent('submit', { order: this.data.rows.map((r) => r.id) });
+      this._submittedOrder = this.data.rows.map((r) => r.id);
+      this.triggerEvent('submit', { order: this._submittedOrder });
     },
     onClose() { this._configSignature = ''; this.triggerEvent('close'); },
   },

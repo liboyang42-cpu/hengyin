@@ -88,13 +88,14 @@
   <view class="slide2 screen {{detailEnter ? 'slide2--enter' : ''}}" id="screen2">
     <!-- v13 详情顶部(业主 2026-10-22「和 HTML 一模一样」):整屏照片可左右滑,下半压黑渐变,
          发布者 / 大标题 / 一段介绍 / 价格按钮 + 收藏方块 + 类型文字都压在照片上。 -->
+    <!-- 首屏即可见的大图不走 lazy-load:swiper 内懒加载在真机/工具里常不触发,第二屏上半整块黑(实走 A1) -->
     <view class="det1 dt" id="heroTop">
       <swiper class="bgt-swiper dt__trk" circular="{{true}}" bindchange="onHeroSwipe">
         <swiper-item wx:if="{{!img.list(info.imgArr).length}}">
-          <image lazy-load="true" src="{{info.imgUrl || '/pages/topic/images/icon_line.jpg'}}" mode="aspectFill" class="bgt" />
+          <image src="{{info.imgUrl || '/pages/topic/images/icon_line.jpg'}}" mode="aspectFill" class="bgt" />
         </swiper-item>
         <swiper-item wx:for="{{img.list(info.imgArr)}}" wx:key="index">
-          <image lazy-load="true" src="{{item}}" mode="aspectFill" class="bgt" />
+          <image src="{{item}}" mode="aspectFill" class="bgt" />
         </swiper-item>
       </swiper>
       <view class="dt__shade"></view>
