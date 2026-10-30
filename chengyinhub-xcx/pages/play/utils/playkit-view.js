@@ -711,6 +711,8 @@ function pickPlayKit(view, now) {
       finished: !!seg.finished,
       passed: !!seg.passed,
       lastCorrect: !!seg.lastCorrect,
+      // 服务端记的上一次提交顺序:排对之后重进 / 静默回来,台面按它摆,不回到题面的打乱序(实走 A14 复核)
+      lastOrder: Array.isArray(seg.lastOrder) ? seg.lastOrder : [],
     });
   }
   if (name === 'match') {

@@ -994,6 +994,7 @@ Page({
   },
 
   onUnload() {
+    this._stopStationBgm();
     this._stopThemeBgm();
     this.suspendOrientLifecycle();
     this.setData({ arrivalGuard: null });
@@ -3802,6 +3803,30 @@ Page({
     try { this._themeBgm.stop(); this._themeBgm.destroy(); } catch (e) {}
     this._themeBgm = null;
   },
+  /* 站点背景音乐(模板「背景音乐」):故事流里内嵌的玩法不经 advanced-game 面板,原来一声不响(实走 A13 复核)。
+     与主题配乐同一首就继续放主题配乐;不同就暂停主题配乐、改放这一站的,收起玩法再换回来。跟随「背景音乐」开关。 */
+  _syncStationBgm(music) {
+    const src = music && typeof music.audioUrl === 'string' ? music.audioUrl : '';
+    if (!src || !this.data.themeBgmOn || this.data.isPreview) { this._stopStationBgm(); return; }
+    if (src === this.data.topicAudioUrl) { this._stopStationBgm(); this._startThemeBgm(); return; }
+    if (this._stationBgm && this._stationBgmSrc === src) return;
+    this._stopStationBgm();
+    if (this._themeBgm) { try { this._themeBgm.pause(); } catch (e) {} }
+    const ctx = audioSession.register(wx.createInnerAudioContext(), { kind: 'bgm' });
+    ctx.src = src;
+    ctx.loop = music.loop !== false;
+    ctx.volume = 0.35;
+    ctx.onError(() => { this._stopStationBgm(); });
+    this._stationBgm = ctx; this._stationBgmSrc = src;
+    ctx.play();
+  },
+  _stopStationBgm() {
+    if (!this._stationBgm) return;
+    audioSession.unregister(this._stationBgm);
+    try { this._stationBgm.stop(); this._stationBgm.destroy(); } catch (e) {}
+    this._stationBgm = null; this._stationBgmSrc = '';
+    if (this._themeBgm && this.data.themeBgmOn) { try { this._themeBgm.play(); } catch (e) {} }
+  },
   /** 入场码页轮询到商家核销:同页重读节点,进度环 / 卡片 / 已体验当场更新,不用退出重进(实走 B6)。 */
   onTicketRedeemed() {
     if (!this._isPlayAccountCurrent() || this.data.isPreview || this.data.isMock) return;
@@ -3810,7 +3835,7 @@ Page({
   toggleThemeBgm() {
     const on = !this.data.themeBgmOn;
     this.setData({ themeBgmOn: on });
-    if (on) this._startThemeBgm(); else this._stopThemeBgm();
+    if (on) this._startThemeBgm(); else { this._stopStationBgm(); this._stopThemeBgm(); }
   },
   startStoryIntro() {
     if (!this.data.storyIntro.show || this.data.storyIntro.out) return;
@@ -4206,6 +4231,9 @@ Page({
         that.loadTeamProgress();   // P1 带领场探测(club 场次才 exists,内部自管轮询)
         that._loadPlayerGameModule();
         that._consumePendingStart();
+        // 中途重进一局(开场已看过 / 卡包已拆):主题配乐接着放,原来只在开场与拆包时起播,重进就没了(实走 A7 复核)
+        const resumed = storyResume.read(that._runSessionScope());
+        if (resumed.intro || resumed.packOpened) that._startThemeBgm();
         that.loadHudCharacter(); that.loadSessionStats();   // 文档二 L5:状态栏第二行 / 「…」用时与得分 if (that._entryLayer && ['*', String(that._orientSessionId())].includes(that._entryLayer)) that.openScoreOverlay(); that._entryLayer = '';
       });
     }).catch(() => {
@@ -5799,6 +5827,7 @@ Page({
   },
   onAdvancedClose() {
     this._advancedReadyIntent = null;
+    this._stopStationBgm();
     const node = this.data.advancedPlay.node;
     if (node && this._themeChallengeNodeId === Number(node.nodeId)) {
       this._themeChallengeNodeId = null;
@@ -6839,6 +6868,8 @@ Page({
       this.setData({ nodes: this.data.nodes.map(remember) });
     }
     const inline = kit.present === 'inline' && this.data.chapterFull;
+    // 内嵌在故事流里的玩法由本页放站点背景音乐;弹层模式由 advanced-game 自己放,这里不重复
+    if (inline) this._syncStationBgm(view.playKit && view.playKit.backgroundMusic); else this._stopStationBgm();
     const ready = canContinue(view);
     /* 分支走到结局时不自动接着走:结局那段话就是这一站的全部回报,0.9 秒就被翻走等于没看到
        (2026-10-27 生产实测:南京路结案三选一,选完直接跳进附录章节卡)。玩家读完点下面的「继续」。 */

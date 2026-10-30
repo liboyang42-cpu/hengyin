@@ -15,7 +15,8 @@
     </view>
     <view class="ag__error" wx:if="{{error && !unknown}}" bindtap="start" hover-class="ag__press" hover-stay-time="80">{{error}} · 点击重新读取</view>
     <block wx:if="{{state}}">
-      <view class="ag__status"><text class="ag__status-text">{{state.status}}</text><text class="ag__status-text" wx:if="{{remainingSeconds !== null}}">剩余 {{remainingSeconds || 0}} 秒</text><text class="ag__status-text">得分 {{state.score || 0}}</text></view>
+      <!-- 状态行给玩家看的是中文,不露 RUNNING / COMPLETED 这类内部状态名;没得分时不挂「得分 0」(实走 A15 复核) -->
+      <view class="ag__status"><text class="ag__status-text">{{state.status === 'RUNNING' ? '进行中' : (state.status === 'COMPLETED' ? '已完成' : (state.status === 'FAILED' ? '未通过' : (state.status === 'EXPIRED' ? '已超时' : '')))}}</text><text class="ag__status-text" wx:if="{{remainingSeconds !== null}}">剩余 {{remainingSeconds || 0}} 秒</text><text class="ag__status-text" wx:if="{{state.score > 0}}">得分 {{state.score}}</text></view>
 
       <view class="ag-card" wx:if="{{state.config.random.enabled}}">
         <text class="ag-card__title">随机盲盒</text><text class="ag-card__sub">已抽 {{state.draws.length || 0}} / {{state.config.random.drawCount}}</text>

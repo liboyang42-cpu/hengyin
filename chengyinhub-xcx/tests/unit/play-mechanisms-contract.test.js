@@ -36,11 +36,11 @@ test('O-01 删空精度放行:自动到达只在精度已知且 ≤80m 时发(�
   assert.equal(locWrites.length, 2);
 });
 
-test('游玩页:5 处 InnerAudioContext(含主题背景音乐)全部经 audioSession.register', () => {
+test('游玩页:6 处 InnerAudioContext(含主题配乐、站点背景音乐)全部经 audioSession.register', () => {
   const creates = src.match(/wx\.createInnerAudioContext\(\)/g) || [];
   const wrapped = src.match(/audioSession\.register\(wx\.createInnerAudioContext\(\)/g) || [];
-  assert.equal(creates.length, 5);
-  assert.equal(wrapped.length, 5);
+  assert.equal(creates.length, 6);
+  assert.equal(wrapped.length, 6);
   assert.match(src, /pauseAudio\(\) \{\s*[^}]*audioSession\.pauseAll\(\)/);
 });
 

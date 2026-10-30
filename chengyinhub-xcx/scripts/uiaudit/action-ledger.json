@@ -1062116,7 +1062116,7 @@
       }
     },
     {
-      "id": "pages/play/components/advanced-game/index.wxml:24:bindtap:toggleDrawAudio:5",
+      "id": "pages/play/components/advanced-game/index.wxml:25:bindtap:toggleDrawAudio:5",
       "route": "component:pages/play/components/advanced-game/index",
       "hostRoutes": [
         "pages/play/index"
@@ -1062151,7 +1062151,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "toggleDrawAudio",
-        "line": 24,
+        "line": 25,
         "selectorHint": ".ag-draw__audio",
         "visibleCondition": "{{item.audioUrl}}",
         "disabledCondition": null,
@@ -1062205,7 +1062205,7 @@
       }
     },
     {
-      "id": "pages/play/components/advanced-game/index.wxml:28:bindtap:draw:6",
+      "id": "pages/play/components/advanced-game/index.wxml:29:bindtap:draw:6",
       "route": "component:pages/play/components/advanced-game/index",
       "hostRoutes": [
         "pages/play/index"
@@ -1062240,7 +1062240,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "draw",
-        "line": 28,
+        "line": 29,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{acting || unknown || state.draws.length >= state.config.random.drawCount}}",
@@ -1062360,7 +1062360,7 @@
       }
     },
     {
-      "id": "pages/play/components/advanced-game/index.wxml:33:bindtap:choose:7",
+      "id": "pages/play/components/advanced-game/index.wxml:34:bindtap:choose:7",
       "route": "component:pages/play/components/advanced-game/index",
       "hostRoutes": [
         "pages/play/index"
@@ -1062395,7 +1062395,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "choose",
-        "line": 33,
+        "line": 34,
         "selectorHint": ".ag-option",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1062515,7 +1062515,7 @@
       }
     },
     {
-      "id": "pages/play/components/advanced-game/index.wxml:43:bindtap:assignRole:8",
+      "id": "pages/play/components/advanced-game/index.wxml:44:bindtap:assignRole:8",
       "route": "component:pages/play/components/advanced-game/index",
       "hostRoutes": [
         "pages/play/index"
@@ -1062550,7 +1062550,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "assignRole",
-        "line": 43,
+        "line": 44,
         "selectorHint": ".ag-role__option",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1062670,7 +1062670,7 @@
       }
     },
     {
-      "id": "pages/play/components/advanced-game/index.wxml:46:bindtap:completeUnit:9",
+      "id": "pages/play/components/advanced-game/index.wxml:47:bindtap:completeUnit:9",
       "route": "component:pages/play/components/advanced-game/index",
       "hostRoutes": [
         "pages/play/index"
@@ -1062705,7 +1062705,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "completeUnit",
-        "line": 46,
+        "line": 47,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{acting || unknown}}",
@@ -1062905,7 +1062905,7 @@
       }
     },
     {
-      "id": "pages/play/components/advanced-game/index.wxml:50:bindtap:loadLeaderboard:10",
+      "id": "pages/play/components/advanced-game/index.wxml:51:bindtap:loadLeaderboard:10",
       "route": "component:pages/play/components/advanced-game/index",
       "hostRoutes": [
         "pages/play/index"
@@ -1062940,7 +1062940,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "loadLeaderboard",
-        "line": 50,
+        "line": 51,
         "selectorHint": ".ag-refresh",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1063026,7 +1063026,7 @@
       }
     },
     {
-      "id": "pages/play/components/advanced-game/index.wxml:56:bindtap:retry:11",
+      "id": "pages/play/components/advanced-game/index.wxml:57:bindtap:retry:11",
       "route": "component:pages/play/components/advanced-game/index",
       "hostRoutes": [
         "pages/play/index"
@@ -1063061,7 +1063061,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "retry",
-        "line": 56,
+        "line": 57,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": "{{state.canRetry === true && (state.status === 'FAILED' || state.status === 'EXPIRED')}}",
         "disabledCondition": "{{loading || acting || unknown}}",
@@ -1063181,7 +1063181,7 @@
       }
     },
     {
-      "id": "pages/play/components/advanced-game/index.wxml:60:bindtap:continueBase:12",
+      "id": "pages/play/components/advanced-game/index.wxml:61:bindtap:continueBase:12",
       "route": "component:pages/play/components/advanced-game/index",
       "hostRoutes": [
         "pages/play/index"
@@ -1063216,7 +1063216,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "continueBase",
-        "line": 60,
+        "line": 61,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!state.readyForBase}}",
@@ -1082840,7 +1082840,7 @@
       }
     },
     {
-      "id": "pages/play/components/play-verdict/index.wxml:26:bindtap:onClose:0",
+      "id": "pages/play/components/play-verdict/index.wxml:27:bindtap:onClose:0",
       "route": "component:pages/play/components/play-verdict/index",
       "hostRoutes": [
         "pages/play/index",
@@ -1088062,7 +1088062,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onClose",
-        "line": 26,
+        "line": 27,
         "selectorHint": ".pv__cta",
         "visibleCondition": "{{closable}}",
         "disabledCondition": null,
@@ -1111031,7 +1111031,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-sort/index.js:136"
+        "staticSource": "pages/play/components/playkit-sort/index.js:139"
       }
     },
     {
@@ -1111154,7 +1111154,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-sort/index.js:127"
+        "staticSource": "pages/play/components/playkit-sort/index.js:130"
       }
     },
     {
@@ -1111277,7 +1111277,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-sort/index.js:127"
+        "staticSource": "pages/play/components/playkit-sort/index.js:130"
       }
     },
     {
@@ -1111400,7 +1111400,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-sort/index.js:108"
+        "staticSource": "pages/play/components/playkit-sort/index.js:111"
       }
     },
     {
@@ -1111524,7 +1111524,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-sort/index.js:95"
+        "staticSource": "pages/play/components/playkit-sort/index.js:98"
       }
     },
     {
@@ -1111648,7 +1111648,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-sort/index.js:157"
+        "staticSource": "pages/play/components/playkit-sort/index.js:160"
       }
     },
     {
@@ -1111772,7 +1111772,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-sort/index.js:165"
+        "staticSource": "pages/play/components/playkit-sort/index.js:168"
       }
     },
     {
@@ -1129946,7 +1129946,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5483"
+        "staticSource": "pages/play/index.js:5511"
       }
     },
     {
@@ -1130371,7 +1130371,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5186"
+        "staticSource": "pages/play/index.js:5214"
       }
     },
     {
@@ -1130469,7 +1130469,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5469"
+        "staticSource": "pages/play/index.js:5497"
       }
     },
     {
@@ -1130979,7 +1130979,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5405"
+        "staticSource": "pages/play/index.js:5433"
       }
     },
     {
@@ -1131390,7 +1131390,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5405"
+        "staticSource": "pages/play/index.js:5433"
       }
     },
     {
@@ -1131801,7 +1131801,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5405"
+        "staticSource": "pages/play/index.js:5433"
       }
     },
     {
@@ -1131878,7 +1131878,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5297"
+        "staticSource": "pages/play/index.js:5325"
       }
     },
     {
@@ -1132047,7 +1132047,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4652"
+        "staticSource": "pages/play/index.js:4680"
       }
     },
     {
@@ -1132173,7 +1132173,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6768"
+        "staticSource": "pages/play/index.js:6797"
       }
     },
     {
@@ -1132240,7 +1132240,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4648"
+        "staticSource": "pages/play/index.js:4676"
       }
     },
     {
@@ -1132310,7 +1132310,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5381"
+        "staticSource": "pages/play/index.js:5409"
       }
     },
     {
@@ -1132388,7 +1132388,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5816"
+        "staticSource": "pages/play/index.js:5845"
       }
     },
     {
@@ -1132456,7 +1132456,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3452"
+        "staticSource": "pages/play/index.js:3453"
       }
     },
     {
@@ -1132534,7 +1132534,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5816"
+        "staticSource": "pages/play/index.js:5845"
       }
     },
     {
@@ -1132611,7 +1132611,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8315"
+        "staticSource": "pages/play/index.js:8346"
       }
     },
     {
@@ -1132688,7 +1132688,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8368"
+        "staticSource": "pages/play/index.js:8399"
       }
     },
     {
@@ -1132765,7 +1132765,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8358"
+        "staticSource": "pages/play/index.js:8389"
       }
     },
     {
@@ -1132832,7 +1132832,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5826"
+        "staticSource": "pages/play/index.js:5855"
       }
     },
     {
@@ -1132909,7 +1132909,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8368"
+        "staticSource": "pages/play/index.js:8399"
       }
     },
     {
@@ -1132986,7 +1132986,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8358"
+        "staticSource": "pages/play/index.js:8389"
       }
     },
     {
@@ -1133053,7 +1133053,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5827"
+        "staticSource": "pages/play/index.js:5856"
       }
     },
     {
@@ -1133130,7 +1133130,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8362"
+        "staticSource": "pages/play/index.js:8393"
       }
     },
     {
@@ -1133212,7 +1133212,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5864"
+        "staticSource": "pages/play/index.js:5893"
       }
     },
     {
@@ -1133279,7 +1133279,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5965"
+        "staticSource": "pages/play/index.js:5994"
       }
     },
     {
@@ -1133346,7 +1133346,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5997"
+        "staticSource": "pages/play/index.js:6026"
       }
     },
     {
@@ -1133429,7 +1133429,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5946"
+        "staticSource": "pages/play/index.js:5975"
       }
     },
     {
@@ -1133854,7 +1133854,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5884"
+        "staticSource": "pages/play/index.js:5913"
       }
     },
     {
@@ -1133921,7 +1133921,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5868"
+        "staticSource": "pages/play/index.js:5897"
       }
     },
     {
@@ -1133988,7 +1133988,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5869"
+        "staticSource": "pages/play/index.js:5898"
       }
     },
     {
@@ -1134423,7 +1134423,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6033"
+        "staticSource": "pages/play/index.js:6062"
       }
     },
     {
@@ -1134500,7 +1134500,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3939"
+        "staticSource": "pages/play/index.js:3964"
       }
     },
     {
@@ -1134628,7 +1134628,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5670"
+        "staticSource": "pages/play/index.js:5698"
       }
     },
     {
@@ -1134756,7 +1134756,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5670"
+        "staticSource": "pages/play/index.js:5698"
       }
     },
     {
@@ -1134884,7 +1134884,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5670"
+        "staticSource": "pages/play/index.js:5698"
       }
     },
     {
@@ -1135012,7 +1135012,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5670"
+        "staticSource": "pages/play/index.js:5698"
       }
     },
     {
@@ -1135146,7 +1135146,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5670"
+        "staticSource": "pages/play/index.js:5698"
       }
     },
     {
@@ -1135266,7 +1135266,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6177"
+        "staticSource": "pages/play/index.js:6206"
       }
     },
     {
@@ -1135671,7 +1135671,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6279"
+        "staticSource": "pages/play/index.js:6308"
       }
     },
     {
@@ -1135762,7 +1135762,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6670"
+        "staticSource": "pages/play/index.js:6699"
       }
     },
     {
@@ -1136173,7 +1136173,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6013"
+        "staticSource": "pages/play/index.js:6042"
       }
     },
     {
@@ -1136608,7 +1136608,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6033"
+        "staticSource": "pages/play/index.js:6062"
       }
     },
     {
@@ -1137033,7 +1137033,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5998"
+        "staticSource": "pages/play/index.js:6027"
       }
     },
     {
@@ -1137458,7 +1137458,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5874"
+        "staticSource": "pages/play/index.js:5903"
       }
     },
     {
@@ -1137863,7 +1137863,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6089"
+        "staticSource": "pages/play/index.js:6118"
       }
     },
     {
@@ -1137930,7 +1137930,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6732"
+        "staticSource": "pages/play/index.js:6761"
       }
     },
     {
@@ -1137998,7 +1137998,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3452"
+        "staticSource": "pages/play/index.js:3453"
       }
     },
     {
@@ -1138065,7 +1138065,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6732"
+        "staticSource": "pages/play/index.js:6761"
       }
     },
     {
@@ -1138133,7 +1138133,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3452"
+        "staticSource": "pages/play/index.js:3453"
       }
     },
     {
@@ -1138200,7 +1138200,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6697"
+        "staticSource": "pages/play/index.js:6726"
       }
     },
     {
@@ -1138271,7 +1138271,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7727"
+        "staticSource": "pages/play/index.js:7758"
       }
     },
     {
@@ -1138339,7 +1138339,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3452"
+        "staticSource": "pages/play/index.js:3453"
       }
     },
     {
@@ -1138406,7 +1138406,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8165"
+        "staticSource": "pages/play/index.js:8196"
       }
     },
     {
@@ -1138473,7 +1138473,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3608"
+        "staticSource": "pages/play/index.js:3609"
       }
     },
     {
@@ -1138638,7 +1138638,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7779"
+        "staticSource": "pages/play/index.js:7810"
       }
     },
     {
@@ -1138887,7 +1138887,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3610"
+        "staticSource": "pages/play/index.js:3611"
       }
     },
     {
@@ -1139181,7 +1139181,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7743"
+        "staticSource": "pages/play/index.js:7774"
       }
     },
     {
@@ -1139354,7 +1139354,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7612"
+        "staticSource": "pages/play/index.js:7643"
       }
     },
     {
@@ -1139460,7 +1139460,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7996"
+        "staticSource": "pages/play/index.js:8027"
       }
     },
     {
@@ -1139531,7 +1139531,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7727"
+        "staticSource": "pages/play/index.js:7758"
       }
     },
     {
@@ -1139602,7 +1139602,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7727"
+        "staticSource": "pages/play/index.js:7758"
       }
     },
     {
@@ -1139689,7 +1139689,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8241"
+        "staticSource": "pages/play/index.js:8272"
       }
     },
     {
@@ -1139756,7 +1139756,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8423"
+        "staticSource": "pages/play/index.js:8454"
       }
     },
     {
@@ -1139823,7 +1139823,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8462"
+        "staticSource": "pages/play/index.js:8493"
       }
     },
     {
@@ -1139910,7 +1139910,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8463"
+        "staticSource": "pages/play/index.js:8494"
       }
     },
     {
@@ -1140001,7 +1140001,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6670"
+        "staticSource": "pages/play/index.js:6699"
       }
     },
     {
@@ -1140069,7 +1140069,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3452"
+        "staticSource": "pages/play/index.js:3453"
       }
     },
     {
@@ -1140136,7 +1140136,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4660"
+        "staticSource": "pages/play/index.js:4688"
       }
     },
     {
@@ -1140223,7 +1140223,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8241"
+        "staticSource": "pages/play/index.js:8272"
       }
     },
     {
@@ -1140293,7 +1140293,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8271"
+        "staticSource": "pages/play/index.js:8302"
       }
     },
     {
@@ -1140360,7 +1140360,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7510"
+        "staticSource": "pages/play/index.js:7541"
       }
     },
     {
@@ -1140511,7 +1140511,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4068"
+        "staticSource": "pages/play/index.js:4093"
       }
     },
     {
@@ -1140936,7 +1140936,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4076"
+        "staticSource": "pages/play/index.js:4101"
       }
     },
     {
@@ -1141361,7 +1141361,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4083"
+        "staticSource": "pages/play/index.js:4108"
       }
     },
     {
@@ -1141513,7 +1141513,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4086"
+        "staticSource": "pages/play/index.js:4111"
       }
     },
     {
@@ -1141583,7 +1141583,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4086"
+        "staticSource": "pages/play/index.js:4111"
       }
     },
     {
@@ -1141654,7 +1141654,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4071"
+        "staticSource": "pages/play/index.js:4096"
       }
     },
     {
@@ -1141724,7 +1141724,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4068"
+        "staticSource": "pages/play/index.js:4093"
       }
     },
     {
@@ -1142216,7 +1142216,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7509"
+        "staticSource": "pages/play/index.js:7540"
       }
     },
     {
@@ -1142325,7 +1142325,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3432"
+        "staticSource": "pages/play/index.js:3433"
       }
     },
     {
@@ -1142431,7 +1142431,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6552"
+        "staticSource": "pages/play/index.js:6581"
       }
     },
     {
@@ -1142856,7 +1142856,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6530"
+        "staticSource": "pages/play/index.js:6559"
       }
     },
     {
@@ -1142923,7 +1142923,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3455"
+        "staticSource": "pages/play/index.js:3456"
       }
     },
     {
@@ -1142991,7 +1142991,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6664"
+        "staticSource": "pages/play/index.js:6693"
       }
     },
     {
@@ -1143058,7 +1143058,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3455"
+        "staticSource": "pages/play/index.js:3456"
       }
     },
     {
@@ -1143126,7 +1143126,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3452"
+        "staticSource": "pages/play/index.js:3453"
       }
     },
     {
@@ -1143193,7 +1143193,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3455"
+        "staticSource": "pages/play/index.js:3456"
       }
     },
     {
@@ -1143260,7 +1143260,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6619"
+        "staticSource": "pages/play/index.js:6648"
       }
     },
     {
@@ -1143328,7 +1143328,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6664"
+        "staticSource": "pages/play/index.js:6693"
       }
     },
     {
@@ -1143395,7 +1143395,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3455"
+        "staticSource": "pages/play/index.js:3456"
       }
     },
     {
@@ -1143463,7 +1143463,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3452"
+        "staticSource": "pages/play/index.js:3453"
       }
     },
     {
@@ -1143530,7 +1143530,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3455"
+        "staticSource": "pages/play/index.js:3456"
       }
     },
     {
@@ -1143597,7 +1143597,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6619"
+        "staticSource": "pages/play/index.js:6648"
       }
     },
     {
@@ -1143668,7 +1143668,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6609"
+        "staticSource": "pages/play/index.js:6638"
       }
     },
     {
@@ -1143774,7 +1143774,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6648"
+        "staticSource": "pages/play/index.js:6677"
       }
     },
     {
@@ -1143842,7 +1143842,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6664"
+        "staticSource": "pages/play/index.js:6693"
       }
     },
     {
@@ -1143909,7 +1143909,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3455"
+        "staticSource": "pages/play/index.js:3456"
       }
     },
     {
@@ -1143977,7 +1143977,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3452"
+        "staticSource": "pages/play/index.js:3453"
       }
     },
     {
@@ -1144044,7 +1144044,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3455"
+        "staticSource": "pages/play/index.js:3456"
       }
     },
     {
@@ -1144115,7 +1144115,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6659"
+        "staticSource": "pages/play/index.js:6688"
       }
     },
     {
@@ -1144182,7 +1144182,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6619"
+        "staticSource": "pages/play/index.js:6648"
       }
     },
     {
@@ -1144288,7 +1144288,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6648"
+        "staticSource": "pages/play/index.js:6677"
       }
     },
     {
@@ -1144356,7 +1144356,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6664"
+        "staticSource": "pages/play/index.js:6693"
       }
     },
     {
@@ -1144423,7 +1144423,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3455"
+        "staticSource": "pages/play/index.js:3456"
       }
     },
     {
@@ -1144491,7 +1144491,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3452"
+        "staticSource": "pages/play/index.js:3453"
       }
     },
     {
@@ -1144558,7 +1144558,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3455"
+        "staticSource": "pages/play/index.js:3456"
       }
     },
     {
@@ -1144625,7 +1144625,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6619"
+        "staticSource": "pages/play/index.js:6648"
       }
     },
     {
@@ -1144731,7 +1144731,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6648"
+        "staticSource": "pages/play/index.js:6677"
       }
     },
     {
@@ -1144799,7 +1144799,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6664"
+        "staticSource": "pages/play/index.js:6693"
       }
     },
     {
@@ -1144866,7 +1144866,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3455"
+        "staticSource": "pages/play/index.js:3456"
       }
     },
     {
@@ -1144934,7 +1144934,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3452"
+        "staticSource": "pages/play/index.js:3453"
       }
     },
     {
@@ -1145001,7 +1145001,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3455"
+        "staticSource": "pages/play/index.js:3456"
       }
     },
     {
@@ -1145068,7 +1145068,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6619"
+        "staticSource": "pages/play/index.js:6648"
       }
     },
     {
@@ -1145174,7 +1145174,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6648"
+        "staticSource": "pages/play/index.js:6677"
       }
     },
     {
@@ -1145242,7 +1145242,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6664"
+        "staticSource": "pages/play/index.js:6693"
       }
     },
     {
@@ -1145309,7 +1145309,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3455"
+        "staticSource": "pages/play/index.js:3456"
       }
     },
     {
@@ -1145377,7 +1145377,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3452"
+        "staticSource": "pages/play/index.js:3453"
       }
     },
     {
@@ -1145444,7 +1145444,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3455"
+        "staticSource": "pages/play/index.js:3456"
       }
     },
     {
@@ -1145511,7 +1145511,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6619"
+        "staticSource": "pages/play/index.js:6648"
       }
     },
     {
@@ -1145588,7 +1145588,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6652"
+        "staticSource": "pages/play/index.js:6681"
       }
     },
     {
@@ -1145656,7 +1145656,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6664"
+        "staticSource": "pages/play/index.js:6693"
       }
     },
     {
@@ -1145723,7 +1145723,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3455"
+        "staticSource": "pages/play/index.js:3456"
       }
     },
     {
@@ -1145791,7 +1145791,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3452"
+        "staticSource": "pages/play/index.js:3453"
       }
     },
     {
@@ -1145858,7 +1145858,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3455"
+        "staticSource": "pages/play/index.js:3456"
       }
     },
     {
@@ -1145925,7 +1145925,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6619"
+        "staticSource": "pages/play/index.js:6648"
       }
     },
     {
@@ -1146031,7 +1146031,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6648"
+        "staticSource": "pages/play/index.js:6677"
       }
     },
     {
@@ -1146099,7 +1146099,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6664"
+        "staticSource": "pages/play/index.js:6693"
       }
     },
     {
@@ -1146166,7 +1146166,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3455"
+        "staticSource": "pages/play/index.js:3456"
       }
     },
     {
@@ -1146234,7 +1146234,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3452"
+        "staticSource": "pages/play/index.js:3453"
       }
     },
     {
@@ -1146301,7 +1146301,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3455"
+        "staticSource": "pages/play/index.js:3456"
       }
     },
     {
@@ -1146368,7 +1146368,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6600"
+        "staticSource": "pages/play/index.js:6629"
       }
     },
     {
@@ -1146436,7 +1146436,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6664"
+        "staticSource": "pages/play/index.js:6693"
       }
     },
     {
@@ -1146503,7 +1146503,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3455"
+        "staticSource": "pages/play/index.js:3456"
       }
     },
     {
@@ -1146571,7 +1146571,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3452"
+        "staticSource": "pages/play/index.js:3453"
       }
     },
     {
@@ -1146638,7 +1146638,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3455"
+        "staticSource": "pages/play/index.js:3456"
       }
     },
     {
@@ -1146705,7 +1146705,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6600"
+        "staticSource": "pages/play/index.js:6629"
       }
     },
     {
@@ -1146773,7 +1146773,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6664"
+        "staticSource": "pages/play/index.js:6693"
       }
     },
     {
@@ -1146840,7 +1146840,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3455"
+        "staticSource": "pages/play/index.js:3456"
       }
     },
     {
@@ -1146908,7 +1146908,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3452"
+        "staticSource": "pages/play/index.js:3453"
       }
     },
     {
@@ -1146975,7 +1146975,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3455"
+        "staticSource": "pages/play/index.js:3456"
       }
     },
     {
@@ -1147042,7 +1147042,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6600"
+        "staticSource": "pages/play/index.js:6629"
       }
     },
     {
@@ -1147110,7 +1147110,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6664"
+        "staticSource": "pages/play/index.js:6693"
       }
     },
     {
@@ -1147177,7 +1147177,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3455"
+        "staticSource": "pages/play/index.js:3456"
       }
     },
     {
@@ -1147245,7 +1147245,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3452"
+        "staticSource": "pages/play/index.js:3453"
       }
     },
     {
@@ -1147312,7 +1147312,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3455"
+        "staticSource": "pages/play/index.js:3456"
       }
     },
     {
@@ -1147379,7 +1147379,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6600"
+        "staticSource": "pages/play/index.js:6629"
       }
     },
     {
@@ -1147804,7 +1147804,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3806"
+        "staticSource": "pages/play/index.js:3831"
       }
     },
     {
@@ -1147872,7 +1147872,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6664"
+        "staticSource": "pages/play/index.js:6693"
       }
     },
     {
@@ -1147939,7 +1147939,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3455"
+        "staticSource": "pages/play/index.js:3456"
       }
     },
     {
@@ -1148007,7 +1148007,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3452"
+        "staticSource": "pages/play/index.js:3453"
       }
     },
     {
@@ -1148074,7 +1148074,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3455"
+        "staticSource": "pages/play/index.js:3456"
       }
     },
     {
@@ -1148145,7 +1148145,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6655"
+        "staticSource": "pages/play/index.js:6684"
       }
     },
     {
@@ -1148212,7 +1148212,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6619"
+        "staticSource": "pages/play/index.js:6648"
       }
     },
     {
@@ -1148279,7 +1148279,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6641"
+        "staticSource": "pages/play/index.js:6670"
       }
     },
     {
@@ -1148346,7 +1148346,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6628"
+        "staticSource": "pages/play/index.js:6657"
       }
     },
     {
@@ -1148413,7 +1148413,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6712"
+        "staticSource": "pages/play/index.js:6741"
       }
     },
     {
@@ -1148547,7 +1148547,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2571"
+        "staticSource": "pages/play/index.js:2572"
       }
     },
     {
@@ -1148615,7 +1148615,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3452"
+        "staticSource": "pages/play/index.js:3453"
       }
     },
     {
@@ -1149011,7 +1149011,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6997"
+        "staticSource": "pages/play/index.js:7028"
       }
     },
     {
@@ -1149146,7 +1149146,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7376"
+        "staticSource": "pages/play/index.js:7407"
       }
     },
     {
@@ -1149571,7 +1149571,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7384"
+        "staticSource": "pages/play/index.js:7415"
       }
     },
     {
@@ -1149996,7 +1149996,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2573"
+        "staticSource": "pages/play/index.js:2574"
       }
     },
     {
@@ -1150421,7 +1150421,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2897"
+        "staticSource": "pages/play/index.js:2898"
       }
     },
     {
@@ -1150944,7 +1150944,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3331"
+        "staticSource": "pages/play/index.js:3332"
       }
     },
     {
@@ -1151011,7 +1151011,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2896"
+        "staticSource": "pages/play/index.js:2897"
       }
     },
     {
@@ -1151079,7 +1151079,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3452"
+        "staticSource": "pages/play/index.js:3453"
       }
     },
     {
@@ -1151146,7 +1151146,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2896"
+        "staticSource": "pages/play/index.js:2897"
       }
     },
     {
@@ -1151571,7 +1151571,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2897"
+        "staticSource": "pages/play/index.js:2898"
       }
     },
     {
@@ -1151996,7 +1151996,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2897"
+        "staticSource": "pages/play/index.js:2898"
       }
     },
     {
@@ -1152511,7 +1152511,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3263"
+        "staticSource": "pages/play/index.js:3264"
       }
     },
     {
@@ -1152936,7 +1152936,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3331"
+        "staticSource": "pages/play/index.js:3332"
       }
     },
     {
@@ -1153632,7 +1153632,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3073"
+        "staticSource": "pages/play/index.js:3074"
       }
     },
     {
@@ -1154058,7 +1154058,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3121"
+        "staticSource": "pages/play/index.js:3122"
       }
     },
     {
@@ -1154469,7 +1154469,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6667"
+        "staticSource": "pages/play/index.js:6696"
       }
     },
     {
@@ -1154536,7 +1154536,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3202"
+        "staticSource": "pages/play/index.js:3203"
       }
     },
     {
@@ -1154618,7 +1154618,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3217"
+        "staticSource": "pages/play/index.js:3218"
       }
     },
     {
@@ -1154730,7 +1154730,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3244"
+        "staticSource": "pages/play/index.js:3245"
       }
     },
     {
@@ -1155155,7 +1155155,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5800"
+        "staticSource": "pages/play/index.js:5828"
       }
     },
     {
@@ -1155580,7 +1155580,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5755"
+        "staticSource": "pages/play/index.js:5783"
       }
     },
     {
@@ -1156005,7 +1156005,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6778"
+        "staticSource": "pages/play/index.js:6807"
       }
     },
     {
@@ -1156430,7 +1156430,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2949"
+        "staticSource": "pages/play/index.js:2950"
       }
     },
     {
@@ -1156855,7 +1156855,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2899"
+        "staticSource": "pages/play/index.js:2900"
       }
     },
     {
@@ -1156922,7 +1156922,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3427"
+        "staticSource": "pages/play/index.js:3428"
       }
     },
     {
@@ -1156990,7 +1156990,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3452"
+        "staticSource": "pages/play/index.js:3453"
       }
     },
     {
@@ -1157057,7 +1157057,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3427"
+        "staticSource": "pages/play/index.js:3428"
       }
     },
     {
@@ -1157147,7 +1157147,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3388"
+        "staticSource": "pages/play/index.js:3389"
       }
     },
     {
@@ -1157537,7 +1157537,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6668"
+        "staticSource": "pages/play/index.js:6697"
       }
     },
     {
@@ -1157604,7 +1157604,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5973"
+        "staticSource": "pages/play/index.js:6002"
       }
     },
     {
@@ -1157686,7 +1157686,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5974"
+        "staticSource": "pages/play/index.js:6003"
       }
     },
     {
@@ -1157753,7 +1157753,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3847"
+        "staticSource": "pages/play/index.js:3872"
       }
     },
     {
@@ -1157820,7 +1157820,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1272"
+        "staticSource": "pages/play/index.js:1273"
       }
     },
     {
@@ -1157887,7 +1157887,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1272"
+        "staticSource": "pages/play/index.js:1273"
       }
     },
     {
@@ -1158312,7 +1158312,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1253"
+        "staticSource": "pages/play/index.js:1254"
       }
     },
     {
@@ -1159437,7 +1159437,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7171"
+        "staticSource": "pages/play/index.js:7202"
       }
     },
     {
@@ -1159504,7 +1159504,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6669"
+        "staticSource": "pages/play/index.js:6698"
       }
     },
     {
@@ -1159896,7 +1159896,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6692"
+        "staticSource": "pages/play/index.js:6721"
       }
     },
     {
@@ -1160076,7 +1160076,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6690"
+        "staticSource": "pages/play/index.js:6719"
       }
     },
     {
@@ -1160182,7 +1160182,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6691"
+        "staticSource": "pages/play/index.js:6720"
       }
     },
     {
@@ -1160582,7 +1160582,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6689"
+        "staticSource": "pages/play/index.js:6718"
       }
     },
     {
@@ -1160974,7 +1160974,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6693"
+        "staticSource": "pages/play/index.js:6722"
       }
     },
     {
@@ -1161080,7 +1161080,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6726"
+        "staticSource": "pages/play/index.js:6755"
       }
     },
     {
@@ -1161189,7 +1161189,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7508"
+        "staticSource": "pages/play/index.js:7539"
       }
     },
     {
@@ -1161259,7 +1161259,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5337"
+        "staticSource": "pages/play/index.js:5365"
       }
     },
     {
@@ -1161326,7 +1161326,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6723"
+        "staticSource": "pages/play/index.js:6752"
       }
     },
     {
@@ -1161751,7 +1161751,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6674"
+        "staticSource": "pages/play/index.js:6703"
       }
     },
     {
@@ -1162176,7 +1162176,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6674"
+        "staticSource": "pages/play/index.js:6703"
       }
     },
     {
@@ -1162601,7 +1162601,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6674"
+        "staticSource": "pages/play/index.js:6703"
       }
     },
     {
@@ -1162710,7 +1162710,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7508"
+        "staticSource": "pages/play/index.js:7539"
       }
     },
     {
@@ -1162777,7 +1162777,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6723"
+        "staticSource": "pages/play/index.js:6752"
       }
     },
     {
@@ -1162854,7 +1162854,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3810"
+        "staticSource": "pages/play/index.js:3835"
       }
     },
     {
@@ -1162921,7 +1162921,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6679"
+        "staticSource": "pages/play/index.js:6708"
       }
     },
     {
@@ -1163346,7 +1163346,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3989"
+        "staticSource": "pages/play/index.js:4014"
       }
     },
     {
@@ -1163413,7 +1163413,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3841"
+        "staticSource": "pages/play/index.js:3866"
       }
     },
     {
@@ -1163490,7 +1163490,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3961"
+        "staticSource": "pages/play/index.js:3986"
       }
     },
     {
@@ -1163918,7 +1163918,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3514"
+        "staticSource": "pages/play/index.js:3515"
       }
     },
     {
@@ -1164343,7 +1164343,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5175"
+        "staticSource": "pages/play/index.js:5203"
       }
     },
     {
@@ -1164739,7 +1164739,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6997"
+        "staticSource": "pages/play/index.js:7028"
       }
     },
     {
@@ -1164807,7 +1164807,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6946"
+        "staticSource": "pages/play/index.js:6977"
       }
     },
     {
@@ -1164875,7 +1164875,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7376"
+        "staticSource": "pages/play/index.js:7407"
       }
     },
     {
@@ -1165300,7 +1165300,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7384"
+        "staticSource": "pages/play/index.js:7415"
       }
     },
     {
@@ -1165710,7 +1165710,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3870"
+        "staticSource": "pages/play/index.js:3895"
       }
     },
     {
@@ -1166135,7 +1166135,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5325"
+        "staticSource": "pages/play/index.js:5353"
       }
     },
     {
@@ -1166560,7 +1166560,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7652"
+        "staticSource": "pages/play/index.js:7683"
       }
     },
     {
@@ -1166985,7 +1166985,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3815"
+        "staticSource": "pages/play/index.js:3840"
       }
     },
     {
@@ -1167052,7 +1167052,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3833"
+        "staticSource": "pages/play/index.js:3858"
       }
     },
     {
@@ -1167485,7 +1167485,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2494"
+        "staticSource": "pages/play/index.js:2495"
       }
     },
     {
@@ -1167910,7 +1167910,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4030"
+        "staticSource": "pages/play/index.js:4055"
       }
     },
     {
@@ -1167977,7 +1167977,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2488"
+        "staticSource": "pages/play/index.js:2489"
       }
     },
     {
@@ -1168045,7 +1168045,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3452"
+        "staticSource": "pages/play/index.js:3453"
       }
     },
     {
@@ -1168112,7 +1168112,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2489"
+        "staticSource": "pages/play/index.js:2490"
       }
     },
     {
@@ -1168537,7 +1168537,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5211"
+        "staticSource": "pages/play/index.js:5239"
       }
     },
     {
@@ -1168962,7 +1168962,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1592"
+        "staticSource": "pages/play/index.js:1593"
       }
     },
     {
@@ -1169041,7 +1169041,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1331"
+        "staticSource": "pages/play/index.js:1332"
       }
     },
     {
@@ -1169109,7 +1169109,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1372"
+        "staticSource": "pages/play/index.js:1373"
       }
     },
     {
@@ -1169186,7 +1169186,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1383"
+        "staticSource": "pages/play/index.js:1384"
       }
     },
     {
@@ -1169263,7 +1169263,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1397"
+        "staticSource": "pages/play/index.js:1398"
       }
     },
     {
@@ -1169340,7 +1169340,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1397"
+        "staticSource": "pages/play/index.js:1398"
       }
     },
     {
@@ -1169765,7 +1169765,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4888"
+        "staticSource": "pages/play/index.js:4916"
       }
     },
     {
@@ -1169832,7 +1169832,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2485"
+        "staticSource": "pages/play/index.js:2486"
       }
     },
     {
@@ -1169938,7 +1169938,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6552"
+        "staticSource": "pages/play/index.js:6581"
       }
     },
     {
@@ -1170005,7 +1170005,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2455"
+        "staticSource": "pages/play/index.js:2456"
       }
     },
     {
@@ -1170430,7 +1170430,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1602"
+        "staticSource": "pages/play/index.js:1603"
       }
     },
     {
@@ -1170497,7 +1170497,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2342"
+        "staticSource": "pages/play/index.js:2343"
       }
     },
     {
@@ -1170564,7 +1170564,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2325"
+        "staticSource": "pages/play/index.js:2326"
       }
     },
     {
@@ -1170632,7 +1170632,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2317"
+        "staticSource": "pages/play/index.js:2318"
       }
     },
     {
@@ -1170699,7 +1170699,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2355"
+        "staticSource": "pages/play/index.js:2356"
       }
     },
     {
@@ -1170766,7 +1170766,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1945"
+        "staticSource": "pages/play/index.js:1946"
       }
     },
     {
@@ -1170843,7 +1170843,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2369"
+        "staticSource": "pages/play/index.js:2370"
       }
     },
     {
@@ -1171268,7 +1171268,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2465"
+        "staticSource": "pages/play/index.js:2466"
       }
     },
     {
@@ -1171335,7 +1171335,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1658"
+        "staticSource": "pages/play/index.js:1659"
       }
     },
     {
@@ -1171760,7 +1171760,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1700"
+        "staticSource": "pages/play/index.js:1701"
       }
     },
     {
@@ -1171837,7 +1171837,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1673"
+        "staticSource": "pages/play/index.js:1674"
       }
     },
     {
@@ -1171904,7 +1171904,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1658"
+        "staticSource": "pages/play/index.js:1659"
       }
     },
     {
@@ -1172329,7 +1172329,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2465"
+        "staticSource": "pages/play/index.js:2466"
       }
     },
     {
@@ -1172396,7 +1172396,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1669"
+        "staticSource": "pages/play/index.js:1670"
       }
     },
     {
@@ -1172463,7 +1172463,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2032"
+        "staticSource": "pages/play/index.js:2033"
       }
     },
     {
@@ -1172531,7 +1172531,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2030"
+        "staticSource": "pages/play/index.js:2031"
       }
     },
     {
@@ -1172598,7 +1172598,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2024"
+        "staticSource": "pages/play/index.js:2025"
       }
     },
     {
@@ -1172666,7 +1172666,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2023"
+        "staticSource": "pages/play/index.js:2024"
       }
     },
     {
@@ -1172743,7 +1172743,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2268"
+        "staticSource": "pages/play/index.js:2269"
       }
     },
     {
@@ -1172832,7 +1172832,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2277"
+        "staticSource": "pages/play/index.js:2278"
       }
     },
     {
@@ -1173258,7 +1173258,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3600"
+        "staticSource": "pages/play/index.js:3601"
       }
     },
     {
@@ -1173347,7 +1173347,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2182"
+        "staticSource": "pages/play/index.js:2183"
       }
     },
     {
@@ -1173414,7 +1173414,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2045"
+        "staticSource": "pages/play/index.js:2046"
       }
     },
     {
@@ -1173481,7 +1173481,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2046"
+        "staticSource": "pages/play/index.js:2047"
       }
     },
     {
@@ -1173549,7 +1173549,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2122"
+        "staticSource": "pages/play/index.js:2123"
       }
     },
     {
@@ -1173617,7 +1173617,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2122"
+        "staticSource": "pages/play/index.js:2123"
       }
     },
     {
@@ -1173733,7 +1173733,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2079"
+        "staticSource": "pages/play/index.js:2080"
       }
     },
     {
@@ -1173822,7 +1173822,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2182"
+        "staticSource": "pages/play/index.js:2183"
       }
     },
     {
@@ -1173889,7 +1173889,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2178"
+        "staticSource": "pages/play/index.js:2179"
       }
     },
     {
@@ -1173998,7 +1173998,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3432"
+        "staticSource": "pages/play/index.js:3433"
       }
     },
     {
@@ -1174179,7 +1174179,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4891"
+        "staticSource": "pages/play/index.js:4919"
       }
     },
     {
@@ -1174612,7 +1174612,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4940"
+        "staticSource": "pages/play/index.js:4968"
       }
     },
     {
@@ -1174683,7 +1174683,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6573"
+        "staticSource": "pages/play/index.js:6602"
       }
     },
     {
@@ -1174750,7 +1174750,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6582"
+        "staticSource": "pages/play/index.js:6611"
       }
     },
     {
@@ -1175175,7 +1175175,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7671"
+        "staticSource": "pages/play/index.js:7702"
       }
     },
     {
@@ -1175253,7 +1175253,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5317"
+        "staticSource": "pages/play/index.js:5345"
       }
     },
     {
@@ -1175330,7 +1175330,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5311"
+        "staticSource": "pages/play/index.js:5339"
       }
     },
     {
@@ -1175397,7 +1175397,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6556"
+        "staticSource": "pages/play/index.js:6585"
       }
     },
     {
@@ -1175822,7 +1175822,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5686"
+        "staticSource": "pages/play/index.js:5714"
       }
     },
     {
@@ -1178369,7 +1178369,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3452"
+        "staticSource": "pages/play/index.js:3453"
       }
     },
     {
@@ -1178602,7 +1178602,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3452"
+        "staticSource": "pages/play/index.js:3453"
       }
     },
     {
@@ -1182704,7 +1182704,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5306"
+        "staticSource": "pages/play/index.js:5334"
       }
     },
     {

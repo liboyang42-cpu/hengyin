@@ -957,7 +957,7 @@
     
     <view class="cover-photos" wx:if="{{img.list(sheet.node.imgUrl).length > 1}}"><cy-icon name="image" size="22" />{{img.list(sheet.node.imgUrl).length}} 图 · 点击查看</view>
     <!-- 「第 N 站」是城市定向的顺序语义;自由探索没有顺序,这里只说它是哪一家的什么 -->
-    <view class="cover-tag" wx:if="{{mode!=2}}">{{sheet.node.num >= 100 ? '延伸' : '第 ' + (sheet.node.placeNum || sheet.node.num) + ' 站'}}</view>
+    <view class="cover-tag" wx:if="{{mode!=2}}">{{sheet.node.num >= 100 ? '延伸' : (sheet.node.placeNum ? '第 ' + sheet.node.placeNum + ' 站' : (sheet.node.lat ? '第 ' + sheet.node.num + ' 站' : '故事'))}}</view>
     <view class="cover-tag" wx:else>{{sheet.node.done ? '已体验' : '本站权益'}}</view>
     <view class="cover-open" wx:if="{{sheet.node.openText}}">
       <view class="od" style="background:{{sheet.node.openDot}}"></view>

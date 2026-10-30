@@ -227,7 +227,7 @@
 <cy-playkit-sort wx:elif="{{kit.type === 'sort'}}"
   show="{{show}}" prompt="{{kit.prompt}}" items="{{kit.items}}"
   attempts="{{kit.attempts}}" passed="{{kit.passed}}" finished="{{kit.finished}}"
-  last-correct="{{kit.lastCorrect}}"
+  last-correct="{{kit.lastCorrect}}" last-order="{{kit.lastOrder}}"
   bind:submit="onSubmit" bind:close="onClose" />
 
 <cy-playkit-match wx:elif="{{kit.type === 'match'}}"
