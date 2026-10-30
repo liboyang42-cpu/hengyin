@@ -323,6 +323,8 @@ App({
       this._session = createSessionStore({
         target: this.globalData,
         onClear: function (identity) {
+          // 登录代次只在会话被清除(登出/换号)时前进;灰度开关重拉与静默续期都不算换号。
+          that._loginEpoch = (that._loginEpoch || 0) + 1;
           that._featureFlagsEpoch = (that._featureFlagsEpoch || 0) + 1;
           that._communityFeatureOwner = null;
           that.globalData.features = Object.assign({}, that.globalData.features, { communityPostRead: false, communityPostWrite: false });

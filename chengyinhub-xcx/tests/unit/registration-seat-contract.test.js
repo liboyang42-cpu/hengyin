@@ -32,13 +32,13 @@ function component() {
   const file = path.resolve(__dirname, '../../components/cy/scene-qr-ticket/index.js');
   let definition, owner = '11';
   const disk = storage(), requests = [];
-  const app = { getSession: () => ({ getRevision: () => 0 }), _featureFlagsEpoch: 0, getUserID: () => owner, getAuthorization: () => 'fixture-auth-' + owner,
+  const app = { getSession: () => ({ getRevision: () => 0 }), _loginEpoch: 0, getUserID: () => owner, getAuthorization: () => 'fixture-auth-' + owner,
     sendRequest(options) { requests.push(options); } };
   vm.runInNewContext(fs.readFileSync(file, 'utf8'), { Component(value) { definition = value; }, getApp: () => app, wx: disk,
     require: id => require(path.resolve(path.dirname(file), id)), Date, setInterval: () => 1, clearInterval() {} });
   const page = { ...definition.methods, data: { ...definition.data, registrationId: '71' }, _attached: true,
     setData(patch) { Object.assign(this.data, patch); }, triggerEvent() {} };
-  return { page, requests, app, disk, switchOwner(value) { owner = value; app._featureFlagsEpoch++; } };
+  return { page, requests, app, disk, switchOwner(value) { owner = value; app._loginEpoch++; } };
 }
 const choice = { code: 200, data: { requiresSeatSelection: true, registrationId: 71, seatCount: 3 } };
 const issued = (seat = 2) => ({ code: 200, data: { registrationId: 71, seatId: 100 + seat, seatNo: seat,

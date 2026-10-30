@@ -691,10 +691,9 @@ Page({
   },
   _playMember() { return String((app.getUserID && app.getUserID()) || ''); },
   _capturePlayLoginContext() {
-    let issuedAt = '';
-    try { issuedAt = wx.getStorageSync('authorization_issued_at') || ''; } catch (_) {}
-    return { authorization: app.getAuthorization ? app.getAuthorization() : undefined,
-      generation: String(app._featureFlagsEpoch || 0) + ':' + String(issuedAt) };
+    // 只认登录代次(登出/换号才前进):灰度开关重拉、401 静默续期换 token 仍是同一账号,
+    // 拿它们当换号会让在途回包全被丢弃,首屏永远停在 loading(真机票夹进游戏黑屏)。
+    return { generation: String(app._loginEpoch || 0) };
   },
   /** 高级玩法组件句柄;页面未挂 selectComponent(预渲染/桩)时按「无组件」处理。 */
   _advancedGameComponent() {
@@ -710,7 +709,7 @@ Page({
   _isPlayAccountCurrent() {
     const owner = this._boundPlayOwner(), current = this._capturePlayLoginContext();
     return !this._playDisposed && owner === this._playMember()
-      && this._playLoginContext.authorization === current.authorization && this._playLoginContext.generation === current.generation;
+      && this._playLoginContext.generation === current.generation;
   },
   onShow() {
     // 只看账号是否已切换(卸载态由各回调自己的 _isPlayAccountCurrent 挡)

@@ -82,6 +82,9 @@ import com.chengyinhub.common.enums.LimitType;
 @Tag(name = "主题")
 @RequestMapping("/api/topic")
 public class ApiTopicController extends BaseController {
+    @Autowired
+    private com.fasterxml.jackson.databind.ObjectMapper responseObjectMapper;
+
     @Value("${community.post.legacy-writes-enabled:true}")
     private boolean legacyCommunityWritesEnabled;
 
@@ -832,8 +835,11 @@ public class ApiTopicController extends BaseController {
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public AjaxResult authorEditDetail(String id, String scope) {
         AjaxResult result = topicEditDetail(id, scope);
-        if (Integer.valueOf(200).equals(result.get(AjaxResult.CODE_TAG)))
-            result.put(AjaxResult.DATA_TAG, com.chengyinhub.business.service.support.TemplateAdoptionWire.strings(result.get(AjaxResult.DATA_TAG), "templateId"));
+        if (Integer.valueOf(200).equals(result.get(AjaxResult.CODE_TAG))) {
+            Map<String, Object> data = new HashMap<>((Map<String, Object>) result.get(AjaxResult.DATA_TAG));
+            data.put("topic", new com.chengyinhub.business.domain.dto.TopicAuthorEditDTO((CmsTopic) data.get("topic")));
+            result.put(AjaxResult.DATA_TAG, com.chengyinhub.business.service.support.TemplateAdoptionWire.strings(data, "templateId", responseObjectMapper));
+        }
         return result;
     }
 

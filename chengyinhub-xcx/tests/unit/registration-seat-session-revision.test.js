@@ -22,7 +22,7 @@ function fixture() {
   session.applySnapshot({ user_id: 11, authorization: 'synthetic-authorization', role: 'merchant' });
   // Execute the actual app.setUserRole delegate with the actual session-store, not a fake revision increment.
   const app = Object.assign(new Function('wx', 'return ({' + method('app.js', 'setUserRole') + '});')(wx), {
-    _featureFlagsEpoch: 17, getSession: () => session, getUserID: () => session.getUserID(),
+    _loginEpoch: 17, getSession: () => session, getUserID: () => session.getUserID(),
     getAuthorization: () => session.getAuthorization(), sendRequest(options) { requests.push(options); return { abort() {} }; } });
   const flow = verification.createVerificationWorkflow({ storage: wx, getOwner: () => app.getUserID(),
     setTimer(fn) { timers.push(fn); return timers.length; }, clearTimer() {} });
@@ -49,7 +49,7 @@ test('real app.setUserRole changes revision alone: late seat success must keep U
   assert.equal(h.session.getRevision(), 1); assert.equal(h.pending().length, 1);
   h.app.setUserRole('club'); assert.equal(h.session.getRevision(), 2);
   assert.equal(h.app.getAuthorization(), authorization); assert.equal(h.wx.getStorageSync('authorization_issued_at'), issuedAt);
-  assert.equal(h.app._featureFlagsEpoch, 17);
+  assert.equal(h.app._loginEpoch, 17);
   h.requests[0].success(receipt);
   assert.equal(h.pending().length, 1); assert.equal(h.results.length, 0);
   assert.equal(seats.loginCurrent(h.app, h.wx, original.login), false);

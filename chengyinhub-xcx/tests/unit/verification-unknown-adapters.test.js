@@ -80,7 +80,7 @@ function harness(file, method, transport, request, sharedStorage, sourceOverride
   const invoke = () => method === 'submitClubScan'
     ? owner[method](request.url, { code: request.data.code, data: request.data })
     : owner[method](request.url + ':' + (request.data.code || ''), '核销中', request, r => messages.push(r.msg));
-  return { owner, storage, requests, messages, invoke, dispose: () => { if (hook) owner[hook](); else if (owner._verificationWorkflow) { owner._verificationWorkflow.destroy(); owner._verificationWorkflow = null; } }, switchOwner: id => { memberId = id; }, advanceLogin: () => { app._featureFlagsEpoch = (app._featureFlagsEpoch || 0) + 1; }, deadline: () => deadline() };
+  return { owner, storage, requests, messages, invoke, dispose: () => { if (hook) owner[hook](); else if (owner._verificationWorkflow) { owner._verificationWorkflow.destroy(); owner._verificationWorkflow = null; } }, switchOwner: id => { memberId = id; }, advanceLogin: () => { app._loginEpoch = (app._loginEpoch || 0) + 1; }, deadline: () => deadline() };
 }
 
 test('club lifecycle extraction keeps the real inline or block onHide without evaluating Page.data', () => {

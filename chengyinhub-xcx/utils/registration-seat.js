@@ -47,7 +47,7 @@ function captureLogin(app, storage) {
     const revision = app.getSession().getRevision();
     if (!Number.isSafeInteger(revision) || revision < 0) return null;
     return { revision, owner: String(app.getUserID && app.getUserID() || ''), authorization: app.getAuthorization && app.getAuthorization(),
-      generation: String(app._featureFlagsEpoch || 0) + ':' + String(storage.getStorageSync && storage.getStorageSync('authorization_issued_at') || '') };
+      generation: String(app._loginEpoch || 0) + ':' + String(storage.getStorageSync && storage.getStorageSync('authorization_issued_at') || '') };
   } catch (error) { return null; }
 }
 function loginCurrent(app, storage, original) {
