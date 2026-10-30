@@ -1,5 +1,7 @@
 <!-- 2026-10-30 业主定稿 P-3:集邮册是「收集册 · 邮票」:整屏浅色流动底、顶上同一行三段;邮票带齿孔白边,点一张飞到屏幕中间 -->
-<view class="theme-light">
+<view class="theme-dark">
+<!-- 收集册整屏浅色:页根照玩家域挂 theme-dark,浅色由里面这一层 theme-light 逃生口给(与原集邮册同一做法) -->
+<view class="theme-light alb-light">
   <album-aura />
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
@@ -16,7 +18,7 @@
   <view class="al-stage" style="{{pmList === 1 ? '--pm-s:1;' : (pmList === 2 ? '--pm-s-d:.32s;--pm-s-s:1;' : '')}}height:{{stageH}}px;">
     <view class="al-item {{flyIdx === index ? 'is-away' : ''}}" wx:for="{{items}}" wx:key="id" id="al-item-{{index}}" bindtap="openFly" data-idx="{{index}}"
           style="left:{{item.x}}px;top:{{item.y}}px;width:{{cellImgW}}px;height:{{cellImgH}}px;transform:rotate({{item.rot}}deg);z-index:{{item.z}};"
-          aria-role="button" aria-label="放大第 {{index + 1}} 枚邮票" hover-class="cy-pressed" hover-stay-time="80">
+          aria-role="button" aria-label="放大第 {{index + 1 || 1}} 枚邮票" hover-class="cy-pressed" hover-stay-time="80">
       <image class="al-img" src="{{item.picUrl}}" mode="aspectFill" lazy-load></image>
     </view>
   </view>
@@ -38,5 +40,6 @@
     <view class="al-item al-fly__stamp" style="{{fly.style}}"><image class="al-img" src="{{fly.src}}" mode="aspectFill"></image></view>
   </view>
   <view class="al-fab" bindtap="goCamera" wx:if="{{total > 0}}" aria-role="button" aria-label="打开集邮相机" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="40" /></view>
+</view>
 </view>
 </view>

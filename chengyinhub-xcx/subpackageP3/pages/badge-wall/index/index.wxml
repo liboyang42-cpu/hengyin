@@ -1,7 +1,9 @@
 <!-- 勋章墙:整屏 WebGL 数字装置。canvas 铺满视口,cover-view 做原生层之上的悬浮字幕层/详情 sheet;
      无 WebGL 或引擎失败 → 静态网格降级(L0)。 -->
 <!-- 2026-10-30 业主定稿 P-3:勋章墙成了「收集册 · 勋章」:整屏浅色流动底、两个一排、计数换成一圈点、点一枚飞到屏幕中间 -->
-<view class="theme-light" style="--cy-comp-sheet-max-h:calc(100vh - {{sheetTop}}px);">
+<view class="theme-dark" style="--cy-comp-sheet-max-h:calc(100vh - {{sheetTop}}px);">
+<!-- 收集册整屏浅色:页根照玩家域挂 theme-dark,浅色由里面这一层 theme-light 逃生口给(与原集邮册同一做法) -->
+<view class="theme-light alb-light">
   <album-aura wx:if="{{viewMode === 'list'}}" />
   <cy-nav-bar wx:if="{{viewMode === 'list'}}" overlay />
   <cy-toast id="cy-toast" />
@@ -33,9 +35,9 @@
   <scroll-view class="bw-list" scroll-y wx:if="{{viewMode === 'list' && badges.length && !loadFail && !partialFail}}" style="{{pmList === 1 ? '--pm-b:1;' : (pmList === 2 ? '--pm-b-d:.32s;--pm-b-s:1;' : '')}}">
     <album-head active="medal" />
     <!-- 计数(参考 mymind):一圈 24 颗点,按已点亮的比例一颗颗亮起;中间枚数,右边一句宋体 -->
-    <view class="bw-sum" aria-role="text" aria-label="已点亮 {{unlockedCount}} 枚，共 {{badges.length}} 枚">
+    <view class="bw-sum" aria-role="text" aria-label="已点亮 {{unlockedCount || 0}} 枚，共 {{badges.length || 0}} 枚">
       <view class="bw-ring {{ringOn ? 'is-on' : ''}}" aria-hidden="true">
-        <view wx:for="{{ringDots}}" wx:key="i" class="bw-dot {{item.lit ? 'is-lit' : ''}}" style="left:{{item.x}}%;top:{{item.y}}%;transition-delay:{{item.d}}ms;"></view>
+        <view wx:for="{{ringDots}}" wx:key="i" class="bw-dot {{item.lit ? 'is-lit' : ''}}" style="left:{{item.x || 0}}%;top:{{item.y || 0}}%;transition-delay:{{item.d || 0}}ms;"></view>
         <view class="bw-ring__num"><text class="bw-ring__n">{{unlockedCount}}</text><text class="bw-ring__t">共 {{badges.length}}</text></view>
       </view>
       <text class="bw-say" aria-hidden="true">{{ringSay}}</text>
@@ -127,5 +129,6 @@
   </view>
   <!-- 2026-10-28 珐琅徽章离屏画布:只用来生成徽记图,不显示 -->
   <canvas type="2d" id="pinCanvas" class="bw-pin-canvas"></canvas>
+</view>
 </view>
 </view>

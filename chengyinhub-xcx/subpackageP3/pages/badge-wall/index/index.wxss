@@ -199,7 +199,7 @@ page { background: var(--cy-color-bg-page); }
 .theme-light .bw-medal__pin { filter: drop-shadow(0 12rpx 18rpx rgba(40, 30, 20, .28)); } /* ds-ok: 浅底上的投影 */
 .theme-light .bw-cell__name { font-family: "Songti SC", "STSong", "Noto Serif SC", serif; font-size: 30rpx; /* ds-ok: 宋体名字 */ margin-top: var(--cy-space-3); }
 /* 飞到中间 */
-.bw-fly { position: fixed; left: 0; top: 0; right: 0; bottom: 0; z-index: 60; }
+.bw-fly { position: fixed; left: 0; top: 0; right: 0; bottom: 0; z-index: 60; background: transparent; } /* 整屏浮层:底色由里面的 veil 渐显压暗 */
 .bw-fly__veil { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background: rgba(12, 12, 14, .5); /* ds-ok: 压暗底 */ opacity: 0; transition: opacity .4s ease; }
 .bw-fly.is-on .bw-fly__veil { opacity: 1; }
 .bw-fly__pin { position: absolute; filter: drop-shadow(0 30rpx 50rpx rgba(0, 0, 0, .45)); /* ds-ok: 放大后的投影 */ }
@@ -209,3 +209,6 @@ page { background: var(--cy-color-bg-page); }
 .bw-fly__name { font-family: "Songti SC", "STSong", "Noto Serif SC", serif; font-size: 40rpx; /* ds-ok: 放大后的名字 */ font-weight: 600; color: #ffffff; /* ds-ok: 暗底上的白字 */ }
 .bw-fly__meta { max-width: 80%; text-align: center; font-size: var(--cy-font-label); color: rgba(255, 255, 255, .7); /* ds-ok: 同上 */ }
 @media (prefers-reduced-motion: reduce) { .bw-dot, .bw-fly__veil, .bw-fly__cap { transition: none; } }
+
+/* 收集册浅色逃生口:撑满整屏 */
+.alb-light { min-height: 100vh; }

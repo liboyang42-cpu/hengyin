@@ -1422371,1102 +1422371,7 @@
       }
     },
     {
-      "id": "subpackageP3/pages/badge-wall/index/index.wxml:101:bindtap:closeSheet:9",
-      "route": "subpackageP3/pages/badge-wall/index/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageP3/pages/badge-wall/index/index.wxml",
-        "js": "subpackageP3/pages/badge-wall/index/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cover-view",
-        "event": "bindtap",
-        "handler": "closeSheet",
-        "line": 101,
-        "selectorHint": ".bw-veil",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:470"
-      }
-    },
-    {
-      "id": "subpackageP3/pages/badge-wall/index/index.wxml:101:catchtouchmove:noop:10",
-      "route": "subpackageP3/pages/badge-wall/index/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageP3/pages/badge-wall/index/index.wxml",
-        "js": "subpackageP3/pages/badge-wall/index/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cover-view",
-        "event": "catchtouchmove",
-        "handler": "noop",
-        "line": 101,
-        "selectorHint": ".bw-veil",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "other",
-      "interactionMode": "event-contract",
-      "baseActionClass": "other",
-      "effectClasses": [
-        "other"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:449"
-      }
-    },
-    {
-      "id": "subpackageP3/pages/badge-wall/index/index.wxml:105:bindtap:closeSheet:11",
-      "route": "subpackageP3/pages/badge-wall/index/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageP3/pages/badge-wall/index/index.wxml",
-        "js": "subpackageP3/pages/badge-wall/index/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cover-view",
-        "event": "bindtap",
-        "handler": "closeSheet",
-        "line": 105,
-        "selectorHint": ".bw-sh-x",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "关闭勋章详情",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:470"
-      }
-    },
-    {
-      "id": "subpackageP3/pages/badge-wall/index/index.wxml:109:bindtap:goBadge3d:12",
-      "route": "subpackageP3/pages/badge-wall/index/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageP3/pages/badge-wall/index/index.wxml",
-        "js": "subpackageP3/pages/badge-wall/index/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cover-image",
-        "event": "bindtap",
-        "handler": "goBadge3d",
-        "line": 109,
-        "selectorHint": ".bw-sh-pin",
-        "visibleCondition": "{{!sheet.iconUrl && pins[sheet.pinId]}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": "旋转查看{{sheet.name}}",
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "tap",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "subpackageP3/pages/badge-3d/index?name=",
-          "subpackageP3/pages/badge-3d/index?style=pin&glyph="
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:417"
-      }
-    },
-    {
-      "id": "subpackageP3/pages/badge-wall/index/index.wxml:118:bindtap:goBadge3d:13",
-      "route": "subpackageP3/pages/badge-wall/index/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageP3/pages/badge-wall/index/index.wxml",
-        "js": "subpackageP3/pages/badge-wall/index/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cover-view",
-        "event": "bindtap",
-        "handler": "goBadge3d",
-        "line": 118,
-        "selectorHint": ".bw-sh-3d",
-        "visibleCondition": "{{sheet.style=='enamel' || (!sheet.iconUrl && sheet.pinId && !sheet.locked)}}",
-        "disabledCondition": null,
-        "ariaLabel": "查看 3D 徽章",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "tap",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "subpackageP3/pages/badge-3d/index?name=",
-          "subpackageP3/pages/badge-3d/index?style=pin&glyph="
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:417"
-      }
-    },
-    {
-      "id": "subpackageP3/pages/badge-wall/index/index.wxml:122:bindtap:closeFly:14",
-      "route": "subpackageP3/pages/badge-wall/index/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageP3/pages/badge-wall/index/index.wxml",
-        "js": "subpackageP3/pages/badge-wall/index/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "closeFly",
-        "line": 122,
-        "selectorHint": ".bw-fly",
-        "visibleCondition": "{{fly.show}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": "{{fly.name}}",
-        "ariaRole": "dialog",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:508"
-      }
-    },
-    {
-      "id": "subpackageP3/pages/badge-wall/index/index.wxml:122:catchtouchmove:noop:15",
-      "route": "subpackageP3/pages/badge-wall/index/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageP3/pages/badge-wall/index/index.wxml",
-        "js": "subpackageP3/pages/badge-wall/index/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "catchtouchmove",
-        "handler": "noop",
-        "line": 122,
-        "selectorHint": ".bw-fly",
-        "visibleCondition": "{{fly.show}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": "{{fly.name}}",
-        "ariaRole": "dialog",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "other",
-      "interactionMode": "event-contract",
-      "baseActionClass": "other",
-      "effectClasses": [
-        "other"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:449"
-      }
-    },
-    {
-      "id": "subpackageP3/pages/badge-wall/index/index.wxml:124:catchtap:onFlyPin:16",
-      "route": "subpackageP3/pages/badge-wall/index/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageP3/pages/badge-wall/index/index.wxml",
-        "js": "subpackageP3/pages/badge-wall/index/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "image",
-        "event": "catchtap",
-        "handler": "onFlyPin",
-        "line": 124,
-        "selectorHint": ".bw-fly__pin",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": "{{fly.locked ? fly.name : '转动查看' + fly.name}}",
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "tap",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "subpackageP3/pages/badge-3d/index?name=",
-          "subpackageP3/pages/badge-3d/index?style=pin&glyph="
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:516"
-      }
-    },
-    {
-      "id": "subpackageP3/pages/badge-wall/index/index.wxml:16:bindtouchend:onTouchEnd:2",
-      "route": "subpackageP3/pages/badge-wall/index/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageP3/pages/badge-wall/index/index.wxml",
-        "js": "subpackageP3/pages/badge-wall/index/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "canvas",
-        "event": "bindtouchend",
-        "handler": "onTouchEnd",
-        "line": 16,
-        "selectorHint": "#wall",
-        "visibleCondition": "{{!glFail && !loadFail && !partialFail}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:435"
-      }
-    },
-    {
-      "id": "subpackageP3/pages/badge-wall/index/index.wxml:16:bindtouchmove:onTouch:1",
-      "route": "subpackageP3/pages/badge-wall/index/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageP3/pages/badge-wall/index/index.wxml",
-        "js": "subpackageP3/pages/badge-wall/index/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "canvas",
-        "event": "bindtouchmove",
-        "handler": "onTouch",
-        "line": 16,
-        "selectorHint": "#wall",
-        "visibleCondition": "{{!glFail && !loadFail && !partialFail}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "other",
-      "interactionMode": "event-contract",
-      "baseActionClass": "other",
-      "effectClasses": [
-        "other"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:429"
-      }
-    },
-    {
-      "id": "subpackageP3/pages/badge-wall/index/index.wxml:16:bindtouchstart:onTouch:0",
-      "route": "subpackageP3/pages/badge-wall/index/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageP3/pages/badge-wall/index/index.wxml",
-        "js": "subpackageP3/pages/badge-wall/index/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "canvas",
-        "event": "bindtouchstart",
-        "handler": "onTouch",
-        "line": 16,
-        "selectorHint": "#wall",
-        "visibleCondition": "{{!glFail && !loadFail && !partialFail}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "other",
-      "interactionMode": "event-contract",
-      "baseActionClass": "other",
-      "effectClasses": [
-        "other"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:429"
-      }
-    },
-    {
-      "id": "subpackageP3/pages/badge-wall/index/index.wxml:17:bindtouchcancel:onTouchEnd:3",
-      "route": "subpackageP3/pages/badge-wall/index/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageP3/pages/badge-wall/index/index.wxml",
-        "js": "subpackageP3/pages/badge-wall/index/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "canvas",
-        "event": "bindtouchcancel",
-        "handler": "onTouchEnd",
-        "line": 17,
-        "selectorHint": "#wall",
-        "visibleCondition": "{{!glFail && !loadFail && !partialFail}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:435"
-      }
-    },
-    {
-      "id": "subpackageP3/pages/badge-wall/index/index.wxml:22:bindtap:onFbTap:4",
-      "route": "subpackageP3/pages/badge-wall/index/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageP3/pages/badge-wall/index/index.wxml",
-        "js": "subpackageP3/pages/badge-wall/index/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "onFbTap",
-        "line": 22,
-        "selectorHint": ".bw-fb-item",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:476"
-      }
-    },
-    {
-      "id": "subpackageP3/pages/badge-wall/index/index.wxml:47:bindtap:onFbTap:5",
-      "route": "subpackageP3/pages/badge-wall/index/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageP3/pages/badge-wall/index/index.wxml",
-        "js": "subpackageP3/pages/badge-wall/index/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "onFbTap",
-        "line": 47,
-        "selectorHint": ".bw-cell",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": "{{item.name}}，{{item.locked ? '尚未点亮' : '已点亮'}}",
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:476"
-      }
-    },
-    {
-      "id": "subpackageP3/pages/badge-wall/index/index.wxml:68:bind:cta:goExplore:6",
-      "route": "subpackageP3/pages/badge-wall/index/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageP3/pages/badge-wall/index/index.wxml",
-        "js": "subpackageP3/pages/badge-wall/index/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-empty",
-        "event": "bind:cta",
-        "handler": "goExplore",
-        "line": 68,
-        "selectorHint": ".bw-empty-state",
-        "visibleCondition": "{{loaded && !badges.length && !loadFail && !partialFail}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "event-contract",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/index/index"
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:523"
-      }
-    },
-    {
-      "id": "subpackageP3/pages/badge-wall/index/index.wxml:74:bindtap:goBack:7",
-      "route": "subpackageP3/pages/badge-wall/index/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageP3/pages/badge-wall/index/index.wxml",
-        "js": "subpackageP3/pages/badge-wall/index/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cover-view",
-        "event": "bindtap",
-        "handler": "goBack",
-        "line": 74,
-        "selectorHint": ".bw-back-hit",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "返回",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "tap",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/member/index/index"
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:527"
-      }
-    },
-    {
-      "id": "subpackageP3/pages/badge-wall/index/index.wxml:98:bind:retry:retryWall:8",
+      "id": "subpackageP3/pages/badge-wall/index/index.wxml:100:bind:retry:retryWall:8",
       "route": "subpackageP3/pages/badge-wall/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1423489,7 +1422394,7 @@
         "tag": "cy-error",
         "event": "bind:retry",
         "handler": "retryWall",
-        "line": 98,
+        "line": 100,
         "selectorHint": ".bw-error-state",
         "visibleCondition": "{{loadFail || partialFail || (glFail && viewMode === 'wall')}}",
         "loadFailureCondition": "{{loadFail && !wallAuthRequired && !wallAccessDenied}}",
@@ -1423581,6 +1422486,1101 @@
       "evidence": {
         "status": "pending",
         "staticSource": "subpackageP3/pages/badge-wall/index/index.js:359"
+      }
+    },
+    {
+      "id": "subpackageP3/pages/badge-wall/index/index.wxml:103:bindtap:closeSheet:9",
+      "route": "subpackageP3/pages/badge-wall/index/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageP3/pages/badge-wall/index/index.wxml",
+        "js": "subpackageP3/pages/badge-wall/index/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cover-view",
+        "event": "bindtap",
+        "handler": "closeSheet",
+        "line": 103,
+        "selectorHint": ".bw-veil",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:470"
+      }
+    },
+    {
+      "id": "subpackageP3/pages/badge-wall/index/index.wxml:103:catchtouchmove:noop:10",
+      "route": "subpackageP3/pages/badge-wall/index/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageP3/pages/badge-wall/index/index.wxml",
+        "js": "subpackageP3/pages/badge-wall/index/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cover-view",
+        "event": "catchtouchmove",
+        "handler": "noop",
+        "line": 103,
+        "selectorHint": ".bw-veil",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "event-contract",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:449"
+      }
+    },
+    {
+      "id": "subpackageP3/pages/badge-wall/index/index.wxml:107:bindtap:closeSheet:11",
+      "route": "subpackageP3/pages/badge-wall/index/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageP3/pages/badge-wall/index/index.wxml",
+        "js": "subpackageP3/pages/badge-wall/index/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cover-view",
+        "event": "bindtap",
+        "handler": "closeSheet",
+        "line": 107,
+        "selectorHint": ".bw-sh-x",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "关闭勋章详情",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:470"
+      }
+    },
+    {
+      "id": "subpackageP3/pages/badge-wall/index/index.wxml:111:bindtap:goBadge3d:12",
+      "route": "subpackageP3/pages/badge-wall/index/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageP3/pages/badge-wall/index/index.wxml",
+        "js": "subpackageP3/pages/badge-wall/index/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cover-image",
+        "event": "bindtap",
+        "handler": "goBadge3d",
+        "line": 111,
+        "selectorHint": ".bw-sh-pin",
+        "visibleCondition": "{{!sheet.iconUrl && pins[sheet.pinId]}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "旋转查看{{sheet.name}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "subpackageP3/pages/badge-3d/index?name=",
+          "subpackageP3/pages/badge-3d/index?style=pin&glyph="
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:417"
+      }
+    },
+    {
+      "id": "subpackageP3/pages/badge-wall/index/index.wxml:120:bindtap:goBadge3d:13",
+      "route": "subpackageP3/pages/badge-wall/index/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageP3/pages/badge-wall/index/index.wxml",
+        "js": "subpackageP3/pages/badge-wall/index/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cover-view",
+        "event": "bindtap",
+        "handler": "goBadge3d",
+        "line": 120,
+        "selectorHint": ".bw-sh-3d",
+        "visibleCondition": "{{sheet.style=='enamel' || (!sheet.iconUrl && sheet.pinId && !sheet.locked)}}",
+        "disabledCondition": null,
+        "ariaLabel": "查看 3D 徽章",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "subpackageP3/pages/badge-3d/index?name=",
+          "subpackageP3/pages/badge-3d/index?style=pin&glyph="
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:417"
+      }
+    },
+    {
+      "id": "subpackageP3/pages/badge-wall/index/index.wxml:124:bindtap:closeFly:14",
+      "route": "subpackageP3/pages/badge-wall/index/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageP3/pages/badge-wall/index/index.wxml",
+        "js": "subpackageP3/pages/badge-wall/index/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "closeFly",
+        "line": 124,
+        "selectorHint": ".bw-fly",
+        "visibleCondition": "{{fly.show}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{fly.name}}",
+        "ariaRole": "dialog",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:508"
+      }
+    },
+    {
+      "id": "subpackageP3/pages/badge-wall/index/index.wxml:124:catchtouchmove:noop:15",
+      "route": "subpackageP3/pages/badge-wall/index/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageP3/pages/badge-wall/index/index.wxml",
+        "js": "subpackageP3/pages/badge-wall/index/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "catchtouchmove",
+        "handler": "noop",
+        "line": 124,
+        "selectorHint": ".bw-fly",
+        "visibleCondition": "{{fly.show}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{fly.name}}",
+        "ariaRole": "dialog",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "event-contract",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:449"
+      }
+    },
+    {
+      "id": "subpackageP3/pages/badge-wall/index/index.wxml:126:catchtap:onFlyPin:16",
+      "route": "subpackageP3/pages/badge-wall/index/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageP3/pages/badge-wall/index/index.wxml",
+        "js": "subpackageP3/pages/badge-wall/index/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "image",
+        "event": "catchtap",
+        "handler": "onFlyPin",
+        "line": 126,
+        "selectorHint": ".bw-fly__pin",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{fly.locked ? fly.name : '转动查看' + fly.name}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "subpackageP3/pages/badge-3d/index?name=",
+          "subpackageP3/pages/badge-3d/index?style=pin&glyph="
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:516"
+      }
+    },
+    {
+      "id": "subpackageP3/pages/badge-wall/index/index.wxml:18:bindtouchend:onTouchEnd:2",
+      "route": "subpackageP3/pages/badge-wall/index/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageP3/pages/badge-wall/index/index.wxml",
+        "js": "subpackageP3/pages/badge-wall/index/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "canvas",
+        "event": "bindtouchend",
+        "handler": "onTouchEnd",
+        "line": 18,
+        "selectorHint": "#wall",
+        "visibleCondition": "{{!glFail && !loadFail && !partialFail}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:435"
+      }
+    },
+    {
+      "id": "subpackageP3/pages/badge-wall/index/index.wxml:18:bindtouchmove:onTouch:1",
+      "route": "subpackageP3/pages/badge-wall/index/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageP3/pages/badge-wall/index/index.wxml",
+        "js": "subpackageP3/pages/badge-wall/index/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "canvas",
+        "event": "bindtouchmove",
+        "handler": "onTouch",
+        "line": 18,
+        "selectorHint": "#wall",
+        "visibleCondition": "{{!glFail && !loadFail && !partialFail}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "event-contract",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:429"
+      }
+    },
+    {
+      "id": "subpackageP3/pages/badge-wall/index/index.wxml:18:bindtouchstart:onTouch:0",
+      "route": "subpackageP3/pages/badge-wall/index/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageP3/pages/badge-wall/index/index.wxml",
+        "js": "subpackageP3/pages/badge-wall/index/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "canvas",
+        "event": "bindtouchstart",
+        "handler": "onTouch",
+        "line": 18,
+        "selectorHint": "#wall",
+        "visibleCondition": "{{!glFail && !loadFail && !partialFail}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "event-contract",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:429"
+      }
+    },
+    {
+      "id": "subpackageP3/pages/badge-wall/index/index.wxml:19:bindtouchcancel:onTouchEnd:3",
+      "route": "subpackageP3/pages/badge-wall/index/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageP3/pages/badge-wall/index/index.wxml",
+        "js": "subpackageP3/pages/badge-wall/index/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "canvas",
+        "event": "bindtouchcancel",
+        "handler": "onTouchEnd",
+        "line": 19,
+        "selectorHint": "#wall",
+        "visibleCondition": "{{!glFail && !loadFail && !partialFail}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:435"
+      }
+    },
+    {
+      "id": "subpackageP3/pages/badge-wall/index/index.wxml:24:bindtap:onFbTap:4",
+      "route": "subpackageP3/pages/badge-wall/index/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageP3/pages/badge-wall/index/index.wxml",
+        "js": "subpackageP3/pages/badge-wall/index/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onFbTap",
+        "line": 24,
+        "selectorHint": ".bw-fb-item",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:476"
+      }
+    },
+    {
+      "id": "subpackageP3/pages/badge-wall/index/index.wxml:49:bindtap:onFbTap:5",
+      "route": "subpackageP3/pages/badge-wall/index/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageP3/pages/badge-wall/index/index.wxml",
+        "js": "subpackageP3/pages/badge-wall/index/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onFbTap",
+        "line": 49,
+        "selectorHint": ".bw-cell",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{item.name}}，{{item.locked ? '尚未点亮' : '已点亮'}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:476"
+      }
+    },
+    {
+      "id": "subpackageP3/pages/badge-wall/index/index.wxml:70:bind:cta:goExplore:6",
+      "route": "subpackageP3/pages/badge-wall/index/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageP3/pages/badge-wall/index/index.wxml",
+        "js": "subpackageP3/pages/badge-wall/index/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-empty",
+        "event": "bind:cta",
+        "handler": "goExplore",
+        "line": 70,
+        "selectorHint": ".bw-empty-state",
+        "visibleCondition": "{{loaded && !badges.length && !loadFail && !partialFail}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "event-contract",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/index/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:523"
+      }
+    },
+    {
+      "id": "subpackageP3/pages/badge-wall/index/index.wxml:76:bindtap:goBack:7",
+      "route": "subpackageP3/pages/badge-wall/index/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageP3/pages/badge-wall/index/index.wxml",
+        "js": "subpackageP3/pages/badge-wall/index/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cover-view",
+        "event": "bindtap",
+        "handler": "goBack",
+        "line": 76,
+        "selectorHint": ".bw-back-hit",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "返回",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/member/index/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageP3/pages/badge-wall/index/index.js:527"
       }
     },
     {
@@ -1424431,7 +1424431,7 @@
       }
     },
     {
-      "id": "subpackageP3/pages/object-cards/index/index.wxml:12:bindtap:openCats:0",
+      "id": "subpackageP3/pages/object-cards/index/index.wxml:14:bindtap:openCats:0",
       "route": "subpackageP3/pages/object-cards/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1424454,7 +1424454,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openCats",
-        "line": 12,
+        "line": 14,
         "selectorHint": ".oc-filter",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1424498,7 +1424498,7 @@
       }
     },
     {
-      "id": "subpackageP3/pages/object-cards/index/index.wxml:15:bindtap:onGather:1",
+      "id": "subpackageP3/pages/object-cards/index/index.wxml:17:bindtap:onGather:1",
       "route": "subpackageP3/pages/object-cards/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1424521,7 +1424521,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onGather",
-        "line": 15,
+        "line": 17,
         "selectorHint": ".oc-gather",
         "visibleCondition": "{{cards.length > 1}}",
         "disabledCondition": null,
@@ -1424565,7 +1424565,7 @@
       }
     },
     {
-      "id": "subpackageP3/pages/object-cards/index/index.wxml:21:bindtouchcancel:onPileEnd:5",
+      "id": "subpackageP3/pages/object-cards/index/index.wxml:23:bindtouchcancel:onPileEnd:5",
       "route": "subpackageP3/pages/object-cards/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1424588,7 +1424588,7 @@
         "tag": "canvas",
         "event": "bindtouchcancel",
         "handler": "onPileEnd",
-        "line": 21,
+        "line": 23,
         "selectorHint": "#ocPile",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1424632,7 +1424632,7 @@
       }
     },
     {
-      "id": "subpackageP3/pages/object-cards/index/index.wxml:21:bindtouchend:onPileEnd:4",
+      "id": "subpackageP3/pages/object-cards/index/index.wxml:23:bindtouchend:onPileEnd:4",
       "route": "subpackageP3/pages/object-cards/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1424655,7 +1424655,7 @@
         "tag": "canvas",
         "event": "bindtouchend",
         "handler": "onPileEnd",
-        "line": 21,
+        "line": 23,
         "selectorHint": "#ocPile",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1424699,7 +1424699,7 @@
       }
     },
     {
-      "id": "subpackageP3/pages/object-cards/index/index.wxml:21:bindtouchmove:onPileMove:3",
+      "id": "subpackageP3/pages/object-cards/index/index.wxml:23:bindtouchmove:onPileMove:3",
       "route": "subpackageP3/pages/object-cards/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1424722,7 +1424722,7 @@
         "tag": "canvas",
         "event": "bindtouchmove",
         "handler": "onPileMove",
-        "line": 21,
+        "line": 23,
         "selectorHint": "#ocPile",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1424767,7 +1424767,7 @@
       }
     },
     {
-      "id": "subpackageP3/pages/object-cards/index/index.wxml:21:bindtouchstart:onPileStart:2",
+      "id": "subpackageP3/pages/object-cards/index/index.wxml:23:bindtouchstart:onPileStart:2",
       "route": "subpackageP3/pages/object-cards/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1424790,7 +1424790,7 @@
         "tag": "canvas",
         "event": "bindtouchstart",
         "handler": "onPileStart",
-        "line": 21,
+        "line": 23,
         "selectorHint": "#ocPile",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1424835,7 +1424835,7 @@
       }
     },
     {
-      "id": "subpackageP3/pages/object-cards/index/index.wxml:25:bind:cta:loginToRead:6",
+      "id": "subpackageP3/pages/object-cards/index/index.wxml:27:bind:cta:loginToRead:6",
       "route": "subpackageP3/pages/object-cards/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1424858,7 +1424858,7 @@
         "tag": "cy-empty",
         "event": "bind:cta",
         "handler": "loginToRead",
-        "line": 25,
+        "line": 27,
         "selectorHint": ".oc-state",
         "visibleCondition": "{{readAccess}}",
         "disabledCondition": null,
@@ -1424944,7 +1424944,7 @@
       }
     },
     {
-      "id": "subpackageP3/pages/object-cards/index/index.wxml:36:bindtap:closeFly:7",
+      "id": "subpackageP3/pages/object-cards/index/index.wxml:38:bindtap:closeFly:7",
       "route": "subpackageP3/pages/object-cards/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1424967,7 +1424967,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeFly",
-        "line": 36,
+        "line": 38,
         "selectorHint": ".oc-fly",
         "visibleCondition": "{{fly.show}}",
         "disabledCondition": null,
@@ -1425011,7 +1425011,7 @@
       }
     },
     {
-      "id": "subpackageP3/pages/object-cards/index/index.wxml:36:catchtouchmove:noop:8",
+      "id": "subpackageP3/pages/object-cards/index/index.wxml:38:catchtouchmove:noop:8",
       "route": "subpackageP3/pages/object-cards/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1425034,7 +1425034,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "noop",
-        "line": 36,
+        "line": 38,
         "selectorHint": ".oc-fly",
         "visibleCondition": "{{fly.show}}",
         "disabledCondition": null,
@@ -1425079,7 +1425079,7 @@
       }
     },
     {
-      "id": "subpackageP3/pages/object-cards/index/index.wxml:38:catchtap:onFlyItem:9",
+      "id": "subpackageP3/pages/object-cards/index/index.wxml:40:catchtap:onFlyItem:9",
       "route": "subpackageP3/pages/object-cards/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1425102,7 +1425102,7 @@
         "tag": "image",
         "event": "catchtap",
         "handler": "onFlyItem",
-        "line": 38,
+        "line": 40,
         "selectorHint": ".oc-fly__img",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1425146,7 +1425146,7 @@
       }
     },
     {
-      "id": "subpackageP3/pages/object-cards/index/index.wxml:43:bind:close:closeCats:10",
+      "id": "subpackageP3/pages/object-cards/index/index.wxml:45:bind:close:closeCats:10",
       "route": "subpackageP3/pages/object-cards/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1425169,7 +1425169,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeCats",
-        "line": 43,
+        "line": 45,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1425213,7 +1425213,7 @@
       }
     },
     {
-      "id": "subpackageP3/pages/object-cards/index/index.wxml:45:bindtap:pickCat:11",
+      "id": "subpackageP3/pages/object-cards/index/index.wxml:47:bindtap:pickCat:11",
       "route": "subpackageP3/pages/object-cards/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1425236,7 +1425236,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "pickCat",
-        "line": 45,
+        "line": 47,
         "selectorHint": ".oc-cat",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1425322,7 +1425322,7 @@
       }
     },
     {
-      "id": "subpackageP3/pages/object-cards/index/index.wxml:53:bind:close:onCloseActive:12",
+      "id": "subpackageP3/pages/object-cards/index/index.wxml:55:bind:close:onCloseActive:12",
       "route": "subpackageP3/pages/object-cards/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1425345,7 +1425345,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "onCloseActive",
-        "line": 53,
+        "line": 55,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1425389,7 +1425389,7 @@
       }
     },
     {
-      "id": "subpackageP3/pages/object-cards/index/index.wxml:65:bindtap:onRenameStart:13",
+      "id": "subpackageP3/pages/object-cards/index/index.wxml:67:bindtap:onRenameStart:13",
       "route": "subpackageP3/pages/object-cards/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1425412,7 +1425412,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onRenameStart",
-        "line": 65,
+        "line": 67,
         "selectorHint": ".oc-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1425456,7 +1425456,7 @@
       }
     },
     {
-      "id": "subpackageP3/pages/object-cards/index/index.wxml:89:bind:close:onRenameCancel:14",
+      "id": "subpackageP3/pages/object-cards/index/index.wxml:91:bind:close:onRenameCancel:14",
       "route": "subpackageP3/pages/object-cards/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1425479,7 +1425479,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "onRenameCancel",
-        "line": 89,
+        "line": 91,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1425523,7 +1425523,7 @@
       }
     },
     {
-      "id": "subpackageP3/pages/object-cards/index/index.wxml:92:bind:input:onRenameInput:15",
+      "id": "subpackageP3/pages/object-cards/index/index.wxml:94:bind:input:onRenameInput:15",
       "route": "subpackageP3/pages/object-cards/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1425546,7 +1425546,7 @@
         "tag": "cy-field",
         "event": "bind:input",
         "handler": "onRenameInput",
-        "line": 92,
+        "line": 94,
         "selectorHint": "cy-field[bind:input]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1425590,7 +1425590,7 @@
       }
     },
     {
-      "id": "subpackageP3/pages/object-cards/index/index.wxml:95:bindtap:onRenameSubmit:16",
+      "id": "subpackageP3/pages/object-cards/index/index.wxml:97:bindtap:onRenameSubmit:16",
       "route": "subpackageP3/pages/object-cards/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1425613,7 +1425613,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "onRenameSubmit",
-        "line": 95,
+        "line": 97,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{renameSubmitting}}",
@@ -1425707,7 +1425707,7 @@
       }
     },
     {
-      "id": "subpackageP3/pages/stamp-album/index/index.wxml:17:bindtap:openFly:0",
+      "id": "subpackageP3/pages/stamp-album/index/index.wxml:19:bindtap:openFly:0",
       "route": "subpackageP3/pages/stamp-album/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1425730,12 +1425730,12 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openFly",
-        "line": 17,
+        "line": 19,
         "selectorHint": "#al-item-{{index}}",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": "放大第 {{index + 1}} 枚邮票",
+        "ariaLabelExpression": "放大第 {{index + 1 || 1}} 枚邮票",
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -1425774,7 +1425774,7 @@
       }
     },
     {
-      "id": "subpackageP3/pages/stamp-album/index/index.wxml:26:bind:cta:loginToRead:1",
+      "id": "subpackageP3/pages/stamp-album/index/index.wxml:28:bind:cta:loginToRead:1",
       "route": "subpackageP3/pages/stamp-album/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1425797,7 +1425797,7 @@
         "tag": "cy-empty",
         "event": "bind:cta",
         "handler": "loginToRead",
-        "line": 26,
+        "line": 28,
         "selectorHint": ".al-state-fill",
         "visibleCondition": "{{readAccess}}",
         "disabledCondition": null,
@@ -1425883,7 +1425883,7 @@
       }
     },
     {
-      "id": "subpackageP3/pages/stamp-album/index/index.wxml:29:bind:cta:goCamera:3",
+      "id": "subpackageP3/pages/stamp-album/index/index.wxml:31:bind:cta:goCamera:3",
       "route": "subpackageP3/pages/stamp-album/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1425906,7 +1425906,7 @@
         "tag": "cy-empty",
         "event": "bind:cta",
         "handler": "goCamera",
-        "line": 29,
+        "line": 31,
         "selectorHint": "cy-empty[bind:cta]",
         "visibleCondition": "{{loaded && total === 0}}",
         "disabledCondition": null,
@@ -1425953,7 +1425953,7 @@
       }
     },
     {
-      "id": "subpackageP3/pages/stamp-album/index/index.wxml:34:bindtap:retryLoad:4",
+      "id": "subpackageP3/pages/stamp-album/index/index.wxml:36:bindtap:retryLoad:4",
       "route": "subpackageP3/pages/stamp-album/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1425976,7 +1425976,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "retryLoad",
-        "line": 34,
+        "line": 36,
         "selectorHint": ".al-more",
         "visibleCondition": "{{error && items.length}}",
         "disabledCondition": null,
@@ -1426062,7 +1426062,7 @@
       }
     },
     {
-      "id": "subpackageP3/pages/stamp-album/index/index.wxml:36:bindtap:closeFly:5",
+      "id": "subpackageP3/pages/stamp-album/index/index.wxml:38:bindtap:closeFly:5",
       "route": "subpackageP3/pages/stamp-album/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1426085,7 +1426085,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeFly",
-        "line": 36,
+        "line": 38,
         "selectorHint": ".al-fly",
         "visibleCondition": "{{fly.show}}",
         "disabledCondition": null,
@@ -1426129,7 +1426129,7 @@
       }
     },
     {
-      "id": "subpackageP3/pages/stamp-album/index/index.wxml:36:catchtouchmove:noop:6",
+      "id": "subpackageP3/pages/stamp-album/index/index.wxml:38:catchtouchmove:noop:6",
       "route": "subpackageP3/pages/stamp-album/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1426152,7 +1426152,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "noop",
-        "line": 36,
+        "line": 38,
         "selectorHint": ".al-fly",
         "visibleCondition": "{{fly.show}}",
         "disabledCondition": null,
@@ -1426197,7 +1426197,7 @@
       }
     },
     {
-      "id": "subpackageP3/pages/stamp-album/index/index.wxml:40:bindtap:goCamera:7",
+      "id": "subpackageP3/pages/stamp-album/index/index.wxml:42:bindtap:goCamera:7",
       "route": "subpackageP3/pages/stamp-album/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1426220,7 +1426220,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goCamera",
-        "line": 40,
+        "line": 42,
         "selectorHint": ".al-fab",
         "visibleCondition": "{{total > 0}}",
         "disabledCondition": null,

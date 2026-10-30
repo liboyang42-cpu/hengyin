@@ -3,7 +3,9 @@
      堆是 canvas 画的(最近 40 件),分类筛选在服务端做。 -->
 <!-- 2026-10-30 业主定稿 P-3:藏品册是「收集册 · 藏品」:整屏浅色流动底、顶上同一行三段,分类收进右边「筛选」(带图标的三列格子,选中黑底);
      物品能拿起来拖、甩;点一件飞到屏幕中间。 -->
-<view class="theme-light">
+<view class="theme-dark">
+<!-- 收集册整屏浅色:页根照玩家域挂 theme-dark,浅色由里面这一层 theme-light 逃生口给(与原集邮册同一做法) -->
+<view class="theme-light alb-light">
   <album-aura />
   <cy-toast id="cy-toast" />
   <view class="oc-root" style="padding-top:{{navTop}}px;">
@@ -95,4 +97,5 @@
       <cy-btn variant="primary" loading="{{renameSubmitting}}" disabled="{{renameSubmitting}}" bindtap="onRenameSubmit">保存</cy-btn>
     </view>
   </cy-sheet>
+</view>
 </view>
