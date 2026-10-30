@@ -100,7 +100,7 @@
          不显示「1/3」,下一张总露出一截。点图全屏看大图(在大图里继续左右滑),双击图片点赞。 -->
     <view class="post-card__one" wx:if="{{!post.isCompletionShare && post.picList.length === 1}}">
       <image class="post-card__one-img" src="{{post.picList[0]}}" mode="widthFix" lazy-load="true" data-picindex="0"
-             catchtap="onPicTap" aria-role="button" aria-label="查看大图，双击点赞" hover-stop-propagation="true" />
+             catchtap="onPicTap" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="查看大图，双击点赞" hover-stop-propagation="true" />
       <view class="post-card__bigheart {{bigHeart}}" wx:if="{{bigHeart}}" aria-hidden="true"><cy-icon name="heart-filled" size="168" /></view>
     </view>
     <view class="post-card__strip-wrap" wx:elif="{{!post.isCompletionShare && ((post.picList && post.picList.length > 1) || (!post.hasPlayCover && !post.sportName && (post.routePreviewImg || post.sportCover)))}}">
@@ -111,7 +111,7 @@
                  aria-role="button" aria-label="查看路线图" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true" />
           <image wx:for="{{post.picList}}" wx:for-item="pic" wx:for-index="picIndex" wx:key="picIndex" lazy-load="true"
                  class="post-card__strip-pic" src="{{pic}}" mode="heightFix" data-picindex="{{picIndex}}"
-                 catchtap="onPicTap" aria-role="button" aria-label="查看第 {{picIndex + 1}} 张大图，双击点赞" hover-stop-propagation="true" />
+                 catchtap="onPicTap" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="查看第 {{picIndex + 1}} 张大图，双击点赞" hover-stop-propagation="true" />
         </view>
       </scroll-view>
       <view class="post-card__bigheart {{bigHeart}}" wx:if="{{bigHeart}}" aria-hidden="true"><cy-icon name="heart-filled" size="168" /></view>
