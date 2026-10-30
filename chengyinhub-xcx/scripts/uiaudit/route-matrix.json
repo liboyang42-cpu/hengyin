@@ -3,7 +3,7 @@
   "generatedFrom": "app.json + scene-* 组件扫描",
   "previousBatch": null,
   "counts": {
-    "routes": 157,
+    "routes": 158,
     "scenes": 27,
     "added": 0,
     "removed": 0
@@ -1357,6 +1357,19 @@
     },
     {
       "pagePath": "pages/templatedetail/topic-preview/index",
+      "pkg": "pages/templatedetail",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "id"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/templatedetail/topic-detail/index",
       "pkg": "pages/templatedetail",
       "tabBar": false,
       "role": "merchant",

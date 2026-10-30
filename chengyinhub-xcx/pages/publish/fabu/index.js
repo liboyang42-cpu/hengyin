@@ -6648,6 +6648,22 @@ Page({
     this.setEditorState('publishCheck');
   },
 
+  // 2026-10-30 业主 V-24「删除发布确认」:预检刚跑完、没有必填缺项、实名也已登记(或不需要)时直接发布,
+  // 不再弹发布确认;只有还缺东西(必填项 / 实名)时才出发布弹层,让人在原地补齐。
+  // 只在预检回包里调:点灰钮那条没跑过预检,不能借这里绕过去。
+  _afterPrecheck(aiIssues, skipLabel) {
+    this.syncIdentityReady();
+    const blockingAi = (aiIssues || []).some((issue) => issue && issue.message && issue.level === 'error'
+      && issue.type !== 'parse_error' && AI_BLIND_ISSUE_TYPES.indexOf(issue.type) < 0);
+    if (!blockingAi && !this.buildPublishCheck().blocking.length
+        && (!this.data.identityRequired || this.data.identityRegistered)) {
+      this._publishPrecheckOk = !skipLabel && !(aiIssues || []).length;
+      this._publishAfterIdentity();
+      return;
+    }
+    this._showPublishCheck(aiIssues, skipLabel);
+  },
+
   _showBackendPublishIssue(issue) {
     const check = this.buildPublishCheck();
     this.setData({ publishCheck: { show: true, blocking: [issue].concat(check.blocking),
@@ -6683,15 +6699,15 @@ Page({
       success: (res) => {
         if (token !== this._precheckToken) return; // 已被新一次提交取代 / 页面已销毁
         if ((res.code == '200' || res.code == 200) && res.data) {
-          this._showPublishCheck(res.data.issues, '');
+          this._afterPrecheck(res.data.issues, '');
         } else {
           // 频控/身份门禁/AI 异常:降级放行(可用性红线,AI 挂了不能堵死发布路)
-          this._showPublishCheck([], this._precheckSkipLabel(res && res.msg));
+          this._afterPrecheck([], this._precheckSkipLabel(res && res.msg));
         }
       },
       fail: () => {
         if (token !== this._precheckToken) return;
-        this._showPublishCheck([], this._precheckSkipLabel(''));
+        this._afterPrecheck([], this._precheckSkipLabel(''));
       }
     });
   },

@@ -2,7 +2,6 @@
 // 点最前面那张翻面(放大 1.25,两侧邻卡仍露出);下方只有标题、✓ 清单和「用这个模板」。
 // 主题模板没有场地：只讲玩法与故事，不展示里程、站点或位置信息。
 const art = require('../shelf/art.js');
-const cyToast = require('../../../utils/toast.js');
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
 
 const app = getApp();
@@ -205,33 +204,12 @@ Page({
     this.layout(this.data.cards, false);
   },
 
-  // 主题模板 = 整包复制成我的草稿，进专业编辑器(与原模板页「配置」同一条链路)
-  useTemplate() {
-    if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.useTemplate(), { owner: this, target: () => [this._id, this._scope] })) return; // 游客写前登录
-    if (this._readonly) { cyToast('当前岗位仅可浏览模板'); return; }
-    // 后端每次调用都整包复制出新草稿，连点两下就是两份：在途时挡住
-    if (this._using) { cyToast('正在配置，请稍候'); return; }
+  // 2026-10-30 V-24:预览页只看,「查看详情」进主题模板详情;复制草稿(应用)搬到详情页
+  goDetail() {
     if (!this._id) return;
-    const that = this;
-    this._using = true;
-    app.sendRequest({
-      url: '/api/template/topic-template/use',
-      method: 'POST',
-      data: { id: this._id, scope: this._scope },
-      success(res) {
-        that._using = false;
-        if (that._unloaded) return; // 复制回包晚于离开本页：不再把用户拉去编辑器
-        const copiedId = res && res.code == '200' && res.data && res.data.topicId;
-        if (!copiedId) { cyToast((res && res.msg) || '使用模板失败'); return; }
-        const qs = ['id=' + copiedId];
-        if (that._scope) qs.push('scope=' + that._scope);
-        wx.navigateTo({ url: '/pages/publish/fabu/index?' + qs.join('&') });
-      },
-      fail() {
-        that._using = false;
-        if (that._unloaded) return;
-        cyToast('网络错误，请重试');
-      }
-    });
+    const qs = ['id=' + this._id];
+    if (this._scope) qs.push('scope=' + this._scope);
+    if (this._readonly) qs.push('readonly=1');
+    wx.navigateTo({ url: '/pages/templatedetail/topic-detail/index?' + qs.join('&') });
   }
 });

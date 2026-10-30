@@ -173,7 +173,7 @@ const WRITE_ENTRIES = [
   ['pages/square/detail/index.js', 'reportComment', 'report'],
   ['pages/square/components/cy/post-compose/index.js', 'onPublish', 'post'],
   ['pages/team/join/index.js', 'join', 'team'],
-  ['pages/templatedetail/topic-preview/index.js', 'useTemplate', 'publish'],
+  ['pages/templatedetail/topic-detail/index.js', 'useTemplate', 'publish'], // 2026-10-30 V-24:「应用」从模板预览搬到主题模板详情
   ['pages/publish/fabu/index.js', 'submitForm', 'publish'],
   ['pages/publish/fabu/index.js', 'confirmPublishCheck', 'publish'],
   ['pages/publish/activity/index.js', 'submitForm', 'publish'],

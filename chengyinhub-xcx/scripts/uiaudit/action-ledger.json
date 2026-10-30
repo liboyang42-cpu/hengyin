@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5552,
+  "controlCount": 5555,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -2379,6 +2379,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -53513,6 +53514,176 @@
           ]
         },
         {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-btn.xb-cta-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "pages/templatedetail/topic-preview/index",
           "segments": [
             {
@@ -89740,6 +89911,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -99714,6 +99886,44 @@
           ]
         },
         {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-consent-check",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-consent-check",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "pages/templatedetail/topic-preview/index",
           "segments": [
             {
@@ -106728,6 +106938,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -108254,6 +108465,19 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -109345,6 +109569,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -110871,6 +111096,19 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -111961,6 +112199,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -113487,6 +113726,19 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -114577,6 +114829,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -116103,6 +116356,19 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -117193,6 +117459,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -118719,6 +118986,19 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -119809,6 +120089,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -121335,6 +121616,19 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -157277,6 +157571,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -161245,6 +161540,15 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "cy-error.fill-slot",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
           "segments": [
             {
               "selector": "cy-error.fill-slot",
@@ -164466,6 +164770,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -168434,6 +168739,15 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "cy-error.fill-slot",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
           "segments": [
             {
               "selector": "cy-error.fill-slot",
@@ -171655,6 +171969,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -175623,6 +175938,15 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "cy-error.fill-slot",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
           "segments": [
             {
               "selector": "cy-error.fill-slot",
@@ -186189,6 +186513,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -189542,6 +189867,19 @@
           ]
         },
         {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-inline-error.mh__error",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "pages/templatedetail/topic-preview/index",
           "segments": [
             {
@@ -191553,6 +191891,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -192436,6 +192775,15 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "#cy-loading",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
           "segments": [
             {
               "selector": "#cy-loading",
@@ -194618,6 +194966,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -195508,6 +195857,15 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -196207,6 +196565,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -197097,6 +197456,15 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -197796,6 +198164,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -198686,6 +199055,15 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -199384,6 +199762,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -200274,6 +200653,15 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -200972,6 +201360,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -201862,6 +202251,15 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -202560,6 +202958,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -203458,6 +203857,15 @@
           ]
         },
         {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "pages/templatedetail/topic-preview/index",
           "segments": [
             {
@@ -204148,6 +204556,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -210660,6 +211069,66 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -214811,6 +215280,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -221323,6 +221793,66 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -225474,6 +226004,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -231986,6 +232517,66 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -236137,6 +236728,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -242649,6 +243241,66 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -246800,6 +247452,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -253312,6 +253965,66 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -257463,6 +258176,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -263975,6 +264689,66 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -268126,6 +268900,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -274650,6 +275425,66 @@
           ]
         },
         {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "pages/templatedetail/topic-preview/index",
           "segments": [
             {
@@ -278787,6 +279622,7 @@
         "pages/team/detail/index",
         "pages/team/join/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -286702,6 +287538,15 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "cy-nav-bar",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
           "segments": [
             {
               "selector": "cy-nav-bar",
@@ -291823,6 +292668,7 @@
         "pages/team/detail/index",
         "pages/team/join/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantinfo/merchantinfo",
@@ -301671,6 +302517,19 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "cy-nav-bar",
+              "index": 0
+            },
+            {
+              "selector": "cy-offline-banner",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
           "segments": [
             {
               "selector": "cy-nav-bar",
@@ -319613,6 +320472,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -327460,6 +328320,36 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
           "segments": [
             {
               "selector": "cy-error.fill-slot",
@@ -333090,6 +333980,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -340937,6 +341828,36 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
           "segments": [
             {
               "selector": "cy-error.fill-slot",
@@ -346567,6 +347488,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -354414,6 +355336,36 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
           "segments": [
             {
               "selector": "cy-error.fill-slot",
@@ -360044,6 +360996,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -367891,6 +368844,36 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
           "segments": [
             {
               "selector": "cy-error.fill-slot",
@@ -373521,6 +374504,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -381368,6 +382352,36 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
           "segments": [
             {
               "selector": "cy-error.fill-slot",
@@ -457863,6 +458877,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -481640,6 +482655,82 @@
             {
               "selector": "cy-sheet",
               "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
             }
           ]
         },
@@ -497061,6 +498152,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -520838,6 +521930,82 @@
             {
               "selector": "cy-sheet",
               "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
             }
           ]
         },
@@ -536258,6 +537426,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -560035,6 +561204,82 @@
             {
               "selector": "cy-sheet",
               "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
             }
           ]
         },
@@ -575455,6 +576700,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -599232,6 +600478,82 @@
             {
               "selector": "cy-sheet",
               "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
             }
           ]
         },
@@ -614652,6 +615974,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -638429,6 +639752,82 @@
             {
               "selector": "cy-sheet",
               "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
             }
           ]
         },
@@ -653849,6 +655248,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -677626,6 +679026,82 @@
             {
               "selector": "cy-sheet",
               "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
             }
           ]
         },
@@ -693047,6 +694523,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -716824,6 +718301,82 @@
             {
               "selector": "cy-sheet",
               "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
             }
           ]
         },
@@ -732245,6 +733798,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -756022,6 +757576,82 @@
             {
               "selector": "cy-sheet",
               "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
             }
           ]
         },
@@ -771443,6 +773073,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -795220,6 +796851,82 @@
             {
               "selector": "cy-sheet",
               "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
             }
           ]
         },
@@ -810641,6 +812348,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -834418,6 +836126,82 @@
             {
               "selector": "cy-sheet",
               "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
             }
           ]
         },
@@ -849839,6 +851623,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -873616,6 +875401,82 @@
             {
               "selector": "cy-sheet",
               "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
             }
           ]
         },
@@ -889037,6 +890898,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -912814,6 +914676,82 @@
             {
               "selector": "cy-sheet",
               "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-error.fill-slot",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
             }
           ]
         },
@@ -933424,6 +935362,7 @@
         "pages/talent/list/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/topic/merchantinfo/merchantinfo",
         "pages/topic/pricing/index",
         "pages/userinfo/userinfo",
@@ -933672,6 +935611,15 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "cy-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
           "segments": [
             {
               "selector": "cy-tabs",
@@ -934038,6 +935986,7 @@
         "pages/talent/list/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/topic/merchantinfo/merchantinfo",
         "pages/topic/pricing/index",
         "pages/userinfo/userinfo",
@@ -934286,6 +936235,15 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "cy-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
           "segments": [
             {
               "selector": "cy-tabs",
@@ -934652,6 +936610,7 @@
         "pages/talent/list/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/topic/merchantinfo/merchantinfo",
         "pages/topic/pricing/index",
         "pages/userinfo/userinfo",
@@ -934900,6 +936859,15 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "cy-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
           "segments": [
             {
               "selector": "cy-tabs",
@@ -935266,6 +937234,7 @@
         "pages/talent/list/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/topic/merchantinfo/merchantinfo",
         "pages/topic/pricing/index",
         "pages/userinfo/userinfo",
@@ -935514,6 +937483,15 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "cy-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
           "segments": [
             {
               "selector": "cy-tabs",
@@ -935880,6 +937858,7 @@
         "pages/talent/list/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/topic/merchantinfo/merchantinfo",
         "pages/topic/pricing/index",
         "pages/userinfo/userinfo",
@@ -936128,6 +938107,15 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "cy-tabs",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
           "segments": [
             {
               "selector": "cy-tabs",
@@ -937597,6 +939585,7 @@
         "pages/team/join/index",
         "pages/template/index",
         "pages/templatedetail/templatedetail",
+        "pages/templatedetail/topic-detail/index",
         "pages/templatedetail/topic-preview/index",
         "pages/topic/index/index",
         "pages/topic/merchantapply/index",
@@ -938495,6 +940484,15 @@
         },
         {
           "route": "pages/templatedetail/templatedetail",
+          "segments": [
+            {
+              "selector": "#cy-toast",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
           "segments": [
             {
               "selector": "#cy-toast",
@@ -1206085,7 +1208083,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7165"
+        "staticSource": "pages/publish/fabu/index.js:7181"
       }
     },
     {
@@ -1206353,7 +1208351,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7055"
+        "staticSource": "pages/publish/fabu/index.js:7071"
       }
     },
     {
@@ -1206420,7 +1208418,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7071"
+        "staticSource": "pages/publish/fabu/index.js:7087"
       }
     },
     {
@@ -1206487,7 +1208485,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7079"
+        "staticSource": "pages/publish/fabu/index.js:7095"
       }
     },
     {
@@ -1206554,7 +1208552,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7079"
+        "staticSource": "pages/publish/fabu/index.js:7095"
       }
     },
     {
@@ -1206621,7 +1208619,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7079"
+        "staticSource": "pages/publish/fabu/index.js:7095"
       }
     },
     {
@@ -1207358,7 +1209356,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6786"
+        "staticSource": "pages/publish/fabu/index.js:6802"
       }
     },
     {
@@ -1207426,7 +1209424,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8741"
+        "staticSource": "pages/publish/fabu/index.js:8757"
       }
     },
     {
@@ -1207636,7 +1209634,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6807"
+        "staticSource": "pages/publish/fabu/index.js:6823"
       }
     },
     {
@@ -1207779,7 +1209777,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6807"
+        "staticSource": "pages/publish/fabu/index.js:6823"
       }
     },
     {
@@ -1207869,7 +1209867,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6773"
+        "staticSource": "pages/publish/fabu/index.js:6789"
       }
     },
     {
@@ -1207959,7 +1209957,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6773"
+        "staticSource": "pages/publish/fabu/index.js:6789"
       }
     },
     {
@@ -1208049,7 +1210047,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6778"
+        "staticSource": "pages/publish/fabu/index.js:6794"
       }
     },
     {
@@ -1208183,7 +1210181,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6786"
+        "staticSource": "pages/publish/fabu/index.js:6802"
       }
     },
     {
@@ -1208273,7 +1210271,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6742"
+        "staticSource": "pages/publish/fabu/index.js:6758"
       }
     },
     {
@@ -1208378,7 +1210376,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6700"
+        "staticSource": "pages/publish/fabu/index.js:6716"
       }
     },
     {
@@ -1208485,7 +1210483,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6700"
+        "staticSource": "pages/publish/fabu/index.js:6716"
       }
     },
     {
@@ -1208822,7 +1210820,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8029"
+        "staticSource": "pages/publish/fabu/index.js:8045"
       }
     },
     {
@@ -1211348,7 +1213346,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6933"
+        "staticSource": "pages/publish/fabu/index.js:6949"
       }
     },
     {
@@ -1211415,7 +1213413,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6933"
+        "staticSource": "pages/publish/fabu/index.js:6949"
       }
     },
     {
@@ -1211482,7 +1213480,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6951"
+        "staticSource": "pages/publish/fabu/index.js:6967"
       }
     },
     {
@@ -1211549,7 +1213547,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6942"
+        "staticSource": "pages/publish/fabu/index.js:6958"
       }
     },
     {
@@ -1211616,7 +1213614,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6942"
+        "staticSource": "pages/publish/fabu/index.js:6958"
       }
     },
     {
@@ -1211683,7 +1213681,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6979"
+        "staticSource": "pages/publish/fabu/index.js:6995"
       }
     },
     {
@@ -1211822,7 +1213820,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7174"
+        "staticSource": "pages/publish/fabu/index.js:7190"
       }
     },
     {
@@ -1211889,7 +1213887,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7174"
+        "staticSource": "pages/publish/fabu/index.js:7190"
       }
     },
     {
@@ -1211956,7 +1213954,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7207"
+        "staticSource": "pages/publish/fabu/index.js:7223"
       }
     },
     {
@@ -1212186,7 +1214184,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7143"
+        "staticSource": "pages/publish/fabu/index.js:7159"
       }
     },
     {
@@ -1212284,7 +1214282,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7143"
+        "staticSource": "pages/publish/fabu/index.js:7159"
       }
     },
     {
@@ -1212401,7 +1214399,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7163"
+        "staticSource": "pages/publish/fabu/index.js:7179"
       }
     },
     {
@@ -1212510,7 +1214508,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7113"
+        "staticSource": "pages/publish/fabu/index.js:7129"
       }
     },
     {
@@ -1212577,7 +1214575,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7175"
+        "staticSource": "pages/publish/fabu/index.js:7191"
       }
     },
     {
@@ -1212743,7 +1214741,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7175"
+        "staticSource": "pages/publish/fabu/index.js:7191"
       }
     },
     {
@@ -1212810,7 +1214808,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7175"
+        "staticSource": "pages/publish/fabu/index.js:7191"
       }
     },
     {
@@ -1212877,7 +1214875,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7175"
+        "staticSource": "pages/publish/fabu/index.js:7191"
       }
     },
     {
@@ -1212944,7 +1214942,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7175"
+        "staticSource": "pages/publish/fabu/index.js:7191"
       }
     },
     {
@@ -1213011,7 +1215009,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7200"
+        "staticSource": "pages/publish/fabu/index.js:7216"
       }
     },
     {
@@ -1214167,7 +1216165,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6918"
+        "staticSource": "pages/publish/fabu/index.js:6934"
       }
     },
     {
@@ -1216219,7 +1218217,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8741"
+        "staticSource": "pages/publish/fabu/index.js:8757"
       }
     },
     {
@@ -1216377,7 +1218375,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8741"
+        "staticSource": "pages/publish/fabu/index.js:8757"
       }
     },
     {
@@ -1220401,7 +1222399,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8741"
+        "staticSource": "pages/publish/fabu/index.js:8757"
       }
     },
     {
@@ -1221405,7 +1223403,9 @@
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
+      "requiredCapabilityByBranch": {
+        "cancelled": "requestSubscribeMessage"
+      },
       "requestMode": "ordered",
       "confirmationMode": null,
       "control": {
@@ -1221427,7 +1223427,7 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
+      "actionClass": "external",
       "interactionMode": "event-contract",
       "baseActionClass": "read",
       "effectClasses": [
@@ -1221435,11 +1223435,15 @@
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
+      "externalCapabilities": [
+        "requestSubscribeMessage"
+      ],
       "successCapabilities": [],
       "targets": {
         "routes": [
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "pages/topic/merchantinfo/merchantinfo?topicId=",
+          "subpackageA/pages/myproject/index"
         ],
         "apis": [
           "/api/ai/safety/precheck"
@@ -1221458,18 +1223462,22 @@
         ],
         "writeApis": []
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
         "error",
         "timeout",
-        "duplicate-trigger"
+        "duplicate-trigger",
+        "cancelled"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7228"
+        "staticSource": "pages/publish/fabu/index.js:7244"
       }
     },
     {
@@ -1221499,7 +1223507,9 @@
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
+      "requiredCapabilityByBranch": {
+        "cancelled": "requestSubscribeMessage"
+      },
       "requestMode": "ordered",
       "confirmationMode": null,
       "control": {
@@ -1221521,7 +1223531,7 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
+      "actionClass": "external",
       "interactionMode": "event-contract",
       "baseActionClass": "read",
       "effectClasses": [
@@ -1221529,11 +1223539,15 @@
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
+      "externalCapabilities": [
+        "requestSubscribeMessage"
+      ],
       "successCapabilities": [],
       "targets": {
         "routes": [
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "pages/topic/merchantinfo/merchantinfo?topicId=",
+          "subpackageA/pages/myproject/index"
         ],
         "apis": [
           "/api/ai/safety/precheck"
@@ -1221552,18 +1223566,22 @@
         ],
         "writeApis": []
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
         "error",
         "timeout",
-        "duplicate-trigger"
+        "duplicate-trigger",
+        "cancelled"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7228"
+        "staticSource": "pages/publish/fabu/index.js:7244"
       }
     },
     {
@@ -1221630,7 +1223648,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8037"
+        "staticSource": "pages/publish/fabu/index.js:8053"
       }
     },
     {
@@ -1221927,7 +1223945,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7742"
+        "staticSource": "pages/publish/fabu/index.js:7758"
       }
     },
     {
@@ -1222025,7 +1224043,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7742"
+        "staticSource": "pages/publish/fabu/index.js:7758"
       }
     },
     {
@@ -1222138,7 +1224156,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6798"
+        "staticSource": "pages/publish/fabu/index.js:6814"
       }
     },
     {
@@ -1222166,7 +1224184,9 @@
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
+      "requiredCapabilityByBranch": {
+        "cancelled": "requestSubscribeMessage"
+      },
       "requestMode": "ordered",
       "confirmationMode": null,
       "control": {
@@ -1222188,7 +1224208,7 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
+      "actionClass": "external",
       "interactionMode": "tap",
       "baseActionClass": "read",
       "effectClasses": [
@@ -1222196,11 +1224216,15 @@
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
+      "externalCapabilities": [
+        "requestSubscribeMessage"
+      ],
       "successCapabilities": [],
       "targets": {
         "routes": [
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "pages/topic/merchantinfo/merchantinfo?topicId=",
+          "subpackageA/pages/myproject/index"
         ],
         "apis": [
           "/api/ai/safety/precheck"
@@ -1222219,18 +1224243,22 @@
         ],
         "writeApis": []
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
         "error",
         "timeout",
-        "duplicate-trigger"
+        "duplicate-trigger",
+        "cancelled"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7228"
+        "staticSource": "pages/publish/fabu/index.js:7244"
       }
     },
     {
@@ -1222260,7 +1224288,9 @@
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
+      "requiredCapabilityByBranch": {
+        "cancelled": "requestSubscribeMessage"
+      },
       "requestMode": "ordered",
       "confirmationMode": null,
       "control": {
@@ -1222282,7 +1224312,7 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
+      "actionClass": "external",
       "interactionMode": "tap",
       "baseActionClass": "read",
       "effectClasses": [
@@ -1222290,11 +1224320,15 @@
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
+      "externalCapabilities": [
+        "requestSubscribeMessage"
+      ],
       "successCapabilities": [],
       "targets": {
         "routes": [
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "pages/topic/merchantinfo/merchantinfo?topicId=",
+          "subpackageA/pages/myproject/index"
         ],
         "apis": [
           "/api/ai/safety/precheck"
@@ -1222313,18 +1224347,22 @@
         ],
         "writeApis": []
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
         "error",
         "timeout",
-        "duplicate-trigger"
+        "duplicate-trigger",
+        "cancelled"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7228"
+        "staticSource": "pages/publish/fabu/index.js:7244"
       }
     },
     {
@@ -1222592,7 +1224630,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8165"
+        "staticSource": "pages/publish/fabu/index.js:8181"
       }
     },
     {
@@ -1222660,7 +1224698,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8741"
+        "staticSource": "pages/publish/fabu/index.js:8757"
       }
     },
     {
@@ -1222727,7 +1224765,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8165"
+        "staticSource": "pages/publish/fabu/index.js:8181"
       }
     },
     {
@@ -1222794,7 +1224832,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8119"
+        "staticSource": "pages/publish/fabu/index.js:8135"
       }
     },
     {
@@ -1222861,7 +1224899,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8172"
+        "staticSource": "pages/publish/fabu/index.js:8188"
       }
     },
     {
@@ -1222995,7 +1225033,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8768"
+        "staticSource": "pages/publish/fabu/index.js:8784"
       }
     },
     {
@@ -1223163,7 +1225201,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8266"
+        "staticSource": "pages/publish/fabu/index.js:8282"
       }
     },
     {
@@ -1223483,7 +1225521,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8936"
+        "staticSource": "pages/publish/fabu/index.js:8952"
       }
     },
     {
@@ -1223609,7 +1225647,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8718"
+        "staticSource": "pages/publish/fabu/index.js:8734"
       }
     },
     {
@@ -1223734,7 +1225772,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8743"
+        "staticSource": "pages/publish/fabu/index.js:8759"
       }
     },
     {
@@ -1223870,7 +1225908,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8526"
+        "staticSource": "pages/publish/fabu/index.js:8542"
       }
     },
     {
@@ -1223955,7 +1225993,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8514"
+        "staticSource": "pages/publish/fabu/index.js:8530"
       }
     },
     {
@@ -1224022,7 +1226060,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8595"
+        "staticSource": "pages/publish/fabu/index.js:8611"
       }
     },
     {
@@ -1224806,7 +1226844,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8780"
+        "staticSource": "pages/publish/fabu/index.js:8796"
       }
     },
     {
@@ -1224942,7 +1226980,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8780"
+        "staticSource": "pages/publish/fabu/index.js:8796"
       }
     },
     {
@@ -1225059,7 +1227097,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8436"
+        "staticSource": "pages/publish/fabu/index.js:8452"
       }
     },
     {
@@ -1225266,7 +1227304,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8818"
+        "staticSource": "pages/publish/fabu/index.js:8834"
       }
     },
     {
@@ -1225348,7 +1227386,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8241"
+        "staticSource": "pages/publish/fabu/index.js:8257"
       }
     },
     {
@@ -1225430,7 +1227468,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8241"
+        "staticSource": "pages/publish/fabu/index.js:8257"
       }
     },
     {
@@ -1225512,7 +1227550,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8241"
+        "staticSource": "pages/publish/fabu/index.js:8257"
       }
     },
     {
@@ -1225648,7 +1227686,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8780"
+        "staticSource": "pages/publish/fabu/index.js:8796"
       }
     },
     {
@@ -1227726,7 +1229764,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8102"
+        "staticSource": "pages/publish/fabu/index.js:8118"
       }
     },
     {
@@ -1227860,7 +1229898,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8108"
+        "staticSource": "pages/publish/fabu/index.js:8124"
       }
     },
     {
@@ -1227927,7 +1229965,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8099"
+        "staticSource": "pages/publish/fabu/index.js:8115"
       }
     },
     {
@@ -1238139,7 +1240177,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6922"
+        "staticSource": "pages/publish/fabu/index.js:6938"
       }
     },
     {
@@ -1337156,6 +1339194,260 @@
       }
     },
     {
+      "id": "pages/templatedetail/topic-detail/index.wxml:42:bindtap:useTemplate:1",
+      "route": "pages/templatedetail/topic-detail/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/templatedetail/topic-detail/index.wxml",
+        "js": "pages/templatedetail/topic-detail/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bindtap",
+        "handler": "useTemplate",
+        "line": 42,
+        "selectorHint": ".xb-cta-btn",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index",
+          "pages/publish/fabu/index?"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info",
+          "/api/template/topic-template/use"
+        ],
+        "primaryApis": [
+          "/api/template/topic-template/use"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/template/topic-template/use",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/templatedetail/topic-detail/index.js:169"
+      }
+    },
+    {
+      "id": "pages/templatedetail/topic-detail/index.wxml:49:bind:change:switchTab:2",
+      "route": "pages/templatedetail/topic-detail/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/templatedetail/topic-detail/index.wxml",
+        "js": "pages/templatedetail/topic-detail/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-tabs",
+        "event": "bind:change",
+        "handler": "switchTab",
+        "line": 49,
+        "selectorHint": "cy-tabs[bind:change]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/templatedetail/topic-detail/index.js:157"
+      }
+    },
+    {
+      "id": "pages/templatedetail/topic-detail/index.wxml:57:bindtap:previewNode:3",
+      "route": "pages/templatedetail/topic-detail/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/templatedetail/topic-detail/index.wxml",
+        "js": "pages/templatedetail/topic-detail/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "previewNode",
+        "line": 57,
+        "selectorHint": ".xb-mosaic-cell",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "查看大图",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "external",
+      "interactionMode": "tap",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [
+        "previewImage"
+      ],
+      "successCapabilities": [
+        "previewImage"
+      ],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/templatedetail/topic-detail/index.js:162"
+      }
+    },
+    {
       "id": "pages/templatedetail/topic-preview/index.wxml:10:bindtap:load:0",
       "route": "pages/templatedetail/topic-preview/index",
       "hostRoutes": [],
@@ -1337262,7 +1339554,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-preview/index.js:96"
+        "staticSource": "pages/templatedetail/topic-preview/index.js:95"
       }
     },
     {
@@ -1337329,7 +1339621,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-preview/index.js:190"
+        "staticSource": "pages/templatedetail/topic-preview/index.js:189"
       }
     },
     {
@@ -1337397,7 +1339689,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-preview/index.js:184"
+        "staticSource": "pages/templatedetail/topic-preview/index.js:183"
       }
     },
     {
@@ -1337464,7 +1339756,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-preview/index.js:200"
+        "staticSource": "pages/templatedetail/topic-preview/index.js:199"
       }
     },
     {
@@ -1337531,11 +1339823,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-preview/index.js:173"
+        "staticSource": "pages/templatedetail/topic-preview/index.js:172"
       }
     },
     {
-      "id": "pages/templatedetail/topic-preview/index.wxml:47:bindtap:useTemplate:5",
+      "id": "pages/templatedetail/topic-preview/index.wxml:48:bindtap:goDetail:5",
       "route": "pages/templatedetail/topic-preview/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1337557,12 +1339849,12 @@
       "control": {
         "tag": "view",
         "event": "bindtap",
-        "handler": "useTemplate",
-        "line": 47,
+        "handler": "goDetail",
+        "line": 48,
         "selectorHint": ".tp-cta__btn",
         "visibleCondition": null,
         "disabledCondition": null,
-        "ariaLabel": "用这个模板",
+        "ariaLabel": "查看详情",
         "ariaLabelExpression": null,
         "ariaRole": "button",
         "ariaRoleExpression": null,
@@ -1337573,11 +1339865,10 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
+      "actionClass": "navigation",
       "interactionMode": "tap",
-      "baseActionClass": "read",
+      "baseActionClass": "navigation",
       "effectClasses": [
-        "read",
         "navigation"
       ],
       "accessBoundary": null,
@@ -1337585,63 +1339876,24 @@
       "successCapabilities": [],
       "targets": {
         "routes": [
-          "pages/privacy/index",
-          "pages/publish/fabu/index?"
+          "pages/templatedetail/topic-detail/index?"
         ],
-        "apis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info",
-          "/api/template/topic-template/use"
-        ],
-        "primaryApis": [
-          "/api/template/topic-template/use"
-        ],
-        "auxiliaryApis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/template/topic-template/use",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
+        "error"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-preview/index.js:209"
+        "staticSource": "pages/templatedetail/topic-preview/index.js:208"
       }
     },
     {

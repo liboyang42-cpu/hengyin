@@ -143,6 +143,7 @@ chengyinhub-xcx/pages/square/list/index.js 5  # 2026-09-21 状态底座:背景�
 chengyinhub-xcx/pages/talent/list/index.js 3  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹
 chengyinhub-xcx/pages/templatedetail/shelf/index.js 2  # 2026-10-28 模板页货架移进分包组件(原 pages/template/index.js 3 处收回):主题列表与玩法列表(分页)两处请求，失败各落组件内 cy-error 错误态，通用 toast 会双弹
 chengyinhub-xcx/pages/templatedetail/topic-preview/index.js 1  # 2026-10-28 主题卡堆预览：详情读取失败落页内错误态 + 重试，通用 toast 会双弹
+chengyinhub-xcx/pages/templatedetail/topic-detail/index.js 1  # 2026-10-30 V-24 主题模板详情：读取失败落页内 cy-error + 重试，通用 toast 会双弹
 chengyinhub-xcx/pages/templatedetail/templatedetail.js 1  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹
 chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js 1  # 2026-08-25 商家项目页:待审核节点加载失败落 pendingMerchantNodesState:error 并可重试;通用 toast 会双弹
 chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js 1  # 2026-09-11 loadHostChapters:只为「更多」抽屉里那一行填开/关标签。读不到就不写标签(chapterRecruitTag 返回空串)——这是稿 468:1126 明写的口径「状态未知时不写开/关,写错一个字主办方会照着做相反的决定」。它是开抽屉时的预取,弹 toast 只会盖在抽屉上

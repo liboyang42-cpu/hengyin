@@ -77,6 +77,7 @@ const NAV_WITHOUT_L1_TITLE = new Set([
   'pages/square/list/index.wxml', // 2026-08-07 用户裁决:帖文流无大标题
   'pages/templatedetail/templatedetail.wxml',
   'pages/templatedetail/topic-preview/index.wxml', // 2026-10-28 卡堆预览：封面卡堆 + 主题名承担标题，导航只留返回
+  'pages/templatedetail/topic-detail/index.wxml', // 2026-10-30 V-24 主题模板详情：版式照抄玩法模板详情,封面头 + 主题名承担标题
   'pages/topic/index/index.wxml',
   'pages/topic/merchantinfo/merchantinfo.wxml',
   // 2026-09-19 批复1-a=2:pricing/partner 页按用户裁决复活,标题只在 cy-nav-bar 居中

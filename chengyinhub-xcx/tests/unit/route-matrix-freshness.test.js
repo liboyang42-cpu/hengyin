@@ -47,8 +47,9 @@ test('route-matrix 生成物必须与当前 app.json 和 scene 扫描逐字一�
   // 145 → 146:2026-10-28 新增 pages/templatedetail/topic-preview(主题模板卡堆预览，业主定稿原型 v21)。
   // 2026-10-28 L9 再并 master:#652 topic-preview +1 叠加本线 154 ⇒ 155。
   // 2026-10-28 并 master(#658 后)合流 integrate/devfix-20261027:master 155 叠加本线 marketing / analysis 两页 ⇒ 157(build-route-matrix.js --json 重建)。
-  assert.equal(current.routes.length, 157)
-  assert.equal(matrix.counts.routes, 157)
+  // 2026-10-30 V-24 +1 主题模板详情 topic-detail ⇒ 158。
+  assert.equal(current.routes.length, 158)
+  assert.equal(matrix.counts.routes, 158)
   const bundle = matrix.routes.find(route => route.pagePath === 'subpackageMember/free-explore/index')
   assert.equal(bundle.role, 'player')
   assert.equal(bundle.needsLogin, true)

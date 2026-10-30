@@ -9,6 +9,8 @@ const ROOT = path.resolve(__dirname, '../..');
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
 const SHELF_JS = path.join(ROOT, 'pages/templatedetail/shelf/index.js');
 const PREVIEW_JS = path.join(ROOT, 'pages/templatedetail/topic-preview/index.js');
+// 2026-10-30 V-24:「应用」(整包复制)从卡堆预览搬到主题模板详情
+const DETAIL_JS = path.join(ROOT, 'pages/templatedetail/topic-detail/index.js');
 const art = require('../../pages/templatedetail/shelf/art.js');
 
 function stubApp(extra) {
@@ -54,14 +56,14 @@ function mountShelf(props) {
   return Object.assign({ vm, def }, env, wxEnv);
 }
 
-function mountPreview(query, appExtra, wxExtra) {
+function mountPreview(query, appExtra, wxExtra, file) {
   const env = stubApp(appExtra);
   const wxEnv = stubWx();
   Object.assign(global.wx, wxExtra || {});
   let def;
   global.Page = (d) => { def = d; };
-  delete require.cache[PREVIEW_JS];
-  require(PREVIEW_JS);
+  delete require.cache[file || PREVIEW_JS];
+  require(file || PREVIEW_JS);
   const page = Object.assign({}, def);
   page.data = JSON.parse(JSON.stringify(def.data));
   page.setData = function (patch) { Object.assign(this.data, patch); };
@@ -363,19 +365,28 @@ test('每次打开都从中间扇开(减少动态效果时不播)', async () => 
   assert.equal(quiet.page.data.entered, true);
 });
 
+const mountDetail = (query, appExtra, wxExtra) => mountPreview(query, appExtra, wxExtra, DETAIL_JS);
+
+test('卡堆预览「查看详情」带作用域进主题模板详情(V-24)', () => {
+  const m = mountPreview({ id: '7', scope: 'MERCHANT', readonly: '1' });
+  m.page.goDetail();
+  assert.deepEqual(m.navigations, ['/pages/templatedetail/topic-detail/index?id=7&scope=MERCHANT&readonly=1']);
+});
+
 test('用这个模板：先过写前登录闸，只读岗位拦下，在途不重复复制，带 MERCHANT 作用域进专业编辑器', async () => {
+  // 2026-10-30 V-24:这条链路搬到主题模板详情的「应用」
   let gated = 0;
-  const loggedOut = mountPreview({ id: '7' }, { ensureLoginFor: () => { gated += 1; return false; } });
+  const loggedOut = mountDetail({ id: '7' }, { ensureLoginFor: () => { gated += 1; return false; } });
   loggedOut.page.useTemplate();
   assert.equal(gated, 1);
   assert.equal(loggedOut.requests.length, 1, '没登录不发复制请求');
 
-  const ro = mountPreview({ id: '7', scope: 'MERCHANT', readonly: '1' });
+  const ro = mountDetail({ id: '7', scope: 'MERCHANT', readonly: '1' });
   ro.page.useTemplate();
   assert.equal(ro.requests.length, 1);
   assert.deepEqual(ro.toasts, ['当前岗位仅可浏览模板']);
 
-  const m = mountPreview({ id: '7', scope: 'MERCHANT' });
+  const m = mountDetail({ id: '7', scope: 'MERCHANT' });
   m.page.useTemplate();
   m.page.useTemplate();
   const uses = m.requests.filter((r) => r.url === '/api/template/topic-template/use');
@@ -384,7 +395,7 @@ test('用这个模板：先过写前登录闸，只读岗位拦下，在途不�
   uses[0].success(ok({ topicId: 901 }));
   assert.deepEqual(m.navigations, ['/pages/publish/fabu/index?id=901&scope=MERCHANT']);
 
-  const failed = mountPreview({ id: '7' });
+  const failed = mountDetail({ id: '7' });
   failed.page.useTemplate();
   failed.requests.pop().fail();
   failed.page.useTemplate();
@@ -392,7 +403,7 @@ test('用这个模板：先过写前登录闸，只读岗位拦下，在途不�
 });
 
 test('复制回包晚于离开预览页：不再把用户拉去编辑器', () => {
-  const { page, requests, navigations } = mountPreview({ id: '7' });
+  const { page, requests, navigations } = mountDetail({ id: '7' });
   page.useTemplate();
   page.onUnload();
   requests.pop().success(ok({ topicId: 901 }));
