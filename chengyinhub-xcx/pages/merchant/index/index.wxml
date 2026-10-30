@@ -218,7 +218,7 @@
       </view>
     </view>
 
-    <cy-merchant-desk wx:if="{{merchantAccess.active}}" access="{{merchantAccess}}" />
+    <!-- 2026-10-30 业主走查:W8 工程面板(读取门店/扫描凭证等裸按钮)不挂在商家首页,入口都已在扫码/客户/财务/更多 -->
 
     <!-- BL-85 开通前置检查(只读,GET /api/merchant/ops/prerequisites):只列未完成项;
          全部完成或无数据时整块不显示。沿用「我的消息」区块结构,不新造样式。 -->

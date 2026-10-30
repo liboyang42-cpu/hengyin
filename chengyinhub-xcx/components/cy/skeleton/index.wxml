@@ -38,6 +38,31 @@
   </view>
 </view>
 
+<!-- merchant-insight(2026-10-30 业主:店铺参谋加载页要和页面对上):问候 + 头像、主卡(标题/大数/分段/格子/三指标)、两列小卡。 -->
+<view wx:elif="{{type === 'merchant-insight'}}" class="sk sk-insight {{reducedMotion ? 'sk--static' : ''}} {{light ? 'sk--light' : ''}}"
+      aria-role="status" aria-live="polite" aria-label="{{loadingLabel}}">
+  <view class="sk-insight-greet">
+    <view class="sk-bar sk-insight-hi"></view>
+    <view class="sk-bar sk-insight-avatar"></view>
+  </view>
+  <view class="sk-insight-hero">
+    <view class="sk-bar sk-line sk-w40"></view>
+    <view class="sk-bar sk-insight-big"></view>
+    <view class="sk-bar sk-insight-seg"></view>
+    <view class="sk-bar sk-insight-heat"></view>
+    <view class="sk-insight-trio">
+      <view class="sk-bar sk-insight-cell" wx:for="{{[0,1,2]}}" wx:key="*this"></view>
+    </view>
+  </view>
+  <view class="sk-metric-grid">
+    <view class="sk-metric-card" wx:for="{{[0,1]}}" wx:key="*this">
+      <view class="sk-bar sk-metric-label"></view>
+      <view class="sk-bar sk-metric-value"></view>
+      <view class="sk-bar sk-metric-trend"></view>
+    </view>
+  </view>
+</view>
+
 <!-- 路线时间线:节点、连接线、标题与说明。 -->
 <view wx:elif="{{type === 'route-timeline'}}" class="sk sk-route {{reducedMotion ? 'sk--static' : ''}} {{light ? 'sk--light' : ''}}"
       aria-role="status" aria-live="polite" aria-label="{{loadingLabel}}">

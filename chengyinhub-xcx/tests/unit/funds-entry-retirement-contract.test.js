@@ -72,7 +72,7 @@ test('俱乐部分润站内入口进入“我的资产”宿主并由 sceneStack
   assert.equal(merchant.navigations[0][0], 'navigateTo')
   assert.equal(
     merchant.navigations[0][1].url,
-    '/subpackageA/pages/assetcenter/earnings/index?scene=merchant-profit&topicId=42',
+    '/subpackageA/pages/assetcenter/earnings/index?theme=merchant&scene=merchant-profit&topicId=42',
   )
   assert.doesNotMatch(read(PAGES.merchantInfo), /navigateTo\(\{ url: '\/pages\/coop\/finance\/index/)
 })

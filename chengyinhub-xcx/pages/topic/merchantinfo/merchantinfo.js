@@ -2613,11 +2613,11 @@ Page({
     });
   },
 
-  /** 主办方的钱统一进「我的资产」，由收益宿主打开分润场景。 */
+  /** 主办方的钱统一进「我的资产」，由收益宿主打开分润场景。2026-10-30 业主:带 theme=merchant,底页浅色。 */
   goFinance() {
     const id = this.data.topicId || (this.data.info && this.data.info.topicId);
     if (this._navigating) return; this._navigating = true; wx.navigateTo({
-      url: '/subpackageA/pages/assetcenter/earnings/index?scene=merchant-profit' + (id ? '&topicId=' + id : ''), complete: () => { this._navigating = false; },
+      url: '/subpackageA/pages/assetcenter/earnings/index?theme=merchant&scene=merchant-profit' + (id ? '&topicId=' + id : ''), complete: () => { this._navigating = false; },
     });
   },
 

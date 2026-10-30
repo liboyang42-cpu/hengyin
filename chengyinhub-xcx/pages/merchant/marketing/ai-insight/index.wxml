@@ -8,7 +8,7 @@
   <view class="nav-spacer" style="height: {{statusBarHeight + navBarHeight}}px;"></view>
 
   <block wx:if="{{!facts}}">
-    <cy-skeleton wx:if="{{loading && !facts}}" type="merchant-metric" count="{{3}}" />
+    <cy-skeleton wx:if="{{loading && !facts}}" type="merchant-insight" />
     <cy-error load-failure="{{!errorIsDenied}}" class="cy-fade-in" wx:elif="{{error && !facts}}" size="lg" fill title="{{errorNeedsLogin ? '请先登录' : errorIsDenied ? '当前账号没有查看权限' : '店铺数据加载失败'}}" sub="{{error}}" retry="{{errorNeedsLogin ? '重新登录' : '重新加载'}}" bind:retry="retry" auto-back="{{!errorIsDenied}}" />
   </block>
 
@@ -161,10 +161,7 @@
     <block wx:if="{{recTopics.length}}">
       <view class="sec-head mi-in" style="transition-delay: 300ms;">
         <text class="sec-title">为你推荐的主题</text>
-        <view class="sec-link" bindtap="goCoopCenter" hover-class="cy-pressed" hover-stay-time="80"
-              aria-role="button" aria-label="查看全部招商主题">
-          <text>查看全部</text><cy-icon name="arrow-right" size="24" />
-        </view>
+        <!-- 2026-10-30 业主:推荐主题不放「查看全部」,只横滑 -->
       </view>
       <scroll-view class="tscroll" scroll-x enhanced show-scrollbar="{{false}}">
         <view class="trow">

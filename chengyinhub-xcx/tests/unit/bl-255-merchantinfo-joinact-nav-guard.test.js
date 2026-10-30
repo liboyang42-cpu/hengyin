@@ -42,7 +42,7 @@ const CASES = [
   ['goAddStations', {}, '/pages/publish/fabu/index?id=88'],
   ['goInviteMerchant', {}, '/pages/coop/nearby/index?topicId=88'],
   ['goReceivedApplies', {}, '/pages/coop/list/index?tab=received'],
-  ['goFinance', {}, '/subpackageA/pages/assetcenter/earnings/index?scene=merchant-profit&topicId=88'],
+  ['goFinance', {}, '/subpackageA/pages/assetcenter/earnings/index?theme=merchant&scene=merchant-profit&topicId=88'],
   ['goLedger', {}, '/pages/merchant/ledger/index?view=redemptions'],
   ['goLedger', { operationScope: 'CLUB' }, '/pages/club/enroll/index?clubId=9&topicId=88'],
   ['goEditRegistration', { stateKey: 'pending' }, '/pages/topic/merchantapply/index?mode=1&id=5'],
