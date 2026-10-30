@@ -14,6 +14,7 @@ Component({
     rulesOpen:       { type: Boolean, value: false },
     quickActions:    { type: Array, value: [] },
     clubCandidates:  { type: Object, value: { state: '', rows: [] } }, // 走查 v2 R05:主题内可邀约的俱乐部
+    regApplies:      { type: Object, value: { state: '', rows: [] } }, // 走查 v2 R06:本主题收到的商家报名
     hostOwnerType:   { type: String, value: 'merchant' }, // club 主办不显示俱乐部协作位
     playerSheet: { type: Object, value: {} },
     playerFilters: { type: Array, value: [] },

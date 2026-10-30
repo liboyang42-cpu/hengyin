@@ -189,12 +189,30 @@
   <!-- CU-C-126:原来 headerVariant="action" 走「取消 / 标题 / 完成」,两颗都只执行 onClose,
        面板内又没有待保存表单 —— 「完成」不完成任何业务动作,还和同类抽屉的右上 ✕ 不一致。
        退回默认标题头(右上 ✕),真正的招商动作留在底部 merchantActions(去找商家 / 收到的申请)。 -->
-  <project-drawer show="{{ merchantSheet.show }}" title="承接商家" actions="{{ merchantActions }}"
+  <project-drawer show="{{ merchantSheet.show }}" title="招商" actions="{{ merchantActions }}"
                   bind:close="emitCloseMerchant" bind:action="emitDrawerAction">
-    <view class="dp" wx:if="{{ hostRecruit.segments.length }}">
-      <view class="dp-seg {{ item ? 'dp-seg--on' : '' }}" wx:for="{{ hostRecruit.segments }}" wx:key="index"></view>
+    <!-- 走查 v2 R06(业主 2026-10-30):顶部三格;每一站用主题图、给「自己承接 / 招商」;收到的申请在弹窗里确认,不跳出主题 -->
+    <view class="cs-sum">
+      <view class="cs-sum-i"><text class="cs-sum-n">{{ hostRecruit.nodeFilled }}/{{ hostRecruit.nodeTotal }}</text><text class="cs-sum-l">已招站点</text></view>
+      <view class="cs-sum-i"><text class="cs-sum-n">{{ hostRecruit.pendingCount || 0 }}</text><text class="cs-sum-l">待处理申请</text></view>
+      <view class="cs-sum-i"><text class="cs-sum-n">{{ hostRecruit.openNodes.length }}</text><text class="cs-sum-l">还没人接</text></view>
     </view>
-    <view class="dg-sub">已招 {{ hostRecruit.nodeFilled }}/{{ hostRecruit.nodeTotal }} 站<block wx:if="{{ hostRecruit.pendingCount }}"> · {{ hostRecruit.pendingCount || 0 }} 家待确认</block></view>
+
+    <block wx:if="{{ regApplies.rows.length }}">
+      <view class="dg-label">收到的申请</view>
+      <view class="dcard cs-list">
+      <view class="dr" wx:for="{{ regApplies.rows }}" wx:key="id">
+        <image class="dr-avatar" wx:if="{{ item.logo }}" src="{{ item.logo }}" mode="aspectFill" />
+        <view class="dr-avatar dr-avatar--fallback" wx:else>{{ item.initial }}</view>
+        <view class="dr-text">
+          <text class="dr-name">{{ item.name }}</text>
+          <text class="dr-sub" wx:if="{{ item.place }}">申请 {{ item.place }}</text>
+        </view>
+        <view class="cs-pill" catchtap="emit" data-act="confirmRegRow" data-id="{{ item.id }}" data-name="{{ item.name }}" aria-role="button" aria-label="确认 {{ item.name }}" hover-class="cy-pressed" hover-stay-time="80">确认</view>
+      </view>
+      </view>
+    </block>
+    <cy-inline-error wx:if="{{ regApplies.state === 'error' }}" kind="data" title="收到的申请没读到" action="重试" data-act="loadRegApplies" bind:action="emit" />
 
     <block wx:if="{{ ownerChapterApplicationsState === 'error' || pendingMerchantNodesState === 'error' }}">
       <view class="review-error">
@@ -278,9 +296,11 @@
       <view class="dg-label">还没人接</view>
       <view class="dcard">
       <view class="dn" wx:for="{{ hostRecruit.openNodes }}" wx:key="nodeId">
-        <view class="dn-plus"><cy-icon name="plus" size="{{ 28 }}" /></view>
+        <image class="dn-img" wx:if="{{ hostTopic.img }}" src="{{ hostTopic.img }}" mode="aspectFill" />
+        <view class="dn-img dn-img--none" wx:else><cy-icon name="image" size="{{ 32 }}" /></view>
         <text class="dn-name">{{ item.nodeName || '未命名节点' }}</text>
-        <view class="dn-btn" catchtap="emit" data-act="goInviteMerchant" hover-class="cy-pressed" hover-stay-time="80">去招商</view>
+        <view class="cs-pill cs-pill--g" catchtap="emit" data-act="selfTakeNode" data-id="{{ item.nodeId }}" data-name="{{ item.nodeName }}" aria-role="button" aria-label="自己承接 {{ item.nodeName }}" hover-class="cy-pressed" hover-stay-time="80">自己承接</view>
+        <view class="cs-pill" catchtap="emit" data-act="recruitNode" data-id="{{ item.nodeId }}" aria-role="button" aria-label="为 {{ item.nodeName }} 招商" hover-class="cy-pressed" hover-stay-time="80">招商</view>
       </view>
       </view>
     </block>

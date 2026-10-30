@@ -309,6 +309,7 @@ Page({
     checkinCode: '',
     profitSheet: { show: false, state: '', error: '', row: null },
     clubCandidates: { state: '', rows: [] },
+    regApplies: { state: '', rows: [] },
     checkinErr: '',
     privacyGateShow: false,
   },
@@ -357,7 +358,7 @@ Page({
     }
     const reducedMotion = readReducedMotion();
     if (this.data.reducedMotion !== reducedMotion) this.setData({ reducedMotion });
-    if (this._clubSheetReturn) { this._clubSheetReturn = false; this.loadProjectHome(); this.loadClubCandidates(); } merchantTheme.merchantPageShow(); this._navigating = false;
+    if (this._clubSheetReturn) { this._clubSheetReturn = false; this.loadProjectHome(); if (this.data.clubSheet.show) this.loadClubCandidates(); if (this.data.merchantSheet.show) this.loadRegApplies(); } merchantTheme.merchantPageShow(); this._navigating = false;
   },
   onHide() { this._hidden = true; merchantTheme.merchantPageRestore(); },
   onUnload() {
@@ -2548,14 +2549,85 @@ Page({
      连编辑资格都没有时干脆不给主按钮,只留「查看收到的申请」。
      2026-08-10:自由探索的「邀请商家承接章节」并进了同一份商家名单
      (coop/nearby 按距离排,章节作副标题),不再另开一个入口。 */
+  /* 走查 v2 R06(业主 2026-10-30):招商弹窗里每一站自带「自己承接 / 招商」,收到的申请也在弹窗里处理,
+     底部不再放「查看收到的申请」跳出去。自由探索按章节招商(承接后才产生站点),保留一个「去找商家」。 */
   buildMerchantActions() {
-    const review = { key: 'goReceivedApplies', label: '查看收到的申请', ghost: true };
-    // 自由探索按章节招商，商家承接后才产生站点，不能拿当前节点数挡住入口。
-    if (this._isFreeExploreHost || ((this.data.hostRecruit || {}).nodeTotal || 0) > 0) {
-      return [{ key: 'goInviteMerchant', label: '去找商家' }, review];
-    }
-    if (this._hostCanEdit === false) return [review];
-    return [{ key: 'goAddStations', label: '去加节点' }, review];
+    if (this._isFreeExploreHost) return [{ key: 'goInviteMerchant', label: '去找商家' }];
+    if (((this.data.hostRecruit || {}).nodeTotal || 0) > 0) return [];
+    if (this._hostCanEdit === false) return [];
+    return [{ key: 'goAddStations', label: '去加节点' }];
+  },
+
+  // 本主题收到的商家报名(城市定向候选),与协作列表「收到的」同一接口,只留本主题、待确认的
+  loadRegApplies() {
+    if (this.data.role !== 'host') return;
+    const topicId = Number(this.data.topicId || (this.data.info && this.data.info.topicId));
+    const that = this;
+    app.sendRequest({
+      hideLoading: true, silentError: true, url: '/api/coop/candidates/received', method: 'POST',
+      data: JSON.stringify(this.data.operationScope ? { scope: this.data.operationScope } : {}),
+      header: { 'Content-Type': 'application/json' },
+      success(res) {
+        const rows = res && res.code == '200' && res.data && Array.isArray(res.data.rows) ? res.data.rows : null;
+        if (!rows) { that.setData({ regApplies: { state: 'error', rows: [] } }); return; }
+        that.setData({ regApplies: { state: 'ready', rows: rows.filter(function (r) {
+          return r && Number(r.topicId) === topicId && Number(r.auditStatus) === 0;
+        }).map(function (r) {
+          return { id: r.id, name: r.merchantName || '未具名商家', logo: r.merchantLogo || '', initial: String(r.merchantName || '商').slice(0, 1),
+            place: r.nodeName || r.addressName || r.address || '' };
+        }) } });
+      },
+      fail() { that.setData({ regApplies: { state: 'error', rows: [] } }); },
+    });
+  },
+
+  confirmRegRow(e) {
+    const ds = (e && e.currentTarget && e.currentTarget.dataset) || {};
+    if (!ds.id || this._regConfirming) return;
+    const that = this;
+    cyModal.show({
+      title: '确认候选',
+      content: '确认「' + (ds.name || '该商家') + '」占住这一站?同一站其他待调配报名将自动落选。确认后再向他发带条款的合作邀约,他接受才成合作单。',
+      confirmText: '确认',
+      success(r) {
+        if (!r || !r.confirm) return;
+        that._regConfirming = true;
+        app.sendRequest({
+          url: '/api/coop/candidates/confirm', method: 'POST',
+          data: JSON.stringify(that.data.operationScope ? { registrationId: ds.id, scope: that.data.operationScope } : { registrationId: ds.id }),
+          header: { 'Content-Type': 'application/json' },
+          success(res) {
+            that._regConfirming = false;
+            if (res && res.code == '200') { cyToast.success('已确认'); that.loadRegApplies(); that.loadProjectHome(); }
+          },
+          fail() { that._regConfirming = false; },
+        });
+      },
+    });
+  },
+
+  selfTakeNode(e) {
+    const ds = (e && e.currentTarget && e.currentTarget.dataset) || {};
+    const topicId = this.data.topicId || (this.data.info && this.data.info.topicId);
+    if (!ds.id || !topicId || this._navigating) return;
+    this._navigating = true; this._clubSheetReturn = true;
+    wx.navigateTo({
+      url: '/pages/topic/merchantapply/index?topicId=' + topicId + '&nodeId=' + ds.id + '&templateId=0'
+        + '&topicName=' + encodeURIComponent((this.data.hostTopic && this.data.hostTopic.name) || '') + '&nodeName=' + encodeURIComponent(ds.name || ''),
+      complete: () => { this._navigating = false; },
+    });
+  },
+
+  recruitNode(e) {
+    const ds = (e && e.currentTarget && e.currentTarget.dataset) || {};
+    const topicId = this.data.topicId || (this.data.info && this.data.info.topicId) || '';
+    if (this._navigating) return;
+    this._navigating = true; this._clubSheetReturn = true;
+    wx.navigateTo({
+      url: '/pages/coop/nearby/index?topicId=' + topicId + '&topicName=' + encodeURIComponent((this.data.hostTopic && this.data.hostTopic.name) || '')
+        + (ds.id ? '&nodeId=' + ds.id : '') + (this.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT' : ''),
+      complete: () => { this._navigating = false; },
+    });
   },
 
   /** CU-M-181:「去加站点」= 主题编辑器,与「更多 → 票价与主题内容」同一个落点。 */
@@ -3162,6 +3234,7 @@ Page({
       closeClubSheet: 1, closePlayerSheet: 1, closeMerchantSheet: 1,
       closeMoreSheet: 1, onMorePick: 1,
       copyText: 1, goInviteClub: 1, onPlayerFilter: 1, inviteClubRow: 1, openClubHome: 1, loadClubCandidates: 1,
+      loadRegApplies: 1, confirmRegRow: 1, selfTakeNode: 1, recruitNode: 1,
       // CU-C-67:客户名单读失败后的局部重试(错态与零单分开之后要有恢复动作)
       retryPlayerSheet: 1,
       // CU-C-68:抽屉里「本站运营」资格探不到时的就地重试
@@ -3209,6 +3282,7 @@ Page({
     if (key === 'stationQr') return this.showLiveCheckin();
     if (key === 'club') return this.openClubSheet();
     if (key === 'merchant') {                                                     // 只有主办方有这一格
+      this.loadRegApplies();
       return this.setData({
         'merchantSheet.show': true,
         merchantActions: this.buildMerchantActions(),

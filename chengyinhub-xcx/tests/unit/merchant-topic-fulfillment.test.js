@@ -1195,15 +1195,15 @@ function hostRecruitOf(nodeTotal) {
   return { nodeTotal, nodeFilled: 0, pendingCount: 0, openNodes: [] };
 }
 
-test('有节点时抽屉主按钮照旧是「去找商家」，落地仍是附近商家页', () => {
+test('有节点时每一站自带「招商」,落地是带这一站的附近商家页;底部不再放按钮', () => {
   const page = makePage();
   page.setData({ hostRecruit: hostRecruitOf(3), topicId: '77' });
   page.onQuickAction({ currentTarget: { dataset: { key: 'merchant' } } });
 
-  assert.deepEqual(page.data.merchantActions.map((a) => a.key), ['goInviteMerchant', 'goReceivedApplies']);
-  page.onJoinAct({ detail: { act: 'goInviteMerchant', dataset: {} } });
+  assert.deepEqual(page.data.merchantActions.map((a) => a.key), []);
+  page.onJoinAct({ detail: { act: 'recruitNode', dataset: { id: 5 } } });
   assert.equal(navigations.length, 1);
-  assert.match(navigations[0].url, /^\/pages\/coop\/nearby\/index\?topicId=77/);
+  assert.match(navigations[0].url, /^\/pages\/coop\/nearby\/index\?topicId=77.*&nodeId=5/);
 });
 
 test('★零节点时主按钮换成「去加节点」，点了进主题编辑器(节点在那里配)', () => {
@@ -1220,13 +1220,14 @@ test('★零节点时主按钮换成「去加节点」，点了进主题编辑�
   assert.equal(navigations[0].url, '/pages/publish/fabu/index?id=77');
 });
 
-test('★零节点且没有编辑资格时不给主按钮，只留「查看收到的申请」', () => {
+// 走查 v2 R06(2026-10-30):招商弹窗底部不再放「查看收到的申请」,申请在弹窗里确认
+test('★零节点且没有编辑资格时不给主按钮', () => {
   const page = makePage();
   page.setData({ hostRecruit: hostRecruitOf(0), topicId: '77' });
   page._hostCanEdit = false;
   page.onQuickAction({ currentTarget: { dataset: { key: 'merchant' } } });
 
-  assert.deepEqual(page.data.merchantActions.map((a) => a.key), ['goReceivedApplies']);
+  assert.deepEqual(page.data.merchantActions.map((a) => a.key), []);
 });
 
 test('抽屉空态只陈述前置条件，不再指一条页面上没有的「编辑」入口', () => {
@@ -1252,8 +1253,8 @@ test('★负控:把 nodeTotal 分流改回恒有节点，零节点又会拿到�
 
   const mutated = matched[1].replace('nodeTotal || 0) > 0', 'nodeTotal || 1) > 0')
   assert.notEqual(mutated, matched[1], '负控未命中 nodeTotal 判据')
-  assert.equal(run(mutated, 0, true)[0].key, 'goInviteMerchant',
-    '撤掉分流后零节点还能拿到「去找商家」= 上面那条合同是假的')
+  assert.equal(run(mutated, 0, true).length, 0,
+    '撤掉分流后零节点连「去加节点」都没了 = 上面那条合同是真的')
 })
 
 

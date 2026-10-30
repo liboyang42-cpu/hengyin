@@ -740,3 +740,8 @@
 .cs-list .dr-line1 { flex-wrap: nowrap; }
 .cs-list .dr-line1 .dr-name { flex: 0 1 auto; min-width: 0; }
 .cs-list .dr-line1 .dr-tag { flex: none; }
+
+/* 走查 v2 R06:还没人接的站用主题图(不再是加号框) */
+.dn-img { width: 88rpx; height: 88rpx; flex: none; border-radius: 20rpx; background: var(--cy-bg-card-2); }
+.dn-img--none { display: flex; align-items: center; justify-content: center; color: var(--cy-text-tertiary); }
+.dn .dn-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
