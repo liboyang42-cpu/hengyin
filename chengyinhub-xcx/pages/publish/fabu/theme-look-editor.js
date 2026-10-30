@@ -25,6 +25,8 @@ function view(raw, chapters) {
     params: style.params.map((p) => ({ key: p.key, label: p.label, options: p.options.map((o) => ({ value: o[0], label: o[1], on: n.params[p.key] === o[0] })) })),
     palettes: ATMOSPHERES.map((a) => ({ value: a.value, label: a.label, note: a.note, className: a.className, on: a.value === palette })),
     fonts: themeLook.STORY_FONTS.map((f) => ({ value: f[0], label: f[1], on: f[0] === n.storyFont })),
+    // 文字动效:跟随风格(按风格的池子逐段轮换)或选成一种
+    textFxs: [{ value: '', label: '跟随风格', on: !n.textFx }].concat(themeLook.TEXT_FX.map((t) => ({ value: t[0], label: t[1], on: t[0] === n.textFx }))),
     // 末世:每章一个时间段(按章节顺序),再点一次取消
     times: n.style !== 'SURVIVAL' ? [] : (chapters || []).map((c, i) => ({ index: i, name: c.name || ('第 ' + (i + 1) + ' 章'),
       options: themeLook.TIMES.map((t) => ({ value: t[0], label: t[1], on: !!n.times && n.times[i] === t[0] })) })),
@@ -52,6 +54,7 @@ const methods = {
   onLookParam(e) { const d = e.currentTarget.dataset; this._patchLook((n) => { n.params[d.key] = d.value; }); },
   onLookPalette(e) { const v = e.currentTarget.dataset.value; this._patchLook((n) => { n.palette = v; }); },
   onLookFont(e) { const v = e.currentTarget.dataset.value; this._patchLook((n) => { n.storyFont = v; }); },
+  onLookTextFx(e) { const v = e.currentTarget.dataset.value; this._patchLook((n) => { if (v) n.textFx = v; else delete n.textFx; }); },
   onLookTime(e) {
     const d = e.currentTarget.dataset, i = Number(d.index);
     this._patchLook((n) => { const t = (n.times || []).slice(); while (t.length <= i) t.push(''); t[i] = t[i] === d.value ? '' : d.value; n.times = t; });

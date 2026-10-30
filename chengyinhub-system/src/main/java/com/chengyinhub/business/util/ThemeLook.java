@@ -57,7 +57,10 @@ public final class ThemeLook
     /** 末世每章的时间段,按章节顺序;空串 = 该章不设。 */
     private static final Set<String> TIMES = set("DAWN", "NOON", "DUSK", "NIGHT");
     private static final int MAX_TIMES = 60;
-    private static final List<String> ROOT = Arrays.asList("style", "params", "transition", "storyFont", "palette", "times");
+    /** 故事文字动效:作者选一种;不传 = 跟随风格(按风格的池子逐段轮换)。取值小写,与小程序 theme-look.js TEXT_FX 同口径。 */
+    private static final Set<String> TEXT_FX = new HashSet<>(Arrays.asList("rise", "type", "ink", "gather", "glow", "wipe",
+            "drop", "wind", "signal", "fog", "neon", "scan", "decode"));
+    private static final List<String> ROOT = Arrays.asList("style", "params", "transition", "storyFont", "palette", "times", "textFx");
 
     private ThemeLook()
     {
@@ -145,6 +148,23 @@ public final class ThemeLook
         if (!palette.isMissingNode() && !palette.isNull() && !upper(palette).isEmpty())
         {
             out.put("palette", option(palette, PALETTES, "DEFAULT", "主题配色"));
+        }
+        JsonNode textFx = node.path("textFx");
+        if (!textFx.isMissingNode() && !textFx.isNull())
+        {
+            if (!textFx.isTextual())
+            {
+                throw new IllegalArgumentException("画面风格取值必须是文本");
+            }
+            String fx = textFx.asText().trim().toLowerCase(Locale.ROOT);
+            if (!fx.isEmpty())
+            {
+                if (!TEXT_FX.contains(fx))
+                {
+                    throw new IllegalArgumentException("文字动效不合法:" + fx);
+                }
+                out.put("textFx", fx);
+            }
         }
         JsonNode times = node.path("times");
         if (!times.isMissingNode() && !times.isNull())

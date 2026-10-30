@@ -51,6 +51,31 @@ var PALETTES = [['DEFAULT', '黑'], ['BLUE', '蓝'], ['RED', '红'], ['YELLOW', 
 // 末世每章的时间段(2026-10-30 业主):按章节顺序存成数组,空串 = 这一章不设;只染天光,不画景物。
 var TIMES = [['DAWN', '清晨'], ['NOON', '正午'], ['DUSK', '日落'], ['NIGHT', '夜晚']];
 var MAX_TIMES = 60;
+// 故事文字动效(2026-10-30 业主定稿原型 claude.ai/artifact/BRgHjPbXZfe9xhd6QBCwfP v3):每段正文滑进屏幕时播一次。
+// 默认「跟随风格」= 按风格的池子逐段轮换(相邻两段不重复);作者也可以在画面风格面板「字体」下面选成一种。
+// 逐字类(chars = true)要把一段拆成单字渲染;其余整段做。只用过渡 + 逐字延迟,不新增关键帧。
+var TEXT_FX = [
+  ['rise', '浮现'], ['type', '打字机', 1], ['ink', '墨晕', 1], ['gather', '聚星', 1], ['glow', '呼吸光'], ['wipe', '擦出'],
+  ['drop', '落定', 1], ['wind', '风吹', 1], ['signal', '信号', 1], ['fog', '雾散'], ['neon', '霓虹点亮'], ['scan', '扫描'], ['decode', '解码', 1],
+];
+var STYLE_TEXT = {
+  STARDUST: { title: 'gather', opts: 'rise', pool: ['gather', 'rise', 'glow'] },
+  PAPER: { title: 'ink', opts: 'drop', pool: ['type', 'ink', 'drop'] },
+  SURVIVAL: { title: 'wind', opts: 'signal', pool: ['wind', 'signal', 'fog', 'drop'] },
+  CYBER: { title: 'neon', opts: 'scan', pool: ['decode', 'neon', 'scan', 'wipe'] },
+};
+/** 第 i 段正文用哪种动效:作者选了一种就全用它;跟随风格时在池子里轮换。 */
+function textFxFor(look, i) {
+  var n = normalizeLook(look);
+  if (n.textFx) return n.textFx;
+  var pool = (STYLE_TEXT[n.style] || STYLE_TEXT.STARDUST).pool;
+  return pool[((i % pool.length) + pool.length) % pool.length];
+}
+/** 这种动效要不要拆成单字。 */
+function textFxChars(fx) {
+  for (var i = 0; i < TEXT_FX.length; i++) if (TEXT_FX[i][0] === fx) return !!TEXT_FX[i][2];
+  return false;
+}
 
 var DEFAULT_STYLE = 'STARDUST';
 
@@ -88,6 +113,8 @@ function normalizeLook(raw) {
     storyFont: has(STORY_FONTS, storyFont) ? storyFont : 'HAND',
   };
   if (has(PALETTES, palette)) out.palette = palette;
+  var textFx = String(src.textFx || '').toLowerCase();
+  if (has(TEXT_FX, textFx)) out.textFx = textFx;
   if (style.value === 'SURVIVAL' && Array.isArray(src.times)) {
     var times = src.times.slice(0, MAX_TIMES).map(function (t) { t = String(t || '').toUpperCase(); return has(TIMES, t) ? t : ''; });
     while (times.length && !times[times.length - 1]) times.pop();
@@ -119,6 +146,6 @@ function lookClass(look) {
 }
 
 module.exports = {
-  STYLES: STYLES, TRANSITIONS: TRANSITIONS, STORY_FONTS: STORY_FONTS, PALETTES: PALETTES, TIMES: TIMES, DEFAULT_STYLE: DEFAULT_STYLE,
-  normalizeLook: normalizeLook, serializeLook: serializeLook, resolveTransition: resolveTransition, lookClass: lookClass, styleOf: styleOf,
+  STYLES: STYLES, TRANSITIONS: TRANSITIONS, STORY_FONTS: STORY_FONTS, PALETTES: PALETTES, TIMES: TIMES, TEXT_FX: TEXT_FX, STYLE_TEXT: STYLE_TEXT, DEFAULT_STYLE: DEFAULT_STYLE,
+  normalizeLook: normalizeLook, serializeLook: serializeLook, resolveTransition: resolveTransition, lookClass: lookClass, styleOf: styleOf, textFxFor: textFxFor, textFxChars: textFxChars,
 };
