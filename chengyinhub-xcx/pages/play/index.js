@@ -386,6 +386,7 @@ const themePlans = require('./utils/theme-plans.js');
 const playerOps = require('./utils/theme-player-ops.js');
 const { loadStoryFont } = require('./utils/story-font.js');
 const playOverlays = require('./utils/play-hud-overlays.js');
+const playTopbar = require('./utils/play-topbar.js'); // 故事流顶栏:罗盘⇄地图、背包、案件册、各站奖励
 Page({
   ...journeyCheckRecovery.methods(req),
   ...orientLifecycle.methods((url, method, data) => {
@@ -411,10 +412,12 @@ Page({
   ...themePlans.methods(req),
   ...playerOps.methods(req),
   ...playOverlays.methods(req, uuid4),
+  ...playTopbar.methods(req),
   _routeState: normalizeRouteState(null),
 
   data: {
     ...orientLifecycle.data,
+    ...playTopbar.data,
     arrivalGuard: null,
     guardAppealView: null,
     communityPostWrite: false,
@@ -596,6 +599,7 @@ Page({
 
   onLoad(options) {
     loadStoryFont(); // P-60:故事流手写体(未配置 / 失败时 .cy-story-hand 回落系统字体)
+    this._initTopbar(); // 左上角上次选的显示(罗盘 / 地图)
     this._playOwner = this._playMember();
     this._playLoginContext = this._capturePlayLoginContext();
     this._playDisposed = false;
@@ -714,6 +718,7 @@ Page({
       && this._playLoginContext.generation === current.generation;
   },
   onShow() {
+    if (this.data.navMap) this._startHeading(); // 地图档回到前台继续跟朝向
     // 只看账号是否已切换(卸载态由各回调自己的 _isPlayAccountCurrent 挡)
     if (this._playOwner !== undefined && this._playOwner !== this._playMember()) {
       this._stopLeadPoll(); this._stopTracking(); audioSession.pauseAll(); audioSession.releaseAwake();
@@ -979,6 +984,7 @@ Page({
 
   onUnload() {
     this.suspendOrientLifecycle();
+    this._stopTopbar();
     this.setData({ arrivalGuard: null });
     this._playDisposed = true;
     if (this._leadVerificationWorkflow) { this._leadVerificationWorkflow.destroy(); this._leadVerificationWorkflow = null; }
@@ -1026,6 +1032,7 @@ Page({
   //    只把 master 那侧的 _watching=false / offLocationChange / stopLocationUpdate 三句拿掉。
   onHide() {
     this.suspendOrientLifecycle();
+    this._stopTopbar();
     this.setData({ arrivalGuard: null });
     this._leadArrivalEpoch = (this._leadArrivalEpoch || 0) + 1; this._leadArriving = false;
     this._playLoadEpoch = (this._playLoadEpoch || 0) + 1;
@@ -4090,6 +4097,7 @@ Page({
          {name} 会一直原样留着,所以这条必须在首屏成功分支里落。 */
       that._applyStoryVars(d);
       that._applyLook(d.look);
+      that._probeCasebook();
       that._puzzlePersonalBest = Number(d.puzzlePersonalBest) || 0;
       // 规则16 历史履约:已普通下架的本人已完成站只作只读回看,不并入 nodes/total/完成率/解锁/推荐/地图。
       const historyNodes = Array.isArray(d.historyNodes)
@@ -4192,7 +4200,7 @@ Page({
     const chapter = that.buildChapter(d, nodes);
     this._historyNodes = [];
     this.setData({
-      loading: false, emptyTip: '', emptyKind: '', topicId: d.topicId || '', topicName: d.topicName || '', topicDesc: d.topicDesc || '', topicCover: d.topicCover || '', mode, serverMode: mode,
+      loading: false, emptyTip: '', emptyKind: '', topicId: d.topicId || '', topicName: d.topicName || this._entryTopicName || '', topicDesc: d.topicDesc || '', topicCover: d.topicCover || '', mode, serverMode: mode,
       modeLabel: mode == 2 ? '自由探索' : '城市定向',
       routeNotice: that._routeNoticeForState(routeState),
         journeyAttributes: routeState.attributes,
@@ -4512,6 +4520,7 @@ Page({
       remainingGameCount: nodes.filter((node) => node.hasTemplate && !node.done).length,
       total: visibleNodes.length, merchantCount, seatTiles, ringSegs, searchPlaces }, () => {
       if (chapterChanged) this.openChapterFull();
+    this._refreshNavRim();
       wx.nextTick(() => this._measureDeal());   // 布局落定后才量得到瓦片/卡包的真实矩形
       // 探店日:核销完最后一家回到本页(onShow 重拉)时自动弹结算 —— 只认 allDone 上升沿,
       // 重进一个早已完成的主题不重放仪式。经典定向有自己的 completed→openFinish 链,不走这里。
@@ -6764,7 +6773,9 @@ Page({
     /* 分支走到结局时不自动接着走:结局那段话就是这一站的全部回报,0.9 秒就被翻走等于没看到
        (2026-10-27 生产实测:南京路结案三选一,选完直接跳进附录章节卡)。玩家读完点下面的「继续」。 */
     const advanceStory = this.data.chapterFull && this._storyOpenNode && ready && !this.data.playKit.readyForBase
-      && kit.type !== 'branch' && previous.sessionId != null && String(previous.sessionId) === String(kit.sessionId);
+      // 只在「这一站的玩法已经在屏上、从未就绪变成就绪」时接着走:首个视图就已就绪(音乐角)不翻走;换了局也不翻
+      && kit.type !== 'branch' && !!previous.type
+      && (previous.sessionId == null || kit.sessionId == null || String(previous.sessionId) === String(kit.sessionId));
     // 填了一半的草稿按「账号 + 局 + 站」存本地(建档 / 留言组件自取);试玩不存
     if (kit.type === 'profile') this._profileNodeId = String(active.node.nodeId);
     if ((kit.type === 'profile' || kit.type === 'note') && !this.data.isPreview && !this.data.isMock) kit.draftKey = storyResume.draftKey(this._runSessionScope(), active.node.nodeId);

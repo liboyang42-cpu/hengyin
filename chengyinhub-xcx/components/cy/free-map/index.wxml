@@ -5,7 +5,7 @@
        markers="{{scene === 'explore' ? mapMarkers : markers}}"
        polyline="{{mapPolyline}}" polygons="{{mapPolygons}}"
        circles="{{scene === 'explore' ? mapCircles : circles}}"
-       show-location="{{false}}" enable-rotate="{{false}}" enable-overlooking="{{false}}"
+       rotate="{{rotate}}" show-location="{{false}}" enable-rotate="{{false}}" enable-overlooking="{{false}}"
        enable-zoom="{{interactive}}" enable-scroll="{{interactive}}"
        enable-poi="{{true}}" enable-building="{{false}}"
        subkey="{{subkey}}" layer-style="{{layerStyle}}"
