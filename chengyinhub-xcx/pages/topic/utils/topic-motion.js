@@ -81,7 +81,8 @@ function buildStoryCards(info, merchantCards) {
 function storyMeta(info) {
   const d = info || {};
   const parts = [];
-  const chapters = (d.chaptersList || []).length;
+  // chaptersList 只含未购前可预览的章(防剧透),总章数看 totalChapterCount(实走 A2:两章的主题写成「1 章」)
+  const chapters = Number(d.totalChapterCount) > 0 ? Number(d.totalChapterCount) : (d.chaptersList || []).length;
   if (Number(d.productType) === 2) {
     const shops = Number(d.registrationMerchantCount) || 0;
     if (shops > 0) parts.push(shops + ' 家商家');

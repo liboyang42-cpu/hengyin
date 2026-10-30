@@ -328,6 +328,30 @@ class ApiPlayProgressCompletionTruthTest
         assertEquals("该站配置异常，暂时无法打卡", dangling.get("msg"));
     }
 
+    /** 2026-10-30 复核:配了玩法的 GPS 站,玩法没过之前到达不得完成(连线被 GPS 自动到达跳过)。 */
+    @Test
+    void classicGpsStationWithAGameCompletesOnlyAfterTheGameIsPassed()
+    {
+        topic.setProductType(ProductType.ORIENTEERING);
+        node.setTemplateId(905L); node.setLongitude("121.5"); node.setLatitude("31.2");
+        CmsMemberTemplate tpl = new CmsMemberTemplate();
+        tpl.setValidationMethod(5);
+        tpl.setAdvancedConfigJson("{\"schemaVersion\":1,\"match\":{\"enabled\":true},\"qa\":{\"enabled\":false}}");
+        when(templateService.selectCmsMemberTemplateById(905L)).thenReturn(tpl);
+        com.chengyinhub.business.service.IAdvancedGameRuntimeService games = mock(com.chengyinhub.business.service.IAdvancedGameRuntimeService.class);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "advancedGameRuntimeService", games);
+        String a = String.valueOf(ACTIVITY), n = String.valueOf(NODE);
+
+        when(games.readyForBase(eq(PLAYER), any(), any(), eq(NODE))).thenReturn(false);
+        AjaxResult early = BasicPlayCommandFixtures.arrive(controller, a, n, "121.5", "31.2", null, null, null, "10");
+        assertEquals("ADVANCED_FIRST", early.get("errorCode"));
+        verify(progressService, never()).insertPlayerNodeProgress(any());
+
+        when(games.readyForBase(eq(PLAYER), any(), any(), eq(NODE))).thenReturn(true);
+        AjaxResult done = BasicPlayCommandFixtures.arrive(controller, a, n, "121.5", "31.2", null, null, null, "10");
+        assertEquals(200, done.get("code"));
+    }
+
     @SuppressWarnings("unchecked")
     @Test
     void classicArriveStillCompletesThroughTheOriginalProgressPath()
@@ -456,6 +480,30 @@ class ApiPlayProgressCompletionTruthTest
 
     /** 正控:真答错 → 回执带 data.answerWrong 标记,前端才允许计一次错。 */
     @SuppressWarnings("unchecked")
+    @Test
+    void classicLocatedStationJudgesTheAnswerOnlyInsideTheFiftyMetreFence()
+    {
+        // 实走 A20(业主 2026-10-30 拍板「执行 50 米」):老路径到达即完成,作答时随带定位按 arrive 同一围栏判
+        topic.setProductType(ProductType.ORIENTEERING);
+        node.setTemplateId(900L); node.setLongitude("121.4737"); node.setLatitude("31.2304");
+        CmsMemberTemplate tpl = new CmsMemberTemplate();
+        tpl.setValidationMethod(1); tpl.setQuestionAnswer("正确答案");
+        when(templateService.selectCmsMemberTemplateById(900L)).thenReturn(tpl);
+        String a = String.valueOf(ACTIVITY), n = String.valueOf(NODE);
+
+        AjaxResult noFix = BasicPlayCommandFixtures.answer(controller, a, n, "乱写一个", null);
+        assertEquals("ARRIVE_FIRST", noFix.get("errorCode"));
+        AjaxResult far = BasicPlayCommandFixtures.answerAt(controller, a, n, "乱写一个", null, "121.4837", "31.2304", "10");
+        assertEquals("ARRIVE_FIRST", far.get("errorCode"));
+        AjaxResult blurry = BasicPlayCommandFixtures.answerAt(controller, a, n, "乱写一个", null, "121.4737", "31.2304", "200");
+        assertEquals("ARRIVE_FIRST", blurry.get("errorCode"));
+        verify(progressService, never()).insertPlayerNodeProgress(any());
+
+        AjaxResult near = BasicPlayCommandFixtures.answerAt(controller, a, n, "乱写一个", null, "121.4739", "31.2304", "10");
+        assertEquals(null, near.get("errorCode"));
+        assertEquals("答案不正确", near.get("msg"), "围栏内照常判题");
+    }
+
     @Test
     void wrongAnswerResponseCarriesTheAnswerWrongMarker()
     {

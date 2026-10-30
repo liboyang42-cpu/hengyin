@@ -25,6 +25,9 @@ public interface IAdvancedGameRuntimeService {
 
     Map<String, Object> state(Long memberId, Long sessionId);
 
+    /** 本局这一站的高级玩法是否已过(到达收尾的前置);还没开局视为没过。只读,不开新会话。 */
+    default boolean readyForBase(Long memberId, Long activityId, Long topicId, Long nodeId) { return false; }
+
     List<Map<String, Object>> leaderboard(Long memberId, Long activityId, Long topicId, Long nodeId);
 
     /** 完成节点门禁，并返回终点声明的稳定 outcomeCode；无分支玩法时返回 null。 */

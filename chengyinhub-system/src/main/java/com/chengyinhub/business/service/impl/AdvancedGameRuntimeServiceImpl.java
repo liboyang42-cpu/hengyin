@@ -207,6 +207,12 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         return start(memberId, activityId, topicId, nodeId, teamId, null);
     }
 
+    @Override
+    public boolean readyForBase(Long memberId, Long activityId, Long topicId, Long nodeId) {
+        GameInput input = requireInput(memberId, activityId, topicId, nodeId);
+        return input.existing != null && Boolean.TRUE.equals(state(memberId, input.existing.getId()).get("readyForBase"));
+    }
+
     private Map<String, Object> start(Long memberId, Long activityId, Long topicId, Long nodeId, Long teamId,
             GameRuntimeSession retrySource) {
         GameInput input = requireInput(memberId, activityId, topicId, nodeId);
