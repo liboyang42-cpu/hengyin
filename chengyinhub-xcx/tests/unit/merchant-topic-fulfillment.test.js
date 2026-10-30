@@ -450,9 +450,10 @@ test('过审后点修改承接内容不跳页，只说明原因', () => {
 
 test('承接方三个入口、主办方四个入口', () => {
   const page = makePage();
-  assert.deepEqual(page.buildQuickActions('join').map((a) => a.key), ['scan', 'club', 'customer', 'more']);
+  // 走查 v2 R15(2026-10-30):承办方不给俱乐部 / 商家,换成本站二维码
+  assert.deepEqual(page.buildQuickActions('join').map((a) => a.key), ['scan', 'stationQr', 'customer', 'more']);
   assert.deepEqual(page.buildQuickActions('host').map((a) => a.key), ['club', 'merchant', 'customer', 'more']);
-  assert.deepEqual(page.data.quickActions.map((a) => a.key), ['scan', 'club', 'customer', 'more'],
+  assert.deepEqual(page.data.quickActions.map((a) => a.key), ['scan', 'stationQr', 'customer', 'more'],
     '接口没回来之前先按承接方给，不能渲染成空');
 });
 

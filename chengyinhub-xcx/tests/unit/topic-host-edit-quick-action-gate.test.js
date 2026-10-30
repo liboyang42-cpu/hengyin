@@ -96,7 +96,7 @@ test('主办方有编辑资格时,抽屉里那一行可点', () => {
 
 test('承接方的更多格与 host.canEdit 无关(它的闸是 canEditRegistration)', () => {
   const page = makePage();
-  assert.deepEqual(keys(page.buildQuickActions('join', 'merchant', false)), ['scan', 'club', 'customer', 'more']);
+  assert.deepEqual(keys(page.buildQuickActions('join', 'merchant', false)), ['scan', 'stationQr', 'customer', 'more']);
 });
 
 test('applyHome 把后端 host.canEdit 真的接进抽屉那一行', () => {

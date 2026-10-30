@@ -199,7 +199,7 @@ Page({
     // 首屏默认值要与 buildQuickActions('join') 一致 —— 接口没回来之前先按承接方给
     quickActions: [
       { key: 'scan',     label: '扫码',   icon: '/pages/topic/images/icon_qa_scan.svg' },
-      { key: 'club',     label: '俱乐部', icon: '/pages/topic/images/icon_qa_club.svg' },
+      { key: 'stationQr', label: '二维码', iconName: 'qr' },
       { key: 'customer', label: '客户',   icon: '/pages/topic/images/icon_qa_person.svg' },
       { key: 'more',     label: '更多',   icon: '/pages/topic/images/icon_qa_edit.svg' },
     ],
@@ -2293,12 +2293,14 @@ Page({
        「客户」走 /api/project/players,那道闸认的是发布者或有报名行的人,他没有报名行 ⇒ 点了必被拒;
        「更多」抽屉里每一行的动作都挂在自己的报名行上 ⇒ 同样必被拒。给两颗只会报错的按钮不如不给。
        「扫码」是给的:他的核销资格不来自报名行,来自那张合作单(后端 [D22])。 */
-    if (role === 'coopPartner') return [SCAN, CLUB];
-    if (role === 'chapterProject') return [SCAN, CUSTOMER,
-      { key: 'chapterEdit', label: '编辑', icon: '/pages/topic/images/icon_qa_edit.svg' },
-      { key: 'chapterCheckin', label: '出示二维码', iconName: 'qr' }];
+    /* 走查 v2 R15(业主 2026-10-30):承办方不给「俱乐部 / 商家」—— 那是主办的事;只留扫码、客户,
+       再加一个本站二维码(玩法要求扫码参与时贴在店里),复用已有的本站打卡码 / 章节节点码。 */
+    const QR = { key: 'stationQr', label: '二维码', iconName: 'qr' };
+    if (role === 'coopPartner') return [SCAN];
+    if (role === 'chapterProject') return [SCAN, { key: 'chapterCheckin', label: '二维码', iconName: 'qr' }, CUSTOMER,
+      { key: 'chapterEdit', label: '编辑', icon: '/pages/topic/images/icon_qa_edit.svg' }];
     // 承接方:编辑那一项的闸是 canEditRegistration(),但「更多」本身任何状态都能开。
-    return [SCAN, CLUB, CUSTOMER, MORE];
+    return [SCAN, QR, CUSTOMER, MORE];
   },
 
   /**
@@ -3076,6 +3078,7 @@ Page({
     if (key === 'scan') return this.goVerify();
     if (key === 'chapterEdit') return this.openChapterProjectAction('edit');
     if (key === 'chapterCheckin') return this.openChapterProjectAction('checkin');
+    if (key === 'stationQr') return this.showLiveCheckin();
     if (key === 'club') return this.openClubSheet();
     if (key === 'merchant') {                                                     // 只有主办方有这一格
       return this.setData({

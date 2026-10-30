@@ -810,7 +810,8 @@ test('章节承接方没有旧报名记录时进入真实join导览，不回退�
   assert.ok(requestByUrl('/api/merchant/chapter-node/mine'));
   assert.equal(requestByUrl('/api/merchant/chapter-application/owner-list'), undefined,
     '承办方不得读取主办申请列表');
-  assert.deepEqual(page.data.quickActions.map(item => item.key), ['scan', 'customer', 'chapterEdit', 'chapterCheckin'],
+  // 走查 v2 R15(2026-10-30):承办只留扫码 / 二维码 / 客户 + 编辑供给
+  assert.deepEqual(page.data.quickActions.map(item => item.key), ['scan', 'chapterCheckin', 'customer', 'chapterEdit'],
     '不得借用商家协作邀请、主办编辑或其他报名的运营入口');
   for (const badData of [
     { ...data, topic: undefined },
