@@ -188,7 +188,7 @@ test('一路空一路有票:合起来是 ready,有票的那些照常显示', () 
   topicRequest.success({ code: 200, data: { rows: [], total: 0 } })
   activityRequest.success({
     code: 200,
-    data: { rows: [{ id: 22, registrationStatus: 2, cmsActivity: { name: '周末场次' } }], total: 1 },
+    data: { rows: [{ id: 22, registrationStatus: 2, paymentStatus: 2, cmsActivity: { name: '周末场次' } }], total: 1 },
   })
 
   assert.equal(page._topic.state, 'empty')
@@ -225,7 +225,7 @@ test('一路失败另一路有票仍显示有效票，不被整页错误遮住',
   const { page, sandbox } = loadPage()
   page.onLoad({})
   sandbox.requests.find(request => request.data.owner_type === 1).fail({ errMsg: '请求超时' })
-  sandbox.requests.find(request => request.data.owner_type === 2).success({ code: 200, data: { rows: [{ id: 22, registrationStatus: 2, cmsActivity: { name: '正常票' } }], total: 1 } })
+  sandbox.requests.find(request => request.data.owner_type === 2).success({ code: 200, data: { rows: [{ id: 22, registrationStatus: 2, paymentStatus: 2, cmsActivity: { name: '正常票' } }], total: 1 } })
   assert.equal(page.data.walletState, 'ready')
   assert.deepEqual(Array.from(page.data.ticketList, item => item.id), [22])
 })
@@ -250,9 +250,9 @@ test('待支付和已取消票不得进 play，报名成功才带齐 id 开玩',
   page.data.ticketList = [
     { id: 11, kind: 'topic', registrationStatus: 1, cmsTopic: { id: 501 } },
     { id: 12, kind: 'topic', registrationStatus: 3, cmsTopic: { id: 502 } },
-    { id: 13, kind: 'topic', registrationStatus: 2, cmsTopic: {} },
-    { id: 14, kind: 'topic', registrationStatus: 2, cmsTopic: { id: 990059 }, wTitle: '已经改名的四站试玩版' },
-    { id: 15, kind: 'topic', registrationStatus: 2, cmsTopic: { id: 504 }, wTitle: '预制人生 · 同名普通活动' },
+    { id: 13, kind: 'topic', registrationStatus: 2, paymentStatus: 2, cmsTopic: {} },
+    { id: 14, kind: 'topic', registrationStatus: 2, paymentStatus: 2, cmsTopic: { id: 990059 }, wTitle: '已经改名的四站试玩版' },
+    { id: 15, kind: 'topic', registrationStatus: 2, paymentStatus: 2, cmsTopic: { id: 504 }, wTitle: '预制人生 · 同名普通活动' },
   ]
 
   page.goTicket(tap(0))
@@ -293,4 +293,19 @@ test('票夹只剩过期 / 已用的票时整页是空态', () => {
   page._activity = { list: [{ id: 2, registrationStatus: 2, verificationStatus: 1 }], state: 'ready' }
   page.rebuildTicketList()
   assert.equal(page.data.walletState, 'empty')
+})
+
+test('报名已成功但付款未确认、关闭、退款或缺失时，不显示有效票也不能进 play', () => {
+  const { page, sandbox } = loadPage()
+  const rows = [0, 1, 3, 4, null, undefined].map((paymentStatus, index) => ({
+    id: 800 + index, registrationStatus: 2, paymentStatus, ownerId: 63, kind: 'activity',
+  }))
+  page._topic = { list: [], state: 'empty' }
+  page._activity = { list: rows, state: 'ready' }
+  page.rebuildTicketList()
+  assert.deepEqual(Array.from(page.data.ticketList), [])
+  assert.equal(page.data.walletState, 'empty')
+  page.data.ticketList = rows
+  rows.forEach((row, index) => page.goTicket({ currentTarget: { dataset: { index } } }))
+  assert.deepEqual(sandbox.navigations, [])
 })

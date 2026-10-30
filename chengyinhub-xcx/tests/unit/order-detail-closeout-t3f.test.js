@@ -159,7 +159,7 @@ test('首次扫码完成订单不冒充活动结束，票夹和退款资格仍�
   assert.equal(vm.data.info.canRequestRefund, true)
 })
 
-test('OT-01 只有票夹接口可返回的 registrationStatus=2 订单保留票夹入口', () => {
+test('OT-01 只有已支付且报名成功的订单保留票夹入口', () => {
   const cases = [
     {
       label: '待支付', info: { registrationStatus: 1, paymentStatus: 0 },
@@ -223,4 +223,21 @@ test('OT-01 只有票夹接口可返回的 registrationStatus=2 订单保留票�
     assert.equal(vm.data.primaryCta, entry.primary, entry.label + ' 主 CTA')
     assert.equal(vm.data.showSecondaryTicket, entry.secondary, entry.label + ' 次级票夹 CTA')
   })
+})
+
+test('付款未确认的已报名订单不显示票夹入口，直接触发也不能导航', () => {
+  for (const paymentStatus of [0, 1, 3, 4, null, undefined]) {
+    const vm = loadVm()
+    vm.data.orderId = '77'
+    vm.onLoad()
+    const request = sandbox.requests.filter(r => r.url === '/api/registration/info').slice(-1)[0]
+    request.success({ code: 200, data: { id: 77, ownerType: 2, registrationStatus: 2, paymentStatus } })
+    assert.notEqual(vm.data.primaryCta, 'ticket')
+    assert.equal(vm.data.showSecondaryTicket, false)
+    assert.doesNotMatch(vm.data.info.orderHint, /票夹已生成/)
+    const navigations = []
+    vm._leave = url => navigations.push(url)
+    vm.goSignInfo()
+    assert.deepEqual(navigations, [])
+  }
 })

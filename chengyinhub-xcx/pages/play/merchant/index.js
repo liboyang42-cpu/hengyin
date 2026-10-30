@@ -140,6 +140,16 @@ Page({
     if (!node || !node.arrived) { this.setData({ feedback: '先扫店内码进店，再开始任务' }); return }
     const prev = this._prev
     if (!prev || typeof prev.startGame !== 'function') { unreachable(); return }
+    /* 交给游玩页排队、由它在 onShow 重读落定后再开:返回时游玩页会整页重读节点,
+       在 navigateBack 的 success 里直接开,玩法会被那次重读的结果盖掉(实走 B10:偏好题扫码后没出来)。 */
+    if (typeof prev.queueStartGame === 'function') {
+      prev.queueStartGame(node)
+      wx.navigateBack({
+        delta: 1,
+        fail: () => { prev.queueStartGame(null); this.setData({ feedback: '返回主题页失败，请稍后重试' }) },
+      })
+      return
+    }
     wx.navigateBack({
       delta: 1,
       success: () => prev.startGame(node),

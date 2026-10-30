@@ -43,7 +43,7 @@ Component({
          这一句要在 begin() 之前:begin 会把上一局的判定屏清掉。 */
       if (ended) {
         const stage = this.selectComponent('#cy-play-stage');
-        if (stage) stage.win(this.data.body || '');
+        if (stage) stage.win(this.data.body || '', { neutral: true });
         return;
       }
       const stage = this.selectComponent('#cy-play-stage');

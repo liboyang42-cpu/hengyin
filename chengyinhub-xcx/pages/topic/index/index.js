@@ -12,7 +12,7 @@ function recordsRequest(url, method, data, header) {
 /* 结果面板终态停留时长;跳转挂在面板 close 上,时长只此一处 */
 const RESULT_SHEET_MS = 2000;
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
-const { createCheckoutWorkflow, isOrderExpiredFailure, isTerminalOrderConflict,
+const { createCheckoutWorkflow, hasCompletePaymentParams, isOrderExpiredFailure, isTerminalOrderConflict,
   ORDER_REBUILD_REQUIRED, ORDER_EXPIRED_USER_MESSAGE } = require('../../../utils/checkout/checkout-workflow.js');
 const subscribe = require('../../../utils/subscribe.js');
 const { createRegistrationPaymentVerifier } = require('../../../utils/checkout/registration-payment-verifier.js');
@@ -861,7 +861,11 @@ Page({
     });
     // 期限口径同后端建单(CmsRegistrationServiceImpl:购买后 90 天,主题先结束则以主题为准),本地即可算准
     this._pendingOffer = null;
-    marketingConsent.loadOffer(app, info.memberId || 0, (offer) => { if (offer) this._pendingOffer = offer; });
+    // 只有商家发布的主题才问「接收该商家活动消息」:平台/俱乐部号名下若恰好也挂着商家档案,
+    // 会把一家无关的店(实走 A6:海上方舟下面问「滨江骑行装备专卖」)塞给玩家。
+    if (String(info.contentPublisherType || '').toUpperCase() === 'MERCHANT') {
+      marketingConsent.loadOffer(app, info.memberId || 0, (offer) => { if (offer) this._pendingOffer = offer; });
+    }
   },
 
   onRevealWallet() { this._finishReveal('wallet'); },
@@ -1410,10 +1414,16 @@ Page({
             loading.hide();
             if (res.code == '200' && res.data) {
               var d = res.data;
+              const amount = d.payableAmount;
+              if (!d.registrationId || !['number', 'string'].includes(typeof amount) || String(amount).trim() === ''
+                  || !Number.isFinite(Number(amount)) || Number(amount) < 0) {
+                cb({ ok: false, msg: '订单金额待确认，请到订单查看' });
+                return;
+              }
               if (d.payParams && d.payParams.package) {
                 that._selfPlayReqId = null;
                 cb({ ok: true, data: d });
-              } else if (d.payableAmount === 0) {
+              } else if (Number(d.payableAmount) === 0) {
                 that._selfPlayReqId = null;
                 cb({ ok: true, data: d });
               } else if (d.registrationId) {
@@ -1476,7 +1486,9 @@ Page({
         var regId = data.registrationId;
         if (!regId) { cb({ ok: false, errMsg: '缺少订单编号' }); return; }
         return verifyRegistrationPayment({ registrationId: regId }, cb);
-      }
+      },
+      isPayable: function (data) { return !!(data && (data.payParams || Number(data.payableAmount) > 0)); },
+      validatePayment: hasCompletePaymentParams
     });
   },
 
@@ -1995,11 +2007,11 @@ Page({
   },
   
   formatTimeToChinese(seconds) {
-    if (seconds === null || seconds === undefined || seconds === '') return '0时';
+    if (seconds === null || seconds === undefined || seconds === '') return '';
     
     // 确保输入是数字
     const sec = Number(seconds);
-    if (isNaN(sec) || sec < 0) return '0时';
+    if (isNaN(sec) || sec < 0) return '';
     
     // 计算小时和分钟
     const hours = Math.floor(sec / 3600);
@@ -2016,9 +2028,9 @@ Page({
     } else {
       // 1小时或以上
       if (minutes === 0) {
-        return `${hours}时`;
+        return `${hours}小时`;
       } else {
-        return `${hours}时${minutes}分`;
+        return `${hours}小时${minutes}分钟`;
       }
     }
   },

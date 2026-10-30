@@ -90,7 +90,7 @@ test('F14 票夹卡上的可见文字只有类型 · 剩几天;只放能用的�
   assert.match(wxml, /class="wc__s">\{\{item\.wSub\}\}/)
   const js = read('subpackageMember/signup/index.js')
   assert.match(js, /const list = all\.filter\(usableTicket\)/)
-  assert.match(js, /Number\(item\.registrationStatus\) !== 2 \|\| item\.verificationStatus == 1/)
+  assert.match(js, /Number\(item\.registrationStatus\) !== 2 \|\| Number\(item\.paymentStatus\) !== 2 \|\| item\.verificationStatus == 1/)
 })
 
 test('F17 共享活动详情的可空头像在传入 cy-avatar 前归一为空串', () => {

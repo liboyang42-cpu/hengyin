@@ -547,7 +547,11 @@ App({
   getImgUrl(imgPath) {
     if (!imgPath) return '';
     if (imgPath.indexOf('/') === 0) return imgPath;
-    if (/^https?:\/\//i.test(imgPath)) return config.isTrustedAssetUrl(imgPath) ? imgPath : '';
+    if (/^https?:\/\//i.test(imgPath)) {
+      // 后端 OSS 签名链接历史上存成 http://;同一签名走 https 可取,真机不加载 http 图片。
+      var secure = String(imgPath).replace(/^http:\/\//i, 'https://');
+      return config.isTrustedAssetUrl(secure) ? secure : '';
+    }
     var assetBaseUrl = (this.globalData && this.globalData.assetBaseUrl) || config.baseImgUrl;
     return assetBaseUrl ? assetBaseUrl + imgPath : '';
   },

@@ -699,6 +699,30 @@ class ApiPlayProgressCompletionTruthTest
         AjaxResult pick=BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "c", null, "pick-proof", 3);assertEquals(200,pick.get("code"));verify(runtime).recordPlayerArrival(PLAYER,TOPIC,ACTIVITY,NODE,"pick-proof",3,"ANSWER");verify(progressService,never()).insertPlayerNodeProgress(any());verify(pointsAwardService,never()).award(anyLong(),anyLong(),anyLong(),any());
     }
 
+    /** 实走 A20(业主 2026-10-30 拍板「执行 50 米」):本局路线里有坐标的站,未经 GPS 记过到达不得作答;到过就照常判题。 */
+    @Test void locatedGenericStationRefusesAnswersUntilTheGpsArrivalIsRecorded() throws Exception {
+        topic.setProductType(ProductType.ORIENTEERING);node.setTemplateId(9L);
+        com.chengyinhub.business.service.ITopicRouteRuntimeService runtime=mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller,"topicRouteRuntimeService",runtime);
+        when(runtime.canPlay(eq(PLAYER),eq(TOPIC),eq(ACTIVITY),eq(NODE),anyString())).thenReturn(true);
+        when(runtime.genericPlayer(PLAYER,TOPIC,ACTIVITY)).thenReturn(true);
+        com.fasterxml.jackson.databind.ObjectMapper json=new com.fasterxml.jackson.databind.ObjectMapper();
+        when(runtime.nodeArrivalConfig(PLAYER,TOPIC,ACTIVITY,NODE)).thenReturn(json.readTree("{\"longitude\":\"121.47\",\"latitude\":\"31.23\"}"));
+        when(runtime.nodeAnswers(PLAYER,TOPIC,ACTIVITY,NODE)).thenReturn(json.readTree("{\"validationMethod\":3,\"correctAnswer\":\"C\"}"));
+        PlayerNodeProgress proof=new PlayerNodeProgress();proof.setStatus(0);when(proofService.markArrived(PLAYER,ACTIVITY,node)).thenReturn(proof);
+        BasicPlayCommandFixtures.frozenRun(controller,ACTIVITY,TOPIC,NODE,3,json.readTree("{\"validationMethod\":3,\"correctAnswer\":\"C\"}"));
+
+        when(proofService.hasArrived(PLAYER,ACTIVITY,NODE)).thenReturn(false);
+        AjaxResult refused=BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "c", null, "pick-early", 3);
+        assertEquals(500,refused.get("code"));
+        assertEquals("ARRIVE_FIRST",refused.get("errorCode"));
+        verify(runtime,never()).recordPlayerArrival(anyLong(),anyLong(),anyLong(),anyLong(),any(),any(),anyString());
+
+        when(proofService.hasArrived(PLAYER,ACTIVITY,NODE)).thenReturn(true);
+        AjaxResult answered=BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "c", null, "pick-arrived", 3);
+        assertEquals(200,answered.get("code"));
+    }
+
     @Test void originalPublishedAnswerSurvivesUnbindButDoesNotGrantLegacyCompletionOrRewards() throws Exception {
         topic.setProductType(ProductType.ORIENTEERING);node.setTemplateId(null);
         com.chengyinhub.business.service.ITopicRouteRuntimeService runtime=mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);

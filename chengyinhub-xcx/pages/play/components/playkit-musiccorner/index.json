@@ -3,6 +3,7 @@
   "styleIsolation": "isolated",
   "usingComponents": {
     "cy-sheet": "/components/cy/sheet/index",
-    "cy-icon": "/components/cy/icon/index"
+    "cy-icon": "/components/cy/icon/index",
+    "cy-btn": "/components/cy/btn/index"
   }
 }

@@ -51,7 +51,7 @@ function resume(options) {
     if(!facts||facts.requestId!==record.requestId||facts.sourceVersion!==record.sourceVersion||facts.originalTemplateId!==sourceId){fail('原采用结果未确认，请按原请求重试');return;}
     if(facts.status==='REJECTED'){
       try{clear(storage,record);}catch(_){}
-      fail(facts.reason==='SOURCE_VERSION_CONFLICT'?'原采用被拒绝：来源已改变或下架，请重新选择':'原采用未通过内容、玩法能力或资产资格校验');return;
+      fail(facts.reason==='SOURCE_VERSION_CONFLICT'?'原采用被拒绝：来源已改变或下架，请重新选择':(facts.reason==='ADOPTION_CAPABILITY_LOCKED'?'当前身份还没解锁这款玩法用到的分支或计时能力':'原采用未通过内容、玩法能力或资产资格校验'));return;
     }
     const draftId=id(facts.draftId);
     if(facts.status!=='COMPLETED'||!draftId){fail('原采用尚未确认完成');return;}

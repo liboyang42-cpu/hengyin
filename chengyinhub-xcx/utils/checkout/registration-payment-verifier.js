@@ -4,7 +4,7 @@ const { createPaymentVerifier } = require('./payment-verifier.js');
 
 function classifyRegistrationStatus(res) {
   if (!res || typeof res !== 'object') return 'unknown';
-  if (Number(res.paymentStatus) === 2 || Number(res.registrationStatus) === 2) return 'success';
+  if (Number(res.paymentStatus) === 2 && Number(res.registrationStatus) === 2) return 'success';
   if ([3, 4].indexOf(Number(res.paymentStatus)) >= 0 || Number(res.registrationStatus) === 3) return 'failed';
   return 'pending';
 }

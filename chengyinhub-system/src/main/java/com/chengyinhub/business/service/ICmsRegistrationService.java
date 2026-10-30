@@ -496,6 +496,12 @@ public interface ICmsRegistrationService
                                         Integer validationMethod);
 
     /**
+     * 商家在店里核销 = 玩家人在店里:玩家没扫门店码就被核销时,给该章该商家的站点补记到店。
+     * 只补空缺,已有到店时间不覆盖;尽力而为,失败只记日志,不能让已成立的核销回滚。须在核销事务提交后调用。
+     */
+    void recordImpliedShopArrival(CmsRegistration registration, Long chapterId, Long merchantOwnerMemberId);
+
+    /**
      * 该玩家「可以投诉哪些主题」—— <b>投诉页的选择源与受理口的准入,共用这一份判据</b>。
      *
      * <p><b>为什么必须提到 service 层</b>(2026-08-18):此前选择源是

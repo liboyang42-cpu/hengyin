@@ -475,7 +475,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                 audio_duration = CASE
                     WHEN #{audioUrl} = '' THEN NULL
                     WHEN #{audioDuration} IS NOT NULL AND #{audioDuration} > 0 THEN #{audioDuration}
-                    WHEN BINARY #{audioUrl} = BINARY audio_url THEN audio_duration
+                    WHEN cast(#{audioUrl} as binary) = cast(audio_url as binary) THEN audio_duration
                     ELSE NULL
                 END,
             </if>

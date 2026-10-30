@@ -28,7 +28,7 @@
     </view>
   </view>
 
-  <view class="g-btn {{rows.length ? '' : 'g-btn--disabled'}} pe pe--up" style="--pe-d:.8s" bindtap="onSubmit"
+  <view class="g-btn {{rows.length && verdict !== 'ok' ? '' : 'g-btn--disabled'}} pe pe--up" style="--pe-d:.8s" bindtap="onSubmit"
         aria-role="button" aria-label="提交排好的顺序" hover-class="g-btn--press" hover-stay-time="80">
     就这个顺序
   </view>

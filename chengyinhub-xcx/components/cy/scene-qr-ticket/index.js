@@ -1,6 +1,7 @@
 'use strict'
 
 const app = getApp()
+const toast = require('../../../utils/toast.js')
 const { captureLogin, loginCurrent, seatChoice, issuedSeat, seatNumber } = require('../../../utils/registration-seat.js')
 
 Component({
@@ -46,6 +47,37 @@ Component({
   methods: {
     clearTimer() {
       if (this._timer) { clearInterval(this._timer); this._timer = null }
+      this.stopRedeemWatch()
+    },
+    stopRedeemWatch() {
+      if (this._redeemPoll) { clearInterval(this._redeemPoll); this._redeemPoll = null }
+    },
+    /** 码亮着时轻轮询探店完局面:商家一扫,玩家这边当场看到「已核销」并让游玩页重读进度(实走 B6)。
+     *  非探店票这个接口直接拒,第一次失败就停,不打扰别的票种。 */
+    watchRedeem(registrationId) {
+      let baseline = null
+      const poll = () => {
+        if (this._ticketCurrent && !this._ticketCurrent()) { this.clearTimer(); return }
+        app.sendRequest({
+          url: '/api/registration/explore-completion', method: 'POST', data: { id: registrationId },
+          hideLoading: true, silentError: true,
+          // 轮询只是增强:非探店票被拒 / 断网都停掉轮询,码照常可扫,不打扰玩家
+          fail: () => this.stopRedeemWatch(),
+          successStatusAbnormal: () => this.stopRedeemWatch(),
+          success: (res) => {
+            if (!(res && (res.code === 200 || res.code === '200') && res.data)) { this.stopRedeemWatch(); return }
+            const signature = JSON.stringify(res.data)
+            if (baseline === null) { baseline = signature; return }
+            if (signature !== baseline) {
+              baseline = signature
+              toast('商家已核销')
+              this.triggerEvent('redeemed', { registrationId })
+            }
+          },
+        })
+      }
+      poll()
+      this._redeemPoll = setInterval(poll, 4000)
     },
     load() {
       const registrationId = this.data.registrationId
@@ -109,6 +141,7 @@ Component({
           this.setData({ state: 'ready', qr: payload.qrcodeUrl, code: payload.code || '', seatVerified: payload.seatStatus === 1 })
           this.tick()
           this._timer = setInterval(() => this.tick(), 1000)
+          this.watchRedeem(registrationId)
         },
         fail: () => {
           if (current()) this.setData({ state: 'error', errorText: '网络没连上，请重试' })

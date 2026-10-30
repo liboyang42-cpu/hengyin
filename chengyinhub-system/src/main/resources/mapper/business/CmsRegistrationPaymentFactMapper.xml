@@ -15,10 +15,10 @@
             (registration_id, registration_no, payment_fact_id, payment_fact_hash, transaction_id)
         select r.id, r.registration_no, f.id, f.fact_hash, f.transaction_id
         from cms_registration r join wx_verified_payment_fact f on f.id=#{factId}
-        where r.id=#{registrationId} and binary f.fact_hash=binary #{factHash}
+        where r.id=#{registrationId} and cast(f.fact_hash as binary)=cast(#{factHash} as binary)
           and r.payment_status=2 and r.registration_status=2
-          and binary r.registration_no=binary f.business_out_trade_no
-          and binary r.transaction_id=binary f.transaction_id
+          and cast(r.registration_no as binary)=cast(f.business_out_trade_no as binary)
+          and cast(r.transaction_id as binary)=cast(f.transaction_id as binary)
           and r.wechat_payment_amount*100=f.total_fen and f.amount_fen=f.total_fen
           and f.fact_kind='PAYMENT' and f.verification_outcome='VERIFIED'
           and f.verification_version=1 and f.verification_method='SDK_QUERY_ORIGINAL_ORDER'

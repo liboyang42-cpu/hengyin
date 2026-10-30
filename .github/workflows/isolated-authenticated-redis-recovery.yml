@@ -44,6 +44,7 @@ on:
           - capacity-mixed
           - gameplay-process-recovery
           - gameplay-capacity-mixed
+          - packaged-gameplay-capacity
           - restore-application-startup
         default: recovery
 
@@ -69,9 +70,10 @@ jobs:
         env:
           CHENGYIN_CI_AUTH_REDIS_RECOVERY: 'true'
           CHENGYIN_CI_RESTORE_HTTP_STARTUP: ${{ github.event_name == 'workflow_dispatch' && inputs.probe_mode == 'restore-application-startup' && 'true' || 'false' }}
-          CHENGYIN_CI_CAPACITY_MIXED: ${{ github.event_name == 'workflow_dispatch' && (inputs.probe_mode == 'capacity-mixed' || inputs.probe_mode == 'gameplay-capacity-mixed') && 'true' || 'false' }}
-          CHENGYIN_CI_GAMEPLAY_PROCESS_RECOVERY: ${{ github.event_name == 'workflow_dispatch' && (inputs.probe_mode == 'gameplay-process-recovery' || inputs.probe_mode == 'gameplay-capacity-mixed') && 'true' || 'false' }}
-          CHENGYIN_CI_GAMEPLAY_CAPACITY: ${{ github.event_name == 'workflow_dispatch' && inputs.probe_mode == 'gameplay-capacity-mixed' && 'true' || 'false' }}
+          CHENGYIN_CI_CAPACITY_MIXED: ${{ github.event_name == 'workflow_dispatch' && (inputs.probe_mode == 'capacity-mixed' || inputs.probe_mode == 'gameplay-capacity-mixed' || inputs.probe_mode == 'packaged-gameplay-capacity') && 'true' || 'false' }}
+          CHENGYIN_CI_GAMEPLAY_PROCESS_RECOVERY: ${{ github.event_name == 'workflow_dispatch' && (inputs.probe_mode == 'gameplay-process-recovery' || inputs.probe_mode == 'gameplay-capacity-mixed' || inputs.probe_mode == 'packaged-gameplay-capacity') && 'true' || 'false' }}
+          CHENGYIN_CI_GAMEPLAY_CAPACITY: ${{ github.event_name == 'workflow_dispatch' && (inputs.probe_mode == 'gameplay-capacity-mixed' || inputs.probe_mode == 'packaged-gameplay-capacity') && 'true' || 'false' }}
+          CHENGYIN_CI_PACKAGED_GAMEPLAY_CAPACITY: ${{ github.event_name == 'workflow_dispatch' && inputs.probe_mode == 'packaged-gameplay-capacity' && 'true' || 'false' }}
         run: |
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           python3 -I ci/authenticated_redis_recovery_probe.py --check-execution-only
@@ -85,15 +87,19 @@ jobs:
             python3 -B ci/test_capacity_mixed_probe.py
           fi
           if [ "$CHENGYIN_CI_GAMEPLAY_PROCESS_RECOVERY" = true ]; then
-            python3 -I ci/gameplay_process_recovery_probe.py --check-host-only
+            if [ "$CHENGYIN_CI_PACKAGED_GAMEPLAY_CAPACITY" = true ]; then
+              python3 -I ci/gameplay_process_recovery_probe.py --check-packaged-host-only
+            else
+              python3 -I ci/gameplay_process_recovery_probe.py --check-host-only
+            fi
             python3 -B ci/test_gameplay_process_recovery_probe.py
           fi
       - name: Install existing pinned schema client
-        if: ${{ !(github.event_name == 'workflow_dispatch' && (inputs.probe_mode == 'restore-application-startup' || inputs.probe_mode == 'gameplay-process-recovery' || inputs.probe_mode == 'gameplay-capacity-mixed')) }}
+        if: ${{ !(github.event_name == 'workflow_dispatch' && (inputs.probe_mode == 'restore-application-startup' || inputs.probe_mode == 'gameplay-process-recovery' || inputs.probe_mode == 'gameplay-capacity-mixed' || inputs.probe_mode == 'packaged-gameplay-capacity')) }}
         run: python3 -m pip install --disable-pip-version-check PyMySQL==1.1.1
       - name: Install the same pinned driver in the task-owned isolated Python
         id: isolated_python
-        if: ${{ github.event_name == 'workflow_dispatch' && (inputs.probe_mode == 'restore-application-startup' || inputs.probe_mode == 'gameplay-process-recovery' || inputs.probe_mode == 'gameplay-capacity-mixed') }}
+        if: ${{ github.event_name == 'workflow_dispatch' && (inputs.probe_mode == 'restore-application-startup' || inputs.probe_mode == 'gameplay-process-recovery' || inputs.probe_mode == 'gameplay-capacity-mixed' || inputs.probe_mode == 'packaged-gameplay-capacity') }}
         run: |
           set -euo pipefail
           venv="$RUNNER_TEMP/chengyin-auth-python-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
@@ -118,9 +124,10 @@ jobs:
         env:
           CHENGYIN_CI_AUTH_REDIS_RECOVERY: 'true'
           CHENGYIN_CI_RESTORE_HTTP_STARTUP: ${{ github.event_name == 'workflow_dispatch' && inputs.probe_mode == 'restore-application-startup' && 'true' || 'false' }}
-          CHENGYIN_CI_CAPACITY_MIXED: ${{ github.event_name == 'workflow_dispatch' && (inputs.probe_mode == 'capacity-mixed' || inputs.probe_mode == 'gameplay-capacity-mixed') && 'true' || 'false' }}
-          CHENGYIN_CI_GAMEPLAY_PROCESS_RECOVERY: ${{ github.event_name == 'workflow_dispatch' && (inputs.probe_mode == 'gameplay-process-recovery' || inputs.probe_mode == 'gameplay-capacity-mixed') && 'true' || 'false' }}
-          CHENGYIN_CI_GAMEPLAY_CAPACITY: ${{ github.event_name == 'workflow_dispatch' && inputs.probe_mode == 'gameplay-capacity-mixed' && 'true' || 'false' }}
+          CHENGYIN_CI_CAPACITY_MIXED: ${{ github.event_name == 'workflow_dispatch' && (inputs.probe_mode == 'capacity-mixed' || inputs.probe_mode == 'gameplay-capacity-mixed' || inputs.probe_mode == 'packaged-gameplay-capacity') && 'true' || 'false' }}
+          CHENGYIN_CI_GAMEPLAY_PROCESS_RECOVERY: ${{ github.event_name == 'workflow_dispatch' && (inputs.probe_mode == 'gameplay-process-recovery' || inputs.probe_mode == 'gameplay-capacity-mixed' || inputs.probe_mode == 'packaged-gameplay-capacity') && 'true' || 'false' }}
+          CHENGYIN_CI_GAMEPLAY_CAPACITY: ${{ github.event_name == 'workflow_dispatch' && (inputs.probe_mode == 'gameplay-capacity-mixed' || inputs.probe_mode == 'packaged-gameplay-capacity') && 'true' || 'false' }}
+          CHENGYIN_CI_PACKAGED_GAMEPLAY_CAPACITY: ${{ github.event_name == 'workflow_dispatch' && inputs.probe_mode == 'packaged-gameplay-capacity' && 'true' || 'false' }}
           TMPDIR: ${{ runner.temp }}/isolated-authenticated-redis-recovery
         run: |
           set -o pipefail
@@ -154,6 +161,7 @@ jobs:
             ${{ runner.temp }}/isolated-authenticated-redis-recovery/**/authenticated-redis-recovery.json
             ${{ runner.temp }}/isolated-authenticated-redis-recovery/**/capacity-mixed.json
             ${{ runner.temp }}/isolated-authenticated-redis-recovery/**/gameplay-process-recovery.json
+            ${{ runner.temp }}/isolated-authenticated-redis-recovery/**/gameplay-packaged-capacity.json
             ${{ runner.temp }}/isolated-authenticated-redis-recovery/**/gameplay-network.trace
             ${{ runner.temp }}/isolated-authenticated-redis-recovery/**/application.log
             ${{ runner.temp }}/isolated-authenticated-redis-recovery/**/schema-summary.json

@@ -124,7 +124,7 @@ Component({
       if (d.passed && d.card) { this._showInfo(false); return; }
       // 判过了但手里没卡(回读过 / 铸卡没成):只说过了,不能又打开相机让人重拍一段已经过了的
       if (d.passed) { this._note('这张过了'); return; }
-      if (d.flagged) { this._note(this._flaggedCopy()); return; }
+      if (d.flagged) { this._noteFlagged(); return; }
       this._openCam();
     },
     _stopAll() {
@@ -232,13 +232,14 @@ Component({
         return;
       }
       if (out === 'degraded') { this._note('这次没能审，先往下走'); return; }
-      this._note(this._flaggedCopy());
+      this._noteFlagged();
     },
-    _flaggedCopy() {
-      return this.data.fallback === 'pass' ? '机会用完了，这张先算过' : '机会用完了';
+    // 「这张先算过」放到副行:两句挤成两行标题会顶到右上角的「继续」胶囊(实走 A33)
+    _noteFlagged() {
+      this._note('机会用完了', this.data.fallback === 'pass' ? '这张先算过' : '');
     },
-    _note(title) {
-      this.setData({ phase: 'note', head: title, sub: '', headOn: true, pill: '继续', pillReady: true });
+    _note(title, sub) {
+      this.setData({ phase: 'note', head: title, sub: sub || '', headOn: true, pill: '继续', pillReady: true });
     },
     /** 信息态。fresh = 刚揭晓(保存按钮稍后才亮);回看直接能点「完成」。 */
     _showInfo(fresh) {
