@@ -113,6 +113,9 @@ public class ApiClubController extends BaseController {
     @Autowired
     private IClubService clubService;
 
+    @Autowired
+    private com.chengyinhub.business.mapper.UmsMemberFollowMapper umsMemberFollowMapper;
+
     /** F0098:帖子引用「我的游玩记录」的写入资格与读取可见性。 */
     @Autowired
     private ClubPostReferenceGuard clubPostReferenceGuard;
@@ -1682,7 +1685,8 @@ public class ApiClubController extends BaseController {
                 p.setIsLiked(clubPostLikeService.selectByPostAndMember(p.getId(), memberId) != null);
             }
             markViewerReposted(all, memberId);
-        } catch (Exception ignore) { /* 未登录不标 isLiked / viewerReposted */ }
+            markViewerFollows(all, memberId);
+        } catch (Exception ignore) { /* 未登录不标 isLiked / viewerReposted / isFollowTheUser */ }
         List<Object> items = new ArrayList<>(pinned);
         items.addAll(mergeByTime(rest, reposts));
         return AjaxResult.success(items);
@@ -1693,6 +1697,30 @@ public class ApiClubController extends BaseController {
         List<ClubPost> all = new ArrayList<>(posts);
         for (ClubPostRepostItemVO r : reposts) all.add(r.getPost());
         return all;
+    }
+
+    /**
+     * 当前查看者是否已关注各帖作者(一次批量查询,与活动列表同一张关注表)。帖文卡头像上的「+」关注靠它:
+     * 1 = 已关注不出「+」,0 = 未关注;作者是自己的也给 1,不出「+」。
+     */
+    private void markViewerFollows(List<ClubPost> posts, Long memberId) {
+        if (memberId == null || memberId <= 0 || posts.isEmpty()) return;
+        List<Long> authors = new ArrayList<>();
+        for (ClubPost p : posts) {
+            Long a = p.getAuthorMemberId();
+            if (a != null && !a.equals(memberId) && !authors.contains(a)) authors.add(a);
+        }
+        Set<Long> followed = new java.util.HashSet<>();
+        if (!authors.isEmpty()) {
+            for (com.chengyinhub.business.domain.UmsMemberFollow f
+                    : umsMemberFollowMapper.selectUmsMemberFollowsByMemberAndFollowMemberIds(memberId, authors)) {
+                if (f.getFollowMemberId() != null) followed.add(f.getFollowMemberId());
+            }
+        }
+        for (ClubPost p : posts) {
+            Long a = p.getAuthorMemberId();
+            p.setIsFollowTheUser(a == null || a.equals(memberId) || followed.contains(a) ? 1 : 0);
+        }
     }
 
     /** 当前查看者对这批帖文的转发态(一次批量查询)。 */
@@ -1895,6 +1923,7 @@ public class ApiClubController extends BaseController {
         // variant 判定恒假,成绩卡/模板卡在达人页永远不出现(俱乐部页里却出现),同一条帖两种样子。
         projectPostReferences(all);
         markViewerReposted(all, memberId);
+        markViewerFollows(all, memberId);
         Map<Long, Boolean> contentManageByClub = new HashMap<>();
         for (ClubPost p : all) {
             p.setIsLiked(clubPostLikeService.selectByPostAndMember(p.getId(), memberId) != null);

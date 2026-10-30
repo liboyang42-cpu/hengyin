@@ -623,7 +623,8 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 用户要求删除声音开关：主线基数仅减少这一枚真实点击。
   // 2026-10-29 R2 l2-roam:「动态」二级页 pages/square/list 整页删除,重建实测 tap 2413 → 2411。
   // 2026-10-29 dw29 L8 帖文转发:卡片收藏点击换成转发点击(同数),「···」弹层新增收藏行 +1;与 L2 合并后重建实测 2411 → 2412。
-  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 2412)  /* 2026-10-25 地图底部横滑卡片(点卡 = 点列表行)+1,重建实测 2182 → 2183。 */  /* 2026-10-25 官方地点卡:相册图、小红书行、评分星、发布评价、取景卡等新增 tap,重建实测 2177 → 2182。 */  /* 2026-10-07 动态绑定补齐4条tap。2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
+  // 2026-10-30 帖文第三轮:我的帖文换成 cy-post-card(旧 pc-post 的正文/看图/赞/踩/收藏 5 处 tap 随之出账),重建实测 2412 → 2407。
+  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 2407)  /* 2026-10-25 地图底部横滑卡片(点卡 = 点列表行)+1,重建实测 2182 → 2183。 */  /* 2026-10-25 官方地点卡:相册图、小红书行、评分星、发布评价、取景卡等新增 tap,重建实测 2177 → 2182。 */  /* 2026-10-07 动态绑定补齐4条tap。2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
      onFrameShutter / onFrameCancel),其中 uploadPhotoFrame 与 onFrameShutter 是
      actionClass=external(real-device-required)、不进 local 分母 ⇒ 进账的是
      onFrameCancel(玩家端「退出取景」)+ clearPhotoFrame(商家端删图),1787 → 1789(重建实测)。 */
@@ -880,7 +881,8 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 2026-10-28 L9 再并 master(#656):通关过场 bind:continue / bind:save +2,事件合同 2695 → 2697。
   // 2026-10-29 R2 l2-roam:「动态」二级页 pages/square/list 整页删除(帖文卡/操作弹层/发布器等组件事件随页出账),重建实测 2718 → 2695。
   // 2026-10-29 dw29 L8 帖文转发:bind:repost ×2 +2、我的收藏选项弹层 select/cancel +2、广场 bind:favorite −1,事件合同 +4;与 L2 合并后重建实测 2695 → 2699。
-  assert.equal(local.filter((item) => item.interactionMode === 'event-contract').length, 2699)  /* 2026-10-15 PR10 复查:七处登录引导 cta/primary、口碑缺参返回 cta、modal-host 多行 bindinput 全是事件合同,+9(重建实测)。 */  /* F-L5C-06 帖文详情社区未开放空态新增返回 CTA,事件合同 +1(与 E2 合并后实测)。 */  /* F-W1-12 口碑管理登录失效可见态新增「重新登录」事件合同 +1。 */  /* 2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试事件后按最终树重建。 */  /* 2026-09-20 门店分身对话输入与关闭事件接线后按最终树重建。 */  /* 2026-09-20 合批收口:工作区实名接线批 + 底栏 v8 把组件事件/disabledtap 接进台账,本地合同净增 20 条 ⇒ 2107→2127 按最终树重建实测 */  /* 2026-09-19 收口批+开表接线落 master(经 #1115/#1117):41d21a41e 玩法开表三控件进合同,2104→2107 按最终树重建实测 */  // 2026-09-12 rebase #1068/#1070 后重建：接力签 1963；审核收口后 1963→1968。
+  // 2026-10-30 帖文第三轮:帖文卡事件合同 —— 发现 赞/评论/关注 +3、我的 详情/评论/赞 +3、俱乐部详情 关注 +1,重建实测 2699 → 2706。
+  assert.equal(local.filter((item) => item.interactionMode === 'event-contract').length, 2706)  /* 2026-10-15 PR10 复查:七处登录引导 cta/primary、口碑缺参返回 cta、modal-host 多行 bindinput 全是事件合同,+9(重建实测)。 */  /* F-L5C-06 帖文详情社区未开放空态新增返回 CTA,事件合同 +1(与 E2 合并后实测)。 */  /* F-W1-12 口碑管理登录失效可见态新增「重新登录」事件合同 +1。 */  /* 2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试事件后按最终树重建。 */  /* 2026-09-20 门店分身对话输入与关闭事件接线后按最终树重建。 */  /* 2026-09-20 合批收口:工作区实名接线批 + 底栏 v8 把组件事件/disabledtap 接进台账,本地合同净增 20 条 ⇒ 2107→2127 按最终树重建实测 */  /* 2026-09-19 收口批+开表接线落 master(经 #1115/#1117):41d21a41e 玩法开表三控件进合同,2104→2107 按最终树重建实测 */  // 2026-09-12 rebase #1068/#1070 后重建：接力签 1963；审核收口后 1963→1968。
   // 商家承接接入 cy-date-range-sheet 后新增 confirm / cancel 两条事件合同，1662 → 1664。
   // 合作页将会话失效与无权限拆为两个 cy-empty CTA，新增 goLogin / goWorkbench 两条事件合同，1664 → 1666。
   //   带一个 bind:cta 首发引导(+1),净 -2;同批新增两条 cy-state-shell 的 bind:primary
@@ -1749,7 +1751,8 @@ test('合并后可达动作 variant 全部进入台账且 handler 真源可定�
   // 同一枚退役声音开关，总控件数减少1。
   // 2026-10-29 R2 l2-roam:「动态」二级页 pages/square/list 整页删除(其控件随页出账),发现页帖文改全站流,重建实测 5552 → 5526。
   // 2026-10-29 dw29 L8 帖文转发:俱乐部详情 / 俱乐部 tab 各 +1 bind:repost,广场 −1 bind:favorite,
-  assert.equal(ledger.controlCount, 5531)
+  // 2026-10-30 帖文第三轮:我的 −5 tap、帖文卡事件合同(发现 赞/评论/关注 +4、我的 详情/评论/赞 +3、俱乐部详情 关注 +1)、发现页点赞按来源拆两个 variant +1,重建实测 5531 → 5534。
+  assert.equal(ledger.controlCount, 5534)
   // 搜索主题与其它结果拆成互斥点击 +1，合计 3268 → 3271（取动作账本重建实测）。
   // 合作页新增会话失效/无权限两个独立 cy-empty CTA，3271 → 3273。
   // 2026-09-02 俱乐部客户系统落地，3273 → 3295。

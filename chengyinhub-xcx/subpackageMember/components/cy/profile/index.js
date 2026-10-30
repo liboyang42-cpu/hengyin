@@ -2128,6 +2128,9 @@ Component({
         return false;
       }
       newlist.forEach(function (row) {
+        row.source = 'community'; // 帖文卡:社区帖文不出转发,点赞走 creativesquare;作者头像/昵称缺时用主页头的(V-15 同口径)
+        if (!row.memberAvatar) row.memberAvatar = that.data._avatarSrc;
+        if (!row.memberNickname) row.memberNickname = that.data.userInfo && that.data.userInfo.nickname;
         if (row.pics) row.picList = String(row.pics).split(';').filter(function (pic) { return pic; });
         if (row.createTime) row.formattedCreateTime = that.formatTimeDifference(row.createTime);
       });
@@ -2312,6 +2315,14 @@ Component({
   goMerchantTeam: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/team/index', complete: () => { this._navigating = false; } }); },
   goClubWorkbench: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/detail/index?owner=1&tab=manage', complete: () => { this._navigating = false; } }); },
   goCoupon: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/coupon-wallet/index', complete: () => { this._navigating = false; } }); },
+  // 帖文第三轮:帖文卡的点正文 / 点评论进详情,点赞走原来的 creativesquare 点赞(type=1);数据下标来自卡片事件
+  onPostCardDetail: function (e) {
+    this.jumpDetail({ currentTarget: { dataset: { index: e.detail && e.detail.index } } });
+  },
+  onPostCardLike: function (e) {
+    this.lickClick({ currentTarget: { dataset: { index: e.detail && e.detail.index, type: 1 } } });
+  },
+
   jumpDetail: function (e) {
     var activity = this.data.list[e.currentTarget.dataset.index];
     if (activity) { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/square/detail/index?id=' + activity.id, complete: () => { this._navigating = false; } }); }

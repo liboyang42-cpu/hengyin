@@ -76,6 +76,8 @@ class ClubPostFeedScopeTest {
         ReflectionTestUtils.setField(controller, "clubMemberService", memberSvc);
         ReflectionTestUtils.setField(controller, "coopInviteService", inviteSvc);
         ReflectionTestUtils.setField(controller, "clubPostService", postSvc);
+        // 帖文卡头像「+」关注:查看者对作者的关注态(批量查询,默认空 = 都没关注)
+        ReflectionTestUtils.setField(controller, "umsMemberFollowMapper", org.mockito.Mockito.mock(com.chengyinhub.business.mapper.UmsMemberFollowMapper.class));
         ReflectionTestUtils.setField(controller, "clubPostLikeService", likeSvc);
         ReflectionTestUtils.setField(controller, "clubService", clubSvc);
         ReflectionTestUtils.setField(controller, "clubAccessService", accessSvc);

@@ -13,7 +13,7 @@ const vm = require('node:vm');
 
 const ROOT = path.resolve(__dirname, '../..');
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
-const LONG = '入社须知\n1. 准时集合\n2. 带水\n3. 注意安全';
+const LONG = '入社须知\n1. 准时集合\n2. 带水\n3. 注意安全\n4. 别掉队\n5. 拍照\n6. 回家报平安'; // 帖文第三轮:7 段才超过 6 行
 
 function loadCard() {
   let definition;

@@ -443,6 +443,19 @@ const ACTION_VARIANTS = new Map([
     id: 'trade-receipt-read', handler: 'checkThemeTradeReceipt',
     apis: ['/api/game/session/receipt', '/api/game/session/view'], writeApis: [], effectClasses: ['read', 'state'], externalCapabilities: [],
   }]],
+  // 帖文第三轮:发现页帖文流混着俱乐部帖文与社区帖文,点赞按帖子来源只打其中一个接口(utils/post-feed-actions.toggleLike);
+  // 关注只打 /api/user/follow/action(同一模块里的点赞接口不属于这次点击)。
+  ['pages/talent/list/index.js:onLikePost', [
+    { id: 'club-post', handler: 'onLikePost', predicate: { postSource: 'club' },
+      apis: ['/api/club/post/like'], writeApis: ['/api/club/post/like'], effectClasses: ['write', 'state'], externalCapabilities: [],
+      requiredRequests: [{ urlTemplate: '/api/club/post/like', method: 'POST', kind: 'write' }] },
+    { id: 'community-post', handler: 'onLikePost', predicate: { postSource: 'community' },
+      apis: ['/api/creativesquare/like'], writeApis: ['/api/creativesquare/like'], effectClasses: ['write', 'state'], externalCapabilities: [],
+      requiredRequests: [{ urlTemplate: '/api/creativesquare/like', method: 'POST', kind: 'write' }] },
+  ]],
+  ['pages/talent/list/index.js:onFollowPost', [{ id: null, handler: 'onFollowPost',
+    apis: ['/api/user/follow/action'], writeApis: ['/api/user/follow/action'], effectClasses: ['write', 'state'], externalCapabilities: [],
+    requiredRequests: [{ urlTemplate: '/api/user/follow/action', method: 'POST', kind: 'write' }] }]],
   ['subpackageMember/components/cy/profile/index.js:onPrimaryCta', [
     {
       id: 'visitor-follow', handler: 'toggleFollow', predicate: { isSelf: false, subjectIsMerchant: false },

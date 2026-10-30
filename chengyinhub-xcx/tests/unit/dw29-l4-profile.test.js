@@ -109,7 +109,10 @@ test('V-15 全站同步:我的/主页头、首页问候、俱乐部成员、帖�
   const profileJs = read('subpackageMember/components/cy/profile/index.js')
   assert.match(profileJs, /id\.avatar = avatarSrc\(id\.avatar, app\.getImgUrl && app\.getImgUrl\.bind\(app\)\);/)
   const profileWxml = read('subpackageMember/components/cy/profile/index.wxml')
-  assert.match(profileWxml, /src="\{\{img\.first\(item\.memberAvatar\) \|\| _avatarSrc \|\| '\/images\/d_profile\.png'\}\}"/)
+  // 帖文第三轮:我的帖文换成同一张 cy-post-card(卡里 img.first(post.memberAvatar)),缺头像时读取处补主页头的 _avatarSrc
+  assert.match(profileWxml, /<cy-post-card wx:for="\{\{list\}\}"/)
+  assert.match(read('components/cy/post-card/index.wxml'), /src="\{\{img\.first\(post\.memberAvatar\) \|\| '\/images\/d_profile\.png'\}\}"/)
+  assert.match(profileJs, /if \(!row\.memberAvatar\) row\.memberAvatar = that\.data\._avatarSrc;/)
 
   const home = read('pages/index/index.js')
   assert.match(home, /this\._offIdentity = identitySync\.onIdentityChange\(/)

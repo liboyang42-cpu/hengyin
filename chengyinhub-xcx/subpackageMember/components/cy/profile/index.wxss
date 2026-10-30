@@ -550,6 +550,9 @@
 
 /* 动态 Feed */
 .pc-feed { margin-top: var(--cy-space-1); }
+/* 帖文第三轮:帖文卡自带左右 16pt,在正文栏里抵掉一层,和发现页同宽(多图能滑到屏幕边) */
+.pc-feed { margin-left: calc(-1 * var(--cy-page-x)); margin-right: calc(-1 * var(--cy-page-x)); }
+.pc-feed-state { display: block; padding: 0 var(--cy-page-x); }
 .pc-post {
   background: transparent; border: none;
   border-radius: 0; padding: var(--cy-space-3) var(--cy-space-1); margin-bottom: var(--cy-space-1);

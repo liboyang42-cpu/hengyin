@@ -3097,6 +3097,24 @@ Page({
     }
     return scope;
   },
+  // 帖文第三轮:头像「+」关注(与发现同一口径:同作者的帖子一起改,失败回滚,后端提示原样给用户)
+  onFollowPost(e) {
+    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.onFollowPost(e), { owner: this, target: () => [this.data.clubId, e.detail && e.detail.memberId] })) return;
+    const row = (this.data.posts || [])[e.detail && e.detail.index];
+    const memberId = row && row.memberId;
+    const pending = this._followPending || (this._followPending = {});
+    if (!memberId || pending[memberId]) return;
+    pending[memberId] = true;
+    const setFollow = (v) => this.setData({ posts: (this.data.posts || []).map((p) => (p && String(p.memberId) === String(memberId) ? Object.assign({}, p, { isFollowTheUser: v }) : p)) });
+    setFollow(1);
+    app.sendRequest({
+      hideLoading: true, silentError: true, autoErrorToast: false,
+      url: '/api/user/follow/action', method: 'POST', data: { follow_member_id: memberId, follow: 1 },
+      success: (res) => { delete pending[memberId]; if (res && res.code == '200') return; setFollow(0); cyToast((res && res.msg) || '关注没成功'); },
+      fail: () => { delete pending[memberId]; setFollow(0); cyToast('网络错误，请重试'); },
+    });
+  },
+
   onLikePost(e) {
     if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.onLikePost(e), { owner: this, target: () => [this.data.clubId, e.detail && e.detail.postId, e.currentTarget.dataset.id] })) return; // 2026-10-24 游客写前登录
     const rawId = (e.detail && e.detail.postId) || e.currentTarget.dataset.id;

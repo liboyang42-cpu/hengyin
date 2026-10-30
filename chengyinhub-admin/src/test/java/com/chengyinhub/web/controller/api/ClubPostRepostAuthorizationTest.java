@@ -72,6 +72,8 @@ class ClubPostRepostAuthorizationTest {
         ReflectionTestUtils.setField(controller, "clubService", clubs);
         ReflectionTestUtils.setField(controller, "clubMemberService", members);
         ReflectionTestUtils.setField(controller, "clubPostService", posts);
+        // 帖文卡头像「+」关注:查看者对作者的关注态(批量查询,默认空 = 都没关注)
+        ReflectionTestUtils.setField(controller, "umsMemberFollowMapper", org.mockito.Mockito.mock(com.chengyinhub.business.mapper.UmsMemberFollowMapper.class));
         ReflectionTestUtils.setField(controller, "clubPostLikeService", mock(IClubPostLikeService.class));
         ReflectionTestUtils.setField(controller, "clubParticipationGuard", guard);
         club = club(CLUB, 1);

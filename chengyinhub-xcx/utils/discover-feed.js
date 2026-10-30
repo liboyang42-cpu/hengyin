@@ -26,6 +26,7 @@ function normalizeClubPost(p) {
     source: 'club',
     feedKey: 'club-' + p.id,
     sortTs: sortTs(p.createTime),
+    memberId: p.authorMemberId,   // 帖文卡头像「+」关注与点头像都认 memberId
     memberNickname: p.nickname,
     memberAvatar: p.avatar,
     contents: decodeDisplayText(p.content),

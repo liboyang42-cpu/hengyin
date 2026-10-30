@@ -1,5 +1,6 @@
 // 2026-10-29 R2 l2-roam(V-08 业主拍板:帖文流只剩发现 / 俱乐部详情 / 我的):「动态」二级页 pages/square/list 整页删除,其 19 条登记随代码删除(U3-DEBT 7、U4-DEBT 9、U4-DYNAMIC 3),棘轮只下调 u3Handler 62→55、u4Field 114→105、u4Dynamic 65→62;另 4 条既有锚点仅行号位移(各文件顶部加一行 discover-nav 引用):U4-DYNAMIC play 1752→1753、square/detail 1262→1263、im/list 372→374(另加一行注释),U5 play 7904→7905,调用行逐字相同、理由不变;不新增登记;u3Debt / u4Debt / u4Dynamic / u5Silent digest 按门禁 baselineKeyDigest 重算。
 // 2026-10-29 真机走查 l2-roam(V-06/V-07/V-08/V-09):roam/index.js 删「仅前台记录」提示与其渲染字段、改雾重绘/长按环/结算跳转后,下方既有 20 条锚点仅行号位移(566→568、1842→1844、3971→3998、4812→4839、4870→4897、5953→5982、5962→5991、558→560、809→811、780→782、5792→5821、5799→5828、2600→2602、2629→2631、1931→1933、4266→4293、4480→4507、4565→4592、4676→4703、5136→5163),difflib 逐行映射且调用行逐字相同,理由与条数不变,不新增登记;u4Dynamic / u5Silent digest 按门禁 baselineKeyDigest 重算。
+// 2026-10-30 帖文第三轮(我的帖文换成同一张帖文卡):profile/index.js 帖文读取在 forEach 首行加 row.source 与头像/昵称兜底三行,U4-DYNAMIC 本人帖文翻页 patch 2141→2144,调用行逐字相同、理由与条数不变,u4Dynamic digest 按门禁 baselineKeyDigest 重算。
 // 2026-10-29 dw29-l4-profile(V-15 头像显示过 getImgUrl / V-21 个人介绍入口):app.js 顶部 +1 行,U1-VARIABLE consent adapter 426→427;profile/index.js 顶部 +1、_identityHead +2,U1 720→721、U4-DYNAMIC 1291→1294 / 2138→2141;首页 index.js 顶部 +2、onLoad 广播监听 +8、onUnload +1、getUserData +2,U1 1043→1056、U4 1150→1163 / 1259→1272 / 1366→1379;逐条以行及上下各一行与基线分支逐字比对一致,理由与条数不变、不新增登记,u1Variable / u4Dynamic digest 按门禁 baselineKeyDigest 重算。
 // 2026-10-29 dw29 L8 帖文转发:square/list 收藏挪进「···」(data 加一行、弹层分发加收藏分支),U4-DYNAMIC 三条锚点仅行号位移 137→138、177→178、1063→1072;merchant/relation 顶部加转发映射引用一行,U5 合作 tab 帖文流读取 264→265;行内容逐字相同、理由与条数不变,不新增登记;u4Dynamic / u5Silent digest 按门禁 baselineKeyDigest 重算。
 // 合成源退役3条旧U4债务：新主线square/list已无longitude/latitude字段；治理square/detail真实读取this.data.replyId并校验原回复目标，均不能继续记零消费。
@@ -864,7 +865,7 @@ module.exports = {
 // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):45 个既有锚点仅行号位移换 key + 本线 6 处新增登记,digest 按门禁同一算法(sha256 of sorted keys joined by \n)重算。
 // 2026-10-20 合并 master(#327 等)进 #293:两侧重锚逐条按合并后源码同一行文本定位一致(fabu 12 条、merchantinfo 2 条、scene-club-edit 1 条),square/list 196/1259 随 #325 点赞修复后移一行;digest 按门禁同一算法重算。
 // 2026-10-27 devfix L07(21 处动态 setData 仅行号位移):逐条以 master 原行与新行逐字比对一致,理由一字未改,digest 按门禁同算法重算。
-"89dce3be92771171a6a9a66068afdd3c41bbbceca361b96159fc11ac7bb363ab",
+"062b15439032c832f8dc430e90f3bd14ae66f911c9b06199c990d9973ca58d9b",
 // 2026-10-28 模板页货架改版(#652)合 master(#610):本线删 template/index 两条 + master play 1621→1624 重锚，合并树 60 条，digest 按同一算法重算。
 // 2026-10-20 R5 尾段(#327,owner 批准 12 条重锚):fabu 729→731、898→900、2524→2530、3570→3588、3951→3969、4957→4990、5215→5248、5866→5899、5876→5909、5929→5962、6270→6303、7936→8060,逐行比对 master 原行一字未改,理由与条数 58 不变;digest 按同一算法显式重算。
       // 2026-08-20 开卡包四拍动效:u5Silent 条数不变(12),只是 play/index.js 的调用点
@@ -1277,7 +1278,7 @@ module.exports = {
     "chengyinhub-xcx/pages/activity/official-mine/index.js:171": "BL-80 通知复盘读取网络失败:按卡片路径写 _statsLoading=false;sameItem 校验防止写到换行后的另一张卡;owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/pages/activity/official-mine/index.js:172": "BL-80 通知复盘读取网络失败的 _statsText 动态键:写「网络连接失败，点一下重试」,在该卡触达行消费;owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/pages/roam/index.js:568": "BL-70 横滑卡头像堆按命中行拼 shopStrip.rows[i].visitors 路径批量回写;只在横滑卡 poi__who 头像堆消费,epoch 丢弃迟到回包;owner=小程序,复核=2026-12-31",
-    "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:2141": "本人帖文翻页patch只用list[oldLen+i]固定列表名与响应遍历下标，其余feedErr/feedAuthError/hasMore/nodata为字面字段；服务端仅供值不供键；owner=小程序，复核=2026-09-30",
+    "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:2144": "本人帖文翻页patch只用list[oldLen+i]固定列表名与响应遍历下标，其余feedErr/feedAuthError/hasMore/nodata为字面字段；服务端仅供值不供键；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/activity/official-mine/index.js:164": "BL-80 通知复盘读取成功分支的 _canRecover 动态键:按同一卡片路径写是否可安全恢复原投递(仅 code 200 且 canRecoverInapp 为真),sameItem 校验防止写到换行后的另一张卡,在该卡「安全恢复原投递」按钮消费;owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/pages/index/index.js:1272": "底部主题翻页只追加bottomTopicList[oldLen+i]，其余页码/状态/hasMore固定字面字段；下标来自当前列表长度和响应遍历序号；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/index/index.js:1379": "底部活动翻页只追加bottomActivityList[oldLen+i]，其余页码/状态/hasMore固定字面字段；下标来自当前列表长度和响应遍历序号；owner=小程序，复核=2026-09-30",

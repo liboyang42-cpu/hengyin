@@ -26,15 +26,18 @@ function assertSharedPostCard(overrides = {}) {
   // 真正的不变式是「首列宽 == 头像宽」,所以两处必须读同一个变量,不许各写一份字面值。
   // 2026-10-22 新稿(俱乐部页重做 211:271/326/354):不再是两栏网格,头像只占头部行首,
   // 头部给它让出 --pc-avatar + 10pt;内容整宽。不变式改为「头部让位 == 头像宽 + 间距」,同读一个变量。
-  assert.doesNotMatch(componentWxss, /grid-template-columns:\s*var\(--pc-avatar\)/, '内容不能再缩进到头像右侧')
-  assert.match(componentWxss, /\.post-card__head\s*\{[^}]*padding-left:\s*calc\(var\(--pc-avatar\)\s*\+\s*var\(--cy-space-2-5\)\)/s)
+  // 2026-10-30 帖文第三轮(业主定稿 P-1 = Threads 版):头像 36pt 单独占左栏,昵称、正文、图、分享卡、动作行
+  // 都缩进到头像右侧;四种帖文同一条左栏。不变式:左栏 = 头像宽 + 12pt,内容让出的正是这条左栏。
+  assert.doesNotMatch(componentWxss, /grid-template-columns:\s*var\(--pc-avatar\)/)
+  assert.match(componentWxss, /--pc-avatar:\s*72rpx;[\s\S]*--pc-rail:\s*calc\(var\(--pc-avatar\)\s*\+\s*var\(--cy-space-3\)\)/)
+  assert.match(componentWxss, /\.post-card__main\s*\{[^}]*padding-left:\s*var\(--pc-rail\)/s)
   assert.match(componentWxss, /\.post-card__avatar\s*\{[^}]*width:\s*var\(--pc-avatar\)[^}]*height:\s*var\(--pc-avatar\)/s)
-  assert.match(componentWxss, /\.post-card--compact\s*\{\s*--pc-avatar:\s*var\(--cy-space-7\)/)
+  assert.doesNotMatch(componentWxss, /\.post-card--compact\s*\{\s*--pc-avatar/, '不再按 variant 换头像大小')
   // 骨架跟真卡片走(用户拍板):头像与首列间距差一格,加载完成时整栏会横向弹一下。
   const skeletonWxss = overrides.skeletonWxss || read('components/cy/skeleton/index.wxss')
-  assert.match(skeletonWxss, /\.sk-post\s*\{[^}]*gap:\s*var\(--cy-space-2-5\)[^}]*padding:\s*36rpx/s)
-  assert.match(skeletonWxss, /\.sk-post-avatar\s*\{[^}]*width:\s*88rpx[^}]*height:\s*88rpx/s)
-  assert.match(componentWxss, /\.post-card__text\s*\{[^}]*-webkit-line-clamp:\s*2/s)
+  assert.match(skeletonWxss, /\.sk-post\s*\{[^}]*gap:\s*var\(--cy-space-3\)[^}]*padding:\s*var\(--cy-space-3\) var\(--cy-page-x\)/s)
+  assert.match(skeletonWxss, /\.sk-post-avatar\s*\{[^}]*width:\s*72rpx[^}]*height:\s*72rpx/s)
+  assert.match(componentWxss, /\.post-card__text\s*\{[^}]*-webkit-line-clamp:\s*6/s)
   // 点赞态由「描边 heart = 未赞 / 实心 heart-filled = 已赞」表达,不再是一张自带红的位图 SVG。
   assert.match(componentWxml, /post-card__action--like[\s\S]*post-card__heart[^>]*name="heart-filled"[\s\S]*post-card__heart[^>]*name="heart"[\s\S]*emitComment[\s\S]*post-card__share/)
   // 负控:旧做法是去色滤镜把红实心心压成灰实心心,用户读作「已赞」——不许回潮。
@@ -43,7 +46,7 @@ function assertSharedPostCard(overrides = {}) {
   // 2026-10-29 业主:站内转发有真后端(club_post_repost),计数来自服务端 repostCount;
   // 分享到微信仍是产品箭头位图,不换成 cy-icon share。
   assert.match(componentWxml, /aria-label="分享到微信"[\s\S]*src="\/images\/icon_share\.png"/)
-  assert.match(componentWxml, /wx:if="\{\{showRepost\}\}"[\s\S]*\{\{post\.repostCount \|\| ''\}\}/)
+  assert.match(componentWxml, /wx:if="\{\{showRepost && post\.source !== 'community'\}\}"[\s\S]*\{\{post\.repostCount \|\| ''\}\}/)
   assert.doesNotMatch(componentWxml, /name="share"/)
   assert.match(read('pages/talent/list/index.wxml'), /interactive-club/)
   // 2026-10-27 M-24:俱乐部详情玩家深色、商家浅色 ⇒ 帖文卡 light 只跟商家视角走;达人页同理随商家视角切浅色。

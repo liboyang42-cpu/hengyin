@@ -66,15 +66,15 @@
 .sk-post {
   display: flex;
   align-items: flex-start;
-  gap: var(--cy-space-2-5);
-  padding: 36rpx var(--cy-page-x);
+  gap: var(--cy-space-3);
+  padding: var(--cy-space-3) var(--cy-page-x);
 }
-/* ⚠️ 与 cy-post-card 逐像素同步(Figma 297:1827):头像 44pt=88rpx、首列间距 10pt=20rpx、
-   上下内边距 18pt=36rpx。骨架比真卡宽/窄一格,加载完成时整栏会横向弹一下。
+/* ⚠️ 与 cy-post-card 逐像素同步(帖文第三轮 Threads 版):头像 36pt=72rpx、左栏间距 12pt=24rpx、
+   上内边距 12pt=24rpx。骨架比真卡宽/窄一格,加载完成时整栏会横向弹一下。
    真卡在 components/cy/post-card/index.wxss —— 那边改了这里必须跟着改。 */
 .sk-post-avatar {
-  width: 88rpx;
-  height: 88rpx;
+  width: 72rpx;
+  height: 72rpx;
   border-radius: var(--cy-radius-pill);
   flex: none;
 }

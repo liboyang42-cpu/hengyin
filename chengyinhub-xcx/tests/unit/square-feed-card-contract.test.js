@@ -82,10 +82,13 @@ function assertImmersiveCardContract(files) {
   // 2026-09-02 Figma 297:1827 改口径:图廊不再按「正文栏宽」算单张铺满,改成固定 300pt×230pt
   // 的横滑卡(比正文栏 289pt 略宽 ⇒ 右侧被切一刀,那一刀就是「还有下一张、可以滑」的提示)。
   // 原断言钉的是旧的 calc 表达式,与新口径互斥,故整条换成新几何。
-  assert.match(files.postCardWxss, /\.post-card__media-map,\s*\.post-card__media-pic\s*\{[^}]*width:\s*600rpx[^}]*height:\s*460rpx[^}]*border-radius:\s*var\(--cy-radius-lg\)/s,
-    '横滑图廊每张必须是稿上的 300pt × 230pt、16pt 圆角')
-  assert.match(files.postCardWxss, /\.post-card__media-row\s*\{[^}]*gap:\s*var\(--cy-space-2-5\)/s,
-    '图与图的间距必须是稿上的 10pt')
+  // 2026-10-30 帖文第三轮(业主定稿 P-1,Threads 版):多图等高 232pt 横滑、按原比例定宽,能滑过头像那一栏到屏幕两边;
+  // 单图按原比例放在正文列里;不出「1/3」。
+  assert.match(files.postCardWxss, /\.post-card__strip-pic\s*\{[^}]*height:\s*464rpx/s, '多图等高 232pt')
+  assert.match(files.postCardWxml, /class="post-card__strip-pic" src="\{\{pic\}\}" mode="heightFix"/, '多图按原比例定宽')
+  assert.match(files.postCardWxss, /\.post-card__strip-wrap\s*\{[^}]*margin:[^;]*calc\(-1 \* \(var\(--pc-rail\) \+ var\(--cy-page-x\)\)\)/s, '多图滑过头像那一栏')
+  assert.match(files.postCardWxml, /class="post-card__one-img" src="\{\{post\.picList\[0\]\}\}" mode="widthFix"/, '单图按原比例')
+  assert.doesNotMatch(files.postCardWxml, /post-card__count"/, '不出「1/3」')
   assert.match(files.detailWxml, /<cy-feed-play-card\b[^>]*wx:if="\{\{\s*info\.hasPlayCover\s*&&\s*!info\.isCompletionShare\s*\}\}"/s,
     '详情页模板沉浸卡必须排除完赛分享')
 
@@ -107,8 +110,10 @@ function assertImmersiveCardContract(files) {
   assert.match(files.detailWxml, /class="post-text"[^>]*wx:if="\{\{\s*info\.contents\s*\}\}"/)
   // 2026-09-02 Figma 297:1827:scroll-view 外面多包了一层 .post-card__gallery(给页码 pill
   // 一个 position:relative 的锚),wx:if 跟着上移;守的还是同一条:有图就得渲染出来。
-  assert.match(files.postCardWxml, /class="post-card__gallery"[^>]*post\.picList/, '关联卡原有实景图仍须可见')
-  assert.match(files.postCardWxml, /class="post-card__media-pic"[^>]*catchtap="emitPreview"/, '图仍须可点开大图')
+  // 帖文第三轮:单图 .post-card__one / 多图 .post-card__strip-wrap,点图走 onPicTap(单击全屏大图、双击点赞)
+  assert.match(files.postCardWxml, /class="post-card__one" wx:if="\{\{!post\.isCompletionShare && post\.picList\.length === 1\}\}"/, '关联卡原有实景图仍须可见(单图)')
+  assert.match(files.postCardWxml, /class="post-card__strip-wrap" wx:elif="[^"]*post\.picList/, '关联卡原有实景图仍须可见(多图)')
+  assert.match(files.postCardWxml, /class="post-card__strip-pic"[^>]*catchtap="onPicTap"/, '图仍须可点开大图')
   assert.match(files.detailWxml, /class="media"[^>]*picList\.length/, '详情页原有实景图仍须可见')
 
   // 已赞实心 + 未赞描边两枚 cy-icon,后接点赞计数(原先是单张位图 heart-filled.svg)。

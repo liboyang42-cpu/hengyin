@@ -114,9 +114,9 @@
 
       <block wx:if="{{posts.length}}">
         <view id="club-post-{{item.feedKey}}" class="club-post-anchor" wx:for="{{posts}}" wx:key="feedKey" style="{{pmPosts === 1 ? '--pm-p:1;' : (pmPosts === 2 ? '--pm-p-d:.32s;--pm-p-s:1;' : '')}}">
-          <cy-post-card expandable-text post="{{item}}" index="{{index}}" light="{{isMerchantViewer}}" interactive-actions interactive-user interactive-media show-share show-repost
+          <cy-post-card expandable-text post="{{item}}" index="{{index}}" light="{{isMerchantViewer}}" user-id="{{myMemberId}}" interactive-actions interactive-user interactive-media show-follow show-share show-repost
             accessibility-label="查看{{item.memberNickname || '城瘾玩家'}}的动态"
-            bind:detail="onPostDetail" bind:user="onPostUser" bind:preview="onPreviewImage"
+            bind:detail="onPostDetail" bind:user="onPostUser" bind:follow="onFollowPost" bind:preview="onPreviewImage"
             bind:like="onLikePost" bind:repost="onRepostPost" bind:comment="onToggleComments" bind:playdetail="onPostReference" bind:play="onPostReferencePlay">
             <!-- F0098:被引对象当前不可见 ⇒ 只给中性标签,不显示标题封面,也不猜是删了还是转私密 -->
             <view slot="special" class="post-ref-unavailable" wx:if="{{item.refUnavailable}}">引用不可用</view>

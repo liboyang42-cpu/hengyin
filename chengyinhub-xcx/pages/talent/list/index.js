@@ -11,6 +11,7 @@ const discoverNav = require('../../../utils/discover-nav.js');
 const community = require('../../../utils/community-post-api.js').createClient(app, wx);
 const FEED_PAGE_SIZE = 20;
 const clubPostRepost = require('../../../utils/club-post-repost.js');
+const postFeedActions = require('../../../utils/post-feed-actions.js');
 
 // 主理人 L1-L5 等级对外文案(俱乐部继承展示;level=0 不显示)
 const LEVEL_LABELS = ['', 'L1 新手', 'L2 稳定', 'L3 成熟', 'L4 城市运营者', 'L5 区域策划方'];
@@ -30,6 +31,7 @@ function normalizeClub(c) {
 }
 Page({
   data: {
+    viewerId: '', // 帖文卡:自己的帖子不出「+」关注
     // 顶栏几何
     statusBarHeight: app.globalData.statusBarHeight,
     navBarHeight: app.globalData.navBarHeight,
@@ -222,6 +224,17 @@ Page({
     clubPostRepost.toggleRepost({ page: this, listKey: 'feed', postId: postId, app: app, toast: toast });
   },
 
+  // 帖文第三轮:点赞(心形弹 + 数字滚,先改卡面、失败回滚)与头像「+」关注,三处帖文流共用 utils/post-feed-actions
+  onLikePost(e) {
+    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.onLikePost(e), { owner: this, target: () => [e.detail && e.detail.postId] })) return;
+    postFeedActions.toggleLike({ page: this, listKey: 'feed', index: e.detail && e.detail.index, app: app, toast: toast, apply: (next) => this.setData({ feed: next }) });
+  },
+
+  onFollowPost(e) {
+    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.onFollowPost(e), { owner: this, target: () => [e.detail && e.detail.memberId] })) return;
+    postFeedActions.follow({ page: this, listKey: 'feed', index: e.detail && e.detail.index, app: app, toast: toast, apply: (next) => this.setData({ feed: next }) });
+  },
+
   onPostUser(e) {
     const memberId = e.detail && e.detail.memberId;
     if (memberId) wx.navigateTo({ url: '/pages/userinfo/userinfo?userId=' + memberId });
@@ -326,7 +339,7 @@ Page({
 
   onShow() {
 
-    this.setData({ fontScaleStyle: readPageStyle() });
+    this.setData({ fontScaleStyle: readPageStyle(), viewerId: String(app.getUserID() || '') });
     const isMerchantViewer = policy.isMerchantView({
       role: app.getUserRole(),
       userType: app.getUserType(),

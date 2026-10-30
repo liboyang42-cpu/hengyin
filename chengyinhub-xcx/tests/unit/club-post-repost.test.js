@@ -42,7 +42,8 @@ test('卡片:第三个动作是转发(图标 + 计数),收藏不在动作行;分
   const comment = actions.indexOf('emitComment')
   const repostAt = actions.indexOf('post-card__action--repost')
   assert.ok(like >= 0 && comment > like && repostAt > comment, '顺序:点赞 → 评论 → 转发')
-  assert.match(actions, /wx:if="\{\{showRepost\}\}"[^>]*catchtap="emitRepost"/)
+  // 帖文第三轮:发现页混着社区帖,转发只对俱乐部帖文出
+  assert.match(actions, /wx:if="\{\{showRepost && post\.source !== 'community'\}\}"[^>]*catchtap="emitRepost"/)
   assert.match(actions, /post-card__action--repost \{\{post\.viewerReposted \? 'is-on' : ''\}\}/)
   assert.match(actions, /<cy-icon class="post-card__repost-icon" name="repost" size="44" \/><text class="post-card__action-text">\{\{post\.repostCount \|\| ''\}\}<\/text>/)
   assert.doesNotMatch(wxml, /emitFavorite|isBookmarked|star-filled/)
@@ -57,7 +58,7 @@ test('卡片:转发条目在头像上方一行「某某 转发了」,同一张�
   assert.match(wxml, /wx:if="\{\{post\.repostBy\}\}">\{\{post\.repostBy\.nick \|\| '城瘾玩家'\}\} 转发了<\/view>/)
   assert.match(wxml, /\{\{post\.repostBy \? 'post-card--repost' : ''\}\}/)
   const wxss = read('components/cy/post-card/index.wxss')
-  assert.match(wxss, /\.post-card--repost \.post-card__avatar \{ top: calc\(36rpx \+ var\(--cy-space-4\) \+ var\(--cy-space-2\)\); \}/)
+  assert.match(wxss, /\.post-card--repost \.post-card__avatar \{ top: calc\(var\(--cy-space-3\) \+ var\(--cy-space-4\) \+ var\(--cy-space-2\)\); \}/)
 })
 
 test('卡片:emitRepost 抛 repost 事件,带原帖 id / 俱乐部;showFavorite 属性已退场', () => {
@@ -158,7 +159,8 @@ test('接入:俱乐部详情 / 俱乐部 tab 能转发,商家合作页只显示�
 
   const talent = read('pages/talent/list/index.wxml')
   assert.match(talent, /<cy-post-card[^>]*wx:key="feedKey"[^>]*show-repost[^>]*bind:repost="onRepostPost"/)
-  assert.match(read('pages/talent/list/index.js'), /clubPostRepost\.mapClubFeedRows\(rows,/)
+  // 2026-10-29 L2:发现页改全站流(utils/discover-feed.js),只出原帖不混转发条目;转发动作照常可点
+  assert.match(read('pages/talent/list/index.js'), /clubPostRepost\.toggleRepost\(\{ page: this, listKey: 'feed'/)
 
   const relation = read('pages/merchant/relation/index.wxml')
   assert.match(relation, /<cy-post-card[^>]*wx:key="feedKey"/)

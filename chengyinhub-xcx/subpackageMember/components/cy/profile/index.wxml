@@ -247,36 +247,12 @@
       <!-- ===== TAB · 推文 ===== -->
       <block wx:if="{{activeTab === 'posts'}}">
         <view class="pc-feed">
-          <cy-error load-failure wx:if="{{feedErr}}" title="{{feedAuthError ? '登录未成功' : '帖文加载失败'}}" sub="{{feedAuthError ? '请重新进入小程序' : ''}}" retry="重试" bind:retry="reloadFeed" />
-          <cy-empty wx:elif="{{nodata}}" title="还没有帖文" sub="{{isSelf ? '你还没有发布过帖文' : 'TA 还没有发布帖文'}}" />
-          <view class="pc-post" wx:for="{{list}}" wx:key="id">
-            <view class="pc-post-head">
-              <cy-avatar size="sm64" src="{{img.first(item.memberAvatar) || _avatarSrc || '/images/d_profile.png'}}" name="{{item.memberNickname || userInfo.nickname}}" />
-              <view class="pc-post-meta">
-                <text class="pc-post-name">{{item.memberNickname || userInfo.nickname}}</text>
-                <text class="pc-post-time">{{item.formattedCreateTime}}</text>
-              </view>
-            </view>
-            <view class="pc-post-body" bindtap="jumpDetail" data-index="{{index}}" hover-class="cy-pressed" hover-stay-time="80">{{item.contents}}</view>
-            <scroll-view wx:if="{{item.picList && item.picList.length}}" scroll-x class="pc-post-pics">
-              <image wx:for="{{item.picList}}" wx:for-item="pic" wx:key="index" src="{{pic}}" mode="aspectFill" lazy-load="true"
-                     class="pc-post-pic" data-piclist="{{item.picList}}" data-index="{{index}}" catchtap="previewImage"  aria-role="button" aria-label="查看大图" hover-class="cy-pressed" hover-stay-time="80"/>
-            </scroll-view>
-            <view class="pc-post-tools">
-              <view class="pc-tool" catchtap="lickClick" data-index="{{index}}" data-type="1" hover-class="cy-pressed" hover-stay-time="80">
-                <image class="pc-tool-ico" src="{{item.isLiked==1 ? '/subpackageMember/images/icon_sjt_h.png' : '/subpackageMember/images/icon_sjt.png'}}" mode="widthFix" />{{item.likeCount || 0}}
-              </view>
-              <view class="pc-tool" catchtap="lickClick" aria-role="button" aria-label="点赞" data-index="{{index}}" data-type="2" hover-class="cy-pressed" hover-stay-time="80">
-                <image class="pc-tool-ico" src="{{item.isLiked==2 ? '/subpackageMember/images/icon_xjt_h.png' : '/subpackageMember/images/icon_xjt.png'}}" mode="widthFix" />
-              </view>
-              <view class="pc-tool {{item.isBookmarked==1 ? 'is-on' : ''}}" catchtap="favoriteClick" data-index="{{index}}" aria-role="button" aria-label="{{item.isBookmarked==1 ? '取消收藏' : '收藏动态'}}" aria-pressed="{{item.isBookmarked==1}}" hover-class="cy-pressed" hover-stay-time="80">
-                <cy-icon name="{{item.isBookmarked==1 ? 'star-filled' : 'star'}}" size="36" />
-              </view>
-              <button class="pc-tool pc-tool-share" open-type="share" data-id="{{item.id}}" aria-label="转发动态">
-                <image class="pc-tool-ico" src="/images/icon_share.png" mode="widthFix" />
-              </button>
-            </view>
-          </view>
+          <cy-error class="pc-feed-state" load-failure wx:if="{{feedErr}}" title="{{feedAuthError ? '登录未成功' : '帖文加载失败'}}" sub="{{feedAuthError ? '请重新进入小程序' : ''}}" retry="重试" bind:retry="reloadFeed" />
+          <cy-empty class="pc-feed-state" wx:elif="{{nodata}}" title="还没有帖文" sub="{{isSelf ? '你还没有发布过帖文' : 'TA 还没有发布帖文'}}" />
+          <!-- 帖文第三轮(业主定稿 P-1,V-16):我的帖文和发现、俱乐部详情用同一张帖文卡,不再是自己那套 pc-post -->
+          <cy-post-card wx:for="{{list}}" wx:key="id" post="{{item}}" index="{{index}}" light="{{isMerchantView}}"
+            interactive-actions show-share accessibility-label="查看帖文"
+            bind:detail="onPostCardDetail" bind:comment="onPostCardDetail" bind:like="onPostCardLike" />
         </view>
       </block>
 

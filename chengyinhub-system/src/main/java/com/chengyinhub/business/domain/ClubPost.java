@@ -85,6 +85,11 @@ public class ClubPost extends BaseEntity
     /** 当前用户是否已转发(非表字段) */
     private Boolean viewerReposted;
 
+    /** 非持久:当前查看者是否已关注作者(1/0),帖文卡头像「+」关注用 */
+    private Integer isFollowTheUser;
+    public Integer getIsFollowTheUser() { return isFollowTheUser; }
+    public void setIsFollowTheUser(Integer isFollowTheUser) { this.isFollowTheUser = isFollowTheUser; }
+
     /** 非持久:聚合动态流用 —— 一条帖子在 feed 里必须说清是哪个俱乐部发的 */
     private String clubName;
     private String clubLogo;

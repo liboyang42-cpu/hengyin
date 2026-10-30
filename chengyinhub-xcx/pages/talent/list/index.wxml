@@ -33,9 +33,10 @@
     <block wx:else>
       <cy-progress-status class="talent-state" wx:if="{{feedState === 'refreshing'}}" title="正在更新帖文" />
       <block wx:if="{{feed.length}}">
-        <cy-post-card class="cy-fade-in" wx:for="{{feed}}" wx:key="feedKey" post="{{item}}" index="{{index}}" light="{{isMerchantViewer}}" interactive-user interactive-club show-share show-repost
+        <!-- 帖文第三轮:发现 / 俱乐部详情 / 我的 同一张卡同一套动作(点赞、评论、转发、分享、头像「+」关注、点图全屏) -->
+        <cy-post-card class="cy-fade-in" wx:for="{{feed}}" wx:key="feedKey" post="{{item}}" index="{{index}}" light="{{isMerchantViewer}}" user-id="{{viewerId}}" interactive-actions interactive-user interactive-club show-follow show-share show-repost
           accessibility-label="查看{{item.memberNickname || '城瘾玩家'}}的动态"
-          bind:detail="onPostTap" bind:user="onPostUser" bind:club="onPostClub" bind:repost="onRepostPost"
+          bind:detail="onPostTap" bind:comment="onPostTap" bind:like="onLikePost" bind:follow="onFollowPost" bind:user="onPostUser" bind:club="onPostClub" bind:repost="onRepostPost"
           bind:playdetail="onPostReference" bind:play="onPostReferencePlay" />
       </block>
       <cy-empty class="feed-state" wx:else title="还没有帖文" />

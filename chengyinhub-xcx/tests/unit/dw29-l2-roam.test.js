@@ -158,7 +158,7 @@ test('V-07 长按结束是以主键中心为圆心的标准进度环', () => {
 
 test('V-08 头像关注角标用两级选择器,不被内置 button 184px 宽顶成白色月牙', () => {
   const wxss = read('components/cy/post-card/index.wxss').replace(/\/\*[\s\S]*?\*\//g, '');
-  assert.match(wxss, /\.post-card__avatar \.post-card__follow \{[^}]*width: 32rpx;/);
+  assert.match(wxss, /\.post-card__avatar \.post-card__follow \{[^}]*width: 36rpx;/); // 帖文第三轮:36pt 头像配 18pt 角标
   assert.doesNotMatch(wxss, /(^|\})\s*\.post-card__follow \{/, '单类选择器 (0,1,0) 压不过 wx-button:not([size=mini])');
 });
 

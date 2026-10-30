@@ -33,30 +33,31 @@ function loadPostCard(source) {
   return { card, observer: definition.observers['post.contents'] }
 }
 
-test('F-W5-01 帖子卡:超过 40 字或换行成 3 段以上才给「展开」', () => {
+// 2026-10-30 帖文第三轮(业主定稿 P-1,Threads 版):收起态最多 6 行,超过约 120 字或 7 段以上才给「展开」
+test('F-W5-01 帖子卡:超过 120 字或换行成 7 段以上才给「展开」', () => {
   const { card, observer } = loadPostCard()
-  observer.call(card, '入社须知\n1. 准时集合\n2. 带水')
-  assert.equal(card.data.textLong, true, '短句多段的公告收起态会被夹成 2 行，必须能展开')
+  observer.call(card, '入社须知\n1. 准时集合\n2. 带水\n3. 注意安全\n4. 别掉队\n5. 拍照\n6. 回家报平安')
+  assert.equal(card.data.textLong, true, '短句多段的公告收起态会被夹成 6 行，必须能展开')
   observer.call(card, '一行就说完')
   assert.equal(card.data.textLong, false)
-  observer.call(card, '第一段\n第二段')
-  assert.equal(card.data.textLong, false, '两段刚好占两行，不夹')
-  observer.call(card, 'x'.repeat(41))
+  observer.call(card, '1\n2\n3\n4\n5\n6')
+  assert.equal(card.data.textLong, false, '六段刚好占六行，不夹')
+  observer.call(card, 'x'.repeat(121))
   assert.equal(card.data.textLong, true)
   observer.call(card, undefined)
   assert.equal(card.data.textLong, false)
 
   const wxml = read('components/cy/post-card/index.wxml')
   assert.match(wxml, /wx:if="\{\{expandableText && textLong\}\}" catchtap="toggleText"/, '展开按钮独立于点卡片(评论)')
-  assert.doesNotMatch(wxml, /post\.contents\.length > 40/, '展开判据只认 textLong 一处')
+  assert.doesNotMatch(wxml, /post\.contents\.length > /, '展开判据只认 textLong 一处')
   assert.match(rule(read('components/cy/post-card/index.wxss'), '.post-card__text--expanded'), /white-space:\s*pre-wrap/, '展开后保留换行')
 })
 
 test('F-W5-01 负控:展开判据退回只看字数,多段短文必须真红', () => {
   const source = mutated(read('components/cy/post-card/index.js'),
-    "text.length > 40 || text.split(/\\r?\\n/).length > 2", 'text.length > 40')
+    "text.length > 120 || text.split(/\\r?\\n/).length > 6", 'text.length > 120')
   const { card, observer } = loadPostCard(source)
-  observer.call(card, '入社须知\n1. 准时集合\n2. 带水')
+  observer.call(card, '入社须知\n1. 准时集合\n2. 带水\n3. 注意安全\n4. 别掉队\n5. 拍照\n6. 回家报平安')
   assert.notEqual(card.data.textLong, true)
 })
 
