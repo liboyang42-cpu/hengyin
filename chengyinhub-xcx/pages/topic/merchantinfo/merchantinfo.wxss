@@ -1916,8 +1916,8 @@ image.david_stu {
 .pf-state { padding: var(--cy-space-6) 0; text-align: center; font-size: var(--cy-font-label); color: var(--cy-text-secondary); }
 .pf-tiers { white-space: nowrap; margin-bottom: var(--cy-space-3); }
 .pf-tier { display: inline-flex; flex-direction: column; margin-right: var(--cy-space-2); padding: var(--cy-space-2) var(--cy-space-3); border-radius: var(--cy-radius-lg); background: var(--cy-bg-card-2); }
-.pf-tier-n { font-size: var(--cy-font-caption); color: var(--cy-text-secondary); }
-.pf-tier-t { font-size: var(--cy-font-label); font-weight: 700; color: var(--cy-text-title); }
+.pf-tier-n { font-size: var(--cy-font-label); font-weight: 600; color: var(--cy-text-title); }
+.pf-tier-t { margin-top: 4rpx; font-size: var(--cy-type-section-title); font-weight: 800; color: var(--cy-text-title); font-variant-numeric: tabular-nums; }
 .pf-hero { display: flex; flex-direction: column; padding: var(--cy-space-2) 0 var(--cy-space-4); }
 .pf-k { font-size: var(--cy-font-label); color: var(--cy-text-secondary); }
 .pf-big { margin-top: var(--cy-space-1); font-size: 88rpx; font-weight: 900; font-style: italic; letter-spacing: -2rpx; color: var(--cy-text-title); font-variant-numeric: tabular-nums; } /* ds-ok: 大号斜体金额,按业主定稿原型(NRC) */

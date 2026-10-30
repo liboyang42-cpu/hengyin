@@ -720,3 +720,9 @@
 .pg-sub::before { content: ""; position: absolute; left: 16rpx; top: -20rpx; bottom: 14rpx; width: 18rpx; border-left: 3rpx solid var(--cy-bg-card-2); border-bottom: 3rpx solid var(--cy-bg-card-2); border-bottom-left-radius: 18rpx; }
 .pg-si--ok .pg-si-dot { background: #BDBDC4; } /* ds-ok: 已就绪子项灰点 */
 .pg-go-ico { flex: none; margin-left: -6rpx; color: #2F7FEA; } /* ds-ok: 同上 */
+
+/* 走查 v2 R08:更多 = 白底发丝线行(Threads 式),危险项红字 */
+.more-group { padding: 0 var(--cy-space-2); }
+.more-group + .more-group { border-top: 12rpx solid var(--cy-bg-page); }
+.more-group .dpick { min-height: 108rpx; padding: 0 var(--cy-space-3); background: transparent; border-radius: 0; }
+.more-group .dpick-name { font-size: var(--cy-font-body); font-weight: 500; }

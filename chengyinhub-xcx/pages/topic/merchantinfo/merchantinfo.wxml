@@ -521,7 +521,7 @@
     <block wx:elif="{{profitSheet.row}}">
       <!-- 档位:每个合作方开售时定死的条款,只读展示 -->
       <scroll-view class="pf-tiers" scroll-x enhanced show-scrollbar="{{false}}" wx:if="{{profitSheet.row.split && profitSheet.row.split.tiers.length}}">
-        <view class="pf-tier" wx:for="{{profitSheet.row.split.tiers}}" wx:key="key"><text class="pf-tier-n">{{item.name}}</text><text class="pf-tier-t">{{item.tier}}</text></view>
+        <view class="pf-tier" wx:for="{{profitSheet.row.split.tiers}}" wx:key="key"><text class="pf-tier-n">{{item.name || (item.toType === 'club' ? '俱乐部' : '商家')}}</text><text class="pf-tier-t">{{item.tier}}</text></view>
       </scroll-view>
       <view class="pf-hero">
         <text class="pf-k">本主题已入账</text>
@@ -536,7 +536,6 @@
         <view class="pf-legend">
           <view class="pf-lg" wx:for="{{profitSheet.row.split.parts}}" wx:key="key"><view class="pf-lg-dot" style="background: {{item.color}};"></view><text class="pf-lg-n">{{item.label}}</text><text class="pf-lg-v">{{item.rateText}}</text></view>
         </view>
-        <text class="pf-fixed" wx:if="{{profitSheet.row.split.fixedText}}">{{profitSheet.row.split.fixedText}}</text>
       </view>
       <view class="pf-lbl"><text>各方到手</text></view>
       <view class="pf-party" wx:for="{{profitSheet.row.parties}}" wx:key="key">

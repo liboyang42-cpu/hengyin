@@ -2658,6 +2658,7 @@ Page({
             time: t.merchantPayoutTime ? String(t.merchantPayoutTime).slice(5, 10) + ' 到账' : '' },
         ],
       } } });
+      if (split) that._fillTierNames(split.tiers);
     };
     app.sendRequest({
       hideLoading: true, silentError: true, url: '/api/coop/finance', method: 'POST',
@@ -2674,6 +2675,28 @@ Page({
         fail() { terms = null; finish(); },
       });
     }
+  },
+  // 档位卡要写真名字:阵容里只有 id,工作台已有的俱乐部名直接用,其余按定价页同一口径逐个读公开资料
+  _fillTierNames(tiers) {
+    const that = this;
+    (tiers || []).forEach(function (tier) {
+      if (tier.name || !tier.toId) return;
+      app.sendRequest({
+        hideLoading: true, silentError: true,
+        url: tier.toType === 'club' ? '/api/club/detail' : '/api/merchant/public-detail', method: 'POST',
+        data: JSON.stringify({ id: tier.toId }), header: { 'Content-Type': 'application/json' },
+        success(res) {
+          const name = (res && res.code == '200' && res.data && res.data.name) || '';
+          const sheet = that.data.profitSheet;
+          if (!name || !sheet.show || !sheet.row || !sheet.row.split) return;
+          const next = Object.assign({}, sheet, { row: Object.assign({}, sheet.row, { split: Object.assign({}, sheet.row.split, {
+            tiers: sheet.row.split.tiers.map(function (t) { return t.key === tier.key ? Object.assign({}, t, { name: name }) : t; }),
+          }) }) });
+          that.setData({ profitSheet: next });
+        },
+        fail() { /* 名字读不到就保留「商家 / 俱乐部」,数字照常显示 */ },
+      });
+    });
   },
   closeProfitSheet() { this.setData({ profitSheet: { show: false, state: '', error: '', row: null } }); },
   goAllEarnings() {

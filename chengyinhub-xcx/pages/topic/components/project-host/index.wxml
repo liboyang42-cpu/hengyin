@@ -288,13 +288,13 @@
   </project-drawer>
 
   <!-- ===== 「更多」抽屉:按 role + 状态分组(2026-09-05) ===== -->
-  <project-drawer compact="{{true}}" show="{{ moreSheet.show }}" title="更多" bind:close="emitCloseMore">
+  <project-drawer plain="{{true}}" show="{{ moreSheet.show }}" title="更多" bind:close="emitCloseMore">
     <!-- CU-C-68:站点资格探不到时给一行可见且可重试的说明 —— 探不到 ≠ 没资格,
          不能静静把「本站运营」那一组灰着不解释。 -->
     <cy-inline-error wx:if="{{ stationOpsErrorText }}" kind="data" title="本站运营项没能确认"
       sub="{{ stationOpsErrorText }}" action="重新确认" data-act="probeStationOperable" bind:action="emit" />
     <block wx:for="{{ moreSheet.groups }}" wx:key="head" wx:for-item="grp">
-      <view class="dcard more-card" wx:if="{{grp.visibleRows.length}}">
+      <view class="more-group" wx:if="{{grp.visibleRows.length}}">
         <view class="dpick {{ row.disabled ? 'dpick--off' : '' }}" wx:for="{{ grp.visibleRows }}" wx:for-item="row" wx:key="key"
               catchtap="emit" data-act="onMorePick" data-key="{{ row.key }}" hover-class="cy-pressed" hover-stay-time="80">
           <view class="dpick-text">

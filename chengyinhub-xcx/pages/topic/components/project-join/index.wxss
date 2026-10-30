@@ -1123,3 +1123,24 @@
 .chapter-project-item + .chapter-project-item { margin-top: var(--cy-space-2); }
 .chapter-project-meta { margin-top: var(--cy-space-1); font-size: var(--cy-font-caption); color: var(--cy-text-secondary); }
 .chapter-project-actions { display: flex; flex-wrap: wrap; gap: var(--cy-space-2); margin-top: var(--cy-space-2); }
+
+/* 走查 v2 R04(业主 2026-10-30):承办方的进度与主办同一套样式 —— 一张白卡、实心洋红勾、当前步洋红圈、
+   状态写蓝字、连线实线;每步不再各自一张卡、不再用绿色虚线。 */
+.pg { padding: var(--cy-space-4) var(--cy-space-4) var(--cy-space-2); border-radius: var(--cy-radius-xl); background: var(--cy-bg-card); }
+.pg-rail { width: 36rpx; }
+.pg-dot { width: 36rpx; height: 36rpx; box-sizing: border-box; background: #E5338F; } /* ds-ok: 进度洋红,按业主参考视频 */
+.pg-dot--done::after { content: ""; position: absolute; left: 50%; top: 46%; width: 12rpx; height: 7rpx; margin: -5rpx 0 0 -6rpx; border-left: 3rpx solid #fff; border-bottom: 3rpx solid #fff; transform: rotate(-45deg); } /* ds-ok: 白勾 */
+.pg-dot--now { background: var(--cy-bg-card); border: 4rpx solid #E5338F; box-shadow: 0 0 0 8rpx rgba(229, 51, 143, 0.14); } /* ds-ok: 同上 */
+.pg-dot--wait { background: var(--cy-bg-card); border: 0; box-shadow: 0 0 0 2rpx rgba(0, 0, 0, 0.06), 0 4rpx 12rpx rgba(0, 0, 0, 0.08); } /* ds-ok: 同上 */
+.pg-line { left: 16rpx; border-left: 4rpx solid #E5338F; } /* ds-ok: 同上 */
+.pg-line--now, .pg-line--wait { border-left-color: var(--cy-bg-card-2); }
+.pg-card { padding: 0 0 var(--cy-space-2); background: transparent; border-radius: 0; }
+.pg-label { font-size: var(--cy-font-body); }
+.pg-label--done { font-weight: 500; color: var(--cy-text-secondary); }
+.pg-label--wait { color: var(--cy-text-tertiary); }
+.pg-tag { background: transparent; padding: 0; }
+.pg-tag--now { background: transparent; color: #2F7FEA; font-weight: 600; } /* ds-ok: 状态蓝字,按参考 */
+.pg-tag--done { background: transparent; color: var(--cy-text-tertiary); font-weight: 500; }
+.pg-top { justify-content: space-between; }
+.pg-dot--bad { background: var(--cy-danger); }
+.pg-line--bad { border-left-color: var(--cy-danger); }

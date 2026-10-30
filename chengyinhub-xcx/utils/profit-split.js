@@ -19,11 +19,12 @@ function pct(n) {
   return Math.round(n * 10) / 10 + '%';
 }
 
+// 业主 2026-10-30:档位卡上面只写商家 / 俱乐部名字,下面只写那个数
 function tierText(row) {
   const mode = Number(row && row.shareMode);
-  if (mode === 1 && num(row.shareRate) != null) return '分成 ' + pct(num(row.shareRate));
-  if (mode === 2 && num(row.fixedFee) != null) return '每核销 1 人 ¥' + num(row.fixedFee).toFixed(2);
-  return '引流档 · 无现金分成';
+  if (mode === 1 && num(row.shareRate) != null) return pct(num(row.shareRate));
+  if (mode === 2 && num(row.fixedFee) != null) return '¥' + num(row.fixedFee).toFixed(2) + '/人';
+  return '引流';
 }
 
 // lineup:[{toType, toId, shareMode, shareRate(百分数 0–100), fixedFee, name}]
@@ -57,7 +58,7 @@ function buildSplit(lineup, platformRate) {
   return {
     parts,
     fixedText: fixed.length ? '另按核销:' + fixed.join(' · ') : '',
-    tiers: rows.map(function (r) { return { key: (r.toType || '') + ':' + (r.toId || ''), name: r.name || (r.toType === 'club' ? '俱乐部' : '商家'), tier: tierText(r) }; }),
+    tiers: rows.map(function (r) { return { key: (r.toType || '') + ':' + (r.toId || ''), toType: r.toType, toId: r.toId, name: r.name || '', tier: tierText(r) }; }),
   };
 }
 

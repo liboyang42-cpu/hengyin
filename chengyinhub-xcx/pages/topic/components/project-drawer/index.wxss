@@ -162,3 +162,10 @@
 .dw--compact .dw-head { align-items: center; }
 .dw--compact .dw-head-text { padding-left: var(--cy-space-4); }
 .dw--compact .dw-title { font-size: var(--cy-type-sheet-title); }
+
+/* 走查 v2 R08:普通底部弹窗 —— 贴底(不浮)、白底、标题居中、按内容撑高到胶囊下沿为止 */
+.dw--plain { top: auto; left: 0; right: 0; bottom: 0; max-height: calc(100vh - var(--cy-drawer-top, 136rpx)); border-radius: var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0; background: var(--cy-bg-card); }
+.dw--plain .dw-scroll { flex: 0 1 auto; }
+.dw--plain .dw-head { justify-content: center; position: relative; }
+.dw--plain .dw-head-text { flex: none; padding: 0; text-align: center; }
+.dw--plain .dw-close { position: absolute; right: var(--cy-space-3); top: 50%; transform: translateY(-50%); }
