@@ -7,4 +7,5 @@
 .aura__b--3 { width: 520rpx; height: 520rpx; left: 0; top: 1360rpx; background: #E6E0FF; /* ds-ok: 同上 */ animation-duration: 22s; animation-delay: -11s; }
 /* 常驻的慢漂移(不会被快速重触发),只动 transform */
 @keyframes auraDrift { 0% { transform: translate3d(0, 0, 0) scale(1); } 50% { transform: translate3d(100rpx, -80rpx, 0) scale(1.18); } 100% { transform: translate3d(-60rpx, 60rpx, 0) scale(.92); } }
+.aura--reduced .aura__b { animation: none; }
 @media (prefers-reduced-motion: reduce) { .aura__b { animation: none; } }

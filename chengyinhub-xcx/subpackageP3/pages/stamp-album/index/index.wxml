@@ -33,7 +33,7 @@
   <!-- 续页失败:已看到的邮票留在原地,只在页尾给这一页的重试(不整屏报错) -->
   <view class="al-more" wx:elif="{{error && items.length}}" bindtap="retryLoad" aria-role="button" aria-label="重试加载这一页" hover-class="cy-pressed" hover-stay-time="80">这一页没读到 · 点此重试</view>
   <!-- 点开不是新页面:那一枚自己飞到屏幕中间放大,底下压暗;点空白处飞回去 -->
-  <view class="al-fly {{fly.on ? 'is-on' : ''}}" wx:if="{{fly.show}}" bindtap="closeFly" catchtouchmove="noop" aria-role="dialog" aria-label="邮票">
+  <view class="al-fly {{fly.on ? 'is-on' : ''}}" wx:if="{{fly.show}}" bindtap="closeFly" catchtouchmove="noop" hover-class="cy-pressed" hover-stay-time="80" aria-role="dialog" aria-label="邮票">
     <view class="al-fly__veil"></view>
     <view class="al-item al-fly__stamp" style="{{fly.style}}"><image class="al-img" src="{{fly.src}}" mode="aspectFill"></image></view>
   </view>

@@ -803,9 +803,8 @@
   ]
  },
  "B62": {
-  "selector": ".al-root, .theme-light",
+  "selector": ".al-item",
   "min": 1,
-  "weak": true,
   "forbid": [
    "cy-error",
    "cy-skeleton"

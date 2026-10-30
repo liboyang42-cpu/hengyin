@@ -1,2 +1,2 @@
 <!-- 收集册底:整屏一张浅色,三团很淡的蓝 / 青 / 紫慢慢漂(业主参考 mymind Serendipity);状态栏下面同一张底 -->
-<view class="aura" aria-hidden="true"><view class="aura__b aura__b--1"></view><view class="aura__b aura__b--2"></view><view class="aura__b aura__b--3"></view></view>
+<view class="aura {{reduced ? 'aura--reduced' : ''}}" aria-hidden="true"><view class="aura__b aura__b--1"></view><view class="aura__b aura__b--2"></view><view class="aura__b aura__b--3"></view></view>

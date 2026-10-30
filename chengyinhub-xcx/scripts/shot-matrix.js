@@ -302,7 +302,7 @@ const RAW = [
   ['B58', 'B58-templatedetail-loading.png', '/pages/templatedetail/templatedetail?id=1', 'player', 'loading', { loading: true }, undefined, SKEL, 'setData', 'P1', '', 'bbb'],
   ['B59', 'B59-template-index.png', '/pages/template/index', 'player', 'normal', null, undefined, TITLE, 'real-data', 'P0', '', '★"发布广场"居中、与俱乐部/我的同字号（#496 曾被改回，必复验）'],
   ['B60', 'B60-circle-play-missing.png', '/pages/play/circle/index', 'player', 'missing-param', null, undefined, { selector: '.state', min: 1 }, 'real-data', 'P1', '', '缺少城市实例时明确说明，不能停在 loading'],
-  ['B62', 'B62-stamp-album-real.png', '/subpackageP3/pages/stamp-album/index/index', 'player', 'normal', null, undefined, TITLE, 'real-data', 'P0', '', '★替换破图 10；一排三个；玩家侧黑底；真实邮票图'],
+  ['B62', 'B62-stamp-album-real.png', '/subpackageP3/pages/stamp-album/index/index', 'player', 'normal', null, undefined, { selector: '.al-item', min: 1 }, 'real-data', 'P0', '', '★替换破图 10;真实邮票图;2026-10-30 收集册 · 邮票:标题由 album-head 给(不再是 cy-page-title),锚在邮票本身'],
   ['B63', 'B63-stamp-album-empty.png', '/subpackageP3/pages/stamp-album/index/index', 'player', 'empty', { loading: false, list: [] }, undefined, EMPTY, 'setData', 'P1', '', '入口先做只读路由审计（只有漫游中可开）'],
   ['B64', 'B64-stamp-album-fail.png', '/subpackageP3/pages/stamp-album/index/index', 'player', 'error', { loading: false, loadError: true }, undefined, ERR, 'setData', 'P1', '', 'aaa/bbb'],
   ['B65', 'B65-stamp-camera.png', '/subpackageP3/pages/stamp-camera/index/index', 'player', 'normal', null, undefined, TITLE, 'real-device', 'P2', '需真机相机', '—'],

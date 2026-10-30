@@ -1,6 +1,6 @@
 {
   "navigationBarTitleText": "藏品册",
-  "backgroundColor": "#FAFBFD",
+  "backgroundColor": "#ffffff",
   "disableScroll": true,
   "usingComponents": {
     "cy-nav-bar": "/components/cy/nav-bar/index",

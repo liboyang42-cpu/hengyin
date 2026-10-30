@@ -33,9 +33,9 @@
   </view>
 
   <!-- 点一件:它自己从堆里飞到屏幕中间放大,底下压暗;点空白处飞回去;再点这一件打开下面的详情(转台 / 改名) -->
-  <view class="oc-fly {{fly.on ? 'is-on' : ''}}" wx:if="{{fly.show}}" bindtap="closeFly" catchtouchmove="noop" aria-role="dialog" aria-label="{{fly.name}}">
+  <view class="oc-fly {{fly.on ? 'is-on' : ''}}" wx:if="{{fly.show}}" bindtap="closeFly" catchtouchmove="noop" hover-class="cy-pressed" hover-stay-time="80" aria-role="dialog" aria-label="{{fly.name}}">
     <view class="oc-fly__veil"></view>
-    <image class="oc-fly__img {{fly.cut ? 'is-cut' : ''}}" src="{{fly.src}}" mode="aspectFit" style="{{fly.style}}" catchtap="onFlyItem" aria-role="button" aria-label="查看{{fly.name}}的详情" />
+    <image class="oc-fly__img {{fly.cut ? 'is-cut' : ''}}" src="{{fly.src}}" mode="aspectFit" style="{{fly.style}}" catchtap="onFlyItem" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true" aria-role="button" aria-label="查看{{fly.name}}的详情" />
     <view class="oc-fly__cap"><text class="oc-fly__name">{{fly.name}}</text><text class="oc-fly__meta" wx:if="{{fly.meta}}">{{fly.meta}}</text></view>
   </view>
 
