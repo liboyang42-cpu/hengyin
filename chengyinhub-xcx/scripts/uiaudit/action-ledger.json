@@ -1396205,7 +1396205,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:140:bind:change:onConsentChange:4",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:141:bind:change:onConsentChange:4",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1396278,7 +1396278,7 @@
         "tag": "cy-consent-check",
         "event": "bind:change",
         "handler": "onConsentChange",
-        "line": 140,
+        "line": 141,
         "selectorHint": "cy-consent-check[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1396343,7 +1396343,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:144:bindtap:onConsentRetry:5",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:145:bindtap:onConsentRetry:5",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1396416,7 +1396416,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "onConsentRetry",
-        "line": 144,
+        "line": 145,
         "selectorHint": ".consent-err-act",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1396481,7 +1396481,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:192:bindtap:goInvoiceApply:6",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:193:bindtap:goInvoiceApply:6",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1396554,7 +1396554,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goInvoiceApply",
-        "line": 192,
+        "line": 193,
         "selectorHint": ".orow",
         "visibleCondition": "{{invoiceRow.state === 'can'}}",
         "disabledCondition": null,
@@ -1396601,7 +1396601,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:196:bindtap:goInvoiceDetail:7",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:197:bindtap:goInvoiceDetail:7",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1396674,7 +1396674,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goInvoiceDetail",
-        "line": 196,
+        "line": 197,
         "selectorHint": ".orow",
         "visibleCondition": "{{invoiceRow.state === 'ing' || invoiceRow.state === 'issued'}}",
         "disabledCondition": null,
@@ -1396721,7 +1396721,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:274:bindtap:followClub:8",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:275:bindtap:followClub:8",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1396794,7 +1396794,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "followClub",
-        "line": 274,
+        "line": 275,
         "selectorHint": ".revisit-btn",
         "visibleCondition": "{{completion.revisit.canFollow}}",
         "disabledCondition": null,
@@ -1396882,7 +1396882,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:276:bindtap:joinClub:9",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:277:bindtap:joinClub:9",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1396955,7 +1396955,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "joinClub",
-        "line": 276,
+        "line": 277,
         "selectorHint": ".revisit-btn",
         "visibleCondition": "{{completion.revisit.canJoin}}",
         "disabledCondition": null,
@@ -1397044,7 +1397044,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:281:bindtap:goNextEdition:10",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:282:bindtap:goNextEdition:10",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1397117,7 +1397117,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goNextEdition",
-        "line": 281,
+        "line": 282,
         "selectorHint": ".revisit-next",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1397164,7 +1397164,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:301:bindtap:cancelRegistration:11",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:302:bindtap:cancelRegistration:11",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1397239,7 +1397239,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "cancelRegistration",
-        "line": 301,
+        "line": 302,
         "selectorHint": ".sec-btn",
         "visibleCondition": "{{info.registrationStatus==1 || info.canRequestRefund}}",
         "disabledCondition": null,
@@ -1397374,7 +1397374,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:305:bindtap:copyOrderNo:12",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:306:bindtap:copyOrderNo:12",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1397447,7 +1397447,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "copyOrderNo",
-        "line": 305,
+        "line": 306,
         "selectorHint": ".sec-pair-btn",
         "visibleCondition": "{{info.registrationNo}}",
         "disabledCondition": null,
@@ -1397501,7 +1397501,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:312:bindtap:payOrder:13",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:313:bindtap:payOrder:13",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1397574,7 +1397574,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "payOrder",
-        "line": 312,
+        "line": 313,
         "selectorHint": ".primary-cta",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1397685,7 +1397685,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:317:bind:cancel:onTeamSheetCancel:15",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:318:bind:cancel:onTeamSheetCancel:15",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1397758,7 +1397758,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:cancel",
         "handler": "onTeamSheetCancel",
-        "line": 317,
+        "line": 318,
         "selectorHint": "cy-option-sheet[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1397802,7 +1397802,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:317:bind:select:onTeamSheetSelect:14",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:318:bind:select:onTeamSheetSelect:14",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1397875,7 +1397875,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onTeamSheetSelect",
-        "line": 317,
+        "line": 318,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
