@@ -108,3 +108,5 @@
    墙就是这块场地的四条边;提示与按钮跟着场地走,不再按状态栏 / 安全区让位。 */
 .bl--embed { position: relative; height: 1000rpx; border-radius: var(--cy-radius-lg); }
 .bl--embed .bl__hud { top: var(--cy-space-5); }
+/* 内嵌时墙不再是手机四边,而是这块场地 —— 场地得看得见:一层淡底 + 细边 */
+.bl--embed { background: var(--pk-embed-soft, rgba(255,255,255,.05)); box-shadow: inset 0 0 0 2rpx rgba(255,255,255,.14); } /* ds-ok 内嵌球场的边 = 墙 */
