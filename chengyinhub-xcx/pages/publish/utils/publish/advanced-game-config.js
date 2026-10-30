@@ -72,23 +72,18 @@ const CHECK_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
    ⚠️ 这里这张表是**编辑器侧的镜像**,只用于默认选中与置灰;运行期默认表的唯一实现在服务端
    (AdvancedGameConfigValidator#resolvePresent,会话视图与公开投影同源),客户端不重推。 */
 const PRESENT_VALUES = ['inline', 'fullscreen'];
-/** 可内嵌、默认内嵌:选项类与问答类(用户点名的那批)。
-    ⚠️ blindTaste 2026-09-24 撤出:它的组件外壳是 cy-sheet(半屏弹层,稿在 Figma v5.1 node 46:259,
-    蒙眼猫是「闭眼」规则的唯一图示)。半屏靠 position:fixed 贴视口,而内嵌要把它放进
-    `.chfull__para` —— 那个段落恒带 transform + filter(值永远是数字、不是 none),
-    非 none 就是 fixed 后代的**包含块**,弹层会被圈进 190rpx 的段落里跟着缩放和模糊
-    (同 2026-09-22 photoCheck 取景层踩的坑)。**声明了一件它做不到的事,所以撤声明,不改组件。**
-    生产 0 个模板在用它,撤这个默认不影响存量。 */
-// 2026-09-24 用户点名:资料、留言、检定和安静挑战默认长在故事流里。
-const PRESENT_INLINE_DEFAULT = ['qa', 'branch', 'predict', 'pricePair', 'random', 'profile', 'note', 'check', 'quietHold'];
-/** 只能全屏:判定依赖整屏几何或设备能力,配 inline 直接拒(服务端 validator 也拒,不许静默改回)。 */
-const PRESENT_FULLSCREEN_ONLY = ['reaction', 'ballShake', 'countdown', 'stopwatch',
-  'coinFlip', 'hiddenObject', 'scan', 'steps', 'compass', 'shout', 'blindTaste'];
-/** 置灰时写给作者的原因,照抄契约 §1.5 那一句。 */
-const PRESENT_LOCK_REASON = '判定依赖整屏几何或设备能力（整屏就是判定区 / 墙就是手机四条边 / 整屏被油盖住）';
+// 2026-10-30 业主裁决「所有玩法都内嵌」:与服务端 AdvancedGameConfigValidator.PRESENT_SECTIONS 同口径。
+//   任何玩法段默认内嵌,作者仍可显式选整屏;不再有「只能全屏」。原来因 cy-sheet 外壳撤出内嵌的
+//   blindTaste 等,改由各 kit 的内嵌档在原位渲染(不再走 position:fixed 的半屏),见 pages/play/components/playkit-*。
+const PRESENT_INLINE_DEFAULT = ['qa', 'branch', 'predict', 'pricePair', 'random', 'profile', 'note', 'check', 'quietHold',
+  'estimate', 'diyName', 'typeIn', 'dailySign', 'slowTask', 'musicCorner', 'timeWindow', 'diceRoll',
+  'reaction', 'ballShake', 'countdown', 'stopwatch', 'coinFlip', 'hiddenObject', 'scan', 'steps',
+  'compass', 'shout', 'blindTaste', 'silentOrder', 'sort', 'match', 'classify', 'compare', 'photoCheck', 'album'];
+/** 保留导出名给旧调用方;现在是空表。 */
+const PRESENT_FULLSCREEN_ONLY = [];
+const PRESENT_LOCK_REASON = '';
 
-/** 段的默认呈现方式。默认表外的段(含 silentOrder 等修饰段)→ fullscreen,与存量行为一致。
-    ⚠️ diceRoll 默认 fullscreen 但它**不是**「只能全屏」—— 两种写法都保留。 */
+/** 段的默认呈现方式:玩法段一律内嵌;不是玩法段(timer 等)→ fullscreen,与服务端回退一致。 */
 function defaultPresent(section) {
   return PRESENT_INLINE_DEFAULT.indexOf(section) >= 0 ? 'inline' : 'fullscreen';
 }
@@ -430,14 +425,6 @@ function presentError(model) {
   const configured = text(model && model.present);
   if (!configured) return '';
   if (PRESENT_VALUES.indexOf(configured) < 0) return '呈现方式只能是内嵌故事流或整屏';
-  if (configured === 'inline') {
-    for (const section of PRESENT_FULLSCREEN_ONLY) {
-      if (section === 'scan' && (require('./outcome-after.js').mains(model).length || model.branch?.enabled)) continue;
-      if (model[section] && model[section].enabled) {
-        return section + ' 只能整屏：' + PRESENT_LOCK_REASON + '；内嵌进故事流后判定不成立，请改成整屏';
-      }
-    }
-  }
   return '';
 }
 

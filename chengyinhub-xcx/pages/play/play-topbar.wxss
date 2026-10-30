@@ -1,0 +1,31 @@
+/* 故事流顶栏(play-topbar.js / play-topbar.wxml):左上角罗盘 ⇄ 地图、右上角背包与案件册、两张半屏。
+   半屏沿用背包的 tb-* 语言(theme-backpack.wxss),不另造一套;背包本身不在这里改。 */
+/* 地图档:圆盘放大成 GTA III 式雷达,黑描边,人在正中,北针贴边,下一站超出范围时边上一枚指针 */
+.radar__disc.radar__disc--big{ position:relative; width:264rpx; height:264rpx; border-radius:50%; overflow:hidden;
+  box-shadow:0 0 0 6rpx #0A0A0A, 0 0 0 8rpx rgba(255,255,255,.22); } /* ds-ok 雷达描边 = 原型 */
+.radar__disc.radar__disc--big .fx-story__radar-map{ position:absolute; left:-50%; top:-50%; width:200%; height:200%; }
+.fx-story__radar.is-big{ align-self:flex-start; }
+/* 地图档雷达变大时右上角按钮留在顶上(原型 .hd 顶对齐),不跟着雷达下移 */
+.chfull.is-navmap .fx-story__hd{ align-items:flex-start; }
+.radar__me{ position:absolute; left:50%; top:50%; z-index:2; width:0; height:0; margin:-14rpx 0 0 -11rpx;
+  border-left:11rpx solid transparent; border-right:11rpx solid transparent; border-bottom:26rpx solid #FFFFFF; } /* ds-ok 玩家箭头 */
+.radar__n{ position:absolute; left:0; top:0; right:0; bottom:0; z-index:3; pointer-events:none; }
+.radar__n text{ position:absolute; left:50%; top:4rpx; width:30rpx; height:30rpx; margin-left:-15rpx; border-radius:50%; background:#0A0A0A; /* ds-ok 雷达北针 / 画出来的背包图标(图标库没有背包) */
+  color:#FFFFFF; font-size:18rpx; font-weight:700; line-height:30rpx; text-align:center; } /* ds-ok 北针 */
+.radar__rim{ position:absolute; left:0; top:0; right:0; bottom:0; z-index:3; pointer-events:none; }
+.radar__rim-tip{ position:absolute; left:50%; top:6rpx; margin-left:-10rpx; width:0; height:0;
+  border-left:10rpx solid transparent; border-right:10rpx solid transparent; border-bottom:18rpx solid var(--cy-color-play-accent); }
+.radar__fold{ position:absolute; z-index:5; left:calc(var(--cy-page-x) + 220rpx);
+  width:52rpx; height:52rpx; border-radius:50%; display:flex; align-items:center; justify-content:center; transform:rotate(-90deg);
+  background:var(--cy-color-bg-elevated); color:var(--cy-color-text-secondary); }
+/* 地图档时正文让位:顶部留白跟着雷达加高 */
+.chfull.is-navmap .chfull__pad{ height:560rpx; }
+/* 背包图标:图标库没有背包,画一个(与发布页 rt-bag-glyph 同法) */
+.ptb-bag{ position:relative; width:30rpx; height:26rpx; margin-top:8rpx; border:3rpx solid currentColor; border-radius:6rpx; box-sizing:border-box; } /* ds-ok 雷达北针 / 画出来的背包图标(图标库没有背包) */
+.ptb-bag::before{ content:""; position:absolute; left:50%; top:-12rpx; width:14rpx; height:10rpx; margin-left:-7rpx;
+  border:3rpx solid currentColor; border-bottom:0; border-radius:8rpx 8rpx 0 0; box-sizing:border-box; } /* ds-ok 雷达北针 / 画出来的背包图标(图标库没有背包) */
+/* 半屏右侧读数(关系 / 时间 / 领取状态) */
+.ptb__r{ flex:none; font-size:var(--cy-type-label); color:var(--cy-comp-sheet-player-muted); font-variant-numeric:tabular-nums; }
+.ptb__r--ally{ color:var(--cy-color-play-accent); }
+/* 收起钮看着 52rpx,热区用透明 ::after 撑到 88rpx(cy-info-pop 同法) */
+.radar__fold::after{ content:""; position:absolute; left:-18rpx; top:-18rpx; right:-18rpx; bottom:-18rpx; }

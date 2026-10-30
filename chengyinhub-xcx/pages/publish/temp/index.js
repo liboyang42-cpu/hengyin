@@ -273,8 +273,8 @@ Page({
     /* 呈现方式(契约 §1.5):presentChoice = 当前生效档(显式配的,或默认表推的),
        presentInlineLocked = 这个段是不是「只能全屏」那批 —— 那批的内嵌开关置灰并写明原因。 */
     presentChoice: 'fullscreen',
-    presentInlineLocked: false,
-    presentLockReason: '',
+    /* 2026-10-30 所有玩法都能内嵌:撤掉 presentInlineLocked(不再置灰) */
+    /* 同上撤掉 presentLockReason */
     // 这个玩法会不会真的执行限时(施工文档 §1.4)
     timerAvailable: true,
     gameSheetOpen: false,
@@ -2423,11 +2423,11 @@ Page({
      其余默认整屏);「只能全屏」那批把内嵌这一档锁死并给原因。 */
   _presentPatch: function (advanced, gameSection) {
     const explicit = advancedGameConfig.explicitPresent(advanced);
-    const locked = advancedGameConfig.presentInlineLocked(gameSection);
+    /* 2026-10-30 起没有「只能全屏」,不再算 locked */
     return {
       presentChoice: explicit || advancedGameConfig.defaultPresent(gameSection),
-      presentInlineLocked: locked,
-      presentLockReason: locked ? advancedGameConfig.PRESENT_LOCK_REASON : '',
+      /* 2026-10-30 所有玩法都能内嵌:撤掉 presentInlineLocked(不再置灰) */
+      /* 同上撤掉 presentLockReason */
     };
   },
 
@@ -2445,8 +2445,8 @@ Page({
       advanced: advanced,
       advancedConfigError: '',
       presentChoice: present.presentChoice,
-      presentInlineLocked: present.presentInlineLocked,
-      presentLockReason: present.presentLockReason,
+      /* 2026-10-30 所有玩法都能内嵌:撤掉 presentInlineLocked(不再置灰) */
+      /* 同上撤掉 presentLockReason */
     }, () => { this.refreshPreviewState(); });
     this._syncCheckDerived(advanced);
   },
@@ -2795,8 +2795,8 @@ Page({
       pvMethodLabel: game.label,
       pvMethodIconName: game.icon,
       presentChoice: present.presentChoice,
-      presentInlineLocked: present.presentInlineLocked,
-      presentLockReason: present.presentLockReason,
+      /* 2026-10-30 所有玩法都能内嵌:撤掉 presentInlineLocked(不再置灰) */
+      /* 同上撤掉 presentLockReason */
     }, () => {
       this._refreshOutcomeContract();
       this._syncSegments();
@@ -3801,8 +3801,8 @@ Page({
       gameSection: gameSlot.gameSection,
       timerAvailable: gameSlot.timerAvailable,
       presentChoice: gameSlot.presentChoice,
-      presentInlineLocked: gameSlot.presentInlineLocked,
-      presentLockReason: gameSlot.presentLockReason,
+      /* 2026-10-30 所有玩法都能内嵌:撤掉 presentInlineLocked(不再置灰) */
+      /* 同上撤掉 presentLockReason */
       dailySignDrafts: that._dailySignDraftsOf(advancedResult.value),
       advancedConfigError: advancedResult.error,
       outcomePreview: outcomeResult.items,

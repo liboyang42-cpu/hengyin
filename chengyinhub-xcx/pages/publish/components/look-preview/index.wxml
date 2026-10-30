@@ -1,0 +1,27 @@
+<!-- 画面风格预览:示例画面。embedded = 常驻在画面风格面板顶部,随作者切换风格 / 预设即时变化(2026-10-30 业主);
+     否则是从底部弹出的半屏(看转场 + 使用这个风格)。不传 title:cy-sheet 头部被无障碍契约锁死,标题画在内容里。 -->
+<template name="lp-frame">
+  <view class="lp__frame lpv {{cls}}">
+    <canvas type="2d" id="lpfx" class="lp__fx"></canvas>
+    <view class="lp__tex"></view>
+    <view class="lp__body">
+      <text class="lp__kick">{{sample.kick}}</text>
+      <text class="lp__title">{{sample.title}}</text>
+      <text class="lp__story">{{sample.story}}</text>
+      <view class="lp__opt"><text class="lp__opt-k">A</text><text>{{sample.opt}}</text></view>
+    </view>
+    <canvas type="2d" id="lpfront" class="lp__fx lp__fx--front"></canvas>
+  </view>
+</template>
+<view wx:if="{{embedded}}" class="lp lp--embedded"><template is="lp-frame" data="{{cls, sample}}" /></view>
+<cy-sheet wx:else show="{{show}}" handle="{{true}}" stacked="{{false}}" bind:close="onClose">
+  <view class="lp">
+    <view class="lp__name">{{title}}</view>
+    <template is="lp-frame" data="{{cls, sample}}" />
+    <view class="lp__actions">
+      <view class="lp__btn" bindtap="onPlayTransition" aria-role="button" aria-label="预览这个风格的转场" hover-class="cy-pressed" hover-stay-time="80">看转场</view>
+      <view class="lp__btn lp__btn--primary" bindtap="onUse" aria-role="button" aria-label="使用这个风格" hover-class="cy-pressed" hover-stay-time="80">使用这个风格</view>
+    </view>
+  </view>
+  <cy-look-transition id="lpTx" kind="{{tx}}" reduced-motion="{{reducedMotion}}" />
+</cy-sheet>

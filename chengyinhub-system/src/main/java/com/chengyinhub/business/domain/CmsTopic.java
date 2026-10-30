@@ -193,6 +193,9 @@ public class CmsTopic extends BaseEntity
     @com.fasterxml.jackson.annotation.JsonIgnore
     private String publishedThemeRuntimeConfigJson;
 
+    /** 主题画面风格（风格 / 参数 / 转场 / 故事字体），见 ThemeLook；NULL 或空串 = 默认风格，老主题外观不变。 */
+    private String lookJson;
+
     /** 客户端入口开关；服务端从已加载配置校验后赋值，绝不替代配置真源。 */
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private transient Boolean gameModuleEnabled;
@@ -880,6 +883,8 @@ public class CmsTopic extends BaseEntity
 
     public String getThemeRuntimeConfigJson() { return themeRuntimeConfigJson; }
     public void setThemeRuntimeConfigJson(String v) { themeRuntimeConfigJson = v; }
+    public String getLookJson() { return lookJson; }
+    public void setLookJson(String v) { lookJson = v; }
     public String getPublishedThemeRuntimeConfigJson() { return publishedThemeRuntimeConfigJson; }
     public void setPublishedThemeRuntimeConfigJson(String v) { publishedThemeRuntimeConfigJson = v; }
     public String getJourneyRulesJson() { return journeyRulesJson; }

@@ -208,3 +208,7 @@
   margin-top: 38rpx;
   background: var(--cy-color-play-accent-soft);
 }
+
+/* 内嵌档(2026-10-30 所有玩法都内嵌):半屏玩法在故事流里原位渲染 —— 没有面板底色、圆角和把手,
+   左右边距跟故事流正文一致;颜色走 DS token,故事流那层(.chfull[class*="atmosphere--"])已把它们换成章节配色。 */
+.pk-embed { padding: 0 var(--cy-page-x) var(--cy-space-5); box-sizing: border-box; }

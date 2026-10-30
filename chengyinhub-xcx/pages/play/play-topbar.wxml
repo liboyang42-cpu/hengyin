@@ -1,0 +1,34 @@
+<!-- 故事流顶栏的两张半屏(play-topbar.js):案件册、各站奖励。背包仍是定稿的 theme-backpack,这里不碰。 -->
+<cy-sheet show="{{casebook.show}}" title="" closable="{{false}}" handle="{{true}}" footer="{{false}}" bind:close="closeCasebook">
+  <view class="tb-sheet ptb">
+    <view class="tb-close" bindtap="closeCasebook" aria-role="button" aria-label="关闭案件册" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="32" /></view>
+    <text class="tb-title">案件册</text>
+    <view class="tb-empty" wx:if="{{casebook.loading}}">正在读取</view>
+    <cy-inline-error wx:elif="{{casebook.error}}" title="{{casebook.error}}" action="重试" bind:action="openCasebook" />
+    <block wx:else>
+      <view class="tb-group tb-summary" wx:if="{{casebook.total > 0}}">
+        <text class="tb-purpose">发现</text><text class="tb-total">{{casebook.found}} <text class="tb-total-unit">/ {{casebook.total}}</text></text>
+        <view class="tb-meter"><view class="tb-meter-fill" style="width:calc(100% * {{casebook.found}} / {{casebook.total}})"></view></view>
+      </view>
+      <text class="tb-section" wx:if="{{casebook.facts.length}}">事实</text>
+      <view class="tb-group" wx:if="{{casebook.facts.length}}"><view class="tb-row" wx:for="{{casebook.facts}}" wx:key="key"><view class="tb-copy"><text class="tb-name">{{item.label}}</text></view></view></view>
+      <text class="tb-section" wx:if="{{casebook.relations.length}}">人物</text>
+      <view class="tb-group" wx:if="{{casebook.relations.length}}"><view class="tb-row" wx:for="{{casebook.relations}}" wx:key="npcId"><view class="tb-avatar">{{item.name[0]}}</view><view class="tb-copy"><text class="tb-name">{{item.name}}</text></view><text class="ptb__r ptb__r--{{item.state}}">{{item.stateLabel}}</text></view></view>
+      <text class="tb-section" wx:if="{{casebook.costs.length}}">代价</text>
+      <view class="tb-group" wx:if="{{casebook.costs.length}}"><view class="tb-row" wx:for="{{casebook.costs}}" wx:key="tag"><view class="tb-copy"><text class="tb-name">{{item.label}}</text></view></view></view>
+      <text class="tb-section" wx:if="{{casebook.log.length}}">日志</text>
+      <view class="tb-group" wx:if="{{casebook.log.length}}"><view class="tb-row" wx:for="{{casebook.log}}" wx:key="index"><view class="tb-copy"><text class="tb-name">{{item.text}}</text><text class="tb-purpose" wx:if="{{item.delta}}">{{item.delta}}</text></view><text class="ptb__r">{{item.time}}</text></view></view>
+      <view class="tb-empty" wx:if="{{!casebook.facts.length && !casebook.relations.length && !casebook.costs.length && !casebook.log.length}}">还没有记下什么</view>
+    </block>
+  </view>
+</cy-sheet>
+<cy-sheet show="{{journeyRewards.show}}" title="" closable="{{false}}" handle="{{true}}" footer="{{false}}" bind:close="closeJourneyRewards">
+  <view class="tb-sheet ptb">
+    <view class="tb-close" bindtap="closeJourneyRewards" aria-role="button" aria-label="关闭各站奖励" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="32" /></view>
+    <text class="tb-title">各站奖励</text>
+    <view class="tb-empty" wx:if="{{journeyRewards.loading}}">正在读取</view>
+    <cy-inline-error wx:elif="{{journeyRewards.error}}" title="{{journeyRewards.error}}" action="重试" bind:action="openJourneyRewards" />
+    <view class="tb-group" wx:elif="{{journeyRewards.rows.length}}"><view class="tb-row" wx:for="{{journeyRewards.rows}}" wx:key="nodeId"><view class="tb-avatar">礼</view><view class="tb-copy"><text class="tb-name">{{item.name || item.reward}}</text><text class="tb-purpose" wx:if="{{item.name}}">{{item.reward}}</text></view><text class="ptb__r">{{item.state}}</text></view></view>
+    <view class="tb-empty" wx:else>这个主题没有站点奖励</view>
+  </view>
+</cy-sheet>

@@ -81,6 +81,7 @@ const FONT = Object.freeze({
 Component({
   behaviors: [reducedMotionBehavior],
   properties: {
+    inline:      { type: Boolean, value: false }, // 故事流内嵌:原位一块纸台,不铺整屏
     show:        { type: Boolean, value: false },
     dateLabel:   { type: String,  value: '' },
     /* 出发 = 这一站的地址(服务端从节点取,谁发的就是哪个地址) */

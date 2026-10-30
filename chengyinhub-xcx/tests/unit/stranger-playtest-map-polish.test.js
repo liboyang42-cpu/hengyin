@@ -68,9 +68,12 @@ test('canvas 不可用时退回旧的序号胶囊,序号不丢', () => {
   assert.strictEqual(m.data.markers[0].callout.content, '5');
 });
 
-test('雷达小地图与完成卡地图都开 fit;雷达点位缩小', () => {
+// 2026-10-30 业主定稿 GTA III 式雷达:以玩家为中心、看得见周边街道,不再 fit 全部站点(fit 会缩到看不清周边);
+//   下一站超出雷达范围时由边上的指针指过去(play-topbar.js rimPointer),原来「雷达里看不到站」的问题由它接住。
+test('雷达以玩家为中心、下一站超出范围钉在边上;完成卡地图开 fit;雷达点位缩小', () => {
   const wxml = read('pages/play/index.wxml');
-  assert.match(wxml, /fx-story__radar-map[\s\S]{0,700}fit="\{\{true\}\}"/);
+  assert.match(wxml, /fx-story__radar-map[\s\S]{0,700}center="\{\{fmPlayer && fmPlayer\.lat \? fmPlayer/);
+  assert.match(wxml, /class="radar__rim" wx:if="\{\{navRim !== null\}\}"/);
   assert.match(wxml, /finsheet__map-native[\s\S]{0,300}fit="\{\{true\}\}"/);
   assert.match(read('components/cy/free-map/index.js'), /this\.data\.compact \? 22 : 34/);
 });

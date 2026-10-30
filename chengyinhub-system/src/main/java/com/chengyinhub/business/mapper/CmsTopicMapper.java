@@ -25,6 +25,9 @@ public interface CmsTopicMapper
      */
     public CmsTopic selectCmsTopicById(Long id);
 
+    /** 主题画面风格（look_json）单独读：不进通用列清单，老库 / 各集成测试自建的 cms_topic 表不受这一列影响。 */
+    public String selectLookJsonById(Long id);
+
     /** Cancellation owner only; not exposed by the ordinary topic JSON/update mapping. */
     Long selectCancellationEpoch(@Param("id") Long id);
     Long selectCancellationEpochForUpdate(@Param("id") Long id);

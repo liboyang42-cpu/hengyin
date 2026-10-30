@@ -26,6 +26,7 @@ const motion = require('../../../../utils/motion.js');
 Component({
   behaviors: [reducedMotionBehavior],
   properties: {
+    inline: { type: Boolean, value: false }, // 故事流内嵌:不出半屏,原位渲染
     show:      { type: Boolean, value: false },
     eyebrow:   { type: String,  value: '治愈音乐角' },
     arrived:   { type: Boolean, value: false },

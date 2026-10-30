@@ -20,14 +20,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * 呈现方式 present(施工契约 §1.5,2026-09-18 拍板):作者在 advanced_config_json 根层选
- * inline / fullscreen,不由 kit 类型定死。本测试守四件事:
+ * 呈现方式 present(施工契约 §1.5):作者在 advanced_config_json 根层选 inline / fullscreen。
+ * 2026-10-30 业主裁决「所有玩法都内嵌」:原三档默认表合成一档,任何玩法默认内嵌、也都允许显式全屏。本测试守四件事:
  *
  * <ul>
- *   <li>默认表三档一个段都不许挪档(负控②:挪 qa 的档,本文件立刻红);</li>
- *   <li>不配 present 的存量配置照旧合法且规范化一字不改;</li>
- *   <li>「只能全屏」那批段配 inline 直接拒,绝不静默改回 fullscreen(负控①);</li>
- *   <li>运行期与会话投影下发的是最终生效值(负控③:存量模板投影变了立刻红)。</li>
+ *   <li>每一个玩法段不配 present 时都推出 inline(负控②:漏一个段,本文件立刻红);</li>
+ *   <li>不配 present 的存量配置照旧合法且规范化一字不改;没有玩法段时回退 fullscreen;</li>
+ *   <li>每一个玩法段配 inline / fullscreen 都合法,不再有「只能全屏」的拒绝(负控①);</li>
+ *   <li>运行期与会话投影下发的是最终生效值,作者显式 fullscreen 压过默认(负控③)。</li>
  * </ul>
  */
 class PlayKitPresentConfigTest {
@@ -35,17 +35,12 @@ class PlayKitPresentConfigTest {
     private final AdvancedGameConfigValidator validator = new AdvancedGameConfigValidator();
     private final ObjectMapper json = new ObjectMapper();
 
-    /** 契约 §1.5 第一档:可内嵌、默认内嵌。 */
-    private static final String[] INLINE_BY_DEFAULT = {
-            "qa", "branch", "predict", "pricePair", "random", "profile", "note", "check", "quietHold" };
-    /** 契约 §1.5 第二档:可内嵌、默认全屏(diceRoll 2026-09-18 挪入本档)。 */
-    private static final String[] FULLSCREEN_BY_DEFAULT = {
-            "estimate", "diyName", "typeIn",
-            "dailySign", "slowTask", "musicCorner", "timeWindow", "diceRoll" };
-    /** 契约 §1.5 第三档:只能全屏,配 inline 直接拒。compass / shout 为现场感契约 §5.3 新入档。 */
-    private static final String[] FULLSCREEN_ONLY = {
-            "reaction", "ballShake", "countdown", "stopwatch",
-            "coinFlip", "hiddenObject", "scan", "steps", "compass", "shout", "blindTaste" };
+    /** 全部玩法段(与 AdvancedGameConfigValidator.PRESENT_SECTIONS 同口径)。 */
+    private static final String[] GAME_SECTIONS = {
+            "qa", "branch", "predict", "pricePair", "random", "profile", "note", "check", "quietHold",
+            "estimate", "diyName", "typeIn", "dailySign", "slowTask", "musicCorner", "timeWindow", "diceRoll",
+            "reaction", "ballShake", "countdown", "stopwatch", "coinFlip", "hiddenObject", "scan", "steps",
+            "compass", "shout", "blindTaste", "silentOrder", "sort", "match", "classify", "compare", "photoCheck", "album" };
 
     private static String onlySection(String section) {
         return "{\"schemaVersion\":1,\"" + section + "\":{\"enabled\":true}}";
@@ -59,38 +54,18 @@ class PlayKitPresentConfigTest {
         }
     }
 
-    // ==================== 默认表三档(负控②) ====================
+    // ==================== 默认一律内嵌(负控②) ====================
 
     @Test
-    void 默认表_第一档五段默认内嵌() {
-        for (String section : INLINE_BY_DEFAULT) {
+    void 每个玩法段不配present都默认内嵌() {
+        for (String section : GAME_SECTIONS) {
             assertEquals(AdvancedGameConfigValidator.PRESENT_INLINE, resolve(onlySection(section)),
-                    section + " 必须默认内嵌(契约 §1.5 第一档)");
+                    section + " 必须默认内嵌(2026-10-30 所有玩法都内嵌)");
         }
     }
 
     @Test
-    void 默认表_第二档十一段默认全屏() {
-        for (String section : FULLSCREEN_BY_DEFAULT) {
-            assertEquals(AdvancedGameConfigValidator.PRESENT_FULLSCREEN, resolve(onlySection(section)),
-                    section + " 必须默认全屏(契约 §1.5 第二档)");
-        }
-    }
-
-    @Test
-    void 默认表_第三档九段只能全屏默认也是全屏() {
-        for (String section : FULLSCREEN_ONLY) {
-            assertEquals(AdvancedGameConfigValidator.PRESENT_FULLSCREEN, resolve(onlySection(section)),
-                    section + " 必须全屏(契约 §1.5 第三档)");
-        }
-    }
-
-    @Test
-    void 默认表外的段与空配置回退全屏_与改动前行为一致() {
-        for (String section : new String[] { "sort", "match", "classify", "compare", "silentOrder" }) {
-            assertEquals(AdvancedGameConfigValidator.PRESENT_FULLSCREEN, resolve(onlySection(section)),
-                    section + " 不在契约默认表里,必须回退全屏,不许自己升档");
-        }
+    void 没有玩法段时回退全屏_与改动前行为一致() {
         assertEquals(AdvancedGameConfigValidator.PRESENT_FULLSCREEN,
                 resolve("{\"schemaVersion\":1,\"timer\":{\"enabled\":true,\"durationSeconds\":60}}"));
         assertEquals(AdvancedGameConfigValidator.PRESENT_FULLSCREEN,
@@ -141,26 +116,21 @@ class PlayKitPresentConfigTest {
                         + "\"rounds\":3,\"goalMs\":320,\"xp\":10}}");
     }
 
-    /**
-     * diceRoll 例外(2026-09-18 用户点名):整屏与内嵌两套写法都保留 —— 后端不许把它当
-     * 「只能全屏」拒,默认仍是 fullscreen,但 present=inline 必须放行并真的投影出去。
-     * 负控:把 diceRoll 放回 FULLSCREEN_ONLY,本用例立刻红。
-     */
+    /** diceRoll 两套写法都保留:默认内嵌(故事流里直接掷),显式 fullscreen 走整屏摇一摇,两者都要投影出去。 */
     @Test
-    void diceRoll两种写法都放行_默认全屏显式内嵌合法() throws Exception {
+    void diceRoll两种写法都放行_默认内嵌显式全屏合法() throws Exception {
         String dice = "{\"schemaVersion\":1,\"diceRoll\":{\"enabled\":true,\"diceCount\":2,\"xp\":10,"
                 + "\"faces\":[\"一面\",\"二面\",\"三面\",\"四面\",\"五面\",\"六面\"]}}";
-        assertEquals(AdvancedGameConfigValidator.PRESENT_FULLSCREEN, resolve(dice), "diceRoll 默认全屏");
-        assertEquals(AdvancedGameConfigValidator.PRESENT_FULLSCREEN, sessionView(dice).get("present"));
+        assertEquals(AdvancedGameConfigValidator.PRESENT_INLINE, resolve(dice), "diceRoll 默认内嵌");
+        assertEquals(AdvancedGameConfigValidator.PRESENT_INLINE, sessionView(dice).get("present"));
 
-        String inline = withPresent(dice, "inline");
-        assertTrue(validator.validateAndNormalize(inline).contains("\"present\":\"inline\""),
-                "diceRoll 配 present=inline 必须放行,不许当只能全屏拒");
-        assertEquals(AdvancedGameConfigValidator.PRESENT_INLINE, sessionView(inline).get("present"),
-                "显式内嵌必须投影出去");
-        assertEquals(AdvancedGameConfigValidator.PRESENT_INLINE,
-                json.readTree(AdvancedGamePublicProjection.safeConfigJson(inline)).path("present").asText(),
-                "公开投影同样带内嵌");
+        String full = withPresent(dice, "fullscreen");
+        assertTrue(validator.validateAndNormalize(full).contains("\"present\":\"fullscreen\""));
+        assertEquals(AdvancedGameConfigValidator.PRESENT_FULLSCREEN, sessionView(full).get("present"),
+                "显式全屏必须投影出去");
+        assertEquals(AdvancedGameConfigValidator.PRESENT_FULLSCREEN,
+                json.readTree(AdvancedGamePublicProjection.safeConfigJson(full)).path("present").asText(),
+                "公开投影同样带全屏");
     }
 
     @Test
@@ -177,37 +147,20 @@ class PlayKitPresentConfigTest {
                         "{\"schemaVersion\":1,\"present\":1,\"qa\":{\"enabled\":true}}"));
     }
 
-    // ==================== 负控①:只能全屏配 inline 真拒 ====================
+    // ==================== 负控①:不再有「只能全屏」 ====================
 
-    /**
-     * 负控:把 validatePresent 里对「只能全屏」那批的拒绝对掉,本用例立刻红。
-     * 拒绝必须点名段名 + 说清理由 —— 静默改回 fullscreen 会让作者与玩家两边都不知道哪错了。
-     */
+    /** 负控:谁把「只能全屏」的拒绝加回 validatePresent,本用例立刻红。 */
     @Test
-    void 负控_只能全屏的段配inline必须拒且说清理由() {
-        for (String section : FULLSCREEN_ONLY) {
-            IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-                    () -> validator.validateAndNormalize(onlySection(section).replace(
-                            "{\"schemaVersion\":1,", "{\"schemaVersion\":1,\"present\":\"inline\",")),
-                    section + " 配 present=inline 必须被拒");
-            assertTrue(error.getMessage().contains(section), error.getMessage());
-            assertTrue(error.getMessage().contains("只能全屏"), error.getMessage());
-            assertTrue(error.getMessage().contains("整屏"), error.getMessage());
+    void 每个玩法段配inline和fullscreen都合法() {
+        for (String section : GAME_SECTIONS) {
+            for (String present : new String[] { "inline", "fullscreen" }) {
+                String config = onlySection(section).replace("{\"schemaVersion\":1,",
+                        "{\"schemaVersion\":1,\"present\":\"" + present + "\",");
+                assertEquals(present, resolve(config), section + " 显式 " + present + " 必须生效");
+            }
         }
-    }
-
-    /** 「只能全屏」段与别的段同开时同样拒,不许因为存在可内嵌段就放行。 */
-    @Test
-    void 负控_只能全屏段与可内嵌段同开配inline也必须拒() {
-        String config = "{\"schemaVersion\":1,\"present\":\"inline\","
-                + "\"qa\":{\"enabled\":true,\"mode\":\"PICK\",\"maxTries\":2,\"xp\":10,\"options\":["
-                + "{\"id\":\"a\",\"label\":\"对\",\"correct\":true},"
-                + "{\"id\":\"b\",\"label\":\"错\",\"correct\":false}]},"
-                + "\"reaction\":{\"enabled\":true,\"rounds\":3,\"goalMs\":320,\"xp\":10}}";
-
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-                () -> validator.validateAndNormalize(config));
-        assertTrue(error.getMessage().contains("reaction"), error.getMessage());
+        validator.validateAndNormalize("{\"schemaVersion\":1,\"present\":\"inline\","
+                + "\"reaction\":{\"enabled\":true,\"rounds\":3,\"goalMs\":320,\"xp\":10}}");
     }
 
     // ==================== 负控③:投影下发最终生效值 ====================
@@ -216,19 +169,19 @@ class PlayKitPresentConfigTest {
     void 运行期会话视图下发最终生效的present() {
         assertEquals(AdvancedGameConfigValidator.PRESENT_INLINE, sessionView(legacyQaConfig()).get("present"),
                 "存量模板(不带 present)的投影必须按默认表推出 inline");
-        assertEquals(AdvancedGameConfigValidator.PRESENT_FULLSCREEN,
+        assertEquals(AdvancedGameConfigValidator.PRESENT_INLINE,
                 sessionView(legacyEstimateConfig()).get("present"),
-                "第二档存量模板必须推出 fullscreen");
-        assertEquals(AdvancedGameConfigValidator.PRESENT_FULLSCREEN,
+                "原默认全屏的存量模板现在推出 inline");
+        assertEquals(AdvancedGameConfigValidator.PRESENT_INLINE,
                 sessionView("{\"schemaVersion\":1,\"reaction\":{\"enabled\":true,\"rounds\":3,"
                         + "\"goalMs\":320,\"xp\":10}}").get("present"),
-                "只能全屏的段必须推出 fullscreen");
+                "原只能全屏的段现在同样推出 inline");
         assertEquals(AdvancedGameConfigValidator.PRESENT_FULLSCREEN,
                 sessionView(withPresent(legacyQaConfig(), "fullscreen")).get("present"),
                 "作者显式配的必须压过默认表");
         assertEquals(AdvancedGameConfigValidator.PRESENT_INLINE,
                 sessionView(withPresent(legacyEstimateConfig(), "inline")).get("present"),
-                "第二档作者想内嵌就内嵌");
+                "显式内嵌照样生效");
     }
 
     @Test
@@ -237,7 +190,7 @@ class PlayKitPresentConfigTest {
         assertEquals(AdvancedGameConfigValidator.PRESENT_INLINE, qa.path("present").asText());
 
         JsonNode estimate = json.readTree(AdvancedGamePublicProjection.safeConfigJson(legacyEstimateConfig()));
-        assertEquals(AdvancedGameConfigValidator.PRESENT_FULLSCREEN, estimate.path("present").asText());
+        assertEquals(AdvancedGameConfigValidator.PRESENT_INLINE, estimate.path("present").asText());
 
         JsonNode explicit = json.readTree(AdvancedGamePublicProjection.safeConfigJson(
                 withPresent(legacyQaConfig(), "fullscreen")));

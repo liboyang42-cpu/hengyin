@@ -17,7 +17,12 @@ test('cy-sheet 里放了 slot="footer" 的,开标签必须带 footer', () => {
     let m;
     while ((m = open.exec(src))) {
       const end = src.indexOf('</cy-sheet>', m.index);
-      const body = src.slice(m.index + m[0].length, end < 0 ? undefined : end).replace(/<cy-sheet[\s\S]*?<\/cy-sheet>/g, '');
+      // 玩法组件把半屏内容拆进 body.wxml 再 include(内嵌档复用同一份):footer 槽在被 include 的那份里,也要算进来
+      const body = src.slice(m.index + m[0].length, end < 0 ? undefined : end).replace(/<cy-sheet[\s\S]*?<\/cy-sheet>/g, '')
+        .replace(/<include\s+src="([^"]+)"\s*\/>/g, (all, inc) => {
+          const file = path.join(root, path.dirname(rel), inc);
+          return fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : all;
+        });
       if (/slot="footer"/.test(body) && !/(^|\s)footer(\s|=|\/?$)/.test(m[1])) {
         broken.push(rel + ':' + src.slice(0, m.index).split('\n').length);
       }

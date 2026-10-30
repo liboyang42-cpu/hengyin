@@ -1,6 +1,7 @@
 @import "./theme-backpack.wxss";
 @import "./theme-player-ops.wxss";
 @import "./play-overlays.wxss";
+@import "./play-topbar.wxss";
 @import "/style/proto-icons.wxss";
 @import "/style/proto-sheet.wxss";
 @import "/style/proto-shopstrip.wxss";
@@ -504,7 +505,7 @@ page { background: var(--cy-color-bg-page); }
 /* 内嵌 = 原型 card():标题在外、选项一块分组列表、按钮跟在内容后,没有台面自己的底色。
    ⚠️ 这组变量与 pages/publish/temp/index.wxss 的 .cg-pv-inline-kit 逐条一致(契约测试钉着),
       改一处必须改两处 —— 不一致就是作者预览看到的和玩家看到的不是一个东西。 */
-.chfull__kit{ width:100%; --pe-unfold:1; --pk-stage-pos:relative; --pk-stage-height:auto; --pk-stage-body-pos:relative; --pk-stage-bg:transparent; --pk-stage-overflow:visible; --pk-back-display:none; --pk-col-pos:relative; --pk-col-pad:0; --pk-col-align:stretch; --pk-col-text:left; --pk-btn-pos:relative; --pk-btn-x:0; --pk-btn-bottom:0; --pk-btn-mt:var(--cy-space-5); --cy-play-question-size:44rpx; --pk-q-weight:600; --pk-row-justify:flex-start; --pk-qt-radius:32rpx; } /* ds-ok 44rpx = 原型 .card .ct 22px;32rpx 安静挑战内嵌成卡 */
+.chfull__kit{ width:100%; --pe-unfold:1; --pk-stage-pos:relative; --pk-stage-height:auto; --pk-stage-body-pos:relative; --pk-stage-bg:transparent; --pk-stage-overflow:visible; --pk-back-display:none; --pk-col-pos:relative; --pk-col-pad:0; --pk-col-align:stretch; --pk-col-text:left; --pk-btn-pos:relative; --pk-btn-x:0; --pk-btn-bottom:0; --pk-btn-mt:var(--cy-space-5); --cy-play-question-size:44rpx; --pk-q-weight:600; --pk-row-justify:flex-start; --pk-qt-radius:32rpx; --pk-embed-bg:var(--atmo-bg, transparent); --pk-embed-ink:var(--atmo-text, var(--cy-color-text-primary)); --pk-embed-sub:var(--atmo-muted, var(--cy-color-text-tertiary)); --pk-embed-soft:var(--atmo-control, rgba(255,255,255,.08)); --pk-embed-accent:var(--look-a, var(--atmo-text, var(--cy-color-text-primary))); --pk-embed-ok:var(--look-a, var(--atmo-text, var(--cy-color-text-primary))); } /* ds-ok 44rpx = 原型 .card .ct 22px;32rpx 安静挑战内嵌成卡 */
 /* 2026-09-23 用户:内嵌玩法的题目和作答放到屏幕中间 —— 这一块撑满一屏,内容竖向居中(滚到它时锚点对准块顶) */
 .chfull__kit{ min-height:100vh; box-sizing:border-box; display:flex; flex-direction:column; justify-content:center; padding-bottom:var(--cy-space-6); }
 .chfull__collapse{ position:absolute; right:13rpx; bottom:13rpx; color:#8A93A0; /* ds-ok 原型 --t2 */
@@ -1588,7 +1589,7 @@ page { background: var(--cy-color-bg-page); }
 .st-line{ margin:0 96rpx 360rpx; text-align:center;
   font-size:34rpx; line-height:1.95; color:var(--cy-color-text-primary); /* ds-ok 故事流正文比常规正文大一档 */
   opacity:0; transform:translateY(1.95em) scale(.78); filter:blur(22rpx);   /* ds-ok 样机 blur(11px);rpx→px 折半,22rpx≈11px */
-  transition:opacity .5s ease, transform .5s cubic-bezier(.34,1.46,.5,1), filter .5s ease;
+  transition:opacity 1.4s ease, transform 1.6s cubic-bezier(.22,1,.36,1), filter 1.4s ease;
   transition-delay:var(--d, 0s); }   /* 同一批错开 50ms:一起亮就成了整块淡入 */
 .st-line.from-top{ transform:translateY(-1.95em) scale(.78); }   /* 向上滚:从上方落下来 */
 .st-line.is-in{ opacity:1; transform:translateY(0) scale(1); filter:blur(0); }
@@ -1899,3 +1900,83 @@ page { background: var(--cy-color-bg-page); }
 .finsheet .finsheet__records + .finish-journal-entry{ margin-top:19rpx; }
 .finsheet .finsheet__retry{ margin:31rpx 38rpx 0; }
 .finsheet .finsheet__cta{ position:fixed; z-index:5; left:38rpx; right:38rpx; bottom:calc(65rpx + env(safe-area-inset-bottom)); margin:0; height:104rpx; background:#FFFFFF; color:#000000; box-shadow:0 0 80rpx 70rpx #000000; } /* ds-ok 白色主按钮,黑色渐隐托底 */
+
+/* ===== 主题画面风格(pages/play/utils/theme-look.js;作者在发布页「画面风格」里选) =====
+   根节点挂 look--<风格> look-<参数>--<值> story-font--<字体>;没配置 = 星尘 + 手写,与原来一致。
+   --look-a / --look-b / --look-bg 给转场层(components/look-transition)取色。 */
+.play { --look-a: var(--cy-color-play-accent, #E9E2D0); --look-b: var(--cy-color-play-ink-muted, #9AA0AA); --look-bg: #0A0A0A; } /* ds-ok 转场兜底色 = 章节默认黑 */
+.look-tex { position:absolute; left:0; top:0; right:0; bottom:0; pointer-events:none; z-index:1; }
+/* 故事流字体:手写走 story-font.js 在线加载的 CyStoryHand,其余三种用系统自带字体,不额外下载 */
+.story-font--song .cy-story-hand { font-family: "Songti SC", "STSong", "Noto Serif SC", serif; } /* ds-ok 系统宋体 */
+.story-font--kai .cy-story-hand { font-family: "Kaiti SC", "STKaiti", "KaiTi", "Noto Serif SC", serif; } /* ds-ok 系统楷体 */
+.story-font--hei .cy-story-hand { font-family: -apple-system, "PingFang SC", "Noto Sans SC", sans-serif; } /* ds-ok 系统黑体 */ .story-font--bold .cy-story-hand { font-family: -apple-system, "PingFang SC", "Noto Sans SC", sans-serif; font-weight: 900; font-style: italic; letter-spacing: -.01em; } /* ds-ok 粗斜(NRC 式);中文由系统合成斜体 */
+/* 纸本:纸色 + 纸纹 + 压暗四角 */
+.look--paper { --look-bg: #E6DCC4; --look-a: #A3281D; } /* ds-ok 牛皮纸 */
+.look--paper.look-paper--xuan .look-tex { opacity: .6; } /* 宣纸:纸纹更淡;底色只由主题配色决定(原型 v7) */
+.look--paper.look-paper--card .look-tex { background-color: rgba(0,0,0,.25); } /* ds-ok 深色卡纸:压暗一层(原型 v7) */
+.look--paper .look-tex { background: radial-gradient(rgba(90,70,40,.10) 1px, transparent 1.4px) 0 0 / 7rpx 7rpx, radial-gradient(rgba(90,70,40,.08) 1px, transparent 1.6px) 3rpx 4rpx / 11rpx 11rpx, radial-gradient(ellipse 80% 70% at 50% 45%, transparent 55%, rgba(60,40,10,.32) 100%); mix-blend-mode: multiply; } /* ds-ok 纸纹 */
+.look--paper.look-paper--kraft .look-tex { background-color: rgba(176,140,90,.12); } /* ds-ok */
+.look--paper.look-grain--light .look-tex { opacity: .5; }
+.look--paper.look-grain--heavy .look-tex { filter: contrast(1.4); }
+/* 末世:四角压暗;气候决定底色调,风格层的天气在 canvas 上 */
+.look--survival { --look-bg: #0E1012; --look-a: #FF8A3D; --look-b: #8A9196; } /* ds-ok 末世默认(飓风) */
+.look--survival .look-tex { background: radial-gradient(ellipse 80% 70% at 50% 45%, transparent 50%, rgba(0,0,0,.55) 100%); } /* ds-ok */
+/* 末世:气候只管天气与屏幕边缘,底色由主题配色决定(原型 v7) */
+/* 沙尘暴:见下方 .look-tex 泛黄 */
+.look--survival.look-climate--sand .look-tex { background: radial-gradient(ellipse 80% 70% at 50% 45%, transparent 45%, rgba(214,170,110,.28) 100%); } /* ds-ok 沙尘暴:四周泛黄 */
+/* 雷暴:见下方 .look-tex 压暗 */
+.look--survival.look-climate--storm .look-tex { background: radial-gradient(ellipse 80% 70% at 50% 45%, transparent 40%, rgba(0,0,0,.65) 100%); } /* ds-ok 雷暴:四周更暗 */
+.look--survival.look-climate--rain.look-edge--hp .look-tex, .look--survival.look-climate--rain.look-edge--fixed .look-tex, .look--survival.look-climate--storm.look-edge--hp .look-tex { box-shadow: inset 0 0 120rpx rgba(200,215,235,.18); } /* ds-ok 雨:玻璃边起雾 */
+.look--survival.look-edge--off .look-tex { display: none; }
+/* 夜城:霓虹两色 + 扫描线 + 一道缓慢的扫光 */
+.look--cyber { --look-bg: #0B0B0F; --look-a: #F3E600; --look-b: #24E0E8; } /* ds-ok 黄青 */
+.look--cyber.look-neon--cyan_pink { --look-a: #2DE2E6; --look-b: #FF3B6B; } /* ds-ok */
+.look--cyber.look-neon--red_cyan { --look-a: #FF2E4C; --look-b: #2DE2E6; } /* ds-ok */
+.look--cyber .look-tex { background: repeating-linear-gradient(180deg, transparent 0 4rpx, rgba(0,0,0,.22) 4rpx 6rpx), radial-gradient(ellipse 85% 75% at 50% 45%, transparent 55%, rgba(0,0,0,.6) 100%); } /* ds-ok 扫描线 */
+
+/* ===== 主题配色 × 风格(2026-10-30 业主;原型 v7 PAL 表):五档配色在每种风格里各有一套底色 / 字色 / 强调色。
+   作用在章节的 atmosphere--* 上(主题配色设了就统一成它);星尘 = 原章节配色色板不变。根节点同时给转场层取色。 */
+.look--paper .atmosphere--default{ --atmo-bg:#1D1B18; --atmo-card:#292724; --atmo-control:#36332F; --atmo-text:#ECE6D8; --atmo-muted:#9A927F; --look-a:#D0503C; } /* ds-ok 原型 v7 PAL */
+.look--paper .atmosphere--blue{ --atmo-bg:#1C2A44; --atmo-card:#29364E; --atmo-control:#354258; --atmo-text:#EEF0EA; --atmo-muted:#A2ADBF; --look-a:#E8C66A; } /* ds-ok 原型 v7 PAL */
+.look--paper .atmosphere--red{ --atmo-bg:#3A1A17; --atmo-card:#452623; --atmo-control:#50322F; --atmo-text:#F4E6DC; --atmo-muted:#C9A596; --look-a:#E8C66A; } /* ds-ok 原型 v7 PAL */
+.look--paper .atmosphere--yellow{ --atmo-bg:#E6DCC4; --atmo-card:#DBD1BA; --atmo-control:#D0C6B0; --atmo-text:#2B241A; --atmo-muted:#7D715C; --look-a:#A3281D; } /* ds-ok 原型 v7 PAL */
+.look--paper .atmosphere--white{ --atmo-bg:#F4F1EA; --atmo-card:#E7E4DD; --atmo-control:#DAD7D1; --atmo-text:#1E1C19; --atmo-muted:#7A756C; --look-a:#B0302A; } /* ds-ok 原型 v7 PAL */
+.look--survival .atmosphere--default{ --atmo-bg:#0E1012; --atmo-card:#1B1D1F; --atmo-control:#282A2C; --atmo-text:#E4E7E9; --atmo-muted:#8A9196; --look-a:#FF8A3D; } /* ds-ok 原型 v7 PAL */
+.look--survival .atmosphere--blue{ --atmo-bg:#0B1626; --atmo-card:#182333; --atmo-control:#263140; --atmo-text:#EAF3FB; --atmo-muted:#8FA6BD; --look-a:#FFB35C; } /* ds-ok 原型 v7 PAL */
+.look--survival .atmosphere--red{ --atmo-bg:#1C0A0A; --atmo-card:#291717; --atmo-control:#362424; --atmo-text:#F3E3E0; --atmo-muted:#B08A86; --look-a:#7FE6C4; } /* ds-ok 原型 v7 PAL */
+.look--survival .atmosphere--yellow{ --atmo-bg:#2A1D0C; --atmo-card:#372A18; --atmo-control:#443725; --atmo-text:#FFF2DC; --atmo-muted:#CDB38A; --look-a:#8FD3FF; } /* ds-ok 原型 v7 PAL */
+.look--survival .atmosphere--white{ --atmo-bg:#E3E9EE; --atmo-card:#D7DDE2; --atmo-control:#CAD1D7; --atmo-text:#14202B; --atmo-muted:#5D6D7B; --look-a:#D4561E; } /* ds-ok 原型 v7 PAL */
+.look--cyber .atmosphere--default{ --atmo-bg:#0B0B0F; --atmo-card:#18181C; --atmo-control:#262629; --atmo-text:#ECEBE4; --atmo-muted:#8A8C96; } /* ds-ok 原型 v7 PAL */
+.look--cyber .atmosphere--blue{ --atmo-bg:#06101C; --atmo-card:#131E2A; --atmo-control:#202B37; --atmo-text:#E2F1FF; --atmo-muted:#7E93AC; } /* ds-ok 原型 v7 PAL */
+.look--cyber .atmosphere--red{ --atmo-bg:#12060A; --atmo-card:#201417; --atmo-control:#2E2125; --atmo-text:#FFE8EA; --atmo-muted:#A88088; } /* ds-ok 原型 v7 PAL */
+.look--cyber .atmosphere--yellow{ --atmo-bg:#100E04; --atmo-card:#1E1C10; --atmo-control:#2D2A1C; --atmo-text:#FFF6CC; --atmo-muted:#A99E6E; } /* ds-ok 原型 v7 PAL */
+.look--cyber .atmosphere--white{ --atmo-bg:#E6E7EA; --atmo-card:#D9DADD; --atmo-control:#CCCDD1; --atmo-text:#101216; --atmo-muted:#5E636E; } /* ds-ok 原型 v7 PAL */
+.look--stardust.look-palette--default{ --look-bg:#0A0A0A; --look-a:#E9E2D0; --look-b:#9AA0AA; } /* ds-ok 原型 v7 PAL */
+.look--stardust.look-palette--blue{ --look-bg:#0E1A33; --look-a:#CFE0FF; --look-b:#A9BBE0; } /* ds-ok 原型 v7 PAL */
+.look--stardust.look-palette--red{ --look-bg:#2A0E12; --look-a:#FFB8AC; --look-b:#E0AAB1; } /* ds-ok 原型 v7 PAL */
+.look--stardust.look-palette--yellow{ --look-bg:#2A2208; --look-a:#F2D58A; --look-b:#DFCD9A; } /* ds-ok 原型 v7 PAL */
+.look--stardust.look-palette--white{ --look-bg:#F5F6F8; --look-a:#111318; --look-b:#5B6270; } /* ds-ok 原型 v7 PAL */
+.look--paper.look-palette--default{ --look-bg:#1D1B18; --look-a:#D0503C; --look-b:#9A927F; } /* ds-ok 原型 v7 PAL */
+.look--paper.look-palette--blue{ --look-bg:#1C2A44; --look-a:#E8C66A; --look-b:#A2ADBF; } /* ds-ok 原型 v7 PAL */
+.look--paper.look-palette--red{ --look-bg:#3A1A17; --look-a:#E8C66A; --look-b:#C9A596; } /* ds-ok 原型 v7 PAL */
+.look--paper.look-palette--yellow{ --look-bg:#E6DCC4; --look-a:#A3281D; --look-b:#7D715C; } /* ds-ok 原型 v7 PAL */
+.look--paper.look-palette--white{ --look-bg:#F4F1EA; --look-a:#B0302A; --look-b:#7A756C; } /* ds-ok 原型 v7 PAL */
+.look--survival.look-palette--default{ --look-bg:#0E1012; --look-a:#FF8A3D; --look-b:#8A9196; } /* ds-ok 原型 v7 PAL */
+.look--survival.look-palette--blue{ --look-bg:#0B1626; --look-a:#FFB35C; --look-b:#8FA6BD; } /* ds-ok 原型 v7 PAL */
+.look--survival.look-palette--red{ --look-bg:#1C0A0A; --look-a:#7FE6C4; --look-b:#B08A86; } /* ds-ok 原型 v7 PAL */
+.look--survival.look-palette--yellow{ --look-bg:#2A1D0C; --look-a:#8FD3FF; --look-b:#CDB38A; } /* ds-ok 原型 v7 PAL */
+.look--survival.look-palette--white{ --look-bg:#E3E9EE; --look-a:#D4561E; --look-b:#5D6D7B; } /* ds-ok 原型 v7 PAL */
+.look--cyber.look-palette--default{ --look-bg:#0B0B0F; } /* ds-ok 原型 v7 PAL */
+.look--cyber.look-palette--blue{ --look-bg:#06101C; } /* ds-ok 原型 v7 PAL */
+.look--cyber.look-palette--red{ --look-bg:#12060A; } /* ds-ok 原型 v7 PAL */
+.look--cyber.look-palette--yellow{ --look-bg:#100E04; } /* ds-ok 原型 v7 PAL */
+.look--cyber.look-palette--white{ --look-bg:#E6E7EA; } /* ds-ok 原型 v7 PAL */
+/* ===== 末世:每章的时间段(2026-10-30 业主)—— 叠在主题配色底色上的一层天光,只染色,不画任何景物 ===== */
+.look--survival .look-time--dawn{ background-image:linear-gradient(180deg, rgba(70,100,160,.35) 0%, rgba(240,180,140,.28) 100%); } /* ds-ok 清晨:冷蓝转杏 */
+.look--survival .look-time--noon{ background-image:linear-gradient(180deg, rgba(255,255,255,.10) 0%, rgba(255,250,225,.06) 100%); } /* ds-ok 正午:提亮 */
+.look--survival .look-time--dusk{ background-image:linear-gradient(180deg, rgba(60,40,110,.35) 0%, rgba(240,130,70,.42) 100%); } /* ds-ok 日落:紫转橙 */
+.look--survival .look-time--night{ background-image:linear-gradient(180deg, rgba(0,4,16,.45) 0%, rgba(0,4,16,.2) 100%); } /* ds-ok 夜晚:压暗 */
+/* 雷暴打闪时字被照亮一下 */
+.is-lit .cy-story-hand, .is-lit .chfull__para{ text-shadow:0 0 24rpx rgba(235,240,255,.9), 0 0 4rpx rgba(255,255,255,.9); transition:text-shadow .08s; } /* ds-ok 闪电照亮 */
+/* 自由探索的故事层同样铺章节 / 主题配色的底(只在选过风格的主题上带 atmosphere--*) */
+.fx-story[class*="atmosphere--"]{ background:var(--atmo-bg); --cy-color-text-primary:var(--atmo-text); --cy-color-text-tertiary:var(--atmo-muted); }

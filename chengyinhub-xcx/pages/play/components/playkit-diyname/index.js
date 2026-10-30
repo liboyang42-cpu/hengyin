@@ -9,6 +9,7 @@ Component({
   behaviors: [reducedMotionBehavior],
   options: { multipleSlots: true },
   properties: {
+    inline: { type: Boolean, value: false }, // 故事流内嵌:不出半屏,原位渲染
     named:       { type: Boolean, value: false },   // 服务端已存下名字:按钮是「继续」,点了收起
     show:        { type: Boolean, value: false },
     eyebrow:     { type: String,  value: '你的作品' },

@@ -209,14 +209,14 @@ const SAVE_STATE_LABELS = { local: '已存本机', localFailed: '本机未存', 
 
 const runtimeEditor = require('./theme-runtime.js'); const routeNames = require('./theme-route-names.js'); // 文档二 L3
 const structure = require('./theme-runtime-structure.js'); // structure
-const survivalEditor = require('./theme-runtime-survival.js'); // survival
+const survivalEditor = require('./theme-runtime-survival.js'); /* survival */ const lookEditor = require('./theme-look-editor.js'); /* 主题画面风格 */
 const zeroHpEditor = require('./theme-runtime-zero-hp.js'); // R5 HP 归零面板（与 runtimeEditor 内同一组方法，直接展开便于 handler 溯源）
 const ownership = require('./theme-ownership.js'); const d20Page = require('./theme-d20-page.js'); const keysItems = require('./theme-keys-items.js'); const initialCarry = require('./theme-initial-carry.js'); // 文档二 L1;L2 线索与物品 · 物品一组;初始状态 · 开局带着
 Page({
   ...runtimeEditor.methods, ...routeNames.methods,
   ...structure.methods, // structure
   ...survivalEditor.methods, // survival
-  ...zeroHpEditor.methods, // R5 HP 归零
+  ...zeroHpEditor.methods, /* R5 HP 归零 */ ...lookEditor.methods, /* 画面风格 */
   ...ownership.methods, ...d20Page.methods, ...keysItems.methods, ...initialCarry.methods,
   _routeGraph: topicRouteGraph.emptyGraph(),
   _routeMappingSourceNodeId: '',
@@ -228,7 +228,7 @@ Page({
     creatorLoginRequired: false,
     ...runtimeEditor.data, ...routeNames.data,
     ...structure.data, // structure
-    ...survivalEditor.data, // survival
+    ...survivalEditor.data, /* survival */ ...lookEditor.data, /* 画面风格 */
     ...ownership.data, ...d20Page.data, ...keysItems.data, ...initialCarry.data,
     // 氛围块的选择器:cy-dropdown 吃 {value,label} 数组(全仓禁原生 picker),块上回显要 key→中文的映射。
     moodOptions: CHAPTER_ATMOSPHERES,
@@ -446,7 +446,7 @@ Page({
       completeRewardCouponId: 0,
       completeRuleJson: '',
       journeyRules: '',
-      themeRuntimeConfig: '',
+      themeRuntimeConfig: '', look: '', /* 主题画面风格(theme-look.js);空 = 默认星尘 */
       journeyStory: '',
       // 主题级路线真源。旧数据/空值保持 LINEAR；BRANCH_GRAPH 才序列化 routeGraphJson。
       routeMode: 'LINEAR',
@@ -1263,7 +1263,7 @@ Page({
     } else if (this.data.popChapter) {
       this.cancelChapter();
     } else if (this.data.modePickerShow) {
-      this.closeModePicker();
+      this.closeModePicker(); } else if (this.data.lookSheetShow) { this.closeLookEditor();
     } else if (this.data.topicDetailShow) {
       this.closeTopicDetail();
     } else if (this.data.storyVarSheet && this.data.storyVarSheet.show) {
@@ -2797,7 +2797,7 @@ Page({
       'formData.completeRewardCouponId': topic.completeRewardCouponId || 0,
 
       'formData.completeRuleJson': topic.completeRuleJson || '',
-      'formData.themeRuntimeConfig': detail.themeRuntimeConfig || topic.themeRuntimeConfigJson || '',
+      'formData.themeRuntimeConfig': detail.themeRuntimeConfig || topic.themeRuntimeConfigJson || '', 'formData.look': detail.look || '',
       'formData.journeyRules': detail.journeyRules || topic.journeyRulesJson || '',
       'formData.journeyStory': detail.journeyStory || topic.journeyStoryJson || '',
       // 思维阁入口卡的副标题要跟着回填 —— 不然编辑已有主题时明明配过念头,卡上却写「还没配」
@@ -3598,7 +3598,7 @@ Page({
       'formData.completeRewardCouponId': sourceData.completeRewardCouponId || 0,
       // 模式切换复制(_buildCopiedDraft)整份带着这些主题规则;漏回填 = 初始状态、背包、结局、完成规则静默清空(复核 A09)
       'formData.journeyRules': sourceData.journeyRules || '',
-      'formData.themeRuntimeConfig': sourceData.themeRuntimeConfig || '',
+      'formData.themeRuntimeConfig': sourceData.themeRuntimeConfig || '', 'formData.look': sourceData.look || '',
       'formData.journeyStory': sourceData.journeyStory || '',
       'formData.completeRuleJson': sourceData.completeRuleJson || '',
 
@@ -4950,7 +4950,7 @@ Page({
   // ⚠️ 以后要补回「发布前看成品」,走**本地草稿预览**(主题详情页加 preview 入参 + 一条
   // 本地数据源分支),不要再把按钮接回 ?id= —— 那条路读的永远是服务端那一版。
 
-  openTopicDetail() { this._syncRuntimeStats(); this._syncD20Rows(); this._loadPlaySetup(); this._syncKeysItems(); this.setData({ topicDetailShow: true }); },
+  openTopicDetail() { this._syncRuntimeStats(); this._syncD20Rows(); this._loadPlaySetup(); this._syncKeysItems(); this._refreshLookView(); this.setData({ topicDetailShow: true }); },
   closeTopicDetail() { this.setData({ topicDetailShow: false }); },
 
   // 列表 ↔ 地图 视图切换(左下角药丸)。
@@ -7406,7 +7406,7 @@ Page({
           this.data.completionRequiredCount),
         { enabled: this.data.bingoRows.some(row => !!(row.label.trim() || row.feedbackText || row.couponId)), cells: this._bingoCellsByPosition() }),
       journeyRules: journeyRules || null,
-      themeRuntimeConfig: this._runtimePayload(),
+      themeRuntimeConfig: this._runtimePayload(), look: this._lookPayload(),
       // 结局都在章节上(结局章):剧情里的结局清单交给服务端按章重建
       journeyStory: storyEnding.withoutEndingList(this.data.formData.journeyStory) || null,
       publishMode: this.data.aiSimple ? 'ai_simple' : 'pro',

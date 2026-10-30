@@ -27,6 +27,7 @@ Component({
   behaviors: [reducedMotionBehavior],
   options: { multipleSlots: true },
   properties: {
+    inline: { type: Boolean, value: false }, // 故事流内嵌:不出半屏,原位渲染
     show:       { type: Boolean, value: false },
     eyebrow:    { type: String,  value: '低碳行动 · 今日步数' },
     // 图标行的读屏文案。⚠️ 刻意不叫 stepsLabel:本组件 data 里已有同名字段(千分位步数),

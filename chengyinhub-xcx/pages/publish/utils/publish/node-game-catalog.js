@@ -280,13 +280,7 @@ function applyToConfig(advanced, key, options) {
     if (game.mode) next[game.section].mode = game.mode;
     else delete next[game.section].mode;
   }
-  /* 呈现方式(契约 §1.5)跟着玩法走:切到「只能全屏」的段时,之前选的 inline 不再成立 ——
-     清掉它、由默认表接管。留着的话下一次保存会被服务端 validator 直接拒,而作者早已离开
-     这个开关。⚠️ 这不是被禁的「静默改回 fullscreen」:那条说的是验证器收到 inline 不声不响
-     改档;这里是「换玩法」这个作者动作本身带来的必然失效。 */
-  if (next.present === 'inline' && advancedGameConfig.presentInlineLocked(game.section)) {
-    delete next.present;
-  }
+  /* 呈现方式跟着作者走:2026-10-30 起任何玩法都能内嵌,换玩法时作者选的 inline / fullscreen 原样保留。 */
   /* 一个玩法段都没启用(如选了主题级九宫格)时 present 没有意义,与 normalize 同口径清掉。 */
   if (!GAME_SECTIONS.some((name) => next[name] && next[name].enabled)) delete next.present;
   dropStaleTimer(next, key);

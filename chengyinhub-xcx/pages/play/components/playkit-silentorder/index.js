@@ -13,6 +13,7 @@ const motion = require('../../../../utils/motion.js');
 Component({
   behaviors: [reducedMotionBehavior],
   properties: {
+    inline: { type: Boolean, value: false }, // 故事流内嵌:不出半屏,原位渲染
     show:    { type: Boolean, value: false },
     eyebrow: { type: String,  value: '沉默点单 · 店员见证制' },
     title:   { type: String,  value: '' },

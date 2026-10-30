@@ -95,7 +95,8 @@ function buildTopicPreview(form) {
   if (!route.length) throw new Error('先添加一个章节再预览');
   return { topicId: '', topicName: form.name || '草稿预览', topicDesc: form.description || '',
     mode: Number(form.productType) === 2 ? 2 : 1, chapters: route, nodes, startStory: true,
-    thoughts: previewThoughts(form.journeyRules), endings, startState: previewStartState(form.journeyRules) };
+    thoughts: previewThoughts(form.journeyRules), endings, startState: previewStartState(form.journeyRules),
+    look: form.look || '' };  // 画面风格:预览也要看到作者刚选的风格,不能回落默认
 }
 
 /** 试玩的初始状态页:取作者配的起始值(精力 / 幸运开了才列,可见属性全列) */
