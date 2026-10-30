@@ -1,5 +1,6 @@
 // 2026-10-29 R2 l2-roam(V-08 业主拍板:帖文流只剩发现 / 俱乐部详情 / 我的):「动态」二级页 pages/square/list 整页删除,其 19 条登记随代码删除(U3-DEBT 7、U4-DEBT 9、U4-DYNAMIC 3),棘轮只下调 u3Handler 62→55、u4Field 114→105、u4Dynamic 65→62;另 4 条既有锚点仅行号位移(各文件顶部加一行 discover-nav 引用):U4-DYNAMIC play 1752→1753、square/detail 1262→1263、im/list 372→374(另加一行注释),U5 play 7904→7905,调用行逐字相同、理由不变;不新增登记;u3Debt / u4Debt / u4Dynamic / u5Silent digest 按门禁 baselineKeyDigest 重算。
 // 2026-10-29 真机走查 l2-roam(V-06/V-07/V-08/V-09):roam/index.js 删「仅前台记录」提示与其渲染字段、改雾重绘/长按环/结算跳转后,下方既有 20 条锚点仅行号位移(566→568、1842→1844、3971→3998、4812→4839、4870→4897、5953→5982、5962→5991、558→560、809→811、780→782、5792→5821、5799→5828、2600→2602、2629→2631、1931→1933、4266→4293、4480→4507、4565→4592、4676→4703、5136→5163),difflib 逐行映射且调用行逐字相同,理由与条数不变,不新增登记;u4Dynamic / u5Silent digest 按门禁 baselineKeyDigest 重算。
+// 2026-10-30 P-2 资料页改版:路线偏好行内删除撤掉(改在分类半屏里增删),gerenziliao.js removeCategory 与 selectedCategoryNames 写入随之删除,U4 零消费债务 formData、selectedCategoryNames 两条还清出账,u4Field 105→103,u4Debt digest 按门禁 baselineKeyDigest 重算。
 // 2026-10-30 V-19 业主定 B:profile/index.js buildBenefits 前加一行注释(每行权益带 icon 字段),U1-VARIABLE 719→720、U4-DYNAMIC 1292→1293 / 2139→2140,调用行逐字相同、理由与条数不变,digest 按门禁 baselineKeyDigest 重算。
 // 2026-10-30 收集册(业主定稿 P-3):我的「成就」里城市勋章列表并进收集册,profile/index.js 删 medalErr/medalAuthError 两个字段(data 2 行、读取失败分支 3 行),U1-VARIABLE 721→719、U4-DYNAMIC 1294→1292 / 2144→2139,调用行逐字相同、理由与条数不变,u1Variable / u4Dynamic digest 按门禁 baselineKeyDigest 重算。
 // 2026-10-30 收集册(业主定稿 P-3):badge-wall/index.js 顶部加计数环 ringOf 与 motion-preference 引用共 +18 行,U4-DYNAMIC 动态 setData 锚点 205→223,调用行逐字相同、理由与条数不变,u4Dynamic digest 按门禁 baselineKeyDigest 重算。
@@ -303,7 +304,7 @@ module.exports = {
     // 2026-09-19 批复1-a=2:pricing/partner 页按用户裁决复活(B-06 曾整页退役),其两条存量零消费
     //   字段 toType/toId 先随页回账(149→151),随即在同批复落地时还清——index.js 三处读改回显式
     //   this.data.toType/toId,门禁实测不再命中。两条登记出账,棘轮回 149,digest 复算。
-    "u4Field": 105,
+    "u4Field": 103,
       // 2026-08-26 圈层主题接回主题货架:新增 circleTheme import,两条 _coverFail 动态 setData
       //   等量下移(269→270 / 281→282,行号取门禁实测)。调用点与强化理由不变,显式改 digest。
     // 2026-08-27 合并 #883:activity/list 三条 U4-DYNAMIC 登记行号 +2(129→131/151→153/231→233,
@@ -470,7 +471,7 @@ module.exports = {
       // 参数留存 URL 但页面不再落 data),两条存量债直接出账,149 键集实算复挖。
       // 2026-09-19 批复1-a=2 还清:partner#toType/toId 两条随页复活短暂回账(151 键)后当场还债出账,
       //   key 集回到退役前那份 149,digest 按当前 key 集合实算。
-"u4Debt": "dcc7f9ebaf83c1d7d3e0067c8e594534b90e96136a59d01c80aa47f88b136ce2",
+"u4Debt": "ad7551e92ca18b2f46d357f0b27c39923a108f3ef3262adac83c5ac0f6293cf3",
       // 2026-08-17 漫游 S1 施工:条数不变(65),只是 pages/roam/index.js 的两处
       //   `...this._calcArch()` 动态 setData 行号从 3263/3305 移到 3261/3303
       //   (删掉 _apiCheckin 与 /api/play/arrive 那段后整段上移)。
@@ -1164,8 +1165,6 @@ module.exports = {
     "chengyinhub-xcx/pages/club/apply/index.js#backLabel": "存量零消费债务：backLabel 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/pages/club/detail/index.js#sceneStack": "存量零消费债务：sceneStack 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/pages/club/detail/index.js#tabInitialized": "存量零消费债务：tabInitialized 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
-    "chengyinhub-xcx/pages/gerenziliao/gerenziliao.js#selectedCategoryNames": "存量零消费债务：selectedCategoryNames 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
-    "chengyinhub-xcx/pages/gerenziliao/gerenziliao.js#formData": "存量零消费债务：formData 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/pages/gerenziliao/gerenziliao.js#selectedCategoryNamesStr": "存量零消费债务：selectedCategoryNamesStr 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/pages/index/index.js#isAppReady": "存量零消费债务：isAppReady 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/pages/index/index.js#bottomTopicPageNo": "存量零消费债务：bottomTopicPageNo 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",

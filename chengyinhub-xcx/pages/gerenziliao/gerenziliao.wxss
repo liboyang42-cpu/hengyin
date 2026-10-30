@@ -183,3 +183,45 @@ button.david_tk_con_tgb{border: 2rpx dashed var(--cy-border-line); width:100%; h
   color: var(--cy-text-title);
   font-size: var(--cy-type-body);
 }
+
+/* ===== 2026-10-30 业主定稿 P-2(V-15 / V-21):Revolut 式资料页 ===== */
+/* 页顶铺主页背景图,整张高斯模糊 + 半透明压暗,往下渐隐到页面底色 */
+.rv-bg { position: absolute; left: 0; right: 0; top: 0; height: 640rpx; overflow: hidden; z-index: 0; }
+.rv-bg__img { width: 110%; height: 110%; margin: -5%; filter: blur(40rpx); transform: scale(1.06); }
+.rv-bg__fade { position: absolute; left: 0; right: 0; top: 0; bottom: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, .35) 0%, rgba(0, 0, 0, .45) 55%, var(--cy-bg-page) 100%); } /* ds-ok: 背景图上的压暗渐层,落到页面底色 */
+.rv-bg-btn { position: absolute; right: var(--cy-page-x); top: 470rpx; z-index: 2; height: 56rpx; padding: 0 var(--cy-space-3); border-radius: var(--cy-radius-pill);
+  display: flex; align-items: center; gap: var(--cy-space-1-5); font-size: var(--cy-font-caption); color: #ffffff; /* ds-ok: 压在照片上的常量白 */
+  background: rgba(0, 0, 0, .38); /* ds-ok: 照片上的半透明底 */ }
+.rv-head { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; padding-top: var(--cy-space-4); }
+.rv-ava { position: relative; width: 208rpx; height: 208rpx; border-radius: 50%; }
+/* 上传中:外圈一道亮环,上传完收起(不用转圈动画) */
+.rv-ring { position: absolute; left: -10rpx; top: -10rpx; right: -10rpx; bottom: -10rpx; border-radius: 50%; border: 6rpx solid var(--cy-color-text-primary); opacity: 0; transition: opacity .2s ease; }
+.rv-ring.is-on { opacity: .9; }
+/* 编辑笔:头像正下方居中的实心圆(原来在右下角、偏心) */
+.rv-ava-edit { margin-top: -44rpx; z-index: 2; width: 88rpx; height: 88rpx; display: flex; align-items: center; justify-content: center; } /* 44pt 命中区 */
+.rv-ava-edit__dot { width: 56rpx; height: 56rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); border: 4rpx solid var(--cy-bg-page); box-sizing: border-box; }
+.rv-name { margin-top: var(--cy-space-3); font-size: var(--cy-font-title); font-weight: 700; color: var(--cy-text-title); }
+.rv-review { margin-top: var(--cy-space-2); padding: 0 var(--cy-page-x); text-align: center; font-size: var(--cy-font-label); color: var(--cy-danger); }
+/* 分组列表:左字段名、右当前值、末尾 › */
+.rv-group { position: relative; z-index: 1; margin: var(--cy-space-4) var(--cy-page-x) 0; border-radius: var(--cy-radius-lg); background: var(--cy-bg-card); overflow: hidden; }
+.rv-row { position: relative; display: flex; align-items: center; gap: var(--cy-space-2); min-height: 104rpx; padding: 0 var(--cy-space-3) 0 var(--cy-space-4); box-sizing: border-box; }
+.rv-row + .rv-row::before { content: ""; position: absolute; left: var(--cy-space-4); right: 0; top: 0; height: 1rpx; background: var(--cy-border-line); }
+button.rv-row--btn { width: 100%; margin: 0; border: 0; border-radius: 0; background: transparent; line-height: normal; text-align: left; font-size: inherit; color: inherit; }
+button.rv-row--btn::after { border: 0; }
+.rv-row__k { flex: none; font-size: var(--cy-font-body); color: var(--cy-text-title); }
+.rv-row__v { flex: 1; min-width: 0; text-align: right; font-size: var(--cy-font-body); color: var(--cy-text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rv-row__v.is-empty, .rv-row__intro.is-empty { color: var(--cy-text-tertiary); }
+.rv-row__cv { flex: none; color: var(--cy-text-tertiary); }
+/* 个人介绍:值放在字段名下面,最多三行 */
+.rv-row--stack { flex-direction: column; align-items: stretch; gap: var(--cy-space-1); padding-top: var(--cy-space-3); padding-bottom: var(--cy-space-3); }
+.rv-row__line { display: flex; align-items: center; justify-content: space-between; }
+.rv-row__intro { font-size: var(--cy-font-label); line-height: var(--cy-leading-normal); color: var(--cy-text-secondary);
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+.rv-thumbs { flex: 1; display: flex; justify-content: flex-end; gap: var(--cy-space-1-5); }
+.rv-thumb { width: 64rpx; height: 64rpx; border-radius: var(--cy-radius-sm); }
+.rv-chips { flex: 1; min-width: 0; display: flex; justify-content: flex-end; flex-wrap: wrap; gap: var(--cy-space-1-5); }
+.rv-chip { padding: 4rpx var(--cy-space-2); border-radius: var(--cy-radius-pill); background: var(--cy-bg-subtle); font-size: var(--cy-font-caption); color: var(--cy-text-secondary); }
+.rv-count { display: block; text-align: right; margin-top: var(--cy-space-1-5); font-size: var(--cy-font-caption); color: var(--cy-text-tertiary); }
+@media (prefers-reduced-motion: reduce) { .rv-ring { transition: none; } }

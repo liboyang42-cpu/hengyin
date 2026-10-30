@@ -253,7 +253,7 @@ const TITLELESS_SAMPLE = 'pages/gerenziliao/gerenziliao'
 
 test('negative control: 无标题页把旧 L1 标题加回来必须判红', () => {
   const src = sourcesOf(TITLELESS_SAMPLE)
-  const mutated = { ...src, wxml: src.wxml.replace('<cy-nav-bar />', '<cy-nav-bar />\n<cy-page-title title="个人资料" />') }
+  const mutated = { ...src, wxml: src.wxml.replace('<cy-nav-bar overlay />', '<cy-nav-bar overlay />\n<cy-page-title title="个人资料" />') }
   assert.notEqual(mutated.wxml, src.wxml, '变异锚点失效')
   assert.throws(() => assertTitlelessCustomNavPage(mutated, TITLELESS_CUSTOM_NAV_PAGES[TITLELESS_SAMPLE], TITLELESS_SAMPLE), /无标题页/)
 })

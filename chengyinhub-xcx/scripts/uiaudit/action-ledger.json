@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5550,
+  "controlCount": 5551,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -995175,128 +995175,7 @@
       }
     },
     {
-      "id": "pages/gerenziliao/gerenziliao.wxml:101:bind:action:saveInfo:10",
-      "route": "pages/gerenziliao/gerenziliao",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/gerenziliao/gerenziliao.wxml",
-        "js": "pages/gerenziliao/gerenziliao.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-inline-error",
-        "event": "bind:action",
-        "handler": "saveInfo",
-        "line": 101,
-        "selectorHint": "cy-inline-error[bind:action]",
-        "visibleCondition": "{{saveError}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "write",
-      "interactionMode": "event-contract",
-      "baseActionClass": "write",
-      "effectClasses": [
-        "write",
-        "navigation",
-        "state"
-      ],
-      "accessBoundary": "self",
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/member/index/index",
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info",
-          "/api/user/nickname/suggest",
-          "/api/user/update"
-        ],
-        "primaryApis": [
-          "/api/user/nickname/suggest",
-          "/api/user/update"
-        ],
-        "auxiliaryApis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/nickname/suggest",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/update",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": [
-          "/api/user/update"
-        ]
-      },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:712"
-      }
-    },
-    {
-      "id": "pages/gerenziliao/gerenziliao.wxml:111:bindtap:saveInfo:11",
+      "id": "pages/gerenziliao/gerenziliao.wxml:101:bindtap:confirm:15",
       "route": "pages/gerenziliao/gerenziliao",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -995318,13 +995197,13 @@
       "control": {
         "tag": "cy-btn",
         "event": "bindtap",
-        "handler": "saveInfo",
-        "line": 111,
+        "handler": "confirm",
+        "line": 101,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
-        "disabledCondition": "{{!canSave || saving}}",
+        "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": "{{saving ? '正在保存个人资料' : '保存个人资料'}}",
+        "ariaLabelExpression": null,
         "ariaRole": null,
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -995334,90 +995213,36 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "write",
+      "actionClass": "state",
       "interactionMode": "tap",
-      "baseActionClass": "write",
+      "baseActionClass": "state",
       "effectClasses": [
-        "write",
-        "navigation",
         "state"
       ],
-      "accessBoundary": "self",
+      "accessBoundary": null,
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
-        "routes": [
-          "pages/member/index/index",
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info",
-          "/api/user/nickname/suggest",
-          "/api/user/update"
-        ],
-        "primaryApis": [
-          "/api/user/nickname/suggest",
-          "/api/user/update"
-        ],
-        "auxiliaryApis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/nickname/suggest",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/update",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": [
-          "/api/user/update"
-        ]
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
       },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
+        "success"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:712"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:114"
       }
     },
     {
-      "id": "pages/gerenziliao/gerenziliao.wxml:116:bind:close:cancel:12",
+      "id": "pages/gerenziliao/gerenziliao.wxml:105:bind:close:cancel2:16",
       "route": "pages/gerenziliao/gerenziliao",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -995439,8 +995264,8 @@
       "control": {
         "tag": "cy-sheet",
         "event": "bind:close",
-        "handler": "cancel",
-        "line": 116,
+        "handler": "cancel2",
+        "line": 105,
         "selectorHint": ".profile-edit-sheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -995480,7 +995305,186 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:106"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:130"
+      }
+    },
+    {
+      "id": "pages/gerenziliao/gerenziliao.wxml:111:bindtap:deleteCasePic:17",
+      "route": "pages/gerenziliao/gerenziliao",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/gerenziliao/gerenziliao.wxml",
+        "js": "pages/gerenziliao/gerenziliao.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "deleteCasePic",
+        "line": 111,
+        "selectorHint": ".david_del-hit",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "删除这张作品图",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/gerenziliao/gerenziliao.js:370"
+      }
+    },
+    {
+      "id": "pages/gerenziliao/gerenziliao.wxml:113:bindtap:uploadCasePics:18",
+      "route": "pages/gerenziliao/gerenziliao",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/gerenziliao/gerenziliao.wxml",
+        "js": "pages/gerenziliao/gerenziliao.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {
+        "cancelled": "chooseImage",
+        "denied": "chooseImage"
+      },
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "button",
+        "event": "bindtap",
+        "handler": "uploadCasePics",
+        "line": 113,
+        "selectorHint": ".david_tk_con_tgb",
+        "visibleCondition": "{{tempCasePics.length < 9}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "external",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "state"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [
+        "app.chooseImage"
+      ],
+      "successCapabilities": [
+        "app.chooseImage"
+      ],
+      "targets": {
+        "routes": [
+          "pages/crop/index"
+        ],
+        "apis": [
+          "/api/common/uploadOSS",
+          "/api/media/asset/",
+          "/api/media/asset/{param}/retry"
+        ],
+        "primaryApis": [
+          "/api/common/uploadOSS",
+          "/api/media/asset/",
+          "/api/media/asset/{param}/retry"
+        ],
+        "auxiliaryApis": [],
+        "apiContracts": [
+          {
+            "url": "/api/common/uploadOSS",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/media/asset/",
+            "method": "GET",
+            "auth": "authenticated"
+          },
+          {
+            "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner",
+        "cancelled",
+        "denied"
+      ],
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/gerenziliao/gerenziliao.js:351"
       }
     },
     {
@@ -995550,7 +995554,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:787"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:762"
       }
     },
     {
@@ -995667,441 +995671,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:596"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:570"
       }
     },
     {
-      "id": "pages/gerenziliao/gerenziliao.wxml:120:bindinput:onInputChange:13",
-      "route": "pages/gerenziliao/gerenziliao",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/gerenziliao/gerenziliao.wxml",
-        "js": "pages/gerenziliao/gerenziliao.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "textarea",
-        "event": "bindinput",
-        "handler": "onInputChange",
-        "line": 120,
-        "selectorHint": "textarea[bindinput]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "read",
-      "interactionMode": "event-contract",
-      "baseActionClass": "read",
-      "effectClasses": [
-        "read",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info",
-          "/api/user/nickname/check",
-          "/api/user/nickname/suggest"
-        ],
-        "primaryApis": [
-          "/api/user/nickname/check",
-          "/api/user/nickname/suggest"
-        ],
-        "auxiliaryApis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/nickname/check",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/nickname/suggest",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:581"
-      }
-    },
-    {
-      "id": "pages/gerenziliao/gerenziliao.wxml:124:bindtap:confirm:14",
-      "route": "pages/gerenziliao/gerenziliao",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/gerenziliao/gerenziliao.wxml",
-        "js": "pages/gerenziliao/gerenziliao.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-btn",
-        "event": "bindtap",
-        "handler": "confirm",
-        "line": 124,
-        "selectorHint": "cy-btn[bindtap]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:112"
-      }
-    },
-    {
-      "id": "pages/gerenziliao/gerenziliao.wxml:128:bind:close:cancel2:15",
-      "route": "pages/gerenziliao/gerenziliao",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/gerenziliao/gerenziliao.wxml",
-        "js": "pages/gerenziliao/gerenziliao.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-sheet",
-        "event": "bind:close",
-        "handler": "cancel2",
-        "line": 128,
-        "selectorHint": ".profile-edit-sheet",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:128"
-      }
-    },
-    {
-      "id": "pages/gerenziliao/gerenziliao.wxml:134:bindtap:deleteCasePic:16",
-      "route": "pages/gerenziliao/gerenziliao",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/gerenziliao/gerenziliao.wxml",
-        "js": "pages/gerenziliao/gerenziliao.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "deleteCasePic",
-        "line": 134,
-        "selectorHint": ".david_del-hit",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "删除这张作品图",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:368"
-      }
-    },
-    {
-      "id": "pages/gerenziliao/gerenziliao.wxml:136:bindtap:uploadCasePics:17",
-      "route": "pages/gerenziliao/gerenziliao",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/gerenziliao/gerenziliao.wxml",
-        "js": "pages/gerenziliao/gerenziliao.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {
-        "cancelled": "chooseImage",
-        "denied": "chooseImage"
-      },
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "button",
-        "event": "bindtap",
-        "handler": "uploadCasePics",
-        "line": 136,
-        "selectorHint": ".david_tk_con_tgb",
-        "visibleCondition": "{{tempCasePics.length < 9}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "external",
-      "interactionMode": "tap",
-      "baseActionClass": "write",
-      "effectClasses": [
-        "write",
-        "state"
-      ],
-      "accessBoundary": "owned-resource",
-      "externalCapabilities": [
-        "app.chooseImage"
-      ],
-      "successCapabilities": [
-        "app.chooseImage"
-      ],
-      "targets": {
-        "routes": [
-          "pages/crop/index"
-        ],
-        "apis": [
-          "/api/common/uploadOSS",
-          "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
-        ],
-        "primaryApis": [
-          "/api/common/uploadOSS",
-          "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
-        ],
-        "auxiliaryApis": [],
-        "apiContracts": [
-          {
-            "url": "/api/common/uploadOSS",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/media/asset/",
-            "method": "GET",
-            "auth": "authenticated"
-          },
-          {
-            "url": "/api/media/asset/{param}/retry",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger",
-        "forbidden-owner",
-        "cancelled",
-        "denied"
-      ],
-      "requiredPlatforms": [
-        "ios",
-        "android"
-      ],
-      "externalGate": "real-device-required",
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:349"
-      }
-    },
-    {
-      "id": "pages/gerenziliao/gerenziliao.wxml:143:bindtap:confirm2:18",
+      "id": "pages/gerenziliao/gerenziliao.wxml:120:bindtap:confirm2:19",
       "route": "pages/gerenziliao/gerenziliao",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -996124,7 +995698,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "confirm2",
-        "line": 143,
+        "line": 120,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -996164,11 +995738,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:134"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:136"
       }
     },
     {
-      "id": "pages/gerenziliao/gerenziliao.wxml:147:bind:close:cancel3:19",
+      "id": "pages/gerenziliao/gerenziliao.wxml:124:bind:close:cancel3:20",
       "route": "pages/gerenziliao/gerenziliao",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -996191,7 +995765,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "cancel3",
-        "line": 147,
+        "line": 124,
         "selectorHint": ".profile-edit-sheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -996231,11 +995805,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:153"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:155"
       }
     },
     {
-      "id": "pages/gerenziliao/gerenziliao.wxml:153:bindtap:deleteWechat:20",
+      "id": "pages/gerenziliao/gerenziliao.wxml:130:bindtap:deleteWechat:21",
       "route": "pages/gerenziliao/gerenziliao",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -996258,7 +995832,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "deleteWechat",
-        "line": 153,
+        "line": 130,
         "selectorHint": ".david_del-hit",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -996298,11 +995872,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:420"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:392"
       }
     },
     {
-      "id": "pages/gerenziliao/gerenziliao.wxml:155:bindtap:uploadWechat:21",
+      "id": "pages/gerenziliao/gerenziliao.wxml:132:bindtap:uploadWechat:22",
       "route": "pages/gerenziliao/gerenziliao",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -996328,7 +995902,7 @@
         "tag": "button",
         "event": "bindtap",
         "handler": "uploadWechat",
-        "line": 155,
+        "line": 132,
         "selectorHint": ".david_tk_con_tgb",
         "visibleCondition": "{{!tempWechat}}",
         "disabledCondition": null,
@@ -996410,11 +995984,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:408"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:380"
       }
     },
     {
-      "id": "pages/gerenziliao/gerenziliao.wxml:162:bindtap:confirm3:22",
+      "id": "pages/gerenziliao/gerenziliao.wxml:139:bindtap:confirm3:23",
       "route": "pages/gerenziliao/gerenziliao",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -996437,7 +996011,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "confirm3",
-        "line": 162,
+        "line": 139,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -996477,11 +996051,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:159"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:161"
       }
     },
     {
-      "id": "pages/gerenziliao/gerenziliao.wxml:166:bind:close:cancel4:23",
+      "id": "pages/gerenziliao/gerenziliao.wxml:143:bind:close:cancel4:24",
       "route": "pages/gerenziliao/gerenziliao",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -996504,7 +996078,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "cancel4",
-        "line": 166,
+        "line": 143,
         "selectorHint": ".profile-edit-sheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -996544,11 +996118,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:179"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:181"
       }
     },
     {
-      "id": "pages/gerenziliao/gerenziliao.wxml:170:bind:input:onInputChange:24",
+      "id": "pages/gerenziliao/gerenziliao.wxml:147:bind:input:onInputChange:25",
       "route": "pages/gerenziliao/gerenziliao",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -996571,7 +996145,7 @@
         "tag": "cy-field",
         "event": "bind:input",
         "handler": "onInputChange",
-        "line": 170,
+        "line": 147,
         "selectorHint": ".profile-name-field",
         "visibleCondition": null,
         "disabledCondition": "{{saving}}",
@@ -996661,11 +996235,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:581"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:555"
       }
     },
     {
-      "id": "pages/gerenziliao/gerenziliao.wxml:175:bindtap:retryNicknameCheck:25",
+      "id": "pages/gerenziliao/gerenziliao.wxml:152:bindtap:retryNicknameCheck:26",
       "route": "pages/gerenziliao/gerenziliao",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -996688,7 +996262,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "retryNicknameCheck",
-        "line": 175,
+        "line": 152,
         "selectorHint": ".profile-name-link",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -996778,123 +996352,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:261"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:263"
       }
     },
     {
-      "id": "pages/gerenziliao/gerenziliao.wxml:18:bindtap:uploadPic:2",
-      "route": "pages/gerenziliao/gerenziliao",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/gerenziliao/gerenziliao.wxml",
-        "js": "pages/gerenziliao/gerenziliao.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {
-        "cancelled": "chooseImage",
-        "denied": "chooseImage"
-      },
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "uploadPic",
-        "line": 18,
-        "selectorHint": ".shzltop_tu",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "修改头像",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "external",
-      "interactionMode": "tap",
-      "baseActionClass": "write",
-      "effectClasses": [
-        "write",
-        "state"
-      ],
-      "accessBoundary": "owned-resource",
-      "externalCapabilities": [
-        "app.chooseImage"
-      ],
-      "successCapabilities": [
-        "app.chooseImage"
-      ],
-      "targets": {
-        "routes": [
-          "pages/crop/index"
-        ],
-        "apis": [
-          "/api/common/uploadOSS",
-          "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
-        ],
-        "primaryApis": [
-          "/api/common/uploadOSS",
-          "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
-        ],
-        "auxiliaryApis": [],
-        "apiContracts": [
-          {
-            "url": "/api/common/uploadOSS",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/media/asset/",
-            "method": "GET",
-            "auth": "authenticated"
-          },
-          {
-            "url": "/api/media/asset/{param}/retry",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger",
-        "forbidden-owner",
-        "cancelled",
-        "denied"
-      ],
-      "requiredPlatforms": [
-        "ios",
-        "android"
-      ],
-      "externalGate": "real-device-required",
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:792"
-      }
-    },
-    {
-      "id": "pages/gerenziliao/gerenziliao.wxml:181:bindtap:moreNicknameSuggestions:26",
+      "id": "pages/gerenziliao/gerenziliao.wxml:158:bindtap:moreNicknameSuggestions:27",
       "route": "pages/gerenziliao/gerenziliao",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -996917,7 +996379,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "moreNicknameSuggestions",
-        "line": 181,
+        "line": 158,
         "selectorHint": ".profile-name-link",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -996999,11 +996461,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:330"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:332"
       }
     },
     {
-      "id": "pages/gerenziliao/gerenziliao.wxml:186:bindtap:pickNicknameSuggestion:27",
+      "id": "pages/gerenziliao/gerenziliao.wxml:163:bindtap:pickNicknameSuggestion:28",
       "route": "pages/gerenziliao/gerenziliao",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -997026,7 +996488,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "pickNicknameSuggestion",
-        "line": 186,
+        "line": 163,
         "selectorHint": ".profile-name-chip",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -997066,11 +996528,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:334"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:336"
       }
     },
     {
-      "id": "pages/gerenziliao/gerenziliao.wxml:191:bind:action:moreNicknameSuggestions:28",
+      "id": "pages/gerenziliao/gerenziliao.wxml:168:bind:action:moreNicknameSuggestions:29",
       "route": "pages/gerenziliao/gerenziliao",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -997093,7 +996555,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "moreNicknameSuggestions",
-        "line": 191,
+        "line": 168,
         "selectorHint": "cy-inline-error[bind:action]",
         "visibleCondition": "{{nicknameSuggestError}}",
         "disabledCondition": null,
@@ -997175,11 +996637,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:330"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:332"
       }
     },
     {
-      "id": "pages/gerenziliao/gerenziliao.wxml:194:bindtap:confirm4:29",
+      "id": "pages/gerenziliao/gerenziliao.wxml:171:bindtap:confirm4:30",
       "route": "pages/gerenziliao/gerenziliao",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -997202,7 +996664,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "confirm4",
-        "line": 194,
+        "line": 171,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -997242,11 +996704,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:186"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:188"
       }
     },
     {
-      "id": "pages/gerenziliao/gerenziliao.wxml:198:bind:close:onCategorySheetClose:31",
+      "id": "pages/gerenziliao/gerenziliao.wxml:175:bind:close:onCategorySheetClose:32",
       "route": "pages/gerenziliao/gerenziliao",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -997269,7 +996731,7 @@
         "tag": "cy-category-sheet",
         "event": "bind:close",
         "handler": "onCategorySheetClose",
-        "line": 198,
+        "line": 175,
         "selectorHint": ".profile-edit-sheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -997309,11 +996771,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:445"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:417"
       }
     },
     {
-      "id": "pages/gerenziliao/gerenziliao.wxml:198:bind:select:onCategorySelect:30",
+      "id": "pages/gerenziliao/gerenziliao.wxml:175:bind:select:onCategorySelect:31",
       "route": "pages/gerenziliao/gerenziliao",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -997336,7 +996798,7 @@
         "tag": "cy-category-sheet",
         "event": "bind:select",
         "handler": "onCategorySelect",
-        "line": 198,
+        "line": 175,
         "selectorHint": ".profile-edit-sheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -997376,11 +996838,347 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:441"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:413"
       }
     },
     {
-      "id": "pages/gerenziliao/gerenziliao.wxml:30:bindtap:openPop4:3",
+      "id": "pages/gerenziliao/gerenziliao.wxml:23:bindtap:changeHeroBg:2",
+      "route": "pages/gerenziliao/gerenziliao",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/gerenziliao/gerenziliao.wxml",
+        "js": "pages/gerenziliao/gerenziliao.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {
+        "cancelled": "chooseImage",
+        "denied": "chooseImage"
+      },
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "changeHeroBg",
+        "line": 23,
+        "selectorHint": ".rv-bg-btn",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "更换背景",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "external",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "state"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [
+        "app.chooseImage"
+      ],
+      "successCapabilities": [
+        "app.chooseImage"
+      ],
+      "targets": {
+        "routes": [
+          "pages/crop/index"
+        ],
+        "apis": [
+          "/api/common/uploadOSS",
+          "/api/media/asset/",
+          "/api/media/asset/{param}/retry"
+        ],
+        "primaryApis": [
+          "/api/common/uploadOSS",
+          "/api/media/asset/",
+          "/api/media/asset/{param}/retry"
+        ],
+        "auxiliaryApis": [],
+        "apiContracts": [
+          {
+            "url": "/api/common/uploadOSS",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/media/asset/",
+            "method": "GET",
+            "auth": "authenticated"
+          },
+          {
+            "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner",
+        "cancelled",
+        "denied"
+      ],
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/gerenziliao/gerenziliao.js:768"
+      }
+    },
+    {
+      "id": "pages/gerenziliao/gerenziliao.wxml:27:bindtap:uploadPic:3",
+      "route": "pages/gerenziliao/gerenziliao",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/gerenziliao/gerenziliao.wxml",
+        "js": "pages/gerenziliao/gerenziliao.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {
+        "cancelled": "chooseImage",
+        "denied": "chooseImage"
+      },
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "uploadPic",
+        "line": 27,
+        "selectorHint": ".rv-ava",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "修改头像",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "external",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "state"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [
+        "app.chooseImage"
+      ],
+      "successCapabilities": [
+        "app.chooseImage"
+      ],
+      "targets": {
+        "routes": [
+          "pages/crop/index"
+        ],
+        "apis": [
+          "/api/common/uploadOSS",
+          "/api/media/asset/",
+          "/api/media/asset/{param}/retry"
+        ],
+        "primaryApis": [
+          "/api/common/uploadOSS",
+          "/api/media/asset/",
+          "/api/media/asset/{param}/retry"
+        ],
+        "auxiliaryApis": [],
+        "apiContracts": [
+          {
+            "url": "/api/common/uploadOSS",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/media/asset/",
+            "method": "GET",
+            "auth": "authenticated"
+          },
+          {
+            "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner",
+        "cancelled",
+        "denied"
+      ],
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/gerenziliao/gerenziliao.js:778"
+      }
+    },
+    {
+      "id": "pages/gerenziliao/gerenziliao.wxml:31:bindtap:uploadPic:4",
+      "route": "pages/gerenziliao/gerenziliao",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/gerenziliao/gerenziliao.wxml",
+        "js": "pages/gerenziliao/gerenziliao.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {
+        "cancelled": "chooseImage",
+        "denied": "chooseImage"
+      },
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "uploadPic",
+        "line": 31,
+        "selectorHint": ".rv-ava-edit",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "修改头像",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "external",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "state"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [
+        "app.chooseImage"
+      ],
+      "successCapabilities": [
+        "app.chooseImage"
+      ],
+      "targets": {
+        "routes": [
+          "pages/crop/index"
+        ],
+        "apis": [
+          "/api/common/uploadOSS",
+          "/api/media/asset/",
+          "/api/media/asset/{param}/retry"
+        ],
+        "primaryApis": [
+          "/api/common/uploadOSS",
+          "/api/media/asset/",
+          "/api/media/asset/{param}/retry"
+        ],
+        "auxiliaryApis": [],
+        "apiContracts": [
+          {
+            "url": "/api/common/uploadOSS",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/media/asset/",
+            "method": "GET",
+            "auth": "authenticated"
+          },
+          {
+            "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner",
+        "cancelled",
+        "denied"
+      ],
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/gerenziliao/gerenziliao.js:778"
+      }
+    },
+    {
+      "id": "pages/gerenziliao/gerenziliao.wxml:37:bindtap:openPop4:5",
       "route": "pages/gerenziliao/gerenziliao",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -997403,8 +997201,8 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openPop4",
-        "line": 30,
-        "selectorHint": ".shzlbox_li_right",
+        "line": 37,
+        "selectorHint": ".rv-row",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": "编辑昵称",
@@ -997443,11 +997241,78 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:167"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:169"
       }
     },
     {
-      "id": "pages/gerenziliao/gerenziliao.wxml:40:bindgetphonenumber:getPhoneNumber:4",
+      "id": "pages/gerenziliao/gerenziliao.wxml:40:bindtap:openPop:6",
+      "route": "pages/gerenziliao/gerenziliao",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/gerenziliao/gerenziliao.wxml",
+        "js": "pages/gerenziliao/gerenziliao.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "openPop",
+        "line": 40,
+        "selectorHint": ".rv-row",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "编辑个人介绍",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/gerenziliao/gerenziliao.js:101"
+      }
+    },
+    {
+      "id": "pages/gerenziliao/gerenziliao.wxml:47:bindgetphonenumber:getPhoneNumber:7",
       "route": "pages/gerenziliao/gerenziliao",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -997470,8 +997335,8 @@
         "tag": "button",
         "event": "bindgetphonenumber",
         "handler": "getPhoneNumber",
-        "line": 40,
-        "selectorHint": ".shzlbox_li_right",
+        "line": 47,
+        "selectorHint": ".rv-row",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
@@ -997552,78 +997417,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:825"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:812"
       }
     },
     {
-      "id": "pages/gerenziliao/gerenziliao.wxml:50:bindtap:openPop:5",
-      "route": "pages/gerenziliao/gerenziliao",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/gerenziliao/gerenziliao.wxml",
-        "js": "pages/gerenziliao/gerenziliao.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "openPop",
-        "line": 50,
-        "selectorHint": ".shzlbox_li_right",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "编辑个人介绍",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:99"
-      }
-    },
-    {
-      "id": "pages/gerenziliao/gerenziliao.wxml:63:bindtap:openPop2:6",
+      "id": "pages/gerenziliao/gerenziliao.wxml:52:bindtap:openPop2:8",
       "route": "pages/gerenziliao/gerenziliao",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -997646,8 +997444,8 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openPop2",
-        "line": 63,
-        "selectorHint": ".shzlbox_li_right",
+        "line": 52,
+        "selectorHint": ".rv-row",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": "编辑探索作品",
@@ -997686,11 +997484,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:120"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:122"
       }
     },
     {
-      "id": "pages/gerenziliao/gerenziliao.wxml:76:bindtap:openPop3:7",
+      "id": "pages/gerenziliao/gerenziliao.wxml:58:bindtap:openPop3:9",
       "route": "pages/gerenziliao/gerenziliao",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -997713,8 +997511,8 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openPop3",
-        "line": 76,
-        "selectorHint": ".shzlbox_li_right",
+        "line": 58,
+        "selectorHint": ".rv-row",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": "编辑联系二维码",
@@ -997753,78 +997551,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:146"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:148"
       }
     },
     {
-      "id": "pages/gerenziliao/gerenziliao.wxml:85:bindtap:removeCategory:8",
-      "route": "pages/gerenziliao/gerenziliao",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/gerenziliao/gerenziliao.wxml",
-        "js": "pages/gerenziliao/gerenziliao.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "removeCategory",
-        "line": 85,
-        "selectorHint": ".del-hit",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "移除该分类",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:376"
-      }
-    },
-    {
-      "id": "pages/gerenziliao/gerenziliao.wxml:90:bindtap:navigateToCategorySelect:9",
+      "id": "pages/gerenziliao/gerenziliao.wxml:64:bindtap:navigateToCategorySelect:10",
       "route": "pages/gerenziliao/gerenziliao",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -997847,8 +997578,8 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "navigateToCategorySelect",
-        "line": 90,
-        "selectorHint": ".shzlbox_li_right",
+        "line": 64,
+        "selectorHint": ".rv-row",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": "编辑路线偏好",
@@ -997887,7 +997618,433 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/gerenziliao/gerenziliao.js:434"
+        "staticSource": "pages/gerenziliao/gerenziliao.js:406"
+      }
+    },
+    {
+      "id": "pages/gerenziliao/gerenziliao.wxml:77:bind:action:saveInfo:11",
+      "route": "pages/gerenziliao/gerenziliao",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/gerenziliao/gerenziliao.wxml",
+        "js": "pages/gerenziliao/gerenziliao.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-inline-error",
+        "event": "bind:action",
+        "handler": "saveInfo",
+        "line": 77,
+        "selectorHint": "cy-inline-error[bind:action]",
+        "visibleCondition": "{{saveError}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "write",
+      "interactionMode": "event-contract",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "navigation",
+        "state"
+      ],
+      "accessBoundary": "self",
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/member/index/index",
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info",
+          "/api/user/nickname/suggest",
+          "/api/user/update"
+        ],
+        "primaryApis": [
+          "/api/user/nickname/suggest",
+          "/api/user/update"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/user/nickname/suggest",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/user/update",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": [
+          "/api/user/update"
+        ]
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/gerenziliao/gerenziliao.js:687"
+      }
+    },
+    {
+      "id": "pages/gerenziliao/gerenziliao.wxml:87:bindtap:saveInfo:12",
+      "route": "pages/gerenziliao/gerenziliao",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/gerenziliao/gerenziliao.wxml",
+        "js": "pages/gerenziliao/gerenziliao.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bindtap",
+        "handler": "saveInfo",
+        "line": 87,
+        "selectorHint": "cy-btn[bindtap]",
+        "visibleCondition": null,
+        "disabledCondition": "{{!canSave || saving}}",
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{saving ? '正在保存个人资料' : '保存个人资料'}}",
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "write",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "navigation",
+        "state"
+      ],
+      "accessBoundary": "self",
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/member/index/index",
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info",
+          "/api/user/nickname/suggest",
+          "/api/user/update"
+        ],
+        "primaryApis": [
+          "/api/user/nickname/suggest",
+          "/api/user/update"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/user/nickname/suggest",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/user/update",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": [
+          "/api/user/update"
+        ]
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/gerenziliao/gerenziliao.js:687"
+      }
+    },
+    {
+      "id": "pages/gerenziliao/gerenziliao.wxml:92:bind:close:cancel:13",
+      "route": "pages/gerenziliao/gerenziliao",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/gerenziliao/gerenziliao.wxml",
+        "js": "pages/gerenziliao/gerenziliao.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-sheet",
+        "event": "bind:close",
+        "handler": "cancel",
+        "line": 92,
+        "selectorHint": ".profile-edit-sheet",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/gerenziliao/gerenziliao.js:108"
+      }
+    },
+    {
+      "id": "pages/gerenziliao/gerenziliao.wxml:96:bindinput:onInputChange:14",
+      "route": "pages/gerenziliao/gerenziliao",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/gerenziliao/gerenziliao.wxml",
+        "js": "pages/gerenziliao/gerenziliao.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "textarea",
+        "event": "bindinput",
+        "handler": "onInputChange",
+        "line": 96,
+        "selectorHint": "textarea[bindinput]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "event-contract",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info",
+          "/api/user/nickname/check",
+          "/api/user/nickname/suggest"
+        ],
+        "primaryApis": [
+          "/api/user/nickname/check",
+          "/api/user/nickname/suggest"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/user/nickname/check",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/user/nickname/suggest",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/gerenziliao/gerenziliao.js:555"
       }
     },
     {

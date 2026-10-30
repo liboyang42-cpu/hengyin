@@ -73,7 +73,8 @@ test('V-15 资料页:读到的头像走 getImgUrl,不再把 http 签名链接直
   answerUserInfo(requests, { name: '小林', avatar: OSS_HTTP })
   assert.equal(page.data.avatarSrc, OSS_HTTPS)
   assert.equal(page.data.userInfo.avatar, OSS_HTTP, '提交给后端的仍是原值')
-  assert.match(read('pages/gerenziliao/gerenziliao.wxml'), /<cy-avatar src="\{\{avatarSrc \|\| '\/images\/d_profile\.png'\}\}" size="170" \/>/)
+  // 2026-10-30 P-2:头像居中放大到 104pt(208rpx)
+  assert.match(read('pages/gerenziliao/gerenziliao.wxml'), /<cy-avatar src="\{\{avatarSrc \|\| '\/images\/d_profile\.png'\}\}" size="208" \/>/)
 })
 
 test('V-15 资料页:裁完立刻显示本机图,上传成功仍显示本机图并记下服务端地址;失败退回原头像', () => {
@@ -163,7 +164,7 @@ test('V-18 藏品卡:frames / sourceUrl / cutoutUrl 走 getImgUrl,http 签名链
 
 test('V-21 个人介绍:资料页有「个人介绍」一行(同一 introduction 字段),「关于」的编辑直达并自动打开', () => {
   const wxml = read('pages/gerenziliao/gerenziliao.wxml')
-  assert.match(wxml, /<view class="shzlbox_li_left_name">个人介绍<\/view>/)
+  assert.match(wxml, /<text class="rv-row__k">个人介绍<\/text>/) // 2026-10-30 P-2 分组列表
   assert.match(wxml, /bindtap="openPop" aria-role="button" aria-label="编辑个人介绍"/)
   assert.match(wxml, /show="\{\{ popDavid \}\}" title="个人介绍"/)
   assert.doesNotMatch(wxml, /城市签名/)

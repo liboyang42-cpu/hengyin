@@ -64,5 +64,6 @@ test('M-31:入驻审核通过后品牌中心不再出「入驻资料」', () => 
 
 test('P-56:手机号已绑定也有修改图标,走微信手机号授权换绑', () => {
   const wxml = read('pages/gerenziliao/gerenziliao.wxml')
-  assert.match(wxml, /<button class="shzlbox_li_right shzlbox_bind" open-type="getPhoneNumber" bindgetphonenumber="getPhoneNumber" aria-label="\{\{userInfo\.phone \? '更换手机号' : '绑定手机号'\}\}"/)
+  // 2026-10-30 P-2:手机号是分组列表里整行可点的一行(原生 button 承载 getPhoneNumber),行尾 ›
+  assert.match(wxml, /<button class="rv-row rv-row--btn" open-type="getPhoneNumber" bindgetphonenumber="getPhoneNumber" aria-label="\{\{userInfo\.phone \? '更换手机号' : '绑定手机号'\}\}"/)
 })
