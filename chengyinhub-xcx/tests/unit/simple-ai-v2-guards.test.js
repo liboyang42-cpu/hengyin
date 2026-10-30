@@ -59,7 +59,7 @@ function harness(options = {}) {
       if (options.afterStorageWrite) options.afterStorageWrite(k, v, values);
     },
     getStorageInfoSync() { if (flags.read || flags.keys) throw Error('local keys'); return { keys: Object.keys(values) }; },
-    removeStorageSync(k) { delete values[k]; }, choosePoi(r) { pois.push(r); },
+    removeStorageSync(k) { delete values[k]; }, showToast() {}, chooseLocation(r) { pois.push(r); },
     navigateTo(r) { navigations.push(r.url); }, switchTab(r) { navigations.push(r.url); }, navigateBack() {}
   };
   const store = createSessionStore({ wx, now: () => 1000 });
@@ -609,3 +609,14 @@ if (require.main === module) {
   });
 
 }
+
+test('normal map chooser rejects zero/invalid coordinates and accepts a real coordinate selection', () => {
+  const h = harness(); h.ready(); h.finish(h.prepare(), { code: 200, data: view('SUCCEEDED', { resultAvailable: true, result: DRAFT }) });
+  for (const value of [{ longitude: 0, latitude: 0 }, { longitude: '0', latitude: '31' }, { longitude: 181, latitude: 31 }]) {
+    h.page.confirmAiNodePoi({ currentTarget: { dataset: { index: 0 } } }); h.pois.at(-1).success(value);
+    assert.equal(h.page.data.aiPlanNodes[0].confirmed, false); assert.equal(h.page.data.canEnterAiEditor, false);
+  }
+  h.page.confirmAiNodePoi({ currentTarget: { dataset: { index: 0 } } }); h.pois.at(-1).success({ name: 'selected', address: 'place', longitude: 121.47, latitude: 31.23 });
+  assert.equal(h.page.data.aiPlanNodes[0].confirmed, true); assert.equal(h.page.data.canEnterAiEditor, true);
+  h.page.enterAiEditor(); assert.equal(h.values['ai_topic_draft:m7'].chapters[0].nodes[0].longitude, '121.47');
+});

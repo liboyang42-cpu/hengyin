@@ -17,7 +17,7 @@ function trackerHarness() {
   };
   const filename = path.resolve(__dirname, '../../utils/location/bg-tracker.js');
   const module = { exports: {} };
-  vm.runInNewContext(fs.readFileSync(filename, 'utf8'), { module, wx }, { filename });
+  vm.runInNewContext(fs.readFileSync(filename, 'utf8'), { module, wx, setTimeout, clearTimeout }, { filename });
   return { tracker: module.exports, bg, fg, stops };
 }
 const flush = async () => { for (let i = 0; i < 5; i++) await Promise.resolve(); };
@@ -77,7 +77,7 @@ test('GPS success batch cannot notify released waiter after same-key reacquire i
   t.acquire('second', { success: () => seen.push('released-second') });
   bg[0].success();
   assert.deepEqual(seen, ['first'], 'released batch callback must not borrow replacement owner identity');
-  assert.equal(stops.length, 1); stops[0].complete(); bg[1].success();
+  assert.equal(stops.length, 1); stops[0].complete({ errMsg: 'stopLocationUpdate:ok' }); bg[1].success();
   assert.deepEqual(seen, ['first', 'new-second']);
   t.release('second');
 });

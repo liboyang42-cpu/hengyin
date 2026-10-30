@@ -3,6 +3,7 @@ const app = getApp();
 const { memberId, retryLogin, waitForInitialSession } = require('../../../utils/session/login-reload.js');
 const journal = require('../../../utils/ai-theme-draft-journal.js');
 const modal = require('../../../utils/modal.js');
+const { pickLocation, hasCoords } = require('../../../utils/location/location-manager.js');
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
 const UUID = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 const STATES = ['PREPARED', 'PROCESSING', 'UNKNOWN', 'SUCCEEDED', 'FAILED'];
@@ -681,7 +682,7 @@ Page({
     const nodes = this.data.aiPlanNodes || [];
     const canEnterAiEditor = !this._aiProtocolBlocked && !!String(plan.title || '').trim()
       && nodes.length > 0 && (this._aiResultMode === 1 || this._aiResultMode === 2)
-      && nodes.every((node) => node.confirmed && node.longitude && node.latitude);
+      && nodes.every((node) => node.confirmed && hasCoords(node));
     if (canEnterAiEditor !== this.data.canEnterAiEditor) this.setData({ canEnterAiEditor });
   },
   onAiPlanTitleInput(e) {
@@ -697,10 +698,10 @@ Page({
     }
     const index = Number(e.currentTarget.dataset.index), ctx = this._capture('poi', this._aiPending), planEpoch = this._planEpoch;
     if (!ctx || !Number.isSafeInteger(index) || !this.data.aiPlanNodes[index]) return;
-    wx.choosePoi({
-      success: (poi) => {
+    pickLocation({
+      onPick: (poi) => {
         if (!this._current(ctx) || planEpoch !== this._planEpoch || this._aiProtocolBlocked) return;
-        if (!poi || poi.longitude == null || poi.latitude == null) { this.setData({ aiError: '请选择一个有坐标的具体地点。' }); return; }
+        if (!hasCoords(poi)) { this.setData({ aiError: '请选择一个有坐标的具体地点。' }); return; }
         this.setData({
           ['aiPlanNodes[' + index + '].name']: poi.name || this.data.aiPlanNodes[index].name,
           ['aiPlanNodes[' + index + '].address']: poi.address || poi.name || '',
@@ -721,7 +722,7 @@ Page({
     if (this._aiResultMode !== 1 && this._aiResultMode !== 2) {
       this.setData({ aiError: '原起草的路线模式未能确认，当前可查看草稿，暂不能进入编辑器。' }); return;
     }
-    if (nodes.some((node) => !node.confirmed || !node.longitude || !node.latitude)) {
+    if (nodes.some((node) => !node.confirmed || !hasCoords(node))) {
       this.setData({ aiError: '请逐个在地图中确认地点后再继续。' });
       return;
     }

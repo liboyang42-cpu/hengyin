@@ -381,6 +381,7 @@ App({
         getClientVersion: function () { return readClientVersion(wx); },
         getAuthorization: function () { return that.getAuthorization(); },
         getUserID: function () { return that.getUserID(); },
+        getSessionRevision: function () { return that.getSession().getRevision(); },
         reLogin: function (cb) { that.reLogin(cb); },
         // owner 2026-10-24:游客的写请求被 401 拦下时弹同一个登录窗,登录成功后重发一次;游客读请求不再静默建号。
         promptLogin: function (param) { return that.requireLogin({ reason: param && param.loginReason }); },

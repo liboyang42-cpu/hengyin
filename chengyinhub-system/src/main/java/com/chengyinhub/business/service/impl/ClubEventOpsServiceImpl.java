@@ -122,7 +122,8 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
     }
 
     @Override
-    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
+    // Authorization locks the active principal FOR UPDATE; MySQL must permit locking reads.
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public List<ClubEventSeriesView> listSeries(Long actorMemberId, Long clubId) {
         requireActivityManage(actorMemberId, clubId);
         List<ClubEventSeries> rows = clubEventOpsMapper.selectActiveSeriesByClub(clubId);
@@ -138,7 +139,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
     }
 
     @Override
-    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public ClubEventSeriesView getSeries(Long actorMemberId, Long clubId, Long seriesId) {
         if (!positive(seriesId)) throw badRequest("系列参数不完整");
         requireActivityManage(actorMemberId, clubId);
@@ -160,7 +161,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
     }
 
     @Override
-    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public List<Map<String, Object>> listSeriesOccurrences(Long actorMemberId, Long clubId, Long seriesId) {
         if (!positive(seriesId)) throw badRequest("系列参数不完整");
         requireActivityManage(actorMemberId, clubId);

@@ -20,7 +20,7 @@ function stub(opts) {
       startLocationUpdate: function (o) { calls.fg++; opts.fgFail ? o.fail({ errMsg: 'no' }) : o.success(); },
       stopLocationUpdate: function (o) {
         calls.stop++;
-        if (o && o.complete) o.complete();
+        if (o && o.success) o.success();
       },
     },
   };
@@ -41,7 +41,7 @@ function deferredStub(opts) {
       stopLocationUpdate: function (o) {
         calls.stop++;
         if (opts.deferStop) pending.stop.push(o);
-        else if (o && o.complete) o.complete();
+        else if (o && o.success) o.success();
       },
     },
   };
@@ -205,7 +205,7 @@ test('异步 stop 未完成前的新 acquire 必须等待，禁止旧 stop 迟�
   assert.equal(s.calls.bg, 1, 'stop complete 前不能发起新 start');
   assert.equal(t.isRunning(), false);
 
-  s.pending.stop[0].complete();
+  s.pending.stop[0].success();
   assert.equal(s.calls.bg, 2, 'stop 完成后才允许重启');
   s.pending.bg[1].success();
   assert.equal(roamReady, 1);
@@ -221,7 +221,7 @@ test('stopping 中 acquire 后又 release，旧 waiter 不能污染下一次同 
 
   t.acquire('roam', { success: () => { staleReady++; } });
   t.release('roam');
-  s.pending.stop[0].complete();
+  s.pending.stop[0].success();
   assert.equal(s.calls.bg, 1, 'stop 完成时已无 owner，不应自动重启');
 
   t.acquire('roam', { success: () => { freshReady++; } });
@@ -267,14 +267,14 @@ test('撤回前迟到系统success不能冒充新授权ready，补停后必须�
   t.revoke('roam');
   t.acquire('roam', { success() { newReady++; } });
   assert.equal(s.calls.bg, 1);
-  s.pending.stop[0].complete();
+  s.pending.stop[0].success();
   assert.equal(s.calls.bg, 2);
   s.pending.bg[0].success();
   assert.equal(newReady, 0, '旧授权success不能交给新的waiter');
   assert.equal(s.calls.stop, 2);
   s.pending.bg[1].success();
   assert.equal(newReady, 0, '补停中的旧新start也不能提前交付ready');
-  s.pending.stop[1].complete();
+  s.pending.stop[1].success();
   assert.equal(s.calls.bg, 3);
   s.pending.bg[2].success();
   assert.equal(oldReady, 0);
@@ -310,4 +310,40 @@ test('hasOwner只读真实用途持有状态，不触发SDK或授予新用途', 
   tracker.release('play:12');
   assert.equal(tracker.hasOwner('play:12'), false);
   assert.equal(tracker.isRunning(), false);
+});
+
+test('native stop failure remains explicit and cannot silently restart; explicit retry confirms stop', async () => {
+  let fail = true; const s = stub();
+  s.wx.stopLocationUpdate = o => { s.calls.stop++; fail ? o.fail({ errMsg: 'stopLocationUpdate:fail denied' }) : o.success(); };
+  const tracker = fresh(s.wx); tracker.acquire('roam', {});
+  const result = await tracker.revoke('roam'); assert.equal(result.ok, false); assert.equal(tracker.stopState(), 'failed');
+  let rejected = 0; tracker.acquire('new', { fail() { rejected++; } });
+  assert.equal(rejected, 1); assert.equal(s.calls.bg, 1); assert.equal(tracker.hasOwner('new'), false);
+  fail = false; assert.equal((await tracker.retryStop()).ok, true); assert.equal(tracker.stopState(), 'confirmed');
+  assert.equal(s.calls.bg, 1, 'stop retry never starts collection');
+});
+test('native stop without any callback becomes recoverable UNKNOWN instead of success', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const s = stub(); s.wx.stopLocationUpdate = () => { s.calls.stop++; };
+  const tracker = fresh(s.wx); tracker.acquire('roam', {}); const result = tracker.revoke('roam');
+  assert.equal(tracker.stopState(), 'stopping'); t.mock.timers.tick(10000);
+  assert.equal((await result).ok, false); assert.equal(tracker.stopState(), 'failed');
+});
+
+test('purpose revoke upgrades a regular in-flight stop; failure cannot restart the revoked waiter', async () => {
+  const s = deferredStub({ deferStop: true }); const t = fresh(s.wx); const seen = [];
+  t.acquire('roam', { success: () => seen.push('old') }); s.pending.bg[0].success();
+  t.release('roam'); assert.equal(s.calls.stop, 1);
+  t.acquire('roam', { success: () => seen.push('replacement') });
+  const stopped = t.revoke('roam'); assert.equal(s.calls.stop, 1, 'same native stop must be shared');
+  s.pending.stop[0].fail({ errMsg: 'stopLocationUpdate:fail denied' });
+  assert.equal((await stopped).ok, false); assert.equal(t.stopState(), 'failed');
+  assert.deepEqual(seen, ['old']); assert.equal(s.calls.bg, 1); assert.equal(t.hasOwner('roam'), false);
+  let rejected = 0; t.acquire('new-purpose', { fail: () => rejected++ });
+  assert.equal(rejected, 1); assert.equal(s.calls.bg, 1);
+  s.pending.stop[0].success(); assert.equal(t.stopState(), 'failed', 'late contradictory callback is ignored');
+  const retry = t.retryStop(); assert.equal(s.calls.stop, 2); s.pending.stop[1].success();
+  assert.equal((await retry).ok, true); assert.equal(s.calls.bg, 1, 'stop retry does not activate collection');
+  t.acquire('new-purpose', {}); assert.equal(s.calls.bg, 2);
+  s.pending.bg[1].success(); t.release('new-purpose'); s.pending.stop[2].success();
 });

@@ -16,7 +16,7 @@ function mount() {
     wx: {}, require: name => name.endsWith('/toast.js') ? value => toasts.push(value)
       : name.endsWith('/modal.js') ? {} : name.endsWith('/usage-consent.js') ? { VERSIONS: {} }
       : name.endsWith('/roam-presence-privacy.js') ? {}
-      : name.endsWith('/bg-tracker.js') ? { revoke: purpose => revoked.push(purpose), hasOwner: () => false, isRunning: () => false }
+      : name.endsWith('/bg-tracker.js') ? { revoke: purpose => { revoked.push(purpose); return Promise.resolve({ ok: true }); }, stopState: () => 'confirmed', hasOwner: () => false, isRunning: () => false }
       : createRequire(file)(name) });
   const page = { ...definition, data: { ...definition.data }, setData(patch) { changes.push(patch); Object.assign(this.data, patch); } };
   // This suite exercises the real revoke and lifecycle methods, without sending media requests.

@@ -19,7 +19,7 @@ function harness(recordBehavior) {
     getStorageSync: () => '', setStorageSync() {}, showToast() {},
     getWindowInfo: () => ({ statusBarHeight: 20 }), getSystemInfoSync: () => ({ statusBarHeight: 20 }),
     getLocation(o) { h.locations.push(o); }, startLocationUpdateBackground(o) { h.starts.push(o); },
-    stopLocationUpdate(o) { h.stops++; if (o && o.complete) o.complete(); },
+    stopLocationUpdate(o) { h.stops++; if (o && o.success) o.success(); },
     onLocationChange(fn) { h.listeners.add(fn); }, offLocationChange(fn) { h.listeners.delete(fn); },
     setKeepScreenOn() {}, showModal(o) { h.modals.push(o); },
   };

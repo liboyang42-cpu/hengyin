@@ -150,6 +150,7 @@ class StandaloneCheckoutSignupNoticeAcceptanceTest {
         r.setRegistrationStatus(1);
         r.setPaymentStatus(0);
         r.setPayableAmount(payable);
+        r.setWechatPaymentAmount(payable);
         r.setFeePlatformRate(new BigDecimal("0.10"));
         r.setPayExpireTime(new Date(System.currentTimeMillis() + 600_000L));
         return r;
@@ -243,5 +244,57 @@ class StandaloneCheckoutSignupNoticeAcceptanceTest {
         verify(registrations, never()).handleWechatPayCallback(any());
         verify(imService, never()).sendSystem(anyLong(), any(), anyString(), any());
         verify(intents, never()).enqueue(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void zeroRetryRejectsUnprovenFrozenMoneyAndUnknownOrClosedStateBeforeAnyEffect() {
+        givenStandaloneActivity(PLATFORM);
+        for (String invalid : java.util.List.of("payable-null", "negative", "wechat-null", "wechat-nonzero", "unknown", "cancelled")) {
+            CmsRegistration original = pendingOrder(BigDecimal.ZERO);
+            switch (invalid) {
+                case "payable-null" -> original.setPayableAmount(null);
+                case "negative" -> original.setPayableAmount(BigDecimal.ONE.negate());
+                case "wechat-null" -> original.setWechatPaymentAmount(null);
+                case "wechat-nonzero" -> original.setWechatPaymentAmount(BigDecimal.ONE);
+                case "unknown" -> original.setPaymentStatus(1);
+                case "cancelled" -> original.setRegistrationStatus(3);
+            }
+            when(registrationMapper.selectCmsRegistrationById(REG)).thenReturn(original);
+            assertThrows(RuntimeException.class, () -> service.completeZeroAmountPaymentForRetry(REG, MEMBER), invalid);
+        }
+        verify(registrationMapper, never()).claimPaymentSuccess(anyLong(), any(), any());
+        verify(intents, never()).enqueue(any(), any(), any(), any(), any());
+        verifyNoSignupOrWechatEffects();
+    }
+
+    @Test
+    void zeroRetryRechecksLockedBuyerInsteadOfTrustingTheOrdinaryRead() {
+        givenStandaloneActivity(PLATFORM);
+        CmsRegistration observed = pendingOrder(BigDecimal.ZERO);
+        CmsRegistration changed = pendingOrder(BigDecimal.ZERO); changed.setMemberId(2L);
+        when(registrationMapper.selectCmsRegistrationById(REG)).thenReturn(observed);
+        org.mockito.Mockito.doReturn(changed).when(registrationMapper).selectCmsRegistrationByIdForUpdate(REG);
+        assertThrows(RuntimeException.class, () -> service.completeZeroAmountPaymentForRetry(REG, MEMBER));
+        verify(registrationMapper, never()).claimPaymentSuccess(anyLong(), any(), any());
+        verifyNoSignupOrWechatEffects();
+    }
+
+    @Test
+    void completedZeroRetryReadsOriginalResultWithoutAnotherCompletionOrNotice() {
+        givenStandaloneActivity(PLATFORM);
+        CmsRegistration completed = pendingOrder(BigDecimal.ZERO);
+        completed.setPaymentStatus(2); completed.setRegistrationStatus(2);
+        when(registrationMapper.selectCmsRegistrationById(REG)).thenReturn(completed);
+        assertEquals(java.util.List.of(completed), service.completeZeroAmountPaymentForRetry(REG, MEMBER));
+        assertEquals(java.util.List.of(completed), service.completeZeroAmountPaymentForRetry(REG, MEMBER));
+        verify(registrationMapper, never()).claimPaymentSuccess(anyLong(), any(), any());
+        verify(intents, never()).enqueue(any(), any(), any(), any(), any());
+        verifyNoSignupOrWechatEffects();
+    }
+
+    private void verifyNoSignupOrWechatEffects() {
+        verify(wechat, never()).createOrder(any()); verify(wechat, never()).createAppOrder(any());
+        verify(imService, never()).deliverSystemNotification(anyLong());
+        verify(notifyService, never()).notifySignupSuccess(anyLong(), any());
     }
 }

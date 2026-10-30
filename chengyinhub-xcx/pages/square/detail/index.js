@@ -266,6 +266,7 @@ Page({
             commentSubmitError: ''
           });
           that.refreshComments();
+          that.refreshCommentCount();
         } else {
           that.setData({
             commentSubmitError: app.getRequestErrorMessage(res, '评论失败，请稍后重试'),
@@ -344,6 +345,7 @@ Page({
             replySubmitError: ''
           });
           that.refreshComments();
+          that.refreshCommentCount();
         } else {
           that.setData({
             replySubmitError: app.getRequestErrorMessage(res, '回复失败，请稍后重试'),
@@ -1294,6 +1296,30 @@ Page({
 
   refreshComments: function () {
     this.getList(1, true);
+  },
+
+  // 原意图回放也可能是第一次收到成功：计数只读服务端，不在客户端再加一。
+  refreshCommentCount: function () {
+    const current = this._captureCommunityContext(), id = String(this.data.id);
+    const epoch = this._commentCountEpoch = (this._commentCountEpoch || 0) + 1;
+    community.request({
+      current, hideLoading: true, silentError: true,
+      url: '/api/creativesquare/info', method: 'POST', data: { id },
+      success: res => {
+        if (!current() || epoch !== this._commentCountEpoch) return;
+        const count = res && res.data && Number(res.data.commentCount);
+        if (!res || res.code != 200 || !res.data || String(res.data.id) !== id
+            || res.data.commentCount == null || !Number.isSafeInteger(count) || count < 0) {
+          toast('评论已发送，计数请刷新查看');
+          return;
+        }
+        this.setData({ 'info.commentCount': count });
+      },
+      fail: () => {
+        if (!current() || epoch !== this._commentCountEpoch) return;
+        toast('评论已发送，计数请刷新查看');
+      }
+    });
   },
 
   retryCommentLoadMore: function () {

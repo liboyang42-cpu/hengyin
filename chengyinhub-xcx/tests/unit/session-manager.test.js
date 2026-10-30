@@ -273,7 +273,7 @@ test('换号导致旧单航班结束后，新会话仍能再次登录', async ()
   f.switchSession('7', 'A'); assert.equal((await f.manager.refresh()).ok, true);
 });
 
-function loadOwnerApp() {
+function loadOwnerApp(now) {
   const path = require('node:path'), fs = require('node:fs'), vm = require('node:vm');
   const root = path.join(__dirname, '../..');
   let app;
@@ -285,13 +285,35 @@ function loadOwnerApp() {
   }, { filename: 'app.js' });
   const { createSessionStore } = require('../../utils/session/session-store.js');
   const storage = new Map();
-  const session = createSessionStore({ target: app.globalData, wx: {
+  const session = createSessionStore({ target: app.globalData, now, wx: {
     setStorageSync: (key, value) => storage.set(key, value),
     getStorageSync: key => storage.get(key), removeStorageSync: key => storage.delete(key)
   } });
   app.getSession = () => session;
   app.isDevEnv = () => false;
-  return { app, session, toasts, requests };
+  return { app, session, storage, toasts, requests };
+}
+for (const statusCode of [200, 401]) {
+  test('真实App请求丢弃同毫秒A-B-A旧' + statusCode + '，不续期或清除新A', async () => {
+    const f = loadOwnerApp(() => 1234567890000);
+    const snapshot = id => ({ user_id: id, authorization: id + '-token', user_type: 1, role: 'player' });
+    f.session.applySnapshot(snapshot('7'));
+    let loginCalls = 0;
+    f.app.reLogin = () => { loginCalls++; throw new Error('Old request must never renew current identity'); };
+    const callbacks = [];
+    f.app.sendRequest({ url: '/api/user/info', method: 'POST',
+      success: () => callbacks.push('success'), fail: error => callbacks.push(error.reason), complete: () => callbacks.push('complete') });
+    const originalIssuedAt = f.storage.get('authorization_issued_at');
+    f.session.applySnapshot(snapshot('9')); f.session.applySnapshot(snapshot('7'));
+    // Token/UID ABA is enough to reproduce; issued-at wall clock must not be the callback fence.
+    f.requests[0].success({ statusCode, data: { code: statusCode, private: 'old' } });
+    f.requests[0].complete({});
+    await Promise.resolve();
+    assert.equal(loginCalls, 0);
+    assert.equal(f.session.getUserID(), '7'); assert.equal(f.session.getAuthorization(), '7-token');
+    assert.deepEqual(callbacks, ['sessionChanged', 'complete']);
+    assert.equal(f.storage.get('authorization_issued_at'), originalIssuedAt);
+  });
 }
 for (const entry of ['reLogin', 'firstLogin']) {
   test('App ' + entry + ' 在旧失败后保留新账号内存与 Storage，并停止旧提示', async () => {

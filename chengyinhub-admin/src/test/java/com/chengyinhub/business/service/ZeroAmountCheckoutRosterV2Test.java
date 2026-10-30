@@ -92,4 +92,26 @@ class ZeroAmountCheckoutRosterV2Test {
 
         verify(registrationService, never()).completeZeroAmountPayment(anyString());
     }
+
+    @Test
+    void bothRetryChannelsUseOnlyActorBoundOriginalZeroOrderCompletion() {
+        CmsRegistration original = new CmsRegistration();
+        original.setId(77L); original.setRegistrationNo("REG-FREE-77");
+        original.setMemberId(MEMBER); original.setPayableAmount(BigDecimal.ZERO);
+        original.setWechatPaymentAmount(BigDecimal.ZERO); original.setPaymentStatus(2);
+        original.setRegistrationStatus(2);
+        when(registrationService.completeZeroAmountPaymentForRetry(77L, MEMBER))
+                .thenReturn(Collections.singletonList(original));
+        for (boolean app : new boolean[]{false, true}) {
+            RegistrationCheckoutResult result = checkout.retryPayment(MEMBER, 77L, app);
+            assertEquals(77L, result.getData().get("registrationId"));
+            assertEquals(Collections.singletonList(77L), result.getData().get("registrationIds"));
+            assertEquals(2, result.getData().get("paymentStatus"));
+            assertEquals(2, result.getData().get("registrationStatus"));
+            assertEquals(false, result.getData().containsKey("payParams"));
+        }
+        org.mockito.Mockito.verifyNoInteractions(wechatPayService, orderService);
+        verify(registrationService, never()).beginPaymentAttempt(anyLong(), anyLong());
+        verify(registrationService, never()).completeZeroAmountPayment(anyString());
+    }
 }

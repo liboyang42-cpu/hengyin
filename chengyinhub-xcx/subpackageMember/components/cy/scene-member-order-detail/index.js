@@ -42,7 +42,7 @@ const STATUS_TONE = {
   manual_refund: 'neutral',
   unknown: 'neutral',
 };
-const { createCheckoutWorkflow, hasCompletePaymentParams } = require('../../../../utils/checkout/checkout-workflow.js');
+const { createCheckoutWorkflow, hasCompletePaymentParams, isCompletedZeroAmountOrder } = require('../../../../utils/checkout/checkout-workflow.js');
 const teamUp = require('../../../utils/team-up.js');
 const { createRegistrationPaymentVerifier } = require('../../../../utils/checkout/registration-payment-verifier.js');
 const { isRecordList } = require('../../../../utils/response-shape.js');
@@ -621,7 +621,7 @@ Component({
             success: function (res) {
               if (generation !== that._orderGeneration) return;
               cyLoading.hide();
-              if (res && res.code == '200' && hasCompletePaymentParams(res.data)) {
+              if (res && res.code == '200' && (hasCompletePaymentParams(res.data) || isCompletedZeroAmountOrder(res.data, payload.id))) {
                 cb({ ok: true, data: res.data });
               } else {
                 that.setData({ paying: false });
