@@ -251,7 +251,7 @@
     "_why": "保留旧内容的刷新态必须同时出现非阻塞更新提示、标题与内容卡，不能退成整页骨架。"
   },
   "A52": {
-    "selector": ".shzlbox_li_left_txt_li, .shzlbox_li_left_ntu_li",
+    "selector": ".rv-row",
     "min": 1
   },
   "A53": {

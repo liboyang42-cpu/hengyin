@@ -528,7 +528,7 @@
   ]
  },
  "A52": {
-  "selector": ".shzlbox_li_left_txt_li, .shzlbox_li_left_ntu_li",
+  "selector": ".rv-row",
   "min": 1
  },
  "A54": {

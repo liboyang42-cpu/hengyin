@@ -6,6 +6,7 @@
 //
 // 为什么另开一页而不是复用 pages/merchant/relation:那页标题就叫「合作」,
 // 职责是「找新的合作对象」,跟「谁在我这儿消费过」是两件事。
+const modal = require('../../../utils/modal.js');
 const toast = require('../../../utils/toast.js'); const pageMotion = require('../../../utils/page-motion.js');
 const app = getApp();
 /* 原生 showModal / showActionSheet 由微信自己渲染,读不到 WXSS token,只收字面色值。
@@ -706,7 +707,7 @@ Page({
   // 2026-10-30 P-5 M-03:底栏「存为分群」弹一个输入框,名字默认用当前条件拼好,改了就存
   promptSaveSegment() {
     if (!this.data.canSegment || this.data.segmentSaving || !this._hasFilter()) return;
-    wx.showModal({
+    modal.show({
       title: '存为分群',
       editable: true,
       content: this._filterLabel(),
