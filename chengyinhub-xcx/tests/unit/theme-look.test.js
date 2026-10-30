@@ -208,3 +208,34 @@ test('星尘与末世优化(2026-10-30 业主):字处在环境里、浅底深色
   assert.match(read('pages/publish/fabu/look-sheet.wxml'), /bindtap="onLookTime"/)
   assert.match(read('pages/publish/components/look-preview/index.wxml'), /id="lpfront"/)
 })
+
+test('整流程走查修正(2026-10-30):预览带风格、故事流铺主题底色、浅底状态栏只在故事流里换黑、雷达真的变大', () => {
+  // 作者从编辑器点「预览」:草稿预览数据带上 look,玩家页预览链在建章节之前落风格
+  const { buildTopicPreview } = require('../../pages/publish/utils/publish/topic-draft-preview.js')
+  const src = read('pages/publish/utils/publish/topic-draft-preview.js')
+  assert.match(src, /look: form\.look \|\| ''/)
+  assert.equal(typeof buildTopicPreview, 'function')
+  const js = read('pages/play/index.js')
+  assert.match(js, /that\._applyLook\(d\.look\); const chapter = that\.buildChapter\(d, nodes\);/, '预览链先落风格再建章节')
+
+  // 故事流根节点:选过风格的主题才带章节 / 主题配色类(老主题保持纯黑故事背景)
+  const wxml = read('pages/play/index.wxml')
+  assert.equal((wxml.match(/\{\{lookOn \? chapter\.atmosphereClass : ''\}\}/g) || []).length, 2, '城市定向 chfull 与自由探索 fx-story 两处')
+  const look = read('pages/play/utils/play-look.js')
+  assert.match(look, /lookOn: !look\.legacy/)
+  assert.match(read('pages/play/index.wxss'), /\.fx-story\[class\*="atmosphere--"\]\{ background:var\(--atmo-bg\);/)
+
+  // 浅底状态栏:只在故事流开着时换黑字;封面 / 卡包页仍是深底白字;相册关掉回到故事流的颜色
+  assert.match(look, /this\._storyLight = !look\.legacy && \(look\.palette === 'WHITE' \|\| \(look\.style === 'PAPER' && look\.palette === 'YELLOW'\)\)/)
+  const applyBody = look.slice(look.indexOf('_applyLook(raw) {'), look.indexOf('\n    },', look.indexOf('_applyLook(raw) {')))
+  assert.ok(applyBody.length > 0 && !applyBody.includes('setNavigationBarColor'), '落风格时不直接改状态栏')
+  assert.match(js, /_startStoryDust\(\) \{\n    this\._stopStoryDust\(\);\n    this\._storyStatusBar\(true\);/)
+  assert.match(js, /_stopStoryDust\(\) \{\n    clearInterval\(this\._oddTimer\); this\._storyStatusBar\(false\);/)
+  assert.match(js, /light = light \|\| !!this\._storyLight;/)
+
+  // 地图档雷达:本文件在 index.wxss 顶部 @import,选择器要压过后面的 .radar__disc(88rpx);右上角按钮不跟着下移
+  const tb = read('pages/play/play-topbar.wxss')
+  assert.match(tb, /\.radar__disc\.radar__disc--big\{ position:relative; width:264rpx;/)
+  assert.match(tb, /\.chfull\.is-navmap \.fx-story__hd\{ align-items:flex-start; \}/)
+  assert.ok(read('pages/play/index.wxss').indexOf('@import "./play-topbar.wxss"') < read('pages/play/index.wxss').indexOf('.radar__disc{'), '顶栏样式先于 .radar__disc 引入,所以必须提高权重')
+})

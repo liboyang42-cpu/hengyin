@@ -1977,3 +1977,5 @@ page { background: var(--cy-color-bg-page); }
 .look--survival .look-time--night{ background-image:linear-gradient(180deg, rgba(0,4,16,.45) 0%, rgba(0,4,16,.2) 100%); } /* ds-ok 夜晚:压暗 */
 /* 雷暴打闪时字被照亮一下 */
 .is-lit .cy-story-hand, .is-lit .chfull__para{ text-shadow:0 0 24rpx rgba(235,240,255,.9), 0 0 4rpx rgba(255,255,255,.9); transition:text-shadow .08s; } /* ds-ok 闪电照亮 */
+/* 自由探索的故事层同样铺章节 / 主题配色的底(只在选过风格的主题上带 atmosphere--*) */
+.fx-story[class*="atmosphere--"]{ background:var(--atmo-bg); --cy-color-text-primary:var(--atmo-text); --cy-color-text-tertiary:var(--atmo-muted); }

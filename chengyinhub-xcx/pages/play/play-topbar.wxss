@@ -1,10 +1,12 @@
 /* 故事流顶栏(play-topbar.js / play-topbar.wxml):左上角罗盘 ⇄ 地图、右上角背包与案件册、两张半屏。
    半屏沿用背包的 tb-* 语言(theme-backpack.wxss),不另造一套;背包本身不在这里改。 */
 /* 地图档:圆盘放大成 GTA III 式雷达,黑描边,人在正中,北针贴边,下一站超出范围时边上一枚指针 */
-.radar__disc--big{ position:relative; width:264rpx; height:264rpx; border-radius:50%; overflow:hidden;
+.radar__disc.radar__disc--big{ position:relative; width:264rpx; height:264rpx; border-radius:50%; overflow:hidden;
   box-shadow:0 0 0 6rpx #0A0A0A, 0 0 0 8rpx rgba(255,255,255,.22); } /* ds-ok 雷达描边 = 原型 */
-.radar__disc--big .fx-story__radar-map{ position:absolute; left:-50%; top:-50%; width:200%; height:200%; }
+.radar__disc.radar__disc--big .fx-story__radar-map{ position:absolute; left:-50%; top:-50%; width:200%; height:200%; }
 .fx-story__radar.is-big{ align-self:flex-start; }
+/* 地图档雷达变大时右上角按钮留在顶上(原型 .hd 顶对齐),不跟着雷达下移 */
+.chfull.is-navmap .fx-story__hd{ align-items:flex-start; }
 .radar__me{ position:absolute; left:50%; top:50%; z-index:2; width:0; height:0; margin:-14rpx 0 0 -11rpx;
   border-left:11rpx solid transparent; border-right:11rpx solid transparent; border-bottom:26rpx solid #FFFFFF; } /* ds-ok 玩家箭头 */
 .radar__n{ position:absolute; left:0; top:0; right:0; bottom:0; z-index:3; pointer-events:none; }

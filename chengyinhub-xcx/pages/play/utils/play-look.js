@@ -11,7 +11,10 @@ function methods() {
       const look = Object.assign(themeLook.normalizeLook(raw), raw ? {} : { legacy: true });
       this._look = look;
       this._lookKey = JSON.stringify(look);
-      this.setData({ lookClass: themeLook.lookClass(look), lookTransition: themeLook.resolveTransition(look) });
+      // lookOn:选过风格的主题,故事流才铺章节 / 主题配色的底(老主题保持纯黑故事背景)
+      this.setData({ lookClass: themeLook.lookClass(look), lookTransition: themeLook.resolveTransition(look), lookOn: !look.legacy });
+      // 浅底(主题配色白,或纸本 × 黄的牛皮纸):故事流在屏上时状态栏字换黑(见 _storyStatusBar)
+      this._storyLight = !look.legacy && (look.palette === 'WHITE' || (look.style === 'PAPER' && look.palette === 'YELLOW'));
     },
     /** 主题配色设了就统一用它,没设(老主题)各章沿用自己的章节配色。 */
     _themePalette(chapterPreset) {
@@ -29,6 +32,11 @@ function methods() {
       this.setData({ lookLit: true });
       clearTimeout(this._litTimer);
       this._litTimer = setTimeout(() => this.setData({ lookLit: false }), 420);
+    },
+    /** 故事流开 / 关时调:浅底主题开着故事流用黑字状态栏,关掉回白字(封面、卡包页仍是深底)。 */
+    _storyStatusBar(on) {
+      if (!this._storyLight || typeof wx.setNavigationBarColor !== 'function') return;
+      wx.setNavigationBarColor({ frontColor: on ? '#000000' : '#ffffff', backgroundColor: on ? '#ffffff' : '#000000' }); /* ds-ok 微信 API 只收这两个字面色 */
     },
     /** 用风格的转场盖住画面,在完全盖住时执行 swap(换内容),再揭开;转场层不在 / 减动效时直接执行。 */
     _withLookTransition(swap) {

@@ -1785,7 +1785,7 @@ Page({
    *  视差幅度大于手指位移:k>1 的层跟手跑得比手快,近的才「近」。 */
   _startStoryDust() {
     this._stopStoryDust();
-    /* (行位保留:此处原有代码已移除) */
+    this._storyStatusBar(true); /* 浅底主题:故事流在屏上时状态栏黑字 */
     if (this.data.reducedMotion) return;      // 降低动态:静止的星点即可,不跑 rAF
     // 越往后越不正常 · 第 1 档起「字偶尔闪」:隔几秒挑一段带档位的闪 90ms(不占 keyframes 额度)
     this._oddTimer = setInterval(() => {
@@ -1930,7 +1930,7 @@ Page({
   },
 
   _stopStoryDust() {
-    clearInterval(this._oddTimer);
+    clearInterval(this._oddTimer); this._storyStatusBar(false);
     this._dust = null;
     Object.keys(this._dustCanvases || {}).forEach(id => {
       const cv = this._dustCanvases[id];
@@ -3852,7 +3852,7 @@ Page({
   /** 白底全屏时状态栏字换黑,回故事流换回白(页面自绘导航,只动前景色) */
   _albumStatusBar(light) {
     if (typeof wx.setNavigationBarColor !== 'function') return;
-    wx.setNavigationBarColor({ frontColor: light ? '#000000' : '#ffffff', backgroundColor: light ? '#ffffff' : '#000000' });   /* ds-ok 微信 API 只收这两个字面色 */
+    light = light || !!this._storyLight; /* 回故事流时按主题底色恢复(浅底仍是黑字) */ wx.setNavigationBarColor({ frontColor: light ? '#000000' : '#ffffff', backgroundColor: light ? '#ffffff' : '#000000' });   /* ds-ok 微信 API 只收这两个字面色 */
   },
   closeChapterFull() {
     // 收起就停章节音频:它属于这一屏,留在后台继续念会跟节点语音导览抢同一个播放器。
@@ -4236,7 +4236,7 @@ Page({
     that._routeState = routeState;
     that._versionedRouteState = that._routeStateVersionKnown(d.routeState) ? routeState : null;
     that._routeNodeCatalog = catalog;
-    const chapter = that.buildChapter(d, nodes);
+    that._applyLook(d.look); const chapter = that.buildChapter(d, nodes); /* 画面风格先落,章节配色 / 时间段才取得到 */
     this._historyNodes = [];
     this.setData({
       loading: false, emptyTip: '', emptyKind: '', topicId: d.topicId || '', topicName: d.topicName || this._entryTopicName || '', topicDesc: d.topicDesc || '', topicAudioUrl: d.topicAudioUrl || '', topicCover: d.topicCover || '', mode, serverMode: mode,
