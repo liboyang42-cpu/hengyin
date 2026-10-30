@@ -4438,7 +4438,8 @@ Page({
     // num 给空串,free-map 那边就不挂序号胶囊了。
     // 地图上的序号按「地点」数,故事玩法不占号(它们不在地图上)—— 否则两个地点会标成 3 和 8。
     const placeNum = {};
-    visibleNodes.filter((x) => x.lat && x.lng).forEach((x, i) => { placeNum[String(x.nodeId)] = i + 1; });
+    // 节点对象上也记一份:半屏角标用同一个号,不再用 sortId(开场故事站占了 1 号,地图 1 号站的半屏会写「第 2 站」,实走 A32)
+    visibleNodes.filter((x) => x.lat && x.lng).forEach((x, i) => { placeNum[String(x.nodeId)] = i + 1; x.placeNum = i + 1; });
     const fmNodes = visibleNodes.map((x) => ({
       nodeId: x.nodeId, num: mode === 2 ? '' : (placeNum[String(x.nodeId)] || x.num), state: pinState(x), lat: x.lat, lng: x.lng,
       imgUrl: String(x.imgUrl || '').split(',')[0],
