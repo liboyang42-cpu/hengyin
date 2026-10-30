@@ -86,6 +86,11 @@ Page({
       // M-08(2026-10-27):Logo 走圆形取景框;只改取景遮罩,几何与导出(正方形)不变
       // M-09(2026-10-30):商家浅色、玩家深色,视角由 app.cropAll 递来
       this.setData({ round: !!(d && d.shape === 'circle'), merchant: !!(d && d.merchant) });
+      // 浅色版:系统状态栏换深色字,否则白字压在浅底上看不见(VPS 测试服实测);回到商家页时它自己的 onShow 会再设一次
+      if (d && d.merchant) {
+        wx.setNavigationBarColor({ frontColor: '#000000', backgroundColor: '#ffffff' }); // ds-ok: 系统导航栏只收字面色
+        if (typeof wx.setBackgroundColor === 'function') wx.setBackgroundColor({ backgroundColor: '#ffffff' }); // ds-ok
+      }
       // 通道通了但一张图都没给 = 真的没有可裁的图,不是还在等。
       if (!this.queue.length) { this.showMissingSource(); return; }
       this.startAt(0);

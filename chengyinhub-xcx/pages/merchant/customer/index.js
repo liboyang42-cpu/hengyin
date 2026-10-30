@@ -710,8 +710,11 @@ Page({
     modal.show({
       title: '存为分群',
       editable: true,
-      content: this._filterLabel(),
+      // 默认名填进输入框里(不是框上方的说明文字),改了就存
+      value: this._filterLabel(),
+      maxlength: 30,
       placeholderText: '给这组客户起个名字',
+      validate: (text) => (String(text || '').trim() ? '' : '请输入分群名称'),
       confirmText: '保存',
       success: (r) => {
         if (r && r.confirm) this.saveCurrentSegment(String(r.content || '').trim());

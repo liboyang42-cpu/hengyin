@@ -758,6 +758,10 @@ Page({
 
   // 首展由 onLoad 负责，避免双请求；从发布/邀请/主办视图返回后重拉阶段真源。
   onShow() {
+    // 2026-10-30 走查:商家看俱乐部整页浅色,系统状态栏也要换深色字(否则白字压浅底看不见);玩家保持深色页的白字
+    if (this.data.isMerchantViewer) {
+      wx.setNavigationBarColor({ frontColor: '#000000', backgroundColor: '#ffffff' }); // ds-ok: 系统导航栏只收字面色
+    }
     this._navigating = false;
     const reducedMotion = readReducedMotion();
     if (this.data.reducedMotion !== reducedMotion) this.setData({ reducedMotion });
