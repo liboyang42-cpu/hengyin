@@ -27,11 +27,11 @@
           <text class="post-card__badge" wx:if="{{post.authorBadge}}">{{post.authorBadge}}</text>
           <text class="post-card__badge post-card__badge--notice" wx:if="{{post.noticeBadge}}">{{post.noticeBadge}}</text>
         </view>
-        <view class="post-card__meta" wx:if="{{post.clubName || post.formattedCreateTime || post.timeText}}">
+        <view class="post-card__meta" wx:if="{{post.clubName || timeLabel}}">
           <text class="post-card__club post-card__club--interactive" wx:if="{{post.clubName && interactiveClub}}" catchtap="emitClub" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true">{{post.clubName}}</text>
           <text class="post-card__club" wx:elif="{{post.clubName}}">{{post.clubName}}</text>
-          <text wx:if="{{post.clubName && (post.formattedCreateTime || post.timeText)}}"> · </text>
-          <text>{{post.formattedCreateTime || post.timeText}}</text>
+          <text wx:if="{{post.clubName && timeLabel}}"> · </text>
+          <text>{{timeLabel}}</text>
         </view>
       </view>
       <view class="post-card__more" wx:if="{{showMore}}" catchtap="emitMore"

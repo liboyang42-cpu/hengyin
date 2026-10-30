@@ -146,7 +146,7 @@
       <!-- Tab：紧挨主按钮（对标 Xbox Rewards/Posts/Achievements/About） -->
       <!-- 2026-07-31 用户定:这排是「切换不同内容区」,用文字+下划线(fill);白胶囊(chip)只给
            「同一页面内切换内容」的筛选器。上一轮统一成 chip 是改错了,已撤回。 -->
-      <cy-tabs class="pc-tabs" variant="fill" hairline="{{false}}" tabs="{{memberTabs}}" active="{{activeTab}}" bind:change="onTabChange" />
+      <cy-tabs class="pc-tabs {{isMerchantView ? '' : 'pc-tabs--photo'}}" variant="fill" hairline="{{false}}" tabs="{{memberTabs}}" active="{{activeTab}}" bind:change="onTabChange" />
 
       <!-- ===== TAB · 项目 ===== -->
       <block wx:if="{{isSelf && activeTab === 'projects'}}">
@@ -470,11 +470,14 @@
         </view>
         <view class="pc-card pc-about">{{userInfo.introduction || '还没有个人介绍'}}</view>
 
-        <view class="pc-sec-tit">兴趣标签</view>
-        <view class="pc-tags">
-          <text class="pc-tag" wx:for="{{categoryList}}" wx:key="id">{{item.categoryName}}</text>
-          <text class="pc-tag pc-tag--muted" wx:if="{{categoryList.length === 0}}">完善资料后可展示兴趣</text>
-        </view>
+        <!-- 2026-10-30 走查:没有兴趣时不再写「完善资料后可展示兴趣」这类说明 —— 本人给一枚「添加兴趣」直达路线偏好,别人的主页整段不出 -->
+        <block wx:if="{{categoryList.length || isSelf}}">
+          <view class="pc-sec-tit">兴趣标签</view>
+          <view class="pc-tags">
+            <text class="pc-tag" wx:for="{{categoryList}}" wx:key="id">{{item.categoryName}}</text>
+            <view class="pc-tag pc-tag--add" wx:if="{{categoryList.length === 0}}" bindtap="goEditInterests" aria-role="button" aria-label="添加兴趣" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="24" /><text>添加兴趣</text></view>
+          </view>
+        </block>
 
         <view class="pc-sec-tit" wx:if="{{casePicsList.length}}">探索作品</view>
         <view class="pc-works" wx:if="{{casePicsList.length}}">

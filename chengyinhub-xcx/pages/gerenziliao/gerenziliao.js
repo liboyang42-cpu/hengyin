@@ -448,6 +448,7 @@ Page({
     this._hidden = false;
     // V-21:「关于」里的「编辑」带 field=introduction 进来,资料读完直接打开个人介绍面板
     this._openIntroOnLoad = !!(options && options.field === 'introduction');
+    this._openCategoryOnLoad = !!(options && options.field === 'category'); // 2026-10-30 关于「添加兴趣」直达路线偏好
     that.getUserData()
   },
 
@@ -634,6 +635,10 @@ Page({
               selectedCategoryIds: selectedIds,
               selectedCategoryNamesStr: selectedNamesStr
             });
+          }
+          if (that._openCategoryOnLoad) {
+            that._openCategoryOnLoad = false;
+            that.navigateToCategorySelect();
           }
 
         } else {

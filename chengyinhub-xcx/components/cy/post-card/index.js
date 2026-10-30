@@ -9,6 +9,22 @@ function readReducedMotion() {
   } catch (e) { return false; }
 }
 
+// 2026-10-30 走查:同一张帖文卡在发现 / 俱乐部 / 我的三处各写一种时间(09-30 04:13 / 2026年10月26日 于 13:53 / 30天前)。
+// 卡片自己按 createTime 统一成一种:一分钟内「刚刚」、一小时内「N 分钟前」、一天内「N 小时前」、七天内「N 天前」、
+// 今年「M月D日」、往年「YYYY年M月D日」。拿不到 createTime 才用页面给的文字。
+function postTimeLabel(createTime, now) {
+  const m = String(createTime || '').match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/);
+  if (!m) return '';
+  const t = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] || 0)).getTime();
+  const diff = Math.max(0, (now || Date.now()) - t);
+  if (diff < 60000) return '刚刚';
+  if (diff < 3600000) return Math.floor(diff / 60000) + ' 分钟前';
+  if (diff < 86400000) return Math.floor(diff / 3600000) + ' 小时前';
+  if (diff < 7 * 86400000) return Math.floor(diff / 86400000) + ' 天前';
+  const year = new Date(now || Date.now()).getFullYear();
+  return (+m[1] === year ? '' : m[1] + '年') + (+m[2]) + '月' + (+m[3]) + '日';
+}
+
 Component({
   options: { multipleSlots: true },
   properties: {
@@ -32,7 +48,7 @@ Component({
   },
   data: {
     textExpanded: false, textLong: false, likePop: false, likeRoll: '', burst: '', reducedMotion: false,
-    followDone: false, followGone: false, bigHeart: '', refLabel: '', refIcon: 'route',
+    followDone: false, followGone: false, bigHeart: '', refLabel: '', refIcon: 'route', timeLabel: '',
   },
   lifetimes: {
     // 减少动态效果:根节点挂 post-card--reduced,点亮弹跳等位移动画整段不播
@@ -41,6 +57,10 @@ Component({
   },
   observers: {
     'post.id': function () { this.setData({ textExpanded: false, followDone: false, followGone: false, bigHeart: '' }); },
+    'post.createTime, post.formattedCreateTime, post.timeText': function (createTime, formatted, text) {
+      const timeLabel = postTimeLabel(createTime) || formatted || text || '';
+      if (timeLabel !== this.data.timeLabel) this.setData({ timeLabel });
+    },
     // 帖文第三轮(Threads 版):收起态最多 6 行,超过约 120 字或 6 段以上才给「展开」。
     'post.contents': function (contents) {
       const text = typeof contents === 'string' ? contents : '';

@@ -34,8 +34,8 @@
     </view>
     <block wx:if="{{entrySheet=='activity' && entryActivity && entrySheetView=='main'}}">
       <view class="entry-activity__summary">
-        <image wx:if="{{entryActivity.cover}}" class="entry-activity__cover" src="{{entryActivity.cover}}" mode="aspectFill" />
-        <view wx:else class="entry-activity__cover entry-activity__cover--empty"><cy-icon name="image" size="48" /></view>
+        <!-- 2026-10-30 没有封面的活动用首页同一张路线插画(与首页 v2-fcover 兜底一致),不再是灰底 + 图片图标 -->
+        <image class="entry-activity__cover" src="{{entryActivity.cover || '/images/home-route-city-placeholder.jpg'}}" mode="aspectFill" />
         <view class="entry-activity__copy"><text class="entry-activity__title">{{entryActivity.title}}</text><text class="entry-activity__meta">{{entryActivity.meta || entryActivity.address || '查看活动详情'}}</text></view>
       </view>
       <view wx:if="{{!entryActivity.registered || entryActivity.ended}}" class="entry-sheet__primary" bindtap="openEntryActivityDetail" aria-role="button" aria-label="{{entryActivity.ended ? '查看详情' : '去报名'}}" hover-class="cy-pressed" hover-stay-time="80">{{entryActivity.ended ? '查看详情' : '去报名'}}</view>
@@ -160,8 +160,7 @@
     <scroll-view wx:elif="{{entryCards.length || entryFarCards.length}}" class="entry-peek__cards" scroll-x enhanced show-scrollbar="{{false}}"><view class="entry-peek__track">
       <view class="entry-card" wx:for="{{entryCards.length ? entryCards : entryFarCards}}" wx:key="key" data-kind="{{item.kind}}" data-id="{{item.id}}"
             bindtap="onEntryCardTap" aria-role="button" aria-label="打开活动 {{item.title}}" hover-class="cy-pressed" hover-stay-time="80">
-        <image wx:if="{{item.cover}}" class="entry-card__cover" src="{{item.cover}}" mode="aspectFill" />
-        <view wx:else class="entry-card__cover entry-card__cover--empty"><cy-icon name="image" size="48" /></view>
+        <image class="entry-card__cover" src="{{item.cover || '/images/home-route-city-placeholder.jpg'}}" mode="aspectFill" />
         <view class="entry-card__shade"></view>
         <view class="entry-card__copy"><text class="entry-card__tag entry-card__tag--{{item.tag === '自由探索' ? 'free' : 'city'}}">{{item.tag}}</text><text class="entry-card__title">{{item.title}}</text><text class="entry-card__meta">{{item.meta || item.address || '查看活动详情'}}</text></view>
       </view>

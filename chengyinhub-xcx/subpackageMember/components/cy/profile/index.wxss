@@ -437,7 +437,9 @@
 .pc-ai-line { font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); line-height: 1.55; margin-top: var(--cy-legacy-6); }
 
 /* Tab（紧挨主按钮下方） */
-.pc-tabs { margin-bottom: var(--cy-space-4); }   /* 归一 .cy-tabs 后仅保留下方间距;Tab 视觉走全局 .cy-tabs */
+.pc-tabs { margin-bottom: var(--cy-space-4); }
+/* 2026-10-30 走查:往上滑时 tab 行会落到固定封面的浅色部分上,未选中的灰字几乎看不见;封面保持清晰不压暗(业主 08-04),只给字加一层柔和的投影 */
+.pc-tabs--photo { --cy-text-secondary: rgba(255, 255, 255, 0.82); text-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.75); } /* ds-ok: 照片上未选中的 tab 提亮 + 投影(玩家深色;商家浅色不加) */   /* 归一 .cy-tabs 后仅保留下方间距;Tab 视觉走全局 .cy-tabs */
 /* .pc-tab / .pc-tab-on 已归一至全局 .cy-tabs__item(见 style/components.wxss §5.2) */
 
 /* 未收编 cy-card:组件读 --cy-comp-card-bg,不跟随本页 class 主题 ⇒ 商家视角会渲成夜间深卡 */
@@ -665,6 +667,7 @@
   background: var(--cy-color-bg-surface); border: 2rpx solid var(--cy-color-border-subtle); color: var(--cy-color-text-secondary);
 }
 .pc-tag--muted { color: var(--cy-color-text-tertiary); }
+.pc-tag--add { display: inline-flex; align-items: center; gap: var(--cy-space-1); color: var(--cy-color-text-primary); }
 /* G-8 / M-12(2026-10-27):标签库标签 —— 实底、无灰色描边、比 .pc-tag 小一号,前置图标 */
 .pc-tag--lib {
   display: inline-flex; align-items: center; gap: var(--cy-space-1);

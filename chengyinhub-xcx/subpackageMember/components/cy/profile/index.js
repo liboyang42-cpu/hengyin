@@ -2265,6 +2265,7 @@ Component({
   },
   // CU-M-28:这一块显示的是会员本人的 introduction,编辑必须进个人资料;
   // goUserInfo 在商家视角会去品牌中心,那里没有「个人介绍」字段。
+  goEditInterests: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/gerenziliao/gerenziliao?field=category', complete: () => { this._navigating = false; } }); },
   goEditIntro: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/gerenziliao/gerenziliao?field=introduction', complete: () => { this._navigating = false; } }); },
   // FE-14 商家店铺资料收编进「我的」更多菜单(原 shanghuziliao 页保留即重定向)
   goShop: function () { this.closeScene(); if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/decor/index', complete: () => { this._navigating = false; } }); },
