@@ -2623,19 +2623,16 @@ Page({
     });
   },
 
-  // 2026-10-27 M-24·M-34 owner:商家可以入团、看活动,活动卡上的动作是「邀约承接」而不是报名 ——
-  // 进现成的「商家 → 俱乐部」合作邀约(type=1),本俱乐部预选为对象;关联主题仍由商家选自己的
-  // (coop/invite 的 topicId 是邀约方自己的主题,不能把俱乐部的主题塞进去)。
+  // 2026-10-27 M-24·M-34 owner:商家可以入团、看活动,活动卡上的动作是「邀约承接」而不是报名。
+  // 2026-10-30 M-24 业主「我之前不是做好了吗」:承接要落到这一场活动 —— 进这场活动(主题)的项目主页,
+  // 用既有的章节承接申请(/api/merchant/chapter-application/apply),不再进不带活动的通用合作邀约。
   onMerchantUndertake(e) {
     if (!this.data.isMerchantViewer) return;
-    const club = this.data.club || {};
-    const clubId = positiveId(club.id || this.data.clubId);
-    if (!clubId) return;
+    const topicId = positiveId(e && e.currentTarget && e.currentTarget.dataset.id);
+    if (!topicId) return;
     if (this._navigating) return; this._navigating = true;
     wx.navigateTo({
-      url: '/pages/coop/invite/index?type=1&toId=' + clubId
-        + '&toName=' + encodeURIComponent(club.name || '该俱乐部')
-        + (this._operationScope === 'MERCHANT' ? '&scope=MERCHANT' : ''),
+      url: '/pages/topic/merchantinfo/merchantinfo?topicId=' + topicId + '&scope=MERCHANT',
       complete: () => { this._navigating = false; },
     });
   },

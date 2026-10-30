@@ -184,7 +184,7 @@
             </view>
             <view class="ev-acts" wx:if="{{merchantUndertake || canManage || canReport}}">
               <!-- 拍板 2026-10-22 / 2026-10-27 M-24·M-34:商家可以入团、看活动,不能报名(后端报名/候补同闸);
-                   活动卡给商家的是「邀约承接」—— 带上本俱乐部直达商家→俱乐部的合作邀约。 -->
+                   活动卡给商家的是「邀约承接」—— 进这一场活动的项目主页申请承接(2026-10-30 M-24)。 -->
               <view wx:if="{{merchantUndertake}}" class="ev-undertake" catchtap="onMerchantUndertake" data-id="{{item.id}}" data-name="{{item.name}}"
                 aria-role="button" aria-label="邀约承接 {{item.name || '该活动'}}" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true">邀约承接</view>
               <view wx:if="{{canManage}}" class="event-group-code" catchtap="showGroupCode" data-id="{{item.id}}" data-name="{{item.name}}" aria-role="button" aria-label="出示 {{item.name}} 团码" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true">出示团码</view>
