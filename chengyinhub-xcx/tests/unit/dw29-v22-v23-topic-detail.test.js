@@ -127,3 +127,15 @@ test('V-22b R2 节点介绍卡先用站点自己的图，站点图不可用再�
   assert.deepEqual(list[0].nodes.map(n => n.cmsMemberTemplate.imgUrl), ['https://oss.trusted/stop.jpg?Expires=1',
     'https://cdn.trusted/upload/tpl.png', 'https://cdn.trusted/upload/tpl.png', '/images/home-route-city-placeholder.jpg'])
 })
+
+test('2026-10-30 站点和玩法都没图时用主题自己的封面,不再落到通用城市占位图', () => {
+  const app = { globalData: {}, getImgUrl: (v) => (v ? 'https://cdn.trusted/' + v : '') }
+  const config = loadTopicPage(app)
+  const page = { formatTimeToChinese: () => '' }
+  const list = config.processChaptersList.call(page, [{ name: '一', nodes: [
+    { name: 'open', imgUrl: null, cmsMemberTemplate: { imgUrl: '' } },
+  ] }], 'upload/topic-cover.jpg,upload/second.jpg')
+  assert.equal(list[0].nodes[0].cmsMemberTemplate.imgUrl, 'https://cdn.trusted/upload/topic-cover.jpg')
+  const js = fs.readFileSync(path.join(__dirname, '../../pages/topic/index/index.js'), 'utf8')
+  assert.match(js, /that\.processChaptersList\(res\.data\['chaptersList'\], res\.data\['imgUrl'\]\)/)
+})

@@ -57,8 +57,9 @@ function heroIntro(subtitle) {
   return Array.from(nodeText(decodeDisplayText(subtitle))).slice(0, HERO_INTRO_MAX).join('');
 }
 
-function templateCover(template, node) {
-  const urls = [node && node.imgUrl, template.imgUrl, template.imgArr].map((v) => String(v || '').split(/[,;]/).map((src) => src.trim()).filter(Boolean)[0] || '');
+// 2026-10-30:站点和玩法都没图时用这个主题自己的封面,不再落到通用城市占位图
+function templateCover(template, node, topicCover) {
+  const urls = [node && node.imgUrl, template.imgUrl, template.imgArr, topicCover].map((v) => String(v || '').split(/[,;]/).map((src) => src.trim()).filter(Boolean)[0] || '');
   return urls.map((src) => app.getImgUrl(src)).filter(Boolean)[0] || '/images/home-route-city-placeholder.jpg';
 }
 
@@ -2061,7 +2062,7 @@ Page({
 
 
           if (res.data['chaptersList']) {
-            res.data['chaptersList'] = that.processChaptersList(res.data['chaptersList']);
+            res.data['chaptersList'] = that.processChaptersList(res.data['chaptersList'], res.data['imgUrl']);
             that.buildRouteMap(res.data['chaptersList']);
           }
           // 放在 if 外面:没有章节的主题也可能有俱乐部,阵容不该跟着章节一起消失
@@ -2200,7 +2201,7 @@ Page({
   /**
    * 判断章节下是否有商家
    */
-  processChaptersList(chaptersList) {
+  processChaptersList(chaptersList, topicCover) {
     if (!chaptersList || !Array.isArray(chaptersList)) return chaptersList;
     let seq = 0, prevNode = null; // v13 路线:站号全主题连续编号;站间步行线跨章接上(原型每章标题下也有一段)
 
@@ -2234,7 +2235,7 @@ Page({
           firstMerchant.mmsMerchant.name = nodeText(firstMerchant.mmsMerchant.name);
         }
         // V-22b:节点介绍卡先用站点自己的图,再用玩法图;相对路径/http 签名链接/逗号多图在真机上都出不来,卡上一块空白。
-        if (ns[n].cmsMemberTemplate) ns[n].cmsMemberTemplate.imgUrl = templateCover(ns[n].cmsMemberTemplate, ns[n]);
+        if (ns[n].cmsMemberTemplate) ns[n].cmsMemberTemplate.imgUrl = templateCover(ns[n].cmsMemberTemplate, ns[n], topicCover);
         ns[n].walkText = prevNode ? walkText(prevNode, ns[n]) : '';
         seq += 1; ns[n].seq = seq; prevNode = ns[n];
         ns[n].giftText = firstMerchant && firstMerchant.mmsMerchant ? nodeText(firstMerchant.mmsMerchant.derivativeBenefits) : '';
