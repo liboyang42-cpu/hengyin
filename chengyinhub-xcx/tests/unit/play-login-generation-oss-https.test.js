@@ -42,6 +42,9 @@ test('img.wxs first/list 同口径升级自有域名，不碰外域与本地图'
   assert.equal(img.first('http://' + SIGNED + ',http://' + SIGNED), 'https://' + SIGNED);
   assert.deepEqual(Array.from(img.list('http://' + SIGNED + ',/images/x.png')), ['https://' + SIGNED, '/images/x.png']);
   assert.equal(img.first('http://other.example.com/a.jpg'), 'http://other.example.com/a.jpg');
+  // 生产 imgArr 用分号分隔:不能把整串当一张图(实走 A1:详情第二屏 403 整块黑)
+  assert.deepEqual(Array.from(img.list('http://' + SIGNED + ';http://' + SIGNED)), ['https://' + SIGNED, 'https://' + SIGNED]);
+  assert.equal(img.first('http://' + SIGNED + ';/images/x.png'), 'https://' + SIGNED);
 });
 
 function playHost() {

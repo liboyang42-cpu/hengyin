@@ -28,8 +28,9 @@ class ApiPlayRouteContractTest {
         // (routeSessionId/runtimeInstance/authorityEpoch);不带身份的旧重载一律拒绝。
         post("checkin", new Class<?>[]{String.class, String.class, String.class, String.class, Integer.class, Long.class,
                 String.class, Long.class, String.class, Integer.class});
+        // 2026-10-30 业主拍板「执行 50 米」:作答随带 longitude/latitude/accuracy(城市定向有坐标站按到达同一围栏判)
         post("answer", new Class<?>[]{String.class, String.class, String.class, String.class, String.class, Integer.class,
-                Long.class, String.class, Integer.class});
+                Long.class, String.class, Integer.class, String.class, String.class, String.class});
         post("revealPuzzle", new Class<?>[]{String.class, String.class, String.class, String.class, Integer.class,
                 Long.class, String.class, Integer.class});
         post("sensorResult", new Class<?>[]{SensorResultRequest.class});

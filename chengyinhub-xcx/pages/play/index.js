@@ -4783,7 +4783,9 @@ Page({
             // 精度 > 80m 后端必拒(定位精度不足),不发,免得每次定位回调都弹一次拒绝
             /* 8/9/10 是「玩法过了再到达收尾」(与 onAdvancedReady 同一白名单):玩法已通过就和 0/5 一样靠近即点亮,
                否则做完玩法人就站在门口,卡片写着「靠近后会自动点亮」却永远不亮(2026-10-27 生产实测)。 */
-            const arrivesHere = node.vm === 0 || node.vm === 5
+            /* 0/5 站若配了玩法(hasAdvanced),也要先过玩法再靠近点亮:否则人一到门口就自动完成,主玩法根本没开
+               (2026-10-30 复核:霍山公园连线被 GPS 到达直接跳过;服务端同样以 ADVANCED_FIRST 拒)。 */
+            const arrivesHere = ((node.vm === 0 || node.vm === 5) && (!node.hasAdvanced || that._advancedReadyNodeId === node.nodeId))
               || ([8, 9, 10].includes(node.vm) && that._advancedReadyNodeId === node.nodeId);
             if (d <= 50 && !node.done && arrivesHere && playAccuracy.canAutoArrive(loc.accuracy)) that.arrive(node.nodeId, 'gps');
           }
@@ -6091,6 +6093,15 @@ Page({
     const answer = retry && retry.type === 'answer' ? retry.answer : (g.vm == 3 ? this.data.answerSel : this.data.answerInput);
     if (!answer) return this.setData({ gWrong: true, 'game.feedback': '先把答案填上再提交。' });
     if (this.data.isPreview || this.data.isMock) { this.onComplete(g.nodeId, {}); return; }   // 路线级预览只跳过服务端判题,不跳过空值校验
+    /* 城市定向有坐标的站要在 50 米内作答(业主 2026-10-30 拍板,实走 A20):答案随带当前定位,服务端按到达同一围栏判;
+       还没有定位就先请求定位、给提示,不发请求(没有定位一定会被拒,不该算一次提交)。 */
+    const gameNode = (this.data.nodes || []).find((n) => String(n.nodeId) === String(g.nodeId));
+    const located = Number(this.data.mode) === 1 && gameNode && gameNode.lat && gameNode.lng;
+    if (located && !this._loc) {
+      this.setData({ gWrong: false, gNetErr: '先开启定位，到这一站 50 米内再作答', gNetRetryable: false });
+      this.requestPlayLocation();
+      return;
+    }
     const viewContext = this._legacyGameContext();
     if (!this._isLegacyGameCurrent(viewContext)) return;
     if (!this.beginGameWrite()) return;
@@ -6100,7 +6111,8 @@ Page({
     const attempt = { type: 'answer', nodeId: g.nodeId, answer, viewContext };
     const that = this;
     this._withThoughtSync(() => {
-      attempt.payload = this._legacyGameWritePayload('answer', 'answer', g.nodeId, { nodeId: g.nodeId, answer }, retryAttempt);
+      const fix = located && this._loc ? { longitude: this._loc.longitude, latitude: this._loc.latitude, accuracy: this._loc.accuracy } : {};
+      attempt.payload = this._legacyGameWritePayload('answer', 'answer', g.nodeId, Object.assign({ nodeId: g.nodeId, answer }, fix), retryAttempt);
       return req('/api/play/answer', 'POST', this._retriedRouteWriteBody(attempt.payload, retryAttempt));
     }, isCurrent)
       .then((r) => {

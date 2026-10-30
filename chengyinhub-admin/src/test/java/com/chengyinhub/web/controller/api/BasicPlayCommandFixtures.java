@@ -111,6 +111,10 @@ final class BasicPlayCommandFixtures {
         Map<?, ?> x = context(c, a, t, n);
         return c.answer(a, n, input, t, id(action), version(x, expected), session(x), runtime(x), epoch(x));
     }
+    static AjaxResult answerAt(ApiPlayProgressController c, String a, String n, String input, String t, String lng, String lat, String accuracy) {
+        Map<?, ?> x = context(c, a, t, n);
+        return c.answer(a, n, input, t, id(null), version(x, null), session(x), runtime(x), epoch(x), lng, lat, accuracy);
+    }
     static AjaxResult checkin(ApiPlayProgressController c, String a, String input, String t, String action, Integer expected, Long registration, String node) {
         Map<?, ?> x = context(c, a, t, node);
         return c.checkin(a, input, t, id(action), version(x, expected), registration, node, session(x), runtime(x), epoch(x));
