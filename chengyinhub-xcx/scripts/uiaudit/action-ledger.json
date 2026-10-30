@@ -1315950,7 +1315950,7 @@
       }
     },
     {
-      "id": "pages/shezhi/components/privacy-sheet/index.wxml:14:bindtap:withdrawRoamLocationConsent:4",
+      "id": "pages/shezhi/components/privacy-sheet/index.wxml:15:bindtap:withdrawRoamLocationConsent:4",
       "route": "component:pages/shezhi/components/privacy-sheet/index",
       "hostRoutes": [
         "pages/shezhi/shezhi"
@@ -1316130,7 +1316130,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "withdrawRoamLocationConsent",
-        "line": 14,
+        "line": 15,
         "selectorHint": ".pv-sheet__action",
         "visibleCondition": null,
         "disabledCondition": "{{submitting}}",
@@ -1324373,7 +1324373,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:1144"
+        "staticSource": "pages/square/detail/index.js:1160"
       }
     },
     {
@@ -1325106,7 +1325106,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:1144"
+        "staticSource": "pages/square/detail/index.js:1160"
       }
     },
     {
@@ -1325525,7 +1325525,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:1144"
+        "staticSource": "pages/square/detail/index.js:1160"
       }
     },
     {
@@ -1326162,7 +1326162,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:1144"
+        "staticSource": "pages/square/detail/index.js:1160"
       }
     },
     {
@@ -1327690,7 +1327690,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:1144"
+        "staticSource": "pages/square/detail/index.js:1160"
       }
     },
     {

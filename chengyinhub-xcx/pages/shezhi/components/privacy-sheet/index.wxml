@@ -11,7 +11,9 @@
     <cy-btn variant="secondary" loading="{{submitting}}" disabled="{{submitting}}" class="pv-sheet__action" bindtap="disablePresenceSharing">关闭附近的人位置分享</cy-btn>
     <text class="pv-sheet__title">漫游定位</text>
     <text class="pv-sheet__sub">撤回后停止记录轨迹</text>
-    <cy-btn variant="secondary" loading="{{submitting}}" disabled="{{submitting}}" class="pv-sheet__action" bindtap="withdrawRoamLocationConsent">撤回漫游定位同意</cy-btn>
-    <text wx:if="{{submitError}}" class="pv-sheet__sub" aria-live="polite">{{submitError}}</text>
+    <view aria-role="alert" aria-live="polite">
+      <cy-btn variant="secondary" loading="{{submitting}}" disabled="{{submitting}}" class="pv-sheet__action" bindtap="withdrawRoamLocationConsent">{{submitError ? '重试撤回漫游定位同意' : '撤回漫游定位同意'}}</cy-btn>
+      <text wx:if="{{submitError}}" class="pv-sheet__sub">{{submitError}}</text>
+    </view>
   </view>
 </cy-scene-sheet>

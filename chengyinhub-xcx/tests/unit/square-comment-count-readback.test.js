@@ -36,3 +36,20 @@ test('failed count read preserves confirmed comment and explains refresh without
     assert.ok(h.toasts.some(t => String(t).includes('评论已发送，计数请刷新查看')));
   }
 });
+
+test('count read leaves an in-flight full detail reader and its loading state untouched', async () => {
+  const h = load('detail'); await h.ready(post(77, 1, { commentCount: 0 }), []);
+  const id = h.page._detailRequestId, task = h.page._detailRequestTask;
+  h.page.refreshCommentCount(); await h.answer('/api/v1/community/posts/77', post(77, 1, { commentCount: 1 }));
+  const read = h.asked('/api/v1/community/posts/77').at(-1); read.complete();
+  assert.equal(h.page._detailRequestId, id); assert.equal(h.page._detailRequestTask, task);
+  assert.equal(h.page._detailRequestInFlight, true); assert.equal(h.page.data.detailState, 'ready');
+  assert.equal(h.page.data.info.commentCount, 1);
+});
+test('newest count read wins without resetting full post state', async () => {
+  const h = load('detail'); await h.ready(post(77, 1, { commentCount: 0 }), []);
+  h.page.refreshCommentCount(); const old = h.asked('/api/v1/community/posts/77').at(-1);
+  h.page.refreshCommentCount(); await h.answer('/api/v1/community/posts/77', post(77, 1, { commentCount: 2 }));
+  old.success({ code: 200, data: post(77, 1, { commentCount: 1 }) }); await new Promise(r => setImmediate(r));
+  assert.equal(h.page.data.info.commentCount, 2); assert.equal(h.page.data.detailState, 'ready');
+});
