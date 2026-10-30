@@ -64,10 +64,17 @@ test('V-20 订单详情不再有「查看票夹」按钮，进行中订单底部
   assert.equal(vm.data.primaryCta, '')
 })
 
-test('V-20 page 档订单详情的宿主不吃 touchmove，正文能滑到底；时间线与上一张卡留出段距', () => {
+test('V-20 page 档订单详情的宿主不吃 touchmove，正文能滑到底', () => {
   const order = read('subpackageMember/order/order.wxml').replace(/<!--[\s\S]*?-->/g, '')
   const host = order.match(/<view class="order-scene-host" wx:if="\{\{sceneCurrent && sceneCurrent\.id === 'member-order-detail'\}\}"[^>]*>/)
   assert.ok(host); assert.doesNotMatch(host[0], /catchtouchmove/)
   assert.match(read('utils/scene-registry.js'), /'member-order-detail': \{[^}]*variant: 'page'/)
-  assert.match(read(DIR + 'index.wxss'), /\.order-timeline \{ margin: var\(--cy-space-5\) 0 var\(--cy-space-3\);/)
+})
+
+test('V-20 R2 时间线和退款与客服卡不再是更浅的色块：同 .ocard 的底色与圆角，时间线有自己的段标题', () => {
+  const wxss = read(DIR + 'index.wxss')
+  const wxml = read(DIR + 'index.wxml')
+  assert.match(wxml, /<view class="sec-title">订单进度<\/view>\s*<view class="order-timeline"/)
+  assert.match(wxss, /\.body \{[^}]*--cy-scene-card-bg: var\(--cy-color-bg-surface\);[^}]*--cy-scene-card-radius: var\(--cy-radius-xl\);/)
+  assert.match(wxss, /\.order-timeline \{[^}]*border-radius: var\(--cy-scene-card-radius, var\(--cy-radius-lg\)\); background: var\(--cy-scene-card-bg,/)
 })

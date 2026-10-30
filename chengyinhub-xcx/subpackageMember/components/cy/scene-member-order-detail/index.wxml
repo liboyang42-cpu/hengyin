@@ -123,6 +123,7 @@
     <!-- 订单进度。稿 578:2298 那一屏里没有它 —— 稿画的是首屏那一段
          (头图 → 退款卡 → 订单明细 → 支付明细),时间线属于再往下的部分。
          所以不是删掉,是挪到稿那三段之后,别插在中间把稿的顺序打断。 -->
+    <view class="sec-title">订单进度</view>
     <view class="order-timeline" aria-role="list" aria-label="订单进度">
       <view class="order-timeline-step is-{{item.state}}" wx:for="{{orderTimeline}}" wx:key="key" aria-role="listitem">
         <view class="order-timeline-dot"></view>
