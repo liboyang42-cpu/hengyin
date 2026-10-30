@@ -148,7 +148,8 @@ Component({
     },
 
     onSubmit() {
-      if (!canSubmit(this.data.pairedCount, this.data.total)) return;
+      // 已通过就不再交(实走 A15:再交只会撞「这一局连线已经结束了」)
+      if (!canSubmit(this.data.pairedCount, this.data.total) || this.data.verdict === 'ok' || this.data.passed) return;
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
       // ★ 只报玩家连的那些,不报对错 —— 对错在服务端
       this.triggerEvent('submit', { pairs: (this._pairs || []).map((p) => [p[0], p[1]]) });

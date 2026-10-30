@@ -134,10 +134,15 @@ public class TemplateAdoptionService {
             // The execution transaction has rolled back. Persist only a definite validation rejection.
             return tx.execute(t -> {
                 Map<String,Object> row = mapper.lock(actor,key); check(row,owner,scope,fingerprint);
-                if ("PENDING".equals(row.get("status"))) finish(actor,key,"REJECTED",null,"ADOPTION_VALIDATION_REJECTED",null);
+                if ("PENDING".equals(row.get("status"))) finish(actor,key,"REJECTED",null,rejectionCode(rejected),null);
                 return view(mapper.lock(actor,key));
             });
         }
+    }
+    /** 身份能力闸(CapabilityGuard「当前身份未解锁…」)单独给码,其余仍归通用校验拒绝;原文不入库(列宽 64)。 */
+    static String rejectionCode(IllegalArgumentException rejected) {
+        String message = rejected == null ? null : rejected.getMessage();
+        return message != null && message.contains("未解锁") ? "ADOPTION_CAPABILITY_LOCKED" : "ADOPTION_VALIDATION_REJECTED";
     }
     private void finish(Long actor, String key, String state, Long draft, String reason, String draftVersion) {
         if (mapper.finish(actor, key, state, draft, reason, draftVersion) != 1) throw new IllegalStateException("采用回执更新失败");

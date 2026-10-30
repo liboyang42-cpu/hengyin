@@ -90,9 +90,9 @@
         select l.fact_id as id,l.fact_hash as hash from cms_registration r
         join wx_payment_callback_inbox i on i.biz_type=1 and i.biz_id=r.id and i.event_type='SUCCESS' and i.state=2
           and i.notify_hash=unhex(sha2(concat('PAY:',r.transaction_id,':SUCCESS'),256))
-        join wx_payment_callback_fact_link l on l.inbox_id=i.id and binary l.notify_hash=binary lower(hex(i.notify_hash))
+        join wx_payment_callback_fact_link l on l.inbox_id=i.id and cast(l.notify_hash as binary)=cast(lower(hex(i.notify_hash)) as binary)
         join wx_verified_payment_fact pf on pf.id=l.fact_id and pf.fact_hash=l.fact_hash and pf.fact_kind='PAYMENT'
-          and binary pf.business_out_trade_no=binary r.registration_no and binary pf.transaction_id=binary r.transaction_id
+          and cast(pf.business_out_trade_no as binary)=cast(r.registration_no as binary) and cast(pf.transaction_id as binary)=cast(r.transaction_id as binary)
           and pf.amount_fen=r.wechat_payment_amount*100
         where r.id=#{registrationId} for update
     </select>
@@ -122,14 +122,14 @@
         join cms_registration paid_reg on paid_reg.id=payer.registration_id
         where h.id=#{settlementId} and c.id=#{cashCloseId} and c.topic_id=#{topicId}
           and r.payer_registration_id=payer.registration_id and payer.payer_registration_id=payer.registration_id
-          and pf.fact_kind='PAYMENT' and binary pf.business_out_trade_no=binary payer.registration_no
+          and pf.fact_kind='PAYMENT' and cast(pf.business_out_trade_no as binary)=cast(payer.registration_no as binary)
           and pf.currency='CNY' and pf.total_fen=#{originalOrderCash}*100 and pf.amount_fen=pf.total_fen
-          and binary paid_reg.registration_no=binary pf.business_out_trade_no
-          and binary paid_reg.transaction_id=binary pf.transaction_id and paid_reg.wechat_payment_amount*100=pf.amount_fen
+          and cast(paid_reg.registration_no as binary)=cast(pf.business_out_trade_no as binary)
+          and cast(paid_reg.transaction_id as binary)=cast(pf.transaction_id as binary) and paid_reg.wechat_payment_amount*100=pf.amount_fen
     </sql>
     <sql id="originalComponentFrozenScope">
           and #{originalOrderCash}=cast(json_unquote(json_extract(payer.registration_snapshot,'$.wechatPaymentAmount')) as decimal(15,2))
-          and binary h.line_type=binary #{lineType} and binary h.cash_head_kind=binary #{receiverKind}
+          and cast(h.line_type as binary)=cast(#{lineType} as binary) and cast(h.cash_head_kind as binary)=cast(#{receiverKind} as binary)
           and (h.merchant_id &lt;=&gt; #{receiverMemberId})
           and ((h.line_type in ('MERCHANT_VERIFY','LEAD_FEE') and exists (
                 select 1 from coop_settlement_detail d join settlement_claim sc on sc.id=d.claim_id
@@ -148,7 +148,7 @@
           and not exists (select 1 from cms_registration_payment_fact consumed
               where consumed.registration_id=payer.registration_id)
           and exists (select 1 from wx_payment_callback_inbox pi join wx_payment_callback_fact_link pl on pl.inbox_id=pi.id
-                and binary pl.notify_hash=binary lower(hex(pi.notify_hash))
+                and cast(pl.notify_hash as binary)=cast(lower(hex(pi.notify_hash)) as binary)
               where pi.biz_type=1 and pi.biz_id=payer.registration_id and pi.event_type='SUCCESS' and pi.state=2
                 and pi.notify_hash=unhex(sha2(concat('PAY:',pf.transaction_id,':SUCCESS'),256))
                 and pl.fact_id=pf.id and pl.fact_hash=pf.fact_hash)
@@ -159,9 +159,9 @@
         <include refid="originalComponentInsertBase"/>
           and exists (select 1 from cms_registration_payment_fact consumed
               where consumed.registration_id=payer.registration_id
-                and binary consumed.registration_no=binary pf.business_out_trade_no
-                and consumed.payment_fact_id=pf.id and binary consumed.payment_fact_hash=binary pf.fact_hash
-                and binary consumed.transaction_id=binary pf.transaction_id)
+                and cast(consumed.registration_no as binary)=cast(pf.business_out_trade_no as binary)
+                and consumed.payment_fact_id=pf.id and cast(consumed.payment_fact_hash as binary)=cast(pf.fact_hash as binary)
+                and cast(consumed.transaction_id as binary)=cast(pf.transaction_id as binary))
         <include refid="originalComponentFrozenScope"/>
     </insert>
     <select id="selectComponentsForPayerForUpdate" resultMap="Component" useCache="false" flushCache="true">
@@ -212,7 +212,7 @@
         from refund_application f join wx_payment_callback_inbox i
           on i.biz_type=2 and i.biz_id=f.id and i.event_type='SUCCESS'
           and i.notify_hash=unhex(sha2(concat('REFUND:',f.refund_no,':SUCCESS'),256))
-        join wx_payment_callback_fact_link l on l.inbox_id=i.id and binary l.notify_hash=binary lower(hex(i.notify_hash))
+        join wx_payment_callback_fact_link l on l.inbox_id=i.id and cast(l.notify_hash as binary)=cast(lower(hex(i.notify_hash)) as binary)
         where f.id=#{refundId} and f.del_flag=0 and f.status=1 and f.payout_status=1
         for update
     </select>
@@ -226,12 +226,12 @@
         join coop_settlement_cash_contribution r on r.cash_close_id=c.id and r.registration_id=f.source_id
         where f.id=#{refundId} and f.del_flag=0 and f.source_type='registration' and f.status=1
           and ((#{verifiedFactKind}='WX' and f.payout_status=1 and exists (
-                select 1 from wx_payment_callback_inbox i join wx_payment_callback_fact_link l on l.inbox_id=i.id and binary l.notify_hash=binary lower(hex(i.notify_hash))
+                select 1 from wx_payment_callback_inbox i join wx_payment_callback_fact_link l on l.inbox_id=i.id and cast(l.notify_hash as binary)=cast(lower(hex(i.notify_hash)) as binary)
                 join wx_verified_payment_fact pf on pf.id=l.fact_id and pf.fact_hash=l.fact_hash
                 where i.biz_type=2 and i.biz_id=f.id and i.event_type='SUCCESS'
                   and i.notify_hash=unhex(sha2(concat('REFUND:',f.refund_no,':SUCCESS'),256))
                   and pf.id=#{verifiedFactId} and pf.fact_hash=#{verifiedFactHash} and pf.fact_kind='REFUND'
-                  and binary pf.merchant_event_no=binary f.refund_no and binary pf.business_out_trade_no=binary r.payer_order_no
+                  and cast(pf.merchant_event_no as binary)=cast(f.refund_no as binary) and cast(pf.business_out_trade_no as binary)=cast(r.payer_order_no as binary)
                   and pf.amount_fen=#{refundAmount}*100 and pf.total_fen=#{totalAmount}*100 and pf.currency=#{currency}))
             or (#{verifiedFactKind}='MANUAL' and f.payout_status=4 and f.payout_handler_id&gt;0
                 and f.payout_reviewer2_id&gt;0 and f.payout_handler_id&lt;&gt;f.payout_reviewer2_id

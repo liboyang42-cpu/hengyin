@@ -31,14 +31,15 @@ function workflow(disk = storage()) {
 function component() {
   const file = path.resolve(__dirname, '../../components/cy/scene-qr-ticket/index.js');
   let definition, owner = '11';
-  const disk = storage(), requests = [];
+  const disk = storage(), requests = [], polls = [], events = [], intervals = [];
+  // 发码请求单独记;码亮着时的核销轮询(探店完局面)另记,不打乱发码序号
   const app = { getSession: () => ({ getRevision: () => 0 }), _loginEpoch: 0, getUserID: () => owner, getAuthorization: () => 'fixture-auth-' + owner,
-    sendRequest(options) { requests.push(options); } };
+    sendRequest(options) { (options.url === '/api/verify/dyncode/issue' ? requests : polls).push(options); } };
   vm.runInNewContext(fs.readFileSync(file, 'utf8'), { Component(value) { definition = value; }, getApp: () => app, wx: disk,
-    require: id => require(path.resolve(path.dirname(file), id)), Date, setInterval: () => 1, clearInterval() {} });
+    require: id => require(path.resolve(path.dirname(file), id)), Date, setInterval: (fn) => { intervals.push(fn); return intervals.length; }, clearInterval() {} });
   const page = { ...definition.methods, data: { ...definition.data, registrationId: '71' }, _attached: true,
-    setData(patch) { Object.assign(this.data, patch); }, triggerEvent() {} };
-  return { page, requests, app, disk, switchOwner(value) { owner = value; app._loginEpoch++; } };
+    setData(patch) { Object.assign(this.data, patch); }, triggerEvent(name, detail) { events.push({ name, detail }); } };
+  return { page, requests, polls, events, intervals, app, disk, switchOwner(value) { owner = value; app._loginEpoch++; } };
 }
 const choice = { code: 200, data: { requiresSeatSelection: true, registrationId: 71, seatCount: 3 } };
 const issued = (seat = 2) => ({ code: 200, data: { registrationId: 71, seatId: 100 + seat, seatNo: seat,
@@ -142,4 +143,17 @@ test('issuer registration replacement invalidates the old selection and callback
   const h = component(); h.page.load(); h.requests[0].success(choice); h.page.inputSeat({ detail: { value: '2' } }); h.page.confirmSeat();
   h.page.data.registrationId = '72'; h.page.load(); h.requests[1].success(issued());
   assert.equal(h.page.data.code, ''); assert.equal(h.page.data.seatNo, ''); assert.equal(h.requests[2].data.seatNo, undefined);
+});
+
+test('码亮着时轮询探店完局面:局面变了才报「已核销」并通知游玩页', () => {
+  const h = component(); h.page.load(); h.requests[0].success(issued());
+  assert.equal(h.polls[0].url, '/api/registration/explore-completion');
+  h.polls[0].success({ code: 200, data: { redeemed: 0 } });
+  const poll = h.intervals.at(-1);
+  poll(); h.polls[1].success({ code: 200, data: { redeemed: 0 } });
+  assert.equal(h.events.length, 0);
+  const toasts = []; globalThis.wx = { showToast: (o) => toasts.push(o.title) };   // utils/toast 无宿主页时回落 wx.showToast
+  try { poll(); h.polls[2].success({ code: 200, data: { redeemed: 1 } }); } finally { delete globalThis.wx; }
+  assert.deepEqual(h.events.map((e) => e.name), ['redeemed']);
+  assert.deepEqual(toasts, ['商家已核销']);
 });

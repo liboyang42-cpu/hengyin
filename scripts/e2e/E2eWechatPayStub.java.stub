@@ -110,6 +110,12 @@ public class E2eWechatPayStub implements IWechatPayService {
             if (root.hasNonNull("total")) {
                 resultMap.put("total", String.valueOf(root.path("total").asInt()));
             }
+            // 原始可信事实的引用与渠道身份只做透传:真实回调按 verified_fact_id/hash 回读已存在的 VERIFIED 行逐项核对,
+            // 桩不造事实,也不替业务侧判断它对不对。
+            for (String key : new String[]{"verified_fact_id", "verified_fact_hash", "wx_out_trade_no",
+                    "mchid", "appid", "trade_type", "currency"}) {
+                if (root.hasNonNull(key)) resultMap.put(key, root.path(key).asText());
+            }
             String outTradeNo = resultMap.get("out_trade_no");
             String transactionId = resultMap.get("transaction_id");
             Integer total = root.hasNonNull("total") ? root.path("total").asInt() : null;

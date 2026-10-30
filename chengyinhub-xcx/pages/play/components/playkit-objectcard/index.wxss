@@ -2,7 +2,7 @@
    深色:面板 = surface-subtle,卡片 = elevated,主色 = 文字白(9-18 规则:无白底,主按钮反色中性)。
    ⚠️ 不新增 @keyframes(仓内只减不增):点阵、上移都由 canvas 逐帧画,转圈由 setData 转角度。 */
 /* 整屏,不是弹窗(9-24 用户定):底色铺满到状态栏;内容区 .oc__sheet 从胶囊下面开始,不越过微信导航栏 */
-.oc { position: fixed; left: 0; top: 0; right: 0; bottom: 0; z-index: 900; background: var(--cy-color-bg-surface-subtle); }
+.oc { position: fixed; left: 0; top: 0; right: 0; bottom: 0; z-index: calc(var(--cy-z-modal) - 1); /* 单独同意等居中弹窗要压在取景层上(实走 A12) */ background: var(--cy-color-bg-surface-subtle); }
 .oc__sheet { position: absolute; left: 0; right: 0; bottom: 0; overflow: hidden; background: var(--cy-color-bg-surface-subtle); }
 .oc__stage { position: absolute; left: 0; top: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
 

@@ -249,7 +249,7 @@ const MATRIX = [
   //   漫游护照 history/summary/record:ApiRoamPassportController 只取登录 owner，不接收客户端 owner。
   ['utils/roam-passport-read.js', "url: path, method: 'GET'", 'required', 'member', 'self-member-history'],
   //   基础动作上下文/原动作结果:PlayBasicIntentApplication 以 currentMemberId + basicIntentScope 限定本人当前游玩局。
-  ['pages/play/index.js', "req('/api/play/action-receipt', 'GET', { activityId: data.activityId", 'required', 'member', 'current-session'],
+  ['pages/play/index.js', "req('/api/play/action-receipt', 'GET', receiptQuery", 'required', 'member', 'current-session'],
   ['pages/play/index.js', "req('/api/play/action-receipt', 'GET', { activityId: body.activityId", 'required', 'member', 'current-session'],
   ['pages/play/index.js', "req('/api/play/action-context'", 'required', 'member', 'current-session'],
   ['pages/play/index.js', "req('/api/club/lead/unlock-chapter-receipt'", 'required', 'leader', 'current-session'],

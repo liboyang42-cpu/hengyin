@@ -12,8 +12,8 @@
     <select id="selectAuditRegistrationLocation" useCache="false" flushCache="true" resultType="com.chengyinhub.business.domain.CmsRegistration">
         select r.id,r.owner_type as ownerType,r.owner_id as ownerId from business_audit_event a
         join cms_registration r on r.id=a.domain_id
-        where a.id=#{auditId} and binary a.domain_type=binary 'REGISTRATION'
-          and binary a.target_type=binary 'CMS_REGISTRATION' and a.target_id=r.id
+        where a.id=#{auditId} and cast(a.domain_type as binary)=cast('REGISTRATION' as binary)
+          and cast(a.target_type as binary)=cast('CMS_REGISTRATION' as binary) and a.target_id=r.id
     </select>
     <select id="selectRegistrationForUpdate" useCache="false" flushCache="true" resultType="com.chengyinhub.business.domain.CmsRegistration">
         select id,owner_type as ownerType,owner_id as ownerId,member_id as memberId,ticket_id as ticketId,
@@ -30,9 +30,9 @@
     </select>
     <select id="selectVerificationEventsForUpdate" useCache="false" flushCache="true" resultType="com.chengyinhub.business.domain.BusinessAuditEvent">
         select <include refid="auditColumns"/> from business_audit_event
-        where binary domain_type=binary 'REGISTRATION' and domain_id=#{registrationId}
-          and binary target_type=binary 'CMS_REGISTRATION' and target_id=#{registrationId}
-          and binary action in ('REGISTRATION_STATION_REDEEM','REGISTRATION_REDEEM','GROUP_MEMBER_REDEEM','REGISTRATION_VERIFY_REVERSE')
+        where cast(domain_type as binary)=cast('REGISTRATION' as binary) and domain_id=#{registrationId}
+          and cast(target_type as binary)=cast('CMS_REGISTRATION' as binary) and target_id=#{registrationId}
+          and cast(action as binary) in ('REGISTRATION_STATION_REDEEM','REGISTRATION_REDEEM','GROUP_MEMBER_REDEEM','REGISTRATION_VERIFY_REVERSE')
         order by id for update
     </select>
     <select id="selectEffectiveOrdersForUpdate" useCache="false" flushCache="true" resultType="com.chengyinhub.business.domain.CoopOrder">
@@ -62,21 +62,21 @@
         join cms_registration r on r.id=#{registrationId}
         join business_audit_event a on a.id=#{verificationAuditId}
         where o.id=#{orderId} and o.topic_id=#{topicId} and o.to_id=#{beneficiaryMemberId}
-          and binary o.to_type=binary 'merchant' and binary o.role_snapshot=binary 'SUPPLY'
-          and binary o.scope_type_snapshot=binary 'TOPIC' and o.scope_id_snapshot=o.topic_id
-          and binary o.fulfillment_evidence_rule_snapshot=binary 'REGISTRATION_SCAN'
-          and binary o.eligible_purchase_kinds_snapshot=binary 'GUIDED_TICKET' and o.status=0 and o.del_flag=0
-          and i.topic_id=o.topic_id and i.from_id=o.from_id and i.to_id=o.to_id and binary i.to_type=binary 'merchant'
+          and cast(o.to_type as binary)=cast('merchant' as binary) and cast(o.role_snapshot as binary)=cast('SUPPLY' as binary)
+          and cast(o.scope_type_snapshot as binary)=cast('TOPIC' as binary) and o.scope_id_snapshot=o.topic_id
+          and cast(o.fulfillment_evidence_rule_snapshot as binary)=cast('REGISTRATION_SCAN' as binary)
+          and cast(o.eligible_purchase_kinds_snapshot as binary)=cast('GUIDED_TICKET' as binary) and o.status=0 and o.del_flag=0
+          and i.topic_id=o.topic_id and i.from_id=o.from_id and i.to_id=o.to_id and cast(i.to_type as binary)=cast('merchant' as binary)
           and i.invite_type=0 and i.status=1 and i.del_flag=0 and i.supply_station_id=s.id
           and s.topic_id=o.topic_id and s.member_id=o.to_id and s.audit_status=1 and s.del_flag=0
           and r.owner_type=1 and r.owner_id=o.topic_id and r.payment_status=2 and r.registration_status=2
           and r.verification_status=1 and r.verifier_id=o.to_id and r.purchase_kind=1 and r.payable_amount=#{salesBasisAmount}
-          and binary a.domain_type=binary 'REGISTRATION' and a.domain_id=r.id
-          and binary a.target_type=binary 'CMS_REGISTRATION' and a.target_id=r.id
-          and binary a.action=binary 'REGISTRATION_STATION_REDEEM' and a.owner_member_id=o.to_id and a.relation_id=s.id
+          and cast(a.domain_type as binary)=cast('REGISTRATION' as binary) and a.domain_id=r.id
+          and cast(a.target_type as binary)=cast('CMS_REGISTRATION' as binary) and a.target_id=r.id
+          and cast(a.action as binary)=cast('REGISTRATION_STATION_REDEEM' as binary) and a.owner_member_id=o.to_id and a.relation_id=s.id
           and a.create_time=#{fulfilledAt} and a.create_time &gt;= o.create_time
-          and json_valid(o.terms_snapshot) and binary sha2(o.terms_snapshot,256)=binary #{orderTermsSha256}
-          and binary json_unquote(json_extract(o.terms_snapshot,'$.supplyBillingScope.version'))=binary 'REGISTRATION_STATION_V1'
+          and json_valid(o.terms_snapshot) and cast(sha2(o.terms_snapshot,256) as binary)=cast(#{orderTermsSha256} as binary)
+          and cast(json_unquote(json_extract(o.terms_snapshot,'$.supplyBillingScope.version')) as binary)=cast('REGISTRATION_STATION_V1' as binary)
           and cast(json_unquote(json_extract(o.terms_snapshot,'$.supplyBillingScope.stationId')) as unsigned)=s.id
           and cast(json_unquote(json_extract(o.terms_snapshot,'$.supplyBillingScope.topicId')) as unsigned)=o.topic_id
           and cast(json_unquote(json_extract(o.terms_snapshot,'$.supplyBillingScope.merchantMemberId')) as unsigned)=o.to_id
@@ -94,10 +94,10 @@
             false as groupEvidenceMatchesOrder,r.verification_time as verificationTime
         from coop_order_station_fulfillment f join cms_registration r on r.id=f.registration_id
         left join oms_ticket t on t.id=r.ticket_id and t.owner_type=r.owner_type and t.owner_id=r.owner_id
-            and t.del_flag=0 and t.mode=1 and binary t.sub_type=binary 'guided'
+            and t.del_flag=0 and t.mode=1 and cast(t.sub_type as binary)=cast('guided' as binary)
         where f.order_id=#{snapshot.orderId} and f.topic_id=#{snapshot.topicId}
           and f.station_id=#{snapshot.billingStationId} and f.beneficiary_member_id=#{snapshot.beneficiaryId}
-          and binary f.order_terms_sha256=binary #{snapshot.orderTermsSha256}
+          and cast(f.order_terms_sha256 as binary)=cast(#{snapshot.orderTermsSha256} as binary)
           and r.owner_type=1 and r.owner_id=f.topic_id
           and f.fulfilled_at &gt;= #{snapshot.fulfillmentStartInclusive} and f.fulfilled_at &lt; #{settlementCutoff}
         order by r.id,f.id for update

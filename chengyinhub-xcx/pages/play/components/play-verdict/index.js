@@ -37,6 +37,8 @@ Component({
     timedOut: { type: Boolean, value: false },
     // win 专用:一句话。空着就只有对勾 —— 没内容就不要显示提示语
     text: { type: String, value: '' },
+    // 分支三选一这类不判对错的收尾:同一个对勾落场,但不用成功绿(实走 A35)
+    neutral: { type: Boolean, value: false },
     // 结果反馈配图(最多 3 张):玩法模板里作者给成功 / 失败配的图
     images: { type: Array, value: [] },
     // 独立弹出(编辑页预览、玩家端结果反馈)时给一个「继续」收起;挂在玩法台面里时由台面自己管

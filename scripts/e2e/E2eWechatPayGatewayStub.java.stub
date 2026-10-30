@@ -1,0 +1,66 @@
+package com.chengyinhub.e2e;
+
+import com.chengyinhub.business.domain.CmsRegistration;
+import com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent;
+import com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact;
+import com.chengyinhub.business.service.RefundRequestResult;
+import com.chengyinhub.business.service.impl.WechatPaymentSdkGateway;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.stereotype.Component;
+
+import java.math.BigDecimal;
+import java.util.Map;
+
+/**
+ * ★桩:收银出站通道。只存在于本地 e2e 运行时的 exploded jar 里,仓库产品码一行都没有。
+ *
+ * <p>2026-10-28 起报名收银、会员、保证金等出站调用都按名字注入 {@code @Qualifier("wechatPaymentSdkGateway")},
+ * 绕过了 {@link E2eWechatPayStub} 的 {@code @Primary},链路验收下单报 503「支付服务暂不可用」(实走 B8)。
+ * 这里只把这一个 bean 换成转发到 E2eWechatPayStub 的子类;不打开全局 bean 覆盖,回调入口与业务侧不变。
+ */
+@Component
+public class E2eWechatPayGatewayStub implements BeanPostProcessor, ApplicationContextAware {
+
+    private ApplicationContext context;
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) { this.context = applicationContext; }
+
+    @Override
+    public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+        if ("wechatPaymentSdkGateway".equals(beanName) && bean instanceof WechatPaymentSdkGateway && !(bean instanceof Forwarding)) {
+            return new Forwarding(context);
+        }
+        return bean;
+    }
+
+    static class Forwarding extends WechatPaymentSdkGateway {
+        private final ApplicationContext context;
+        Forwarding(ApplicationContext context) { this.context = context; }
+        private E2eWechatPayStub stub() { return context.getBean(E2eWechatPayStub.class); }
+
+        @Override public boolean isReady() { return stub().isReady(); }
+        @Override public boolean isAppReady() { return stub().isAppReady(); }
+        @Override public Map<String, String> createOrder(CmsRegistration r) { return stub().createOrder(r); }
+        @Override public Map<String, String> createAppOrder(CmsRegistration r) { return stub().createAppOrder(r); }
+        @Override public Map<String, String> createGenericAppOrder(String no, BigDecimal amount, String desc) { return stub().createGenericAppOrder(no, amount, desc); }
+        @Override public Map<String, String> createGenericOrder(String no, BigDecimal amount, String desc, String openid) { return stub().createGenericOrder(no, amount, desc, openid); }
+        @Override public String queryRefundStatus(String no) { return stub().queryRefundStatus(no); }
+        @Override public Map<String, String> queryRefundFacts(String no) { return stub().queryRefundFacts(no); }
+        @Override public Map<String, String> queryRefundFacts(WechatVerifiedPaymentFact.Reference original, String no) { return stub().queryRefundFacts(original, no); }
+        @Override public Map<String, String> queryOrderStatus(String no) { return stub().queryOrderStatus(no); }
+        @Override public boolean closeOrder(String no) { return stub().closeOrder(no); }
+        @Override public boolean closePaymentAttempt(String business, String observed) { return stub().closePaymentAttempt(business, observed); }
+        @Override public boolean lockPaymentAttemptForUpdate(String business, String observed) { return stub().lockPaymentAttemptForUpdate(business, observed); }
+        @Override public boolean lockClosablePaymentAttemptForUpdate(String business, String observed) { return stub().lockClosablePaymentAttemptForUpdate(business, observed); }
+        @Override public RefundRequestResult submitRefund(String trade, String refund, BigDecimal amount, BigDecimal total, String reason) { return stub().submitRefund(trade, refund, amount, total, reason); }
+        @Override public RefundRequestResult submitRefund(WechatVerifiedPaymentFact.Reference original, String trade, String refund, BigDecimal amount, BigDecimal total, String reason) { return stub().submitRefund(original, trade, refund, amount, total, reason); }
+        @Override public Map<String, String> transferToBalance(String batch, String detail, BigDecimal amount, String openid, String remark, String appid) { return stub().transferToBalance(batch, detail, amount, openid, remark, appid); }
+        @Override public Map<String, String> queryTransferResult(String batch, String detail) { return stub().queryTransferResult(batch, detail); }
+        @Override public Map<String, String> transferToBalance(CashWithdrawTransferIntent intent) { return stub().transferToBalance(intent); }
+        @Override public Map<String, String> queryTransferResult(CashWithdrawTransferIntent intent) { return stub().queryTransferResult(intent); }
+    }
+}

@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -91,10 +92,15 @@ class PreferencePlayServiceTest {
         when(topics.selectCmsTopicById(9L)).thenReturn(new CmsTopic());
         when(registrations.selectCmsRegistrationList(org.mockito.ArgumentMatchers.any()))
                 .thenReturn(Collections.emptyList());
+        // 没做过偏好玩法:空结果,不报错
+        assertTrue(service.operatingSystem(7L, 9L).isEmpty());
 
+        PlayAttemptLog attempt = new PlayAttemptLog();
+        attempt.setActivityId(10L);
+        when(attempts.selectPreferenceResults(7L, 9L)).thenReturn(Collections.singletonList(attempt));
         assertEquals("完成主题后才能生成新生活操作系统", assertThrows(IllegalArgumentException.class,
                 () -> service.operatingSystem(7L, 9L)).getMessage());
-        verify(attempts).selectPreferenceResults(7L, 9L);
+        verify(attempts, org.mockito.Mockito.times(2)).selectPreferenceResults(7L, 9L);
     }
 
     @Test

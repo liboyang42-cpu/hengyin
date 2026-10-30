@@ -861,7 +861,11 @@ Page({
     });
     // 期限口径同后端建单(CmsRegistrationServiceImpl:购买后 90 天,主题先结束则以主题为准),本地即可算准
     this._pendingOffer = null;
-    marketingConsent.loadOffer(app, info.memberId || 0, (offer) => { if (offer) this._pendingOffer = offer; });
+    // 只有商家发布的主题才问「接收该商家活动消息」:平台/俱乐部号名下若恰好也挂着商家档案,
+    // 会把一家无关的店(实走 A6:海上方舟下面问「滨江骑行装备专卖」)塞给玩家。
+    if (String(info.contentPublisherType || '').toUpperCase() === 'MERCHANT') {
+      marketingConsent.loadOffer(app, info.memberId || 0, (offer) => { if (offer) this._pendingOffer = offer; });
+    }
   },
 
   onRevealWallet() { this._finishReveal('wallet'); },
@@ -2003,11 +2007,11 @@ Page({
   },
   
   formatTimeToChinese(seconds) {
-    if (seconds === null || seconds === undefined || seconds === '') return '0时';
+    if (seconds === null || seconds === undefined || seconds === '') return '';
     
     // 确保输入是数字
     const sec = Number(seconds);
-    if (isNaN(sec) || sec < 0) return '0时';
+    if (isNaN(sec) || sec < 0) return '';
     
     // 计算小时和分钟
     const hours = Math.floor(sec / 3600);
@@ -2024,9 +2028,9 @@ Page({
     } else {
       // 1小时或以上
       if (minutes === 0) {
-        return `${hours}时`;
+        return `${hours}小时`;
       } else {
-        return `${hours}时${minutes}分`;
+        return `${hours}小时${minutes}分钟`;
       }
     }
   },

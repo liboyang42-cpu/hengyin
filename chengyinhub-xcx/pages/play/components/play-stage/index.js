@@ -59,6 +59,7 @@ Component({
     verdict: '',
     shaking: false,
     verdictText: '',
+    verdictNeutral: false,
     timedOut: false,
     // 入场(2026-10-23 主人定稿「玩法入场动效」):每次打开 0 → 1,各玩法屏的 .pe 零件按它过渡。
     // peOn 只在入场那两秒为 1,之后各零件的延时归零,别的交互不再被拖慢。
@@ -208,12 +209,12 @@ Component({
       return left === 0;
     },
 
-    win(text) {
+    win(text, opts) {
       if (this._done) return;
       this._done = true;
       this._stopTick(); this._stopDeadline();
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
-      this.setData({ verdict: 'win', verdictText: text || '', timedOut: false });
+      this.setData({ verdict: 'win', verdictText: text || '', verdictNeutral: !!(opts && opts.neutral), timedOut: false });
       this.triggerEvent('verdict', { kind: 'win' });
     },
     /** 判负。timedOut 决定屏上那两个字是「时间到」还是「失败」。 */

@@ -11,7 +11,7 @@
       </view>
     </view>
   </view>
-  <view class="cf__hint" wx:if="{{mode === 'gate'}}">轻点继续</view>
+  <view class="cf__hint" wx:if="{{mode === 'gate'}}">轻点跳过</view>
   <view class="cf__btns {{cta ? 'is-on' : ''}}" wx:if="{{mode === 'finale'}}">
     <view class="cf__pill cf__pill--s" catchtap="onClose" aria-role="button" aria-label="继续" hover-class="cf-pressed" hover-stay-time="80">继续</view>
     <view class="cf__pill cf__pill--p" catchtap="onSave" aria-role="button" aria-label="保存通关卡" hover-class="cf-pressed" hover-stay-time="80">保存通关卡</view>

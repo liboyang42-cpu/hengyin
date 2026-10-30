@@ -30,6 +30,8 @@ function resolveOpenState(node, nowMinutes) {
     if (status === '即将打烊') return { openText: status, openCol: OPEN_SOON, openDot: OPEN_SOON };
     return { openText: status, openCol: OPEN_OFF, openDot: OPEN_OFF };
   }
+  // 全天开放(街面点位、纪念碑这类)没有「营业」可言,挂「营业中」反而像一家店(实走 A32)
+  if (/^\s*0?0:00\s*[-~—–至]\s*(23:59|24:00)\s*$/.test(String(node.businessTime || ''))) return { openText: '', openCol: '', openDot: '' };
   const minutes = typeof nowMinutes === 'number'
     ? nowMinutes
     : (function () { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); }());
