@@ -216,7 +216,8 @@ test('integration registers delivered routes and keeps the engineering desk off 
   assert.equal(member.pages.filter(item => item === 'free-explore/index').length, 1);
   for (const ext of ['js', 'json', 'wxml', 'wxss']) assert.ok(read('subpackageMember/free-explore/index.' + ext));
   const merchant = JSON.parse(read('pages/merchant/index/index.json'));
-  // 2026-10-30 业主走查(IMG_0736/0746):工程面板在首页露出裸文字按钮,首页不再挂载
+  // 2026-10-30 业主走查(IMG_0736/0746):工程面板(商品与履约 / 门店与核销范围 / 读取门店与营业时段 / 门店位置与营业设置 / 查看供货与合作)整件删除
   assert.equal(merchant.usingComponents['cy-merchant-desk'], undefined);
   assert.doesNotMatch(read('pages/merchant/index/index.wxml'), /<cy-merchant-desk\b/);
+  assert.equal(fs.existsSync(path.join(ROOT, 'pages/merchant/components/desk')), false);
 });

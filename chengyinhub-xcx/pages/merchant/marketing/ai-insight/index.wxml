@@ -18,7 +18,7 @@
          不写「店主」/「店」占位;问候与头像垂直居中对齐;头像不描边(G-5)。 -->
     <view class="greet mi-in" style="transition-delay: 0ms;">
       <view class="greet-b">
-        <view class="greet-line"><text>Hi{{storeName ? '，' : ''}}</text><text>{{storeName}}</text></view>
+        <view class="greet-line"><text>{{greetWord}}{{storeName ? '，' : ''}}</text><text>{{storeName}}</text></view>
         
         <text class="gen-at" wx:if="{{loading}}" aria-role="status">正在更新经营数据…</text>
         <!-- 2026-10-23 业主:删去「生成于 … · 次日更新」 -->

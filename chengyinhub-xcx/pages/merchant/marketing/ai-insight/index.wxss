@@ -82,8 +82,9 @@
 }
 .greet-b { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--cy-space-1); }
 .greet-line {
-  font-size: 38rpx; /* ds-ok: 同工作台问候行稿面 19px */
-  line-height: 1.4;
+  font-size: 48rpx; /* ds-ok: 2026-10-30 业主 D05「招呼语字体大一点」24px */
+  font-weight: 600;
+  line-height: 1.35;
   letter-spacing: -1rpx;
   color: var(--cy-text-title);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
