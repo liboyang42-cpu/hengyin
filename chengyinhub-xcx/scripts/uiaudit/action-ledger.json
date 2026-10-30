@@ -1339300,7 +1339300,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-detail/index.js:169"
+        "staticSource": "pages/templatedetail/topic-detail/index.js:171"
       }
     },
     {
@@ -1339367,7 +1339367,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-detail/index.js:157"
+        "staticSource": "pages/templatedetail/topic-detail/index.js:159"
       }
     },
     {
@@ -1339444,7 +1339444,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-detail/index.js:162"
+        "staticSource": "pages/templatedetail/topic-detail/index.js:164"
       }
     },
     {
@@ -1339554,7 +1339554,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-preview/index.js:95"
+        "staticSource": "pages/templatedetail/topic-preview/index.js:97"
       }
     },
     {
@@ -1339621,7 +1339621,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-preview/index.js:189"
+        "staticSource": "pages/templatedetail/topic-preview/index.js:191"
       }
     },
     {
@@ -1339689,7 +1339689,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-preview/index.js:183"
+        "staticSource": "pages/templatedetail/topic-preview/index.js:185"
       }
     },
     {
@@ -1339756,7 +1339756,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-preview/index.js:199"
+        "staticSource": "pages/templatedetail/topic-preview/index.js:201"
       }
     },
     {
@@ -1339823,7 +1339823,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-preview/index.js:172"
+        "staticSource": "pages/templatedetail/topic-preview/index.js:174"
       }
     },
     {
@@ -1339893,7 +1339893,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-preview/index.js:208"
+        "staticSource": "pages/templatedetail/topic-preview/index.js:210"
       }
     },
     {

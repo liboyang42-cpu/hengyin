@@ -77,6 +77,8 @@ Page({
     this._readonly = options.readonly === '1';
     // 商家侧一律浅色(业主规则):只换颜色，版式同玩家侧深色版
     this.setData({ reducedMotion: readReducedMotion(), light: this._scope === 'MERCHANT' });
+    // 浅色版系统状态栏换深色字(VPS 测试服实测白字压浅底看不见)
+    if (this._scope === 'MERCHANT') wx.setNavigationBarColor({ frontColor: '#000000', backgroundColor: '#ffffff' }); // ds-ok: 系统导航栏只收字面色
     this.load();
   },
 

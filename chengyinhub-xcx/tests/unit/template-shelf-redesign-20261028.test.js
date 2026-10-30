@@ -31,7 +31,8 @@ function stubWx() {
     navigateTo(o) { navigations.push(o.url); },
     showToast(o) { toasts.push(o.title); },
     getStorageSync: () => '',
-    getWindowInfo: () => ({ windowWidth: 375 })
+    getWindowInfo: () => ({ windowWidth: 375 }),
+    setNavigationBarColor() {}
   };
   global.getCurrentPages = () => [];
   return { navigations, toasts };

@@ -25,9 +25,9 @@
     <view class="xb-head">
       <view class="xb-head-cover">
         <image wx:if="{{ cover }}" src="{{ cover }}" mode="aspectFill" />
-        <view wx:else class="xb-head-cover-ph" aria-role="img" aria-label="{{ name || '该主题' }} 的封面未能加载">
-          <image class="xb-cover-ph-icon" src="/images/no_data.svg" mode="aspectFit" />
-          <text class="xb-cover-ph-txt">封面暂不可用</text>
+        <!-- 2026-10-30 业主「不能只是占位」:主题模板没有封面时用城市 3D 图标做封面,与玩法模板详情同一套 -->
+        <view wx:else class="xb-head-cover-ph" aria-role="img" aria-label="{{ name || '该主题' }} 的封面">
+          <image class="xb-cover-art" src="/pages/templatedetail/art/cat/city.png" mode="aspectFit" />
         </view>
       </view>
       <view class="xb-head-meta">

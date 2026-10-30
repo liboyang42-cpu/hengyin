@@ -92,6 +92,8 @@ Page({
     this._readonly = options.readonly === '1';
     // 商家侧一律浅色(业主规则),版式同玩家侧深色版
     this.setData({ light: this._scope === 'MERCHANT', activeTab: options.tab === 'capabilities' ? 'capabilities' : 'details' });
+    // 浅色版系统状态栏换深色字,否则白字压浅底看不见(VPS 测试服实测)
+    if (this._scope === 'MERCHANT') wx.setNavigationBarColor({ frontColor: '#000000', backgroundColor: '#ffffff' }); // ds-ok: 系统导航栏只收字面色
     this.load();
   },
 
