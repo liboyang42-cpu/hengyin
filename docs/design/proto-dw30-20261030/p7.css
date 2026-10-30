@@ -496,3 +496,10 @@
 .rd8-h{font-size:18px;font-weight:700;line-height:1.3;margin-top:8px}
 .rd8-d{font-size:13.5px;line-height:1.55;margin-top:6px;opacity:.85;min-height:63px}
 .rd8-go{font-size:14px;font-weight:700;margin-top:10px}
+/* 消息页回到 M-06 定稿,只补承接对象 / 邀请语 / 三个按钮 */
+.pg-im .invite-card.ic9{height:auto;cursor:pointer}
+.pg-im .ic9-tg{color:#1D5FC4!important;font-weight:600;white-space:normal}
+.pg-im .ic9-msg{white-space:normal!important;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pg-im .ic9 .invite-card__acts .invite-card__btn{flex:1}
+.pg-im .ic9 .invite-card__btn{min-width:0;padding:0 6px;white-space:nowrap}.pg-im .ic9 .invite-card__btn--primary{flex:1.3}
+.pg-im .ic9 .invite-card__btn{display:flex;align-items:center;justify-content:center;text-align:center}

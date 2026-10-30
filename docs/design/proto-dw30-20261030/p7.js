@@ -184,32 +184,35 @@
     if (v.target.node == null) return '第 ' + (v.target.ch + 1) + ' 章 · ' + c.n + ' · ' + c.nodes.length + ' 个节点';
     return '第 ' + (v.target.node + 1) + ' 站 · ' + c.nodes[v.target.node][0];
   }
+  // 沿用已定稿的消息页(subpackageB/pages/im/list,M-06 2026-10-27):填充式收件箱 / 发件箱、顶部协作邀请横滑卡带、
+  // 下面「消息」会话列表。邀请卡仍是 invite-card 原结构,只补上业主要的邀请语、承接对象和 回复 / 拒绝 / 接受合作。
   function invCard(v) {
     var i = INV.indexOf(v), t = THEMES[v.theme], out = v.box === 'out';
-    var acts = out ? '<view class="ic7-acts"><view class="ic7-b" data-act="invReply" data-i="' + i + '">发消息</view><view class="ic7-b" data-toast7="已撤回">撤回</view></view>'
-      : v.st === 'pending' ? '<view class="ic7-acts"><view class="ic7-b" data-act="invReply" data-i="' + i + '">回复</view><view class="ic7-b" data-act="invNo" data-i="' + i + '">拒绝</view><view class="ic7-b ic7-b--on" data-act="invYes" data-i="' + i + '">同意</view></view>'
-      : '<view class="ic7-acts"><view class="ic7-b" data-act="invReply" data-i="' + i + '">回复</view><view class="ic7-b ic7-b--on ic7-b--wide" data-go="' + (t.kind === 'free' ? 'join-chapter' : 'join-node') + '">进入工作台</view></view>';
-    var stTxt = out ? '<text class="tk7-st w">等对方回复</text>' : v.st === 'pending' ? '<text class="tk7-st n">待回复</text>' : '<text class="tk7-st ok">已同意</text>';
-    return '<view class="tk7"' + (i ? '' : mk(1)) + '>' +
-      '<view class="tk7-top"><img class="tk7-av" src="' + C + v.av + '"><view class="mr-m"><view class="tk7-who">' + (out ? '你 → ' + v.who : v.who) + '</view><view class="mr-s">' + v.time + '</view></view>' + stTxt + '</view>' +
-      '<view class="tk7-body" data-act="invOpen" data-i="' + i + '"><img class="tk7-cv" src="' + C + t.cover + '"><view class="tk7-m"><text class="tk7-k">' + (t.kind === 'free' ? '自由探索' : '城市定向') + '</text><view class="tk7-n">' + t.name + '</view><view class="tk7-t">' + I('pin', 22) + '<text>' + targetText(v) + '</text></view></view><i class="tk7-chev"></i></view>' +
-      '<view class="tk7-perf"><i></i><i></i></view>' +
-      '<view class="tk7-msg">' + v.msg + '</view>' + acts + '</view>';
+    var tone = out ? 'pending' : v.st === 'pending' ? 'pending' : 'accepted', stTxt = out ? '待对方确认' : v.st === 'pending' ? '待接受' : '已接受';
+    var acts = !out && v.st === 'pending'
+      ? '<view class="invite-card__acts"><view class="invite-card__btn" data-act="invReply" data-i="' + i + '">回复</view><view class="invite-card__btn" data-act="invNo" data-i="' + i + '">拒绝</view><view class="invite-card__btn invite-card__btn--primary" data-act="invYes" data-i="' + i + '">接受合作</view></view>'
+      : '<text class="invite-card__time">' + v.time + '</text>';
+    return '<view class="invite-card ic9" data-act="invOpen" data-i="' + i + '"' + (i ? '' : mk(1)) + '>' +
+      '<view class="invite-card__top"><text class="invite-status is-' + tone + '">' + stTxt + '</text><text class="invite-card__from">' + (out ? '发给 ' : '来自 ') + v.who + '</text></view>' +
+      '<view class="invite-card__main"><img class="invite-card__cover" src="' + C + t.cover + '"><view class="invite-card__info"><text class="invite-card__date">' + t.date.split(' ')[0] + ' 起 · ' + (t.kind === 'free' ? '自由探索' : '城市定向') + '</text><text class="invite-card__name">' + t.name + '</text><text class="invite-card__sub ic9-tg">' + targetText(v) + '</text></view></view>' +
+      '<text class="invite-card__terms ic9-msg">' + v.msg + '</text>' + acts + '</view>';
   }
-  var MSGS = { in: [['城瘾小助手', '你的主题「上海像一部旧电影」招商截止还有 2 天', '14:32', 'old-movie.jpg', 1], ['苏河茶室', '好的,周六下午我们留两张桌子', '13:05', 'midlife-day.jpg', 2], ['副本人生', '第 2 站的打卡照片收到了,很好看', '昨天', 'heat-escape.jpg', 0], ['旧书与胶片', '下周三可以碰一下吗?', '10-27', 'treasure-hunter.jpg', 0]],
-    out: [['旧书与胶片', '你:想请你们带团走第 3 站', '10-29', 'treasure-hunter.jpg', 0], ['一尺花园', '你:章节邀约已发出,等你们回复', '10-26', 'flavor-tour.jpg', 0]] };
-  function msgList(box) { return MSGS[box].map(function (m) { return '<view class="ms7-r"><img src="' + C + m[3] + '"><view class="mr-m"><view class="mr-n">' + m[0] + '</view><view class="mr-s">' + m[1] + '</view></view><view class="ms7-e"><text>' + m[2] + '</text>' + (m[4] ? '<b>' + m[4] + '</b>' : '') + '</view></view>'; }).join(''); }
-  function invList(box) {
-    var rows = INV.filter(function (v) { return v.box === box; });
-    return rows.map(invCard).join('');
+  function invList(box) { return INV.filter(function (v) { return v.box === box; }).map(invCard).join(''); }
+  var MSGS = { in: [['城瘾小助手', '你的主题「上海像一部旧电影」招商截止还有 2 天', '14:32', '', 1, 'sys'], ['苏河茶室', '好的,周六下午我们留两张桌子', '13:05', 'midlife-day.jpg', 2], ['城瘾官方', '自由探索供给说明已更新', '昨天', 'old-movie.jpg', 0, 'off'], ['副本人生', '第 2 站的打卡照片收到了,很好看', '昨天', 'heat-escape.jpg', 0], ['旧书与胶片', '下周三可以碰一下吗?', '10-27', 'treasure-hunter.jpg', 0]],
+    out: [['旧书与胶片', '你:想请你们带团走第 3 站', '10-29', 'treasure-hunter.jpg', 0], ['一尺花园', '你:章节邀约已发出', '10-26', 'flavor-tour.jpg', 0]] };
+  function msgList(box) {
+    return MSGS[box].map(function (m) {
+      return '<view class="conv-wrap"><view class="conv' + (m[5] === 'sys' ? ' is-sys' : '') + '"><view class="avatar">' + (m[5] === 'sys' ? '<view class="sys-avatar">' + I('bell', 48) + '</view>' : '<img class="avatar-img" src="' + C + m[3] + '">') + '</view>' +
+        '<view class="conv-body"><view class="conv-top"><text class="conv-name' + (m[5] === 'sys' ? ' sys-name' : '') + '">' + m[0] + '</text>' + (m[5] === 'off' ? '<text class="official-tag">官方</text>' : '') + '<text class="conv-time">' + m[2] + '</text></view>' +
+        '<view class="conv-bottom"><text class="conv-preview">' + m[1] + '</text>' + (m[4] ? '<view class="badge">' + m[4] + '</view>' : '') + '</view></view></view></view>';
+    }).join('');
   }
-  S.push(scr('msg', '消息 · 协作邀请', '消息', 'subpackageB/pages/im/list/index.wxml + pages/coop/invite-detail',
-    '<view class="sv"><view class="theme-merchant pg-im" style="background:#F3F4F4;min-height:844px"><view style="height:96px"></view>' +
-    '<view class="bx7"' + mk(2) + '><i class="bx7-pill"></i><view class="bx7-t on" data-act="box" data-b="in">收件箱<b>2</b></view><view class="bx7-t" data-act="box" data-b="out">发件箱</view></view>' +
-    '<view class="ic7-h">协作邀请<span id="invN">2 条待回复</span></view><scroll-view scroll-x class="tk7-row" id="invList">' + invList('in') + '</scroll-view>' +
-    '<view class="ic7-h" style="margin-top:6px">消息</view><view class="ms7" id="msgList">' + msgList('in') + '</view>' +
-    '<view style="height:40px"></view></view></view>' + U.navBar({ title: '消息' }),
-    [[1, '协作邀请和消息放在同一页:上面一排邀请函横滑,下面是消息会话列表。邀请卡做成一张「邀请函票根」:上面是谁邀请的、什么时候、状态;中间票面是主题封面 + 类型 + 主题名,下面一行用定位图标写清邀请你接的是哪一章 / 哪一站(或「任选一章」);撕线下面是邀请语和按钮。点票面 → 邀约详情弹窗 → 「查看主题」再叠一层看整个主题 → 点章节看节点 → 点节点看玩法和地点,受邀的那一章 / 站标着「邀请你承接」。'], [2, '收件箱 / 发件箱换成胶囊分段:白色滑块带弹性滑过去,未处理数用小黑圆标;发件箱的卡是「你 → 对方」,按钮换成发消息 / 撤回。']]));
+  function boxTabs() { return '<view class="c-tabs tabs-row"><scroll-view class="cy-tabs cy-tabs--fill cy-tabs--wide" scroll-x><view class="cy-tabs__track">' + [['in', '收件箱'], ['out', '发件箱']].map(function (t, k) { return '<view class="cy-tabs__item' + (k ? '' : ' cy-tabs__item--on') + '" data-act="box" data-b="' + t[0] + '"><view class="cy-tabs__label">' + t[1] + '</view></view>'; }).join('') + '</view></scroll-view></view>'; }
+  S.push(scr('msg', '消息 · 协作邀请', '消息', 'subpackageB/pages/im/list/index.wxml(M-06 定稿)',
+    '<view class="sv"><view class="theme-merchant pg-im"><view class="im-list" style="padding-top:87px"><view class="message-tools">' + boxTabs() + '</view>' +
+    '<view class="invite-strip"><text class="invite-strip__title">协作邀请</text><scroll-view class="invite-strip__scroll" scroll-x><view class="invite-strip__track" id="invList">' + invList('in') + '</view></scroll-view></view>' +
+    '<view class="body"><text class="invite-strip__title">消息</text><view id="msgList">' + msgList('in') + '</view><view style="height:20px"></view></view></view></view></view>' + U.navBar({ title: '消息' }),
+    [[1, '整页照已定稿的消息页(M-06):收件箱 / 发件箱、上面协作邀请横滑卡带、下面「消息」会话列表都不变。邀请卡还是原来的卡,只补三样:承接对象(哪一章 / 哪一站)、邀请语两行、按钮改成 回复 / 拒绝 / 接受合作。点卡 → 邀约详情 → 整个主题 → 章节 → 节点。']]));
 
   // 邀约详情 → 主题 → 章节 → 节点
   function themeSheet(key, hl) {
@@ -277,7 +280,7 @@
     { k: '问题', t: '到店后没人复购', d: '41 位里只有 3 位回来过。到店权益只送一杯茶,没有下次来的理由。', bg: '#FFE9D6', fg: '#6B2F05', dot: '#F07A1A', art: 'ticket', go: '去设权益' },
     { k: '问题', t: '周日核销慢', d: '周日下午平均每位等 6 分钟才核销,有 4 位没核销就走了。', bg: '#FDE2E4', fg: '#7A1622', dot: '#E5484D', art: 'chat', go: '看客户' }];
   function readDeck() {
-    return '<view class="rd8"' + mk(2) + '><view class="rd8-sum"><text class="rd8-k">这 30 天</text><view class="rd8-t">客人集中在周末下午:41 位到店,七成在周六、周日 14–17 点,工作日几乎没人。</view><view class="rd8-c"><text><i style="background:#22A55B"></i>2 个机会</text><text><i style="background:#F07A1A"></i>2 个问题</text></view></view>' +
+    return '<view class="rd8"' + mk(2) + '>' +
       '<scroll-view scroll-x class="rd8-row">' + READS.map(function (r) {
         return '<view class="rd8-card" style="background:' + r.bg + ';color:' + r.fg + '"><canvas width="520" height="240" data-art="' + r.art + '" data-dot="' + r.dot + '"></canvas><view class="rd8-b"><text class="rd8-tag" style="background:' + r.fg + '">' + r.k + '</text><view class="rd8-h">' + r.t + '</view><view class="rd8-d">' + r.d + '</view><view class="rd8-go" style="color:' + r.fg + '" data-toast7="' + r.go + '">' + r.go + ' ›</view></view></view>';
       }).join('') + '</scroll-view><view class="ai-source7">解读依据今天 06:00 的经营数据</view></view>';
@@ -291,7 +294,7 @@
       return '<view class="tcard"><view class="tcard-cover"><img class="tcard-img" src="' + C + t[1] + '"><view class="tcard-shade"></view><view class="tcard-over"><view class="tcard-title"><text class="tcard-name">' + t[0] + '</text><view class="tcard-tag">招商中</view></view><text class="tcard-reason">平台招商中的自由探索主题</text><view class="tcard-foot"><view class="tcard-cta">看看</view></view></view></view></view>'; }).join('') + '</view></scroll-view>' +
     '<view class="sec-head"><text class="sec-title">经营解读</text></view>' + readDeck() +
     '<view style="height:40px"></view></view></view></view>' + U.navBar({ title: '店铺参谋' }),
-    [[1, '问候、主卡、推荐主题等其他区块都照原页面,不改。'], [2, '只改「经营解读」:上面一段总结(这 30 天怎么样),标出几个机会、几个问题;下面机会和问题做成一排横滑卡,不再用标签切换。每张一个颜色 + 会流动的点阵图,左上角标「机会 / 问题」,底部一个去处理的入口。']]));
+    [[1, '问候、主卡、推荐主题等其他区块都照原页面,不改。'], [2, '只改「经营解读」:机会和问题直接做成一排横滑卡,不再用标签切换。每张一个颜色 + 会流动的点阵图,左上角标「机会 / 问题」,底部一个去处理的入口。']]));
 
   // ---------------- AI 店铺角色 首次介绍 ----------------
   S.push(scr('npc', 'AI 店铺角色 · 首次介绍', 'AI 店铺角色', 'pages/merchant/decor/ai-npc/index.wxml',
@@ -427,8 +430,8 @@
     station: function (el) { var s = STATIONS[+el.getAttribute('data-i')];
       open({ id: 'near', title: '第 ' + (+el.getAttribute('data-i') + 1) + ' 站 · 招商', back: true, level: 'full', fixed: true, body: '<view class="st7" style="border:0"><img class="st7-img" src="' + C + s.img + '"><view class="mr-m"><view class="mr-n">' + s.n + '</view><view class="mr-s">权益档按章节固定:引流型 · 无分成</view></view></view><view class="lbl7"><text>附近 1 公里的商家</text></view>' +
         NEAR.map(function (m, i) { return '<view class="mr"><img class="mr-av mr-av--sq" src="' + C + m.img + '" data-go="mer-home"><view class="mr-m" data-go="mer-home"><view class="mr-n">' + m.n + '</view><view class="mr-s">' + m.m + '</view></view><view class="pill7" data-act="inviteMer" data-i="' + i + '">邀约</view></view>'; }).join('') }); },
-    inviteMer: function (el) { var m = NEAR[+el.getAttribute('data-i')]; inviteSheet('mer', m.n, m.m, m.img, 'mer-home'); },
-    sendInvite: function (el) { var kind = el.getAttribute('data-kind'); closeTop(); if (kind === 'club') { var c = clubs().filter(function (x) { return !x.st; })[0]; if (c) c.st = 'wait'; var r = cur().querySelector('#clubRows'); if (r) r.innerHTML = clubRows(); } toast('邀约已发出,对方会在消息里收到'); },
+    inviteMer: function (el) { lastMerBtn = el; var m = NEAR[+el.getAttribute('data-i')]; inviteSheet('mer', m.n, m.m, m.img, 'mer-home'); },
+    sendInvite: function (el) { var kind = el.getAttribute('data-kind'); closeTop(); if (kind !== 'club' && lastMerBtn) { lastMerBtn.outerHTML = '<text class="chip7 chip7--warn"><i class="spin7"></i>等回复</text>'; lastMerBtn = null; } if (kind === 'club') { var c = clubs().filter(function (x) { return !x.st; })[0]; if (c) c.st = 'wait'; var r = cur().querySelector('#clubRows'); if (r) r.innerHTML = clubRows(); } toast('邀约已发出,对方会在消息里收到'); },
     selfTake: function (el) { var i = +el.getAttribute('data-i'); STATIONS[i].kind = 'self'; STATIONS[i].who = '星巴克咖啡厅'; var r = cur().querySelector('#stRows'); r.innerHTML = stationRows(); toast('这一站由你自己承接'); },
     applyOk: function (el) { var a = APPLY.splice(+el.getAttribute('data-i'), 1)[0]; STATIONS[1].kind = 'mer'; STATIONS[1].who = a.n; STATIONS[1].apply = 0; cur().querySelector('#stRows').innerHTML = stationRows(); cur().querySelector('#apRows').innerHTML = applyRows(); toast('已通过,可以在「主页」看对方微信、发消息'); },
     applyNo: function (el) { APPLY.splice(+el.getAttribute('data-i'), 1); STATIONS[1].apply = 0; cur().querySelector('#stRows').innerHTML = stationRows(); cur().querySelector('#apRows').innerHTML = applyRows(); toast('已婉拒'); },
@@ -455,7 +458,7 @@
     themeOpen: function (el) { var v = INV[+el.getAttribute('data-i')]; themeSheet(v.theme, v.target); },
     chOpen: function (el) { chapterSheet(el.getAttribute('data-t'), +el.getAttribute('data-c')); },
     ndOpen: function (el) { nodeSheet(el.getAttribute('data-t'), +el.getAttribute('data-c'), +el.getAttribute('data-n')); },
-    box: function (el) { var b = el.getAttribute('data-b'), root = el.parentNode; [].forEach.call(root.querySelectorAll('.bx7-t'), function (x) { x.classList.toggle('on', x === el); }); root.classList.toggle('r', b === 'out'); var L = cur().querySelector('#invList'), M = cur().querySelector('#msgList'); [L, M].forEach(function (x) { x.classList.add('sw'); }); setTimeout(function () { L.innerHTML = invList(b); L.scrollLeft = 0; M.innerHTML = msgList(b); cur().querySelector('#invN').textContent = b === 'in' ? '2 条待回复' : '1 条等对方回复'; [L, M].forEach(function (x) { x.classList.remove('sw'); }); }, 160); },
+    box: function (el) { var b = el.getAttribute('data-b'); [].forEach.call(el.parentNode.children, function (x) { x.classList.toggle('cy-tabs__item--on', x === el); }); var L = cur().querySelector('#invList'), M = cur().querySelector('#msgList'); L.innerHTML = invList(b); L.parentNode.scrollLeft = 0; M.innerHTML = msgList(b); },
     dkOpen: function (el) { el.classList.toggle('open'); var l = el.querySelector('.link7'); if (l) l.textContent = el.classList.contains('open') ? '收起' : '展开'; },
     earnWin: function (el) { var root = el.parentNode, k = +el.getAttribute('data-k'); [].forEach.call(root.querySelectorAll('.sg7-t'), function (x) { x.classList.toggle('on', x === el); }); root.querySelector('.sg7-pill').style.transform = 'translateX(' + (k * 100) + '%)'; var box = root.nextElementSibling, inn = box.querySelector('.wn7-in'); box.style.height = inn.offsetHeight + 'px'; inn.innerHTML = earnRows(+el.getAttribute('data-w')); requestAnimationFrame(function () { box.style.height = inn.offsetHeight + 'px'; }); },
     startSale: function () { ACT.goTicket(); },
@@ -561,7 +564,7 @@
       '<view class="mr-s" style="margin-top:10px;white-space:normal">' + (sold ? '已开售:文案和玩法改动审核通过后对新玩家生效。' : '还没开售:三项都能改,审核通过后生效。') + '</view>',
       foot: '<view class="os-btn dis" id="askGo" data-act="askSend">提交申请</view>' });
   }
-  var rdI = 0, invKind = '', dkTimer;
+  var rdI = 0, invKind = '', dkTimer, lastMerBtn = null;
   function rollTo(el, to) {
     var t0 = performance.now(), dur = to ? 1100 : 300; el.classList.add('roll'); el.parentNode.classList.remove('settled');
     (function f(t) { var p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 3), v = to * e;
