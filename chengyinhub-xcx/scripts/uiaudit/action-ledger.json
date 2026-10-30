@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5565,
+  "controlCount": 5566,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -1225621,7 +1225621,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/theme-look-editor.js:48"
+        "staticSource": "pages/publish/fabu/theme-look-editor.js:50"
       }
     },
     {
@@ -1225688,7 +1225688,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/theme-look-editor.js:52"
+        "staticSource": "pages/publish/fabu/theme-look-editor.js:54"
       }
     },
     {
@@ -1225755,7 +1225755,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/theme-look-editor.js:40"
+        "staticSource": "pages/publish/fabu/theme-look-editor.js:42"
       }
     },
     {
@@ -1225822,7 +1225822,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/theme-look-editor.js:55"
+        "staticSource": "pages/publish/fabu/theme-look-editor.js:58"
       }
     },
     {
@@ -1225889,7 +1225889,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/theme-look-editor.js:53"
+        "staticSource": "pages/publish/fabu/theme-look-editor.js:55"
       }
     },
     {
@@ -1225956,7 +1225956,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/theme-look-editor.js:54"
+        "staticSource": "pages/publish/fabu/theme-look-editor.js:56"
       }
     },
     {
@@ -1226023,7 +1226023,74 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/theme-look-editor.js:40"
+        "staticSource": "pages/publish/fabu/theme-look-editor.js:42"
+      }
+    },
+    {
+      "id": "pages/publish/fabu/look-sheet.wxml:65:bindtap:onLookTextFx:8",
+      "route": "pages/publish/fabu/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/publish/fabu/look-sheet.wxml",
+        "js": "pages/publish/fabu/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onLookTextFx",
+        "line": 65,
+        "selectorHint": ".look-chip",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "文字动效:{{item.label}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/publish/fabu/theme-look-editor.js:57"
       }
     },
     {
@@ -1226090,7 +1226157,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/theme-look-editor.js:40"
+        "staticSource": "pages/publish/fabu/theme-look-editor.js:42"
       }
     },
     {
@@ -1238722,7 +1238789,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/theme-look-editor.js:39"
+        "staticSource": "pages/publish/fabu/theme-look-editor.js:41"
       }
     },
     {
