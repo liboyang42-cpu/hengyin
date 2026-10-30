@@ -253,7 +253,7 @@ for (const entry of ['privacy', 'sheet']) test(entry + ': confirmed audit surviv
   assert.equal(h.target._roamAuditConfirmed, true); assert.equal(h.stops, 1);
   if (entry === 'privacy') {
     h.app.hasPendingPrivacyAuthorization = () => true; h.target.onHide(); h.target.onShow();
-    assert.equal(h.target.data.failedAction, 'stop'); h.target.retrySubmit();
+    assert.equal(h.target._failedAction, 'stop'); h.target.retrySubmit();
   } else {
     h.sheetLifecycle.hide.call(h.target); h.sheetLifecycle.show.call(h.target);
     h.target.withdrawRoamLocationConsent();

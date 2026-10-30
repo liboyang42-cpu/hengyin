@@ -50,7 +50,7 @@ test('同意记录失败保留持久错误与重试上下文，不用易逝 toas
   page.agreePrivacy({ detail: { buttonId: 'agree-button' } })
   await settle()
   assert.equal(page.data.submitting, false)
-  assert.equal(page.data.failedAction, 'agree')
+  assert.equal(page._failedAction, 'agree')
   assert.match(page.data.submitError, /同意记录失败/)
   assert.equal(sandbox.toasts.length, 0)
   assert.equal(sandbox.backs, 0)
@@ -68,7 +68,7 @@ test('撤回记录失败保持页面与错误，重试成功后清除错误', as
   const { page, sandbox } = loadPage(() => shouldFail ? Promise.reject(new Error('offline')) : Promise.resolve())
   page.withdrawRoamLocationConsent()
   await settle()
-  assert.equal(page.data.failedAction, 'revoke')
+  assert.equal(page._failedAction, 'revoke')
   assert.match(page.data.submitError, /本机.*已停.*撤回记录待确认/)
   assert.equal(sandbox.toasts.length, 0)
 
@@ -76,7 +76,7 @@ test('撤回记录失败保持页面与错误，重试成功后清除错误', as
   page.retrySubmit()
   await settle()
   assert.equal(page.data.submitError, '')
-  assert.equal(page.data.failedAction, '')
+  assert.equal(page._failedAction, '')
   assert.deepEqual(sandbox.records.map((item) => item.eventType), ['REVOKE', 'REVOKE'])
   assert.deepEqual(sandbox.toasts, ['已撤回漫游定位同意'])
 })
@@ -108,8 +108,8 @@ test('首次隐私闸保留一句话与一行勾选，设置页每项保留独�
 
 test('negative control:失败分支必须写 submitError/failedAction，不能只 showToast', () => {
   const source = fs.readFileSync(MODULE, 'utf8')
-  assert.match(source, /failedAction:\s*'agree'/)
-  assert.match(source, /failedAction:\s*'revoke'/)
+  assert.match(source, /this\._failedAction\s*=\s*'agree'/)
+  assert.match(source, /this\._failedAction\s*=\s*'revoke'/)
   assert.match(source, /retrySubmit\(\)/)
 })
 

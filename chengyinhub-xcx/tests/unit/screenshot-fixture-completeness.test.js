@@ -128,8 +128,8 @@ const CONTRACTS = {
   },
   A58: {
     sources: ['pages/privacy/index.js', 'pages/privacy/index.wxml'],
-    paths: ['pendingAuthorization', 'submitting', 'submitError', 'failedAction'],
-    equals: { pendingAuthorization: false, submitting: false, submitError: '', failedAction: '' },
+    paths: ['pendingAuthorization', 'submitting', 'submitError'],
+    equals: { pendingAuthorization: false, submitting: false, submitError: '' },
   },
   A14: {
     // 2026-08-20 卡片重设计:卡体收进 cy-club-card,子键消费在组件源码(整对象经 club prop 传入)
