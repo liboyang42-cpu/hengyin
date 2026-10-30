@@ -51,7 +51,7 @@
 }
 
 .dw--customer .dw-head {
-  padding: 96rpx 40rpx 0; /* ds-ok: 标题 x=20, y=374 */
+  padding: 40rpx 40rpx 0; /* ds-ok: 走查 v2 R07 定稿 r_cust3:标题贴近弹窗上沿,x=20 */
 }
 
 .dw--customer .dw-title {
@@ -67,10 +67,12 @@
 }
 
 .dw--customer .dw-scroll {
-  flex: 0 1 auto;
-  max-height: calc(70vh - 240rpx);
-  padding: 10rpx 40rpx 0; /* ds-ok: Figma 内容 x=20 */
+  flex: 1;
+  min-height: 0;
+  padding-top: 10rpx;
 }
+/* 走查 v2 R07:左右留白放到内容层(border-box),scroll-view 自身不再 100% 宽再加内距、整块溢出屏幕 */
+.dw--customer .dw-scroll-content { padding-left: 40rpx; padding-right: 40rpx; } /* ds-ok: Figma 内容 x=20 */
 .dw-head {
   flex: none;
   display: flex;

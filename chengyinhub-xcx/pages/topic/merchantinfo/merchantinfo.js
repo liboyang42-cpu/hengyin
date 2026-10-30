@@ -2487,7 +2487,8 @@ Page({
     const groups = order.map(function (key) {
       return {
         key: key,
-        when: key === '__none__' ? '未指定场次' : key,
+        // 走查 v2 R07:场次写成「11-02 14:00 场」(去年份,与定稿一致);非日期的场次名原样
+        when: key === '__none__' ? '未指定场次' : String(key).replace(/^\d{4}-(\d{2}-\d{2})(?:[ T](\d{2}:\d{2})(?::\d{2})?)?$/, function (m, md, hm) { return md + (hm ? ' ' + hm : '') + ' 场'; }),
         sourceText: byRun[key].length + ' 人',
         rows: byRun[key],
       };

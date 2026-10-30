@@ -69,13 +69,15 @@ test('主办与承接两套主题名单都使用客户和核销口径', () => {
   ]) {
     const wxml = read(file);
     assert.match(wxml, /<project-drawer[^>]*title="客户"[^>]*customer-mode="\{\{true\}\}"/s, `${file} 应使用客户弹窗外壳`);
-    assert.match(wxml, />已核销 <text class="dsum-n"/);
-    assert.match(wxml, />待核销 <text class="dsum-n"/);
-    assert.doesNotMatch(wxml, />已到店 <text class="dsum-n"/);
-    assert.doesNotMatch(wxml, />未到店 <text class="dsum-n"/);
+    // 走查 v2 R07(2026-10-30):汇总改成数字格(数字在上、名称在下),核销口径的名称不变
+    assert.match(wxml, /class="dsum-l">已核销</);
+    assert.match(wxml, /class="dsum-l">待核销</);
+    assert.doesNotMatch(wxml, /class="dsum-l">已到店</);
+    assert.doesNotMatch(wxml, /class="dsum-l">未到店</);
     assert.doesNotMatch(wxml, /class="drun"/);
     assert.doesNotMatch(wxml, /\{\{ p\.ticketNo \}\}/);
-    assert.match(wxml, /class="dr-sub">\{\{ g\.when \}\}<\/text>/);
+    // 走查 v2 R07:核销时间并进场次那一行
+    assert.match(wxml, /class="dr-sub">\{\{ g\.when \}\}<block wx:if="\{\{ p\.arrivedTimeText \}\}"> · \{\{ p\.arrivedTimeText \}\} 核销<\/block><\/text>/);
     assert.match(wxml, /class="dr-phone" wx:if="\{\{ p\.phone \}\}"/,
       `${file} 每位有权限查看电话的客户都应显示电话行`);
     assert.match(wxml, /data-act="copyText"[^>]*data-text="\{\{ p\.phone \}\}"[^>]*aria-label="复制电话"/,

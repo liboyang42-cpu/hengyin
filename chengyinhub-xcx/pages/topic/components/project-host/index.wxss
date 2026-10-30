@@ -745,3 +745,25 @@
 .dn-img { width: 88rpx; height: 88rpx; flex: none; border-radius: 20rpx; background: var(--cy-bg-card-2); }
 .dn-img--none { display: flex; align-items: center; justify-content: center; color: var(--cy-text-tertiary); }
 .dn .dn-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* 走查 v2 R07(业主 2026-10-30 定稿 r_cust3):客户弹窗——数字格汇总、自适应宽度的筛选胶囊、
+   行内头像 / 名字 + 场次 / 右侧状态胶囊,行间发丝线。核销时间并进场次那一行。 */
+.dsum { display: flex; gap: 16rpx; }
+.dsum-i { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8rpx; padding: 24rpx 24rpx 22rpx; border-radius: 28rpx; background: var(--cy-bg-card); }
+.dsum-i .dsum-n { font-size: 44rpx; line-height: 52rpx; font-weight: 700; color: var(--cy-text-title); font-variant-numeric: tabular-nums; }
+.dsum-l { font-size: var(--cy-font-caption); color: var(--cy-text-secondary); white-space: nowrap; }
+.dfil { gap: 16rpx; margin-top: 28rpx; flex-wrap: wrap; }
+.dfil-item { flex: none; padding: 0 28rpx; height: 64rpx; background: var(--cy-bg-card); color: var(--cy-text-title); }
+.player-list { margin-top: 16rpx; }
+.player-row { min-height: 0; padding: 28rpx 0; gap: 24rpx; align-items: center; }
+.player-row .dr-avatar { width: 80rpx; height: 80rpx; }
+.player-row .dr-text { margin-top: 0; min-width: 0; }
+.player-row .dr-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.player-row .dr-sub { margin-top: 6rpx; color: var(--cy-text-secondary); }
+.player-row .dr-state { flex: none; padding: 6rpx 18rpx; border-radius: var(--cy-radius-pill); font-weight: 600; }
+.player-row .dr-state--pending { color: var(--cy-color-status-warning); background: var(--cy-color-status-warning-soft); }
+.player-row .dr-state--contacted { color: var(--cy-text-secondary); background: var(--cy-bg-card-2); }
+.player-row .dr-state--arrived,
+.player-row .dr-state--redeemed { color: var(--cy-success); background: var(--cy-color-status-success-soft); }
+.player-row .dr-state--refunded { color: var(--cy-danger); background: var(--cy-color-status-danger-soft); }
+.dfil-item.dfil-item--on { background: var(--cy-text-title); color: var(--cy-btn-solid-fg); }
