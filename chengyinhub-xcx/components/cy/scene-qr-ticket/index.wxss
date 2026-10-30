@@ -2,13 +2,10 @@
 .ticket-scene { position: relative; min-height: calc(100vh - 180rpx); box-sizing: border-box; padding: var(--cy-space-3) 0 calc(var(--cy-space-5) + env(safe-area-inset-bottom)); }
 
 /* V-02(2026-10-29 业主):与票夹背面(subpackageMember/signup .wc__back)同一版式:白卡、标题、码心 logo、到期一行。 */
-.voucher__card { width: 577rpx; min-height: 640rpx; margin: var(--cy-space-4) auto 0; box-sizing: border-box; padding: 64rpx 46rpx 56rpx; border-radius: 54rpx; background: #f6f6f4; display: flex; flex-direction: column; align-items: center; } /* ds-ok: 与票夹入场码白卡同值 */
+.voucher__card { width: 577rpx; min-height: 640rpx; margin: var(--cy-space-4) auto 0; box-sizing: border-box; padding: 56rpx 46rpx; border-radius: 54rpx; background: #f6f6f4; display: flex; flex-direction: column; align-items: center; justify-content: center; } /* ds-ok: 与票夹入场码白卡同值 */
 .voucher__title { max-width: 100%; font-size: 40rpx; font-weight: 700; color: #111; } /* ds-ok */
 .voucher__qr { position: relative; margin-top: 48rpx; width: 400rpx; height: 400rpx; border-radius: 28rpx; background: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 0 8rpx 28rpx rgba(0,0,0,.08); } /* ds-ok */
-.voucher__qr-img { width: 360rpx; height: 360rpx; }
 .voucher__qr-tip { font-size: 27rpx; color: rgba(17,17,17,.55); padding: 20rpx 30rpx; } /* ds-ok */
-.voucher__qr-logo { position: absolute; left: 50%; top: 50%; width: 88rpx; height: 88rpx; margin: -44rpx 0 0 -44rpx; border-radius: 20rpx; background: #fff; display: flex; align-items: center; justify-content: center; } /* ds-ok V-02 码心白底 */
-.voucher__qr-logo-img { width: 64rpx; height: 64rpx; }
 .voucher__exp { margin-top: 40rpx; font-size: 23rpx; color: rgba(17,17,17,.5); } /* ds-ok */
 .ep1 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .voucher__acts { width: calc(100% - 76rpx); margin: var(--cy-space-5) auto 0; display: flex; align-items: center; gap: 23rpx; }

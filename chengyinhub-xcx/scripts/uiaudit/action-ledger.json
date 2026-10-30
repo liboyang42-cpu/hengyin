@@ -401413,7 +401413,7 @@
       }
     },
     {
-      "id": "components/cy/scene-qr-ticket/index.wxml:25:bindtap:changeSeat:4",
+      "id": "components/cy/scene-qr-ticket/index.wxml:24:bindtap:changeSeat:4",
       "route": "component:components/cy/scene-qr-ticket/index",
       "hostRoutes": [
         "pages/play/index",
@@ -401476,7 +401476,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "changeSeat",
-        "line": 25,
+        "line": 24,
         "selectorHint": ".seat-choice__switch",
         "visibleCondition": "{{seatCount > 1}}",
         "disabledCondition": null,
@@ -401520,7 +401520,7 @@
       }
     },
     {
-      "id": "components/cy/scene-qr-ticket/index.wxml:27:bindtap:close:5",
+      "id": "components/cy/scene-qr-ticket/index.wxml:26:bindtap:close:5",
       "route": "component:components/cy/scene-qr-ticket/index",
       "hostRoutes": [
         "pages/play/index",
@@ -401583,7 +401583,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "close",
-        "line": 27,
+        "line": 26,
         "selectorHint": ".voucher__back",
         "visibleCondition": null,
         "disabledCondition": null,

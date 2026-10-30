@@ -29,12 +29,13 @@ test('V-02 组件版式:标题 + 码 + logo，到期行有才出，没有倒计�
   const xml = read('components/cy/scene-qr-ticket/index.wxml').replace(/<!--[\s\S]*?-->/g, '')
   const card = xml.slice(xml.indexOf('class="voucher__card"'), xml.indexOf('seat-choice__switch'))
   assert.match(card, /<text wx:if="\{\{title\}\}" class="voucher__title ep1">\{\{title\}\}<\/text>/)
-  assert.match(card, /class="voucher__qr-logo"><image class="voucher__qr-logo-img" src="\/images\/cy_logo_mark\.png"/)
+  // 10-29 第三轮:码换成 cy-dot-qr(圆点 + 码心黑色 logo + 彩色波),和票夹背面同一个组件
+  assert.match(card, /<cy-dot-qr wx:if="\{\{state === 'ready'\}\}" src="\{\{qr\}\}" size="\{\{360\}\}" \/>/)
   assert.match(card, /<text wx:if="\{\{expiry\}\}" class="voucher__exp">\{\{expiry\}\}<\/text>/)
   assert.doesNotMatch(xml, /Code :|countdown|城瘾活动入场码|出示扫码核销|现在核销|bigqr|长期开放/)
   const css = read('components/cy/scene-qr-ticket/index.wxss')
   const wallet = read('subpackageMember/signup/index.wxss')
-  for (const [mine, theirs] of [['.voucher__qr {', '.wc__qr {'], ['.voucher__qr-logo {', '.wc__qr-logo {'], ['.voucher__exp {', '.wc__exp {']]) {
+  for (const [mine, theirs] of [['.voucher__qr {', '.wc__qr {'], ['.voucher__exp {', '.wc__exp {']]) {
     const body = (src, sel) => src.slice(src.indexOf(sel) + sel.length, src.indexOf('}', src.indexOf(sel)))
     assert.equal(body(css, mine), body(wallet, theirs), mine + ' 与票夹同值')
   }

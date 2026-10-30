@@ -43,7 +43,7 @@ test('V-02 背面只有标题和码:不露原始 token、不显示倒计时、�
   assert.doesNotMatch(back, /入场码<\/text>|长期开放|wValidity/)
   const texts = back.match(/<text[^>]*>[^<]*<\/text>/g) || []
   assert.deepEqual(texts.map(t => t.replace(/<[^>]+>/g, '')), ['{{item.wTitle}}', '重新生成', '生成中…', '{{item.wExpiry}}'])
-  assert.match(back, /class="wc__qr-logo"><image class="wc__qr-logo-img" src="\/images\/cy_logo_mark\.png"/)
+  assert.match(back, /<cy-dot-qr wx:if="\{\{qrState === 'ready' && flipped\}\}" src="\{\{qrUrl\}\}" size="\{\{360\}\}" reduced-motion="\{\{reduced\}\}" \/>/)
   assert.ok(fs.statSync(path.join(ROOT, 'images/cy_logo_mark.png')).isFile())
   assert.match(read('subpackageMember/signup/index.wxss'), /\.wc__qr \{ position: relative;/)
   assert.doesNotMatch(read('subpackageMember/signup/index.js'), /有效期剩余/)

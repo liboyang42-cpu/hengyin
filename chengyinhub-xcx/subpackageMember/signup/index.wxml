@@ -57,8 +57,8 @@
           <view class="wc__face wc__back" wx:if="{{index === currentSwiperTicket}}">
             <text class="wc__bn ep1">{{item.wTitle}}</text>
             <view class="wc__qr">
-              <image wx:if="{{qrState === 'ready'}}" class="wc__qr-img" src="{{qrUrl}}" mode="aspectFit" />
-              <view wx:if="{{qrState === 'ready'}}" class="wc__qr-logo"><image class="wc__qr-logo-img" src="/images/cy_logo_mark.png" mode="aspectFit" /></view>
+              <!-- 2026-10-29 业主:码居中、码心黑色 logo、彩色波动效(cy-dot-qr);翻到背面才挂画布 -->
+              <cy-dot-qr wx:if="{{qrState === 'ready' && flipped}}" src="{{qrUrl}}" size="{{360}}" reduced-motion="{{reduced}}" />
               <text wx:elif="{{qrState === 'error'}}" class="wc__qr-tip" catchtap="retryQr" aria-role="button" aria-label="重新生成入场码" hover-class="cy-pressed" hover-stay-time="80">重新生成</text>
               <text wx:else class="wc__qr-tip">生成中…</text>
             </view>

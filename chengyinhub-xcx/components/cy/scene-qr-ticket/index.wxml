@@ -14,8 +14,7 @@
     <view class="voucher__card">
       <text wx:if="{{title}}" class="voucher__title ep1">{{title}}</text>
       <view class="voucher__qr">
-        <image wx:if="{{state === 'ready'}}" class="voucher__qr-img" src="{{qr}}" mode="aspectFit" />
-        <view wx:if="{{state === 'ready'}}" class="voucher__qr-logo"><image class="voucher__qr-logo-img" src="/images/cy_logo_mark.png" mode="aspectFit" /></view>
+        <cy-dot-qr wx:if="{{state === 'ready'}}" src="{{qr}}" size="{{360}}" />
         <text wx:else class="voucher__qr-tip">生成中…</text>
       </view>
       <text wx:if="{{seatNo}}" class="voucher__exp">第 {{seatNo}} 席</text>
