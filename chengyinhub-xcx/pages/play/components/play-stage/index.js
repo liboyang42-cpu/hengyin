@@ -57,7 +57,6 @@ Component({
     countingIn: false,
     calibrating: false,
     verdict: '',
-    shaking: false,
     verdictText: '',
     verdictNeutral: false,
     timedOut: false,
@@ -237,18 +236,9 @@ Component({
       this._burn = setTimeout(() => { this._burn = null; this.fail(true); }, BURN_MS);
     },
 
-    /** 答错抖一下。由玩法在判错那一刻调:stage.nudge()。
-        减动效直接不抖 —— 这一下是反馈不是信息,信息在那一行的红上。 */
-    nudge() {
-      if (this.data.reducedMotion || this.data.shaking) return;
-      this.setData({ shaking: true });
-      // 句柄要存:同文件另外三个计时器都存了,这一个不存的话 300ms 内退出会对已销毁组件 setData
-      if (this._shakeTimer) clearTimeout(this._shakeTimer);
-      this._shakeTimer = setTimeout(() => {
-        this._shakeTimer = null;
-        this.setData({ shaking: false });
-      }, 300);
-    },
+    /** 答错时玩法会调 stage.nudge()。2026-10-29 业主:不要整屏抖动(c5ff3c3 已从 wxml 摘掉 st--shake),
+        这里保留入口、什么都不做 —— 判错的信息在那一行的红上。 */
+    nudge() {},
 
     onBack() { this._stopAll(); this._stopServerDeadline(); this.triggerEvent('back'); },
   },
