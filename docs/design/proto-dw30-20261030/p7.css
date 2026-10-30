@@ -312,3 +312,37 @@
 .rd7-go{display:inline-flex;align-items:center;height:34px;padding:0 16px;border-radius:999px;color:#fff;font-size:13.5px;font-weight:600;margin-top:12px}
 .ai-source7{font-size:12px;color:var(--o-faint);text-align:center;margin-top:2px}
 .ic7,.ic7 *{white-space:normal}.ic7-who,.ic7 .mr-s{white-space:nowrap}
+/* 10-30 第四轮:进度每步可点 / 申请修改 / 账户收益下半屏 */
+.pg7-row{cursor:pointer}
+.pg7-chev{display:inline-block;width:6px;height:6px;border-right:1.5px solid #C2C2C8;border-top:1.5px solid #C2C2C8;transform:rotate(45deg);margin-left:8px;vertical-align:2px}
+.sd7{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--o-mute);margin:-2px 0 6px}
+.sd7 .pg7-dot{width:14px;height:14px;--pk:#E5338F}
+.sd7 .pg7-dot.done{background:#E5338F}.sd7 .pg7-dot.run{border:1.6px solid #E5338F}
+.sd7-lock{display:flex;gap:10px;align-items:flex-start;background:#EEF4FE;color:#1D5FC4;border-radius:14px;padding:12px;font-size:14px;line-height:1.5;margin-bottom:6px;white-space:normal}
+.ed7{display:flex;align-items:center;gap:10px;padding:13px 0;border-bottom:.5px solid var(--o-line)}
+.ed7>text{font-size:13px;color:var(--o-ok);display:flex;align-items:center;gap:4px;flex:none}
+.ed7.lock>text{color:var(--o-mute)}
+.ed7.lock .mr-n{color:var(--o-faint)}
+.pk7-c{width:20px;height:20px;border-radius:6px;border:1.5px solid #CFCFD4;flex:none;box-sizing:border-box;position:relative}
+.pk7.on .pk7-c{background:var(--o-ink);border-color:var(--o-ink)}
+.pk7.on .pk7-c:after{content:"";position:absolute;left:5px;top:2px;width:5px;height:9px;border-right:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(45deg)}
+.eb7{margin:12px 16px 0;background:#fff;border-radius:20px;padding:16px}
+.eb7-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.eb7-h b{font-size:16px;color:var(--o-ink)}
+.eb7-h>text{font-size:15px;font-weight:600;color:var(--o-ok);font-variant-numeric:tabular-nums}
+.eb7-bars{display:flex;align-items:flex-end;gap:3px;height:64px;margin-top:10px}
+.eb7-bars i{flex:1;background:#E3E4E8;border-radius:3px}
+.eb7-bars i.on{background:var(--o-ink)}
+.eb7-ax{display:flex;justify-content:space-between;font-size:11px;color:var(--o-faint);margin-top:6px}
+.eb7-r{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:.5px solid var(--o-line)}
+.eb7-r:last-child{border-bottom:0}
+.eb7-ic{width:40px;height:40px;border-radius:12px;background:var(--o-sub);object-fit:contain;padding:6px;box-sizing:border-box;flex:none}
+.eb7-ic--ph{object-fit:cover;padding:0}
+.eb7-ic--g{display:flex;align-items:center;justify-content:center;color:var(--o-ink2)}
+.eb7-v{font-size:15px;font-weight:600;color:var(--o-ink);font-variant-numeric:tabular-nums;flex:none}
+.eb7-v.z{color:var(--o-faint);font-weight:500}
+.eb7-v.up{color:var(--o-ok)}
+.eb7-none{display:flex;align-items:center;gap:10px;padding:12px 0 2px;font-size:14px;color:var(--o-faint)}
+.pg-er .c-asset-earnings,.pg-er .c-asset-earnings .ae{min-height:0;padding-bottom:0}
+.pg-er .c-asset-earnings .ae-hero{padding-bottom:12px}
+.ed7>text{font-size:12.5px;white-space:nowrap}
