@@ -1909,3 +1909,16 @@ image.david_stu {
   justify-content: center;
   background: var(--cy-bg-subtle);
 }
+
+/* 走查 v2 R09:分润明细弹窗 */
+.pf { padding: 0 var(--cy-page-x) var(--cy-space-4); }
+.pf-lock { display: flex; align-items: center; gap: var(--cy-space-2); font-size: var(--cy-font-caption); color: var(--cy-text-secondary); margin-bottom: var(--cy-space-3); }
+.pf-state { padding: var(--cy-space-6) 0; text-align: center; font-size: var(--cy-font-label); color: var(--cy-text-secondary); }
+.pf-hero { display: flex; flex-direction: column; padding: var(--cy-space-4); margin-bottom: var(--cy-space-3); border-radius: var(--cy-radius-xl); background: var(--cy-bg-card-2); }
+.pf-k { font-size: var(--cy-font-caption); color: var(--cy-text-secondary); }
+.pf-big { margin-top: var(--cy-space-2); font-size: 72rpx; font-weight: 800; font-style: italic; color: var(--cy-text-title); font-variant-numeric: tabular-nums; } /* ds-ok: 大号斜体金额,按业主定稿原型 */
+.pf-st { margin-top: var(--cy-space-2); font-size: var(--cy-font-label); font-weight: 600; color: var(--cy-text-body); }
+.pf-kv { display: flex; justify-content: space-between; align-items: center; padding: var(--cy-space-3) 0; border-bottom: 1rpx solid var(--cy-border-card); font-size: var(--cy-font-label); }
+.pf-kv .k { color: var(--cy-text-secondary); }
+.pf-kv .v { color: var(--cy-text-title); font-weight: 600; font-variant-numeric: tabular-nums; }
+.pf-all { margin-top: var(--cy-space-5); height: var(--cy-btn-h); line-height: var(--cy-btn-h); text-align: center; border-radius: var(--cy-radius-pill); background: var(--cy-bg-card-2); color: var(--cy-text-title); font-size: var(--cy-font-body); font-weight: 600; }

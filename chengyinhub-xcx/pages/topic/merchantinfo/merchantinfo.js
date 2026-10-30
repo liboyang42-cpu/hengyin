@@ -307,6 +307,7 @@ Page({
     checkinQrState: 'loading',
     checkinQrUrl: '',
     checkinCode: '',
+    profitSheet: { show: false, state: '', error: '', row: null },
     checkinErr: '',
     privacyGateShow: false,
   },
@@ -2617,11 +2618,43 @@ Page({
   },
 
   /** 主办方的钱统一进「我的资产」，由收益宿主打开分润场景。2026-10-30 业主:带 theme=merchant,底页浅色。 */
+  /* 走查 v2 R09(业主 2026-10-30):从主题工作台点「结算 / 分润明细」不再跳去账户收益页 ——
+     项目主题点开的都是弹窗,底下还是这个工作台。弹窗只讲这一个主题:我到手多少、结没结、卖了 / 核了多少、
+     平台与商家各拿多少;档位开售时按章节定死,这里只读不改。数据复用 /api/coop/finance 里本主题那一行。 */
   goFinance() {
-    const id = this.data.topicId || (this.data.info && this.data.info.topicId);
-    if (this._navigating) return; this._navigating = true; wx.navigateTo({
-      url: '/subpackageA/pages/assetcenter/earnings/index?theme=merchant&scene=merchant-profit' + (id ? '&topicId=' + id : ''), complete: () => { this._navigating = false; },
+    const id = Number(this.data.topicId || (this.data.info && this.data.info.topicId));
+    this.setData({ profitSheet: { show: true, state: 'loading', error: '', row: null } });
+    const that = this;
+    const money = function (v) { return typeof v === 'number' && Number.isFinite(v) && v >= 0 ? '¥' + v.toFixed(2) : '—'; };
+    app.sendRequest({
+      hideLoading: true, silentError: true, url: '/api/coop/finance', method: 'POST',
+      data: JSON.stringify({}), header: { 'Content-Type': 'application/json' },
+      success(res) {
+        if (!that.data.profitSheet.show) return;
+        const topics = res && res.code == '200' && res.data && Array.isArray(res.data.topics) ? res.data.topics : null;
+        if (!topics) { that.setData({ profitSheet: { show: true, state: 'error', error: (res && res.msg) || '分润明细暂时没读到', row: null } }); return; }
+        const t = topics.find(function (r) { return r && Number(r.topicId) === id; });
+        if (!t) { that.setData({ profitSheet: { show: true, state: 'empty', error: '', row: null } }); return; }
+        const settled = t.settled === true;
+        that.setData({ profitSheet: { show: true, state: 'ready', error: '', row: {
+          myIncome: money(t.myIncome),
+          statusText: typeof t.settled !== 'boolean' ? '结算状态待确认' : (settled ? (t.myIncomeArrived === true ? '已到账' : '已结算 · 待到账') : '待结算'),
+          totalSales: typeof t.totalSales === 'number' ? t.totalSales + ' 份' : '—',
+          verifiedSales: typeof t.verifiedSales === 'number' ? t.verifiedSales + ' 份' : '—',
+          platformAmount: money(t.platformAmount),
+          merchantTotal: money(t.merchantTotal),
+          merchantPaid: money(t.merchantPaid),
+          payoutTime: t.merchantPayoutTime ? String(t.merchantPayoutTime).slice(0, 10) : (t.merchantPayableTime ? String(t.merchantPayableTime).slice(0, 10) + ' 应付' : '每月 5 日结上月'),
+        } } });
+      },
+      fail() { if (that.data.profitSheet.show) that.setData({ profitSheet: { show: true, state: 'error', error: '网络不稳，分润明细没读到', row: null } }); },
     });
+  },
+  closeProfitSheet() { this.setData({ profitSheet: { show: false, state: '', error: '', row: null } }); },
+  goAllEarnings() {
+    this.closeProfitSheet();
+    if (this._navigating) return; this._navigating = true;
+    wx.navigateTo({ url: '/subpackageA/pages/assetcenter/earnings/index?theme=merchant', complete: () => { this._navigating = false; } });
   },
 
 

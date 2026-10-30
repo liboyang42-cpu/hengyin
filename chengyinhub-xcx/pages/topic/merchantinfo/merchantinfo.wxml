@@ -511,6 +511,29 @@
   bind:close="closeLiveCheckin"
   bind:retry="issueStationPoster"
   bind:secondary="downloadCheckinQr" />
+<!-- 走查 v2 R09:分润明细弹在工作台上(不离开主题) -->
+<cy-sheet class="theme-merchant" show="{{profitSheet.show}}" title="分润明细" bind:close="closeProfitSheet">
+  <view class="pf">
+    <view class="pf-lock"><cy-icon name="lock" size="26" /><text>档位按章节在开售时定好，不能改</text></view>
+    <view wx:if="{{profitSheet.state === 'loading'}}" class="pf-state">正在读取…</view>
+    <cy-inline-error wx:elif="{{profitSheet.state === 'error'}}" kind="data" title="分润明细没读到" sub="{{profitSheet.error}}" action="重试" bind:action="goFinance" />
+    <view wx:elif="{{profitSheet.state === 'empty'}}" class="pf-state">这个主题还没有分润记录，开售并核销后会出现在这里</view>
+    <block wx:elif="{{profitSheet.row}}">
+      <view class="pf-hero">
+        <text class="pf-k">我在本主题到手</text>
+        <text class="pf-big">{{profitSheet.row.myIncome}}</text>
+        <text class="pf-st">{{profitSheet.row.statusText}}</text>
+      </view>
+      <view class="pf-kv"><text class="k">已售</text><text class="v">{{profitSheet.row.totalSales}}</text></view>
+      <view class="pf-kv"><text class="k">已核销</text><text class="v">{{profitSheet.row.verifiedSales}}</text></view>
+      <view class="pf-kv"><text class="k">平台服务费</text><text class="v">{{profitSheet.row.platformAmount}}</text></view>
+      <view class="pf-kv"><text class="k">承接商家合计</text><text class="v">{{profitSheet.row.merchantTotal}}</text></view>
+      <view class="pf-kv"><text class="k">已打款给商家</text><text class="v">{{profitSheet.row.merchantPaid}}</text></view>
+      <view class="pf-kv"><text class="k">结算</text><text class="v">{{profitSheet.row.payoutTime}}</text></view>
+    </block>
+    <view class="pf-all" bindtap="goAllEarnings" aria-role="button" aria-label="查看全部收益" hover-class="cy-pressed" hover-stay-time="80">全部收益</view>
+  </view>
+</cy-sheet>
 <cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />
 
 <!-- 危险动作三段式确认:文案来自 utils/danger-actions.js,页面只给 key -->

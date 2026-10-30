@@ -63,17 +63,20 @@ function loadPage(relativePath, source = read(relativePath)) {
   return { page: Object.assign({}, pageConfig, { data: JSON.parse(JSON.stringify(pageConfig.data)) }), navigations }
 }
 
-test('俱乐部分润站内入口进入“我的资产”宿主并由 sceneStack 打开', () => {
+// 走查 v2 R09(业主 2026-10-30):主题工作台的「结算」就地弹分润明细(不离开主题);
+// 弹窗里的「全部收益」进浅色账户收益宿主。
+test('工作台分润明细就地弹出，全部收益进商家浅色账户收益', () => {
   const merchant = loadPage(PAGES.merchantInfo)
   merchant.page.data.topicId = 42
+  merchant.page.setData = function (patch) { Object.assign(this.data, patch) }
   merchant.page.goFinance()
+  assert.equal(merchant.navigations.length, 0, '结算不再跳走')
+  assert.equal(merchant.page.data.profitSheet.show, true)
 
+  merchant.page.goAllEarnings()
   assert.equal(merchant.navigations.length, 1)
   assert.equal(merchant.navigations[0][0], 'navigateTo')
-  assert.equal(
-    merchant.navigations[0][1].url,
-    '/subpackageA/pages/assetcenter/earnings/index?theme=merchant&scene=merchant-profit&topicId=42',
-  )
+  assert.equal(merchant.navigations[0][1].url, '/subpackageA/pages/assetcenter/earnings/index?theme=merchant')
   assert.doesNotMatch(read(PAGES.merchantInfo), /navigateTo\(\{ url: '\/pages\/coop\/finance\/index/)
 })
 
