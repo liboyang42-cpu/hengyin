@@ -443,3 +443,56 @@
 .dk7-c.p1{transform:translateY(13px) scale(.95)}
 .dk7-c.p2{transform:translateY(26px) scale(.9)}
 .dk7-c.p1,.dk7-c.p2{box-shadow:0 -1px 0 rgba(0,0,0,.03)}
+/* 第六轮:邀请横滑 + 消息并组 / 主题二维码 */
+.tk7-row{display:flex;gap:12px;overflow-x:auto;padding:2px 16px 18px;scroll-snap-type:x mandatory;scrollbar-width:none;transition:opacity .16s}
+.tk7-row .tk7{flex:none;width:292px;scroll-snap-align:start}
+.tk7-row.sw,.ms7.sw{opacity:0}
+.ic7-h span{font-size:13px;font-weight:500;color:var(--o-mute)}
+.ms7{margin:0 16px;background:#fff;border-radius:22px;padding:4px 14px;transition:opacity .16s}
+.ms7-r{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:.5px solid var(--o-line)}
+.ms7-r:last-child{border-bottom:0}
+.ms7-r img{width:46px;height:46px;border-radius:50%;object-fit:cover;flex:none}
+.ms7-e{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:none}
+.ms7-e text{font-size:12px;color:var(--o-faint)}
+.ms7-e b{min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#E5484D;color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;box-sizing:border-box}
+.qr8{padding-top:4px}
+.qr8-card{margin:0 auto;width:268px;background:#fff;border-radius:24px;padding:18px;box-shadow:0 1px 0 rgba(0,0,0,.04),0 14px 34px rgba(20,22,26,.1);text-align:center;border:1px solid var(--o-line)}
+.qr8-h b{display:block;font-size:18px;color:var(--o-ink)}
+.qr8-h span{display:block;font-size:12.5px;color:var(--o-mute);margin-top:4px}
+.qr8-c{width:200px!important;height:200px!important;margin:16px auto 10px;display:block;border-radius:12px}
+.qr8-f{font-size:12.5px;color:var(--o-ink2)}
+.qa{justify-content:space-around}
+/* 账户收益下半屏(Revolut) */
+.rv7{margin:4px 16px 0;background:#fff;border-radius:22px;padding:6px 16px 0}
+.rv7-r{display:flex;align-items:center;gap:12px;padding:12px 0}
+.rv7-ic{width:42px;height:42px;border-radius:50%;background:var(--o-sub);display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none;color:var(--o-ink2)}
+.rv7-ic img{width:100%;height:100%;object-fit:cover}
+.rv7-ic.o .c-icon{transform:rotate(-45deg)}
+.rv7-v{font-size:15.5px;font-weight:600;color:var(--o-ink);font-variant-numeric:tabular-nums;flex:none}
+.rv7-v.up{color:var(--o-ok)}
+.rv7-all{border-top:.5px solid var(--o-line);text-align:center;padding:14px 0;font-size:14.5px;font-weight:600;color:#2F6FE0}
+.rv7-none{display:flex;flex-direction:column;align-items:center;gap:6px;padding:22px 0 24px;text-align:center}
+.rv7-none b{font-size:15px;color:var(--o-ink);margin-top:4px}
+.rv7-none text{font-size:13px;color:var(--o-mute)}
+.rv7-tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 16px 0}
+.rv7-t{background:#fff;border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:2px;min-height:92px;box-sizing:border-box}
+.rv7-t text{font-size:12.5px;color:var(--o-mute)}
+.rv7-t b{font-size:20px;color:var(--o-ink);font-variant-numeric:tabular-nums}
+.rv7-t span{font-size:12px;color:var(--o-faint);margin-top:auto}
+.rv7-sp{width:100%;height:26px;margin-top:auto}
+.rv7-sp polyline{fill:none;stroke:var(--o-ok);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* 经营解读:总结 + 横滑 */
+.rd8{margin:0 0 0}
+.rd8-sum{margin:0 16px;background:#fff;border-radius:22px;padding:16px}
+.rd8-k{font-size:12px;font-weight:600;color:var(--o-mute);letter-spacing:.04em}
+.rd8-t{font-size:16.5px;font-weight:600;line-height:1.5;color:var(--o-ink);margin-top:6px;white-space:normal}
+.rd8-c{display:flex;gap:14px;margin-top:10px;font-size:13px;color:var(--o-ink2)}
+.rd8-c i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;vertical-align:1px}
+.rd8-row{display:flex;gap:12px;overflow-x:auto;padding:12px 16px 10px;scroll-snap-type:x mandatory;scrollbar-width:none}
+.rd8-card{flex:none;width:248px;border-radius:22px;overflow:hidden;scroll-snap-align:start;white-space:normal}
+.rd8-card canvas{display:block;width:100%;height:112px;mix-blend-mode:multiply}
+.rd8-b{padding:12px 16px 16px}
+.rd8-tag{display:inline-block;font-size:11.5px;font-weight:700;color:#fff;padding:3px 9px;border-radius:999px}
+.rd8-h{font-size:18px;font-weight:700;line-height:1.3;margin-top:8px}
+.rd8-d{font-size:13.5px;line-height:1.55;margin-top:6px;opacity:.85;min-height:63px}
+.rd8-go{font-size:14px;font-weight:700;margin-top:10px}

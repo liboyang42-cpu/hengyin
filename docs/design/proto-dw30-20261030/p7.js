@@ -46,24 +46,24 @@
     }).join('');
   }
   var HOST_STATE = {
-    draft: { status: '草稿', cur: 1 }, recruit: { status: '招商中', cur: 2 }, price: { status: '待定价', cur: 3 }, sale: { status: '售票中', cur: 3 }, end: { status: '已结束', cur: 5 } };
+    draft: { status: '草稿', cur: 1 }, recruit: { status: '招商中', cur: 2 }, price: { status: '待配票务', cur: 3 }, sale: { status: '售票中', cur: 4 }, end: { status: '已结束', cur: 6 } };
   function hostSteps(k) {
     var cur = HOST_STATE[k].cur;
     var L = [
       { label: '配置主题', time: '10-26' },
-      { label: '发布', sub: [['剧情、站点、票价已填好', 'ok'], ['发布后开始招商和售票', 'now', 'publish', '去发布']] },
+      { label: '发布', sub: [['剧情、站点已填好 · 票务可以之后再配', 'ok'], ['发布后先开始招商', 'now', 'publish', '去发布']] },
       { label: '招商', sub: [['俱乐部 1 家已接受 · 1 家等回复', 'ok', 'dw-club', '看俱乐部'], ['商家 2/4 站 · 1 个申请待处理', 'now', 'dw-recruit', '去处理']] },
+      { label: '配置票务', sub: [['合作方已就位 · 2/4 站 + 1 家俱乐部', 'ok'], ['票种和票价在主题配置的票务里设', 'now', 'goTicket', '去配置']] },
       { label: '售票', sub: [['已售 36 份 · 11-01 起开放', 'ok'], ['还没到店 22 位', 'now', 'dw-cust', '看客户']] },
       { label: '核销接待', sub: [['已核销 14 位', 'ok'], ['还剩 22 位待核销', 'now', 'scan', '去扫码']] },
       { label: '结算', sub: [['每月 5 日结上月', ''], ['本主题已入账 ¥420.00', 'ok', 'dw-profit', '分润明细']] }];
     return L.map(function (s, i) {
       var o = Object.assign({}, s);
       o.st = i < cur ? 'done' : (i === cur ? 'run' : 'todo');
-      if (o.st === 'run') o.tag = (k === 'price' && i === 3) ? '待开售' : ['', '待发布', '待邀约', '待核销', '待核销', '待结算'][i];
-      if (k === 'price' && i === 3) o.sub = [['招商已截止 · 2/4 站已招', 'ok'], ['定好票价,提交开售审核', 'now', 'startSale', '开始售卖']];
+      if (o.st === 'run') o.tag = ['', '待发布', '待邀约', '待配置', '待核销', '待核销', '待结算'][i];
       if (o.st !== 'run') { o.sub = i < cur ? null : null; }
-      if (i === 5 && o.st === 'todo') o.lock = '每月 5 日';
-      if (i < cur && !o.time) o.time = ['10-26', '10-27', '10-29', '11-01', '11-30', ''][i];
+      if (i === 6 && o.st === 'todo') o.lock = '每月 5 日';
+      if (i < cur && !o.time) o.time = ['10-26', '10-27', '10-29', '10-30', '11-01', '11-30', ''][i];
       return o;
     });
   }
@@ -78,7 +78,7 @@
          : { label: '邀请俱乐部承办', st: 'run', tag: '待邀约', sub: [['有 1 家俱乐部接受承办,才能开始售票', 'now', 'dw-club', '去邀请']] },
       ok ? { label: '招商', st: 'run', tag: '待邀约', sub: [['承办:城市定向免费测试俱乐部', 'ok', 'dw-club', '看看'], ['商家 1/3 章 · 1 个申请待处理', 'now', 'dw-recruit', '去处理']] }
          : { label: '招商', st: 'todo' },
-      { label: '售票', st: 'todo', time: ok ? '' : '俱乐部接受后开放' }, { label: '核销接待', st: 'todo' }, { label: '结算', st: 'todo', lock: '每月 5 日' }];
+      { label: '配置票务', st: 'todo', time: ok ? '' : '合作方就位后' }, { label: '售票', st: 'todo' }, { label: '核销接待', st: 'todo' }, { label: '结算', st: 'todo', lock: '每月 5 日' }];
   }
   function chapterJoinSteps() {
     return [{ label: '申请承接', time: '10-27 10:20', st: 'done' }, { label: '主办确认', time: '10-28 09:12', st: 'done' },
@@ -95,25 +95,25 @@
   function workbench(o) {
     var host = o.role !== 'join', free = o.free, m = o.m;
     if (!host) return joinBench(m);
-    var qa = host ? [['dw-club', '俱乐部', 'icon_qa_club.svg'], ['dw-recruit', '招商', 'icon_qa_store.svg'], ['dw-cust', '客户', 'icon_qa_person.svg'], ['dw-more', '更多', 'icon_qa_edit.svg']]
+    var qa = host ? [['dw-club', '俱乐部', 'icon_qa_club.svg'], ['dw-recruit', '招商', 'icon_qa_store.svg'], ['dw-cust', '客户', 'icon_qa_person.svg'], ['themeQr', '二维码', 'i:qr'], ['dw-more', '更多', 'icon_qa_edit.svg']]
       : [['scan', '扫码', 'icon_qa_scan.svg'], ['dw-club', '俱乐部', 'icon_qa_club.svg'], ['dw-cust', '客户', 'icon_qa_person.svg'], ['dw-more', '更多', 'icon_qa_edit.svg']];
     var stList = free ? freeSteps(o.ok) : hostSteps(o.state || 'recruit');
     return '<view class="sv"><view class="c-project-host"><view class="page theme-merchant">' + hero(free ? (o.ok ? '招商中' : '待俱乐部承办') : HOST_STATE[o.state || 'recruit'].status) +
       '<view class="head"><view class="head-title">上海像一部旧电影</view><view class="head-meta"><view class="meta-chip">' + I('calendar', 26) + '<text>11-01 至 11-30</text></view><view class="chip head-role">' + (free ? '主办 · 自由探索' : '主办 · 城市定向') + '</view></view></view>' +
       (free && !o.ok ? '<view class="gate7"' + mk(2) + '><text>邀请一个俱乐部承办后才能开始售票</text><view class="pill7" data-act="dw-club">去邀请</view></view>' : '') +
-      (o.state === 'price' || (free && o.ok) ? '<view class="gate7"' + mk(2) + '><text>' + (free ? '俱乐部已承办 · 定好票价就能开售' : '招商已截止 · 定好票价就能开售') + '</text><view class="pill7" data-act="startSale">开始售卖</view></view>' : '') +
+      (o.state === 'price' ? '<view class="gate7"' + mk(2) + '><text>合作方已就位 · 配好票务就开售</text><view class="pill7" data-act="goTicket">配置票务</view></view>' : '') +
       qaRow(qa) +
       '<view class="sec"><view class="sec-head"><text class="sec-title">售卖</text><view class="sec-action" data-act="dw-profit"><text>结算</text>' + I('arrow-right', 24) + '</view></view>' +
       '<view class="metrics"><view class="metric"><text class="metric-n">' + (o.state === 'draft' || o.state === 'price' || free ? 0 : 36) + '</text><text class="metric-l">已售份数</text></view><view class="metric"><text class="metric-n">' + (free ? (o.ok ? '1/3' : '0/3') : '2/4') + '</text><text class="metric-l">' + (free ? '已招章节' : '已招站点') + '</text></view><view class="metric"><text class="metric-n">' + (free && !o.ok ? 0 : 1) + '</text><text class="metric-l">' + (free ? '承办俱乐部' : '合作俱乐部') + '</text></view></view></view>' +
       '<view class="pg7"' + mk(1) + '><view class="pg7-h"><b>进度</b><span>' + (free ? '自由探索 · 主办' : '城市定向 · 主办') + '</span></view>' + steps(stList) + '</view>' +
       '<view style="height:40px"></view></view></view></view>' + U.navBar({ overlay: true, pill: true, tint: 'light' });
   }
-  function qaRow(qa) { return '<view class="qa">' + qa.map(function (q) { return '<view class="qa-btn" data-act="' + q[0] + '"><view class="qa-ico"><img class="qa-ico-img" src="' + IMG + q[2] + '"></view><text class="qa-label">' + q[1] + '</text></view>'; }).join('') + '</view>'; }
+  function qaRow(qa) { return '<view class="qa">' + qa.map(function (q) { return '<view class="qa-btn" data-act="' + q[0] + '"><view class="qa-ico">' + (q[2].indexOf('i:') === 0 ? I(q[2].slice(2), 40) : '<img class="qa-ico-img" src="' + IMG + q[2] + '">') + '</view><text class="qa-label">' + q[1] + '</text></view>'; }).join('') + '</view>'; }
   function joinBench(m) {
     var node = m === 'jn';
     return '<view class="sv"><view class="c-project-host"><view class="page theme-merchant">' + hero(node ? '承办 · 待补供给' : '承办 · 待补供给') +
       '<view class="head"><view class="head-title">' + (node ? '上海像一部旧电影' : '苏州河慢慢走') + '</view><view class="head-meta"><view class="meta-chip">' + I('calendar', 26) + '<text>11-01 至 11-30</text></view><view class="chip head-role">' + (node ? '承办 · 第 2 站' : '承办 · 第 1 章') + '</view></view></view>' +
-      '<view' + mk(1) + '>' + qaRow([['scan', '扫码', 'icon_qa_scan.svg'], ['dw-cust', '客户', 'icon_qa_person.svg']]) + '</view>' +
+      '<view' + mk(1) + '>' + qaRow([['scan', '扫码', 'icon_qa_scan.svg'], ['themeQr', '二维码', 'i:qr'], ['dw-cust', '客户', 'icon_qa_person.svg']]) + '</view>' +
       '<view class="sec"><view class="sec-head"><text class="sec-title">本' + (node ? '站' : '章') + '</text></view><view class="metrics"><view class="metric"><text class="metric-n">22</text><text class="metric-l">已预约</text></view><view class="metric"><text class="metric-n">14</text><text class="metric-l">已核销</text></view><view class="metric"><text class="metric-n">8</text><text class="metric-l">待核销</text></view></view></view>' +
       mineBlock(m) +
       '<view class="pg7"><view class="pg7-h"><b>进度</b><span>' + (node ? '城市定向 · 承办' : '自由探索 · 承办') + '</span></view>' + steps(node ? joinSteps() : chapterJoinSteps()) + '</view>' +
@@ -124,7 +124,7 @@
   S.push(scr('ws-recruit', '主办 · 招商中', '主题工作台', 'pages/topic/components/project-host/index.wxml', workbench({ state: 'recruit' }), WS_NOTES));
   S.push(scr('ws-draft', '主办 · 待发布', '主题工作台', 'project-host', workbench({ state: 'draft' }), WS_NOTES));
   S.push(scr('ws-sale', '主办 · 售票中', '主题工作台', 'project-host', workbench({ state: 'sale' }), WS_NOTES));
-  S.push(scr('ws-price', '主办 · 待定价(开始售卖)', '主题工作台', 'project-host + pages/topic/pricing', workbench({ state: 'price' }), [[2, '招商截止后进入「待定价」:顶部一条「定好票价就能开售」+「开始售卖」,进度里售票这一步也有同一个入口。点开是定价弹窗:系统按成本算出最低价,主办在最低价之上定终价,参考同城同类均价;各方分成在这一步已锁定。提交后走平台开售审核(沿用现有 /api/topic/pricing/confirm 与开售审核),审核通过才开始卖。']]));
+  S.push(scr('ws-price', '主办 · 待配票务', '主题工作台', 'project-host → pages/publish/fabu(票务区)', workbench({ state: 'price' }), [[2, '顺序改成:先配主题、发布、招商 —— 这时可以不配票务;邀约都被接受、合作方就位后,工作台出「配好票务就能开售」+「配置票务」,进度里多一步「配置票务」。点了直接进现有的主题配置页并定位到票务区(票种、票价),不另做新页面。']]));
   var JOIN_NOTES = [[1, '承办只有「扫码」「客户」两格:俱乐部、商家、更多都不给(那些是主办的事)。客户弹窗里没有定向广播。'], [2, '页面下面列出我承接的那一份:城市定向是一个节点,自由探索是一整章(连同章里的节点)。'], [3, '最底下「联系主办」:打电话、发消息、看主办主页。号码不上屏,沿用玩家端「联系主办」那一套(/api/play/contact)。']];
   S.push(scr('join-node', '承办 · 城市定向(承接节点)', '主题工作台', 'pages/topic/components/project-join/index.wxml', workbench({ role: 'join', m: 'jn' }), JOIN_NOTES));
   S.push(scr('join-chapter', '承办 · 自由探索(承接章节)', '主题工作台', 'pages/topic/components/project-join/index.wxml', workbench({ role: 'join', m: 'jc' }), JOIN_NOTES));
@@ -196,6 +196,9 @@
       '<view class="tk7-perf"><i></i><i></i></view>' +
       '<view class="tk7-msg">' + v.msg + '</view>' + acts + '</view>';
   }
+  var MSGS = { in: [['城瘾小助手', '你的主题「上海像一部旧电影」招商截止还有 2 天', '14:32', 'old-movie.jpg', 1], ['苏河茶室', '好的,周六下午我们留两张桌子', '13:05', 'midlife-day.jpg', 2], ['副本人生', '第 2 站的打卡照片收到了,很好看', '昨天', 'heat-escape.jpg', 0], ['旧书与胶片', '下周三可以碰一下吗?', '10-27', 'treasure-hunter.jpg', 0]],
+    out: [['旧书与胶片', '你:想请你们带团走第 3 站', '10-29', 'treasure-hunter.jpg', 0], ['一尺花园', '你:章节邀约已发出,等你们回复', '10-26', 'flavor-tour.jpg', 0]] };
+  function msgList(box) { return MSGS[box].map(function (m) { return '<view class="ms7-r"><img src="' + C + m[3] + '"><view class="mr-m"><view class="mr-n">' + m[0] + '</view><view class="mr-s">' + m[1] + '</view></view><view class="ms7-e"><text>' + m[2] + '</text>' + (m[4] ? '<b>' + m[4] + '</b>' : '') + '</view></view>'; }).join(''); }
   function invList(box) {
     var rows = INV.filter(function (v) { return v.box === box; });
     return rows.map(invCard).join('');
@@ -203,9 +206,10 @@
   S.push(scr('msg', '消息 · 协作邀请', '消息', 'subpackageB/pages/im/list/index.wxml + pages/coop/invite-detail',
     '<view class="sv"><view class="theme-merchant pg-im" style="background:#F3F4F4;min-height:844px"><view style="height:96px"></view>' +
     '<view class="bx7"' + mk(2) + '><i class="bx7-pill"></i><view class="bx7-t on" data-act="box" data-b="in">收件箱<b>2</b></view><view class="bx7-t" data-act="box" data-b="out">发件箱</view></view>' +
-    '<view class="ic7-h">协作邀请</view><view id="invList" class="tk7-list">' + invList('in') + '</view>' +
+    '<view class="ic7-h">协作邀请<span id="invN">2 条待回复</span></view><scroll-view scroll-x class="tk7-row" id="invList">' + invList('in') + '</scroll-view>' +
+    '<view class="ic7-h" style="margin-top:6px">消息</view><view class="ms7" id="msgList">' + msgList('in') + '</view>' +
     '<view style="height:40px"></view></view></view>' + U.navBar({ title: '消息' }),
-    [[1, '邀请卡做成一张「邀请函票根」:上面是谁邀请的、什么时候、状态;中间票面是主题封面 + 类型 + 主题名,下面一行用定位图标写清邀请你接的是哪一章 / 哪一站(或「任选一章」);撕线下面是邀请语和按钮。点票面 → 邀约详情弹窗 → 「查看主题」再叠一层看整个主题 → 点章节看节点 → 点节点看玩法和地点,受邀的那一章 / 站标着「邀请你承接」。'], [2, '收件箱 / 发件箱换成胶囊分段:白色滑块带弹性滑过去,未处理数用小黑圆标;发件箱的卡是「你 → 对方」,按钮换成发消息 / 撤回。']]));
+    [[1, '协作邀请和消息放在同一页:上面一排邀请函横滑,下面是消息会话列表。邀请卡做成一张「邀请函票根」:上面是谁邀请的、什么时候、状态;中间票面是主题封面 + 类型 + 主题名,下面一行用定位图标写清邀请你接的是哪一章 / 哪一站(或「任选一章」);撕线下面是邀请语和按钮。点票面 → 邀约详情弹窗 → 「查看主题」再叠一层看整个主题 → 点章节看节点 → 点节点看玩法和地点,受邀的那一章 / 站标着「邀请你承接」。'], [2, '收件箱 / 发件箱换成胶囊分段:白色滑块带弹性滑过去,未处理数用小黑圆标;发件箱的卡是「你 → 对方」,按钮换成发消息 / 撤回。']]));
 
   // 邀约详情 → 主题 → 章节 → 节点
   function themeSheet(key, hl) {
@@ -250,39 +254,33 @@
     }).join('');
   }
   function earnPage(has) {
-    return '<view class="sv"><view class="theme-merchant pg-er" style="background:#F3F4F4;min-height:844px"><view style="height:87px"></view>' +
-      '<view class="c-page-title"><view class="pt pt--left"><view class="pt__title">账户收益</view></view></view>' +
-      // 钱包卡:余额滚动计数(带纵向动态模糊),停稳后副文淡入
-      '<view class="wl7' + (has ? '' : ' wl7--empty') + '"' + mk(1) + '><i class="wl7-o o1"></i><i class="wl7-o o2"></i>' +
-      '<view class="wl7-k">账户收益(元)</view><view class="wl7-n" data-to="' + (has ? 1280 : 0) + '">¥0.00</view>' +
-      '<view class="wl7-s">' + (has ? '<text>可提现 <b>¥1,280.00</b></text><text>待结算 <b>¥1,080.00</b></text>' : '<text>第一笔核销结算后,收益会到这里</text>') + '</view></view>' +
-      '<view class="c-asset-earnings"><view class="ae"><view class="ae-actions wl7-acts">' + [['arrow-right', '提现', 1], ['list', '明细'], ['sort', '分析'], ['more', '更多']].map(function (a) { return '<view class="ae-action"' + (a[1] === '更多' ? ' data-act="earnMore"' : '') + '><view class="ae-action__ic' + (a[2] ? ' ae-action__ic--primary' : '') + '">' + I(a[0], 40) + '</view><text>' + a[1] + '</text></view>'; }).join('') + '</view></view></view>' +
-      // 收益从哪来:三张叠卡自动轮换,点一下展开成列表(CRED)
-      '<view class="dk7" id="dk7"' + mk(2) + ' data-act="dkOpen"><view class="dk7-h"><b>收益从哪来</b><text class="link7" style="font-size:13px">展开</text></view><view class="dk7-stack">' +
-      EARN_SRC.map(function (r, k) { return '<view class="dk7-c p' + k + '" style="background:' + r[4] + '"><img src="' + D3 + r[2] + '"><view class="mr-m"><view class="mr-n">' + r[0] + '</view><view class="mr-s">' + r[1] + '</view></view><text class="dk7-v">' + (has ? r[3] : '¥0') + '</text></view>'; }).join('') + '</view>' +
-      (has ? '' : '<view class="os-btn" style="margin-top:12px;height:44px;font-size:15px" data-toast7="打开合作中心">去承接主题</view>') + '</view>' +
-      // 最近:Revolut 式分段 + 列表伸缩
-      '<view class="wn7"' + mk(3) + '><view class="dk7-h"><b>最近</b></view>' +
-      (has ? '<view class="sg7"><i class="sg7-pill"></i>' + [[7, '7 天'], [30, '30 天'], [0, '全部']].map(function (w, k) { return '<view class="sg7-t' + (k ? '' : ' on') + '" data-act="earnWin" data-w="' + w[0] + '" data-k="' + k + '">' + w[1] + '</view>'; }).join('') + '</view><view class="wn7-list"><view class="wn7-in">' + earnRows(7) + '</view></view>'
-        : '<view class="eb7-none">' + I('list', 36) + '<text>还没有进出记录</text></view>') + '</view>' +
+    // 上半屏保持原页面不动(主卡 + 四个按钮);只重做下半屏,照 Revolut 账户首页:一张交易卡(3 笔 + 查看全部),下面两块小卡
+    var tx = [['上海像一部旧电影 · 第 2 站', '今天 14:20 · 核销 3 份', '+¥21.00', 'old-movie.jpg', ''], ['提现到微信零钱', '10-25 · 已到账', '−¥500.00', '', 'out'], ['苏州河慢慢走 · 第 1 章', '10-21 · 十月结算', '+¥1,000.00', 'time-pollution.jpg', '']];
+    return '<view class="sv"><view class="er-page theme-merchant pg-er" style="padding-top:87px"><view class="c-page-title"><view class="pt pt--left"><view class="pt__title">账户收益</view></view></view><view class="c-asset-earnings"><view class="ae"><view class="ae-hero"><view class="ae-card"><text class="ae-card__label">账户收益（元）</text><text class="ae-card__amount">' + (has ? '¥1,280.00' : '¥0.00') + '</text></view>' +
+      '<view class="ae-actions">' + [['arrow-right', '提现', 1], ['list', '明细'], ['sort', '分析'], ['more', '更多']].map(function (a) { return '<view class="ae-action"' + (a[1] === '更多' ? ' data-act="earnMore"' : '') + '><view class="ae-action__ic' + (a[2] ? ' ae-action__ic--primary' : '') + '">' + I(a[0], 40) + '</view><text>' + a[1] + '</text></view>'; }).join('') + '</view></view></view></view>' +
+      '<view class="rv7"' + mk(1) + '>' + (has ? tx.map(function (r) { return '<view class="rv7-r"><view class="rv7-ic' + (r[4] ? ' o' : '') + '">' + (r[3] ? '<img src="' + C + r[3] + '">' : I('arrow-right', 30)) + '</view><view class="mr-m"><view class="mr-n">' + r[0] + '</view><view class="mr-s">' + r[1] + '</view></view><text class="rv7-v' + (r[2][0] === '+' ? ' up' : '') + '">' + r[2] + '</text></view>'; }).join('') + '<view class="rv7-all">查看全部</view>'
+        : '<view class="rv7-none"><view class="rv7-ic o">' + I('list', 30) + '</view><b>还没有交易</b><text>收益到账、提现都会列在这里</text></view>') + '</view>' +
+      '<view class="rv7-tiles"' + mk(2) + '><view class="rv7-t"><text>本月入账</text><b>' + (has ? '+¥1,167' : '¥0') + '</b>' + (has ? '<svg viewBox="0 0 100 28" class="rv7-sp"><polyline points="0,24 12,22 24,23 36,16 48,18 60,10 72,13 84,6 100,4" /></svg>' : '<span>—</span>') + '</view>' +
+      '<view class="rv7-t"><text>待结算</text><b>' + (has ? '¥1,080' : '¥0') + '</b><span>' + (has ? '11-05 到账' : '有核销后按月结') + '</span></view></view>' +
       '<view style="height:40px"></view></view></view>' + U.navBar({});
   }
-  var EARN_NOTES = [[1, '余额放进一张钱包卡(参考 Circle):进页时数字从 0 滚到余额,滚动时带纵向模糊,停稳后「可提现 / 待结算」淡入;卡上一层很淡的点阵票根图。没收益时卡片变灰,只写「第一笔核销结算后,收益会到这里」。'], [2, '「收益从哪来」三张叠卡自动轮换(参考 CRED 叠卡),点一下整叠展开成三行列表,各自金额;没收益时下面带「去承接主题」。'], [3, '「最近」用胶囊分段 7 天 / 30 天 / 全部(参考 Revolut):滑块带弹性滑过去,下面列表高度跟着伸缩、一行行露出来。']];
+  var EARN_NOTES = [[1, '上半屏(主卡和四个按钮)保持原样。下半屏照 Revolut 账户首页:一张白色交易卡,最近 3 笔(头像 / 标题 / 时间,金额右对齐,进账绿色),底部居中「查看全部」;没有交易时卡里只放一个小图标和一句话,不再是大插画。'], [2, '下面两块并排小卡:本月入账(带一条迷你走势线)、待结算(写下次到账日)。']];
   S.push(scr('earn-more', '账户收益 · 还没有收益', '账户收益', 'components/cy/scene-asset-earnings/index.wxml', earnPage(false), EARN_NOTES));
   S.push(scr('earn-has', '账户收益 · 有收益', '账户收益', 'components/cy/scene-asset-earnings/index.wxml', earnPage(true), EARN_NOTES));
 
   // ---------------- 店铺参谋:其他区块照原样,只改「经营解读」----------------
   // 经营解读的三段(总结 / 机会 / 问题)来自 ai.summary / ai.opportunity / ai.problem,做成一叠可翻的卡
+  // 经营解读:顶部一段总结(ai.summary),下面机会 / 问题做成一排横滑卡,不再用标签切换
   var READS = [
-    { k: 'sum', tab: '总结', label: '这 30 天', t: '客人集中在周末下午', d: '近 30 天 41 位玩家到店,七成在周六、周日 14–17 点,工作日几乎没人。', bg: '#E9E4FF', fg: '#2B2470', dot: '#6C5CE7', art: 'arrow' },
-    { k: 'op', tab: '机会', label: '可以做', t: '承接一条周末路线', d: '「上海像一部旧电影」第 2 站离你 300 米,周末每场 20 人,正好补上下午的空位。', bg: '#DDF3E6', fg: '#14532D', dot: '#22A55B', art: 'pin', go: '去看看' },
-    { k: 'pb', tab: '问题', label: '要留意', t: '到店后没人复购', d: '41 位里只有 3 位回来过。到店权益只送一杯茶,没有留下下次来的理由。', bg: '#FFE9D6', fg: '#6B2F05', dot: '#F07A1A', art: 'ticket', go: '去设权益' }];
+    { k: '机会', t: '承接一条周末路线', d: '「上海像一部旧电影」第 2 站离你 300 米,周末每场 20 人,正好补上下午的空位。', bg: '#DDF3E6', fg: '#14532D', dot: '#22A55B', art: 'pin', go: '去看看' },
+    { k: '机会', t: '工作日晚上还空着', d: '附近两条夜游路线在招商,晚上 7–9 点能带来客流。', bg: '#E4EEFF', fg: '#163B7A', dot: '#3B76E8', art: 'arrow', go: '去看看' },
+    { k: '问题', t: '到店后没人复购', d: '41 位里只有 3 位回来过。到店权益只送一杯茶,没有下次来的理由。', bg: '#FFE9D6', fg: '#6B2F05', dot: '#F07A1A', art: 'ticket', go: '去设权益' },
+    { k: '问题', t: '周日核销慢', d: '周日下午平均每位等 6 分钟才核销,有 4 位没核销就走了。', bg: '#FDE2E4', fg: '#7A1622', dot: '#E5484D', art: 'chat', go: '看客户' }];
   function readDeck() {
-    return '<view class="rd7"' + mk(2) + '><view class="rd7-tabs">' + READS.map(function (r, i) { return '<view class="rd7-tab' + (i ? '' : ' on') + '" data-act="rdGo" data-i="' + i + '"><i style="background:' + r.dot + '"></i>' + r.tab + '</view>'; }).join('') + '</view>' +
-      '<view class="rd7-stack">' + READS.map(function (r, i) {
-        return '<view class="rd7-card" data-i="' + i + '" data-act="rdNext" style="background:' + r.bg + ';color:' + r.fg + '"><canvas width="560" height="300" data-art="' + r.art + '" data-dot="' + r.dot + '"></canvas>' +
-          '<view class="rd7-b"><view class="rd7-l"><text>' + r.label + '</text><text>' + (i + 1) + ' / 3</text></view><view class="rd7-t">' + r.t + '</view><view class="rd7-d">' + r.d + '</view>' + (r.go ? '<view class="rd7-go" style="background:' + r.fg + '" data-toast7="' + r.go + '">' + r.go + '</view>' : '') + '</view></view>';
-      }).join('') + '</view><view class="ai-source7">解读依据今天 06:00 的经营数据</view></view>';
+    return '<view class="rd8"' + mk(2) + '><view class="rd8-sum"><text class="rd8-k">这 30 天</text><view class="rd8-t">客人集中在周末下午:41 位到店,七成在周六、周日 14–17 点,工作日几乎没人。</view><view class="rd8-c"><text><i style="background:#22A55B"></i>2 个机会</text><text><i style="background:#F07A1A"></i>2 个问题</text></view></view>' +
+      '<scroll-view scroll-x class="rd8-row">' + READS.map(function (r) {
+        return '<view class="rd8-card" style="background:' + r.bg + ';color:' + r.fg + '"><canvas width="520" height="240" data-art="' + r.art + '" data-dot="' + r.dot + '"></canvas><view class="rd8-b"><text class="rd8-tag" style="background:' + r.fg + '">' + r.k + '</text><view class="rd8-h">' + r.t + '</view><view class="rd8-d">' + r.d + '</view><view class="rd8-go" style="color:' + r.fg + '" data-toast7="' + r.go + '">' + r.go + ' ›</view></view></view>';
+      }).join('') + '</scroll-view><view class="ai-source7">解读依据今天 06:00 的经营数据</view></view>';
   }
   S.push(scr('ins', '店铺参谋 · 经营解读', '店铺参谋', 'pages/merchant/marketing/ai-insight/index.wxml',
     '<view class="sv"><view class="page theme-merchant pg-ins"><view style="height:87px"></view><view class="body">' +
@@ -293,7 +291,7 @@
       return '<view class="tcard"><view class="tcard-cover"><img class="tcard-img" src="' + C + t[1] + '"><view class="tcard-shade"></view><view class="tcard-over"><view class="tcard-title"><text class="tcard-name">' + t[0] + '</text><view class="tcard-tag">招商中</view></view><text class="tcard-reason">平台招商中的自由探索主题</text><view class="tcard-foot"><view class="tcard-cta">看看</view></view></view></view></view>'; }).join('') + '</view></scroll-view>' +
     '<view class="sec-head"><text class="sec-title">经营解读</text></view>' + readDeck() +
     '<view style="height:40px"></view></view></view></view>' + U.navBar({ title: '店铺参谋' }),
-    [[1, '问候、主卡、推荐主题等其他区块都照原页面,不改。'], [2, '只改「经营解读」:原来一张纯文字卡(总结 / 机会 / 问题),改成三张叠放的卡。点卡或点上面的小标签切换:当前这张往左滑出、落到最后面,下一张升上来;每张一个颜色和一幅会流动的点阵图。机会和问题各带一个去处理的按钮。']]));
+    [[1, '问候、主卡、推荐主题等其他区块都照原页面,不改。'], [2, '只改「经营解读」:上面一段总结(这 30 天怎么样),标出几个机会、几个问题;下面机会和问题做成一排横滑卡,不再用标签切换。每张一个颜色 + 会流动的点阵图,左上角标「机会 / 问题」,底部一个去处理的入口。']]));
 
   // ---------------- AI 店铺角色 首次介绍 ----------------
   S.push(scr('npc', 'AI 店铺角色 · 首次介绍', 'AI 店铺角色', 'pages/merchant/decor/ai-npc/index.wxml',
@@ -457,10 +455,16 @@
     themeOpen: function (el) { var v = INV[+el.getAttribute('data-i')]; themeSheet(v.theme, v.target); },
     chOpen: function (el) { chapterSheet(el.getAttribute('data-t'), +el.getAttribute('data-c')); },
     ndOpen: function (el) { nodeSheet(el.getAttribute('data-t'), +el.getAttribute('data-c'), +el.getAttribute('data-n')); },
-    box: function (el) { var b = el.getAttribute('data-b'), root = el.parentNode; [].forEach.call(root.querySelectorAll('.bx7-t'), function (x) { x.classList.toggle('on', x === el); }); root.classList.toggle('r', b === 'out'); var L = cur().querySelector('#invList'); L.classList.add('sw'); setTimeout(function () { L.innerHTML = invList(b); L.classList.remove('sw'); }, 160); },
+    box: function (el) { var b = el.getAttribute('data-b'), root = el.parentNode; [].forEach.call(root.querySelectorAll('.bx7-t'), function (x) { x.classList.toggle('on', x === el); }); root.classList.toggle('r', b === 'out'); var L = cur().querySelector('#invList'), M = cur().querySelector('#msgList'); [L, M].forEach(function (x) { x.classList.add('sw'); }); setTimeout(function () { L.innerHTML = invList(b); L.scrollLeft = 0; M.innerHTML = msgList(b); cur().querySelector('#invN').textContent = b === 'in' ? '2 条待回复' : '1 条等对方回复'; [L, M].forEach(function (x) { x.classList.remove('sw'); }); }, 160); },
     dkOpen: function (el) { el.classList.toggle('open'); var l = el.querySelector('.link7'); if (l) l.textContent = el.classList.contains('open') ? '收起' : '展开'; },
     earnWin: function (el) { var root = el.parentNode, k = +el.getAttribute('data-k'); [].forEach.call(root.querySelectorAll('.sg7-t'), function (x) { x.classList.toggle('on', x === el); }); root.querySelector('.sg7-pill').style.transform = 'translateX(' + (k * 100) + '%)'; var box = root.nextElementSibling, inn = box.querySelector('.wn7-in'); box.style.height = inn.offsetHeight + 'px'; inn.innerHTML = earnRows(+el.getAttribute('data-w')); requestAnimationFrame(function () { box.style.height = inn.offsetHeight + 'px'; }); },
-    startSale: function () { saleSheet(); },
+    startSale: function () { ACT.goTicket(); },
+    goTicket: function () { toast('打开主题配置 · 票务(现有页面,定位到票务区)'); },
+    themeQr: function () { var m = mode(), join = /^j/.test(m);
+      open({ id: 'qr', title: '本主题二维码', center: true, level: 'full', body: '<view class="qr8"' + mk(9) + '>' + '<view class="qr8-card"><view class="qr8-h"><b>' + (m === 'jc' ? '苏州河慢慢走' : '上海像一部旧电影') + '</b><span>' + (join ? (m === 'jc' ? '第 1 章 · 苏河北岸 · 星巴克咖啡厅' : '第 2 站 · 上海邮政博物馆 · 星巴克咖啡厅') : '主办 · 星巴克咖啡厅') + '</span></view><canvas class="qr7 qr8-c" data-qr="1" width="220" height="220"></canvas><view class="qr8-f">玩家用微信扫一扫,直接进入' + (join ? '这一站' : '这个主题') + '</view></view>' +
+        '<view class="mr-s" style="text-align:center;white-space:normal;margin-top:12px">玩法里要求「扫码参与」时,把它贴在店里或活动现场。每个主题一张码,' + (join ? '只对应你承接的这一站。' : '对应整个主题。') + '</view></view>',
+        foot: '<view class="os-row2"><view class="os-btn os-btn--g" data-toast7="已保存到相册">保存到相册</view><view class="os-btn" data-toast7="已生成可打印的 A5 海报">打印海报</view></view>',
+        after: function (el) { [].forEach.call(el.querySelectorAll('canvas[data-qr]'), drawQr); } }); },
     priceStep: function (el) { var n = cur().querySelector('#prN'), v = +n.getAttribute('data-v') + (+el.getAttribute('data-d')); if (v < 58) { toast('不能低于最低价 ¥58'); return; } n.setAttribute('data-v', v); n.textContent = '¥' + v; },
     saleSubmit: function () { closeAll(); var g = cur().querySelector('.gate7'); if (g) g.innerHTML = '<text>开售审核中 · 平台通过后自动开始售票</text><view class="pill7 pill7--g dis7">已提交</view>'; toast('已提交开售审核'); },
     invReply: function (el) { var v = INV[+el.getAttribute('data-i')];
@@ -524,6 +528,9 @@
     } else if (label === '邀请俱乐部承办' || label === '俱乐部承办') {
       body = kvs([['需要', '1 家俱乐部承办'], ['已邀请', label === '俱乐部承办' ? '城市定向免费测试俱乐部 · 已接受' : '还没有']]) + '<view class="mr-s" style="margin-top:10px;white-space:normal">俱乐部接受后才能开始售票。</view>';
       foot = '<view class="os-btn" data-act="dw-club">' + (label === '俱乐部承办' ? '看俱乐部' : '邀请俱乐部') + '</view>';
+    } else if (label === '配置票务') {
+      body = kvs([['合作方', '2/4 站商家 · 1 家俱乐部已就位'], ['票种 / 票价', '还没配'], ['在哪里配', '主题配置 · 票务']]) + '<view class="mr-s" style="margin-top:10px;white-space:normal">发布时可以先不配票务,先把商家和俱乐部邀齐;配好票务后提交开售。</view>';
+      foot = '<view class="os-btn" data-act="goTicket">去主题配置 · 票务</view>';
     } else if (label === '售票') {
       body = kvs([['已售', sold ? '36 份' : '—'], ['还没到店', sold ? '22 位' : '—'], ['开放', '11-01 至 11-30'], ['地点', sold ? '已开售,锁定' : '开售前可改']]);
       foot = sold ? '<view class="os-btn" data-act="dw-cust">看客户</view>' : '';
@@ -634,7 +641,6 @@
     var wl = cur().querySelector('.wl7-n'); if (wl) rollTo(wl, +wl.getAttribute('data-to'));
     var dk = cur().querySelector('.dk7-stack'); if (dk) dkTimer = setInterval(function () { if (dk.parentNode.classList.contains('open')) return; var cs = dk.querySelectorAll('.dk7-c'); [].forEach.call(cs, function (c) { var p = +(/p(\d)/.exec(c.className) || [0, 0])[1]; c.className = 'dk7-c p' + ((p + 2) % 3); }); }, 2200);
     var wn = cur().querySelector('.wn7-list'); if (wn) wn.style.height = '';
-    if (id === 'ins') { rdI = 0; setTimeout(function () { rdShow(0); }, 30); }
     if (id === 'npc' && !aiSeen) setTimeout(aiIntro, 300);
     var m = /[?&]scroll=(\d+)/.exec(location.search); if (m) setTimeout(function () { var sv = cur().querySelector('.sv,.ph7'); if (sv) sv.scrollTop = +m[1]; }, 80);
   };
