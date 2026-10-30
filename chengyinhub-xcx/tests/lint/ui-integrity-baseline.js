@@ -3,6 +3,7 @@
 // 2026-10-28 d4cc公共主线合并：仅保留两边原实名记录与退役事实；当前字面键计数/摘要非新源实扫，须由原hosted门禁按合成源码复核。
 // 2026-10-28 核销详情已显式四端点，删除其旧U1豁免(10→9)；带队增加一行仅平移里程碑U5旧锚，其理由及43上限不变。
 // 2026-10-28 整批公共源合并：原10个调用与public master/治理源锚点上下三行逐字相同，仅迁移行号；理由、数量及冻结上限不变，原排序键算法重算摘要。
+// 2026-10-30 走查 v2 IMG_0752(PR #684):消息页「协作邀请」加邀约提醒开关与卡片承接对象/邀请语,im/list 既有 U4-DYNAMIC 锚点仅行号位移 372→392(同一 this.setData(patch) 行,上下文逐字相同),理由与条数不变,u4Dynamic keyDigest 按同一算法重算。
 // 2026-10-28 合并 master(e52eab7e,#658 之后)进 integrate/devfix-20261027(#641),两侧重锚:既有锚点逐条按两侧父树原行文本(及上下各一行)在合并树定位同一行后换 key,理由一字未改,不新增登记;u1Variable 换 key 7(master 3、本线 4)、u4Dynamic 合并后 60 条(master 侧 34 条、本线侧 31 条换 key)、u5Silent 44 条(master 侧 19 条、本线侧 22 条换 key);删去两侧已移除代码的未命中项:u4Dynamic 3(fabu 旧草稿恢复 patch、模板页两处 _coverFail)、u5Silent 2(post-compose 选活动两读取)、u4Debt 9(本线还清 7 + master 完成页还清 2);棘轮 u1Variable 10 / u3Handler 62 / u4Field 124(master)·119(本线)→117 / u4Dynamic 60·62→60 / u5Silent 43·44→44(=本线既有登记,master 43 + 本线漫游三条 − post-compose 两条),冻结上限不变;五个 keyDigest 按门禁 baselineKeyDigest 在合并树实算。
 // 2026-10-28 v8 改后图落代码:signup /api/team/my 同一调用点仅行号 334→398(票夹翻面与开始游戏在上方加代码,行及上下各一行逐字相同,理由不变);u5Silent 新增漫游附近活动兜底两条(42→44);u5Silent digest 按同一算法重算。
 // 2026-10-27 最小改动返修:主理人申请页恢复开场形变(P-24 只修时序),U4-DYNAMIC club/apply onInput / toggleBool 两条锚点仅行号位移 221→233 / 232→244(同一行 this.setData({ [f]: ... }),理由不变),u4Dynamic digest 按同一算法重算。
@@ -860,7 +861,7 @@ module.exports = {
 // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):45 个既有锚点仅行号位移换 key + 本线 6 处新增登记,digest 按门禁同一算法(sha256 of sorted keys joined by \n)重算。
 // 2026-10-20 合并 master(#327 等)进 #293:两侧重锚逐条按合并后源码同一行文本定位一致(fabu 12 条、merchantinfo 2 条、scene-club-edit 1 条),square/list 196/1259 随 #325 点赞修复后移一行;digest 按门禁同一算法重算。
 // 2026-10-27 devfix L07(21 处动态 setData 仅行号位移):逐条以 master 原行与新行逐字比对一致,理由一字未改,digest 按门禁同算法重算。
-"09d6249a5b291a9b50d2b8b2b4a88a673a1f2c850f931e9aa46224a6b06d6cd7",
+"e2065a303b7232229200c3b5aa8bb509c535a499f931109f73c109d49fc5e211",
 // 2026-10-28 模板页货架改版(#652)合 master(#610):本线删 template/index 两条 + master play 1621→1624 重锚，合并树 60 条，digest 按同一算法重算。
 // 2026-10-20 R5 尾段(#327,owner 批准 12 条重锚):fabu 729→731、898→900、2524→2530、3570→3588、3951→3969、4957→4990、5215→5248、5866→5899、5876→5909、5929→5962、6270→6303、7936→8060,逐行比对 master 原行一字未改,理由与条数 58 不变;digest 按同一算法显式重算。
       // 2026-08-20 开卡包四拍动效:u5Silent 条数不变(12),只是 play/index.js 的调用点
@@ -1357,7 +1358,7 @@ module.exports = {
     "chengyinhub-xcx/pages/square/list/index.js:137": "动态 setData 需精确登记：[key]: item；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/square/list/index.js:177": "动态 setData 需精确登记：[key]: currentItem；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js:651": "可承接章节失败态只在 categoryMissing 布尔判定下二选一；两个对象分支的键均在本方法写死，state/error/allChaptersList 被 WXML 消费，loading 是已精确登记的页内控制字段；owner=小程序，复核=2026-09-30",
-    "chengyinhub-xcx/subpackageB/pages/im/list/index.js:372": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
+    "chengyinhub-xcx/subpackageB/pages/im/list/index.js:392": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/subpackageMember/coupon-qr/index.js:227": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/subpackageP3/pages/badge-wall/index/index.js:205": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/subpackageP3/pages/stamp-camera/index/index.js:74": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",

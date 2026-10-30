@@ -8,6 +8,7 @@ const { decorate: decorateInvites } = require('../../../../utils/coop-invite-vie
 const roleGuard = require('../../../../utils/roleGuard.js');
 const roleViewFilter = require('../../../../utils/transport/role-view-filter.js');
 const merchantTheme = require('../../../../utils/merchant-theme.js');
+const subscribe = require('../../../../utils/subscribe.js');
 const { reader, sameReader } = require('../../../../utils/user-character.js');
 const app = getApp();
 
@@ -33,6 +34,7 @@ Page({
     invitesIn: [],
     invitesOut: [],
     inviteError: '',
+    inviteAlertOn: false,
     // M-06 / G-10:商家视角整页浅色,合作邀请做成顶部横滑卡片带;玩家视角保持深色与原邀请行。
     isMerchantView: false,
   },
@@ -210,7 +212,13 @@ Page({
           return;
         }
         const shape = function (rows) {
-          return decorateInvites(rows, d.slots).filter(function (it) { return it.inviteId; });
+          // 走查 v2 R03:卡上写清承接的是哪一章 / 哪一站,受邀商家才知道邀的是什么
+          return decorateInvites(rows, d.slots).filter(function (it) { return it.inviteId; }).map(function (it) {
+            const station = typeof it.supplyStationName === 'string' ? it.supplyStationName.trim() : '';
+            const chapter = typeof it.chapterName === 'string' ? it.chapterName.trim() : '';
+            const message = typeof it.message === 'string' ? decodeDisplayText(it.message).trim() : '';
+            return Object.assign(it, { targetText: station ? '承接 · ' + station : (chapter ? '承接 · ' + chapter : ''), message: message });
+          });
         };
         that.setData({ invitesIn: shape(d.received), invitesOut: shape(d.sent), inviteError: '' });
         that.refreshView();
@@ -220,6 +228,18 @@ Page({
         if (roleViewFilter.isSuppressed(res)) { that.setData({ invitesIn: [], invitesOut: [], inviteError: '' }); return; }
         that.setData({ inviteError: '邀请暂时没读到' });
       },
+    });
+  },
+
+  // 走查 v2 IMG_0752:邀约提醒开关。打开时在手势内请求订阅;关掉只是不再提醒(微信订阅一次一用,不需要撤销)。
+  onInviteAlertChange(e) {
+    const on = !!(e && e.detail && e.detail.value);
+    if (!on) { this.setData({ inviteAlertOn: false }); return; }
+    const that = this;
+    return subscribe.request(['coopInvited']).then(function (result) {
+      const accepted = result.acceptedKeys.indexOf('coopInvited') >= 0;
+      that.setData({ inviteAlertOn: accepted });
+      toast.show(accepted ? '已开启邀约提醒' : (result.status === subscribe.STATUS.UNSUPPORTED ? '当前微信版本不支持邀约提醒' : '未开启邀约提醒'));
     });
   },
 

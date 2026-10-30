@@ -28,7 +28,17 @@
   <!-- M-06(owner 2026-10-27 m681):商家视角的协作邀请不再是一条条消息,而是顶部一条横滑卡片带;
        卡片同宽同高,点开进协作邀请详情。玩家视角保持下面原来的邀请行。 -->
   <view wx:if="{{isMerchantView && (activeTab === 'in' ? invitesIn.length : invitesOut.length)}}" class="invite-strip">
-    <text class="invite-strip__title">协作邀请</text>
+    <!-- 走查 v2 IMG_0752:邀约提醒做成开关,放在「协作邀请」标题旁(原合作中心那一行「开启」按钮)。
+         订阅须在点击手势内请求,所以开关的 change 直接发起订阅;关掉只改本地显示,微信侧订阅随用随失效。 -->
+    <view class="invite-strip__head">
+      <text class="invite-strip__title">协作邀请</text>
+      <block wx:if="{{activeTab === 'in'}}">
+      <view class="invite-alert">
+        <text class="invite-alert__label">邀约提醒</text>
+        <cy-switch class="invite-alert__sw" checked="{{inviteAlertOn}}" bindchange="onInviteAlertChange" accessibility-label="邀约提醒" />
+      </view>
+      </block>
+    </view>
     <scroll-view class="invite-strip__scroll" scroll-x enhanced show-scrollbar="{{false}}">
       <view class="invite-strip__track">
         <view wx:for="{{activeTab === 'in' ? invitesIn : invitesOut}}" wx:key="rowKey" class="invite-card"
@@ -46,11 +56,15 @@
             <view class="invite-card__info">
               <text class="invite-card__date" wx:if="{{item.dateText}}">{{item.dateText}} 起</text>
               <text class="invite-card__name">{{item.topicText || item.partnerName}}</text>
-              <text class="invite-card__sub" wx:if="{{item.topicAddressName}}">{{item.topicAddressName}}</text>
+              <text class="invite-card__sub invite-card__target" wx:if="{{item.targetText}}">{{item.targetText}}</text>
+              <text class="invite-card__sub" wx:elif="{{item.topicAddressName}}">{{item.topicAddressName}}</text>
             </view>
           </view>
-          <text class="invite-card__terms" wx:if="{{item.termsText}}">{{item.termsText}}</text>
+          <!-- 走查 v2 R03:卡上写邀请语(对方留言),没有留言才退回条款 -->
+          <text class="invite-card__msg" wx:if="{{item.message}}">{{item.message}}</text>
+          <text class="invite-card__terms" wx:elif="{{item.termsText}}">{{item.termsText}}</text>
           <view class="invite-card__acts" wx:if="{{activeTab === 'in' && item.status === 0}}">
+            <view class="invite-card__btn" aria-role="button" aria-label="回复" hover-class="cy-pressed" hover-stay-time="80">回复</view>
             <view class="invite-card__btn" aria-role="button" aria-label="拒绝" hover-class="cy-pressed" hover-stay-time="80">拒绝</view>
             <view class="invite-card__btn invite-card__btn--primary" aria-role="button" aria-label="接受合作" hover-class="cy-pressed" hover-stay-time="80">接受合作</view>
           </view>
