@@ -28,18 +28,19 @@ test('O-01 删空精度放行:自动到达只在精度已知且 ≤80m 时发(�
   assert.equal(A.canAutoArrive(80.1), false);
   for (const v of [undefined, null, '', NaN, -1, '30']) assert.equal(A.canAutoArrive(v), false, String(v));
   // 自动到达的站:0/5 恒定;8/9/10 只在本站玩法已通过后(_advancedReadyNodeId)—— 精度闸照旧不能少
-  assert.match(src, /const arrivesHere = node\.vm === 0 \|\| node\.vm === 5\s*\|\| \(\[8, 9, 10\]\.includes\(node\.vm\) && that\._advancedReadyNodeId === node\.nodeId\);/);
+  // 0/5 站配了玩法(hasAdvanced)也要先过玩法再自动点亮(2026-10-30 复核:连线被 GPS 到达跳过)
+  assert.match(src, /const arrivesHere = \(\(node\.vm === 0 \|\| node\.vm === 5\) && \(!node\.hasAdvanced \|\| that\._advancedReadyNodeId === node\.nodeId\)\)\s*\|\| \(\[8, 9, 10\]\.includes\(node\.vm\) && that\._advancedReadyNodeId === node\.nodeId\);/);
   assert.match(src, /arrivesHere && playAccuracy\.canAutoArrive\(loc\.accuracy\)\) that\.arrive\(node\.nodeId, 'gps'\)/);
   // 两个定位来源都把 accuracy 原样带进 _loc,arrive 请求从 _loc 取
   const locWrites = src.match(/_loc = \{ longitude: loc\.longitude, latitude: loc\.latitude, accuracy: loc\.accuracy \}/g) || [];
   assert.equal(locWrites.length, 2);
 });
 
-test('游玩页:4 处 InnerAudioContext 全部经 audioSession.register', () => {
+test('游玩页:5 处 InnerAudioContext(含主题背景音乐)全部经 audioSession.register', () => {
   const creates = src.match(/wx\.createInnerAudioContext\(\)/g) || [];
   const wrapped = src.match(/audioSession\.register\(wx\.createInnerAudioContext\(\)/g) || [];
-  assert.equal(creates.length, 4);
-  assert.equal(wrapped.length, 4);
+  assert.equal(creates.length, 5);
+  assert.equal(wrapped.length, 5);
   assert.match(src, /pauseAudio\(\) \{\s*[^}]*audioSession\.pauseAll\(\)/);
 });
 

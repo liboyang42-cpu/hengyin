@@ -596,6 +596,10 @@ public class PlayNodeQueryApplication {
         if (topicForFlow != null) data.put("topicName", topicForFlow.getName());
         // 自由探索卡包首屏的底图:主题长图(列表里的封面也是它),前端虚化铺底,没有就退回章节封面
         if (topicForFlow != null) data.put("topicCover", topicForFlow.getImgUrl());
+        // 完成页标题、自由探索卡包抬头都要主题名;此前前端读 d.topicName 而这里从没下发 ⇒ 恒空,只能回落章节名。
+        if (topicForFlow != null) data.put("topicName", topicForFlow.getName());
+        // 主题配乐(作者媒体,详情页同一条):游玩页作循环底乐,#659 移除的是合成环境音,不是作者音频。
+        if (topicForFlow != null) data.put("topicAudioUrl", topicForFlow.getAudioUrl());
         // 故事开局的「初始状态」页只列作者真开了的精力 / 幸运:回执里的 hp/luck 没开也有值(取配置初始值),看不出开没开
         Map<String, Object> vitalsOn = read.contentSnapshot != null
                 ? vitalsOn(com.chengyinhub.business.service.support.NodeJourneySnapshot.journeyRules(read.contentSnapshot.toString()))

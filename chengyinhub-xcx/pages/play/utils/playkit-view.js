@@ -421,6 +421,15 @@ function checkReceiptView(receipt) {
   };
 }
 
+/** 留言时间:服务端给的是毫秒数,直接上屏是一串 1793093579000(实走 A24)。已是文字的原样保留。 */
+function noteAt(at) {
+  const ms = typeof at === 'number' ? at : (/^\d{12,}$/.test(String(at || '')) ? Number(at) : NaN);
+  if (!Number.isFinite(ms)) return at || '';
+  const d = new Date(ms);
+  const p = (n) => (n < 10 ? '0' : '') + n;
+  return p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+}
+
 /** 留言:previous 是给后来的人看的前几条,mine 是自己的那条(留过才给)。 */
 function buildNote(seg) {
   return {
@@ -428,7 +437,7 @@ function buildNote(seg) {
     prompt: seg.prompt || '',
     maxLength: Number(seg.maxLength) || 40,
     presets: seg.presets || [],
-    previous: seg.previous || [],
+    previous: (seg.previous || []).map((p) => Object.assign({}, p, { at: noteAt(p && p.at) })),
     mine: typeof seg.mine === 'string' ? seg.mine : (seg.mine && typeof seg.mine.text === 'string' ? seg.mine.text : ''),
     done: !!seg.done,
   };

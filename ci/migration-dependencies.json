@@ -891,6 +891,8 @@
     "20261026_user_invoice_processing": ["20261022_f7_user_invoice"],
     "20261026_user_invoice_title_receipt": ["20261022_f7_user_invoice"],
     "20261026_user_invoice_menu": ["20261012_missing_business_menu", "20261026_user_invoice_processing", "20261026_user_invoice_title_receipt"],
-    "20261022_f7_minor_guardian": []
+    "20261022_f7_minor_guardian": [],
+    "20261030_merchant_game_mechanics": ["m1_permission_full", "p1_rbac_permission_defaults", "20261012_missing_role_permission_defaults"],
+    "20261030_merchant_game_covers_to_oss": ["seed_merchant_game_a8_20260823", "seed_merchant_game_b27_20260823", "20260825_cover_urls_off_package", "20261009_merchant_game_a8_cdn_guard"]
   }
 }

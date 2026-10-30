@@ -361,6 +361,10 @@ public class ApiLoginController extends BaseController {
             // 号必须放 data:success(String) 会把 11 位号写进 msg,小程序消毒器会改成「操作失败」
             return AjaxResult.success("操作成功", phone);
         } else {
+            // 40029 = 授权码本身无效(开发者工具模拟授权、码已用过):重试同一条路没用,别说「稍后重试」(实走 A4)
+            if (errcodeObj != null && "40029".equals(errcodeObj.toString())) {
+                return AjaxResult.error("手机号授权无效，请在手机微信里重新授权");
+            }
             getWxToken(true);
             return AjaxResult.error("获取手机号失败，请稍后重试");
         }

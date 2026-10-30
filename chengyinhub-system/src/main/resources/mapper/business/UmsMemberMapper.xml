@@ -275,7 +275,7 @@
         update ums_member
         set password = #{hashedPassword}
         where id = #{id}
-          and binary password = binary #{observedPassword}
+          and cast(password as binary) = cast(#{observedPassword} as binary)
           and password not like '$2%'
     </update>
 

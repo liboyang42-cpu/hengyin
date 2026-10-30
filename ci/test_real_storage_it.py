@@ -494,9 +494,9 @@ class RegistryContractTest(unittest.TestCase):
         # p0-acceptance-ac1(AC1)：核销 5 + 跨账号 3 + 城市跑 2 + 自由探索供给闸 2 + 注销 1。
         # port-*：同批 master 侧移植，类与条数同原批；port-core-funds 27；port-ai-quota 22；port-f3-growth 12；port-f3-evidence 4。
         expected = {"core-funds": 27, "ai-quota": 24, "e04-07-coupon": 10, "community-e02": 14,
-                    "b05-visibility": 3, "f3-growth": 12, "extra-storage": 133,
+                    "b05-visibility": 3, "f3-growth": 12, "extra-storage": 137,
                     "port-e04-07-coupon": 10, "port-community-e02": 14, "port-b05-visibility": 3,
-                    "port-extra-storage": 133,
+                    "port-extra-storage": 137,
                     "port-core-funds": 27, "port-ai-quota": 24,
                     "port-f3-growth": 12, "port-f3-evidence": 4,
                     "funnel-max-date": 4, "port-prelaunch-69": 40,
@@ -505,7 +505,7 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-broadcast-migration": 12, "architecture-day-settlement": 7,
                     "architecture-day-state-recovery": 51,
                     "architecture-day-runtime-governance": 37,
-                    "architecture-day-registration-write": 125,
+                    "architecture-day-registration-write": 132,
                     "architecture-day-im-revocation": 2,
                     "architecture-day-w19-owner-notice": 29,
                     "architecture-day-play-scheduler": 16,
@@ -531,14 +531,14 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-topic-cash-fence": 5,
                     "architecture-day-scheduler-two-process": 3,
                     "architecture-day-cash-recovery": 10,
-                    "architecture-day-funds-closure": 279,
+                    "architecture-day-funds-closure": 286,
                     "architecture-day-npc-voice-asr": 14,
                     "architecture-day-clm-commerce-proof": 8,
                     "architecture-day-media-retry-budget": 8,
                     "architecture-day-before-start-notice": 12,
                     "architecture-day-commerce-generic-guard": 6,
                     "architecture-day-refund-lifecycle": 76,
-                    "architecture-day-integrated-changes": 933, "payment-intent-correctness": 30}
+                    "architecture-day-integrated-changes": 940, "payment-intent-correctness": 30}
         reg = registry()
         totals = {name: sum(reg["classes"][fqcn]["tests"] for fqcn in batch["classes"])
                   for name, batch in reg["batches"].items()}
@@ -571,7 +571,7 @@ class RegistryContractTest(unittest.TestCase):
     def test_registration_and_revocation_batches_require_current_counts_and_real_gates(self):
         reg = registry()
         expected = {
-            "com.chengyinhub.business.service.RegistrationFundsMybatisIntegrationTest": (101, {"CHENGYIN_FUNDS_MYSQL_IT": "1"}),
+            "com.chengyinhub.business.service.RegistrationFundsMybatisIntegrationTest": (108, {"CHENGYIN_FUNDS_MYSQL_IT": "1"}),
             "com.chengyinhub.business.it.MerchantRegistrationCancellationMySqlIT": (15, {}),
             "com.chengyinhub.business.it.RegistrationStationFulfillmentMySqlIT": (9, {}),
         }

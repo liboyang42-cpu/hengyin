@@ -42,7 +42,7 @@ const STATUS_TONE = {
   manual_refund: 'neutral',
   unknown: 'neutral',
 };
-const { createCheckoutWorkflow, hasCompletePaymentParams } = require('../../../../utils/checkout/checkout-workflow.js');
+const { createCheckoutWorkflow, hasCompletePaymentParams, isCompletedZeroAmountOrder } = require('../../../../utils/checkout/checkout-workflow.js');
 const teamUp = require('../../../utils/team-up.js');
 const { createRegistrationPaymentVerifier } = require('../../../../utils/checkout/registration-payment-verifier.js');
 const { isRecordList } = require('../../../../utils/response-shape.js');
@@ -485,6 +485,10 @@ Component({
        ⚠️ 方向是单向的:订单页能来票夹,票夹不回订单(2026-09-10 用户定)。 */
     goSignInfo() {
       const info = this.data.info || {};
+      if (Number(info.paymentStatus) !== 2 || Number(info.registrationStatus) !== 2) {
+        toast('支付待确认，请刷新订单');
+        return;
+      }
       const stype = Number(info.ownerType) === 1 ? 0 : 2;
       this._leave('/subpackageMember/signup/index?focusId=' + (info.id || '') + '&stype=' + stype);
     },
@@ -621,7 +625,7 @@ Component({
             success: function (res) {
               if (generation !== that._orderGeneration) return;
               cyLoading.hide();
-              if (res && res.code == '200' && hasCompletePaymentParams(res.data)) {
+              if (res && res.code == '200' && (hasCompletePaymentParams(res.data) || isCompletedZeroAmountOrder(res.data, payload.id))) {
                 cb({ ok: true, data: res.data });
               } else {
                 that.setData({ paying: false });
@@ -940,12 +944,14 @@ Component({
               info.orderHint = Number(info.verificationStatus) === 1 ? '本次订单已核销'
                 : (summary.firstScanCompleted ? '首次扫码成功，订单已完成'
                   : (isTopicOrder ? '本次路线已结束' : '本次活动已结束'));
-            } else if (Number(info.registrationStatus) === 2) {
+            } else if (Number(info.registrationStatus) === 2 && Number(info.paymentStatus) === 2) {
               info.orderHint = isTopicOrder
                 ? '票夹已生成，可进入路线查看城市节点与打卡反馈'
                 : (isExploreOrder ? '票夹已生成，请按场次时间到集合点开场' : '票夹已生成，可继续探索或现场核验');
-            } else if (Number(info.registrationStatus) === 1) {
+            } else if (Number(info.registrationStatus) === 1 || [0, 1].includes(Number(info.paymentStatus))) {
               info.orderHint = '请完成支付后使用票夹';
+            } else if (Number(info.registrationStatus) === 2 && info.paymentStatus == null) {
+              info.orderHint = '支付结果待确认，请刷新订单后查看票夹';
             } else {
               info.orderHint = '订单已关闭，如有疑问请联系客服';
             }
@@ -988,7 +994,7 @@ Component({
             const wechatAmt = Number(info.wechatPaymentAmount);
             // 票夹的 owner_type=1/2 列表由后端固定过滤 registration_status=2。
             // 详情入口必须与它同口径，否则待支付/取消/退款/过期订单带 focusId 过去也永远找不到。
-            const ticketWalletAvailable = Number(info.registrationStatus) === 2;
+            const ticketWalletAvailable = Number(info.registrationStatus) === 2 && Number(info.paymentStatus) === 2;
             const primaryCta = resolvePrimaryCta(info.orderStateKey, ticketWalletAvailable);
 
             pageMotion.enter(that, 'pmPage'); pageMotion.countIn(that, 'odK'); that.setData({

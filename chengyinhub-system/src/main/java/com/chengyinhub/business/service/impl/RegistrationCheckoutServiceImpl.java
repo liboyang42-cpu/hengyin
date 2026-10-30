@@ -82,6 +82,19 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
     public RegistrationCheckoutResult retryPayment(Long memberId, Long registrationId, boolean appChannel) {
         RestoreDispatchGuard.requireDispatchAllowed();
         requireNoActiveTransaction();
+        List<CmsRegistration> zeroOrder = registrationService.completeZeroAmountPaymentForRetry(
+                registrationId, memberId);
+        if (zeroOrder != null) {
+            CmsRegistration original = zeroOrder.stream()
+                    .filter(row -> row != null && registrationId.equals(row.getId()))
+                    .findFirst().orElseThrow(() -> new RegistrationCheckoutException(500, "原零元报名回执不完整"));
+            Map<String, Object> data = mapOrder(original, zeroOrder);
+            // The actor-bound transaction returned current completed rows; project their facts,
+            // not a synthetic success inferred from missing payment parameters.
+            data.put("paymentStatus", original.getPaymentStatus());
+            data.put("registrationStatus", original.getRegistrationStatus());
+            return new RegistrationCheckoutResult("报名完成确认成功", data);
+        }
         if (!wechatPayService.isReady()) {
             throw new RegistrationCheckoutException(503, "支付服务暂不可用，请稍后再试");
         }

@@ -15,5 +15,7 @@ class RegistrationPaymentRetryContractTest {
         assertEquals(RegistrationCheckoutResult.class, retry.getReturnType());
         assertNotNull(ICmsRegistrationService.class.getMethod(
                 "beginPaymentAttempt", Long.class, Long.class));
+        assertEquals(java.util.List.class, ICmsRegistrationService.class.getMethod(
+                "completeZeroAmountPaymentForRetry", Long.class, Long.class).getReturnType());
     }
 }

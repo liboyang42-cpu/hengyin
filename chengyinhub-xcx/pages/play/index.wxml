@@ -299,6 +299,11 @@
         <!-- 动态效果是本机偏好,就地能翻 —— 真开关,不带箭头、不跳页。
              ⚠️ 这一行此前被写在「设置」那一行的内部(标签没闭合就插了新行),
              于是屏上出现两行「设置」,里外两层还都可点。 -->
+        <view class="drow" wx:if="{{topicAudioUrl}}">
+          <view class="dic pic pic--gear"></view>
+          <view class="dcopy"><text class="dt">背景音乐</text></view>
+          <view class="dsw {{themeBgmOn ? 'is-on' : ''}}" catchtap="toggleThemeBgm" aria-role="switch" aria-checked="{{themeBgmOn}}" aria-label="背景音乐" hover-class="cy-pressed" hover-stay-time="80"><view class="dsw-i"></view></view>
+        </view>
         <view class="drow">
           <view class="dic pic pic--gear"></view>
           <view class="dcopy"><text class="dt">动态效果</text><text class="ds">{{reducedMotion ? '已减少' : '正常播放'}}</text></view>
@@ -515,7 +520,7 @@
        ★ 卡包发牌是把「洗牌」演给用户看,顺序仍然是后端给的(nodes 的下发次序),
          前端一律按 seatTiles 原序渲染,不许自己 shuffle —— 否则商家看板的曝光对不上账。 -->
   <scroll-view class="fx" wx:if="{{mode==2 && !freeMap}}" scroll-y enhanced show-scrollbar="{{false}}"
-               style="padding-top:{{chrome.contentTop}}px">
+               style="padding-top:{{chrome.contentTop + (lead.exists ? 64 : 0)}}px">
     <!-- 页面底:主题封面 + 模糊 + 压暗蒙版。主题封面(topicCover)优先,没有退回章节封面链;都缺时整层不渲染,退回纯深色底。
          图放大到 120% 是因为 blur 会把边缘糊出透明边,不撑开就露出一圈亮边。减淡档判据见 wxss .fx-bg--pack。 -->
     <view class="fx-bg {{headIn || packOpen ? '' : 'fx-bg--pack'}}" wx:if="{{topicCover || chapter.cover}}">
@@ -964,7 +969,7 @@
     
     <view class="cover-photos" wx:if="{{img.list(sheet.node.imgUrl).length > 1}}"><cy-icon name="image" size="22" />{{img.list(sheet.node.imgUrl).length}} 图 · 点击查看</view>
     <!-- 「第 N 站」是城市定向的顺序语义;自由探索没有顺序,这里只说它是哪一家的什么 -->
-    <view class="cover-tag" wx:if="{{mode!=2}}">第 {{sheet.node.num}} 站</view>
+    <view class="cover-tag" wx:if="{{mode!=2}}">{{sheet.node.num >= 100 ? '延伸' : '第 ' + (sheet.node.placeNum || sheet.node.num) + ' 站'}}</view>
     <view class="cover-tag" wx:else>{{sheet.node.done ? '已体验' : '本站权益'}}</view>
     <view class="cover-open" wx:if="{{sheet.node.openText}}">
       <view class="od" style="background:{{sheet.node.openDot}}"></view>
@@ -1007,7 +1012,7 @@
     <!-- 无模板 → 读文字,到达即完成 -->
     <block wx:else>
       <cy-btn wx:if="{{mode!=2 && guardAppealView && guardAppealView.reference.nodeId == sheet.node.nodeId && guardAppealView.state === 'FOUND' && guardAppealView.result.canReverify}}" variant="primary" style="margin-top:var(--cy-space-3-5)" bindtap="reverifyGuardArrival">我已到达此站</cy-btn>
-      <cy-btn wx:else variant="primary" style="margin-top:var(--cy-space-3-5)" bindtap="onSheetGoTap">{{mode==2 ? '去这家' : (gpsOk ? '我已到达此站' : '开启定位')}}</cy-btn>
+      <cy-btn wx:else variant="primary" style="margin-top:var(--cy-space-3-5)" bindtap="onSheetGoTap">{{mode==2 ? '去这家' : (!sheet.node.lat ? '开始' : (gpsOk ? '我已到达此站' : '开启定位'))}}</cy-btn>
       <!-- 文档二 L5 B T-34 / X8:到站被拦 —— 同一行一句话 + 一个动作 -->
       <block wx:if="{{mode!=2 && guardAppealView && guardAppealView.reference.nodeId == sheet.node.nodeId && guardAppealView.command}}">
         <view class="sheet-note" wx:if="{{guardAppealView.state === 'FOUND' && guardAppealView.result.canReverify}}">申诉已通过，请在本节点重新确认到达</view>
@@ -1016,7 +1021,7 @@
       </block>
       <view class="sheet-note" wx:elif="{{mode!=2 && arrivalGuard && arrivalGuard.nodeId == sheet.node.nodeId && arrivalGuard.appealable}}">本次到达未记录<text class="sheet-note-action" bindtap="appealArrivalFromSheet" hover-class="cy-pressed" hover-stay-time="80"> · 申诉</text></view>
       <view class="sheet-note" wx:elif="{{mode!=2 && arrivalGuard && arrivalGuard.nodeId == sheet.node.nodeId}}">{{arrivalGuard.message}}<text class="sheet-note-action" bindtap="onScanArrive" hover-class="cy-pressed" hover-stay-time="80"> · 可扫码到达</text></view>
-      <view class="sheet-note" wx:elif="{{mode!=2}}">{{gpsHint}}<text class="sheet-note-action" wx:if="{{!gpsOk}}" bindtap="onScanArrive" hover-class="cy-pressed" hover-stay-time="80"> · 可扫码到达</text></view>
+      <view class="sheet-note" wx:elif="{{mode!=2 && sheet.node.lat}}">{{gpsHint}}<text class="sheet-note-action" wx:if="{{!gpsOk}}" bindtap="onScanArrive" hover-class="cy-pressed" hover-stay-time="80"> · 可扫码到达</text></view>
       <!-- 自由探索:核销由商家扫玩家的码完成,所以这里说的是「到店后怎么办」,不是「怎么打卡」 -->
       <view class="sheet-note" wx:else>到店后出示核销码给商家扫<text class="sheet-note-action" wx:if="{{!gpsOk}}" bindtap="onScanArrive" hover-class="cy-pressed" hover-stay-time="80"> · 可扫码到达</text></view>
     </block>
@@ -1240,7 +1245,7 @@
   <view class="finsheet__map">
     <image class="finsheet__map-fallback" wx:if="{{finishSnap}}" src="{{finishSnap}}" mode="aspectFit"></image>
     <free-map class="finsheet__map-native" nodes="{{newLifeOS.show && newLifeOS.mapNodes.length ? newLifeOS.mapNodes : fmNodes}}" player="{{fmPlayer}}"
-              center="{{fmCenter}}" scale="14" map-polyline="{{fmPolyline}}" fit="{{true}}" fit-padding="{{[64, 36, 36, 36]}}"
+              center="{{fmCenter}}" scale="14" map-polyline="{{fmPolyline}}" fit="{{true}}" fit-padding="{{[112, 36, 36, 36]}}"
               subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}"
               show-controls="{{false}}" show-photo-callouts="{{false}}" interactive="{{false}}" />
     <view class="os-map-label" wx:if="{{newLifeOS.show}}">3km 生活圈 · {{newLifeOS.mapAnchors.length}} 个地点</view>
@@ -1614,7 +1619,7 @@
   <view class="psheet__grab"></view>
   <view class="psheet__x" catchtap="onProtoSheetClose" aria-role="button" aria-label="关闭{{sceneCurrent.title}}" hover-class="cy-pressed" hover-stay-time="80"><view class="psheet__x-i"></view></view>
   <text class="ph1">{{sceneCurrent.title}}</text>
-    <cy-scene-qr-ticket registration-id="{{sceneCurrent.params.registrationId}}" bind:close="backScene" />
+    <cy-scene-qr-ticket registration-id="{{sceneCurrent.params.registrationId}}" bind:close="backScene" bind:redeemed="onTicketRedeemed" />
 </view>
 </view>
 <view class="play-scene-host" wx:if="{{sceneCurrent && sceneCurrent.id === 'roam-stamp-album'}}" catchtouchmove="blockSceneTouch">

@@ -158,6 +158,14 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     private com.chengyinhub.business.mapper.RedemptionMapper redemptionMapper;
 
     @Autowired
+    @Lazy
+    private com.chengyinhub.business.service.IShopDayProofService shopDayProofService;
+
+    @Autowired
+    @Lazy
+    private com.chengyinhub.business.service.ICmsTopicNodeService topicNodeService;
+
+    @Autowired
     private OmsTicketMapper omsTicketMapper;
 
     /** 候补 offer 已在晋级事务占过库存；报名事务只 claim/bind，绝不能再扣一次。 */
@@ -2386,6 +2394,72 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    public List<CmsRegistration> completeZeroAmountPaymentForRetry(Long registrationId, Long memberId) {
+        RestoreDispatchGuard.requireDispatchAllowed();
+        if (registrationId == null || registrationId <= 0 || memberId == null || memberId <= 0) {
+            throw new RuntimeException("报名不存在或无权操作");
+        }
+        CmsRegistration observed = cmsRegistrationMapper.selectCmsRegistrationById(registrationId);
+        if (observed == null || !memberId.equals(observed.getMemberId())) {
+            throw new RuntimeException("报名不存在或无权操作");
+        }
+        RegistrationTopicFence.LockedOrder locked = RegistrationTopicFence.lock(observed,
+                cmsRegistrationMapper, cmsActivityMapper, cmsTopicMapper);
+        List<CmsRegistration> rows = locked.rows();
+        for (CmsRegistration row : rows) {
+            if (!memberId.equals(row.getMemberId()) || StringUtils.isBlank(row.getRegistrationNo())) {
+                throw new IllegalStateException("原订单身份不完整或归属不一致");
+            }
+        }
+        // The existing parent-order locking query orders by id. Creation freezes the aggregate
+        // cash basis on that original first row; a zero-valued paid-order sibling is not a free order.
+        CmsRegistration payer = rows.get(0);
+        if (payer.getPayableAmount() == null || payer.getPayableAmount().signum() < 0) {
+            throw new IllegalStateException("原订单应付金额缺失或无效");
+        }
+        if (payer.getPayableAmount().signum() > 0) return null;
+
+        boolean allCompleted = true;
+        for (CmsRegistration row : rows) {
+            if (row.getPayableAmount() == null || row.getPayableAmount().signum() != 0
+                    || row.getWechatPaymentAmount() == null || row.getWechatPaymentAmount().signum() != 0
+                    || StringUtils.isNotBlank(row.getTransactionId())) {
+                throw new IllegalStateException("原零现金订单冻结金额或交易身份无法核对");
+            }
+            if (verifiedPaymentFacts.hasConfirmedExternalSuccess(row.getRegistrationNo())) {
+                throw new IllegalStateException("原外部支付事实与零现金订单冲突，请人工核对");
+            }
+            boolean completed = isSameCompletedPayment(row, "");
+            if (!completed && !(Integer.valueOf(1).equals(row.getRegistrationStatus())
+                    && Integer.valueOf(0).equals(row.getPaymentStatus()))) {
+                throw new IllegalStateException("原零现金订单不是可完成状态，请核对原支付结果");
+            }
+            allCompleted &= completed;
+        }
+        if (allCompleted) return rows;
+        if (locked.activity() != null && locked.activity().getCancelTime() != null) {
+            throw new IllegalStateException("原活动已取消，不能完成报名");
+        }
+        // Preserve zero-amount creation/replay's time contract: payExpireTime gates a new
+        // WeChat attempt, not this already-created local completion. Closed orders above stay closed.
+        RegistrationTopicFence.LockedOrder original = new RegistrationTopicFence.LockedOrder(
+                payer, rows, locked.topic(), locked.activity());
+        if (!"SUCCESS".equals(completePaymentSuccess(original, ""))) {
+            throw new IllegalStateException("零元报名支付状态确认失败");
+        }
+        List<CmsRegistration> completed = new ArrayList<>();
+        for (CmsRegistration row : rows) {
+            CmsRegistration current = cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(row.getId());
+            if (current == null || !memberId.equals(current.getMemberId()) || !isSameCompletedPayment(current, "")) {
+                throw new IllegalStateException("原零现金订单完成回执不完整");
+            }
+            completed.add(current);
+        }
+        return completed;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
     public String completeZeroAmountPayment(String registrationNo) {
         RestoreDispatchGuard.requireDispatchAllowed();
         CmsRegistration registration = getByRegistrationNo(registrationNo);
@@ -3665,6 +3739,24 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             return registrationPaymentCallbackFailure(outTradeNo, "topic_closed_original_payment_recovery_required");
         }
         return "SUCCESS";
+    }
+
+    @Override
+    public void recordImpliedShopArrival(CmsRegistration registration, Long chapterId, Long merchantOwnerMemberId) {
+        if (registration == null || !Long.valueOf(2L).equals(registration.getOwnerType())
+                || chapterId == null || merchantOwnerMemberId == null) return;
+        try {
+            CmsTopicNode probe = new CmsTopicNode();
+            probe.setChapterId(chapterId);
+            probe.setMerchantMemberId(merchantOwnerMemberId);
+            List<CmsTopicNode> nodes = topicNodeService.selectCmsTopicNodeList(probe);
+            if (nodes == null) return;
+            for (CmsTopicNode node : nodes) {
+                shopDayProofService.markArrived(registration.getMemberId(), registration.getOwnerId(), node);
+            }
+        } catch (RuntimeException e) {
+            logger.warn("核销补记到店失败 registrationId={} chapterId={}", registration.getId(), chapterId, e);
+        }
     }
 
     private WechatVerifiedPaymentFactService.Stored checkedVerifiedPayment(Map<String, String> facts) {

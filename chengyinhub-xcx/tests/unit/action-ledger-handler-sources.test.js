@@ -370,7 +370,8 @@ test('PlayKit parent delegates real advanced retry and scopes photo consent to i
   assert.match(child, /this\.request\('\/api\/play\/advanced\/action', 'POST', command\)/);
   const consentGuard = /const consentCurrent = \(\) => !operation\.isAborted\(\) && this\._kitPhotoIntent === intent && contextCurrent\(\) && sameQuestion\(\);/;
   assert.match(parent, consentGuard);
-  assert.match(parent, /if \(option\.name === 'SUBMIT_PHOTO_CHECK'\) \{\s*const consentCurrent = [^\n]+;\s*app\.requestSeparateConsent\('photo', consentCurrent\)/);
+  // 2026-10-30 A23:同账号同一局已同意过就走 photo-existing-consent(不再弹),否则仍先单独同意
+  assert.match(parent, /if \(option\.name === 'SUBMIT_PHOTO_CHECK'\) \{\s*const consentCurrent = [^\n]+;[\s\S]{0,700}this\._photoConsentScope === consentScope \? Promise\.resolve\(\) : app\.requestSeparateConsent\('photo', consentCurrent\)/);
   assert.match(album, /game\.action\('SUBMIT_ALBUM'/);
   const source = fs.readFileSync(path.join(root, 'scripts/uiaudit/build-action-ledger.js'), 'utf8');
   const plan = source.slice(source.indexOf("['pages/play/index.js:onPlayKitAction'"), source.indexOf("['pages/play/index.js:retryGameSubmission'"));

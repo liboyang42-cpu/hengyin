@@ -226,6 +226,13 @@ public interface ICmsRegistrationService
     public String completeZeroAmountPayment(String registrationNo);
 
     /**
+     * /pay 的 actor-bound 本地零现金恢复。锁后核原整单身份/冻结金额并原子完成，返回全部原报名。
+     * 仅原父单支付主体冻结应付额严格为正时返回 null，调用方仍须先判 SDK readiness 再 claim PAYING。
+     * 缺失/负金额、未知支付、跨账号/范围及已关闭原单拒绝；不调用外部支付。
+     */
+    List<CmsRegistration> completeZeroAmountPaymentForRetry(Long registrationId, Long memberId);
+
+    /**
      * 重新支付前的唯一业务 Gate：校验归属、待支付状态、支付时效、当前可售/可收款与费率快照。
      * 合法重试必须返回原报名及稳定 registrationNo，禁止换单号复活旧单。
      * 过期时抛 {@code RegistrationOrderExpiredException}；经 {@link #beginPaymentAttempt}
@@ -487,6 +494,12 @@ public interface ICmsRegistrationService
                                         Long topicId, Long merchantOwnerMemberId,
                                         Long operatorMemberId, String actorRoleCode,
                                         Integer validationMethod);
+
+    /**
+     * 商家在店里核销 = 玩家人在店里:玩家没扫门店码就被核销时,给该章该商家的站点补记到店。
+     * 只补空缺,已有到店时间不覆盖;尽力而为,失败只记日志,不能让已成立的核销回滚。须在核销事务提交后调用。
+     */
+    void recordImpliedShopArrival(CmsRegistration registration, Long chapterId, Long merchantOwnerMemberId);
 
     /**
      * 该玩家「可以投诉哪些主题」—— <b>投诉页的选择源与受理口的准入,共用这一份判据</b>。

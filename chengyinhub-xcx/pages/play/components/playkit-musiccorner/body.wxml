@@ -29,4 +29,6 @@
     <view class="mc__track">
       <view class="mc__track-fill" style="width:{{percent || 0}}%"></view>
     </view>
+    <!-- 音乐角不判定通关、一出来就可继续:没有这颗按钮时玩家只能下拉关面板才走得了(实走 A25) -->
+    <cy-btn variant="secondary" style="width:100%;margin-top:var(--cy-space-4)" bindtap="onClose">继续</cy-btn>
   </view>

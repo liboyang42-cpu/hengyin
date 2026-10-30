@@ -87,6 +87,11 @@ function createResponse(overrides) {
   return Object.assign({ code: '200', data: { registrationId: 1001, payableAmount: 100 } }, overrides);
 }
 
+function paidOrder() {
+  return { registrationId: 1001, payableAmount: 100,
+    payParams: { timeStamp: '1720000000', nonceStr: 'nonce', package: 'prepay_id=x', signType: 'RSA', paySign: 'signature' } };
+}
+
 test('自玩下单必须带幂等键 requestId，后端才可能识别重放', () => {
   const { vm, requests } = loadTopicPageWithWorkflow();
 
@@ -138,7 +143,7 @@ test('零元通行证仍直接进入游玩，付费单仍拉起微信支付', ()
   const paid = loadTopicPageWithWorkflow();
   paid.vm._createSelfPlayOrder.call(paid.vm, 500);
   paid.requests[0].success(createResponse({
-    data: { registrationId: 1001, payableAmount: 100, payParams: { package: 'prepay_id=x' } }
+    data: paidOrder()
   }));
   // 工作流通过 requestPayment 依赖拉起微信支付,请求已进入 payments 列表
   assert.equal(paid.payments.length, 1, '有 payParams 必须照常拉起支付');
@@ -157,6 +162,56 @@ test('零元通行证仍直接进入游玩，付费单仍拉起微信支付', ()
   assert.equal(free.vm._revealRegId, 1002, '「开始游戏」要能带着这张票直接开局');
   assert.equal(free.payments.length, 0);
   assert.equal(free.requests.length, 1, '零元单不该再去取支付参数');
+});
+
+test('取消微信支付不得显示通行证到账或跳票夹', () => {
+  const h = loadTopicPageWithWorkflow();
+  h.vm._createSelfPlayOrder(500);
+  h.requests[0].success(createResponse({ data: paidOrder() }));
+  h.payments[0].fail({ errMsg: 'requestPayment:fail cancel' });
+  assert.equal(h.vm.data.reveal.show, false);
+  assert.equal(h.vm.data.is_join, 0);
+  assert.deepEqual(h.navigations, []);
+  assert.ok(h.toasts.includes('已取消支付'));
+});
+
+test('微信回调成功仍等服务端确认，确认后才显示到账', () => {
+  const h = loadTopicPageWithWorkflow();
+  h.vm._createSelfPlayOrder(500);
+  h.requests[0].success(createResponse({ data: paidOrder() }));
+  h.payments[0].success();
+  assert.equal(h.vm.data.reveal.show, false);
+  assert.deepEqual(h.navigations, []);
+  const verify = h.requests.find(r => r.url === '/api/registration/info');
+  verify.success({ code: 200, data: { paymentStatus: 2, registrationStatus: 2 } });
+  assert.equal(h.vm.data.reveal.show, true);
+  assert.equal(h.vm._revealRegId, 1001);
+});
+
+test('下单金额缺失或非法时不得当免费成功，也不调起支付', () => {
+  for (const payableAmount of [undefined, null, '', ' ', false, [], -1, 'invalid']) {
+    const h = loadTopicPageWithWorkflow();
+    h.vm._createSelfPlayOrder(500);
+    h.requests[0].success(createResponse({ data: Object.assign(paidOrder(), { payableAmount }) }));
+    assert.equal(h.vm.data.reveal.show, false);
+    assert.equal(h.vm.data.is_join, 0);
+    assert.equal(h.payments.length, 0);
+    assert.deepEqual(h.navigations, []);
+  }
+});
+
+test('重试回包有支付参数但缺金额时仍必须付款，取消不能发票', () => {
+  const h = loadTopicPageWithWorkflow();
+  h.vm._createSelfPlayOrder(500);
+  h.requests[0].success(createResponse());
+  const order = paidOrder();
+  delete order.payableAmount;
+  h.requests[1].success(createResponse({ data: order }));
+  assert.equal(h.payments.length, 1);
+  assert.equal(h.vm.data.reveal.show, false);
+  h.payments[0].fail({ errMsg: 'requestPayment:fail cancel' });
+  assert.equal(h.vm.data.reveal.show, false);
+  assert.deepEqual(h.navigations, []);
 });
 
 test('后端业务错误按原合同提示，并允许换一次新的幂等键重来', () => {

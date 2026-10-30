@@ -222,13 +222,17 @@ function req(url, method, data, header, silentError) {
   if (basic && data && typeof data._intentCurrent === 'function' && !data._intentCurrent()) return Promise.resolve({ obsolete: true });
   if (basic && data && data._intentOwner != null && data._intentOwner !== String((app.getUserID && app.getUserID()) || '')) return Promise.resolve({ obsolete: true });
   if (basic && data && data.receiptOnly) {
-    return req('/api/play/action-receipt', 'GET', { activityId: data.activityId, topicId: data.topicId, nodeId: data.nodeId, routeActionId: data.routeActionId }, undefined, true).then(response => {
+    const receiptQuery = { topicId: data.topicId, nodeId: data.nodeId, routeActionId: data.routeActionId };
+    if (data.activityId != null) receiptQuery.activityId = data.activityId;
+    return req('/api/play/action-receipt', 'GET', receiptQuery, undefined, true).then(response => {
       return response.intentTerminal ? response : Object.assign({}, response, { code: 520, intentUnknown: true, httpFail: true });
     });
   }
   if (basic && data && data.routeSessionId == null) {
     const owner = data._intentOwner;
-    return req('/api/play/action-context', 'GET', { activityId: data.activityId, topicId: data.topicId, nodeId: data.nodeId }, undefined, true).then(response => {
+    const contextQuery = { topicId: data.topicId, nodeId: data.nodeId };
+    if (data.activityId != null) contextQuery.activityId = data.activityId;
+    return req('/api/play/action-context', 'GET', contextQuery, undefined, true).then(response => {
       if (typeof data._intentCurrent === 'function' && !data._intentCurrent()) return { obsolete: true };
       if (owner != null && owner !== String((app.getUserID && app.getUserID()) || '')) return { obsolete: true };
       if (!(response.code == 200 || response.code == '200') || !response.data) return response;
@@ -479,6 +483,8 @@ Page({
     rewardDrop: { show: false, text: '', badges: [] },
     ringSegs: [],                 // 已核销环:等分间断条,一家一条,核销一家亮一条(见 _ringSegs)
     topicName: '',                // 卡包印刷用:一章一商家后 chapter.name 只是第一章,不能拿它当主题名
+    topicAudioUrl: '',            // 主题配乐:游玩页循环底乐(作者媒体)
+    themeBgmOn: true,
     topicCover: '',               // 卡包首屏底图:主题长图,虚化后铺底(没有就退回 chapter.cover)
     topicDesc: '',                // 通行证首屏那段简介:同理,chapters[0].description 讲的是第一家店的事
     seatTiles: [], packOpen: false, packShake: false, packBurst: false,
@@ -718,6 +724,7 @@ Page({
       wx.reLaunch({ url: '/pages/index/index' });
       return;
     }
+    if (this._themeBgm && this.data.themeBgmOn) { try { this._themeBgm.play(); } catch (e) {} }
     this.restoreGuardAppeal();
     this._syncCommunityEntry();
     this._themeHidden = false; this._startThemePoll();
@@ -728,6 +735,17 @@ Page({
     if (this.data.chapStory.show) audioSession.keepAwake('chapStory', true);
     this._resetPackFx();   // onHide 清掉定时器后,四拍/拖拽的中间态标志必须归零,否则包把自己挡死
     if (!this.data.isPreview && !this.data.isMock && (this.data.activityId || this.data.topicId) && (!this.data.loading || this._playReloadOnShow)) { this._playReloadOnShow = false; this.loadData(false); }
+    else this._consumePendingStart();
+  },
+  /** 商家页交回来的玩法:等本页重读落定再开(见 merchant/index.js _handoffToPlayHost)。null 撤销排队。 */
+  queueStartGame(node) { this._pendingStartNode = node || null; },
+  _consumePendingStart() {
+    const pending = this._pendingStartNode;
+    if (!pending) return;
+    this._pendingStartNode = null;
+    const fresh = this._nodeById(pending.nodeId);
+    // 商家页只在已进店时交接;重读回来的节点若还没带上进店事实,以交接时的为准
+    this.startGame(Object.assign({}, pending, fresh || {}, { arrived: true }));
   },
 
   // M2 会话参数:活动会话带 activityId,自玩会话带 topicId(后端二选一,活动优先)
@@ -976,6 +994,7 @@ Page({
   },
 
   onUnload() {
+    this._stopThemeBgm();
     this.suspendOrientLifecycle(); this._stopTopbar();
     this.setData({ arrivalGuard: null });
     this._playDisposed = true;
@@ -1046,6 +1065,14 @@ Page({
     });
   },
 
+  /** 这一局的用时:页内时钟只从本次进页算起,中途退出重进就只剩最后几十秒(实走 B15 显示 0:00:30,实际约 20 分钟)。
+   *  取它与「首站完成 → 末站完成」跨度中较大的一个。 */
+  _runElapsedSeconds() {
+    const clock = this._sessionClock ? this._sessionClock.elapsedSeconds() : 0;
+    const stamps = (this.data.nodes || []).map((n) => Number(n.doneAt) || 0).filter((t) => t > 0);
+    const span = stamps.length > 1 ? Math.round((Math.max.apply(null, stamps) - Math.min.apply(null, stamps)) / 1000) : 0;
+    return Math.max(clock, span);
+  },
   _ensureSessionClock() {
     if (!this._sessionClock) {
       this._sessionClock = createSessionClock();
@@ -1304,7 +1331,8 @@ Page({
   openPack() {
     if (this._dragMoved) return;   // 刚做完一次拖拽,吞掉紧跟着的 tap
     if (this.data.packOpen || this.data.packShake || this.data.packTear || this.data.tearPct > 0) return;   // 播放中再点不重入
-    if (this.data.reducedMotion) { this.setData({ packOpen: true, headIn: true }); return; }
+    this._startThemeBgm();
+    if (this.data.reducedMotion) { this.setData({ packOpen: true, headIn: true }); if (!this.data.isPreview) storyResume.patch(this._runSessionScope(), { packOpened: true }); return; }
     this._packTimers = this._packTimers || [];
 
     this.setData({ packShake: true, packDim: true });
@@ -1333,7 +1361,7 @@ Page({
       // 早置会把还在飞的卡强行拍到落点。
       const n = this.data.seatTiles.length || 1;
       const done = (n - 1) * DEAL_STAGGER + DEAL_FLIGHT;
-      this._packTimers.push(setTimeout(() => this.setData({ packOpen: true }), done + 60));
+      this._packTimers.push(setTimeout(() => { this.setData({ packOpen: true }); if (!this.data.isPreview) storyResume.patch(this._runSessionScope(), { packOpened: true }); }, done + 60));
       this._packTimers.push(setTimeout(
         () => this.setData({ packBurst: false, blastRays: [], blastShards: [] }), done + 400));
     }, delay));
@@ -2484,6 +2512,13 @@ Page({
       return true;
     }
     const prev = (this.data.nodes || []).find((n) => String(n.nodeId) === String(node.unlockAfterNodeId));
+    // locked 是进页那一刻的快照:前置站刚在本页完成时它还没刷新,不能再拿「先完成刚完成的那站」挡人。
+    // 服务端完成入口另有硬闸,这里放行只影响提示层。
+    if (prev && prev.done) {
+      const idx = (this.data.nodes || []).indexOf(node);
+      if (idx >= 0) this.setData({ ['nodes[' + idx + '].locked']: false });
+      return false;
+    }
     cyToast(prev ? ('先完成「' + prev.name + '」才会解锁') : '前路未知 · 先完成前置关卡');
     return true;
   },
@@ -3697,7 +3732,9 @@ Page({
     } else {
       // 无块流的存量章节:沿用旧口径(描述 + 已完成节点的手记),行为逐字不变
       push(this.data.chapter.description);
-      nodes.forEach((n) => { if (n.done && n.story) push(n.story); });
+      // 只接本章节点的手记:不限章节时第 2 章会把第 1 章各站正文整段重放(实走 A17)
+      const chapId = this.data.chapter && this.data.chapter.id;
+      nodes.forEach((n) => { if (n.done && n.story && (chapId == null || String(n.chapterId) === String(chapId))) push(n.story); });
       /* 没有块流就没有「节点在哪一块」可对:正开着的内嵌玩法只能接在末尾。下面那条兜底要求
          _playKitNodeId 为空,而开站必然记下它 ⇒ 无块流章节的内嵌玩法以前一律不铺,
          玩家只看见手记和「继续探索」,玩法永远打不开(2026-10-27 生产实测:南京路附录盲盒)。 */
@@ -3746,9 +3783,39 @@ Page({
     if (!Array.isArray(chapter.blocks) || seen || this.data.storyIntro.show) { this.openChapterFull(); return; }
     this.setData({ storyIntro: { show: true, out: false, title: this.data.topicName || chapter.name || '', line: introLine(this.data.topicDesc) } });
   },
+  /** 主题配乐:作者在主题上配的曲子(详情页同一条),游玩页低音量循环当底乐。
+   *  只在玩家第一次点「开始游戏 / 撕卡包」后起播(小程序音频要用户手势),旁白与玩法音频照常叠在上面。 */
+  _startThemeBgm() {
+    const url = this.data.topicAudioUrl;
+    if (!url || !this.data.themeBgmOn || this.data.isPreview || this._themeBgm) return;
+    const ctx = audioSession.register(wx.createInnerAudioContext(), { kind: 'bgm' });
+    ctx.src = url;
+    ctx.loop = true;
+    ctx.volume = 0.25;
+    ctx.onError(() => { this._stopThemeBgm(); });
+    this._themeBgm = ctx;
+    ctx.play();
+  },
+  _stopThemeBgm() {
+    if (!this._themeBgm) return;
+    audioSession.unregister(this._themeBgm);
+    try { this._themeBgm.stop(); this._themeBgm.destroy(); } catch (e) {}
+    this._themeBgm = null;
+  },
+  /** 入场码页轮询到商家核销:同页重读节点,进度环 / 卡片 / 已体验当场更新,不用退出重进(实走 B6)。 */
+  onTicketRedeemed() {
+    if (!this._isPlayAccountCurrent() || this.data.isPreview || this.data.isMock) return;
+    this.loadData(false);
+  },
+  toggleThemeBgm() {
+    const on = !this.data.themeBgmOn;
+    this.setData({ themeBgmOn: on });
+    if (on) this._startThemeBgm(); else this._stopThemeBgm();
+  },
   startStoryIntro() {
     if (!this.data.storyIntro.show || this.data.storyIntro.out) return;
     storyResume.patch(this._runSessionScope(), { intro: true });
+    this._startThemeBgm();
     const go = () => { this.setData({ 'storyIntro.show': false }); this.openChapterFull(); };
     if (this.data.reducedMotion) { go(); return; }
     this.setData({ 'storyIntro.out': true });
@@ -4099,7 +4166,7 @@ Page({
       // subpackagePrefab。那条换轨让「用玩法模板 + 主题配置做出《预制人生》」永远无法验收 ——
       // 作者配得再对,一取这个名字就被顶掉,看到的仍是写死在 JS 里的那份。
       that.setData({
-        loading: false, emptyTip: '', emptyKind: '', topicId: d.topicId || '', topicName, topicDesc: d.topicDesc || '', topicCover: d.topicCover || '',
+        loading: false, emptyTip: '', emptyKind: '', topicId: d.topicId || '', topicName, topicDesc: d.topicDesc || '', topicAudioUrl: d.topicAudioUrl || '', topicCover: d.topicCover || '',
         mode, serverMode: mode, playContact: playOverlays.contact(d.contact),
         modeLabel: mode == 2 ? '自由探索' : '城市定向',
         routeNotice: that._routeNoticeForState(routeState),
@@ -4138,6 +4205,7 @@ Page({
         that._restoreRunSession(d, routeState, nodes);
         that.loadTeamProgress();   // P1 带领场探测(club 场次才 exists,内部自管轮询)
         that._loadPlayerGameModule();
+        that._consumePendingStart();
         that.loadHudCharacter(); that.loadSessionStats();   // 文档二 L5:状态栏第二行 / 「…」用时与得分 if (that._entryLayer && ['*', String(that._orientSessionId())].includes(that._entryLayer)) that.openScoreOverlay(); that._entryLayer = '';
       });
     }).catch(() => {
@@ -4171,7 +4239,7 @@ Page({
     const chapter = that.buildChapter(d, nodes);
     this._historyNodes = [];
     this.setData({
-      loading: false, emptyTip: '', emptyKind: '', topicId: d.topicId || '', topicName: d.topicName || this._entryTopicName || '', topicDesc: d.topicDesc || '', topicCover: d.topicCover || '', mode, serverMode: mode,
+      loading: false, emptyTip: '', emptyKind: '', topicId: d.topicId || '', topicName: d.topicName || this._entryTopicName || '', topicDesc: d.topicDesc || '', topicAudioUrl: d.topicAudioUrl || '', topicCover: d.topicCover || '', mode, serverMode: mode,
       modeLabel: mode == 2 ? '自由探索' : '城市定向',
       routeNotice: that._routeNoticeForState(routeState),
         journeyAttributes: routeState.attributes,
@@ -4303,7 +4371,8 @@ Page({
       mileage: c.totalMileage ? (c.totalMileage + 'km') : '',
       timeText: c.totalTime ? Math.round(c.totalTime / 60) + ' 分钟' : '',
       description: c.description || '',
-      blocks: Array.isArray(c.blocks) ? c.blocks : null, audioUrl: c.audioUrl || '',
+      blocks: Array.isArray(c.blocks) ? c.blocks : null,
+      audioUrl: c.audioUrl || '',
       atmospherePreset: normalizeAtmosphere(this._themePalette(c.atmospherePreset)),
       atmosphereClass: atmosphereClass(this._themePalette(c.atmospherePreset)) + this._chapterTime(i),
       nodeCount: 0,   // 回填于 loadData:按 chapterId 数节点
@@ -4369,7 +4438,8 @@ Page({
     // num 给空串,free-map 那边就不挂序号胶囊了。
     // 地图上的序号按「地点」数,故事玩法不占号(它们不在地图上)—— 否则两个地点会标成 3 和 8。
     const placeNum = {};
-    visibleNodes.filter((x) => x.lat && x.lng).forEach((x, i) => { placeNum[String(x.nodeId)] = i + 1; });
+    // 节点对象上也记一份:半屏角标用同一个号,不再用 sortId(开场故事站占了 1 号,地图 1 号站的半屏会写「第 2 站」,实走 A32)
+    visibleNodes.filter((x) => x.lat && x.lng).forEach((x, i) => { placeNum[String(x.nodeId)] = i + 1; x.placeNum = i + 1; });
     const fmNodes = visibleNodes.map((x) => ({
       nodeId: x.nodeId, num: mode === 2 ? '' : (placeNum[String(x.nodeId)] || x.num), state: pinState(x), lat: x.lat, lng: x.lng,
       imgUrl: String(x.imgUrl || '').split(',')[0],
@@ -4408,7 +4478,8 @@ Page({
           cover: card.cover || '',
           mileage: card.mileage || '',
           timeText: card.timeText || '',
-          blocks: card.blocks || null, audioUrl: card.audioUrl || '',
+          blocks: card.blocks || null,
+          audioUrl: card.audioUrl || '',
           atmospherePreset: normalizeAtmosphere(this._themePalette(card.atmospherePreset)),
           atmosphereClass: atmosphereClass(this._themePalette(card.atmospherePreset)) + this._chapterTime((this.data.chapterCards || []).indexOf(card)),
         };
@@ -4449,7 +4520,11 @@ Page({
       name: x.name || '未命名商家',
       chapterLabel: (() => {
         const c = chapById[String(x.chapterId)];
-        return c ? [c.meta, c.title].filter(Boolean).join(' · ') : '';
+        // 章名本身就以「第N章」开头时不再前缀序号:「第 1 章 · 第1章 · 美食烹饪」(实走 B11)
+        if (!c) return '';
+        const title = String(c.title || '');
+        const titled = /^\s*第\s*[0-9一二三四五六七八九十百]+\s*章/.test(title);
+        return [titled ? '' : c.meta, c.title].filter(Boolean).join(' · ');
       })(),
       imgUrl: String(x.imgUrl || '').split(',')[0],
       playName: x.gameTitle || '',
@@ -4485,6 +4560,10 @@ Page({
     const chapterChanged = this.data.chapterFull && String(activeChapter.id) !== String(this.data.chapter.id);
     const merchantCount = new Set(visibleNodes.filter((node) => Number(node.merchantId) > 0)
       .map((node) => String(node.merchantId))).size;
+    // 卡包只拆一次:本局拆过的,重进直接落定发好的牌,不再每次重放撕包(实走 B11)
+    if (mode === 2 && !this.data.packOpen && !this.data.isPreview && storyResume.read(this._runSessionScope()).packOpened) {
+      this.setData({ packOpen: true, headIn: true });
+    }
     this.setData({ fmNodes, fmPolyline, fmPlayer, fmCenter, nextNode, storyDistText, storyThoughts, chapter: activeChapter, allDone, doneCount,
       remainingGameCount: nodes.filter((node) => node.hasTemplate && !node.done).length,
       total: visibleNodes.length, merchantCount, seatTiles, ringSegs, searchPlaces }, () => {
@@ -4704,7 +4783,9 @@ Page({
             // 精度 > 80m 后端必拒(定位精度不足),不发,免得每次定位回调都弹一次拒绝
             /* 8/9/10 是「玩法过了再到达收尾」(与 onAdvancedReady 同一白名单):玩法已通过就和 0/5 一样靠近即点亮,
                否则做完玩法人就站在门口,卡片写着「靠近后会自动点亮」却永远不亮(2026-10-27 生产实测)。 */
-            const arrivesHere = node.vm === 0 || node.vm === 5
+            /* 0/5 站若配了玩法(hasAdvanced),也要先过玩法再靠近点亮:否则人一到门口就自动完成,主玩法根本没开
+               (2026-10-30 复核:霍山公园连线被 GPS 到达直接跳过;服务端同样以 ADVANCED_FIRST 拒)。 */
+            const arrivesHere = ((node.vm === 0 || node.vm === 5) && (!node.hasAdvanced || that._advancedReadyNodeId === node.nodeId))
               || ([8, 9, 10].includes(node.vm) && that._advancedReadyNodeId === node.nodeId);
             if (d <= 50 && !node.done && arrivesHere && playAccuracy.canAutoArrive(loc.accuracy)) that.arrive(node.nodeId, 'gps');
           }
@@ -6012,6 +6093,15 @@ Page({
     const answer = retry && retry.type === 'answer' ? retry.answer : (g.vm == 3 ? this.data.answerSel : this.data.answerInput);
     if (!answer) return this.setData({ gWrong: true, 'game.feedback': '先把答案填上再提交。' });
     if (this.data.isPreview || this.data.isMock) { this.onComplete(g.nodeId, {}); return; }   // 路线级预览只跳过服务端判题,不跳过空值校验
+    /* 城市定向有坐标的站要在 50 米内作答(业主 2026-10-30 拍板,实走 A20):答案随带当前定位,服务端按到达同一围栏判;
+       还没有定位就先请求定位、给提示,不发请求(没有定位一定会被拒,不该算一次提交)。 */
+    const gameNode = (this.data.nodes || []).find((n) => String(n.nodeId) === String(g.nodeId));
+    const located = Number(this.data.mode) === 1 && gameNode && gameNode.lat && gameNode.lng;
+    if (located && !this._loc) {
+      this.setData({ gWrong: false, gNetErr: '先开启定位，到这一站 50 米内再作答', gNetRetryable: false });
+      this.requestPlayLocation();
+      return;
+    }
     const viewContext = this._legacyGameContext();
     if (!this._isLegacyGameCurrent(viewContext)) return;
     if (!this.beginGameWrite()) return;
@@ -6021,19 +6111,26 @@ Page({
     const attempt = { type: 'answer', nodeId: g.nodeId, answer, viewContext };
     const that = this;
     this._withThoughtSync(() => {
-      attempt.payload = this._legacyGameWritePayload('answer', 'answer', g.nodeId, { nodeId: g.nodeId, answer }, retryAttempt);
+      const fix = located && this._loc ? { longitude: this._loc.longitude, latitude: this._loc.latitude, accuracy: this._loc.accuracy } : {};
+      attempt.payload = this._legacyGameWritePayload('answer', 'answer', g.nodeId, Object.assign({ nodeId: g.nodeId, answer }, fix), retryAttempt);
       return req('/api/play/answer', 'POST', this._retriedRouteWriteBody(attempt.payload, retryAttempt));
     }, isCurrent)
       .then((r) => {
         const current = isCurrent();
         that._finishRouteWriteContext(context);
         if (!current) return;
-        if (r.code == 200 || r.code == '200') { that._resolveRouteAction('answer', g.nodeId); that.clearGameNetworkError(); that.onComplete(g.nodeId, r.data); }
+        if (r.code == 200 || r.code == '200') { that._resolveRouteAction('answer', g.nodeId); that.clearGameNetworkError(); if (r.msg) cyToast(r.msg); that.onComplete(g.nodeId, r.data); }   // 答对只有纸屑,没有一句「答对了」(实走 A29)
         else if (that._handleRouteConflict(r, 'answer', g.nodeId)) return;
         // 请求没送到 ≠ 服务端判你答错。原码把 code!=200 一律记 wrongCount++,断网提交两次
         // 就满足 canReveal(wc>=2) —— 系统替你答错两次、直接把答案揭示了。
         else if (r.httpFail) that.recordGameHttpUnknown(r.msg);
         else if (r.netFail) that.recordGameNetworkFailure('提交没送出去，检查网络后重试', attempt);
+        // 还没到站(50 米围栏)不是答错:按提示条显示,不标红、不计错(实走 A20)
+        else if (r.errorCode === 'ARRIVE_FIRST') {
+          that._resolveRouteAction('answer', g.nodeId);
+          that._lastGameAttempt = null;
+          that.setData({ gWrong: false, gNetErr: r.msg || '先到这一站附近，再开始作答', gNetRetryable: false });
+        }
         else {
           that._resolveRouteAction('answer', g.nodeId);
           that._lastGameAttempt = null;
@@ -6383,6 +6480,10 @@ Page({
         if (frText) this.setData({ frag: { show: true, text: frText, step: '我的第 ' + done.length + ' 步 · ' + (node.name || '') } });
       }
       const completed = data && data.completed;
+      // 已通关后再做选做站,服务端每次仍回 completed=true:只在「这一次才通关」时弹通关卡(实走 A19)
+      const completedNow = completed && !this.data.topicCompleted
+        && (this.data.isPreview || !storyResume.read(this._runSessionScope()).finished);
+      if (completedNow && !this.data.isPreview) storyResume.patch(this._runSessionScope(), { finished: true });
       /* 服务端这次判了通关(主题规则可以是「主线 N 站」,选做站没走完也算):通关卡按「通关」讲,
          别因为本地还有没走的选做站就把标题写成章节名、把里程碑少算这一个(2026-10-27 生产实测)。 */
       if (completed && !this.data.topicCompleted) this.setData({ topicCompleted: true });
@@ -6413,12 +6514,13 @@ Page({
       } else {
         if (hasMedalArt) this.diegetic('这个节点的名次奖牌已经发完，完成记录已保存');
         if (node.couponId) this.showCoupon('到店出示核销');
-        if (completed) setTimeout(() => { if (effectsCurrent()) this.openFinish(); }, 600);  // 末站即便配券也要弹通关卡(原 else-if 漏掉)
+        if (completedNow) setTimeout(() => { if (effectsCurrent()) this.openFinish(); }, 600);  // 末站即便配券也要弹通关卡(原 else-if 漏掉)
       }
       if (newBadges.length || (hasMedalArt && (medalRank || previewMedal))) this._triggerCelebration('medal-earned');
       this.setData({ journalDot: !this.data.showJournal });
       if (storyOpen && (this.data.isPreview || this.data.isMock)) this.openChapterFull();
-      if ((this._routeState.routeMode === 'BRANCH_GRAPH' || storyOpen) && !this.data.isPreview && !this.data.isMock) {
+      // 城市定向逐站解锁:下一站的 locked 与本站剧情段都在 /nodes 里,完成后同页重读,不等玩家退出重进(实走 A10)。
+      if ((this._routeState.routeMode === 'BRANCH_GRAPH' || storyOpen || this.data.mode === 1) && !this.data.isPreview && !this.data.isMock) {
         // routeState 只描述节点状态，未包含本次刚从 HIDDEN 解锁节点的地点/玩法资料。
         // 必须同页重读 /nodes，不能等玩家重新进入页面才看见下一站。
         this.loadData(false);
@@ -6740,8 +6842,9 @@ Page({
     const ready = canContinue(view);
     /* 分支走到结局时不自动接着走:结局那段话就是这一站的全部回报,0.9 秒就被翻走等于没看到
        (2026-10-27 生产实测:南京路结案三选一,选完直接跳进附录章节卡)。玩家读完点下面的「继续」。 */
+    /* 抽卡 / 音乐角 / 相册首屏就「可继续」,但结果本身就是要看的:自动接走会 0.9 秒把抽到的卡翻走(实走 A18)。 */
     const advanceStory = this.data.chapterFull && this._storyOpenNode && ready && !this.data.playKit.readyForBase
- /* 只在「这一站的玩法已经在屏上、从未就绪变成就绪」时接着走:首个视图就已就绪(音乐角)不翻走;换了局也不翻 */ && kit.type !== 'branch' && !!previous.type && (previous.sessionId == null || kit.sessionId == null || String(previous.sessionId) === String(kit.sessionId));
+      && !['branch', 'random', 'musiccorner', 'album'].includes(kit.type) && !!previous.type && (previous.sessionId == null || kit.sessionId == null || String(previous.sessionId) === String(kit.sessionId)); /* 另外只在这一站的玩法已在屏上、从未就绪变成就绪时接着走;换了局也不翻 */
     // 填了一半的草稿按「账号 + 局 + 站」存本地(建档 / 留言组件自取);试玩不存
     if (kit.type === 'profile') this._profileNodeId = String(active.node.nodeId);
     if ((kit.type === 'profile' || kit.type === 'note') && !this.data.isPreview && !this.data.isMock) kit.draftKey = storyResume.draftKey(this._runSessionScope(), active.node.nodeId);
@@ -7202,8 +7305,13 @@ Page({
     }));
     if (option.name === 'SUBMIT_PHOTO_CHECK') {
       const consentCurrent = () => !operation.isAborted() && this._kitPhotoIntent === intent && contextCurrent() && sameQuestion();
-      app.requestSeparateConsent('photo', consentCurrent).then(() => {
+      /* 照片模型处理的单独同意按「这一局」问一次(业主 2026-10-30 拍板,实走 A23):同账号同一局已同意过就直接上传,
+         换局、换账号或页面重进再问。服务端仍逐次校验已存同意记录,这里只是不再每拍一张就弹一次。 */
+      const consentScope = String(this._playMember()) + '|' + this._sessionKey();
+      const consent = this._photoConsentScope === consentScope ? Promise.resolve() : app.requestSeparateConsent('photo', consentCurrent);
+      consent.then(() => {
         if (!consentCurrent()) { settle(); operation.finish(); return; }
+        this._photoConsentScope = consentScope;
         upload();
       }).catch(error => {
         const owned = consentCurrent();
@@ -7819,7 +7927,7 @@ Page({
     const tags = topId != null ? { [topId]: all[topId] } : {};
     // 成就气泡挂到既有 fmNodes 上(节点 pin 全部保留),没有成就的节点 reviewLabel 为空 = 原样显示序号
     const fmNodes = (this.data.fmNodes || []).map((n) => Object.assign({}, n, { reviewLabel: tags[n.nodeId] || '' }));
-    const sec = this._sessionClock ? this._sessionClock.elapsedSeconds() : 0;
+    const sec = this._runElapsedSeconds();
     if (!this._reviewBase) this._reviewBase = (this.data.fmPolyline || []).slice();
     this.setData({
       fmNodes,
@@ -8298,8 +8406,8 @@ Page({
     const shop = this.data.mode === 2;
     const mics = ['env', 'leaf', 'moon', 'key'];
     let items = (this.data.finishMedalList || []).map((m, i) => ({ key: m.key || 'm' + i, name: m.name, sub: m.sub, img: m.img || '', mic: mics[i % 4] }));
-    if (!items.length) items = [{ key: 'theme', name: this.data.topicName || '主题通关', sub: shop ? '全部去完' : '主题通关', img: '', mic: shop ? 'stamp' : 'env' }];
-    const sec = this._sessionClock ? this._sessionClock.elapsedSeconds() : 0;
+    if (!items.length) items = [{ key: 'theme', name: this.data.topicName || '主题通关', sub: shop ? '全部到访' : '主题通关', img: '', mic: shop ? 'stamp' : 'env' }];
+    const sec = this._runElapsedSeconds();
     const hms = sec > 0 ? Math.floor(sec / 3600) + ':' + String(Math.floor(sec / 60) % 60).padStart(2, '0') + ':' + String(Math.floor(sec) % 60).padStart(2, '0') : '';
     const km = this._reviewDistanceKm(this._reviewOrderedNodes());
     const stats = [];
@@ -8343,7 +8451,7 @@ Page({
   /** 2026-10-28 通关过场:整个主题走完时先放「三棱锥炸开 → 银色城瘾标志」,播完再露出通关勋章页。探店日与试玩不放。 */
   _openFinale(isShopDay) {
     if (!this.data.allDone || isShopDay || this.data.isPreview || this.data.isMock) return;
-    const sec = this._sessionClock ? this._sessionClock.elapsedSeconds() : 0;
+    const sec = this._runElapsedSeconds();
     const flip = chapterFlip.buildFinale({
       cards: this.data.chapterCards, nodes: this.data.nodes, topicCover: this.data.topicCover, topicName: this.data.topicName,
       doneCount: this.data.doneCount, elapsed: sec > 0 ? formatElapsed(sec) : '', score: this.data.finishScore,

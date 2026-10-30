@@ -17,7 +17,7 @@ const app = getApp()
 const policy = require('../../../../utils/identity/identity-policy.js')
 const { summarizeOrderState, canRequestOrderRefund, formatRefundDeadline } = require('../../../../utils/order-status.js')
 const { resolveActualPaidAmount, isFreeOrder } = require('../../../../utils/order-actual-pay.js')
-const { createCheckoutWorkflow, hasCompletePaymentParams } = require('../../../../utils/checkout/checkout-workflow.js')
+const { createCheckoutWorkflow, hasCompletePaymentParams, isCompletedZeroAmountOrder } = require('../../../../utils/checkout/checkout-workflow.js')
 const { createRegistrationPaymentVerifier } = require('../../../../utils/checkout/registration-payment-verifier.js')
 
 // 6-12:退款确认弹窗的截止话术只读后端返回的 refundInfo(可退状态与截止点都由后端 RefundPolicy 判)。
@@ -395,7 +395,7 @@ Component({
             data: { id: payload.id },
             success(res) {
               cyLoading.hide()
-              if (res && res.code == '200' && hasCompletePaymentParams(res.data)) {
+              if (res && res.code == '200' && (hasCompletePaymentParams(res.data) || isCompletedZeroAmountOrder(res.data, payload.id))) {
                 cb({ ok: true, data: res.data })
               } else {
                 that.setData({ isPaying: false })

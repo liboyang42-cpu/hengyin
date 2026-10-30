@@ -1,18 +1,23 @@
 // 多图 CSV 工具(WXML 不支持 String.split,统一走 WXS)。
-// 字段存"url1,url2,url3"逗号分隔;缩略图取首张 first(),画廊取全部 list()。
+// 字段存"url1,url2,url3"逗号分隔;生产主题 imgArr 也有分号分隔的,两种都认 ——
+// 只按逗号切时整串分号拼接被当成一张图,OSS 签名校验 403,详情第二屏上半整块黑(实走 A1 真因)。
+// 缩略图取首张 first(),画廊取全部 list()。
 // 兼容旧单图数据:无逗号时 first 返回原串、list 返回单元素数组。
 // 后端 OSS 签名链接历史上存成 http://;真机不加载 http 图片,自有域名统一走 https(与 app.getImgUrl 同口径)。
 var OWN_HTTP = getRegExp('^http://(chengyin-oss\\.oss-cn-shanghai\\.aliyuncs\\.com|www\\.chengyinhub\\.com)(/)', 'i');
 var secure = function (u) {
   return u.replace(OWN_HTTP, 'https://$1$2');
 };
+var parts = function (s) {
+  return ('' + s).split(';').join(',').split(',');
+};
 var first = function (s) {
   if (!s) return '';
-  return secure(('' + s).split(',')[0] || '');
+  return secure(parts(s)[0] || '');
 };
 var list = function (s) {
   if (!s) return [];
-  var arr = ('' + s).split(',');
+  var arr = parts(s);
   var out = [];
   for (var i = 0; i < arr.length; i++) {
     if (arr[i]) out.push(secure(arr[i]));

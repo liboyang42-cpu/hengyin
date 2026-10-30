@@ -544,6 +544,8 @@ public class RegistrationRedemptionApplication {
         } catch (Exception e) {
             logger.error("探店章节收藏凭证写入失败 registrationId={} chapterId={}", registration.getId(), chapterId, e);
         }
+        // 商家核销 = 玩家在店:补记到店,否则「到店」「核销」两份事实对不上,玩家再扫门店码会被「该章节已核销」拒(实走 B4)
+        registrationService.recordImpliedShopArrival(registration, chapterId, merchantOwnerMemberId);
         // 通关副作用已在 redeemExploreChapterAndRecord 的同一事务收口；这里不再吞异常或重复发奖。
 
         if (redemption.getCompletionEarnedXp() > 0) {

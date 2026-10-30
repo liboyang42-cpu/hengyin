@@ -34,6 +34,6 @@
   <cy-play-countin show="{{countingIn}}" bind:done="onCountedIn" />
   <cy-play-calibrate show="{{calibrating}}" label="{{calibrateLabel}}" ms="{{calibrateMs}}"
                      bind:tick="onCalibrateTick" bind:done="onCalibrated" />
-  <cy-play-verdict show="{{verdict !== ''}}" kind="{{verdict}}"
+  <cy-play-verdict show="{{verdict !== ''}}" kind="{{verdict}}" neutral="{{verdictNeutral}}"
                    timed-out="{{timedOut}}" text="{{verdictText}}" />
 </view>
