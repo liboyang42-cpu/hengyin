@@ -18,7 +18,7 @@ Component({
     showFollow: { type: Boolean, value: false },
     showMore: { type: Boolean, value: false },
     showShare: { type: Boolean, value: false },
-    showFavorite: { type: Boolean, value: false },
+    showRepost: { type: Boolean, value: false },
     expandableText: { type: Boolean, value: false },
     interactiveActions: { type: Boolean, value: false },
     interactiveUser: { type: Boolean, value: false },
@@ -90,7 +90,7 @@ Component({
       }
       this.triggerEvent('like', Object.assign(this.eventDetail(), { type: 1 }));
     },
-    emitFavorite() { this.triggerEvent('favorite', this.eventDetail()); },
+    emitRepost() { this.triggerEvent('repost', this.eventDetail()); },
     emitComment() { this.triggerEvent('comment', this.eventDetail()); },
     emitPreview(e) {
       if (!this.data.interactiveMedia) {

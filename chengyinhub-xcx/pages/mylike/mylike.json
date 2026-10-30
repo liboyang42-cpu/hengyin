@@ -11,7 +11,8 @@
     "cy-page-title": "/components/cy/page-title/index",
     "cy-toast": "/components/cy/toast/index",
     "cy-loading-mask": "/components/cy/loading-mask/index",
-    "cy-modal-host": "/components/cy/modal-host/index"
+    "cy-modal-host": "/components/cy/modal-host/index",
+    "cy-option-sheet": "/components/cy/option-sheet/index"
   },
   "navigationBarTitleText": "我的收藏",
   "navigationStyle": "custom",

@@ -90,17 +90,20 @@ test('行:16pt 文字弹性撑开 + 22×22 图标,危险行用登记过 AA 豁�
 })
 
 test('三个入口的交互语义一个都不能少', () => {
-  for (const [action, handler] of [['edit', 'onEdit'], ['delete', 'onDelete'], ['report', 'onReport']]) {
+  // 2026-10-29 业主:收藏从卡片动作行挪进来,宿主开 bookmarkable 才出,共四行
+  for (const [action, handler] of [['edit', 'onEdit'], ['delete', 'onDelete'], ['report', 'onReport'], ['bookmark', 'onBookmark']]) {
     const re = new RegExp(`bindtap="${handler}" data-action="${action}"[\\s\\S]{0,160}?hover-class="cy-pressed"`)
     assert.match(WXML, re, `${action} 行必须保留 bindtap + data-action + 按压反馈`)
   }
   const labels = WXML.match(/aria-label="[^"]+"/g) || []
-  assert.equal(labels.length, 3, '三行都要有可读的 aria-label')
-  assert.equal((WXML.match(/aria-role="button"/g) || []).length, 3, '三行都要有 button 语义')
+  assert.equal(labels.length, 4, '四行都要有可读的 aria-label')
+  assert.equal((WXML.match(/aria-role="button"/g) || []).length, 4, '四行都要有 button 语义')
 })
 
 test('只有本人看得到编辑与删除', () => {
-  assert.match(WXML, /class="pa-card" wx:if="\{\{owner\}\}"/, '编辑卡整张只给本人')
+  assert.match(WXML, /class="pa-card" wx:if="\{\{owner \|\| bookmarkable\}\}"/, '可逆操作卡:本人或宿主开了收藏才出')
+  assert.match(WXML, /class="pa-row" wx:if="\{\{owner\}\}" bindtap="onEdit"/, '编辑只给本人')
+  assert.match(WXML, /class="pa-row" wx:if="\{\{bookmarkable\}\}" bindtap="onBookmark"/, '收藏行只在宿主开 bookmarkable 时出')
   assert.match(WXML, /class="pa-row pa-row--danger" wx:if="\{\{owner\}\}" bindtap="onDelete"/, '删除只给本人')
   assert.doesNotMatch(
     WXML,

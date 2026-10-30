@@ -26,6 +26,18 @@
 /* Roam 块间距 14pt(插槽卡自己的 :host margin-bottom 已是 --cy-space-3-5,同值) */
 .post-card--roam { --pc-gap: var(--cy-space-3-5); }       /* 28rpx */
 
+/* 转发条目:头像上方一行「某某 转发了」,头像随之下移这一行的高度 */
+.post-card__repost-by {
+  margin-bottom: var(--cy-space-2);
+  overflow: hidden;
+  font-size: var(--cy-font-label);
+  line-height: var(--cy-space-4);
+  color: var(--cy-color-text-tertiary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.post-card--repost .post-card__avatar { top: calc(36rpx + var(--cy-space-4) + var(--cy-space-2)); }
+
 .post-card__avatar {
   position: absolute;
   left: var(--cy-page-x);
@@ -206,7 +218,8 @@
 }
 .post-card__action::after { border: none; }
 .post-card__action--like.is-on { color: var(--cy-color-status-danger); }
-.post-card__action--favorite.is-on { color: var(--cy-color-text-primary); }
+.post-card__action--repost.is-on { color: var(--cy-color-status-success); }
+.post-card__repost-icon { flex: none; color: currentColor; }
 /* 描边 heart = 未赞(继承 .post-card__action 的 primary),实心 heart-filled = 已赞
  * (由 .post-card__action--like.is-on 上色 --cy-color-status-danger,计数文字同色)。
  * 原先是一张自带红的位图 SVG,靠去色滤镜压成「灰实心心」,读起来像已赞,已废弃。 */

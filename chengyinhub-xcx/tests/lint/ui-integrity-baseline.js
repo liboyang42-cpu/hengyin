@@ -1,6 +1,7 @@
 // 2026-10-29 R2 l2-roam(V-08 业主拍板:帖文流只剩发现 / 俱乐部详情 / 我的):「动态」二级页 pages/square/list 整页删除,其 19 条登记随代码删除(U3-DEBT 7、U4-DEBT 9、U4-DYNAMIC 3),棘轮只下调 u3Handler 62→55、u4Field 114→105、u4Dynamic 65→62;另 4 条既有锚点仅行号位移(各文件顶部加一行 discover-nav 引用):U4-DYNAMIC play 1752→1753、square/detail 1262→1263、im/list 372→374(另加一行注释),U5 play 7904→7905,调用行逐字相同、理由不变;不新增登记;u3Debt / u4Debt / u4Dynamic / u5Silent digest 按门禁 baselineKeyDigest 重算。
 // 2026-10-29 真机走查 l2-roam(V-06/V-07/V-08/V-09):roam/index.js 删「仅前台记录」提示与其渲染字段、改雾重绘/长按环/结算跳转后,下方既有 20 条锚点仅行号位移(566→568、1842→1844、3971→3998、4812→4839、4870→4897、5953→5982、5962→5991、558→560、809→811、780→782、5792→5821、5799→5828、2600→2602、2629→2631、1931→1933、4266→4293、4480→4507、4565→4592、4676→4703、5136→5163),difflib 逐行映射且调用行逐字相同,理由与条数不变,不新增登记;u4Dynamic / u5Silent digest 按门禁 baselineKeyDigest 重算。
 // 2026-10-29 dw29-l4-profile(V-15 头像显示过 getImgUrl / V-21 个人介绍入口):app.js 顶部 +1 行,U1-VARIABLE consent adapter 426→427;profile/index.js 顶部 +1、_identityHead +2,U1 720→721、U4-DYNAMIC 1291→1294 / 2138→2141;首页 index.js 顶部 +2、onLoad 广播监听 +8、onUnload +1、getUserData +2,U1 1043→1056、U4 1150→1163 / 1259→1272 / 1366→1379;逐条以行及上下各一行与基线分支逐字比对一致,理由与条数不变、不新增登记,u1Variable / u4Dynamic digest 按门禁 baselineKeyDigest 重算。
+// 2026-10-29 dw29 L8 帖文转发:square/list 收藏挪进「···」(data 加一行、弹层分发加收藏分支),U4-DYNAMIC 三条锚点仅行号位移 137→138、177→178、1063→1072;merchant/relation 顶部加转发映射引用一行,U5 合作 tab 帖文流读取 264→265;行内容逐字相同、理由与条数不变,不新增登记;u4Dynamic / u5Silent digest 按门禁 baselineKeyDigest 重算。
 // 合成源退役3条旧U4债务：新主线square/list已无longitude/latitude字段；治理square/detail真实读取this.data.replyId并校验原回复目标，均不能继续记零消费。
 // d4cc 原主线已退役的两条post-compose U5登记随同采用；合成loadActivityOptions全文1588bytes与d4cc逐字相同(SHA524609f81bb0686cb928acfcccff06e2a4c5888732a91fd24dac6dedb28e8d05)，不删除请求或反馈。
 // 2026-10-28 d4cc公共主线合并：仅保留两边原实名记录与退役事实；当前字面键计数/摘要非新源实扫，须由原hosted门禁按合成源码复核。
@@ -1053,7 +1054,7 @@ module.exports = {
       //   逐条回读仍是「只为读章节 recruitEnabled、失败不弹全局 toast」这一处,静默理由一字未改,条数 27 不变。
 // 2026-10-17 合并 master 进漫游上线分支:roam/index.js 14 条、nearby/index.js 2 条既有调用仅行号位移(按 master 源码逐行回读定位);漫游两栏改版删掉 /api/registration/list 静默读取(749),U5 29→28。digest 按同一算法显式重算。
 // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):锚点位移 + 举报半屏/AI 对话组件下沉会员分包换路径 + 本线 9 处新增登记,digest 按同一算法重算。
-"51158d31b56572459de3aa8a8d9dcf9fad3b7fd89a8c3f29667e547d28be02ef"
+"b3e1827c109832e160f0cc8c2cebe0beec253c4ef4324923fd7fe1088befc8f5"
 
     }
   },
@@ -1456,7 +1457,7 @@ module.exports = {
       // 2026-09-20 合并后按最终源码重钉，调用与静默降级理由未改。
       "chengyinhub-xcx/pages/play/index.js:7905": "已完成里程碑为可选增强，请求失败保持 milestone=null 且轴不渲染；owner=小程序，复核=2026-09-15",
     "chengyinhub-xcx/pages/topic/pricing/index.js:184": "合作阵容行补名是 best-effort 装饰读取:拉不到名字就保留「合作俱乐部/承接商家」类型兜底,条款摘要照常、点开合作方页自有错误态;为补名弹全局 toast 会让主办方以为整页定价坏了;owner=小程序,复核=2026-12-31",
-    "chengyinhub-xcx/pages/merchant/relation/index.js:264": "合作 tab 帖文流读取(2026-10-22 业主:合作 tab 看帖文):失败经同函数内具名 fail() 落 feedState=error/stale-error 与 feedError,页面 cy-error 呈现并给重试,关通道 toast 避免双重反馈;owner=小程序,复核=2026-11-30",
+    "chengyinhub-xcx/pages/merchant/relation/index.js:265": "合作 tab 帖文流读取(2026-10-22 业主:合作 tab 看帖文):失败经同函数内具名 fail() 落 feedState=error/stale-error 与 feedError,页面 cy-error 呈现并给重试,关通道 toast 避免双重反馈;owner=小程序,复核=2026-11-30",
     "chengyinhub-xcx/utils/predict-entry.js:15": "消息页「竞猜待答」入口显隐读取(2026-10-22 业主:无待答不出入口):读失败照样显示入口(宁可多一行,不让 48 小时期限提醒消失),不是用户动作,无需弹错;owner=小程序,复核=2026-11-30",
   }
 };

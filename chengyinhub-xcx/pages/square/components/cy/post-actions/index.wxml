@@ -2,9 +2,16 @@
      ⚠️ 分组卡(两张)不是平列表,理由见 index.wxss 头部注释 —— 别顺手拍平。 -->
 <cy-sheet inset show="{{show}}" title="帖文操作" style="--cy-sheet-heading-size: var(--cy-comp-sheet-title-size);" bind:close="onClose">
   <view class="pa">
-    <!-- 卡1 · 可逆编辑。非本人的帖没有这张卡。 -->
-    <view class="pa-card" wx:if="{{owner}}">
-      <view class="pa-row" bindtap="onEdit" data-action="edit"
+    <!-- 卡1 · 可逆操作(编辑 / 收藏)。2026-10-29 业主:动作行第三位换成转发,收藏挪进这里。
+         非本人且宿主不开收藏时没有这张卡。 -->
+    <view class="pa-card" wx:if="{{owner || bookmarkable}}">
+      <view class="pa-row" wx:if="{{bookmarkable}}" bindtap="onBookmark" data-action="bookmark"
+            aria-role="button" aria-label="{{bookmarked ? '取消收藏' : '收藏帖文'}}"
+            hover-class="cy-pressed" hover-stay-time="80">
+        <view class="pa-row__label">{{bookmarked ? '取消收藏' : '收藏'}}</view>
+        <cy-icon name="{{bookmarked ? 'star-filled' : 'star'}}" size="44" />
+      </view>
+      <view class="pa-row" wx:if="{{owner}}" bindtap="onEdit" data-action="edit"
             aria-role="button" aria-label="编辑这条帖文"
             hover-class="cy-pressed" hover-stay-time="80">
         <view class="pa-row__label">编辑</view>

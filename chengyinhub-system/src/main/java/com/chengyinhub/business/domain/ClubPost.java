@@ -52,6 +52,9 @@ public class ClubPost extends BaseEntity
     /** 评论数 */
     private Integer commentCount;
 
+    /** 转发数 */
+    private Integer repostCount;
+
     /** del_flag 0存在 2删除 */
     private Integer delFlag;
 
@@ -78,6 +81,9 @@ public class ClubPost extends BaseEntity
 
     /** 非持久：当前用户是否已点赞 */
     private Boolean isLiked;
+
+    /** 当前用户是否已转发(非表字段) */
+    private Boolean viewerReposted;
 
     /** 非持久:聚合动态流用 —— 一条帖子在 feed 里必须说清是哪个俱乐部发的 */
     private String clubName;
@@ -128,6 +134,8 @@ public class ClubPost extends BaseEntity
     public void setLikeCount(Integer likeCount) { this.likeCount = likeCount; }
     public Integer getCommentCount() { return commentCount; }
     public void setCommentCount(Integer commentCount) { this.commentCount = commentCount; }
+    public Integer getRepostCount() { return repostCount; }
+    public void setRepostCount(Integer repostCount) { this.repostCount = repostCount; }
     public Integer getDelFlag() { return delFlag; }
     public void setDelFlag(Integer delFlag) { this.delFlag = delFlag; }
     public Integer getIsPinned() { return isPinned; }
@@ -146,6 +154,8 @@ public class ClubPost extends BaseEntity
     public void setAvatar(String avatar) { this.avatar = avatar; }
     public Boolean getIsLiked() { return isLiked; }
     public void setIsLiked(Boolean isLiked) { this.isLiked = isLiked; }
+    public Boolean getViewerReposted() { return viewerReposted; }
+    public void setViewerReposted(Boolean viewerReposted) { this.viewerReposted = viewerReposted; }
 
     @Override
     public String toString() {

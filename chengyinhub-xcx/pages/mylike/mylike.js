@@ -20,6 +20,8 @@ Page({
     favoriteTabs: [{ key: 'posts', label: '帖文' }, { key: 'topics', label: '主题' }],
     activeFavoriteTab: 'posts',
     postList: [],
+    postMoreShow: false,
+    postMoreItems: ['取消收藏'],
     ztList1: [], // 路线列表
     loading: false,
     refreshing: false,
@@ -454,6 +456,25 @@ Page({
       fail: finishPrompt,
       complete: finishPrompt
     });
+  },
+
+  // 「···」只记帖文 id:列表随时可能刷新,到选项回来时按 id 找回当前行再取消收藏。
+  onPostMore(e) {
+    const item = this.data.postList[e.detail && e.detail.index];
+    if (!item || !item.id) return;
+    this._postMoreId = String(item.id);
+    this.setData({ postMoreShow: true });
+  },
+  closePostMore() {
+    this._postMoreId = '';
+    this.setData({ postMoreShow: false });
+  },
+  onPostMoreSelect(e) {
+    const id = this._postMoreId;
+    this.closePostMore();
+    if (!id || !e || !e.detail || e.detail.index !== 0) return;
+    const index = this.data.postList.findIndex(row => row && String(row.id) === id);
+    if (index >= 0) this.postUnlike({ detail: { index: index } });
   },
 
   postUnlike: function(e) {

@@ -3,11 +3,14 @@ package com.chengyinhub.business.service.impl;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 import com.chengyinhub.business.access.club.ClubAccessContext;
@@ -17,6 +20,7 @@ import com.chengyinhub.business.domain.BusinessAuditEvent;
 import com.chengyinhub.business.domain.Club;
 import com.chengyinhub.business.domain.ClubMember;
 import com.chengyinhub.business.domain.ClubPost;
+import com.chengyinhub.business.domain.ClubPostRepost;
 import com.chengyinhub.business.domain.ClubPostRevision;
 import com.chengyinhub.business.domain.dto.ClubPostUpdateResult;
 import com.chengyinhub.business.mapper.BusinessAuditEventMapper;
@@ -322,6 +326,82 @@ public class ClubPostServiceImpl implements IClubPostService
         // 51 = 单页上限 50 + 1 条探针(调用方据此判断 hasMore)。
         return clubPostMapper.selectSiteFeed(viewerId, beforeId != null && beforeId > 0 ? beforeId : null,
                 limit <= 0 ? 21 : Math.min(limit, 51));
+    }
+
+    // ---- 帖文转发(dw29 L8) ----
+
+    /** 动态流单次取转发条目上限,与帖文页上限同口径 */
+    private static final int FEED_REPOST_MAX = 50;
+
+    @Override
+    public boolean isReposted(Long postId, Long memberId)
+    {
+        ClubPostRepost row = clubPostMapper.selectRepostByPostAndMember(postId, memberId);
+        return row != null && Integer.valueOf(0).equals(row.getDelFlag());
+    }
+
+    @Override
+    public boolean setReposted(Long postId, Long memberId, boolean reposted)
+    {
+        ClubPostRepost row = clubPostMapper.selectRepostByPostAndMember(postId, memberId);
+        boolean current = row != null && Integer.valueOf(0).equals(row.getDelFlag());
+        if (current == reposted) return false;
+        if (!reposted)
+        {
+            // 只有真撤掉了一行才减数:并发下另一请求先撤了,这里就不能再减一次。
+            if (clubPostMapper.cancelByPostAndMember(postId, memberId) > 0)
+            {
+                clubPostMapper.incrementRepostCount(postId, -1);
+                return true;
+            }
+            return false;
+        }
+        Date now = DateUtils.getNowDate();
+        int changed;
+        if (row == null)
+        {
+            ClubPostRepost repost = new ClubPostRepost();
+            repost.setPostId(postId);
+            repost.setMemberId(memberId);
+            repost.setCreateTime(now);
+            changed = clubPostMapper.insertClubPostRepost(repost);
+        }
+        else
+        {
+            changed = clubPostMapper.reactivateRepostById(row.getId(), now);
+        }
+        if (changed > 0)
+        {
+            clubPostMapper.incrementRepostCount(postId, 1);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public Set<Long> selectRepostedPostIds(Long memberId, List<Long> postIds)
+    {
+        Set<Long> out = new HashSet<>();
+        if (memberId == null || postIds == null || postIds.isEmpty()) return out;
+        List<Long> rows = clubPostMapper.selectRepostedPostIds(memberId, postIds);
+        if (rows != null) out.addAll(rows);
+        return out;
+    }
+
+    @Override
+    public List<ClubPostRepost> selectFeedReposts(List<Long> clubIds, Date since, Date until, int limit)
+    {
+        // 空集合不进 SQL:foreach 会生成 `in ()`。
+        if (clubIds == null || clubIds.isEmpty()) return new ArrayList<>();
+        int bounded = limit <= 0 ? 20 : Math.min(limit, FEED_REPOST_MAX);
+        return clubPostMapper.selectFeedReposts(clubIds, since, until, bounded);
+    }
+
+    @Override
+    public List<ClubPost> selectOriginalPosts(List<Long> postIds)
+    {
+        if (postIds == null || postIds.isEmpty()) return new ArrayList<>();
+        return clubPostMapper.selectFeedPostsByIds(postIds);
     }
 
     private void audit(ClubAccessContext access, String action, ClubPost post,

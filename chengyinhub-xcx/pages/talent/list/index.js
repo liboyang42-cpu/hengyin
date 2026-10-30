@@ -10,6 +10,7 @@ const discoverFeed = require('../../../utils/discover-feed.js');
 const discoverNav = require('../../../utils/discover-nav.js');
 const community = require('../../../utils/community-post-api.js').createClient(app, wx);
 const FEED_PAGE_SIZE = 20;
+const clubPostRepost = require('../../../utils/club-post-repost.js');
 
 // 主理人 L1-L5 等级对外文案(俱乐部继承展示;level=0 不显示)
 const LEVEL_LABELS = ['', 'L1 新手', 'L2 稳定', 'L3 成熟', 'L4 城市运营者', 'L5 区域策划方'];
@@ -211,6 +212,14 @@ Page({
     const post = this.data.feed[e.detail && e.detail.index];
     if (!post || !post.sportTopicId) return this.onPostTap(e);
     wx.navigateTo({ url: '/pages/play/index?topicId=' + post.sportTopicId });
+  },
+
+  // dw29 L8 转发/撤销:乐观切换,失败回滚并原样显示后端提示
+  onRepostPost(e) {
+    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.onRepostPost(e), { owner: this, target: () => [e.detail && e.detail.postId] })) return;
+    const postId = e.detail && e.detail.postId;
+    if (postId == null) return;
+    clubPostRepost.toggleRepost({ page: this, listKey: 'feed', postId: postId, app: app, toast: toast });
   },
 
   onPostUser(e) {

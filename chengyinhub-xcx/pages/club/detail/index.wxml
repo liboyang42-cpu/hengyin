@@ -113,14 +113,15 @@
       </view>
 
       <block wx:if="{{posts.length}}">
-        <view id="club-post-{{item.id}}" class="club-post-anchor" wx:for="{{posts}}" wx:key="id" style="{{pmPosts === 1 ? '--pm-p:1;' : (pmPosts === 2 ? '--pm-p-d:.32s;--pm-p-s:1;' : '')}}">
-          <cy-post-card expandable-text post="{{item}}" index="{{index}}" light="{{isMerchantViewer}}" interactive-actions interactive-user interactive-media show-share
+        <view id="club-post-{{item.feedKey}}" class="club-post-anchor" wx:for="{{posts}}" wx:key="feedKey" style="{{pmPosts === 1 ? '--pm-p:1;' : (pmPosts === 2 ? '--pm-p-d:.32s;--pm-p-s:1;' : '')}}">
+          <cy-post-card expandable-text post="{{item}}" index="{{index}}" light="{{isMerchantViewer}}" interactive-actions interactive-user interactive-media show-share show-repost
             accessibility-label="查看{{item.memberNickname || '城瘾玩家'}}的动态"
             bind:detail="onPostDetail" bind:user="onPostUser" bind:preview="onPreviewImage"
-            bind:like="onLikePost" bind:comment="onToggleComments" bind:playdetail="onPostReference" bind:play="onPostReferencePlay">
+            bind:like="onLikePost" bind:repost="onRepostPost" bind:comment="onToggleComments" bind:playdetail="onPostReference" bind:play="onPostReferencePlay">
             <!-- F0098:被引对象当前不可见 ⇒ 只给中性标签,不显示标题封面,也不猜是删了还是转私密 -->
             <view slot="special" class="post-ref-unavailable" wx:if="{{item.refUnavailable}}">引用不可用</view>
-            <view slot="moderation" class="post-moderation">
+            <!-- 转发条目的原帖可能在别的俱乐部:本俱乐部的编辑/置顶/删除不作用在它上面 -->
+            <view slot="moderation" class="post-moderation" wx:if="{{!item.isRepostItem}}">
               <view class="post-moderation__action" wx:if="{{item.authorMemberId == myMemberId || (canModerateContent && item.type == 2)}}" catchtap="onEditPost" data-id="{{item.id}}" aria-role="button" aria-label="编辑动态" hover-class="cy-pressed" hover-stay-time="80">编辑</view>
               <view class="post-moderation__action" wx:if="{{canModerateContent && item.type == 2}}" catchtap="onTogglePin" data-id="{{item.id}}" aria-role="button" aria-label="{{item.isPinned ? '取消置顶公告' : '置顶公告'}}" hover-class="cy-pressed" hover-stay-time="80">{{item.isPinned ? '取消置顶' : '置顶'}}</view>
               <view class="post-moderation__action" wx:if="{{item.version > 0}}" catchtap="onViewPostHistory" data-id="{{item.id}}" aria-role="button" aria-label="查看动态编辑历史" hover-class="cy-pressed" hover-stay-time="80">历史</view>

@@ -40,8 +40,11 @@ function assertSharedPostCard(overrides = {}) {
   // 负控:旧做法是去色滤镜把红实心心压成灰实心心,用户读作「已赞」——不许回潮。
   assert.doesNotMatch(componentWxss, /grayscale|post-card__heart--muted/)
   assert.match(componentWxml, /<cy-icon[^>]*name="comment"/)
-  assert.match(componentWxml, /aria-label="转发帖文"[\s\S]*src="\/images\/icon_share\.png"/)
-  assert.doesNotMatch(componentWxml, /repostCount|name="share"/)
+  // 2026-10-29 业主:站内转发有真后端(club_post_repost),计数来自服务端 repostCount;
+  // 分享到微信仍是产品箭头位图,不换成 cy-icon share。
+  assert.match(componentWxml, /aria-label="分享到微信"[\s\S]*src="\/images\/icon_share\.png"/)
+  assert.match(componentWxml, /wx:if="\{\{showRepost\}\}"[\s\S]*\{\{post\.repostCount \|\| ''\}\}/)
+  assert.doesNotMatch(componentWxml, /name="share"/)
   assert.match(read('pages/talent/list/index.wxml'), /interactive-club/)
   // 2026-10-27 M-24:俱乐部详情玩家深色、商家浅色 ⇒ 帖文卡 light 只跟商家视角走;达人页同理随商家视角切浅色。
   assert.match(read('pages/club/detail/index.wxml'), /<cy-post-card[^>]*light="\{\{isMerchantViewer\}\}"/, '俱乐部详情只在商家视角开浅色卡片')
