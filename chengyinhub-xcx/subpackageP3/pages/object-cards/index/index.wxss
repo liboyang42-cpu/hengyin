@@ -179,7 +179,7 @@ page {
 .oc-filter__ic { width: 40rpx; height: 40rpx; }
 /* 分类半屏:三列图标格,选中黑底白字 */
 .oc-cats { display: flex; flex-wrap: wrap; gap: var(--cy-space-2); padding: 0 0 var(--cy-space-4); }
-.oc-cat { width: calc((100% - 2 * var(--cy-space-2)) / 3); box-sizing: border-box; padding: var(--cy-space-3) var(--cy-space-1) var(--cy-space-2-5); border-radius: 28rpx;
+.oc-cat { width: calc((100% - 2 * var(--cy-space-2)) / 3); box-sizing: border-box; padding: var(--cy-space-3) var(--cy-space-1) var(--cy-space-2-5); border-radius: var(--cy-radius-lg);
   display: flex; flex-direction: column; align-items: center; gap: var(--cy-space-1-5); background: var(--cy-color-bg-surface-subtle);
   font-size: var(--cy-font-label); font-weight: 500; color: var(--cy-color-text-primary); }
 .oc-cat.is-on { background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); }
