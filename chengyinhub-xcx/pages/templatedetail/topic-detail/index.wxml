@@ -127,7 +127,7 @@
           <view class="cap-stop__no">{{ item.no }}</view>
           <view class="cap-stop__main">
             <text class="cap-stop__name ep1" wx:if="{{ item.name }}">{{ item.name }}</text>
-            <text class="cap-stop__game">{{ item.game || '—' }}</text>
+            <text class="cap-stop__game" wx:if="{{ item.game }}">{{ item.game }}</text>
             <text class="cap-stop__do" wx:if="{{ item.doText }}">{{ item.doText }}</text>
             <view class="cap-stop__dur" wx:if="{{ item.dur }}"><cy-icon name="clock" size="22" /><text>{{ item.dur }}</text></view>
           </view>

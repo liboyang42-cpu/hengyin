@@ -156,7 +156,7 @@ test('缺封面/缺图占位继续用 no_data.svg(不随空态换图)', () => {
     'pages/club/topic-detail/index.wxml',
     'pages/activity/list/index.wxml',
     'pages/topic/merchantinfo/merchantinfo.wxml',
-    'pages/templatedetail/templatedetail.wxml',
+    // 2026-10-30 模板详情头图不再用缺图图标:模板本身没封面时用它第一个分类的 3D 图标做封面(业主「不能只是占位」)
     'components/cy/scene-roam-task-list/index.wxml',
   ].forEach((rel) => assert.ok(read(rel).includes('src="/images/no_data.svg"'), `${rel} 的缺图占位被换掉`))
   assert.match(read('pages/templatedetail/shelf/index.js'), /coverErrorSrc:\s*'\/images\/no_data\.svg'/)

@@ -155,6 +155,9 @@ page {
 }
 .xb-cover-ph-icon { width: 64rpx; height: 48rpx; flex: 0 0 auto; }
 .xb-cover-ph-txt { font-size: var(--cy-font-micro); line-height: var(--cy-leading-normal); }
+/* 2026-10-30:无封面的模板用第一个分类的 3D 图标做封面,底色带一点渐层,不再是灰底 + 缺图图标 */
+.xb-head-cover-ph { background: radial-gradient(circle at 50% 38%, var(--cy-color-bg-surface-subtle), var(--cy-bg-card-2) 72%); }
+.xb-cover-art { width: 128rpx; height: 128rpx; flex: 0 0 auto; }
 
 .xb-head-meta { flex: 1; min-width: 0; }
 
