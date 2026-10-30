@@ -1,0 +1,38 @@
+/* 画面风格预览。色板是四种风格的示意(与玩家页 .look--* 同值),不是可配颜色。 */
+.lp { padding: 0 var(--cy-page-x) var(--cy-space-5); }
+.lp__name { font-size: var(--cy-type-sheet-title); font-weight: 700; color: var(--cy-color-text-primary); margin-bottom: var(--cy-space-3); }
+.lp__frame { position: relative; height: 640rpx; border-radius: var(--cy-radius-lg); overflow: hidden; background: var(--lp-bg); color: var(--lp-ink);
+  --look-bg: var(--lp-bg); --look-a: var(--lp-acc); --look-b: var(--lp-acc2); }
+.lp__fx { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+.lp__tex { position: absolute; left: 0; top: 0; right: 0; bottom: 0; pointer-events: none; }
+.lp__body { position: absolute; left: 40rpx; right: 40rpx; bottom: 48rpx; display: flex; flex-direction: column; }
+.lp__kick { font-size: var(--cy-type-label); letter-spacing: 6rpx; color: var(--lp-mute); }
+.lp__title { margin-top: 12rpx; font-size: 52rpx; font-weight: 700; letter-spacing: 4rpx; color: var(--lp-title); }
+.lp__story { margin-top: 20rpx; font-size: 34rpx; line-height: 1.8; font-family: 'CyStoryHand', "Kaiti SC", serif; } /* ds-ok 手写体在线加载,失败回落楷体 */
+.lp__opt { margin-top: 28rpx; display: flex; gap: 20rpx; align-items: baseline; padding: 22rpx 24rpx; border-left: 4rpx solid var(--lp-acc); background: var(--lp-soft); font-size: var(--cy-type-body); }
+.lp__opt-k { color: var(--lp-acc); font-weight: 700; }
+.lp__actions { display: flex; gap: var(--cy-space-3); margin-top: var(--cy-space-4); }
+.lp__btn { flex: 1; height: 96rpx; border-radius: 999rpx; display: flex; align-items: center; justify-content: center; font-size: var(--cy-type-button); font-weight: 600; background: var(--cy-color-surface-muted, rgba(0,0,0,.06)); color: var(--cy-color-text-primary); } /* ds-ok 底色兜底 */
+.lp__btn--primary { background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg); }
+/* 故事字体(与玩家页 .story-font--* 同族) */
+.story-font--song .lp__story { font-family: "Songti SC", "STSong", serif; } /* ds-ok */
+.story-font--kai .lp__story { font-family: "Kaiti SC", "STKaiti", "KaiTi", serif; } /* ds-ok */
+.story-font--hei .lp__story { font-family: -apple-system, "PingFang SC", sans-serif; } /* ds-ok */
+/* 四种风格的示意色板 */
+.lpv.look--stardust { --lp-bg: #0E1A33; --lp-ink: #F5F8FF; --lp-title: #F5F8FF; --lp-mute: #A9BBE0; --lp-acc: #CFE0FF; --lp-acc2: #A9BBE0; --lp-soft: rgba(255,255,255,.06); } /* ds-ok */
+.lpv.look--paper { --lp-bg: #E6DCC4; --lp-ink: #2B241A; --lp-title: #2B241A; --lp-mute: #7D715C; --lp-acc: #A3281D; --lp-acc2: #7D715C; --lp-soft: rgba(43,36,26,.06); } /* ds-ok 牛皮纸 */
+.lpv.look--paper.look-paper--xuan { --lp-bg: #F4F1EA; } /* ds-ok */
+.lpv.look--paper.look-paper--card { --lp-bg: #1D1B18; --lp-ink: #ECE6D8; --lp-title: #ECE6D8; --lp-mute: #9A927F; --lp-acc: #D0503C; --lp-soft: rgba(255,255,255,.06); } /* ds-ok */
+.lpv.look--paper .lp__tex { background: radial-gradient(rgba(90,70,40,.10) 1px, transparent 1.4px) 0 0 / 7rpx 7rpx, radial-gradient(ellipse 80% 70% at 50% 45%, transparent 55%, rgba(60,40,10,.3) 100%); } /* ds-ok 纸纹 */
+.lpv.look--paper.look-grain--light .lp__tex { opacity: .5; }
+.lpv.look--survival { --lp-bg: #0E1012; --lp-ink: #E4E7E9; --lp-title: #E4E7E9; --lp-mute: #8A9196; --lp-acc: #FF8A3D; --lp-acc2: #8A9196; --lp-soft: rgba(255,255,255,.05); } /* ds-ok 飓风 */
+.lpv.look--survival.look-climate--winter { --lp-bg: #0B1626; --lp-acc: #FFB35C; } /* ds-ok */
+.lpv.look--survival.look-climate--heat { --lp-bg: #2A1D0C; --lp-acc: #8FD3FF; } /* ds-ok */
+.lpv.look--survival.look-climate--bunker { --lp-bg: #1C0A0A; --lp-acc: #7FE6C4; } /* ds-ok */
+.lpv.look--survival .lp__tex { background: radial-gradient(ellipse 80% 70% at 50% 45%, transparent 50%, rgba(0,0,0,.55) 100%); } /* ds-ok */
+.lpv.look--cyber { --lp-bg: #0B0B0F; --lp-ink: #ECEBE4; --lp-title: #F3E600; --lp-mute: #24E0E8; --lp-acc: #F3E600; --lp-acc2: #24E0E8; --lp-soft: rgba(243,230,0,.08); } /* ds-ok 黄青 */
+.lpv.look--cyber.look-neon--cyan_pink { --lp-title: #2DE2E6; --lp-acc: #2DE2E6; --lp-acc2: #FF3B6B; --lp-mute: #FF3B6B; } /* ds-ok */
+.lpv.look--cyber.look-neon--red_cyan { --lp-title: #FF2E4C; --lp-acc: #FF2E4C; --lp-acc2: #2DE2E6; --lp-mute: #2DE2E6; } /* ds-ok */
+.lpv.look--cyber .lp__tex { background: repeating-linear-gradient(180deg, transparent 0 4rpx, rgba(0,0,0,.22) 4rpx 6rpx); } /* ds-ok 扫描线 */
+/* 组件样式隔离,全局 .cy-pressed 进不来,本地定义一份(同 ai-assist)。 */
+.cy-pressed { opacity: .88; }

@@ -94,3 +94,23 @@ test('发布页:保存上送 look,回读核对画面风格', () => {
   assert.match(js, /'formData\.look': detail\.look \|\| ''/)
   assert.match(read('pages/publish/utils/publish/server-draft.js'), /云端保存的画面风格与本机不一致/)
 })
+
+test('发布页预览用的风格层与转场是玩家页的逐字副本(作者看到的就是玩家看到的)', () => {
+  assert.equal(read('pages/publish/utils/publish/look-fx.js'), read('pages/play/utils/look-fx.js'))
+  for (const f of ['index.js', 'index.json', 'index.wxml', 'index.wxss']) {
+    assert.equal(read('pages/publish/components/look-transition/' + f), read('pages/play/components/look-transition/' + f), f)
+  }
+})
+
+test('选风格先弹底部预览,点「使用这个风格」才写回;返回键先收预览', () => {
+  const editor = read('pages/publish/fabu/theme-look-editor.js')
+  assert.match(editor, /onLookStyle\(e\) \{[\s\S]*?lookPreview: \{ show: true/)
+  assert.doesNotMatch(editor.match(/onLookStyle\(e\) \{[\s\S]*?\n  \},/)[0], /_patchLook/, '点风格不许直接写回')
+  assert.match(editor, /onLookPreviewUse\(e\) \{[\s\S]*?_patchLook/)
+  assert.match(read('pages/publish/fabu/look-sheet.wxml'), /<cy-look-preview show="\{\{lookPreview\.show\}\}" look="\{\{lookPreview\.look\}\}" bind:use="onLookPreviewUse" bind:close="onLookPreviewClose" \/>/)
+  assert.ok(JSON.parse(read('pages/publish/fabu/index.json')).usingComponents['cy-look-preview'])
+  const preview = read('pages/publish/components/look-preview/index.wxml')
+  assert.match(preview, /bindtap="onPlayTransition"/)
+  assert.match(preview, /bindtap="onUse"/)
+  assert.match(read('pages/publish/fabu/index.js'), /lookPreview\.show\) \{\n      this\.onLookPreviewClose\(\);/)
+})

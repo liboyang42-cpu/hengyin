@@ -1,5 +1,5 @@
 <!-- 画面风格(theme-look-editor.js):选风格 → 该风格的参数 → 转场 → 故事字体。点选即生效,不另设保存键。 -->
-<cy-sheet show="{{lookSheetShow}}" stacked="{{false}}" bind:close="closeLookEditor">
+<cy-sheet show="{{lookSheetShow}}" stacked="{{lookPreview.show}}" bind:close="closeLookEditor">
   <view class="node-sheet look-sheet">
     <view class="node-sheet__top">
       <view class="node-sheet__close" bindtap="closeLookEditor" aria-role="button" aria-label="关闭画面风格" hover-class="cy-pressed" hover-stay-time="80">关闭</view>
@@ -43,3 +43,4 @@
     </view>
   </view>
 </cy-sheet>
+<cy-look-preview show="{{lookPreview.show}}" look="{{lookPreview.look}}" bind:use="onLookPreviewUse" bind:close="onLookPreviewClose" />

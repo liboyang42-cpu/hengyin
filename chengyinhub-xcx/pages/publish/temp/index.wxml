@@ -214,13 +214,13 @@
               <view class="cg-r5-row__main"><text class="cg-r5-row__title">{{gameCurrent.label}}</text><text class="cg-r5-row__sub" wx:if="{{gameCurrent.sub}}">{{gameCurrent.sub}}</text></view>
               <view class="cg-r5-pill" bindtap="openR5GameSheet" aria-role="button" aria-label="更换玩法" hover-class="cy-pressed" hover-stay-time="80">更换</view>
             </view>
-            <!-- 2026-10-23 主人:「形式」不在卡里选了(每种形式在选择玩法里各是一枚标签),卡里只留呈现方式 -->
+            <!-- 2026-10-23 主人:「形式」不在卡里选了(每种形式在选择玩法里各是一枚标签),卡里只留呈现方式。
+                 2026-10-30 所有玩法都能内嵌:不再置灰、不再写「只能整屏」,默认选中内嵌故事流 -->
             <view class="cg-game-opts" wx:if="{{gameKey !== 'bingo' && gameKey !== 'album'}}">
               <view><view class="cg-cfg-label">呈现方式</view>
-                <cy-dropdown portal="{{false}}" range="{{presentOptions}}" range-key="label" value="{{opt.idx(presentOptions, presentChoice)}}" disabled="{{presentInlineLocked}}" bind:change="onPickPresent"><view class="cg-pick {{opt.idx(presentOptions, presentChoice) < 0 ? 'empty' : ''}}">{{opt.label(presentOptions, presentChoice)}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown>
+                <cy-dropdown portal="{{false}}" range="{{presentOptions}}" range-key="label" value="{{opt.idx(presentOptions, presentChoice)}}" bind:change="onPickPresent"><view class="cg-pick {{opt.idx(presentOptions, presentChoice) < 0 ? 'empty' : ''}}">{{opt.label(presentOptions, presentChoice)}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown>
               </view>
             </view>
-            <view class="cg-cfg-hint" wx:if="{{presentInlineLocked}}">只能整屏：{{presentLockReason}}</view>
           </block>
       </cy-card>
       <view class="cg-inline-cfg" id="game-cfg" wx:if="{{ mod.key === 'finish' && gameKey }}">

@@ -16,7 +16,7 @@ function view(raw) {
   };
 }
 
-const data = { lookSheetShow: false, lookView: view(null) };
+const data = { lookSheetShow: false, lookView: view(null), lookPreview: { show: false, look: null } };
 
 const methods = {
   _refreshLookView() { this.setData({ lookView: view(this.data.formData.look) }); },
@@ -28,8 +28,19 @@ const methods = {
     const raw = themeLook.serializeLook(themeLook.normalizeLook(n));
     this.setData({ 'formData.look': raw, lookView: view(raw) });
   },
-  // 换风格：参数换成新风格的默认值，转场与字体保留作者已选的
-  onLookStyle(e) { const v = e.currentTarget.dataset.value; this._patchLook((n) => { if (n.style !== v) { n.style = v; n.params = {}; } }); },
+  // 点一种风格:先从底部弹出预览,给个大概的样子;点「使用这个风格」才写回。
+  // 换风格时参数换成新风格的默认值,转场与字体保留作者已选的。
+  onLookStyle(e) {
+    const v = e.currentTarget.dataset.value, n = themeLook.normalizeLook(this.data.formData.look);
+    if (n.style !== v) { n.style = v; n.params = {}; }
+    this.setData({ lookPreview: { show: true, look: themeLook.normalizeLook(n) } });
+  },
+  onLookPreviewUse(e) {
+    const look = e.detail.look;
+    this._patchLook((n) => { n.style = look.style; n.params = look.params; });
+    this.setData({ 'lookPreview.show': false });
+  },
+  onLookPreviewClose() { this.setData({ 'lookPreview.show': false }); },
   onLookParam(e) { const d = e.currentTarget.dataset; this._patchLook((n) => { n.params[d.key] = d.value; }); },
   onLookTransition(e) { const v = e.currentTarget.dataset.value; this._patchLook((n) => { n.transition = v; }); },
   onLookFont(e) { const v = e.currentTarget.dataset.value; this._patchLook((n) => { n.storyFont = v; }); },

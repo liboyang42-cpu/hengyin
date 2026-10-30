@@ -57,9 +57,11 @@ test('十组单选都是 cy-dropdown,且接回原来那个处理器', () => {
   }
 })
 
-test('「只能整屏」时呈现方式下拉整个置灰,原因照旧写出来', () => {
-  assert.match(WXML, /<cy-dropdown [^>]*disabled="\{\{presentInlineLocked\}\}"[^>]*bind:change="onPickPresent"/)
-  assert.match(WXML, /只能整屏：\{\{presentLockReason\}\}/)
+// 2026-10-30 所有玩法都能内嵌:呈现方式下拉不再置灰,也不再写「只能整屏」
+test('呈现方式下拉对任何玩法都可选,没有置灰和「只能整屏」', () => {
+  assert.match(WXML, /<cy-dropdown [^>]*range="\{\{presentOptions\}\}"[^>]*bind:change="onPickPresent"/)
+  assert.doesNotMatch(WXML, /disabled="\{\{presentInlineLocked\}\}"/)
+  assert.doesNotMatch(WXML, /只能整屏/)
 })
 
 /* 空值(没选过 / 老模板里存了不认识的值)统一显示「请选择」,不留一个空白框 */

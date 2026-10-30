@@ -1261,6 +1261,8 @@ Page({
       this.cancelChapter();
     } else if (this.data.modePickerShow) {
       this.closeModePicker();
+    } else if (this.data.lookPreview && this.data.lookPreview.show) {
+      this.onLookPreviewClose();
     } else if (this.data.lookSheetShow) {
       this.closeLookEditor();
     } else if (this.data.topicDetailShow) {
