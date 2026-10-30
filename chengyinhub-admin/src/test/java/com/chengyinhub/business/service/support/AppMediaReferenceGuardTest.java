@@ -55,6 +55,15 @@ class AppMediaReferenceGuardTest {
         }
         verifyNoInteractions(assets);
     }
+    @Test void bundledPlatformMerchantGameCoversCanBeAdoptedButLookalikesCannot() {
+        String cover="https://www.chengyinhub.com/prod-api/profile/merchant-game-covers/stain-detective.jpg";
+        assertEquals(cover,guard.requireAttachment(11L,cover,false));
+        for(String ref:new String[]{"https://foreign.invalid/prod-api/profile/merchant-game-covers/stain-detective.jpg",
+                "https://www.chengyinhub.com/prod-api/profile/merchant-game-covers/../legacy.png",
+                "http://www.chengyinhub.com/prod-api/profile/merchant-game-covers/stain-detective.jpg"}) {
+            assertThrows(ServiceException.class,()->guard.requireAttachment(11L,ref,false));
+        }
+    }
     @Test void systemActorIdCannotBecomeAppPrivateAuthorButApprovedLocalMediaCanBeReused() {
         String key="/profile/upload/2026/10/12/0123456789abcdef0123456789abcdef.png";
         Map<String,Object> held=Map.of("id",7L,"memberId",11L,"objectKey",key,"reviewState","HOLD","ownerType","SYSTEM");

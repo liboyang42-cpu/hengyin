@@ -222,13 +222,17 @@ function req(url, method, data, header, silentError) {
   if (basic && data && typeof data._intentCurrent === 'function' && !data._intentCurrent()) return Promise.resolve({ obsolete: true });
   if (basic && data && data._intentOwner != null && data._intentOwner !== String((app.getUserID && app.getUserID()) || '')) return Promise.resolve({ obsolete: true });
   if (basic && data && data.receiptOnly) {
-    return req('/api/play/action-receipt', 'GET', { activityId: data.activityId, topicId: data.topicId, nodeId: data.nodeId, routeActionId: data.routeActionId }, undefined, true).then(response => {
+    const receiptQuery = { topicId: data.topicId, nodeId: data.nodeId, routeActionId: data.routeActionId };
+    if (data.activityId != null) receiptQuery.activityId = data.activityId;
+    return req('/api/play/action-receipt', 'GET', receiptQuery, undefined, true).then(response => {
       return response.intentTerminal ? response : Object.assign({}, response, { code: 520, intentUnknown: true, httpFail: true });
     });
   }
   if (basic && data && data.routeSessionId == null) {
     const owner = data._intentOwner;
-    return req('/api/play/action-context', 'GET', { activityId: data.activityId, topicId: data.topicId, nodeId: data.nodeId }, undefined, true).then(response => {
+    const contextQuery = { topicId: data.topicId, nodeId: data.nodeId };
+    if (data.activityId != null) contextQuery.activityId = data.activityId;
+    return req('/api/play/action-context', 'GET', contextQuery, undefined, true).then(response => {
       if (typeof data._intentCurrent === 'function' && !data._intentCurrent()) return { obsolete: true };
       if (owner != null && owner !== String((app.getUserID && app.getUserID()) || '')) return { obsolete: true };
       if (!(response.code == 200 || response.code == '200') || !response.data) return response;
@@ -479,6 +483,8 @@ Page({
     rewardDrop: { show: false, text: '', badges: [] },
     ringSegs: [],                 // 已核销环:等分间断条,一家一条,核销一家亮一条(见 _ringSegs)
     topicName: '',                // 卡包印刷用:一章一商家后 chapter.name 只是第一章,不能拿它当主题名
+    topicAudioUrl: '',            // 主题配乐:游玩页循环底乐(作者媒体)
+    themeBgmOn: true,
     topicCover: '',               // 卡包首屏底图:主题长图,虚化后铺底(没有就退回 chapter.cover)
     topicDesc: '',                // 通行证首屏那段简介:同理,chapters[0].description 讲的是第一家店的事
     seatTiles: [], packOpen: false, packShake: false, packBurst: false,
@@ -718,6 +724,7 @@ Page({
       wx.reLaunch({ url: '/pages/index/index' });
       return;
     }
+    if (this._themeBgm && this.data.themeBgmOn) { try { this._themeBgm.play(); } catch (e) {} }
     this.restoreGuardAppeal();
     this._syncCommunityEntry();
     this._themeHidden = false; this._startThemePoll();
@@ -976,6 +983,7 @@ Page({
   },
 
   onUnload() {
+    this._stopThemeBgm();
     this.suspendOrientLifecycle();
     this.setData({ arrivalGuard: null });
     this._playDisposed = true;
@@ -1304,6 +1312,7 @@ Page({
   openPack() {
     if (this._dragMoved) return;   // 刚做完一次拖拽,吞掉紧跟着的 tap
     if (this.data.packOpen || this.data.packShake || this.data.packTear || this.data.tearPct > 0) return;   // 播放中再点不重入
+    this._startThemeBgm();
     if (this.data.reducedMotion) { this.setData({ packOpen: true, headIn: true }); return; }
     this._packTimers = this._packTimers || [];
 
@@ -3746,9 +3755,34 @@ Page({
     if (!Array.isArray(chapter.blocks) || seen || this.data.storyIntro.show) { this.openChapterFull(); return; }
     this.setData({ storyIntro: { show: true, out: false, title: this.data.topicName || chapter.name || '', line: introLine(this.data.topicDesc) } });
   },
+  /** 主题配乐:作者在主题上配的曲子(详情页同一条),游玩页低音量循环当底乐。
+   *  只在玩家第一次点「开始游戏 / 撕卡包」后起播(小程序音频要用户手势),旁白与玩法音频照常叠在上面。 */
+  _startThemeBgm() {
+    const url = this.data.topicAudioUrl;
+    if (!url || !this.data.themeBgmOn || this.data.isPreview || this._themeBgm) return;
+    const ctx = audioSession.register(wx.createInnerAudioContext(), { kind: 'bgm' });
+    ctx.src = url;
+    ctx.loop = true;
+    ctx.volume = 0.25;
+    ctx.onError(() => { this._stopThemeBgm(); });
+    this._themeBgm = ctx;
+    ctx.play();
+  },
+  _stopThemeBgm() {
+    if (!this._themeBgm) return;
+    audioSession.unregister(this._themeBgm);
+    try { this._themeBgm.stop(); this._themeBgm.destroy(); } catch (e) {}
+    this._themeBgm = null;
+  },
+  toggleThemeBgm() {
+    const on = !this.data.themeBgmOn;
+    this.setData({ themeBgmOn: on });
+    if (on) this._startThemeBgm(); else this._stopThemeBgm();
+  },
   startStoryIntro() {
     if (!this.data.storyIntro.show || this.data.storyIntro.out) return;
     storyResume.patch(this._runSessionScope(), { intro: true });
+    this._startThemeBgm();
     const go = () => { this.setData({ 'storyIntro.show': false }); this.openChapterFull(); };
     if (this.data.reducedMotion) { go(); return; }
     this.setData({ 'storyIntro.out': true });
@@ -4099,7 +4133,7 @@ Page({
       // subpackagePrefab。那条换轨让「用玩法模板 + 主题配置做出《预制人生》」永远无法验收 ——
       // 作者配得再对,一取这个名字就被顶掉,看到的仍是写死在 JS 里的那份。
       that.setData({
-        loading: false, emptyTip: '', emptyKind: '', topicId: d.topicId || '', topicName, topicDesc: d.topicDesc || '', topicCover: d.topicCover || '',
+        loading: false, emptyTip: '', emptyKind: '', topicId: d.topicId || '', topicName, topicDesc: d.topicDesc || '', topicAudioUrl: d.topicAudioUrl || '', topicCover: d.topicCover || '',
         mode, serverMode: mode, playContact: playOverlays.contact(d.contact),
         modeLabel: mode == 2 ? '自由探索' : '城市定向',
         routeNotice: that._routeNoticeForState(routeState),
@@ -4171,7 +4205,7 @@ Page({
     const chapter = that.buildChapter(d, nodes);
     this._historyNodes = [];
     this.setData({
-      loading: false, emptyTip: '', emptyKind: '', topicId: d.topicId || '', topicName: d.topicName || '', topicDesc: d.topicDesc || '', topicCover: d.topicCover || '', mode, serverMode: mode,
+      loading: false, emptyTip: '', emptyKind: '', topicId: d.topicId || '', topicName: d.topicName || this._entryTopicName || '', topicDesc: d.topicDesc || '', topicAudioUrl: d.topicAudioUrl || '', topicCover: d.topicCover || '', mode, serverMode: mode,
       modeLabel: mode == 2 ? '自由探索' : '城市定向',
       routeNotice: that._routeNoticeForState(routeState),
         journeyAttributes: routeState.attributes,
@@ -4304,6 +4338,7 @@ Page({
       timeText: c.totalTime ? Math.round(c.totalTime / 60) + ' 分钟' : '',
       description: c.description || '',
       blocks: Array.isArray(c.blocks) ? c.blocks : null,
+      audioUrl: c.audioUrl || '',
       atmospherePreset: normalizeAtmosphere(c.atmospherePreset),
       atmosphereClass: atmosphereClass(c.atmospherePreset),
       nodeCount: 0,   // 回填于 loadData:按 chapterId 数节点
@@ -4409,6 +4444,7 @@ Page({
           mileage: card.mileage || '',
           timeText: card.timeText || '',
           blocks: card.blocks || null,
+          audioUrl: card.audioUrl || '',
           atmospherePreset: normalizeAtmosphere(card.atmospherePreset),
           atmosphereClass: atmosphereClass(card.atmospherePreset),
         };

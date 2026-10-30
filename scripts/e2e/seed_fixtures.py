@@ -32,7 +32,7 @@ DEFAULT_ROLE_PERMISSIONS = (
     ("club", 5, None, 3, 3, 1, 1, 1, 0,
      "checkin,scan,quiz,puzzle,collect,occupy,minigame", 1, 1, 0, 1, 1,
      "theme+city", 1, 0),
-    ("merchant", 0, None, 0, 3, 0, 0, 1, 1, "checkin,scan", 0, 0, 1, 0, 1,
+    ("merchant", 0, None, 0, 3, 0, 0, 1, 1, "checkin,scan", 1, 1, 1, 0, 1,
      "store", 1, 3),
 )
 MERCHANT_CAPABILITY_SUBJECTS = (

@@ -544,6 +544,7 @@ public class RegistrationRedemptionApplication {
         } catch (Exception e) {
             logger.error("探店章节收藏凭证写入失败 registrationId={} chapterId={}", registration.getId(), chapterId, e);
         }
+        recordImpliedArrival(registration, chapterId, merchantOwnerMemberId);
         // 通关副作用已在 redeemExploreChapterAndRecord 的同一事务收口；这里不再吞异常或重复发奖。
 
         if (redemption.getCompletionEarnedXp() > 0) {
@@ -579,6 +580,31 @@ public class RegistrationRedemptionApplication {
 
     @Autowired
     private com.chengyinhub.business.service.RegistrationSeatService registrationSeatService;
+    @Autowired
+    private IShopDayProofService shopDayProofService;
+    @Autowired
+    private ICmsTopicNodeService topicNodeService;
+
+    /**
+     * 商家在店里核销 = 玩家人在店里。玩家没扫门店码就被核销时补记到店(只补空缺，已有到店时间不覆盖),
+     * 否则「到店」与「核销」两份事实对不上，玩家之后再扫码还会被「该章节已核销」拒掉。
+     * 在核销事务之外、尽力而为：补记失败不能让已成立的核销回滚。
+     */
+    private void recordImpliedArrival(CmsRegistration registration, Long chapterId, Long merchantOwnerMemberId) {
+        if (registration == null || !Long.valueOf(2L).equals(registration.getOwnerType())) return;
+        try {
+            CmsTopicNode probe = new CmsTopicNode();
+            probe.setChapterId(chapterId);
+            probe.setMerchantMemberId(merchantOwnerMemberId);
+            List<CmsTopicNode> nodes = topicNodeService.selectCmsTopicNodeList(probe);
+            if (nodes == null) return;
+            for (CmsTopicNode node : nodes) {
+                shopDayProofService.markArrived(registration.getMemberId(), registration.getOwnerId(), node);
+            }
+        } catch (Exception e) {
+            logger.warn("核销补记到店失败 registrationId={} chapterId={}", registration.getId(), chapterId, e);
+        }
+    }
 
     /**
      * Failed new-use gates do not erase a committed seat. Signature-only identity checking is

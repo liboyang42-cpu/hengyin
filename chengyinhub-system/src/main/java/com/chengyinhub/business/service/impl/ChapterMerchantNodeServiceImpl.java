@@ -326,7 +326,19 @@ public class ChapterMerchantNodeServiceImpl implements IChapterMerchantNodeServi
         node.setNodeAuditTime(new Date());
         node.setUpdateTime(new Date());
         nodeService.updateCmsTopicNode(node);
+        if (approve) republishPlayerRoute(topic);
         return node;
+    }
+
+    /**
+     * 玩家读的是 cms_topic.published_route_graph_json,只在首次内容过审时编译一次。
+     * 主题过审后才招进来的商家点位(店名/玩法/权益/分身)不重编就永远到不了玩家端 ——
+     * 2026-10-29 实走六店自由探索时玩家看到的全是建期占位节点。已发布主题在点位过审后重编一次。
+     */
+    private void republishPlayerRoute(CmsTopic topic) {
+        if (topic == null || !Integer.valueOf(1).equals(topic.getStatus())
+                || topic.getPublishedConfigVersion() == null || topic.getPublishedConfigVersion() <= 0L) return;
+        topicService.publishApprovedRouteSnapshot(topic.getId());
     }
 
     private void notifyPlayersOfReplacement(CmsTopic topic, Long chapterId, Long replacementOfferId) {
@@ -368,6 +380,7 @@ public class ChapterMerchantNodeServiceImpl implements IChapterMerchantNodeServi
             nodeService.updateCmsTopicNode(node);
             n++;
         }
+        if (approve && n > 0) republishPlayerRoute(topicMapper.selectCmsTopicByIdForUpdate(mine.get(0).getTopicId()));
         return n;
     }
 
