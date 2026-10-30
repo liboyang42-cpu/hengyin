@@ -217,19 +217,28 @@
     </block>
 
     <!-- 经营解读(AI 可降级,数据区不连坐) -->
-    <view class="sec-head mi-in" wx:if="{{ai}}" style="transition-delay: 480ms;"><text class="sec-title">经营解读</text></view>
-    <view wx:if="{{ai}}" class="ai-card">
-      <text class="ai-lowsample" wx:if="{{facts.lowSample}}">数据还少，以下解读仅供参考</text>
-      <text class="ai-summary">{{ai.summary}}</text>
-      <view class="ai-op" wx:if="{{ai.opportunity}}">
-        <text class="ai-op-k">机会</text><text class="ai-op-txt">{{ai.opportunity}}</text>
+    <view class="sec-head mi-in" wx:if="{{ai && (ai.opportunity || ai.problem)}}" style="transition-delay: 480ms;"><text class="sec-title">经营解读</text></view>
+    <!-- 走查 v2 R11(业主 2026-10-30):经营解读不再是一张纯文字卡、也不放总结白卡 ——
+         机会 / 问题做成一排横滑卡,每张一个颜色、标「机会 / 问题」。其他区块不动。 -->
+    <scroll-view wx:if="{{ai && (ai.opportunity || ai.problem)}}" class="ai-row" scroll-x enhanced show-scrollbar="{{false}}">
+      <view class="ai-track">
+        <view class="ai-pc ai-pc--op" wx:if="{{ai.opportunity}}">
+          <view class="ai-pc-art"></view>
+          <text class="ai-pc-tag">机会</text>
+          <text class="ai-pc-txt">{{ai.opportunity}}</text>
+        </view>
+        <view class="ai-pc ai-pc--pb" wx:if="{{ai.problem}}">
+          <view class="ai-pc-art"></view>
+          <text class="ai-pc-tag">问题</text>
+          <text class="ai-pc-txt">{{ai.problem}}</text>
+        </view>
       </view>
-      <view class="ai-op" wx:if="{{ai.problem}}">
-        <text class="ai-op-k">问题</text><text class="ai-op-txt">{{ai.problem}}</text>
-      </view>
-      <!-- PC-233:智能解读与当日缓存同版——喂 AI 的是生成时的经营数据与档案,今天改档案对解读次日生效 -->
-      <text class="ai-source" wx:if="{{generatedAt}}">解读依据 {{generatedAt}} 的经营数据与当时的档案；今天修改的档案次日生效</text>
-    </view>
+    </scroll-view>
+    <block wx:if="{{ai && (ai.opportunity || ai.problem)}}">
+    <text class="ai-lowsample ai-note" wx:if="{{facts.lowSample}}">数据还少，以下解读仅供参考</text>
+    <!-- PC-233:智能解读与当日缓存同版——喂 AI 的是生成时的经营数据与档案,今天改档案对解读次日生效 -->
+    <text class="ai-source ai-note" wx:if="{{generatedAt}}">解读依据 {{generatedAt}} 的经营数据与当时的档案；今天修改的档案次日生效</text>
+    </block>
     <!-- 2026-10-23 业主:没有解读就整段不显示(连标题),
          不再出 AI 降级卡(降级说明 + 重新生成按钮)。
          每次回到本页 onShow 都会重新 load(),解读随之重新请求。

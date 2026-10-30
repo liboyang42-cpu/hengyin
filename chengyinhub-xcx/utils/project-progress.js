@@ -45,7 +45,7 @@ function buildHostSteps(input) {
       subs: [{ text: '每月 5 日结算上月已核销部分', act: 'goFinance', actText: '分润明细' }] },
   ];
 
-  return steps.map(function (step, i) {
+  const mapped = steps.map(function (step, i) {
     const state = i < stage ? 'done' : (i === stage ? 'run' : 'todo');
     return {
       key: step.key,
@@ -56,6 +56,21 @@ function buildHostSteps(input) {
       subs: state === 'run' ? (step.subs || []) : [],
     };
   });
+  if (!freeExplore) return mapped;
+  /* 走查 v2 R14(业主 2026-10-30):自由探索要先有 1 家俱乐部承办才能开售(后端开售闸
+     SALE_EXECUTING_CLUB_UNRESOLVED)。发布之后插一步「邀请俱乐部承办」;没人接受时它是当前步,后面全部等着。 */
+  const published = stage >= 2;
+  const clubStep = {
+    key: 'executor', label: clubs ? '俱乐部承办' : '邀请俱乐部承办',
+    state: clubs ? 'done' : (published ? 'run' : 'todo'),
+    status: !clubs && published ? '待邀约' : '', lock: '',
+    subs: !clubs && published ? [{ text: '有 1 家俱乐部接受承办,才能开始售票', act: 'onQuickAction', actKey: 'club', actText: '去邀请' }] : [],
+  };
+  if (!clubs && published) {
+    mapped.slice(2).forEach(function (step) { step.state = 'todo'; step.status = ''; step.subs = []; });
+  }
+  mapped.splice(2, 0, clubStep);
+  return mapped;
 }
 
 module.exports = { buildHostSteps };

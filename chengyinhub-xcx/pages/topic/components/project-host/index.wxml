@@ -44,6 +44,12 @@
     </view>
   </view>
 
+  <!-- 走查 v2 R14(业主 2026-10-30):商家发自由探索,要先邀 1 家俱乐部承办,对方接受后才能开售 -->
+  <view class="gate" wx:if="{{ needExecutorClub }}">
+    <text class="gate-t">邀请一个俱乐部承办后才能开始售票</text>
+    <view class="gate-btn" bindtap="emit" data-act="onQuickAction" data-key="club" aria-role="button" aria-label="去邀请俱乐部承办" hover-class="cy-pressed" hover-stay-time="80">去邀请</view>
+  </view>
+
   <!-- ===== 售卖 ===== -->
   <view class="sec">
     <view class="sec-head">

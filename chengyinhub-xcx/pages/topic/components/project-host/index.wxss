@@ -704,3 +704,8 @@
 .pg-si--now .pg-si-dot { background: #E5338F; } /* ds-ok: 同上 */
 .pg-si-t { flex: 1; min-width: 0; }
 .pg-go { flex: none; font-weight: 600; color: #2F7FEA; } /* ds-ok: 同上 */
+
+/* 走查 v2 R14:自由探索待俱乐部承办提示 */
+.gate { display: flex; align-items: center; gap: var(--cy-space-3); margin: var(--cy-space-3) var(--cy-page-x) 0; padding: var(--cy-space-4); border-radius: var(--cy-radius-xl); background: var(--cy-bg-card); }
+.gate-t { flex: 1; min-width: 0; font-size: var(--cy-font-body); font-weight: 600; color: var(--cy-text-title); line-height: 1.4; }
+.gate-btn { flex: none; height: 64rpx; line-height: 64rpx; padding: 0 var(--cy-space-4); border-radius: var(--cy-radius-pill); background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); font-size: var(--cy-font-label); font-weight: 600; }

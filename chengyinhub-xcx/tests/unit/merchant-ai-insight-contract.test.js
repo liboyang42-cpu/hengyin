@@ -54,7 +54,8 @@ test('AI 降级不连坐:ai 为空时数据区照常、经营解读整段不显�
   assert.doesNotMatch(PAGE_WXML, /class="ai-card ai-card--down"/);
   assert.doesNotMatch(PAGE_WXML, /基础数据可用/);
   // 合 master 后标题带入场动效类 mi-in 与延时 style;本条只钉「无 AI 不出标题」
-  assert.match(PAGE_WXML, /<view class="sec-head[^"]*" wx:if="\{\{ai\}\}"[^>]*><text class="sec-title">经营解读<\/text><\/view>/);
+  // 2026-10-30 走查 v2 R11:没有机会 / 问题就整段(连标题)不显示
+  assert.match(PAGE_WXML, /<view class="sec-head[^"]*" wx:if="\{\{ai && \(ai\.opportunity \|\| ai\.problem\)\}\}"[^>]*><text class="sec-title">经营解读<\/text><\/view>/);
 });
 
 test('数字位一律是数:null 指标写 0,不放横杠(2026-09-19 用户裁决,与营销页同口径)', () => {

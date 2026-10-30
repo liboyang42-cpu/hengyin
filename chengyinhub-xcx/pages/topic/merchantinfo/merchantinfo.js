@@ -3269,8 +3269,7 @@ Page({
             sub: this.chapterOpenSub(), disabled: this.chapterFinished() || this.noChapter(),
             switchKnown: !this.noChapter(), checked: this.chapterRecruitTag() === '开',
             busy: !!this._chapterRecruitBusy, tag: this.chapterRecruitTag() },
-          { key: 'chapterInvite', label: '邀请其他商家', sub: this.inviteMerchantSub(),
-            disabled: this.chapterFinished() },
+          // 走查 v2 R08(业主 2026-10-30):「更多」里不再放「邀请其他商家」—— 招商弹窗里就能邀
 
         ] },
         { head: '本站运营(主办方自己也接待时)', rows: this.stationOpsRows(OPS) },

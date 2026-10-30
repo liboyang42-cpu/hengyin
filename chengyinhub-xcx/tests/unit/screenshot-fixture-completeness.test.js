@@ -300,7 +300,7 @@ const CONTRACTS = {
   },
   C12b: {
     sources: ['pages/merchant/marketing/ai-insight/index.js', 'pages/merchant/marketing/ai-insight/index.wxml'],
-    paths: ['loading', 'error', 'factState', 'facts.window', 'valueCard.visitors', 'ai.summary', 'aiError', 'metricCards[].name'],
+    paths: ['loading', 'error', 'factState', 'facts.window', 'valueCard.visitors', 'ai.opportunity', 'aiError', 'metricCards[].name'],
     equals: { loading: false, error: '', factState: 'ready', aiError: '' },
   },
   C12c: {

@@ -69,6 +69,8 @@ Component({
       this.setData({
         recruitDone: total > 0 && filled >= total,
         clubCount: clubs.length,
+        needExecutorClub: !!topic && Number(topic.productType) === 2 && this.data.hostOwnerType !== 'club'
+          && [1, 2].indexOf(Number(topic.lifecycle)) >= 0 && !clubs.some(function (c) { return c && c.accepted; }),
         // 走查 v2 R04/R16:底部进度,只用这几份已有数据派生
         hostProgress: projectProgress.buildHostSteps({
           lifecycle: topic && topic.lifecycle,
@@ -83,7 +85,7 @@ Component({
     },
   },
   data: {
-    recruitDone: false, clubCount: 0, hostProgress: [], anyDrawerOpen: false, hostStatusText: '状态待确认',
+    recruitDone: false, clubCount: 0, hostProgress: [], needExecutorClub: false, anyDrawerOpen: false, hostStatusText: '状态待确认',
     circleCandidates: [], circleConfigHint: '',
     circleConfigActions: [{ key: 'submitCircleConfig', label: '保存供给角色' }],
   },
