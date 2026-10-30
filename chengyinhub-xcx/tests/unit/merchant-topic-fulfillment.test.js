@@ -502,8 +502,9 @@ test('俱乐部抽屉的动作按身份/空态给不同文案', () => {
   host.data.role = 'host';
   host.openClubSheet();
   // 走查 v2 R05(业主 2026-10-30):从主题打开的俱乐部弹窗不跳出去看「收到的申请」
-  assert.deepEqual(host.data.clubActions.map((a) => a.key), ['goInviteClub'],
-    '主办方只留邀请,申请不跳出主题');
+  // 走查 v2 R05(2026-10-30):主办的俱乐部弹窗里直接列可邀约的俱乐部(每行邀约 / 主页),底部不再放跳出去的按钮
+  assert.deepEqual(host.data.clubActions.map((a) => a.key), [],
+    '主办方在弹窗里就地邀约,不跳出主题');
 });
 
 /**

@@ -133,10 +133,17 @@
 
 
   <!-- ===== 俱乐部抽屉 ===== -->
-  <project-drawer compact="{{!clubSheet.items.length}}" show="{{ clubSheet.show }}" title="{{ '合作俱乐部' }}" actions="{{ clubActions }}"
+  <project-drawer show="{{ clubSheet.show }}" title="合作俱乐部" actions="{{ clubActions }}"
                   bind:close="emitCloseClub" bind:action="emitDrawerAction">
+    <!-- 走查 v2 R05(业主 2026-10-30):顶部三格数,下面「已邀约」与「可以邀约的俱乐部」两组;每行「邀约 / 主页」,不跳出主题 -->
+    <view class="cs-sum">
+      <view class="cs-sum-i"><text class="cs-sum-n">{{ clubAccepted }}</text><text class="cs-sum-l">已合作</text></view>
+      <view class="cs-sum-i"><text class="cs-sum-n">{{ clubSheet.items.length - clubAccepted }}</text><text class="cs-sum-l">等回复</text></view>
+      <view class="cs-sum-i"><text class="cs-sum-n">{{ clubCandidates.rows.length }}</text><text class="cs-sum-l">可邀约</text></view>
+    </view>
     <block wx:if="{{ clubSheet.items.length }}">
-      <view class="dcard">
+      <view class="dg-label">已邀约</view>
+      <view class="dcard cs-list">
       <view class="dr" wx:for="{{ clubSheet.items }}" wx:key="clubId">
         <image class="dr-avatar dr-avatar--round" wx:if="{{ item.logo }}" src="{{ item.logo }}" mode="aspectFill" />
         <view class="dr-avatar dr-avatar--round dr-avatar--fallback" wx:else>{{ item.initial }}</view>
@@ -153,10 +160,29 @@
           </view>
           <text class="dr-sub" wx:else>未留电话</text>
         </view>
+        <view class="cs-pill cs-pill--g" catchtap="emit" data-act="openClubHome" data-id="{{ item.clubId }}" aria-role="button" aria-label="打开 {{ item.name }} 主页" hover-class="cy-pressed" hover-stay-time="80">主页</view>
       </view>
       </view>
     </block>
-    <cy-empty wx:else title="还没有俱乐部带团" />
+    <block wx:if="{{ clubCandidates.state }}">
+      <view class="dg-label">可以邀约的俱乐部</view>
+      <cy-skeleton wx:if="{{ clubCandidates.state === 'loading' }}" type="list" count="{{ 3 }}" />
+      <cy-inline-error wx:elif="{{ clubCandidates.state === 'error' }}" kind="data" title="俱乐部列表没读到" action="重试" data-act="loadClubCandidates" bind:action="emit" />
+      <view class="dcard cs-list" wx:elif="{{ clubCandidates.rows.length }}">
+      <view class="dr" wx:for="{{ clubCandidates.rows }}" wx:key="id">
+        <image class="dr-avatar dr-avatar--round" wx:if="{{ item.logo }}" src="{{ item.logo }}" mode="aspectFill" />
+        <view class="dr-avatar dr-avatar--round dr-avatar--fallback" wx:else>{{ item.initial }}</view>
+        <view class="dr-text">
+          <text class="dr-name ep1">{{ item.name }}</text>
+          <text class="dr-sub" wx:if="{{ item.meta }}">{{ item.meta }}</text>
+        </view>
+        <view class="cs-pill" catchtap="emit" data-act="inviteClubRow" data-id="{{ item.id }}" data-name="{{ item.name }}" aria-role="button" aria-label="邀约 {{ item.name }}" hover-class="cy-pressed" hover-stay-time="80">邀约</view>
+        <view class="cs-pill cs-pill--g" catchtap="emit" data-act="openClubHome" data-id="{{ item.id }}" aria-role="button" aria-label="打开 {{ item.name }} 主页" hover-class="cy-pressed" hover-stay-time="80">主页</view>
+      </view>
+      </view>
+      <cy-empty wx:else size="sm" title="附近暂时没有可以邀约的俱乐部" />
+    </block>
+    <cy-empty wx:if="{{ !clubSheet.items.length && !clubCandidates.state }}" title="还没有俱乐部带团" />
   </project-drawer>
 
   <!-- ===== 承接商家抽屉(主办方独有) ===== -->

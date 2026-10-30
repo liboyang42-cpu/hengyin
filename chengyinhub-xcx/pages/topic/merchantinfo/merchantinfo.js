@@ -308,6 +308,7 @@ Page({
     checkinQrUrl: '',
     checkinCode: '',
     profitSheet: { show: false, state: '', error: '', row: null },
+    clubCandidates: { state: '', rows: [] },
     checkinErr: '',
     privacyGateShow: false,
   },
@@ -356,7 +357,7 @@ Page({
     }
     const reducedMotion = readReducedMotion();
     if (this.data.reducedMotion !== reducedMotion) this.setData({ reducedMotion });
-    merchantTheme.merchantPageShow(); this._navigating = false;
+    if (this._clubSheetReturn) { this._clubSheetReturn = false; this.loadProjectHome(); this.loadClubCandidates(); } merchantTheme.merchantPageShow(); this._navigating = false;
   },
   onHide() { this._hidden = true; merchantTheme.merchantPageRestore(); },
   onUnload() {
@@ -2308,14 +2309,60 @@ Page({
    * 俱乐部抽屉。空态也照常打开 —— 抽屉里那句引导和黑按钮就是空态的下一步,
    * 直接跳走反而让人不知道自己点了什么。
    */
+  /* 走查 v2 R05(业主 2026-10-30):主办从主题打开俱乐部弹窗,弹窗里直接列「已邀约」和「可以邀约的俱乐部」,
+     每行「邀约」「主页」;邀约走现成邀约表单(带好本主题与这家俱乐部,条款 / 幂等都在那页),
+     主页进正式俱乐部主页的「概览」;返回后弹窗还开着并刷新状态。 */
   openClubSheet() {
+    const host = this.data.role === 'host';
     this.setData({
       'clubSheet.show': true,
-      clubActions: this.data.role === 'host'
-        // 走查 v2 R05:从主题打开的俱乐部弹窗不再跳出去看「收到的申请」
-        ? [{ key: 'goInviteClub', label: '去找俱乐部' }]
+      clubActions: host
+        ? []
         : [{ key: 'goInviteClub', label: this.data.clubSheet.items.length ? '再找一家俱乐部带团' : '去找俱乐部' }],
     });
+    if (host) this.loadClubCandidates();
+  },
+
+  loadClubCandidates() {
+    if (this.data.role !== 'host') return;
+    const that = this;
+    this.setData({ clubCandidates: { state: 'loading', rows: [] } });
+    app.sendRequest({
+      hideLoading: true, silentError: true, url: '/api/merchant/clubs', method: 'POST',
+      data: JSON.stringify({}), header: { 'Content-Type': 'application/json' },
+      success(res) {
+        const rows = res && res.code == '200' && Array.isArray(res.data) ? res.data : null;
+        if (!rows) { that.setData({ clubCandidates: { state: 'error', rows: [] } }); return; }
+        const invited = {};
+        (that.data.clubSheet.items || []).forEach(function (c) { invited[String(c.clubId)] = true; });
+        that.setData({ clubCandidates: { state: 'ready', rows: rows.filter(function (c) { return c && c.id && !invited[String(c.id)]; }).slice(0, 30).map(function (c) {
+          return {
+            id: c.id, name: c.name || '未命名俱乐部', logo: c.logo || '', initial: String(c.name || '?').slice(0, 1),
+            meta: [c.clubType, typeof c.memberCount === 'number' ? c.memberCount + ' 人' : '', c.city].filter(Boolean).join(' · '),
+          };
+        }) } });
+      },
+      fail() { that.setData({ clubCandidates: { state: 'error', rows: [] } }); },
+    });
+  },
+
+  inviteClubRow(e) {
+    const ds = (e && e.currentTarget && e.currentTarget.dataset) || {};
+    const topicId = this.data.topicId || (this.data.info && this.data.info.topicId);
+    if (!ds.id || !topicId || this._navigating) return;
+    this._navigating = true; this._clubSheetReturn = true;
+    wx.navigateTo({
+      url: '/pages/coop/invite/index?type=1&toId=' + ds.id + '&toName=' + encodeURIComponent(ds.name || '') + '&topicId=' + topicId
+        + (this.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT' : ''),
+      complete: () => { this._navigating = false; },
+    });
+  },
+
+  openClubHome(e) {
+    const ds = (e && e.currentTarget && e.currentTarget.dataset) || {};
+    if (!ds.id || this._navigating) return;
+    this._navigating = true; this._clubSheetReturn = true;
+    wx.navigateTo({ url: '/pages/club/detail/index?id=' + ds.id + '&tab=overview' + (this.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT' : ''), complete: () => { this._navigating = false; } });
   },
 
   closeClubSheet() {
@@ -3114,7 +3161,7 @@ Page({
       onPrimaryTap: 1, onQuickAction: 1, retryLoad: 1, toggleRules: 1, onHeroError: 1,
       closeClubSheet: 1, closePlayerSheet: 1, closeMerchantSheet: 1,
       closeMoreSheet: 1, onMorePick: 1,
-      copyText: 1, goInviteClub: 1, onPlayerFilter: 1,
+      copyText: 1, goInviteClub: 1, onPlayerFilter: 1, inviteClubRow: 1, openClubHome: 1, loadClubCandidates: 1,
       // CU-C-67:客户名单读失败后的局部重试(错态与零单分开之后要有恢复动作)
       retryPlayerSheet: 1,
       // CU-C-68:抽屉里「本站运营」资格探不到时的就地重试

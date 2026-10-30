@@ -730,7 +730,8 @@ Page({
     this._topics = [];
     this._leaderboardSort = 'composite';
     const id = opt && opt.id ? Number(opt.id) : null;
-    this._requestedTab = opt && opt.tab === 'manage' ? 'manage' : '';
+    // 走查 v2 R05(业主 2026-10-30):从主题工作台「主页」进来先落「概览」
+    this._requestedTab = opt && (opt.tab === 'manage' || opt.tab === 'overview') ? opt.tab : '';
     this._requestedPostId = opt && opt.postId ? String(opt.postId) : '';
     this.setData({
       myMemberId: app.getUserID && app.getUserID(),
@@ -2062,7 +2063,7 @@ Page({
       const sameClub = that.data.club && String(that.data.club.id) === String(club.id);
       const immediateCanUseManageTab = legacyCanGovern || (sameClub && that.data.canUseManageTab);
       const canKeepTab = that.data.tabInitialized && (immediateCanUseManageTab || that.data.activeTab !== 'manage');
-      const requestedTab = that._requestedTab === 'manage' && legacyCanGovern ? 'manage' : '';
+      const requestedTab = that._requestedTab === 'manage' && legacyCanGovern ? 'manage' : (that._requestedTab === 'overview' ? 'overview' : '');
       const initialTab = canKeepTab && that.data.activeTab ? that.data.activeTab : (requestedTab || that.rememberedTabForClub(club, immediateCanUseManageTab) || that.defaultTabForClub(club));
       if (club) rememberClubTab(club.id, initialTab);
       if (requestedTab) that._requestedTab = '';
@@ -2081,7 +2082,7 @@ Page({
         const sameClub = !!club && that.data.club && String(that.data.club.id) === String(club.id);
         const immediateCanUseManageTab = legacyCanGovern || (sameClub && that.data.canUseManageTab);
         const canKeepTab = !!club && that.data.tabInitialized && (immediateCanUseManageTab || that.data.activeTab !== 'manage');
-        const requestedTab = that._requestedTab === 'manage' && legacyCanGovern ? 'manage' : '';
+        const requestedTab = that._requestedTab === 'manage' && legacyCanGovern ? 'manage' : (that._requestedTab === 'overview' ? 'overview' : '');
         const initialTab = canKeepTab && that.data.activeTab ? that.data.activeTab : (requestedTab || that.rememberedTabForClub(club, immediateCanUseManageTab) || that.defaultTabForClub(club));
         if (club) rememberClubTab(club.id, initialTab);
         if (requestedTab) that._requestedTab = '';

@@ -39,6 +39,7 @@
     clubSheet="{{ clubSheet }}"
     hostTopic="{{ hostTopic }}"
     hostRecruit="{{ hostRecruit }}"
+    clubCandidates="{{ clubCandidates }}"
     hostMerchants="{{ hostMerchants }}"
     hostPlayers="{{ hostPlayers }}"
     owner-chapter-applications="{{ownerChapterApplications}}"

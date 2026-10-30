@@ -13,6 +13,7 @@ Component({
     loadFailed:      { type: Boolean, value: false },
     rulesOpen:       { type: Boolean, value: false },
     quickActions:    { type: Array, value: [] },
+    clubCandidates:  { type: Object, value: { state: '', rows: [] } }, // 走查 v2 R05:主题内可邀约的俱乐部
     hostOwnerType:   { type: String, value: 'merchant' }, // club 主办不显示俱乐部协作位
     playerSheet: { type: Object, value: {} },
     playerFilters: { type: Array, value: [] },
@@ -69,6 +70,7 @@ Component({
       this.setData({
         recruitDone: total > 0 && filled >= total,
         clubCount: clubs.length,
+        clubAccepted: clubs.filter(function (c) { return c && c.accepted; }).length,
         needExecutorClub: !!topic && Number(topic.productType) === 2 && this.data.hostOwnerType !== 'club'
           && [1, 2].indexOf(Number(topic.lifecycle)) >= 0 && !clubs.some(function (c) { return c && c.accepted; }),
         // 走查 v2 R04/R16:底部进度,只用这几份已有数据派生
@@ -85,7 +87,7 @@ Component({
     },
   },
   data: {
-    recruitDone: false, clubCount: 0, hostProgress: [], needExecutorClub: false, anyDrawerOpen: false, hostStatusText: '状态待确认',
+    recruitDone: false, clubCount: 0, clubAccepted: 0, hostProgress: [], needExecutorClub: false, anyDrawerOpen: false, hostStatusText: '状态待确认',
     circleCandidates: [], circleConfigHint: '',
     circleConfigActions: [{ key: 'submitCircleConfig', label: '保存供给角色' }],
   },
