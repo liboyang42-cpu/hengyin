@@ -308619,7 +308619,7 @@
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": "查看第 {{picIndex + 1}} 张大图，双击点赞",
+        "ariaLabelExpression": "查看第 {{picIndex + 1 || 1}} 张大图，双击点赞",
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
