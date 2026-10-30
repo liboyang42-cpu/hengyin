@@ -8572,6 +8572,104 @@
    "checks"
   ]
  },
+ "B78": {
+  "data": {
+   "loading": false,
+   "loadError": false,
+   "loadErrorMsg": "",
+   "chapters": [
+    {
+     "img": "/images/route_city_cover.png",
+     "no": "示例no",
+     "name": "示例name",
+     "text": "示例text",
+     "stops": "示例stops",
+     "value": "示例value",
+     "label": "示例label",
+     "teaser": "示例teaser",
+     "game": "示例game",
+     "doText": "示例doText",
+     "dur": "示例dur",
+     "id": 1
+    }
+   ],
+   "stats": [
+    {
+     "img": "/images/route_city_cover.png",
+     "no": "示例no",
+     "name": "示例name",
+     "text": "示例text",
+     "stops": "示例stops",
+     "value": "示例value",
+     "label": "示例label",
+     "teaser": "示例teaser",
+     "game": "示例game",
+     "doText": "示例doText",
+     "dur": "示例dur",
+     "id": 1
+    }
+   ],
+   "gallery": [
+    {
+     "img": "/images/route_city_cover.png",
+     "no": "示例no",
+     "name": "示例name",
+     "text": "示例text",
+     "stops": "示例stops",
+     "value": "示例value",
+     "label": "示例label",
+     "teaser": "示例teaser",
+     "game": "示例game",
+     "doText": "示例doText",
+     "dur": "示例dur",
+     "id": 1
+    }
+   ],
+   "stops": [
+    {
+     "img": "/images/route_city_cover.png",
+     "no": "示例no",
+     "name": "示例name",
+     "text": "示例text",
+     "stops": "示例stops",
+     "value": "示例value",
+     "label": "示例label",
+     "teaser": "示例teaser",
+     "game": "示例game",
+     "doText": "示例doText",
+     "dur": "示例dur",
+     "id": 1
+    }
+   ],
+   "summary": [
+    {
+     "img": "/images/route_city_cover.png",
+     "no": "示例no",
+     "name": "示例name",
+     "text": "示例text",
+     "stops": "示例stops",
+     "value": "示例value",
+     "label": "示例label",
+     "teaser": "示例teaser",
+     "game": "示例game",
+     "doText": "示例doText",
+     "dur": "示例dur",
+     "id": 1
+    }
+   ]
+  },
+  "dropped": [],
+  "switchKeys": [
+   "loading",
+   "loadError",
+   "loadErrorMsg",
+   "chapters",
+   "stats",
+   "gallery",
+   "stops",
+   "summary"
+  ]
+ },
  "C01": {
   "data": {
    "merchantAccess": {
