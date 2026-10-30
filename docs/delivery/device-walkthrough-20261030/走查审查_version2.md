@@ -2,7 +2,7 @@
 
 来源：Obsidian `真机走查问题（玩家版）.md`。第 112–160 行「version2」是 10-29 晚新增的 27 张截图（IMG_0736–0762），内容几乎都是**商家视角的主题工作台、协作邀请、账户收益、店铺参谋**。第 1–109 行是 10-26 那批（已在 10-27 实施文档里编成 P-01～P-60）。
 
-诊断基于 hengyin master `48c9a50c`。代码修复在分支 `feature/dw30-v2-merchant-workbench`（草稿 PR，未合并，等业主看过再合）。需要重新设计的条目做了可点原型：`proto/index.html`。
+诊断基于 hengyin master `48c9a50c`。代码修复在分支 `feature/dw30-v2-merchant-workbench`（草稿 PR，未合并，等业主看过再合）。需要重新设计的条目做了可点原型：`docs/design/proto-dw30-20261030/p6-merchant.html`（沿用 10-29 原型的做法：`tools/build-css.js` 把 master WXSS 转成 `shared/cy.css`，页面按 master WXML 的结构和类名拼，只有 `p6.css` 是本次改动；10-30 业主说第一版设计差，已按此重做）。
 
 图例：✅ 本分支已修 · 🎨 原型待确认 · ⏳ 已在别的未合并 PR 里 · 🔧 需业主操作 · ❓ 需要业主决定
 
