@@ -92,7 +92,7 @@
     <view class="det1 dt" id="heroTop">
       <swiper class="bgt-swiper dt__trk" circular="{{true}}" bindchange="onHeroSwipe">
         <swiper-item wx:if="{{!img.list(info.imgArr).length}}">
-          <image src="{{info.imgUrl || '/pages/topic/images/icon_line.jpg'}}" mode="aspectFill" class="bgt" />
+          <image src="{{img.first(info.imgUrl) || '/pages/topic/images/icon_line.jpg'}}" mode="aspectFill" class="bgt" />
         </swiper-item>
         <swiper-item wx:for="{{img.list(info.imgArr)}}" wx:key="index">
           <image src="{{item}}" mode="aspectFill" class="bgt" />
