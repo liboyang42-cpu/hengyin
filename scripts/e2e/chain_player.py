@@ -56,7 +56,8 @@ def store_trusted_payment_fact(reg_no, transaction_id, total_fen):
 
 
 def assert_paid_callback(callback, paid_rows, expected_transaction_id):
-    if callback.get("_status") != 200 or callback.get("code") != "SUCCESS":
+    # 回调成功应答是 HTTP 204 空体(ApiRegistrationController.callbackResponse,微信 v3 口径);失败是 500 + FAIL 正文
+    if callback.get("_status") != 204 or callback.get("_raw", "") != "":
         raise RuntimeError("支付回调协议未成功:%s" % callback)
     if (len(paid_rows) != 1 or paid_rows[0][2] != 2 or paid_rows[0][3] is None
             or paid_rows[0][4] != expected_transaction_id):

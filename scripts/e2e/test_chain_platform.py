@@ -227,13 +227,13 @@ class ChainPlatformSaleGateTest(unittest.TestCase):
 
     def test_payment_callback_requires_success_protocol_and_db_fact(self):
         paid = ((74, "R74", 2, "2026-09-21 12:00:00", "E2E-TXN-74"),)
-        assert_paid_callback(
-            {"code": "SUCCESS", "message": "成功", "_status": 200}, paid, "E2E-TXN-74")
+        assert_paid_callback({"_raw": "", "_status": 204}, paid, "E2E-TXN-74")
         bad_cases = (
-            ({"code": 200, "_status": 200}, paid),
-            ({"code": "SUCCESS", "_status": 500}, paid),
-            ({"code": "SUCCESS", "_status": 200}, ((74, "R74", 1, None, None),)),
-            ({"code": "SUCCESS", "_status": 200}, ((74, "R74", 2, "2026-09-21", "OTHER"),)),
+            ({"code": "SUCCESS", "message": "成功", "_status": 200}, paid),
+            ({"code": "FAIL", "message": "通知处理尚未确认", "_status": 500}, paid),
+            ({"_raw": "unexpected", "_status": 204}, paid),
+            ({"_raw": "", "_status": 204}, ((74, "R74", 1, None, None),)),
+            ({"_raw": "", "_status": 204}, ((74, "R74", 2, "2026-09-21", "OTHER"),)),
         )
         for callback, rows in bad_cases:
             with self.subTest(callback=callback, rows=rows), self.assertRaises(RuntimeError):
