@@ -4,7 +4,7 @@
      同样只负责渲染,所有点击从 bind:act 冒泡回页面。 -->
 <view class="page theme-merchant">
   <!-- 2026-09-18 ✕统一裁决:打卡码弹层显示时导航退场,唯一出口是弹层✕/遮罩 -->
-  <cy-nav-bar overlay pill pillDark tint="light" wx:if="{{!navHidden}}" />
+  <cy-nav-bar overlay pill pillDark scrolled="{{navScrolled}}" tint="{{navScrolled ? '' : 'light'}}" wx:if="{{!navHidden}}" />
 
   <cy-error class="load-error" wx:if="{{ loadFailed }}" load-failure="{{true}}" style="padding-top: {{ statusBarHeight + navBarHeight }}px;" />
 
