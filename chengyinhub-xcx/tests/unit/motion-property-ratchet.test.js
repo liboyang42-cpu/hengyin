@@ -79,7 +79,9 @@ const LAYOUT_ANIMATION_CEILING = 9 // 2026-10-29 pages/square/list 整页删除(
 //   全站关键帧进不来,只能本地一条 pc-like-pop)。只在「未赞 → 赞」那一下播,进页已赞的不播。
 // 2026-10-23 148 → 146:起名页 templateadd 整页删除带走 1 条(#565);弹层动效统一,cy-scene-sheet 的 ss-up 换成 transition(_in 开关)、顺带补上退场,再减 1。
 // 2026-10-28 146 → 145:模板页改为分包货架(业主定稿原型 v21),头牌扫光 tpl-glow-spin 随旧列表退役
-const KEYFRAMES_CEILING = 145
+// 2026-10-30 +1 auraDrift:收集册整屏浅色底三团色块的常驻慢漂移(subpackageP3/components/album-aura,业主参考 mymind),
+//   一进页就一直漂,不会被快速重触发,只动 transform;145 → 146。
+const KEYFRAMES_CEILING = 146
 
 /* 逐条豁免。**不是预算额度** —— 想加一组就得在这里写清楚为什么它不属于本门禁要防的场景,
    由 review 逐条看,而不是把上限往上抬一格了事。抬上限会让棘轮退化成台账:

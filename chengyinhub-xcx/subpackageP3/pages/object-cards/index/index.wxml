@@ -1,20 +1,25 @@
 <!-- 藏品册(施工文档第四版 §3.3,样稿 artifact 9U7HFWDfbinjmt2tppvVGp):
      物品从上往下掉、堆在地面线上;右上角 ✦ 聚成一团,再按一下落回去;点一件放大看。
      堆是 canvas 画的(最近 40 件),分类筛选在服务端做。 -->
-<view class="theme-dark">
+<!-- 2026-10-30 业主定稿 P-3:藏品册是「收集册 · 藏品」:整屏浅色流动底、顶上同一行三段,分类收进右边「筛选」(带图标的三列格子,选中黑底);
+     物品能拿起来拖、甩;点一件飞到屏幕中间。 -->
+<view class="theme-light">
+  <album-aura />
   <cy-toast id="cy-toast" />
-  <view class="oc-root">
-    <cy-nav-bar plain />
-    <cy-page-title title="藏品册" />
-    <view class="oc-bar">
-      <cy-tabs class="oc-chips" variant="chip" tabs="{{cats}}" active="{{filter}}" bind:change="onFilter" />
+  <view class="oc-root" style="padding-top:{{navTop}}px;">
+    <cy-nav-bar overlay />
+    <album-head active="object">
+      <view class="oc-filter {{filter !== '全部' ? 'is-on' : ''}}" bindtap="openCats" aria-role="button" aria-label="筛选分类，当前{{filter}}" hover-class="cy-pressed" hover-stay-time="80">
+        <image class="oc-filter__ic" src="{{catIcon[filter]}}" mode="aspectFit" aria-hidden="true" /><text>{{filter}}</text>
+      </view>
       <view class="oc-gather {{ball ? 'is-on' : ''}}" wx:if="{{cards.length > 1}}" bindtap="onGather"
             aria-role="button" aria-label="{{ball ? '让它们落下来' : '聚成一团'}}" hover-class="cy-pressed" hover-stay-time="80"></view>
-    </view>
+    </album-head>
 
     <view class="oc-pile">
-      <canvas type="2d" id="ocPile" class="oc-pile__cv {{active ? 'is-hidden' : ''}}" bindtap="onTapPile" hover-class="oc-pile--press" hover-stay-time="80"
-              aria-role="img" aria-label="藏品堆，共 {{cards.length}} 件，点一件放大看"></canvas>
+      <canvas type="2d" id="ocPile" class="oc-pile__cv {{active || fly.show || catsOpen ? 'is-hidden' : ''}}" disable-scroll="{{true}}"
+              bindtouchstart="onPileStart" bindtouchmove="onPileMove" bindtouchend="onPileEnd" bindtouchcancel="onPileEnd"
+              aria-role="img" aria-label="藏品堆，共 {{cards.length}} 件，点一件放大看，按住可以拖"></canvas>
       <!-- 失败 / 首屏加载 / 真空态互斥:失败时空态不得替它背书。
            整页失败沿用产品裁决(零按钮说清原因 → 自动返回),所以不挂 retry;切分类失败只提示并退回原分类。 -->
   <cy-empty class="oc-state" fill="{{true}}" wx:if="{{readAccess}}" title="{{readAccess === 'login' ? '登录后查看自己的册子' : '当前账号无法查看'}}" sub="{{readAccess === 'login' ? '' : '请返回重新进入'}}" cta="{{readAccess === 'login' ? '去登录' : ''}}" bind:cta="loginToRead" />
@@ -26,6 +31,23 @@
                 />
     </view>
   </view>
+
+  <!-- 点一件:它自己从堆里飞到屏幕中间放大,底下压暗;点空白处飞回去;再点这一件打开下面的详情(转台 / 改名) -->
+  <view class="oc-fly {{fly.on ? 'is-on' : ''}}" wx:if="{{fly.show}}" bindtap="closeFly" catchtouchmove="noop" aria-role="dialog" aria-label="{{fly.name}}">
+    <view class="oc-fly__veil"></view>
+    <image class="oc-fly__img {{fly.cut ? 'is-cut' : ''}}" src="{{fly.src}}" mode="aspectFit" style="{{fly.style}}" catchtap="onFlyItem" aria-role="button" aria-label="查看{{fly.name}}的详情" />
+    <view class="oc-fly__cap"><text class="oc-fly__name">{{fly.name}}</text><text class="oc-fly__meta" wx:if="{{fly.meta}}">{{fly.meta}}</text></view>
+  </view>
+
+  <!-- 分类:60% 半屏,全部 + 8 类排成三列,每类一个图标,选中黑底白字 -->
+  <cy-sheet show="{{catsOpen}}" title="分类" bind:close="closeCats">
+    <view class="oc-cats">
+      <view wx:for="{{cats}}" wx:key="key" class="oc-cat {{filter === item.key ? 'is-on' : ''}}" bindtap="pickCat" data-key="{{item.key}}"
+            aria-role="button" aria-label="{{item.label}}" aria-selected="{{filter === item.key}}" hover-class="cy-pressed" hover-stay-time="80">
+        <image class="oc-cat__ic" src="{{catIcon[item.key]}}" mode="aspectFit" aria-hidden="true" /><text>{{item.label}}</text>
+      </view>
+    </view>
+  </cy-sheet>
 
   <!-- 放大态:有转台就左右拖着转,有贴纸就看贴纸,都没有是照片卡 -->
   <cy-sheet show="{{!!active && !renaming}}" title="{{active.title || '藏品'}}" bind:close="onCloseActive">

@@ -499,8 +499,6 @@ Component({
     projectAuthError: false,
     feedErr: false,
     feedAuthError: false,
-    medalErr: false,
-    medalAuthError: false,
     sceneStack: [],
     sceneCurrent: null,
     sceneConfirm: { show: false, action: null, pending: null }
@@ -620,7 +618,7 @@ Component({
         identityCard: { shops: 0, themes: 0, routes: 0, km: '0', medals: 0, cities: 1 },
         exploreStat: { shops: 0, weekExp: 0 }, themeProgress: [], medals: [], medalCount: 0,
         orderPreviewList: [], projectPreviewList: [], projectPendingCount: 0,
-        orderErr: false, orderAuthError: false, projectErr: false, projectAuthError: false, medalErr: false, medalAuthError: false,
+        orderErr: false, orderAuthError: false, projectErr: false, projectAuthError: false,
         list: [], page_no: 1, hasMore: false, nodata: false, feedErr: false, feedAuthError: false,
         pointsSheet: { show: false, loading: false, loaded: false, failed: false, tasks: [] },
         sceneStack: [], sceneCurrent: null, sceneConfirm: { show: false, action: null, pending: null } });
@@ -1426,10 +1424,9 @@ Component({
     var that = this;
     return req('/api/medal/wall', {}).then(function (res) {
       if (!that._currentProfileRead(read, res)) return;
-      // 原码失败即 return,medals 停在 [] → 渲染「完成城市节点即可点亮勋章」= 把失败说成没勋章
+      // 2026-10-30 城市勋章列表已并进收集册:这里只给收集册入口那叠勋章取缩略图和数量;读失败就保持原样(入口用默认图),不另报错
       if (res.code != '200' || !isRecord(res.data)
           || (res.data.medals != null && !isRecordList(res.data.medals))) {
-        that.setData({ medalErr: true, medalAuthError: isAuthFailure(res) });
         return;
       }
       var medals = (res.data.medals || []).map(function (m) {
@@ -1442,8 +1439,6 @@ Component({
         };
       });
       that.setData({
-        medalErr: false,
-        medalAuthError: false,
         medals: medals,
         medalCount: res.data.count || medals.length,
         'identityCard.medals': res.data.count || medals.length

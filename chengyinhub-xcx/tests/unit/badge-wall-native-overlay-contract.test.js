@@ -34,7 +34,10 @@ test('badge-wall WebGL 分支的导航、字幕、错误态和详情层都在正
   // 2026-09-24 用户:「上面的那些颜色说明也要删掉」—— 图例整块删
   assert.doesNotMatch(wxml, /bw-legend|bw-lg/)
   assert.match(wxml, /<cover-view class="bw-sh-x"[^>]*bindtap="closeSheet"[^>]*aria-role="button"[^>]*aria-label="关闭勋章详情"/)
-  assert.doesNotMatch(wxml, /<cy-nav-bar\b/, '原生 canvas 之上不能继续放普通 cy-nav-bar')
+  // 2026-10-30 收集册:列表模式(没有 WebGL canvas)才挂普通 cy-nav-bar;墙模式仍只用 cover-view
+  assert.doesNotMatch(wxml, /<cy-nav-bar\b(?![^>]*wx:if="\{\{viewMode === 'list'\}\}")/, '原生 canvas 之上不能继续放普通 cy-nav-bar')
+  assert.match(wxml, /<canvas wx:if="\{\{!glFail[^"]*\}\}" type="webgl"[\s\S]*?<\/canvas>/)
+  assert.match(wxml, /<block wx:if="\{\{viewMode === 'wall' &&/, 'WebGL canvas 只在墙模式出现')
   assertErrorContract(wxml, pageJson)
 })
 

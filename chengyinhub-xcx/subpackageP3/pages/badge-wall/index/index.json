@@ -1,12 +1,15 @@
 {
   "navigationStyle": "custom",
-  "navigationBarTextStyle": "white",
+  "navigationBarTextStyle": "black",
   "navigationBarTitleText": "勋章墙",
-  "backgroundColor": "#000000",
+  "backgroundColor": "#FAFBFD",
   "backgroundTextStyle": "dark",
   "disableScroll": true,
   "usingComponents": {
     "cy-icon": "/components/cy/icon/index",
+    "cy-nav-bar": "/components/cy/nav-bar/index",
+    "album-head": "/subpackageP3/components/album-head/index",
+    "album-aura": "/subpackageP3/components/album-aura/index",
     "cy-error": "/components/cy/error/index",
     "cy-empty": "/components/cy/empty/index",
     "cy-skeleton": "/components/cy/skeleton/index",

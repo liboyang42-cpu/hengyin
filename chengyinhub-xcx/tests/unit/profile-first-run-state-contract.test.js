@@ -618,12 +618,12 @@ test('HTTP401和历史鉴权码2必须正常登录后才恢复指标读取', asy
   }
 })
 
-test('订单、项目、推文和勋章分别区分登录与网络失败，成功重试清除登录提示', async () => {
+// 2026-10-30 收集册:「城市勋章」列表并进收集册,我的里勋章只给入口那叠取缩略图,不再有自己的错误态(medalErr 已删)
+test('订单、项目、推文分别区分登录与网络失败，成功重试清除登录提示', async () => {
   const cases = [
     ['loadOrderPreview', '/api/registration/list', 'order', { rows: [] }],
     ['loadProjectPreview', '/api/topic/list', 'project', { rows: [], total: 0 }],
     ['getCreativesquareList', '/api/creativesquare/list', 'feed', { rows: [], total: 0 }],
-    ['loadMedals', '/api/medal/wall', 'medal', { medals: [], count: 0 }],
   ]
   for (const [method, url, section, data] of cases) {
     const component = loadProfile()

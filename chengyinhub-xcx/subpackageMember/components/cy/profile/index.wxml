@@ -292,55 +292,33 @@
           <view class="pc-compare"><text>查看详情</text><cy-icon name="arrow-right" size="28" /></view>
         </view>
 
-        <!-- 未收编 cy-cell:本行的 aria-role/aria-label 是无障碍必需,而 cy-cell 不透传 aria
-             (组件只在 open-type 的 button 上有 aria-label),全仓也无 aria 挂自定义组件的先例。
-             收编会静默丢掉这两个属性 ⇒ 等 cy-cell 支持 aria 透传再收。 -->
-        <view class="pc-wall" bindtap="goWall" hover-class="pc-tap" hover-stay-time="80"
-              aria-role="button" aria-label="勋章墙，实时数字装置，查看全部勋章">
-          <view class="pc-wall-l">
-            <text class="pc-wall-t">勋章墙</text>
-            <text class="pc-wall-s">实时数字装置 · 查看全部勋章</text>
+        <!-- 2026-10-30 业主定稿 P-3:「勋章墙 / 集邮册 / 藏品册」三行合成一本「收集册」;这块原来是黄色纸页,按业主给的 mymind 视频改成
+             浅色底 + 三叠小卡片(勋章 / 邮票 / 藏品),点哪一叠进收集册的哪一段。原来下面那张「城市勋章」列表删掉 ——
+             城市勋章就是收集册「勋章」段里的勋章。 -->
+        <view class="pc-album">
+          <view class="pc-album-head" bindtap="goWall" hover-class="pc-tap" hover-stay-time="80" aria-role="button" aria-label="打开收集册">
+            <text class="pc-album-t">收集册</text>
+            <cy-icon class="pc-album-arrow" name="arrow-right" size="32" />
           </view>
-          <cy-icon class="pc-wall-arrow" name="arrow-right" size="32" />
-        </view>
-
-        <view class="pc-wall" bindtap="goAlbum" hover-class="pc-tap" hover-stay-time="80"
-              aria-role="button" aria-label="集邮册，上街拍到的城市，查看全部邮票">
-          <view class="pc-wall-l">
-            <text class="pc-wall-t">集邮册</text>
-            <text class="pc-wall-s">上街拍到的城市 · 查看全部邮票</text>
-          </view>
-          <cy-icon class="pc-wall-arrow" name="arrow-right" size="32" />
-        </view>
-
-        <!-- 未收编 cy-cell:与上面两行同一条理由(cy-cell 不透传 aria,收编会静默丢掉无障碍名) -->
-        <view class="pc-wall" bindtap="goObjectCards" hover-class="pc-tap" hover-stay-time="80"
-              aria-role="button" aria-label="藏品册，玩的时候拍下的东西，查看全部藏品卡">
-          <view class="pc-wall-l">
-            <text class="pc-wall-t">藏品册</text>
-            <text class="pc-wall-s">玩的时候拍下的东西 · 查看全部藏品卡</text>
-          </view>
-          <cy-icon class="pc-wall-arrow" name="arrow-right" size="32" />
-        </view>
-
-        <view class="pc-sec-tit">城市勋章 · {{medalCount}}</view>
-        <!-- 未收编 cy-card:同上,cy-card 读 --cy-comp-card-bg ⇒ 商家视角会渲成夜间深卡 -->
-        <view class="pc-card pc-achv-list">
-          <cy-error load-failure wx:if="{{medalErr}}" title="{{medalAuthError ? '登录未成功' : '勋章加载失败'}}" sub="{{medalAuthError ? '请重新进入小程序' : ''}}" retry="重试" bind:retry="reloadMedals" />
-          <cy-empty wx:elif="{{medals.length === 0}}" title="还没有点亮的勋章" />
-          <!-- medals 里只有【已点亮】的勋章,未点亮的不在列表里 —— 故此处没有进度可言,
-               「已获得」由右侧 ✓ 表达。别再加进度条:它只会恒满。 -->
-          <view class="pc-achv" wx:for="{{medals}}" wx:key="templateId"
-                aria-label="{{item.medalName}},已获得">
-            <image class="pc-achv-ico" wx:if="{{item.medalImg}}" src="{{item.medalImg}}" mode="aspectFill" lazy-load="true" aria-hidden="true" />
-            <view class="pc-achv-ico pc-achv-ico--fallback" wx:else aria-hidden="true">
-              <cy-icon name="star" size="40" />
+          <view class="pc-album-row">
+            <view class="pc-pile" bindtap="goWall" hover-class="pc-tap" hover-stay-time="80" aria-role="button" aria-label="收集册 · 勋章{{medalCount ? '，已点亮 ' + medalCount + ' 枚' : ''}}">
+              <view class="pc-pile-c pc-pile-c--0"><image class="pc-pile-img" src="{{medals[2].medalImg || '/subpackageMember/images/album/medal.png'}}" mode="aspectFit" /></view>
+              <view class="pc-pile-c pc-pile-c--1"><image class="pc-pile-img" src="{{medals[1].medalImg || '/subpackageMember/images/album/medal.png'}}" mode="aspectFit" /></view>
+              <view class="pc-pile-c pc-pile-c--2"><image class="pc-pile-img" src="{{medals[0].medalImg || '/subpackageMember/images/album/medal.png'}}" mode="aspectFit" /></view>
+              <view class="pc-pile-t"><text>勋章</text><text class="pc-pile-n" wx:if="{{medalCount}}">{{medalCount}}</text></view>
             </view>
-            <view class="pc-achv-main">
-              <view class="pc-achv-name">{{item.medalName}}</view>
+            <view class="pc-pile" bindtap="goAlbum" hover-class="pc-tap" hover-stay-time="80" aria-role="button" aria-label="收集册 · 邮票">
+              <view class="pc-pile-c pc-pile-c--0"></view>
+              <view class="pc-pile-c pc-pile-c--1"></view>
+              <view class="pc-pile-c pc-pile-c--2"><image class="pc-pile-img" src="/subpackageMember/images/album/stamp.png" mode="aspectFit" /></view>
+              <view class="pc-pile-t"><text>邮票</text></view>
             </view>
-            <!-- 收编 cy-icon:组件内部自带 aria-hidden,无障碍零损失 -->
-            <cy-icon class="pc-achv-ok" name="check" size="32" />
+            <view class="pc-pile" bindtap="goObjectCards" hover-class="pc-tap" hover-stay-time="80" aria-role="button" aria-label="收集册 · 藏品">
+              <view class="pc-pile-c pc-pile-c--0"></view>
+              <view class="pc-pile-c pc-pile-c--1"></view>
+              <view class="pc-pile-c pc-pile-c--2"><image class="pc-pile-img" src="/subpackageMember/images/album/object.png" mode="aspectFit" /></view>
+              <view class="pc-pile-t"><text>藏品</text></view>
+            </view>
           </view>
         </view>
         </view>

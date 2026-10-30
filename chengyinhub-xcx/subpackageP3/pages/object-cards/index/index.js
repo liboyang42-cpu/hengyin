@@ -14,8 +14,19 @@ const cyToast = require('../../../../utils/toast.js');
 const PAGE_SIZE = 40;
 const ALL = '全部';
 const CATEGORIES = ['电子产品', '服饰', '鞋包', '食物饮料', '书籍文具', '玩具摆件', '日用杂物', '其他'];
+// 分类图标(Fluent Emoji 3D,MIT License,microsoft/fluentui-emoji;缩到 96px 放在本分包)
+const CAT_ICON = {
+  [ALL]: '/subpackageP3/images/cat/all.png', 电子产品: '/subpackageP3/images/cat/electronics.png', 服饰: '/subpackageP3/images/cat/clothing.png',
+  鞋包: '/subpackageP3/images/cat/bags.png', 食物饮料: '/subpackageP3/images/cat/food.png', 书籍文具: '/subpackageP3/images/cat/books.png',
+  玩具摆件: '/subpackageP3/images/cat/toys.png', 日用杂物: '/subpackageP3/images/cat/daily.png', 其他: '/subpackageP3/images/cat/other.png',
+};
+/** 按住超过这么远(px)算拖,不算点 */
+const DRAG_SLOP = 6;
 /** 地面线离画布底边(px):下面留给安全区和一点呼吸 */
 const FLOOR_GAP = 56;
+
+// 透明导航压在内容上,内容从导航下沿开始(状态栏 + 导航栏)
+function navTopOf(a) { const g = (a && a.globalData) || {}; return (g.statusBarHeight || 44) + (g.navBarHeight || 44); }
 
 Page({
   data: {
@@ -36,6 +47,10 @@ Page({
     renameValue: '',
     renameError: '',
     renameSubmitting: false,
+    catIcon: CAT_ICON,
+    catsOpen: false,
+    fly: { show: false, on: false, src: '', style: '', name: '', meta: '', cut: false },
+    navTop: navTopOf(app), // 透明导航压在内容上
   },
 
   onLoad() {
@@ -77,6 +92,7 @@ Page({
   onUnload() {
     this._destroyed = true;
     this._unloaded = true;
+    if (this._flyTimer) clearTimeout(this._flyTimer);
     this._loadSeq = (this._loadSeq || 0) + 1;
     this._stop();
   },
@@ -160,6 +176,60 @@ Page({
     this.load(key);
   },
 
+  // 2026-10-30 业主:分类不再占第二排,收进「筛选」—— 半屏三列图标格,选中黑底白字;选完物件从上面重新落下
+  openCats() { this.setData({ catsOpen: true }); },
+  // 画布是原生层,会压在半屏上面 —— 半屏开着时画布藏起来,关掉后补画一帧
+  closeCats() { this.setData({ catsOpen: false }, () => { if (this._ctx) this._draw(); }); },
+  pickCat(e) {
+    const key = e.currentTarget.dataset.key;
+    this.setData({ catsOpen: false });
+    this.onFilter({ detail: { key: key } });
+  },
+
+  // ---------------- 拿起来拖(2026-10-30 业主:以前的藏品能拖) ----------------
+  // 按住一件:它跟着手指走、把别的挤开;松手按最后一段的速度甩出去;没动过就是点 → 飞到中间
+  onPileStart(e) {
+    const t = e && e.touches && e.touches[0];
+    if (!t || !this._world) return;
+    const b = pile.hit(this._bodies, t.x, t.y);
+    this._drag = { body: b, x0: t.x, y0: t.y, lx: t.x, ly: t.y, lt: Date.now(), vx: 0, vy: 0, moved: false };
+    if (b) { b.held = true; b.vx = 0; b.vy = 0; this._bodies.splice(this._bodies.indexOf(b), 1); this._bodies.push(b); this._run(); }
+  },
+  onPileMove(e) {
+    const d = this._drag;
+    const t = e && e.touches && e.touches[0];
+    if (!d || !t) return;
+    if (!d.moved && Math.hypot(t.x - d.x0, t.y - d.y0) > DRAG_SLOP) d.moved = true;
+    if (!d.body || !d.moved) return;
+    const now = Date.now();
+    const dt = Math.max(1, now - d.lt);
+    // 速度按 16ms 一帧折算,和物理一步同一个单位
+    d.vx = (t.x - d.lx) / dt * 16; d.vy = (t.y - d.ly) / dt * 16;
+    d.lx = t.x; d.ly = t.y; d.lt = now;
+    const b = d.body, w = this._world;
+    b.x = Math.max(b.r, Math.min(w.W - b.r, t.x));
+    b.y = Math.max(b.r, Math.min(w.floor - b.r, t.y));
+    b.rot += d.vx * 0.004;
+    this._run();
+  },
+  onPileEnd() {
+    const d = this._drag;
+    this._drag = null;
+    if (!d) return;
+    if (d.body) {
+      d.body.held = false;
+      if (d.moved) {
+        d.body.vx = Math.max(-28, Math.min(28, d.vx));
+        d.body.vy = Math.max(-28, Math.min(28, d.vy));
+        d.body.vr = d.vx * 0.01;
+        this._run();
+        return;
+      }
+      this._run();
+    }
+    if (!d.moved) this.onTapPile({ detail: { x: d.x0 + this._rect.left, y: d.y0 + this._rect.top } });
+  },
+
   // ---------------- 物品堆 ----------------
   /** fromTop = 从屏幕上方掉进来(切分类);首屏直接落定再画,不让玩家干等。 */
   _build(fromTop) {
@@ -218,11 +288,12 @@ Page({
     ctx.clearRect(0, 0, w.W, w.floor + FLOOR_GAP);
     // 地面线 + 一点往下的雾
     const g = ctx.createLinearGradient(0, w.floor, 0, w.floor + 18);
-    g.addColorStop(0, 'rgba(255,255,255,0.06)');
-    g.addColorStop(1, 'rgba(255,255,255,0)');
+    // 2026-10-30 收集册浅色底:地面线与雾改成深色淡影
+    g.addColorStop(0, 'rgba(40,52,90,0.08)'); /* ds-ok: canvas 读不到 CSS 变量,浅底上的地面雾 */
+    g.addColorStop(1, 'rgba(40,52,90,0)'); /* ds-ok: 同上 */
     ctx.fillStyle = g;
     ctx.fillRect(18, w.floor, w.W - 36, 18);
-    ctx.fillStyle = 'rgba(255,255,255,0.22)';
+    ctx.fillStyle = 'rgba(40,52,90,0.2)'; /* ds-ok: 同上,地面线 */
     ctx.fillRect(18, w.floor, w.W - 36, 1);
     // 右下角的木牌(样稿里就有)
     ctx.fillStyle = '#6b5a47'; /* ds-ok: 样稿里的木牌,插画色不走主题 token */
@@ -241,8 +312,13 @@ Page({
     ctx.rotate(b.rot);
     const s = b.size;
     if (img && card.cutoutUrl) {
+      // 抠图外面一圈白色裁切边,像贴纸(业主定稿 P-3);白边图按图缓存一次
+      const st = this._sticker(src, img);
       const k = s / Math.max(img.width, img.height);
-      ctx.drawImage(img, -img.width * k / 2, -img.height * k / 2, img.width * k, img.height * k);
+      ctx.shadowColor = 'rgba(40,30,20,0.28)'; /* ds-ok: canvas 落影 */
+      ctx.shadowBlur = 6; ctx.shadowOffsetY = 3;
+      if (st) ctx.drawImage(st.c, -st.w * k / 2, -st.h * k / 2, st.w * k, st.h * k);
+      else ctx.drawImage(img, -img.width * k / 2, -img.height * k / 2, img.width * k, img.height * k);
     } else if (img) {
       // 没抠出来的:一小块照片,圆角
       const k = Math.max(s / img.width, s / img.height);
@@ -256,17 +332,80 @@ Page({
       ctx.clip();
       ctx.drawImage(img, -img.width * k / 2, -img.height * k / 2, img.width * k, img.height * k);
     } else {
-      ctx.fillStyle = '#2A2A2C'; /* ds-ok: 图没加载出来的占位块,= bg-raised 的深色值(canvas 读不到 CSS 变量) */
+      ctx.fillStyle = '#E4E6EC'; /* ds-ok: 图没加载出来的占位块,浅底上的浅灰(canvas 读不到 CSS 变量) */
       ctx.fillRect(-s * 0.4, -s * 0.4, s * 0.8, s * 0.8);
     }
     ctx.restore();
   },
 
+  /** 贴纸白边:把抠图向四周错开画 16 次再整块染白,最后把原图压在上面;离屏 2d 画布,一张图只做一次 */
+  _sticker(src, img) {
+    const cache = this._stickers || (this._stickers = {});
+    if (cache[src] !== undefined) return cache[src];
+    cache[src] = null;
+    if (typeof wx.createOffscreenCanvas !== 'function') return null;
+    try {
+      const pad = Math.round(Math.max(img.width, img.height) * 0.06);
+      const W = img.width + pad * 2, H = img.height + pad * 2;
+      const c = wx.createOffscreenCanvas({ type: '2d', width: W, height: H });
+      const x = c.getContext('2d');
+      for (let a = 0; a < 16; a++) {
+        const t = a / 16 * Math.PI * 2;
+        x.drawImage(img, pad + Math.cos(t) * pad * 0.8, pad + Math.sin(t) * pad * 0.8, img.width, img.height);
+      }
+      x.globalCompositeOperation = 'source-in';
+      x.fillStyle = '#FFFFFF'; /* ds-ok: 贴纸白边 */
+      x.fillRect(0, 0, W, H);
+      x.globalCompositeOperation = 'source-over';
+      x.drawImage(img, pad, pad, img.width, img.height);
+      cache[src] = { c: c, w: W, h: H };
+    } catch (err) { cache[src] = null; }
+    return cache[src];
+  },
+
   onTapPile(e) {
     if (!this._rect || !e || !e.detail) return;
     const hitBody = pile.hit(this._bodies, e.detail.x - this._rect.left, e.detail.y - this._rect.top);
-    if (hitBody) this.setData({ active: hitBody.item });
+    if (hitBody) this.openFly(hitBody);
   },
+
+  // ---------------- 飞到中间(FLIP:先摆在堆里的位置和角度,下一拍放开) ----------------
+  openFly(b) {
+    const card = b.item;
+    const src = card.cutoutUrl || card.sourceUrl || (card.frames && card.frames[0]) || '';
+    if (!src) { this.setData({ active: card }); return; }
+    let w = 375, h = 667;
+    try { const info = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync(); w = info.windowWidth; h = info.windowHeight; } catch (err) { /* 默认值 */ }
+    const size = Math.round(w * 0.7), left = Math.round((w - size) / 2), top = Math.round(h * 0.42 - size / 2);
+    const cx = this._rect.left + b.x, cy = this._rect.top + b.y;
+    const base = 'left:' + left + 'px;top:' + top + 'px;width:' + size + 'px;height:' + size + 'px;';
+    const from = 'transform:translate(' + Math.round(cx - (left + size / 2)) + 'px,' + Math.round(cy - (top + size / 2)) + 'px) scale(' + (b.size / size).toFixed(3) + ') rotate(' + (b.rot * 180 / Math.PI).toFixed(1) + 'deg);';
+    this._flyFrom = base + from + 'transition:none;';
+    this._flyCard = card;
+    this.setData({ fly: { show: true, on: false, src: src, style: this._flyFrom, name: card.title || '藏品', meta: card.place || card.category || '', cut: !!card.cutoutUrl } });
+    clearTimeout(this._flyTimer);
+    this._flyTimer = setTimeout(() => {
+      if (this._destroyed) return;
+      this.setData({ 'fly.on': true, 'fly.style': base + 'transform:none;transition:' + (this._reduced ? 'none' : 'transform .6s cubic-bezier(.2,.9,.25,1.06)') + ';' });
+    }, 30);
+  },
+  closeFly() {
+    if (!this.data.fly.show) return;
+    this.setData({ 'fly.on': false, 'fly.style': (this._flyFrom || '').replace('transition:none;', 'transition:transform .42s cubic-bezier(.4,0,.2,1);') });
+    clearTimeout(this._flyTimer);
+    this._flyTimer = setTimeout(() => {
+      if (this._destroyed) return;
+      this.setData({ fly: { show: false, on: false, src: '', style: '', name: '', meta: '', cut: false } }, () => { if (this._ctx) this._draw(); });
+    }, 420);
+  },
+  // 中间那件再点一下:打开原来的详情(转台 / 贴纸 / 名称可改)
+  onFlyItem() {
+    const card = this._flyCard;
+    if (!card) return;
+    clearTimeout(this._flyTimer);
+    this.setData({ fly: { show: false, on: false, src: '', style: '', name: '', meta: '', cut: false }, active: card });
+  },
+  noop() {},
 
   // 画布在放大态时是 display:none,回来补画一帧(停住的堆不会自己再画)
   onCloseActive() { this.setData({ active: null }, () => { if (this._ctx) this._draw(); }); },
