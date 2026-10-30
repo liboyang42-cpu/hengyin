@@ -1,3 +1,4 @@
+<wxs src="../../../utils/wxs/img.wxs" module="img" />
 <!-- Figma 297:1827 · variant 由 post 字段派生,页面不判:
      isCompletionShare → Roam(头像 40 / 块间距 14) · hasPlayCover → Template(头像 40)
      picList 有图 → Image(头像 44) · 都没有 → Text(头像 44)
@@ -6,8 +7,8 @@
 <view class="post-card {{reducedMotion ? 'post-card--reduced' : ''}} {{light ? 'post-card--light' : ''}} {{post.isCompletionShare || post.hasPlayCover ? 'post-card--compact' : ''}} {{post.isCompletionShare ? 'post-card--roam' : ''}}" bindtap="emitDetail" aria-role="button" aria-label="{{accessibilityLabel}}" hover-class="cy-pressed" hover-stay-time="80">
   <view class="post-card__avatar">
       <image class="post-card__avatar-img" wx:if="{{interactiveUser}}" lazy-load="true" catchtap="emitUser" aria-role="button" aria-label="打开用户主页"
-             src="{{post.memberAvatar || '/images/d_profile.png'}}" mode="aspectFill" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true" />
-      <image class="post-card__avatar-img" wx:else lazy-load="true" src="{{post.memberAvatar || '/images/d_profile.png'}}" mode="aspectFill" />
+             src="{{img.first(post.memberAvatar) || '/images/d_profile.png'}}" mode="aspectFill" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true" />
+      <image class="post-card__avatar-img" wx:else lazy-load="true" src="{{img.first(post.memberAvatar) || '/images/d_profile.png'}}" mode="aspectFill" />
       <button catchtap="emitFollow" aria-role="button" aria-label="关注" class="post-card__follow"
               wx:if="{{showFollow && (!post.hasPlayCover || post.isCompletionShare) && post.isFollowTheUser == 0 && post.memberId != userId}}">
         <image class="post-card__follow-icon" lazy-load="true" src="/images/icon_jia.png" mode="widthFix" />
