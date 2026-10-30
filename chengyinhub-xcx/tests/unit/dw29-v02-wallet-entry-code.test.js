@@ -118,3 +118,14 @@ test('V-02 翻回正面后不再续签；再翻过来码快过期就重新签发
   sandbox.timers.at(-1).fn(); assert.equal(sandbox.requests.length, 1)
   tap(); assert.equal(sandbox.requests.length, 2)
 })
+
+test('V-02 票夹卡面「剩 N 天」与背面「N 天内过期」同一个自然日数(2026-10-30 DevTools 实测两面差一天)', () => {
+  const { passExpiryText, passDaysLeft } = require('../../utils/ticket-expiry.js')
+  const now = new Date(2026, 9, 30, 18, 0, 0).getTime()
+  const until = '2026-11-04 23:59:59'
+  assert.equal(passDaysLeft(until, now), 5)
+  assert.equal(passExpiryText(until, now), '5 天内过期')
+  assert.equal(passDaysLeft('2026-10-30 23:59:59', now), 0)
+  assert.equal(passDaysLeft('2026-10-29 23:59:59', now), null)
+  assert.match(fs.readFileSync(path.join(__dirname, '../../subpackageMember/signup/index.js'), 'utf8'), /const days = passDaysLeft\(item\.wUntil\);/)
+})

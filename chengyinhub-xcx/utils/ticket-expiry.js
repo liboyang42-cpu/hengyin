@@ -13,14 +13,20 @@ function toDate(value) {
 
 function dayStart(date) { return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime() }
 
-function passExpiryText(until, now) {
+// 还剩几个自然日(今天到期 = 0;已过期 / 没有到期日 = null)。票夹卡面「剩 N 天」与背面「N 天内过期」同一个数。
+function passDaysLeft(until, now) {
   const date = toDate(until)
-  if (!date) return ''
+  if (!date) return null
   const today = new Date(typeof now === 'number' ? now : Date.now())
-  if (date.getTime() < today.getTime()) return ''
-  const days = Math.round((dayStart(date) - dayStart(today)) / DAY_MS)
+  if (date.getTime() < today.getTime()) return null
+  return Math.round((dayStart(date) - dayStart(today)) / DAY_MS)
+}
+
+function passExpiryText(until, now) {
+  const days = passDaysLeft(until, now)
+  if (days === null) return ''
   if (days <= 0) return '今天过期'
   return days <= WINDOW_DAYS ? days + ' 天内过期' : ''
 }
 
-module.exports = { passExpiryText }
+module.exports = { passExpiryText, passDaysLeft }

@@ -2,7 +2,7 @@ const toast = require('../../utils/toast.js');
 const QR_REFRESH_LEAD_MS = 30000; // 到期前 30 秒续签
 const QR_MIN_REFRESH_MS = 5000;
 const QR_RETRY_MS = 5000;
-const { passExpiryText } = require('../../utils/ticket-expiry.js');
+const { passExpiryText, passDaysLeft } = require('../../utils/ticket-expiry.js');
 const { isLoginRequired, retryLogin } = require('../../utils/session/login-reload.js');
 const app = getApp();
 function walletOwner() { return typeof app.getUserID === 'function' ? String(app.getUserID() || '') : ''; }
@@ -705,9 +705,9 @@ function reducedMotionOn() {
 const DECK_POSE = [{ y: 0, s: 1, b: 1, o: 1 }, { y: -26, s: 0.93, b: 0.5, o: 1 }, { y: -48, s: 0.86, b: 0.32, o: 1 }, { y: -62, s: 0.8, b: 0.2, o: 1 }, { y: -62, s: 0.8, b: 0.2, o: 0 }];
 /* 卡面文字:类型 · 剩几天(有到期日才写),状态不是待使用时写状态;tab 归类 */
 function walletCard(item) {
-  const until = item.wUntil ? new Date(String(item.wUntil).replace(/-/g, '/')) : null;
-  const days = until && !isNaN(until.getTime()) ? Math.ceil((until.getTime() - Date.now()) / 86400000) : null;
-  return Object.assign(item, { wSub: days !== null && days >= 0 ? item.wType + ' · 剩 ' + days + ' 天' : item.wType, wExpiry: passExpiryText(item.wUntil) });
+  // 卡面「剩 N 天」与背面「N 天内过期」同一套自然日算法(原来卡面按 24 小时向上取整,同一张票两面差一天)
+  const days = passDaysLeft(item.wUntil);
+  return Object.assign(item, { wSub: days === null ? item.wType : item.wType + (days === 0 ? ' · 今天过期' : ' · 剩 ' + days + ' 天'), wExpiry: passExpiryText(item.wUntil) });
 }
 /* 能用的票:已报名(已付款 / 免费)、没核验、没取消没过期,到期日也还没过 */
 function usableTicket(item) {
