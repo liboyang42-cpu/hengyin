@@ -51,6 +51,8 @@ import static com.chengyinhub.common.core.domain.AjaxResult.error;
 public class PlayNodeQueryApplication {
     private static final Logger logger = LoggerFactory.getLogger(PlayNodeQueryApplication.class);
 
+    @Autowired(required = false)
+    private com.chengyinhub.business.mapper.CmsTopicMapper cmsTopicMapper;
     @Autowired
     private NpcProfileService npcProfileService;
     @Autowired
@@ -601,6 +603,8 @@ public class PlayNodeQueryApplication {
         if (circleTopic != null && StringUtils.isNotEmpty(circleTopic.getCircleThemeCode())) {
             data.put("circleThemeCode", circleTopic.getCircleThemeCode());
         }
+        // 主题画面风格:风格 / 参数 / 转场 / 故事字体,前端 theme-look.js 读不懂就回落默认
+        if (cmsTopicMapper != null) data.put("look", cmsTopicMapper.selectLookJsonById(read.tId));
         data.put("mode", read.playMode); // 1经典定向(线性) 2自由定向(全开)
         if (read.playMode == PlayMode.LINEAR_ORIENTEERING) {
             Integer personalBest = playerNodeProgressService.selectPuzzlePersonalBest(read.memberId, read.tId);

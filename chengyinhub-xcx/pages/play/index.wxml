@@ -1,5 +1,6 @@
-<view class="play {{reducedMotion ? 'play--reduced-motion' : ''}} {{story.show ? 'play--scaled' : ''}}" style="--cy-psheet-max-h: calc(100vh - {{chrome.sheetTop}}px)">
+<view class="play {{lookClass}} {{reducedMotion ? 'play--reduced-motion' : ''}} {{story.show ? 'play--scaled' : ''}}" style="--cy-psheet-max-h: calc(100vh - {{chrome.sheetTop}}px)">
   <cy-toast id="cy-toast" />
+  <cy-look-transition id="lookTx" kind="{{lookTransition}}" reduced-motion="{{reducedMotion}}" />
   <include src="theme-backpack.wxml" />
   <include src="theme-player-ops.wxml" />
   <include src="play-overlays.wxml" />
@@ -286,7 +287,7 @@
           <view class="dsw {{reducedMotion ? '' : 'is-on'}}" catchtap="toggleReducedMotion" aria-role="switch" aria-checked="{{!reducedMotion}}" aria-label="动态效果" hover-class="cy-pressed" hover-stay-time="80"><view class="dsw-i"></view></view>
         </view>
     </scroll-view>
-  <canvas type="2d" id="stBack" class="fx-story__dust"></canvas>
+  <canvas type="2d" id="stBack" class="fx-story__dust"></canvas><view class="look-tex"></view>
   <view class="chfull__stage">
     <scroll-view class="chfull__scroll st-scroll" scroll-y enhanced bounces show-scrollbar="{{false}}"
                  bindscroll="onChapterScroll" scroll-into-view="{{chapterGameAnchor}}" scroll-with-animation>
@@ -776,7 +777,7 @@
   <!-- ③ 章节剧情全屏故事流。两张 canvas 夹住文字:后面那张是远景,前面那张的近景粒子会盖过字 -->
   <view class="fx-story {{chapStory.open ? 'is-open' : ''}}" wx:if="{{mode==2 && chapStory.show}}"
         aria-role="dialog" aria-modal="true" aria-label="{{chapStory.title}} 剧情">
-    <canvas type="2d" id="stBack" class="fx-story__dust"></canvas>
+    <canvas type="2d" id="stBack" class="fx-story__dust"></canvas><view class="look-tex"></view>
     <view class="fx-story__hd" style="padding-top:{{chrome.actionTop}}px">
       <view class="fx-story__back" bindtap="closeChapStory" aria-role="button" aria-label="收起，回到卡片"
             hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="back" size="34" /></view>

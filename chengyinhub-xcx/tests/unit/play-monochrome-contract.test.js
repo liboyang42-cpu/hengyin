@@ -134,6 +134,8 @@ function withoutChapterAtmospherePresets(file, source) {
   if (file !== 'pages/play/index.wxss') return source
   // 2026-09-06 章节配色换成黑蓝红黄白五档纯色,豁免名单跟着换(原 night/archive/moss/neon)
   return source.replace(/\.atmosphere--(?:default|blue|red|yellow|white)\s*\{[^}]*\}/g, '')
+    // 2026-10-29 主题画面风格:作者选的风格调色(纸色 / 末世气候 / 夜城霓虹)只在 .look--<四种风格> 开头的规则里豁免
+    .replace(/\.look--(?:stardust|paper|survival|cyber)[^{]*\{[^}]*\}/g, '')
 }
 
 function colorFailures(files = SURFACE_FILES, overrides = {}) {
@@ -226,4 +228,13 @@ test('漫游回看不信任历史记录携带的任意点色', () => {
   assert.doesNotMatch(session, /color:\s*p\.color/)
   assert.match(session, /color:\s*SHARE_CARD\.poi\[i % SHARE_CARD\.poi\.length\]/)
   assert.match(session, /poi:\s*\['#4B46F5', '#8C91A0', '#646B78', '#121317'\]/)
+})
+
+test('主题画面风格的调色只在 .look--<风格> 规则内豁免，挪到普通表面必须判红', () => {
+  const file = 'pages/play/index.wxss'
+  const source = sourceWithoutComments(file)
+  assert.match(source, /\.look--cyber\s*\{[^}]*#F3E600/)
+  assert.deepEqual(colorFailures([file], { [file]: source }), [])
+  const leaked = source + '\n.gp2__card{border-color:#F3E600;}\n'
+  assert.deepEqual(colorFailures([file], { [file]: leaked }), [`${file}: #F3E600`])
 })

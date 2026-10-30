@@ -349,6 +349,7 @@ function readbackIssue(sent, detail, expectDraft) {
   } catch (invalid) { return invalid.message; }
   if (initialOf(sent && sent.journeyRules) !== initialOf(detail.journeyRules || detail.topic.journeyRulesJson)) return '云端保存的初始状态与本机不一致';
   if (!authoredRulesMatch(sent && sent.journeyRules, detail.journeyRules || detail.topic.journeyRulesJson)) return '云端保存的旅程规则与本机不一致';
+  if (sent && sent.look != null) { const look = require('./theme-look.js'); if (look.serializeLook(sent.look) !== look.serializeLook(detail.look)) return '云端保存的画面风格与本机不一致'; }
   return '';
 }
 

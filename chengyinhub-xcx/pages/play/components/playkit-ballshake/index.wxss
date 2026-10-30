@@ -103,3 +103,8 @@
 }
 .bl__b--press { opacity: .88; }
 .bl__b--busy { opacity: .55; }
+
+/* 内嵌档(2026-10-30 所有玩法都内嵌):球场收成故事流里一块 1000rpx 高的整宽场地(与 index.js EMBED_H_RPX 同值),
+   墙就是这块场地的四条边;提示与按钮跟着场地走,不再按状态栏 / 安全区让位。 */
+.bl--embed { position: relative; height: 1000rpx; border-radius: var(--cy-radius-lg); }
+.bl--embed .bl__hud { top: var(--cy-space-5); }

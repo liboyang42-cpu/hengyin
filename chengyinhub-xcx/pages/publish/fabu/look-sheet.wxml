@@ -1,0 +1,45 @@
+<!-- 画面风格(theme-look-editor.js):选风格 → 该风格的参数 → 转场 → 故事字体。点选即生效,不另设保存键。 -->
+<cy-sheet show="{{lookSheetShow}}" stacked="{{false}}" bind:close="closeLookEditor">
+  <view class="node-sheet look-sheet">
+    <view class="node-sheet__top">
+      <view class="node-sheet__close" bindtap="closeLookEditor" aria-role="button" aria-label="关闭画面风格" hover-class="cy-pressed" hover-stay-time="80">关闭</view>
+      <view class="node-sheet__done" bindtap="closeLookEditor" aria-role="button" aria-label="完成画面风格" hover-class="cy-pressed" hover-stay-time="80">完成</view>
+    </view>
+    <view class="node-sheet__titlebar"><text class="node-sheet__name node-sheet__name--static">画面风格</text></view>
+
+    <view class="look-styles">
+      <view wx:for="{{lookView.styles}}" wx:key="value" class="look-style {{item.on ? 'is-on' : ''}}" data-value="{{item.value}}" bindtap="onLookStyle"
+            aria-role="button" aria-label="选择{{item.label}}风格" aria-selected="{{item.on}}" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="look-sw {{item.sw}}"></view>
+        <text class="look-style__name">{{item.label}}</text>
+      </view>
+    </view>
+
+    <view class="node-card look-card">
+      <view wx:for="{{lookView.params}}" wx:for-item="p" wx:key="key" class="look-row">
+        <text class="look-row__k">{{p.label}}</text>
+        <view class="look-chips">
+          <view wx:for="{{p.options}}" wx:key="value" class="look-chip {{item.on ? 'is-on' : ''}}" data-key="{{p.key}}" data-value="{{item.value}}" bindtap="onLookParam"
+                aria-role="button" aria-label="{{p.label}}:{{item.label}}" aria-selected="{{item.on}}" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="node-card look-card">
+      <view class="look-row look-row--wrap">
+        <text class="look-row__k">转场</text>
+        <view class="look-chips">
+          <view wx:for="{{lookView.transitions}}" wx:key="value" class="look-chip {{item.on ? 'is-on' : ''}}" data-value="{{item.value}}" bindtap="onLookTransition"
+                aria-role="button" aria-label="转场:{{item.label}}" aria-selected="{{item.on}}" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view>
+        </view>
+      </view>
+      <view class="look-row">
+        <text class="look-row__k">故事字体</text>
+        <view class="look-chips">
+          <view wx:for="{{lookView.fonts}}" wx:key="value" class="look-chip look-chip--font look-font--{{item.value}} {{item.on ? 'is-on' : ''}}" data-value="{{item.value}}" bindtap="onLookFont"
+                aria-role="button" aria-label="故事字体:{{item.label}}" aria-selected="{{item.on}}" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+</cy-sheet>

@@ -158,7 +158,8 @@ test('pickEffectOp 仍认检定段芯片的 data-op(那一段不在本次改动�
   assert.ok(JSON.stringify(calls[calls.length - 1]).includes('"op":"DEC"'))
 })
 
-test('呈现方式:下拉选「整屏」写 fullscreen;被锁时硬选内嵌也写不进去(真防线在 applyPresent)', () => {
+// 2026-10-30 所有玩法都内嵌:原「只能整屏」的段(reaction 等)选内嵌也要写得进去
+test('呈现方式:下拉选「整屏」写 fullscreen;原只能整屏的段选内嵌同样写进去', () => {
   const { self, calls } = instance({ gameSection: 'qa' })
   const full = self.data.presentOptions.findIndex((o) => o.key === 'fullscreen')
   self.onPickPresent(pick(full))
@@ -167,7 +168,7 @@ test('呈现方式:下拉选「整屏」写 fullscreen;被锁时硬选内嵌也�
   const locked = instance({ gameSection: 'reaction' })
   const inline = locked.self.data.presentOptions.findIndex((o) => o.key === 'inline')
   locked.self.onPickPresent(pick(inline))
-  assert.deepEqual(locked.calls, [], '「只能整屏」的段被选内嵌，不该写任何东西')
+  assert.ok(locked.calls.some((c) => c.presentChoice === 'inline'), '原只能整屏的段选内嵌没有写进去')
 })
 
 /* 2026-09-23 用户:「选框应该下拉应该是向下的箭头」。图标集是脚本生成、禁手改,没有 chevron-down;

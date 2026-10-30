@@ -1,0 +1,20 @@
+/* 画面风格选择层(look-sheet.wxml)。色卡只是示意四种风格的底色与主色,不是可配的颜色。 */
+.look-styles { display: flex; gap: var(--cy-space-3, 24rpx); padding: 0 var(--cy-space-4, 32rpx) var(--cy-space-4, 32rpx); }
+.look-style { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 12rpx; padding: 16rpx 0; border-radius: 24rpx; border: 2rpx solid transparent; }
+.look-style.is-on { border-color: var(--cy-color-text-primary); }
+.look-sw { width: 112rpx; height: 112rpx; border-radius: 50%; }
+.look-sw--stardust { background: radial-gradient(circle at 70% 30%, #FFFFFF 0 4rpx, transparent 6rpx), radial-gradient(circle at 30% 65%, #FFFFFF 0 3rpx, transparent 5rpx), #0E1A33; } /* ds-ok 风格示意色 */
+.look-sw--paper { background: linear-gradient(135deg, #E6DCC4 60%, #A3281D 60%); } /* ds-ok 风格示意色 */
+.look-sw--survival { background: repeating-linear-gradient(105deg, transparent 0 10rpx, rgba(255,255,255,.18) 10rpx 12rpx), linear-gradient(135deg, #0E1012 55%, #FF8A3D 55%); } /* ds-ok 风格示意色 */
+.look-sw--cyber { background: linear-gradient(135deg, #0B0B0F 55%, #F3E600 55%); box-shadow: inset 0 0 0 3rpx #24E0E8; } /* ds-ok 风格示意色 */
+.look-style__name { font-size: var(--cy-type-body, 28rpx); color: var(--cy-color-text-primary); }
+.look-card { padding: 8rpx 0; }
+.look-row { display: flex; align-items: flex-start; gap: 24rpx; padding: 20rpx 28rpx; }
+.look-row + .look-row { border-top: 1rpx solid var(--cy-color-border-subtle, rgba(0,0,0,.08)); } /* ds-ok 分隔线兜底 */
+.look-row__k { flex: none; width: 128rpx; padding-top: 10rpx; font-size: var(--cy-type-label, 26rpx); color: var(--cy-color-text-secondary); }
+.look-chips { flex: 1; display: flex; flex-wrap: wrap; gap: 12rpx; }
+.look-chip { padding: 10rpx 24rpx; border-radius: 999rpx; font-size: var(--cy-type-label, 26rpx); color: var(--cy-color-text-primary); background: var(--cy-color-surface-muted, rgba(0,0,0,.05)); } /* ds-ok 底色兜底 */
+.look-chip.is-on { background: var(--cy-color-text-primary); color: var(--cy-color-surface, #FFFFFF); } /* ds-ok 反色兜底 */
+.look-font--SONG { font-family: "Songti SC", "STSong", serif; } /* ds-ok 系统宋体预览 */
+.look-font--KAI { font-family: "Kaiti SC", "STKaiti", "KaiTi", serif; } /* ds-ok 系统楷体预览 */
+.look-font--HAND { font-family: 'CyStoryHand', "Kaiti SC", serif; } /* ds-ok 手写体(在线加载)预览 */

@@ -2441,6 +2441,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         topic.setJourneyRulesJson(journeyRulesValidator.validateAndNormalize(dto.getJourneyRules()));
         String runtimeRaw = mediaPublicationGuard.requireJson(memberId, dto.getThemeRuntimeConfig(), !saveDraft);
         topic.setThemeRuntimeConfigJson(com.chengyinhub.business.service.support.ThemeRuntimeConfig.withoutClientBindings(runtimeRaw));
+        topic.setLookJson(com.chengyinhub.business.util.ThemeLook.normalize(dto.getLook()));
         com.chengyinhub.business.service.support.ThemeRuntimeConfig.assertJourneyReferences(
                 com.chengyinhub.business.service.support.ThemeRuntimeConfig.parseForNodeSave(runtimeRaw),
                 com.chengyinhub.business.domain.JourneyRules.parse(topic.getJourneyRulesJson()));
@@ -2915,6 +2916,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         patch.setJourneyRulesJson(journeyRulesValidator.validateAndNormalize(dto.getJourneyRules()));
         String runtimeRaw = mediaPublicationGuard.requireJson(memberId, dto.getThemeRuntimeConfig() == null ? exist.getThemeRuntimeConfigJson() : dto.getThemeRuntimeConfig(), !draft);
         patch.setThemeRuntimeConfigJson(com.chengyinhub.business.service.support.ThemeRuntimeConfig.withoutClientBindings(dto.getThemeRuntimeConfig()));
+        patch.setLookJson(com.chengyinhub.business.util.ThemeLook.normalize(dto.getLook()));
         com.chengyinhub.business.service.support.ThemeRuntimeConfig.assertJourneyReferences(
                 com.chengyinhub.business.service.support.ThemeRuntimeConfig.parseForNodeSave(runtimeRaw),
                 com.chengyinhub.business.domain.JourneyRules.parse(patch.getJourneyRulesJson() == null ? exist.getJourneyRulesJson() : patch.getJourneyRulesJson()));

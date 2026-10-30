@@ -242,30 +242,17 @@ public class AdvancedGameConfigValidator {
     public static final String PRESENT_INLINE = "inline";
     public static final String PRESENT_FULLSCREEN = "fullscreen";
     private static final Set<String> PRESENT_VALUES = setOf(PRESENT_INLINE, PRESENT_FULLSCREEN);
-    /** §1.5 第一档:可内嵌、默认内嵌(选项类与问答类)。profile / note / check 于 2026-09-24 用户点名挪入
-     *  (对照《预制人生》原型:出生登记、「在现场」写一句、带检定的选择都直接嵌在故事流里)。 */
-    private static final Set<String> PRESENT_INLINE_BY_DEFAULT = setOf(
-            "qa", "branch", "predict", "pricePair", "random", "profile", "note", "check",
-            // 安静挑战(《预制人生》里的「站直」):2026-09-24 用户点名改内嵌。判定只靠麦克风,不靠整屏几何
-            "quietHold");
     /**
-     * §1.5 第二档:可内嵌、默认全屏(作者想内嵌就内嵌)。diceRoll 于 2026-09-18 用户点名挪进本档:
-     * 整屏(按住掷骰)与内嵌(故事流里直接掷)两套写法都保留,由 present 选。
+     * §1.5 呈现段(2026-10-30 业主裁决「所有玩法都内嵌」):原来的三档(默认内嵌 / 默认全屏 / 只能全屏)合成一档 ——
+     * 任何玩法都可以、也默认嵌进故事流;作者仍可在模板里显式配 present=fullscreen。
+     * 原「只能全屏」那批(弹球、倒计时、扫码、找东西、罗盘……)的判定区改为内嵌块自身的边界,
+     * 由小程序端各 kit 的内嵌档负责(见 pages/play/components/playkit-* 的 inline)。
      */
-    private static final Set<String> PRESENT_FULLSCREEN_BY_DEFAULT = setOf(
-            "estimate", "diyName", "typeIn",
-            "dailySign", "slowTask", "musicCorner", "timeWindow", "diceRoll");
-    /**
-     * §1.5 第三档:只能全屏。判定依赖整屏几何或设备能力(整屏就是判定区 / 墙就是手机的四条边 /
-     * 整屏被油盖住),配 present=inline 直接拒 —— 绝不静默改回 fullscreen。
-     */
-    private static final Set<String> PRESENT_FULLSCREEN_ONLY = setOf(
-            "reaction", "ballShake", "countdown", "stopwatch",
-            "coinFlip", "hiddenObject", "scan", "steps",
-            // 罗盘指向:判定依赖整屏几何(指针要有转动余量)与设备罗盘(现场感契约 §5.3)
-            "compass",
-            // 喊一嗓子:判定依赖设备麦克风 + 整屏反馈(现场感契约 §5.3)。quietHold 2026-09-24 已挪去默认内嵌,shout 仍只能全屏
-            "shout", "blindTaste");
+    private static final Set<String> PRESENT_SECTIONS = setOf(
+            "qa", "branch", "predict", "pricePair", "random", "profile", "note", "check", "quietHold",
+            "estimate", "diyName", "typeIn", "dailySign", "slowTask", "musicCorner", "timeWindow", "diceRoll",
+            "reaction", "ballShake", "countdown", "stopwatch", "coinFlip", "hiddenObject", "scan", "steps",
+            "compass", "shout", "blindTaste", "silentOrder", "sort", "match", "classify", "compare", "photoCheck", "album");
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -392,13 +379,6 @@ public class AdvancedGameConfigValidator {
         if (!configured.isTextual() || !PRESENT_VALUES.contains(configured.asText())) {
             throw new IllegalArgumentException("present 只能是 inline 或 fullscreen");
         }
-        if (!PRESENT_INLINE.equals(configured.asText())) return;
-        for (String section : PRESENT_FULLSCREEN_ONLY) {
-            if (!enabled(root.get(section)) || scanParticipation(root, section)) continue;
-            throw new IllegalArgumentException(section + " 只能全屏:该玩法的判定依赖整屏几何或设备能力,"
-                    + "内嵌进故事流后判定不成立。present=inline 不适用于它,"
-                    + "请删掉 present 或改配 present=fullscreen");
-        }
     }
 
     /**
@@ -417,19 +397,10 @@ public class AdvancedGameConfigValidator {
     }
 
     /**
-     * 最终生效的呈现方式(施工契约 §1.5):作者显式配的优先,缺省按三档默认表推导。
-     * 这是全链路唯一一份默认表实现 —— 运行期会话视图与公开投影都调这里,客户端不重推。
-     *
-     * <p>默认表外的段(如 sort / match / classify / compare / silentOrder)不投票:任一
-     * 「默认全屏 / 只能全屏」段启用即 fullscreen,否则有「默认内嵌」段即 inline;两者都没有
-     * (存量只配 timer 这类无呈现段 / 没配玩法)回退 fullscreen,与改动前的全屏行为一致。
+     * 最终生效的呈现方式(施工契约 §1.5):作者显式配的优先;否则只要启用了任一玩法段就内嵌;
+     * 一个玩法段都没有(存量只配 timer 这类无呈现段 / 没配玩法)回退 fullscreen,与改动前一致。
+     * 这是全链路唯一一份实现 —— 运行期会话视图与公开投影都调这里,客户端不重推。
      */
-    private static boolean scanParticipation(JsonNode root, String section) {
-        if (!"scan".equals(section)) return false;
-        for (String main : GameplayOutcomeRules.MAIN_GAMEPLAYS) if (enabled(root.get(main))) return true;
-        return enabled(root.get("branch"));
-    }
-
     public static String resolvePresent(JsonNode configRoot) {
         if (configRoot != null && configRoot.isObject()) {
             JsonNode configured = configRoot.get("present");
@@ -437,13 +408,7 @@ public class AdvancedGameConfigValidator {
                     && PRESENT_VALUES.contains(configured.asText())) {
                 return configured.asText();
             }
-            for (String section : PRESENT_FULLSCREEN_BY_DEFAULT) {
-                if (enabled(configRoot.get(section))) return PRESENT_FULLSCREEN;
-            }
-            for (String section : PRESENT_FULLSCREEN_ONLY) {
-                if (enabled(configRoot.get(section)) && !scanParticipation(configRoot, section)) return PRESENT_FULLSCREEN;
-            }
-            for (String section : PRESENT_INLINE_BY_DEFAULT) {
+            for (String section : PRESENT_SECTIONS) {
                 if (enabled(configRoot.get(section))) return PRESENT_INLINE;
             }
         }

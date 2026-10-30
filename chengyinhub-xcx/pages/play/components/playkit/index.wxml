@@ -14,7 +14,7 @@
 </cy-sheet>
 <view wx:elif="{{kit.terminal && inline && show}}"><template is="terminal-result" data="{{kit: kit}}" /></view>
 <cy-playkit-timewindow wx:elif="{{kit.type === 'timewindow'}}"
-  show="{{show}}" eyebrow="{{kit.eyebrow}}" glyph="{{kit.glyph}}" title="{{kit.title}}"
+  show="{{show}}" inline="{{inline}}" eyebrow="{{kit.eyebrow}}" glyph="{{kit.glyph}}" title="{{kit.title}}"
   open-from="{{kit.openFrom}}" open-to="{{kit.openTo}}"
   remain-seconds="{{kit.remainSeconds}}" subscribed="{{kit.subscribed}}"
   bind:subscribe="onSubscribe" bind:open="onOpen" bind:close="onClose" />
@@ -26,30 +26,30 @@
   bind:answer="onAnswer" bind:close="onClose" />
 
 <cy-playkit-silentorder wx:elif="{{kit.type === 'silentorder'}}"
-  show="{{show}}" eyebrow="{{kit.eyebrow}}" title="{{kit.title}}" rule="{{kit.rule}}"
+  show="{{show}}" inline="{{inline}}" eyebrow="{{kit.eyebrow}}" title="{{kit.title}}" rule="{{kit.rule}}"
   qr-url="{{kit.qrUrl}}" elapsed-seconds="{{kit.elapsedSeconds}}"
   bind:giveup="onGiveUp" bind:close="onClose" />
 
 <cy-playkit-diyname wx:elif="{{kit.type === 'diyname'}}"
-  show="{{show}}" eyebrow="{{kit.eyebrow}}" title="{{kit.title}}" photo-url="{{kit.photoUrl}}"
+  show="{{show}}" inline="{{inline}}" eyebrow="{{kit.eyebrow}}" title="{{kit.title}}" photo-url="{{kit.photoUrl}}"
   value="{{kit.value}}" suggestions="{{kit.suggestions}}" cta-label="{{kit.ctaLabel}}"
   submitting="{{kit.submitting}}"
   bind:namechange="onNameChange" bind:submit="onSubmit"
   bind:close="onClose" bind:requestclose="onRequestClose" />
 
 <cy-playkit-musiccorner wx:elif="{{kit.type === 'musiccorner'}}"
-  show="{{show}}" eyebrow="{{kit.eyebrow}}" arrived="{{kit.arrived}}" title="{{kit.title}}"
+  show="{{show}}" inline="{{inline}}" eyebrow="{{kit.eyebrow}}" arrived="{{kit.arrived}}" title="{{kit.title}}"
   track-name="{{kit.trackName}}" duration="{{kit.duration}}" position="{{kit.position}}"
   playing="{{kit.playing}}" hint="{{kit.hint}}"
   bind:toggle="onToggle" bind:close="onClose" />
 
 <cy-playkit-steps wx:elif="{{kit.type === 'steps'}}"
-  show="{{show}}" eyebrow="{{kit.eyebrow}}" steps="{{kit.steps}}" goal="{{kit.goal}}"
+  show="{{show}}" inline="{{inline}}" eyebrow="{{kit.eyebrow}}" steps="{{kit.steps}}" goal="{{kit.goal}}"
   co2-label="{{kit.co2Label}}" remain-label="{{kit.remainLabel}}" refreshing="{{kit.refreshing}}"
   bind:refresh="onRefresh" bind:close="onClose" />
 
 <cy-playkit-dailysign wx:elif="{{kit.type === 'dailysign'}}"
-  show="{{show}}" date-label="{{kit.dateLabel}}" address="{{kit.address}}"
+  show="{{show}}" inline="{{inline}}" date-label="{{kit.dateLabel}}" address="{{kit.address}}"
   lines="{{kit.lines}}" signer="{{kit.signer}}" left-at="{{kit.leftAt}}"
   serial-label="{{kit.serialLabel}}" text-max="{{kit.textMax}}"
   revealed="{{kit.revealed}}" photo-url="{{kit.photoUrl}}"
@@ -57,7 +57,7 @@
   bind:accept="onAccept" bind:close="onClose" />
 
 <cy-playkit-slowtask wx:elif="{{kit.type === 'slowtask'}}"
-  show="{{show}}" eyebrow="{{kit.eyebrow}}" title="{{kit.title}}"
+  show="{{show}}" inline="{{inline}}" eyebrow="{{kit.eyebrow}}" title="{{kit.title}}"
   start-hint="{{kit.startHint}}" start-label="{{kit.startLabel}}"
   wait-hint="{{kit.waitHint}}" wait-cta="{{kit.waitCta}}"
   unlock-label="{{kit.unlockLabel}}" unlock-text="{{kit.unlockText}}"
@@ -82,7 +82,7 @@
   bind:start="onStart" bind:submit="onSubmit" bind:verdict="onVerdict" bind:close="onClose" />
 
 <cy-playkit-ballshake wx:elif="{{kit.type === 'ballshake'}}"
-  show="{{show}}" kicker="{{kit.kicker}}" goal="{{kit.goal}}"
+  show="{{show}}" inline="{{inline}}" kicker="{{kit.kicker}}" goal="{{kit.goal}}"
   challenge="{{kit.challenge}}" shared-challenge="{{kit.challengeShared}}"
   timed="{{kit.timed}}" seconds="{{kit.seconds}}" attempt-id="{{kit.attemptId}}"
   bind:start="onStart" bind:submit="onSubmit" bind:verdict="onVerdict" bind:close="onClose" />
@@ -171,7 +171,7 @@
   bind:verdict="onVerdict" bind:close="onClose" />
 
 <cy-playkit-scan wx:elif="{{kit.type === 'scan'}}"
-  show="{{show}}" title="{{kit.title}}" kind="{{kit.kind}}" reply="{{kit.reply}}"
+  show="{{show}}" inline="{{inline}}" title="{{kit.title}}" kind="{{kit.kind}}" reply="{{kit.reply}}"
   audio-url="{{kit.audioUrl}}" image-url="{{kit.imageUrl}}"
   overlay-url="{{kit.overlayUrl}}" overlay-scale="{{kit.overlayScale}}"
   ar-mode="{{kit.arMode}}" marker-url="{{kit.markerUrl}}" model-url="{{kit.modelUrl}}"

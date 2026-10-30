@@ -47,7 +47,8 @@
     "cy-sheet": "/components/cy/sheet/index",
     "cy-theme-records": "/components/cy/theme-records/index",
     "cy-dropdown": "/components/cy/dropdown/index",
-    "cy-back-guard": "/components/cy/back-guard/index"
+    "cy-back-guard": "/components/cy/back-guard/index",
+    "cy-look-transition": "/pages/play/components/look-transition/index"
   },
   "componentPlaceholder": {
     "cy-scene-play-activity-detail": "view",

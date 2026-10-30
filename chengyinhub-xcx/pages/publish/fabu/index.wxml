@@ -1806,6 +1806,7 @@
 <include src="runtime-structure-editor.wxml" /> <!-- structure -->
 <include src="survival-editor.wxml" /> <!-- survival -->
 <include src="zero-hp-editor.wxml" /> <!-- R5 HP 归零 -->
+<include src="look-sheet.wxml" /> <!-- 画面风格 -->
   </block>
 </view>
 <cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />

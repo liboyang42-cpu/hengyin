@@ -1,0 +1,10 @@
+<view class="lt lt--{{k}} {{phase}}" wx:if="{{phase}}" catchtouchmove="noop" aria-hidden="true">
+  <view class="lt__panel" wx:if="{{k=='fade'||k=='page'||k=='wipe'||k=='gust'||k=='static'||k=='surge'||k=='zoom'}}"></view>
+  <view class="lt__circle" wx:if="{{k=='iris'||k=='warp'||k=='ink'}}"></view>
+  <view class="lt__lines" wx:if="{{k=='warp'}}"></view>
+  <view class="lt__bolt" wx:if="{{k=='surge'}}"></view>
+  <block wx:if="{{k=='shutter'}}"><view class="lt__slat" wx:for="{{slats}}" wx:key="k" style="top:{{item.k*12.5}}%;transition-delay:{{item.d}}ms"></view></block>
+  <block wx:if="{{k=='glitch'}}"><view class="lt__band {{item.k%2 ? 'lt__band--r' : ''}}" wx:for="{{bands}}" wx:key="k" style="top:{{item.k*16.667}}%;transition-delay:{{item.d}}ms"></view></block>
+  <view class="lt__grid" wx:if="{{k=='pixel'}}"><view class="lt__tile" wx:for="{{tiles}}" wx:key="k" style="transition-delay:{{item.d}}ms"></view></view>
+  <block wx:if="{{k=='curtain'}}"><view class="lt__half lt__half--l"></view><view class="lt__half lt__half--r"></view></block>
+</view>

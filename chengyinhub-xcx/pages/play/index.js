@@ -139,6 +139,7 @@ const PLAY_STORY_CARD = Object.freeze({
 // 接入文档见 components/cy/free-map/DARK_MAP.md。
 const { MAP_STYLE: MAP_DARK } = require('../../utils/map-style.js');
 const storyScene = require('./utils/story-scene.js');
+const themeLook = require('./utils/theme-look.js'); const lookFx = require('./utils/look-fx.js'); // 主题画面风格:风格层粒子 + 转场 + 故事字体
 const lifeArchive = require('./utils/life-archive.js');
 const storyResume = require('./utils/story-resume.js');
 /* 内心声音(原型 VOICES 表原值);第 3 档异常时两个声音改名(越往后越像机器)。 */
@@ -473,6 +474,7 @@ Page({
     previewEnding: { show: false, list: [], idx: 0 },
     bootStage: '',   // 开局「开机」动画的阶段(on/line/open/fade),空 = 不显示   // W-15 试玩末尾的结局卡(只在预览出现)
     chapterCards: [],             // 横滑章节卡(buildChapterCards)
+    lookClass: themeLook.lookClass(null), lookTransition: themeLook.resolveTransition(null), // 主题画面风格(/api/play/nodes 的 look)
     // mode2(自由探索)首屏:卡包 → 六宫格。动画标志位只驱动 WXSS class,不参与业务判定。
     // 四拍:② 蓄力(摇+压暗) → ③ 横撕(封口条扯走+爆炸) → ④ 发牌(逐张飞出) → 空袋下沉。
     // 奖励掉落卡:带服务端稳定 ID(badgeCode),可跳到徽章墙回读,不是一闪而过的 toast
@@ -1804,12 +1806,13 @@ Page({
             that._sceneTarget || 'city', 0.025);
           const cu = that._sceneCur || storyScene.initial('city');
           if (!near) that._paintSceneLight(ctx, W, H, cu);
-          const rgb = 'rgb(' + cu.col.map(Math.round).join(',') + ')';
+          const lm = lookFx.dustMod(that._look);   // 主题画面风格对浮尘的修正(星尘调密度/速度/光色,其它风格收掉大半)
+          const rgb = 'rgb(' + (lm.col || cu.col).map(Math.round).join(',') + ')';
           for (const p of that._dust) {
             if ((p.z > 1.2) !== near) continue;
-            if (p.k > cu.n) continue;
+            if (p.k > cu.n * lm.n) continue;
             // 自己慢慢漂 + 场景的风向(原型 vx/vy × z × 1.2,量纲同为像素每帧)
-            p.x += (p.vx * 0.4 + cu.vx * p.z * 1.2) / W; p.y += (p.vy * 0.4 + cu.vy * p.z * 1.2) / H;
+            p.x += (p.vx * 0.4 + cu.vx * p.z * 1.2) * lm.speed / W; p.y += (p.vy * 0.4 + cu.vy * p.z * 1.2) * lm.speed / H;
             if (p.x < -0.05) p.x = 1.05; if (p.x > 1.05) p.x = -0.05;
             const y = ((p.y * H - off * p.z) % (H * 2) + H * 2) % (H * 2) - H * 0.5;
             ctx.globalAlpha = Math.min(1, p.a * cu.alpha / 0.5);
@@ -1819,6 +1822,12 @@ Page({
             else if (p.shape === 1) { ctx.beginPath(); ctx.arc(x, y, s / 2, 0, 6.2832); ctx.fill(); }
             else { ctx.beginPath(); ctx.moveTo(x, y - s / 2); ctx.lineTo(x + s / 2, y + s / 2);
               ctx.lineTo(x - s / 2, y + s / 2); ctx.closePath(); ctx.fill(); }
+          }
+          // 风格层(末世天气 / 夜城电流)只画在远景那张上,字盖在它上面
+          if (!near) {
+            if (!that._lookFx || that._lookFx.key !== that._lookKey) { that._lookFx = lookFx.create(that._look, W, H); that._lookFx.key = that._lookKey; }
+            lookFx.draw(that._lookFx, ctx, W, H, Date.now());
+            ctx.globalAlpha = 1;
           }
           // ⚠️ 只在预览态回写帧计数:静态截图看不出「粒子有没有在动」,
           //    而这正是之前漏掉的 bug(漂移量纲写错,每帧只挪 0.01px,看着完全静止)。
@@ -3968,10 +3977,23 @@ Page({
       if (chapterId && gates.indexOf(chapterId) < 0) storyResume.patch(scope, { gates: gates.concat(chapterId).slice(-40) });
     }
     this._pendingChapterGateKey = '';
-    this.setData({ 'chapterGate.show': false }, () => {
+    this._withLookTransition(() => this.setData({ 'chapterGate.show': false }, () => {
       this.measureChapter();
       this.playChapterAudio();
-    });
+    }));
+  },
+  /** 主题画面风格:读不懂的值回落默认(星尘 + 光圈 + 手写),老主题外观不变。 */
+  _applyLook(raw) {
+    const look = themeLook.normalizeLook(raw);
+    this._look = look;
+    this._lookKey = JSON.stringify(look);
+    this.setData({ lookClass: themeLook.lookClass(look), lookTransition: themeLook.resolveTransition(look) });
+  },
+  /** 用风格的转场盖住画面,在完全盖住时执行 swap(换内容),再揭开;转场层不在 / 减动效时直接执行。 */
+  _withLookTransition(swap) {
+    const tx = this.data.reducedMotion || typeof this.selectComponent !== 'function' ? null : this.selectComponent('#lookTx');
+    if (!tx) { swap(); return; }
+    tx.run(swap);
   },
   /** 滑动核销确认:真正的核销是商家扫玩家的码,这里只是玩家侧把码亮出来并标记本次已出示。
    *  ⚠️ 不在客户端写「已核销」到后端 —— 那是商家侧的动作,客户端说了不算。 */
@@ -4067,6 +4089,7 @@ Page({
          章节文本与节点 story 大多数时候在这个点的会话之前就被读到 —— 只从会话视图取的话
          {name} 会一直原样留着,所以这条必须在首屏成功分支里落。 */
       that._applyStoryVars(d);
+      that._applyLook(d.look);
       that._puzzlePersonalBest = Number(d.puzzlePersonalBest) || 0;
       // 规则16 历史履约:已普通下架的本人已完成站只作只读回看,不并入 nodes/total/完成率/解锁/推荐/地图。
       const historyNodes = Array.isArray(d.historyNodes)
@@ -5100,7 +5123,7 @@ Page({
     storyResume.patch(this._runSessionScope(), { openNodeId: String(node.nodeId) });
     this._freshStoryGame = String(node.nodeId);
     this._storyOpenNode = true;
-    this.startGame(node);
+    this._withLookTransition(() => this.startGame(node));
   },
   onSheetGoTap() {
     const node = this.data.sheet.node;

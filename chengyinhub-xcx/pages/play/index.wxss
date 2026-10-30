@@ -500,7 +500,7 @@ page { background: var(--cy-color-bg-page); }
 /* 内嵌 = 原型 card():标题在外、选项一块分组列表、按钮跟在内容后,没有台面自己的底色。
    ⚠️ 这组变量与 pages/publish/temp/index.wxss 的 .cg-pv-inline-kit 逐条一致(契约测试钉着),
       改一处必须改两处 —— 不一致就是作者预览看到的和玩家看到的不是一个东西。 */
-.chfull__kit{ width:100%; --pe-unfold:1; --pk-stage-pos:relative; --pk-stage-height:auto; --pk-stage-body-pos:relative; --pk-stage-bg:transparent; --pk-stage-overflow:visible; --pk-back-display:none; --pk-col-pos:relative; --pk-col-pad:0; --pk-col-align:stretch; --pk-col-text:left; --pk-btn-pos:relative; --pk-btn-x:0; --pk-btn-bottom:0; --pk-btn-mt:var(--cy-space-5); --cy-play-question-size:44rpx; --pk-q-weight:600; --pk-row-justify:flex-start; --pk-qt-radius:32rpx; } /* ds-ok 44rpx = 原型 .card .ct 22px;32rpx 安静挑战内嵌成卡 */
+.chfull__kit{ width:100%; --pe-unfold:1; --pk-stage-pos:relative; --pk-stage-height:auto; --pk-stage-body-pos:relative; --pk-stage-bg:transparent; --pk-stage-overflow:visible; --pk-back-display:none; --pk-col-pos:relative; --pk-col-pad:0; --pk-col-align:stretch; --pk-col-text:left; --pk-btn-pos:relative; --pk-btn-x:0; --pk-btn-bottom:0; --pk-btn-mt:var(--cy-space-5); --cy-play-question-size:44rpx; --pk-q-weight:600; --pk-row-justify:flex-start; --pk-qt-radius:32rpx; --pk-embed-bg:var(--atmo-bg, transparent); --pk-embed-ink:var(--atmo-text, var(--cy-color-text-primary)); --pk-embed-sub:var(--atmo-muted, var(--cy-color-text-tertiary)); --pk-embed-soft:var(--atmo-control, rgba(255,255,255,.08)); --pk-embed-accent:var(--look-a, var(--atmo-text, var(--cy-color-text-primary))); --pk-embed-ok:var(--look-a, var(--atmo-text, var(--cy-color-text-primary))); } /* ds-ok 44rpx = 原型 .card .ct 22px;32rpx 安静挑战内嵌成卡 */
 /* 2026-09-23 用户:内嵌玩法的题目和作答放到屏幕中间 —— 这一块撑满一屏,内容竖向居中(滚到它时锚点对准块顶) */
 .chfull__kit{ min-height:100vh; box-sizing:border-box; display:flex; flex-direction:column; justify-content:center; padding-bottom:var(--cy-space-6); }
 .chfull__collapse{ position:absolute; right:13rpx; bottom:13rpx; color:#8A93A0; /* ds-ok 原型 --t2 */
@@ -1891,3 +1891,36 @@ page { background: var(--cy-color-bg-page); }
 .finsheet .finsheet__records + .finish-journal-entry{ margin-top:19rpx; }
 .finsheet .finsheet__retry{ margin:31rpx 38rpx 0; }
 .finsheet .finsheet__cta{ position:fixed; z-index:5; left:38rpx; right:38rpx; bottom:calc(65rpx + env(safe-area-inset-bottom)); margin:0; height:104rpx; background:#FFFFFF; color:#000000; box-shadow:0 0 80rpx 70rpx #000000; } /* ds-ok 白色主按钮,黑色渐隐托底 */
+
+/* ===== 主题画面风格(pages/play/utils/theme-look.js;作者在发布页「画面风格」里选) =====
+   根节点挂 look--<风格> look-<参数>--<值> story-font--<字体>;没配置 = 星尘 + 手写,与原来一致。
+   --look-a / --look-b / --look-bg 给转场层(components/look-transition)取色。 */
+.play { --look-a: var(--cy-color-play-accent, #E9E2D0); --look-b: var(--cy-color-play-ink-muted, #9AA0AA); --look-bg: #0A0A0A; } /* ds-ok 转场兜底色 = 章节默认黑 */
+.look-tex { position:absolute; left:0; top:0; right:0; bottom:0; pointer-events:none; z-index:1; }
+/* 故事流字体:手写走 story-font.js 在线加载的 CyStoryHand,其余三种用系统自带字体,不额外下载 */
+.story-font--song .cy-story-hand { font-family: "Songti SC", "STSong", "Noto Serif SC", serif; } /* ds-ok 系统宋体 */
+.story-font--kai .cy-story-hand { font-family: "Kaiti SC", "STKaiti", "KaiTi", "Noto Serif SC", serif; } /* ds-ok 系统楷体 */
+.story-font--hei .cy-story-hand { font-family: -apple-system, "PingFang SC", "Noto Sans SC", sans-serif; } /* ds-ok 系统黑体 */
+/* 纸本:纸色 + 纸纹 + 压暗四角 */
+.look--paper { --look-bg: #E6DCC4; --look-a: #A3281D; } /* ds-ok 牛皮纸 */
+.look--paper.look-paper--xuan { --look-bg: #F4F1EA; } /* ds-ok 宣纸 */
+.look--paper.look-paper--card { --look-bg: #1D1B18; --look-a: #D0503C; } /* ds-ok 深色卡纸 */
+.look--paper .look-tex { background: radial-gradient(rgba(90,70,40,.10) 1px, transparent 1.4px) 0 0 / 7rpx 7rpx, radial-gradient(rgba(90,70,40,.08) 1px, transparent 1.6px) 3rpx 4rpx / 11rpx 11rpx, radial-gradient(ellipse 80% 70% at 50% 45%, transparent 55%, rgba(60,40,10,.32) 100%); mix-blend-mode: multiply; } /* ds-ok 纸纹 */
+.look--paper.look-paper--kraft .look-tex { background-color: rgba(176,140,90,.12); } /* ds-ok */
+.look--paper.look-grain--light .look-tex { opacity: .5; }
+.look--paper.look-grain--heavy .look-tex { filter: contrast(1.4); }
+/* 末世:四角压暗;气候决定底色调,风格层的天气在 canvas 上 */
+.look--survival { --look-bg: #0E1012; --look-a: #FF8A3D; --look-b: #8A9196; } /* ds-ok 末世默认(飓风) */
+.look--survival .look-tex { background: radial-gradient(ellipse 80% 70% at 50% 45%, transparent 50%, rgba(0,0,0,.55) 100%); } /* ds-ok */
+.look--survival.look-climate--winter { --look-bg: #0B1626; --look-a: #FFB35C; } /* ds-ok */
+.look--survival.look-climate--heat { --look-bg: #2A1D0C; --look-a: #8FD3FF; } /* ds-ok */
+.look--survival.look-climate--heat .look-tex { background: radial-gradient(ellipse 80% 70% at 50% 45%, transparent 45%, rgba(255,238,206,.22) 100%); mix-blend-mode: screen; } /* ds-ok 热浪发白 */
+.look--survival.look-climate--bunker { --look-bg: #1C0A0A; --look-a: #7FE6C4; } /* ds-ok */
+.look--survival.look-climate--bunker .look-tex { background: radial-gradient(ellipse 70% 60% at 50% 45%, transparent 35%, rgba(0,0,0,.8) 100%); } /* ds-ok 地堡收窄 */
+.look--survival.look-climate--winter.look-edge--hp .look-tex, .look--survival.look-climate--winter.look-edge--fixed .look-tex { box-shadow: inset 0 0 120rpx rgba(220,235,250,.28); } /* ds-ok 窗霜 */
+.look--survival.look-edge--off .look-tex { display: none; }
+/* 夜城:霓虹两色 + 扫描线 + 一道缓慢的扫光 */
+.look--cyber { --look-bg: #0B0B0F; --look-a: #F3E600; --look-b: #24E0E8; } /* ds-ok 黄青 */
+.look--cyber.look-neon--cyan_pink { --look-a: #2DE2E6; --look-b: #FF3B6B; } /* ds-ok */
+.look--cyber.look-neon--red_cyan { --look-a: #FF2E4C; --look-b: #2DE2E6; } /* ds-ok */
+.look--cyber .look-tex { background: repeating-linear-gradient(180deg, transparent 0 4rpx, rgba(0,0,0,.22) 4rpx 6rpx), radial-gradient(ellipse 85% 75% at 50% 45%, transparent 55%, rgba(0,0,0,.6) 100%); } /* ds-ok 扫描线 */

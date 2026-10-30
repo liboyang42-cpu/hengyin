@@ -1323,10 +1323,12 @@ class AdvancedGameConfigValidatorTest {
 
     // ==================== 扫码第四档 OVERLAY(AR 契约 §4.1) ====================
 
-    @Test void scanOnlyLegacyPresentationStillRequiresFullscreen() throws Exception {
+    // 2026-10-30 所有玩法都内嵌:单独扫码也默认内嵌,显式 inline 不再被拒;显式 fullscreen 照样生效
+    @Test void scanOnlyPresentationDefaultsInlineAndAcceptsBothValues() throws Exception {
         String scan=scanConfig("\"kind\":\"TEXT\",\"reply\":\"欢迎\"");
-        assertEquals("fullscreen",AdvancedGameConfigValidator.resolvePresent(objectMapper.readTree(scan)));
-        assertThrows(IllegalArgumentException.class,()->validator.validateAndNormalize(scan.replace("\"schemaVersion\":1","\"schemaVersion\":1,\"present\":\"inline\"")));
+        assertEquals("inline",AdvancedGameConfigValidator.resolvePresent(objectMapper.readTree(scan)));
+        validator.validateAndNormalize(scan.replace("\"schemaVersion\":1","\"schemaVersion\":1,\"present\":\"inline\""));
+        assertEquals("fullscreen",AdvancedGameConfigValidator.resolvePresent(objectMapper.readTree(scan.replace("\"schemaVersion\":1","\"schemaVersion\":1,\"present\":\"fullscreen\""))));
     }
     @Test void scanPlusMainGameplayUsesMainDefaultPresentation() throws Exception {
         JsonNode config=objectMapper.readTree("{\"scan\":{\"enabled\":true},\"qa\":{\"enabled\":true}}");

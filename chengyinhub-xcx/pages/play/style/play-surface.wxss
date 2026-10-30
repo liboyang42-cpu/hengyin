@@ -11,27 +11,29 @@
  * 那是玩法道具色,不是界面色。
  */
 
+/* 2026-10-30 所有玩法都内嵌:每个值都包一层 var(--pk-embed-*, 原值) —— 整屏没有这组变量,落回下面的原值,逐字不变;
+   内嵌时故事流那层(.chfull__kit / 预览 .cg-pv-inline-kit)给出章节配色 + 画面风格的主色,玩法就长在故事里。 */
 /* ============ 皮肤表 · 逐字抄自原型 playkit.html 的 .phone[data-skin=...] ============
  * 每个玩法一套自己的底色/墨色/次级色/软底/强调色,**不是**统一走 DS token ——
  * 原型里猜图是黑、猜数字是白、九宫格是淡蓝、抽卡是浅灰,把它们统一成玩家暗色
  * 等于把十九个玩法压成同一张脸。这里的值不许改,要改先改原型。
  * ⚠️ ds-ok:这一整段是玩法皮肤,不是界面色,不参与主题翻转。
  */
-.skin-estimate { --bg:#fcfcfc; --ink:#111114; --sub:#6c6c6c; --soft:#e7e7e7; --accent:#fc3f3f; --ok:#12a06f; } /* ds-ok */
-.skin-guess    { --bg:#0e0e0e; --ink:#f0ece5; --sub:#8a857d; --soft:#1b1b1a; --accent:#e4ddd2; --ok:#3ecf8e; } /* ds-ok */
-.skin-hidden   { --bg:#0d0d10; --ink:#f8f8f8; --sub:#919199; --soft:#1c1c1e; --accent:#12b886; --ok:#12b886; } /* ds-ok */
-.skin-predict  { --bg:#08080a; --ink:#f4f4f6; --sub:#78787f; --soft:#141418; --accent:#ffffff; --ok:#ffffff; } /* ds-ok */
-.skin-bingo    { --bg:#cfe2f5; --ink:#111114; --sub:#4d6076; --soft:#b7d2ec; --accent:#fc7ebd; --ok:#3fd2d2; } /* ds-ok */
-.skin-draw     { --bg:#e7e7e7; --ink:#111114; --sub:#5a5f66; --soft:#d6d6d6; --accent:#00bdfc; --ok:#00bdfc; } /* ds-ok */
-.skin-qa       { --bg:#fcfcfc; --ink:#111114; --sub:#6c6c6c; --soft:#ececec; --accent:#fc3f3f; --ok:#12a06f; } /* ds-ok */
+.skin-estimate { --bg:var(--pk-embed-bg, #fcfcfc); --ink:var(--pk-embed-ink, #111114); --sub:var(--pk-embed-sub, #6c6c6c); --soft:var(--pk-embed-soft, #e7e7e7); --accent:var(--pk-embed-accent, #fc3f3f); --ok:var(--pk-embed-ok, #12a06f); } /* ds-ok */
+.skin-guess    { --bg:var(--pk-embed-bg, #0e0e0e); --ink:var(--pk-embed-ink, #f0ece5); --sub:var(--pk-embed-sub, #8a857d); --soft:var(--pk-embed-soft, #1b1b1a); --accent:var(--pk-embed-accent, #e4ddd2); --ok:var(--pk-embed-ok, #3ecf8e); } /* ds-ok */
+.skin-hidden   { --bg:var(--pk-embed-bg, #0d0d10); --ink:var(--pk-embed-ink, #f8f8f8); --sub:var(--pk-embed-sub, #919199); --soft:var(--pk-embed-soft, #1c1c1e); --accent:var(--pk-embed-accent, #12b886); --ok:var(--pk-embed-ok, #12b886); } /* ds-ok */
+.skin-predict  { --bg:var(--pk-embed-bg, #08080a); --ink:var(--pk-embed-ink, #f4f4f6); --sub:var(--pk-embed-sub, #78787f); --soft:var(--pk-embed-soft, #141418); --accent:var(--pk-embed-accent, #ffffff); --ok:var(--pk-embed-ok, #ffffff); } /* ds-ok */
+.skin-bingo    { --bg:var(--pk-embed-bg, #cfe2f5); --ink:var(--pk-embed-ink, #111114); --sub:var(--pk-embed-sub, #4d6076); --soft:var(--pk-embed-soft, #b7d2ec); --accent:var(--pk-embed-accent, #fc7ebd); --ok:var(--pk-embed-ok, #3fd2d2); } /* ds-ok */
+.skin-draw     { --bg:var(--pk-embed-bg, #e7e7e7); --ink:var(--pk-embed-ink, #111114); --sub:var(--pk-embed-sub, #5a5f66); --soft:var(--pk-embed-soft, #d6d6d6); --accent:var(--pk-embed-accent, #00bdfc); --ok:var(--pk-embed-ok, #00bdfc); } /* ds-ok */
+.skin-qa       { --bg:var(--pk-embed-bg, #fcfcfc); --ink:var(--pk-embed-ink, #111114); --sub:var(--pk-embed-sub, #6c6c6c); --soft:var(--pk-embed-soft, #ececec); --accent:var(--pk-embed-accent, #fc3f3f); --ok:var(--pk-embed-ok, #12a06f); } /* ds-ok */
 /* 问答只有黑白两版,不给自由配色 —— 一放开,十家店会调出十种对比度不合格的组合 */
-.skin-qadark   { --bg:#0d0d10; --ink:#f6f6f8; --sub:#8a8a92; --soft:#1b1b20; --accent:#ff6b6b; --ok:#3ecf8e; } /* ds-ok */
-.skin-branch   { --bg:#12100e; --ink:#f2efe9; --sub:#8b857a; --soft:#211e1a; --accent:#d8a05a; --ok:#d8a05a; } /* ds-ok */
+.skin-qadark   { --bg:var(--pk-embed-bg, #0d0d10); --ink:var(--pk-embed-ink, #f6f6f8); --sub:var(--pk-embed-sub, #8a8a92); --soft:var(--pk-embed-soft, #1b1b20); --accent:var(--pk-embed-accent, #ff6b6b); --ok:var(--pk-embed-ok, #3ecf8e); } /* ds-ok */
+.skin-branch   { --bg:var(--pk-embed-bg, #12100e); --ink:var(--pk-embed-ink, #f2efe9); --sub:var(--pk-embed-sub, #8b857a); --soft:var(--pk-embed-soft, #211e1a); --accent:var(--pk-embed-accent, #d8a05a); --ok:var(--pk-embed-ok, #d8a05a); } /* ds-ok */
 /* 浅色玻璃(精准停表):值取自原型 #kit2 那一屏自己的底 / 墨 / 灰,不是新造的色。
    台面的退出 / 还能错 / 倒数跟着走浅色,不再是暗版字压在浅底上。--ci-* 只给倒数层用 */
-.skin-glass    { --bg:#f2f4f6; --ink:#111111; --sub:#5a5f66; --soft:#cfd4d9; --accent:#111111; --ok:#12a06f; --ci-scrim:rgba(242, 244, 246, .86); --ci-ink:#111111; } /* ds-ok */
+.skin-glass    { --bg:var(--pk-embed-bg, #f2f4f6); --ink:var(--pk-embed-ink, #111111); --sub:var(--pk-embed-sub, #5a5f66); --soft:var(--pk-embed-soft, #cfd4d9); --accent:var(--pk-embed-accent, #111111); --ok:var(--pk-embed-ok, #12a06f); --ci-scrim:rgba(242, 244, 246, .86); --ci-ink:#111111; } /* ds-ok */
 /* 兜底:没指定皮肤时按问答暗版,别落到透明 */
-.skin-none     { --bg:#0d0d10; --ink:#f6f6f8; --sub:#8a8a92; --soft:#1b1b20; --accent:#ff6b6b; --ok:#3ecf8e; } /* ds-ok */
+.skin-none     { --bg:var(--pk-embed-bg, #0d0d10); --ink:var(--pk-embed-ink, #f6f6f8); --sub:var(--pk-embed-sub, #8a8a92); --soft:var(--pk-embed-soft, #1b1b20); --accent:var(--pk-embed-accent, #ff6b6b); --ok:var(--pk-embed-ok, #3ecf8e); } /* ds-ok */
 
 /* 眉标:屏幕最上面那行小字。商家填的「标题」落在这里 */
 .g-kicker {

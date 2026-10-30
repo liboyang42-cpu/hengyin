@@ -48,6 +48,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="journeyStoryJson" column="journey_story_json" />
         <result property="themeRuntimeConfigJson" column="theme_runtime_config_json" />
         <result property="publishedThemeRuntimeConfigJson" column="published_theme_runtime_config_json" />
+        <result property="lookJson" column="look_json" />
         <result property="feePlatformRate"    column="fee_platform_rate"    />
         <result property="feeGuaranteeBaseRate"    column="fee_guarantee_base_rate"    />
         <result property="feeGuaranteeStepRate"    column="fee_guarantee_step_rate"    />
@@ -811,6 +812,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         order by <if test="clubId != null">coalesce(club_pinned, 0) desc, </if>id desc
     </select>
     
+    <select id="selectLookJsonById" parameterType="Long" resultType="java.lang.String">
+        select look_json from cms_topic where id = #{id}
+    </select>
+
     <select id="selectCmsTopicById" parameterType="Long" resultMap="CmsTopicResult">
         <include refid="selectCmsTopicVo"/>
         where id = #{id}
@@ -924,6 +929,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="journeyStoryJson != null">journey_story_json,</if>
             <if test="themeRuntimeConfigJson != null">theme_runtime_config_json,</if>
             <if test="publishedThemeRuntimeConfigJson != null">published_theme_runtime_config_json,</if>
+            <if test="lookJson != null">look_json,</if>
             <if test="topicId != null">topic_id,</if>
             <if test="name != null">name,</if>
             <if test="subtitle != null">subtitle,</if>
@@ -989,6 +995,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="journeyStoryJson != null">#{journeyStoryJson},</if>
             <if test="themeRuntimeConfigJson != null">#{themeRuntimeConfigJson},</if>
             <if test="publishedThemeRuntimeConfigJson != null">#{publishedThemeRuntimeConfigJson},</if>
+            <if test="lookJson != null">#{lookJson},</if>
             <if test="topicId != null">#{topicId},</if>
             <if test="name != null">#{name},</if>
             <if test="subtitle != null">#{subtitle},</if>
@@ -1063,6 +1070,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="journeyRulesJson != null">journey_rules_json = #{journeyRulesJson},</if>
             <if test="journeyStoryJson != null">journey_story_json = #{journeyStoryJson},</if>
             <if test="themeRuntimeConfigJson != null">theme_runtime_config_json = #{themeRuntimeConfigJson},</if>
+            <if test="lookJson != null">look_json = #{lookJson},</if>
             <if test="feePlatformRate != null">fee_platform_rate = #{feePlatformRate},</if>
             <if test="feeGuaranteeBaseRate != null">fee_guarantee_base_rate = #{feeGuaranteeBaseRate},</if>
             <if test="feeGuaranteeStepRate != null">fee_guarantee_step_rate = #{feeGuaranteeStepRate},</if>
