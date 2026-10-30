@@ -138,8 +138,7 @@ const PLAY_STORY_CARD = Object.freeze({
 // S9 暗色底图配置已抽到 utils/map-style.js(roam 页共用同一份,避免只改一页导致半暗半亮)。
 // 接入文档见 components/cy/free-map/DARK_MAP.md。
 const { MAP_STYLE: MAP_DARK } = require('../../utils/map-style.js');
-const storyScene = require('./utils/story-scene.js');
-const themeLook = require('./utils/theme-look.js'); const lookFx = require('./utils/look-fx.js'); // 主题画面风格:风格层粒子 + 转场 + 故事字体
+const storyScene = require('./utils/story-scene.js'); const themeLook = require('./utils/theme-look.js'); const lookFx = require('./utils/look-fx.js'); /* 主题画面风格:风格层粒子 + 转场 + 故事字体 */
 const lifeArchive = require('./utils/life-archive.js');
 const storyResume = require('./utils/story-resume.js');
 /* 内心声音(原型 VOICES 表原值);第 3 档异常时两个声音改名(越往后越像机器)。 */
@@ -385,8 +384,7 @@ const themeTrade = require('./utils/theme-trade.js');
 const themePlans = require('./utils/theme-plans.js');
 const playerOps = require('./utils/theme-player-ops.js');
 const { loadStoryFont } = require('./utils/story-font.js');
-const playOverlays = require('./utils/play-hud-overlays.js');
-const playTopbar = require('./utils/play-topbar.js'); // 故事流顶栏:罗盘⇄地图、背包、案件册、各站奖励
+const playOverlays = require('./utils/play-hud-overlays.js'); const playTopbar = require('./utils/play-topbar.js'); const playLook = require('./utils/play-look.js'); /* 故事流顶栏:罗盘⇄地图、背包、案件册、各站奖励 */
 Page({
   ...journeyCheckRecovery.methods(req),
   ...orientLifecycle.methods((url, method, data) => {
@@ -411,13 +409,11 @@ Page({
   ...themeTrade.methods(req),
   ...themePlans.methods(req),
   ...playerOps.methods(req),
-  ...playOverlays.methods(req, uuid4),
-  ...playTopbar.methods(req),
+  ...playOverlays.methods(req, uuid4), ...playTopbar.methods(req), ...playLook.methods(),
   _routeState: normalizeRouteState(null),
 
   data: {
-    ...orientLifecycle.data,
-    ...playTopbar.data,
+    ...orientLifecycle.data, ...playTopbar.data,
     arrivalGuard: null,
     guardAppealView: null,
     communityPostWrite: false,
@@ -476,8 +472,7 @@ Page({
     chapter: { idxLabel: '第一章', name: '', description: '', cover: '', mileage: '', timeText: '', atmospherePreset: 'DEFAULT', atmosphereClass: 'atmosphere--default' },
     previewEnding: { show: false, list: [], idx: 0 },
     bootStage: '',   // 开局「开机」动画的阶段(on/line/open/fade),空 = 不显示   // W-15 试玩末尾的结局卡(只在预览出现)
-    chapterCards: [],             // 横滑章节卡(buildChapterCards)
-    lookClass: themeLook.lookClass(null), lookTransition: themeLook.resolveTransition(null), // 主题画面风格(/api/play/nodes 的 look)
+    chapterCards: [], /* 横滑章节卡(buildChapterCards) */ lookClass: themeLook.lookClass(null), lookTransition: themeLook.resolveTransition(null), /* 主题画面风格(/api/play/nodes 的 look) */
     // mode2(自由探索)首屏:卡包 → 六宫格。动画标志位只驱动 WXSS class,不参与业务判定。
     // 四拍:② 蓄力(摇+压暗) → ③ 横撕(封口条扯走+爆炸) → ④ 发牌(逐张飞出) → 空袋下沉。
     // 奖励掉落卡:带服务端稳定 ID(badgeCode),可跳到徽章墙回读,不是一闪而过的 toast
@@ -598,8 +593,7 @@ Page({
   },
 
   onLoad(options) {
-    loadStoryFont(); // P-60:故事流手写体(未配置 / 失败时 .cy-story-hand 回落系统字体)
-    this._initTopbar(); // 左上角上次选的显示(罗盘 / 地图)
+    loadStoryFont(); /* P-60:故事流手写体(未配置 / 失败时 .cy-story-hand 回落系统字体) */ this._initTopbar(); /* 左上角上次选的显示(罗盘 / 地图) */
     this._playOwner = this._playMember();
     this._playLoginContext = this._capturePlayLoginContext();
     this._playDisposed = false;
@@ -717,8 +711,7 @@ Page({
     return !this._playDisposed && owner === this._playMember()
       && this._playLoginContext.generation === current.generation;
   },
-  onShow() {
-    if (this.data.navMap) this._startHeading(); // 地图档回到前台继续跟朝向
+  onShow() { if (this.data.navMap) this._startHeading(); /* 地图档回到前台继续跟朝向 */
     // 只看账号是否已切换(卸载态由各回调自己的 _isPlayAccountCurrent 挡)
     if (this._playOwner !== undefined && this._playOwner !== this._playMember()) {
       this._stopLeadPoll(); this._stopTracking(); audioSession.pauseAll(); audioSession.releaseAwake();
@@ -983,8 +976,7 @@ Page({
   },
 
   onUnload() {
-    this.suspendOrientLifecycle();
-    this._stopTopbar();
+    this.suspendOrientLifecycle(); this._stopTopbar();
     this.setData({ arrivalGuard: null });
     this._playDisposed = true;
     if (this._leadVerificationWorkflow) { this._leadVerificationWorkflow.destroy(); this._leadVerificationWorkflow = null; }
@@ -1031,8 +1023,7 @@ Page({
   // 2026-08-20 并 master:开卡包的三个 timeout 与定位无关,该清照清;
   //    只把 master 那侧的 _watching=false / offLocationChange / stopLocationUpdate 三句拿掉。
   onHide() {
-    this.suspendOrientLifecycle();
-    this._stopTopbar();
+    this.suspendOrientLifecycle(); this._stopTopbar();
     this.setData({ arrivalGuard: null });
     this._leadArrivalEpoch = (this._leadArrivalEpoch || 0) + 1; this._leadArriving = false;
     this._playLoadEpoch = (this._playLoadEpoch || 0) + 1;
@@ -1766,6 +1757,7 @@ Page({
    *  视差幅度大于手指位移:k>1 的层跟手跑得比手快,近的才「近」。 */
   _startStoryDust() {
     this._stopStoryDust();
+    /* (行位保留:此处原有代码已移除) */
     if (this.data.reducedMotion) return;      // 降低动态:静止的星点即可,不跑 rAF
     // 越往后越不正常 · 第 1 档起「字偶尔闪」:隔几秒挑一段带档位的闪 90ms(不占 keyframes 额度)
     this._oddTimer = setInterval(() => {
@@ -1813,8 +1805,7 @@ Page({
             that._sceneTarget || 'city', 0.025);
           const cu = that._sceneCur || storyScene.initial('city');
           if (!near) that._paintSceneLight(ctx, W, H, cu);
-          const lm = lookFx.dustMod(that._look);   // 主题画面风格对浮尘的修正(星尘调密度/速度/光色,其它风格收掉大半)
-          const rgb = 'rgb(' + (lm.col || cu.col).map(Math.round).join(',') + ')';
+          const lm = lookFx.dustMod(that._look); /* 主题画面风格对浮尘的修正(星尘调密度/速度/光色,其它风格收掉大半) */ const rgb = 'rgb(' + (lm.col || cu.col).map(Math.round).join(',') + ')';
           for (const p of that._dust) {
             if ((p.z > 1.2) !== near) continue;
             if (p.k > cu.n * lm.n) continue;
@@ -1828,13 +1819,7 @@ Page({
             if (p.shape === 0) ctx.fillRect(x, y, s, s);
             else if (p.shape === 1) { ctx.beginPath(); ctx.arc(x, y, s / 2, 0, 6.2832); ctx.fill(); }
             else { ctx.beginPath(); ctx.moveTo(x, y - s / 2); ctx.lineTo(x + s / 2, y + s / 2);
-              ctx.lineTo(x - s / 2, y + s / 2); ctx.closePath(); ctx.fill(); }
-          }
-          // 风格层(末世天气 / 夜城电流)只画在远景那张上,字盖在它上面
-          if (!near) {
-            if (!that._lookFx || that._lookFx.key !== that._lookKey) { that._lookFx = lookFx.create(that._look, W, H); that._lookFx.key = that._lookKey; }
-            lookFx.draw(that._lookFx, ctx, W, H, Date.now());
-            ctx.globalAlpha = 1;
+              ctx.lineTo(x - s / 2, y + s / 2); ctx.closePath(); ctx.fill(); } } /* 风格层(末世天气 / 夜城电流)只画在远景那张上,字盖在它上面 */ if (!near) { if (!that._lookFx || that._lookFx.key !== that._lookKey) { that._lookFx = lookFx.create(that._look, W, H); that._lookFx.key = that._lookKey; } lookFx.draw(that._lookFx, ctx, W, H, Date.now()); ctx.globalAlpha = 1;
           }
           // ⚠️ 只在预览态回写帧计数:静态截图看不出「粒子有没有在动」,
           //    而这正是之前漏掉的 bug(漂移量纲写错,每帧只挪 0.01px,看着完全静止)。
@@ -3739,6 +3724,7 @@ Page({
       if (!wasOpen) this._storyTop = 0;
       this.showChapterGate();
       if (!wasOpen) this._resumeStory();
+      /* (行位保留:此处原有代码已移除) */
       this.measureChapter();
       if (!this.data.chapterGate.show) this.playChapterAudio();
       this._enterThemeChapter();
@@ -3989,19 +3975,6 @@ Page({
       this.playChapterAudio();
     }));
   },
-  /** 主题画面风格:读不懂的值回落默认(星尘 + 光圈 + 手写),老主题外观不变。 */
-  _applyLook(raw) {
-    const look = themeLook.normalizeLook(raw);
-    this._look = look;
-    this._lookKey = JSON.stringify(look);
-    this.setData({ lookClass: themeLook.lookClass(look), lookTransition: themeLook.resolveTransition(look) });
-  },
-  /** 用风格的转场盖住画面,在完全盖住时执行 swap(换内容),再揭开;转场层不在 / 减动效时直接执行。 */
-  _withLookTransition(swap) {
-    const tx = this.data.reducedMotion || typeof this.selectComponent !== 'function' ? null : this.selectComponent('#lookTx');
-    if (!tx) { swap(); return; }
-    tx.run(swap);
-  },
   /** 滑动核销确认:真正的核销是商家扫玩家的码,这里只是玩家侧把码亮出来并标记本次已出示。
    *  ⚠️ 不在客户端写「已核销」到后端 —— 那是商家侧的动作,客户端说了不算。 */
   confirmRedeem() {
@@ -4095,9 +4068,7 @@ Page({
       /* 故事变量的两个来源之一(另一个是 advanced 会话视图):/api/play/nodes 回包 data.vars。
          章节文本与节点 story 大多数时候在这个点的会话之前就被读到 —— 只从会话视图取的话
          {name} 会一直原样留着,所以这条必须在首屏成功分支里落。 */
-      that._applyStoryVars(d);
-      that._applyLook(d.look);
-      that._probeCasebook();
+      that._applyStoryVars(d); that._applyLook(d.look); that._probeCasebook();
       that._puzzlePersonalBest = Number(d.puzzlePersonalBest) || 0;
       // 规则16 历史履约:已普通下架的本人已完成站只作只读回看,不并入 nodes/total/完成率/解锁/推荐/地图。
       const historyNodes = Array.isArray(d.historyNodes)
@@ -4332,8 +4303,7 @@ Page({
       mileage: c.totalMileage ? (c.totalMileage + 'km') : '',
       timeText: c.totalTime ? Math.round(c.totalTime / 60) + ' 分钟' : '',
       description: c.description || '',
-      blocks: Array.isArray(c.blocks) ? c.blocks : null,
-      audioUrl: c.audioUrl || '',
+      blocks: Array.isArray(c.blocks) ? c.blocks : null, audioUrl: c.audioUrl || '',
       atmospherePreset: normalizeAtmosphere(c.atmospherePreset),
       atmosphereClass: atmosphereClass(c.atmospherePreset),
       nodeCount: 0,   // 回填于 loadData:按 chapterId 数节点
@@ -4438,8 +4408,7 @@ Page({
           cover: card.cover || '',
           mileage: card.mileage || '',
           timeText: card.timeText || '',
-          blocks: card.blocks || null,
-          audioUrl: card.audioUrl || '',
+          blocks: card.blocks || null, audioUrl: card.audioUrl || '',
           atmospherePreset: normalizeAtmosphere(card.atmospherePreset),
           atmosphereClass: atmosphereClass(card.atmospherePreset),
         };
@@ -4519,8 +4488,7 @@ Page({
     this.setData({ fmNodes, fmPolyline, fmPlayer, fmCenter, nextNode, storyDistText, storyThoughts, chapter: activeChapter, allDone, doneCount,
       remainingGameCount: nodes.filter((node) => node.hasTemplate && !node.done).length,
       total: visibleNodes.length, merchantCount, seatTiles, ringSegs, searchPlaces }, () => {
-      if (chapterChanged) this.openChapterFull();
-    this._refreshNavRim();
+      if (chapterChanged) this.openChapterFull(); this._refreshNavRim();
       wx.nextTick(() => this._measureDeal());   // 布局落定后才量得到瓦片/卡包的真实矩形
       // 探店日:核销完最后一家回到本页(onShow 重拉)时自动弹结算 —— 只认 allDone 上升沿,
       // 重进一个早已完成的主题不重放仪式。经典定向有自己的 completed→openFinish 链,不走这里。
@@ -6773,9 +6741,7 @@ Page({
     /* 分支走到结局时不自动接着走:结局那段话就是这一站的全部回报,0.9 秒就被翻走等于没看到
        (2026-10-27 生产实测:南京路结案三选一,选完直接跳进附录章节卡)。玩家读完点下面的「继续」。 */
     const advanceStory = this.data.chapterFull && this._storyOpenNode && ready && !this.data.playKit.readyForBase
-      // 只在「这一站的玩法已经在屏上、从未就绪变成就绪」时接着走:首个视图就已就绪(音乐角)不翻走;换了局也不翻
-      && kit.type !== 'branch' && !!previous.type
-      && (previous.sessionId == null || kit.sessionId == null || String(previous.sessionId) === String(kit.sessionId));
+ /* 只在「这一站的玩法已经在屏上、从未就绪变成就绪」时接着走:首个视图就已就绪(音乐角)不翻走;换了局也不翻 */ && kit.type !== 'branch' && !!previous.type && (previous.sessionId == null || kit.sessionId == null || String(previous.sessionId) === String(kit.sessionId));
     // 填了一半的草稿按「账号 + 局 + 站」存本地(建档 / 留言组件自取);试玩不存
     if (kit.type === 'profile') this._profileNodeId = String(active.node.nodeId);
     if ((kit.type === 'profile' || kit.type === 'note') && !this.data.isPreview && !this.data.isMock) kit.draftKey = storyResume.draftKey(this._runSessionScope(), active.node.nodeId);

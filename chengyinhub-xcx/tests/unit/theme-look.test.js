@@ -112,5 +112,5 @@ test('选风格先弹底部预览,点「使用这个风格」才写回;返回键
   const preview = read('pages/publish/components/look-preview/index.wxml')
   assert.match(preview, /bindtap="onPlayTransition"/)
   assert.match(preview, /bindtap="onUse"/)
-  assert.match(read('pages/publish/fabu/index.js'), /lookPreview\.show\) \{\n      this\.onLookPreviewClose\(\);/)
+  assert.match(read('pages/publish/fabu/index.js'), /lookPreview\.show\)\s*\{\s*this\.onLookPreviewClose\(\);/)
 })

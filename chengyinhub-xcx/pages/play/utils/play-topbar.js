@@ -48,7 +48,8 @@ const data = {
 };
 
 function methods(req) {
-  return {
+  // 写成 const 对象再返回:台账 / 处理器门禁(xcx-scan)只扫模块里 `const X = {` 的键
+  const api = {
     _initTopbar() {
       if (readMode() === 'map') this._setNav(true);
     },
@@ -122,6 +123,7 @@ function methods(req) {
     },
     closeJourneyRewards() { this.setData({ 'journeyRewards.show': false }); },
   };
+  return api;
 }
 
 module.exports = { data, methods, rimPointer, bearing, meters, NAV_KEY, RIM_METERS };
