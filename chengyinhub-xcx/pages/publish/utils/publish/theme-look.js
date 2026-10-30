@@ -23,8 +23,8 @@ var STYLES = [
     ] },
   { value: 'SURVIVAL', label: '末世', transition: 'GUST',
     params: [
-      { key: 'climate', label: '气候', options: [['WINTER', '寒冬'], ['BUNKER', '地堡'], ['HEAT', '热浪'], ['STORM', '飓风']], def: 'STORM' },
-      { key: 'volatility', label: '天气', options: [['CALM', '平稳'], ['SHIFTING', '多变'], ['VIOLENT', '剧烈']], def: 'SHIFTING' },
+      { key: 'climate', label: '天气', options: [['CLEAR', '晴'], ['RAIN', '雨'], ['STORM', '雷暴'], ['SAND', '沙尘暴']], def: 'RAIN' },
+      { key: 'volatility', label: '变化', options: [['CALM', '平稳'], ['SHIFTING', '多变'], ['VIOLENT', '剧烈']], def: 'SHIFTING' },
       { key: 'edge', label: '屏幕边缘', options: [['HP', '跟随体力'], ['FIXED', '固定'], ['OFF', '关闭']], def: 'HP' },
     ] },
   { value: 'CYBER', label: '夜城', transition: 'SURGE',
@@ -43,8 +43,14 @@ var TRANSITIONS = [
 ];
 
 var STORY_FONTS = [
-  ['HAND', '手写'], ['SONG', '宋体'], ['KAI', '楷体'], ['HEI', '黑体'],
+  ['HAND', '手写'], ['SONG', '宋体'], ['KAI', '楷体'], ['HEI', '黑体'], ['BOLD', '粗斜'],
 ];
+// 主题配色(2026-10-30 业主:原「章节配色」提到主题层并改名):与章节配色同一套五档,每种风格把这五档映射成自己的底色。
+// 不设 = 各章沿用自己的章节配色,老主题外观不变。
+var PALETTES = [['DEFAULT', '黑'], ['BLUE', '蓝'], ['RED', '红'], ['YELLOW', '黄'], ['WHITE', '白']];
+// 末世每章的时间段(2026-10-30 业主):按章节顺序存成数组,空串 = 这一章不设;只染天光,不画景物。
+var TIMES = [['DAWN', '清晨'], ['NOON', '正午'], ['DUSK', '日落'], ['NIGHT', '夜晚']];
+var MAX_TIMES = 60;
 
 var DEFAULT_STYLE = 'STARDUST';
 
@@ -74,12 +80,20 @@ function normalizeLook(raw) {
   });
   var transition = String(src.transition || '').toUpperCase();
   var storyFont = String(src.storyFont || '').toUpperCase();
-  return {
+  var palette = String(src.palette || '').toUpperCase();
+  var out = {
     style: style.value,
     params: params,
     transition: has(TRANSITIONS, transition) ? transition : 'AUTO',
     storyFont: has(STORY_FONTS, storyFont) ? storyFont : 'HAND',
   };
+  if (has(PALETTES, palette)) out.palette = palette;
+  if (style.value === 'SURVIVAL' && Array.isArray(src.times)) {
+    var times = src.times.slice(0, MAX_TIMES).map(function (t) { t = String(t || '').toUpperCase(); return has(TIMES, t) ? t : ''; });
+    while (times.length && !times[times.length - 1]) times.pop();
+    if (times.length) out.times = times;
+  }
+  return out;
 }
 
 /** 写：存成紧凑 JSON；与默认完全相同时存空串，老主题不因打开过编辑器就多出一份配置。 */
@@ -100,10 +114,11 @@ function lookClass(look) {
   var n = normalizeLook(look), out = ['look--' + n.style.toLowerCase()];
   Object.keys(n.params).forEach(function (k) { out.push('look-' + k + '--' + n.params[k].toLowerCase()); });
   out.push('story-font--' + n.storyFont.toLowerCase());
+  if (n.palette) out.push('look-palette--' + n.palette.toLowerCase());
   return out.join(' ');
 }
 
 module.exports = {
-  STYLES: STYLES, TRANSITIONS: TRANSITIONS, STORY_FONTS: STORY_FONTS, DEFAULT_STYLE: DEFAULT_STYLE,
+  STYLES: STYLES, TRANSITIONS: TRANSITIONS, STORY_FONTS: STORY_FONTS, PALETTES: PALETTES, TIMES: TIMES, DEFAULT_STYLE: DEFAULT_STYLE,
   normalizeLook: normalizeLook, serializeLook: serializeLook, resolveTransition: resolveTransition, lookClass: lookClass, styleOf: styleOf,
 };

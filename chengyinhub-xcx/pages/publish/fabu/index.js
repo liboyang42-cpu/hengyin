@@ -1256,7 +1256,7 @@ Page({
     } else if (this.data.popChapter) {
       this.cancelChapter();
     } else if (this.data.modePickerShow) {
-      this.closeModePicker(); } else if (this.data.lookPreview && this.data.lookPreview.show) { this.onLookPreviewClose(); } else if (this.data.lookSheetShow) { this.closeLookEditor();
+      this.closeModePicker(); } else if (this.data.lookSheetShow) { this.closeLookEditor();
     } else if (this.data.topicDetailShow) {
       this.closeTopicDetail();
     } else if (this.data.storyVarSheet && this.data.storyVarSheet.show) {

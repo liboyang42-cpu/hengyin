@@ -29,7 +29,7 @@ class ThemeLookTest
     {
         ThemeLook.normalize("{\"style\":\"STARDUST\",\"params\":{\"density\":\"DENSE\",\"drift\":\"FAST\",\"tone\":\"COOL\"}}");
         ThemeLook.normalize("{\"style\":\"PAPER\",\"params\":{\"paper\":\"XUAN\",\"grain\":\"HEAVY\",\"stamp\":\"SEAL\"}}");
-        ThemeLook.normalize("{\"style\":\"SURVIVAL\",\"params\":{\"climate\":\"BUNKER\",\"volatility\":\"VIOLENT\",\"edge\":\"OFF\"}}");
+        ThemeLook.normalize("{\"style\":\"SURVIVAL\",\"params\":{\"climate\":\"SAND\",\"volatility\":\"VIOLENT\",\"edge\":\"OFF\"}}");
         ThemeLook.normalize("{\"style\":\"CYBER\",\"params\":{\"neon\":\"RED_CYAN\",\"current\":\"LOW\",\"glitch\":\"OFF\"}}");
     }
 
@@ -45,5 +45,26 @@ class ThemeLookTest
         assertThrows(IllegalArgumentException.class, () -> ThemeLook.normalize("{\"style\":1}"));
         assertThrows(IllegalArgumentException.class, () -> ThemeLook.normalize("[\"CYBER\"]"));
         assertThrows(IllegalArgumentException.class, () -> ThemeLook.normalize("not json"));
+        assertThrows(IllegalArgumentException.class, () -> ThemeLook.normalize("{\"style\":\"CYBER\",\"palette\":\"GREEN\"}"));
+    }
+
+    @Test
+    void themePaletteIsOptionalAndBoldItalicFontIsAccepted()
+    {
+        assertEquals("{\"style\":\"PAPER\",\"params\":{},\"transition\":\"AUTO\",\"storyFont\":\"BOLD\",\"palette\":\"YELLOW\"}",
+                ThemeLook.normalize("{\"style\":\"paper\",\"storyFont\":\"bold\",\"palette\":\"yellow\"}"));
+        // 不传 / 空串 = 各章沿用自己的章节配色,输出里不出现 palette
+        assertEquals("{\"style\":\"PAPER\",\"params\":{},\"transition\":\"AUTO\",\"storyFont\":\"HAND\"}",
+                ThemeLook.normalize("{\"style\":\"PAPER\",\"palette\":\"\"}"));
+    }
+
+    @Test
+    void survivalWeatherAndChapterTimes()
+    {
+        assertEquals("{\"style\":\"SURVIVAL\",\"params\":{\"climate\":\"SAND\"},\"transition\":\"AUTO\",\"storyFont\":\"HAND\",\"times\":[\"DAWN\",\"\",\"DUSK\"]}",
+                ThemeLook.normalize("{\"style\":\"SURVIVAL\",\"params\":{\"climate\":\"sand\"},\"times\":[\"dawn\",\"\",\"dusk\",\"\"]}"));
+        assertThrows(IllegalArgumentException.class, () -> ThemeLook.normalize("{\"style\":\"SURVIVAL\",\"params\":{\"climate\":\"WINTER\"}}"));
+        assertThrows(IllegalArgumentException.class, () -> ThemeLook.normalize("{\"style\":\"SURVIVAL\",\"times\":[\"NOON\",\"MIDNIGHT\"]}"));
+        assertThrows(IllegalArgumentException.class, () -> ThemeLook.normalize("{\"style\":\"PAPER\",\"times\":[\"NOON\"]}"));
     }
 }

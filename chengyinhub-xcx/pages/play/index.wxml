@@ -78,7 +78,7 @@
      卡头那个展开钮打开。上面是章节标题,中间那块(稿上 390×473 实线框)只放正文:
      一次一段、居中,向上滑时字从小变大 + 渐显,滑走的渐隐 —— 与旅程手记(Tesseract)同一套观感。
      下面三格读数与三键栏沿用运行栈,不另做一套。 -->
-<view class="chfull {{storyChat ? 'is-chat' : ''}} {{navMap ? 'is-navmap' : ''}}" wx:if="{{chapterFull}}" hidden="{{screen === 'gamePlay' || album.show || playKit.show || (advancedPlay.show && !playKit.kit)}}">
+<view class="chfull {{storyChat ? 'is-chat' : ''}} {{navMap ? 'is-navmap' : ''}} {{lookLit ? 'is-lit' : ''}}" wx:if="{{chapterFull}}" hidden="{{screen === 'gamePlay' || album.show || playKit.show || (advancedPlay.show && !playKit.kit)}}">
   <view class="fx-story__hd" style="padding-top:{{chrome.contentTop}}px">
     <!-- 左上角:罗盘(2026-09-22 用户裁决「左上角还是地图切换」,按预制人生排版)。
          2026-09-23 裁决:点它打开真实小地图(下方 .story-map),没有带坐标的地点时回卡包;距离走既有的 _distText。 -->
@@ -793,7 +793,7 @@
   </view>
 
   <!-- ③ 章节剧情全屏故事流。两张 canvas 夹住文字:后面那张是远景,前面那张的近景粒子会盖过字 -->
-  <view class="fx-story {{chapStory.open ? 'is-open' : ''}}" wx:if="{{mode==2 && chapStory.show}}"
+  <view class="fx-story {{chapStory.open ? 'is-open' : ''}} {{lookLit ? 'is-lit' : ''}}" wx:if="{{mode==2 && chapStory.show}}"
         aria-role="dialog" aria-modal="true" aria-label="{{chapStory.title}} 剧情">
     <canvas type="2d" id="stBack" class="fx-story__dust"></canvas><view class="look-tex"></view>
     <view class="fx-story__hd" style="padding-top:{{chrome.actionTop}}px">

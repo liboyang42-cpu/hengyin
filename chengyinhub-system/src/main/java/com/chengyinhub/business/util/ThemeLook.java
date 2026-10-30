@@ -2,6 +2,7 @@ package com.chengyinhub.business.util;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.Arrays;
@@ -39,7 +40,7 @@ public final class ThemeLook
                 "grain", set("LIGHT", "MEDIUM", "HEAVY"),
                 "stamp", set("VERIFIED", "VISITED", "SEAL")));
         s.put("SURVIVAL", params(
-                "climate", set("WINTER", "BUNKER", "HEAT", "STORM"),
+                "climate", set("CLEAR", "RAIN", "STORM", "SAND"),
                 "volatility", set("CALM", "SHIFTING", "VIOLENT"),
                 "edge", set("HP", "FIXED", "OFF")));
         s.put("CYBER", params(
@@ -50,8 +51,13 @@ public final class ThemeLook
     }
     private static final Set<String> TRANSITIONS = set("AUTO", "FADE", "IRIS", "PAGE", "WIPE", "SHUTTER", "PIXEL", "WARP",
             "GUST", "STATIC", "GLITCH", "SURGE", "INK", "CURTAIN", "ZOOM");
-    private static final Set<String> STORY_FONTS = set("HAND", "SONG", "KAI", "HEI");
-    private static final List<String> ROOT = Arrays.asList("style", "params", "transition", "storyFont");
+    private static final Set<String> STORY_FONTS = set("HAND", "SONG", "KAI", "HEI", "BOLD");
+    /** 主题配色:与章节配色同一套五档;不传 = 各章沿用自己的章节配色(老主题外观不变)。 */
+    private static final Set<String> PALETTES = set("DEFAULT", "BLUE", "RED", "YELLOW", "WHITE");
+    /** 末世每章的时间段,按章节顺序;空串 = 该章不设。 */
+    private static final Set<String> TIMES = set("DAWN", "NOON", "DUSK", "NIGHT");
+    private static final int MAX_TIMES = 60;
+    private static final List<String> ROOT = Arrays.asList("style", "params", "transition", "storyFont", "palette", "times");
 
     private ThemeLook()
     {
@@ -135,6 +141,42 @@ public final class ThemeLook
         }
         out.put("transition", option(node.path("transition"), TRANSITIONS, "AUTO", "转场"));
         out.put("storyFont", option(node.path("storyFont"), STORY_FONTS, "HAND", "故事字体"));
+        JsonNode palette = node.path("palette");
+        if (!palette.isMissingNode() && !palette.isNull() && !upper(palette).isEmpty())
+        {
+            out.put("palette", option(palette, PALETTES, "DEFAULT", "主题配色"));
+        }
+        JsonNode times = node.path("times");
+        if (!times.isMissingNode() && !times.isNull())
+        {
+            if (!"SURVIVAL".equals(style) || !times.isArray() || times.size() > MAX_TIMES)
+            {
+                throw new IllegalArgumentException("章节时间段格式不正确");
+            }
+            ArrayNode list = JSON.createArrayNode();
+            int last = -1;
+            for (int i = 0; i < times.size(); i++)
+            {
+                String t = upper(times.get(i));
+                if (!t.isEmpty() && !TIMES.contains(t))
+                {
+                    throw new IllegalArgumentException("章节时间段不合法:" + t);
+                }
+                list.add(t);
+                if (!t.isEmpty())
+                {
+                    last = i;
+                }
+            }
+            if (last >= 0)
+            {
+                ArrayNode trimmed = out.putArray("times");
+                for (int i = 0; i <= last; i++)
+                {
+                    trimmed.add(list.get(i).asText());
+                }
+            }
+        }
         return out.toString();
     }
 

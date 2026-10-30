@@ -1164,7 +1164,7 @@
           </view>
         </view>
 
-        <view class="chapter-atmosphere" wx:if="{{formData.productType === 1}}">
+        <view class="chapter-atmosphere" wx:if="{{formData.productType === 1 && !lookView.themed}}"> <!-- 设了主题配色就统一用它,章节里不再单设 -->
           <view class="chapter-atmosphere__head">
             <text>章节配色</text>
           </view>

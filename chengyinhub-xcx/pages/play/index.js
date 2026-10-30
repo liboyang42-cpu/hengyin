@@ -1804,7 +1804,7 @@ Page({
           if (!near) that._sceneCur = storyScene.step(that._sceneCur || storyScene.initial(that._sceneTarget || 'city'),
             that._sceneTarget || 'city', 0.025);
           const cu = that._sceneCur || storyScene.initial('city');
-          if (!near) that._paintSceneLight(ctx, W, H, cu);
+          if (!near && !lookFx.dustMod(that._look).clean) that._paintSceneLight(ctx, W, H, cu); /* 星尘:背景干净,不叠场景光 */
           const lm = lookFx.dustMod(that._look); /* 主题画面风格对浮尘的修正(星尘调密度/速度/光色,其它风格收掉大半) */ const rgb = 'rgb(' + (lm.col || cu.col).map(Math.round).join(',') + ')';
           for (const p of that._dust) {
             if ((p.z > 1.2) !== near) continue;
@@ -1820,7 +1820,7 @@ Page({
             else if (p.shape === 1) { ctx.beginPath(); ctx.arc(x, y, s / 2, 0, 6.2832); ctx.fill(); }
             else { ctx.beginPath(); ctx.moveTo(x, y - s / 2); ctx.lineTo(x + s / 2, y + s / 2);
               ctx.lineTo(x - s / 2, y + s / 2); ctx.closePath(); ctx.fill(); } } /* 风格层(末世天气 / 夜城电流)只画在远景那张上,字盖在它上面 */ if (!near) { if (!that._lookFx || that._lookFx.key !== that._lookKey) { that._lookFx = lookFx.create(that._look, W, H); that._lookFx.key = that._lookKey; } lookFx.draw(that._lookFx, ctx, W, H, Date.now()); ctx.globalAlpha = 1;
-          }
+          } else if (that._lookFx) { lookFx.drawFront(that._lookFx, ctx, W, H, Date.now()); that._lookLightUp(that._lookFx.flashAt); } /* 字前面:近星 / 水珠 / 沙雾;打闪时把字照亮 */
           // ⚠️ 只在预览态回写帧计数:静态截图看不出「粒子有没有在动」,
           //    而这正是之前漏掉的 bug(漂移量纲写错,每帧只挪 0.01px,看着完全静止)。
           //    生产态不写 —— 一秒一次 setData 是白花的开销。
@@ -4304,8 +4304,8 @@ Page({
       timeText: c.totalTime ? Math.round(c.totalTime / 60) + ' 分钟' : '',
       description: c.description || '',
       blocks: Array.isArray(c.blocks) ? c.blocks : null, audioUrl: c.audioUrl || '',
-      atmospherePreset: normalizeAtmosphere(c.atmospherePreset),
-      atmosphereClass: atmosphereClass(c.atmospherePreset),
+      atmospherePreset: normalizeAtmosphere(this._themePalette(c.atmospherePreset)),
+      atmosphereClass: atmosphereClass(this._themePalette(c.atmospherePreset)) + this._chapterTime(i),
       nodeCount: 0,   // 回填于 loadData:按 chapterId 数节点
     }));
   },
@@ -4336,8 +4336,8 @@ Page({
       cover: this._coverOf(c.imgArr ? String(c.imgArr).split(/[,;]/)[0] : (c.cover || ''), nodes),
       mileage: c.totalMileage ? (c.totalMileage + 'km') : '',
       timeText: c.totalTime ? Math.round(c.totalTime / 60) + ' 分钟' : '',
-      atmospherePreset: normalizeAtmosphere(c.atmospherePreset),
-      atmosphereClass: atmosphereClass(c.atmospherePreset),
+      atmospherePreset: normalizeAtmosphere(this._themePalette(c.atmospherePreset)),
+      atmosphereClass: atmosphereClass(this._themePalette(c.atmospherePreset)) + this._chapterTime(0),
       routeGeometry: c.routeGeometry || null,
       // 章节背景旁白:进本章自动播放(2026-09-04 拍板)。
       // ⚠️ buildChapter 是**白名单**映射 —— 后端下发了、这里不列,页面就永远读不到。
@@ -4409,8 +4409,8 @@ Page({
           mileage: card.mileage || '',
           timeText: card.timeText || '',
           blocks: card.blocks || null, audioUrl: card.audioUrl || '',
-          atmospherePreset: normalizeAtmosphere(card.atmospherePreset),
-          atmosphereClass: atmosphereClass(card.atmospherePreset),
+          atmospherePreset: normalizeAtmosphere(this._themePalette(card.atmospherePreset)),
+          atmosphereClass: atmosphereClass(this._themePalette(card.atmospherePreset)) + this._chapterTime((this.data.chapterCards || []).indexOf(card)),
         };
       }
     }

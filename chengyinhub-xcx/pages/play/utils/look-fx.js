@@ -1,46 +1,71 @@
-// 故事流远景画布上的“风格层”：星尘只调现有浮尘；纸本换成稀疏纸屑；末世画会自己变的天气；夜城画电流。
-// 每帧由 index.js 的粒子循环调用（远景那张画布），不 setData、不碰 DOM。参数来自 theme-look.js。
+// 故事流画布上的“风格层”：星尘画几颗彩色小方块 / 三角(漂浮的东西只在星尘里)；末世画会自己变的天气；夜城画电流；纸本只有纸纹理。
+// 每帧由 index.js 的粒子循环调用：draw 画在字后面那张(远景),drawFront 画在字前面那张(近景,让字处在环境里)。
+// 不 setData、不碰 DOM;雷暴打闪时只记 flashAt,由页面决定要不要把字照亮。参数来自 theme-look.js。
 
 const NEON = { YELLOW_CYAN: ['243,230,0', '36,224,232'], CYAN_PINK: ['45,226,230', '255,59,107'], RED_CYAN: ['255,46,76', '45,226,230'] };
 const TONE = { WHITE: null, WARM: [255, 214, 160], COOL: [190, 215, 255] };
+// 星尘小星的颜色:光色 = 白时各色混着,暖 / 冷时偏一边;白底用同色系的深色
+const STAR_COL = { WHITE: ['255,255,255', '255,214,160', '190,215,255', '255,182,206', '170,240,210', '214,196,255'], WARM: ['255,214,160', '255,190,150', '255,236,200', '255,182,206'], COOL: ['190,215,255', '170,240,230', '214,196,255', '235,244,255'] };
+const STAR_INK = { WHITE: ['40,44,56', '176,110,40', '50,90,170', '180,60,110', '30,130,100', '100,70,170'], WARM: ['176,110,40', '170,80,50', '120,84,40', '180,60,110'], COOL: ['50,90,170', '30,120,130', '100,70,170', '40,44,56'] };
 
-/** 现有星尘的修正量：n = 显示比例，speed = 漂移倍数，col = 颜色覆盖（null 沿用场景色）。 */
+/** 浅底(主题配色选了白)时粒子画深色,否则白底上看不见(2026-10-30 业主)。 */
+function isLight(look) { return !!look && look.palette === 'WHITE'; }
+const INK = [24, 26, 32];
+
+/** 现有星尘的修正量：n = 显示比例，speed = 漂移倍数，col = 颜色覆盖（null 沿用场景色）；still = 不跟场景的风走。 */
 function dustMod(look) {
+  const m = dustBase(look);
+  if (isLight(look)) m.col = INK;
+  return m;
+}
+function dustBase(look) {
   const p = (look && look.params) || {};
-  switch (look && look.style) {
-    case 'PAPER': return { n: 0.22, speed: 0.5, col: [214, 196, 160] };
-    case 'SURVIVAL': return { n: 0, speed: 1, col: null };
-    case 'CYBER': return { n: 0.12, speed: 0.6, col: null };
-    default: return {
-      n: { SPARSE: 0.5, NORMAL: 1, DENSE: 1.6 }[p.density] || 1,
-      speed: { SLOW: 1, NORMAL: 1.8, FAST: 3 }[p.drift] || 1,
-      col: TONE[p.tone] || null,
-    };
+  // 老主题没配过风格(legacy):原来的浮尘一点不变
+  if (!look || look.legacy) return { n: 1, speed: 1, col: null };
+  switch (look.style) {
+    // 2026-10-30 业主:漂浮的东西只在星尘里出现,其它风格不撒浮尘
+    case 'PAPER': case 'SURVIVAL': case 'CYBER': return { n: 0, speed: 1, col: null };
+    // 星尘:场景浮尘与场景光都收掉(背景干净),小星由 pieces 画(字后几颗、字前几颗)
+    default: return { n: 0, speed: 1, col: null, clean: true };
   }
 }
 
-// ---------- 末世：天气按阶段自己变，振幅与节奏由“天气”参数决定 ----------
+// ---------- 末世：天气按阶段自己变，振幅与节奏由“变化”参数决定 ----------
+// 2026-10-30 业主:天气四种 —— 晴 / 雨 / 雷暴 / 沙尘暴;bolt = 这一段会打闪
 const CLIMATE = {
-  WINTER: [{ t: 7, wind: 0.4, snow: 0.45 }, { t: 6, wind: 1.8, snow: 0.8, debris: 0.15 }, { t: 8, wind: 3.4, snow: 1, gust: 1 }, { t: 6, wind: -1.3, snow: 0.55 }, { t: 6, wind: 0.2, snow: 0.2 }],
-  STORM: [{ t: 6, wind: 0.7, rain: 0.2 }, { t: 7, wind: 2.8, rain: 0.1, debris: 0.9, gust: 1 }, { t: 8, wind: 1.6, rain: 1 }, { t: 5, wind: 0.1, rain: 0.04 }, { t: 7, wind: -3, rain: 0.75, debris: 0.7, gust: 1 }, { t: 6, wind: -1, rain: 0.4 }],
-  HEAT: [{ t: 7, wind: 0.3, dust: 0.2 }, { t: 6, wind: 1.9, dust: 0.7, debris: 0.35, gust: 1 }, { t: 8, wind: 3.2, dust: 1, debris: 0.5, gust: 1 }, { t: 5, wind: 0.9, dust: 0.25, rain: 0.4 }, { t: 5, wind: -0.4, dust: 0.12 }],
-  BUNKER: [{ t: 7, drip: 0.5, wind: 0.15, dust: 0.25 }, { t: 6, drip: 0.8, wind: 0.2, dust: 0.3 }, { t: 7, drip: 0.35, wind: 0.1, dust: 0.2 }],
+  CLEAR: [{ t: 8, wind: 0.25, dust: 0.06 }, { t: 7, wind: 0.7, dust: 0.1 }, { t: 7, wind: 0.15 }],
+  RAIN: [{ t: 7, wind: 0.4, rain: 0.55 }, { t: 7, wind: 1.2, rain: 0.9 }, { t: 6, wind: 0.2, rain: 0.35 }, { t: 7, wind: -0.8, rain: 0.75 }],
+  STORM: [{ t: 6, wind: 0.9, rain: 0.6, bolt: 1 }, { t: 7, wind: 2.8, rain: 0.8, debris: 0.6, gust: 1, bolt: 1 }, { t: 8, wind: 1.6, rain: 1, bolt: 1 }, { t: 6, wind: -2.4, rain: 0.85, debris: 0.4, gust: 1, bolt: 1 }],
+  SAND: [{ t: 7, wind: 0.6, dust: 0.45 }, { t: 6, wind: 1.9, dust: 0.8, debris: 0.35, gust: 1 }, { t: 8, wind: 3.2, dust: 1, debris: 0.5, gust: 1 }, { t: 6, wind: 1, dust: 0.55 }],
 };
 const VOL = { CALM: { amp: 0.5, len: 1.6 }, SHIFTING: { amp: 1, len: 1 }, VIOLENT: { amp: 1.4, len: 0.6 } };
-const KEYS = ['wind', 'rain', 'snow', 'dust', 'debris', 'drip'];
+const KEYS = ['wind', 'rain', 'dust', 'debris'];
 
 function create(look, W, H) {
   const style = look && look.style;
   if (style === 'SURVIVAL') {
-    const p = look.params, phases = CLIMATE[p.climate] || CLIMATE.STORM, vol = VOL[p.volatility] || VOL.SHIFTING;
+    const p = look.params, phases = CLIMATE[p.climate] || CLIMATE.RAIN, vol = VOL[p.volatility] || VOL.SHIFTING;
     const cur = {}; KEYS.forEach((k) => { cur[k] = (phases[0][k] || 0) * vol.amp; });
     const A = (n, f) => Array.from({ length: n }, f);
-    return { kind: 'survival', phases, vol, i: 0, until: 0, cur, g: 0, gv: 0, nextG: 0, t: 0,
+    return { kind: 'survival', light: isLight(look), phases, vol, i: 0, until: 0, cur, g: 0, gv: 0, nextG: 0, t: 0, nextBolt: 0, strike: null, flashAt: 0,
       R: A(200, () => ({ x: Math.random() * W, y: Math.random() * H, v: 10 + Math.random() * 6, a: 0.12 + Math.random() * 0.2 })),
-      S: A(150, () => ({ x: Math.random() * W, y: Math.random() * H, v: 0.5 + Math.random() * 0.9, a: 0.35 + Math.random() * 0.5, s: 0.8 + Math.random() * 1.8, t: Math.random() * 6 })),
       D: A(140, () => ({ x: Math.random() * W, y: Math.random() * H, a: 0.1 + Math.random() * 0.28, s: 0.5 + Math.random() * 1.2, t: Math.random() * 6 })),
       B: A(10, () => ({ on: 0 })), L: A(10, () => ({ on: 0 })),
-      P: [0.1, 0.3, 0.58, 0.76, 0.92].map((x) => ({ x: x * W, y: -1, v: 0, wait: 0 })) };
+      // 字前面:玻璃上的水珠(雨 / 雷暴)、贴脸飞过的沙(沙尘暴)、几缕近处的雨
+      G: A(16, () => ({ x: Math.random() * W, y: 40 + Math.random() * (H - 80), r: 3 + Math.random() * 6, born: 0, run: 0 })),
+      F: A(24, () => ({ x: Math.random() * W, y: Math.random() * H, v: 22 + Math.random() * 10, a: 0.06 + Math.random() * 0.1 })),
+      Z: A(7, (v, i) => ({ x: Math.random() * W, y: (i + 0.5) * H / 7, r: 120 + Math.random() * 120, a: 0.5 + Math.random() * 0.5 })) };
+  }
+  if (style === 'STARDUST' && !look.legacy) {
+    // 星尘:近处几颗大而虚的星从字前面慢慢飘过,另有几块漂浮物(远的在字后,近的在字前)
+    const A = (n, f) => Array.from({ length: n }, f);
+    const p = look.params || {}, k = { SPARSE: 0.6, NORMAL: 1, DENSE: 1.6 }[p.density] || 1, sp = { SLOW: 1, NORMAL: 1.8, FAST: 3 }[p.drift] || 1;
+    // 2026-10-30 业主:背景只放几颗小星,用方块 / 三角这种简单形状;漂浮的小东西颜色要多样,都要小
+    const pal = (isLight(look) ? STAR_INK : STAR_COL)[p.tone] || (isLight(look) ? STAR_INK : STAR_COL).WHITE;
+    const piece = (front) => ({ x: Math.random() * W, y: Math.random() * H, s: front ? 2.6 + Math.random() * 1.8 : 1.2 + Math.random() * 1.6, shape: Math.random() < 0.5 ? 0 : 1,
+      c: pal[(Math.random() * pal.length) | 0], a: front ? 0.55 + Math.random() * 0.3 : 0.35 + Math.random() * 0.45, tw: Math.random() < 0.4 ? 0.6 + Math.random() * 1.4 : 0, ph: Math.random() * 6.28,
+      vx: (Math.random() - 0.5) * 0.06 * sp, vy: -(0.02 + Math.random() * 0.05) * sp * (front ? 1.6 : 1), rot: Math.random() * 6.28, vr: (Math.random() - 0.5) * 0.006 });
+    return { kind: 'stardust', back: A(Math.round(34 * k), () => piece(false)), front: A(Math.round(7 * k), () => piece(true)) };
   }
   if (style === 'CYBER') {
     const p = look.params;
@@ -118,38 +143,103 @@ function drawSurvival(s, ctx, W, H, now) {
   s.w = w;
   ctx.lineCap = 'round';
   // 雨：跟风斜
-  const nR = Math.round(Math.min(1, c.rain) * s.R.length); ctx.strokeStyle = 'rgb(206,214,222)'; ctx.lineWidth = 0.8;
+  const nR = Math.round(Math.min(1, c.rain) * s.R.length); ctx.strokeStyle = s.light ? 'rgb(60,70,84)' : 'rgb(206,214,222)'; ctx.lineWidth = 0.8;
   for (let i = 0; i < nR; i++) { const q = s.R[i]; q.x += w * 2.4; q.y += q.v;
     if (q.y > H + 20 || q.x < -90 || q.x > W + 90) { q.y = -20 - Math.random() * 80; q.x = Math.random() * (W + 160) - 80 - w * 30; }
     ctx.globalAlpha = q.a * Math.min(1, c.rain * 1.6); ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.lineTo(q.x - w * 3.6, q.y - q.v * 1.5); ctx.stroke(); }
-  // 雪：大风时拉成短线
-  const nS = Math.round(Math.min(1, c.snow) * s.S.length); ctx.fillStyle = ctx.strokeStyle = 'rgb(235,244,255)';
-  for (let i = 0; i < nS; i++) { const q = s.S[i]; q.t += 0.02; const vx = w * 1.15 + Math.sin(q.t) * 0.35, vy = q.v * (1 + aw * 0.15);
-    q.x += vx; q.y += vy; if (q.y > H + 10) { q.y = -10; q.x = Math.random() * W; } if (q.x > W + 20) q.x = -20; if (q.x < -20) q.x = W + 20;
-    ctx.globalAlpha = q.a;
-    if (Math.abs(vx) > 2.4) { ctx.lineWidth = q.s * 1.2; ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.lineTo(q.x - vx * 2, q.y - vy * 2); ctx.stroke(); }
-    else { ctx.beginPath(); ctx.arc(q.x, q.y, q.s, 0, 6.2832); ctx.fill(); } }
-  // 沙尘 / 地堡里灯下的浮尘
-  const nD = Math.round(Math.min(1, c.dust) * s.D.length); ctx.fillStyle = 'rgb(230,196,140)';
+  // 沙尘
+  const nD = Math.round(Math.min(1, c.dust) * s.D.length); ctx.fillStyle = s.light ? 'rgb(120,84,40)' : 'rgb(230,196,140)';
   for (let i = 0; i < nD; i++) { const q = s.D[i]; q.t += 0.015; q.x += w * 2.1 + 0.15 + Math.sin(q.t) * 0.2; q.y += Math.sin(q.t * 0.7) * 0.25;
     if (q.x > W + 20) { q.x = -20; q.y = Math.random() * H; } if (q.x < -20) { q.x = W + 20; q.y = Math.random() * H; }
     ctx.globalAlpha = q.a; ctx.beginPath(); ctx.arc(q.x, q.y, q.s, 0, 6.2832); ctx.fill(); }
   // 风线
   if (aw > 1.1 && Math.random() < (aw - 1) * 0.05) { const l = s.L.find((x) => !x.on); if (l) Object.assign(l, { on: 1, len: 80 + Math.random() * 160, y: 60 + Math.random() * (H - 120), v: w * (7 + Math.random() * 4), a: (0.035 + Math.random() * 0.05) * Math.min(1, (aw - 1) / 1.6), bend: (Math.random() - 0.5) * 14 }, { x: w > 0 ? -250 : W + 10 }); }
-  ctx.strokeStyle = 'rgb(220,226,232)'; ctx.lineWidth = 0.8;
+  ctx.strokeStyle = s.light ? 'rgb(70,78,90)' : 'rgb(220,226,232)'; ctx.lineWidth = 0.8;
   s.L.forEach((l) => { if (!l.on) return; l.x += l.v; if (l.x > W + 20 || l.x < -l.len - 260) { l.on = 0; return; }
     ctx.globalAlpha = l.a; ctx.beginPath(); ctx.moveTo(l.x, l.y); ctx.quadraticCurveTo(l.x + l.len / 2, l.y + l.bend, l.x + l.len, l.y + l.bend * 0.3); ctx.stroke(); });
   // 碎片
   if (c.debris > 0.05 && Math.random() < c.debris * 0.045 * (1 + s.g)) { const b = s.B.find((x) => !x.on); if (b) Object.assign(b, { on: 1, x: w >= 0 ? -20 : W + 20, y: Math.random() * H * 0.9, w: 4 + Math.random() * 7, h: 2 + Math.random() * 4, r: Math.random() * 6, vr: (Math.random() - 0.5) * 0.3, a: 0.25 + Math.random() * 0.35, t: Math.random() * 6 }); }
-  ctx.fillStyle = 'rgb(200,206,212)';
+  ctx.fillStyle = s.light ? 'rgb(70,78,90)' : 'rgb(200,206,212)';
   s.B.forEach((b) => { if (!b.on) return; b.t += 0.05; b.x += w * 4.4 + (w >= 0 ? 1 : -1); b.y += Math.sin(b.t) * 1.4 + 0.35; b.r += b.vr * (aw * 0.5 + 0.3);
     if (b.x > W + 30 || b.x < -30 || b.y > H + 20) { b.on = 0; return; }
     ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(b.r); ctx.globalAlpha = b.a; ctx.fillRect(-b.w / 2, -b.h / 2, b.w, b.h * Math.abs(Math.cos(b.t))); ctx.restore(); });
-  // 地堡滴水
-  if (c.drip > 0.05) { ctx.strokeStyle = 'rgb(220,200,190)'; ctx.lineWidth = 1.4;
-    s.P.forEach((d) => { if (d.y < 0) { if (now > d.wait && Math.random() < c.drip * 0.04) { d.y = 46; d.v = 0; } return; }
-      d.v += 0.3; d.y += d.v; ctx.globalAlpha = 0.5; ctx.beginPath(); ctx.moveTo(d.x, d.y - 4 - d.v * 0.8); ctx.lineTo(d.x, d.y); ctx.stroke();
-      if (d.y > H - 46) { d.y = -1; d.wait = now + (1400 + Math.random() * 3200) / (c.drip + 0.2); } }); }
+  // 雷暴:打闪 —— 一道锯齿光从天上劈下来,整屏亮一下;页面读 flashAt 把字照亮
+  if (T.bolt && now > s.nextBolt) {
+    if (s.nextBolt) { const x = W * (0.15 + Math.random() * 0.7), pts = [[x, 0]]; bolt(x, 0, x + (Math.random() - 0.5) * W * 0.4, H * (0.45 + Math.random() * 0.2), 90, 6, pts); s.strike = { pts, t0: now }; s.flashAt = now; }
+    s.nextBolt = now + (3500 + Math.random() * 5500) * s.vol.len;
+  }
+  if (s.strike && now - s.strike.t0 < 900) {
+    const k = 1 - (now - s.strike.t0) / 900;
+    ctx.globalAlpha = 0.5 * k * k; ctx.fillStyle = s.light ? 'rgb(255,255,255)' : 'rgb(225,232,255)'; ctx.fillRect(0, 0, W, H);
+    if (now - s.strike.t0 < 220) { ctx.globalAlpha = 0.95; ctx.strokeStyle = s.light ? 'rgb(40,46,60)' : 'rgb(240,244,255)'; ctx.lineWidth = 2; ctx.shadowBlur = 16; ctx.shadowColor = 'rgb(200,212,255)';
+      ctx.beginPath(); s.strike.pts.forEach((pt, i) => (i ? ctx.lineTo(pt[0], pt[1]) : ctx.moveTo(pt[0], pt[1]))); ctx.stroke(); ctx.shadowBlur = 0; }
+  }
+  ctx.globalAlpha = 1;
+}
+
+// 星尘:一颗方块或三角的小星,慢慢漂、慢慢转,一部分会闪
+function pieces(list, ctx, W, H, now) {
+  const t = now / 1000;
+  for (const q of list) {
+    q.x += q.vx; q.y += q.vy; q.rot += q.vr;
+    if (q.y < -8) { q.y = H + 8; q.x = Math.random() * W; } if (q.x < -8) q.x = W + 8; if (q.x > W + 8) q.x = -8;
+    ctx.globalAlpha = q.a * (q.tw ? 0.45 + 0.55 * Math.max(0, Math.sin(t * q.tw + q.ph)) : 1);
+    ctx.fillStyle = 'rgb(' + q.c + ')';
+    ctx.save(); ctx.translate(q.x, q.y); ctx.rotate(q.rot);
+    if (q.shape === 0) ctx.fillRect(-q.s / 2, -q.s / 2, q.s, q.s);
+    else { ctx.beginPath(); ctx.moveTo(0, -q.s * 0.6); ctx.lineTo(q.s * 0.55, q.s * 0.4); ctx.lineTo(-q.s * 0.55, q.s * 0.4); ctx.closePath(); ctx.fill(); }
+    ctx.restore();
+  }
+  ctx.globalAlpha = 1;
+}
+
+/** 字前面那张画布:让字处在环境里 —— 星尘的近星与近处漂浮物、玻璃上的水珠、贴脸的沙、近处的雨。 */
+function drawFront(state, ctx, W, H, now) {
+  if (!state) return;
+  if (state.kind === 'stardust') {
+    pieces(state.front, ctx, W, H, now);
+    return;
+  }
+  if (state.kind !== 'survival') return;
+  const c = state.cur, light = state.light;
+  // 近处的雨:粗、虚、快
+  if (c.rain > 0.2) {
+    ctx.strokeStyle = light ? 'rgb(60,70,84)' : 'rgb(220,228,236)'; ctx.lineWidth = 1.8; ctx.lineCap = 'round';
+    state.F.forEach((q) => { q.y += q.v; q.x += (state.w || 0) * 3; if (q.y > H + 60) { q.y = -60; q.x = Math.random() * W; }
+      ctx.globalAlpha = q.a * Math.min(1, c.rain); ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.lineTo(q.x - (state.w || 0) * 5, q.y - 46); ctx.stroke(); });
+  }
+  // 玻璃上的水珠:雨越大越多;大的偶尔顺着玻璃滑下去,身后留一道湿痕。
+  // 水珠是透明的 —— 只画上沿一道细高光、下沿一道暗边,中间几乎不填色(不要白点)
+  const nG = Math.round(Math.min(1, c.rain * 1.1) * state.G.length);
+  const hi = light ? '255,255,255' : '235,242,250', lo = light ? '40,48,60' : '0,0,0';
+  state.G.forEach((d, i) => {
+    if (i >= nG) { d.born = 0; return; }
+    if (!d.born) { d.born = now; d.run = 0; d.trail = 0; d.x = Math.random() * W; d.y = 40 + Math.random() * (H - 80); }
+    const a = Math.min(1, (now - d.born) / 1200);
+    if (!d.run && d.r > 6 && Math.random() < 0.002) { d.run = now; d.y0 = d.y; }
+    if (d.run) { d.y += 1.2 + (now - d.run) / 500; d.x += Math.sin((now - d.run) / 180) * 0.25; if (d.y > H + 20) d.born = 0; }
+    const rx = d.r * (d.run ? 0.8 : 1), ry = d.r * (d.run ? 1.35 : 1.1);
+    if (d.run) {
+      const g = ctx.createLinearGradient(d.x, d.y0, d.x, d.y);
+      g.addColorStop(0, 'rgba(' + hi + ',0)'); g.addColorStop(1, 'rgba(' + hi + ',' + 0.18 * a + ')');
+      ctx.globalAlpha = 1; ctx.fillStyle = g; ctx.fillRect(d.x - rx * 0.35, d.y0, rx * 0.7, d.y - d.y0);
+    }
+    ctx.globalAlpha = a;
+    ctx.fillStyle = 'rgba(' + lo + ',' + (light ? 0.05 : 0.12) + ')'; ctx.beginPath(); ctx.ellipse(d.x, d.y, rx, ry, 0, 0, 6.2832); ctx.fill();
+    ctx.lineWidth = Math.max(0.8, d.r * 0.16);
+    ctx.strokeStyle = 'rgba(' + lo + ',' + (light ? 0.28 : 0.45) + ')'; ctx.beginPath(); ctx.ellipse(d.x, d.y, rx, ry, 0, 0.25, 2.9); ctx.stroke();
+    ctx.strokeStyle = 'rgba(' + hi + ',' + (light ? 0.9 : 0.6) + ')'; ctx.beginPath(); ctx.ellipse(d.x, d.y, rx * 0.82, ry * 0.82, 0, 3.6, 5.4); ctx.stroke();
+    ctx.fillStyle = 'rgba(' + hi + ',' + (light ? 0.95 : 0.75) + ')'; ctx.beginPath(); ctx.arc(d.x - rx * 0.35, d.y - ry * 0.4, Math.max(0.6, d.r * 0.14), 0, 6.2832); ctx.fill();
+  });
+  // 沙尘暴:大团沙雾从字前面卷过去,字时隐时现
+  if (c.dust > 0.3) {
+    const k = Math.min(1, (c.dust - 0.3) / 0.6), w = state.w || 0.5;
+    state.Z.forEach((z) => { z.x += 0.6 + w * 1.6; if (z.x - z.r > W) { z.x = -z.r; z.y = Math.random() * H; }
+      const g = ctx.createRadialGradient(z.x, z.y, 0, z.x, z.y, z.r);
+      const sc = light ? '214,186,140' : '176,128,70';
+      g.addColorStop(0, 'rgba(' + sc + ',' + (0.78 * z.a * k) + ')'); g.addColorStop(1, 'rgba(' + sc + ',0)');
+      ctx.globalAlpha = 1; ctx.fillStyle = g; ctx.fillRect(z.x - z.r, z.y - z.r, z.r * 2, z.r * 2); });
+  }
   ctx.globalAlpha = 1;
 }
 
@@ -157,8 +247,9 @@ function drawSurvival(s, ctx, W, H, now) {
 function draw(state, ctx, W, H, now) {
   if (!state) return 0;
   if (state.kind === 'cyber') drawCyber(state, ctx, W, H, now);
+  else if (state.kind === 'stardust') pieces(state.back, ctx, W, H, now);
   else if (state.kind === 'survival') { drawSurvival(state, ctx, W, H, now); return state.w || 0; }
   return 0;
 }
 
-module.exports = { dustMod, create, draw, CLIMATE, NEON };
+module.exports = { dustMod, create, draw, drawFront, isLight, CLIMATE, NEON };

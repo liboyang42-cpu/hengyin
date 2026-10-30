@@ -54,7 +54,7 @@ test('参数只认本风格的键,错值回落该参数默认;换风格不串参
 })
 
 test('每种风格的风格层都能连续画帧(假 canvas),末世返回风速', () => {
-  const ctx = new Proxy({}, { get: (t, k) => (k in t ? t[k] : () => {}), set: (t, k, v) => { t[k] = v; return true } })
+  const ctx = new Proxy({}, { get: (t, k) => (k in t ? t[k] : /^create(Radial|Linear)Gradient$/.test(k) ? () => ({ addColorStop() {} }) : () => {}), set: (t, k, v) => { t[k] = v; return true } })
   for (const s of look.STYLES) for (const p of s.params) for (const o of p.options) {
     const n = look.normalizeLook({ style: s.value, params: { [p.key]: o[0] } })
     const state = fx.create(n, 390, 844)
@@ -102,15 +102,109 @@ test('发布页预览用的风格层与转场是玩家页的逐字副本(作者�
   }
 })
 
-test('选风格先弹底部预览,点「使用这个风格」才写回;返回键先收预览', () => {
-  const editor = read('pages/publish/fabu/theme-look-editor.js')
-  assert.match(editor, /onLookStyle\(e\) \{[\s\S]*?lookPreview: \{ show: true/)
-  assert.doesNotMatch(editor.match(/onLookStyle\(e\) \{[\s\S]*?\n  \},/)[0], /_patchLook/, '点风格不许直接写回')
-  assert.match(editor, /onLookPreviewUse\(e\) \{[\s\S]*?_patchLook/)
-  assert.match(read('pages/publish/fabu/look-sheet.wxml'), /<cy-look-preview show="\{\{lookPreview\.show\}\}" look="\{\{lookPreview\.look\}\}" bind:use="onLookPreviewUse" bind:close="onLookPreviewClose" \/>/)
-  assert.ok(JSON.parse(read('pages/publish/fabu/index.json')).usingComponents['cy-look-preview'])
-  const preview = read('pages/publish/components/look-preview/index.wxml')
-  assert.match(preview, /bindtap="onPlayTransition"/)
-  assert.match(preview, /bindtap="onUse"/)
-  assert.match(read('pages/publish/fabu/index.js'), /lookPreview\.show\)\s*\{\s*this\.onLookPreviewClose\(\);/)
+test('画面风格(2026-10-30 业主,对齐原型 v7):预览常驻;风格 → 参数 → 主题配色 → 字体;转场系统配好', () => {
+  // 主题配色 = 章节配色同五档,存进 look.palette;不设 = 各章沿用自己的章节配色
+  assert.deepEqual(look.PALETTES.map(p => p[0]), ['DEFAULT', 'BLUE', 'RED', 'YELLOW', 'WHITE'])
+  assert.equal(look.normalizeLook({ style: 'PAPER' }).palette, undefined, '老主题没有主题配色')
+  assert.equal(look.normalizeLook({ style: 'PAPER', palette: 'yellow' }).palette, 'YELLOW')
+  assert.equal(look.normalizeLook({ style: 'PAPER', palette: 'GREEN' }).palette, undefined)
+  assert.match(look.lookClass({ style: 'PAPER', palette: 'YELLOW' }), /look-palette--yellow/)
+  assert.ok(look.STORY_FONTS.some(f => f[0] === 'BOLD'), '新增粗斜字体')
+  const java = read('../chengyinhub-system/src/main/java/com/chengyinhub/business/util/ThemeLook.java')
+  assert.match(java, /STORY_FONTS = set\("HAND", "SONG", "KAI", "HEI", "BOLD"\)/)
+  assert.match(java, /PALETTES = set\("DEFAULT", "BLUE", "RED", "YELLOW", "WHITE"\)/)
+
+  const sheet = read('pages/publish/fabu/look-sheet.wxml')
+  assert.match(sheet, /<cy-look-preview class="look-pin" embedded="\{\{true\}\}" show="\{\{lookSheetShow\}\}" look="\{\{lookView\.look\}\}" \/>/, '预览常驻、钉在顶部')
+  const at = (k) => sheet.indexOf(k)
+  assert.ok(at('cy-look-preview') < at('onLookStyle') && at('onLookStyle') < at('onLookParam') && at('onLookParam') < at('onLookPalette') && at('onLookPalette') < at('onLookFont'), '预览 → 风格 → 参数 → 主题配色 → 字体')
+  assert.match(sheet, /<text>主题配色<\/text>/)
+  for (const gone of ['onLookTransition', 'lookPreview.show']) assert.ok(!sheet.includes(gone), '作者面板不再有 ' + gone)
+  assert.match(read('pages/publish/fabu/index.wxml'), /class="chapter-atmosphere" wx:if="\{\{formData\.productType === 1 && !lookView\.themed\}\}"/, '设了主题配色,章节里不再单设')
+
+  const page = { data: { formData: { look: '', chapters: [{ atmospherePreset: 'BLUE' }] } }, setData(patch) { for (const k of Object.keys(patch)) { const ks = k.split('.'); let o = this.data; while (ks.length > 1) o = o[ks.shift()]; o[ks[0]] = patch[k] } } }
+  Object.assign(page, require('../../pages/publish/fabu/theme-look-editor.js').methods)
+  page._refreshLookView()
+  assert.equal(page.data.lookView.palettes.find(p => p.on).value, 'BLUE', '没设主题配色:预览先按第一章的配色')
+  assert.equal(page.data.formData.look, '', '只是打开不写')
+  const tap = (m, dataset) => page[m]({ currentTarget: { dataset } })
+  tap('onLookStyle', { value: 'PAPER' })
+  tap('onLookParam', { key: 'paper', value: 'XUAN' })
+  tap('onLookPalette', { value: 'YELLOW' })
+  tap('onLookFont', { value: 'BOLD' })
+  assert.deepEqual(JSON.parse(page.data.formData.look), { style: 'PAPER', params: { paper: 'XUAN', grain: 'MEDIUM', stamp: 'VERIFIED' }, transition: 'AUTO', storyFont: 'BOLD', palette: 'YELLOW' })
+  assert.equal(page.data.lookView.summary, '纸本 · 黄 · 粗斜')
+  tap('onLookStyle', { value: 'CYBER' })
+  const n = JSON.parse(page.data.formData.look)
+  assert.equal(n.palette, 'YELLOW', '换风格:主题配色保留'); assert.equal(n.storyFont, 'BOLD', '换风格:字体保留'); assert.equal(n.params.neon, 'YELLOW_CYAN', '换风格:参数回新风格默认')
+
+  // 玩家页:主题配色设了就统一各章配色;底色表按风格映射,参数不再改底色
+  const play = read('pages/play/index.js')
+  assert.equal((play.match(/atmosphereClass\(this\._themePalette\(/g) || []).length, 3)
+  const wxss = read('pages/play/index.wxss')
+  assert.match(wxss, /\.look--paper \.atmosphere--yellow\{ --atmo-bg:#E6DCC4;/, '纸本 × 黄 = 牛皮纸(原型 v7)')
+  assert.ok(!/look-climate--\w+ \{ --look-bg/.test(wxss) && !/look-paper--(xuan|card) \{ --look-bg/.test(wxss), '参数不改底色')
+  assert.match(wxss, /\.story-font--bold \.cy-story-hand \{[^}]*font-weight: 900; font-style: italic;/)
+
+  assert.match(read('pages/publish/components/look-preview/index.wxml'), /<view wx:if="\{\{embedded\}\}" class="lp lp--embedded">/)
+  assert.ok(!/lookPreview/.test(read('pages/publish/fabu/index.js')), '返回键不再处理已删的弹出预览')
+})
+
+test('星尘与末世优化(2026-10-30 业主):字处在环境里、浅底深色粒子、末世四种天气 + 每章时间段', () => {
+  const surv = look.STYLES.find(s => s.value === 'SURVIVAL')
+  assert.deepEqual(surv.params[0].options.map(o => o[0]), ['CLEAR', 'RAIN', 'STORM', 'SAND'], '天气:晴 / 雨 / 雷暴 / 沙尘暴')
+  assert.deepEqual(Object.keys(fx.CLIMATE), ['CLEAR', 'RAIN', 'STORM', 'SAND'])
+  assert.ok(fx.CLIMATE.STORM.every(p => p.bolt), '雷暴每一段都会打闪')
+  // 每章时间段:只在末世里,按章节顺序,尾部空的不存
+  assert.deepEqual(look.normalizeLook({ style: 'SURVIVAL', times: ['dawn', '', 'dusk', ''] }).times, ['DAWN', '', 'DUSK'])
+  assert.equal(look.normalizeLook({ style: 'PAPER', times: ['DAWN'] }).times, undefined)
+  assert.match(read('../chengyinhub-system/src/main/java/com/chengyinhub/business/util/ThemeLook.java'), /TIMES = set\("DAWN", "NOON", "DUSK", "NIGHT"\)/)
+
+  // 白底:粒子画深色;星尘不跟场景的风
+  // 漂浮的东西只在星尘里:其它风格不撒浮尘;星尘背景干净(不叠场景光),整片银河自己画;老主题(没配风格)浮尘照旧
+  for (const st of ['PAPER', 'SURVIVAL', 'CYBER']) assert.equal(fx.dustMod({ style: st, params: {} }).n, 0, st + ' 不撒浮尘')
+  assert.equal(fx.dustMod({ style: 'STARDUST', params: {} }).clean, true)
+  assert.deepEqual(fx.dustMod({ style: 'STARDUST', params: {}, legacy: true }), { n: 1, speed: 1, col: null }, '老主题外观不变')
+  assert.equal(fx.create({ style: 'STARDUST', params: {}, legacy: true }, 390, 844).kind, 'none')
+  assert.match(read('pages/play/utils/play-look.js'), /raw \? \{\} : \{ legacy: true \}/)
+  assert.match(read('pages/play/index.js'), /if \(!near && !lookFx\.dustMod\(that\._look\)\.clean\) that\._paintSceneLight/)
+  const ctx = new Proxy({}, { get: (t, k) => (/^create(Radial|Linear)Gradient$/.test(k) ? () => ({ addColorStop() {} }) : () => {}), set: () => true })
+  const storm = fx.create({ style: 'SURVIVAL', params: { climate: 'STORM', volatility: 'VIOLENT', edge: 'HP' }, palette: 'WHITE' }, 390, 844)
+  assert.equal(storm.light, true)
+  let now = 1e6
+  for (let i = 0; i < 1500; i++) { now += 16; fx.draw(storm, ctx, 390, 844, now); fx.drawFront(storm, ctx, 390, 844, now) }
+  assert.ok(storm.flashAt > 0, '雷暴打过闪,页面据此把字照亮')
+  assert.ok(storm.G.some(d => d.born), '字前面有玻璃上的水珠')
+  const dust = fx.create({ style: 'STARDUST', params: { density: 'NORMAL', drift: 'SLOW', tone: 'WHITE' } }, 390, 844)
+  assert.equal(dust.kind, 'stardust')
+  assert.ok(dust.back.length > dust.front.length && dust.front.length > 0, '字后几颗、字前几颗')
+  assert.ok(dust.back.concat(dust.front).every(q => q.shape === 0 || q.shape === 1), '只有方块和三角')
+  assert.ok(dust.back.concat(dust.front).every(q => q.s <= 4.4), '都很小')
+  assert.ok(new Set(dust.back.map(q => q.c)).size >= 3, '颜色多样')
+  const dense = fx.create({ style: 'STARDUST', params: { density: 'DENSE' } }, 390, 844)
+  assert.ok(dense.back.length > dust.back.length, '浮尘参数决定数量')
+  const y0 = dust.back[0].y; fx.draw(dust, ctx, 390, 844, now); fx.drawFront(dust, ctx, 390, 844, now)
+  assert.notEqual(dust.back[0].y, y0, '慢慢漂')
+  assert.equal(read('pages/publish/utils/publish/look-fx.js'), read('pages/play/utils/look-fx.js'), '发布页预览用同一份')
+
+  // 玩家页接线:字前面那张画 drawFront、打闪照亮字、章节类带时间段
+  const js = read('pages/play/index.js'), wxml = read('pages/play/index.wxml'), wxss = read('pages/play/index.wxss')
+  assert.match(js, /lookFx\.drawFront\(that\._lookFx, ctx, W, H, Date\.now\(\)\); that\._lookLightUp\(that\._lookFx\.flashAt\);/)
+  assert.equal((js.match(/\+ this\._chapterTime\(/g) || []).length, 3)
+  assert.equal((wxml.match(/\{\{lookLit \? 'is-lit' : ''\}\}/g) || []).length, 2)
+  assert.match(wxss, /\.look--survival \.look-time--dusk\{ background-image:/)
+  assert.ok(!/look-climate--(winter|heat|bunker)/.test(wxss), '旧气候的样式已清掉')
+
+  // 编辑器:末世才出现每章时间段,再点一次取消
+  const page = { data: { formData: { look: '', chapters: [{ name: '早班渡轮' }, { name: '日落之前' }] } }, setData(patch) { for (const k of Object.keys(patch)) { const ks = k.split('.'); let o = this.data; while (ks.length > 1) o = o[ks.shift()]; o[ks[0]] = patch[k] } } }
+  Object.assign(page, require('../../pages/publish/fabu/theme-look-editor.js').methods)
+  page._refreshLookView(); assert.equal(page.data.lookView.times.length, 0, '星尘没有时间段')
+  page.onLookStyle({ currentTarget: { dataset: { value: 'SURVIVAL' } } })
+  assert.deepEqual(page.data.lookView.times.map(t => t.name), ['早班渡轮', '日落之前'])
+  page.onLookTime({ currentTarget: { dataset: { index: 1, value: 'DUSK' } } })
+  assert.deepEqual(JSON.parse(page.data.formData.look).times, ['', 'DUSK'])
+  page.onLookTime({ currentTarget: { dataset: { index: 1, value: 'DUSK' } } })
+  assert.equal(JSON.parse(page.data.formData.look).times, undefined, '再点一次取消')
+  assert.match(read('pages/publish/fabu/look-sheet.wxml'), /bindtap="onLookTime"/)
+  assert.match(read('pages/publish/components/look-preview/index.wxml'), /id="lpfront"/)
 })

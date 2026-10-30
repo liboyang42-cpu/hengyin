@@ -17,6 +17,7 @@ Component({
     show: { type: Boolean, value: false },
     look: { type: Object, value: null },
     reducedMotion: { type: Boolean, value: false },
+    embedded: { type: Boolean, value: false },
   },
   data: { cls: '', sample: SAMPLE.STARDUST, tx: 'IRIS', title: '' },
   observers: {
@@ -26,23 +27,26 @@ Component({
       const n = themeLook.normalizeLook(look);
       const style = themeLook.styleOf(n.style);
       this._look = n;
-      this.setData({ cls: themeLook.lookClass(n), sample: SAMPLE[n.style], tx: themeLook.resolveTransition(n), title: style.label });
-      // 等半屏升起、画布有尺寸再开画
-      this._t = setTimeout(() => this._paint(), 360);
+      const time = (n.times || []).find((t) => t);
+      this.setData({ cls: themeLook.lookClass(n) + (time ? ' look-time--' + time.toLowerCase() : ''), sample: SAMPLE[n.style], tx: themeLook.resolveTransition(n), title: style.label });
+      // 等面板升起、画布有尺寸再开画;常驻时只是换风格,画布已在
+      this._t = setTimeout(() => this._paint(), this._painted && this.properties.embedded ? 0 : 360);
     },
   },
   lifetimes: { detached() { this._stop(); } },
   methods: {
     _stop() { clearTimeout(this._t); if (this._cv && this._raf) this._cv.cancelAnimationFrame(this._raf); this._raf = 0; },
     _paint() {
-      wx.createSelectorQuery().in(this).select('#lpfx').fields({ node: true, size: true }).exec((res) => {
+      wx.createSelectorQuery().in(this).select('#lpfx').fields({ node: true, size: true }).select('#lpfront').fields({ node: true, size: true }).exec((res) => {
         const item = res && res[0]; if (!item || !item.node || !this.properties.show) return;
+        // 字前面那张:近星 / 水珠 / 沙雾,与玩家页同一份 drawFront
+        const fr = res[1] && res[1].node, fctx = fr && fr.getContext('2d');
         const cv = item.node, ctx = cv.getContext('2d'), dpr = (wx.getWindowInfo && wx.getWindowInfo().pixelRatio) || 2;
-        cv.width = item.width * dpr; cv.height = item.height * dpr; ctx.scale(dpr, dpr);
+        cv.width = item.width * dpr; cv.height = item.height * dpr; ctx.scale(dpr, dpr); if (fr) { fr.width = item.width * dpr; fr.height = item.height * dpr; fctx.scale(dpr, dpr); }
         const W = item.width, H = item.height, look = this._look, mod = lookFx.dustMod(look), state = lookFx.create(look, W, H);
         const col = mod.col ? mod.col.join(',') : '255,255,255';
         const specks = Array.from({ length: Math.round(60 * mod.n) }, () => ({ x: Math.random() * W, y: Math.random() * H, s: 0.6 + Math.random() * 1.6, a: 0.15 + Math.random() * 0.4, vy: -(0.05 + Math.random() * 0.15) * mod.speed }));
-        this._cv = cv;
+        this._cv = cv; this._painted = true;
         const loop = () => {
           if (!this.properties.show) return;
           ctx.clearRect(0, 0, W, H);
@@ -51,6 +55,7 @@ Component({
             ctx.globalAlpha = p.a; ctx.fillStyle = 'rgb(' + col + ')'; ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, 6.2832); ctx.fill();
           });
           if (!this.properties.reducedMotion) lookFx.draw(state, ctx, W, H, Date.now());
+          if (fctx) { fctx.clearRect(0, 0, W, H); if (!this.properties.reducedMotion) lookFx.drawFront(state, fctx, W, H, Date.now()); }
           ctx.globalAlpha = 1;
           this._raf = cv.requestAnimationFrame(loop);
         };
