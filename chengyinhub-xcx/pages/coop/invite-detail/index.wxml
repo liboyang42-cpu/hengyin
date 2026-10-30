@@ -69,6 +69,16 @@
       </view>
     </view>
 
+    <!-- 走查 v2 R03(业主 2026-10-30):受邀商家要能一路点进去看整个主题、具体章节与节点,才知道邀的是什么。
+         现成的主题详情页就有章节 / 节点 / 玩法,这里直接给入口,不另做一套。 -->
+    <view class="op op--theme" wx:if="{{invite.topicId}}" bindtap="openTopicDetail" aria-role="button" aria-label="查看主题详情" hover-class="cy-pressed" hover-stay-time="80">
+      <view class="op-main">
+        <text class="op-name">查看主题详情</text>
+        <text class="op-hint" wx:if="{{invite.supplyStationText}}">邀请你承接 · {{invite.supplyStationText}}</text>
+      </view>
+      <cy-icon name="arrow-right" size="24" />
+    </view>
+
     <view class="card">
       <text class="card-title">合作条款</text>
       <view class="kv"><text class="k">合作双方</text><text class="v">{{invite.typeText}}</text></view>

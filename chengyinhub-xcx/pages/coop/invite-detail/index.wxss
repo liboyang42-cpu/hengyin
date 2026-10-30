@@ -123,3 +123,7 @@
 .act--ghost { border: 2rpx solid var(--cy-color-border-subtle); color: var(--cy-color-text-primary); }
 /* 终态那条不是按钮:不给圆角药丸的实心感,也不给按压反馈 */
 .act--dead { color: var(--cy-color-text-tertiary); font-size: var(--cy-font-caption); font-weight: 400; }
+
+/* 走查 v2 R03:查看主题详情入口 */
+.op--theme { margin: 0 var(--cy-page-x) var(--cy-space-4); padding: var(--cy-space-4); border-radius: var(--cy-radius-lg); background: var(--cy-bg-card); }
+.op-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4rpx; }

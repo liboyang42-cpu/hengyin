@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5491,
+  "controlCount": 5492,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -988657,7 +988657,7 @@
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:104:bindinput:onDraftInput:5",
+      "id": "pages/coop/invite-detail/index.wxml:114:bindinput:onDraftInput:6",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -988680,7 +988680,7 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "onDraftInput",
-        "line": 104,
+        "line": 114,
         "selectorHint": ".field",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -988724,7 +988724,7 @@
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:117:bindtap:openAcceptedProject:6",
+      "id": "pages/coop/invite-detail/index.wxml:127:bindtap:openAcceptedProject:7",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -988747,7 +988747,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openAcceptedProject",
-        "line": 117,
+        "line": 127,
         "selectorHint": ".op",
         "visibleCondition": "{{projectActionVisible}}",
         "disabledCondition": null,
@@ -988794,7 +988794,7 @@
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:123:bindtap:contactPartner:7",
+      "id": "pages/coop/invite-detail/index.wxml:133:bindtap:contactPartner:8",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -988817,7 +988817,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "contactPartner",
-        "line": 123,
+        "line": 133,
         "selectorHint": ".op",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -988901,11 +988901,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:413"
+        "staticSource": "pages/coop/invite-detail/index.js:422"
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:129:bindtap:openPerkPick:8",
+      "id": "pages/coop/invite-detail/index.wxml:139:bindtap:openPerkPick:9",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -988928,7 +988928,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openPerkPick",
-        "line": 129,
+        "line": 139,
         "selectorHint": ".op",
         "visibleCondition": "{{box === 'received' && invite.toType === 'merchant'}}",
         "disabledCondition": null,
@@ -989018,11 +989018,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:473"
+        "staticSource": "pages/coop/invite-detail/index.js:482"
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:138:bindtap:reviewCoop:9",
+      "id": "pages/coop/invite-detail/index.wxml:148:bindtap:reviewCoop:10",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -989045,7 +989045,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "reviewCoop",
-        "line": 138,
+        "line": 148,
         "selectorHint": ".op",
         "visibleCondition": "{{box === 'received' || invite.toType === 'merchant'}}",
         "disabledCondition": null,
@@ -989127,11 +989127,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:571"
+        "staticSource": "pages/coop/invite-detail/index.js:580"
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:146:bindtap:cancelAccepted:10",
+      "id": "pages/coop/invite-detail/index.wxml:156:bindtap:cancelAccepted:11",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -989154,7 +989154,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "cancelAccepted",
-        "line": 146,
+        "line": 156,
         "selectorHint": ".op",
         "visibleCondition": "{{!invite.termsFrozen}}",
         "disabledCondition": null,
@@ -989262,11 +989262,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:444"
+        "staticSource": "pages/coop/invite-detail/index.js:453"
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:150:bindtap:explainCancelLocked:11",
+      "id": "pages/coop/invite-detail/index.wxml:160:bindtap:explainCancelLocked:12",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -989289,7 +989289,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "explainCancelLocked",
-        "line": 150,
+        "line": 160,
         "selectorHint": ".op",
         "visibleCondition": "{{invite.termsFrozen}}",
         "disabledCondition": null,
@@ -989329,11 +989329,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:468"
+        "staticSource": "pages/coop/invite-detail/index.js:477"
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:163:bindtap:reject:12",
+      "id": "pages/coop/invite-detail/index.wxml:173:bindtap:reject:13",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -989356,7 +989356,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "reject",
-        "line": 163,
+        "line": 173,
         "selectorHint": ".act",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -989468,7 +989468,7 @@
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:165:bindtap:accept:13",
+      "id": "pages/coop/invite-detail/index.wxml:175:bindtap:accept:14",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -989491,7 +989491,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "accept",
-        "line": 165,
+        "line": 175,
         "selectorHint": ".act",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -989602,7 +989602,7 @@
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:169:bindtap:withdraw:14",
+      "id": "pages/coop/invite-detail/index.wxml:179:bindtap:withdraw:15",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -989625,7 +989625,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "withdraw",
-        "line": 169,
+        "line": 179,
         "selectorHint": ".act",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -989737,7 +989737,7 @@
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:173:bindtap:goDeposit:15",
+      "id": "pages/coop/invite-detail/index.wxml:183:bindtap:goDeposit:16",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -989760,7 +989760,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goDeposit",
-        "line": 173,
+        "line": 183,
         "selectorHint": ".act",
         "visibleCondition": "{{depositActionVisible}}",
         "disabledCondition": null,
@@ -989804,11 +989804,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:656"
+        "staticSource": "pages/coop/invite-detail/index.js:665"
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:184:bind:close:closePerkPick:16",
+      "id": "pages/coop/invite-detail/index.wxml:194:bind:close:closePerkPick:17",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -989831,7 +989831,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closePerkPick",
-        "line": 184,
+        "line": 194,
         "selectorHint": ".theme-merchant",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -989871,11 +989871,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:523"
+        "staticSource": "pages/coop/invite-detail/index.js:532"
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:189:catchtap:togglePerk:18",
+      "id": "pages/coop/invite-detail/index.wxml:199:catchtap:togglePerk:19",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -989898,7 +989898,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "togglePerk",
-        "line": 189,
+        "line": 199,
         "selectorHint": ".pk-item",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -989938,11 +989938,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:530"
+        "staticSource": "pages/coop/invite-detail/index.js:539"
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:198:catchtap:submitPerks:19",
+      "id": "pages/coop/invite-detail/index.wxml:208:catchtap:submitPerks:20",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -989965,7 +989965,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "submitPerks",
-        "line": 198,
+        "line": 208,
         "selectorHint": ".pk-save",
         "visibleCondition": "{{perkState === 'ready'}}",
         "disabledCondition": null,
@@ -990048,11 +990048,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:535"
+        "staticSource": "pages/coop/invite-detail/index.js:544"
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:201:bind:cancel:onReviewSheetCancel:21",
+      "id": "pages/coop/invite-detail/index.wxml:211:bind:cancel:onReviewSheetCancel:22",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -990075,7 +990075,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:cancel",
         "handler": "onReviewSheetCancel",
-        "line": 201,
+        "line": 211,
         "selectorHint": "cy-option-sheet[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -990115,11 +990115,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:584"
+        "staticSource": "pages/coop/invite-detail/index.js:593"
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:201:bind:select:onReviewSheetSelect:20",
+      "id": "pages/coop/invite-detail/index.wxml:211:bind:select:onReviewSheetSelect:21",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -990142,7 +990142,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onReviewSheetSelect",
-        "line": 201,
+        "line": 211,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -990235,7 +990235,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:588"
+        "staticSource": "pages/coop/invite-detail/index.js:597"
       }
     },
     {
@@ -990305,7 +990305,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:665"
+        "staticSource": "pages/coop/invite-detail/index.js:674"
       }
     },
     {
@@ -990383,6 +990383,76 @@
       "evidence": {
         "status": "pending",
         "staticSource": "pages/coop/invite-detail/index.js:289"
+      }
+    },
+    {
+      "id": "pages/coop/invite-detail/index.wxml:74:bindtap:openTopicDetail:5",
+      "route": "pages/coop/invite-detail/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/coop/invite-detail/index.wxml",
+        "js": "pages/coop/invite-detail/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "openTopicDetail",
+        "line": 74,
+        "selectorHint": ".op",
+        "visibleCondition": "{{invite.topicId}}",
+        "disabledCondition": null,
+        "ariaLabel": "查看主题详情",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/topic/index/index?id="
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/coop/invite-detail/index.js:413"
       }
     },
     {
