@@ -7,7 +7,7 @@ const app = getApp();
    写法与现码 pages/publish/fabu/index.js:69 的同名局部常量一致 —— 不抽成公共模块:
    小程序这批单测用的是 `unexpected require` 白名单沙箱,多一个跨文件 require
    会同时打破十几个测试装置,代价远大于这一行重复。 */
-const { readReducedMotion } = require('../../../utils/motion-preference.js');
+const { readReducedMotion } = require('../../../utils/motion-preference.js'); const profitSplit = require('../../../utils/profit-split.js'); // 走查 v2 R09:分润明细口径
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const { chinaDayStart, chinaDayEnd, chinaParts } = require('../../../utils/datetime');
 /* 数据条的格子只有一份实现:玩家深色版(214:384)与本页浅色版(181:575)是同一块。 */
@@ -2623,32 +2623,57 @@ Page({
      平台与商家各拿多少;档位开售时按章节定死,这里只读不改。数据复用 /api/coop/finance 里本主题那一行。 */
   goFinance() {
     const id = Number(this.data.topicId || (this.data.info && this.data.info.topicId));
+    const isHost = this.data.role === 'host';
     this.setData({ profitSheet: { show: true, state: 'loading', error: '', row: null } });
     const that = this;
-    const money = function (v) { return typeof v === 'number' && Number.isFinite(v) && v >= 0 ? '¥' + v.toFixed(2) : '—'; };
+    let finance;
+    let terms = isHost ? undefined : null;
+    const finish = function () {
+      if (!that.data.profitSheet.show || finance === undefined || terms === undefined) return;
+      if (finance === null) { that.setData({ profitSheet: { show: true, state: 'error', error: '分润明细暂时没读到', row: null } }); return; }
+      const t = finance.find(function (r) { return r && Number(r.topicId) === id; });
+      if (!t) { that.setData({ profitSheet: { show: true, state: 'empty', error: '', row: null } }); return; }
+      const names = {};
+      ((that.data.clubSheet && that.data.clubSheet.items) || []).forEach(function (c) { names['club:' + c.clubId] = c.name; });
+      (that.data.hostMerchants || []).forEach(function (m) { if (m.merchantId) names['merchant:' + m.merchantId] = m.name; });
+      const lineup = terms && Array.isArray(terms.lineup) ? terms.lineup.map(function (r) {
+        return Object.assign({}, r, { name: names[(r.toType === 'club' ? 'club:' : 'merchant:') + r.toId] || '' });
+      }) : [];
+      const split = terms ? profitSplit.buildSplit(lineup, terms.platformRate) : null;
+      const settled = t.settled === true;
+      const arrived = t.myIncomeArrived === true;
+      const pending = !settled && typeof t.myIncome === 'number' ? profitSplit.money(t.myIncome) : '¥0.00';
+      that.setData({ profitSheet: { show: true, state: 'ready', error: '', row: {
+        myIncome: settled ? profitSplit.money(t.myIncome) : '¥0.00',
+        pendingText: pending,
+        soldText: typeof t.totalSales === 'number' ? t.totalSales + ' 份' : '—',
+        split: split,
+        parties: profitSplit.buildPartyRows(t, split),
+        steps: [
+          { key: 'verify', label: '玩家到店核销', state: typeof t.verifiedSales === 'number' && t.verifiedSales > 0 ? 'done' : 'run',
+            time: typeof t.verifiedSales === 'number' ? '已核销 ' + t.verifiedSales + ' 份' : '' },
+          { key: 'settle', label: '每月 5 日结算上月', state: settled ? 'done' : 'run',
+            time: t.merchantPayableTime ? String(t.merchantPayableTime).slice(5, 10) + ' 应付' : '' },
+          { key: 'arrive', label: '到账账户收益', state: arrived ? 'done' : 'todo',
+            time: t.merchantPayoutTime ? String(t.merchantPayoutTime).slice(5, 10) + ' 到账' : '' },
+        ],
+      } } });
+    };
     app.sendRequest({
       hideLoading: true, silentError: true, url: '/api/coop/finance', method: 'POST',
       data: JSON.stringify({}), header: { 'Content-Type': 'application/json' },
-      success(res) {
-        if (!that.data.profitSheet.show) return;
-        const topics = res && res.code == '200' && res.data && Array.isArray(res.data.topics) ? res.data.topics : null;
-        if (!topics) { that.setData({ profitSheet: { show: true, state: 'error', error: (res && res.msg) || '分润明细暂时没读到', row: null } }); return; }
-        const t = topics.find(function (r) { return r && Number(r.topicId) === id; });
-        if (!t) { that.setData({ profitSheet: { show: true, state: 'empty', error: '', row: null } }); return; }
-        const settled = t.settled === true;
-        that.setData({ profitSheet: { show: true, state: 'ready', error: '', row: {
-          myIncome: money(t.myIncome),
-          statusText: typeof t.settled !== 'boolean' ? '结算状态待确认' : (settled ? (t.myIncomeArrived === true ? '已到账' : '已结算 · 待到账') : '待结算'),
-          totalSales: typeof t.totalSales === 'number' ? t.totalSales + ' 份' : '—',
-          verifiedSales: typeof t.verifiedSales === 'number' ? t.verifiedSales + ' 份' : '—',
-          platformAmount: money(t.platformAmount),
-          merchantTotal: money(t.merchantTotal),
-          merchantPaid: money(t.merchantPaid),
-          payoutTime: t.merchantPayoutTime ? String(t.merchantPayoutTime).slice(0, 10) : (t.merchantPayableTime ? String(t.merchantPayableTime).slice(0, 10) + ' 应付' : '每月 5 日结上月'),
-        } } });
-      },
-      fail() { if (that.data.profitSheet.show) that.setData({ profitSheet: { show: true, state: 'error', error: '网络不稳，分润明细没读到', row: null } }); },
+      success(res) { finance = res && res.code == '200' && res.data && Array.isArray(res.data.topics) ? res.data.topics : null; finish(); },
+      fail() { finance = null; finish(); },
     });
+    // 分成比例只有主办能读(/api/topic/pricing/preview 只认主题发布者);读不到就不画比例条,只列金额
+    if (isHost) {
+      app.sendRequest({
+        hideLoading: true, silentError: true, url: '/api/topic/pricing/preview', method: 'POST',
+        data: JSON.stringify({ topicId: id, subType: 'self' }), header: { 'Content-Type': 'application/json' },
+        success(res) { terms = res && res.code == '200' && res.data && Array.isArray(res.data.lineup) ? res.data : null; finish(); },
+        fail() { terms = null; finish(); },
+      });
+    }
   },
   closeProfitSheet() { this.setData({ profitSheet: { show: false, state: '', error: '', row: null } }); },
   goAllEarnings() {

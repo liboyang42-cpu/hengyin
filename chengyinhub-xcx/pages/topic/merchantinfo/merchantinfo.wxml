@@ -519,17 +519,37 @@
     <cy-inline-error wx:elif="{{profitSheet.state === 'error'}}" kind="data" title="分润明细没读到" sub="{{profitSheet.error}}" action="重试" bind:action="goFinance" />
     <view wx:elif="{{profitSheet.state === 'empty'}}" class="pf-state">这个主题还没有分润记录，开售并核销后会出现在这里</view>
     <block wx:elif="{{profitSheet.row}}">
+      <!-- 档位:每个合作方开售时定死的条款,只读展示 -->
+      <scroll-view class="pf-tiers" scroll-x enhanced show-scrollbar="{{false}}" wx:if="{{profitSheet.row.split && profitSheet.row.split.tiers.length}}">
+        <view class="pf-tier" wx:for="{{profitSheet.row.split.tiers}}" wx:key="key"><text class="pf-tier-n">{{item.name}}</text><text class="pf-tier-t">{{item.tier}}</text></view>
+      </scroll-view>
       <view class="pf-hero">
-        <text class="pf-k">我在本主题到手</text>
+        <text class="pf-k">本主题已入账</text>
         <text class="pf-big">{{profitSheet.row.myIncome}}</text>
-        <text class="pf-st">{{profitSheet.row.statusText}}</text>
+        <view class="pf-sub"><text>待结算 <text class="pf-b">{{profitSheet.row.pendingText}}</text></text><text>已售 <text class="pf-b">{{profitSheet.row.soldText}}</text></text></view>
       </view>
-      <view class="pf-kv"><text class="k">已售</text><text class="v">{{profitSheet.row.totalSales}}</text></view>
-      <view class="pf-kv"><text class="k">已核销</text><text class="v">{{profitSheet.row.verifiedSales}}</text></view>
-      <view class="pf-kv"><text class="k">平台服务费</text><text class="v">{{profitSheet.row.platformAmount}}</text></view>
-      <view class="pf-kv"><text class="k">承接商家合计</text><text class="v">{{profitSheet.row.merchantTotal}}</text></view>
-      <view class="pf-kv"><text class="k">已打款给商家</text><text class="v">{{profitSheet.row.merchantPaid}}</text></view>
-      <view class="pf-kv"><text class="k">结算</text><text class="v">{{profitSheet.row.payoutTime}}</text></view>
+      <view class="pf-flow" wx:if="{{profitSheet.row.split && profitSheet.row.split.parts.length}}">
+        <view class="pf-flow-h"><text>每卖出 1 份</text><text class="pf-flow-r">怎么分</text></view>
+        <view class="pf-bar">
+          <view class="pf-seg" wx:for="{{profitSheet.row.split.parts}}" wx:key="key" style="flex: {{item.flex}}; background: {{item.color}};"><text>{{item.rateText}}</text></view>
+        </view>
+        <view class="pf-legend">
+          <view class="pf-lg" wx:for="{{profitSheet.row.split.parts}}" wx:key="key"><view class="pf-lg-dot" style="background: {{item.color}};"></view><text class="pf-lg-n">{{item.label}}</text><text class="pf-lg-v">{{item.rateText}}</text></view>
+        </view>
+        <text class="pf-fixed" wx:if="{{profitSheet.row.split.fixedText}}">{{profitSheet.row.split.fixedText}}</text>
+      </view>
+      <view class="pf-lbl"><text>各方到手</text></view>
+      <view class="pf-party" wx:for="{{profitSheet.row.parties}}" wx:key="key">
+        <view class="pf-party-dot" style="background: {{item.color}};"></view>
+        <view class="pf-party-m"><text class="pf-party-n">{{item.label}}</text><text class="pf-party-s">{{item.sub}}</text></view>
+        <text class="pf-party-v">{{item.amount}}</text>
+      </view>
+      <view class="pf-lbl"><text>结算</text></view>
+      <view class="pf-step pf-step--{{item.state}}" wx:for="{{profitSheet.row.steps}}" wx:key="key">
+        <view class="pf-step-rail"><view class="pf-step-dot"></view><view class="pf-step-line"></view></view>
+        <text class="pf-step-l">{{item.label}}</text>
+        <text class="pf-step-t" wx:if="{{item.time}}">{{item.time}}</text>
+      </view>
     </block>
     <view class="pf-all" bindtap="goAllEarnings" aria-role="button" aria-label="查看全部收益" hover-class="cy-pressed" hover-stay-time="80">全部收益</view>
   </view>

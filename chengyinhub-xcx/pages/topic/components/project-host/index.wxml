@@ -103,12 +103,11 @@
   <!-- 走查 v2 R04/R16(业主 2026-10-30):底部「查看收到的申请」撤掉 —— 申请在招商 / 俱乐部弹窗里处理,不跳出主题。
        换成进度:做完是洋红勾,当前这步洋红圈 + 蓝字状态,子项写还差什么、右侧蓝字直接去处理;每一步都能点开对应弹窗。 -->
   <view class="pg" wx:if="{{ hostProgress.length }}">
-    <view class="pg-h"><text class="pg-t">进度</text></view>
+    <view class="pg-h"><text class="pg-t">进度</text><text class="pg-hr">{{ hostTopic.productType == 2 ? '自由探索' : '城市定向' }} · 主办</text></view>
     <view class="pg-row pg-row--{{ step.state }} {{ step.lock ? 'pg-row--lock' : '' }}" wx:for="{{ hostProgress }}" wx:for-item="step" wx:key="key">
       <view class="pg-rail">
         <view class="pg-dot pg-dot--{{ step.state }} {{ step.lock ? 'pg-dot--lock' : '' }}">
-          <cy-icon wx:if="{{ step.state === 'done' }}" name="check" size="{{ 22 }}" />
-          <cy-icon wx:elif="{{ step.lock }}" name="lock" size="{{ 20 }}" />
+          <cy-icon wx:if="{{ step.lock }}" name="lock" size="{{ 20 }}" />
         </view>
         <view class="pg-line {{ step.state === 'done' ? 'pg-line--done' : '' }}"></view>
       </view>
@@ -124,6 +123,7 @@
             <text class="pg-si-t">{{ sub.text }}</text>
             <text class="pg-go" wx:if="{{ sub.act }}" bindtap="emit" data-act="{{ sub.act }}" data-key="{{ sub.actKey || '' }}"
                   aria-role="button" aria-label="{{ sub.actText }}" hover-class="cy-pressed" hover-stay-time="80">{{ sub.actText }}</text>
+            <cy-icon class="pg-go-ico" wx:if="{{ sub.act }}" name="chevron-right" size="{{ 22 }}" />
           </view>
         </view>
       </view>

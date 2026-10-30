@@ -709,3 +709,14 @@
 .gate { display: flex; align-items: center; gap: var(--cy-space-3); margin: var(--cy-space-3) var(--cy-page-x) 0; padding: var(--cy-space-4); border-radius: var(--cy-radius-xl); background: var(--cy-bg-card); }
 .gate-t { flex: 1; min-width: 0; font-size: var(--cy-font-body); font-weight: 600; color: var(--cy-text-title); line-height: 1.4; }
 .gate-btn { flex: none; height: 64rpx; line-height: 64rpx; padding: 0 var(--cy-space-4); border-radius: var(--cy-radius-pill); background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); font-size: var(--cy-font-label); font-weight: 600; }
+
+/* 进度对齐定稿原型:做完是实心洋红圆 + 白勾(CSS 画),表头右侧写类型 · 身份,子项从当前步分出去 */
+.pg-h { display: flex; align-items: baseline; justify-content: space-between; }
+.pg-hr { font-size: var(--cy-font-caption); color: var(--cy-text-tertiary); }
+.pg-dot--done { position: relative; }
+.pg-dot--done::after { content: ""; position: absolute; left: 50%; top: 46%; width: 12rpx; height: 7rpx; margin: -5rpx 0 0 -6rpx; border-left: 3rpx solid #fff; border-bottom: 3rpx solid #fff; transform: rotate(-45deg); } /* ds-ok: 白勾 */
+.pg-row { padding-bottom: var(--cy-space-5); }
+.pg-sub { position: relative; margin-left: -44rpx; padding-left: 48rpx; }
+.pg-sub::before { content: ""; position: absolute; left: 16rpx; top: -20rpx; bottom: 14rpx; width: 18rpx; border-left: 3rpx solid var(--cy-bg-card-2); border-bottom: 3rpx solid var(--cy-bg-card-2); border-bottom-left-radius: 18rpx; }
+.pg-si--ok .pg-si-dot { background: #BDBDC4; } /* ds-ok: 已就绪子项灰点 */
+.pg-go-ico { flex: none; margin-left: -6rpx; color: #2F7FEA; } /* ds-ok: 同上 */
