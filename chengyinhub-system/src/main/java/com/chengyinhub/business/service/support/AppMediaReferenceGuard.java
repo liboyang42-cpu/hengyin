@@ -21,8 +21,6 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 @Component
 public class AppMediaReferenceGuard {
     private static final String LOCAL_IMAGE = "/profile/upload/[0-9]{4}/[0-9]{2}/[0-9]{2}/[A-Za-z0-9_-]+\\.(jpg|jpeg|png|gif)";
-    private static final java.util.regex.Pattern PLATFORM_GAME_COVER = java.util.regex.Pattern.compile(
-            "https://www\\.chengyinhub\\.com/prod-api/profile/merchant-game-covers/[a-z0-9-]{1,80}\\.(jpg|png)");
     private static final String OSS_IMAGE = "upload/[0-9a-f]{32}\\.(jpg|jpeg|png|gif)";
     private final ObjectMapper json = new ObjectMapper();
     @Autowired private AppMediaAssetMapper mapper;
@@ -35,9 +33,6 @@ public class AppMediaReferenceGuard {
             // G-3:本站存储里没有登记的图(后台上传、模板自带、登记表上线前的旧图)不再要求重新上传。
             String system = systemImageReference(reference);
             if (system != null) return system;
-            // 平台随包发布的商家玩法封面(A8/B27 种子,生产 cdn_guard 迁移断言的就是这个形状):
-            // 不是用户上传、没有登记行,但出自本站固定目录。不放行的话商家一款平台玩法都采用不了。
-            if (PLATFORM_GAME_COVER.matcher(reference.trim()).matches()) return reference.trim();
         }
         if (memberId == null || memberId <= 0 || asset == null || !(asset.get("id") instanceof Number)
                 || ((Number) asset.get("id")).longValue() <= 0) {
