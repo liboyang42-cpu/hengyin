@@ -6113,6 +6113,12 @@ Page({
         // 就满足 canReveal(wc>=2) —— 系统替你答错两次、直接把答案揭示了。
         else if (r.httpFail) that.recordGameHttpUnknown(r.msg);
         else if (r.netFail) that.recordGameNetworkFailure('提交没送出去，检查网络后重试', attempt);
+        // 还没到站(50 米围栏)不是答错:按提示条显示,不标红、不计错(实走 A20)
+        else if (r.errorCode === 'ARRIVE_FIRST') {
+          that._resolveRouteAction('answer', g.nodeId);
+          that._lastGameAttempt = null;
+          that.setData({ gWrong: false, gNetErr: r.msg || '先到这一站附近，再开始作答', gNetRetryable: false });
+        }
         else {
           that._resolveRouteAction('answer', g.nodeId);
           that._lastGameAttempt = null;
@@ -7287,8 +7293,13 @@ Page({
     }));
     if (option.name === 'SUBMIT_PHOTO_CHECK') {
       const consentCurrent = () => !operation.isAborted() && this._kitPhotoIntent === intent && contextCurrent() && sameQuestion();
-      app.requestSeparateConsent('photo', consentCurrent).then(() => {
+      /* 照片模型处理的单独同意按「这一局」问一次(业主 2026-10-30 拍板,实走 A23):同账号同一局已同意过就直接上传,
+         换局、换账号或页面重进再问。服务端仍逐次校验已存同意记录,这里只是不再每拍一张就弹一次。 */
+      const consentScope = String(this._playMember()) + '|' + this._sessionKey();
+      const consent = this._photoConsentScope === consentScope ? Promise.resolve() : app.requestSeparateConsent('photo', consentCurrent);
+      consent.then(() => {
         if (!consentCurrent()) { settle(); operation.finish(); return; }
+        this._photoConsentScope = consentScope;
         upload();
       }).catch(error => {
         const owned = consentCurrent();

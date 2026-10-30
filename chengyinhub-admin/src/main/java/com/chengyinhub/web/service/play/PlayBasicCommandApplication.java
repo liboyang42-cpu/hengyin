@@ -300,6 +300,19 @@ public class PlayBasicCommandApplication {
         String unlockErr = playNodeContext.routeAccessError(memberId, actId, ctx.topicId, node, routeActionId);
         if (unlockErr != null) return error(unlockErr);
 
+        // 城市定向「到站后作答」:本局按冻结到达配置有坐标的站,须先经 GPS 围栏(50 米)记过到达才能作答。
+        // 只管到达与任务分开记的本局路线(与 arrive 的 personalArrival 同一判据);老路径到达即完成,不受影响。
+        // 实走 A20:规则写「50米内解锁」,人不在附近也能答对完成。
+        if (playMode == PlayMode.LINEAR_ORIENTEERING && originalRun.session() != null && topicRouteRuntimeService != null
+                && topicRouteRuntimeService.genericPlayer(memberId, ctx.topicId, actId)) {
+            com.fasterxml.jackson.databind.JsonNode target = topicRouteRuntimeService.nodeArrivalConfig(memberId, ctx.topicId, actId, node.getId());
+            boolean located = target != null && StringUtils.isNotBlank(target.path("longitude").asText(null))
+                    && StringUtils.isNotBlank(target.path("latitude").asText(null));
+            if (located && !shopDayProofService.hasArrived(memberId, actId, node.getId())) {
+                return error("先到这一站 50 米内，再开始作答").put("errorCode", "ARRIVE_FIRST");
+            }
+        }
+
         // 读节点绑定模板的验证方式 + 校验答案(R18-FREEZE:对错判定按开局快照,新发布不改写
         // 进行中的一局;老局快照没有 nodeAnswers 键时回退实时模板)
         com.fasterxml.jackson.databind.JsonNode frozenAnswer = playNodeContext.frozenAnswer(

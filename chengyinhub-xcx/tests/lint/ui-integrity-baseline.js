@@ -13,6 +13,7 @@
 // 2026-10-27 L08 真机走查(头像名称同步/我的页/品牌中心):profile/index.js 三条既有锚点仅行号位移(U1-VARIABLE 663→707;U4-DYNAMIC 1152→1276、1991→2120),逐条以行及上下各一行与 origin/master 原位置逐字比对一致;条数、理由与上限不变,u1Variable / u4Dynamic digest 按同一算法重算。
 // 2026-10-25 上传候选整合：保留地点线逐项登记，既有调用按逐字相同行迁锚，未扩大地点线门禁上限。
 // 2026-10-27 L05 俱乐部与帖文真机修复:square/list 撤掉行内发布框(上方删 ~220 行),u4Dynamic 三条锚点仅行号位移(157→137、197→177、1287→1063,同一 [key] / 翻页追加 setData,上下文逐字相同、理由不变);post-compose 加俱乐部模式在上方插入代码,u5Silent 两条选活动读取被门禁判为静态已处理而出账(43→41);u4Debt / u4Dynamic / u5Silent digest 按同一算法重算。
+// 2026-10-30 A20/A23(到站作答提示、照片同意按局记一次,上方 +11 行):U5 已完成里程碑读取 7989→8000,同一调用行、理由与条数不变,u5Silent digest 按门禁 baselineKeyDigest 重算。
 // 2026-10-30 A32 半屏角标改用地图号(上方 +1 行):U5 已完成里程碑读取 7988→7989,同一调用行、理由与条数不变,u5Silent digest 按门禁 baselineKeyDigest 重算。
 // 2026-10-30 实走修复批(fix/walkthrough-1029):play/index.js 上方加主题背景音乐、商家页交接排队等代码,U4-DYNAMIC 章节正文显形 patch 1752→1780、U5 已完成里程碑读取 7904→7988;topic/index/index.js 营销同意只对商家主题加载(+4 行),U4-DYNAMIC buildRouteMap 2049→2053;同一调用行、理由与条数不变,u4Dynamic / u5Silent digest 按门禁 baselineKeyDigest 重算。
 // 2026-10-29 票夹进游戏黑屏修复(#671):app.js 会话清除处加登录代次两行,U1-VARIABLE consent adapter 调用点 424→426;play/index.js 登录上下文少一行,U4-DYNAMIC 1753→1752、U5 已完成里程碑读取 7905→7904;同一调用行、理由与条数不变,u1Variable / u4Dynamic / u5Silent digest 按门禁 baselineKeyDigest 重算。
@@ -1052,7 +1053,7 @@ module.exports = {
       //   逐条回读仍是「只为读章节 recruitEnabled、失败不弹全局 toast」这一处,静默理由一字未改,条数 27 不变。
 // 2026-10-17 合并 master 进漫游上线分支:roam/index.js 14 条、nearby/index.js 2 条既有调用仅行号位移(按 master 源码逐行回读定位);漫游两栏改版删掉 /api/registration/list 静默读取(749),U5 29→28。digest 按同一算法显式重算。
 // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):锚点位移 + 举报半屏/AI 对话组件下沉会员分包换路径 + 本线 9 处新增登记,digest 按同一算法重算。
-"657f5540a1ef9626204dd62197396f424a115a03e283946358f1407752c3b838"
+"7f4c16a3f5fd2c4d4c2e0118b4b0df64fa68435d5a83cbfaace68a83813fd1cc"
 
     }
   },
@@ -1472,7 +1473,7 @@ module.exports = {
       //   loadMilestone 的 /api/play/my-completed 这条 silentError 调用点 5542→5570(门禁实测)。
       //   主包瘦身后 post-compose 已下沉到 pages/square/components/cy/。
       // 2026-09-20 合并后按最终源码重钉，调用与静默降级理由未改。
-      "chengyinhub-xcx/pages/play/index.js:7989": "已完成里程碑为可选增强，请求失败保持 milestone=null 且轴不渲染；owner=小程序，复核=2026-09-15",
+      "chengyinhub-xcx/pages/play/index.js:8000": "已完成里程碑为可选增强，请求失败保持 milestone=null 且轴不渲染；owner=小程序，复核=2026-09-15",
     "chengyinhub-xcx/pages/topic/pricing/index.js:184": "合作阵容行补名是 best-effort 装饰读取:拉不到名字就保留「合作俱乐部/承接商家」类型兜底,条款摘要照常、点开合作方页自有错误态;为补名弹全局 toast 会让主办方以为整页定价坏了;owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/pages/merchant/relation/index.js:264": "合作 tab 帖文流读取(2026-10-22 业主:合作 tab 看帖文):失败经同函数内具名 fail() 落 feedState=error/stale-error 与 feedError,页面 cy-error 呈现并给重试,关通道 toast 避免双重反馈;owner=小程序,复核=2026-11-30",
     "chengyinhub-xcx/utils/predict-entry.js:15": "消息页「竞猜待答」入口显隐读取(2026-10-22 业主:无待答不出入口):读失败照样显示入口(宁可多一行,不让 48 小时期限提醒消失),不是用户动作,无需弹错;owner=小程序,复核=2026-11-30",
