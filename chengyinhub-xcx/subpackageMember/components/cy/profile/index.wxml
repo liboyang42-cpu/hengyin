@@ -495,12 +495,12 @@
         <view class="pc-sec-tit" wx:if="{{!isMerchantView}}">探索与更多</view>
         <view class="pc-benefits" wx:if="{{!isMerchantView}}">
           <view class="pc-benefit" bindtap="goCoupon" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="我的优惠券">
-            <view class="pc-benefit-dot pc-benefit-dot--entry"><cy-icon name="coupon" size="24" /></view>
+            <cy-icon class="pc-benefit-ic" name="coupon" size="48" />
             <text class="pc-benefit-text">我的优惠券</text>
             <cy-icon class="pc-benefit-arrow" name="arrow-right" size="32" />
           </view>
           <view class="pc-benefit" bindtap="goInvite" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="邀请好友，分享城瘾给好友">
-            <view class="pc-benefit-dot pc-benefit-dot--entry"><cy-icon name="gift" size="24" /></view>
+            <cy-icon class="pc-benefit-ic" name="gift" size="48" />
             <text class="pc-benefit-text">邀请好友</text>
             <cy-icon class="pc-benefit-arrow" name="arrow-right" size="32" />
           </view>
@@ -510,9 +510,11 @@
         <view class="pc-benefits">
           <view class="pc-benefit {{item.unlocked ? '' : 'pc-benefit--lock'}}" wx:for="{{benefits}}" wx:key="text"
                 bindtap="onBenefitTap" data-route="{{item.route}}" data-unlocked="{{item.unlocked}}" hover-class="cy-pressed" hover-stay-time="80">
-            <view class="pc-benefit-dot"><cy-icon name="{{item.unlocked ? 'check' : 'lock'}}" size="24" /></view>
+            <!-- 2026-10-30 V-19 业主定 B:线条图标放大到 24pt、去掉圆底、与文字同一中线;没解锁的图标和字变灰,行尾一把锁 -->
+            <cy-icon class="pc-benefit-ic" name="{{item.icon || 'check'}}" size="48" />
             <text class="pc-benefit-text">{{item.text}}</text>
-            <cy-icon class="pc-benefit-arrow" wx:if="{{item.route && item.unlocked}}" name="arrow-right" size="32" />
+            <cy-icon class="pc-benefit-lock" wx:if="{{!item.unlocked}}" name="lock" size="30" />
+            <cy-icon class="pc-benefit-arrow" wx:elif="{{item.route}}" name="arrow-right" size="32" />
           </view>
         </view>
         </block>

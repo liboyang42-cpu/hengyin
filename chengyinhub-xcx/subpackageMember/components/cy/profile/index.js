@@ -61,15 +61,16 @@ function buildBenefits(p) {
   p = p || {};
   var max = p.maxThemes;
   return [
-    { text: '发布路线 · 上限 ' + (max == null ? '不限' : (max || 0)), unlocked: (max == null || max > 0) },
-    { text: '发布优惠券', unlocked: p.canPublishCoupon === true },
-    { text: '到店核销', unlocked: p.canRedeemCoupon === true },
-    { text: '分支 / 条件玩法', unlocked: p.canBranch === true },
-    { text: '博弈机制（竞速/对抗/协作）', unlocked: p.canGameMechanic === true },
-    { text: '开放门店为城市节点', unlocked: p.canOpenAsNode === true },
-    { text: '勋章设计', unlocked: p.canDesignMedal === true },
-    { text: '建群', unlocked: p.canCreateGroup === true },
-    { text: '我的收益', unlocked: p.withdrawable === true, route: '/subpackageA/pages/assetcenter/earnings/index' }
+    // 2026-10-30 V-19 业主定 B:每行换成对应的线条图标(不再是勾 / 锁占位),没解锁的行尾一把锁
+    { text: '发布路线 · 上限 ' + (max == null ? '不限' : (max || 0)), unlocked: (max == null || max > 0), icon: 'route' },
+    { text: '发布优惠券', unlocked: p.canPublishCoupon === true, icon: 'coupon' },
+    { text: '到店核销', unlocked: p.canRedeemCoupon === true, icon: 'scan' },
+    { text: '分支 / 条件玩法', unlocked: p.canBranch === true, icon: 'switch-chapter' },
+    { text: '博弈机制（竞速/对抗/协作）', unlocked: p.canGameMechanic === true, icon: 'flag' },
+    { text: '开放门店为城市节点', unlocked: p.canOpenAsNode === true, icon: 'poi-shop' },
+    { text: '勋章设计', unlocked: p.canDesignMedal === true, icon: 'star' },
+    { text: '建群', unlocked: p.canCreateGroup === true, icon: 'tab-club' },
+    { text: '我的收益', unlocked: p.withdrawable === true, route: '/subpackageA/pages/assetcenter/earnings/index', icon: 'finance' }
   ];
 }
 
