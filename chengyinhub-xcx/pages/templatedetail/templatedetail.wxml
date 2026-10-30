@@ -156,7 +156,7 @@
         <scroll-view class="xb-type-scroll" scroll-x enhanced show-scrollbar="{{ false }}">
           <view class="xb-type-inner">
             <view class="xb-type-item" wx:for="{{ sceneChips }}" wx:key="index">
-              <view class="xb-type-icon"><cy-icon name="poi-shop" size="30" /></view>
+              <view class="xb-type-icon"><image class="xb-type-img" src="{{ sceneIcons[index] }}" mode="aspectFit" aria-hidden="true" /></view>
               <text>{{ item }}</text>
             </view>
           </view>
@@ -218,7 +218,7 @@
 
       <view class="xb-block" wx:if="{{ info.rating }}">
         <view class="xb-section-title">
-          <cy-icon name="star" size="30" />
+          <image class="xb-section-ico" src="/pages/templatedetail/art/3d/star.png" mode="aspectFit" aria-hidden="true" />
           <text>评价</text>
         </view>
         <view class="xb-rating-card">

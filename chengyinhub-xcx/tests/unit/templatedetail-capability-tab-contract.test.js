@@ -116,6 +116,8 @@ test('V-11 负控:能力 tab 回到按「方式」行条件给出时判红', () 
 test('RUN-024 分类名称含中点也保持一个标签，不能伪装商家类型', () => {
   const target = normalizedTarget({ id: 9, title: '分类测试', sysCategoryList: [{ categoryName: 'CU走查·解谜互动' }] })
   assert.deepEqual(Array.from(target.sceneChips), ['CU走查·解谜互动'])
+  // 2026-10-30 业主「不能只是占位」:每个分类配自己的 3D 图标,对不上关键词用 other
+  assert.deepEqual(Array.from(target.sceneIcons), ['/pages/templatedetail/art/cat/other.png'])
   const wxml = fs.readFileSync(path.join(ROOT, 'pages/templatedetail/templatedetail.wxml'), 'utf8')
   assert.doesNotMatch(wxml, /推荐商家类型/)
 })

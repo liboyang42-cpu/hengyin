@@ -552,6 +552,12 @@ page {
   color: var(--xb-muted);
 }
 
+/* 2026-10-30:每个分类自己的 3D 图标(art/cat) */
+.xb-type-img {
+  width: 60rpx;
+  height: 60rpx;
+}
+
 .xb-node-card {
   width: 232rpx;
   flex: none;

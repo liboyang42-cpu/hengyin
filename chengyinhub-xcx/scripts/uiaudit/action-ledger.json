@@ -1338020,7 +1338020,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:394"
+        "staticSource": "pages/templatedetail/templatedetail.js:416"
       }
     },
     {
@@ -1338091,7 +1338091,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:370"
+        "staticSource": "pages/templatedetail/templatedetail.js:392"
       }
     },
     {
@@ -1338158,7 +1338158,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:408"
+        "staticSource": "pages/templatedetail/templatedetail.js:430"
       }
     },
     {
@@ -1338225,7 +1338225,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:399"
+        "staticSource": "pages/templatedetail/templatedetail.js:421"
       }
     },
     {
@@ -1338292,7 +1338292,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:428"
+        "staticSource": "pages/templatedetail/templatedetail.js:450"
       }
     },
     {
@@ -1338359,7 +1338359,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:456"
+        "staticSource": "pages/templatedetail/templatedetail.js:478"
       }
     },
     {
@@ -1338427,7 +1338427,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:469"
+        "staticSource": "pages/templatedetail/templatedetail.js:491"
       }
     },
     {
@@ -1338494,7 +1338494,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:463"
+        "staticSource": "pages/templatedetail/templatedetail.js:485"
       }
     },
     {
@@ -1338561,7 +1338561,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:448"
+        "staticSource": "pages/templatedetail/templatedetail.js:470"
       }
     },
     {
@@ -1338628,7 +1338628,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:448"
+        "staticSource": "pages/templatedetail/templatedetail.js:470"
       }
     },
     {
@@ -1338695,7 +1338695,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:448"
+        "staticSource": "pages/templatedetail/templatedetail.js:470"
       }
     },
     {
@@ -1338762,7 +1338762,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:448"
+        "staticSource": "pages/templatedetail/templatedetail.js:470"
       }
     },
     {
@@ -1338830,7 +1338830,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:469"
+        "staticSource": "pages/templatedetail/templatedetail.js:491"
       }
     },
     {
@@ -1338897,7 +1338897,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:463"
+        "staticSource": "pages/templatedetail/templatedetail.js:485"
       }
     },
     {
@@ -1338979,7 +1338979,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:473"
+        "staticSource": "pages/templatedetail/templatedetail.js:495"
       }
     },
     {
@@ -1339046,7 +1339046,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:383"
+        "staticSource": "pages/templatedetail/templatedetail.js:405"
       }
     },
     {
@@ -1339123,7 +1339123,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:413"
+        "staticSource": "pages/templatedetail/templatedetail.js:435"
       }
     },
     {
@@ -1339190,7 +1339190,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/templatedetail.js:390"
+        "staticSource": "pages/templatedetail/templatedetail.js:412"
       }
     },
     {

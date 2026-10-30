@@ -11,3 +11,10 @@
 - bulb.png：Light bulb（创作者说）
 
 规则、分类与适用场景、包含内容 / 节点三处复用主包 `/images/publish-quick/` 的拼图、地图、指南针（同一来源，见那里的 README）。
+
+## 分类与适用场景(art/cat/,2026-10-30)
+
+同一来源(Microsoft Fluent Emoji 3D,MIT,LICENSE 见 art/cat/LICENSE),从 256px 原图缩到 96px 并转 256 色调色板,未改画面。按分类名关键词选图(templatedetail.js `SCENE_ICON_RULES`),对不上的用 other(Sparkles)。
+sport=Running shoe · tech=Laptop · coffee=Hot beverage · food=Cooking · fun=Video game · pet=Dog face · biz=Briefcase · world=Globe showing Asia-Australia · travel=Automobile · stage=Performing arts · art=Artist palette · cloth=T-shirt · repair=Hammer and wrench · family=Teddy bear · photo=Camera · city=Cityscape · culture=Classical building · other=Sparkles
+
+star.png:Star(评价分节标题,原来是线条星星,2026-10-30 换成同一套 3D)

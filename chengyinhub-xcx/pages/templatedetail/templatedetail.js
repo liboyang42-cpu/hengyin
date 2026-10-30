@@ -87,6 +87,24 @@ function categoryChips(info, categoryText) {
     : (categoryText ? [categoryText] : []);
 }
 
+// 2026-10-30 业主「不能只是占位」:分类与适用场景每一项按名字配一个 3D 图标(Fluent 3D,MIT,见 art/cat/LICENSE),
+// 原来所有分类同一个店铺线条图标,看着像占位。按关键词匹配,都对不上用「闪光」。
+var SCENE_ICON_RULES = [
+  [/运动|健身|徒步|户外|跑/, 'sport'], [/科技|数码|电子/, 'tech'], [/咖啡|茶饮|饮品/, 'coffee'],
+  [/美食|烹饪|餐|吃/, 'food'], [/娱乐|游戏|达人|电竞/, 'fun'], [/宠物/, 'pet'], [/商务|职场|办公/, 'biz'],
+  [/世界|旅行|旅游/, 'world'], [/出行|交通|驾/, 'travel'], [/戏剧|演出|剧场|表演|话剧/, 'stage'],
+  [/文化|历史|人文|博物|古迹/, 'culture'], [/设计|美学|艺术|文艺|手作/, 'art'], [/衣物|洗护|服饰/, 'cloth'], [/家政|维修/, 'repair'],
+  [/亲子|家庭|儿童/, 'family'], [/摄影|拍照|影像/, 'photo'], [/城市|街区|城区|商圈/, 'city']
+];
+
+function sceneIcon(name) {
+  var text = String(name || '');
+  for (var i = 0; i < SCENE_ICON_RULES.length; i++) {
+    if (SCENE_ICON_RULES[i][0].test(text)) return '/pages/templatedetail/art/cat/' + SCENE_ICON_RULES[i][1] + '.png';
+  }
+  return '/pages/templatedetail/art/cat/other.png';
+}
+
 function buildDetailDisplay(info, categoryText) {
   info = info || {};
   var materialChips = splitValues(info.requiredMaterials);
@@ -95,7 +113,8 @@ function buildDetailDisplay(info, categoryText) {
     isTopicTemplate: !!isTopicTemplate(info),
     detailStats: buildDetailStats(info),
     materialChips: materialChips,
-    sceneChips: sceneChips
+    sceneChips: sceneChips,
+    sceneIcons: sceneChips.map(sceneIcon)
   };
 }
 
@@ -154,6 +173,7 @@ Page({
     detailStats: [],
     materialChips: [],
     sceneChips: [],
+    sceneIcons: [],
     publisherText: '城瘾',
     isOfficialPublisher: false,
     capExpanded: {},
@@ -261,6 +281,7 @@ Page({
     target.detailStats = detail.detailStats;
     target.materialChips = detail.materialChips;
     target.sceneChips = detail.sceneChips;
+    target.sceneIcons = detail.sceneIcons;
     target.isTopicTemplate = detail.isTopicTemplate;
     target.difficultyLetter = meta.letter;
     target.difficultyLabel = meta.label;
@@ -284,6 +305,7 @@ Page({
       detailStats: detail.detailStats,
       materialChips: detail.materialChips,
       sceneChips: detail.sceneChips,
+      sceneIcons: detail.sceneIcons,
       isTopicTemplate: detail.isTopicTemplate,
       capExpanded: {},
       difficultyLetter: meta.letter,
