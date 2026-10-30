@@ -125,5 +125,22 @@
 .act--dead { color: var(--cy-color-text-tertiary); font-size: var(--cy-font-caption); font-weight: 400; }
 
 /* 走查 v2 R03:查看主题详情入口 */
-.op--theme { margin: 0 var(--cy-page-x) var(--cy-space-4); padding: var(--cy-space-4); border-radius: var(--cy-radius-lg); background: var(--cy-bg-card); }
-.op-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4rpx; }
+
+/* 走查 v2(2026-10-30):协作详情重排 —— 顶部主题卡 + 蓝色承接对象行 */
+.iv { margin-bottom: var(--cy-space-4); border-radius: var(--cy-radius-xl); overflow: hidden; background: var(--cy-color-bg-raised); }
+.iv .cover { position: relative; margin: 0; border-radius: 0; height: 300rpx; }
+.iv-shade { position: absolute; left: 0; right: 0; bottom: 0; height: 120rpx; background: linear-gradient(180deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.18)); } /* ds-ok: 封面底部压暗 */
+.iv-body { display: flex; flex-direction: column; padding: var(--cy-space-4); }
+.iv-top { display: flex; align-items: center; justify-content: space-between; gap: var(--cy-space-3); }
+.iv-top .hd-status { font-size: var(--cy-font-label); padding: 6rpx 18rpx; border-radius: var(--cy-radius-pill); background: var(--cy-bg-card-2); }
+.iv-from { flex: 1; min-width: 0; text-align: right; font-size: var(--cy-font-caption); color: var(--cy-color-text-tertiary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.iv-name { margin-top: var(--cy-space-3); font-size: var(--cy-type-section-title); font-weight: 700; color: var(--cy-color-text-primary); line-height: 1.35; }
+.iv-type { margin-top: 4rpx; font-size: var(--cy-font-caption); color: var(--cy-color-text-secondary); }
+.iv-count { margin-top: 4rpx; font-size: var(--cy-font-caption); color: var(--cy-color-status-warning, #B26B00); }
+.iv-target { display: flex; align-items: center; gap: var(--cy-space-2); margin-top: var(--cy-space-4); padding: var(--cy-space-3) var(--cy-space-4); border-radius: var(--cy-radius-lg); background: #EEF4FE; color: #1D5FC4; } /* ds-ok: 承接对象蓝,按业主定稿原型 */
+.iv-target-m { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.iv-target-k { font-size: var(--cy-font-caption); color: #4B7CC9; } /* ds-ok: 同上 */
+.iv-target-v { font-size: var(--cy-font-label); font-weight: 700; color: #123E86; } /* ds-ok: 同上 */
+.iv-target-go { font-size: var(--cy-font-caption); font-weight: 600; }
+.kv-contact { display: flex; align-items: center; gap: var(--cy-space-2); }
+.kv .v--muted { font-weight: 500; color: var(--cy-color-text-tertiary); }

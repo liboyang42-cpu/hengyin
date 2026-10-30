@@ -36,51 +36,53 @@
     <!-- 行内错误走统一组件承接(U6:裸错误文案必须带恢复出口;这里是说明态,没有可重试的动作) -->
     <cy-inline-error wx:if="{{actionError}}" kind="data" title="这个操作没完成" sub="{{actionError}}" />
 
-    <view class="hd">
-      <text class="hd-status hd-status--{{tone}}">{{statusText}}</text>
-      <text class="hd-from">{{box === 'sent' ? '发给' : '来自'}} {{invite.partnerName || '对方'}}</text>
-    </view>
-
-    <!-- 终态把封面压暗一档:与可操作的状态分开,但条款仍完整显示。
-         CU-M-110 / CU-C-121:没有封面数据时整块 380rpx 灰底是纯空的,把主题名推到屏幕中段
-         —— 容器一起不渲染,而不是只藏掉里面的 <image>。 -->
-    <view class="cover {{tone === 'closed' ? 'cover--dim' : ''}}" wx:if="{{invite.cover}}">
-      <image class="cover-img" src="{{invite.cover}}" mode="aspectFill" lazy-load="true" />
-    </view>
-
-    <view class="meta">
-      <text class="meta-title">{{invite.topicText}}</text>
-      <text wx:if="{{invite.countdownText}}" class="meta-line">{{invite.countdownText}}</text>
-      <text class="meta-line">{{invite.typeText}}</text>
-      <text class="meta-line" wx:if="{{invite.viewerPartyName}}">{{box === 'received' ? '接收俱乐部' : '发起俱乐部'}}：{{invite.viewerPartyName}}</text>
-      <!-- 联系方式给不给由后端定(§3.8 只在已接受时下发)。没下发就照实说明,不留空、也不假装有 -->
-      <view class="meta-contact">
-        <text class="meta-contact-label">联系方式</text>
-        <block wx:if="{{invite.partnerContact}}">
-          <text class="meta-contact-value">{{invite.partnerContact}}</text>
-          <text wx:if="{{invite.partnerPhone}}" class="meta-copy" bindtap="copyPhone" aria-role="button"
-                aria-label="复制对方电话" hover-class="cy-pressed" hover-stay-time="80">复制</text>
-        </block>
-        <!-- CU-M-90:内部条款号(§3.8)只留在上面那条注释里,用户可见文案不出现 -->
-        <text wx:elif="{{invite.status === 0}}" class="meta-contact-none">{{box === 'received' ? '接受合作后可查看联系方式' : '对方接受后可查看联系方式'}}</text>
-        <!-- CU-C-09/25:已接受却没下发 = 对方没留联系方式,不是「未接受」;站内会话仍可用 -->
-        <text wx:elif="{{invite.status === 1}}" class="meta-contact-none">对方没有留联系方式，可用下方「联系合作方」站内沟通</text>
-        <text wx:else class="meta-contact-none">邀约已结束，无法联系对方</text>
+    <!-- 走查 v2(业主 2026-10-30「协作详情还是很乱」):上面一张主题卡把「谁、哪个主题、邀你接什么、什么状态」说完,
+         下面条款 / 留言 / 操作各一张卡。联系方式并进条款卡,不再单独一行挂在标题下。 -->
+    <view class="iv">
+      <!-- 终态把封面压暗一档:与可操作的状态分开,但条款仍完整显示。
+           CU-M-110 / CU-C-121:没有封面数据时容器整块不渲染,而不是只藏掉里面的 <image>。 -->
+      <view class="cover {{tone === 'closed' ? 'cover--dim' : ''}}" wx:if="{{invite.cover}}">
+        <image class="cover-img" src="{{invite.cover}}" mode="aspectFill" lazy-load="true" />
+        <view class="iv-shade"></view>
       </view>
-    </view>
-
-    <!-- 走查 v2 R03(业主 2026-10-30):受邀商家要能一路点进去看整个主题、具体章节与节点,才知道邀的是什么。
-         现成的主题详情页就有章节 / 节点 / 玩法,这里直接给入口,不另做一套。 -->
-    <view class="op op--theme" wx:if="{{invite.topicId}}" bindtap="openTopicDetail" aria-role="button" aria-label="查看主题详情" hover-class="cy-pressed" hover-stay-time="80">
-      <view class="op-main">
-        <text class="op-name">查看主题详情</text>
-        <text class="op-hint" wx:if="{{invite.supplyStationText}}">邀请你承接 · {{invite.supplyStationText}}</text>
+      <view class="iv-body">
+        <view class="iv-top">
+          <text class="hd-status hd-status--{{tone}}">{{statusText}}</text>
+          <text class="iv-from">{{box === 'sent' ? '发给' : '来自'}} {{invite.partnerName || '对方'}}<block wx:if="{{invite.timeText}}"> · {{invite.timeText}}</block></text>
+        </view>
+        <text class="iv-name">{{invite.topicText}}</text>
+        <text class="iv-type">{{invite.typeText}}</text>
+        <text wx:if="{{invite.countdownText}}" class="iv-count">{{invite.countdownText}}</text>
+        <!-- 走查 v2 R03:受邀商家要能一路点进去看整个主题、具体章节与节点,才知道邀的是什么 -->
+        <view class="iv-target" wx:if="{{invite.topicId}}" bindtap="openTopicDetail" aria-role="button" aria-label="查看主题详情" hover-class="cy-pressed" hover-stay-time="80">
+          <cy-icon name="pin" size="28" />
+          <view class="iv-target-m">
+            <text class="iv-target-k">{{invite.supplyStationText ? '邀请你承接' : '查看主题'}}</text>
+            <text class="iv-target-v">{{invite.supplyStationText || '章节、节点与玩法'}}</text>
+          </view>
+          <text class="iv-target-go">主题详情</text>
+          <cy-icon name="arrow-right" size="24" />
+        </view>
       </view>
-      <cy-icon name="arrow-right" size="24" />
     </view>
 
     <view class="card">
       <text class="card-title">合作条款</text>
+      <view class="kv" wx:if="{{invite.viewerPartyName}}"><text class="k">{{box === 'received' ? '接收俱乐部' : '发起俱乐部'}}</text><text class="v">{{invite.viewerPartyName}}</text></view>
+      <!-- 联系方式给不给由后端定(§3.8 只在已接受时下发)。没下发就照实说明,不留空、也不假装有 -->
+      <view class="kv meta-contact">
+        <text class="k">联系方式</text>
+        <block wx:if="{{invite.partnerContact}}">
+          <view class="v kv-contact"><text>{{invite.partnerContact}}</text>
+            <text wx:if="{{invite.partnerPhone}}" class="meta-copy" bindtap="copyPhone" aria-role="button"
+                  aria-label="复制对方电话" hover-class="cy-pressed" hover-stay-time="80">复制</text></view>
+        </block>
+        <!-- CU-M-90:内部条款号(§3.8)只留在上面那条注释里,用户可见文案不出现 -->
+        <text wx:elif="{{invite.status === 0}}" class="v v--muted">{{box === 'received' ? '接受合作后可查看联系方式' : '对方接受后可查看联系方式'}}</text>
+        <!-- CU-C-09/25:已接受却没下发 = 对方没留联系方式,不是「未接受」;站内会话仍可用 -->
+        <text wx:elif="{{invite.status === 1}}" class="v v--muted">对方没有留联系方式，可用下方「联系合作方」站内沟通</text>
+        <text wx:else class="v v--muted">邀约已结束，无法联系对方</text>
+      </view>
       <view class="kv"><text class="k">合作双方</text><text class="v">{{invite.typeText}}</text></view>
       <view class="kv"><text class="k">分润</text><text class="v">{{invite.termsText || '—'}}</text></view>
       <view wx:if="{{invite.supplyStationText}}" class="kv"><text class="k">核销据点</text><text class="v">{{invite.supplyStationText}} · {{invite.supplyStationNote}}</text></view>
