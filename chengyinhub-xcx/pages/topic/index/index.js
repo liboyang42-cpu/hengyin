@@ -60,7 +60,7 @@ function heroIntro(subtitle) {
 // 2026-10-30:站点和玩法都没图时用这个主题自己的封面,不再落到通用城市占位图
 function templateCover(template, node, topicCover) {
   const urls = [node && node.imgUrl, template.imgUrl, template.imgArr, topicCover].map((v) => String(v || '').split(/[,;]/).map((src) => src.trim()).filter(Boolean)[0] || '');
-  return urls.map((src) => app.getImgUrl(src)).filter(Boolean)[0] || '/images/home-route-city-placeholder.jpg';
+  return urls.map((src) => app.getImgUrl(src)).filter(Boolean)[0] || '/images/route_city_cover.png';
 }
 
 function normalizeChaptersList(chaptersList) {

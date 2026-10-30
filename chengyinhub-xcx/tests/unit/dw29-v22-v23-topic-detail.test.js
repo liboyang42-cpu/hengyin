@@ -80,7 +80,7 @@ test('V-22b 节点介绍卡玩法图经 app.getImgUrl，http 转 https、相对�
   ] }])
   const urls = list[0].nodes.map(n => n.cmsMemberTemplate && n.cmsMemberTemplate.imgUrl)
   assert.deepEqual(urls, ['https://oss.trusted/a.png', 'https://cdn.trusted/upload/b.png', 'https://cdn.trusted/upload/d.png',
-    '/images/home-route-city-placeholder.jpg', undefined])
+    '/images/route_city_cover.png', undefined])
 })
 
 test('V-23d 数据条各格等分屏宽，不横向溢出', () => {
@@ -125,7 +125,7 @@ test('V-22b R2 节点介绍卡先用站点自己的图，站点图不可用再�
     { name: 'd', imgUrl: null, cmsMemberTemplate: { imgUrl: '' } },
   ] }])
   assert.deepEqual(list[0].nodes.map(n => n.cmsMemberTemplate.imgUrl), ['https://oss.trusted/stop.jpg?Expires=1',
-    'https://cdn.trusted/upload/tpl.png', 'https://cdn.trusted/upload/tpl.png', '/images/home-route-city-placeholder.jpg'])
+    'https://cdn.trusted/upload/tpl.png', 'https://cdn.trusted/upload/tpl.png', '/images/route_city_cover.png'])
 })
 
 test('2026-10-30 站点和玩法都没图时用主题自己的封面,不再落到通用城市占位图', () => {
