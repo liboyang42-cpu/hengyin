@@ -71,9 +71,9 @@ const keys = (list) => list.map((a) => a.key);
 // 下移到「抽屉里那一行可不可点」。保护目标没变:后端说不能改,前端就不能给可用入口。
 test('主办方没有编辑资格时,更多格照常出现,但抽屉里的「票价与主题内容」置灰', () => {
   const page = makePage();
-  assert.deepEqual(keys(page.buildQuickActions('host', 'merchant', false)), ['club', 'merchant', 'customer', 'more']);
+  assert.deepEqual(keys(page.buildQuickActions('host', 'merchant', false)), ['club', 'merchant', 'customer', 'themeQr', 'more'] /* 2026-10-30 走查 v2 R15 加本主题二维码 */);
   // 俱乐部主办没有「俱乐部」格,这条既有规则不能被顺手改坏
-  assert.deepEqual(keys(page.buildQuickActions('host', 'club', false)), ['merchant', 'customer', 'more']);
+  assert.deepEqual(keys(page.buildQuickActions('host', 'club', false)), ['merchant', 'customer', 'themeQr', 'more'] /* 2026-10-30 走查 v2 R15 */);
 
   page.data.role = 'host';
   page.openMoreSheet();
@@ -86,8 +86,8 @@ test('主办方没有编辑资格时,更多格照常出现,但抽屉里的「票
 
 test('主办方有编辑资格时,抽屉里那一行可点', () => {
   const page = makePage();
-  assert.deepEqual(keys(page.buildQuickActions('host', 'merchant', true)), ['club', 'merchant', 'customer', 'more']);
-  assert.deepEqual(keys(page.buildQuickActions('host', 'club', true)), ['merchant', 'customer', 'more']);
+  assert.deepEqual(keys(page.buildQuickActions('host', 'merchant', true)), ['club', 'merchant', 'customer', 'themeQr', 'more'] /* 2026-10-30 走查 v2 R15 加本主题二维码 */);
+  assert.deepEqual(keys(page.buildQuickActions('host', 'club', true)), ['merchant', 'customer', 'themeQr', 'more'] /* 2026-10-30 走查 v2 R15 */);
 
   page.data.role = 'host';
   page.openMoreSheet();

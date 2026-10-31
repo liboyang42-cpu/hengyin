@@ -213,7 +213,7 @@ Page({
        它一直混在「待核销」里,商家因此分不出「该去催」和「人已经在店里了」。 */
     playerFilters: [
       { key: 'all', label: '全部' },
-      { key: 'pending', label: '待核销' },
+      { key: 'pending', label: '还没到店' }, // 走查 v2 R07 定稿:未到店 / 还没到店,核销后才算到
       { key: 'contacted', label: '已接洽' },
       { key: 'arrived', label: '已核销' },
     ],
@@ -306,7 +306,7 @@ Page({
     checkinVisible: false,
     checkinQrState: 'loading',
     checkinQrUrl: '',
-    checkinCode: '',
+    checkinCode: '', checkinHost: false, hostInviteId: 0, broadcastSheet: { show: false, state: '', content: '', deliverable: 0, remaining: 0, sending: false, error: '' },
     profitSheet: { show: false, state: '', error: '', row: null },
     clubCandidates: { state: '', rows: [] },
     regApplies: { state: '', rows: [] },
@@ -1847,7 +1847,7 @@ Page({
           return;
         }
         // 承接方:聚合接口里带着报名记录,拿它的 id 回到既有详情流程
-        const reg = d.join && d.join.registration;
+        that.setData({ hostInviteId: (d.join && (d.join.hostInviteId || (d.join.coopInvite && d.join.coopInvite.inviteId))) || 0 }); const reg = d.join && d.join.registration;
         if (reg && reg.id) {
           // 同一主题可承接多站(PR #585)。只渲染第一条的话,后面几站在页面上根本不存在 ——
           // 2026-08-07 现网已有 2 例。这里把全部站做成可切换的列表,当前站仍是第一条。
@@ -2290,7 +2290,8 @@ Page({
       // 前端解释不出"为什么不能改",给个点了只会撞 403 的按钮不如不给。
       // ⚠️ canEdit === false 只让抽屉里的「票价与主题内容」置灰,不再吞掉整颗按钮 ——
       //    章节控制与本站运营跟编辑资格无关,吞了按钮等于把那些动作一起藏没了。
-      return base.concat([MORE]);
+      // 走查 v2 R15(业主 2026-10-30):主办也有一张「本主题二维码」,玩家扫了直接进这个主题
+      return base.concat([{ key: 'themeQr', label: '二维码', iconName: 'qr' }, MORE]);
     }
     /* CU-M-92「只接了合作邀约、还没有点位」的商家:四格里只有两格真能用。
        「客户」走 /api/project/players,那道闸认的是发布者或有报名行的人,他没有报名行 ⇒ 点了必被拒;
@@ -2389,11 +2390,8 @@ Page({
       'playerSheet.show': true,
       // CU-C-67:每次打开都清掉上一次的失败态 —— 错态与零单是两个态,不能互相残留
       'playerSheet.errorText': '',
-      playerActions: this.data.role === 'host'
-        // CU-M-183:商家那本台账不按主题过滤,按钮就得先说清是「全店」——
-        // 点进去才发现混着别的项目,主办方会以为名单和台账口径不一致。
-        ? [{ key: 'goLedger', label: '查看全店核销记录' }]
-        : [],
+      // 走查 v2 R07(业主 2026-10-30 定稿):底部不再放「查看全店核销记录」,最后一行是「定向广播」(主办商家)
+      playerActions: [],
     });
     app.sendRequest({
       hideLoading: true, silentError: true,
@@ -2461,7 +2459,7 @@ Page({
         stateText: state === 'redeemed' ? '已核销'
           : (state === 'refunded' ? '已退款'
             : (state === 'arrived' ? '已核销'
-              : (state === 'contacted' ? '已接洽' : '待核销'))),
+              : (state === 'contacted' ? '已接洽' : '未到店'))),
         arrivedTimeText: (r.checkinAt || r.arrivedTime) ? String(r.checkinAt || r.arrivedTime).slice(11, 16) : '',
         initial: (r.name || '?').slice(0, 1),
       });
@@ -2501,7 +2499,7 @@ Page({
     if (!kept.length) {
       emptyText = !rows.length && !shopDay
         ? (filter === 'all' ? '暂无报名' : '还没有人下单，这一档也是空的')
-        : (filter === 'pending' ? '没有待核销的客户'
+        : (filter === 'pending' ? '没有还没到店的客户'
           : (filter === 'contacted' ? '还没有客户接洽'
             : (filter === 'arrived' ? '没有已核销的客户'
               : (shopDay ? '本店暂没有现场客户记录' : '没有符合条件的客户'))));
@@ -2604,6 +2602,69 @@ Page({
           fail() { that._regConfirming = false; },
         });
       },
+    });
+  },
+
+  /* 走查 v2 R07(业主 2026-10-30):客户弹窗最后一行「定向广播」—— 发给本主题的买票玩家。
+     复用商家客户的定向广播(/api/merchant/crm/broadcast,同意过滤、每人每天 1 条、商家每天 3 条都在服务端),
+     只多带一个 topicId 把名单收窄到这个主题。 */
+  openBroadcast() {
+    const topicId = Number(this.data.topicId || (this.data.info && this.data.info.topicId));
+    if (!topicId) return;
+    this._broadcastRequestId = 'tb' + topicId + '-' + Date.now() + '-' + Math.floor(Math.random() * 1e6);
+    this.setData({ broadcastSheet: { show: true, state: 'loading', content: '', deliverable: 0, remaining: 0, sending: false, error: '' } });
+    const that = this;
+    app.sendRequest({
+      hideLoading: true, silentError: true,
+      url: '/api/merchant/crm/broadcast/preview', method: 'POST',
+      data: JSON.stringify({ topicId: topicId }), header: { 'Content-Type': 'application/json' },
+      success(res) {
+        const d = res && res.code == '200' && res.data;
+        if (!d) { that.setData({ 'broadcastSheet.state': 'error', 'broadcastSheet.error': (res && res.msg) || '没读到可以收到的人数' }); return; }
+        that.setData({ 'broadcastSheet.state': 'ready', 'broadcastSheet.deliverable': d.deliverableCount || 0, 'broadcastSheet.remaining': d.merchantDailyRemaining || 0 });
+      },
+      fail() { that.setData({ 'broadcastSheet.state': 'error', 'broadcastSheet.error': '网络异常，请重试' }); },
+    });
+  },
+
+  closeBroadcast() { this.setData({ 'broadcastSheet.show': false }); },
+
+  onBroadcastInput(e) { this.setData({ 'broadcastSheet.content': String((e && e.detail && e.detail.value) || '') }); },
+
+  sendBroadcast() {
+    const b = this.data.broadcastSheet;
+    const content = String(b.content || '').trim();
+    const topicId = Number(this.data.topicId || (this.data.info && this.data.info.topicId));
+    if (b.sending || b.state !== 'ready' || !content || !b.deliverable || !b.remaining || !topicId) return;
+    const that = this;
+    this.setData({ 'broadcastSheet.sending': true });
+    app.sendRequest({
+      url: '/api/merchant/crm/broadcast', method: 'POST',
+      data: JSON.stringify({ topicId: topicId, content: content, requestId: this._broadcastRequestId }),
+      header: { 'Content-Type': 'application/json' },
+      success(res) {
+        that.setData({ 'broadcastSheet.sending': false });
+        if (res && res.code == '200') { cyToast.success('已发出'); that.setData({ 'broadcastSheet.show': false }); }
+      },
+      fail() { that.setData({ 'broadcastSheet.sending': false }); },
+    });
+  },
+
+  // 走查 v2 R15:承办视图底部「联系主办」—— 已接受合作的双方取/建 1:1 会话,与协作详情「联系合作方」同一接口
+  contactHost() {
+    const id = this.data.hostInviteId;
+    if (!id || this._contactingHost) return;
+    const that = this;
+    this._contactingHost = true;
+    app.sendRequest({
+      url: '/api/coop/contact', method: 'POST',
+      data: JSON.stringify({ id: id }), header: { 'Content-Type': 'application/json' },
+      success(res) {
+        that._contactingHost = false;
+        const conv = res && res.code == '200' && res.data && res.data.conversationId;
+        if (conv) wx.navigateTo({ url: '/subpackageB/pages/im/chat/index?conversationId=' + conv + '&type=1&name=' + encodeURIComponent('主办方') });
+      },
+      fail() { that._contactingHost = false; },
     });
   },
 
@@ -3235,7 +3296,7 @@ Page({
       closeClubSheet: 1, closePlayerSheet: 1, closeMerchantSheet: 1,
       closeMoreSheet: 1, onMorePick: 1,
       copyText: 1, goInviteClub: 1, onPlayerFilter: 1, inviteClubRow: 1, openClubHome: 1, loadClubCandidates: 1,
-      loadRegApplies: 1, confirmRegRow: 1, selfTakeNode: 1, recruitNode: 1,
+      loadRegApplies: 1, confirmRegRow: 1, selfTakeNode: 1, recruitNode: 1, contactHost: 1, openBroadcast: 1,
       // CU-C-67:客户名单读失败后的局部重试(错态与零单分开之后要有恢复动作)
       retryPlayerSheet: 1,
       // CU-C-68:抽屉里「本站运营」资格探不到时的就地重试
@@ -3281,6 +3342,7 @@ Page({
     if (key === 'chapterEdit') return this.openChapterProjectAction('edit');
     if (key === 'chapterCheckin') return this.openChapterProjectAction('checkin');
     if (key === 'stationQr') return this.showLiveCheckin();
+    if (key === 'themeQr') return this.showHostQr();
     if (key === 'club') return this.openClubSheet();
     if (key === 'merchant') {                                                     // 只有主办方有这一格
       this.loadRegApplies();
@@ -4025,7 +4087,7 @@ Page({
       app.tips('本站未绑定节点，无法出示码');
       return false;
     }
-    this.setData({ checkinVisible: true });
+    this.setData({ checkinVisible: true, checkinHost: false });
     this.issueStationPoster();
     return true;
   },
@@ -4099,7 +4161,52 @@ Page({
 
   copyCheckinCode() { codeTextUtil.copy(this.data.checkinCode); },
 
+  // 走查 v2 R15:主办的本主题小程序码,与承办那张本站码共用同一个出码弹窗
+  showHostQr() {
+    this.setData({ checkinVisible: true, checkinHost: true });
+    this.issueHostQr();
+    return true;
+  },
+
+  issueHostQr(opts) {
+    const topicId = this.data.topicId || (this.data.info && this.data.info.topicId);
+    if (!topicId) return;
+    const that = this;
+    const saveAfter = !!(opts && opts.saveAfter);
+    const epoch = (this._checkinEpoch || 0) + 1;
+    this._checkinEpoch = epoch;
+    this.setData({ checkinQrState: 'loading', checkinQrUrl: '', checkinCode: '', checkinErr: '' });
+    app.sendRequest({
+      url: '/api/topic/host-qrcode', method: 'POST',
+      data: { id: topicId, scope: this.data.operationScope || '' },
+      hideLoading: true,
+      success(res) {
+        if (epoch !== that._checkinEpoch) return;
+        const url = res && res.code == '200' && res.data ? res.data.qrcodeUrl : '';
+        if (!url) {
+          that.setData({ checkinQrState: 'error', checkinErr: (res && res.msg) || '二维码暂时没能生成' });
+          return;
+        }
+        that.setData({ checkinQrState: 'ready', checkinQrUrl: url });
+        if (saveAfter) that.saveCheckinImage(url);
+      },
+      fail() {
+        if (epoch !== that._checkinEpoch) return;
+        that.setData({ checkinQrState: 'error', checkinErr: '网络异常，请重试' });
+      },
+    });
+  },
+
+  retryCheckinQr() {
+    if (this.data.checkinHost) this.issueHostQr(); else this.issueStationPoster();
+  },
+
   downloadCheckinQr() {
+    if (this.data.checkinHost) {
+      if (this.data.checkinQrState === 'ready' && this.data.checkinQrUrl) this.saveCheckinImage(this.data.checkinQrUrl);
+      else this.issueHostQr({ saveAfter: true });
+      return true;
+    }
     if (!this._checkinNodeId()) {
       app.tips('本站未绑定节点，无法下载码');
       return false;

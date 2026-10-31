@@ -125,6 +125,30 @@ class MerchantCrmBroadcastServiceImplTest {
         assertEquals(2, preview.getMerchantDailyRemaining());
     }
 
+    /** 走查 v2 R07:主题工作台「定向广播」按主题收窄,主题 id 进名册查询(SQL 只取该主题已支付报名)。 */
+    @Test
+    void topicIdNarrowsAudienceQueryToThatTopic() {
+        ArgumentCaptor<MerchantCrmCustomerQuery> captor =
+                ArgumentCaptor.forClass(MerchantCrmCustomerQuery.class);
+        when(appMapper.selectOwnedBroadcastCandidates(eq(OWNER_MEMBER), captor.capture(), eq(200)))
+                .thenReturn(Collections.singletonList(candidate(101L, "林青", null, null)));
+        MerchantCrmBroadcastRequest request = request();
+        request.setTopicId(990045L);
+
+        MerchantCrmBroadcastPreviewVO preview = service.preview(PRINCIPAL, request);
+
+        assertEquals(1, preview.getAudienceCount());
+        assertEquals(Long.valueOf(990045L), captor.getValue().getTopicId());
+    }
+
+    @Test
+    void invalidTopicIdIsRejected() {
+        MerchantCrmBroadcastRequest request = request();
+        request.setTopicId(0L);
+        assertThrows(ServiceException.class,
+                () -> service.preview(PRINCIPAL, request));
+    }
+
     @Test
     void teamScopeNarrowsServerSideByOwnedTeamName() {
         when(appMapper.selectOwnedBroadcastCandidates(eq(OWNER_MEMBER), any(MerchantCrmCustomerQuery.class), eq(200)))

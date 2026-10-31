@@ -101,10 +101,12 @@ public class ProjectHomeReadServiceImpl implements IProjectHomeReadService {
             if (!myChapterApplications.isEmpty()) {
                 join.put("chapterApplications", myChapterApplications);
             }
+            putHostInvite(join, acceptedInvite);
             out.put("join", join);
         } else if (!myChapterApplications.isEmpty()) {
             Map<String, Object> join = new HashMap<>();
             join.put("chapterApplications", myChapterApplications);
+            putHostInvite(join, acceptedInvite);
             out.put("join", join);
         } else if (!isHost && acceptedInvite != null) {
             // 只接了合作邀约、还没有自己的站点:他也是这条路线的承接方,给承接视图,
@@ -145,6 +147,14 @@ public class ProjectHomeReadServiceImpl implements IProjectHomeReadService {
             }
         }
         return null;
+    }
+
+    /** 走查 v2 R15(业主 2026-10-30):承办视图底部「联系主办」复用 /api/coop/contact,它要已接受的那张邀约。
+        没有已接受邀约(还在报名 / 待确认)时不给,前端就不出这个按钮。 */
+    private static void putHostInvite(Map<String, Object> join, CoopInvite acceptedInvite) {
+        if (acceptedInvite != null) {
+            join.put("hostInviteId", acceptedInvite.getId());
+        }
     }
 
     private Map<String, Object> buildCoopOnlyJoin(Long topicId, CoopInvite acceptedInvite) {

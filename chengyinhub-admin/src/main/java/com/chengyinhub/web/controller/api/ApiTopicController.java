@@ -787,6 +787,42 @@ public class ApiTopicController extends BaseController {
                 v2Result == null ? topicId : v2Result);
     }
 
+    @Autowired
+    private com.chengyinhub.business.service.IPlayerWxacodeService playerWxacodeService;
+
+    /**
+     * 走查 v2 R15(业主 2026-10-30):主办方的「本主题二维码」—— 玩法要求扫码参与时贴在现场,
+     * 玩家微信扫一扫直接进这个主题(承办商家那张是自己那一站的海报码,另走 /api/merchant/chapter-node/poster-code)。
+     * scene = {@code tp.<主题id>},落地页 pages/index/index 按前缀转到主题详情;码永久复用(服务内按 scene 缓存)。
+     */
+    @Operation(summary = "主办方取本主题小程序码(仅发布者)")
+    @PostMapping("/host-qrcode")
+    public AjaxResult hostQrcode(String id, String scope) {
+        Long principal;
+        try { principal = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        if (principal == null || principal <= 0) return error("请先登录");
+        Long topicId = Convert.toLong(id, 0L);
+        if (topicId <= 0) return error("参数不合规");
+        Long owner;
+        try {
+            owner = resolveProjectOwnerMemberId(principal, scope);
+        } catch (ServiceException e) {
+            return new AjaxResult(e.getCode(), e.getMessage());
+        }
+        CmsTopic topic = cmsTopicService.selectCmsTopicById(topicId);
+        if (topic == null || (topic.getDelFlag() != null && topic.getDelFlag() != 0)
+                || OwnershipUtils.notOwner(topic.getMemberId(), owner)) return error("主题不存在或无权查看");
+        Map<String, Object> data = new HashMap<>();
+        try {
+            data.put("qrcodeUrl", playerWxacodeService.getOrCreateScene("tp." + topicId));
+        } catch (IllegalStateException e) {
+            return error(e.getMessage());
+        }
+        data.put("topicId", topicId);
+        data.put("topicName", topic.getName());
+        return success(data);
+    }
+
     /** 发布者邀约选章用的只读卡片，不返回章节编辑内容。 */
     @Operation(summary = "邀约选章卡片（仅发布者，只读，不受编辑锁限制）")
     @PostMapping("/invite-chapters")

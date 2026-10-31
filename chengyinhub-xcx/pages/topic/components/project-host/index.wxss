@@ -767,3 +767,8 @@
 .player-row .dr-state--redeemed { color: var(--cy-success); background: var(--cy-color-status-success-soft); }
 .player-row .dr-state--refunded { color: var(--cy-danger); background: var(--cy-color-status-danger-soft); }
 .dfil-item.dfil-item--on { background: var(--cy-text-title); color: var(--cy-btn-solid-fg); }
+
+/* 走查 v2 R07:客户弹窗最后一行「定向广播」 */
+.bcast-row { display: flex; align-items: center; gap: 12rpx; margin-top: 24rpx; padding: 32rpx; border-radius: 28rpx; background: var(--cy-bg-card); color: var(--cy-text-tertiary); }
+.bcast-t { flex: none; font-size: var(--cy-font-body); font-weight: 600; color: var(--cy-text-title); }
+.bcast-s { flex: 1; min-width: 0; text-align: right; font-size: var(--cy-font-caption); color: var(--cy-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

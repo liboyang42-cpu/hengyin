@@ -1953,3 +1953,13 @@ image.david_stu {
 .pf-step--todo .pf-step-l { color: var(--cy-text-tertiary); }
 .pf-step-t { font-size: var(--cy-font-caption); color: var(--cy-text-tertiary); }
 .pf-all { margin-top: var(--cy-space-5); height: var(--cy-btn-h); line-height: var(--cy-btn-h); text-align: center; border-radius: var(--cy-radius-pill); background: var(--cy-bg-card-2); color: var(--cy-text-title); font-size: var(--cy-font-body); font-weight: 600; }
+
+/* 走查 v2 R07:定向广播弹窗 */
+.bc { display: flex; flex-direction: column; gap: 24rpx; padding: 8rpx 0 24rpx; }
+.bc-input { box-sizing: border-box; width: 100%; height: 220rpx; padding: 24rpx; border-radius: 28rpx; background: var(--cy-bg-card); font-size: var(--cy-font-body); color: var(--cy-text-title); }
+.bc-row { display: flex; justify-content: space-between; align-items: center; padding: 28rpx 32rpx; border-radius: 28rpx; background: var(--cy-bg-card); }
+.bc-k { font-size: var(--cy-font-body); color: var(--cy-text-secondary); }
+.bc-v { font-size: var(--cy-font-body); font-weight: 600; color: var(--cy-text-title); font-variant-numeric: tabular-nums; }
+.bc-btn { height: var(--cy-btn-h); display: flex; align-items: center; justify-content: center; border-radius: var(--cy-radius-pill); background: var(--cy-text-title); color: var(--cy-btn-solid-fg); font-size: var(--cy-font-body); font-weight: 600; }
+.bc-btn--off { opacity: .35; }
+.bc-cap { text-align: center; font-size: var(--cy-font-caption); color: var(--cy-text-secondary); }

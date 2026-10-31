@@ -452,7 +452,8 @@ test('承接方三个入口、主办方四个入口', () => {
   const page = makePage();
   // 走查 v2 R15(2026-10-30):承办方不给俱乐部 / 商家,换成本站二维码
   assert.deepEqual(page.buildQuickActions('join').map((a) => a.key), ['scan', 'stationQr', 'customer', 'more']);
-  assert.deepEqual(page.buildQuickActions('host').map((a) => a.key), ['club', 'merchant', 'customer', 'more']);
+  // 2026-10-30 走查 v2 R15:主办快捷格加「二维码」(本主题小程序码)
+  assert.deepEqual(page.buildQuickActions('host').map((a) => a.key), ['club', 'merchant', 'customer', 'themeQr', 'more']);
   assert.deepEqual(page.data.quickActions.map((a) => a.key), ['scan', 'stationQr', 'customer', 'more'],
     '接口没回来之前先按承接方给，不能渲染成空');
 });
@@ -559,7 +560,7 @@ test('玩家名单按场次分组，空态分三种说法', () => {
   page.setData(page.buildPlayerSheet({ rows: [] }, 'all'));
   assert.match(page.data.playerSheet.emptyText, /暂无报名/);
   page.setData(page.buildPlayerSheet({ rows: [{ registrationId: 1, arrived: true }] }, 'pending'));
-  assert.equal(page.data.playerSheet.emptyText, '没有待核销的客户');
+  assert.equal(page.data.playerSheet.emptyText, '没有还没到店的客户');
   page.setData(page.buildPlayerSheet({ rows: [{ registrationId: 1, arrived: false }] }, 'arrived'));
   assert.equal(page.data.playerSheet.emptyText, '没有已核销的客户');
 
@@ -575,7 +576,7 @@ test('玩家名单按场次分组，空态分三种说法', () => {
   assert.doesNotMatch(zeroOrderTexts.join('\n'), /,/u, '中文文案不用半角逗号');
   // 有人扫码待确认时,「待核销」为空不等于「全部客户都已核销」—— 那句是假的。
   page.setData(page.buildPlayerSheet({ rows: [{ registrationId: 1, state: 'contacted' }] }, 'pending'));
-  assert.equal(page.data.playerSheet.emptyText, '没有待核销的客户');
+  assert.equal(page.data.playerSheet.emptyText, '没有还没到店的客户');
   page.setData(page.buildPlayerSheet({ rows: [{ registrationId: 1, state: 'pending' }] }, 'contacted'));
   assert.equal(page.data.playerSheet.emptyText, '还没有客户接洽');
 });
@@ -585,7 +586,7 @@ test('本店现场名单为空只描述现场记录，不推断主题没有订�
   const data = { viewType: 'SHOP_DAY_MERCHANT_ROSTER', rows: [] };
   const expected = {
     all: '本店暂没有现场客户记录',
-    pending: '没有待核销的客户',
+    pending: '没有还没到店的客户',
     contacted: '还没有客户接洽',
     arrived: '没有已核销的客户',
   };
@@ -622,7 +623,8 @@ test('主办段整形:进度条按节点数等分，数字有兜底', () => {
   assert.equal(page.data.hostMerchants[0].statusText, '已中标');
   assert.equal(page.data.hostMerchants[1].statusText, '待审核');
   assert.equal(page.data.hostMerchants[1].isSelf, true, '自己报名自己的主题要标出来');
-  assert.deepEqual(page.data.quickActions.map((a) => a.key), ['club', 'merchant', 'customer', 'more']);
+  // 2026-10-30 走查 v2 R15:主办快捷格加「二维码」(本主题小程序码)
+  assert.deepEqual(page.data.quickActions.map((a) => a.key), ['club', 'merchant', 'customer', 'themeQr', 'more']);
 
   // 后端只给了个空壳:不能渲染出 undefined,也不能画一条空的进度条
   const bare = makePage();
@@ -1170,8 +1172,8 @@ test('CU-M-183:主办方抽屉的台账入口写明「全店」作用域', () =>
   host.data.role = 'host';
   host.data.topicId = 8001;
   host.openPlayerSheet();
-  assert.deepEqual(host.data.playerActions.map((a) => a.key), ['goLedger']);
-  assert.match(host.data.playerActions[0].label, /全店/, '入口要先说清这不是本主题记录');
+  // 2026-10-30 走查 v2 R07(业主定稿):客户弹窗底部不再放台账入口,最后一行是「定向广播」(只发本主题买票玩家)
+  assert.deepEqual(host.data.playerActions, []);
 
   const joiner = makePage();
   joiner.data.role = 'join';
@@ -1180,9 +1182,7 @@ test('CU-M-183:主办方抽屉的台账入口写明「全店」作用域', () =>
   assert.deepEqual(joiner.data.playerActions, [], '承接方不下发主办方的记录出口');
 
   const source = fs.readFileSync(path.resolve(__dirname, '../../pages/topic/merchantinfo/merchantinfo.js'), 'utf8');
-  const withoutScopeWord = source.replace(/label: '查看全店核销记录'/, "label: '查看核销记录'");
-  assert.notEqual(withoutScopeWord, source, '负控锚点失效:入口文案没被改回去');
-  assert.doesNotMatch(withoutScopeWord, /key: 'goLedger', label: '查看全店核销记录'/, '去掉「全店」二字必须判红');
+  assert.doesNotMatch(source, /label: '查看核销记录'/, '台账入口若回来,仍必须写明「全店」');
 });
 /* ===== CU-M-181:承接商家抽屉的主按钮必须对得上「现在做得动的事」 =====
    走查:抽屉空态写着「先去编辑里加节点再招商」,底部按钮却恒是「去找商家」;

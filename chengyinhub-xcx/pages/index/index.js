@@ -11,7 +11,7 @@ const { decorateFeedCards } = require('../../utils/index/feed-card.js');
 const { buildHomeActionBanners, openHomeActionBanner } = require('../../utils/index/home-action-banner.js');
 const { readReducedMotion } = require('../../utils/motion-preference.js');
 const { openScene } = require('../../utils/scene-entry.js');
-const { parseDoorScene, pathForScanEntry } = require('../../utils/game-door-entry.js');
+const { parseDoorScene, parseTopicScene, pathForScanEntry } = require('../../utils/game-door-entry.js');
 
 const { buildActivityShare } = require('../../utils/activity-share.js');
 const { appendByIndex } = require('../../utils/list-append.js');
@@ -346,6 +346,14 @@ Page({
   },
 
   consumeDoorScene(options) {
+    // 主办方「本主题二维码」:直接进主题详情(买票 / 已有票进游玩都在详情页上)
+    const topicId = parseTopicScene(options && options.scene) || parseTopicScene(app.pendingDoorScene);
+    if (topicId) {
+      app.pendingDoorScene = null;
+      const path = '/pages/topic/index/index?id=' + topicId;
+      wx.redirectTo({ url: path, fail() { wx.reLaunch({ url: path }); } });
+      return true;
+    }
     const code = parseDoorScene(options && options.scene) || parseDoorScene(app.pendingDoorScene);
     app.pendingDoorScene = null;
     if (!code) return false;

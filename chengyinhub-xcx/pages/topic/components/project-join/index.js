@@ -4,6 +4,7 @@
 Component({
   options: { addGlobalClass: true },
   properties: {
+    hostInviteId: { type: Number, value: 0 }, // 走查 v2 R15:有已接受的合作才出「联系主办」
     chapterProject: { type: Boolean, value: false },
     myChapterApplications: { type: Array, value: [] },
     myChapterNodes: { type: Array, value: [] },

@@ -71,9 +71,9 @@ test('主办与承接两套主题名单都使用客户和核销口径', () => {
     assert.match(wxml, /<project-drawer[^>]*title="客户"[^>]*customer-mode="\{\{true\}\}"/s, `${file} 应使用客户弹窗外壳`);
     // 走查 v2 R07(2026-10-30):汇总改成数字格(数字在上、名称在下),核销口径的名称不变
     assert.match(wxml, /class="dsum-l">已核销</);
-    assert.match(wxml, /class="dsum-l">待核销</);
-    assert.doesNotMatch(wxml, /class="dsum-l">已到店</);
-    assert.doesNotMatch(wxml, /class="dsum-l">未到店</);
+    // 2026-10-30 走查 v2 R07(业主定稿 r_cust3):汇总格写「还没到店」,行内胶囊写「未到店」
+    assert.match(wxml, /class="dsum-l">还没到店</);
+    assert.doesNotMatch(wxml, /class="dsum-l">待核销</);
     assert.doesNotMatch(wxml, /class="drun"/);
     assert.doesNotMatch(wxml, /\{\{ p\.ticketNo \}\}/);
     // 走查 v2 R07:核销时间并进场次那一行
@@ -98,8 +98,9 @@ test('主办与承接两套主题名单都使用客户和核销口径', () => {
   assert.doesNotMatch(joinWxml, /actions="\{\{ playerActions \}\}"/,
     '承接方已有页面内真实入口，客户抽屉不重复造入口');
   assert.match(pageJs, /playerActions:\s*\[\]/);
-  assert.match(pageJs, /this\.data\.role === 'host'[\s\S]*key: 'goLedger'[\s\S]*label: '查看全店核销记录'/,
-    '页面只能为主办方客户抽屉下发查看记录动作，且 CU-M-183 要求写明全店作用域');
+  // 2026-10-30 走查 v2 R07(业主定稿):客户弹窗不再下发台账入口,最后一行是「定向广播」(主办商家)
+  assert.match(read('pages/topic/components/project-host/index.wxml'), /data-act="openBroadcast"/,
+    '主办客户弹窗最后一行是定向广播');
   assert.match(pageWxml, /<project-host[\s\S]*playerActions="\{\{ playerActions \}\}"[\s\S]*bind:act="onJoinAct"/,
     '主办页必须把查看记录动作传入组件');
 

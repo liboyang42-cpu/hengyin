@@ -1166,3 +1166,6 @@
 .player-row .dr-state--redeemed { color: var(--cy-success); background: var(--cy-color-status-success-soft); }
 .player-row .dr-state--refunded { color: var(--cy-danger); background: var(--cy-color-status-danger-soft); }
 .dfil-item.dfil-item--on { background: var(--cy-text-title); color: var(--cy-btn-solid-fg); }
+
+/* 走查 v2 R15:联系主办 —— 进度下面一颗整宽白底按钮 */
+.contact-host { display: flex; align-items: center; justify-content: center; gap: 12rpx; height: 96rpx; margin: 24rpx var(--cy-page-x) 0; border-radius: var(--cy-radius-pill); background: var(--cy-bg-card); color: var(--cy-text-title); font-size: var(--cy-font-body); font-weight: 600; }
