@@ -1772,7 +1772,7 @@ Page({
           const cy = it.top + it.height / 2 - box.top;
           const inView = that.data.reducedMotion || (it.bottom > box.top + 80 && it.top < box.bottom - 40);
           if (ln.in && !inView) return { ...ln, in: false, dir: cy < 0 ? 'down' : 'up', d: 0 };
-          if (!ln.in && inView) { const d = (order++) * 0.35; return { ...ln, in: true, dir, d }; }
+          if (!ln.in && inView) { const d = (order++) * 0.35; if (chapterFull && ln.fx === 'decode') that._decodeLine(i); return { ...ln, in: true, dir, d }; } /* 解码:滑进来时才开始还原 */
           return ln;
         });
         // 只发显形状态中真正改变的路径,不把文字、图片与玩法配置整表重传。
@@ -3764,7 +3764,7 @@ Page({
       chapterParas: items.map((item, i) => Object.assign({
         i, text: '', url: '', audioKey: 'ch' + i,
         in: !!this.data.reducedMotion, dir: 'up', d: 0,
-      }, item, item.url ? { url: secureOwnMedia(item.url) } : {})),   // 故事流语音 / 配图同样升 https(实走复核:章节旁白仍是 http)
+      }, item, item.url ? { url: secureOwnMedia(item.url) } : {}, this._textFx(item, i))),   /* 故事流语音 / 配图升 https;文字动效:选过风格的主题才有 */
       storyChat: false,
     }, () => {
       if (!wasOpen) this._storyTop = 0;

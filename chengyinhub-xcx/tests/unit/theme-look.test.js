@@ -239,3 +239,50 @@ test('整流程走查修正(2026-10-30):预览带风格、故事流铺主题底�
   assert.match(tb, /\.chfull\.is-navmap \.fx-story__hd\{ align-items:flex-start; \}/)
   assert.ok(read('pages/play/index.wxss').indexOf('@import "./play-topbar.wxss"') < read('pages/play/index.wxss').indexOf('.radar__disc{'), '顶栏样式先于 .radar__disc 引入,所以必须提高权重')
 })
+
+test('故事文字动效(2026-10-30 业主定稿原型 v3):每段滑进来播一次、按风格轮换、作者可在字体下面选一种', () => {
+  // 目录:13 种,去掉了翻页 / 盖印 / 逐字;后端同口径
+  assert.deepEqual(look.TEXT_FX.map(t => t[0]), ['rise', 'type', 'ink', 'gather', 'glow', 'wipe', 'drop', 'wind', 'signal', 'fog', 'neon', 'scan', 'decode'])
+  for (const gone of ['page', 'stamp', 'char']) assert.equal(look.normalizeLook({ style: 'PAPER', textFx: gone }).textFx, undefined, gone + ' 已取消')
+  assert.match(read('../chengyinhub-system/src/main/java/com/chengyinhub/business/util/ThemeLook.java'), /TEXT_FX = new HashSet<>\(Arrays\.asList\("rise", "type", "ink", "gather", "glow", "wipe",\s*"drop", "wind", "signal", "fog", "neon", "scan", "decode"\)\)/)
+  // 池子:星尘 聚星 / 浮现 / 呼吸光;纸本 打字机 / 墨晕 / 落定;轮换时相邻两段不重复
+  assert.deepEqual(look.STYLE_TEXT.STARDUST.pool, ['gather', 'rise', 'glow'])
+  assert.deepEqual(look.STYLE_TEXT.PAPER.pool, ['type', 'ink', 'drop'])
+  for (const s of look.STYLES) { const seq = [0, 1, 2, 3, 4, 5].map(i => look.textFxFor({ style: s.value }, i)); seq.slice(1).forEach((f, i) => assert.notEqual(f, seq[i], s.value + ' 相邻两段不重复')) }
+  assert.equal(look.textFxFor({ style: 'CYBER', textFx: 'ink' }, 3), 'ink', '作者选了一种就全用它')
+  assert.equal(look.textFxChars('decode'), true); assert.equal(look.textFxChars('scan'), false)
+
+  // 玩家页:正文段带 fx(逐字类带 chars,标点粘前一字);滑进屏幕(is-in)才播;解码滑进来时才逐拍还原;老主题不带
+  const mixin = require('../../pages/play/utils/play-look.js').methods()
+  const host = Object.assign({ data: { chapterParas: [] }, setData() {} }, mixin)
+  host._look = look.normalizeLook({ style: 'PAPER' })
+  const a = host._textFx({ kind: 'image' }, 0), b = host._textFx({ kind: 'text', text: '名单上的字迹已经褪色,' }, 1), c = host._textFx({ kind: 'text', text: '最后一行。' }, 2)
+  assert.deepEqual(a, {}); assert.equal(b.fx, 'type'); assert.equal(c.fx, 'ink', '轮换只数正文段')
+  assert.equal(b.chars[b.chars.length - 1].ch, '色,', '标点粘在前一个字上')
+  host._look = Object.assign(look.normalizeLook(null), { legacy: true })
+  assert.deepEqual(host._textFx({ kind: 'text', text: '老主题' }, 0), {}, '没配风格的老主题不加动效')
+  const js = read('pages/play/index.js'), wxml = read('pages/play/index.wxml'), wxss = read('pages/play/index.wxss')
+  assert.match(js, /\}, item, this\._textFx\(item, i\)\)\),/)
+  assert.match(js, /if \(chapterFull && ln\.fx === 'decode'\) that\._decodeLine\(i\);/)
+  assert.match(wxml, /\{\{item\.fx \? 'tfx tfx--' \+ item\.fx : ''\}\}/)
+  assert.match(wxml, /class="tfx__c \{\{c\.raw \? 'is-raw' : ''\}\}" style="--i:\{\{c\.i\}\};--r:\{\{c\.r\}\};--dx:\{\{c\.dx\}\}px;--dy:\{\{c\.dy\}\}px" aria-hidden="true"/)
+  assert.match(wxml, /<text wx:if="\{\{item\.chars\}\}" class="tfx__sr">\{\{item\.text\}\}<\/text>/, '拆成单字后整句仍给读屏')
+  for (const fx of ['type', 'ink', 'gather', 'drop', 'wind', 'signal']) assert.match(wxss, new RegExp('\\.tfx--' + fx + '\\.is-in \\.tfx__c\\{'), fx + ' 在 is-in 时显形')
+  for (const fx of ['glow', 'wipe', 'fog', 'neon', 'scan']) assert.match(wxss, new RegExp('\\.chfull__para\\.tfx--' + fx + '\\.is-in\\{'), fx)
+  const tfxCss = wxss.slice(wxss.indexOf('/* ===== 故事文字动效'))
+  assert.ok(!/@keyframes|animation\s*:/.test(tfxCss), '只用过渡,不新增关键帧')
+  assert.match(tfxCss, /\.play--reduced-motion \.tfx__c\{ transition:none; opacity:1;/)
+
+  // 编辑器:画面风格面板「字体」下面一行「文字动效」:跟随风格 + 13 种;预览示例正文跟着播
+  const sheet = read('pages/publish/fabu/look-sheet.wxml')
+  assert.ok(sheet.indexOf('>字体<') < sheet.indexOf('>文字动效<') && sheet.indexOf('>文字动效<') > 0, '在字体下面')
+  const page = { data: { formData: { look: '' } }, setData(patch) { for (const k of Object.keys(patch)) { const ks = k.split('.'); let o = this.data; while (ks.length > 1) o = o[ks.shift()]; o[ks[0]] = patch[k] } } }
+  Object.assign(page, require('../../pages/publish/fabu/theme-look-editor.js').methods)
+  page._refreshLookView()
+  assert.equal(page.data.lookView.textFxs.length, 14); assert.equal(page.data.lookView.textFxs[0].label, '跟随风格'); assert.equal(page.data.lookView.textFxs[0].on, true)
+  page.onLookTextFx({ currentTarget: { dataset: { value: 'decode' } } })
+  assert.equal(JSON.parse(page.data.formData.look).textFx, 'decode')
+  page.onLookTextFx({ currentTarget: { dataset: { value: '' } } })
+  assert.equal(page.data.formData.look, '', '回到跟随风格 = 不存')
+  assert.match(read('pages/publish/components/look-preview/index.wxml'), /class="lp__story tfx tfx--\{\{fx\}\} \{\{fxIn \? 'is-in' : ''\}\}"/)
+})

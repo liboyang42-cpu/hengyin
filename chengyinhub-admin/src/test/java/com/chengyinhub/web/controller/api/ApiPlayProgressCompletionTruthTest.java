@@ -328,28 +328,21 @@ class ApiPlayProgressCompletionTruthTest
         assertEquals("该站配置异常，暂时无法打卡", dangling.get("msg"));
     }
 
-    /** 2026-10-30 复核:配了玩法的 GPS 站,玩法没过之前到达不得完成(连线被 GPS 自动到达跳过)。 */
+    /** 2026-10-30 复核:玩法没过就到达,要拿到明确的业务拒绝(不是异常),否则小程序把到达记成「结果待确认」锁死按钮。 */
     @Test
-    void classicGpsStationWithAGameCompletesOnlyAfterTheGameIsPassed()
+    void classicArriveBeforeTheGameIsPassedGetsAClearRefusal()
     {
         topic.setProductType(ProductType.ORIENTEERING);
-        node.setTemplateId(905L); node.setLongitude("121.5"); node.setLatitude("31.2");
-        CmsMemberTemplate tpl = new CmsMemberTemplate();
-        tpl.setValidationMethod(5);
-        tpl.setAdvancedConfigJson("{\"schemaVersion\":1,\"match\":{\"enabled\":true},\"qa\":{\"enabled\":false}}");
-        when(templateService.selectCmsMemberTemplateById(905L)).thenReturn(tpl);
+        node.setLongitude("121.5"); node.setLatitude("31.2");
         com.chengyinhub.business.service.IAdvancedGameRuntimeService games = mock(com.chengyinhub.business.service.IAdvancedGameRuntimeService.class);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "advancedGameRuntimeService", games);
         String a = String.valueOf(ACTIVITY), n = String.valueOf(NODE);
 
-        when(games.readyForBase(eq(PLAYER), any(), any(), eq(NODE))).thenReturn(false);
+        when(games.completeGate(eq(PLAYER), any(), any(), eq(NODE))).thenThrow(new com.chengyinhub.common.exception.ServiceException("请先完成高级玩法"));
         AjaxResult early = BasicPlayCommandFixtures.arrive(controller, a, n, "121.5", "31.2", null, null, null, "10");
         assertEquals("ADVANCED_FIRST", early.get("errorCode"));
+        assertEquals("请先完成高级玩法", early.get("msg"));
         verify(progressService, never()).insertPlayerNodeProgress(any());
-
-        when(games.readyForBase(eq(PLAYER), any(), any(), eq(NODE))).thenReturn(true);
-        AjaxResult done = BasicPlayCommandFixtures.arrive(controller, a, n, "121.5", "31.2", null, null, null, "10");
-        assertEquals(200, done.get("code"));
     }
 
     @SuppressWarnings("unchecked")
