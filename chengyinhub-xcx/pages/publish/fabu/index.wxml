@@ -1457,7 +1457,7 @@
             <view class="sp-ch__h">{{chapter.name}}</view>
             <view class="sp-ch__meta"><cy-icon name="check" size="26" /><text>{{chapter.meta}}</text></view>
             <view class="sp-say {{chapter.flag ? 'is-flag' : ''}}" wx:if="{{chapter.story || chapter.flag}}" data-chapterindex="{{chapter.index}}" bindtap="onPreviewEdit"
-                  aria-role="button" aria-label="编辑{{chapter.name}}剧情" hover-class="cy-pressed" hover-stay-time="80">{{chapter.flag || chapter.story}}</view>
+                  aria-role="button" aria-label="编辑{{chapter.name}}剧情" hover-class="cy-pressed" hover-stay-time="80"><text class="sp-say__flag" wx:if="{{chapter.flag}}">{{chapter.flag}} · 去修改</text>{{chapter.story}}</view>
             <view class="sp-stop" wx:for="{{chapter.nodes}}" wx:key="index" wx:for-item="node">
               <view class="sp-stop__no">{{node.index + 1}}</view>
               <view class="sp-say" wx:if="{{node.say}}" data-chapterindex="{{chapter.index}}" data-nodeindex="{{node.index}}" bindtap="onPreviewEdit"

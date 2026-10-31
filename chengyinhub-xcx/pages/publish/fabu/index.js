@@ -6664,11 +6664,11 @@ Page({
         /[1-9]/.test(String(stats.totalDurationDisplay || '')) ? '约 ' + stats.totalDurationDisplay : '',
         Number(parseFloat(stats.totalDistance)) > 0 ? stats.totalDistance : '',
       ].filter(Boolean),
-      // 票务:票种、档期、售票三行。自由探索的定价与开卖要经招商与锁价(后端恒走招募链),
-      // 没填票价时写「开售前定价」,售票写「招商结束后开售」,不再当成免费。
+      // 票务:票种、档期、售票三行。自由探索的开卖要经招商与锁价(后端恒走招募链),售票写「招商结束后开售」。
+      // 票价目前仍是发布必填(锁价只回写自玩价与有人带票,作者这张票不回写),没填就写「—」并由问题行标红,不当成免费。
       ticketRows: ticket ? [
         { key: 'name', k: ticket.name || '未命名票种',
-          v: (priced ? (Number(ticket.price) > 0 ? '¥' + Number(ticket.price) : '免费') : (freeExplore ? '开售前定价' : '免费')) + stock },
+          v: (priced ? (Number(ticket.price) > 0 ? '¥' + Number(ticket.price) : '免费') : '—') + stock },
         { key: 'validity', k: '档期', v: [previewDay(ticket.startTime), previewDay(ticket.endTime)].filter(Boolean).join(' — ') || '—' },
         { key: 'sale', k: '售票', v: freeExplore ? '招商结束后开售' : (previewDay(ticket.saleStartTime) ? previewDay(ticket.saleStartTime) + '起' : '—') },
       ] : [],
