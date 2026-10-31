@@ -143,6 +143,28 @@ public class ApiOfficialEventController extends BaseController {
     }
 
     @Operation(summary = "官方活动详情")
+    @Autowired
+    private com.chengyinhub.business.service.IPlayerWxacodeService playerWxacodeService;
+
+    /**
+     * 通用分享页活动卡右下的小程序码(2026-10-31 业主批准 P-8)。可见性与详情同一口径(detail 返回 null = 看不到 ⇒ 不出码);
+     * scene = ac.<id>,落地页转官方活动详情;码按 scene 永久复用。
+     */
+    @Operation(summary = "活动分享卡的小程序码")
+    @PostMapping("/events/{id}/share-code")
+    public AjaxResult shareCode(@PathVariable("id") Long id) {
+        Long memberId = uid();
+        if (memberId <= 0) return error("请先登录");
+        if (id == null || id <= 0 || officialEventService.detail(id, memberId) == null) return error("活动不存在");
+        Map<String, Object> data = new java.util.HashMap<>();
+        try {
+            data.put("qrcodeUrl", playerWxacodeService.getOrCreateScene("ac." + id));
+        } catch (IllegalStateException e) {
+            return error(e.getMessage());
+        }
+        return success(data);
+    }
+
     @GetMapping("/events/{id}")
     public AjaxResult detail(@PathVariable("id") Long id) {
         Map<String, Object> vo = officialEventService.detail(id, uid());

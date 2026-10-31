@@ -320,6 +320,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where id = #{sessionId} and member_id = #{memberId} and status = 1
           and finish_result_json is null
     </update>
+    <!-- 2026-10-31 P-7:结算后写一次简化轨迹(本人、已结算、位置未清) -->
+    <update id="saveSessionTrack">
+        update roam_session set track_json = #{trackJson}
+        where id = #{id} and member_id = #{memberId} and status = 1 and location_cleared_at is null
+    </update>
+
     <update id="updateSessionFinish" parameterType="RoamSession">
         update roam_session
         set finished_at = #{finishedAt}, distance_m = #{distanceM}, tiles_revealed = #{tilesRevealed},
@@ -777,7 +783,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
           and location_cleared_at is null order by finished_at, id limit #{limit}
     </select>
     <update id="clearEndedSessionLocation">
-        update roam_session set last_lat = null, last_lng = null, last_report_at = null, presence_visible = 0,
+        update roam_session set last_lat = null, last_lng = null, last_report_at = null, presence_visible = 0, track_json = null,
           finish_result_json = #{resultJson}, location_cleared_at = now()
         where id = #{id} and member_id = #{memberId} and status = 1 and (finished_at is null or finished_at &lt;= #{cutoff})
           and location_cleared_at is null

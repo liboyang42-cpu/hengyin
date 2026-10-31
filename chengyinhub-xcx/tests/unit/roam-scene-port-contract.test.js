@@ -36,8 +36,10 @@ function methodSource(source, name, nextName) {
 }
 
 function assertPortContract(files) {
-  assert.match(files.historySceneWxml, /class="hs-sum"[^>]*wx:if="\{\{summary\.trips\}\}"/, '漫游历史弹窗必须展示汇总行')
-  assert.match(files.historySceneWxml, /class="rc"[^>]*wx:for="\{\{list\}\}"/, '漫游历史弹窗必须使用 #600 RunCard 流')
+  // 2026-10-31 P-7:汇总行改成 NRC 总成绩(class hs-total),仍然只在有记录时出
+  assert.match(files.historySceneWxml, /class="hs-total"[^>]*wx:if="\{\{summary\.trips\}\}"/, '漫游历史必须展示汇总行(NRC 总成绩)')
+  // 2026-10-31 P-7:循环挂在 block 上(同月第一张卡上方出月份标题),卡片本身仍是 RunCard
+  assert.match(files.historySceneWxml, /<block wx:for="\{\{list\}\}"[^>]*>[\s\S]*?<view class="rc"/, '漫游历史弹窗必须使用 #600 RunCard 流')
   assert.match(files.historySceneWxml, /class="rc__stats"/, 'RunCard 必须保留距离、探店、用时三格')
   assert.match(files.historySceneWxml, /class="rc__badges"/, 'RunCard 必须保留勋章/邮票行')
   assert.doesNotMatch(files.historySceneWxml, /hs-filter|hs-card/, '旧筛选票根弹窗必须删除')
@@ -52,9 +54,9 @@ function assertPortContract(files) {
   const historyPageJson = JSON.parse(files.historyPageJson)
   assert.equal(historyPageJson.usingComponents['cy-scene-roam-history'], '/components/cy/scene-roam-history/index')
   assert.match(files.historyPageWxml, /<cy-nav-bar\b/)
-  assert.match(files.historyPageWxml, /<cy-page-title[^>]*title="漫游历史"/)
+  assert.match(files.historyPageWxml, /<cy-page-title[^>]*title="漫游记录"/) // 2026-10-31 P-7 标题「漫游记录」
   assert.match(files.historyPageWxml, /<cy-scene-roam-history\b/)
-  assert.doesNotMatch(files.historyPageWxml, /wx:for|class="rc|class="hs-sum/, '深链页不得复制 RunCard 正文')
+  assert.doesNotMatch(files.historyPageWxml, /wx:for|class="rc|class="hs-total/, '深链页不得复制 RunCard 正文')
   assert.doesNotMatch(files.historyPageJs, /roam_sessions/, '漫游历史深链页不得复制列表取数与整形')
 
   assert.match(files.sessionSceneWxml, /class="kv"/, '本次漫游弹窗必须使用 #600 键值汇总')
@@ -145,7 +147,7 @@ test('negative control：摘掉 RunCard 汇总必须判红', () => {
   const current = sources()
   const missingSummary = {
     ...current,
-    historySceneWxml: current.historySceneWxml.replace('class="hs-sum"', 'class="hs-summary-removed"'),
+    historySceneWxml: current.historySceneWxml.replace('class="hs-total"', 'class="hs-summary-removed"'),
   }
   assert.notEqual(missingSummary.historySceneWxml, current.historySceneWxml, '汇总行变异锚点失效')
   assert.throws(() => assertPortContract(missingSummary), /汇总行/)

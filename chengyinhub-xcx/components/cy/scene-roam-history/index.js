@@ -6,6 +6,36 @@ const { readNonNegative } = require('../../../utils/roam-history-metrics.js')
 const { createReader, merge } = require('../../../utils/roam-passport-read.js')
 const WEEK = ['日', '一', '二', '三', '四', '五', '六']
 
+// 2026-10-31 P-7:每条记录就是一张轨迹地图卡。卡内地图区 686×360rpx,轨迹与店铺点一起按 bbox 居中
+// (与足迹分享卡同一套投影);没有轨迹(换手机 / 30 天位置已清)只在中间画一个点,不画线。
+const MAP_W = 686
+const MAP_H = 360
+const MAP_PAD = 48
+function routeView(track, pois) {
+  const pts = (Array.isArray(track) ? track : []).filter((p) => p && Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lng)))
+  if (pts.length < 2) return { segs: [], dots: [], start: null, end: null, single: true }
+  const kx = Math.cos(Number(pts[0].lat) * Math.PI / 180)
+  const M = (p) => ({ x: Number(p.lng) * kx, y: -Number(p.lat) })
+  const tp = pts.map(M)
+  const pp = (Array.isArray(pois) ? pois : []).filter((p) => p && Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lng))).map(M)
+  let x0 = 1e9; let y0 = 1e9; let x1 = -1e9; let y1 = -1e9
+  tp.concat(pp).forEach((p) => { x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y); x1 = Math.max(x1, p.x); y1 = Math.max(y1, p.y) })
+  const sc = Math.min((MAP_W - MAP_PAD * 2) / Math.max(1e-9, x1 - x0), (MAP_H - MAP_PAD * 2) / Math.max(1e-9, y1 - y0))
+  const ox = (MAP_W - (x1 - x0) * sc) / 2 - x0 * sc
+  const oy = (MAP_H - (y1 - y0) * sc) / 2 - y0 * sc
+  const X = (p) => Math.round(p.x * sc + ox)
+  const Y = (p) => Math.round(p.y * sc + oy)
+  const segs = []
+  for (let i = 1; i < tp.length; i++) {
+    const ax = X(tp[i - 1]); const ay = Y(tp[i - 1]); const bx = X(tp[i]); const by = Y(tp[i])
+    const len = Math.hypot(bx - ax, by - ay)
+    if (len < 2) continue
+    segs.push({ i, x: ax, y: ay, len: Math.round(len) + 3, deg: Math.round(Math.atan2(by - ay, bx - ax) * 180 / Math.PI) })
+  }
+  return { segs, dots: pp.map((p, i) => ({ i, x: X(p), y: Y(p), tone: i % 4 })),
+    start: { x: X(tp[0]), y: Y(tp[0]) }, end: { x: X(tp[tp.length - 1]), y: Y(tp[tp.length - 1]) }, single: false }
+}
+
 function nonNegativeNumber(value) {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : null
 }
@@ -20,7 +50,7 @@ Component({
     // CU-M-55:本次漫游还没结束。sessions 只在结算时才写(roam 页 _saveSession),
     // 所以「列表空」不等于「没开始过」—— 进行中有本机的 recovery 记录作依据。
     inProgress: false,
-    summary: { trips: 0, km: '0.0', shopsText: '0' },
+    summary: { trips: 0, km: '0.0', shopsText: '0', timeText: '—' },
   },
   lifetimes: {
     attached() { this._load() },
@@ -98,17 +128,27 @@ Component({
       const list = this._sorted('new')
       let km = 0; let kmKnown = true
       let shops = 0; let shopsKnown = true
+      let secs = 0; let secsKnown = true
+      let month = ''
       list.forEach((session) => {
         if (session.distanceValue === null) kmKnown = false
         else km += session.distanceValue
         if (session.shopsValue === null) shopsKnown = false
         else shops += session.shopsValue
+        const dur = nonNegativeNumber(session && session.durSec)
+        if (dur === null) secsKnown = false
+        else secs += dur
+        // 按月分组:同一个月的第一张卡上面出月份标题
+        session.monthHead = session.monthText !== month ? session.monthText : ''
+        month = session.monthText
       })
       pageMotion.enter(this, 'pmList'); this.setData({
         list,
         state: 'ready',
         inProgress: this._inProgress === true,
-        summary: { trips: list.length, km: kmKnown ? km.toFixed(1) : '—', shopsText: shopsKnown ? String(shops) : '—' },
+        // NRC 总成绩:没有数据的项写「—」,不造 0(UI-04)
+        summary: { trips: list.length, km: kmKnown ? km.toFixed(2) : '—', shopsText: shopsKnown ? String(shops) : '—',
+          timeText: secsKnown && list.length ? `${Math.floor(secs / 3600)}:${String(Math.floor(secs % 3600 / 60)).padStart(2, '0')}` : '—' },
       })
     },
     _sorted() {
@@ -135,6 +175,9 @@ Component({
             ? `${date.getMonth() + 1}/${date.getDate()}/${String(date.getFullYear()).slice(2)}`
             : '日期不可用',
           title: (zone && zone !== '这片街区' ? zone : '城市') + '漫游',
+          dateCard: validDate ? `${date.getMonth() + 1}月${date.getDate()}日 周${WEEK[date.getDay()]} · ${['凌晨', '上午', '下午', '晚上'][Math.floor(date.getHours() / 6)]}` : '日期不可用',
+          monthText: validDate ? `${date.getFullYear()}年${date.getMonth() + 1}月` : '',
+          route: routeView(session && session.track, session && session.pois),
           cover: typeof firstPhoto === 'string' ? firstPhoto : ((firstPhoto && firstPhoto.path) || ''),
           stamps: photos.length,
           medals: [session && session.medal, session && session.shopMedalName].filter(Boolean),

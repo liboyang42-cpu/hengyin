@@ -1033,8 +1033,31 @@
   <view class="psheet__grab"></view>
   <view class="psheet__x" catchtap="onProtoSheetClose" aria-role="button" aria-label="关闭{{sceneCurrent.title}}" hover-class="cy-pressed" hover-stay-time="80"><view class="psheet__x-i"></view></view>
   <text class="ph1">{{sceneCurrent.title}}</text>
-  <!-- 预览卡已删(用户裁决):结算页本身就是预览,sheet 只承载去哪儿分享 -->
-  <view class="sharesheet">
+  <!-- 2026-10-31 业主批准 P-8(通用分享页 · 漫游):只有一张卡,在页面中间偏下 —— 就是「保存」导出的那张(预览 = 导出图);
+       四个色块换底色(导出跟着换);「谁能看到」照旧是真闸;渠道圆钮放大、横向滑动。 -->
+  <view class="sharesheet rsh" style="--rsh-bg:{{share.bg || '#121317'}};">
+  <view class="rsh-stage">
+    <view class="rsh-card">
+      <view class="rsh-map">
+        <view class="rsh-route" wx:if="{{shareArch.archSegs.length}}">
+          <view class="rsh-seg" wx:for="{{shareArch.archSegs}}" wx:key="i" style="left:{{item.x}}rpx;top:{{item.y}}rpx;width:{{item.len}}rpx;transform:rotate({{item.deg}}deg);"></view>
+          <view class="rsh-poi" wx:for="{{shareArch.archPois}}" wx:key="i" style="left:{{item.x}}rpx;top:{{item.y}}rpx;background:{{item.color || '#D9D9D9'}};"></view>
+          <view class="rsh-end" wx:if="{{shareArch.archEnd.x != null}}" style="left:{{shareArch.archEnd.x}}rpx;top:{{shareArch.archEnd.y}}rpx;"></view>
+        </view>
+        <text class="rsh-empty" wx:else>今日足迹</text>
+      </view>
+      <view class="rsh-stats">
+        <view class="rsh-st"><text class="rsh-v">{{shareFinish.shops == null ? 0 : shareFinish.shops}}</text><text class="rsh-l">探店</text></view>
+        <view class="rsh-st"><text class="rsh-v">{{shareFinish.distance == null ? 0 : shareFinish.distance}}</text><text class="rsh-l">km</text></view>
+        <view class="rsh-st"><text class="rsh-v">{{shareFinish.explorePct == null ? 0 : shareFinish.explorePct}}%</text><text class="rsh-l">探索度</text></view>
+      </view>
+    </view>
+    <text class="rsh-wm">城瘾 · {{shareFinish.date || 'CityFog'}}</text>
+  </view>
+  <view class="rsh-sw">
+    <view class="rsh-swatch {{share.bg === item || (!share.bg && index === 0) ? 'is-on' : ''}}" wx:for="{{shareColors}}" wx:key="*this"
+          data-c="{{item}}" bindtap="onShareColor" aria-role="button" aria-label="换第 {{index + 1}} 种底色" hover-class="cy-pressed" hover-stay-time="80"><view class="rsh-dot" style="background:{{item}}"></view></view>
+  </view>
   <!-- 发布可见性(Strava「Visibility / Who can view」同构):三档都是**真闸**,
        不放后端不认识的选项 —— 选中即决定下面哪几条渠道还能点。 -->
   <view class="sh-vis">
@@ -1048,14 +1071,15 @@
             aria-role="radio" aria-checked="{{share.visibility === 'private'}}" hover-class="cy-pressed" hover-stay-time="80">仅自己</view>
     </view>
     <text class="sh-vis__hint">{{share.visibility === 'public' ? '全站可见' : (share.visibility === 'friends' ? '仅好友可见' : '仅存相册')}}</text>
-    
   </view>
-  <view class="sh-channels">
-    <view wx:if="{{share.communityWrite}}" class="sh-ch {{share.can.square ? '' : 'is-off'}}" bindtap="shareTo" data-ch="广场" hover-class="cy-pressed" hover-stay-time="80"><view class="sh-ci"><cy-icon name="tab-feed" size="36" /></view><text>{{share.squarePostUnknown?'广场 · 待确认':'广场'}}</text></view>
-    <view class="sh-ch {{share.can.moments ? '' : 'is-off'}}" bindtap="shareTo" data-ch="朋友圈" hover-class="cy-pressed" hover-stay-time="80"><view class="sh-ci"><cy-icon name="share" size="36" /></view><text>朋友圈</text></view>
-    <view class="sh-ch {{share.can.xhs ? '' : 'is-off'}}" bindtap="shareTo" data-ch="小红书" hover-class="cy-pressed" hover-stay-time="80"><view class="sh-ci"><cy-icon name="image" size="36" /></view><text>小红书</text></view>
-    <view class="sh-ch {{share.can.save ? '' : 'is-off'}}" bindtap="shareTo" data-ch="保存" hover-class="cy-pressed" hover-stay-time="80"><view class="sh-ci"><cy-icon name="check" size="36" /></view><text>保存</text></view>
-  </view>
+  <scroll-view class="rsh-ch" scroll-x enhanced show-scrollbar="{{false}}">
+    <button class="rsh-ch-i rsh-ch-btn {{share.visibility === 'private' ? 'is-off' : ''}}" open-type="share" disabled="{{share.visibility === 'private'}}" aria-label="发给微信好友"><view class="rsh-ci"><cy-icon name="share" size="44" /></view><text>微信好友</text></button>
+    <view class="rsh-ch-i {{share.can.moments ? '' : 'is-off'}}" bindtap="shareTo" data-ch="朋友圈" aria-role="button" aria-label="朋友圈" hover-class="cy-pressed" hover-stay-time="80"><view class="rsh-ci"><cy-icon name="image" size="44" /></view><text>朋友圈</text></view>
+    <view class="rsh-ch-i {{share.can.xhs ? '' : 'is-off'}}" bindtap="shareTo" data-ch="小红书" aria-role="button" aria-label="小红书" hover-class="cy-pressed" hover-stay-time="80"><view class="rsh-ci"><cy-icon name="copy" size="44" /></view><text>小红书</text></view>
+    <view class="rsh-ch-i {{share.can.save ? '' : 'is-off'}}" bindtap="shareTo" data-ch="保存" aria-role="button" aria-label="保存图片" hover-class="cy-pressed" hover-stay-time="80"><view class="rsh-ci"><cy-icon name="download" size="44" /></view><text>保存图片</text></view>
+    <view wx:if="{{share.communityWrite}}" class="rsh-ch-i {{share.can.square ? '' : 'is-off'}}" bindtap="shareTo" data-ch="广场" aria-role="button" aria-label="发到广场" hover-class="cy-pressed" hover-stay-time="80"><view class="rsh-ci"><cy-icon name="tab-feed" size="44" /></view><text>{{share.squarePostUnknown?'广场 · 待确认':'发到广场'}}</text></view>
+    <view class="rsh-ch-i {{share.can.save ? '' : 'is-off'}}" bindtap="shareMore" aria-role="button" aria-label="更多" hover-class="cy-pressed" hover-stay-time="80"><view class="rsh-ci"><cy-icon name="more" size="44" /></view><text>更多</text></view>
+  </scroll-view>
   </view>
 </view>
 </view>
@@ -1066,6 +1090,7 @@
 	<!-- tabBar 只在起始页出现:地图入口与运行态保持沉浸，原有 intro 流程不变 -->
 	<tabBar wx:if="{{screen=='entry-map'||screen=='intro'}}" dark="{{true}}" monochrome="{{true}}" reduced-motion="{{reducedMotion}}"/>
 <cy-celebrate event-key="{{celebrationEvent}}" reduced-motion="{{reducedMotion}}" />
+<cy-share-card show="{{shareCard.show}}" card="{{shareCard.card}}" bind:close="onShareCardClose" />
 </view>
 
 <!-- BL-01 点位筛选:本页半屏统一用原型 .psheet(scene-sheet-contract 钉死不回 cy-sheet),标题 + 右上 ✕。

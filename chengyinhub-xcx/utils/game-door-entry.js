@@ -31,6 +31,15 @@ function parseTopicScene(scene) {
   return m ? m[1] : null
 }
 
+// 2026-10-31 P-8:官方活动分享卡上的小程序码,scene = ac.<活动id>
+function parseActivityScene(scene) {
+  if (scene == null || scene === '') return null
+  let raw = String(scene)
+  try { raw = decodeURIComponent(raw) } catch (e) { /* already decoded */ }
+  const m = /^ac\.(\d{1,18})$/.exec(raw.trim())
+  return m ? m[1] : null
+}
+
 function isWxacodeEnter(scene) {
   const n = Number(scene)
   return n === 1047 || n === 1048 || n === 1049
@@ -39,11 +48,12 @@ function isWxacodeEnter(scene) {
 function captureDoorScene(e, currentPending) {
   const query = (e && e.query) || {}
   const topicId = parseTopicScene(query.scene)
-  const code = parseDoorScene(query.scene) || (topicId ? 'tp.' + topicId : null)
+  const activityId = parseActivityScene(query.scene)
+  const code = parseDoorScene(query.scene) || (topicId ? 'tp.' + topicId : null) || (activityId ? 'ac.' + activityId : null)
   if (!code || !isWxacodeEnter(e && e.scene)) {
     return currentPending || null
   }
   return code
 }
 
-module.exports = { parseDoorScene, parseTopicScene, pathForScanEntry, captureDoorScene }
+module.exports = { parseDoorScene, parseTopicScene, pathForScanEntry, captureDoorScene, parseActivityScene }

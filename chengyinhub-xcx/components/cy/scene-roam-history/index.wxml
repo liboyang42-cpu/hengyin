@@ -5,10 +5,14 @@
   <view wx:if="{{remoteLoading}}" aria-role="status">正在读取漫游记录…</view>
   <view wx:if="{{remoteError}}" bindtap="retry" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">漫游记录读取失败，当前仅显示已读取记录。点此重试</view>
   <view wx:if="{{localWarning}}">本机补充记录暂时无法读取</view>
-  <view class="hs-sum" wx:if="{{summary.trips}}">
-    <text>已读取{{ summary.trips || 0 }}次漫游</text>
-    <text>{{summary.km || 0}}公里</text>
-    <text>探{{summary.shopsText || 0}}家</text>
+  <!-- 2026-10-31 P-7:总成绩照 NRC —— 总公里数粗斜体大数字,下面一行次数 / 探店 / 用时;没有数据写「—」 -->
+  <view class="hs-total" wx:if="{{summary.trips}}">
+    <view class="hs-total__big"><text class="hs-total__n">{{summary.km}}</text><text class="hs-total__u">公里</text></view>
+    <view class="hs-total__row">
+      <view class="hs-total__i"><text class="hs-total__v">{{summary.trips}}</text><text class="hs-total__l">次漫游</text></view>
+      <view class="hs-total__i"><text class="hs-total__v">{{summary.shopsText}}</text><text class="hs-total__l">家店</text></view>
+      <view class="hs-total__i"><text class="hs-total__v">{{summary.timeText}}</text><text class="hs-total__l">用时</text></view>
+    </view>
   </view>
   <!-- 2026-10-14 随漫游上线:那年今日 / 月度回顾 / 导出(各自独立页面,读服务端本人完成记录;弹窗内不直接导航,由宿主页跳转) -->
   <view class="hs-tools" wx:if="{{tools}}">
@@ -18,30 +22,31 @@
   </view>
 
   <view class="hs-scroll" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
-    <view class="rc" wx:for="{{list}}" wx:key="historyKey" bindtap="openSession" data-ts="{{item.ts}}" data-session-id="{{item.serverFact ? item.sessionId : ''}}"
-          aria-role="button" aria-label="{{item.dateShort}} {{item.title}},{{item.distanceText || 0}}公里" hover-class="cy-pressed" hover-stay-time="80" style="--pmi:{{index}};">
-      <view class="rc__main">
-        <view class="rc__thumb">
-          <image wx:if="{{item.cover}}" class="rc__thumb-image" src="{{item.cover}}" mode="aspectFill" />
-          <cy-icon wx:else name="walk" size="61" />
+    <!-- 每条记录就是一张地图卡:上半是这次的轨迹(起点空心、终点实心、途经的店四色打点),下半是标题、日期和三栏成绩 -->
+    <block wx:for="{{list}}" wx:key="historyKey">
+    <text class="hs-month" wx:if="{{item.monthHead}}">{{item.monthHead}}</text>
+    <view class="rc" bindtap="openSession" data-ts="{{item.ts}}" data-session-id="{{item.serverFact ? item.sessionId : ''}}"
+          aria-role="button" aria-label="{{item.dateCard}} {{item.title}},{{item.distanceText || 0}}公里" hover-class="cy-pressed" hover-stay-time="80" style="--pmi:{{index}};">
+      <cy-route-thumb route="{{item.route}}" />
+      <view class="rc__body">
+        <view class="rc__row">
+          <view class="rc__t"><cy-icon name="route" size="36" /><text class="rc__title">{{item.title}}</text></view>
+          <text class="rc__date">{{item.dateCard}}</text>
         </view>
-        <view class="rc__copy">
-          <text class="rc__date">{{item.dateShort}} · {{item.serverFact ? '已完成' : '本机记录'}}</text>
-          <text class="rc__title">{{item.title}}</text>
+        <view class="rc__stats">
+          <view class="rc__st"><text class="rc__v">{{item.distanceText}}</text><text class="rc__l">公里</text></view>
+          <view class="rc__st"><text class="rc__v">{{item.shopsText}}</text><text class="rc__l">探店</text></view>
+          <view class="rc__st"><text class="rc__v">{{item.time}}</text><text class="rc__l">用时</text></view>
         </view>
-      </view>
-      <view class="rc__stats">
-        <view class="rc__st"><text class="rc__v">{{item.distanceText}}</text><text class="rc__l">公里</text></view>
-        <view class="rc__st"><text class="rc__v">{{item.shopsText}}</text><text class="rc__l">探店</text></view>
-        <view class="rc__st"><text class="rc__v">{{item.time}}</text><text class="rc__l">用时</text></view>
-      </view>
-      <view class="rc__badges" wx:if="{{item.medals.length || item.stamps}}">
-        <view class="rc__hex" wx:for="{{item.medals}}" wx:for-item="medal" wx:key="index" aria-label="{{medal}}">
-          <cy-icon name="star" size="31" />
+        <view class="rc__badges" wx:if="{{item.medals.length || item.stamps}}">
+          <view class="rc__hex" wx:for="{{item.medals}}" wx:for-item="medal" wx:key="index" aria-label="{{medal}}">
+            <cy-icon name="star-filled" size="26" />
+          </view>
+          <view class="rc__stamps" wx:if="{{item.stamps}}"><text>{{item.stamps || 0}} 枚邮票</text></view>
         </view>
-        <view class="rc__stamps" wx:if="{{item.stamps}}"><cy-icon name="star" size="22" /><text>{{item.stamps || 0}} 枚邮票</text></view>
       </view>
     </view>
+    </block>
 
     <!-- CU-M-55:正在漫游时 sessions 必然为空(记录要结算才写),此时说「你还没有开始过」
          与事实相反,CTA 也不该是「出发第一次漫游」。判据在组件:本机 recovery 记录仍在。 -->

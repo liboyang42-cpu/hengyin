@@ -3,7 +3,8 @@
   "usingComponents": {
     "cy-empty": "/components/cy/empty/index",
     "cy-error": "/components/cy/error/index",
-    "cy-icon": "/components/cy/icon/index"
+    "cy-icon": "/components/cy/icon/index",
+    "cy-route-thumb": "/components/cy/route-thumb/index"
   },
   "styleIsolation": "isolated"
 }

@@ -431,7 +431,12 @@ Page({
     promptTop: 100,
     paceCard: { show: false, title: '', body: '', demo: false },
     medal: { show: false },
-    share: { show: false, idx: 0, squarePostUnknown: false, visibility: 'public', channels: ['广场', '朋友圈', '小红书', '保存'], can: { square: true, moments: true, xhs: true, save: true } },
+    share: { show: false, idx: 0, bg: '', squarePostUnknown: false, visibility: 'public', channels: ['广场', '朋友圈', '小红书', '保存'], can: { square: true, moments: true, xhs: true, save: true } },
+    // 2026-10-31 P-8:分享页四个色块(漫游卡底色,导出跟着换)与预览卡的数据(= 导出那张)
+    shareColors: ['#121317', '#20283A', '#3A2A1E', '#2E2A6B'], /* ds-ok P-8 漫游分享卡底色色块(业主批准稿) */
+    shareCard: { show: false, card: {} }, // P-8 晒勋章:通用分享层
+    shareArch: { archSegs: [], archPois: [], archEnd: {} },
+    shareFinish: {},
     discoverReward: { show: false, poi: {} },
     celebrationEvent: '',
     roamPrompt: { show: false },    // 漫游提示（prompt-slot 栈最低优先级）
@@ -2010,10 +2015,15 @@ Page({
     this._lastDistanceM = distanceM;
     const sendFinish = () => {
       const poiIds = Object.keys(this._foundRoamPois).join(',');
+      // 2026-10-31 P-7:漫游记录卡片画这次的轨迹 —— 简化轨迹随结算上送(≤600 点,服务端再抽稀到 300、30 天随位置清空)
+      const all = (this._track || []).filter((q) => q && Number.isFinite(Number(q.lat)) && Number.isFinite(Number(q.lng)));
+      const step = Math.max(1, Math.ceil(all.length / 600));
+      const track = all.filter((q, i) => i % step === 0 || i === all.length - 1).map((q) => [Number(q.lat), Number(q.lng)]);
       return req('/api/roam/finish', 'POST', {
         sessionId: String(this._roamSid || 0),
         poiIds,
         distanceM: String(Math.round(distanceM || 0)),
+        track: track.length > 1 ? JSON.stringify(track) : '',
       }).then((res) => {
         if (generation !== this._roamWriteGeneration || !this._recoveryOwnerCurrent()) return false;
         if ((res.code == '200' || res.code == 200) && res.data) {
@@ -4723,45 +4733,14 @@ Page({
   },
   // 徽章卡真图导出,复用足迹卡的 sharecv 管线
   // 先关弹层再生成:medal.show 会让 _blocked() 丢 GPS 点,窗口开着越久丢得越多
+  // 2026-10-31 P-8:晒勋章也走通用分享页(勋章卡 + 色块 + 渠道,右下小程序码)
   shareMedal() {
     const medal = this.data.medal || {};
     this.closeMedal();
-    return this._exportAndSave('生成徽章卡', () => this._drawMedalCard(medal));
+    this.setData({ shareCard: { show: true, card: { kind: 'medal', title: medal.name || medal.short || '勋章', meta: medal.sub || '' } } });
+    return Promise.resolve(true);
   },
 
-  /** 徽章分享卡(750x1000):光晕+徽章圆(与 CSS .medal-coin 同构)+名称+水印 */
-  _drawMedalCard(medal) {
-    return this._getShareCanvas().then((cv) => {
-      const W = 750; const H = 1000;
-      const SS = 2; // 同 _drawShareCard:2x 超采样防真机导出发糊
-      cv.width = W * SS; cv.height = H * SS;
-      const g = cv.getContext('2d');
-      g.scale(SS, SS);
-      const bg = g.createLinearGradient(0, 0, W, H);
-      bg.addColorStop(0, '#171717'); bg.addColorStop(1, '#0B0B0B');
-      g.fillStyle = bg; g.fillRect(0, 0, W, H);
-      const cx = W / 2; const cy = 330; const R = 150;
-      const glow = g.createRadialGradient(cx, cy, R * 0.6, cx, cy, R * 2.2);
-      glow.addColorStop(0, 'rgba(255,255,255,.45)'); glow.addColorStop(1, 'rgba(255,255,255,0)');
-      g.fillStyle = glow; g.fillRect(0, 0, W, H);
-      const coin = g.createRadialGradient(cx, cy - R * 0.24, R * 0.15, cx, cy, R);
-      coin.addColorStop(0, '#FFFFFF'); coin.addColorStop(0.62, BRAND); coin.addColorStop(1, '#4A4A4A');
-      g.beginPath(); g.arc(cx, cy, R, 0, Math.PI * 2);
-      g.fillStyle = coin; g.fill();
-      g.textAlign = 'center';
-      g.fillStyle = '#fff'; g.font = 'bold 44px sans-serif';
-      g.fillText(medal.short || '徽章', cx, cy + 14);
-      g.fillStyle = BRAND; g.font = '24px sans-serif';
-      g.fillText('徽 章 到 手', cx, 590);
-      g.fillStyle = '#fff'; g.font = 'bold 48px sans-serif';
-      g.fillText(medal.name || '', cx, 660);
-      g.fillStyle = '#999999'; g.font = '26px sans-serif';
-      g.fillText(medal.sub || '', cx, 716);
-      g.fillStyle = '#5A5A5A'; g.font = '22px sans-serif';
-      g.fillText('城瘾 · CityFog', cx, H - 70);
-      return this._canvasExport(cv);
-    });
-  },
 
   _arrive() {
     if (this._arrivalWait) return this._arrivalWait;
@@ -4939,9 +4918,12 @@ Page({
     const communityWrite = typeof app.canUseCommunity === 'function' && app.canUseCommunity(true);
     const privacy = readSharePrivacy(wx);
     this.setData({
+      shareArch: this._activeShareArch() || { archSegs: [], archPois: [], archEnd: {} },
+      shareFinish: this._activeShareFinish(),
       share: {
         show: true,
         idx: 0,
+        bg: '',
         squarePostUnknown: !!this._squarePostUnknown,
         visibility: privacy.visibility,
         channels: channelsForVisibility(privacy.visibility).filter(channel => channel !== '广场' || communityWrite),
@@ -5038,6 +5020,22 @@ Page({
     this.closeScene();
   },
   onShareSwipe(e) { this.setData({ 'share.idx': e.detail.current }); },
+  // 2026-10-31 P-8:换底色(只这一次分享,导出图跟着换)
+  onShareColor(e) {
+    const c = (e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.c) || '';
+    if (c) this.setData({ 'share.bg': c });
+  },
+  // 2026-10-31 P-8「更多」:导出同一张卡,交给系统图片分享菜单(发给朋友 / 收藏 / 保存);可见范围同「保存」一道闸
+  onShareCardClose() { this.setData({ 'shareCard.show': false }); },
+  shareMore() {
+    if (!this.data.share.can.save) { cyToast('当前可见范围不导出图片'); return Promise.resolve(false); }
+    const current = this._shareScope();
+    return this._drawShareCard(this.data.share.idx).then((path) => {
+      if (!current() || !path) return false;
+      wx.showShareImageMenu({ path, fail: () => {} });
+      return true;
+    }, () => { if (current()) cyToast('卡片图没生成，请重试'); return false; });
+  },
   /**
    * P0-2 所见即所得:按当前预览卡(share.idx)画同版式 canvas 导出,预览=导出图。
    * #25 渠道收口 —— 每条渠道只承诺它真能做到的事:
@@ -5402,7 +5400,8 @@ Page({
       const bg = g.createLinearGradient(0, 0, W, H);
       if (idx === 1) { bg.addColorStop(0, '#242424'); bg.addColorStop(1, '#0B0B0B'); }
       else { bg.addColorStop(0, '#171717'); bg.addColorStop(1, '#0B0B0B'); }
-      g.fillStyle = bg; g.fillRect(0, 0, W, H);
+      // 2026-10-31 P-8:分享页选的底色(预览 = 导出图)
+      g.fillStyle = this.data.share.bg || bg; g.fillRect(0, 0, W, H);
       // UI-04(2026-09-18):没取到的数字统计显示 0(原为「—」,R9-42 的旧口径已被本批覆盖)。
       const cols = [
         { v: fin.shops == null ? '0' : String(fin.shops), l: '探店' },
@@ -5589,7 +5588,8 @@ Page({
 
   openRoamReward() { this.openScene('game-coupon-wallet'); },
   openRoamTasks() { this.openScene('roam-task-list'); },
-  openRoamHistory() { this.openScene('roam-history'); },
+  // 2026-10-31 P-7:漫游记录是全屏深色页(导航栏 + 胶囊),navigateTo,不再是半屏
+  openRoamHistory() { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageRoam/history/index', complete: () => { this._navigating = false; } }); },
 
   /* ── 工具抽屉(原型 f-more)与它通向的几处 ────────────────────────────────
      三键左边那枚「更多」拉开;九行的去处逐条对到现有场景,没有一行是新编的。

@@ -30,7 +30,7 @@ class RoamPassportReadMySqlIT {
         DriverManagerDataSource source = new DriverManagerDataSource(
             config.databaseUrl().replace("/" + config.databaseName() + "?", "/" + database + "?"), config.user(), config.password());
         db = new JdbcTemplate(source);
-        db.execute("create table roam_session(id bigint primary key, member_id bigint not null, status int, started_at datetime, finished_at datetime, distance_m int, finish_result_json longtext) engine=InnoDB");
+        db.execute("create table roam_session(id bigint primary key, member_id bigint not null, status int, started_at datetime, finished_at datetime, distance_m int, finish_result_json longtext, track_json mediumtext) engine=InnoDB");
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean(); factory.setDataSource(source);
         factory.setMapperLocations(new ClassPathResource("mapper/business/RoamPassportMapper.xml"));
         service = new RoamPassportReadService(new SqlSessionTemplate(factory.getObject()).getMapper(RoamPassportMapper.class));

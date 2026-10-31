@@ -92,6 +92,9 @@ public interface RoamMapper {
     RoamSession selectOwnedSessionForUpdate(@Param("id") Long id, @Param("memberId") Long memberId);
     /** CAS 结算写回:仅 status=0 可更新为 1,返回 1=本请求抢到结算权 */
     int updateSessionFinish(RoamSession session);
+
+    /** 2026-10-31 P-7:结算后写简化轨迹(已抽稀、已校验) */
+    int saveSessionTrack(@Param("id") Long id, @Param("memberId") Long memberId, @Param("trackJson") String trackJson);
     /** 已结算 24–72h、未成功召回且仍可重试的会话。 */
     List<RoamSession> selectRecallCandidates(@Param("from") Date from, @Param("to") Date to,
                                               @Param("retryBefore") Date retryBefore,

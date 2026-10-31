@@ -485,7 +485,9 @@ test('官方活动详情分享卡携带当前活动 canonical 路由、标题与
     e: { title: '城市夜行计划', coverImg: 'https://img.example/cover.jpg' },
   });
   assertOfficialShareContract(detail.page.onShareAppMessage());
-  assert.match(source('pages/activity/official-detail/index.wxml'), /<button[^>]*open-type="share"[^>]*aria-label="分享活动"/s);
+  // 2026-10-31 P-8:详情页的分享按钮打开通用分享层;「微信好友」在分享层里(open-type=share),仍走本页 onShareAppMessage
+  assert.match(source('pages/activity/official-detail/index.wxml'), /<button[^>]*bindtap="openShareCard"[^>]*aria-label="分享活动"/s);
+  assert.match(source('components/cy/share-card/index.wxml'), /<button[^>]*open-type="share"[^>]*aria-label="发给微信好友"/s);
 });
 
 test('负控:分享卡退回列表页或丢活动参数必须判红', () => {

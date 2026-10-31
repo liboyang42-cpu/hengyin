@@ -2259,9 +2259,22 @@
    "list": [
     {
      "ts": 1,
-     "dateShort": "08.09",
+     "historyKey": "local:1",
+     "dateCard": "8月9日 周六 · 晚上",
+     "monthHead": "2026年8月",
      "title": "外滩夜行",
-     "cover": "/images/route_city_cover.png",
+     "route": {
+      "segs": [
+       { "i": 1, "x": 120, "y": 220, "len": 180, "deg": -20 },
+       { "i": 2, "x": 290, "y": 160, "len": 160, "deg": 15 }
+      ],
+      "dots": [
+       { "i": 0, "x": 290, "y": 160, "tone": 0 }
+      ],
+      "start": { "x": 120, "y": 220 },
+      "end": { "x": 444, "y": 200 },
+      "single": false
+     },
      "distanceText": "6.8",
      "shopsText": "4",
      "time": "01:28",
@@ -2273,8 +2286,9 @@
    ],
    "summary": {
     "trips": 1,
-    "km": "6.8",
-    "shopsText": "4"
+    "km": "6.80",
+    "shopsText": "4",
+    "timeText": "1:28"
    }
   },
   "target": "cy-scene-roam-history",

@@ -137,6 +137,7 @@ function parseContentCards(contentJson) {
 
 Page({
   data: {
+    shareCard: { show: false, card: {} }, // 2026-10-31 P-8:通用分享层
     id: 0,
     e: null,
     boundTopicError: '',
@@ -611,6 +612,18 @@ Page({
       complete: () => { if (this._ctaContext === context) this._ctaBusy = false; }
     });
   },
+
+  // 2026-10-31 P-8:通用分享页 —— 活动卡(封面 / 活动名 / 粗斜体日期 / 时间地点),右下活动码
+  openShareCard() {
+    const e = this.data.e || {};
+    if (!this.data.id) return;
+    const range = String(e._dateRange || '');
+    const md = /(\d{1,2})[.\/月-](\d{1,2})/.exec(range);
+    this.setData({ shareCard: { show: true, card: { kind: 'activity', id: String(this.data.id), title: e.title || '城瘾官方活动',
+      cover: e.coverImg || '', date: md ? String(md[1]).padStart(2, '0') + '.' + String(md[2]).padStart(2, '0') : '',
+      when: [range, e.city].filter(Boolean).join(' · ') } } });
+  },
+  onShareCardClose() { this.setData({ 'shareCard.show': false }); },
 
   onShareAppMessage() {
     const e = this.data.e || {};

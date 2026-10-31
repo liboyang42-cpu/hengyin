@@ -32,8 +32,9 @@ test('正式页面不再把 emoji 当作 UI 图标', () => {
 test('漫游历史路线使用 walk 语义图标并保留时长', () => {
   const wxml = renderable(read('components/cy/scene-roam-history/index.wxml'));
   assertCyIconRegistration('components/cy/scene-roam-history/index.json');
-  // 2026-08-06 历史卡改 RunCard 版式:walk 图标在封面空位,时长在「用时」读数格
-  assert.match(wxml, /<cy-icon wx:else name="walk" size="61" \/>/);
+  // 2026-08-06 历史卡改 RunCard 版式:时长在「用时」读数格。
+  // 2026-10-31 业主批准 P-7:卡片上半就是轨迹地图,标题行用 route 语义图标(原封面空位的 walk 图标随缩略图退场)
+  assert.match(wxml, /<cy-icon name="route" size="36" \/><text class="rc__title">/);
   assert.match(wxml, /<text class="rc__v">\{\{item\.time\}\}<\/text><text class="rc__l">用时<\/text>/);
 });
 

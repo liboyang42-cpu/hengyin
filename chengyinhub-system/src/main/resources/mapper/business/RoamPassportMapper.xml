@@ -7,8 +7,9 @@
     <result property="finishedAt" column="finished_at"/>
     <result property="distanceM" column="distance_m"/>
     <result property="finishResultJson" column="finish_result_json"/>
+    <result property="trackJson" column="track_json"/>
   </resultMap>
-  <sql id="columns">id, started_at, finished_at, distance_m, finish_result_json</sql>
+  <sql id="columns">id, started_at, finished_at, distance_m, finish_result_json, track_json</sql>
   <select id="page" resultMap="Fact" useCache="false">
     select <include refid="columns"/> from roam_session
     where member_id = #{owner} and status = 1

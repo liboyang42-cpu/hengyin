@@ -914,3 +914,30 @@ cy-proto-cam{ position:fixed; left:0; right:0; top:0; bottom:0; z-index:58; poin
 
 /* 2026-10-27 owner P-31:更多 / 设置两张面板贴内容高,最高 80% 屏,超出在面板里滚动(原先「设置」只露半截) */
 .psheet.roam-menu-sheet{ height:auto; max-height:80vh; overflow-y:auto; }
+
+/* ===== 2026-10-31 业主批准 P-8:漫游分享 —— 一张卡居中偏下(= 导出图),色块换底色,渠道圆钮 64px 横滑 ===== */
+.rsh { display: flex; flex-direction: column; flex: 1; min-height: 0; margin: 0 -32rpx; padding: 0 32rpx; background: var(--rsh-bg); transition: background .3s; }
+.rsh-stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding: 24rpx 0 16rpx; }
+.rsh-card { width: 600rpx; padding: 12rpx; box-sizing: border-box; border-radius: var(--cy-radius-xl) var(--cy-radius-xl) 26rpx 26rpx; background: #0D0D0D; box-shadow: inset 0 0 0 2rpx rgba(255, 255, 255, .12); } /* ds-ok P-8 与导出卡同色 */
+.rsh-map { position: relative; width: 576rpx; height: 520rpx; overflow: hidden; border-radius: var(--cy-radius-lg); background: linear-gradient(180deg, #1A1A1A, #0C0C0C); display: flex; align-items: center; justify-content: center; } /* ds-ok P-8 与导出卡同色 */
+.rsh-route { position: absolute; left: 0; top: 0; width: 576rpx; height: 520rpx; }
+.rsh-seg { position: absolute; height: 7rpx; margin-top: -3rpx; border-radius: 4rpx; background: #FFFFFF; transform-origin: 0 50%; box-shadow: 0 0 12rpx rgba(255, 255, 255, .7); } /* ds-ok P-8 轨迹白线发光,同导出 */
+.rsh-poi { position: absolute; width: 14rpx; height: 14rpx; margin: -7rpx 0 0 -7rpx; border-radius: 50%; border: 5rpx solid #FFFFFF; } /* ds-ok P-8 店铺点白描边,同导出 */
+.rsh-end { position: absolute; width: 12rpx; height: 12rpx; margin: -6rpx 0 0 -6rpx; border-radius: 50%; background: #FFFFFF; border: 6rpx solid #FFFFFF; } /* ds-ok P-8 终点,同导出 */
+.rsh-empty { font-size: var(--cy-type-body); color: #686868; } /* ds-ok 同导出空态 */
+.rsh-stats { display: flex; justify-content: space-around; padding: 28rpx 0 20rpx; }
+.rsh-st { display: flex; flex-direction: column; align-items: center; gap: 4rpx; }
+.rsh-v { font-size: var(--cy-type-sheet-title); font-weight: 900; font-style: italic; color: #FFFFFF; font-variant-numeric: tabular-nums; } /* ds-ok 卡上白字 */
+.rsh-l { font-size: var(--cy-type-label); color: rgba(255, 255, 255, .55); } /* ds-ok 卡上灰字 */
+.rsh-wm { margin-top: 20rpx; font-size: var(--cy-type-label); color: rgba(255, 255, 255, .45); } /* ds-ok 卡下水印 */
+.rsh-sw { flex: none; display: flex; justify-content: center; gap: 4rpx; padding: 0 0 12rpx; }
+.rsh-swatch { width: 88rpx; height: 88rpx; display: flex; align-items: center; justify-content: center; }
+.rsh-dot { width: 56rpx; height: 56rpx; border-radius: 50%; box-shadow: inset 0 0 0 3rpx rgba(255, 255, 255, .35); } /* ds-ok 色块描边 */
+.rsh-swatch.is-on .rsh-dot { box-shadow: 0 0 0 5rpx #FFFFFF; } /* ds-ok 当前色块 */
+.rsh-ch { flex: none; white-space: nowrap; margin: 0 -32rpx; padding: 20rpx 0 calc(24rpx + env(safe-area-inset-bottom)); width: auto; }
+.rsh-ch-i { display: inline-flex; flex-direction: column; align-items: center; gap: 12rpx; width: 152rpx; vertical-align: top; font-size: var(--cy-type-label); color: #FFFFFF; } /* ds-ok 色块底上的白字 */
+.rsh-ch-i:first-child { margin-left: 24rpx; }
+.rsh-ch-i.is-off { opacity: .35; }
+.rsh-ch-btn { margin: 0; padding: 0; line-height: normal; background: transparent; border-radius: 0; }
+.rsh-ch-btn::after { border: 0; }
+.rsh-ci { width: 128rpx; height: 128rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, .14); } /* ds-ok P-8 渠道圆钮 64px */

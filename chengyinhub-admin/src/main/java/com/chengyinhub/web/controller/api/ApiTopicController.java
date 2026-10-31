@@ -828,6 +828,34 @@ public class ApiTopicController extends BaseController {
         return success(data);
     }
 
+    /**
+     * 通用分享页卡片右下的小程序码(2026-10-31 业主批准 P-8 ⑤:主题卡 / 勋章卡都放码)。
+     * 主题:只给已上架、未删除的主题出码(scene = tp.<id>,落地页转主题详情,与主办方的本主题码同一张);
+     * 不带主题 id(勋章卡)出首页码。码按 scene 永久复用(服务内缓存),不会每次分享都生成。
+     */
+    @Operation(summary = "分享卡片的小程序码(主题 / 首页)")
+    @PostMapping("/share-code")
+    public AjaxResult shareCode(String id) {
+        Long principal;
+        try { principal = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        if (principal == null || principal <= 0) return error("请先登录");
+        Long topicId = Convert.toLong(id, 0L);
+        String scene = "home";
+        if (topicId > 0) {
+            CmsTopic topic = cmsTopicService.selectCmsTopicById(topicId);
+            if (topic == null || (topic.getDelFlag() != null && topic.getDelFlag() != 0)
+                    || !Integer.valueOf(1).equals(topic.getStatus())) return error("主题还没上架，暂时不能生成小程序码");
+            scene = "tp." + topicId;
+        }
+        Map<String, Object> data = new HashMap<>();
+        try {
+            data.put("qrcodeUrl", playerWxacodeService.getOrCreateScene(scene));
+        } catch (IllegalStateException e) {
+            return error(e.getMessage());
+        }
+        return success(data);
+    }
+
     /** 发布者邀约选章用的只读卡片，不返回章节编辑内容。 */
     @Operation(summary = "邀约选章卡片（仅发布者，只读，不受编辑锁限制）")
     @PostMapping("/invite-chapters")
