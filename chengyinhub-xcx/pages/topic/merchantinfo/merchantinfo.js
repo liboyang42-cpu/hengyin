@@ -2575,6 +2575,8 @@ Page({
   /* 走查 v2 R06(业主 2026-10-30):招商弹窗里每一站自带「自己承接 / 招商」,收到的申请也在弹窗里处理,
      底部不再放「查看收到的申请」跳出去。自由探索按章节招商(承接后才产生站点),保留一个「去找商家」。 */
   buildMerchantActions() {
+    // 2026-10-31 P-6:有站点行(每站「档位 / 招商」)时底部不再放「去找商家」,招商在站点行里叠附近商家
+    if ((this.data.recruitStations || []).length) return [];
     if (this._isFreeExploreHost) return [{ key: 'goInviteMerchant', label: '去找商家' }];
     if (((this.data.hostRecruit || {}).nodeTotal || 0) > 0) return [];
     if (this._hostCanEdit === false) return [];

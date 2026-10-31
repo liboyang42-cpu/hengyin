@@ -7,7 +7,7 @@
  * ============================================================ */
 
 /* 底部操作栏是 fixed 的,末尾分组要留出它的高度 */
-.page { padding-bottom: 260rpx; }  /* ds-ok: 量表外遗留值,复核保留 */
+.page { padding-bottom: 260rpx; min-height: 100vh; box-sizing: border-box; background: var(--cy-bg-page); }  /* ds-ok: 量表外遗留值,复核保留;2026-10-31 P-6 根节点自己铺底色,俱乐部主办深色时不露页面的浅色底 */
 .page-pad { height: var(--cy-space-2); }
 
 /* ===== Hero ===== */

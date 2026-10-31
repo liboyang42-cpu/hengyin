@@ -335,7 +335,7 @@
     <!-- CU-M-181:原来这句写着「先去编辑里加站点」,但抽屉底部那颗按钮恒写「去找商家」,
          照着空态做找不到「编辑」,照按钮点又落进没有站点可承接的空页。空态只陈述前置条件,
          怎么补交给底部那颗按 nodeTotal 换出来的「去加站点」。 -->
-    <cy-empty wx:if="{{ !hostMerchants.length && !hostRecruit.openNodes.length }}" title="这条路线还没有配置节点" sub="先把节点配好，商家才有可承接的站。" />
+    <cy-empty wx:if="{{ !recruitStations.length && !hostMerchants.length && !hostRecruit.openNodes.length }}" title="这条路线还没有配置节点" sub="先把节点配好，商家才有可承接的站。" />
   </project-drawer>
 
   <!-- ===== 圈层供给角色抽屉(BL-183) ===== -->

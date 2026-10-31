@@ -221,7 +221,8 @@ public class ProjectHomeReadServiceImpl implements IProjectHomeReadService {
         Map<String, Object> host = new HashMap<>();
         // 主办方身份:俱乐部主办的主题不需要「俱乐部」协作区块(俱乐部不邀俱乐部,
         // 俱乐部管理人属后续需求),前端按此隐藏;商家/个人主办照常。
-        host.put("ownerType", topic.getClubId() != null ? "club" : "merchant");
+        // clubId 0 = 不挂俱乐部(发布页 / 存量数据都用 0 表示无),不能当成俱乐部主办 —— 否则商家主题会被渲染成俱乐部深色工作台
+        host.put("ownerType", topic.getClubId() != null && topic.getClubId() > 0 ? "club" : "merchant");
         host.put("recruit", buildRecruit(topic, invites));
         host.put("clubs", buildHostClubs(invites));
         host.put("merchants", buildHostMerchants(topic));
