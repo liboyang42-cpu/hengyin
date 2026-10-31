@@ -6574,6 +6574,12 @@ Page({
       ],
       // P-4 剧情预览:玩家看到的样子 —— 模式、票价、每章剧情与节点照片 / 玩法、通关勋章
       mode: Number(fd.productType) === 2 ? '自由探索' : '城市定向',
+      // 封面上的小标签只放有值的:没算出时长 / 里程(0)就不出那一枚,不写「0min」
+      chips: [
+        (fd.chapters || []).length + ' 章 · ' + (stats.totalNodes || 0) + ' 个节点',
+        /[1-9]/.test(String(stats.totalDurationDisplay || '')) ? '约 ' + stats.totalDurationDisplay : '',
+        Number(parseFloat(stats.totalDistance)) > 0 ? stats.totalDistance : '',
+      ].filter(Boolean),
       ticket: ((fd.tickets || [])[0] && {
         name: fd.tickets[0].name || '未命名票种',
         price: Number(fd.tickets[0].price) > 0 ? '¥' + Number(fd.tickets[0].price) : '免费',

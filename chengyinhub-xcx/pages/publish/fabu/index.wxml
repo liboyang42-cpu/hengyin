@@ -1356,7 +1356,7 @@
           <text class="sp-title">{{publishCheck.preview.name}}</text>
           <view class="sp-meta">
             <text class="sp-chip">{{publishCheck.preview.mode}}</text>
-            <text class="sp-chip" wx:for="{{publishCheck.preview.stats}}" wx:key="k" wx:if="{{item.v && item.v !== '0'}}">{{item.v}} {{item.k}}</text>
+            <text class="sp-chip" wx:for="{{publishCheck.preview.chips}}" wx:key="*this">{{item}}</text>
           </view>
         </view>
       </view>
