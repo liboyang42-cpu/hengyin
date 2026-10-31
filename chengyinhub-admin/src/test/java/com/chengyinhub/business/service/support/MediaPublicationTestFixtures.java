@@ -20,6 +20,7 @@ public final class MediaPublicationTestFixtures {
         ReflectionTestUtils.setField(references, "assets", mock(AppMediaAssetService.class));
         AppMediaPublicationGuard publication = new AppMediaPublicationGuard();
         ReflectionTestUtils.setField(publication,"references",references);
+        ReflectionTestUtils.setField(publication,"libraries",mock(com.chengyinhub.business.mapper.CmsTemplateLibraryMapper.class));
         return publication;
     }
 }

@@ -108,6 +108,30 @@ class FileOssUploadUtilsPresignedUrlTest {
     }
 
     @Test
+    void generalSdkClientSignsHttpsForBareHttpAndHttpsEndpoints() throws Exception {
+        String key = "upload/0123456789abcdef0123456789abcdef.png";
+        for (String endpoint : new String[] {"oss-cn-shanghai.aliyuncs.com",
+                "http://oss-cn-shanghai.aliyuncs.com", "HTTP://oss-cn-shanghai.aliyuncs.com",
+                "https://oss-cn-shanghai.aliyuncs.com"}) {
+            ClientConfiguration configuration = new ClientConfiguration();
+            OSSClient client = FileOssUploadUtils.createOssClient(endpoint,
+                    new DefaultCredentialProvider("test-id", "test-secret"), configuration);
+            try {
+                GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest("private-test", key);
+                request.setExpiration(new Date(System.currentTimeMillis() + 60_000L));
+                URL signed = new URL(FileOssUploadUtils.resolveGeneratedUrl(client, request));
+                assertEquals("https", signed.getProtocol(), endpoint);
+                assertEquals("private-test.oss-cn-shanghai.aliyuncs.com", signed.getHost());
+                assertEquals("/" + key, signed.getPath());
+                assertTrue(signed.getQuery().contains("Signature="));
+                assertEquals(com.aliyun.oss.common.comm.Protocol.HTTPS, configuration.getProtocol());
+            } finally {
+                client.shutdown();
+            }
+        }
+    }
+
+    @Test
     void communitySdkRejectsAmbiguousOrInsecureEndpointBeforeCreatingClient() {
         for (String endpoint : new String[] {null, "", "http://oss-cn-shanghai.aliyuncs.com",
                 "https://user@oss-cn-shanghai.aliyuncs.com", "https://oss-cn-shanghai.aliyuncs.com:443",
