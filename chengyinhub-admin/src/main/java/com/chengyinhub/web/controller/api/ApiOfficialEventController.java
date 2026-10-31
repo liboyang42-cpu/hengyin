@@ -142,7 +142,6 @@ public class ApiOfficialEventController extends BaseController {
         return success(officialEventService.listPublic(city, uid()));
     }
 
-    @Operation(summary = "官方活动详情")
     @Autowired
     private com.chengyinhub.business.service.IPlayerWxacodeService playerWxacodeService;
 
@@ -165,6 +164,7 @@ public class ApiOfficialEventController extends BaseController {
         return success(data);
     }
 
+    @Operation(summary = "官方活动详情")
     @GetMapping("/events/{id}")
     public AjaxResult detail(@PathVariable("id") Long id) {
         Map<String, Object> vo = officialEventService.detail(id, uid());
