@@ -231,6 +231,25 @@ class TopicCreateOpenClubPoolTest {
                 "未传字段的新建主题必须默认开放承接池 —— 前端显式上送是同一个口径的前半段,后端缺省是后半段");
     }
 
+    /**
+     * D3(2026-09-05,业主 2026-10-31 再次确认):商家发的城市定向只能自己带,不邀俱乐部 ——
+     * 以商家主体(scope=MERCHANT)发布时,不论显式开还是未传(12B 的缺省是开),公开承接池都必须落 0。
+     */
+    @Test
+    void createTopic_neverOpensClubPoolForMerchantScopedCityOrientation() {
+        for (Integer requested : Arrays.asList(1, null)) {
+            Mockito.clearInvocations(cmsTopicMapper);
+            com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
+            TopicCreateDTO dto = cityOrientationDto(requested);
+            dto.setScope("MERCHANT");
+            com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).createTopic(dto, 42L, "tester");
+            ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
+            verify(cmsTopicMapper).insertCmsTopic(cap.capture());
+            assertEquals(0, cap.getValue().getOpenClubPool(),
+                    "商家城市定向的承接池必须恒 0(requested=" + requested + ") —— 默认开不能替商家打开");
+        }
+    }
+
     @Test
     void createTopic_keeps_explicit_closed_switch_for_city_orientation() {
         // 主办手动关 = 显式 0,必须如实落库(默认开不等于写死开)。

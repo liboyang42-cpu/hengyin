@@ -32,6 +32,9 @@ public class ApiPricingController extends BaseController {
     @Autowired
     private ICmsTopicService cmsTopicService;
 
+    @Autowired
+    private com.chengyinhub.business.service.impl.MemberIdentityService memberIdentityService;
+
     @Operation(summary = "定价预览(阵容+成本构成+底价P_min)")
     @PostMapping("/preview")
     public AjaxResult preview(@RequestBody Map<String, Object> body) {
@@ -63,7 +66,14 @@ public class ApiPricingController extends BaseController {
         try {
             // 双票:guidedPrice(有人带)+ selfPrice(无人带,复用自玩票);兼容旧字段 finalPrice→guided
             BigDecimal guidedPrice = body.get("guidedPrice") != null ? asBd(body.get("guidedPrice")) : asBd(body.get("finalPrice"));
-            pricingService.confirmPrice(topicId, guidedPrice, asBd(body.get("selfPrice")),
+            BigDecimal selfPrice = asBd(body.get("selfPrice"));
+            // 2026-10-31 业主:开了承接、还在招商的主题可以先不定价,招商结束后在这里定终价。
+            // 发布时票价是 0 ⇒ 按免费主题豁免了实名;终价一旦收费,实名闸必须在这一步补上(电商法 §27),
+            // 否则「先发免费、后定收费」就是绕过发布者实名的口子。
+            if ((isPositive(guidedPrice) || isPositive(selfPrice)) && !memberIdentityService.isRegistered(ownerOf(topicId))) {
+                return error("收费主题要先登记发布者实名(姓名与身份证号),再确认终价");
+            }
+            pricingService.confirmPrice(topicId, guidedPrice, selfPrice,
                     asInt(body.get("guidedInventory")), asBd(body.get("leadCost")),
                     asInt(body.get("teamSize")));
             return AjaxResult.success("终价已确认，请等待开售审核");
@@ -79,6 +89,13 @@ public class ApiPricingController extends BaseController {
         if (OwnershipUtils.notOwner(topic.getMemberId(), memberId)) return error("仅主题发布者可定价");
         return null;
     }
+
+    private Long ownerOf(Long topicId) {
+        CmsTopic topic = cmsTopicService.selectCmsTopicById(topicId);
+        return topic == null ? null : topic.getMemberId();
+    }
+
+    private static boolean isPositive(BigDecimal v) { return v != null && v.signum() > 0; }
 
     private static Long asLong(Object o) { return o == null ? null : Long.valueOf(String.valueOf(o).trim()); }
     private static Integer asInt(Object o) { return o == null ? null : Integer.valueOf(String.valueOf(o).trim()); }

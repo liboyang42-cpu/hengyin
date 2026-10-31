@@ -122,6 +122,8 @@
   gap: var(--cy-space-1-5);
 }
 .qa-btn--tap { opacity: .6; }
+/* 2026-10-31:发布时没开的承接,工作台对应按钮灰掉;点了说明原因(merchantinfo.hostRecruitGate) */
+.qa-btn--off { opacity: .35; }
 .qa-ico {
   width: 104rpx;
   height: 104rpx;

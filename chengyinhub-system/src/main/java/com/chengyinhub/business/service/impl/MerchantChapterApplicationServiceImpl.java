@@ -378,6 +378,10 @@ public class MerchantChapterApplicationServiceImpl implements IMerchantChapterAp
                 row.put("address", m.getAddress());
                 row.put("chapterId", chapter.getId());
                 row.put("chapterName", chapter.getName() == null ? "未命名章节" : chapter.getName());
+                // 2026-10-31 业主:每一站一个档位,商家只能接受或拒绝 —— 邀约里要写清这一站的档与条件(只读)
+                row.put("termsMode", chapter.getTermsMode() == null ? "PERK" : chapter.getTermsMode());
+                row.put("perkMinValue", chapter.getPerkMinValue());
+                row.put("maxPerHeadFee", chapter.getMaxPerHeadFee());
                 row.put("distance", m instanceof MerchantSearchQuery ? ((MerchantSearchQuery) m).getDistance() : null);
                 if (withdrawals.isEmpty()) {
                     if (com.chengyinhub.business.domain.enums.TopicLifecycleState.commercialTermsFrozen(topic.getLifecycle())

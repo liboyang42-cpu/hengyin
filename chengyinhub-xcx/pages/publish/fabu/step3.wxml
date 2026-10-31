@@ -99,8 +99,10 @@
                归属俱乐部的主题(俱乐部自办团 / 自动挂靠)同样不露面、不上送 1:
                池的读侧一直排除 club_id 非空的主题,服务端 resolveOpenClubPool 也恒 0
                (2026-09-15 补充裁决,审查D §1 第 4 条)。 -->
-          <view class="pd-section-title" wx:if="{{formData.productType === 1 && !formData.clubId}}">俱乐部承接</view>
-          <view class="node-card" wx:if="{{formData.productType === 1 && !formData.clubId}}">
+          <!-- D3(2026-09-05,业主 2026-10-31 再次确认):商家发的城市定向只能自己带,不邀俱乐部 —— 商家主体不露面、上送恒 0,
+               后端 CmsTopicServiceImpl.isMerchantScope 同样恒 0。 -->
+          <view class="pd-section-title" wx:if="{{formData.productType === 1 && !formData.clubId && operationScope !== 'MERCHANT'}}">俱乐部承接</view>
+          <view class="node-card" wx:if="{{formData.productType === 1 && !formData.clubId && operationScope !== 'MERCHANT'}}">
             <view class="node-card__row">
               <view class="node-card__ico"><cy-icon name="tab-club" size="32" /></view>
               <view class="node-card__main">

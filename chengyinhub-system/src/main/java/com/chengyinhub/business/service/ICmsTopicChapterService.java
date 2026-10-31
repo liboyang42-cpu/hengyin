@@ -116,6 +116,11 @@ public interface ICmsTopicChapterService
 
     public void configureSupplyTerms(Long chapterId, ChapterSupplyTermsDTO terms);
 
+
+    /** 主办方在工作台改某一站的档位:锁内校验归属,规则与后台 configureSupplyTerms 同一套。 */
+
+    void configureSupplyTermsAsOwner(Long chapterId, Long memberId, ChapterSupplyTermsDTO terms);
+
     /** 按章节读取人工批次容量；尚未配置时返回三数全空的 DTO。 */
     public ChapterServiceCapacityDTO getServiceCapacity(Long chapterId);
 

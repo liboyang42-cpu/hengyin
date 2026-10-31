@@ -4,12 +4,14 @@ import com.chengyinhub.business.domain.Club;
 import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.domain.CmsRegistrationMerchant;
 import com.chengyinhub.business.domain.CmsTopic;
+import com.chengyinhub.business.domain.CmsTopicChapter;
 import com.chengyinhub.business.domain.CmsTopicNode;
 import com.chengyinhub.business.domain.CoopInvite;
 import com.chengyinhub.business.domain.MmsMerchant;
 import com.chengyinhub.business.domain.MerchantChapterApplication;
 import com.chengyinhub.business.domain.ViewRegistrationMerchant;
 import com.chengyinhub.business.domain.enums.TopicLifecycleState;
+import com.chengyinhub.business.mapper.CmsTopicChapterMapper;
 import com.chengyinhub.business.service.IClubService;
 import com.chengyinhub.business.service.ICmsRegistrationMerchantService;
 import com.chengyinhub.business.service.ICmsRegistrationService;
@@ -22,6 +24,7 @@ import com.chengyinhub.business.service.IMmsMerchantService;
 import com.chengyinhub.business.service.IProjectHomeReadService;
 import com.chengyinhub.common.constant.RecruitmentWindowPolicy;
 import com.chengyinhub.common.utils.DateUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -48,6 +51,9 @@ public class ProjectHomeReadServiceImpl implements IProjectHomeReadService {
     private final IMmsMerchantService merchantService;
     private final IMerchantRegistrationDetailReadService detailReadService;
     private final IMerchantChapterApplicationService merchantChapterApplicationService;
+    /** 只读「开了商家承接的站有几个」给工作台的「招商」按钮定灰;缺席时不下发该字段,前端按可用处理(真闸在写接口)。 */
+    @Autowired(required = false)
+    private CmsTopicChapterMapper cmsTopicChapterMapper;
 
     public ProjectHomeReadServiceImpl(ICmsTopicService topicService,
                                       ICmsTopicNodeService topicNodeService,
@@ -217,6 +223,11 @@ public class ProjectHomeReadServiceImpl implements IProjectHomeReadService {
         host.put("clubs", buildHostClubs(invites));
         host.put("merchants", buildHostMerchants(topic));
         host.put("players", buildPlayers(topic.getId()));
+        // 2026-10-31 业主:俱乐部 / 商家招商在发布之后做,发布时的开关决定工作台能用什么 —— 关着的那颗按钮灰掉。
+        // 城市定向看公开承接池;自由探索看有没有开了商家承接的站(章节 recruit_enabled)。
+        host.put("openClubPool", topic.getOpenClubPool() != null && topic.getOpenClubPool() == 1);
+        Integer recruitChapters = countRecruitChapters(topic.getId());
+        if (recruitChapters != null) host.put("recruitChapterCount", recruitChapters);
         // 主页入口与编辑/保存共用现有编辑窗口，避免主办方点击后才发现内容已冻结。
         try {
             com.chengyinhub.business.util.TopicEditWindow.Scope scope =
@@ -231,6 +242,17 @@ public class ProjectHomeReadServiceImpl implements IProjectHomeReadService {
             host.put("editReason", closed.getMessage());
         }
         return host;
+    }
+
+    private Integer countRecruitChapters(Long topicId) {
+        if (cmsTopicChapterMapper == null || topicId == null) return null;
+        CmsTopicChapter q = new CmsTopicChapter();
+        q.setTopicId(topicId);
+        int n = 0;
+        for (CmsTopicChapter c : cmsTopicChapterMapper.selectCmsTopicChapterList(q)) {
+            if (c != null && c.getRecruitEnabled() != null && c.getRecruitEnabled() == 1) n++;
+        }
+        return n;
     }
 
     /** 招商进度:有几个站、几个站已经有人接、还有几家在等确认。 */

@@ -461,6 +461,64 @@ public class CmsTopicChapterServiceImpl implements ICmsTopicChapterService
         if (ChapterRecruitmentRules.isEnabled(chapter.getRecruitEnabled())) {
             ChapterRecruitmentRules.assertV1RecruitmentTermsMode(termsMode, directPayer(chapter.getTopicId()) != null);
         }
+        applySupplyTerms(chapterId, chapter, terms);
+    }
+
+    /**
+     * 主办方在工作台改某一站的档位(2026-10-31 业主:招商在发布之后做,逐站一个档位)。
+     * <p>与后台 {@link #configureSupplyTerms} 同一套形状 / 改档 / 容量 / 计酬闸({@link #applySupplyTerms}),
+     * 只是把后台的数据范围闸换成<b>锁内归属校验</b>:先锁主题内容再 FOR UPDATE 读主题,
+     * 归属人不是 memberId 就拒 —— 新写接口的 owner 校验落在锁里,不是先读后写。
+     * <p>主办侧一律按开放招商 V1 口径:只有权益 / 引流,俱乐部自己发的自由探索(直付主体 = 俱乐部)才多一档计酬。
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void configureSupplyTermsAsOwner(Long chapterId, Long memberId, ChapterSupplyTermsDTO terms)
+    {
+        if (terms == null) {
+            throw new IllegalStateException("缺少供给条款配置");
+        }
+        if (memberId == null || memberId <= 0) {
+            throw new IllegalStateException("请先登录");
+        }
+        String termsMode = terms.getTermsMode();
+        if (!TermsMode.isValid(termsMode)) {
+            throw new IllegalStateException("条款档不合法:" + termsMode + "(须为 PERK/REVSHARE/TRAFFIC)");
+        }
+        assertTermsShape(terms);
+        CmsTopicChapter locator = chapterId == null || chapterId <= 0 ? null
+                : cmsTopicChapterMapper.selectCmsTopicChapterById(chapterId);
+        if (locator == null || locator.getTopicId() == null) throw new IllegalStateException("章节不存在");
+        Long topicId = locator.getTopicId();
+        contentWriteGuard.lockTopicContent(topicId);
+        CmsTopic topic = cmsTopicMapper.selectCmsTopicByIdForUpdate(topicId);
+        if (topic == null || Integer.valueOf(2).equals(topic.getDelFlag()) || topic.getLifecycle() == null) {
+            throw new IllegalStateException("主题不存在、已删除或生命周期未知，拒绝修改章节");
+        }
+        if (!memberId.equals(topic.getMemberId())) {
+            throw new IllegalStateException("无权操作该主题");
+        }
+        TopicLifecycleState lifecycle;
+        try {
+            lifecycle = TopicLifecycleState.fromCode(topic.getLifecycle());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalStateException("主题不存在、已删除或生命周期未知，拒绝修改章节");
+        }
+        if (lifecycle.isSaleStarted()) {
+            throw new IllegalStateException("主题已开售，这一站的档位已冻结");
+        }
+        CmsTopicChapter chapter = cmsTopicChapterMapper.selectContentByIdForUpdate(chapterId);
+        if (chapter == null || !java.util.Objects.equals(topicId, chapter.getTopicId())) {
+            throw new IllegalStateException("章节归属已变化，请刷新后重试");
+        }
+        ChapterRecruitmentRules.assertV1RecruitmentTermsMode(termsMode, directPayer(topicId) != null);
+        applySupplyTerms(chapterId, chapter, terms);
+    }
+
+    /** 两条入口(后台 / 主办)共用的改档主体:调用方已持锁并校验过范围或归属。 */
+    private void applySupplyTerms(Long chapterId, CmsTopicChapter chapter, ChapterSupplyTermsDTO terms)
+    {
+        String termsMode = terms.getTermsMode();
 
         // ★ 闸:D21 —— 计酬档只对 ③-自营 开放。第三方的计酬 = 第三方间分钱 = 二清,须等收付通(P0-43)。
         //   isPlatformOwned 自己 fail-closed(查不到 CONTENT 槽即返 false)。

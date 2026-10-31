@@ -2375,6 +2375,15 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
      * @param clubId      归属俱乐部;非空 = 俱乐部自办团,恒不开放
      * @return 落库的 open_club_pool(1 开放 / 0 不开放)
      */
+    /**
+     * D3(2026-09-05,业主 2026-10-31 再次确认):商家发的城市定向只能自己带,不邀俱乐部 ——
+     * 以商家主体(scope=MERCHANT)发布 / 编辑时公开承接池恒 0,不论请求里带没带开关。
+     * 未传时 resolveOpenClubPool 会按 12B 默认开,这里必须先截住,否则默认值就是绕过口。
+     */
+    private static boolean isMerchantScope(TopicCreateDTO dto) {
+        return dto != null && "MERCHANT".equalsIgnoreCase(dto.getScope());
+    }
+
     private Integer resolveOpenClubPool(Integer requested, Integer productType, Long clubId) {
         if (productType == null || productType != ProductType.ORIENTEERING) {
             return 0;
@@ -2515,7 +2524,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         topic.setMerchantStatus(resolveMerchantPoolFlag(dto.getOpenMerchantPool(), memberId));
         // 开放范围·俱乐部承接(P0-4):2026-09-15 裁决 12B 起默认开,主办可手动关(未传=开,显式 0=关);
         // 归属俱乐部的主题(含自动挂靠)恒 0 —— 俱乐部自办团不进公开承接池(补充裁决)。
-        topic.setOpenClubPool(resolveOpenClubPool(dto.getOpenClubPool(), productType, topic.getClubId()));
+        topic.setOpenClubPool(isMerchantScope(dto) ? 0 : resolveOpenClubPool(dto.getOpenClubPool(), productType, topic.getClubId()));
         // [P0-50/D21] ③ 自由探索**必须走招募链**(2026-07-16 拍板)。
         //
         // 为什么是硬性的:③ 的四道闸 —— 地板价、锁价费率快照(P0-28)、每必选章 SUPPLY≥1、
@@ -2963,7 +2972,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         patch.setMerchantStatus(resolveMerchantPoolFlag(dto.getOpenMerchantPool(), memberId));
         // 归属俱乐部的主题(含自动挂靠)恒 0:与建题同口径 —— 俱乐部自办团不进公开承接池
         // (2026-09-15 补充裁决,审查D §1 第 4 条);其余沿用编辑侧原语义(显式 1 才开)。
-        patch.setOpenClubPool(patch.getClubId() != null ? 0
+        patch.setOpenClubPool(patch.getClubId() != null || isMerchantScope(dto) ? 0
                 : dto.getOpenClubPool() != null && dto.getOpenClubPool() == 1 ? 1 : 0);
 
         // R19-DRAFT2:与 createTopicInternal 同一道闸同一分流 —— 招募截止属完整度,草稿可空。
