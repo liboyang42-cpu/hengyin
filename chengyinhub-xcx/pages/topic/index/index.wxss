@@ -1950,6 +1950,7 @@ button::after {
 .topic .hero-fav { width: 96rpx; height: 96rpx; border-radius: 27rpx; background: rgba(255,255,255,.12); border: 1rpx solid rgba(255,255,255,.3); box-sizing: border-box; } /* ds-ok */
 .topic .hero-fav.is-on { background: #fff; } /* ds-ok */
 .bm-ic { width: 35rpx; height: 35rpx; display: block; }
+.topic .hero-share { color: #fff; } /* ds-ok: 与收藏方块同一枚玻璃方块,图标白色 */
 .topic .hero-type { padding-left: 8rpx; font-size: 25rpx; font-weight: 600; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .topic .hero-type--city { color: #5AA9FF; } /* ds-ok: v13 城市定向蓝 */
 .topic .hero-type--free { color: #7CF0A0; } /* ds-ok: v13 自由探索绿 */

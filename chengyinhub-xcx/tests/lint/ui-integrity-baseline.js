@@ -1,3 +1,4 @@
+// 2026-10-31 业主:主题详情收藏旁加分享(进通用分享页),topic/index/index.js 加 shareCard / privacyGateShow 数据 3 行与 openShareCard / onShareCardClose / 隐私弹窗两个方法共 13 行,其后 U4-DYNAMIC 锚点 2022→2038,调用行逐字相同、理由与条数不变;u4Dynamic digest 按门禁 baselineKeyDigest 重算。
 // 2026-10-31 F3/F5(P-7 / P-8):index/index.js、roam/index.js 加活动码落地 / 漫游轨迹上送 / 分享页改版后,20 条锚点仅行号位移,逐条以 master 原行与新行逐字一致定位,理由与条数不变、不新增登记;digest 按门禁重算。
 // 2026-10-31 核对 F6(走查 P-38「全部」= 所有距离):nearby/index.js onLayerTap 的「全部」分支由 9 行收成 7 行,其后三条锚点仅行号位移 959→957(U1-VARIABLE / U5)、1003→1001、1024→1022(U5),调用行逐字相同、理由与条数不变;u1Variable / u5Silent digest 按门禁 baselineKeyDigest 重算。
 // 2026-10-31 dw29 发布集成(master + album-r4 + p4-template + l1 + l6 + l5):两侧各自重锚的登记取并集后,37 条旧行号副本(另一侧已换新 key 且命中)删除;11 条锚点随合并后源码仅行号位移(app.js 427→428、首页 1056→1060 / 1163→1167 / 1272→1276 / 1379→1383、topic/index 2053→2022、square/detail 1280→1281、play 1789→1791 / U5 8068→8072、fabu 6782→6798 / 9075→9091),逐条以合并前所在分支的原行与新行逐字一致定位,理由与条数不变、不新增登记;u1Variable / u4Dynamic / u5Silent digest 按门禁 baselineKeyDigest 重算。
@@ -895,7 +896,7 @@ module.exports = {
 // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):45 个既有锚点仅行号位移换 key + 本线 6 处新增登记,digest 按门禁同一算法(sha256 of sorted keys joined by \n)重算。
 // 2026-10-20 合并 master(#327 等)进 #293:两侧重锚逐条按合并后源码同一行文本定位一致(fabu 12 条、merchantinfo 2 条、scene-club-edit 1 条),square/list 196/1259 随 #325 点赞修复后移一行;digest 按门禁同一算法重算。
 // 2026-10-27 devfix L07(21 处动态 setData 仅行号位移):逐条以 master 原行与新行逐字比对一致,理由一字未改,digest 按门禁同算法重算。
-"1200301d4023707f734a0b92a0b2a1fdb2d0957753b6d932bc341577e82229b4",
+"6dbe94f04a0d31df24c3865c6509654bc4b309080620011cf6f9c37576fdc2e8",
 // 2026-10-28 模板页货架改版(#652)合 master(#610):本线删 template/index 两条 + master play 1621→1624 重锚，合并树 60 条，digest 按同一算法重算。
 // 2026-10-20 R5 尾段(#327,owner 批准 12 条重锚):fabu 729→731、898→900、2524→2530、3570→3588、3951→3969、4957→4990、5215→5248、5866→5899、5876→5909、5929→5962、6270→6303、7936→8060,逐行比对 master 原行一字未改,理由与条数 58 不变;digest 按同一算法显式重算。
       // 2026-08-20 开卡包四拍动效:u5Silent 条数不变(12),只是 play/index.js 的调用点
@@ -1297,7 +1298,7 @@ module.exports = {
     "chengyinhub-xcx/pages/square/components/route-map/index.js:56": "同一loadRoute业务拒绝清图，routePreview.build([])只返回固定路线视图字段并触发empty；共享topic-route-preview实现与WXML逐字段核对，不从响应提供键。owner=小程序；复核=2026-10-24",
     "chengyinhub-xcx/pages/square/components/route-map/index.js:62": "同一loadRoute网络失败清图，current()先校验session revision/read epoch，固定投影routePreview.build([])与empty事件给宿主可见空态；不回写其他页面。owner=小程序；复核=2026-10-24",
     "chengyinhub-xcx/pages/square/components/route-map/index.js:71": "buildRouteMap的局部view只由utils/topic-route-preview.build(chaptersList)产生；固定路线视图八字段，routeReady决定ready/empty，节点只供值、不能供setData键；地图与提示消费其余七字段，routeIsRoad仅同源固定判定元数据，不声称直接渲染。owner=小程序；复核=2026-10-24",
-    "chengyinhub-xcx/pages/topic/index/index.js:2022": "buildRouteMap只提交utils/topic-route-preview.build(chaptersList)固定八个路线视图字段；每章道路独立校验，缺损退节点虚线，不展开章节任意键；路线地图/提示与JS选择消费其余七字段，routeIsRoad仅同源固定判定元数据，不声称直接渲染。owner=小程序；复核=2026-10-24",
+    "chengyinhub-xcx/pages/topic/index/index.js:2038": "buildRouteMap只提交utils/topic-route-preview.build(chaptersList)固定八个路线视图字段；每章道路独立校验，缺损退节点虚线，不展开章节任意键；路线地图/提示与JS选择消费其余七字段，routeIsRoad仅同源固定判定元数据，不声称直接渲染。owner=小程序；复核=2026-10-24",
 
     // 2026-10-19 Claude 小程序线移植到 master:本线新增 6 处动态 setData 逐项登记(棘轮/digest 待审批后同步)。
     "chengyinhub-xcx/pages/activity/official-mine/index.js:155": "BL-80 通知复盘按卡片位置拼 broadcasts[i]._statsLoading/_statsText 路径写入「正在读取复盘」;字段在本页 wxml 该卡触达行消费;owner=小程序,复核=2026-12-31",
