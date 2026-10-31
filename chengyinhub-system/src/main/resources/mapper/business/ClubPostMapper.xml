@@ -105,6 +105,34 @@
         limit #{limit}
     </select>
 
+    <!-- 全站帖文流(2026-10-29 业主:俱乐部 tab 改名「发现」,帖文看全站)。
+         与俱乐部详情同一口径:俱乐部未删且审核通过;不公开的俱乐部只对主理人和在册成员可见(= canViewClub);
+         帖子 del_flag=0(驳回回调 del_flag=2 即下架);viewer 与作者任一方拉黑对方都不出现。
+         order by id desc 走主键倒序扫描,不需要新索引。 -->
+    <select id="selectSiteFeed" resultMap="ClubPostResult">
+        select cp.id, cp.club_id, cp.author_member_id, cp.content, cp.images, cp.ref_type, cp.ref_id, cp.type,
+               cp.like_count, cp.comment_count, cp.del_flag, cp.is_pinned, cp.pinned_at,
+               cp.version, cp.create_time, cp.update_time,
+               exists(select 1 from club_post_revision r where r.post_id = cp.id) as edited,
+               m.nickname as nickname, m.avatar as avatar,
+               c.name as clubName, c.logo as clubLogo
+        from club_post cp
+        left join ums_member m on m.id = cp.author_member_id
+        join club c on c.id = cp.club_id and c.del_flag = 0 and c.status = 1
+        where cp.del_flag = 0
+          and (c.public_visible is null or c.public_visible &lt;&gt; 0
+               or c.member_id = #{viewerId}
+               or exists(select 1 from club_member cm
+                         where cm.club_id = c.id and cm.member_id = #{viewerId}
+                           and cm.status = 1 and cm.del_flag = 0))
+          and not exists(select 1 from im_block b
+                         where (b.member_id = #{viewerId} and b.blocked_member_id = cp.author_member_id)
+                            or (b.member_id = cp.author_member_id and b.blocked_member_id = #{viewerId}))
+          <if test="beforeId != null"> and cp.id &lt; #{beforeId}</if>
+        order by cp.id desc
+        limit #{limit}
+    </select>
+
     <insert id="insertClubPost" parameterType="ClubPost" useGeneratedKeys="true" keyProperty="id">
         insert into club_post (club_id, author_member_id, content, images, ref_type, ref_id, type,
                                like_count, comment_count, del_flag, is_pinned, version, create_time)

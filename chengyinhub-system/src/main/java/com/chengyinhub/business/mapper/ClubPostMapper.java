@@ -49,4 +49,8 @@ public interface ClubPostMapper
     /** 聚合动态流:按俱乐部集合取。clubIds 必须非空(空集合会生成 `in ()` 语法错,调用方先挡)。 */
     List<ClubPost> selectFeedByClubIds(@org.apache.ibatis.annotations.Param("clubIds") List<Long> clubIds,
                                        @org.apache.ibatis.annotations.Param("limit") int limit);
+
+    /** 全站帖文流(发现页):审核通过且对 viewer 可见的俱乐部的帖文,排除双向拉黑,按 id 倒序,beforeId 为翻页游标。 */
+    List<ClubPost> selectSiteFeed(@Param("viewerId") Long viewerId, @Param("beforeId") Long beforeId,
+                                  @Param("limit") int limit);
 }

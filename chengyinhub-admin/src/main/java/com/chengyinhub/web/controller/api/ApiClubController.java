@@ -1728,13 +1728,13 @@ public class ApiClubController extends BaseController {
      * 聚合动态流。俱乐部页的「帖文」tab 吃这个 —— 在此之前动态只活在单个俱乐部
      * 详情页里,没有跨俱乐部的流,前端想做 feed 只能自己一个个俱乐部拉。
      *
-     * 范围按身份给,不是全站公开流:
+     * 不传 scope(老客户端)时范围按身份给:
      *   玩家 → 我加入的俱乐部
      *   商家 → 我合作过(邀约已接受)的俱乐部
-     * 一个都没有就返回空列表 —— 那是正常状态,不是错误。全站流会让「关注」
-     * 这件事失去意义,也会把没有任何关系的俱乐部内容推给不相干的人。
+     * 一个都没有就返回空列表 —— 那是正常状态,不是错误。
+     * scope=all(2026-10-29 业主拍板「发现」页)是全站流:见 ClubPostMapper.selectSiteFeed。
      */
-    @Operation(summary = "聚合动态流(我加入/我合作过的俱乐部)")
+    @Operation(summary = "聚合动态流(我加入/我合作过的俱乐部;scope=all 为全站)")
     @PostMapping("/post/feed")
     public AjaxResult postFeed(@RequestBody(required = false) Map<String, Object> body) {
         Long memberId;
@@ -1748,6 +1748,24 @@ public class ApiClubController extends BaseController {
         }
         if (limit <= 0) limit = 20;
         if (limit > 50) limit = 50;
+
+        // 2026-10-29 业主:俱乐部 tab 改名「发现」,帖文改看全站。scope=all 走全站流,
+        // 可见性 / 拉黑 / 删除在 SQL 里判;不传 scope 的老客户端仍是「我加入 / 我合作过」。
+        if (body != null && "all".equals(String.valueOf(body.get("scope")))) {
+            if (memberId == null || memberId <= 0) return error("请先登录");
+            Long beforeId = null;
+            if (body.get("beforeId") != null) {
+                try { beforeId = Long.parseLong(String.valueOf(body.get("beforeId")).trim()); } catch (Exception ignored) { }
+            }
+            List<ClubPost> page = clubPostService.selectSiteFeed(memberId, beforeId, limit + 1);
+            boolean hasMore = page.size() > limit;
+            List<ClubPost> rows = hasMore ? new ArrayList<>(page.subList(0, limit)) : page;
+            decorateFeedRows(rows, memberId);
+            Map<String, Object> d = new HashMap<>();
+            d.put("rows", rows);
+            d.put("hasMore", hasMore);
+            return AjaxResult.success(d);
+        }
 
         Set<Long> scope = new LinkedHashSet<>();
         // 我加入的(含我自己建的 —— 创建者也是成员)
@@ -1765,6 +1783,14 @@ public class ApiClubController extends BaseController {
         }
 
         List<ClubPost> posts = clubPostService.selectFeedByClubIds(new ArrayList<>(scope), limit);
+        decorateFeedRows(posts, memberId);
+        Map<String, Object> d = new HashMap<>();
+        d.put("rows", posts);
+        d.put("clubCount", scope.size());
+        return AjaxResult.success(d);
+    }
+
+    private void decorateFeedRows(List<ClubPost> posts, Long memberId) {
         // 聚合流与俱乐部页是同一批帖子,引用投影也得给 —— 不给的话前端拿不到 sportName,
         // variant 判定恒假,成绩卡/模板卡在达人页永远不出现(俱乐部页里却出现),同一条帖两种样子。
         projectPostReferences(posts);
@@ -1779,10 +1805,6 @@ public class ApiClubController extends BaseController {
             }
             p.setViewerCanManage(canManage);
         }
-        Map<String, Object> d = new HashMap<>();
-        d.put("rows", posts);
-        d.put("clubCount", scope.size());
-        return AjaxResult.success(d);
     }
 
     /** 当前点赞状态快照，不是原写请求的最终回执。沿用动态列表的俱乐部可见性。 */

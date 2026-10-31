@@ -51,4 +51,7 @@ public interface IClubPostService
 
     /** 聚合动态流:按俱乐部集合取,clubIds 为空直接返回空列表。 */
     List<ClubPost> selectFeedByClubIds(java.util.List<Long> clubIds, int limit);
+
+    /** 全站帖文流(发现页):可见性与拉黑在 SQL 里判,limit 夹到 [1,51]。 */
+    List<ClubPost> selectSiteFeed(Long viewerId, Long beforeId, int limit);
 }
