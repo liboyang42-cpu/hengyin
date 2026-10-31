@@ -35,17 +35,20 @@ public class RegistrationTicketApplication {
     private final IPerkLedgerService perkLedgerService;
     private final QrcodeServiceImpl qrcodeService;
     private final String dynSecret;
+    /** V-02:新码签发即作废同报名单同类型的旧码。 */
+    private final RegistrationDynCodeLedger dynCodeLedger;
 
     public RegistrationTicketApplication(ICmsRegistrationService registrationService,
             RegistrationSeatService registrationSeatService, ICmsActivityService activityService,
             IPerkLedgerService perkLedgerService, QrcodeServiceImpl qrcodeService,
-            @Value("${verify.dyncode-secret:${token.secret}}") String dynSecret) {
+            @Value("${verify.dyncode-secret:${token.secret}}") String dynSecret, RegistrationDynCodeLedger dynCodeLedger) {
         this.registrationService = registrationService;
         this.registrationSeatService = registrationSeatService;
         this.activityService = activityService;
         this.perkLedgerService = perkLedgerService;
         this.qrcodeService = qrcodeService;
         this.dynSecret = dynSecret;
+        this.dynCodeLedger = dynCodeLedger;
     }
 
     public AjaxResult issueDynCode(Long actorMemberId, Long registrationId, Integer seatNo) {
@@ -119,6 +122,10 @@ public class RegistrationTicketApplication {
             qrcodeUrl = qrcodeService.generateInlineQrcode(code, 300, 300);
         } catch (Exception ignore) {
             logger.error("签发核销码二维码生成失败", ignore);
+        }
+        // 只有真把新码交到玩家手里(有图)才作废旧码;出图失败时玩家手上的旧码照常可用。
+        if (qrcodeUrl != null && dynCodeLedger != null) {
+            dynCodeLedger.recordIssued(code, DYN_TTL_MS);
         }
 
         Map<String, Object> data = new HashMap<>();

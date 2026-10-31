@@ -42,6 +42,7 @@ function loadPage(js = source()) {
       if (request === '../../utils/play-engine.js') return require('../../utils/play-engine.js')
       // PR10 F-W1-12:页面新依赖登录引导判定(真模块,无副作用)
       if (request.endsWith('/utils/session/login-reload.js')) return require('../../utils/session/login-reload.js')
+      if (request.endsWith('/utils/ticket-expiry.js')) return require('../../utils/ticket-expiry.js')
       throw new Error('unexpected require: ' + request)
     },
   }

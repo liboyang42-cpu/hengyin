@@ -3444,7 +3444,7 @@ Page({
     if (this.data.isPreview || this.data.isMock) return;
     const regId = this.data.regId;
     if (!regId) { this._explainMissingEntryQr(); return; }
-    this.openScene('qr-ticket', { registrationId: regId });
+    this.openScene('qr-ticket', { registrationId: regId, title: this.data.topicName || '', until: this._passExpiresAt || '' });
   },
   /**
    * 从帖文/俱乐部等入口进来时页面只有 activityId/topicId,没有票夹带的 registrationId,
@@ -4197,6 +4197,7 @@ Page({
       // 通关奖励摘要:唯一渲染点(剧本 tab 的奖励卡)随起始页删除,这里只留 js 侧消费
       // (完成页判「有没有券」与奖励文案),所以退回实例字段,不再占一个没人渲染的 data 位。
       that._themeReward = d.reward || null;
+      that._passExpiresAt = d.expiresAt || '';
       const topicName = d.topicName || that._entryTopicName || '';
       that._vitalsOn = d.vitalsOn || null;
       // 2026-09-22 拆除:此处原先按主题名正则 /^预制人生/ 把整局 redirectTo 到硬编码分包
@@ -4278,6 +4279,7 @@ Page({
     that._routeNodeCatalog = catalog;
     that._applyLook(d.look); const chapter = that.buildChapter(d, nodes); /* 画面风格先落,章节配色 / 时间段才取得到 */
     this._historyNodes = [];
+    that._passExpiresAt = d.expiresAt || '';
     this.setData({
       loading: false, emptyTip: '', emptyKind: '', topicId: d.topicId || '', topicName: d.topicName || this._entryTopicName || '', topicDesc: d.topicDesc || '', topicAudioUrl: d.topicAudioUrl || '', topicCover: d.topicCover || '', mode, serverMode: mode,
       modeLabel: mode == 2 ? '自由探索' : '城市定向',
@@ -6801,7 +6803,7 @@ Page({
         if (seatChoice(res.data, regId)) {
           // 旧优惠券出码调用也走同一明确选席组件；不能把整单默认成第一席。
           that.setData({ 'ticket.loading': false, 'ticket.url': '', 'ticket.code': '' });
-          that.openScene('qr-ticket', { registrationId: regId });
+          that.openScene('qr-ticket', { registrationId: regId, title: that.data.topicName || '', until: that._passExpiresAt || '' });
           return;
         }
         that.setData({ 'ticket.url': res.data.qrcodeUrl || '', 'ticket.code': res.data.code || '', 'ticket.loading': false, 'ticket.expiresAt': res.data.expiresAt || 0 });

@@ -19,8 +19,12 @@ function validDays(data, now) {
   return left > 0 ? Math.min(ninety, left) : 0
 }
 
-function buildTopicStatBar(info) {
+/* opts.keepZeroCounts(V-23,2026-10-29 业主「总里程右边原来还有很多数据，不能都没了」):
+   玩家详情页的数据条在总里程之后照常出「参与商家 / 已参加」,真实为 0 就写 0 —— 不因为是 0 整格消失。
+   商家页不传,口径不变。 */
+function buildTopicStatBar(info, opts) {
   const data = info || {}
+  const keepZeroCounts = !!(opts && opts.keepZeroCounts)
   const cells = []
 
   const rating = positiveNumber(data.averageRating)
@@ -39,10 +43,10 @@ function buildTopicStatBar(info) {
     const days = validDays(data)
     if (days) cells.push({ key: 'valid', label: '有效期', value: String(days), sub: '天' })
     const shops = Math.floor(positiveNumber(data.registrationMerchantCount))
-    if (shops) cells.push({ key: 'merchant', label: '参与商家', value: String(shops), sub: '家' })
+    if (shops || keepZeroCounts) cells.push({ key: 'merchant', label: '参与商家', value: String(shops), sub: '家' })
     cells.push({ key: 'route', label: '路线', value: '不限', sub: '任意顺序' })
     const players = Math.floor(positiveNumber(data.playerCount))
-    if (players) cells.push({ key: 'players', label: '已参加', value: players.toLocaleString('en-US'), sub: '人' })
+    if (players || keepZeroCounts) cells.push({ key: 'players', label: '已参加', value: players.toLocaleString('en-US'), sub: '人' })
     return cells
   }
 
@@ -63,7 +67,12 @@ function buildTopicStatBar(info) {
   if (mileage) cells.push({ key: 'mileage', label: '总里程', value: String(mileage), sub: '公里' })
 
   const merchants = Math.floor(positiveNumber(data.registrationMerchantCount))
-  if (merchants) cells.push({ key: 'merchant', label: '参与商家', value: String(merchants), sub: '家' })
+  if (merchants || keepZeroCounts) cells.push({ key: 'merchant', label: '参与商家', value: String(merchants), sub: '家' })
+
+  if (keepZeroCounts) {
+    const players = Math.floor(positiveNumber(data.playerCount))
+    cells.push({ key: 'players', label: '已参加', value: players.toLocaleString('en-US'), sub: '人' })
+  }
 
   return cells
 }

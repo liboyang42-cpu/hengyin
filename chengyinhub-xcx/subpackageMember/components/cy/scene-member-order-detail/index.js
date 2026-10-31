@@ -53,29 +53,33 @@ function toDisplayTime(value) {
   return text || '';
 }
 
+// V-20:头图取主题/场次自己的封面并经 app.getImgUrl 补全(相对路径、http OSS 签名链接在真机上原样给不出图)。
+function firstImage(value) {
+  if (!value) return '';
+  let list = value;
+  if (typeof value === 'string') {
+    if (value.indexOf('[') === 0) {
+      try { list = JSON.parse(value); } catch (e) { list = []; }
+    } else {
+      list = value.split(/[,;]/);
+    }
+  }
+  if (!Array.isArray(list)) return '';
+  for (let i = 0; i < list.length; i += 1) {
+    const src = app && typeof app.getImgUrl === 'function' ? app.getImgUrl(String(list[i] || '').trim()) : String(list[i] || '').trim();
+    if (src) return src;
+  }
+  return '';
+}
+
 function resolveHeroImage(info) {
   const fallback = '/subpackageMember/images/icon_ticket_empty.svg';
   if (!info) return fallback;
-  if (info.cmsActivity && info.cmsActivity.imgUrl) return info.cmsActivity.imgUrl;
+  const activity = info.cmsActivity;
   const topic = info.cmsTopic;
-  if (topic) {
-    if (topic.imgArr) {
-      try {
-        const arr = typeof topic.imgArr === 'string' ? JSON.parse(topic.imgArr) : topic.imgArr;
-        if (Array.isArray(arr) && arr[0]) return arr[0];
-      } catch (e) { /* ignore */ }
-    }
-    if (topic.imgUrl) {
-      if (typeof topic.imgUrl === 'string' && topic.imgUrl.indexOf('[') === 0) {
-        try {
-          const arr = JSON.parse(topic.imgUrl);
-          if (Array.isArray(arr) && arr[0]) return arr[0];
-        } catch (e) { /* ignore */ }
-      }
-      return topic.imgUrl;
-    }
-  }
-  return fallback;
+  return (activity && (firstImage(activity.imgUrl) || firstImage(activity.imgArr)))
+    || (topic && (firstImage(topic.imgArr) || firstImage(topic.imgUrl)))
+    || fallback;
 }
 
 // 批5 完局面(图鉴 / 通关奖励到账明细 / J·R90 入口)的空态。
@@ -167,11 +171,9 @@ function toCompletionView(vo) {
   return view
 }
 
-function resolvePrimaryCta(orderStateKey, ticketWalletAvailable) {
-  if (orderStateKey === 'pending_payment') return 'pay';
-  if (!ticketWalletAvailable) return '';
-  if (orderStateKey === 'not_started' || orderStateKey === 'in_progress') return 'ticket';
-  return '';
+// V-20:订单详情不再放「查看票夹」,底部主 CTA 只剩待支付的「去支付」。
+function resolvePrimaryCta(orderStateKey) {
+  return orderStateKey === 'pending_payment' ? 'pay' : '';
 }
 
 function buildOrderTimeline(info) {
@@ -276,7 +278,7 @@ Component({
       orderTimeline: [],
       expiresAtText: '',
       primaryCta: '',
-      showSecondaryTicket: false,
+      ticketPriceShown: '',
       // 稿 578:2298:头图上的金额行/时间行与状态药丸,退款状态卡
       whenText: '',
       statusTone: 'neutral',
@@ -339,7 +341,7 @@ Component({
         info: {},
         completion: emptyCompletion(),
         primaryCta: '',
-        showSecondaryTicket: false,
+        ticketPriceShown: '',
         teamSheetShow: false,
         paying: false,
         cancelling: false,
@@ -480,19 +482,7 @@ Component({
       this.triggerEvent('back');
     },
 
-    /* 订单页通往票夹的唯一出口(底部主 CTA 与次级键都走它)。
-       2026-09-11 删掉快捷入口卡之后,原来的 goRoute/goPlay 与这里逐字相同,是重复的一份。
-       ⚠️ 方向是单向的:订单页能来票夹,票夹不回订单(2026-09-10 用户定)。 */
-    goSignInfo() {
-      const info = this.data.info || {};
-      if (Number(info.paymentStatus) !== 2 || Number(info.registrationStatus) !== 2) {
-        toast('支付待确认，请刷新订单');
-        return;
-      }
-      const stype = Number(info.ownerType) === 1 ? 0 : 2;
-      this._leave('/subpackageMember/signup/index?focusId=' + (info.id || '') + '&stype=' + stype);
-    },
-
+    /* V-20 业主 2026-10-29:订单详情不再放「查看票夹」,原 goSignInfo 出口随按钮一起删除。 */
 
     startOrderTeam() {
       const info = this.data.info || {}
@@ -992,10 +982,11 @@ Component({
             const qty = Number(info.orderNum) > 0 ? Number(info.orderNum) : 1;
             const pointAmt = Number(info.pointPaymentAmount);
             const wechatAmt = Number(info.wechatPaymentAmount);
-            // 票夹的 owner_type=1/2 列表由后端固定过滤 registration_status=2。
-            // 详情入口必须与它同口径，否则待支付/取消/退款/过期订单带 focusId 过去也永远找不到。
-            const ticketWalletAvailable = Number(info.registrationStatus) === 2 && Number(info.paymentStatus) === 2;
-            const primaryCta = resolvePrimaryCta(info.orderStateKey, ticketWalletAvailable);
+            const primaryCta = resolvePrimaryCta(info.orderStateKey);
+            // V-20:票价显示真实单价;免费报名没有票价快照时就是 ¥0,不写「—」。
+            const ticketPriceRaw = info.ticketPrice;
+            const ticketPriceShown = ticketPriceRaw !== undefined && ticketPriceRaw !== null && ticketPriceRaw !== ''
+              ? ticketPriceRaw : (info.isFreeOrder ? 0 : '');
 
             pageMotion.enter(that, 'pmPage'); pageMotion.countIn(that, 'odK'); that.setData({
               /* 稿 578:2298(D07)「大金额与状态先行」——头图上第一眼是实付金额,
@@ -1028,7 +1019,7 @@ Component({
               orderTimeline: buildOrderTimeline(info),
               expiresAtText: toDisplayTime(info.expiresAt),
               primaryCta: primaryCta,
-              showSecondaryTicket: ticketWalletAvailable && primaryCta !== 'ticket',
+              ticketPriceShown: ticketPriceShown,
               loadState: 'ready', loadErrorText: '', loadFailureVisible: false
             });
             that.loadCompletion(info);

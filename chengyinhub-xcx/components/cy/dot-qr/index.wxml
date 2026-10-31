@@ -1,0 +1,8 @@
+<!-- 入场码:后端出的码按模块还原成圆点重画,码心黑色城瘾 logo,彩色波从码心往外扫;还原失败退回原图 + 黑色 logo -->
+<view class="dq" style="width: {{size}}rpx; height: {{size}}rpx;" aria-role="img" aria-label="入场码">
+  <canvas wx:if="{{!fallback}}" type="2d" id="dq" class="dq__cv" style="width: {{size}}rpx; height: {{size}}rpx;"></canvas>
+  <block wx:else>
+    <image class="dq__img" src="{{src}}" mode="aspectFit" />
+    <view class="dq__logo"><image class="dq__logo-img" src="/images/cy_logo_mark.png" mode="aspectFit" /></view>
+  </block>
+</view>

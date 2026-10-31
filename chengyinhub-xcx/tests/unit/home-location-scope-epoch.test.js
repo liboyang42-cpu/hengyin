@@ -31,8 +31,8 @@ function page() {
   value.setData=(patch,done)=>{Object.assign(value.data,patch);if(done)done()}
   return value
 }
-function latest(p,row=consent()) {
-  p.getHomeCityLocation()
+function latest(p,row=consent(),opts) {
+  p.getHomeCityLocation(opts)
   const r=requests.find(x=>x.url==='/api/compliance/consents/latest')
   assert.ok(r);assert.deepEqual(JSON.parse(r.data),{docType:'privacy_policy',scene:'home_city_location'})
   r.success({code:200,data:row});return r
@@ -92,7 +92,7 @@ test('无效坐标、换账号后迟到城市结果不写入当前页面',()=>{
   assert.equal(requests.some(x=>x.url==='/api/map/reverse-geocode'),false)
   locations[0].success({latitude:31.23,longitude:121.47})
   const r=requests.find(x=>x.url==='/api/map/reverse-geocode');member='1002'
-  r.success({code:200,data:{city:'上海市'}});assert.equal(p.data.city,'')
+  r.success({code:200,data:{city:'杭州市'}});assert.notEqual(p.data.city,'杭州市')
 })
 test('首页刷新即使残留旧坐标也不上传给附近排序',()=>{
   const p=page();p.data.locationInfo={latitude:31.23,longitude:121.47}
@@ -102,11 +102,11 @@ test('首页刷新即使残留旧坐标也不上传给附近排序',()=>{
   assert.equal(near[2].sort_type,2);assert.equal('latitude' in near[2],false);assert.equal('longitude' in near[2],false)
 })
 test('定位API或授权读取失败给简短反馈，不采集或泄露原始错误',()=>{
-  const p=page();latest(p);assert.equal(loading,true)
+  const p=page();latest(p,consent(),{userInitiated:true});assert.equal(loading,true)
   locations[0].fail({errMsg:'private-platform-detail'});assert.equal(loading,false)
   assert.equal(toasts.at(-1),'获取位置失败，请检查手机定位是否开启')
   assert.equal(requests.some(x=>x.url==='/api/map/reverse-geocode'),false)
-  requests=[];locations=[];p.getHomeCityLocation();requests[0].fail()
+  requests=[];locations=[];p.getHomeCityLocation({userInitiated:true});requests[0].fail()
   assert.equal(toasts.at(-1),'定位同意状态获取失败，请稍后重试')
   requests=[];p.getHomeCityLocation();requests[0].success({code:500})
   assert.equal(locations.length,0)
@@ -115,31 +115,29 @@ test('定位API或授权读取失败给简短反馈，不采集或泄露原始�
   assert.equal(toasts.includes('暂时无法定位城市，可继续浏览'),false)
 })
 test('定位权限被拒只引导打开设置一次',()=>{
-  const p=page();latest(p)
+  const p=page();latest(p,consent(),{userInitiated:true})
   locations[0].fail({errMsg:'getLocation:fail auth deny'})
   assert.equal(modals.length,1);assert.equal(modals[0].confirmText||'', '去设置')
   const opened=[];wx.openSetting=v=>opened.push(v)
   modals[0].success({confirm:true});assert.equal(opened.length,1)
   delete wx.openSetting
-  locations=[];requests=[];p.getHomeCityLocation()
+  locations=[];requests=[];p.getHomeCityLocation({userInitiated:true})
   requests[0].success({code:200,data:consent()})
   locations[0].fail({errMsg:'getLocation:fail auth deny'})
   assert.equal(modals.length,1)
 })
-test('服务端要求手动输入时露出手动选城市而不是死胡同',()=>{
+test('服务端要求手动输入时固定默认城市上海市而不是死胡同',()=>{
   const p=page();latest(p)
   locations[0].success({latitude:31.23,longitude:121.47})
   const geo=requests.find(x=>x.url==='/api/map/reverse-geocode')
   geo.success({code:200,data:{city:'',manualInputRequired:true,reason:'MAP_UNAVAILABLE'}})
-  assert.equal(p.data.cityManual,true);assert.equal(p.data.city,'')
-  p.onManualCityChange({detail:{value:1}})
-  assert.equal(p.data.city,'上海市');assert.equal(p.data.cityManual,false)
+  assert.equal(p.data.cityManual,false);assert.equal(p.data.city,'上海市')
 })
 test('逆地理请求失败与空城市给出不同提示',()=>{
-  let p=page();latest(p);locations[0].success({latitude:31.23,longitude:121.47})
+  let p=page();latest(p,consent(),{userInitiated:true});locations[0].success({latitude:31.23,longitude:121.47})
   requests.find(x=>x.url==='/api/map/reverse-geocode').fail()
   assert.equal(toasts.at(-1),'城市识别请求失败，请检查网络')
-  requests=[];locations=[];p=page();latest(p);locations[0].success({latitude:31.23,longitude:121.47})
+  requests=[];locations=[];p=page();latest(p,consent(),{userInitiated:true});locations[0].success({latitude:31.23,longitude:121.47})
   requests.find(x=>x.url==='/api/map/reverse-geocode').success({code:200,data:{city:''}})
   assert.equal(toasts.at(-1),'未识别到所在城市，可手动选择城市')
 })

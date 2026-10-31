@@ -1582,20 +1582,6 @@ button::after {
 .sess__capacity { font-size: var(--cy-font-label); color: var(--cy-text-secondary); margin: 0 25rpx 8rpx; }
 .sess__note { font-size: var(--cy-font-label); color: var(--cy-text-secondary); margin: 8rpx 25rpx 0; }
 
-/* ── 场地卡(详情 tab 简介下方,Figma 2233:11677)── */
-.venue-card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--cy-bg-card);
-  border-radius: var(--cy-radius-lg);
-  padding: var(--cy-space-3-5) var(--cy-space-4);
-  margin-top: var(--cy-space-4);
-}
-.venue-card__name { font-size: var(--cy-font-body); font-weight: 600; color: var(--cy-text-title); }
-.venue-card__addr { font-size: var(--cy-font-label); color: var(--cy-text-body); margin-top: 6rpx; }
-.venue-card__pin { flex-shrink: 0; margin-left: var(--cy-space-4); }
-
 /* 减少动态效果:吸顶标签栏的滑入是整条位移,直接到位;吸顶本身与配色照常,反馈不归零。 */
 .topic--reduced .sticky-tab-wrapper.sticky { animation: none; }
 
@@ -1957,8 +1943,7 @@ button::after {
 .topic .hero-by__n { font-size: 25rpx; font-weight: 600; color: #fff; } /* ds-ok */
 .topic .hero-by__k { font-size: 23rpx; color: rgba(255,255,255,.6); } /* ds-ok */
 .topic .hero-title { font-size: 69rpx; line-height: 1.08; font-weight: 600; letter-spacing: -1rpx; color: #fff; } /* ds-ok */
-.hero-desc { margin-top: 27rpx; height: 173rpx; overflow: hidden; font-size: 27rpx; line-height: 1.6; color: rgba(255,255,255,.8); /* ds-ok */
-  -webkit-mask: linear-gradient(180deg, #000 55%, transparent); mask: linear-gradient(180deg, #000 55%, transparent); } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+.hero-desc { margin-top: 27rpx; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 27rpx; line-height: 1.6; color: rgba(255,255,255,.8); } /* ds-ok: V-23c 主题配置短简介,最多 20 字一行 */
 .topic .hero-acts { display: flex; align-items: center; gap: 19rpx; margin-top: 42rpx; min-height: 96rpx; }
 .topic .hero-cta { height: 96rpx; min-width: 288rpx; padding: 0 50rpx; border-radius: 48rpx; background: #fff; color: #000; font-size: 29rpx; font-weight: 600; box-sizing: border-box; } /* ds-ok */
 .topic .hero-cta.is-off { background: #2C2C2E; color: #8E8E93; } /* ds-ok */
@@ -1995,10 +1980,6 @@ button::after {
 .topic .tabcont > .det3:first-child .det-type, .topic .tabcont > .det-type:first-child { margin-top: 0; }
 .topic .davidxian { display: none; }
 .topic .det3 .cont1 .txt1 { font-size: 25rpx; color: #8E8E93; padding-left: 12rpx; } /* ds-ok */
-.topic .venue-card { display: flex; align-items: center; justify-content: space-between; margin-top: 27rpx; padding: 31rpx; border-radius: 27rpx; background: #1C1C1E; border: 0; } /* ds-ok */
-.topic .venue-card__name { font-size: 29rpx; font-weight: 600; color: #fff; } /* ds-ok */
-.topic .venue-card__addr { font-size: 23rpx; color: #8E8E93; } /* ds-ok */
-.topic .venue-card__pin { width: 38rpx; height: 38rpx; flex: none; }
 /* 节点介绍:150px 宽照片卡横滑 */
 .topic .det4 .temp-list { margin: 0 -31rpx; }
 .topic .det4 .temp-list .ul { display: flex; gap: 27rpx; overflow-x: auto; padding: 0 31rpx; }
@@ -2094,6 +2075,14 @@ button::after {
 .topic .det3 .txt1.para { font-size: 27rpx; line-height: 1.75; color: #cfcfd3; padding-left: 0; } /* ds-ok */
 .sticky-tab-wrapper.sticky ~ .slide1, .sticky-tab-wrapper.sticky ~ .slide2 .statbar { margin-top: 0; }
 .topic .statbar { box-sizing: border-box; width: 100%; }
+/* V-23d 业主 2026-10-29:数据条最右一格(参与商家)被切掉。375/390 宽下所有格子等分屏宽,不再横向溢出:
+   徽章与各格同为 flex 等分,格内文字居中,长值(开放日期)在格内换行而不是被裁。 */
+.topic .statbar__row { width: 100%; }
+.topic .statbar__badge, .topic .statbar__cell { flex: 1 1 0; min-width: 0; width: auto; }
+.topic .statbar__badge { display: block; }
+.topic .statbar__label, .topic .statbar__sub { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.topic .statbar__value { max-width: 100%; white-space: normal; word-break: break-all; text-align: center; }
+.topic .statbar__row--dense .statbar__value { font-size: 30rpx; } /* ds-ok: V-23d 五格以上时收小一档才放得下 */
 
 /* —— v13 购买半屏:票面(照片 + 齿孔 + 镭射)/ 票种 / 小牌 / 合计 / 去结算 —— */
 .bdim { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 180; background: rgba(0,0,0,.55); opacity: 0; transition: opacity var(--cy-motion-sheet-out) var(--cy-ease-standard); } /* ds-ok */

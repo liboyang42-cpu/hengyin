@@ -174,7 +174,7 @@ test('real role change invalidates issuer callbacks and retry without selecting 
   assert.equal(h.requests[1].data.seatNo, 2); h.app.setUserRole('club');
   h.requests[1].success({ code: 200, data: { registrationId: 71, seatId: 102, seatNo: 2, seatStatus: 0,
     code: h.request.data.code, qrcodeUrl: 'fixture-qr', expiresAt: Date.now() + 300000 } });
-  assert.equal(page.data.code, ''); assert.equal(page.data.state, 'loading');
+  assert.equal(page.data.qr, ''); assert.equal(page.data.state, 'loading');
   page.retry(); assert.equal(h.requests.length, 2); assert.equal(page.data.seatNo, 2);
   assert.equal(page.data.state, 'error'); assert.match(page.data.errorText, /登录状态已变化/); h.flow.destroy();
 });

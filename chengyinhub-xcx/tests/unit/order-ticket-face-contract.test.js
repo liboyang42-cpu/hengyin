@@ -20,7 +20,8 @@ function assertOrderDetailContract(js, wxml) {
   // 订单页通往票夹只留一个出口,别再长回两份逐字相同的实现
   assert.doesNotMatch(js, /goRoute\(\)/)
   assert.doesNotMatch(js, /goPlay\(\)/)
-  assert.match(js, /goSignInfo\(\) \{/)
+  // 2026-10-29 走查 V-20:订单详情不再放「查看票夹」,goSignInfo 随按钮删除
+  assert.doesNotMatch(js, /goSignInfo\(\)/)
   /* 2026-09-11 按稿 578:2298 重排之后,场次时间与日期时间合成了一个 whenText ——
      同一个事实原来在头图、「日期」「时间」「场次」四处各拼一遍。
      这条契约要证的性质没变:探店日的场次时间槽必须真的上到界面,而且来源仍是 sessionTimeText。 */
@@ -84,10 +85,10 @@ test('票夹卡:一张完整票图,票名/状态只走 aria-label,CTA 文案照�
 
 /* 负控:把那条 is_join=1 的跳转塞回任何一个方法里,契约都必须变红。
    2026-09-11 起注入点不再是 goRoute(它已随快捷入口卡一起删掉)—— 改成往
-   goSignInfo 里塞,证的是「整个组件一处都不许有」而不是「某个方法不许有」。 */
+   goInvoiceApply 里塞(2026-10-29 goSignInfo 已随「查看票夹」删除),证的是「整个组件一处都不许有」而不是「某个方法不许有」。 */
 test('mutation 负控:订单页任何一处跳回 is_join 都要变红', () => {
   const js = read('subpackageMember/components/cy/scene-member-order-detail/index.js')
-    .replace(/goSignInfo\(\) \{[\s\S]*?\},/, "goSignInfo() {\n      this._leave('/pages/topic/index/index?is_join=1&id=1');\n    },")
+    .replace(/goInvoiceApply\(\) \{[^\n]*\},/, "goInvoiceApply() { this._leave('/pages/topic/index/index?is_join=1&id=1'); },")
   assert.throws(() => assertOrderDetailContract(
     js, read('subpackageMember/components/cy/scene-member-order-detail/index.wxml')), assert.AssertionError)
 })
@@ -95,7 +96,7 @@ test('mutation 负控:订单页任何一处跳回 is_join 都要变红', () => {
 /* 负控:快捷入口卡长回来(两行文案来自后端、点了去票夹)也要变红 —— 它是这一轮按稿删的。 */
 test('mutation 负控:快捷入口卡长回来要变红', () => {
   const js = read('subpackageMember/components/cy/scene-member-order-detail/index.js')
-    .replace(/goSignInfo\(\) \{/, "goRoute() { this.goSignInfo(); },\n\n    goSignInfo() {")
+    .replace(/goInvoiceApply\(\) \{/, "goRoute() { this.goInvoiceApply(); },\n\n    goInvoiceApply() {")
   assert.throws(() => assertOrderDetailContract(
     js, read('subpackageMember/components/cy/scene-member-order-detail/index.wxml')), assert.AssertionError)
 })

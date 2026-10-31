@@ -3,13 +3,17 @@ function decorateFeedCards(list, normalizeImage) {
   const toImage = typeof normalizeImage === 'function' ? normalizeImage : function (src) { return src; };
 
   return list.map(function (item) {
-    const raw = item.imgArr || item.imgUrl || '';
-    const imgList = String(raw)
-      .split(/[,;]/)
-      .map(function (src) { return src.trim(); })
-      .filter(Boolean)
-      .map(toImage)
-      .filter(Boolean);
+    const parse = function (raw) {
+      return String(raw || '')
+        .split(/[,;]/)
+        .map(function (src) { return src.trim(); })
+        .filter(Boolean)
+        .map(toImage)
+        .filter(Boolean);
+    };
+    // V-10:imgArr 拆不出可用图时退回主题自己的 imgUrl，两者都没有才用占位。
+    let imgList = parse(item.imgArr);
+    if (!imgList.length) imgList = parse(item.imgUrl);
     const feedImages = imgList.slice(0, 4);
     const feedCount = feedImages.length;
     const feedGridMode = feedCount >= 4 ? '4' : (feedCount === 3 ? '3' : (feedCount === 2 ? '2' : '1'));

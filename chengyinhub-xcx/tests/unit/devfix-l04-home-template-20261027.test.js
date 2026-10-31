@@ -61,7 +61,7 @@ test('P-03:「主题 / 活动」tab 与第一张卡之间留 24rpx', () => {
 // 取代 P-04 的「无封面插画占位 + 左文右宫格」。封面缺失只剩兜底图,卡下不再露白。
 test('P-04:推荐卡整张铺封面，缺封面用兜底图，不再出宫格与占位插画', () => {
   const wxml = homeWxml();
-  const covers = wxml.match(/<image class="v2-fcover" src="\{\{item\.cover \|\| '\/images\/route_city_cover\.png'\}\}"/g) || [];
+  const covers = wxml.match(/<image class="v2-fcover" src="\{\{item\.cover \|\| '\/images\/home-route-city-placeholder\.jpg'\}\}"/g) || [];
   assert.equal(covers.length, 2, '主题和活动两个分支都铺封面');
   assert.doesNotMatch(wxml, /v2-fgrid|v2-fcell/);
   assert.match(rule(homeWxss(), '.v2-fcover'), /width:\s*100%[\s\S]*height:\s*100%/);

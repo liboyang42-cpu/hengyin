@@ -58,7 +58,7 @@ class FreeOrderCancelEntryGateAcceptanceTest {
         doReturn(MEMBER).when(controller).getAppUserId();
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "registrationTicketApplication",
                 new RegistrationTicketApplication(regSvc, mock(com.chengyinhub.business.service.RegistrationSeatService.class),
-                        activitySvc, perkSvc, mock(com.chengyinhub.business.service.impl.QrcodeServiceImpl.class), "test-secret"));
+                        activitySvc, perkSvc, mock(com.chengyinhub.business.service.impl.QrcodeServiceImpl.class), "test-secret", mock(com.chengyinhub.web.service.verify.RegistrationDynCodeLedger.class)));
         when(regSvc.selectCmsRegistrationById(REG)).thenReturn(cancelledFreeOrder());
 
         AjaxResult res = controller.issueDynCode(REG);
