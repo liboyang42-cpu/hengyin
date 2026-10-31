@@ -188,7 +188,8 @@ Component({
           distanceText: distanceValue === null ? (session && session.serverFact ? '—' : '0') : String(distanceValue),
           shopsValue,
           shopsText: shopsValue === null ? '—' : String(shopsValue),
-          time: (session && typeof session.time === 'string' && session.time.trim()) || this._formatDuration(session && session.durSec) || '—',
+          // 2026-10-31 P-7:用时与总成绩同一写法 h:mm(有 durSec 就按它算,老本机记录才退回存下的展示串)
+          time: this._formatDuration(session && session.durSec) || (session && typeof session.time === 'string' && session.time.trim()) || '—',
           _timestamp: timestamp,
         }
       })
@@ -204,7 +205,7 @@ Component({
     _formatDuration(seconds) {
       const value = nonNegativeNumber(seconds)
       if (value === null) return ''
-      return `${String(Math.floor(value / 60)).padStart(2, '0')}:${String(value % 60).padStart(2, '0')}`
+      return `${Math.floor(value / 3600)}:${String(Math.floor(value % 3600 / 60)).padStart(2, '0')}`
     },
     openSession(event) {
       this.triggerEvent('open', { id: 'roam-session', params: { ts: event.currentTarget.dataset.sessionId ? 'server:' + event.currentTarget.dataset.sessionId : event.currentTarget.dataset.ts, sessionId: event.currentTarget.dataset.sessionId || '' } })

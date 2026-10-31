@@ -1029,13 +1029,13 @@
 <!-- ===================== C2 分享 sheet ===================== -->
 <view class="roam-scene-host" wx:if="{{sceneCurrent && sceneCurrent.id === 'roam-share'}}" catchtouchmove="blockSceneTouch">
 <view class="pdim {{sceneIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" bindtap="onProtoSheetClose" aria-role="button" aria-label="关闭{{sceneCurrent.title}}" hover-class="cy-pressed" hover-stay-time="80"></view>
-<view class="psheet psheet--{{sceneCurrent.variant}} {{sceneIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" catchtap="noop">
+<view class="psheet psheet--{{sceneCurrent.variant}} {{sceneIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" style="{{share.bg ? 'background:' + share.bg + ';' : ''}}" catchtap="noop">
   <view class="psheet__grab"></view>
   <view class="psheet__x" catchtap="onProtoSheetClose" aria-role="button" aria-label="关闭{{sceneCurrent.title}}" hover-class="cy-pressed" hover-stay-time="80"><view class="psheet__x-i"></view></view>
   <text class="ph1">{{sceneCurrent.title}}</text>
   <!-- 2026-10-31 业主批准 P-8(通用分享页 · 漫游):只有一张卡,在页面中间偏下 —— 就是「保存」导出的那张(预览 = 导出图);
        四个色块换底色(导出跟着换);「谁能看到」照旧是真闸;渠道圆钮放大、横向滑动。 -->
-  <view class="sharesheet rsh" style="--rsh-bg:{{share.bg || '#121317'}};">
+  <view class="sharesheet rsh">
   <view class="rsh-stage">
     <view class="rsh-card">
       <view class="rsh-map">

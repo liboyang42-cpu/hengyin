@@ -4,8 +4,8 @@
 .sc-x, .sc-sp { flex: none; width: 88rpx; height: 88rpx; display: flex; align-items: center; justify-content: center; }
 .sc-h { flex: 1; text-align: center; font-size: var(--cy-type-card-title); font-weight: 700; }
 .sc-stage { flex: 1; display: flex; align-items: flex-end; justify-content: center; padding: 48rpx 0 32rpx; }
-.sc-card { position: relative; width: 560rpx; min-height: 820rpx; border-radius: var(--cy-radius-xl); overflow: hidden; background: rgba(0, 0, 0, .28); box-shadow: 0 24rpx 60rpx rgba(0, 0, 0, .35); } /* ds-ok P-8 卡片压在色块底上 */
-.sc-in { position: relative; display: flex; flex-direction: column; padding: 40rpx; box-sizing: border-box; min-height: 820rpx; }
+.sc-card { position: relative; display: flex; flex-direction: column; width: 560rpx; min-height: 820rpx; border-radius: var(--cy-radius-xl); overflow: hidden; background: rgba(0, 0, 0, .28); box-shadow: 0 24rpx 60rpx rgba(0, 0, 0, .35); } /* ds-ok P-8 卡片压在色块底上 */
+.sc-in { position: relative; flex: 1; display: flex; flex-direction: column; padding: 40rpx; box-sizing: border-box; }
 .sc-eb { font-size: var(--cy-type-label); font-weight: 600; color: rgba(255, 255, 255, .7); } /* ds-ok 卡片压字 */
 .sc-t { margin-top: 12rpx; font-size: var(--cy-type-sheet-title); font-weight: 800; line-height: 1.2; color: #FFFFFF; } /* ds-ok 卡片压字 */
 .sc-m { margin-top: 8rpx; font-size: var(--cy-type-body); color: rgba(255, 255, 255, .7); } /* ds-ok 卡片压字 */
@@ -14,7 +14,6 @@
 .sc-brand { font-size: var(--cy-type-card-title); font-weight: 800; color: #FFFFFF; } /* ds-ok 卡片压字 */
 .sc-qr { width: 120rpx; height: 120rpx; padding: 8rpx; border-radius: var(--cy-radius-sm); background: #FFFFFF; } /* ds-ok 小程序码白底 */
 .sc-card--act .sc-cover { display: block; width: 560rpx; height: 420rpx; }
-.sc-card--act .sc-in { min-height: 400rpx; }
 .sc-when { display: flex; flex-direction: column; margin-top: 16rpx; }
 .sc-date { font-size: var(--cy-type-data-xl); line-height: 1; font-weight: 900; font-style: italic; color: #FFFFFF; } /* ds-ok 卡片压字 */
 .sc-whenl { margin-top: 8rpx; font-size: var(--cy-type-label); color: rgba(255, 255, 255, .7); } /* ds-ok 卡片压字 */
@@ -35,7 +34,7 @@
 .sc-ch { flex: none; white-space: nowrap; padding-bottom: calc(32rpx + env(safe-area-inset-bottom)); }
 .sc-ch-i { display: inline-flex; flex-direction: column; align-items: center; gap: 12rpx; width: 152rpx; vertical-align: top; font-size: var(--cy-type-label); color: #FFFFFF; } /* ds-ok 色块底上的白字 */
 .sc-ch-i:first-child { margin-left: 24rpx; }
-.sc-ch-btn { margin: 0; padding: 0; line-height: normal; background: transparent; border-radius: 0; }
+.sc-ch-btn { width: 152rpx !important; min-width: 0; margin: 0; padding: 0; line-height: normal; background: transparent; border-radius: 0; } /* 原生 button 默认宽度会把第一格撑宽 */
 .sc-ch-btn::after { border: 0; }
 .sc-ch-c { width: 128rpx; height: 128rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, .14); } /* ds-ok P-8 渠道圆钮 64px */
 .sc-cv { position: fixed; left: -9999rpx; top: 0; width: 750px; height: 1200px; }
