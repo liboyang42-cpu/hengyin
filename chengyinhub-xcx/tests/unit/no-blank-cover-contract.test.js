@@ -17,15 +17,16 @@ const stripWxmlComments = (source) => source.replace(/<!--[\s\S]*?-->/g, '')
  * 要么整块收起。这条门禁锁住「不许只剩底色」。
  */
 
-test('CU-M-104 模板详情头图:无封面必须给图标 + 短文案,不是一块底色', () => {
+test('CU-M-104 模板详情头图:无封面必须给分类 3D 图标做封面,不是一块底色', () => {
   const wxml = stripWxmlComments(read('pages/templatedetail/templatedetail.wxml'))
   const wxss = read('pages/templatedetail/templatedetail.wxss')
   const slot = wxml.match(/<view class="xb-head-cover"[\s\S]*?<\/view>\s*<\/view>/)
   assert.ok(slot, 'xb-head-cover 锚点失效')
 
   assert.match(slot[0], /class="xb-head-cover-ph"[^>]*aria-role="img"/, '占位块要声明自己是图片位')
-  assert.match(slot[0], /src="\/images\/no_data\.svg"/, '必须用全站缺图图标，不另造一套')
-  assert.match(slot[0], /封面暂不可用/, '文案与 pages/template 列表同一口径')
+  // 2026-10-30 业主「不能只是占位」:模板本身没有封面时用它第一个分类的 3D 图标做封面(兜底 other),不再是缺图图标 + 「封面暂不可用」
+  assert.match(slot[0], /class="xb-cover-art" src="\{\{ sceneIcons\[0\] \|\| '\/pages\/templatedetail\/art\/cat\/other\.png' \}\}"/)
+  assert.doesNotMatch(slot[0], /封面暂不可用/)
 
   const ph = wxss.match(/\.xb-head-cover-ph\s*\{[^}]*\}/)
   assert.ok(ph, '.xb-head-cover-ph 规则缺失')

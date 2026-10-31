@@ -44,7 +44,8 @@
 
     <view class="tp-cta">
       <view class="tp-cta__glow" aria-hidden="true"></view>
-      <view class="tp-cta__btn cy-rise-in" style="animation-delay: 1.05s;" bindtap="useTemplate" aria-role="button" aria-label="用这个模板" hover-class="cy-pressed" hover-stay-time="80">用这个模板</view>
+      <!-- 2026-10-30 V-24:这一页只是预览,「查看详情」进主题模板详情(那里看剧情、每站玩法,「应用」在那里) -->
+      <view class="tp-cta__btn cy-rise-in" style="animation-delay: 1.05s;" bindtap="goDetail" aria-role="button" aria-label="查看详情" hover-class="cy-pressed" hover-stay-time="80">查看详情</view>
     </view>
   </block>
 </view>

@@ -1,0 +1,25 @@
+/* 主题模板详情(2026-10-30 业主 V-24):版式照抄玩法模板详情 templatedetail,只新增「剧情」与「能力 · 按站」两块 */
+@import "../templatedetail.wxss";
+
+/* 剧情:开场白 → 每章一段 + 这一章依次经过的节点 */
+.st-ch { margin-top: var(--cy-space-4); }
+.st-ch__hd { display: flex; align-items: baseline; gap: var(--cy-space-2); }
+.st-ch__no { font-size: var(--cy-font-caption); color: var(--cy-text-tertiary); }
+.st-ch__t { font-size: var(--cy-font-body); font-weight: 700; color: var(--cy-text-title); }
+.st-ch__p { margin-top: var(--cy-space-1-5); font-size: var(--cy-font-label); line-height: var(--cy-leading-normal); color: var(--cy-text-secondary); }
+.st-ch__path { display: flex; flex-wrap: wrap; gap: var(--cy-space-1-5); margin-top: var(--cy-space-2); }
+.st-ch__stop { display: flex; align-items: center; gap: var(--cy-space-1); max-width: 100%; padding: 6rpx var(--cy-space-2) 6rpx 6rpx; border-radius: var(--cy-radius-pill); background: var(--cy-bg-card-2); font-size: var(--cy-font-caption); color: var(--cy-text-body); }
+.st-ch__dot { flex: none; width: 36rpx; height: 36rpx; line-height: 36rpx; border-radius: 50%; text-align: center; background: var(--cy-bg-card); color: var(--cy-text-title); font-size: var(--cy-font-caption); }
+
+/* 能力:顶上一行概要,下面按站列玩法 */
+.cap-sum { display: flex; flex-wrap: wrap; gap: var(--cy-space-2); margin: 0 var(--cy-page-x); }
+.cap-list { margin: var(--cy-space-4) var(--cy-page-x) 0; border-radius: var(--cy-radius-lg); background: var(--cy-bg-card); overflow: hidden; }
+.cap-stop { position: relative; display: flex; gap: var(--cy-space-3); padding: var(--cy-space-3) var(--cy-space-4); }
+.cap-stop + .cap-stop::before { content: ""; position: absolute; left: var(--cy-space-4); right: 0; top: 0; height: 1rpx; background: var(--cy-border-line); }
+.cap-stop__no { flex: none; width: 48rpx; height: 48rpx; line-height: 48rpx; border-radius: 50%; text-align: center; background: var(--cy-bg-card-2); font-size: var(--cy-font-caption); font-weight: 700; color: var(--cy-text-title); }
+.cap-stop__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--cy-space-1); }
+.cap-stop__name { font-size: var(--cy-font-caption); color: var(--cy-text-tertiary); }
+.cap-stop__game { font-size: var(--cy-font-body); font-weight: 700; color: var(--cy-text-title); }
+.cap-stop__do { font-size: var(--cy-font-label); line-height: var(--cy-leading-normal); color: var(--cy-text-secondary); }
+.cap-stop__dur { display: flex; align-items: center; gap: var(--cy-space-1); font-size: var(--cy-font-caption); color: var(--cy-text-tertiary); }
+.td-medal-img { width: 112rpx; height: 112rpx; flex: none; }

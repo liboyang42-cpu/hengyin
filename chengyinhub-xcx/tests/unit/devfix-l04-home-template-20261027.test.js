@@ -106,7 +106,9 @@ test('P-11:玩法 tab 只列单节点地点玩法，主题自带的分段游戏�
 
 test('P-11:主题点开预览，「用这个模板」直进专业编辑器 publish/fabu', () => {
   assert.match(read('pages/templatedetail/shelf/index.js'), /url: '\/pages\/templatedetail\/topic-preview\/index\?' \+ qs\.join\('&'\)/);
-  assert.match(read('pages/templatedetail/topic-preview/index.js'), /wx\.navigateTo\(\{ url: '\/pages\/publish\/fabu\/index\?' \+ qs\.join\('&'\) \}\)/);
+  // 2026-10-30 V-24:预览「查看详情」进主题模板详情,「应用」在详情页直进专业编辑器
+  assert.match(read('pages/templatedetail/topic-preview/index.js'), /url: '\/pages\/templatedetail\/topic-detail\/index\?' \+ qs\.join\('&'\)/);
+  assert.match(read('pages/templatedetail/topic-detail/index.js'), /wx\.navigateTo\(\{ url: '\/pages\/publish\/fabu\/index\?' \+ qs\.join\('&'\) \}\)/);
 });
 
 function assertBackdrop(wxml, wxss, js) {

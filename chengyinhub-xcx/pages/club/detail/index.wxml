@@ -104,8 +104,8 @@
           <text class="post-composer-who">{{myNickname || '城瘾玩家'}}</text>
           <text class="post-composer-ph">有什么新鲜好玩的分享吗？</text>
           <view class="post-composer-tools">
-            <!-- 2026-10-28 业主:三个图标照 Figma 285:395 —— 线框方块、实心定位、旗子 -->
-            <view class="post-composer-ico post-composer-sq" aria-hidden="true"></view>
+            <!-- 2026-10-29 V-04 业主:第一枚是图片图标,不是空线框方块 -->
+            <cy-icon class="post-composer-ico" name="image" size="44" />
             <cy-icon class="post-composer-ico" name="pin-solid" size="44" />
             <cy-icon class="post-composer-ico" name="flag" size="44" />
           </view>
