@@ -802,7 +802,9 @@ public class ApiRoamController extends BaseController {
     }
 
     @Operation(summary = "漫游结算(发探索值 + 里程碑勋章)")
-    /** 没带轨迹的结算(老调用方与单测);接口本身走下面带 track 的那一个 */
+    /** 没带轨迹的结算(老调用方与单测);接口本身走下面带 track 的那一个。
+     *  ⚠️ 必须同样挂事务:从代理进来再内部调用四参版不会再过代理,不挂就等于结算没有事务(锁 / 回滚全失效)。 */
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public AjaxResult finish(String sessionId, String poiIds, Integer distanceM) {
         return finish(sessionId, poiIds, distanceM, null);
     }
