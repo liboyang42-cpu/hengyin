@@ -53,12 +53,13 @@ test('V-02 7 天内到期才写 N 天内过期，当天写今天过期，其余�
   const { page } = loadPage()
   const pad = n => String(n).padStart(2, '0')
   const at = days => { const d = new Date(Date.now() + days * 86400000); d.setHours(23, 59, 0, 0); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' 23:59:00' }
+  // 主线「付款确认后才展示有效票」:样例票都带已付款
   page._topic = { state: 'ready', list: [
-    { id: 11, registrationStatus: 2, cmsTopic: { name: '海上方舟' } },
-    { id: 13, registrationStatus: 2, expiresAt: at(3), cmsTopic: { name: '三天' } },
-    { id: 14, registrationStatus: 2, expiresAt: at(30), cmsTopic: { name: '一月' } },
+    { id: 11, registrationStatus: 2, paymentStatus: 2, cmsTopic: { name: '海上方舟' } },
+    { id: 13, registrationStatus: 2, paymentStatus: 2, expiresAt: at(3), cmsTopic: { name: '三天' } },
+    { id: 14, registrationStatus: 2, paymentStatus: 2, expiresAt: at(30), cmsTopic: { name: '一月' } },
   ] }
-  page._activity = { state: 'ready', list: [{ id: 12, registrationStatus: 2, cmsActivity: { name: '夜行', endDate: at(0) } }] }
+  page._activity = { state: 'ready', list: [{ id: 12, registrationStatus: 2, paymentStatus: 2, cmsActivity: { name: '夜行', endDate: at(0) } }] }
   page.rebuildTicketList()
   const byId = Object.fromEntries(page.data.ticketList.map(t => [t.id, t]))
   assert.equal(byId[11].wExpiry, '')
