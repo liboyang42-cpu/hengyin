@@ -68,6 +68,12 @@ Component({
       if (show && !this._circleConfigOpen) this.resetCircleCandidates();
       this._circleConfigOpen = !!show;
     },
+    // 招商第三版站点行的汇总:已承接几站 / 还开着没人接几站
+    'recruitStations, ownerChapterApplications': function (rows, apps) {
+      const list = rows || [];
+      this.setData({ stationSum: { taken: list.filter((r) => r.state === 'taken').length, open: list.filter((r) => r.state === 'open').length,
+        pending: (apps || []).filter((a) => a && a.actionable).length } });
+    },
     // 派生量放 observer 而不是让页面再多存两个字段:它们只有这个视图用得上
     'hostRecruit, clubSheet, hostTopic, hostPlayers': function (recruit, sheet, topic, players) {
       const total = (recruit && recruit.nodeTotal) || 0;
@@ -93,7 +99,7 @@ Component({
     },
   },
   data: {
-    recruitDone: false, clubCount: 0, clubAccepted: 0, hostProgress: [], needExecutorClub: false, anyDrawerOpen: false, hostStatusText: '状态待确认',
+    recruitDone: false, stationSum: { taken: 0, open: 0, pending: 0 }, clubCount: 0, clubAccepted: 0, hostProgress: [], needExecutorClub: false, anyDrawerOpen: false, hostStatusText: '状态待确认',
     circleCandidates: [], circleConfigHint: '',
     circleConfigActions: [{ key: 'submitCircleConfig', label: '保存供给角色' }],
   },

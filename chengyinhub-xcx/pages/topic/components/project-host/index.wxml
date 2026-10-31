@@ -198,9 +198,10 @@
                   bind:close="emitCloseMerchant" bind:action="emitDrawerAction">
     <!-- 走查 v2 R06(业主 2026-10-30):顶部三格;每一站用主题图、给「自己承接 / 招商」;收到的申请在弹窗里确认,不跳出主题 -->
     <view class="cs-sum">
-      <view class="cs-sum-i"><text class="cs-sum-n">{{ hostRecruit.nodeFilled }}/{{ hostRecruit.nodeTotal }}</text><text class="cs-sum-l">已招站点</text></view>
-      <view class="cs-sum-i"><text class="cs-sum-n">{{ hostRecruit.pendingCount || 0 }}</text><text class="cs-sum-l">待处理申请</text></view>
-      <view class="cs-sum-i"><text class="cs-sum-n">{{ hostRecruit.openNodes.length }}</text><text class="cs-sum-l">还没人接</text></view>
+      <!-- 2026-10-31 P-6:有站点行(自由探索每站一个档位)时按站点数;城市定向仍按节点 -->
+      <view class="cs-sum-i"><text class="cs-sum-n">{{ recruitStations.length ? stationSum.taken + '/' + recruitStations.length : hostRecruit.nodeFilled + '/' + hostRecruit.nodeTotal }}</text><text class="cs-sum-l">已招站点</text></view>
+      <view class="cs-sum-i"><text class="cs-sum-n">{{ recruitStations.length ? stationSum.pending : (hostRecruit.pendingCount || 0) }}</text><text class="cs-sum-l">待处理申请</text></view>
+      <view class="cs-sum-i"><text class="cs-sum-n">{{ recruitStations.length ? stationSum.open : hostRecruit.openNodes.length }}</text><text class="cs-sum-l">还没人接</text></view>
     </view>
 
     <!-- 2026-10-31 业主批准 P-6 招商第三版:档位挂在每一站上(cms_topic_chapter.terms_mode),同一站所有商家条件相同;
