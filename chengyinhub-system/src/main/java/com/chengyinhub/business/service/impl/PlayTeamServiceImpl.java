@@ -37,7 +37,8 @@ public class PlayTeamServiceImpl implements IPlayTeamService {
     private static final SecureRandom INVITE_RANDOM = new SecureRandom();
     static final long APPLY_TTL_MILLIS = 24L * 60 * 60 * 1000;
     static final int NEARBY_DEFAULT_RADIUS_M = 3000;
-    static final int NEARBY_MAX_RADIUS_M = 20000;
+    /** 走查 P-38(业主):附近地图「全部」= 所有距离;结果仍按距离由近到远截断条数,半径上限只防坐标溢出(NEARBY_LIMIT)。 */
+    static final int NEARBY_MAX_RADIUS_M = 1_000_000;
     static final int NEARBY_LIMIT = 50;
 
     @Autowired

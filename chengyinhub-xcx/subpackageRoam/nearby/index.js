@@ -92,7 +92,7 @@ Page({
     listRows: [], layer: 'all', layerSub: '', layerSheet: '', layerItems: [], poiCard: null, poiCardIn: false, poiFlip: false, poiExpand: false, pcClip: '', poiPhoto: 0, camOpen: false, privacyGateShow: false, // 2026-10-22 筛选行与地标/商家点位卡
     myReadAccess: '', myReadError: false, myLoaded: false,
     rangeItems: RANGE_ITEMS,
-    rangeIndex: T.RADII.indexOf(DEFAULT_RADIUS),
+    rangeIndex: T.RADII.indexOf(DEFAULT_RADIUS), rangeAll: false,
     rangeSheetShow: false,
     loadError: false,
     /* sheet = '' | team(P2/P3/P4/被拒/已加入)| leader(P5)| mine(P6)| topic。非空时底部角控件收起。 */
@@ -537,7 +537,7 @@ Page({
     const r = T.RADII[idx];
     if (!r) { this.closeRange(); return; }
     this._radius = r;
-    this.setData({ rangeSheetShow: false, rangeIndex: idx, rangeText: kmText(r), scale: r >= 10000 ? 11 : r >= 5000 ? 12 : r >= 3000 ? 13 : 15 }); // v13:1 公里时再近一级,照片点位铺得开
+    this.setData({ rangeSheetShow: false, rangeAll: false, rangeIndex: idx, rangeText: kmText(r), scale: r >= 10000 ? 11 : r >= 5000 ? 12 : r >= 3000 ? 13 : 15 }); // v13:1 公里时再近一级,照片点位铺得开
     this.refresh(this.data.center);
   },
 
@@ -873,14 +873,12 @@ Page({
       setTimeout(() => { if (!this._unloaded && this.data.layerSheet === layer) this.setData({ mddIn: true }); }, 20);
       return;
     }
-    // 2026-10-27 owner P-38:「全部」= 所有距离 —— 范围直接放到最大档(服务端上限 20 公里),再按全部类型显示
-    if (layer !== 'team') {
-      const maxIdx = T.RADII.length - 1;
-      if (this._radius !== T.RADII[maxIdx]) {
-        this.setData({ layer: 'all', layerSub: '', layerSheet: '' });
-        this.onRangePick({ detail: { index: maxIdx } });
-        return;
-      }
+    // 2026-10-27 owner P-38:「全部」= 所有距离 —— 不再停在 20 公里档,半径放开(服务端按距离由近到远截断条数),再按全部类型显示
+    if (layer !== 'team' && this._radius !== T.ALL_RADIUS) {
+      this._radius = T.ALL_RADIUS;
+      this.setData({ layer: 'all', layerSub: '', layerSheet: '', rangeAll: true, rangeIndex: -1, rangeText: '全部距离', scale: 5 });
+      this.refresh(this.data.center);
+      return;
     }
     this.setData({ layer: layer === 'team' ? 'team' : 'all', layerSub: '' }, () => this._syncMarkers());
   },

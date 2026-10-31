@@ -8,6 +8,8 @@ const { MAP_AVATAR_COLORS: C } = require('../../utils/play-visual-tokens.js');
 const { toTimestamp } = require('../../utils/datetime.js');
 
 const RADII = [1000, 3000, 5000, 10000, 20000];
+// 走查 P-38(业主):筛选条「全部」= 所有距离,不在范围档位里;服务端照样按距离由近到远截断条数
+const ALL_RADIUS = 1000000;
 const STATUSES = ['NONE', 'PENDING', 'JOINED', 'LEADER', 'REJECTED'];
 const TEAM_MARKER_TAG = 4;   // 与 roam-hangout.parseMarkerId 的 1/2/3 不撞号
 
@@ -237,6 +239,6 @@ function leaderSub(t) {
 
 
 module.exports = {
-  RADII, TEAM_MARKER_TAG, teamCardState, decorateTeam, headerText, rangeText, nextRadius, myTeamsText,
+  RADII, ALL_RADIUS, TEAM_MARKER_TAG, teamCardState, decorateTeam, headerText, rangeText, nextRadius, myTeamsText,
   resolveTeamError, myTeamRows, teamMarkerSpec, teamIconKey, buildTeamMarkers, applicantRows, leaderSub,
 };
