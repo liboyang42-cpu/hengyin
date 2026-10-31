@@ -15,6 +15,7 @@
     </view>
     <text class="eo-none" wx:if="{{month.ready && !month.items.length}}">这个月还没有收入</text>
     <text class="eo-none" wx:elif="{{monthError}}" bindtap="retryMonth" aria-role="button" aria-label="重新加载本月收入" hover-class="cy-pressed" hover-stay-time="80">没加载出来，点这里重试</text>
+    <text class="eo-none" wx:if="{{clubError}}" bindtap="retryClubPay" aria-role="button" aria-label="重新加载俱乐部计酬" hover-class="cy-pressed" hover-stay-time="80">俱乐部计酬没加载出来，点这里重试</text>
   </view>
 
   <view class="eo-sec eo-sec--gap"><text class="eo-sec__t">我的资产</text></view>

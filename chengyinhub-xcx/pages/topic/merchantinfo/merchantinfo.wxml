@@ -21,6 +21,7 @@
   <cy-empty wx:else fill size="lg" kind="error" title="当前账号无权查看" sub="" cta="返回上一页" bind:cta="goBack" />
 </block>
 <project-host wx:elif="{{ role === 'host' }}"
+    navScrolled="{{ navScrolled }}"
     hostOwnerType="{{ hostOwnerType || '' }}"
     statusBarHeight="{{ statusBarHeight }}"
     navBarHeight="{{ navBarHeight }}"
@@ -50,6 +51,7 @@
     bind:act="onJoinAct" />
 
 <project-join wx:elif="{{ !fromMerchantJoin }}"
+    navScrolled="{{ navScrolled }}"
     chapterProject="{{ chapterProject }}"
     myChapterApplications="{{ myChapterApplications }}"
     myChapterNodes="{{ myChapterNodes }}"

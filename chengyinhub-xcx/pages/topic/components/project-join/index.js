@@ -4,6 +4,8 @@
 Component({
   options: { addGlobalClass: true },
   properties: {
+    // 2026-10-30 走查:页面滚过封面后导航栏转实底(否则正文滑进透明栏、标题压在状态栏时间上)
+    navScrolled: { type: Boolean, value: false },
     chapterProject: { type: Boolean, value: false },
     myChapterApplications: { type: Array, value: [] },
     myChapterNodes: { type: Array, value: [] },

@@ -621,7 +621,7 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 2026-10-28 L9 再并 master(#652 模板页货架改版):重建实测 tap 2406 → 2414,增减与 master 自身台账变化逐项一致。
   // 2026-10-28 L9 再并 master(#656 章节翻转过场):整屏轻点继续 + 通关「继续」「保存通关卡」+3,tap 2414 → 2417(重建实测,与 master 台账变化一致)。
   // 用户要求删除声音开关：主线基数仅减少这一枚真实点击。
-  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 2405)  /* 2026-10-29 dw29 L1 Round 2:入场码组件改成票夹同款(撤「现在核销！」与放大码层的关闭/刷新)、删详情地址卡、删简介展开,重建实测 2410 → 2405。 */  /* 2026-10-29 dw29 L1:删订单详情两颗「查看票夹」、主题详情「我的游玩记录 / 主题音频讲解 / 举报这个主题」三行(-5),加首页城市重新定位、主题简介展开(+2),重建实测 2413 → 2410。 */  /* 2026-10-25 地图底部横滑卡片(点卡 = 点列表行)+1,重建实测 2182 → 2183。 */  /* 2026-10-25 官方地点卡:相册图、小红书行、评分星、发布评价、取景卡等新增 tap,重建实测 2177 → 2182。 */  /* 2026-10-07 动态绑定补齐4条tap。2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
+  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 2414)  /* 2026-10-29 dw29 l6 M-32 本月收入明细俱乐部计酬重试 +1,2413 → 2414。 */  /* 2026-10-25 地图底部横滑卡片(点卡 = 点列表行)+1,重建实测 2182 → 2183。 */  /* 2026-10-25 官方地点卡:相册图、小红书行、评分星、发布评价、取景卡等新增 tap,重建实测 2177 → 2182。 */  /* 2026-10-07 动态绑定补齐4条tap。2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
      onFrameShutter / onFrameCancel),其中 uploadPhotoFrame 与 onFrameShutter 是
      actionClass=external(real-device-required)、不进 local 分母 ⇒ 进账的是
      onFrameCancel(玩家端「退出取景」)+ clearPhotoFrame(商家端删图),1787 → 1789(重建实测)。 */
@@ -1743,7 +1743,8 @@ test('合并后可达动作 variant 全部进入台账且 handler 真源可定�
   // 2026-10-28 L9 再并 master(#652):+31 −16,控件 5513 → 5528(重建实测,与 master 台账变化逐项一致)。
   // 2026-10-28 L9 再并 master(#656):+6,控件 5528 → 5534(重建实测,与 master 台账变化逐项一致)。
   // 同一枚退役声音开关，总控件数减少1。
-  assert.equal(ledger.controlCount, 5541)  // 2026-10-29 dw29 L1 Round 2:入场码组件撤 openBigQr / closeBigQr×2 / 刷新 retry / 遮罩 noop,主题详情撤地址卡 goLocation 与 toggleHeroDesc,重建实测 5548 → 5541。 // 2026-10-29 dw29 L1 走查:删 5 个 tap(两颗查看票夹、游玩记录、音频讲解、举报)与订单详情宿主 catchtouchmove,加首页城市定位、简介展开 2 个 tap,重建实测 5552 → 5548
+  // 2026-10-29 dw29 l6 第二轮 M-32:本月收入明细新增「俱乐部计酬没加载出来，点这里重试」一颗 tap,5552 → 5553(重建实测)。
+  assert.equal(ledger.controlCount, 5553)
   // 搜索主题与其它结果拆成互斥点击 +1，合计 3268 → 3271（取动作账本重建实测）。
   // 合作页新增会话失效/无权限两个独立 cy-empty CTA，3271 → 3273。
   // 2026-09-02 俱乐部客户系统落地，3273 → 3295。

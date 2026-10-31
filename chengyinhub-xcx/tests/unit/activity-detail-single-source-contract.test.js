@@ -34,6 +34,8 @@ function loadOrderPage() {
     require(request) {
       if (request.endsWith('scene-registry.js')) return registry
       if (request.endsWith('activity-share.js')) return share
+      // M-25:订单页进页先问视角(商家改去我的项目);本用例是玩家宿主
+      if (request.endsWith('roleGuard.js')) return { isMerchantView: () => false }
       throw new Error(`unexpected dependency: ${request}`)
     },
   }, { filename })

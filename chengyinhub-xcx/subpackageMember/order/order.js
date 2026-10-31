@@ -3,6 +3,7 @@
 const app = getApp();
 const { activityShareFromEvent } = require('../../utils/activity-share.js');
 const { getScene } = require('../../utils/scene-registry.js');
+const roleGuard = require('../../utils/roleGuard.js');
 
 Page({
   data: {
@@ -13,6 +14,11 @@ Page({
     sceneCurrent: null,
   },
   onLoad(options) {
+    // M-25(2026-10-27 业主):商家不报名游玩、没有订单 —— 商家视角从任何入口进订单页都直接换成「我的项目」
+    if (roleGuard.isMerchantView()) {
+      wx.redirectTo({ url: '/subpackageA/pages/myproject/index?scope=MERCHANT' });
+      return;
+    }
     const detailId = options && options.detailId;
     if (!detailId) return;
     const scene = getScene('member-order-detail', { id: detailId });

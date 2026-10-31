@@ -133,6 +133,7 @@ const loadPage = (rel, options = {}) => {
         parseRatio: () => null,
         clampTransform: (value) => value,
         computeCropRect: () => null,
+        fitFrame: require(path.join(ROOT, 'pages/crop/utils/crop-geometry.js')).fitFrame,
       }
     }
     // 2026-08-26 点赞爆一下:动效与减动效偏好走既有真源,用真模块不用桩 ——
