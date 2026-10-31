@@ -26,6 +26,12 @@ public class TopicTemplateNodeVO {
     @Schema(description = "一句钩子（hookText，空则回退 description 截 40 字）")
     private String hookTeaser;
 
+    @Schema(description = "这一站的玩法名称（取自模板 title，与 games 同一来源）")
+    private String gameTitle;
+
+    @Schema(description = "这一站玩法的预计时长（取自模板 duration，分钟）")
+    private Long gameDuration;
+
     // ====== getters/setters ======
 
     public String getName() { return name; }
@@ -38,4 +44,8 @@ public class TopicTemplateNodeVO {
     public void setInteractionType(String interactionType) { this.interactionType = interactionType; }
     public String getHookTeaser() { return hookTeaser; }
     public void setHookTeaser(String hookTeaser) { this.hookTeaser = hookTeaser; }
+    public String getGameTitle() { return gameTitle; }
+    public void setGameTitle(String gameTitle) { this.gameTitle = gameTitle; }
+    public Long getGameDuration() { return gameDuration; }
+    public void setGameDuration(Long gameDuration) { this.gameDuration = gameDuration; }
 }
