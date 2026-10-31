@@ -1379,10 +1379,10 @@
         <block wx:if="{{publishCheck.preview.ticketRows.length}}">
           <view class="sp-sec">票务</view>
           <view class="sp-group">
-            <view class="sp-row {{index === 0 && publishCheck.preview.ticketFlag ? 'is-flag' : ''}}" wx:for="{{publishCheck.preview.ticketRows}}" wx:key="key"
+            <view class="sp-row {{item.key === publishCheck.preview.ticketFlagRow ? 'is-flag' : ''}}" wx:for="{{publishCheck.preview.ticketRows}}" wx:key="key"
                   data-target="ticket" bindtap="onPreviewEdit" aria-role="button" aria-label="{{item.k}} {{item.v}}，去票务设置" hover-class="cy-pressed" hover-stay-time="80">
               <text class="sp-row__k">{{item.k}}</text>
-              <text class="sp-row__v">{{index === 0 && publishCheck.preview.ticketFlag ? publishCheck.preview.ticketFlag : item.v}}</text>
+              <text class="sp-row__v">{{item.key === publishCheck.preview.ticketFlagRow ? publishCheck.preview.ticketFlag : item.v}}</text>
               <cy-icon name="chevron-right" size="24" />
             </view>
           </view>

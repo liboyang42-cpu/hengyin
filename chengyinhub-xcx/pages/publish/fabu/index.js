@@ -6622,7 +6622,7 @@ Page({
     const fd = this.data.formData || {};
     const freeExplore = Number(fd.productType) === 2;
     const merchantScope = this.data.operationScope === 'MERCHANT';
-    const issues = (blocking || this.data.publishCheck.blocking || []).map((item) => Object.assign({ label: item.label }, previewIssueWhere(item.field)));
+    const issues = (blocking || this.data.publishCheck.blocking || []).map((item) => Object.assign({ label: item.label, field: item.field }, previewIssueWhere(item.field)));
     const ticketIssue = issues.find((item) => item.ticket);
     const chapterIssue = (index) => issues.find((item) => item.chapter === index);
     const ticket = (fd.tickets || [])[0] || null;
@@ -6673,6 +6673,8 @@ Page({
         { key: 'sale', k: '售票', v: freeExplore ? '招商结束后开售' : (previewDay(ticket.saleStartTime) ? previewDay(ticket.saleStartTime) + '起' : '—') },
       ] : [],
       ticketFlag: ticketIssue ? '* ' + ticketIssue.label : '',
+      // 标红落到对应那一行:售票时间 → 售票,档期起止 → 档期,其余(名称 / 价格 / 实名)→ 票种行
+      ticketFlagRow: !ticketIssue ? '' : (/sale/i.test(ticketIssue.field || '') ? 'sale' : (/ticket(Start|End)/.test(ticketIssue.field || '') ? 'validity' : 'name')),
       settings: [
         { icon: 'flag', k: '模式', target: 'detail', v: freeExplore ? '自由探索' : '城市定向' },
         { icon: 'check', k: '通关规则', target: 'detail', v: this.data.completionRuleMode === 'AT_LEAST'
