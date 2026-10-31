@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>漫游历史</title>
+<style>
+/* ===== 共用：玩家深色 token（chengyinhub-xcx/style/tokens.wxss） ===== */
+:root{
+  --bg:#000000; --surface:#0A0A0B; --subtle:#141416; --elev:#1C1C1E;
+  --t1:#F8F8F8; --t2:#B7B7B7; --t3:#919191; --inv:#0A0A0A;
+  --bd:rgba(255,255,255,.08); --brand:#F8F8F8; --brand-soft:rgba(248,248,248,.12);
+  --ok:#22C55E; --warn:#D58300; --danger:#E5484D;
+  --r-md:12px; --r-lg:16px; --pill:999px; --px:16px;
+  --mono:"SF Mono","DIN Alternate",ui-monospace,Menlo,monospace;
+  --ease-out:cubic-bezier(.22,.61,.36,1); --ease-std:cubic-bezier(.4,0,.2,1); --spring:cubic-bezier(.2,1.4,.5,1);
+  --desk:#101113; --desk-card:#191A1D; --desk-t:#E6E6E6; --desk-t2:#9A9A9A; --desk-bd:rgba(255,255,255,.1);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--desk);color:var(--desk-t);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue","Microsoft YaHei",sans-serif;-webkit-font-smoothing:antialiased}
+body{overflow-x:hidden}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+input{font:inherit}
+.stage{min-height:100vh;display:flex;gap:40px;justify-content:center;align-items:flex-start;padding:32px 16px}
+/* 手机框 */
+.phone{position:relative;flex:none;width:375px;height:812px;border-radius:44px;overflow:hidden;background:var(--bg);color:var(--t1);
+  box-shadow:0 0 0 10px #232427,0 0 0 11px #3a3b3f,0 30px 80px rgba(0,0,0,.55);isolation:isolate}
+.sb{position:absolute;left:0;right:0;top:0;height:44px;z-index:95;display:flex;align-items:center;justify-content:space-between;padding:0 22px 0 34px;font-size:15px;font-weight:600;pointer-events:none;color:var(--t1)}
+.sb__r{display:flex;gap:5px;align-items:center}
+.nav{position:absolute;left:0;right:0;top:44px;height:44px;z-index:94;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.nav > *{pointer-events:auto}
+.nav__t{font-size:17px;font-weight:600;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:opacity .2s var(--ease-out)}
+.nav__back{position:absolute;left:4px;top:0;width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:var(--t1)}
+.capsule{position:absolute;z-index:97;right:7px;top:50px;width:87px;height:32px;border-radius:16px;background:rgba(0,0,0,.15);border:1px solid rgba(255,255,255,.28);display:flex;align-items:center;color:#fff;pointer-events:none}
+.capsule span{flex:1;display:flex;align-items:center;justify-content:center}
+.capsule i.sep{width:1px;height:18px;background:rgba(255,255,255,.28)}
+.home-ind{position:absolute;left:50%;bottom:8px;width:134px;height:5px;margin-left:-67px;border-radius:3px;background:rgba(255,255,255,.85);z-index:96;pointer-events:none}
+/* 屏 */
+.screen{position:absolute;inset:0;background:var(--bg);transition:transform .36s var(--ease-std),opacity .36s var(--ease-std)}
+.screen.is-right{transform:translateX(100%)}
+.screen.is-left{transform:translateX(-28%);opacity:.6}
+.scroll{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none}
+.scroll::-webkit-scrollbar{display:none}
+/* toast */
+.toast{position:absolute;left:50%;top:46%;z-index:200;max-width:280px;padding:11px 16px;border-radius:12px;background:rgba(28,28,30,.96);border:1px solid var(--bd);color:var(--t1);font-size:14px;line-height:1.45;text-align:center;
+  transform:translate(-50%,8px);opacity:0;pointer-events:none;transition:opacity .2s var(--ease-out),transform .2s var(--ease-out)}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+/* 弹层（原型 .psheet / .pdim） */
+.dim{position:absolute;inset:0;z-index:150;background:rgba(0,0,0,.62);opacity:0;pointer-events:none;transition:opacity .28s var(--ease-std)}
+.dim.on{opacity:1;pointer-events:auto}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:160;max-height:80%;overflow-y:auto;scrollbar-width:none;background:#000;border-radius:28px 28px 0 0;padding:0 var(--px) 34px;
+  transform:translateY(105%);transition:transform .32s var(--ease-std);border-top:1px solid var(--bd)}
+.sheet::-webkit-scrollbar{display:none}
+.sheet.on{transform:none}
+.sheet__grab{display:block;width:40px;height:4px;border-radius:2px;margin:10px auto 0;background:rgba(255,255,255,.22);position:relative}
+.sheet__grab::after{content:"";position:absolute;left:50%;top:50%;width:44px;height:44px;transform:translate(-50%,-50%)}
+.sheet__x{position:absolute;right:12px;top:12px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:#C4CBD4}
+.sheet__h{display:block;margin:20px 0 4px;font-size:20px;font-weight:700}
+.drow{display:flex;align-items:center;gap:14px;padding:15px 0;min-height:58px;border-top:1px solid rgba(255,255,255,.07);width:100%;text-align:left}
+.drow:first-of-type{border-top:0}
+.dic{flex:none;width:26px;height:26px;display:flex;align-items:center;justify-content:center;color:#8A93A0}
+.dcopy{flex:1;min-width:0;display:flex;flex-direction:column}
+.dt{font-size:14px;color:#fff}
+.ds{margin-top:2px;font-size:11px;color:#6A7282}
+.dv{flex:none;margin-left:auto;font-size:12px;color:#8A93A0}
+.darr{flex:none;margin-left:8px;color:#5B6472;display:flex}
+.dsw{flex:none;margin-left:auto;position:relative;width:44px;height:26px;border-radius:999px;background:#1E2228;transition:background .18s var(--ease-out)}
+.dsw i{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#8A93A0;transition:transform .18s var(--ease-out),background .18s var(--ease-out)}
+.dsw.is-on{background:#fff}
+.dsw.is-on i{transform:translateX(18px);background:#0A0A0A}
+.badge-new{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:999px;background:var(--ok);color:#04130A;font-size:10px;font-weight:700;vertical-align:1px}
+/* 主按钮 */
+.btn{display:flex;align-items:center;justify-content:center;gap:6px;height:44px;padding:0 18px;border-radius:999px;font-size:15px;font-weight:600}
+.btn--w{background:var(--brand);color:var(--inv)}
+.btn--s{background:var(--brand-soft);color:var(--t1)}
+/* 说明面板 */
+.panel{width:320px;flex:none;background:var(--desk-card);border:1px solid var(--desk-bd);border-radius:16px;padding:20px;font-size:13px;line-height:1.6;color:var(--desk-t)}
+.panel h1{font-size:18px;margin-bottom:2px}
+.panel .id{display:inline-block;font-family:var(--mono);font-size:12px;padding:2px 8px;border-radius:6px;background:#2a2b30;color:#d6d6d6;margin-bottom:8px}
+.panel h2{font-size:12px;font-weight:600;color:var(--desk-t2);margin:16px 0 6px;letter-spacing:.04em}
+.panel ul{padding-left:18px}
+.panel li{margin:3px 0}
+.panel .note{margin-top:12px;padding:10px 12px;border-radius:10px;background:#22201a;color:#e2c98f;font-size:12px}
+.segs{display:flex;flex-wrap:wrap;gap:6px}
+.segs button{padding:6px 12px;border-radius:999px;border:1px solid var(--desk-bd);background:#202125;color:var(--desk-t);font-size:12px}
+.segs button.on{background:#F8F8F8;color:#0A0A0A;border-color:#F8F8F8}
+.ic{display:inline-flex;align-items:center;justify-content:center;line-height:0}
+@media (max-width:760px){.stage{flex-direction:column;align-items:center}.panel{width:100%;max-width:375px}}
+@media (max-width:420px){.stage{padding:0 0 24px;gap:20px}.phone{width:100vw;max-width:375px;border-radius:0;box-shadow:none}.panel{width:auto;align-self:stretch;margin:0 16px;max-width:none}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:0s!important;animation-duration:0s!important;animation-iteration-count:1!important;scroll-behavior:auto!important}}
+
+.phone,.screen{background:#0A0A0B}
+.nav{background:rgba(10,10,11,0);transition:background .2s var(--ease-out)}
+.nav.is-solid{background:rgba(10,10,11,.92);backdrop-filter:blur(14px);border-bottom:1px solid var(--bd)}
+.nav .nav__t{opacity:0}
+.nav.is-solid .nav__t{opacity:1}
+.top-fill{position:absolute;left:0;right:0;top:0;height:44px;z-index:93;background:rgba(10,10,11,0);transition:background .2s}
+.top-fill.is-solid{background:rgba(10,10,11,.92);backdrop-filter:blur(14px)}
+.hs{padding:88px 0 40px}
+.big-t{padding:6px 16px 8px;font-size:28px;font-weight:700;letter-spacing:.5px}
+.hs-sum{display:flex;gap:15px;padding:0 16px 12px;color:var(--t3);font-size:13.5px}
+.hs-sum b{color:var(--t1);font-family:var(--mono);font-weight:700;margin-right:2px}
+.hs-tools{display:flex;gap:8px;padding:0 16px 12px}
+.hs-tool{flex:1;min-height:44px;display:flex;align-items:center;justify-content:center;gap:5px;border-radius:999px;background:var(--subtle);font-size:13px;font-weight:600}
+.chips{position:sticky;top:88px;z-index:5;display:flex;gap:8px;padding:8px 16px 10px;background:#0A0A0B;overflow-x:auto;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;height:32px;padding:0 14px;border-radius:999px;background:var(--elev);color:var(--t2);font-size:13px}
+.chip.on{background:var(--brand);color:var(--inv);font-weight:600}
+.mon{padding:18px 16px 10px}
+.mon__h{display:flex;align-items:baseline;gap:8px}
+.mon__m{font-size:22px;font-weight:800}
+.mon__y{font-size:13px;color:var(--t3)}
+.mon__tot{display:flex;gap:22px;margin-top:8px}
+.mon__tot b{display:block;font-family:"Helvetica Neue",Arial,sans-serif;font-style:italic;font-weight:900;font-size:22px;letter-spacing:-.5px;line-height:1.1}
+.mon__tot span{font-size:11px;color:var(--t3)}
+.rc{display:block;width:calc(100% - 32px);margin:0 16px 12px;text-align:left;border-radius:16px;overflow:hidden;background:var(--subtle);border:1px solid var(--bd);transition:transform .18s var(--ease-out)}
+.rc:active{transform:scale(.985)}
+.rc__map{position:relative;height:172px;background:#1E2024}
+.rc__map > svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.rc__map::after{content:"";position:absolute;inset:auto 0 0 0;height:40px;background:linear-gradient(180deg,rgba(20,20,22,0),rgba(20,20,22,.9))}
+.rc__date{position:absolute;left:10px;top:10px;z-index:2;padding:4px 10px;border-radius:999px;background:rgba(10,10,11,.66);backdrop-filter:blur(8px);font-size:11.5px;color:var(--t1)}
+.rc__medal{position:absolute;right:10px;top:10px;z-index:2;display:flex;align-items:center;gap:4px;padding:4px 9px;border-radius:999px;background:rgba(213,131,0,.2);color:#F5B547;font-size:11px;font-weight:600}
+.rc__body{padding:4px 14px 12px}
+.rc__title{font-size:16px;font-weight:700}
+.rc__sub{font-size:12px;color:var(--t3);margin-left:6px;font-weight:400}
+.rc__stats{display:flex;justify-content:space-between;margin-top:10px}
+.rc__v{display:block;font-family:var(--mono);font-size:17px;font-weight:700}
+.rc__l{font-size:11px;color:var(--t3)}
+.rc__foot{display:flex;align-items:center;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--bd);font-size:11.5px;color:var(--t3)}
+.rc__foot .ic{color:var(--warn)}
+.none{padding:48px 16px;text-align:center;color:var(--t3);font-size:13px}
+/* 空态 / 错误 / 加载（还原 cy-empty / cy-error 文案） */
+.state{display:flex;flex-direction:column;align-items:center;padding:72px 32px 0;text-align:center}
+.state__ic{width:72px;height:72px;border-radius:50%;background:var(--subtle);display:flex;align-items:center;justify-content:center;color:var(--t3)}
+.state__t{margin-top:16px;font-size:17px;font-weight:700}
+.state__s{margin-top:6px;font-size:13px;color:var(--t3)}
+.state .btn{margin-top:20px;min-width:168px}
+.state__ghost{width:100%;margin-top:28px;border-radius:16px;overflow:hidden;opacity:.35;border:1px dashed rgba(255,255,255,.2);height:120px;position:relative}
+.state__ghost > svg{position:absolute;inset:0;width:100%;height:100%}
+.loading{padding:60px 0;text-align:center;color:var(--t3);font-size:14px}
+.skel{margin:0 16px 12px;height:250px;border-radius:16px;background:linear-gradient(90deg,#141416 0,#1C1C1E 40%,#141416 80%);background-size:200% 100%;animation:sk 1.2s linear infinite}
+@keyframes sk{to{background-position:-200% 0}}
+/* 详情 */
+.dt-map{position:relative;height:400px;background:#1E2024}
+.dt-map > svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.dt-map::before{content:"";position:absolute;inset:0 0 auto 0;height:110px;z-index:1;background:linear-gradient(180deg,rgba(10,10,11,.85),rgba(10,10,11,0))}
+.dt-map::after{content:"";position:absolute;inset:auto 0 0 0;height:90px;background:linear-gradient(180deg,rgba(10,10,11,0),#0A0A0B)}
+.dt-legend{position:absolute;right:12px;bottom:18px;z-index:2;display:flex;gap:10px;font-size:11px;color:var(--t2)}
+.dt-legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;vertical-align:0}
+.dt-body{padding:0 16px 40px;margin-top:-18px;position:relative;z-index:2}
+.dt-date{font-size:13px;color:var(--t3)}
+.dt-t{margin-top:2px;font-size:22px;font-weight:700}
+.dt-big{margin-top:14px;display:flex;align-items:baseline;gap:8px}
+.dt-big b{font-family:"Helvetica Neue",Arial,sans-serif;font-style:italic;font-weight:900;font-size:76px;line-height:.9;letter-spacing:-3px}
+.dt-big span{font-size:17px;font-weight:600;color:var(--t2)}
+.dt-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 8px;margin-top:20px;padding-top:16px;border-top:1px solid var(--bd)}
+.dt-grid b{display:block;font-family:"Helvetica Neue",Arial,sans-serif;font-style:italic;font-weight:900;font-size:24px;letter-spacing:-.5px}
+.dt-grid span{font-size:11.5px;color:var(--t3)}
+.dt-sec{margin-top:24px;font-size:13px;font-weight:600;color:var(--t2)}
+.dt-medals{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.dt-medal{display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;background:var(--subtle);border:1px solid var(--bd);font-size:12.5px}
+.dt-medal .ic{color:var(--warn)}
+.dt-stamps{display:flex;gap:10px;margin-top:10px;overflow-x:auto;scrollbar-width:none}
+.dt-stamp{flex:none;width:96px;padding:6px 6px 8px;border-radius:6px;background:#F2EFE8;color:#121212;font-size:10.5px;text-align:center}
+.dt-stamp i{display:block;height:84px;border-radius:3px;margin-bottom:6px}
+.dt-btns{display:flex;gap:10px;margin-top:28px}
+.dt-btns .btn{flex:1}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="phone" id="phone">
+    <div class="sb"></div>
+    <div class="top-fill" id="topFill"></div>
+    <div class="capsule"></div>
+
+    <!-- 列表页（G-1：variant 'page'，全屏页面，不再是黑色 full sheet） -->
+    <section class="screen" id="scrList">
+      <div class="scroll" id="listScroll">
+        <div class="hs">
+          <div class="big-t">漫游历史</div>
+          <div class="hs-sum" id="sum"></div>
+          <div class="hs-tools">
+            <button class="hs-tool" data-act="tool" data-arg="那年今日"><i data-ic="calendar" data-size="16"></i>那年今日</button>
+            <button class="hs-tool" data-act="tool" data-arg="月度回顾"><i data-ic="list" data-size="16"></i>月度回顾</button>
+            <button class="hs-tool" data-act="tool" data-arg="导出"><i data-ic="download" data-size="16"></i>导出</button>
+          </div>
+          <div class="chips" id="chips">
+            <button class="chip on" data-act="filter" data-arg="all">全部</button>
+            <button class="chip" data-act="filter" data-arg="this">本月</button>
+            <button class="chip" data-act="filter" data-arg="last">上月</button>
+            <button class="chip" data-act="filter" data-arg="medal">有勋章</button>
+            <button class="chip" data-act="filter" data-arg="stamp">有邮票</button>
+          </div>
+          <div id="list"></div>
+        </div>
+      </div>
+      <div class="nav" id="listNav"><button class="nav__back" data-act="back" aria-label="返回"><i data-ic="back"></i></button><span class="nav__t">漫游历史</span></div>
+    </section>
+
+    <!-- 详情页 -->
+    <section class="screen is-right" id="scrDetail">
+      <div class="scroll" id="detailScroll"><div id="detail"></div></div>
+      <div class="nav" id="detailNav"><button class="nav__back" data-act="back" aria-label="返回"><i data-ic="back"></i></button><span class="nav__t" id="detailTitle">城西漫游</span></div>
+    </section>
+
+    <div class="dim" id="dim" data-act="closeSheetAct"></div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <div class="home-ind"></div>
+  </div>
+
+  <aside class="panel">
+    <span class="id">P-37 · 第 4 批 · 需先确认原型</span>
+    <h1>漫游历史</h1>
+    <h2>现状（p120）</h2>
+    <ul>
+      <li>漫游抽屉「记录」→ <code>roam-history</code> 黑色 full sheet，里面是 cy-scene-roam-history：汇总一行 + 三个工具 + RunCard 列表（左侧 69px 小方图 / 走路图标，下面三格数字）。</li>
+    </ul>
+    <h2>这版改了什么</h2>
+    <ul>
+      <li>改成<b>全屏页面</b>（G-1）：导航栏返回、大标题，滚动后导航栏出标题。页面底色用 surface #0A0A0B，卡片用 #141416，地图用深灰样式，不是纯黑。</li>
+      <li>按月分组（参考 NRC 历史）：每月一个头，带当月 距离 / 次数 / 时长 合计。</li>
+      <li>每条记录是一张<b>轨迹地图卡</b>：地图占卡片主体（街道 / 水系 / 公园 + 绿色轨迹，起点绿点、终点白点），下面日期、标题、公里 / 用时 / 探店 / 探索度，底行邮票和勋章。</li>
+      <li>点卡片进详情：大地图 + NRC 斜体大数字 + 六格数据 + 勋章 + 邮票 + 分享（接 P-36 通用分享页）。</li>
+      <li>筛选：全部 / 本月 / 上月 / 有勋章 / 有邮票。汇总行、三个工具、空态文案沿用现有组件。</li>
+    </ul>
+    <h2>数据状态</h2>
+    <div class="segs">
+      <button class="on" data-act="state" data-seg="state" data-arg="data">有数据</button>
+      <button data-act="state" data-seg="state" data-arg="empty">空态</button>
+      <button data-act="state" data-seg="state" data-arg="progress">漫游中</button>
+      <button data-act="state" data-seg="state" data-arg="loading">加载中</button>
+      <button data-act="state" data-seg="state" data-arg="error">加载失败</button>
+    </div>
+    <h2>快捷</h2>
+    <div class="segs">
+      <button data-act="openFirst">打开第一条详情</button>
+    </div>
+    <div class="note">地名、勋章名为示例数据。地图为手绘风格化 SVG，不是真实瓦片。</div>
+  </aside>
+</div>
+<script>
+/* ===== 共用：工具、图标、弹层栈、点击委托、风格化地图 ===== */
+const $ = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+const IC = {
+  back: '<path d="m15 18-6-6 6-6"/>',
+  x: '<path d="M18 6 6 18M6 6l12 12"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  share: '<path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="m16 6-4-4-4 4"/><path d="M12 2v13"/>',
+  chat: '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',
+  aperture: '<circle cx="12" cy="12" r="10"/><path d="m14.31 8 5.74 9.94M9.69 8h11.48M7.38 12l5.74-9.94M9.69 16 3.95 6.06M14.31 16H2.83M16.62 12l-5.74 9.94"/>',
+  square: '<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>',
+  book: '<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/><path d="M9 7h6"/>',
+  download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',
+  link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+  pin: '<path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>',
+  users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+  nav: '<path d="m3 11 19-9-9 19-2-8-8-2z"/>',
+  gear: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+  crosshair: '<circle cx="12" cy="12" r="8"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><circle cx="12" cy="12" r="1.5"/>',
+  star: '<path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/>',
+  calendar: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+  list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
+  more: '<circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/>',
+  camera: '<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z"/><circle cx="12" cy="13" r="3.5"/>',
+  clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+  route: '<circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/>',
+  chev: '<path d="m9 18 6-6-6-6"/>',
+  chevl: '<path d="m15 18-6-6 6-6"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>',
+  image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21"/>',
+  info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
+  walk: '<circle cx="13" cy="4" r="2"/><path d="m9 20 3-6 3 3v4M7.5 12.5 10 8l4 1 2 3"/>',
+  medal: '<path d="M7.21 15 2.66 7.14a2 2 0 0 1 .13-2.2L4.4 2.8A2 2 0 0 1 6 2h12a2 2 0 0 1 1.6.8l1.6 2.14a2 2 0 0 1 .14 2.2L16.79 15"/><circle cx="12" cy="17" r="5"/>',
+  layers: '<path d="m12 2 10 5-10 5L2 7z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/>',
+  flag: '<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22v-7"/>',
+  gift: '<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"/>',
+  stamp: '<path d="M5 22h14M19.27 13.73A2.5 2.5 0 0 0 17.5 13h-11A2.5 2.5 0 0 0 4 15.5V17a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-1.5c0-.66-.26-1.3-.73-1.77"/><path d="M14 13V8.5C14 7 15 7 15 5a3 3 0 0 0-6 0c0 2 1 2 1 3.5V13"/>',
+  filter: '<path d="M3 6h18M7 12h10M10 18h4"/>',
+  bell: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+  trash: '<path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  fog: '<path d="M4 14h16M2 18h14M6 10h14M8 6h8"/>',
+  pause: '<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>',
+  play: '<path d="M7 4.5v15l12-7.5z"/>',
+};
+function ic(name, size) { const s = size || 24; return '<svg viewBox="0 0 24 24" width="' + s + '" height="' + s + '" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (IC[name] || '') + '</svg>'; }
+function hydrateIcons(root) { $$('[data-ic]', root).forEach(el => { if (!el.dataset.icDone) { el.innerHTML = ic(el.dataset.ic, Number(el.dataset.size) || 24); el.classList.add('ic'); el.dataset.icDone = '1'; } }); }
+
+let toastTimer = 0;
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('on');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('on'), 1900);
+}
+
+/* 弹层栈：返回先关弹层（G-2） */
+const sheetStack = [];
+function openSheet(id) {
+  const s = document.getElementById(id); if (!s) return;
+  if (sheetStack.indexOf(id) < 0) sheetStack.push(id);
+  s.style.zIndex = 160 + sheetStack.length * 2;
+  document.getElementById('dim').style.zIndex = 159 + sheetStack.length * 2;
+  document.getElementById('dim').classList.add('on');
+  requestAnimationFrame(() => s.classList.add('on'));
+}
+function closeSheet() {
+  const id = sheetStack.pop(); if (!id) return false;
+  document.getElementById(id).classList.remove('on');
+  const dim = document.getElementById('dim');
+  if (!sheetStack.length) dim.classList.remove('on'); else dim.style.zIndex = 159 + sheetStack.length * 2;
+  return true;
+}
+function closeAllSheets() { while (sheetStack.length) closeSheet(); }
+
+/* 拖动后吞掉紧跟的一次 click（卡片拖动 / 地图拖动） */
+let swallowClick = false;
+document.addEventListener('click', (ev) => {
+  if (swallowClick) { swallowClick = false; return; }
+  const el = ev.target.closest('[data-act]');
+  if (!el) return;
+  if (el.getAttribute('aria-disabled') === 'true' && !el.dataset.allowDisabled) return;
+  const fn = (typeof ACT !== 'undefined') && ACT[el.dataset.act];
+  if (fn) fn(el, ev); else console.warn('未定义动作', el.dataset.act);
+});
+function setSeg(group, value) { $$('[data-seg="' + group + '"]').forEach(b => b.classList.toggle('on', b.dataset.arg === value)); }
+
+/* 可复现随机 */
+function rng(seed) { let a = seed >>> 0; return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+/* 风格化深色地图（G-12）：街道网格 / 水系 / 公园块 + 可选轨迹。无真实瓦片。 */
+let mapUid = 0;
+function genRoute(R, w, h, o) {
+  const pad = o.pad == null ? Math.min(w, h) * .16 : o.pad;
+  const ang = o.ang;
+  const n = o.segs || (7 + Math.floor(R() * 6));
+  let x = o.sx != null ? o.sx : pad + R() * (w - pad * 2) * .5 + (w - pad * 2) * .1;
+  let y = o.sy != null ? o.sy : pad + R() * (h - pad * 2) * .4 + (h - pad * 2) * .35;
+  const pts = [[x, y]];
+  let dir = Math.floor(R() * 4);
+  const unit = Math.min(w, h) * (o.step || .16);
+  for (let i = 0; i < n; i++) {
+    dir = (dir + (R() < .5 ? 1 : 3) + (R() < .2 ? 1 : 0)) % 4;
+    const a = ang + dir * Math.PI / 2;
+    const len = unit * (.6 + R() * 1.1);
+    let nx = x + Math.cos(a) * len, ny = y + Math.sin(a) * len;
+    if (nx < pad || nx > w - pad || ny < pad || ny > h - pad) { nx = x - Math.cos(a) * len; ny = y - Math.sin(a) * len; }
+    nx = Math.max(pad, Math.min(w - pad, nx)); ny = Math.max(pad, Math.min(h - pad, ny));
+    x = nx; y = ny; pts.push([x, y]);
+  }
+  return pts;
+}
+function routePath(pts) {
+  let d = 'M' + pts[0][0].toFixed(1) + ' ' + pts[0][1].toFixed(1);
+  for (let i = 1; i < pts.length - 1; i++) {
+    const [x0, y0] = pts[i - 1], [x1, y1] = pts[i], [x2, y2] = pts[i + 1];
+    const r = 0.28;
+    const ax = x1 + (x0 - x1) * r, ay = y1 + (y0 - y1) * r, bx = x1 + (x2 - x1) * r, by = y1 + (y2 - y1) * r;
+    d += ' L' + ax.toFixed(1) + ' ' + ay.toFixed(1) + ' Q' + x1.toFixed(1) + ' ' + y1.toFixed(1) + ' ' + bx.toFixed(1) + ' ' + by.toFixed(1);
+  }
+  const l = pts[pts.length - 1]; d += ' L' + l[0].toFixed(1) + ' ' + l[1].toFixed(1);
+  return d;
+}
+function mapSVG(seed, w, h, o) {
+  o = o || {};
+  const R = rng(seed * 7919 + 13);
+  const uid = 'mp' + (mapUid++);
+  const angDeg = o.angDeg != null ? o.angDeg : (R() * 36 - 18);
+  const ang = angDeg * Math.PI / 180;
+  const pal = Object.assign({ bg: '#17181B', block: '#1B1C20', minor: '#232529', major: '#30333A', water: '#0F1C27', park: '#13221A', route: '#22C55E' }, o.pal || {});
+  let s = '<svg class="' + (o.cls || 'msvg') + '" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">';
+  s += '<rect width="' + w + '" height="' + h + '" fill="' + pal.bg + '"/>';
+  s += '<g transform="rotate(' + angDeg.toFixed(1) + ' ' + w / 2 + ' ' + h / 2 + ')">';
+  const big = Math.max(w, h) * 1.6, ox = w / 2 - big / 2, oy = h / 2 - big / 2;
+  const step = (o.street || 26) * (0.85 + R() * .4);
+  // 街区块（略亮的块面）
+  for (let gx = ox; gx < ox + big; gx += step) for (let gy = oy; gy < oy + big; gy += step) {
+    if (R() < .55) s += '<rect x="' + (gx + 3).toFixed(1) + '" y="' + (gy + 3).toFixed(1) + '" width="' + (step - 6).toFixed(1) + '" height="' + (step - 6).toFixed(1) + '" rx="2" fill="' + pal.block + '"/>';
+  }
+  // 公园
+  const parks = 1 + Math.floor(R() * 2);
+  for (let i = 0; i < parks; i++) {
+    const pw = step * (1.6 + R() * 2), ph = step * (1.2 + R() * 1.8);
+    s += '<rect x="' + (w * (.1 + R() * .7)).toFixed(1) + '" y="' + (h * (.1 + R() * .7)).toFixed(1) + '" width="' + pw.toFixed(1) + '" height="' + ph.toFixed(1) + '" rx="8" fill="' + pal.park + '"/>';
+  }
+  // 次干道
+  let lines = '';
+  let k = 0;
+  for (let gx = ox; gx < ox + big; gx += step, k++) lines += '<line x1="' + gx.toFixed(1) + '" y1="' + oy + '" x2="' + gx.toFixed(1) + '" y2="' + (oy + big) + '" stroke="' + (k % 4 === 1 ? pal.major : pal.minor) + '" stroke-width="' + (k % 4 === 1 ? 4 : 1.4) + '"/>';
+  k = 0;
+  for (let gy = oy; gy < oy + big; gy += step, k++) lines += '<line x1="' + ox + '" y1="' + gy.toFixed(1) + '" x2="' + (ox + big) + '" y2="' + gy.toFixed(1) + '" stroke="' + (k % 4 === 2 ? pal.major : pal.minor) + '" stroke-width="' + (k % 4 === 2 ? 4 : 1.4) + '"/>';
+  s += lines + '</g>';
+  // 水系（一条弯河）
+  if (o.water !== false && (o.water === true || R() > .3)) {
+    const y0 = h * (.15 + R() * .7), amp = h * .12;
+    const ww = Math.max(14, Math.min(w, h) * (.07 + R() * .05));
+    s += '<path d="M' + (-w * .1) + ' ' + y0.toFixed(1) + ' C' + (w * .3) + ' ' + (y0 - amp).toFixed(1) + ' ' + (w * .6) + ' ' + (y0 + amp).toFixed(1) + ' ' + (w * 1.1) + ' ' + (y0 - amp * .4).toFixed(1) + '" stroke="' + pal.water + '" stroke-width="' + ww.toFixed(1) + '" fill="none" stroke-linecap="round"/>';
+  }
+  let pts = null;
+  if (o.route !== false) {
+    pts = o.pts || genRoute(R, w, h, Object.assign({ ang: ang }, o.routeOpt || {}));
+    const d = routePath(pts);
+    const rw = o.rw || Math.max(2.5, Math.min(w, h) * .018);
+    s += '<path d="' + d + '" fill="none" stroke="' + pal.route + '" stroke-opacity=".22" stroke-width="' + (rw * 3.2).toFixed(1) + '" stroke-linecap="round" stroke-linejoin="round"/>';
+    s += '<path d="' + d + '" fill="none" stroke="' + pal.route + '" stroke-width="' + rw.toFixed(1) + '" stroke-linecap="round" stroke-linejoin="round"/>';
+    if (o.dots !== false) {
+      const a = pts[0], b = pts[pts.length - 1], dr = rw * 1.7;
+      s += '<circle cx="' + a[0].toFixed(1) + '" cy="' + a[1].toFixed(1) + '" r="' + dr.toFixed(1) + '" fill="' + pal.route + '" stroke="#0A0A0B" stroke-width="' + (rw * .8).toFixed(1) + '"/>';
+      s += '<circle cx="' + b[0].toFixed(1) + '" cy="' + b[1].toFixed(1) + '" r="' + (dr * 1.1).toFixed(1) + '" fill="#F8F8F8" stroke="#0A0A0B" stroke-width="' + (rw * .8).toFixed(1) + '"/>';
+    }
+  }
+  s += (o.extra || '') + '</svg>';
+  return { svg: s, pts: pts, uid: uid };
+}
+function statusBarHTML() {
+  return '<span>9:41</span><span class="sb__r">' +
+    '<svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>' +
+    '<svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor"><path d="M8 2.6c2.2 0 4.2.9 5.7 2.3l1.2-1.2A9.7 9.7 0 0 0 8 .9 9.7 9.7 0 0 0 1.1 3.7l1.2 1.2A8 8 0 0 1 8 2.6Zm0 3.4c1.3 0 2.5.5 3.4 1.3l1.2-1.2A6.5 6.5 0 0 0 8 4.3a6.5 6.5 0 0 0-4.6 1.8l1.2 1.2C5.5 6.5 6.7 6 8 6Zm0 3.3c.5 0 1 .2 1.3.5L8 11.1 6.7 9.8c.3-.3.8-.5 1.3-.5Z"/></svg>' +
+    '<svg width="27" height="13" viewBox="0 0 27 13" fill="none"><rect x=".5" y=".5" width="22" height="12" rx="3.5" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="19" height="9" rx="2" fill="currentColor"/><path d="M24.5 4.5v4c.8-.3 1.5-1.1 1.5-2s-.7-1.7-1.5-2Z" fill="currentColor" opacity=".45"/></svg></span>';
+}
+function capsuleHTML() {
+  return '<span><svg width="20" height="6" viewBox="0 0 20 6" fill="currentColor"><circle cx="3" cy="3" r="2.2"/><circle cx="10" cy="3" r="2.6"/><circle cx="17" cy="3" r="2.2"/></svg></span><i class="sep"></i>' +
+    '<span><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="9" r="7"/><circle cx="9" cy="9" r="2.4" fill="currentColor" stroke="none"/></svg></span>';
+}
+function initChrome() {
+  $$('.sb').forEach(el => el.innerHTML = statusBarHTML());
+  $$('.capsule').forEach(el => el.innerHTML = capsuleHTML());
+  hydrateIcons(document);
+}
+
+const WEEK = '日一二三四五六';
+const PAL = { bg: '#1E2024', block: '#25272C', minor: '#2D3036', major: '#3B3F47', water: '#16293B', park: '#1B2F23', route: '#22C55E' };
+const SESS = [
+  { ts: '2026-10-24T15:20', zone: '城西', km: 3.42, dur: '58:12', sec: 3492, shops: 6, pct: 23, stamps: 3, xp: 120, medals: ['城西初探'] },
+  { ts: '2026-10-19T19:05', zone: '河岸', km: 2.10, dur: '36:40', sec: 2200, shops: 2, pct: 11, stamps: 1, xp: 40, medals: [] },
+  { ts: '2026-10-12T10:30', zone: '老城', km: 5.86, dur: '1:32:05', sec: 5525, shops: 9, pct: 31, stamps: 5, xp: 210, medals: ['老城漫游者', '九店连走'] },
+  { ts: '2026-10-03T16:45', zone: '大学城', km: 1.24, dur: '21:18', sec: 1278, shops: 1, pct: 6, stamps: 0, xp: 20, medals: [] },
+  { ts: '2026-09-27T14:10', zone: '示例街区', km: 4.05, dur: '1:10:22', sec: 4222, shops: 5, pct: 19, stamps: 2, xp: 95, medals: [] },
+  { ts: '2026-09-14T09:40', zone: '城东', km: 2.77, dur: '47:51', sec: 2871, shops: 3, pct: 14, stamps: 2, xp: 60, medals: ['早起漫游'] },
+  { ts: '2026-09-02T20:15', zone: '河岸', km: 1.92, dur: '31:09', sec: 1869, shops: 2, pct: 9, stamps: 0, xp: 35, medals: [] },
+  { ts: '2026-08-22T17:30', zone: '城西', km: 3.10, dur: '52:44', sec: 3164, shops: 4, pct: 15, stamps: 1, xp: 70, medals: [] },
+].map((s, i) => { const d = new Date(s.ts); return Object.assign(s, { i, d, m: d.getMonth() + 1, y: d.getFullYear(), title: s.zone + '漫游' }); });
+const S = { state: 'data', filter: 'all', open: -1 };
+const mapCache = {};
+
+function hms(sec) { const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60); return h ? h + ':' + String(m).padStart(2, '0') : m + ' 分'; }
+function dateShort(s) { return s.m + '/' + s.d.getDate() + ' 周' + WEEK[s.d.getDay()]; }
+function dateFull(s) { return s.y + '年' + s.m + '月' + s.d.getDate() + '日 周' + WEEK[s.d.getDay()] + ' ' + String(s.d.getHours()).padStart(2, '0') + ':' + String(s.d.getMinutes()).padStart(2, '0') + ' 出发'; }
+function cardMap(s) {
+  if (!mapCache[s.i]) mapCache[s.i] = mapSVG(100 + s.i * 37, 343, 172, { pal: PAL, street: 24, rw: 3.6, routeOpt: { segs: 8 + (s.shops % 5), step: .32 } }).svg;
+  return mapCache[s.i];
+}
+function filtered() {
+  return SESS.filter(s => S.filter === 'all' ? true : S.filter === 'this' ? (s.y === 2026 && s.m === 10) : S.filter === 'last' ? (s.y === 2026 && s.m === 9) : S.filter === 'medal' ? s.medals.length > 0 : s.stamps > 0);
+}
+function renderSum() {
+  const el = $('#sum');
+  if (S.state !== 'data') { el.style.display = 'none'; return; }
+  el.style.display = '';
+  const km = SESS.reduce((a, s) => a + s.km, 0), shops = SESS.reduce((a, s) => a + s.shops, 0);
+  el.innerHTML = '<span><b>' + SESS.length + '</b>次漫游</span><span><b>' + km.toFixed(1) + '</b>公里</span><span>探<b>' + shops + '</b>家</span>';
+}
+function renderList() {
+  renderSum();
+  $('#chips').style.display = S.state === 'data' ? '' : 'none';
+  const box = $('#list');
+  if (S.state === 'loading') { box.innerHTML = '<div class="loading">正在读取漫游记录…</div><div class="skel"></div><div class="skel"></div>'; return; }
+  if (S.state === 'error') { box.innerHTML = '<div class="state"><div class="state__ic">' + ic('info', 30) + '</div><div class="state__t">漫游记录加载失败</div><div class="state__s">网络不稳定，稍后再试</div><button class="btn btn--w" data-act="retry">重试</button></div>'; return; }
+  if (S.state === 'empty' || S.state === 'progress') {
+    const prog = S.state === 'progress';
+    box.innerHTML = '<div class="state"><div class="state__ic">' + ic(prog ? 'walk' : 'route', 30) + '</div><div class="state__t">' + (prog ? '正在漫游中' : '还没有漫游记录') + '</div>' +
+      (prog ? '<div class="state__s">结束后收录</div>' : '') +
+      '<button class="btn btn--w" data-act="toRoam">' + (prog ? '回到地图' : '出发第一次漫游') + '</button>' +
+      '<div class="state__ghost">' + mapSVG(9, 343, 120, { pal: PAL, route: false, street: 22 }).svg + '</div></div>';
+    return;
+  }
+  const rows = filtered();
+  if (!rows.length) { box.innerHTML = '<div class="none">这个筛选下没有记录</div>'; return; }
+  let html = '', curKey = '';
+  rows.forEach(s => {
+    const key = s.y + '-' + s.m;
+    if (key !== curKey) {
+      curKey = key;
+      const ms = rows.filter(x => x.y === s.y && x.m === s.m);
+      const km = ms.reduce((a, x) => a + x.km, 0), sec = ms.reduce((a, x) => a + x.sec, 0);
+      html += '<div class="mon"><div class="mon__h"><span class="mon__m">' + s.m + '月</span><span class="mon__y">' + s.y + '</span></div>' +
+        '<div class="mon__tot"><div><b>' + km.toFixed(1) + '</b><span>公里</span></div><div><b>' + ms.length + '</b><span>次漫游</span></div><div><b>' + hms(sec) + '</b><span>时长</span></div></div></div>';
+    }
+    html += '<button class="rc" data-act="openSession" data-arg="' + s.i + '" aria-label="' + dateShort(s) + ' ' + s.title + '，' + s.km + '公里">' +
+      '<div class="rc__map">' + cardMap(s) + '<span class="rc__date">' + dateShort(s) + '</span>' +
+      (s.medals.length ? '<span class="rc__medal">' + ic('medal', 12) + s.medals.length + ' 枚勋章</span>' : '') + '</div>' +
+      '<div class="rc__body"><div class="rc__title">' + s.title + '<span class="rc__sub">' + String(s.d.getHours()).padStart(2, '0') + ':' + String(s.d.getMinutes()).padStart(2, '0') + ' 出发</span></div>' +
+      '<div class="rc__stats"><div><span class="rc__v">' + s.km.toFixed(2) + '</span><span class="rc__l">公里</span></div><div><span class="rc__v">' + s.dur + '</span><span class="rc__l">用时</span></div>' +
+      '<div><span class="rc__v">' + s.shops + '</span><span class="rc__l">探店</span></div><div><span class="rc__v">' + s.pct + '%</span><span class="rc__l">探索度</span></div></div>' +
+      '<div class="rc__foot">' + (s.stamps ? ic('star', 13) + s.stamps + ' 枚邮票' : '这次没有留邮票') + '</div></div></button>';
+  });
+  box.innerHTML = html;
+}
+function renderDetail(s) {
+  $('#detailTitle').textContent = s.title;
+  const map = mapSVG(100 + s.i * 37, 375, 400, { pal: PAL, street: 30, rw: 5, routeOpt: { segs: 8 + (s.shops % 5), step: .32, pad: 80 } }).svg;
+  const stampsHTML = s.stamps ? Array.from({ length: s.stamps }, (_, k) => '<div class="dt-stamp"><i style="background:linear-gradient(' + (40 + k * 60) + 'deg,#2a4d3a,#c9a35b)"></i>漫游打卡 ' + (k + 1) + '</div>').join('') : '<div class="dt-date">这次没有留邮票</div>';
+  $('#detail').innerHTML = '<div class="dt-map">' + map + '<div class="dt-legend"><span><i style="background:#22C55E"></i>起点</span><span><i style="background:#F8F8F8"></i>终点</span></div></div>' +
+    '<div class="dt-body"><div class="dt-date">' + dateFull(s) + '</div><div class="dt-t">' + s.title + '</div>' +
+    '<div class="dt-big"><b>' + s.km.toFixed(2) + '</b><span>公里</span></div>' +
+    '<div class="dt-grid"><div><b>' + s.dur + '</b><span>用时</span></div><div><b>' + s.shops + '</b><span>探店</span></div><div><b>' + s.pct + '%</b><span>探索度</span></div>' +
+    '<div><b>' + s.stamps + '</b><span>邮票</span></div><div><b>+' + s.xp + '</b><span>探索值</span></div><div><b>' + s.medals.length + '</b><span>勋章 (枚)</span></div></div>' +
+    (s.medals.length ? '<div class="dt-sec">这次获得的勋章</div><div class="dt-medals">' + s.medals.map(m => '<span class="dt-medal">' + ic('medal', 14) + m + '</span>').join('') + '</div>' : '') +
+    '<div class="dt-sec">邮票</div><div class="dt-stamps">' + stampsHTML + '</div>' +
+    '<div class="dt-btns"><button class="btn btn--w" data-act="shareSession">' + ic('share', 18) + '分享</button></div></div>';
+  $('#detailScroll').scrollTop = 0;
+}
+function openSession(i) {
+  S.open = i; renderDetail(SESS[i]);
+  $('#scrList').classList.add('is-left'); $('#scrDetail').classList.remove('is-right');
+  syncNav();
+}
+function closeDetail() { S.open = -1; $('#scrList').classList.remove('is-left'); $('#scrDetail').classList.add('is-right'); syncNav(); }
+function syncNav() {
+  const sc = S.open >= 0 ? $('#detailScroll') : $('#listScroll');
+  const solid = sc.scrollTop > (S.open >= 0 ? 260 : 40);
+  $(S.open >= 0 ? '#detailNav' : '#listNav').classList.toggle('is-solid', solid);
+  $('#topFill').classList.toggle('is-solid', solid);
+}
+
+const ACT = {
+  back() { if (closeSheet()) return; if (S.open >= 0) { closeDetail(); return; } toast('返回漫游（原生返回）'); },
+  closeSheetAct() { closeSheet(); },
+  tool(el) { toast('打开「' + el.dataset.arg + '」页面'); },
+  filter(el) { S.filter = el.dataset.arg; $$('.chip').forEach(c => c.classList.toggle('on', c === el)); renderList(); },
+  openSession(el) { openSession(Number(el.dataset.arg)); },
+  shareSession() { toast('打开通用分享页（P-36），内容源 = 这次漫游'); },
+  retry() { S.state = 'loading'; setSeg('state', 'loading'); renderList(); setTimeout(() => { S.state = 'data'; setSeg('state', 'data'); renderList(); }, 900); },
+  toRoam(el) { toast(S.state === 'progress' ? '回到漫游地图' : '去漫游首页出发'); },
+  state(el) { S.state = el.dataset.arg; setSeg('state', S.state); if (S.open >= 0) closeDetail(); renderList(); },
+  openFirst() { if (S.state !== 'data') { S.state = 'data'; setSeg('state', 'data'); renderList(); } openSession(0); },
+};
+initChrome();
+renderList();
+$('#listScroll').addEventListener('scroll', syncNav, { passive: true });
+$('#detailScroll').addEventListener('scroll', syncNav, { passive: true });
+</script>
+</body>
+</html>

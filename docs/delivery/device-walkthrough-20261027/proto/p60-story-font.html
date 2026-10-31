@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>故事手写体</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Long+Cang&family=Ma+Shan+Zheng&family=Zhi+Mang+Xing&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ease-out:cubic-bezier(.22,.61,.36,1); --std:cubic-bezier(.4,0,.2,1); --spring:cubic-bezier(.2,1.4,.5,1);
+  --doc-bg:#E6E8EC; --doc-card:#FFFFFF; --doc-ink:#111111; --doc-muted:#5B6270; --doc-line:#DADDE3; --doc-chip:#F1F2F4; --doc-link:#1F55C8;
+  /* 玩家深色 token + 故事流（pages/play/index.wxss .chfull）*/
+  --bg:#000000; --elev:#1C1C1E; --t1:#F8F8F8; --t2:#B7B7B7; --t3:#919191; --line:rgba(255,255,255,.08);
+  --sys:-apple-system,"PingFang SC","Helvetica Neue","Microsoft YaHei",sans-serif;
+  --mono:"SF Mono","DIN Alternate",ui-monospace,monospace;
+  --story-size:17px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --doc-bg:#141518; --doc-card:#1D1F23; --doc-ink:#F2F3F5; --doc-muted:#A3A9B4; --doc-line:#2E3138; --doc-chip:#262930; --doc-link:#8FB0FF; }
+}
+:root[data-theme="dark"]{ --doc-bg:#141518; --doc-card:#1D1F23; --doc-ink:#F2F3F5; --doc-muted:#A3A9B4; --doc-line:#2E3138; --doc-chip:#262930; --doc-link:#8FB0FF; }
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--doc-bg);color:var(--doc-ink);font-family:var(--sys);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit;padding:0}
+a{color:var(--doc-link)}
+.wrap{display:flex;gap:28px;justify-content:center;align-items:flex-start;padding:28px 16px;flex-wrap:wrap;max-width:1260px;margin:0 auto}
+.panel{order:-1;width:100%;background:var(--doc-card);border:1px solid var(--doc-line);border-radius:16px;padding:20px 22px;font-size:13px;line-height:1.6;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px 28px}
+.panel > div{min-width:0}
+.panel h1{font-size:18px;margin:0 0 4px}
+.panel .id{display:inline-block;font-family:var(--mono);font-size:12px;padding:2px 8px;border-radius:999px;background:var(--doc-chip);margin-bottom:8px}
+.panel h2{font-size:13px;margin:14px 0 6px;color:var(--doc-muted);font-weight:600}
+.panel ul{margin:0;padding-left:18px}
+.panel li{margin:3px 0}
+.ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ctl button{padding:6px 12px;border-radius:999px;border:1px solid var(--doc-line);background:var(--doc-chip);font-size:12px}
+.ctl button.on{background:var(--doc-ink);color:var(--doc-card);border-color:var(--doc-ink)}
+.size{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:12px}
+.size input{flex:1;accent-color:#111}
+.size output{font-family:var(--mono);width:36px}
+.q{background:var(--doc-chip);border-radius:10px;padding:8px 10px;margin-top:6px}
+.lic{width:100%;border-collapse:collapse;font-size:12px}
+.lic td{padding:5px 4px;border-top:1px solid var(--doc-line);vertical-align:top}
+.lic td:first-child{white-space:nowrap;font-weight:600}
+@media (max-width:1100px){ .panel{grid-template-columns:1fr 1fr} }
+@media (max-width:760px){ .panel{grid-template-columns:1fr} }
+
+.col{display:flex;flex-direction:column;align-items:center;gap:12px}
+.col-hd{width:375px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.col-hd b{font-size:15px}
+.col-hd small{display:block;color:var(--doc-muted);font-size:12px}
+.pick{height:32px;padding:0 14px;border-radius:999px;border:1px solid var(--doc-line);background:var(--doc-card);font-size:13px;font-weight:600;white-space:nowrap}
+.pick.on{background:var(--doc-ink);color:var(--doc-card);border-color:var(--doc-ink)}
+.fstate{font-size:11px;color:var(--doc-muted);font-family:var(--mono)}
+
+.phone{position:relative;width:375px;height:812px;border-radius:44px;overflow:hidden;flex:none;box-shadow:0 0 0 10px #101010,0 24px 60px rgba(0,0,0,.28);background:var(--bg);color:var(--t1);font-family:var(--sys);cursor:pointer;user-select:none}
+.phone.chosen{box-shadow:0 0 0 10px #101010,0 0 0 13px #F8F8F8,0 24px 60px rgba(0,0,0,.28)}
+@media (max-width:420px){
+  .wrap{flex-direction:column;align-items:center;padding:16px 12px;gap:24px}
+  .panel{order:5;padding:16px}
+  .phone,.col-hd{width:calc(100vw - 24px);max-width:375px}
+}
+.status{position:absolute;left:0;right:0;top:0;height:44px;z-index:6;display:flex;align-items:center;justify-content:space-between;padding:0 26px 0 32px;font-size:15px;font-weight:600}
+.status svg{display:block}
+.nav{position:absolute;left:0;right:0;top:44px;height:44px;z-index:6;display:flex;align-items:center}
+.nav__back{width:44px;height:44px;display:flex;align-items:center;justify-content:center;margin-left:4px}
+.nav__title{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:15px;font-weight:700;white-space:nowrap;max-width:150px;overflow:hidden;text-overflow:ellipsis}
+.capsule{position:absolute;right:7px;top:6px;width:87px;height:32px;border-radius:16px;display:flex;align-items:center;background:rgba(0,0,0,.15);border:1px solid rgba(255,255,255,.28)}
+.capsule span{flex:1;display:flex;align-items:center;justify-content:center;height:100%}
+.capsule i{width:1px;height:18px;background:rgba(255,255,255,.3)}
+.ico{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ico--s{width:16px;height:16px}
+/* .fx-story__hd：顶部渐隐，与章节名同排的工具 */
+.hd{position:absolute;left:0;right:0;top:0;z-index:5;height:176px;padding:96px 16px 0;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;
+  background:linear-gradient(180deg,rgba(0,0,0,.97) 0%,rgba(0,0,0,.94) 55%,rgba(0,0,0,0) 100%)}
+.hd > *{pointer-events:auto}
+.radar{width:52px;height:52px;border-radius:50%;background:var(--elev);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;color:var(--t2);gap:1px}
+.radar svg{color:var(--t1)}
+.radar b{font-family:var(--mono);font-weight:500}
+.act{width:44px;height:44px;border-radius:50%;background:var(--elev);display:flex;align-items:center;justify-content:center}
+/* 故事流 */
+.stream{position:absolute;inset:0;overflow-y:auto;scrollbar-width:none;scroll-behavior:smooth;padding:300px 0 520px}
+.stream::-webkit-scrollbar{display:none}
+.blk{margin:0 48px 120px;text-align:center;opacity:0;transform:translateY(1.2em) scale(.9);filter:blur(10px);transition:opacity .5s ease,transform .5s cubic-bezier(.34,1.46,.5,1),filter .5s ease}
+.blk.in{opacity:1;transform:none;filter:none}
+.blk.past{opacity:.38}
+.blk--ttl{margin-bottom:96px}
+.meta{font-size:11px;letter-spacing:1.5px;color:var(--t3)}
+.ttl{margin-top:8px;font-size:29px;font-weight:700;line-height:1.35}
+/* ★ 只有这两类换手写体：正文 .hand 与对白 .voice-t */
+.hand,.voice-t{font-family:var(--hand),var(--sys);font-size:var(--story-size);line-height:1.95;color:var(--t1);transition:font-size .2s}
+.phone[data-fallback="1"] .hand,.phone[data-fallback="1"] .voice-t{font-family:var(--sys)}
+.hand{font-size:calc(var(--story-size) * var(--k,1))}
+.voice{text-align:left;margin:0 32px 120px}
+.voice-n{display:flex;align-items:center;gap:8px;font-size:11px;letter-spacing:2px;font-weight:800;color:var(--vc)}
+.voice-n i{width:6px;height:6px;border-radius:50%;background:var(--vc);box-shadow:0 0 10px var(--vc)}
+.voice-t{margin-top:6px;font-size:calc(var(--story-size) * var(--k,1))}
+.thought{position:relative;width:280px;margin:0 auto 120px;padding:22px 0 20px;text-align:center}
+.thought::before,.thought::after{content:"";position:absolute;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent)}
+.thought::before{top:0}.thought::after{bottom:0}
+.orb{width:9px;height:9px;margin:7px auto 18px;border-radius:50%;background:#fff;box-shadow:0 0 16px 4px rgba(255,255,255,.45)}
+.thought-k{font-size:11px;letter-spacing:2px;color:rgba(255,255,255,.6)}
+.thought-t{margin:7px 0 6px;font-size:19px;font-weight:600;letter-spacing:2px}
+.thought-d{font-size:13px;line-height:1.7;color:rgba(255,255,255,.72)}
+.thought-e{margin-top:10px;font-size:12px;color:rgba(255,255,255,.5);font-family:var(--sys)}
+.cont{display:flex;align-items:center;justify-content:center;height:44px;border-radius:999px;background:#fff;color:#111;font-size:15px;font-weight:700;margin:0 24px;width:calc(100% - 48px)}
+.caret{display:inline-block;width:2px;height:1em;background:var(--t2);vertical-align:-.15em;margin-left:2px;animation:blink .8s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.tap-hint{position:absolute;left:0;right:0;bottom:44px;z-index:5;text-align:center;font-size:12px;color:var(--t3);pointer-events:none;transition:opacity .3s}
+.tap-hint.gone{opacity:0}
+.fb-badge{position:absolute;left:50%;top:100px;transform:translateX(-50%);z-index:7;height:24px;padding:0 10px;border-radius:999px;background:rgba(229,72,77,.18);color:#FF9A9D;font-size:11px;display:none;align-items:center;white-space:nowrap}
+.phone[data-fallback="1"] .fb-badge{display:flex}
+/* 弹层 */
+.mask{position:absolute;inset:0;z-index:20;background:rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .25s var(--std)}
+.mask.show{opacity:1;pointer-events:auto}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:21;background:var(--elev);border-radius:20px 20px 0 0;padding:8px 16px 40px;transform:translateY(105%);transition:transform .32s var(--ease-out);cursor:default}
+.sheet.show{transform:none}
+.handle{width:100%;height:20px;display:flex;align-items:center;justify-content:center}
+.handle::before{content:"";width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,.24)}
+.sheet h3{margin:4px 0 12px;font-size:18px}
+.srow{display:flex;align-items:center;justify-content:space-between;min-height:52px;border-top:1px solid var(--line);font-size:15px}
+.seg{display:flex;gap:6px}
+.seg button{height:32px;min-width:44px;padding:0 10px;border-radius:999px;background:rgba(255,255,255,.08);font-size:13px}
+.seg button.on{background:#F8F8F8;color:#0A0A0A;font-weight:700}
+.sample{margin-top:8px;padding:12px;border-radius:12px;background:rgba(255,255,255,.05);text-align:center}
+.toast{position:fixed;left:50%;bottom:40px;z-index:99;transform:translate(-50%,8px);max-width:320px;padding:10px 16px;border-radius:12px;background:rgba(17,17,17,.92);color:#fff;font-size:13px;line-height:1.5;text-align:center;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s var(--ease-out)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+}
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <section class="panel">
+    <div>
+      <span class="id">P-60 · pages/play 故事流</span>
+      <h1>故事流手写体选型</h1>
+      <p style="margin:0;color:var(--doc-muted)">三台手机同一段故事，只换正文和对白的字体。<b>点手机屏幕推进</b>（打字机效果，再点一下直接显示整句）。</p>
+      <h2>状态切换</h2>
+      <div class="ctl">
+        <button data-act="sync" id="syncBtn" class="on">三台同步推进</button>
+        <button data-act="fail" id="failBtn">字体加载失败</button>
+        <button data-act="typing" id="typeBtn" class="on">打字机效果</button>
+        <button data-act="replay">从头再看</button>
+      </div>
+      <label class="size">正文字号<input type="range" id="sizeRange" data-act="sizeSlider" min="15" max="22" value="17"><output id="sizeOut">17px</output></label>
+      <p style="margin:8px 0 0;color:var(--doc-muted);font-size:12px">参考链接 x.com/azhassan_/status/2114737566503075868：<b>x.com 无法访问（代理 403），按需求描述做的等效实现</b>——黑底、居中、一次一段的故事流配手写体。</p>
+    </div>
+    <div>
+      <h2 style="margin-top:0">只换什么</h2>
+      <ul>
+        <li>换：故事正文（.chfull__para 文本段）、对白正文（.chfull__voice-t）。</li>
+        <li>不换：章节标题、说话人名字、「得到一个念头」卡、按钮、距离等数字，都保持系统字体。</li>
+      </ul>
+      <h2>落地方案</h2>
+      <ul>
+        <li>用常用 3500 字表 + 标点做子集（pyftsubset → woff2），约 1–2 MB。</li>
+        <li>放到我们自己的 OSS / CDN（需加进小程序 downloadFile 合法域名，开 CORS）。</li>
+        <li>进故事流前 <code>wx.loadFontFace({ family:'cy-story', source:'url(…)', global:true })</code>，本地缓存；成功前和失败时都用系统字体，不阻塞阅读。</li>
+        <li>子集外的生僻字自动逐字回退系统字体（font-family 链）。作者预览（publish/fabu、temp）同步换。</li>
+        <li>全站现在没有用过 wx.loadFontFace，这是第一处。</li>
+      </ul>
+    </div>
+    <div>
+      <h2 style="margin-top:0">许可（均为 SIL OFL 1.1，可免费商用、可子集化）</h2>
+      <table class="lic">
+        <tr><td>A 龙藏体</td><td><a href="https://fonts.google.com/specimen/Long+Cang" target="_blank" rel="noopener">Google Fonts</a> · <a href="https://github.com/google/fonts/tree/main/ofl/longcang" target="_blank" rel="noopener">GitHub</a> · <a href="https://github.com/google/fonts/blob/main/ofl/longcang/OFL.txt" target="_blank" rel="noopener">OFL</a></td></tr>
+        <tr><td>B 志莽行书</td><td><a href="https://fonts.google.com/specimen/Zhi+Mang+Xing" target="_blank" rel="noopener">Google Fonts</a> · <a href="https://github.com/google/fonts/tree/main/ofl/zhimangxing" target="_blank" rel="noopener">GitHub</a> · <a href="https://github.com/google/fonts/blob/main/ofl/zhimangxing/OFL.txt" target="_blank" rel="noopener">OFL</a></td></tr>
+        <tr><td>C 马善政楷书</td><td><a href="https://fonts.google.com/specimen/Ma+Shan+Zheng" target="_blank" rel="noopener">Google Fonts</a> · <a href="https://github.com/google/fonts/tree/main/ofl/mashanzheng" target="_blank" rel="noopener">GitHub</a> · <a href="https://github.com/google/fonts/blob/main/ofl/mashanzheng/OFL.txt" target="_blank" rel="noopener">OFL</a></td></tr>
+        <tr><td>备选 霞鹜文楷</td><td><a href="https://github.com/lxgw/LxgwWenKai" target="_blank" rel="noopener">GitHub（OFL 1.1）</a>：偏楷体、不算手写，但字库全、长段最好读；三款都不满意时用它。</td></tr>
+      </table>
+      <p style="margin:6px 0 0;color:var(--doc-muted);font-size:12px">OFL 注意：可以免费商用、嵌入、子集化；子集文件不能单独售卖，改过的字体不能沿用原保留名（自用子集按惯例另起文件名即可）。</p>
+      <h2>待业主确认</h2>
+      <div class="q">1. 三款选哪一款（点手机上方「选这款」标记）。我的倾向：C 马善政最易读，A 龙藏最像随手写的信，B 志莽行书最有气势但长段吃力。</div>
+      <div class="q">2. 字号：手写体同字号看起来偏小，原型默认仍 17px，可用滑杆试 18–19px。</div>
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const FONTS = [
+  { key:'A', name:'龙藏体', en:'Long Cang', family:"'Long Cang'", k:1.12, note:'随手写信感，笔画细' },
+  { key:'B', name:'志莽行书', en:'Zhi Mang Xing', family:"'Zhi Mang Xing'", k:1.12, note:'行书，气势强' },
+  { key:'C', name:'马善政楷书', en:'Ma Shan Zheng', family:"'Ma Shan Zheng'", k:1.04, note:'毛笔楷书，最易读' }
+];
+const STORY = [
+  { kind:'ttl', meta:'第一章', title:'雨夜的来信' },
+  { kind:'text', text:'雨是从傍晚开始下的。老城的石板路被洗得发亮，路灯一盏一盏地亮起来。' },
+  { kind:'text', text:'你在旧邮局门口停下。信箱上贴着一张泛黄的明信片，上面只写了一行字。' },
+  { kind:'voice', who:'咔哒', color:'#7DD3FC', text:'别急着走。这张明信片，是写给你的。' },
+  { kind:'text', text:'背面写着：「去梧桐巷，找第十七号门。」字迹很潦草，像是匆忙间写下的。' },
+  { kind:'voice', who:'店主', color:'#FCA5A5', text:'你也是来找那封信的人吗？上一个来的人，三年前就没再回来过。' },
+  { kind:'thought', name:'寄信的人', desc:'也许他一直在等你回来。', need:1200 },
+  { kind:'end' }
+];
+const S = { sync:true, fail:false, typing:true, size:17, chosen:null, typers:{} };
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove('show'),1800); }
+
+function phoneHTML(f, i){
+  return `<div class="col">
+    <div class="col-hd"><div><b>${f.key} · ${f.name}</b><small>${f.en} · ${f.note}</small><span class="fstate" data-fstate="${i}">加载中…</span></div>
+      <button class="pick" data-act="choose" data-arg="${i}">选这款</button></div>
+    <div class="phone" data-phone="${i}" data-act="advance" data-arg="${i}" style="--hand:${f.family};--k:${f.k}" aria-label="${f.name} 故事流，点按推进">
+      <div class="status"><span>9:41</span><svg width="68" height="12" viewBox="0 0 68 12" fill="#fff"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/><path d="M29 3.2a9 9 0 0 1 12 0l-1.3 1.4a7 7 0 0 0-9.4 0zM31.6 6a5.3 5.3 0 0 1 6.8 0L37 7.4a3.3 3.3 0 0 0-4 0zM35 11.2l-1.6-1.7a2.3 2.3 0 0 1 3.2 0z"/><rect x="45.5" y=".5" width="20" height="11" rx="3" fill="none" stroke="#fff" opacity=".4"/><rect x="47" y="2" width="17" height="8" rx="1.6"/></svg></div>
+      <div class="nav"><button class="nav__back" data-act="back" data-arg="${i}" aria-label="返回"><svg class="ico" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+        <div class="nav__title">第一章 · 雨夜的来信</div>
+        <div class="capsule" aria-hidden="true"><span><svg width="18" height="4" viewBox="0 0 18 4" fill="#fff"><circle cx="2" cy="2" r="2"/><circle cx="9" cy="2" r="2"/><circle cx="16" cy="2" r="2"/></svg></span><i></i><span><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#fff" stroke-width="1.6"><circle cx="9" cy="9" r="7.5"/><circle cx="9" cy="9" r="2.6" fill="#fff"/></svg></span></div></div>
+      <div class="stream" data-stream="${i}"></div>
+      <div class="hd">
+        <button class="radar" data-act="radar" aria-label="打开地图，下一站 320 米"><svg class="ico ico--s" viewBox="0 0 24 24"><path d="m12 2 3 9-3 2-3-2z" fill="currentColor"/><circle cx="12" cy="12" r="9"/></svg><b>320 m</b></button>
+        <button class="act" data-act="openSheet" data-arg="${i}" aria-label="游玩工具"><svg class="ico" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/><circle cx="19" cy="12" r="1.2" fill="currentColor"/></svg></button>
+      </div>
+      <div class="fb-badge">手写体没加载上，已用系统字体</div>
+      <div class="tap-hint" data-hint="${i}">轻点屏幕继续</div>
+      <div class="mask" data-mask="${i}" data-act="closeSheet" data-arg="${i}"></div>
+      <div class="sheet" data-sheet="${i}" role="dialog" aria-label="阅读设置">
+        <button class="handle" data-act="closeSheet" data-arg="${i}" aria-label="关闭"></button>
+        <h3>阅读设置</h3>
+        <div class="srow"><span>正文字号</span><div class="seg" data-seg="${i}">
+          <button data-act="setSize" data-arg="15">小</button><button data-act="setSize" data-arg="17">标准</button><button data-act="setSize" data-arg="19">大</button><button data-act="setSize" data-arg="21">特大</button></div></div>
+        <div class="srow"><span>字体</span><span style="color:var(--t2);font-size:13px">${f.name}（手写）</span></div>
+        <div class="sample hand">雨是从傍晚开始下的。</div>
+      </div>
+    </div></div>`;
+}
+function blockHTML(b){
+  if (b.kind==='ttl') return `<div class="blk blk--ttl"><div class="meta">${b.meta}</div><div class="ttl">${b.title}</div></div>`;
+  if (b.kind==='text') return `<div class="blk"><span class="hand" data-full="${b.text}"></span></div>`;
+  if (b.kind==='voice') return `<div class="blk voice" style="--vc:${b.color}"><div class="voice-n"><i></i>${b.who}</div><div class="voice-t" data-full="${b.text}"></div></div>`;
+  if (b.kind==='thought') return `<div class="blk thought"><div class="orb"></div><div class="thought-k">得到一个念头</div><div class="thought-t">${b.name}</div><div class="thought-d">${b.desc}</div><div class="thought-e">边走边想 · 走 ${b.need} 步后想通</div></div>`;
+  return `<div class="blk" style="margin:0 0 40px"><button class="cont" data-act="cont">继续探索</button></div>`;
+}
+
+function typeInto(i, el){
+  const full = el.dataset.full;
+  if (!S.typing || reduce){ el.textContent = full; return; }
+  let n=0; el.innerHTML='<span class="caret"></span>';
+  const t = setInterval(()=>{ n++; el.innerHTML = full.slice(0,n) + (n<full.length?'<span class="caret"></span>':''); if(n>=full.length){ clearInterval(t); delete S.typers[i]; } }, 55);
+  S.typers[i] = { t, el, full };
+}
+function finishTyping(i){ const ty=S.typers[i]; if(!ty) return false; clearInterval(ty.t); ty.el.textContent=ty.full; delete S.typers[i]; return true; }
+
+function advanceOne(i){
+  if (finishTyping(i)) return;
+  const pos = S.per[i]||0; if (pos >= STORY.length) return;
+  const st = document.querySelector(`[data-stream="${i}"]`);
+  st.querySelectorAll('.blk.in').forEach(x=>x.classList.add('past'));
+  st.insertAdjacentHTML('beforeend', blockHTML(STORY[pos]));
+  const blk = st.lastElementChild;
+  requestAnimationFrame(()=>{ blk.classList.add('in'); const target = blk.offsetTop - st.clientHeight*0.42 + blk.offsetHeight/2; st.scrollTop = Math.max(0,target); });
+  const typeEl = blk.querySelector('[data-full]'); if (typeEl) typeInto(i, typeEl);
+  S.per[i] = pos+1;
+  document.querySelector(`[data-hint="${i}"]`).classList.toggle('gone', S.per[i] >= STORY.length || S.per[i] > 1);
+}
+function resetAll(){
+  Object.keys(S.typers).forEach(k=>finishTyping(k));
+  S.per = {}; FONTS.forEach((_,i)=>{ document.querySelector(`[data-stream="${i}"]`).innerHTML=''; document.querySelector(`[data-hint="${i}"]`).classList.remove('gone'); advanceOne(i); });
+}
+function openSheet(i){ document.querySelector(`[data-mask="${i}"]`).classList.add('show'); document.querySelector(`[data-sheet="${i}"]`).classList.add('show'); syncSeg(); }
+function closeSheet(i){ const sh=document.querySelector(`[data-sheet="${i}"]`); if(!sh.classList.contains('show')) return false; sh.classList.remove('show'); document.querySelector(`[data-mask="${i}"]`).classList.remove('show'); return true; }
+function anySheet(i){ return document.querySelector(`[data-sheet="${i}"]`).classList.contains('show'); }
+function setSize(v){ S.size=v; document.documentElement.style.setProperty('--story-size', v+'px'); $('sizeRange').value=v; $('sizeOut').textContent=v+'px'; syncSeg(); }
+function syncSeg(){ document.querySelectorAll('[data-seg] button').forEach(b=>b.classList.toggle('on', +b.dataset.arg===S.size)); }
+function checkFonts(){
+  FONTS.forEach((f,i)=>{
+    const el=document.querySelector(`[data-fstate="${i}"]`);
+    if (S.fail){ el.textContent=' · 模拟失败 → 系统字体'; return; }
+    if (!document.fonts || !document.fonts.load){ el.textContent=''; return; }
+    document.fonts.load(`17px ${f.family}`, '雨是从傍晚开始下的').then(list=>{
+      el.textContent = list && list.length ? ' · 已加载（演示用 Google Fonts）' : ' · 未加载 → 正在用系统字体';
+    }).catch(()=>{ el.textContent=' · 未加载 → 正在用系统字体'; });
+  });
+}
+
+const ACT = {
+  advance(el, ev){ const i=+el.dataset.arg; if (anySheet(i)) return; if (S.sync) FONTS.forEach((_,k)=>advanceOne(k)); else advanceOne(i); },
+  cont(el, ev){ ev.stopPropagation(); toast('继续探索 → 去下一站（地图导航）'); },
+  radar(el, ev){ ev.stopPropagation(); toast('打开小地图：下一站 梧桐巷 17 号 · 320 m'); },
+  openSheet(el, ev){ ev.stopPropagation(); openSheet(+el.dataset.arg); },
+  closeSheet(el, ev){ ev.stopPropagation(); closeSheet(+el.dataset.arg); },
+  back(el, ev){ ev.stopPropagation(); const i=+el.dataset.arg; if (closeSheet(i)) { toast('已关闭弹层（返回先关弹层）'); return; } toast('返回上一页（卡片 / 地图）'); },
+  setSize(el, ev){ ev.stopPropagation(); setSize(+el.dataset.arg); toast('正文字号 '+el.dataset.arg+'px'); },
+  choose(el){ const i=+el.dataset.arg; S.chosen = S.chosen===i ? null : i;
+    document.querySelectorAll('.pick').forEach((b,k)=>{ b.classList.toggle('on',k===S.chosen); b.textContent = k===S.chosen?'已选这款':'选这款'; });
+    document.querySelectorAll('.phone').forEach((p,k)=>p.classList.toggle('chosen',k===S.chosen));
+    toast(S.chosen==null?'已取消选择':'已标记：'+FONTS[i].name); },
+  sync(el){ S.sync=!S.sync; el.classList.toggle('on',S.sync); toast(S.sync?'三台一起推进':'每台单独推进'); },
+  fail(el){ S.fail=!S.fail; el.classList.toggle('on',S.fail); document.querySelectorAll('.phone').forEach(p=>p.dataset.fallback=S.fail?'1':'0'); checkFonts();
+    toast(S.fail?'模拟 wx.loadFontFace 失败：回退系统字体，阅读不中断':'手写体已恢复'); },
+  typing(el){ S.typing=!S.typing; el.classList.toggle('on',S.typing); toast(S.typing?'打字机效果：开':'打字机效果：关（整句出现）'); },
+  replay(){ resetAll(); toast('从头再看'); },
+  sizeSlider(){ /* 拖动由 input 事件处理 */ }
+};
+document.addEventListener('click', ev => {
+  const el = ev.target.closest('[data-act]'); if (!el || el.disabled) return;
+  const fn = ACT[el.dataset.act]; if (fn) fn(el, ev);
+});
+$('sizeRange').addEventListener('input', e=>setSize(+e.target.value));
+$('wrap').insertAdjacentHTML('beforeend', FONTS.map(phoneHTML).join(''));
+S.per = {};
+resetAll();
+checkFonts();
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(checkFonts);
+</script>
+</body>
+</html>
