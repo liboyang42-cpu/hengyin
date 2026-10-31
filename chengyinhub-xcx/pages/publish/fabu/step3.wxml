@@ -111,7 +111,7 @@
             </view>
           </view>
 
-          <view class="pd-section-title">玩家组队</view>
+          <view class="pd-section-title" id="fieldTeam">玩家组队</view>
           <view class="node-card">
             <view class="node-card__row">
               <view class="node-card__ico"><cy-icon name="tab-club" size="32" /></view>

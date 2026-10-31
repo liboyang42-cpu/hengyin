@@ -1263,7 +1263,9 @@
              判据用 merchantPoolEditable —— 它就是「本账号是不是俱乐部主理人」的权限快照,
              和后端 CmsTopicServiceImpl.resolveMerchantPoolFlag 是同一条闸(2026-08-11 定的)。
              ⚠️ 此前这一段没有任何 wx:if:玩家和商家也看得到整套控件,开了要到发布时才被后端拒。 -->
-        <view class="chapter-recruit" wx:if="{{merchantPoolEditable}}">
+        <!-- 2026-10-31 业主批准 P-6/P-9:商家主办的自由探索也逐站招商(权益 / 引流两档,后端开放招商 V1 不看主理人身份),
+             否则预览里打开「商家承接」后补品类时会跳到一个看不到的区块。 -->
+        <view class="chapter-recruit" wx:if="{{merchantPoolEditable || (operationScope === 'MERCHANT' && formData.productType === 2)}}">
           <view class="chapter-recruit__head">
             <text>商家承接</text>
           </view>
@@ -1347,7 +1349,10 @@
        左上 ✕ 回配置,右上「完成」= 发布(内容安全预检在这一步跑,没有任何文字版确认)。
        预检或后端有挡住发布的问题时,这一层重新打开,红行列在最上面,点它回到字段所在的位置。
        ⚠️ 数据读编辑器里的当前草稿(_buildPublishPreview),不是 ?id= 拉服务端那一版。 -->
-  <view class="sp theme-dark" wx:if="{{publishCheck.show}}" catchtouchmove="noop">
+  <!-- P-9(2026-10-31 业主批准):主页面浅色,与专业主题编辑器同一套;封面 / 标题 / 详情 / 票务 / 主题设置 /
+       发布后的合作 / 画面风格 / 剧情都在主页面上,每一行点了回到编辑器里那一项。只有「看剧情」用弹窗(也是浅色)。
+       挡住发布的问题列在封面下面,写清在哪里,「去修改」直接定位;票务行 / 章节行同步标红。 -->
+  <view class="sp" wx:if="{{publishCheck.show}}" catchtouchmove="noop">
     <scroll-view class="sp-scroll" scroll-y enhanced show-scrollbar="{{false}}">
       <view class="sp-hero">
         <image wx:if="{{publishCheck.preview.cover}}" class="sp-hero__img" src="{{publishCheck.preview.cover}}" mode="aspectFill" />
@@ -1360,43 +1365,120 @@
           </view>
         </view>
       </view>
-      <view class="sp-issues" wx:if="{{publishCheck.blocking.length}}">
-        <view class="sp-issue" wx:for="{{publishCheck.blocking}}" wx:key="index"
-              data-field="{{item.field}}" data-label="{{item.label}}" data-tab="{{item.tab}}" bindtap="locatePublishIssue" aria-role="button" aria-label="去处理 {{item.label}}" hover-class="cy-pressed" hover-stay-time="80">
-          <text class="sp-issue__star">*</text><text class="sp-issue__t">{{item.label}}</text><cy-icon name="chevron-right" size="24" />
+      <view class="sp-pad">
+        <view class="sp-issues" wx:if="{{publishCheck.blocking.length}}">
+          <view class="sp-issue" wx:for="{{publishCheck.blocking}}" wx:key="index" data-field="{{item.field}}" bindtap="locatePublishIssue"
+                aria-role="button" aria-label="{{item.label}}，去修改" hover-class="cy-pressed" hover-stay-time="80">
+            <text class="sp-issue__star">*</text>
+            <view class="sp-issue__t"><text>{{item.label}}</text><text class="sp-issue__w" wx:if="{{item.where}}">{{item.where}}</text></view>
+            <text class="sp-issue__go">去修改</text><cy-icon name="chevron-right" size="24" />
+          </view>
         </view>
-      </view>
-      <view class="sp-sec" wx:if="{{publishCheck.preview.description}}"><text class="sp-lede">{{publishCheck.preview.description}}</text></view>
-      <view class="sp-ticket" wx:if="{{publishCheck.preview.ticket}}" data-target="ticket" bindtap="onPreviewEdit" aria-role="button" aria-label="票价 {{publishCheck.preview.ticket.price}}，去票务设置" hover-class="cy-pressed" hover-stay-time="80">
-        <text>{{publishCheck.preview.ticket.name}}</text><text class="sp-ticket__p">{{publishCheck.preview.ticket.price}}</text>
-      </view>
-      <block wx:for="{{publishCheck.preview.chapters}}" wx:key="index" wx:for-item="chapter">
-        <view class="sp-ch"><text>{{chapter.name}}</text></view>
-        <view class="sp-blk" wx:if="{{chapter.story}}" data-chapterindex="{{chapter.index}}" bindtap="onPreviewEdit" aria-role="button" aria-label="编辑{{chapter.name}}剧情" hover-class="cy-pressed" hover-stay-time="80">
-          <view class="sp-say">{{chapter.story}}</view>
-          <view class="sp-edit"><cy-icon name="edit" size="24" /></view>
-        </view>
-        <view class="sp-blk sp-node" wx:for="{{chapter.nodes}}" wx:key="index" wx:for-item="node"
-              data-chapterindex="{{chapter.index}}" data-nodeindex="{{node.index}}" bindtap="onPreviewEdit" aria-role="button" aria-label="编辑节点 {{node.name}}" hover-class="cy-pressed" hover-stay-time="80">
-          <view class="sp-node__no">{{node.index + 1}}</view>
-          <view class="sp-node__card">
-            <image wx:if="{{node.img}}" class="sp-node__img" src="{{node.img}}" mode="aspectFill" lazy-load="true" />
-            <view class="sp-node__body">
-              <text class="sp-node__name">{{node.name}}</text>
-              <text class="sp-node__addr">{{node.address}}</text>
-              <view class="sp-node__play" wx:if="{{node.play}}"><cy-icon name="flag" size="22" /><text>{{node.play}}</text></view>
+        <view class="sp-desc" wx:if="{{publishCheck.preview.description}}">{{publishCheck.preview.description}}</view>
+
+        <block wx:if="{{publishCheck.preview.ticketRows.length}}">
+          <view class="sp-sec">票务</view>
+          <view class="sp-group">
+            <view class="sp-row {{index === 0 && publishCheck.preview.ticketFlag ? 'is-flag' : ''}}" wx:for="{{publishCheck.preview.ticketRows}}" wx:key="key"
+                  data-target="ticket" bindtap="onPreviewEdit" aria-role="button" aria-label="{{item.k}} {{item.v}}，去票务设置" hover-class="cy-pressed" hover-stay-time="80">
+              <text class="sp-row__k">{{item.k}}</text>
+              <text class="sp-row__v">{{index === 0 && publishCheck.preview.ticketFlag ? publishCheck.preview.ticketFlag : item.v}}</text>
+              <cy-icon name="chevron-right" size="24" />
             </view>
           </view>
-          <view class="sp-edit"><cy-icon name="edit" size="24" /></view>
+        </block>
+
+        <view class="sp-sec">主题设置</view>
+        <view class="sp-group">
+          <view class="sp-row" wx:for="{{publishCheck.preview.settings}}" wx:key="k" data-target="{{item.target}}" bindtap="onPreviewEdit"
+                aria-role="button" aria-label="{{item.k}} {{item.v}}，去修改" hover-class="cy-pressed" hover-stay-time="80">
+            <view class="sp-row__i"><cy-icon name="{{item.icon}}" size="30" /></view>
+            <text class="sp-row__k">{{item.k}}</text><text class="sp-row__v">{{item.v}}</text><cy-icon name="chevron-right" size="24" />
+          </view>
         </view>
-      </block>
-      <view class="sp-end"><cy-icon name="star-filled" size="56" /><view><text class="sp-end__t">通关勋章</text><text class="sp-end__n">{{publishCheck.preview.medal}}</text></view></view>
-      <view class="sp-pad"></view>
+
+        <block wx:if="{{publishCheck.preview.switches.length}}">
+          <view class="sp-sec">发布后的合作</view>
+          <view class="sp-group">
+            <view class="sp-row sp-swrow" wx:for="{{publishCheck.preview.switches}}" wx:key="key">
+              <view class="sp-row__i"><cy-icon name="{{item.icon}}" size="30" /></view>
+              <view class="sp-swrow__t"><text class="sp-row__k">{{item.label}}</text><text class="sp-swrow__d" wx:if="{{item.note}}">{{item.note}}</text></view>
+              <view wx:if="{{item.locked}}" class="sp-lock" data-reason="{{item.reason}}" bindtap="onPreviewLockedTap" aria-role="button" aria-label="{{item.label}}不可用：{{item.reason}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="lock" size="28" /></view>
+              <text wx:elif="{{item.fixed}}" class="sp-fixed">必须</text>
+              <cy-switch wx:elif="{{item.key === 'club'}}" checked="{{item.on}}" bindchange="onPreviewClubPool" />
+              <cy-switch wx:else checked="{{item.on}}" bindchange="onPreviewMerchantRecruit" />
+            </view>
+          </view>
+        </block>
+
+        <view class="sp-sec">画面风格</view>
+        <view class="sp-look" data-target="look" bindtap="onPreviewEdit" aria-role="button" aria-label="画面风格，去修改" hover-class="cy-pressed" hover-stay-time="80">
+          <cy-look-preview class="sp-look__pv" embedded="{{true}}" show="{{publishCheck.show && !storyPop.show}}" look="{{publishCheck.preview.look}}" />
+          <view class="sp-group">
+            <view class="sp-row" wx:for="{{publishCheck.preview.lookRows}}" wx:key="k">
+              <text class="sp-row__k">{{item.k}}</text><text class="sp-row__v">{{item.v}}</text><cy-icon name="chevron-right" size="24" />
+            </view>
+          </view>
+        </view>
+
+        <block wx:if="{{publishCheck.preview.chapters.length}}">
+          <view class="sp-sec">剧情</view>
+          <view class="sp-story">
+            <view class="sp-chrow {{chapter.flag ? 'is-flag' : ''}}" wx:for="{{publishCheck.preview.chapters}}" wx:key="index" wx:for-item="chapter"
+                  data-chapterindex="{{chapter.index}}" bindtap="openStoryPop" aria-role="button" aria-label="从{{chapter.name}}开始读剧情" hover-class="cy-pressed" hover-stay-time="80">
+              <text class="sp-chrow__no">{{chapter.index + 1}}</text>
+              <view class="sp-chrow__t"><text>{{chapter.name}}</text><text class="sp-chrow__m">{{chapter.flag || chapter.meta}}</text></view>
+              <cy-icon name="chevron-right" size="24" />
+            </view>
+            <view class="sp-read" data-chapterindex="0" bindtap="openStoryPop" aria-role="button" aria-label="阅读剧情" hover-class="cy-pressed" hover-stay-time="80">阅读剧情</view>
+          </view>
+        </block>
+
+        <view class="sp-end"><cy-icon name="star-filled" size="40" /><view><text class="sp-end__t">通关勋章</text><text class="sp-end__n">{{publishCheck.preview.medal}}</text></view></view>
+        <view class="sp-bottom"></view>
+      </view>
     </scroll-view>
     <view class="sp-top" style="padding-top: {{statusBarHeight}}px;">
       <view class="sp-x" bindtap="closePublishCheck" aria-role="button" aria-label="退出预览，回到配置" hover-class="cy-pressed" hover-stay-time="80"><view class="sp-x__c"><cy-icon name="close" size="32" /></view></view>
       <cy-btn class="sp-done" variant="primary" size="sm" loading="{{submitting}}" disabled="{{!!publishCheck.blocking.length}}" aria-disabled="{{!!publishCheck.blocking.length}}"
               bind:disabledtap="onPublishCheckDisabledTap" bindtap="confirmPublishCheck">完成</cy-btn>
+    </view>
+
+    <!-- 剧情弹窗(浅色,与编辑器同一套):章标题 / 章剧情;每站 序号 → 剧情 → 图卡。点哪一块回到编辑器那一处。 -->
+    <view class="sp-pop {{storyPop.show ? 'is-open' : ''}}">
+      <view class="sp-pop__mask" bindtap="closeStoryPop" aria-role="button" aria-label="关闭剧情" hover-class="cy-pressed" hover-stay-time="80"></view>
+      <view class="sp-pop__panel">
+        <view class="sp-pop__grab"></view>
+        <view class="sp-pop__hd"><text>剧情</text>
+          <view class="sp-pop__x" bindtap="closeStoryPop" aria-role="button" aria-label="关闭剧情" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close" size="30" /></view>
+        </view>
+        <scroll-view class="sp-pop__body" scroll-y enhanced show-scrollbar="{{false}}" scroll-into-view="{{storyPop.anchor}}">
+          <view class="sp-ch" wx:for="{{publishCheck.preview.chapters}}" wx:key="index" wx:for-item="chapter" id="spch{{chapter.index}}">
+            <view class="sp-ch__h">{{chapter.name}}</view>
+            <view class="sp-ch__meta"><cy-icon name="check" size="26" /><text>{{chapter.meta}}</text></view>
+            <view class="sp-say {{chapter.flag ? 'is-flag' : ''}}" wx:if="{{chapter.story || chapter.flag}}" data-chapterindex="{{chapter.index}}" bindtap="onPreviewEdit"
+                  aria-role="button" aria-label="编辑{{chapter.name}}剧情" hover-class="cy-pressed" hover-stay-time="80">{{chapter.flag || chapter.story}}</view>
+            <view class="sp-stop" wx:for="{{chapter.nodes}}" wx:key="index" wx:for-item="node">
+              <view class="sp-stop__no">{{node.index + 1}}</view>
+              <view class="sp-say" wx:if="{{node.say}}" data-chapterindex="{{chapter.index}}" data-nodeindex="{{node.index}}" bindtap="onPreviewEdit"
+                    aria-role="button" aria-label="编辑{{node.name}}" hover-class="cy-pressed" hover-stay-time="80">{{node.say}}</view>
+              <view class="sp-card" data-chapterindex="{{chapter.index}}" data-nodeindex="{{node.index}}" bindtap="onPreviewEdit"
+                    aria-role="button" aria-label="编辑{{node.name}}" hover-class="cy-pressed" hover-stay-time="80">
+                <view class="sp-card__img" wx:if="{{node.img}}">
+                  <image class="sp-card__pic" src="{{node.img}}" mode="aspectFill" lazy-load="true" />
+                  <text class="sp-card__game" wx:if="{{node.play}}">{{node.play}}</text>
+                </view>
+                <view class="sp-card__foot">
+                  <view class="sp-card__copy"><text class="sp-card__at">{{node.address}}</text><text class="sp-card__shop">{{node.name}}</text>
+                    <text class="sp-card__play" wx:if="{{node.play && !node.img}}">{{node.play}}</text></view>
+                  <view class="sp-card__route"><cy-icon name="route" size="36" /></view>
+                </view>
+              </view>
+            </view>
+          </view>
+          <view class="sp-bottom"></view>
+        </scroll-view>
+      </view>
     </view>
   </view>
 
