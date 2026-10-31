@@ -22,6 +22,11 @@ const EDITOR_STEP_TITLES = new Set(['pages/publish/fabu/step3.wxml'])
 // 这些都有返回导航，但承担的是封面头、搜索框、会话名、向导问题或码卡，不是独立 L1 大标题行。
 // 清单锁死后，新自绘页不会因为没用 cy-page-title 而静默漏扫。
 const NAV_WITHOUT_L1_TITLE = new Set([
+  // 2026-10-30 业主定稿 P-3:勋章墙 / 集邮册 / 藏品册合成「收集册」三段 —— nav overlay 透明压在整屏浅色流动底上,
+  // 大标题「收集册」(宋体)与三段切换由 subpackageP3/components/album-head 组件给,三页同一个,不走 cy-page-title。
+  'subpackageP3/pages/badge-wall/index/index.wxml',
+  'subpackageP3/pages/stamp-album/index/index.wxml',
+  'subpackageP3/pages/object-cards/index/index.wxml',
   'pages/merchant/decor/ai-npc/index.wxml',
   // 2026-10-28 p86:快速配置 —— 「快速配置」在 cy-nav-bar 居中,正文首屏是问句 + 兴趣气泡
   'pages/publish/simple/index.wxml',
@@ -74,9 +79,9 @@ const NAV_WITHOUT_L1_TITLE = new Set([
   'subpackageRoam/citynode-code/index.wxml',
   'pages/search2/result/index.wxml',
   'pages/square/detail/index.wxml',
-  'pages/square/list/index.wxml', // 2026-08-07 用户裁决:帖文流无大标题
   'pages/templatedetail/templatedetail.wxml',
   'pages/templatedetail/topic-preview/index.wxml', // 2026-10-28 卡堆预览：封面卡堆 + 主题名承担标题，导航只留返回
+  'pages/templatedetail/topic-detail/index.wxml', // 2026-10-30 V-24 主题模板详情：版式照抄玩法模板详情,封面头 + 主题名承担标题
   'pages/topic/index/index.wxml',
   'pages/topic/merchantinfo/merchantinfo.wxml',
   // 2026-09-19 批复1-a=2:pricing/partner 页按用户裁决复活,标题只在 cy-nav-bar 居中
@@ -503,7 +508,8 @@ test('全仓 85 个 cy-page-title 页面：共享标题统一提供上 space-5 /
   // 2026-10-27 +1:自由探索权益页(subpackageMember/free-explore) cy-nav-bar + 共享 cy-page-title 标准二级页 ⇒ 84 → 85。
   // 2026-10-28 +4:原型 C 的我的申诉(照抄我的举报)与发票详情、发票抬头、抬头编辑(X5 拆页),均为 cy-nav-bar + 共享 cy-page-title 标准二级页 ⇒ 85 → 89。
   // 2026-10-28 并 master(#658 后)合流 integrate/devfix-20261027:master 89 叠加本线营销消息页(P-55)与账户收益分析页(G-9)两页 ⇒ 89 → 91(实测)。
-  assert.equal(files.length, 91, 'cy-page-title 页面清单漂移时必须重新做间距归类')
+  // 2026-10-30 收集册:集邮册、藏品册不再用 cy-page-title(标题由 album-head 给,见 NAV_WITHOUT_L1_TITLE) ⇒ 91 → 89。
+  assert.equal(files.length, 89, 'cy-page-title 页面清单漂移时必须重新做间距归类')
 // 2026-09-02:+2 俱乐部客户列表与客户详情，复用 shared page-title 间距，64→66。
 //   客户详情的头像绝对定位在标题行上，不进入标题流，不影响上 space-5 / 下 space-2。
   files.forEach((rel) => {

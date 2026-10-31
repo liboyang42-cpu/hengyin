@@ -3,6 +3,8 @@ page { background: #000; } /* ds-ok 预览页固定纯黑底(原型 .px) */
 .tp { position: relative; min-height: 100vh; background: #000; color: #F8F8F8; padding-bottom: calc(300rpx + env(safe-area-inset-bottom)); overflow: hidden; } /* ds-ok 原型 .px 纯黑底 */
 .tp-glow { position: absolute; left: 0; right: 0; top: 0; height: 840rpx; pointer-events: none; background: radial-gradient(120% 70% at 50% 18%, var(--glow), rgba(0, 0, 0, 0) 70%); } /* ds-ok 封面取色光晕 */
 .tp > view:not(.tp-glow) { position: relative; }
+/* 2026-10-30 P-4:上一行把 fixed 的按钮条改成了 relative(按钮出屏),按钮条单独回到 fixed */
+.tp > view.tp-cta { position: fixed; } /* 与上一行同权重,写在后面生效 */
 
 .tp-state { padding: 240rpx 32rpx 0; display: flex; flex-direction: column; align-items: center; gap: 24rpx; }
 .tp-state__t { font-size: 28rpx; color: rgba(255, 255, 255, 0.62); } /* ds-ok 原型深色次级字 */

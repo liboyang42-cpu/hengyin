@@ -12,7 +12,6 @@ const ROOT = path.resolve(__dirname, '../..')
 const read = (relativePath) => fs.readFileSync(path.join(ROOT, relativePath), 'utf8')
 
 const PROFILE = 'subpackageMember/components/cy/profile/index.js'
-const SQUARE_LIST = 'pages/square/list/index.js'
 const SQUARE_DETAIL = 'pages/square/detail/index.js'
 const ORDER_DETAIL = 'subpackageMember/components/cy/scene-member-order-detail/index.js'
 
@@ -199,27 +198,6 @@ test('个人主页:切账号/资料换代后迟到的关注回包不得落屏', 
 
 // ---------------------------------------------------------------- 广场列表 / 详情
 
-test('广场列表:关注带意图态,失败不翻 UI,重试同意图不反转', () => {
-  const { instance, asked } = mount(SQUARE_LIST, 'page')
-  instance.setData({ list: [{ memberId: 88, isFollowTheUser: 0, id: 1 }] })
-
-  instance.followClick({ currentTarget: { dataset: { index: 0 } } })
-  assert.equal(asked('/api/user/follow/action')[0].data.follow, 1)
-
-  instance.failLast('/api/user/follow/action')
-  assert.equal(instance.data.list[0].isFollowTheUser, 0, '丢响应不得把列表项置成已关注')
-
-  instance.followClick({ currentTarget: { dataset: { index: 0 } } })
-  assert.equal(asked('/api/user/follow/action')[1].data.follow, 1, '重试必须同一意图')
-  instance.answer('/api/user/follow/action', { code: '200' })
-  assert.equal(instance.data.list[0].isFollowTheUser, 1)
-
-  instance.followClick({ currentTarget: { dataset: { index: 0 } } })
-  assert.equal(asked('/api/user/follow/action')[2].data.follow, 0, '已关注后再点才是取消')
-  instance.answer('/api/user/follow/action', { code: '200' })
-  assert.equal(instance.data.list[0].isFollowTheUser, 0)
-})
-
 test('广场详情:关注带意图态并只有成功才翻 UI', () => {
   const { instance, asked } = mount(SQUARE_DETAIL, 'page')
   instance.setData({ info: { memberId: 88, isFollowTheUser: 0 } })
@@ -261,16 +239,6 @@ test('订单详情:关注主办带 follow=1,失败不假成功', () => {
 })
 
 // ---------------------------------------------------------------- 负控
-
-test('负控:广场列表去掉意图态参数时必须判红', () => {
-  const source = read(SQUARE_LIST)
-  const mutated = source.replace('        follow: intendedFollow,\n', '')
-  assert.notEqual(mutated, source, '负控锚点失效:未找到 follow 意图态')
-  const { instance, asked } = mount(SQUARE_LIST, 'page', { source: mutated })
-  instance.setData({ list: [{ memberId: 88, isFollowTheUser: 0, id: 1 }] })
-  instance.followClick({ currentTarget: { dataset: { index: 0 } } })
-  assert.throws(() => assert.equal(asked('/api/user/follow/action')[0].data.follow, 1), assert.AssertionError)
-})
 
 test('负控:个人主页去掉意图态参数时必须判红', () => {
   const source = read(PROFILE)
@@ -318,14 +286,11 @@ test('广场详情:清空后的空 pics 不再渲染空媒体位', () => {
   assert.equal(instance.data.picList.length, 0, '空 pics 必须解析为空数组，不能是 [""]')
 })
 
-test('广场列表:清空后的空 pics 解析为空数组', () => {
-  const { instance } = mount(SQUARE_LIST, 'page')
-  instance.getList(true, 1)
-  instance.answer('/api/creativesquare/list', {
-    code: '200',
-    data: { rows: [{ id: 5, memberId: 9, contents: '正文', pics: '', address: '' }], total: 1 },
-  })
-  assert.equal(instance.data.list[0].picList.length, 0, '列表空 pics 不得解析出空图片位')
+test('发现页全站流:清空后的空 pics 解析为空数组', () => {
+  // 2026-10-29「动态」列表页已删,社区帖文改在发现页(utils/discover-feed.js)归一
+  const { normalizeCommunityPost } = require('../../utils/discover-feed.js')
+  const row = normalizeCommunityPost({ id: 5, memberId: 9, contents: '正文', pics: '', address: '' })
+  assert.equal(row.picList.length, 0, '列表空 pics 不得解析出空图片位')
 })
 
 test('负控:详情读侧不做空段过滤时必须判红', () => {

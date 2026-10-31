@@ -76,6 +76,8 @@ class ClubPostFeedScopeTest {
         ReflectionTestUtils.setField(controller, "clubMemberService", memberSvc);
         ReflectionTestUtils.setField(controller, "coopInviteService", inviteSvc);
         ReflectionTestUtils.setField(controller, "clubPostService", postSvc);
+        // 帖文卡头像「+」关注:查看者对作者的关注态(批量查询,默认空 = 都没关注)
+        ReflectionTestUtils.setField(controller, "umsMemberFollowMapper", org.mockito.Mockito.mock(com.chengyinhub.business.mapper.UmsMemberFollowMapper.class));
         ReflectionTestUtils.setField(controller, "clubPostLikeService", likeSvc);
         ReflectionTestUtils.setField(controller, "clubService", clubSvc);
         ReflectionTestUtils.setField(controller, "clubAccessService", accessSvc);
@@ -228,5 +230,66 @@ class ClubPostFeedScopeTest {
         ClubPost row = (ClubPost) ((List<?>) data.get("rows")).get(0);
         assertEquals(Boolean.TRUE, row.getViewerCanManage());
         verify(accessSvc, times(1)).resolve(ME, 5L, null);
+    }
+
+    // ---------- 2026-10-29 发现页:scope=all 全站流 ----------
+
+    private Map<String, Object> siteBody(Object limit, Object beforeId) {
+        Map<String, Object> b = body(limit);
+        b.put("scope", "all");
+        if (beforeId != null) b.put("beforeId", beforeId);
+        return b;
+    }
+
+    private ClubPost post(long id, long clubId) {
+        ClubPost p = new ClubPost();
+        p.setId(id);
+        p.setClubId(clubId);
+        return p;
+    }
+
+    @Test
+    @Timeout(5)
+    void siteScopeReadsWholeSiteFeedWithViewerCursorAndProbeRow() {
+        when(postSvc.selectSiteFeed(ME, 300L, 3)).thenReturn(Arrays.asList(post(30L, 1L), post(20L, 2L), post(10L, 1L)));
+
+        AjaxResult result = controller.postFeed(siteBody(2, "300"));
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> data = (Map<String, Object>) result.get("data");
+        List<?> rows = (List<?>) data.get("rows");
+        assertEquals(2, rows.size(), "探针行不回给前端");
+        assertEquals(Boolean.TRUE, data.get("hasMore"));
+        assertEquals(false, data.containsKey("clubCount"), "全站流没有「我的俱乐部数」口径");
+        verify(postSvc, times(0)).selectFeedByClubIds(any(), anyInt());
+        verify(memberSvc, times(0)).selectClubIdsByMember(anyLong());
+    }
+
+    @Test
+    @Timeout(5)
+    void siteScopeLastPageReportsNoMoreAndDecoratesRows() {
+        when(postSvc.selectSiteFeed(ME, null, 21)).thenReturn(Collections.singletonList(post(5L, 9L)));
+        when(accessSvc.resolve(ME, 9L, null)).thenReturn(null);
+
+        AjaxResult result = controller.postFeed(siteBody(null, "x"));
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> data = (Map<String, Object>) result.get("data");
+        assertEquals(Boolean.FALSE, data.get("hasMore"));
+        ClubPost row = (ClubPost) ((List<?>) data.get("rows")).get(0);
+        assertEquals(Boolean.FALSE, row.getIsLiked());
+        assertEquals(Boolean.FALSE, row.getViewerCanManage());
+    }
+
+    @Test
+    @Timeout(5)
+    void siteScopeClampsLimitAndStillNeedsLogin() {
+        controller.postFeed(siteBody(9999, null));
+        verify(postSvc).selectSiteFeed(ME, null, 51);
+
+        doReturn(null).when(controller).getAppUserId();
+        AjaxResult r = controller.postFeed(siteBody(null, null));
+        assertTrue(r.isError(), "全站流也要求登录");
+        verify(postSvc, times(1)).selectSiteFeed(any(), any(), anyInt());
     }
 }

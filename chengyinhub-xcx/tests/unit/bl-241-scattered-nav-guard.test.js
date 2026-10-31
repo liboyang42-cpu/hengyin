@@ -54,11 +54,6 @@ const CASES = [
     tap(page) { page.openCustomer({ currentTarget: { dataset: { memberid: '41' } } }) },
   },
   {
-    name: '广场官方活动横幅', file: 'pages/square/list/index.js', show: 'onShow',
-    url: '/pages/activity/official-detail/index?id=5',
-    tap(page) { page.goUpcoming({ currentTarget: { dataset: { id: 5 } } }) },
-  },
-  {
     name: '模板详情主按钮', file: 'pages/templatedetail/templatedetail.js', show: 'onShow',
     url: '/pages/publish/temp/index?id=12',
     prep(page) { Object.assign(page.data, { id: 12, scope: 'library' }) },

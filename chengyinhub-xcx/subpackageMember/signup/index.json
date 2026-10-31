@@ -1,6 +1,7 @@
 {
   "usingComponents": {
     "cy-nav-bar": "/components/cy/nav-bar/index",
+    "cy-dot-qr": "/components/cy/dot-qr/index",
     "cy-icon": "/components/cy/icon/index",
     "cy-skeleton": "/components/cy/skeleton/index",
     "cy-state-shell": "/components/cy/state-shell/index",

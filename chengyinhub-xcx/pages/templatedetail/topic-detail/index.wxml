@@ -1,0 +1,144 @@
+<!-- 主题模板详情(2026-10-30 业主 V-24):版式照抄玩法模板详情 templatedetail —— 封面 + 名字 + 发布方、
+     「应用」与分享同款、详情 / 能力两个 tab。主题模板没有场地:只讲故事和玩法,不出地址。 -->
+<view class="{{light ? 'theme-merchant' : 'theme-dark'}}">
+  <cy-toast id="cy-toast" />
+  <cy-loading-mask id="cy-loading" />
+  <cy-modal-host id="cy-modal-host" />
+<view class="xb-page">
+  <view class="xb-bg" wx:if="{{ cover }}">
+    <image class="xb-bg-img" src="{{ cover }}" mode="aspectFill" />
+    <view class="xb-bg-mask"></view>
+  </view>
+
+  <cy-nav-bar overlay pill="{{!!cover}}" />
+
+  <view class="xb-state" style="padding-top:{{statusBarHeight + navBarHeight + 24}}px;" wx:if="{{ loading }}">
+    <cy-skeleton type="detail" />
+  </view>
+  <view class="xb-state" style="padding-top:{{statusBarHeight + navBarHeight + 24}}px;" wx:if="{{ loadError && !loading }}">
+    <cy-error load-failure class="fill-slot" fill="{{true}}" size="lg" title="主题模板没能打开" sub="{{loadErrorMsg}}" bind:retry="onRetry" auto-back />
+  </view>
+
+  <scroll-view wx:if="{{ !loading && !loadError }}" class="xb-scroll xb-scroll--bleed" scroll-y enhanced show-scrollbar="{{ false }}">
+    <view style="height: {{statusBarHeight + navBarHeight}}px;"></view>
+
+    <view class="xb-head">
+      <view class="xb-head-cover">
+        <image wx:if="{{ cover }}" src="{{ cover }}" mode="aspectFill" />
+        <!-- 2026-10-30 业主「不能只是占位」:主题模板没有封面时用城市 3D 图标做封面,与玩法模板详情同一套 -->
+        <view wx:else class="xb-head-cover-ph" aria-role="img" aria-label="{{ name || '该主题' }} 的封面">
+          <image class="xb-cover-art" src="/pages/templatedetail/art/cat/city.png" mode="aspectFit" />
+        </view>
+      </view>
+      <view class="xb-head-meta">
+        <view class="xb-head-title ep2">{{ name || '主题模板' }}</view>
+        <view class="xb-head-sub ep1">{{ author }}</view>
+        <text class="xb-head-badge" wx:if="{{ official }}">官方</text>
+      </view>
+    </view>
+
+    <!-- 「应用」与右边分享键同一套样式(V-24 业主「应用和旁边分享一样的样式」),点了直接复制进主题配置 -->
+    <view class="xb-cta">
+      <cy-btn class="xb-cta-btn xb-cta-btn--share" variant="ghost" bindtap="useTemplate">应用</cy-btn>
+      <button class="xb-share" open-type="share" aria-label="分享主题模板" hover-class="cy-pressed" hover-stay-time="80">
+        <cy-icon name="share" size="40" />
+      </button>
+    </view>
+
+    <view class="xb-tabs-wrap">
+      <cy-tabs tabs="{{ tabs }}" active="{{ activeTab }}" bind:change="switchTab" />
+    </view>
+
+    <!-- ===== 详情 ===== -->
+    <block wx:if="{{ activeTab === 'details' }}">
+      <view class="xb-mosaic-wrap" wx:if="{{ gallery.length > 1 }}">
+        <scroll-view class="xb-mosaic-scroll" scroll-x enhanced show-scrollbar="{{ false }}">
+          <view class="xb-mosaic-inner">
+            <view class="xb-mosaic-cell" wx:for="{{ gallery }}" wx:key="index" bindtap="previewNode" aria-role="button" aria-label="查看大图" data-url="{{ item.img }}" hover-class="cy-pressed" hover-stay-time="80">
+              <image src="{{ item.img }}" mode="aspectFill" lazy-load="true" />
+            </view>
+          </view>
+        </scroll-view>
+      </view>
+
+      <!-- 剧情:开场白全文 → 每一章(章名 + 一段 + 这一章依次经过的节点),玩家读到的就是这个故事 -->
+      <view class="xb-block xb-block--lead" wx:if="{{ opening || chapters.length }}">
+        <view class="xb-section-title">
+          <image class="xb-section-ico" src="/pages/templatedetail/art/3d/book.png" mode="aspectFit" aria-hidden="true" />
+          <text>剧情</text>
+        </view>
+        <view class="xb-body xb-body--soft" wx:if="{{ opening }}">{{ opening }}</view>
+        <view class="st-ch" wx:for="{{ chapters }}" wx:key="key">
+          <view class="st-ch__hd"><text class="st-ch__no" wx:if="{{ item.no }}">{{ item.no }}</text><text class="st-ch__t">{{ item.name }}</text></view>
+          <view class="st-ch__p" wx:if="{{ item.text }}">{{ item.text }}</view>
+          <view class="st-ch__path" wx:if="{{ item.stops.length }}">
+            <view class="st-ch__stop" wx:for="{{ item.stops }}" wx:for-item="stop" wx:key="no"><text class="st-ch__dot">{{ stop.no }}</text><text class="ep1">{{ stop.name }}</text></view>
+          </view>
+        </view>
+      </view>
+
+      <view class="xb-stat-grid" wx:if="{{ stats.length }}">
+        <view class="xb-stat-card" wx:for="{{ stats }}" wx:key="label">
+          <view class="xb-stat-value">{{ item.value }}</view>
+          <view class="xb-stat-label">{{ item.label }}</view>
+        </view>
+      </view>
+
+      <view class="xb-block" wx:if="{{ gallery.length }}">
+        <view class="xb-section-title">
+          <image class="xb-section-ico" src="/images/publish-quick/explore.png" mode="aspectFit" aria-hidden="true" />
+          <text>节点</text>
+        </view>
+        <scroll-view class="xb-node-scroll" scroll-x enhanced show-scrollbar="{{ false }}">
+          <view class="xb-node-inner">
+            <view class="xb-node-card" wx:for="{{ gallery }}" wx:key="index">
+              <image class="xb-node-img" src="{{ item.img }}" mode="aspectFill" lazy-load="true" />
+              <view class="xb-node-foot">
+                <text class="xb-node-name">{{ item.name || '节点 ' + (index + 1) }}</text>
+                <text class="xb-node-desc ep1" wx:if="{{ item.teaser }}">{{ item.teaser }}</text>
+              </view>
+            </view>
+          </view>
+        </scroll-view>
+      </view>
+
+      <view class="xb-block" wx:if="{{ medalName }}">
+        <view class="xb-section-title">
+          <cy-icon name="star" size="30" />
+          <text>通关勋章</text>
+        </view>
+        <view class="xb-quote-card">
+          <image wx:if="{{ medalImg }}" class="td-medal-img" src="{{ medalImg }}" mode="aspectFit" />
+          <view class="xb-quote-copy">
+            <text class="xb-quote-author">{{ medalName }}</text>
+            <text class="xb-quote-text">走完全部节点时点亮</text>
+          </view>
+        </view>
+      </view>
+    </block>
+
+    <!-- ===== 能力:概要一行 + 按站列玩法 ===== -->
+    <block wx:if="{{ activeTab === 'capabilities' }}">
+      <view class="cap-sum" wx:if="{{ summary.length }}">
+        <text class="xb-chip" wx:for="{{ summary }}" wx:key="*this">{{ item }}</text>
+      </view>
+      <view class="cap-list" wx:if="{{ stops.length }}">
+        <view class="cap-stop" wx:for="{{ stops }}" wx:key="no">
+          <view class="cap-stop__no">{{ item.no }}</view>
+          <view class="cap-stop__main">
+            <text class="cap-stop__name ep1" wx:if="{{ item.name }}">{{ item.name }}</text>
+            <text class="cap-stop__game" wx:if="{{ item.game }}">{{ item.game }}</text>
+            <text class="cap-stop__do" wx:if="{{ item.doText }}">{{ item.doText }}</text>
+            <view class="cap-stop__dur" wx:if="{{ item.dur }}"><cy-icon name="clock" size="22" /><text>{{ item.dur }}</text></view>
+          </view>
+        </view>
+      </view>
+      <view class="xb-caps" wx:else>
+        <view class="xb-caprow"><text class="xb-caprow-k">—</text></view>
+      </view>
+    </block>
+
+    <view class="xb-scroll-pad"></view>
+  </scroll-view>
+</view>
+</view>

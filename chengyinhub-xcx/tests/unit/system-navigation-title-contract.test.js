@@ -45,7 +45,7 @@ const DIRECT_PRO_ENTRY_CALLERS = [
   ['pages/club/detail/index.js', ["'/pages/publish/fabu/index?clubId=' + cid + '&mode=' + mode"]],
   ['pages/merchant/marketing/index.js', ["'/pages/publish/fabu/index?mode=2&scope=MERCHANT'", "'/pages/publish/fabu/index?scope=MERCHANT'"]],
   ['subpackageA/pages/myproject/index.js', ["'/pages/publish/fabu/index'"]],
-  ['pages/square/list/index.js', ["'/pages/publish/fabu/index'"]],
+  // 2026-10-29:「动态」二级页 pages/square/list 删除,其直达 fabu 入口随页面移除 ⇒ 5 个文件 / 6 处。
   ['pages/talent/list/index.js', ["'/pages/publish/fabu/index'"]],
 ]
 
@@ -160,9 +160,9 @@ function assertFullscreenMapNavPage({ json, wxml, js }, expected, file) {
 const sourcesOf = (page) => ({ json: read(page + '.json'), wxml: read(page + '.wxml'), js: read(page + '.js') })
 
 function assertDirectProfessionalEntryCallers() {
-  assert.equal(DIRECT_PRO_ENTRY_CALLERS.length, 6, '专业编辑入口调用方必须保持 6 个文件的完整清单')
-  assert.equal(DIRECT_PRO_ENTRY_CALLERS.reduce((sum, [, destinations]) => sum + destinations.length, 0), 7,
-    '专业编辑入口必须覆盖 7 处跳转(marketing 两处；工作台空态改去承接，不再直达 fabu)')
+  assert.equal(DIRECT_PRO_ENTRY_CALLERS.length, 5, '专业编辑入口调用方必须保持 5 个文件的完整清单')
+  assert.equal(DIRECT_PRO_ENTRY_CALLERS.reduce((sum, [, destinations]) => sum + destinations.length, 0), 6,
+    '专业编辑入口必须覆盖 6 处跳转(marketing 两处；工作台空态改去承接，不再直达 fabu)')
   DIRECT_PRO_ENTRY_CALLERS.forEach(([file, destinations]) => {
     const source = read(file)
     assert.doesNotMatch(source, /\/pages\/publish\/topicadd\/topicadd/,
@@ -187,7 +187,7 @@ function runTopicaddRedirect(options) {
   return redirects
 }
 
-test('6 个专业编辑入口(7 处跳转)全部直达 fabu', () => {
+test('5 个专业编辑入口(6 处跳转)全部直达 fabu', () => {
   assertDirectProfessionalEntryCallers()
 })
 
@@ -253,7 +253,7 @@ const TITLELESS_SAMPLE = 'pages/gerenziliao/gerenziliao'
 
 test('negative control: 无标题页把旧 L1 标题加回来必须判红', () => {
   const src = sourcesOf(TITLELESS_SAMPLE)
-  const mutated = { ...src, wxml: src.wxml.replace('<cy-nav-bar />', '<cy-nav-bar />\n<cy-page-title title="个人资料" />') }
+  const mutated = { ...src, wxml: src.wxml.replace('<cy-nav-bar overlay />', '<cy-nav-bar overlay />\n<cy-page-title title="个人资料" />') }
   assert.notEqual(mutated.wxml, src.wxml, '变异锚点失效')
   assert.throws(() => assertTitlelessCustomNavPage(mutated, TITLELESS_CUSTOM_NAV_PAGES[TITLELESS_SAMPLE], TITLELESS_SAMPLE), /无标题页/)
 })

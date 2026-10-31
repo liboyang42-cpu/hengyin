@@ -5,6 +5,8 @@ const FREE_STATUS = ['草稿', '招募中', '待定价', '售票中', '进行中
 Component({
   options: { addGlobalClass: true },
   properties: {
+    // 2026-10-30 走查:页面滚过封面后导航栏转实底(否则正文滑进透明栏、标题压在状态栏时间上)
+    navScrolled: { type: Boolean, value: false },
     /* CU-C-68:主办方抽屉「本站运营」资格探不到时的可见说明(页面探、组件只渲染)。 */
     stationOpsErrorText: { type: String, value: '' },
     statusBarHeight: { type: Number, value: 0 },

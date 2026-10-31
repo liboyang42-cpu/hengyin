@@ -207,7 +207,8 @@ test('模板货架加载、失败与重试走设计系统组件；复制失败�
   assert.match(wxml, /<cy-error wx:elif="\{\{ topicError && !topicLoaded \}\}"[^>]*bindretry="retry"/,
     '列表加载失败必须有可见重试入口')
   assert.doesNotMatch(wxml + read('pages/template/index.wxml'), /circleThemes/)
-  const preview = read('pages/templatedetail/topic-preview/index.js')
+  // 2026-10-30 V-24:整包复制从卡堆预览搬到主题模板详情(topic-detail)
+  const preview = read('pages/templatedetail/topic-detail/index.js')
   assert.match(preview, /fail\(\) \{\s*that\._using = false;/, '复制失败要放行下一次')
 })
 

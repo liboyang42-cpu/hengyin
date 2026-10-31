@@ -88,7 +88,7 @@ class ApiVerifyControllerTest {
                 .thenReturn(true);
         ReflectionTestUtils.setField(controller, "registrationTicketApplication", new RegistrationTicketApplication(
                 registrationService, mock(com.chengyinhub.business.service.RegistrationSeatService.class),
-                activityService, perkSvc, qrcodeService, SECRET));
+                activityService, perkSvc, qrcodeService, SECRET, mock(com.chengyinhub.web.service.verify.RegistrationDynCodeLedger.class)));
         cityNodeRedemptionApplication = new CityNodeRedemptionApplication(
                 merchantAccessService, roamMapper, couponHistoryService, auditMapper, qrcodeService, SECRET);
         ReflectionTestUtils.setField(controller, "cityNodeRedemptionApplication", cityNodeRedemptionApplication);
@@ -133,7 +133,7 @@ class ApiVerifyControllerTest {
         TestableApiVerifyController anon = new TestableApiVerifyController(0L);
         ReflectionTestUtils.setField(anon, "registrationTicketApplication", new RegistrationTicketApplication(
                 registrationService, mock(com.chengyinhub.business.service.RegistrationSeatService.class), activityService,
-                mock(com.chengyinhub.business.service.IPerkLedgerService.class), qrcodeService, SECRET));
+                mock(com.chengyinhub.business.service.IPerkLedgerService.class), qrcodeService, SECRET, mock(com.chengyinhub.web.service.verify.RegistrationDynCodeLedger.class)));
         AjaxResult r = anon.issueDynCode(1L);
         assertEquals(500, r.get(AjaxResult.CODE_TAG));
         assertEquals("请先登录", r.get(AjaxResult.MSG_TAG));

@@ -641,7 +641,8 @@ test('商家项目写链路显式携带 MERCHANT scope，个人发布入口不�
   const projects = read('subpackageA/pages/myproject/index.js');
   // 2026-10-28:模板货架移进分包组件，整包复制挪到主题预览页;作用域一路透传
   const shelf = read('pages/template/index.wxml');
-  const topicPreview = read('pages/templatedetail/topic-preview/index.js');
+  // 2026-10-30 V-24:整包复制从卡堆预览搬到主题模板详情
+  const topicPreview = read('pages/templatedetail/topic-detail/index.js');
   const projectHome = read('pages/topic/merchantinfo/merchantinfo.js');
 
   assert.doesNotMatch(workbench, /pages\/publish\/fabu\/index\?scope=MERCHANT/,

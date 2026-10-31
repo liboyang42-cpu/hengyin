@@ -135,6 +135,9 @@ const SCALE_WALK = 17;       // 步行视角(半视野~280m):能看到街道网+
 const SCALE_PAUSE_MIN = 13;  // 暂停至少缩到此级别
 const OVERVIEW_PAD = 1.55;   // 暂停总览:轨迹半径 × 此系数 + 底栏留白(m)
 const CENTER_MS = 500;
+// 2026-10-29 V-07:屏幕雾两帧之间最短间隔、离屏画布倍率(见 _scheduleScreenFogRender / _trySetupScreenFog)
+const FOG_SCREEN_MIN_MS = 600;
+const FOG_SCREEN_DPR = 1;
 const LINE_MS = 1500;
 const END_HOLD_MS = 3000;
 const ROAM_OPENING_MS = 4200;
@@ -414,7 +417,6 @@ Page({
     // 2026-10-27 owner P-27:「已恢复上次漫游」行已删,recoveryAvailable 无人渲染,随之去掉(死字段门禁 U4)
     roamSessionReady: false,
     locErr: false,
-    locationForegroundOnly: false,
     gpsWeak: '',
     nearestM: 0,
     poiErr: false,
@@ -3114,7 +3116,9 @@ Page({
       const height = Number(item && item.height);
       if (node && width > 0 && height > 0) {
         try {
-          const dpr = Math.min(2, (this._win && this._win.dpr) || 2);
+          // 2026-10-29 V-07:雾是羽化遮罩,不需要视网膜清晰度。按 1 倍像素画,
+          // 每帧 PNG 编码+写盘的像素量降到原来的 1/4,松手后的重绘不再卡一下。
+          const dpr = FOG_SCREEN_DPR;
           node.width = Math.round(width * dpr);
           node.height = Math.round(height * dpr);
           const g = node.getContext('2d');
@@ -3157,6 +3161,7 @@ Page({
     const size = this._fogScreenSize;
     if (!g || !size) return;
     const frameStartedAt = Date.now();
+    this._fogScreenLastDrawAt = frameStartedAt;
     const reveals = (this._historyReveals || []).concat(this._reveals || []);
     const circles = projectRevealCircles(region, size, reveals, REVEAL_M, FOG_FEATHER);
     this._fogScreenCircleCount = circles.length;
@@ -3301,11 +3306,26 @@ Page({
 
   _scheduleScreenFogRender(delay) {
     if (this._fogMode !== 'screen') return;
-    if (this._fogScreenRenderTimer) clearTimeout(this._fogScreenRenderTimer);
+    // 2026-10-29 V-07:走路时定位(500ms)和揭示各自都会排一次重绘。原来每次都重置去抖,
+    // 全屏 PNG 编码+写盘几乎不停 = 卡顿。改为合并:已有在排的就不再排,两帧至少隔
+    // FOG_SCREEN_MIN_MS;只有显式要求立即重画(手势松手 delay=0)才插队。
+    if (this._fogScreenRenderTimer) {
+      if (delay !== 0) return;
+      clearTimeout(this._fogScreenRenderTimer);
+    }
+    const since = Date.now() - (this._fogScreenLastDrawAt || 0);
+    const wait = delay == null ? Math.max(160, FOG_SCREEN_MIN_MS - since) : delay;
     this._fogScreenRenderTimer = setTimeout(() => {
       this._fogScreenRenderTimer = null;
       this._renderScreenFog();
-    }, delay == null ? 160 : delay);
+    }, wait);
+  },
+
+  /** 取消在途的重绘(旧视口的 region 已经不对了),但不拉黑 —— 旧帧继续留在屏上。 */
+  _cancelScreenFogRender() {
+    this._fogScreenRegionSeq = (this._fogScreenRegionSeq || 0) + 1;
+    if (this._fogScreenRegionTimer) { clearTimeout(this._fogScreenRegionTimer); this._fogScreenRegionTimer = null; }
+    if (this._fogScreenRenderTimer) { clearTimeout(this._fogScreenRenderTimer); this._fogScreenRenderTimer = null; }
   },
 
   _guardScreenViewportChange() {
@@ -3710,13 +3730,18 @@ Page({
       if (detail.scale != null) this._mapScale = detail.scale;
       return;
     }
-    if (this._fogMode === 'screen' && phase === 'begin') {
-      // ★ 只有手势才在 begin 就遮:拖拽/缩放期间小程序不派发中间态 region,错位会一路放大到
-      //   松手才收敛,那种情况下旧帧确实会把成片没探过的地名亮出来,先遮住是对的。
-      // ★ 但 center 是数据绑定,走路时每次定位回调都改它 → 同样派发 regionchange(causedBy=update)。
-      //   那是米级位移、远小于 REVEAL_M,旧帧顶着最多在视口边缘多露一条窄边,却要付一次全屏黑。
-      //   高频黑闪比那条窄边严重得多 ⇒ 程序跟随不遮,交给 end 阶段按真实漂移量判。
-      if (byGesture) this._guardScreenViewportChange();
+    if (phase === 'begin') {
+      // 2026-10-29 V-07(业主:地图滑不动、一闪一闪、时不时黑一下):
+      // ① 手指一按下就停掉跟随回中。原来 _hold 只在松手时才设,拖动中每 500ms 的定位回调
+      //    照样改 center,地图被拽回玩家位置 = 「滑不动」。松手(end)再从那一刻起算 3s;
+      //    end 若丢失,60s 后自动恢复跟随。
+      // ② 手势期间不再拉全屏黑 guard:旧雾帧留在屏上,松手后按新视口立即重画一帧,
+      //    新帧 load 完才替换旧帧(双缓冲),全程不出现纯黑。只取消在途的旧视口重绘。
+      //    程序跟随(causedBy=update)照旧不遮,交给 end 阶段按真实漂移量判。
+      if (byGesture) {
+        this._hold = Date.now() + 60000;
+        if (this._fogMode === 'screen') this._cancelScreenFogRender();
+      }
       return;
     }
     if (phase !== 'end') return;
@@ -3724,9 +3749,9 @@ Page({
     if (detail.scale != null) this._mapScale = detail.scale;
     if (byGesture) this._hold = Date.now();
     if (this._fogMode === 'screen') {
-      // 缩放变了旧帧尺寸整个不对,必遮;否则按「当前帧画的时候视口在哪」和现在差多远来判。
-      if (byGesture || scaleChanged || this._screenFogDriftTooFar()) this._guardScreenViewportChange();
-      this._scheduleScreenFogRender();
+      // 程序移动(回中跳远、程序缩放)仍按「旧帧还能不能顶着用」判;手势松手只重画、不遮。
+      if (!byGesture && (scaleChanged || this._screenFogDriftTooFar())) this._guardScreenViewportChange();
+      this._scheduleScreenFogRender(byGesture ? 0 : undefined);
     }
   },
 
@@ -3832,12 +3857,13 @@ Page({
     const owner = String(getApp().getUserID() || '');
     const live = () => !that._unloaded && epoch === that._realStartEpoch && locationRevision === bgTracker.revision('roam') && owner === String(getApp().getUserID() || '');
     this._realStarting = true;
-    this.setData({ locationForegroundOnly: false });
+    // 2026-10-29 V-06:「仅前台记录」提示已按业主删除,前台降级只作实例状态保留,不再进渲染数据
+    this._locationForegroundOnly = false;
     this._observeLocationRevocation();
     const abandon = () => {
       if (!live()) return;
       that._realStarting = false;
-      that.setData({ locationForegroundOnly: false });
+      that._locationForegroundOnly = false;
       if (that._realRevokeOff) { that._realRevokeOff(); that._realRevokeOff = null; }
     };
     const onOk = (usingBackground) => {
@@ -3845,7 +3871,8 @@ Page({
       that._realStarting = false; that._realAnchor = null;
       that._realOn = true;
       wx.onLocationChange(that._onRealLoc = (loc) => { if (live() && that._realOn) that._realTick(loc); });
-      that.setData({ locErr: false, locationForegroundOnly: usingBackground === false });
+      that._locationForegroundOnly = usingBackground === false;
+      that.setData({ locErr: false });
       that._syncGoal();
       wx.setKeepScreenOn && wx.setKeepScreenOn({ keepScreenOn: true });
       // 不再弹「真实定位已开启」:计时与定位点已说明,toast 会压住暂停键。
@@ -3888,7 +3915,7 @@ Page({
     bgTracker.release('roam');
     this._realStartEpoch = (this._realStartEpoch || 0) + 1;
     this._realStarting = false;
-    this.setData({ locationForegroundOnly: false });
+    this._locationForegroundOnly = false;
     if (this._realRevokeOff) { this._realRevokeOff(); this._realRevokeOff = null; }
     const onLocationChange = this._onRealLoc;
     this._realOn = false;
@@ -5545,10 +5572,12 @@ Page({
     this._loadIntroPassport();
     if (typeof getApp().sendRequest === 'function') this._loadEntryMap(this.data.center);
   },
-  backToSquare() {
-    if (getCurrentPages().length > 1) wx.navigateBack();
-    else if (typeof getApp().canUseCommunity === 'function' && getApp().canUseCommunity(false)) wx.redirectTo({ url: '/pages/square/list/index' });
-    else wx.switchTab({ url: '/pages/index/index' });
+  // 2026-10-29 V-08 业主:结束漫游后不要跳到「动态」二级页(pages/square/list),跳漫游记录。
+  // 先关掉结算页回漫游首页,再打开漫游记录页;从记录页返回落在漫游首页。
+  openSettleHistory() {
+    if (this.data.screen !== 'arrive') return;
+    this.closeSettle();
+    this.openRoamHistory();
   },
 
   // 发现商家:漫游里按调性(标签/城市角色)挑店(discover 列表页)

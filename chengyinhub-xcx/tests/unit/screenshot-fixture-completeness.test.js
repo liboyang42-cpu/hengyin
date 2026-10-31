@@ -664,14 +664,8 @@ test('C01 内容态关闭全部加载门', () => {
   assert.equal(FIXTURES.C01.data.todoLoading, false)
 })
 
-test('A09 游客态与 B13 自由探索态使用各自真实正文分支', () => {
-  const shots = Object.fromEntries(SHOTS.map(shot => [shot.id, shot]))
-  assert.equal(shots.A09.role, 'guest')
-  assert.equal(shots.A09.state, 'normal')
-  assert.ok(Array.isArray(FIXTURES.A09.data.list) && FIXTURES.A09.data.list.length > 0)
-  assert.equal(FIXTURES.A09.data.loadError, false)
-  assert.equal(SELECTORS.A09.selector, 'cy-post-card')
-  assert.deepEqual(SELECTORS.A09.forbid, ['cy-error', 'cy-skeleton'])
+// 2026-10-29:A05–A09 广场列表页截图行随 pages/square/list 删除撤出矩阵,A09 游客态断言一并移除。
+test('B13 自由探索态使用真实正文分支', () => {
   assert.equal(SELECTORS.B13.selector, '.fx-pack')
 })
 

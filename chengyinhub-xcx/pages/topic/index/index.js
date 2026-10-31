@@ -51,6 +51,18 @@ function nodeText(value) {
   return out === 'null' ? '' : out;
 }
 
+// V-23c 业主 2026-10-29「简介最多20个字 在主题配置那里配置好的」:头图下只放主题配置里的短简介(subtitle),最多 20 字一行。
+const HERO_INTRO_MAX = 20;
+function heroIntro(subtitle) {
+  return Array.from(nodeText(decodeDisplayText(subtitle))).slice(0, HERO_INTRO_MAX).join('');
+}
+
+// 2026-10-30:站点和玩法都没图时用这个主题自己的封面,不再落到通用城市占位图
+function templateCover(template, node, topicCover) {
+  const urls = [node && node.imgUrl, template.imgUrl, template.imgArr, topicCover].map((v) => String(v || '').split(/[,;]/).map((src) => src.trim()).filter(Boolean)[0] || '');
+  return urls.map((src) => app.getImgUrl(src)).filter(Boolean)[0] || '/images/route_city_cover.png';
+}
+
 function normalizeChaptersList(chaptersList) {
   if (chaptersList == null) return [];
   if (!Array.isArray(chaptersList)) return null;
@@ -92,7 +104,6 @@ Page({
     sessionPicker: { show: false },
     clubSheetShow: false,
     clubSheetItems: [],
-    canReport: false,
     reportReasonShow: false,
     reportReasonItems: [],
     resultSheet: { show: false, kind: 'success', title: '', sub: '', meta: '', pill: '',
@@ -174,7 +185,6 @@ Page({
     topBarHeight: 0, // 顶部栏高度
     tabHeight: 100, // 标签栏高度
     totalStickyHeight: 0, // 吸顶总高度（状态栏+导航栏+标签栏）
-    topicAudioPlaying: false,
   },
 
   onLoad(options) {
@@ -351,7 +361,6 @@ Page({
    */
   onHide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
     this._stopKenBurns();
-    this.pauseTopicAudio();
     this.setData({
       isTabSticky: false,
     });
@@ -365,7 +374,6 @@ Page({
     reportSheet.cancel(this);
     this._themeRecordsDisposed = true;
     this._themeRecordsEpoch = (this._themeRecordsEpoch || 0) + 1;
-    this.destroyTopicAudio();
     this._stopKenBurns();
     (this._motionTimers || []).forEach(clearTimeout);
     if (this._workflow) this._workflow.destroy();
@@ -374,46 +382,7 @@ Page({
     }
   },
 
-  // ===== 主题音频播放 =====
-  toggleTopicAudio() {
-    var that = this;
-    var url = this.data.info && this.data.info.audioUrl;
-    if (!url) return;
-    if (this._topicAudio && this._topicAudio.src === url) {
-      if (this.data.topicAudioPlaying) {
-        this._topicAudio.pause();
-      } else {
-        this._topicAudio.play();
-      }
-      return;
-    }
-    this.destroyTopicAudio();
-    var audio = wx.createInnerAudioContext();
-    audio.src = url;
-    audio.obeyMuteSwitch = false;
-    audio.onPlay(function () { that.setData({ topicAudioPlaying: true }); });
-    audio.onPause(function () { that.setData({ topicAudioPlaying: false }); });
-    audio.onStop(function () { that.setData({ topicAudioPlaying: false }); });
-    audio.onEnded(function () { that.setData({ topicAudioPlaying: false }); });
-    audio.onError(function (err) {
-      that.setData({ topicAudioPlaying: false });
-      toast(app.getRequestErrorMessage(err, '播放失败'));
-    });
-    audio.play();
-    this._topicAudio = audio;
-  },
-
-  pauseTopicAudio() {
-    if (!this._topicAudio) return;
-    try { this._topicAudio.pause(); } catch (e) {}
-  },
-
-  destroyTopicAudio() {
-    if (!this._topicAudio) return;
-    try { this._topicAudio.destroy(); } catch (e) {}
-    this._topicAudio = null;
-    this.setData({ topicAudioPlaying: false });
-  },
+  // V-22 业主 2026-10-29:主题音频只在游戏里播放,详情页不再放「主题音频讲解」行(播放代码随之删除)
 
   /**
    * 切换标签页
@@ -2105,7 +2074,7 @@ Page({
 
 
           if (res.data['chaptersList']) {
-            res.data['chaptersList'] = that.processChaptersList(res.data['chaptersList']);
+            res.data['chaptersList'] = that.processChaptersList(res.data['chaptersList'], res.data['imgUrl']);
             that.buildRouteMap(res.data['chaptersList']);
           }
           // 放在 if 外面:没有章节的主题也可能有俱乐部,阵容不该跟着章节一起消失
@@ -2113,19 +2082,21 @@ Page({
           res.data['contentIncludes'] = that.buildContentIncludes(res.data);
 
           res.data['venue'] = that.buildVenue(res.data);
+          res.data['heroIntro'] = heroIntro(res.data.subtitle);
           const rounded = Math.max(0, Math.min(5, Math.round(Number(res.data.averageRating) || 0)));
           const ratingStars = [];
           for (let i = 1; i <= rounded; i++) ratingStars.push({ star: i });
 
+          // V-23:详情正文不再放举报行,可否举报只作处理器内部闸,不进页面 data
+          that._canReport = canReportTopic(res.data, typeof app.getUserID === 'function' ? app.getUserID() : '');
           that.setData({
             info: res.data,
-            canReport: canReportTopic(res.data, typeof app.getUserID === 'function' ? app.getUserID() : ''),
             // P0(2026-09-05 审核):已购态不再只信 URL 参数 is_join(全仓只有订单详情会传 1,
             // 从首页/搜索进来的已购用户永远看不到「开始玩」)。/info-to-user 已按 ownerType=1 &
             // registrationStatus=2 回填 isSignUp,与自玩通行证的建单口径同源,直接用它。
             is_join: (String(that.data.is_join) === '1' || Number(res.data.isSignUp) === 1) ? 1 : 0,
             // 稿 214:384 的数据条:与商家版 181:575 同一份格子(utils 里只有一份实现)
-            statBar: buildTopicStatBar(res.data),
+            statBar: buildTopicStatBar(res.data, { keepZeroCounts: true }),
             ratingStars,
             // 探店日/自由探索(productType=2):场次块换真场次卡,不再当「阵容」花名册渲染
             isExplore: Number(res.data.productType) === 2,
@@ -2242,7 +2213,7 @@ Page({
   /**
    * 判断章节下是否有商家
    */
-  processChaptersList(chaptersList) {
+  processChaptersList(chaptersList, topicCover) {
     if (!chaptersList || !Array.isArray(chaptersList)) return chaptersList;
     let seq = 0, prevNode = null; // v13 路线:站号全主题连续编号;站间步行线跨章接上(原型每章标题下也有一段)
 
@@ -2275,6 +2246,8 @@ Page({
         if (firstMerchant && firstMerchant.mmsMerchant) {
           firstMerchant.mmsMerchant.name = nodeText(firstMerchant.mmsMerchant.name);
         }
+        // V-22b:节点介绍卡先用站点自己的图,再用玩法图;相对路径/http 签名链接/逗号多图在真机上都出不来,卡上一块空白。
+        if (ns[n].cmsMemberTemplate) ns[n].cmsMemberTemplate.imgUrl = templateCover(ns[n].cmsMemberTemplate, ns[n], topicCover);
         ns[n].walkText = prevNode ? walkText(prevNode, ns[n]) : '';
         seq += 1; ns[n].seq = seq; prevNode = ns[n];
         ns[n].giftText = firstMerchant && firstMerchant.mmsMerchant ? nodeText(firstMerchant.mmsMerchant.derivativeBenefits) : '';
@@ -2309,7 +2282,7 @@ Page({
   // FOLLOWUP-A-1:举报主题,流程与动态详情 reportSquare 同一套(utils/content-report.js)
   reportTopic() {
     if (app.ensureLoginFor && !app.ensureLoginFor('report', () => this.reportTopic(), { owner: this, target: () => [this.data.id] })) return; // 2026-10-24 游客写前登录
-    if (!this.data.canReport) return;
+    if (!this._canReport) return;
     contentReport.reportTopic(this, app, this.data.id);
   },
   onReportReasonSelect(e) { reportSheet.select(this, e); },

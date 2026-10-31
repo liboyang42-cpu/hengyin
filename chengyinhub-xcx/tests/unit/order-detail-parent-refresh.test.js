@@ -365,7 +365,7 @@ test('ORDER-01:订单详情和订单列表读首次扫码完成，零元退出�
   assert.equal(verification.label, '等待到店核销');
   assert.equal(verification.state, 'current');
   assert.equal(h.detail.data.verificationTimeText, '');
-  assert.equal(h.detail.data.showSecondaryTicket, true, '已完成订单仍有票夹入口继续探索');
+  assert.equal(h.detail.data.primaryCta, '', '2026-10-29 V-20:订单详情不再出「查看票夹」');
   const cancel = h.beginCancel();
   assert.equal(cancel.data.id, row.id, '首次扫码完成不能藏掉零元退出入口');
 

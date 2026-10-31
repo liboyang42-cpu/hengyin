@@ -235,7 +235,7 @@ test('G-9 余额只承载金额，四个动作在余额下方，次级入口收�
   assert.doesNotMatch(more, /openSettlement/, '结算明细不在更多里重复')
   assert.match(more, /class="tm-row" bindtap="openWithdrawHistory"/, '提现记录必须保留入口')
   assert.match(more, /class="tm-row" bindtap="openInvite"/, '邀请记录必须保留入口')
-  assert.match(wxml, /<cy-earnings-overview bind:detail="openIncomeDetail" \/>/)
+  assert.match(wxml, /<cy-earnings-overview merchant="\{\{theme === 'merchant'\}\}" bind:detail="openIncomeDetail" \/>/)
 })
 
 test('G-9 动作是圆形图标 + 文字，热区走统一按钮高度', () => {

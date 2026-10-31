@@ -124,6 +124,7 @@ function currentProjectRead(page, key) {
 
 Page({
   data: {
+    navScrolled: false, // 2026-10-30:滚过封面(约 200px)后导航栏转实底
     projectReadAuth: '',
     reducedMotion: false,
     // 稿 181:575 的数据条(与玩家版 214:384 同一块,只换色板)
@@ -345,6 +346,12 @@ Page({
       // 三条入口分支全不命中 ⇒ 不请求、不报错、也没有出口。与其他详情页统一落缺参态。
       this.setData({ missingParam: true });
     }
+  },
+
+  // 2026-10-30 走查:承接 / 主办视图的导航栏是透明叠在封面上的,滚过封面后要转实底;只在跨过阈值时 setData
+  onPageScroll(e) {
+    const scrolled = !!(e && e.scrollTop > 200);
+    if (scrolled !== this.data.navScrolled) this.setData({ navScrolled: scrolled });
   },
 
   onShow() {
@@ -2605,7 +2612,8 @@ Page({
           header: { 'Content-Type': 'application/json' },
           success(res) {
             that._regConfirming = false;
-            if (res && res.code == '200') { cyToast.success('已确认'); that.loadRegApplies(); that.loadProjectHome(); }
+            // 确认后这一行从「收到的申请」里消失、已招数跟着变,界面本身就是回执,不再弹成功提示(成功 toast 棘轮)
+            if (res && res.code == '200') { that.loadRegApplies(); that.loadProjectHome(); }
           },
           fail() { that._regConfirming = false; },
         });

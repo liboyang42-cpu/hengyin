@@ -1,5 +1,6 @@
-/* 与数据条 .statbar__cell 同一版式:小标题在上,内容在下(业主:徽章文字放上面)。 */
-.tb-cell { width: 208rpx; display: flex; flex-direction: column; align-items: center; gap: 8rpx; }
+/* 与数据条 .statbar__cell 同一版式:小标题在上,内容在下(业主:徽章文字放上面)。
+   V-23d:格宽由宿主 .statbar__badge 与其它格等分,组件内撑满宿主。 */
+.tb-cell { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 8rpx; }
 .tb-pressed { opacity: .7; }
 .tb-label { font-size: var(--cy-type-caption); letter-spacing: .44rpx; color: var(--cy-color-text-secondary); }
 .tb-hex { position: relative; width: 58rpx; height: 66rpx; overflow: hidden;

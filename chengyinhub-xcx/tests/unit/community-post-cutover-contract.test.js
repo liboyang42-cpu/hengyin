@@ -206,7 +206,7 @@ test('bad JSON and unreadable guideline rules block before modal ack or create',
 test('native share keeps existing analytics and route without a silent canonical write', () => {
   const fs=require('node:fs');const path=require('node:path');
   const h=harness();assert.equal(h.client.share,undefined);
-  for(const page of ['list','detail']) {
+  for(const page of ['detail']) { // 2026-10-29:广场列表页已删
     const source=fs.readFileSync(path.join(__dirname,'../../pages/square',page,'index.js'),'utf8');
     const validate=value=>assert.ok(!value.includes('community.share('));
     validate(source);

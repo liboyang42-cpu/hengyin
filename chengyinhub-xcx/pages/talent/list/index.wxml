@@ -16,15 +16,14 @@
         </view>
       </view>
       <!-- 2026-09-18 UI-19:一级 tab 页也要有页标题(与商家「模板」tab 同一形态:导航栏居中一行) -->
-      <text class="nav-title">俱乐部</text>
+      <text class="nav-title">发现</text>
     </view>
   </view>
 
   <view style="height: {{headerH}}px;"></view>
 
   <!-- ===== 帖文 / 俱乐部 一级 tab(2026-08-05)=====
-       帖文原来只活在单个俱乐部详情页里,没有跨俱乐部的流。范围不是全站公开流:
-       玩家看我加入的、商家看我谈成过的(后端 /api/club/post/feed 判死)。 -->
+       2026-10-29 业主:页名改「发现」,帖文看全站(俱乐部帖文 + 社区帖文,见 utils/discover-feed.js)。 -->
   <cy-tabs class="top-tabs" variant="fill" wide="{{true}}" tabs="{{topTabs}}" active="{{activeTopTab}}" bind:change="onTopTabChange" />
 
   <!-- ===== 帖文 ===== -->
@@ -34,12 +33,13 @@
     <block wx:else>
       <cy-progress-status class="talent-state" wx:if="{{feedState === 'refreshing'}}" title="正在更新帖文" />
       <block wx:if="{{feed.length}}">
-        <cy-post-card class="cy-fade-in" wx:for="{{feed}}" wx:key="id" post="{{item}}" index="{{index}}" light="{{isMerchantViewer}}" interactive-user interactive-club show-share
+        <!-- 帖文第三轮:发现 / 俱乐部详情 / 我的 同一张卡同一套动作(点赞、评论、转发、分享、头像「+」关注、点图全屏) -->
+        <cy-post-card class="cy-fade-in" wx:for="{{feed}}" wx:key="feedKey" post="{{item}}" index="{{index}}" light="{{isMerchantViewer}}" user-id="{{viewerId}}" interactive-actions interactive-user interactive-club show-follow show-share show-repost
           accessibility-label="查看{{item.memberNickname || '城瘾玩家'}}的动态"
-          bind:detail="onPostTap" bind:user="onPostUser" bind:club="onPostClub"
+          bind:detail="onPostTap" bind:comment="onPostTap" bind:like="onLikePost" bind:follow="onFollowPost" bind:user="onPostUser" bind:club="onPostClub" bind:repost="onRepostPost"
           bind:playdetail="onPostReference" bind:play="onPostReferencePlay" />
       </block>
-      <cy-empty class="feed-state" wx:else title="{{feedEmptyTitle}}" sub="{{feedEmptySub}}" />
+      <cy-empty class="feed-state" wx:else title="还没有帖文" />
     </block>
     <view class="safe-bottom"></view>
   </view>

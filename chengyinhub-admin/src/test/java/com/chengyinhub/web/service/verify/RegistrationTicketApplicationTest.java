@@ -34,7 +34,7 @@ class RegistrationTicketApplicationTest {
     @BeforeEach void setup() {
         orders = mock(ICmsRegistrationService.class); seats = mock(RegistrationSeatService.class);
         activities = mock(ICmsActivityService.class); perks = mock(IPerkLedgerService.class); qr = mock(QrcodeServiceImpl.class);
-        application = new RegistrationTicketApplication(orders, seats, activities, perks, qr, SECRET);
+        application = new RegistrationTicketApplication(orders, seats, activities, perks, qr, SECRET, mock(RegistrationDynCodeLedger.class));
         order = new CmsRegistration(); order.setId(31L); order.setMemberId(51L); order.setOwnerType(2L); order.setOwnerId(61L);
         order.setPaymentStatus(2); order.setRegistrationStatus(2); order.setOrderNum(3L); order.setPurchaseKind(1);
         when(orders.selectCmsRegistrationById(31L)).thenReturn(order);

@@ -22,6 +22,7 @@ import com.chengyinhub.business.domain.ClubMember;
 import com.chengyinhub.business.domain.ClubPost;
 import com.chengyinhub.business.domain.ClubPostComment;
 import com.chengyinhub.business.domain.ClubPostLike;
+import com.chengyinhub.business.domain.ClubPostRepost;
 import com.chengyinhub.business.domain.ClubPendingSettlement;
 import com.chengyinhub.business.domain.ClubPendingDeposit;
 import com.chengyinhub.business.domain.ClubRoleAssignment;
@@ -34,6 +35,7 @@ import com.chengyinhub.business.domain.dto.ClubPostMutationRequest;
 import com.chengyinhub.business.domain.dto.ClubPostUpdateResult;
 import com.chengyinhub.business.domain.dto.ClubLeaderProfileRequest;
 import com.chengyinhub.business.domain.vo.ClubLifecycleCommandResultVO;
+import com.chengyinhub.business.domain.vo.ClubPostRepostItemVO;
 import com.chengyinhub.business.domain.vo.ClubRegistrationRosterVO;
 import com.chengyinhub.business.domain.vo.PublicClubVO;
 import com.chengyinhub.business.domain.CoopInvite;
@@ -110,6 +112,9 @@ public class ApiClubController extends BaseController {
 
     @Autowired
     private IClubService clubService;
+
+    @Autowired
+    private com.chengyinhub.business.mapper.UmsMemberFollowMapper umsMemberFollowMapper;
 
     /** F0098:帖子引用「我的游玩记录」的写入资格与读取可见性。 */
     @Autowired
@@ -1656,14 +1661,132 @@ public class ApiClubController extends BaseController {
         int limit = body.getLimit() == null ? POST_PAGE_MAX : Math.max(1, Math.min(POST_PAGE_MAX, body.getLimit()));
         Long beforeId = body.getBeforeId() != null && body.getBeforeId() > 0 ? body.getBeforeId() : null;
         List<ClubPost> posts = clubPostService.selectClubPostPage(body.getClubId(), beforeId, limit);
-        projectPostReferences(posts);
+        // dw29 L8:本俱乐部成员的转发按转发时间插进同一页。时间窗跟着帖文游标走 ——
+        // 上界 = 游标帖的发帖时间(不含),下界 = 本页最后一条非置顶帖的发帖时间(含,页不满则不设界),
+        // 前后两页的窗首尾相接,转发不会重复也不会漏,老客户端的 beforeId 用法不变。
+        List<ClubPost> pinned = new ArrayList<>();
+        List<ClubPost> rest = new ArrayList<>();
+        for (ClubPost p : posts) {
+            if (beforeId == null && Integer.valueOf(1).equals(p.getIsPinned())) pinned.add(p); else rest.add(p);
+        }
+        Date until = null;
+        if (beforeId != null) {
+            ClubPost cursor = clubPostService.selectClubPostById(beforeId);
+            until = cursor == null ? null : cursor.getCreateTime();
+        }
+        Date since = rest.size() >= limit ? rest.get(rest.size() - 1).getCreateTime() : null;
+        List<ClubPostRepostItemVO> reposts = repostItems(clubPostService.selectFeedReposts(
+                java.util.Collections.singletonList(body.getClubId()), since, until, POST_PAGE_MAX));
+        List<ClubPost> all = withRepostOriginals(posts, reposts);
+        projectPostReferences(all);
         try {
             Long memberId = currentMemberId();
-            for (ClubPost p : posts) {
+            for (ClubPost p : all) {
                 p.setIsLiked(clubPostLikeService.selectByPostAndMember(p.getId(), memberId) != null);
             }
-        } catch (Exception ignore) { /* 未登录不标 isLiked */ }
-        return AjaxResult.success(posts);
+            markViewerReposted(all, memberId);
+            markViewerFollows(all, memberId);
+        } catch (Exception ignore) { /* 未登录不标 isLiked / viewerReposted / isFollowTheUser */ }
+        List<Object> items = new ArrayList<>(pinned);
+        items.addAll(mergeByTime(rest, reposts));
+        return AjaxResult.success(items);
+    }
+
+    /** 帖文 + 转发条目里嵌的原帖,一起做引用投影与查看者状态标注。 */
+    private List<ClubPost> withRepostOriginals(List<ClubPost> posts, List<ClubPostRepostItemVO> reposts) {
+        List<ClubPost> all = new ArrayList<>(posts);
+        for (ClubPostRepostItemVO r : reposts) all.add(r.getPost());
+        return all;
+    }
+
+    /**
+     * 当前查看者是否已关注各帖作者(一次批量查询,与活动列表同一张关注表)。帖文卡头像上的「+」关注靠它:
+     * 1 = 已关注不出「+」,0 = 未关注;作者是自己的也给 1,不出「+」。
+     */
+    private void markViewerFollows(List<ClubPost> posts, Long memberId) {
+        if (memberId == null || memberId <= 0 || posts.isEmpty()) return;
+        List<Long> authors = new ArrayList<>();
+        for (ClubPost p : posts) {
+            Long a = p.getAuthorMemberId();
+            if (a != null && !a.equals(memberId) && !authors.contains(a)) authors.add(a);
+        }
+        Set<Long> followed = new java.util.HashSet<>();
+        if (!authors.isEmpty()) {
+            for (com.chengyinhub.business.domain.UmsMemberFollow f
+                    : umsMemberFollowMapper.selectUmsMemberFollowsByMemberAndFollowMemberIds(memberId, authors)) {
+                if (f.getFollowMemberId() != null) followed.add(f.getFollowMemberId());
+            }
+        }
+        for (ClubPost p : posts) {
+            Long a = p.getAuthorMemberId();
+            p.setIsFollowTheUser(a == null || a.equals(memberId) || followed.contains(a) ? 1 : 0);
+        }
+    }
+
+    /** 当前查看者对这批帖文的转发态(一次批量查询)。 */
+    private void markViewerReposted(List<ClubPost> posts, Long memberId) {
+        if (memberId == null || posts.isEmpty()) return;
+        List<Long> ids = new ArrayList<>();
+        for (ClubPost p : posts) if (p.getId() != null && !ids.contains(p.getId())) ids.add(p.getId());
+        Set<Long> reposted = clubPostService.selectRepostedPostIds(memberId, ids);
+        for (ClubPost p : posts) p.setViewerReposted(reposted.contains(p.getId()));
+    }
+
+    /**
+     * 转发行 → 动态流条目。原帖已删、所在俱乐部已解散,或查看者现在看不了那个俱乐部(转私密、被移出),
+     * 整条略去 —— 不出「原帖不可用」的空壳,也不暗示是哪种原因。每条原帖一份独立对象,标注互不串。
+     */
+    private List<ClubPostRepostItemVO> repostItems(List<ClubPostRepost> reposts) {
+        List<ClubPostRepostItemVO> out = new ArrayList<>();
+        if (reposts == null || reposts.isEmpty()) return out;
+        List<Long> postIds = new ArrayList<>();
+        for (ClubPostRepost r : reposts) if (r.getPostId() != null && !postIds.contains(r.getPostId())) postIds.add(r.getPostId());
+        Map<Long, ClubPost> originals = new HashMap<>();
+        for (ClubPost p : clubPostService.selectOriginalPosts(postIds)) {
+            if (p != null && p.getId() != null) originals.put(p.getId(), p);
+        }
+        Map<Long, Boolean> readableClub = new HashMap<>();
+        Set<Long> used = new java.util.HashSet<>();
+        for (ClubPostRepost r : reposts) {
+            ClubPost original = originals.get(r.getPostId());
+            if (original == null) continue;
+            Boolean readable = readableClub.get(original.getClubId());
+            if (readable == null) {
+                readable = canViewClub(clubService.selectClubById(original.getClubId()));
+                readableClub.put(original.getClubId(), readable);
+            }
+            if (!readable) continue;
+            ClubPostRepostItemVO item = new ClubPostRepostItemVO();
+            item.setRepostId(r.getId());
+            item.setReposterMemberId(r.getMemberId());
+            item.setReposterNick(r.getNickname());
+            item.setReposterAvatar(r.getAvatar());
+            item.setRepostTime(r.getCreateTime());
+            // 同一帖被两人转发:第二条起复制一份,免得两条目共用一个对象。
+            item.setPost(used.add(original.getId()) ? original : copyPost(original));
+            out.add(item);
+        }
+        return out;
+    }
+
+    private ClubPost copyPost(ClubPost src) {
+        ClubPost p = new ClubPost();
+        org.springframework.beans.BeanUtils.copyProperties(src, p);
+        return p;
+    }
+
+    /** 帖文按发帖时间、转发按转发时间,统一倒序合并;同一时刻帖文在前。两路各自已倒序。 */
+    private List<Object> mergeByTime(List<ClubPost> posts, List<ClubPostRepostItemVO> reposts) {
+        List<Object> out = new ArrayList<>(posts.size() + reposts.size());
+        int i = 0, j = 0;
+        while (i < posts.size() || j < reposts.size()) {
+            if (j >= reposts.size()) { out.add(posts.get(i++)); continue; }
+            if (i >= posts.size()) { out.add(reposts.get(j++)); continue; }
+            Date pt = posts.get(i).getCreateTime(), rt = reposts.get(j).getRepostTime();
+            boolean repostFirst = rt != null && (pt == null || rt.after(pt));
+            out.add(repostFirst ? reposts.get(j++) : posts.get(i++));
+        }
+        return out;
     }
 
     /**
@@ -1728,13 +1851,13 @@ public class ApiClubController extends BaseController {
      * 聚合动态流。俱乐部页的「帖文」tab 吃这个 —— 在此之前动态只活在单个俱乐部
      * 详情页里,没有跨俱乐部的流,前端想做 feed 只能自己一个个俱乐部拉。
      *
-     * 范围按身份给,不是全站公开流:
+     * 不传 scope(老客户端)时范围按身份给:
      *   玩家 → 我加入的俱乐部
      *   商家 → 我合作过(邀约已接受)的俱乐部
-     * 一个都没有就返回空列表 —— 那是正常状态,不是错误。全站流会让「关注」
-     * 这件事失去意义,也会把没有任何关系的俱乐部内容推给不相干的人。
+     * 一个都没有就返回空列表 —— 那是正常状态,不是错误。
+     * scope=all(2026-10-29 业主拍板「发现」页)是全站流:见 ClubPostMapper.selectSiteFeed。
      */
-    @Operation(summary = "聚合动态流(我加入/我合作过的俱乐部)")
+    @Operation(summary = "聚合动态流(我加入/我合作过的俱乐部;scope=all 为全站)")
     @PostMapping("/post/feed")
     public AjaxResult postFeed(@RequestBody(required = false) Map<String, Object> body) {
         Long memberId;
@@ -1748,6 +1871,24 @@ public class ApiClubController extends BaseController {
         }
         if (limit <= 0) limit = 20;
         if (limit > 50) limit = 50;
+
+        // 2026-10-29 业主:俱乐部 tab 改名「发现」,帖文改看全站。scope=all 走全站流,
+        // 可见性 / 拉黑 / 删除在 SQL 里判;不传 scope 的老客户端仍是「我加入 / 我合作过」。
+        if (body != null && "all".equals(String.valueOf(body.get("scope")))) {
+            if (memberId == null || memberId <= 0) return error("请先登录");
+            Long beforeId = null;
+            if (body.get("beforeId") != null) {
+                try { beforeId = Long.parseLong(String.valueOf(body.get("beforeId")).trim()); } catch (Exception ignored) { }
+            }
+            List<ClubPost> page = clubPostService.selectSiteFeed(memberId, beforeId, limit + 1);
+            boolean hasMore = page.size() > limit;
+            List<ClubPost> rows = hasMore ? new ArrayList<>(page.subList(0, limit)) : page;
+            decorateFeedRows(rows, memberId);
+            Map<String, Object> d = new HashMap<>();
+            d.put("rows", rows);
+            d.put("hasMore", hasMore);
+            return AjaxResult.success(d);
+        }
 
         Set<Long> scope = new LinkedHashSet<>();
         // 我加入的(含我自己建的 —— 创建者也是成员)
@@ -1765,11 +1906,26 @@ public class ApiClubController extends BaseController {
         }
 
         List<ClubPost> posts = clubPostService.selectFeedByClubIds(new ArrayList<>(scope), limit);
+        // dw29 L8:范围内俱乐部成员的转发与帖文按时间合并,整体仍只取 limit 条。
+        List<ClubPostRepostItemVO> reposts = repostItems(
+                clubPostService.selectFeedReposts(new ArrayList<>(scope), null, null, limit));
+        List<ClubPost> all = withRepostOriginals(posts, reposts);
+        decorateFeedRows(all, memberId);
+        List<Object> rows = mergeByTime(posts, reposts);
+        Map<String, Object> d = new HashMap<>();
+        d.put("rows", rows.size() > limit ? new ArrayList<>(rows.subList(0, limit)) : rows);
+        d.put("clubCount", scope.size());
+        return AjaxResult.success(d);
+    }
+
+    private void decorateFeedRows(List<ClubPost> all, Long memberId) {
         // 聚合流与俱乐部页是同一批帖子,引用投影也得给 —— 不给的话前端拿不到 sportName,
         // variant 判定恒假,成绩卡/模板卡在达人页永远不出现(俱乐部页里却出现),同一条帖两种样子。
-        projectPostReferences(posts);
+        projectPostReferences(all);
+        markViewerReposted(all, memberId);
+        markViewerFollows(all, memberId);
         Map<Long, Boolean> contentManageByClub = new HashMap<>();
-        for (ClubPost p : posts) {
+        for (ClubPost p : all) {
             p.setIsLiked(clubPostLikeService.selectByPostAndMember(p.getId(), memberId) != null);
             Boolean canManage = contentManageByClub.get(p.getClubId());
             if (canManage == null) {
@@ -1779,10 +1935,6 @@ public class ApiClubController extends BaseController {
             }
             p.setViewerCanManage(canManage);
         }
-        Map<String, Object> d = new HashMap<>();
-        d.put("rows", posts);
-        d.put("clubCount", scope.size());
-        return AjaxResult.success(d);
     }
 
     /** 当前点赞状态快照，不是原写请求的最终回执。沿用动态列表的俱乐部可见性。 */
@@ -1844,6 +1996,52 @@ public class ApiClubController extends BaseController {
         }
         Map<String, Object> d = new HashMap<>();
         d.put("liked", liked);
+        return AjaxResult.success(d);
+    }
+
+    @Operation(summary = "转发帖文(dw29 L8)")
+    @PostMapping("/post/repost")
+    @Transactional(rollbackFor = Exception.class, isolation = Isolation.READ_COMMITTED)
+    public AjaxResult postRepost(@RequestBody(required = false) ClubPostRepost body) {
+        return changeRepost(body, true);
+    }
+
+    @Operation(summary = "撤销转发(dw29 L8)")
+    @PostMapping("/post/repost/undo")
+    @Transactional(rollbackFor = Exception.class, isolation = Isolation.READ_COMMITTED)
+    public AjaxResult postRepostUndo(@RequestBody(required = false) ClubPostRepost body) {
+        return changeRepost(body, false);
+    }
+
+    /**
+     * 转发与点赞同一套闸与锁序:先锁俱乐部、再锁帖文,锁后复核帖文归属与删除态。
+     * 转发要求此刻读得到原帖(俱乐部可见 + 未被封禁);转自己的帖允许。
+     * 撤销只动本人那一行,不要求原帖仍可读 —— 帖子转私密/被移出后,本人仍能把自己的转发撤掉。
+     */
+    private AjaxResult changeRepost(ClubPostRepost body, boolean reposted) {
+        Long memberId;
+        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        if (memberId == null || memberId <= 0) return error("请先登录");
+        if (body == null || body.getPostId() == null || body.getPostId() <= 0) return error("缺少动态ID");
+        ClubPost targetPost = clubPostService.selectClubPostById(body.getPostId());
+        if (targetPost == null) return error("动态不存在");
+        if (reposted && !Integer.valueOf(0).equals(targetPost.getDelFlag())) return error("动态不存在");
+        Club club = clubService.selectClubByIdForUpdate(targetPost.getClubId());
+        if (club == null && reposted) return error("动态不存在");
+        targetPost = clubPostService.selectClubPostByIdForUpdate(body.getPostId());
+        if (targetPost == null || (club != null && !club.getId().equals(targetPost.getClubId()))) {
+            return error("动态不存在");
+        }
+        if (reposted) {
+            if (!Integer.valueOf(0).equals(targetPost.getDelFlag())) return error("动态不存在");
+            if (!canViewClub(club)) return error("这个俱乐部只对成员开放");
+            clubParticipationGuard.requireAllowed(club.getId(), memberId);
+        }
+        clubPostService.setReposted(targetPost.getId(), memberId, reposted);
+        ClubPost after = clubPostService.selectClubPostById(targetPost.getId());
+        Map<String, Object> d = new HashMap<>();
+        d.put("reposted", clubPostService.isReposted(targetPost.getId(), memberId));
+        d.put("repostCount", after == null || after.getRepostCount() == null ? 0 : after.getRepostCount());
         return AjaxResult.success(d);
     }
 

@@ -12,7 +12,8 @@ const renderable = (source) => source.replace(/<!--[\s\S]*?-->/g, '').replace(/\
 function assertCompletionShareContract(listJs, cardHostWxml, completionWxml) {
   const wxml = renderable(cardHostWxml)
   const card = renderable(completionWxml)
-  assert.match(listJs, /isCompletionShare\s*=\s*isCompletedShare\(newlist\[i\]\)/)
+  // 2026-10-29:广场列表页已删,社区帖的 variant 判定在发现页全站流 utils/discover-feed.js
+  assert.match(listJs, /item\.isCompletionShare\s*=\s*isCompletedShare\(item\)/)
   assert.match(wxml, /<cy-completion-share-card\b[^>]*wx:if="\{\{post\.isCompletionShare\}\}"/)
   assert.match(card, /class="completion-share-card__cover"[^>]*src="\{\{cover\}\}"[^>]*mode="\{\{roamResult \? 'aspectFit' : 'aspectFill'\}\}"/)
   // 2026-09-02 Figma 297:1827 Roam variant:成绩卡不再是「820rpx 全幅封面 + overlay 叠字」。
@@ -44,7 +45,7 @@ function assertImListStillLive(appJson, talentJs, ledgerJs, imListJs) {
 }
 
 test('A05: 完赛分享使用单张图片成绩卡，模板/路线分享继续使用既有沉浸卡', () => {
-  const listJs = read('pages/square/list/index.js')
+  const listJs = read('utils/discover-feed.js')
   const listWxml = read('components/cy/post-card/index.wxml')
   const completionWxml = read('components/cy/completion-share-card/index.wxml')
   const completionWxss = read('components/cy/completion-share-card/index.wxss')
@@ -69,7 +70,7 @@ test('A05: 完赛分享使用单张图片成绩卡，模板/路线分享继续�
 })
 
 test('A05 negative control: 让完赛帖重新落入沉浸卡必须判红', () => {
-  const js = read('pages/square/list/index.js')
+  const js = read('utils/discover-feed.js')
   const source = read('components/cy/post-card/index.wxml')
   const card = read('components/cy/completion-share-card/index.wxml')
   const mutated = source.replace(
@@ -134,11 +135,11 @@ test('A52/A53: 未填写资料行回到同一高度，五个页内面板使用�
   const wxss = read('pages/gerenziliao/gerenziliao.wxss')
 
   assert.doesNotMatch(wxml, /\/images\/d_jftu2\.png/)
-  assert.ok((wxml.match(/>未填写<\/view>/g) || []).length >= 3, '媒体/列表空态必须使用与普通行同高的“未填写”文本')
-  assert.match(wxml, /class="shzlbox_li_left_ntu"\s+wx:if="\{\{casePicsList\.length > 0\}\}"/)
-  assert.match(wxml, /class="shzlbox_li_left_ntu"\s+wx:if="\{\{userInfo\.wechat\}\}"/)
-  assert.match(wxss, /\.shzlbox_li\s*\{[^}]*min-height:\s*var\(--cy-btn-h\)/s)
-  assert.match(wxss, /\.shzlbox_li_left_ntu\s*\{[^}]*margin-top:\s*0/s)
+  // 2026-10-30 业主定稿 P-2:Revolut 式分组列表 —— 每行同一最小高度,媒体 / 列表没填时同一行里写灰色「未填写」
+  assert.ok((wxml.match(/<text class="rv-row__v is-empty"[^>]*>未填写<\/text>/g) || []).length >= 3, '媒体/列表空态必须使用与普通行同高的“未填写”文本')
+  assert.match(wxml, /class="rv-thumbs" wx:if="\{\{casePicsList\.length > 0\}\}"/)
+  assert.match(wxml, /class="rv-thumbs" wx:if="\{\{userInfo\.wechat\}\}"/)
+  assert.match(wxss, /\.rv-row\s*\{[^}]*min-height:\s*104rpx/s)
   assert.equal((wxml.match(/class="profile-edit-sheet"/g) || []).length, 5)
   assert.doesNotMatch(wxss, /\.profile-edit-sheet\s*\{[^}]*--cy-comp-sheet-bg:/)
   assert.match(read('components/cy/sheet/index.wxss'), /--cy-comp-sheet-bg:\s*var\(--cy-comp-sheet-role-glass\)/)

@@ -56,11 +56,11 @@
         <!-- M-27(2026-10-27):头像不要描边;换 Logo 后经 identity-sync 广播即时刷新 -->
         <view wx:if="{{merchantAccess.canWriteProfile}}" class="rv-hero-avatar-hit" bindtap="goBrandManage" aria-role="button" aria-label="管理品牌资料" hover-class="cy-pressed" hover-stay-time="80">
           <cy-avatar class="rv-hero-avatar" size="112"
-                    src="{{ merchantInfo.logo || '' }}" name="{{ displayName }}" />
+                    src="{{ img.one(merchantInfo.logo) }}" name="{{ displayName }}" />
         </view>
         <view wx:else class="rv-hero-avatar-hit">
           <cy-avatar class="rv-hero-avatar" size="112"
-                    src="{{ merchantInfo.logo || '' }}" name="{{ displayName }}" />
+                    src="{{ img.one(merchantInfo.logo) }}" name="{{ displayName }}" />
         </view>
       </view>
 

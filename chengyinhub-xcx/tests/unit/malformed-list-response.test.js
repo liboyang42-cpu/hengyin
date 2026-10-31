@@ -207,12 +207,7 @@ test('首页列表包含空元素时进入显式错误态且不崩溃', () => {
   assert.equal(h.vm.data.listErr.recommendedTopicList, true);
 });
 
-test('广场帖子和评论列表包含空元素时进入错误态且不崩溃', () => {
-  const feed = harness('pages/square/list/index.js', 'page');
-  feed.vm.getList();
-  assert.doesNotThrow(() => feed.requests[0].success({ code: '200', data: { rows: [null], total: 1 } }));
-  assert.equal(feed.vm.data.loadError, true);
-
+test('广场帖子评论列表包含空元素时进入错误态且不崩溃', () => {
   const detail = harness('pages/square/detail/index.js', 'page');
   detail.vm.data.id = 9;
   detail.vm.getList();
@@ -242,10 +237,14 @@ test('收藏列表包含空元素时进入错误态且不崩溃', () => {
 
 // 2026-09-07:合作池整块删除(用户拍板),这条只剩俱乐部动态流那一半。
 // 「列表含空元素 → 进错误态而不是冒充真实空态」这条不变量本身没变。
-test('俱乐部动态流包含空元素时进入错误态', () => {
+test('发现页全站帖文流包含空元素时进入错误态', async () => {
   const feed = harness('pages/talent/list/index.js', 'page');
   feed.vm.loadFeed();
-  assert.doesNotThrow(() => feed.requests[0].success({ code: '200', data: { rows: [null], clubCount: 1 } }));
+  await new Promise(resolve => setImmediate(resolve));
+  const club = feed.requests.find(r => r.url === '/api/club/post/feed');
+  assert.ok(club, '发现页必须请求全站俱乐部帖文');
+  assert.doesNotThrow(() => club.success({ code: '200', data: { rows: [null], hasMore: false } }));
+  await new Promise(resolve => setImmediate(resolve));
   assert.equal(feed.vm.data.feedState, 'error');
 });
 

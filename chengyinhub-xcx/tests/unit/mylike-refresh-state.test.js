@@ -57,7 +57,8 @@ test('帖文收藏刷新 502 保留旧卡片与操作，并在 complete 后停�
   const view = fs.readFileSync(VIEW_PATH, 'utf8');
   assert.doesNotMatch(view, /<cy-inline-error[^>]*staleError/);
   assert.match(view, /bind:detail="goPost"/);
-  assert.match(view, /bind:favorite="postUnlike"/);
+  assert.match(view, /bind:more="onPostMore"/);
+  assert.match(view, /bind:select="onPostMoreSelect"/);
 });
 
 function loadPage() {

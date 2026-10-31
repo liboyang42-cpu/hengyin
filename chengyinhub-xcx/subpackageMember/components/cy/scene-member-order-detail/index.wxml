@@ -82,7 +82,7 @@
     <view class="ocard">
       <view class="orow">
         <text class="orow-k">票价</text>
-        <text class="orow-v">{{money.amount(info.ticketPrice)}} × {{orderQty}}</text>
+        <text class="orow-v">{{money.amount(ticketPriceShown)}} × {{orderQty}}</text>
       </view>
       <view class="orow" wx:if="{{showPointPay}}">
         <text class="orow-k">积分抵扣{{info.pointUsed ? '（' + info.pointUsed + ' 积分）' : ''}}</text>
@@ -123,6 +123,7 @@
     <!-- 订单进度。稿 578:2298 那一屏里没有它 —— 稿画的是首屏那一段
          (头图 → 退款卡 → 订单明细 → 支付明细),时间线属于再往下的部分。
          所以不是删掉,是挪到稿那三段之后,别插在中间把稿的顺序打断。 -->
+    <view class="sec-title">订单进度</view>
     <view class="order-timeline" aria-role="list" aria-label="订单进度">
       <view class="order-timeline-step is-{{item.state}}" wx:for="{{orderTimeline}}" wx:key="key" aria-role="listitem">
         <view class="order-timeline-dot"></view>
@@ -299,7 +300,6 @@
             排在稿那两颗上面,各占一行,不挤进并排那一排。 -->
     <view class="secondary-actions">
       <view wx:if="{{info.registrationStatus==1 || info.canRequestRefund}}" class="sec-btn sec-danger {{cancelling ? 'sec-btn--disabled' : ''}}" bindtap="cancelRegistration" aria-role="button" aria-label="{{cancelling ? '正在处理' : (info.isFreeOrder ? '取消报名' : (info.registrationStatus==2 ? '取消并退款' : '取消订单'))}}" aria-disabled="{{cancelling}}" hover-class="{{cancelling ? 'none' : 'cy-pressed'}}" hover-stay-time="80">{{cancelling ? '处理中' : (info.isFreeOrder ? '取消报名' : (info.registrationStatus==2 ? '取消并退款' : '取消订单'))}}</view>
-      <view wx:if="{{showSecondaryTicket}}" class="sec-btn sec-solid" bindtap="goSignInfo" hover-class="cy-pressed" hover-stay-time="80">查看票夹</view>
     </view>
     <view class="sec-pair">
       <button class="sec-pair-btn" open-type="contact" show-message-card="true" send-message-title="订单客服" send-message-path="/subpackageMember/orderinfo/orderinfo?id={{info.id}}">联系客服</button>
@@ -309,9 +309,8 @@
   </view>
     <!-- §3.2:主 CTA 固定在底部,不与正文一起滚走。放在 .david(ready 闸)内 ⇒
          失败/加载态下不会漏出来。sticky 而非 fixed,留在 sheet 的滚动容器里。 -->
-    <view class="bp-cta-bar" wx:if="{{primaryCta === 'pay' || primaryCta === 'ticket'}}">
-      <view wx:if="{{primaryCta === 'pay'}}" class="primary-cta" bindtap="payOrder" aria-role="button" aria-label="去支付" hover-class="cy-pressed" hover-stay-time="80">{{paying ? '支付中...' : '去支付'}}</view>
-      <view wx:elif="{{primaryCta === 'ticket'}}" class="primary-cta" bindtap="goSignInfo" aria-role="button" aria-label="查看票夹" hover-class="cy-pressed" hover-stay-time="80">查看票夹</view>
+    <view class="bp-cta-bar" wx:if="{{primaryCta === 'pay'}}">
+      <view class="primary-cta" bindtap="payOrder" aria-role="button" aria-label="去支付" hover-class="cy-pressed" hover-stay-time="80">{{paying ? '支付中...' : '去支付'}}</view>
     </view>
   <!-- 队伍人数选择(2026-09-02 由 wx.showActionSheet 收编)。放在 ready 闸内:
        .detail 的直属子节点必须受 loadState 闸控制,失败态不该还挂着一个弹层。 -->

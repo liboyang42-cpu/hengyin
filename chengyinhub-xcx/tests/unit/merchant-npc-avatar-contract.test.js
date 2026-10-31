@@ -12,7 +12,7 @@ const js = fs.readFileSync(path.join(COMPONENT, 'index.js'), 'utf8');
 // 这三条都属于「坏了不会报错、只会静默变难看/消失」那一类,所以拿测试钉住。
 
 test('形象卡在 tab 之上,不藏在某个 tab 里', () => {
-  const tabsAt = wxml.indexOf('<cy-tabs class="pc-tabs"');
+  const tabsAt = wxml.indexOf('<cy-tabs class="pc-tabs'); // 2026-10-30 class 后面多了玩家视角的 pc-tabs--photo
   const cardAt = wxml.indexOf('class="pc-npc"');
   assert.ok(tabsAt > 0 && cardAt > 0, '结构变了:找不到 tab 或形象卡');
   // 他人视角默认落在 posts(profile/index.js 的 activeTab 兜底),

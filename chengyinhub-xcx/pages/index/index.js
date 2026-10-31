@@ -18,6 +18,8 @@ const { appendByIndex } = require('../../utils/list-append.js');
 const { isRecordList } = require('../../utils/response-shape.js');
 const { isValidMobile } = require('../../utils/form-state.js');
 const phoneReminder = require('../../utils/phone-reminder.js');
+const identitySync = require('../../utils/identity-sync.js');
+const { avatarSrc } = identitySync;
 const { VERSIONS } = require('../../utils/compliance/usage-consent.js');
 
 function isHomeCityAgreement(row) {
@@ -132,7 +134,11 @@ function isCurrentLocationRequest(page, scope) {
 
 const homeCity = require('../../utils/index/home-city-location.js');
 function showHomeCityLocationError(page, scope, kind) {
-  hideLocationLoading(page, scope); if (isCurrentLocationRequest(page, scope)) cyToast(homeCity.message(kind));
+  hideLocationLoading(page, scope);
+  if (!isCurrentLocationRequest(page, scope)) return;
+  // V-01:冷启动/onShow 的自动定位失败不弹提示，保留上次城市，没有就露出手动选择；只有用户主动点定位才提示。
+  if (scope.userInitiated) cyToast(homeCity.message(kind));
+  else if (!page.data.city) page.setData({ city: homeCity.DEFAULT_CITY, cityManual: false });
 }
 
 function hideLocationLoading(page, scope) {
@@ -289,6 +295,14 @@ Page({
   onLoad(options) {
     const that = this;
     this._unloaded = false;
+    // V-15 / G-5:个人资料换头像、改昵称保存成功即换掉问候区,不等 onShow 回读
+    this._offIdentity = identitySync.onIdentityChange(function (evt) {
+      if (evt.scope !== 'member' || that._unloaded) return;
+      const userInfo = Object.assign({}, that.data.userInfo);
+      if (evt.patch.avatar) userInfo.avatar = avatarSrc(evt.patch.avatar, app.getImgUrl && app.getImgUrl.bind(app));
+      if (evt.patch.nickname) userInfo.nickname = evt.patch.nickname;
+      that.setData({ userInfo: userInfo });
+    });
 
     // 门口游戏码优先：没报名去买主题，已报名进游玩。不能先被商家分流吃掉 scene。
     if (this.consumeDoorScene(options)) return;
@@ -606,6 +620,7 @@ Page({
    */
   onUnload() {
     this._unloaded = true;
+    if (this._offIdentity) { this._offIdentity(); this._offIdentity = null; }
     this._locationEpoch = (this._locationEpoch || 0) + 1;
     if (this._locationLoadingEpoch != null) {
       this._locationLoadingEpoch = null;
@@ -1015,7 +1030,9 @@ Page({
         that._getUserDataRetryCount = 0;  // 成功后重置,避免下次调用从陈旧计数开始
         if (res && res.code == "200" && res.data && typeof res.data === 'object' && !Array.isArray(res.data)) {
           // F-L5C-04/F-W1-14:首页不再主动弹窗索取手机号,只在确需的业务动作里按需请求或由用户在个人资料页绑定。
-          that.setData({ userInfo: res.data, isLoading: false });
+          // V-15:头像过 getImgUrl(http 签名链接 / 相对路径真机拒载)
+          const userInfo = Object.assign({}, res.data, { avatar: avatarSrc(res.data.avatar, app.getImgUrl && app.getImgUrl.bind(app)) });
+          that.setData({ userInfo: userInfo, isLoading: false });
         } else if (res && res.code == "401") {
           that.firstLogin();
         } else {
@@ -1450,12 +1467,16 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
     return indexFormat.processTopicDate(list);
   },
 
-  getHomeCityLocation() {
+  getHomeCityLocation(opts) {
     if (this._unloaded || this._homeLocationHidden) return;
     const scope = captureLocationRequest(this);
-    if (!(Number(scope.memberId) > 0) || !scope.authorization || scope.authorization === 'dev-token') return;
+    scope.userInitiated = !!(opts && opts.userInitiated);
+    if (!(Number(scope.memberId) > 0) || !scope.authorization || scope.authorization === 'dev-token') {
+      if (!this.data.city) this.setData({ city: homeCity.readLastCity() || homeCity.DEFAULT_CITY, cityManual: false });
+      return;
+    }
     const that = this;
-    this.setData({ city: '', cityManual: false });
+    this.setData({ city: this.data.city || homeCity.readLastCity(), cityManual: false });
     app.sendRequest({
       url: '/api/compliance/consents/latest',
       method: 'POST',
@@ -1550,7 +1571,7 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
         if (!isCurrentLocationRequest(that, scope)) return;
         const data = res && Number(res.code) === 200 && res.data;
         const city = data && data.city;
-        if (typeof city === 'string' && city.trim()) { that.setData({ city: city.trim(), cityManual: false }); return; }
+        if (typeof city === 'string' && city.trim()) { that.setData({ city: city.trim(), cityManual: false }); homeCity.saveLastCity(city.trim()); return; }
         if (data && data.manualInputRequired) { offerManualCity(that, scope, data.reason); return; }
         showHomeCityLocationError(that, scope, 'empty');
       },
@@ -1563,7 +1584,12 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
   onManualCityChange(e) {
     const idx = Number(e && e.detail && e.detail.value);
     const city = String(homeCity.CITY_OPTIONS[idx] || '').trim();
-    if (city) this.setData({ city: city, cityManual: false });
+    if (city) { this.setData({ city: city, cityManual: false }); homeCity.saveLastCity(city); }
+  },
+
+  // V-01:用户主动点城市重新定位，失败时才提示。
+  onTapHomeCity() {
+    this.getHomeCityLocation({ userInitiated: true });
   },
 })
 
@@ -1571,14 +1597,15 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
 function offerManualCity(page, scope, reason) {
   hideLocationLoading(page, scope);
   if (!isCurrentLocationRequest(page, scope)) return;
-  page.setData({ cityManual: true });
-  cyToast(reason === 'MAP_RATE_LIMITED' ? '定位请求较频繁，请手动选择城市' : '暂时无法自动识别城市，请手动选择');
+  if (!page.data.city) page.setData({ city: homeCity.DEFAULT_CITY, cityManual: false });
+  if (scope.userInitiated) cyToast(reason === 'MAP_RATE_LIMITED' ? '定位请求较频繁，请手动选择城市' : '暂时无法自动识别城市，请手动选择');
 }
 
 // 权限被拒/系统定位关闭:只引导打开设置一次(本页面实例内)。
 function offerLocationSettings(page, scope) {
   hideLocationLoading(page, scope);
   if (!isCurrentLocationRequest(page, scope)) return;
+  if (!scope.userInitiated) { if (!page.data.city) page.setData({ city: homeCity.DEFAULT_CITY, cityManual: false }); return; }
   if (page._locationSettingsOffered) { cyToast(homeCity.message('device')); return; }
   page._locationSettingsOffered = true;
   modal.show({

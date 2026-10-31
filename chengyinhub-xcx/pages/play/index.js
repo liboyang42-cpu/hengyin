@@ -6,11 +6,13 @@ const cyLoading = require('../../utils/loading.js');
 const cyToast = require('../../utils/toast.js');
 const motion = require('../../utils/motion.js');
 const app = getApp();
+const discoverNav = require('../../utils/discover-nav.js');
 const bgTracker = require('../../utils/location/bg-tracker.js');
 let playLocationOwnerSequence = 0; // 每次实际持有使用独立key，旧页面不能释放新会话。
 const analytics = require('../../utils/analytics.js');
 const { activityShareFromEvent } = require('../../utils/activity-share.js');
 const { bundledMerchantGameAudioPath } = require('./utils/merchant-game-assets.js');
+const { stripOperatorNotes } = require('../../utils/rule-steps.js');
 const geo = require('../../utils/geo.js'); // 纯地理/时间工具(haversine/营业窗判定),可单测
 const recommend = require('./utils/play-recommend.js'); // P0 推荐评分(纯函数,已单测)
 const { buildPlayRoute, createSessionClock, formatElapsed } = require('../../utils/play-ui-contract.js');
@@ -3442,7 +3444,7 @@ Page({
     if (this.data.isPreview || this.data.isMock) return;
     const regId = this.data.regId;
     if (!regId) { this._explainMissingEntryQr(); return; }
-    this.openScene('qr-ticket', { registrationId: regId });
+    this.openScene('qr-ticket', { registrationId: regId, title: this.data.topicName || '', until: this._passExpiresAt || '' });
   },
   /**
    * 从帖文/俱乐部等入口进来时页面只有 activityId/topicId,没有票夹带的 registrationId,
@@ -4195,6 +4197,7 @@ Page({
       // 通关奖励摘要:唯一渲染点(剧本 tab 的奖励卡)随起始页删除,这里只留 js 侧消费
       // (完成页判「有没有券」与奖励文案),所以退回实例字段,不再占一个没人渲染的 data 位。
       that._themeReward = d.reward || null;
+      that._passExpiresAt = d.expiresAt || '';
       const topicName = d.topicName || that._entryTopicName || '';
       that._vitalsOn = d.vitalsOn || null;
       // 2026-09-22 拆除:此处原先按主题名正则 /^预制人生/ 把整局 redirectTo 到硬编码分包
@@ -4276,6 +4279,7 @@ Page({
     that._routeNodeCatalog = catalog;
     that._applyLook(d.look); const chapter = that.buildChapter(d, nodes); /* 画面风格先落,章节配色 / 时间段才取得到 */
     this._historyNodes = [];
+    that._passExpiresAt = d.expiresAt || '';
     this.setData({
       loading: false, emptyTip: '', emptyKind: '', topicId: d.topicId || '', topicName: d.topicName || this._entryTopicName || '', topicDesc: d.topicDesc || '', topicAudioUrl: d.topicAudioUrl || '', topicCover: d.topicCover || '', mode, serverMode: mode,
       modeLabel: mode == 2 ? '自由探索' : '城市定向',
@@ -4357,7 +4361,7 @@ Page({
       // 模板呈现字段(/api/play/nodes 已下发)
       gameTitle: n.gameTitle || (vm === 6 ? '生活偏好校准' : (vm === 4 ? '现场打卡' : (vm === 2 ? '拍照任务' : (vm ? '节点任务' : '')))),
       duration: n.duration ? (n.duration + ' 分钟') : '', difficulty: n.difficulty || '', players: n.players || '',
-      materials: n.requiredMaterials || '', rule: n.ruleInstructions || '',
+      materials: n.requiredMaterials || '', rule: stripOperatorNotes(n.ruleInstructions || ''), // V-12:运营备注不给玩家看
       story: n.storyText || '', cover: n.storyImg || n.imgUrl || '',
       cardHook: n.cardHookLong || '',
       fragmentText: n.fragmentText || '',
@@ -6799,7 +6803,7 @@ Page({
         if (seatChoice(res.data, regId)) {
           // 旧优惠券出码调用也走同一明确选席组件；不能把整单默认成第一席。
           that.setData({ 'ticket.loading': false, 'ticket.url': '', 'ticket.code': '' });
-          that.openScene('qr-ticket', { registrationId: regId });
+          that.openScene('qr-ticket', { registrationId: regId, title: that.data.topicName || '', until: that._passExpiresAt || '' });
           return;
         }
         that.setData({ 'ticket.url': res.data.qrcodeUrl || '', 'ticket.code': res.data.code || '', 'ticket.loading': false, 'ticket.expiresAt': res.data.expiresAt || 0 });
@@ -8326,9 +8330,9 @@ Page({
   },
   shareFinish() {
     if (typeof app.canUseCommunity !== 'function' || !app.canUseCommunity(true)) { cyToast('当前账号未开放广场发布'); return; }
-    // 通关→广场发布:发帖时活动选择器列出已通关活动(本场已在 /api/play/my-completed 中),选中即关联
-    cyToast('去广场发布你的城市足迹');
-    setTimeout(() => { wx.navigateTo({ url: '/pages/square/list/index' }); }, 800);
+    // 2026-10-29 业主:「动态」二级页已删,通关后去发现页的全站帖文。
+    discoverNav.markDiscoverFeed(app);
+    wx.switchTab({ url: '/pages/talent/list/index' });
   },
 
   // ---------- 音频播放 ----------

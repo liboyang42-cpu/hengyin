@@ -16,6 +16,7 @@
         <result property="type"    column="type"    />
         <result property="likeCount"    column="like_count"    />
         <result property="commentCount"    column="comment_count"    />
+        <result property="repostCount"    column="repost_count"    />
         <result property="delFlag"    column="del_flag"    />
         <result property="isPinned"    column="is_pinned"    />
         <result property="pinnedAt"    column="pinned_at"    />
@@ -31,21 +32,21 @@
 
     <select id="selectClubPostById" parameterType="Long" resultMap="ClubPostResult">
         select cp.id, cp.club_id, cp.author_member_id, cp.content, cp.images, cp.ref_type, cp.ref_id, cp.type,
-               cp.like_count, cp.comment_count, cp.del_flag, cp.is_pinned, cp.pinned_at,
+               cp.like_count, cp.comment_count, cp.repost_count, cp.del_flag, cp.is_pinned, cp.pinned_at,
                cp.version, cp.create_time, cp.update_time,
                exists(select 1 from club_post_revision r where r.post_id = cp.id) as edited
         from club_post cp where cp.id = #{id}
     </select>
 
-    <select id="selectClubPostByIdForUpdate" parameterType="Long" resultMap="ClubPostResult">
-        select id, club_id, author_member_id, content, images, ref_type, ref_id, type, like_count, comment_count,
+    <select id="selectClubPostByIdForUpdate" parameterType="Long" resultMap="ClubPostResult" useCache="false" flushCache="true">
+        select id, club_id, author_member_id, content, images, ref_type, ref_id, type, like_count, comment_count, repost_count,
                del_flag, is_pinned, pinned_at, version, create_time, update_time
         from club_post where id = #{id} for update
     </select>
 
     <select id="selectClubPostList" parameterType="ClubPost" resultMap="ClubPostResult">
         select cp.id, cp.club_id, cp.author_member_id, cp.content, cp.images, cp.ref_type, cp.ref_id, cp.type,
-               cp.like_count, cp.comment_count, cp.del_flag, cp.is_pinned, cp.pinned_at,
+               cp.like_count, cp.comment_count, cp.repost_count, cp.del_flag, cp.is_pinned, cp.pinned_at,
                cp.version, cp.create_time, cp.update_time,
                exists(select 1 from club_post_revision r where r.post_id = cp.id) as edited,
                m.nickname as nickname, m.avatar as avatar
@@ -63,7 +64,7 @@
     <!-- 俱乐部动态流分页(P0-82):pinned=true 取置顶帖;否则取非置顶帖按 id 倒序,beforeId 为翻页游标。 -->
     <select id="selectClubPostPage" resultMap="ClubPostResult">
         select cp.id, cp.club_id, cp.author_member_id, cp.content, cp.images, cp.ref_type, cp.ref_id, cp.type,
-               cp.like_count, cp.comment_count, cp.del_flag, cp.is_pinned, cp.pinned_at,
+               cp.like_count, cp.comment_count, cp.repost_count, cp.del_flag, cp.is_pinned, cp.pinned_at,
                cp.version, cp.create_time, cp.update_time,
                exists(select 1 from club_post_revision r where r.post_id = cp.id) as edited,
                m.nickname as nickname, m.avatar as avatar
@@ -90,7 +91,7 @@
          不进这里 —— MyBatis 的 foreach 遇到空集合会生成 `in ()` 语法错。 -->
     <select id="selectFeedByClubIds" resultMap="ClubPostResult">
         select cp.id, cp.club_id, cp.author_member_id, cp.content, cp.images, cp.ref_type, cp.ref_id, cp.type,
-               cp.like_count, cp.comment_count, cp.del_flag, cp.is_pinned, cp.pinned_at,
+               cp.like_count, cp.comment_count, cp.repost_count, cp.del_flag, cp.is_pinned, cp.pinned_at,
                cp.version, cp.create_time, cp.update_time,
                exists(select 1 from club_post_revision r where r.post_id = cp.id) as edited,
                m.nickname as nickname, m.avatar as avatar,
@@ -103,6 +104,50 @@
           <foreach collection="clubIds" item="cid" open="(" separator="," close=")">#{cid}</foreach>
         order by cp.id desc
         limit #{limit}
+    </select>
+
+    <!-- 全站帖文流(2026-10-29 业主:俱乐部 tab 改名「发现」,帖文看全站)。
+         与俱乐部详情同一口径:俱乐部未删且审核通过;不公开的俱乐部只对主理人和在册成员可见(= canViewClub);
+         帖子 del_flag=0(驳回回调 del_flag=2 即下架);viewer 与作者任一方拉黑对方都不出现。
+         order by id desc 走主键倒序扫描,不需要新索引。 -->
+    <select id="selectSiteFeed" resultMap="ClubPostResult">
+        select cp.id, cp.club_id, cp.author_member_id, cp.content, cp.images, cp.ref_type, cp.ref_id, cp.type,
+               cp.like_count, cp.comment_count, cp.repost_count, cp.del_flag, cp.is_pinned, cp.pinned_at,
+               cp.version, cp.create_time, cp.update_time,
+               exists(select 1 from club_post_revision r where r.post_id = cp.id) as edited,
+               m.nickname as nickname, m.avatar as avatar,
+               c.name as clubName, c.logo as clubLogo
+        from club_post cp
+        left join ums_member m on m.id = cp.author_member_id
+        join club c on c.id = cp.club_id and c.del_flag = 0 and c.status = 1
+        where cp.del_flag = 0
+          and (c.public_visible is null or c.public_visible &lt;&gt; 0
+               or c.member_id = #{viewerId}
+               or exists(select 1 from club_member cm
+                         where cm.club_id = c.id and cm.member_id = #{viewerId}
+                           and cm.status = 1 and cm.del_flag = 0))
+          and not exists(select 1 from im_block b
+                         where (b.member_id = #{viewerId} and b.blocked_member_id = cp.author_member_id)
+                            or (b.member_id = cp.author_member_id and b.blocked_member_id = #{viewerId}))
+          <if test="beforeId != null"> and cp.id &lt; #{beforeId}</if>
+        order by cp.id desc
+        limit #{limit}
+    </select>
+
+    <!-- 转发条目嵌的原帖(dw29 L8):与聚合流同一组列;已删帖文、已解散俱乐部的不返回,调用方据此略去该条转发。 -->
+    <select id="selectFeedPostsByIds" resultMap="ClubPostResult">
+        select cp.id, cp.club_id, cp.author_member_id, cp.content, cp.images, cp.ref_type, cp.ref_id, cp.type,
+               cp.like_count, cp.comment_count, cp.repost_count, cp.del_flag, cp.is_pinned, cp.pinned_at,
+               cp.version, cp.create_time, cp.update_time,
+               exists(select 1 from club_post_revision r where r.post_id = cp.id) as edited,
+               m.nickname as nickname, m.avatar as avatar,
+               c.name as clubName, c.logo as clubLogo
+        from club_post cp
+        left join ums_member m on m.id = cp.author_member_id
+        join club c on c.id = cp.club_id and c.del_flag = 0
+        where cp.del_flag = 0
+          and cp.id in
+          <foreach collection="ids" item="pid" open="(" separator="," close=")">#{pid}</foreach>
     </select>
 
     <insert id="insertClubPost" parameterType="ClubPost" useGeneratedKeys="true" keyProperty="id">
@@ -149,5 +194,67 @@
     <update id="incrementCommentCount">
         update club_post set comment_count = greatest(ifnull(comment_count, 0) + #{delta}, 0) where id = #{id}
     </update>
+
+    <update id="incrementRepostCount">
+        update club_post set repost_count = greatest(ifnull(repost_count, 0) + #{delta}, 0) where id = #{id}
+    </update>
+
+    <!-- ==== 帖文转发 club_post_repost(dw29 L8) ==== -->
+    <resultMap type="com.chengyinhub.business.domain.ClubPostRepost" id="ClubPostRepostResult">
+        <result property="id"    column="id"    />
+        <result property="postId"    column="post_id"    />
+        <result property="memberId"    column="member_id"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="nickname"    column="nickname"    />
+        <result property="avatar"    column="avatar"    />
+    </resultMap>
+
+    <select id="selectRepostByPostAndMember" resultMap="ClubPostRepostResult">
+        select id, post_id, member_id, del_flag, create_time from club_post_repost
+        where post_id = #{postId} and member_id = #{memberId} limit 1
+    </select>
+
+    <insert id="insertClubPostRepost" parameterType="com.chengyinhub.business.domain.ClubPostRepost" useGeneratedKeys="true" keyProperty="id">
+        insert into club_post_repost (post_id, member_id, del_flag, create_time)
+        values (#{postId}, #{memberId}, 0, #{createTime})
+    </insert>
+
+    <update id="reactivateRepostById">
+        update club_post_repost set del_flag = 0, create_time = #{createTime}
+        where id = #{id} and del_flag = 2
+    </update>
+
+    <update id="cancelByPostAndMember">
+        update club_post_repost set del_flag = 2
+        where post_id = #{postId} and member_id = #{memberId} and del_flag = 0
+    </update>
+
+    <select id="selectRepostedPostIds" resultType="java.lang.Long">
+        select post_id from club_post_repost
+        where member_id = #{memberId} and del_flag = 0
+          and post_id in
+          <foreach collection="postIds" item="pid" open="(" separator="," close=")">#{pid}</foreach>
+    </select>
+
+    <!-- 转发人按「在册成员」口径(与 selectClubIdsByMember 同:status=1、未删、俱乐部在营)。
+         原帖能不能给当前查看者看,不在这里判 —— 调用方按原帖所在俱乐部逐个复核后才放行。 -->
+    <select id="selectFeedReposts" resultMap="ClubPostRepostResult">
+        select r.id, r.post_id, r.member_id, r.del_flag, r.create_time, m.nickname as nickname, m.avatar as avatar
+        from club_post_repost r
+        left join ums_member m on m.id = r.member_id
+        where r.del_flag = 0
+          and r.member_id in (
+              select cm.member_id from club_member cm
+              join club c on c.id = cm.club_id and c.del_flag = 0
+              where cm.status = 1 and cm.del_flag = 0
+                and cm.club_id in
+                <foreach collection="clubIds" item="cid" open="(" separator="," close=")">#{cid}</foreach>
+          )
+          <if test="since != null"> and r.create_time &gt;= #{since}</if>
+          <if test="until != null"> and r.create_time &lt; #{until}</if>
+        order by r.create_time desc, r.id desc
+        limit #{limit}
+    </select>
 
 </mapper>

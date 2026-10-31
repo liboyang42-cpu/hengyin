@@ -60,6 +60,11 @@ class TopicQueryTemplateBatchTest {
                 detail.getChapters().get(0).getNodes().stream().map(v -> v.getName()).toList());
         assertEquals(Arrays.asList("type-201", "type-202", "type-201", null, null, null, null),
                 detail.getChapters().get(0).getNodes().stream().map(v -> v.getInteractionType()).toList());
+        // V-24:每站带上这一站的玩法名与时长,与 games 同一份模板行
+        assertEquals(Arrays.asList("game-201", "game-202", "game-201", null, null, null, null),
+                detail.getChapters().get(0).getNodes().stream().map(v -> v.getGameTitle()).toList());
+        assertEquals(Arrays.asList(5L, 5L, 5L, null, null, null, null),
+                detail.getChapters().get(0).getNodes().stream().map(v -> v.getGameDuration()).toList());
         assertEquals(Arrays.asList(201L, 202L, 204L), detail.getGames().stream().map(v -> v.getId()).toList());
         assertEquals(0, detail.getChapters().get(2).getNodeCount());
         // Literal shadow of the former singleton projection's seven allowed game fields, not batch SQL row order.

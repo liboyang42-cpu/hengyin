@@ -15,6 +15,8 @@
   --mi-grey-1:    #DCDDE2; /* ds-ok 逐日格 1 档 / 普通柱 */
   --mi-grey-2:    #A8A9B0; /* ds-ok 逐日格 2 档 */
   --mi-off:       #EDEDF2; /* ds-ok 稿 1:36 空格 / 空进度 */
+  --mi-heat-off:  #DCDDE2; /* ds-ok M-21 复查:逐日格空格在白卡上要看得见(全零店铺整片都是空格) */
+  --mi-heat-1:    #C2C3CA; /* ds-ok 逐日格 1 档(空格加深后随之下移一档) */
   --mi-on-ink:    #FFFFFF; /* ds-ok 近黑底白字 */
   --mi-scrim:     rgba(17, 17, 17, .28); /* ds-ok 弹层遮罩 */
   --mi-scrim-press: rgba(17, 17, 17, .34); /* ds-ok 点遮罩关闭时的按压回应 */
@@ -160,12 +162,12 @@
 .heat-cell {
   aspect-ratio: 1;
   border-radius: var(--cy-radius-sm);
-  background: var(--mi-off);
+  background: var(--mi-heat-off);
 }
 /* 7 天只有一排:格子与 30/90 天同大(15 列的格宽),两端对齐轴上的起止日期 */
 .heat--week { display: flex; justify-content: space-between; }
 .heat--week .heat-cell { width: calc((100% - 112rpx) / 15); }
-.heat-cell--l1 { background: var(--mi-grey-1); }
+.heat-cell--l1 { background: var(--mi-heat-1); }
 .heat-cell--l2 { background: var(--mi-grey-2); }
 .heat-cell--l3 { background: var(--mi-ink); }
 .heat-ax {

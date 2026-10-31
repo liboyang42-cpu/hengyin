@@ -1,9 +1,11 @@
 {
   "navigationBarTitleText": "集邮册",
-  "backgroundColor": "#F3F4F4",
+  "backgroundColor": "#ffffff",
   "onReachBottomDistance": 120,
   "usingComponents": {
     "cy-nav-bar": "/components/cy/nav-bar/index",
+    "album-head": "/subpackageP3/components/album-head/index",
+    "album-aura": "/subpackageP3/components/album-aura/index",
     "cy-page-title": "/components/cy/page-title/index",
     "cy-error": "/components/cy/error/index",
     "cy-icon": "/components/cy/icon/index",

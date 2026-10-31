@@ -168,13 +168,13 @@ node --test tests/unit/page-cleanup-audit.test.js
 | `pages/coop/settlement-detail/index` | 否 | `chengyinhub-xcx/components/cy/scene-merchant-profit/index.js:178` | KEEP |
 | `pages/coop/withdraw/index` | 否 | `chengyinhub-xcx/subpackageMember/tixianjilu/tixianjilu.js:6` | UNSURE |
 | `pages/coop/withdraw/records/index` | 否 | `chengyinhub-xcx/subpackageMember/tixianjilu/tixianjilu.js:6` | UNSURE |
-| `pages/square/list/index` | 否 | `chengyinhub-xcx/pages/play/index.js:6683` | KEEP |
 | `pages/square/detail/index` | 否 | `chengyinhub-xcx/pages/mylike/mylike.js:313` | KEEP |
 | `pages/search2/index` | 否 | `chengyinhub-xcx/pages/merchant/index/index.js:1026` | KEEP |
 | `pages/search2/result/index` | 否 | `chengyinhub-xcx/pages/search2/index.js:135` | KEEP |
 | `pages/searchmap/index` | 否 | `chengyinhub-xcx/components/cy/icon/spec.json:70` | KEEP |
 | `pages/templatedetail/templatedetail` | 否 | `chengyinhub-xcx/pages/club/topic-story/index.js:239` | KEEP |
 | `pages/templatedetail/topic-preview/index` | 否 | `chengyinhub-xcx/pages/templatedetail/shelf/index.js:324` | KEEP |
+| `pages/templatedetail/topic-detail/index` | 否 | `chengyinhub-xcx/pages/templatedetail/topic-preview/index.js:213` | KEEP |
 | `pages/address/address` | 否 | `chengyinhub-xcx/pages/activity/baoming/baoming.js:562` | KEEP |
 | `pages/addressinfo/addressinfo` | 否 | `chengyinhub-xcx/pages/activity/baoming/baoming.js:581` | KEEP |
 | `pages/shezhi/shezhi` | 否 | `chengyinhub-xcx/components/cy/scene-deep-link/index.js:34` | KEEP |

@@ -28,6 +28,7 @@ public class AppMediaReferenceGuard {
 
     public String requireAttachment(Long memberId, String reference, boolean publish) {
         if (reference == null || reference.trim().isEmpty()) return reference;
+        if (memberId != null && memberId > 0 && AppMediaSchema.isOfficialTemplateImage(reference.trim())) return reference.trim();
         Map<String, Object> asset = resolve(reference);
         if (memberId != null && memberId > 0 && !registered(asset)) {
             // G-3:本站存储里没有登记的图(后台上传、模板自带、登记表上线前的旧图)不再要求重新上传。
@@ -100,6 +101,7 @@ public class AppMediaReferenceGuard {
     private String resolveVisibleUrl(String reference, Long viewerMemberId) {
         if (reference == null || reference.trim().isEmpty()) return reference;
         if (AppMediaSchema.isBundledMerchantGameAudio(reference)) return reference;
+        if (AppMediaSchema.isOfficialTemplateImage(reference.trim())) return reference.trim();
         Map<String, Object> asset = resolve(reference);
         if (!registered(asset)) {
             String system = systemImageKey(reference);
@@ -178,6 +180,11 @@ public class AppMediaReferenceGuard {
         if (key == null || key.startsWith("/profile/upload/")) return key;
         URI uri = URI.create(reference.trim());
         return uri.getScheme() + "://" + uri.getRawAuthority() + "/" + key;
+    }
+
+    /** 引用是否落在媒体登记表里;登记过的媒体始终按审核事实与归属判定,不走任何沿用放行。 */
+    public boolean isRegistered(String reference) {
+        return reference != null && !reference.trim().isEmpty() && registered(resolve(reference));
     }
 
     private static boolean registered(Map<String, Object> asset) {

@@ -8,6 +8,7 @@ const { firstCategoryName } = require('../../../utils/category-icon.js');
 // 帖子流与 pages/talent/list 的「帖文」tab 同一套投影/判定,别写第二份。
 const { isCompletedShare, hasFeedPlayCover } = require('../../../utils/feed-play-card.js');
 const { decodeDisplayText } = require('../../../utils/display-text.js');
+const clubPostRepost = require('../../../utils/club-post-repost.js');
 const { isRecord, isRecordList } = require('../../../utils/response-shape.js');
 
 function textOrDash(value, fallback) {
@@ -274,7 +275,8 @@ Page({
         const noClub = res.data.clubCount === 0;
         finish();
         that.setData({
-          feed: rows.map(function (p) {
+          // dw29 L8:转发条目摊平成「原帖 + repostBy」,映射与俱乐部页同一份
+          feed: clubPostRepost.mapClubFeedRows(rows, function (p) {
             const ref = Object.assign({}, p, { dataType: p.refType, completed: true });
             return Object.assign({}, p, {
               memberNickname: p.nickname,

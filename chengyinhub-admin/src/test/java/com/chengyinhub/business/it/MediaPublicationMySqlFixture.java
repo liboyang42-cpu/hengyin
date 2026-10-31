@@ -24,6 +24,7 @@ final class MediaPublicationMySqlFixture {
         AppMediaPublicationGuard publication = new AppMediaPublicationGuard();
         ReflectionTestUtils.setField(publication, "references", references);
         ReflectionTestUtils.setField(publication, "templates", templates);
+        ReflectionTestUtils.setField(publication, "libraries", sql.getMapper(com.chengyinhub.business.mapper.CmsTemplateLibraryMapper.class));
         return publication;
     }
     static String approvedImage(SqlSessionTemplate sql, Long owner) { return image(sql, owner, true); }

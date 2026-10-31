@@ -107,6 +107,10 @@
   position: relative;
   z-index: 2;
   padding: 0 var(--cy-page-x);
+  /* V-20 R2:场景卡底原来是一块更浅的灰(时间线、退款与客服),和订单明细这些 .ocard 不一样;
+     这一页统一成 .ocard 的底色和圆角 */
+  --cy-scene-card-bg: var(--cy-color-bg-surface);
+  --cy-scene-card-radius: var(--cy-radius-xl);
 }
 
 .order-load-loading {
@@ -133,7 +137,7 @@
   --cy-comp-card-highlight: transparent;
   --cy-comp-card-shadow-day: none;
 }
-.order-timeline { margin-bottom: var(--cy-space-3); padding: var(--cy-space-3) var(--cy-space-4); border-radius: var(--cy-radius-lg); background: var(--cy-scene-card-bg, var(--cy-color-bg-surface-strong)); }
+.order-timeline { margin: 0 0 var(--cy-space-3); padding: var(--cy-space-4); border-radius: var(--cy-scene-card-radius, var(--cy-radius-lg)); background: var(--cy-scene-card-bg, var(--cy-color-bg-surface-strong)); }
 .order-timeline-step { position: relative; display: grid; grid-template-columns: 28rpx 1fr; gap: var(--cy-space-2); min-height: 86rpx; color: var(--cy-text-secondary); }
 .order-timeline-step::after { content: ''; position: absolute; left: 11rpx; top: 25rpx; bottom: -4rpx; width: 2rpx; background: var(--cy-border-card); }
 .order-timeline-step:last-child::after { display: none; }

@@ -61,7 +61,7 @@ test('P-03:「主题 / 活动」tab 与第一张卡之间留 24rpx', () => {
 // 取代 P-04 的「无封面插画占位 + 左文右宫格」。封面缺失只剩兜底图,卡下不再露白。
 test('P-04:推荐卡整张铺封面，缺封面用兜底图，不再出宫格与占位插画', () => {
   const wxml = homeWxml();
-  const covers = wxml.match(/<image class="v2-fcover" src="\{\{item\.cover \|\| '\/images\/route_city_cover\.png'\}\}"/g) || [];
+  const covers = wxml.match(/<image class="v2-fcover" src="\{\{item\.cover \|\| '\/images\/home-route-city-placeholder\.jpg'\}\}"/g) || [];
   assert.equal(covers.length, 2, '主题和活动两个分支都铺封面');
   assert.doesNotMatch(wxml, /v2-fgrid|v2-fcell/);
   assert.match(rule(homeWxss(), '.v2-fcover'), /width:\s*100%[\s\S]*height:\s*100%/);
@@ -106,7 +106,9 @@ test('P-11:玩法 tab 只列单节点地点玩法，主题自带的分段游戏�
 
 test('P-11:主题点开预览，「用这个模板」直进专业编辑器 publish/fabu', () => {
   assert.match(read('pages/templatedetail/shelf/index.js'), /url: '\/pages\/templatedetail\/topic-preview\/index\?' \+ qs\.join\('&'\)/);
-  assert.match(read('pages/templatedetail/topic-preview/index.js'), /wx\.navigateTo\(\{ url: '\/pages\/publish\/fabu\/index\?' \+ qs\.join\('&'\) \}\)/);
+  // 2026-10-30 V-24:预览「查看详情」进主题模板详情,「应用」在详情页直进专业编辑器
+  assert.match(read('pages/templatedetail/topic-preview/index.js'), /url: '\/pages\/templatedetail\/topic-detail\/index\?' \+ qs\.join\('&'\)/);
+  assert.match(read('pages/templatedetail/topic-detail/index.js'), /wx\.navigateTo\(\{ url: '\/pages\/publish\/fabu\/index\?' \+ qs\.join\('&'\) \}\)/);
 });
 
 function assertBackdrop(wxml, wxss, js) {

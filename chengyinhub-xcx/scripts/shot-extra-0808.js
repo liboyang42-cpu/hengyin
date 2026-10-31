@@ -329,8 +329,6 @@ const RAW = [
     { loading: false, nodata: false, loadErr: false, list: [{ id: 1, amount: '200.00', statusText: '已到账', createTime: '2026-08-01 10:12' }, { id: 2, amount: '80.00', statusText: '处理中', createTime: '2026-08-05 19:30' }] }, [0], { selector: 'view', min: 3 }, '提现记录填充态', '#withdrawHistory'],
   ['S12', 'S12-withdraw-history-empty.png', '/subpackageMember/tixianjilu/tixianjilu', 'player', 'empty',
     { loading: false, nodata: true, loadErr: false, list: [] }, [0], { selector: 'view', min: 3 }, '提现记录空态', '#withdrawHistory'],
-  ['S13', 'S13-square-list-error.png', '/pages/square/list/index', 'player', 'error',
-    { loadError: true, nodata: false, list: [] }, [0], { selector: '.cy-error', min: 1 }, '广场错误态(A09 用的 sessionExpired 页面里不存在)'],
   ['S14', 'S14-searchmap-locerror.png', '/pages/searchmap/index', 'player', 'permission',
     { locationError: true, locationMessage: '未获取到定位权限，无法显示附近路线', locationAction: '去设置开启' }, [0], { selector: 'view', min: 3 }, '地图定位失败态(A30 的 locationDenied 页面里不存在)'],
   ['S15', 'S15-searchmap-category-sheet.png', '/pages/searchmap/index', 'player', 'sheet',

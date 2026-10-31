@@ -180,7 +180,7 @@ function loadEntry(relPath, source = read(relPath), fixture = {}) {
         return { showWithdrawCsPopup() { popups.push(true) }, WITHDRAW_CS_WECHAT_ID: 'stub-not-real' }
       }
       if (request.endsWith('utils/analytics.js')) return { track() {} }
-      if (request.endsWith('utils/roleGuard.js')) return { can: () => true, load(callback) { if (fixture.deferGuard) guardCallbacks.push(callback); else callback() } }
+      if (request.endsWith('utils/roleGuard.js')) return { can: () => true, isMerchantView: () => false, load(callback) { if (fixture.deferGuard) guardCallbacks.push(callback); else callback() } }
       if (request.endsWith('utils/merchant-theme.js')) return { merchantPageShow() {}, merchantPageRestore() {} }
       if (request.endsWith('subpackageA/utils/withdrawal-preflight.js')) {
         return {

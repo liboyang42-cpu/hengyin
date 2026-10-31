@@ -171,7 +171,7 @@ Component({
       }).catch(() => { this._loginPending = false })
     },
     // 2026-08-11 用户裁决:收益明细放到页面上,不再开弹层
-    openIncomeDetail() { if (!this._hasCurrentBalance()) return; wx.navigateTo({ url: '/subpackageA/pages/assetcenter/income-detail/income-detail' }) },
+    openIncomeDetail() { if (!this._hasCurrentBalance()) return; wx.navigateTo({ url: '/subpackageA/pages/assetcenter/income-detail/income-detail' + (this.data.theme === 'merchant' ? '?theme=merchant' : '') }) },
     openWithdrawHistory() { if (!this._hasCurrentBalance()) return; this.triggerEvent('open', { id: 'member-withdraw-history' }) },
     openWithdraw() {
       if (!this._hasCurrentBalance()) return

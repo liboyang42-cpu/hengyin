@@ -4,7 +4,7 @@
      而不是把 merchantinfo.wxml 撑到八百行。 -->
 <view class="page theme-merchant">
   <!-- hero 上悬浮返回钮:封面是用户上传的亮图,用深色 scrim 胶囊保证白箭头可见 -->
-  <cy-nav-bar overlay pill pillDark tint="light" />
+  <cy-nav-bar overlay pill pillDark scrolled="{{navScrolled}}" tint="{{navScrolled ? '' : 'light'}}" />
 
   <!-- 整页错误态:原来接口失败只弹一条 toast,页面留一屏空白让人以为「没有数据」 -->
   <cy-error class="load-error" wx:if="{{ loadFailed }}" load-failure="{{true}}" style="padding-top: {{ statusBarHeight + navBarHeight }}px;" />

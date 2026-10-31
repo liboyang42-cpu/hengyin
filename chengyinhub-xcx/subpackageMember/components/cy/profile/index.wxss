@@ -437,7 +437,9 @@
 .pc-ai-line { font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); line-height: 1.55; margin-top: var(--cy-legacy-6); }
 
 /* Tab（紧挨主按钮下方） */
-.pc-tabs { margin-bottom: var(--cy-space-4); }   /* 归一 .cy-tabs 后仅保留下方间距;Tab 视觉走全局 .cy-tabs */
+.pc-tabs { margin-bottom: var(--cy-space-4); }
+/* 2026-10-30 走查:往上滑时 tab 行会落到固定封面的浅色部分上,未选中的灰字几乎看不见;封面保持清晰不压暗(业主 08-04),只给字加一层柔和的投影 */
+.pc-tabs--photo { --cy-text-secondary: rgba(255, 255, 255, 0.82); text-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.75); } /* ds-ok: 照片上未选中的 tab 提亮 + 投影(玩家深色;商家浅色不加) */   /* 归一 .cy-tabs 后仅保留下方间距;Tab 视觉走全局 .cy-tabs */
 /* .pc-tab / .pc-tab-on 已归一至全局 .cy-tabs__item(见 style/components.wxss §5.2) */
 
 /* 未收编 cy-card:组件读 --cy-comp-card-bg,不跟随本页 class 主题 ⇒ 商家视角会渲成夜间深卡 */
@@ -550,6 +552,9 @@
 
 /* 动态 Feed */
 .pc-feed { margin-top: var(--cy-space-1); }
+/* 帖文第三轮:帖文卡自带左右 16pt,在正文栏里抵掉一层,和发现页同宽(多图能滑到屏幕边) */
+.pc-feed { margin-left: calc(-1 * var(--cy-page-x)); margin-right: calc(-1 * var(--cy-page-x)); }
+.pc-feed-state { display: block; padding: 0 var(--cy-page-x); }
 .pc-post {
   background: transparent; border: none;
   border-radius: 0; padding: var(--cy-space-3) var(--cy-space-1); margin-bottom: var(--cy-space-1);
@@ -662,6 +667,7 @@
   background: var(--cy-color-bg-surface); border: 2rpx solid var(--cy-color-border-subtle); color: var(--cy-color-text-secondary);
 }
 .pc-tag--muted { color: var(--cy-color-text-tertiary); }
+.pc-tag--add { display: inline-flex; align-items: center; gap: var(--cy-space-1); color: var(--cy-color-text-primary); }
 /* G-8 / M-12(2026-10-27):标签库标签 —— 实底、无灰色描边、比 .pc-tag 小一号,前置图标 */
 .pc-tag--lib {
   display: inline-flex; align-items: center; gap: var(--cy-space-1);
@@ -981,3 +987,26 @@
 /* 末张卡(经营团队)被自定义 tabBar 盖住:在原底距上再加一段并计安全区,保证滚到底能完整露出 */
 .pc-merchant .pc-body { padding-bottom: calc(var(--cy-space-8) + var(--cy-tabbar-h)); }
 .pc-merchant .pc-team-entry { margin-bottom: var(--cy-space-4); }
+
+/* ===== 2026-10-30 收集册入口(业主定稿 P-3,参考 mymind):浅色底 + 三叠小卡片 ===== */
+.pc-album { position: relative; margin-top: var(--cy-space-4); padding: var(--cy-space-3) var(--cy-space-4) var(--cy-space-4); border-radius: var(--cy-radius-xl); overflow: hidden;
+  background: radial-gradient(120% 90% at 10% 15%, #D8E6FF 0, rgba(216, 230, 255, 0) 60%), radial-gradient(110% 90% at 92% 95%, #D6F2EE 0, rgba(214, 242, 238, 0) 55%), #FAFBFD; /* ds-ok: 收集册浅色底,与册内 album-aura 同一组色 */
+  color: #1B1D22; /* ds-ok: 浅底上的墨色,不随玩家深色主题翻 */ }
+.pc-album-head { display: flex; align-items: center; justify-content: space-between; min-height: 64rpx; }
+.pc-album-t { font-family: "Songti SC", "STSong", "Noto Serif SC", serif; font-size: 40rpx; /* ds-ok: 宋体标题 */ font-weight: 600; }
+.pc-album-arrow { color: #8A8F99; /* ds-ok: 同上 */ }
+.pc-album-row { display: flex; gap: var(--cy-space-2); margin-top: var(--cy-space-2); }
+.pc-pile { position: relative; flex: 1; height: 236rpx; }
+.pc-pile-c { position: absolute; left: 50%; top: 8rpx; width: 124rpx; height: 152rpx; margin-left: -62rpx; border-radius: 16rpx; background: #FFFFFF; /* ds-ok: 白卡 */
+  box-shadow: 0 12rpx 28rpx rgba(40, 52, 90, .14), 0 2rpx 4rpx rgba(40, 52, 90, .08); /* ds-ok: 卡片浮在浅底上 */ display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.pc-pile-c--0 { transform: translateX(-18rpx) rotate(-8deg); }
+.pc-pile-c--1 { transform: translateX(16rpx) rotate(6deg); }
+.pc-pile-img { width: 84%; height: 84%; }
+.pc-pile-t { position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; gap: 2rpx;
+  font-family: "Songti SC", "STSong", "Noto Serif SC", serif; font-size: 26rpx; /* ds-ok: 宋体名字 */ font-weight: 600; }
+.pc-pile-n { font-family: -apple-system, "PingFang SC", sans-serif; font-size: 22rpx; /* ds-ok: 数量小字 */ font-weight: 500; color: #8A8F99; /* ds-ok: 同上 */ }
+
+/* 2026-10-30 V-19 业主定 B:权益 / 入口行用各自的线条图标(24pt),不垫圆底;没解锁的图标与字变灰,行尾锁 */
+.pc-benefit-ic { flex: none; color: var(--cy-color-text-primary); }
+.pc-benefit--lock .pc-benefit-ic { color: var(--cy-color-text-tertiary); }
+.pc-benefit-lock { flex: none; color: var(--cy-color-text-tertiary); }

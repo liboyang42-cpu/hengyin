@@ -69,7 +69,7 @@ function assertTemplateStateNav(source) {
   const successScroll = source.indexOf('class="xb-scroll xb-scroll--bleed"')
   assert.ok(successScroll >= 0 && source.indexOf('class="xb-cta"') > successScroll,
     'CTA 必须落在成功态滚动区内(loading/error 没有可点的主动作)')
-  const ctaBtn = source.match(/<cy-btn[^>]*class="xb-cta-btn"[^>]*>/)
+  const ctaBtn = source.match(/<cy-btn[^>]*class="xb-cta-btn[^"]*"[^>]*>/)
   assert.ok(ctaBtn, 'CTA 主按钮必须存在')
   assert.doesNotMatch(ctaBtn[0], /--cy-btn-h\s*:/, 'CTA 主按钮必须消费全站 --cy-btn-h')
   assert.match(source, /class="xb-scroll-pad"/, '正文末尾必须留收尾留白 + 安全区')
@@ -87,34 +87,10 @@ function assertTemplateCtaDoesNotCoverContent(wxss) {
   assert.match(pad[0], /env\(safe-area-inset-bottom\)/, 'scroll-pad 必须把安全区一起让掉')
 }
 
-function assertSquareStandaloneNav(wxml, json, script) {
-  const navTag = wxml.match(/<cy-nav-bar[\s\S]*?\/>/)
-  assert.ok(navTag, 'standalone square page needs cy-nav back')
-  assert.match(navTag[0], /custom-back[\s\S]*?bind:back="goBack"/, 'square nav must keep the page-owned back fallback')
-  assert.equal((navTag[0].match(/\stitle=/g) || []).length, 1, 'square nav must carry exactly one title')
-  assert.match(navTag[0], /\stitle="动态"/, 'square nav must carry only the user-confirmed 动态 title')
-  assert.doesNotMatch(navTag[0], /推荐/, '动态标题旁不得出现推荐')
-  assert.match(wxml, /class="sq-nav-spacer" style="height: \{\{statusBarHeight \+ navBarHeight\}\}px;"/, 'feed must be offset below the full fixed nav')
-  // 2026-08-07 用户裁决反转:广场帖文流不设页面大标题(顶部直接进内容,对齐 Live Campfire 参考)。
-  // 原「恰好一处 cy-page-title」断言随之改为「不得出现」——防有人把标题加回来。
-  const pageTitles = wxml.match(/<cy-page-title[^>]*>/g) || []
-  assert.equal(pageTitles.length, 0, `square feed must not render a page title, got ${pageTitles.length}`)
-  assert.match(json, /"cy-nav-bar"\s*:\s*"\/components\/cy\/nav-bar\/index"/, 'square must register cy-nav')
-  assert.match(json, /"cy-page-title"\s*:\s*"\/components\/cy\/page-title\/index"/, 'square must register cy-page-title')
-  assert.match(script, /goBack\(\)\s*\{[\s\S]*?wx\.navigateBack\([\s\S]*?wx\.switchTab\(\{ url: '\/pages\/index\/index' \}\)/, 'standalone square back must recover to root tab only on stack failure')
-  assert.match(script, /navBarHeight:\s*44/, 'square page must keep a nav-height fallback for the fixed nav spacer')
-  assert.match(script, /navBarHeight: app\.globalData\.navBarHeight \|\| 44/, 'square page must use the shared nav height when available')
-}
-
-test('P0 club/template/square keep state-safe navigation and recoverable standalone back', () => {
+test('P0 club/template keep state-safe navigation and recoverable standalone back', () => {
   assertClubStateNav(read('pages/club/detail/index.wxml'))
   assertTemplateStateNav(read('pages/templatedetail/templatedetail.wxml'))
   assertTemplateCtaDoesNotCoverContent(read('pages/templatedetail/templatedetail.wxss'))
-  assertSquareStandaloneNav(
-    read('pages/square/list/index.wxml'),
-    read('pages/square/list/index.json'),
-    read('pages/square/list/index.js'),
-  )
 })
 
 test('negative control: a nav moved below the club state branch is rejected', () => {
@@ -142,27 +118,6 @@ test('negative control: 拿掉紧凑头的顶栏让位 spacer(标题被压)必�
   const mutated = source.replace('<view style="height: {{statusBarHeight + navBarHeight}}px;"></view>', '')
   assert.notEqual(mutated, source, '变异锚点失效(源码已改动?)')
   assert.throws(() => assertTemplateStateNav(mutated), assert.AssertionError)
-})
-
-test('negative control: square 导航加入第二标题必须判红', () => {
-  const wxml = read('pages/square/list/index.wxml')
-  const json = read('pages/square/list/index.json')
-  const script = read('pages/square/list/index.js')
-  const mutated = wxml.replace('<cy-nav-bar\n', '<cy-nav-bar\n    title="广场帖文"\n')
-  assert.notEqual(mutated, wxml, '变异锚点失效(源码已改动?)')
-  assert.throws(() => assertSquareStandaloneNav(mutated, json, script), assert.AssertionError)
-})
-
-test('negative control: square 把页面大标题加回来必须判红(2026-08-07 裁决:帖文流无大标题)', () => {
-  const wxml = read('pages/square/list/index.wxml')
-  const json = read('pages/square/list/index.json')
-  const script = read('pages/square/list/index.js')
-  const mutated = wxml.replace(
-    '    <view class="sq-nav-spacer"',
-    '  <cy-page-title class="c1-page-title" title="广场帖文" safe-top="{{false}}" />\n    <view class="sq-nav-spacer"',
-  )
-  assert.notEqual(mutated, wxml, '变异锚点失效(源码已改动?)')
-  assert.throws(() => assertSquareStandaloneNav(mutated, json, script), assert.AssertionError)
 })
 
 // spacer 已经让过一次位,行内 padding-top 会让成功态二次让位(顶部空出一整条)。

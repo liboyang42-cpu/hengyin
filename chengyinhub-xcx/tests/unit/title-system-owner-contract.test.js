@@ -26,6 +26,8 @@ const WEBGL_EXCEPTION = 'subpackageP3/pages/badge-wall/index/index'
 
 // 完整路由盘点：总数断言只能防止数量漂移，逐路由集合才能防止两个页面互换后仍然假绿。
 const EXPECTED_NAV_ROUTES = [
+  // 2026-10-30 收集册 · 勋章:列表模式挂 cy-nav-bar overlay(WebGL 墙模式仍是 cover-view,见 WEBGL_EXCEPTION)。
+  'subpackageP3/pages/badge-wall/index/index',
   // 2026-10-26 角色卡与本人发票使用共享导航及页标题；定向计分保留原生导航。
   'subpackageMember/character/index',
   'subpackageMember/invoice/index',
@@ -53,11 +55,13 @@ const EXPECTED_NAV_ROUTES = [
   'subpackageRoam/nearby/index',
   // 2026-08-04 收口:漫游历史从手写 .hs-back/.hs-title 换成 cy-nav-bar plain + cy-page-title
   'subpackageRoam/history/index', 'subpackageRoam/session/index',
-  'pages/square/list/index', 'pages/square/detail/index',
+  'pages/square/detail/index',
   'pages/search2/index', 'pages/search2/result/index', 'subpackageMember/signup/index',
   'pages/templatedetail/templatedetail',
   // 2026-10-28 +1:主题模板卡堆预览(业主定稿原型 v21):custom 导航 + overlay cy-nav-bar,标题由卡堆下方主题名承担
   'pages/templatedetail/topic-preview/index',
+  // 2026-10-30 V-24 +1:主题模板详情(照抄玩法模板详情):custom 导航 + overlay cy-nav-bar,标题由封面头的主题名承担
+  'pages/templatedetail/topic-detail/index',
   'pages/address/address', 'pages/addressinfo/addressinfo', 'pages/shezhi/shezhi', 'pages/shezhi/about/index',
   // 2026-10-27 L02 P-55:营销消息与优惠券改成设置里点进去的独立页
   'pages/shezhi/marketing/index',
@@ -170,7 +174,7 @@ const EXPECTED_PAGE_TITLE_ROUTES = [
   // 2026-10-28 G-9:账户收益 · 分析页
   'subpackageA/pages/assetcenter/analysis/index',
   'subpackageP3/pages/growthcenter/index/index',
-  'subpackageP3/pages/growthcenter/leaderboard/index', 'subpackageP3/pages/stamp-album/index/index',
+  'subpackageP3/pages/growthcenter/leaderboard/index',
   'pages/publish/activity/index',
   'pages/club/edit/index', 'pages/club/enroll/index', 'pages/club/checkin-detail/index', 'pages/club/group-code/index', 'pages/club/join-requests/index', 'pages/club/workbench/index', 'pages/club/customers/index', 'pages/club/customer-detail/index', 'pages/club/roles/index', 'pages/club/governance/index', 'pages/club/event-ops/index', 'pages/club/settlement/index', 'pages/club/notify/index',
   'pages/club/badges/index', // 2026-10-15 CL3 俱乐部勋章页:cy-nav-bar + cy-page-title 标准二级页
@@ -189,7 +193,7 @@ const EXPECTED_PAGE_TITLE_ROUTES = [
   'pages/coop/withdraw/index', 'pages/coop/withdraw/records/index',
   /* 2026-09-22 Phase 0 物品卡实验室页:普通玩家二级页,左对齐大标题「立体藏品卡」由 cy-page-title 出。 */
   /* 2026-09-22 Phase 3 藏品册页:普通玩家二级页,左对齐大标题「藏品册」由 cy-page-title 出。 */
-  'subpackageP3/pages/object-cards/index/index',
+  // 2026-10-30 业主定稿 P-3:集邮册、藏品册成了「收集册」两段,大标题由 album-head 组件给,不再用 cy-page-title。
 ]
 
 // 2026-09-03 入职流重做:apply 与 create 统一成 cy-nav-bar + cy-h1 的向导形态,
@@ -323,6 +327,9 @@ function assertTitleInventory(readSource = read) {
   // 2026-10-28 +1:主题模板卡堆预览 topic-preview(custom 导航 + overlay cy-nav-bar,不挂 cy-page-title)⇒ 145 → 146。
   // 2026-10-28 L9 再并 master:#652 topic-preview(custom)+1 叠加本线 ⇒ 154 → 155;custom 153 → 154。
   // 2026-10-28 并 master(#658 后)合流 integrate/devfix-20261027:master 155 / custom 154 叠加本线两页(均 custom)⇒ 157;custom 156。
+  // 2026-10-30 V-24 +1:主题模板详情 topic-detail(custom 导航 + overlay cy-nav-bar,不挂 cy-page-title)⇒ 158;custom 157。
+  // 2026-10-29 −1:「动态」二级页 pages/square/list 删除(custom 导航)⇒ 157 → 156;custom 156 → 155。
+  // 2026-10-31 dw29 发布集成:两边叠加(topic-detail +1、square/list −1)⇒ 157;custom 156。
   assert.equal(rows.length, 157, '注册页面盘点数量发生漂移,需重新核对标题规范')
   assert.equal(rows.filter((row) => row.custom).length, 156)
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail),
@@ -387,6 +394,8 @@ test('owner 特殊形态保留显式产品裁决:向导问句与 WebGL cover-vie
   const webgl = routeSources(WEBGL_EXCEPTION)
   assert.match(webgl.wxml, /<cover-view class="bw-cap"/)
   assert.match(webgl.wxml, /<cover-view class="bw-cap-t">勋章墙<\/cover-view>/)
+  // 2026-10-30 收集册:列表模式标题由 album-head 给(勋章段)
+  assert.match(webgl.wxml, /<album-head active="medal" \/>/)
   assert.doesNotMatch(webgl.wxml, /<cy-page-title\b/)
 })
 

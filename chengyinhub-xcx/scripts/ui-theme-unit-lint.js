@@ -27,9 +27,11 @@ const DOMAIN_RULES = [
     // 商家看消息与系统通知必须浅色,玩家仍是暗色;页面按 roleGuard.isMerchantView 分档。
     // 2026-10-27 M-24 owner(真机走查 m692):俱乐部详情(club/detail)进共享域 —— 商家可以入团、看活动,
     // 商家看俱乐部页用浅色,玩家仍是纯黑;页面按 isMerchantViewer 在根节点二选一,与上面几页同一种做法。
+    // 2026-10-30 P-5 M-09 业主批注「商家是浅色 玩家是深色」:裁剪页(pages/crop)进共享域,根节点按 merchant 二选一。
     // 2026-10-28 G-9 / m680:账户收益与分析页进共享域 —— 商家「财务」进同一页浅色版(?theme=merchant),
     // 玩家从「我的收益」进来仍是暗色;根节点按 merchantView 二选一。
-    route: /^(?:pages\/(?:template|templatedetail|talent|shezhi|mylike)\/|pages\/club\/(?:topic-story|detail)\/|pages\/activity\/(?:detail|official-(?:inbox|mine))\/|subpackageMember\/(?:mytemplate|tixianjilu)\/|subpackageA\/pages\/(?:infomation|assetcenter\/(?:earnings|analysis))\/|subpackageB\/pages\/im\/)/
+    // 2026-10-29 G-10 / M-35:收益明细随账户收益进共享域 —— 商家从「明细」带 ?theme=merchant 进来是浅色。
+    route: /^(?:pages\/(?:template|templatedetail|talent|shezhi|mylike|crop)\/|pages\/club\/(?:topic-story|detail)\/|pages\/activity\/(?:detail|official-(?:inbox|mine))\/|subpackageMember\/(?:mytemplate|tixianjilu)\/|subpackageA\/pages\/(?:infomation|assetcenter\/(?:earnings|analysis|income-detail))\/|subpackageB\/pages\/im\/)/
   },
   {
     domain: 'merchant',

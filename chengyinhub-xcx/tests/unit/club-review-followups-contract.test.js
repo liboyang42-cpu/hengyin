@@ -38,19 +38,24 @@ test('★引用卡的两个动作在三个宿主页都接上了(渲染了却没�
     assert.match(wxml, /bind:playdetail="onPostReference[A-Za-z]*"/, `${page} 要接住看详情`)
     assert.match(wxml, /bind:play="onPostReferencePlay"/, `${page} 要接住试玩，否则按钮点了没反应`)
   }
-  assert.match(read('pages/square/list/index.wxml'), /bind:play="goPlay"/)
 })
 
 test('★达人页要能派生 variant,而且必须复用同一份判据', () => {
-  const js = read('pages/talent/list/index.js')
-  assert.match(js, /require\('\.\.\/\.\.\/\.\.\/utils\/feed-play-card\.js'\)/)
+  // 2026-10-29 发现页:帖文归一化收进 utils/discover-feed.js,判据仍复用 feed-play-card
+  assert.match(read('pages/talent/list/index.js'), /require\('\.\.\/\.\.\/\.\.\/utils\/discover-feed\.js'\)/)
+  const js = read('utils/discover-feed.js')
+  assert.match(js, /require\('\.\/feed-play-card\.js'\)/)
   assert.match(js, /isCompletionShare: isCompletedShare\(ref\)/)
   assert.match(js, /hasPlayCover: hasFeedPlayCover\(ref\)/)
   assert.doesNotMatch(js, /function\s+(isCompletedShare|hasFeedPlayCover)\s*\(/, '不许写第二套判据')
   // 后端不投影的话,前端派生出来也是空壳
   const controller = read('../chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubController.java')
   const feed = controller.slice(controller.indexOf('@PostMapping("/post/feed")'))
-  assert.match(feed.slice(0, 2000), /projectPostReferences\(posts\);/,
+  assert.match(feed.slice(0, 4000), /decorateFeedRows\(rows, memberId\);/, '全站流也要投影引用')
+  // dw29 L8:老范围聚合流投影对象是「帖文 + 转发条目里嵌的原帖」(all),帖文本身仍在其中
+  assert.match(feed.slice(0, 4000), /withRepostOriginals\(posts, reposts\);\s*decorateFeedRows\(all, memberId\);/, '老范围聚合流也要投影引用')
+  const decorate = controller.slice(controller.indexOf('private void decorateFeedRows'))
+  assert.match(decorate.slice(0, 600), /projectPostReferences\(all\);/,
     '聚合流也要投影引用，否则达人页拿不到 sportName,卡片永远不出现')
 })
 

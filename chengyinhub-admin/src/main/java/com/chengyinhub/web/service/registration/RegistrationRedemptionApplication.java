@@ -81,13 +81,24 @@ public class RegistrationRedemptionApplication {
     @Value("${verify.dyncode-secret:${token.secret}}")
     private String dynSecret;
 
+    @Autowired
+    private com.chengyinhub.web.service.verify.RegistrationDynCodeLedger dynCodeLedger;
+
+    /** 新用途核销:验签与有效期之外,再拒已被同报名单同类型更新码取代的旧码(V-02)。只读回执仍走 verifyForReceipt。 */
+    private VerifyDynCodeUtil.Result rejectSuperseded(VerifyDynCodeUtil.Result r, String code) {
+        if (r.valid && dynCodeLedger != null && dynCodeLedger.superseded(code)) {
+            return VerifyDynCodeUtil.Result.rejected(com.chengyinhub.web.service.verify.RegistrationDynCodeLedger.SUPERSEDED);
+        }
+        return r;
+    }
+
     /**
      * 把扫到的 code 解析成 CmsRegistration(BE-11):先试动态签名码(verify 通过→按 regId 查),
      * v1 动态码失败保留校验原因；只有旧静态码进入 verificationCode 查询。
      * 选择章节/据点期间过期不会被误报为无效码，不改核销/结算主逻辑。
      */
     private CmsRegistration resolveRegistrationByScanCode(String code) {
-        VerifyDynCodeUtil.Result r = VerifyDynCodeUtil.verify(code, System.currentTimeMillis(), dynSecret);
+        VerifyDynCodeUtil.Result r = rejectSuperseded(VerifyDynCodeUtil.verify(code, System.currentTimeMillis(), dynSecret), code);
         if (r.valid && r.regId != null) {
             return registrationService.selectCmsRegistrationById(r.regId);
         }
@@ -561,7 +572,7 @@ public class RegistrationRedemptionApplication {
         if (StringUtils.isEmpty(code)) {
             return AjaxResult.error("核销码无效");
         }
-        VerifyDynCodeUtil.Result result = VerifyDynCodeUtil.verify(code, System.currentTimeMillis(), dynSecret);
+        VerifyDynCodeUtil.Result result = rejectSuperseded(VerifyDynCodeUtil.verify(code, System.currentTimeMillis(), dynSecret), code);
         if (!result.valid) {
             AjaxResult original = replayOriginalSeat(actorContext, "activity", code, null, false);
             if (original != null) return original;
@@ -616,7 +627,7 @@ public class RegistrationRedemptionApplication {
         }
         // 动态码的 type 只能信任服务端验签结果；活动票属于 D9 全团结算，不能落入 D22 主题商家分账。
         if (code.startsWith("v1.")) {
-            VerifyDynCodeUtil.Result result = VerifyDynCodeUtil.verify(code, System.currentTimeMillis(), dynSecret);
+            VerifyDynCodeUtil.Result result = rejectSuperseded(VerifyDynCodeUtil.verify(code, System.currentTimeMillis(), dynSecret), code);
             if (!result.valid) {
                 AjaxResult original = replayOriginalSeat(actorContext, null, code, activityId, true);
                 if (original != null) return original;
@@ -720,7 +731,7 @@ public class RegistrationRedemptionApplication {
                     return tooEarly;
                 }
                 if (cmsRegistration.getOrderNum() != null && cmsRegistration.getOrderNum() > 1) {
-                    VerifyDynCodeUtil.Result explicitSeat = VerifyDynCodeUtil.verify(code, System.currentTimeMillis(), dynSecret);
+                    VerifyDynCodeUtil.Result explicitSeat = rejectSuperseded(VerifyDynCodeUtil.verify(code, System.currentTimeMillis(), dynSecret), code);
                     Integer seatNo = explicitSeat.valid && explicitSeat.type != null && explicitSeat.type.startsWith("activity_seat_")
                             ? com.chengyinhub.business.service.RegistrationSeatService.seatNumber(explicitSeat.type) : null;
                     if (seatNo == null) return AjaxResult.error("多人订单请逐席位出示核销码，整单码不能代替逐人核销");

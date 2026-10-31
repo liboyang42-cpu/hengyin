@@ -108,7 +108,7 @@
           <text class="hero-by__n">{{publisher.name}}</text><text class="hero-by__k">发布</text>
         </view>
         <view class="hero-title">{{info.name}}</view>
-        <view class="hero-desc" wx:if="{{info.description && info.description !== 'null'}}">{{info.description}}</view>
+        <view class="hero-desc" wx:if="{{info.heroIntro}}">{{info.heroIntro}}</view>
         <view class="hero-acts" id="heroActs">
           <view wx:if="{{heroCta.text}}" class="hero-cta {{heroCta.kind === 'locked' ? 'is-off' : ''}} {{docked ? 'is-away' : ''}}" bindtap="onHeroCta" aria-role="button" aria-label="{{heroCta.text}}" hover-class="cy-pressed" hover-stay-time="80">{{heroCta.text}}</view>
           <view class="hero-fav {{faved ? 'is-on' : ''}} {{docked ? 'is-away' : ''}}" bindtap="toggleFav" aria-role="button" aria-label="{{faved ? '取消收藏' : '收藏主题'}}" hover-class="cy-pressed" hover-stay-time="80"><image class="bm-ic" src="{{faved ? '/pages/topic/images/icon_bm_on.svg' : '/pages/topic/images/icon_bm.svg'}}" mode="aspectFit" /></view>
@@ -141,8 +141,8 @@
          ⚠️ 原来这里是两列网格,格子还是另一套(章节/预计用时/总里程/参与玩家),
             同一条路线两个身份看到的关键数字对不上。 -->
     <scroll-view scroll-x class="statbar" wx:if="{{statBar.length}}" enhanced show-scrollbar="{{false}}">
-      <view class="statbar__row">
-        <cy-theme-badge name="{{info.finishMedalName}}" img="{{info.finishMedalImg}}" product-type="{{info.productType == 2 ? 2 : 1}}" reduced-motion="{{reducedMotion}}" />
+      <view class="statbar__row {{statBar.length >= 5 ? 'statbar__row--dense' : ''}}">
+        <cy-theme-badge class="statbar__badge" name="{{info.finishMedalName}}" img="{{info.finishMedalImg}}" product-type="{{info.productType == 2 ? 2 : 1}}" reduced-motion="{{reducedMotion}}" />
         <view class="statbar__sep"></view>
         <block wx:for="{{statBar}}" wx:key="key">
           <view class="statbar__sep" wx:if="{{index > 0}}"></view>
@@ -172,21 +172,12 @@
       <view class="{{tabPre ? 'tab-pre ' : ''}}tabcont" wx:if="{{ activeTab=='0' }}">
         <view class="det3" style="padding-top: 0;">
           <view class="wp">
+            <!-- V-22b 业主 2026-10-29「而且删除掉地址吧」:详情 tab 不再放场地/地址卡 -->
             <view class="det-type">{{info.name}}</view>
             <view class="cont1">
               <view class="txt1">
                 {{info.subtitle}}
               </view>
-            </view>
-            <!-- 场地卡(Figma 2233:11677):名称+地址+定位图标,有坐标时点击打开内置地图 -->
-            <view class="venue-card" wx:if="{{info.venue}}" bindtap="goLocation"
-              data-latitude="{{info.venue.latitude}}" data-longitude="{{info.venue.longitude}}"
-              data-name="{{info.venue.name}}" data-address="{{info.venue.addr || info.venue.name}}" hover-class="cy-pressed" hover-stay-time="80">
-              <view class="venue-card__main">
-                <view class="venue-card__name">{{info.venue.name}}</view>
-                <view class="venue-card__addr" wx:if="{{info.venue.addr}}">{{info.venue.addr}}</view>
-              </view>
-              <image class="venue-card__pin" src="/pages/topic/images/icon_pin_line.svg" mode="aspectFit" />
             </view>
           </view>
         </view>
@@ -195,21 +186,8 @@
           <view class="det-type">参与商家 · {{merchantCards.length || 0}} 家</view>
           <cy-merchant-cards items="{{merchantCards}}" owned="{{is_join == 1}}" bind:open="onMerchantOpen" />
         </view>
-        <view wx:if="{{is_join == 1}}" class="topic-audio" bindtap="openThemeHistory" aria-role="button" aria-label="我的游玩记录" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="clock" size="36" /><text>我的游玩记录</text><cy-icon name="chevron-right" size="28" /></view>
         <!-- 原型 B T-36 开局前准备:作者配了准备项或可玩时段才出现(B1),行形与上一行相同 -->
         <view wx:if="{{is_join == 1 && prep.show}}" class="topic-audio" bindtap="openPrep" aria-role="button" aria-label="{{prep.rowText}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="{{prep.icon}}" size="36" /><text>{{prep.rowText}}</text><cy-icon wx:if="{{!prep.loading && !prep.error}}" name="chevron-right" size="28" /></view>
-        <!-- 主题音频讲解 -->
-        <view wx:if="{{info.audioUrl}}" class="topic-audio" bindtap="toggleTopicAudio"
-              aria-role="button" aria-label="主题音频讲解，点此{{topicAudioPlaying?'暂停':'播放'}}" hover-class="cy-pressed" hover-stay-time="80">
-          <view class="topic-audio__btn">
-            <cy-icon wx:if="{{!topicAudioPlaying}}" name="play" size="30" />
-            <text wx:else class="topic-audio__pause">暂停</text>
-          </view>
-          <view class="topic-audio__main">
-            <view class="topic-audio__title">主题音频讲解</view>
-            <view class="topic-audio__meta">{{info.audioDuration||0}} 秒 · 点此{{topicAudioPlaying?'暂停':'播放'}}</view>
-          </view>
-        </view>
 
         <view class="davidxian" wx:if="{{ info.templateCount!=0 }}"></view>
 
@@ -337,9 +315,7 @@
           </view>
         </view>
 
-        <!-- FOLLOWUP-A-1:别人公开的主题才给举报。2026-10-20 owner 看截图后从封面叠层挪到评价区上方(详情页末尾那格会被底栏挡住):
-             叠在头图上与 CU-C-111 同病(封面装饰被盖住),也不该和「立即报名」一样大;沿用上面「我的游玩记录」那一行的样式。 -->
-        <view wx:if="{{canReport}}" class="topic-audio topic-report-entry" bindtap="reportTopic" aria-role="button" aria-label="举报这个主题" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="flag" size="36" /><text>举报这个主题</text><cy-icon name="chevron-right" size="28" /></view>
+        <!-- V-23 业主 2026-10-29「举报也不展示」:详情正文不再放「举报这个主题」行;本页没有自绘 ⋯ 菜单,举报处理逻辑(reportTopic)保留待业主定入口 -->
         <!-- v13 评价:标题 + 一张深灰卡;没人评价时整张卡就是写评价入口(原「投票」同一个 voteClick) -->
         <view class="det6">
           <view class="det-type">评价</view>

@@ -84,7 +84,7 @@ test('优惠券旧出码调用遇多人选择信息时移交同一显式选席�
     openScene: (...args) => scenes.push(args) });
   page.ensureTicket(); await new Promise(resolve => setImmediate(resolve));
   assert.deepEqual(requests[0][2], { registrationId: 71 });
-  assert.deepEqual(scenes, [['qr-ticket', { registrationId: 71 }]]);
+  assert.deepEqual(scenes, [['qr-ticket', { registrationId: 71, title: '', until: '' }]]);
   assert.ok(updates.some(patch => patch['ticket.code'] === ''));
 });
 

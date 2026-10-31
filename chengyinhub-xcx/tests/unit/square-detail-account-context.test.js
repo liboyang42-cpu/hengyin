@@ -28,14 +28,6 @@ for (const kind of ['comment', 'reply']) test('late ' + kind + ' write after unl
   write.success({ code: 200, data: {} }); write.complete();
   assert.equal(h.patches.length, before); assert.equal(h.requests.length, count);
 });
-test('real feed cannot resurrect a deleted post from a pre-delete response', async () => {
-  const h = load('list'); h.page.data.userId = 1; h.page.getList();
-  await h.answer('/api/v1/community/feeds/LATEST', { items: [post()], hasMore: false });
-  h.page.getList(1, true); const old = h.asked('/api/v1/community/feeds/LATEST').at(-1);
-  h.page.deleteCurrentSquarePost('77'); await h.answer('/api/v1/community/posts/77', {});
-  old.success({ code: 200, data: { items: [post()], hasMore: false } });
-  assert.equal(h.page.data.list.length, 0);
-});
 test('real Page restores and retries an unknown comment after a cold client without changing its input or key', async () => {
   const a = load('detail'); await a.ready();
   a.page.setData({ commentContent: 'original' }); a.page.addComment();

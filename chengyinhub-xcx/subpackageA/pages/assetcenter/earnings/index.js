@@ -49,7 +49,8 @@ Page({
   onLoad(options) {
     this._hidden = false
     this._unloaded = false
-    if (options && options.theme === 'merchant') this.setData({ merchantView: true })
+    // 2026-10-30 走查:商家从项目主页、我的「我的收益」等入口进来没带 theme 参数,整页落成玩家深色;按身份兜底
+    if ((options && options.theme === 'merchant') || roleGuard.isMerchantView()) this.setData({ merchantView: true })
     if (!options || options.scene !== 'merchant-profit') return
     const params = options.topicId ? { topicId: options.topicId } : {}
     this.openScene({ detail: { id: 'merchant-profit', params } })

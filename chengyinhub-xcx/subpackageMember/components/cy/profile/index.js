@@ -31,6 +31,7 @@ const { buildOrderPreviewList } = require('./order-preview.js');
 const { shapeMerchantSafety } = require('./merchant-safety-summary.js');
 const { shapeMerchantNode, readFavoriteToggle } = require('./merchant-node-favorite.js');
 const identitySync = require('../../../../utils/identity-sync.js');
+const { avatarSrc } = identitySync;
 const tagLibrary = require('../../../../utils/tag-library.js');
 const THEME_EMOJI = ['🍜', '❤️', '📚', '☕', '🌸', '🎮', '📷', '🏯'];
 const MEDAL_EMOJI = {
@@ -60,15 +61,16 @@ function buildBenefits(p) {
   p = p || {};
   var max = p.maxThemes;
   return [
-    { text: '发布路线 · 上限 ' + (max == null ? '不限' : (max || 0)), unlocked: (max == null || max > 0) },
-    { text: '发布优惠券', unlocked: p.canPublishCoupon === true },
-    { text: '到店核销', unlocked: p.canRedeemCoupon === true },
-    { text: '分支 / 条件玩法', unlocked: p.canBranch === true },
-    { text: '博弈机制（竞速/对抗/协作）', unlocked: p.canGameMechanic === true },
-    { text: '开放门店为城市节点', unlocked: p.canOpenAsNode === true },
-    { text: '勋章设计', unlocked: p.canDesignMedal === true },
-    { text: '建群', unlocked: p.canCreateGroup === true },
-    { text: '我的收益', unlocked: p.withdrawable === true, route: '/subpackageA/pages/assetcenter/earnings/index' }
+    // 2026-10-30 V-19 业主定 B:每行换成对应的线条图标(不再是勾 / 锁占位),没解锁的行尾一把锁
+    { text: '发布路线 · 上限 ' + (max == null ? '不限' : (max || 0)), unlocked: (max == null || max > 0), icon: 'route' },
+    { text: '发布优惠券', unlocked: p.canPublishCoupon === true, icon: 'coupon' },
+    { text: '到店核销', unlocked: p.canRedeemCoupon === true, icon: 'scan' },
+    { text: '分支 / 条件玩法', unlocked: p.canBranch === true, icon: 'switch-chapter' },
+    { text: '博弈机制（竞速/对抗/协作）', unlocked: p.canGameMechanic === true, icon: 'flag' },
+    { text: '开放门店为城市节点', unlocked: p.canOpenAsNode === true, icon: 'poi-shop' },
+    { text: '勋章设计', unlocked: p.canDesignMedal === true, icon: 'star' },
+    { text: '建群', unlocked: p.canCreateGroup === true, icon: 'tab-club' },
+    { text: '我的收益', unlocked: p.withdrawable === true, route: '/subpackageA/pages/assetcenter/earnings/index', icon: 'finance' }
   ];
 }
 
@@ -498,8 +500,6 @@ Component({
     projectAuthError: false,
     feedErr: false,
     feedAuthError: false,
-    medalErr: false,
-    medalAuthError: false,
     sceneStack: [],
     sceneCurrent: null,
     sceneConfirm: { show: false, action: null, pending: null }
@@ -619,7 +619,7 @@ Component({
         identityCard: { shops: 0, themes: 0, routes: 0, km: '0', medals: 0, cities: 1 },
         exploreStat: { shops: 0, weekExp: 0 }, themeProgress: [], medals: [], medalCount: 0,
         orderPreviewList: [], projectPreviewList: [], projectPendingCount: 0,
-        orderErr: false, orderAuthError: false, projectErr: false, projectAuthError: false, medalErr: false, medalAuthError: false,
+        orderErr: false, orderAuthError: false, projectErr: false, projectAuthError: false,
         list: [], page_no: 1, hasMore: false, nodata: false, feedErr: false, feedAuthError: false,
         pointsSheet: { show: false, loading: false, loaded: false, failed: false, tasks: [] },
         sceneStack: [], sceneCurrent: null, sceneConfirm: { show: false, action: null, pending: null } });
@@ -1106,6 +1106,8 @@ Component({
       d.subjectIsMerchant ? d.subjectMerchant : selfMerchant, d.userInfo);
     // 本人商家身份还没回来时先不落「商家」两个字,沿用会员昵称占位一帧,避免闪成默认名
     if (selfAsMerchant && !(selfMerchant && selfMerchant.name)) id.name = (d.userInfo && d.userInfo.nickname) || id.name;
+    // V-15:后端头像是 http 签名链接 / 相对路径时真机拒载,显示前过 getImgUrl
+    id.avatar = avatarSrc(id.avatar, app.getImgUrl && app.getImgUrl.bind(app));
     return id;
   },
 
@@ -1423,10 +1425,9 @@ Component({
     var that = this;
     return req('/api/medal/wall', {}).then(function (res) {
       if (!that._currentProfileRead(read, res)) return;
-      // 原码失败即 return,medals 停在 [] → 渲染「完成城市节点即可点亮勋章」= 把失败说成没勋章
+      // 2026-10-30 城市勋章列表已并进收集册:这里只给收集册入口那叠勋章取缩略图和数量;读失败就保持原样(入口用默认图),不另报错
       if (res.code != '200' || !isRecord(res.data)
           || (res.data.medals != null && !isRecordList(res.data.medals))) {
-        that.setData({ medalErr: true, medalAuthError: isAuthFailure(res) });
         return;
       }
       var medals = (res.data.medals || []).map(function (m) {
@@ -1439,8 +1440,6 @@ Component({
         };
       });
       that.setData({
-        medalErr: false,
-        medalAuthError: false,
         medals: medals,
         medalCount: res.data.count || medals.length,
         'identityCard.medals': res.data.count || medals.length
@@ -2125,6 +2124,9 @@ Component({
         return false;
       }
       newlist.forEach(function (row) {
+        row.source = 'community'; // 帖文卡:社区帖文不出转发,点赞走 creativesquare;作者头像/昵称缺时用主页头的(V-15 同口径)
+        if (!row.memberAvatar) row.memberAvatar = that.data._avatarSrc;
+        if (!row.memberNickname) row.memberNickname = that.data.userInfo && that.data.userInfo.nickname;
         if (row.pics) row.picList = String(row.pics).split(';').filter(function (pic) { return pic; });
         if (row.createTime) row.formattedCreateTime = that.formatTimeDifference(row.createTime);
       });
@@ -2263,7 +2265,8 @@ Component({
   },
   // CU-M-28:这一块显示的是会员本人的 introduction,编辑必须进个人资料;
   // goUserInfo 在商家视角会去品牌中心,那里没有「个人介绍」字段。
-  goEditIntro: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/gerenziliao/gerenziliao', complete: () => { this._navigating = false; } }); },
+  goEditInterests: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/gerenziliao/gerenziliao?field=category', complete: () => { this._navigating = false; } }); },
+  goEditIntro: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/gerenziliao/gerenziliao?field=introduction', complete: () => { this._navigating = false; } }); },
   // FE-14 商家店铺资料收编进「我的」更多菜单(原 shanghuziliao 页保留即重定向)
   goShop: function () { this.closeScene(); if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/decor/index', complete: () => { this._navigating = false; } }); },
   // 访客看商家主页的底部「发起合作」:与 club/detail onInviteMerchant 同链路(coop/invite type=0,
@@ -2309,6 +2312,14 @@ Component({
   goMerchantTeam: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/team/index', complete: () => { this._navigating = false; } }); },
   goClubWorkbench: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/detail/index?owner=1&tab=manage', complete: () => { this._navigating = false; } }); },
   goCoupon: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/coupon-wallet/index', complete: () => { this._navigating = false; } }); },
+  // 帖文第三轮:帖文卡的点正文 / 点评论进详情,点赞走原来的 creativesquare 点赞(type=1);数据下标来自卡片事件
+  onPostCardDetail: function (e) {
+    this.jumpDetail({ currentTarget: { dataset: { index: e.detail && e.detail.index } } });
+  },
+  onPostCardLike: function (e) {
+    this.lickClick({ currentTarget: { dataset: { index: e.detail && e.detail.index, type: 1 } } });
+  },
+
   jumpDetail: function (e) {
     var activity = this.data.list[e.currentTarget.dataset.index];
     if (activity) { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/square/detail/index?id=' + activity.id, complete: () => { this._navigating = false; } }); }
