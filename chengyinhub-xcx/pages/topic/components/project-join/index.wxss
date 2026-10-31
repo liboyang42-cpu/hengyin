@@ -1148,8 +1148,8 @@
 /* 走查 v2 R07(业主 2026-10-30 定稿 r_cust3):客户弹窗——数字格汇总、自适应宽度的筛选胶囊、
    行内头像 / 名字 + 场次 / 右侧状态胶囊,行间发丝线。核销时间并进场次那一行。 */
 .dsum { display: flex; gap: 16rpx; }
-.dsum-i { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8rpx; padding: 24rpx 24rpx 22rpx; border-radius: 28rpx; background: var(--cy-bg-card); }
-.dsum-i .dsum-n { font-size: 44rpx; line-height: 52rpx; font-weight: 700; color: var(--cy-text-title); font-variant-numeric: tabular-nums; }
+.dsum-i { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8rpx; padding: 24rpx 24rpx 22rpx; border-radius: var(--cy-radius-lg); background: var(--cy-bg-card); }
+.dsum-i .dsum-n { font-size: var(--cy-font-display); line-height: 52rpx; font-weight: 700; color: var(--cy-text-title); font-variant-numeric: tabular-nums; }
 .dsum-l { font-size: var(--cy-font-caption); color: var(--cy-text-secondary); white-space: nowrap; }
 .dfil { gap: 16rpx; margin-top: 28rpx; flex-wrap: wrap; }
 .dfil-item { flex: none; padding: 0 28rpx; height: 64rpx; background: var(--cy-bg-card); color: var(--cy-text-title); }

@@ -730,7 +730,7 @@
 /* 走查 v2 R05:俱乐部弹窗顶部三格 + 行尾「邀约 / 主页」 */
 .cs-sum { display: flex; gap: var(--cy-space-2); margin-bottom: var(--cy-space-3); }
 .cs-sum-i { flex: 1; display: flex; flex-direction: column; padding: var(--cy-space-3) var(--cy-space-4); border-radius: var(--cy-radius-lg); background: var(--cy-bg-card); }
-.cs-sum-n { font-size: 44rpx; font-weight: 800; color: var(--cy-text-title); font-variant-numeric: tabular-nums; }
+.cs-sum-n { font-size: var(--cy-font-display); font-weight: 800; color: var(--cy-text-title); font-variant-numeric: tabular-nums; }
 .cs-sum-l { font-size: var(--cy-font-caption); color: var(--cy-text-secondary); }
 .cs-pill { flex: none; height: 60rpx; line-height: 60rpx; padding: 0 var(--cy-space-4); margin-left: var(--cy-space-2); border-radius: var(--cy-radius-pill); background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); font-size: var(--cy-font-caption); font-weight: 600; }
 .cs-pill--g { background: var(--cy-bg-card-2); color: var(--cy-text-title); }
@@ -742,15 +742,15 @@
 .cs-list .dr-line1 .dr-tag { flex: none; }
 
 /* 走查 v2 R06:还没人接的站用主题图(不再是加号框) */
-.dn-img { width: 88rpx; height: 88rpx; flex: none; border-radius: 20rpx; background: var(--cy-bg-card-2); }
+.dn-img { width: 88rpx; height: 88rpx; flex: none; border-radius: var(--cy-radius-md); background: var(--cy-bg-card-2); }
 .dn-img--none { display: flex; align-items: center; justify-content: center; color: var(--cy-text-tertiary); }
 .dn .dn-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* 走查 v2 R07(业主 2026-10-30 定稿 r_cust3):客户弹窗——数字格汇总、自适应宽度的筛选胶囊、
    行内头像 / 名字 + 场次 / 右侧状态胶囊,行间发丝线。核销时间并进场次那一行。 */
 .dsum { display: flex; gap: 16rpx; }
-.dsum-i { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8rpx; padding: 24rpx 24rpx 22rpx; border-radius: 28rpx; background: var(--cy-bg-card); }
-.dsum-i .dsum-n { font-size: 44rpx; line-height: 52rpx; font-weight: 700; color: var(--cy-text-title); font-variant-numeric: tabular-nums; }
+.dsum-i { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8rpx; padding: 24rpx 24rpx 22rpx; border-radius: var(--cy-radius-lg); background: var(--cy-bg-card); }
+.dsum-i .dsum-n { font-size: var(--cy-font-display); line-height: 52rpx; font-weight: 700; color: var(--cy-text-title); font-variant-numeric: tabular-nums; }
 .dsum-l { font-size: var(--cy-font-caption); color: var(--cy-text-secondary); white-space: nowrap; }
 .dfil { gap: 16rpx; margin-top: 28rpx; flex-wrap: wrap; }
 .dfil-item { flex: none; padding: 0 28rpx; height: 64rpx; background: var(--cy-bg-card); color: var(--cy-text-title); }
@@ -769,6 +769,6 @@
 .dfil-item.dfil-item--on { background: var(--cy-text-title); color: var(--cy-btn-solid-fg); }
 
 /* 走查 v2 R07:客户弹窗最后一行「定向广播」 */
-.bcast-row { display: flex; align-items: center; gap: 12rpx; margin-top: 24rpx; padding: 32rpx; border-radius: 28rpx; background: var(--cy-bg-card); color: var(--cy-text-tertiary); }
+.bcast-row { display: flex; align-items: center; gap: 12rpx; margin-top: 24rpx; padding: 32rpx; border-radius: var(--cy-radius-lg); background: var(--cy-bg-card); color: var(--cy-text-tertiary); }
 .bcast-t { flex: none; font-size: var(--cy-font-body); font-weight: 600; color: var(--cy-text-title); }
 .bcast-s { flex: 1; min-width: 0; text-align: right; font-size: var(--cy-font-caption); color: var(--cy-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

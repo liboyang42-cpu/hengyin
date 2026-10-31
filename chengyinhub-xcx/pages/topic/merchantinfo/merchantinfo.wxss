@@ -1927,11 +1927,11 @@ image.david_stu {
 .pf-flow-h { display: flex; justify-content: space-between; font-size: var(--cy-font-label); opacity: 0.85; }
 .pf-flow-r { opacity: 0.7; }
 .pf-bar { display: flex; gap: 6rpx; height: 112rpx; margin-top: var(--cy-space-3); }
-.pf-seg { position: relative; border-radius: 16rpx; overflow: hidden; }
+.pf-seg { position: relative; border-radius: var(--cy-radius-sm); overflow: hidden; }
 .pf-seg text { position: absolute; left: 12rpx; bottom: 10rpx; font-size: 22rpx; font-weight: 700; color: rgba(20, 22, 26, 0.75); } /* ds-ok: 同上 */
 .pf-legend { display: flex; flex-wrap: wrap; margin-top: var(--cy-space-3); }
 .pf-lg { width: 50%; display: flex; align-items: center; gap: var(--cy-space-2); padding: 8rpx 0; font-size: var(--cy-font-caption); box-sizing: border-box; padding-right: var(--cy-space-3); }
-.pf-lg-dot { width: 16rpx; height: 16rpx; border-radius: 4rpx; flex: none; }
+.pf-lg-dot { width: 16rpx; height: 16rpx; border-radius: 4rpx; flex: none; } /* ds-ok: 图例小方块(16rpx)按定稿 r_profit,4rpx 圆角无对应档位 */
 .pf-lg-n { flex: 1; opacity: 0.85; }
 .pf-lg-v { font-weight: 700; }
 .pf-fixed { display: block; margin-top: var(--cy-space-2); font-size: var(--cy-font-caption); opacity: 0.7; }
@@ -1956,8 +1956,8 @@ image.david_stu {
 
 /* 走查 v2 R07:定向广播弹窗 */
 .bc { display: flex; flex-direction: column; gap: 24rpx; padding: 8rpx 0 24rpx; }
-.bc-input { box-sizing: border-box; width: 100%; height: 220rpx; padding: 24rpx; border-radius: 28rpx; background: var(--cy-bg-card); font-size: var(--cy-font-body); color: var(--cy-text-title); }
-.bc-row { display: flex; justify-content: space-between; align-items: center; padding: 28rpx 32rpx; border-radius: 28rpx; background: var(--cy-bg-card); }
+.bc-input { box-sizing: border-box; width: 100%; height: 220rpx; padding: 24rpx; border-radius: var(--cy-radius-lg); background: var(--cy-bg-card-2); font-size: var(--cy-font-body); color: var(--cy-text-title); }
+.bc-row { display: flex; justify-content: space-between; align-items: center; padding: 28rpx 32rpx; border-radius: var(--cy-radius-lg); background: var(--cy-bg-card-2); }
 .bc-k { font-size: var(--cy-font-body); color: var(--cy-text-secondary); }
 .bc-v { font-size: var(--cy-font-body); font-weight: 600; color: var(--cy-text-title); font-variant-numeric: tabular-nums; }
 .bc-btn { height: var(--cy-btn-h); display: flex; align-items: center; justify-content: center; border-radius: var(--cy-radius-pill); background: var(--cy-text-title); color: var(--cy-btn-solid-fg); font-size: var(--cy-font-body); font-weight: 600; }

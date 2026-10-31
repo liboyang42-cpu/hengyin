@@ -520,7 +520,7 @@
     <textarea class="bc-input" maxlength="120" placeholder="写给本主题的买票玩家" value="{{broadcastSheet.content}}" bindinput="onBroadcastInput" />
     <view class="bc-row">
       <text class="bc-k">可以收到</text>
-      <text class="bc-v" wx:if="{{broadcastSheet.state === 'ready'}}">{{broadcastSheet.deliverable}} 人</text>
+      <text class="bc-v" wx:if="{{broadcastSheet.state === 'ready'}}">{{broadcastSheet.deliverable || 0}} 人</text>
       <text class="bc-v" wx:elif="{{broadcastSheet.state === 'loading'}}">正在计算…</text>
     </view>
     <cy-inline-error wx:if="{{broadcastSheet.state === 'error'}}" kind="data" title="人数没读到" sub="{{broadcastSheet.error}}" action="重试" bind:action="openBroadcast" />

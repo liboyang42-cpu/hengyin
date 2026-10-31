@@ -39,7 +39,7 @@
   <view class="qa">
     <view class="qa-btn" wx:for="{{ quickActions }}" wx:key="key"
           data-act="onQuickAction" data-key="{{ item.key }}" bindtap="emit" hover-class="qa-btn--tap">
-      <view class="qa-ico"><image class="qa-ico-img" src="{{ item.icon }}" mode="aspectFit" /></view>
+      <view class="qa-ico"><cy-icon wx:if="{{item.iconName}}" name="{{item.iconName}}" size="40" /><image wx:else class="qa-ico-img" src="{{ item.icon }}" mode="aspectFit" /></view>
       <text class="qa-label">{{ item.label }}</text>
     </view>
   </view>

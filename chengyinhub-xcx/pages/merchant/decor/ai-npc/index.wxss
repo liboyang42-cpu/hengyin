@@ -243,6 +243,6 @@
 .ni-t { margin-top: var(--cy-space-3); font-size: var(--cy-type-sheet-title); font-weight: 700; color: var(--cy-text-title); text-align: center; }
 .ni-s { margin-top: var(--cy-space-2); font-size: var(--cy-font-label); color: var(--cy-text-secondary); text-align: center; line-height: 1.5; }
 .ni-dots { display: flex; gap: 12rpx; margin: var(--cy-space-5) 0; }
-.ni-dot { width: 36rpx; height: 12rpx; border-radius: 6rpx; background: var(--cy-bg-card-2); transform: scaleX(0.34); transition: transform 0.3s; }
+.ni-dot { width: 36rpx; height: 12rpx; border-radius: var(--cy-radius-pill); background: var(--cy-bg-card-2); transform: scaleX(0.34); transition: transform 0.3s; }
 .ni-dot--on { transform: scaleX(1); background: var(--cy-text-title); }
 .ni-btn { width: 100%; height: var(--cy-btn-h); line-height: var(--cy-btn-h); border-radius: var(--cy-radius-pill); background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); text-align: center; font-size: var(--cy-font-body); font-weight: 700; }

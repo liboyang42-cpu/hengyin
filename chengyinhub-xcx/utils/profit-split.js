@@ -3,7 +3,7 @@
 // 与 /api/topic/pricing/preview 的阵容条款(平台费率 + 每个合作方的分成方式 / 比例 / 每人固定费)。
 // 比例条只画「按票款分成」的部分;按核销固定费、引流档不进比例条,写在下面一行,不编百分比。
 
-const COLORS = { host: '#A5A6E8', merchant: '#F2C46B', club: '#7FD1A6', platform: '#5A5A60' };
+const COLORS = { host: '#A5A6E8', merchant: '#F2C46B', club: '#7FD1A6', platform: '#5A5A60' }; /* ds-ok: 分润条四方配色按业主定稿 r_profit,数据可视化色无对应 token */
 
 function num(v) {
   const n = Number(v);
