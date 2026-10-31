@@ -36,6 +36,9 @@ Component({
     pendingMerchantNodesState: { type: String, value: 'idle' },
     // BL-183:圈层供给角色抽屉。开关/提交中/后端错误归页面;勾选只在抽屉里,提交时随事件带回。
     circleConfig:    { type: Object, value: { show: false, submitting: false, errorText: '', errorTitle: '' } },
+    // 2026-10-31 P-6:招商第三版的站点行(每站一个档位)与五个叠层的状态,都由页面组装
+    recruitStations: { type: Array, value: [] },
+    layers:          { type: Object, value: {} },
   },
   observers: {
     'hostTopic, hostRecruit': function (topic, recruit) {
@@ -140,6 +143,11 @@ Component({
     emit(e) {
       const ds = e.currentTarget.dataset || {};
       this.triggerEvent('act', { act: ds.act, dataset: ds });
+    },
+    // 叠层里的输入框:把输入值一并带回页面(页面是唯一状态源)
+    emitInput(e) {
+      const ds = e.currentTarget.dataset || {};
+      this.triggerEvent('act', { act: ds.act, dataset: Object.assign({}, ds, { value: e.detail.value }) });
     },
     emitCloseClub() {
       this.triggerEvent('act', { act: 'closeClubSheet', dataset: {} });

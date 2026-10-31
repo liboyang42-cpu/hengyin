@@ -2,7 +2,8 @@
      与 project-join 同一套视觉词汇(浅灰底 + 白卡 + 关系入口),但对象不同:
      承接方管的是自己那一站,主办方管的是整条线上谁在帮他。
      同样只负责渲染,所有点击从 bind:act 冒泡回页面。 -->
-<view class="page theme-merchant">
+<!-- 2026-10-31 业主批准 P-6:俱乐部主办用同一套页面,深色 -->
+<view class="page {{ hostOwnerType === 'club' ? 'theme-dark' : 'theme-merchant' }}">
   <!-- 2026-09-18 ✕统一裁决:打卡码弹层显示时导航退场,唯一出口是弹层✕/遮罩 -->
   <cy-nav-bar overlay pill pillDark scrolled="{{navScrolled}}" tint="{{navScrolled ? '' : 'light'}}" wx:if="{{!navHidden}}" />
 
@@ -133,7 +134,7 @@
 
 
   <!-- ===== 俱乐部抽屉 ===== -->
-  <project-drawer show="{{ clubSheet.show }}" title="合作俱乐部" actions="{{ clubActions }}"
+  <project-drawer show="{{ clubSheet.show }}" title="合作俱乐部" actions="{{ clubActions }}" under="{{ layers.clubInvite.show || layers.clubHome.show }}"
                   bind:close="emitCloseClub" bind:action="emitDrawerAction">
     <!-- 走查 v2 R05(业主 2026-10-30):顶部三格数,下面「已邀约」与「可以邀约的俱乐部」两组;每行「邀约 / 主页」,不跳出主题 -->
     <view class="cs-sum">
@@ -154,6 +155,10 @@
                   wx:if="{{ item.statusText }}">{{ item.statusText }}</text>
           </view>
           <text class="dr-sub" wx:if="{{ item.leaderName || item.terms }}">{{ item.leaderName ? '负责人 ' + item.leaderName : '' }}{{ item.leaderName && item.terms ? ' · ' : '' }}{{ item.terms }}</text>
+          <!-- 2026-10-31 P-6:三格状态 已发出 → 已读 → 已接受;走完的格子实心,当前一格在走 -->
+          <view class="trk" wx:if="{{ item.track }}">
+            <view class="trk-i {{ step.cls }}" wx:for="{{ item.track }}" wx:for-item="step" wx:key="label"><view class="trk-bar"><view class="trk-fill"></view></view><text>{{ step.label }}</text></view>
+          </view>
           <view class="dr-phone" wx:if="{{ item.phone }}">
             <text class="dr-phone-n">{{ item.phone }}</text>
             <view class="dr-copy" catchtap="emit" data-act="copyText" data-text="{{ item.phone }}" aria-role="button" aria-label="复制电话" hover-class="cy-pressed" hover-stay-time="80"><image class="dr-copy-img" src="/pages/topic/images/icon_copy.svg" mode="aspectFit" /></view>
@@ -189,7 +194,7 @@
   <!-- CU-C-126:原来 headerVariant="action" 走「取消 / 标题 / 完成」,两颗都只执行 onClose,
        面板内又没有待保存表单 —— 「完成」不完成任何业务动作,还和同类抽屉的右上 ✕ 不一致。
        退回默认标题头(右上 ✕),真正的招商动作留在底部 merchantActions(去找商家 / 收到的申请)。 -->
-  <project-drawer show="{{ merchantSheet.show }}" title="招商" actions="{{ merchantActions }}"
+  <project-drawer show="{{ merchantSheet.show }}" title="招商" actions="{{ merchantActions }}" under="{{ layers.tier.show || layers.shops.show }}"
                   bind:close="emitCloseMerchant" bind:action="emitDrawerAction">
     <!-- 走查 v2 R06(业主 2026-10-30):顶部三格;每一站用主题图、给「自己承接 / 招商」;收到的申请在弹窗里确认,不跳出主题 -->
     <view class="cs-sum">
@@ -197,6 +202,28 @@
       <view class="cs-sum-i"><text class="cs-sum-n">{{ hostRecruit.pendingCount || 0 }}</text><text class="cs-sum-l">待处理申请</text></view>
       <view class="cs-sum-i"><text class="cs-sum-n">{{ hostRecruit.openNodes.length }}</text><text class="cs-sum-l">还没人接</text></view>
     </view>
+
+    <!-- 2026-10-31 业主批准 P-6 招商第三版:档位挂在每一站上(cms_topic_chapter.terms_mode),同一站所有商家条件相同;
+         还没人接的站可以改档(叠「这一站的档位」),已有商家接了就锁住(后端同样拒)。「招商」叠附近商家。 -->
+    <block wx:if="{{ recruitStations.length }}">
+      <view class="dg-label">站点</view>
+      <view class="dcard cs-list">
+        <view class="dr st3" wx:for="{{ recruitStations }}" wx:key="chapterId">
+          <image class="dr-avatar" wx:if="{{ hostTopic.img }}" src="{{ hostTopic.img }}" mode="aspectFill" />
+          <view class="dr-avatar dr-avatar--fallback" wx:else><cy-icon name="discover-shop" size="{{ 32 }}" /></view>
+          <view class="dr-text">
+            <text class="dr-name ep1">{{ item.name }}</text>
+            <view class="st3-t"><text class="tchip tchip--{{ item.tierKey }}" wx:if="{{ item.tierLabel }}">{{ item.tierLabel }}</text><text class="dr-sub ep1">{{ item.takerName || item.termsText }}</text></view>
+          </view>
+          <text class="dr-tag dr-tag--ok" wx:if="{{ item.state === 'taken' }}">已承接</text>
+          <text class="dr-tag" wx:elif="{{ item.state === 'off' }}">未开放</text>
+          <block wx:else>
+            <view class="cs-pill cs-pill--g" catchtap="emit" data-act="openTierLayer" data-id="{{ item.chapterId }}" aria-role="button" aria-label="{{ item.name }}的档位" hover-class="cy-pressed" hover-stay-time="80">档位</view>
+            <view class="cs-pill" catchtap="emit" data-act="openShopsLayer" data-id="{{ item.chapterId }}" aria-role="button" aria-label="为 {{ item.name }} 招商" hover-class="cy-pressed" hover-stay-time="80">招商</view>
+          </block>
+        </view>
+      </view>
+    </block>
 
     <block wx:if="{{ regApplies.rows.length }}">
       <view class="dg-label">收到的申请</view>
@@ -240,9 +267,9 @@
           </view>
           <view class="review-actions" wx:if="{{ item.actionable }}">
             <view class="review-btn review-btn--ghost" catchtap="emit" data-act="auditChapterApplication"
-                  data-id="{{item.id}}" data-approved="{{false}}" hover-class="cy-pressed" hover-stay-time="80">婉拒</view>
+                  data-id="{{item.id}}" data-approved="{{false}}" hover-class="cy-pressed" hover-stay-time="80">拒绝</view>
             <view class="review-btn" catchtap="emit" data-act="auditChapterApplication"
-                  data-id="{{item.id}}" data-approved="{{true}}" hover-class="cy-pressed" hover-stay-time="80">通过</view>
+                  data-id="{{item.id}}" data-approved="{{true}}" hover-class="cy-pressed" hover-stay-time="80">确认</view>
           </view>
         </view>
       </view>
@@ -334,7 +361,7 @@
   </project-drawer>
 
   <!-- ===== 「更多」抽屉:按 role + 状态分组(2026-09-05) ===== -->
-  <project-drawer plain="{{true}}" show="{{ moreSheet.show }}" title="更多" bind:close="emitCloseMore">
+  <project-drawer show="{{ moreSheet.show }}" title="更多" bind:close="emitCloseMore"> <!-- 2026-10-31 P-6:与合作俱乐部 / 招商 / 客户同一档全屏 -->
     <!-- CU-C-68:站点资格探不到时给一行可见且可重试的说明 —— 探不到 ≠ 没资格,
          不能静静把「本站运营」那一组灰着不解释。 -->
     <cy-inline-error wx:if="{{ stationOpsErrorText }}" kind="data" title="本站运营项没能确认"
@@ -416,4 +443,131 @@
     </view>
     </block>
   </project-drawer>
+  <!-- ===== 叠层(2026-10-31 业主批准 P-6):都叠在抽屉上,不跳出主题 ===== -->
+  <!-- 邀约俱乐部:字段照 coop/invite(按人分成金额 / 引流合作、邀请语),只是搬进叠层 -->
+  <project-layer show="{{ layers.clubInvite.show }}" depth="{{ layers.clubInvite.depth }}" title="邀约俱乐部" data-act="closeLayer" data-layer="clubInvite" bind:back="emit">
+    <view class="lv-to">
+      <image class="dr-avatar dr-avatar--round" wx:if="{{ layers.clubInvite.logo }}" src="{{ layers.clubInvite.logo }}" mode="aspectFill" />
+      <view class="dr-avatar dr-avatar--round dr-avatar--fallback" wx:else>{{ layers.clubInvite.initial }}</view>
+      <view class="lv-to-t"><text class="lv-to-n">{{ layers.clubInvite.name }}</text><text class="lv-to-s">{{ hostTopic.name }}</text></view>
+    </view>
+    <view class="dg-label">合作方式</view>
+    <view class="dcard lv-terms">
+      <view class="lv-seg">
+        <view class="lv-seg-i {{ layers.clubInvite.shareMode === 2 ? 'is-on' : '' }}" catchtap="emit" data-act="setClubInviteMode" data-mode="{{ 2 }}" aria-role="button" aria-label="按人分成" hover-class="cy-pressed" hover-stay-time="80">按人分成</view>
+        <view class="lv-seg-i {{ layers.clubInvite.shareMode === 0 ? 'is-on' : '' }}" catchtap="emit" data-act="setClubInviteMode" data-mode="{{ 0 }}" aria-role="button" aria-label="引流合作" hover-class="cy-pressed" hover-stay-time="80">引流合作</view>
+      </view>
+      <view class="lv-fee" wx:if="{{ layers.clubInvite.shareMode === 2 }}">
+        <text>每核销 1 位玩家</text>
+        <view class="lv-fee-v"><text>¥</text><input class="lv-fee-in" type="digit" value="{{ layers.clubInvite.fee }}" placeholder="0" data-act="onClubInviteFee" bindinput="emitInput" /></view>
+      </view>
+    </view>
+    <view class="dg-label">邀请语</view>
+    <view class="dcard lv-msg"><textarea class="lv-msg-in" value="{{ layers.clubInvite.message }}" placeholder="邀请贵俱乐部来参加活动" maxlength="200" auto-height data-act="onClubInviteMessage" bindinput="emitInput" /></view>
+    <text class="lv-err" wx:if="{{ layers.clubInvite.error }}">{{ layers.clubInvite.error }}</text>
+    <view slot="foot" class="lv-send {{ layers.clubInvite.sending ? 'is-busy' : '' }}" catchtap="emit" data-act="sendClubInvite" aria-role="button" aria-label="发出邀约" hover-class="cy-pressed" hover-stay-time="80">{{ layers.clubInvite.sending ? '正在发出…' : '发出邀约' }}</view>
+  </project-layer>
+
+  <!-- 俱乐部主页:主理人、四格数据(没有的写「—」)、标签与常去区域、完整介绍、最近带过的活动、最近动态与成员 -->
+  <project-layer show="{{ layers.clubHome.show }}" depth="{{ layers.clubHome.depth }}" under="{{ layers.clubInvite.show }}" title="{{ layers.clubHome.name || '俱乐部' }}" data-act="closeLayer" data-layer="clubHome" bind:back="emit">
+    <cy-skeleton wx:if="{{ layers.clubHome.state === 'loading' }}" type="list" count="{{ 3 }}" />
+    <cy-inline-error wx:elif="{{ layers.clubHome.state === 'error' }}" kind="data" title="俱乐部主页没读到" action="重试" data-act="reloadClubHome" bind:action="emit" />
+    <block wx:else>
+      <image class="lv-cover" wx:if="{{ layers.clubHome.cover }}" src="{{ layers.clubHome.cover }}" mode="aspectFill" />
+      <view class="lv-id">
+        <image class="dr-avatar dr-avatar--round lv-logo" wx:if="{{ layers.clubHome.logo }}" src="{{ layers.clubHome.logo }}" mode="aspectFill" />
+        <view class="dr-avatar dr-avatar--round dr-avatar--fallback lv-logo" wx:else>{{ layers.clubHome.initial }}</view>
+        <view class="lv-to-t"><text class="lv-home-n">{{ layers.clubHome.name }}</text><text class="lv-to-s" wx:if="{{ layers.clubHome.meta }}">{{ layers.clubHome.meta }}</text></view>
+      </view>
+      <view class="lv-stats">
+        <view class="lv-stat" wx:for="{{ layers.clubHome.stats }}" wx:key="label"><text class="lv-stat-n">{{ item.value }}</text><text class="lv-stat-l">{{ item.label }}</text></view>
+      </view>
+      <view class="lv-tags" wx:if="{{ layers.clubHome.tags.length || layers.clubHome.areas.length }}">
+        <text class="lv-tag" wx:for="{{ layers.clubHome.tags }}" wx:key="*this">{{ item }}</text>
+        <text class="lv-tag lv-tag--area" wx:for="{{ layers.clubHome.areas }}" wx:key="*this">{{ item }}</text>
+      </view>
+      <text class="lv-bio" wx:if="{{ layers.clubHome.bio }}">{{ layers.clubHome.bio }}</text>
+      <block wx:if="{{ layers.clubHome.acts.length }}">
+        <view class="dg-label">最近带过的活动</view>
+        <scroll-view class="lv-acts" scroll-x enhanced show-scrollbar="{{ false }}">
+          <view class="lv-act" wx:for="{{ layers.clubHome.acts }}" wx:key="id">
+            <image class="lv-act-img" wx:if="{{ item.img }}" src="{{ item.img }}" mode="aspectFill" />
+            <view class="lv-act-img lv-act-img--none" wx:else></view>
+            <text class="lv-act-t ep1">{{ item.name }}</text>
+          </view>
+        </scroll-view>
+      </block>
+      <block wx:if="{{ layers.clubHome.post }}">
+        <view class="dg-label">最近动态</view>
+        <view class="dcard lv-post"><text class="lv-post-t">{{ layers.clubHome.post.text }}</text><text class="lv-post-m">{{ layers.clubHome.post.time }}</text></view>
+      </block>
+      <block wx:if="{{ layers.clubHome.members.length }}">
+        <view class="dg-label">成员</view>
+        <view class="lv-members">
+          <block wx:for="{{ layers.clubHome.members }}" wx:key="id">
+            <image class="dr-avatar dr-avatar--round" wx:if="{{ item.avatar }}" src="{{ item.avatar }}" mode="aspectFill" />
+            <view class="dr-avatar dr-avatar--round dr-avatar--fallback" wx:else>{{ item.initial }}</view>
+          </block>
+          <text class="lv-members-more" wx:if="{{ layers.clubHome.moreMembers }}">+{{ layers.clubHome.moreMembers }}</text>
+        </view>
+      </block>
+    </block>
+    <view slot="foot" wx:if="{{ layers.clubHome.canInvite }}" class="lv-send" catchtap="emit" data-act="inviteFromClubHome" aria-role="button" aria-label="邀约这个俱乐部" hover-class="cy-pressed" hover-stay-time="80">邀约</view>
+  </project-layer>
+
+  <!-- 这一站的档位:商家主办两档(权益 / 引流);俱乐部自己发的自由探索多一档计酬(俱乐部直付商家) -->
+  <project-layer show="{{ layers.tier.show }}" depth="{{ 2 }}" title="这一站的档位" data-act="closeLayer" data-layer="tier" bind:back="emit">
+    <view class="lv-st">「{{ layers.tier.name }}」这一站</view>
+    <view class="lv-tiers">
+      <view class="lv-tier {{ layers.tier.mode === item.key ? 'is-on' : '' }}" wx:for="{{ layers.tier.options }}" wx:key="key"
+            catchtap="emit" data-act="setTierMode" data-mode="{{ item.key }}" aria-role="button" aria-label="{{ item.label }}" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="lv-tier-h"><text>{{ item.label }}</text>
+          <view class="lv-tier-v" wx:if="{{ item.field && layers.tier.mode === item.key }}"><text>{{ item.fieldLabel }} ¥</text>
+            <input class="lv-tier-in" type="digit" value="{{ item.field === 'perkMinValue' ? layers.tier.perkMinValue : layers.tier.maxPerHeadFee }}" data-act="onTierField" data-field="{{ item.field }}" bindinput="emitInput" /></view>
+        </view>
+        <text class="lv-tier-d">{{ item.desc }}</text>
+      </view>
+    </view>
+    <view class="dg-label">最多几家商家接</view>
+    <view class="dcard lv-cnt">
+      <text>商家数上限</text>
+      <view class="lv-step">
+        <view class="lv-step-b" catchtap="emit" data-act="stepTierMax" data-delta="{{ -1 }}" aria-role="button" aria-label="减少" hover-class="cy-pressed" hover-stay-time="80"><view class="lv-step-minus"></view></view>
+        <text class="lv-step-v">{{ layers.tier.maxMerchant > 0 ? layers.tier.maxMerchant : '不限' }}</text>
+        <view class="lv-step-b" catchtap="emit" data-act="stepTierMax" data-delta="{{ 1 }}" aria-role="button" aria-label="增加" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="32" /></view>
+      </view>
+    </view>
+    <text class="lv-note" wx:if="{{ !layers.tier.club }}">计酬档要平台按核销付钱，商家发起的主题暂不开放。</text>
+    <text class="lv-err" wx:if="{{ layers.tier.error }}">{{ layers.tier.error }}</text>
+    <view slot="foot" class="lv-send {{ layers.tier.saving ? 'is-busy' : '' }}" catchtap="emit" data-act="saveTier" aria-role="button" aria-label="保存档位" hover-class="cy-pressed" hover-stay-time="80">{{ layers.tier.saving ? '正在保存…' : '保存' }}</view>
+  </project-layer>
+
+  <!-- 附近商家:为这一站找商家,可邀约的给「邀约承接」 -->
+  <project-layer show="{{ layers.shops.show }}" depth="{{ 2 }}" under="{{ layers.shopInvite.show }}" title="附近商家" data-act="closeLayer" data-layer="shops" bind:back="emit">
+    <view class="lv-st">为「{{ layers.shops.name }}」找商家</view>
+    <cy-skeleton wx:if="{{ layers.shops.state === 'loading' }}" type="list" count="{{ 4 }}" />
+    <cy-inline-error wx:elif="{{ layers.shops.state === 'error' }}" kind="data" title="附近商家没读到" action="重试" data-act="reloadShops" bind:action="emit" />
+    <view class="dcard cs-list" wx:elif="{{ layers.shops.rows.length }}">
+      <view class="dr" wx:for="{{ layers.shops.rows }}" wx:key="memberId">
+        <image class="dr-avatar" wx:if="{{ item.logo }}" src="{{ item.logo }}" mode="aspectFill" />
+        <view class="dr-avatar dr-avatar--fallback" wx:else>{{ item.initial }}</view>
+        <view class="dr-text"><text class="dr-name ep1">{{ item.name }}</text><text class="dr-sub ep1" wx:if="{{ item.sub }}">{{ item.sub }}</text></view>
+        <view class="cs-pill" catchtap="emit" data-act="openShopInvite" data-id="{{ item.memberId }}" aria-role="button" aria-label="邀约 {{ item.name }} 承接" hover-class="cy-pressed" hover-stay-time="80">邀约承接</view>
+      </view>
+    </view>
+    <cy-empty wx:else size="sm" title="附近暂时没有可以邀约的商家" />
+  </project-layer>
+
+  <!-- 邀约承接:写的就是这一站的档与条件(只读);商家只能接受或拒绝,不能换档 -->
+  <project-layer show="{{ layers.shopInvite.show }}" depth="{{ 3 }}" title="邀约承接" data-act="closeLayer" data-layer="shopInvite" bind:back="emit">
+    <view class="lv-to">
+      <image class="dr-avatar" wx:if="{{ layers.shopInvite.logo }}" src="{{ layers.shopInvite.logo }}" mode="aspectFill" />
+      <view class="dr-avatar dr-avatar--fallback" wx:else>{{ layers.shopInvite.initial }}</view>
+      <view class="lv-to-t"><text class="lv-to-n">{{ layers.shopInvite.name }}</text><text class="lv-to-s">{{ layers.shopInvite.station }}</text></view>
+    </view>
+    <view class="dg-label">这一站的合作方式</view>
+    <view class="dcard lv-terms"><view class="lv-inv3"><text class="tchip tchip--{{ layers.shopInvite.tierKey }}">{{ layers.shopInvite.tierLabel }}</text><text>{{ layers.shopInvite.termsText }}</text></view></view>
+    <text class="lv-err" wx:if="{{ layers.shopInvite.error }}">{{ layers.shopInvite.error }}</text>
+    <view slot="foot" class="lv-send {{ layers.shopInvite.sending ? 'is-busy' : '' }}" catchtap="emit" data-act="sendShopInvite" aria-role="button" aria-label="发出邀约" hover-class="cy-pressed" hover-stay-time="80">{{ layers.shopInvite.sending ? '正在发出…' : '发出邀约' }}</view>
+  </project-layer>
 </view>

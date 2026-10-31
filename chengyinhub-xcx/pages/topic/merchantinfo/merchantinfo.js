@@ -19,6 +19,7 @@ const { validationMethodLabel } = require('../../../utils/validation-method-labe
 const { resolveMenuChrome } = require('../../../utils/nav-safe-area.js');
 const mediaPreview = require('../../../utils/media-preview.js');
 const codeTextUtil = require('../utils/code-text.js');
+const hostLayers = require('./host-layers.js'); // 2026-10-31 P-6:主办工作台叠层(邀约 / 主页 / 档位 / 附近商家)
 
 function recruitBoundaryLabel(allowed, maxXp) {
   const parts = [];
@@ -123,7 +124,9 @@ function currentProjectRead(page, key) {
 }
 
 Page({
+  ...hostLayers.methods,
   data: {
+    ...hostLayers.data,
     navScrolled: false, // 2026-10-30:滚过封面(约 200px)后导航栏转实底
     projectReadAuth: '',
     reducedMotion: false,
@@ -2137,6 +2140,7 @@ Page({
       quickActions: this.buildQuickActions('host', host.ownerType, host.canEdit, this.hostRecruitGate(topic, host)),
       hostOwnerType: host.ownerType || 'merchant',
       'clubSheet.items': this.mapClubs(host.clubs),
+      recruitStations: hostLayers.decorateStations(host.recruitChapters),
       hostTopic: {
         status: topic.status,
         productType: topic.productType,
@@ -2263,7 +2267,9 @@ Page({
         // fail-closed:status 缺失时按「待确认」,不按「合作中」——
         // 把还没答应的人标成合作方,商家会照着去安排场次。
         accepted: c.status === 1,
-        statusText: c.status === 1 ? '合作中' : '待对方确认',
+        // 2026-10-31 P-6:主办那一侧有邀约记录的等回复行,用三格状态条(已发出 → 已读 → 已接受)代替「待对方确认」
+        track: c.inviteId ? hostLayers.inviteTrack(c.status, !!c.read) : null,
+        statusText: c.status === 1 ? '合作中' : (c.status === 2 ? '已拒绝' : (c.inviteId && c.status === 0 ? '' : '待对方确认')),
         terms: c.terms || '',
       };
     });
@@ -2375,31 +2381,14 @@ Page({
     });
   },
 
-  inviteClubRow(e) {
-    const ds = (e && e.currentTarget && e.currentTarget.dataset) || {};
-    const topicId = this.data.topicId || (this.data.info && this.data.info.topicId);
-    if (!ds.id || !topicId || this._navigating) return;
-    this._navigating = true; this._clubSheetReturn = true;
-    wx.navigateTo({
-      url: '/pages/coop/invite/index?type=1&toId=' + ds.id + '&toName=' + encodeURIComponent(ds.name || '') + '&topicId=' + topicId
-        + (this.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT' : ''),
-      complete: () => { this._navigating = false; },
-    });
-  },
-
-  openClubHome(e) {
-    const ds = (e && e.currentTarget && e.currentTarget.dataset) || {};
-    if (!ds.id || this._navigating) return;
-    this._navigating = true; this._clubSheetReturn = true;
-    wx.navigateTo({ url: '/pages/club/detail/index?id=' + ds.id + '&tab=overview' + (this.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT' : ''), complete: () => { this._navigating = false; } });
-  },
+  // inviteClubRow / openClubHome:2026-10-31 P-6 起叠在抽屉上,见 host-layers.js
 
   closeClubSheet() {
-    this.setData({ 'clubSheet.show': false });
+    this.setData({ 'clubSheet.show': false, 'layers.clubInvite': { show: false }, 'layers.clubHome': { show: false } });
   },
 
   closeMerchantSheet() {
-    this.setData({ 'merchantSheet.show': false });
+    this.setData({ 'merchantSheet.show': false, 'layers.tier': { show: false }, 'layers.shops': { show: false }, 'layers.shopInvite': { show: false } });
   },
 
   closePlayerSheet() {
@@ -3344,6 +3333,10 @@ Page({
       openCircleConfig: 1, closeCircleConfig: 1, submitCircleConfig: 1,
       auditChapterApplication: 1, revokeChapterInvitation: 1, auditMerchantNode: 1, retryChapterReviews: 1,
       switchStation: 1,
+      // 2026-10-31 P-6 叠层
+      closeLayer: 1, setClubInviteMode: 1, onClubInviteFee: 1, onClubInviteMessage: 1, sendClubInvite: 1,
+      inviteFromClubHome: 1, reloadClubHome: 1, openTierLayer: 1, setTierMode: 1, onTierField: 1, stepTierMax: 1,
+      saveTier: 1, openShopsLayer: 1, reloadShops: 1, openShopInvite: 1, sendShopInvite: 1,
       openNodeNpcForm: 1, openChapterOfferForm: 1, openChapterNodeForm: 1,
       withdrawChapterApplication: 1, reconfirmCircleSupply: 1, pauseCircleSupply: 1, retryMyChapterNodes: 1,
       // 打开章节 / 打开节点(Figma 439:6336 / 336:461)

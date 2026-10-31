@@ -6,6 +6,7 @@
     "cy-icon": "/components/cy/icon/index",
     "cy-nav-bar": "/components/cy/nav-bar/index",
     "project-drawer": "/pages/topic/components/project-drawer/index",
+    "project-layer": "/pages/topic/components/project-layer/index",
     "cy-empty": "/components/cy/empty/index",
     "cy-inline-error": "/components/cy/inline-error/index",
     "cy-switch": "/components/cy/switch/index",

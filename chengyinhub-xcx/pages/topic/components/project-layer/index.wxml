@@ -1,0 +1,17 @@
+<!-- 叠层(2026-10-31 业主批准 P-6):在工作台抽屉上再叠一层(邀约 / 俱乐部主页 / 这一站的档位 / 附近商家),
+     iOS 式:下面一层缩小压暗、露出顶边;左上返回回到下一层,不离开主题。底部动作放 foot 插槽。 -->
+<block wx:if="{{ show }}">
+<view class="ly-mask ly-mask--{{ depth }}" catchtouchmove="noop" bindtap="onBack" aria-role="button" aria-label="返回" hover-class="cy-pressed" hover-stay-time="80"></view>
+<view class="ly ly--{{ depth }} {{ under ? 'ly--under' : '' }}" style="--cy-layer-top:{{panelTop}}px">
+  <view class="ly-grab"></view>
+  <view class="ly-head">
+    <view class="ly-back" catchtap="onBack" aria-role="button" aria-label="返回" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="back" size="40" /></view>
+    <text class="ly-title">{{ title }}</text>
+    <view class="ly-sp"></view>
+  </view>
+  <scroll-view class="ly-body" scroll-y>
+    <view class="ly-body-content"><slot></slot><view class="ly-pad"></view></view>
+  </scroll-view>
+  <view class="ly-foot"><slot name="foot"></slot></view>
+</view>
+</block>

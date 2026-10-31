@@ -54,6 +54,9 @@ public class ProjectHomeReadServiceImpl implements IProjectHomeReadService {
     /** 只读「开了商家承接的站有几个」给工作台的「招商」按钮定灰;缺席时不下发该字段,前端按可用处理(真闸在写接口)。 */
     @Autowired(required = false)
     private CmsTopicChapterMapper cmsTopicChapterMapper;
+    /** 只读每一站的生效供给(有商家接了 ⇒ 档位锁住);缺席时站点行不带承接方,档位按钮仍以写接口为准。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.mapper.MerchantChapterOfferMapper merchantChapterOfferMapper;
 
     public ProjectHomeReadServiceImpl(ICmsTopicService topicService,
                                       ICmsTopicNodeService topicNodeService,
@@ -226,8 +229,14 @@ public class ProjectHomeReadServiceImpl implements IProjectHomeReadService {
         // 2026-10-31 业主:俱乐部 / 商家招商在发布之后做,发布时的开关决定工作台能用什么 —— 关着的那颗按钮灰掉。
         // 城市定向看公开承接池;自由探索看有没有开了商家承接的站(章节 recruit_enabled)。
         host.put("openClubPool", topic.getOpenClubPool() != null && topic.getOpenClubPool() == 1);
-        Integer recruitChapters = countRecruitChapters(topic.getId());
-        if (recruitChapters != null) host.put("recruitChapterCount", recruitChapters);
+        List<Map<String, Object>> recruitChapters = buildRecruitChapters(topic);
+        if (recruitChapters != null) {
+            int open = 0;
+            for (Map<String, Object> row : recruitChapters) if (Boolean.TRUE.equals(row.get("recruitEnabled"))) open++;
+            host.put("recruitChapterCount", open);
+            // 2026-10-31 业主批准 P-6 招商第三版:每一站一个档位,商家只能接受或拒绝;已有商家接的站锁住
+            host.put("recruitChapters", recruitChapters);
+        }
         // 主页入口与编辑/保存共用现有编辑窗口，避免主办方点击后才发现内容已冻结。
         try {
             com.chengyinhub.business.util.TopicEditWindow.Scope scope =
@@ -244,15 +253,42 @@ public class ProjectHomeReadServiceImpl implements IProjectHomeReadService {
         return host;
     }
 
-    private Integer countRecruitChapters(Long topicId) {
-        if (cmsTopicChapterMapper == null || topicId == null) return null;
+    private List<Map<String, Object>> buildRecruitChapters(CmsTopic topic) {
+        if (cmsTopicChapterMapper == null || topic == null || topic.getId() == null) return null;
         CmsTopicChapter q = new CmsTopicChapter();
-        q.setTopicId(topicId);
-        int n = 0;
-        for (CmsTopicChapter c : cmsTopicChapterMapper.selectCmsTopicChapterList(q)) {
-            if (c != null && c.getRecruitEnabled() != null && c.getRecruitEnabled() == 1) n++;
+        q.setTopicId(topic.getId());
+        List<CmsTopicChapter> chapters = cmsTopicChapterMapper.selectCmsTopicChapterList(q);
+        List<Long> ids = new ArrayList<>();
+        for (CmsTopicChapter c : chapters) if (c != null && c.getId() != null) ids.add(c.getId());
+        Map<Long, List<String>> takers = new HashMap<>();
+        if (merchantChapterOfferMapper != null && !ids.isEmpty()) {
+            for (com.chengyinhub.business.domain.MerchantChapterOffer o : merchantChapterOfferMapper.selectLiveByChapterIds(ids)) {
+                if (o == null || o.getChapterId() == null) continue;
+                String name = o.getMerchantName();
+                if ((name == null || name.isEmpty()) && o.getMerchantId() != null) {
+                    MmsMerchant m = merchantService.selectMmsMerchantById(o.getMerchantId());
+                    name = m == null ? null : m.getName();
+                }
+                takers.computeIfAbsent(o.getChapterId(), k -> new ArrayList<>()).add(name == null ? "" : name);
+            }
         }
-        return n;
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (CmsTopicChapter c : chapters) {
+            if (c == null || c.getId() == null) continue;
+            List<String> names = takers.getOrDefault(c.getId(), new ArrayList<>());
+            Map<String, Object> row = new HashMap<>();
+            row.put("chapterId", c.getId());
+            row.put("name", c.getName());
+            row.put("recruitEnabled", c.getRecruitEnabled() != null && c.getRecruitEnabled() == 1);
+            row.put("termsMode", c.getTermsMode() == null ? "PERK" : c.getTermsMode());
+            row.put("perkMinValue", c.getPerkMinValue());
+            row.put("maxPerHeadFee", c.getMaxPerHeadFee());
+            row.put("maxMerchant", c.getMaxMerchant() == null ? 0 : c.getMaxMerchant());
+            row.put("liveOffers", names.size());
+            row.put("takerName", names.isEmpty() ? null : names.get(0));
+            out.add(row);
+        }
+        return out;
     }
 
     /** 招商进度:有几个站、几个站已经有人接、还有几家在等确认。 */
@@ -325,6 +361,10 @@ public class ProjectHomeReadServiceImpl implements IProjectHomeReadService {
     private List<Map<String, Object>> buildHostClubs(List<CoopInvite> invites) {
         List<Map<String, Object>> out = new ArrayList<>();
         Set<Long> seen = new HashSet<>();
+        List<Long> inviteIds = new ArrayList<>();
+        for (CoopInvite i : invites) if ("club".equals(i.getToType()) && i.getId() != null) inviteIds.add(i.getId());
+        // 已读回执:三格状态条 已发出 → 已读 → 已接受 的中间一格
+        Map<Long, Date> readTimes = coopInviteService.selectReadTimes(inviteIds);
         for (CoopInvite i : invites) {
             if (!"club".equals(i.getToType()) || i.getToId() == null || !seen.add(i.getToId())) {
                 continue;
@@ -338,6 +378,8 @@ public class ProjectHomeReadServiceImpl implements IProjectHomeReadService {
             row.put("phone", club == null ? null : club.getPhone());
             row.put("status", i.getStatus());
             row.put("terms", termsOf(i));
+            row.put("inviteId", i.getId());
+            row.put("read", i.getId() != null && readTimes.containsKey(i.getId()));
             out.add(row);
         }
         return out;

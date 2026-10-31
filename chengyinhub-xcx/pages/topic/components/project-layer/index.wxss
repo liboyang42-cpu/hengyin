@@ -1,0 +1,30 @@
+/* 叠层面板:与 project-drawer 同底色 / 圆角;第 2 层顶端比抽屉低 24rpx,第 3 层再低 24rpx。 */
+.ly-mask { position: fixed; left: 0; right: 0; top: 0; bottom: 0; z-index: calc(var(--cy-z-sheet) + 2); background: var(--cy-color-overlay); }
+.ly {
+  position: fixed; left: 0; right: 0; bottom: 0;
+  top: calc(var(--cy-layer-top, 69px) + 24rpx);
+  z-index: calc(var(--cy-z-sheet) + 3);
+  display: flex; flex-direction: column; box-sizing: border-box;
+  padding-bottom: env(safe-area-inset-bottom);
+  border-radius: var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0;
+  background: var(--cy-bg-page);
+  overflow: hidden;
+  transition: transform .3s cubic-bezier(.2, .8, .2, 1), filter .3s;
+}
+.ly-mask--3 { z-index: calc(var(--cy-z-sheet) + 4); }
+.ly--3 { top: calc(var(--cy-layer-top, 69px) + 48rpx); z-index: calc(var(--cy-z-sheet) + 5); }
+.ly--under { transform: scale(.94); transform-origin: 50% 0; filter: brightness(.7); }
+.ly-grab { flex: none; height: 32rpx; display: flex; align-items: center; justify-content: center; }
+.ly-grab::after { content: ""; width: 72rpx; height: 10rpx; border-radius: var(--cy-radius-pill); background: var(--cy-color-border-strong); }
+.ly-head { flex: none; display: flex; align-items: center; padding: 0 var(--cy-space-2) var(--cy-space-1); }
+.ly-back, .ly-sp { flex: none; width: var(--cy-btn-h); height: var(--cy-btn-h); display: flex; align-items: center; justify-content: center; color: var(--cy-text-title); }
+.ly-title { flex: 1; min-width: 0; text-align: center; font-size: var(--cy-comp-sheet-title-size); font-weight: 700; color: var(--cy-text-title); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ly-body { flex: 1; min-height: 0; }
+.ly-body-content { padding: var(--cy-space-2) var(--cy-page-x) 0; box-sizing: border-box; }
+.ly-pad { height: var(--cy-space-3); }
+.ly-foot { flex: none; padding: var(--cy-space-2) var(--cy-page-x) var(--cy-space-3); }
+.ly-foot:empty { display: none; }
+@media (prefers-reduced-motion: reduce) { .ly { transition: none; } }
+
+/* isolated 组件内全局 .cy-pressed 进不来,必须本地定义一份(与 project-drawer 同值)。 */
+.cy-pressed { opacity: .88; }

@@ -171,3 +171,8 @@
 .dw--plain .dw-head { justify-content: center; position: relative; }
 .dw--plain .dw-head-text { flex: none; padding: 0; text-align: center; }
 .dw--plain .dw-close { position: absolute; right: var(--cy-space-3); top: 50%; transform: translateY(-50%); }
+
+/* 2026-10-31 P-6 叠层:上面再叠一层时,这一层缩到 0.94 压暗、露出顶边(iOS 叠卡) */
+.dw { transition: transform .3s cubic-bezier(.2, .8, .2, 1), filter .3s; }
+.dw--under { transform: scale(.94); transform-origin: 50% 0; filter: brightness(.7); }
+@media (prefers-reduced-motion: reduce) { .dw { transition: none; } }

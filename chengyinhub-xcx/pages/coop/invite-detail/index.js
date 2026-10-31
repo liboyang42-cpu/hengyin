@@ -179,6 +179,13 @@ Page({
           && draft.box === ctx.box && Number(draft.status) === Number(hit.status);
         that.applyInvite(hit, keepDraft ? draft.draft : '');
         that._draftSnapshot = null;
+        // 2026-10-31 P-6 已读回执:受邀方打开 = 已读(发起方那一行的三格状态条走到「已读」)。
+        // 后端只认受邀方本人、只写一次;回执写不上不影响看邀约与处理(失败走默认提示)。
+        if (ctx.box === 'received' && !that._readSent) {
+          that._readSent = true;
+          app.sendRequest({ hideLoading: true, url: '/api/coop/invite/read', method: 'POST',
+            data: JSON.stringify({ id: Number(hit.inviteId) }), header: jsonHeader() });
+        }
       },
       fail() {
         if (!that._isCurrent(ctx)) return;
