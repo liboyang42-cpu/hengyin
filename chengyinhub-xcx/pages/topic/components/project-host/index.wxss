@@ -851,3 +851,6 @@
 .lv-step-minus { width: 28rpx; height: 4rpx; border-radius: var(--cy-radius-pill); background: currentColor; }
 .lv-step-v { min-width: 80rpx; text-align: center; font-size: var(--cy-font-subtitle); font-weight: 800; color: var(--cy-text-title); font-variant-numeric: tabular-nums; }
 .lv-inv3 { display: flex; align-items: center; gap: var(--cy-space-2); font-size: var(--cy-font-body); color: var(--cy-text-title); }
+/* 2026-10-31 P-6 俱乐部主办深色(真机走查):封面角标在照片压暗层上恒为白字;关系入口的 SVG 图标是深色线稿,深色底上反相 */
+.theme-dark .hero-status { color: #FFFFFF; } /* ds-ok 照片压暗层上的白字 */
+.theme-dark .qa-ico-img { filter: invert(1); }
