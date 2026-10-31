@@ -533,7 +533,8 @@ test('客户入口开玩家名单抽屉，不跳全局关系页', () => {
  * 名单空态三种说法分开:「一单没卖」「全部已核销」「还没人核销」的下一步完全不同,
  * 合成一句等于什么都没说。
  */
-test('玩家名单按场次分组，空态分三种说法', () => {
+// 2026-10-31 走查 v2 W2-07 / F7(业主):「全部」改成上面还没到店、下面已核销两段,场次落到每一行;选了某一档就一段
+test('玩家名单按到店状态分段（场次写在行上），空态分三种说法', () => {
   const page = makePage();
   const data = {
     rows: [
@@ -546,15 +547,28 @@ test('玩家名单按场次分组，空态分三种说法', () => {
   };
 
   page.setData(page.buildPlayerSheet(data, 'all'));
-  assert.deepEqual(page.data.playerSheet.groups.map((g) => g.key), ['8.6 周三 · 19:30', '8.9 周六 · 14:00']);
-  assert.equal(page.data.playerSheet.groups[0].rows.length, 2);
+  assert.deepEqual(page.data.playerSheet.groups.map((g) => g.title), ['还没到店', '已核销']);
+  assert.deepEqual(page.data.playerSheet.groups[0].rows.map((r) => r.name), ['王小强', '李蔓']);
+  assert.equal(page.data.playerSheet.groups[0].rows[1].when, '8.9 周六 · 14:00');
 
   page.setData(page.buildPlayerSheet(data, 'arrived'));
   assert.equal(page.data.playerSheet.groups.length, 1);
+  assert.equal(page.data.playerSheet.groups[0].title, '');
   assert.equal(page.data.playerSheet.groups[0].rows[0].name, '张明');
 
   page.setData(page.buildPlayerSheet(data, 'pending'));
-  assert.equal(page.data.playerSheet.groups.length, 2);
+  assert.equal(page.data.playerSheet.groups.length, 1);
+  assert.equal(page.data.playerSheet.groups[0].rows.length, 2);
+
+  // F7:还没开售(招募中)且一单没有 —— 写「未售票」,不是「暂无报名」;开售后的零单照旧
+  page.data.hostTopic = { lifecycle: 1 };
+  page.setData(page.buildPlayerSheet({ rows: [] }, 'all'));
+  assert.equal(page.data.playerSheet.notSelling, true);
+  assert.equal(page.data.playerSheet.emptyText, '未售票');
+  page.data.hostTopic = { lifecycle: 3 };
+  page.setData(page.buildPlayerSheet({ rows: [] }, 'all'));
+  assert.equal(page.data.playerSheet.notSelling, false);
+  page.data.hostTopic = null;
 
   // 一单都没卖 vs 卖了但筛空,说法必须不同
   page.setData(page.buildPlayerSheet({ rows: [] }, 'all'));

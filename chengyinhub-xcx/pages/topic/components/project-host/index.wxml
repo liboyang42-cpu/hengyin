@@ -370,15 +370,15 @@
       <view class="dsum-i"><text class="dsum-n">{{ playerSheet.redeemedCount || 0 }}</text><text class="dsum-l">已核销</text></view>
     </view>
     <view class="dsum" wx:else>
-      <view class="dsum-i"><text class="dsum-n">{{ playerSheet.summary.paidCount || 0 }}</text><text class="dsum-l">已售</text></view>
-      <view class="dsum-i"><text class="dsum-n">{{ playerSheet.summary.pendingCount || 0 }}</text><text class="dsum-l">还没到店</text></view>
+      <view class="dsum-i"><text class="dsum-n">{{ playerSheet.notSelling ? '—' : (playerSheet.summary.paidCount || 0) }}</text><text class="dsum-l">已售</text></view>
+      <view class="dsum-i"><text class="dsum-n">{{ playerSheet.notSelling ? '—' : (playerSheet.summary.pendingCount || 0) }}</text><text class="dsum-l">还没到店</text></view>
       <!-- 稿 471:6605 汇总是四格:已售 / 待核销 / 已接洽 / 已核销。
            已接洽 = 玩家扫过码等我确认,原来它被并进「待核销」里数。 -->
       <view class="dsum-i" wx:if="{{ playerSheet.summary.contactedCount }}"><text class="dsum-n">{{ playerSheet.summary.contactedCount || 0 }}</text><text class="dsum-l">已接洽</text></view>
-      <view class="dsum-i"><text class="dsum-n">{{ playerSheet.summary.arrivedCount || 0 }}</text><text class="dsum-l">已核销</text></view>
+      <view class="dsum-i"><text class="dsum-n">{{ playerSheet.notSelling ? '—' : (playerSheet.summary.arrivedCount || 0) }}</text><text class="dsum-l">已核销</text></view>
       <view class="dsum-i" wx:if="{{ playerSheet.summary.refundedCount }}"><text class="dsum-n">{{ playerSheet.summary.refundedCount || 0 }}</text><text class="dsum-l">已退款</text></view>
     </view>
-    <view class="dfil">
+    <view class="dfil" wx:if="{{ !playerSheet.notSelling }}">
       <view class="dfil-item {{ playerSheet.filter === item.key ? 'dfil-item--on' : '' }}"
             wx:for="{{ playerFilters }}" wx:key="key" wx:if="{{ item.key !== 'contacted' || playerSheet.summary.contactedCount }}"
             catchtap="emit" data-act="onPlayerFilter" data-key="{{ item.key }}" hover-class="cy-pressed" hover-stay-time="80">{{ item.label }}</view>
@@ -389,12 +389,14 @@
     <view class="player-list">
     <block wx:if="{{ playerSheet.groups.length }}">
       <block wx:for="{{ playerSheet.groups }}" wx:for-item="g" wx:key="key">
+        <!-- 走查 v2 W2-07 / F7:「全部」里上面还没到店、下面已核销,各带人数 -->
+        <view class="pl-h" wx:if="{{ g.title }}"><text>{{ g.title }}</text><text class="pl-h-n">{{ g.rows.length }}</text></view>
         <view class="dr player-row" wx:for="{{ g.rows }}" wx:for-item="p" wx:key="registrationId">
           <image class="dr-avatar dr-avatar--round" wx:if="{{ p.avatar }}" src="{{ p.avatar }}" mode="aspectFill" />
           <view class="dr-avatar dr-avatar--round dr-avatar--fallback" wx:else>{{ p.initial }}</view>
           <view class="dr-text">
             <view class="dr-line1"><text class="dr-name">{{ p.name || '未留姓名' }}</text></view>
-            <text class="dr-sub">{{ g.when }}<block wx:if="{{ p.arrivedTimeText }}"> · {{ p.arrivedTimeText }} 核销</block></text>
+            <text class="dr-sub">{{ p.when }}<block wx:if="{{ p.arrivedTimeText }}"> · {{ p.arrivedTimeText }} 核销</block></text>
             <view class="dr-phone" wx:if="{{ p.phone }}">
               <text class="dr-phone-n">{{ p.phone }}</text>
               <view class="dr-copy" catchtap="emit" data-act="copyText" data-text="{{ p.phone }}" aria-role="button" aria-label="复制电话" hover-class="cy-pressed" hover-stay-time="80"><image class="dr-copy-img" src="/pages/topic/images/icon_copy.svg" mode="aspectFit" /></view>
@@ -404,10 +406,10 @@
         </view>
       </block>
     </block>
-    <view class="dempty" wx:else>{{ playerSheet.emptyText }}</view>
+    <view class="dempty {{ playerSheet.notSelling ? 'dempty--closed' : '' }}" wx:else>{{ playerSheet.emptyText }}</view>
     </view>
     <!-- 走查 v2 R07(业主 2026-10-30 定稿):最后一行定向广播,发给本主题买票玩家(俱乐部主办的主题走俱乐部那套) -->
-    <view class="bcast-row" wx:if="{{ hostOwnerType !== 'club' }}" catchtap="emit" data-act="openBroadcast" aria-role="button" aria-label="定向广播" hover-class="cy-pressed" hover-stay-time="80">
+    <view class="bcast-row" wx:if="{{ hostOwnerType !== 'club' && !playerSheet.notSelling }}" catchtap="emit" data-act="openBroadcast" aria-role="button" aria-label="定向广播" hover-class="cy-pressed" hover-stay-time="80">
       <text class="bcast-t">定向广播</text>
       <text class="bcast-s">发给本主题的买票玩家</text>
       <cy-icon name="chevron-right" size="{{ 28 }}" />

@@ -2474,29 +2474,36 @@ Page({
       if (filter === 'pending') return state === 'pending';
       return true;
     });
-    // 场次:后端按报名给的是 participateDate,没有就归到「未指定场次」
-    const order = [];
-    const byRun = {};
+    // 场次:后端按报名给的是 participateDate,没有就是「未指定场次」;写成「11-02 14:00 场」(去年份,与定稿一致),非日期的场次名原样
     kept.forEach(function (r) {
-      const key = r.sessionLabel || r.participateDate || '__none__';
-      if (!byRun[key]) { byRun[key] = []; order.push(key); }
-      byRun[key].push(r);
+      const key = r.sessionLabel || r.participateDate || '';
+      r.when = !key ? '未指定场次' : String(key).replace(/^\d{4}-(\d{2}-\d{2})(?:[ T](\d{2}:\d{2})(?::\d{2})?)?$/, function (m, md, hm) { return md + (hm ? ' ' + hm : '') + ' 场'; });
     });
-    const groups = order.map(function (key) {
-      return {
-        key: key,
-        // 走查 v2 R07:场次写成「11-02 14:00 场」(去年份,与定稿一致);非日期的场次名原样
-        when: key === '__none__' ? '未指定场次' : String(key).replace(/^\d{4}-(\d{2}-\d{2})(?:[ T](\d{2}:\d{2})(?::\d{2})?)?$/, function (m, md, hm) { return md + (hm ? ' ' + hm : '') + ' 场'; }),
-        sourceText: byRun[key].length + ' 人',
-        rows: byRun[key],
-      };
-    });
+    /* 走查 v2 W2-07 / F7(业主 2026-10-29):售票之后上面是还没到店的、下面是已经核销的(退款的放最后)。
+       只在「全部」里分段;选了某一档就是那一档本身,不再加段头。探店日名单没有「到店前」这一档,原样一段。 */
+    const SECTIONS = [
+      { key: 'waiting', title: '还没到店', has: function (s) { return s === 'pending' || s === 'contacted'; } },
+      { key: 'done', title: '已核销', has: function (s) { return s === 'arrived' || s === 'redeemed'; } },
+      { key: 'refunded', title: '已退款', has: function (s) { return s === 'refunded'; } },
+    ];
+    const groups = filter === 'all' && !shopDay
+      ? SECTIONS.map(function (sec) {
+        return { key: sec.key, title: sec.title, rows: kept.filter(function (r) { return sec.has(r.state); }) };
+      }).filter(function (g) { return g.rows.length; })
+      : (kept.length ? [{ key: filter, title: '', rows: kept }] : []);
+    /* F7:没开放售票哪来的客户 —— 主题还没开售(草稿 / 立项待审 / 招募 / 待定价)且一单没有时,
+       这里就写「未售票」,汇总格写「—」,不摆三个 0 让人以为卖了却没人买。开售后的 0 是真 0,照常显示。 */
+    const lifecycle = Number((this.data.hostTopic && this.data.hostTopic.lifecycle != null)
+      ? this.data.hostTopic.lifecycle : (this.data.info && this.data.info.lifecycle));
+    const notSelling = !shopDay && !rows.length && [0, 7, 1, 2].indexOf(lifecycle) > -1;
     // CU-C-125:空态判据是**筛完之后**的 kept,不是未筛的 rows —— 拿 rows 判,一单没卖时
     // 四个 Tab 会说同一句「还没有人下单」,而选中「待核销」时真正要回答的是这一档有没有记录。
     // 「全部客户都已核销」这类说法也一起换掉:已接洽的人既不在待核销也不在已核销,
     // 那句在有人扫码待确认时是假的。
     let emptyText = '';
-    if (!kept.length) {
+    if (notSelling) {
+      emptyText = '未售票';
+    } else if (!kept.length) {
       emptyText = !rows.length && !shopDay
         ? (filter === 'all' ? '暂无报名' : '还没有人下单，这一档也是空的')
         : (filter === 'pending' ? '没有还没到店的客户'
@@ -2511,6 +2518,7 @@ Page({
       'playerSheet.groups': groups,
       'playerSheet.summary': d.summary || {},
       'playerSheet.shopDay': shopDay,
+      'playerSheet.notSelling': notSelling,
       'playerSheet.visibleCount': rows.length,
       'playerSheet.redeemedCount': rows.filter(function (r) { return r.state === 'redeemed'; }).length,
       'playerSheet.contactHint': d.contactHint || '',

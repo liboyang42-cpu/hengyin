@@ -1344562,7 +1344562,7 @@
       }
     },
     {
-      "id": "pages/topic/components/project-host/index.wxml:400:catchtap:emit:39",
+      "id": "pages/topic/components/project-host/index.wxml:402:catchtap:emit:39",
       "route": "component:pages/topic/components/project-host/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -1344597,7 +1344597,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "emit",
-        "line": 400,
+        "line": 402,
         "selectorHint": ".dr-copy",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1344722,7 +1344722,7 @@
       }
     },
     {
-      "id": "pages/topic/components/project-host/index.wxml:410:catchtap:emit:40",
+      "id": "pages/topic/components/project-host/index.wxml:412:catchtap:emit:40",
       "route": "component:pages/topic/components/project-host/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -1344757,9 +1344757,9 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "emit",
-        "line": 410,
+        "line": 412,
         "selectorHint": ".bcast-row",
-        "visibleCondition": "{{ hostOwnerType !== 'club' }}",
+        "visibleCondition": "{{ hostOwnerType !== 'club' && !playerSheet.notSelling }}",
         "disabledCondition": null,
         "ariaLabel": "定向广播",
         "ariaLabelExpression": null,
@@ -1347762,7 +1347762,7 @@
       }
     },
     {
-      "id": "pages/topic/components/project-join/index.wxml:587:catchtap:emit:36",
+      "id": "pages/topic/components/project-join/index.wxml:589:catchtap:emit:36",
       "route": "component:pages/topic/components/project-join/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -1347797,7 +1347797,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "emit",
-        "line": 587,
+        "line": 589,
         "selectorHint": ".dr-copy",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1357023,7 +1357023,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3290"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3298"
       }
     },
     {
@@ -1359758,7 +1359758,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3860"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3868"
       }
     },
     {
@@ -1359886,7 +1359886,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3862"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3870"
       }
     },
     {
@@ -1360366,7 +1360366,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:4162"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:4170"
       }
     },
     {
@@ -1360433,7 +1360433,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:4095"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:4103"
       }
     },
     {
@@ -1360567,7 +1360567,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:4200"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:4208"
       }
     },
     {
@@ -1360701,7 +1360701,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:4204"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:4212"
       }
     },
     {
@@ -1360768,7 +1360768,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:2630"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:2638"
       }
     },
     {
@@ -1360836,7 +1360836,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3290"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3298"
       }
     },
     {
@@ -1360903,7 +1360903,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:2632"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:2640"
       }
     },
     {
@@ -1361015,7 +1361015,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:2611"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:2619"
       }
     },
     {
@@ -1361127,7 +1361127,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:2634"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:2642"
       }
     },
     {
@@ -1361194,7 +1361194,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:2882"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:2890"
       }
     },
     {
@@ -1361327,7 +1361327,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:2805"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:2813"
       }
     },
     {
@@ -1361398,7 +1361398,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:2883"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:2891"
       }
     },
     {
@@ -1361574,7 +1361574,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3807"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3815"
       }
     },
     {
@@ -1361673,7 +1361673,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3797"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3805"
       }
     },
     {
@@ -1361772,7 +1361772,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3797"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3805"
       }
     },
     {
@@ -1361871,7 +1361871,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3797"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3805"
       }
     },
     {
@@ -1361970,7 +1361970,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3797"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3805"
       }
     },
     {

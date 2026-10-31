@@ -772,3 +772,8 @@
 .bcast-row { display: flex; align-items: center; gap: 12rpx; margin-top: 24rpx; padding: 32rpx; border-radius: var(--cy-radius-lg); background: var(--cy-bg-card); color: var(--cy-text-tertiary); }
 .bcast-t { flex: none; font-size: var(--cy-font-body); font-weight: 600; color: var(--cy-text-title); }
 .bcast-s { flex: 1; min-width: 0; text-align: right; font-size: var(--cy-font-caption); color: var(--cy-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* 走查 v2 W2-07 / F7:客户名单段头(还没到店 / 已核销)与未售票态 */
+.pl-h { display: flex; align-items: baseline; gap: 12rpx; margin-top: var(--cy-space-4); font-size: var(--cy-font-label); font-weight: 600; color: var(--cy-text-secondary); }
+.pl-h-n { font-variant-numeric: tabular-nums; color: var(--cy-text-tertiary); }
+.dempty--closed { font-size: var(--cy-font-subtitle); font-weight: 600; color: var(--cy-text-title); }

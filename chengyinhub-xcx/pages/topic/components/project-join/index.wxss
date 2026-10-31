@@ -1169,3 +1169,8 @@
 
 /* 走查 v2 R15:联系主办 —— 进度下面一颗整宽白底按钮 */
 .contact-host { display: flex; align-items: center; justify-content: center; gap: 12rpx; height: 96rpx; margin: 24rpx var(--cy-page-x) 0; border-radius: var(--cy-radius-pill); background: var(--cy-bg-card); color: var(--cy-text-title); font-size: var(--cy-font-body); font-weight: 600; }
+
+/* 走查 v2 W2-07 / F7:客户名单段头(还没到店 / 已核销)与未售票态 */
+.pl-h { display: flex; align-items: baseline; gap: 12rpx; margin-top: var(--cy-space-4); font-size: var(--cy-font-label); font-weight: 600; color: var(--cy-text-secondary); }
+.pl-h-n { font-variant-numeric: tabular-nums; color: var(--cy-text-tertiary); }
+.dempty--closed { font-size: var(--cy-font-subtitle); font-weight: 600; color: var(--cy-text-title); }

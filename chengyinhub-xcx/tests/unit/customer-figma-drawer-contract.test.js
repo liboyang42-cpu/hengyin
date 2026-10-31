@@ -77,7 +77,7 @@ test('主办与承接两套主题名单都使用客户和核销口径', () => {
     assert.doesNotMatch(wxml, /class="drun"/);
     assert.doesNotMatch(wxml, /\{\{ p\.ticketNo \}\}/);
     // 走查 v2 R07:核销时间并进场次那一行
-    assert.match(wxml, /class="dr-sub">\{\{ g\.when \}\}<block wx:if="\{\{ p\.arrivedTimeText \}\}"> · \{\{ p\.arrivedTimeText \}\} 核销<\/block><\/text>/);
+    assert.match(wxml, /class="dr-sub">\{\{ p\.when \}\}<block wx:if="\{\{ p\.arrivedTimeText \}\}"> · \{\{ p\.arrivedTimeText \}\} 核销<\/block><\/text>/);
     assert.match(wxml, /class="dr-phone" wx:if="\{\{ p\.phone \}\}"/,
       `${file} 每位有权限查看电话的客户都应显示电话行`);
     assert.match(wxml, /data-act="copyText"[^>]*data-text="\{\{ p\.phone \}\}"[^>]*aria-label="复制电话"/,
