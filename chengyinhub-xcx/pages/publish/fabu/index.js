@@ -5509,7 +5509,8 @@ Page({
           editIndex: index,
           id: ticket.id,
           name: ticket.name || '',
-          price: ticket.price || 0,
+          // 自由探索的票价可留空 = 开售前定价(招商结束、锁价时写回);城市定向仍是发布时定价
+          price: Number(this.data.formData.productType) === 2 && (ticket.price === '' || ticket.price == null) ? '' : (ticket.price || 0),
           totalStock: ticket.totalStock == null || ticket.totalStock === '' ? 100 : ticket.totalStock,
           mode: this.data.formData.productType || 1,
           meetingPoint: ticket.meetingPoint || '',
@@ -5532,7 +5533,7 @@ Page({
         editingTicket: {
           editIndex: -1,
           name: '',
-          price: 0,
+          price: Number(this.data.formData.productType) === 2 ? '' : 0,
           totalStock: 100,
           // [P0-02] 新票跟主题走,不硬编码 1 —— 这是活的混票源:从自由定向入口进来再加一张票,
           // saveTicket 会把这张 mode=1 的票推进列表 ⇒ 混票主题当场产生。
@@ -5573,6 +5574,8 @@ Page({
       || freeExplorationValidityScheduleIssues(et)[0] || freeExplorationSaleScheduleIssues(et)[0];
     if (issue) return issue.message;
     if (Number(et.mode) === 1 && !nonEmpty(et.meetingPoint)) return '请选择集合地点';
+    // 只有自由探索能开售前定价;从自由探索切到城市定向时留下的空价必须补上
+    if (Number(et.mode) === 1 && (et.price === '' || et.price == null)) return '请填写票价';
     return '';
   },
 
@@ -5599,7 +5602,7 @@ Page({
     const stock = et.totalStock == null || et.totalStock === '' ? NaN : Number(et.totalStock);
     const ticketData = {
       name: et.name,
-      price: Number(et.price) || 0,
+      price: Number(this.data.formData.productType) === 2 && et.price === '' ? '' : (Number(et.price) || 0),
       totalStock: Number.isFinite(stock) ? stock : 100,
       mode: this.data.formData.productType || 1,
       meetingPoint: et.meetingPoint,
@@ -6665,10 +6668,10 @@ Page({
         Number(parseFloat(stats.totalDistance)) > 0 ? stats.totalDistance : '',
       ].filter(Boolean),
       // 票务:票种、档期、售票三行。自由探索的开卖要经招商与锁价(后端恒走招募链),售票写「招商结束后开售」。
-      // 票价目前仍是发布必填(锁价只回写自玩价与有人带票,作者这张票不回写),没填就写「—」并由问题行标红,不当成免费。
+      // 自由探索的票价可以留空 = 开售前定价(锁价时写回这张票);城市定向没填就写「—」并由问题行标红,不当成免费。
       ticketRows: ticket ? [
         { key: 'name', k: ticket.name || '未命名票种',
-          v: (priced ? (Number(ticket.price) > 0 ? '¥' + Number(ticket.price) : '免费') : '—') + stock },
+          v: (priced ? (Number(ticket.price) > 0 ? '¥' + Number(ticket.price) : '免费') : (freeExplore ? '开售前定价' : '—')) + stock },
         { key: 'validity', k: '档期', v: [previewDay(ticket.startTime), previewDay(ticket.endTime)].filter(Boolean).join(' — ') || '—' },
         { key: 'sale', k: '售票', v: freeExplore ? '招商结束后开售' : (previewDay(ticket.saleStartTime) ? previewDay(ticket.saleStartTime) + '起' : '—') },
       ] : [],
@@ -7575,6 +7578,8 @@ Page({
     const formattedTickets = this.data.formData.tickets.map(ticket => ({
       ...ticket,
       mode: productType,
+      // 开售前定价:空价上送 null,后端只对自由探索放行,锁价时把终价写回这张票
+      price: ticket.price === '' ? null : ticket.price,
       // [P1-41] 归一化:sync 同步来的值可能已带时间/ISO 串,原样追加会拼出非法时间
       startTime: this._normalizeDateTime(ticket.syncWithTheme ? this.data.formData.startDate : ticket.startTime, '00:00:00'),
       endTime: this._normalizeDateTime(ticket.syncWithTheme ? this.data.formData.endDate : ticket.endTime, '23:59:59'),

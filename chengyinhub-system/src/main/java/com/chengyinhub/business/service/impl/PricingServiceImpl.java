@@ -425,6 +425,24 @@ public class PricingServiceImpl implements IPricingService {
                 omsTicketMapper.insertOmsTicket(t);
             }
         }
+        // 开售前定价(2026-10-31 业主 Q7):发布时留空价的票(自由探索招商期)在这里写成终价,
+        // 否则开售终审(TopicSaleTimeValidator)会因 price 缺失拒绝开卖。
+        BigDecimal pendingFill = selfPrice != null ? selfPrice : guidedPrice;
+        OmsTicket pq = new OmsTicket();
+        pq.setOwnerType(1L);
+        pq.setOwnerId(topicId);
+        pq.setDelFlag(0);
+        List<OmsTicket> topicTickets = omsTicketMapper.selectOmsTicketList(pq);
+        if (topicTickets != null) for (OmsTicket pending : topicTickets) {
+            if (pending == null || pending.getPrice() != null) continue;
+            OmsTicket t = new OmsTicket();
+            t.setId(pending.getId());
+            t.setPrice(pendingFill);
+            t.setUpdateTime(DateUtils.getNowDate());
+            if (omsTicketMapper.updateOmsTicket(t) != 1) {
+                throw new IllegalStateException("票种已变化，无法确认终价");
+            }
+        }
         // canonical15 含人工责任/授权事实，锁价流程无权替运营补值或自动提审。
         // 本事务最多推进到 PRICING；运营保存 canonical 草稿后显式提交开售审。
         return 1;

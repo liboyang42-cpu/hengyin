@@ -148,7 +148,7 @@
                 <view class="node-card__ico"><cy-icon name="coupon" size="32" /></view>
                 <view class="node-card__main">
                   <text class="node-card__title">{{ticket.name || '未命名票种'}}</text>
-                  <text class="node-card__value">{{ticket.price > 0 ? '¥' + ticket.price : '免费'}} · {{ticket.mode === 1 ? '城市定向' : '自由探索'}} · {{ticket.totalStock || 0}} 张</text>
+                  <text class="node-card__value">{{ticket.price === '' || ticket.price === null ? (ticket.mode === 1 ? '未填票价' : '开售前定价') : (ticket.price > 0 ? '¥' + ticket.price : '免费')}} · {{ticket.mode === 1 ? '城市定向' : '自由探索'}} · {{ticket.totalStock || 0}} 张</text>
                 </view>
                 <!-- 2026-09-05:正在编辑的那一行要看得出来。编辑器就在下面展开着,
                      这一行却还写「编辑 ›」,读起来像"还能再点开一个",实际点了是收起。 -->
@@ -187,8 +187,8 @@
             <view class="node-card">
               <view class="tk-grid">
                 <view class="tk-field">
-                  <text class="tk-label">票单价格 (¥)<text class="g-req">*</text></text>
-                  <input class="tk-input" type="digit" placeholder="0.00" placeholder-class="slopes-story-placeholder" value="{{editingTicket.price}}" bindinput="onEditTicketChange" data-field="price" />
+                  <text class="tk-label">票单价格 (¥)<text class="g-req" wx:if="{{formData.productType != 2}}">*</text></text>
+                  <input class="tk-input" type="digit" placeholder="{{formData.productType == 2 ? '开售前定价' : '0.00'}}" placeholder-class="slopes-story-placeholder" value="{{editingTicket.price}}" bindinput="onEditTicketChange" data-field="price" />
                 </view>
                 <view class="tk-field">
                   <text class="tk-label">发行数量 (张)</text>

@@ -180,6 +180,27 @@ class FreeExplorePriceLockAcceptanceTest {
         assertNull(topicWrite.getValue().getSelfPlayPrice(), "只填有人带时不得改写自玩价");
     }
 
+    // 开售前定价(2026-10-31 业主 Q7):发布时留空价的票由锁价写成终价,已有价的票不动。
+    @Test
+    void confirm_fillsTicketsPublishedWithoutPrice() {
+        freeExploreTopic(2);
+        OmsTicket pending = new OmsTicket();
+        pending.setId(6601L);
+        OmsTicket priced = new OmsTicket();
+        priced.setId(6602L);
+        priced.setPrice(new BigDecimal("50"));
+        when(ticketMapper.selectOmsTicketList(any(OmsTicket.class))).thenReturn(java.util.Arrays.asList(pending, priced));
+        when(ticketMapper.updateOmsTicket(any(OmsTicket.class))).thenReturn(1);
+
+        service.confirmPrice(TOPIC_ID, null, new BigDecimal("66.60"), null, null, null);
+
+        ArgumentCaptor<OmsTicket> ticketWrite = ArgumentCaptor.forClass(OmsTicket.class);
+        verify(ticketMapper).updateOmsTicket(ticketWrite.capture());
+        assertEquals(Long.valueOf(6601L), ticketWrite.getValue().getId());
+        assertEquals(new BigDecimal("66.60"), ticketWrite.getValue().getPrice());
+        assertNull(ticketWrite.getValue().getTotalInventory(), "只写价格,不碰库存");
+    }
+
     @Test
     void confirm_priceExactlyAtFloorIsAccepted() {
         freeExploreTopic(2);
