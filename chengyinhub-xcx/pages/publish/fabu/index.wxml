@@ -111,7 +111,7 @@
       <view class="pd-entry-card__row">
         <view class="pd-entry-card__main">
           <text class="pd-entry-card__title">主题详情</text>
-          <text class="pd-entry-card__sub">{{topicDetailSummary}}</text>
+          <text class="pd-entry-card__sub {{topicDetailMissing ? 'is-missing' : ''}}"><text wx:if="{{topicDetailMissing}}" class="req-left__star">* </text>{{topicDetailSummary}}</text>
         </view>
         <view class="pd-row-chevron"><cy-icon name="chevron-right" size="32" /></view>
       </view>
@@ -144,7 +144,8 @@
         <view class="pd-modecard__ico"><cy-icon name="coupon" size="36" /></view>
         <text class="pd-modecard__eyebrow">票务</text>
         <text class="pd-modecard__name">票务设置</text>
-        <view class="pd-modecard__action"><text>编辑</text><cy-icon name="chevron-right" size="24" /></view>
+        <!-- P-4(V-25):票务有必填没填时,「编辑」换成红色「* 还有 N 项未填」;点卡照旧进票务页 -->
+        <view class="pd-modecard__action {{ticketMissing.total ? 'is-missing' : ''}}"><text wx:if="{{ticketMissing.total}}"><text class="req-left__star">*</text> 还有 {{ticketMissing.total || 0}} 项未填</text><text wx:else>编辑</text><cy-icon name="chevron-right" size="24" /></view>
       </view>
     </view>
 
@@ -735,7 +736,11 @@
     </view>
     <!-- 第 2 页(票务)底栏:稿 P11 / C11 都是【整宽黑色药丸「完成」】,不是左下角一行小字。
          票务页没有视图切换,左槽空着;整条底栏就交给这一颗收尾动作。 -->
-    <cy-btn wx:if="{{editorPage === 2}}" variant="primary" class="slopes-tabbar__doneCta" data-page="1" bindtap="switchEditorPage" aria-label="完成票务设置，回到创作">完成</cy-btn>
+    <!-- P-4(V-25):票务页左槽 = 回创作页的返回键,右边「预览」:还有未填项就滚到第一项,填完进剧情预览 -->
+    <view class="slopes-tabbar__tabs" wx:if="{{editorPage === 2}}">
+      <view class="slopes-tab" data-page="1" bindtap="switchEditorPage" aria-role="button" aria-label="回到创作" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="back" size="46" /></view>
+    </view>
+    <cy-btn wx:if="{{editorPage === 2}}" variant="primary" class="slopes-tabbar__cta" loading="{{submitting}}" disabled="{{submitting}}" bindtap="openStoryPreview" aria-label="预览主题，填完后可发布"><text>{{submitting ? '发布中...' : '预览'}}</text><cy-icon name="arrow-right" size="28" /></cy-btn>
     <!-- 2026-09-05 用户裁决:删掉「预览」。它跳玩家端主题详情页(/pages/topic/index/index?id=),
          读的是**服务端已保存的那一版** —— 编辑器里刚写的东西根本不在里面;而且新建、还没
          发布过的主题没有 editingTopicId,点了压根不跳转,只弹一句 toast。一个既看不到当前
@@ -745,7 +750,8 @@
     <!-- 「保存草稿」= 存进服务端草稿(不发布、不送审、不占在架额度),存好后回读拿到真实编号,留在编辑页;
          与本机自动保存(只防杀进程丢稿)不是一回事。已发布的主题不出现(编辑窗口规则不变)。 -->
     <cy-btn wx:if="{{editorPage === 1 && (!editingTopicId || editIsDraft)}}" variant="secondary" class="slopes-tabbar__draftCta" loading="{{draftSaving}}" disabled="{{submitting}}" aria-disabled="{{submitting || draftSaving}}" bindtap="saveServerDraft" aria-label="保存草稿到云端，不发布">{{draftSaving ? '保存中...' : '保存草稿'}}</cy-btn>
-    <cy-btn wx:if="{{editorPage === 1}}" variant="primary" class="slopes-tabbar__cta" loading="{{submitting}}" disabled="{{!canPublish}}" aria-disabled="{{!canPublish || submitting}}" bindtap="submitForm" bind:disabledtap="onPublishDisabledTap"><text>{{submitting ? '发布中...' : '发布'}}</text><cy-icon name="arrow-right" size="28" /></cy-btn>
+    <!-- P-4(V-25):「发布」→「下一步」,永远可点,去票务页;发布在剧情预览右上「完成」 -->
+    <cy-btn wx:if="{{editorPage === 1}}" variant="primary" class="slopes-tabbar__cta" data-page="2" bindtap="switchEditorPage" aria-label="下一步：票务设置"><text>下一步</text><cy-icon name="arrow-right" size="28" /></cy-btn>
   </view>
 
   <!-- 左下角视图切换药丸:列表 ↔ 地图,只在第 1 页(第 2 页是纯表单,地图对它没意义)。 -->
@@ -1257,7 +1263,9 @@
              判据用 merchantPoolEditable —— 它就是「本账号是不是俱乐部主理人」的权限快照,
              和后端 CmsTopicServiceImpl.resolveMerchantPoolFlag 是同一条闸(2026-08-11 定的)。
              ⚠️ 此前这一段没有任何 wx:if:玩家和商家也看得到整套控件,开了要到发布时才被后端拒。 -->
-        <view class="chapter-recruit" wx:if="{{merchantPoolEditable}}">
+        <!-- 2026-10-31 业主批准 P-6/P-9:商家主办的自由探索也逐站招商(权益 / 引流两档,后端开放招商 V1 不看主理人身份),
+             否则预览里打开「商家承接」后补品类时会跳到一个看不到的区块。 -->
+        <view class="chapter-recruit" wx:if="{{merchantPoolEditable || (operationScope === 'MERCHANT' && formData.productType === 2)}}">
           <view class="chapter-recruit__head">
             <text>商家承接</text>
           </view>
@@ -1337,129 +1345,139 @@
       </view>
   </view>
 
-  <!-- 发布前检查弹层 -->
-  <!-- 2026-10-22 业主裁决(L09):撤掉右上角 ✕,退出走底部「返回修改」或点遮罩;遮罩同时锁住下层。 -->
-  <view class="pc-mask" wx:if="{{publishCheck.show}}" bindtap="closePublishCheck" catchtouchmove="noop" aria-role="button" aria-label="关闭发布确认" hover-class="cy-pressed" hover-stay-time="80"></view>
-  <view class="pop-model pop-publish-check {{ publishCheck.show?'show':'' }}">
-    <!-- 2026-09-05 用户拍板:点「发布」不直接发 —— 先自动检查,再让人过一遍眼,确认了才真发布。
-         所以这一层不再只是「检查报告」,它就是那一页确认页:检查结果 + 玩家看到的样子 + 两颗底部动作。 -->
-    <!-- 标题居中:左右各留一个等宽空位(右上角 ✕ 已按 2026-10-22 业主裁决撤掉)。 -->
-    <view class="pop-top flex-cb">
-      <view class="pc-lead"></view>
-      <view class="tit">发布确认</view>
-      <view class="pc-lead"></view>
+  <!-- 剧情预览(P-4 / V-25,原「发布确认」这一层):票务页「预览」打开,玩家看到的样子按章节往下读;
+       左上 ✕ 回配置,右上「完成」= 发布(内容安全预检在这一步跑,没有任何文字版确认)。
+       预检或后端有挡住发布的问题时,这一层重新打开,红行列在最上面,点它回到字段所在的位置。
+       ⚠️ 数据读编辑器里的当前草稿(_buildPublishPreview),不是 ?id= 拉服务端那一版。 -->
+  <!-- P-9(2026-10-31 业主批准):主页面浅色,与专业主题编辑器同一套;封面 / 标题 / 详情 / 票务 / 主题设置 /
+       发布后的合作 / 画面风格 / 剧情都在主页面上,每一行点了回到编辑器里那一项。只有「看剧情」用弹窗(也是浅色)。
+       挡住发布的问题列在封面下面,写清在哪里,「去修改」直接定位;票务行 / 章节行同步标红。 -->
+  <view class="sp" wx:if="{{publishCheck.show}}" catchtouchmove="noop">
+    <scroll-view class="sp-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+      <view class="sp-hero">
+        <image wx:if="{{publishCheck.preview.cover}}" class="sp-hero__img" src="{{publishCheck.preview.cover}}" mode="aspectFill" />
+        <view wx:else class="sp-hero__img sp-hero__img--empty"><cy-icon name="image" size="64" /></view>
+        <view class="sp-hero__copy">
+          <text class="sp-title">{{publishCheck.preview.name}}</text>
+          <view class="sp-meta">
+            <text class="sp-chip">{{publishCheck.preview.mode}}</text>
+            <text class="sp-chip" wx:for="{{publishCheck.preview.chips}}" wx:key="*this">{{item}}</text>
+          </view>
+        </view>
+      </view>
+      <view class="sp-pad">
+        <view class="sp-issues" wx:if="{{publishCheck.blocking.length}}">
+          <view class="sp-issue" wx:for="{{publishCheck.blocking}}" wx:key="index" data-field="{{item.field}}" bindtap="locatePublishIssue"
+                aria-role="button" aria-label="{{item.label}}，去修改" hover-class="cy-pressed" hover-stay-time="80">
+            <text class="sp-issue__star">*</text>
+            <view class="sp-issue__t"><text>{{item.label}}</text><text class="sp-issue__w" wx:if="{{item.where}}">{{item.where}}</text></view>
+            <text class="sp-issue__go">去修改</text><cy-icon name="chevron-right" size="24" />
+          </view>
+        </view>
+        <view class="sp-desc" wx:if="{{publishCheck.preview.description}}">{{publishCheck.preview.description}}</view>
+
+        <block wx:if="{{publishCheck.preview.ticketRows.length}}">
+          <view class="sp-sec">票务</view>
+          <view class="sp-group">
+            <view class="sp-row {{index === 0 && publishCheck.preview.ticketFlag ? 'is-flag' : ''}}" wx:for="{{publishCheck.preview.ticketRows}}" wx:key="key"
+                  data-target="ticket" bindtap="onPreviewEdit" aria-role="button" aria-label="{{item.k}} {{item.v}}，去票务设置" hover-class="cy-pressed" hover-stay-time="80">
+              <text class="sp-row__k">{{item.k}}</text>
+              <text class="sp-row__v">{{index === 0 && publishCheck.preview.ticketFlag ? publishCheck.preview.ticketFlag : item.v}}</text>
+              <cy-icon name="chevron-right" size="24" />
+            </view>
+          </view>
+        </block>
+
+        <view class="sp-sec">主题设置</view>
+        <view class="sp-group">
+          <view class="sp-row" wx:for="{{publishCheck.preview.settings}}" wx:key="k" data-target="{{item.target}}" bindtap="onPreviewEdit"
+                aria-role="button" aria-label="{{item.k}} {{item.v}}，去修改" hover-class="cy-pressed" hover-stay-time="80">
+            <view class="sp-row__i"><cy-icon name="{{item.icon}}" size="30" /></view>
+            <text class="sp-row__k">{{item.k}}</text><text class="sp-row__v">{{item.v}}</text><cy-icon name="chevron-right" size="24" />
+          </view>
+        </view>
+
+        <block wx:if="{{publishCheck.preview.switches.length}}">
+          <view class="sp-sec">发布后的合作</view>
+          <view class="sp-group">
+            <view class="sp-row sp-swrow" wx:for="{{publishCheck.preview.switches}}" wx:key="key">
+              <view class="sp-row__i"><cy-icon name="{{item.icon}}" size="30" /></view>
+              <view class="sp-swrow__t"><text class="sp-row__k">{{item.label}}</text><text class="sp-swrow__d" wx:if="{{item.note}}">{{item.note}}</text></view>
+              <view wx:if="{{item.locked}}" class="sp-lock" data-reason="{{item.reason}}" bindtap="onPreviewLockedTap" aria-role="button" aria-label="{{item.label}}不可用：{{item.reason}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="lock" size="28" /></view>
+              <text wx:elif="{{item.fixed}}" class="sp-fixed">必须</text>
+              <cy-switch wx:elif="{{item.key === 'club'}}" checked="{{item.on}}" bindchange="onPreviewClubPool" />
+              <cy-switch wx:else checked="{{item.on}}" bindchange="onPreviewMerchantRecruit" />
+            </view>
+          </view>
+        </block>
+
+        <view class="sp-sec">画面风格</view>
+        <view class="sp-look" data-target="look" bindtap="onPreviewEdit" aria-role="button" aria-label="画面风格，去修改" hover-class="cy-pressed" hover-stay-time="80">
+          <cy-look-preview class="sp-look__pv" embedded="{{true}}" show="{{publishCheck.show && !storyPop.show}}" look="{{publishCheck.preview.look}}" />
+          <view class="sp-group">
+            <view class="sp-row" wx:for="{{publishCheck.preview.lookRows}}" wx:key="k">
+              <text class="sp-row__k">{{item.k}}</text><text class="sp-row__v">{{item.v}}</text><cy-icon name="chevron-right" size="24" />
+            </view>
+          </view>
+        </view>
+
+        <block wx:if="{{publishCheck.preview.chapters.length}}">
+          <view class="sp-sec">剧情</view>
+          <view class="sp-story">
+            <view class="sp-chrow {{chapter.flag ? 'is-flag' : ''}}" wx:for="{{publishCheck.preview.chapters}}" wx:key="index" wx:for-item="chapter"
+                  data-chapterindex="{{chapter.index}}" bindtap="openStoryPop" aria-role="button" aria-label="从{{chapter.name}}开始读剧情" hover-class="cy-pressed" hover-stay-time="80">
+              <text class="sp-chrow__no">{{chapter.index + 1}}</text>
+              <view class="sp-chrow__t"><text>{{chapter.name}}</text><text class="sp-chrow__m">{{chapter.flag || chapter.meta}}</text></view>
+              <cy-icon name="chevron-right" size="24" />
+            </view>
+            <view class="sp-read" data-chapterindex="0" bindtap="openStoryPop" aria-role="button" aria-label="阅读剧情" hover-class="cy-pressed" hover-stay-time="80">阅读剧情</view>
+          </view>
+        </block>
+
+        <view class="sp-end"><cy-icon name="star-filled" size="40" /><view><text class="sp-end__t">通关勋章</text><text class="sp-end__n">{{publishCheck.preview.medal}}</text></view></view>
+        <view class="sp-bottom"></view>
+      </view>
+    </scroll-view>
+    <view class="sp-top" style="padding-top: {{statusBarHeight}}px;">
+      <view class="sp-x" bindtap="closePublishCheck" aria-role="button" aria-label="退出预览，回到配置" hover-class="cy-pressed" hover-stay-time="80"><view class="sp-x__c"><cy-icon name="close" size="32" /></view></view>
+      <cy-btn class="sp-done" variant="primary" size="sm" loading="{{submitting}}" disabled="{{!!publishCheck.blocking.length}}" aria-disabled="{{!!publishCheck.blocking.length}}"
+              bind:disabledtap="onPublishCheckDisabledTap" bindtap="confirmPublishCheck">完成</cy-btn>
     </view>
-    <view class="pop-cont pc-cont">
-      <view class="pc-lede">发布后平台审核</view>
-      <!-- 2026-10-22 业主裁决(L09):真正挡住发布的项排在最前,统一叫「需要先处理」,每条都带修复动作;
-           红字提示只在这组非空时出现。(P-44 起旧草稿静默归到当前入口,不再有归属阻断项) -->
-      <block wx:if="{{publishCheck.blocking.length || !identityReady}}">
-        <view class="pc-section-tit pc-blocking">需要先处理</view>
-        <view class="pc-item pc-item-blocking" wx:for="{{publishCheck.blocking}}" wx:key="index"
-              data-field="{{item.field}}" data-label="{{item.label}}" data-tab="{{item.tab}}" bindtap="locatePublishIssue" aria-role="button" aria-label="去填写 {{item.label}}" hover-class="cy-pressed" hover-stay-time="80">
-          <text class="pc-dot pc-dot-red"></text>
-          <text class="pc-label">{{item.label}}</text>
-          <view class="pc-arrow"><text>去填写</text><cy-icon name="arrow-right" size="24" /></view>
+
+    <!-- 剧情弹窗(浅色,与编辑器同一套):章标题 / 章剧情;每站 序号 → 剧情 → 图卡。点哪一块回到编辑器那一处。 -->
+    <view class="sp-pop {{storyPop.show ? 'is-open' : ''}}">
+      <view class="sp-pop__mask" bindtap="closeStoryPop" aria-role="button" aria-label="关闭剧情" hover-class="cy-pressed" hover-stay-time="80"></view>
+      <view class="sp-pop__panel">
+        <view class="sp-pop__grab"></view>
+        <view class="sp-pop__hd"><text>剧情</text>
+          <view class="sp-pop__x" bindtap="closeStoryPop" aria-role="button" aria-label="关闭剧情" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close" size="30" /></view>
         </view>
-        <!-- RUN-52 发布者实名:玩家没有向导,这一层就是最后一步,补全的控件就在下面,
-             所以这一条不带「去填写」——没有别处可去,指向本层下方那三格(不是死箭头)。 -->
-        <view class="pc-item pc-item-blocking" wx:if="{{!identityReady}}">
-          <text class="pc-dot pc-dot-red"></text>
-          <text class="pc-label">发布者实名未填写</text>
-          <view class="pc-arrow pc-arrow--static"><text>在下方填写</text></view>
-        </view>
-      </block>
-      <view class="pc-section-tit">本次发布</view>
-      <cy-card class="pc-summary">
-        <view class="pc-summary__line" wx:for="{{publishCheck.summary}}" wx:key="*this">{{item}}</view>
-        <view class="pc-summary__visibility">{{publishToCreative ? '发布后在创意广场公开' : '仅通过主题入口访问'}}</view>
-      </cy-card>
-      <block wx:if="{{publishCheck.passed.length}}">
-        <view class="pc-section-tit">自动检查</view>
-        <cy-card class="pc-passed">
-          <view class="pc-passed__head">
-            <view class="pc-passed__mark"><cy-icon name="check" size="28" /></view>
-            <text class="pc-passed__title">自动检查已通过 · {{publishCheck.passed.length || 0}} 项</text>
-          </view>
-          <view class="pc-passed__item" wx:for="{{publishCheck.passed}}" wx:key="label">
-            <text class="pc-dot pc-dot-ok"></text>
-            <text class="pc-label">{{item.label}}</text>
-          </view>
-        </cy-card>
-      </block>
-      <block wx:if="{{publishCheck.advisory.length}}">
-        <view class="pc-section-tit pc-advisory">建议完善(不影响发布)</view>
-        <view class="pc-item pc-item-advisory" wx:for="{{publishCheck.advisory}}" wx:key="index"
-              data-field="{{item.field}}" data-tab="{{item.tab}}" bindtap="locatePublishIssue" aria-role="button" aria-label="去完善 {{item.label}}" hover-class="cy-pressed" hover-stay-time="80">
-          <text class="pc-dot pc-dot-gray"></text>
-          <text class="pc-label">{{item.label}}</text>
-          <view class="pc-arrow"><text>去完善</text><cy-icon name="arrow-right" size="24" /></view>
-        </view>
-      </block>
-      <!-- RUN-52 发布者实名:要收钱就得知道收钱的人是谁(电商法 §27)。姓名 + 身份证号 + 单独同意,
-           挂在发布确认这一层(用户裁定「放最后一步」)。已登记的人整节不见,只在上面的
-           「自动检查已通过」里多一行「已登记」——接口只回真假,值不下发也不回显。 -->
-      <block wx:if="{{identityRequired && !identityRegistered}}">
-        <view class="pc-section-tit">发布者实名</view>
-        <view class="pc-identity">
-          <cy-field label="真实姓名" required placeholder="与身份证一致"
-                    value="{{identityRealName}}" maxlength="{{20}}"
-                    data-field="identityRealName" bindinput="onIdentityFieldInput" />
-          <cy-field label="身份证号" required placeholder="18 位"
-                    value="{{identityIdCard}}" maxlength="{{18}}"
-                    data-field="identityIdCard" bindinput="onIdentityFieldInput" />
-          <cy-consent-check class="pc-identity__consent" checked="{{identityConsented}}"
-                            text="{{identityHint}}" bind:change="onIdentityConsent" />
-          <view class="pc-identity__foot">修改实名请联系客服</view>
-        </view>
-        <cy-inline-error class="pc-identity__err" wx:if="{{identityError}}" kind="error"
-                         title="实名没有登记" sub="{{identityError}}" />
-      </block>
-      <!-- P0.5 奖励总览(只读:XP 自动分配 / 通关勋章) -->
-      <view class="pc-section-tit">奖励总览</view>
-      <cy-card class="pc-reward">
-        <view class="pc-reward-row"><text class="pc-reward-k">探索值</text><text class="pc-reward-v">自动分配</text></view>
-        <view class="pc-reward-row"><text class="pc-reward-k">通关勋章</text><text class="pc-reward-v">{{formData.finishMedalName || (formData.name || '主题名') + ' · 通关(默认)'}}</text></view>
-      </cy-card>
-      <!-- blocking 非空(内容安全/AI 判定为 error)时不给继续发布。
-           2026-09-05 按 Figma 统一按钮位置:阻断态原来只有一行红字、连个按钮都没有,
-           和「仅建议」那态长得完全不同 —— 现在两态都有同一颗底部按钮,阻断时禁用,
-           红字提示留在按钮上方说明为什么点不动。 -->
-      <!-- 玩家看到的样子。⚠️ 读的是编辑器里的当前草稿(_buildPublishPreview),不是 ?id= 拉服务端 ——
-           拿服务端那版预览就是上一次保存的内容,与眼前的编辑器对不上。 -->
-      <block wx:if="{{publishCheck.preview}}">
-        <view class="pc-section-tit">玩家看到的样子</view>
-        <cy-card class="pc-preview">
-          <image wx:if="{{publishCheck.preview.cover}}" class="pc-preview__cover" src="{{publishCheck.preview.cover}}" mode="aspectFill" lazy-load="true" />
-          <view wx:else class="pc-preview__cover pc-preview__cover--empty"><cy-icon name="image" size="48" /></view>
-          <text class="pc-preview__name">{{publishCheck.preview.name}}</text>
-          <text class="pc-preview__sub" wx:if="{{publishCheck.preview.subtitle}}">{{publishCheck.preview.subtitle}}</text>
-          <view class="pc-preview__stats">
-            <view class="pc-preview__stat" wx:for="{{publishCheck.preview.stats}}" wx:key="k">
-              <text class="pc-preview__stat-v">{{item.v}}</text>
-              <text class="pc-preview__stat-k">{{item.k}}</text>
+        <scroll-view class="sp-pop__body" scroll-y enhanced show-scrollbar="{{false}}" scroll-into-view="{{storyPop.anchor}}">
+          <view class="sp-ch" wx:for="{{publishCheck.preview.chapters}}" wx:key="index" wx:for-item="chapter" id="spch{{chapter.index}}">
+            <view class="sp-ch__h">{{chapter.name}}</view>
+            <view class="sp-ch__meta"><cy-icon name="check" size="26" /><text>{{chapter.meta}}</text></view>
+            <view class="sp-say {{chapter.flag ? 'is-flag' : ''}}" wx:if="{{chapter.story || chapter.flag}}" data-chapterindex="{{chapter.index}}" bindtap="onPreviewEdit"
+                  aria-role="button" aria-label="编辑{{chapter.name}}剧情" hover-class="cy-pressed" hover-stay-time="80">{{chapter.flag || chapter.story}}</view>
+            <view class="sp-stop" wx:for="{{chapter.nodes}}" wx:key="index" wx:for-item="node">
+              <view class="sp-stop__no">{{node.index + 1}}</view>
+              <view class="sp-say" wx:if="{{node.say}}" data-chapterindex="{{chapter.index}}" data-nodeindex="{{node.index}}" bindtap="onPreviewEdit"
+                    aria-role="button" aria-label="编辑{{node.name}}" hover-class="cy-pressed" hover-stay-time="80">{{node.say}}</view>
+              <view class="sp-card" data-chapterindex="{{chapter.index}}" data-nodeindex="{{node.index}}" bindtap="onPreviewEdit"
+                    aria-role="button" aria-label="编辑{{node.name}}" hover-class="cy-pressed" hover-stay-time="80">
+                <view class="sp-card__img" wx:if="{{node.img}}">
+                  <image class="sp-card__pic" src="{{node.img}}" mode="aspectFill" lazy-load="true" />
+                  <text class="sp-card__game" wx:if="{{node.play}}">{{node.play}}</text>
+                </view>
+                <view class="sp-card__foot">
+                  <view class="sp-card__copy"><text class="sp-card__at">{{node.address}}</text><text class="sp-card__shop">{{node.name}}</text>
+                    <text class="sp-card__play" wx:if="{{node.play && !node.img}}">{{node.play}}</text></view>
+                  <view class="sp-card__route"><cy-icon name="route" size="36" /></view>
+                </view>
+              </view>
             </view>
           </view>
-          <text class="pc-preview__desc" wx:if="{{publishCheck.preview.description}}">{{publishCheck.preview.description}}</text>
-          <view class="pc-preview__chapter" wx:for="{{publishCheck.preview.chapters}}" wx:key="name" wx:for-item="chapter">
-            <text class="pc-preview__chapter-name">{{chapter.name}}</text>
-            <view class="pc-preview__node" wx:for="{{chapter.nodes}}" wx:key="name">
-              <text class="pc-preview__node-name">{{item.name}}</text>
-              <text class="pc-preview__node-addr">{{item.address}}</text>
-            </view>
-          </view>
-        </cy-card>
-      </block>
-      <!-- blocking 非空(内容安全/AI 判定为 error)时不给发布:按钮禁用,红字说明为什么点不动。 -->
-      <view class="pc-actions">
-        <view wx:if="{{publishCheck.blocking.length || !identityReady}}" class="pc-blocked-tip">请先完成必填项</view>
-        <view class="pc-actions__row">
-          <cy-btn class="pc-actions__btn" variant="secondary" bindtap="closePublishCheck">返回修改</cy-btn>
-          <cy-btn class="pc-actions__btn" variant="primary" disabled="{{!!publishCheck.blocking.length || !identityReady}}"
-                  aria-disabled="{{!!publishCheck.blocking.length || !identityReady}}"
-                  bind:disabledtap="onPublishCheckDisabledTap"
-                  bindtap="confirmPublishCheck">确认发布</cy-btn>
-        </view>
+          <view class="sp-bottom"></view>
+        </scroll-view>
       </view>
     </view>
   </view>

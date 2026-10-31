@@ -118,14 +118,14 @@ test('免费发布不登记实名，改回收费后立即恢复实名门槛', ()
   page.data.identityRegistered = false
   page.data.publishCheck = { blocking: [] }
   let published = 0
-  page._publishAfterIdentity = () => { published++ }
+  page._submitFromPreview = () => { published++ } // P-4:「完成」过了实名闸就交给它走预检 → 发布
   page.confirmPublishCheck()
   assert.equal(published, 1)
   assert.equal(page.data.identityRequired, false)
-  assert.equal(page.data.identityReady, true)
+  assert.equal(page._identityReady(), true)
   page.data.formData.tickets[0].price = 1
   page.confirmPublishCheck()
   assert.equal(published, 1)
   assert.equal(page.data.identityRequired, true)
-  assert.equal(page.data.identityReady, false)
+  assert.equal(page._identityReady(), false)
 })

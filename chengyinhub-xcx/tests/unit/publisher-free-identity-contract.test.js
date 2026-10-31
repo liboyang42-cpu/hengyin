@@ -91,7 +91,8 @@ function harness(mutate) {
     if (callback) callback.call(page)
   }
   let published = 0
-  page._publishAfterIdentity = () => { published += 1 }
+  // 2026-10-31 P-4:剧情预览「完成」通过实名闸后经 _submitFromPreview 走预检 → 发布;这里只数放行次数
+  page._submitFromPreview = () => { published += 1 }
   page.setEditorState = () => {}
   page.destroyPreviewAudio = () => {}
   return { page, requests, loads, published: () => published, setMember: (id) => { memberId = id } }
@@ -113,7 +114,8 @@ test('免费主题无实名即可确认，改为收费即恢复实名闸且可�
   h.page.confirmPublishCheck()
   assert.equal(h.published(), 1)
   assert.equal(h.page.data.identityRequired, true)
-  assert.equal(h.page.data.identityReady, false)
+  assert.equal(h.page._identityReady(), false)
+  assert.equal(h.page.data.editorPage, 2, '实名没齐:送回票务页实名分区')
   h.page.data.formData.tickets[0].price = 0
   h.page.confirmPublishCheck()
   assert.equal(h.published(), 2)
@@ -181,10 +183,10 @@ test('免费不是跳过业务检查：blocking 时零价也不能发布', () =>
   assert.equal(h.requests.length, 0)
 })
 
-test('负控：移除 identityReady 闸会让未登记收费主题进入登记流程，测试能识别', () => {
+test('负控：移除实名闸会让未登记收费主题进入登记流程，测试能识别', () => {
   const mutation = (source) => source.replace(
-    'if (this.data.publishCheck.blocking.length || !this.data.identityReady) return;',
-    'if (this.data.publishCheck.blocking.length) return;')
+    "if (!this._identityReady()) { this._backToIdentity(''); return; }",
+    '')
   const h = harness(mutation)
   h.page.data.formData.tickets[0].price = 1
   h.page.confirmPublishCheck()

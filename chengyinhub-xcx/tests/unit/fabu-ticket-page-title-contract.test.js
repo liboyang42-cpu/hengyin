@@ -19,7 +19,7 @@ const page2 = step3.slice(step3.indexOf('wx:if="{{editorPage === 2}}"'));
 test('票务这一步有且只有一个页面级标题,排在区块标题之前', () => {
   const titles = page2.match(/<cy-page-title\b/g) || [];
   assert.equal(titles.length, 1, '一个步骤一个 L1 标题，不许两处各摆一个');
-  const firstSection = page2.indexOf('<view class="pd-section-title">档期</view>');
+  const firstSection = page2.indexOf('<view class="pd-section-title">档期</view>'); // P-4:外面套了一层 pd-sec-hd(右侧红字缺项数)
   assert.ok(firstSection > 0, '「档期」区块标题还在原位');
   assert.ok(page2.indexOf('<cy-page-title') < firstSection, '页面级标题必须在该屏第一个元素');
 });
@@ -32,10 +32,10 @@ test('标题措辞与入口卡、返回动作同一套词', () => {
   const entryCard = index.slice(index.indexOf('data-page="2"'), index.indexOf('data-page="2"') + 600);
   assert.match(entryCard, /<text class="pd-modecard__name">票务设置<\/text>/,
     '入口卡叫「票务设置」,进来以后不许换个名字');
-  // 返回路径:底部整宽那颗「完成」的无障碍名指向回到创作
-  const doneCta = index.slice(index.indexOf('slopes-tabbar__doneCta'));
-  assert.match(doneCta.slice(0, 400), /aria-label="完成票务设置，回到创作"/,
-    '这一屏唯一的收尾动作要能说清回哪去');
+  // 返回路径(2026-10-31 P-4):底栏左槽那颗返回键回创作页,无障碍名要说清回哪去;右边「预览」往前走
+  assert.match(index, /<view class="slopes-tab" data-page="1" bindtap="switchEditorPage" aria-role="button" aria-label="回到创作"/,
+    '回创作页的入口要能说清回哪去');
+  assert.match(index, /bindtap="openStoryPreview" aria-label="预览主题，填完后可发布"/);
 });
 
 test('组件真的注册过,否则标题会静默不渲染', () => {

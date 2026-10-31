@@ -144,6 +144,20 @@ function chapterCardTitle(index, name) {
   if (CHAPTER_ORDINAL.test(raw)) return raw;
   return raw ? seq + ' ' + raw : seq;
 }
+// P-9 剧情预览:「11月1日」这种短日期;解析不了就原样不出(不写 NaN)
+function previewDay(value) {
+  const m = /(\d{4})-(\d{1,2})-(\d{1,2})/.exec(String(value || ''));
+  return m ? Number(m[2]) + '月' + Number(m[3]) + '日' : '';
+}
+// P-9:挡住发布的一条问题在哪儿 —— 票务 / 第 N 章 / 主题设置。只做「去哪儿改」的提示,定位仍走 locatePublishIssue。
+function previewIssueWhere(field) {
+  const f = String(field || '');
+  if (/^ticket|^tickets|^sale|^identity/.test(f)) return { where: '票务', chapter: -1, ticket: true };
+  const idx = /^chapter[A-Za-z]*[:.\[](\d+)/.exec(f);
+  if (idx) return { where: '第 ' + (Number(idx[1]) + 1) + ' 章', chapter: Number(idx[1]), ticket: false };
+  if (/^chapter|^templat|^node|^runtime|^themeState/.test(f)) return { where: '剧情', chapter: -1, ticket: false };
+  return { where: f ? '主题设置' : '', chapter: -1, ticket: false };
+}
 function ticketCoordinate(ticket, formField, storedField) {
   const current = ticket[formField];
   if (current !== null && current !== undefined && current !== '') return current;
@@ -272,6 +286,9 @@ Page({
     chapterNumbers: [],
     topicDetailShow: false, // 主题详情弹窗
     topicDetailSummary: '', // 入口卡上的摘要:还差几项
+    topicDetailMissing: 0,  // P-4:主题详情还有几项必填没填(>0 时摘要标红)
+    // P-4(V-25):票务页各分区还有几项必填没填;票务卡与分区标题右侧的红色「* 还有 N 项未填」都读它
+    ticketMissing: { dates: 0, tickets: 0, identity: 0, total: 0 },
     chapterPreview: { show: false, number: 1, total: 1, title: '', subtitle: '' },
     chapterStates: [],      // 由 pro-editor-policy 算出的派生态,不进 formData(见 refreshPrimaryActionState)
     chapterActionLabels: [],
@@ -299,11 +316,11 @@ Page({
     themeSwitchColor: TOPIC_EDITOR_SWITCH_COLOR,
     // 发布前检查弹层(M4·A):blocking=硬必填(阻断),advisory=软建议(不阻断)
     publishCheck: { show: false, blocking: [], advisory: [], summary: [], passed: [], preview: null },
-    // RUN-52 发布者实名(挂进上面那一层弹层)。registered 只有真/假 —— 接口不下发姓名与证件号;
-    // ready 驱动「必填项」那条与「确认发布」的可点性;字段刻意不放 formData,免得混进主题提交 payload。
+    storyPop: { show: false, anchor: '' }, // P-9:预览里只有「看剧情」用弹窗
+    // RUN-52 发布者实名(P-4 起在票务页最后一个分区)。registered 只有真/假 —— 接口不下发姓名与证件号;
+    // 三格齐不齐由 _identityReady() 现算(只在点「完成」时用,不进渲染);字段刻意不放 formData,免得混进主题提交 payload。
     identityRegistered: false,
     identityRequired: true,
-    identityReady: false,
     // 旧草稿没记录商家/个人入口、用户还没确认归属:页内横幅 + 发布确认里的「需要先处理」都看它
     identityRealName: '',
     identityIdCard: '',
@@ -6372,8 +6389,9 @@ Page({
     if (JSON.stringify(pendingMaterialStates) !== JSON.stringify(d.pendingMaterialStates)) {
       summaryPatch.pendingMaterialStates = pendingMaterialStates;
     }
-    const summary = missing ? ('还差 ' + missing + ' 项') : '已填完';
+    const summary = missing ? ('还有 ' + missing + ' 项未填') : '已填完';
     if (summary !== d.topicDetailSummary) summaryPatch.topicDetailSummary = summary;
+    if (missing !== d.topicDetailMissing) summaryPatch.topicDetailMissing = missing;
     if (Object.keys(summaryPatch).length) this.setData(summaryPatch);
 
     const bag = this._buildValidationBag();
@@ -6384,7 +6402,23 @@ Page({
       && (!d.editingTopicId || d.editLoaded);
     const patch = {};
     if (canPublish !== d.canPublish) patch.canPublish = canPublish;
+    const ticketMissing = this._ticketMissing(bag);
+    if (JSON.stringify(ticketMissing) !== JSON.stringify(d.ticketMissing)) patch.ticketMissing = ticketMissing;
     if (Object.keys(patch).length) this.setData(patch);
+  },
+
+  // P-4(V-25):票务页三个分区的缺项数 —— 档期 / 票务按校验袋的字段,实名按三格是否填了
+  _ticketMissing(bag) {
+    const errorKeys = Object.keys((bag || this._buildValidationBag()).errors || {});
+    const id = this.identityForm();
+    const missing = {
+      dates: errorKeys.filter((key) => key === 'startDate' || key === 'endDate' || key === 'recruitDeadline').length,
+      tickets: errorKeys.filter((key) => key.indexOf('ticket') === 0).length,
+      identity: publisherIdentity.topicRequiresIdentity(this.data.formData) && !id.identityRegistered
+        ? [!String(id.realName || '').trim(), !String(id.idCard || '').trim(), !id.consented].filter(Boolean).length : 0,
+    };
+    missing.total = missing.dates + missing.tickets + missing.identity;
+    return missing;
   },
 
   validateForm() {
@@ -6537,8 +6571,77 @@ Page({
   // 发布确认页的「玩家看到的样子」。
   // ⚠️ 数据源必须是编辑器里的**当前草稿**,不是 ?id= 拉服务端 —— 服务端那版是上一次保存的,
   //    拿它当预览就是 2026-09-05 删掉的那个假预览重新长回来。
-  _buildPublishPreview() {
+  // P-9:问题行带上「在哪里」,预览里对应的票务行 / 章节行据此标红
+  _withIssueWhere(list) {
+    return (list || []).map((item) => Object.assign({}, item, { where: previewIssueWhere(item.field).where }));
+  },
+
+  // P-9 预览里的两个开关改了以后:本地判定重算(开商家承接会多出品类等必填),AI / 后端那几条原样留着
+  _refreshStoryPreview() {
+    const kept = (this.data.publishCheck.blocking || []).filter((item) => !item.field);
+    const blocking = this._withIssueWhere(kept.concat(this.buildPublishCheck().blocking));
+    this.setData({ 'publishCheck.blocking': blocking, 'publishCheck.preview': this._buildPublishPreview(blocking) });
+  },
+
+  onPreviewClubPool(e) {
+    this.setData({ 'formData.openClubPool': !!(e.detail && e.detail.value) }, () => this._refreshStoryPreview());
+  },
+
+  // 商家承接:城市定向 = 主题级商家池;自由探索 = 每一章的「开放商家承接」一起开 / 关(条款与品类回章节里设)
+  onPreviewMerchantRecruit(e) {
+    const on = !!(e.detail && e.detail.value);
+    if (Number(this.data.formData.productType) !== 2) {
+      this.setData({ 'formData.openMerchantPool': on }, () => this._refreshStoryPreview());
+      return;
+    }
+    const chapters = (this.data.formData.chapters || []).map((chapter) => Object.assign({}, chapter, {
+      recruitEnabled: on ? 1 : 0,
+      termsMode: ['PERK', 'TRAFFIC', 'REVSHARE'].includes(chapter.termsMode) ? chapter.termsMode : 'PERK',
+      maxMerchant: Number.isInteger(Number(chapter.maxMerchant)) && Number(chapter.maxMerchant) >= 0 ? Number(chapter.maxMerchant) : 0,
+    }));
+    this.setData({ 'formData.chapters': chapters }, () => { this.updateAllStatistics(); this._refreshStoryPreview(); });
+    if (on) this.loadMerchantCategories();
+  },
+
+  // 锁住的那一行:说明为什么(商家城市定向只能自己带,后端 D3)
+  onPreviewLockedTap(e) {
+    cyToast((e && e.currentTarget && e.currentTarget.dataset.reason) || '');
+  },
+
+  // 剧情弹窗:点某一章就从那一章开始读
+  openStoryPop(e) {
+    const index = Number(e && e.currentTarget && e.currentTarget.dataset.chapterindex) || 0;
+    this.setData({ storyPop: { show: true, anchor: '' } }, () => this.setData({ 'storyPop.anchor': 'spch' + index }));
+  },
+
+  closeStoryPop() {
+    this.setData({ 'storyPop.show': false });
+  },
+
+  _buildPublishPreview(blocking) {
     const fd = this.data.formData || {};
+    const freeExplore = Number(fd.productType) === 2;
+    const merchantScope = this.data.operationScope === 'MERCHANT';
+    const issues = (blocking || this.data.publishCheck.blocking || []).map((item) => Object.assign({ label: item.label }, previewIssueWhere(item.field)));
+    const ticketIssue = issues.find((item) => item.ticket);
+    const chapterIssue = (index) => issues.find((item) => item.chapter === index);
+    const ticket = (fd.tickets || [])[0] || null;
+    const priced = !!ticket && ticket.price !== '' && ticket.price != null;
+    const stock = ticket && Number(ticket.totalStock) > 0 ? ' · ' + Number(ticket.totalStock) + ' 张' : '';
+    const look = this.data.lookView || {};
+    const lookOn = (list) => ((list || []).find((x) => x.on) || {}).label || '';
+    const recruitOn = (fd.chapters || []).some((c) => Number(c.recruitEnabled) === 1);
+    const lockReason = '商家发的城市定向只能自己带，不能邀俱乐部和商家';
+    // 发布后的合作:只放后端真有的开关,没有的不画(界面不骗人)
+    const switches = [];
+    if (!fd.clubId && !freeExplore) switches.push({ key: 'club', icon: 'tab-club', label: '俱乐部承接',
+      on: !!fd.openClubPool, locked: merchantScope, reason: lockReason });
+    if (!fd.clubId && freeExplore && merchantScope) switches.push({ key: 'club', icon: 'tab-club', label: '俱乐部承接',
+      fixed: true, note: '必须先邀 1 家俱乐部承办才能开售' });
+    if (freeExplore && (this.data.merchantPoolEditable || merchantScope)) switches.push({ key: 'merchant', icon: 'discover-shop', label: '商家承接',
+      on: recruitOn, note: '每一站按档位邀商家（' + (fd.clubId ? '权益 / 计酬 / 引流' : '权益 / 引流') + '）' });
+    else if (!freeExplore && merchantScope) switches.push({ key: 'merchant', icon: 'discover-shop', label: '商家承接', locked: true, reason: lockReason });
+    else if (!freeExplore && this.data.merchantPoolEditable) switches.push({ key: 'merchant', icon: 'discover-shop', label: '商家承接', on: !!fd.openMerchantPool });
     // 直接重算,不读 this.data.totalStats:那个字段全页零渲染(U4 存量债务 A1),
     // 读它只会把一条死字段升级成「内部状态」,而算一次的成本本来就可以忽略。
     const stats = this.calculateTotalStats() || {};
@@ -6553,13 +6656,54 @@ Page({
         { k: '时长', v: stats.totalDurationDisplay || '—' },
         { k: '里程', v: stats.totalDistance || 0 },
       ],
+      // P-4 剧情预览:玩家看到的样子 —— 模式、票价、每章剧情与节点照片 / 玩法、通关勋章
+      mode: Number(fd.productType) === 2 ? '自由探索' : '城市定向',
+      // 封面上的小标签只放有值的:没算出时长 / 里程(0)就不出那一枚,不写「0min」
+      chips: [
+        (fd.chapters || []).length + ' 章 · ' + (stats.totalNodes || 0) + ' 个节点',
+        /[1-9]/.test(String(stats.totalDurationDisplay || '')) ? '约 ' + stats.totalDurationDisplay : '',
+        Number(parseFloat(stats.totalDistance)) > 0 ? stats.totalDistance : '',
+      ].filter(Boolean),
+      // 票务:票种、档期、售票三行。自由探索的定价与开卖要经招商与锁价(后端恒走招募链),
+      // 没填票价时写「开售前定价」,售票写「招商结束后开售」,不再当成免费。
+      ticketRows: ticket ? [
+        { key: 'name', k: ticket.name || '未命名票种',
+          v: (priced ? (Number(ticket.price) > 0 ? '¥' + Number(ticket.price) : '免费') : (freeExplore ? '开售前定价' : '免费')) + stock },
+        { key: 'validity', k: '档期', v: [previewDay(ticket.startTime), previewDay(ticket.endTime)].filter(Boolean).join(' — ') || '—' },
+        { key: 'sale', k: '售票', v: freeExplore ? '招商结束后开售' : (previewDay(ticket.saleStartTime) ? previewDay(ticket.saleStartTime) + '起' : '—') },
+      ] : [],
+      ticketFlag: ticketIssue ? '* ' + ticketIssue.label : '',
+      settings: [
+        { icon: 'flag', k: '模式', target: 'detail', v: freeExplore ? '自由探索' : '城市定向' },
+        { icon: 'check', k: '通关规则', target: 'detail', v: this.data.completionRuleMode === 'AT_LEAST'
+          ? '完成任意 ' + (Number(this.data.completionRequiredCount) || 0) + ' 个节点' : '完成全部节点' },
+        { icon: 'tab-club', k: '组队', target: 'team', v: Number(fd.teamMode) > 0 ? '支持 · 最多 ' + (Number(fd.teamMaxMembers) || 0) + ' 人' : '不支持' },
+      ],
+      switches,
+      look: look.look || null,
+      lookRows: [
+        { k: '风格', v: lookOn(look.styles) },
+        { k: '主题配色', v: lookOn(look.palettes) },
+        (look.times || []).length ? { k: '每章时间', v: look.times.map((t) => t.name + ' ' + (lookOn(t.options) || '—')).join(' · ') } : null,
+        { k: '字体', v: lookOn(look.fonts) },
+        { k: '文字动效', v: lookOn(look.textFxs) },
+      ].filter((row) => row && row.v),
+      medal: fd.finishMedalName || (fd.name || '主题名') + ' · 通关',
       chapters: (fd.chapters || []).map((chapter, index) => ({
+        index,
         // CU-C-87:与章节卡同一把尺子 —— 名字自带「第N章」时不再叠一次序号,
         // 否则确认页会出现「第1章 第1章 隔离书店站」。
         name: chapterCardTitle(index, chapter && chapter.name),
-        nodes: (((chapter && chapter.nodes) || []).map((node) => ({
+        story: (chapter && chapter.description) || '',
+        meta: ((chapter && chapter.nodes) || []).length + ' 站',
+        flag: chapterIssue(index) ? '* ' + chapterIssue(index).label : '',
+        nodes: (((chapter && chapter.nodes) || []).map((node, nodeIndex) => ({
+          index: nodeIndex,
           name: (node && node.name) || '未命名节点',
           address: node && node._storyGame ? '无需到达地点' : ((node && node.address) || '未选地点'),
+          img: String((node && node.imgUrl) || '').split(',').filter(Boolean)[0] || '',
+          play: (node && node.templateName) || '',
+          say: (node && node.description) || '',
         }))),
       })),
     };
@@ -6649,8 +6793,9 @@ Page({
     const passed = this._buildPublishPassed(precheckOk);
     this.setData({
       publishCheck: {
-        show: true, blocking, advisory, summary, passed, preview: this._buildPublishPreview(),
+        show: true, blocking: this._withIssueWhere(blocking), advisory, summary, passed, preview: this._buildPublishPreview(blocking),
       },
+      storyPop: { show: false, anchor: '' },
     });
     this.setEditorState('publishCheck');
   },
@@ -6673,9 +6818,11 @@ Page({
 
   _showBackendPublishIssue(issue) {
     const check = this.buildPublishCheck();
-    this.setData({ publishCheck: { show: true, blocking: [issue].concat(check.blocking),
+    const blocking = [issue].concat(check.blocking);
+    this.setData({ publishCheck: { show: true, blocking: this._withIssueWhere(blocking),
       advisory: check.advisory, summary: this._buildPublishSummary(),
-      passed: this._buildPublishPassed(false), preview: this._buildPublishPreview() } });
+      passed: this._buildPublishPassed(false), preview: this._buildPublishPreview(blocking) },
+      storyPop: { show: false, anchor: '' } });
     this.setEditorState('publishCheck');
   },
 
@@ -6724,8 +6871,15 @@ Page({
     if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.confirmPublishCheck(), { owner: this, target: () => [this.data.editingTopicId, this.data.draftUuid, this.data.operationScope, this.data.formData.clubId, this.data.formData.productType] })) return; // 2026-10-24 游客写前登录
     if (this._identityRegistering) return;
     this.syncIdentityReady();
-    if (this.data.publishCheck.blocking.length || !this.data.identityReady) return;
-    if (!this.data.identityRequired || this.data.identityRegistered) { this._publishAfterIdentity(); return; }
+    if (this.data.publishCheck.blocking.length) return;
+    // 发布者会收到招募状态与承接意向通知。订阅授权只能在点击里同步弹:「完成」这一下就请求;
+    // 后面的实名登记与内容预检都是异步回调,到那时已经弹不出来。
+    subscribe.request(['recruit', 'clubInterest']).then((result) => {
+      this._publishSubscribeStatus = result.status;
+    });
+    // P-4:实名三格在票务页最后一个分区,预览里没有 —— 没填齐就送回那里
+    if (!this._identityReady()) { this._backToIdentity(''); return; }
+    if (!this.data.identityRequired || this.data.identityRegistered) { this._submitFromPreview(); return; }
     // 先落实名、再落主题:后端两道闸就是这个顺序(/api/publisher/identity 先于 /api/topic/create
     // 的实名校验),并发两发会被拦成「请先登记实名信息」。
     const requestEpoch = (this._identityRequestEpoch || 0) + 1;
@@ -6744,14 +6898,80 @@ Page({
           || precheckToken !== this._precheckToken || scope !== this.data.operationScope
           || !this.data.publishCheck.show) return;
       if (!r.ok) {
-        // 弹层不关:字段就在原地,改完再点一次;报错用软红整块,不给输入框描红边
-        this.setData({ identityError: r.message });
+        // 字段在票务页:回到那里显示报错(软红整块,不给输入框描红边),改完再预览一次
+        this._backToIdentity(r.message);
         return;
       }
-      this.setData({ identityRegistered: true, identityReady: true, identityError: '' });
+      this.setData({ identityRegistered: true, identityError: '' });
       if (this.data.publishCheck.blocking.length) return;
-      this._publishAfterIdentity();
+      this._submitFromPreview();
     });
+  },
+
+  // P-4:剧情预览右上「完成」= 发布。内容安全预检在这一步才跑(内容到这一刻才定);
+  // 预检没问题直接发布,有问题重新打开这一层、红行列在最上面(_afterPrecheck → _showPublishCheck)。
+  _submitFromPreview() {
+    this.setData({ 'publishCheck.show': false });
+    this.setEditorState('idle');
+    this.submitForm();
+  },
+
+  _backToIdentity(message) {
+    this.closePublishCheck();
+    this.setData({ editorPage: 2, identityError: message || '' }, () => this._scrollSheetTo('fieldIdentity'));
+    if (!message) {
+      const check = publisherIdentity.checkIdentityForm(this.identityForm());
+      cyToast(check.ok ? '发布者实名还没登记' : check.message);
+    }
+  },
+
+  // P-4(V-25):票务页底部「预览」—— 票务页还有没填的,滚到第一项并报还差几项;
+  // 都填完就打开剧情预览(原发布确认那一层)。这一步不烧 AI 预检次数,预检在「完成」时跑。
+  openStoryPreview() {
+    this.syncIdentityReady();
+    const bag = this._buildValidationBag();
+    const errors = bag.errors || {};
+    const missing = this._ticketMissing(bag);
+    this.setData({ ticketMissing: missing });
+    const first = Object.keys(errors).find((key) => ISSUE_PAGE2_ANCHORS.indexOf(this._anchorForErrorKey(key)) >= 0);
+    if (first) {
+      this.focusValidationError({ [first]: errors[first] });
+      cyToast('还有 ' + missing.total + ' 项未填');
+      return;
+    }
+    if (missing.identity) { this._backToIdentity(''); return; }
+    // CU-C-168:这一步没跑内容安全预检,第二个参数照实说(预检在「完成」时才跑)
+    this._showPublishCheck([], '内容安全预检还没跑');
+  },
+
+  // 票务页分区标题右侧红色「* 还有 N 项未填」:滚到这一区的第一项
+  onReqLeftTap(e) {
+    const anchor = (e && e.currentTarget && e.currentTarget.dataset.anchor) || '';
+    if (anchor === 'ticketSection') {
+      const errors = this._buildValidationBag().errors || {};
+      const key = Object.keys(errors).find((k) => k.indexOf('ticket') === 0);
+      if (key) { this.focusValidationError({ [key]: errors[key] }); return; }
+    }
+    this._scrollSheetTo(anchor);
+  },
+
+  // 剧情预览每一块右上的笔:回到配置里对应的位置(章节 → 章节设置,节点 → 节点编辑,票价 → 票务页)
+  onPreviewEdit(e) {
+    const ds = (e && e.currentTarget && e.currentTarget.dataset) || {};
+    this.closePublishCheck();
+    if (ds.target === 'ticket') { this.setData({ editorPage: 2 }, () => this._scrollSheetTo('ticketSection')); return; }
+    // P-9:主题设置 / 画面风格那几行回到各自所在的那一屏
+    if (ds.target === 'team') { this.setData({ editorPage: 2 }, () => this._scrollSheetTo('fieldTeam')); return; }
+    if (ds.target === 'detail') { this.setData({ editorPage: 1 }, () => this.openTopicDetail()); return; }
+    if (ds.target === 'look') { this.setData({ editorPage: 1 }, () => { this.openTopicDetail(); this.openLookEditor(); }); return; }
+    this.setData({ editorPage: 1 });
+    const chapterindex = Number(ds.chapterindex);
+    if (!(this.data.formData.chapters || [])[chapterindex]) return;
+    if (ds.nodeindex !== undefined && ds.nodeindex !== '') {
+      this.showEditNodes({ currentTarget: { dataset: { chapterindex, nodeindex: Number(ds.nodeindex) } } });
+      return;
+    }
+    this.showEditChapter({ currentTarget: { dataset: { index: chapterindex } } });
   },
 
   _publishAfterIdentity() {
@@ -6763,7 +6983,7 @@ Page({
 
   // 发布弹层的「确认发布」被置灰时点它 —— 报第一条真缺项,不打空炮。
   onPublishCheckDisabledTap() {
-    if (!this.data.identityReady) {
+    if (!this._identityReady()) {
       const check = publisherIdentity.checkIdentityForm(this.identityForm());
       cyToast(check.ok ? '发布者实名还没登记' : check.message);
       return;
@@ -6784,13 +7004,16 @@ Page({
     };
   },
 
-  // 三项齐不齐只驱动「必填项」那条与 CTA 可点性;规则仍然只有 utils/publisher-identity.js 一份
+  // 要不要实名驱动票务页那一区显不显示;规则仍然只有 utils/publisher-identity.js 一份
   syncIdentityReady() {
     const required = publisherIdentity.topicRequiresIdentity(this.data.formData);
-    const ready = !required || publisherIdentity.identitySatisfied(this.identityForm());
-    if (ready !== this.data.identityReady || required !== this.data.identityRequired) {
-      this.setData({ identityRequired: required, identityReady: ready });
-    }
+    if (required !== this.data.identityRequired) this.setData({ identityRequired: required });
+  },
+
+  // 三格齐不齐(或根本不需要实名):只在点「完成」/ 完成置灰时现算
+  _identityReady() {
+    return !publisherIdentity.topicRequiresIdentity(this.data.formData)
+      || publisherIdentity.identitySatisfied(this.identityForm());
   },
 
   onIdentityFieldInput(e) {
@@ -6814,13 +7037,7 @@ Page({
     this.setEditorState('idle');
   },
 
-  // 发布钮置灰 = 有硬必填没交。点它不打空炮:直接开同一张「发布前检查」弹层,
-  // 逐条列还差什么 + 一键定位。纯本地判定,不烧 AI 预检次数(频控是全端点共用的池)。
-  // CU-C-168:这条路径**没跑过**内容安全预检,第二个参数必须说实话 —— 传空串会被
-  // 当成「跑过了且没问题」,于是弹层一边列着缺项、一边绿着「内容安全预检通过」。
-  onPublishDisabledTap() {
-    this._showPublishCheck([], '内容安全预检还没跑');
-  },
+
 
   // 一键定位:把这一项送到它字段真正所在的那一屏(切页 / 开主题详情弹窗 / 展开票务并打开对应票单),
   // 再滚到锚点。
@@ -7274,12 +7491,7 @@ Page({
       return;
     }
 
-    // 发布者会收到招募状态与承接意向通知；只在首次「发布」tap 中请求，预检确认回调不重复弹。
-    if (!precheckAcked) {
-      subscribe.request(['recruit', 'clubInterest']).then((result) => {
-        this._publishSubscribeStatus = result.status;
-      });
-    }
+    // 招募状态与承接意向通知的订阅授权在剧情预览「完成」那一下请求(confirmPublishCheck),这里是异步链路,不再弹。
 
     // 发布前 AI 安全预检:每次提交跑一次(内容可能已改),用户在弹层点「继续发布」后一次性放行
     if (!precheckAcked) {

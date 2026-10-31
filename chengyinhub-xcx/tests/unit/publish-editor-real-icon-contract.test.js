@@ -76,8 +76,8 @@ test('本批次新增与替换的可点图标具备可读名称和 88rpx 命中�
   for (const marker of [
     /class="slopes-node-photo"[\s\S]{0,240}aria-role="button"[\s\S]{0,120}aria-label=/,
     /class="slopes-node-more"[\s\S]{0,240}aria-role="button"[\s\S]{0,120}aria-label=/,
-    /class="pc-item pc-item-blocking"[\s\S]{0,240}aria-role="button"[\s\S]{0,120}aria-label=/,
-    /class="pc-item pc-item-advisory"[\s\S]{0,240}aria-role="button"[\s\S]{0,120}aria-label=/,
+    /class="sp-issue"[\s\S]{0,240}aria-role="button"[\s\S]{0,120}aria-label=/,
+    /class="sp-x"[\s\S]{0,120}aria-role="button"[\s\S]{0,120}aria-label=/,
   ]) assert.match(fabuWxml, marker, `专业编辑器缺少可点图标语义：${marker}`)
   assert.match(topicWxml, /class="pd-gdel"[\s\S]{0,180}aria-role="button"[\s\S]{0,120}aria-label=/)
   assert.match(simpleWxml, /class="simple-ai__chip"[\s\S]{0,220}aria-role="button"[\s\S]{0,120}aria-label=/)

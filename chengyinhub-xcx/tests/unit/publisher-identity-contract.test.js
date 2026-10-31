@@ -31,11 +31,13 @@ const ENTRY = {
   },
   fabu: {
     js: 'pages/publish/fabu/index.js',
-    wxml: 'pages/publish/fabu/index.wxml',
+    // 2026-10-31 P-4(V-25):实名三格从发布确认搬到票务页最后一个分区(step3.wxml)
+    wxml: 'pages/publish/fabu/step3.wxml',
     source: 'SOURCE_TOPIC_PUBLISH',
     consentKey: 'identityConsented',
   },
 }
+const FABU_INDEX_WXML = 'pages/publish/fabu/index.wxml'
 const SCENE_JS = 'components/cy/scene-route-content/index.js'
 const SCENE_WXML = 'components/cy/scene-route-content/index.wxml'
 const UTIL = 'utils/publisher-identity.js'
@@ -165,11 +167,15 @@ test('时序:收费入口先登记再落业务单，免费主理人只落能力�
 
   const fabuJs = read(ENTRY.fabu.js)
   const confirm = methodBody(fabuJs, 'confirmPublishCheck')
-  assert.match(confirm, /if \(this\.data\.publishCheck\.blocking\.length \|\| !this\.data\.identityReady\) return;/,
-    '实名不齐时「确认发布」必须直接 return')
+  assert.match(confirm, /if \(this\.data\.publishCheck\.blocking\.length\) return;/)
+  assert.match(confirm, /if \(!this\._identityReady\(\)\) \{ this\._backToIdentity\(''\); return; \}/,
+    '实名不齐时「完成」必须送回票务页实名分区,不登记、不发布')
   assert.match(confirm, /publisherIdentity\.registerIdentity\(this\.identityForm\(\)/)
   assert.doesNotMatch(confirm, /this\.submitForm\(\)/,
-    'fabu 真正的发布动作只能待在 _publishAfterIdentity 里')
+    'fabu 的发布动作不直接写在「完成」里:登记成功后经 _submitFromPreview 走预检再发')
+  assert.match(bodyFrom(confirm, '(r) => {'), /if \(!r\.ok\)[\s\S]*?return;[\s\S]*?this\._submitFromPreview\(\)/,
+    '主题只能在实名登记成功之后发')
+  assert.match(methodBody(fabuJs, '_submitFromPreview'), /this\.submitForm\(\)/)
   assert.match(methodBody(fabuJs, '_publishAfterIdentity'), /this\.submitForm\(\)/)
 
   const scene = read(SCENE_JS)
@@ -183,17 +189,18 @@ test('时序:收费入口先登记再落业务单，免费主理人只落能力�
     '登记成功后重走 submitForm,此时第二遍只落业务单')
 })
 
-test('发布弹层:实名没齐时确认键置灰且会说话', () => {
-  const wxml = read(ENTRY.fabu.wxml)
+test('剧情预览:有阻断项时「完成」置灰且会说话;实名没齐时票务页分区标红', () => {
+  const wxml = read(FABU_INDEX_WXML)
   const btn = /<cy-btn[^>]*bindtap="confirmPublishCheck"[^>]*>/.exec(wxml)
-  assert.ok(btn, '找不到「确认发布」按钮')
-  // 2026-10-27 P-44:旧草稿静默归到当前入口,legacyScopePending 阻断条件随归属确认一起删除
-  assert.match(btn[0], /disabled="\{\{!!publishCheck\.blocking\.length \|\| !identityReady\}\}"/,
-    '实名不齐时确认发布必须置灰')
+  assert.ok(btn, '找不到「完成」按钮')
+  assert.match(btn[0], /disabled="\{\{!!publishCheck\.blocking\.length\}\}"/,
+    '有阻断项时「完成」必须置灰')
   assert.match(btn[0], /bind:disabledtap="onPublishCheckDisabledTap"/,
     '置灰键要点得动并说出缺什么(置灰键会说话)')
-  assert.match(wxml, /wx:if="\{\{publishCheck\.blocking\.length \|\| !identityReady\}\}"/,
-    '必填项区块要把「发布者实名未填写」也列进阻断')
+  // 实名三格不在预览里:票务页那一区标题右侧红字报还差几项,「预览」/「完成」都把人送回那里
+  assert.match(read(ENTRY.fabu.wxml), /wx:if="\{\{ticketMissing\.identity\}\}"[^>]*data-anchor="fieldIdentity"/,
+    '实名分区要显示「* 还有 N 项未填」')
+  assert.match(methodBody(read(ENTRY.fabu.js), 'openStoryPreview'), /if \(missing\.identity\) \{ this\._backToIdentity\(''\); return; \}/)
 })
 
 // 负控只在内存里改串再验判定,绝不回写源文件(测试进程被杀也不能留下半个页面)
@@ -211,8 +218,8 @@ test('negative control:收费登记闸、免费创建发点与 PII 隔离缺失�
     },
     {
       file: ENTRY.fabu.js,
-      anchor: /if \(this\.data\.publishCheck\.blocking\.length \|\| !this\.data\.identityReady\) return;/,
-      assert: (src) => assert.match(methodBody(src, 'confirmPublishCheck'), /!this\.data\.identityReady\) return;/),
+      anchor: /if \(!this\._identityReady\(\)\) \{ this\._backToIdentity\(''\); return; \}/,
+      assert: (src) => assert.match(methodBody(src, 'confirmPublishCheck'), /if \(!this\._identityReady\(\)\) \{ this\._backToIdentity/),
     },
     {
       file: SCENE_JS,
@@ -220,9 +227,9 @@ test('negative control:收费登记闸、免费创建发点与 PII 隔离缺失�
       assert: (src) => assert.match(/'club-apply':\s*\{[^\n]*become-leader[^\n]*\}/.exec(src)[0], /withoutIdentity\(form\)/),
     },
     {
-      file: ENTRY.fabu.wxml,
-      anchor: /!identityReady/g,
-      assert: (src) => assert.match(/<cy-btn[^>]*bindtap="confirmPublishCheck"[^>]*>/.exec(src)[0], /!identityReady/),
+      file: FABU_INDEX_WXML,
+      anchor: /disabled="\{\{!!publishCheck\.blocking\.length\}\}"/g,
+      assert: (src) => assert.match(/<cy-btn[^>]*bindtap="confirmPublishCheck"[^>]*>/.exec(src)[0], /disabled="\{\{!!publishCheck\.blocking\.length\}\}"/),
     },
   ]
   for (const { file, anchor, assert: check } of checks) {
