@@ -44,7 +44,8 @@ test('V-02 组件版式:标题 + 码 + logo，到期行有才出，没有倒计�
 
 test('V-02 组件到期行与票夹同一规则', () => {
   const pad = n => String(n).padStart(2, '0')
-  const d = new Date(Date.now() + 2 * 86400000)
+  // 按自然日加(夏令时切换那天 +48 小时会落到前一天)
+  const d = new Date(); d.setDate(d.getDate() + 2)
   const soon = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' 23:59:00'
   assert.equal(mount({ until: soon }).page.data.expiry, '2 天内过期')
   assert.equal(mount({ until: '' }).page.data.expiry, '')
