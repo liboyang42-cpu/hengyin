@@ -14,7 +14,9 @@ test('RUN-002: 管理与筛选独立弹层，列表仍可批量选人', () => {
   const wxml = read('pages/merchant/customer/index.wxml');
   // 2026-10-28 m679:管理半屏改成 Threads 式菜单,不带标题
   assert.match(wxml, /<cy-sheet inset show="\{\{toolsOpen\}\}" bind:close="closeTools">/);
-  assert.match(wxml, /<cy-sheet[^>]*show="\{\{filterOpen\}\}"[^>]*title="筛选客户"/);
+  // 2026-10-30 业主定稿 P-5 M-03:iOS 式头 —— 左「取消」、中间「筛选客户」、右「重置」,不再用面板自带的标题 + ×
+  assert.match(wxml, /<cy-sheet[^>]*show="\{\{filterOpen\}\}"[^>]*closable="\{\{false\}\}"/);
+  assert.match(wxml, /<text class="cu-fx-hd__t">筛选客户<\/text>/);
   assert.match(wxml, /data-memberid="\{\{item.memberId\}\}"/);
   assert.match(wxml, /wx:if="\{\{selecting\}\}"/);
 });

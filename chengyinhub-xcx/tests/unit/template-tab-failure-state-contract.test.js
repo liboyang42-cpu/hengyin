@@ -147,12 +147,17 @@ test('整套主题货架沿原整包采用进入新主题草稿，不混用小�
   h.page.openTopic({ currentTarget: { dataset: { item: h.page.data.featTopics[0] } } });
   assert.equal(h.navigations[0], '/pages/templatedetail/topic-preview/index?id=31');
   let definition; global.Page = value => { definition = value; };
+  // 2026-10-30 V-24:预览页「查看详情」进主题模板详情,「应用」在详情页,复制链路不变
   const file = path.join(ROOT, 'pages/templatedetail/topic-preview/index.js'); delete require.cache[file]; require(file);
   const preview = Object.assign({}, definition, { data: JSON.parse(JSON.stringify(definition.data)) });
-  preview.setData = patch => Object.assign(preview.data, patch); preview.onLoad({ id: '31' }); preview.useTemplate();
+  preview.setData = patch => Object.assign(preview.data, patch); preview.onLoad({ id: '31' }); preview.goDetail();
+  assert.equal(h.navigations[1], '/pages/templatedetail/topic-detail/index?id=31');
+  const detailFile = path.join(ROOT, 'pages/templatedetail/topic-detail/index.js'); delete require.cache[detailFile]; require(detailFile);
+  const detail = Object.assign({}, definition, { data: JSON.parse(JSON.stringify(definition.data)) });
+  detail.setData = patch => Object.assign(detail.data, patch); detail.onLoad({ id: '31' }); detail.useTemplate();
   const use = lastRequest(h, '/api/template/topic-template/use');
   assert.deepEqual(use.data, { id: '31', scope: '' });
-  assert.equal(h.navigations.length, 1); use.success({ code: 200, data: { topicId: 8031 } });
-  assert.equal(h.navigations[1], '/pages/publish/fabu/index?id=8031');
+  assert.equal(h.navigations.length, 2); use.success({ code: 200, data: { topicId: 8031 } });
+  assert.equal(h.navigations[2], '/pages/publish/fabu/index?id=8031');
   assert.equal(h.requests.some(r => r.url === '/api/template/adopt-draft'), false);
 });

@@ -12,4 +12,16 @@ const MESSAGES = {
 
 function message(kind) { return MESSAGES[kind] || MESSAGES.generic; }
 
-module.exports = { CITY_OPTIONS, message };
+// V-01:记住上次定位/手动选择的城市，自动定位失败时沿用。
+const LAST_CITY_KEY = 'home_city_last';
+function readLastCity() {
+  try { const v = wx.getStorageSync(LAST_CITY_KEY); return typeof v === 'string' ? v.trim() : ''; } catch (e) { return ''; }
+}
+function saveLastCity(city) {
+  try { if (city) wx.setStorageSync(LAST_CITY_KEY, String(city).trim()); } catch (e) { /* 存储失败不影响展示 */ }
+}
+
+// V-01:没有记住的城市且自动定位失败时固定落到上海市(取自上面的候选城市,不另设配置)。
+const DEFAULT_CITY = CITY_OPTIONS[CITY_OPTIONS.indexOf('上海市')];
+
+module.exports = { CITY_OPTIONS, DEFAULT_CITY, message, readLastCity, saveLastCity };

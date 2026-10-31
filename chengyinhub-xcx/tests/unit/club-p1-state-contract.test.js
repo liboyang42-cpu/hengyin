@@ -45,6 +45,7 @@ function loadPage(relativePath, app, requireMap = {}) {
       // BL-20:俱乐部详情图片预览走 utils/media-preview(纯模块,给真实现)
       if (request === '../../../utils/media-preview.js') return require('../../utils/media-preview.js')
       if (request === '../utils/club-pinned-notice.js') return require('../../pages/club/utils/club-pinned-notice.js')
+      if (request === '../../../utils/club-post-repost.js') return require('../../utils/club-post-repost.js')
       throw new Error(`unexpected require: ${request}`)
     },
     Set,

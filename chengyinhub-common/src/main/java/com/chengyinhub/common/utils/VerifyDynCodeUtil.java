@@ -42,6 +42,11 @@ public class VerifyDynCodeUtil {
         static Result fail(String reason) {
             return new Result(false, null, null, reason);
         }
+
+        /** 调用方在验签之外的业务拒绝(例如新码已作废旧码),reason 原样给扫码方。 */
+        public static Result rejected(String reason) {
+            return fail(reason);
+        }
     }
 
     /**

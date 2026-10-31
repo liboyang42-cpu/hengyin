@@ -30,7 +30,7 @@ module.exports = { valid: valid };
       <cy-skeleton wx:if="{{feedState === 'loading' && feedSlow}}" type="card" count="{{3}}" loading-label="帖子加载中" />
       <cy-error load-failure class="cy-fade-in" wx:elif="{{feedState === 'error'}}" title="帖子加载失败" sub="{{feedError}}" retry="重试" bind:retry="loadFeed" />
       <block wx:elif="{{feed.length}}">
-        <cy-post-card class="cy-fade-in" wx:for="{{feed}}" wx:key="id" post="{{item}}" index="{{index}}" light="{{true}}" interactive-club
+        <cy-post-card class="cy-fade-in" wx:for="{{feed}}" wx:key="feedKey" post="{{item}}" index="{{index}}" light="{{true}}" interactive-club
           accessibility-label="查看{{item.memberNickname || '城瘾玩家'}}的动态"
           bind:detail="onPostTap" bind:club="onPostClub"
           bind:playdetail="onPostReference" bind:play="onPostReference" />

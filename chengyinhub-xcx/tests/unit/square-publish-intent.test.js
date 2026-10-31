@@ -11,7 +11,6 @@ const vm = require('../helpers/ui-sandbox-vm.js')
 const ROOT = path.resolve(__dirname, '../..')
 const read = (relativePath) => fs.readFileSync(path.join(ROOT, relativePath), 'utf8')
 
-const SQUARE_LIST = 'pages/square/list/index.js'
 const POST_COMPOSE = 'pages/square/components/cy/post-compose/index.js'
 const ROAM = 'pages/roam/index.js'
 const INTENT = 'utils/publish/publish-intent.js'
@@ -157,9 +156,7 @@ test('R10-03 util:改 payload 换新键并保留前次未知痕迹;账号隔离�
 // 2026-10-27 P-20 owner:广场行内发布框撤掉,新建帖统一走 cy-post-compose(下方「发布组件」用例覆盖意图键);
 // 原「广场列表:首次发布 / 丢回包重试 / 改内容换键 / 切账号 / 软删换键」五条随页内发布流水一并撤走。
 
-function mountSquareList(options = {}) {
-  return mount(SQUARE_LIST, 'page', options)
-}
+// 2026-10-29:广场列表页(pages/square/list)已删,mountSquareList 随之撤走。
 
 
 // ---------------------------------------------------------------- post-compose
@@ -325,7 +322,6 @@ test('负控:意图键不再是稳定复用(每次新键)时必须判红', () =>
     "  if (existing && KEY_RE.test(String(existing.key)) && existing.payloadKey === pk && existing.status !== 'success') {",
     '  if (false) {')
   assert.notEqual(mutated, source, '负控锚点失效:未找到复用条件')
-  const h = mount(SQUARE_LIST, 'page', { source: read(SQUARE_LIST) })
   // 用变异后的 util 源替换真实模块:直接在独立沙箱里验证同 payload 两次 begin 不再同键
   let sandboxModule = null
   const sandbox = {

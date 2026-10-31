@@ -1,9 +1,11 @@
 {
   "navigationBarTitleText": "藏品册",
-  "backgroundColor": "#0A0A0B",
+  "backgroundColor": "#ffffff",
   "disableScroll": true,
   "usingComponents": {
     "cy-nav-bar": "/components/cy/nav-bar/index",
+    "album-head": "/subpackageP3/components/album-head/index",
+    "album-aura": "/subpackageP3/components/album-aura/index",
     "cy-page-title": "/components/cy/page-title/index",
     "cy-tabs": "/components/cy/tabs/index",
     "cy-spin-card": "/components/cy/spin-card/index",
@@ -17,5 +19,5 @@
     "cy-btn": "/components/cy/btn/index"
   },
   "navigationStyle": "custom",
-  "navigationBarTextStyle": "white"
+  "navigationBarTextStyle": "black"
 }

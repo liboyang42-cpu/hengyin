@@ -556,6 +556,14 @@
         },
         "review": "pending"
       },
+      "repost": {
+        "scale": 1,
+        "offset": {
+          "x": 0,
+          "y": 0
+        },
+        "review": "pending"
+      },
       "route": {
         "scale": 1,
         "offset": {

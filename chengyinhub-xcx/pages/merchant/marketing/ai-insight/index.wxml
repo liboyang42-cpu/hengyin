@@ -23,7 +23,7 @@
         <text class="gen-at" wx:if="{{loading}}" aria-role="status">正在更新经营数据…</text>
         <!-- 2026-10-23 业主:删去「生成于 … · 次日更新」 -->
       </view>
-      <cy-avatar class="greet-avatar" size="112" shape="circle" src="{{profile.logo || ''}}" name="{{storeName}}" />
+      <cy-avatar class="greet-avatar" size="112" shape="circle" src="{{img.one(storeLogo)}}" name="{{storeName}}" />
     </view>
 
     <!-- 主卡:大数字 + 环比 + 时间窗 + 逐日格 + 三指标 + 淡紫核销进度(字段缺失 unknown 不画卡) -->
@@ -272,3 +272,4 @@
     </view>
   </block>
 </view>
+<wxs src="../../../../utils/wxs/img.wxs" module="img" />

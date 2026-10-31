@@ -76,7 +76,7 @@ function loadTopic(h, info) {
 test('FOLLOWUP-A-1 主题:别人公开的主题出举报入口,提交到 /api/topic/report 带 id + 所选原因', async () => {
   const h = harness('pages/topic/index/index.js');
   loadTopic(h, topicInfo());
-  assert.equal(h.page.data.canReport, true);
+  assert.equal(h.page._canReport, true);
   const submit = await runReport(h, () => h.page.reportTopic(), r => r.success({ code: 200, msg: '举报已提交，内容将进入审核' }));
   assert.equal(submit.url, '/api/topic/report');
   assert.equal(submit.method, 'POST');
@@ -88,14 +88,14 @@ test('FOLLOWUP-A-1 主题:本人的、未上架或审核未过的主题不出举
   for (const over of [{ isOwner: 1 }, { memberId: 11 }, { userStatus: 0 }, { status: 2 }, { status: 0 }]) {
     const h = harness('pages/topic/index/index.js');
     loadTopic(h, topicInfo(over));
-    assert.equal(h.page.data.canReport, false, JSON.stringify(over));
+    assert.equal(h.page._canReport, false, JSON.stringify(over));
     h.page.reportTopic();
     assert.equal(h.modals.length, 0, JSON.stringify(over));
     assert.equal(h.requests.length, 0);
   }
   const wxml = read('pages/topic/index/index.wxml');
-  // 2026-10-20 owner 看截图后:举报不叠在封面上,放在详情页末尾,沿用「我的游玩记录」行样式。
-  assert.match(wxml, /<view wx:if="\{\{canReport\}\}" class="topic-audio topic-report-entry" bindtap="reportTopic"[^>]*>[\s\S]*?<text>举报这个主题<\/text>/);
+  // 2026-10-29 走查 V-23 业主「举报也不展示」:详情正文不再放「举报这个主题」行(本页无自绘 ⋯ 菜单,处理器保留)。
+  assert.doesNotMatch(wxml.replace(/<!--[\s\S]*?-->/g, ''), /举报这个主题|topic-report-entry/);
   const hero = wxml.slice(wxml.indexOf('<view class="cont topic-hero-meta">'), wxml.indexOf('<view class="topic-beta"'));
   assert.doesNotMatch(hero, /reportTopic/, '举报入口不能叠在头图上');
   assert.match(wxml, /<cy-option-sheet show="\{\{reportReasonShow\}\}" title="选择举报原因" items="\{\{reportReasonItems\}\}"/);

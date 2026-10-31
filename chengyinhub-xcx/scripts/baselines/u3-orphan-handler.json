@@ -1,7 +1,7 @@
 {
   "note": "U3 孤儿 handler 存量。只能变小不能变大;修完一条就重跑 --update-baseline。",
   "generatedBy": "js-orphan-handler-lint.js --update-baseline",
-  "count": 74,
+  "count": 67,
   "entries": [
     "subpackageMember/components/cy/profile/index.js::goMyJoin",
     "subpackageMember/components/cy/profile/index.js::onAiStart",
@@ -65,13 +65,6 @@
     "pages/shezhi/shezhi.js::goRuzhu",
     "pages/square/detail/index.js::onCommentBlur",
     "pages/square/detail/index.js::onImageLoad",
-    "pages/square/list/index.js::goSearchMap",
-    "pages/square/list/index.js::onAddRoute",
-    "pages/square/list/index.js::onDrawerTouchEnd",
-    "pages/square/list/index.js::onDrawerTouchMove",
-    "pages/square/list/index.js::onDrawerTouchStart",
-    "pages/square/list/index.js::onImageLoad",
-    "pages/square/list/index.js::onPublishSuccess",
     "pages/talent/list/index.js::goMyClubConsole",
     "pages/talent/list/index.js::onHeroTap",
     "pages/talent/list/index.js::onTopicTap",

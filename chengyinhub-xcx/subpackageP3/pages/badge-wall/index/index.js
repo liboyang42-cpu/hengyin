@@ -11,6 +11,7 @@ const { recoverReadSession } = require('../../../../utils/session/login-reload.j
 const { resolveMenuChrome } = require('../../../../utils/nav-safe-area.js'); const pageMotion = require('../../../../utils/page-motion.js');
 const ENGINE = require('./engine.js'); const ENAMEL = require('./enamel-pin.js'); const PIN_PX = 420; function pinIdOf(b) { return (b.glyph || 'DEFAULT') + (b.locked ? '_l' : ''); } // 2026-10-28 业主:珐琅徽章(enamel-pin.js)
 const { chinaDateKey } = require('../../../../utils/datetime');
+const { readReducedMotion } = require('../../../../utils/motion-preference.js');
 const { isRecord, isRecordList } = require('../../../../utils/response-shape.js');
 const { sendUiStateRequest } = require('../../../../utils/ui-state-request.js');
 // 9-24 顶部颜色图例删掉后,墙模式顶部少让约 20px(图例一行 + 上边距),170 → 150
@@ -58,6 +59,22 @@ const CODE_TO_GLYPH = {
 function glyphFor(code) {
   const key = String(code || '');
   return CODE_TO_GLYPH[key] || (/^ROAM_POI_\d+$/.test(key) ? 'citylit' : undefined);
+}
+
+// 2026-10-30 收集册计数环(参考 mymind):固定 24 颗点,按已点亮比例点亮;右边一句宋体。
+const RING_DOTS = 24;
+const CN = ['零', '一', '两', '三', '四', '五', '六', '七', '八', '九', '十'];
+function cnNum(n) { return n <= 10 ? CN[n] : (n < 20 ? '十' + (n === 10 ? '' : CN[n - 10].replace('两', '二')) : String(n)); }
+function ringOf(lit, total) {
+  const on = total > 0 ? Math.round(RING_DOTS * lit / total) : 0;
+  const dots = [];
+  for (let i = 0; i < RING_DOTS; i++) {
+    const a = (i / RING_DOTS) * Math.PI * 2 - Math.PI / 2;
+    dots.push({ i: i, x: +(50 + Math.cos(a) * 46).toFixed(2), y: +(50 + Math.sin(a) * 46).toFixed(2), lit: i < on, d: i * 45 });
+  }
+  const rest = Math.max(0, total - lit);
+  const say = total ? cnNum(lit) + '枚勋章。\n' + (rest ? '还差' + cnNum(rest) + '枚。' : '一枚不少。') : '';
+  return { dots: dots, say: say };
 }
 
 // 详情只展示日期,兼容后端 Date 的字符串与时间戳序列化。
@@ -190,6 +207,7 @@ Page({
     unlockedCount: 0,
     lockedCount: 0,
     sheetOn: false, pins: {},
+    ringDots: [], ringOn: false, ringSay: '', flyIdx: -1, fly: { show: false, on: false, src: '', style: '', name: '', meta: '', locked: false },
     sheet: { name: '', rarZh: '', rarColor: '', desc: '', time: '', source: '', cond: '' }
   },
 
@@ -219,6 +237,8 @@ Page({
   onHide() { this._hidden = true; if (this.engine) this.engine.stop(); },
   onUnload() {
     this._unloaded = true;
+    if (this._ringTimer) clearTimeout(this._ringTimer);
+    if (this._flyTimer) clearTimeout(this._flyTimer);
     this._loadRequestId = (this._loadRequestId || 0) + 1;
     this.destroyEngine();
   },
@@ -378,13 +398,18 @@ Page({
     if (this.data.viewMode === 'list' && !this.data.badges.length) pageMotion.enter(this, 'pmList'); this._badgeCache = list; // 2026-10-23:列表首次到达时依次浮上来
     this._resolveFocus(list);
     if (!list.length) this.destroyEngine();
+    const ring = ringOf(unlockedCount, list.length);
     this.setData({
       loaded: true,
       badges: list,
       badgeGroups: badgeGroups,
       unlockedCount: unlockedCount,
       lockedCount: list.length - unlockedCount,
+      ringDots: ring.dots, ringSay: ring.say, ringOn: false,
     });
+    // 点阵进场:先全灰落定,下一拍挂 is-on,亮着的点按各自 transition-delay 一颗颗变红(纯过渡,不用 keyframes)
+    clearTimeout(this._ringTimer);
+    this._ringTimer = setTimeout(() => { if (!this._unloaded) this.setData({ ringOn: true }); }, 120);
     if (this.engine) this.engine.setBadges(list); this._renderPins(list);
   },
 
@@ -448,7 +473,52 @@ Page({
     if (this.engine) this.engine.closeDetail();
   },
 
-  onFbTap(e) { this.openSheet(e.currentTarget.dataset.idx); },
+  onFbTap(e) {
+    const idx = Number(e.currentTarget.dataset.idx);
+    if (this.data.viewMode === 'list') this.openFly(idx); else this.openSheet(idx);
+  },
+
+  // ── 点开:那一枚从格子里飞到屏幕中间(FLIP:先摆在原位,下一拍放开) ──
+  openFly(idx) {
+    const b = this.data.badges[idx];
+    if (!b || this.data.fly.show) return;
+    const src = b.iconUrl || this.data.pins[pinIdOf(b)] || '';
+    if (!src) { this.openSheet(idx); return; }
+    const that = this;
+    this.createSelectorQuery().select('#bw-medal-' + idx).boundingClientRect().exec(function (res) {
+      const r = res && res[0];
+      if (!r || that._unloaded) return;
+      let w = 375, h = 667;
+      try { const info = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync(); w = info.windowWidth; h = info.windowHeight; } catch (e) {}
+      const size = Math.round(w * 0.72), left = Math.round((w - size) / 2), top = Math.round(h * 0.42 - size / 2);
+      const base = 'left:' + left + 'px;top:' + top + 'px;width:' + size + 'px;height:' + size + 'px;';
+      const from = 'transform:translate(' + Math.round(r.left + r.width / 2 - (left + size / 2)) + 'px,' + Math.round(r.top + r.height / 2 - (top + size / 2)) + 'px) scale(' + (r.width / size).toFixed(3) + ');';
+      that._flyFrom = base + from + 'transition:none;';
+      that._flyBadge = b;
+      const meta = b.locked ? (b.cond || '还没点亮') : (b.time || '已点亮');
+      that.setData({ flyIdx: idx, fly: { show: true, on: false, src: src, style: that._flyFrom, name: b.name, meta: meta, locked: !!b.locked } });
+      const reduced = readReducedMotion();
+      clearTimeout(that._flyTimer);
+      that._flyTimer = setTimeout(function () {
+        if (that._unloaded) return;
+        that.setData({ 'fly.on': true, 'fly.style': base + 'transform:none;transition:' + (reduced ? 'none' : 'transform .6s cubic-bezier(.2,.9,.25,1.06)') + ';' });
+      }, 30);
+    });
+  },
+  closeFly() {
+    if (!this.data.fly.show) return;
+    const that = this;
+    this.setData({ 'fly.on': false, 'fly.style': (this._flyFrom || '').replace('transition:none;', 'transition:transform .42s cubic-bezier(.4,0,.2,1);') });
+    clearTimeout(this._flyTimer);
+    this._flyTimer = setTimeout(function () { if (!that._unloaded) that.setData({ flyIdx: -1, fly: { show: false, on: false, src: '', style: '', name: '', meta: '', locked: false } }); }, 420);
+  },
+  // 中间那枚再点一下:进 3D 转台(与原详情里的「查看 3D 徽章」同一条路);没点亮的不进
+  onFlyPin() {
+    const b = this._flyBadge;
+    if (!b || b.locked) return;
+    this.setData({ sheet: Object.assign({}, this.data.sheet, { style: b.style || 'glow', iconUrl: b.iconUrl || '', rarity: b.rarity || 0, pinId: pinIdOf(b), glyph: b.glyph || 'DEFAULT', locked: false, name: b.name }) });
+    this.goBadge3d();
+  },
 
   goExplore() {
     wx.switchTab({ url: '/pages/index/index' });

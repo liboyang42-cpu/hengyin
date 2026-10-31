@@ -55,26 +55,30 @@
 
 .crop__frame {
   position: relative;
-  overflow: hidden;              /* 框外直接裁掉 = 参考图里的纯黑 */
+  overflow: visible;             /* M-09:框外不再裁掉,整张图都在,框外由 .crop__mask 压暗 */
   box-sizing: border-box;
-  border: 1px solid var(--cy-comp-crop-frame-line);
 }
 
-/* M-08(2026-10-27):圆形取景框。方框描边换成圆,圆外用超大 box-shadow 压暗(被 .crop__frame 的 overflow 裁在框内) */
-.crop__frame--round { border-color: transparent; }
-.crop__round-mask {
+/* M-09:框外整圈压暗 —— 框本身是个洞,外面一圈超大 box-shadow;圆形取景就是圆洞 */
+.crop__mask {
   position: absolute;
   left: 0;
   top: 0;
   width: 100%;
   height: 100%;
-  border-radius: 50%;
   box-sizing: border-box;
   border: 1px solid var(--cy-comp-crop-frame-line);
-  box-shadow: 0 0 0 2000px rgba(0, 0, 0, 0.55); /* ds-ok: 取景遮罩,照片语境固定半透明黑 */
+  box-shadow: 0 0 0 2000px rgba(0, 0, 0, 0.6); /* ds-ok: 取景遮罩,照片语境固定半透明黑 */
   pointer-events: none;
   z-index: 1;
 }
+.crop__mask--round { border-radius: 50%; }
+.theme-merchant .crop__mask { box-shadow: 0 0 0 2000px rgba(255, 255, 255, 0.72); } /* ds-ok: 浅色版框外提亮 */
+/* 封面等方框里的三分线 */
+.crop__grid { position: absolute; left: 0; top: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+.crop__grid-v, .crop__grid-h { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+.crop__grid-v { background: linear-gradient(90deg, transparent calc(33.33% - 1px), rgba(255, 255, 255, .5) 33.33%, transparent calc(33.33% + 1px), transparent calc(66.66% - 1px), rgba(255, 255, 255, .5) 66.66%, transparent calc(66.66% + 1px)); } /* ds-ok: 三分线 */
+.crop__grid-h { background: linear-gradient(180deg, transparent calc(33.33% - 1px), rgba(255, 255, 255, .5) 33.33%, transparent calc(33.33% + 1px), transparent calc(66.66% - 1px), rgba(255, 255, 255, .5) 66.66%, transparent calc(66.66% + 1px)); } /* ds-ok: 三分线 */
 
 /* 定位在框心,translate(-50%,-50%) 让 transform-origin 与几何模型的「相对框心位移」对齐 */
 .crop__img {
@@ -157,3 +161,16 @@
   width: 750rpx;
   height: 750rpx;
 }
+
+/* ===== 2026-10-30 P-5(M-09):底栏三个小胶囊(32pt 高),不再是两块大按钮;商家浅色 ===== */
+.crop__bar { gap: var(--cy-space-2); }
+.crop__action { min-height: 88rpx; padding: 0; background: transparent; }
+.crop__action text { display: flex; align-items: center; height: 64rpx; padding: 0 var(--cy-space-4); border-radius: var(--cy-radius-pill);
+  font-size: var(--cy-font-label); font-weight: 600; background: var(--cy-color-bg-surface); color: var(--cy-color-text-primary); }
+.crop__action--confirm { background: transparent; padding-left: 0; padding-right: 0; }
+.crop__action--confirm text { background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); }
+.crop__bar--missing .crop__action--return { background: transparent; }
+.crop__bar--missing .crop__action--return text { flex: 1; justify-content: center; background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); }
+.crop__action--press { background: transparent; opacity: .78; }
+.theme-merchant .crop, .theme-merchant .crop__stage { background: var(--cy-color-bg-page); }
+.theme-merchant .crop__nav { background: var(--cy-color-bg-page); }

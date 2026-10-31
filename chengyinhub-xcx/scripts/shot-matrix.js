@@ -157,11 +157,6 @@ const RAW = [
   ['A02', 'A02-index-skeleton.png', '/pages/index/index', 'player', 'loading', { isAppReady: true, isLoading: true, listLoading: { recommendedTopicList: true, nearbyActivityList: true, upcomingActivityList: true }, listErr: { recommendedTopicList: false, nearbyActivityList: false, upcomingActivityList: false }, recommendedTopicList: [], recoHero: null, nearbyActivityList: [], upcomingActivityList: [], bannerState: 'loading' }, undefined, SKEL, 'setData', 'P1', '', '首屏三个内容分区使用同构骨架，且清空迟到响应留下的正文'],
   ['A03', 'A03-index-error.png', '/pages/index/index', 'player', 'error', { isAppReady: true, isLoading: false, listLoading: { recommendedTopicList: false, nearbyActivityList: false, upcomingActivityList: false }, listErr: { recommendedTopicList: true, nearbyActivityList: true, upcomingActivityList: true }, recommendedTopicList: [], recoHero: null, nearbyActivityList: [], upcomingActivityList: [], bannerState: 'error' }, undefined, ERR, 'setData', 'P1', '', '错误态清空迟到正文并为每个失败分区保留单一重试 CTA'],
   ['A04', 'A04-index-logout.png', '/pages/index/index', 'guest', 'permission', null, undefined, TITLE, 'identity+setData', 'P1', '', '不出现"登录已过期"横条'],
-  ['A05', 'A05-square-list-real.png', '/pages/square/list/index', 'player', 'normal', { picList: [IMG] }, undefined, { selector: '.post-card', min: 1 }, 'real-data', 'P0', '', '★替换废图 15；Strava 单列流，作者/正文/媒体齐全'],
-  ['A06', 'A06-square-list-empty.png', '/pages/square/list/index', 'player', 'empty', { loading: false, nodata: true, list: [] }, undefined, EMPTY, 'setData', 'P1', '', 'aaa 居中放大'],
-  ['A07', 'A07-square-list-skeleton.png', '/pages/square/list/index', 'player', 'loading', { loading: true, list: [] }, undefined, SKEL, 'setData', 'P1', '', 'bbb'],
-  ['A08', 'A08-square-list-error.png', '/pages/square/list/index', 'player', 'error', { loading: false, loadError: true, list: [], loadMoreError: '', submitError: '', submitErrorKind: '' }, undefined, ERR, 'setData', 'P1', '', '错误态不显示内部占位词'],
-  ['A09', 'A09-square-list-guest.png', '/pages/square/list/index', 'guest', 'normal', { loadError: false, nodata: false, list: [{ id: 1, memberId: 2, memberNickname: '城市漫游者', contents: '游客也能先浏览广场内容', picList: [] }] }, undefined, { selector: 'cy-post-card', min: 1 }, 'identity+setData', 'P1', '', '列表可匿名浏览；登录门只在互动动作触发，不把游客态伪造成会话过期页'],
   ['A10', 'A10-square-detail-normal.png', '/pages/square/detail/index?id=1', 'player', 'normal', { picList: [IMG, IMG] }, undefined, TITLE, 'setData', 'P0', '', '标题上移；对话框/关注白色；+号在头像右下。**有媒体**态：wxml 的媒体区挂在 picList.length!=0 上，不注入就和 A12 走同一条分支、拍成同一张'],
   ['A11', 'A11-square-detail-longtext.png', '/pages/square/detail/index?id=1', 'player', 'long-value', { info: { contents: '城市的细节不会在匆忙经过时自己出现。沿着河岸慢慢走，留意门牌、砖缝、旧招牌和夜色里仍亮着的窗，把这段足够长的文字完整排进卡片，任何一个连续片段都不应该越过屏幕边缘。' }, picList: [IMG] }, undefined, TITLE, 'setData', 'P2', '', '长正文与图片使用页面真实字段，正文不得溢出'],
   ['A12', 'A12-square-detail-nomedia.png', '/pages/square/detail/index?id=1', 'player', 'normal', { picList: [] }, undefined, TITLE, 'setData', 'P1', '', '无媒体不留灰块 —— 与 A10 的差别就是 picList 空/非空，必须显式注入'],
@@ -307,7 +302,7 @@ const RAW = [
   ['B58', 'B58-templatedetail-loading.png', '/pages/templatedetail/templatedetail?id=1', 'player', 'loading', { loading: true }, undefined, SKEL, 'setData', 'P1', '', 'bbb'],
   ['B59', 'B59-template-index.png', '/pages/template/index', 'player', 'normal', null, undefined, TITLE, 'real-data', 'P0', '', '★"发布广场"居中、与俱乐部/我的同字号（#496 曾被改回，必复验）'],
   ['B60', 'B60-circle-play-missing.png', '/pages/play/circle/index', 'player', 'missing-param', null, undefined, { selector: '.state', min: 1 }, 'real-data', 'P1', '', '缺少城市实例时明确说明，不能停在 loading'],
-  ['B62', 'B62-stamp-album-real.png', '/subpackageP3/pages/stamp-album/index/index', 'player', 'normal', null, undefined, TITLE, 'real-data', 'P0', '', '★替换破图 10；一排三个；玩家侧黑底；真实邮票图'],
+  ['B62', 'B62-stamp-album-real.png', '/subpackageP3/pages/stamp-album/index/index', 'player', 'normal', null, undefined, { selector: '.al-item', min: 1 }, 'real-data', 'P0', '', '★替换破图 10;真实邮票图;2026-10-30 收集册 · 邮票:标题由 album-head 给(不再是 cy-page-title),锚在邮票本身'],
   ['B63', 'B63-stamp-album-empty.png', '/subpackageP3/pages/stamp-album/index/index', 'player', 'empty', { loading: false, list: [] }, undefined, EMPTY, 'setData', 'P1', '', '入口先做只读路由审计（只有漫游中可开）'],
   ['B64', 'B64-stamp-album-fail.png', '/subpackageP3/pages/stamp-album/index/index', 'player', 'error', { loading: false, loadError: true }, undefined, ERR, 'setData', 'P1', '', 'aaa/bbb'],
   ['B65', 'B65-stamp-camera.png', '/subpackageP3/pages/stamp-camera/index/index', 'player', 'normal', null, undefined, TITLE, 'real-device', 'P2', '需真机相机', '—'],
@@ -327,8 +322,9 @@ const RAW = [
   ['B73', 'B73-leaderboard-growth.png', '/subpackageP3/pages/growthcenter/leaderboard/index', 'player', 'normal', leaderboardFixture('exp', 'total'), undefined, { selector: '.gc-pod-name', min: 3 }, 'setData', 'P1', '', '成长榜使用 metric=exp 与 EXP 单位，不再注入页面已删除的 rankType'],
   ['B74', 'B74-leaderboard-empty.png', '/subpackageP3/pages/growthcenter/leaderboard/index', 'player', 'empty', { list: [] }, undefined, EMPTY, 'setData', 'P1', '', '⚠️ 字段名按页面实况:activeTopTab/activeClubTab/nearbyClubs。早先写成 activeTab/clubs,两态都落到空态、md5 相同'],
   ['B75', 'B75-leaderboard-error.png', '/subpackageP3/pages/growthcenter/leaderboard/index', 'player', 'error', { loading: false, errorMsg: '排行榜没有加载出来', metric: 'point', period: 'total', unit: '积分', top3: [], rest: [], me: null }, undefined, { selector: '.gc-error-board', min: 1 }, 'setData', 'P1', '', 'HTTP/业务失败(含 404)走 cy-error 可重试错误态，不再映射暂未开放'],
-  ['B76', 'B76-topic-preview-normal.png', '/pages/templatedetail/topic-preview/index?id=1', 'player', 'normal', null, undefined, { selector: '.stk', min: 1 }, 'real-data', 'P1', '', '主题卡堆预览(玩家深色):扇形卡堆 + ✓ 清单 + 「用这个模板」'],
+  ['B76', 'B76-topic-preview-normal.png', '/pages/templatedetail/topic-preview/index?id=1', 'player', 'normal', null, undefined, { selector: '.stk', min: 1 }, 'real-data', 'P1', '', '主题卡堆预览(玩家深色):扇形卡堆 + ✓ 清单 + 「查看详情」'],
   ['B77', 'B77-topic-preview-merchant.png', '/pages/templatedetail/topic-preview/index?id=1&scope=MERCHANT&readonly=1', 'merchant', 'normal', null, undefined, { selector: '.tp--light', min: 1 }, 'real-data', 'P1', '', '主题卡堆预览商家侧浅色版(只换颜色)'],
+  ['B78', 'B78-topic-detail-normal.png', '/pages/templatedetail/topic-detail/index?id=1', 'player', 'normal', null, undefined, { selector: '.xb-head', min: 1 }, 'real-data', 'P1', '', '主题模板详情(V-24):剧情 + 能力按站列玩法 + 「应用」与分享同款'],
 
   // ---------- D-C 商家、俱乐部与合作（55） ----------
   ['C01', 'C01-merchant-home-normal.png', '/pages/merchant/index/index', 'merchant', 'normal', { merchantAccess: MERCHANT_OWNER_ACCESS, displayName: '外滩夜行补给站', merchantInfo: { id: 1, name: '外滩夜行补给站', logo: IMG }, dashboardLoading: false, dashboardError: '', dashboardData: { revenue: '128.00' }, joinLoading: false, hostLoading: false, todoLoading: false, gameEntryLoading: false, joinTotal: 0, hostProjectTotal: 1, projectCards: [{ key: 'host:9', role: 'host', roleLabel: '主办', id: 9, ownerId: 9, bizType: 'topic', title: '外滩夜行路线', statusLabel: '招募中', catLabel: '城市路线', thumb: IMG, meta: '8月23日 · 上海', todoCount: 2, todoChips: [{ key: 'verify', label: '待核销', count: 2, tone: 'warn' }], msgCount: 1 }], notifications: [{ id: 1, label: '待确认承接', content: '外滩夜行路线', time: '刚刚' }] }, undefined, TITLE, 'identity+setData', 'P0', '', '首屏显示已确认收入、项目与消息，未知值不冒充 ¥0'],
@@ -496,7 +492,7 @@ const RAW = [
   ['E19', 'E19-publish-temp-editor.png', '/pages/publish/temp/index', 'merchant', 'normal', { id: 0, durationOptions: ['30 分钟', '60 分钟', '90 分钟'], difficultyOptions: ['简易', '一般', '困难'], playersOptions: ['1-2 人', '2-6 人', '6-12 人'], playersText: '2-6 人', durationText: '30 分钟', difficultyLabel: '一般', selectedCategoryIds: [3], selectedCategoryNames: ['城市观察'], selectedCategoryNamesStr: '城市观察', categoryList: [{ id: 3, categoryName: '城市观察' }], formData: { originalTemplateId: 0, categoryId: 3, title: '找到老建筑的年份', description: '观察门楣和立面细节', imgUrl: IMG, players: '2-6 人', usageLocation: '户外街区', requiredMaterials: '手机、笔', duration: '30', difficulty: '中', isSync: 1, ruleInstructions: '到达点位后找到铜牌，输入上面的年份。', validationMethod: 1, feedbackMethod: 0, questionName: '铜牌上写的年份是？', questionAnswer: '1932', feedbackText: '你找到了这座建筑的时间线索。', couponId: 0, medalImg: '', medalName: '', questionA: '', questionB: '', questionC: '', questionD: '', correctAnswer: 'A', activityCategoryids: '3', hint1: '留意入口右侧', hint2: '铜牌在及肩高度', answerReveal: '1932', photoRequireDesc: '', photoReview: 0, audioUrl: '', audioDuration: '', audioFileName: '', audioFormat: '', storyJson: '', status: 1 }, moduleList: [{ key: 'finish', name: '完成方式' }], availableModules: [], optionItems: [], storyBeats: [{ id: 1, text: '门楣上的时间藏在铜牌里。', tag: '开场', imgs: [IMG] }], errors: {}, aiNodeAvailable: false, aiNodeState: 'idle', aiNodeError: '', aiNodeChips: ['设计一个现场观察问答', '生成拍照打卡任务', '补齐两级提示'] }, undefined, { selector: '.cg', min: 1 }, 'identity+setData', 'P0', '', '节点玩法编辑器正常态；duration/difficulty/players 选项使用 dictLabel 字符串数组'],
   ['E20', 'E20-template-intro-normal.png', '/pages/publish/template-intro/index', 'merchant', 'normal', { cards: [{ id: 11, title: '线索解谜', imgUrl: IMG, catName: '城市观察', accent: '#E8536B' }, { id: 12, title: '拍照打卡', imgUrl: '/images/route_free_cover.png', catName: '现场互动', accent: '#18B5A0' }, { id: 13, title: '问答任务', imgUrl: IMG, catName: '线索问答', accent: '#F0B429' }] }, undefined, { selector: '.ti', min: 1 }, 'identity+setData', 'P0', '', '节点玩法引导页三张真实形状卡片'],
   ['E22', 'E22-topicadd-normal.png', '/pages/publish/topicadd/topicadd?mode=1', 'merchant', 'normal', { id: 0, templateName: '外滩夜行档案', canEnterPro: true, clubId: '', mode: 1, modeTitle: '城市定向', modeDesc: '按顺序完成点位，适合集合出发、带队运营和强节奏故事。', modeHint: '下一步会进入专业路线编辑器，默认创建城市定向票种。', namePlaceholder: '例如：外滩夜行档案' }, undefined, { selector: '.topicadd-page', min: 1 }, 'identity+setData', 'P0', '被验对象已退役:PR #685 把 topicadd 降级成纯重定向壳。注意本条的 DOM 断言 .topicadd-page 这个 class 也随之不存在了 —— 硬补拍等于连断言一起造假。「主题命名」已挪进 fabu 第一屏第一位的名称输入框(fabu/index.wxml:66),「类型确认」由 fabu 自带的模式切换器承担(:75);转跳本身由 tests/unit/topicadd-shell-redirect-contract.test.js 锁住。', '已退役,见 blocked 原因'],
-  ['E23', 'E23-templatedetail-normal.png', '/pages/templatedetail/templatedetail?id=11&scope=library', 'merchant', 'normal', { id: 11, scope: 'library', info: { title: '老建筑年份线索', publisher: '城瘾玩法工坊', description: '观察建筑立面、门楣与铜牌，找到藏在街区里的时间线索。', ruleInstructions: '到达点位后阅读提示，输入现场看到的年份。', difficulty: '中', duration: 30, players: '2-6 人', requiredMaterials: '手机、笔', storyText: '一条街的时间，往往藏在最小的细节里。', storyImg: IMG, validationMethodStr: '文字暗号', validationMethod: 1, usageLocation: '户外街区', questionName: '铜牌上的年份是？', questionA: '', questionB: '', questionC: '', questionD: '', imgUrl: IMG }, gallery: [IMG, '/images/route_free_cover.png'], galleryColumns: [{ top: IMG, bottom: '/images/route_free_cover.png' }], coverUrl: IMG, categoryText: '城市观察', difficultyLetter: '中', difficultyLabel: '中等难度', loading: false, loadError: false, activeTab: 'details', primaryLabel: '开始应用', tplTabs: [{ key: 'details', label: '详情' }, { key: 'capabilities', label: '能力' }] }, undefined, { selector: '.xb-page', min: 1 }, 'identity+setData', 'P0', '', '玩法详情正常态；gallery 是 URL 字符串数组，galleryColumns 是列对象数组'],
+  ['E23', 'E23-templatedetail-normal.png', '/pages/templatedetail/templatedetail?id=11&scope=library', 'merchant', 'normal', { id: 11, scope: 'library', info: { title: '老建筑年份线索', publisher: '城瘾玩法工坊', description: '观察建筑立面、门楣与铜牌，找到藏在街区里的时间线索。', ruleInstructions: '到达点位后阅读提示，输入现场看到的年份。', difficulty: '中', duration: 30, players: '2-6 人', requiredMaterials: '手机、笔', storyText: '一条街的时间，往往藏在最小的细节里。', storyImg: IMG, validationMethodStr: '文字暗号', validationMethod: 1, usageLocation: '户外街区', questionName: '铜牌上的年份是？', questionA: '', questionB: '', questionC: '', questionD: '', imgUrl: IMG }, gallery: [IMG, '/images/route_free_cover.png'], galleryColumns: [{ top: IMG, bottom: '/images/route_free_cover.png' }], coverUrl: IMG, categoryText: '城市观察', difficultyLetter: '中', difficultyLabel: '中等难度', loading: false, loadError: false, activeTab: 'details', primaryLabel: '应用', tplTabs: [{ key: 'details', label: '详情' }, { key: 'capabilities', label: '能力' }] }, undefined, { selector: '.xb-page', min: 1 }, 'identity+setData', 'P0', '', '玩法详情正常态；gallery 是 URL 字符串数组，galleryColumns 是列对象数组'],
   ['E24', 'E24-topic-pricing-normal.png', '/pages/topic/pricing/index?topicId=301', 'merchant', 'normal', { topicId: 301, subType: 'guided', leadCost: '200', teamSize: '10', loading: false, errorText: '', floor: 49, floorText: '49.00', finalPrice: 69, sliderMax: 120, referenceText: '上海同类已开售均价 ¥79.00（12 个样本）', referencePrice: 79, referenceDeltaText: '未高于同城参考价', saving: false, canConfirmPrice: true }, undefined, { selector: '.pg', min: 1 }, 'identity+setData', 'P0', '', '有人带终价确认正常态'],
   ['E25', 'E25-myproject-normal.png', '/subpackageA/pages/myproject/index?type=topic', 'merchant', 'normal', { typeTab: 'topic', projectState: 'ready', projectErrorMsg: '', stateIndex: 0, stateSheetVisible: false, ownerChips: [{ key: 'all', label: '全部' }, { key: 'merchant', label: '商家' }], owner: 'all', list: [{ id: 301, bizType: 'topic', cover: IMG, title: '外滩夜行档案', projectTypeText: '城市定向', stateText: '进行中', _stateVariant: 'success', _dot: true, ownerType: 'merchant', _acceptAccented: true, _showAccept: true, acceptStatusText: '承接 3 家', signupCount: 28, viewCount: 316, _canToggle: true, _canDelete: false, _action: '编辑', _canViewApplies: true, _toggleLabel: '暂停' }], pendingSummary: { total: 2, rejected: 0, draft: 1, pending: 1 }, capped: false, loading: false, loaded: true, emptyTit: '还没有主题', emptySub: '用发布按钮创建你的第一条城市路线', tplList: [], tplLoaded: false, tplLoading: false, tplErrorMsg: '' }, undefined, { selector: '.mp-card', min: 1 }, 'identity+setData', 'P0', '', '我的项目主题列表正常态'],
   ['E26', 'E26-myproject-empty.png', '/subpackageA/pages/myproject/index?type=topic', 'merchant', 'empty', { typeTab: 'topic', projectState: 'ready', projectErrorMsg: '', stateIndex: 0, stateSheetVisible: false, ownerChips: [], owner: 'all', list: [], pendingSummary: { total: 0, rejected: 0, draft: 0, pending: 0 }, capped: false, loading: false, loaded: true, emptyTit: '还没有主题', emptySub: '用发布按钮创建你的第一条城市路线', tplList: [], tplLoaded: false, tplLoading: false, tplErrorMsg: '' }, undefined, { selector: 'cy-empty', min: 1 }, 'identity+setData', 'P1', '', '我的项目主题空态'],
@@ -668,12 +664,13 @@ const countBy = (pred) => SHOTS.filter(pred).length;
 // 2026-10-28 模板页货架改版新增主题卡堆预览页:B76 玩家深色 / B77 商家浅色两条 P1 real-data,total 340→342、P1 199→201、actionable 316→318(P1 192→194)、B 69→71、real-data 38→40。
 // 2026-10-28 L9 再并 master(#652 B76/B77)叠加本线 D12h–D12l:total 351、P1 201、actionable 327(P1 194)、B 71、real-data 43。
 // 2026-10-28 并 master(#658 后)合流 integrate/devfix-20261027:本线 F201(营销消息页)与 D33A(账户收益分析页)两行叠加 master,自检实测 total 353、P1 203、actionable 329(P1 196)、D 52、setData 186、real-data 44。
-// 2026-10-30 实走复核补时间轴对照玩家端填充态 F202(P1 setData actionable):total 353→354、P1 203→204、actionable 329→330(P1 196→197)、F 95→96、setData 186→187。
+// 2026-10-29 走查 l2-roam V-08 第二轮删除「动态」二级页 pages/square/list:A05–A09 五行退场,total 353→348、P0 140→139、P1 203→199、actionable 329→324(P0 131→130、P1 196→192)、A 53→48、setData 186→183、identity+setData 116→115、real-data 44→43;blocked 与已验 fixture 不变。
+// 2026-10-31 dw29 发布集成:master(F202 等,354)叠加 l2-roam 删「动态」二级页 A05–A09(−5)与 V-24 主题模板详情(+1),按实列复算 total 350、P0 139、P1 201、actionable 326(P0 130、P1 194)、A 48、B 72、setData 184、identity+setData 115、real-data 44。
 const STATS = {
-  "total": 354,
+  "total": 350,
   "byPriority": {
-    "P0": 140,
-    "P1": 204,
+    "P0": 139,
+    "P1": 201,
     "P2": 10
   },
   "blockedByPriority": {
@@ -682,23 +679,23 @@ const STATS = {
     "P2": 8
   },
   "actionable": {
-    "P0": 131,
-    "P1": 197,
+    "P0": 130,
+    "P1": 194,
     "P2": 2,
-    "total": 330
+    "total": 326
   },
   "blocked": 24,
   "domains": {
-    "A": 53,
-    "B": 71,
+    "A": 48,
+    "B": 72,
     "C": 56,
     "D": 52,
     "E": 26,
     "F": 96
   },
   "control": {
-    "setData": 187,
-    "identity+setData": 116,
+    "setData": 184,
+    "identity+setData": 115,
     "real-data": 44,
     "real-device": 7
   },

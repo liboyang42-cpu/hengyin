@@ -3,18 +3,23 @@
 const app = getApp()
 const toast = require('../../../utils/toast.js')
 const { captureLogin, loginCurrent, seatChoice, issuedSeat, seatNumber } = require('../../../utils/registration-seat.js')
+const { passExpiryText } = require('../../../utils/ticket-expiry.js')
+// V-02(2026-10-29 业主):与票夹背面同一版式与规则 —— 只有标题 + 码(码心城瘾 logo)，7 天内到期才写「N 天内过期」；
+// 不显示倒计时、原始码串和说明，动态码到期前 30 秒后台静默续签，续签期间旧码照常出示。
+const REFRESH_LEAD_MS = 30000
+const RETRY_MS = 5000
 
 Component({
   properties: {
     registrationId: { type: String, value: '' },
+    title: { type: String, value: '' },
+    until: { type: null, value: '' },
   },
   data: {
     state: 'loading',
     qr: '',
-    code: '',
     errorText: '',
-    countdown: '',
-    bigQr: false,
+    expiry: '',
     seatNo: '', seatInput: '', seatCount: 0, seatVerified: false,
   },
   observers: {
@@ -24,15 +29,17 @@ Component({
         this._loadedRegistrationId = ''
         this._loadToken = (this._loadToken || 0) + 1
         this.clearTimer()
-        this.setData({ state: 'error', qr: '', code: '', countdown: '', errorText: '缺少报名记录，无法生成入场码' })
+        this.setData({ state: 'error', qr: '', errorText: '缺少报名记录，无法生成入场码' })
         return
       }
       if (value !== this._loadedRegistrationId) this.load()
     },
+    until(value) { this.setData({ expiry: passExpiryText(value) }) },
   },
   lifetimes: {
     attached() {
       this._attached = true
+      this.setData({ expiry: passExpiryText(this.data.until) })
       if (this.data.registrationId) this.load()
       else this.setData({ state: 'error', errorText: '缺少报名记录，无法生成入场码' })
     },
@@ -40,8 +47,6 @@ Component({
       this._attached = false
       this._loadToken = (this._loadToken || 0) + 1
       this.clearTimer()
-      // 顶亮的屏必须还回去,否则用户离开票券页后屏幕一直全亮在烧电
-      this.restoreBrightness()
     },
   },
   methods: {
@@ -79,7 +84,7 @@ Component({
       poll()
       this._redeemPoll = setInterval(poll, 4000)
     },
-    load() {
+    load(silent) {
       const registrationId = this.data.registrationId
       if (!registrationId) {
         this.setData({ state: 'error', errorText: '缺少报名记录，无法生成入场码' })
@@ -88,7 +93,7 @@ Component({
       if (!this._ticketLogin) this._ticketLogin = captureLogin(app, wx)
       if (!loginCurrent(app, wx, this._ticketLogin)) {
         this.clearTimer()
-        this.setData({ state: 'error', qr: '', code: '', bigQr: false, errorText: '登录状态已变化，请重新打开票券' })
+        this.setData({ state: 'error', qr: '', errorText: '登录状态已变化，请重新打开票券' })
         return
       }
       if (String(this._loadedRegistrationId) !== String(registrationId)) {
@@ -102,8 +107,17 @@ Component({
         && String(this.data.registrationId) === String(registrationId) && this.data.seatNo === seatNo
         && loginCurrent(app, wx, this._ticketLogin)
       this._ticketCurrent = current
-      this.clearTimer()
-      this.setData({ state: 'loading', qr: '', code: '', errorText: '', countdown: '', bigQr: false })
+      // 静默续签:旧码与到期计时都留着;续签没成功而旧码还没到期就稍后再试,真过期由 tick 落错误态。
+      const keepOld = () => {
+        if (!silent || !(this._expiresAt > Date.now())) return false
+        this._refreshing = false; this._retryAt = Date.now() + RETRY_MS
+        return true
+      }
+      if (silent) this._refreshing = true
+      else {
+        this.clearTimer(); this._refreshing = false
+        this.setData({ state: 'loading', qr: '', errorText: '' })
+      }
       app.sendRequest({
         url: '/api/verify/dyncode/issue',
         method: 'POST',
@@ -113,16 +127,18 @@ Component({
         success: (res) => {
           if (!current()) return
           if (!(res && (res.code === 200 || res.code === '200') && res.data)) {
+            if (keepOld()) return
             this.setData({ state: 'error', errorText: (res && res.msg) || '入场码生成失败' })
             return
           }
           const payload = res.data
+          if (silent && (seatChoice(payload, registrationId) || !payload.qrcodeUrl) && keepOld()) return
           if (seatChoice(payload, registrationId)) {
-            this.setData({ state: 'choose', seatCount: Number(payload.seatCount), qr: '', code: '', errorText: '' })
+            this.setData({ state: 'choose', seatCount: Number(payload.seatCount), qr: '', errorText: '' })
             return
           }
           if (seatNo && !issuedSeat(payload, registrationId, seatNo)) {
-            this.setData({ state: 'error', qr: '', code: '', errorText: '原席位身份无法确认，请重新打开票券' })
+            this.setData({ state: 'error', qr: '', errorText: '原席位身份无法确认，请重新打开票券' })
             return
           }
           if (!payload.qrcodeUrl) {
@@ -134,20 +150,21 @@ Component({
             ? (rawExpiresAt < 100000000000 ? rawExpiresAt * 1000 : rawExpiresAt)
             : 0
           if (!(expiresAt > Date.now())) {
-            this.setData({ state: 'error', qr: '', code: '', errorText: '入场码有效期暂时无法确认，请重新获取' })
+            if (keepOld()) return
+            this.setData({ state: 'error', qr: '', errorText: '入场码有效期暂时无法确认，请重新获取' })
             return
           }
-          this._expiresAt = expiresAt
-          this.setData({ state: 'ready', qr: payload.qrcodeUrl, code: payload.code || '', seatVerified: payload.seatStatus === 1 })
-          this.tick()
+          this.clearTimer()
+          this._expiresAt = expiresAt; this._refreshing = false; this._retryAt = 0
+          this.setData({ state: 'ready', qr: payload.qrcodeUrl, seatVerified: payload.seatStatus === 1 })
           this._timer = setInterval(() => this.tick(), 1000)
           this.watchRedeem(registrationId)
         },
         fail: () => {
-          if (current()) this.setData({ state: 'error', errorText: '网络没连上，请重试' })
+          if (current() && !keepOld()) this.setData({ state: 'error', errorText: '网络没连上，请重试' })
         },
         successStatusAbnormal: () => {
-          if (current()) this.setData({ state: 'error', errorText: '入场码服务暂不可用，请重试' })
+          if (current() && !keepOld()) this.setData({ state: 'error', errorText: '入场码服务暂不可用，请重试' })
         },
       })
     },
@@ -165,50 +182,21 @@ Component({
     changeSeat() {
       if (!this.data.seatCount || !loginCurrent(app, wx, this._ticketLogin)) return
       this._loadToken = (this._loadToken || 0) + 1
-      this.clearTimer(); this.restoreBrightness()
-      this.setData({ state: 'choose', seatNo: '', seatInput: '', qr: '', code: '', bigQr: false, errorText: '' })
+      this.clearTimer()
+      this.setData({ state: 'choose', seatNo: '', seatInput: '', qr: '', errorText: '' })
     },
     tick() {
       if (this._ticketCurrent && !this._ticketCurrent()) { this.clearTimer(); return }
-      const left = Math.max(0, (this._expiresAt || 0) - Date.now())
+      const now = Date.now()
+      const left = Math.max(0, (this._expiresAt || 0) - now)
       if (!left) {
         this.clearTimer()
-        this.setData({ state: 'error', qr: '', code: '', countdown: '', errorText: '入场码已过期，请重新获取' })
+        this.setData({ state: 'error', qr: '', errorText: '入场码已过期，请重新获取' })
         return
       }
-      const seconds = Math.ceil(left / 1000)
-      this.setData({ countdown: `有效期剩余 ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}` })
+      if (left <= REFRESH_LEAD_MS && !this._refreshing && now >= (this._retryAt || 0)) this.load(true)
     },
     retry() { this.load() },
-    openBigQr() {
-      if (this.data.state !== 'ready' || !this.data.qr || this._ticketCurrent && !this._ticketCurrent()) return
-      this.setData({ bigQr: true })
-      this.boostBrightness()
-    },
-    closeBigQr() {
-      this.setData({ bigQr: false })
-      this.restoreBrightness()
-    },
-    /** 放大出示时顶亮屏幕:强光下低亮度屏幕扫不出来,这是现场最常见的一种「码没问题但扫不动」。 */
-    boostBrightness() {
-      if (!wx.setScreenBrightness) return
-      const current = this._ticketCurrent
-      const boost = () => { if (this.data.bigQr && (!current || current())) wx.setScreenBrightness({ value: 1, fail: () => {} }) }
-      if (this._prevBrightness != null || !wx.getScreenBrightness) { boost(); return }
-      // 必须等 get 回来再顶亮:两个 API 都是异步的,先 set 后 get 会把刚顶上去的 1
-      // 当成「原亮度」存下来 ⇒ 关闭时「还原」回 1 ⇒ 屏幕永远停在最亮下不来。
-      wx.getScreenBrightness({
-        success: (res) => { if (this.data.bigQr && (!current || current())) { this._prevBrightness = res && res.value; boost() } },
-        fail: () => { boost() },
-      })
-    },
-    restoreBrightness() {
-      if (!wx.setScreenBrightness || this._prevBrightness == null) return
-      wx.setScreenBrightness({ value: this._prevBrightness, fail: () => {} })
-      this._prevBrightness = null
-    },
-    close() { this.restoreBrightness(); this.triggerEvent('close') },
-    // 遮罩 catchtouchmove 吃掉滑动,大图二维码打开时底下页面不跟着滚
-    noop() {},
+    close() { this.triggerEvent('close') },
   },
 })

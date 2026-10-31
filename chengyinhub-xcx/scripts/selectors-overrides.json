@@ -25,36 +25,6 @@
       ".v3-hero-mem"
     ]
   },
-  "A05": {
-    "selector": ".square, .theme-dark, .sq-page, .pop",
-    "min": 1,
-    "weak": true,
-    "forbid": [
-      "cy-empty",
-      "cy-error"
-    ]
-  },
-  "A06": {
-    "selector": "cy-empty",
-    "min": 1
-  },
-  "A07": {
-    "selector": "cy-skeleton",
-    "min": 1
-  },
-  "A08": {
-    "selector": "cy-error",
-    "min": 1
-  },
-  "A09": {
-    "selector": "cy-post-card",
-    "min": 1,
-    "forbid": [
-      "cy-error",
-      "cy-skeleton"
-    ],
-    "_why": "广场列表允许游客浏览；A09 必须命中真实帖子正文，不能再注入页面不存在的 sessionExpired 并复用加载错误态。"
-  },
   "A10": {
     "selector": ".detail, .theme-dark",
     "min": 1,
@@ -281,7 +251,7 @@
     "_why": "保留旧内容的刷新态必须同时出现非阻塞更新提示、标题与内容卡，不能退成整页骨架。"
   },
   "A52": {
-    "selector": ".shzlbox_li_left_txt_li, .shzlbox_li_left_ntu_li",
+    "selector": ".rv-row",
     "min": 1
   },
   "A53": {
@@ -638,9 +608,8 @@
     ]
   },
   "B62": {
-    "selector": ".al-root, .theme-light",
+    "selector": ".al-item",
     "min": 1,
-    "weak": true,
     "forbid": [
       "cy-error",
       "cy-skeleton"

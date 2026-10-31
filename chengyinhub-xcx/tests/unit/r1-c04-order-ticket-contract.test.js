@@ -197,7 +197,8 @@ test('C04 orderinfo: loading 组件化、危险动作描边且不与快捷主动
   const wxss = read('subpackageMember/components/cy/scene-member-order-detail/index.wxss')
   assert.match(json, /"cy-empty":\s*"\/components\/cy\/empty\/index"/)
   assert.match(wxml, /<cy-empty[^>]*wx:if="\{\{loadState==='loading'\}\}"[^>]*kind="loading"[^>]*title="订单详情加载中"[^>]*\/>/)
-  assert.match(wxml, /wx:if="\{\{showSecondaryTicket\}\}"\s+class="sec-btn sec-solid"/, '查看票夹次级动作必须按 showSecondaryTicket 受控展示，不与主 CTA 同屏抢位')
+  // 2026-10-29 走查 V-20:业主要求订单详情不再放「查看票夹」
+  assert.doesNotMatch(wxml.replace(/<!--[\s\S]*?-->/g, ''), /查看票夹/)
   assert.match(rule(wxss, '.body'), /padding:\s*0\s+var\(--cy-page-x\)/, '订单主体必须与页面统一左右边距对齐')
   const cancel = rule(wxss, '.sec-danger')
   assert.match(cancel, /background:\s*transparent/)

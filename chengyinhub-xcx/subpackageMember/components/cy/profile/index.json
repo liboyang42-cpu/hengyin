@@ -7,6 +7,7 @@
     "cy-empty": "/components/cy/empty/index",
     "cy-error": "/components/cy/error/index",
     "cy-avatar": "/components/cy/avatar/index",
+    "cy-post-card": "/components/cy/post-card/index",
     "cy-skeleton": "/components/cy/skeleton/index",
     "cy-cell": "/components/cy/cell/index",
     "cy-icon": "/components/cy/icon/index",

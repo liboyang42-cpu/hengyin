@@ -276,7 +276,8 @@ test('入场码是场景栈内的真实动态码，不再保留旧 ticket 页面
   assert.match(ticketJs, /String\(this\.data\.registrationId\) === String\(registrationId\) && this\.data\.seatNo === seatNo[\s\S]*?loginCurrent\(app, wx, this\._ticketLogin\)/, '原报名、席位、登录代次都必须保持原样')
   assert.match(ticketJs, /success: \(res\) => \{\s*if \(!current\(\)\) return/, '成功响应必须先验证完整原上下文')
   assert.match(ticketWxml, /class="voucher__card"/, '主线票券终态应收敛到 qr-ticket 场景组件')
-  assert.match(ticketWxml, /class="bigqr" wx:if="\{\{bigQr\}\}"/, '放大核销码也应留在同一场景组件')
+  // 2026-10-29 V-02:业主要求与票夹背面同一版式，放大码层随之取消，不能在别处再长出第二套。
+  assert.doesNotMatch(ticketWxml, /bigqr|bigQr/, '入场码只保留票夹同款一种版式')
   assert.doesNotMatch(hostWxml, /ticket\.show/, 'play 页面不得保留第二套票券视图')
 })
 

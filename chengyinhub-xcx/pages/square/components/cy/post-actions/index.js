@@ -5,7 +5,7 @@
  *   wxml: <cy-post-actions show="{{actionsShow}}" owner="{{isMine}}" post-id="{{post.id}}"
  *                          bind:select="onPostAction" bind:close="closeActions" />
  *   js:   onPostAction(e) {
- *           // e.detail = { action: 'edit' | 'delete' | 'report', id }
+ *           // e.detail = { action: 'edit' | 'delete' | 'report' | 'bookmark', id }
  *           // ⚠ action==='delete' 时用户**已经**过完危险确认弹窗,页面直接发请求即可,
  *           //   不要再自建一道 wx.showModal —— 那是两道闸,用户要点两次。
  *         }
@@ -33,6 +33,9 @@ Component({
     /* CU-C-107:待删帖文的正文前段 —— 确认框要能核对删的是哪一条。宿主页传过来,
        组件不自己再去拉一次帖子(列表已经在手上了)。 */
     summary: { type: String, value: '' },
+    /* 收藏行(2026-10-29 从卡片动作行挪进来):宿主页开了才出;bookmarked 决定文案。 */
+    bookmarkable: { type: Boolean, value: false },
+    bookmarked: { type: Boolean, value: false },
   },
   methods: {
     /* 遮罩 / 关闭:只上报,show 的所有权在页面 */
@@ -42,6 +45,7 @@ Component({
 
     onEdit()   { this._pick('edit'); },
     onReport() { this._pick('report'); },
+    onBookmark() { this._pick('bookmark'); },
 
     /* 三个入口一律先收起菜单再走动作:删除要把屏幕让给确认弹窗,
        编辑/举报要么跳页要么弹二次确认,菜单留在原地都是碍事的。 */

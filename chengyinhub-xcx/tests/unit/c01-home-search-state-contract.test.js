@@ -106,6 +106,7 @@ const loadPage = (rel, options = {}) => {
     if (request.endsWith('community-post-api.js')) return require('../helpers/community-page-seam.js')
     if (request === '../../../utils/datetime') return { toTimestamp: (value) => value }
     if (request === '../../../utils/analytics.js') return { track: () => {} }
+    if (request === '../../../utils/discover-nav.js') return require(path.join(ROOT, 'utils/discover-nav.js'))
     if (request === '../../../utils/media-preview.js') return loadMediaPreview({ previewImage() {} })
     if (request === '../../../utils/feed-play-card.js') return require(path.join(ROOT, 'utils/feed-play-card.js'))
     if (request === '../../../utils/response-shape.js') return require(path.join(ROOT, 'utils/response-shape.js'))
@@ -132,6 +133,7 @@ const loadPage = (rel, options = {}) => {
         parseRatio: () => null,
         clampTransform: (value) => value,
         computeCropRect: () => null,
+        fitFrame: require(path.join(ROOT, 'pages/crop/utils/crop-geometry.js')).fitFrame,
       }
     }
     // 2026-08-26 点赞爆一下:动效与减动效偏好走既有真源,用真模块不用桩 ——
@@ -339,12 +341,8 @@ test('square/detail 关注评论者只在服务端回读确认后报成功，回
   assert.equal(successToasts.at(-1), '关注成功')
 })
 
-test('广场列表与详情销毁时中止 RequestTask 并使详情/评论 epoch 失效', () => {
-  const listSource = read('pages/square/list/index.js')
-  const listUnload = listSource.slice(listSource.indexOf('onUnload()'), listSource.indexOf('goUserInfoClcik'))
-  assert.match(listUnload, /_feedRequestId\s*=\s*\(this\._feedRequestId\s*\|\|\s*0\)\s*\+\s*1/)
-  assert.match(listUnload, /_feedRequestTask[\s\S]*\.abort\(\)/)
-
+test('广场详情销毁时中止 RequestTask 并使详情/评论 epoch 失效', () => {
+  // 2026-10-29「动态」列表页已删,只剩详情页
   const detailSource = read('pages/square/detail/index.js')
   assert.match(detailSource, /onUnload\(\)\s*\{[\s\S]*_detailRequestId\s*=\s*\(this\._detailRequestId\s*\|\|\s*0\)\s*\+\s*1/)
   assert.match(detailSource, /onUnload\(\)\s*\{[\s\S]*_commentsRequestId\s*=\s*\(this\._commentsRequestId\s*\|\|\s*0\)\s*\+\s*1/)
@@ -631,26 +629,6 @@ test('P0-G negative control: an inline literal color changes this exact guard to
   const offenders = styles.filter((style) => /(^|;)\s*color\s*:\s*#/.test(style) || /font-size\s*:\s*\d/.test(style))
   assert.deepEqual(offenders, ['color:#7A5CFF;font-size:26rpx;'])
   assert.throws(() => assert.deepEqual(offenders, []), /color:#7A5CFF/)
-})
-
-test('P0-F: 广场三个灰色统计块已删除，由 token 横向活动卡轨承接', () => {
-  const wxml = read('pages/square/list/index.wxml')
-  const js = read('pages/square/list/index.js')
-  const wxss = read('pages/square/list/index.wxss')
-  assert.doesNotMatch(wxml, /class="(?:summary|sum-card)"/)
-  assert.doesNotMatch(js, /creativesquare\/summary|getSummary/)
-  assert.match(wxml, /class="sq-upcoming-track"[^>]*scroll-x[\s\S]*?class="sq-upcoming-card/)
-  const banner = wxss.slice(wxss.indexOf('.sq-upcoming-track {'), wxss.indexOf('/* ===== 内联发布框'))
-  assert.match(banner, /background: var\(--cy-color-bg-elevated\)/)
-  assert.doesNotMatch(banner.replace(/\/\*[\s\S]*?\*\//g, ''), /(?:#|rgba\()/,
-    '新 banner 的颜色必须全部由 token 提供')
-})
-
-test('P0-F negative control: 把旧三格统计块塞回广场必须判红', () => {
-  const source = read('pages/square/list/index.wxml')
-  const mutated = source.replace('<scroll-view class="sq-upcoming-track"', '<view class="summary"><view class="sum-card"></view></view>\n    <scroll-view class="sq-upcoming-track"')
-  assert.notEqual(mutated, source, '负控必须真实突变 C01 源文件')
-  assert.throws(() => assert.doesNotMatch(mutated, /class="(?:summary|sum-card)"/), /summary/)
 })
 
 // ---------------------------------------------------------------------------
@@ -1025,7 +1003,7 @@ const phMoreTag = (wxml) => {
 }
 
 test('C01-R5: the square feed overflow control is a visible DS icon with a real 88rpx hit target, and still opens showAction', () => {
-  const hostWxml = read('pages/square/list/index.wxml')
+  // 2026-10-29「动态」列表页已删;more 事件仍由广场详情交给 onPostAction 的操作菜单(见上方 square/detail 用例)
   const wxml = read('components/cy/post-card/index.wxml')
   const wxss = read('components/cy/post-card/index.wxss')
   const tag = phMoreTag(wxml)
@@ -1033,7 +1011,6 @@ test('C01-R5: the square feed overflow control is a visible DS icon with a real 
 
   // ① 行为与语义不变
   assert.match(tag, /catchtap="emitMore"/, '溢出入口必须从共享卡派发 more 事件')
-  assert.match(hostWxml, /bind:more="showAction"/, '广场必须继续把 more 事件交给 showAction')
   assert.match(read('components/cy/post-card/index.js'), /eventDetail\(\)[\s\S]*index: this\.data\.index/, '共享卡必须仍把 index 交给 showAction')
   assert.match(tag, /aria-role="button"/, '图标钮必须声明 button 角色')
   assert.match(tag, /aria-label="更多操作"/, '图标钮必须有可读名称')
@@ -1119,10 +1096,9 @@ test('C01-R6 negative control: marking ready before the size resolves turns its 
 test('C01-R6: square/detail hands its nav back to goBack, and the whole chain has a fallback', () => {
   assert.match(read('pages/square/detail/index.wxml'), /<cy-nav-bar custom-back bind:back="goBack" \/>/,
     '详情页必须接管返回')
-  assert.match(read('pages/square/detail/index.js'), /goBack\(\)\s*\{[\s\S]*reLaunch\(\{ url: '\/pages\/square\/list\/index' \}\)/,
-    '详情 goBack 必须在栈空时回广场列表')
-  assert.match(read('pages/square/list/index.js'), /goBack\(\)\s*\{[\s\S]*switchTab\(\{ url: '\/pages\/index\/index' \}\)/,
-    '广场列表 goBack 必须再有 home 保底')
+  // 2026-10-29「动态」列表页已删:栈空时直接回发现页的全站帖文(一级 tab,不会再断链)
+  assert.match(read('pages/square/detail/index.js'), /goBack\(\)\s*\{[\s\S]*?fail: \(\) => \{ discoverNav\.markDiscoverFeed\(app\); wx\.switchTab\(\{ url: '\/pages\/talent\/list\/index' \}\)/,
+    '详情 goBack 必须在栈空时标记帖文 tab 并 switchTab 回发现页')
 })
 
 test('C01-R6 negative control: leaving the detail nav bar bare turns its exact guard red', () => {

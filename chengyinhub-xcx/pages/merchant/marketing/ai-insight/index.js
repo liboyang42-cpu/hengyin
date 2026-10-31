@@ -71,8 +71,8 @@ Page({
     ai: null,             // AI 解读(可为 null 的降级层)
     // aiError 已撤(2026-10-23,见 load 成功分支注释)
     generatedAt: '',
-    profile: null,        // 后端实时读的店铺视图(storeName/logo + 承接档案字段),不走缓存
     storeName: '',        // 页头问候「Hi，店名」
+    storeLogo: '',        // 页头店铺头像(商家 Logo)
     factState: 'unknown', // unknown=字段缺失 | empty=服务端明确全零 | ready=有真实事实
     valueCard: null,      // 首屏归因价值卡:城瘾为你带来 N 位玩家/M 次打卡/K 单核销 + 核销进度 + 环比
     metricCards: [],      // 核销率 / 复购率两张小卡:比率 + 说明行 + 分段胶囊进度条
@@ -214,8 +214,8 @@ Page({
             ai: d.ai || null,
             // aiError 不再下发:2026-10-23 业主「没有就不显示」,唯一消费方 AI 降级卡已删(占位保留行号锚点)
             generatedAt: d.generatedAt || '',
-            profile: d.profile || null,
             storeName: String(profile.storeName || '').trim(),
+            storeLogo: String(profile.logo || '').trim(),
             factState,
             hero,
             slots: that._buildSlots(d.facts),
@@ -242,6 +242,9 @@ Page({
           else if (replaying) that._countTo(hero.target);
           // owner 2026-10-23:核销进度条每次打开都扫一遍,不因暂无核销就一动不动
           that._sweepPips();
+          // M-21(2026-10-29 复查):参谋包里缺店名/Logo 时(旧后端或商家行没按会员号查到),
+          // 补读首页与「我的」同一来源 /api/merchant/info,不再留空「Hi」
+          if (!that.data.storeName || !that.data.storeLogo) that._loadStoreIdentity(isCurrent);
         } else if (res && res.code !== '200' && res.code !== 200) {
           that._clearSensitiveState(app.getRequestErrorMessage(res, '商家资格已失效'));
         } else {
@@ -261,8 +264,8 @@ Page({
       ai: null,
       // aiError 已撤(2026-10-23)
       generatedAt: '',
-      profile: null,
       storeName: '',
+      storeLogo: '',
       factState: 'unknown',
       valueCard: null,
       metricCards: [],
@@ -286,6 +289,26 @@ Page({
     this._trends = null;
     this._metric = null;
     this._stopMotion();
+  },
+
+  _loadStoreIdentity(isCurrent) {
+    const that = this;
+    app.sendRequest({
+      hideLoading: true,
+      silentError: true,
+      url: '/api/merchant/info',
+      method: 'POST',
+      success(res) {
+        if (!isCurrent() || !res || (res.code !== '200' && res.code !== 200) || !res.data) return;
+        that.setData({
+          storeName: that.data.storeName || String(res.data.name || '').trim(),
+          storeLogo: that.data.storeLogo || String(res.data.logo || '').trim(),
+        });
+      },
+      // 补读失败只轻提示一次,问候区保持现状(经营数据照常可看)
+      fail(res) { if (isCurrent()) app.showToast({ title: app.getRequestErrorMessage(res, '店铺名称和 Logo 没能取回') }); },
+      successStatusAbnormal(res) { if (isCurrent()) app.showToast({ title: app.getRequestErrorMessage(res, '店铺名称和 Logo 没能取回') }); },
+    });
   },
 
   retry() {

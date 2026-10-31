@@ -706,6 +706,10 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         CmsMemberTemplate t = new CmsMemberTemplate();
         copyPropertiesToMemberTemplate(request, t);
         assertTemplateRewardOwnership(memberId, t, existingDraft);
+        // 来源编号先落到实体上:媒体闸据它认出「公开模板自带的图」(V-13)
+        t.setOriginalTemplateId(
+            (request.getOriginalTemplateId() != null && request.getOriginalTemplateId() > 0)
+                ? request.getOriginalTemplateId() : 0L);
         mediaPublicationGuard.requireTemplate(memberId, t, false);
         t.setMemberId(memberId);
         t.setUpdateBy(username);
@@ -719,9 +723,6 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         if (StringUtils.isNotBlank(cats)) {
             t.setCategoryId(Long.valueOf(cats.split(",")[0].trim()));
         }
-        t.setOriginalTemplateId(
-            (request.getOriginalTemplateId() != null && request.getOriginalTemplateId() > 0)
-                ? request.getOriginalTemplateId() : 0L);
 
         if (request.getId() != null && request.getId() > 0) {
             t.setId(request.getId());

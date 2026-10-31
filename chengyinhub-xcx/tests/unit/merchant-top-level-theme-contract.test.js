@@ -95,31 +95,4 @@ test('negative control: an unreachable citynode restore cannot satisfy the lifec
   assert.throws(() => assertMerchantThemeLifecycle(broken, pagePath), assert.AssertionError)
 })
 
-function assertSquarePlayerDomain(source, wxml) {
-  assert.match(source, /onShow\(\)\s*\{[\s\S]*?merchantTheme\.merchantPageRestore\(\);/,
-    'square belongs to the player content domain and must always restore dark native chrome')
-  assert.doesNotMatch(source, /merchantTheme\.merchantPageShow\(\)/,
-    'merchant identity must not turn the player square light')
-  assert.match(wxml, /<view class="square theme-dark sq-page">/)
-  assert.doesNotMatch(wxml, /theme-merchant/)
-}
-
-test('shared square stays in the player dark domain for every identity', () => {
-  const source = read('pages/square/list/index.js')
-  assert.match(source, /require\(['"]\.\.\/\.\.\/\.\.\/utils\/merchant-theme\.js['"]\)/)
-  for (const role of ['player', 'club', 'merchant']) {
-    assertLifecycleRestores(source, 'pages/square/list/index.js', 'onHide', { role, requireInvalidation: true })
-  }
-  assert.match(source, /onUnload\(\)\s*\{[\s\S]*?merchantTheme\.merchantPageRestore\(\);[\s\S]*?\}/)
-  assertSquarePlayerDomain(source, read('pages/square/list/index.wxml'))
-})
-
-test('negative control: adding a merchant light branch to square is rejected', () => {
-  const source = read('pages/square/list/index.js')
-  const wxml = read('pages/square/list/index.wxml')
-  const brokenSource = source.replace('merchantTheme.merchantPageRestore();', 'merchantTheme.merchantPageShow();')
-  const brokenWxml = wxml.replace('square theme-dark sq-page', "square {{isMerchantView ? 'theme-merchant' : 'theme-dark'}} sq-page")
-  assert.notEqual(brokenSource, source, 'negative control must mutate native chrome')
-  assert.notEqual(brokenWxml, wxml, 'negative control must mutate the page surface')
-  assert.throws(() => assertSquarePlayerDomain(brokenSource, brokenWxml), assert.AssertionError)
-})
+// 2026-10-29:广场列表页(pages/square/list)已删,「广场恒为玩家深色域」用例与负控随页撤走。

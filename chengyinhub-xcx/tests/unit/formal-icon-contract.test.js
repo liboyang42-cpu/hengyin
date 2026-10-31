@@ -13,7 +13,6 @@ const UI_EMOJI = /[\u{1F300}-\u{1FAFF}]/u;
 const TARGETS = [
   'subpackageRoam/history/index.wxml',
   'pages/publish/temp/index.wxml',
-  'pages/square/list/index.wxml',
 ];
 
 function assertCyIconRegistration(jsonFile) {
@@ -25,7 +24,7 @@ function assertCyIconRegistration(jsonFile) {
   );
 }
 
-test('三张正式页面不再把 emoji 当作 UI 图标', () => {
+test('正式页面不再把 emoji 当作 UI 图标', () => {
   for (const file of TARGETS) {
     assert.doesNotMatch(renderable(read(file)), UI_EMOJI, `${file} 仍含正式 UI emoji`);
   }
@@ -44,15 +43,11 @@ test('语音上传入口保留可点击的纯文本标签', () => {
   assert.match(wxml, /<view class="cg-audio-empty"[^>]*bindtap="uploadAudio"[^>]*>上传音频文件<\/view>/);
 });
 
-test('广场完成状态使用 star 语义图标并保留完成数量', () => {
-  const listWxml = renderable(read('pages/square/list/index.wxml'));
+test('帖文通关徽章使用 star 语义图标并保留完成数量', () => {
+  // 2026-10-29「动态」二级页(pages/square/list)已删;徽章本体在共享 feed-play-card 组件里。
   const cardWxml = renderable(read('components/cy/feed-play-card/index.wxml'));
-  assertCyIconRegistration('pages/square/list/index.json');
   assertCyIconRegistration('components/cy/feed-play-card/index.json');
-  // 2026-10-27 P-20 owner:广场行内发布框(含「已选活动 · 完成 N/M」摘要)撤掉,发帖统一走全屏发帖弹窗;
-  // 列表页只剩帖子通关徽章这一枚 star。
-  const stars = [...(listWxml + cardWxml).matchAll(/<cy-icon\b[^>]*name="star"/g)];
+  const stars = [...cardWxml.matchAll(/<cy-icon\b[^>]*name="star"/g)];
   assert.equal(stars.length, 1, '帖子通关徽章应有一个 star 图标');
-  assert.doesNotMatch(listWxml, /selectedActivity/);
   assert.match(cardWxml, /class="feed-play-card__trophy"[\s\S]*class="feed-play-card__trophy-icon"/);
 });

@@ -65,6 +65,8 @@ class ApiClubPostPrivacyProjectionTest {
         ReflectionTestUtils.setField(controller, "clubService", clubService);
         ReflectionTestUtils.setField(controller, "clubMemberService", memberService);
         ReflectionTestUtils.setField(controller, "clubPostService", postService);
+        // 帖文卡头像「+」关注:查看者对作者的关注态(批量查询,默认空 = 都没关注)
+        ReflectionTestUtils.setField(controller, "umsMemberFollowMapper", org.mockito.Mockito.mock(com.chengyinhub.business.mapper.UmsMemberFollowMapper.class));
         ReflectionTestUtils.setField(controller, "viewCreativeSquareService", squareService);
         ReflectionTestUtils.setField(controller, "clubPostReferenceGuard", guard);
         ReflectionTestUtils.setField(controller, "clubPostLikeService", mock(IClubPostLikeService.class));

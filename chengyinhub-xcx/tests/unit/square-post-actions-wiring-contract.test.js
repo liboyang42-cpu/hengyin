@@ -1,5 +1,5 @@
 /**
- * H050/H051 · 帖文「···」操作接线契约(square 详情 + 广场列表)。
+ * H050/H051 · 帖文「···」操作接线契约(square 详情;2026-10-29 广场列表页已删,列表用例随页撤走)。
  *
  * 组件(chengyinhub-xcx/components/cy/post-actions)与内部危险确认闸早已完工并有
  * post-actions-sheet-contract 钉住,但全仓零调用 —— 用户发错帖/想删帖没有入口。
@@ -38,38 +38,20 @@ function assertDetailWired(wxml) {
     '旧的「只有举报」自绘弹层必须退役(三合一组件替代它)');
 }
 
-function assertListWired(wxml) {
-  assert.match(wxml, POST_ACTIONS_TAG, '广场列表必须挂三合一操作弹层，三根线齐全');
-  assert.match(wxml, /<cy-post-actions id="post-actions"[^>]*owner="\{\{currentActionOwner\}\}"/,
-    'owner 必须来自当前行作者判定');
-  assert.match(wxml, /<cy-post-compose[^>]*edit-post="\{\{composeEdit\}\}"/,
-    '列表页的编辑同样走 edit-post');
-  assert.doesNotMatch(wxml, /bmShow/,
-    '旧的 index 版举报弹层必须整体退役(bmShow/bmClose 不许留半截)');
-}
-
-test('渲染层:详情与列表都接上 cy-post-actions(编辑走 cy-post-compose 编辑态)', () => {
+test('渲染层:详情接上 cy-post-actions(编辑走 cy-post-compose 编辑态)', () => {
   const detailWxml = read('pages/square/detail/index.wxml');
-  const listWxml = read('pages/square/list/index.wxml');
   const detailJson = JSON.parse(read('pages/square/detail/index.json'));
-  const listJson = JSON.parse(read('pages/square/list/index.json'));
 
   assertDetailWired(detailWxml);
-  assertListWired(listWxml);
 
   assert.equal(detailJson.usingComponents['cy-post-actions'], '/pages/square/components/cy/post-actions/index');
   assert.equal(detailJson.usingComponents['cy-post-compose'], '/pages/square/components/cy/post-compose/index');
-  assert.equal(listJson.usingComponents['cy-post-actions'], '/pages/square/components/cy/post-actions/index');
 
   // 负控:把渲染入口从 wxml 里删掉,同一条断言必须真红
   const stripped = detailWxml.replace(/<cy-post-actions[\s\S]*?\/>/, '');
   assert.notEqual(stripped, detailWxml, '负控锚点失效:详情 cy-post-actions 未命中');
   assert.throws(() => assertDetailWired(stripped), assert.AssertionError,
     '删掉渲染入口后必须变红 —— 只断言 data 的契约会放过这种回归');
-
-  const strippedList = listWxml.replace(/<cy-post-actions[\s\S]*?\/>/, '');
-  assert.notEqual(strippedList, listWxml, '负控锚点失效:列表 cy-post-actions 未命中');
-  assert.throws(() => assertListWired(strippedList), assert.AssertionError);
 });
 
 function loadPage(relativePath, opts) {
@@ -211,51 +193,6 @@ test('详情:编辑以编辑态打开新建面板并带原帖 id/正文/关联;�
   }, assert.AssertionError, '掐掉分发分支后必须变红');
 });
 
-test('列表:more 解析当前行的 id/归属;删除摘行、编辑开面板、举报走确认', () => {
-  const h = loadPage('pages/square/list/index.js');
-  h.page.data.userId = 1;
-  h.page.data.list = [
-    { id: 11, memberId: 1, contents: '我的帖', dataId: 0, dataType: 0 },
-    { id: 12, memberId: 2, contents: '别人的帖' },
-  ];
-
-  h.page.showAction({ detail: { index: 1 } });
-  assert.equal(h.page.data.postActionShow, true);
-  assert.equal(h.page.data.currentActionId, '12');
-  assert.equal(h.page.data.currentActionOwner, false, '别人的帖:只该看到举报');
-
-  h.page.closePostActions();
-  assert.equal(h.page.data.postActionShow, false);
-  h.page.showAction({ detail: { index: 0 } });
-  assert.equal(h.page.data.currentActionId, '11');
-  assert.equal(h.page.data.currentActionOwner, true, '本人帖:编辑/删除要出现');
-
-  h.page.onPostAction({ detail: { action: 'edit', id: '11' } });
-  assert.equal(h.page.data.composeShow, true);
-  assert.equal(h.page.data.composeEdit.id, '11');
-  assert.equal(h.page.data.composeEdit.contents, '我的帖');
-
-  h.page.onComposeClose();
-  assert.equal(h.page.data.composeShow, false);
-  assert.equal(h.page.data.composeEdit, null, '关面板必须清编辑态，免得下次新建以编辑态打开');
-
-  h.page.showAction({ detail: { index: 0 } });
-  h.page.onPostAction({ detail: { action: 'delete', id: '11' } });
-  const write = h.requests.find((r) => r.url === '/api/creativesquare/delete');
-  assert.ok(write, '列表删除必须发删除请求');
-  assert.equal(String(write.data.id), '11');
-  write.success({ code: '200', data: { lifecycle: 'PUBLISHED' } });
-  assert.deepEqual(h.page.data.list.map((item) => item.id), [12], '删除成功后本地摘掉这一行');
-  assert.equal(h.page.data.postActionShow, false);
-
-  h.page.showAction({ detail: { index: 0 } });
-  h.page.onPostAction({ detail: { action: 'report', id: '12' } });
-  assert.equal(h.modalCalls.length >= 1, true, '举报必须过确认框');
-  const report = h.requests.find((r) => r.url === '/api/creativesquare/report');
-  assert.ok(report, '确认后必须发举报请求');
-  assert.equal(String(report.data.id), '12');
-});
-
 test('A-09:非本人纯文本帖在详情也有举报入口(owner=false 只渲染举报行)', () => {
   const h = loadPage('pages/square/detail/index.js');
   detailReady(h, { memberId: 2 });
@@ -271,20 +208,4 @@ test('A-09:非本人纯文本帖在详情也有举报入口(owner=false 只渲�
 
   const wxml = read('pages/square/detail/index.wxml');
   assert.match(wxml, /<cy-post-actions[^>]*owner="\{\{isMine\}\}"/, 'owner 仍由 isMine 决定，非本人不露出编辑/删除');
-});
-
-test('列表:编辑入口显式带编辑态,关闭后清编辑态', () => {
-  // 2026-09-18 UI-15:「展开进完整新建弹窗」口随发布区改造删除,
-  // cy-post-compose 只剩编辑已有帖一条入口;这里锁编辑态的装载与关闭清理。
-  const h = loadPage('pages/square/list/index.js');
-  h.page.data.userId = 1;
-  h.page.data.list = [{ id: 11, memberId: 1, contents: '我的帖' }];
-  h.page.showAction({ detail: { index: 0 } });
-  h.page.onPostAction({ detail: { action: 'edit', id: '11' } });
-  assert.equal(h.page.data.composeShow, true);
-  assert.ok(h.page.data.composeEdit, '编辑入口必须带被编辑的那条帖');
-
-  h.page.onComposeClose();
-  assert.equal(h.page.data.composeShow, false);
-  assert.equal(h.page.data.composeEdit, null, '关闭后必须清编辑态，不能带到下一次打开');
 });

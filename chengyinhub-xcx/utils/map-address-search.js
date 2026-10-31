@@ -66,4 +66,22 @@ function decoratePlaces(places) {
   }));
 }
 
-module.exports = { PIN_COLORS, NEUTRAL_PIN, pinColorForKind, subtitleFor, matchPlaces, decoratePlaces };
+/**
+ * 2026-10-29 V-06:腾讯地点搜索未启用或没回结果时,用后端商家节点库(/api/city/nodes?keyword=)兜底。
+ * 把 CityNodeVO 换成搜索结果行;已在本地结果里的同名地点不重复。
+ */
+function cityNodesToPlaces(rows, taken) {
+  const names = {};
+  (Array.isArray(taken) ? taken : []).forEach((p) => { if (p && p.name) names[p.name] = true; });
+  const out = [];
+  (Array.isArray(rows) ? rows : []).forEach((n) => {
+    const name = n && (n.name || n.merchantName);
+    const lat = Number(n && n.lat); const lng = Number(n && n.lng);
+    if (!name || names[name] || !Number.isFinite(lat) || !Number.isFinite(lng) || (!lat && !lng)) return;
+    names[name] = true;
+    out.push({ id: 'node-' + (n.poiId != null ? n.poiId : out.length), kind: 'place', name, address: n.merchantAddress || '', lat, lng });
+  });
+  return out;
+}
+
+module.exports = { PIN_COLORS, NEUTRAL_PIN, pinColorForKind, subtitleFor, matchPlaces, decoratePlaces, cityNodesToPlaces };

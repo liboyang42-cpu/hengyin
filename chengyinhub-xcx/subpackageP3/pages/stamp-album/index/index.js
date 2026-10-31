@@ -3,8 +3,12 @@
 const app = getApp();
 const session = require('../../../../utils/session/login-reload.js'); const pageMotion = require('../../../../utils/page-motion.js');
 const LAYOUT = require('./layout.js');
+const { readReducedMotion } = require('../../../../utils/motion-preference.js');
 
 const COLS = 4;
+
+// 透明导航压在内容上,内容从导航下沿开始(状态栏 + 导航栏)
+function navTopOf(a) { const g = (a && a.globalData) || {}; return (g.statusBarHeight || 44) + (g.navBarHeight || 44); }
 
 Page({
   data: {
@@ -13,7 +17,9 @@ Page({
     cellImgW: 0, cellImgH: 0,
     // loaded = 「真的读到了后端的答复」;error = 「没读到」。两者不是一回事:
     // 失败时把 loaded 置真,空态「还没有邮票」就会替失败背书,用户以为册子被清空了(截图 057)。
-    pageNum: 1, loading: false, loaded: false, error: false, noMore: false
+    pageNum: 1, loading: false, loaded: false, error: false, noMore: false,
+    flyIdx: -1, fly: { show: false, on: false, src: '', style: '' },
+    navTop: navTopOf(app) // 透明导航压在内容上,内容从导航下沿开始
   },
 
   onLoad() {
@@ -30,7 +36,40 @@ Page({
     if (this._readOwner !== this._readIdentity()) { this._resetRead(); this.load(); }
   },
   onHide() { this._hidden = true; },
-  onUnload() { this._destroyed = true; this._unloaded = true; },
+  onUnload() { this._destroyed = true; this._unloaded = true; if (this._flyTimer) clearTimeout(this._flyTimer); },
+  noop() {},
+  // ── 2026-10-30 点开:那一枚从原位飞到屏幕中间放大(FLIP:先摆回原位和原角度,下一拍放开) ──
+  openFly(e) {
+    const idx = Number(e.currentTarget.dataset.idx);
+    const it = this.data.items[idx];
+    if (!it || this.data.fly.show) return;
+    const that = this;
+    this.createSelectorQuery().select('#al-item-' + idx).boundingClientRect().exec(function (res) {
+      const r = res && res[0];
+      if (!r || that._unloaded) return;
+      let w = 375, h = 667;
+      try { const info = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync(); w = info.windowWidth; h = info.windowHeight; } catch (err) {}
+      const bw = Math.round(w * 0.74), bh = Math.round(bw * that.data.cellImgH / Math.max(1, that.data.cellImgW));
+      const left = Math.round((w - bw) / 2), top = Math.round(h * 0.46 - bh / 2);
+      const base = 'left:' + left + 'px;top:' + top + 'px;width:' + bw + 'px;height:' + bh + 'px;';
+      const from = 'transform:translate(' + Math.round(r.left + r.width / 2 - (left + bw / 2)) + 'px,' + Math.round(r.top + r.height / 2 - (top + bh / 2)) + 'px) scale(' + (that.data.cellImgW / bw).toFixed(3) + ') rotate(' + (it.rot || 0) + 'deg);';
+      that._flyFrom = base + from + 'transition:none;';
+      that.setData({ flyIdx: idx, fly: { show: true, on: false, src: it.picUrl, style: that._flyFrom } });
+      const reduced = readReducedMotion();
+      clearTimeout(that._flyTimer);
+      that._flyTimer = setTimeout(function () {
+        if (that._unloaded) return;
+        that.setData({ 'fly.on': true, 'fly.style': base + 'transform:rotate(-2deg);transition:' + (reduced ? 'none' : 'transform .6s cubic-bezier(.2,.9,.25,1.06)') + ';' });
+      }, 30);
+    });
+  },
+  closeFly() {
+    if (!this.data.fly.show) return;
+    const that = this;
+    this.setData({ 'fly.on': false, 'fly.style': (this._flyFrom || '').replace('transition:none;', 'transition:transform .42s cubic-bezier(.4,0,.2,1);') });
+    clearTimeout(this._flyTimer);
+    this._flyTimer = setTimeout(function () { if (!that._unloaded) that.setData({ flyIdx: -1, fly: { show: false, on: false, src: '', style: '' } }); }, 420);
+  },
   _readIdentity() { return [session.memberId(app), (app.globalData || {}).authorization || ''].join('|'); },
   _resetRead() {
     this._readOwner = this._readIdentity();

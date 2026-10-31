@@ -10,7 +10,7 @@ const componentNames = ['play-pause', 'club-topic-merchants', 'club-publish-shee
 const selected = componentNames.flatMap((name) => ['js', 'json', 'wxml', 'wxss']
   .map((ext) => `components/cy/${name}/index.${ext}`)).concat([
   'images/home-banner-2.jpg', 'images/home-route-free-placeholder.jpg',
-  'images/home-route-city-placeholder.jpg', 'images/group1.png', 'images/icon_air.png',
+  'images/group1.png', 'images/icon_air.png',
   'images/publish-sheet-template.svg', 'images/publish-sheet-topic.svg',
   'images/publish-sheet-activity.svg', 'images/d_ok.png', 'images/publish-sheet-lock.svg',
   'components/cy/icon/spec.json', 'images/publish-quick/README.md', '.gitignore',
@@ -120,7 +120,7 @@ function runtimeFiles(directory = ROOT, rel = '') {
 }
 
 test('the reviewed exclusions remain exact files, with source files retained', () => {
-  assert.equal(selected.length, 56);
+  assert.equal(selected.length, 55);
   for (const file of selected) {
     assert.ok(fileIgnores.has(file), 'missing exact exclusion: ' + file);
     // This IDE-only optional file need not exist on a clean CI checkout.

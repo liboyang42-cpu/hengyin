@@ -75,9 +75,10 @@ const MATRIX = [
   ['pages/publish/utils/publish/gameplay-support-matrix.js', "url: '/api/play/theme/support-matrix'", 'required', 'author', 'global-authenticated-read'],
   // 俱乐部直付应收只读：商家岗位 FINANCE_READ 派生店主，俱乐部按当前主理人归属校验。
   ['components/cy/club-direct-ledger/index.js', "url: scope.kind === 'club'", 'required', 'merchant/club', 'owned-merchant-or-club-receivable'],
+  // 2026-10-29 M-32:俱乐部计酬并进账户收益「本月收入明细」,同端点同权限档(商家 FINANCE_READ 派生店主)。
+  ['components/cy/earnings-overview/index.js', "url: '/api/club-direct-merchant/merchant'", 'required', 'merchant', 'owned-merchant-or-club-receivable'],
   ['utils/deregister-flow.js', "sendUiStateRequest(app, '/api/user/deregister/status'", 'required', 'member', 'self-account'],
   ['utils/deregister-flow.js', "sendUiStateRequest(app, '/api/user/deregister/status', { method: 'GET',", 'required', 'member', 'self-account'],
-  ['pages/square/list/index.js', "url: '/api/official/events'", 'optional', 'visitor/member', 'public-list+viewer-personalization'],
   ['components/cy/scene-roam-task-list/index.js', "url: '/api/official/events'", 'optional', 'visitor/member', 'public-list+viewer-personalization'],
   ['components/cy/scene-roam-task-list/index.js', "url: '/api/official/my-events'", 'required', 'member', 'self-registration'],
   ['pages/activity/official-inbox/index.js', "url: '/api/official/v2/party-inbox'", 'required', 'member', 'self-party'],
@@ -99,6 +100,8 @@ const MATRIX = [
   ['subpackageMember/components/cy/npc-chat/index.js', "url: '/api/ai/npc/chat/data/export'", 'required', 'member', 'self-account'],
   ['pages/activity/official-detail/index.js', "url: '/api/official/events/' + id", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
   ['pages/searchmap/index.js', "url: '/api/city/nodes'", 'required', 'member', 'global-read+viewer-personalization'],
+  // 2026-10-29 V-06:漫游顶部搜地点在腾讯地点搜索回空/失败时查商家节点库兜底(同 searchmap 一档)
+  ['components/cy/map-address-search/index.js', "url: '/api/city/nodes'", 'required', 'member', 'global-read+viewer-personalization'],
   ['subpackageMember/components/cy/scene-roam-poi-detail/index.js', "url: '/api/city/nodes/' + this.data.poiId", 'required', 'member', 'global-read+viewer-personalization'],
   // 2026-10-25 官方地点:地图点位卡展开读节点(相册 / 玩法 / 完成状态),挑战页读同一节点,与据点详情同端点同权限档。
   ['subpackageRoam/nearby/index.js', "url: '/api/city/nodes/' + id", 'required', 'member', 'global-read+viewer-personalization'],
@@ -416,7 +419,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-10-28 L9 再并 master:P-08 首页 run-session/list 退场 −1,108 → 107。
   // Frozen-master calls + creator-scoped supply stations + V2 original-request recovery.
   // Source accounting only; this merged tree has NOT_RUN validation.
-  assert.equal(directCount, 109, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-10-29 M-32:账户收益本月收入明细读俱乐部计酬一处(同 club-direct-ledger 端点与权限档,已入 MATRIX),109 → 110。
+  assert.equal(directCount, 110, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。
@@ -746,10 +750,11 @@ test('广场商业身份权限仍来自当前账号与授权，不以俱乐部�
   assert.match(policy[1], /this\._communityFeatureOwner === String\(this\.getUserID\(\) \|\| ''\)/);
   assert.match(policy[1], /this\._communityFeatureAuthorization === this\.getAuthorization\(\)/);
   assert.match(policy[1], /\[write \? 'communityPostWrite' : 'communityPostRead'\] === true/);
-  const square = fs.readFileSync(path.join(XCX_ROOT, 'pages/square/list/index.js'), 'utf8');
-  assert.match(square, /if \(!write\) this\.setData\(\{ composeShow: false, composeEdit: null \}\)/);
-  assert.match(square, /if \(!read\) \{[\s\S]*?list: \[\]/, '读资格失效仍撤下原列表');
-  assert.doesNotMatch(square, /submitFormData\s*\(/, '不能复活 master 已迁出的旧发布写入口');
+  // 2026-10-29 R2:广场列表页已删,社区帖文改由发现页读;读资格不在时不拉社区那一路。
+  const discover = fs.readFileSync(path.join(XCX_ROOT, 'pages/talent/list/index.js'), 'utf8');
+  assert.match(discover, /if \(typeof app\.canUseCommunity === 'function' && app\.canUseCommunity\(false\)\) \{\s*sources\.push/,
+    '社区帖文那一路只在当前账号有读资格时加入');
+  assert.doesNotMatch(discover, /submitFormData\s*\(/, '不能复活 master 已迁出的旧发布写入口');
 });
 
 test('迁移到真实共用发布器的续登仍绑定原俱乐部、引用、编辑稿与内容，广场写拒绝闸不丢', () => {

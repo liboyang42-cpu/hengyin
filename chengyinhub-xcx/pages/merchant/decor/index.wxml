@@ -72,14 +72,14 @@
             aria-label="修改店铺 Logo"
             hover-class="cy-pressed"
           >
-            <image wx:if="{{m.logo}}" src="{{m.logo}}" mode="aspectFill" />
+            <image wx:if="{{m.logo}}" src="{{img.one(m.logo)}}" mode="aspectFill" />
             <text wx:else>{{m.name ? m.name[0] : '店'}}</text>
           </view><view class="dc-edit-hit dc-edit-hit--avatar" catchtap="uploadLogo" aria-role="button" aria-label="编辑头像" hover-class="cy-pressed"><view class="dc-edit-badge"><cy-icon name="edit" size="30" /></view></view></view>
           <text class="dc-name">{{m.name || '填写店铺名称'}}</text>
         </view>
         <view class="dc-card">
           <view class="dc-cover-wrap" bindtap="uploadCover" aria-role="button" aria-label="修改封面图" hover-class="cy-pressed">
-            <image wx:if="{{m.coverImage}}" class="dc-cover" src="{{m.coverImage}}" mode="aspectFill" />
+            <image wx:if="{{m.coverImage}}" class="dc-cover" src="{{img.one(m.coverImage)}}" mode="aspectFill" />
             <view wx:else class="dc-cover dc-placeholder">添加店铺封面</view>
             <view class="dc-edit-hit dc-edit-hit--cover" catchtap="uploadCover" aria-role="button" aria-label="编辑封面" hover-class="cy-pressed"><view class="dc-edit-badge"><cy-icon name="edit" size="30" /></view></view>
           </view>
@@ -190,10 +190,11 @@
           <text class="dc-name">让合作发生在店里</text>
         </view>
         <view class="dc-card dc-inset">
+          <!-- M-30(m700):承接摘要(如「免费承接」)与下面「合作诉求」同一行式,标题左、摘要右对齐 -->
           <view class="dc-heading" bindtap="goCoopSetting" aria-role="button" hover-class="cy-pressed">
             承接设置
+            <text class="dc-muted">{{coopSummary || '完善你的承接能力'}}</text>
           </view>
-          <text class="dc-muted">{{coopSummary || '完善你的承接能力'}}</text>
           <view class="dc-inner-row">
             <cy-cell arrow-icon="chevron-right"
               title="合作诉求" hairline="{{false}}"
@@ -529,7 +530,7 @@
       <image
         wx:if="{{imageEditor.value}}"
         class="dc-image-preview {{imageEditor.key === 'logo' ? 'dc-image-preview--logo' : ''}}"
-        src="{{imageEditor.value}}"
+        src="{{img.one(imageEditor.value)}}"
         mode="aspectFill"
       />
       <!-- M-08(2026-10-27):没有图时不再留一大块空白 —— 占位与预览同尺寸(Logo 为居中圆),点它直接选图 -->
@@ -557,3 +558,4 @@
     custom-style="width:0;height:0;background:transparent;pointer-events:none"
     bind:afterleave="onNativeBackGuard" />
 </view>
+<wxs src="../../../utils/wxs/img.wxs" module="img" />

@@ -122,7 +122,8 @@ function assertLegacyMerchantHero(wxml, wxss) {
   // 绝不能兜底到 userInfo.avatar —— 那会把登录者的个人头像挂成门店脸
   // 2026-09-21:cy-avatar.src 是强类型 String,API 给 null 会报类型警告(F-17),
   //   所以允许且只允许归一成空串;任何图片路径或 userInfo 兜底仍判红 —— 空串就是"空位"。
-  assert.match(wxml, /class="rv-hero-avatar"[\s\S]{0,80}src="\{\{ merchantInfo\.logo(?: \|\| '')? \}\}"/,
+  // 2026-10-29 M-11:Logo 是 http 签名链接,经 img.one 换 https(只换协议,不兜底)
+  assert.match(wxml, /class="rv-hero-avatar"[\s\S]{0,80}src="\{\{ img\.one\(merchantInfo\.logo\) \}\}"/,
     'hero 头像必须只读 merchantInfo.logo(至多归一为空串)');
   // ⚠️ 负向断言不能写成 /\|\|\s*(?!'')/ —— \s* 会回溯成零宽,于是 (?!'') 在那个空格上成立,
   //   任何兜底都判绿(本文件下方 box-shadow 那条注释记的是同一个坑)。把 \s* 挪进断言里面。
@@ -237,7 +238,7 @@ test('负控:首屏注入经营概览卡片形态时，旧版 hero 合同必须�
 test('负控:hero 头像兜底回 userInfo.avatar(#870 修过的病)时必须判红', () => {
   const wxml = fs.readFileSync(path.join(__dirname, '../../pages/merchant/index/index.wxml'), 'utf8');
   const wxss = fs.readFileSync(path.join(__dirname, '../../pages/merchant/index/index.wxss'), 'utf8');
-  const mutated = wxml.replace(/src="\{\{ merchantInfo\.logo(?: \|\| '')? \}\}"/g, 'src="{{ merchantInfo.logo || userInfo.avatar }}"');
+  const mutated = wxml.replace(/src="\{\{ img\.one\(merchantInfo\.logo\) \}\}"/g, 'src="{{ img.one(merchantInfo.logo || userInfo.avatar) }}"');
   assert.notEqual(mutated, wxml, '负控锚点失效:找不到 hero 头像的 src');
   assert.throws(() => assertLegacyMerchantHero(mutated, wxss), /只读 merchantInfo\.logo|不能兜底/);
 });

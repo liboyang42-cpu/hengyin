@@ -80,7 +80,7 @@ test('用户点名的无标题资料页保留共享返回栏和等高占位', ()
 test('负控:把旧个人资料大标题加回无标题页必须判红', () => {
   const route = 'pages/gerenziliao/gerenziliao'
   const s = sourcesOf(route)
-  s.wxml = s.wxml.replace('<cy-nav-bar />', '<cy-nav-bar />\n<cy-page-title title="个人资料" />')
+  s.wxml = s.wxml.replace('<cy-nav-bar overlay />', '<cy-nav-bar overlay />\n<cy-page-title title="个人资料" />')
   assert.notEqual(s.wxml, read(`${route}.wxml`), '变异未生效，负控本身是假的')
   assert.throws(() => assertTitlelessSharedNav(route, '个人资料', s))
 })

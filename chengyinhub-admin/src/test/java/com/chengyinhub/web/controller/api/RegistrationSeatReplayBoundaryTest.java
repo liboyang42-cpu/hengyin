@@ -80,7 +80,7 @@ class RegistrationSeatReplayBoundaryTest {
             ReflectionTestUtils.setField(RegistrationRedemptionTestFixtures.application(scanner), (String) field[0], field[1]);
         ReflectionTestUtils.setField(reader, "registrationTicketApplication", new RegistrationTicketApplication(
                 orders, service, activityService, mock(IPerkLedgerService.class),
-                mock(com.chengyinhub.business.service.impl.QrcodeServiceImpl.class), SECRET));
+                mock(com.chengyinhub.business.service.impl.QrcodeServiceImpl.class), SECRET, mock(com.chengyinhub.web.service.verify.RegistrationDynCodeLedger.class)));
     }
     private String code(boolean expired, int seat) {
         return VerifyDynCodeUtil.issue(31L, "activity_seat_" + seat,

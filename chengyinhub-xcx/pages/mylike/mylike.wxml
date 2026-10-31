@@ -3,6 +3,8 @@
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
+  <!-- 2026-10-29 业主:收藏从卡片动作行挪进「···」;这里只有「取消收藏」一项 -->
+  <cy-option-sheet immediate show="{{postMoreShow}}" title="帖文操作" items="{{postMoreItems}}" bind:select="onPostMoreSelect" bind:cancel="closePostMore" />
 <view class="mylike">
   <cy-nav-bar />
   <!-- 返回-标题间距是本批 A46 基准：fixed nav 后只留同高占位，不额外加空档。 -->
@@ -21,8 +23,8 @@
       <block wx:else>
         <view class="favorite-refreshing" wx:if="{{refreshing}}" aria-role="status" aria-live="polite"></view>
         <cy-post-card wx:for="{{postList}}" wx:key="id" post="{{item}}" index="{{index}}" light="{{isMerchantView}}"
-          show-favorite show-share accessibility-label="查看收藏的动态"
-          bind:detail="goPost" bind:favorite="postUnlike" />
+          show-more show-share accessibility-label="查看收藏的动态"
+          bind:detail="goPost" bind:more="onPostMore" />
         <view class="favorite-end" wx:if="{{postList.length && !hasMorePosts}}">已加载全部帖文</view>
       </block>
     </block>

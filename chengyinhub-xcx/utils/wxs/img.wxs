@@ -24,7 +24,12 @@ var list = function (s) {
   }
   return out;
 };
+// 单图字段(商家 Logo、店铺封面):只把自有域名 http 换成 https,其余原样(本地 /images/ 路径不动)
+var one = function (s) {
+  return s ? secure('' + s) : '';
+};
 module.exports = {
   first: first,
-  list: list
+  list: list,
+  one: one
 };

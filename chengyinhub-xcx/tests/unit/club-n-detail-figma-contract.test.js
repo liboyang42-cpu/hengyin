@@ -129,7 +129,9 @@ function assertContract(overrides = {}) {
 
   // —— 活动空态 282:478:卡容器内 标题 / 说明 / 主按钮 / 归属提示 ——
   // 2026-09-06 裸文字空态收编:标题 / 说明 / 主按钮 / 归属提示 都由 cy-empty 承载(说明里带归属句,cta 只给主理人)
-  assert.match(rule(wxss, '.ev-empty'), /background:\s*var\(--cy-color-bg-elevated\)/)   // 空态仍在卡容器内(282:478)
+  // 2026-10-29 V-05:空态不用卡片框住,并下移到与帖子 tab 空态同高
+  assert.doesNotMatch(rule(wxss, '.ev-empty'), /background|border-radius/, '活动空态不得再套卡片')
+  assert.match(rule(wxss, '.ev-empty'), /margin-top:\s*calc\(var\(--cy-space-8\) \* 2 \+ var\(--cy-space-5\)\)/)
   // P-14:空态文案「暂时俱乐部还没有活动」
   assert.match(wxml, /<cy-empty wx:else class="ev-empty" title="暂时俱乐部还没有活动"[^>]*cta="\{\{club\.isOwner \|\| canManageActivities \? '发布主题' : ''\}\}" bind:cta="onCreateTeam"/)
 

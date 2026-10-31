@@ -1,6 +1,6 @@
 'use strict';
 
-// BL-191：广场动态删除/举报、评论举报的成功回调必须按发起时的 item.id 摘行，
+// BL-191：广场动态删除/举报、评论举报的成功回调(2026-10-29「动态」列表页已删,只剩详情页评论举报)必须按发起时的 item.id 摘行，
 // 不能用发起时的 index splice —— 请求期间下拉刷新或另一条先返回就会摘掉别人的行。
 
 const test = require('node:test');
@@ -84,55 +84,6 @@ function loadPage(relativePath, opts) {
   return { page, requests, modalCalls, navigations, toasts };
 }
 
-
-test('列表删除：请求期间列表被替换，成功后只摘这条、找不到不动', () => {
-  const h = loadPage('pages/square/list/index.js');
-  h.page.data.userId = 1;
-  h.page.data.list = [{ id: 11, memberId: 1 }, { id: 12, memberId: 2 }];
-  h.page.showAction({ detail: { index: 0 } });
-  h.page.onPostAction({ detail: { action: 'delete', id: '11' } });
-  const write = h.requests.find((r) => r.url === '/api/creativesquare/delete');
-  h.page.data.list = [{ id: 20 }, { id: 11, memberId: 1 }, { id: 21 }];
-  write.success({ code: '200' });
-  assert.deepEqual(ids(h.page.data.list), [20, 21]);
-  assert.equal(h.page.data.nodata, false);
-
-  const g = loadPage('pages/square/list/index.js');
-  g.page.data.userId = 1;
-  g.page.data.list = [{ id: 11, memberId: 1 }];
-  g.page.showAction({ detail: { index: 0 } });
-  g.page.onPostAction({ detail: { action: 'delete', id: '11' } });
-  g.page.data.list = [{ id: 30 }, { id: 31 }];
-  g.requests.find((r) => r.url === '/api/creativesquare/delete').success({ code: '200' });
-  assert.deepEqual(ids(g.page.data.list), [30, 31], '目标已不在列表里时不得摘别人的行');
-});
-
-test('列表举报：两条先后返回删掉的是正确的两条', () => {
-  const h = loadPage('pages/square/list/index.js');
-  h.page.data.userId = 1;
-  h.page.data.list = [{ id: 11, memberId: 2 }, { id: 12, memberId: 3 }, { id: 13, memberId: 4 }];
-  h.page.showAction({ detail: { index: 0 } });
-  h.page.onPostAction({ detail: { action: 'report', id: '11' } });
-  h.page.showAction({ detail: { index: 1 } });
-  h.page.onPostAction({ detail: { action: 'report', id: '12' } });
-  const reports = h.requests.filter((r) => r.url === '/api/creativesquare/report');
-  assert.deepEqual(reports.map((r) => r.data.id), [11, 12]);
-  reports[0].success({ code: '200' });
-  reports[1].success({ code: '200' });
-  assert.deepEqual(ids(h.page.data.list), [13]);
-});
-
-test('列表举报：请求期间列表被替换，删光后 nodata', () => {
-  const h = loadPage('pages/square/list/index.js');
-  h.page.data.userId = 1;
-  h.page.data.list = [{ id: 11, memberId: 2 }];
-  h.page.showAction({ detail: { index: 0 } });
-  h.page.onPostAction({ detail: { action: 'report', id: '11' } });
-  h.page.data.list = [{ id: 11, memberId: 2 }];
-  h.requests.find((r) => r.url === '/api/creativesquare/report').success({ code: '200' });
-  assert.equal(h.page.data.list.length, 0);
-  assert.equal(h.page.data.nodata, true);
-});
 
 test('详情评论举报：两条先后返回、请求期间列表被替换都按 id 摘行', () => {
   const h = loadPage('pages/square/detail/index.js');

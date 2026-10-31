@@ -366,6 +366,9 @@ public class TopicQueryService {
                             CmsMemberTemplate tpl = chapterTemplates.get(n.getTemplateId());
                             if (tpl != null) {
                                 nVO.setInteractionType(tpl.getInteractionType());
+                                // V-24(2026-10-30):主题模板详情「能力」按站列出这一站玩什么、大概多久
+                                nVO.setGameTitle(tpl.getTitle());
+                                nVO.setGameDuration(tpl.getDuration());
                                 // 玩法去重
                                 if (!gameMap.containsKey(n.getTemplateId())) {
                                     com.chengyinhub.business.domain.vo.TopicTemplateGameVO gVO =

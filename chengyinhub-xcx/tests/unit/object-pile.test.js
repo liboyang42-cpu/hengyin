@@ -90,6 +90,7 @@ test('★藏品册页隐藏时停掉逐帧重画、回来再接着画 —— 聚
 test('★点开一件时藏起物品堆画布 —— canvas 会压在半屏弹层与遮罩上面(2026-09-24 模拟器实拍)', () => {
   const wxml = read('../../subpackageP3/pages/object-cards/index/index.wxml')
   const wxss = read('../../subpackageP3/pages/object-cards/index/index.wxss')
-  assert.ok(/<canvas type="2d" id="ocPile" class="oc-pile__cv \{\{active \? 'is-hidden' : ''\}\}"/.test(wxml), '画布没跟着放大态藏起来')
+  // 2026-10-30 收集册:点一件先飞到中间(fly),再点才开详情(active);两种盖层下画布都藏起来
+  assert.ok(/<canvas type="2d" id="ocPile" class="oc-pile__cv \{\{active \|\| fly\.show \|\| catsOpen \? 'is-hidden' : ''\}\}"/.test(wxml), '画布没跟着放大态藏起来')
   assert.ok(/\.oc-pile__cv\.is-hidden\s*\{\s*display: none;/.test(wxss), '藏画布要用 display:none(visibility 对 canvas 不管用)')
 })

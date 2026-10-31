@@ -87,7 +87,8 @@ test('成功:以返回卡名为准更新放大态,提示并回读当前分类', 
 test('页面接线:名称行可点、改名半屏用 cy-sheet + cy-field;回调不用 this 方法简写', () => {
   const wxml = fs.readFileSync(path.join(root, 'subpackageP3/pages/object-cards/index/index.wxml'), 'utf8');
   const js = fs.readFileSync(path.join(root, 'subpackageP3/pages/object-cards/index/index.js'), 'utf8');
-  assert.match(wxml, /<cy-page-title title="藏品册" \/>/, '不改现有主标题');
+  // 2026-10-30 业主定稿 P-3:藏品册成了「收集册 · 藏品」,标题由收集册的段头给
+  assert.match(wxml, /<album-head active="object">/, '收集册段头');
   assert.match(wxml, /bindtap="onRenameStart" aria-role="button"/);
   assert.match(wxml, /<cy-sheet show="\{\{renaming\}\}" title="改名"/);
   assert.match(wxml, /<cy-field label="卡名"/);

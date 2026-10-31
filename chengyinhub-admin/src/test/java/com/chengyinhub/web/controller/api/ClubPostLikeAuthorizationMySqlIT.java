@@ -96,7 +96,8 @@ class ClubPostLikeAuthorizationMySqlIT {
                     "sql/migration_20261012_club_join_review.sql",
                     "sql/migration_club_post_announcement_20260823.sql",
                     "sql/migration_club_post_reference_20260910.sql",
-                    "sql/migration_club_role_governance_20260823.sql");
+                    "sql/migration_club_role_governance_20260823.sql",
+                    "sql/migration_20261029_club_post_repost.sql");
         }
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean();
         factory.setDataSource(source);

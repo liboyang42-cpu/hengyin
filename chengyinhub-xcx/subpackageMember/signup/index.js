@@ -1,4 +1,8 @@
 const toast = require('../../utils/toast.js');
+const QR_REFRESH_LEAD_MS = 30000; // 到期前 30 秒续签
+const QR_MIN_REFRESH_MS = 5000;
+const QR_RETRY_MS = 5000;
+const { passExpiryText, passDaysLeft } = require('../../utils/ticket-expiry.js');
 const { isLoginRequired, retryLogin } = require('../../utils/session/login-reload.js');
 const app = getApp();
 function walletOwner() { return typeof app.getUserID === 'function' ? String(app.getUserID() || '') : ''; }
@@ -46,7 +50,7 @@ Page({
           差异塞进 if,还丢掉各自的分页。 */
     ticketList: [],
     currentSwiperTicket: 0, deckPoses: [], deckStill: false, wbg: ['', ''], wbgOn: 0, navH: appGlobal.navBarHeight || 44, // v13 卡堆 / 两层模糊背景
-    flipped: false, qrState: 'idle', qrUrl: '', qrCode: '', qrCountdown: '', entering: false, startLit: false, reduced: false, // 2026-10-28 翻面入场码 + 开始游戏
+    flipped: false, qrState: 'idle', qrUrl: '', entering: false, startLit: false, reduced: false, // 2026-10-28 翻面入场码 + 开始游戏
     walletState: 'loading', // loading | ready | error | login | empty —— 由两条支线的状态合成
     walletErrorMsg: '',
     focusState: '',
@@ -339,19 +343,27 @@ Page({
     const flipped = !this.data.flipped;
     this.setData({ flipped });
     const item = (this.data.ticketList || [])[index];
-    if (flipped && item && String(item.id) !== this._qrFor) this._loadQr(item);
+    if (!flipped || !item) return;
+    if (String(item.id) !== this._qrFor || !(this._qrExpiresAt > Date.now() + QR_REFRESH_LEAD_MS)) this._loadQr(item);
+    else if (!this._qrTimer) this._scheduleQrRefresh(item, this._qrExpiresAt - Date.now() - QR_REFRESH_LEAD_MS);
   },
   retryQr() {
     const item = (this.data.ticketList || [])[this.data.currentSwiperTicket];
     if (item) this._loadQr(item);
   },
-  _loadQr(item) {
+  // V-02:动态码到期前在后台静默续签，不给玩家显示倒计时；续签期间旧码照常出示，真过期了才落错误态。
+  _loadQr(item, silent) {
     const registrationId = exactRegistrationId(item.id);
     const token = this._qrToken = (this._qrToken || 0) + 1;
     this._clearQrTimer();
-    this._qrFor = '';
-    if (!registrationId) { this.setData({ qrState: 'error', qrUrl: '', qrCode: '', qrCountdown: '' }); return; }
-    this.setData({ qrState: 'loading', qrUrl: '', qrCode: '', qrCountdown: '' });
+    if (!silent) this._qrFor = '';
+    if (!registrationId) { this.setData({ qrState: 'error', qrUrl: '' }); return; }
+    if (!silent) this.setData({ qrState: 'loading', qrUrl: '' });
+    // 静默续签失败而旧码还没到期:旧码继续出示,稍后再续
+    const keepOld = () => {
+      if (!(silent && this._qrExpiresAt > Date.now() + QR_RETRY_MS)) return false;
+      this._scheduleQrRefresh(item, QR_RETRY_MS); return true;
+    };
     app.sendRequest({
       url: '/api/verify/dyncode/issue', method: 'POST', data: { registrationId }, hideLoading: true, silentError: true,
       success: (res) => {
@@ -359,22 +371,27 @@ Page({
         const payload = res && (res.code === 200 || res.code === '200') && res.data;
         const raw = payload && payload.expiresAt;
         const expiresAt = typeof raw === 'number' && Number.isFinite(raw) ? (raw < 100000000000 ? raw * 1000 : raw) : 0;
-        if (!payload || !payload.qrcodeUrl || !(expiresAt > Date.now())) { this.setData({ qrState: 'error' }); return; }
+        if (!payload || !payload.qrcodeUrl || !(expiresAt > Date.now())) {
+          if (!keepOld()) { this._qrFor = ''; this.setData({ qrState: 'error', qrUrl: '' }); }
+          return;
+        }
         this._qrFor = registrationId; this._qrExpiresAt = expiresAt;
-        this.setData({ qrState: 'ready', qrUrl: payload.qrcodeUrl, qrCode: payload.code || '' });
-        this._qrTick(); this._qrTimer = setInterval(() => this._qrTick(), 1000);
+        this.setData({ qrState: 'ready', qrUrl: payload.qrcodeUrl });
+        this._scheduleQrRefresh(item, Math.max(QR_MIN_REFRESH_MS, expiresAt - Date.now() - QR_REFRESH_LEAD_MS));
       },
-      fail: () => { if (!this._unloaded && token === this._qrToken) this.setData({ qrState: 'error' }); },
-      successStatusAbnormal: () => { if (!this._unloaded && token === this._qrToken) this.setData({ qrState: 'error' }); },
+      fail: () => { if (this._unloaded || token !== this._qrToken || keepOld()) return; this._qrFor = ''; this.setData({ qrState: 'error', qrUrl: '' }); },
+      successStatusAbnormal: () => { if (this._unloaded || token !== this._qrToken || keepOld()) return; this._qrFor = ''; this.setData({ qrState: 'error', qrUrl: '' }); },
     });
   },
-  _qrTick() {
-    const left = Math.max(0, (this._qrExpiresAt || 0) - Date.now());
-    if (!left) { this._clearQrTimer(); this._qrFor = ''; this.setData({ qrState: 'error', qrUrl: '', qrCode: '', qrCountdown: '' }); return; }
-    const s = Math.ceil(left / 1000);
-    this.setData({ qrCountdown: '有效期剩余 ' + Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0') });
+  _scheduleQrRefresh(item, delay) {
+    this._clearQrTimer();
+    this._qrTimer = setTimeout(() => {
+      this._qrTimer = null;
+      if (this._unloaded || !this.data.flipped) return;
+      this._loadQr(item, true);
+    }, delay);
   },
-  _clearQrTimer() { if (this._qrTimer) { clearInterval(this._qrTimer); this._qrTimer = null; } },
+  _clearQrTimer() { if (this._qrTimer) { clearTimeout(this._qrTimer); this._qrTimer = null; } },
 
   /* 重试。哪条支线错了就重拉哪条;两条都错就都拉。 */
   retryWallet() {
@@ -661,7 +678,7 @@ Page({
     const next = (thrown + 1) % n;
     this._throwing = true;
     this._clearQrTimer(); this._qrFor = '';
-    this.setData({ currentSwiperTicket: next, flipped: false, qrState: 'idle', qrUrl: '', qrCode: '', qrCountdown: '' });
+    this.setData({ currentSwiperTicket: next, flipped: false, qrState: 'idle', qrUrl: '' });
     this._deckLay();
     this.setData({ ['deckPoses[' + thrown + ']']: out });
     this._bgTo(list[next] && list[next].wImg);
@@ -688,12 +705,9 @@ function reducedMotionOn() {
 const DECK_POSE = [{ y: 0, s: 1, b: 1, o: 1 }, { y: -26, s: 0.93, b: 0.5, o: 1 }, { y: -48, s: 0.86, b: 0.32, o: 1 }, { y: -62, s: 0.8, b: 0.2, o: 1 }, { y: -62, s: 0.8, b: 0.2, o: 0 }];
 /* 卡面文字:类型 · 剩几天(有到期日才写),状态不是待使用时写状态;tab 归类 */
 function walletCard(item) {
-  const until = item.wUntil ? new Date(String(item.wUntil).replace(/-/g, '/')) : null;
-  const days = until && !isNaN(until.getTime()) ? Math.ceil((until.getTime() - Date.now()) / 86400000) : null;
-  // 当天就截止的写「今天」:按毫秒向上取整,今天 14:16 的场次在凌晨会写成「剩 1 天」,时区偏差时还会多一天(实走 B14)
-  const today = until && !isNaN(until.getTime()) && until.toDateString() === new Date().toDateString();
-  const left = today ? '今天截止' : ('剩 ' + days + ' 天');
-  return Object.assign(item, { wSub: days !== null && days >= 0 ? item.wType + ' · ' + left : item.wType });
+  // 卡面「剩 N 天」与背面「N 天内过期」同一套自然日算法(原来卡面按 24 小时向上取整,同一张票两面差一天)
+  const days = passDaysLeft(item.wUntil);
+  return Object.assign(item, { wSub: days === null ? item.wType : item.wType + (days === 0 ? ' · 今天过期' : ' · 剩 ' + days + ' 天'), wExpiry: passExpiryText(item.wUntil) });
 }
 /* 能用的票:已报名(已付款 / 免费)、没核验、没取消没过期,到期日也还没过 */
 function usableTicket(item) {

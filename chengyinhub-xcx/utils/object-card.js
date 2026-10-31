@@ -8,17 +8,27 @@ const { validBox } = require('./object-card-reveal.js');
 
 const GENERATING = ['QUEUED', 'GENERATING'];
 
+// V-18(2026-10-29):后端回的 OSS 签名链接是 http://,真机拒载 → 卡面「照片没读出来」。
+// 与全站同口径走 app.getImgUrl(http→https、相对路径补域名)。
+function mediaUrl(url) {
+  if (!url) return '';
+  let app = null;
+  try { app = typeof getApp === 'function' ? getApp() : null; } catch (e) { app = null; }
+  return app && typeof app.getImgUrl === 'function' ? app.getImgUrl(url) : url;
+}
+
 function toCard(vo) {
   if (!vo || typeof vo !== 'object') return null;
-  const frames = Array.isArray(vo.frames) && vo.frames.length ? vo.frames.slice() : [vo.sourceUrl];
+  const sourceUrl = mediaUrl(vo.sourceUrl);
+  const frames = Array.isArray(vo.frames) && vo.frames.length ? vo.frames.map(mediaUrl) : [sourceUrl];
   return {
     id: vo.id,
     frames,
     title: vo.title || '',
     caption: vo.caption || '',
-    sourceUrl: vo.sourceUrl || '',
+    sourceUrl,
     // 抠图贴纸与物品在原照片里的位置:没抠出来都是 null,界面据此退回照片卡
-    cutoutUrl: vo.cutoutUrl || null,
+    cutoutUrl: mediaUrl(vo.cutoutUrl) || null,
     cutoutBox: validBox(vo.cutoutBox),
     category: vo.category || null,
     // 地点(主题名 · 节点名)只在藏品册列表里有;当场那一屏由页面给

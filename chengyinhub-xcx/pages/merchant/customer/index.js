@@ -6,6 +6,7 @@
 //
 // 为什么另开一页而不是复用 pages/merchant/relation:那页标题就叫「合作」,
 // 职责是「找新的合作对象」,跟「谁在我这儿消费过」是两件事。
+const modal = require('../../../utils/modal.js');
 const toast = require('../../../utils/toast.js'); const pageMotion = require('../../../utils/page-motion.js');
 const app = getApp();
 /* 原生 showModal / showActionSheet 由微信自己渲染,读不到 WXSS token,只收字面色值。
@@ -99,7 +100,6 @@ Page({
     batchError: '',
     savedSegments: [],
     savedSegmentsError: '',
-    segmentName: '',
     segmentSaving: false,
     exportTask: null,
     exportState: 'idle',
@@ -353,8 +353,7 @@ Page({
         batchError: '',
         savedSegments: [],
         savedSegmentsError: '',
-        segmentName: '',
-        segmentSaving: false,
+            segmentSaving: false,
         exportTask: null,
         exportState: 'idle',
         exportError: '',
@@ -705,13 +704,47 @@ Page({
     });
   },
 
-  onSegmentNameInput(e) { this.setData({ segmentName: (e.detail && e.detail.value) || '' }); },
+  // 2026-10-30 P-5 M-03:底栏「存为分群」弹一个输入框,名字默认用当前条件拼好,改了就存
+  promptSaveSegment() {
+    if (!this.data.canSegment || this.data.segmentSaving || !this._hasFilter()) return;
+    modal.show({
+      title: '存为分群',
+      editable: true,
+      // 默认名填进输入框里(不是框上方的说明文字),改了就存
+      value: this._filterLabel(),
+      maxlength: 30,
+      placeholderText: '给这组客户起个名字',
+      validate: (text) => (String(text || '').trim() ? '' : '请输入分群名称'),
+      confirmText: '保存',
+      success: (r) => {
+        if (r && r.confirm) this.saveCurrentSegment(String(r.content || '').trim());
+      },
+    });
+  },
 
-  saveCurrentSegment() {
+  _hasFilter() {
+    const d = this.data;
+    return d.segment !== 'all' || !!d.sourceType || !!d.sourceStart || !!d.sourceEnd || d.tagId !== '';
+  },
+
+  // 当前条件拼成默认分群名:回头客 · 主题 · 咖啡常客
+  _filterLabel() {
+    const d = this.data;
+    const parts = [];
+    const seg = SEGMENTS.find(item => item.key === d.segment);
+    if (seg && seg.key !== 'all') parts.push(seg.label);
+    if (d.sourceType) parts.push(d.sourceType === '1' ? '主题' : '活动');
+    if (d.sourceStart || d.sourceEnd) parts.push(`${d.sourceStart || '…'} 至 ${d.sourceEnd || '…'}`);
+    const tag = d.tagId !== '' && (d.availableTags || []).find(item => item.id === d.tagId);
+    if (tag) parts.push(tag.tagName);
+    return parts.join(' · ').slice(0, 30);
+  },
+
+  saveCurrentSegment(name) {
     if (!this.data.canSegment || this.data.segmentSaving) return;
     const isCurrent = this._scopeGuard();
     if (!isCurrent()) return;
-    const name = this.data.segmentName.trim();
+    name = String(name || '').trim();
     if (!name || name.length > 30) { toast('请输入1至30字分群名称'); return; }
     this.setData({ segmentSaving: true });
     app.sendRequest({
@@ -725,7 +758,6 @@ Page({
         if (!isCurrent()) return;
         this.setData({ segmentSaving: false });
         if (!ok(res)) { toast(requestError(res, '保存分群失败')); return; }
-        this.setData({ segmentName: '' });
         this.loadSavedSegments();
         toast.success('分群已保存');
       },

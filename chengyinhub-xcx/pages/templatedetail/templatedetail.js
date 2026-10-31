@@ -87,6 +87,24 @@ function categoryChips(info, categoryText) {
     : (categoryText ? [categoryText] : []);
 }
 
+// 2026-10-30 业主「不能只是占位」:分类与适用场景每一项按名字配一个 3D 图标(Fluent 3D,MIT,见 art/cat/LICENSE),
+// 原来所有分类同一个店铺线条图标,看着像占位。按关键词匹配,都对不上用「闪光」。
+var SCENE_ICON_RULES = [
+  [/运动|健身|徒步|户外|跑/, 'sport'], [/科技|数码|电子/, 'tech'], [/咖啡|茶饮|饮品/, 'coffee'],
+  [/美食|烹饪|餐|吃/, 'food'], [/娱乐|游戏|达人|电竞/, 'fun'], [/宠物/, 'pet'], [/商务|职场|办公/, 'biz'],
+  [/世界|旅行|旅游/, 'world'], [/出行|交通|驾/, 'travel'], [/戏剧|演出|剧场|表演|话剧/, 'stage'],
+  [/文化|历史|人文|博物|古迹/, 'culture'], [/设计|美学|艺术|文艺|手作/, 'art'], [/衣物|洗护|服饰/, 'cloth'], [/家政|维修/, 'repair'],
+  [/亲子|家庭|儿童/, 'family'], [/摄影|拍照|影像/, 'photo'], [/城市|街区|城区|商圈/, 'city']
+];
+
+function sceneIcon(name) {
+  var text = String(name || '');
+  for (var i = 0; i < SCENE_ICON_RULES.length; i++) {
+    if (SCENE_ICON_RULES[i][0].test(text)) return '/pages/templatedetail/art/cat/' + SCENE_ICON_RULES[i][1] + '.png';
+  }
+  return '/pages/templatedetail/art/cat/other.png';
+}
+
 function buildDetailDisplay(info, categoryText) {
   info = info || {};
   var materialChips = splitValues(info.requiredMaterials);
@@ -95,7 +113,8 @@ function buildDetailDisplay(info, categoryText) {
     isTopicTemplate: !!isTopicTemplate(info),
     detailStats: buildDetailStats(info),
     materialChips: materialChips,
-    sceneChips: sceneChips
+    sceneChips: sceneChips,
+    sceneIcons: sceneChips.map(sceneIcon)
   };
 }
 
@@ -135,15 +154,11 @@ function buildCapRows(info, categoryText) {
 var TAB_DETAILS = { key: 'details', label: '详情' };
 var TAB_CAPABILITIES = { key: 'capabilities', label: '能力' };
 
-// CU-M-130:能力 tab 里只有「方式」是这一栏独有的信息 —— 场景在详情栏已经铺成 chips,
-// 来源就是头部的发布者署名。三者只剩署名时,点「能力」看到的是一句和主按钮重复的说明,
-// 标签与内容对不上,这时候不把「能力」这个 tab 给出去。
-function hasCapabilityInfo(capRows) {
-  return (capRows || []).some(function (row) { return row && row.key === 'way'; });
-}
-
-function buildTplTabs(capable) {
-  return capable ? [TAB_DETAILS, TAB_CAPABILITIES] : [TAB_DETAILS];
+// V-11(2026-10-29 业主):每个模板都给「详情 / 能力」两个 tab。
+// 原 CU-M-130 判据只认「方式」行,而 b27 起的机制型官方模板 validation_method=0、
+// 玩法写在 advanced_config 里,没有「方式」行 ⇒ 整批模板丢了「能力」tab。
+function buildTplTabs() {
+  return [TAB_DETAILS, TAB_CAPABILITIES];
 }
 
 Page({
@@ -158,6 +173,7 @@ Page({
     detailStats: [],
     materialChips: [],
     sceneChips: [],
+    sceneIcons: [],
     publisherText: '城瘾',
     isOfficialPublisher: false,
     capExpanded: {},
@@ -182,10 +198,10 @@ Page({
     inputAnswer: '',
     isMyScope: false,
     isMerchant: false,
-    // 公共库主动作统一「开始应用」(基于模板起草)。scope=my 按服务端 canEdit 定:
+    // 公共库主动作统一「应用」(基于模板起草;V-11 由「开始应用」改名)。scope=my 按服务端 canEdit 定:
     // 本人可编辑才叫「继续编辑」,否则「去模板广场选用」,不让非本人进编辑器。
     // 详情回包前保持默认文案,goPrimary 在 canEdit 未确认时不进编辑页。
-    primaryLabel: '开始应用',
+    primaryLabel: '应用',
     tplTabs: [TAB_DETAILS, TAB_CAPABILITIES]
   },
 
@@ -260,12 +276,12 @@ Page({
     target.publisherText = publisher.text;
     target.isOfficialPublisher = publisher.official;
     target.capRows = buildCapRows(normalized.info, normalized.categoryText);
-    target.tplTabs = buildTplTabs(hasCapabilityInfo(target.capRows));
-    if (!hasCapabilityInfo(target.capRows)) target.activeTab = 'details';
+    target.tplTabs = buildTplTabs();
     target.ruleSteps = templateDetailUtil.splitRuleSteps(normalized.info.ruleInstructions);
     target.detailStats = detail.detailStats;
     target.materialChips = detail.materialChips;
     target.sceneChips = detail.sceneChips;
+    target.sceneIcons = detail.sceneIcons;
     target.isTopicTemplate = detail.isTopicTemplate;
     target.difficultyLetter = meta.letter;
     target.difficultyLabel = meta.label;
@@ -277,20 +293,19 @@ Page({
     var detail = buildDetailDisplay(normalized.info, normalized.categoryText);
     var publisher = resolvePublisherDisplay(normalized.info, this.data.scope);
     var capRows = buildCapRows(normalized.info, normalized.categoryText);
-    var capable = hasCapabilityInfo(capRows);
     this.setData({
-      info: normalized.info, primaryLabel: this.data.scope !== 'my' ? '开始应用' : (normalized.info.canEdit === true ? '继续编辑' : '去模板广场选用'),
+      info: normalized.info, primaryLabel: this.data.scope !== 'my' ? '应用' : (normalized.info.canEdit === true ? '继续编辑' : '去模板广场选用'),
       gallery: normalized.gallery,
       coverUrl: detailCover(normalized),
       publisherText: publisher.text,
       isOfficialPublisher: publisher.official,
       capRows: capRows,
-      tplTabs: buildTplTabs(capable),
-      activeTab: capable ? this.data.activeTab : 'details',
+      tplTabs: buildTplTabs(),
       ruleSteps: templateDetailUtil.splitRuleSteps(normalized.info.ruleInstructions),
       detailStats: detail.detailStats,
       materialChips: detail.materialChips,
       sceneChips: detail.sceneChips,
+      sceneIcons: detail.sceneIcons,
       isTopicTemplate: detail.isTopicTemplate,
       capExpanded: {},
       difficultyLetter: meta.letter,

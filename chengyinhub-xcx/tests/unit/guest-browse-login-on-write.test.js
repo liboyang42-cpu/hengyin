@@ -156,10 +156,7 @@ const WRITE_ENTRIES = [
   ['pages/club/detail/index.js', 'reportClubMember', 'report'],
   ['pages/club/detail/index.js', 'reportClub', 'report'],
   ['pages/club/detail/index.js', 'reportTopicActivity', 'report'],
-  ['pages/square/list/index.js', 'lickClick', 'like'],
-  ['pages/square/list/index.js', 'favoriteClick', 'like'],
-  ['pages/square/list/index.js', 'followClick', 'like'],
-  ['pages/square/list/index.js', 'reportSquare', 'report'],
+  // 2026-10-29:「动态」列表页(pages/square/list)已删,帖文写入口只剩下面的详情页
   // 2026-10-27 P-20:广场行内发布框(submitFormData)撤掉,新建帖同走 cy-post-compose 的 onPublish(下方已列)
   ['pages/square/detail/index.js', 'addComment', 'post'],
   ['pages/square/detail/index.js', 'addReplyComment', 'post'],
@@ -173,7 +170,7 @@ const WRITE_ENTRIES = [
   ['pages/square/detail/index.js', 'reportComment', 'report'],
   ['pages/square/components/cy/post-compose/index.js', 'onPublish', 'post'],
   ['pages/team/join/index.js', 'join', 'team'],
-  ['pages/templatedetail/topic-preview/index.js', 'useTemplate', 'publish'],
+  ['pages/templatedetail/topic-detail/index.js', 'useTemplate', 'publish'], // 2026-10-30 V-24:「应用」从模板预览搬到主题模板详情
   ['pages/publish/fabu/index.js', 'submitForm', 'publish'],
   ['pages/publish/fabu/index.js', 'confirmPublishCheck', 'publish'],
   ['pages/publish/activity/index.js', 'submitForm', 'publish'],

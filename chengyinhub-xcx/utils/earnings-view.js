@@ -32,9 +32,31 @@ function monthIncome(rows, now, limit) {
   const items = list.slice(0, limit || 3).map((r, i) => {
     const d = toDate(r.createTime); const s = sourceOf(r);
     return { key: String(r.id || i), title: String(r.changeReason || s.label), tag: s.label, icon: s.icon,
-      date: d ? (d.getMonth() + 1) + '月' + d.getDate() + '日' : '', amountText: '+' + amount(r.changeBalance).toFixed(2) };
+      date: d ? (d.getMonth() + 1) + '月' + d.getDate() + '日' : '', amountText: '+' + amount(r.changeBalance).toFixed(2),
+      at: d ? d.getTime() : 0 };
   });
   return { total: total.toFixed(2), count: list.length, items, monthLabel: (today.getMonth() + 1) + '月' };
+}
+
+// M-32(2026-10-29 业主「要的」):俱乐部计酬(俱乐部直接付款,/api/club-direct-merchant/merchant)
+// 不进余额流水,并进本月收入明细作单独来源行。只取本月待结清/已结清两态(撤销、退回不是收入),
+// 行已经过 club-direct-ledger/view-model 的 ledgerView 校验;不计入余额口径的 total。
+const CLUB_PAY = { label: '俱乐部计酬', icon: 'connect' };
+const CLUB_PAY_STATUS = ['OPEN', 'SETTLED'];
+function clubPayMonthItems(ledgerRows, now) {
+  const today = now || new Date();
+  return (Array.isArray(ledgerRows) ? ledgerRows : []).filter((r) => r && CLUB_PAY_STATUS.indexOf(r.status) !== -1)
+    .map((r) => ({ r, d: toDate(r.timeText) }))
+    .filter((x) => sameMonth(x.d, today))
+    .map(({ r, d }) => ({ key: 'club-' + r.id, title: '核销 #' + r.redemptionId, tag: CLUB_PAY.label + ' · ' + r.statusText,
+      icon: CLUB_PAY.icon, date: (d.getMonth() + 1) + '月' + d.getDate() + '日',
+      amountText: '+' + String(r.amountText || '').replace(/^¥/, ''), at: d.getTime() }));
+}
+/** 本月收入明细 = 余额收入行 + 俱乐部计酬行,按时间倒序 */
+function withClubPay(month, clubItems) {
+  const items = (month && month.items || []).concat(clubItems || []);
+  items.sort((a, b) => (b.at || 0) - (a.at || 0));
+  return Object.assign({}, month, { items });
 }
 
 /** 近 n 个月每月收入(旧 → 新),给分析页柱图;height 是相对最高那个月的 0–100 */
@@ -79,4 +101,4 @@ function assetRows(stages) {
   return rows;
 }
 
-module.exports = { monthIncome, monthlySeries, sourceBreakdown, assetRows, sourceOf };
+module.exports = { monthIncome, monthlySeries, sourceBreakdown, assetRows, sourceOf, clubPayMonthItems, withClubPay };

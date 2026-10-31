@@ -88,7 +88,7 @@
             fill
             size="lg"
             title="{{activeTab === 'in' ? '还没有消息' : '还没有发出的邀请'}}"
-            cta="{{activeTab === 'in' && communityPostRead ? '去广场找人' : ''}}"
+            cta="{{activeTab === 'in' && communityPostRead ? '去发现找人' : ''}}"
             bindcta="onEmptyCta" />
 
   <!-- 列表 -->

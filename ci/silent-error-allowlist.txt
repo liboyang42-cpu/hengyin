@@ -89,7 +89,7 @@ chengyinhub-xcx/pages/roam/index.js 2  # 2026-09-11 原型 f-topic/f-city 与 f-
 chengyinhub-xcx/pages/roam/index.js 2  # 2026-09-21 漫游入口地图活动层与队伍层:两路失败汇总到 entryLoadError 并提供重新加载；拖图会后台刷新，关闭通用 toast 避免与页内错误态重复报错。
 chengyinhub-xcx/subpackageRoam/my-teams/index.js 3  # 2026-10-14 我的队伍页:/api/team/my 与 /api/team/my-applications 两条读取失败由页内 mt-err「点按重试」承接(两条都失败才显示,只拿到一条就先显示那一条);附近招募 /api/team/nearby 失败同样落到页内 mt-err 重试；撤回已迁移 teamRecovery，登记仅覆盖这三处读取。
 chengyinhub-xcx/subpackageRoam/nearby/index.js 2  # 2026-09-11 原型 h-place:①拉附近别人打过卡的地方,跟着地图中心走的背景读取,读不到就这一次列表为空,拖一下图就会再拉(弹错等于每拖一下弹一个框);②拉「谁在这儿打过卡」的头像与人数,半屏的名字与地址已经先渲染出来了,补不上就只显示名字。
-chengyinhub-xcx/pages/square/list/index.js 0  # UNREVIEWED_BASELINE_20260818:1 存量未审查,禁止新增(2026-10-27 P-20:行内发布框撤掉,页内发布请求删除,申报 1→0,冻结数不动)
+chengyinhub-xcx/pages/square/list/index.js 0  # UNREVIEWED_BASELINE_20260818:1 存量未审查,禁止新增(2026-10-27 P-20:行内发布框撤掉,页内发布请求删除,申报 1→0,冻结数不动;2026-10-29 整页删除,冻结数仍不动)
 chengyinhub-xcx/pages/talent/list/index.js 1  # UNREVIEWED_BASELINE_20260818:1 存量未审查,禁止新增
 chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js 2  # UNREVIEWED_BASELINE_20260818:2 存量未审查,禁止新增
 chengyinhub-xcx/subpackageMember/complaint/index.js 0  # UNREVIEWED_BASELINE_20260818:1 2026-10-13 主题读取、自有记录及举报提交三处逐调用审完，转下方实名理由；冻结1不变，零额收据保留
@@ -110,6 +110,8 @@ chengyinhub-xcx/pages/club/detail/index.js 2  # 2026-08-26 会员摘要失败落
 chengyinhub-xcx/pages/club/detail/index.js 6  # 2026-09-10 设置弹窗五处 + 发帖选择器一处:客户人数与已结算分润取不到就在原位显示「暂时读不到」(留空会被读成「一个客户都没有」「一分钱都没有」);开放设置三个开关(俱乐部公开可见 / 允许成员发帖 / 开放商家承接)失败落 openSettingErrorText 由该行下的 cy-inline-error 承接并可重试。「带上一次游玩记录」选择器失败落 postRefState=error,由半屏里的 cy-error 带重试承接。六处都有页内承接,通用 toast 会双弹
 chengyinhub-xcx/pages/club/detail/index.js 1  # 2026-10-22 W10a:期次空原因读取失败落中性空态「暂时无法确认原因」+ 重新加载,有页内承接,通用 toast 会双弹(2026-10-27 P-14:俱乐部活动月历整体删除,月历场次那一处随之撤掉,2→1)
 chengyinhub-xcx/pages/club/detail/index.js 1  # 2026-10-22 业主「入会欢迎语」:设置 → 开放设置里保存欢迎语失败(含送检拒绝 / 迁移未落库)落 openSettingErrorKey=welcomeNote,由该行下的 cy-inline-error 带原因与「重试」承接;通用 toast 会双弹
+chengyinhub-xcx/pages/club/detail/index.js 1  # 2026-10-30 帖文第三轮 头像「+」关注:先把同作者帖子的「+」收起,失败回滚角标并用 cyToast 原样显示后端提示(网络失败写「网络错误，请重试」);通用 toast 会双弹
+chengyinhub-xcx/utils/post-feed-actions.js 2  # 2026-10-30 帖文第三轮 发现页点赞与「+」关注:先改卡面,业务失败或网络失败都回滚卡面并由页面传入的 toast 原样显示后端提示;请求层通用 toast 会双弹
 chengyinhub-xcx/pages/club/event-ops/index.js 11  # 2026-08-25 活动运营:权限/系列/名册/取消状态失败落 errorText / seriesError / rosterError / cancellationError,写操作落当前表单错误;通用 toast 会双弹(2026-09-10 补记:场次取消提交与取消后的独立状态回读是两处,册子只记了一处)
 chengyinhub-xcx/pages/club/governance/index.js 4  # 2026-08-25 治理页:权限、案件、成员与封禁失败统一落页面 errorText 状态并可重试;通用 toast 会双弹
 chengyinhub-xcx/pages/club/notify/index.js 6  # 投递状态自动回读失败保留上次结果、手动刷新失败可见toast； 2026-08-25 通知运营:权限/预览失败落页内状态,发送与重试失败落精确操作错误;通用 toast 会双弹(2026-09-10 +1:R4 各分组人数是行内装饰,算不出来就不显示)
@@ -139,10 +141,10 @@ chengyinhub-xcx/pages/search2/index.js 1  # 2026-08-25 状态底座:失败落页
 chengyinhub-xcx/pages/shezhi/components/marketing-consent/index.js 2  # 2026-08-25 营销授权:加载/保存失败落组件 error 状态,保留原值与重试入口;通用 toast 会双弹
 chengyinhub-xcx/pages/shezhi/shezhi.js 1  # 2026-08-25 状态底座:调用点自己 showToast 精确文案,关掉通用 toast 是防双弹
 chengyinhub-xcx/pages/square/detail/index.js 10  # 2026-09-21 状态底座:读取失败落页内错误态;收藏等提交动作自带精确 toast,通用 toast 会双弹
-chengyinhub-xcx/pages/square/list/index.js 5  # 2026-09-21 状态底座:背景预取静默降级;列表失败落页内错误态;收藏动作自带精确 toast
-chengyinhub-xcx/pages/talent/list/index.js 3  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹
+chengyinhub-xcx/pages/talent/list/index.js 4  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹;2026-10-29 发现页全站帖文:俱乐部帖文与社区帖文两路请求失败都汇到 _onFeedFail 落 feedState=error/stale-error(翻页失败保留已载帖文、下次触底重试),3→4;动态二级页 pages/square/list 删除,其 5 处登记随页删除
 chengyinhub-xcx/pages/templatedetail/shelf/index.js 2  # 2026-10-28 模板页货架移进分包组件(原 pages/template/index.js 3 处收回):主题列表与玩法列表(分页)两处请求，失败各落组件内 cy-error 错误态，通用 toast 会双弹
 chengyinhub-xcx/pages/templatedetail/topic-preview/index.js 1  # 2026-10-28 主题卡堆预览：详情读取失败落页内错误态 + 重试，通用 toast 会双弹
+chengyinhub-xcx/pages/templatedetail/topic-detail/index.js 1  # 2026-10-30 V-24 主题模板详情：读取失败落页内 cy-error + 重试，通用 toast 会双弹
 chengyinhub-xcx/pages/templatedetail/templatedetail.js 1  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹
 chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js 1  # 2026-08-25 商家项目页:待审核节点加载失败落 pendingMerchantNodesState:error 并可重试;通用 toast 会双弹
 chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js 1  # 2026-09-11 loadHostChapters:只为「更多」抽屉里那一行填开/关标签。读不到就不写标签(chapterRecruitTag 返回空串)——这是稿 468:1126 明写的口径「状态未知时不写开/关,写错一个字主办方会照着做相反的决定」。它是开抽屉时的预取,弹 toast 只会盖在抽屉上
@@ -250,9 +252,11 @@ chengyinhub-xcx/subpackageRoam/nearby/index.js 3  # 2026-10-25 官方地点卡�
 chengyinhub-xcx/pages/play/poi-challenge/index.js 2  # 2026-10-25 地点挑战页:节点读取失败落 cy-error 错误页 + 重试;提交 /complete 的拒绝原因由答题卡反馈或 toast 显示,未知结果 toast「结果还没确认」,不叠通用 toast。
 chengyinhub-xcx/pages/club/apply/index.js 1  # 2026-10-27 L03 P-23:进页预查 /api/merchant/access/me 只为提前说明「这个账号已经是商家」;查不到就照常放行(后端提交时 requireNoActiveMerchantIdentity 仍兜底拒绝并在第 4 步原位报错),有商家行时落 bootstrapState=merchant 由 cy-state-shell 说明并给出口。通用 toast 在进页时弹一条与表单无关的错误是噪音
 chengyinhub-xcx/components/cy/earnings-overview/index.js 2  # 2026-10-28 G-9 账户收益「本月收入明细」(/api/user/balance/list)与「我的资产」(/api/wallet/stages):失败各自落卡内「没加载出来，点这里重试」(monthError / assetsError),余额主读取不受影响;通用 toast 会与卡内错误双弹
+chengyinhub-xcx/components/cy/earnings-overview/index.js 1  # 2026-10-29 M-32 商家「本月收入明细」并入俱乐部计酬(/api/club-direct-merchant/merchant):失败落卡内「俱乐部计酬没加载出来，点这里重试」(clubError),403 无财务权限不出行;通用 toast 会与卡内错误双弹
+chengyinhub-xcx/pages/merchant/marketing/ai-insight/index.js 1  # 2026-10-29 M-21 参谋包缺店名/Logo 时补读 /api/merchant/info:失败由本调用的 fail/successStatusAbnormal 显式 toast 一次,问候区保持现状;关闭通道 toast 避免双弹,离页/换号后的回包丢弃
 chengyinhub-xcx/subpackageA/pages/assetcenter/analysis/index.js 1  # 2026-10-28 G-9 账户收益·分析页读余额流水:失败落整页 cy-error 加载失败 + 重试,关闭通用 toast 避免双弹;离页后旧回包按 token 丢弃
 chengyinhub-xcx/components/cy/club-pool-cards/index.js 1  # 2026-10-28 m689 店铺参谋「俱乐部合作」读合作池:失败在原位显示「俱乐部合作暂时没读到，点这里重试」(poolError),页面主卡不连坐;通用 toast 会与卡内提示双弹
-chengyinhub-xcx/components/cy/map-address-search/index.js 1  # 2026-10-28 p115 漫游搜索框联网搜地点(/api/map/place-search):失败时面板写「联网搜索暂时不可用，先显示附近的地点」(remoteError),本地地址照常可选;每次输入都会重搜,弹 toast 会随打字反复打扰
+chengyinhub-xcx/components/cy/map-address-search/index.js 2  # 2026-10-28 p115 漫游搜索框联网搜地点(/api/map/place-search);2026-10-29 V-06 联网搜不到时再查商家节点库(/api/city/nodes)兜底。两处失败都由面板写「联网搜索暂时不可用，先显示附近的地点」(remoteError),本地地址照常可选;每次输入都会重搜,弹 toast 会随打字反复打扰
 chengyinhub-xcx/pages/roam/index.js 2  # 2026-10-28 p74「附近活动总是有的」:3 公里为空时 20 公里兜底(/api/roam/entry/nearby)与其他城市公开主题(/api/topic/list)两级背景读取;主读取已成功落定,兜底读不到时卡片带保持主读取的空态卡,页面没有可给的重试动作,弹 toast 会把「附近本来就没有」说成出错
 chengyinhub-xcx/subpackageMember/signup/index.js 1  # 2026-10-28 票夹翻面入场码(/api/verify/dyncode/issue):失败在卡背显示入场码没取到 + 重试(qrState:error),通用 toast 会与卡背提示双弹;翻回正面或换卡即作废旧请求
 

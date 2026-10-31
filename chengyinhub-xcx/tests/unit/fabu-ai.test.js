@@ -363,13 +363,9 @@ test('★ parse_error 是「AI 自己炸了」→ 只降级成 advisory,不许�
     data: { traceId: 't2', pass: false, issues: [{ level: 'error', type: 'parse_error', message: 'AI 响应格式异常,请重试' }] }
   });
 
-  assert.equal(p.data.publishCheck.blocking.length, 0,
+  // 2026-10-30 业主 V-24「删除发布确认」:没有阻断项就直接发布,不再弹确认层
+  assert.equal(p.data.publishCheck.show, false,
     'parse_error 虽然 level=error,但错在 AI 不在用户内容，阻断=可用性事故');
-  assert.ok(p.data.publishCheck.advisory.some((a) => a.label === 'AI 响应格式异常,请重试'),
-    'parse_error 要以建议项呈现，不能静默吞掉');
-
-  sent = [];
-  p.confirmPublishCheck();
   assert.equal(createdCount(), 1, 'parse_error 后必须还能发布');
 });
 
@@ -381,12 +377,9 @@ test('★ 预检频控超限 → 降级放行 + 友好文案(包含匹配,不硬
   // 页面若改成硬编码整串匹配,这条就会红。
   sent[0].success({ code: 500, msg: '今日AI次数已用完(35/天),明天再来吧' });
 
-  const labels = p.data.publishCheck.advisory.map((a) => a.label);
-  assert.equal(p.data.publishCheck.blocking.length, 0);
-  assert.ok(labels.some((l) => l.indexOf('AI 次数已用完') >= 0), '频控要给专门的友好文案，不能落到通用保底');
-
-  sent = [];
-  p.confirmPublishCheck();
+  assert.ok(p._precheckSkipLabel('今日AI次数已用完(35/天),明天再来吧').indexOf('AI 次数已用完') >= 0, '频控要给专门的友好文案，不能落到通用保底');
+  // 2026-10-30 V-24:没有阻断项直接发布,不再弹确认层
+  assert.equal(p.data.publishCheck.show, false);
   assert.equal(createdCount(), 1, '频控用完必须还能发布');
 });
 
@@ -396,12 +389,9 @@ test('预检网络挂 → 降级放行,给通用兜底文案', () => {
   p.submitForm();
   sent[0].fail();
 
-  const labels = p.data.publishCheck.advisory.map((a) => a.label);
-  assert.equal(p.data.publishCheck.blocking.length, 0);
-  assert.ok(labels.some((l) => l.indexOf('安全预检暂不可用') >= 0));
-
-  sent = [];
-  p.confirmPublishCheck();
+  assert.ok(p._precheckSkipLabel('').indexOf('安全预检暂不可用') >= 0);
+  // 2026-10-30 V-24:没有阻断项直接发布,不再弹确认层
+  assert.equal(p.data.publishCheck.show, false);
   assert.equal(createdCount(), 1, '网络挂必须还能发布');
 });
 
@@ -533,10 +523,8 @@ test('未登记发布者的明确零价主题通过内容预检后直接发布�
   precheck.success({ code: '200', data: { traceId: 'free', pass: true, issues: [] } });
   assert.equal(p.data.identityRequired, false);
   assert.equal(p.data.identityReady, true);
-  assert.equal(createdCount(), 0, '内容预检成功不自动发布');
-  sent = [];
-  p.confirmPublishCheck();
-  assert.equal(createdCount(), 1, '用户确认后免费主题直接发布');
+  // 2026-10-30 业主 V-24「删除发布确认」:内容预检通过、免费主题不需要实名 ⇒ 直接发布,不再等用户确认
+  assert.equal(createdCount(), 1, '免费主题预检通过后直接发布');
   assert.equal(sent.filter((request) => request.url.startsWith('/api/publisher/identity')).length, 0);
   const created = sent.find((request) => request.url === '/api/topic/v2/create');
   assert.doesNotMatch(created.data, /realName|idCard|identityConsent/);

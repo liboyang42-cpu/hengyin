@@ -1284,17 +1284,6 @@
       "hasWxml": true
     },
     {
-      "pagePath": "pages/square/list/index",
-      "pkg": "pages/square",
-      "tabBar": false,
-      "role": "player",
-      "needsLogin": true,
-      "needsData": false,
-      "dataKeys": [],
-      "hasJs": true,
-      "hasWxml": true
-    },
-    {
       "pagePath": "pages/square/detail/index",
       "pkg": "pages/square",
       "tabBar": false,
@@ -1357,6 +1346,19 @@
     },
     {
       "pagePath": "pages/templatedetail/topic-preview/index",
+      "pkg": "pages/templatedetail",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "id"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/templatedetail/topic-detail/index",
       "pkg": "pages/templatedetail",
       "tabBar": false,
       "role": "merchant",
@@ -1469,7 +1471,7 @@
       "pagePath": "pages/crop/index",
       "pkg": "pages/crop",
       "tabBar": false,
-      "role": "player",
+      "role": "merchant",
       "needsLogin": false,
       "needsData": false,
       "dataKeys": [],

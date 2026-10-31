@@ -45,7 +45,7 @@
       <cy-scene-qr-citynode poi-id="{{sceneCurrent.params.poiId}}" name="{{sceneCurrent.params.name}}" bind:close="closeChildScene" />
     </block>
     <block wx:elif="{{sceneCurrent.id === 'qr-ticket'}}">
-      <cy-scene-qr-ticket registration-id="{{sceneCurrent.params.registrationId}}" bind:close="closeChildScene" />
+      <cy-scene-qr-ticket registration-id="{{sceneCurrent.params.registrationId}}" title="{{sceneCurrent.params.title}}" until="{{sceneCurrent.params.until}}" bind:close="closeChildScene" />
     </block>
     <block wx:elif="{{sceneCurrent.id === 'roam-stamp-album'}}">
       <cy-scene-roam-stamp-album bind:camera="openStampCamera" bind:close="closeChildScene" />

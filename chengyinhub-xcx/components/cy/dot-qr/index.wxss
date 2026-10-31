@@ -1,0 +1,7 @@
+:host { display: block; }
+.dq { position: relative; }
+.dq__cv { display: block; }
+.dq__img { width: 100%; height: 100%; display: block; }
+.dq__logo { position: absolute; left: 50%; top: 50%; width: 22%; height: 22%; transform: translate(-50%, -50%); display: flex; align-items: center; justify-content: center; }
+/* 退回原图时 logo 也是黑的:把原 logo 压成纯黑剪影 */
+.dq__logo-img { width: 80%; height: 80%; filter: brightness(0); }

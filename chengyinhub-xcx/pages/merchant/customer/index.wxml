@@ -9,8 +9,9 @@
   </view>
 
   <view class="cu-segs">
-    <view class="cu-seg" bindtap="toggleFilters" aria-role="button" aria-label="筛选客户" hover-class="cy-pressed" hover-stay-time="80">
-      <text class="cu-seg-lbl">筛选</text>
+    <!-- 2026-10-30 P-5 M-03:有筛选条件时「筛选」变实心并带条件数 -->
+    <view class="cu-seg {{segment !== 'all' || sourceType || sourceStart || sourceEnd || tagId ? 'cu-seg--filtered' : ''}}" bindtap="toggleFilters" aria-role="button" aria-label="筛选客户" hover-class="cy-pressed" hover-stay-time="80">
+      <text class="cu-seg-lbl">{{segment !== 'all' || sourceType || sourceStart || sourceEnd || tagId ? '筛选 · ' + ((segment !== 'all' ? 1 : 0) + (sourceType ? 1 : 0) + (sourceStart || sourceEnd ? 1 : 0) + (tagId ? 1 : 0)) : '筛选'}}</text>
     </view>
     <view class="cu-seg" bindtap="toggleTools" aria-role="button" aria-label="打开客户管理工具" hover-class="cy-pressed" hover-stay-time="80">
       <text class="cu-seg-lbl">管理</text>
@@ -121,48 +122,57 @@
       </view>
     </view>
   </cy-sheet>
-  <cy-sheet show="{{filterOpen}}" class="cu-filter-sheet" title="筛选客户" handle="{{true}}" fixed="full" footer="{{true}}" bind:close="closeFilters">
+  <!-- 2026-10-30 业主定稿 P-5 M-03:iOS 半屏 —— 左「取消」、中间标题、右「重置」(有条件时才亮);
+       「我的分群」放最上面点了直接套用;每组单选 chip 左边固定留勾的位置(没选是空圈);标签换行排;
+       底栏左「存为分群」(有条件才可点,点了弹输入框)、右「查看 N 位客户」。 -->
+  <cy-sheet show="{{filterOpen}}" class="cu-filter-sheet" closable="{{false}}" handle="{{true}}" fixed="full" footer="{{true}}" bind:close="closeFilters">
+    <view class="cu-fx-hd">
+      <view class="cu-fx-hd__btn" bindtap="closeFilters" aria-role="button" aria-label="取消" hover-class="cy-pressed" hover-stay-time="80"><text>取消</text></view>
+      <text class="cu-fx-hd__t">筛选客户</text>
+      <view class="cu-fx-hd__btn cu-fx-hd__btn--r {{segment !== 'all' || sourceType || sourceStart || sourceEnd || tagId ? '' : 'is-off'}}" bindtap="clearFilters" aria-role="button" aria-label="重置筛选" aria-disabled="{{!(segment !== 'all' || sourceType || sourceStart || sourceEnd || tagId)}}" hover-class="cy-pressed" hover-stay-time="80"><text>重置</text></view>
+    </view>
     <view class="cu-filter">
       <cy-inline-error wx:if="{{savedSegmentsError}}" title="保存分群暂未更新" sub="{{savedSegmentsError}}" action="重试" bind:action="loadSavedSegments" />
+      <block wx:if="{{savedSegments.length}}">
+        <text class="cu-filter-title">我的分群</text>
+        <view class="cu-saved">
+          <text class="cu-saved-item" wx:for="{{savedSegments}}" wx:key="id"
+                data-segmentid="{{item.id}}" bindtap="applySavedSegment" aria-role="button" aria-label="套用分群{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">{{item.name}}</text>
+        </view>
+      </block>
       <text class="cu-filter-title">客户类型</text>
       <view class="cu-filter-options">
-        <view class="cu-filter-chip" wx:for="{{segments}}" wx:key="key" data-key="{{item.key}}" bindtap="onSegmentTap"
+        <view class="cu-filter-chip {{segment === item.key ? 'is-on' : ''}}" wx:for="{{segments}}" wx:key="key" data-key="{{item.key}}" bindtap="onSegmentTap"
               aria-role="button" aria-label="{{item.label}}{{segment === item.key ? '，已选中' : ''}}" hover-class="cy-pressed" hover-stay-time="80">
-          <view class="cu-option-check"><cy-icon wx:if="{{segment === item.key}}" name="check" size="28" /></view>
+          <view class="cu-option-check"><cy-icon wx:if="{{segment === item.key}}" name="check" size="24" /></view>
           <text>{{item.label}}</text>
         </view>
       </view>
       <text class="cu-filter-title">客户来源</text>
       <view class="cu-filter-options">
-        <view class="cu-filter-chip" data-value="" bindtap="onSourceTap" hover-class="cy-pressed" hover-stay-time="80" aria-role="button"><view class="cu-option-check"><cy-icon wx:if="{{sourceType === ''}}" name="check" size="28" /></view><text>全部</text></view>
-        <view class="cu-filter-chip" data-value="1" bindtap="onSourceTap" hover-class="cy-pressed" hover-stay-time="80" aria-role="button"><view class="cu-option-check"><cy-icon wx:if="{{sourceType === '1'}}" name="check" size="28" /></view><text>主题</text></view>
-        <view class="cu-filter-chip" data-value="2" bindtap="onSourceTap" hover-class="cy-pressed" hover-stay-time="80" aria-role="button"><view class="cu-option-check"><cy-icon wx:if="{{sourceType === '2'}}" name="check" size="28" /></view><text>活动</text></view>
+        <view class="cu-filter-chip {{sourceType === '' ? 'is-on' : ''}}" data-value="" bindtap="onSourceTap" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="全部{{sourceType === '' ? '，已选中' : ''}}"><view class="cu-option-check"><cy-icon wx:if="{{sourceType === ''}}" name="check" size="24" /></view><text>全部</text></view>
+        <view class="cu-filter-chip {{sourceType === '1' ? 'is-on' : ''}}" data-value="1" bindtap="onSourceTap" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="主题{{sourceType === '1' ? '，已选中' : ''}}"><view class="cu-option-check"><cy-icon wx:if="{{sourceType === '1'}}" name="check" size="24" /></view><text>主题</text></view>
+        <view class="cu-filter-chip {{sourceType === '2' ? 'is-on' : ''}}" data-value="2" bindtap="onSourceTap" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="活动{{sourceType === '2' ? '，已选中' : ''}}"><view class="cu-option-check"><cy-icon wx:if="{{sourceType === '2'}}" name="check" size="24" /></view><text>活动</text></view>
       </view>
       <text class="cu-filter-title">来源时间</text>
       <view class="cu-date-row">
-        <cy-date-field class="cu-date-field" presentation="dropdown" mode="date" value="{{sourceStart}}" title="选择开始日期" bind:change="onSourceStartChange"><view class="cu-date">{{sourceStart || '开始日期'}}</view></cy-date-field>
+        <cy-date-field class="cu-date-field" presentation="dropdown" mode="date" value="{{sourceStart}}" title="选择开始日期" bind:change="onSourceStartChange"><view class="cu-date {{sourceStart ? 'is-set' : ''}}"><cy-icon name="calendar" size="28" /><text>{{sourceStart || '开始日期'}}</text></view></cy-date-field>
         <text class="cu-date-sep">至</text>
-        <cy-date-field class="cu-date-field" presentation="dropdown" mode="date" value="{{sourceEnd}}" title="选择结束日期" bind:change="onSourceEndChange"><view class="cu-date">{{sourceEnd || '结束日期'}}</view></cy-date-field>
+        <cy-date-field class="cu-date-field" presentation="dropdown" mode="date" value="{{sourceEnd}}" title="选择结束日期" bind:change="onSourceEndChange"><view class="cu-date {{sourceEnd ? 'is-set' : ''}}"><cy-icon name="calendar" size="28" /><text>{{sourceEnd || '结束日期'}}</text></view></cy-date-field>
       </view>
-      <text class="cu-filter-title" wx:if="{{availableTags.length}}">客户标签</text>
-      <scroll-view wx:if="{{availableTags.length}}" scroll-x class="cu-tag-filter" show-scrollbar="{{false}}">
-        <view class="cu-filter-chip" data-tagid="" bindtap="onTagFilterTap" hover-class="cy-pressed" hover-stay-time="80" aria-role="button"><view class="cu-option-check"><cy-icon wx:if="{{tagId === ''}}" name="check" size="28" /></view><text>全部标签</text></view>
-        <view class="cu-filter-chip"
-              wx:for="{{availableTags}}" wx:key="id" data-tagid="{{item.id}}" bindtap="onTagFilterTap" hover-class="cy-pressed" hover-stay-time="80" aria-role="button"><view class="cu-option-check"><cy-icon wx:if="{{tagId === item.id}}" name="check" size="28" /></view><text>{{item.tagName}}</text></view>
-      </scroll-view>
-      <view wx:if="{{canSegment}}" class="cu-save-segment">
-        <input class="cu-segment-input" value="{{segmentName}}" maxlength="30" placeholder="命名当前筛选"
-               bindinput="onSegmentNameInput" />
-        <view class="cu-save-button"><cy-btn variant="secondary" loading="{{segmentSaving}}" bindtap="saveCurrentSegment">保存分群</cy-btn></view>
-      </view>
-      <view wx:if="{{savedSegments.length}}" class="cu-saved">
-        <text class="cu-saved-item" wx:for="{{savedSegments}}" wx:key="id"
-              data-segmentid="{{item.id}}" bindtap="applySavedSegment" hover-class="cy-pressed" hover-stay-time="80">{{item.name}}</text>
-      </view>
+      <block wx:if="{{availableTags.length}}">
+        <text class="cu-filter-title">客户标签</text>
+        <view class="cu-filter-options">
+          <view class="cu-filter-chip {{tagId === '' ? 'is-on' : ''}}" data-tagid="" bindtap="onTagFilterTap" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="全部标签{{tagId === '' ? '，已选中' : ''}}"><view class="cu-option-check"><cy-icon wx:if="{{tagId === ''}}" name="check" size="24" /></view><text>全部标签</text></view>
+          <view class="cu-filter-chip {{tagId === item.id ? 'is-on' : ''}}" wx:for="{{availableTags}}" wx:key="id" data-tagid="{{item.id}}" bindtap="onTagFilterTap" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="{{item.tagName}}{{tagId === item.id ? '，已选中' : ''}}"><view class="cu-option-check"><cy-icon wx:if="{{tagId === item.id}}" name="check" size="24" /></view><text>{{item.tagName}}</text></view>
+        </view>
+      </block>
     </view>
     <view slot="footer" class="cu-filter-footer">
-      <cy-btn class="cu-filter-reset" variant="secondary" bindtap="clearFilters">清空筛选</cy-btn>
-      <cy-btn bindtap="closeFilters">查看结果</cy-btn>
+      <view wx:if="{{canSegment}}" class="cu-fx-save {{segment !== 'all' || sourceType || sourceStart || sourceEnd || tagId ? '' : 'is-off'}}" bindtap="promptSaveSegment" aria-role="button" aria-label="存为分群" aria-disabled="{{!(segment !== 'all' || sourceType || sourceStart || sourceEnd || tagId)}}" hover-class="cy-pressed" hover-stay-time="80">
+        <cy-icon name="plus" size="28" /><text>{{segmentSaving ? '保存中' : '存为分群'}}</text>
+      </view>
+      <cy-btn class="cu-fx-go" bindtap="closeFilters">{{castCount > 0 ? '查看 ' + castCount + ' 位客户' : '查看结果'}}</cy-btn>
     </view>
   </cy-sheet>
 

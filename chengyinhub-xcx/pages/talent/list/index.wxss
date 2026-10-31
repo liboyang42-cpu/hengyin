@@ -306,7 +306,8 @@ page { background: var(--cy-bg-card); }
 
 /* 2026-10-23 页面动效(utils/page-motion.js):容器 --pm-* 置 1 时先隐着,再依次浮上来;静止时无过渡,按压反馈不受影响;减少动态效果时从不触发 */
 .tab-body--feed cy-post-card, .club-grid .club-card { display: block; }
-.tab-body--feed cy-post-card { filter: opacity(calc(1 - var(--pm-p, 0))); translate: 0 calc(var(--pm-p, 0) * 31rpx); transition: filter var(--pm-p-d, 0s) ease, translate var(--pm-p-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-p-s, 0) * 0ms), calc(var(--pm-p-s, 0) * 0ms), 0s, 0s; }
+/* 2026-10-30 走查:原来淡入用 filter: opacity(),帖文卡在祖先带 filter 时单图整块不显示(发现 / 俱乐部帖文只剩灰底),改成 opacity。 */
+.tab-body--feed cy-post-card { opacity: calc(1 - var(--pm-p, 0)); translate: 0 calc(var(--pm-p, 0) * 31rpx); transition: opacity var(--pm-p-d, 0s) ease, translate var(--pm-p-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-p-s, 0) * 0ms), calc(var(--pm-p-s, 0) * 0ms), 0s, 0s; }
 .tab-body--feed cy-post-card:nth-child(2) { transition-delay: calc(var(--pm-p-s, 0) * 30ms), calc(var(--pm-p-s, 0) * 30ms), 0s, 0s; }
 .tab-body--feed cy-post-card:nth-child(3) { transition-delay: calc(var(--pm-p-s, 0) * 60ms), calc(var(--pm-p-s, 0) * 60ms), 0s, 0s; }
 .tab-body--feed cy-post-card:nth-child(4) { transition-delay: calc(var(--pm-p-s, 0) * 90ms), calc(var(--pm-p-s, 0) * 90ms), 0s, 0s; }

@@ -19,9 +19,9 @@
         <view class="ae-action" bindtap="openMore" aria-role="button" aria-label="更多：提现记录、邀请记录" hover-class="cy-pressed" hover-stay-time="80"><view class="ae-action__ic"><cy-icon name="more" size="40" /></view><text>更多</text></view>
       </view>
     </view>
-    <cy-empty class="ae-fill" wx:if="{{balance === '0.00'}}" fill="{{true}}" size="lg" kind="empty" title="还没有收益" cta="去发布路线" bind:cta="goPublish" />
+    <cy-empty class="ae-fill" wx:if="{{balance === '0.00' && theme !== 'merchant'}}" fill="{{true}}" size="lg" kind="empty" title="还没有收益" cta="去发布路线" bind:cta="goPublish" />
     <view class="ae-section" wx:else>
-      <cy-earnings-overview bind:detail="openIncomeDetail" />
+      <cy-earnings-overview merchant="{{theme === 'merchant'}}" bind:detail="openIncomeDetail" />
     </view>
   </block>
   <!-- 「更多」:Threads 式菜单(m694 统一格式),行直接绑原入口;打开场景时宿主页把菜单收起 -->

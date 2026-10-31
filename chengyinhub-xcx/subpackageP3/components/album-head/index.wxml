@@ -1,0 +1,11 @@
+<!-- 收集册(2026-10-30 业主定稿 P-3):勋章 / 邮票 / 藏品是同一本册子的三段,三个原路由保留,段间切换就地换页、不叠页面栈 -->
+<view class="ah">
+  <view class="ah-title">收集册</view>
+  <view class="ah-bar">
+    <view class="ah-seg" aria-role="tablist">
+      <view wx:for="{{segs}}" wx:key="key" class="ah-chip {{active === item.key ? 'is-on' : ''}}" bindtap="go" data-key="{{item.key}}"
+            aria-role="tab" aria-selected="{{active === item.key}}" aria-label="{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view>
+    </view>
+    <view class="ah-tools"><slot /></view>
+  </view>
+</view>

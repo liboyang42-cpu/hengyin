@@ -216,6 +216,39 @@ class AppMediaReferenceGuardTest {
                 () -> guard.requireAttachment(null, "/profile/upload/2024/05/01/a.png", false));
     }
 
+    // ===== V-13 / M-29(2026-10-29) =====
+
+    @Test void officialTemplateImagesAreUsableByAnyoneAndVisibleButNeverProcessingInput() {
+        for (String official : new String[]{
+                "https://www.chengyinhub.com/prod-api/profile/template-covers/p03-capture-this-moment.webp",
+                "https://www.chengyinhub.com/prod-api/profile/topic-covers/bund-night.webp",
+                "https://www.chengyinhub.com/prod-api/profile/merchant-game-covers/movement-bingo.jpg"}) {
+            assertEquals(official, guard.requireAttachment(22L, official, true));
+            assertEquals(official, guard.requireAttachment(22L, " " + official + " ", false));
+            assertEquals(official, guard.visibleUrl(official, null));
+            assertThrows(ServiceException.class, () -> guard.processingUrl(official, 22L));
+        }
+        assertThrows(ServiceException.class, () -> guard.requireAttachment(null,
+                "https://www.chengyinhub.com/prod-api/profile/template-covers/p03-capture-this-moment.webp", false));
+        for (String lookalike : new String[]{
+                "http://www.chengyinhub.com/prod-api/profile/template-covers/p03.webp",
+                "https://www.chengyinhub.com.evil.test/prod-api/profile/template-covers/p03.webp",
+                "https://www.chengyinhub.com/prod-api/profile/template-covers/../upload/x.webp",
+                "https://www.chengyinhub.com/prod-api/profile/avatar/p03.webp",
+                "https://www.chengyinhub.com/prod-api/profile/template-covers/p03.webp?x=1"}) {
+            assertThrows(ServiceException.class, () -> guard.requireAttachment(22L, lookalike, true), lookalike);
+            assertEquals("", guard.visibleUrl(lookalike, null), lookalike);
+        }
+        verifyNoInteractions(assets);
+    }
+
+    @Test void ugcStoreGalleryAcceptsEveryApprovedUploadEvenFromAnotherStaffAccount() {
+        state("APPROVED");
+        String signed = "https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/" + KEY + "?Expires=1&OSSAccessKeyId=a&Signature=b";
+        assertEquals("[\"media-asset:7\",\"media-asset:7\"]",
+                guard.requireAttachments(33L, "[\"" + signed + "\",\"media-asset:7\"]", true));
+    }
+
     @Test void jsonGalleryIsCheckedPerImageAndKeepsArrayShape() {
         state("APPROVED");
         String local = "/profile/upload/2024/05/01/a.png";

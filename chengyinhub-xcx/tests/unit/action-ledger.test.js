@@ -231,7 +231,8 @@ test('确认框合同沿同步 helper 展开，但截断异步回调与互斥 va
     ['pages/mylike/mylike.js', 'topicUnlike', null],
     // 2026-09-16 H050/H051:广场举报行从页面自绘弹层搬进 cy-post-actions,页面只剩一个
     // bind:select 分发器 —— 按 variant.id='report' 定位这条分支(handler 名是绑定名)。
-    ['pages/square/list/index.js', 'onPostAction', 'report'],
+    // 2026-10-29 R2:广场列表页已删,改钉帖文详情页的同一分发器。
+    ['pages/square/detail/index.js', 'onPostAction', 'report'],
   ].forEach(([entryJs, handler, variantId]) => {
     const action = rebuilt.controls.find((item) => item.entry.js === entryJs && item.control.handler === handler
       && (variantId ? item.variant && item.variant.id === variantId : !item.variant))
@@ -620,7 +621,7 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 2026-10-28 L9 再并 master(#652 模板页货架改版):重建实测 tap 2406 → 2414,增减与 master 自身台账变化逐项一致。
   // 2026-10-28 L9 再并 master(#656 章节翻转过场):整屏轻点继续 + 通关「继续」「保存通关卡」+3,tap 2414 → 2417(重建实测,与 master 台账变化一致)。
   // 用户要求删除声音开关：主线基数仅减少这一枚真实点击。
-  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 2424)  /* 2026-10-30 并 #691 故事文字动效:「文字动效」选项 +1,重建实测 2423 → 2424。 */  /* 2026-10-30 截图复核(并 #686 后重建):连线 / 排序过关「继续」两处 + 时间轴对照玩家端标行 / 继续 / 提交三处,2418 → 2423。 */  /* 2026-10-30 #686 主题画面风格 + 故事流顶栏:罗盘⇄雷达、背包 / 案件册图标、各站奖励、画面风格面板(风格 / 参数 / 主题配色 / 每章时间段 / 字体),重建实测 2415 → 2418。 */  /* 2026-10-30 实走修复:游玩页工具菜单「背景音乐」开关、音乐角「继续」两处 tap,重建实测 2413 → 2415。 */  /* 2026-10-25 地图底部横滑卡片(点卡 = 点列表行)+1,重建实测 2182 → 2183。 */  /* 2026-10-25 官方地点卡:相册图、小红书行、评分星、发布评价、取景卡等新增 tap,重建实测 2177 → 2182。 */  /* 2026-10-07 动态绑定补齐4条tap。2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
+  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 2421)  /* 2026-10-31 dw29 发布集成(master 2424 + album-r4 / p4-template / l1 / l6 / l5 合流,square/list 整页删除等逐项叠加):重建实测 2421。 */  /* 2026-10-29 dw29 l6 M-32 本月收入明细俱乐部计酬重试 +1,2413 → 2414。 */  /* 2026-10-25 地图底部横滑卡片(点卡 = 点列表行)+1,重建实测 2182 → 2183。 */  /* 2026-10-25 官方地点卡:相册图、小红书行、评分星、发布评价、取景卡等新增 tap,重建实测 2177 → 2182。 */  /* 2026-10-07 动态绑定补齐4条tap。2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
      onFrameShutter / onFrameCancel),其中 uploadPhotoFrame 与 onFrameShutter 是
      actionClass=external(real-device-required)、不进 local 分母 ⇒ 进账的是
      onFrameCancel(玩家端「退出取景」)+ clearPhotoFrame(商家端删图),1787 → 1789(重建实测)。 */
@@ -875,7 +876,7 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 2026-10-28 #652 合 master(#610):master +2 与本线 +7 合流，重建实测 2564。
   // 2026-10-28 L9 再并 master(#652):事件合同 2688 → 2695(重建实测)。
   // 2026-10-28 L9 再并 master(#656):通关过场 bind:continue / bind:save +2,事件合同 2695 → 2697。
-  assert.equal(local.filter((item) => item.interactionMode === 'event-contract').length, 2726)  /* 2026-10-30 截图复核(并 #686 后重建):时间轴对照退出事件 + 分发器 submit/close,2723 → 2726。 */  /* 2026-10-30 #686 顶栏弹层与画面风格面板的关闭 / 回调事件合同,重建实测 2718 → 2723。 */  /* 2026-10-15 PR10 复查:七处登录引导 cta/primary、口碑缺参返回 cta、modal-host 多行 bindinput 全是事件合同,+9(重建实测)。 */  /* F-L5C-06 帖文详情社区未开放空态新增返回 CTA,事件合同 +1(与 E2 合并后实测)。 */  /* F-W1-12 口碑管理登录失效可见态新增「重新登录」事件合同 +1。 */  /* 2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试事件后按最终树重建。 */  /* 2026-09-20 门店分身对话输入与关闭事件接线后按最终树重建。 */  /* 2026-09-20 合批收口:工作区实名接线批 + 底栏 v8 把组件事件/disabledtap 接进台账,本地合同净增 20 条 ⇒ 2107→2127 按最终树重建实测 */  /* 2026-09-19 收口批+开表接线落 master(经 #1115/#1117):41d21a41e 玩法开表三控件进合同,2104→2107 按最终树重建实测 */  // 2026-09-12 rebase #1068/#1070 后重建：接力签 1963；审核收口后 1963→1968。
+  assert.equal(local.filter((item) => item.interactionMode === 'event-contract').length, 2717)  /* 2026-10-31 dw29 发布集成:master 与五条 lane 合流后重建实测 2717(入场码组件同时挂 bind:redeemed 与 L1 标题/到期属性)。 */  /* 2026-10-29 dw29 L1 Round 2:入场码放大层遮罩 catchtouchmove(noop)随放大层撤掉,重建实测 2717 → 2716。 */  /* 2026-10-29 dw29 L1:订单详情宿主去掉 catchtouchmove(page 档能滑到底),重建实测 2718 → 2717。 */  /* 2026-10-15 PR10 复查:七处登录引导 cta/primary、口碑缺参返回 cta、modal-host 多行 bindinput 全是事件合同,+9(重建实测)。 */  /* F-L5C-06 帖文详情社区未开放空态新增返回 CTA,事件合同 +1(与 E2 合并后实测)。 */  /* F-W1-12 口碑管理登录失效可见态新增「重新登录」事件合同 +1。 */  /* 2026-10-06 profile 订单/项目错误态新增两个 cy-error 重试事件后按最终树重建。 */  /* 2026-09-20 门店分身对话输入与关闭事件接线后按最终树重建。 */  /* 2026-09-20 合批收口:工作区实名接线批 + 底栏 v8 把组件事件/disabledtap 接进台账,本地合同净增 20 条 ⇒ 2107→2127 按最终树重建实测 */  /* 2026-09-19 收口批+开表接线落 master(经 #1115/#1117):41d21a41e 玩法开表三控件进合同,2104→2107 按最终树重建实测 */  // 2026-09-12 rebase #1068/#1070 后重建：接力签 1963；审核收口后 1963→1968。
   // 商家承接接入 cy-date-range-sheet 后新增 confirm / cancel 两条事件合同，1662 → 1664。
   // 合作页将会话失效与无权限拆为两个 cy-empty CTA，新增 goLogin / goWorkbench 两条事件合同，1664 → 1666。
   //   带一个 bind:cta 首发引导(+1),净 -2;同批新增两条 cy-state-shell 的 bind:primary
@@ -1742,7 +1743,8 @@ test('合并后可达动作 variant 全部进入台账且 handler 真源可定�
   // 2026-10-28 L9 再并 master(#652):+31 −16,控件 5513 → 5528(重建实测,与 master 台账变化逐项一致)。
   // 2026-10-28 L9 再并 master(#656):+6,控件 5528 → 5534(重建实测,与 master 台账变化逐项一致)。
   // 同一枚退役声音开关，总控件数减少1。
-  assert.equal(ledger.controlCount, 5574)  // 2026-10-30 并 #691 故事文字动效选项 +1,重建实测 5573 → 5574  // 2026-10-30 截图复核(并 #686 后重建):过关「继续」2 + 时间轴对照玩家端 6,5565 → 5573  // 2026-10-30 #686 主题画面风格 + 故事流顶栏,重建实测 5556 → 5565  // 2026-10-30 实走修复:背景音乐开关、音乐角继续、选场次底栏入会/结算二选一,重建实测 5552 → 5556
+  // 2026-10-29 dw29 l6 第二轮 M-32:本月收入明细新增「俱乐部计酬没加载出来，点这里重试」一颗 tap,5552 → 5553(重建实测)。
+  assert.equal(ledger.controlCount, 5568)  /* 2026-10-31 dw29 发布集成:master 与五条 lane 合流后重建实测 5568。 */
   // 搜索主题与其它结果拆成互斥点击 +1，合计 3268 → 3271（取动作账本重建实测）。
   // 合作页新增会话失效/无权限两个独立 cy-empty CTA，3271 → 3273。
   // 2026-09-02 俱乐部客户系统落地，3273 → 3295。

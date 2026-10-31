@@ -4,8 +4,11 @@
 const merchantTheme = require('../../../../utils/merchant-theme.js')
 
 Page({
-  // 本页正文根恒 theme-dark(D33 玩家资金域),原生壳必须同档;否则浅色状态条压深色内容
-  onShow() { merchantTheme.merchantPageRestore() },
+  data: { merchantView: false },
+  // G-10 / M-35:商家从账户收益进来带 theme=merchant,整页浅色;玩家仍是 theme-dark
+  onLoad(options) { this.setData({ merchantView: !!(options && options.theme === 'merchant') }) },
+  // 玩家视角正文根是 theme-dark(D33 玩家资金域),原生壳必须同档;否则浅色状态条压深色内容
+  onShow() { if (this.data.merchantView) merchantTheme.merchantPageShow(); else merchantTheme.merchantPageRestore() },
   onHide() { merchantTheme.merchantPageRestore() },
   onUnload() { merchantTheme.merchantPageRestore() },
   goBack() {

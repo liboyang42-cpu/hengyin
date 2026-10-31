@@ -21,6 +21,7 @@ const { captureDoorScene } = require('./utils/game-door-entry.js');
 const roleGuard = require('./utils/roleGuard.js');
 const { safeUserMessage } = require('./utils/transport/safe-user-message.js');
 const requireLoginGuard = require('./utils/auth/require-login.js');
+const { avatarSrc } = require('./utils/identity-sync.js');
 App({
   // 开发版判定:只用于开发调试入口(如 debug_user_view、显式预览参数);不得用于伪造登录身份(F-W1-01)。
   isDevEnv: function () {
@@ -506,7 +507,8 @@ App({
   setUserType: function (user_type) { this.getSession().setUserType(user_type); },
   setAvatar: function (avatar) { this.getSession().setAvatar(avatar); },
   setNickname: function (nickname) { this.getSession().setNickname(nickname); },
-  getAvatar: function () { return this.getSession().getAvatar(); },
+  // V-15:会话里存后端原值,读出来给 <image> 用的统一过 getImgUrl(http→https),各页不必各自处理
+  getAvatar: function () { return avatarSrc(this.getSession().getAvatar(), this.getImgUrl.bind(this)); },
   getNickname: function () { return this.getSession().getNickname(); },
   getUserType: function () { return this.getSession().getUserType(); },
   getAuthorization: function () { return this.getSession().getAuthorization(); },
@@ -616,7 +618,8 @@ App({
         },
         // 临时路径可能有 9 条,塞 query 会超长 → 经 eventChannel 递
         success: function (res) {
-          res.eventChannel.emit('cropInit', { paths: paths, ratio: ratio || 'free', shape: shape || '' });
+          // M-09(2026-10-30):商家浅色、玩家深色 —— 视角在这里定好一并递过去,裁剪页不再自己判身份
+          res.eventChannel.emit('cropInit', { paths: paths, ratio: ratio || 'free', shape: shape || '', merchant: roleGuard.isMerchantView() });
         },
         // 页面栈满(10 层)等原因打不开 → 退回原图上传,别让整条流程断在这
         fail: function () { once(paths); },

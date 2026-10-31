@@ -330,14 +330,6 @@
       "reason": "软删不可逆,帖文与互动无法找回;确认闸长在 cy-post-actions 组件内部(DELETE_CONFIRM_KEY),详情页只转发 select 事件"
     },
     {
-      "endpoint": "/api/creativesquare/delete",
-      "file": "pages/square/list/index.js",
-      "irreversible": true,
-      "confirmKey": "club.post.delete",
-      "confirmFile": "pages/square/components/cy/post-actions/index.js",
-      "reason": "同上,广场列表入口;确认闸同样长在 cy-post-actions 组件内部"
-    },
-    {
       "endpoint": "/api/comment/delete",
       "file": "subpackageMember/components/cy/scene-roam-poi-detail/index.js",
       "irreversible": true,
