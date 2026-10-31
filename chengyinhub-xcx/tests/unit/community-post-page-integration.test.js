@@ -31,11 +31,13 @@ function load(file, replies) {
 const flush = () => new Promise(resolve => setImmediate(resolve));
 const created = o => ({...bundle(70,{...o.data,lifecycle:'DRAFT',version:0}),media:o.data.mediaIds.map(id=>({id})),references:o.data.references});
 const checked = (_o,state) => ({...state,post:{...state.post,lifecycle:'CHECKING',version:state.post.version+1}});
-test('real list caller reads canonical bundles then bookmarks and cancels same post', async () => {
-  const h=load('pages/square/list/index.js',[{items:[bundle()],hasMore:false,nextCursor:56},bundle(56,{viewerBookmarked:1}),bundle()]);
-  h.page.getList();await flush(); assert.equal(h.page.data.list[0].contents,'内容');assert.equal(h.calls[0].url,'/api/v1/community/feeds/LATEST');
-  h.page.favoriteClick({currentTarget:{dataset:{index:0}}});await flush();assert.equal(h.page.data.list[0].isBookmarked,1);
-  h.page.favoriteClick({currentTarget:{dataset:{index:0}}});await flush();assert.equal(h.page.data.list[0].isBookmarked,0);assert.equal(h.calls[2].method,'DELETE');
+// 2026-10-29「动态」列表页已删;社区帖文的公开流改由发现页(pages/talent/list)与俱乐部帖文合并读取。
+test('real discover caller reads canonical LATEST bundles alongside the whole-site club feed', async () => {
+  const h=load('pages/talent/list/index.js',[{rows:[],hasMore:false},{items:[bundle()],hasMore:false,nextCursor:56}]);
+  h.page.loadFeed();await flush();await flush();
+  assert.equal(h.calls[0].url,'/api/club/post/feed');assert.equal(JSON.parse(h.calls[0].data).scope,'all');
+  assert.equal(h.calls[1].url,'/api/v1/community/feeds/LATEST');
+  assert.equal(h.page.data.feed[0].contents,'内容');assert.equal(h.page.data.feed[0].source,'community');assert.equal(h.page.data.feedState,'ready');
 });
 test('real detail caller reads same shared ID and server like result', async () => {
   const h=load('pages/square/detail/index.js',[bundle(),bundle(56,{viewerLiked:1,likeCount:8})]);h.page.data.id=56;h.page.data.userId=990005;
@@ -85,7 +87,7 @@ test('actual detail comment follow readback uses canonical comments and authorit
 const reportReasons = Array.from({ length: 13 }, (_, i) => ({ code: 'REASON_' + (i + 1), label: '原因' + (i + 1) }));
 const reportingCapability = { reporting: { policyVersion: 'server-policy-13', reasons: reportReasons } };
 function reportFixture(kind, replies = [reportingCapability, o => ({id:72,...o.data})]) {
-  const h = load('pages/square/' + (kind === 'list' ? 'list' : 'detail') + '/index.js', replies);
+  const h = load('pages/square/detail/index.js', replies);
   h.page.data.id = 59; h.page.data.list = [{ id: kind === 'comment' ? 3 : 59 }]; h.page._actionIndex = 0; h.page.data.currentActionId = '59';
   h.wx.showActionSheet = o => o.fail({ errMsg: 'showActionSheet:fail parameter error: itemList should not be large than 6' });
   h.startReport = () => kind === 'comment' ? h.page.reportComment({ currentTarget: { dataset: { index: 0 } } }) : h.page.reportSquare();
@@ -103,7 +105,8 @@ function actualReasonSheet(page) {
   definition.observers.items.call(sheet, page.data.reportReasonItems); definition.observers.show.call(sheet, true);
   return sheet;
 }
-for (const kind of ['list', 'detail', 'comment']) {
+// 2026-10-29「动态」列表页已删,举报入口只剩详情页(帖文 + 评论)
+for (const kind of ['detail', 'comment']) {
   for (const index of [0, 6, 12]) test('actual ' + kind + ' report selects reason ' + (index + 1) + ' from all thirteen', async () => {
     const h = reportFixture(kind); h.startReport(); await flush();
     assert.equal(h.page.data.reportReasonShow, true); assert.deepEqual(h.page.data.reportReasonItems, reportReasons.map(r => r.label));

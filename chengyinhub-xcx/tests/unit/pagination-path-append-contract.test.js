@@ -159,7 +159,6 @@ test('分页点整表 concat 已绝迹,改为路径追加', () => {
   const banned = [
     ['pages/index/index.js', /bottomTopicList:\s*that\.data\.bottomTopicList\.concat/],
     ['pages/index/index.js', /bottomActivityList:\s*that\.data\.bottomActivityList\.concat/],
-    ['pages/square/list/index.js', /that\.data\.list\.concat\(newlist\)/],
     ['pages/square/detail/index.js', /that\.data\.list\.concat\(newlist\)/],
     ['pages/searchmap/index.js', /that\.data\.list\.concat\(newList\)/],
     ['pages/merchant/customer/index.js', /that\.data\.rows\.concat\(list\)/],
@@ -171,7 +170,6 @@ test('分页点整表 concat 已绝迹,改为路径追加', () => {
   const required = [
     ['pages/index/index.js', /appendByIndex\('bottomTopicList',\s*that\.data\.bottomTopicList\.length/],
     ['pages/index/index.js', /appendByIndex\('bottomActivityList',\s*that\.data\.bottomActivityList\.length/],
-    ['pages/square/list/index.js', /appendByIndex\('list',\s*oldLen,\s*newlist\)/],
     ['pages/square/detail/index.js', /appendByIndex\('list',\s*oldLen,\s*newlist\)/],
     ['pages/searchmap/index.js', /appendByIndex\('list',\s*oldLen,\s*newList\)/],
     ['pages/searchmap/index.js', /that\.appendMarkersFromActivities\(newList,\s*oldLen\)/],

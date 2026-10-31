@@ -31,9 +31,11 @@ function loadPage() {
     '../../../utils/group-code-session.js': { buildGroupCodeIssuePayload: () => ({}), listGroupCodeActivities: () => [] },
     '../utils/owner-action-guard.js': require('../../pages/club/utils/owner-action-guard.js'),
     '../utils/club-pinned-notice.js': require('../../pages/club/utils/club-pinned-notice.js'),
+    '../../../utils/club-post-repost.js': require('../../utils/club-post-repost.js'),
     '../utils/club-event-calendar.js': require('../../pages/club/utils/club-event-calendar.js'),
     '../utils/edition-empty-reason.js': require('../../pages/club/utils/edition-empty-reason.js'),
     '../utils/club-pinned-notice.js': require('../../pages/club/utils/club-pinned-notice.js'),
+    '../../../utils/club-post-repost.js': require('../../utils/club-post-repost.js'),
   }
   vm.runInNewContext(fs.readFileSync(path.join(ROOT, PAGE), 'utf8'), {
     getApp: () => app,

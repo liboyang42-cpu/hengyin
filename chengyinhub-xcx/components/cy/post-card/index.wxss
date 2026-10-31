@@ -13,23 +13,35 @@
  * 头像只属于头部那一行(头像 · 名字/时间 · 更多),正文、图廊、模板封面、动作行都占满卡片整宽。
  * 头像改成绝对定位压在头部行首,头部给它让出 头像宽 + 10pt;wxml 结构不动。 */
 .post-card {
-  --pc-avatar: 88rpx;                 /* 44pt */
-  --pc-gap: var(--cy-space-3);        /* 12pt = 24rpx */
+  /* 帖文第三轮(业主定稿 P-1 = Threads 版):头像 36pt 单独占左栏,昵称、正文、图、分享卡、动作行都缩进到头像右侧 */
+  --pc-avatar: 72rpx;                 /* 36pt */
+  --pc-rail: calc(var(--pc-avatar) + var(--cy-space-3));   /* 左栏 = 头像 + 12pt */
+  --pc-gap: var(--cy-space-2);        /* 8pt */
   position: relative;
   display: block;
-  padding: 36rpx var(--cy-page-x);    /* 上下 18pt / 左右 16pt */
+  padding: var(--cy-space-3) var(--cy-page-x) var(--cy-space-1-5);   /* 上 12pt / 下 6pt / 左右 16pt */
   box-sizing: border-box;
   border-bottom: 1rpx solid var(--cy-color-border-subtle);
 }
 /* Roam(isCompletionShare)/ Template(hasPlayCover):头像 40pt */
-.post-card--compact { --pc-avatar: var(--cy-space-7); }   /* 80rpx */
-/* Roam 块间距 14pt(插槽卡自己的 :host margin-bottom 已是 --cy-space-3-5,同值) */
-.post-card--roam { --pc-gap: var(--cy-space-3-5); }       /* 28rpx */
+/* 帖文第三轮:四种帖文同一条左栏,不再按 variant 换头像大小 */
+
+/* 转发条目:头像上方一行「某某 转发了」,头像随之下移这一行的高度 */
+.post-card__repost-by {
+  margin-bottom: var(--cy-space-2);
+  overflow: hidden;
+  font-size: var(--cy-font-label);
+  line-height: var(--cy-space-4);
+  color: var(--cy-color-text-tertiary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.post-card--repost .post-card__avatar { top: calc(var(--cy-space-3) + var(--cy-space-4) + var(--cy-space-2)); }
 
 .post-card__avatar {
   position: absolute;
   left: var(--cy-page-x);
-  top: 36rpx;                         /* 与卡片上内边距 18pt 对齐,正好落在头部行首 */
+  top: var(--cy-space-3);             /* 与卡片上内边距对齐 */
   z-index: 1;
   width: var(--pc-avatar);
   height: var(--pc-avatar);
@@ -44,25 +56,32 @@
   background: var(--cy-color-bg-elevated);
 }
 
-.post-card__follow {
+/* 2026-10-29 V-08:必须两级选择器(0,2,0)。微信内置 wx-button:not([size=mini]) { width:184px } 是 (0,1,1),
+   单写 .post-card__follow 时角标被顶成 184px 宽的白色椭圆,从头像左下方伸出去(业主:头像下面的白色月牙)。 */
+.post-card__avatar .post-card__follow {
   position: absolute;
-  right: -8rpx;
-  bottom: -8rpx;
-  width: 32rpx;
-  height: 32rpx;
+  right: -6rpx;
+  bottom: -6rpx;
+  width: 36rpx;
+  height: 36rpx;
   min-height: 0;
   padding: 0;
   margin: 0;
   line-height: 1;
   background: var(--cy-btn-solid-bg);
-  border: 3rpx solid var(--cy-color-bg-page);
+  color: var(--cy-btn-solid-fg);
+  border: 4rpx solid var(--cy-color-bg-page);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: transform var(--cy-motion-press) var(--cy-ease-out), background-color 200ms ease;
 }
+/* 点了变成勾(弹一下),0.9 秒后收起 */
+.post-card__avatar .post-card__follow.is-done { background: var(--cy-color-status-success); animation: pc-like-pop 400ms var(--cy-ease-spring) both; }
+.post-card--reduced .post-card__avatar .post-card__follow.is-done { animation: none; }
 
-.post-card__follow::after {
+.post-card__avatar .post-card__follow::after {
   content: '';
   position: absolute;
   left: -28rpx;
@@ -72,15 +91,14 @@
   border: none;
 }
 
-.post-card__follow-icon { width: 16rpx; height: 16rpx; filter: brightness(0); }
-.post-card__main { min-width: 0; }
+.post-card__follow-icon { color: currentColor; }
+.post-card__main { min-width: 0; padding-left: var(--pc-rail); }
 /* 稿:Header 垂直居中。首列的头像比 who 竖排高,所以这里跟着头像撑到同高,昵称才真的压在头像中线上。 */
 .post-card__head {
   display: flex;
   align-items: center;
-  min-height: var(--pc-avatar);
-  padding-left: calc(var(--pc-avatar) + var(--cy-space-2-5));   /* 让出头像 + Header 间距 10pt */
-  margin-bottom: var(--pc-gap);
+  min-height: 40rpx;                  /* 昵称一行,与头像上沿对齐 */
+  margin-bottom: 2rpx;
 }
 .post-card__identity { flex: 1; min-width: 0; }
 .post-card__name { display: flex; align-items: center; min-width: 0; gap: var(--cy-space-1); }
@@ -123,7 +141,7 @@
   flex: none;
   min-width: 88rpx;
   min-height: 88rpx;
-  margin: 0 calc(-1 * var(--cy-space-3)) 0 0;
+  margin: -24rpx calc(-1 * var(--cy-space-3)) -24rpx 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -144,9 +162,10 @@
   margin: 0;
   overflow: hidden;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 6;               /* 帖文第三轮:最多 6 行,超出才「展开」 */
+  white-space: pre-wrap;
   color: var(--cy-color-text-primary);
-  font-size: var(--cy-font-body);       /* 28rpx = 14pt */
+  font-size: var(--cy-font-subtitle);   /* 30rpx 一档(15pt) */
   /* 稿行高 22pt @ 字号 14pt。写比例不写 44rpx —— 用户把微信字号调大时 --cy-type-scale 会放大
    * font-size,固定 rpx 行高会把第二行切掉。 */
   line-height: 1.571;
@@ -160,43 +179,37 @@
   font-weight: 500;
   color: var(--cy-color-text-secondary);
 }
-.post-card__gallery { position: relative; margin-bottom: var(--pc-gap); }
-.post-card__media { width: 100%; white-space: nowrap; }
-.post-card__media-row { display: inline-flex; gap: var(--cy-space-2-5); }   /* 10pt */
-.post-card__media-map,
-.post-card__media-pic {
-  width: 600rpx;                        /* 300pt:窄于可视宽,右边露出下一张 = 提示可横滑 */
-  height: 460rpx;                       /* 230pt */
-  flex: none;
-  border-radius: var(--cy-radius-lg);   /* 32rpx = 16pt */
-  background: var(--cy-color-bg-surface-subtle);
-}
-.post-card__count {
-  position: absolute;
-  top: 24rpx;                           /* 距顶 12pt */
-  left: 576rpx;                         /* 稿 211:326:压在第一张图(600rpx)右上角,距其右缘 12pt */
-  transform: translateX(-100%);
-  padding: 10rpx 20rpx;                 /* 上下 5pt / 左右 10pt */
-  border-radius: var(--cy-radius-pill);
-  /* 黑纱 + 白字是一体的:这层压在用户照片上,浅色档翻成白底黑字就在亮照片上读不出来了,
-   * 所以两处都刻意不绑主题变量。 */
-  background: rgba(0, 0, 0, .6); /* ds-ok: 压在照片上的黑纱,不随主题翻转 */
-  color: #ffffff; /* ds-ok: 同上,黑纱上恒用白字 */
-  font-size: var(--cy-font-label);      /* 24rpx = 12pt */
-  font-weight: 500;
-  line-height: 1;
-  pointer-events: none;
-}
-.post-card__actions { display: flex; align-items: center; justify-content: space-between; min-height: 88rpx; }
-.post-card__actions-left { display: flex; align-items: center; flex: 1; min-width: 0; gap: 44rpx; }  /* 动作间距 22pt */
+.post-card__body { margin-bottom: 0; }
+/* 单图:按原比例放在正文列里,竖图最高 420pt 截掉下半 */
+.post-card__one { position: relative; margin-top: var(--pc-gap); max-width: 100%; max-height: 840rpx; overflow: hidden; border-radius: var(--cy-radius-sm); }
+.post-card__one-img { display: block; width: 100%; border-radius: var(--cy-radius-sm); background: var(--cy-color-bg-surface-subtle); }
+/* 多图:等高横滑,能滑过头像那一栏到屏幕两边;不出「1/3」,下一张总露出一截 */
+.post-card__strip-wrap { position: relative; margin: var(--pc-gap) calc(-1 * var(--cy-page-x)) 0 calc(-1 * (var(--pc-rail) + var(--cy-page-x))); }
+.post-card__strip { width: 100%; white-space: nowrap; }
+.post-card__strip-row { display: inline-flex; gap: var(--cy-space-1-5); padding: 0 var(--cy-page-x) 0 calc(var(--pc-rail) + var(--cy-page-x)); }
+.post-card__strip-pic { flex: none; height: 464rpx; min-width: 200rpx; max-width: 560rpx; border-radius: var(--cy-radius-sm); background: var(--cy-color-bg-surface-subtle); }
+.post-card__strip-map { width: 560rpx; }
+/* 双击点赞:图片中间飘出一颗大心 */
+/* 双击点赞:图片中间飘出一颗大心(两段过渡:弹出 → 上飘淡出;不用 keyframes,快速连点不抖) */
+.post-card__bigheart { position: absolute; left: 50%; top: 50%; width: 168rpx; height: 168rpx; margin: -84rpx 0 0 -84rpx; color: #ffffff; /* ds-ok: 压在照片上的常量白心 */
+  pointer-events: none; filter: drop-shadow(0 8rpx 28rpx rgba(0, 0, 0, .4)); opacity: 0; transform: scale(0); } /* ds-ok: 大心压在照片上的落影 */
+.post-card__bigheart.is-in { opacity: 1; transform: scale(1); transition: transform 260ms var(--cy-ease-spring), opacity 120ms ease; }
+.post-card__bigheart.is-out { opacity: 0; transform: scale(1.1) translateY(-40rpx); transition: transform 260ms ease-out, opacity 260ms ease-out; }
+/* 分享出来的内容自成一张卡:带边框,卡顶一行类型 */
+.post-card__ref { margin-top: var(--cy-space-2-5); padding: var(--cy-space-3); border: 1rpx solid var(--cy-color-border-subtle); border-radius: var(--cy-radius-lg); background: var(--cy-color-bg-surface); }
+.post-card__ref-label { display: flex; align-items: center; gap: var(--cy-space-1-5); margin-bottom: var(--cy-space-2); font-size: var(--cy-font-label); font-weight: 600; color: var(--cy-color-text-secondary); }
+.post-card__actions { display: flex; align-items: center; min-height: 88rpx; margin-left: -18rpx; }
+/* 帖文第三轮:赞、评论、转发、分享四个图标靠左排,分享不再甩到最右边 */
+.post-card__actions-left { display: flex; align-items: center; min-width: 0; gap: 0; }
 .post-card__action {
-  min-width: 88rpx;
+  min-width: 88rpx;                     /* 44pt 触达区不缩(club-feed-actions-hit-targets) */
   min-height: 88rpx;
-  padding: 0;
+  padding: 0 18rpx;
   margin: 0;
   display: flex;
   align-items: center;
-  gap: 14rpx;                           /* 图标 ↔ 数字 7pt */
+  gap: 8rpx;                            /* 图标 ↔ 数字 4pt */
+  border-radius: var(--cy-radius-pill);
   border: 0;
   background: transparent;
   line-height: 1;
@@ -204,7 +217,8 @@
 }
 .post-card__action::after { border: none; }
 .post-card__action--like.is-on { color: var(--cy-color-status-danger); }
-.post-card__action--favorite.is-on { color: var(--cy-color-text-primary); }
+.post-card__action--repost.is-on { color: var(--cy-color-status-success); }
+.post-card__repost-icon { flex: none; color: currentColor; }
 /* 描边 heart = 未赞(继承 .post-card__action 的 primary),实心 heart-filled = 已赞
  * (由 .post-card__action--like.is-on 上色 --cy-color-status-danger,计数文字同色)。
  * 原先是一张自带红的位图 SVG,靠去色滤镜压成「灰实心心」,读起来像已赞,已废弃。 */
@@ -217,8 +231,18 @@
   100% { transform: scale(1); }
 }
 .post-card--reduced .post-card__heart { animation: none; }
-@media (prefers-reduced-motion: reduce) { .post-card__action--like.is-pop .post-card__heart { animation: none; } }
-.post-card__action-text { font-size: var(--cy-font-body); font-weight: 500; color: currentColor; }   /* 28rpx = 14pt Medium */
+/* 点亮时六个小点散开 + 数字滚一格(两段过渡,不用 keyframes) */
+.post-card__heart-wrap { position: relative; display: flex; }
+.post-card__burst { position: absolute; left: 50%; top: 50%; width: 0; height: 0; pointer-events: none; }
+.post-card__burst-dot { position: absolute; left: -4rpx; top: -4rpx; width: 8rpx; height: 8rpx; border-radius: 50%; background: var(--cy-color-status-danger); opacity: 0; transform: rotate(var(--a)) translateY(-12rpx); }
+.post-card__burst.is-start .post-card__burst-dot { opacity: 1; }
+.post-card__burst.is-go .post-card__burst-dot { opacity: 0; transform: rotate(var(--a)) translateY(-34rpx) scale(.2); transition: transform 480ms ease-out, opacity 480ms ease-out; }
+.post-card__count-roll { height: 36rpx; overflow: hidden; display: flex; align-items: center; }
+.post-card__action-text.is-up { transform: translateY(100%); }
+.post-card__action-text.is-down { transform: translateY(-100%); }
+.post-card__action-text.is-roll { transform: translateY(0); transition: transform 280ms ease-out; }
+@media (prefers-reduced-motion: reduce) { .post-card__burst, .post-card__bigheart { display: none; } .post-card__action-text.is-up, .post-card__action-text.is-down { transform: none; } }
+.post-card__action-text { font-size: var(--cy-font-label); font-weight: 400; color: currentColor; font-variant-numeric: tabular-nums; }
 /* 矢量图标随 currentColor 走,不再需要 brightness/invert 兜暗端 —— 同 .post-card__share-icon。 */
 .post-card__comment-icon { color: currentColor; }
 .post-card__share {
@@ -226,19 +250,18 @@
   min-width: 88rpx;
   min-height: 88rpx;
   flex: none;
-  /* UI-15(2026-09-18):分享要更靠右 —— 88rpx 热区不动,glyph 由居中改贴右缘,
-     与主栏右边线(卡片内容右缘)对齐,视觉上比原先再右移 22rpx。 */
+  /* 帖文第三轮:分享跟在转发后面靠左排,不再甩到最右 */
   padding: 0;
-  margin: 0 0 0 auto;
+  margin: 0 0 0 var(--cy-space-1);
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   border: 0;
   background: transparent;
   color: var(--cy-color-text-primary);
 }
 .post-card__share::after { border: none; }
-.post-card__share-icon { width: 44rpx; height: 44rpx; filter: invert(1); }
+.post-card__share-icon { width: 40rpx; height: 40rpx; filter: invert(1); }
 .cy-pressed { opacity: 0.78; transform: scale(0.985); }
 
 /* —— Roam(211:271):动作行之后的 Kudos 与 CommentPreview,几何同 completion-share-card,字号按新稿 13pt —— */

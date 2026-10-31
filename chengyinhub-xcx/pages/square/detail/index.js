@@ -8,6 +8,7 @@ const { reader, sameReader } = require('../../../utils/user-character.js');
 const app = getApp();
 const community = require('../../../utils/community-post-api.js').createClient(app, wx);
 const analytics = require('../../../utils/analytics.js');
+const discoverNav = require('../../../utils/discover-nav.js');
 const { appendByIndex } = require('../../../utils/list-append.js');
 const {
   buildFeedPlaySubtitle,
@@ -1156,11 +1157,11 @@ Page({
     this.getData();
   },
 
-  // 详情可从分享/扫码直达，栈为空时回到广场列表，避免空态上的“返回”成为死动作。
+  // 详情可从分享/扫码直达，栈为空时回到发现页的全站帖文（2026-10-29「动态」二级页已删），避免空态上的“返回”成为死动作。
   goBack() {
     wx.navigateBack({
       delta: 1,
-      fail: () => wx.reLaunch({ url: '/pages/square/list/index' })
+      fail: () => { discoverNav.markDiscoverFeed(app); wx.switchTab({ url: '/pages/talent/list/index' }); }
     });
   },
 

@@ -61,6 +61,7 @@ function loadDetail() {
       // BL-20:俱乐部详情图片预览走 utils/media-preview(纯模块,给真实现)
       if (request === '../../../utils/media-preview.js') return require('../../utils/media-preview.js')
       if (request === '../utils/club-pinned-notice.js') return require('../../pages/club/utils/club-pinned-notice.js')
+      if (request === '../../../utils/club-post-repost.js') return require('../../utils/club-post-repost.js')
       throw new Error(`unexpected require: ${request}`)
     },
     Set,
@@ -130,6 +131,7 @@ function loadSettings() {
       // BL-20:俱乐部详情图片预览走 utils/media-preview(纯模块,给真实现)
       if (request === '../../../utils/media-preview.js') return require('../../utils/media-preview.js')
       if (request === '../utils/club-pinned-notice.js') return require('../../pages/club/utils/club-pinned-notice.js')
+      if (request === '../../../utils/club-post-repost.js') return require('../../utils/club-post-repost.js')
       throw new Error(`unexpected require: ${request}`)
     },
     wx: {
@@ -715,6 +717,8 @@ test('L06(b/d/e):头部元信息；商家可加入、活动卡给「邀约承接
   assert.doesNotMatch(view, /class="profile-cta"/, '头部不再放加入按钮')
   // 2026-10-27 M-24·M-34 owner:商家在活动卡上看到的是「邀约承接」(取代「商家不能报名」灰字),仍不给报名。
   assert.match(view, /wx:if="\{\{merchantUndertake\}\}" class="ev-undertake" catchtap="onMerchantUndertake"[^>]*>邀约承接</)
+  // 2026-10-30 M-24:承接落到这一场活动 —— 进这场活动的项目主页走既有章节承接申请,不再进通用合作邀约
+  assert.match(read('pages/club/detail/index.js'), /onMerchantUndertake\(e\) \{[\s\S]*?url: '\/pages\/topic\/merchantinfo\/merchantinfo\?topicId=' \+ topicId \+ '&scope=MERCHANT'/)
   assert.match(view, /upcomingTopics[^\n]*\n[^\n]*merchantUndertake: isMerchantViewer/)
   assert.doesNotMatch(view, /club-coop-floating|cy-coop-invite-sheet|goClubCoop/)
   assert.doesNotMatch(read('pages/club/detail/index.json'), /coop-invite-sheet/)

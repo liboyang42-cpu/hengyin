@@ -242,7 +242,7 @@ test('T03 新增暗色表面文字与评分分布实际对比度达标', () => {
   assert.ok(contrast(playAccent, playSurface) >= 3, '评分数字与分布条对卡片底必须达到 3:1')
 })
 
-test('P2 发布广场用户可见中文文案不夹半角标点', () => {
-  const wxml = stripWxmlComments(read('pages/square/list/index.wxml'))
+test('P2 发现页(原广场列表页 2026-10-29 已删)用户可见中文文案不夹半角标点', () => {
+  const wxml = stripWxmlComments(read('pages/talent/list/index.wxml'))
   assert.doesNotMatch(wxml, /[\p{Script=Han}][,;:!?]|[,;:!?][\p{Script=Han}]/u, '中文文案相邻标点必须使用全角形式')
 })

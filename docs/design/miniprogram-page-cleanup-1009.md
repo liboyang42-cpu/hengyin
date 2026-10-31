@@ -168,7 +168,6 @@ node --test tests/unit/page-cleanup-audit.test.js
 | `pages/coop/settlement-detail/index` | 否 | `chengyinhub-xcx/components/cy/scene-merchant-profit/index.js:178` | KEEP |
 | `pages/coop/withdraw/index` | 否 | `chengyinhub-xcx/subpackageMember/tixianjilu/tixianjilu.js:6` | UNSURE |
 | `pages/coop/withdraw/records/index` | 否 | `chengyinhub-xcx/subpackageMember/tixianjilu/tixianjilu.js:6` | UNSURE |
-| `pages/square/list/index` | 否 | `chengyinhub-xcx/pages/play/index.js:6683` | KEEP |
 | `pages/square/detail/index` | 否 | `chengyinhub-xcx/pages/mylike/mylike.js:313` | KEEP |
 | `pages/search2/index` | 否 | `chengyinhub-xcx/pages/merchant/index/index.js:1026` | KEEP |
 | `pages/search2/result/index` | 否 | `chengyinhub-xcx/pages/search2/index.js:135` | KEEP |

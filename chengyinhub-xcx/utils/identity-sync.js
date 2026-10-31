@@ -93,6 +93,27 @@ function resolveSelfIdentity(merchantView, merchant, member) {
   return { name: String(u.nickname || '').trim() || '探索者', avatar: u.avatar || '/images/d_profile.png', initial: '' };
 }
 
+// V-15(2026-10-29 真机走查 v15):换完头像后资料页只剩一个黑圈。
+// 后端回的头像是 OSS 签名 http:// 链接或相对路径,页面直接塞给 <image>,真机拒载。
+// 显示前统一过 app.getImgUrl(http→https、相对路径补域名);
+// 刚选好、还在本机的临时文件(wxfile:// / 开发者工具的 http://tmp/)原样显示,不能被补域名或改成 https。
+
+const LOCAL_FILE = /^(wxfile|file):\/\//i;
+const DEVTOOLS_TEMP = /^https?:\/\/(tmp|usr|store)\//i;
+
+function isLocalFile(path) {
+  const p = String(path || '');
+  return LOCAL_FILE.test(p) || DEVTOOLS_TEMP.test(p);
+}
+
+/** 头像 → 可以直接给 <image src> 的地址;读不出来返回空串,由调用方落默认头像。 */
+function avatarSrc(raw, getImgUrl) {
+  const value = typeof raw === 'string' ? raw.trim() : '';
+  if (!value) return '';
+  if (isLocalFile(value) || typeof getImgUrl !== 'function') return value;
+  return getImgUrl(value) || '';
+}
+
 function _resetForTest() {
   epoch = 0;
   latest = { merchant: null, member: null };
@@ -105,5 +126,7 @@ module.exports = {
   identityEpoch: identityEpoch,
   latestIdentity: latestIdentity,
   resolveSelfIdentity: resolveSelfIdentity,
+  isLocalFile: isLocalFile,
+  avatarSrc: avatarSrc,
   _resetForTest: _resetForTest,
 };

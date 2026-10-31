@@ -3,13 +3,14 @@
 /* U-050:广场帖的转发卡。
  *
  * 只有「已发布 + 公开」的帖子才生成指向帖子详情的卡片:标题取正文摘要,封面取首图。
- * 私密 / 仅关注者 / 社区可见 / 未发布的帖子,对方点开也看不到——这时退回广场首页的
+ * 私密 / 仅关注者 / 社区可见 / 未发布的帖子,对方点开也看不到——这时退回发现页帖文 tab 的
  * 通用卡片,卡片上不带正文与图片(卡片一旦发出就固化在对方会话里,不能先露出再靠详情页拦)。
  * 旧接口的帖子没有 audience 字段,旧广场只有公开帖,按公开处理。
  */
 
 const GENERIC_TITLE = '城瘾Hub';
-const GENERIC_PATH = '/pages/square/list/index';
+// 2026-10-29:「动态」二级页已删,通用卡落到发现页的全站帖文 tab。
+const GENERIC_PATH = '/pages/talent/list/index?tab=feed';
 const TITLE_MAX = 28;
 
 function isPubliclyShareable(post) {

@@ -20,14 +20,7 @@ test('post menu captures ID before close mutates its bound properties, including
   h.instance.data.postId='77';h.instance.onDelete();assert.equal(h.opened[0][1].id,'77');
   h.instance.data.postId='99';h.instance.onDeleteConfirmed();assert.equal(h.events.at(-1)[1].id,'77');
 });
-test('list pending delete still removes captured ID after reordering, never the new row at its old index', async () => {
-  const h=load('list');h.page.data.userId=1;h.page.getList();await tick();
-  await h.answer('/api/v1/community/feeds/LATEST',{items:[post(77),post(88)],hasMore:false,nextCursor:null});
-  h.page.showAction({detail:{index:0}});h.page.onPostAction({detail:{action:'delete',id:'77'}});
-  const request=h.asked('/api/v1/community/posts/77')[0];assert.equal(request.method,'DELETE');
-  h.page.data.list.reverse();await h.answer('/api/v1/community/posts/77',{});
-  assert.deepEqual(h.page.data.list.map(row=>row.id),[88]);
-});
+// 2026-10-29:广场列表页(pages/square/list)已删,列表侧的待删行目标用例随页撤走。
 test('detail cannot dispatch an old action after route/owner changes or a mismatched event ID', async () => {
   for(const transition of ['id','owner','route','unload']) {
     const h=load('detail');await h.ready(post(),[comment()]);h.page.openPostActions();const before=h.requests.length;

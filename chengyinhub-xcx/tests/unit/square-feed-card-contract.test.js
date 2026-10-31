@@ -13,9 +13,6 @@ function sources() {
     componentWxss: read('components/cy/feed-play-card/index.wxss'),
     completionWxml: read('components/cy/completion-share-card/index.wxml'),
     completionWxss: read('components/cy/completion-share-card/index.wxss'),
-    listWxml: renderable(read('pages/square/list/index.wxml')),
-    listWxss: read('pages/square/list/index.wxss'),
-    listJson: JSON.parse(read('pages/square/list/index.json')),
     postCardWxml: renderable(read('components/cy/post-card/index.wxml')),
     postCardJson: JSON.parse(read('components/cy/post-card/index.json')),
     postCardWxss: read('components/cy/post-card/index.wxss'),
@@ -72,10 +69,7 @@ function assertImmersiveCardContract(files) {
   assert.equal(files.detailJson.usingComponents['cy-completion-share-card'], '/components/cy/completion-share-card/index')
   assert.match(files.postCardWxml, /<cy-completion-share-card\b[^>]*wx:if="\{\{post\.isCompletionShare\}\}"[^>]*roam-result="\{\{post\.isRoamResultShare\}\}"/s,
     '完赛分享必须走独立图片成绩卡')
-  assert.doesNotMatch(files.listWxml, /<cy-(?:completion-share|feed-play)-card\b/,
-    '★ 列表页不许再自己判 variant —— 那正是俱乐部页/达人页漏渲染的原因')
-  assert.match(files.listWxml, /bind:playdetail="goPlayTopicDetail"[\s\S]{0,80}bind:remix="goRemixTemplate"[\s\S]{0,40}bind:play="goPlay"/,
-    '列表页要把三个动作从帖文卡上接回来，否则成绩卡/模板卡点了没反应')
+  // 2026-10-29:广场列表页(pages/square/list)已删,列表页侧的 variant / 三动作接线断言随页撤走。
   assert.match(files.detailWxml, /<cy-completion-share-card\b[^>]*wx:if="\{\{info\.isCompletionShare\}\}"[^>]*roam-result="\{\{info\.isRoamResultShare\}\}"/s,
     '详情完赛分享必须与列表共用图片成绩卡')
   // 2026-09-02 Figma 297:1827 Roam variant:成绩不再叠在图片内部,改为 TitleRow → Stats → 轨迹图 竖排。
@@ -88,10 +82,13 @@ function assertImmersiveCardContract(files) {
   // 2026-09-02 Figma 297:1827 改口径:图廊不再按「正文栏宽」算单张铺满,改成固定 300pt×230pt
   // 的横滑卡(比正文栏 289pt 略宽 ⇒ 右侧被切一刀,那一刀就是「还有下一张、可以滑」的提示)。
   // 原断言钉的是旧的 calc 表达式,与新口径互斥,故整条换成新几何。
-  assert.match(files.postCardWxss, /\.post-card__media-map,\s*\.post-card__media-pic\s*\{[^}]*width:\s*600rpx[^}]*height:\s*460rpx[^}]*border-radius:\s*var\(--cy-radius-lg\)/s,
-    '横滑图廊每张必须是稿上的 300pt × 230pt、16pt 圆角')
-  assert.match(files.postCardWxss, /\.post-card__media-row\s*\{[^}]*gap:\s*var\(--cy-space-2-5\)/s,
-    '图与图的间距必须是稿上的 10pt')
+  // 2026-10-30 帖文第三轮(业主定稿 P-1,Threads 版):多图等高 232pt 横滑、按原比例定宽,能滑过头像那一栏到屏幕两边;
+  // 单图按原比例放在正文列里;不出「1/3」。
+  assert.match(files.postCardWxss, /\.post-card__strip-pic\s*\{[^}]*height:\s*464rpx/s, '多图等高 232pt')
+  assert.match(files.postCardWxml, /class="post-card__strip-pic" src="\{\{pic\}\}" mode="heightFix"/, '多图按原比例定宽')
+  assert.match(files.postCardWxss, /\.post-card__strip-wrap\s*\{[^}]*margin:[^;]*calc\(-1 \* \(var\(--pc-rail\) \+ var\(--cy-page-x\)\)\)/s, '多图滑过头像那一栏')
+  assert.match(files.postCardWxml, /class="post-card__one-img" src="\{\{post\.picList\[0\]\}\}" mode="widthFix"/, '单图按原比例')
+  assert.doesNotMatch(files.postCardWxml, /post-card__count"/, '不出「1/3」')
   assert.match(files.detailWxml, /<cy-feed-play-card\b[^>]*wx:if="\{\{\s*info\.hasPlayCover\s*&&\s*!info\.isCompletionShare\s*\}\}"/s,
     '详情页模板沉浸卡必须排除完赛分享')
 
@@ -113,8 +110,10 @@ function assertImmersiveCardContract(files) {
   assert.match(files.detailWxml, /class="post-text"[^>]*wx:if="\{\{\s*info\.contents\s*\}\}"/)
   // 2026-09-02 Figma 297:1827:scroll-view 外面多包了一层 .post-card__gallery(给页码 pill
   // 一个 position:relative 的锚),wx:if 跟着上移;守的还是同一条:有图就得渲染出来。
-  assert.match(files.postCardWxml, /class="post-card__gallery"[^>]*post\.picList/, '关联卡原有实景图仍须可见')
-  assert.match(files.postCardWxml, /class="post-card__media-pic"[^>]*catchtap="emitPreview"/, '图仍须可点开大图')
+  // 帖文第三轮:单图 .post-card__one / 多图 .post-card__strip-wrap,点图走 onPicTap(单击全屏大图、双击点赞)
+  assert.match(files.postCardWxml, /class="post-card__one" wx:if="\{\{!post\.isCompletionShare && post\.picList\.length === 1\}\}"/, '关联卡原有实景图仍须可见(单图)')
+  assert.match(files.postCardWxml, /class="post-card__strip-wrap" wx:elif="[^"]*post\.picList/, '关联卡原有实景图仍须可见(多图)')
+  assert.match(files.postCardWxml, /class="post-card__strip-pic"[^>]*catchtap="onPicTap"/, '图仍须可点开大图')
   assert.match(files.detailWxml, /class="media"[^>]*picList\.length/, '详情页原有实景图仍须可见')
 
   // 已赞实心 + 未赞描边两枚 cy-icon,后接点赞计数(原先是单张位图 heart-filled.svg)。
@@ -125,10 +124,9 @@ function assertImmersiveCardContract(files) {
   assert.match(files.detailWxml, /class="act act--comment[^>]*catchtap="focusCommentInput"[\s\S]*?name="comment"[\s\S]*?\{\{\s*info\.commentCount/)
   assert.match(files.postCardWxml, /class="post-card__share"[^>]*open-type="share"/)
   assert.match(files.detailWxml, /class="act-share act-share--end"[^>]*open-type="share"/)
-  assert.doesNotMatch(files.listWxml + files.detailWxml, /class="act-report"/, '动作行只保留点赞、评论与分享')
-  assert.doesNotMatch(files.listWxml + files.detailWxml, />\s*赞\s*</, '动作行不得出现“赞”字')
+  assert.doesNotMatch(files.detailWxml, /class="act-report"/, '动作行只保留点赞、评论与分享')
+  assert.doesNotMatch(files.detailWxml, />\s*赞\s*</, '动作行不得出现“赞”字')
 
-  assert.doesNotMatch(files.listWxss, /\.play-card\b|\.pc-(?:cover|body|title|sub|actions|btn)\b/, '列表页不得留一份平行卡样式')
   assert.doesNotMatch(files.detailWxss, /\.play-actions\b|\.pa-btn\b/, '详情页不得留一份平行卡样式')
 }
 
@@ -182,9 +180,8 @@ test('可玩卡副标题与完赛分享图片按真实字段生成', () => {
 })
 
 test('模板改编按钮调用真实 /use 接口并进入复制出的草稿', () => {
-  const listJs = read('pages/square/list/index.js')
   const detailJs = read('pages/square/detail/index.js')
-  for (const source of [listJs, detailJs]) {
+  for (const source of [detailJs]) {
     assert.match(source, /goRemixTemplate[\s\S]*remixTopicTemplate\(app,\s*(?:item|info)\.sportTopicId\)/)
   }
   assert.match(sources().remixJs, /url:\s*'\/api\/template\/topic-template\/use'/)

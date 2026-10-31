@@ -1,0 +1,29 @@
+:host { display: block; }
+.ah { padding: 0 var(--cy-page-x); }
+.ah-title {
+  padding: var(--cy-space-2) 0 var(--cy-space-3);
+  font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
+  font-size: 64rpx;                    /* ds-ok: 收集册宋体大标题,32pt */
+  font-weight: 600;
+  line-height: 1.15;
+  color: var(--cy-color-text-primary);
+}
+.ah-bar { display: flex; align-items: center; gap: var(--cy-space-2); padding-bottom: var(--cy-space-2-5); }
+.ah-seg { display: flex; gap: var(--cy-space-2); flex: none; }
+.ah-chip {
+  min-width: 112rpx;
+  height: 64rpx;
+  padding: 0 var(--cy-space-4);
+  border-radius: var(--cy-radius-pill);
+  display: flex; align-items: center; justify-content: center;
+  box-sizing: border-box;
+  font-size: var(--cy-font-label);
+  font-weight: 600;
+  color: var(--cy-color-text-primary);
+  background: var(--cy-color-bg-surface);
+  box-shadow: 0 2rpx 8rpx rgba(30, 40, 80, .06); /* ds-ok: 白胶囊浮在浅色底上的一点影 */
+}
+/* 选中黑底白字(业主 10-29 定) */
+.ah-chip.is-on { background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); box-shadow: none; }
+.ah-tools { margin-left: auto; display: flex; align-items: center; gap: var(--cy-space-2); }
+.cy-pressed { opacity: .78; }

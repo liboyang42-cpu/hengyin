@@ -1421,7 +1421,7 @@
   </scroll-view>
   <view class="ending__acts">
     <cy-btn variant="secondary" style="flex:1" bindtap="saveFinishCard">保存足迹卡</cy-btn>
-    <cy-btn wx:if="{{communityPostWrite}}" variant="primary" style="flex:1" bindtap="shareFinish">去广场</cy-btn>
+    <cy-btn wx:if="{{communityPostWrite}}" variant="primary" style="flex:1" bindtap="shareFinish">去发现</cy-btn>
   </view>
 </view>
 

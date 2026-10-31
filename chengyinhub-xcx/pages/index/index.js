@@ -18,6 +18,8 @@ const { appendByIndex } = require('../../utils/list-append.js');
 const { isRecordList } = require('../../utils/response-shape.js');
 const { isValidMobile } = require('../../utils/form-state.js');
 const phoneReminder = require('../../utils/phone-reminder.js');
+const identitySync = require('../../utils/identity-sync.js');
+const { avatarSrc } = identitySync;
 const { VERSIONS } = require('../../utils/compliance/usage-consent.js');
 
 function isHomeCityAgreement(row) {
@@ -289,6 +291,14 @@ Page({
   onLoad(options) {
     const that = this;
     this._unloaded = false;
+    // V-15 / G-5:个人资料换头像、改昵称保存成功即换掉问候区,不等 onShow 回读
+    this._offIdentity = identitySync.onIdentityChange(function (evt) {
+      if (evt.scope !== 'member' || that._unloaded) return;
+      const userInfo = Object.assign({}, that.data.userInfo);
+      if (evt.patch.avatar) userInfo.avatar = avatarSrc(evt.patch.avatar, app.getImgUrl && app.getImgUrl.bind(app));
+      if (evt.patch.nickname) userInfo.nickname = evt.patch.nickname;
+      that.setData({ userInfo: userInfo });
+    });
 
     // 门口游戏码优先：没报名去买主题，已报名进游玩。不能先被商家分流吃掉 scene。
     if (this.consumeDoorScene(options)) return;
@@ -598,6 +608,7 @@ Page({
    */
   onUnload() {
     this._unloaded = true;
+    if (this._offIdentity) { this._offIdentity(); this._offIdentity = null; }
     this._locationEpoch = (this._locationEpoch || 0) + 1;
     if (this._locationLoadingEpoch != null) {
       this._locationLoadingEpoch = null;
@@ -1007,7 +1018,9 @@ Page({
         that._getUserDataRetryCount = 0;  // 成功后重置,避免下次调用从陈旧计数开始
         if (res && res.code == "200" && res.data && typeof res.data === 'object' && !Array.isArray(res.data)) {
           // F-L5C-04/F-W1-14:首页不再主动弹窗索取手机号,只在确需的业务动作里按需请求或由用户在个人资料页绑定。
-          that.setData({ userInfo: res.data, isLoading: false });
+          // V-15:头像过 getImgUrl(http 签名链接 / 相对路径真机拒载)
+          const userInfo = Object.assign({}, res.data, { avatar: avatarSrc(res.data.avatar, app.getImgUrl && app.getImgUrl.bind(app)) });
+          that.setData({ userInfo: userInfo, isLoading: false });
         } else if (res && res.code == "401") {
           that.firstLogin();
         } else {

@@ -2,6 +2,7 @@ const pageMotion = require('../../../utils/page-motion.js');
 const modal = require('../../../utils/modal.js');
 const mediaPreview = require('../../../utils/media-preview.js');
 const clubPinnedNotice = require('../utils/club-pinned-notice.js');
+const clubPostRepost = require('../../../utils/club-post-repost.js');
 const { isClubLeader } = require('../../../utils/roleGuard.js');
 const { isPoolList, decoratePool, parseInviteId } = require('../../../utils/coop-invite-view.js');
 const cyToast = require('../../../utils/toast.js');
@@ -406,8 +407,11 @@ function buildPostRefOptions(rows) {
 // 发帖/评论/点赞后的回读保留已加载深度(上限与后端单页上限一致),不把用户翻过的帖子收回去。
 const CLUB_POST_PAGE_SIZE = 20;
 const CLUB_POST_PAGE_MAX = 50;
+// 转发条目(dw29 L8)不是本俱乐部的帖文:不算页深、不参与游标(它的 id 是原帖的)。
 function unpinnedClubPosts(rows) {
-  return (rows || []).filter(function (p) { return p && !(p.isPinned === true || Number(p.isPinned) === 1); });
+  return (rows || []).filter(function (p) {
+    return p && p.itemType !== 'repost' && !p.isRepostItem && !(p.isPinned === true || Number(p.isPinned) === 1);
+  });
 }
 function clubPostReloadLimit(posts) {
   return Math.min(CLUB_POST_PAGE_MAX, Math.max(CLUB_POST_PAGE_SIZE, unpinnedClubPosts(posts).length));
@@ -416,6 +420,13 @@ function clubPostCursor(posts) {
   const ids = unpinnedClubPosts(posts).map(function (p) { return Number(p.id); })
     .filter(function (id) { return Number.isSafeInteger(id) && id > 0; });
   return ids.length ? Math.min.apply(null, ids) : null;
+}
+
+// 「主理人」徽标只对本俱乐部的帖文成立;转发进来的别的俱乐部帖文不按本俱乐部主理人判。
+function clubOwnerFor(p, club) {
+  if (!club) return null;
+  if (p && p.clubId != null && club.id != null && String(p.clubId) !== String(club.id)) return null;
+  return club.memberId;
 }
 
 function normalizeClubPost(p, clubOwnerId) {
@@ -747,6 +758,10 @@ Page({
 
   // 首展由 onLoad 负责，避免双请求；从发布/邀请/主办视图返回后重拉阶段真源。
   onShow() {
+    // 2026-10-30 走查:商家看俱乐部整页浅色,系统状态栏也要换深色字(否则白字压浅底看不见);玩家保持深色页的白字
+    if (this.data.isMerchantViewer) {
+      wx.setNavigationBarColor({ frontColor: '#000000', backgroundColor: '#ffffff' }); // ds-ok: 系统导航栏只收字面色
+    }
     this._navigating = false;
     const reducedMotion = readReducedMotion();
     if (this.data.reducedMotion !== reducedMotion) this.setData({ reducedMotion });
@@ -1730,8 +1745,8 @@ Page({
   loadPosts() {
     const that = this;
     if (isDemoClubId(this.data.clubId)) {
-      const posts = mockData.getDemoClubPosts().map(function (p) {
-        return normalizeClubPost(p, that.data.club && that.data.club.memberId);
+      const posts = clubPostRepost.mapClubFeedRows(mockData.getDemoClubPosts(), function (p) {
+        return normalizeClubPost(p, clubOwnerFor(p, that.data.club));
       });
       pageMotion.enter(that, 'pmPosts'); that.setData({ posts: posts, pinnedNotices: clubPinnedNotice.pick(posts, that.data.clubId), postsLoaded: true }, function () { that.scrollToRequestedPost(); });
       return;
@@ -1747,8 +1762,8 @@ Page({
           that.setData({ postsLoaded: true, postsError: bizFailureMessage(res, '帖子加载失败') });
           return;
         }
-        const posts = res.data.map(function (p) {
-          return normalizeClubPost(p, that.data.club && that.data.club.memberId);
+        const posts = clubPostRepost.mapClubFeedRows(res.data, function (p) {
+          return normalizeClubPost(p, clubOwnerFor(p, that.data.club));
         });
         pageMotion.enter(that, 'pmPosts'); that._postsHasMore = unpinnedClubPosts(res.data).length >= limit; that.setData({ posts: posts, pinnedNotices: clubPinnedNotice.pick(posts, that.data.clubId), postsLoaded: true, postsError: '' }, function () { that.scrollToRequestedPost(); });
       },
@@ -1771,10 +1786,11 @@ Page({
         that._postsMoreEpoch = null;
         if (res.code != '200' || !Array.isArray(res.data)) { cyToast(bizFailureMessage(res, '更早的帖子没能加载出来')); return; }
         const seen = {};
-        (that.data.posts || []).forEach(function (p) { seen[String(p.id)] = true; });
-        const more = unpinnedClubPosts(res.data).filter(function (p) { return !seen[String(p.id)]; }).map(function (p) {
-          return normalizeClubPost(p, that.data.club && that.data.club.memberId);
-        });
+        (that.data.posts || []).forEach(function (p) { seen[p.feedKey || String(p.id)] = true; });
+        const rows = res.data.filter(function (p) { return p && (p.itemType === 'repost' || unpinnedClubPosts([p]).length); });
+        const more = clubPostRepost.mapClubFeedRows(rows, function (p) {
+          return normalizeClubPost(p, clubOwnerFor(p, that.data.club));
+        }).filter(function (p) { return !seen[p.feedKey]; });
         that._postsHasMore = unpinnedClubPosts(res.data).length >= CLUB_POST_PAGE_SIZE;
         that.setData({ posts: (that.data.posts || []).concat(more) });
       },
@@ -2033,13 +2049,14 @@ Page({
   // 那时拿不到 clubOwnerId,整批作者徽标是空的;之后任何一次 loadPosts(点赞/评论/编辑)才带上。
   // 用户看到的就是「主理人」标记跟点赞有关系。详情回来之后按同一判据重跑一次装饰。
   applyClubOwnerBadge() {
-    const ownerId = this.data.club && this.data.club.memberId;
+    const club = this.data.club;
+    const ownerId = club && club.memberId;
     const posts = this.data.posts || [];
     if (!ownerId || !posts.length) return;
     let changed = false;
     const next = posts.map(function (p) {
       // 判据只有一处:再过一遍 normalizeClubPost 取徽标,不在这里另写一个三元
-      const badge = normalizeClubPost(p, ownerId).authorBadge;
+      const badge = normalizeClubPost(p, clubOwnerFor(p, club)).authorBadge;
       if (p.authorBadge === badge) return p;
       changed = true;
       return Object.assign({}, p, { authorBadge: badge });
@@ -2229,7 +2246,9 @@ Page({
           that.setData({ members: [], membersState: 'business-error', memberStrip: [] });
           return;
         }
-        that.setData({ members: res.data, membersState: 'ready', memberStrip: buildMemberStrip(res.data, that.data.club && that.data.club.memberCount) });
+        // V-15:成员头像是后端 http 签名链接 / 相对路径时真机拒载,入列前过 getImgUrl
+        const members = res.data.map((m) => (m && m.avatar && app.getImgUrl ? Object.assign({}, m, { avatar: app.getImgUrl(m.avatar) }) : m));
+        that.setData({ members: members, membersState: 'ready', memberStrip: buildMemberStrip(members, that.data.club && that.data.club.memberCount) });
         if (that._leaderboardRows) that.setData({ leaderboard: that.composeLeaderboard() });
       },
       fail() {
@@ -2608,19 +2627,16 @@ Page({
     });
   },
 
-  // 2026-10-27 M-24·M-34 owner:商家可以入团、看活动,活动卡上的动作是「邀约承接」而不是报名 ——
-  // 进现成的「商家 → 俱乐部」合作邀约(type=1),本俱乐部预选为对象;关联主题仍由商家选自己的
-  // (coop/invite 的 topicId 是邀约方自己的主题,不能把俱乐部的主题塞进去)。
+  // 2026-10-27 M-24·M-34 owner:商家可以入团、看活动,活动卡上的动作是「邀约承接」而不是报名。
+  // 2026-10-30 M-24 业主「我之前不是做好了吗」:承接要落到这一场活动 —— 进这场活动(主题)的项目主页,
+  // 用既有的章节承接申请(/api/merchant/chapter-application/apply),不再进不带活动的通用合作邀约。
   onMerchantUndertake(e) {
     if (!this.data.isMerchantViewer) return;
-    const club = this.data.club || {};
-    const clubId = positiveId(club.id || this.data.clubId);
-    if (!clubId) return;
+    const topicId = positiveId(e && e.currentTarget && e.currentTarget.dataset.id);
+    if (!topicId) return;
     if (this._navigating) return; this._navigating = true;
     wx.navigateTo({
-      url: '/pages/coop/invite/index?type=1&toId=' + clubId
-        + '&toName=' + encodeURIComponent(club.name || '该俱乐部')
-        + (this._operationScope === 'MERCHANT' ? '&scope=MERCHANT' : ''),
+      url: '/pages/topic/merchantinfo/merchantinfo?topicId=' + topicId + '&scope=MERCHANT',
       complete: () => { this._navigating = false; },
     });
   },
@@ -3082,6 +3098,24 @@ Page({
     }
     return scope;
   },
+  // 帖文第三轮:头像「+」关注(与发现同一口径:同作者的帖子一起改,失败回滚,后端提示原样给用户)
+  onFollowPost(e) {
+    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.onFollowPost(e), { owner: this, target: () => [this.data.clubId, e.detail && e.detail.memberId] })) return;
+    const row = (this.data.posts || [])[e.detail && e.detail.index];
+    const memberId = row && row.memberId;
+    const pending = this._followPending || (this._followPending = {});
+    if (!memberId || pending[memberId]) return;
+    pending[memberId] = true;
+    const setFollow = (v) => this.setData({ posts: (this.data.posts || []).map((p) => (p && String(p.memberId) === String(memberId) ? Object.assign({}, p, { isFollowTheUser: v }) : p)) });
+    setFollow(1);
+    app.sendRequest({
+      hideLoading: true, silentError: true, autoErrorToast: false,
+      url: '/api/user/follow/action', method: 'POST', data: { follow_member_id: memberId, follow: 1 },
+      success: (res) => { delete pending[memberId]; if (res && res.code == '200') return; setFollow(0); cyToast((res && res.msg) || '关注没成功'); },
+      fail: () => { delete pending[memberId]; setFollow(0); cyToast('网络错误，请重试'); },
+    });
+  },
+
   onLikePost(e) {
     if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.onLikePost(e), { owner: this, target: () => [this.data.clubId, e.detail && e.detail.postId, e.currentTarget.dataset.id] })) return; // 2026-10-24 游客写前登录
     const rawId = (e.detail && e.detail.postId) || e.currentTarget.dataset.id;
@@ -3125,6 +3159,14 @@ Page({
         that.readbackPostLike(key);
       },
     });
+  },
+
+  // dw29 L8 转发/撤销:乐观切换,失败回滚并原样显示后端提示。原帖与它的转发条目一起变。
+  onRepostPost(e) {
+    if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.onRepostPost(e), { owner: this, target: () => [this.data.clubId, e.detail && e.detail.postId] })) return;
+    const postId = e.detail && e.detail.postId;
+    if (postId == null) return;
+    clubPostRepost.toggleRepost({ page: this, listKey: 'posts', postId: postId, app: app, toast: cyToast });
   },
 
   // 不查首页/扫描分页；必须核对原 owner+club+post 与严格 boolean。

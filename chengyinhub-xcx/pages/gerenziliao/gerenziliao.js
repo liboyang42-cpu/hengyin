@@ -6,6 +6,7 @@ const { isValidMobile } = require('../../utils/form-state.js');
 const nicknameCheck = require('./nickname-check.js');
 const profileReview = require('../../utils/profile-review.js');
 const identitySync = require('../../utils/identity-sync.js');
+const { avatarSrc } = identitySync;
 
 // 输入停顿多久再问后端:太短每个字都打一枪,太长用户等不到反馈。
 const NICKNAME_CHECK_DEBOUNCE_MS = 400;
@@ -57,12 +58,17 @@ Page({
       phone: ''
     },
     phoneMasked: '',
+    // V-15:头像位显示地址。刚选的图先显示本机临时文件,服务端值统一过 getImgUrl;提交给后端的仍是 userInfo.avatar
+    avatarSrc: '',
     avatarReviewText: '',
+    // 2026-10-30 P-2:页顶模糊背景用「我的 · 主页」同一张背景图(member_hero_bg,与主页「更换背景」同一份)
+    heroImg: '/images/mer1.jpg',
+    avatarUploading: false,
     casePicsList: [], // 个人项目图片数组
     tempCasePics: [], // 临时个人项目图片数组（编辑时使用）
     tempCaseIntroducton: '', // 临时个人项目描述
     tempWechat: '', // 临时微信二维码
-    tempIntroduction: '', // 城市签名草稿；完成前不写回 userInfo
+    tempIntroduction: '', // 个人介绍草稿；完成前不写回 userInfo
     tempName: '', // 昵称草稿；完成前不写回 userInfo
     // 昵称校验(N4):'' 未检查/与原昵称相同 | checking | available | taken | invalid | error(查询失败,可重试)
     nicknameState: '',
@@ -74,7 +80,6 @@ Page({
 
     // 活动类型选择 - 多选相关
     selectedCategoryIds: [], // 选中的分类ID数组
-    selectedCategoryNames: [], // 选中的分类名称数组
     categorySheetVisible: false,
     categorySheetIds: '',
     selectedCategoryNamesStr: '', // 选中的分类名称字符串，用于显示
@@ -370,36 +375,6 @@ Page({
       tempCasePics: tempCasePics
     });
   },
-  removeCategory: function (e) {
-    const categoryId = parseInt(e.currentTarget.dataset.id);
-    const that = this;
-
-    // 从 selectedCategoryIds 中移除
-    const newSelectedIds = that.data.selectedCategoryIds.filter(id => id !== categoryId);
-
-    // 从 selectedCategoryNames 中移除对应的名称
-    const newSelectedNames = that.data.selectedCategoryNames.filter((name, index) => {
-      return that.data.selectedCategoryIds[index] !== categoryId;
-    });
-
-    // 从 categoryList 中移除（更新显示的分类列表）
-    const newCategoryList = that.data.categoryList.filter(item => item.id !== categoryId);
-
-    that.setData({
-      selectedCategoryIds: newSelectedIds,
-      selectedCategoryNames: newSelectedNames,
-      categoryList: newCategoryList,
-      'formData.activityCategoryids': newSelectedIds.join(',')
-    });
-
-    // console.log('移除分类后:', {
-//       selectedIds: newSelectedIds,
-//       selectedNames: newSelectedNames,
-//       categoryList: newCategoryList
-//     });
-
-    toast.success('移除成功', { duration: 1000 });
-  },
 
   // 上传微信二维码
   uploadWechat: function() {
@@ -454,7 +429,6 @@ Page({
     // 更新 categoryList 数组（这是您主要需要的）
     that.setData({
       selectedCategoryIds: selectedCategoryIds,
-      selectedCategoryNames: selectedCategoryNames,
       selectedCategoryNamesStr: selectedCategoryNamesStr,
       // 更新 categoryList 数组
       categoryList: selectedCategories || []
@@ -468,7 +442,13 @@ Page({
   onLoad(options) {
     var that = this
     this._unloaded = false;
+    let hero = '';
+    try { hero = wx.getStorageSync('member_hero_bg') || ''; } catch (e) { hero = ''; }
+    if (hero) this.setData({ heroImg: hero });
     this._hidden = false;
+    // V-21:「关于」里的「编辑」带 field=introduction 进来,资料读完直接打开个人介绍面板
+    this._openIntroOnLoad = !!(options && options.field === 'introduction');
+    this._openCategoryOnLoad = !!(options && options.field === 'category'); // 2026-10-30 关于「添加兴趣」直达路线偏好
     that.getUserData()
   },
 
@@ -543,10 +523,10 @@ Page({
       this.setData({
         userInfo: { name: '', introduction: '', website: '', caseIntroducton: '',
           avatar: '', tag_ids: '', casePics: '', wechat: '', phone: '' },
-        phoneMasked: '', casePicsList: [], tempCasePics: [], tempCaseIntroducton: '',
+        phoneMasked: '', avatarSrc: '', casePicsList: [], tempCasePics: [], tempCaseIntroducton: '',
         tempWechat: '', tempIntroduction: '', tempName: '', nicknameState: '', nicknameHint: '',
         nicknameSuggestions: [], nicknameSuggesting: false, nicknameSuggestError: '', selectedCategoryIds: [],
-        selectedCategoryNames: [], selectedCategoryNamesStr: '', categoryList: [],
+        selectedCategoryNamesStr: '', categoryList: [],
         categorySheetVisible: false, categorySheetIds: '', popDavid: false,
         popDavid2: false, popDavid3: false, popDavid4: false, loaded: false,
         canSave: false, saving: false, saveError: '', saveSucceeded: false,
@@ -631,6 +611,7 @@ Page({
               ...res.data
             },
             phoneMasked: maskPhone(res.data.phone),
+            avatarSrc: avatarSrc(res.data.avatar, app.getImgUrl && app.getImgUrl.bind(app)),
             casePicsList: casePicsList,
             loading: false,
             refreshing: false,
@@ -639,6 +620,10 @@ Page({
             loadErrorSub: ''
           }, () => that.refreshSaveState());
           that.loadProfileReview(context);
+          if (that._openIntroOnLoad) {
+            that._openIntroOnLoad = false;
+            that.openPop();
+          }
 
           if (isRecordList(res.data.sysCategoryList) && res.data.sysCategoryList.length > 0) {
             const selectedIds = res.data.sysCategoryList.map(item => item.id);
@@ -648,9 +633,12 @@ Page({
             that.setData({
               categoryList: res.data.sysCategoryList,
               selectedCategoryIds: selectedIds,
-              selectedCategoryNames: selectedNames,
               selectedCategoryNamesStr: selectedNamesStr
             });
+          }
+          if (that._openCategoryOnLoad) {
+            that._openCategoryOnLoad = false;
+            that.navigateToCategorySelect();
           }
 
         } else {
@@ -690,7 +678,9 @@ Page({
       success: function (res) {
         if (!that.currentProfileContext(context) || seq !== that._profileReviewSeq) return;
         const receipt = res && res.code == '200' ? res.data : null;
-        that.setData({ avatarReviewText: profileReview.memberAvatarText(receipt) });
+        // 2026-10-30 P-2:审核中新头像直接显示,不再写「复核中」;只有未通过时才出一行提示(文字照 profile-review 原样)
+        const rejected = !!(receipt && receipt.avatar && receipt.avatar.state === 'REJECTED');
+        that.setData({ avatarReviewText: rejected ? profileReview.memberAvatarText(receipt) : '' });
       },
       fail: function () {
         if (!that.currentProfileContext(context) || seq !== that._profileReviewSeq) return;
@@ -779,15 +769,42 @@ Page({
     else wx.switchTab({ url: '/pages/member/index/index' });
   },
 
+  // 2026-10-30 P-2:页顶「更换背景」,与主页「⋯ → 更换背景」同一份(member_hero_bg),选完立刻换上
+  changeHeroBg() {
+    const that = this;
+    app.chooseImage(function (urls) {
+      if (!urls || !urls.length || that._unloaded) return;
+      try { wx.setStorageSync('member_hero_bg', urls[0]); } catch (e) { /* 存不下就只换这一屏 */ }
+      that.setData({ heroImg: urls[0] });
+      toast('背景已更新');
+    }, 1, { crop: true, cropScale: '16:9' });
+  },
+
   uploadPic() {
     let that = this;
     const context = this.profileContext();
+    let previousSrc = null;
     app.chooseImage(function (res) {
       that.applyProfileResult(context, () => {
         // 换了还没保存的新头像:旧头像的审核回执不再对应屏幕上这张,先不显示。
-        that.setData({ 'userInfo.avatar': res[0], avatarReviewText: '' });
+        // 屏幕上继续用本机那张(上传开始时已换上),不等签名链接再下载一遍。
+        that.setData({ 'userInfo.avatar': res[0], avatarSrc: that.data.avatarSrc || avatarSrc(res[0], app.getImgUrl && app.getImgUrl.bind(app)), avatarReviewText: '' });
       });
-    }, 1, { crop: true, cropScale: '1:1' });
+    }, 1, {
+      crop: true, cropScale: '1:1',
+      // V-15:裁完就把本机图换上头像位,上传、审核期间都不留空圈
+      onUploadStart(filePaths) {
+        if (!that.currentProfileContext(context) || !filePaths || !filePaths[0]) return;
+        previousSrc = that.data.avatarSrc;
+        that.setData({ avatarSrc: filePaths[0], avatarReviewText: '', avatarUploading: true });
+      },
+      // 上传失败退回原头像;返回 false 让 chooseImage 照常弹失败提示
+      onUploadDone(r) {
+        if (that.currentProfileContext(context)) that.setData({ avatarUploading: false });
+        if (!r.ok && previousSrc !== null && that.currentProfileContext(context)) that.setData({ avatarSrc: previousSrc });
+        return false;
+      }
+    });
   },
 
   releaseProfilePhoneLoading(token = this._profilePhoneLoading) {

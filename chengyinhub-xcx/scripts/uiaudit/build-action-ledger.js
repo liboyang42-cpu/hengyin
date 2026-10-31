@@ -443,6 +443,19 @@ const ACTION_VARIANTS = new Map([
     id: 'trade-receipt-read', handler: 'checkThemeTradeReceipt',
     apis: ['/api/game/session/receipt', '/api/game/session/view'], writeApis: [], effectClasses: ['read', 'state'], externalCapabilities: [],
   }]],
+  // 帖文第三轮:发现页帖文流混着俱乐部帖文与社区帖文,点赞按帖子来源只打其中一个接口(utils/post-feed-actions.toggleLike);
+  // 关注只打 /api/user/follow/action(同一模块里的点赞接口不属于这次点击)。
+  ['pages/talent/list/index.js:onLikePost', [
+    { id: 'club-post', handler: 'onLikePost', predicate: { postSource: 'club' },
+      apis: ['/api/club/post/like'], writeApis: ['/api/club/post/like'], effectClasses: ['write', 'state'], externalCapabilities: [],
+      requiredRequests: [{ urlTemplate: '/api/club/post/like', method: 'POST', kind: 'write' }] },
+    { id: 'community-post', handler: 'onLikePost', predicate: { postSource: 'community' },
+      apis: ['/api/creativesquare/like'], writeApis: ['/api/creativesquare/like'], effectClasses: ['write', 'state'], externalCapabilities: [],
+      requiredRequests: [{ urlTemplate: '/api/creativesquare/like', method: 'POST', kind: 'write' }] },
+  ]],
+  ['pages/talent/list/index.js:onFollowPost', [{ id: null, handler: 'onFollowPost',
+    apis: ['/api/user/follow/action'], writeApis: ['/api/user/follow/action'], effectClasses: ['write', 'state'], externalCapabilities: [],
+    requiredRequests: [{ urlTemplate: '/api/user/follow/action', method: 'POST', kind: 'write' }] }]],
   ['subpackageMember/components/cy/profile/index.js:onPrimaryCta', [
     {
       id: 'visitor-follow', handler: 'toggleFollow', predicate: { isSelf: false, subjectIsMerchant: false },
@@ -1003,11 +1016,6 @@ const ACTION_VARIANTS = new Map([
     { id: 'edit', handler: 'openPostEdit', predicate: { selectAction: 'edit' }, apis: [], effectClasses: ['state'] },
     { id: 'delete', handler: 'deleteSquarePost', predicate: { selectAction: 'delete' }, apis: ['/api/v1/community/posts/{param}'] },
     { id: 'report', handler: 'reportSquareFromActions', predicate: { selectAction: 'report' }, apis: ['/api/v1/community/capabilities', '/api/v1/community/reports'], confirmationMode: 'wx.showModal' },
-  ]],
-  ['pages/square/list/index.js:onPostAction', [
-    { id: 'edit', handler: 'editCurrentSquarePost', predicate: { selectAction: 'edit' }, apis: [], effectClasses: ['state'] },
-    { id: 'delete', handler: 'deleteCurrentSquarePost', predicate: { selectAction: 'delete' }, apis: ['/api/v1/community/posts/{param}'] },
-    { id: 'report', handler: 'reportSquare', predicate: { selectAction: 'report' }, apis: ['/api/v1/community/capabilities', '/api/v1/community/reports'], confirmationMode: 'wx.showModal' },
   ]],
   ['pages/square/components/cy/post-actions/index.js:onDelete', [
     // 组件的删除闸走 this._danger() 间接拿 cy-danger-confirm(selectComponent 不在本函数体),

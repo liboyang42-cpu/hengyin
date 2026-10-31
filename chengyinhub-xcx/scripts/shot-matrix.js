@@ -157,11 +157,6 @@ const RAW = [
   ['A02', 'A02-index-skeleton.png', '/pages/index/index', 'player', 'loading', { isAppReady: true, isLoading: true, listLoading: { recommendedTopicList: true, nearbyActivityList: true, upcomingActivityList: true }, listErr: { recommendedTopicList: false, nearbyActivityList: false, upcomingActivityList: false }, recommendedTopicList: [], recoHero: null, nearbyActivityList: [], upcomingActivityList: [], bannerState: 'loading' }, undefined, SKEL, 'setData', 'P1', '', '首屏三个内容分区使用同构骨架，且清空迟到响应留下的正文'],
   ['A03', 'A03-index-error.png', '/pages/index/index', 'player', 'error', { isAppReady: true, isLoading: false, listLoading: { recommendedTopicList: false, nearbyActivityList: false, upcomingActivityList: false }, listErr: { recommendedTopicList: true, nearbyActivityList: true, upcomingActivityList: true }, recommendedTopicList: [], recoHero: null, nearbyActivityList: [], upcomingActivityList: [], bannerState: 'error' }, undefined, ERR, 'setData', 'P1', '', '错误态清空迟到正文并为每个失败分区保留单一重试 CTA'],
   ['A04', 'A04-index-logout.png', '/pages/index/index', 'guest', 'permission', null, undefined, TITLE, 'identity+setData', 'P1', '', '不出现"登录已过期"横条'],
-  ['A05', 'A05-square-list-real.png', '/pages/square/list/index', 'player', 'normal', { picList: [IMG] }, undefined, { selector: '.post-card', min: 1 }, 'real-data', 'P0', '', '★替换废图 15；Strava 单列流，作者/正文/媒体齐全'],
-  ['A06', 'A06-square-list-empty.png', '/pages/square/list/index', 'player', 'empty', { loading: false, nodata: true, list: [] }, undefined, EMPTY, 'setData', 'P1', '', 'aaa 居中放大'],
-  ['A07', 'A07-square-list-skeleton.png', '/pages/square/list/index', 'player', 'loading', { loading: true, list: [] }, undefined, SKEL, 'setData', 'P1', '', 'bbb'],
-  ['A08', 'A08-square-list-error.png', '/pages/square/list/index', 'player', 'error', { loading: false, loadError: true, list: [], loadMoreError: '', submitError: '', submitErrorKind: '' }, undefined, ERR, 'setData', 'P1', '', '错误态不显示内部占位词'],
-  ['A09', 'A09-square-list-guest.png', '/pages/square/list/index', 'guest', 'normal', { loadError: false, nodata: false, list: [{ id: 1, memberId: 2, memberNickname: '城市漫游者', contents: '游客也能先浏览广场内容', picList: [] }] }, undefined, { selector: 'cy-post-card', min: 1 }, 'identity+setData', 'P1', '', '列表可匿名浏览；登录门只在互动动作触发，不把游客态伪造成会话过期页'],
   ['A10', 'A10-square-detail-normal.png', '/pages/square/detail/index?id=1', 'player', 'normal', { picList: [IMG, IMG] }, undefined, TITLE, 'setData', 'P0', '', '标题上移；对话框/关注白色；+号在头像右下。**有媒体**态：wxml 的媒体区挂在 picList.length!=0 上，不注入就和 A12 走同一条分支、拍成同一张'],
   ['A11', 'A11-square-detail-longtext.png', '/pages/square/detail/index?id=1', 'player', 'long-value', { info: { contents: '城市的细节不会在匆忙经过时自己出现。沿着河岸慢慢走，留意门牌、砖缝、旧招牌和夜色里仍亮着的窗，把这段足够长的文字完整排进卡片，任何一个连续片段都不应该越过屏幕边缘。' }, picList: [IMG] }, undefined, TITLE, 'setData', 'P2', '', '长正文与图片使用页面真实字段，正文不得溢出'],
   ['A12', 'A12-square-detail-nomedia.png', '/pages/square/detail/index?id=1', 'player', 'normal', { picList: [] }, undefined, TITLE, 'setData', 'P1', '', '无媒体不留灰块 —— 与 A10 的差别就是 picList 空/非空，必须显式注入'],
@@ -307,7 +302,7 @@ const RAW = [
   ['B58', 'B58-templatedetail-loading.png', '/pages/templatedetail/templatedetail?id=1', 'player', 'loading', { loading: true }, undefined, SKEL, 'setData', 'P1', '', 'bbb'],
   ['B59', 'B59-template-index.png', '/pages/template/index', 'player', 'normal', null, undefined, TITLE, 'real-data', 'P0', '', '★"发布广场"居中、与俱乐部/我的同字号（#496 曾被改回，必复验）'],
   ['B60', 'B60-circle-play-missing.png', '/pages/play/circle/index', 'player', 'missing-param', null, undefined, { selector: '.state', min: 1 }, 'real-data', 'P1', '', '缺少城市实例时明确说明，不能停在 loading'],
-  ['B62', 'B62-stamp-album-real.png', '/subpackageP3/pages/stamp-album/index/index', 'player', 'normal', null, undefined, TITLE, 'real-data', 'P0', '', '★替换破图 10；一排三个；玩家侧黑底；真实邮票图'],
+  ['B62', 'B62-stamp-album-real.png', '/subpackageP3/pages/stamp-album/index/index', 'player', 'normal', null, undefined, { selector: '.al-item', min: 1 }, 'real-data', 'P0', '', '★替换破图 10;真实邮票图;2026-10-30 收集册 · 邮票:标题由 album-head 给(不再是 cy-page-title),锚在邮票本身'],
   ['B63', 'B63-stamp-album-empty.png', '/subpackageP3/pages/stamp-album/index/index', 'player', 'empty', { loading: false, list: [] }, undefined, EMPTY, 'setData', 'P1', '', '入口先做只读路由审计（只有漫游中可开）'],
   ['B64', 'B64-stamp-album-fail.png', '/subpackageP3/pages/stamp-album/index/index', 'player', 'error', { loading: false, loadError: true }, undefined, ERR, 'setData', 'P1', '', 'aaa/bbb'],
   ['B65', 'B65-stamp-camera.png', '/subpackageP3/pages/stamp-camera/index/index', 'player', 'normal', null, undefined, TITLE, 'real-device', 'P2', '需真机相机', '—'],
@@ -668,12 +663,12 @@ const countBy = (pred) => SHOTS.filter(pred).length;
 // 2026-10-28 模板页货架改版新增主题卡堆预览页:B76 玩家深色 / B77 商家浅色两条 P1 real-data,total 340→342、P1 199→201、actionable 316→318(P1 192→194)、B 69→71、real-data 38→40。
 // 2026-10-28 L9 再并 master(#652 B76/B77)叠加本线 D12h–D12l:total 351、P1 201、actionable 327(P1 194)、B 71、real-data 43。
 // 2026-10-28 并 master(#658 后)合流 integrate/devfix-20261027:本线 F201(营销消息页)与 D33A(账户收益分析页)两行叠加 master,自检实测 total 353、P1 203、actionable 329(P1 196)、D 52、setData 186、real-data 44。
-// 2026-10-30 实走复核补时间轴对照玩家端填充态 F202(P1 setData actionable):total 353→354、P1 203→204、actionable 329→330(P1 196→197)、F 95→96、setData 186→187。
+// 2026-10-29 走查 l2-roam V-08 第二轮删除「动态」二级页 pages/square/list:A05–A09 五行退场,total 353→348、P0 140→139、P1 203→199、actionable 329→324(P0 131→130、P1 196→192)、A 53→48、setData 186→183、identity+setData 116→115、real-data 44→43;blocked 与已验 fixture 不变。
 const STATS = {
-  "total": 354,
+  "total": 348,
   "byPriority": {
-    "P0": 140,
-    "P1": 204,
+    "P0": 139,
+    "P1": 199,
     "P2": 10
   },
   "blockedByPriority": {
@@ -682,14 +677,14 @@ const STATS = {
     "P2": 8
   },
   "actionable": {
-    "P0": 131,
-    "P1": 197,
+    "P0": 130,
+    "P1": 192,
     "P2": 2,
-    "total": 330
+    "total": 324
   },
   "blocked": 24,
   "domains": {
-    "A": 53,
+    "A": 48,
     "B": 71,
     "C": 56,
     "D": 52,
@@ -697,9 +692,9 @@ const STATS = {
     "F": 96
   },
   "control": {
-    "setData": 187,
-    "identity+setData": 116,
-    "real-data": 44,
+    "setData": 183,
+    "identity+setData": 115,
+    "real-data": 43,
     "real-device": 7
   },
   "fixtureVerified": 16

@@ -1,6 +1,11 @@
 <!-- 勋章墙:整屏 WebGL 数字装置。canvas 铺满视口,cover-view 做原生层之上的悬浮字幕层/详情 sheet;
      无 WebGL 或引擎失败 → 静态网格降级(L0)。 -->
+<!-- 2026-10-30 业主定稿 P-3:勋章墙成了「收集册 · 勋章」:整屏浅色流动底、两个一排、计数换成一圈点、点一枚飞到屏幕中间 -->
 <view class="theme-dark" style="--cy-comp-sheet-max-h:calc(100vh - {{sheetTop}}px);">
+<!-- 收集册整屏浅色:页根照玩家域挂 theme-dark,浅色由里面这一层 theme-light 逃生口给(与原集邮册同一做法) -->
+<view class="theme-light alb-light">
+  <album-aura wx:if="{{viewMode === 'list'}}" />
+  <cy-nav-bar wx:if="{{viewMode === 'list'}}" overlay />
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
@@ -28,15 +33,26 @@
   </block>
 
   <scroll-view class="bw-list" scroll-y wx:if="{{viewMode === 'list' && badges.length && !loadFail && !partialFail}}" style="{{pmList === 1 ? '--pm-b:1;' : (pmList === 2 ? '--pm-b-d:.32s;--pm-b-s:1;' : '')}}">
+    <album-head active="medal" />
+    <!-- 计数(参考 mymind):一圈 24 颗点,按已点亮的比例一颗颗亮起;中间枚数,右边一句宋体 -->
+    <view class="bw-sum" aria-role="text" aria-label="已点亮 {{unlockedCount || 0}} 枚，共 {{badges.length || 0}} 枚">
+      <view class="bw-ring {{ringOn ? 'is-on' : ''}}" aria-hidden="true">
+        <view wx:for="{{ringDots}}" wx:key="i" class="bw-dot {{item.lit ? 'is-lit' : ''}}" style="left:{{item.x || 0}}%;top:{{item.y || 0}}%;transition-delay:{{item.d || 0}}ms;"></view>
+        <view class="bw-ring__num"><text class="bw-ring__n">{{unlockedCount}}</text><text class="bw-ring__t">共 {{badges.length}}</text></view>
+      </view>
+      <text class="bw-say" aria-hidden="true">{{ringSay}}</text>
+    </view>
     <!-- 2026-10-28 业主:一行两个勋章,直接看到勋章长什么样;没解锁的变灰,但还认得出是什么。勋章下面不垫灰色方块。 -->
     <block wx:for="{{badgeGroups}}" wx:for-item="group" wx:key="key">
       <text class="bw-list-h" wx:if="{{group.title}}">{{group.title}}</text>
       <view class="bw-grid">
         <view class="bw-cell" wx:for="{{group.items}}" wx:for-item="item" wx:key="_idx" bindtap="onFbTap" data-idx="{{item._idx}}" hover-class="cy-pressed" hover-stay-time="80" style="--pmi:{{item._idx}};"
               aria-role="button" aria-label="{{item.name}}，{{item.locked ? '尚未点亮' : '已点亮'}}">
-          <view class="bw-medal {{item.locked ? 'is-locked' : ''}}">
+          <view class="bw-card bw-card--{{item.rarity || 0}} {{item.locked ? 'is-locked' : ''}} {{flyIdx === item._idx ? 'is-away' : ''}}">
+          <view class="bw-medal {{item.locked ? 'is-locked' : ''}}" id="bw-medal-{{item._idx}}">
             <image wx:if="{{item.iconUrl}}" class="bw-medal__img" src="{{item.iconUrl}}" mode="aspectFit" />
             <image wx:elif="{{pins[item.pinId]}}" class="bw-medal__pin" src="{{pins[item.pinId]}}" mode="aspectFit" aria-hidden="true" />
+          </view>
           </view>
           <text class="bw-cell__name ep1">{{item.name}}</text>
           <text class="bw-cell__meta ep1">{{item.locked ? (item.cond || '尚未点亮') : (item.time || '已点亮')}}</text>
@@ -55,7 +71,7 @@
     wx:if="{{loaded && !badges.length && !loadFail && !partialFail}}" />
 
   <!-- 原生 WebGL 覆盖层:普通 view 会被 canvas 原生层压住,返回必须留在 cover-view 上 -->
-  <cover-view class="bw-top" style="padding-top:{{statusBarHeight}}px;">
+  <cover-view class="bw-top" wx:if="{{viewMode === 'wall'}}" style="padding-top:{{statusBarHeight}}px;">
     <cover-view class="bw-top-bar" style="height:{{navBarHeight}}px;">
       <cover-view class="bw-back-hit" bindtap="goBack" aria-role="button" aria-label="返回" hover-class="cy-pressed" hover-stay-time="80">
         <cover-view class="bw-back-inner"><cover-image class="bw-back-icon" src="/subpackageP3/images/icon_back.png" mode="aspectFit" /></cover-view>
@@ -104,7 +120,15 @@
       <cover-view class="bw-sh-3d" wx:if="{{sheet.style=='enamel' || (!sheet.iconUrl && sheet.pinId && !sheet.locked)}}" bindtap="goBadge3d" aria-role="button" aria-label="查看 3D 徽章" hover-class="cy-pressed" hover-stay-time="80">查看 3D 徽章<cover-image class="bw-sh-3d-icon" src="/images/icon_right.png" mode="aspectFit" /></cover-view>
     </cover-view>
   </cover-view>
+  <!-- 2026-10-30 业主:点开不是新页面 —— 那一枚自己从格子里飞到屏幕中间放大,底下压暗;点空白处飞回去,点勋章进 3D 转台 -->
+  <view class="bw-fly {{fly.on ? 'is-on' : ''}}" wx:if="{{fly.show}}" bindtap="closeFly" catchtouchmove="noop" hover-class="cy-pressed" hover-stay-time="80" aria-role="dialog" aria-label="{{fly.name}}">
+    <view class="bw-fly__veil"></view>
+    <image class="bw-fly__pin {{fly.locked ? 'is-locked' : ''}}" src="{{fly.src}}" mode="aspectFit" style="{{fly.style}}" catchtap="onFlyPin" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true"
+           aria-role="button" aria-label="{{fly.locked ? fly.name : '转动查看' + fly.name}}" />
+    <view class="bw-fly__cap"><text class="bw-fly__name">{{fly.name}}</text><text class="bw-fly__meta">{{fly.meta}}</text></view>
+  </view>
   <!-- 2026-10-28 珐琅徽章离屏画布:只用来生成徽记图,不显示 -->
   <canvas type="2d" id="pinCanvas" class="bw-pin-canvas"></canvas>
+</view>
 </view>
 </view>

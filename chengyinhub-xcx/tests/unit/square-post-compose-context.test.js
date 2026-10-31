@@ -216,7 +216,7 @@ for (const pending of ['guidelines', 'modal']) {
   });
 }
 
-for (const route of ['list', 'detail']) {
+for (const route of ['detail']) { // 2026-10-29:广场列表页已删
   test(route + ' parent: refresh the real view and preserve the newer open editor', () => {
     let definition;
     vm.runInNewContext(fs.readFileSync(path.join(root, 'pages/square/' + route + '/index.js'), 'utf8'), {

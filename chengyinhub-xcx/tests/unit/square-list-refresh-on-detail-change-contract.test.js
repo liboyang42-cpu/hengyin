@@ -4,9 +4,8 @@
 // 修法:详情侧删/改成功后给上一页(列表)置脏标,列表 onShow 只在有脏标时刷一次首屏 ——
 // 不是每次 onShow 全量重拉。
 //
-// 契约两侧都钉:① 列表侧:脏标驱动一次刷新、且只消费一次;
-//             ② 详情侧:删除/编辑保存成功真的会调用上一页的置脏方法。
-// 负控:去掉列表的脏标分支 / 去掉详情置脏调用,对应用例必须真红。
+// 2026-10-29:广场列表页(pages/square/list)已删,列表侧用例随之删除;
+// 详情侧仍钉:删除/编辑保存成功真的会调用上一页的置脏方法 / 落 app 级脏标(我的页帖文列表消费)。
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -16,93 +15,8 @@ const path = require('node:path');
 const vm = require('../helpers/ui-sandbox-vm.js');
 
 const ROOT = path.resolve(__dirname, '../..');
-const LIST_REL = 'pages/square/list/index.js';
 const DETAIL_REL = 'pages/square/detail/index.js';
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
-
-function setPath(target, dotted, value) {
-  const parts = dotted.split('.');
-  let cursor = target;
-  parts.slice(0, -1).forEach((part) => {
-    cursor[part] = cursor[part] || {};
-    cursor = cursor[part];
-  });
-  cursor[parts.at(-1)] = value;
-}
-
-function loadList(opts) {
-  const requests = [];
-  let definition = null;
-  const absolutePath = path.join(ROOT, LIST_REL);
-  const app = {
-    canUseCommunity: () => true, // Current-account server-open fixture.
-    globalData: { statusBarHeight: 20, navBarHeight: 44 },
-    getUserID: () => 1,
-    getAvatar: () => '',
-    getNickname: () => '',
-    getPageSize: () => 10,
-    getTotalPage: () => 1,
-    getRequestErrorMessage: (res, fallback) => fallback,
-    sendRequest(options) { requests.push(options); return { abort() {}, aborted: false }; },
-  };
-  const wxApi = {
-    hideTabBar() {}, showTabBar() {}, stopPullDownRefresh() {}, setNavigationBarColor() {},
-    getSystemInfoSync: () => ({ windowWidth: 375, windowHeight: 812, statusBarHeight: 20, safeAreaInsets: { bottom: 0 } }),
-    getMenuButtonBoundingClientRect: () => ({ bottom: 64 }),
-    createSelectorQuery: () => ({ select() { return this; }, selectViewport() { return this; }, boundingClientRect() { return this; }, fields() { return this; }, scrollOffset() { return this; }, exec(cb) { if (cb) cb([{ scrollTop: 0 }]); } }),
-  };
-  const source = (opts && opts.source) || read(LIST_REL);
-  // ui-sandbox-vm 只把 toast/loading/modal/datetime 装进沙箱;theme/merchant-theme 走 Node 真 require,
-  // 读的是主 realm 的全局 —— 两个 realm 都要给桩。
-  global.getApp = () => app;
-  global.wx = wxApi;
-  vm.runInNewContext(source, {
-    console,
-    getApp: () => app,
-    Page: (config) => { definition = config; },
-    require: id => id.includes('community-post-api') ? require('../helpers/community-page-seam') : createRequire(absolutePath)(id),
-    setTimeout() {}, clearTimeout() {}, setInterval() {}, clearInterval() {},
-    wx: wxApi,
-  }, { filename: absolutePath });
-  assert.ok(definition, LIST_REL + ' 必须注册 Page');
-  const page = Object.assign({}, definition, {
-    data: JSON.parse(JSON.stringify(definition.data)),
-    setData(patch, done) {
-      Object.entries(patch).forEach(([key, value]) => setPath(this.data, key, value));
-      if (done) done.call(this);
-    },
-  });
-  // This harness represents an already loaded, server-open cached list.
-  page.data.communityPostRead = true; page.data.communityPostWrite = true; page.data.listLoading = false;
-  return { page, requests, app };
-}
-
-const feedRequests = (requests) => requests.filter((r) => r.url === '/api/creativesquare/list');
-
-test('列表:无脏标不重拉,置脏标后 onShow 刷一次,且脏标只消费一次', () => {
-  const { page, requests } = loadList();
-  page.onShow();
-  assert.equal(feedRequests(requests).length, 0, '没有详情变更时不许每次 onShow 全量重拉');
-
-  page.markSquareListDirty();
-  page.onShow();
-  assert.equal(feedRequests(requests).length, 1, '详情删/改过，回列表必须刷一次首屏');
-  assert.equal(feedRequests(requests)[0].data.pageNum, 1, '只刷首屏');
-
-  page.onShow();
-  assert.equal(feedRequests(requests).length, 1, '脏标消费后不得持续重拉');
-});
-
-test('列表:刷新失败不清脏标之外的任何已读内容,刷新请求走既有 getList 口径', () => {
-  const { page, requests } = loadList();
-  page.setData({ list: [{ id: 900, memberId: 1, contents: '旧卡' }], listLoading: false });
-  page.markSquareListDirty();
-  page.onShow();
-  const feed = feedRequests(requests)[0];
-  assert.ok(feed, '脏标必须触发首屏请求');
-  assert.equal(feed.data.pageNum, 1);
-  assert.ok(page.data.list.length >= 1, '刷新期间旧卡仍在屏上');
-});
 
 function loadDetail(prev, opts) {
   const requests = [];
@@ -199,18 +113,6 @@ test('A-RPT-5:分享直开详情(栈里没有列表)时,置脏落 app 级脏标'
     '分享直开没有上一页实例，脏标必须落到 app 级，否则之后进列表仍是旧卡');
 });
 
-test('A-RPT-5:列表消费 app 级脏标刷一次,且只消费一次', () => {
-  const { page, requests, app } = loadList();
-  page.onShow();
-  assert.equal(feedRequests(requests).length, 0, '没有脏标不许重拉');
-
-  app.globalData.squareListDirty = true; // 详情由分享直开时置的脏标
-  page.onShow();
-  assert.equal(feedRequests(requests).length, 1, 'app 级脏标也必须触发首屏刷新');
-  page.onShow();
-  assert.equal(feedRequests(requests).length, 1, 'app 级脏标消费后不得持续重拉');
-});
-
 test('A-RPT-5 负控:详情没上一页时去掉 app 级脏标,再进列表不刷 ⇒ 用例真红', () => {
   const source = read(DETAIL_REL);
   const broken = source.replace(
@@ -226,41 +128,6 @@ test('A-RPT-5 负控:详情没上一页时去掉 app 级脏标,再进列表不�
   page.deleteSquarePost();
   requests.find((r) => r.url === '/api/creativesquare/delete').success({ code: '200' });
   assert.equal(app.globalData.squareListDirty, undefined, '负控必须真的把 app 级置脏摘掉');
-});
-
-test('负控:去掉列表脏标分支,置脏标后仍不刷 ⇒ 用例真红', () => {
-  const source = read(LIST_REL);
-  const broken = source.replace(
-    '    const globalDirty = !!(app.globalData && app.globalData.squareListDirty);\n    const feedVersion = app.globalData && app.globalData.squareListDirtyVersion || 0;\n    if ((this._squareListDirty || globalDirty || feedVersion > (this._communityFeedVersion || 0)) && !this.data.isRefreshing) {\n      this._communityFeedVersion = feedVersion;\n      this._squareListDirty = false;\n      if (app.globalData) app.globalData.squareListDirty = false;\n      this.refreshList();\n    }\n',
-    '',
-  );
-  assert.notEqual(broken, source, '负控锚点失效:脏标分支未命中');
-
-  const { page, requests } = loadList({ source: broken });
-  page.markSquareListDirty();
-  page.onShow();
-  assert.equal(feedRequests(requests).length, 0, '负控必须真的把脏标分支摘掉');
-});
-
-test('每个广场实例读取自己的社区版本，旧布尔脏标已消费也能刷新', () => {
-  const first = loadList(), second = loadList();
-  const shared = { squareListDirty: true, squareListDirtyVersion: 1 };
-  first.app.globalData = shared; second.app.globalData = shared;
-  first.page.onShow();
-  assert.equal(shared.squareListDirty, false);
-  second.page.onShow();
-  assert.equal(feedRequests(first.requests).length, 1);
-  assert.equal(feedRequests(second.requests).length, 1);
-  first.page.onShow(); second.page.onShow();
-  assert.equal(feedRequests(first.requests).length, 1);
-  assert.equal(feedRequests(second.requests).length, 1);
-  shared.squareListDirtyVersion = 2;
-  first.page.onShow(); second.page.onShow();
-  assert.equal(first.page._communityFeedVersion, 1, '在途不能消费尚未刷新的版本');
-  for (const h of [first, second]) feedRequests(h.requests)[0].complete();
-  first.page.onShow(); second.page.onShow();
-  assert.equal(feedRequests(first.requests).length, 2);
-  assert.equal(feedRequests(second.requests).length, 2);
 });
 
 const detailReads = h => h.requests.filter(r => r.url === '/api/creativesquare/info');

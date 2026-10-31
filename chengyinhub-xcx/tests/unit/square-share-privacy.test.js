@@ -1,10 +1,10 @@
 'use strict';
-// U-050:广场帖转发卡只给公开且已发布的帖子带正文摘要/封面/详情链接,其余退回广场通用卡。
+// U-050:广场帖转发卡只给公开且已发布的帖子带正文摘要/封面/详情链接,其余退回发现页帖文 tab 的通用卡。
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { buildSquareShare } = require('../../pages/square/utils/square-share.js');
 
-const GENERIC = { title: '城瘾Hub', path: '/pages/square/list/index' };
+const GENERIC = { title: '城瘾Hub', path: '/pages/talent/list/index?tab=feed' };
 
 test('public published post shares its own excerpt, cover and detail path', () => {
   const card = buildSquareShare({ id: 56, audience: 'PUBLIC', status: 1,

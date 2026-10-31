@@ -8,6 +8,7 @@ const { decorate: decorateInvites } = require('../../../../utils/coop-invite-vie
 const roleGuard = require('../../../../utils/roleGuard.js');
 const roleViewFilter = require('../../../../utils/transport/role-view-filter.js');
 const merchantTheme = require('../../../../utils/merchant-theme.js');
+const discoverNav = require('../../../../utils/discover-nav.js');
 const { reader, sameReader } = require('../../../../utils/user-character.js');
 const app = getApp();
 
@@ -318,7 +319,8 @@ Page({
   onEmptyCta() {
     if (typeof app.canUseCommunity !== 'function' || !app.canUseCommunity(false)) return;
     const tab = this.data.activeTab;
-    if (tab === 'in' && !this._navigating) { this._navigating = true; wx.navigateTo({ url: '/pages/square/list/index', complete: () => { this._navigating = false; } }); }
+    // 2026-10-29:「动态」二级页已删,去发现页的全站帖文找人。
+    if (tab === 'in' && !this._navigating) { this._navigating = true; discoverNav.markDiscoverFeed(app); wx.switchTab({ url: '/pages/talent/list/index', complete: () => { this._navigating = false; } }); }
   },
 
   fmtPreview(c) {

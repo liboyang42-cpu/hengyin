@@ -107,16 +107,13 @@ test('发帖弹窗是全屏:发帖与草稿两层都把 full 档抬到整屏,上
   assert.match(js, /--cy-comp-sheet-max-h: calc\(100vh - ' \+ Math\.round\(top\) \+ 'px\); --cy-comp-sheet-full: 100vh;/);
 });
 
-test('俱乐部页、广场页都只挂同一个全屏发帖弹窗,页内不再有 textarea 发帖框', () => {
+test('俱乐部页只挂同一个全屏发帖弹窗(广场列表页 2026-10-29 已删),页内不再有 textarea 发帖框', () => {
   const club = read('pages/club/detail/index.wxml');
   assert.match(club, /<cy-post-compose show="\{\{composerOpen\}\}" club-id="\{\{club\.id\}\}"/);
   assert.doesNotMatch(club, /class="post-composer"|class="post-input"|bindtap="onPostSubmit"/);
   const clubJson = JSON.parse(read('pages/club/detail/index.json'));
   assert.equal(clubJson.usingComponents['cy-post-compose'], '/pages/square/components/cy/post-compose/index');
   assert.equal(clubJson.componentPlaceholder['cy-post-compose'], 'view', '跨分包引用必须带占位');
-  const square = read('pages/square/list/index.wxml');
-  assert.doesNotMatch(square, /<textarea/, '广场页内不再有 textarea 发帖框');
-  assert.match(square, /class="compose-entry"[^>]*bindtap="openCompose"/);
 });
 
 // 2026-10-27 P-21 owner(真机走查 p112):帖文里关联的路线卡用主题封面,不再是一大块黑色路线底图。

@@ -1,5 +1,7 @@
-<!-- 裁剪页:顶部标题栏 / 中间黑底裁剪区 / 底部 Cancel·Choose(参考 Threads 选图裁剪) -->
-<view class="theme-dark">
+<!-- 裁剪页:顶部标题栏 / 中间裁剪区 / 底部 取消·还原·选取(参考 Threads 选图裁剪)
+     2026-10-30 业主定稿 P-5(M-09):整张图都在屏幕里,取景框外压暗(浅色版提亮)不再裁掉;框按用途定比例、居中留边;
+     底栏三个小胶囊。商家浅色、玩家深色(业主批注「商家是浅色 玩家是深色」)。 -->
+<view class="{{merchant ? 'theme-merchant' : 'theme-dark'}}">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
@@ -34,14 +36,15 @@
     <!-- 框外纯黑:图片超出部分直接裁掉,不做半透明蒙层(跟参考图一致)。
          居中交给 CSS flex,不用 JS 算 top —— 舞台真实高度只有布局知道,JS 再算一遍必然对不齐 -->
     <view wx:else class="crop__frame {{round ? 'crop__frame--round' : ''}}"
-          style="width:{{frameW}}px;height:{{frameH}}px;">
+          style="width:{{frameW || 0}}px;height:{{frameH || 0}}px;">
       <image wx:if="{{ready}}"
              class="crop__img"
              src="{{src}}"
              mode="scaleToFill"
              style="width:{{imgW}}px;height:{{imgH}}px;transform:translate3d(calc(-50% + {{tx}}px), calc(-50% + {{ty}}px), 0) scale({{scale}});" />
-      <!-- M-08:圆形取景 —— 圆外四角压暗,圆内就是主页上会看到的 Logo -->
-      <view wx:if="{{round}}" class="crop__round-mask"></view>
+      <!-- M-09:框外整圈压暗(浅色版提亮),图不再被框裁掉;圆形取景就是圆洞;非圆框里画三分线 -->
+      <view class="crop__mask {{round ? 'crop__mask--round' : ''}}"></view>
+      <view wx:if="{{!round}}" class="crop__grid" aria-hidden="true"><view class="crop__grid-v"></view><view class="crop__grid-h"></view></view>
     </view>
     <view wx:if="{{exportError}}" class="crop__export-error">
       <cy-inline-error kind="error" title="裁剪没有完成" sub="{{exportError}}" action="使用原图" bind:action="onUseOriginal" />
@@ -51,6 +54,9 @@
   <view class="crop__bar {{sourceState === 'missing' ? 'crop__bar--missing' : ''}}" style="height:{{bottomBarH}}px;">
     <view class="crop__action {{sourceState === 'missing' ? 'crop__action--return' : ''}}" hover-class="crop__action--press" bindtap="onCancel" aria-role="button" aria-label="{{sourceState === 'missing' ? '返回上一页' : '取消'}}">
       <text>{{sourceState === 'missing' ? '返回上一页' : '取消'}}</text>
+    </view>
+    <view wx:if="{{sourceState === 'ready'}}" class="crop__action crop__action--reset" hover-class="crop__action--press" bindtap="onReset" aria-role="button" aria-label="还原">
+      <text>还原</text>
     </view>
     <view wx:if="{{sourceState === 'ready'}}" class="crop__action crop__action--confirm {{busy ? 'crop__action--busy' : ''}}" hover-class="crop__action--press" bindtap="onConfirm">
       <text>{{busy ? '处理中' : (exportError ? '重试裁剪' : '选取')}}</text>

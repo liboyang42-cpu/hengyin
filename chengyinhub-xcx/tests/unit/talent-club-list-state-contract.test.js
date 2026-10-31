@@ -68,7 +68,7 @@ function validFeed() {
     code: '200',
     data: {
       rows: [{ id: 8, clubId: 1, nickname: '小城', images: '', createTime: '2026-08-23 12:30:00' }],
-      clubCount: 1,
+      hasMore: false,
     },
   }
 }
@@ -120,7 +120,9 @@ test('成员刷新失败保留旧名单并进入 stale-error，重试复用当�
   assert.deepEqual(JSON.parse(requests[2].data), { clubId: 1 })
 })
 
-test('成员、首页与 feed 的同一资源重复加载只发一个请求', () => {
+const flush = () => new Promise((resolve) => setImmediate(resolve))
+
+test('成员、首页与 feed 的同一资源重复加载只发一个请求', async () => {
   const members = loadPage()
   members.page.data.managingClub = { id: 1 }
   members.page.loadClubMembers(1)
@@ -135,7 +137,9 @@ test('成员、首页与 feed 的同一资源重复加载只发一个请求', ()
   const feed = loadPage()
   feed.page.loadFeed()
   feed.page.loadFeed()
+  await flush()
   assert.equal(feed.requests.length, 1)
+  assert.deepEqual(JSON.parse(feed.requests[0].data), { scope: 'all', limit: 20 })
 })
 
 test('俱乐部首页刷新业务失败保留已展示分区并进入 stale-error', () => {
@@ -153,20 +157,26 @@ test('俱乐部首页刷新业务失败保留已展示分区并进入 stale-erro
   assert.deepEqual(page.data.nearbyClubs.map((item) => item.id), [2])
 })
 
-test('俱乐部 feed 刷新网络失败保留旧帖，合法空结果进入 empty', () => {
+test('俱乐部 feed 刷新网络失败保留旧帖，合法空结果进入 empty', async () => {
   const { page, requests } = loadPage()
   page.loadFeed()
+  await flush()
   requests[0].success(validFeed())
+  await flush()
   assert.equal(page.data.feedState, 'ready')
 
   page.loadFeed()
   assert.equal(page.data.feedState, 'refreshing')
+  await flush()
   requests[1].fail({ errMsg: 'request:fail offline' })
+  await flush()
   assert.equal(page.data.feedState, 'stale-error')
   assert.deepEqual(page.data.feed.map((item) => item.id), [8])
 
   page.loadFeed()
-  requests[2].success({ code: '200', data: { rows: [], clubCount: 0 } })
+  await flush()
+  requests[2].success({ code: '200', data: { rows: [], hasMore: false } })
+  await flush()
   assert.equal(page.data.feedState, 'empty')
   assert.deepEqual(page.data.feed, [])
 })

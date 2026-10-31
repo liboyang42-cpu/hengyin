@@ -18,12 +18,6 @@ test('A22 搜索历史走 normalize，猜你想搜空词不渲染', () => {
   assert.match(wxml, /wx:if="\{\{item\}\}"/)
 })
 
-test('A07 广场骨架时不出现正在加载更多动态', () => {
-  const wxml = read('pages/square/list/index.wxml')
-  assert.match(wxml, /isLoadingMore && list\.length/)
-  assert.doesNotMatch(wxml, /wx:if="\{\{isLoadingMore\}\}"[^>]*>正在加载更多动态/)
-})
-
 test('A48 收藏刷新不写加载中汉字', () => {
   const wxml = read('pages/mylike/mylike.wxml')
   assert.doesNotMatch(wxml, /正在更新收藏列表/)

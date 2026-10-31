@@ -63,6 +63,8 @@ const ALLOWED = [
   // 2026-09-18 「凭证弹层只留✕」用户裁决:以下四页的全屏 cy-qr-voucher 显示时整条
   // cy-nav-bar 退场 —— 返回钮浮在弹层遮罩上就是与✕并存的双出口。弹层态出口=✕(绑同一
   // onClose,深链安全逻辑不变);其余所有态(缺参/结果/正常页身)导航照常无条件渲染。
+  // 2026-10-30 收集册 · 勋章:列表模式挂 cy-nav-bar overlay;WebGL 墙模式另有 cover-view 返回层(bw-top),两种模式互斥、各自有返回出口
+  `subpackageP3/pages/badge-wall/index/index | cy-nav-bar | 自带 wx:if="{{viewMode === 'list'}}"`,
   `subpackageRoam/citynode-code/index | cy-nav-bar | 自带 wx:if="{{state === 'missing'}}"`,
   `subpackageMember/coupon-qr/index | cy-nav-bar | 自带 wx:if="{{!(entryState === 'ready' && useStatus == 0)}}"`,
   `pages/club/detail/index | cy-nav-bar | 自带 wx:if="{{!(groupCodeVisible && groupCodeState !== 'selecting')}}"`,

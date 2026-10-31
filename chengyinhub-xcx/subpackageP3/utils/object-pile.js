@@ -34,6 +34,8 @@ function step(bodies, world, dt) {
   const d = dt || 1;
   for (const b of bodies) {
     b.contact = false;
+    // 2026-10-30 业主:藏品能拿起来拖。被手指按住的那件由页面摆位置,这里不推它、不给它重力
+    if (b.held) { b.vr *= 0.8; continue; }
     if (world.ball) {
       b.vx += (world.cx - b.x) * PULL * d;
       b.vy += (world.cy - b.y) * PULL * d;
@@ -54,10 +56,14 @@ function step(bodies, world, dt) {
         const dist = Math.hypot(dx, dy);
         const min = a.r + b.r;
         if (dist <= 0 || dist >= min) continue;
-        const o = (min - dist) / 2;
+        // 手里那件当成推不动的:重叠全让另一件让开
+        const wa = a.held ? 0 : 1;
+        const wb = b.held ? 0 : 1;
+        if (!wa && !wb) continue;
+        const o = (min - dist) / (wa + wb);
         const nx = dx / dist;
         const ny = dy / dist;
-        a.x -= nx * o; a.y -= ny * o; b.x += nx * o; b.y += ny * o;
+        a.x -= nx * o * wa; a.y -= ny * o * wa; b.x += nx * o * wb; b.y += ny * o * wb;
         const rv = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
         if (rv < 0) {
           const imp = -rv * 0.55;
@@ -69,7 +75,7 @@ function step(bodies, world, dt) {
     }
   }
   // 碰撞会把下面那件往下挤:挤完再夹一次,不然会穿过地面线
-  for (const b of bodies) bounds(b, world);
+  for (const b of bodies) if (!b.held) bounds(b, world);
   if (!world.ball) {
     // 只有「挨着东西」的才能停:半空里刚起步的速度也很小,不能被冻在空中
     for (const b of bodies) if (b.contact && Math.hypot(b.vx, b.vy) < REST_SPEED) { b.vx = 0; b.vy = 0; b.vr = 0; }
@@ -84,7 +90,7 @@ function bounds(b, world) {
 
 /** 都停住了:页面据此停掉逐帧重画(省电)。聚团时永远不算停(一直在轻轻挤)。 */
 function settled(bodies) {
-  return bodies.every((b) => b.vx === 0 && b.vy === 0 && b.y > 0);
+  return bodies.every((b) => !b.held && b.vx === 0 && b.vy === 0 && b.y > 0);
 }
 
 /** 点中的那一件:从最后画的(最上面)往回找。 */

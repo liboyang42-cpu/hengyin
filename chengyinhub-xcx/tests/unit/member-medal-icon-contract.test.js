@@ -17,19 +17,13 @@ const { readResolved } = require('../helpers/resolve-profile');
 const XCX = process.env.MEMBER_MEDAL_CONTRACT_ROOT || path.resolve(__dirname, '../..');
 const read = (file) => readResolved(file);
 
-test('勋章图片优先，缺失图片使用通用 star 图标而不渲染 emoji', () => {
+// 2026-10-30 业主定稿 P-3:「城市勋章」列表并进收集册,我的里只剩收集册入口那一叠勋章缩略图 ——
+// 有 medalImg 先用图片,缺图落通用勋章图(不是 emoji)。
+test('收集册入口的勋章缩略图:图片优先，缺图落通用勋章图而不渲染 emoji', () => {
   const wxml = read('pages/member/index/index.wxml');
-
-  assert.match(
-    wxml,
-    /<image class="pc-achv-ico" wx:if="\{\{item\.medalImg\}\}" src="\{\{item\.medalImg\}\}"/,
-    'medalImg 存在时必须优先走图片'
-  );
-  assert.match(
-    wxml,
-    /<view class="pc-achv-ico pc-achv-ico--fallback" wx:else[\s\S]*?<cy-icon\b[^>]*name="star"[^>]*\/>[\s\S]*?<\/view>/,
-    'medalImg 缺失时必须渲染 star cy-icon 保底'
-  );
+  assert.match(wxml, /src="\{\{medals\[0\]\.medalImg \|\| '\/subpackageMember\/images\/album\/medal\.png'\}\}"/, 'medalImg 存在时必须优先走图片');
+  assert.ok(fs.existsSync(path.join(XCX, 'subpackageMember/images/album/medal.png')), '缺图时的通用勋章图要在包里');
   assert.doesNotMatch(wxml, /item\.emoji/, '正式勋章图标不得消费 emoji 字段');
   assert.doesNotMatch(wxml, /pc-achv-ico--emoji/, '正式勋章图标不得保留 emoji fallback class');
+  assert.doesNotMatch(wxml, /pc-achv-list/, '城市勋章列表已并进收集册');
 });

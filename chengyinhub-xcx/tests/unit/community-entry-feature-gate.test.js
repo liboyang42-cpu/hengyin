@@ -13,7 +13,7 @@ function mount(kind) {
     canUseCommunity: mode => mode ? write : read,
     loadFeatureFlags: () => new Promise(resolve => refreshes.push(resolve)),
     sendRequest: options => { requests.push(options); return { abort() {} }; }, tips() {} };
-  const file = path.join(ROOT, kind === 'profile' ? 'subpackageMember/components/cy/profile/index.js' : 'pages/square/list/index.js');
+  const file = path.join(ROOT, 'subpackageMember/components/cy/profile/index.js');
   const wx = { hideTabBar() {}, showToast: o => toasts.push(o.title), stopPullDownRefresh() {} };
   global.getApp = () => app; global.wx = wx;
   vm.runInNewContext(fs.readFileSync(file, 'utf8'), { getApp: () => app, wx, console,
@@ -38,31 +38,11 @@ test('profile requested posts resumes after real flag read but not after user ch
   other.page.onTabChange({detail:{key:'about'}});other.flags(true,true);other.refreshes[0]();await flush();
   assert.equal(other.page.data.activeTab,'about');assert.equal(other.requests.length,0);
 });
-// 2026-10-27 P-20 owner:广场行内发布框撤掉,发帖统一走全屏发帖弹窗(草稿由组件存本机);
-// 页面侧的闸改成「关闭的账号点发帖入口不拉起弹窗」,原 valCont/submitFormData 断言随之换成 openCompose。
-test('square closed deep link clears old feed and refuses to open the composer without any feed request', async () => {
-  const h=mount('list');Object.assign(h.page.data,{composeShow:true});
-  h.page._syncCommunityAccess();h.refreshes[0]();await flush();h.page.getList();h.page.openCompose();
-  assert.equal(h.page.data.list.length,0);assert.equal(h.page.data.composeShow,false);
-  assert.equal(h.requests.length,0);assert.deepEqual(h.toasts,['当前账号未开放广场发布']);
-});
-test('square read-only account can fetch feed but cannot edit or open the composer', async () => {
-  const h=mount('list');h.flags(true,false);Object.assign(h.page.data,{composeShow:true});
-  h.page._syncCommunityAccess();h.refreshes[0]();await flush();
-  assert.equal(h.page.data.communityPostRead,true);assert.equal(h.page.data.communityPostWrite,false);assert.equal(h.page.data.composeShow,false);
-  assert.equal(h.requests[0].url,'/api/creativesquare/list');const count=h.requests.length;
-  h.page._actionIndex=0;h.page.editCurrentSquarePost();h.page.openCompose();assert.equal(h.requests.length,count);assert.equal(h.page.data.composeShow,false);
-});
-test('late feature completion cannot apply old account visibility to square or profile', async () => {
-  for(const kind of ['list','profile']) {
-    const h=mount(kind);const sync=kind==='list'?'_syncCommunityAccess':'_syncCommunityProfile';h.page[sync]();
+// 2026-10-29:广场列表页(pages/square/list)已删,square 侧的入口闸用例随页撤走,只留个人主页。
+test('late feature completion cannot apply old account visibility to profile', async () => {
+  for(const kind of ['profile']) {
+    const h=mount(kind);const sync='_syncCommunityProfile';h.page[sync]();
     const snapshot=JSON.stringify(h.page.data);h.owner('99');h.flags(true,true);h.refreshes[0]();await flush();
     assert.equal(JSON.stringify(h.page.data),snapshot);assert.equal(h.requests.length,0);
   }
-});
-test('closing square invalidates in-flight feed even if abort callback still arrives', async () => {
-  const h=mount('list');h.flags(true,true);h.page.getList();assert.equal(h.requests.length,1);
-  h.flags(false,false);h.page._syncCommunityAccess();h.refreshes[0]();await flush();
-  h.requests[0].success({code:200,data:{rows:[{id:9,contents:'旧账号帖子'}],total:1}});
-  assert.equal(h.page.data.list.length,0);assert.equal(h.page.data.communityPostRead,false);
 });

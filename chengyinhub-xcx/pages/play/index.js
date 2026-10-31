@@ -6,6 +6,7 @@ const cyLoading = require('../../utils/loading.js');
 const cyToast = require('../../utils/toast.js');
 const motion = require('../../utils/motion.js');
 const app = getApp();
+const discoverNav = require('../../utils/discover-nav.js');
 const bgTracker = require('../../utils/location/bg-tracker.js');
 let playLocationOwnerSequence = 0; // 每次实际持有使用独立key，旧页面不能释放新会话。
 const analytics = require('../../utils/analytics.js');
@@ -8326,9 +8327,9 @@ Page({
   },
   shareFinish() {
     if (typeof app.canUseCommunity !== 'function' || !app.canUseCommunity(true)) { cyToast('当前账号未开放广场发布'); return; }
-    // 通关→广场发布:发帖时活动选择器列出已通关活动(本场已在 /api/play/my-completed 中),选中即关联
-    cyToast('去广场发布你的城市足迹');
-    setTimeout(() => { wx.navigateTo({ url: '/pages/square/list/index' }); }, 800);
+    // 2026-10-29 业主:「动态」二级页已删,通关后去发现页的全站帖文。
+    discoverNav.markDiscoverFeed(app);
+    wx.switchTab({ url: '/pages/talent/list/index' });
   },
 
   // ---------- 音频播放 ----------

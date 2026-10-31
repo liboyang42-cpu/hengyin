@@ -158,6 +158,8 @@ class ApiClubTopicVisibilityTest {
             ReflectionTestUtils.setField(controller, "clubMemberService", members);
             ReflectionTestUtils.setField(controller, "cmsTopicService", topics);
             ReflectionTestUtils.setField(controller, "clubPostService", posts);
+            // 帖文卡头像「+」关注:查看者对作者的关注态(批量查询,默认空 = 都没关注)
+            ReflectionTestUtils.setField(controller, "umsMemberFollowMapper", org.mockito.Mockito.mock(com.chengyinhub.business.mapper.UmsMemberFollowMapper.class));
             ClubPost postQuery = new ClubPost();
             postQuery.setClubId(73L);
             boolean allowed = scenario < 4;

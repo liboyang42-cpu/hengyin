@@ -188,25 +188,27 @@ test('全黑等待或失败态直接拦住原生 POI，不允许盲点到店', (
   }
 });
 
-test('地图视野变化立即全黑并作废在途 image，直到新版本 load', () => {
+// 2026-10-29 V-07 业主:拖动地图「一闪一闪、时不时黑一下」。手势期间不再拉全屏黑层,
+// 旧帧留在屏上;只作废在途的旧视口 region 请求,松手立刻重画,新帧 load 后替换。
+test('地图手势拖动不拉全黑层，只作废在途重绘，松手立即重画', () => {
   const page = loadRoamPage();
   page._fogLifecycleGen = 4;
   page._fogMode = 'screen';
   page._fogScreenVersion = 12;
+  page._fogScreenRegionSeq = 3;
   page.data.fogScreenGuard = false;
-  page.data.fogScreenLayers = [{ generation: 4, version: 12, src: '/tmp/fog-12.png', loaded: false }];
-  let scheduled = 0;
-  page._scheduleScreenFogRender = () => { scheduled++; };
+  page.data.fogScreenLayers = [{ generation: 4, version: 12, src: '/tmp/fog-12.png', loaded: true }];
+  const delays = [];
+  page._scheduleScreenFogRender = (delay) => { delays.push(delay); };
 
   page.onRegionChange({ detail: { phase: 'begin', causedBy: 'drag' } });
-  assert.strictEqual(page.data.fogScreenGuard, true, '拖拽开始必须先盖全黑层');
-  assert.strictEqual(page._fogScreenVersion, 13, '拖拽开始必须作废在途 image 世代');
-  page.onFogScreenLoad({ currentTarget: { dataset: { generation: 4, version: 12 } } });
-  assert.strictEqual(page.data.fogScreenGuard, true, '迟到的旧 image load 不能撤掉过渡黑层');
+  assert.strictEqual(page.data.fogScreenGuard, false, '拖拽开始不能盖全黑层');
+  assert.strictEqual(page._fogScreenRegionSeq, 4, '拖拽开始必须作废在途的旧视口 region');
+  assert.strictEqual(page.data.fogScreenLayers.length, 1, '旧帧必须继续留在屏上');
 
   page.onRegionChange({ detail: { phase: 'end', causedBy: 'drag', scale: 17 } });
-  assert.strictEqual(scheduled, 1, '拖拽结束必须安排当前视野的新遮罩');
-  assert.strictEqual(page.data.fogScreenGuard, true, '新 image load 前必须继续全黑');
+  assert.deepStrictEqual(delays, [0], '拖拽结束必须立即安排当前视野的新遮罩');
+  assert.strictEqual(page.data.fogScreenGuard, false, '新 image load 前也不黑屏，旧帧顶着');
 });
 
 test('首张当前世代 image load 前不启动计时或持续定位', () => {

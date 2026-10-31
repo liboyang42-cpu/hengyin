@@ -4,7 +4,7 @@ const path = require('node:path')
 const test = require('node:test')
 const vm = require('../helpers/ui-sandbox-vm.js')
 
-// BL-247:收件箱空态「去广场找人」与客户页空态「去合作中心」连点只跳一次;complete 或 onShow 后可再跳;
+// BL-247:收件箱空态「去发现找人」(2026-10-29 改 switchTab 去发现页帖文)与客户页空态「去合作中心」连点只跳一次;complete 或 onShow 后可再跳;
 // 非 dm 标签/非 go-coop 时不跳也不上锁
 
 const ROOT = path.resolve(__dirname, '../..')
@@ -12,7 +12,7 @@ const ROOT = path.resolve(__dirname, '../..')
 function load(file) {
   let definition
   const navs = []
-  const base = { navigateTo: (o) => navs.push(o), getStorageSync: () => '', getSystemInfoSync: () => ({ statusBarHeight: 20, windowWidth: 375 }) }
+  const base = { navigateTo: (o) => navs.push(o), switchTab: (o) => navs.push(o), getStorageSync: () => '', getSystemInfoSync: () => ({ statusBarHeight: 20, windowWidth: 375 }) }
   const wx = new Proxy(base, { get(t, k) { return k in t ? t[k] : () => {} } })
   const app = new Proxy({ globalData: {}, sendRequest() { return { abort() {} } }, canUseCommunity: () => true }, {
     get(t, k) { return k in t ? t[k] : () => '' },
@@ -33,13 +33,14 @@ function load(file) {
     data: JSON.parse(JSON.stringify(definition.data || {})),
     setData(patch) { Object.assign(this.data, patch) },
   })
-  return { page, navs }
+  return { page, navs, app }
 }
 
 const CASES = [
   {
-    name: '收件箱空态「去广场找人」', file: 'subpackageB/pages/im/list/index.js',
-    url: '/pages/square/list/index',
+    name: '收件箱空态「去发现找人」', file: 'subpackageB/pages/im/list/index.js',
+    url: '/pages/talent/list/index',
+    discover: true,
     prep(page) { page.data.activeTab = 'in' },
     tap(page) { page.onEmptyCta() },
   },
@@ -55,11 +56,12 @@ for (const c of CASES) {
   const mount = () => { const r = load(c.file); c.prep(r.page); return r }
 
   test(`BL-247:${c.name} complete 未回调时连点两次只跳 1 次,complete 后可再跳`, () => {
-    const { page, navs } = mount()
+    const { page, navs, app } = mount()
     c.tap(page)
     c.tap(page)
     assert.equal(navs.length, 1)
     assert.equal(navs[0].url, c.url)
+    if (c.discover) assert.equal(app.globalData.discoverFeedTab, true, '发现页凭一次性标记切到帖文 tab')
     navs[0].complete()
     c.tap(page)
     assert.equal(navs.length, 2)

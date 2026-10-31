@@ -86,30 +86,12 @@ test('A01：首页头像入口使用全局 44px 最小触达区 token', () => {
     '纯文案招呼层不得以整行透明盒遮住右侧头像点击中心')
 })
 
-test('A05/A06：广场顶部为横向 banner，发布器展示本人头像与昵称', () => {
-  const wxml = stripComments(read('pages/square/list/index.wxml'))
+test('A05/A06：帖文卡共用可玩卡与完赛成绩卡(2026-10-29 广场列表页已删,列表页断言随之删除)', () => {
   const feedCard = stripComments(read('components/cy/feed-play-card/index.wxml'))
   const completionCard = stripComments(read('components/cy/completion-share-card/index.wxml'))
-  const js = read('pages/square/list/index.js')
-  // 2026-09-11:两块正文收进 cy-post-card(页面不判 variant),所以这三条从列表页改看组件。
   const postCard = stripComments(read('components/cy/post-card/index.wxml'))
-  assert.doesNotMatch(wxml, /class="(?:summary|sum-card)"/)
-  assert.doesNotMatch(js, /creativesquare\/summary|getSummary/)
-  assert.match(wxml, /<scroll-view[^>]*class="sq-upcoming-track"[^>]*scroll-x[\s\S]*?wx:for="\{\{upcomingCards\}\}"/)
-  assert.match(wxml, /class="up-avatar-stack"[\s\S]*?wx:for="\{\{item\.avatars\}\}"[\s\S]*?item\.avatarOverflow/)
-  // 2026-09-02 帖文 B1:compose-head 拆成 compose-row(头像列) + compose-col(内容列),
-  // 昵称/正文/工具栏共用同一条左边线。断言跟着结构走,顺带把「内容列真的包住正文」也钉住。
-  // 2026-09-02 B2(Figma 379:2437):内容列首行由固定文案「发布帖文」改为本人昵称,
-  // 断言随之从字面量改成昵称绑定 + 兜底「城瘾玩家」。
-  assert.match(wxml, /class="compose-row"[\s\S]*?avatar \|\| '\/images\/d_profile\.png'[\s\S]*?class="compose-col"[\s\S]*?>\{\{nickname \|\| '城瘾玩家'\}\}</)
-  // 2026-10-27 P-20 owner:行内 textarea 撤掉,这一行只剩发帖入口(点开全屏发帖弹窗);
-  // 占位文案仍落在内容列里,与头像右边缘对齐。
-  assert.match(wxml, /class="compose-col"[\s\S]*?class="compose-ph"/,
-    '占位必须落在内容列里，否则又会通栏、与头像右边缘不齐')
   assert.match(postCard, /<cy-feed-play-card\b[^>]*bind:detail="emitPlayDetail"[^>]*bind:play="emitPlay"/,
     '发布帖文模板须接入列表/详情共用的可玩卡组件')
-  assert.match(wxml, /bind:playdetail="goPlayTopicDetail"[\s\S]{0,80}bind:play="goPlay"/,
-    '列表页要把可玩卡的动作从帖文卡上接回来')
   assert.match(postCard, /<cy-completion-share-card\b[^>]*wx:if="\{\{post\.isCompletionShare\}\}"/,
     '完赛分享须使用单张图片成绩卡，不能复用模板/路线沉浸卡')
   // 2026-09-02 Figma 297:1827 Roam variant:标题与成绩不再叠在封面图上,改为正文栏内的竖排段落
@@ -148,8 +130,9 @@ test('A14/A15 + UI-19：俱乐部主 tab 贴导航等分，有页标题，一张
   const js = read('pages/talent/list/index.js')
   const wxss = read('pages/talent/list/index.wxss')
   // 2026-09-18 UI-19 用户:一级 tab 页要有页标题 ⇒ 导航栏居中「俱乐部」(原 A14 禁 nav-title 的口径作废)
+  // 2026-10-29 V-08 业主:页名改「发现」
   assert.doesNotMatch(wxml, /nav-search|class="club-tabs"/)
-  assert.match(wxml, /<text class="nav-title">俱乐部<\/text>/)
+  assert.match(wxml, /<text class="nav-title">发现<\/text>/)
   assert.match(wxml, /<cy-tabs class="top-tabs" variant="fill" wide="\{\{true\}\}"/)
   assert.doesNotMatch(js, /activeClubTab|clubTabs|onClubTabChange|onSearchTap/)
   assert.doesNotMatch(wxml, /进行中挑战|club-events/)
@@ -218,7 +201,9 @@ test('A45：我的收藏保留主题长方卡，并新增帖文/主题双域与�
   const wxss = read('pages/mylike/mylike.wxss')
   assertFavoriteCardsOnly(wxml)
   assert.match(wxml, /<cy-tabs\b[^>]*tabs="\{\{favoriteTabs\}\}"/)
-  assert.match(wxml, /<cy-post-card\b[^>]*show-favorite/)
+  // 2026-10-29 业主:收藏从卡片动作行挪进「···」,本页「···」只给「取消收藏」
+  assert.match(wxml, /<cy-post-card\b[^>]*show-more[^>]*bind:more="onPostMore"/)
+  assert.match(wxml, /<cy-option-sheet immediate[^>]*bind:select="onPostMoreSelect"/)
   assert.match(wxss, /\.favorite-card\s*\{[^}]*aspect-ratio:\s*16 \/ 9/)
   assert.match(wxss, /\.favorite-card__actions button\s*\{[^}]*width:\s*var\(--cy-btn-h\);[^}]*height:\s*var\(--cy-btn-h\)/)
   assert.match(wxml, /class="favorite-card__action-visual"/)
