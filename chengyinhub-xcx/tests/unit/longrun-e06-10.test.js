@@ -9,7 +9,7 @@ function harness(foreground) {
   const bg = [], fg = [], stops = [];
   const module = { exports: {} };
   const filename = path.resolve(__dirname, '../../utils/location/bg-tracker.js');
-  vm.runInNewContext(fs.readFileSync(filename, 'utf8'), { module, wx: {
+  vm.runInNewContext(fs.readFileSync(filename, 'utf8'), { module, setTimeout, clearTimeout, wx: {
     startLocationUpdateBackground: options => bg.push(options),
     startLocationUpdate: foreground || (options => fg.push(options)),
     stopLocationUpdate: options => stops.push(options),
@@ -48,7 +48,7 @@ test('throwing consumer can still cancel an old same-key success waiter during d
   t.acquire('b', { success: () => seen.push('old-b') });
   assert.throws(() => bg[0].success(), value => value === error);
   assert.deepEqual(seen, ['a']); assert.equal(stops.length, 1);
-  stops[0].complete(); bg[1].success();
+  stops[0].complete({ errMsg: 'stopLocationUpdate:ok' }); bg[1].success();
   assert.deepEqual(seen, ['a', 'new-b']);
 });
 

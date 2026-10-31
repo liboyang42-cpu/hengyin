@@ -15,6 +15,9 @@ var owners = Object.create(null);   // sessionKey -> 领取身份
 var started = false;
 var starting = false;
 var stopping = false;
+var stopFailure = null;
+var stopBlocksRestart = false;
+var stopPromise = null;
 var usingBackground = false;
 var generation = 0;
 var waiters = [];
@@ -44,22 +47,48 @@ function notify(batch, callback, value) {
 }
 
 function count() { return Object.keys(owners).length; }
-function stopLocation() {
-  if (stopping) return;
+function stopLocation(requireConfirmation) {
+  // 普通行程释放沿用已获同意持有者的恢复；用途撤回把同一在途停止升级为必须确认。
+  if (requireConfirmation) stopBlocksRestart = true;
+  if (stopping) return stopPromise;
   stopping = true;
-  var completed = false;
-  var finish = function () {
+  var completed = false, resolveStop;
+  var result = stopPromise = new Promise(function (resolve) { resolveStop = resolve; });
+  // 系统没有回调也不能宣称已停；只保留可显式重试的停止失败，不重新开启采集。
+  var timer = setTimeout(function () { finish({ errMsg: 'stopLocationUpdate:fail timeout' }); }, 10000);
+  var finish = function (error) {
     if (completed) return;
     completed = true;
+    clearTimeout(timer);
     stopping = false;
-    beginStart();
+    stopFailure = error || null;
+    if (!error) stopBlocksRestart = false;
+    stopPromise = null;
+    resolveStop({ ok: !error, error: error || null });
+    if (error && stopBlocksRestart) {
+      if (waiters.length) finishFailure(generation, error);
+    } else beginStart();
   };
   try {
-    wx.stopLocationUpdate({ success: finish, fail: finish, complete: finish });
+    wx.stopLocationUpdate({
+      success: function () { finish(null); },
+      fail: function (error) { finish(error || { errMsg: 'stopLocationUpdate:fail' }); },
+      complete: function (res) {
+        if (res && /:fail/.test(res.errMsg || '')) finish(res);
+        else if (res && /:ok/.test(res.errMsg || '')) finish(null);
+      }
+    });
   } catch (e) {
-    if (completed) throw e; // 来自重启后的消费者回调
-    finish();
+    if (completed) throw e;
+    finish({ errMsg: 'stopLocationUpdate:fail exception' });
   }
+  return result;
+}
+
+function stopState() { return stopping ? 'stopping' : stopFailure ? 'failed' : 'confirmed'; }
+function retryStop() {
+  // 撤回一个用途不越权关闭其它独立获准的持有者。
+  return count() > 0 ? Promise.resolve({ ok: true, otherOwners: true }) : stopLocation(true);
 }
 
 function finishSuccess(gen, background) {
@@ -68,7 +97,7 @@ function finishSuccess(gen, background) {
     started = false;
     usingBackground = false;
     if (starting) { starting = false; generation += 1; }
-    stopLocation();
+    stopLocation(true);
     return;
   }
   // release 后旧启动才成功：没有新持有者就必须补偿 stop；若已有新一代启动在等，
@@ -87,6 +116,7 @@ function finishSuccess(gen, background) {
     return;
   }
   started = true;
+  if (!stopBlocksRestart) stopFailure = null;
   usingBackground = background;
   var ready = waiters;
   waiters = [];
@@ -139,6 +169,7 @@ function beginStart() {
  */
 function acquire(key, opts) {
   opts = opts || {};
+  if (stopFailure && stopBlocksRestart) { if (opts.fail) opts.fail(stopFailure); return; }
   if (owners[key]) return; // owner key 即幂等键，重复 acquire 不能重复回调/注册监听。
   cancelNotifications(key, false); // 新领取取代该 key 在途的旧失败通知
   var owner = owners[key] = { key: key, opts: opts };
@@ -181,6 +212,8 @@ function observeRevocation(key, listener) {
 
 /** 撤回的是用途授权；其他独立获准的持有者继续运行，最后一个才停系统定位。 */
 function revoke(key) {
+  var needsStop = started || starting || stopping || !!stopFailure;
+  var result = Promise.resolve({ ok: true, otherOwners: count() > 1 });
   revisions[key] = revision(key) + 1;
   cancelNotifications(key, false);
   delete owners[key];
@@ -191,10 +224,11 @@ function revoke(key) {
     starting = false;
     started = false;
     usingBackground = false;
-    stopLocation();
+    if (needsStop) result = stopLocation(true);
   }
   (revokeListeners[key] || []).slice().forEach(function (listener) { listener(); });
+  return result;
 }
 
-module.exports = { acquire: acquire, release: release, revoke: revoke, revision: revision,
+module.exports = { stopState: stopState, retryStop: retryStop, acquire: acquire, release: release, revoke: revoke, revision: revision,
   observeRevocation: observeRevocation, hasOwner: hasOwner, isBackground: isBackground, isRunning: isRunning };

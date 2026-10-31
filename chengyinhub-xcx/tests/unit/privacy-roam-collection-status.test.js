@@ -20,7 +20,7 @@ function mount() {
   global.wx = {
     getStorageSync: () => '', setStorageSync() {}, showToast() {}, showModal() {},
     startLocationUpdateBackground(options) { h.starts.push(options); },
-    stopLocationUpdate(options) { h.stops++; if (options && options.complete) options.complete(); },
+    stopLocationUpdate(options) { h.stops++; if (options && options.success) options.success(); },
     onLocationChange() {}, offLocationChange() {},
   };
   delete require.cache[BG]; delete require.cache[PRIVACY];

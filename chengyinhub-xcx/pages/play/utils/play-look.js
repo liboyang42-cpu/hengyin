@@ -1,0 +1,77 @@
+// 主题画面风格在玩家页的两个入口(theme-look.js 读 / look-transition 转场)。从 index.js 抽出:
+// 那个文件的 UI 门禁基线按行号登记,新方法放这里,index.js 只留单行挂钩,行号不动。
+const themeLook = require('./theme-look.js');
+const PUNCT = /^[,.!?;:，。！？；：、」』）)…—]$/;
+const GLYPH = 'ｱｲｳｴｵｶｷｸｹｺ01#%&*<>/=+';
+
+function methods() {
+  // 写成 const 对象再返回:台账 / 处理器门禁(xcx-scan)只扫模块里 `const X = {` 的键
+  const api = {
+    /** 读不懂的值回落默认(星尘 + 光圈 + 手写),老主题外观不变。 */
+    _applyLook(raw) {
+      // 没配过风格的老主题:标 legacy,星尘的新银河不套上去,原来的浮尘与场景光照旧
+      const look = Object.assign(themeLook.normalizeLook(raw), raw ? {} : { legacy: true });
+      this._look = look;
+      this._lookKey = JSON.stringify(look);
+      // lookOn:选过风格的主题,故事流才铺章节 / 主题配色的底(老主题保持纯黑故事背景)
+      this.setData({ lookClass: themeLook.lookClass(look), lookTransition: themeLook.resolveTransition(look), lookOn: !look.legacy });
+      // 浅底(主题配色白,或纸本 × 黄的牛皮纸):故事流在屏上时状态栏字换黑(见 _storyStatusBar)
+      this._storyLight = !look.legacy && (look.palette === 'WHITE' || (look.style === 'PAPER' && look.palette === 'YELLOW'));
+    },
+    /** 主题配色设了就统一用它,没设(老主题)各章沿用自己的章节配色。 */
+    _themePalette(chapterPreset) {
+      return (this._look && this._look.palette) || chapterPreset;
+    },
+    /** 末世每章的时间段(清晨 / 正午 / 日落 / 夜晚):按章节顺序取,只在末世里生效;没设 = 不加。 */
+    _chapterTime(i) {
+      const look = this._look, t = look && look.style === 'SURVIVAL' && look.times && look.times[i];
+      return t ? ' look-time--' + t.toLowerCase() : '';
+    },
+    /** 雷暴打闪:字跟着亮一下(远景画布已经整屏闪过);同一道闪只照一次。 */
+    _lookLightUp(flashAt) {
+      if (!flashAt || flashAt === this._litAt) return;
+      this._litAt = flashAt;
+      this.setData({ lookLit: true });
+      clearTimeout(this._litTimer);
+      this._litTimer = setTimeout(() => this.setData({ lookLit: false }), 420);
+    },
+    /** 故事正文第 i 段的文字动效(选过风格的主题才有):fx = 动效名;逐字类再给 chars(标点粘在前一个字上,不会单独掉到行首)。 */
+    _textFx(item, i) {
+      const look = this._look;
+      if (i === 0) this._textSeq = -1;   // 每章从第一段重新数(轮换只数正文段)
+      if (!look || look.legacy || !item || item.kind !== 'text' || !item.text) return {};
+      this._textSeq = (this._textSeq == null ? -1 : this._textSeq) + 1;
+      const fx = themeLook.textFxFor(look, this._textSeq);
+      if (!themeLook.textFxChars(fx)) return { fx };
+      const parts = Array.from(item.text).reduce((acc, ch) => { if (acc.length && PUNCT.test(ch)) acc[acc.length - 1] += ch; else acc.push(ch); return acc; }, []);
+      return { fx, chars: parts.map((ch, k) => { const a = Math.random() * 6.283, d = 30 + Math.random() * 50;
+        return { i: k, ch, r: Math.random().toFixed(3), dx: (Math.cos(a) * d).toFixed(1), dy: (Math.sin(a) * d).toFixed(1) }; }) };
+    },
+    /** 解码:这一段刚滑进屏幕时,单字先显示成乱码,分几拍逐字还原(只发这一段的 chars)。 */
+    _decodeLine(i) {
+      const key = 'chapterParas[' + i + '].chars', para = (this.data.chapterParas || [])[i];
+      if (!para || !para.chars || this.data.reducedMotion) return;
+      const real = para.chars.map((c) => c.ch), steps = 6;
+      clearTimeout((this._decodeTimers || {})[i]); this._decodeTimers = this._decodeTimers || {};
+      const tick = (k) => {
+        this.setData({ [key]: para.chars.map((c, j) => Object.assign({}, c, { ch: j < (real.length * k) / steps ? real[j] : GLYPH[(Math.random() * GLYPH.length) | 0], raw: j >= (real.length * k) / steps })) });
+        if (k < steps) this._decodeTimers[i] = setTimeout(() => tick(k + 1), 80);
+      };
+      tick(0);
+    },
+    /** 故事流开 / 关时调:浅底主题开着故事流用黑字状态栏,关掉回白字(封面、卡包页仍是深底)。 */
+    _storyStatusBar(on) {
+      if (!this._storyLight || typeof wx.setNavigationBarColor !== 'function') return;
+      wx.setNavigationBarColor({ frontColor: on ? '#000000' : '#ffffff', backgroundColor: on ? '#ffffff' : '#000000' }); /* ds-ok 微信 API 只收这两个字面色 */
+    },
+    /** 用风格的转场盖住画面,在完全盖住时执行 swap(换内容),再揭开;转场层不在 / 减动效时直接执行。 */
+    _withLookTransition(swap) {
+      const tx = this.data.reducedMotion || typeof this.selectComponent !== 'function' ? null : this.selectComponent('#lookTx');
+      if (!tx) { swap(); return; }
+      tx.run(swap);
+    },
+  };
+  return api;
+}
+
+module.exports = { methods };

@@ -1587,6 +1587,7 @@
  "A58b": {
   "data": {
    "pendingAuthorization": true,
+   "homeCityError": "",
    "mediaRows": [
     {
      "typeLabel": "示例typeLabel",
@@ -1599,16 +1600,15 @@
    ],
    "mediaLoading": false,
    "mediaError": "",
-   "submitError": "",
-   "failedAction": ""
+   "submitError": ""
   },
   "dropped": [],
   "switchKeys": [
+   "homeCityError",
    "mediaRows",
    "mediaLoading",
    "mediaError",
-   "submitError",
-   "failedAction"
+   "submitError"
   ]
  },
  "A58": {
@@ -1616,7 +1616,7 @@
    "pendingAuthorization": false,
    "submitting": false,
    "submitError": "",
-   "failedAction": "",
+   "homeCityError": "",
    "mediaRows": [
     {
      "typeLabel": "示例typeLabel",
@@ -1632,11 +1632,11 @@
   },
   "dropped": [],
   "switchKeys": [
+   "homeCityError",
    "mediaRows",
    "mediaLoading",
    "mediaError",
-   "submitError",
-   "failedAction"
+   "submitError"
   ]
  },
  "A59": {
@@ -17102,6 +17102,53 @@
   "dropped": [],
   "switchKeys": []
  },
+ "F202": {
+  "data": {
+   "show": true,
+   "kit": {
+    "type": "compare",
+    "prompt": "对照两条时间线：标出右侧所有发生在1943年以前的事。",
+    "left": {
+     "label": "世界",
+     "items": [
+      {
+       "id": "w1938",
+       "time": "1938",
+       "text": "奥地利被德国吞并"
+      },
+      {
+       "id": "w1939",
+       "time": "1939",
+       "text": "第二次世界大战爆发"
+      }
+     ]
+    },
+    "right": {
+     "label": "上海",
+     "items": [
+      {
+       "id": "s1938",
+       "time": "1938",
+       "text": "难民乘船抵达上海"
+      },
+      {
+       "id": "s1943",
+       "time": "1943",
+       "text": "无国籍难民限定居住区设立"
+      }
+     ]
+    },
+    "attempts": 0,
+    "passed": false,
+    "finished": false,
+    "lastCorrect": false,
+    "lastMarked": []
+   }
+  },
+  "target": "cy-playkit",
+  "dropped": [],
+  "switchKeys": []
+ },
  "F92": {
   "data": {
    "show": true,
@@ -18091,5 +18138,4 @@
   "dropped": [],
   "switchKeys": []
  }
-
 }

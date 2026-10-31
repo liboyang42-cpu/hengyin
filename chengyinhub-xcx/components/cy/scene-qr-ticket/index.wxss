@@ -13,7 +13,9 @@
 .voucher__qr { width: 258rpx; height: 258rpx; }
 .voucher__qr--empty { display: flex; align-items: center; justify-content: center; font-size: 23rpx; color: #6A7282; background: #F2F2F2; } /* ds-ok Figma 二维码占位槽 */
 .voucher__notch { position: absolute; left: 0; right: 0; top: 394rpx; height: 79rpx; background: #0A0A0A; display: flex; align-items: center; justify-content: center; } /* ds-ok Figma 黑色 Code 带 */
-.voucher__code { font-size: 40rpx; font-weight: 700; color: #FFFFFF; } /* ds-ok Figma Code 实测字号与反色 */
+.voucher__code { font-size: 40rpx; font-weight: 700; color: #FFFFFF; /* ds-ok Figma Code 实测字号与反色 */
+  /* 动态码是 90 多位的签名串,原样铺开会冲出两侧缺口(实走 B16):留出缺口宽度,超长省略,扫码不受影响 */
+  max-width: calc(100% - 140rpx); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .voucher__foot { position: absolute; left: 31rpx; right: 31rpx; top: 548rpx; display: flex; flex-direction: column; }
 .voucher__exp { font-size: 24rpx; color: #6A7282; line-height: 1.4; } /* ds-ok Figma 票面辅助文字 */
 .voucher__name { margin-top: 14rpx; font-size: 34rpx; font-weight: 700; color: #0A0A0A; } /* ds-ok Figma 票面标题 */

@@ -16,6 +16,7 @@
 const STEP_MS = 16;
 const SENSOR_GAP_MS = 3500;
 const R = 26;                  // 球半径,rpx。换算见下面 _r(按 750rpx 基准折成 px)
+const EMBED_H_RPX = 1000; // 内嵌球场高度,与 index.wxss 的 .bl--embed 同值
 const GRAVITY = 0.05;          // 倾斜 → 加速度。普通重力的三分之一
 const DAMP = 0.999;            // 阻尼几乎不给:球要一直有劲
 const EDGES = ['top', 'bottom', 'left', 'right'];
@@ -50,6 +51,7 @@ function tiltAccel(acc, zero) {
 Component({
   behaviors: [reducedMotionBehavior],
   properties: {
+    inline: { type: Boolean, value: false }, // 故事流内嵌:墙 = 这一块球场的四条边,不是手机四边
     show: { type: Boolean, value: false },
     kicker: { type: String, value: '撞够 30 次' },
     goal: { type: Number, value: 30 },
@@ -150,7 +152,8 @@ Component({
     _measure() {
       const info = wx.getSystemInfoSync ? wx.getSystemInfoSync() : { windowWidth: 375, windowHeight: 700 };
       this._w = info.windowWidth;
-      this._h = info.windowHeight;
+      // 内嵌时球场是故事流里一块 EMBED_H_RPX 高、整宽的场地(见 .bl--embed),墙就是它的四条边
+      this._h = this.data.inline ? EMBED_H_RPX * (info.windowWidth / 750) : info.windowHeight;
       /* rpx → px:750rpx = 屏宽,所以 1rpx = windowWidth/750 px。
          写死 R/2 只在 375pt 的屏上对,窄屏球会偏大、宽屏偏小 —— 而这一屏
          的判定是「球撞到边几次」,球的大小直接改变难度。 */

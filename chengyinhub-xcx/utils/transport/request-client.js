@@ -93,6 +93,7 @@ function createRequestClient(deps) {
   var getClientVersion = deps.getClientVersion || function () { return ''; };
   var upgradePrompted = false;
   var getUserID = deps.getUserID || function () { return ''; };
+  var getSessionRevision = deps.getSessionRevision || function () { return 0; };
   var reLogin = deps.reLogin || function (cb) { cb(false); };
   var promptLogin = deps.promptLogin || function () { return Promise.resolve(false); };
   var showToast = deps.showToast || function () {};
@@ -136,7 +137,8 @@ function createRequestClient(deps) {
     state.control = {
       isAuthenticatedContinuationCurrent: function () {
         if (state.aborted || state.sessionChanged || typeof state.renewalCurrent !== 'function'
-            || state.owner !== String(getUserID() || '') || state.authorization !== getAuthorization()) return false;
+            || state.owner !== String(getUserID() || '') || state.authorization !== getAuthorization()
+            || state.sessionRevision !== getSessionRevision()) return false;
         try { return state.renewalCurrent() === true; } catch (error) { return false; }
       },
       abort: function () {
@@ -154,11 +156,12 @@ function createRequestClient(deps) {
     var header = buildHeader(param, method);
     // 重试守卫存于内部 state(不污染调用方 param;复用同一 param 的多次请求各自独立重登)。
     // task/aborted 让调用方能取消当前尝试和静默重登后的下一跳；同一个 state 只暴露一个 control。
-    var state = _state || { retried: false, aborted: false, task: null, attempt: 0, transportRetryAttempt: 0, owner: String(getUserID() || ''), authorization: getAuthorization() };
+    var state = _state || { retried: false, aborted: false, task: null, attempt: 0, transportRetryAttempt: 0, owner: String(getUserID() || ''), authorization: getAuthorization(), sessionRevision: getSessionRevision() };
     var control = requestControl(state);
     if (state.aborted || state.sessionChanged) return control;
     function ownerChanged() { return state.owner !== String(getUserID() || ''); }
-    function sessionChanged() { return ownerChanged() || (param.auth !== false && state.authorization !== getAuthorization()); }
+    function sessionChanged() { return ownerChanged() || state.sessionRevision !== getSessionRevision()
+      || (param.auth !== false && state.authorization !== getAuthorization()); }
     function stopForSessionChange() {
       state.sessionChanged = true;
       var failure = { reason: 'sessionChanged', msg: '登录状态已变更，请重试' };
@@ -227,6 +230,7 @@ function createRequestClient(deps) {
               if (ok && owner && getAuthorization()) {
                 state.owner = owner;
                 state.authorization = getAuthorization();
+                state.sessionRevision = getSessionRevision();
                 send(param, customSiteUrl, state);
                 return;
               }
@@ -241,10 +245,12 @@ function createRequestClient(deps) {
               state.owner = String(getUserID() || '');
             }
             var ownSessionCleared = !ok && result && result.sessionCleared && !getUserID() && !getAuthorization();
-            if ((ownerChanged() && !ownSessionCleared) || (result && result.reason === 'sessionChanged')) { stopForSessionChange(); return; }
+            if (((ownerChanged() || !ok && state.sessionRevision !== getSessionRevision()) && !ownSessionCleared)
+                || (result && result.reason === 'sessionChanged')) { stopForSessionChange(); return; }
             if (ok) {
               if (result && typeof result.isCurrentSession === 'function' && !result.isCurrentSession()) { stopForSessionChange(); return; }
               state.authorization = getAuthorization();
+              state.sessionRevision = getSessionRevision();
               state.renewalCurrent = result && typeof result.isCurrentSession === 'function'
                 ? function () { return result.isCurrentSession(); } : null;
               send(param, customSiteUrl, state); // 用新 token 重试原请求(共享 state 防二次重登)

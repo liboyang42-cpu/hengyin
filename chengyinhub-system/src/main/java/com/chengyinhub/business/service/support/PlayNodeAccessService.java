@@ -312,6 +312,8 @@ public class PlayNodeAccessService {
             if (st.getStatus() == 1) return "队伍集合中,等队长开始行程";
             if (node == null || node.getChapterId() == null || st.getCurrentChapterId() == null) return null;
             if (node.getChapterId().equals(st.getCurrentChapterId())) return null;
+            // 自由探索「节点全开 · 随时开玩」:队长只管集合与开局,不按章节放行;商家核销本就不受此闸。
+            if (resolveMode(actId, node.getTopicId()) == com.chengyinhub.common.constant.PlayMode.FREE_COLLECT) return null;
             CmsTopicChapter cur = cmsTopicChapterService.selectCmsTopicChapterById(st.getCurrentChapterId());
             CmsTopicChapter mine = cmsTopicChapterService.selectCmsTopicChapterById(node.getChapterId());
             if (cur == null || mine == null || cur.getSortId() == null || mine.getSortId() == null) return null;

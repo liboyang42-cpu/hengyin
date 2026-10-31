@@ -1,0 +1,103 @@
+/* 画面风格预览。色板是四种风格的示意(与玩家页 .look--* 同值),不是可配颜色。 */
+.lp { padding: 0 var(--cy-page-x) var(--cy-space-5); }
+.lp__name { font-size: var(--cy-type-sheet-title); font-weight: 700; color: var(--cy-color-text-primary); margin-bottom: var(--cy-space-3); }
+.lp__frame { position: relative; height: 640rpx; border-radius: var(--cy-radius-lg); overflow: hidden; background: var(--lp-bg); color: var(--lp-ink);
+  --look-bg: var(--lp-bg); --look-a: var(--lp-acc); --look-b: var(--lp-acc2); }
+.lp__fx { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+.lp__tex { position: absolute; left: 0; top: 0; right: 0; bottom: 0; pointer-events: none; }
+.lp__body { position: absolute; left: 40rpx; right: 40rpx; bottom: 48rpx; display: flex; flex-direction: column; }
+.lp__kick { font-size: var(--cy-type-label); letter-spacing: 6rpx; color: var(--lp-mute); }
+.lp__title { margin-top: 12rpx; font-size: 52rpx; font-weight: 700; letter-spacing: 4rpx; color: var(--lp-title); } /* ds-ok 预览示例标题的展示字号 */
+.lp__story { margin-top: 20rpx; font-size: 34rpx; line-height: 1.8; font-family: 'CyStoryHand', "Kaiti SC", serif; } /* ds-ok 手写体在线加载,失败回落楷体 */
+.lp__opt { margin-top: 28rpx; display: flex; gap: 20rpx; align-items: baseline; padding: 22rpx 24rpx; border-left: 4rpx solid var(--lp-acc); background: var(--lp-soft); font-size: var(--cy-type-body); }
+.lp__opt-k { color: var(--lp-acc); font-weight: 700; }
+.lp__actions { display: flex; gap: var(--cy-space-3); margin-top: var(--cy-space-4); }
+.lp__btn { flex: 1; height: 96rpx; border-radius: 999rpx; display: flex; align-items: center; justify-content: center; font-size: var(--cy-type-button); font-weight: 600; background: var(--cy-color-surface-muted, rgba(0,0,0,.06)); color: var(--cy-color-text-primary); } /* ds-ok 底色兜底 */
+.lp__btn--primary { background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg); }
+/* 故事字体(与玩家页 .story-font--* 同族) */
+.story-font--song .lp__story { font-family: "Songti SC", "STSong", serif; } /* ds-ok */
+.story-font--kai .lp__story { font-family: "Kaiti SC", "STKaiti", "KaiTi", serif; } /* ds-ok */
+.story-font--hei .lp__story { font-family: -apple-system, "PingFang SC", sans-serif; } /* ds-ok */
+.story-font--bold .lp__story { font-family: -apple-system, "PingFang SC", sans-serif; font-weight: 900; font-style: italic; letter-spacing: -.01em; } /* ds-ok 粗斜(NRC 式) */
+/* 主题配色 × 风格:与玩家页同一张表(原型 v7 PAL);底色只由配色决定,参数只改纹理 / 霓虹 */
+.lpv.look--stardust.look-palette--default { --lp-bg: #0A0A0A; --lp-ink: #F2F2F0; --lp-title: #F2F2F0; --lp-mute: #9AA0AA; --lp-acc: #E9E2D0; --lp-acc2: #9AA0AA; --lp-soft: rgba(255,255,255,.06); } /* ds-ok */
+.lpv.look--stardust.look-palette--blue { --lp-bg: #0E1A33; --lp-ink: #F5F8FF; --lp-title: #F5F8FF; --lp-mute: #A9BBE0; --lp-acc: #CFE0FF; --lp-acc2: #A9BBE0; --lp-soft: rgba(255,255,255,.06); } /* ds-ok */
+.lpv.look--stardust.look-palette--red { --lp-bg: #2A0E12; --lp-ink: #FFF4F5; --lp-title: #FFF4F5; --lp-mute: #E0AAB1; --lp-acc: #FFB8AC; --lp-acc2: #E0AAB1; --lp-soft: rgba(255,255,255,.06); } /* ds-ok */
+.lpv.look--stardust.look-palette--yellow { --lp-bg: #2A2208; --lp-ink: #FFFBEF; --lp-title: #FFFBEF; --lp-mute: #DFCD9A; --lp-acc: #F2D58A; --lp-acc2: #DFCD9A; --lp-soft: rgba(255,255,255,.06); } /* ds-ok */
+.lpv.look--stardust.look-palette--white { --lp-bg: #F5F6F8; --lp-ink: #111318; --lp-title: #111318; --lp-mute: #5B6270; --lp-acc: #111318; --lp-acc2: #5B6270; --lp-soft: rgba(0,0,0,.06); } /* ds-ok */
+.lpv.look--paper.look-palette--default { --lp-bg: #1D1B18; --lp-ink: #ECE6D8; --lp-title: #ECE6D8; --lp-mute: #9A927F; --lp-acc: #D0503C; --lp-acc2: #9A927F; --lp-soft: rgba(255,255,255,.06); } /* ds-ok */
+.lpv.look--paper.look-palette--blue { --lp-bg: #1C2A44; --lp-ink: #EEF0EA; --lp-title: #EEF0EA; --lp-mute: #A2ADBF; --lp-acc: #E8C66A; --lp-acc2: #A2ADBF; --lp-soft: rgba(255,255,255,.06); } /* ds-ok */
+.lpv.look--paper.look-palette--red { --lp-bg: #3A1A17; --lp-ink: #F4E6DC; --lp-title: #F4E6DC; --lp-mute: #C9A596; --lp-acc: #E8C66A; --lp-acc2: #C9A596; --lp-soft: rgba(255,255,255,.06); } /* ds-ok */
+.lpv.look--paper.look-palette--yellow { --lp-bg: #E6DCC4; --lp-ink: #2B241A; --lp-title: #2B241A; --lp-mute: #7D715C; --lp-acc: #A3281D; --lp-acc2: #7D715C; --lp-soft: rgba(0,0,0,.06); } /* ds-ok */
+.lpv.look--paper.look-palette--white { --lp-bg: #F4F1EA; --lp-ink: #1E1C19; --lp-title: #1E1C19; --lp-mute: #7A756C; --lp-acc: #B0302A; --lp-acc2: #7A756C; --lp-soft: rgba(0,0,0,.06); } /* ds-ok */
+.lpv.look--survival.look-palette--default { --lp-bg: #0E1012; --lp-ink: #E4E7E9; --lp-title: #E4E7E9; --lp-mute: #8A9196; --lp-acc: #FF8A3D; --lp-acc2: #8A9196; --lp-soft: rgba(255,255,255,.06); } /* ds-ok */
+.lpv.look--survival.look-palette--blue { --lp-bg: #0B1626; --lp-ink: #EAF3FB; --lp-title: #EAF3FB; --lp-mute: #8FA6BD; --lp-acc: #FFB35C; --lp-acc2: #8FA6BD; --lp-soft: rgba(255,255,255,.06); } /* ds-ok */
+.lpv.look--survival.look-palette--red { --lp-bg: #1C0A0A; --lp-ink: #F3E3E0; --lp-title: #F3E3E0; --lp-mute: #B08A86; --lp-acc: #7FE6C4; --lp-acc2: #B08A86; --lp-soft: rgba(255,255,255,.06); } /* ds-ok */
+.lpv.look--survival.look-palette--yellow { --lp-bg: #2A1D0C; --lp-ink: #FFF2DC; --lp-title: #FFF2DC; --lp-mute: #CDB38A; --lp-acc: #8FD3FF; --lp-acc2: #CDB38A; --lp-soft: rgba(255,255,255,.06); } /* ds-ok */
+.lpv.look--survival.look-palette--white { --lp-bg: #E3E9EE; --lp-ink: #14202B; --lp-title: #14202B; --lp-mute: #5D6D7B; --lp-acc: #D4561E; --lp-acc2: #5D6D7B; --lp-soft: rgba(0,0,0,.06); } /* ds-ok */
+.lpv.look--cyber.look-palette--default { --lp-bg: #0B0B0F; --lp-ink: #ECEBE4; --lp-mute: #8A8C96; --lp-soft: rgba(255,255,255,.06); } /* ds-ok */
+.lpv.look--cyber.look-palette--blue { --lp-bg: #06101C; --lp-ink: #E2F1FF; --lp-mute: #7E93AC; --lp-soft: rgba(255,255,255,.06); } /* ds-ok */
+.lpv.look--cyber.look-palette--red { --lp-bg: #12060A; --lp-ink: #FFE8EA; --lp-mute: #A88088; --lp-soft: rgba(255,255,255,.06); } /* ds-ok */
+.lpv.look--cyber.look-palette--yellow { --lp-bg: #100E04; --lp-ink: #FFF6CC; --lp-mute: #A99E6E; --lp-soft: rgba(255,255,255,.06); } /* ds-ok */
+.lpv.look--cyber.look-palette--white { --lp-bg: #E6E7EA; --lp-ink: #101216; --lp-mute: #5E636E; --lp-soft: rgba(0,0,0,.06); } /* ds-ok */
+.lpv.look--paper.look-paper--card .lp__tex { background-color: rgba(0,0,0,.25); } /* ds-ok */
+.lpv.look--paper.look-paper--kraft .lp__tex { background-color: rgba(176,140,90,.14); } /* ds-ok */
+.lpv.look--cyber.look-neon--yellow_cyan { --lp-title: #F3E600; --lp-acc: #F3E600; --lp-acc2: #24E0E8; } /* ds-ok */
+.lpv.look--cyber.look-neon--cyan_pink { --lp-title: #2DE2E6; --lp-acc: #2DE2E6; --lp-acc2: #FF3B6B; } /* ds-ok */
+.lpv.look--cyber.look-neon--red_cyan { --lp-title: #FF2E4C; --lp-acc: #FF2E4C; --lp-acc2: #2DE2E6; } /* ds-ok */
+.lpv.look--paper .lp__tex { background: radial-gradient(rgba(90,70,40,.10) 1px, transparent 1.4px) 0 0 / 7rpx 7rpx, radial-gradient(ellipse 80% 70% at 50% 45%, transparent 55%, rgba(60,40,10,.3) 100%); } /* ds-ok 纸纹 */
+.lpv.look--paper.look-grain--light .lp__tex { opacity: .5; }
+.lpv.look--survival .lp__tex { background: radial-gradient(ellipse 80% 70% at 50% 45%, transparent 50%, rgba(0,0,0,.55) 100%); } /* ds-ok */
+.lpv.look--cyber .lp__tex { background: repeating-linear-gradient(180deg, transparent 0 4rpx, rgba(0,0,0,.22) 4rpx 6rpx); } /* ds-ok 扫描线 */
+/* 组件样式隔离,全局 .cy-pressed 进不来,本地定义一份(同 ai-assist)。 */
+.cy-pressed { opacity: .88; }
+/* 常驻在面板顶部时不留半屏的下边距,高度让位给下面的风格与预设 */
+.lp--embedded { padding-bottom: 0; }
+.lp--embedded .lp__frame { height: 480rpx; }
+/* 末世:第一章的时间段,与玩家页同一层天光 */
+.lpv.look--survival.look-time--dawn { background-image: linear-gradient(180deg, rgba(70,100,160,.35) 0%, rgba(240,180,140,.28) 100%); } /* ds-ok */
+.lpv.look--survival.look-time--noon { background-image: linear-gradient(180deg, rgba(255,255,255,.10) 0%, rgba(255,250,225,.06) 100%); } /* ds-ok */
+.lpv.look--survival.look-time--dusk { background-image: linear-gradient(180deg, rgba(60,40,110,.35) 0%, rgba(240,130,70,.42) 100%); } /* ds-ok */
+.lpv.look--survival.look-time--night { background-image: linear-gradient(180deg, rgba(0,4,16,.45) 0%, rgba(0,4,16,.2) 100%); } /* ds-ok */
+.lp__fx--front { z-index: 2; pointer-events: none; }
+
+/* ===== 故事文字动效:与玩家页 pages/play/index.wxss 同一套(选择器从 .chfull__para 换成 .lp__story);选了就在示例正文上重播一次。
+   浮现 = 原有 st-line 显形,不另写;逐字类把一段拆成 .tfx__c 单字。只用过渡 + 逐字延迟,不新增关键帧。 */
+.tfx__c{ display:inline-block; white-space:pre; }
+/* 逐字类:整段本身立即可见,显形交给每个字 */
+.lp__story.tfx--type, .lp__story.tfx--ink, .lp__story.tfx--gather, .lp__story.tfx--drop, .lp__story.tfx--wind, .lp__story.tfx--signal, .lp__story.tfx--decode{ opacity:1; transform:none; filter:none; }
+/* 打字机:一字一字立刻出现 */
+.tfx--type .tfx__c{ opacity:0; transition:opacity 0s linear calc(var(--i) * 70ms); }
+.tfx--type.is-in .tfx__c{ opacity:1; }
+/* 墨晕:字从洇开的墨里收拢成形 */
+.tfx--ink .tfx__c{ opacity:0; filter:blur(14rpx); transform:scale(1.35); transition:opacity .9s ease calc(var(--i) * 45ms), filter 1.2s ease calc(var(--i) * 45ms), transform 1.2s cubic-bezier(.22,1,.36,1) calc(var(--i) * 45ms); }
+.tfx--ink.is-in .tfx__c{ opacity:1; filter:none; transform:none; }
+/* 聚星:每个字从四散的星点聚过来 */
+.tfx--gather .tfx__c{ opacity:0; filter:blur(8rpx); transform:translate(var(--dx), var(--dy)) scale(.3); transition:opacity 1s ease calc(var(--r) * 900ms), filter 1.2s ease calc(var(--r) * 900ms), transform 1.6s cubic-bezier(.16,1,.3,1) calc(var(--r) * 900ms); }
+.tfx--gather.is-in .tfx__c{ opacity:1; filter:none; transform:none; }
+/* 落定:每个字从上方落下,轻轻回弹 */
+.tfx--drop .tfx__c{ opacity:0; transform:translateY(-32rpx); transition:opacity .4s ease calc(var(--i) * 40ms), transform .7s cubic-bezier(.34,1.56,.64,1) calc(var(--i) * 40ms); }
+.tfx--drop.is-in .tfx__c{ opacity:1; transform:none; }
+/* 风吹:字顺着风从右边斜着吹进来 */
+.tfx--wind .tfx__c{ opacity:0; filter:blur(6rpx); transform:translateX(68rpx) skewX(-18deg); transition:opacity .6s ease calc(var(--i) * 35ms), filter .8s ease calc(var(--i) * 35ms), transform .9s cubic-bezier(.22,1,.36,1) calc(var(--i) * 35ms); }
+.tfx--wind.is-in .tfx__c{ opacity:1; filter:none; transform:none; }
+/* 信号:像接收不稳的电台,闪几下才稳住 */
+.tfx--signal .tfx__c{ opacity:0; transition:opacity .9s steps(5, jump-both) calc(var(--r) * 700ms); }
+.tfx--signal.is-in .tfx__c{ opacity:1; }
+/* 解码:乱码逐字还原(play-look _decodeLine 换字符),还没还原的字用强调色 */
+.tfx--decode .tfx__c.is-raw{ color:var(--look-b); opacity:.75; }
+/* 呼吸光:整段淡入后亮一下 */
+.lp__story.tfx--glow{ transform:none; filter:none; transition:opacity 1.2s ease, text-shadow 1.4s ease .6s; }
+.lp__story.tfx--glow.is-in{ text-shadow:0 0 30rpx var(--look-a); }
+/* 擦出:从左到右揭开 */
+.lp__story.tfx--wipe{ opacity:1; transform:none; filter:none; clip-path:inset(0 100% 0 0); transition:clip-path 1.3s cubic-bezier(.65,0,.35,1); }
+.lp__story.tfx--wipe.is-in{ clip-path:inset(0 0 0 0); }
+/* 雾散:很虚的一整段,慢慢变清楚 */
+.lp__story.tfx--fog{ transform:none; filter:blur(28rpx); letter-spacing:.25em; transition:opacity 2s ease, filter 2.6s ease, letter-spacing 2.6s ease; }
+.lp__story.tfx--fog.is-in{ filter:none; letter-spacing:0; }
+/* 霓虹点亮:灯管通电,闪两下亮起 */
+.lp__story.tfx--neon{ transform:none; filter:none; transition:opacity .6s steps(4, jump-both); }
+.lp__story.tfx--neon.is-in{ text-shadow:0 0 28rpx var(--look-a); }
+/* 扫描:一道扫描线从上到下扫过,扫过的地方才出现 */
+.lp__story.tfx--scan{ opacity:1; transform:none; filter:none; clip-path:inset(0 0 100% 0); transition:clip-path 1s linear; }
+.lp__story.tfx--scan.is-in{ clip-path:inset(0 0 0 0); }

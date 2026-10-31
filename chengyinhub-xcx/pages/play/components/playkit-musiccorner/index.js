@@ -26,6 +26,7 @@ const motion = require('../../../../utils/motion.js');
 Component({
   behaviors: [reducedMotionBehavior],
   properties: {
+    inline: { type: Boolean, value: false }, // 故事流内嵌:不出半屏,原位渲染
     show:      { type: Boolean, value: false },
     eyebrow:   { type: String,  value: '治愈音乐角' },
     arrived:   { type: Boolean, value: false },
@@ -40,7 +41,7 @@ Component({
     bars: BAR_HEIGHTS,
     litBars: 0,
     percent: 0,
-    positionLabel: '0:00',
+    positionLabel: '',
   },
   observers: {
     'position, duration': function (position, duration) {
@@ -48,7 +49,9 @@ Component({
       this.setData({
         litBars: litBarCount(position, duration, BAR_HEIGHTS.length),
         percent: pct,
-        positionLabel: formatTime(position),
+        // 没开始播时不写「0:00」:知道时长就写时长,不知道就不写;播放中写「进度 / 时长」(实走复核)
+        positionLabel: position > 0 ? (duration > 0 ? formatTime(position) + ' / ' + formatTime(duration) : formatTime(position))
+          : (duration > 0 ? formatTime(duration) : ''),
       });
     },
   },

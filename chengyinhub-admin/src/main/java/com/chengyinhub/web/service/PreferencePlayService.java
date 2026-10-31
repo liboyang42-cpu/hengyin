@@ -170,6 +170,8 @@ public class PreferencePlayService {
             throw new IllegalArgumentException("主题不存在");
         }
         List<PlayAttemptLog> attempts = attemptMapper.selectPreferenceResults(memberId, topicId);
+        // 一局没做过偏好玩法就没有可生成的内容:回空结果(页面据此不出这一屏),不在每次通关时报错(实走 B15)
+        if (attempts == null || attempts.isEmpty()) return new LinkedHashMap<String, Object>();
         if (!completedByMember(memberId, topicId, attempts)) {
             throw new IllegalArgumentException("完成主题后才能生成新生活操作系统");
         }

@@ -118,9 +118,18 @@ public class ApiPlayProgressController extends BaseController {
     @PostMapping("/answer")
     @DeadlockRetry
     public AjaxResult answer(String activityId, String nodeId, String answer, String topicId,
+            String routeActionId, Integer expectedRouteVersion, Long routeSessionId, String runtimeInstance, Integer authorityEpoch,
+            String longitude, String latitude, String accuracy)
+    {
+        return playBasicCommandApplication.answer(currentMemberId(), activityId, nodeId, answer, topicId, routeActionId, expectedRouteVersion, routeSessionId, runtimeInstance, authorityEpoch,
+                longitude, latitude, accuracy);
+    }
+
+    public AjaxResult answer(String activityId, String nodeId, String answer, String topicId,
             String routeActionId, Integer expectedRouteVersion, Long routeSessionId, String runtimeInstance, Integer authorityEpoch)
     {
-        return playBasicCommandApplication.answer(currentMemberId(), activityId, nodeId, answer, topicId, routeActionId, expectedRouteVersion, routeSessionId, runtimeInstance, authorityEpoch);
+        return answer(activityId, nodeId, answer, topicId, routeActionId, expectedRouteVersion, routeSessionId, runtimeInstance, authorityEpoch,
+                null, null, null);
     }
 
     public AjaxResult answer(String activityId, String nodeId, String answer, String topicId,

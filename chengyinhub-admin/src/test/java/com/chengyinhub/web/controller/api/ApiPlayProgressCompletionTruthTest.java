@@ -328,6 +328,23 @@ class ApiPlayProgressCompletionTruthTest
         assertEquals("该站配置异常，暂时无法打卡", dangling.get("msg"));
     }
 
+    /** 2026-10-30 复核:玩法没过就到达,要拿到明确的业务拒绝(不是异常),否则小程序把到达记成「结果待确认」锁死按钮。 */
+    @Test
+    void classicArriveBeforeTheGameIsPassedGetsAClearRefusal()
+    {
+        topic.setProductType(ProductType.ORIENTEERING);
+        node.setLongitude("121.5"); node.setLatitude("31.2");
+        com.chengyinhub.business.service.IAdvancedGameRuntimeService games = mock(com.chengyinhub.business.service.IAdvancedGameRuntimeService.class);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "advancedGameRuntimeService", games);
+        String a = String.valueOf(ACTIVITY), n = String.valueOf(NODE);
+
+        when(games.completeGate(eq(PLAYER), any(), any(), eq(NODE))).thenThrow(new com.chengyinhub.common.exception.ServiceException("请先完成高级玩法"));
+        AjaxResult early = BasicPlayCommandFixtures.arrive(controller, a, n, "121.5", "31.2", null, null, null, "10");
+        assertEquals("ADVANCED_FIRST", early.get("errorCode"));
+        assertEquals("请先完成高级玩法", early.get("msg"));
+        verify(progressService, never()).insertPlayerNodeProgress(any());
+    }
+
     @SuppressWarnings("unchecked")
     @Test
     void classicArriveStillCompletesThroughTheOriginalProgressPath()
@@ -456,6 +473,30 @@ class ApiPlayProgressCompletionTruthTest
 
     /** 正控:真答错 → 回执带 data.answerWrong 标记,前端才允许计一次错。 */
     @SuppressWarnings("unchecked")
+    @Test
+    void classicLocatedStationJudgesTheAnswerOnlyInsideTheFiftyMetreFence()
+    {
+        // 实走 A20(业主 2026-10-30 拍板「执行 50 米」):老路径到达即完成,作答时随带定位按 arrive 同一围栏判
+        topic.setProductType(ProductType.ORIENTEERING);
+        node.setTemplateId(900L); node.setLongitude("121.4737"); node.setLatitude("31.2304");
+        CmsMemberTemplate tpl = new CmsMemberTemplate();
+        tpl.setValidationMethod(1); tpl.setQuestionAnswer("正确答案");
+        when(templateService.selectCmsMemberTemplateById(900L)).thenReturn(tpl);
+        String a = String.valueOf(ACTIVITY), n = String.valueOf(NODE);
+
+        AjaxResult noFix = BasicPlayCommandFixtures.answer(controller, a, n, "乱写一个", null);
+        assertEquals("ARRIVE_FIRST", noFix.get("errorCode"));
+        AjaxResult far = BasicPlayCommandFixtures.answerAt(controller, a, n, "乱写一个", null, "121.4837", "31.2304", "10");
+        assertEquals("ARRIVE_FIRST", far.get("errorCode"));
+        AjaxResult blurry = BasicPlayCommandFixtures.answerAt(controller, a, n, "乱写一个", null, "121.4737", "31.2304", "200");
+        assertEquals("ARRIVE_FIRST", blurry.get("errorCode"));
+        verify(progressService, never()).insertPlayerNodeProgress(any());
+
+        AjaxResult near = BasicPlayCommandFixtures.answerAt(controller, a, n, "乱写一个", null, "121.4739", "31.2304", "10");
+        assertEquals(null, near.get("errorCode"));
+        assertEquals("答案不正确", near.get("msg"), "围栏内照常判题");
+    }
+
     @Test
     void wrongAnswerResponseCarriesTheAnswerWrongMarker()
     {
@@ -697,6 +738,30 @@ class ApiPlayProgressCompletionTruthTest
         when(runtime.canPlay(PLAYER,TOPIC,ACTIVITY,NODE,"pick-proof")).thenReturn(true);
         BasicPlayCommandFixtures.frozenRun(controller,ACTIVITY,TOPIC,NODE,3,json.readTree("{\"validationMethod\":3,\"correctAnswer\":\"C\"}"));
         AjaxResult pick=BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "c", null, "pick-proof", 3);assertEquals(200,pick.get("code"));verify(runtime).recordPlayerArrival(PLAYER,TOPIC,ACTIVITY,NODE,"pick-proof",3,"ANSWER");verify(progressService,never()).insertPlayerNodeProgress(any());verify(pointsAwardService,never()).award(anyLong(),anyLong(),anyLong(),any());
+    }
+
+    /** 实走 A20(业主 2026-10-30 拍板「执行 50 米」):本局路线里有坐标的站,未经 GPS 记过到达不得作答;到过就照常判题。 */
+    @Test void locatedGenericStationRefusesAnswersUntilTheGpsArrivalIsRecorded() throws Exception {
+        topic.setProductType(ProductType.ORIENTEERING);node.setTemplateId(9L);
+        com.chengyinhub.business.service.ITopicRouteRuntimeService runtime=mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller,"topicRouteRuntimeService",runtime);
+        when(runtime.canPlay(eq(PLAYER),eq(TOPIC),eq(ACTIVITY),eq(NODE),anyString())).thenReturn(true);
+        when(runtime.genericPlayer(PLAYER,TOPIC,ACTIVITY)).thenReturn(true);
+        com.fasterxml.jackson.databind.ObjectMapper json=new com.fasterxml.jackson.databind.ObjectMapper();
+        when(runtime.nodeArrivalConfig(PLAYER,TOPIC,ACTIVITY,NODE)).thenReturn(json.readTree("{\"longitude\":\"121.47\",\"latitude\":\"31.23\"}"));
+        when(runtime.nodeAnswers(PLAYER,TOPIC,ACTIVITY,NODE)).thenReturn(json.readTree("{\"validationMethod\":3,\"correctAnswer\":\"C\"}"));
+        PlayerNodeProgress proof=new PlayerNodeProgress();proof.setStatus(0);when(proofService.markArrived(PLAYER,ACTIVITY,node)).thenReturn(proof);
+        BasicPlayCommandFixtures.frozenRun(controller,ACTIVITY,TOPIC,NODE,3,json.readTree("{\"validationMethod\":3,\"correctAnswer\":\"C\"}"));
+
+        when(proofService.hasArrived(PLAYER,ACTIVITY,NODE)).thenReturn(false);
+        AjaxResult refused=BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "c", null, "pick-early", 3);
+        assertEquals(500,refused.get("code"));
+        assertEquals("ARRIVE_FIRST",refused.get("errorCode"));
+        verify(runtime,never()).recordPlayerArrival(anyLong(),anyLong(),anyLong(),anyLong(),any(),any(),anyString());
+
+        when(proofService.hasArrived(PLAYER,ACTIVITY,NODE)).thenReturn(true);
+        AjaxResult answered=BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "c", null, "pick-arrived", 3);
+        assertEquals(200,answered.get("code"));
     }
 
     @Test void originalPublishedAnswerSurvivesUnbindButDoesNotGrantLegacyCompletionOrRewards() throws Exception {

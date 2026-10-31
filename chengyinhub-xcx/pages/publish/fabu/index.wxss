@@ -4882,3 +4882,4 @@ page { background: var(--cy-btn-solid-bg); }
 .pw-custom__t { flex: 1; font-size: var(--cy-type-body); color: var(--cy-color-text-primary); }
 .pw-custom__v { font-size: var(--cy-type-body); font-variant-numeric: tabular-nums; }
 .pw-custom__done { margin-top: var(--cy-space-3); height: 100rpx; border-radius: var(--cy-radius-lg); display: flex; align-items: center; justify-content: center; font-size: var(--cy-type-button); font-weight: 700; background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg); }
+@import "./look-sheet.wxss"; /* 画面风格 */

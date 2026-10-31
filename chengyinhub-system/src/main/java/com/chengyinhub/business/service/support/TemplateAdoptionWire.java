@@ -10,7 +10,10 @@ import java.util.List;
 public final class TemplateAdoptionWire {
     private TemplateAdoptionWire() {}
     public static JsonNode strings(Object value, String field) {
-        JsonNode node = new ObjectMapper().findAndRegisterModules().valueToTree(value);
+        return strings(value, field, new ObjectMapper().findAndRegisterModules());
+    }
+    public static JsonNode strings(Object value, String field, ObjectMapper mapper) {
+        JsonNode node = mapper.valueToTree(value);
         visit(node, field); return node;
     }
     private static void visit(JsonNode node, String field) {

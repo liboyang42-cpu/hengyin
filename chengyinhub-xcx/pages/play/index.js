@@ -138,7 +138,7 @@ const PLAY_STORY_CARD = Object.freeze({
 // S9 暗色底图配置已抽到 utils/map-style.js(roam 页共用同一份,避免只改一页导致半暗半亮)。
 // 接入文档见 components/cy/free-map/DARK_MAP.md。
 const { MAP_STYLE: MAP_DARK } = require('../../utils/map-style.js');
-const storyScene = require('./utils/story-scene.js');
+const storyScene = require('./utils/story-scene.js'); const themeLook = require('./utils/theme-look.js'); const lookFx = require('./utils/look-fx.js'); /* 主题画面风格:风格层粒子 + 转场 + 故事字体 */
 const lifeArchive = require('./utils/life-archive.js');
 const storyResume = require('./utils/story-resume.js');
 /* 内心声音(原型 VOICES 表原值);第 3 档异常时两个声音改名(越往后越像机器)。 */
@@ -217,18 +217,30 @@ function uuid4() {
   });
 }
 
+// 自有域名(OSS / 主站)的签名链接历史上存成 http://;同一签名走 https 可取。与 utils/wxs/img.wxs 的 OWN_HTTP 同口径。
+// 照片模型处理单独同意已问过的那一局(账号|主题|路线局),见 SUBMIT_PHOTO_CHECK
+const PHOTO_CONSENT_SCOPE_KEY = 'cy_photo_consent_run_v1';
+
+function secureOwnMedia(url) {
+  return String(url || '').replace(/^http:\/\/(chengyin-oss\.oss-cn-shanghai\.aliyuncs\.com|www\.chengyinhub\.com)\//i, 'https://$1/');
+}
+
 function req(url, method, data, header, silentError) {
   const basic = method === 'POST' && (['/api/play/answer', '/api/play/checkin', '/api/play/arrive', '/api/play/photo', '/api/play/puzzle/reveal', '/api/play/sensor-result'].includes(url) || /^\/api\/play\/preference\/[1-9][0-9]*\/submit$/.test(url));
   if (basic && data && typeof data._intentCurrent === 'function' && !data._intentCurrent()) return Promise.resolve({ obsolete: true });
   if (basic && data && data._intentOwner != null && data._intentOwner !== String((app.getUserID && app.getUserID()) || '')) return Promise.resolve({ obsolete: true });
   if (basic && data && data.receiptOnly) {
-    return req('/api/play/action-receipt', 'GET', { activityId: data.activityId, topicId: data.topicId, nodeId: data.nodeId, routeActionId: data.routeActionId }, undefined, true).then(response => {
+    const receiptQuery = { topicId: data.topicId, nodeId: data.nodeId, routeActionId: data.routeActionId };
+    if (data.activityId != null) receiptQuery.activityId = data.activityId;
+    return req('/api/play/action-receipt', 'GET', receiptQuery, undefined, true).then(response => {
       return response.intentTerminal ? response : Object.assign({}, response, { code: 520, intentUnknown: true, httpFail: true });
     });
   }
   if (basic && data && data.routeSessionId == null) {
     const owner = data._intentOwner;
-    return req('/api/play/action-context', 'GET', { activityId: data.activityId, topicId: data.topicId, nodeId: data.nodeId }, undefined, true).then(response => {
+    const contextQuery = { topicId: data.topicId, nodeId: data.nodeId };
+    if (data.activityId != null) contextQuery.activityId = data.activityId;
+    return req('/api/play/action-context', 'GET', contextQuery, undefined, true).then(response => {
       if (typeof data._intentCurrent === 'function' && !data._intentCurrent()) return { obsolete: true };
       if (owner != null && owner !== String((app.getUserID && app.getUserID()) || '')) return { obsolete: true };
       if (!(response.code == 200 || response.code == '200') || !response.data) return response;
@@ -384,7 +396,7 @@ const themeTrade = require('./utils/theme-trade.js');
 const themePlans = require('./utils/theme-plans.js');
 const playerOps = require('./utils/theme-player-ops.js');
 const { loadStoryFont } = require('./utils/story-font.js');
-const playOverlays = require('./utils/play-hud-overlays.js');
+const playOverlays = require('./utils/play-hud-overlays.js'); const playTopbar = require('./utils/play-topbar.js'); const playLook = require('./utils/play-look.js'); /* 故事流顶栏:罗盘⇄地图、背包、案件册、各站奖励 */
 Page({
   ...journeyCheckRecovery.methods(req),
   ...orientLifecycle.methods((url, method, data) => {
@@ -409,11 +421,11 @@ Page({
   ...themeTrade.methods(req),
   ...themePlans.methods(req),
   ...playerOps.methods(req),
-  ...playOverlays.methods(req, uuid4),
+  ...playOverlays.methods(req, uuid4), ...playTopbar.methods(req), ...playLook.methods(),
   _routeState: normalizeRouteState(null),
 
   data: {
-    ...orientLifecycle.data,
+    ...orientLifecycle.data, ...playTopbar.data,
     arrivalGuard: null,
     guardAppealView: null,
     communityPostWrite: false,
@@ -472,13 +484,15 @@ Page({
     chapter: { idxLabel: '第一章', name: '', description: '', cover: '', mileage: '', timeText: '', atmospherePreset: 'DEFAULT', atmosphereClass: 'atmosphere--default' },
     previewEnding: { show: false, list: [], idx: 0 },
     bootStage: '',   // 开局「开机」动画的阶段(on/line/open/fade),空 = 不显示   // W-15 试玩末尾的结局卡(只在预览出现)
-    chapterCards: [],             // 横滑章节卡(buildChapterCards)
+    chapterCards: [], /* 横滑章节卡(buildChapterCards) */ lookClass: themeLook.lookClass(null), lookTransition: themeLook.resolveTransition(null), /* 主题画面风格(/api/play/nodes 的 look) */
     // mode2(自由探索)首屏:卡包 → 六宫格。动画标志位只驱动 WXSS class,不参与业务判定。
     // 四拍:② 蓄力(摇+压暗) → ③ 横撕(封口条扯走+爆炸) → ④ 发牌(逐张飞出) → 空袋下沉。
     // 奖励掉落卡:带服务端稳定 ID(badgeCode),可跳到徽章墙回读,不是一闪而过的 toast
     rewardDrop: { show: false, text: '', badges: [] },
     ringSegs: [],                 // 已核销环:等分间断条,一家一条,核销一家亮一条(见 _ringSegs)
     topicName: '',                // 卡包印刷用:一章一商家后 chapter.name 只是第一章,不能拿它当主题名
+    topicAudioUrl: '',            // 主题配乐:游玩页循环底乐(作者媒体)
+    themeBgmOn: true,
     topicCover: '',               // 卡包首屏底图:主题长图,虚化后铺底(没有就退回 chapter.cover)
     topicDesc: '',                // 通行证首屏那段简介:同理,chapters[0].description 讲的是第一家店的事
     seatTiles: [], packOpen: false, packShake: false, packBurst: false,
@@ -593,7 +607,7 @@ Page({
   },
 
   onLoad(options) {
-    loadStoryFont(); // P-60:故事流手写体(未配置 / 失败时 .cy-story-hand 回落系统字体)
+    loadStoryFont(); /* P-60:故事流手写体(未配置 / 失败时 .cy-story-hand 回落系统字体) */ this._initTopbar(); /* 左上角上次选的显示(罗盘 / 地图) */
     this._playOwner = this._playMember();
     this._playLoginContext = this._capturePlayLoginContext();
     this._playDisposed = false;
@@ -711,13 +725,14 @@ Page({
     return !this._playDisposed && owner === this._playMember()
       && this._playLoginContext.generation === current.generation;
   },
-  onShow() {
+  onShow() { if (this.data.navMap) this._startHeading(); /* 地图档回到前台继续跟朝向 */
     // 只看账号是否已切换(卸载态由各回调自己的 _isPlayAccountCurrent 挡)
     if (this._playOwner !== undefined && this._playOwner !== this._playMember()) {
       this._stopLeadPoll(); this._stopTracking(); audioSession.pauseAll(); audioSession.releaseAwake();
       wx.reLaunch({ url: '/pages/index/index' });
       return;
     }
+    if (this._themeBgm && this.data.themeBgmOn) { try { this._themeBgm.play(); } catch (e) {} }
     this.restoreGuardAppeal();
     this._syncCommunityEntry();
     this._themeHidden = false; this._startThemePoll();
@@ -728,6 +743,17 @@ Page({
     if (this.data.chapStory.show) audioSession.keepAwake('chapStory', true);
     this._resetPackFx();   // onHide 清掉定时器后,四拍/拖拽的中间态标志必须归零,否则包把自己挡死
     if (!this.data.isPreview && !this.data.isMock && (this.data.activityId || this.data.topicId) && (!this.data.loading || this._playReloadOnShow)) { this._playReloadOnShow = false; this.loadData(false); }
+    else this._consumePendingStart();
+  },
+  /** 商家页交回来的玩法:等本页重读落定再开(见 merchant/index.js _handoffToPlayHost)。null 撤销排队。 */
+  queueStartGame(node) { this._pendingStartNode = node || null; },
+  _consumePendingStart() {
+    const pending = this._pendingStartNode;
+    if (!pending) return;
+    this._pendingStartNode = null;
+    const fresh = this._nodeById(pending.nodeId);
+    // 商家页只在已进店时交接;重读回来的节点若还没带上进店事实,以交接时的为准
+    this.startGame(Object.assign({}, pending, fresh || {}, { arrived: true }));
   },
 
   // M2 会话参数:活动会话带 activityId,自玩会话带 topicId(后端二选一,活动优先)
@@ -976,7 +1002,9 @@ Page({
   },
 
   onUnload() {
-    this.suspendOrientLifecycle();
+    this._stopStationBgm();
+    this._stopThemeBgm();
+    this.suspendOrientLifecycle(); this._stopTopbar();
     this.setData({ arrivalGuard: null });
     this._playDisposed = true;
     if (this._leadVerificationWorkflow) { this._leadVerificationWorkflow.destroy(); this._leadVerificationWorkflow = null; }
@@ -1023,7 +1051,7 @@ Page({
   // 2026-08-20 并 master:开卡包的三个 timeout 与定位无关,该清照清;
   //    只把 master 那侧的 _watching=false / offLocationChange / stopLocationUpdate 三句拿掉。
   onHide() {
-    this.suspendOrientLifecycle();
+    this.suspendOrientLifecycle(); this._stopTopbar();
     this.setData({ arrivalGuard: null });
     this._leadArrivalEpoch = (this._leadArrivalEpoch || 0) + 1; this._leadArriving = false;
     this._playLoadEpoch = (this._playLoadEpoch || 0) + 1;
@@ -1046,6 +1074,14 @@ Page({
     });
   },
 
+  /** 这一局的用时:页内时钟只从本次进页算起,中途退出重进就只剩最后几十秒(实走 B15 显示 0:00:30,实际约 20 分钟)。
+   *  取它与「首站完成 → 末站完成」跨度中较大的一个。 */
+  _runElapsedSeconds() {
+    const clock = this._sessionClock ? this._sessionClock.elapsedSeconds() : 0;
+    const stamps = (this.data.nodes || []).map((n) => Number(n.doneAt) || 0).filter((t) => t > 0);
+    const span = stamps.length > 1 ? Math.round((Math.max.apply(null, stamps) - Math.min.apply(null, stamps)) / 1000) : 0;
+    return Math.max(clock, span);
+  },
   _ensureSessionClock() {
     if (!this._sessionClock) {
       this._sessionClock = createSessionClock();
@@ -1304,7 +1340,8 @@ Page({
   openPack() {
     if (this._dragMoved) return;   // 刚做完一次拖拽,吞掉紧跟着的 tap
     if (this.data.packOpen || this.data.packShake || this.data.packTear || this.data.tearPct > 0) return;   // 播放中再点不重入
-    if (this.data.reducedMotion) { this.setData({ packOpen: true, headIn: true }); return; }
+    this._startThemeBgm();
+    if (this.data.reducedMotion) { this.setData({ packOpen: true, headIn: true }); if (!this.data.isPreview) storyResume.patch(this._runSessionScope(), { packOpened: true }); return; }
     this._packTimers = this._packTimers || [];
 
     this.setData({ packShake: true, packDim: true });
@@ -1333,7 +1370,7 @@ Page({
       // 早置会把还在飞的卡强行拍到落点。
       const n = this.data.seatTiles.length || 1;
       const done = (n - 1) * DEAL_STAGGER + DEAL_FLIGHT;
-      this._packTimers.push(setTimeout(() => this.setData({ packOpen: true }), done + 60));
+      this._packTimers.push(setTimeout(() => { this.setData({ packOpen: true }); if (!this.data.isPreview) storyResume.patch(this._runSessionScope(), { packOpened: true }); }, done + 60));
       this._packTimers.push(setTimeout(
         () => this.setData({ packBurst: false, blastRays: [], blastShards: [] }), done + 400));
     }, delay));
@@ -1648,7 +1685,7 @@ Page({
     if (st.playing) { this._stopChapAudio(); return; }
     if (!this._chapAudio) {
       const ctx = audioSession.register(wx.createInnerAudioContext(), { kind: 'chapter' });
-      ctx.src = st.audio;
+      ctx.src = secureOwnMedia(st.audio);
       // 三个终态都要把按钮态收回去,否则暂停图标会一直亮着
       ctx.onPlay(() => audioSession.keepAwake('chapAudio', true));
       ctx.onPause(() => audioSession.keepAwake('chapAudio', false));
@@ -1735,7 +1772,7 @@ Page({
           const cy = it.top + it.height / 2 - box.top;
           const inView = that.data.reducedMotion || (it.bottom > box.top + 80 && it.top < box.bottom - 40);
           if (ln.in && !inView) return { ...ln, in: false, dir: cy < 0 ? 'down' : 'up', d: 0 };
-          if (!ln.in && inView) { const d = (order++) * 0.05; return { ...ln, in: true, dir, d }; }
+          if (!ln.in && inView) { const d = (order++) * 0.35; if (chapterFull && ln.fx === 'decode') that._decodeLine(i); return { ...ln, in: true, dir, d }; } /* 解码:滑进来时才开始还原 */
           return ln;
         });
         // 只发显形状态中真正改变的路径,不把文字、图片与玩法配置整表重传。
@@ -1757,7 +1794,7 @@ Page({
    *  视差幅度大于手指位移:k>1 的层跟手跑得比手快,近的才「近」。 */
   _startStoryDust() {
     this._stopStoryDust();
-    if (this.data.chapterFull) return;
+    this._storyStatusBar(true); /* 浅底主题:故事流在屏上时状态栏黑字 */
     if (this.data.reducedMotion) return;      // 降低动态:静止的星点即可,不跑 rAF
     // 越往后越不正常 · 第 1 档起「字偶尔闪」:隔几秒挑一段带档位的闪 90ms(不占 keyframes 额度)
     this._oddTimer = setInterval(() => {
@@ -1804,13 +1841,13 @@ Page({
           if (!near) that._sceneCur = storyScene.step(that._sceneCur || storyScene.initial(that._sceneTarget || 'city'),
             that._sceneTarget || 'city', 0.025);
           const cu = that._sceneCur || storyScene.initial('city');
-          if (!near) that._paintSceneLight(ctx, W, H, cu);
-          const rgb = 'rgb(' + cu.col.map(Math.round).join(',') + ')';
+          if (!near && !lookFx.dustMod(that._look).clean) that._paintSceneLight(ctx, W, H, cu); /* 星尘:背景干净,不叠场景光 */
+          const lm = lookFx.dustMod(that._look); /* 主题画面风格对浮尘的修正(星尘调密度/速度/光色,其它风格收掉大半) */ const rgb = 'rgb(' + (lm.col || cu.col).map(Math.round).join(',') + ')';
           for (const p of that._dust) {
             if ((p.z > 1.2) !== near) continue;
-            if (p.k > cu.n) continue;
+            if (p.k > cu.n * lm.n) continue;
             // 自己慢慢漂 + 场景的风向(原型 vx/vy × z × 1.2,量纲同为像素每帧)
-            p.x += (p.vx * 0.4 + cu.vx * p.z * 1.2) / W; p.y += (p.vy * 0.4 + cu.vy * p.z * 1.2) / H;
+            p.x += (p.vx * 0.4 + cu.vx * p.z * 1.2) * lm.speed / W; p.y += (p.vy * 0.4 + cu.vy * p.z * 1.2) * lm.speed / H;
             if (p.x < -0.05) p.x = 1.05; if (p.x > 1.05) p.x = -0.05;
             const y = ((p.y * H - off * p.z) % (H * 2) + H * 2) % (H * 2) - H * 0.5;
             ctx.globalAlpha = Math.min(1, p.a * cu.alpha / 0.5);
@@ -1819,8 +1856,8 @@ Page({
             if (p.shape === 0) ctx.fillRect(x, y, s, s);
             else if (p.shape === 1) { ctx.beginPath(); ctx.arc(x, y, s / 2, 0, 6.2832); ctx.fill(); }
             else { ctx.beginPath(); ctx.moveTo(x, y - s / 2); ctx.lineTo(x + s / 2, y + s / 2);
-              ctx.lineTo(x - s / 2, y + s / 2); ctx.closePath(); ctx.fill(); }
-          }
+              ctx.lineTo(x - s / 2, y + s / 2); ctx.closePath(); ctx.fill(); } } /* 风格层(末世天气 / 夜城电流)只画在远景那张上,字盖在它上面 */ if (!near) { if (!that._lookFx || that._lookFx.key !== that._lookKey) { that._lookFx = lookFx.create(that._look, W, H); that._lookFx.key = that._lookKey; } lookFx.draw(that._lookFx, ctx, W, H, Date.now()); ctx.globalAlpha = 1;
+          } else if (that._lookFx) { lookFx.drawFront(that._lookFx, ctx, W, H, Date.now()); that._lookLightUp(that._lookFx.flashAt); } /* 字前面:近星 / 水珠 / 沙雾;打闪时把字照亮 */
           // ⚠️ 只在预览态回写帧计数:静态截图看不出「粒子有没有在动」,
           //    而这正是之前漏掉的 bug(漂移量纲写错,每帧只挪 0.01px,看着完全静止)。
           //    生产态不写 —— 一秒一次 setData 是白花的开销。
@@ -1902,7 +1939,7 @@ Page({
   },
 
   _stopStoryDust() {
-    clearInterval(this._oddTimer);
+    clearInterval(this._oddTimer); this._storyStatusBar(false);
     this._dust = null;
     Object.keys(this._dustCanvases || {}).forEach(id => {
       const cv = this._dustCanvases[id];
@@ -2209,7 +2246,7 @@ Page({
     this._stopShopNpcVoice();
     const audio = audioSession.register(wx.createInnerAudioContext(), { kind: 'npc' });
     this._shopNpcVoiceAudio = audio;
-    audio.src = audioUrl;
+    audio.src = secureOwnMedia(audioUrl);
     audio.onEnded(() => this._stopShopNpcVoice());
     audio.onError(() => this._stopShopNpcVoice());
     audio.play();
@@ -2484,6 +2521,13 @@ Page({
       return true;
     }
     const prev = (this.data.nodes || []).find((n) => String(n.nodeId) === String(node.unlockAfterNodeId));
+    // locked 是进页那一刻的快照:前置站刚在本页完成时它还没刷新,不能再拿「先完成刚完成的那站」挡人。
+    // 服务端完成入口另有硬闸,这里放行只影响提示层。
+    if (prev && prev.done) {
+      const idx = (this.data.nodes || []).indexOf(node);
+      if (idx >= 0) this.setData({ ['nodes[' + idx + '].locked']: false });
+      return false;
+    }
     cyToast(prev ? ('先完成「' + prev.name + '」才会解锁') : '前路未知 · 先完成前置关卡');
     return true;
   },
@@ -3697,7 +3741,9 @@ Page({
     } else {
       // 无块流的存量章节:沿用旧口径(描述 + 已完成节点的手记),行为逐字不变
       push(this.data.chapter.description);
-      nodes.forEach((n) => { if (n.done && n.story) push(n.story); });
+      // 只接本章节点的手记:不限章节时第 2 章会把第 1 章各站正文整段重放(实走 A17)
+      const chapId = this.data.chapter && this.data.chapter.id;
+      nodes.forEach((n) => { if (n.done && n.story && (chapId == null || String(n.chapterId) === String(chapId))) push(n.story); });
       /* 没有块流就没有「节点在哪一块」可对:正开着的内嵌玩法只能接在末尾。下面那条兜底要求
          _playKitNodeId 为空,而开站必然记下它 ⇒ 无块流章节的内嵌玩法以前一律不铺,
          玩家只看见手记和「继续探索」,玩法永远打不开(2026-10-27 生产实测:南京路附录盲盒)。 */
@@ -3718,13 +3764,13 @@ Page({
       chapterParas: items.map((item, i) => Object.assign({
         i, text: '', url: '', audioKey: 'ch' + i,
         in: !!this.data.reducedMotion, dir: 'up', d: 0,
-      }, item)),
+      }, item, item.url ? { url: secureOwnMedia(item.url) } : {}, this._textFx(item, i))),   /* 故事流语音 / 配图升 https;文字动效:选过风格的主题才有 */
       storyChat: false,
     }, () => {
       if (!wasOpen) this._storyTop = 0;
       this.showChapterGate();
       if (!wasOpen) this._resumeStory();
-      if (autoNodeId != null) this._autoInline(autoNodeId);
+      /* (行位保留:此处原有代码已移除) */
       this.measureChapter();
       if (!this.data.chapterGate.show) this.playChapterAudio();
       this._enterThemeChapter();
@@ -3746,9 +3792,65 @@ Page({
     if (!Array.isArray(chapter.blocks) || seen || this.data.storyIntro.show) { this.openChapterFull(); return; }
     this.setData({ storyIntro: { show: true, out: false, title: this.data.topicName || chapter.name || '', line: introLine(this.data.topicDesc) } });
   },
+  /** 主题配乐:作者在主题上配的曲子(详情页同一条),游玩页低音量循环当底乐。
+   *  只在玩家第一次点「开始游戏 / 撕卡包」后起播(小程序音频要用户手势),旁白与玩法音频照常叠在上面。 */
+  _startThemeBgm() {
+    const url = this.data.topicAudioUrl;
+    if (!url || !this.data.themeBgmOn || this.data.isPreview || this._themeBgm) return;
+    const ctx = audioSession.register(wx.createInnerAudioContext(), { kind: 'bgm' });
+    ctx.src = secureOwnMedia(url);
+    ctx.loop = true;
+    ctx.volume = 0.25;
+    ctx.onError(() => { this._stopThemeBgm(); });
+    this._themeBgm = ctx;
+    ctx.play();
+  },
+  _stopThemeBgm() {
+    if (!this._themeBgm) return;
+    audioSession.unregister(this._themeBgm);
+    try { this._themeBgm.stop(); this._themeBgm.destroy(); } catch (e) {}
+    this._themeBgm = null;
+  },
+  /* 站点背景音乐(模板「背景音乐」):故事流里内嵌的玩法不经 advanced-game 面板,原来一声不响(实走 A13 复核)。
+     与主题配乐同一首就继续放主题配乐;不同就暂停主题配乐、改放这一站的,收起玩法再换回来。跟随「背景音乐」开关。 */
+  _syncStationBgm(music) {
+    const src = music && typeof music.audioUrl === 'string' ? music.audioUrl : '';
+    if (!src || !this.data.themeBgmOn || this.data.isPreview) { this._stopStationBgm(); return; }
+    // 同一首曲子可能一边是 http、一边是 https,或签名参数不同:按升 https 后的文件地址比
+    const sameFile = (u) => secureOwnMedia(u).split('?')[0];
+    if (sameFile(src) === sameFile(this.data.topicAudioUrl)) { this._stopStationBgm(); this._startThemeBgm(); return; }
+    if (this._stationBgm && this._stationBgmSrc === src) return;
+    this._stopStationBgm();
+    if (this._themeBgm) { try { this._themeBgm.pause(); } catch (e) {} }
+    const ctx = audioSession.register(wx.createInnerAudioContext(), { kind: 'bgm' });
+    ctx.src = secureOwnMedia(src);
+    ctx.loop = music.loop !== false;
+    ctx.volume = 0.35;
+    ctx.onError(() => { this._stopStationBgm(); });
+    this._stationBgm = ctx; this._stationBgmSrc = src;
+    ctx.play();
+  },
+  _stopStationBgm() {
+    if (!this._stationBgm) return;
+    audioSession.unregister(this._stationBgm);
+    try { this._stationBgm.stop(); this._stationBgm.destroy(); } catch (e) {}
+    this._stationBgm = null; this._stationBgmSrc = '';
+    if (this._themeBgm && this.data.themeBgmOn) { try { this._themeBgm.play(); } catch (e) {} }
+  },
+  /** 入场码页轮询到商家核销:同页重读节点,进度环 / 卡片 / 已体验当场更新,不用退出重进(实走 B6)。 */
+  onTicketRedeemed() {
+    if (!this._isPlayAccountCurrent() || this.data.isPreview || this.data.isMock) return;
+    this.loadData(false);
+  },
+  toggleThemeBgm() {
+    const on = !this.data.themeBgmOn;
+    this.setData({ themeBgmOn: on });
+    if (on) this._startThemeBgm(); else { this._stopStationBgm(); this._stopThemeBgm(); }
+  },
   startStoryIntro() {
     if (!this.data.storyIntro.show || this.data.storyIntro.out) return;
     storyResume.patch(this._runSessionScope(), { intro: true });
+    this._startThemeBgm();
     const go = () => { this.setData({ 'storyIntro.show': false }); this.openChapterFull(); };
     if (this.data.reducedMotion) { go(); return; }
     this.setData({ 'storyIntro.out': true });
@@ -3785,7 +3887,7 @@ Page({
   /** 白底全屏时状态栏字换黑,回故事流换回白(页面自绘导航,只动前景色) */
   _albumStatusBar(light) {
     if (typeof wx.setNavigationBarColor !== 'function') return;
-    wx.setNavigationBarColor({ frontColor: light ? '#000000' : '#ffffff', backgroundColor: light ? '#ffffff' : '#000000' });   /* ds-ok 微信 API 只收这两个字面色 */
+    light = light || !!this._storyLight; /* 回故事流时按主题底色恢复(浅底仍是黑字) */ wx.setNavigationBarColor({ frontColor: light ? '#000000' : '#ffffff', backgroundColor: light ? '#ffffff' : '#000000' });   /* ds-ok 微信 API 只收这两个字面色 */
   },
   closeChapterFull() {
     // 收起就停章节音频:它属于这一屏,留在后台继续念会跟节点语音导览抢同一个播放器。
@@ -3882,7 +3984,7 @@ Page({
     this.initAudio();
     const audio = this._audio;
     audio.stop();
-    audio.src = String(url);
+    audio.src = secureOwnMedia(url);
     audio.play();
     this.setData({ audioNodeId: 'chapter' });
   },
@@ -3902,7 +4004,7 @@ Page({
     if (same && this.data.audioPlaying) { audio.pause(); return; }
     if (same && !this.data.audioError) { audio.play(); return; }
     audio.stop();
-    audio.src = item.url;
+    audio.src = secureOwnMedia(item.url);
     audio.play();
     this.setData({ audioNodeId: key });
   },
@@ -3970,10 +4072,10 @@ Page({
       if (chapterId && gates.indexOf(chapterId) < 0) storyResume.patch(scope, { gates: gates.concat(chapterId).slice(-40) });
     }
     this._pendingChapterGateKey = '';
-    this.setData({ 'chapterGate.show': false }, () => {
+    this._withLookTransition(() => this.setData({ 'chapterGate.show': false }, () => {
       this.measureChapter();
       this.playChapterAudio();
-    });
+    }));
   },
   /** 滑动核销确认:真正的核销是商家扫玩家的码,这里只是玩家侧把码亮出来并标记本次已出示。
    *  ⚠️ 不在客户端写「已核销」到后端 —— 那是商家侧的动作,客户端说了不算。 */
@@ -4068,7 +4170,7 @@ Page({
       /* 故事变量的两个来源之一(另一个是 advanced 会话视图):/api/play/nodes 回包 data.vars。
          章节文本与节点 story 大多数时候在这个点的会话之前就被读到 —— 只从会话视图取的话
          {name} 会一直原样留着,所以这条必须在首屏成功分支里落。 */
-      that._applyStoryVars(d);
+      that._applyStoryVars(d); that._applyLook(d.look); that._probeCasebook();
       that._puzzlePersonalBest = Number(d.puzzlePersonalBest) || 0;
       // 规则16 历史履约:已普通下架的本人已完成站只作只读回看,不并入 nodes/total/完成率/解锁/推荐/地图。
       const historyNodes = Array.isArray(d.historyNodes)
@@ -4099,7 +4201,7 @@ Page({
       // subpackagePrefab。那条换轨让「用玩法模板 + 主题配置做出《预制人生》」永远无法验收 ——
       // 作者配得再对,一取这个名字就被顶掉,看到的仍是写死在 JS 里的那份。
       that.setData({
-        loading: false, emptyTip: '', emptyKind: '', topicId: d.topicId || '', topicName, topicDesc: d.topicDesc || '', topicCover: d.topicCover || '',
+        loading: false, emptyTip: '', emptyKind: '', topicId: d.topicId || '', topicName, topicDesc: d.topicDesc || '', topicAudioUrl: d.topicAudioUrl || '', topicCover: d.topicCover || '',
         mode, serverMode: mode, playContact: playOverlays.contact(d.contact),
         modeLabel: mode == 2 ? '自由探索' : '城市定向',
         routeNotice: that._routeNoticeForState(routeState),
@@ -4138,6 +4240,10 @@ Page({
         that._restoreRunSession(d, routeState, nodes);
         that.loadTeamProgress();   // P1 带领场探测(club 场次才 exists,内部自管轮询)
         that._loadPlayerGameModule();
+        that._consumePendingStart();
+        // 中途重进一局(开场已看过 / 卡包已拆):主题配乐接着放,原来只在开场与拆包时起播,重进就没了(实走 A7 复核)
+        const resumed = storyResume.read(that._runSessionScope());
+        if (resumed.intro || resumed.packOpened) that._startThemeBgm();
         that.loadHudCharacter(); that.loadSessionStats();   // 文档二 L5:状态栏第二行 / 「…」用时与得分 if (that._entryLayer && ['*', String(that._orientSessionId())].includes(that._entryLayer)) that.openScoreOverlay(); that._entryLayer = '';
       });
     }).catch(() => {
@@ -4168,10 +4274,10 @@ Page({
     that._routeState = routeState;
     that._versionedRouteState = that._routeStateVersionKnown(d.routeState) ? routeState : null;
     that._routeNodeCatalog = catalog;
-    const chapter = that.buildChapter(d, nodes);
+    that._applyLook(d.look); const chapter = that.buildChapter(d, nodes); /* 画面风格先落,章节配色 / 时间段才取得到 */
     this._historyNodes = [];
     this.setData({
-      loading: false, emptyTip: '', emptyKind: '', topicId: d.topicId || '', topicName: d.topicName || '', topicDesc: d.topicDesc || '', topicCover: d.topicCover || '', mode, serverMode: mode,
+      loading: false, emptyTip: '', emptyKind: '', topicId: d.topicId || '', topicName: d.topicName || this._entryTopicName || '', topicDesc: d.topicDesc || '', topicAudioUrl: d.topicAudioUrl || '', topicCover: d.topicCover || '', mode, serverMode: mode,
       modeLabel: mode == 2 ? '自由探索' : '城市定向',
       routeNotice: that._routeNoticeForState(routeState),
         journeyAttributes: routeState.attributes,
@@ -4244,7 +4350,8 @@ Page({
       question: n.question || '', options: n.options || null,
       // 题面媒体(看图答题 / 听音答题)。与 audio(整节点语音导览)不是一回事:
       // 那是到达就能听的导览,这是这道题的题面,只在答题卡里出现。
-      questionImg: n.questionImg || '', questionAudio: n.questionAudio || '',
+      // 后端签名链接存成 http://,真机不放 http 音频 / 不显 http 图片;与图片同口径升 https(实走复核)
+      questionImg: secureOwnMedia(n.questionImg), questionAudio: secureOwnMedia(n.questionAudio),
       optionMedia: n.optionMedia || null,
       points: n.xp || 12,
       // 模板呈现字段(/api/play/nodes 已下发)
@@ -4263,7 +4370,7 @@ Page({
       puzzleScore: n.puzzleScore == null ? null : Number(n.puzzleScore),
       completionMode: n.completionMode || '',
       feedback: n.feedbackText || '答案还没咬合,再看看四周……',
-      photoDesc: n.photoRequireDesc || '', audio: n.audioUrl || '', audioDur: (n.audioDuration ? n.audioDuration + '″' : ''),
+      photoDesc: n.photoRequireDesc || '', audio: secureOwnMedia(n.audioUrl), audioDur: (n.audioDuration ? n.audioDuration + '″' : ''),
       medalName: shopDay ? '' : (n.medalName || ''), medalImg: shopDay ? '' : (n.medalImg || ''), medalStyle: shopDay ? '' : (n.medalStyle || 'glow'), couponId: shopDay ? 0 : (n.couponId || 0),
       // 后端 /nodes 新下发的券公开投影(name/amount/endTime;无 code):券页据此显示真面额
       coupon: shopDay ? null : (n.coupon || null),
@@ -4304,8 +4411,9 @@ Page({
       timeText: c.totalTime ? Math.round(c.totalTime / 60) + ' 分钟' : '',
       description: c.description || '',
       blocks: Array.isArray(c.blocks) ? c.blocks : null,
-      atmospherePreset: normalizeAtmosphere(c.atmospherePreset),
-      atmosphereClass: atmosphereClass(c.atmospherePreset),
+      audioUrl: c.audioUrl || '',
+      atmospherePreset: normalizeAtmosphere(this._themePalette(c.atmospherePreset)),
+      atmosphereClass: atmosphereClass(this._themePalette(c.atmospherePreset)) + this._chapterTime(i),
       nodeCount: 0,   // 回填于 loadData:按 chapterId 数节点
     }));
   },
@@ -4336,8 +4444,8 @@ Page({
       cover: this._coverOf(c.imgArr ? String(c.imgArr).split(/[,;]/)[0] : (c.cover || ''), nodes),
       mileage: c.totalMileage ? (c.totalMileage + 'km') : '',
       timeText: c.totalTime ? Math.round(c.totalTime / 60) + ' 分钟' : '',
-      atmospherePreset: normalizeAtmosphere(c.atmospherePreset),
-      atmosphereClass: atmosphereClass(c.atmospherePreset),
+      atmospherePreset: normalizeAtmosphere(this._themePalette(c.atmospherePreset)),
+      atmosphereClass: atmosphereClass(this._themePalette(c.atmospherePreset)) + this._chapterTime(0),
       routeGeometry: c.routeGeometry || null,
       // 章节背景旁白:进本章自动播放(2026-09-04 拍板)。
       // ⚠️ buildChapter 是**白名单**映射 —— 后端下发了、这里不列,页面就永远读不到。
@@ -4369,7 +4477,8 @@ Page({
     // num 给空串,free-map 那边就不挂序号胶囊了。
     // 地图上的序号按「地点」数,故事玩法不占号(它们不在地图上)—— 否则两个地点会标成 3 和 8。
     const placeNum = {};
-    visibleNodes.filter((x) => x.lat && x.lng).forEach((x, i) => { placeNum[String(x.nodeId)] = i + 1; });
+    // 节点对象上也记一份:半屏角标用同一个号,不再用 sortId(开场故事站占了 1 号,地图 1 号站的半屏会写「第 2 站」,实走 A32)
+    visibleNodes.filter((x) => x.lat && x.lng).forEach((x, i) => { placeNum[String(x.nodeId)] = i + 1; x.placeNum = i + 1; });
     const fmNodes = visibleNodes.map((x) => ({
       nodeId: x.nodeId, num: mode === 2 ? '' : (placeNum[String(x.nodeId)] || x.num), state: pinState(x), lat: x.lat, lng: x.lng,
       imgUrl: String(x.imgUrl || '').split(',')[0],
@@ -4409,8 +4518,9 @@ Page({
           mileage: card.mileage || '',
           timeText: card.timeText || '',
           blocks: card.blocks || null,
-          atmospherePreset: normalizeAtmosphere(card.atmospherePreset),
-          atmosphereClass: atmosphereClass(card.atmospherePreset),
+          audioUrl: card.audioUrl || '',
+          atmospherePreset: normalizeAtmosphere(this._themePalette(card.atmospherePreset)),
+          atmosphereClass: atmosphereClass(this._themePalette(card.atmospherePreset)) + this._chapterTime((this.data.chapterCards || []).indexOf(card)),
         };
       }
     }
@@ -4449,7 +4559,11 @@ Page({
       name: x.name || '未命名商家',
       chapterLabel: (() => {
         const c = chapById[String(x.chapterId)];
-        return c ? [c.meta, c.title].filter(Boolean).join(' · ') : '';
+        // 章名本身就以「第N章」开头时不再前缀序号:「第 1 章 · 第1章 · 美食烹饪」(实走 B11)
+        if (!c) return '';
+        const title = String(c.title || '');
+        const titled = /^\s*第\s*[0-9一二三四五六七八九十百]+\s*章/.test(title);
+        return [titled ? '' : c.meta, c.title].filter(Boolean).join(' · ');
       })(),
       imgUrl: String(x.imgUrl || '').split(',')[0],
       playName: x.gameTitle || '',
@@ -4485,10 +4599,14 @@ Page({
     const chapterChanged = this.data.chapterFull && String(activeChapter.id) !== String(this.data.chapter.id);
     const merchantCount = new Set(visibleNodes.filter((node) => Number(node.merchantId) > 0)
       .map((node) => String(node.merchantId))).size;
+    // 卡包只拆一次:本局拆过的,重进直接落定发好的牌,不再每次重放撕包(实走 B11)
+    if (mode === 2 && !this.data.packOpen && !this.data.isPreview && storyResume.read(this._runSessionScope()).packOpened) {
+      this.setData({ packOpen: true, headIn: true });
+    }
     this.setData({ fmNodes, fmPolyline, fmPlayer, fmCenter, nextNode, storyDistText, storyThoughts, chapter: activeChapter, allDone, doneCount,
       remainingGameCount: nodes.filter((node) => node.hasTemplate && !node.done).length,
       total: visibleNodes.length, merchantCount, seatTiles, ringSegs, searchPlaces }, () => {
-      if (chapterChanged) this.openChapterFull();
+      if (chapterChanged) this.openChapterFull(); this._refreshNavRim();
       wx.nextTick(() => this._measureDeal());   // 布局落定后才量得到瓦片/卡包的真实矩形
       // 探店日:核销完最后一家回到本页(onShow 重拉)时自动弹结算 —— 只认 allDone 上升沿,
       // 重进一个早已完成的主题不重放仪式。经典定向有自己的 completed→openFinish 链,不走这里。
@@ -4704,7 +4822,9 @@ Page({
             // 精度 > 80m 后端必拒(定位精度不足),不发,免得每次定位回调都弹一次拒绝
             /* 8/9/10 是「玩法过了再到达收尾」(与 onAdvancedReady 同一白名单):玩法已通过就和 0/5 一样靠近即点亮,
                否则做完玩法人就站在门口,卡片写着「靠近后会自动点亮」却永远不亮(2026-10-27 生产实测)。 */
-            const arrivesHere = node.vm === 0 || node.vm === 5
+            /* 0/5 站若配了玩法(hasAdvanced),也要先过玩法再靠近点亮:否则人一到门口就自动完成,主玩法根本没开
+               (2026-10-30 复核:霍山公园连线被 GPS 到达直接跳过;服务端同样以 ADVANCED_FIRST 拒)。 */
+            const arrivesHere = ((node.vm === 0 || node.vm === 5) && (!node.hasAdvanced || that._advancedReadyNodeId === node.nodeId))
               || ([8, 9, 10].includes(node.vm) && that._advancedReadyNodeId === node.nodeId);
             if (d <= 50 && !node.done && arrivesHere && playAccuracy.canAutoArrive(loc.accuracy)) that.arrive(node.nodeId, 'gps');
           }
@@ -5100,7 +5220,7 @@ Page({
     storyResume.patch(this._runSessionScope(), { openNodeId: String(node.nodeId) });
     this._freshStoryGame = String(node.nodeId);
     this._storyOpenNode = true;
-    this.startGame(node);
+    this._withLookTransition(() => this.startGame(node));
   },
   onSheetGoTap() {
     const node = this.data.sheet.node;
@@ -5189,7 +5309,10 @@ Page({
     // 所以闸放在这一层。(服务端四个完成入口另有硬闸,这里是 UX 层:先说清「还差什么」。)
     if (!node.done && this._routeInteractionBlocked()) { cyToast(this.data.routeNotice || '路线状态同步中'); return; }
     if (this._lockedTip(node)) return;
-    const biz = node.businessTime;
+    // 全天开放(00:00–23:59)不是有用的营业信息,不挂在地址后(实走复核:每站都写着 00:00–23:59)
+    const biz = /^\s*00:00\s*[-–~至]\s*23:59\s*$/.test(String(node.businessTime || '')) ? '' : node.businessTime;
+    const story = String(node.story || '');
+    const sentence = story.match(/^[^。！？!?]*[。！？!?]?/)[0];
     // S4 营业态换算已抽到 utils/play-open-state.js:大卡、六宫格瓦片、商家权益页共用一份,
     // 免得各自抄一份再各自漂。规则未变(openStatus 优先 → businessTime 兜底 → 都无则空)。
     const { openText, openCol, openDot } = resolveOpenState(node);
@@ -5197,7 +5320,10 @@ Page({
       metaLine: (node.address || '此处') + (biz ? (' · ' + biz) : ''),
       bizText: biz, openText, openCol, openDot,
       hasGame: node.hasTemplate,
-      gameLede: node.story ? String(node.story).slice(0, 24) : '到达后开启本站任务',
+      // 一句话导语:取第一句,过长才截断并补省略号,不再从句子中间硬切
+      gameLede: story ? (sentence.length <= 40 ? sentence : sentence.slice(0, 38) + '…') : '到达后开启本站任务',
+      // 简介只是重复标题(如「结语 · 1945年以后」配「1945年以后」)时不再写一遍
+      description: node.description && String(node.name || '').indexOf(String(node.description).trim()) >= 0 ? '' : node.description,
       cardHook: node.cardHook || ''
     });
     this.setData({
@@ -5718,6 +5844,7 @@ Page({
   },
   onAdvancedClose() {
     this._advancedReadyIntent = null;
+    this._stopStationBgm();
     const node = this.data.advancedPlay.node;
     if (node && this._themeChallengeNodeId === Number(node.nodeId)) {
       this._themeChallengeNodeId = null;
@@ -6012,6 +6139,15 @@ Page({
     const answer = retry && retry.type === 'answer' ? retry.answer : (g.vm == 3 ? this.data.answerSel : this.data.answerInput);
     if (!answer) return this.setData({ gWrong: true, 'game.feedback': '先把答案填上再提交。' });
     if (this.data.isPreview || this.data.isMock) { this.onComplete(g.nodeId, {}); return; }   // 路线级预览只跳过服务端判题,不跳过空值校验
+    /* 城市定向有坐标的站要在 50 米内作答(业主 2026-10-30 拍板,实走 A20):答案随带当前定位,服务端按到达同一围栏判;
+       还没有定位就先请求定位、给提示,不发请求(没有定位一定会被拒,不该算一次提交)。 */
+    const gameNode = (this.data.nodes || []).find((n) => String(n.nodeId) === String(g.nodeId));
+    const located = Number(this.data.mode) === 1 && gameNode && gameNode.lat && gameNode.lng;
+    if (located && !this._loc) {
+      this.setData({ gWrong: false, gNetErr: '先开启定位，到这一站 50 米内再作答', gNetRetryable: false });
+      this.requestPlayLocation();
+      return;
+    }
     const viewContext = this._legacyGameContext();
     if (!this._isLegacyGameCurrent(viewContext)) return;
     if (!this.beginGameWrite()) return;
@@ -6021,19 +6157,27 @@ Page({
     const attempt = { type: 'answer', nodeId: g.nodeId, answer, viewContext };
     const that = this;
     this._withThoughtSync(() => {
-      attempt.payload = this._legacyGameWritePayload('answer', 'answer', g.nodeId, { nodeId: g.nodeId, answer }, retryAttempt);
-      return req('/api/play/answer', 'POST', this._retriedRouteWriteBody(attempt.payload, retryAttempt));
+      const fix = located && this._loc ? { longitude: this._loc.longitude, latitude: this._loc.latitude, accuracy: this._loc.accuracy } : {};
+      attempt.payload = this._legacyGameWritePayload('answer', 'answer', g.nodeId, Object.assign({ nodeId: g.nodeId, answer }, fix), retryAttempt);
+      // 作答的每种结果(答错 / 未到 50 米 / 业务拒绝 / 未送达)都在题卡里就地写明,不再额外弹全局 toast(实走复核:同一句话出现两遍)
+      return req('/api/play/answer', 'POST', this._retriedRouteWriteBody(attempt.payload, retryAttempt), undefined, true);
     }, isCurrent)
       .then((r) => {
         const current = isCurrent();
         that._finishRouteWriteContext(context);
         if (!current) return;
-        if (r.code == 200 || r.code == '200') { that._resolveRouteAction('answer', g.nodeId); that.clearGameNetworkError(); that.onComplete(g.nodeId, r.data); }
+        if (r.code == 200 || r.code == '200') { that._resolveRouteAction('answer', g.nodeId); that.clearGameNetworkError(); if (r.msg) cyToast(r.msg); that.onComplete(g.nodeId, r.data); }   // 答对只有纸屑,没有一句「答对了」(实走 A29)
         else if (that._handleRouteConflict(r, 'answer', g.nodeId)) return;
         // 请求没送到 ≠ 服务端判你答错。原码把 code!=200 一律记 wrongCount++,断网提交两次
         // 就满足 canReveal(wc>=2) —— 系统替你答错两次、直接把答案揭示了。
         else if (r.httpFail) that.recordGameHttpUnknown(r.msg);
         else if (r.netFail) that.recordGameNetworkFailure('提交没送出去，检查网络后重试', attempt);
+        // 还没到站(50 米围栏)不是答错:按提示条显示,不标红、不计错(实走 A20)
+        else if (r.errorCode === 'ARRIVE_FIRST') {
+          that._resolveRouteAction('answer', g.nodeId);
+          that._lastGameAttempt = null;
+          that.setData({ gWrong: false, gNetErr: r.msg || '先到这一站附近，再开始作答', gNetRetryable: false });
+        }
         else {
           that._resolveRouteAction('answer', g.nodeId);
           that._lastGameAttempt = null;
@@ -6383,6 +6527,10 @@ Page({
         if (frText) this.setData({ frag: { show: true, text: frText, step: '我的第 ' + done.length + ' 步 · ' + (node.name || '') } });
       }
       const completed = data && data.completed;
+      // 已通关后再做选做站,服务端每次仍回 completed=true:只在「这一次才通关」时弹通关卡(实走 A19)
+      const completedNow = completed && !this.data.topicCompleted
+        && (this.data.isPreview || !storyResume.read(this._runSessionScope()).finished);
+      if (completedNow && !this.data.isPreview) storyResume.patch(this._runSessionScope(), { finished: true });
       /* 服务端这次判了通关(主题规则可以是「主线 N 站」,选做站没走完也算):通关卡按「通关」讲,
          别因为本地还有没走的选做站就把标题写成章节名、把里程碑少算这一个(2026-10-27 生产实测)。 */
       if (completed && !this.data.topicCompleted) this.setData({ topicCompleted: true });
@@ -6413,12 +6561,13 @@ Page({
       } else {
         if (hasMedalArt) this.diegetic('这个节点的名次奖牌已经发完，完成记录已保存');
         if (node.couponId) this.showCoupon('到店出示核销');
-        if (completed) setTimeout(() => { if (effectsCurrent()) this.openFinish(); }, 600);  // 末站即便配券也要弹通关卡(原 else-if 漏掉)
+        if (completedNow) setTimeout(() => { if (effectsCurrent()) this.openFinish(); }, 600);  // 末站即便配券也要弹通关卡(原 else-if 漏掉)
       }
       if (newBadges.length || (hasMedalArt && (medalRank || previewMedal))) this._triggerCelebration('medal-earned');
       this.setData({ journalDot: !this.data.showJournal });
       if (storyOpen && (this.data.isPreview || this.data.isMock)) this.openChapterFull();
-      if ((this._routeState.routeMode === 'BRANCH_GRAPH' || storyOpen) && !this.data.isPreview && !this.data.isMock) {
+      // 城市定向逐站解锁:下一站的 locked 与本站剧情段都在 /nodes 里,完成后同页重读,不等玩家退出重进(实走 A10)。
+      if ((this._routeState.routeMode === 'BRANCH_GRAPH' || storyOpen || this.data.mode === 1) && !this.data.isPreview && !this.data.isMock) {
         // routeState 只描述节点状态，未包含本次刚从 HIDDEN 解锁节点的地点/玩法资料。
         // 必须同页重读 /nodes，不能等玩家重新进入页面才看见下一站。
         this.loadData(false);
@@ -6737,11 +6886,14 @@ Page({
       this.setData({ nodes: this.data.nodes.map(remember) });
     }
     const inline = kit.present === 'inline' && this.data.chapterFull;
+    // 内嵌在故事流里的玩法由本页放站点背景音乐;弹层模式由 advanced-game 自己放,这里不重复
+    if (inline) this._syncStationBgm(view.playKit && view.playKit.backgroundMusic); else this._stopStationBgm();
     const ready = canContinue(view);
     /* 分支走到结局时不自动接着走:结局那段话就是这一站的全部回报,0.9 秒就被翻走等于没看到
        (2026-10-27 生产实测:南京路结案三选一,选完直接跳进附录章节卡)。玩家读完点下面的「继续」。 */
+    /* 抽卡 / 音乐角 / 相册首屏就「可继续」,但结果本身就是要看的:自动接走会 0.9 秒把抽到的卡翻走(实走 A18)。 */
     const advanceStory = this.data.chapterFull && this._storyOpenNode && ready && !this.data.playKit.readyForBase
-      && kit.type !== 'branch';
+      && !['branch', 'random', 'musiccorner', 'album'].includes(kit.type) && !!previous.type && (previous.sessionId == null || kit.sessionId == null || String(previous.sessionId) === String(kit.sessionId)); /* 另外只在这一站的玩法已在屏上、从未就绪变成就绪时接着走;换了局也不翻 */
     // 填了一半的草稿按「账号 + 局 + 站」存本地(建档 / 留言组件自取);试玩不存
     if (kit.type === 'profile') this._profileNodeId = String(active.node.nodeId);
     if ((kit.type === 'profile' || kit.type === 'note') && !this.data.isPreview && !this.data.isMock) kit.draftKey = storyResume.draftKey(this._runSessionScope(), active.node.nodeId);
@@ -7202,8 +7354,18 @@ Page({
     }));
     if (option.name === 'SUBMIT_PHOTO_CHECK') {
       const consentCurrent = () => !operation.isAborted() && this._kitPhotoIntent === intent && contextCurrent() && sameQuestion();
-      app.requestSeparateConsent('photo', consentCurrent).then(() => {
+      /* 照片模型处理的单独同意按「这一局」问一次(业主 2026-10-30 拍板,实走 A23):同账号同一局已同意过就直接上传,
+         换局、换账号再问。「这一局」是路线局(routeSessionId),页面退出重进仍是同一局,不再重问(实走复核);
+         没有路线局时退回只记在本页。服务端仍逐次校验已存同意记录,这里只是不再每拍一张就弹一次。 */
+      const runId = (this._routeState || {}).sessionId;
+      const consentScope = String(this._playMember()) + '|' + this._sessionKey() + '|' + (runId == null ? '' : runId);
+      let storedScope = '';
+      try { storedScope = runId == null ? '' : (wx.getStorageSync(PHOTO_CONSENT_SCOPE_KEY) || ''); } catch (e) { storedScope = ''; }
+      const consent = this._photoConsentScope === consentScope || storedScope === consentScope ? Promise.resolve() : app.requestSeparateConsent('photo', consentCurrent);
+      consent.then(() => {
         if (!consentCurrent()) { settle(); operation.finish(); return; }
+        this._photoConsentScope = consentScope;
+        if (runId != null) { try { wx.setStorageSync(PHOTO_CONSENT_SCOPE_KEY, consentScope); } catch (e) { /* 存不下只是下次重进会再问一次 */ } }
         upload();
       }).catch(error => {
         const owned = consentCurrent();
@@ -7355,7 +7517,9 @@ Page({
       });
     }
     if (shouldPlay) {
-      if (this._kitAudio.src !== kit.audioUrl) this._kitAudio.src = kit.audioUrl;
+      // 音乐角曲目来自玩法配置,同样可能是 http 签名链接(实走复核)
+      const kitSrc = secureOwnMedia(kit.audioUrl);
+      if (this._kitAudio.src !== kitSrc) this._kitAudio.src = kitSrc;
       this._kitAudio.play();
     } else {
       this._kitAudio.pause();
@@ -7819,7 +7983,7 @@ Page({
     const tags = topId != null ? { [topId]: all[topId] } : {};
     // 成就气泡挂到既有 fmNodes 上(节点 pin 全部保留),没有成就的节点 reviewLabel 为空 = 原样显示序号
     const fmNodes = (this.data.fmNodes || []).map((n) => Object.assign({}, n, { reviewLabel: tags[n.nodeId] || '' }));
-    const sec = this._sessionClock ? this._sessionClock.elapsedSeconds() : 0;
+    const sec = this._runElapsedSeconds();
     if (!this._reviewBase) this._reviewBase = (this.data.fmPolyline || []).slice();
     this.setData({
       fmNodes,
@@ -8221,7 +8385,7 @@ Page({
     } else {
       // 不同节点或错误重试 → 换源
       audio.stop();
-      audio.src = g.audio;
+      audio.src = secureOwnMedia(g.audio);
       audio.play();
       this.setData({ audioNodeId: g.nodeId });
     }
@@ -8242,7 +8406,7 @@ Page({
     if (same && this.data.audioPlaying) { audio.pause(); return; }
     if (same && !this.data.audioError) { audio.play(); return; }
     audio.stop();
-    audio.src = url;
+    audio.src = secureOwnMedia(url);
     audio.play();
     this.setData({ audioNodeId: key });
   },
@@ -8298,8 +8462,8 @@ Page({
     const shop = this.data.mode === 2;
     const mics = ['env', 'leaf', 'moon', 'key'];
     let items = (this.data.finishMedalList || []).map((m, i) => ({ key: m.key || 'm' + i, name: m.name, sub: m.sub, img: m.img || '', mic: mics[i % 4] }));
-    if (!items.length) items = [{ key: 'theme', name: this.data.topicName || '主题通关', sub: shop ? '全部去完' : '主题通关', img: '', mic: shop ? 'stamp' : 'env' }];
-    const sec = this._sessionClock ? this._sessionClock.elapsedSeconds() : 0;
+    if (!items.length) items = [{ key: 'theme', name: this.data.topicName || '主题通关', sub: shop ? '全部到访' : '主题通关', img: '', mic: shop ? 'stamp' : 'env' }];
+    const sec = this._runElapsedSeconds();
     const hms = sec > 0 ? Math.floor(sec / 3600) + ':' + String(Math.floor(sec / 60) % 60).padStart(2, '0') + ':' + String(Math.floor(sec) % 60).padStart(2, '0') : '';
     const km = this._reviewDistanceKm(this._reviewOrderedNodes());
     const stats = [];
@@ -8343,7 +8507,7 @@ Page({
   /** 2026-10-28 通关过场:整个主题走完时先放「三棱锥炸开 → 银色城瘾标志」,播完再露出通关勋章页。探店日与试玩不放。 */
   _openFinale(isShopDay) {
     if (!this.data.allDone || isShopDay || this.data.isPreview || this.data.isMock) return;
-    const sec = this._sessionClock ? this._sessionClock.elapsedSeconds() : 0;
+    const sec = this._runElapsedSeconds();
     const flip = chapterFlip.buildFinale({
       cards: this.data.chapterCards, nodes: this.data.nodes, topicCover: this.data.topicCover, topicName: this.data.topicName,
       doneCount: this.data.doneCount, elapsed: sec > 0 ? formatElapsed(sec) : '', score: this.data.finishScore,

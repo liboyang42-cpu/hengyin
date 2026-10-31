@@ -6,9 +6,9 @@
 
 ★ 支付这一层需要一个【桩】,见文件末尾说明。桩只存在于本地 e2e 运行时,仓库产品码一行都没有。
 """
-import sys, pathlib, json, time
+import sys, pathlib, json, time, hashlib, datetime
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from chain_lib import http, q, admin_token, app_token, step, show, readback
+from chain_lib import http, q, ex, admin_token, app_token, step, show, readback
 
 EXEC_CLUB_ID, EXEC_CLUB_PHONE = 7002, "13900000008"
 PLAYER_PHONE, PLAYER_MEMBER = "13900000009", 9009
@@ -16,8 +16,48 @@ MERCHANT_PHONE_BY_MEMBER = {9002: "13900000002", 9005: "13900000005",
                             9006: "13900000006", 9007: "13900000007"}
 
 
+FIXTURE_MCHID, FIXTURE_APPID = "E2EMCH0001", "wxe2e00000000001"
+
+
+def fact_hash(values):
+    """与 WechatVerifiedPaymentFact.canonicalFacts()/factHash() 逐字节同口径:每项「UTF-8 字节长:值」,null 记 -1:。"""
+    out = []
+    for value in values:
+        out.append("-1:" if value is None else "%d:%s" % (len(value.encode("utf-8")), value))
+    return hashlib.sha256("".join(out).encode("utf-8")).hexdigest()
+
+
+def store_trusted_payment_fact(reg_no, transaction_id, total_fen):
+    """★夹具扮演「已验签的支付渠道」:把一条 VERIFIED 原始支付事实写进测试库。
+
+    桩通道自己从不造事实(E2eWechatPayStub 只消费已存在的原始事实);生产里这一行由 SDK 查单验签后写入。
+    有冻结的支付尝试(wx_pay_order_intent)就逐项照抄它,没有就按「业务单号即渠道单号、无意图哈希」的历史口径。
+    """
+    intent = q("SELECT out_trade_no,mchid,appid,trade_type,currency,total_fen,request_hash FROM wx_pay_order_intent "
+               "WHERE business_out_trade_no=%s AND closed_confirmed_at IS NULL ORDER BY attempt_no DESC LIMIT 1", (reg_no,))
+    if intent:
+        wx_no, mchid, appid, trade_type, currency, total, request_hash = intent[0]
+        total = int(total)
+    else:
+        wx_no, mchid, appid, trade_type, currency, total, request_hash = (
+            reg_no, FIXTURE_MCHID, FIXTURE_APPID, "JSAPI", "CNY", total_fen, None)
+    success_at = datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).strftime("%Y-%m-%dT%H:%M:%SZ")
+    digest = fact_hash(["wx-success-fact-v1", "PAYMENT", mchid, appid, reg_no, wx_no, wx_no, transaction_id,
+                        transaction_id, trade_type, currency, str(total), str(total), success_at, request_hash])
+    ex("INSERT INTO wx_verified_payment_fact (fact_kind,mchid,appid,business_out_trade_no,wx_out_trade_no,"
+       "merchant_event_no,provider_id,transaction_id,trade_type,currency,total_fen,amount_fen,success_at,"
+       "intent_request_hash,fact_hash,verification_version,verification_outcome,verification_method,original_payment_state) "
+       "VALUES ('PAYMENT',%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,1,'VERIFIED','SDK_QUERY_ORIGINAL_ORDER','SUCCESS')",
+       (mchid, appid, reg_no, wx_no, wx_no, transaction_id, transaction_id, trade_type, currency,
+        total, total, success_at, request_hash, digest))
+    fact_id = q("SELECT id FROM wx_verified_payment_fact WHERE fact_hash=%s", (digest,))[0][0]
+    return {"verified_fact_id": str(fact_id), "verified_fact_hash": digest, "wx_out_trade_no": wx_no,
+            "mchid": mchid, "appid": appid, "trade_type": trade_type, "currency": currency}
+
+
 def assert_paid_callback(callback, paid_rows, expected_transaction_id):
-    if callback.get("_status") != 200 or callback.get("code") != "SUCCESS":
+    # 回调成功应答是 HTTP 204 空体(ApiRegistrationController.callbackResponse,微信 v3 口径);失败是 500 + FAIL 正文
+    if callback.get("_status") != 204 or callback.get("_raw", "") != "":
         raise RuntimeError("支付回调协议未成功:%s" % callback)
     if (len(paid_rows) != 1 or paid_rows[0][2] != 2 or paid_rows[0][3] is None
             or paid_rows[0][4] != expected_transaction_id):
@@ -83,9 +123,11 @@ def main(tid):
     step("支付成功:走【真实回调入口】POST /api/registration/callback,受控参数明文喂进去")
     # ★桩:支付可用性(环境依赖)。桩掉的只有外部支付通道(商户凭据/SDK/验签/预下单);
     #   金额冻结校验、订单状态机、entitlement 等业务侧一条都没绕过,更没有直接改 payment_status。
-    callback = http("POST", "/api/registration/callback", json_body={
+    fact = store_trusted_payment_fact(reg_no, "E2E-TXN-%d" % reg, 6900)
+    show("trusted fact", "id=%s" % fact["verified_fact_id"])
+    callback = http("POST", "/api/registration/callback", json_body=dict(fact, **{
         "out_trade_no": reg_no, "transaction_id": "E2E-TXN-%d" % reg,
-        "trade_state": "SUCCESS", "total": 6900})
+        "trade_state": "SUCCESS", "total": 6900}))
     show("callback", json.dumps(callback, ensure_ascii=False)[:120])
     paid_rows = readback("报名单", "SELECT id,registration_no,payment_status,payment_time,transaction_id "
                          "FROM cms_registration WHERE id=%s", (reg,))

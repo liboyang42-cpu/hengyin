@@ -188,3 +188,28 @@ test('F-R2S-15: a new message restarts the automatic PROCESSING re-poll budget',
   assert.equal(chat._retryCount, 2, 'retrying the same message keeps its used re-poll count');
   chat.cancelPending();
 });
+
+test('shown NPC changing session/scope aborts the old track and rejects its late reply', async () => {
+  for (const [property, next] of [['sessionId', 92], ['scope', 'merchant']]) {
+    const requests = []; let aborts = 0;
+    const chat = createChat({ sendRequest(r) { requests.push(r); return { abort() { aborts++; } }; } }, { scope: 'roam' });
+    inputAndSend(chat, 'original track'); const old = requests[0];
+    chat.properties[property] = next; definition.properties[property].observer.call(chat, next);
+    assert.equal(aborts, 1); assert.deepEqual(chat.data.messages, []); assert.equal(chat.data.state, 'IDLE');
+    old.success(response(old.data.requestId, 'old private answer')); await sleep(40);
+    assert.deepEqual(chat.data.messages, []);
+    inputAndSend(chat, 'new track'); const current = requests[1];
+    current.success(response(current.data.requestId, 'new')); await sleep(40);
+    assert.equal(chat.data.messages.at(-1).text, 'new'); chat.cancelPending();
+  }
+});
+test('track change cancels a typewriter and returning to original pending track only reads original key', async () => {
+  const requests = []; const chat = createChat({ sendRequest(r) { requests.push(r); return { abort() {} }; } }, { scope: 'roam' });
+  inputAndSend(chat, 'pending'); const original = requests[0];
+  chat.properties.sessionId = 92; definition.properties.sessionId.observer.call(chat, 92);
+  chat.properties.sessionId = 91; definition.properties.sessionId.observer.call(chat, 91);
+  assert.equal(requests[1].method, 'GET'); assert.equal(requests[1].data.requestId, original.data.requestId);
+  requests[1].success(response(original.data.requestId, 'long approved answer'));
+  chat.properties.scope = 'merchant'; definition.properties.scope.observer.call(chat, 'merchant');
+  await sleep(60); assert.deepEqual(chat.data.messages, []); assert.equal(chat.data.state, 'IDLE');
+});

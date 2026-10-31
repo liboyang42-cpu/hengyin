@@ -82,6 +82,9 @@ import com.chengyinhub.common.enums.LimitType;
 @Tag(name = "主题")
 @RequestMapping("/api/topic")
 public class ApiTopicController extends BaseController {
+    @Autowired
+    private com.fasterxml.jackson.databind.ObjectMapper responseObjectMapper;
+
     @Value("${community.post.legacy-writes-enabled:true}")
     private boolean legacyCommunityWritesEnabled;
 
@@ -94,6 +97,8 @@ public class ApiTopicController extends BaseController {
 
     @Autowired
     private ICmsTopicService cmsTopicService;
+    @Autowired(required = false)
+    private com.chengyinhub.business.mapper.CmsTopicMapper cmsTopicMapper;
 
     /**
      * 「来源」栏投影（官方 / 俱乐部 / 会员）。
@@ -868,8 +873,11 @@ public class ApiTopicController extends BaseController {
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public AjaxResult authorEditDetail(String id, String scope) {
         AjaxResult result = topicEditDetail(id, scope);
-        if (Integer.valueOf(200).equals(result.get(AjaxResult.CODE_TAG)))
-            result.put(AjaxResult.DATA_TAG, com.chengyinhub.business.service.support.TemplateAdoptionWire.strings(result.get(AjaxResult.DATA_TAG), "templateId"));
+        if (Integer.valueOf(200).equals(result.get(AjaxResult.CODE_TAG))) {
+            Map<String, Object> data = new HashMap<>((Map<String, Object>) result.get(AjaxResult.DATA_TAG));
+            data.put("topic", new com.chengyinhub.business.domain.dto.TopicAuthorEditDTO((CmsTopic) data.get("topic")));
+            result.put(AjaxResult.DATA_TAG, com.chengyinhub.business.service.support.TemplateAdoptionWire.strings(data, "templateId", responseObjectMapper));
+        }
         return result;
     }
 
@@ -947,6 +955,7 @@ public class ApiTopicController extends BaseController {
         // R2-B10 编辑器回显:顶层单列一份 journeyRules(与保存入参同名),老编辑器不读它也不受影响。
         data.put("journeyRules", topic.getJourneyRulesJson());
         data.put("themeRuntimeConfig", topic.getThemeRuntimeConfigJson());
+        data.put("look", cmsTopicMapper == null ? null : cmsTopicMapper.selectLookJsonById(topic.getId()));
         // R8-STORY 同款回显:主题级剧情配置与保存入参同名
         data.put("journeyStory", topic.getJourneyStoryJson());
         data.put("openingChapterId", com.chengyinhub.business.domain.JourneyStory.openingChapterId(topic.getJourneyStoryJson()));

@@ -1,8 +1,8 @@
 <wxs src="../../../../utils/wxs/list-key.wxs" module="lk" />
-<view class="ds" wx:if="{{show}}">
+<view class="ds {{inline ? 'ds--embed' : ''}}" wx:if="{{show}}">
   <!-- 这一屏是「纸的世界」:浅灰底、拉丝银打印机、白色热敏小票。刻意不跟深色主题走(见 wxss 头注)。 -->
   <view class="ds__bg" aria-hidden="true"></view>
-  <view class="ds__stage" style="{{stagePadTop ? 'padding-top:' + stagePadTop + 'px;' : ''}}" catchtap="noop">
+  <view class="ds__stage" style="{{stagePadTop && !inline ? 'padding-top:' + stagePadTop + 'px;' : ''}}" catchtap="noop">
     <view class="ds__nav">
       <view class="ds__navbtn" bindtap="onClose"
             aria-role="button" aria-label="关闭今日城市签" hover-class="cy-pressed" hover-stay-time="80">

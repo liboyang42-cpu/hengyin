@@ -63,6 +63,9 @@ public class PlayBasicCommandApplication {
     @Autowired
     private IShopDayProofService shopDayProofService;
     @Autowired(required = false)
+    @org.springframework.context.annotation.Lazy
+    private com.chengyinhub.business.service.IAdvancedGameRuntimeService advancedGameRuntimeService;
+    @Autowired(required = false)
     private IPlayCheckinCodeService playCheckinCodeService;
     @Autowired
     private PlayScanEntryService playScanEntryService;
@@ -252,9 +255,20 @@ public class PlayBasicCommandApplication {
     public AjaxResult answer(Long actorMemberId, String activityId, String nodeId, String answer, String topicId,
             String routeActionId, Integer expectedRouteVersion, Long routeSessionId, String runtimeInstance, Integer authorityEpoch)
     {
+        return answer(actorMemberId, activityId, nodeId, answer, topicId, routeActionId, expectedRouteVersion,
+                routeSessionId, runtimeInstance, authorityEpoch, null, null, null);
+    }
+
+    /** 带作答时定位(城市定向有坐标的站按到达同一围栏判,见 answerFenceError)。 */
+    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
+    public AjaxResult answer(Long actorMemberId, String activityId, String nodeId, String answer, String topicId,
+            String routeActionId, Integer expectedRouteVersion, Long routeSessionId, String runtimeInstance, Integer authorityEpoch,
+            String longitude, String latitude, String accuracy)
+    {
         return playBasicIntentApplication.executeBasicIntent(actorMemberId, "ANSWER", activityId, topicId, nodeId, routeActionId, expectedRouteVersion,
                 null, routeSessionId, runtimeInstance, authorityEpoch, java.util.Arrays.asList(answer),
-                originalRun -> answerOnce(actorMemberId, activityId, nodeId, answer, topicId, routeActionId, expectedRouteVersion, runtimeInstance, authorityEpoch, originalRun));
+                originalRun -> answerOnce(actorMemberId, activityId, nodeId, answer, topicId, routeActionId, expectedRouteVersion, runtimeInstance, authorityEpoch, originalRun,
+                        longitude, latitude, accuracy));
     }
 
     public AjaxResult answer(String activityId, String nodeId, String answer, String topicId,
@@ -264,6 +278,14 @@ public class PlayBasicCommandApplication {
 
     public AjaxResult answerOnce(Long actorMemberId, String activityId, String nodeId, String answer, String topicId,
             String routeActionId, Integer expectedRouteVersion, String runtimeInstance, Integer authorityEpoch, PlayOriginalRun originalRun)
+    {
+        return answerOnce(actorMemberId, activityId, nodeId, answer, topicId, routeActionId, expectedRouteVersion, runtimeInstance, authorityEpoch, originalRun,
+                null, null, null);
+    }
+
+    public AjaxResult answerOnce(Long actorMemberId, String activityId, String nodeId, String answer, String topicId,
+            String routeActionId, Integer expectedRouteVersion, String runtimeInstance, Integer authorityEpoch, PlayOriginalRun originalRun,
+            String longitude, String latitude, String accuracy)
     {
         Long memberId = actorMemberId;
         if (memberId <= 0) return error("请先登录");
@@ -299,6 +321,25 @@ public class PlayBasicCommandApplication {
         // 线性解锁校验（仅 mode=1 经典定向）
         String unlockErr = playNodeContext.routeAccessError(memberId, actId, ctx.topicId, node, routeActionId);
         if (unlockErr != null) return error(unlockErr);
+
+        // 城市定向「到站后作答」:本局按冻结到达配置有坐标的站,须先经 GPS 围栏(50 米)记过到达才能作答。
+        // 只管到达与任务分开记的本局路线(与 arrive 的 personalArrival 同一判据);老路径到达即完成,不受影响。
+        // 实走 A20:规则写「50米内解锁」,人不在附近也能答对完成。
+        boolean runtimePath = originalRun.session() != null && topicRouteRuntimeService != null
+                && topicRouteRuntimeService.genericPlayer(memberId, ctx.topicId, actId);
+        if (playMode == PlayMode.LINEAR_ORIENTEERING && runtimePath) {
+            com.fasterxml.jackson.databind.JsonNode target = topicRouteRuntimeService.nodeArrivalConfig(memberId, ctx.topicId, actId, node.getId());
+            boolean located = target != null && StringUtils.isNotBlank(target.path("longitude").asText(null))
+                    && StringUtils.isNotBlank(target.path("latitude").asText(null));
+            if (located && !shopDayProofService.hasArrived(memberId, actId, node.getId())) {
+                return error("先到这一站 50 米内，再开始作答").put("errorCode", "ARRIVE_FIRST");
+            }
+        } else if (playMode == PlayMode.LINEAR_ORIENTEERING
+                && StringUtils.isNotBlank(node.getLongitude()) && StringUtils.isNotBlank(node.getLatitude())) {
+            // 老路径到达即完成,没有单独的到达记录可查:答案随带的定位按 arrive 同一围栏(精度 80 米、距离 50 米)判
+            String fenceErr = answerFenceError(node, longitude, latitude, accuracy);
+            if (fenceErr != null) return error(fenceErr).put("errorCode", "ARRIVE_FIRST");
+        }
 
         // 读节点绑定模板的验证方式 + 校验答案(R18-FREEZE:对错判定按开局快照,新发布不改写
         // 进行中的一局;老局快照没有 nodeAnswers 键时回退实时模板)
@@ -371,6 +412,23 @@ public class PlayBasicCommandApplication {
         if (ctx.nightWarning) data.put("nightWarning", true); // M2 自玩夜间提示(不阻断)
         boolean firstTime = Boolean.TRUE.equals(data.get("firstTime"));
         return AjaxResult.success(firstTime ? "答对了！" : "该节点已完成", data);
+    }
+
+    /** 作答时定位的到站围栏,与 arrive 坐标判定同口径;null = 在站内。 */
+    private String answerFenceError(CmsTopicNode node, String longitude, String latitude, String accuracy) {
+        if (StringUtils.isBlank(longitude) || StringUtils.isBlank(latitude) || StringUtils.isBlank(accuracy)) {
+            return "先开启定位，到这一站 50 米内再作答";
+        }
+        Double playerLat = PlayNodeContext.parseGeoCoordinate(latitude, -90d, 90d);
+        Double playerLng = PlayNodeContext.parseGeoCoordinate(longitude, -180d, 180d);
+        Double nodeLat = PlayNodeContext.parseGeoCoordinate(node.getLatitude(), -90d, 90d);
+        Double nodeLng = PlayNodeContext.parseGeoCoordinate(node.getLongitude(), -180d, 180d);
+        Double acc = PlayNodeContext.parseGeoCoordinate(accuracy, 0d, Double.MAX_VALUE);
+        if (playerLat == null || playerLng == null || nodeLat == null || nodeLng == null || acc == null) return "定位无效";
+        if (acc > GEOFENCE_ACCURACY_METERS) return "定位精度不足，请到开阔处再作答";
+        double dist = GeoDistanceUtils.haversineMeters(playerLat, playerLng, nodeLat, nodeLng);
+        if (!Double.isFinite(dist)) return "定位无效";
+        return dist > GEOFENCE_METERS ? "还没到这一站附近，到 50 米内再作答" : null;
     }
 
     public AjaxResult answer(String activityId, String nodeId, String answer, String topicId) {
@@ -602,6 +660,16 @@ public class PlayBasicCommandApplication {
             if(personalArrival)data.put("themeRuntime",topicRouteRuntimeService.recordPlayerArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId,expectedRouteVersion,"GPS"));
             if(sharedArrival!=null)data.put("sharedRuntime",gameSessionRuntimeService.recordSharedBasicArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId,"GPS",runtimeInstance,authorityEpoch));
             recordFirstSuccessfulScan(memberId,ctx);return AjaxResult.success("已记录本局到达，请继续当前任务或操作",data);}
+        // 玩法没过就到达:原闸在完成链里以异常拒绝,小程序收不到明确回执会把到达记成「结果待确认」,
+        // 之后玩法做完「我已到达此站」也点不动,只能退出重进(2026-10-30 开发者工具复核)。
+        // 这里先按同一闸判一次,拒绝时给出明确的业务回执。
+        if (advancedGameRuntimeService != null) {
+            try {
+                advancedGameRuntimeService.completeGate(memberId, actId, ctx.topicId, node.getId());
+            } catch (ServiceException notPassed) {
+                return error(notPassed.getMessage()).put("errorCode", "ADVANCED_FIRST");
+            }
+        }
         playNodeCompletionApplication.logAttempt(memberId, node, actId, 3, 1, null); // M9 GPS到达成功
         Map<String, Object> data = playNodeCompletionApplication.advanceProgress(memberId, node, actId, null, null, null,
                 RewardPolicy.FULL, routeActionId, expectedRouteVersion, null, null, originalRun);

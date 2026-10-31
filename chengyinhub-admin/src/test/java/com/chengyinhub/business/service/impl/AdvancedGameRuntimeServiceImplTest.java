@@ -265,6 +265,90 @@ class AdvancedGameRuntimeServiceImplTest {
         assertEquals("当前自玩资格已失效", fresh.getMessage(), "未开局：到期后不能新开局");
     }
 
+    private ITopicRouteRuntimeService frozenBasicRoute(JsonNode config) {
+        ITopicRouteRuntimeService route = mock(ITopicRouteRuntimeService.class);
+        ReflectionTestUtils.setField(service, "topicRouteRuntimeService", route);
+        com.fasterxml.jackson.databind.node.ObjectNode content = new com.fasterxml.jackson.databind.ObjectMapper()
+                .createObjectNode().put("contentSnapshotVersion", 1).put("templateId", TEMPLATE_ID);
+        content.putObject("nodePresentation").put("id", NODE_ID).put("topicId", TOPIC_ID).put("templateId", TEMPLATE_ID);
+        content.putObject("templatePresentation").put("title", "原普通文字题");
+        when(route.nodeAnswers(MEMBER_ID, TOPIC_ID, ACTIVITY_ID, NODE_ID)).thenReturn(content);
+        when(route.nodeRuntimeConfig(MEMBER_ID, TOPIC_ID, NODE_ID, ACTIVITY_ID)).thenReturn(config);
+        when(route.hasRunningSession(MEMBER_ID, TOPIC_ID, ACTIVITY_ID)).thenReturn(true);
+        when(route.canPlay(MEMBER_ID, TOPIC_ID, ACTIVITY_ID, NODE_ID)).thenReturn(true);
+        return route;
+    }
+
+    @Test
+    void completeGateAcceptsTheOriginalEmptyBasicConfigWithoutReadingCurrentTemplateOrWritingRuntime() {
+        var empty = new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode();
+        frozenBasicRoute(empty);
+        assertNull(service.completeGate(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID));
+        assertTrue(empty.isEmpty());
+        verifyNoInteractions(templateMapper, attemptMapper);
+        verify(sessionMapper, never()).insert(any());
+        verify(sessionMapper, never()).updateStateCas(any());
+    }
+
+    @Test
+    void emptyBasicConfigStillRequiresCurrentRouteAdmission() {
+        var empty = new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode();
+        var route = frozenBasicRoute(empty);
+        when(route.canPlay(MEMBER_ID, TOPIC_ID, ACTIVITY_ID, NODE_ID)).thenReturn(false);
+        assertEquals("请先完成上一站", assertThrows(IllegalStateException.class,
+                () -> service.completeGate(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID)).getMessage());
+        verifyNoInteractions(templateMapper, attemptMapper);
+    }
+
+    @Test
+    void emptyBasicConfigCannotReplaceAnExistingUnfinishedAdvancedSession() {
+        frozenBasicRoute(new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode());
+        GameRuntimeSession original = runningSession(fullConfig(),
+                "{\"draws\":[],\"branch\":{\"currentStepId\":\"start\",\"visitedStepIds\":[\"start\"]}}");
+        when(sessionMapper.selectPlayerByOwner(ACTIVITY_ID, TOPIC_ID, NODE_ID, MEMBER_ID)).thenReturn(original);
+        assertEquals("高级玩法尚未完成", assertThrows(ServiceException.class,
+                () -> service.completeGate(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID)).getMessage());
+        verify(sessionMapper, never()).updateStateCas(any());
+    }
+
+    @Test
+    void emptyBasicConfigDoesNotAcceptForeignFrozenContent() {
+        var route = frozenBasicRoute(new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode());
+        var foreign = new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode()
+                .put("contentSnapshotVersion", 1);
+        foreign.putObject("nodePresentation").put("id", NODE_ID).put("topicId", TOPIC_ID + 1);
+        when(route.nodeAnswers(MEMBER_ID, TOPIC_ID, ACTIVITY_ID, NODE_ID)).thenReturn(foreign);
+        assertEquals("本局内容快照不可用", assertThrows(IllegalStateException.class,
+                () -> service.completeGate(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID)).getMessage());
+        verifyNoInteractions(templateMapper, attemptMapper);
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"{\"schemaVersion\":2}", "{\"branch\":{\"enabled\":true}}", "[]"})
+    void nonemptyOrWrongShapedFrozenConfigIsNeverTreatedAsBasicOnly(String raw) throws Exception {
+        frozenBasicRoute(new com.fasterxml.jackson.databind.ObjectMapper().readTree(raw));
+        assertThrows(IllegalArgumentException.class,
+                () -> service.completeGate(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID));
+        verifyNoInteractions(templateMapper, attemptMapper);
+        verify(sessionMapper, never()).insert(any());
+    }
+
+    @Test
+    void frozenEnabledMechanicStillRequiresItsOriginalAdvancedCompletion() throws Exception {
+        frozenBasicRoute(new com.fasterxml.jackson.databind.ObjectMapper().readTree(randomOnlyConfig()));
+        assertEquals("请先完成高级玩法", assertThrows(ServiceException.class,
+                () -> service.completeGate(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID)).getMessage());
+        verifyNoInteractions(templateMapper, attemptMapper);
+    }
+
+    @Test
+    void missingFrozenConfigStillFailsClosedInsteadOfReadingLiveTemplate() {
+        frozenBasicRoute(null);
+        assertEquals("本局玩法配置不可用", assertThrows(IllegalStateException.class,
+                () -> service.completeGate(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID)).getMessage());
+        verifyNoInteractions(templateMapper, attemptMapper);
+    }
+
     // ==================== M1 回执自带新世界 ====================
 
     @Test

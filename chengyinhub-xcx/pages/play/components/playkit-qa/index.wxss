@@ -99,7 +99,7 @@
 }
 .qa__opt-main { display: flex; align-items: center; gap: 28rpx; flex: 1; min-width: 0; transition: transform .18s ease; }
 .qa__tail { display: none; }
-.qa__opt.is-on    { color: var(--ink); font-weight: 700; }
+.qa__opt.is-on    { color: var(--ink); font-weight: 700; background: var(--soft); } /* 只变字重看不出选中(实走 A21) */
 .qa__opt.is-right { color: var(--ok); font-weight: 700; }
 .qa__opt.is-wrong { color: var(--accent); font-weight: 700; }
 .qa__opt.is-on .qa__opt-main,

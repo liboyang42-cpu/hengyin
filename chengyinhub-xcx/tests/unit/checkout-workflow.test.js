@@ -16,6 +16,7 @@ function makeWf(over) {
   const calls = { order: 0, pay: 0, verify: 0 };
   let orderCb = null; let payCb = null; let verifyCb = null;
   const deps = Object.assign({
+    setTimer: () => 0, clearTimer: () => {},
     createOrder: (payload, cb) => { calls.order++; orderCb = cb; },
     requestPayment: (orderData, cb) => { calls.pay++; payCb = cb; },
     isPayable: (d) => d.payableAmount > 0,
@@ -50,6 +51,32 @@ test('防重:在途再次 submit 被忽略,createOrder 只调一次', () => {
   assert.equal(wf.submit({}, h), false); // 在途,忽略
   assert.equal(calls.order, 1);
   assert.equal(wf.isBusy(), true);
+});
+
+test('SDK永不回调时只核对原订单，迟到SDK回调不能重复核账或解除UNKNOWN', () => {
+  let watchdog;
+  const { wf, resolveOrder, resolvePay, resolveVerify, calls } = makeWf({ setTimer: fn => { watchdog = fn; return 1; } });
+  const h = handlers();
+  wf.submit({ originalKey: 'unchanged' }, h);
+  resolveOrder({ ok: true, data: { registrationId: 19, payableAmount: 5 } });
+  watchdog();
+  assert.equal(wf.getState(), 'verifying'); assert.equal(calls.verify, 1);
+  resolvePay({ ok: true }); resolvePay({ ok: false, cancelled: true });
+  assert.equal(calls.verify, 1); assert.equal(calls.pay, 1); assert.equal(calls.order, 1);
+  resolveVerify({ ok: false, status: 'unknown' });
+  assert.equal(wf.getState(), 'unknown'); assert.equal(wf.submit({}), false);
+  assert.deepEqual(h.log.map(x => x[0]), ['unknown']);
+});
+
+test('SDK无回调后的原单核账仅服务端成功才能完成；销毁撤销watchdog', () => {
+  let watchdog, clears = 0;
+  const f = makeWf({ setTimer: fn => { watchdog = fn; return 1; }, clearTimer: () => { clears++; } });
+  const h = handlers(); f.wf.submit({}, h); f.resolveOrder({ ok: true, data: { registrationId: 19, payableAmount: 5 } });
+  watchdog(); f.resolveVerify({ ok: true });
+  assert.equal(f.wf.getState(), 'done'); assert.deepEqual(h.log.map(x => x[0]), ['paySuccess']);
+  const other = makeWf({ setTimer: fn => { watchdog = fn; return 2; }, clearTimer: () => { clears++; } });
+  other.wf.submit({}, h); other.resolveOrder({ ok: true, data: { payableAmount: 5 } }); other.wf.destroy(); watchdog();
+  assert.equal(other.calls.verify, 0); assert.equal(clears, 2);
 });
 
 test('创建订单失败 → onOrderFail、不拉起支付、回 idle 可重试', () => {

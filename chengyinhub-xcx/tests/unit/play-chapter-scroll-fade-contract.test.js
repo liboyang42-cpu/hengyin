@@ -123,7 +123,7 @@ test('只发新故事 in/dir/d 变化路径，屏外段与正文/玩法配置不
     'chapterParas[2].d', 'chapterParas[2].dir', 'chapterParas[2].in',
   ])
   assert.equal(page.data.chapterParas[0].in, true)
-  assert.equal(page.data.chapterParas[2].d, 0.05, '同批入场仍逐段错开 50ms')
+  assert.equal(page.data.chapterParas[2].d, 0.35, '同批入场仍逐段错开(2026-10-29 业主:显形放慢,50ms → 350ms)')
   assert.equal(page.data.chapterParas[1].in, false)
   assert.deepEqual(page.data.chapterParas[2].config, { profile: { required: true } })
 })

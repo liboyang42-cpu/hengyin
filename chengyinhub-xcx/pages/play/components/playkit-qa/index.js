@@ -56,6 +56,7 @@ const buildOptions = (list) => (list || []).map((o, i) => ({
 Component({
   behaviors: [reducedMotionBehavior],
   properties: {
+    inline: { type: Boolean, value: false },   // 故事流里就地玩:过了之后往下走用故事流自己的「继续故事」,本屏不再出第二个「继续」
     show: { type: Boolean, value: false },
     mode: { type: String, value: 'type' },        // type | pick | shot
     sessionId: { type: String, value: '' },      // Original runtime identity; never a client-generated business ID.

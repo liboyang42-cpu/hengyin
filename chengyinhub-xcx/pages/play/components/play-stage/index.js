@@ -57,8 +57,8 @@ Component({
     countingIn: false,
     calibrating: false,
     verdict: '',
-    shaking: false,
     verdictText: '',
+    verdictNeutral: false,
     timedOut: false,
     // 入场(2026-10-23 主人定稿「玩法入场动效」):每次打开 0 → 1,各玩法屏的 .pe 零件按它过渡。
     // peOn 只在入场那两秒为 1,之后各零件的延时归零,别的交互不再被拖慢。
@@ -208,12 +208,12 @@ Component({
       return left === 0;
     },
 
-    win(text) {
+    win(text, opts) {
       if (this._done) return;
       this._done = true;
       this._stopTick(); this._stopDeadline();
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
-      this.setData({ verdict: 'win', verdictText: text || '', timedOut: false });
+      this.setData({ verdict: 'win', verdictText: text || '', verdictNeutral: !!(opts && opts.neutral), timedOut: false });
       this.triggerEvent('verdict', { kind: 'win' });
     },
     /** 判负。timedOut 决定屏上那两个字是「时间到」还是「失败」。 */
@@ -236,18 +236,9 @@ Component({
       this._burn = setTimeout(() => { this._burn = null; this.fail(true); }, BURN_MS);
     },
 
-    /** 答错抖一下。由玩法在判错那一刻调:stage.nudge()。
-        减动效直接不抖 —— 这一下是反馈不是信息,信息在那一行的红上。 */
-    nudge() {
-      if (this.data.reducedMotion || this.data.shaking) return;
-      this.setData({ shaking: true });
-      // 句柄要存:同文件另外三个计时器都存了,这一个不存的话 300ms 内退出会对已销毁组件 setData
-      if (this._shakeTimer) clearTimeout(this._shakeTimer);
-      this._shakeTimer = setTimeout(() => {
-        this._shakeTimer = null;
-        this.setData({ shaking: false });
-      }, 300);
-    },
+    /** 答错时玩法会调 stage.nudge()。2026-10-29 业主:不要整屏抖动(c5ff3c3 已从 wxml 摘掉 st--shake),
+        这里保留入口、什么都不做 —— 判错的信息在那一行的红上。 */
+    nudge() {},
 
     onBack() { this._stopAll(); this._stopServerDeadline(); this.triggerEvent('back'); },
   },

@@ -1,0 +1,7 @@
+{
+  "component": true,
+  "usingComponents": {
+    "cy-sheet": "/components/cy/sheet/index",
+    "cy-look-transition": "/pages/publish/components/look-transition/index"
+  }
+}

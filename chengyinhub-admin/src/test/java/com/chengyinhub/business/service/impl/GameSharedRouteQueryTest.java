@@ -167,6 +167,7 @@ class GameSharedRouteQueryTest {
         String oldRun = run.getVariablesJson(), oldTeam = team.getVariablesJson(), oldConfig = session.getModuleConfigSnapshotJson();
         ObjectNode first = (ObjectNode) runtime.querySharedRouteSnapshot(7L, 80L, 70L, 11L);
         assertEquals(2, first.path("authorityEpoch").asInt());
+        assertEquals("game:50", first.path("runtimeInstance").asText());
         ((ObjectNode) first.path("nodeAnswers").path("11").path("templatePresentation")).put("title", "mutable caller");
         assertEquals("原题", runtime.querySharedRouteSnapshot(7L, 80L, 70L, 11L)
                 .path("nodeAnswers").path("11").path("templatePresentation").path("title").asText());
@@ -205,6 +206,45 @@ class GameSharedRouteQueryTest {
         assertEquals(32L, answer.path("templateId").asLong());
         assertEquals("第二原题", answer.path("templatePresentation").path("title").asText());
         assertEquals(2, snapshot.path("authorityEpoch").asInt());
+    }
+
+    @Test void originalContentCarriesTheActiveQuestIdentityThroughTheRealAnswerGuard() throws Exception {
+        mappedQuests(true);
+        TopicRouteEngine.State state = json.readValue(team.getVariablesJson(), TopicRouteEngine.State.class);
+        state.getThemeRuntime().with("gameplay").put("activeQuestReceiptId", 73L);
+        team.setVariablesJson(json.writeValueAsString(state));
+        String stored = team.getVariablesJson();
+        var routes = mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
+        when(routes.queryNodeContentSnapshot(7L, 80L, 70L, 11L))
+                .thenAnswer(call -> runtime.querySharedRouteSnapshot(7L, 80L, 70L, 11L));
+        var context = new com.chengyinhub.web.service.play.PlayNodeContext();
+        ReflectionTestUtils.setField(context, "topicRouteRuntimeService", routes);
+        var original = new com.chengyinhub.web.service.play.PlayOriginalRun(null, 50L, "game:50:quest:73", 2);
+        assertEquals(32L, context.frozenAnswer(7L, 80L, 70L, 11L, original).path("templateId").asLong());
+        assertThrows(IllegalStateException.class, () -> context.frozenAnswer(7L, 80L, 70L, 11L,
+                new com.chengyinhub.web.service.play.PlayOriginalRun(null, 50L, "game:50:quest:72", 2)));
+        assertThrows(IllegalStateException.class, () -> context.frozenAnswer(7L, 80L, 70L, 11L,
+                new com.chengyinhub.web.service.play.PlayOriginalRun(null, 50L, "game:50:quest:73", 1)));
+        assertThrows(IllegalStateException.class, () -> context.frozenAnswer(7L, 80L, 70L, 11L,
+                new com.chengyinhub.web.service.play.PlayOriginalRun(null, 50L, "", 2)));
+        assertEquals(stored, team.getVariablesJson());
+        verify(mapper, never()).updateStoryStateCas(any());
+        verify(mapper, never()).selectSessionByActivityForUpdate(anyLong());
+    }
+
+    @Test void originalContentUsesTheSameActiveOperationIdentityWithoutRefreshingIt() throws Exception {
+        mappedQuests(false);
+        TopicRouteEngine.State state = json.readValue(team.getVariablesJson(), TopicRouteEngine.State.class);
+        state.getThemeRuntime().putObject("activeOperation").put("nodeId", 11L)
+                .put("sourceNodeId", 101L).put("receiptId", 74L).put("epoch", 2);
+        team.setVariablesJson(json.writeValueAsString(state));
+        String stored = team.getVariablesJson();
+        var snapshot = runtime.querySharedRouteSnapshot(7L, 80L, 70L, 11L);
+        assertEquals("game:50:operation:74", snapshot.path("runtimeInstance").asText());
+        assertEquals(2, snapshot.path("authorityEpoch").asInt());
+        assertEquals(31L, snapshot.path("nodeAnswers").path("11").path("templateId").asLong());
+        assertEquals(stored, team.getVariablesJson());
+        verify(mapper, never()).updateStoryStateCas(any());
     }
 
     @Test void ambiguousMappedSourceIsRejectedInsteadOfSelectingAFutureQuest() throws Exception {

@@ -1,0 +1,8 @@
+@import "/pages/play/components/playkit-sort/index.wxss";
+
+/* cy-playkit-compare · 时间轴对照:行卡、反馈条、按钮全部沿用排序定稿(上面 import),
+   这里只补两条时间线各自的小标题,以及年份比单个序号宽 */
+.cp__side { margin-top: var(--cy-space-5); font-size: var(--cy-type-label); font-weight: 700; color: var(--sub); }
+.cp__list { margin-top: var(--cy-space-2); }
+.cp__row { height: auto; min-height: 112rpx; padding-top: var(--cy-space-3); padding-bottom: var(--cy-space-3); }   /* ds-ok 与排序行同高档,事件文字可折两行 */
+.cp__time { width: auto; min-width: 96rpx; font-size: var(--cy-type-body); }

@@ -41,6 +41,7 @@ Component({
     target: { type: Object, value: null, observer() { this._rebuild(); } },
     // 精简(故事流左上角的雷达小地图,2026-09-24):只画下一站和「我」,不画其它站的锁 / 序号胶囊 / 候选光圈
     compact: { type: Boolean, value: false, observer() { this._rebuild(); } },
+    rotate: { type: Number, value: 0 }, // 地图旋转角(度);故事流雷达跟随朝向用,缺省 0 = 正北朝上
     // 视野自动框住所有点(含「我」);fitPadding = [上,右,下,左] px。
     // 雷达小地图要它:以前固定 scale=16 以我为中心,下一站在 3km 外时圆里只有街道(2026-10-27 实测)。
     fit: { type: Boolean, value: false },

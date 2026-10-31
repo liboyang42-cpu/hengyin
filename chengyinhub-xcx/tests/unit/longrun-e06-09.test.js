@@ -8,7 +8,7 @@ const vm = require('node:vm');
 function tracker(wx) {
   const module = { exports: {} };
   const filename = path.resolve(__dirname, '../../utils/location/bg-tracker.js');
-  vm.runInNewContext(fs.readFileSync(filename, 'utf8'), { module, wx }, { filename });
+  vm.runInNewContext(fs.readFileSync(filename, 'utf8'), { module, wx, setTimeout, clearTimeout }, { filename });
   return module.exports;
 }
 

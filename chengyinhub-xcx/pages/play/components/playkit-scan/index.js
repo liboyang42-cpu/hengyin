@@ -47,6 +47,7 @@ function clampScale(raw) {
 Component({
   behaviors: [reducedMotionBehavior],
   properties: {
+    inline: { type: Boolean, value: false }, // 故事流内嵌:取景收成流里一块,不接真 AR(xr-frame 要整窗画布)
     show: { type: Boolean, value: false },
     // ⚠️ 默认值只在**没传**这个属性时生效。分发器一律传 kit.title,商家没填就是 ''
     // —— 那会把这一行顶掉,而不是回落到默认。所以回落放在 titleText 上。
@@ -175,7 +176,7 @@ Component({
      */
     _refreshAr() {
       // 直接递 this.data,不在这里写 overlayUrl / arMode 字面键:自触发 observer 门禁按字面键判「写了被监听的键」
-      const live = shouldUseAr(Object.assign({}, this.data, { supported: arSupported(), arFail: this._arFail }));
+      const live = !this.data.inline && shouldUseAr(Object.assign({}, this.data, { supported: arSupported(), arFail: this._arFail }));
       if (live === this.data.arLive) return;
       if (!live) { this._stopArTimer(); this.setData({ arLive: false }); return; }
       const win = (wx.getWindowInfo && wx.getWindowInfo()) || wx.getSystemInfoSync();

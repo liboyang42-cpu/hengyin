@@ -28,6 +28,10 @@
 .pv--on .pv__fill { transform: translateY(0); }
 .pv--win .pv__fill { background: var(--cy-color-status-success); }
 .pv--fail .pv__fill { background: var(--cy-color-status-danger); }
+.pv--neutral .pv__fill { background: var(--cy-color-bg-surface-strong); }
+/* 中性判定(分支结局这类没有对错的选择):浪尖跟着换中性色,不留一圈绿边(实走 A35 复核) */
+.pv--neutral .pv__wave--a { background-image: radial-gradient(circle at 50% 100%, var(--cy-color-bg-surface-strong) 30rpx, transparent 31rpx); }
+.pv--neutral .pv__wave--b { background-image: radial-gradient(circle at 50% 100%, var(--cy-color-bg-surface-strong) 22rpx, transparent 23rpx); }
 
 /* 液面那道弧:一排半圆骑在色块顶边上,横向平移。
    两层不同速度、不同相位 —— 同速的话整块像一个刚体在晃,不像水。 */

@@ -284,3 +284,6 @@
   bottom: calc(env(safe-area-inset-bottom) + 48rpx);  /* ds-ok 接替说明条的位置 */
   transform: translateX(-50%);
 }
+
+/* 内嵌档(2026-10-30 所有玩法都内嵌):整屏取景收成故事流里的一块圆角取景框;真 AR 不接管(见 _refreshAr)。 */
+.sc--embed .sc__cam { position: relative; left: auto; top: auto; right: auto; bottom: auto; height: 880rpx; border-radius: var(--cy-radius-lg); }

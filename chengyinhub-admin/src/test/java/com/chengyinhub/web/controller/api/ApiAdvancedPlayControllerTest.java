@@ -75,4 +75,32 @@ class ApiAdvancedPlayControllerTest {
         org.mockito.Mockito.verify(runtimeService, org.mockito.Mockito.never()).finishPendingCardMint(anyMap());
     }
 
+    @Test
+    void 事务内的校验拒绝按4xx下发_客户端据此确认未执行而不是挂结果待确认() {
+        when(runtimeService.act(anyLong(), anyLong(), any(), anyString(), anyString(), anyMap()))
+                .thenThrow(new IllegalArgumentException("作品名须为 1 至 12 字"));
+        AjaxResult response = controller.action(Map.of("sessionId", 51, "version", 3,
+                "idempotencyKey", "k2", "action", "SUBMIT_DIY_NAME"));
+        assertEquals(400, response.get("code"));
+        assertEquals("作品名须为 1 至 12 字", response.get("msg"));
+        org.mockito.Mockito.verify(runtimeService, org.mockito.Mockito.never()).finishPendingCardMint(anyMap());
+    }
+
+    @Test
+    void 拍照动作与提交之后的收尾失败仍是通用错误_不冒充未执行() {
+        when(runtimeService.act(anyLong(), anyLong(), any(), anyString(), anyString(), anyMap()))
+                .thenThrow(new IllegalStateException("照片审核不能在已有业务事务中执行"));
+        AjaxResult photo = controller.action(Map.of("sessionId", 51, "version", 3,
+                "idempotencyKey", "k3", "action", "SUBMIT_PHOTO_CHECK"));
+        assertEquals(500, photo.get("code"));
+
+        Map<String, Object> judged = new HashMap<>();
+        org.mockito.Mockito.reset(runtimeService);
+        when(runtimeService.act(anyLong(), anyLong(), any(), anyString(), anyString(), anyMap())).thenReturn(judged);
+        when(runtimeService.finishPendingCardMint(judged)).thenThrow(new IllegalStateException("铸卡失败"));
+        AjaxResult minted = controller.action(Map.of("sessionId", 51, "version", 3,
+                "idempotencyKey", "k4", "action", "SUBMIT_SORT"));
+        assertEquals(500, minted.get("code"));
+    }
+
 }

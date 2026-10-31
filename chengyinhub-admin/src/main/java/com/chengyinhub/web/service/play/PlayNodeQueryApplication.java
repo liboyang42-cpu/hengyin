@@ -51,6 +51,8 @@ import static com.chengyinhub.common.core.domain.AjaxResult.error;
 public class PlayNodeQueryApplication {
     private static final Logger logger = LoggerFactory.getLogger(PlayNodeQueryApplication.class);
 
+    @Autowired(required = false)
+    private com.chengyinhub.business.mapper.CmsTopicMapper cmsTopicMapper;
     @Autowired
     private NpcProfileService npcProfileService;
     @Autowired
@@ -590,8 +592,14 @@ public class PlayNodeQueryApplication {
         // 而这一屏说的是「四家店、30 天、没有顺序」这件整体的事。
         // topicForFlow 在同一作用域里已经无条件取过同一个 tId,不再查第二次
         if (topicForFlow != null) data.put("topicDesc", topicForFlow.getDescription());
+        // 顶栏要显示主题名(2026-10-30):此前只有入口 URL 带 topicName,不带时游玩页标题为空(走查 A16 / B11)
+        if (topicForFlow != null) data.put("topicName", topicForFlow.getName());
         // 自由探索卡包首屏的底图:主题长图(列表里的封面也是它),前端虚化铺底,没有就退回章节封面
         if (topicForFlow != null) data.put("topicCover", topicForFlow.getImgUrl());
+        // 完成页标题、自由探索卡包抬头都要主题名;此前前端读 d.topicName 而这里从没下发 ⇒ 恒空,只能回落章节名。
+        if (topicForFlow != null) data.put("topicName", topicForFlow.getName());
+        // 主题配乐(作者媒体,详情页同一条):游玩页作循环底乐,#659 移除的是合成环境音,不是作者音频。
+        if (topicForFlow != null) data.put("topicAudioUrl", topicForFlow.getAudioUrl());
         // 故事开局的「初始状态」页只列作者真开了的精力 / 幸运:回执里的 hp/luck 没开也有值(取配置初始值),看不出开没开
         Map<String, Object> vitalsOn = read.contentSnapshot != null
                 ? vitalsOn(com.chengyinhub.business.service.support.NodeJourneySnapshot.journeyRules(read.contentSnapshot.toString()))
@@ -601,6 +609,8 @@ public class PlayNodeQueryApplication {
         if (circleTopic != null && StringUtils.isNotEmpty(circleTopic.getCircleThemeCode())) {
             data.put("circleThemeCode", circleTopic.getCircleThemeCode());
         }
+        // 主题画面风格:风格 / 参数 / 转场 / 故事字体,前端 theme-look.js 读不懂就回落默认
+        if (cmsTopicMapper != null) data.put("look", cmsTopicMapper.selectLookJsonById(read.tId));
         data.put("mode", read.playMode); // 1经典定向(线性) 2自由定向(全开)
         if (read.playMode == PlayMode.LINEAR_ORIENTEERING) {
             Integer personalBest = playerNodeProgressService.selectPuzzlePersonalBest(read.memberId, read.tId);

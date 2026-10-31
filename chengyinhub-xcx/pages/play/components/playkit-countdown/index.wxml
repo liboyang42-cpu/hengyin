@@ -18,7 +18,7 @@
     <view class="oc__b {{running ? 'oc__b--busy' : ''}} pe pe--up" style="--pe-d:.75s" bindtap="onStart"
           aria-role="button" aria-label="{{running ? '倒计时进行中' : '开始倒计时'}}"
           hover-class="oc__b--press" hover-stay-time="80">
-      {{running ? '走着呢' : (finished ? '再来一次' : '开始')}}
+      {{running ? '静默中' : (finished ? '再来一次' : '开始')}}
     </view>
   </view>
 </cy-play-stage>

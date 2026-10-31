@@ -158,6 +158,14 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     private com.chengyinhub.business.mapper.RedemptionMapper redemptionMapper;
 
     @Autowired
+    @Lazy
+    private com.chengyinhub.business.service.IShopDayProofService shopDayProofService;
+
+    @Autowired
+    @Lazy
+    private com.chengyinhub.business.service.ICmsTopicNodeService topicNodeService;
+
+    @Autowired
     private OmsTicketMapper omsTicketMapper;
 
     /** 候补 offer 已在晋级事务占过库存；报名事务只 claim/bind，绝不能再扣一次。 */
@@ -3731,6 +3739,24 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             return registrationPaymentCallbackFailure(outTradeNo, "topic_closed_original_payment_recovery_required");
         }
         return "SUCCESS";
+    }
+
+    @Override
+    public void recordImpliedShopArrival(CmsRegistration registration, Long chapterId, Long merchantOwnerMemberId) {
+        if (registration == null || !Long.valueOf(2L).equals(registration.getOwnerType())
+                || chapterId == null || merchantOwnerMemberId == null) return;
+        try {
+            CmsTopicNode probe = new CmsTopicNode();
+            probe.setChapterId(chapterId);
+            probe.setMerchantMemberId(merchantOwnerMemberId);
+            List<CmsTopicNode> nodes = topicNodeService.selectCmsTopicNodeList(probe);
+            if (nodes == null) return;
+            for (CmsTopicNode node : nodes) {
+                shopDayProofService.markArrived(registration.getMemberId(), registration.getOwnerId(), node);
+            }
+        } catch (RuntimeException e) {
+            logger.warn("核销补记到店失败 registrationId={} chapterId={}", registration.getId(), chapterId, e);
+        }
     }
 
     private WechatVerifiedPaymentFactService.Stored checkedVerifiedPayment(Map<String, String> facts) {

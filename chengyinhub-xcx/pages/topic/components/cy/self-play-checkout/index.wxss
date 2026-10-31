@@ -1,5 +1,5 @@
 /* 从右侧推入的整屏层,版式与报名结算页一致(深色玩家域)。 */
-.ck { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 900; background: var(--cy-bg-page);
+.ck { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: calc(var(--cy-z-modal) - 1); /* 「还差姓名和手机号」弹窗要压在结算层上(实走 A3) */ background: var(--cy-bg-page);
   transform: translateX(100%); transition: transform .45s cubic-bezier(.2, .82, .2, 1); }
 .ck.is-on { transform: none; }
 .ck-pressed { opacity: .75; }

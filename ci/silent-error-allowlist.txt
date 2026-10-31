@@ -130,7 +130,7 @@ chengyinhub-xcx/pages/merchant/predict/index.js 3  # 2026-09-12 竞猜待答:身
 chengyinhub-xcx/pages/merchant/ledger/index.js 1  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹
 chengyinhub-xcx/pages/merchant/team/index.js 7  # 2026-08-25 团队页:权限、成员、岗位、邀请与写操作失败落页内/弹层精确错误并保留重试;通用 toast 会双弹
 chengyinhub-xcx/pages/mylike/mylike.js 4  # 2026-09-21 收藏双域:列表失败落页内 cy-error,取消收藏失败由动作自己的精确 toast 承接,通用 toast 会双弹;2026-10-22 W11 取消结果未知时的 like_list 回读失败由回读自己的「取消结果未确认」toast 承接并保持锁定
-chengyinhub-xcx/components/cy/scene-qr-ticket/index.js 1  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹
+chengyinhub-xcx/components/cy/scene-qr-ticket/index.js 2  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹;2026-10-30 码亮着时的核销轮询(探店完局面)是增强,非探店票被拒/断网只停轮询,码照常可扫,每 4 秒弹错会刷屏
 chengyinhub-xcx/pages/square/components/cy/post-compose/index.js 3  # 选活动两路读取落activityError并给重试；发布失败由当前编辑器显式提示，关闭、切号或旧请求错误不能污染新界面
 chengyinhub-xcx/pages/publish/activity/index.js 4  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹;2026-09-12 编辑回填 /api/activity/info 同口径 +1
 chengyinhub-xcx/pages/publish/fabu/theme-runtime-structure.js 1  # 2026-10-28 文档二 L3 到达与引导:换个方式写入失败,非 200 原样落半屏内 structureError(cy-inline-error),网络失败 cyToast 一句,不再叠加统一 toast

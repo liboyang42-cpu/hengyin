@@ -39,6 +39,7 @@
     "cy-playkit-sort": "/pages/play/components/playkit-sort/index",
     "cy-playkit-match": "/pages/play/components/playkit-match/index",
     "cy-playkit-classify": "/pages/play/components/playkit-classify/index",
+    "cy-playkit-compare": "/pages/play/components/playkit-compare/index",
     "cy-playkit-album": "/pages/play/components/playkit-album/index",
     "cy-playkit-journey-check": "/pages/play/components/playkit-journey-check/index"
   }

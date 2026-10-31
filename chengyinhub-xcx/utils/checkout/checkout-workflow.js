@@ -79,6 +79,9 @@ function createCheckoutWorkflow(deps) {
   var isPayable = deps.isPayable || function (d) { return d && d.payableAmount > 0; };
   var verifyPayment = deps.verifyPayment; // 可选:支付成功后向服务端确认终态
   var validatePayment = deps.validatePayment; // 可选:页面按自己的支付参数形态做完整性校验
+  var setTimer = deps.setTimer || setTimeout;
+  var clearTimer = deps.clearTimer || clearTimeout;
+  var paymentCallbackTimeoutMs = 20000;
 
   if (!createOrder || !requestPayment) {
     throw new Error('checkout-workflow: 缺少 createOrder/requestPayment 依赖');
@@ -88,6 +91,7 @@ function createCheckoutWorkflow(deps) {
   var destroyed = false;
   var generation = 0;
   var activeControl = null;
+  var paymentTimer = null;
 
   function call(fn, arg) { if (typeof fn === 'function') fn(arg); }
   function current(run) { return !destroyed && run === generation; }
@@ -97,6 +101,8 @@ function createCheckoutWorkflow(deps) {
     }
   }
   function stopActive() {
+    if (paymentTimer !== null) clearTimer(paymentTimer);
+    paymentTimer = null;
     var control = activeControl;
     activeControl = null;
     if (!control) return;
@@ -136,10 +142,14 @@ function createCheckoutWorkflow(deps) {
         return;
       }
       state = 'paying';
-      var payControl = requestPayment(data, function (payRes) {
-        if (!current(run)) return;
+      var paymentSettled = false;
+      function paymentResult(payRes, callbackMissing) {
+        if (!current(run) || paymentSettled) return;
+        paymentSettled = true;
+        if (paymentTimer !== null) clearTimer(paymentTimer);
+        paymentTimer = null;
         activeControl = null;
-        if (payRes && payRes.ok) {
+        if (callbackMissing || payRes && payRes.ok) {
           if (verifyPayment) {
             state = 'verifying';
             call(handlers.onPayVerifying, data);
@@ -161,15 +171,20 @@ function createCheckoutWorkflow(deps) {
             });
             if (!verificationSettled) remember(verifyControl);
           } else {
-            state = 'done'; // 支付成功只可能进 done 一次
-            call(handlers.onPaySuccess, data);
+            state = callbackMissing ? 'unknown' : 'done';
+            if (callbackMissing) call(handlers.onPayUnknown, { ok: false, status: 'unknown',
+              errMsg: '支付结果未知，请到订单查看，暂不要重复支付' });
+            else call(handlers.onPaySuccess, data);
           }
         } else {
           state = 'idle'; // 取消/失败可重试
           if (payRes && payRes.cancelled) call(handlers.onPayCancel);
           else call(handlers.onPayFail, safePaymentFailure(payRes, '支付失败，请重试'));
         }
-      });
+      }
+      // SDK 无回调只触发同一原订单的核账，不推断支付失败或再次拉起支付。
+      paymentTimer = setTimer(function () { paymentResult(null, true); }, paymentCallbackTimeoutMs);
+      var payControl = requestPayment(data, function (payRes) { paymentResult(payRes, false); });
       if (state === 'paying') remember(payControl);
     });
     if (state === 'submitting') remember(orderControl);

@@ -165,7 +165,7 @@ test('慢任务到期进入可领取态_不得显示还有0天', () => {
   const fs = require('node:fs')
   const path = require('node:path')
   const wxml = fs.readFileSync(path.resolve(__dirname,
-    '../../pages/play/components/playkit-slowtask/index.wxml'), 'utf8')
+    '../../pages/play/components/playkit-slowtask/body.wxml'), 'utf8')
   assert.match(wxml, /wx:elif="\{\{!claimed && daysLeft > 0\}\}"/)
 })
 

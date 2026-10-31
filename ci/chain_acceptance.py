@@ -63,7 +63,7 @@ REDIS_HOST, REDIS_PORT, REDIS_DB = "127.0.0.1", 6379, 9
 APP_BASE = "http://127.0.0.1:8099"
 APP_READY_LINE = "Started RuoYiApplication"
 FAULT_MARKER = "e2e 注入"
-STUBS = ("E2eWechatPayStub", "E2eFaultInjectionFilter", "E2eWxContentSecurityStub")
+STUBS = ("E2eWechatPayStub", "E2eWechatPayGatewayStub", "E2eFaultInjectionFilter", "E2eWxContentSecurityStub")
 CONTENT_SECURITY_STUB = "E2eWxContentSecurityStub"
 CONTENT_SECURITY_GATE = "EXTERNAL_GATE: content security stubbed"
 # 内容安全桩只许改写两次出站调用;回调验签、nonce、结论落地必须走真实实现。

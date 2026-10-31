@@ -1075,6 +1075,8 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             CmsMemberTemplate template = content == null ? templateMapper.selectCmsMemberTemplateById(node.getTemplateId()) : null;
             JsonNode frozen=topicRouteRuntimeService==null?null:topicRouteRuntimeService.nodeRuntimeConfig(memberId,topicId,nodeId,activityId);
             if (content != null && frozen == null) throw new IllegalStateException("本局玩法配置不可用");
+            // Publication freezes ordinary basic-only nodes as an empty config; never consult a newer template.
+            if (frozen != null && frozen.isObject() && frozen.isEmpty()) return null;
             if (frozen==null && (template == null || StringUtils.isBlank(template.getAdvancedConfigJson()))) return null;
             String configJson = configValidator.validateAndNormalize(frozen==null?template.getAdvancedConfigJson():frozen.toString());
             if (!configValidator.hasEnabledMechanic(configJson)) return null;

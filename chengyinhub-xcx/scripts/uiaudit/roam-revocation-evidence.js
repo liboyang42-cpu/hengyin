@@ -144,7 +144,23 @@ function validate(action, branch, receipt, capture) {
     stops.forEach(success)
     requireFact(newCalls.every(call => call.method === 'stopLocationUpdate'), '漫游撤回后出现未授权新start')
   }
-  if (scenario === 'stop-confirmed') {
+  if (scenario === 'no-active-collection') {
+    source(proof.sourceRefs.stopState, 'utils/location/bg-tracker.js#stopState')
+    requireFact(proof.sourceRefs.stopState.beforeValue === before.stopState
+      && proof.sourceRefs.stopState.afterValue === after.stopState
+      && before.stopState === 'confirmed' && after.stopState === 'confirmed', '无采集分型缺实际已确认停止状态')
+    requireFact(before.roamOwner === false && before.trackerRunning === false && before.starting === false
+      && before.realOn === false && before.listener === false
+      && after.roamOwner === false && after.trackerRunning === false && after.starting === false
+      && after.realOn === false && after.listener === false, '无采集分型存在持有者或在途采集')
+    requireFact(newCalls.length === 0, '无采集分型期间不得出现新SDK调用')
+    requireFact(stops.every(call => call.outcome === 'success' && call.ok === true
+      && call.completedOrder < sdk.revokedOrder), '无采集分型此前停止失败或尚在途')
+    requireFact(sdk.calls.filter(call => call.method !== 'stopLocationUpdate' && call.outcome === 'success')
+      .every(call => stops.some(stop => stop.completedOrder > call.completedOrder
+        && stop.completedOrder < sdk.revokedOrder)), '无采集分型此前成功启动缺已完成停止')
+    requireFact(['success', 'duplicate-trigger', 'timeout'].includes(branch), '无采集分型不符分支')
+  } else if (scenario === 'stop-confirmed') {
     requireFact(newCalls.some(call => call.method === 'stopLocationUpdate'), '缺本次实际stop')
     stopped()
     requireFact(['success', 'duplicate-trigger', 'timeout'].includes(branch) || recordFailed, '停止形态不符分支')

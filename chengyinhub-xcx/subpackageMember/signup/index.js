@@ -690,7 +690,10 @@ const DECK_POSE = [{ y: 0, s: 1, b: 1, o: 1 }, { y: -26, s: 0.93, b: 0.5, o: 1 }
 function walletCard(item) {
   const until = item.wUntil ? new Date(String(item.wUntil).replace(/-/g, '/')) : null;
   const days = until && !isNaN(until.getTime()) ? Math.ceil((until.getTime() - Date.now()) / 86400000) : null;
-  return Object.assign(item, { wSub: days !== null && days >= 0 ? item.wType + ' · 剩 ' + days + ' 天' : item.wType });
+  // 当天就截止的写「今天」:按毫秒向上取整,今天 14:16 的场次在凌晨会写成「剩 1 天」,时区偏差时还会多一天(实走 B14)
+  const today = until && !isNaN(until.getTime()) && until.toDateString() === new Date().toDateString();
+  const left = today ? '今天截止' : ('剩 ' + days + ' 天');
+  return Object.assign(item, { wSub: days !== null && days >= 0 ? item.wType + ' · ' + left : item.wType });
 }
 /* 能用的票:已报名(已付款 / 免费)、没核验、没取消没过期,到期日也还没过 */
 function usableTicket(item) {
