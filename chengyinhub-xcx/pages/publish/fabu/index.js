@@ -7400,7 +7400,7 @@ Page({
       // 归一放在**上送这一处**而不是各个入口:模式切换(applyEntryMode)、草稿复制
       // (_buildCopiedDraft)、编辑回填三条路都可能把 formData 带到自由探索上,
       // 而自由探索上送 1 会撞服务端 assertClubLeadOnlyForCityOrienteering 直接抛。
-      openClubPool: (productType === 1 && !this.data.formData.clubId && this.data.formData.openClubPool) ? 1 : 0,
+      openClubPool: (productType === 1 && !this.data.formData.clubId && this.data.operationScope !== 'MERCHANT' && this.data.formData.openClubPool) ? 1 : 0,
       recruitDeadline: Number(this.data.formData.productType) === 2
         ? this._normalizeDateTime(this.data.formData.recruitDeadline, '23:59:59') : null,
       publishToCreative: this.data.publishToCreative ? 1 : 0, // 1=同步到创意广场 0=否(后端 ApiTopicController.createTopic 已处理:开关开则插 dataType=2 创意广场帖)

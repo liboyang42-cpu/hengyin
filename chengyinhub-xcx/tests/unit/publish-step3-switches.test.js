@@ -162,9 +162,9 @@ test('step3:「邀请俱乐部带队」在、绑活方法、只对非俱乐部�
   const live = wxml.replace(/<!--[\s\S]*?-->/g, '');
   assert.ok(/checked="\{\{formData\.openClubPool\}\}"/.test(live), '开关必须在版面上');
   assert.ok(live.includes('onClubPoolChange'), '绑定必须在');
-  assert.ok(live.indexOf('wx:if="{{formData.productType === 1 && !formData.clubId}}">俱乐部承接</view>') >= 0,
-    '只对「非俱乐部城市定向」露出:自由探索撞服务端带队闸；俱乐部自办团不进公开池,'
-    + '两处露出的都是点得动却不生效的死开关');
+  assert.ok(live.indexOf('wx:if="{{formData.productType === 1 && !formData.clubId && operationScope !== \'MERCHANT\'}}">俱乐部承接</view>') >= 0,
+    '只对「非俱乐部、非商家主体的城市定向」露出:自由探索撞服务端带队闸；俱乐部自办团不进公开池;'
+    + '商家城市定向只能自己带(D3),三处露出的都是点得动却不生效的死开关');
   assert.ok(!/wx:if="\{\{formData\.productType === 1\}\}">俱乐部承接/.test(live),
     '旧条件(不看 clubId)不能回潮 —— 那正是「界面在骗人」的形态');
 

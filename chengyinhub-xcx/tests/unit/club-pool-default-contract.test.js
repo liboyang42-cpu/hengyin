@@ -30,14 +30,14 @@ test('专业版发布页:开关在、绑活方法、新建默认开、非俱乐�
     '开关必须在版面上 —— 裁决 12B 恢复「主办可手动关」,没有控件就不是统一口径');
   assert.ok(live.includes('onClubPoolChange'), '开关必须绑到活方法');
   assert.ok(live.includes('邀请俱乐部带队'), '文案必须在');
-  assert.ok(live.indexOf('wx:if="{{formData.productType === 1 && !formData.clubId}}">俱乐部承接</view>') >= 0,
-    '只对「非俱乐部城市定向」露出:自由探索没有俱乐部带队；俱乐部自办团不进公开承接池');
+  assert.ok(live.indexOf('wx:if="{{formData.productType === 1 && !formData.clubId && operationScope !== \'MERCHANT\'}}">俱乐部承接</view>') >= 0,
+    '只对「非俱乐部、非商家主体的城市定向」露出:自由探索没有俱乐部带队；俱乐部自办团不进公开承接池;商家城市定向只能自己带(D3)');
 
   const js = read('pages/publish/fabu/index.js');
   assert.match(js, /openClubPool:\s*true,/, '新建默认必须为开');
   assert.match(js,
-    /openClubPool:\s*\(productType === 1 && !this\.data\.formData\.clubId && this\.data\.formData\.openClubPool\)\s*\?\s*1\s*:\s*0/,
-    '上送归一:非俱乐部城市定向按开关，自由探索与俱乐部自办团恒 0');
+    /openClubPool:\s*\(productType === 1 && !this\.data\.formData\.clubId && this\.data\.operationScope !== 'MERCHANT' && this\.data\.formData\.openClubPool\)\s*\?\s*1\s*:\s*0/,
+    '上送归一:非俱乐部、非商家主体的城市定向按开关，自由探索、俱乐部自办团与商家城市定向恒 0');
 });
 
 test('negative control:默认改回关、上送漏掉任一恒 0 条件、版面撤开关都必须判红', () => {
@@ -47,15 +47,19 @@ test('negative control:默认改回关、上送漏掉任一恒 0 条件、版面
   const hardcoded = '      openClubPool: 0,';
   assert.throws(
     () => assert.match(hardcoded,
-      /openClubPool:\s*\(productType === 1 && !this\.data\.formData\.clubId && this\.data\.formData\.openClubPool\)\s*\?\s*1\s*:\s*0/),
+      /openClubPool:\s*\(productType === 1 && !this\.data\.formData\.clubId && this\.data\.operationScope !== 'MERCHANT' && this\.data\.formData\.openClubPool\)\s*\?\s*1\s*:\s*0/),
     assert.AssertionError);
 
   // 漏掉 clubId 条件(旧的一版归一)也必须红 —— 那正是「俱乐部自办团仍上送 1」的形态。
   const clubIgnored = '      openClubPool: (productType === 1 && this.data.formData.openClubPool) ? 1 : 0,';
   assert.throws(
     () => assert.match(clubIgnored,
-      /openClubPool:\s*\(productType === 1 && !this\.data\.formData\.clubId && this\.data\.formData\.openClubPool\)\s*\?\s*1\s*:\s*0/),
+      /openClubPool:\s*\(productType === 1 && !this\.data\.formData\.clubId && this\.data\.operationScope !== 'MERCHANT' && this\.data\.formData\.openClubPool\)\s*\?\s*1\s*:\s*0/),
     assert.AssertionError);
+
+  // 漏掉商家主体条件也必须红 —— 那正是「商家城市定向默认开池、俱乐部可来申请带队」(违背 D3)的形态。
+  const merchantIgnored = '      openClubPool: (productType === 1 && !this.data.formData.clubId && this.data.formData.openClubPool) ? 1 : 0,';
+  assert.throws(() => assert.match(merchantIgnored, /openClubPool:\s*\(productType === 1 && !this\.data\.formData\.clubId && this\.data\.operationScope !== 'MERCHANT' && this\.data\.formData\.openClubPool\)\s*\?\s*1\s*:\s*0/), assert.AssertionError);
 
   const wxmlWithoutSwitch = '<view>俱乐部承接</view>';
   assert.throws(() => assert.ok(/checked="\{\{formData\.openClubPool\}\}"/.test(wxmlWithoutSwitch)), assert.AssertionError);

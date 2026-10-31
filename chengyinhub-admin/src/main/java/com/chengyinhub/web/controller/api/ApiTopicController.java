@@ -1687,6 +1687,59 @@ public class ApiTopicController extends BaseController {
     }
 
     /**
+     * 主办方在工作台改某一站的档位(2026-10-31 业主:招商在发布之后做,每一站一个档位,商家只能接受或拒绝)。
+     *
+     * <p>★ 本端点只负责登录 + 解析归属主体 + 转调;归属校验、改档闸(有生效供给不许改)、容量与计酬闸
+     * 全在 {@link ICmsTopicChapterService#configureSupplyTermsAsOwner} 的锁内完成 —— 先读后写的归属判断会被并发绕过。
+     * 主办侧只有权益 / 引流两档,俱乐部自己发的自由探索才多一档计酬(服务端判定,不信客户端)。
+     */
+    @Operation(summary = "主办方设置某一站的招商档位")
+    @PostMapping("/chapter/supply-terms")
+    @Parameters({
+            @Parameter(name = "chapterId", description = "章节id"),
+            @Parameter(name = "termsMode", description = "PERK 权益档 / TRAFFIC 引流档 / REVSHARE 计酬档"),
+            @Parameter(name = "perkMinValue", description = "权益档门槛(元),空=不设"),
+            @Parameter(name = "maxPerHeadFee", description = "计酬档每人次上限(元),计酬档必填"),
+            @Parameter(name = "maxMerchant", description = "商家数上限,0=不限"),
+            @Parameter(name = "scope", description = "MERCHANT 时按商家主体解析归属")
+    })
+    public AjaxResult setChapterSupplyTerms(String chapterId, String termsMode, BigDecimal perkMinValue,
+                                            BigDecimal maxPerHeadFee, Integer maxMerchant, String scope) {
+        Long principalMemberId;
+        try {
+            principalMemberId = getAppUserId();
+        } catch (Exception e) {
+            return error("请先登录");
+        }
+        if (principalMemberId == null || principalMemberId <= 0) {
+            return error("请先登录");
+        }
+        Long cid = Convert.toLong(chapterId, 0L);
+        if (cid <= 0) {
+            return error("参数不合规");
+        }
+        Long memberId;
+        try {
+            memberId = resolveProjectOwnerMemberId(principalMemberId, scope);
+        } catch (ServiceException e) {
+            return new AjaxResult(e.getCode(), e.getMessage());
+        }
+        com.chengyinhub.business.domain.dto.ChapterSupplyTermsDTO terms = new com.chengyinhub.business.domain.dto.ChapterSupplyTermsDTO();
+        terms.setTermsMode(termsMode);
+        terms.setPerkMinValue(perkMinValue);
+        terms.setMaxPerHeadFee(maxPerHeadFee);
+        terms.setMaxMerchant(maxMerchant == null ? 0 : maxMerchant);
+        try {
+            cmsTopicChapterService.configureSupplyTermsAsOwner(cid, memberId, terms);
+        } catch (ServiceException e) {
+            return new AjaxResult(e.getCode(), e.getMessage());
+        } catch (IllegalStateException e) {
+            return error(e.getMessage());
+        }
+        return success("这一站的档位已保存");
+    }
+
+    /**
      * 稿 468:1126「章节控制 → 结束本章」。2026-09-10 用户定的闸:**只有发起人能点**。
      *
      * <p>发起人 = 主题归属人(cms_topic.member_id),与同组的「开放报名」同一把锁 ——

@@ -993335,7 +993335,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/nearby/index.js:498"
+        "staticSource": "pages/coop/nearby/index.js:509"
       }
     },
     {
@@ -993406,7 +993406,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/nearby/index.js:397"
+        "staticSource": "pages/coop/nearby/index.js:408"
       }
     },
     {
@@ -993486,7 +993486,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/nearby/index.js:383"
+        "staticSource": "pages/coop/nearby/index.js:394"
       }
     },
     {
@@ -993613,7 +993613,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/nearby/index.js:498"
+        "staticSource": "pages/coop/nearby/index.js:509"
       }
     },
     {
@@ -993745,7 +993745,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/nearby/index.js:504"
+        "staticSource": "pages/coop/nearby/index.js:515"
       }
     },
     {
@@ -993815,7 +993815,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/nearby/index.js:502"
+        "staticSource": "pages/coop/nearby/index.js:513"
       }
     },
     {
@@ -993882,7 +993882,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/nearby/index.js:146"
+        "staticSource": "pages/coop/nearby/index.js:155"
       }
     },
     {
@@ -993949,7 +993949,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/nearby/index.js:451"
+        "staticSource": "pages/coop/nearby/index.js:462"
       }
     },
     {
@@ -994085,7 +994085,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/nearby/index.js:439"
+        "staticSource": "pages/coop/nearby/index.js:450"
       }
     },
     {
@@ -1222059,7 +1222059,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:109:bindchange:onClubPoolChange:4",
+      "id": "pages/publish/fabu/step3.wxml:111:bindchange:onClubPoolChange:4",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1222082,7 +1222082,7 @@
         "tag": "cy-switch",
         "event": "bindchange",
         "handler": "onClubPoolChange",
-        "line": 109,
+        "line": 111,
         "selectorHint": "cy-switch[bindchange]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1222126,7 +1222126,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:120:bindchange:onTeamSupportChange:5",
+      "id": "pages/publish/fabu/step3.wxml:122:bindchange:onTeamSupportChange:5",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1222149,7 +1222149,7 @@
         "tag": "cy-switch",
         "event": "bindchange",
         "handler": "onTeamSupportChange",
-        "line": 120,
+        "line": 122,
         "selectorHint": "cy-switch[bindchange]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1222193,7 +1222193,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:127:bindtap:onTeamModeSelect:6",
+      "id": "pages/publish/fabu/step3.wxml:129:bindtap:onTeamModeSelect:6",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1222216,7 +1222216,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onTeamModeSelect",
-        "line": 127,
+        "line": 129,
         "selectorHint": ".tk-segment__item",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1222260,7 +1222260,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:128:bindtap:onTeamModeSelect:7",
+      "id": "pages/publish/fabu/step3.wxml:130:bindtap:onTeamModeSelect:7",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1222283,7 +1222283,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onTeamModeSelect",
-        "line": 128,
+        "line": 130,
         "selectorHint": ".tk-segment__item",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1222327,7 +1222327,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:132:bind:change:onTeamMaxMembersChange:8",
+      "id": "pages/publish/fabu/step3.wxml:134:bind:change:onTeamMaxMembersChange:8",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1222350,7 +1222350,7 @@
         "tag": "cy-dropdown",
         "event": "bind:change",
         "handler": "onTeamMaxMembersChange",
-        "line": 132,
+        "line": 134,
         "selectorHint": "cy-dropdown[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1222394,7 +1222394,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:145:bindtap:openTicketEditor:9",
+      "id": "pages/publish/fabu/step3.wxml:147:bindtap:openTicketEditor:9",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1222417,7 +1222417,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openTicketEditor",
-        "line": 145,
+        "line": 147,
         "selectorHint": ".node-card",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1222461,7 +1222461,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:160:bindtap:openTicketEditor:10",
+      "id": "pages/publish/fabu/step3.wxml:162:bindtap:openTicketEditor:10",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1222484,7 +1222484,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openTicketEditor",
-        "line": 160,
+        "line": 162,
         "selectorHint": ".slopes-add-chapter",
         "visibleCondition": "{{!showTicketEditor}}",
         "disabledCondition": null,
@@ -1222528,7 +1222528,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:174:bindtap:closeTicketEditor:11",
+      "id": "pages/publish/fabu/step3.wxml:176:bindtap:closeTicketEditor:11",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1222551,7 +1222551,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeTicketEditor",
-        "line": 174,
+        "line": 176,
         "selectorHint": ".node-pill",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1222595,7 +1222595,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:179:bindinput:onEditTicketChange:12",
+      "id": "pages/publish/fabu/step3.wxml:181:bindinput:onEditTicketChange:12",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1222618,7 +1222618,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onEditTicketChange",
-        "line": 179,
+        "line": 181,
         "selectorHint": ".tk-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1222662,7 +1222662,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:190:bindinput:onEditTicketChange:13",
+      "id": "pages/publish/fabu/step3.wxml:192:bindinput:onEditTicketChange:13",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1222685,7 +1222685,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onEditTicketChange",
-        "line": 190,
+        "line": 192,
         "selectorHint": ".tk-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1222729,7 +1222729,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:194:bindinput:onEditTicketChange:14",
+      "id": "pages/publish/fabu/step3.wxml:196:bindinput:onEditTicketChange:14",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1222752,7 +1222752,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onEditTicketChange",
-        "line": 194,
+        "line": 196,
         "selectorHint": ".tk-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1222796,7 +1222796,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:200:bindtap:showTicketTimePicker:15",
+      "id": "pages/publish/fabu/step3.wxml:202:bindtap:showTicketTimePicker:15",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1222819,7 +1222819,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "showTicketTimePicker",
-        "line": 200,
+        "line": 202,
         "selectorHint": ".node-card__row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1222863,7 +1222863,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:209:bindtap:showTicketTimePicker:16",
+      "id": "pages/publish/fabu/step3.wxml:211:bindtap:showTicketTimePicker:16",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1222886,7 +1222886,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "showTicketTimePicker",
-        "line": 209,
+        "line": 211,
         "selectorHint": ".node-card__row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1222930,7 +1222930,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:230:bindtap:showTicketTimePicker:17",
+      "id": "pages/publish/fabu/step3.wxml:232:bindtap:showTicketTimePicker:17",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1222953,7 +1222953,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "showTicketTimePicker",
-        "line": 230,
+        "line": 232,
         "selectorHint": ".node-card__row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1222997,7 +1222997,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:238:bindtap:showTicketTimePicker:18",
+      "id": "pages/publish/fabu/step3.wxml:240:bindtap:showTicketTimePicker:18",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1223020,7 +1223020,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "showTicketTimePicker",
-        "line": 238,
+        "line": 240,
         "selectorHint": ".node-card__row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1223064,7 +1223064,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:248:bindinput:onEditTicketChange:19",
+      "id": "pages/publish/fabu/step3.wxml:250:bindinput:onEditTicketChange:19",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1223087,7 +1223087,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onEditTicketChange",
-        "line": 248,
+        "line": 250,
         "selectorHint": ".tk-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1223131,7 +1223131,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:251:bindtap:chooseTicketMeetingPoint:20",
+      "id": "pages/publish/fabu/step3.wxml:253:bindtap:chooseTicketMeetingPoint:20",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1223159,7 +1223159,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "chooseTicketMeetingPoint",
-        "line": 251,
+        "line": 253,
         "selectorHint": ".node-card__row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1223218,7 +1223218,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:266:bindchange:onEditTicketSyncToggle:21",
+      "id": "pages/publish/fabu/step3.wxml:268:bindchange:onEditTicketSyncToggle:21",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1223241,7 +1223241,7 @@
         "tag": "cy-switch",
         "event": "bindchange",
         "handler": "onEditTicketSyncToggle",
-        "line": 266,
+        "line": 268,
         "selectorHint": "cy-switch[bindchange]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1223285,7 +1223285,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:270:bindtap:showTicketTimePicker:22",
+      "id": "pages/publish/fabu/step3.wxml:272:bindtap:showTicketTimePicker:22",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1223308,74 +1223308,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "showTicketTimePicker",
-        "line": 270,
-        "selectorHint": ".node-card__row",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5675"
-      }
-    },
-    {
-      "id": "pages/publish/fabu/step3.wxml:278:bindtap:showTicketTimePicker:23",
-      "route": "pages/publish/fabu/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/publish/fabu/step3.wxml",
-        "js": "pages/publish/fabu/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "showTicketTimePicker",
-        "line": 278,
+        "line": 272,
         "selectorHint": ".node-card__row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1223486,7 +1223419,74 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:305:bindinput:onEditTicketChange:24",
+      "id": "pages/publish/fabu/step3.wxml:280:bindtap:showTicketTimePicker:23",
+      "route": "pages/publish/fabu/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/publish/fabu/step3.wxml",
+        "js": "pages/publish/fabu/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "showTicketTimePicker",
+        "line": 280,
+        "selectorHint": ".node-card__row",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/publish/fabu/index.js:5675"
+      }
+    },
+    {
+      "id": "pages/publish/fabu/step3.wxml:307:bindinput:onEditTicketChange:24",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1223509,7 +1223509,7 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "onEditTicketChange",
-        "line": 305,
+        "line": 307,
         "selectorHint": ".pd-card-textarea",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1223553,7 +1223553,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:310:bind:disabledtap:onSaveTicketDisabledTap:26",
+      "id": "pages/publish/fabu/step3.wxml:312:bind:disabledtap:onSaveTicketDisabledTap:26",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1223576,7 +1223576,7 @@
         "tag": "cy-btn",
         "event": "bind:disabledtap",
         "handler": "onSaveTicketDisabledTap",
-        "line": 310,
+        "line": 312,
         "selectorHint": "#ticketEditorSave",
         "visibleCondition": null,
         "disabledCondition": "{{!canSaveTicket}}",
@@ -1223621,7 +1223621,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:310:bindtap:saveTicket:25",
+      "id": "pages/publish/fabu/step3.wxml:312:bindtap:saveTicket:25",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1223644,7 +1223644,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "saveTicket",
-        "line": 310,
+        "line": 312,
         "selectorHint": "#ticketEditorSave",
         "visibleCondition": null,
         "disabledCondition": "{{!canSaveTicket}}",
@@ -1223712,7 +1223712,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:327:bindchange:onSelfPlayToggle:27",
+      "id": "pages/publish/fabu/step3.wxml:329:bindchange:onSelfPlayToggle:27",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1223735,7 +1223735,7 @@
         "tag": "cy-switch",
         "event": "bindchange",
         "handler": "onSelfPlayToggle",
-        "line": 327,
+        "line": 329,
         "selectorHint": "cy-switch[bindchange]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1223802,7 +1223802,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:334:bindinput:onSelfPlayPriceInput:28",
+      "id": "pages/publish/fabu/step3.wxml:336:bindinput:onSelfPlayPriceInput:28",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1223825,7 +1223825,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onSelfPlayPriceInput",
-        "line": 334,
+        "line": 336,
         "selectorHint": ".tk-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1223892,7 +1223892,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:338:bindinput:onSelfPlayQuotaInput:29",
+      "id": "pages/publish/fabu/step3.wxml:340:bindinput:onSelfPlayQuotaInput:29",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1223915,7 +1223915,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onSelfPlayQuotaInput",
-        "line": 338,
+        "line": 340,
         "selectorHint": ".tk-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1339493,7 +1339493,7 @@
         "ariaRole": null,
         "ariaRoleExpression": null,
         "ariaDisabled": null,
-        "ariaDisabledExpression": null,
+        "ariaDisabledExpression": "{{ !!item.disabled }}",
         "ariaExpanded": null,
         "ariaExpandedExpression": null,
         "ariaChecked": null,
@@ -1351529,7 +1351529,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3306"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3326"
       }
     },
     {
@@ -1354264,7 +1354264,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3876"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3898"
       }
     },
     {
@@ -1354392,7 +1354392,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3878"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3900"
       }
     },
     {
@@ -1354872,7 +1354872,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:4178"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:4200"
       }
     },
     {
@@ -1354939,7 +1354939,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:4111"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:4133"
       }
     },
     {
@@ -1355073,7 +1355073,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:4216"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:4238"
       }
     },
     {
@@ -1355207,7 +1355207,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:4220"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:4242"
       }
     },
     {
@@ -1355274,7 +1355274,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:2646"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:2666"
       }
     },
     {
@@ -1355341,7 +1355341,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:2648"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:2668"
       }
     },
     {
@@ -1355453,7 +1355453,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:2627"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:2647"
       }
     },
     {
@@ -1355565,7 +1355565,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:2650"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:2670"
       }
     },
     {
@@ -1355633,7 +1355633,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3306"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3326"
       }
     },
     {
@@ -1355700,7 +1355700,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:2898"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:2918"
       }
     },
     {
@@ -1355833,7 +1355833,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:2821"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:2841"
       }
     },
     {
@@ -1355904,7 +1355904,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:2899"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:2919"
       }
     },
     {
@@ -1356080,7 +1356080,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3823"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3845"
       }
     },
     {
@@ -1356179,7 +1356179,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3813"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3835"
       }
     },
     {
@@ -1356278,7 +1356278,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3813"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3835"
       }
     },
     {
@@ -1356377,7 +1356377,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3813"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3835"
       }
     },
     {
@@ -1356476,7 +1356476,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3813"
+        "staticSource": "pages/topic/merchantinfo/merchantinfo.js:3835"
       }
     },
     {

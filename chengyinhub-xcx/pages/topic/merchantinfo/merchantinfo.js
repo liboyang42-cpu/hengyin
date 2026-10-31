@@ -2134,7 +2134,7 @@ Page({
     const nodeTotal = recruit.nodeTotal || 0;
     const nodeFilled = recruit.nodeFilled || 0;
     this.setData({
-      quickActions: this.buildQuickActions('host', host.ownerType, host.canEdit),
+      quickActions: this.buildQuickActions('host', host.ownerType, host.canEdit, this.hostRecruitGate(topic, host)),
       hostOwnerType: host.ownerType || 'merchant',
       'clubSheet.items': this.mapClubs(host.clubs),
       hostTopic: {
@@ -2274,7 +2274,25 @@ Page({
    * ★ 承接方没有「商家」这一格 —— 同场其他商家对他不可见(2026-08-04 用户决策),
    *   给一个点开必然是空的按钮,比不给更糟。
    */
-  buildQuickActions(role, ownerType, canEdit) {
+  /* 2026-10-31 业主:俱乐部 / 商家招商在发布之后做,发布时的开关决定工作台能用什么,关着的那颗灰掉点不了。
+     · 商家发的城市定向只能自己带(D3):两颗都灰;
+     · 城市定向没开公开承接池:「俱乐部」灰;自由探索的俱乐部承办是开售前必办,不灰;
+     · 自由探索一站都没开商家承接:「商家」灰(在「更多 › 章节控制」逐站打开)。
+     后端没下发判据(老接口)时不灰 —— 真闸在各写接口,前端只是不让人点进死路。 */
+  hostRecruitGate(topic, host) {
+    const productType = Number(topic && topic.productType);
+    const merchantCity = this.data.operationScope === 'MERCHANT' && productType === 1;
+    const gate = {};
+    if (merchantCity) {
+      gate.club = gate.merchant = '商家发的城市定向只能自己带,不能邀俱乐部和商家';
+      return gate;
+    }
+    if (productType === 1 && host && host.openClubPool === false) gate.club = '发布时没开「俱乐部承接」,去「更多 › 票价与主题内容」打开';
+    if (productType === 2 && host && host.recruitChapterCount === 0) gate.merchant = '还没有开放商家承接的站,去「更多 › 章节控制」逐站打开';
+    return gate;
+  },
+
+  buildQuickActions(role, ownerType, canEdit, gate) {
     // 顺手记下编辑资格:「更多」抽屉里「票价与主题内容」那一行靠它决定是否置灰。
     // wxml 不渲染这个值,所以留在实例上,不进 setData(死数据字段门禁 A2)。
     this._hostCanEdit = canEdit !== false;
@@ -2298,7 +2316,9 @@ Page({
       // ⚠️ canEdit === false 只让抽屉里的「票价与主题内容」置灰,不再吞掉整颗按钮 ——
       //    章节控制与本站运营跟编辑资格无关,吞了按钮等于把那些动作一起藏没了。
       // 走查 v2 R15(业主 2026-10-30):主办也有一张「本主题二维码」,玩家扫了直接进这个主题
-      return base.concat([{ key: 'themeQr', label: '二维码', iconName: 'qr' }, MORE]);
+      const g = gate || {};
+      const gated = base.map((item) => (g[item.key] ? Object.assign({}, item, { disabled: true, disabledReason: g[item.key] }) : item));
+      return gated.concat([{ key: 'themeQr', label: '二维码', iconName: 'qr' }, MORE]);
     }
     /* CU-M-92「只接了合作邀约、还没有点位」的商家:四格里只有两格真能用。
        「客户」走 /api/project/players,那道闸认的是发布者或有报名行的人,他没有报名行 ⇒ 点了必被拒;
@@ -3351,6 +3371,8 @@ Page({
    */
   onQuickAction(e) {
     const key = e.currentTarget.dataset.key;
+    const gated = (this.data.quickActions || []).find((item) => item.key === key && item.disabled);
+    if (gated) { app.tips(gated.disabledReason); return; }
     /* 扫码(稿 88:4014 第一格 · G1=A):走 goVerify —— 核销整套在商家中心首页,
        这里只做交接,不在承接页复制第二份(R2 判定,G3 已确认撤销「就地展开」那条)。
        与底部「去核销」同一个落点,区别只是这一格任何状态都能点。 */
