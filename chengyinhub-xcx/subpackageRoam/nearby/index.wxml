@@ -43,7 +43,7 @@
 
   <!-- 列表模式:范围内全部队伍,点一行 = 点地图上的那支(同一张队伍卡) -->
   <scroll-view class="mt-list" scroll-y enhanced show-scrollbar="{{false}}" wx:if="{{viewMode === 'list'}}" style="top:{{hudTop + 56}}px;">
-    <view class="mt-list__sec">{{rangeText}}内 · {{listRows.length || 0}} 个</view>
+    <view class="mt-list__sec">{{rangeAll ? rangeText : rangeText + '内'}} · {{listRows.length || 0}} 个</view>
     <view class="mt-row mt-row--list" wx:for="{{listRows}}" wx:key="key" data-kind="{{item.kind}}" data-id="{{item.id}}" bindtap="onListRowTap"
           aria-role="button" aria-label="{{item.name}}，{{item.badge}}" hover-class="cy-pressed" hover-stay-time="80">
       <image wx:if="{{item.img}}" class="mt-row__im {{item.round ? 'is-r' : ''}}" src="{{item.img}}" mode="aspectFill" lazy-load="true" />

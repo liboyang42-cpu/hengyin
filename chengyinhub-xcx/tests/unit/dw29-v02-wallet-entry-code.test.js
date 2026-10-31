@@ -52,7 +52,7 @@ test('V-02 背面只有标题和码:不露原始 token、不显示倒计时、�
 test('V-02 7 天内到期才写 N 天内过期，当天写今天过期，其余不写', () => {
   const { page } = loadPage()
   const pad = n => String(n).padStart(2, '0')
-  const at = days => { const d = new Date(Date.now() + days * 86400000); d.setHours(23, 59, 0, 0); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' 23:59:00' }
+  const at = days => { const d = new Date(); d.setDate(d.getDate() + days); d.setHours(23, 59, 0, 0); /* 按自然日加,夏令时切换不差一天 */ return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' 23:59:00' }
   // 主线「付款确认后才展示有效票」:样例票都带已付款
   page._topic = { state: 'ready', list: [
     { id: 11, registrationStatus: 2, paymentStatus: 2, cmsTopic: { name: '海上方舟' } },

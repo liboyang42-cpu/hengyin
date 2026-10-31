@@ -158,3 +158,23 @@ for (const generator of ['team', 'self']) {
     assert.equal(await pending, false); assert.equal(Object.keys(h.page._icons).length, 0); assert.equal(h.page._selfIcon, '');
   });
 }
+
+test('P-38「全部」= 所有距离:三类附近读取都用放开的半径,再点范围档位回到具体公里数', () => {
+  const T = require('../../subpackageRoam/utils/map-team.js');
+  const h = mount(); h.page.setData({ center: { lat: 31, lng: 121 } });
+  h.page.onLayerTap({ currentTarget: { dataset: { layer: 'all' }, offsetLeft: 0 } });
+  const radii = h.requests.map(r => r.data && r.data.radius);
+  assert.ok(radii.length >= 3, '队伍 / 主题 / 地点三路都重新读取');
+  assert.ok(radii.every(r => r === T.ALL_RADIUS), '全部不再停在 20 公里档');
+  assert.equal(h.page.data.rangeAll, true);
+  assert.equal(h.page.data.rangeText, '全部距离');
+  assert.equal(h.page.data.layer, 'all');
+  const before = h.requests.length;
+  h.page.onLayerTap({ currentTarget: { dataset: { layer: 'all' }, offsetLeft: 0 } });
+  assert.equal(h.page.data.rangeAll, true);
+  h.page.onRangePick({ detail: { index: 1 } });
+  assert.equal(h.page.data.rangeAll, false);
+  assert.ok(h.requests.slice(before).every(r => r.data.radius === 3000));
+  const wxml = fs.readFileSync(path.resolve(__dirname, '../../subpackageRoam/nearby/index.wxml'), 'utf8');
+  assert.match(wxml, /\{\{rangeAll \? rangeText : rangeText \+ '内'\}\} · \{\{listRows\.length \|\| 0\}\} 个/);
+});

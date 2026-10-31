@@ -1,3 +1,4 @@
+// 2026-10-31 核对 F6(走查 P-38「全部」= 所有距离):nearby/index.js onLayerTap 的「全部」分支由 9 行收成 7 行,其后三条锚点仅行号位移 959→957(U1-VARIABLE / U5)、1003→1001、1024→1022(U5),调用行逐字相同、理由与条数不变;u1Variable / u5Silent digest 按门禁 baselineKeyDigest 重算。
 // 2026-10-31 dw29 发布集成(master + album-r4 + p4-template + l1 + l6 + l5):两侧各自重锚的登记取并集后,37 条旧行号副本(另一侧已换新 key 且命中)删除;11 条锚点随合并后源码仅行号位移(app.js 427→428、首页 1056→1060 / 1163→1167 / 1272→1276 / 1379→1383、topic/index 2053→2022、square/detail 1280→1281、play 1789→1791 / U5 8068→8072、fabu 6782→6798 / 9075→9091),逐条以合并前所在分支的原行与新行逐字一致定位,理由与条数不变、不新增登记;u1Variable / u4Dynamic / u5Silent digest 按门禁 baselineKeyDigest 重算。
 // 2026-10-30 Questify ship：合入最新主线后，存量锚点仅迁行；调用和相邻行逐字一致，理由、条数与上限不变。
 // 2026-10-30 走查:俱乐部详情 onShow 开头加商家浅色状态栏 4 行,该文件 760 行以后的既有锚点 +4,行文本与理由不变,相关 digest 按门禁 baselineKeyDigest 重算。
@@ -474,7 +475,7 @@ module.exports = {
       // 受控路由、理由及 10 条登记保持，digest 仅随行号更新。
       // 2026-10-11 登录隔离及正常失败状态兼容：App consent wrapper 329→343，同一调用及理由，数量仍11。
       // 2026-10-14 W5尾项:profile 544→559/870→885、参与详情 176→177 仅行号下移，同一调用及理由，数量仍11。
-      "u1Variable": "7668ff593425a10a418ac41a2c066a5ea5f67c60afbb89e903c739f168789860",
+      "u1Variable": "1ed1218fe8ab859090e8be06cffde82710bdd4da97a6a73824e21adeed540b96",
       // 2026-08-25 816 并入:key 集合按上面的逐条核对结果变化,digest 显式更新。
       "u3Debt": // 2026-09-09 一枚圆钮:roam#onCenterHoldStart / onCenterHoldEnd 两笔零绑定债务已还
       //   —— 长按 3 秒结束的逻辑接到了主键的 touchstart/touchend 上。99→97,digest 显式更新。
@@ -1083,13 +1084,13 @@ module.exports = {
       //   逐条回读仍是「只为读章节 recruitEnabled、失败不弹全局 toast」这一处,静默理由一字未改,条数 27 不变。
 // 2026-10-17 合并 master 进漫游上线分支:roam/index.js 14 条、nearby/index.js 2 条既有调用仅行号位移(按 master 源码逐行回读定位);漫游两栏改版删掉 /api/registration/list 静默读取(749),U5 29→28。digest 按同一算法显式重算。
 // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):锚点位移 + 举报半屏/AI 对话组件下沉会员分包换路径 + 本线 9 处新增登记,digest 按同一算法重算。
-"4ee387775d60da6862a129025b91586db81a2c1524666e5e48d8d7ecc859667c"
+"a26f0f6cd8e7a2416a7a3bc8e3f3283a3c4edcb9eed93055e8f4758efd7e0119"
 
     }
   },
   "cleanupPlan": {},
   "u1Variable": {
-    "chengyinhub-xcx/subpackageRoam/nearby/index.js:959": "公开照片侧车只由 poiGalleryPath 的平台相对图片键构造，拒绝外站、路径穿越和非图片后缀；poiGallery 再校验地点ID、封面与同目录高清图片，账号/卡片代际隔离迟到回包；owner=上海据点，复核=2026-10-24",
+    "chengyinhub-xcx/subpackageRoam/nearby/index.js:957": "公开照片侧车只由 poiGalleryPath 的平台相对图片键构造，拒绝外站、路径穿越和非图片后缀；poiGallery 再校验地点ID、封面与同目录高清图片，账号/卡片代际隔离迟到回包；owner=上海据点，复核=2026-10-24",
     "chengyinhub-xcx/subpackageMember/components/cy/scene-roam-poi-detail/index.js:572": "公开图片许可仅取自白名单平台相对封面键对应的 .gallery.json，不接受外站与路径穿越，回包核对地点ID并限制文本长度，账号/页面代际隔离迟到回包；owner=上海据点，复核=2026-10-24",
     "chengyinhub-xcx/utils/community-post-api.js:84": "canonical 社区受控请求对象：BASE+path 只接固定发布/编辑阶段 helper 与举报闭包的枚举路由，举报回读仅显式切至本人 /api/community-trust/reports/mine；完整目标匹配 Controller，owner/current 检查及 pipeline success/fail 可见反馈保留，取消不报成功；owner=小程序，复核=213",
   // (本支) "chengyinhub-xcx/app.js:337": "consent adapter 的 options 只由 utils/compliance/consent-client.js 构造，该模块把唯一 endpoint 固定为 /api/compliance/consents；owner=小程序，复核=2026-09-15",
@@ -1417,9 +1418,9 @@ module.exports = {
     "chengyinhub-xcx/pages/roam/index.js:5982": "漫游起始页「附近活动」3 公里为空时的 20 公里兜底读取(同 /api/roam/entry/nearby、同权限档):主读取已成功落定(空也是真结果),这一条只往底部卡片带补同城活动,读不到就接着读其他城市公开主题;不改地图点位、不承载写入;只写回同一次进页序号与同一身份;owner=漫游,复核=2026-10-28",
     "chengyinhub-xcx/pages/roam/index.js:5991": "漫游起始页「附近活动」同城也为空时读其他城市公开主题(/api/topic/list 公开列表):只填底部卡片带,读不到时卡片带保持主读取给出的空态卡;不改地图点位、不承载写入;只写回同一次进页序号与同一身份;owner=漫游,复核=2026-10-28",
     // 2026-10-25 官方地点卡片:展开详情两条背景读取逐项登记。
-    "chengyinhub-xcx/subpackageRoam/nearby/index.js:1003": "官方地点卡展开时补读节点(相册 / 玩法 / 完成状态 / 评分):卡片已先用地图点位数据渲染名称、地址、介绍和封面,读不到只是少相册与玩法块,开始挑战前挑战页会重新读同一节点并在失败时给错误页和重试;只写回仍开着的同一张卡;owner=上海据点,复核=2026-10-25",
-    "chengyinhub-xcx/subpackageRoam/nearby/index.js:1024": "官方地点卡评价列表背景读取:失败时不显示评价区空态文案(reviewsLoaded=false),卡片其余内容与按钮照常,重新点开卡片会重读;不承载提交;只写回仍开着的同一张卡;owner=上海据点,复核=2026-10-25",
-    "chengyinhub-xcx/subpackageRoam/nearby/index.js:959": "可选公开相册补充读取，缺失或失败保留已显示的封面与正常导航，不将缺失侧车伪报为地点不可用；不承载提交或奖励，重新点开可重读；owner=上海据点，复核=2026-10-24",
+    "chengyinhub-xcx/subpackageRoam/nearby/index.js:1001": "官方地点卡展开时补读节点(相册 / 玩法 / 完成状态 / 评分):卡片已先用地图点位数据渲染名称、地址、介绍和封面,读不到只是少相册与玩法块,开始挑战前挑战页会重新读同一节点并在失败时给错误页和重试;只写回仍开着的同一张卡;owner=上海据点,复核=2026-10-25",
+    "chengyinhub-xcx/subpackageRoam/nearby/index.js:1022": "官方地点卡评价列表背景读取:失败时不显示评价区空态文案(reviewsLoaded=false),卡片其余内容与按钮照常,重新点开卡片会重读;不承载提交;只写回仍开着的同一张卡;owner=上海据点,复核=2026-10-25",
+    "chengyinhub-xcx/subpackageRoam/nearby/index.js:957": "可选公开相册补充读取，缺失或失败保留已显示的封面与正常导航，不将缺失侧车伪报为地点不可用；不承载提交或奖励，重新点开可重读；owner=上海据点，复核=2026-10-24",
     "chengyinhub-xcx/subpackageMember/components/cy/scene-roam-poi-detail/index.js:573": "可选照片署名与许可补充读取，缺失时保留后端相册、玩法和导航，不阻断任务；没有写入或奖励成功提示；owner=上海据点，复核=2026-10-24",
     // 2026-10-19 Claude 小程序线移植到 master:本线新增 9 处 silentError 逐项登记(超冻结上限 30,棘轮/上限/digest 待审批后同步)。
     "chengyinhub-xcx/subpackageMember/components/cy/report-sheet/index.js:51": "BL-32/BL-218 举报半屏读原因:失败落 stage=loadfail 结果半屏(failText 带重试),seq 丢弃关掉重开后的旧回包;字段不以 error 命名,静态扫描证明不了;owner=小程序,复核=2026-12-31",
