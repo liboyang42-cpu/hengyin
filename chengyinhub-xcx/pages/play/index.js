@@ -217,6 +217,14 @@ function uuid4() {
   });
 }
 
+// 自有域名(OSS / 主站)的签名链接历史上存成 http://;同一签名走 https 可取。与 utils/wxs/img.wxs 的 OWN_HTTP 同口径。
+// 照片模型处理单独同意已问过的那一局(账号|主题|路线局),见 SUBMIT_PHOTO_CHECK
+const PHOTO_CONSENT_SCOPE_KEY = 'cy_photo_consent_run_v1';
+
+function secureOwnMedia(url) {
+  return String(url || '').replace(/^http:\/\/(chengyin-oss\.oss-cn-shanghai\.aliyuncs\.com|www\.chengyinhub\.com)\//i, 'https://$1/');
+}
+
 function req(url, method, data, header, silentError) {
   const basic = method === 'POST' && (['/api/play/answer', '/api/play/checkin', '/api/play/arrive', '/api/play/photo', '/api/play/puzzle/reveal', '/api/play/sensor-result'].includes(url) || /^\/api\/play\/preference\/[1-9][0-9]*\/submit$/.test(url));
   if (basic && data && typeof data._intentCurrent === 'function' && !data._intentCurrent()) return Promise.resolve({ obsolete: true });
@@ -994,6 +1002,7 @@ Page({
   },
 
   onUnload() {
+    this._stopStationBgm();
     this._stopThemeBgm();
     this.suspendOrientLifecycle(); this._stopTopbar();
     this.setData({ arrivalGuard: null });
@@ -1676,7 +1685,7 @@ Page({
     if (st.playing) { this._stopChapAudio(); return; }
     if (!this._chapAudio) {
       const ctx = audioSession.register(wx.createInnerAudioContext(), { kind: 'chapter' });
-      ctx.src = st.audio;
+      ctx.src = secureOwnMedia(st.audio);
       // 三个终态都要把按钮态收回去,否则暂停图标会一直亮着
       ctx.onPlay(() => audioSession.keepAwake('chapAudio', true));
       ctx.onPause(() => audioSession.keepAwake('chapAudio', false));
@@ -2237,7 +2246,7 @@ Page({
     this._stopShopNpcVoice();
     const audio = audioSession.register(wx.createInnerAudioContext(), { kind: 'npc' });
     this._shopNpcVoiceAudio = audio;
-    audio.src = audioUrl;
+    audio.src = secureOwnMedia(audioUrl);
     audio.onEnded(() => this._stopShopNpcVoice());
     audio.onError(() => this._stopShopNpcVoice());
     audio.play();
@@ -3755,7 +3764,7 @@ Page({
       chapterParas: items.map((item, i) => Object.assign({
         i, text: '', url: '', audioKey: 'ch' + i,
         in: !!this.data.reducedMotion, dir: 'up', d: 0,
-      }, item, this._textFx(item, i))), /* 文字动效:选过风格的主题才有 */
+      }, item, item.url ? { url: secureOwnMedia(item.url) } : {}, this._textFx(item, i))),   /* 故事流语音 / 配图升 https;文字动效:选过风格的主题才有 */
       storyChat: false,
     }, () => {
       if (!wasOpen) this._storyTop = 0;
@@ -3789,7 +3798,7 @@ Page({
     const url = this.data.topicAudioUrl;
     if (!url || !this.data.themeBgmOn || this.data.isPreview || this._themeBgm) return;
     const ctx = audioSession.register(wx.createInnerAudioContext(), { kind: 'bgm' });
-    ctx.src = url;
+    ctx.src = secureOwnMedia(url);
     ctx.loop = true;
     ctx.volume = 0.25;
     ctx.onError(() => { this._stopThemeBgm(); });
@@ -3802,6 +3811,32 @@ Page({
     try { this._themeBgm.stop(); this._themeBgm.destroy(); } catch (e) {}
     this._themeBgm = null;
   },
+  /* 站点背景音乐(模板「背景音乐」):故事流里内嵌的玩法不经 advanced-game 面板,原来一声不响(实走 A13 复核)。
+     与主题配乐同一首就继续放主题配乐;不同就暂停主题配乐、改放这一站的,收起玩法再换回来。跟随「背景音乐」开关。 */
+  _syncStationBgm(music) {
+    const src = music && typeof music.audioUrl === 'string' ? music.audioUrl : '';
+    if (!src || !this.data.themeBgmOn || this.data.isPreview) { this._stopStationBgm(); return; }
+    // 同一首曲子可能一边是 http、一边是 https,或签名参数不同:按升 https 后的文件地址比
+    const sameFile = (u) => secureOwnMedia(u).split('?')[0];
+    if (sameFile(src) === sameFile(this.data.topicAudioUrl)) { this._stopStationBgm(); this._startThemeBgm(); return; }
+    if (this._stationBgm && this._stationBgmSrc === src) return;
+    this._stopStationBgm();
+    if (this._themeBgm) { try { this._themeBgm.pause(); } catch (e) {} }
+    const ctx = audioSession.register(wx.createInnerAudioContext(), { kind: 'bgm' });
+    ctx.src = secureOwnMedia(src);
+    ctx.loop = music.loop !== false;
+    ctx.volume = 0.35;
+    ctx.onError(() => { this._stopStationBgm(); });
+    this._stationBgm = ctx; this._stationBgmSrc = src;
+    ctx.play();
+  },
+  _stopStationBgm() {
+    if (!this._stationBgm) return;
+    audioSession.unregister(this._stationBgm);
+    try { this._stationBgm.stop(); this._stationBgm.destroy(); } catch (e) {}
+    this._stationBgm = null; this._stationBgmSrc = '';
+    if (this._themeBgm && this.data.themeBgmOn) { try { this._themeBgm.play(); } catch (e) {} }
+  },
   /** 入场码页轮询到商家核销:同页重读节点,进度环 / 卡片 / 已体验当场更新,不用退出重进(实走 B6)。 */
   onTicketRedeemed() {
     if (!this._isPlayAccountCurrent() || this.data.isPreview || this.data.isMock) return;
@@ -3810,7 +3845,7 @@ Page({
   toggleThemeBgm() {
     const on = !this.data.themeBgmOn;
     this.setData({ themeBgmOn: on });
-    if (on) this._startThemeBgm(); else this._stopThemeBgm();
+    if (on) this._startThemeBgm(); else { this._stopStationBgm(); this._stopThemeBgm(); }
   },
   startStoryIntro() {
     if (!this.data.storyIntro.show || this.data.storyIntro.out) return;
@@ -3949,7 +3984,7 @@ Page({
     this.initAudio();
     const audio = this._audio;
     audio.stop();
-    audio.src = String(url);
+    audio.src = secureOwnMedia(url);
     audio.play();
     this.setData({ audioNodeId: 'chapter' });
   },
@@ -3969,7 +4004,7 @@ Page({
     if (same && this.data.audioPlaying) { audio.pause(); return; }
     if (same && !this.data.audioError) { audio.play(); return; }
     audio.stop();
-    audio.src = item.url;
+    audio.src = secureOwnMedia(item.url);
     audio.play();
     this.setData({ audioNodeId: key });
   },
@@ -4206,6 +4241,9 @@ Page({
         that.loadTeamProgress();   // P1 带领场探测(club 场次才 exists,内部自管轮询)
         that._loadPlayerGameModule();
         that._consumePendingStart();
+        // 中途重进一局(开场已看过 / 卡包已拆):主题配乐接着放,原来只在开场与拆包时起播,重进就没了(实走 A7 复核)
+        const resumed = storyResume.read(that._runSessionScope());
+        if (resumed.intro || resumed.packOpened) that._startThemeBgm();
         that.loadHudCharacter(); that.loadSessionStats();   // 文档二 L5:状态栏第二行 / 「…」用时与得分 if (that._entryLayer && ['*', String(that._orientSessionId())].includes(that._entryLayer)) that.openScoreOverlay(); that._entryLayer = '';
       });
     }).catch(() => {
@@ -4312,7 +4350,8 @@ Page({
       question: n.question || '', options: n.options || null,
       // 题面媒体(看图答题 / 听音答题)。与 audio(整节点语音导览)不是一回事:
       // 那是到达就能听的导览,这是这道题的题面,只在答题卡里出现。
-      questionImg: n.questionImg || '', questionAudio: n.questionAudio || '',
+      // 后端签名链接存成 http://,真机不放 http 音频 / 不显 http 图片;与图片同口径升 https(实走复核)
+      questionImg: secureOwnMedia(n.questionImg), questionAudio: secureOwnMedia(n.questionAudio),
       optionMedia: n.optionMedia || null,
       points: n.xp || 12,
       // 模板呈现字段(/api/play/nodes 已下发)
@@ -4331,7 +4370,7 @@ Page({
       puzzleScore: n.puzzleScore == null ? null : Number(n.puzzleScore),
       completionMode: n.completionMode || '',
       feedback: n.feedbackText || '答案还没咬合,再看看四周……',
-      photoDesc: n.photoRequireDesc || '', audio: n.audioUrl || '', audioDur: (n.audioDuration ? n.audioDuration + '″' : ''),
+      photoDesc: n.photoRequireDesc || '', audio: secureOwnMedia(n.audioUrl), audioDur: (n.audioDuration ? n.audioDuration + '″' : ''),
       medalName: shopDay ? '' : (n.medalName || ''), medalImg: shopDay ? '' : (n.medalImg || ''), medalStyle: shopDay ? '' : (n.medalStyle || 'glow'), couponId: shopDay ? 0 : (n.couponId || 0),
       // 后端 /nodes 新下发的券公开投影(name/amount/endTime;无 code):券页据此显示真面额
       coupon: shopDay ? null : (n.coupon || null),
@@ -5270,7 +5309,10 @@ Page({
     // 所以闸放在这一层。(服务端四个完成入口另有硬闸,这里是 UX 层:先说清「还差什么」。)
     if (!node.done && this._routeInteractionBlocked()) { cyToast(this.data.routeNotice || '路线状态同步中'); return; }
     if (this._lockedTip(node)) return;
-    const biz = node.businessTime;
+    // 全天开放(00:00–23:59)不是有用的营业信息,不挂在地址后(实走复核:每站都写着 00:00–23:59)
+    const biz = /^\s*00:00\s*[-–~至]\s*23:59\s*$/.test(String(node.businessTime || '')) ? '' : node.businessTime;
+    const story = String(node.story || '');
+    const sentence = story.match(/^[^。！？!?]*[。！？!?]?/)[0];
     // S4 营业态换算已抽到 utils/play-open-state.js:大卡、六宫格瓦片、商家权益页共用一份,
     // 免得各自抄一份再各自漂。规则未变(openStatus 优先 → businessTime 兜底 → 都无则空)。
     const { openText, openCol, openDot } = resolveOpenState(node);
@@ -5278,7 +5320,10 @@ Page({
       metaLine: (node.address || '此处') + (biz ? (' · ' + biz) : ''),
       bizText: biz, openText, openCol, openDot,
       hasGame: node.hasTemplate,
-      gameLede: node.story ? String(node.story).slice(0, 24) : '到达后开启本站任务',
+      // 一句话导语:取第一句,过长才截断并补省略号,不再从句子中间硬切
+      gameLede: story ? (sentence.length <= 40 ? sentence : sentence.slice(0, 38) + '…') : '到达后开启本站任务',
+      // 简介只是重复标题(如「结语 · 1945年以后」配「1945年以后」)时不再写一遍
+      description: node.description && String(node.name || '').indexOf(String(node.description).trim()) >= 0 ? '' : node.description,
       cardHook: node.cardHook || ''
     });
     this.setData({
@@ -5799,6 +5844,7 @@ Page({
   },
   onAdvancedClose() {
     this._advancedReadyIntent = null;
+    this._stopStationBgm();
     const node = this.data.advancedPlay.node;
     if (node && this._themeChallengeNodeId === Number(node.nodeId)) {
       this._themeChallengeNodeId = null;
@@ -6113,7 +6159,8 @@ Page({
     this._withThoughtSync(() => {
       const fix = located && this._loc ? { longitude: this._loc.longitude, latitude: this._loc.latitude, accuracy: this._loc.accuracy } : {};
       attempt.payload = this._legacyGameWritePayload('answer', 'answer', g.nodeId, Object.assign({ nodeId: g.nodeId, answer }, fix), retryAttempt);
-      return req('/api/play/answer', 'POST', this._retriedRouteWriteBody(attempt.payload, retryAttempt));
+      // 作答的每种结果(答错 / 未到 50 米 / 业务拒绝 / 未送达)都在题卡里就地写明,不再额外弹全局 toast(实走复核:同一句话出现两遍)
+      return req('/api/play/answer', 'POST', this._retriedRouteWriteBody(attempt.payload, retryAttempt), undefined, true);
     }, isCurrent)
       .then((r) => {
         const current = isCurrent();
@@ -6839,6 +6886,8 @@ Page({
       this.setData({ nodes: this.data.nodes.map(remember) });
     }
     const inline = kit.present === 'inline' && this.data.chapterFull;
+    // 内嵌在故事流里的玩法由本页放站点背景音乐;弹层模式由 advanced-game 自己放,这里不重复
+    if (inline) this._syncStationBgm(view.playKit && view.playKit.backgroundMusic); else this._stopStationBgm();
     const ready = canContinue(view);
     /* 分支走到结局时不自动接着走:结局那段话就是这一站的全部回报,0.9 秒就被翻走等于没看到
        (2026-10-27 生产实测:南京路结案三选一,选完直接跳进附录章节卡)。玩家读完点下面的「继续」。 */
@@ -7306,12 +7355,17 @@ Page({
     if (option.name === 'SUBMIT_PHOTO_CHECK') {
       const consentCurrent = () => !operation.isAborted() && this._kitPhotoIntent === intent && contextCurrent() && sameQuestion();
       /* 照片模型处理的单独同意按「这一局」问一次(业主 2026-10-30 拍板,实走 A23):同账号同一局已同意过就直接上传,
-         换局、换账号或页面重进再问。服务端仍逐次校验已存同意记录,这里只是不再每拍一张就弹一次。 */
-      const consentScope = String(this._playMember()) + '|' + this._sessionKey();
-      const consent = this._photoConsentScope === consentScope ? Promise.resolve() : app.requestSeparateConsent('photo', consentCurrent);
+         换局、换账号再问。「这一局」是路线局(routeSessionId),页面退出重进仍是同一局,不再重问(实走复核);
+         没有路线局时退回只记在本页。服务端仍逐次校验已存同意记录,这里只是不再每拍一张就弹一次。 */
+      const runId = (this._routeState || {}).sessionId;
+      const consentScope = String(this._playMember()) + '|' + this._sessionKey() + '|' + (runId == null ? '' : runId);
+      let storedScope = '';
+      try { storedScope = runId == null ? '' : (wx.getStorageSync(PHOTO_CONSENT_SCOPE_KEY) || ''); } catch (e) { storedScope = ''; }
+      const consent = this._photoConsentScope === consentScope || storedScope === consentScope ? Promise.resolve() : app.requestSeparateConsent('photo', consentCurrent);
       consent.then(() => {
         if (!consentCurrent()) { settle(); operation.finish(); return; }
         this._photoConsentScope = consentScope;
+        if (runId != null) { try { wx.setStorageSync(PHOTO_CONSENT_SCOPE_KEY, consentScope); } catch (e) { /* 存不下只是下次重进会再问一次 */ } }
         upload();
       }).catch(error => {
         const owned = consentCurrent();
@@ -7463,7 +7517,9 @@ Page({
       });
     }
     if (shouldPlay) {
-      if (this._kitAudio.src !== kit.audioUrl) this._kitAudio.src = kit.audioUrl;
+      // 音乐角曲目来自玩法配置,同样可能是 http 签名链接(实走复核)
+      const kitSrc = secureOwnMedia(kit.audioUrl);
+      if (this._kitAudio.src !== kitSrc) this._kitAudio.src = kitSrc;
       this._kitAudio.play();
     } else {
       this._kitAudio.pause();
@@ -8329,7 +8385,7 @@ Page({
     } else {
       // 不同节点或错误重试 → 换源
       audio.stop();
-      audio.src = g.audio;
+      audio.src = secureOwnMedia(g.audio);
       audio.play();
       this.setData({ audioNodeId: g.nodeId });
     }
@@ -8350,7 +8406,7 @@ Page({
     if (same && this.data.audioPlaying) { audio.pause(); return; }
     if (same && !this.data.audioError) { audio.play(); return; }
     audio.stop();
-    audio.src = url;
+    audio.src = secureOwnMedia(url);
     audio.play();
     this.setData({ audioNodeId: key });
   },

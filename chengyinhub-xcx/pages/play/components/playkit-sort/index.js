@@ -45,9 +45,11 @@ function canSubmit(rows) {
 Component({
   behaviors: [reducedMotionBehavior],
   properties: {
+    inline: { type: Boolean, value: false },   // 故事流里就地玩:过了之后往下走用故事流自己的「继续故事」,本屏不再出第二个「继续」
     show: { type: Boolean, value: false },
     prompt: { type: String, value: '' },
     items: { type: Array, value: [] },
+    lastOrder: { type: Array, value: [] },
     attempts: { type: Number, value: 0 },
     passed: { type: Boolean, value: false },
     finished: { type: Boolean, value: false },
@@ -69,7 +71,9 @@ Component({
       if (signature === this._configSignature) return;
       this._configSignature = signature;
       this._dragTo = -1;
-      const kept = this.data.passed && passedOrders[signature];
+      // 排对过就按服务端的上一次提交顺序摆(重进页面也在);本机缓存只兜底同一会话里服务端还没回来的那一下
+      const serverOrder = (this.data.lastOrder || []).length ? this.data.lastOrder : null;
+      const kept = this.data.passed && (serverOrder || passedOrders[signature]);
       const rows = kept ? kept.map((id) => paint(items).find((r) => r.id === id)).filter(Boolean) : paint(items);
       this.setData({ rows, dragging: -1, dragOffset: 0, picked: -1, verdict: kept ? 'ok' : '' });
       const stage = this.selectComponent('#cy-play-stage');

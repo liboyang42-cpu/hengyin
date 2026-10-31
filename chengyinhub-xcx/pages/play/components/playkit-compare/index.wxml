@@ -1,0 +1,36 @@
+<!-- 时间轴对照(R16)· 照排序定稿的台面原样搭:同一块深色舞台、同一种行卡、同一条反馈条与底部大按钮。
+     两条时间线逐条并排,顺序就是题面不打乱;点一行标出、再点取消,标好了交。 -->
+<cy-play-stage id="cy-play-stage" skin="qadark" show="{{show}}" back-label="退出"
+               bind:back="onClose">
+  <view class="g-col so {{reducedMotion ? 'so--reduced' : ''}}">
+    <view class="so__prompt pe pe--blur" style="--pe-d:.05s">{{prompt}}</view>
+
+    <block wx:for="{{sides}}" wx:for-item="side" wx:key="key">
+      <view class="cp__side pe pe--blur" style="--pe-d:.15s" wx:if="{{side.label}}">{{side.label}}</view>
+      <view class="so__list cp__list">
+        <!-- 回执只有整体对错:判错不逐行标红(服务端不给逐条对错);通过才把标出的那几行变绿 -->
+        <view class="so__row cp__row {{item.marked ? (verdict === 'ok' ? 'is-right' : 'is-pick') : ''}} pe pe--up"
+              style="--pe-d:.25s;--pe-i:{{index}}"
+              wx:for="{{side.rows}}" wx:key="id" data-id="{{item.id}}" bindtap="onToggle"
+              aria-role="checkbox" aria-checked="{{item.marked}}" aria-label="{{item.time}} {{item.text}}"
+              hover-class="so__press" hover-stay-time="80">
+          <view class="so__no cp__time">{{item.time}}</view>
+          <view class="so__label">{{item.text}}</view>
+        </view>
+      </view>
+    </block>
+
+    <view class="so__fb {{verdict === 'ok' ? 'is-ok' : 'is-no'}}" wx:if="{{verdict}}">
+      {{verdict === 'ok' ? '标对了 · 这一题过了' : (finished ? '次数用完了 · 这次不扣生命' : '还没标对 · 再对照一遍')}}
+    </view>
+  </view>
+
+  <view wx:if="{{(verdict === 'ok' || finished) && !inline}}" class="g-btn pe pe--up" style="--pe-d:.8s" bindtap="onClose"
+        aria-role="button" aria-label="继续" hover-class="g-btn--press" hover-stay-time="80">
+    继续
+  </view>
+  <view wx:elif="{{verdict !== 'ok' && !finished}}" class="g-btn {{markedCount ? '' : 'g-btn--disabled'}} pe pe--up" style="--pe-d:.8s" bindtap="onSubmit"
+        aria-role="button" aria-label="提交标出的条目" hover-class="g-btn--press" hover-stay-time="80">
+    就标这些
+  </view>
+</cy-play-stage>

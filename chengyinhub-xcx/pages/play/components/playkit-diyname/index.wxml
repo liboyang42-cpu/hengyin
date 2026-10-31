@@ -1,4 +1,4 @@
-<cy-sheet wx:if="{{!inline}}" show="{{show}}" handle="{{true}}" dirty="{{!!value}}"
+<cy-sheet wx:if="{{!inline}}" show="{{show}}" handle="{{true}}" footer dirty="{{!!value}}"
           bind:close="onClose" bind:requestclose="onRequestClose">
   <include src="body.wxml" />
 </cy-sheet>

@@ -10,6 +10,7 @@ Component({
   options: { multipleSlots: true },
   properties: {
     inline: { type: Boolean, value: false }, // 故事流内嵌:不出半屏,原位渲染
+    named:       { type: Boolean, value: false },   // 服务端已存下名字:按钮是「继续」,点了收起
     show:        { type: Boolean, value: false },
     eyebrow:     { type: String,  value: '你的作品' },
     title:       { type: String,  value: '' },
@@ -30,6 +31,7 @@ Component({
       this.triggerEvent('namechange', { value: name });
     },
     onSubmit() {
+      if (this.data.named) { this.triggerEvent('close'); return; }
       if (this.data.submitting || !this.data.value) return;
       // 提交命名 = 这一轮创作定稿。输入与点选备选都不震(那是过程,不是结果)
       motion.haptic({ reducedMotion: this.data.reducedMotion });

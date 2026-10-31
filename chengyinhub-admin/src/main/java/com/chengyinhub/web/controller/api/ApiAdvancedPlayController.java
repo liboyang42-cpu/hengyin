@@ -49,20 +49,32 @@ public class ApiAdvancedPlayController extends BaseController {
     @PostMapping("/action")
     @SuppressWarnings("unchecked")
     public AjaxResult action(@RequestBody Map<String, Object> body) {
+        String action = Convert.toStr(body.get("action"), "");
+        Map<String, Object> judged;
         try {
             Map<String, Object> payload = body.get("payload") instanceof Map
                     ? (Map<String, Object>) body.get("payload") : Collections.emptyMap();
-            Map<String, Object> judged = runtimeService.act(getAppUserId(), longOrZero(body.get("sessionId")),
+            judged = runtimeService.act(getAppUserId(), longOrZero(body.get("sessionId")),
                     body.get("version") == null ? null : Convert.toInt(body.get("version"), -1),
-                    Convert.toStr(body.get("idempotencyKey"), ""),
-                    Convert.toStr(body.get("action"), ""), payload);
-            // act 返回前已提交玩法事务；铸卡放在提交之后。
-            return success(CheckReceiptProjection.response(runtimeService.finishPendingCardMint(judged)));
+                    Convert.toStr(body.get("idempotencyKey"), ""), action, payload);
         } catch (AiProviderOutcomeUnknownException e) {
             return AjaxResult.error(520, "照片结果还在确认中，请稍后核对").put("intentUnknown", true);
         } catch (ServiceException e) {
             // 冲突回执(fresh view + encounter)在 ServiceException.data 里,交给全局处理器按 code 下发。
             throw e.setData(CheckReceiptProjection.response(e.getData()));
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            /* 非拍照动作整段在 act 的一个事务里判定,这里抛出的校验拒绝已整体回滚、什么都没写 ——
+               是明确的「未执行」,按 4xx 下发;原来走通用 500,客户端只能当「结果待确认」并锁住这一屏,
+               玩家改了输入也交不了(实走复核:作品命名被拒后整屏卡在「原请求仍待确认」)。
+               拍照动作先调外部模型再落库,仍走原来的未知态处理。 */
+            if ("SUBMIT_PHOTO_CHECK".equalsIgnoreCase(action.trim())) return error(e.getMessage());
+            return AjaxResult.error(400, e.getMessage());
+        } catch (RuntimeException e) {
+            return error(e.getMessage());
+        }
+        try {
+            // act 返回前已提交玩法事务；铸卡放在提交之后。
+            return success(CheckReceiptProjection.response(runtimeService.finishPendingCardMint(judged)));
         } catch (RuntimeException e) {
             return error(e.getMessage());
         }

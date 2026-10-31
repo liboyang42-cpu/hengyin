@@ -28,7 +28,12 @@
     </view>
   </view>
 
-  <view class="g-btn {{rows.length && verdict !== 'ok' ? '' : 'g-btn--disabled'}} pe pe--up" style="--pe-d:.8s" bindtap="onSubmit"
+  <!-- 过了之后大按钮不再是一枚灰掉的「就这个顺序」:玩家只看见死按钮、找不到路,改成「继续」,和左上返回同一动作;故事流内嵌时下面已有「继续故事」,不再出这枚(实走复核) -->
+  <view wx:if="{{verdict === 'ok' && !inline}}" class="g-btn pe pe--up" style="--pe-d:.8s" bindtap="onClose"
+        aria-role="button" aria-label="继续" hover-class="g-btn--press" hover-stay-time="80">
+    继续
+  </view>
+  <view wx:elif="{{verdict !== 'ok'}}" class="g-btn {{rows.length && verdict !== 'ok' ? '' : 'g-btn--disabled'}} pe pe--up" style="--pe-d:.8s" bindtap="onSubmit"
         aria-role="button" aria-label="提交排好的顺序" hover-class="g-btn--press" hover-stay-time="80">
     就这个顺序
   </view>

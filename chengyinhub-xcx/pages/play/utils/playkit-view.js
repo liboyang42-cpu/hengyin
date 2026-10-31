@@ -23,6 +23,9 @@ const KIT_PRIORITY = [
   'qa', 'branch', 'predict', 'random', 'estimate', 'pricePair',
   /* R3 排序 / 连线 / 分类:节点的主玩法,没做完不该先弹别的。 */
   'sort', 'match', 'classify',
+  /* R16 时间轴对照:服务端早就能判(SUBMIT_COMPARE),玩家端一直没有这一屏 ——
+     配了它的站点玩完前一段就关掉、会话永远停在进行中,这一站完成不了(实走复核:海上方舟「生命签证」)。 */
+  'compare',
   'hiddenObject', 'scan',
   /* 《预制人生》那批(2026-09-17 契约 §2)。profile 排最前:它是这一场的开档,
      后面的故事变量要靠它;其余三个里 photoCheck/note 要玩家当场动手,typeIn 是限时挑战。
@@ -88,6 +91,7 @@ const TYPE_OF = {
   sort: 'sort',
   match: 'match',
   classify: 'classify',
+  compare: 'compare',
 };
 
 function pad4(n) { return String(Number(n) || 0).padStart(4, '0'); }
@@ -181,6 +185,8 @@ function segmentComplete(name, seg) {
      连线 / 分类没有次数上限:只有连对 / 分对(passed)才是终点,错了可以一直改。 */
   if (name === 'sort') return !!seg.finished;
   if (name === 'match' || name === 'classify') return !!seg.passed;
+  // 对照题同排序:标对或次数用尽(finished)才算完
+  if (name === 'compare') return !!seg.finished;
   // 找东西反过来:有确定答案,必须全找齐才算过
   if (name === 'hiddenObject') return ((seg.foundIds || []).length >= (seg.total || 0));
   if (name === 'blindTaste') return !!seg.solved;
@@ -639,7 +645,9 @@ function pickPlayKit(view, now) {
         value: seg.name || '',
         suggestions: seg.suggestions || [],
         maxLength: seg.maxLength || 16,
-        ctaLabel: '提交作品',
+        // 服务端已存下名字 = 这一段完成:按钮改「继续」收起,不再停在一枚还能点的「提交作品」上(实走复核)
+        named: !!String(seg.name || '').trim(),
+        ctaLabel: String(seg.name || '').trim() ? '继续' : '提交作品',
       });
     }
     if (name === 'silentOrder') {
@@ -711,6 +719,23 @@ function pickPlayKit(view, now) {
       finished: !!seg.finished,
       passed: !!seg.passed,
       lastCorrect: !!seg.lastCorrect,
+      // 服务端记的上一次提交顺序:排对之后重进 / 静默回来,台面按它摆,不回到题面的打乱序(实走 A14 复核)
+      lastOrder: Array.isArray(seg.lastOrder) ? seg.lastOrder : [],
+    });
+  }
+  /* R16 时间轴对照:两条时间线原样(顺序就是题面),answer 服务端不下发;
+     lastMarked 是上一次交的标法,重进页面按它摆 */
+  if (name === 'compare') {
+    return Object.assign(base, {
+      prompt: seg.prompt || '',
+      left: seg.left || {},
+      right: seg.right || {},
+      maxAttempts: seg.maxAttempts || 0,
+      attempts: seg.attempts || 0,
+      finished: !!seg.finished,
+      passed: !!seg.passed,
+      lastCorrect: !!seg.lastCorrect,
+      lastMarked: Array.isArray(seg.lastMarked) ? seg.lastMarked : [],
     });
   }
   if (name === 'match') {
@@ -902,6 +927,7 @@ const ACTION_OF = {
   'sort:submit': 'SUBMIT_SORT',
   'match:submit': 'SUBMIT_MATCH',
   'classify:submit': 'SUBMIT_CLASSIFY',
+  'compare:submit': 'SUBMIT_COMPARE',
   'hidden:submit': 'SUBMIT_HIDDEN_OBJECT',
   'predict:submit': 'SUBMIT_PREDICT',
   /* 七个挑战类都要先开表(原来六个 + 喊一嗓子):服务端拿 START_CHALLENGE 那一刻的**服务器时间**复核成绩,
@@ -991,6 +1017,7 @@ function serverPayload(type, action, detail) {
     case 'sort:submit': return { order: d.order || [] };
     case 'match:submit': return { pairs: d.pairs || [] };
     case 'classify:submit': return { placement: d.placement || {} };
+    case 'compare:submit': return { marked: d.marked || [] };
     /* ★ 单位在这儿换:组件按**百分比**报(0–100,它的定位样式就是百分比),
        服务端按**比例**收(0–1,热区配置也是比例)。不换的话每一次点击都会被
        「点击位置必须是 0 到 1 之间的比例值」打回来,这个玩法整个玩不了。 */
@@ -1006,6 +1033,8 @@ function serverPayload(type, action, detail) {
     /* 《预制人生》四个新段:字段名逐条对契约 §2。
        typeIn 的 elapsedMs 是客户端按设备时钟量出来的,服务端会用开表时间复核。 */
     case 'profile:submit': return { answers: d.answers || {}, avatarUrl: d.avatarUrl || '' };
+    // 作品命名:组件报 value,服务端 SUBMIT_DIY_NAME 读 name —— 原样透传时服务端读到空串,一律「作品名须为 1 至 N 字」(实走复核)
+    case 'diyname:submit': return { name: String(d.value || '').trim() };
     case 'note:submit': return { text: d.text || '' };
     case 'typein:submit': return { text: d.text || '', elapsedMs: Math.round(d.elapsedMs || 0) };
     /* 接力签:留下的那句和可选照片。现网 CLAIM_DAILY_SIGN 还不消费这两字段,多带无害;

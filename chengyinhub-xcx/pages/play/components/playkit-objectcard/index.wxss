@@ -15,7 +15,10 @@
 .oc__hint--center::before { background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2014%2014%22%20fill%3D%22none%22%20stroke%3D%22%23919191%22%20stroke-width%3D%221.4%22%3E%3Ccircle%20cx%3D%227%22%20cy%3D%227%22%20r%3D%224.5%22%2F%3E%3Cpath%20d%3D%22M7%200v3M7%2011v3M0%207h3M11%207h3%22%2F%3E%3C%2Fsvg%3E"); }
 .oc__hint--bright::before { background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2014%2014%22%20fill%3D%22none%22%20stroke%3D%22%23919191%22%20stroke-width%3D%221.4%22%3E%3Ccircle%20cx%3D%227%22%20cy%3D%227%22%20r%3D%222.8%22%2F%3E%3Cpath%20d%3D%22M7%20.5v2M7%2011.5v2M.5%207h2M11.5%207h2M2.4%202.4l1.4%201.4M10.2%2010.2l1.4%201.4M2.4%2011.6l1.4-1.4M10.2%203.8l1.4-1.4%22%2F%3E%3C%2Fsvg%3E"); }
 .oc__hint--clear::before { width: 24rpx; background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2015%2014%22%20fill%3D%22none%22%20stroke%3D%22%23919191%22%20stroke-width%3D%221.4%22%3E%3Cpath%20d%3D%22M1%207s2.4-4.5%206.5-4.5S14%207%2014%207s-2.4%204.5-6.5%204.5S1%207%201%207z%22%2F%3E%3Ccircle%20cx%3D%227.5%22%20cy%3D%227%22%20r%3D%222%22%2F%3E%3C%2Fsvg%3E"); }
-.oc__sub { margin-top: 12rpx; padding: 0 64rpx; font-size: var(--cy-type-caption); color: var(--cy-color-text-tertiary); }
+/* 判定说明只在标题下方,不和右上「继续」胶囊同排:不必再让出胶囊宽度,铺到页边距;
+   取景框顶在 170rpx,标题之下只放得下两行 —— 原先只有约 260rpx 宽,AI 给的一句理由折成四行压到照片上(实走复核) */
+.oc__sub { margin: 12rpx -148rpx 0; font-size: var(--cy-type-caption); line-height: 32rpx; color: var(--cy-color-text-tertiary);
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; } /* ds-ok 与 .oc__head 两侧 180rpx 留白对冲,回到 32rpx 页边距 */
 
 /* 取景框(9-24 用户:再大一点、上下留白居中):左右各 32rpx。上沿 = 标题区底(24 + 62 + 12 + 32 = 130rpx)+ 40,
    下沿 = 按钮行顶(110 + 127 = 237rpx,再加安全区)+ 40 —— 两段留白相等。改标题区或按钮行高度时两边一起算 */

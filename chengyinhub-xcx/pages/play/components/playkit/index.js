@@ -15,6 +15,8 @@ const KIT_TYPES = [
   'qa', 'branch', 'estimate', 'pricepair', 'hidden', 'predict', 'random', 'bingo', 'scan',
   /* R3 三个新玩法(施工文档 · 证据板):排序 / 连线 / 分类 */
   'sort', 'match', 'classify',
+  /* R16 时间轴对照:照排序那一屏搭(实走复核补上玩家端) */
+  'compare',
   /* 计步单独一个 'walk':已有的 'steps' 是 v5.1 那批半屏 sheet 的壳,
      与这一批整屏的不是一套东西。同名会让人以为换个 kit 就能切,实际两套壳。 */
   'walk',

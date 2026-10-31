@@ -262,7 +262,7 @@ test('故事文字动效(2026-10-30 业主定稿原型 v3):每段滑进来播一
   host._look = Object.assign(look.normalizeLook(null), { legacy: true })
   assert.deepEqual(host._textFx({ kind: 'text', text: '老主题' }, 0), {}, '没配风格的老主题不加动效')
   const js = read('pages/play/index.js'), wxml = read('pages/play/index.wxml'), wxss = read('pages/play/index.wxss')
-  assert.match(js, /\}, item, this\._textFx\(item, i\)\)\),/)
+  assert.match(js, /\}, item, (?:item\.url \? \{ url: secureOwnMedia\(item\.url\) \} : \{\}, )?this\._textFx\(item, i\)\)\),/)  // 并 #690:配图 / 语音先升 https,再叠文字动效
   assert.match(js, /if \(chapterFull && ln\.fx === 'decode'\) that\._decodeLine\(i\);/)
   assert.match(wxml, /\{\{item\.fx \? 'tfx tfx--' \+ item\.fx : ''\}\}/)
   assert.match(wxml, /class="tfx__c \{\{c\.raw \? 'is-raw' : ''\}\}" style="--i:\{\{c\.i\}\};--r:\{\{c\.r\}\};--dx:\{\{c\.dx\}\}px;--dy:\{\{c\.dy\}\}px" aria-hidden="true"/)

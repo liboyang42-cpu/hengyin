@@ -1,4 +1,4 @@
-<cy-sheet wx:if="{{!inline}}" show="{{show}}" handle="{{true}}" bind:close="onClose">
+<cy-sheet wx:if="{{!inline}}" show="{{show}}" handle="{{true}}" footer bind:close="onClose">
   <include src="body.wxml" />
 </cy-sheet>
 <!-- 内嵌档(2026-10-30 所有玩法都内嵌):不能套 cy-sheet —— .chfull__para 带 transform/filter,是 fixed 后代的包含块,半屏会被圈进段落里。 -->

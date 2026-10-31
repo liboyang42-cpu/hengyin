@@ -593,6 +593,8 @@ const RAW = [
   ['F86', 'F86-playkit-sort.png', '/pages/play/index?mock=1', 'player', 'normal', { show: true, kit: { type: 'sort', prompt: '把林舟的陈述按他说话的顺序排好', items: [{ id: 's2', label: '说明原声只授权在展厅播放' }, { id: 's1', label: '承认删掉了那一分钟录音' }, { id: 's3', label: '请求更正展签「从未存在」' }], maxAttempts: 2, attempts: 1, finished: false, passed: false, lastCorrect: false } }, undefined, { selector: 'cy-playkit-sort', min: 1 }, 'setData', 'P1', '', '排序:服务端给出的打乱项可用按钮调整顺序，不强迫玩家只靠拖拽。', 'cy-playkit'],
   ['F87', 'F87-playkit-match.png', '/pages/play/index?mock=1', 'player', 'normal', { show: true, kit: { type: 'match', prompt: '每份材料能回答哪个问题', left: [{ id: 'l1', label: '签收联 071' }, { id: 'l2', label: '原声录音' }, { id: 'l3', label: '合照 P-02' }], right: [{ id: 'r2', label: '码头原本叫什么' }, { id: 'r1', label: '是谁来拿走了东西' }, { id: 'r3', label: '那天还有谁在场' }], attempts: 1, passed: false, lastCorrect: false } }, undefined, { selector: 'cy-playkit-match', min: 1 }, 'setData', 'P1', '', '连线:左右点选配对，以相同序号角标表达对应关系。', 'cy-playkit'],
   ['F88', 'F88-playkit-classify.png', '/pages/play/index?mock=1', 'player', 'normal', { show: true, kit: { type: 'classify', prompt: '把证据板上的四条分清楚', bins: [{ id: 'b1', label: '事实' }, { id: 'b2', label: '证词' }, { id: 'b3', label: '猜测' }], items: [{ id: 'i1', label: '签收栏是空白的' }, { id: 'i2', label: '阿蓉说来拿东西的是许闻' }, { id: 'i3', label: '林舟是故意躲起来的' }, { id: 'i4', label: '交接编号是 071' }], attempts: 1, passed: false, lastCorrect: false } }, undefined, { selector: 'cy-playkit-classify', min: 1 }, 'setData', 'P1', '', '分类:每条证据选择一个类别，全部分完才能提交。', 'cy-playkit'],
+  // 2026-10-30 实走复核:R16 时间轴对照补上玩家端,填充态为标了两条、尚未提交。
+  ['F202', 'F202-playkit-compare.png', '/pages/play/index?mock=1', 'player', 'normal', { show: true, kit: { type: 'compare', prompt: '对照两条时间线：标出右侧所有发生在1943年以前的事。', left: { label: '世界', items: [{ id: 'w1938', time: '1938', text: '奥地利被德国吞并' }, { id: 'w1939', time: '1939', text: '第二次世界大战爆发' }] }, right: { label: '上海', items: [{ id: 's1938', time: '1938', text: '难民乘船抵达上海' }, { id: 's1943', time: '1943', text: '无国籍难民限定居住区设立' }] }, attempts: 0, passed: false, finished: false, lastCorrect: false, lastMarked: [] } }, undefined, { selector: 'cy-playkit-compare', min: 1 }, 'setData', 'P1', '', '时间轴对照:两条时间线逐条并排，点行标出，标好了提交。', 'cy-playkit'],
   ['F92', 'F92-playkit-scan-overlay.png', '/pages/play/index?mock=1', 'player', 'normal', { show: true, kit: { type: 'scan', title: '让墙上的画活过来', kind: '显形', scanned: false, overlayUrl: IMG, overlayScale: 60 } }, undefined, { selector: 'cy-playkit-scan', min: 1 }, 'setData', 'P1', '', '扫码显形档:页内相机取景 + 扫中后叠加层;权限/设备不配合时落回「用微信扫一扫」旁路。', 'cy-playkit'],
   ['F63', 'F63-playkit-branch.png', '/pages/play/index?mock=1', 'player', 'normal', { show: true, kit: { type: 'branch', title: '钟楼下的岔路', body: '雨停了。左边巷子传来烤面包的味道,右边是往河堤去的石阶。', options: [{ t: '拐进巷子', fb: '面包房还亮着灯。', next: 2 }, { t: '走上石阶', fb: '河风比想象中大。', next: 3 }], limitSeconds: 0 } }, undefined, { selector: 'cy-playkit-branch', min: 1 }, 'setData', 'P1', '', '分支剧情:界面和问答一样,但不判对错,所以没有次数、没有对错色。', 'cy-playkit'],
   ['F64', 'F64-playkit-estimate.png', '/pages/play/index?mock=1', 'player', 'normal', { show: true, kit: { type: 'estimate', title: '这棵树有多少岁?', unit: '年', min: 0, max: 400, limitSeconds: 0, maxTries: 3 } }, undefined, { selector: 'cy-playkit-estimate', min: 1 }, 'setData', 'P1', '', '猜数字:答案与容差都不下发,判定在服务端;揭晓时间写在屏上。', 'cy-playkit'],
@@ -666,11 +668,12 @@ const countBy = (pred) => SHOTS.filter(pred).length;
 // 2026-10-28 模板页货架改版新增主题卡堆预览页:B76 玩家深色 / B77 商家浅色两条 P1 real-data,total 340→342、P1 199→201、actionable 316→318(P1 192→194)、B 69→71、real-data 38→40。
 // 2026-10-28 L9 再并 master(#652 B76/B77)叠加本线 D12h–D12l:total 351、P1 201、actionable 327(P1 194)、B 71、real-data 43。
 // 2026-10-28 并 master(#658 后)合流 integrate/devfix-20261027:本线 F201(营销消息页)与 D33A(账户收益分析页)两行叠加 master,自检实测 total 353、P1 203、actionable 329(P1 196)、D 52、setData 186、real-data 44。
+// 2026-10-30 实走复核补时间轴对照玩家端填充态 F202(P1 setData actionable):total 353→354、P1 203→204、actionable 329→330(P1 196→197)、F 95→96、setData 186→187。
 const STATS = {
-  "total": 353,
+  "total": 354,
   "byPriority": {
     "P0": 140,
-    "P1": 203,
+    "P1": 204,
     "P2": 10
   },
   "blockedByPriority": {
@@ -680,9 +683,9 @@ const STATS = {
   },
   "actionable": {
     "P0": 131,
-    "P1": 196,
+    "P1": 197,
     "P2": 2,
-    "total": 329
+    "total": 330
   },
   "blocked": 24,
   "domains": {
@@ -691,10 +694,10 @@ const STATS = {
     "C": 56,
     "D": 52,
     "E": 26,
-    "F": 95
+    "F": 96
   },
   "control": {
-    "setData": 186,
+    "setData": 187,
     "identity+setData": 116,
     "real-data": 44,
     "real-device": 7
