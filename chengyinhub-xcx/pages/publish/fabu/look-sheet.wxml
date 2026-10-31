@@ -59,6 +59,13 @@
                 aria-role="button" aria-label="字体:{{item.label}}" aria-selected="{{item.on}}" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view>
         </view>
       </view>
+      <view class="look-row">
+        <text class="look-row__k">文字动效</text>
+        <view class="look-chips">
+          <view wx:for="{{lookView.textFxs}}" wx:key="value" class="look-chip {{item.on ? 'is-on' : ''}}" data-value="{{item.value}}" bindtap="onLookTextFx"
+                aria-role="button" aria-label="文字动效:{{item.label}}" aria-selected="{{item.on}}" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view>
+        </view>
+      </view>
     </view>
   </view>
 </cy-sheet>

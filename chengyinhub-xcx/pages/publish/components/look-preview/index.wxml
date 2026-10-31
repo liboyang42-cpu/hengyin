@@ -7,17 +7,17 @@
     <view class="lp__body">
       <text class="lp__kick">{{sample.kick}}</text>
       <text class="lp__title">{{sample.title}}</text>
-      <text class="lp__story">{{sample.story}}</text>
+      <view class="lp__story tfx tfx--{{fx}} {{fxIn ? 'is-in' : ''}}"><text wx:if="{{chars}}" wx:for="{{chars}}" wx:for-item="c" wx:key="i" class="tfx__c {{c.raw ? 'is-raw' : ''}}" style="--i:{{c.i}};--r:{{c.r}};--dx:{{c.dx}}px;--dy:{{c.dy}}px">{{c.ch}}</text><block wx:if="{{!chars}}">{{sample.story}}</block></view>
       <view class="lp__opt"><text class="lp__opt-k">A</text><text>{{sample.opt}}</text></view>
     </view>
     <canvas type="2d" id="lpfront" class="lp__fx lp__fx--front"></canvas>
   </view>
 </template>
-<view wx:if="{{embedded}}" class="lp lp--embedded"><template is="lp-frame" data="{{cls, sample}}" /></view>
+<view wx:if="{{embedded}}" class="lp lp--embedded"><template is="lp-frame" data="{{cls, sample, fx, fxIn, chars}}" /></view>
 <cy-sheet wx:else show="{{show}}" handle="{{true}}" stacked="{{false}}" bind:close="onClose">
   <view class="lp">
     <view class="lp__name">{{title}}</view>
-    <template is="lp-frame" data="{{cls, sample}}" />
+    <template is="lp-frame" data="{{cls, sample, fx, fxIn, chars}}" />
     <view class="lp__actions">
       <view class="lp__btn" bindtap="onPlayTransition" aria-role="button" aria-label="预览这个风格的转场" hover-class="cy-pressed" hover-stay-time="80">看转场</view>
       <view class="lp__btn lp__btn--primary" bindtap="onUse" aria-role="button" aria-label="使用这个风格" hover-class="cy-pressed" hover-stay-time="80">使用这个风格</view>

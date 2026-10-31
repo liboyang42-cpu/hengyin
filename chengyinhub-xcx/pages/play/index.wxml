@@ -317,7 +317,7 @@
       <view class="chfull__pad"></view>
       <!-- ⚠️ 外层 .chfull__para 每项一个,不能按类型拆成不同类名:measureChapter 用
            selectAll('.chfull__para') 按下标对齐 chapterParas,少一个就整屏焦点错位。 -->
-      <view wx:for="{{chapterParas}}" wx:key="i" id="{{item.nodeId ? 'chapter-game-' + item.nodeId : 'chapter-block-' + item.i}}" class="chfull__para st-line {{item.kind !== 'text' ? 'chfull__para--wide' : 'cy-story-hand'}} {{item.in ? 'is-in' : ''}} {{item.dir === 'down' ? 'from-top' : ''}} {{item.odd ? 'odd' + item.odd : ''}} {{oddFlick === item.i ? 'is-flick' : ''}}"
+      <view wx:for="{{chapterParas}}" wx:key="i" id="{{item.nodeId ? 'chapter-game-' + item.nodeId : 'chapter-block-' + item.i}}" class="chfull__para st-line {{item.kind !== 'text' ? 'chfull__para--wide' : 'cy-story-hand'}} {{item.in ? 'is-in' : ''}} {{item.dir === 'down' ? 'from-top' : ''}} {{item.odd ? 'odd' + item.odd : ''}} {{oddFlick === item.i ? 'is-flick' : ''}} {{item.fx ? 'tfx tfx--' + item.fx : ''}}"
             style="--d:{{item.d}}s">
         <image wx:if="{{item.kind === 'cover'}}" class="chfull__cover" src="{{item.url}}" mode="aspectFit" />
         <image wx:elif="{{item.kind === 'image'}}" class="chfull__img" src="{{item.url}}" mode="widthFix" lazy-load="true"
@@ -388,7 +388,7 @@
             advantage="{{journeyCheck.advantage}}" disadvantage="{{journeyCheck.disadvantage}}"
             receipt="{{journeyCheck.receipt}}" r5="{{journeyCheck.r5}}" allowed-actions="{{journeyCheck.allowedActions}}" disabled-reason="{{journeyCheck.disabledReason}}" bind:action="onJourneyCheckAction" bind:close="closeJourneyCheck" />
         </view>
-        <block wx:else><text class="chfull__cond" wx:if="{{item.cond}}">{{item.cond}}</text>{{item.text}}</block>
+        <block wx:else><text class="chfull__cond" wx:if="{{item.cond}}">{{item.cond}}</text><text wx:if="{{item.chars}}" wx:for="{{item.chars}}" wx:for-item="c" wx:key="i" class="tfx__c {{c.raw ? 'is-raw' : ''}}" style="--i:{{c.i}};--r:{{c.r}};--dx:{{c.dx}}px;--dy:{{c.dy}}px" aria-hidden="true">{{c.ch}}</text><block wx:if="{{!item.chars}}">{{item.text}}</block><text wx:if="{{item.chars}}" class="tfx__sr">{{item.text}}</text></block>
       </view>
       <view class="chfull__end" wx:if="{{(chapterParas[chapterParas.length - 1].kind !== 'game' && chapterParas[chapterParas.length - 1].kind !== 'kit' && chapterParas[chapterParas.length - 1].kind !== 'journeyCheck') || chapterParas[chapterParas.length - 1].done}}">
         <view class="chfull__continue" bindtap="continueChapterStory" aria-role="button" aria-label="{{chapter.opening ? '出发' : (chapter.ending ? '继续' : '继续探索')}}" hover-class="cy-pressed" hover-stay-time="80">{{chapter.opening ? '出发' : (chapter.ending ? '继续' : '继续探索')}}</view>

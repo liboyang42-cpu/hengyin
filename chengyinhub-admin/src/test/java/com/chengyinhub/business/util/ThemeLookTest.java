@@ -67,4 +67,15 @@ class ThemeLookTest
         assertThrows(IllegalArgumentException.class, () -> ThemeLook.normalize("{\"style\":\"SURVIVAL\",\"times\":[\"NOON\",\"MIDNIGHT\"]}"));
         assertThrows(IllegalArgumentException.class, () -> ThemeLook.normalize("{\"style\":\"PAPER\",\"times\":[\"NOON\"]}"));
     }
+
+    @Test
+    void textFxIsOptionalLowercaseAndFromTheCatalog()
+    {
+        assertEquals("{\"style\":\"CYBER\",\"params\":{},\"transition\":\"AUTO\",\"storyFont\":\"HAND\",\"textFx\":\"decode\"}",
+                ThemeLook.normalize("{\"style\":\"CYBER\",\"textFx\":\"Decode\"}"));
+        assertEquals("{\"style\":\"CYBER\",\"params\":{},\"transition\":\"AUTO\",\"storyFont\":\"HAND\"}",
+                ThemeLook.normalize("{\"style\":\"CYBER\",\"textFx\":\"\"}"));
+        assertThrows(IllegalArgumentException.class, () -> ThemeLook.normalize("{\"style\":\"PAPER\",\"textFx\":\"page\"}"));
+        assertThrows(IllegalArgumentException.class, () -> ThemeLook.normalize("{\"style\":\"PAPER\",\"textFx\":\"stamp\"}"));
+    }
 }

@@ -1979,3 +1979,47 @@ page { background: var(--cy-color-bg-page); }
 .is-lit .cy-story-hand, .is-lit .chfull__para{ text-shadow:0 0 24rpx rgba(235,240,255,.9), 0 0 4rpx rgba(255,255,255,.9); transition:text-shadow .08s; } /* ds-ok 闪电照亮 */
 /* 自由探索的故事层同样铺章节 / 主题配色的底(只在选过风格的主题上带 atmosphere--*) */
 .fx-story[class*="atmosphere--"]{ background:var(--atmo-bg); --cy-color-text-primary:var(--atmo-text); --cy-color-text-tertiary:var(--atmo-muted); }
+/* ===== 故事文字动效(2026-10-30 业主定稿原型 v3,theme-look.js TEXT_FX):一段滑进屏幕(.is-in)时播一次,滑出去复位,再滑回来重播。
+   浮现 = 原有 st-line 显形,不另写;逐字类把一段拆成 .tfx__c 单字。只用过渡 + 逐字延迟,不新增关键帧。 */
+.tfx__c{ display:inline-block; white-space:pre; }
+.tfx__sr{ position:absolute; width:1rpx; height:1rpx; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; } /* 单字隐藏给读屏,整句由这一份念 */
+/* 逐字类:整段本身立即可见,显形交给每个字 */
+.chfull__para.tfx--type, .chfull__para.tfx--ink, .chfull__para.tfx--gather, .chfull__para.tfx--drop, .chfull__para.tfx--wind, .chfull__para.tfx--signal, .chfull__para.tfx--decode{ opacity:1; transform:none; filter:none; }
+/* 打字机:一字一字立刻出现 */
+.tfx--type .tfx__c{ opacity:0; transition:opacity 0s linear calc(var(--i) * 70ms); }
+.tfx--type.is-in .tfx__c{ opacity:1; }
+/* 墨晕:字从洇开的墨里收拢成形 */
+.tfx--ink .tfx__c{ opacity:0; filter:blur(14rpx); transform:scale(1.35); transition:opacity .9s ease calc(var(--i) * 45ms), filter 1.2s ease calc(var(--i) * 45ms), transform 1.2s cubic-bezier(.22,1,.36,1) calc(var(--i) * 45ms); }
+.tfx--ink.is-in .tfx__c{ opacity:1; filter:none; transform:none; }
+/* 聚星:每个字从四散的星点聚过来 */
+.tfx--gather .tfx__c{ opacity:0; filter:blur(8rpx); transform:translate(var(--dx), var(--dy)) scale(.3); transition:opacity 1s ease calc(var(--r) * 900ms), filter 1.2s ease calc(var(--r) * 900ms), transform 1.6s cubic-bezier(.16,1,.3,1) calc(var(--r) * 900ms); }
+.tfx--gather.is-in .tfx__c{ opacity:1; filter:none; transform:none; }
+/* 落定:每个字从上方落下,轻轻回弹 */
+.tfx--drop .tfx__c{ opacity:0; transform:translateY(-32rpx); transition:opacity .4s ease calc(var(--i) * 40ms), transform .7s cubic-bezier(.34,1.56,.64,1) calc(var(--i) * 40ms); }
+.tfx--drop.is-in .tfx__c{ opacity:1; transform:none; }
+/* 风吹:字顺着风从右边斜着吹进来 */
+.tfx--wind .tfx__c{ opacity:0; filter:blur(6rpx); transform:translateX(68rpx) skewX(-18deg); transition:opacity .6s ease calc(var(--i) * 35ms), filter .8s ease calc(var(--i) * 35ms), transform .9s cubic-bezier(.22,1,.36,1) calc(var(--i) * 35ms); }
+.tfx--wind.is-in .tfx__c{ opacity:1; filter:none; transform:none; }
+/* 信号:像接收不稳的电台,闪几下才稳住 */
+.tfx--signal .tfx__c{ opacity:0; transition:opacity .9s steps(5, jump-both) calc(var(--r) * 700ms); }
+.tfx--signal.is-in .tfx__c{ opacity:1; }
+/* 解码:乱码逐字还原(play-look _decodeLine 换字符),还没还原的字用强调色 */
+.tfx--decode .tfx__c.is-raw{ color:var(--look-b); opacity:.75; }
+/* 呼吸光:整段淡入后亮一下 */
+.chfull__para.tfx--glow{ transform:none; filter:none; transition:opacity 1.2s ease, text-shadow 1.4s ease .6s; }
+.chfull__para.tfx--glow.is-in{ text-shadow:0 0 30rpx var(--look-a); }
+/* 擦出:从左到右揭开 */
+.chfull__para.tfx--wipe{ opacity:1; transform:none; filter:none; clip-path:inset(0 100% 0 0); transition:clip-path 1.3s cubic-bezier(.65,0,.35,1); }
+.chfull__para.tfx--wipe.is-in{ clip-path:inset(0 0 0 0); }
+/* 雾散:很虚的一整段,慢慢变清楚 */
+.chfull__para.tfx--fog{ transform:none; filter:blur(28rpx); letter-spacing:.25em; transition:opacity 2s ease, filter 2.6s ease, letter-spacing 2.6s ease; }
+.chfull__para.tfx--fog.is-in{ filter:none; letter-spacing:0; }
+/* 霓虹点亮:灯管通电,闪两下亮起 */
+.chfull__para.tfx--neon{ transform:none; filter:none; transition:opacity .6s steps(4, jump-both); }
+.chfull__para.tfx--neon.is-in{ text-shadow:0 0 28rpx var(--look-a); }
+/* 扫描:一道扫描线从上到下扫过,扫过的地方才出现 */
+.chfull__para.tfx--scan{ opacity:1; transform:none; filter:none; clip-path:inset(0 0 100% 0); transition:clip-path 1s linear; }
+.chfull__para.tfx--scan.is-in{ clip-path:inset(0 0 0 0); }
+/* 减少动态:直接显示 */
+.play--reduced-motion .tfx__c{ transition:none; opacity:1; transform:none; filter:none; }
+.play--reduced-motion .chfull__para.tfx{ transition:none; clip-path:none; filter:none; letter-spacing:normal; }
