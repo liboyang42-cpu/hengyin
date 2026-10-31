@@ -272,6 +272,9 @@ Page({
     chapterNumbers: [],
     topicDetailShow: false, // 主题详情弹窗
     topicDetailSummary: '', // 入口卡上的摘要:还差几项
+    topicDetailMissing: 0,  // P-4:主题详情还有几项必填没填(>0 时摘要标红)
+    // P-4(V-25):票务页各分区还有几项必填没填;票务卡与分区标题右侧的红色「* 还有 N 项未填」都读它
+    ticketMissing: { dates: 0, tickets: 0, identity: 0, total: 0 },
     chapterPreview: { show: false, number: 1, total: 1, title: '', subtitle: '' },
     chapterStates: [],      // 由 pro-editor-policy 算出的派生态,不进 formData(见 refreshPrimaryActionState)
     chapterActionLabels: [],
@@ -299,11 +302,10 @@ Page({
     themeSwitchColor: TOPIC_EDITOR_SWITCH_COLOR,
     // 发布前检查弹层(M4·A):blocking=硬必填(阻断),advisory=软建议(不阻断)
     publishCheck: { show: false, blocking: [], advisory: [], summary: [], passed: [], preview: null },
-    // RUN-52 发布者实名(挂进上面那一层弹层)。registered 只有真/假 —— 接口不下发姓名与证件号;
-    // ready 驱动「必填项」那条与「确认发布」的可点性;字段刻意不放 formData,免得混进主题提交 payload。
+    // RUN-52 发布者实名(P-4 起在票务页最后一个分区)。registered 只有真/假 —— 接口不下发姓名与证件号;
+    // 三格齐不齐由 _identityReady() 现算(只在点「完成」时用,不进渲染);字段刻意不放 formData,免得混进主题提交 payload。
     identityRegistered: false,
     identityRequired: true,
-    identityReady: false,
     // 旧草稿没记录商家/个人入口、用户还没确认归属:页内横幅 + 发布确认里的「需要先处理」都看它
     identityRealName: '',
     identityIdCard: '',
@@ -6372,8 +6374,9 @@ Page({
     if (JSON.stringify(pendingMaterialStates) !== JSON.stringify(d.pendingMaterialStates)) {
       summaryPatch.pendingMaterialStates = pendingMaterialStates;
     }
-    const summary = missing ? ('还差 ' + missing + ' 项') : '已填完';
+    const summary = missing ? ('还有 ' + missing + ' 项未填') : '已填完';
     if (summary !== d.topicDetailSummary) summaryPatch.topicDetailSummary = summary;
+    if (missing !== d.topicDetailMissing) summaryPatch.topicDetailMissing = missing;
     if (Object.keys(summaryPatch).length) this.setData(summaryPatch);
 
     const bag = this._buildValidationBag();
@@ -6384,7 +6387,23 @@ Page({
       && (!d.editingTopicId || d.editLoaded);
     const patch = {};
     if (canPublish !== d.canPublish) patch.canPublish = canPublish;
+    const ticketMissing = this._ticketMissing(bag);
+    if (JSON.stringify(ticketMissing) !== JSON.stringify(d.ticketMissing)) patch.ticketMissing = ticketMissing;
     if (Object.keys(patch).length) this.setData(patch);
+  },
+
+  // P-4(V-25):票务页三个分区的缺项数 —— 档期 / 票务按校验袋的字段,实名按三格是否填了
+  _ticketMissing(bag) {
+    const errorKeys = Object.keys((bag || this._buildValidationBag()).errors || {});
+    const id = this.identityForm();
+    const missing = {
+      dates: errorKeys.filter((key) => key === 'startDate' || key === 'endDate' || key === 'recruitDeadline').length,
+      tickets: errorKeys.filter((key) => key.indexOf('ticket') === 0).length,
+      identity: publisherIdentity.topicRequiresIdentity(this.data.formData) && !id.identityRegistered
+        ? [!String(id.realName || '').trim(), !String(id.idCard || '').trim(), !id.consented].filter(Boolean).length : 0,
+    };
+    missing.total = missing.dates + missing.tickets + missing.identity;
+    return missing;
   },
 
   validateForm() {
@@ -6553,13 +6572,25 @@ Page({
         { k: '时长', v: stats.totalDurationDisplay || '—' },
         { k: '里程', v: stats.totalDistance || 0 },
       ],
+      // P-4 剧情预览:玩家看到的样子 —— 模式、票价、每章剧情与节点照片 / 玩法、通关勋章
+      mode: Number(fd.productType) === 2 ? '自由探索' : '城市定向',
+      ticket: ((fd.tickets || [])[0] && {
+        name: fd.tickets[0].name || '未命名票种',
+        price: Number(fd.tickets[0].price) > 0 ? '¥' + Number(fd.tickets[0].price) : '免费',
+      }) || null,
+      medal: fd.finishMedalName || (fd.name || '主题名') + ' · 通关',
       chapters: (fd.chapters || []).map((chapter, index) => ({
+        index,
         // CU-C-87:与章节卡同一把尺子 —— 名字自带「第N章」时不再叠一次序号,
         // 否则确认页会出现「第1章 第1章 隔离书店站」。
         name: chapterCardTitle(index, chapter && chapter.name),
-        nodes: (((chapter && chapter.nodes) || []).map((node) => ({
+        story: (chapter && chapter.description) || '',
+        nodes: (((chapter && chapter.nodes) || []).map((node, nodeIndex) => ({
+          index: nodeIndex,
           name: (node && node.name) || '未命名节点',
           address: node && node._storyGame ? '无需到达地点' : ((node && node.address) || '未选地点'),
+          img: String((node && node.imgUrl) || '').split(',').filter(Boolean)[0] || '',
+          play: (node && node.templateName) || '',
         }))),
       })),
     };
@@ -6724,8 +6755,15 @@ Page({
     if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.confirmPublishCheck(), { owner: this, target: () => [this.data.editingTopicId, this.data.draftUuid, this.data.operationScope, this.data.formData.clubId, this.data.formData.productType] })) return; // 2026-10-24 游客写前登录
     if (this._identityRegistering) return;
     this.syncIdentityReady();
-    if (this.data.publishCheck.blocking.length || !this.data.identityReady) return;
-    if (!this.data.identityRequired || this.data.identityRegistered) { this._publishAfterIdentity(); return; }
+    if (this.data.publishCheck.blocking.length) return;
+    // 发布者会收到招募状态与承接意向通知。订阅授权只能在点击里同步弹:「完成」这一下就请求;
+    // 后面的实名登记与内容预检都是异步回调,到那时已经弹不出来。
+    subscribe.request(['recruit', 'clubInterest']).then((result) => {
+      this._publishSubscribeStatus = result.status;
+    });
+    // P-4:实名三格在票务页最后一个分区,预览里没有 —— 没填齐就送回那里
+    if (!this._identityReady()) { this._backToIdentity(''); return; }
+    if (!this.data.identityRequired || this.data.identityRegistered) { this._submitFromPreview(); return; }
     // 先落实名、再落主题:后端两道闸就是这个顺序(/api/publisher/identity 先于 /api/topic/create
     // 的实名校验),并发两发会被拦成「请先登记实名信息」。
     const requestEpoch = (this._identityRequestEpoch || 0) + 1;
@@ -6744,14 +6782,76 @@ Page({
           || precheckToken !== this._precheckToken || scope !== this.data.operationScope
           || !this.data.publishCheck.show) return;
       if (!r.ok) {
-        // 弹层不关:字段就在原地,改完再点一次;报错用软红整块,不给输入框描红边
-        this.setData({ identityError: r.message });
+        // 字段在票务页:回到那里显示报错(软红整块,不给输入框描红边),改完再预览一次
+        this._backToIdentity(r.message);
         return;
       }
-      this.setData({ identityRegistered: true, identityReady: true, identityError: '' });
+      this.setData({ identityRegistered: true, identityError: '' });
       if (this.data.publishCheck.blocking.length) return;
-      this._publishAfterIdentity();
+      this._submitFromPreview();
     });
+  },
+
+  // P-4:剧情预览右上「完成」= 发布。内容安全预检在这一步才跑(内容到这一刻才定);
+  // 预检没问题直接发布,有问题重新打开这一层、红行列在最上面(_afterPrecheck → _showPublishCheck)。
+  _submitFromPreview() {
+    this.setData({ 'publishCheck.show': false });
+    this.setEditorState('idle');
+    this.submitForm();
+  },
+
+  _backToIdentity(message) {
+    this.closePublishCheck();
+    this.setData({ editorPage: 2, identityError: message || '' }, () => this._scrollSheetTo('fieldIdentity'));
+    if (!message) {
+      const check = publisherIdentity.checkIdentityForm(this.identityForm());
+      cyToast(check.ok ? '发布者实名还没登记' : check.message);
+    }
+  },
+
+  // P-4(V-25):票务页底部「预览」—— 票务页还有没填的,滚到第一项并报还差几项;
+  // 都填完就打开剧情预览(原发布确认那一层)。这一步不烧 AI 预检次数,预检在「完成」时跑。
+  openStoryPreview() {
+    this.syncIdentityReady();
+    const bag = this._buildValidationBag();
+    const errors = bag.errors || {};
+    const missing = this._ticketMissing(bag);
+    this.setData({ ticketMissing: missing });
+    const first = Object.keys(errors).find((key) => ISSUE_PAGE2_ANCHORS.indexOf(this._anchorForErrorKey(key)) >= 0);
+    if (first) {
+      this.focusValidationError({ [first]: errors[first] });
+      cyToast('还有 ' + missing.total + ' 项未填');
+      return;
+    }
+    if (missing.identity) { this._backToIdentity(''); return; }
+    // CU-C-168:这一步没跑内容安全预检,第二个参数照实说(预检在「完成」时才跑)
+    this._showPublishCheck([], '内容安全预检还没跑');
+  },
+
+  // 票务页分区标题右侧红色「* 还有 N 项未填」:滚到这一区的第一项
+  onReqLeftTap(e) {
+    const anchor = (e && e.currentTarget && e.currentTarget.dataset.anchor) || '';
+    if (anchor === 'ticketSection') {
+      const errors = this._buildValidationBag().errors || {};
+      const key = Object.keys(errors).find((k) => k.indexOf('ticket') === 0);
+      if (key) { this.focusValidationError({ [key]: errors[key] }); return; }
+    }
+    this._scrollSheetTo(anchor);
+  },
+
+  // 剧情预览每一块右上的笔:回到配置里对应的位置(章节 → 章节设置,节点 → 节点编辑,票价 → 票务页)
+  onPreviewEdit(e) {
+    const ds = (e && e.currentTarget && e.currentTarget.dataset) || {};
+    this.closePublishCheck();
+    if (ds.target === 'ticket') { this.setData({ editorPage: 2 }, () => this._scrollSheetTo('ticketSection')); return; }
+    this.setData({ editorPage: 1 });
+    const chapterindex = Number(ds.chapterindex);
+    if (!(this.data.formData.chapters || [])[chapterindex]) return;
+    if (ds.nodeindex !== undefined && ds.nodeindex !== '') {
+      this.showEditNodes({ currentTarget: { dataset: { chapterindex, nodeindex: Number(ds.nodeindex) } } });
+      return;
+    }
+    this.showEditChapter({ currentTarget: { dataset: { index: chapterindex } } });
   },
 
   _publishAfterIdentity() {
@@ -6763,7 +6863,7 @@ Page({
 
   // 发布弹层的「确认发布」被置灰时点它 —— 报第一条真缺项,不打空炮。
   onPublishCheckDisabledTap() {
-    if (!this.data.identityReady) {
+    if (!this._identityReady()) {
       const check = publisherIdentity.checkIdentityForm(this.identityForm());
       cyToast(check.ok ? '发布者实名还没登记' : check.message);
       return;
@@ -6784,13 +6884,16 @@ Page({
     };
   },
 
-  // 三项齐不齐只驱动「必填项」那条与 CTA 可点性;规则仍然只有 utils/publisher-identity.js 一份
+  // 要不要实名驱动票务页那一区显不显示;规则仍然只有 utils/publisher-identity.js 一份
   syncIdentityReady() {
     const required = publisherIdentity.topicRequiresIdentity(this.data.formData);
-    const ready = !required || publisherIdentity.identitySatisfied(this.identityForm());
-    if (ready !== this.data.identityReady || required !== this.data.identityRequired) {
-      this.setData({ identityRequired: required, identityReady: ready });
-    }
+    if (required !== this.data.identityRequired) this.setData({ identityRequired: required });
+  },
+
+  // 三格齐不齐(或根本不需要实名):只在点「完成」/ 完成置灰时现算
+  _identityReady() {
+    return !publisherIdentity.topicRequiresIdentity(this.data.formData)
+      || publisherIdentity.identitySatisfied(this.identityForm());
   },
 
   onIdentityFieldInput(e) {
@@ -6814,13 +6917,7 @@ Page({
     this.setEditorState('idle');
   },
 
-  // 发布钮置灰 = 有硬必填没交。点它不打空炮:直接开同一张「发布前检查」弹层,
-  // 逐条列还差什么 + 一键定位。纯本地判定,不烧 AI 预检次数(频控是全端点共用的池)。
-  // CU-C-168:这条路径**没跑过**内容安全预检,第二个参数必须说实话 —— 传空串会被
-  // 当成「跑过了且没问题」,于是弹层一边列着缺项、一边绿着「内容安全预检通过」。
-  onPublishDisabledTap() {
-    this._showPublishCheck([], '内容安全预检还没跑');
-  },
+
 
   // 一键定位:把这一项送到它字段真正所在的那一屏(切页 / 开主题详情弹窗 / 展开票务并打开对应票单),
   // 再滚到锚点。
@@ -7274,12 +7371,7 @@ Page({
       return;
     }
 
-    // 发布者会收到招募状态与承接意向通知；只在首次「发布」tap 中请求，预检确认回调不重复弹。
-    if (!precheckAcked) {
-      subscribe.request(['recruit', 'clubInterest']).then((result) => {
-        this._publishSubscribeStatus = result.status;
-      });
-    }
+    // 招募状态与承接意向通知的订阅授权在剧情预览「完成」那一下请求(confirmPublishCheck),这里是异步链路,不再弹。
 
     // 发布前 AI 安全预检:每次提交跑一次(内容可能已改),用户在弹层点「继续发布」后一次性放行
     if (!precheckAcked) {

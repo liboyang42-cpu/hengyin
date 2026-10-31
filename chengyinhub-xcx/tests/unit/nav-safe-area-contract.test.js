@@ -61,7 +61,10 @@ function assertPublishChrome(source) {
   // 2026-09-05:发布从第 2 页底部收回第 1 页底栏(删掉「预览」后那个位置空出来),
   // 文案「检查并发布」→「发布」并带箭头。这条守的是「发布入口还在、还能点到」,
   // 所以只钉 bindtap="submitForm" 这个事实,不钉文案与内部结构。
-  assert.match(source, /<cy-btn[^>]*bindtap="submitForm"/, 'publish CTA must remain reachable')
+  // 2026-10-31 业主 P-4:第 1 页「下一步」→ 票务页「预览」→ 剧情预览右上「完成」= 发布。守的事实照旧:发布入口还在、还能点到。
+  assert.match(source, /<cy-btn[^>]*bindtap="openStoryPreview"/, 'ticketing page must open the story preview')
+  assert.match(source, /<cy-btn[^>]*bindtap="confirmPublishCheck"/, 'publish CTA must remain reachable')
+  assert.match(source, /class="sp-top" style="padding-top: \{\{statusBarHeight\}\}px;"/, 'story preview actions must clear the status bar')
 }
 
 test('P0 capsule geometry keeps the close target reachable at 375/393 widths and shifted capsules', () => {

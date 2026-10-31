@@ -20,7 +20,8 @@
                「这块管什么」,不是「你是谁」;而且主理人把开关关成自办之后,标题照旧写
                「与商家池」,名不副实。现在拆成两块:档期(恒显示)+ 商家招商(能开才显示),
                标题各自固定,关掉开关时整块消失。 -->
-          <view class="pd-section-title">档期</view>
+          <!-- P-4(V-25):分区标题右侧红色「* 还有 N 项未填」,点它滚到这一区 -->
+          <view class="pd-sec-hd"><view class="pd-section-title">档期</view><view class="req-left" wx:if="{{ticketMissing.dates}}" data-anchor="fieldDates" bindtap="onReqLeftTap" aria-role="button" aria-label="档期还有 {{ticketMissing.dates || 0}} 项未填，去填写" hover-class="cy-pressed" hover-stay-time="80"><text class="req-left__star">*</text> 还有 {{ticketMissing.dates || 0}} 项未填</view></view>
 
           <!-- 档期(主题起止)2026-08-10 从主题详情弹窗迁来:用户「档期与商家池不是在这里配置」。
                ⚠️ 不能只删不搬:票种编辑器的「与主题日期一致」拿的就是这两个值,删了它就没来源。 -->
@@ -140,7 +141,7 @@
             </block>
           </view>
 
-          <view class="pd-section-title">票务</view>
+          <view class="pd-sec-hd"><view class="pd-section-title">票务</view><view class="req-left" wx:if="{{ticketMissing.tickets}}" data-anchor="ticketSection" bindtap="onReqLeftTap" aria-role="button" aria-label="票务还有 {{ticketMissing.tickets || 0}} 项未填，去填写" hover-class="cy-pressed" hover-stay-time="80"><text class="req-left__star">*</text> 还有 {{ticketMissing.tickets || 0}} 项未填</view></view>
           <view id="ticketSection">
             <view class="node-card" wx:for="{{formData.tickets}}" wx:key="index" wx:for-item="ticket" wx:for-index="ti" bindtap="openTicketEditor" data-index="{{ti}}" hover-class="cy-pressed" hover-stay-time="80">
               <view class="node-card__row">
@@ -340,6 +341,25 @@
                 </view>
               </block>
             </view>
+          </block>
+
+          <!-- RUN-52 发布者实名(P-4 从发布确认搬来,放票务页最后一个分区):要收钱就得知道收钱的人是谁(电商法 §27)。
+               姓名 + 身份证号 + 单独同意,字段与同意文案照原样;已登记的人整节不见 —— 接口只回真假,值不下发也不回显。 -->
+          <block wx:if="{{identityRequired && !identityRegistered}}">
+            <view class="pd-sec-hd"><view class="pd-section-title">发布者实名</view><view class="req-left" wx:if="{{ticketMissing.identity}}" data-anchor="fieldIdentity" bindtap="onReqLeftTap" aria-role="button" aria-label="发布者实名还有 {{ticketMissing.identity || 0}} 项未填，去填写" hover-class="cy-pressed" hover-stay-time="80"><text class="req-left__star">*</text> 还有 {{ticketMissing.identity || 0}} 项未填</view></view>
+            <view class="pc-identity" id="fieldIdentity">
+              <cy-field label="真实姓名" required placeholder="与身份证一致"
+                        value="{{identityRealName}}" maxlength="{{20}}"
+                        data-field="identityRealName" bindinput="onIdentityFieldInput" />
+              <cy-field label="身份证号" required placeholder="18 位"
+                        value="{{identityIdCard}}" maxlength="{{18}}"
+                        data-field="identityIdCard" bindinput="onIdentityFieldInput" />
+              <cy-consent-check class="pc-identity__consent" checked="{{identityConsented}}"
+                                text="{{identityHint}}" bind:change="onIdentityConsent" />
+              <view class="pc-identity__foot">修改实名请联系客服</view>
+            </view>
+            <cy-inline-error class="pc-identity__err" wx:if="{{identityError}}" kind="error"
+                             title="实名没有登记" sub="{{identityError}}" />
           </block>
 
       </view>

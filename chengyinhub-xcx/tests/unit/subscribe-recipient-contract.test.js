@@ -53,7 +53,8 @@ const SUBSCRIPTION_RECIPIENT_CONTRACTS = [
     recipientRole: 'publisher',
     entryFile: 'pages/publish/fabu/index.js',
     entryWxml: 'pages/publish/fabu/index.wxml',
-    gestureHandler: 'submitForm',
+    // 2026-10-31 P-4:发布入口改成剧情预览右上「完成」(confirmPublishCheck),授权跟着挪到这一下点击
+    gestureHandler: 'confirmPublishCheck',
     backendConfigKey: 'tplRecruit',
     backendEvidence: [
       ['chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java', /notifyRecruit\(topic\.getMemberId\(\)/],

@@ -4892,3 +4892,47 @@ page { background: var(--cy-btn-solid-bg); }
 .pw-custom__v { font-size: var(--cy-type-body); font-variant-numeric: tabular-nums; }
 .pw-custom__done { margin-top: var(--cy-space-3); height: 100rpx; border-radius: var(--cy-radius-lg); display: flex; align-items: center; justify-content: center; font-size: var(--cy-type-button); font-weight: 700; background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg); }
 @import "./look-sheet.wxss"; /* 画面风格 */
+
+/* ===== P-4 / V-25(2026-10-31):必填缺项红字 + 剧情预览(原发布确认那一层) ===== */
+.pd-sec-hd { display: flex; align-items: baseline; justify-content: space-between; gap: var(--cy-space-2); }
+.req-left { flex: none; display: inline-flex; align-items: center; min-height: 88rpx; padding-right: 8rpx; color: var(--cy-color-action-danger-bg); font-size: var(--cy-font-label); }
+.req-left__star { font-weight: 700; }
+.pd-entry-card__sub.is-missing, .pd-modecard__action.is-missing { color: var(--cy-color-action-danger-bg); }
+.sp { position: fixed; left: 0; right: 0; top: 0; bottom: 0; z-index: var(--cy-z-sheet); background: var(--cy-color-bg-page); color: var(--cy-color-text-primary); }
+.sp-scroll { height: 100%; }
+.sp-hero { position: relative; height: 920rpx; overflow: hidden; }
+.sp-hero__img { width: 100%; height: 100%; display: block; }
+.sp-hero__img--empty { display: flex; align-items: center; justify-content: center; background: var(--cy-color-bg-elevated); color: var(--cy-color-text-tertiary); }
+.sp-hero::after { content: ""; position: absolute; left: 0; right: 0; top: 0; bottom: 0; background: linear-gradient(180deg, rgba(0, 0, 0, .35) 0%, rgba(0, 0, 0, 0) 30%, rgba(0, 0, 0, .2) 60%, var(--cy-color-bg-page) 100%); } /* ds-ok P-4 封面压暗,与剧情页同一套渐变 */
+.sp-hero__copy { position: absolute; left: 40rpx; right: 40rpx; bottom: 36rpx; z-index: 1; display: flex; flex-direction: column; }
+.sp-title { font-size: 68rpx; font-weight: 800; line-height: 1.1; }
+.sp-meta { display: flex; flex-wrap: wrap; gap: 12rpx; margin-top: 24rpx; }
+.sp-chip { padding: 8rpx 20rpx; border-radius: var(--cy-radius-pill); background: var(--cy-color-bg-glass); font-size: 26rpx; font-weight: 500; }
+.sp-issues { margin: 24rpx 40rpx 0; border-radius: 28rpx; overflow: hidden; background: var(--cy-color-bg-elevated); }
+.sp-issue { display: flex; align-items: center; gap: 8rpx; min-height: 88rpx; padding: 0 28rpx; color: var(--cy-color-action-danger-bg); font-size: 28rpx; }
+.sp-issue + .sp-issue { border-top: 1rpx solid var(--cy-color-border-subtle); }
+.sp-issue__star { font-weight: 700; }
+.sp-issue__t { flex: 1; min-width: 0; }
+.sp-sec { padding: 40rpx 40rpx 0; }
+.sp-lede { font-size: 32rpx; line-height: 1.6; color: var(--cy-color-text-secondary); }
+.sp-ticket { margin: 24rpx 40rpx 0; min-height: 88rpx; padding: 0 32rpx; border-radius: 28rpx; background: var(--cy-color-bg-elevated); display: flex; justify-content: space-between; align-items: center; font-size: 30rpx; }
+.sp-ticket__p { font-size: 34rpx; font-weight: 700; }
+.sp-ch { margin: 56rpx 40rpx 8rpx; font-size: 44rpx; font-weight: 700; }
+.sp-blk { position: relative; margin: 24rpx 40rpx 0; border-radius: 28rpx; }
+.sp-edit { position: absolute; right: 16rpx; top: 16rpx; width: 56rpx; height: 56rpx; border-radius: 50%; background: var(--cy-color-bg-glass); display: flex; align-items: center; justify-content: center; }
+.sp-say { padding: 28rpx 96rpx 28rpx 32rpx; border-radius: 28rpx; background: var(--cy-color-bg-elevated); font-size: 32rpx; line-height: 1.6; }
+.sp-node { display: flex; gap: 20rpx; }
+.sp-node__no { flex: none; width: 56rpx; height: 56rpx; margin-top: 12rpx; border-radius: 50%; background: var(--cy-color-text-primary); color: var(--cy-color-bg-page); font-size: 28rpx; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.sp-node__card { flex: 1; min-width: 0; border-radius: 28rpx; overflow: hidden; background: var(--cy-color-bg-elevated); }
+.sp-node__img { width: 100%; height: 340rpx; display: block; }
+.sp-node__body { padding: 24rpx 28rpx; display: flex; flex-direction: column; }
+.sp-node__name { font-size: 34rpx; font-weight: 600; }
+.sp-node__addr { margin-top: 4rpx; font-size: 26rpx; color: var(--cy-color-text-tertiary); }
+.sp-node__play { align-self: flex-start; display: inline-flex; align-items: center; gap: 8rpx; margin-top: 16rpx; padding: 6rpx 20rpx; border-radius: var(--cy-radius-pill); background: var(--cy-color-bg-surface-strong); font-size: 24rpx; font-weight: 600; }
+.sp-end { margin: 56rpx 40rpx 0; padding: 40rpx; border-radius: 36rpx; background: var(--cy-color-bg-elevated); display: flex; align-items: center; gap: 32rpx; color: var(--cy-color-status-warning); }
+.sp-end__t { display: block; font-size: 26rpx; color: var(--cy-color-text-tertiary); }
+.sp-end__n { display: block; margin-top: 4rpx; font-size: 38rpx; font-weight: 700; color: var(--cy-color-text-primary); }
+.sp-pad { height: calc(120rpx + env(safe-area-inset-bottom)); }
+.sp-top { position: absolute; left: 0; right: 0; top: 0; z-index: 2; height: 88rpx; box-sizing: content-box; display: flex; align-items: center; justify-content: space-between; padding-left: 24rpx; padding-right: 204rpx; }
+.sp-x { width: 88rpx; height: 88rpx; display: flex; align-items: center; justify-content: center; }
+.sp-x__c { width: 64rpx; height: 64rpx; border-radius: 50%; background: var(--cy-color-bg-glass); display: flex; align-items: center; justify-content: center; }

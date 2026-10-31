@@ -117,36 +117,41 @@ test('负控：发布活动摘表单闸、漏收费实名闸或把免费卡实�
   }
 })
 
-test('专业发布：发布主动作读取 JS 派生状态(平铺后只剩这一个主动作)', () => {
+// 2026-10-31 业主 P-4(V-25):第 1 页「发布」→「下一步」,永远可点(去票务页);票务页「预览」还有未填就滚到第一项,
+// 填完进剧情预览;真正的发布在剧情预览右上「完成」。要守的语义挪到「完成」上:有阻断项时必须置灰(派生态),不许恒黑可点。
+function assertFabuPublishAction(wxml) {
+  const done = wxml.match(/<cy-btn[^>]*bindtap="confirmPublishCheck"[^>]*>[\s\S]*?<\/cy-btn>/)
+  assert.ok(done, '剧情预览的「完成」必须存在')
+  assert.match(done[0], /\sdisabled="\{\{!!publishCheck\.blocking\.length\}\}"/, '「完成」的可用态必须来自 JS 派生的阻断项')
+  assert.match(done[0], /loading="\{\{submitting\}\}"/, '提交中必须有 loading 态，不能重复点')
+}
+
+test('专业发布：下一步永远可点去票务页;发布在剧情预览「完成」,可用态读 JS 派生的阻断项', () => {
   const js = read('pages/publish/fabu/index.js')
   const wxml = read('pages/publish/fabu/index.wxml')
-  // 2026-08-10 平铺:没有「下一步」了(也就没有 canAdvanceRoute),发布按钮从第三步底部
-  // 提到常驻右上角。要守的语义没变 —— 主动作的可用态必须由 JS 派生,不许恒黑。
-  // 2026-08-10 两页:发布回到第 2 页底部,文案改「检查并发布」。语义不变 —— 主动作可用态必须由 JS 派生
-  // 2026-09-05 删掉「预览」后发布收回第 1 页底栏、文案改「发布」并带箭头。
-  //   照上面那条同样的教训:只钉语义(同一个 cy-btn 上 disabled 绑 canPublish + bindtap 是 submitForm),
-  //   不钉它长什么样,免得下次换文案/加图标又红一次。真正要防的是主动作恒黑或脱离派生态。
-  const primary = wxml.match(/<cy-btn[^>]*bindtap="submitForm"[^>]*>[\s\S]*?<\/cy-btn>/)
-  assert.ok(primary, '发布主动作必须存在')
-  assert.match(primary[0], /disabled="\{\{!canPublish\}\}"/, '发布按钮的可用态必须来自 JS 派生的 canPublish')
-  assert.match(primary[0], /loading="\{\{submitting\}\}"/, '提交中必须有 loading 态，不能重复点')
-  assert.match(primary[0], /submitting \? '发布中\.\.\.' : '发布'/, '提交中文案必须切换')
+  const next = wxml.match(/<cy-btn wx:if="\{\{editorPage === 1\}\}" variant="primary"[^>]*>[\s\S]*?<\/cy-btn>/)
+  assert.ok(next, '第 1 页主动作必须存在')
+  assert.match(next[0], /data-page="2" bindtap="switchEditorPage"/, '「下一步」去票务页')
+  assert.doesNotMatch(next[0], /disabled=/, '业主 P-4:「下一步」永远可点')
+  const preview = wxml.match(/<cy-btn wx:if="\{\{editorPage === 2\}\}" variant="primary"[^>]*>[\s\S]*?<\/cy-btn>/)
+  assert.ok(preview, '票务页主动作必须存在')
+  assert.match(preview[0], /bindtap="openStoryPreview"/)
+  assert.match(preview[0], /submitting \? '发布中\.\.\.' : '预览'/, '提交中文案必须切换')
+  assertFabuPublishAction(wxml)
   assert.doesNotMatch(wxml, /canAdvanceRoute/, '步骤已退役，不该再有下一步闸的残留接线')
-  assert.match(js, /canPublish:\s*false/)
   assert.match(js, /refreshPrimaryActionState\s*\(\)/)
   assert.match(js, /setData\(patch, \(\) => that\.refreshPrimaryActionState\(\)\)/)
 })
 
-test('负控：专业发布恢复恒黑按钮必须判红', () => {
+test('负控：专业发布「完成」摘掉阻断项接线必须判红', () => {
   const source = read('pages/publish/fabu/index.wxml')
-  const broken = source.replace(' disabled="{{!canPublish}}"', '')
-  assert.notEqual(broken, source, '负控锚点失效：专业发布没有 canPublish 接线')
-  assert.doesNotMatch(broken, /disabled="\{\{!canPublish\}\}"/)
+  const broken = source.replace(' disabled="{{!!publishCheck.blocking.length}}"', '')
+  assert.notEqual(broken, source, '负控锚点失效：「完成」没有阻断项接线')
+  assert.throws(() => assertFabuPublishAction(broken), assert.AssertionError)
 })
 
 const PUBLISH_FORM_ROUTES = [
   ['pages/publish/activity/index.wxml', 'canContinue'],
-  ['pages/publish/fabu/index.wxml', 'canPublish'],
   ['pages/publish/fabu/step3.wxml', 'canSaveTicket'],
   ['pages/publish/temp/index.wxml', 'canOpenPreview'],
   ['pages/publish/temp/index.wxml', 'canPublishGame'],

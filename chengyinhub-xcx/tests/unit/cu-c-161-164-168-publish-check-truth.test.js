@@ -101,13 +101,22 @@ const labels = (items) => (items || []).map((item) => item.label);
 const precheckLine = (passed) => labels(passed).find((label) => /内容安全预检/.test(label));
 const ticketLine = (passed) => labels(passed).find((label) => /种票单/.test(label));
 
+// 2026-10-31 P-4:原「点灰钮」路径改成票务页「预览」—— 打开剧情预览这一步同样没跑内容安全预检。
+// 票务页必填都齐、实名已登记时才会真的打开那一层,这里把两项摆齐,量的是「没跑预检」这一件事。
+function openPreview(page) {
+  page.data.identityRegistered = true;
+  page._buildValidationBag = () => ({ errors: {}, isValid: () => true, firstMessage: () => '' });
+  page.openStoryPreview();
+  assert.equal(page.data.publishCheck.show, true, '前提:预览已打开');
+}
+
 // ============================================================ CU-C-168 ①预检状态
 test('CU-C-168 没跑过预检时,「内容安全预检通过」不得出现在已通过那一栏', () => {
   const page = loadFabu();
-  page.onPublishDisabledTap();
+  openPreview(page);
 
   assert.equal(precheckLine(page.data.publishCheck.passed), undefined,
-    `点灰钮这条路径没发过请求，却报通过: ${JSON.stringify(labels(page.data.publishCheck.passed))}`);
+    `打开预览这条路径没发过请求，却报通过: ${JSON.stringify(labels(page.data.publishCheck.passed))}`);
   assert.equal(page._publishPrecheckOk, false);
   assert.ok(labels(page.data.publishCheck.advisory).some((label) => /预检还没跑/.test(label)),
     '没跑过要说成人家听得懂的话，别只留一条空白');
@@ -218,9 +227,9 @@ test('negative control:把 skipLabel 改回空串,「没跑预检」立刻又变
   const broken = mutate(read(FABU_JS),
     "this._showPublishCheck([], '内容安全预检还没跑');",
     "this._showPublishCheck([], '');",
-    'onPublishDisabledTap');
+    'openStoryPreview');
   const page = loadFabu(broken);
-  page.onPublishDisabledTap();
+  openPreview(page);
   assert.equal(precheckLine(page.data.publishCheck.passed), '内容安全预检通过',
     '摘掉修复后没复现假绿 ⇒ 这条断言没量到东西');
   assert.equal(page._publishPrecheckOk, true);
