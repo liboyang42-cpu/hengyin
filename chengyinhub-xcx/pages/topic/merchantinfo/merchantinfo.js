@@ -7,7 +7,7 @@ const app = getApp();
    写法与现码 pages/publish/fabu/index.js:69 的同名局部常量一致 —— 不抽成公共模块:
    小程序这批单测用的是 `unexpected require` 白名单沙箱,多一个跨文件 require
    会同时打破十几个测试装置,代价远大于这一行重复。 */
-const { readReducedMotion } = require('../../../utils/motion-preference.js');
+const { readReducedMotion } = require('../../../utils/motion-preference.js'); const profitSplit = require('../../../utils/profit-split.js'); // 走查 v2 R09:分润明细口径
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const { chinaDayStart, chinaDayEnd, chinaParts } = require('../../../utils/datetime');
 /* 数据条的格子只有一份实现:玩家深色版(214:384)与本页浅色版(181:575)是同一块。 */
@@ -200,7 +200,7 @@ Page({
     // 首屏默认值要与 buildQuickActions('join') 一致 —— 接口没回来之前先按承接方给
     quickActions: [
       { key: 'scan',     label: '扫码',   icon: '/pages/topic/images/icon_qa_scan.svg' },
-      { key: 'club',     label: '俱乐部', icon: '/pages/topic/images/icon_qa_club.svg' },
+      { key: 'stationQr', label: '二维码', iconName: 'qr' },
       { key: 'customer', label: '客户',   icon: '/pages/topic/images/icon_qa_person.svg' },
       { key: 'more',     label: '更多',   icon: '/pages/topic/images/icon_qa_edit.svg' },
     ],
@@ -214,7 +214,7 @@ Page({
        它一直混在「待核销」里,商家因此分不出「该去催」和「人已经在店里了」。 */
     playerFilters: [
       { key: 'all', label: '全部' },
-      { key: 'pending', label: '待核销' },
+      { key: 'pending', label: '还没到店' }, // 走查 v2 R07 定稿:未到店 / 还没到店,核销后才算到
       { key: 'contacted', label: '已接洽' },
       { key: 'arrived', label: '已核销' },
     ],
@@ -307,7 +307,10 @@ Page({
     checkinVisible: false,
     checkinQrState: 'loading',
     checkinQrUrl: '',
-    checkinCode: '',
+    checkinCode: '', checkinHost: false, hostInviteId: 0, broadcastSheet: { show: false, state: '', content: '', deliverable: 0, remaining: 0, sending: false, error: '' },
+    profitSheet: { show: false, state: '', error: '', row: null },
+    clubCandidates: { state: '', rows: [] },
+    regApplies: { state: '', rows: [] },
     checkinErr: '',
     privacyGateShow: false,
   },
@@ -362,7 +365,7 @@ Page({
     }
     const reducedMotion = readReducedMotion();
     if (this.data.reducedMotion !== reducedMotion) this.setData({ reducedMotion });
-    merchantTheme.merchantPageShow(); this._navigating = false;
+    if (this._clubSheetReturn) { this._clubSheetReturn = false; this.loadProjectHome(); if (this.data.clubSheet.show) this.loadClubCandidates(); if (this.data.merchantSheet.show) this.loadRegApplies(); } merchantTheme.merchantPageShow(); this._navigating = false;
   },
   onHide() { this._hidden = true; merchantTheme.merchantPageRestore(); },
   onUnload() {
@@ -1851,7 +1854,7 @@ Page({
           return;
         }
         // 承接方:聚合接口里带着报名记录,拿它的 id 回到既有详情流程
-        const reg = d.join && d.join.registration;
+        that.setData({ hostInviteId: (d.join && (d.join.hostInviteId || (d.join.coopInvite && d.join.coopInvite.inviteId))) || 0 }); const reg = d.join && d.join.registration;
         if (reg && reg.id) {
           // 同一主题可承接多站(PR #585)。只渲染第一条的话,后面几站在页面上根本不存在 ——
           // 2026-08-07 现网已有 2 例。这里把全部站做成可切换的列表,当前站仍是第一条。
@@ -2294,31 +2297,81 @@ Page({
       // 前端解释不出"为什么不能改",给个点了只会撞 403 的按钮不如不给。
       // ⚠️ canEdit === false 只让抽屉里的「票价与主题内容」置灰,不再吞掉整颗按钮 ——
       //    章节控制与本站运营跟编辑资格无关,吞了按钮等于把那些动作一起藏没了。
-      return base.concat([MORE]);
+      // 走查 v2 R15(业主 2026-10-30):主办也有一张「本主题二维码」,玩家扫了直接进这个主题
+      return base.concat([{ key: 'themeQr', label: '二维码', iconName: 'qr' }, MORE]);
     }
     /* CU-M-92「只接了合作邀约、还没有点位」的商家:四格里只有两格真能用。
        「客户」走 /api/project/players,那道闸认的是发布者或有报名行的人,他没有报名行 ⇒ 点了必被拒;
        「更多」抽屉里每一行的动作都挂在自己的报名行上 ⇒ 同样必被拒。给两颗只会报错的按钮不如不给。
        「扫码」是给的:他的核销资格不来自报名行,来自那张合作单(后端 [D22])。 */
-    if (role === 'coopPartner') return [SCAN, CLUB];
-    if (role === 'chapterProject') return [SCAN, CUSTOMER,
-      { key: 'chapterEdit', label: '编辑', icon: '/pages/topic/images/icon_qa_edit.svg' },
-      { key: 'chapterCheckin', label: '出示二维码', iconName: 'qr' }];
+    /* 走查 v2 R15(业主 2026-10-30):承办方不给「俱乐部 / 商家」—— 那是主办的事;只留扫码、客户,
+       再加一个本站二维码(玩法要求扫码参与时贴在店里),复用已有的本站打卡码 / 章节节点码。 */
+    const QR = { key: 'stationQr', label: '二维码', iconName: 'qr' };
+    if (role === 'coopPartner') return [SCAN];
+    if (role === 'chapterProject') return [SCAN, { key: 'chapterCheckin', label: '二维码', iconName: 'qr' }, CUSTOMER,
+      { key: 'chapterEdit', label: '编辑', icon: '/pages/topic/images/icon_qa_edit.svg' }];
     // 承接方:编辑那一项的闸是 canEditRegistration(),但「更多」本身任何状态都能开。
-    return [SCAN, CLUB, CUSTOMER, MORE];
+    return [SCAN, QR, CUSTOMER, MORE];
   },
 
   /**
    * 俱乐部抽屉。空态也照常打开 —— 抽屉里那句引导和黑按钮就是空态的下一步,
    * 直接跳走反而让人不知道自己点了什么。
    */
+  /* 走查 v2 R05(业主 2026-10-30):主办从主题打开俱乐部弹窗,弹窗里直接列「已邀约」和「可以邀约的俱乐部」,
+     每行「邀约」「主页」;邀约走现成邀约表单(带好本主题与这家俱乐部,条款 / 幂等都在那页),
+     主页进正式俱乐部主页的「概览」;返回后弹窗还开着并刷新状态。 */
   openClubSheet() {
+    const host = this.data.role === 'host';
     this.setData({
       'clubSheet.show': true,
-      clubActions: this.data.role === 'host'
-        ? [{ key: 'goInviteClub', label: '去找俱乐部' }, { key: 'goReceivedApplies', label: '查看收到的申请', ghost: true }]
+      clubActions: host
+        ? []
         : [{ key: 'goInviteClub', label: this.data.clubSheet.items.length ? '再找一家俱乐部带团' : '去找俱乐部' }],
     });
+    if (host) this.loadClubCandidates();
+  },
+
+  loadClubCandidates() {
+    if (this.data.role !== 'host') return;
+    const that = this;
+    this.setData({ clubCandidates: { state: 'loading', rows: [] } });
+    app.sendRequest({
+      hideLoading: true, silentError: true, url: '/api/merchant/clubs', method: 'POST',
+      data: JSON.stringify({}), header: { 'Content-Type': 'application/json' },
+      success(res) {
+        const rows = res && res.code == '200' && Array.isArray(res.data) ? res.data : null;
+        if (!rows) { that.setData({ clubCandidates: { state: 'error', rows: [] } }); return; }
+        const invited = {};
+        (that.data.clubSheet.items || []).forEach(function (c) { invited[String(c.clubId)] = true; });
+        that.setData({ clubCandidates: { state: 'ready', rows: rows.filter(function (c) { return c && c.id && !invited[String(c.id)]; }).slice(0, 30).map(function (c) {
+          return {
+            id: c.id, name: c.name || '未命名俱乐部', logo: c.logo || '', initial: String(c.name || '?').slice(0, 1),
+            meta: [c.clubType, typeof c.memberCount === 'number' ? c.memberCount + ' 人' : '', c.city].filter(Boolean).join(' · '),
+          };
+        }) } });
+      },
+      fail() { that.setData({ clubCandidates: { state: 'error', rows: [] } }); },
+    });
+  },
+
+  inviteClubRow(e) {
+    const ds = (e && e.currentTarget && e.currentTarget.dataset) || {};
+    const topicId = this.data.topicId || (this.data.info && this.data.info.topicId);
+    if (!ds.id || !topicId || this._navigating) return;
+    this._navigating = true; this._clubSheetReturn = true;
+    wx.navigateTo({
+      url: '/pages/coop/invite/index?type=1&toId=' + ds.id + '&toName=' + encodeURIComponent(ds.name || '') + '&topicId=' + topicId
+        + (this.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT' : ''),
+      complete: () => { this._navigating = false; },
+    });
+  },
+
+  openClubHome(e) {
+    const ds = (e && e.currentTarget && e.currentTarget.dataset) || {};
+    if (!ds.id || this._navigating) return;
+    this._navigating = true; this._clubSheetReturn = true;
+    wx.navigateTo({ url: '/pages/club/detail/index?id=' + ds.id + '&tab=overview' + (this.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT' : ''), complete: () => { this._navigating = false; } });
   },
 
   closeClubSheet() {
@@ -2344,11 +2397,8 @@ Page({
       'playerSheet.show': true,
       // CU-C-67:每次打开都清掉上一次的失败态 —— 错态与零单是两个态,不能互相残留
       'playerSheet.errorText': '',
-      playerActions: this.data.role === 'host'
-        // CU-M-183:商家那本台账不按主题过滤,按钮就得先说清是「全店」——
-        // 点进去才发现混着别的项目,主办方会以为名单和台账口径不一致。
-        ? [{ key: 'goLedger', label: '查看全店核销记录' }]
-        : [],
+      // 走查 v2 R07(业主 2026-10-30 定稿):底部不再放「查看全店核销记录」,最后一行是「定向广播」(主办商家)
+      playerActions: [],
     });
     app.sendRequest({
       hideLoading: true, silentError: true,
@@ -2416,7 +2466,7 @@ Page({
         stateText: state === 'redeemed' ? '已核销'
           : (state === 'refunded' ? '已退款'
             : (state === 'arrived' ? '已核销'
-              : (state === 'contacted' ? '已接洽' : '待核销'))),
+              : (state === 'contacted' ? '已接洽' : '未到店'))),
         arrivedTimeText: (r.checkinAt || r.arrivedTime) ? String(r.checkinAt || r.arrivedTime).slice(11, 16) : '',
         initial: (r.name || '?').slice(0, 1),
       });
@@ -2431,31 +2481,39 @@ Page({
       if (filter === 'pending') return state === 'pending';
       return true;
     });
-    // 场次:后端按报名给的是 participateDate,没有就归到「未指定场次」
-    const order = [];
-    const byRun = {};
+    // 场次:后端按报名给的是 participateDate,没有就是「未指定场次」;写成「11-02 14:00 场」(去年份,与定稿一致),非日期的场次名原样
     kept.forEach(function (r) {
-      const key = r.sessionLabel || r.participateDate || '__none__';
-      if (!byRun[key]) { byRun[key] = []; order.push(key); }
-      byRun[key].push(r);
+      const key = r.sessionLabel || r.participateDate || '';
+      r.when = !key ? '未指定场次' : String(key).replace(/^\d{4}-(\d{2}-\d{2})(?:[ T](\d{2}:\d{2})(?::\d{2})?)?$/, function (m, md, hm) { return md + (hm ? ' ' + hm : '') + ' 场'; });
     });
-    const groups = order.map(function (key) {
-      return {
-        key: key,
-        when: key === '__none__' ? '未指定场次' : key,
-        sourceText: byRun[key].length + ' 人',
-        rows: byRun[key],
-      };
-    });
+    /* 走查 v2 W2-07 / F7(业主 2026-10-29):售票之后上面是还没到店的、下面是已经核销的(退款的放最后)。
+       只在「全部」里分段;选了某一档就是那一档本身,不再加段头。探店日名单没有「到店前」这一档,原样一段。 */
+    const SECTIONS = [
+      { key: 'waiting', title: '还没到店', has: function (s) { return s === 'pending' || s === 'contacted'; } },
+      { key: 'done', title: '已核销', has: function (s) { return s === 'arrived' || s === 'redeemed'; } },
+      { key: 'refunded', title: '已退款', has: function (s) { return s === 'refunded'; } },
+    ];
+    const groups = filter === 'all' && !shopDay
+      ? SECTIONS.map(function (sec) {
+        return { key: sec.key, title: sec.title, rows: kept.filter(function (r) { return sec.has(r.state); }) };
+      }).filter(function (g) { return g.rows.length; })
+      : (kept.length ? [{ key: filter, title: '', rows: kept }] : []);
+    /* F7:没开放售票哪来的客户 —— 主题还没开售(草稿 / 立项待审 / 招募 / 待定价)且一单没有时,
+       这里就写「未售票」,汇总格写「—」,不摆三个 0 让人以为卖了却没人买。开售后的 0 是真 0,照常显示。 */
+    const lifecycle = Number((this.data.hostTopic && this.data.hostTopic.lifecycle != null)
+      ? this.data.hostTopic.lifecycle : (this.data.info && this.data.info.lifecycle));
+    const notSelling = !shopDay && !rows.length && [0, 7, 1, 2].indexOf(lifecycle) > -1;
     // CU-C-125:空态判据是**筛完之后**的 kept,不是未筛的 rows —— 拿 rows 判,一单没卖时
     // 四个 Tab 会说同一句「还没有人下单」,而选中「待核销」时真正要回答的是这一档有没有记录。
     // 「全部客户都已核销」这类说法也一起换掉:已接洽的人既不在待核销也不在已核销,
     // 那句在有人扫码待确认时是假的。
     let emptyText = '';
-    if (!kept.length) {
+    if (notSelling) {
+      emptyText = '未售票';
+    } else if (!kept.length) {
       emptyText = !rows.length && !shopDay
         ? (filter === 'all' ? '暂无报名' : '还没有人下单，这一档也是空的')
-        : (filter === 'pending' ? '没有待核销的客户'
+        : (filter === 'pending' ? '没有还没到店的客户'
           : (filter === 'contacted' ? '还没有客户接洽'
             : (filter === 'arrived' ? '没有已核销的客户'
               : (shopDay ? '本店暂没有现场客户记录' : '没有符合条件的客户'))));
@@ -2467,6 +2525,7 @@ Page({
       'playerSheet.groups': groups,
       'playerSheet.summary': d.summary || {},
       'playerSheet.shopDay': shopDay,
+      'playerSheet.notSelling': notSelling,
       'playerSheet.visibleCount': rows.length,
       'playerSheet.redeemedCount': rows.filter(function (r) { return r.state === 'redeemed'; }).length,
       'playerSheet.contactHint': d.contactHint || '',
@@ -2504,14 +2563,149 @@ Page({
      连编辑资格都没有时干脆不给主按钮,只留「查看收到的申请」。
      2026-08-10:自由探索的「邀请商家承接章节」并进了同一份商家名单
      (coop/nearby 按距离排,章节作副标题),不再另开一个入口。 */
+  /* 走查 v2 R06(业主 2026-10-30):招商弹窗里每一站自带「自己承接 / 招商」,收到的申请也在弹窗里处理,
+     底部不再放「查看收到的申请」跳出去。自由探索按章节招商(承接后才产生站点),保留一个「去找商家」。 */
   buildMerchantActions() {
-    const review = { key: 'goReceivedApplies', label: '查看收到的申请', ghost: true };
-    // 自由探索按章节招商，商家承接后才产生站点，不能拿当前节点数挡住入口。
-    if (this._isFreeExploreHost || ((this.data.hostRecruit || {}).nodeTotal || 0) > 0) {
-      return [{ key: 'goInviteMerchant', label: '去找商家' }, review];
-    }
-    if (this._hostCanEdit === false) return [review];
-    return [{ key: 'goAddStations', label: '去加节点' }, review];
+    if (this._isFreeExploreHost) return [{ key: 'goInviteMerchant', label: '去找商家' }];
+    if (((this.data.hostRecruit || {}).nodeTotal || 0) > 0) return [];
+    if (this._hostCanEdit === false) return [];
+    return [{ key: 'goAddStations', label: '去加节点' }];
+  },
+
+  // 本主题收到的商家报名(城市定向候选),与协作列表「收到的」同一接口,只留本主题、待确认的
+  loadRegApplies() {
+    if (this.data.role !== 'host') return;
+    const topicId = Number(this.data.topicId || (this.data.info && this.data.info.topicId));
+    const that = this;
+    app.sendRequest({
+      hideLoading: true, silentError: true, url: '/api/coop/candidates/received', method: 'POST',
+      data: JSON.stringify(this.data.operationScope ? { scope: this.data.operationScope } : {}),
+      header: { 'Content-Type': 'application/json' },
+      success(res) {
+        const rows = res && res.code == '200' && res.data && Array.isArray(res.data.rows) ? res.data.rows : null;
+        if (!rows) { that.setData({ regApplies: { state: 'error', rows: [] } }); return; }
+        that.setData({ regApplies: { state: 'ready', rows: rows.filter(function (r) {
+          return r && Number(r.topicId) === topicId && Number(r.auditStatus) === 0;
+        }).map(function (r) {
+          return { id: r.id, name: r.merchantName || '未具名商家', logo: r.merchantLogo || '', initial: String(r.merchantName || '商').slice(0, 1),
+            place: r.nodeName || r.addressName || r.address || '' };
+        }) } });
+      },
+      fail() { that.setData({ regApplies: { state: 'error', rows: [] } }); },
+    });
+  },
+
+  confirmRegRow(e) {
+    const ds = (e && e.currentTarget && e.currentTarget.dataset) || {};
+    if (!ds.id || this._regConfirming) return;
+    const that = this;
+    cyModal.show({
+      title: '确认候选',
+      content: '确认「' + (ds.name || '该商家') + '」占住这一站?同一站其他待调配报名将自动落选。确认后再向他发带条款的合作邀约,他接受才成合作单。',
+      confirmText: '确认',
+      success(r) {
+        if (!r || !r.confirm) return;
+        that._regConfirming = true;
+        app.sendRequest({
+          url: '/api/coop/candidates/confirm', method: 'POST',
+          data: JSON.stringify(that.data.operationScope ? { registrationId: ds.id, scope: that.data.operationScope } : { registrationId: ds.id }),
+          header: { 'Content-Type': 'application/json' },
+          success(res) {
+            that._regConfirming = false;
+            // 确认后这一行从「收到的申请」里消失、已招数跟着变,界面本身就是回执,不再弹成功提示(成功 toast 棘轮)
+            if (res && res.code == '200') { that.loadRegApplies(); that.loadProjectHome(); }
+          },
+          fail() { that._regConfirming = false; },
+        });
+      },
+    });
+  },
+
+  /* 走查 v2 R07(业主 2026-10-30):客户弹窗最后一行「定向广播」—— 发给本主题的买票玩家。
+     复用商家客户的定向广播(/api/merchant/crm/broadcast,同意过滤、每人每天 1 条、商家每天 3 条都在服务端),
+     只多带一个 topicId 把名单收窄到这个主题。 */
+  openBroadcast() {
+    const topicId = Number(this.data.topicId || (this.data.info && this.data.info.topicId));
+    if (!topicId) return;
+    this._broadcastRequestId = 'tb' + topicId + '-' + Date.now() + '-' + Math.floor(Math.random() * 1e6);
+    this.setData({ broadcastSheet: { show: true, state: 'loading', content: '', deliverable: 0, remaining: 0, sending: false, error: '' } });
+    const that = this;
+    app.sendRequest({
+      hideLoading: true, silentError: true,
+      url: '/api/merchant/crm/broadcast/preview', method: 'POST',
+      data: JSON.stringify({ topicId: topicId }), header: { 'Content-Type': 'application/json' },
+      success(res) {
+        const d = res && res.code == '200' && res.data;
+        if (!d) { that.setData({ 'broadcastSheet.state': 'error', 'broadcastSheet.error': (res && res.msg) || '没读到可以收到的人数' }); return; }
+        that.setData({ 'broadcastSheet.state': 'ready', 'broadcastSheet.deliverable': d.deliverableCount || 0, 'broadcastSheet.remaining': d.merchantDailyRemaining || 0 });
+      },
+      fail() { that.setData({ 'broadcastSheet.state': 'error', 'broadcastSheet.error': '网络异常，请重试' }); },
+    });
+  },
+
+  closeBroadcast() { this.setData({ 'broadcastSheet.show': false }); },
+
+  onBroadcastInput(e) { this.setData({ 'broadcastSheet.content': String((e && e.detail && e.detail.value) || '') }); },
+
+  sendBroadcast() {
+    const b = this.data.broadcastSheet;
+    const content = String(b.content || '').trim();
+    const topicId = Number(this.data.topicId || (this.data.info && this.data.info.topicId));
+    if (b.sending || b.state !== 'ready' || !content || !b.deliverable || !b.remaining || !topicId) return;
+    const that = this;
+    this.setData({ 'broadcastSheet.sending': true });
+    app.sendRequest({
+      url: '/api/merchant/crm/broadcast', method: 'POST',
+      data: JSON.stringify({ topicId: topicId, content: content, requestId: this._broadcastRequestId }),
+      header: { 'Content-Type': 'application/json' },
+      success(res) {
+        that.setData({ 'broadcastSheet.sending': false });
+        if (res && res.code == '200') { cyToast.success('已发出'); that.setData({ 'broadcastSheet.show': false }); }
+      },
+      fail() { that.setData({ 'broadcastSheet.sending': false }); },
+    });
+  },
+
+  // 走查 v2 R15:承办视图底部「联系主办」—— 已接受合作的双方取/建 1:1 会话,与协作详情「联系合作方」同一接口
+  contactHost() {
+    const id = this.data.hostInviteId;
+    if (!id || this._contactingHost) return;
+    const that = this;
+    this._contactingHost = true;
+    app.sendRequest({
+      url: '/api/coop/contact', method: 'POST',
+      data: JSON.stringify({ id: id }), header: { 'Content-Type': 'application/json' },
+      success(res) {
+        that._contactingHost = false;
+        const conv = res && res.code == '200' && res.data && res.data.conversationId;
+        if (conv) wx.navigateTo({ url: '/subpackageB/pages/im/chat/index?conversationId=' + conv + '&type=1&name=' + encodeURIComponent('主办方') });
+      },
+      fail() { that._contactingHost = false; },
+    });
+  },
+
+  selfTakeNode(e) {
+    const ds = (e && e.currentTarget && e.currentTarget.dataset) || {};
+    const topicId = this.data.topicId || (this.data.info && this.data.info.topicId);
+    if (!ds.id || !topicId || this._navigating) return;
+    this._navigating = true; this._clubSheetReturn = true;
+    wx.navigateTo({
+      url: '/pages/topic/merchantapply/index?topicId=' + topicId + '&nodeId=' + ds.id + '&templateId=0'
+        + '&topicName=' + encodeURIComponent((this.data.hostTopic && this.data.hostTopic.name) || '') + '&nodeName=' + encodeURIComponent(ds.name || ''),
+      complete: () => { this._navigating = false; },
+    });
+  },
+
+  recruitNode(e) {
+    const ds = (e && e.currentTarget && e.currentTarget.dataset) || {};
+    const topicId = this.data.topicId || (this.data.info && this.data.info.topicId) || '';
+    if (this._navigating) return;
+    this._navigating = true; this._clubSheetReturn = true;
+    wx.navigateTo({
+      url: '/pages/coop/nearby/index?topicId=' + topicId + '&topicName=' + encodeURIComponent((this.data.hostTopic && this.data.hostTopic.name) || '')
+        + (ds.id ? '&nodeId=' + ds.id : '') + (this.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT' : ''),
+      complete: () => { this._navigating = false; },
+    });
   },
 
   /** CU-M-181:「去加站点」= 主题编辑器,与「更多 → 票价与主题内容」同一个落点。 */
@@ -2620,12 +2814,92 @@ Page({
     });
   },
 
-  /** 主办方的钱统一进「我的资产」，由收益宿主打开分润场景。 */
+  /** 主办方的钱统一进「我的资产」，由收益宿主打开分润场景。2026-10-30 业主:带 theme=merchant,底页浅色。 */
+  /* 走查 v2 R09(业主 2026-10-30):从主题工作台点「结算 / 分润明细」不再跳去账户收益页 ——
+     项目主题点开的都是弹窗,底下还是这个工作台。弹窗只讲这一个主题:我到手多少、结没结、卖了 / 核了多少、
+     平台与商家各拿多少;档位开售时按章节定死,这里只读不改。数据复用 /api/coop/finance 里本主题那一行。 */
   goFinance() {
-    const id = this.data.topicId || (this.data.info && this.data.info.topicId);
-    if (this._navigating) return; this._navigating = true; wx.navigateTo({
-      url: '/subpackageA/pages/assetcenter/earnings/index?scene=merchant-profit' + (id ? '&topicId=' + id : ''), complete: () => { this._navigating = false; },
+    const id = Number(this.data.topicId || (this.data.info && this.data.info.topicId));
+    const isHost = this.data.role === 'host';
+    this.setData({ profitSheet: { show: true, state: 'loading', error: '', row: null } });
+    const that = this;
+    let finance;
+    let terms = isHost ? undefined : null;
+    const finish = function () {
+      if (!that.data.profitSheet.show || finance === undefined || terms === undefined) return;
+      if (finance === null) { that.setData({ profitSheet: { show: true, state: 'error', error: '分润明细暂时没读到', row: null } }); return; }
+      const t = finance.find(function (r) { return r && Number(r.topicId) === id; });
+      if (!t) { that.setData({ profitSheet: { show: true, state: 'empty', error: '', row: null } }); return; }
+      const names = {};
+      ((that.data.clubSheet && that.data.clubSheet.items) || []).forEach(function (c) { names['club:' + c.clubId] = c.name; });
+      (that.data.hostMerchants || []).forEach(function (m) { if (m.merchantId) names['merchant:' + m.merchantId] = m.name; });
+      const lineup = terms && Array.isArray(terms.lineup) ? terms.lineup.map(function (r) {
+        return Object.assign({}, r, { name: names[(r.toType === 'club' ? 'club:' : 'merchant:') + r.toId] || '' });
+      }) : [];
+      const split = terms ? profitSplit.buildSplit(lineup, terms.platformRate) : null;
+      const settled = t.settled === true;
+      const arrived = t.myIncomeArrived === true;
+      const pending = !settled && typeof t.myIncome === 'number' ? profitSplit.money(t.myIncome) : '¥0.00';
+      that.setData({ profitSheet: { show: true, state: 'ready', error: '', row: {
+        myIncome: settled ? profitSplit.money(t.myIncome) : '¥0.00',
+        pendingText: pending,
+        soldText: typeof t.totalSales === 'number' ? t.totalSales + ' 份' : '—',
+        split: split,
+        parties: profitSplit.buildPartyRows(t, split),
+        steps: [
+          { key: 'verify', label: '玩家到店核销', state: typeof t.verifiedSales === 'number' && t.verifiedSales > 0 ? 'done' : 'run',
+            time: typeof t.verifiedSales === 'number' ? '已核销 ' + t.verifiedSales + ' 份' : '' },
+          { key: 'settle', label: '每月 5 日结算上月', state: settled ? 'done' : 'run',
+            time: t.merchantPayableTime ? String(t.merchantPayableTime).slice(5, 10) + ' 应付' : '' },
+          { key: 'arrive', label: '到账账户收益', state: arrived ? 'done' : 'todo',
+            time: t.merchantPayoutTime ? String(t.merchantPayoutTime).slice(5, 10) + ' 到账' : '' },
+        ],
+      } } });
+      if (split) that._fillTierNames(split.tiers);
+    };
+    app.sendRequest({
+      hideLoading: true, silentError: true, url: '/api/coop/finance', method: 'POST',
+      data: JSON.stringify({}), header: { 'Content-Type': 'application/json' },
+      success(res) { finance = res && res.code == '200' && res.data && Array.isArray(res.data.topics) ? res.data.topics : null; finish(); },
+      fail() { finance = null; finish(); },
     });
+    // 分成比例只有主办能读(/api/topic/pricing/preview 只认主题发布者);读不到就不画比例条,只列金额
+    if (isHost) {
+      app.sendRequest({
+        hideLoading: true, silentError: true, url: '/api/topic/pricing/preview', method: 'POST',
+        data: JSON.stringify({ topicId: id, subType: 'self' }), header: { 'Content-Type': 'application/json' },
+        success(res) { terms = res && res.code == '200' && res.data && Array.isArray(res.data.lineup) ? res.data : null; finish(); },
+        fail() { terms = null; finish(); },
+      });
+    }
+  },
+  // 档位卡要写真名字:阵容里只有 id,工作台已有的俱乐部名直接用,其余按定价页同一口径逐个读公开资料
+  _fillTierNames(tiers) {
+    const that = this;
+    (tiers || []).forEach(function (tier) {
+      if (tier.name || !tier.toId) return;
+      app.sendRequest({
+        hideLoading: true, silentError: true,
+        url: tier.toType === 'club' ? '/api/club/detail' : '/api/merchant/public-detail', method: 'POST',
+        data: JSON.stringify({ id: tier.toId }), header: { 'Content-Type': 'application/json' },
+        success(res) {
+          const name = (res && res.code == '200' && res.data && res.data.name) || '';
+          const sheet = that.data.profitSheet;
+          if (!name || !sheet.show || !sheet.row || !sheet.row.split) return;
+          const next = Object.assign({}, sheet, { row: Object.assign({}, sheet.row, { split: Object.assign({}, sheet.row.split, {
+            tiers: sheet.row.split.tiers.map(function (t) { return t.key === tier.key ? Object.assign({}, t, { name: name }) : t; }),
+          }) }) });
+          that.setData({ profitSheet: next });
+        },
+        fail() { /* 名字读不到就保留「商家 / 俱乐部」,数字照常显示 */ },
+      });
+    });
+  },
+  closeProfitSheet() { this.setData({ profitSheet: { show: false, state: '', error: '', row: null } }); },
+  goAllEarnings() {
+    this.closeProfitSheet();
+    if (this._navigating) return; this._navigating = true;
+    wx.navigateTo({ url: '/subpackageA/pages/assetcenter/earnings/index?theme=merchant', complete: () => { this._navigating = false; } });
   },
 
 
@@ -3037,7 +3311,8 @@ Page({
       onPrimaryTap: 1, onQuickAction: 1, retryLoad: 1, toggleRules: 1, onHeroError: 1,
       closeClubSheet: 1, closePlayerSheet: 1, closeMerchantSheet: 1,
       closeMoreSheet: 1, onMorePick: 1,
-      copyText: 1, goInviteClub: 1, onPlayerFilter: 1,
+      copyText: 1, goInviteClub: 1, onPlayerFilter: 1, inviteClubRow: 1, openClubHome: 1, loadClubCandidates: 1,
+      loadRegApplies: 1, confirmRegRow: 1, selfTakeNode: 1, recruitNode: 1, contactHost: 1, openBroadcast: 1,
       // CU-C-67:客户名单读失败后的局部重试(错态与零单分开之后要有恢复动作)
       retryPlayerSheet: 1,
       // CU-C-68:抽屉里「本站运营」资格探不到时的就地重试
@@ -3082,8 +3357,11 @@ Page({
     if (key === 'scan') return this.goVerify();
     if (key === 'chapterEdit') return this.openChapterProjectAction('edit');
     if (key === 'chapterCheckin') return this.openChapterProjectAction('checkin');
+    if (key === 'stationQr') return this.showLiveCheckin();
+    if (key === 'themeQr') return this.showHostQr();
     if (key === 'club') return this.openClubSheet();
     if (key === 'merchant') {                                                     // 只有主办方有这一格
+      this.loadRegApplies();
       return this.setData({
         'merchantSheet.show': true,
         merchantActions: this.buildMerchantActions(),
@@ -3272,8 +3550,7 @@ Page({
             sub: this.chapterOpenSub(), disabled: this.chapterFinished() || this.noChapter(),
             switchKnown: !this.noChapter(), checked: this.chapterRecruitTag() === '开',
             busy: !!this._chapterRecruitBusy, tag: this.chapterRecruitTag() },
-          { key: 'chapterInvite', label: '邀请其他商家', sub: this.inviteMerchantSub(),
-            disabled: this.chapterFinished() },
+          // 走查 v2 R08(业主 2026-10-30):「更多」里不再放「邀请其他商家」—— 招商弹窗里就能邀
 
         ] },
         { head: '本站运营(主办方自己也接待时)', rows: this.stationOpsRows(OPS) },
@@ -3826,7 +4103,7 @@ Page({
       app.tips('本站未绑定节点，无法出示码');
       return false;
     }
-    this.setData({ checkinVisible: true });
+    this.setData({ checkinVisible: true, checkinHost: false });
     this.issueStationPoster();
     return true;
   },
@@ -3900,7 +4177,52 @@ Page({
 
   copyCheckinCode() { codeTextUtil.copy(this.data.checkinCode); },
 
+  // 走查 v2 R15:主办的本主题小程序码,与承办那张本站码共用同一个出码弹窗
+  showHostQr() {
+    this.setData({ checkinVisible: true, checkinHost: true });
+    this.issueHostQr();
+    return true;
+  },
+
+  issueHostQr(opts) {
+    const topicId = this.data.topicId || (this.data.info && this.data.info.topicId);
+    if (!topicId) return;
+    const that = this;
+    const saveAfter = !!(opts && opts.saveAfter);
+    const epoch = (this._checkinEpoch || 0) + 1;
+    this._checkinEpoch = epoch;
+    this.setData({ checkinQrState: 'loading', checkinQrUrl: '', checkinCode: '', checkinErr: '' });
+    app.sendRequest({
+      url: '/api/topic/host-qrcode', method: 'POST',
+      data: { id: topicId, scope: this.data.operationScope || '' },
+      hideLoading: true,
+      success(res) {
+        if (epoch !== that._checkinEpoch) return;
+        const url = res && res.code == '200' && res.data ? res.data.qrcodeUrl : '';
+        if (!url) {
+          that.setData({ checkinQrState: 'error', checkinErr: (res && res.msg) || '二维码暂时没能生成' });
+          return;
+        }
+        that.setData({ checkinQrState: 'ready', checkinQrUrl: url });
+        if (saveAfter) that.saveCheckinImage(url);
+      },
+      fail() {
+        if (epoch !== that._checkinEpoch) return;
+        that.setData({ checkinQrState: 'error', checkinErr: '网络异常，请重试' });
+      },
+    });
+  },
+
+  retryCheckinQr() {
+    if (this.data.checkinHost) this.issueHostQr(); else this.issueStationPoster();
+  },
+
   downloadCheckinQr() {
+    if (this.data.checkinHost) {
+      if (this.data.checkinQrState === 'ready' && this.data.checkinQrUrl) this.saveCheckinImage(this.data.checkinQrUrl);
+      else this.issueHostQr({ saveAfter: true });
+      return true;
+    }
     if (!this._checkinNodeId()) {
       app.tips('本站未绑定节点，无法下载码');
       return false;

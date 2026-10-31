@@ -213,7 +213,7 @@
              余额直接读 userInfo.balance,零新增请求;整段在 isSelf 分支内,别人主页看不到。 -->
         <view class="pc-sec-head">
           <text class="pc-sec-tit pc-sec-tit--sm">我的资产</text>
-          <view class="pc-sec-link" bindtap="goEarnings" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="查看资产详情"><cy-icon name="arrow-right" size="26" /></view>
+          <!-- 2026-10-30 业主:「我的资产」标题旁不要箭头,卡片本身可点 -->
         </view>
         <!-- P-49(2026-10-27,0.3 新口径):没有就是 0,不再用「—」代替 —— 取不到余额也显示 ¥0 -->
         <view class="pc-asset" bindtap="goEarnings" hover-class="pc-tap" hover-stay-time="80"

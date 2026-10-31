@@ -7,6 +7,8 @@ Component({
   properties: {
     show:    { type: Boolean, value: false },
     compact: { type: Boolean, value: false },
+    // 走查 v2 R08(业主 2026-10-30):「更多」是普通底部弹窗 —— 贴底、标题居中、按内容撑高
+    plain:   { type: Boolean, value: false },
     title:   { type: String,  value: '' },
     // 稿 468:960/1009/1086/1126:四套抽屉的标题下面都有一句「这一套为什么长这样」,
     // 商家一打开就知道现在这个状态能做什么、不能做什么,不用逐行试。

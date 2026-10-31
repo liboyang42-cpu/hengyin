@@ -225,8 +225,10 @@ test('入口清零:四个旧跳转全改指铃铛「收到的」/附近商家,�
   assert.doesNotMatch(listJs, /goCandidates/);
   assert.match(listJs, /goInviteOthers[\s\S]{0,220}pages\/coop\/nearby\/index\?topicId=/);
 
-  const hostWxml = read('pages/topic/components/project-host/index.wxml');
-  assert.match(hostWxml, /data-act="goReceivedApplies">查看收到的申请/);
+  // 走查 v2 R04(2026-10-30):主办工作台底栏「查看收到的申请」撤掉,改成底部进度;申请在招商弹窗里处理
+  const hostWxml = read('pages/topic/components/project-host/index.wxml').replace(/<!--[\s\S]*?-->/g, '');
+  assert.doesNotMatch(hostWxml, /查看收到的申请/);
+  assert.match(hostWxml, /wx:for="\{\{ hostProgress \}\}"/);
   assert.doesNotMatch(hostWxml, /goCandidates|查看候选池/);
 
   const hostJs = read('pages/topic/merchantinfo/merchantinfo.js');
@@ -246,9 +248,8 @@ test('入口清零:四个旧跳转全改指铃铛「收到的」/附近商家,�
   assert.equal(routes.some((route) => route.includes('coop/candidates')), false, 'app.json 登记必须清零');
 });
 
-test('★负控:project-host 底栏改回旧 data-act → 入口断言必须红', () => {
+test('★负控:project-host 底栏加回「查看收到的申请」→ 入口断言必须红', () => {
   const original = read('pages/topic/components/project-host/index.wxml');
-  const mutated = original.replace('data-act="goReceivedApplies"', 'data-act="goCandidates"');
-  assert.notEqual(mutated, original, '负控锚点失效:新 data-act 不存在');
-  assert.throws(() => assert.match(mutated, /data-act="goReceivedApplies">查看收到的申请/), assert.AssertionError);
+  const mutated = original + '<cy-btn bindtap="emit" data-act="goReceivedApplies">查看收到的申请</cy-btn>';
+  assert.throws(() => assert.doesNotMatch(mutated.replace(/<!--[\s\S]*?-->/g, ''), /查看收到的申请/), assert.AssertionError);
 });

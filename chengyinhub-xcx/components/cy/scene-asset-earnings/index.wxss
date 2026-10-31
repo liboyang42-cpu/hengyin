@@ -21,3 +21,6 @@
    只减淡不位移:位移要配 .cy-motion-reduced 兜底,而那个类挂在组件外的祖先上,
    isolated 下同样够不着 —— 与其留个撤不掉的位移,不如按仓库既有组件按压类的做法只减淡。 */
 .cy-pressed { opacity: .88; }
+
+/* 走查 v2 R10:「更多」行直接落在白底上,发丝线分隔(定稿原型),不再套一块灰底 */
+.tm-group { background: transparent; border-radius: 0; }

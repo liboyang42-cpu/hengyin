@@ -79,7 +79,8 @@ test('cy-skeleton 新增五种同构语义骨架，旧四种 type 与默认行�
   const semanticRoots = Array.from(wxml.matchAll(/<view wx:(?:if|elif|else)\b[^>]*class="sk(?:\s|\{\{)[^"]*"[^>]*>/g), (match) => match[0]);
   // 2026-08-24:并入 master 后 type 分支为 10 种(新增 5 种同构语义 + 旧 4 种 + 兜底 list)。
   // 2026-09-02 帖文 B3:再加 post-card 鱼骨(与 cy-post-card 同构),10 → 11。
-  assert.equal(semanticRoots.length, 11, '全部骨架根节点都必须暴露加载状态语义');
+  // 2026-10-30 店铺参谋首载 merchant-insight(与 ai-insight 页同构),11 → 12。
+  assert.equal(semanticRoots.length, 12, '全部骨架根节点都必须暴露加载状态语义');
   semanticRoots.forEach((root) => {
     assert.match(root, /aria-role="status"/);
     assert.match(root, /aria-live="polite"/);

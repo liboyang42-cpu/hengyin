@@ -1,0 +1,122 @@
+/* P-6 提案:走查 version2(商家)。只写本次改动,颜色 / 圆角 / 间距只用 master token;其余样式全部来自 cy.css。 */
+
+/* ===== 商家首页 · 项目卡改大卡(复用「为你推荐的主题」tcard 的封面 + 底部渐暗)===== */
+.p6-pcard{position:relative;margin:0 var(--cy-page-x);height:208px;border-radius:var(--cy-radius-xl);overflow:hidden;background:var(--cy-color-bg-surface-subtle);box-shadow:0 2px 5px rgba(0,0,0,.06)}
+.p6-pcard img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.p6-pcard__shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 38%,rgba(0,0,0,.62) 100%)}
+.p6-pcard__none{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.p6-pcard__none img{position:static;width:64px;height:64px;opacity:.28;filter:grayscale(1)}
+.p6-pcard__top{position:absolute;left:14px;right:14px;top:14px;display:flex;align-items:center;justify-content:space-between}
+.p6-pcard__tag{height:24px;padding:0 10px;border-radius:999px;background:rgba(0,0,0,.42);color:#fff;font-size:12px;font-weight:600;display:inline-flex;align-items:center}
+.p6-pcard__bell{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.22);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;position:relative}
+.p6-pcard__bell img{position:static;width:18px;height:18px;filter:invert(1)}
+.p6-pcard__bell i{position:absolute;right:5px;top:5px;width:7px;height:7px;border-radius:50%;background:var(--cy-color-status-danger,#E5484D)}
+.p6-pcard__txt{position:absolute;left:16px;right:16px;bottom:14px;color:#fff}
+.p6-pcard__t{font-size:20px;font-weight:700;line-height:1.25}
+.p6-pcard__s{margin-top:4px;font-size:13px;opacity:.86}
+.p6-pcard__visit{margin-top:8px;display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:999px;background:rgba(255,255,255,.18);font-size:12px}
+
+/* ===== 商家首页 · 我的消息(ramandesigns9 通知叠层):只换图标、加未读点 / 单条 × / 清空 ===== */
+.p6-ns .rv-msg-ico{border-radius:11px;background:var(--cy-color-action-primary-bg);color:var(--cy-color-action-primary-fg)}
+.p6-ns .rv-msg-ico .cyi{background:currentColor}
+.p6-ns .rv-msg-item{position:relative;padding-right:40px}
+.p6-ns .rv-msg-time{position:absolute;right:16px;top:14px;font-size:11px}
+.p6-ns .rv-msg-main{padding-right:44px}
+.p6-dot{position:absolute;right:18px;bottom:16px;width:7px;height:7px;border-radius:50%;background:var(--cy-color-text-primary)}
+.p6-x{position:absolute;right:12px;bottom:10px;width:24px;height:24px;border-radius:50%;background:var(--cy-color-bg-surface-subtle);display:none;align-items:center;justify-content:center;color:var(--cy-color-text-secondary)}
+.rv-msg-stack--open .p6-x{display:flex}.rv-msg-stack--open .p6-dot{display:none}
+.p6-ns .rv-msg-item{transition:transform .42s cubic-bezier(.32,1.25,.5,1),opacity .28s}
+.p6-ns.is-leave .rv-msg-item{transform:translateY(0) scale(.9)!important;opacity:0}
+.p6-clear{display:flex;align-items:center;justify-content:center;gap:6px;height:40px;margin:6px var(--cy-page-x) 0;font-size:13px;color:var(--cy-color-text-tertiary)}
+.p6-done{display:flex;justify-content:center;padding:6px 0}
+.p6-done view{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 14px 0 6px;border-radius:999px;background:var(--cy-bg-card);box-shadow:0 4px 12px rgba(0,0,0,.08);font-size:13px;font-weight:600;color:var(--cy-color-text-primary);animation:p6pop .45s cubic-bezier(.3,1.6,.4,1)}
+.p6-done i{width:24px;height:24px;border-radius:50%;background:var(--cy-color-action-primary-bg);color:var(--cy-color-action-primary-fg);display:flex;align-items:center;justify-content:center;font-style:normal;font-size:12px}
+@keyframes p6pop{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
+
+/* ===== 协作邀请卡状态:步骤条(shedsgns 的形,不用粉色,用商家近黑)===== */
+.p6-steps{display:flex;align-items:center;margin:14px 0 6px}
+.p6-steps .n{width:16px;height:16px;border-radius:50%;flex:none;background:var(--cy-color-bg-surface-subtle);display:flex;align-items:center;justify-content:center;box-sizing:border-box}
+.p6-steps .n.done{background:var(--cy-color-action-primary-bg)}
+.p6-steps .n.done:after{content:"";width:6px;height:3px;border-left:1.6px solid #fff;border-bottom:1.6px solid #fff;transform:translateY(-1px) rotate(-45deg)}
+.p6-steps .n.run{background:var(--cy-bg-card);border:1.6px solid var(--cy-color-action-primary-bg)}
+.p6-steps .n.run:after{content:"";width:6px;height:6px;border-radius:50%;background:var(--cy-color-action-primary-bg);animation:p6pulse 1.3s ease-in-out infinite}
+.p6-steps .l{flex:1;height:2px;background:var(--cy-color-bg-surface-subtle);position:relative;overflow:hidden}
+.p6-steps .l.done:after{content:"";position:absolute;inset:0;background:var(--cy-color-action-primary-bg);animation:p6fill .5s ease-out both}
+.p6-steplab{display:flex;justify-content:space-between;font-size:11px;color:var(--cy-color-text-tertiary)}
+.p6-steplab b{font-weight:600;color:var(--cy-color-text-primary)}
+@keyframes p6pulse{0%,100%{transform:scale(.6);opacity:.55}50%{transform:scale(1);opacity:1}}
+@keyframes p6fill{from{transform:translateX(-100%)}to{transform:none}}
+.p6-strip-hd{display:flex;align-items:center;justify-content:space-between;padding:0 var(--cy-page-x) var(--cy-space-3)}
+.p6-strip-hd .invite-strip__title{padding:0}
+.p6-remind{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--cy-color-text-tertiary)}
+
+/* 竖向步骤(邀请详情):同一套圆点,子步骤缩进 */
+.p6-vt{padding:4px 0 4px 26px;position:relative}
+.p6-vt .it{position:relative;padding:8px 0 12px;font-size:15px;color:var(--cy-color-text-primary)}
+.p6-vt .it .t{display:flex;justify-content:space-between;gap:8px}
+.p6-vt .it .t span{font-size:12px;color:var(--cy-color-text-tertiary)}
+.p6-vt .it:before{content:"";position:absolute;left:-23px;top:11px;width:14px;height:14px;border-radius:50%;background:var(--cy-color-bg-surface-subtle);box-sizing:border-box}
+.p6-vt .it.done:before{background:var(--cy-color-action-primary-bg)}
+.p6-vt .it.run:before{background:var(--cy-bg-card);border:1.6px solid var(--cy-color-action-primary-bg)}
+.p6-vt .it:after{content:"";position:absolute;left:-17px;top:27px;bottom:-9px;width:2px;background:var(--cy-color-bg-surface-subtle)}
+.p6-vt .it.done:after{background:var(--cy-color-action-primary-bg)}
+.p6-vt .it:last-child:after{display:none}
+.p6-vt .it.todo{color:var(--cy-color-text-tertiary)}
+.p6-sub{margin-top:6px;display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--cy-color-text-secondary)}
+.p6-sub .ok:before{content:"✓ ";color:var(--cy-color-text-primary)}
+.p6-sub .wait:before{content:"";display:inline-block;width:10px;height:10px;margin-right:6px;border-radius:50%;border:1.6px solid var(--cy-color-bg-surface-subtle);border-top-color:var(--cy-color-action-primary-bg);animation:p6spin 1s linear infinite;vertical-align:-1px}
+@keyframes p6spin{to{transform:rotate(360deg)}}
+
+/* ===== 主题内叠层:第二层压在第一层上,第一层缩小压暗(iOS 叠 sheet)===== */
+.p6-stack .dw{transition:transform .34s cubic-bezier(.4,0,.2,1),filter .34s}
+.p6-stack.is-under .dw{transform:scale(.94) translateY(-8px);filter:brightness(.92)}
+.p6-back{width:36px;height:44px;margin-left:-8px;display:flex;align-items:center;justify-content:center;flex:none}
+.p6-dw-hd{display:flex;align-items:center}
+/* 行内两颗小按钮(沿用 dn-btn 的形,第二颗灰) */
+.p6-btns{display:flex;gap:8px;flex:none}
+.p6-btn-g{background:var(--cy-color-bg-surface-subtle)!important;color:var(--cy-color-text-primary)!important}
+.p6-pending{display:inline-flex;align-items:center;gap:6px}
+.p6-pending:before{content:"";width:10px;height:10px;border-radius:50%;border:1.6px solid var(--cy-color-bg-surface-subtle);border-top-color:currentColor;animation:p6spin 1s linear infinite}
+.p6-tierbar{display:flex;height:10px;border-radius:5px;overflow:hidden;margin:12px 0 8px;background:var(--cy-color-bg-surface-subtle)}
+.p6-tierbar i{display:block;height:100%}
+.p6-tierrow{display:flex;justify-content:space-between;font-size:13px;padding:3px 0;color:var(--cy-color-text-secondary)}
+.p6-tierrow b{font-weight:600;color:var(--cy-color-text-primary);font-variant-numeric:tabular-nums}
+.p6-sw{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;vertical-align:1px}
+
+/* ===== 店铺参谋 · 经营优化(复用 tcard 封面卡)===== */
+.p6-tips{display:flex;flex-direction:column;gap:12px;padding:0 var(--cy-page-x)}
+.p6-tip{border-radius:var(--cy-radius-xl);overflow:hidden;background:var(--cy-bg-card)}
+.p6-tip__cv{height:132px;position:relative;overflow:hidden}
+.p6-tip__cv img{width:100%;height:100%;object-fit:cover}
+.p6-tip__cv .ic{position:absolute;right:12px;bottom:-10px;width:72px;height:72px}
+.p6-tip__b{display:flex;align-items:center;gap:12px;padding:14px 16px}
+.p6-tip__t{font-size:15px;font-weight:600;color:var(--cy-color-text-primary)}
+.p6-tip__s{font-size:12px;color:var(--cy-color-text-tertiary);margin-top:2px}
+.p6-tip__go{flex:none;height:32px;padding:0 14px;border-radius:999px;background:var(--cy-color-action-primary-bg);color:var(--cy-color-action-primary-fg);font-size:13px;font-weight:600;display:flex;align-items:center}
+
+/* ===== AI 店铺角色 · 首次介绍(TrninhHuy1 四步弹窗;图 = 城瘾积木 logo)===== */
+.p6-intro{position:absolute;left:8px;right:8px;bottom:8px;border-radius:28px;background:var(--cy-bg-card);padding:12px 20px 24px;z-index:9001;animation:up .34s cubic-bezier(.4,0,.2,1);text-align:center}
+.p6-intro__x{position:absolute;right:12px;top:12px;width:32px;height:32px;border-radius:50%;background:var(--cy-color-bg-surface-subtle);display:flex;align-items:center;justify-content:center;color:var(--cy-color-text-secondary)}
+.p6-intro__t{font-size:20px;font-weight:700;color:var(--cy-color-text-primary);margin-top:6px}
+.p6-intro__s{font-size:14px;color:var(--cy-color-text-tertiary);margin-top:6px}
+.p6-intro__dots{display:flex;gap:6px;justify-content:center;margin:16px 0 18px}
+.p6-intro__dots i{width:6px;height:6px;border-radius:3px;background:var(--cy-color-bg-surface-subtle);transition:width .3s}
+.p6-intro__dots i.on{width:18px;background:var(--cy-color-action-primary-bg)}
+.p6-intro__go{height:50px;border-radius:999px;background:var(--cy-color-action-primary-bg);color:var(--cy-color-action-primary-fg);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600}
+.p6-logo{display:block;margin:6px auto 0;overflow:visible}
+.p6-logo .lp{transform-box:fill-box;transform-origin:center;transition:transform .7s cubic-bezier(.3,1.35,.4,1)}
+.p6-logo .lbub{transform-box:fill-box;transform-origin:left bottom;transition:transform .5s cubic-bezier(.3,1.6,.4,1),opacity .3s}
+
+/* 改动外标 */
+.p6-gone{margin:12px var(--cy-page-x);padding:10px;border:1.5px dashed var(--mk);border-radius:12px;color:var(--mk);font-size:12px;text-align:center}
+@media (prefers-reduced-motion: reduce){.p6-steps .n.run:after,.p6-sub .wait:before,.p6-pending:before{animation:none}.p6-logo .lp,.p6-ns .rv-msg-item{transition:none}}
+
+/* 微信原生 switch(cy-switch 默认色 #0E9E73 = --cy-comp-switch-on) */
+.p6-switch{position:relative;width:51px;height:31px;border-radius:16px;background:var(--cy-color-bg-surface-subtle,#E9E9EA);flex:none;cursor:pointer;transition:background .2s}
+.p6-switch:after{content:"";position:absolute;left:2px;top:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.18);transition:transform .25s cubic-bezier(.3,1.4,.5,1)}
+.p6-switch.is-on{background:var(--cy-comp-switch-on,#0E9E73)}.p6-switch.is-on:after{transform:translateX(20px)}
+.p6-dw-hd{flex:1;min-width:0}
+.c-project-host .p6-stack .player-row{align-items:center}
+.c-project-host .p6-stack .player-row .dr-text{justify-content:center}
+.scr .ios-sheet>.mask{background:rgba(0,0,0,.4)!important;opacity:1!important;animation:none!important}
+.scr .ios-sheet{background:transparent!important}

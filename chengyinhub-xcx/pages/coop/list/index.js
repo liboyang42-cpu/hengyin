@@ -635,18 +635,6 @@ Page({
     });
   },
 
-  // 邀约提醒订阅(原合作中心「开启邀约提醒」):须在点击手势内请求
-  enableInviteAlerts() {
-    const that = this;
-    return subscribe.request(['coopInvited']).then(function (result) {
-      const accepted = result.acceptedKeys.indexOf('coopInvited') >= 0;
-      that.setData({
-        actionReceipt: accepted ? '已开启邀约提醒' : '',
-        actionError: accepted ? '' : (result.status === subscribe.STATUS.UNSUPPORTED ? '当前微信版本不支持邀约提醒' : '未开启邀约提醒，可稍后再试'),
-      });
-    });
-  },
-
   onTabChange(e) { this.setData({ tab: Number(e.detail.key), tabKey: e.detail.key }); },
 
   /* CU-C-75:显示层过滤。四路数据(收到的邀约 / 我发出的 / 带队申请 / 官方邀约)

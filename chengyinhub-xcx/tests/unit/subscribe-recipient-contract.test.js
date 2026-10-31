@@ -9,7 +9,8 @@ const REPO_ROOT = path.resolve(XCX_ROOT, '..');
 
 const SURFACE_ROLES = {
   // 2026-09-15 合作中心「邀约我的」tab 收进协作邀请「收到的」,邀约提醒入口随之搬家
-  'pages/coop/list/index.js': 'invitee',
+  // 2026-10-30 走查 v2 IMG_0752:协作统一进消息页,入口再搬到消息页「协作邀请」标题旁的开关
+  'subpackageB/pages/im/list/index.js': 'invitee',
   'pages/merchant/ledger/index.js': 'merchant',
   'pages/publish/fabu/index.js': 'publisher',
   'pages/activity/official-detail/index.js': 'participant',
@@ -21,10 +22,11 @@ const SUBSCRIPTION_RECIPIENT_CONTRACTS = [
     event: '合作被邀约',
     templateKey: 'coopInvited',
     recipientRole: 'invitee',
-    entryFile: 'pages/coop/list/index.js',
-    entryWxml: 'pages/coop/list/index.wxml',
-    wxmlScopeMarker: '新邀约到达时提醒我',
-    gestureHandler: 'enableInviteAlerts',
+    entryFile: 'subpackageB/pages/im/list/index.js',
+    entryWxml: 'subpackageB/pages/im/list/index.wxml',
+    wxmlScopeMarker: '邀约提醒',
+    gestureHandler: 'onInviteAlertChange',
+    controlTag: 'cy-switch',
     backendConfigKey: 'tplCoopInvited',
     backendEvidence: [
       ['chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCoopController.java', /notifyCoopInvited\(toOwner\b/],

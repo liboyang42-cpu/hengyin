@@ -450,9 +450,11 @@ test('过审后点修改承接内容不跳页，只说明原因', () => {
 
 test('承接方三个入口、主办方四个入口', () => {
   const page = makePage();
-  assert.deepEqual(page.buildQuickActions('join').map((a) => a.key), ['scan', 'club', 'customer', 'more']);
-  assert.deepEqual(page.buildQuickActions('host').map((a) => a.key), ['club', 'merchant', 'customer', 'more']);
-  assert.deepEqual(page.data.quickActions.map((a) => a.key), ['scan', 'club', 'customer', 'more'],
+  // 走查 v2 R15(2026-10-30):承办方不给俱乐部 / 商家,换成本站二维码
+  assert.deepEqual(page.buildQuickActions('join').map((a) => a.key), ['scan', 'stationQr', 'customer', 'more']);
+  // 2026-10-30 走查 v2 R15:主办快捷格加「二维码」(本主题小程序码)
+  assert.deepEqual(page.buildQuickActions('host').map((a) => a.key), ['club', 'merchant', 'customer', 'themeQr', 'more']);
+  assert.deepEqual(page.data.quickActions.map((a) => a.key), ['scan', 'stationQr', 'customer', 'more'],
     '接口没回来之前先按承接方给，不能渲染成空');
 });
 
@@ -500,8 +502,10 @@ test('俱乐部抽屉的动作按身份/空态给不同文案', () => {
   const host = makePage();
   host.data.role = 'host';
   host.openClubSheet();
-  assert.deepEqual(host.data.clubActions.map((a) => a.key), ['goInviteClub', 'goReceivedApplies'],
-    '主办方是两个并排:邀请 + 收到的申请');
+  // 走查 v2 R05(业主 2026-10-30):从主题打开的俱乐部弹窗不跳出去看「收到的申请」
+  // 走查 v2 R05(2026-10-30):主办的俱乐部弹窗里直接列可邀约的俱乐部(每行邀约 / 主页),底部不再放跳出去的按钮
+  assert.deepEqual(host.data.clubActions.map((a) => a.key), [],
+    '主办方在弹窗里就地邀约,不跳出主题');
 });
 
 /**
@@ -529,7 +533,8 @@ test('客户入口开玩家名单抽屉，不跳全局关系页', () => {
  * 名单空态三种说法分开:「一单没卖」「全部已核销」「还没人核销」的下一步完全不同,
  * 合成一句等于什么都没说。
  */
-test('玩家名单按场次分组，空态分三种说法', () => {
+// 2026-10-31 走查 v2 W2-07 / F7(业主):「全部」改成上面还没到店、下面已核销两段,场次落到每一行;选了某一档就一段
+test('玩家名单按到店状态分段（场次写在行上），空态分三种说法', () => {
   const page = makePage();
   const data = {
     rows: [
@@ -542,21 +547,34 @@ test('玩家名单按场次分组，空态分三种说法', () => {
   };
 
   page.setData(page.buildPlayerSheet(data, 'all'));
-  assert.deepEqual(page.data.playerSheet.groups.map((g) => g.key), ['8.6 周三 · 19:30', '8.9 周六 · 14:00']);
-  assert.equal(page.data.playerSheet.groups[0].rows.length, 2);
+  assert.deepEqual(page.data.playerSheet.groups.map((g) => g.title), ['还没到店', '已核销']);
+  assert.deepEqual(page.data.playerSheet.groups[0].rows.map((r) => r.name), ['王小强', '李蔓']);
+  assert.equal(page.data.playerSheet.groups[0].rows[1].when, '8.9 周六 · 14:00');
 
   page.setData(page.buildPlayerSheet(data, 'arrived'));
   assert.equal(page.data.playerSheet.groups.length, 1);
+  assert.equal(page.data.playerSheet.groups[0].title, '');
   assert.equal(page.data.playerSheet.groups[0].rows[0].name, '张明');
 
   page.setData(page.buildPlayerSheet(data, 'pending'));
-  assert.equal(page.data.playerSheet.groups.length, 2);
+  assert.equal(page.data.playerSheet.groups.length, 1);
+  assert.equal(page.data.playerSheet.groups[0].rows.length, 2);
+
+  // F7:还没开售(招募中)且一单没有 —— 写「未售票」,不是「暂无报名」;开售后的零单照旧
+  page.data.hostTopic = { lifecycle: 1 };
+  page.setData(page.buildPlayerSheet({ rows: [] }, 'all'));
+  assert.equal(page.data.playerSheet.notSelling, true);
+  assert.equal(page.data.playerSheet.emptyText, '未售票');
+  page.data.hostTopic = { lifecycle: 3 };
+  page.setData(page.buildPlayerSheet({ rows: [] }, 'all'));
+  assert.equal(page.data.playerSheet.notSelling, false);
+  page.data.hostTopic = null;
 
   // 一单都没卖 vs 卖了但筛空,说法必须不同
   page.setData(page.buildPlayerSheet({ rows: [] }, 'all'));
   assert.match(page.data.playerSheet.emptyText, /暂无报名/);
   page.setData(page.buildPlayerSheet({ rows: [{ registrationId: 1, arrived: true }] }, 'pending'));
-  assert.equal(page.data.playerSheet.emptyText, '没有待核销的客户');
+  assert.equal(page.data.playerSheet.emptyText, '没有还没到店的客户');
   page.setData(page.buildPlayerSheet({ rows: [{ registrationId: 1, arrived: false }] }, 'arrived'));
   assert.equal(page.data.playerSheet.emptyText, '没有已核销的客户');
 
@@ -572,7 +590,7 @@ test('玩家名单按场次分组，空态分三种说法', () => {
   assert.doesNotMatch(zeroOrderTexts.join('\n'), /,/u, '中文文案不用半角逗号');
   // 有人扫码待确认时,「待核销」为空不等于「全部客户都已核销」—— 那句是假的。
   page.setData(page.buildPlayerSheet({ rows: [{ registrationId: 1, state: 'contacted' }] }, 'pending'));
-  assert.equal(page.data.playerSheet.emptyText, '没有待核销的客户');
+  assert.equal(page.data.playerSheet.emptyText, '没有还没到店的客户');
   page.setData(page.buildPlayerSheet({ rows: [{ registrationId: 1, state: 'pending' }] }, 'contacted'));
   assert.equal(page.data.playerSheet.emptyText, '还没有客户接洽');
 });
@@ -582,7 +600,7 @@ test('本店现场名单为空只描述现场记录，不推断主题没有订�
   const data = { viewType: 'SHOP_DAY_MERCHANT_ROSTER', rows: [] };
   const expected = {
     all: '本店暂没有现场客户记录',
-    pending: '没有待核销的客户',
+    pending: '没有还没到店的客户',
     contacted: '还没有客户接洽',
     arrived: '没有已核销的客户',
   };
@@ -619,7 +637,8 @@ test('主办段整形:进度条按节点数等分，数字有兜底', () => {
   assert.equal(page.data.hostMerchants[0].statusText, '已中标');
   assert.equal(page.data.hostMerchants[1].statusText, '待审核');
   assert.equal(page.data.hostMerchants[1].isSelf, true, '自己报名自己的主题要标出来');
-  assert.deepEqual(page.data.quickActions.map((a) => a.key), ['club', 'merchant', 'customer', 'more']);
+  // 2026-10-30 走查 v2 R15:主办快捷格加「二维码」(本主题小程序码)
+  assert.deepEqual(page.data.quickActions.map((a) => a.key), ['club', 'merchant', 'customer', 'themeQr', 'more']);
 
   // 后端只给了个空壳:不能渲染出 undefined,也不能画一条空的进度条
   const bare = makePage();
@@ -1167,8 +1186,8 @@ test('CU-M-183:主办方抽屉的台账入口写明「全店」作用域', () =>
   host.data.role = 'host';
   host.data.topicId = 8001;
   host.openPlayerSheet();
-  assert.deepEqual(host.data.playerActions.map((a) => a.key), ['goLedger']);
-  assert.match(host.data.playerActions[0].label, /全店/, '入口要先说清这不是本主题记录');
+  // 2026-10-30 走查 v2 R07(业主定稿):客户弹窗底部不再放台账入口,最后一行是「定向广播」(只发本主题买票玩家)
+  assert.deepEqual(host.data.playerActions, []);
 
   const joiner = makePage();
   joiner.data.role = 'join';
@@ -1177,9 +1196,7 @@ test('CU-M-183:主办方抽屉的台账入口写明「全店」作用域', () =>
   assert.deepEqual(joiner.data.playerActions, [], '承接方不下发主办方的记录出口');
 
   const source = fs.readFileSync(path.resolve(__dirname, '../../pages/topic/merchantinfo/merchantinfo.js'), 'utf8');
-  const withoutScopeWord = source.replace(/label: '查看全店核销记录'/, "label: '查看核销记录'");
-  assert.notEqual(withoutScopeWord, source, '负控锚点失效:入口文案没被改回去');
-  assert.doesNotMatch(withoutScopeWord, /key: 'goLedger', label: '查看全店核销记录'/, '去掉「全店」二字必须判红');
+  assert.doesNotMatch(source, /label: '查看核销记录'/, '台账入口若回来,仍必须写明「全店」');
 });
 /* ===== CU-M-181:承接商家抽屉的主按钮必须对得上「现在做得动的事」 =====
    走查:抽屉空态写着「先去编辑里加节点再招商」,底部按钮却恒是「去找商家」;
@@ -1192,15 +1209,15 @@ function hostRecruitOf(nodeTotal) {
   return { nodeTotal, nodeFilled: 0, pendingCount: 0, openNodes: [] };
 }
 
-test('有节点时抽屉主按钮照旧是「去找商家」，落地仍是附近商家页', () => {
+test('有节点时每一站自带「招商」,落地是带这一站的附近商家页;底部不再放按钮', () => {
   const page = makePage();
   page.setData({ hostRecruit: hostRecruitOf(3), topicId: '77' });
   page.onQuickAction({ currentTarget: { dataset: { key: 'merchant' } } });
 
-  assert.deepEqual(page.data.merchantActions.map((a) => a.key), ['goInviteMerchant', 'goReceivedApplies']);
-  page.onJoinAct({ detail: { act: 'goInviteMerchant', dataset: {} } });
+  assert.deepEqual(page.data.merchantActions.map((a) => a.key), []);
+  page.onJoinAct({ detail: { act: 'recruitNode', dataset: { id: 5 } } });
   assert.equal(navigations.length, 1);
-  assert.match(navigations[0].url, /^\/pages\/coop\/nearby\/index\?topicId=77/);
+  assert.match(navigations[0].url, /^\/pages\/coop\/nearby\/index\?topicId=77.*&nodeId=5/);
 });
 
 test('★零节点时主按钮换成「去加节点」，点了进主题编辑器(节点在那里配)', () => {
@@ -1217,13 +1234,14 @@ test('★零节点时主按钮换成「去加节点」，点了进主题编辑�
   assert.equal(navigations[0].url, '/pages/publish/fabu/index?id=77');
 });
 
-test('★零节点且没有编辑资格时不给主按钮，只留「查看收到的申请」', () => {
+// 走查 v2 R06(2026-10-30):招商弹窗底部不再放「查看收到的申请」,申请在弹窗里确认
+test('★零节点且没有编辑资格时不给主按钮', () => {
   const page = makePage();
   page.setData({ hostRecruit: hostRecruitOf(0), topicId: '77' });
   page._hostCanEdit = false;
   page.onQuickAction({ currentTarget: { dataset: { key: 'merchant' } } });
 
-  assert.deepEqual(page.data.merchantActions.map((a) => a.key), ['goReceivedApplies']);
+  assert.deepEqual(page.data.merchantActions.map((a) => a.key), []);
 });
 
 test('抽屉空态只陈述前置条件，不再指一条页面上没有的「编辑」入口', () => {
@@ -1249,8 +1267,8 @@ test('★负控:把 nodeTotal 分流改回恒有节点，零节点又会拿到�
 
   const mutated = matched[1].replace('nodeTotal || 0) > 0', 'nodeTotal || 1) > 0')
   assert.notEqual(mutated, matched[1], '负控未命中 nodeTotal 判据')
-  assert.equal(run(mutated, 0, true)[0].key, 'goInviteMerchant',
-    '撤掉分流后零节点还能拿到「去找商家」= 上面那条合同是假的')
+  assert.equal(run(mutated, 0, true).length, 0,
+    '撤掉分流后零节点连「去加节点」都没了 = 上面那条合同是真的')
 })
 
 

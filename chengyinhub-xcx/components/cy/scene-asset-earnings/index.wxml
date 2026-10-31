@@ -25,10 +25,11 @@
     </view>
   </block>
   <!-- 「更多」:Threads 式菜单(m694 统一格式),行直接绑原入口;打开场景时宿主页把菜单收起 -->
-  <cy-sheet inset show="{{moreShow}}" bind:close="closeMore">
+  <!-- 走查 v2 R10 / IMG_0761(业主 2026-10-30):不要「更多」标题,底部样式与其他弹窗统一(贴底,不再浮动 inset);
+       「结算明细」外面已经有了,菜单里不再重复 -->
+  <cy-sheet show="{{moreShow}}" bind:close="closeMore">
     <view class="tm">
       <view class="tm-group">
-        <view class="tm-row" wx:if="{{theme === 'merchant'}}" bindtap="openSettlement" aria-role="button" aria-label="结算明细" hover-class="cy-pressed" hover-stay-time="80"><text class="tm-label">结算明细</text><cy-icon class="tm-ico" name="finance" size="40" /></view>
         <view class="tm-row" bindtap="openWithdrawHistory" aria-role="button" aria-label="打开提现记录弹窗" hover-class="cy-pressed" hover-stay-time="80"><text class="tm-label">提现记录</text><cy-icon class="tm-ico" name="clock" size="40" /></view>
         <view class="tm-row" bindtap="openInvite" aria-role="button" aria-label="邀请记录" hover-class="cy-pressed" hover-stay-time="80"><text class="tm-label">邀请记录</text><cy-icon class="tm-ico" name="gift" size="40" /></view>
       </view>

@@ -1,5 +1,6 @@
 // 主办方「我发的这条路线」视图 —— 纯展示组件,与 project-join 同构。
 const circleTheme = require('../../utils/circle-theme.js');
+const projectProgress = require('../../../../utils/project-progress.js');
 const FREE_STATUS = ['草稿', '招募中', '待定价', '售票中', '进行中', '结算中', '已关闭', '立项待审'];
 Component({
   options: { addGlobalClass: true },
@@ -14,6 +15,8 @@ Component({
     loadFailed:      { type: Boolean, value: false },
     rulesOpen:       { type: Boolean, value: false },
     quickActions:    { type: Array, value: [] },
+    clubCandidates:  { type: Object, value: { state: '', rows: [] } }, // 走查 v2 R05:主题内可邀约的俱乐部
+    regApplies:      { type: Object, value: { state: '', rows: [] } }, // 走查 v2 R06:本主题收到的商家报名
     hostOwnerType:   { type: String, value: 'merchant' }, // club 主办不显示俱乐部协作位
     playerSheet: { type: Object, value: {} },
     playerFilters: { type: Array, value: [] },
@@ -63,17 +66,31 @@ Component({
       this._circleConfigOpen = !!show;
     },
     // 派生量放 observer 而不是让页面再多存两个字段:它们只有这个视图用得上
-    'hostRecruit, clubSheet': function (recruit, sheet) {
+    'hostRecruit, clubSheet, hostTopic, hostPlayers': function (recruit, sheet, topic, players) {
       const total = (recruit && recruit.nodeTotal) || 0;
       const filled = (recruit && recruit.nodeFilled) || 0;
+      const clubs = (sheet && sheet.items) || [];
       this.setData({
         recruitDone: total > 0 && filled >= total,
-        clubCount: ((sheet && sheet.items) || []).length,
+        clubCount: clubs.length,
+        clubAccepted: clubs.filter(function (c) { return c && c.accepted; }).length,
+        needExecutorClub: !!topic && Number(topic.productType) === 2 && this.data.hostOwnerType !== 'club'
+          && [1, 2].indexOf(Number(topic.lifecycle)) >= 0 && !clubs.some(function (c) { return c && c.accepted; }),
+        // 走查 v2 R04/R16:底部进度,只用这几份已有数据派生
+        hostProgress: projectProgress.buildHostSteps({
+          lifecycle: topic && topic.lifecycle,
+          productType: topic && topic.productType,
+          nodeTotal: total,
+          nodeFilled: filled,
+          pendingCount: recruit && recruit.pendingCount,
+          clubCount: clubs.filter(function (c) { return c && c.accepted; }).length,
+          paidCount: players && players.paidCount,
+        }),
       });
     },
   },
   data: {
-    recruitDone: false, clubCount: 0, anyDrawerOpen: false, hostStatusText: '状态待确认',
+    recruitDone: false, clubCount: 0, clubAccepted: 0, hostProgress: [], needExecutorClub: false, anyDrawerOpen: false, hostStatusText: '状态待确认',
     circleCandidates: [], circleConfigHint: '',
     circleConfigActions: [{ key: 'submitCircleConfig', label: '保存供给角色' }],
   },

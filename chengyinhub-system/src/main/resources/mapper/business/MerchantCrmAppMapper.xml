@@ -139,6 +139,9 @@
         <if test="query.sourceType != null">
             and r.owner_type = #{query.sourceType}
         </if>
+        <if test="query.topicId != null">
+            and r.owner_type = 1 and r.owner_id = #{query.topicId} and r.payment_status = 2
+        </if>
         <if test="query.sourceStartTime != null">
             and r.create_time &gt;= #{query.sourceStartTime}
         </if>

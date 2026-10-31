@@ -85,8 +85,8 @@ test('负控：CU-C-126 把「取消/完成」那对假动作头塞回抽屉必�
 test('负控：CU-C-126 承接商家重新挂上 headerVariant="action" 必须判红', () => {
   const file = 'pages/topic/components/project-host/index.wxml'
   const broken = read(file).replace(
-    '<project-drawer show="{{ merchantSheet.show }}" title="承接商家" actions=',
-    '<project-drawer show="{{ merchantSheet.show }}" title="承接商家" headerVariant="action" actions=',
+    '<project-drawer show="{{ merchantSheet.show }}" title="招商" actions=',
+    '<project-drawer show="{{ merchantSheet.show }}" title="招商" headerVariant="action" actions=',
   )
   assert.notEqual(broken, read(file), '负控变异注入失败:承接商家开标签要先同步')
   assert.throws(() => assertContract({ [file]: broken }), /默认标题头/)

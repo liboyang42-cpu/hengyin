@@ -4,6 +4,7 @@
 Component({
   options: { addGlobalClass: true },
   properties: {
+    hostInviteId: { type: Number, value: 0 }, // 走查 v2 R15:有已接受的合作才出「联系主办」
     // 2026-10-30 走查:页面滚过封面后导航栏转实底(否则正文滑进透明栏、标题压在状态栏时间上)
     navScrolled: { type: Boolean, value: false },
     chapterProject: { type: Boolean, value: false },

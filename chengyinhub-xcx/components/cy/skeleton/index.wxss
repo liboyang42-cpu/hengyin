@@ -247,6 +247,17 @@
 .sk-metric-value { width: 76%; height: var(--cy-space-6); margin-top: var(--cy-space-3); }
 .sk-metric-trend { width: 46%; height: var(--cy-space-2-5); margin-top: var(--cy-space-2); }
 
+/* —— merchant-insight:店铺参谋首载,块位与 ai-insight 的 greet / hero / 两列卡同构 —— */
+.sk-insight-greet { display: flex; align-items: center; justify-content: space-between; gap: var(--cy-space-3); padding: var(--cy-space-2) 0 var(--cy-space-4); }
+.sk-insight-hi { width: 52%; height: var(--cy-space-5); }
+.sk-insight-avatar { width: 112rpx; height: 112rpx; border-radius: 50%; flex: none; }
+.sk-insight-hero { padding: var(--cy-space-4); margin-bottom: var(--cy-space-3); border-radius: var(--cy-radius-lg); background: var(--cy-color-bg-surface); }
+.sk-insight-big { width: 46%; height: var(--cy-space-7); margin-top: var(--cy-space-2); }
+.sk-insight-seg { width: 100%; height: var(--cy-space-6); margin-top: var(--cy-space-4); border-radius: var(--cy-radius-pill); }
+.sk-insight-heat { width: 100%; height: var(--cy-space-7); margin-top: var(--cy-space-3); }
+.sk-insight-trio { display: flex; gap: var(--cy-space-2); margin-top: var(--cy-space-3); }
+.sk-insight-cell { flex: 1; height: 120rpx; border-radius: var(--cy-radius-md); }
+
 /* —— route-timeline:节点 + 连接线 + 文案 —— */
 .sk-route-row { display: flex; gap: var(--cy-space-3); min-height: 128rpx; }
 .sk-route-rail { position: relative; width: var(--cy-space-4); display: flex; justify-content: center; flex: none; }

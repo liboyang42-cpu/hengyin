@@ -115,11 +115,12 @@ test('受邀方落承接视图:role=join、没有报名行也不去查一条不�
   assert.equal(page.data.coopPartner.termsText, '分成 20%');
 });
 
-test('受邀方的关系入口只给真能用的两格:扫码 + 俱乐部', () => {
+// 走查 v2 R15(业主 2026-10-30):承办方不给「俱乐部」格,受邀方只剩真能用的扫码
+test('受邀方的关系入口只给真能用的一格:扫码', () => {
   const page = openAsInvitedPartner(coopOnlyHome());
 
-  assert.deepEqual(page.data.quickActions.map((a) => a.key), ['scan', 'club'],
-    '「客户」走 /api/project/players、「更多」抽屉里每行都挂报名行 —— 受邀方点了必被拒，不给');
+  assert.deepEqual(page.data.quickActions.map((a) => a.key), ['scan'],
+    '「客户」走 /api/project/players、「更多」抽屉里每行都挂报名行 —— 受邀方点了必被拒;俱乐部是主办的事');
 
   // 俱乐部抽屉的数据在 project-home 那一次就带回来了,不该再拉一次接口
   assert.equal(page.data.clubSheet.items.length, 1);

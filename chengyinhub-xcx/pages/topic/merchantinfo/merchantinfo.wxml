@@ -40,6 +40,8 @@
     clubSheet="{{ clubSheet }}"
     hostTopic="{{ hostTopic }}"
     hostRecruit="{{ hostRecruit }}"
+    clubCandidates="{{ clubCandidates }}"
+    regApplies="{{ regApplies }}"
     hostMerchants="{{ hostMerchants }}"
     hostPlayers="{{ hostPlayers }}"
     owner-chapter-applications="{{ownerChapterApplications}}"
@@ -51,6 +53,7 @@
     bind:act="onJoinAct" />
 
 <project-join wx:elif="{{ !fromMerchantJoin }}"
+    hostInviteId="{{ hostInviteId }}"
     navScrolled="{{ navScrolled }}"
     chapterProject="{{ chapterProject }}"
     myChapterApplications="{{ myChapterApplications }}"
@@ -504,15 +507,71 @@
   qr="{{checkinQrUrl}}"
   code="{{checkinCode}}"
   bindlongpress="copyCheckinCode"
-  title="本站打卡码"
-  desc="长期有效，可保存后张贴"
+  title="{{checkinHost ? '本主题二维码' : '本站打卡码'}}"
+  desc="{{checkinHost ? '玩家用微信扫一扫，直接进入这个主题' : '长期有效，可保存后张贴'}}"
   countdown=""
   error-text="{{checkinErr || '打卡码暂时没能生成'}}"
   secondary-text="{{checkinQrState === 'ready' && checkinQrUrl ? '保存到相册' : ''}}"
   mask-closable="{{true}}"
   bind:close="closeLiveCheckin"
-  bind:retry="issueStationPoster"
+  bind:retry="retryCheckinQr"
   bind:secondary="downloadCheckinQr" />
+<!-- 走查 v2 R07:定向广播(主办商家,只发本主题买票玩家) -->
+<cy-sheet class="theme-merchant" show="{{broadcastSheet.show}}" title="定向广播" bind:close="closeBroadcast">
+  <view class="bc">
+    <textarea class="bc-input" maxlength="120" placeholder="写给本主题的买票玩家" value="{{broadcastSheet.content}}" bindinput="onBroadcastInput" />
+    <view class="bc-row">
+      <text class="bc-k">可以收到</text>
+      <text class="bc-v" wx:if="{{broadcastSheet.state === 'ready'}}">{{broadcastSheet.deliverable || 0}} 人</text>
+      <text class="bc-v" wx:elif="{{broadcastSheet.state === 'loading'}}">正在计算…</text>
+    </view>
+    <cy-inline-error wx:if="{{broadcastSheet.state === 'error'}}" kind="data" title="人数没读到" sub="{{broadcastSheet.error}}" action="重试" bind:action="openBroadcast" />
+    <view class="bc-btn {{broadcastSheet.state === 'ready' && broadcastSheet.content && broadcastSheet.deliverable && broadcastSheet.remaining && !broadcastSheet.sending ? '' : 'bc-btn--off'}}" bindtap="sendBroadcast" aria-role="button" aria-label="发送" hover-class="cy-pressed" hover-stay-time="80">{{broadcastSheet.state === 'ready' && !broadcastSheet.remaining ? '今天已发满 3 条' : '发送'}}</view>
+    <text class="bc-cap">只发给同意接收商家消息的玩家，每人每天最多收 1 条</text>
+  </view>
+</cy-sheet>
+<!-- 走查 v2 R09:分润明细弹在工作台上(不离开主题) -->
+<cy-sheet class="theme-merchant" show="{{profitSheet.show}}" title="分润明细" bind:close="closeProfitSheet">
+  <view class="pf">
+    <view class="pf-lock"><cy-icon name="lock" size="26" /><text>档位按章节在开售时定好，不能改</text></view>
+    <view wx:if="{{profitSheet.state === 'loading'}}" class="pf-state">正在读取…</view>
+    <cy-inline-error wx:elif="{{profitSheet.state === 'error'}}" kind="data" title="分润明细没读到" sub="{{profitSheet.error}}" action="重试" bind:action="goFinance" />
+    <view wx:elif="{{profitSheet.state === 'empty'}}" class="pf-state">这个主题还没有分润记录，开售并核销后会出现在这里</view>
+    <block wx:elif="{{profitSheet.row}}">
+      <!-- 档位:每个合作方开售时定死的条款,只读展示 -->
+      <scroll-view class="pf-tiers" scroll-x enhanced show-scrollbar="{{false}}" wx:if="{{profitSheet.row.split && profitSheet.row.split.tiers.length}}">
+        <view class="pf-tier" wx:for="{{profitSheet.row.split.tiers}}" wx:key="key"><text class="pf-tier-n">{{item.name || (item.toType === 'club' ? '俱乐部' : '商家')}}</text><text class="pf-tier-t">{{item.tier}}</text></view>
+      </scroll-view>
+      <view class="pf-hero">
+        <text class="pf-k">本主题已入账</text>
+        <text class="pf-big">{{profitSheet.row.myIncome}}</text>
+        <view class="pf-sub"><text>待结算 <text class="pf-b">{{profitSheet.row.pendingText}}</text></text><text>已售 <text class="pf-b">{{profitSheet.row.soldText}}</text></text></view>
+      </view>
+      <view class="pf-flow" wx:if="{{profitSheet.row.split && profitSheet.row.split.parts.length}}">
+        <view class="pf-flow-h"><text>每卖出 1 份</text><text class="pf-flow-r">怎么分</text></view>
+        <view class="pf-bar">
+          <view class="pf-seg" wx:for="{{profitSheet.row.split.parts}}" wx:key="key" style="flex: {{item.flex}}; background: {{item.color}};"><text>{{item.rateText}}</text></view>
+        </view>
+        <view class="pf-legend">
+          <view class="pf-lg" wx:for="{{profitSheet.row.split.parts}}" wx:key="key"><view class="pf-lg-dot" style="background: {{item.color}};"></view><text class="pf-lg-n">{{item.label}}</text><text class="pf-lg-v">{{item.rateText}}</text></view>
+        </view>
+      </view>
+      <view class="pf-lbl"><text>各方到手</text></view>
+      <view class="pf-party" wx:for="{{profitSheet.row.parties}}" wx:key="key">
+        <view class="pf-party-dot" style="background: {{item.color}};"></view>
+        <view class="pf-party-m"><text class="pf-party-n">{{item.label}}</text><text class="pf-party-s">{{item.sub}}</text></view>
+        <text class="pf-party-v">{{item.amount}}</text>
+      </view>
+      <view class="pf-lbl"><text>结算</text></view>
+      <view class="pf-step pf-step--{{item.state}}" wx:for="{{profitSheet.row.steps}}" wx:key="key">
+        <view class="pf-step-rail"><view class="pf-step-dot"></view><view class="pf-step-line"></view></view>
+        <text class="pf-step-l">{{item.label}}</text>
+        <text class="pf-step-t" wx:if="{{item.time}}">{{item.time}}</text>
+      </view>
+    </block>
+    <view class="pf-all" bindtap="goAllEarnings" aria-role="button" aria-label="查看全部收益" hover-class="cy-pressed" hover-stay-time="80">全部收益</view>
+  </view>
+</cy-sheet>
 <cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />
 
 <!-- 危险动作三段式确认:文案来自 utils/danger-actions.js,页面只给 key -->

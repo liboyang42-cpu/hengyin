@@ -15,7 +15,9 @@ test('P-47 / M-14:设置钮玩家深色下为白色;我的订单 / 我的资产�
   const projects = WXML.slice(WXML.indexOf('TAB · 项目'), WXML.indexOf('TAB · 推文'))
   assert.doesNotMatch(projects, /<text>查看详情<\/text>/)
   assert.match(projects, /bindtap="goOrder"[^>]*><cy-icon name="arrow-right"/)
-  assert.match(projects, /bindtap="goEarnings"[^>]*aria-label="查看资产详情"><cy-icon name="arrow-right"/)
+  // 2026-10-30 业主:「我的资产」标题旁不要箭头(卡片本身可点进账户收益)
+  assert.doesNotMatch(projects, /aria-label="查看资产详情"/)
+  assert.match(projects, /class="pc-asset" bindtap="goEarnings"/)
 })
 
 // 2026-10-28 p91 业主「卡片太窄了又,稍微高一点」:400×400 → 500×440,渐变不动
