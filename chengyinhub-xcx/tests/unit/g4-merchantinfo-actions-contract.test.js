@@ -239,7 +239,7 @@ test('CU-C-67:俱乐部读数(viewType=CLUB_TOPIC_ROSTER)能被客户抽屉正�
     summary: { paidCount: 3, pendingCount: 1, contactedCount: 1, arrivedCount: 1 },
   }, 'all');
   assert.equal(patch['playerSheet.shopDay'], false, '俱乐部名单不是「探店日门店名册」口径');
-  assert.deepEqual(patch['playerSheet.rows'].map((r) => r.stateText), ['已核销', '已接洽', '待核销']);
+  assert.deepEqual(patch['playerSheet.rows'].map((r) => r.stateText), ['已核销', '已接洽', '未到店']); // 2026-10-30 走查 v2 R07 定稿:未核销即未到店
   assert.equal(patch['playerSheet.groups'].length, 2, '按场次分组，没场次的归到「未指定场次」');
   assert.equal(patch['playerSheet.summary'].paidCount, 3);
 });

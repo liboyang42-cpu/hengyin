@@ -1,1 +1,0 @@
-{ "component": true, "usingComponents": { "cy-inline-error": "/components/cy/inline-error/index", "cy-switch": "/components/cy/switch/index", "cy-date-field": "/components/cy/date-field/index" } }

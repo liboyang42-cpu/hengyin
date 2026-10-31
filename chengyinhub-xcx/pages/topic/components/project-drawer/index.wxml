@@ -2,7 +2,7 @@
 <block wx:if="{{ show }}">
 <!-- 面板外的页面由统一遮罩压暗。 -->
 <view class="dw-mask" catchtouchmove="noop" bindtap="onClose" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"></view>
-<view class="dw {{customerMode ? 'dw--customer' : ''}} {{compact ? 'dw--compact' : ''}}" style="--cy-drawer-top:{{panelTop}}px;--cy-drawer-max-height:calc(100vh - {{panelTop}}px)">
+<view class="dw {{customerMode ? 'dw--customer' : ''}} {{compact ? 'dw--compact' : ''}} {{plain ? 'dw--plain' : ''}}" style="--cy-drawer-top:{{panelTop}}px;--cy-drawer-max-height:calc(100vh - {{panelTop}}px)">
   <view class="dw-head">
     <view class="dw-head-text">
       <text class="dw-title">{{ title }}</text>

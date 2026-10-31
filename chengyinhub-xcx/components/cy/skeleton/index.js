@@ -1,5 +1,5 @@
 // 统一加载骨架屏:首屏 loading 期间占位,避免白屏→突现。
-// type:旧档 list/card/detail/amount；新档 feed-card/map-card/merchant-metric/route-timeline/form-section/ticket。
+// type:旧档 list/card/detail/amount；新档 feed-card/map-card/merchant-metric/merchant-insight/route-timeline/form-section/ticket。
 // count: list/card 重复几条(默认 list=4 / card=2,由使用方传)
 const reducedMotionBehavior = require('../../../behaviors/reduced-motion.js');
 const roleGuard = require('../../../utils/roleGuard.js');

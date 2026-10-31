@@ -218,7 +218,7 @@
       </view>
     </view>
 
-    <cy-merchant-desk wx:if="{{merchantAccess.active}}" access="{{merchantAccess}}" />
+    <!-- 2026-10-30 业主走查:W8 工程面板(商品与履约 / 门店与核销范围 / 读取门店与营业时段 / 门店位置与营业设置 / 查看供货与合作)已整件删除 -->
 
     <!-- BL-85 开通前置检查(只读,GET /api/merchant/ops/prerequisites):只列未完成项;
          全部完成或无数据时整块不显示。沿用「我的消息」区块结构,不新造样式。 -->

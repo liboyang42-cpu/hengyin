@@ -183,7 +183,7 @@ test('点推荐卡带 topicId 进广场;非法 id 退回纯列表', () => {
   assert.equal(navigated[1], '/pages/merchant/coop-center/index');
 });
 
-test('推荐卡本体、卡面场次行、「查看全部」三者都对上', () => {
+test('推荐卡本体、卡面场次行对上,不放「查看全部」', () => {
   const wxml = read('pages/merchant/marketing/ai-insight/index.wxml');
   // 2026-10-22 owner:点卡先展开详情弹层,弹层主按钮再带 topicId 去合作中心
   assert.match(wxml, /class="tcard" id="tc-\{\{index\}\}" wx:for="\{\{recTopics\}\}" wx:key="topicId" bindtap="openTopic"\s+data-idx="\{\{index\}\}"/);
@@ -192,7 +192,7 @@ test('推荐卡本体、卡面场次行、「查看全部」三者都对上', ()
   // 同名主题靠点开后的详情弹层「场次 · 主办」一行分开(metaText 仍由 _decorateTopics 生成,下方负控照旧钉它)
   assert.doesNotMatch(wxml, /class="tcard-stat/, '卡面不再渲染场次/主办');
   assert.match(wxml, /<text class="ts-k">场次 · 主办<\/text><text class="ts-v">\{\{sheetTopic\.metaText\}\}<\/text>/, '场次/主办改在详情弹层里');
-  assert.match(wxml, /class="sec-link" bindtap="goCoopCenter"/, '「查看全部」仍去完整列表');
+  assert.doesNotMatch(wxml, /class="sec-link" bindtap="goCoopCenter"/, '2026-10-30 业主:推荐主题只横滑,不放「查看全部」');
 });
 
 test('负控:卡面改回只渲染名字时,场次断言必须真红', () => {

@@ -3,7 +3,7 @@ const merchantTheme = require('../../../../utils/merchant-theme.js');
 const { merchantHomeUrl } = require('../../../../utils/merchant-home-link.js');
 const { toTimestamp, chinaParts } = require('../../../../utils/datetime.js');
 const { failureStatus, retryLogin, recoverReadSession } = require('../../../../utils/session/login-reload.js');
-const { readReducedMotion } = require('../../../../utils/motion-preference.js');
+const { readReducedMotion } = require('../../../../utils/motion-preference.js'); const identitySync = require('../../../../utils/identity-sync.js'); // 2026-10-30 D05:换 Logo / 店名后本页同步
 
 // 推荐主题 / 空态引导都去合作中心申请承接。
 // 2026-09-18 UI-11:按用户稿删掉「建议活动」区块后,suggestion.type 路由表随之退场。
@@ -71,7 +71,7 @@ Page({
     ai: null,             // AI 解读(可为 null 的降级层)
     // aiError 已撤(2026-10-23,见 load 成功分支注释)
     generatedAt: '',
-    storeName: '',        // 页头问候「Hi，店名」
+    storeName: '', greetWord: '你好', // 页头问候「早上好，店名」(2026-10-30 D05:按时段换问候语)
     storeLogo: '',        // 页头店铺头像(商家 Logo)
     factState: 'unknown', // unknown=字段缺失 | empty=服务端明确全零 | ready=有真实事实
     valueCard: null,      // 首屏归因价值卡:城瘾为你带来 N 位玩家/M 次打卡/K 单核销 + 核销进度 + 环比
@@ -112,7 +112,7 @@ Page({
     this._hidden = false;
     const reducedMotion = readReducedMotion();
     if (this.data.reducedMotion !== reducedMotion) this.setData({ reducedMotion });
-    merchantTheme.merchantPageShow();
+    merchantTheme.merchantPageShow(); this._syncGreeting();
     // 首次 onShow 紧跟 onLoad，不重复请求；以后每次返回都让服务端重新确认商家资格。
     const memberId = String(typeof app.getUserID === 'function' ? (app.getUserID() || '') : '');
     const scopeChanged = this._dataMemberId !== undefined && this._dataMemberId !== memberId;
@@ -140,7 +140,7 @@ Page({
   onUnload() {
     this._unloaded = true;
     this._stopMotion();
-    this._requestEpoch = (this._requestEpoch || 0) + 1;
+    this._requestEpoch = (this._requestEpoch || 0) + 1; if (this._offIdentity) this._offIdentity();
     merchantTheme.merchantPageRestore();
   },
 
@@ -724,6 +724,23 @@ Page({
   },
 
   goCoopCenter() { wx.navigateTo({ url: COOP_CENTER_ROUTE }); },
+
+  // 2026-10-30 D05(业主:头像要同步、招呼语换一句话):问候语按北京时间时段;品牌中心刚换的 Logo / 店名先盖上,接口回读兜底。
+  _syncGreeting() {
+    const hour = (chinaParts(Date.now()) || {}).hours || 0;
+    const greetWord = hour < 5 ? '晚上好' : hour < 11 ? '早上好' : hour < 13 ? '中午好' : hour < 18 ? '下午好' : '晚上好';
+    if (this.data.greetWord !== greetWord) this.setData({ greetWord });
+    this._applyIdentity(identitySync.latestIdentity('merchant'));
+    if (!this._offIdentity) this._offIdentity = identitySync.onIdentityChange((evt) => { if (evt && evt.scope === 'merchant') this._applyIdentity(evt.patch); });
+  },
+  _applyIdentity(patch) {
+    if (!patch || this._unloaded) return;
+    // 2026-10-31 合 master:页头头像改读 storeLogo(M-21 复查),品牌中心换的 Logo 直接盖到 storeLogo
+    const storeLogo = patch.logo || this.data.storeLogo || '';
+    const storeName = patch.name || this.data.storeName;
+    if (storeLogo === this.data.storeLogo && storeName === this.data.storeName) return;
+    this.setData({ storeLogo, storeName });
+  },
 
 
 });

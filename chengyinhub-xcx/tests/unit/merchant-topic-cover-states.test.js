@@ -49,6 +49,8 @@ function merchantInfoPageFrom(source) {
       }
       if (request === '../../../utils/media-preview.js') return loadMediaPreview({ previewImage() {} });
       if (request === '../utils/code-text.js') return require('../../pages/topic/utils/code-text.js');
+      // 2026-10-30 走查 v2 R09:分润明细口径
+      if (request === '../../../utils/profit-split.js') return require('../../utils/profit-split.js');
       throw new Error('unexpected require: ' + request);
     },
   };

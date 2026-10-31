@@ -42,7 +42,8 @@ const CASES = [
   ['goAddStations', {}, '/pages/publish/fabu/index?id=88'],
   ['goInviteMerchant', {}, '/pages/coop/nearby/index?topicId=88'],
   ['goReceivedApplies', {}, '/pages/coop/list/index?tab=received'],
-  ['goFinance', {}, '/subpackageA/pages/assetcenter/earnings/index?scene=merchant-profit&topicId=88'],
+  // 走查 v2 R09(2026-10-30):工作台「结算」改为就地弹分润明细,只有弹窗里的「全部收益」才跳账户收益
+  ['goAllEarnings', {}, '/subpackageA/pages/assetcenter/earnings/index?theme=merchant'],
   ['goLedger', {}, '/pages/merchant/ledger/index?view=redemptions'],
   ['goLedger', { operationScope: 'CLUB' }, '/pages/club/enroll/index?clubId=9&topicId=88'],
   ['goEditRegistration', { stateKey: 'pending' }, '/pages/topic/merchantapply/index?mode=1&id=5'],

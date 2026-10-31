@@ -90,6 +90,13 @@ Page({
     // M-28:门店信息版式 —— 行默认只读,点底部「编辑」才可改;首次进入给一段「这是什么」的说明
     editing: false,
     introVisible: false,
+    introStep: 0,
+    introSteps: [
+      { key: 'avatar', a: 'convenience_store', b: 'sparkles', t: '它是你的店在城瘾里的分身', s: '出现在漫游地图和店铺主页上，替你招呼路过的玩家' },
+      { key: 'greet', a: 'waving_hand', b: 'speech_balloon', t: '玩家路过，它先打招呼', s: '按你写的招呼语和性格说话' },
+      { key: 'menu', a: 'fork_and_knife_with_plate', b: 'alarm_clock', t: '菜单和营业时间它都答得上', s: '读的是你门店资料里的内容' },
+      { key: 'persona', a: 'name_badge', b: 'performing_arts', t: '起个名字、选个性格就能用', s: '温柔、可爱、毒舌，随时可改' },
+    ],
     // M-28:麦克风权限被拒后,引导去设置页打开 scope.record
     voiceNeedSetting: false,
     auditStatus: null,
@@ -144,8 +151,12 @@ Page({
     if (!introSeen) this.setData({ introVisible: true });
     this._loadProfile();
   },
+  nextIntro() {
+    if (this.data.introStep < this.data.introSteps.length - 1) { this.setData({ introStep: this.data.introStep + 1 }); return; }
+    this.dismissIntro();
+  },
   dismissIntro() {
-    this.setData({ introVisible: false });
+    this.setData({ introVisible: false, introStep: 0 });
     try { if (typeof wx.setStorageSync === 'function') wx.setStorageSync(INTRO_SEEN_KEY, 1); } catch (e) { /* 存不下只是下次再说明一遍 */ }
   },
   toggleEditing() {

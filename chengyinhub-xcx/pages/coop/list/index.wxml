@@ -170,9 +170,7 @@
       {{officialErrorText}}<text class="inline-retry" bindtap="loadOfficialInvites" aria-role="button" aria-label="重试加载官方邀约" hover-class="cy-pressed" hover-stay-time="80">重试</text>
     </view>
     <!-- 邀约提醒订阅须在点击手势内请求;空列表时更需要,所以不挂列表条件 -->
-    <view class="inline-state">
-      新邀约到达时提醒我<cy-btn class="alert-btn" variant="ghost" size="sm" bindtap="enableInviteAlerts" accessibilityLabel="开启合作邀约提醒">开启</cy-btn>
-    </view>
+    <!-- 走查 v2 IMG_0752(2026-10-30):邀约提醒开关挪到消息页「协作邀请」标题旁(协作统一进消息),本页不再放 -->
     <cy-empty size="lg" style="flex:1;min-height:0;" kind="empty" wx:if="{{chapterState === 'ready' && !chapterReceived.length && receivedApplyState === 'ready' && !receivedApplyErrorText && !receivedRegErrorText && !officialErrorText && !listErrorText && !received.length && !receivedApplies.length && !receivedRegs.length && !officialInvites.length}}" fill title="还没有收到协作邀请" cta="去发起邀请" bindcta="goInvite" />
     </block>
   </block>

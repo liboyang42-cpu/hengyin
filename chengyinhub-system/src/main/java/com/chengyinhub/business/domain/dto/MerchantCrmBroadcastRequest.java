@@ -20,6 +20,8 @@ public class MerchantCrmBroadcastRequest {
     private List<String> groups;
     /** 逐个选中的客户会员 id;仅 MEMBERS 使用,且必须落在当前筛选结果内。 */
     private List<Long> memberIds;
+    /** 只发给这个主题的买票玩家(走查 v2 R07,主题工作台客户弹窗「定向广播」);空 = 不按主题收窄。 */
+    private Long topicId;
     private String content;
     private String requestId;
 
@@ -41,6 +43,8 @@ public class MerchantCrmBroadcastRequest {
     public void setGroups(List<String> value) { groups = value; }
     public List<Long> getMemberIds() { return memberIds; }
     public void setMemberIds(List<Long> value) { memberIds = value; }
+    public Long getTopicId() { return topicId; }
+    public void setTopicId(Long value) { topicId = value; }
     public String getContent() { return content; }
     public void setContent(String value) { content = value; }
     public String getRequestId() { return requestId; }

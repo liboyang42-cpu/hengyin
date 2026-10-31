@@ -45,16 +45,13 @@
   max-height: calc(70vh - 240rpx);
 }
 
+/* 走查 v2 R07(业主 2026-10-30):客户弹窗和其他弹窗一样拉到胶囊下沿,不再卡 70vh */
 .dw--customer {
-  top: auto;
-  bottom: 0;
-  height: min(70vh, var(--cy-drawer-max-height, 70vh));
-  max-height: min(70vh, var(--cy-drawer-max-height, 70vh));
   overflow: hidden;
 }
 
 .dw--customer .dw-head {
-  padding: 96rpx 40rpx 0; /* ds-ok: 标题 x=20, y=374 */
+  padding: 40rpx 40rpx 0; /* ds-ok: 走查 v2 R07 定稿 r_cust3:标题贴近弹窗上沿,x=20 */
 }
 
 .dw--customer .dw-title {
@@ -70,10 +67,12 @@
 }
 
 .dw--customer .dw-scroll {
-  flex: 0 1 auto;
-  max-height: calc(70vh - 240rpx);
-  padding: 10rpx 40rpx 0; /* ds-ok: Figma 内容 x=20 */
+  flex: 1;
+  min-height: 0;
+  padding-top: 10rpx;
 }
+/* 走查 v2 R07:左右留白放到内容层(border-box),scroll-view 自身不再 100% 宽再加内距、整块溢出屏幕 */
+.dw--customer .dw-scroll-content { padding-left: 40rpx; padding-right: 40rpx; } /* ds-ok: Figma 内容 x=20 */
 .dw-head {
   flex: none;
   display: flex;
@@ -165,3 +164,10 @@
 .dw--compact .dw-head { align-items: center; }
 .dw--compact .dw-head-text { padding-left: var(--cy-space-4); }
 .dw--compact .dw-title { font-size: var(--cy-type-sheet-title); }
+
+/* 走查 v2 R08:普通底部弹窗 —— 贴底(不浮)、白底、标题居中、按内容撑高到胶囊下沿为止 */
+.dw--plain { top: auto; left: 0; right: 0; bottom: 0; max-height: calc(100vh - var(--cy-drawer-top, 136rpx)); border-radius: var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0; background: var(--cy-bg-card); }
+.dw--plain .dw-scroll { flex: 0 1 auto; }
+.dw--plain .dw-head { justify-content: center; position: relative; }
+.dw--plain .dw-head-text { flex: none; padding: 0; text-align: center; }
+.dw--plain .dw-close { position: absolute; right: var(--cy-space-3); top: 50%; transform: translateY(-50%); }

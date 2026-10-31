@@ -52,8 +52,9 @@ test('项目客户抽屉贴住安全区且只有一层面板背景', () => {
 
   assert.doesNotMatch(wxml, /class="dw-stack"/, '导航下的长面板不得再向上伸出装饰堆叠层');
   assert.match(wxml, /--cy-drawer-top:\{\{panelTop\}\}px/, '顶边必须消费胶囊实测坐标');
-  assert.match(wxss, /\.dw--customer\s*\{[^}]*bottom:\s*0;[^}]*overflow:\s*hidden;/s,
-    '客户抽屉必须贴底并裁掉圆角外溢');
+  // 走查 v2 R07(业主 2026-10-30):客户弹窗和其他长面板一样到胶囊下沿,只保留裁切,不再单独卡 70vh
+  assert.match(wxss, /\.dw--customer\s*\{[^}]*overflow:\s*hidden;/s, '客户抽屉裁掉圆角外溢');
+  assert.doesNotMatch(wxss, /\.dw--customer\s*\{[^}]*70vh/s, '客户抽屉不再单独限高 70vh');
   assert.match(wxml, /<view class="dw-scroll-pad"><\/view>/,
     '客户抽屉安全区应留在同色面板内部');
   assert.match(wxss, /\.dw\s*\{[^}]*top:\s*var\(--cy-drawer-top[^}]*bottom:\s*0;[^}]*overflow:\s*hidden;/s, '项目长面板避开导航并贴底，正文独立滚动');
@@ -68,13 +69,15 @@ test('主办与承接两套主题名单都使用客户和核销口径', () => {
   ]) {
     const wxml = read(file);
     assert.match(wxml, /<project-drawer[^>]*title="客户"[^>]*customer-mode="\{\{true\}\}"/s, `${file} 应使用客户弹窗外壳`);
-    assert.match(wxml, />已核销 <text class="dsum-n"/);
-    assert.match(wxml, />待核销 <text class="dsum-n"/);
-    assert.doesNotMatch(wxml, />已到店 <text class="dsum-n"/);
-    assert.doesNotMatch(wxml, />未到店 <text class="dsum-n"/);
+    // 走查 v2 R07(2026-10-30):汇总改成数字格(数字在上、名称在下),核销口径的名称不变
+    assert.match(wxml, /class="dsum-l">已核销</);
+    // 2026-10-30 走查 v2 R07(业主定稿 r_cust3):汇总格写「还没到店」,行内胶囊写「未到店」
+    assert.match(wxml, /class="dsum-l">还没到店</);
+    assert.doesNotMatch(wxml, /class="dsum-l">待核销</);
     assert.doesNotMatch(wxml, /class="drun"/);
     assert.doesNotMatch(wxml, /\{\{ p\.ticketNo \}\}/);
-    assert.match(wxml, /class="dr-sub">\{\{ g\.when \}\}<\/text>/);
+    // 走查 v2 R07:核销时间并进场次那一行
+    assert.match(wxml, /class="dr-sub">\{\{ p\.when \}\}<block wx:if="\{\{ p\.arrivedTimeText \}\}"> · \{\{ p\.arrivedTimeText \}\} 核销<\/block><\/text>/);
     assert.match(wxml, /class="dr-phone" wx:if="\{\{ p\.phone \}\}"/,
       `${file} 每位有权限查看电话的客户都应显示电话行`);
     assert.match(wxml, /data-act="copyText"[^>]*data-text="\{\{ p\.phone \}\}"[^>]*aria-label="复制电话"/,
@@ -95,8 +98,9 @@ test('主办与承接两套主题名单都使用客户和核销口径', () => {
   assert.doesNotMatch(joinWxml, /actions="\{\{ playerActions \}\}"/,
     '承接方已有页面内真实入口，客户抽屉不重复造入口');
   assert.match(pageJs, /playerActions:\s*\[\]/);
-  assert.match(pageJs, /this\.data\.role === 'host'[\s\S]*key: 'goLedger'[\s\S]*label: '查看全店核销记录'/,
-    '页面只能为主办方客户抽屉下发查看记录动作，且 CU-M-183 要求写明全店作用域');
+  // 2026-10-30 走查 v2 R07(业主定稿):客户弹窗不再下发台账入口,最后一行是「定向广播」(主办商家)
+  assert.match(read('pages/topic/components/project-host/index.wxml'), /data-act="openBroadcast"/,
+    '主办客户弹窗最后一行是定向广播');
   assert.match(pageWxml, /<project-host[\s\S]*playerActions="\{\{ playerActions \}\}"[\s\S]*bind:act="onJoinAct"/,
     '主办页必须把查看记录动作传入组件');
 

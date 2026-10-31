@@ -229,7 +229,10 @@ test('G-9 余额只承载金额，四个动作在余额下方，次级入口收�
   assert.doesNotMatch(card, /cy-cell|ae-action/, '入口不得留在余额区内')
   const actions = wxml.slice(wxml.indexOf('<view class="ae-actions">'), wxml.indexOf('<cy-empty'))
   for (const t of ['提现', '明细', '分析', '更多']) assert.match(actions, new RegExp(`ae-action[^>]*[\\s\\S]*?<text>${t}</text>`))
-  const more = wxml.slice(wxml.indexOf('<cy-sheet inset show="{{moreShow}}"'))
+  // 走查 v2 R10(2026-10-30):「更多」贴底(不再 inset),不重复外面已有的结算明细
+  assert.ok(wxml.indexOf('<cy-sheet show="{{moreShow}}"') >= 0, '更多弹窗与其他弹窗同样贴底')
+  const more = wxml.slice(wxml.indexOf('<cy-sheet show="{{moreShow}}"'))
+  assert.doesNotMatch(more, /openSettlement/, '结算明细不在更多里重复')
   assert.match(more, /class="tm-row" bindtap="openWithdrawHistory"/, '提现记录必须保留入口')
   assert.match(more, /class="tm-row" bindtap="openInvite"/, '邀请记录必须保留入口')
   assert.match(wxml, /<cy-earnings-overview merchant="\{\{theme === 'merchant'\}\}" bind:detail="openIncomeDetail" \/>/)

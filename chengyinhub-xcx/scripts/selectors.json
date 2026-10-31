@@ -888,7 +888,7 @@
   ]
  },
  "C12b": {
-  "selector": ".value-card, .ai-card",
+  "selector": ".value-card, .ai-row",
   "min": 2,
   "_why": "店铺参谋正常态必须同时呈现基础经营事实与 AI 解读。"
  },

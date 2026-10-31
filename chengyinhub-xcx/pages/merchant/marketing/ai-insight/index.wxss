@@ -84,8 +84,9 @@
 }
 .greet-b { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--cy-space-1); }
 .greet-line {
-  font-size: 38rpx; /* ds-ok: 同工作台问候行稿面 19px */
-  line-height: 1.4;
+  font-size: 48rpx; /* ds-ok: 2026-10-30 业主 D05「招呼语字体大一点」24px */
+  font-weight: 600;
+  line-height: 1.35;
   letter-spacing: -1rpx;
   color: var(--cy-text-title);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -535,3 +536,18 @@
 }
 .ts-btn--ghost { flex: 0 0 38%; background: var(--cy-bg-page); color: var(--cy-text-title); }
 
+
+/* 走查 v2 R11:经营解读横滑卡(机会绿、问题橙),点阵装饰用 radial-gradient 平铺 */
+.ai-row { margin: 0 calc(-1 * var(--cy-page-x)); width: auto; white-space: nowrap; }
+.ai-track { display: flex; gap: var(--cy-space-3); padding: 0 var(--cy-page-x) var(--cy-space-3); }
+.ai-pc { flex: none; width: 496rpx; border-radius: var(--cy-radius-2xl); overflow: hidden; white-space: normal; display: flex; flex-direction: column; padding-bottom: var(--cy-space-5); }
+.ai-pc--op { background: #DDF3E6; color: #14532D; } /* ds-ok: 机会卡配色,按业主定稿原型 */
+.ai-pc--pb { background: #FFE9D6; color: #6B2F05; } /* ds-ok: 问题卡配色,按业主定稿原型 */
+.ai-pc-art { height: 200rpx; background-size: 22rpx 22rpx; } /* ds-ok: 点阵装饰 */
+.ai-pc--op .ai-pc-art { background-image: radial-gradient(circle, rgba(34, 165, 91, 0.55) 4rpx, transparent 5rpx); } /* ds-ok: 同上 */
+.ai-pc--pb .ai-pc-art { background-image: radial-gradient(circle, rgba(240, 122, 26, 0.55) 4rpx, transparent 5rpx); } /* ds-ok: 同上 */
+.ai-pc-tag { align-self: flex-start; margin: var(--cy-space-4) var(--cy-space-5) 0; padding: 4rpx 18rpx; border-radius: var(--cy-radius-pill); font-size: var(--cy-font-caption); font-weight: 700; color: #fff; } /* ds-ok: 同上 */
+.ai-pc--op .ai-pc-tag { background: #14532D; } /* ds-ok: 同上 */
+.ai-pc--pb .ai-pc-tag { background: #6B2F05; } /* ds-ok: 同上 */
+.ai-pc-txt { margin: var(--cy-space-3) var(--cy-space-5) 0; font-size: var(--cy-font-body); line-height: 1.55; font-weight: 600; }
+.ai-note { display: block; }

@@ -158,3 +158,4 @@ page {
 .inv:nth-child(7) { transition-delay: calc(var(--pm-l-s, 0) * 180ms), calc(var(--pm-l-s, 0) * 180ms), 0s, 0s; }
 .inv:nth-child(8) { transition-delay: calc(var(--pm-l-s, 0) * 210ms), calc(var(--pm-l-s, 0) * 210ms), 0s, 0s; }
 .inv:nth-child(n+9) { transition-delay: calc(var(--pm-l-s, 0) * 240ms), calc(var(--pm-l-s, 0) * 240ms), 0s, 0s; }
+

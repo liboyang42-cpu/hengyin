@@ -675,3 +675,105 @@
 }
 
 .more-card { margin-bottom: var(--cy-space-3); }
+
+/* 走查 v2 R04/R16:底部进度(参考 shedsgns 视频:洋红勾、蓝色状态字、子项分支、最后一步蓝锁 + 琥珀标签) */
+.pg { margin: var(--cy-space-5) var(--cy-page-x) var(--cy-space-6); padding: var(--cy-space-4) var(--cy-space-4) var(--cy-space-1); border-radius: var(--cy-radius-xl); background: var(--cy-bg-card); }
+.pg-h { margin-bottom: var(--cy-space-3); }
+.pg-t { font-size: var(--cy-type-section-title); font-weight: 700; color: var(--cy-text-title); }
+.pg-row { display: flex; gap: var(--cy-space-3); padding-bottom: var(--cy-space-4); }
+.pg-rail { width: 36rpx; flex: none; display: flex; flex-direction: column; align-items: center; }
+.pg-dot { width: 36rpx; height: 36rpx; border-radius: 50%; flex: none; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: var(--cy-bg-card); box-shadow: 0 0 0 2rpx rgba(0, 0, 0, 0.06), 0 4rpx 12rpx rgba(0, 0, 0, 0.08); /* ds-ok: 进度圆点浮起,按参考 */ color: var(--cy-text-inverse, #fff); }
+.pg-dot--done { background: #E5338F; box-shadow: none; } /* ds-ok: 进度洋红,按业主参考视频 */
+.pg-dot--run { border: 4rpx solid #E5338F; box-shadow: 0 0 0 8rpx rgba(229, 51, 143, 0.14); } /* ds-ok: 同上 */
+.pg-dot--lock { border: 3rpx solid #2F7FEA; box-shadow: none; color: #2F7FEA; } /* ds-ok: 锁定步蓝色,按参考 */
+.pg-line { flex: 1; width: 4rpx; min-height: 28rpx; margin-top: 4rpx; background: var(--cy-bg-card-2); }
+.pg-line--done { background: #E5338F; } /* ds-ok: 同上 */
+.pg-row:last-child .pg-line { display: none; }
+.pg-m { flex: 1; min-width: 0; }
+.pg-top { display: flex; align-items: center; justify-content: space-between; gap: var(--cy-space-2); min-height: 36rpx; }
+.pg-lab { font-size: var(--cy-font-body); font-weight: 600; color: var(--cy-text-title); }
+.pg-row--todo .pg-lab { color: var(--cy-text-tertiary); font-weight: 500; }
+.pg-row--done .pg-lab { color: var(--cy-text-secondary); font-weight: 500; }
+.pg-row--lock .pg-lab { color: var(--cy-text-title); font-weight: 600; }
+.pg-stat { font-size: var(--cy-font-label); font-weight: 600; color: #2F7FEA; } /* ds-ok: 状态蓝字,按参考 */
+.pg-ask { font-size: var(--cy-font-caption); font-weight: 600; color: #B8650A; background: #FDEBD3; padding: 4rpx 18rpx; border-radius: 12rpx; } /* ds-ok: 琥珀标签,按参考 */
+.pg-sub { margin-top: var(--cy-space-2); display: flex; flex-direction: column; gap: var(--cy-space-2); }
+.pg-si { display: flex; align-items: center; gap: var(--cy-space-2); font-size: var(--cy-font-label); color: var(--cy-text-secondary); }
+.pg-si-dot { width: 10rpx; height: 10rpx; border-radius: 50%; flex: none; background: var(--cy-bg-card-2); }
+.pg-si--now { color: var(--cy-text-title); }
+.pg-si--now .pg-si-dot { background: #E5338F; } /* ds-ok: 同上 */
+.pg-si-t { flex: 1; min-width: 0; }
+.pg-go { flex: none; font-weight: 600; color: #2F7FEA; } /* ds-ok: 同上 */
+
+/* 走查 v2 R14:自由探索待俱乐部承办提示 */
+.gate { display: flex; align-items: center; gap: var(--cy-space-3); margin: var(--cy-space-3) var(--cy-page-x) 0; padding: var(--cy-space-4); border-radius: var(--cy-radius-xl); background: var(--cy-bg-card); }
+.gate-t { flex: 1; min-width: 0; font-size: var(--cy-font-body); font-weight: 600; color: var(--cy-text-title); line-height: 1.4; }
+.gate-btn { flex: none; height: 64rpx; line-height: 64rpx; padding: 0 var(--cy-space-4); border-radius: var(--cy-radius-pill); background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); font-size: var(--cy-font-label); font-weight: 600; }
+
+/* 进度对齐定稿原型:做完是实心洋红圆 + 白勾(CSS 画),表头右侧写类型 · 身份,子项从当前步分出去 */
+.pg-h { display: flex; align-items: baseline; justify-content: space-between; }
+.pg-hr { font-size: var(--cy-font-caption); color: var(--cy-text-tertiary); }
+.pg-dot--done { position: relative; }
+.pg-dot--done::after { content: ""; position: absolute; left: 50%; top: 46%; width: 12rpx; height: 7rpx; margin: -5rpx 0 0 -6rpx; border-left: 3rpx solid #fff; border-bottom: 3rpx solid #fff; transform: rotate(-45deg); } /* ds-ok: 白勾 */
+.pg-row { padding-bottom: var(--cy-space-5); }
+.pg-sub { position: relative; margin-left: -44rpx; padding-left: 48rpx; }
+.pg-sub::before { content: ""; position: absolute; left: 16rpx; top: -20rpx; bottom: 14rpx; width: 18rpx; border-left: 3rpx solid var(--cy-bg-card-2); border-bottom: 3rpx solid var(--cy-bg-card-2); border-bottom-left-radius: 18rpx; }
+.pg-si--ok .pg-si-dot { background: #BDBDC4; } /* ds-ok: 已就绪子项灰点 */
+.pg-go-ico { flex: none; margin-left: -6rpx; color: #2F7FEA; } /* ds-ok: 同上 */
+
+/* 走查 v2 R08:更多 = 白底发丝线行(Threads 式),危险项红字 */
+.more-group { padding: 0 var(--cy-space-2); }
+.more-group + .more-group { border-top: 12rpx solid var(--cy-bg-page); }
+.more-group .dpick { min-height: 108rpx; padding: 0 var(--cy-space-3); background: transparent; border-radius: 0; }
+.more-group .dpick-name { font-size: var(--cy-font-body); font-weight: 500; }
+
+/* 走查 v2 R05:俱乐部弹窗顶部三格 + 行尾「邀约 / 主页」 */
+.cs-sum { display: flex; gap: var(--cy-space-2); margin-bottom: var(--cy-space-3); }
+.cs-sum-i { flex: 1; display: flex; flex-direction: column; padding: var(--cy-space-3) var(--cy-space-4); border-radius: var(--cy-radius-lg); background: var(--cy-bg-card); }
+.cs-sum-n { font-size: var(--cy-font-display); font-weight: 800; color: var(--cy-text-title); font-variant-numeric: tabular-nums; }
+.cs-sum-l { font-size: var(--cy-font-caption); color: var(--cy-text-secondary); }
+.cs-pill { flex: none; height: 60rpx; line-height: 60rpx; padding: 0 var(--cy-space-4); margin-left: var(--cy-space-2); border-radius: var(--cy-radius-pill); background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); font-size: var(--cy-font-caption); font-weight: 600; }
+.cs-pill--g { background: var(--cy-bg-card-2); color: var(--cy-text-title); }
+.cs-list .dr { align-items: center; }
+.cs-list .dr-avatar { width: 80rpx; height: 80rpx; }
+.cs-list .dr-name, .cs-list .dr-sub { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cs-list .dr-line1 { flex-wrap: nowrap; }
+.cs-list .dr-line1 .dr-name { flex: 0 1 auto; min-width: 0; }
+.cs-list .dr-line1 .dr-tag { flex: none; }
+
+/* 走查 v2 R06:还没人接的站用主题图(不再是加号框) */
+.dn-img { width: 88rpx; height: 88rpx; flex: none; border-radius: var(--cy-radius-md); background: var(--cy-bg-card-2); }
+.dn-img--none { display: flex; align-items: center; justify-content: center; color: var(--cy-text-tertiary); }
+.dn .dn-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* 走查 v2 R07(业主 2026-10-30 定稿 r_cust3):客户弹窗——数字格汇总、自适应宽度的筛选胶囊、
+   行内头像 / 名字 + 场次 / 右侧状态胶囊,行间发丝线。核销时间并进场次那一行。 */
+.dsum { display: flex; gap: 16rpx; }
+.dsum-i { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8rpx; padding: 24rpx 24rpx 22rpx; border-radius: var(--cy-radius-lg); background: var(--cy-bg-card); }
+.dsum-i .dsum-n { font-size: var(--cy-font-display); line-height: 52rpx; font-weight: 700; color: var(--cy-text-title); font-variant-numeric: tabular-nums; }
+.dsum-l { font-size: var(--cy-font-caption); color: var(--cy-text-secondary); white-space: nowrap; }
+.dfil { gap: 16rpx; margin-top: 28rpx; flex-wrap: wrap; }
+.dfil-item { flex: none; padding: 0 28rpx; height: 64rpx; background: var(--cy-bg-card); color: var(--cy-text-title); }
+.player-list { margin-top: 16rpx; }
+.player-row { min-height: 0; padding: 28rpx 0; gap: 24rpx; align-items: center; }
+.player-row .dr-avatar { width: 80rpx; height: 80rpx; }
+.player-row .dr-text { margin-top: 0; min-width: 0; }
+.player-row .dr-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.player-row .dr-sub { margin-top: 6rpx; color: var(--cy-text-secondary); }
+.player-row .dr-state { flex: none; padding: 6rpx 18rpx; border-radius: var(--cy-radius-pill); font-weight: 600; }
+.player-row .dr-state--pending { color: var(--cy-color-status-warning); background: var(--cy-color-status-warning-soft); }
+.player-row .dr-state--contacted { color: var(--cy-text-secondary); background: var(--cy-bg-card-2); }
+.player-row .dr-state--arrived,
+.player-row .dr-state--redeemed { color: var(--cy-success); background: var(--cy-color-status-success-soft); }
+.player-row .dr-state--refunded { color: var(--cy-danger); background: var(--cy-color-status-danger-soft); }
+.dfil-item.dfil-item--on { background: var(--cy-text-title); color: var(--cy-btn-solid-fg); }
+
+/* 走查 v2 R07:客户弹窗最后一行「定向广播」 */
+.bcast-row { display: flex; align-items: center; gap: 12rpx; margin-top: 24rpx; padding: 32rpx; border-radius: var(--cy-radius-lg); background: var(--cy-bg-card); color: var(--cy-text-tertiary); }
+.bcast-t { flex: none; font-size: var(--cy-font-body); font-weight: 600; color: var(--cy-text-title); }
+.bcast-s { flex: 1; min-width: 0; text-align: right; font-size: var(--cy-font-caption); color: var(--cy-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* 走查 v2 W2-07 / F7:客户名单段头(还没到店 / 已核销)与未售票态 */
+.pl-h { display: flex; align-items: baseline; gap: 12rpx; margin-top: var(--cy-space-4); font-size: var(--cy-font-label); font-weight: 600; color: var(--cy-text-secondary); }
+.pl-h-n { font-variant-numeric: tabular-nums; color: var(--cy-text-tertiary); }
+.dempty--closed { font-size: var(--cy-font-subtitle); font-weight: 600; color: var(--cy-text-title); }

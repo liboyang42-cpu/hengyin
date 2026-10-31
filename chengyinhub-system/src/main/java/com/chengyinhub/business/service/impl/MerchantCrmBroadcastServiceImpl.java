@@ -407,6 +407,13 @@ public class MerchantCrmBroadcastServiceImpl implements IMerchantCrmBroadcastSer
             if (tagId <= 0) throw new ServiceException("标签无效", 400);
             query.setTagId(tagId);
         }
+        // 走查 v2 R07:主题工作台客户弹窗只发本主题买票玩家。归属不另判 —— 名册口径
+        // (OwnedRegistrationScope)本来就只含本商家发布或承接的主题,别人的主题收窄出来是 0 人。
+        Long topicId = request == null ? null : request.getTopicId();
+        if (topicId != null) {
+            if (topicId <= 0) throw new ServiceException("主题无效", 400);
+            query.setTopicId(topicId);
+        }
         Integer sourceType = request == null ? null : request.getSourceType();
         if (sourceType != null) {
             if (sourceType != 1 && sourceType != 2) throw new ServiceException("来源类型无效", 400);
@@ -492,6 +499,7 @@ public class MerchantCrmBroadcastServiceImpl implements IMerchantCrmBroadcastSer
         snapshot.put("keyword", query.getKeyword());
         snapshot.put("segment", query.getSegment());
         snapshot.put("tagId", query.getTagId());
+        snapshot.put("topicId", query.getTopicId());
         snapshot.put("sourceType", query.getSourceType());
         snapshot.put("sourceStart", query.getSourceStart());
         snapshot.put("sourceEnd", query.getSourceEnd());

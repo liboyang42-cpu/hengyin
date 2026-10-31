@@ -297,20 +297,10 @@ test('合作中心路线与官方活动都有 true-empty，并复用同一个刷
   assert.match(view, /!events\.length[^>]*title="还没有官方活动"[^>]*cta="刷新合作机会"/)
 })
 
-// 2026-09-15 入口随「邀约我的」tab 收进协作邀请「收到的」;回执走页内 actionReceipt(与本页其他动作同一出口)
-test('协作邀请「收到的」由受邀方主动点击开启邀约提醒，并消费授权结果', async () => {
-  const calls = []
-  const { page } = createPage('pages/coop/list/index.js', {}, {
-    requestSubscribeMessage(options) {
-      calls.push(options.tmplIds)
-      options.success({ [options.tmplIds[0]]: 'accept' })
-    },
-  })
-
-  await page.enableInviteAlerts()
-  assert.deepEqual(calls, [[TEMPLATES.coopInvited]])
-  assert.equal(page.data.actionReceipt, '已开启邀约提醒')
-  assert.match(read('pages/coop/list/index.wxml'), /bindtap="enableInviteAlerts"/)
+// 2026-10-30 走查 v2 IMG_0752:邀约提醒改成开关,挪到消息页「协作邀请」标题旁;协作邀请页不再放这一行
+test('邀约提醒开关在消息页协作邀请标题旁，协作邀请页不再重复', () => {
+  assert.match(read('subpackageB/pages/im/list/index.wxml'), /<cy-switch[^>]+bindchange="onInviteAlertChange"/)
+  assert.doesNotMatch(read('pages/coop/list/index.wxml').replace(/<!--[\s\S]*?-->/g, ''), /邀约提醒|enableInviteAlerts/)
 })
 
 test('收藏页只保留帖文与主题数据链，不回流退役活动与商家状态', () => {

@@ -409,6 +409,15 @@ Page({
     this._navigating = true; wx.navigateTo({ url: '/pages/topic/merchantinfo/merchantinfo?topicId=' + topicId + '&scope=' + scope, complete: () => { this._navigating = false; } });
   },
 
+  // 走查 v2 R03:点进现有主题详情页看章节 / 节点 / 玩法(同一 topicId,不改后端)
+  openTopicDetail() {
+    const inv = this.data.invite;
+    const topicId = inv && parseInviteId(inv.topicId);
+    if (!topicId || this._navigating) return;
+    this._navigating = true;
+    wx.navigateTo({ url: '/pages/topic/index/index?id=' + topicId, complete: () => { this._navigating = false; } });
+  },
+
   // 联系合作方:T19 已签约双方取/建 1:1 会话(后端 /api/coop/contact 复用 resolveToOwner+startSingle)
   contactPartner() {
     const ctx = this._captureContext();
