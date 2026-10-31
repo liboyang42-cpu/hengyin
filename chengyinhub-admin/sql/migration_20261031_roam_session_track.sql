@@ -8,7 +8,7 @@ SET @roam_session_track_exists := (
     SELECT COUNT(*) FROM information_schema.columns
       WHERE table_schema=DATABASE() AND table_name='roam_session' AND column_name='track_json');
 SET @roam_session_track_sql := IF(@roam_session_track_exists=0,
-    'ALTER TABLE roam_session ADD COLUMN track_json MEDIUMTEXT NULL COMMENT ''简化轨迹 [[lat,lng],...] ≤300 点;30 天随详细位置清空'' AFTER finish_result_json',
+    'ALTER TABLE roam_session ADD COLUMN track_json MEDIUMTEXT NULL COMMENT ''简化轨迹 [[lat,lng],...] ≤300 点;30 天随详细位置清空''',
     'SELECT 1');
 PREPARE roam_session_track_stmt FROM @roam_session_track_sql;
 EXECUTE roam_session_track_stmt;
