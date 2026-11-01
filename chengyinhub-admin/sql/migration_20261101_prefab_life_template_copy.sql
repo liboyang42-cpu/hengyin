@@ -14,6 +14,9 @@ UPDATE cms_member_template SET title = '边界:终章三选一' WHERE id = 137 A
 -- 2) 第三站限时打字的目标:测试串 hello world 换成本主题的母题「收到」
 UPDATE cms_member_template SET advanced_config_json = REPLACE(advanced_config_json, '"target":"hello world"', '"target":"收到"')
  WHERE id = 135 AND advanced_config_json LIKE '%"target":"hello world"%';
+-- 生产库里这一列是 MySQL JSON 规范化后的写法(冒号后带空格),两种写法都要换
+UPDATE cms_member_template SET advanced_config_json = REPLACE(advanced_config_json, '"target": "hello world"', '"target": "收到"')
+ WHERE id = 135 AND advanced_config_json LIKE '%"target": "hello world"%';
 UPDATE cms_topic_node SET description = '在写字楼外的公共人行道过一道检定,再限时打出那句「收到」。'
  WHERE id = 194 AND topic_id = 990059 AND description = '在写字楼外的公共人行道过一道检定,再限时打出 hello world。';
 
