@@ -442,6 +442,12 @@
       <text class="bcast-s">发给本主题的买票玩家</text>
       <cy-icon name="chevron-right" size="{{ 28 }}" />
     </view>
+    <!-- 2026-11-01 业主:俱乐部也要能发通知 —— 俱乐部主办走俱乐部群发通知,默认发给本主题这一场的报名玩家 -->
+    <view class="bcast-row" wx:if="{{ hostOwnerType === 'club' }}" catchtap="emit" data-act="openClubNotify" aria-role="button" aria-label="发通知" hover-class="cy-pressed" hover-stay-time="80">
+      <text class="bcast-t">发通知</text>
+      <text class="bcast-s">发给本主题的报名玩家</text>
+      <cy-icon name="chevron-right" size="{{ 28 }}" />
+    </view>
     </block>
   </project-drawer>
   <!-- ===== 叠层(2026-10-31 业主批准 P-6):都叠在抽屉上,不跳出主题 ===== -->

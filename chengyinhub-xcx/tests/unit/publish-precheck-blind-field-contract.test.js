@@ -129,3 +129,12 @@ test('免费发布不登记实名，改回收费后立即恢复实名门槛', ()
   assert.equal(page.data.identityRequired, true)
   assert.equal(page._identityReady(), false)
 })
+
+// 2026-11-01 生产走查:官方模板「预制人生」的地铁换乘通道 / 楼梯间被 AI 判成 error 级 timeline_conflict,
+// 「完成」被禁用。营业/开放时间、人流只是提醒:照常显示在提醒里,不挡发布。
+test('AI 报 error 级 timeline_conflict 只进提醒,不挡发布', () => {
+  const page = makePage([])
+  page._showPublishCheck([{ level: 'error', type: 'timeline_conflict', message: '节点涉及地铁换乘通道,需核实可走时段。' }], '')
+  assert.equal(page.data.publishCheck.blocking.length, 0)
+  assert.ok(page.data.publishCheck.advisory.some((item) => /换乘通道/.test(item.label)))
+})

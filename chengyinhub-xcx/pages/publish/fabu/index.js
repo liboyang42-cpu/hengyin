@@ -214,6 +214,8 @@ const IMG_ARR_MAX = 9; // 横版封面张数上限(与门店相册一致)
 const AI_QUOTA_HINT = '今日AI次数已用完';
 // AI 预检的输入(_buildPrecheckReq)里根本没有这些字段 ⇒ 模型的判断是凭空猜测,不能拿来阻断发布
 const AI_BLIND_ISSUE_TYPES = ['missing_cover'];
+// 只当提醒、模型标成 error 也不挡发布:营业/开放时间、人流(2026-11-01 走查里它把公共空间路线判成 error,官方模板都发不出去)
+const AI_ADVISORY_ISSUE_TYPES = ['timeline_conflict'];
 /* 结果面板终态的停留时长(cy-result-sheet 的 duration 默认也是 2000)。
    保存成功后要跳走,面板时长与跳转延时必须是同一个数 —— 分开写会漂成
    「面板还在播就被顶掉」或者「收完了还空等一截」。 */
@@ -6789,7 +6791,8 @@ Page({
       && AI_BLIND_ISSUE_TYPES.indexOf(issue.type) < 0);
     issues.forEach((issue) => {
       const item = { label: issue.message, tab: '2' };
-      if (issue.level === 'error' && issue.type !== 'parse_error') blocking.push(item);
+      if (issue.level === 'error' && issue.type !== 'parse_error'
+        && AI_ADVISORY_ISSUE_TYPES.indexOf(issue.type) < 0) blocking.push(item);
       else advisory.push(item);
     });
     if (skipLabel) advisory.push({ label: skipLabel, tab: '2' });
@@ -6814,7 +6817,8 @@ Page({
   _afterPrecheck(aiIssues, skipLabel) {
     this.syncIdentityReady();
     const blockingAi = (aiIssues || []).some((issue) => issue && issue.message && issue.level === 'error'
-      && issue.type !== 'parse_error' && AI_BLIND_ISSUE_TYPES.indexOf(issue.type) < 0);
+      && issue.type !== 'parse_error' && AI_BLIND_ISSUE_TYPES.indexOf(issue.type) < 0
+      && AI_ADVISORY_ISSUE_TYPES.indexOf(issue.type) < 0);
     if (!blockingAi && !this.buildPublishCheck().blocking.length
         && (!this.data.identityRequired || this.data.identityRegistered)) {
       this._publishPrecheckOk = !skipLabel && !(aiIssues || []).length;
@@ -7604,7 +7608,7 @@ Page({
       endDate: this._normalizeDateTime(this.data.formData.endDate, '23:59:59'),
       imgUrl: this.data.formData.imgUrl,
       imgArr: this.data.formData.imgArr,
-      categoryIds: this.data.selectedCategoryIds.join(','),
+      categoryIds: this.data.selectedCategoryIds.filter(id => String(id) !== '0').join(','), // 0 = 存量「未选」占位
       chapters: chapters,
       collaboratorIds: this.data.formData.collaboratorIds,
       // [P0-02] 产品真源:主题级模式显式上送(= 入口的 entryMode)。后端据此覆盖每张票的 mode,

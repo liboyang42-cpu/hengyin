@@ -21,7 +21,10 @@ spring:
             # 最小连接池数量
             minIdle: 10
             # 最大连接池数量
-            maxActive: 20
+            # 2026-11-01 生产走查:每 5 分钟整点约 14 个定时任务同秒起跑,20 个连接被占满、请求排队到 maxWait 失败
+            # (D12 采样 active≈12 waiting 5~8,每天约 100 次告警)。定时任务已错开秒位(migration_20261101_stagger_sys_job_seconds),
+            # 池上限同时放到 40;MySQL max_connections 远高于此。可用环境变量回调。
+            maxActive: ${CHENGYIN_DB_POOL_MAX_ACTIVE:40}
             # 配置获取连接等待超时的时间
             # F-W3-05:原 60000(60s)远超客户端超时,池满时请求排队一分钟才报错;改为 5s 快速失败,
             # 失败由 RuntimeFailureAlarmFilter 以 runtime.db.connection 告警;可用环境变量回调。

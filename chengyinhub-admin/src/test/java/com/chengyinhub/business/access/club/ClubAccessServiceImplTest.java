@@ -370,6 +370,34 @@ class ClubAccessServiceImplTest {
         return row;
     }
 
+    @Test
+    void clubOwnedPublicTopicSelfHostSessionCountsAsClubEventButOthersDoNot() {
+        // 2026-11-01 生产走查:俱乐部公开主题的自办场次不挂 club_id,俱乐部给本场报名玩家发通知 403
+        com.chengyinhub.business.mapper.CmsTopicMapper topics = mock(com.chengyinhub.business.mapper.CmsTopicMapper.class);
+        ReflectionTestUtils.setField(service, "cmsTopicMapper", topics);
+        when(clubs.selectClubById(11L)).thenReturn(activeClub(11L, 900L));
+        CmsActivity session = activity(56L, null);
+        session.setTopicId(TOPIC);
+        session.setMemberId(900L);
+        when(activities.selectCmsActivityById(56L)).thenReturn(session);
+        com.chengyinhub.business.domain.CmsTopic topic = new com.chengyinhub.business.domain.CmsTopic();
+        topic.setId(TOPIC);
+        topic.setClubId(11L);
+        topic.setMemberId(900L);
+        when(topics.selectCmsTopicById(TOPIC)).thenReturn(topic);
+
+        ClubAccessContext access = service.require(900L, 11L, 56L, ClubPermission.EVENT_OPERATE);
+        assertEquals(56L, access.getActivityId());
+
+        topic.setClubId(12L);
+        assertEquals(403, assertThrows(ServiceException.class,
+                () -> service.require(900L, 11L, 56L, ClubPermission.EVENT_OPERATE)).getCode());
+        topic.setClubId(11L);
+        session.setMemberId(901L);
+        assertEquals(403, assertThrows(ServiceException.class,
+                () -> service.require(900L, 11L, 56L, ClubPermission.EVENT_OPERATE)).getCode());
+    }
+
     private CmsActivity activity(Long id, Long clubId) {
         CmsActivity activity = new CmsActivity();
         activity.setId(id);

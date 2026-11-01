@@ -2134,6 +2134,8 @@ Page({
     const recruit = host.recruit || {};
     const players = host.players || {};
     this._isFreeExploreHost = Number(topic.productType) === 2;
+    this._clubNotifyTarget = host.ownerType === 'club' && Number(host.clubId) > 0
+      ? { clubId: Number(host.clubId), activityId: Number(host.selfHostActivityId) || 0 } : null;
     const nodeTotal = recruit.nodeTotal || 0;
     const nodeFilled = recruit.nodeFilled || 0;
     this.setData({
@@ -2652,6 +2654,15 @@ Page({
       },
       fail() { that.setData({ 'broadcastSheet.state': 'error', 'broadcastSheet.error': '网络异常，请重试' }); },
     });
+  },
+
+  /* 2026-11-01 业主:俱乐部也要能发通知。商家定向广播只认商家客户,俱乐部主办改进俱乐部群发通知:
+     带上本主题的自办场次 ⇒ 默认受众「本场已报名」;还没开出场次就只能发全体成员。 */
+  openClubNotify() {
+    const target = this._clubNotifyTarget;
+    if (!target) return;
+    this.setData({ 'playerSheet.show': false });
+    wx.navigateTo({ url: '/pages/club/notify/index?clubId=' + target.clubId + (target.activityId ? '&activityId=' + target.activityId : '') });
   },
 
   closeBroadcast() { this.setData({ 'broadcastSheet.show': false }); },
@@ -3323,7 +3334,7 @@ Page({
       closeClubSheet: 1, closePlayerSheet: 1, closeMerchantSheet: 1,
       closeMoreSheet: 1, onMorePick: 1,
       copyText: 1, goInviteClub: 1, onPlayerFilter: 1, inviteClubRow: 1, openClubHome: 1, loadClubCandidates: 1,
-      loadRegApplies: 1, confirmRegRow: 1, selfTakeNode: 1, recruitNode: 1, contactHost: 1, openBroadcast: 1,
+      loadRegApplies: 1, confirmRegRow: 1, selfTakeNode: 1, recruitNode: 1, contactHost: 1, openBroadcast: 1, openClubNotify: 1,
       // CU-C-67:客户名单读失败后的局部重试(错态与零单分开之后要有恢复动作)
       retryPlayerSheet: 1,
       // CU-C-68:抽屉里「本站运营」资格探不到时的就地重试

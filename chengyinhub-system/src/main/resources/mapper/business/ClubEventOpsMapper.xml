@@ -749,7 +749,8 @@
     <select id="selectRegisteredRecipients" resultType="long">
         select distinct r.member_id
         from cms_registration r
-        inner join cms_activity a on a.id = r.owner_id and a.club_id = #{clubId} and a.del_flag = 0
+        <!-- 俱乐部公开主题的自办场次不挂 club_id,按主题归属认(同 ClubAccessService.requireOwnedActivity) -->
+        inner join cms_activity a on a.id = r.owner_id and (a.club_id = #{clubId} or (a.club_id is null and exists (select 1 from cms_topic t where t.id = a.topic_id and t.club_id = #{clubId} and t.member_id = a.member_id))) and a.del_flag = 0
         where r.owner_type = 2 and r.owner_id = #{activityId}
           and r.payment_status = 2 and r.registration_status = 2
         order by r.member_id asc
@@ -768,7 +769,7 @@
         select distinct r.member_id
         from cms_registration r
         inner join cms_activity a on a.id = r.owner_id
-          and a.club_id = #{clubId} and a.id = #{activityId} and a.del_flag = 0 and a.end_date &lt;= now()
+          and (a.club_id = #{clubId} or (a.club_id is null and exists (select 1 from cms_topic t where t.id = a.topic_id and t.club_id = #{clubId} and t.member_id = a.member_id))) and a.id = #{activityId} and a.del_flag = 0 and a.end_date &lt;= now()
         left join club_lead_checkin ck on ck.activity_id = a.id and ck.member_id = r.member_id
         left join club_event_attendance_correction corr on corr.id = (
           select max(c2.id) from club_event_attendance_correction c2
