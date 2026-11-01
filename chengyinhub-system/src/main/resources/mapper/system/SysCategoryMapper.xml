@@ -35,6 +35,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="icon != null  and icon != ''"> and icon = #{icon}</if>
             <if test="status != null "> and status = #{status}</if>
         </where>
+        <!-- 2026-11-01:按运营排序展示(主题类别「城市漫步」在前),同序再按 id -->
+        order by sort_id, id
     </select>
     
     <select id="selectSysCategoryById" parameterType="Long" resultMap="SysCategoryResult">
