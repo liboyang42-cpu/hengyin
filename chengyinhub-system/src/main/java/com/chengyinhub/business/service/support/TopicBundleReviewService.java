@@ -394,7 +394,6 @@ public class TopicBundleReviewService {
         if (!writeStable(expected).equals(writeStable(declarationSnapshot(topicId)))) throw stale();
     }
 
-
     private ObjectNode templateContent(CmsMemberTemplate template) {
         ObjectNode value = json.valueToTree(template);
         value.remove("createBy"); value.remove("createTime");
