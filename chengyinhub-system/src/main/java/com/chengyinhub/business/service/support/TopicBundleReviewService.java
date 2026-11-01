@@ -396,7 +396,7 @@ public class TopicBundleReviewService {
 
     private String declarationText(JsonNode value) {
         try {
-            return json.writeValueAsString(value);
+            return json.writeValueAsString(canonical(value));
         } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
             throw stale();
         }
