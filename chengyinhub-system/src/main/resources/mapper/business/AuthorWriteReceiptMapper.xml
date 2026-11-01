@@ -9,7 +9,7 @@
     INSERT INTO app_author_write_receipt (actor_member_id, operation, request_id, request_hash)
     VALUES (#{actor}, #{operation}, #{requestId}, #{hash})
   </insert>
-  <select id="lock" resultMap="receipt">
+  <select id="lock" resultMap="receipt" useCache="false" flushCache="true">
     SELECT request_hash, result_json FROM app_author_write_receipt
     WHERE actor_member_id=#{actor} AND operation=#{operation} AND request_id=#{requestId} FOR UPDATE
   </select>
