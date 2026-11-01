@@ -200,7 +200,6 @@ const MATRIX = [
   ['pages/activity/official-mine/index.js', "url: '/api/official/broadcast/' + encodeURIComponent(String(id)) + '/stats'", 'required', 'publisher', 'self-publisher'],
   ['pages/merchant/crm-campaigns/index.js', "url: '/api/merchant/crm/campaigns'", 'required', 'merchant', 'owned-merchant-resource'],
   ['pages/merchant/crm-campaigns/index.js', 'url: `/api/merchant/crm/campaigns/${id}`', 'required', 'merchant', 'owned-merchant-resource'],
-  ['pages/merchant/index/index.js', "url: '/api/merchant/ops/prerequisites'", 'required', 'merchant', 'self-merchant'],
   ['pages/play/merchant/components/safety-rating-sheet/index.js', "url: '/api/community-trust/safety/taxonomy'", 'required', 'member', 'global-authenticated-read'],
   ['pages/roam/index.js', "req('/api/official/active-for-roam'", 'required', 'member', 'global-authenticated-read'],
   ['subpackageB/pages/im/chat/index.js', 'url: `/api/audit/${auditTaskId}/detail`', 'required', 'member', 'self-account'],
@@ -423,7 +422,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // Source accounting only; this merged tree has NOT_RUN validation.
   // 2026-10-29 M-32:账户收益本月收入明细读俱乐部计酬一处(同 club-direct-ledger 端点与权限档,已入 MATRIX),109 → 110。
   // R03/R12 原写入结果仅按登录actor、操作种类和原请求号回读；新增一条本人回执GET。
-  assert.equal(directCount, 111, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-11-01:商家工作台删除开通前置检查,少一处 GET(/api/merchant/ops/prerequisites) 111 → 110
+  assert.equal(directCount, 110, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。

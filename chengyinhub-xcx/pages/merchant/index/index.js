@@ -11,7 +11,6 @@ const { isRecord, isRecordList, isBizOk } = require('../../../utils/response-sha
 const { inactiveAccess, normalizeMerchantAccess } = require('../../../utils/merchant-access-policy.js');
 const { ensureSession } = require('../utils/session/ensure-session.js');
 const { normalizeMerchantFinanceRoute } = require('../utils/merchant-finance.js');
-const { pendingPrerequisites } = require('../utils/merchant-prerequisites.js');
 const identitySync = require('../../../utils/identity-sync.js');
 
 // cms_topic.product_type → 展示名(与 marketing 页同口径)
@@ -104,7 +103,6 @@ Page({
     inboxLoaded: false,
     inboxError: false,
     // BL-85 开通前置检查未完成项(只读;全部完成/无数据/失败时为空,不展示)
-    prerequisites: [],
     todo: { biddingTopics: 0, pendingVerify: 0, verifiedCount: 0, pendingScanConfirm: 0, pendingOrders: 0, refundCount: 0 },
     todoLoading: true,
     todoError: false,
@@ -539,9 +537,6 @@ Page({
     // access/me 已给出可安全展示的商家摘要；完整资料接口要求 PROFILE_WRITE，
     // 核销员/运营/财务不得为了加载工作台而先撞一次 403。
     if (currentAccess.canWriteProfile) this.loadMerchantInfo(dataEpoch);
-    // 前置检查按店主主体计算(permissionRequired=MERCHANT_OWNER),只给能改资料的岗位读。
-    if (currentAccess.canWriteProfile) this.loadPrerequisites(dataEpoch);
-    else this.setData({ prerequisites: [] });
     this.loadUserInfo(dataEpoch);
     // master #807 的商家游戏模组入口:自带 client 空守卫,与角色无关,所有员工都能看到入口。
     this.loadMerchantGameEntries();
@@ -656,7 +651,6 @@ Page({
       inboxItems: [],
       inboxLoaded: false,
       inboxError: false,
-      prerequisites: [],
       chapterSheet: { show: false, code: '', items: [] },
       stationSheet: { show: false, code: '', items: [] },
       verificationResult: { show: false, state: '', title: '', message: '' },
@@ -890,31 +884,7 @@ Page({
     this._navigating = true; wx.navigateTo({ url: '/pages/merchant/predict/index', complete: () => { this._navigating = false; } });
   },
 
-  loadPrerequisites(dataEpoch = this._dataEpoch || 0) {
-    const that = this;
-    app.sendRequest({
-      hideLoading: true, silentError: true,
-      url: '/api/merchant/ops/prerequisites', method: 'GET',
-      success(res) {
-        if (!that.isCurrentDataEpoch(dataEpoch)) return;
-        const ok = res && (res.code === '200' || res.code === 200);
-        that.setData({ prerequisites: ok ? pendingPrerequisites(res.data) : [] });
-      },
-      fail() {
-        if (!that.isCurrentDataEpoch(dataEpoch)) return;
-        that.setData({ prerequisites: [] });
-      },
-    });
-  },
-
-  goPrerequisite(e) {
-    const key = String((e.currentTarget.dataset || {}).key || '');
-    const item = (this.data.prerequisites || []).find(row => row.key === key);
-    if (!item || !item.path || this._navigating) return; // 跳转中不响应连点,免得叠两层前置项页
-    this._navigating = true;
-    wx.navigateTo({ url: item.path, complete: () => { this._navigating = false; } });
-  },
-
+  // 2026-11-01 业主:商家页只在开通后才进得来,「开通前置检查」整块删除(接口仍保留给后台)
   loadMerchantInfo(dataEpoch = this._dataEpoch || 0) {
     const that = this;
     app.sendRequest({

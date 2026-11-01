@@ -220,28 +220,6 @@
 
     <!-- 2026-10-30 业主走查:W8 工程面板(商品与履约 / 门店与核销范围 / 读取门店与营业时段 / 门店位置与营业设置 / 查看供货与合作)已整件删除 -->
 
-    <!-- BL-85 开通前置检查(只读,GET /api/merchant/ops/prerequisites):只列未完成项;
-         全部完成或无数据时整块不显示。沿用「我的消息」区块结构,不新造样式。 -->
-    <view class="rv-section" wx:if="{{!consoleStatus && prerequisites.length}}">
-      <view class="rv-section-head">
-        <text class="rv-section-title">开通前置检查</text>
-      </view>
-      <view class="rv-msg-card">
-        <view class="rv-msg-item" wx:for="{{prerequisites}}" wx:key="key"
-              bindtap="goPrerequisite" data-key="{{item.key}}" hover-class="{{item.path ? 'rv-tap' : ''}}"
-              aria-role="{{item.path ? 'button' : ''}}" aria-label="未完成：{{item.title}}{{item.description ? '，' + item.description : ''}}">
-          <view class="rv-msg-ico">
-            <cy-icon name="bell" size="34" />
-          </view>
-          <view class="rv-msg-main">
-            <text class="rv-msg-title">{{item.title}}</text>
-            <text class="rv-msg-sub ep1" wx:if="{{item.description}}">{{item.description}}</text>
-          </view>
-          <text class="rv-msg-time" wx:if="{{item.path}}">去完善</text>
-        </view>
-      </view>
-    </view>
-
     <!-- 我的消息(2026-08-20 稿 3910:580;2026-10-22 owner 裁决改为常驻):站内会话(含城瘾小助手)+
          收到的协作邀请 + 收入/核销动态合并,新的在前取 3 条(utils/inbox-preview.js);
          「全部」进站内消息收件箱。首载未落定时只占一行高度不画内容,不冒充「还没有消息」。 -->
