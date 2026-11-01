@@ -15,6 +15,8 @@ public class MerchantCrmBroadcastPreviewVO {
     private Integer merchantDailyLimit;
     private Integer merchantDailyUsed;
     private Integer merchantDailyRemaining;
+    /** 回显收窄到的主题;小程序按它确认服务端确实按主题筛过,没回显就不让发。 */
+    private Long topicId;
 
     public Long getFilterTotalCount() { return filterTotalCount; }
     public void setFilterTotalCount(Long value) { filterTotalCount = value; }
@@ -36,4 +38,6 @@ public class MerchantCrmBroadcastPreviewVO {
     public void setMerchantDailyUsed(Integer value) { merchantDailyUsed = value; }
     public Integer getMerchantDailyRemaining() { return merchantDailyRemaining; }
     public void setMerchantDailyRemaining(Integer value) { merchantDailyRemaining = value; }
+    public Long getTopicId() { return topicId; }
+    public void setTopicId(Long value) { topicId = value; }
 }

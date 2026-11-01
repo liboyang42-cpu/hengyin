@@ -150,14 +150,18 @@
       <view wx:else>
         <view class="rv-project-cards" wx:if="{{projectCards.length}}" style="{{pmProj === 1 ? '--pm-j:1;' : (pmProj === 2 ? '--pm-j-d:.32s;--pm-j-s:1;' : '')}}">
           <view class="rv-project-item" wx:for="{{projectCards}}" wx:key="key">
-          <view class="rv-project-card" bindtap="openProjectCard"
+          <view class="rv-project-card rv-project-card--cover {{img.first(item.thumb) ? 'is-cover' : ''}}" bindtap="openProjectCard"
                 data-role="{{item.role}}" data-id="{{item.id}}" data-topicid="{{item.ownerId}}" data-biztype="{{item.bizType}}" data-source="{{item.projectSource}}"
                 hover-class="rv-tap" aria-role="button" aria-label="打开{{item.roleLabel || ''}}项目{{item.title}}">
             <!-- 72×72 封面。承接取主题封面、主办取自己主题的封面;字段是逗号分隔多图,取首张。
                  底色本身就是缺图时的占位,不另画空图标。 -->
+            <!-- 走查 v2 R01(W2-01 业主「项目卡片有点丑 可以变成大的卡片」,原型 p6 home):整张封面铺满 + 底部渐暗,
+                 文字压在图上;没有封面用城瘾 logo 灰色占位。结构与类名不变,只加 --cover 修饰。 -->
             <view class="rv-project-thumb">
               <image class="rv-project-thumb-img" wx:if="{{img.first(item.thumb)}}"
                      src="{{img.first(item.thumb)}}" mode="aspectFill" lazy-load="true" />
+              <image class="rv-project-thumb-logo" wx:else src="/images/cy_logo_mark.png" mode="aspectFit" />
+              <view class="rv-project-shade" wx:if="{{img.first(item.thumb)}}"></view>
             </view>
 
             <view class="rv-project-body">
@@ -250,7 +254,15 @@
         <text class="rv-section-title">我的消息</text>
         <view class="rv-section-more" bindtap="goInbox" aria-role="button" aria-label="查看全部消息" hover-class="cy-pressed" hover-stay-time="80"><text>全部</text><cy-icon name="arrow-right" size="24" /></view>
       </view>
-      <view class="rv-msg-card {{inboxItems.length > 1 ? (msgOpen ? 'rv-msg-stack rv-msg-stack--open' : 'rv-msg-stack rv-msg-stack--n' + inboxItems.length) : ''}}">
+      <!-- 走查 v2 R02(业主 10-30,原型 p6 home 2 号):黑色方块图标、未读点;展开后每条 × = 标为已读,
+           底下「清空」= 全部标为已读;都标完收成「都看完了」小胶囊。 -->
+      <view class="rv-msg-done-row" wx:if="{{inboxAllRead && !inboxItems.length}}">
+        <view class="rv-msg-done" bindtap="goInbox" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="消息都看完了，打开站内消息">
+          <view class="rv-msg-done-ico"><cy-icon name="check" size="24" /></view>
+          <text>都看完了</text>
+        </view>
+      </view>
+      <view wx:else class="rv-msg-card rv-msg-card--ns {{inboxItems.length > 1 ? (msgOpen ? 'rv-msg-stack rv-msg-stack--open' : 'rv-msg-stack rv-msg-stack--n' + inboxItems.length) : ''}}">
         <block wx:if="{{inboxItems.length}}">
           <view class="rv-msg-item {{msgOpen ? 'cy-fly-in' : ''}}" style="{{msgOpen ? 'animation-delay:' + index * 50 + 'ms' : ''}}" wx:for="{{inboxItems}}" wx:key="key"
                 bindtap="openInboxItem" data-key="{{item.key}}" hover-class="rv-tap" aria-role="button" aria-label="{{(inboxItems.length > 1 && !msgOpen) ? '展开 ' + inboxItems.length + ' 条消息' : '查看消息：' + item.title}}">
@@ -262,6 +274,10 @@
               <text class="rv-msg-sub ep1" wx:if="{{item.sub}}">{{item.sub}}</text>
             </view>
             <text class="rv-msg-time">{{item.time}}</text>
+            <view class="rv-msg-dot" wx:if="{{item.unread && !msgOpen}}"></view>
+            <view class="rv-msg-x" wx:if="{{msgOpen}}" catchtap="dismissInboxItem" data-key="{{item.key}}" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="标为已读：{{item.title}}">
+              <cy-icon name="close-sm" size="24" />
+            </view>
           </view>
         </block>
         <view class="rv-msg-item" wx:elif="{{inboxLoaded}}" bindtap="goInbox" hover-class="rv-tap" aria-role="button" aria-label="{{inboxError ? '消息暂时没读到，打开站内消息' : '还没有消息，打开站内消息'}}">
@@ -273,6 +289,10 @@
           </view>
         </view>
         <view class="rv-msg-item rv-msg-item--pending" wx:else aria-hidden="true"></view>
+      </view>
+      <view class="rv-msg-clear" wx:if="{{msgOpen && inboxItems.length > 1}}" bindtap="clearInbox" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="全部标为已读">
+        <cy-icon name="trash" size="26" />
+        <text>清空</text>
       </view>
     </view>
 

@@ -2650,6 +2650,8 @@ Page({
       success(res) {
         const d = res && res.code == '200' && res.data;
         if (!d) { that.setData({ 'broadcastSheet.state': 'error', 'broadcastSheet.error': (res && res.msg) || '没读到可以收到的人数' }); return; }
+        // 旧版后端不认 topicId,会按全店客户算人数、真发也发全店;没回显本主题就不让发。
+        if (Number(d.topicId) !== topicId) { that.setData({ 'broadcastSheet.state': 'error', 'broadcastSheet.error': '现在还不能只发给本主题的玩家，请稍后再试' }); return; }
         that.setData({ 'broadcastSheet.state': 'ready', 'broadcastSheet.deliverable': d.deliverableCount || 0, 'broadcastSheet.remaining': d.merchantDailyRemaining || 0 });
       },
       fail() { that.setData({ 'broadcastSheet.state': 'error', 'broadcastSheet.error': '网络异常，请重试' }); },
