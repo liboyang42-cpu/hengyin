@@ -35,6 +35,8 @@ const PLAY_PLAYER_QUERY_APPLICATION = path.resolve(
 // optional = 后端允许匿名，但登录时会按 uid 返回个人态，所以仍使用默认认证；
 // required = 后端 anyRequest().authenticated()，绝不能 auth:false。
 const MATRIX = [
+  // 原写入回执仅按登录态actor读取，operation和requestId不接受会员ID。
+  ['utils/author-write-recovery.js', "url: '/api/author-write/receipt'", 'required', 'member', 'self-account'],
   // Team board reads retain authenticated access; detail additionally enforces active team membership.
   ['pages/team/detail/index.js', "url: '/api/orient/team/detail'", 'required', 'member', 'active-team-member'],
   ['pages/team/detail/index.js', "url: '/api/orient/team/ranking'", 'required', 'member', 'global-authenticated-read'],
@@ -420,7 +422,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // Frozen-master calls + creator-scoped supply stations + V2 original-request recovery.
   // Source accounting only; this merged tree has NOT_RUN validation.
   // 2026-10-29 M-32:账户收益本月收入明细读俱乐部计酬一处(同 club-direct-ledger 端点与权限档,已入 MATRIX),109 → 110。
-  assert.equal(directCount, 110, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // R03/R12 原写入结果仅按登录actor、操作种类和原请求号回读；新增一条本人回执GET。
+  assert.equal(directCount, 111, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。

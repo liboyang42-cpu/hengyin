@@ -52,6 +52,9 @@ import com.chengyinhub.common.enums.LimitType;
 @Tag(name = "模版")
 @RequestMapping("/api/template")
 public class ApiTemplateController extends BaseController {
+    @Autowired
+    private com.chengyinhub.business.service.support.AuthorWriteReceiptService authorWriteReceipts;
+
 
     /** O5b-5:发布时标题相似度提示(WARN,不拦)。 */
     @Autowired(required = false)
@@ -94,6 +97,12 @@ public class ApiTemplateController extends BaseController {
     @RateLimiter(time = 60, count = 10, limitType = LimitType.MEMBER)
     @PostMapping("/publish")
     public AjaxResult publish(@RequestBody @Validated CmsTemplatePublishRequest request) {
+        if (request == null || request.getRequestId() == null || request.getRequestId().isBlank()) return publishOnce(request);
+        return authorWriteReceipts.execute(getAppUserId(), "TEMPLATE_PUBLISH", request.getRequestId(), request,
+                () -> publishOnce(request));
+    }
+
+    private AjaxResult publishOnce(CmsTemplatePublishRequest request) {
         try {
             // 获取当前登录用户ID
             Long principalMemberId = getAppUserId();
@@ -156,6 +165,12 @@ public class ApiTemplateController extends BaseController {
     @RateLimiter(time = 60, count = 30, limitType = LimitType.MEMBER)
     @PostMapping("/draft")
     public AjaxResult draft(@RequestBody CmsTemplatePublishRequest request) {
+        if (request == null || request.getRequestId() == null || request.getRequestId().isBlank()) return draftOnce(request);
+        return authorWriteReceipts.execute(getAppUserId(), "TEMPLATE_DRAFT", request.getRequestId(), request,
+                () -> draftOnce(request));
+    }
+
+    private AjaxResult draftOnce(CmsTemplatePublishRequest request) {
         try {
             Long principalMemberId = getAppUserId();
             if (principalMemberId == null || principalMemberId <= 0) {

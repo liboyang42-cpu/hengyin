@@ -9,6 +9,7 @@
 //     由调用方各自判,组件不判 —— 组件判的话两轨就又绑一起了。
 const analytics = require('../../../../utils/analytics.js');
 const chatExport = require('./chat-export.js');
+const authorWrites = require('../../../../utils/author-write-recovery.js');
 
 const MAX_MESSAGE_CODE_POINTS = 300;
 const MAX_VISIBLE_MESSAGES = 20;
@@ -34,7 +35,13 @@ Component({
       value: false,
       observer: function (visible) {
         if (!visible) this._resetForClose();
-        else this._recoverPending();
+        else {
+          this._recoverPending();
+          try {
+            if (authorWrites.pending(wx, authorWrites.ownerOf(getApp()), 'npc-delete'))
+              this.setData({ clearError: '上次清除结果待确认，请点击清除入口核对原请求' });
+          } catch (error) { this.setData({ clearError: error.message }); }
+        }
       },
     },
     sessionId: { type: Number, value: 0, observer: function () { this._resetForTrackChange(); } },
@@ -216,24 +223,28 @@ Component({
       this._invalidate(false);
       this.setData({ clearError: '' });
       dc.busyOn();
-      const failMsg = '清除没有成功，对话记录还在，请重试';
-      getApp().sendRequest({
-        url: '/api/ai/npc/chat/data/delete',
-        method: 'POST',
-        data: {},
-        hideLoading: true,
-        silentError: true,
-        success: (res) => {
-          if (!res || (res.code != 200 && res.code != '200')) { this._clearing = false; this.setData({ clearError: failMsg }); dc.failed(failMsg); return; }
+      const app = getApp();
+      const generation = this._generation;
+      const fail = message => { this._clearing = false; this.setData({ clearError: message }); dc.failed(message); };
+      authorWrites.run({ app, storage: wx, bucket: 'npc-delete', operation: 'NPC_CHAT_DELETE',
+        endpoint: '/api/ai/npc/chat/data/delete', body: {},
+        current: () => generation === this._generation && this.properties.show,
+        validResult: data => !!data && typeof data.deleted === 'number' && Number.isSafeInteger(data.deleted) && data.deleted >= 0,
+        send: (intent, callbacks) => app.sendRequest({
+          ...callbacks,
+          url: '/api/ai/npc/chat/data/delete', method: 'POST', data: intent.body,
+          hideLoading: true, autoErrorToast: false,
+        }),
+        onSuccess: (res) => {
           this._clearing = false;
           // 本地列表只是服务端记录的镜像,服务端删成功后同步清空
           this.setData({ messages: [], state: 'IDLE', isThinking: false, scrollIntoView: '' });
           this.onCloseExport();
-          const deleted = res.data && Number(res.data.deleted);
-          dc.done(Number.isFinite(deleted) && deleted > 0 ? '已删除 ' + deleted + ' 条对话记录，当前对话也已清空。' : '');
+          const deleted = res.data.deleted;
+          dc.done(deleted > 0 ? '已删除 ' + deleted + ' 条对话记录，当前对话也已清空。' : '已确认没有需要清除的对话记录。');
         },
-        fail: () => { this._clearing = false; this.setData({ clearError: '清除没有成功，对话记录还在，请重试' }); dc.failed(failMsg) },
-        successStatusAbnormal: () => { this._clearing = false; this.setData({ clearError: failMsg }); dc.failed(failMsg) },
+        onRejected: res => fail(res.msg || '清除请求未执行，请重试'),
+        onUnknown: fail,
       });
     },
 
@@ -422,6 +433,7 @@ Component({
 
     _resetForClose: function () {
       this._invalidate(false);
+      this._clearing = false;
       // _pendingRecovery 刻意保留:重开时按 requestId 回读,而不是让用户再发一遍。
       this._retryMessage = null;
       this._retryCount = 0;

@@ -880,7 +880,7 @@
                bindinput="onShopNpcInput" bindfocus="onShopNpcFocus" bindconfirm="sendShopNpc" />
         <!-- 按住说话:和打字并列在同一条输入框里,所以「点了语音回不了打字」结构上不成立 -->
         <view class="fx-npc__mic {{shopNpc.recording ? 'is-rec' : ''}}"
-              bindtouchstart="onVoiceStart" bindtouchend="onVoiceEnd" bindtouchcancel="onVoiceEnd"
+              bindtouchstart="onVoiceStart" bindtouchend="onVoiceEnd" bindtouchcancel="onVoiceCancel"
               aria-role="button" aria-label="按住说话">
           <!-- 图标集(生成物)里没有麦克风,不手改图标集:phone 是现成里最接近「说话」的隐喻,
                录音态靠输入框文案「正在听…松开发送」+ 高亮承接 -->

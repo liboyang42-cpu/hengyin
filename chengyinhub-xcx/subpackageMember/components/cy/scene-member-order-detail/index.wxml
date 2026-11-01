@@ -11,6 +11,7 @@
   <cy-result-sheet show="{{loadFailureVisible}}" kind="fail" title="订单暂不可查看" why="{{loadErrorText}}" duration="{{2000}}" bind:close="backToOrderList" />
 
   <view class="david" wx:if="{{loadState==='ready'}}">
+  <cy-inline-error wx:if="{{loadErrorText}}" title="{{loadErrorText}}" />
   <!-- 稿 578:2298(D07):大金额与状态先行。头图上依次是实付金额(40px)、
        路线名(18px)、场次时间(12px)、一颗状态药丸 —— 原来这里印的是
        「已报名 / 请完成支付后使用票夹」,一句状态加一句提示,金额反而要翻到下面才看得到。

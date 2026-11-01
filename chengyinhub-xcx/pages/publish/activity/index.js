@@ -1,4 +1,5 @@
 const modal = require('../../../utils/modal.js');
+const authorWrites = require('../../../utils/author-write-recovery.js');
 const mediaPreview = require('../../../utils/media-preview.js');
 const cyToast = require('../../../utils/toast.js');
 const { isAlbumTemplate, ALBUM_ONLY_IN_STORY } = require('../../../utils/album-template.js');
@@ -510,6 +511,10 @@ Page({
     if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.submitForm(), { owner: this, target: () => [this.editingActivityId, this.data.merchantHost, this.data.formData.templateId] })) return; // 2026-10-24 游客写前登录
     // 防重复发布:发布键收编 cy-btn 后视觉 disabled 不拦点击,提交中须早退(原靠原生 <button disabled> 拦)
     if (this.data.submitting) return;
+    try {
+      const original = authorWrites.pending(wx, authorWrites.ownerOf(app), this._activityWriteBucket());
+      if (original) { this.sendData(original.body); return; }
+    } catch (error) { this.setData({ submitError: error.message }); return; }
     if (!this.validateForm()) {
       cyToast('请完善表单信息')
       return
@@ -630,9 +635,12 @@ Page({
   },
 
   // 发布提交状态机(防重/失败回退/销毁守卫走共享 publish-workflow;url/analytics/toast/跳转保持本页)
+  _activityWriteBucket() { return 'activity:' + (this.data.merchantHost ? 'MERCHANT' : '') + ':' + (this.editingActivityId || 'new'); },
+
   getPublishWorkflow() {
     if (!this._publishWorkflow) {
       this._publishWorkflow = createPublishWorkflow({
+        networkFailureState: 'unknown',
         request: (payload, cb) => {
           const options = {
             data: JSON.stringify(payload),
@@ -646,11 +654,21 @@ Page({
             },
             fail: () => cb({ ok: false, networkError: true })
           }
-          if (this.editingActivityId) {
-            sendUiStateRequest(app, '/api/activity/update', options)
-          } else {
-            sendUiStateRequest(app, '/api/activity/publish', options)
-          }
+          authorWrites.run({ app, storage: wx, bucket: this._activityWriteBucket(),
+            operation: this.editingActivityId ? 'ACTIVITY_UPDATE' : 'ACTIVITY_PUBLISH',
+            endpoint: this.editingActivityId ? '/api/activity/update' : '/api/activity/publish', body: payload,
+            current: () => !this._unloaded && !this._hidden,
+            validResult: (value, intent) => intent.operation === 'ACTIVITY_UPDATE'
+              ? /^[1-9]\d*$/.test(String(intent.body.id || ''))
+              : /^[1-9]\d*$/.test(String(value && value.id || value || '')),
+            send: (intent, handlers) => {
+              const request = Object.assign({}, options, handlers, { data: JSON.stringify(intent.body) });
+              if (intent.operation === 'ACTIVITY_UPDATE') return sendUiStateRequest(app, '/api/activity/update', request);
+              return sendUiStateRequest(app, '/api/activity/publish', request);
+            },
+            onSuccess: options.success, onRejected: options.success,
+            onUnknown: message => cb({ ok: false, networkError: true, msg: message }),
+          })
         }
       })
     }
@@ -660,6 +678,9 @@ Page({
   // 发送数据到API
   sendData(data) {
     const that = this
+    if (that._publishWorkflow && that._publishWorkflow.getState() === 'unknown') {
+      that._publishWorkflow.destroy(); that._publishWorkflow = null
+    }
     const started = that.getPublishWorkflow().submit(data, {
       onSuccess: (resData) => {
         const activityId = that.editingActivityId
@@ -693,7 +714,7 @@ Page({
       },
       onFail: (res) => {
         const message = res && res.networkError
-          ? '网络错误，请重试'
+          ? (res.msg || '原请求结果待确认，请重试核对')
           : (app.getRequestErrorMessage ? app.getRequestErrorMessage(res, that.editingActivityId ? '保存失败，请重试' : '发布失败，请重试') : ((res && res.msg) || (that.editingActivityId ? '保存失败，请重试' : '发布失败，请重试')))
         that.setData({ submitting: false, submitError: message })
       }

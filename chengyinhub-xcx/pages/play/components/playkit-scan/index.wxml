@@ -34,7 +34,7 @@
           <view class="sc__wave">
             <view class="sc__wave-b" wx:for="{{wave}}" wx:key="index" style="height:{{item}}rpx"></view>
           </view>
-          <view class="sc__sec">{{seconds}}″</view>
+          <view class="sc__sec">{{seconds > 0 ? seconds + '″' : '时长未知'}}</view>
         </view>
         <view class="sc__sub" wx:if="{{reply}}">{{reply}}</view>
       </block>

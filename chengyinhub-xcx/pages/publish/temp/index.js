@@ -1,4 +1,5 @@
 const templateAdoption = require('../utils/publish/template-adoption.js');
+const authorWrites = require('../../../utils/author-write-recovery.js');
 const { applyTheme } = require('../../../utils/theme.js');
 const { memberId, failureStatus, retryLogin, waitForInitialSession, recoverReadSession } = require('../../../utils/session/login-reload.js');
 const modal = require('../../../utils/modal.js');
@@ -3282,6 +3283,8 @@ Page({
 
   publishGame: function () {
     if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.publishGame(), { owner: this, target: () => [this._templateId, this._boundDraftId, this.data.from, this.data.operationScope, this.data.isMyScope] })) return; // 2026-10-24 游客写前登录
+    const original = this._pendingTemplateWrite();
+    if (original) return this.sendData(original.body, original.endpoint, original.action);
     if (this.data.from === 'citynode' && !this.data.merchantAccess.canManageProjects) {
       toast('当前岗位没有节点管理权限');
       return;
@@ -3351,6 +3354,8 @@ Page({
 
   saveDraft: function () {
     if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.saveDraft(), { owner: this, target: () => [this._templateId, this._boundDraftId, this.data.from, this.data.operationScope, this.data.isMyScope] })) return; // 2026-10-24 游客写前登录
+    const original = this._pendingTemplateWrite();
+    if (original) return this.sendData(original.body, original.endpoint, original.action);
     if (this.data.from === 'fabu') return this.publishGame();
     if (this.data.from === 'citynode') {
       toast('节点玩法请配置完成后直接保存');
@@ -3378,7 +3383,19 @@ Page({
     else this.saveDraft();
   },
 
+  _templateWriteBucket() {
+    return 'template:' + this.data.operationScope + ':' + this.data.from + ':' + (this._templateId || 'new') + ':' + (this._boundDraftId || '');
+  },
+
+  _pendingTemplateWrite() {
+    if (this.data.from === 'citynode') return null;
+    try { return authorWrites.pending(wx, authorWrites.ownerOf(app), this._templateWriteBucket()); }
+    catch (error) { this.setData({ submitError: error.message }); return null; }
+  },
+
   sendData: function (data, url, action) {
+    const original = this._pendingTemplateWrite();
+    if (original) { data = original.body; url = original.endpoint; action = original.action; }
     const current = currentEditor(this);
     if (!current() || !this._ownTemplateWritable()) return;
     const that = this;
@@ -3400,10 +3417,10 @@ Page({
       submitError: ''
     });
 
-    app.sendRequest({
+    const request = {
       url: url,
       hideLoading: true,
-      silentError: true,
+      autoErrorToast: false,
       data: JSON.stringify(data),
       method: "POST",
       header: {
@@ -3517,6 +3534,19 @@ Page({
           submitError: safeUserMessage(res, '网络暂时不可用，内容已保留，请重试')
         });
       }
+    };
+    if (url !== '/api/template/draft' && url !== '/api/template/publish') {
+      app.sendRequest({ ...request, url: '/api/merchant/city-node/template/submit' }); return;
+    }
+    authorWrites.run({ app, storage: wx, bucket: this._templateWriteBucket(),
+      operation: url === '/api/template/draft' ? 'TEMPLATE_DRAFT' : 'TEMPLATE_PUBLISH', endpoint: url, body: data, action,
+      current, validResult: result => /^[1-9]\d{0,18}$/.test(String(result && result.id || result || '')),
+      send: (intent, handlers) => app.sendRequest(Object.assign({}, request, handlers, {
+        url: intent.operation === 'TEMPLATE_DRAFT' ? '/api/template/draft' : '/api/template/publish',
+        data: JSON.stringify(intent.body),
+      })),
+      onSuccess: request.success, onRejected: request.success,
+      onUnknown: message => request.fail({ msg: message }),
     });
   },
 

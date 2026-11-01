@@ -1091,6 +1091,11 @@ Page({
   },
 
   clearLocalDraft() {
+    if (this._publishAttempt || this._serverDraftAttempt || this.data.submitting || this.data.draftSaving) {
+      this.setData({ submitError: '发布或保存结果待确认，请先核对原结果后再清空草稿' });
+      cyToast('请先确认发布或保存结果');
+      return;
+    }
     if (this._draftStorageUnavailable) { this._markDraftStorageUnavailable(); return; }
     const memberId = String(app.getUserID() || '');
     if (this._unloaded) return;
@@ -1106,6 +1111,7 @@ Page({
       confirmText: '清空',
       success: (res) => {
         if (!res.confirm || this._unloaded || this._draftStorageUnavailable
+            || this._publishAttempt || this._serverDraftAttempt || this.data.submitting || this.data.draftSaving
             || memberId !== String(app.getUserID() || '')
             || memberId !== String(this.data.draftMemberId || '')
             || topicId !== this.data.editingTopicId || draftUuid !== this.data.draftUuid) return;
@@ -1117,7 +1123,8 @@ Page({
         }
         const mode = Number(this.data.formData.productType) === 2 ? 2 : 1;
         const club = this.data.formData.clubId ? ('&clubId=' + encodeURIComponent(this.data.formData.clubId)) : '';
-        wx.redirectTo({ url: '/pages/publish/fabu/index?newDraft=1&mode=' + mode + club });
+        const scope = this.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT' : '';
+        wx.redirectTo({ url: '/pages/publish/fabu/index?newDraft=1&mode=' + mode + club + scope });
       },
     });
   },

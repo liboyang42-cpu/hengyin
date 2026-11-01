@@ -7,6 +7,8 @@ const { isFreeOrder, resolveActualPaidAmount } = require('../../../../utils/orde
 const cancellationFeedback = require('../../../../utils/cancellation-feedback.js');
 const subscribe = require('../../../../utils/subscribe.js');
 const { isUnknownHttpStatus } = require('../../../../utils/transport/failure-envelope.js');
+const { failureStatus } = require('../../../../utils/session/login-reload.js');
+const { reader, sameReader } = require('../../../../utils/user-character.js');
 
 /* 稿 578:2312 的状态药丸:退款处理中是琥珀(#FF9E14)。其余档位按语义配到既有状态色,
    不为这一页新起一套色 —— 药丸在本仓是 cy-badge 的语言,这里只是把订单态映射过去。 */
@@ -308,6 +310,10 @@ Component({
       if (this._finishCancellation) this._finishCancellation()
       this._attached = false
       this._orderGeneration = (this._orderGeneration || 0) + 1
+      this._invoiceKey = (this._invoiceKey || 0) + 1
+      this._consentKey = ''
+      this._consentOffer = null
+      this._consentRequestId = null
       this._completionRequestId = (this._completionRequestId || 0) + 1
       if (this._workflow) this._workflow.destroy()
     },
@@ -326,6 +332,10 @@ Component({
       const valid = /^[1-9]\d*$/.test(id)
       if (valid && String(this._orderId) === id) return
       this._orderGeneration = (this._orderGeneration || 0) + 1
+      this._invoiceKey = (this._invoiceKey || 0) + 1
+      this._consentKey = ''
+      this._consentOffer = null
+      this._consentRequestId = null
       this._orderRequestId = (this._orderRequestId || 0) + 1
       this._completionRequestId = (this._completionRequestId || 0) + 1
       this._orderFetchInFlight = 0
@@ -339,6 +349,7 @@ Component({
       this._orderId = valid ? id : 0
       this.setData({
         info: {},
+        invoiceRow: { show: false },
         completion: emptyCompletion(),
         primaryCta: '',
         ticketPriceShown: '',
@@ -366,6 +377,8 @@ Component({
       const exactId = value => /^[1-9]\d{0,18}$/.test(String(value == null ? '' : value)) ? String(value) : '';
       const id = exactId(info.id);
       const key = this._invoiceKey = (this._invoiceKey || 0) + 1;
+      const generation = this._orderGeneration, capturedReader = reader(app);
+      this.setData({ invoiceRow: { show: false } });
       const STATE = { NONE: 'can', SUBMITTED: 'ing', CLAIMED: 'ing', PROCESSING: 'ing', ISSUE_UNKNOWN: 'ing', ISSUED: 'issued', PAUSED: 'paused' };
       if (Number(info.paymentStatus) !== 2 || info.isFreeOrder || !id) { this.setData({ invoiceRow: { show: false } }); return; }
       const state = STATE[info.invoiceStatus];
@@ -376,7 +389,8 @@ Component({
       }
       const that = this;
       const settle = function (res) {
-        if (!that._attached || that._invoiceKey !== key) return;
+        if (!that._attached || that._invoiceKey !== key || generation !== that._orderGeneration
+            || !sameReader(app, capturedReader) || String(that._orderId) !== id) return;
         const rows = res && Number(res.code) === 200 && Array.isArray(res.data) ? res.data : [];
         const row = rows.find(item => item && exactId(item.orderId) === id);
         that.setData({ invoiceRow: row ? { show: true, state: exactId(row.issuerId) ? 'can' : 'blocked' } : { show: false } });
@@ -457,10 +471,12 @@ Component({
     /* 同一次勾选意图(含失败重试)复用同一个 requestId:重放由服务端识别,不写第二条。 */
     _submitMarketingConsent(offer) {
       const that = this;
+      const generation = this._orderGeneration, id = this._orderId, capturedReader = reader(app);
       if (!that._consentRequestId) that._consentRequestId = marketingConsent.newRequestId('order');
       that.setData({ consentChecked: true, consentState: 'saving', consentError: '' });
       marketingConsent.optIn(app, offer, that._consentRequestId, function (result) {
-        if (!that._attached) return;
+        if (!that._attached || generation !== that._orderGeneration || id !== that._orderId
+            || !sameReader(app, capturedReader)) return;
         if (result.ok) {
           // 成功态就是同意行里那句「已同意,可在设置里随时退订」—— 不补两秒就没的 toast
           // (成功 toast 棘轮只减不增:提示不替代状态)。
@@ -837,6 +853,13 @@ Component({
 
     getData: function (_id, dedupe) {
       const that = this;
+      if (that._orderReader && !sameReader(app, that._orderReader)) {
+        that._invoiceKey = (that._invoiceKey || 0) + 1;
+        that._consentKey = ''; that._consentOffer = null; that._consentRequestId = null;
+        that.setData({ info: {}, invoiceRow: { show: false }, consentOffer: { show: false },
+          consentChecked: false, consentState: 'idle', primaryCta: '', completion: emptyCompletion(), loadState: 'loading' });
+      }
+      const capturedReader = that._orderReader = reader(app);
       if (dedupe && that._orderFetchInFlight) return;
       const orderGeneration = that._orderGeneration;
       const requestId = (that._orderRequestId || 0) + 1;
@@ -852,9 +875,20 @@ Component({
       const hasRendered = that.data.loadState === 'ready';
       if (!hasRendered) that.setData({ loadState: 'loading', loadErrorText: '', loadFailureVisible: false });
       // 首屏失败由结果面板说原因,不再另弹同义 toast;订单已在屏时(后台刷新失败)没有面板,只剩 toast 这一个信号。
-      const markFailed = function (state, text) {
+      const markFailed = function (state, text, response, statusCode) {
         if (!isCurrentRequest()) return;
-        if (hasRendered || that.data.loadState === 'ready') { return; } // 后台刷新失败不提示,保留已显示内容
+        const denied = [2, 401, 403].includes(failureStatus(response, statusCode))
+          || response && response.reason === 'sessionChanged' || !sameReader(app, capturedReader)
+          || /无权|权限不足|没有权限|请先登录/.test(text);
+        if (denied) {
+          that._invoiceKey = (that._invoiceKey || 0) + 1;
+          that._consentKey = ''; that._consentOffer = null; that._consentRequestId = null;
+          that.setData({ info: {}, invoiceRow: { show: false }, completion: emptyCompletion(),
+            consentOffer: { show: false }, consentChecked: false, consentState: 'idle', primaryCta: '',
+            loadState: 'failed_business', loadErrorText: text, loadFailureVisible: true });
+          return;
+        }
+        if (hasRendered || that.data.loadState === 'ready') { that.setData({ loadErrorText: '刷新失败，当前显示上次读取的订单' }); return; }
         that.setData({ loadState: state, loadErrorText: text,
           loadFailureVisible: state === 'failed_business' && /无权|权限|登录|参数/.test(text) });
       };
@@ -1027,13 +1061,13 @@ Component({
             that.loadInvoice(info);
           } else {
             // 过时请求的失败不能在新请求已接管后弹出误导性提示。
-            markFailed('failed_business', app.getRequestErrorMessage(res, '订单暂时读不到'));
+            markFailed('failed_business', app.getRequestErrorMessage(res, '订单暂时读不到'), res);
           }
         },
-        fail: function (res) {
+        fail: function (res, statusCode) {
           settleFetch();
           // 过时请求的失败不能在新请求已接管后弹出误导性提示。
-          markFailed('failed_network', '网络异常，订单没有读到');
+          markFailed('failed_network', app.getRequestErrorMessage(res, '网络异常，订单没有读到'), res, statusCode);
         }
       });
     }

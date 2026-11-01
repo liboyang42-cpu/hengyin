@@ -1,4 +1,4 @@
-const { test } = require('node:test');
+const { test, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 const tools = require('../../pages/publish/utils/publish/template-tools.js');
 const advancedConfig = require('../../pages/publish/utils/publish/advanced-game-config.js');
@@ -7,10 +7,11 @@ const authorFields = require('../../pages/publish/utils/publish/template-author-
 let pageConfig;
 const requests = [];
 global.getApp = () => ({ globalData: { statusBarHeight: 20, navBarHeight: 44 },
-  getAuthorization: () => 'test', sendRequest: request => requests.push(request), tips: () => {} });
+  getUserID: () => 9, getAuthorization: () => 'test', sendRequest: request => requests.push(request), tips: () => {} });
 global.wx = { getStorageSync: () => undefined, setStorageSync: () => {}, removeStorageSync: () => {},
   getBackgroundAudioManager: () => ({ stop: () => {} }), showToast: () => {}, showModal: () => {} };
 global.Page = config => { pageConfig = config; };
+beforeEach(() => Object.assign(global.wx, require('../helpers/memory-storage.js')()));
 
 function page() {
   delete require.cache[require.resolve('../../pages/publish/temp/index.js')];
@@ -61,7 +62,9 @@ test('后端模板参数错误打开对应工具并保留草稿输入', () => {
   assert.equal(editor.data.toolError.plan, 0);
   editor.closeToolSheet();
   editor.sendData({ title: editor.data.formData.title, status: 0 }, '/api/template/draft', 'draft');
-  requests.at(-1).success({ code: 500, msg: 'costOptions 须为 2 至 4 组' });
+  const command = JSON.parse(requests.at(-1).data);
+  requests.at(-1).success({ code: 500, msg: 'costOptions 须为 2 至 4 组',
+    writeReceipt: { state: 'REJECTED', operation: 'TEMPLATE_DRAFT', requestId: command.requestId } });
   assert.equal(editor.data.formData.title, '未保存的玩法');
   assert.equal(editor.data.submitError, 'costOptions 须为 2 至 4 组');
   assert.equal(editor.data.toolSheetOpen, true, '费用参数错误打开费用工具（2026-10-11 费用回到工具目录）');

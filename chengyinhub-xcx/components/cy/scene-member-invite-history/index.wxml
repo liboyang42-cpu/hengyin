@@ -41,6 +41,7 @@
     </view>
 
     <view class="ir-more" wx:if="{{hasMore && !loading && !loadMoreError}}" bindtap="loadMore" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">加载更多</view>
+    <cy-error wx:if="{{loadMoreError && groups.length && !loading}}" load-failure title="更多邀请记录读取失败" retry="重试" bind:retry="loadMore" />
     <view class="ir-more ir-more--loading" wx:if="{{loading && groups.length}}">正在加载…</view>
   </block>
 </view>

@@ -2139,6 +2139,8 @@ Page({
     try { intent.rec.stop(); } catch (e) { intent.onError(); }
   },
 
+  onVoiceCancel() { this._cancelShopRecording(); },
+
   /** 语音走**统一上传通道的 uploadOne**,不裸调 wx.uploadFile ——
    *  裸调会漏掉认证头构造,而这条链路是要花钱的写操作。
    *  这里用 uploadOne 而不是 uploadAll:后者强制结果里带文件地址,而语音刻意不落盘,
@@ -2379,7 +2381,7 @@ Page({
    *  没有坐标就不假装能导航 —— 提示一句比打开一张空白地图诚实。 */
   openHeroNav() {
     const node = (this.data.nodes || []).find((n) => String(n.nodeId) === String(this.data.hero.node.nodeId));
-    const lng = node && Number(node.longitude), lat = node && Number(node.latitude);
+    const lng = node && Number(node.lng), lat = node && Number(node.lat);
     if (!lng || !lat) { cyToast('这家还没标坐标'); return; }
     wx.openLocation({ longitude: lng, latitude: lat, name: node.name || '', address: node.address || '', scale: 18 });
   },
@@ -3974,7 +3976,7 @@ Page({
    *  audioNodeId 在这里存字符串 'ch',节点侧存的是数字 nodeId,=== 比较不会撞。 */
   /** 故事流右上角的声音钮:整章旁白开/关。只有作者配了 audioUrl 时 wxml 才渲染它。 */
   toggleStoryAudio() {
-    if (this.data.audioNodeId === 'chapter' && this.data.audioPlaying) { this._stopChapAudio(); return; }
+    if (this.data.audioNodeId === 'chapter' && this.data.audioPlaying) { if (this._audio) this._audio.pause(); return; }
     this.playChapterAudio();
   },
 
@@ -7502,10 +7504,17 @@ Page({
       this._kitAudio.onPause(() => audioSession.keepAwake('kitAudio', false));
       this._kitAudio.onStop(() => audioSession.keepAwake('kitAudio', false));
       this._kitAudio.onTimeUpdate(() => {
+        if (this._kit() !== this._kitAudioKit || !this._isPlayAccountCurrent()) return;
         this.setData({
           'playKit.kit.position': Math.floor(this._kitAudio.currentTime || 0),
           'playKit.kit.duration': Math.floor(this._kitAudio.duration || 0),
+          'playKit.kit.audioSeconds': Math.ceil(this._kitAudio.duration || 0),
         });
+      });
+      this._kitAudio.onCanplay(() => {
+        if (this._kit() !== this._kitAudioKit || !this._isPlayAccountCurrent()) return;
+        const seconds = Math.ceil(this._kitAudio.duration || 0);
+        if (seconds > 0) this.setData({ 'playKit.kit.audioSeconds': seconds });
       });
       this._kitAudio.onEnded(() => {
         // 只收播放态:音乐角明确**不判定通关**(2026-08-26 拍板,utils/playkit-view.js:318)。
@@ -7521,6 +7530,7 @@ Page({
       });
     }
     if (shouldPlay) {
+      this._kitAudioKit = kit;
       // 音乐角曲目来自玩法配置,同样可能是 http 签名链接(实走复核)
       const kitSrc = secureOwnMedia(kit.audioUrl);
       if (this._kitAudio.src !== kitSrc) this._kitAudio.src = kitSrc;

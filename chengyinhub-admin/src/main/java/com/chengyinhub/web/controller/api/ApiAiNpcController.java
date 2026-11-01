@@ -49,6 +49,9 @@ import com.chengyinhub.common.enums.LimitType;
 @RequestMapping("/api/ai/npc")
 public class ApiAiNpcController extends BaseController
 {
+    @Autowired
+    private com.chengyinhub.business.service.support.AuthorWriteReceiptService authorWriteReceipts;
+
     private static final Logger log = LoggerFactory.getLogger(ApiAiNpcController.class);
 
     @Autowired
@@ -467,8 +470,16 @@ public class ApiAiNpcController extends BaseController
      */
     @Operation(summary = "删除我的NPC聊天记录")
     @PostMapping("/chat/data/delete")
-    public AjaxResult deleteChatData()
+    public AjaxResult deleteChatData(@org.springframework.web.bind.annotation.RequestBody(required = false) Map<String, String> body)
     {
+        String requestId = body == null ? null : body.get("requestId");
+        if (requestId == null || requestId.isBlank()) return deleteChatData();
+        Long actor = getAppUserId();
+        return authorWriteReceipts.execute(actor, "NPC_CHAT_DELETE", requestId, Collections.emptyMap(),
+                () -> success(Collections.singletonMap("deleted", npcChatDataService.deleteForUser(actor))));
+    }
+
+    public AjaxResult deleteChatData() {
         int deleted = npcChatDataService.deleteForUser(getAppUserId());
         return success(Collections.singletonMap("deleted", deleted));
     }

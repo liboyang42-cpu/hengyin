@@ -107,6 +107,7 @@
 
   <!-- 列表 -->
   <scroll-view class="body" wx:else scroll-y enhanced show-scrollbar="{{false}}" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
+    <cy-inline-error wx:if="{{refreshError}}" title="{{refreshError}}" action="重试" bind:action="retryConversations" />
     <text wx:if="{{isMerchantView && viewList.length && (activeTab === 'in' ? invitesIn.length : invitesOut.length)}}" class="invite-strip__title">消息</text>
     <view class="conv-wrap {{item._open ? 'is-open' : ''}}" wx:for="{{viewList}}" wx:key="conversationId">
       <!-- 左滑露出的操作 -->
