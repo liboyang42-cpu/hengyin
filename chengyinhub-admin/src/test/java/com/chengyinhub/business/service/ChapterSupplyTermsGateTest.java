@@ -413,4 +413,67 @@ class ChapterSupplyTermsGateTest {
 
         verify(chapterMapper, never()).selectCmsTopicChapterById(anyLong());
     }
+
+    // ------------------------------------------------- 入口四:主办方工作台(2026-10-31 业主:招商在发布之后做,逐站一个档位)
+
+    private CmsTopic ownedTopic(Long owner, TopicLifecycleState state) {
+        CmsTopic topic = new CmsTopic();
+        topic.setId(TOPIC);
+        topic.setMemberId(owner);
+        topic.setLifecycle(state.getCode());
+        topic.setDelFlag(0);
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
+        when(chapterMapper.selectContentByIdForUpdate(CH)).thenReturn(chapter(TermsMode.PERK));
+        return topic;
+    }
+
+    /** 归属人改档放行,写的是专用 updateSupplyTerms(整列覆盖),不是逐列 patch。 */
+    @Test
+    void owner_canSwitchStationToTraffic() {
+        ownedTopic(42L, TopicLifecycleState.RECRUITING);
+        service.configureSupplyTermsAsOwner(CH, 42L, terms(TermsMode.TRAFFIC));
+        verify(chapterMapper).updateSupplyTerms(eq(CH), eq(TermsMode.TRAFFIC), any(), any(), eq(0), any());
+    }
+
+    /** 🔴 归属校验在锁里:主题归属人不是请求人 ⇒ 拒,一列都不写。 */
+    @Test
+    void owner_refusesNonOwnerUnderLock() {
+        ownedTopic(42L, TopicLifecycleState.RECRUITING);
+        IllegalStateException e = assertThrows(IllegalStateException.class,
+                () -> service.configureSupplyTermsAsOwner(CH, 99L, terms(TermsMode.TRAFFIC)));
+        assertTrue(e.getMessage().contains("无权操作"));
+        verify(chapterMapper, never()).updateSupplyTerms(anyLong(), any(), any(), any(), any(), any());
+    }
+
+    /** 🔴 已开售 ⇒ 档位冻结。 */
+    @Test
+    void owner_refusesAfterSaleStarted() {
+        ownedTopic(42L, TopicLifecycleState.SELLING);
+        assertThrows(IllegalStateException.class,
+                () -> service.configureSupplyTermsAsOwner(CH, 42L, terms(TermsMode.TRAFFIC)));
+        verify(chapterMapper, never()).updateSupplyTerms(anyLong(), any(), any(), any(), any(), any());
+    }
+
+    /**
+     * 🔴 商家(非俱乐部直付主体)主办只有权益 / 引流:即使主题恰好是平台自营,主办侧也不能标计酬 ——
+     * 开放招商 V1「平台计酬待P2开放」。俱乐部自己发的自由探索才放开(直付主体 = 俱乐部)。
+     */
+    @Test
+    void owner_merchantHostCannotPickRevshare() {
+        ownedTopic(42L, TopicLifecycleState.RECRUITING);
+        IllegalStateException e = assertThrows(IllegalStateException.class,
+                () -> service.configureSupplyTermsAsOwner(CH, 42L, terms(TermsMode.REVSHARE)));
+        assertTrue(e.getMessage().contains("权益合作或引流合作"));
+        verify(chapterMapper, never()).updateSupplyTerms(anyLong(), any(), any(), any(), any(), any());
+    }
+
+    /** 🔴 改档闸同样生效:这一站已有商家接 ⇒ 不许改档(已谈定的条件不追溯)。 */
+    @Test
+    void owner_refusesTierChangeWhenStationHasLiveOffers() {
+        ownedTopic(42L, TopicLifecycleState.RECRUITING);
+        when(offerMapper.selectByChapter(CH)).thenReturn(Collections.singletonList(new MerchantChapterOffer()));
+        assertThrows(IllegalStateException.class,
+                () -> service.configureSupplyTermsAsOwner(CH, 42L, terms(TermsMode.TRAFFIC)));
+        verify(chapterMapper, never()).updateSupplyTerms(anyLong(), any(), any(), any(), any(), any());
+    }
 }

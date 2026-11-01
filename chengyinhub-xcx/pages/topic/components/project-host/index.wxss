@@ -7,7 +7,7 @@
  * ============================================================ */
 
 /* 底部操作栏是 fixed 的,末尾分组要留出它的高度 */
-.page { padding-bottom: 260rpx; }  /* ds-ok: 量表外遗留值,复核保留 */
+.page { padding-bottom: 260rpx; min-height: 100vh; box-sizing: border-box; background: var(--cy-bg-page); }  /* ds-ok: 量表外遗留值,复核保留;2026-10-31 P-6 根节点自己铺底色,俱乐部主办深色时不露页面的浅色底 */
 .page-pad { height: var(--cy-space-2); }
 
 /* ===== Hero ===== */
@@ -122,6 +122,8 @@
   gap: var(--cy-space-1-5);
 }
 .qa-btn--tap { opacity: .6; }
+/* 2026-10-31:发布时没开的承接,工作台对应按钮灰掉;点了说明原因(merchantinfo.hostRecruitGate) */
+.qa-btn--off { opacity: .35; }
 .qa-ico {
   width: 104rpx;
   height: 104rpx;
@@ -777,3 +779,78 @@
 .pl-h { display: flex; align-items: baseline; gap: 12rpx; margin-top: var(--cy-space-4); font-size: var(--cy-font-label); font-weight: 600; color: var(--cy-text-secondary); }
 .pl-h-n { font-variant-numeric: tabular-nums; color: var(--cy-text-tertiary); }
 .dempty--closed { font-size: var(--cy-font-subtitle); font-weight: 600; color: var(--cy-text-title); }
+
+/* ===== 2026-10-31 业主批准 P-6:邀约状态条 / 站点档位 / 叠层内容 ===== */
+/* 三格状态:走完的实心,当前一格在走(进度条从左往右填) */
+.trk { display: flex; gap: var(--cy-space-1); margin-top: var(--cy-space-1); }
+.trk-i { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6rpx; font-size: var(--cy-font-micro); color: var(--cy-text-secondary); }
+.trk-bar { height: 6rpx; border-radius: var(--cy-radius-pill); background: var(--cy-bg-card-2); overflow: hidden; }
+.trk-fill { width: 100%; height: 100%; background: var(--cy-text-title); transform: scaleX(0); transform-origin: 0 50%; transition: transform .4s ease-out; }
+.trk-i.is-done .trk-fill { transform: scaleX(1); }
+.trk-i.is-done, .trk-i.is-cur { color: var(--cy-text-title); font-weight: 600; }
+.trk-i.is-cur .trk-fill { transform: scaleX(.5); }
+/* 站点行:名字下面档位小标 + 条件 */
+.st3-t { display: flex; align-items: center; gap: var(--cy-space-1); min-width: 0; margin-top: 4rpx; }
+.tchip { flex: none; padding: 2rpx 14rpx; border-radius: var(--cy-radius-pill); font-size: var(--cy-font-micro); font-weight: 700; }
+.tchip--perk { background: var(--cy-color-status-success-soft); color: var(--cy-success); }
+.tchip--traffic { background: var(--cy-color-status-info-soft); color: var(--cy-info); }
+.tchip--revshare { background: var(--cy-color-status-warning-soft); color: var(--cy-color-status-warning); }
+/* 叠层:收件人 / 合作方式 / 邀请语 / 发送 */
+.lv-to { display: flex; align-items: center; gap: var(--cy-space-3); padding: var(--cy-space-2) 0; }
+.lv-to-t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.lv-to-n { font-size: var(--cy-font-subtitle); font-weight: 700; color: var(--cy-text-title); }
+.lv-to-s { margin-top: 4rpx; font-size: var(--cy-font-caption); color: var(--cy-text-secondary); }
+.lv-terms { padding: var(--cy-space-3); }
+.lv-seg { display: flex; padding: 6rpx; border-radius: var(--cy-radius-pill); background: var(--cy-bg-card-2); }
+.lv-seg-i { flex: 1; height: 68rpx; line-height: 68rpx; text-align: center; border-radius: var(--cy-radius-pill); font-size: var(--cy-font-body); color: var(--cy-text-secondary); }
+.lv-seg-i.is-on { background: var(--cy-bg-card); color: var(--cy-text-title); font-weight: 700; }
+.lv-fee { display: flex; align-items: center; justify-content: space-between; margin-top: var(--cy-space-3); font-size: var(--cy-font-body); color: var(--cy-text-secondary); }
+.lv-fee-v { display: flex; align-items: baseline; gap: 6rpx; color: var(--cy-text-title); }
+.lv-fee-in { width: 160rpx; text-align: right; font-size: var(--cy-font-display); font-weight: 800; font-style: italic; color: var(--cy-text-title); }
+.lv-msg { padding: var(--cy-space-3); }
+.lv-msg-in { width: 100%; min-height: 120rpx; font-size: var(--cy-font-body); line-height: 1.6; color: var(--cy-text-title); }
+.lv-err { display: block; margin-top: var(--cy-space-2); font-size: var(--cy-font-caption); color: var(--cy-color-action-danger-bg); }
+.lv-note { display: block; margin-top: var(--cy-space-2); font-size: var(--cy-font-caption); color: var(--cy-text-secondary); }
+.lv-send { height: var(--cy-btn-h); line-height: var(--cy-btn-h); text-align: center; border-radius: var(--cy-radius-pill); background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); font-size: var(--cy-font-body); font-weight: 700; }
+.lv-send.is-busy { opacity: .5; }
+/* 俱乐部主页 */
+.lv-cover { display: block; width: 100%; height: 300rpx; border-radius: var(--cy-radius-lg); }
+.lv-id { display: flex; align-items: center; gap: var(--cy-space-3); margin-top: var(--cy-space-3); }
+.lv-logo { width: 96rpx; height: 96rpx; }
+.lv-home-n { font-size: var(--cy-font-title); font-weight: 800; color: var(--cy-text-title); }
+.lv-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12rpx; margin: var(--cy-space-3) 0 var(--cy-space-2); }
+.lv-stat { display: flex; flex-direction: column; padding: 20rpx 16rpx; border-radius: var(--cy-radius-md); background: var(--cy-bg-card); }
+.lv-stat-n { font-size: var(--cy-font-display); line-height: 1.1; font-weight: 800; font-style: italic; color: var(--cy-text-title); font-variant-numeric: tabular-nums; }
+.lv-stat-l { margin-top: 4rpx; font-size: var(--cy-font-micro); color: var(--cy-text-secondary); }
+.lv-tags { display: flex; flex-wrap: wrap; gap: 12rpx; margin-bottom: var(--cy-space-2); }
+.lv-tag { padding: 8rpx 20rpx; border-radius: var(--cy-radius-pill); background: var(--cy-bg-card); font-size: var(--cy-font-caption); color: var(--cy-text-secondary); }
+.lv-tag--area { background: transparent; box-shadow: inset 0 0 0 1rpx var(--cy-border); }
+.lv-bio { display: block; font-size: var(--cy-font-body); line-height: 1.7; color: var(--cy-text-secondary); white-space: pre-wrap; }
+.lv-acts { white-space: nowrap; }
+.lv-act { display: inline-flex; flex-direction: column; width: 260rpx; margin-right: var(--cy-space-2); vertical-align: top; }
+.lv-act-img { width: 260rpx; height: 180rpx; border-radius: var(--cy-radius-md); background: var(--cy-bg-card-2); }
+.lv-act-t { margin-top: 8rpx; font-size: var(--cy-font-caption); font-weight: 600; color: var(--cy-text-title); white-space: normal; }
+.lv-post { padding: var(--cy-space-3); display: flex; flex-direction: column; gap: 8rpx; }
+.lv-post-t { font-size: var(--cy-font-body); line-height: 1.6; color: var(--cy-text-title); }
+.lv-post-m { font-size: var(--cy-font-micro); color: var(--cy-text-secondary); }
+.lv-members { display: flex; align-items: center; flex-wrap: wrap; gap: 12rpx; }
+.lv-members .dr-avatar { width: 64rpx; height: 64rpx; }
+.lv-members-more { font-size: var(--cy-font-caption); color: var(--cy-text-secondary); }
+/* 这一站的档位 */
+.lv-st { margin-bottom: var(--cy-space-2); font-size: var(--cy-font-body); font-weight: 700; color: var(--cy-text-title); }
+.lv-tiers { display: flex; flex-direction: column; gap: var(--cy-space-2); }
+.lv-tier { padding: var(--cy-space-3); border-radius: var(--cy-radius-lg); background: var(--cy-bg-card); box-shadow: inset 0 0 0 2rpx transparent; }
+.lv-tier.is-on { box-shadow: inset 0 0 0 4rpx var(--cy-text-title); }
+.lv-tier-h { display: flex; align-items: center; justify-content: space-between; font-size: var(--cy-font-subtitle); font-weight: 700; color: var(--cy-text-title); }
+.lv-tier-v { display: flex; align-items: baseline; gap: 4rpx; font-size: var(--cy-font-caption); font-weight: 600; color: var(--cy-text-secondary); }
+.lv-tier-in { width: 120rpx; text-align: right; font-size: var(--cy-font-subtitle); font-weight: 800; color: var(--cy-text-title); }
+.lv-tier-d { display: block; margin-top: 8rpx; font-size: var(--cy-font-caption); line-height: 1.6; color: var(--cy-text-secondary); }
+.lv-cnt { display: flex; align-items: center; justify-content: space-between; padding: var(--cy-space-2) var(--cy-space-3); font-size: var(--cy-font-body); color: var(--cy-text-title); }
+.lv-step { display: flex; align-items: center; gap: var(--cy-space-2); }
+.lv-step-b { width: var(--cy-btn-h); height: var(--cy-btn-h); display: flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--cy-bg-card-2); font-size: var(--cy-font-title); color: var(--cy-text-title); }
+.lv-step-minus { width: 28rpx; height: 4rpx; border-radius: var(--cy-radius-pill); background: currentColor; }
+.lv-step-v { min-width: 80rpx; text-align: center; font-size: var(--cy-font-subtitle); font-weight: 800; color: var(--cy-text-title); font-variant-numeric: tabular-nums; }
+.lv-inv3 { display: flex; align-items: center; gap: var(--cy-space-2); font-size: var(--cy-font-body); color: var(--cy-text-title); }
+/* 2026-10-31 P-6 俱乐部主办深色(真机走查):封面角标在照片压暗层上恒为白字;关系入口的 SVG 图标是深色线稿,深色底上反相 */
+.theme-dark .hero-status { color: #FFFFFF; } /* ds-ok 照片压暗层上的白字 */
+.theme-dark .qa-ico-img { filter: invert(1); }

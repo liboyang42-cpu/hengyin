@@ -802,9 +802,16 @@ public class ApiRoamController extends BaseController {
     }
 
     @Operation(summary = "漫游结算(发探索值 + 里程碑勋章)")
+    /** 没带轨迹的结算(老调用方与单测);接口本身走下面带 track 的那一个。
+     *  ⚠️ 必须同样挂事务:从代理进来再内部调用四参版不会再过代理,不挂就等于结算没有事务(锁 / 回滚全失效)。 */
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
+    public AjaxResult finish(String sessionId, String poiIds, Integer distanceM) {
+        return finish(sessionId, poiIds, distanceM, null);
+    }
+
     @PostMapping("/finish")
     @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)  // C3b:中途失败整体回滚,重试不重复发/不丢
-    public AjaxResult finish(String sessionId, String poiIds, Integer distanceM) {
+    public AjaxResult finish(String sessionId, String poiIds, Integer distanceM, String track) {
         Long memberId = uid();
         if (memberId <= 0) return error("请先登录");
         roamMapper.lockClaimOwner(memberId);
@@ -836,6 +843,9 @@ public class ApiRoamController extends BaseController {
         session.setXpAwarded(totalXp);
         if (roamMapper.updateSessionFinish(session) == 0) return error("本次漫游已结算");
         session.setStatus(1);
+        // 2026-10-31 P-7:简化轨迹给漫游记录卡片画图。只做展示,不参与结算;无效轨迹不存(卡片按没有轨迹画)。
+        String trackJson = com.chengyinhub.business.service.support.RoamTrackSimplifier.simplify(track);
+        if (trackJson != null) roamMapper.saveSessionTrack(sid, memberId, trackJson);
 
         // ④ 双轨发放:只入 member_growth。后续异常会由方法事务把上面的 CAS 一并回滚。
         if (totalXp > 0) growthService.addExp(memberId, totalXp, "城市漫游");

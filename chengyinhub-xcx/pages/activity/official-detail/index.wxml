@@ -205,7 +205,8 @@
     </scroll-view>
 
     <view class="od-cta-bar">
-      <button class="od-share" open-type="share" aria-label="分享活动">
+      <!-- 2026-10-31 P-8:分享进通用分享页(一张活动卡 + 色块 + 渠道;微信好友在那一页) -->
+      <button class="od-share" bindtap="openShareCard" aria-label="分享活动" hover-class="cy-pressed" hover-stay-time="80">
         <view class="od-share-visual"><cy-icon name="share" size="34" /></view>
       </button>
       <view wx:if="{{cta.type !== 'wait' && cta.type !== 'ended'}}" class="od-cta {{cta.type}}"
@@ -220,5 +221,6 @@
                     title="{{loadErrTitle}}" sub="{{loadErrSub}}"
                     primary="{{loadErrAction}}" bind:primary="onLoadErrorAction" auto-back custom-back bind:back="onLoadErrorBack" />
   </view>
+  <cy-share-card show="{{shareCard.show}}" card="{{shareCard.card}}" bind:close="onShareCardClose" />
 </view>
 

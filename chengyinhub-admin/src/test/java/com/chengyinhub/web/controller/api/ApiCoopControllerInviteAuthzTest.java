@@ -925,4 +925,45 @@ class ApiCoopControllerInviteAuthzTest {
         verify(coopInviteService, never()).insertCoopInvite(any());
     }
 
+
+    // ------------------------------------------------- 已读回执(2026-10-31 P-6)
+
+    private CoopInvite clubInviteTo(Long clubOwner) {
+        CoopInvite inv = new CoopInvite();
+        inv.setId(77L);
+        inv.setInviteType(1);
+        inv.setFromType("member");
+        inv.setFromId(OTHER);
+        inv.setToType("club");
+        inv.setToId(66L);
+        inv.setStatus(0);
+        Club club = new Club();
+        club.setId(66L);
+        club.setMemberId(clubOwner);
+        when(clubService.selectClubById(66L)).thenReturn(club);
+        when(coopInviteService.selectCoopInviteById(77L)).thenReturn(inv);
+        return inv;
+    }
+
+    /** 受邀俱乐部的群主打开详情 ⇒ 写一次已读。 */
+    @Test
+    void read_inviteeMarksRead() {
+        clubInviteTo(ME);
+        CoopInvite body = new CoopInvite();
+        body.setId(77L);
+        AjaxResult r = c.markInviteRead(body);
+        assertEquals(200, r.get(AjaxResult.CODE_TAG));
+        org.mockito.Mockito.verify(coopInviteService).markRead(77L);
+    }
+
+    /** 🔴 发起方 / 旁人打开都不算读:不写回执,不然「已读」就成了发起方自己点出来的假状态。 */
+    @Test
+    void read_nonInviteeCannotMarkRead() {
+        clubInviteTo(OTHER);
+        CoopInvite body = new CoopInvite();
+        body.setId(77L);
+        AjaxResult r = c.markInviteRead(body);
+        assertEquals(500, r.get(AjaxResult.CODE_TAG));
+        org.mockito.Mockito.verify(coopInviteService, org.mockito.Mockito.never()).markRead(any());
+    }
 }

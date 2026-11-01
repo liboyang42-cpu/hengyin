@@ -15,7 +15,8 @@
     "cy-btn": "/components/cy/btn/index",
     "cy-event-attendance": "/components/cy/event-attendance/index",
     "cy-privacy-gate": "/components/cy/privacy-gate/index",
-    "cy-consent-check": "/components/cy/consent-check/index"
+    "cy-consent-check": "/components/cy/consent-check/index",
+    "cy-share-card": "/components/cy/share-card/index"
   },
   "navigationStyle": "custom"
 }

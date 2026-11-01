@@ -197,7 +197,8 @@ test('channelFlags:模板只读布尔，不在 WXML 里对中文字面量做 ind
 test('契约:分享 sheet 的置灰只能读 share.can 布尔，不许在 WXML 里 indexOf', () => {
   const wxml = fs.readFileSync(path.join(ROOT, 'pages/roam/index.wxml'), 'utf8')
   // 2026-09-19 裁决:分享 sheet 退出口只留 ✕(底部「取消」已删),区间尾锚改用 sheet 之后的 canvas。
-  const sheet = wxml.slice(wxml.indexOf('sh-channels'), wxml.indexOf('<canvas type="2d" id="iconcv"'))
+  // 2026-10-31 P-8:渠道行改成横滑大圆钮(class rsh-ch),起锚跟着换
+  const sheet = wxml.slice(wxml.indexOf('class="rsh-ch"'), wxml.indexOf('<canvas type="2d" id="iconcv"'))
   assert.equal(/indexOf/.test(sheet), false, '渠道置灰又用回了 WXML indexOf —— 那个表达式恒假，置灰不会生效')
   assert.match(sheet, /share\.can\.square/)
   assert.match(sheet, /share\.can\.save/)

@@ -112,6 +112,19 @@ test('票价：空、负数分别报不同文案；0 是合法的免费票', () 
   assert.deepEqual(fieldsOf(free), [], '0 元票必须放行');
 });
 
+test('开售前定价(2026-10-31 业主 Q7):自由探索票价可留空,城市定向不行', () => {
+  const pending = base();
+  pending.formData.productType = 2;
+  pending.formData.recruitDeadline = '2026-08-30';
+  pending.formData.tickets = [Object.assign({}, OK_TICKET, { price: '' })];
+  assert.equal(fieldsOf(pending).includes('ticketPrice0'), false, '自由探索空价 = 开售前定价,锁价时写回');
+
+  const neg = base();
+  neg.formData.productType = 2;
+  neg.formData.tickets = [Object.assign({}, OK_TICKET, { price: -1 })];
+  assert.ok(fieldsOf(neg).includes('ticketPrice0'), '负价照旧拦');
+});
+
 test('城市定向票(mode=1)要集合地点，普通票要起止日期', () => {
   const cityNoMeeting = base();
   cityNoMeeting.formData.tickets = [{ name: 'A', price: 1, mode: 1 }];

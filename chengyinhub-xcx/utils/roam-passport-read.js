@@ -10,7 +10,13 @@ function fact(raw) {
   return { sessionId: raw.sessionId, ts: finished || started || 0, finishedAt: finished,
     distance: distance == null ? null : distance / 1000, shops: count(raw.shops),
     durSec: finished != null && started != null && finished >= started ? Math.floor((finished - started) / 1000) : null,
-    photos: [], track: [], pois: [], serverFact: true }
+    photos: [], track: serverTrack(raw.track), pois: [], serverFact: true }
+}
+// 2026-10-31 P-7:服务端简化轨迹 [[lat,lng],...];30 天后随详细位置清空(null),坏点整条丢弃
+function serverTrack(raw) {
+  if (!Array.isArray(raw)) return []
+  const ok = raw.every(p => Array.isArray(p) && p.length === 2 && p.every(Number.isFinite) && Math.abs(p[0]) <= 90 && Math.abs(p[1]) <= 180)
+  return ok ? raw.map(p => ({ lat: p[0], lng: p[1] })) : []
 }
 function merge(local, remote) {
   const ids = new Set(remote.map(row => row.sessionId))
@@ -24,7 +30,7 @@ function merge(local, remote) {
           (typeof point[axis] === 'number' || typeof point[axis] === 'string' && point[axis].trim() !== '')
           && Number.isFinite(Number(point[axis])) && Math.abs(Number(point[axis])) <= max)
       })))
-    return { ...saved, ...row, ts: saved && saved.ts || row.ts, localSupplement: !!saved, photos: saved && saved.photos || [], track: saved && saved.track || [], pois: saved && saved.pois || [],
+    return { ...saved, ...row, ts: saved && saved.ts || row.ts, localSupplement: !!saved, photos: saved && saved.photos || [], track: saved && saved.track && saved.track.length ? saved.track : row.track, pois: saved && saved.pois || [],
       historyKey: 'server:' + row.sessionId }
   })
   // Legacy records remain local records; never upload them or add them to server passport totals.

@@ -85,6 +85,15 @@ function isLocationPermissionFailure(value) {
  * 发起合作要看得到对方的承接档案再决定。电话联系留在行内 —— 那是联系未入驻商家,
  * 不是合作。
  */
+/** 这一站的档与条件,只读展示:权益档写门槛,计酬档写俱乐部付的每人次上限,引流档写到店打卡。 */
+function stationTermsText(r) {
+  const mode = r && r.termsMode;
+  if (mode === 'TRAFFIC') return '(引流档 · 到店打卡)';
+  if (mode === 'REVSHARE') return '(计酬档 · 俱乐部付 ≤ ¥' + (Number(r.maxPerHeadFee) || 0) + ' / 人次)';
+  if (mode === 'PERK') return Number(r.perkMinValue) > 0 ? '(权益档 · ≥ ¥' + Number(r.perkMinValue) + ' 权益)' : '(权益档)';
+  return '';
+}
+
 Page({
   data: {
     statusBarHeight: getApp().globalData.statusBarHeight,
@@ -350,8 +359,10 @@ Page({
     });
     invitable.forEach(function (r) {
       const row = put('m' + r.memberId, Object.assign({}, r, { canInvite: true, replacementInvites: [] }));
-      if (!(row.chapterNames || []).includes(r.chapterName)) {
-        row.chapterNames = (row.chapterNames || []).concat([r.chapterName]);
+      // 2026-10-31 业主:每一站一个档位,邀约写清这一站的档与条件(商家只能接受或拒绝)
+      const label = r.chapterName + stationTermsText(r);
+      if (!(row.chapterNames || []).includes(label)) {
+        row.chapterNames = (row.chapterNames || []).concat([label]);
       }
       if (r.replacementOfOfferId != null) {
         const candidates = row.replacementInvites;

@@ -63,6 +63,8 @@ public class RoamPassportReadService {
             } catch (RuntimeException ignored) { /* Legacy missing/corrupt optional statistic stays unknown. */ }
         }
         out.put("shops", shops);
+        // 2026-10-31 P-7:简化轨迹(30 天后随详细位置清空,之后为 null,卡片退回只画区域)
+        out.put("track", RoamTrackSimplifier.parse(row.getTrackJson()));
         return out;
     }
 }

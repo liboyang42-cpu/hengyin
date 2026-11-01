@@ -24,7 +24,9 @@
     "cy-route-sketch": "/pages/topic/components/cy/route-sketch/index",
     "cy-merchant-cards": "/pages/topic/components/cy/merchant-cards/index",
     "cy-self-play-checkout": "/pages/topic/components/cy/self-play-checkout/index",
-    "cy-pass-reveal": "/pages/topic/components/cy/pass-reveal/index"
+    "cy-pass-reveal": "/pages/topic/components/cy/pass-reveal/index",
+    "cy-share-card": "/components/cy/share-card/index",
+    "cy-privacy-gate": "/components/cy/privacy-gate/index"
   },
   "navigationStyle": "custom",
   "navigationBarTextStyle": "white"

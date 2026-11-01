@@ -1,6 +1,8 @@
 {
   "schemaVersion": 1,
   "dependencies": {
+    "20261031_coop_invite_read_time": [],
+    "20261031_roam_session_track": ["roam", "roam_session_recovery_20260913"],
     "x12_topic_look_20261029": ["theme_runtime_20261004"],
     "20261029_activity_cancellation_receipt": [],
     "20261029_club_post_repost": ["club_post"],

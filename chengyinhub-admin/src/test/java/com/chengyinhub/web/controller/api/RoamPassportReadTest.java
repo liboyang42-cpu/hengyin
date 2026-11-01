@@ -27,7 +27,9 @@ class RoamPassportReadTest {
         assertEquals("9007199254740994", result.get("nextBefore"));
         assertEquals(true, result.get("hasMore"));
         Map<?, ?> fact = (Map<?, ?>) ((List<?>) result.get("items")).get(0);
-        assertEquals(Set.of("sessionId", "startedAt", "finishedAt", "distanceM", "shops"), fact.keySet());
+        // 2026-10-31 P-7:多一个 track,只读 track_json 列;finish_result_json 里混着的轨迹 / 照片照旧不下发
+        assertEquals(Set.of("sessionId", "startedAt", "finishedAt", "distanceM", "shops", "track"), fact.keySet());
+        assertEquals(null, fact.get("track"));
         assertEquals(2L, fact.get("shops"));
         when(mapper.page(7L, 9007199254740994L, 3)).thenReturn(List.of(row(9007199254740993L)));
         assertEquals(false, service.page(7L, "9007199254740994", 2).get("hasMore"));

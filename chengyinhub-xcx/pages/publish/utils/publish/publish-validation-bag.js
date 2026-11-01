@@ -78,7 +78,8 @@ function buildValidationBag(state) {
     // 验证票务信息(价格/集合地点/票单时间为本页专有规则,逐票交错顺序保持原样)
     (formData.tickets || []).forEach((ticket, index) => {
       bag.require(nonEmpty(ticket.name), `ticketName${index}`, '请填写票单名称', `第${index + 1}个票务：请填写票单名称`);
-      if (ticket.price === undefined || ticket.price === null || ticket.price === '') {
+      // 开售前定价(2026-10-31 业主 Q7):自由探索恒走招商→锁价,票价可留空,锁价时写回;城市定向发布即开卖必须有价
+      if ((ticket.price === undefined || ticket.price === null || ticket.price === '') && Number(formData.productType) !== 2) {
         bag.add(`ticketPrice${index}`, '请填写票价', `第${index + 1}个票务：请填写票价`);
       } else if (ticket.price < 0) {
         bag.add(`ticketPrice${index}`, '价格不能为负数', `第${index + 1}个票务：价格不能为负数`);

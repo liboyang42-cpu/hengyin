@@ -88,9 +88,11 @@ test('城市定向的章节卡必须有「编辑章节」入口(稿 P2/C2 是两
     '城市定向档只有「编辑故事流」一颗时，章节设置在卡上没有任何入口')
 })
 
-test('商家承接只有俱乐部主理人能开(2026-09-07 用户裁决 + 0811 后端同型闸)', () => {
-  assert.match(WXML, /<view class="chapter-recruit" wx:if="\{\{merchantPoolEditable\}\}">/,
-    '这一段没有身份闸，玩家和商家也能开，开了要到发布时才被后端 resolveMerchantPoolFlag 拒')
+// 2026-10-31 业主批准 P-6/P-9:商家主办的自由探索也逐站招商(权益 / 引流两档)。章节招商后端不看主理人身份
+// (resolveMerchantPoolFlag 只管主题级商家池 merchant_status,那道闸不动);玩家仍然看不到这一段。
+test('章节商家承接:俱乐部主理人,或商家主办的自由探索才露面;玩家不露', () => {
+  assert.match(WXML, /<view class="chapter-recruit" wx:if="\{\{merchantPoolEditable \|\| \(operationScope === 'MERCHANT' && formData\.productType === 2\)\}\}">/,
+    '这一段没有身份闸，玩家也能开')
 })
 
 test('商家的票务页没有自玩票整段(稿 M11)', () => {

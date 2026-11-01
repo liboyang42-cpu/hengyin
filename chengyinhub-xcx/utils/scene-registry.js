@@ -43,7 +43,7 @@ const SCENES = {
   'roam-discover': { title: '发现附近店铺', theme: 'player', variant: 'full' },
   // ⚠️ 漫游域(subpackageRoam)由用户本人维护:roam-passport 已在 master 下线,不加回来。
   // 2026-10-27 P-37(业主 p120):漫游历史「不能是黑色弹窗,要全屏」⇒ page 档;roam / play 宿主按 page 档直接进深链页。
-  'roam-history': { route: '/subpackageRoam/history/index', title: '漫游历史', theme: 'player', variant: 'page' },
+  'roam-history': { route: '/subpackageRoam/history/index', title: '漫游记录', theme: 'player', variant: 'page' },
   'roam-session': { route: '/subpackageRoam/session/index', title: '本次漫游', theme: 'player', variant: 'full', canBack: true },
   // 2026-10-27 P-58(业主 p101):优惠券「不能是弹窗,之前做好过正常页面」⇒ page 档
   'game-coupon-wallet': { route: '/subpackageMember/coupon-wallet/index', title: '优惠券', theme: 'player', variant: 'page' },

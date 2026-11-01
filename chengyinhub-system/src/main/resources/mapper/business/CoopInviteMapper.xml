@@ -44,6 +44,17 @@
         <result property="depositPaidTransactionId" column="deposit_paid_transaction_id"/>
     </resultMap>
 
+    <!-- 2026-10-31 已读回执:独立语句,不进 selectCoopInviteVo —— 列由 migration_20261031_coop_invite_read_time.sql 落库 -->
+    <update id="markRead">
+        update coop_invite set read_time = #{readTime} where id = #{id} and read_time is null
+    </update>
+
+    <select id="selectReadTimes" resultType="java.util.HashMap">
+        select id as id, read_time as readTime from coop_invite
+        where read_time is not null and id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </select>
+
     <sql id="selectCoopInviteVo">
         select id, invite_type, from_type, from_id, to_type, to_id, topic_id, origin_apply_id, node_id, supply_station_id, game_id, target_level, status, message, handle_time, handle_reason, expire_time, config_deadline, share_mode, share_rate, fixed_fee, deposit_amount, deposit_status, deposit_out_trade_no, deposit_refund_no, deposit_refund_state, deposit_refund_amount, deposit_refund_lease_token, deposit_refund_lease_at, deposit_refund_requested_at, deposit_refund_confirmed_at, deposit_paid_transaction_id, create_by, create_time, update_by, update_time, del_flag from coop_invite
     </sql>

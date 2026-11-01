@@ -108,7 +108,7 @@ class GenericGameplayHttpE2eIT {
 
     // shortcut: local PNG and offline signatures exclude OSS I/O; use dedicated OSS acceptance for upload/download.
     static final class ReviewedMediaFixture implements AutoCloseable {
-        private static final String ENDPOINT = "http://127.0.0.1:9";
+        private static final String ENDPOINT = "https://127.0.0.1:9";
         private static final String BUCKET = "offline-http-e2e";
         private static final String ACCESS_ID = "offline-http-e2e-not-a-credential";
         private final String label;
@@ -218,7 +218,7 @@ class GenericGameplayHttpE2eIT {
 
         private String knownReference(String value) {
             java.net.URI uri = java.net.URI.create(value);
-            assertTrue("http".equals(uri.getScheme()) && "127.0.0.1".equals(uri.getHost()) && uri.getPort() == 9
+            assertTrue("https".equals(uri.getScheme()) && "127.0.0.1".equals(uri.getHost()) && uri.getPort() == 9
                     && uri.getUserInfo() == null && uri.getFragment() == null, "Offline fixture origin required");
             String prefix = "/" + BUCKET + "/";
             assertTrue(uri.getRawPath().startsWith(prefix), "Offline fixture bucket required");
@@ -275,7 +275,7 @@ class GenericGameplayHttpE2eIT {
             assertNotEquals(expected, canonicalReadView(original.deepCopy().put("text", "different")));
             ObjectNode reordered = original.deepCopy(); reordered.putArray("order").add("second").add("first");
             assertNotEquals(expected, canonicalReadView(reordered));
-            String foreign = first.replace(ENDPOINT, "http://127.0.0.2:9");
+            String foreign = first.replace(ENDPOINT, "https://127.0.0.2:9");
             assertNotEquals(expected, canonicalReadView(original.deepCopy().put("image", foreign)));
             assertEquals(foreign, canonicalReadView(original.deepCopy().put("image", foreign)).path("image").asText());
             for (String refused : new String[]{first.replace(key, "upload/00000000000000000000000000000000.png"),

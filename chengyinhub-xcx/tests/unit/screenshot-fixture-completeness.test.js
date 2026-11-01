@@ -149,7 +149,7 @@ const CONTRACTS = {
     shell: ['subpackageRoam/history/index.wxml', '<cy-scene-roam-history'],
     target: 'cy-scene-roam-history',
     state: 'normal',
-    paths: ['state', 'list[].title', 'list[].dateShort', 'list[].distanceText', 'list[].shopsText', 'list[].medals', 'summary.trips', 'summary.km', 'summary.shopsText'],
+    paths: ['state', 'list[].title', 'list[].dateCard', 'list[].distanceText', 'list[].shopsText', 'list[].medals', 'summary.trips', 'summary.km', 'summary.shopsText'],
     equals: { state: 'ready' },
   },
   B08: {

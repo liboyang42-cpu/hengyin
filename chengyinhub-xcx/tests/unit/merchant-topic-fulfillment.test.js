@@ -477,6 +477,15 @@ test('俱乐部半屏按后端给的原样映射，缺电话时不编一个出�
   assert.equal(noStatus[0].statusText, '待对方确认');
   assert.equal(noStatus[0].accepted, false);
 
+  // 2026-10-31 P-6:主办侧带邀约 id 的等回复行改用三格状态条;已读回执把第二格点亮
+  const tracked = page.mapClubs([{ clubId: 4, name: '黄浦城市探索队', status: 0, inviteId: 9, read: true }]);
+  assert.equal(tracked[0].statusText, '');
+  assert.deepEqual(tracked[0].track.map((s) => s.cls), ['is-done', 'is-done', 'is-cur']);
+  const unread = page.mapClubs([{ clubId: 6, name: 'City Walk 周末班', status: 0, inviteId: 11 }]);
+  assert.deepEqual(unread[0].track.map((s) => s.cls), ['is-done', 'is-cur', '']);
+  const accepted = page.mapClubs([{ clubId: 5, name: '老城厢走读社', status: 1, inviteId: 10 }]);
+  assert.equal(accepted[0].track, null, '已合作只出标签,不画状态条');
+
   // 组件不许渲染空胶囊:后端没给状态时那个位置该整个消失,不是留一条灰杠
   const join = fs.readFileSync(WXML, 'utf8');
   const host = fs.readFileSync(path.resolve(__dirname, '../../pages/topic/components/project-host/index.wxml'), 'utf8');

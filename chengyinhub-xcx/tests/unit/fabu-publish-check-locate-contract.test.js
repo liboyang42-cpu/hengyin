@@ -73,8 +73,9 @@ function locate(page, field) {
 test('wxml 把缺项的字段带到处理函数,不再只给一个粗分类 tab', () => {
   const wxml = fs.readFileSync(WXML, 'utf8');
   // 2026-10-27 P-44:旧草稿归属行(reopenLegacyDraftScope)随归属确认一起删除,不许回潮。
-  const rows = wxml.match(/<view class="pc-item pc-item-(blocking|advisory)" wx:for=[\s\S]*?hover-stay-time="80">/g) || [];
-  assert.equal(rows.length, 2, '必填行 + 建议行各一条');
+  // 2026-10-31 P-4:发布确认改成剧情预览,挡住发布的项是预览最上面的红行(sp-issue);「建议完善」那组随确认层撤掉
+  const rows = wxml.match(/<view class="sp-issue" wx:for=[\s\S]*?hover-stay-time="80">/g) || [];
+  assert.equal(rows.length, 1, '阻断行一条');
   assert.doesNotMatch(wxml, /legacyScopePending|reopenLegacyDraftScope|确认旧草稿的发布入口|旧草稿还没恢复/);
   rows.forEach((row) => {
     assert.match(row, /data-field="\{\{item\.field\}\}"/, `定位行没带字段: ${row}`);
