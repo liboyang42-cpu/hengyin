@@ -1,3 +1,4 @@
+// 2026-11-01 dw31 上线集成(master + #695 F2 + #694 F4 + #696 F3/F5):三侧各自重锚的 U4-DYNAMIC 登记取并集(各改不同文件,无同一锚点两侧冲突),条数与理由不变;u4Dynamic digest 按门禁 baselineKeyDigest 重算。
 // 2026-10-31 F2 招商流程(P-6 叠层):merchantinfo.js 引入 host-layers、跳转式邀约 / 主页挪进叠层模块后,U4-DYNAMIC 锚点仅行号位移(661→664、2437→2426、2468→2457),逐条以上一版原行与新行逐字一致定位,理由与条数不变;digest 按门禁重算。
 // 2026-10-31 F2 招商流程修复:merchantinfo.js 加 hostRecruitGate(工作台按发布开关灰掉「俱乐部 / 商家」)后,U4-DYNAMIC 锚点仅行号位移(2417→2437、2448→2468),逐条以 master 原行与新行逐字一致定位,理由与条数不变、不新增登记;u4Dynamic digest 按门禁 baselineKeyDigest 重算。
 // 2026-10-31 业主「开售前定价要修」:fabu/index.js 票种编辑器、发布上送与剧情预览为自由探索留空价(开售前定价)共加 5 行,其后 6 条锚点仅行号位移(U4-DYNAMIC 5688→5691、6395→6398、6407→6410、6474→6477、7023→7026、9305→9310),调用行逐字相同、理由与条数不变;digest 按门禁 baselineKeyDigest 重算。
@@ -902,9 +903,7 @@ module.exports = {
 // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):45 个既有锚点仅行号位移换 key + 本线 6 处新增登记,digest 按门禁同一算法(sha256 of sorted keys joined by \n)重算。
 // 2026-10-20 合并 master(#327 等)进 #293:两侧重锚逐条按合并后源码同一行文本定位一致(fabu 12 条、merchantinfo 2 条、scene-club-edit 1 条),square/list 196/1259 随 #325 点赞修复后移一行;digest 按门禁同一算法重算。
 // 2026-10-27 devfix L07(21 处动态 setData 仅行号位移):逐条以 master 原行与新行逐字比对一致,理由一字未改,digest 按门禁同算法重算。
-"ce0738281bfbe8f01694f987cd67dcaa4aef41fe3acdc4ca780f9fae44debbe1",
-"438255a000954dff9f01d3d74e736404a99daf2104012eecd2c1aa745956368e",
-"6dbe94f04a0d31df24c3865c6509654bc4b309080620011cf6f9c37576fdc2e8",
+"6177b95f73c329fe3e2aae987f83d3c2b609563ce450cb3579540aba5979bb4f",
 // 2026-10-28 模板页货架改版(#652)合 master(#610):本线删 template/index 两条 + master play 1621→1624 重锚，合并树 60 条，digest 按同一算法重算。
 // 2026-10-20 R5 尾段(#327,owner 批准 12 条重锚):fabu 729→731、898→900、2524→2530、3570→3588、3951→3969、4957→4990、5215→5248、5866→5899、5876→5909、5929→5962、6270→6303、7936→8060,逐行比对 master 原行一字未改,理由与条数 58 不变;digest 按同一算法显式重算。
       // 2026-08-20 开卡包四拍动效:u5Silent 条数不变(12),只是 play/index.js 的调用点

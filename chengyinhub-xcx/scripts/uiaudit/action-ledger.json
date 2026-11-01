@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5536,
+  "controlCount": 5578,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -1224891,7 +1224891,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:110:bindchange:onClubPoolChange:5",
+      "id": "pages/publish/fabu/step3.wxml:112:bindchange:onClubPoolChange:5",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1224914,7 +1224914,7 @@
         "tag": "cy-switch",
         "event": "bindchange",
         "handler": "onClubPoolChange",
-        "line": 110,
+        "line": 112,
         "selectorHint": "cy-switch[bindchange]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1224958,7 +1224958,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:121:bindchange:onTeamSupportChange:6",
+      "id": "pages/publish/fabu/step3.wxml:123:bindchange:onTeamSupportChange:6",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1224981,7 +1224981,7 @@
         "tag": "cy-switch",
         "event": "bindchange",
         "handler": "onTeamSupportChange",
-        "line": 121,
+        "line": 123,
         "selectorHint": "cy-switch[bindchange]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1225092,7 +1225092,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:129:bindtap:onTeamModeSelect:8",
+      "id": "pages/publish/fabu/step3.wxml:131:bindtap:onTeamModeSelect:8",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1225115,7 +1225115,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onTeamModeSelect",
-        "line": 129,
+        "line": 131,
         "selectorHint": ".tk-segment__item",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1225159,7 +1225159,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:133:bind:change:onTeamMaxMembersChange:9",
+      "id": "pages/publish/fabu/step3.wxml:135:bind:change:onTeamMaxMembersChange:9",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1225182,7 +1225182,7 @@
         "tag": "cy-dropdown",
         "event": "bind:change",
         "handler": "onTeamMaxMembersChange",
-        "line": 133,
+        "line": 135,
         "selectorHint": "cy-dropdown[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1225226,7 +1225226,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:144:bindtap:onReqLeftTap:10",
+      "id": "pages/publish/fabu/step3.wxml:146:bindtap:onReqLeftTap:10",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1225249,7 +1225249,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onReqLeftTap",
-        "line": 144,
+        "line": 146,
         "selectorHint": ".req-left",
         "visibleCondition": "{{ticketMissing.tickets}}",
         "disabledCondition": null,
@@ -1225293,7 +1225293,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:146:bindtap:openTicketEditor:11",
+      "id": "pages/publish/fabu/step3.wxml:148:bindtap:openTicketEditor:11",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1225316,7 +1225316,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openTicketEditor",
-        "line": 146,
+        "line": 148,
         "selectorHint": ".node-card",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1225360,7 +1225360,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:161:bindtap:openTicketEditor:12",
+      "id": "pages/publish/fabu/step3.wxml:163:bindtap:openTicketEditor:12",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1225383,7 +1225383,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openTicketEditor",
-        "line": 161,
+        "line": 163,
         "selectorHint": ".slopes-add-chapter",
         "visibleCondition": "{{!showTicketEditor}}",
         "disabledCondition": null,
@@ -1225427,7 +1225427,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:175:bindtap:closeTicketEditor:13",
+      "id": "pages/publish/fabu/step3.wxml:177:bindtap:closeTicketEditor:13",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1225450,7 +1225450,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeTicketEditor",
-        "line": 175,
+        "line": 177,
         "selectorHint": ".node-pill",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1225494,7 +1225494,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:180:bindinput:onEditTicketChange:14",
+      "id": "pages/publish/fabu/step3.wxml:182:bindinput:onEditTicketChange:14",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1225517,7 +1225517,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onEditTicketChange",
-        "line": 180,
+        "line": 182,
         "selectorHint": ".tk-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1225561,7 +1225561,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:191:bindinput:onEditTicketChange:15",
+      "id": "pages/publish/fabu/step3.wxml:193:bindinput:onEditTicketChange:15",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1225584,7 +1225584,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onEditTicketChange",
-        "line": 191,
+        "line": 193,
         "selectorHint": ".tk-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1225628,7 +1225628,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:195:bindinput:onEditTicketChange:16",
+      "id": "pages/publish/fabu/step3.wxml:197:bindinput:onEditTicketChange:16",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1225651,7 +1225651,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onEditTicketChange",
-        "line": 195,
+        "line": 197,
         "selectorHint": ".tk-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1225695,7 +1225695,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:201:bindtap:showTicketTimePicker:17",
+      "id": "pages/publish/fabu/step3.wxml:203:bindtap:showTicketTimePicker:17",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1225718,7 +1225718,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "showTicketTimePicker",
-        "line": 201,
+        "line": 203,
         "selectorHint": ".node-card__row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1225762,7 +1225762,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:210:bindtap:showTicketTimePicker:18",
+      "id": "pages/publish/fabu/step3.wxml:212:bindtap:showTicketTimePicker:18",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1225785,7 +1225785,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "showTicketTimePicker",
-        "line": 210,
+        "line": 212,
         "selectorHint": ".node-card__row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1225829,7 +1225829,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:231:bindtap:showTicketTimePicker:19",
+      "id": "pages/publish/fabu/step3.wxml:233:bindtap:showTicketTimePicker:19",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1225852,74 +1225852,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "showTicketTimePicker",
-        "line": 231,
-        "selectorHint": ".node-card__row",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5695"
-      }
-    },
-    {
-      "id": "pages/publish/fabu/step3.wxml:239:bindtap:showTicketTimePicker:20",
-      "route": "pages/publish/fabu/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/publish/fabu/step3.wxml",
-        "js": "pages/publish/fabu/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "showTicketTimePicker",
-        "line": 239,
+        "line": 233,
         "selectorHint": ".node-card__row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1226030,7 +1225963,74 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:249:bindinput:onEditTicketChange:21",
+      "id": "pages/publish/fabu/step3.wxml:241:bindtap:showTicketTimePicker:20",
+      "route": "pages/publish/fabu/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/publish/fabu/step3.wxml",
+        "js": "pages/publish/fabu/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "showTicketTimePicker",
+        "line": 241,
+        "selectorHint": ".node-card__row",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/publish/fabu/index.js:5695"
+      }
+    },
+    {
+      "id": "pages/publish/fabu/step3.wxml:251:bindinput:onEditTicketChange:21",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1226053,7 +1226053,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onEditTicketChange",
-        "line": 249,
+        "line": 251,
         "selectorHint": ".tk-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1226097,7 +1226097,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:252:bindtap:chooseTicketMeetingPoint:22",
+      "id": "pages/publish/fabu/step3.wxml:254:bindtap:chooseTicketMeetingPoint:22",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1226125,7 +1226125,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "chooseTicketMeetingPoint",
-        "line": 252,
+        "line": 254,
         "selectorHint": ".node-card__row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1226184,7 +1226184,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:267:bindchange:onEditTicketSyncToggle:23",
+      "id": "pages/publish/fabu/step3.wxml:269:bindchange:onEditTicketSyncToggle:23",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1226207,7 +1226207,7 @@
         "tag": "cy-switch",
         "event": "bindchange",
         "handler": "onEditTicketSyncToggle",
-        "line": 267,
+        "line": 269,
         "selectorHint": "cy-switch[bindchange]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1226251,7 +1226251,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:271:bindtap:showTicketTimePicker:24",
+      "id": "pages/publish/fabu/step3.wxml:273:bindtap:showTicketTimePicker:24",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1226274,7 +1226274,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "showTicketTimePicker",
-        "line": 271,
+        "line": 273,
         "selectorHint": ".node-card__row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1226318,7 +1226318,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:279:bindtap:showTicketTimePicker:25",
+      "id": "pages/publish/fabu/step3.wxml:281:bindtap:showTicketTimePicker:25",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1226341,7 +1226341,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "showTicketTimePicker",
-        "line": 279,
+        "line": 281,
         "selectorHint": ".node-card__row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1226452,7 +1226452,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:306:bindinput:onEditTicketChange:26",
+      "id": "pages/publish/fabu/step3.wxml:308:bindinput:onEditTicketChange:26",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1226475,7 +1226475,7 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "onEditTicketChange",
-        "line": 306,
+        "line": 308,
         "selectorHint": ".pd-card-textarea",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1226519,7 +1226519,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:311:bind:disabledtap:onSaveTicketDisabledTap:28",
+      "id": "pages/publish/fabu/step3.wxml:313:bind:disabledtap:onSaveTicketDisabledTap:28",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1226542,7 +1226542,7 @@
         "tag": "cy-btn",
         "event": "bind:disabledtap",
         "handler": "onSaveTicketDisabledTap",
-        "line": 311,
+        "line": 313,
         "selectorHint": "#ticketEditorSave",
         "visibleCondition": null,
         "disabledCondition": "{{!canSaveTicket}}",
@@ -1226587,7 +1226587,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:311:bindtap:saveTicket:27",
+      "id": "pages/publish/fabu/step3.wxml:313:bindtap:saveTicket:27",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1226610,7 +1226610,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "saveTicket",
-        "line": 311,
+        "line": 313,
         "selectorHint": "#ticketEditorSave",
         "visibleCondition": null,
         "disabledCondition": "{{!canSaveTicket}}",
@@ -1226678,7 +1226678,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:328:bindchange:onSelfPlayToggle:29",
+      "id": "pages/publish/fabu/step3.wxml:330:bindchange:onSelfPlayToggle:29",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1226701,7 +1226701,7 @@
         "tag": "cy-switch",
         "event": "bindchange",
         "handler": "onSelfPlayToggle",
-        "line": 328,
+        "line": 330,
         "selectorHint": "cy-switch[bindchange]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1226768,7 +1226768,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:335:bindinput:onSelfPlayPriceInput:30",
+      "id": "pages/publish/fabu/step3.wxml:337:bindinput:onSelfPlayPriceInput:30",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1226791,7 +1226791,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onSelfPlayPriceInput",
-        "line": 335,
+        "line": 337,
         "selectorHint": ".tk-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1226858,7 +1226858,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:339:bindinput:onSelfPlayQuotaInput:31",
+      "id": "pages/publish/fabu/step3.wxml:341:bindinput:onSelfPlayQuotaInput:31",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1226881,7 +1226881,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onSelfPlayQuotaInput",
-        "line": 339,
+        "line": 341,
         "selectorHint": ".tk-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1226925,7 +1226925,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:349:bindtap:onReqLeftTap:32",
+      "id": "pages/publish/fabu/step3.wxml:351:bindtap:onReqLeftTap:32",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1226948,7 +1226948,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onReqLeftTap",
-        "line": 349,
+        "line": 351,
         "selectorHint": ".req-left",
         "visibleCondition": "{{ticketMissing.identity}}",
         "disabledCondition": null,
@@ -1226992,7 +1226992,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:353:bindinput:onIdentityFieldInput:33",
+      "id": "pages/publish/fabu/step3.wxml:355:bindinput:onIdentityFieldInput:33",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1227015,7 +1227015,7 @@
         "tag": "cy-field",
         "event": "bindinput",
         "handler": "onIdentityFieldInput",
-        "line": 353,
+        "line": 355,
         "selectorHint": "cy-field[bindinput]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1227082,7 +1227082,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:356:bindinput:onIdentityFieldInput:34",
+      "id": "pages/publish/fabu/step3.wxml:358:bindinput:onIdentityFieldInput:34",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1227105,7 +1227105,7 @@
         "tag": "cy-field",
         "event": "bindinput",
         "handler": "onIdentityFieldInput",
-        "line": 356,
+        "line": 358,
         "selectorHint": "cy-field[bindinput]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1227172,7 +1227172,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:358:bind:change:onIdentityConsent:35",
+      "id": "pages/publish/fabu/step3.wxml:360:bind:change:onIdentityConsent:35",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1227195,7 +1227195,7 @@
         "tag": "cy-consent-check",
         "event": "bind:change",
         "handler": "onIdentityConsent",
-        "line": 358,
+        "line": 360,
         "selectorHint": ".pc-identity__consent",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1347979,6 +1347979,609 @@
       "evidence": {
         "status": "pending",
         "staticSource": "pages/topic/components/project-join/index.js:88"
+      }
+    },
+    {
+      "id": "pages/topic/components/project-layer/index.wxml:4:bindtap:onBack:1",
+      "route": "component:pages/topic/components/project-layer/index",
+      "hostRoutes": [
+        "pages/topic/merchantinfo/merchantinfo"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            },
+            {
+              "selector": "project-layer",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            },
+            {
+              "selector": "project-layer",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            },
+            {
+              "selector": "project-layer",
+              "index": 2
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            },
+            {
+              "selector": "project-layer",
+              "index": 3
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            },
+            {
+              "selector": "project-layer",
+              "index": 4
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            },
+            {
+              "selector": "project-layer",
+              "index": 5
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            },
+            {
+              "selector": "project-layer",
+              "index": 6
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            },
+            {
+              "selector": "project-layer",
+              "index": 7
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            },
+            {
+              "selector": "project-layer",
+              "index": 8
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            },
+            {
+              "selector": "project-layer",
+              "index": 9
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/topic/components/project-layer/index.wxml",
+        "js": "pages/topic/components/project-layer/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onBack",
+        "line": 4,
+        "selectorHint": ".ly-mask",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "返回",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "tap",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/topic/components/project-layer/index.js:26"
+      }
+    },
+    {
+      "id": "pages/topic/components/project-layer/index.wxml:4:catchtouchmove:noop:0",
+      "route": "component:pages/topic/components/project-layer/index",
+      "hostRoutes": [
+        "pages/topic/merchantinfo/merchantinfo"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            },
+            {
+              "selector": "project-layer",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            },
+            {
+              "selector": "project-layer",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            },
+            {
+              "selector": "project-layer",
+              "index": 2
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            },
+            {
+              "selector": "project-layer",
+              "index": 3
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            },
+            {
+              "selector": "project-layer",
+              "index": 4
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            },
+            {
+              "selector": "project-layer",
+              "index": 5
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            },
+            {
+              "selector": "project-layer",
+              "index": 6
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            },
+            {
+              "selector": "project-layer",
+              "index": 7
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            },
+            {
+              "selector": "project-layer",
+              "index": 8
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            },
+            {
+              "selector": "project-layer",
+              "index": 9
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/topic/components/project-layer/index.wxml",
+        "js": "pages/topic/components/project-layer/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "catchtouchmove",
+        "handler": "noop",
+        "line": 4,
+        "selectorHint": ".ly-mask",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "返回",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "event-contract",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/topic/components/project-layer/index.js:25"
+      }
+    },
+    {
+      "id": "pages/topic/components/project-layer/index.wxml:8:catchtap:onBack:2",
+      "route": "component:pages/topic/components/project-layer/index",
+      "hostRoutes": [
+        "pages/topic/merchantinfo/merchantinfo"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            },
+            {
+              "selector": "project-layer",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            },
+            {
+              "selector": "project-layer",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            },
+            {
+              "selector": "project-layer",
+              "index": 2
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            },
+            {
+              "selector": "project-layer",
+              "index": 3
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            },
+            {
+              "selector": "project-layer",
+              "index": 4
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            },
+            {
+              "selector": "project-layer",
+              "index": 5
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            },
+            {
+              "selector": "project-layer",
+              "index": 6
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            },
+            {
+              "selector": "project-layer",
+              "index": 7
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            },
+            {
+              "selector": "project-layer",
+              "index": 8
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "project-host",
+              "index": 0
+            },
+            {
+              "selector": "project-layer",
+              "index": 9
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/topic/components/project-layer/index.wxml",
+        "js": "pages/topic/components/project-layer/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "catchtap",
+        "handler": "onBack",
+        "line": 8,
+        "selectorHint": ".ly-back",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "返回",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "tap",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/topic/components/project-layer/index.js:26"
       }
     },
     {
