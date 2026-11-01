@@ -8,6 +8,10 @@ public class RoamSession {
     private Long memberId;
     private String clientSessionKey;
     private String finishResultJson;
+    /** 简化轨迹 JSON [[lat,lng],...](≤300 点);30 天随详细位置清空 */
+    private String trackJson;
+    public String getTrackJson() { return trackJson; }
+    public void setTrackJson(String trackJson) { this.trackJson = trackJson; }
     private Date startedAt;
     private Date finishedAt;
     private Date locationClearedAt;

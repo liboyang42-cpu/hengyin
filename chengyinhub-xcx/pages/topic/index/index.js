@@ -119,6 +119,9 @@ Page({
     coverImages: [], kbIdx: 0, coverLeaving: false, detailEnter: false, heroIdx: 0, navSolid: false, storyChars: [], routeNote: '', sketchPoints: [], routeReal: false, tabPre: false, buyOpts: [], buySel: 0, sessionPreferName: '',
     publisher: { name: '', avatar: '' }, heroCta: { kind: '', text: '' }, faved: false,
     docked: false, dockCtaStyle: '', dockFavStyle: '',
+    shareCard: { show: false, card: {} },
+    // 分享页「保存图片」走相册授权:页内弹隐私确认,不整页跳隐私页
+    privacyGateShow: false,
     merchantCards: [], storyCards: [], storyMeta: '', openChapter: -1, storyDocked: false,
     teams: { rows: [], need: 0 },
     prep: { show: false }, prepShow: false, prepBusy: false,
@@ -619,6 +622,19 @@ Page({
       fail: () => {},
     });
   },
+
+  // 2026-10-31 P-8:主题卡(封面 / 主题名 / 一站接一站的路线),右下主题码;微信好友走本页 onShareAppMessage
+  openShareCard() {
+    const info = this.data.info || {};
+    const id = info.id || this.data.id;
+    if (!id) return;
+    this.setData({ shareCard: { show: true, card: { kind: 'theme', id: String(id), title: info.name || '城瘾主题',
+      cover: (this.data.coverImages || [])[0] || info.imgUrl || '', meta: this.data.storyMeta || '',
+      stops: (this.data.storyCards || []).map((c) => c.title) } } });
+  },
+  onShareCardClose() { this.setData({ 'shareCard.show': false }); },
+  showPrivacyGate() { this.setData({ privacyGateShow: true }); },
+  onPrivacyGateSettled() { this.setData({ privacyGateShow: false }); },
 
   toggleFav() {
     if (app.ensureLoginFor && !app.ensureLoginFor('like', () => this.toggleFav(), { owner: this, target: () => [this.data.id, this.data.info && this.data.info.id] })) return; // 2026-10-24 游客写前登录

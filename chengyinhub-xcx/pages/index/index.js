@@ -11,7 +11,7 @@ const { decorateFeedCards } = require('../../utils/index/feed-card.js');
 const { buildHomeActionBanners, openHomeActionBanner } = require('../../utils/index/home-action-banner.js');
 const { readReducedMotion } = require('../../utils/motion-preference.js');
 const { openScene } = require('../../utils/scene-entry.js');
-const { parseDoorScene, parseTopicScene, pathForScanEntry } = require('../../utils/game-door-entry.js');
+const { parseDoorScene, parseTopicScene, parseActivityScene, pathForScanEntry } = require('../../utils/game-door-entry.js');
 
 const { buildActivityShare } = require('../../utils/activity-share.js');
 const { appendByIndex } = require('../../utils/list-append.js');
@@ -365,6 +365,14 @@ Page({
     if (topicId) {
       app.pendingDoorScene = null;
       const path = '/pages/topic/index/index?id=' + topicId;
+      wx.redirectTo({ url: path, fail() { wx.reLaunch({ url: path }); } });
+      return true;
+    }
+    // 2026-10-31 P-8:活动分享卡的码 → 官方活动详情
+    const activityId = parseActivityScene(options && options.scene) || parseActivityScene(app.pendingDoorScene);
+    if (activityId) {
+      app.pendingDoorScene = null;
+      const path = '/pages/activity/official-detail/index?id=' + activityId;
       wx.redirectTo({ url: path, fail() { wx.reLaunch({ url: path }); } });
       return true;
     }

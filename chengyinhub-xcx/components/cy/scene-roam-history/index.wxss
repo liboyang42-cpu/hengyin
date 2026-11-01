@@ -1,25 +1,33 @@
 :host { display: block; height: 100%; }
 .hs { display: flex; flex-direction: column; width: 100%; height: 100%; min-height: 0; box-sizing: border-box; color: var(--cy-color-text-primary); }
-.hs-sum { display: flex; gap: 31rpx; padding: 0 38rpx 23rpx; flex: none; color: var(--cy-color-text-tertiary); font-size: 27rpx; } /* ds-ok Figma 实测(用户裁决字面值) */
-.hs-tools { display: flex; gap: 15rpx; padding: 0 31rpx 23rpx; flex: none; } /* 与下方 .rc 卡片同一左右缘(31rpx,Figma 字面值) */
+/* 2026-10-31 P-7:全屏深色;总成绩照 NRC 粗斜体大数字 */
+.hs-total { flex: none; padding: 8rpx 32rpx 32rpx; }
+.hs-total__big { display: flex; align-items: baseline; gap: 12rpx; }
+.hs-total__n { font-size: var(--cy-type-data-2xl); line-height: 1; font-weight: 900; font-style: italic; letter-spacing: -.02em; color: var(--cy-color-text-primary); font-variant-numeric: tabular-nums; }
+.hs-total__u { font-size: var(--cy-type-body); font-weight: 600; color: var(--cy-color-text-tertiary); }
+.hs-total__row { display: flex; gap: 56rpx; margin-top: 20rpx; }
+.hs-total__i { display: flex; flex-direction: column; gap: 4rpx; }
+.hs-total__v { font-size: var(--cy-type-section-title); font-weight: 800; font-style: italic; color: var(--cy-color-text-primary); font-variant-numeric: tabular-nums; }
+.hs-total__l { font-size: var(--cy-type-label); color: var(--cy-color-text-tertiary); }
+.hs-tools { display: flex; gap: 16rpx; padding: 0 32rpx 24rpx; flex: none; }
 .hs-tool { flex: 1; min-height: 88rpx; display: flex; align-items: center; justify-content: center; gap: 10rpx; border-radius: var(--cy-radius-pill); background: var(--cy-color-bg-surface-subtle); color: var(--cy-color-text-primary); font-size: var(--cy-type-label); font-weight: 600; }
 .hs-scroll { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow-y: auto; }
-/* 卡片不随容器压缩:否则 overflow:hidden 会把底部邮票行裁掉,列表改为在 .hs-scroll 内滚动 */
+.hs-month { flex: none; padding: 16rpx 32rpx 16rpx; font-size: var(--cy-type-label); font-weight: 700; color: var(--cy-color-text-tertiary); }
+/* 卡片不随容器压缩:否则 overflow:hidden 会把底部邮票行裁掉 */
 .hs-scroll > .rc { flex: none; }
-.rc { margin: 0 31rpx 23rpx; overflow: hidden; border: 1rpx solid var(--cy-color-border-subtle); border-radius: 31rpx; background: var(--cy-color-bg-surface-subtle); } /* ds-ok Figma 实测(用户裁决字面值) */
-.rc__main { display: flex; align-items: center; gap: 23rpx; padding: 31rpx 31rpx 0; } /* ds-ok Figma 实测(用户裁决字面值) */
-.rc__thumb { width: 138rpx; height: 138rpx; flex: none; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 23rpx; background: var(--cy-color-bg-elevated); color: var(--cy-color-text-tertiary); } /* ds-ok Figma 实测(用户裁决字面值) */
-.rc__thumb-image { width: 100%; height: 100%; }
-.rc__copy { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4rpx; }
-.rc__date { color: var(--cy-color-text-tertiary); font-size: 25rpx; } /* ds-ok Figma 实测(用户裁决字面值) */
-.rc__title { overflow: hidden; color: var(--cy-color-text-primary); font-size: 31rpx; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; } /* ds-ok Figma 实测(用户裁决字面值) */
-.rc__stats { display: flex; gap: 46rpx; padding: 31rpx; } /* ds-ok Figma 实测(用户裁决字面值) */
+.rc { margin: 0 32rpx 24rpx; overflow: hidden; border-radius: var(--cy-radius-lg); background: var(--cy-color-bg-surface-subtle); }
+.rc__body { padding: 24rpx 28rpx 28rpx; }
+.rc__row { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; }
+.rc__t { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10rpx; color: var(--cy-color-text-primary); }
+.rc__title { overflow: hidden; font-size: var(--cy-type-card-title); font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+.rc__date { flex: none; color: var(--cy-color-text-tertiary); font-size: var(--cy-type-label); }
+.rc__stats { display: flex; gap: 56rpx; padding-top: 20rpx; }
 .rc__st { display: flex; flex-direction: column; gap: 4rpx; }
-.rc__v { color: var(--cy-color-text-primary); font-size: 34rpx; font-weight: 700; } /* ds-ok Figma 实测(用户裁决字面值) */
-.rc__l { color: var(--cy-color-text-tertiary); font-size: 23rpx; } /* ds-ok Figma 实测(用户裁决字面值) */
-.rc__badges { display: flex; align-items: center; flex-wrap: wrap; gap: 15rpx; padding: 23rpx 31rpx; border-top: 1rpx solid var(--cy-color-border-subtle); }
-.rc__hex { width: 62rpx; height: 70rpx; display: flex; align-items: center; justify-content: center; color: var(--cy-color-status-warning); }
-.rc__stamps { align-self: center; display: flex; align-items: center; gap: var(--cy-space-1); color: var(--cy-color-text-tertiary); font-size: 23rpx; } /* ds-ok Figma 实测(用户裁决字面值) */
+.rc__v { color: var(--cy-color-text-primary); font-size: var(--cy-type-section-title); font-weight: 800; font-style: italic; font-variant-numeric: tabular-nums; }
+.rc__l { color: var(--cy-color-text-tertiary); font-size: var(--cy-type-label); }
+.rc__badges { display: flex; align-items: center; flex-wrap: wrap; gap: 16rpx; margin-top: 20rpx; padding-top: 20rpx; border-top: 1rpx solid var(--cy-color-border-subtle); }
+.rc__hex { width: 52rpx; height: 52rpx; display: flex; align-items: center; justify-content: center; border-radius: var(--cy-radius-sm); background: var(--cy-color-bg-elevated); color: var(--cy-color-status-warning); }
+.rc__stamps { display: flex; align-items: center; color: var(--cy-color-text-tertiary); font-size: var(--cy-type-label); }
 .fill-slot { display: flex !important; flex: 1 !important; flex-direction: column !important; min-height: 0 !important; }
 .history-loading { display: flex; align-items: center; justify-content: center; min-height: 240rpx; color: var(--cy-color-text-tertiary); font-size: var(--cy-type-body); }
 

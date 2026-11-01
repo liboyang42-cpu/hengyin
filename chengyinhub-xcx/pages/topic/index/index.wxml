@@ -3,6 +3,7 @@
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
+  <cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />
 <view class="topic {{reducedMotion ? 'topic--reduced' : ''}}" bindtouchstart="touchStart" bindtouchmove="touchMove" bindtouchend="touchEnd">
 <wxs src="../../../utils/wxs/img.wxs" module="img" />
   <!-- 错误态用标准导航的主题文字 token 保证深底返回箭头可见；正常主题页保留 hero 顶栏。 -->
@@ -112,6 +113,8 @@
         <view class="hero-acts" id="heroActs">
           <view wx:if="{{heroCta.text}}" class="hero-cta {{heroCta.kind === 'locked' ? 'is-off' : ''}} {{docked ? 'is-away' : ''}}" bindtap="onHeroCta" aria-role="button" aria-label="{{heroCta.text}}" hover-class="cy-pressed" hover-stay-time="80">{{heroCta.text}}</view>
           <view class="hero-fav {{faved ? 'is-on' : ''}} {{docked ? 'is-away' : ''}}" bindtap="toggleFav" aria-role="button" aria-label="{{faved ? '取消收藏' : '收藏主题'}}" hover-class="cy-pressed" hover-stay-time="80"><image class="bm-ic" src="{{faved ? '/pages/topic/images/icon_bm_on.svg' : '/pages/topic/images/icon_bm.svg'}}" mode="aspectFit" /></view>
+          <!-- 2026-10-31 业主:收藏旁边放分享,进通用分享页(主题卡 + 色块 + 渠道;微信好友在那一页) -->
+          <view class="hero-fav hero-share" bindtap="openShareCard" aria-role="button" aria-label="分享主题" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="share" size="35" /></view>
           <text class="hero-type hero-type--{{info.productType == 2 ? 'free' : 'city'}}">{{info.productType == 2 ? '自由探索' : '城市定向'}}</text>
         </view>
         <view class="bm-closed" wx:if="{{merchantClosed && is_join == 0}}" aria-role="alert">商家暂停营业，暂不可报名</view>
@@ -568,3 +571,5 @@
   bind:close="onResultSheetClose" />
 
 <view class="theme-dark"><cy-theme-records title="{{topicName || info.name}}" history-open="{{themeHistoryOpen}}" rows="{{themeHistoryRows}}" more="{{themeHistoryMore}}" busy="{{themeRecordsBusy}}" error="{{themeRecordsError}}" read-failure="{{themeRecordsReadFailure}}" card-session="{{themeCardSessionId}}" card="{{themeResultCard}}" replay-allowed="{{themeRecordsState.replayAllowed === true}}" replay-busy="{{themeReplayBusy}}" bind:closehistory="closeThemeHistory" bind:morehistory="loadMoreThemeHistory" bind:opencard="openThemeRecordCard" bind:closecard="closeThemeResultCard" bind:replay="replayThemeSession" bind:checkreplay="checkThemeReplay" replay-unconfirmed="{{themeReplayUnconfirmed}}" bind:retrycard="retryThemeResultCard" /></view>
+
+<cy-share-card show="{{shareCard.show}}" card="{{shareCard.card}}" bind:close="onShareCardClose" />

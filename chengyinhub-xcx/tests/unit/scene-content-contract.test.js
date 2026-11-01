@@ -343,7 +343,7 @@ test('Figma 三个弹窗接入真实入口，并锁定玩家深色/商户浅色�
   assert.match(shareWxml, /open-type="share" data-share-kind="invite"/)
   assert.match(shareJs, /isDevEnv\(\)/)
   assert.match(shareJs, /figma-invite-qr\.png/)
-  assert.match(historyWxml, /class="hs-sum"/)
+  assert.match(historyWxml, /class="hs-total"/) // 2026-10-31 P-7:总成绩(NRC)
   assert.match(historyWxml, /class="rc__stats"/)
   assert.match(historyWxml, /class="rc__badges"/)
   assert.match(historyJs, /const WEEK = \['日'/)
