@@ -1097,7 +1097,7 @@ Page({
   clearLocalDraft() {
     if (this._publishAttempt || this._serverDraftAttempt || this.data.submitting || this.data.draftSaving) {
       // 只提示不改 submitError:那块「这次还没有保存 · 重试」是发布失败的出口,点重试会重新发布,不是这里要的动作
-      cyToast('上次发布还没确认成功，确认前不能清空草稿');
+      cyToast('上次发布未确认，不能清空草稿');
       return;
     }
     if (this._draftStorageUnavailable) { this._markDraftStorageUnavailable(); return; }
