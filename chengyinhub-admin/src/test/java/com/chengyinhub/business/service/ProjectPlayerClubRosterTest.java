@@ -138,13 +138,27 @@ class ProjectPlayerClubRosterTest {
 
     @Test
     void 不挂俱乐部的探店日主题仍走商家门店名册() {
-        when(topicService.selectCmsTopicById(TOPIC)).thenReturn(exploreTopic(OTHER_MEMBER, null));
+        // 2026-11-01 走查 v2 R14:发布者本人改走主办口径(见下一条),这里守开店商家(非发布者)仍是门店名册
+        when(topicService.selectCmsTopicById(TOPIC)).thenReturn(exploreTopic(CLUB_OWNER, null));
         when(shopDayRosterService.list(OTHER_MEMBER, TOPIC, true))
                 .thenReturn(Collections.<String, Object>singletonMap("rows", Collections.emptyList()));
 
         Map<String, Object> out = service.listPlayers(OTHER_MEMBER, TOPIC, true);
 
         assertNotNull(out.get("rows"), "没有 club_id 就还是商家口径,一步都不许变");
+        verify(clubCrmAppService, never()).topicCustomers(anyLong(), anyLong(), anyLong(), anyString());
+    }
+
+    /** 走查 v2 R14:商家发布的自由探索,发布者看整张主题买票名单,不撞「无权查看该探店日门店名单」。 */
+    @Test
+    void 商家发布者看自由探索主题走主办名单不走门店名册() {
+        when(topicService.selectCmsTopicById(TOPIC)).thenReturn(exploreTopic(OTHER_MEMBER, null));
+
+        Map<String, Object> out = service.listPlayers(OTHER_MEMBER, TOPIC, true);
+
+        assertNotNull(out.get("summary"), "主办口径带 summary");
+        assertNull(out.get("viewType"), "不是门店名册");
+        verify(shopDayRosterService, never()).list(anyLong(), anyLong(), anyBoolean());
         verify(clubCrmAppService, never()).topicCustomers(anyLong(), anyLong(), anyLong(), anyString());
     }
 

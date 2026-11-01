@@ -635,6 +635,7 @@ Page({
     this._merchantGameEntries = [];
     this._notifications = [];
     this._inbox = null;
+    this._inboxUnread = null;
     if (this._revenueCountStop) this._revenueCountStop();
     this._revenueCountStop = null;
     this.setData({
@@ -1285,7 +1286,8 @@ Page({
     this.markInboxRead([item]);
     this._inboxUnread = (this._inboxUnread || this.data.inboxItems).filter((row) => row.key !== key);
     const items = this._inboxUnread.slice(0, 3);
-    this.setData({ inboxItems: items, msgOpen: this.data.msgOpen && items.length > 1, inboxAllRead: !items.length });
+    // 展开着就一直展开到标完,最后一条也能 ×(只剩一条时不叠,× 直接露在卡上)
+    this.setData({ inboxItems: items, msgOpen: this.data.msgOpen && items.length > 0, inboxAllRead: !items.length });
   },
 
   clearInbox() {

@@ -816,6 +816,7 @@ page {
 .rv-project-card--cover.is-cover .rv-project-card-meta { opacity: .86; }
 .rv-project-card--cover.is-cover .rv-project-bell-img { filter: brightness(0) invert(1); }
 .rv-project-card--cover:not(.is-cover) .rv-project-bell { background: var(--cy-bg-card); }
+.rv-project-card--cover:not(.is-cover) .rv-project-card-note { color: var(--cy-color-text-tertiary); }
 .rv-project-card--cover .rv-project-visit {
   max-width: 360rpx;
   height: 48rpx; padding: 0 20rpx;

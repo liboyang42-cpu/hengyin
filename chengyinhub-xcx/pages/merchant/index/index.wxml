@@ -274,8 +274,8 @@
               <text class="rv-msg-sub ep1" wx:if="{{item.sub}}">{{item.sub}}</text>
             </view>
             <text class="rv-msg-time">{{item.time}}</text>
-            <view class="rv-msg-dot" wx:if="{{item.unread && !msgOpen}}"></view>
-            <view class="rv-msg-x" wx:if="{{msgOpen}}" catchtap="dismissInboxItem" data-key="{{item.key}}" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="标为已读：{{item.title}}">
+            <view class="rv-msg-dot" wx:if="{{item.unread && !msgOpen && inboxItems.length > 1}}"></view>
+            <view class="rv-msg-x" wx:if="{{msgOpen || inboxItems.length === 1}}" catchtap="dismissInboxItem" data-key="{{item.key}}" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="标为已读：{{item.title}}">
               <cy-icon name="close-sm" size="24" />
             </view>
           </view>
@@ -290,7 +290,7 @@
         </view>
         <view class="rv-msg-item rv-msg-item--pending" wx:else aria-hidden="true"></view>
       </view>
-      <view class="rv-msg-clear" wx:if="{{msgOpen && inboxItems.length > 1}}" bindtap="clearInbox" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="全部标为已读">
+      <view class="rv-msg-clear" wx:if="{{msgOpen && inboxItems.length}}" bindtap="clearInbox" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="全部标为已读">
         <cy-icon name="trash" size="26" />
         <text>清空</text>
       </view>

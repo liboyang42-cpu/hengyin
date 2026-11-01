@@ -181,3 +181,24 @@ test('R02 换账号不共用已读记录;没有任何消息仍是「还没有消
   assert.deepEqual(page.data.inboxItems, [])
   assert.equal(page.data.inboxAllRead, false)
 })
+
+test('R02 展开后一路 × 到最后一条也能标掉;只有一条消息时 × 直接在卡上', () => {
+  const now = Date.now()
+  const page = loadPage()
+  page.onShow()
+  last('/api/merchant/access/me').success(accessReply())
+  settle(page, now)
+  page.openInboxItem({ currentTarget: { dataset: { key: 'invite-21' } } })
+  for (const key of ['invite-21', 'conv-13', 'conv-11']) {
+    page.dismissInboxItem({ currentTarget: { dataset: { key } } })
+  }
+  assert.deepEqual(page.data.inboxItems.map((i) => i.key), ['event-0'])
+  assert.equal(page.data.msgOpen, true, '还剩一条时保持展开,× 还在')
+  page.dismissInboxItem({ currentTarget: { dataset: { key: 'event-0' } } })
+  assert.deepEqual(page.data.inboxItems, [])
+  assert.equal(page.data.inboxAllRead, true)
+  assert.equal(page.data.msgOpen, false)
+
+  const wxml = require('node:fs').readFileSync(path.join(ROOT, 'pages/merchant/index/index.wxml'), 'utf8')
+  assert.match(wxml, /class="rv-msg-x" wx:if="\{\{msgOpen \|\| inboxItems\.length === 1\}\}"/)
+})
