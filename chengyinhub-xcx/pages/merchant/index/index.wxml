@@ -148,70 +148,46 @@
            **加载中冒充空态**的假结论;已有项目时刷新保留旧卡,避免整块闪退。 -->
       <cy-skeleton wx:if="{{!projectCards.length && (joinLoading || hostLoading || todoLoading || gameEntryLoading)}}" type="list" count="{{2}}" />
       <view wx:else>
-        <view class="rv-project-cards" wx:if="{{projectCards.length}}" style="{{pmProj === 1 ? '--pm-j:1;' : (pmProj === 2 ? '--pm-j-d:.32s;--pm-j-s:1;' : '')}}">
+        <!-- 2026-11-01 业主(项目卡方案 B v3):横滑大卡,4:3 封面铺满整张卡(与主题封面同比例,不裁);
+             左上状态(小色点 + 字)、右上主题类型,都是白色毛玻璃签;底部白色半透明渐变只包住文字区,
+             「N 张待核销」深色签在名称上方。卡片不放扫码按钮(工作台第一个快捷入口就是扫码),点卡进项目工作台。
+             项目多时最后一格叠成一摞,点开「全部」。 -->
+        <scroll-view class="rv-project-cards" wx:if="{{projectCards.length}}" scroll-x enhanced show-scrollbar="{{false}}" style="{{pmProj === 1 ? '--pm-j:1;' : (pmProj === 2 ? '--pm-j-d:.32s;--pm-j-s:1;' : '')}}">
+          <view class="rv-project-track">
           <view class="rv-project-item" wx:for="{{projectCards}}" wx:key="key">
           <view class="rv-project-card" bindtap="openProjectCard"
                 data-role="{{item.role}}" data-id="{{item.id}}" data-topicid="{{item.ownerId}}" data-biztype="{{item.bizType}}" data-source="{{item.projectSource}}"
-                hover-class="rv-tap" aria-role="button" aria-label="打开{{item.roleLabel || ''}}项目{{item.title}}">
-            <!-- 72×72 封面。承接取主题封面、主办取自己主题的封面;字段是逗号分隔多图,取首张。
-                 底色本身就是缺图时的占位,不另画空图标。 -->
-            <view class="rv-project-thumb">
-              <image class="rv-project-thumb-img" wx:if="{{img.first(item.thumb)}}"
-                     src="{{img.first(item.thumb)}}" mode="aspectFill" lazy-load="true" />
+                hover-class="rv-tap" aria-role="button"
+                aria-label="打开{{item.roleLabel || ''}}项目{{item.title}}{{item.statusLabel ? '，' + item.statusLabel : ''}}{{item.verifyCount ? '，' + item.verifyCount + ' 张待核销' : ''}}">
+            <image class="rv-project-cover" wx:if="{{img.first(item.thumb)}}"
+                   src="{{img.first(item.thumb)}}" mode="aspectFill" lazy-load="true" />
+            <view class="rv-project-line1">
+              <text class="rv-project-status" wx:if="{{item.statusLabel}}"><text class="rv-project-dot rv-project-dot--{{item.statusTone || 'wait'}}"></text>{{item.statusLabel}}</text>
+              <view class="rv-project-line1-fill"></view>
+              <text class="rv-project-cat" wx:if="{{item.catLabel}}">{{item.catLabel}}</text>
             </view>
-
+            <view class="rv-project-frost"></view>
             <view class="rv-project-body">
-              <!-- 共用正文：状态/类目、标题、日期与待办。 -->
-              <view class="rv-project-line1">
-                <text class="rv-project-status" wx:if="{{item.statusLabel}}">{{item.statusLabel}}</text>
-                <text class="rv-project-cat" wx:if="{{item.catLabel}}">{{item.catLabel}}</text>
-                <view class="rv-project-line1-fill"></view>
-                <!-- 铃铛与目标列表同按项目展示近期收入/核销动态，不表示未读。 -->
-                <view class="rv-project-bell" wx:if="{{item.msgCount}}"
-                      catchtap="goProjectMessages"
-                      data-ownertype="{{item.ownerType}}" data-ownerid="{{item.ownerId}}"
-                      hover-class="rv-tap" aria-role="button"
-                      aria-label="查看本项目近期动态，共{{item.msgCount || 0}}条" hover-stop-propagation="true">
-                  <view class="rv-project-bell-ico">
-                    <image class="rv-project-bell-img" src="/pages/merchant/images/icon_bell_alert.svg" mode="aspectFit" />
-                    <view class="rv-project-bell-dot"></view>
-                  </view>
-                  <text class="rv-project-bell-count">{{item.msgCount > 99 ? '99+' : item.msgCount}}</text>
-                </view>
-                <!-- 没动态时是不可点的占位铃铛,标题宽度不跳 -->
-                <view class="rv-project-bell rv-project-bell--muted" wx:else aria-label="暂无动态">
-                  <view class="rv-project-bell-ico">
-                    <image class="rv-project-bell-img" src="/pages/merchant/images/icon_bell_muted.svg" mode="aspectFit" />
-                  </view>
-                </view>
-              </view>
-
+              <text class="rv-project-verify" wx:if="{{item.verifyCount}}">{{item.verifyCount > 99 ? '99+' : item.verifyCount}} 张待核销</text>
               <text class="rv-project-card-title ep1">{{item.title}}</text>
-              <text class="rv-project-card-meta ep1">{{item.meta}}</text>
-
-              <view class="rv-project-line3">
-                <!-- 一件事一段:标签和数字各自把话说完,颜色只做语义强化。
-                     待办没取到时这一格留空(失败只在区块顶部报一次,不在每张卡上写日志)。
-                     2026-08-20 用户拍板:主办/承办角色 pill 从卡面删除(aria-label 仍带角色语义)。 -->
-                <view class="rv-project-todos">
-                  <block wx:if="{{item.todoCount}}">
-                    <block wx:for="{{item.todoChips}}" wx:for-item="chip" wx:key="key">
-                      <text class="rv-project-todo-sep" wx:if="{{index > 0}}">·</text>
-                      <text class="rv-project-todo rv-project-todo--{{chip.tone}}">{{chip.label}}</text>
-                      <text class="rv-project-todo-num rv-project-todo--{{chip.tone}}">{{chip.count}}</text>
-                    </block>
-                  </block>
-                  <text class="rv-project-card-note" wx:elif="{{item.todoText}}">{{item.todoText}}</text>
-                </view>
-                <!-- 2026-09-23 用户裁决:项目卡都是已确定接待的项目,不写「本站可接待」这类站点状态;
-                     俱乐部要来时写「谁、哪天几点到店」(upcoming-runs,含俱乐部自己开的场次)。 -->
-                <text class="rv-project-visit" wx:if="{{item.visitText}}">{{item.visitText}}</text>
-
-              </view>
+              <text class="rv-project-card-meta ep1" wx:if="{{item.meta}}">{{item.meta}}</text>
+              <!-- 2026-09-23 用户裁决:俱乐部要来时写「谁、哪天几点到店」(upcoming-runs,含俱乐部自己开的场次)。 -->
+              <text class="rv-project-visit ep1" wx:if="{{item.visitText}}">{{item.visitText}}</text>
             </view>
           </view>
           </view>
-        </view>
+          <view class="rv-project-item rv-project-more" wx:if="{{joinTotal + hostProjectTotal > projectCards.length}}"
+                bindtap="goPublishedProjects" hover-class="rv-tap" aria-role="button"
+                aria-label="查看全部项目，还有 {{joinTotal + hostProjectTotal - projectCards.length}} 个">
+            <view class="rv-project-more-c rv-project-more-c--3"></view>
+            <view class="rv-project-more-c rv-project-more-c--2"></view>
+            <view class="rv-project-more-c rv-project-more-c--1">
+              <text class="rv-project-more-n">+{{joinTotal + hostProjectTotal - projectCards.length}}</text>
+              <text class="rv-project-more-t">更多项目</text>
+            </view>
+          </view>
+          </view>
+        </scroll-view>
 
         <cy-error load-failure wx:if="{{joinError || hostError}}" title="项目和待办加载失败"
                   retry="重试" bind:retry="reloadProjects" />

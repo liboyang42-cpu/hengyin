@@ -10,7 +10,6 @@ const { merchantHomeUrl } = require('../../../utils/merchant-home-link.js');
 const { isRecord, isRecordList, isBizOk } = require('../../../utils/response-shape.js');
 const { inactiveAccess, normalizeMerchantAccess } = require('../../../utils/merchant-access-policy.js');
 const { ensureSession } = require('../utils/session/ensure-session.js');
-const { normalizeMerchantFinanceRoute } = require('../utils/merchant-finance.js');
 const identitySync = require('../../../utils/identity-sync.js');
 
 // cms_topic.product_type → 展示名(与 marketing 页同口径)
@@ -44,7 +43,7 @@ const { resolveVerificationResult, classifyVerificationOutcome, createVerificati
 const { resolveVerificationScan } = require('../../../utils/verification-scan.js');
 const { getScene } = require('../../../utils/scene-registry.js');
 const { pushScene, popScene, currentScene, exitDecision } = require('../../../utils/scene-stack.js');
-const { hasTodoSummaryPayload, buildProjectCards, isEndedProject, localToday, attachVisitTexts } = require('../../../utils/merchant-workbench.js');
+const { hasTodoSummaryPayload, buildProjectCards, isHiddenProjectCard, sortProjectCards, isEndedProject, localToday, attachVisitTexts } = require('../../../utils/merchant-workbench.js');
 const { resolveApplicationResponse, decorateApplication } = require('../../../utils/merchant-identity-policy.js');
 const { offerVerificationReadback } = require('../../../utils/verification-readback.js');
 const { createGameSessionClient } = require('../../../utils/game-session-client.js');
@@ -375,8 +374,8 @@ Page({
       todoByProject: this.data.todo.byProject,
       events: this._notifications || [],
       todoError: this.data.todoError,
-    }).filter((card) => card.statusLabel !== '已结束');
-    this.refreshGameStationSummaries(projectCards);
+    }).filter((card) => !isHiddenProjectCard(card));
+    this.refreshGameStationSummaries(sortProjectCards(projectCards));
   },
 
   // activityId 只来自服务端按当前登录商家过滤的 entries(只用来补出没对上承接卡的活动卡);
@@ -1024,7 +1023,9 @@ Page({
           const confirmedRows = list.filter((item) => Number(item.status) === 1);
           const today = localToday();
           const activeRows = confirmedRows.filter((item) => !isEndedProject(item.startDate, item.endDate, today));
-          const formatted = that.formatJoinCards(activeRows.slice(0, 10).map(withStartDateStr));
+          // 2026-11-01 业主:审核中的承接申请也上工作台,卡上标「待审核」(只进卡片,不进确认关系与总数)
+          const pendingRows = list.filter((item) => Number(item.status) === 0 && !isEndedProject(item.startDate, item.endDate, today));
+          const formatted = that.formatJoinCards(activeRows.concat(pendingRows).slice(0, 10).map(withStartDateStr));
           that._legacyJoinTopicIds = new Set(activeRows
             .map((item) => String(item.topicId))
             .filter((topicId) => topicId && topicId !== 'undefined' && topicId !== 'null'));
@@ -1032,7 +1033,7 @@ Page({
           that._legacyJoinLoading = false;
           that._legacyJoinError = false;
           that.setData({
-            projectList: formatted.slice(0, 2),
+            projectList: formatted,
           });
           that.refreshJoinTotal();
           that.refreshJoinRequestState();
@@ -1152,7 +1153,7 @@ Page({
         // 状态签同源(isEndedProject:档期未知不算结束),前端不再自己数。
         const activeTotal = finiteCount(res.data.activeTotal);
         that.setData({
-          hostProjectList: rows.slice(0, 2),
+          hostProjectList: rows,
           hostProjectTotal: activeTotal === null ? 0 : activeTotal,
           hostLoading: false,
           hostError: false,
@@ -1455,14 +1456,6 @@ Page({
       return this.openScene('play-activity-detail', { id: ds.id });
     }
     return this.goHostProject(e);
-  },
-
-  // 铃铛与列表同取商家最近动态，按卡片真实项目归属筛选，不代表未读或完整历史。
-  goProjectMessages(e) {
-    const ds = e && e.currentTarget && e.currentTarget.dataset || {};
-    const route = normalizeMerchantFinanceRoute({ view: 'messages', ownerType: ds.ownertype, ownerId: ds.ownerid });
-    if (!route || this._navigating) return; // 跳转中不响应连点
-    this._navigating = true; wx.navigateTo({ url: '/pages/merchant/ledger/index?view=messages&ownerType=' + route.ownerType + '&ownerId=' + route.ownerId, complete: () => { this._navigating = false; } });
   },
 
   goPublishedProjects() {

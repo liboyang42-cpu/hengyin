@@ -42,7 +42,7 @@ const CASES = [
   ['goFinance', undefined, '/subpackageA/pages/assetcenter/earnings/index?theme=merchant'], // 2026-10-28 M-32:财务先进账户收益浅色版
   ['goBrandManage', undefined, '/pages/merchant/decor/index'],
   ['goCustomers', undefined, '/pages/merchant/customer/index'],
-  ['goProjectMessages', { currentTarget: { dataset: { ownertype: 1, ownerid: 7 } } }, '/pages/merchant/ledger/index?view=messages&ownerType=1&ownerId=7'],
+  // 2026-11-01 业主:项目卡铃铛删除,goProjectMessages 随之移除
   ['goPublishedProjects', undefined, '/subpackageA/pages/myproject/index?scope=MERCHANT'],
 ]
 
@@ -64,7 +64,6 @@ test('BL-234:无权限或缺参不跳也不上锁', () => {
   page.data.merchantAccess = Object.assign({}, page.data.merchantAccess, { canReadAftercare: false, canManageProjects: false })
   page.goAftercare()
   page.goPredictInbox()
-  page.goProjectMessages({ currentTarget: { dataset: { id: 7, ownertype: 1 } } })
   assert.equal(navs.length, 0)
   page.goFinance()
   assert.equal(navs.length, 1)

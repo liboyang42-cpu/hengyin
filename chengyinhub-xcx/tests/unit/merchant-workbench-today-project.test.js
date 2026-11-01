@@ -121,7 +121,7 @@ test('B2: 同一跨日瞬时在 LA/UTC/上海都以上海今天判状态、结�
       unknownStatus: '',
       unknownEnded: false,
       noHit: null,
-      cardStatuses: ['', '已结束', '承接中', '承接中', ''],
+      cardStatuses: ['', '已结束', '进行中', '报名中', ''],  // 2026-11-01 业主:卡上按上海档期写进行中 / 报名中
     }, tz + ' 不得把手机日历当业务日历；显式 today 与未知/坏档期边界仍保留')
   }
 })
