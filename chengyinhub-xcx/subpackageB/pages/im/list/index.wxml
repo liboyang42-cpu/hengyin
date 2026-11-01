@@ -23,6 +23,8 @@
     <cy-icon name="clock" size="28" /><text>正在刷新消息</text>
   </view>
 
+  <!-- 刷新失败但保留上次的列表:提示放在页签下、所有行之上,不夹在会话行中间 -->
+  <cy-inline-error wx:if="{{refreshError}}" kind="network" title="{{refreshError}}" action="重试" bind:action="retryConversations" />
   <!-- 合作邀请:收到的在收件箱、我发出的在发件箱,点进邀约详情处理。与会话是两套数据源,读不到只在这里局部报错。 -->
   <cy-inline-error wx:if="{{inviteError}}" kind="data" title="{{inviteError}}" action="重试" bind:action="loadInvites" />
   <!-- M-06(owner 2026-10-27 m681):商家视角的协作邀请不再是一条条消息,而是顶部一条横滑卡片带;
@@ -107,7 +109,6 @@
 
   <!-- 列表 -->
   <scroll-view class="body" wx:else scroll-y enhanced show-scrollbar="{{false}}" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
-    <cy-inline-error wx:if="{{refreshError}}" title="{{refreshError}}" action="重试" bind:action="retryConversations" />
     <text wx:if="{{isMerchantView && viewList.length && (activeTab === 'in' ? invitesIn.length : invitesOut.length)}}" class="invite-strip__title">消息</text>
     <view class="conv-wrap {{item._open ? 'is-open' : ''}}" wx:for="{{viewList}}" wx:key="conversationId">
       <!-- 左滑露出的操作 -->

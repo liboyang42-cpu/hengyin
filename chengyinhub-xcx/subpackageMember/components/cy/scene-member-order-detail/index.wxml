@@ -11,7 +11,6 @@
   <cy-result-sheet show="{{loadFailureVisible}}" kind="fail" title="订单暂不可查看" why="{{loadErrorText}}" duration="{{2000}}" bind:close="backToOrderList" />
 
   <view class="david" wx:if="{{loadState==='ready'}}">
-  <cy-inline-error wx:if="{{loadErrorText}}" title="{{loadErrorText}}" action="重试" bind:action="reloadOrder" />
   <!-- 稿 578:2298(D07):大金额与状态先行。头图上依次是实付金额(40px)、
        路线名(18px)、场次时间(12px)、一颗状态药丸 —— 原来这里印的是
        「已报名 / 请完成支付后使用票夹」,一句状态加一句提示,金额反而要翻到下面才看得到。
@@ -32,6 +31,8 @@
     <!-- 稿 578:2313 那张卡:标题 / 一句话 / 右上角状态词。
          2026-09-11 用户定「是退款、还是已完成、未开始,要有不同状态的」⇒
          它不是退款专用卡,每个订单态都出,右上角那个词的颜色跟着状态走。 -->
+    <!-- 刷新失败但保留上次的订单:放在头图下第一张卡的位置,一眼能看到 -->
+    <cy-inline-error wx:if="{{loadErrorText}}" kind="network" title="{{loadErrorText}}" action="重试" bind:action="reloadOrder" />
     <view class="ocard state-notice" wx:if="{{stateNotice.show}}">
       <view class="state-notice__head">
         <text class="state-notice__k">{{stateNotice.title}}</text>

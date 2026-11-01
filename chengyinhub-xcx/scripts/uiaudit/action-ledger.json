@@ -187355,6 +187355,23 @@
               "index": 0
             },
             {
+              "selector": "cy-scene-member-order-detail",
+              "index": 0
+            },
+            {
+              "selector": "cy-inline-error",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
               "selector": "cy-scene-qr-coupon",
               "index": 0
             },
@@ -187642,6 +187659,19 @@
           ]
         },
         {
+          "route": "subpackageMember/order/order",
+          "segments": [
+            {
+              "selector": "cy-scene-member-order-detail",
+              "index": 0
+            },
+            {
+              "selector": "cy-inline-error",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/orderinfo/orderinfo",
           "segments": [
             {
@@ -187650,6 +187680,19 @@
             },
             {
               "selector": "cy-inline-error.mh__error",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-inline-error",
               "index": 0
             }
           ]
@@ -187919,6 +187962,23 @@
             },
             {
               "selector": "cy-inline-error.mh__error",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "#roamDeepLink",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-member-order-detail",
+              "index": 0
+            },
+            {
+              "selector": "cy-inline-error",
               "index": 0
             }
           ]
@@ -1375145,7 +1375205,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/list/index.wxml:106:bindcta:onEmptyCta:9",
+      "id": "subpackageB/pages/im/list/index.wxml:108:bindcta:onEmptyCta:10",
       "route": "subpackageB/pages/im/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1375168,7 +1375228,7 @@
         "tag": "cy-empty",
         "event": "bindcta",
         "handler": "onEmptyCta",
-        "line": 106,
+        "line": 108,
         "selectorHint": "cy-empty[bindcta]",
         "visibleCondition": "{{loaded && viewList.length === 0 && !(activeTab === 'in' ? invitesIn.length : invitesOut.length)}}",
         "disabledCondition": null,
@@ -1375282,116 +1375342,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/list/index.wxml:110:bind:action:retryConversations:10",
-      "route": "subpackageB/pages/im/list/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "subpackageB/pages/im/list/index.wxml",
-        "js": "subpackageB/pages/im/list/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-inline-error",
-        "event": "bind:action",
-        "handler": "retryConversations",
-        "line": 110,
-        "selectorHint": "cy-inline-error[bind:action]",
-        "visibleCondition": "{{refreshError}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "read",
-      "interactionMode": "event-contract",
-      "baseActionClass": "read",
-      "effectClasses": [
-        "read",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/config/features",
-          "/api/im/conversations",
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "primaryApis": [
-          "/api/im/conversations"
-        ],
-        "auxiliaryApis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/im/conversations",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageB/pages/im/list/index.js:186"
-      }
-    },
-    {
-      "id": "subpackageB/pages/im/list/index.wxml:115:catchtap:onRowRead:11",
+      "id": "subpackageB/pages/im/list/index.wxml:116:catchtap:onRowRead:11",
       "route": "subpackageB/pages/im/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1375414,7 +1375365,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onRowRead",
-        "line": 115,
+        "line": 116,
         "selectorHint": ".act",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1375503,7 +1375454,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/list/index.wxml:118:catchtap:onRowMute:12",
+      "id": "subpackageB/pages/im/list/index.wxml:119:catchtap:onRowMute:12",
       "route": "subpackageB/pages/im/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1375526,7 +1375477,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onRowMute",
-        "line": 118,
+        "line": 119,
         "selectorHint": ".act",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1375612,7 +1375563,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/list/index.wxml:121:catchtap:onRowDelete:13",
+      "id": "subpackageB/pages/im/list/index.wxml:122:catchtap:onRowDelete:13",
       "route": "subpackageB/pages/im/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1375635,7 +1375586,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onRowDelete",
-        "line": 121,
+        "line": 122,
         "selectorHint": ".act",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1375681,7 +1375632,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/list/index.wxml:130:bindtouchend:onTouchEnd:16",
+      "id": "subpackageB/pages/im/list/index.wxml:131:bindtouchend:onTouchEnd:16",
       "route": "subpackageB/pages/im/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1375703,208 +1375654,6 @@
       "control": {
         "tag": "view",
         "event": "bindtouchend",
-        "handler": "onTouchEnd",
-        "line": 130,
-        "selectorHint": ".conv",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageB/pages/im/list/index.js:409"
-      }
-    },
-    {
-      "id": "subpackageB/pages/im/list/index.wxml:130:bindtouchmove:onTouchMove:15",
-      "route": "subpackageB/pages/im/list/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "subpackageB/pages/im/list/index.wxml",
-        "js": "subpackageB/pages/im/list/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtouchmove",
-        "handler": "onTouchMove",
-        "line": 130,
-        "selectorHint": ".conv",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageB/pages/im/list/index.js:389"
-      }
-    },
-    {
-      "id": "subpackageB/pages/im/list/index.wxml:130:bindtouchstart:onTouchStart:14",
-      "route": "subpackageB/pages/im/list/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "subpackageB/pages/im/list/index.wxml",
-        "js": "subpackageB/pages/im/list/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtouchstart",
-        "handler": "onTouchStart",
-        "line": 130,
-        "selectorHint": ".conv",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "other",
-      "interactionMode": "event-contract",
-      "baseActionClass": "other",
-      "effectClasses": [
-        "other"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageB/pages/im/list/index.js:384"
-      }
-    },
-    {
-      "id": "subpackageB/pages/im/list/index.wxml:131:bindtouchcancel:onTouchEnd:17",
-      "route": "subpackageB/pages/im/list/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "subpackageB/pages/im/list/index.wxml",
-        "js": "subpackageB/pages/im/list/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtouchcancel",
         "handler": "onTouchEnd",
         "line": 131,
         "selectorHint": ".conv",
@@ -1375950,7 +1375699,209 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/list/index.wxml:132:bindtap:openChat:18",
+      "id": "subpackageB/pages/im/list/index.wxml:131:bindtouchmove:onTouchMove:15",
+      "route": "subpackageB/pages/im/list/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "subpackageB/pages/im/list/index.wxml",
+        "js": "subpackageB/pages/im/list/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtouchmove",
+        "handler": "onTouchMove",
+        "line": 131,
+        "selectorHint": ".conv",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageB/pages/im/list/index.js:389"
+      }
+    },
+    {
+      "id": "subpackageB/pages/im/list/index.wxml:131:bindtouchstart:onTouchStart:14",
+      "route": "subpackageB/pages/im/list/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "subpackageB/pages/im/list/index.wxml",
+        "js": "subpackageB/pages/im/list/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtouchstart",
+        "handler": "onTouchStart",
+        "line": 131,
+        "selectorHint": ".conv",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "event-contract",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageB/pages/im/list/index.js:384"
+      }
+    },
+    {
+      "id": "subpackageB/pages/im/list/index.wxml:132:bindtouchcancel:onTouchEnd:17",
+      "route": "subpackageB/pages/im/list/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "subpackageB/pages/im/list/index.wxml",
+        "js": "subpackageB/pages/im/list/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtouchcancel",
+        "handler": "onTouchEnd",
+        "line": 132,
+        "selectorHint": ".conv",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageB/pages/im/list/index.js:409"
+      }
+    },
+    {
+      "id": "subpackageB/pages/im/list/index.wxml:133:bindtap:openChat:18",
       "route": "subpackageB/pages/im/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1375973,7 +1375924,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openChat",
-        "line": 132,
+        "line": 133,
         "selectorHint": ".conv",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1376020,7 +1375971,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/list/index.wxml:160:bind:cancel:onDangerCancel:20",
+      "id": "subpackageB/pages/im/list/index.wxml:161:bind:cancel:onDangerCancel:20",
       "route": "subpackageB/pages/im/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1376043,7 +1375994,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:cancel",
         "handler": "onDangerCancel",
-        "line": 160,
+        "line": 161,
         "selectorHint": "#dc",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1376087,7 +1376038,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/list/index.wxml:160:bind:confirm:onDangerConfirm:19",
+      "id": "subpackageB/pages/im/list/index.wxml:161:bind:confirm:onDangerConfirm:19",
       "route": "subpackageB/pages/im/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1376110,7 +1376061,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onDangerConfirm",
-        "line": 160,
+        "line": 161,
         "selectorHint": "#dc",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1376199,7 +1376150,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/list/index.wxml:160:bind:done:onDangerCancel:21",
+      "id": "subpackageB/pages/im/list/index.wxml:161:bind:done:onDangerCancel:21",
       "route": "subpackageB/pages/im/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1376222,7 +1376173,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:done",
         "handler": "onDangerCancel",
-        "line": 160,
+        "line": 161,
         "selectorHint": "#dc",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1376336,7 +1376287,116 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/list/index.wxml:27:bind:action:loadInvites:3",
+      "id": "subpackageB/pages/im/list/index.wxml:27:bind:action:retryConversations:3",
+      "route": "subpackageB/pages/im/list/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "subpackageB/pages/im/list/index.wxml",
+        "js": "subpackageB/pages/im/list/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-inline-error",
+        "event": "bind:action",
+        "handler": "retryConversations",
+        "line": 27,
+        "selectorHint": "cy-inline-error[bind:action]",
+        "visibleCondition": "{{refreshError}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "event-contract",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/im/conversations",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/im/conversations"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/im/conversations",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageB/pages/im/list/index.js:186"
+      }
+    },
+    {
+      "id": "subpackageB/pages/im/list/index.wxml:29:bind:action:loadInvites:4",
       "route": "subpackageB/pages/im/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1376359,7 +1376419,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "loadInvites",
-        "line": 27,
+        "line": 29,
         "selectorHint": "cy-inline-error[bind:action]",
         "visibleCondition": "{{inviteError}}",
         "disabledCondition": null,
@@ -1376445,7 +1376505,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/list/index.wxml:38:bindchange:onInviteAlertChange:4",
+      "id": "subpackageB/pages/im/list/index.wxml:40:bindchange:onInviteAlertChange:5",
       "route": "subpackageB/pages/im/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1376470,7 +1376530,7 @@
         "tag": "cy-switch",
         "event": "bindchange",
         "handler": "onInviteAlertChange",
-        "line": 38,
+        "line": 40,
         "selectorHint": ".invite-alert__sw",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1376523,7 +1376583,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/list/index.wxml:45:bindtap:openInvite:5",
+      "id": "subpackageB/pages/im/list/index.wxml:47:bindtap:openInvite:6",
       "route": "subpackageB/pages/im/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1376546,7 +1376606,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openInvite",
-        "line": 45,
+        "line": 47,
         "selectorHint": ".invite-card",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1376593,7 +1376653,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/list/index.wxml:77:bindtap:openInvite:6",
+      "id": "subpackageB/pages/im/list/index.wxml:79:bindtap:openInvite:7",
       "route": "subpackageB/pages/im/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1376616,7 +1376676,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openInvite",
-        "line": 77,
+        "line": 79,
         "selectorHint": ".invite-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1376733,7 +1376793,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/list/index.wxml:97:bind:cta:loginConversations:7",
+      "id": "subpackageB/pages/im/list/index.wxml:99:bind:cta:loginConversations:8",
       "route": "subpackageB/pages/im/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1376756,7 +1376816,7 @@
         "tag": "cy-empty",
         "event": "bind:cta",
         "handler": "loginConversations",
-        "line": 97,
+        "line": 99,
         "selectorHint": ".cy-fade-in",
         "visibleCondition": "{{error && loginRequired}}",
         "disabledCondition": null,
@@ -1394981,7 +1395041,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:116:bindchange:onTeamInviteOnlyChange:3",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:117:bindchange:onTeamInviteOnlyChange:3",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1395054,7 +1395114,7 @@
         "tag": "cy-switch",
         "event": "bindchange",
         "handler": "onTeamInviteOnlyChange",
-        "line": 116,
+        "line": 117,
         "selectorHint": "cy-switch[bindchange]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1395098,7 +1395158,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:118:bindtap:startOrderTeam:4",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:119:bindtap:startOrderTeam:4",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1395171,7 +1395231,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "startOrderTeam",
-        "line": 118,
+        "line": 119,
         "selectorHint": ".link-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1395232,190 +1395292,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:14:bind:action:reloadOrder:1",
-      "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
-      "hostRoutes": [
-        "subpackageMember/coupon-wallet/index",
-        "subpackageMember/order/order",
-        "subpackageMember/orderinfo/orderinfo",
-        "subpackageRoam/poi-detail/index"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "subpackageMember/coupon-wallet/index",
-          "segments": [
-            {
-              "selector": "cy-scene-deep-link",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-member-order-detail",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/order/order",
-          "segments": [
-            {
-              "selector": "cy-scene-member-order-detail",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/orderinfo/orderinfo",
-          "segments": [
-            {
-              "selector": "#orderDetail",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageRoam/poi-detail/index",
-          "segments": [
-            {
-              "selector": "#roamDeepLink",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-member-order-detail",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "subpackageMember/components/cy/scene-member-order-detail/index.wxml",
-        "js": "subpackageMember/components/cy/scene-member-order-detail/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-inline-error",
-        "event": "bind:action",
-        "handler": "reloadOrder",
-        "line": 14,
-        "selectorHint": "cy-inline-error[bind:action]",
-        "visibleCondition": "{{loadErrorText}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "read",
-      "interactionMode": "event-contract",
-      "baseActionClass": "read",
-      "effectClasses": [
-        "read",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/config/features",
-          "/api/invoice/orders/eligible",
-          "/api/login/code",
-          "/api/merchant/crm/marketing-consents",
-          "/api/registration/explore-completion",
-          "/api/registration/info",
-          "/api/role/info"
-        ],
-        "primaryApis": [
-          "/api/invoice/orders/eligible",
-          "/api/merchant/crm/marketing-consents",
-          "/api/registration/explore-completion",
-          "/api/registration/info"
-        ],
-        "auxiliaryApis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/invoice/orders/eligible",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/merchant/crm/marketing-consents",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/registration/explore-completion",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/registration/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:408"
-      }
-    },
-    {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:142:bind:change:onConsentChange:5",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:143:bind:change:onConsentChange:5",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1395488,7 +1395365,7 @@
         "tag": "cy-consent-check",
         "event": "bind:change",
         "handler": "onConsentChange",
-        "line": 142,
+        "line": 143,
         "selectorHint": "cy-consent-check[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1395553,7 +1395430,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:146:bindtap:onConsentRetry:6",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:147:bindtap:onConsentRetry:6",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1395626,7 +1395503,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "onConsentRetry",
-        "line": 146,
+        "line": 147,
         "selectorHint": ".consent-err-act",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1395691,7 +1395568,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:194:bindtap:goInvoiceApply:7",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:195:bindtap:goInvoiceApply:7",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1395764,7 +1395641,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goInvoiceApply",
-        "line": 194,
+        "line": 195,
         "selectorHint": ".orow",
         "visibleCondition": "{{invoiceRow.state === 'can'}}",
         "disabledCondition": null,
@@ -1395811,7 +1395688,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:198:bindtap:goInvoiceDetail:8",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:199:bindtap:goInvoiceDetail:8",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1395884,7 +1395761,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goInvoiceDetail",
-        "line": 198,
+        "line": 199,
         "selectorHint": ".orow",
         "visibleCondition": "{{invoiceRow.state === 'ing' || invoiceRow.state === 'issued'}}",
         "disabledCondition": null,
@@ -1395931,7 +1395808,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:276:bindtap:followClub:9",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:277:bindtap:followClub:9",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1396004,7 +1395881,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "followClub",
-        "line": 276,
+        "line": 277,
         "selectorHint": ".revisit-btn",
         "visibleCondition": "{{completion.revisit.canFollow}}",
         "disabledCondition": null,
@@ -1396092,7 +1395969,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:278:bindtap:joinClub:10",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:279:bindtap:joinClub:10",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1396165,7 +1396042,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "joinClub",
-        "line": 278,
+        "line": 279,
         "selectorHint": ".revisit-btn",
         "visibleCondition": "{{completion.revisit.canJoin}}",
         "disabledCondition": null,
@@ -1396254,7 +1396131,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:283:bindtap:goNextEdition:11",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:284:bindtap:goNextEdition:11",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1396327,7 +1396204,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goNextEdition",
-        "line": 283,
+        "line": 284,
         "selectorHint": ".revisit-next",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1396374,7 +1396251,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:303:bindtap:cancelRegistration:12",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:304:bindtap:cancelRegistration:12",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1396449,7 +1396326,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "cancelRegistration",
-        "line": 303,
+        "line": 304,
         "selectorHint": ".sec-btn",
         "visibleCondition": "{{info.registrationStatus==1 || info.canRequestRefund}}",
         "disabledCondition": null,
@@ -1396584,7 +1396461,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:307:bindtap:copyOrderNo:13",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:308:bindtap:copyOrderNo:13",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1396657,7 +1396534,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "copyOrderNo",
-        "line": 307,
+        "line": 308,
         "selectorHint": ".sec-pair-btn",
         "visibleCondition": "{{info.registrationNo}}",
         "disabledCondition": null,
@@ -1396711,7 +1396588,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:314:bindtap:payOrder:14",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:315:bindtap:payOrder:14",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1396784,7 +1396661,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "payOrder",
-        "line": 314,
+        "line": 315,
         "selectorHint": ".primary-cta",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1396895,7 +1396772,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:319:bind:cancel:onTeamSheetCancel:16",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:320:bind:cancel:onTeamSheetCancel:16",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1396968,7 +1396845,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:cancel",
         "handler": "onTeamSheetCancel",
-        "line": 319,
+        "line": 320,
         "selectorHint": "cy-option-sheet[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1397012,7 +1396889,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:319:bind:select:onTeamSheetSelect:15",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:320:bind:select:onTeamSheetSelect:15",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1397085,7 +1396962,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onTeamSheetSelect",
-        "line": 319,
+        "line": 320,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1397149,7 +1397026,190 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:73:bindtap:openMeetingPoint:2",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:35:bind:action:reloadOrder:1",
+      "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
+      "hostRoutes": [
+        "subpackageMember/coupon-wallet/index",
+        "subpackageMember/order/order",
+        "subpackageMember/orderinfo/orderinfo",
+        "subpackageRoam/poi-detail/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-member-order-detail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/order/order",
+          "segments": [
+            {
+              "selector": "cy-scene-member-order-detail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "#roamDeepLink",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-member-order-detail",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "subpackageMember/components/cy/scene-member-order-detail/index.wxml",
+        "js": "subpackageMember/components/cy/scene-member-order-detail/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-inline-error",
+        "event": "bind:action",
+        "handler": "reloadOrder",
+        "line": 35,
+        "selectorHint": "cy-inline-error[bind:action]",
+        "visibleCondition": "{{loadErrorText}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "event-contract",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/invoice/orders/eligible",
+          "/api/login/code",
+          "/api/merchant/crm/marketing-consents",
+          "/api/registration/explore-completion",
+          "/api/registration/info",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/invoice/orders/eligible",
+          "/api/merchant/crm/marketing-consents",
+          "/api/registration/explore-completion",
+          "/api/registration/info"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/invoice/orders/eligible",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/crm/marketing-consents",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/registration/explore-completion",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/registration/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:408"
+      }
+    },
+    {
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:74:bindtap:openMeetingPoint:2",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1397222,7 +1397282,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openMeetingPoint",
-        "line": 73,
+        "line": 74,
         "selectorHint": ".orow",
         "visibleCondition": "{{info.meetingPointDisplayText}}",
         "disabledCondition": null,
