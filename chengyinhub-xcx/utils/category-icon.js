@@ -23,6 +23,7 @@ var RULES = [
   [/文化|叙事|故事|历史|读书/, 'draft'],
   [/亲子|协作|团队|组队|社交|交友|俱乐部/, 'mtab-customers'],
   [/解谜|谜题|推理|机关/, 'lock'],
+  [/夜游|夜生活|夜/, 'star'],
 ];
 
 var FALLBACK_ICON = 'discover-shop';

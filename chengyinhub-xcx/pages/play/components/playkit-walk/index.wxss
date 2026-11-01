@@ -3,14 +3,18 @@
 /* cy-playkit-walk · 低碳行动 · 计步(逐值照抄原型 playkit.html 的 .g-walk / .lcd 一族)
  * 参考:Any Distance「目标设定 LCD」。琥珀点阵面板 + 七段数码大字 + 整块实心琥珀 CTA。
  * ⚠️ 整段是玩法道具色,ds-ok。原型 375px 画布,1px = 2rpx。
+ * 内嵌(故事流 .chfull__kit 下发 --pk-col-pos / --pk-card-* / --pk-btn-pos):整块成一张卡、按钮跟在卡后,
+ * 同 ballshake 的 bl--embed;原先写死 absolute,在故事流里按钮浮在半屏、步数面板被挤出屏幕。
  */
 .wk {
-  position: absolute;
+  position: var(--pk-col-pos, absolute);
+  min-height: var(--pk-card-h, 0);
+  border-radius: var(--pk-card-radius, 0);
   left: 0; right: 0; top: 0; bottom: 0;
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  padding: calc(env(safe-area-inset-top) + 180rpx) 44rpx 200rpx;
+  padding: var(--pk-card-pad, calc(env(safe-area-inset-top) + 180rpx) 44rpx 200rpx);
   box-sizing: border-box;
   background: #0B0B0C;                                   /* ds-ok 原型 .g-walk */
   color: #F2F2F2;                                        /* ds-ok */
@@ -113,10 +117,11 @@
 
 /* 整块实心琥珀 CTA —— 这一屏的主色就是它 */
 .wk__cta {
-  position: absolute;
-  left: var(--cy-page-x);
-  right: var(--cy-page-x);
-  bottom: calc(env(safe-area-inset-bottom) + 60rpx);
+  position: var(--pk-btn-pos, absolute);
+  left: var(--pk-btn-x, var(--cy-page-x));
+  right: var(--pk-btn-x, var(--cy-page-x));
+  bottom: var(--pk-btn-bottom, calc(env(safe-area-inset-bottom) + 60rpx));
+  margin-top: var(--pk-btn-mt, 0);
   z-index: 5;
   height: 104rpx;
   display: flex; align-items: center; justify-content: center;

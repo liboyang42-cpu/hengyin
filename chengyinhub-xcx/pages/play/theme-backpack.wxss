@@ -6,7 +6,7 @@
 .theme-bag-icon{width:25rpx;height:30rpx;border:3rpx solid var(--cy-color-text-secondary);border-radius:7rpx;position:relative;margin:10rpx} /* ds-ok: 图标轮廓的小圆角 */
 .theme-bag-icon:before{content:"";width:9rpx;height:8rpx;border:3rpx solid var(--cy-color-text-secondary);border-bottom:0;border-radius:5rpx 5rpx 0 0;position:absolute;top:-11rpx;left:5rpx} /* ds-ok: 图标轮廓的小圆角 */
 .theme-bag-icon:after{content:"";left:4rpx;right:4rpx;bottom:4rpx;height:9rpx;position:absolute;border:2rpx solid var(--cy-color-text-secondary);border-radius:3rpx} /* ds-ok: 图标轮廓的小圆角 */
-.chfull .fx-story__t.theme-chapter-nav{position:absolute;left:var(--cy-page-x);text-align:left;right:210rpx;font-size:var(--cy-type-body);line-height:40px}
+.chfull .fx-story__t.theme-chapter-nav{position:absolute;left:var(--cy-page-x);text-align:left;right:210rpx;font-size:var(--cy-type-body);line-height:40px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} /* 主题名 · 章节名过长时单行省略,折行会压到下方指南针 */
 .chfull .fx-story__t.theme-chapter-nav--preview{left:calc(var(--cy-page-x) + var(--cy-btn-h) + 16rpx)}
 .tb-sheet{min-height:50vh;padding:var(--cy-space-4) 0 var(--cy-space-5);color:var(--cy-comp-sheet-player-text)}
 .tb-title{display:block;font-size:var(--cy-type-page-title);font-weight:700;line-height:1.2;margin:var(--cy-space-4) 0 var(--cy-space-5);overflow-wrap:anywhere}

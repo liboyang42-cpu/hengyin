@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -413,6 +414,21 @@ class TopicBundleReviewServiceTest {
         stubLockedRows(); key.setInitialValue(4);
         assertThrows(IllegalStateException.class, () -> service.applyDecision(10L, 7L, submitted, true));
         verify(templateMapper, never()).approveBundledDraft(anyLong(), anyLong());
+    }
+
+    @Test
+    void unchangedDeclarationsPassAfterTheSnapshotRoundTrip() {
+        // 2026-11-01 生产:提交快照读回后 topicId 是 IntNode、现读是 LongNode,未变化的声明也被判 stale
+        com.chengyinhub.business.mapper.ThemeStateKeyMapper keys = (com.chengyinhub.business.mapper.ThemeStateKeyMapper)
+                org.springframework.test.util.ReflectionTestUtils.getField(service, "themeStateKeyMapper");
+        com.chengyinhub.business.domain.ThemeStateKey key = new com.chengyinhub.business.domain.ThemeStateKey();
+        key.setTopicId(10L); key.setStateKey("counter.instability"); key.setKeyType("counter");
+        key.setScope("run"); key.setLabel("偏离"); key.setInitialValue(0); key.setVisible(Boolean.FALSE);
+        when(keys.selectByTopicId(10L)).thenReturn(Collections.singletonList(key));
+        String submitted = service.freezeForSubmission(10L, 7L).getSnapshotJson();
+        assertDoesNotThrow(() -> service.assertDeclarationsUnchanged(10L, submitted));
+        key.setLabel("偏离值");
+        assertThrows(IllegalStateException.class, () -> service.assertDeclarationsUnchanged(10L, submitted));
     }
 
     @Test

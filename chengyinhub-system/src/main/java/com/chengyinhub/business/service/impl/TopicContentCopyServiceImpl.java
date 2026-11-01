@@ -16,6 +16,8 @@ import com.chengyinhub.business.mapper.NpcProfileMapper;
 import com.chengyinhub.business.service.ITopicContentCopyService;
 import com.chengyinhub.business.service.ICmsMemberTemplateService;
 import com.chengyinhub.business.service.IProductRoleService;
+import com.chengyinhub.business.domain.ThemeStateKey;
+import com.chengyinhub.business.service.support.ThemeStateKeyService;
 import com.chengyinhub.business.service.support.TopicCompletionRulePolicy;
 import com.chengyinhub.business.service.support.TopicRouteConfigValidator;
 import com.chengyinhub.business.service.support.TopicTemplateRuleIdentityRemapper;
@@ -55,6 +57,7 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
     @Autowired private IProductRoleService productRoleService;
     @Autowired private ICmsMemberTemplateService cmsMemberTemplateService;
     @Autowired private TopicPlatformContentSlotGuard platformContentSlotGuard;
+    @Autowired private ThemeStateKeyService themeStateKeyService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -115,11 +118,38 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
             // R13-NPC:副本 NPC 同样是新 id,call / epilogues 的 npcId 一起重映射。
             remapCopiedJourneyStory(id, newTopicId, originalTopic.getJourneyStoryJson(), copiedMaps.chapterOldToNew, copiedMaps.oldToNew, npcIdMap);
             preserveSameOwnerCopiedCompletionRule(originalTopic, newTopic);
+            // 站点玩法里引用的状态键要跟着走:副本不注册,发布闸「以下状态键未注册」把套模板的人整个挡住
+            copyStateKeys(id, newTopicId);
         }
         if (copyType >= 3) {
             copyCollaborators(id, newTopicId);
         }
         return newTopicId;
+    }
+
+    private void copyStateKeys(Long sourceTopicId, Long copyTopicId) {
+        // 手工 new 的旧单测没注入(同 TopicPublicationContentGuard.assertStateKeysRegistered),Spring 运行态必注入
+        if (themeStateKeyService == null) return;
+        List<ThemeStateKey> copies = new ArrayList<ThemeStateKey>();
+        for (ThemeStateKey source : themeStateKeyService.listByTopic(sourceTopicId)) {
+            ThemeStateKey key = new ThemeStateKey();
+            key.setStateKey(source.getStateKey());
+            key.setKeyType(source.getKeyType());
+            key.setScope(source.getScope());
+            key.setLabel(source.getLabel());
+            key.setInitialValue(source.getInitialValue());
+            key.setMinValue(source.getMinValue());
+            key.setMaxValue(source.getMaxValue());
+            key.setDisplayType(source.getDisplayType());
+            key.setColor(source.getColor());
+            key.setIcon(source.getIcon());
+            key.setSortOrder(source.getSortOrder());
+            key.setVisible(source.getVisible());
+            key.setPersistScope(source.getPersistScope());
+            key.setRulesJson(source.getRulesJson());
+            copies.add(key);
+        }
+        themeStateKeyService.register(copyTopicId, copies);
     }
 
     private void preserveSameOwnerCopiedCompletionRule(CmsTopic original, CmsTopic copy) {

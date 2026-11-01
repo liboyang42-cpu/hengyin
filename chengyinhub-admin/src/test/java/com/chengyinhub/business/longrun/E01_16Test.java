@@ -68,7 +68,7 @@ class E01_16Test {
         dataSource.setUsername("sa"); dataSource.setPassword("");
         jdbc = new JdbcTemplate(dataSource);
         jdbc.execute("create table club(id bigint primary key, member_id bigint)");
-        jdbc.execute("create table cms_topic(id bigint primary key,member_id bigint)");
+        jdbc.execute("create table cms_topic(id bigint primary key,member_id bigint,club_id bigint)");
         jdbc.execute("create table cms_activity(id bigint primary key,club_id bigint,member_id bigint,topic_id bigint,del_flag int,"
                 + "status int,publish_status int,cancel_time timestamp,cancel_reason varchar(255))");
         jdbc.execute("create table cms_registration(id bigint primary key,owner_type int,owner_id bigint,"
@@ -96,7 +96,7 @@ class E01_16Test {
         jdbc.execute("create table club_event_notification_outbox(delivery_id bigint primary key,status varchar(24),"
                 + "next_attempt_at timestamp,create_time timestamp,update_time timestamp)");
         jdbc.update("insert into club values(21,42)");
-        jdbc.update("insert into cms_topic values(31,42)");
+        jdbc.update("insert into cms_topic(id,member_id) values(31,42)");
         jdbc.update("insert into cms_activity(id,club_id,member_id,topic_id,del_flag,status,publish_status) values(71,21,42,31,0,1,1)");
         jdbc.update("insert into cms_registration values(401,2,71,101,2,2)");
         jdbc.update("insert into club_event_series(id,club_id,topic_id,status,version) values(61,21,31,'ACTIVE',0)");

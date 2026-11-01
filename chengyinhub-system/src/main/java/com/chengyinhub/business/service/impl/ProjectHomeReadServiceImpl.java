@@ -57,6 +57,9 @@ public class ProjectHomeReadServiceImpl implements IProjectHomeReadService {
     /** 只读每一站的生效供给(有商家接了 ⇒ 档位锁住);缺席时站点行不带承接方,档位按钮仍以写接口为准。 */
     @Autowired(required = false)
     private com.chengyinhub.business.mapper.MerchantChapterOfferMapper merchantChapterOfferMapper;
+    /** 俱乐部主办:找本主题的自办场次,工作台「客户 · 发通知」带着它进俱乐部群发通知(本场已报名);缺席时不下发,入口退回只发全体成员。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.mapper.CmsActivityMapper cmsActivityMapper;
 
     public ProjectHomeReadServiceImpl(ICmsTopicService topicService,
                                       ICmsTopicNodeService topicNodeService,
@@ -215,6 +218,16 @@ public class ProjectHomeReadServiceImpl implements IProjectHomeReadService {
 
     // ==================== host ====================
 
+    private Long selfHostActivityId(CmsTopic topic) {
+        if (cmsActivityMapper == null || topic.getMemberId() == null) return null;
+        com.chengyinhub.business.domain.CmsActivity probe = new com.chengyinhub.business.domain.CmsActivity();
+        probe.setTopicId(topic.getId());
+        probe.setMemberId(topic.getMemberId());
+        probe.setDelFlag(0);
+        List<com.chengyinhub.business.domain.CmsActivity> rows = cmsActivityMapper.selectCmsActivityList(probe);
+        return rows == null || rows.isEmpty() ? null : rows.get(0).getId();
+    }
+
     private Map<String, Object> buildHost(CmsTopic topic) {
         List<CoopInvite> invites = livingInvites(topic.getId());
 
@@ -223,6 +236,13 @@ public class ProjectHomeReadServiceImpl implements IProjectHomeReadService {
         // 俱乐部管理人属后续需求),前端按此隐藏;商家/个人主办照常。
         // clubId 0 = 不挂俱乐部(发布页 / 存量数据都用 0 表示无),不能当成俱乐部主办 —— 否则商家主题会被渲染成俱乐部深色工作台
         host.put("ownerType", topic.getClubId() != null && topic.getClubId() > 0 ? "club" : "merchant");
+        if (topic.getClubId() != null && topic.getClubId() > 0) {
+            // 2026-11-01 业主:俱乐部要能发通知。商家定向广播只认商家客户(俱乐部调它 403),
+            // 俱乐部走自己的群发通知;本主题的自办场次就是「本场已报名」的那一场。
+            host.put("clubId", topic.getClubId());
+            Long selfHostActivityId = selfHostActivityId(topic);
+            if (selfHostActivityId != null) host.put("selfHostActivityId", selfHostActivityId);
+        }
         host.put("recruit", buildRecruit(topic, invites));
         host.put("clubs", buildHostClubs(invites));
         host.put("merchants", buildHostMerchants(topic));

@@ -29,6 +29,7 @@ public class ClubAccessServiceImpl implements IClubAccessService {
     @Autowired private ClubMemberMapper clubMemberMapper;
     @Autowired private ClubRoleAssignmentMapper clubRoleAssignmentMapper;
     @Autowired private CmsActivityMapper cmsActivityMapper;
+    @Autowired(required = false) private com.chengyinhub.business.mapper.CmsTopicMapper cmsTopicMapper;
     @Autowired private UmsMemberMapper umsMemberMapper;
 
     @Override
@@ -149,8 +150,15 @@ public class ClubAccessServiceImpl implements IClubAccessService {
 
     private void requireOwnedActivity(Long activityId, Long clubId) {
         CmsActivity activity = cmsActivityMapper.selectCmsActivityById(activityId);
-        if (activity == null || !activityId.equals(activity.getId()) || !clubId.equals(activity.getClubId())
+        if (activity == null || !activityId.equals(activity.getId())
                 || !Integer.valueOf(0).equals(activity.getDelFlag())) throw forbidden();
+        if (clubId.equals(activity.getClubId())) return;
+        // 俱乐部自己的公开主题:自办场次刻意不挂 club_id(挂上会打开成员限定闸),场次归属按主题归属认 ——
+        // 否则俱乐部给自己主题的报名玩家发通知、做场次运营一律 403(2026-11-01 生产走查)。
+        if (activity.getClubId() != null || activity.getTopicId() == null || cmsTopicMapper == null) throw forbidden();
+        com.chengyinhub.business.domain.CmsTopic topic = cmsTopicMapper.selectCmsTopicById(activity.getTopicId());
+        if (topic == null || !clubId.equals(topic.getClubId()) || topic.getMemberId() == null
+                || !topic.getMemberId().equals(activity.getMemberId())) throw forbidden();
     }
 
     private boolean isActiveClub(Club club, Long clubId) {

@@ -6,7 +6,9 @@
  * ⚠️ 整段是玩法皮肤色,ds-ok:要改先改原型。原型 375px 画布,1px = 2rpx。
  */
 .sw {
-  position: absolute;
+  position: var(--pk-col-pos, absolute);   /* 故事流内嵌 = 定高卡片(同 ballshake 的 bl--embed),整屏不变 */
+  min-height: var(--pk-card-h-tall, 0);   /* 内容比一般卡高:底部按钮/说明会压到牌面 */
+  border-radius: var(--pk-card-radius, 0);
   left: 0; right: 0; top: 0; bottom: 0;
   display: flex;
   flex-direction: column;

@@ -170,6 +170,9 @@ test('主题类别计入缺项数,数组与逗号串两种形态都认', () => {
     '没选类别必须进缺项数，否则选完类别总览数字不动')
   assert.equal(evalDraft(ready({ categoryIds: '' }), { categoryIds: ['4001'] })
     .blockingIssues.filter(i => i.key === 'categoryIds').length, 0, '页面传数组形态')
+  // 2026-11-01 走查:套模板的副本带着占位类别 0,没选类别也被当成选了
+  assert.ok(evalDraft(ready({ categoryIds: '' }), { categoryIds: ['0'] }).blockingIssues.some(i => i.key === 'categoryIds'),
+    '占位类别 0 不算选了')
   assert.equal(evalDraft(ready({ categoryIds: '' }), { categoryIds: [] })
     .blockingIssues.filter(i => i.key === 'categoryIds').length, 1)
   // 负控:取消选择后残留的空逗号串,不能因为「字符串非空」被判成已选

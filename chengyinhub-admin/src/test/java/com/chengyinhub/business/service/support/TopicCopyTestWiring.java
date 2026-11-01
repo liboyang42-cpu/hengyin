@@ -30,6 +30,10 @@ public final class TopicCopyTestWiring {
         }
         ReflectionTestUtils.setField(copy, "cmsMemberTemplateService", templates);
         ReflectionTestUtils.setField(copy, "platformContentSlotGuard", slots);
+        // 复制连同已注册状态键:沿用 facade 的注册服务;老夹具没有时给一个空注册表(Mockito 列表默认空)
+        Object stateKeys = TopicPublicationTestWiring.get(facade, "themeStateKeyService");
+        ReflectionTestUtils.setField(copy, "themeStateKeyService", stateKeys instanceof ThemeStateKeyService ? stateKeys
+                : new ThemeStateKeyService(org.mockito.Mockito.mock(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class)));
         ReflectionTestUtils.setField(facade, "cmsMemberTemplateService", templates);
         ReflectionTestUtils.setField(facade, "platformContentSlotGuard", slots);
         ReflectionTestUtils.setField(facade, "topicContentCopyService", copy);
