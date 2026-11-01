@@ -36,6 +36,9 @@ Component({
     pendingMerchantNodesState: { type: String, value: 'idle' },
     // BL-183:圈层供给角色抽屉。开关/提交中/后端错误归页面;勾选只在抽屉里,提交时随事件带回。
     circleConfig:    { type: Object, value: { show: false, submitting: false, errorText: '', errorTitle: '' } },
+    // 2026-10-31 P-6:招商第三版的站点行(每站一个档位)与五个叠层的状态,都由页面组装
+    recruitStations: { type: Array, value: [] },
+    layers:          { type: Object, value: {} },
   },
   observers: {
     'hostTopic, hostRecruit': function (topic, recruit) {
@@ -65,6 +68,12 @@ Component({
       if (show && !this._circleConfigOpen) this.resetCircleCandidates();
       this._circleConfigOpen = !!show;
     },
+    // 招商第三版站点行的汇总:已承接几站 / 还开着没人接几站
+    'recruitStations, ownerChapterApplications': function (rows, apps) {
+      const list = rows || [];
+      this.setData({ stationSum: { taken: list.filter((r) => r.state === 'taken').length, open: list.filter((r) => r.state === 'open').length,
+        pending: (apps || []).filter((a) => a && a.actionable).length } });
+    },
     // 派生量放 observer 而不是让页面再多存两个字段:它们只有这个视图用得上
     'hostRecruit, clubSheet, hostTopic, hostPlayers': function (recruit, sheet, topic, players) {
       const total = (recruit && recruit.nodeTotal) || 0;
@@ -90,7 +99,7 @@ Component({
     },
   },
   data: {
-    recruitDone: false, clubCount: 0, clubAccepted: 0, hostProgress: [], needExecutorClub: false, anyDrawerOpen: false, hostStatusText: '状态待确认',
+    recruitDone: false, stationSum: { taken: 0, open: 0, pending: 0 }, clubCount: 0, clubAccepted: 0, hostProgress: [], needExecutorClub: false, anyDrawerOpen: false, hostStatusText: '状态待确认',
     circleCandidates: [], circleConfigHint: '',
     circleConfigActions: [{ key: 'submitCircleConfig', label: '保存供给角色' }],
   },
@@ -140,6 +149,11 @@ Component({
     emit(e) {
       const ds = e.currentTarget.dataset || {};
       this.triggerEvent('act', { act: ds.act, dataset: ds });
+    },
+    // 叠层里的输入框:把输入值一并带回页面(页面是唯一状态源)
+    emitInput(e) {
+      const ds = e.currentTarget.dataset || {};
+      this.triggerEvent('act', { act: ds.act, dataset: Object.assign({}, ds, { value: e.detail.value }) });
     },
     emitCloseClub() {
       this.triggerEvent('act', { act: 'closeClubSheet', dataset: {} });

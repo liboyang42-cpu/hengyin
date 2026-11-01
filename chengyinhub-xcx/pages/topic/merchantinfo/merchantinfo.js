@@ -19,6 +19,7 @@ const { validationMethodLabel } = require('../../../utils/validation-method-labe
 const { resolveMenuChrome } = require('../../../utils/nav-safe-area.js');
 const mediaPreview = require('../../../utils/media-preview.js');
 const codeTextUtil = require('../utils/code-text.js');
+const hostLayers = require('./host-layers.js'); // 2026-10-31 P-6:主办工作台叠层(邀约 / 主页 / 档位 / 附近商家)
 
 function recruitBoundaryLabel(allowed, maxXp) {
   const parts = [];
@@ -123,7 +124,9 @@ function currentProjectRead(page, key) {
 }
 
 Page({
+  ...hostLayers.methods,
   data: {
+    ...hostLayers.data,
     navScrolled: false, // 2026-10-30:滚过封面(约 200px)后导航栏转实底
     projectReadAuth: '',
     reducedMotion: false,
@@ -2134,9 +2137,10 @@ Page({
     const nodeTotal = recruit.nodeTotal || 0;
     const nodeFilled = recruit.nodeFilled || 0;
     this.setData({
-      quickActions: this.buildQuickActions('host', host.ownerType, host.canEdit),
+      quickActions: this.buildQuickActions('host', host.ownerType, host.canEdit, this.hostRecruitGate(topic, host)),
       hostOwnerType: host.ownerType || 'merchant',
       'clubSheet.items': this.mapClubs(host.clubs),
+      recruitStations: hostLayers.decorateStations(host.recruitChapters),
       hostTopic: {
         status: topic.status,
         productType: topic.productType,
@@ -2263,7 +2267,9 @@ Page({
         // fail-closed:status 缺失时按「待确认」,不按「合作中」——
         // 把还没答应的人标成合作方,商家会照着去安排场次。
         accepted: c.status === 1,
-        statusText: c.status === 1 ? '合作中' : '待对方确认',
+        // 2026-10-31 P-6:主办那一侧有邀约记录的等回复行,用三格状态条(已发出 → 已读 → 已接受)代替「待对方确认」
+        track: c.inviteId ? hostLayers.inviteTrack(c.status, !!c.read) : null,
+        statusText: c.status === 1 ? '合作中' : (c.status === 2 ? '已拒绝' : (c.inviteId && c.status === 0 ? '' : '待对方确认')),
         terms: c.terms || '',
       };
     });
@@ -2274,7 +2280,25 @@ Page({
    * ★ 承接方没有「商家」这一格 —— 同场其他商家对他不可见(2026-08-04 用户决策),
    *   给一个点开必然是空的按钮,比不给更糟。
    */
-  buildQuickActions(role, ownerType, canEdit) {
+  /* 2026-10-31 业主:俱乐部 / 商家招商在发布之后做,发布时的开关决定工作台能用什么,关着的那颗灰掉点不了。
+     · 商家发的城市定向只能自己带(D3):两颗都灰;
+     · 城市定向没开公开承接池:「俱乐部」灰;自由探索的俱乐部承办是开售前必办,不灰;
+     · 自由探索一站都没开商家承接:「商家」灰(在「更多 › 章节控制」逐站打开)。
+     后端没下发判据(老接口)时不灰 —— 真闸在各写接口,前端只是不让人点进死路。 */
+  hostRecruitGate(topic, host) {
+    const productType = Number(topic && topic.productType);
+    const merchantCity = this.data.operationScope === 'MERCHANT' && productType === 1;
+    const gate = {};
+    if (merchantCity) {
+      gate.club = gate.merchant = '商家发的城市定向只能自己带,不能邀俱乐部和商家';
+      return gate;
+    }
+    if (productType === 1 && host && host.openClubPool === false) gate.club = '发布时没开「俱乐部承接」,去「更多 › 票价与主题内容」打开';
+    if (productType === 2 && host && host.recruitChapterCount === 0) gate.merchant = '还没有开放商家承接的站,去「更多 › 章节控制」逐站打开';
+    return gate;
+  },
+
+  buildQuickActions(role, ownerType, canEdit, gate) {
     // 顺手记下编辑资格:「更多」抽屉里「票价与主题内容」那一行靠它决定是否置灰。
     // wxml 不渲染这个值,所以留在实例上,不进 setData(死数据字段门禁 A2)。
     this._hostCanEdit = canEdit !== false;
@@ -2298,7 +2322,9 @@ Page({
       // ⚠️ canEdit === false 只让抽屉里的「票价与主题内容」置灰,不再吞掉整颗按钮 ——
       //    章节控制与本站运营跟编辑资格无关,吞了按钮等于把那些动作一起藏没了。
       // 走查 v2 R15(业主 2026-10-30):主办也有一张「本主题二维码」,玩家扫了直接进这个主题
-      return base.concat([{ key: 'themeQr', label: '二维码', iconName: 'qr' }, MORE]);
+      const g = gate || {};
+      const gated = base.map((item) => (g[item.key] ? Object.assign({}, item, { disabled: true, disabledReason: g[item.key] }) : item));
+      return gated.concat([{ key: 'themeQr', label: '二维码', iconName: 'qr' }, MORE]);
     }
     /* CU-M-92「只接了合作邀约、还没有点位」的商家:四格里只有两格真能用。
        「客户」走 /api/project/players,那道闸认的是发布者或有报名行的人,他没有报名行 ⇒ 点了必被拒;
@@ -2355,31 +2381,14 @@ Page({
     });
   },
 
-  inviteClubRow(e) {
-    const ds = (e && e.currentTarget && e.currentTarget.dataset) || {};
-    const topicId = this.data.topicId || (this.data.info && this.data.info.topicId);
-    if (!ds.id || !topicId || this._navigating) return;
-    this._navigating = true; this._clubSheetReturn = true;
-    wx.navigateTo({
-      url: '/pages/coop/invite/index?type=1&toId=' + ds.id + '&toName=' + encodeURIComponent(ds.name || '') + '&topicId=' + topicId
-        + (this.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT' : ''),
-      complete: () => { this._navigating = false; },
-    });
-  },
-
-  openClubHome(e) {
-    const ds = (e && e.currentTarget && e.currentTarget.dataset) || {};
-    if (!ds.id || this._navigating) return;
-    this._navigating = true; this._clubSheetReturn = true;
-    wx.navigateTo({ url: '/pages/club/detail/index?id=' + ds.id + '&tab=overview' + (this.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT' : ''), complete: () => { this._navigating = false; } });
-  },
+  // inviteClubRow / openClubHome:2026-10-31 P-6 起叠在抽屉上,见 host-layers.js
 
   closeClubSheet() {
-    this.setData({ 'clubSheet.show': false });
+    this.setData({ 'clubSheet.show': false, 'layers.clubInvite': { show: false }, 'layers.clubHome': { show: false } });
   },
 
   closeMerchantSheet() {
-    this.setData({ 'merchantSheet.show': false });
+    this.setData({ 'merchantSheet.show': false, 'layers.tier': { show: false }, 'layers.shops': { show: false }, 'layers.shopInvite': { show: false } });
   },
 
   closePlayerSheet() {
@@ -2566,6 +2575,8 @@ Page({
   /* 走查 v2 R06(业主 2026-10-30):招商弹窗里每一站自带「自己承接 / 招商」,收到的申请也在弹窗里处理,
      底部不再放「查看收到的申请」跳出去。自由探索按章节招商(承接后才产生站点),保留一个「去找商家」。 */
   buildMerchantActions() {
+    // 2026-10-31 P-6:有站点行(每站「档位 / 招商」)时底部不再放「去找商家」,招商在站点行里叠附近商家
+    if ((this.data.recruitStations || []).length) return [];
     if (this._isFreeExploreHost) return [{ key: 'goInviteMerchant', label: '去找商家' }];
     if (((this.data.hostRecruit || {}).nodeTotal || 0) > 0) return [];
     if (this._hostCanEdit === false) return [];
@@ -3324,6 +3335,10 @@ Page({
       openCircleConfig: 1, closeCircleConfig: 1, submitCircleConfig: 1,
       auditChapterApplication: 1, revokeChapterInvitation: 1, auditMerchantNode: 1, retryChapterReviews: 1,
       switchStation: 1,
+      // 2026-10-31 P-6 叠层
+      closeLayer: 1, setClubInviteMode: 1, onClubInviteFee: 1, onClubInviteMessage: 1, sendClubInvite: 1,
+      inviteFromClubHome: 1, reloadClubHome: 1, openTierLayer: 1, setTierMode: 1, onTierField: 1, stepTierMax: 1,
+      saveTier: 1, openShopsLayer: 1, reloadShops: 1, openShopInvite: 1, sendShopInvite: 1,
       openNodeNpcForm: 1, openChapterOfferForm: 1, openChapterNodeForm: 1,
       withdrawChapterApplication: 1, reconfirmCircleSupply: 1, pauseCircleSupply: 1, retryMyChapterNodes: 1,
       // 打开章节 / 打开节点(Figma 439:6336 / 336:461)
@@ -3351,6 +3366,8 @@ Page({
    */
   onQuickAction(e) {
     const key = e.currentTarget.dataset.key;
+    const gated = (this.data.quickActions || []).find((item) => item.key === key && item.disabled);
+    if (gated) { app.tips(gated.disabledReason); return; }
     /* 扫码(稿 88:4014 第一格 · G1=A):走 goVerify —— 核销整套在商家中心首页,
        这里只做交接,不在承接页复制第二份(R2 判定,G3 已确认撤销「就地展开」那条)。
        与底部「去核销」同一个落点,区别只是这一格任何状态都能点。 */

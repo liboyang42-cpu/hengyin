@@ -13,12 +13,12 @@ function assertClubHostContract(pageJs, pageWxml, hostWxml, hostJs) {
     pageJs,
     // 2026-08-18:buildQuickActions 多了第三个参数 canEdit(主办方编辑资格闸),EDIT 从数组
     // 字面量里挪到了 base.concat([EDIT])。本条契约要盯的仍然只有一件事:俱乐部主办没有 CLUB 格。
-    /buildQuickActions\(role, ownerType, canEdit\)[\s\S]*?ownerType === 'club' \? \[MERCHANT, CUSTOMER\] : \[CLUB, MERCHANT, CUSTOMER\]/,
+    /buildQuickActions\(role, ownerType, canEdit, gate\)[\s\S]*?ownerType === 'club' \? \[MERCHANT, CUSTOMER\] : \[CLUB, MERCHANT, CUSTOMER\]/,
     '俱乐部主办的快捷位必须裁掉「俱乐部」格',
   )
   assert.match(
     pageJs,
-    /buildQuickActions\('host', host\.ownerType, host\.canEdit\)/,
+    /buildQuickActions\('host', host\.ownerType, host\.canEdit, this\.hostRecruitGate\(topic, host\)\)/,
     'applyHome 必须把后端 host.ownerType 传进快捷位组装',
   )
   assert.match(pageWxml, /hostOwnerType="\{\{ hostOwnerType \|\| '' \}\}"/, '页面必须传主办身份且不能把 null 交给强类型组件属性')

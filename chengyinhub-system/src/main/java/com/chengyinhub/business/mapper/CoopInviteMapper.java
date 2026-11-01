@@ -27,6 +27,12 @@ public interface CoopInviteMapper {
 
     public CoopInvite selectCoopInviteById(Long id);
 
+    /** 已读回执:只在 read_time 为空时写一次(受邀方首次打开),返回受影响行数 */
+    int markRead(@org.apache.ibatis.annotations.Param("id") Long id, @org.apache.ibatis.annotations.Param("readTime") java.util.Date readTime);
+
+    /** 已读回执批量读:返回 [{id, readTime}],只含已读的行 */
+    java.util.List<java.util.Map<String, Object>> selectReadTimes(@org.apache.ibatis.annotations.Param("ids") java.util.List<Long> ids);
+
     /** B1-4:行锁读取(FOR UPDATE),须在事务内调用 */
     public CoopInvite selectCoopInviteByIdForUpdate(Long id);
 

@@ -235,6 +235,23 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
     }
 
     @Override
+    public void markRead(Long id) {
+        if (id == null || id <= 0) return;
+        coopInviteMapper.markRead(id, DateUtils.getNowDate());
+    }
+
+    @Override
+    public java.util.Map<Long, java.util.Date> selectReadTimes(java.util.List<Long> ids) {
+        java.util.Map<Long, java.util.Date> out = new java.util.HashMap<>();
+        if (ids == null || ids.isEmpty()) return out;
+        for (java.util.Map<String, Object> row : coopInviteMapper.selectReadTimes(ids)) {
+            Object id = row.get("id"), at = row.get("readTime");
+            if (id instanceof Number && at instanceof java.util.Date) out.put(((Number) id).longValue(), (java.util.Date) at);
+        }
+        return out;
+    }
+
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public List<CoopInvite> selectCoopInviteList(CoopInvite coopInvite) {
         // 查询前先把已超时的待确认行幂等写入终态，列表不依赖 Quartz 是否正常运行。

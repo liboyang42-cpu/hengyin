@@ -19,6 +19,8 @@ Component({
     customerMode: { type: Boolean, value: false },
     // [{ key, label, ghost? }],最多两个并排
     actions: { type: Array,   value: [] },
+    // 2026-10-31 P-6:上面叠了一层(邀约 / 主页 / 档位 / 附近商家)时缩小压暗、露出顶边
+    under: { type: Boolean, value: false },
   },
   data: { panelTop: 69 },
   lifetimes: {

@@ -10,6 +10,12 @@ public interface ICoopInviteService {
 
     public CoopInvite selectCoopInviteById(Long id);
 
+    /** 受邀方首次打开邀约:写一次已读回执(调用方已校验受邀方身份) */
+    void markRead(Long id);
+
+    /** 已读回执:邀约 id → 首次打开时间(没读过的不在结果里) */
+    java.util.Map<Long, java.util.Date> selectReadTimes(java.util.List<Long> ids);
+
     public List<CoopInvite> selectCoopInviteList(CoopInvite coopInvite);
 
     /** 合作列表专用只读投影：过期待确认映射为5，不持久化终态。 */

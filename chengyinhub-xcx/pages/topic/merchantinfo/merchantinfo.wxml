@@ -50,6 +50,8 @@
     pending-merchant-nodes-state="{{pendingMerchantNodesState}}"
     station-ops-error-text="{{stationOpsErrorText}}"
     circle-config="{{circleConfig}}"
+    recruit-stations="{{recruitStations}}"
+    layers="{{layers}}"
     bind:act="onJoinAct" />
 
 <project-join wx:elif="{{ !fromMerchantJoin }}"

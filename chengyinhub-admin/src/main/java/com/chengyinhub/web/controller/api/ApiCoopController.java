@@ -526,6 +526,29 @@ public class ApiCoopController extends BaseController {
      * 历史 type2 只允许读取展示，任何处理动作都拒绝。
      */
     @Operation(summary = "处理协作邀请(接受/拒绝/取消)")
+    /**
+     * 已读回执(2026-10-31 业主批准 P-6:主办在「已邀约」里看到 已发出 → 已读 → 已接受)。
+     * 只有受邀方本人(俱乐部群主 / 商家主体,商家侧重验 COOP_MANAGE)打开详情时写一次;发起方自己看不算读。
+     */
+    @PostMapping("/invite/read")
+    public AjaxResult markInviteRead(@RequestBody CoopInvite body) {
+        Long memberId;
+        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        if (body == null || body.getId() == null) return error("缺少参数");
+        CoopInvite inv = coopInviteService.selectCoopInviteById(body.getId());
+        if (inv == null) return error("邀请不存在");
+        Long toOwner = resolveToOwner(inv);
+        Long contractMemberId;
+        try {
+            contractMemberId = resolveActionContractMemberId(memberId, inv, null, toOwner, false, true);
+        } catch (ServiceException e) {
+            return new AjaxResult(e.getCode(), e.getMessage());
+        }
+        if (toOwner == null || !toOwner.equals(contractMemberId)) return error("仅受邀方可标记已读");
+        coopInviteService.markRead(inv.getId());
+        return AjaxResult.success();
+    }
+
     @PostMapping("/handle")
     public AjaxResult handle(@RequestBody CoopInvite body) {
         Long memberId;

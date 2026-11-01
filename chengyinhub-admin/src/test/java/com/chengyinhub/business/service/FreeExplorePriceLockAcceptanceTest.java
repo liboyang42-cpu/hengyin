@@ -300,7 +300,15 @@ class FreeExplorePriceLockAcceptanceTest {
     // ------------------------------------------------------------------ (c) 控制器:归属 + 原话透传
 
     private ApiPricingController controller(Long caller, IPricingService pricing) {
+        return controller(caller, pricing, true);
+    }
+
+    private ApiPricingController controller(Long caller, IPricingService pricing, boolean ownerRegistered) {
         ApiPricingController controller = spy(new ApiPricingController());
+        com.chengyinhub.business.service.impl.MemberIdentityService identity =
+                mock(com.chengyinhub.business.service.impl.MemberIdentityService.class);
+        when(identity.isRegistered(OWNER_ID)).thenReturn(ownerRegistered);
+        ReflectionTestUtils.setField(controller, "memberIdentityService", identity);
         ICmsTopicService topicService = mock(ICmsTopicService.class);
         CmsTopic topic = new CmsTopic();
         topic.setId(TOPIC_ID);
@@ -360,6 +368,37 @@ class FreeExplorePriceLockAcceptanceTest {
         assertEquals(500, result.get(AjaxResult.CODE_TAG));
         assertEquals("每个必选章至少需要 1 家生效商家供给,暂不能锁价开售", result.get(AjaxResult.MSG_TAG));
         assertNoWrite();
+    }
+
+    /**
+     * 2026-10-31:招商中的主题可以先不定价(发布时票价 0 ⇒ 免费豁免实名);终价收费时必须补上实名闸,
+     * 否则「先发免费、后定收费」绕过发布者实名。
+     */
+    @Test
+    void controller_paidFinalPriceRequiresPublisherIdentity() {
+        IPricingService pricing = mock(IPricingService.class);
+        ApiPricingController controller = controller(OWNER_ID, pricing, false);
+
+        AjaxResult result = controller.confirm(body());
+
+        assertEquals(500, result.get(AjaxResult.CODE_TAG));
+        assertEquals("收费主题要先登记发布者实名(姓名与身份证号),再确认终价", result.get(AjaxResult.MSG_TAG));
+        verifyNoInteractions(pricing);
+    }
+
+    @Test
+    void controller_freeFinalPriceStaysExemptFromIdentity() {
+        IPricingService pricing = mock(IPricingService.class);
+        ApiPricingController controller = controller(OWNER_ID, pricing, false);
+        Map<String, Object> free = body();
+        free.put("guidedPrice", "0");
+        free.put("selfPrice", "0.00");
+
+        AjaxResult result = controller.confirm(free);
+
+        assertEquals(200, result.get(AjaxResult.CODE_TAG));
+        verify(pricing).confirmPrice(eq(TOPIC_ID), eq(new BigDecimal("0")), eq(new BigDecimal("0.00")),
+                eq(37), eq(new BigDecimal("100")), eq(4));
     }
 
     // ------------------------------------------------------------------ (d) 玩家报价 = 供给票价
