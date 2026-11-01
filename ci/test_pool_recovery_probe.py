@@ -7,7 +7,7 @@ class OwnedPoolProfileTest(unittest.TestCase):
  def test_only_exact_hosted_objects_and_explicit_profile_are_accepted(self):
   name='cy-startup-12-34';network={'Name':name,'Internal':True,'Id':'n'};objects=[]
   for i,suffix in enumerate(['app','mysql','redis']):
-   objects.append({'Id':str(i)*64,'Name':'/'+name+'-'+suffix,'NetworkSettings':{'Networks':{name:{'NetworkID':'n'}}},'State':{'Running':True,'Paused':False,'OOMKilled':False},'Config':{'Cmd':['--spring.datasource.druid.maxActive=20','--spring.datasource.druid.maxWait=5000','--spring.datasource.druid.socketTimeout=60000']}})
+   objects.append({'Id':str(i)*64,'Name':'/'+name+'-'+suffix,'NetworkSettings':{'Networks':{name:{'NetworkID':'n'}}},'State':{'Running':True,'Paused':False,'OOMKilled':False},'Config':{'Cmd':['--spring.datasource.druid.maxActive=40','--spring.datasource.druid.maxWait=5000','--spring.datasource.druid.socketTimeout=60000']}})
   probe.validate_targets(name,'unix:///var/run/docker.sock',objects,network)
   for kind in ['foreign-name','socket-preemption','oom','non-internal']:
    with self.subTest(kind=kind):
@@ -35,9 +35,9 @@ class OwnedPoolProfileTest(unittest.TestCase):
   with mock.patch.object(probe.subprocess,'check_output',side_effect=error),self.assertRaises(probe.subprocess.CalledProcessError):probe.command(['mysql'])
   self.assertEqual(probe.CLIENT_STDERR,[clean])
  def test_native_druid_exception_requires_expected_pool_and_bounded_wait(self):
-  actual='Caused by: com.alibaba.druid.pool.GetConnectionTimeoutException: wait millis 5001, active 20, maxActive 20, creating 0'
+  actual='Caused by: com.alibaba.druid.pool.GetConnectionTimeoutException: wait millis 5001, active 40, maxActive 40, creating 0'
   self.assertEqual(probe.native_pool_timeout_wait(actual),5001)
-  for bad in [actual.replace('GetConnectionTimeoutException','SQLTimeoutException'),actual.replace('active 20','active 19'),actual.replace('maxActive 20','maxActive 21'),actual.replace('millis 5001','millis 1000'),actual.replace('millis 5001','millis 10000')]:
+  for bad in [actual.replace('GetConnectionTimeoutException','SQLTimeoutException'),actual.replace('active 40','active 39'),actual.replace('maxActive 40','maxActive 41'),actual.replace('millis 5001','millis 1000'),actual.replace('millis 5001','millis 10000')]:
    with self.subTest(log=bad),self.assertRaises(RuntimeError):probe.native_pool_timeout_wait(bad)
 class PoolOuterEvidenceTest(unittest.TestCase):
  """Execute the real embedded protocols with Docker/Git doubles, never Java/DB."""

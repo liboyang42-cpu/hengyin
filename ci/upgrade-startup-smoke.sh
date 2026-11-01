@@ -330,7 +330,7 @@ POOL_LABEL=()
 if [ "${CHENGYIN_CI_POOL_RECOVERY:-false}" = true ]; then
   python3 -I "$ROOT/ci/pool_recovery_probe.py" --check-execution-only
   test "$(command docker context inspect --format '{{.Endpoints.docker.Host}}')" = unix:///var/run/docker.sock
-  POOL_PROFILE=(--spring.datasource.druid.maxActive=20 --spring.datasource.druid.maxWait=5000 --spring.datasource.druid.socketTimeout=60000)
+  POOL_PROFILE=(--spring.datasource.druid.maxActive=40 --spring.datasource.druid.maxWait=5000 --spring.datasource.druid.socketTimeout=60000)
 fi
 RUN_NAME="cy-startup-$$-$RANDOM"
 if [ "${CHENGYIN_CI_POOL_RECOVERY:-false}" = true ]; then

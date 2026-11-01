@@ -4,7 +4,10 @@
 /* 与 quiethold 同一骨架、颜色语义反过来:那边红=要出事,这边绿=在成事。
    动效只走 transition(契约 §6.1 关键帧只减不增)。 */
 .sh {
-  position: absolute;
+  position: var(--pk-col-pos, absolute);   /* 故事流内嵌 = 定高卡片(同 ballshake 的 bl--embed),整屏不变 */
+  min-height: var(--pk-card-h, 0);
+  border-radius: var(--pk-card-radius, 0);
+  overflow: hidden;
   left: 0; right: 0; top: 0; bottom: 0;
   display: flex;
   flex-direction: column;

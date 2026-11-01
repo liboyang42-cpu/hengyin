@@ -4,7 +4,10 @@
  * 等待态是红、变色态是绿、抢跑单独一态 —— 照 Human Benchmark 的读法,
  * 那是这类玩法里唯一被大量人验证过的配色约定,不自己发明。 */
 .rx {
-  position: absolute;
+  position: var(--pk-col-pos, absolute);   /* 故事流内嵌 = 定高卡片(同 ballshake 的 bl--embed),整屏不变 */
+  min-height: var(--pk-card-h, 0);
+  border-radius: var(--pk-card-radius, 0);
+  overflow: hidden;
   left: 0; right: 0; top: 0; bottom: 0;
   display: flex;
   flex-direction: column;

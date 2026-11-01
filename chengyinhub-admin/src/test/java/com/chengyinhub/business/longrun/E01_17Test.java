@@ -188,6 +188,8 @@ class E01_17Test {
     }
 
     private void schema(JdbcTemplate jdbc) {
+        // 受众 SQL 按主题归属认俱乐部自办场次(cms_topic.club_id),夹具同真实表结构带上这张表
+        jdbc.execute("create table cms_topic(id bigint primary key,member_id bigint,club_id bigint)");
         jdbc.execute("create table cms_activity(id bigint primary key,club_id bigint,member_id bigint,topic_id bigint,del_flag int,status int,"
                 + "publish_status int,cancel_time timestamp)");
         jdbc.execute("create table cms_registration(id bigint primary key,owner_type int,owner_id bigint,"

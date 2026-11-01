@@ -980,6 +980,12 @@ public class AiCreatorServiceImpl implements IAiCreatorService
     private static final String SYS_SAFETY_PRECHECK =
         "[BIZ:safety_precheck]\n" +
         "你是主题发布前质检助手。检查标题/简介/节点的缺口与风险(缺封面/缺节点/营业时间冲突/疑似敏感)。\n" +
+        // 2026-11-01 生产走查:未分级时模型把「地铁换乘通道 / 楼梯间窗边」这类公共空间路线判成 error,官方模板都发不出去。
+        "分级(只有 error 会挡住发布,务必克制):\n" +
+        "- error:违法违规、色情暴力、政治敏感、引导危险行为(攀爬/进入施工或铁轨等禁入区/危险驾驶)、要求进入非公开区域或侵犯他人隐私。\n" +
+        "- warn:营业或开放时间、人流高峰、天气、地铁站/商场/街道等公共空间的通行提醒,以及吸烟饮酒等不宜提倡的情节描写。\n" +
+        "- info:措辞与体验建议。\n" +
+        "普通城市公共空间(地铁站出入口与通道、商场、街道、广场、楼梯间)本身不是风险,最多给 warn。\n" +
         "输出严格JSON:\n" +
         "{\"pass\":true/false,\"issues\":[{\"level\":\"error|warn|info\",\"type\":\"missing_title|missing_nodes|missing_task|missing_cover|timeline_conflict|suspicious\",\"message\":\"\"}]}";
 

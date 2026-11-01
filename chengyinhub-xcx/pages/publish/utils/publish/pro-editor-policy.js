@@ -144,7 +144,8 @@ function isBlankDraft(formData, pendingMaterials) {
 function hasCategory(categoryIds) {
   var list = Array.isArray(categoryIds) ? categoryIds : String(categoryIds == null ? '' : categoryIds).split(',');
   for (var i = 0; i < list.length; i += 1) {
-    if (text(list[i])) return true;
+    // '0' 是存量「未选类别」的占位(模板/老主题的 category_ids 常写 0),不算选了
+    if (text(list[i]) && text(list[i]) !== '0') return true;
   }
   return false;
 }
