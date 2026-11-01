@@ -7,7 +7,7 @@ class OwnedPoolProfileTest(unittest.TestCase):
  def test_only_exact_hosted_objects_and_explicit_profile_are_accepted(self):
   name='cy-startup-12-34';network={'Name':name,'Internal':True,'Id':'n'};objects=[]
   for i,suffix in enumerate(['app','mysql','redis']):
-   objects.append({'Id':str(i)*64,'Name':'/'+name+'-'+suffix,'NetworkSettings':{'Networks':{name:{'NetworkID':'n'}}},'State':{'Running':True,'Paused':False,'OOMKilled':False},'Config':{'Cmd':['--spring.datasource.druid.maxActive=20','--spring.datasource.druid.maxWait=5000','--spring.datasource.druid.socketTimeout=60000']}})
+   objects.append({'Id':str(i)*64,'Name':'/'+name+'-'+suffix,'NetworkSettings':{'Networks':{name:{'NetworkID':'n'}}},'State':{'Running':True,'Paused':False,'OOMKilled':False},'Config':{'Cmd':['--spring.datasource.druid.maxActive=40','--spring.datasource.druid.maxWait=5000','--spring.datasource.druid.socketTimeout=60000']}})
   probe.validate_targets(name,'unix:///var/run/docker.sock',objects,network)
   for kind in ['foreign-name','socket-preemption','oom','non-internal']:
    with self.subTest(kind=kind):

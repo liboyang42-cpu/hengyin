@@ -68,7 +68,7 @@ class E01_16Test {
         dataSource.setUsername("sa"); dataSource.setPassword("");
         jdbc = new JdbcTemplate(dataSource);
         jdbc.execute("create table club(id bigint primary key, member_id bigint)");
-        jdbc.execute("create table cms_topic(id bigint primary key,member_id bigint)");
+        jdbc.execute("create table cms_topic(id bigint primary key,member_id bigint,club_id bigint)");
         jdbc.execute("create table cms_activity(id bigint primary key,club_id bigint,member_id bigint,topic_id bigint,del_flag int,"
                 + "status int,publish_status int,cancel_time timestamp,cancel_reason varchar(255))");
         jdbc.execute("create table cms_registration(id bigint primary key,owner_type int,owner_id bigint,"

@@ -36,7 +36,7 @@ def validate_targets(name,endpoint,objects,network):
   require(obj['NetworkSettings']['Networks'][name]['NetworkID']==network['Id'],'wrong network identity')
   require(obj['State']['Running'] and not obj['State']['Paused'] and not obj['State']['OOMKilled'],'object not healthy')
  cmd=objects[0]['Config']['Cmd']
- for token in ['--spring.datasource.druid.maxActive=20','--spring.datasource.druid.maxWait=5000','--spring.datasource.druid.socketTimeout=60000']:
+ for token in ['--spring.datasource.druid.maxActive=40','--spring.datasource.druid.maxWait=5000','--spring.datasource.druid.socketTimeout=60000']:
   require(cmd.count(token)==1,'missing or duplicate isolated pool profile')
 def validate_execution_env(env):
  require(sys.platform.startswith('linux'),'actual Linux host required')
