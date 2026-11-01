@@ -165,8 +165,10 @@ function createSessionStore(options) {
     setNickname: function (v) { set('nickname', v); },
     getNickname: function () { return get('nickname'); },
     // role 保留空值守卫(复刻 setUserRole 的 `if (!role) return`),避免把空角色写进单一真源
+    // 同值回填不算会话变化:首页每次显示都会用 /api/user/info 回填角色,
+    // 若照样 revision++,在途的列表请求全部按「登录状态已变更」作废,编辑精选/附近活动留空
     setUserRole: function (role) {
-      if (!role) return;
+      if (!role || role === get('role')) return;
       set('role', role);
     },
     getUserRole: function () { return get('role'); },
