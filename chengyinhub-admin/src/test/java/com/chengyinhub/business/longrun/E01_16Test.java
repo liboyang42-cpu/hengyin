@@ -96,7 +96,7 @@ class E01_16Test {
         jdbc.execute("create table club_event_notification_outbox(delivery_id bigint primary key,status varchar(24),"
                 + "next_attempt_at timestamp,create_time timestamp,update_time timestamp)");
         jdbc.update("insert into club values(21,42)");
-        jdbc.update("insert into cms_topic values(31,42)");
+        jdbc.update("insert into cms_topic(id,member_id) values(31,42)");
         jdbc.update("insert into cms_activity(id,club_id,member_id,topic_id,del_flag,status,publish_status) values(71,21,42,31,0,1,1)");
         jdbc.update("insert into cms_registration values(401,2,71,101,2,2)");
         jdbc.update("insert into club_event_series(id,club_id,topic_id,status,version) values(61,21,31,'ACTIVE',0)");

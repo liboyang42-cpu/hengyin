@@ -35,9 +35,9 @@ class OwnedPoolProfileTest(unittest.TestCase):
   with mock.patch.object(probe.subprocess,'check_output',side_effect=error),self.assertRaises(probe.subprocess.CalledProcessError):probe.command(['mysql'])
   self.assertEqual(probe.CLIENT_STDERR,[clean])
  def test_native_druid_exception_requires_expected_pool_and_bounded_wait(self):
-  actual='Caused by: com.alibaba.druid.pool.GetConnectionTimeoutException: wait millis 5001, active 20, maxActive 20, creating 0'
+  actual='Caused by: com.alibaba.druid.pool.GetConnectionTimeoutException: wait millis 5001, active 40, maxActive 40, creating 0'
   self.assertEqual(probe.native_pool_timeout_wait(actual),5001)
-  for bad in [actual.replace('GetConnectionTimeoutException','SQLTimeoutException'),actual.replace('active 20','active 19'),actual.replace('maxActive 20','maxActive 21'),actual.replace('millis 5001','millis 1000'),actual.replace('millis 5001','millis 10000')]:
+  for bad in [actual.replace('GetConnectionTimeoutException','SQLTimeoutException'),actual.replace('active 40','active 39'),actual.replace('maxActive 40','maxActive 41'),actual.replace('millis 5001','millis 1000'),actual.replace('millis 5001','millis 10000')]:
    with self.subTest(log=bad),self.assertRaises(RuntimeError):probe.native_pool_timeout_wait(bad)
 class PoolOuterEvidenceTest(unittest.TestCase):
  """Execute the real embedded protocols with Docker/Git doubles, never Java/DB."""

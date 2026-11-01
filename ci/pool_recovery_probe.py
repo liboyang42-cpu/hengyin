@@ -5,6 +5,8 @@ from pathlib import Path
 SCHEMA='upgrade_startup_probe'
 D=['docker','--context','default']
 CLIENT_STDERR=[]
+# 打包默认 maxActive(application-druid.yml CHENGYIN_DB_POOL_MAX_ACTIVE 默认值);2026-11-01 由 20 调到 40
+POOL_MAX=40
 def require(ok,why):
  if not ok:raise RuntimeError(why)
 def scrub_stderr(data):
@@ -17,7 +19,7 @@ def native_pool_timeout_wait(log):
  match=re.search(r'com\.alibaba\.druid\.pool\.GetConnectionTimeoutException: wait millis (\d+), active (\d+), maxActive (\d+)(?:,|$)',log,re.M)
  require(match is not None,'native Druid pool-timeout evidence missing')
  wait,active,maximum=map(int,match.groups())
- require(5000<=wait<=6000 and active==20 and maximum==20,'unexpected native Druid timeout wait or pool values')
+ require(5000<=wait<=6000 and active==POOL_MAX and maximum==POOL_MAX,'unexpected native Druid timeout wait or pool values')
  return wait
 def command(args,timeout=10):
  try:return subprocess.check_output(args,timeout=timeout,text=True,stderr=subprocess.PIPE)
@@ -53,7 +55,7 @@ def main():
  endpoint=command(D+['context','inspect','--format','{{.Endpoints.docker.Host}}']).strip()
  validate_targets(name,endpoint,objects,network)
  app,db,redis=[o['Id']for o in objects];initial=[{k:o['State'][k]for k in ['Pid','Running','Paused','OOMKilled']}for o in objects]
- nonce='qa_pool_'+uuid.uuid4().hex+'_';holder=None;connection=None;workers=None;holder_stderr_collected=False;report={'dedicatedWorkflowOnly':True,'eventName':os.environ['GITHUB_EVENT_NAME'],'readOnlyBusinessPath':'POST /api/common/dict','nonce':nonce,'targets':[{'id':o['Id'],'name':o['Name']}for o in objects],'initialState':initial,'profile':{'maxActive':20,'maxWaitMs':5000,'socketTimeoutMs':60000,'connectTimeoutMs':5000},'notCapacityOrLatencySlaAcceptance':True}
+ nonce='qa_pool_'+uuid.uuid4().hex+'_';holder=None;connection=None;workers=None;holder_stderr_collected=False;report={'dedicatedWorkflowOnly':True,'eventName':os.environ['GITHUB_EVENT_NAME'],'readOnlyBusinessPath':'POST /api/common/dict','nonce':nonce,'targets':[{'id':o['Id'],'name':o['Name']}for o in objects],'initialState':initial,'profile':{'maxActive':POOL_MAX,'maxWaitMs':5000,'socketTimeoutMs':60000,'connectTimeoutMs':5000},'notCapacityOrLatencySlaAcceptance':True}
  def sql(s):return command(D+['exec',db,'mysql','-uroot','-N','--batch','--raw',SCHEMA,'-e',s],timeout=5).strip()
  def holder_owned_count():
   return sql(f"SELECT COUNT(*) FROM information_schema.processlist WHERE ID={connection} AND USER='root' AND DB='{SCHEMA}' AND LOCATE('{nonce}',COALESCE(INFO,''))>0")
@@ -93,15 +95,15 @@ def main():
   report['holderOwnershipCounts']=ownership
   require(bool(ownership) and ownership[-1]==1,'owned holder nonce not observable in processlist')
   report['holderOwnershipConfirmedBeforeRequests']=True
-  workers=concurrent.futures.ThreadPoolExecutor(max_workers=20);requests=[workers.submit(read,i)for i in range(20)]
+  workers=concurrent.futures.ThreadPoolExecutor(max_workers=POOL_MAX);requests=[workers.submit(read,i)for i in range(POOL_MAX)]
   blocked_sql=("SELECT COUNT(*) FROM information_schema.processlist WHERE USER='startup_probe' AND DB='"+SCHEMA+"' AND STATE IN ('Waiting for table metadata lock','Waiting for table level lock') AND LOCATE('"+nonce+"',COALESCE(INFO,''))>0 AND LOCATE('sys_dict_data',COALESCE(INFO,''))>0")
   samples=[];deadline=time.monotonic()+3
   while time.monotonic()<deadline:
    count=int(sql(blocked_sql));samples.append(count)
-   if count==20:break
+   if count==POOL_MAX:break
    time.sleep(.1)
-  report['blockedSelectCounts']=samples;require(samples[-1]==20,'twenty real SQL reads were not blocked before deadline')
-  report['overflowRequest']=read(20)
+  report['blockedSelectCounts']=samples;require(samples[-1]==POOL_MAX,'pool-size real SQL reads were not blocked before deadline')
+  report['overflowRequest']=read(POOL_MAX)
   require(report['overflowRequest']['businessCode']==500,'overflow did not fail closed with native business error')
   log=command(D+['logs',app],timeout=10)
   report['nativeDruidTimeoutWaitMs']=native_pool_timeout_wait(log)
