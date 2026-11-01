@@ -814,7 +814,7 @@ page {
 .rv-project-card--cover.is-cover .rv-project-todo,
 .rv-project-card--cover.is-cover .rv-project-todo-num { color: var(--cy-color-text-inverse); }
 .rv-project-card--cover.is-cover .rv-project-card-meta { opacity: .86; }
-.rv-project-card--cover.is-cover .rv-project-bell-img { filter: invert(1); }
+.rv-project-card--cover.is-cover .rv-project-bell-img { filter: brightness(0) invert(1); }
 .rv-project-card--cover:not(.is-cover) .rv-project-bell { background: var(--cy-bg-card); }
 .rv-project-card--cover .rv-project-visit {
   max-width: 360rpx;
