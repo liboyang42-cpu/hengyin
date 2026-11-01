@@ -46,8 +46,8 @@
                  方框、选项 C 多一个播放角标,而玩家永远看不到。要做就连配置一起做。 -->
             <view class="qa__opt-t">{{item.t}}</view>
           </view>
-          <view class="qa__opt-t" wx:if="{{item.chosen}}">你的选择</view>
-          <view class="qa__opt-t" wx:if="{{item.answer}}">正确答案</view>
+          <view class="qa__opt-tag" wx:if="{{item.chosen}}">你的选择</view>
+          <view class="qa__opt-tag" wx:if="{{item.answer}}">正确答案</view>
         </view>
       </view>
 
