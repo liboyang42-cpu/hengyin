@@ -33,6 +33,7 @@ class LinearThemeNoSessionNodeResultTest {
         topic = new CmsTopic();
         topic.setId(10L);
         topic.setRouteMode("LINEAR");
+        topic.setPublishedConfigVersion(1L); // 同 VPS 上的南京路:已发布版本号在、无冻结路线图(老线性主题)
         when(topics.selectCmsTopicById(10L)).thenReturn(topic);
         CmsTopicNode node = new CmsTopicNode();
         node.setId(11L); node.setTopicId(10L); node.setStatus(1L); node.setMerchantMemberId(30L);
