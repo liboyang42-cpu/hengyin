@@ -391,10 +391,10 @@ public class TopicBundleReviewService {
         // 比序列化文本而不是 JsonNode.equals:提交快照是从存库字符串读回来的,topicId 这类数读回来是 IntNode,
         // 现读的声明投影里是 LongNode,equals 判不等 —— 有状态键的主题一律被当成「提交内容已变化」发不出去
         // (2026-11-01 生产:套用带状态键的官方模板后发布被拒)。内容哈希本来就按序列化文本算,口径一致。
-        if (!canonical(expected).equals(canonical(declarationSnapshot(topicId)))) throw stale();
+        if (!declarationText(expected).equals(declarationText(declarationSnapshot(topicId)))) throw stale();
     }
 
-    private String canonical(JsonNode value) {
+    private String declarationText(JsonNode value) {
         try {
             return json.writeValueAsString(value);
         } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
