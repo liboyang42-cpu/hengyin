@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "dependencies": {
+    "20261101_prefab_life_template_state_keys": ["theme_state_key_20260916", "20261022_theme_state_key_attribute_def", "seed_prefab_life_20260918"],
     "20261031_coop_invite_read_time": [],
     "20261031_roam_session_track": ["roam", "roam_session_recovery_20260913"],
     "x12_topic_look_20261029": ["theme_runtime_20261004"],

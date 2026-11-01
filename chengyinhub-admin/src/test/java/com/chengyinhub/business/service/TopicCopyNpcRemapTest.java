@@ -190,6 +190,39 @@ class TopicCopyNpcRemapTest {
     }
 
     @Test
+    void copyCarriesRegisteredStateKeysSoTheCopyCanPublish() throws Exception {
+        // 2026-11-01 生产走查:官方模板「应用」后玩法里的 counter.instability 在副本没注册,发布闸整份拒绝
+        com.chengyinhub.business.mapper.ThemeStateKeyMapper keyMapper = mock(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class);
+        com.chengyinhub.business.domain.ThemeStateKey sourceKey = new com.chengyinhub.business.domain.ThemeStateKey();
+        sourceKey.setId(77L);
+        sourceKey.setTopicId(SOURCE_TOPIC);
+        sourceKey.setStateKey("counter.instability");
+        sourceKey.setKeyType("counter");
+        sourceKey.setScope("run");
+        sourceKey.setLabel("偏离");
+        sourceKey.setVisible(Boolean.FALSE);
+        when(keyMapper.selectByTopicId(SOURCE_TOPIC)).thenReturn(new ArrayList<>(Arrays.asList(sourceKey)));
+        when(keyMapper.lockTopicForStateKeyWrite(NEW_TOPIC)).thenReturn(NEW_TOPIC);
+        ReflectionTestUtils.setField(service, "themeStateKeyService",
+                new com.chengyinhub.business.service.support.ThemeStateKeyService(keyMapper));
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put("copyType", 2);
+        params.put("memberId", 20099L);
+
+        com.chengyinhub.business.service.support.TopicCopyTestWiring.owner(service).copyCmsTopic(SOURCE_TOPIC, params);
+
+        ArgumentCaptor<com.chengyinhub.business.domain.ThemeStateKey> written =
+                ArgumentCaptor.forClass(com.chengyinhub.business.domain.ThemeStateKey.class);
+        verify(keyMapper).upsertThemeStateKey(written.capture());
+        assertEquals(NEW_TOPIC, written.getValue().getTopicId());
+        assertEquals("counter.instability", written.getValue().getStateKey());
+        assertEquals("偏离", written.getValue().getLabel());
+        assertEquals(Boolean.FALSE, written.getValue().getVisible());
+        assertNull(written.getValue().getId());
+        assertEquals(SOURCE_TOPIC, sourceKey.getTopicId(), "来源行不得被改写");
+    }
+
+    @Test
     void copyRemapsNpcRefsToCopiedNpcsAndNullsMerchantAvatar() throws Exception {
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("copyType", 2);

@@ -542,17 +542,27 @@ public class ApiTopicController extends BaseController {
             final Long fMemberId = memberId;
             final String fUsername = username;
             TopicBundleSubmitResultVO v2Result = null;
-            if (chapterFlowV2) {
-                v2Result = guardOnline
-                        ? quotaService.runWithThemeOnlineGuard(memberId, null,
-                            () -> cmsTopicService.createTopicV2WithReview(dto, fMemberId, fUsername))
-                        : cmsTopicService.createTopicV2WithReview(dto, memberId, username);
-                topicId = v2Result.getTopicId();
-            } else {
-                topicId = guardOnline
-                        ? quotaService.runWithThemeOnlineGuard(memberId, null,
-                            () -> cmsTopicService.createTopic(dto, fMemberId, fUsername))
-                        : cmsTopicService.createTopic(dto, memberId, username);
+            try {
+                if (chapterFlowV2) {
+                    v2Result = guardOnline
+                            ? quotaService.runWithThemeOnlineGuard(memberId, null,
+                                () -> cmsTopicService.createTopicV2WithReview(dto, fMemberId, fUsername))
+                            : cmsTopicService.createTopicV2WithReview(dto, memberId, username);
+                    topicId = v2Result.getTopicId();
+                } else {
+                    topicId = guardOnline
+                            ? quotaService.runWithThemeOnlineGuard(memberId, null,
+                                () -> cmsTopicService.createTopic(dto, fMemberId, fUsername))
+                            : cmsTopicService.createTopic(dto, memberId, username);
+                }
+            } catch (ServiceException e) {
+                // 只包建题这一笔事务:这里抛出 = 整笔回滚、主题没建出来,可以给确定的 4xx。
+                // 建题之后的送检/同步仍走外层(那时主题已落库,不能让客户端当成没建而重发)。
+                releaseDraftRequest(draftRequestKey);
+                AjaxResult attributeError = authorAttributeError(e);
+                if (attributeError != null) return attributeError;
+                logger.warn("主题发布被业务闸拒绝: memberId={}, reason={}", memberId, e.getMessage());
+                return businessRefusal(e, UserSafeMessage.of(e.getMessage(), TOPIC_CREATE_GENERIC_MSG));
             }
             // 建题已提交:立刻把意图键落成主题号 —— 之后的送检/同步即便抛错也不能释放它,否则重试会再建一份
             if (draftRequestKey != null) {
@@ -773,6 +783,11 @@ public class ApiTopicController extends BaseController {
             return AjaxResult.error(HttpStatus.UPGRADE_REQUIRED, e.getMessage());
         } catch (ChapterFlowValidationException e) {
             return AjaxResult.error(HttpStatus.BAD_REQUEST, e.getMessage());
+        } catch (ServiceException e) {
+            AjaxResult attributeError = authorAttributeError(e);
+            if (attributeError != null) return attributeError;
+            logger.warn("主题保存被业务闸拒绝: topicId={}, reason={}", dto.getId(), e.getMessage());
+            return businessRefusal(e, e.getMessage());
         } catch (RuntimeException e) {
             AjaxResult attributeError = authorAttributeError(e);
             if (attributeError != null) return attributeError;
@@ -1408,6 +1423,15 @@ public class ApiTopicController extends BaseController {
         java.util.Map<String, Object> d = new java.util.HashMap<>();
         d.put("newTopicId", newTopicId);
         return AjaxResult.success(d);
+    }
+
+    /**
+     * 发布/保存事务内的业务拒绝(整笔已回滚):给 4xx。客户端发布流程只把 4xx 当「确定没成功」并显示原因;
+     * 5xx 一律当「结果未知」,锁住重发让人去项目列表核对 —— 业务闸的拒绝原因会被藏起来,作者无从下手。
+     */
+    private AjaxResult businessRefusal(ServiceException e, String message) {
+        Integer code = e.getCode();
+        return AjaxResult.error(code != null && code >= 400 && code < 500 ? code : HttpStatus.BAD_REQUEST, message);
     }
 
     private AjaxResult authorAttributeError(RuntimeException error) {

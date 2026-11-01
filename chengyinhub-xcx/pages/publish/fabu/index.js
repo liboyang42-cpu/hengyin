@@ -132,6 +132,8 @@ const timeOptions = require('../../../utils/time-picker-options.js');
 // 所属那一屏里存在 —— 所以定位要先切屏/开层、再滚锚点,顺序反了就是一次空滚。
 const ISSUE_PAGE2_ANCHORS = ['fieldDates', 'fieldRecruitDeadline', 'ticketSection'];
 const ISSUE_SHEET_ANCHORS = ['fieldDescription', 'fieldVisual', 'fieldCategory', 'fieldCompletionRule'];
+// 主题详情弹窗里的必填项(pro-editor-policy blockingIssues 的 key);入口卡「还有 N 项未填」只数这些
+const TOPIC_DETAIL_ISSUE_KEYS = ['subtitle', 'description', 'imgUrl', 'categoryIds'];
 
 // CU-C-87:章节标题 = 位置序号 + 用户填的名字;名字自带编号(「第1章 隔离书店站」)时
 // 不再叠一层,否则编辑页与发布确认页都会出现「第1章 第1章 隔离书店站」。
@@ -6363,7 +6365,8 @@ Page({
       pendingMaterials: d.pendingMaterials,
       categoryIds: d.selectedCategoryIds,
     });
-    const missing = policy.blockingIssues.length;
+    // 入口卡只数主题详情弹窗里那几项;章节缺剧情/缺节点由章节卡自己标,算进来会让人打开弹窗却找不到要填什么
+    const missing = policy.blockingIssues.filter(issue => TOPIC_DETAIL_ISSUE_KEYS.indexOf(issue.key) !== -1).length;
     const openingIndex = (d.formData.chapters || []).findIndex(chapter => chapter.opening === true);
     let chapterNumber = 0;
     const summaryPatch = { openingIndex,
