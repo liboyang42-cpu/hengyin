@@ -946,7 +946,7 @@ Page({
       success(res) {
         if (!that.isCurrentDataEpoch(dataEpoch)) return;
         if (res.code == '200' && res.data) {
-          if (res.data.role && res.data.role !== app.getUserRole()) app.setUserRole(res.data.role); // 角色没变不回写：回写会推进会话版本，把同屏在途的经营数据 / 消息 / 待办请求作废成「登录状态已变更」
+          if (res.data.role) app.setUserRole(res.data.role);
           that._userInfo = res.data;
           that.refreshProfileHeader(that.data.merchantInfo, res.data);
         }
