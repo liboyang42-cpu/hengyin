@@ -714,7 +714,7 @@ Page({
       },
       onFail: (res) => {
         const message = res && res.networkError
-          ? (res.msg || '原请求结果待确认，请重试核对')
+          ? (res.msg || '还没确认是否保存成功，再提交一次即可，不会重复保存')
           : (app.getRequestErrorMessage ? app.getRequestErrorMessage(res, that.editingActivityId ? '保存失败，请重试' : '发布失败，请重试') : ((res && res.msg) || (that.editingActivityId ? '保存失败，请重试' : '发布失败，请重试')))
         that.setData({ submitting: false, submitError: message })
       }

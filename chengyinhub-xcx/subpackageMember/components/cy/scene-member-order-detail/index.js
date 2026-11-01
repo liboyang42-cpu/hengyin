@@ -888,7 +888,7 @@ Component({
             loadState: 'failed_business', loadErrorText: text, loadFailureVisible: true });
           return;
         }
-        if (hasRendered || that.data.loadState === 'ready') { that.setData({ loadErrorText: '刷新失败，当前显示上次读取的订单' }); return; }
+        if (hasRendered || that.data.loadState === 'ready') { that.setData({ loadErrorText: '没刷新成功，显示的是之前的订单信息' }); return; }
         that.setData({ loadState: state, loadErrorText: text,
           loadFailureVisible: state === 'failed_business' && /无权|权限|登录|参数/.test(text) });
       };

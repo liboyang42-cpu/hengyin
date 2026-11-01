@@ -78,12 +78,12 @@ function loadPending(storage, owner, merchantId) {
   const value = storage.getStorageSync(pendingKey(owner, merchantId))
   if (!value) return null
   if (!value || String(value.merchantId) !== String(merchantId) || !value.idempotencyKey
-      || !ISSUE_LABELS[value.issueType] || !checkDescription(value.description).ok) throw Error('原纠错记录无法读取，请保留后核对')
+      || !ISSUE_LABELS[value.issueType] || !checkDescription(value.description).ok) throw Error('上次的纠错内容读不出来，请重新填写')
   return JSON.parse(JSON.stringify(value))
 }
 function savePending(storage, owner, payload) {
   storage.setStorageSync(pendingKey(owner, payload.merchantId), JSON.parse(JSON.stringify(payload)))
-  if (JSON.stringify(loadPending(storage, owner, payload.merchantId)) !== JSON.stringify(payload)) throw Error('原纠错记录保存失败，请重试')
+  if (JSON.stringify(loadPending(storage, owner, payload.merchantId)) !== JSON.stringify(payload)) throw Error('纠错没能存到本机，请再试一次')
 }
 function clearPending(storage, owner, payload) {
   const saved = loadPending(storage, owner, payload.merchantId)

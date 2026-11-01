@@ -39,7 +39,7 @@ Component({
           this._recoverPending();
           try {
             if (authorWrites.pending(wx, authorWrites.ownerOf(getApp()), 'npc-delete'))
-              this.setData({ clearError: '上次清除结果待确认，请点击清除入口核对原请求' });
+              this.setData({ clearError: '上次清除还没确认完成，再点一次「清除」即可' });
           } catch (error) { this.setData({ clearError: error.message }); }
         }
       },
@@ -241,9 +241,9 @@ Component({
           this.setData({ messages: [], state: 'IDLE', isThinking: false, scrollIntoView: '' });
           this.onCloseExport();
           const deleted = res.data.deleted;
-          dc.done(deleted > 0 ? '已删除 ' + deleted + ' 条对话记录，当前对话也已清空。' : '已确认没有需要清除的对话记录。');
+          dc.done(deleted > 0 ? '已清除 ' + deleted + ' 条对话' : '没有需要清除的对话');
         },
-        onRejected: res => fail(res.msg || '清除请求未执行，请重试'),
+        onRejected: res => fail(res.msg || '没清除成功，请重试'),
         onUnknown: fail,
       });
     },

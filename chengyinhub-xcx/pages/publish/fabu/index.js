@@ -1096,8 +1096,8 @@ Page({
 
   clearLocalDraft() {
     if (this._publishAttempt || this._serverDraftAttempt || this.data.submitting || this.data.draftSaving) {
-      this.setData({ submitError: '发布或保存结果待确认，请先核对原结果后再清空草稿' });
-      cyToast('请先确认发布或保存结果');
+      this.setData({ submitError: '上次发布还没确认成功，确认前不能清空草稿' });
+      cyToast('上次发布还没确认成功');
       return;
     }
     if (this._draftStorageUnavailable) { this._markDraftStorageUnavailable(); return; }

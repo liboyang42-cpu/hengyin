@@ -175,7 +175,7 @@ Page({
       return;
     }
     if (preserveConfirmed) {
-      this.setData({ loading: false, refreshing: false, error: false, refreshError: '刷新失败，当前显示上次读取的消息', loginRequired: false });
+      this.setData({ loading: false, refreshing: false, error: false, refreshError: '没刷新成功，显示的是之前的消息', loginRequired: false });
       return;
     }
     // PR10 F-W1-12:未登录(无会话 / 401)给登录引导;其余失败仍按 load-failure 留白

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5580,
+  "controlCount": 5582,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -59970,90 +59970,6 @@
           "route": "subpackageA/pages/assetcenter/earnings/index",
           "segments": [
             {
-              "selector": "cy-scene-member-invite-history",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.rs__act",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageA/pages/assetcenter/earnings/index",
-          "segments": [
-            {
-              "selector": "cy-scene-member-invite-history",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.rs__act",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "subpackageA/pages/assetcenter/earnings/index",
-          "segments": [
-            {
-              "selector": "cy-scene-member-invite-history",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageA/pages/assetcenter/earnings/index",
-          "segments": [
-            {
-              "selector": "cy-scene-member-invite-history",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "subpackageA/pages/assetcenter/earnings/index",
-          "segments": [
-            {
               "selector": "cy-scene-member-withdraw-history",
               "index": 0
             },
@@ -72473,90 +72389,6 @@
             {
               "selector": "cy-error",
               "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/myinvite/myinvite",
-          "segments": [
-            {
-              "selector": "#inviteHistory",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.rs__act",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/myinvite/myinvite",
-          "segments": [
-            {
-              "selector": "#inviteHistory",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.rs__act",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/myinvite/myinvite",
-          "segments": [
-            {
-              "selector": "#inviteHistory",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/myinvite/myinvite",
-          "segments": [
-            {
-              "selector": "#inviteHistory",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -99909,27 +99741,6 @@
           "route": "subpackageA/pages/assetcenter/earnings/index",
           "segments": [
             {
-              "selector": "cy-scene-member-invite-history",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-consent-check",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageA/pages/assetcenter/earnings/index",
-          "segments": [
-            {
               "selector": "cy-scene-member-withdraw-history",
               "index": 0
             },
@@ -102514,27 +102325,6 @@
             {
               "selector": "cy-error",
               "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-consent-check",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/myinvite/myinvite",
-          "segments": [
-            {
-              "selector": "#inviteHistory",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -159481,19 +159271,6 @@
           "route": "subpackageA/pages/assetcenter/earnings/index",
           "segments": [
             {
-              "selector": "cy-scene-member-invite-history",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "subpackageA/pages/assetcenter/earnings/index",
-          "segments": [
-            {
               "selector": "cy-scene-member-withdraw-history",
               "index": 0
             },
@@ -160670,19 +160447,6 @@
             {
               "selector": "cy-error",
               "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/myinvite/myinvite",
-          "segments": [
-            {
-              "selector": "#inviteHistory",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
             }
           ]
         },
@@ -166657,19 +166421,6 @@
           "route": "subpackageA/pages/assetcenter/earnings/index",
           "segments": [
             {
-              "selector": "cy-scene-member-invite-history",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "subpackageA/pages/assetcenter/earnings/index",
-          "segments": [
-            {
               "selector": "cy-scene-member-withdraw-history",
               "index": 0
             },
@@ -167846,19 +167597,6 @@
             {
               "selector": "cy-error",
               "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/myinvite/myinvite",
-          "segments": [
-            {
-              "selector": "#inviteHistory",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
             }
           ]
         },
@@ -173833,19 +173571,6 @@
           "route": "subpackageA/pages/assetcenter/earnings/index",
           "segments": [
             {
-              "selector": "cy-scene-member-invite-history",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "subpackageA/pages/assetcenter/earnings/index",
-          "segments": [
-            {
               "selector": "cy-scene-member-withdraw-history",
               "index": 0
             },
@@ -175022,19 +174747,6 @@
             {
               "selector": "cy-error",
               "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/myinvite/myinvite",
-          "segments": [
-            {
-              "selector": "#inviteHistory",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
             }
           ]
         },
@@ -326505,23 +326217,6 @@
           "route": "subpackageA/pages/assetcenter/earnings/index",
           "segments": [
             {
-              "selector": "cy-scene-member-invite-history",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageA/pages/assetcenter/earnings/index",
-          "segments": [
-            {
               "selector": "cy-scene-member-withdraw-history",
               "index": 0
             },
@@ -328595,23 +328290,6 @@
             {
               "selector": "cy-error",
               "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/myinvite/myinvite",
-          "segments": [
-            {
-              "selector": "#inviteHistory",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -339948,23 +339626,6 @@
           "route": "subpackageA/pages/assetcenter/earnings/index",
           "segments": [
             {
-              "selector": "cy-scene-member-invite-history",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageA/pages/assetcenter/earnings/index",
-          "segments": [
-            {
               "selector": "cy-scene-member-withdraw-history",
               "index": 0
             },
@@ -342038,23 +341699,6 @@
             {
               "selector": "cy-error",
               "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/myinvite/myinvite",
-          "segments": [
-            {
-              "selector": "#inviteHistory",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -353391,23 +353035,6 @@
           "route": "subpackageA/pages/assetcenter/earnings/index",
           "segments": [
             {
-              "selector": "cy-scene-member-invite-history",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageA/pages/assetcenter/earnings/index",
-          "segments": [
-            {
               "selector": "cy-scene-member-withdraw-history",
               "index": 0
             },
@@ -355481,23 +355108,6 @@
             {
               "selector": "cy-error",
               "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/myinvite/myinvite",
-          "segments": [
-            {
-              "selector": "#inviteHistory",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -366834,23 +366444,6 @@
           "route": "subpackageA/pages/assetcenter/earnings/index",
           "segments": [
             {
-              "selector": "cy-scene-member-invite-history",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageA/pages/assetcenter/earnings/index",
-          "segments": [
-            {
               "selector": "cy-scene-member-withdraw-history",
               "index": 0
             },
@@ -368924,23 +368517,6 @@
             {
               "selector": "cy-error",
               "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/myinvite/myinvite",
-          "segments": [
-            {
-              "selector": "#inviteHistory",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -380277,23 +379853,6 @@
           "route": "subpackageA/pages/assetcenter/earnings/index",
           "segments": [
             {
-              "selector": "cy-scene-member-invite-history",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageA/pages/assetcenter/earnings/index",
-          "segments": [
-            {
               "selector": "cy-scene-member-withdraw-history",
               "index": 0
             },
@@ -382367,23 +381926,6 @@
             {
               "selector": "cy-error",
               "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/myinvite/myinvite",
-          "segments": [
-            {
-              "selector": "#inviteHistory",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -396793,6 +396335,118 @@
         "line": 43,
         "selectorHint": ".ir-more",
         "visibleCondition": "{{hasMore && !loading && !loadMoreError}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [
+          "/api/user/invite_list",
+          "/api/user/points/list"
+        ],
+        "primaryApis": [
+          "/api/user/invite_list",
+          "/api/user/points/list"
+        ],
+        "auxiliaryApis": [],
+        "apiContracts": [
+          {
+            "url": "/api/user/invite_list",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/user/points/list",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "components/cy/scene-member-invite-history/index.js:259"
+      }
+    },
+    {
+      "id": "components/cy/scene-member-invite-history/index.wxml:45:bindtap:loadMore:2",
+      "route": "component:components/cy/scene-member-invite-history/index",
+      "hostRoutes": [
+        "subpackageA/pages/assetcenter/earnings/index",
+        "subpackageMember/myinvite/myinvite"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "subpackageA/pages/assetcenter/earnings/index",
+          "segments": [
+            {
+              "selector": "cy-scene-member-invite-history",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/myinvite/myinvite",
+          "segments": [
+            {
+              "selector": "#inviteHistory",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "components/cy/scene-member-invite-history/index.wxml",
+        "js": "components/cy/scene-member-invite-history/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "loadMore",
+        "line": 45,
+        "selectorHint": ".ir-more",
+        "visibleCondition": "{{loadMoreError && groups.length && !loading}}",
         "disabledCondition": null,
         "ariaLabel": null,
         "ariaLabelExpression": null,
@@ -483096,48 +482750,6 @@
           "route": "subpackageA/pages/assetcenter/earnings/index",
           "segments": [
             {
-              "selector": "cy-scene-member-invite-history",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageA/pages/assetcenter/earnings/index",
-          "segments": [
-            {
-              "selector": "cy-scene-member-invite-history",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageA/pages/assetcenter/earnings/index",
-          "segments": [
-            {
               "selector": "cy-scene-member-withdraw-history",
               "index": 0
             },
@@ -488849,48 +488461,6 @@
             {
               "selector": "cy-error",
               "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/myinvite/myinvite",
-          "segments": [
-            {
-              "selector": "#inviteHistory",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/myinvite/myinvite",
-          "segments": [
-            {
-              "selector": "#inviteHistory",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -522196,48 +521766,6 @@
           "route": "subpackageA/pages/assetcenter/earnings/index",
           "segments": [
             {
-              "selector": "cy-scene-member-invite-history",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageA/pages/assetcenter/earnings/index",
-          "segments": [
-            {
-              "selector": "cy-scene-member-invite-history",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageA/pages/assetcenter/earnings/index",
-          "segments": [
-            {
               "selector": "cy-scene-member-withdraw-history",
               "index": 0
             },
@@ -527949,48 +527477,6 @@
             {
               "selector": "cy-error",
               "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/myinvite/myinvite",
-          "segments": [
-            {
-              "selector": "#inviteHistory",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/myinvite/myinvite",
-          "segments": [
-            {
-              "selector": "#inviteHistory",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -561295,48 +560781,6 @@
           "route": "subpackageA/pages/assetcenter/earnings/index",
           "segments": [
             {
-              "selector": "cy-scene-member-invite-history",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageA/pages/assetcenter/earnings/index",
-          "segments": [
-            {
-              "selector": "cy-scene-member-invite-history",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageA/pages/assetcenter/earnings/index",
-          "segments": [
-            {
               "selector": "cy-scene-member-withdraw-history",
               "index": 0
             },
@@ -567048,48 +566492,6 @@
             {
               "selector": "cy-error",
               "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/myinvite/myinvite",
-          "segments": [
-            {
-              "selector": "#inviteHistory",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/myinvite/myinvite",
-          "segments": [
-            {
-              "selector": "#inviteHistory",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -600394,48 +599796,6 @@
           "route": "subpackageA/pages/assetcenter/earnings/index",
           "segments": [
             {
-              "selector": "cy-scene-member-invite-history",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageA/pages/assetcenter/earnings/index",
-          "segments": [
-            {
-              "selector": "cy-scene-member-invite-history",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageA/pages/assetcenter/earnings/index",
-          "segments": [
-            {
               "selector": "cy-scene-member-withdraw-history",
               "index": 0
             },
@@ -606147,48 +605507,6 @@
             {
               "selector": "cy-error",
               "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/myinvite/myinvite",
-          "segments": [
-            {
-              "selector": "#inviteHistory",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/myinvite/myinvite",
-          "segments": [
-            {
-              "selector": "#inviteHistory",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -639493,48 +638811,6 @@
           "route": "subpackageA/pages/assetcenter/earnings/index",
           "segments": [
             {
-              "selector": "cy-scene-member-invite-history",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageA/pages/assetcenter/earnings/index",
-          "segments": [
-            {
-              "selector": "cy-scene-member-invite-history",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageA/pages/assetcenter/earnings/index",
-          "segments": [
-            {
               "selector": "cy-scene-member-withdraw-history",
               "index": 0
             },
@@ -645246,48 +644522,6 @@
             {
               "selector": "cy-error",
               "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/myinvite/myinvite",
-          "segments": [
-            {
-              "selector": "#inviteHistory",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/myinvite/myinvite",
-          "segments": [
-            {
-              "selector": "#inviteHistory",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -678592,48 +677826,6 @@
           "route": "subpackageA/pages/assetcenter/earnings/index",
           "segments": [
             {
-              "selector": "cy-scene-member-invite-history",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageA/pages/assetcenter/earnings/index",
-          "segments": [
-            {
-              "selector": "cy-scene-member-invite-history",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageA/pages/assetcenter/earnings/index",
-          "segments": [
-            {
               "selector": "cy-scene-member-withdraw-history",
               "index": 0
             },
@@ -684345,48 +683537,6 @@
             {
               "selector": "cy-error",
               "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/myinvite/myinvite",
-          "segments": [
-            {
-              "selector": "#inviteHistory",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/myinvite/myinvite",
-          "segments": [
-            {
-              "selector": "#inviteHistory",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -717692,48 +716842,6 @@
           "route": "subpackageA/pages/assetcenter/earnings/index",
           "segments": [
             {
-              "selector": "cy-scene-member-invite-history",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageA/pages/assetcenter/earnings/index",
-          "segments": [
-            {
-              "selector": "cy-scene-member-invite-history",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageA/pages/assetcenter/earnings/index",
-          "segments": [
-            {
               "selector": "cy-scene-member-withdraw-history",
               "index": 0
             },
@@ -723445,48 +722553,6 @@
             {
               "selector": "cy-error",
               "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/myinvite/myinvite",
-          "segments": [
-            {
-              "selector": "#inviteHistory",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/myinvite/myinvite",
-          "segments": [
-            {
-              "selector": "#inviteHistory",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -756792,48 +755858,6 @@
           "route": "subpackageA/pages/assetcenter/earnings/index",
           "segments": [
             {
-              "selector": "cy-scene-member-invite-history",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageA/pages/assetcenter/earnings/index",
-          "segments": [
-            {
-              "selector": "cy-scene-member-invite-history",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageA/pages/assetcenter/earnings/index",
-          "segments": [
-            {
               "selector": "cy-scene-member-withdraw-history",
               "index": 0
             },
@@ -762545,48 +761569,6 @@
             {
               "selector": "cy-error",
               "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/myinvite/myinvite",
-          "segments": [
-            {
-              "selector": "#inviteHistory",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/myinvite/myinvite",
-          "segments": [
-            {
-              "selector": "#inviteHistory",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -795892,48 +794874,6 @@
           "route": "subpackageA/pages/assetcenter/earnings/index",
           "segments": [
             {
-              "selector": "cy-scene-member-invite-history",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageA/pages/assetcenter/earnings/index",
-          "segments": [
-            {
-              "selector": "cy-scene-member-invite-history",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageA/pages/assetcenter/earnings/index",
-          "segments": [
-            {
               "selector": "cy-scene-member-withdraw-history",
               "index": 0
             },
@@ -801645,48 +800585,6 @@
             {
               "selector": "cy-error",
               "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/myinvite/myinvite",
-          "segments": [
-            {
-              "selector": "#inviteHistory",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/myinvite/myinvite",
-          "segments": [
-            {
-              "selector": "#inviteHistory",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -834992,48 +833890,6 @@
           "route": "subpackageA/pages/assetcenter/earnings/index",
           "segments": [
             {
-              "selector": "cy-scene-member-invite-history",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageA/pages/assetcenter/earnings/index",
-          "segments": [
-            {
-              "selector": "cy-scene-member-invite-history",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageA/pages/assetcenter/earnings/index",
-          "segments": [
-            {
               "selector": "cy-scene-member-withdraw-history",
               "index": 0
             },
@@ -840745,48 +839601,6 @@
             {
               "selector": "cy-error",
               "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/myinvite/myinvite",
-          "segments": [
-            {
-              "selector": "#inviteHistory",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/myinvite/myinvite",
-          "segments": [
-            {
-              "selector": "#inviteHistory",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -874092,48 +872906,6 @@
           "route": "subpackageA/pages/assetcenter/earnings/index",
           "segments": [
             {
-              "selector": "cy-scene-member-invite-history",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageA/pages/assetcenter/earnings/index",
-          "segments": [
-            {
-              "selector": "cy-scene-member-invite-history",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageA/pages/assetcenter/earnings/index",
-          "segments": [
-            {
               "selector": "cy-scene-member-withdraw-history",
               "index": 0
             },
@@ -879845,48 +878617,6 @@
             {
               "selector": "cy-error",
               "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/myinvite/myinvite",
-          "segments": [
-            {
-              "selector": "#inviteHistory",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/myinvite/myinvite",
-          "segments": [
-            {
-              "selector": "#inviteHistory",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -913192,48 +911922,6 @@
           "route": "subpackageA/pages/assetcenter/earnings/index",
           "segments": [
             {
-              "selector": "cy-scene-member-invite-history",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageA/pages/assetcenter/earnings/index",
-          "segments": [
-            {
-              "selector": "cy-scene-member-invite-history",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageA/pages/assetcenter/earnings/index",
-          "segments": [
-            {
               "selector": "cy-scene-member-withdraw-history",
               "index": 0
             },
@@ -918945,48 +917633,6 @@
             {
               "selector": "cy-error",
               "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/myinvite/myinvite",
-          "segments": [
-            {
-              "selector": "#inviteHistory",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/myinvite/myinvite",
-          "segments": [
-            {
-              "selector": "#inviteHistory",
-              "index": 0
-            },
-            {
-              "selector": "cy-error",
-              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -1396335,7 +1394981,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:116:bindchange:onTeamInviteOnlyChange:2",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:116:bindchange:onTeamInviteOnlyChange:3",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1396452,7 +1395098,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:118:bindtap:startOrderTeam:3",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:118:bindtap:startOrderTeam:4",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1396586,7 +1395232,190 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:142:bind:change:onConsentChange:4",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:14:bind:action:reloadOrder:1",
+      "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
+      "hostRoutes": [
+        "subpackageMember/coupon-wallet/index",
+        "subpackageMember/order/order",
+        "subpackageMember/orderinfo/orderinfo",
+        "subpackageRoam/poi-detail/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-member-order-detail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/order/order",
+          "segments": [
+            {
+              "selector": "cy-scene-member-order-detail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "#roamDeepLink",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-member-order-detail",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "subpackageMember/components/cy/scene-member-order-detail/index.wxml",
+        "js": "subpackageMember/components/cy/scene-member-order-detail/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-inline-error",
+        "event": "bind:action",
+        "handler": "reloadOrder",
+        "line": 14,
+        "selectorHint": "cy-inline-error[bind:action]",
+        "visibleCondition": "{{loadErrorText}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "event-contract",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/invoice/orders/eligible",
+          "/api/login/code",
+          "/api/merchant/crm/marketing-consents",
+          "/api/registration/explore-completion",
+          "/api/registration/info",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/invoice/orders/eligible",
+          "/api/merchant/crm/marketing-consents",
+          "/api/registration/explore-completion",
+          "/api/registration/info"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/invoice/orders/eligible",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/crm/marketing-consents",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/registration/explore-completion",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/registration/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:408"
+      }
+    },
+    {
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:142:bind:change:onConsentChange:5",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1396724,7 +1395553,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:146:bindtap:onConsentRetry:5",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:146:bindtap:onConsentRetry:6",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1396862,7 +1395691,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:194:bindtap:goInvoiceApply:6",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:194:bindtap:goInvoiceApply:7",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1396982,7 +1395811,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:198:bindtap:goInvoiceDetail:7",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:198:bindtap:goInvoiceDetail:8",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1397102,7 +1395931,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:276:bindtap:followClub:8",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:276:bindtap:followClub:9",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1397263,7 +1396092,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:278:bindtap:joinClub:9",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:278:bindtap:joinClub:10",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1397425,7 +1396254,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:283:bindtap:goNextEdition:10",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:283:bindtap:goNextEdition:11",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1397545,7 +1396374,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:303:bindtap:cancelRegistration:11",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:303:bindtap:cancelRegistration:12",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1397755,7 +1396584,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:307:bindtap:copyOrderNo:12",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:307:bindtap:copyOrderNo:13",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1397882,7 +1396711,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:314:bindtap:payOrder:13",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:314:bindtap:payOrder:14",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1398066,7 +1396895,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:319:bind:cancel:onTeamSheetCancel:15",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:319:bind:cancel:onTeamSheetCancel:16",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1398183,7 +1397012,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:319:bind:select:onTeamSheetSelect:14",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:319:bind:select:onTeamSheetSelect:15",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1398320,7 +1397149,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:73:bindtap:openMeetingPoint:1",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:73:bindtap:openMeetingPoint:2",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",

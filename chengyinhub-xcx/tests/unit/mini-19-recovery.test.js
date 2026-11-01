@@ -107,7 +107,7 @@ test('R05 已加载订单遇403清主体，普通断网保留但标注旧数据'
   let request; const app = { getUserID: () => 9, sendRequest: value => { request = value; }, getRequestErrorMessage: (r, fallback) => r.msg || fallback };
   const get = method(detail, 'getData', { app, ...login, ...readers, emptyCompletion: () => ({}) });
   const p = host({ loadState: 'ready', info: { id: 11 }, invoiceRow: { show: true } }, { _orderId: 11 });
-  get.call(p, 11); request.fail({ msg: '网络断开' }); assert.equal(p.data.info.id, 11); assert.match(p.data.loadErrorText, /上次/);
+  get.call(p, 11); request.fail({ msg: '网络断开' }); assert.equal(p.data.info.id, 11); assert.match(p.data.loadErrorText, /之前/);
   get.call(p, 11); request.fail({ msg: '无权查看' }, 403); assert.equal(Object.keys(p.data.info).length, 0); assert.equal(p.data.invoiceRow.show, false);
 });
 test('R06 换单立即清发票并作废旧回包；R07旧同意回包不改新单', () => {
@@ -145,7 +145,7 @@ test('R10 纠错重开保留原键与原正文；500和空成功不能释放，�
 test('R11 静默403清消息与邀请，断网保留并可见标记', () => {
   const app = { getUserID: () => 9, getRequestErrorMessage: () => '拒绝' }, p = host({ list: [1], viewList: [1], invitesIn: [1], loaded: true });
   const error = method('subpackageB/pages/im/list/index.js', '_setConversationError', { app, ...login });
-  error.call(p, {}, true); assert.equal(p.data.list.length, 1); assert.match(p.data.refreshError, /上次/);
+  error.call(p, {}, true); assert.equal(p.data.list.length, 1); assert.match(p.data.refreshError, /之前/);
   error.call(p, { code: 403 }, true, 403); assert.equal(p.data.list.length, 0); assert.equal(p.data.invitesIn.length, 0); assert.equal(p.data.loaded, false);
 });
 test('R12 清除超时/畸形deleted保持未知，明确零条完成，不误删后续对话', () => {
@@ -176,7 +176,7 @@ test('R14 搜索发送keyword，慢到的旧关键词结果与complete均不覆�
 test('R15 邀请下一页失败有原页重试，游标不归零', () => {
   const p = host({ hasMore: true, loading: false, loadMoreError: true }, { _pageNo: 2, load: reset => { assert.equal(reset, false); } });
   method('components/cy/scene-member-invite-history/index.js', 'loadMore').call(p); assert.equal(p._pageNo, 2);
-  assert.match(read('components/cy/scene-member-invite-history/index.wxml'), /loadMoreError && groups.length && !loading[^>]*[\s\S]*?bind:retry="loadMore"/);
+  assert.match(read('components/cy/scene-member-invite-history/index.wxml'), /loadMoreError && groups.length && !loading[^>]*bindtap="loadMore"/);
 });
 test('R16 旁白关闭暂停实际_audio，R17归一化坐标可以导航', () => {
   let paused = 0, opened;

@@ -86,7 +86,7 @@ Component({
     submit() {
       if (this._busy) return
       const owner = String(app.getUserID && app.getUserID() || '')
-      if (!owner) { this.setData({ stage: 'fail', failText: '请先登录后提交纠错' }); return }
+      if (!owner) { this.setData({ stage: 'fail', failText: '登录后才能提交纠错' }); return }
       const checked = model.checkDescription(this.data.description)
       if (!checked.ok) { this.setData({ descriptionError: checked.error }); return }
       const merchantId = this.properties.merchantId

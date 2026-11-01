@@ -209,7 +209,7 @@ test('C2 页面原有效果编辑后草稿/复制请求只改目标，A10 与其
   for (const [key, value] of Object.entries(author)) assert.equal(payload[key], value);
   requests[0].success({ code: 500, msg: '服务暂不可用' });
   assert.equal(self.data.advanced.check.successEffects[0].value, 8);
-  assert.match(self.data.submitError, /结果待确认/);
+  assert.match(self.data.submitError, /还没确认是否保存成功/);
   const saved = require('../../utils/author-write-recovery.js').pending(global.wx, '9', self._templateWriteBucket());
   assert.equal(saved.body.advancedConfigJson, payload.advancedConfigJson);
   const reentered = page(); reentered.fillFormWithTemplateData(payload);
