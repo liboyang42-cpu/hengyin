@@ -35,3 +35,7 @@
 本次没有执行生产迁移、部署、微信上传、开发者工具交互、真机或真实支付。前端回归使用平台能力替身；事务及独立 MySQL 验证使用 GitHub 托管 CI，不能据此宣称线上或业务验收完成。原业务归属、内容审核、支付核账和申诉受理检查保持原合同。
 
 架构 verifier 的精确登记及根协调者审阅范围见 [VERIFIER-REVIEW.md](VERIFIER-REVIEW.md)。按实际公共代码使用 Java 21 / 当前 Spring Boot；未按照旧仓库文字降级版本或新增依赖。
+
+复核真实调用链发现 NPC 内层原为 REQUIRES_NEW；删除分支现单独使用 REQUIRED，保持用户锁并加入回执事务，其余聊天事务不变。新增回归调用实际 NpcChatWriteService，在删除后、回执前抛错必须恢复被删行；同号完成后的重放保留后续新对话。该用例同时在 H2 与独立 MySQL 执行。
+
+CI 依赖扫描另发现现有 follow-redirects 1.16.1 的高危阻断。按[官方安全公告](https://github.com/advisories/GHSA-mrwp-f3q8-3g9p)只将后台锁文件这一条更新为 1.16.2；官方包 SHA-512 及清单一致性已核验，没有新增依赖或降低扫描门槛，配套后台构建由 CI 核验。
