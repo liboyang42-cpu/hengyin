@@ -79,12 +79,17 @@ Component({
       const total = (recruit && recruit.nodeTotal) || 0;
       const filled = (recruit && recruit.nodeFilled) || 0;
       const clubs = (sheet && sheet.items) || [];
+      const needClub = !!topic && Number(topic.productType) === 2 && this.data.hostOwnerType !== 'club'
+        && [1, 2].indexOf(Number(topic.lifecycle)) >= 0 && !clubs.some(function (c) { return c && c.accepted; });
       this.setData({
         recruitDone: total > 0 && filled >= total,
         clubCount: clubs.length,
         clubAccepted: clubs.filter(function (c) { return c && c.accepted; }).length,
-        needExecutorClub: !!topic && Number(topic.productType) === 2 && this.data.hostOwnerType !== 'club'
-          && [1, 2].indexOf(Number(topic.lifecycle)) >= 0 && !clubs.some(function (c) { return c && c.accepted; }),
+        needExecutorClub: needClub,
+        // 2026-11-01 业主:与俱乐部活动详情同一套 —— 开售后出「核销」三格,底部主键按状态变
+        showVerify: [3, 4, 5, 6].indexOf(Number(topic && topic.lifecycle)) >= 0,
+        hostPrimary: projectProgress.hostPrimary({ lifecycle: topic && topic.lifecycle, needExecutorClub: needClub }),
+        topicStructure: [Number(topic && topic.productType) === 2 ? '自由探索' : '城市定向', total ? total + ' 站' : ''].filter(Boolean).join(' · '),
         // 走查 v2 R04/R16:底部进度,只用这几份已有数据派生
         hostProgress: projectProgress.buildHostSteps({
           lifecycle: topic && topic.lifecycle,
@@ -99,7 +104,7 @@ Component({
     },
   },
   data: {
-    recruitDone: false, stationSum: { taken: 0, open: 0, pending: 0 }, clubCount: 0, clubAccepted: 0, hostProgress: [], needExecutorClub: false, anyDrawerOpen: false, hostStatusText: '状态待确认',
+    recruitDone: false, stationSum: { taken: 0, open: 0, pending: 0 }, clubCount: 0, clubAccepted: 0, hostProgress: [], needExecutorClub: false, showVerify: false, hostPrimary: { text: '', act: '', key: '', disabled: true }, topicStructure: '', anyDrawerOpen: false, hostStatusText: '状态待确认',
     circleCandidates: [], circleConfigHint: '',
     circleConfigActions: [{ key: 'submitCircleConfig', label: '保存供给角色' }],
   },

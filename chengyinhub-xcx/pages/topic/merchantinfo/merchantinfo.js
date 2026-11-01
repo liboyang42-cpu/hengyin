@@ -2174,7 +2174,9 @@ Page({
             : (Number(m.status) === 2 ? '已驳回' : (Number(m.status) === 1 ? '已通过' : '待审核')),
         });
       }),
-      hostPlayers: { paidCount: players.paidCount || 0 },
+      // 2026-11-01:核销三格(待核销 / 已核销 / 已售),已核销由 project/home 一起下发
+      hostPlayers: { paidCount: players.paidCount || 0, arrivedCount: players.arrivedCount || 0,
+        pendingCount: Math.max(0, (players.paidCount || 0) - (players.arrivedCount || 0)) },
     });
   },
 
@@ -3330,7 +3332,7 @@ Page({
   onJoinAct(e) {
     const detail = e.detail || {};
     const HANDLERS = {
-      goTopicDetail: 1, goTemplateDetail: 1, goLedger: 1, goVerify: 1,
+      goTopicDetail: 1, goTemplateDetail: 1, goLedger: 1, goVerify: 1, goStory: 1,
       showLiveCheckin: 1, downloadCheckinQr: 1,
       onPrimaryTap: 1, onQuickAction: 1, retryLoad: 1, toggleRules: 1, onHeroError: 1,
       closeClubSheet: 1, closePlayerSheet: 1, closeMerchantSheet: 1,
@@ -4115,8 +4117,25 @@ Page({
   },
 
   // 核销扫码流程(含③选章面板)整套在商家首页,这里只做交接,不复制一份出来各自演化
+  // 2026-11-01 业主:「扫码 / 去核销」直接拉起扫码。核销整套(选席位 / 选章节 / 结果待确认)只在商家首页
+  // (俱乐部主办在俱乐部页)一份,带 scan=1 进去立刻开扫码;navigateTo 而不是 reLaunch,返回仍回到主题。
   goVerify() {
-    wx.reLaunch({ url: '/pages/merchant/index/index' });
+    if (this._navigating) return;
+    const clubId = this.data.hostOwnerType === 'club' && this._clubNotifyTarget ? this._clubNotifyTarget.clubId : 0;
+    const url = clubId ? '/pages/club/detail/index?id=' + clubId + '&scan=1' : '/pages/merchant/index/index?scan=1';
+    this._navigating = true;
+    wx.navigateTo({ url: url, complete: () => { this._navigating = false; } });
+  },
+
+  // 2026-11-01 业主:主题卡 → 剧情与玩法(路线 / 玩法 / 答案),与俱乐部活动详情同一页;商家走主办 / 承接商家的答案接口
+  goStory() {
+    const topicId = Number(this.data.topicId || (this.data.info && this.data.info.topicId) || 0);
+    if (!topicId || this._navigating) return;
+    this._navigating = true;
+    const clubId = this.data.hostOwnerType === 'club' && this._clubNotifyTarget ? this._clubNotifyTarget.clubId : 0;
+    const url = '/pages/club/topic-story/index?topicId=' + topicId
+      + (clubId ? '&clubId=' + clubId : '&scope=' + (this.data.operationScope || 'MERCHANT'));
+    wx.navigateTo({ url: url, complete: () => { this._navigating = false; } });
   },
 
   _checkinNodeId() {

@@ -88,7 +88,8 @@ const STATES = {
   //    读着像个查看动作,点下去弹的是「结束这场活动?」。写动作不许挂在读文案下面,
   //    所以让文案跟行为走(结束活动的确认弹层自己会再说一遍要干什么)。
   //    核销台账另有入口:主题设置半屏里的「核销台账」。
-  selfrun:   { text: '进行中',  primary: '结束活动',     disabled: false, verify: true,  reject: false, sessions: true  },
+  // 2026-11-01 业主(Figma H6):自办进行中底部就是「去核销」,点了直接扫码;结束活动挪进「更多」。
+  selfrun:   { text: '进行中',  primary: '去核销',       disabled: false, verify: true,  reject: false, sessions: true  },
   ended:     { text: '已结束',  primary: '查看结算报告',  disabled: false, verify: true,  reject: false, sessions: true  },
 };
 
@@ -832,8 +833,20 @@ Page({
     if (!this._directorActivityId) { this.goSessionEntry(); return; }
     if (key === 'confirmed') { this.onPrepareSession(); return; }
     if (key === 'preparing') { this.onStartSession(); return; }
-    if (key === 'running' || key === 'selfrun') { this.setData({ directorEndConfirmShow: true }); return; }
+    if (key === 'selfrun') { this.goScan(); return; }
+    if (key === 'running') { this.setData({ directorEndConfirmShow: true }); return; }
     this.notReady(this.data.primary.text);
+  },
+
+  // 去核销:扫码与核销写闸只在俱乐部页一份(onClubScan),带 scan=1 进去直接拉起扫码,返回仍回到本页。
+  goScan() {
+    if (!this._clubId || this._navigating) return;
+    this._navigating = true;
+    wx.navigateTo({ url: '/pages/club/detail/index?id=' + encodeURIComponent(this._clubId) + '&scan=1', complete: () => { this._navigating = false; } });
+  },
+
+  openEndSession() {
+    this.setData({ settingSheetVisible: false, directorEndConfirmShow: true });
   },
 
   goSettlement() {

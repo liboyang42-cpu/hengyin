@@ -843,6 +843,57 @@ public class ApiTopicController extends BaseController {
         return success(data);
     }
 
+    @Autowired
+    private IPuzzlePlayService puzzlePlayService;
+
+    /**
+     * 2026-11-01 业主:商家打开主题卡也能看剧情、玩法与答案,和俱乐部那边(/api/club/topic-node-answer)一样。
+     * 准入 fail-closed:主题发布者本人,或这一站已中标(audit_status=1)的承接商家;站点必须属于这个主题。
+     * 答案文本同样只走 IPuzzlePlayService(只放行文字问答 / 选择题),不另写判据。
+     */
+    @Operation(summary = "商家查看本主题某站点的玩法答案(发布者 / 该站承接商家)")
+    @PostMapping("/host-node-answer")
+    public AjaxResult hostNodeAnswer(@RequestBody Map<String, Object> body) {
+        Long principal;
+        try { principal = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        if (principal == null || principal <= 0) return error("请先登录");
+        if (body == null) return error("缺少参数");
+        Long topicId = Convert.toLong(body.get("topicId"), 0L);
+        Long nodeId = Convert.toLong(body.get("nodeId"), 0L);
+        if (topicId <= 0 || nodeId <= 0) return error("缺少主题或站点");
+        Long owner;
+        try {
+            owner = resolveProjectOwnerMemberId(principal, body.get("scope") == null ? null : String.valueOf(body.get("scope")));
+        } catch (ServiceException e) {
+            return new AjaxResult(e.getCode(), e.getMessage());
+        }
+        CmsTopic topic = cmsTopicService.selectCmsTopicById(topicId);
+        if (topic == null || (topic.getDelFlag() != null && topic.getDelFlag() != 0)) return error("主题不存在");
+        CmsTopicNode node = cmsTopicNodeService.selectCmsTopicNodeById(nodeId);
+        if (node == null || !topicId.equals(node.getTopicId())) return error("该站点不属于本主题");
+        boolean publisher = !OwnershipUtils.notOwner(topic.getMemberId(), owner);
+        boolean undertaker = false;
+        if (!publisher) {
+            for (CmsRegistrationMerchant row : selectOwnFulfillments(topicId, owner)) {
+                if (nodeId.equals(row.getNodeId())) { undertaker = true; break; }
+            }
+        }
+        if (!publisher && !undertaker) return error("只有主办方或这一站的承接商家能看答案");
+        CmsMemberTemplate template = puzzlePlayService.selectPuzzleTemplate(node);
+        if (template == null) return error("该站点没有可查看的答案");
+        List<String> hints = new ArrayList<>();
+        if (StringUtils.isNotBlank(template.getHint1())) hints.add(template.getHint1());
+        if (StringUtils.isNotBlank(template.getHint2())) hints.add(template.getHint2());
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("nodeId", node.getId());
+        data.put("gameTitle", template.getTitle());
+        data.put("question", template.getQuestionName());
+        data.put("answerReveal", puzzlePlayService.revealText(template));
+        data.put("hints", hints);
+        data.put("feedbackText", template.getFeedbackText());
+        return success(data);
+    }
+
     /**
      * 通用分享页卡片右下的小程序码(2026-10-31 业主批准 P-8 ⑤:主题卡 / 勋章卡都放码)。
      * 主题:只给已上架、未删除的主题出码(scene = tp.<id>,落地页转主题详情,与主办方的本主题码同一张);

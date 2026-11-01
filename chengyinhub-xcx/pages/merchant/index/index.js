@@ -152,6 +152,10 @@ Page({
     });
     // 首屏数据统一由紧随其后的 onShow 在远程身份确认后加载，避免 onLoad/onShow 并发拉两整组工作台。
     if (options && options.scene) this.openScene(options.scene, { id: options.id, tab: options.tab });
+    // 2026-11-01 业主:主题工作台「扫码 / 去核销」直接开扫码 —— 核销整套(选席位 / 选章节 / 结果待确认)
+    // 只在本页一份,工作台带 scan=1 进来就拉起扫码,返回仍回到主题。核销权限由服务端核验接口自己判。
+    // 只挂在 onLoad,不挂在身份回读回调里:那条回调「重新加载」等按钮也会走,不能顺带拉起扫码。
+    if (options && options.scan === '1') wx.nextTick(() => this.goScanQR());
   },
 
   refreshProfileHeader(merchantInfo, userInfo) {

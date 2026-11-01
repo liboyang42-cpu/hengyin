@@ -73,4 +73,22 @@ function buildHostSteps(input) {
   return mapped;
 }
 
-module.exports = { buildHostSteps };
+/* 2026-11-01 业主:主办工作台底部主键跟俱乐部活动详情一样按状态变(Figma 俱乐部 H1–H6)。
+   动作全部复用工作台现有派发;售票 / 进行中就是「去核销」,点了直接扫码。 */
+function hostPrimary(input) {
+  const src = input || {};
+  const lifecycle = Number(src.lifecycle);
+  if (lifecycle === 7) return { text: '等待审核中', act: '', key: '', disabled: true };
+  if (lifecycle === 0) return { text: '继续编辑', act: 'goAddStations', key: '', disabled: false };
+  if (lifecycle === 1) {
+    return src.needExecutorClub
+      ? { text: '去邀请承办', act: 'onQuickAction', key: 'club', disabled: false }
+      : { text: '去招商', act: 'onQuickAction', key: 'merchant', disabled: false };
+  }
+  if (lifecycle === 2) return { text: '配置票务', act: 'goAddStations', key: '', disabled: false };
+  if (lifecycle === 3 || lifecycle === 4) return { text: '去核销', act: 'goVerify', key: '', disabled: false };
+  if (lifecycle === 5 || lifecycle === 6) return { text: '查看结算', act: 'goFinance', key: '', disabled: false };
+  return { text: '', act: '', key: '', disabled: true };
+}
+
+module.exports = { buildHostSteps, hostPrimary };

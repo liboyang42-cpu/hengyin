@@ -79,12 +79,42 @@
          这句只解释显而易见的事实、不给动作,还占掉指标卡与底部入口之间的一整行。 -->
   </view>
 
-  <view class="sec rules" bindtap="emit" data-act="toggleRules" aria-role="button" aria-expanded="{{rulesOpen}}"
-        aria-label="{{rulesOpen ? '收起可修改内容说明' : '查看哪些内容还能修改'}}" hover-class="cy-pressed" hover-stay-time="80">
-    <cy-icon name="info" size="{{ 26 }}" />
-    <text wx:if="{{ rulesOpen }}">开卖后日期、节点和票价不能再改，名称、描述和封面可以随时改。</text>
-    <text wx:else>哪些内容还能改</text>
-    <cy-icon wx:if="{{ !rulesOpen }}" name="arrow-right" size="24" />
+  <!-- 2026-11-01 业主:与俱乐部活动详情(Figma 俱乐部 H4–H6)同一块 —— 开售后出「核销」三格,右上「记录」进核销台账 -->
+  <view class="sec" wx:if="{{ showVerify }}">
+    <view class="sec-head">
+      <text class="sec-title">核销</text>
+      <view class="sec-action" bindtap="emit" data-act="goLedger" aria-role="button" aria-label="打开核销记录" hover-class="cy-pressed" hover-stay-time="80">
+        <text>记录</text>
+        <cy-icon name="arrow-right" size="{{ 24 }}" />
+      </view>
+    </view>
+    <view class="metrics">
+      <view class="metric">
+        <text class="metric-n">{{ hostPlayers.pendingCount || 0 }}</text>
+        <text class="metric-l">待核销</text>
+      </view>
+      <view class="metric">
+        <text class="metric-n">{{ hostPlayers.arrivedCount || 0 }}</text>
+        <text class="metric-l">已核销</text>
+      </view>
+      <view class="metric">
+        <text class="metric-n">{{ hostPlayers.paidCount || 0 }}</text>
+        <text class="metric-l">已售份数</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 2026-11-01 业主:商家打开主题卡也能看剧情、玩法与答案,与俱乐部活动详情「主题」同一块 -->
+  <view class="sec">
+    <view class="sec-head"><text class="sec-title">主题</text></view>
+    <view class="tcard" bindtap="emit" data-act="goStory" aria-role="button" aria-label="打开剧情与玩法" hover-class="cy-pressed" hover-stay-time="80">
+      <image class="tcard-cover" wx:if="{{ hostTopic.img }}" src="{{ hostTopic.img }}" mode="aspectFill" lazy-load="true" />
+      <view class="tcard-body">
+        <text class="tcard-name">{{ hostTopic.name }}</text>
+        <text class="tcard-sub" wx:if="{{ topicStructure }}">{{ topicStructure }}</text>
+        <view class="tcard-more"><text>打开剧情与玩法</text><cy-icon name="arrow-right" size="{{ 24 }}" /></view>
+      </view>
+    </view>
   </view>
 
   <view class="sec" wx:if="{{ hostTopic.circleThemeCode }}">
@@ -129,6 +159,20 @@
         </view>
       </view>
     </view>
+  </view>
+
+  <!-- 2026-11-01 业主:底部固定条与俱乐部活动详情 / 承接视图同一套 ——「哪些内容还能改」压在主键正上方,主键按状态变 -->
+  <view class="foot-space"></view>
+  <view class="bottom-bar" wx:if="{{ hostPrimary.text }}">
+    <view class="rules" bindtap="emit" data-act="toggleRules" aria-role="button" aria-expanded="{{rulesOpen}}"
+          aria-label="{{rulesOpen ? '收起可修改内容说明' : '查看哪些内容还能修改'}}" hover-class="cy-pressed" hover-stay-time="80">
+      <cy-icon name="info" size="{{ 26 }}" />
+      <text wx:if="{{ rulesOpen }}">开卖后日期、节点和票价不能再改，名称、描述和封面可以随时改。</text>
+      <text wx:else>哪些内容还能改</text>
+      <cy-icon wx:if="{{ !rulesOpen }}" name="arrow-right" size="24" />
+    </view>
+    <cy-btn variant="primary" style="width:100%" disabled="{{ hostPrimary.disabled }}"
+            bindtap="emit" data-act="{{ hostPrimary.act }}" data-key="{{ hostPrimary.key }}">{{ hostPrimary.text }}</cy-btn>
   </view>
   </block>
 

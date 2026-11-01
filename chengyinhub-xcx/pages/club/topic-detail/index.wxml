@@ -423,6 +423,13 @@
         </view>
         <cy-icon name="arrow-right" size="28" />
       </view>
+      <view wx:if="{{statusKey === 'selfrun' && primary.text}}" class="tset-row" bindtap="openEndSession" aria-role="button" aria-label="结束活动"
+        hover-class="cy-pressed" hover-stay-time="80">
+        <view class="tset-row-main">
+          <text class="tset-row-title">结束活动</text>
+        </view>
+        <cy-icon name="arrow-right" size="28" />
+      </view>
       <view class="tset-row" bindtap="goLedger" aria-role="button" aria-label="核销记录"
         hover-class="cy-pressed" hover-stay-time="80">
         <view class="tset-row-main">

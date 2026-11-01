@@ -259,6 +259,18 @@
     </view>
   </view>
 
+  <!-- 2026-11-01 业主:承接商家打开主题卡也能看整条路线的剧情、玩法,以及自己这一站的答案(与俱乐部活动详情「主题」同一块) -->
+  <view class="sec" wx:if="{{ !coopPartner }}">
+    <view class="sec-head"><text class="sec-title">主题</text></view>
+    <view class="tcard" bindtap="emit" data-act="goStory" aria-role="button" aria-label="打开剧情与玩法" hover-class="cy-pressed" hover-stay-time="80">
+      <image class="tcard-cover" wx:if="{{ heroImg && !heroFailed }}" src="{{ heroImg }}" mode="aspectFill" lazy-load="true" />
+      <view class="tcard-body">
+        <text class="tcard-name">{{ info.topicName || info.addressName || '未命名路线' }}</text>
+        <view class="tcard-more"><text>打开剧情与玩法</text><cy-icon name="arrow-right" size="{{ 24 }}" /></view>
+      </view>
+    </view>
+  </view>
+
   <!-- ===== 进度:报名 → 审核 → 开始 → 结束 =====
        不放场次:到店时间玩家常不准,照着排班反而误事(2026-09-05 拍板) -->
   <view class="sec" wx:if="{{ progress.length }}">
