@@ -15,7 +15,7 @@ function raw(owner = '11', status = 'BOOKED') {
 function harness(options = { registrationId: ID }) {
   let owner = '11', token = 'token-A', page, confirm;
   const requests = [], quotes = [], storage = new Map(); let storageFails = false;
-  const app = { getUserID: () => owner, getAuthorization: () => token, sendRequest: r => {
+  const app = { globalData: {}, getUserID: () => owner, getAuthorization: () => token, sendRequest: r => {
     if (r.url.endsWith('/cancel-quote')) {
       quotes.push(r);
       r.success({ code: 200, data: { holderMemberId: owner, registrationId: ID, reservationId: '41',
