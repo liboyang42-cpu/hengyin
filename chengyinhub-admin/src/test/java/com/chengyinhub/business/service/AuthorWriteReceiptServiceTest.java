@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class AuthorWriteReceiptServiceTest {
     private JdbcTemplate jdbc;
     private AuthorWriteReceiptService service;
+    private DataSourceTransactionManager manager;
     protected DataSource dataSource() {
         JdbcDataSource source = new JdbcDataSource();
         source.setURL("jdbc:h2:mem:author_" + java.util.UUID.randomUUID() + ";MODE=MySQL;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000");
@@ -37,7 +38,8 @@ class AuthorWriteReceiptServiceTest {
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean(); factory.setDataSource(source);
         factory.setMapperLocations(new ClassPathResource("mapper/business/AuthorWriteReceiptMapper.xml"));
         AuthorWriteReceiptMapper mapper = new SqlSessionTemplate(factory.getObject()).getMapper(AuthorWriteReceiptMapper.class);
-        service = new AuthorWriteReceiptService(mapper, new DataSourceTransactionManager(source));
+        manager = new DataSourceTransactionManager(source);
+        service = new AuthorWriteReceiptService(mapper, manager);
     }
     private AjaxResult effect(long id) { jdbc.update("INSERT INTO author_write_effect VALUES (?)", id); return AjaxResult.success(id); }
     private int effects() { return jdbc.queryForObject("SELECT COUNT(*) FROM author_write_effect", Integer.class); }
@@ -90,5 +92,31 @@ class AuthorWriteReceiptServiceTest {
         AjaxResult replay = service.execute(9L, "NPC_CHAT_DELETE", "original-5", Map.of(),
                 () -> AjaxResult.success(Map.of("deleted", jdbc.update("DELETE FROM author_write_effect"))));
         assertEquals(first.get("data"), replay.get("data")); assertEquals(1, effects());
+    }
+
+    @Test void actualNpcDeleteJoinsReceiptRollbackAndReplayPreservesLaterChats() {
+        var requests = org.mockito.Mockito.mock(com.chengyinhub.business.mapper.NpcChatRequestMapper.class);
+        var logs = org.mockito.Mockito.mock(com.chengyinhub.business.mapper.NpcChatLogMapper.class);
+        var asr = org.mockito.Mockito.mock(com.chengyinhub.business.mapper.NpcAsrIntentMapper.class);
+        org.mockito.Mockito.when(requests.lockChatUser(9L)).thenReturn(9L);
+        org.mockito.Mockito.when(logs.deleteNpcChatLogsByUserId(9L))
+                .thenAnswer(call -> jdbc.update("DELETE FROM author_write_effect"));
+        var npc = new com.chengyinhub.business.service.impl.NpcChatWriteService(requests, logs, manager);
+        org.springframework.test.util.ReflectionTestUtils.setField(npc, "asrIntents", asr);
+        effect(31);
+        assertThrows(IllegalStateException.class, () -> service.execute(9L, "NPC_CHAT_DELETE", "actual-delete-6", Map.of(), () -> {
+            assertEquals(1, npc.deleteForUser(9L));
+            throw new IllegalStateException("删除后回执保存前失败");
+        }));
+        assertEquals(1, effects(), "真实删除服务必须随回执回滚，不能独立提交删除");
+        service.execute(9L, "NPC_CHAT_DELETE", "actual-delete-6", Map.of(),
+                () -> AjaxResult.success(Map.of("deleted", npc.deleteForUser(9L))));
+        assertEquals(0, effects());
+        effect(32);
+        service.execute(9L, "NPC_CHAT_DELETE", "actual-delete-6", Map.of(),
+                () -> AjaxResult.success(Map.of("deleted", npc.deleteForUser(9L))));
+        assertEquals(1, effects(), "已完成的删除重放不得删除后续对话");
+        org.mockito.Mockito.verify(logs, org.mockito.Mockito.times(2)).deleteNpcChatLogsByUserId(9L);
+        org.mockito.Mockito.verify(asr, org.mockito.Mockito.times(2)).redactForUser(9L);
     }
 }
