@@ -97,17 +97,37 @@ function loadFabu(src) {
   return page;
 }
 
+// 取页面真实方法(loadFabu 里某些方法被换成空壳)
+function definitionOf(name) {
+  let definition;
+  vm.runInNewContext(read(FABU_JS), {
+    getApp: () => ({ globalData: {} }), Page(p) { definition = p; }, Component(p) { definition = p; },
+    getCurrentPages: () => [{}], require: createRequire(path.resolve(ROOT, FABU_JS)),
+    setTimeout: noop, clearTimeout: noop, setInterval: () => 1, clearInterval: noop, console, Date, JSON, wx: makeWx(),
+  }, { filename: path.resolve(ROOT, FABU_JS) });
+  return definition[name];
+}
+
 const labels = (items) => (items || []).map((item) => item.label);
 const precheckLine = (passed) => labels(passed).find((label) => /内容安全预检/.test(label));
 const ticketLine = (passed) => labels(passed).find((label) => /种票单/.test(label));
 
+// 2026-10-31 P-4:原「点灰钮」路径改成票务页「预览」—— 打开剧情预览这一步同样没跑内容安全预检。
+// 票务页必填都齐、实名已登记时才会真的打开那一层,这里把两项摆齐,量的是「没跑预检」这一件事。
+function openPreview(page) {
+  page.data.identityRegistered = true;
+  page._buildValidationBag = () => ({ errors: {}, isValid: () => true, firstMessage: () => '' });
+  page.openStoryPreview();
+  assert.equal(page.data.publishCheck.show, true, '前提:预览已打开');
+}
+
 // ============================================================ CU-C-168 ①预检状态
 test('CU-C-168 没跑过预检时,「内容安全预检通过」不得出现在已通过那一栏', () => {
   const page = loadFabu();
-  page.onPublishDisabledTap();
+  openPreview(page);
 
   assert.equal(precheckLine(page.data.publishCheck.passed), undefined,
-    `点灰钮这条路径没发过请求，却报通过: ${JSON.stringify(labels(page.data.publishCheck.passed))}`);
+    `打开预览这条路径没发过请求，却报通过: ${JSON.stringify(labels(page.data.publishCheck.passed))}`);
   assert.equal(page._publishPrecheckOk, false);
   assert.ok(labels(page.data.publishCheck.advisory).some((label) => /预检还没跑/.test(label)),
     '没跑过要说成人家听得懂的话，别只留一条空白');
@@ -159,7 +179,13 @@ test('CU-C-168 保存票种的可用态与「填没填全」共用同一条判�
   assert.equal(page.data.canSaveTicket, false, '集合地点没选就不该能保存');
   assert.equal(page._ticketSaveBlockReason(), '请选择集合地点');
 
-  page.data.editingTicket = { name: '标准票', mode: 1, startTime: '09:00', endTime: '10:00', meetingPoint: '某某书店' };
+  // 2026-10-31 开售前定价:城市定向发布即开卖,票价是「填全」的一项(空价不能当免费);自由探索才可留空
+  page.data.editingTicket = { name: '标准票', mode: 1, price: '', startTime: '09:00', endTime: '10:00', meetingPoint: '某某书店' };
+  page.refreshTicketSaveState();
+  assert.equal(page.data.canSaveTicket, false, '城市定向没填票价不该能保存');
+  assert.equal(page._ticketSaveBlockReason(), '请填写票价');
+
+  page.data.editingTicket = { name: '标准票', mode: 1, price: 0, startTime: '09:00', endTime: '10:00', meetingPoint: '某某书店' };
   page.refreshTicketSaveState();
   assert.equal(page.data.canSaveTicket, true, '填全了必须放行人 —— 闸不能改过头');
   assert.equal(page._ticketSaveBlockReason(), '');
@@ -218,9 +244,9 @@ test('negative control:把 skipLabel 改回空串,「没跑预检」立刻又变
   const broken = mutate(read(FABU_JS),
     "this._showPublishCheck([], '内容安全预检还没跑');",
     "this._showPublishCheck([], '');",
-    'onPublishDisabledTap');
+    'openStoryPreview');
   const page = loadFabu(broken);
-  page.onPublishDisabledTap();
+  openPreview(page);
   assert.equal(precheckLine(page.data.publishCheck.passed), '内容安全预检通过',
     '摘掉修复后没复现假绿 ⇒ 这条断言没量到东西');
   assert.equal(page._publishPrecheckOk, true);
@@ -271,4 +297,21 @@ test('negative control:节点地点文案退回共用一行,CU-C-161 检查器�
     "{{nodesForm.address || '自由探索可稍后补'}}",
     '节点地点空态');
   assert.throws(() => assertNodeAddressCopy(broken), assert.AssertionError);
+});
+
+// 2026-10-31 业主「开售前定价要修」(Q7):自由探索的票价可以留空,预览写「开售前定价」;城市定向空价写「—」并挡发布
+test('开售前定价:自由探索空价预览写「开售前定价」,城市定向空价写「—」', () => {
+  const page = loadFabu();
+  // loadFabu 把预览换成了空壳,这里要真的那一份
+  page._buildPublishPreview = definitionOf('_buildPublishPreview');
+  page.calculateTotalStats = () => ({});
+  page.data.formData.productType = 2;
+  page.data.formData.tickets = [{ name: '探索票', mode: 2, price: '', totalStock: 50 }];
+  let row = page._buildPublishPreview([]).ticketRows[0];
+  assert.equal(row.v, '开售前定价 · 50 张');
+
+  page.data.formData.productType = 1;
+  page.data.formData.tickets = [{ name: '集合票', mode: 1, price: '', totalStock: 50 }];
+  row = page._buildPublishPreview([]).ticketRows[0];
+  assert.equal(row.v, '— · 50 张');
 });

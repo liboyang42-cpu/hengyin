@@ -453,20 +453,17 @@ test('★ 预检遇 HTTP 502 → 必须收掉在途遮罩,否则挡死整页', (
 
 
 /* 收费发布的实名和内容预检互不替代；明确正价 fixture 防止免费授权掩盖收费闸。
- * 没登记时确认发布必须是空操作，登记成功之后同一次点击才把主题发出去。 */
-test('★ 发布者实名没登记 → 确认发布不放行;登记成功那一发之后才发主题', () => {
+ * 2026-10-31 P-4(V-25):实名三格在票务页最后一个分区;票务页「预览」打开剧情预览,右上「完成」才发布。
+ * 实名没填齐时「预览」/「完成」都把人送回那一区,不登记、不发主题;登记成功之后同一次点击才走预检 → 发布。 */
+const precheckOf = () => sent.find((request) => request.url === '/api/ai/safety/precheck');
+test('★ 发布者实名没登记 → 不进预览、完成不放行;登记成功那一发之后才预检并发主题', () => {
   const p = makeReadyPage(1);
   p.data.identityRegistered = false;
-  p.data.identityReady = false;
   sent = [];
-  p.submitForm();
-  sent[0].success({ code: '200', data: { traceId: 't9', pass: true, issues: [] } });
-  assert.equal(p.data.publishCheck.blocking.length, 0, '实名不属内容预检的 blocking,别混进那份清单');
-  assert.equal(p.data.identityReady, false);
-
-  sent = [];
-  p.confirmPublishCheck();
-  assert.equal(sent.length, 0, '实名没登记时「确认发布」必须是空操作(不静默放行，也不硬发)');
+  p.openStoryPreview();
+  assert.equal(p.data.publishCheck.show, false, '实名三格没填,预览不打开');
+  assert.equal(p.data.editorPage, 2, '送回票务页的实名分区');
+  assert.equal(sent.length, 0, '不烧预检、不登记');
 
   Object.assign(p.data, {
     identityRealName: '林野',
@@ -474,56 +471,63 @@ test('★ 发布者实名没登记 → 确认发布不放行;登记成功那一�
     identityConsented: true,
   });
   p.syncIdentityReady();
-  assert.equal(p.data.identityReady, true);
+  assert.equal(p._identityReady(), true);
+  p.openStoryPreview();
+  assert.equal(p.data.publishCheck.show, true, '都填齐了才打开剧情预览');
+  assert.equal(p.data.publishCheck.blocking.length, 0, '实名不属内容预检的 blocking,别混进那份清单');
+  assert.equal(sent.length, 0, '打开预览不烧 AI 预检次数');
 
   sent = [];
   p.confirmPublishCheck();
   assert.equal(sent[0].url, '/api/publisher/identity');
   assert.equal(JSON.parse(sent[0].data).source, 'topic_publish');
   assert.equal(createdCount(), 0, '实名没落库前不得把主题发出去(后端闸就按这个顺序判)');
-  assert.equal(p.data.publishCheck.show, true, '登记在途不关弹层');
+  assert.equal(p.data.publishCheck.show, true, '登记在途不关预览');
 
   sent[0].success({ code: 200, data: { registered: true } });
   assert.equal(p.data.identityRegistered, true);
+  const precheck = precheckOf();
+  assert.ok(precheck, '实名落地后同一次点击接着跑内容预检');
+  assert.equal(createdCount(), 0, '预检回包前不发');
+  precheck.success({ code: '200', data: { traceId: 't9', pass: true, issues: [] } });
   assert.equal(p.data.publishCheck.show, false);
-  assert.equal(createdCount(), 1, '实名落地后同一次点击就把主题发出去');
+  assert.equal(createdCount(), 1, '预检通过就把主题发出去,不再有确认层');
 });
 
-test('★ 实名登记失败 → 弹层留在原地报错,字段不丢,主题不发', () => {
+test('★ 实名登记失败 → 回到票务页实名分区报错,字段不丢,主题不发', () => {
   const p = makeReadyPage(1);
   p.data.identityRegistered = false;
-  p.data.identityReady = false;
-  sent = [];
-  p.submitForm();
-  sent[0].success({ code: '200', data: { traceId: 't8', pass: true, issues: [] } });
-  assert.equal(p.data.publishCheck.show, true, '后面的断言以「弹层开着」为前提');
   Object.assign(p.data, {
     identityRealName: '林野', identityIdCard: '11010519491231002X', identityConsented: true,
   });
   p.syncIdentityReady();
+  p.openStoryPreview();
+  assert.equal(p.data.publishCheck.show, true, '后面的断言以「预览开着」为前提');
   sent = [];
   p.confirmPublishCheck();
   assert.equal(sent[0].url, '/api/publisher/identity');
   sent[0].success({ code: 500, msg: '该证件已绑定其他账号' });
   assert.equal(p.data.identityError, '该证件已绑定其他账号');
-  assert.equal(p.data.publishCheck.show, true, '报错要让位给同一层的字段，不能把弹层关掉');
+  assert.equal(p.data.publishCheck.show, false, '字段在票务页,报错要回到字段旁边');
+  assert.equal(p.data.editorPage, 2);
+  assert.equal(p.data.identityRealName, '林野', '字段不丢');
   assert.equal(createdCount(), 0);
-  assert.equal(p.data.identityReady, true, '三项还在，置灰键不该反过来又被点亮成假可用');
+  assert.equal(precheckOf(), undefined, '实名没落地不跑预检');
 });
 
 
-test('未登记发布者的明确零价主题通过内容预检后直接发布，不登记实名', () => {
+test('未登记发布者的明确零价主题:完成后内容预检通过直接发布，不登记实名', () => {
   const p = makeReadyPage(0);
   p.data.identityRegistered = false;
-  p.data.identityReady = false;
   sent = [];
-  p.submitForm();
-  const precheck = sent.find((request) => request.url === '/api/ai/safety/precheck');
+  p.openStoryPreview();
+  assert.equal(p.data.identityRequired, false);
+  assert.equal(p._identityReady(), true);
+  assert.equal(p.data.publishCheck.show, true, '免费主题不需要实名,直接进预览');
+  p.confirmPublishCheck();
+  const precheck = precheckOf();
   assert.ok(precheck, '免费主题仍须内容预检');
   precheck.success({ code: '200', data: { traceId: 'free', pass: true, issues: [] } });
-  assert.equal(p.data.identityRequired, false);
-  assert.equal(p.data.identityReady, true);
-  // 2026-10-30 业主 V-24「删除发布确认」:内容预检通过、免费主题不需要实名 ⇒ 直接发布,不再等用户确认
   assert.equal(createdCount(), 1, '免费主题预检通过后直接发布');
   assert.equal(sent.filter((request) => request.url.startsWith('/api/publisher/identity')).length, 0);
   const created = sent.find((request) => request.url === '/api/topic/v2/create');

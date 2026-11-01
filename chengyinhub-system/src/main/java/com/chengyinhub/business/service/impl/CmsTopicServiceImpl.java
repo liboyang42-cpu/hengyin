@@ -3772,6 +3772,12 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
                 OmsTicketWriteValidator.validateTotalInventory(ticket.getTotalInventory());
             } else {
                 OmsTicketWriteValidator.validateNewTicket(ticket);
+                // 开售前定价(2026-10-31 业主 Q7):只有自由探索恒走招商→锁价,票价可留空,
+                // 由 confirmPrice 写回;其余主题发布即开卖,空价不能落库(也不能当免费)。
+                if (ticket.getPrice() == null
+                        && ProductType.FREE_EXPLORE != (productType == null ? -1 : productType)) {
+                    throw new ServiceException("请填写票价", HttpStatus.BAD_REQUEST);
+                }
             }
 
             Deque<OmsTicket> reusable = reusableByKey.get(topicTicketPairingKey(

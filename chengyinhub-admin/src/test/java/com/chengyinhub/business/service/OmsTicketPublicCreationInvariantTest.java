@@ -52,6 +52,28 @@ class OmsTicketPublicCreationInvariantTest {
         verify(ticketMapper, never()).insertOmsTicket(any());
     }
 
+    // 开售前定价(2026-10-31 业主 Q7):空价只放行自由探索(锁价时写回),城市定向发布即开卖必须有价。
+    @Test
+    void topicPublishRejectsBlankPriceForOrienteeringButKeepsItForFreeExplore() {
+        OmsTicketMapper ticketMapper = mock(OmsTicketMapper.class);
+        CmsTopicServiceImpl service = new CmsTopicServiceImpl();
+        ReflectionTestUtils.setField(service, "omsTicketMapper", ticketMapper);
+        ActivityTicketRequest ticket = validTicket();
+        ticket.setPrice(null);
+
+        ServiceException ex = assertThrows(ServiceException.class, () -> ReflectionTestUtils.invokeMethod(
+                service, "saveTickets", Collections.singletonList(ticket), 701L, 88L, "creator", 1, false));
+        assertEquals("请填写票价", ex.getMessage());
+        verify(ticketMapper, never()).insertOmsTicket(any());
+
+        ReflectionTestUtils.invokeMethod(
+                service, "saveTickets", Collections.singletonList(ticket), 702L, 88L, "creator", 2, false);
+        org.mockito.ArgumentCaptor<com.chengyinhub.business.domain.OmsTicket> written =
+                org.mockito.ArgumentCaptor.forClass(com.chengyinhub.business.domain.OmsTicket.class);
+        verify(ticketMapper).insertOmsTicket(written.capture());
+        assertEquals(null, written.getValue().getPrice(), "自由探索空价原样落库,不能被当成免费 0");
+    }
+
     @Test
     void activityPublishRejectsReversedTicketWindowBeforeWritingTicket() {
         OmsTicketMapper ticketMapper = mock(OmsTicketMapper.class);

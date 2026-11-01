@@ -93,6 +93,8 @@ class TopicProductTypeTest {
         ActivityTicketRequest t = new ActivityTicketRequest();
         t.setName(name);
         t.setMode(mode);
+        // 2026-10-31 开售前定价:城市定向发布即开卖,空价会被拒;本类只验 mode,给一个确定票价
+        t.setPrice(new java.math.BigDecimal("10"));
         t.setTotalStock(10);
         t.setStartTime(new Date(1_800_000_000_000L));
         t.setEndTime(new Date(1_800_003_600_000L));
