@@ -2938,7 +2938,7 @@ Page({
         && matchingPlayerTerminalReceipt(result, pending, 'FAILED');
       if (applied) {
         this._clearPlayerPending();
-        cyToast.success('选择已记录');
+        if (!this.data.gameModule.sheetShow) cyToast.success('选择已记录'); // 线索面板开着时由面板内 .gmod__write 一行反馈,不再叠 toast
         this.setData({ 'gameModule.write': { status: 'confirmed', requestId, message: '选择已记录' } }, () => this._loadPlayerGameModule());
         return;
       }
@@ -3008,7 +3008,7 @@ Page({
         const evidenceOnly = node.playerTask.inputType === 'PHOTO'
           && node.playerTask.completionPolicy === 'EVIDENCE_ONLY';
         const submissionId = result.receipt.result && result.receipt.result.submissionId;
-        cyToast(evidenceOnly ? '证据已记录' : (submissionId ? ('核验编号 ' + submissionId) : '任务已提交'), { icon: evidenceOnly ? 'none' : 'success' });
+        if (!this.data.gameModule.sheetShow) cyToast(evidenceOnly ? '证据已记录' : (submissionId ? ('核验编号 ' + submissionId) : '任务已提交'), { icon: evidenceOnly ? 'none' : 'success' }); // 面板开着时只留面板内一行
         this.setData({ 'gameModule.write': {
           status: 'confirmed', requestId,
           message: evidenceOnly ? '证据已记录' : '任务已记录',
@@ -6605,7 +6605,7 @@ Page({
     this.openScene('game-coupon-wallet');
   },
   continueNext() {
-    this.setData({ 'sheet.show': false });
+    this._outThen('sheet'); // 与 ✕ / 遮罩同一退场,不一帧消失
     const nx = this.data.nextNode;
     if (nx) { const node = this._nodeById(nx.nodeId); if (node && node.lat && node.lng) this.setData({ fmCenter: { lat: node.lat, lng: node.lng } }); }
   },

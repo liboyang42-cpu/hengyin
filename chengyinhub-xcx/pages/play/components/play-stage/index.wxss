@@ -120,6 +120,7 @@
   height: 14rpx;
   border-radius: 50%;
   background: var(--ink);
+  transition: background-color var(--cy-motion-fast) var(--cy-ease-out); /* 掉一条命:点就地变淡,不是一帧硬换 */
 }
 .st__tries-dot--used { background: var(--soft); }
 /* 浅色玻璃上 14rpx 的点压不住背景光,放大一档 */

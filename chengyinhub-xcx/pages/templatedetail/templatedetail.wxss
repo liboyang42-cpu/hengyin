@@ -109,7 +109,7 @@ page {
 
 /* ADA:成功态 hero 全出血,顶部不再让位(wxml 上换成 .xb-scroll--bleed 且去掉行内 padding-top)。
    loading/error 走 .xb-state,仍各自带 statusBar+navBar 的让位。 */
-.xb-scroll--bleed { padding-top: 0; }
+.xb-scroll--bleed { padding-top: 0; animation: cy-fade-in var(--cy-motion-fade-swap) var(--cy-ease-out); } /* 成功态随加载完成挂载:与兄弟页同一挂载淡入(全局 cy-fade-in,只淡不移) */
 
 /* CTA 已按参考图搬进页面流(不再有固定底栏遮正文),这里只留常规收尾留白 + 安全区。 */
 .xb-scroll-pad {

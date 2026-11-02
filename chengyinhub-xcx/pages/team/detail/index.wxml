@@ -31,15 +31,15 @@
       <view class="team-title">{{team.title || '一起出发的玩家队伍'}}</view>
       <view class="team-sub">{{team.joinMode == 2 ? '公开招募' : '仅邀请'}}</view>
       <view class="team-meta">
-        <view class="team-meta-item"><text class="team-meta-value">{{team.joinedCount}} / {{team.maxMembers}}</text><text class="team-meta-key">当前成员</text></view>
+        <view class="team-meta-item"><text class="team-meta-value">{{team.joinedCount != null ? team.joinedCount : '—'}} / {{team.maxMembers != null ? team.maxMembers : '—'}}</text><text class="team-meta-key">当前成员</text></view>
         <view class="team-meta-item"><text class="team-meta-value">{{expireText || '待定'}}</text><text class="team-meta-key">场次开始</text></view>
       </view>
     </view>
 
     <view class="team-actions" wx:if="{{team.status == 0}}">
-      <button class="team-action primary" open-type="share">邀请队友</button>
+      <button class="team-action primary" open-type="share" hover-class="cy-pressed" hover-stay-time="80">邀请队友</button>
       <view wx:if="{{!joined}}" class="team-action secondary" bindtap="goJoin"
-            aria-role="button" aria-label="加入队伍" hover-class="team-action--pressed">加入队伍</view>
+            aria-role="button" aria-label="加入队伍" hover-class="cy-pressed" hover-stay-time="80">加入队伍</view>
     </view>
 
     <!-- C-02b:队长在招募中可把「公开招募」改回「仅邀请」(或反向)。后端 join-mode 只认队长,
@@ -72,12 +72,12 @@
     <!-- 定向开关关闭 / 普通队伍 / 非成员(无法确认是否定向队)不适用看板:整段不渲染,不给普通队伍挂定向提示。
          原型 B T-32:成员 × 节点矩阵(横滑),最后一行写全队是否完成;排名名次按服务端顺排。 -->
     <view wx:if="{{boardState === 'loading' || boardState === 'error' || boardState === 'login' || boardState === 'ready'}}" class="team-section-title">队伍进度</view>
-    <view wx:if="{{boardState === 'loading'}}" class="team-sync" aria-role="status">正在加载…</view>
+    <cy-skeleton wx:if="{{boardState === 'loading'}}" type="list" count="2" loading-label="正在加载队伍进度" />
     <cy-inline-error wx:if="{{boardState === 'error' || boardState === 'login'}}"
       title="{{boardState === 'login' ? boardMessage : '队伍进度加载失败'}}" action="{{boardState === 'login' ? '登录' : '重试'}}" bind:action="retryBoard" />
     <block wx:if="{{boardState === 'ready' && board}}">
       <view class="team-card">
-        <view class="team-member tm-sum"><view class="team-member-main"><view class="team-member-name">全队已完成 {{board.summary.teamDoneCount}} / {{board.summary.totalTasks || 0}} 个节点</view></view></view>
+        <view class="team-member tm-sum"><view class="team-member-main"><view class="team-member-name">全队已完成 {{board.summary.teamDoneCount}} / {{board.summary.totalTasks === 0 ? 0 : (board.summary.totalTasks || '—')}} 个节点</view></view></view>
         <cy-empty wx:if="{{!board.tasks.length}}" title="暂无节点" />
         <scroll-view wx:else scroll-x class="tm-matrix" enhanced show-scrollbar="{{false}}">
           <view class="tm-mx">
@@ -91,23 +91,23 @@
         </scroll-view>
       </view>
       <view class="team-section-title">本场队伍排名</view>
-      <view wx:if="{{rankingState === 'loading'}}" class="team-sync" aria-role="status">正在加载…</view>
+      <cy-skeleton wx:if="{{rankingState === 'loading'}}" type="list" count="2" loading-label="正在加载队伍排名" />
       <cy-inline-error wx:if="{{rankingState === 'error'}}" title="队伍排名加载失败" action="重试" bind:action="retryBoard" />
       <view wx:if="{{rankingState === 'ready'}}" class="team-card">
         <cy-empty wx:if="{{!boardRanks.length}}" title="暂无队伍排名" />
         <view class="team-member" wx:for="{{boardRanks}}" wx:key="teamId">
           <text class="tm-rank">{{item.rank}}</text>
           <view class="team-member-main"><view class="team-member-name">{{item.title}}{{item.mine ? ' · 我的队伍' : ''}}</view></view>
-          <text class="tm-val">{{item.teamDoneCount}} / {{item.totalTasks || 0}}</text>
+          <text class="tm-val">{{item.teamDoneCount}} / {{item.totalTasks === 0 ? 0 : (item.totalTasks || '—')}}</text>
         </view>
       </view>
     </block>
 
     <view class="team-actions" wx:if="{{joined && team.status < 2}}">
       <view class="team-action secondary" bindtap="quit" aria-role="button"
-            aria-label="{{leader ? '退出并移交队长' : '退出队伍'}}" hover-class="team-action--pressed">{{leader ? '退出并移交队长' : '退出队伍'}}</view>
+            aria-label="{{leader ? '退出并移交队长' : '退出队伍'}}" hover-class="cy-pressed" hover-stay-time="80">{{leader ? '退出并移交队长' : '退出队伍'}}</view>
       <view wx:if="{{leader}}" class="team-action danger" bindtap="disband"
-            aria-role="button" aria-label="解散队伍" hover-class="team-action--pressed">解散队伍</view>
+            aria-role="button" aria-label="解散队伍" hover-class="cy-pressed" hover-stay-time="80">解散队伍</view>
     </view>
     <view class="team-note team-report" wx:if="{{!leader}}" bindtap="openReport" aria-role="button" aria-label="举报这支队伍"
           hover-class="cy-pressed" hover-stay-time="80">举报队伍</view>

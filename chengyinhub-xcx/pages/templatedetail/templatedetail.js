@@ -380,7 +380,7 @@ Page({
       },
       complete: function () {
         if (!that.isDetailRequestCurrent(token, context)) return;
-        that.setData({ loading: false });
+        that.setData({ loading: false }, () => { if (!that._heroRecedeApplied && !that.data.loadError) that.onReady(); }); // #xbScroll 只在加载完才挂载:onReady 那次选不到,这里补挂一次
       }
     });
   },
