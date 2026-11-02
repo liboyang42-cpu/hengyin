@@ -55,9 +55,10 @@
 <view class="leadbar glass" wx:if="{{hud.topBanner(couponToast, screen, leadLoadError, lead) === 'leadbar'}}">
   <view class="lb-left">
     <view class="lb-dot"></view>
-    <text class="lb-txt">带领中 · {{lead.arrived}}/{{lead.total}} 人{{lead.chapterName ? ' · ' + lead.chapterName : ''}}</text>
+    <text class="lb-txt" wx:if="{{lead.ended}}">本场已结束 · 你完成了 {{doneCount}}/{{total}} 站</text>
+    <text class="lb-txt" wx:else>带领中 · {{lead.arrived}}/{{lead.total}} 人{{lead.chapterName ? ' · ' + lead.chapterName : ''}}</text>
   </view>
-  <text class="lb-wait">{{lead.isLeader ? '队长带领中 · 工具在更多' : '队长带队中'}}</text>
+  <text class="lb-wait" wx:if="{{!lead.ended}}">{{lead.isLeader ? '队长带领中 · 工具在更多' : '队长带队中'}}</text>
 </view>
 <view class="leadbar leadbar-retry glass" wx:if="{{hud.topBanner(couponToast, screen, leadLoadError, lead) === 'leadRetry'}}" bindtap="retryLeadProgress" aria-role="button" aria-label="重新加载当前状态" hover-class="cy-pressed" hover-stay-time="80">
   <cy-icon name="warning" size="24" />

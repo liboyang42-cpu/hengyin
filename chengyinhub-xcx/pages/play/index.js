@@ -4906,6 +4906,7 @@ Page({
           arrived: d.arrived || 0, total: d.total || 0, meArrived: !!d.meArrived,
           chapterName: d.chapterName || '', currentChapterId: d.currentChapterId, nextChapterId: d.nextChapterId, broadcast: d.broadcast || '',
           directorRun: d.directorRun === true,
+          ended: d.sessionEnded === true,
           members: (d.members || []).slice(0, 8)
         },
         leadLoadError: false,

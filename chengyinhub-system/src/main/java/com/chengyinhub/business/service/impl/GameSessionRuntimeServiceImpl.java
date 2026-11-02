@@ -2255,7 +2255,8 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         GameSession session = runtimeMapper.selectSessionByActivity(activityId);
         if (session == null) {
             if ("CLUB".equals(actor.getPerspective())
-                    && clubMemberService.isTopicOwner(activity.getTopicId(), activity.getClubId(), actor.getMemberId())) {
+                    && (clubMemberService.isTopicOwner(activity.getTopicId(), activity.getClubId(), actor.getMemberId())
+                        || clubMemberService.isSessionDirector(activity.getTopicId(), activity.getClubId(), actor.getMemberId()))) {
                 GameSessionView notPrepared = baseView(null, activityId, "CLUB", "NOT_PREPARED", 0, null);
                 notPrepared.setAvailableActions(Collections.singletonList("PREPARE"));
                 return notPrepared;
@@ -3930,7 +3931,8 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
             throw error("GAME_FORBIDDEN_SCOPE", "仅该场俱乐部主理人可操作");
         }
         if (activity.getTopicId() == null || activity.getClubId() == null
-                || !clubMemberService.isTopicOwner(activity.getTopicId(), activity.getClubId(), actor.getMemberId())) {
+                || !(clubMemberService.isTopicOwner(activity.getTopicId(), activity.getClubId(), actor.getMemberId())
+                    || clubMemberService.isSessionDirector(activity.getTopicId(), activity.getClubId(), actor.getMemberId()))) {
             throw error("GAME_FORBIDDEN_SCOPE", "仅该场俱乐部主理人可操作");
         }
     }

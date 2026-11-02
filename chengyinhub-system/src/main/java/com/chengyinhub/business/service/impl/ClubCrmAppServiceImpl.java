@@ -270,7 +270,9 @@ public class ClubCrmAppServiceImpl implements IClubCrmAppService {
                     || access.getRoleCodes().contains(com.chengyinhub.business.access.club.ClubRoleCode.CLUB_CO_OWNER));
         // 导演台:与 GameSessionRuntimeServiceImpl.requireClubOwner 同一个判据(isTopicOwner:主题有指向本俱乐部的
         // 生效合作单且查看者是主理人)。俱乐部自建、没有合作单的主题这里是 false,页面不给必失败的导演台入口。
-        boolean canDirect = clubMemberService.isTopicOwner(topicId, clubId, principalMemberId);
+        // C-12:执行俱乐部主理人也能导演自己俱乐部的场次(场次 club_id = 本俱乐部)。
+        boolean canDirect = clubMemberService.isTopicOwner(topicId, clubId, principalMemberId)
+                || clubMemberService.isSessionDirector(topicId, clubId, principalMemberId);
         boolean canReviewChapterApplications = principalMemberId.equals(toLong(row.get("ownerMemberId")));
 
         Map<String, Object> data = new LinkedHashMap<>();
