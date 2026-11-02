@@ -58,7 +58,7 @@ Page({
     saving: false,
     submitError: '',
     canConfirmPrice: false,
-    phaseBlocked: false,
+    phaseBlocked: false, priced: false, // P-34:priced = 已过定价阶段(终价已确认/开售后),与「还没到定价阶段」分开说
     // CU-C-70:成团人数为空/0 时的输入提示(与按钮禁用态同一把尺子)。
     teamSizeError: '',
     lineup: [],
@@ -145,7 +145,7 @@ Page({
           floorText: money(res.data.priceMin),
           finalPrice: start,
           // CU-M-32:未到定价阶段(canConfirm===false)事先置灰;老后端不带该字段时仍由服务端拦。
-          phaseBlocked: res.data.canConfirm === false,
+          phaseBlocked: res.data.canConfirm === false, priced: res.data.priced === true,
           // CU-C-70:floor=0(例:带队成本被静默摊成 0)时 min>=floor 恒真,旧式自校验放行零价。
           // 人数这道条件必须参与,不然按钮点得动而价格是 0。
           canConfirmPrice: start >= floor && res.data.canConfirm !== false
@@ -255,8 +255,9 @@ Page({
   // 人数那块页内已有常挂提示,但按钮在屏幕底部,不给回应的灰按钮在本仓是记过过的死交互。
   onConfirmDisabledTap() {
     if (this.data.saving) return;
-    const reason = this.data.teamSizeError
-      || (this.data.phaseBlocked ? '主题还没进入定价阶段' : '');
+    // P-34:开售后人数提示已无意义,先说终价已确认
+    const reason = this.data.priced ? '终价已确认' : (this.data.teamSizeError
+      || (this.data.phaseBlocked ? '主题还没进入定价阶段' : ''));
     if (reason) this.setData({ submitError: reason });
   },
 

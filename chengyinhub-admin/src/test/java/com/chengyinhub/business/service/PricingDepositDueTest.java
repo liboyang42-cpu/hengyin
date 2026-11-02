@@ -93,6 +93,73 @@ class PricingDepositDueTest {
                 .insertOmsTicket(any(com.chengyinhub.business.domain.OmsTicket.class));
     }
 
+    /** P-34(第三轮):确认的终价写进作者的城市票;已是终价的票不重写。 */
+    @Test
+    void cityConfirmWritesTheConfirmedPriceOntoAuthoredTickets() {
+        CmsTopic pricing = new CmsTopic();
+        pricing.setId(705L); pricing.setMemberId(900001L); pricing.setLifecycle(2);
+        pricing.setProductType(com.chengyinhub.common.constant.ProductType.ORIENTEERING);
+        when(cmsTopicMapper.selectCmsTopicByIdForUpdate(705L)).thenReturn(pricing);
+        when(coopOrderMapper.selectEffectiveOrdersByTopicId(705L)).thenReturn(Collections.emptyList());
+        com.chengyinhub.business.domain.OmsTicket old = new com.chengyinhub.business.domain.OmsTicket();
+        old.setId(905L); old.setName("领队场"); old.setPrice(new BigDecimal("69")); old.setDelFlag(0);
+        com.chengyinhub.business.domain.OmsTicket same = new com.chengyinhub.business.domain.OmsTicket();
+        same.setId(906L); same.setName("晚场"); same.setPrice(new BigDecimal("79")); same.setDelFlag(0);
+        when(ticketMapper.selectOmsTicketList(any(com.chengyinhub.business.domain.OmsTicket.class))).thenAnswer(inv -> {
+            com.chengyinhub.business.domain.OmsTicket q = inv.getArgument(0);
+            return "guided".equals(q.getSubType()) ? Collections.emptyList() : java.util.Arrays.asList(old, same);
+        });
+        java.util.List<com.chengyinhub.business.domain.OmsTicket> writes = new java.util.ArrayList<>();
+        when(ticketMapper.updateOmsTicket(any(com.chengyinhub.business.domain.OmsTicket.class))).thenAnswer(inv -> {
+            writes.add(inv.getArgument(0));
+            return 1;
+        });
+
+        service.confirmPrice(705L, new BigDecimal("79"), null, null, null, null);
+
+        org.junit.jupiter.api.Assertions.assertEquals(1, writes.size());
+        org.junit.jupiter.api.Assertions.assertEquals(905L, writes.get(0).getId());
+        org.junit.jupiter.api.Assertions.assertEquals(0, new BigDecimal("79").compareTo(writes.get(0).getPrice()));
+        org.junit.jupiter.api.Assertions.assertNull(writes.get(0).getTotalInventory(), "库存不动");
+        org.junit.jupiter.api.Assertions.assertNull(writes.get(0).getRemainingInventory(), "库存不动");
+        verify(ticketMapper, org.mockito.Mockito.never()).insertOmsTicket(any(com.chengyinhub.business.domain.OmsTicket.class));
+    }
+
+    /** P-34(第三轮):作者的票并发变化(写 0 行)时不报确认成功,整笔回滚。 */
+    @Test
+    void cityConfirmRefusesWhenAnAuthoredTicketChangedUnderneath() {
+        CmsTopic pricing = new CmsTopic();
+        pricing.setId(706L); pricing.setMemberId(900001L); pricing.setLifecycle(2);
+        pricing.setProductType(com.chengyinhub.common.constant.ProductType.ORIENTEERING);
+        when(cmsTopicMapper.selectCmsTopicByIdForUpdate(706L)).thenReturn(pricing);
+        when(coopOrderMapper.selectEffectiveOrdersByTopicId(706L)).thenReturn(Collections.emptyList());
+        com.chengyinhub.business.domain.OmsTicket authored = new com.chengyinhub.business.domain.OmsTicket();
+        authored.setId(907L); authored.setName("领队场"); authored.setPrice(new BigDecimal("69")); authored.setDelFlag(0);
+        when(ticketMapper.selectOmsTicketList(any(com.chengyinhub.business.domain.OmsTicket.class))).thenAnswer(inv -> {
+            com.chengyinhub.business.domain.OmsTicket q = inv.getArgument(0);
+            return "guided".equals(q.getSubType()) ? Collections.emptyList() : Collections.singletonList(authored);
+        });
+        when(ticketMapper.updateOmsTicket(any(com.chengyinhub.business.domain.OmsTicket.class))).thenReturn(0);
+
+        assertThrows(IllegalStateException.class,
+                () -> service.confirmPrice(706L, new BigDecimal("79"), null, null, null, null));
+    }
+
+    /** P-34(第三轮):开售后的预览标 priced=true,定价页据此不再说「合作阵容锁定后可定价」;定价阶段为 false。 */
+    @Test
+    void previewMarksPricedOnceTheThemeIsPastPricing() {
+        when(coopOrderMapper.selectEffectiveOrdersByTopicId(707L)).thenReturn(Collections.emptyList());
+        when(ticketMapper.selectOmsTicketList(any(com.chengyinhub.business.domain.OmsTicket.class))).thenReturn(Collections.emptyList());
+        CmsTopic selling = new CmsTopic();
+        selling.setId(707L); selling.setLifecycle(3);
+        when(cmsTopicMapper.selectCmsTopicLifecycleById(707L)).thenReturn(selling);
+        org.junit.jupiter.api.Assertions.assertEquals(Boolean.TRUE, service.previewTopic(707L, null, null, "guided").getPriced());
+        selling.setLifecycle(2);
+        org.junit.jupiter.api.Assertions.assertEquals(Boolean.FALSE, service.previewTopic(707L, null, null, "guided").getPriced());
+        selling.setLifecycle(1);
+        org.junit.jupiter.api.Assertions.assertEquals(Boolean.FALSE, service.previewTopic(707L, null, null, "guided").getPriced());
+    }
+
     /** 自由探索等非城市主题照旧:没有 guided 票就插一张(原口径不动)。 */
     @Test
     void nonCityConfirmStillInsertsGuidedTicket() {

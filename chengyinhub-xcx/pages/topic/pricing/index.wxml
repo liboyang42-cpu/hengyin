@@ -74,7 +74,8 @@
 
       
       <view class="pg-actions">
-        <view class="pg-note" wx:if="{{phaseBlocked}}">合作阵容锁定后可定价</view>
+        <view class="pg-note" wx:if="{{priced}}">终价已确认</view>
+        <view class="pg-note" wx:elif="{{phaseBlocked}}">合作阵容锁定后可定价</view>
         <cy-inline-error wx:if="{{submitError}}" title="终价确认失败" sub="{{submitError}}" action="{{phaseBlocked ? '' : '重试'}}" bind:action="confirmPrice" />
         <!-- CU-C-100:按钮原来写「并开售」,而后端确认只推到 PRICING、开售要运营另行送审
              (回执是「终价已确认，请等待开售审核」)。照回执改口径,不承诺当场开卖。 -->

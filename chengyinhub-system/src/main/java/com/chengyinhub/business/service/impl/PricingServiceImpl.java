@@ -298,6 +298,8 @@ public class PricingServiceImpl implements IPricingService {
         String blockReason = lifecycleRow == null ? LIFECYCLE_BLOCK_REASON : lifecycleBlockReason(lifecycleRow);
         if (blockReason == null) blockReason = supplyBlockReason(cmsTopicMapper.selectProductTypeById(topicId), topicId);
         r.setCanConfirm(blockReason == null);
+        // P-34(第三轮):已过定价阶段(开售及以后)单独标出,定价页不再误报「合作阵容锁定后可定价」
+        r.setPriced(lifecycleRow != null && lifecycleRow.getLifecycle() != null && lifecycleRow.getLifecycle() > 2);
         r.setConfirmBlockReason(blockReason);
         r.setCurrentPrice(currentPrice(topicId, subType));
         java.util.Map<String, Object> reference = pricingReferenceMapper == null
@@ -435,10 +437,17 @@ public class PricingServiceImpl implements IPricingService {
             if (!authored.isEmpty()) {
                 // P-01:编辑器发的城市定向票不带 sub_type,它们本身就是有人带的场次票(带时间、集合点、库存)。
                 // 原来这里会另插一张无时间的「有人带」票 ⇒ 开售终审恒拒「ticket.startTime 与 ticket.endTime 必须同时存在」。
-                // 现在沿用作者的票:不新插、不改库存;价格低于底价的点名拒绝,作者的价已填则以作者的为准。
-                for (OmsTicket t : authored) {
-                    if (t.getPrice() != null && t.getPrice().compareTo(guidedFloor) < 0) {
-                        throw new IllegalStateException("票种「" + t.getName() + "」的价格低于底价 " + guidedFloor);
+                // 现在沿用作者的票:不新插、不改库存。
+                // P-34(第三轮):主办方在定价页确认的终价写进作者的票 —— 原来只校验不写,确认 ¥79 后票还是作者填的 ¥69,
+                // 玩家实际按旧价付款。终价已在上面按地板价校验过。
+                for (OmsTicket a : authored) {
+                    if (a.getPrice() != null && a.getPrice().compareTo(guidedPrice) == 0) continue;
+                    OmsTicket t = new OmsTicket();
+                    t.setId(a.getId());
+                    t.setPrice(guidedPrice);
+                    t.setUpdateTime(DateUtils.getNowDate());
+                    if (omsTicketMapper.updateOmsTicket(t) != 1) {
+                        throw new IllegalStateException("票种「" + a.getName() + "」已变化，无法确认终价");
                     }
                 }
             } else if (existing != null && !existing.isEmpty()) {

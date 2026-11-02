@@ -1365186,7 +1365186,7 @@
       }
     },
     {
-      "id": "pages/topic/pricing/index.wxml:78:bind:action:confirmPrice:10",
+      "id": "pages/topic/pricing/index.wxml:79:bind:action:confirmPrice:10",
       "route": "pages/topic/pricing/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1365209,7 +1365209,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "confirmPrice",
-        "line": 78,
+        "line": 79,
         "selectorHint": "cy-inline-error[bind:action]",
         "visibleCondition": "{{submitError}}",
         "disabledCondition": null,
@@ -1365297,11 +1365297,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/pricing/index.js:270"
+        "staticSource": "pages/topic/pricing/index.js:271"
       }
     },
     {
-      "id": "pages/topic/pricing/index.wxml:81:bind:disabledtap:onConfirmDisabledTap:12",
+      "id": "pages/topic/pricing/index.wxml:82:bind:disabledtap:onConfirmDisabledTap:12",
       "route": "pages/topic/pricing/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1365324,7 +1365324,7 @@
         "tag": "cy-btn",
         "event": "bind:disabledtap",
         "handler": "onConfirmDisabledTap",
-        "line": 81,
+        "line": 82,
         "selectorHint": "cy-btn[bind:disabledtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canConfirmPrice}}",
@@ -1365368,7 +1365368,7 @@
       }
     },
     {
-      "id": "pages/topic/pricing/index.wxml:81:bindtap:confirmPrice:11",
+      "id": "pages/topic/pricing/index.wxml:82:bindtap:confirmPrice:11",
       "route": "pages/topic/pricing/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1365391,7 +1365391,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "confirmPrice",
-        "line": 81,
+        "line": 82,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canConfirmPrice}}",
@@ -1365479,7 +1365479,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/pricing/index.js:270"
+        "staticSource": "pages/topic/pricing/index.js:271"
       }
     },
     {

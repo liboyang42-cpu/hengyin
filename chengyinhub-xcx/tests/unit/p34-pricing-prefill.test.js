@@ -48,3 +48,27 @@ test('已填票价低于地板价时回落到地板价;旧后端没这个字段�
   preview(legacy, { priceMin: 12.3 });
   assert.equal(legacy.data.finalPrice, 13);
 });
+
+// P-34 第三轮:开售后再打开定价页,不能说「合作阵容锁定后可定价」
+test('开售后(priced)说终价已确认,不误报阵容未锁定;定价前照旧', () => {
+  const fs = require('fs');
+  const path = require('path');
+  const wxml = fs.readFileSync(path.join(__dirname, '../../pages/topic/pricing/index.wxml'), 'utf8');
+  assert.match(wxml, /<view class="pg-note" wx:if="\{\{priced\}\}">终价已确认<\/view>\s*<view class="pg-note" wx:elif="\{\{phaseBlocked\}\}">合作阵容锁定后可定价<\/view>/);
+
+  const sold = load();
+  sold.data.subType = 'guided';
+  preview(sold, { canConfirm: false, priced: true, currentPrice: 79 });
+  assert.equal(sold.data.priced, true);
+  assert.equal(sold.data.finalPrice, 79);
+  assert.equal(sold.data.canConfirmPrice, false);
+  sold.onConfirmDisabledTap();
+  assert.equal(sold.data.submitError, '终价已确认');
+
+  const early = load();
+  early.data.subType = 'self';
+  preview(early, { canConfirm: false });
+  assert.equal(early.data.priced, false);
+  early.onConfirmDisabledTap();
+  assert.equal(early.data.submitError, '主题还没进入定价阶段');
+});

@@ -51,6 +51,12 @@ public class PricingResult implements Serializable {
     /** P-34:作者已经填过的票价(有人带取主题票最高价,无人带取自玩价);没有则为空。定价页用它预填。 */
     private BigDecimal currentPrice;
 
+    /** P-34:主题已过定价阶段(lifecycle>2,终价已确认),只读展示。 */
+    private Boolean priced;
+
+    public Boolean getPriced() { return priced; }
+    public void setPriced(Boolean priced) { this.priced = priced; }
+
     public BigDecimal getCurrentPrice() { return currentPrice; }
     public void setCurrentPrice(BigDecimal currentPrice) { this.currentPrice = currentPrice; }
 
