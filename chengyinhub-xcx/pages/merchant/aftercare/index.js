@@ -21,6 +21,7 @@ Page({
     tabs: TABS,
     bucket: 'PENDING',
     pageState: 'loading',
+    listShell: false,
     errorMessage: '',
     items: [],
     groups: [],
@@ -101,7 +102,7 @@ Page({
     if (!this._merchantAccess || !this._merchantAccess.canReadAftercare) return;
     const bucket = this.data.bucket;
     const pageNum = reset ? 1 : this.data.pageNum + 1;
-    if (reset) this.setData({ pageState: 'loading', errorMessage: '', loadingMore: false });
+    if (reset) this.setData({ pageState: 'loading', errorMessage: '', loadingMore: false, listShell: true }); // 2026-11-02 X-5:进入列表后分段常驻
     else this.setData({ loadingMore: true });
     app.sendRequest({
       hideLoading: true,

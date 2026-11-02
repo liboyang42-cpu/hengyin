@@ -6,6 +6,12 @@
   <cy-nav-bar custom-back bind:back="onNavBack" />
   <cy-page-title title="核销记录" safe-top="{{false}}" />
 
+  <!-- 2026-11-02 X-5:分段只挂一份,空态与列表之间切换时胶囊滑动而不是重建 -->
+  <view class="vrl-tabbar" wx:if="{{pageState === 'empty' || pageState === 'ready'}}">
+    <cy-tabs class="vrl-filter" variant="chip" shared-slab tabs="{{tabs}}"
+      active="{{bucket}}" bind:change="switchBucket" />
+  </view>
+
   <cy-skeleton wx:if="{{pageState === 'loading'}}" type="list" count="4" />
   <cy-error wx:elif="{{pageState === 'error'}}" fill size="lg"
             title="核销记录加载失败" sub="{{errorMessage}}"
@@ -16,17 +22,13 @@
             retry="" bind:back="onNavBack" auto-back custom-back />
 
   <view wx:elif="{{pageState === 'empty'}}" class="vrl-shell">
-    <cy-tabs class="vrl-filter" variant="chip" tabs="{{tabs}}"
-      active="{{bucket}}" bind:change="switchBucket" />
     <cy-empty fill size="lg" kind="empty" title="{{bucket === 'VERIFIED' ? '还没有已核销记录' : '没有未核销记录'}}" />
   </view>
 
   <scroll-view wx:elif="{{pageState === 'ready'}}" scroll-y class="vrl-scroll"
                enhanced show-scrollbar="{{false}}">
     <view class="vrl-shell" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
-      <cy-tabs class="vrl-filter" variant="chip" tabs="{{tabs}}"
-        active="{{bucket}}" bind:change="switchBucket" />
-      <view class="fin-group vrl-group" wx:for="{{groups}}" wx:for-item="group" wx:key="key">
+      <view class="fin-group vrl-group" wx:for="{{groups}}" wx:for-item="group" wx:key="key" style="--pmi:{{index}};">
         <view class="vrl-group-head">
           <text class="vrl-group-label">{{group.label}}</text>
           <text class="vrl-group-total">{{group.items.length || 0}} 条</text>

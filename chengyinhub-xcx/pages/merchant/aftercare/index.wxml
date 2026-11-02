@@ -6,6 +6,12 @@
   <cy-nav-bar custom-back bind:back="onNavBack" />
   <cy-page-title title="退款售后" safe-top="{{false}}" />
 
+  <!-- 2026-11-02 X-5:分段只挂一份、放在状态链外:切分段时只有列表区换成骨架,分段不消失不重建 -->
+  <view class="acl-tabbar" wx:if="{{pageState === 'empty' || pageState === 'ready' || (pageState === 'loading' && listShell)}}">
+    <cy-tabs class="acl-filter" variant="chip" shared-slab tabs="{{tabs}}"
+      active="{{bucket}}" bind:change="switchBucket" />
+  </view>
+
   <cy-skeleton wx:if="{{pageState === 'loading'}}" type="list" count="4" />
   <cy-error load-failure wx:elif="{{pageState === 'error'}}" fill size="lg"
             title="售后列表加载失败" sub="{{errorMessage}}"
@@ -16,8 +22,6 @@
             retry="" bind:back="onNavBack" auto-back custom-back />
 
   <view wx:elif="{{pageState === 'empty'}}" class="acl-shell">
-    <cy-tabs class="acl-filter" variant="chip" tabs="{{tabs}}"
-      active="{{bucket}}" bind:change="switchBucket" />
     <!-- CU-M-152:三个分段共用同一句「退款申请会按平台审核与款项真实状态显示在这里」——
          既不解释现在该做什么,也没有下一步,还把平台内部审核口径写进商家空态。分段标题已经
          说清了是哪一段,这里只留标题。 -->
@@ -27,8 +31,6 @@
   <scroll-view wx:elif="{{pageState === 'ready'}}" scroll-y class="acl-scroll"
                enhanced show-scrollbar="{{false}}" bindscrolltolower="loadMore">
     <view class="acl-shell">
-      <cy-tabs class="acl-filter" variant="chip" tabs="{{tabs}}"
-        active="{{bucket}}" bind:change="switchBucket" />
       <!-- 列表接口不支持关键词:只在已加载的数据里筛;没有其他真实可筛维度,所以不放「筛选」按钮。 -->
       <cy-search class="acl-search" value="{{keyword}}" placeholder="搜索客户、活动、单号或原因"
                  bind:input="onSearchInput" />

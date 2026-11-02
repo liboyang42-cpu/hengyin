@@ -32,6 +32,7 @@ function detailPage(file, payload, query) {
     getApp: () => app,
     require: requestPath => requestPath.includes('merchant-finance')
       ? { isFinanceObjectPayload: result => !!result && result.code === 200 && !!result.data, money: value => Number(value).toFixed(2) }
+      : requestPath.includes('page-motion') ? { countMoney() {}, countIn() {}, enter() {} } // 动效是装饰,合同测试里置空
       : (requestPath.includes('response-shape')
         ? {
           isRecord: value => !!value && typeof value === 'object' && !Array.isArray(value),

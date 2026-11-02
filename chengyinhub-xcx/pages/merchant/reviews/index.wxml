@@ -1,9 +1,9 @@
 <view class="review-page theme-merchant" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
-  <view wx:if="{{mode === 'manage' && replyPending}}" aria-role="alert">
-    <text>回复结果待确认：{{replyRequestId}}</text>
+  <view wx:if="{{mode === 'manage' && replyPending}}" class="review-recovery" aria-role="alert">
+    <text class="review-recovery__text">回复结果待确认：{{replyRequestId}}</text>
     <cy-inline-error wx:if="{{replyError}}" kind="error" title="{{replyError}}" />
-    <button bindtap="recoverReply" disabled="{{replySubmitting}}">读取原回复请求</button>
-    <button wx:if="{{replyRequestId}}" bindtap="copyReplyRequestId">复制原请求号</button>
+    <cy-btn disabled="{{replySubmitting}}" bindtap="recoverReply">读取原回复请求</cy-btn>
+    <cy-btn wx:if="{{replyRequestId}}" variant="secondary" bindtap="copyReplyRequestId">复制原请求号</cy-btn>
     <cy-cell title="联系平台客服" description="可提供原请求号供核对；当前结果仍待确认" open-type="contact" hairline="{{false}}" />
   </view>
   <cy-toast id="cy-toast" />

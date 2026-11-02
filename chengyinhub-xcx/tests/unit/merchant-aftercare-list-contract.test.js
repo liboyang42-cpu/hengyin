@@ -37,8 +37,11 @@ test('售后三段筛选使用 cy-tabs 的 detail.key 事件合同', () => {
   const wxml = read('pages/merchant/aftercare/index.wxml');
 
   assert.equal(json.usingComponents['cy-tabs'], '/components/cy/tabs/index');
-  assert.equal((wxml.match(/<cy-tabs\b/g) || []).length, 2,
-    '空态与列表态都必须保留同一筛选入口');
+  // 2026-11-02 X-5:筛选只挂一份、放在状态链外,空态/列表/切段加载都是同一个实例(胶囊滑动而不是重建)
+  assert.equal((wxml.match(/<cy-tabs\b/g) || []).length, 1,
+    '空态与列表态共用同一个筛选入口');
+  assert.match(wxml, /<view class="acl-tabbar" wx:if="\{\{pageState === 'empty' \|\| pageState === 'ready' \|\| \(pageState === 'loading' && listShell\)\}\}">/,
+    '筛选在空态、列表态与切段加载时都在');
   assert.match(wxml,
     /<cy-tabs[^>]*tabs="\{\{tabs\}\}"[^>]*active="\{\{bucket\}\}"[^>]*bind:change="switchBucket"/);
   assert.match(js, /const bucket = event && event\.detail && event\.detail\.key;/,
