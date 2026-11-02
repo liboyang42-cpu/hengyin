@@ -661,7 +661,8 @@
   font-size: var(--cy-type-label);
 }
 .pc-about { padding: var(--cy-space-3) var(--cy-space-3-5); font-size: var(--cy-type-body); line-height: 1.55; color: var(--cy-color-text-secondary); margin-bottom: var(--cy-space-1); /* ds-ok: 28rpx 无同值 spacing token */ }
-.pc-tags { display: flex; flex-wrap: wrap; gap: var(--cy-space-1-5); margin-bottom: var(--cy-space-2); padding: var(--cy-space-3-5) 0 var(--cy-space-4); /* ds-ok: 12rpx 无同值 spacing token */ }
+.pc-tags { display: flex; flex-wrap: wrap; gap: var(--cy-space-1-5); margin-bottom: var(--cy-space-2); padding: 0; /* ds-ok: 12rpx 无同值 spacing token */ }
+.pc-merchant .pc-tags { padding: var(--cy-space-3-5) 0 var(--cy-space-4); }
 .pc-tag {
   font-size: var(--cy-type-label); padding: var(--cy-space-1) var(--cy-legacy-18); border-radius: var(--cy-radius-pill); /* ds-ok: 18rpx 无同值 spacing token */
   background: var(--cy-color-bg-surface); border: 2rpx solid var(--cy-color-border-subtle); color: var(--cy-color-text-secondary);
