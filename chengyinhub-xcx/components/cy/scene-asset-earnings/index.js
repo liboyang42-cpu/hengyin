@@ -4,8 +4,7 @@ const toast = require('../../../utils/toast.js');
 const app = getApp()
 const { recoverReadSession } = require('../../../utils/session/login-reload.js')
 const roleGuard = require('../../../utils/roleGuard.js')
-const motion = require('../../../utils/motion.js')
-const { readReducedMotion } = require('../../../utils/motion-preference.js')
+const pageMotion = require('../../../utils/page-motion.js')
 
 function identityKey() {
   const gd = app.globalData || {}
@@ -35,8 +34,8 @@ Component({
   data: {
     state: 'loading',
     balance: '',
-    /* 金额滚动展示值:countUp 只写这里,balance 保持真值(空态判断/全部提现都读真值) */
-    balanceDisplay: '',
+    /* 金额落地进度(page-motion countMoney 写 0→1,数完为 null);模板用 count.wxs money() 按比例显示,balance 保持真值 */
+    balanceK: null,
     // 2026-10-28 G-9 Revolut 版:提现 / 明细 / 分析 / 更多;本月收入与我的资产由 cy-earnings-overview 自读
     moreShow: false,
   },
@@ -45,7 +44,6 @@ Component({
     detached() {
       this._detached = true
       this._loadToken = (this._loadToken || 0) + 1
-      if (this._stopCountUp) { this._stopCountUp(); this._stopCountUp = null }
       this._clearBalance()
     },
   },
@@ -63,9 +61,10 @@ Component({
   },
   methods: {
     _clearBalance() {
-      if (this._stopCountUp) { this._stopCountUp(); this._stopCountUp = null }
+      const stopCount = this._pmCounters && this._pmCounters.balanceK
+      if (stopCount) stopCount()
       this._dataIdentity = null
-      this.setData({ balance: '', balanceDisplay: '' })
+      this.setData({ balance: '', balanceK: null })
     },
     _recoverReadSession(res, statusCode, token) {
       if (this._detached || token !== this._loadToken) return false
@@ -133,22 +132,13 @@ Component({
         successStatusAbnormal: (res, statusCode) => { if (!this._recoverReadSession(res, statusCode, token) && this._acceptRead(token)) this.setData({ state: this._readFailureState(res, statusCode) }) },
       })
     },
-    /* 金额落定时从 0 滚到真值(220ms);末帧被 countUp 钉死在 to,不会显示错。
-     * 减动效 / 非正数直接落定不滚。 */
+    /* 金额落定:共用件 countMoney 慢-快-慢落地(1300ms,与商家首页累计收入一致);只写进度 balanceK,
+     * 显示 = 真值 × 进度,换号/隐藏时 _clearBalance 停表并清空真值,不会闪出旧金额。减动效 / 非正数直接落定。 */
     _showBalance(balance, token) {
       if (!this._acceptRead(token)) return
       this._dataIdentity = this._loadIdentity
-      if (this._stopCountUp) { this._stopCountUp(); this._stopCountUp = null }
-      const target = Number(balance)
-      if (readReducedMotion() || !(target > 0)) {
-        this.setData({ state: 'ready', balance, balanceDisplay: balance })
-        return
-      }
-      /* 起点显式归零 —— 否则 refresh 时 state 转 ready 到首帧之间那一拍会闪出上次的金额 */
-      this.setData({ state: 'ready', balance, balanceDisplay: '0.00' })
-      this._stopCountUp = motion.countUp(0, target, (v) => {
-        if (this._acceptRead(token)) this.setData({ balanceDisplay: v.toFixed(2) })
-      }, { decimals: 2, onDone: () => { if (this._acceptRead(token)) this._stopCountUp = null } })
+      this.setData({ state: 'ready', balance, balanceK: null })
+      if (Number(balance) > 0) pageMotion.countMoney(this, 'balanceK')
     },
     openAnalysis() { if (!this._hasCurrentBalance()) return; wx.navigateTo({ url: '/subpackageA/pages/assetcenter/analysis/index' + (this.data.theme === 'merchant' ? '?theme=merchant' : '') }) },
     openMore() { if (this._hasCurrentBalance()) this.setData({ moreShow: true }) },

@@ -58,7 +58,10 @@ test('负控:从任一商家页面根摘掉 theme-merchant 会被拒绝', () => 
   assert.throws(() => assertMerchantThemeRoot(broken, route), /页面顶层必须含/)
 })
 
-test('我的项目使用商家浅色桥接，旧版卡片 token 不得停留在深色 page 快照', () => {
+test('我的项目按进入身份二选一:商家浅色走类作用域桥接,玩家和俱乐部保持深色', () => {
   const wxss = read('subpackageA/pages/myproject/index.wxss')
-  assert.match(wxss, /^@import\s+['"]\.\.\/\.\.\/\.\.\/style\/merchant-light\.wxss['"];/)
+  assert.match(wxss, /^@import\s+['"]\.\.\/\.\.\/\.\.\/style\/merchant-light-scope\.wxss['"];/)
+  assert.equal(classifyPageDomain('subpackageA/pages/myproject/index'), 'shared')
+  const themes = topLevelThemeClasses(read('subpackageA/pages/myproject/index.wxml'))
+  assert.ok(themes.has('theme-merchant') && themes.has('theme-dark'))
 })

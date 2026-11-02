@@ -29,7 +29,7 @@
 
 .body {
   position: relative; /* 刷新胶囊 .marketing-sync 的定位参照 */
-  padding: 0 var(--cy-page-x) var(--cy-tabbar-h);
+  padding: 0 var(--cy-page-x) calc(var(--cy-tabbar-h) + var(--cy-space-2));
 }
 
 /* 入口/身份失败的内联错误(替代原整屏闸);下面 hero 自带 padding,这里只要底距 */

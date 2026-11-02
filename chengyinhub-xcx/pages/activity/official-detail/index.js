@@ -152,7 +152,7 @@ Page({
     loadErrAction: '重试',
     loadErrActionType: 'retry',
     organizerEntry: false,
-    commandRecovery: null,
+    commandRecovery: null, recoveryShown: false,
     privacyGateShow: false,
     policyChecked: false,
     signupBlocked: false,
@@ -550,9 +550,10 @@ Page({
 
   _openRecovery() {
     this._recoveryReader = reader(app);
-    if (this._recovery) this._recovery.dispose();
+    if (this._recovery) this._recovery.dispose(); this._freshCommand = false;
     this._recovery = createRecovery({ app, platform: wx, domain: 'SIGNUP', targetId: this.data.id,
-      changed: value => this.setData({ commandRecovery: value }),
+      changed: value => { const fresh = this._freshCommand; if (!value.busy) this._freshCommand = false; // 本页刚发出的请求在途时不弹恢复卡(按钮自带忙态);回包未知/失败、重进页面读到存档、APPLIED 回执照常显示
+        this.setData({ commandRecovery: value, recoveryShown: !!(value.state || value.busy) && !(fresh && value.busy) }); },
       terminal: result => {
         // 服务端按平台规则拒绝报名时,只在安全须知段写一句中性说明
         if (result.state === 'REJECTED' && (result.errorCode || (result.data && result.data.errorCode)) === 'ORIENT_SAFETY_BLOCKED') this.setData({ signupBlocked: true });
@@ -585,7 +586,7 @@ Page({
         if (this._current(context)) this._activityStartSubscribeStatus = result.status;
       }).catch(() => {});
     }
-    return this._recovery.start('signup', {});
+    this._freshCommand = true; return this._recovery.start('signup', {});
   },
 
   doComplete() {

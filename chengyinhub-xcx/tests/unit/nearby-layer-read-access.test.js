@@ -176,5 +176,5 @@ test('P-38「全部」= 所有距离:三类附近读取都用放开的半径,再
   assert.equal(h.page.data.rangeAll, false);
   assert.ok(h.requests.slice(before).every(r => r.data.radius === 3000));
   const wxml = fs.readFileSync(path.resolve(__dirname, '../../subpackageRoam/nearby/index.wxml'), 'utf8');
-  assert.match(wxml, /\{\{rangeAll \? rangeText : rangeText \+ '内'\}\} · \{\{listRows\.length \|\| 0\}\} 个/);
+  assert.match(wxml, /\{\{rangeAll \? rangeText : rangeText \+ '内'\}\} · \{\{num\.n\(listRows\.length \|\| listLoaded \? listRows\.length : null\)\}\} 个/); // N-01:没读完显示「—」,读完的 0 照常显示
 });

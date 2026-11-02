@@ -14,7 +14,7 @@
 
   <block wx:elif="{{permissionState === 'ready'}}">
   <view class="sub">{{clubName || '我的俱乐部'}} · {{ teams.length || 0 }} 个团 · 报名费由平台担保托管</view>
-  <view wx:if="{{refreshing}}" class="refreshing" aria-role="status" aria-live="polite">正在更新报名名册…</view>
+  <view wx:if="{{refreshing}}" class="refreshing cy-refresh-float" aria-role="status" aria-live="polite">正在更新报名名册…</view>
   <cy-inline-error load-failure wx:if="{{staleError}}" class="list-inline-error" kind="{{staleErrorKind}}" title="报名名册暂未更新"
                    sub="{{staleError}}" action="重试更新" bind:action="retryLoadTeams" />
 

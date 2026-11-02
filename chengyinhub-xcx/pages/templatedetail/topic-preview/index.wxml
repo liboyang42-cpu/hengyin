@@ -34,9 +34,9 @@
     </view>
 
     <view class="tp-info {{ cards[sel] && flip ? 'tp-info--dim' : '' }}">
-      <text class="tp-title cy-rise-in" style="animation-delay: .45s;">{{ name }}</text>
+      <text class="tp-title cy-rise-in" style="animation-delay: .25s;">{{ name }}</text>
       <view class="tp-ck">
-        <view class="tp-ck__li cy-rise-in" wx:for="{{ checks }}" wx:key="index" style="animation-delay: {{ 0.6 + index * 0.12 }}s;">
+        <view class="tp-ck__li cy-rise-in" wx:for="{{ checks }}" wx:key="index" style="animation-delay: {{ 0.35 + index * 0.08 }}s;">
           <image class="tp-ck__ic" src="/pages/templatedetail/art/tab/check.svg" mode="aspectFit" /><text>{{ item }}</text>
         </view>
       </view>
@@ -45,7 +45,7 @@
     <view class="tp-cta">
       <view class="tp-cta__glow" aria-hidden="true"></view>
       <!-- 2026-10-30 V-24:这一页只是预览,「查看详情」进主题模板详情(那里看剧情、每站玩法,「应用」在那里) -->
-      <view class="tp-cta__btn cy-rise-in" style="animation-delay: 1.05s;" bindtap="goDetail" aria-role="button" aria-label="查看详情" hover-class="cy-pressed" hover-stay-time="80">查看详情</view>
+      <view class="tp-cta__btn cy-rise-in" style="animation-delay: .6s;" bindtap="goDetail" aria-role="button" aria-label="查看详情" hover-class="cy-pressed" hover-stay-time="80">查看详情</view>
     </view>
   </block>
 </view>
