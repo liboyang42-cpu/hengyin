@@ -1,3 +1,4 @@
+// 章节翻转过场第三轮:P-08(等队长放行停在门上)与 g20(通关彩纸撒到通关卡出来之后)。
 // P-08 第三轮:带领场被挡住的章停在翻转门上 —— 底部「等队长放行」代替「轻点跳过」,
 // 不自己进正文、轻点也不进;held 变 false 后门自己发 continue。
 const assert = require('node:assert/strict')
@@ -83,4 +84,21 @@ test('不带 held 的门照旧:播完自己进', () => {
 test('底部提示:held 时写「等队长放行」,不写「轻点跳过」', () => {
   const wxml = fs.readFileSync(path.join(DIR, 'index.wxml'), 'utf8')
   assert.match(wxml, /<view class="cf__hint" wx:if="\{\{mode === 'gate'\}\}">\{\{held \? '等队长放行' : '轻点跳过'\}\}<\/view>/)
+})
+
+// g20 第三轮(业主):通关卡留着,彩纸要回来 —— 彩纸要一直撒到通关卡立起来之后。
+test('g20:通关炸开后彩纸撒到通关卡出来之后,不是卡一出来就停', () => {
+  const def = load()
+  const c = instance(def, { mode: 'finale' })
+  const at = []
+  c._at = (fn, ms) => { at.push({ fn, ms }) }
+  c._cx = 100; c._cy = 100; c._S = 1; c._scene = {}
+  c._makeShards = () => {}; c._burstConfetti = () => {}; c._assembleLogo = () => {}
+  c._waves = []; c._sparks = []
+  const t0 = Date.now()
+  def.methods._explode.call(c)
+  const cardAt = Math.max(...at.map(a => a.ms))
+  assert.ok(c._confettiUntil - t0 >= cardAt + 1500, '卡出来以后至少还撒 1.5 秒')
+  at.forEach(a => a.fn())
+  assert.equal(c.data.cta, true)
 })

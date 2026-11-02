@@ -6,6 +6,8 @@ const E = require('./engine');
 const AW = 360, AH = 378;                 // 面图分辨率(与 250×262 的面同比例)
 const NOISE = '░▒▓█▚▞■□';
 const LOGO_SRC = '/images/cy_logo_mark.png';
+const CARD_AT_MS = 3000;                  // 炸开后多久立起通关卡(标题、合计、两枚按钮)
+const CONFETTI_AFTER_CARD_MS = 2400;      // g20:卡立起来之后彩纸再撒多久
 
 function chars(text) { return Array.from(String(text || '')); }
 
@@ -153,9 +155,11 @@ Component({
       for (let w = 0; w < 3; w++) this._waves.push({ x: this._cx, y: this._cy, life: -w * 7, max: 44 });
       for (let i = 0; i < 90; i++) { const a = Math.random() * 6.283, s = 2 + Math.random() * 7; this._sparks.push({ x: this._cx, y: this._cy, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 2, life: 0, max: 50 + Math.random() * 70, g: 1 }); }
       this._burstConfetti(70);
-      this._confettiUntil = Date.now() + 2600;
+      // g20 第三轮(业主「彩纸要回来,通关卡留着」):彩纸原来 2.6 秒就停撒、通关卡 3 秒才出,卡一立起来屏上就只剩零星几片。
+      // 改成一直撒到卡出来之后 CONFETTI_AFTER_CARD_MS,卡和彩纸同屏;片子、颜色、下落都不变。
+      this._confettiUntil = Date.now() + CARD_AT_MS + CONFETTI_AFTER_CARD_MS;
       this._at(() => this._assembleLogo(false), 700);
-      this._at(() => { this.setData({ quiet: false, cta: true }); this._decode(this.data.info, 0); }, 3000);
+      this._at(() => { this.setData({ quiet: false, cta: true }); this._decode(this.data.info, 0); }, CARD_AT_MS);
     },
     _continue() {
       if (this._left || this.data.mode !== 'gate' || this.data.held) return;
