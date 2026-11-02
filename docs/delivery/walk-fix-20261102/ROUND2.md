@@ -21,3 +21,12 @@ The BRIEF.md rules still bind. Work on your lane's existing branch and draft PR;
   - Prove it over HTTP: the sale path succeeds for a club's own theme, and the quote still returns the payment refusal.
   - Do not change payouts, shares or settlement. If this changes who is recorded as being paid, stop and list it under `needs owner`.
 - Your RESULT.md says a draft PR exists, but none was visible at 08:51 UTC. Open it if it is missing.
+
+## Payment model (owner decision, recorded for all sessions; not lane work)
+
+- Each organiser (merchant or club) uses their own WeChat merchant account. Ticket money goes straight to it and never to the platform first. The platform charges a 3% commission on actual ticket revenue.
+- Co-organisers settle offline with the organiser. They confirm receipt themselves; that is a record only and cannot block withdrawal, because the platform does not hold the money.
+- Refunds use one platform-wide rule: 100% more than 24 hours before the start, 50% within 24 hours, none after the start. A merchant dropping out is handled manually, case by case, with the 3% recalculated.
+- Merchant numbers are reviewed once by the platform after WeChat authorisation; changing the number means a new review. Without an approved number, turning on 「本章开放商家承接」 or publishing a paid theme shows a pop-up, and the ticket page says nothing about it. Clubs WeChat will not allow are told to apply. Platform-owned themes keep the platform merchant account and pay no 3%.
+- China build only. US providers, accounts and flows need a separate decision. This does not authorise payment or deployment changes.
+- **Status:** design approved; no code until 服务商 approval. `assertCollectible` stays closed until then, so paid themes launch as platform-owned for now. No lane changes this.
