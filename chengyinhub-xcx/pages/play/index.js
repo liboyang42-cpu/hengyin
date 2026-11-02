@@ -6592,7 +6592,8 @@ Page({
       if (completed && !this.data.topicCompleted) this.setData({ topicCompleted: true });
       // 后端本次新得成长徽章(FIRST_STEP/STREAK/TOPIC_CLEAR…),与节点模板勋章不同源,逐一轻提示
       const newBadges = (data && data.newBadges) || [];
-      if (newBadges.length) {
+      // g20:最后一站不再先叠「解锁徽章」卡 —— 先放尾声,再一张通关卡;徽章照常落在收藏里
+      if (newBadges.length && !completedNow) {
         // 原来这里是一句 toast:徽章名一闪就没,badgeCode(服务端给的稳定 ID)被直接丢掉,
         // 玩家既回不到收藏位、也没法核实这枚徽章到底有没有真落进墙里。
         // 改成常驻掉落卡:留住 code,给「查看收藏」和「继续」两条明路。
@@ -6610,7 +6611,12 @@ Page({
       const medalRank = data && Number(data.medalRank) > 0 ? Number(data.medalRank) : 0;
       const hasMedalArt = !!(node.medalName || node.medalImg);
       const previewMedal = !!(this.data.isPreview || this.data.isMock);
-      if (hasMedalArt && (medalRank || previewMedal)) {
+      if (hasMedalArt && medalRank && completedNow) {
+        // g20:最后一站夺到名次奖牌也不再单独弹勋章屏,勋章收进完成页的勋章堆
+        (this._wonMedals = this._wonMedals || []).push({ nodeId: node.nodeId, name: node.medalName || '专属徽章', img: node.medalImg || '', rank: medalRank });
+        if (node.couponId) this.showCoupon('到店出示核销');
+        setTimeout(() => { if (effectsCurrent()) this.openFinish(); }, 600);
+      } else if (hasMedalArt && (medalRank || previewMedal)) {
         // 模板勋章弹层;关闭时若已通关由 closeMedal 触发通关卡
         this._medalCompletionContext = effectContext;
         this.setData({ medal: { show: true, name: node.medalName || '专属徽章', shortName: (node.medalName || '徽章').slice(0, 2), img: node.medalImg, style: node.medalStyle || 'glow', coupon: node.couponId ? '到店出示核销' : '' } }); if (medalRank) (this._wonMedals = this._wonMedals || []).push({ nodeId: node.nodeId, name: node.medalName || '专属徽章', img: node.medalImg || '', rank: medalRank }); // 完成页勋章堆只收真夺到的
@@ -6619,7 +6625,7 @@ Page({
         if (node.couponId) this.showCoupon('到店出示核销');
         if (completedNow) setTimeout(() => { if (effectsCurrent()) this.openFinish(); }, 600);  // 末站即便配券也要弹通关卡(原 else-if 漏掉)
       }
-      if (newBadges.length || (hasMedalArt && (medalRank || previewMedal))) this._triggerCelebration('medal-earned');
+      if (!completedNow && (newBadges.length || (hasMedalArt && (medalRank || previewMedal)))) this._triggerCelebration('medal-earned');
       this.setData({ journalDot: !this.data.showJournal });
       if (storyOpen && (this.data.isPreview || this.data.isMock)) this.openChapterFull();
       // 城市定向逐站解锁:下一站的 locked 与本站剧情段都在 /nodes 里,完成后同页重读,不等玩家退出重进(实走 A10)。
@@ -7830,7 +7836,7 @@ Page({
       if (!this._isFinishViewCurrent(finishView) || !this.data.showFinish) return;
       this._triggerCelebration(this.data.mode === 2 ? 'free-finish' : 'classic-finish');
       this.paintRouteThumb();   // finish-map 盒内=路线缩略图(全卡仅保存时生成,避免和 HTML 数字行重复)
-      this.buildReview(); this._openMedalScreen(); this._openFinale(isShopDay); // B:轨迹回顾层(渐进描线 + 成就气泡 + 用时/距离);v13 整个主题走完时盖上通关勋章页
+      this.buildReview(); if (!this._openFinale(isShopDay)) this._openMedalScreen(); // g20:通关过场本身就是那一张通关卡,不再在它下面再垫一层勋章页;B:轨迹回顾层(渐进描线 + 成就气泡 + 用时/距离);v13 整个主题走完时盖上通关勋章页
     });
     this.loadMilestone(); this.loadStageEnd(); // BL-186 本章结算与里程碑并列读,不挡完成页
     if (!this.data.allDone) { this.loadSessionStats(); this.loadHudCharacter(); } // 文档二 L5:章节结算的本局成绩名次与 RPG 小结
@@ -8562,7 +8568,7 @@ Page({
 
   /** 2026-10-28 通关过场:整个主题走完时先放「三棱锥炸开 → 银色城瘾标志」,播完再露出通关勋章页。探店日与试玩不放。 */
   _openFinale(isShopDay) {
-    if (!this.data.allDone || isShopDay || this.data.isPreview || this.data.isMock) return;
+    if (!this.data.allDone || isShopDay || this.data.isPreview || this.data.isMock) return false;
     const sec = this._runElapsedSeconds();
     const flip = chapterFlip.buildFinale({
       cards: this.data.chapterCards, nodes: this.data.nodes, topicCover: this.data.topicCover, topicName: this.data.topicName,
@@ -8570,6 +8576,7 @@ Page({
       puzzle: { score: this.data.finishPuzzleScore, count: this.data.finishPuzzleCount },
     });
     this.setData({ finale: Object.assign({ show: true }, flip) });
+    return true;
   },
   closeFinale() { this.setData({ 'finale.show': false }); },
   saveFinale() { this.setData({ 'finale.show': false }, () => this.saveFinishCard()); },

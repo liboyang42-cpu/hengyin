@@ -955,7 +955,7 @@
   </view>
 </view>
 <view class="banner" wx:if="{{hud.bottomCard(screen, allDone, nav, nextNode, null) === 'banner'}}" bindtap="openFinish" hover-class="cy-pressed" hover-stay-time="80">
-  <view class="b1">{{mode==2 ? '本轮探索已完成' : '本章' + total + '处旧址已全部点亮'}}</view>
+  <view class="b1">{{mode==2 ? '本轮探索已完成' : total + '处旧址已全部点亮'}}</view>
   <view class="b2 serif">{{mode==2 ? '看看这一天的收获' : '领取你的城市足迹卡'}}</view>
 </view>
 
