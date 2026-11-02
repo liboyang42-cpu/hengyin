@@ -387,12 +387,12 @@
               aria-role="button" aria-label="{{item.go}}:{{item.text}}" hover-class="cy-pressed" hover-stay-time="80">
           <view class="chfull__fsentry-title">{{item.text}}</view>
         </view>
-        <view wx:elif="{{item.kind === 'kit'}}" class="chfull__kit" style="padding-top:calc({{chrome.contentTop}}px + var(--cy-btn-h) + var(--cy-space-3))">
+        <view wx:elif="{{item.kind === 'kit'}}" class="chfull__kit" style="padding-top:max(var(--chfull-fade-end), calc({{chrome.contentTop}}px + var(--cy-btn-h) + var(--cy-space-3)))">
           <cy-playkit kit="{{playKit.kit}}" show="{{true}}" inline="{{true}}" bind:kitaction="onPlayKitAction" />
           <view class="chfull__continue" wx:if="{{playKit.readyForBase && advancedPlay.show}}" bindtap="continueStoryGame"
                 aria-role="button" aria-label="继续故事" hover-class="cy-pressed" hover-stay-time="80">继续故事</view>
         </view>
-        <view wx:elif="{{item.kind === 'journeyCheck'}}" class="chfull__kit" style="padding-top:calc({{chrome.contentTop}}px + var(--cy-btn-h) + var(--cy-space-3))">
+        <view wx:elif="{{item.kind === 'journeyCheck'}}" class="chfull__kit" style="padding-top:max(var(--chfull-fade-end), calc({{chrome.contentTop}}px + var(--cy-btn-h) + var(--cy-space-3)))">
           <cy-playkit-journey-check show="{{journeyCheck.show}}" loading="{{journeyCheck.loading}}" unknown="{{journeyCheck.unknown}}"
             skill="{{journeyCheck.skill}}" tier="{{journeyCheck.tier}}" mods="{{journeyCheck.mods}}"
             advantage="{{journeyCheck.advantage}}" disadvantage="{{journeyCheck.disadvantage}}"

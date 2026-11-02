@@ -87,3 +87,6 @@
 .es__res--miss .es__res-h { color: var(--cy-color-status-danger); }
 .es__res-d { font-size: var(--cy-type-label); color: var(--sub); }
 .es__res-r { margin-top: 8rpx; font-size: var(--cy-type-body); line-height: 1.6; color: var(--ink); }
+/* P-09 第三轮:交过之后数已经定了,滚筒只留中间那个数(上下镜像收掉),
+   让下面的结果行和作者揭示在一屏里放得下,不再压在屏幕下沿被截掉。只换高度,不加动画。 */
+.es--done .es__reel { height: 400rpx; }   /* ds-ok 中间一格 336rpx + 上下留白 */

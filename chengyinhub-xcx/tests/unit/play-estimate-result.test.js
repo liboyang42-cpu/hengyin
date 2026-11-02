@@ -57,3 +57,28 @@ test('playkit 容器把结果字段接到猜数字组件', () => {
   assert.match(own, /\{\{result\.head\}\}/);
   assert.match(own, /\{\{title\}\}/);
 });
+
+// P-09 第三轮(业主):题干在深色上要看得清;结果行不能压在屏幕下沿被截掉。
+test('P-09 第三轮:内嵌玩法块的上内边距至少到故事流顶部渐隐结束处', () => {
+  const fs = require('node:fs')
+  const path = require('node:path')
+  const wxml = fs.readFileSync(path.join(__dirname, '../../pages/play/index.wxml'), 'utf8')
+  const wxss = fs.readFileSync(path.join(__dirname, '../../pages/play/index.wxss'), 'utf8')
+  const fade = wxss.match(/\.chfull__scroll\{[^}]*mask-image:linear-gradient\(to bottom, transparent 0, transparent 220rpx, #000 (\d+)rpx\)/)
+  assert.ok(fade, '故事流顶部渐隐还在')
+  assert.match(wxss, new RegExp('\\.chfull\\{[^}]*--chfull-fade-end:' + fade[1] + 'rpx;'), '变量与遮罩终点同一个数')
+  const kits = wxml.match(/class="chfull__kit" style="[^"]*"/g)
+  assert.equal(kits.length, 2)
+  kits.forEach((k) => assert.match(k, /padding-top:max\(var\(--chfull-fade-end\), calc\(/))
+})
+
+test('P-09 第三轮:交过之后滚筒收矮,只留中间那个数', () => {
+  const fs = require('node:fs')
+  const path = require('node:path')
+  const dir = path.join(__dirname, '../../pages/play/components/playkit-estimate')
+  assert.match(fs.readFileSync(path.join(dir, 'index.wxml'), 'utf8'), /<view class="g-col es \{\{result \? 'es--done' : ''\}\}">/)
+  const css = fs.readFileSync(path.join(dir, 'index.wxss'), 'utf8')
+  const done = Number(css.match(/\.es--done \.es__reel \{ height: (\d+)rpx; \}/)[1])
+  const lane = Number(css.match(/\.es__lane--mid \{[^}]*height: (\d+)rpx;/)[1])
+  assert.ok(done >= lane && done < 980, '收矮后放得下中间一格、又比原来的 980rpx 矮')
+})
