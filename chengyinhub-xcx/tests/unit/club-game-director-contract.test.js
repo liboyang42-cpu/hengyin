@@ -1741,11 +1741,52 @@ test('复盘指标显示数字与单位，节点完成行有标题与计数', as
   })
   harness.page.initDirector('703')
   await settle()
-  assert.deepEqual(JSON.parse(JSON.stringify(harness.page.data.recapMetrics[0])), { label: '持票玩家', valueText: '6', unit: '人' })
+  assert.deepEqual(JSON.parse(JSON.stringify(harness.page.data.recapMetrics[0])), { key: 'PAID_PLAYERS', label: '持票玩家', valueText: '6', unit: '人' })
   assert.deepEqual(JSON.parse(JSON.stringify(harness.page.data.recapStationRows)),
     [{ id: 5001, title: '旧钟楼', subtitle: '到达 4 人 · 完成 3 · 打回 1' }])
   const recapWxml = read('pages/club/components/club-director-recap/index.wxml')
   assert.match(recapWxml, /\{\{item\.valueText\}\}/)
   assert.doesNotMatch(recapWxml, /\{\{item\.value\}\}/)
-  assert.match(read(DIRECTOR_HOST_WXML), /completion-rows="\{\{recapStationRows\}\}"/)
+  assert.match(read(DIRECTOR_HOST_WXML), /station-rows="\{\{recapStationRows\}\}"/)
+})
+
+// C-11 第三轮(Figma D9 289:523):已结束 = 复盘整页态。漏斗前三个数做大块,后两个进「完成情况」行,
+// 榜单只出复盘里那一份;进行中各段(核销/主题/接下来/集合时间/排行榜)不再出。
+test('已结束复盘：三块大数、完成情况两行、只有一份榜单，进行中各段收起', async () => {
+  const metrics = [
+    { key: 'PAID_PLAYERS', label: '持票玩家', value: 4, unit: '人' },
+    { key: 'ARRIVED_PLAYERS', label: '到场玩家', value: 3, unit: '人' },
+    { key: 'NORMAL_COMPLETERS', label: '有完成进度', value: 0, unit: '人' },
+    { key: 'FALLBACK_COMPLETERS', label: '兜底完成', value: 0, unit: '人' },
+    { key: 'FINISHED_TEAMS', label: '完成队伍', value: 0, unit: '队' },
+  ]
+  const projection = {
+    sessionId: 9003, activityId: 703, status: 'FINISHED', revision: 12, availableActions: [],
+    readiness: { blockers: [], canStart: false }, stations: [], teams: [], roles: [], roleOptions: [], broadcasts: [],
+    leaderboard: { visible: true, rows: [] },
+    recap: { metrics: metrics, stations: [], exportAvailable: true },
+  }
+  const harness = loadDirector({
+    load() { return Promise.resolve(projection) },
+    submit() { return Promise.resolve({}) },
+    readReceipt() { return Promise.resolve({}) },
+  })
+  harness.page.initDirector('703')
+  await settle()
+  assert.deepEqual(harness.page.data.recapTiles.map(function (m) { return m.label }), ['持票玩家', '到场玩家', '有完成进度'])
+  assert.deepEqual(JSON.parse(JSON.stringify(harness.page.data.recapCompletionRows)), [
+    { id: 'FALLBACK_COMPLETERS', title: '兜底完成', value: '0 人' },
+    { id: 'FINISHED_TEAMS', title: '完成队伍', value: '0 队' },
+  ])
+  const host = read(DIRECTOR_HOST_WXML)
+  assert.match(host, /metrics="\{\{recapTiles\}\}"/)
+  assert.match(host, /completion-title="完成情况" completion-rows="\{\{recapCompletionRows\}\}"/)
+  assert.match(host, /<block wx:if="\{\{!\(directorActive && statusKey === 'ended'\)\}\}">\s*<!-- ④ 核销/)
+  assert.match(host, /leaderboardVisibleKnown && statusKey !== 'ended'/)
+  assert.match(host, /opsTimeAvailable && statusKey !== 'ended'/)
+  const recapWxml = read('pages/club/components/club-director-recap/index.wxml')
+  const order = ['cdrecap__metrics', '{{completionTitle}}', '{{leaderboardTitle}}', '{{stationTitle}}'].map(function (k) { return recapWxml.indexOf(k) })
+  assert.ok(order.every(function (i, n) { return i > 0 && (n === 0 || i > order[n - 1]) }), 'tiles → 完成情况 → 榜单 → 节点完成')
+  assert.match(recapWxml, /wx:if="\{\{stationRows\.length\}\}"/)
+  assert.doesNotMatch(recapWxml, /funnelSub/)
 })

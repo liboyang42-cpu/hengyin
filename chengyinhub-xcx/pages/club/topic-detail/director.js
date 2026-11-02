@@ -233,7 +233,12 @@ function recapMetricView(metric) {
   const label = item.label || item.name || item.key || ''
   const value = item.value
   if (!label || value == null) return null
-  return { label: label, valueText: String(value), unit: item.unit || '' }
+  return { key: item.key || '', label: label, valueText: String(value), unit: item.unit || '' }
+}
+
+// C-11 第三轮(Figma D9 289:523):漏斗前三个数做大块,其余进「完成情况」行。
+function recapCompletionRow(metric, index) {
+  return { id: metric.key || ('m' + index), title: metric.label, value: metric.valueText + (metric.unit ? ' ' + metric.unit : '') }
 }
 
 // C-11:复盘「节点完成」行。服务端给的是原始计数对象,行组件要 {id,title,subtitle}。
@@ -555,6 +560,8 @@ const DIRECTOR_DATA = {
     canToggleLeaderboard: false,
     recap: null,
     recapMetrics: [],
+    recapTiles: [],
+    recapCompletionRows: [],
     recapStationRows: [],
     canExportRecap: false,
     exportState: 'idle',
@@ -760,6 +767,9 @@ const DIRECTOR_METHODS = {
     const leaderboard = projection.leaderboard || null
     const leaderboardVisibleKnown = !!leaderboard && typeof leaderboard.visible === 'boolean'
     const recap = projection.recap || null
+    const recapMetrics = recap && Array.isArray(recap.metrics)
+      ? recap.metrics.map(recapMetricView).filter(function (item) { return !!item })
+      : []
     this._genericControl = projection.genericControl || null
     this._roleOptions = roleOptions
     this._takeoverTargetOptions = []
@@ -823,9 +833,9 @@ const DIRECTOR_METHODS = {
       leaderboardVisibleKnown: leaderboardVisibleKnown,
       canToggleLeaderboard: leaderboardVisibleKnown && hasAction(availableActions, 'SET_LEADERBOARD_VISIBILITY'),
       recap: recap,
-      recapMetrics: recap && Array.isArray(recap.metrics)
-        ? recap.metrics.map(recapMetricView).filter(function (item) { return !!item })
-        : [],
+      recapMetrics: recapMetrics,
+      recapTiles: recapMetrics.slice(0, 3),
+      recapCompletionRows: recapMetrics.slice(3).map(recapCompletionRow),
       recapStationRows: recap && Array.isArray(recap.stations)
         ? recap.stations.map(recapStationRow).filter(function (item) { return !!item })
         : [],
