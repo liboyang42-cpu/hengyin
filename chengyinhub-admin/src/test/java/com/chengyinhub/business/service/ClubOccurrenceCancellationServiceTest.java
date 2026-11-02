@@ -235,6 +235,7 @@ class ClubOccurrenceCancellationServiceTest {
         when(topics.selectCmsTopicByIdForUpdate(31L)).thenReturn(topic);
         ReflectionTestUtils.setField(service,"cancellationActivityMapper",activities);
         ReflectionTestUtils.setField(service,"cancellationTopicMapper",topics);
+        CancellationPhaseTestSupport.wireReceiptMocks(service);
         when(mapper.selectSeriesByActivityAnyStatusForUpdate(ACTIVITY)).thenReturn(null);
         when(mapper.selectOccurrenceByActivityAndClubForUpdate(ACTIVITY, CLUB)).thenReturn(null);
     }
