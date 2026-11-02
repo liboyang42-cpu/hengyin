@@ -116,7 +116,7 @@ Page({
     // 2026-10-22 业主:三个标签 = 详情 / 故事 / 路线(自由探索没有固定路线,第三个叫「地点」)
     topicTabs: [{ key: '0', label: '详情' }, { key: '1', label: '故事' }, { key: '2', label: '路线' }],
     // ===== 2026-10-22 动效与新增块(docs/design/动效界面落地_20261022) =====
-    coverImages: [], kbIdx: 0, coverLeaving: false, detailEnter: false, heroIdx: 0, navSolid: false, storyChars: [], routeNote: '', sketchPoints: [], routeReal: false, tabPre: false, buyOpts: [], buySel: 0, sessionPreferName: '',
+    coverImages: [], kbIdx: 0, coverLeaving: false, detailEnter: false, heroIdx: 0, navSolid: false, storyChars: [], routeNote: '', sketchPoints: [], routeReal: false, tabPre: false, tabRun: false, buyOpts: [], buySel: 0, sessionPreferName: '',
     publisher: { name: '', avatar: '' }, heroCta: { kind: '', text: '' }, faved: false,
     docked: false, dockCtaStyle: '', dockFavStyle: '',
     shareCard: { show: false, card: {} },
@@ -394,8 +394,8 @@ Page({
     // cy-tabs 通过 detail.key 传当前项;保留 dataset 兼容旧调用点(若还有)
     const index = (e.detail && e.detail.key) !== undefined ? e.detail.key : e.currentTarget.dataset.index;
     this.setData({
-      activeTab: index, tabPre: !this.data.reducedMotion // v13:切标签时各块从下方依次浮上来
-    }, () => { if (this.data.tabPre) this._later(30, () => this.setData({ tabPre: false })); });
+      activeTab: index, tabPre: !this.data.reducedMotion, tabRun: !this.data.reducedMotion // v13:切标签时各块从下方依次浮上来;依次延迟只在入场这 1.4s 内生效,之后按压立即响应
+    }, () => { if (this.data.tabPre) { const run = this._tabRunSeq = (this._tabRunSeq || 0) + 1; this._later(30, () => this.setData({ tabPre: false }, () => this._later(1400, () => { if (run === this._tabRunSeq) this.setData({ tabRun: false }); }))); } });
     if (String(index) === '2') this._loadProgress();
     if (String(index) === '1') { this.setData({ openChapter: -1 }); this._later(900, () => { if (String(this.data.activeTab) === '1') this.setData({ openChapter: 0 }); }); } // v13:进故事标签后第一章自己展开
   },
@@ -857,27 +857,27 @@ Page({
   onRevealPlay() { this._finishReveal('play'); },
 
   _finishReveal(kind) {
-    this.setData({ 'reveal.show': false, selfPlayCheckoutShow: false });
+    if (this._navigating || !this.data.reveal.show) return; // 连点「开始游戏」/「放进票夹」只走一次
     const hasOffer = !!this._pendingOffer;
     this._pendingOffer = null;
     if (hasOffer) {
       // 商家营销同意(拍板第 40 条 A)仍走原结果面板那一行;面板收起后再去票夹/开局
-      this._revealNext = kind;
+      this.setData({ 'reveal.show': false, selfPlayCheckoutShow: false }); this._revealNext = kind;
       this._goSelfPlay(this._revealTopicId);
       return;
     }
-    this._goAfterReveal(kind);
+    this._goAfterReveal(kind, () => this.setData({ 'reveal.show': false, selfPlayCheckoutShow: false })); // 揭晓层等下一页推上来再收,中间不露出主题页
   },
 
-  _goAfterReveal(kind) {
+  _goAfterReveal(kind, onGone) {
     const topicId = this._revealTopicId || (this.data.info && this.data.info.id) || this.data.id;
-    const regId = this._revealRegId;
+    const regId = this._revealRegId; if (this._navigating) return; this._navigating = true;
     if (kind === 'play' && regId && topicId) {
       const name = this.data.info && this.data.info.name ? '&topicName=' + encodeURIComponent(this.data.info.name) : '';
-      wx.navigateTo({ url: '/pages/play/index?topicId=' + topicId + '&registrationId=' + regId + '&entry=ticket' + name });
+      wx.navigateTo({ url: '/pages/play/index?topicId=' + topicId + '&registrationId=' + regId + '&entry=ticket' + name, success: onGone, complete: () => { this._navigating = false; } });
       return;
     }
-    wx.navigateTo({ url: '/subpackageMember/signup/index?stype=0&arrive=1' });
+    wx.navigateTo({ url: '/subpackageMember/signup/index?stype=0&arrive=1', success: onGone, complete: () => { this._navigating = false; } });
   },
 
   goTemplateDetail(e) {
@@ -1254,8 +1254,8 @@ Page({
     if (this.lockedTip()) return;
     const picked = (e && e.detail) || {};
     if (!picked.activityId || !picked.ticketId) return;
-    this.setData({ 'sessionPicker.show': false });
-    wx.navigateTo({
+    if (this._navigating) return; this._navigating = true; this.setData({ 'sessionPicker.show': false });
+    wx.navigateTo({ complete: () => { this._navigating = false; },
       url: '/pages/activity/baoming/baoming?activityId=' + picked.activityId
         + '&ticketId=' + picked.ticketId,
     });

@@ -220,6 +220,9 @@
 
 <!-- 占位必须和 .bmbottom 的真实高度同算式(含安全区):写死 240rpx 会比底栏矮一个
      home indicator,正文最后一行被永久盖住 —— 实拍到「…不会重复创建订」被切。 -->
+<!-- 加载中先把底栏占住(同高、按钮不可点),加载完只换内容,「付款」不再从底下滑进来 -->
+<view wx:if="{{pageState === 'loading'}}" class="bmbottom-spacer"></view>
+<view wx:if="{{pageState === 'loading'}}" class="bmbottom" aria-hidden="true"><view class="bmbottom_box" style="height:20px"></view><cy-btn variant="primary" style="width:686rpx;margin:0 auto;display:block" disabled="{{true}}" accessibility-label="正在加载"></cy-btn></view>
 <view wx:if="{{pageState === 'ready'}}" class="bmbottom-spacer"
   style="--baoming-action-extra: {{submitError ? 'calc(var(--cy-btn-h) + var(--cy-space-2))' : '0rpx'}}"></view>
 <view wx:if="{{pageState === 'ready'}}" class="bmbottom"
