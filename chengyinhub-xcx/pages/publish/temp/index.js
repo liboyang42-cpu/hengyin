@@ -2231,7 +2231,7 @@ Page({
     if (key === 'story' && this.data.storyBeats.length === 0) {
       patch.storyBeats = [{ id: 1, text: '', tag: '', imgs: [] }];
     }
-    this._setFormState(patch);
+    this._setFormState(patch); const anchor = key === 'finish' ? 'sec-join' : (key === 'reward' && this.data.gameKey !== 'album' ? 'sec-reward' : ''); if (anchor) { this.setData({ scrollIntoView: '' }); setTimeout(() => { this.setData({ scrollIntoView: anchor }); }, 30); } // CP-13:新模块接在长表单末尾,关掉面板后滚过去,看得见加在哪
   },
 
   removeModule: function (e) {

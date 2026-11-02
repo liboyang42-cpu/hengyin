@@ -332,7 +332,6 @@
         <!-- E-09:失败 ≠「还没有人通关」 -->
         <cy-error load-failure class="ov-lb-empty" wx:elif="{{leaderboardError}}" size="sm" title="榜单加载失败" sub="{{leaderboardError}}" retry="重试" bind:retry="loadLeaderboard" />
         <cy-empty class="ov-lb-empty" wx:elif="{{leaderboardLoaded}}" title="{{leaderboardEmptyTitle}}" />
-        <view class="ov-lb-note" wx:if="{{leaderboard.length}}">每周一重置</view>
       </block>
       <!-- Locked(25:5) -->
       <view wx:else class="ov-locked">
@@ -427,9 +426,6 @@
             <view class="club-stat"><text class="club-stat-value">{{clubStats.completed}}</text><text class="club-stat-label">完成人次</text></view>
             <view class="club-stat"><text class="club-stat-value">{{clubStats.overallRateText}}</text><text class="club-stat-label">完成率</text></view>
           </view>
-          <!-- CU-C-51:「项目」只数本团自办主题(不含承接来的项目),两个「人次」数的是节点游玩人数
-               而不是报名人数 —— 不写清范围就会跟下方项目卡上的「N 人报名」当成同一回事。 -->
-          <view class="club-stats-note">仅统计本俱乐部自办项目。</view>
           <view class="club-stats-topics" wx:if="{{clubStats.topics.length}}">
             <view class="club-stats-topic" wx:for="{{clubStats.topics}}" wx:key="topicId">
               <text class="club-stats-topic-name">{{item.name}}</text>
@@ -449,7 +445,7 @@
             <image class="manage-project-cover" src="{{item.imgUrl || '/images/route_free_cover.png'}}" mode="aspectFill" lazy-load="true" />
             <view class="manage-project-main">
               <view class="manage-project-name">{{item.name || '未命名项目'}}</view>
-              <view class="manage-project-meta">{{item.dateText || '时间待定'}} · {{item.signupCount != null ? item.signupCount + ' 人' : '—'}}报名</view>
+              <view class="manage-project-meta">{{item.dateText || '时间待定'}} · {{item.signupCount != null ? item.signupCount + ' 人报名' : '—'}}</view>
             </view>
             <!-- F-W5-11:两枚工具按钮收进第二行,不再与标题/报名数抢同一行的宽度。 -->
             <view wx:if="{{club.isOwner || club.viewerIsAdmin || canManageActivities || canOperateEvents || hasEventScope}}" class="manage-project-tools">
