@@ -7,6 +7,7 @@ Each lane: branch `claude/walk-fix-1102-<lane>` from `origin/master`, one draft 
 L2 also edits `pages/play` (free exploration), so keep edits narrow.
 
 - **P-04** ending never plays. 「你需要核对清楚」. Establish the true cause first and state it in RESULT.md, then fix so the author's 尾声 plays after the last station.
+  - **Strong lead, from reading the code, not yet run:** `TopicRouteRuntimeServiceImpl.journeyConfigured` (about line 1190) returns true for an opening chapter but apparently not for an ending. So a linear theme with only an ending gets no route session, and `/api/play/journey/ending` fails with 「本局尚未开始」. The 「开始这一局」 hold reportedly doesn't create that session. If this holds, both branches need the check: the frozen `runtimeSnapshotVersion==1` branch and the live one. Reproduce it first, and check that creating a session doesn't change how existing linear themes behave.
 - **P-02** text answers with alternatives: split on 、 and comma, match any.
 - **P-11** a right answer has no response. 「而且答题打错了不要抖动界面」. Remove any shake on a wrong answer. Show 「对了」 and the fragment or reveal.
 - **P-09** number guess. 「这种游戏界面可以不显示顶部的地图和主题标题 需要展示的是游戏的标题或问题 然后要有返回」. Show the question and a back control; hide the top map and theme title on this game screen; send the question and post-submit reveal from the server. Report other full-screen games with the same problem; change them only if trivial.
