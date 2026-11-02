@@ -6,4 +6,4 @@
 .ev-code__state { padding:var(--cy-space-6) 0; color:var(--cy-color-text-tertiary); font-size:var(--cy-type-label); }
 .ev-code__bib { font-size:var(--cy-type-body); font-weight:700; color:var(--cy-color-text-primary); }
 .ev-code__link { min-height:72rpx; display:flex; align-items:center; color:var(--cy-color-text-secondary); font-size:var(--cy-type-label); text-decoration:underline; }
-.cy-pressed { opacity:.82; }
+.cy-pressed { opacity:.88; } /* r2-shared:与全局 .cy-pressed 同值(isolated 组件只减淡) */
