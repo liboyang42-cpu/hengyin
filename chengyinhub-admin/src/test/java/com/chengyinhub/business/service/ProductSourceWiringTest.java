@@ -223,7 +223,8 @@ class ProductSourceWiringTest {
     @Test
     void settlementReadsFeeSnapshotNotLive() throws Exception {
         String src = sourceOf("chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java");
-        assertEquals(1, countOccurrences(src, "pricingService.platformRateOf(topic)"),
+        // 两处:coop 主题结算 + 俱乐部自有主题无合作单的自玩结算(settleClubSelfPlayTopic,2026-11-02),都读快照。
+        assertEquals(2, countOccurrences(src, "pricingService.platformRateOf(topic)"),
                 "结算必须按主题快照取平台率");
         assertEquals(1, countOccurrences(src, "pricingService.initiatorGuaranteeRateOf(topic,"),
                 "结算必须按主题快照取保底率");
