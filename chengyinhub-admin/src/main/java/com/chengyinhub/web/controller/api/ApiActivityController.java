@@ -69,6 +69,9 @@ import com.chengyinhub.business.access.merchant.MerchantPermission;
 @RequestMapping("/api/activity")
 
 public class ApiActivityController extends BaseController {
+    @Autowired
+    private com.chengyinhub.business.service.support.AuthorWriteReceiptService authorWriteReceipts;
+
 
     @Autowired
     private ICmsActivityService cmsActivityService;
@@ -775,6 +778,12 @@ public class ApiActivityController extends BaseController {
     @Log(title = "发布活动", businessType = BusinessType.INSERT)
     @PostMapping("/publish")
     public AjaxResult publish(@Validated @RequestBody CmsActivityPublishRequest request) {
+        if (request == null || request.getRequestId() == null || request.getRequestId().isBlank()) return publishOnce(request);
+        return authorWriteReceipts.execute(getAppUserId(), "ACTIVITY_PUBLISH", request.getRequestId(), request,
+                () -> publishOnce(request));
+    }
+
+    private AjaxResult publishOnce(CmsActivityPublishRequest request) {
         try {
 
             // 添加调试日志
@@ -869,6 +878,12 @@ public class ApiActivityController extends BaseController {
     @Log(title = "更新活动", businessType = BusinessType.UPDATE)
     @PostMapping("/update")
     public AjaxResult update(@Validated @RequestBody CmsActivityPublishRequest request) {
+        if (request == null || request.getRequestId() == null || request.getRequestId().isBlank()) return updateOnce(request);
+        return authorWriteReceipts.execute(getAppUserId(), "ACTIVITY_UPDATE", request.getRequestId(), request,
+                () -> updateOnce(request));
+    }
+
+    private AjaxResult updateOnce(CmsActivityPublishRequest request) {
         Long memberId = 0L;
         try {
             memberId = getAppUserId();

@@ -27,12 +27,14 @@ test('工作台项目卡:承接签按确认关系判,主办签按真实档期判
     hostList: [{ id: 9, bizType: 'activity', titleText: 'X', startTime: '2026-08-01', endTime: '2026-08-02' }],
     todoByProject: [],
   })
-  assert.equal(cards[0].statusLabel, '承接中')
+  assert.equal(cards[0].statusLabel, '进行中')
+  assert.equal(cards[0].statusTone, 'run')
   assert.equal(cards[0].catLabel, '自由探索')
-  assert.equal(cards[1].statusLabel, '承接中', '未来档期的已确认关系仍是承接中')
+  assert.equal(cards[1].statusLabel, '报名中', '未来档期的已确认关系写报名中(2026-11-01 业主方案 B v3)')
+  assert.equal(cards[1].statusTone, 'open')
   assert.equal(cards[1].catLabel, '城市定向')
   assert.equal(cards[2].statusLabel, '', '确认关系与档期未知不许编一个状态出来')
-  assert.equal(cards[3].statusLabel, '', '未确认关系不能仅按进行中档期冒充承接中')
+  assert.equal(cards[3].statusLabel, '待审核', '审核中的承接申请写待审核,不按进行中档期冒充已承接')
   assert.equal(cards[4].statusLabel, '已结束')
   assert.equal(cards[4].catLabel, '活动')
   const wxml = read('pages/merchant/index/index.wxml')

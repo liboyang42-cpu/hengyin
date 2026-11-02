@@ -13,6 +13,7 @@ let sent = [];
 let navigations = [];
 let toasts = [];
 let pageConfig = null;
+let durable;
 
 global.getApp = () => ({
   globalData: { statusBarHeight: 20, navBarHeight: 44 },
@@ -25,8 +26,9 @@ global.getApp = () => ({
   getToken: () => '',
 });
 global.wx = {
-  getStorageSync: () => undefined,
-  setStorageSync: () => {},
+  getStorageSync: key => durable.getStorageSync(key),
+  setStorageSync: (key, value) => durable.setStorageSync(key, value),
+  removeStorageSync: key => durable.removeStorageSync(key),
   showToast: (o) => { toasts.push(o && o.title); },
   showLoading: () => {},
   hideLoading: () => {},
@@ -42,6 +44,7 @@ global.wx = {
 global.Page = (cfg) => { pageConfig = cfg; };
 
 beforeEach(() => {
+  durable = require('../helpers/memory-storage.js')();
   sent = [];
   navigations = [];
   toasts = [];

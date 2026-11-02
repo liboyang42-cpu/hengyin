@@ -27,7 +27,7 @@ test('商家工作台承接卡写俱乐部到店时间，不写站点状态，�
   assert.doesNotMatch(js, /openGameStation/)
 
   assert.match(wxml, /bindtap="openProjectCard"/)
-  assert.match(wxml, /class="rv-project-visit" wx:if="\{\{item\.visitText\}\}"/)
+  assert.match(wxml, /class="rv-project-visit ep1" wx:if="\{\{item\.visitText\}\}"/)
   assert.doesNotMatch(wxml, /gameEntry\.gameText/, '卡上不写「本站可接待」等站点状态')
   assert.doesNotMatch(wxml, /本站准备与运行/)
 })

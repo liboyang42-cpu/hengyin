@@ -27,6 +27,7 @@ Component({
   },
   observers: {
     show(v) {
+      this._requestEpoch = (this._requestEpoch || 0) + 1;
       // 每次打开都是一次新的选择,重置到第一页——避免上次滚动位置/过滤态串到这次
       if (v) {
         this.setData({
@@ -39,8 +40,8 @@ Component({
   },
   methods: {
     onSearchInput(e) {
-      // 既有选择器这里只存值、没有真正接入过滤逻辑,原样保留(不在本次范围内新修)
-      this.setData({ searchKeyword: e.detail.value });
+      this.setData({ searchKeyword: e.detail.value, list: [], page_no: 1, nodata: false, hasMore: false });
+      this._getList(1);
     },
 
     onReachBottom() {
@@ -66,6 +67,8 @@ Component({
     onClose() { this.triggerEvent('close'); },
 
     _getList(pageNo) {
+      const epoch = this._requestEpoch = (this._requestEpoch || 0) + 1;
+      const keyword = String(this.data.searchKeyword || '').trim();
       const requestedPage = pageNo || this.data.page_no;
       const isFirstPage = requestedPage === 1;
       this.setData({ loading: true, loadError: '' });
@@ -76,8 +79,10 @@ Component({
         data: {
           pageNum: requestedPage,
           pageSize: app.getPageSize(),
+          keyword,
         },
         success: (res) => {
+          if (epoch !== this._requestEpoch) return;
           if (res.code != '200') {
             this.setData({
               loadError: app.getRequestErrorMessage(res, '服务返回异常，重试会重新拉取一次'),
@@ -112,12 +117,14 @@ Component({
           });
         },
         fail: () => {
+          if (epoch !== this._requestEpoch) return;
           this.setData({
             loadError: '网络异常，请重试',
             loadErrorPage: requestedPage,
           });
         },
         complete: () => {
+          if (epoch !== this._requestEpoch) return;
           this.setData({
             loading: false,
             nodata: !this.data.loadError && this.data.list.length < 1,

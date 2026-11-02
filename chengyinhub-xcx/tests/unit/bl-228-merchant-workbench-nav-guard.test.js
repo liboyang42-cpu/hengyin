@@ -4,7 +4,8 @@ const path = require('node:path')
 const test = require('node:test')
 const vm = require('../helpers/ui-sandbox-vm.js')
 
-// BL-228:商家工作台「核销记录」「开店前置项」连点只跳一次;complete 回调后可再跳;无权限/缺 path 不跳也不上锁
+// BL-228:商家工作台「核销记录」连点只跳一次;complete 回调后可再跳;无权限不跳也不上锁
+// (2026-11-01 业主删除工作台「开通前置检查」,原「开店前置项」用例随之移除)
 
 const ROOT = path.resolve(__dirname, '../..')
 const PAGE = 'pages/merchant/index/index.js'
@@ -29,14 +30,8 @@ function loadPage() {
     setData(patch) { Object.assign(this.data, patch) },
   })
   page.data.merchantAccess = Object.assign({}, page.data.merchantAccess, { canReadVerifyRecords: true })
-  page.data.prerequisites = [
-    { key: 'shop', path: '/pages/merchant/shop/index' },
-    { key: 'nopath', path: '' },
-  ]
   return { page, navs }
 }
-
-const tapKey = (key) => ({ currentTarget: { dataset: { key } } })
 
 test('BL-228:核销记录 complete 未回调时连调两次只跳 1 次,complete 后可再跳', () => {
   const { page, navs } = loadPage()
@@ -49,31 +44,12 @@ test('BL-228:核销记录 complete 未回调时连调两次只跳 1 次,complete
   assert.equal(navs.length, 2)
 })
 
-test('BL-228:开店前置项 complete 未回调时连调两次只跳 1 次,complete 后可再跳', () => {
-  const { page, navs } = loadPage()
-  page.goPrerequisite(tapKey('shop'))
-  page.goPrerequisite(tapKey('shop'))
-  assert.equal(navs.length, 1)
-  assert.equal(navs[0].url, '/pages/merchant/shop/index')
-  navs[0].complete()
-  page.goPrerequisite(tapKey('shop'))
-  assert.equal(navs.length, 2)
-})
-
-test('BL-228:两个入口共用跳转中标记,一个在途时另一个也不跳', () => {
-  const { page, navs } = loadPage()
-  page.goVerifyRecords()
-  page.goPrerequisite(tapKey('shop'))
-  assert.equal(navs.length, 1)
-})
-
-test('BL-228:无核销记录权限 / 缺 path / 未知 key 时不跳也不上锁', () => {
+test('BL-228:无核销记录权限时不跳也不上锁', () => {
   const { page, navs } = loadPage()
   page.data.merchantAccess = Object.assign({}, page.data.merchantAccess, { canReadVerifyRecords: false })
   page.goVerifyRecords()
-  page.goPrerequisite(tapKey('nopath'))
-  page.goPrerequisite(tapKey('missing'))
   assert.equal(navs.length, 0)
-  page.goPrerequisite(tapKey('shop'))
+  page.data.merchantAccess = Object.assign({}, page.data.merchantAccess, { canReadVerifyRecords: true })
+  page.goVerifyRecords()
   assert.equal(navs.length, 1)
 })
