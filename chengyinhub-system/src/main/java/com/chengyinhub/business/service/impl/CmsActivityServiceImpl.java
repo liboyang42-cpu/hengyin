@@ -107,6 +107,10 @@ public class CmsActivityServiceImpl implements ICmsActivityService
     @org.springframework.beans.factory.annotation.Value("${chengyin.platform.member-id:100000}")
     private Long platformMemberId;
 
+    /** 俱乐部场次的收款人 = 俱乐部当前主理人。 */
+    @Autowired
+    private com.chengyinhub.business.service.support.ClubPrincipalPayee clubPrincipalPayee;
+
     /** 客诉期提现闸:涉诉报名单结算暂扣,客诉关闭后补结。 */
     @Autowired
     private com.chengyinhub.business.mapper.ActivitySettlementHoldMapper activitySettlementHoldMapper;
@@ -275,10 +279,11 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         // 2. 计算各项佣金（含主题设计者，无主题来源时其份额并入商户）
         ActivitySettlementDTO settlement = calculateActivityCommissions(activity, totalSales, rule);
 
-        // 3. 分配商户分润（活动归属商户）
-        payActivityCommission(activity.getMemberId(), settlement.getMerchantCommissionAmount(),
+        // 3. 分配商户分润（活动收款人:俱乐部场次给当前主理人,其余给创建人,见 ClubPrincipalPayee）
+        Long payee = activityPayee(activity);
+        payActivityCommission(payee, settlement.getMerchantCommissionAmount(),
                 "活动分润 - " + activity.getName(), 3L, activity.getId());
-        settlementDebtLedger.offsetFromSettlement(activity.getMemberId(),
+        settlementDebtLedger.offsetFromSettlement(payee,
                 settlement.getMerchantCommissionAmount(), activity.getId());
 
         // 4. 分配平台分润（打入平台账户）。前置校验失败会抛异常并回滚本活动的原子领取。
@@ -354,14 +359,26 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         }
         requireUsablePlatformSettlementAccount(setting, rule, activity.getId());
         ActivitySettlementDTO settlement = calculateActivityCommissions(activity, sales, rule);
-        payActivityCommission(activity.getMemberId(), settlement.getMerchantCommissionAmount(),
+        Long payee = activityPayee(activity);
+        payActivityCommission(payee, settlement.getMerchantCommissionAmount(),
                 "活动分润(客诉结案补结) - " + activity.getName(), 3L, activity.getId());
-        settlementDebtLedger.offsetFromSettlement(activity.getMemberId(),
+        settlementDebtLedger.offsetFromSettlement(payee,
                 settlement.getMerchantCommissionAmount(), activity.getId());
         payActivityCommission(setting.getPlatformMemberId(), settlement.getPlatformCommissionAmount(),
                 "活动平台分润(客诉结案补结) - " + activity.getName(), 7L, activity.getId());
         settlementDetailMapper.markRegistrationDetailsSettled(registration.getId());
         return true;
+    }
+
+    /**
+     * 活动现金收款人(2026-11-02 业主口径:钱给人,不给俱乐部实体)。俱乐部场次 = 俱乐部当前主理人,
+     * 转让后新主理人收;非俱乐部场次仍是 cms_activity.member_id。退款冲回按实际入账人扣,见 RefundServiceImpl。
+     */
+    private Long activityPayee(CmsActivity activity) {
+        if (activity.getClubId() == null || activity.getClubId() <= 0) {
+            return activity.getMemberId();
+        }
+        return clubPrincipalPayee.forActivity(activity);
     }
 
     private void requireUsablePlatformSettlementAccount(CmsSetting setting, SettlementRule rule, Long activityId) {
