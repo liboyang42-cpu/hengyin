@@ -295,11 +295,26 @@ class TopicSaleFinalizationServiceImplTest {
         when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC_ID)).thenReturn(pricingTopic(ProductType.ORIENTEERING));
         CmsTopicChapter required = new CmsTopicChapter();
         required.setId(991L);
+        required.setRecruitEnabled(1);
         when(chapterMapper.selectRequiredByTopic(TOPIC_ID)).thenReturn(Collections.singletonList(required));
 
         IllegalStateException error = assertThrows(IllegalStateException.class, () -> service.finalizeForSale(TOPIC_ID));
 
         assertTrue(error.getMessage().contains("chapterId=991"), "必选章空缺必须点名被拦字段");
+    }
+
+    /** P-01:城市定向未开商家承接的必选章(编辑器默认 required=1)不要求商家供给。 */
+    @Test
+    void cityRequiredChapterWithoutMerchantRecruitmentNeedsNoSupply() {
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC_ID)).thenReturn(pricingTopic(ProductType.ORIENTEERING));
+        CmsTopicChapter authored = new CmsTopicChapter();
+        authored.setId(992L);
+        authored.setRecruitEnabled(0);
+        when(chapterMapper.selectRequiredByTopic(TOPIC_ID)).thenReturn(Collections.singletonList(authored));
+        when(lineupSource.readEffectiveLineup(TOPIC_ID)).thenReturn(new CoopOrderLineupSource.ReadResult(
+                Collections.singletonList(organizer(7L)), Collections.emptyList()));
+
+        org.junit.jupiter.api.Assertions.assertDoesNotThrow(() -> service.finalizeForSale(TOPIC_ID));
     }
 
     @Test

@@ -166,3 +166,22 @@ print("quote", J(quote))
 print("RESULT_TOPIC", tid, "ACTIVITY", aid, "TICKET", tk[0][0])
 json.dump({"tid": tid, "aid": aid, "ticket": tk[0][0], "mode": MODE,
            "quoteSign": (quote.get("data") or {}).get("quoteSign")}, open(RIG + "/p01-%s.json" % MODE, "w"))
+
+step("player 9009: consent, create the registration, pay through the rig seam -> real /api/registration/callback")
+if quote.get("code") != 200:
+    print("quote refused; no registration created (expected for a club-owned paid theme: assertCollectible)")
+    sys.exit(0)
+print(J(http("POST", "/api/compliance/consents", token=player, json_body={
+    "docType": "activity_host_data_sharing", "scene": "activity_signup", "eventType": "AGREE",
+    "requestId": "p01-consent-%d" % int(time.time())})))
+created = http("POST", "/api/registration/create", token=player, json_body={
+    "ownerType": 2, "ownerId": aid, "ticketId": tk[0][0], "isUsePoint": 0, "realName": "许知远",
+    "phone": "13800000789", "quoteSign": quote["data"]["quoteSign"], "requestId": "p01-create-%d" % int(time.time())})
+print("create", J(created))
+rid = (created.get("data") or {}).get("registrationId")
+pay = subprocess.run([sys.executable, os.path.expanduser("~/rig/docs/delivery/cloud-walk-20261101/rig/pay.py"),
+                      "--member", "9009"], capture_output=True, text=True)
+print("pay", pay.stdout.strip()[-400:] or pay.stderr[-400:])
+readback("registration after callback", "SELECT id,owner_type,owner_id,ticket_id,payable_amount,payment_status,"
+         "registration_status,purchase_kind FROM cms_registration WHERE id=%s", (rid,))
+readback("payment fact", "SELECT registration_id,status,amount_fen FROM registration_payment_fact WHERE registration_id=%s", (rid,))

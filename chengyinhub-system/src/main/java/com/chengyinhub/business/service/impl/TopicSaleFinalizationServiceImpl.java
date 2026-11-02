@@ -148,7 +148,7 @@ public class TopicSaleFinalizationServiceImpl implements ITopicSaleFinalizationS
         List<OmsTicket> tickets = activeTickets(topicId);
         TopicSaleTimeValidator.assertValid(topic, tickets, finalizeNow, () -> hasRecruitedPartners(topicId));
         List<MerchantChapterOffer> offers = validOffers(topicId, finalizeNow);
-        assertRequiredChapterCoverage(topicId, offers);
+        assertRequiredChapterCoverage(topic, offers);
 
         CoopOrderLineupSource.ReadResult orderLineup = coopOrderLineupSource.readEffectiveLineup(topicId);
         if (!orderLineup.getRepairReasons().isEmpty()) {
@@ -395,11 +395,16 @@ public class TopicSaleFinalizationServiceImpl implements ITopicSaleFinalizationS
         return valid;
     }
 
-    private void assertRequiredChapterCoverage(Long topicId, List<MerchantChapterOffer> offers) {
+    private void assertRequiredChapterCoverage(CmsTopic topic, List<MerchantChapterOffer> offers) {
+        Long topicId = topic.getId();
         if (pureContentExploreService != null && pureContentExploreService.isPureContent(topicId)) return;
         List<CmsTopicChapter> required = chapterMapper.selectRequiredByTopic(topicId);
         if (required == null) return;
+        // P-01:城市定向的「必选章」是玩家必须走完的章(编辑器默认全是 1),不等于要商家供给;
+        // 只有开了商家承接(recruit_enabled=1)的章才必须有生效 SUPPLY。自由探索照旧每个必选章都要。
+        boolean city = Integer.valueOf(ProductType.ORIENTEERING).equals(topic.getProductType());
         for (CmsTopicChapter chapter : required) {
+            if (city && chapter != null && !Integer.valueOf(1).equals(chapter.getRecruitEnabled())) continue;
             boolean covered = false;
             for (MerchantChapterOffer offer : offers) {
                 if (chapter != null && chapter.getId() != null && chapter.getId().equals(offer.getChapterId())) {
