@@ -3920,6 +3920,7 @@ Page({
       this._chapterTrailNext = null;
       this._chapterTrailRead = Object.assign({}, this._chapterTrailRead, { [String((this.data.chapter || {}).id)]: true });
       storyResume.patch(this._runSessionScope(), { trails: Object.assign({}, storyResume.read(this._runSessionScope()).trails, this._chapterTrailRead) });
+      this._lastActiveChapterId = next.id;
       this.setData({ chapter: next }, () => this.openChapterFull());
       return Promise.resolve();
     }
@@ -4539,22 +4540,7 @@ Page({
       const activeNode = this._nodeById(rawNextNode.nodeId);
       const card = (this.data.chapterCards || []).find((item) => activeNode && item.id != null
         && String(item.id) === String(activeNode.chapterId));
-      if (card) {
-        activeChapter = {
-          id: card.id,
-          opening: card.opening === true,
-          idxLabel: card.meta,
-          name: card.title,
-          description: card.description || card.sub || '',
-          cover: card.cover || '',
-          mileage: card.mileage || '',
-          timeText: card.timeText || '',
-          blocks: card.blocks || null,
-          audioUrl: card.audioUrl || '',
-          atmospherePreset: normalizeAtmosphere(this._themePalette(card.atmospherePreset)),
-          atmosphereClass: atmosphereClass(this._themePalette(card.atmospherePreset)) + this._chapterTime((this.data.chapterCards || []).indexOf(card)),
-        };
-      }
+      if (card) activeChapter = this._chapterFromCard(card);
     }
     const fmCenter = (target && target.lat) ? { lat: target.lat, lng: target.lng }
       : (fmPlayer || { lat: first.lat || 31.2304, lng: first.lng || 121.4737 });
@@ -4628,19 +4614,29 @@ Page({
     const storyDistText = nextNode ? this._distText(nextNode) : '';
     // 伏笔:服务端只下发已得到的念头,这里原样带到菜单上(见右上角「伏笔」那一行)
     const storyThoughts = (this._routeState && this._routeState.thoughts) || [];
-    const switching = String(activeChapter.id) !== String(this.data.chapter.id);
-    let chapterChanged = this.data.chapterFull && switching;
-    /* P-29:本章最后一站刚完成、本章还有收尾文字没读 ⇒ 先停在本章把收尾铺出来,
-       点本章末尾的「继续探索」再换到下一章(见 continueChapterStory)。站点卡开着时故事流是收起的,
-       所以不看 chapterFull 也要停;故事流开着时只在第一次停下时重铺一次。读过的收尾记在本局存档里,重进不重放。 */
-    const trailRead = Object.assign({}, this.data.isPreview ? {} : storyResume.read(this._runSessionScope()).trails, this._chapterTrailRead);
-    if (switching && !this.data.isPreview && chapterTrail.holdForTrail(this.data.chapter, nodes, trailRead)) {
-      this._chapterTrailNext = activeChapter;
-      activeChapter = this.data.chapter;
-      chapterChanged = this.data.chapterFull && this._chapterTrailHeldId !== String(activeChapter.id);
-      if (this.data.chapterFull) this._chapterTrailHeldId = String(activeChapter.id);
-    } else if (!switching) {
-      this._chapterTrailNext = null;
+    /* P-29:上一次停在的那一章(不是 data.chapter —— 重拉节点会把它重置成第一章)刚走完、还有收尾没读 ⇒
+       先停在那一章把收尾铺出来,点那一章末尾的「继续探索」再换到下一章(见 continueChapterStory)。
+       服务端只把块流下发到第一个未完成节点:章节卡是在最后一站完成前拉的,收尾还没到手(unknown),
+       就先安静地停着,等完成后那次重拉带来完整块流再判。读过的收尾记在本局存档里,重进不重放。 */
+    const trailCards = this.data.chapterCards || [];
+    if (trailCards !== this._trailCardsRef) {
+      this._trailCardsRef = trailCards;
+      this._trailDoneAtLoad = nodes.filter((n) => n && n.done).map((n) => String(n.nodeId));
+    }
+    let trailHold = 'none';
+    const trailPrevId = this._lastActiveChapterId;
+    if (mode === 1 && !this.data.isPreview && trailPrevId != null && String(trailPrevId) !== String(activeChapter.id)) {
+      const prevCard = trailCards.find((c) => c && c.id != null && String(c.id) === String(trailPrevId));
+      const trailRead = Object.assign({}, storyResume.read(this._runSessionScope()).trails, this._chapterTrailRead);
+      trailHold = chapterTrail.trailState(prevCard, nodes, trailRead, this._trailDoneAtLoad);
+      if (trailHold !== 'none') { this._chapterTrailNext = activeChapter; activeChapter = this._chapterFromCard(prevCard); }
+    }
+    if (trailHold === 'none') this._chapterTrailNext = null;
+    this._lastActiveChapterId = activeChapter.id;
+    let chapterChanged = this.data.chapterFull && String(activeChapter.id) !== String(this.data.chapter.id);
+    if (trailHold === 'hold' && this.data.chapterFull && this._chapterTrailShownId !== String(activeChapter.id)) {
+      chapterChanged = true;   // 收尾第一次到手:重铺一次本章
+      this._chapterTrailShownId = String(activeChapter.id);
     }
     const merchantCount = new Set(visibleNodes.filter((node) => Number(node.merchantId) > 0)
       .map((node) => String(node.merchantId))).size;
@@ -4666,6 +4662,23 @@ Page({
     this.buildJournal();
   },
 
+  /** 章节卡 → 本页 chapter 对象(rebuild 换章与 P-29 停在上一章共用) */
+  _chapterFromCard(card) {
+    return {
+      id: card.id,
+      opening: card.opening === true,
+      idxLabel: card.meta,
+      name: card.title,
+      description: card.description || card.sub || '',
+      cover: card.cover || '',
+      mileage: card.mileage || '',
+      timeText: card.timeText || '',
+      blocks: card.blocks || null,
+      audioUrl: card.audioUrl || '',
+      atmospherePreset: normalizeAtmosphere(this._themePalette(card.atmospherePreset)),
+      atmosphereClass: atmosphereClass(this._themePalette(card.atmospherePreset)) + this._chapterTime((this.data.chapterCards || []).indexOf(card)),
+    };
+  },
   _nodeById(id) { return this.data.nodes.find((n) => n.nodeId === id); },
   // 历史回看专用查找:只在手记/剧情全文里用,不并入可玩 nodes(不给任何操作入口)。
   _historyNodeById(id) {
