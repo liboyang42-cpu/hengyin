@@ -44,6 +44,7 @@ function loadPage(mutate) {
     wx: {
       redirectTo: (options) => redirects.push(options),
       navigateBack: (options) => backs.push(options || {}), showToast() {},
+      nextTick: (fn) => fn(),
     },
   }
   vm.runInNewContext(source, sandbox, { filename: JS_PATH })
@@ -308,4 +309,23 @@ test('V5a SC-CL-APPROVE：被驳回的俱乐部不占两家名额，重新提交
   fresh.roleCallbacks[0]({ role: 'club', permission: { canCreateClub: true } })
   fresh.requests[0].success({ code: 200, data: { owned: [{ id: 11, status: 1 }, { id: 13, status: 1 }, { id: 12, status: 2 }] } })
   assert.equal(fresh.page.data.bootstrapState, 'limit', '两家在营时被驳回的那家不能让名额变多')
+})
+
+// C-14(2026-11-02 walk-fix):名称被占用时「重试」只会重发同一名称;入口改为回到名称步,改名后旧错误立即消失。
+test('名称已被使用：入口回到名称步，改名后清掉旧错误', () => {
+  const h = loadPage()
+  Object.assign(h.page.data, {
+    bootstrapState: 'ready', step: 4, canNext: true,
+    clubType: '兴趣社群', activityPrefs: ['轻社交'], name: '城瘾跑团', city: '上海',
+  })
+  h.page.submit()
+  h.requests[0].success({ code: 500, msg: '俱乐部名称已被使用，请换一个' })
+  assert.equal(h.page.data.submitNameTaken, true)
+  assert.match(WXML, /action="\{\{submitNameTaken \? '去改名称' : '重试'\}\}"/)
+  h.page.retrySubmit()
+  assert.equal(h.requests.length, 1, '名称冲突不得原样重发')
+  assert.equal(h.page.data.step, 3)
+  h.page.onInput({ currentTarget: { dataset: { field: 'name' } }, detail: { value: '沪上慢走社' } })
+  assert.equal(h.page.data.submitError, '')
+  assert.equal(h.page.data.submitNameTaken, false)
 })
