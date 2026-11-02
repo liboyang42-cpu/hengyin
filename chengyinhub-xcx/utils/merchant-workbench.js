@@ -249,9 +249,9 @@ function visitTextOf(run, now) {
   const p = chinaParts(run.arrivalStart || run.startTime);
   if (!p) return '';
   const pad = (n) => (n < 10 ? '0' + n : String(n));
-  // M-04:开场当天写「今天 几点 · 谁 · 几人已报名」,不再只给日期。
+  // M-04:开场当天写「今天 几点 · 几人已报名」,不再只给日期(卡上这一格窄,俱乐部名留给他日场次)。
   if (isTodayRun(run, now)) {
-    return '今天 ' + pad(p.hours) + ':' + pad(p.minutes) + ' · ' + run.clubName + ' · ' + Number(run.paidCount) + ' 人已报名';
+    return '今天 ' + pad(p.hours) + ':' + pad(p.minutes) + ' · ' + Number(run.paidCount) + ' 人已报名';
   }
   return run.clubName + ' · ' + p.month + '月' + p.day + '日 周' + WEEKDAY[p.weekday] + ' ' + pad(p.hours) + ':' + pad(p.minutes) + ' 到店';
 }
