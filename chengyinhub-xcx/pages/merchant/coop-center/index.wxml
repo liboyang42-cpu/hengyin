@@ -60,7 +60,7 @@
       <cy-error load-failure class="cy-fade-in" size="lg" wx:elif="{{eventsError && !events.length}}" title="官方活动加载失败" sub="{{eventsError}}" retry="重新加载" bind:retry="loadEvents" />
       <view wx:else class="cc-list">
         <view class="cc-refreshing" wx:if="{{eventsLoading && events.length}}" aria-role="status" aria-live="polite">正在刷新官方活动…</view>
-        <view class="cc-card cc-card--tap {{flyClass}}" style="animation-delay: {{index < 5 ? index * 40 : 200}}ms" wx:for="{{events}}" wx:key="id" data-id="{{item.id}}" bindtap="openEvent"
+        <view class="cc-card cc-card--tap" wx:for="{{events}}" wx:key="id" data-id="{{item.id}}" bindtap="openEvent"
           aria-role="button" aria-label="查看官方活动：{{item.title}}" hover-class="cy-pressed" hover-stay-time="80">
           <text class="cc-eyebrow">{{item.city || '全城'}}</text>
           <text class="cc-card-title">{{item.title}}</text>

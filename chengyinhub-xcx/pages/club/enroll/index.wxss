@@ -9,7 +9,7 @@ cy-empty { display: flex !important; flex: 1 !important; min-height: 0; }
 .ep1 { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 
 /* 导航 */
-.sub { padding: 0 var(--cy-page-x) var(--cy-space-2-5); font-size: var(--cy-font-label); color: var(--cy-text-secondary); }
+.sub { padding: 8rpx var(--cy-page-x) var(--cy-space-2-5); font-size: var(--cy-font-label); color: var(--cy-text-secondary); }
 
 /* 状态 */
 /* CP-05:刷新提示浮在列表上不占位(.cy-refresh-float),页面形状不变 */

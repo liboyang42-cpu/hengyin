@@ -112,8 +112,7 @@
 /* ===== 四个关系入口 ===== */
 .qa {
   display: flex;
-  padding: var(--cy-space-4) var(--cy-page-x) 0;
-  margin-bottom: calc(-1 * var(--cy-space-1)); /* 抵掉 qa-label 行高留白:入口→下一块与卡→分组标题同为 16.6px */
+  padding: var(--cy-space-4) var(--cy-page-x) var(--cy-space-1);
 }
 .qa-btn {
   flex: 1;
@@ -680,7 +679,7 @@
 .more-card { margin-bottom: var(--cy-space-3); }
 
 /* 走查 v2 R04/R16:底部进度(参考 shedsgns 视频:洋红勾、蓝色状态字、子项分支、最后一步蓝锁 + 琥珀标签) */
-.pg { margin: var(--cy-space-2) var(--cy-page-x) var(--cy-space-6); /* 上面已有 .page-pad 8.3px,合计 16.6 与卡间距一致 */ padding: var(--cy-space-4) var(--cy-space-4) var(--cy-space-1); border-radius: var(--cy-radius-xl); background: var(--cy-bg-card); }
+.pg { margin: var(--cy-space-5) var(--cy-page-x) var(--cy-space-6); padding: var(--cy-space-4) var(--cy-space-4) var(--cy-space-1); border-radius: var(--cy-radius-xl); background: var(--cy-bg-card); }
 .pg-h { margin-bottom: var(--cy-space-3); }
 .pg-t { font-size: var(--cy-type-section-title); font-weight: 700; color: var(--cy-text-title); }
 .pg-row { display: flex; gap: var(--cy-space-3); padding-bottom: var(--cy-space-4); }
@@ -924,6 +923,3 @@
 .bx-row-t { font-size: var(--cy-font-body); color: var(--cy-text-title); }
 .bx-row-s { font-size: var(--cy-font-label); color: var(--cy-text-secondary); }
 .bx-quote { margin-top: 24rpx; padding: 28rpx; border-radius: var(--cy-radius-lg); background: var(--cy-bg-card); font-size: var(--cy-font-body); line-height: 1.5; color: var(--cy-text-title); }
-
-/* 客户弹层:胶囊下的联系说明原来贴着胶囊(1.8px) */
-.dfil + .dg-sub { margin-top: var(--cy-space-3); }

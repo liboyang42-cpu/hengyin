@@ -461,13 +461,13 @@ Component({
     streakDays: 0,
     exploreValue: 0,
     cityName: '上海',
-    // 2026-09-18 UI-04:接口回来后缺字段仍落 0(见 loadUserData);2026-11-02 round2:接口回来前是 null,
-    // WXML 经 num.n() 显示「—」,不再在加载前显示假的 0。null 不直出:直出会打印字面「null」
-    // (2026-08-19 A42 实拍)。
-    // 看别人主页同走 loadUserData,回来后与本人同一套兜底。
-    friendNum: null, // 加载前「—」,不显示假的 0(num.wxs)
-    followNum: null,
-    fansNum: null,
+    // 2026-09-18 用户走查 UI-04:数字统计没取到就显示 0,不再显示横杠「—」。
+    // 仍不能是 null —— WXML 文本插值会把 null **原样打印成字面「null」**
+    // (2026-08-19 A42 实拍:好友「—」、关注「null」、粉丝「null」)。0 是唯一既非空
+    // 又不撒谎的初值:接口回来前/看别人主页走别的取数路径时,这三位是「暂无数字」。
+    friendNum: 0,
+    followNum: 0,
+    fansNum: 0,
     profilePoint: null,
     profileMetricState: 'loading',
     profileMetricAuthError: false,
@@ -614,7 +614,7 @@ Component({
       this.setData({ selfReadAccess: access, userInfo: {}, categoryList: [], casePicsList: [], joinInfo: { id: 0 },
         merchantAccess: inactiveAccess(), merchantAccessState: 'idle', merchantTeamEntryValue: '', isMerchantView: false,
         isClubLeader: false, benefits: buildBenefits({}), balanceText: null,
-        friendNum: null, followNum: null, fansNum: null, growthLevel: 1, streakDays: 0, exploreValue: 0, profilePoint: null,
+        friendNum: 0, followNum: 0, fansNum: 0, growthLevel: 1, streakDays: 0, exploreValue: 0, profilePoint: null,
         pointsStat: { weekPoints: 0, rankPercentage: 0 }, rankDisplay: { no: 0, delta: '' },
         identityCard: { shops: 0, themes: 0, routes: 0, km: '0', medals: 0, cities: 1 },
         exploreStat: { shops: 0, weekExp: 0 }, themeProgress: [], medals: [], medalCount: 0,

@@ -4,7 +4,6 @@
   "usingComponents": {
     "cy-btn": "/components/cy/btn/index",
     "cy-icon": "/components/cy/icon/index",
-    "cy-empty": "/components/cy/empty/index",
-    "cy-skeleton": "/components/cy/skeleton/index"
+    "cy-empty": "/components/cy/empty/index"
   }
 }

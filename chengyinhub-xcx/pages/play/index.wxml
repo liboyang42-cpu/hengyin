@@ -1652,7 +1652,7 @@
 
 
 <!-- 升级2:俱乐部局角色卡(首入本场弹一次;v5 语言:scrim + 玻璃卡 + 翻入动画) -->
-<view class="rolemask{{reducedMotion ? ' play--reduced-motion' : ''}}" catchtouchmove="noop" wx:if="{{roleCard.show}}" bindtap="closeRoleCard" aria-role="button" aria-label="关闭身份卡" hover-class="cy-pressed" hover-stay-time="80"></view>
+<view class="rolemask" catchtouchmove="noop" wx:if="{{roleCard.show}}" bindtap="closeRoleCard" aria-role="button" aria-label="关闭身份卡" hover-class="cy-pressed" hover-stay-time="80"></view>
 <!-- v5.1/v5.2 新玩法分发器:kit 由 cy-advanced-game 抛上来的权威会话视图派生
      (见 utils/playkit-view.js)。这些壳是独立 sheet,套不进面板自己那层 sheet,所以渲染在这里。 -->
 <cy-playkit id="playKit" kit="{{playKit.kit}}" show="{{playKit.show}}" bind:kitaction="onPlayKitAction" />
@@ -1666,7 +1666,7 @@
   receipt="{{journeyCheck.receipt}}" r5="{{journeyCheck.r5}}" allowed-actions="{{journeyCheck.allowedActions}}" disabled-reason="{{journeyCheck.disabledReason}}"
   bind:action="onJourneyCheckAction" bind:close="closeJourneyCheck" />
 
-<view class="rolecard{{reducedMotion ? ' play--reduced-motion' : ''}}" wx:if="{{roleCard.show}}">
+<view class="rolecard" wx:if="{{roleCard.show}}">
   <view class="rolecard__tag">今晚的身份</view>
   <view class="rolecard__emb"><cy-icon name="{{roleCard.iconName}}" size="72" /></view>
   <view class="rolecard__name">{{roleCard.name}}</view>
@@ -1686,8 +1686,8 @@
 </view>
 
 <block wx:if="{{gameModule.sheetShow}}">
-<view class="mask {{gmodOut ? 'is-out' : ''}}{{reducedMotion ? ' play--reduced-motion' : ''}}" bindtap="closeGameModule" aria-role="button" aria-label="关闭本局线索" hover-class="cy-pressed" hover-stay-time="80"></view>
-<view class="sheet {{gmodOut ? 'is-out' : ''}}{{reducedMotion ? ' play--reduced-motion' : ''}}" catchtap="noop">
+<view class="mask {{gmodOut ? 'is-out' : ''}}" bindtap="closeGameModule" aria-role="button" aria-label="关闭本局线索" hover-class="cy-pressed" hover-stay-time="80"></view>
+<view class="sheet {{gmodOut ? 'is-out' : ''}}" catchtap="noop">
   <view class="sheet-grab"></view>
   <view class="sheet__x" catchtap="closeGameModule" aria-role="button" aria-label="关闭本局线索" hover-class="cy-pressed" hover-stay-time="80"><view class="sheet__x-i"></view></view>
   <view class="sheet-body">
@@ -1846,8 +1846,8 @@
 
 <!-- 升级3:同行者榜(cy-sheet 玻璃半屏;score=完成关数,同分先完成者靠前) -->
 <block wx:if="{{board.show}}">
-<view class="mask {{boardOut ? 'is-out' : ''}}{{reducedMotion ? ' play--reduced-motion' : ''}}" bindtap="closeBoard" aria-role="button" aria-label="关闭同行者榜" hover-class="cy-pressed" hover-stay-time="80"></view>
-<view class="sheet {{boardOut ? 'is-out' : ''}}{{reducedMotion ? ' play--reduced-motion' : ''}}" catchtap="noop">
+<view class="mask {{boardOut ? 'is-out' : ''}}" bindtap="closeBoard" aria-role="button" aria-label="关闭同行者榜" hover-class="cy-pressed" hover-stay-time="80"></view>
+<view class="sheet {{boardOut ? 'is-out' : ''}}" catchtap="noop">
   <view class="sheet-grab"></view>
   <view class="sheet__x" catchtap="closeBoard" aria-role="button" aria-label="关闭同行者榜" hover-class="cy-pressed" hover-stay-time="80"><view class="sheet__x-i"></view></view>
   <view class="sheet-body">

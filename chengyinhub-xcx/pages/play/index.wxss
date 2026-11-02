@@ -198,7 +198,6 @@ page { background: var(--cy-color-bg-page); }
   /* 88% 在刘海机上顶边会落进胶囊行(12% 高≈101px vs 胶囊底≈103px)——与 .psheet 同法,页面根给实测值,取两者较小 */
   height:min(var(--cy-comp-sheet-full), var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); max-height:min(var(--cy-comp-sheet-full), var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); overflow-y:auto; animation:sheetUp var(--cy-motion-sheet-full-in) var(--cy-ease-standard); }
 /* 2026-10-23 弹层动效:手动关闭先播退场再卸载(index.js 的 _outThen);面板 full 档 280ms,遮罩同档 */
-.mask.cy-pressed{ transform:none; opacity:1; } /* 全屏遮罩按住不缩不减淡(同 topic .bdim);退场 .is-out 写在后面仍生效 */
 .mask.is-out{ animation:none; opacity:0; transition:opacity var(--cy-motion-sheet-full-out) var(--cy-ease-standard); pointer-events:none; }
 .sheet.is-out{ animation:none; transform:translateY(105%); transition:transform var(--cy-motion-sheet-full-out) var(--cy-ease-standard); pointer-events:none; }
 .play--reduced-motion .mask, .play--reduced-motion .sheet{ animation:none; }
@@ -1102,7 +1101,6 @@ page { background: var(--cy-color-bg-page); }
 /* 2026-09-02:原 960/961 —— 夹在 toast(950)与 celebrate(990)之间,等于身份卡会压住 toast、
    又被庆祝层压住,两头都不是有意设计。居中卡 = modal 档;本页其它浮层最高 210,顺序不变。 */
 .rolemask { position: fixed; inset: 0; z-index: var(--cy-z-modal); background: rgba(0,0,0,.55); /* ds-ok 弹窗 scrim */ animation: fade var(--cy-motion-standard) var(--cy-ease-out) both; }
-.rolemask.cy-pressed { transform: none; opacity: 1; } /* 全屏遮罩按住不缩整屏(同 topic .bdim) */
 .rolecard {
   position: fixed; left: 50%; top: 50%; z-index: calc(var(--cy-z-modal) + 1); width: 600rpx;
   transform: translate(-50%, -50%);
