@@ -142,6 +142,27 @@ class ClubSessionServiceImplTest {
         assertEquals("请到集合点500米内签到", policy.validate(activity, 31.2156, 121.4380, new Date()));
     }
 
+    /** C-18:同俱乐部同主题同集合时刻已有未取消的一场,再开直接拒;取消掉的那一场不挡。 */
+    @Test
+    void sameMomentSessionIsRefusedButCancelledOneDoesNotBlock() {
+        service.open(request(), OWNER_ID, "主理人");
+        ArgumentCaptor<CmsActivity> captor = ArgumentCaptor.forClass(CmsActivity.class);
+        verify(activityService).insertCmsActivity(captor.capture());
+        CmsActivity first = captor.getValue();
+        ArgumentCaptor<CmsActivity> probe = ArgumentCaptor.forClass(CmsActivity.class);
+        when(activityService.selectCmsActivityList(probe.capture())).thenReturn(Collections.singletonList(first));
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+                () -> service.open(request(), OWNER_ID, "主理人"));
+        assertEquals("这个时间已有一场，请换个时间或直接修改那一场", error.getMessage());
+        assertEquals(TOPIC_ID, probe.getValue().getTopicId());
+        assertEquals(CLUB_ID, probe.getValue().getClubId());
+        assertEquals(Integer.valueOf(1), probe.getValue().getExcludeCancelled());
+
+        first.setCancelTime(new Date());
+        assertEquals(Long.valueOf(51L), service.open(request(), OWNER_ID, "主理人"));
+    }
+
     /** AUDIT-G1-3:父主题被驳回 / 作者下架 / 待审时不能开场次。 */
     @Test
     void parentTopicNotLive_refusesOpening() {

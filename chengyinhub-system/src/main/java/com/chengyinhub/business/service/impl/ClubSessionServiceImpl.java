@@ -122,6 +122,9 @@ public class ClubSessionServiceImpl implements IClubSessionService {
             throw new IllegalArgumentException("集合时间必须晚于当前时间");
         }
         requireOwnerForUpdate(request.getClubId(), memberId);
+        // C-18:同一俱乐部、同一主题、同一集合时刻已有一场(未取消)时不再静默再建一场。
+        // 放在俱乐部行锁之后,两次并发提交也会串行看到对方;系列按 requestId 的回执重放在调用方更早返回,不经过这里。
+        requireNoSameMomentSession(request.getClubId(), request.getTopicId(), assemblyMoment);
         // 9-16 拍板第 2 条:欠款逾期未补足 ⇒ 不能开新场次(场次票款结算给开场主理人)。
         settlementDebtLedger.requireNoOverdueDebt(memberId);
         CmsTopic topic = topicService.selectCmsTopicById(request.getTopicId());
@@ -201,6 +204,22 @@ public class ClubSessionServiceImpl implements IClubSessionService {
             }
         }
         return activity.getId();
+    }
+
+    private void requireNoSameMomentSession(Long clubId, Long topicId, Date assemblyMoment) {
+        CmsActivity probe = new CmsActivity();
+        probe.setTopicId(topicId);
+        probe.setClubId(clubId);
+        probe.setDelFlag(0);
+        probe.setExcludeCancelled(1);
+        List<CmsActivity> existing = activityService.selectCmsActivityList(probe);
+        if (existing == null) return;
+        for (CmsActivity activity : existing) {
+            if (activity != null && activity.getCancelTime() == null && activity.getStartDate() != null
+                    && activity.getStartDate().getTime() == assemblyMoment.getTime()) {
+                throw new IllegalArgumentException("这个时间已有一场，请换个时间或直接修改那一场");
+            }
+        }
     }
 
     /** 取主题票(owner_type=1)里第一张带完整集合点坐标的票,写到场次 latitude/longitude。 */
