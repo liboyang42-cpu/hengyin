@@ -2476,7 +2476,8 @@ Page({
       || sourceRows.some(function (r) { return !!r.entitlementStatus; });
     const rows = sourceRows.map(function (r) {
       const state = shopDay
-        ? (r.serviceStartedAt ? 'redeemed' : 'arrived')
+        // M-12:已付款、本站权益未用、还没到店的玩家也在名单里(NOT_ARRIVED),归「还没到店」。
+        ? (r.serviceStartedAt ? 'redeemed' : (r.entitlementStatus === 'NOT_ARRIVED' ? 'pending' : 'arrived'))
         : (r.state || (r.arrived ? 'arrived' : 'pending'));
       return Object.assign({}, r, {
         state: state,
@@ -2510,7 +2511,7 @@ Page({
       { key: 'done', title: '已核销', has: function (s) { return s === 'arrived' || s === 'redeemed'; } },
       { key: 'refunded', title: '已退款', has: function (s) { return s === 'refunded'; } },
     ];
-    const groups = filter === 'all' && !shopDay
+    const groups = filter === 'all'
       ? SECTIONS.map(function (sec) {
         return { key: sec.key, title: sec.title, rows: kept.filter(function (r) { return sec.has(r.state); }) };
       }).filter(function (g) { return g.rows.length; })

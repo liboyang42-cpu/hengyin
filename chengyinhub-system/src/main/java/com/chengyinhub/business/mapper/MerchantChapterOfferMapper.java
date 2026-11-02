@@ -75,6 +75,9 @@ public interface MerchantChapterOfferMapper {
     /** 某主题当前在供给的 offer(只返 status=1) */
     public List<MerchantChapterOffer> selectByTopic(@Param("topicId") Long topicId);
 
+    /** M-04:本商家(merchant_id = 店主 memberId)有生效供给的主题,供工作台「即将到店」读取。 */
+    public List<Long> selectLiveTopicIdsByMerchant(@Param("merchantId") Long merchantId);
+
     /**
      * 核销时原子扣减配额,返回影响行数,0 = 配额已用尽或 offer 已失效。
      * ⚠️ **防超发的唯一防线**:必须是「够扣才扣」的条件 update,不能先 select 判断再 update ——

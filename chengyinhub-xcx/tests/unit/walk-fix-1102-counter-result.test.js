@@ -96,3 +96,19 @@ test('M-23 继续扫码先收起面板再打开扫码；M-25 非城瘾码进同�
   const src = read('pages/merchant/index/index.js');
   assert.match(src, /that\.showRejectedScan\(scan\.message === '二维码格式错误' \? '这不是城瘾的核销码' : scan\.message\)/);
 });
+
+test('M-04 承接卡在开场当天写「今天 几点 · 俱乐部 · 几人已报名」并收起「今日无待办」', () => {
+  const { attachVisitTexts } = require('../../utils/merchant-workbench.js');
+  const now = Date.parse('2026-11-02T05:00:00.000Z'); // 上海 13:00
+  const out = attachVisitTexts([
+    { role: 'join', ownerId: 990014, todoText: '今日无待办' },
+    { role: 'join', ownerId: 5, todoText: '今日无待办' },
+  ], [
+    { topicId: 990014, clubName: '执行俱乐部', paidCount: 4, startTime: '2026-11-02 13:23:00' },
+    { topicId: 5, clubName: '夜跑团', paidCount: 2, startTime: '2026-11-12 10:00:00' },
+  ], now);
+  assert.equal(out[0].visitText, '今天 13:23 · 执行俱乐部 · 4 人已报名');
+  assert.equal(out[0].todoText, '');
+  assert.equal(out[1].visitText, '夜跑团 · 11月12日 周四 10:00 到店');
+  assert.equal(out[1].todoText, '今日无待办');
+});

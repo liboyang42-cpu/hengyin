@@ -149,6 +149,13 @@
         select count(1) from merchant_chapter_offer where chapter_id = #{chapterId}
     </select>
 
+    <!-- M-04:工作台即将到店。复用 liveOffer 片段,与核销/供给池同一口径。 -->
+    <select id="selectLiveTopicIdsByMerchant" resultType="java.lang.Long">
+        select distinct topic_id from merchant_chapter_offer
+        where merchant_id = #{merchantId} and topic_id is not null and <include refid="liveOffer"/>
+        order by topic_id asc
+    </select>
+
     <select id="selectByTopic" parameterType="Long" resultMap="MerchantChapterOfferResult">
         <include refid="selectMerchantChapterOfferVo"/>
         where topic_id = #{topicId} and <include refid="liveOffer"/>
