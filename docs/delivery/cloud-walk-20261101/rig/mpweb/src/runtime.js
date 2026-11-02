@@ -192,7 +192,7 @@ function infoOf(file) {
     if (n.g === 'import') { var sub = infoOf(n.src); for (var t in sub.tpl) info.tpl[t] = sub.tpl[t]; }
   });
   // nested wxs (inside blocks) too
-  (function walk(list) { list.forEach(function (n) { if (n.g === 'wxs' && !info.wxs[n.m]) info.wxs[n.m] = n.src ? reqWxs(n.src) : reqWxs(n.inlineId); if (n.c && n.g !== 'template') walk(n.c); }); })(nodes);
+  (function walk(list) { list.forEach(function (n) { if (n.g === 'wxs' && !info.wxs[n.m]) info.wxs[n.m] = n.src ? reqWxs(n.src) : reqWxs(n.inlineId); if (n.g === 'template' && n.name && !info.tpl[n.name]) info.tpl[n.name] = { nodes: n.c, file: file }; /* CLUB-WALK HARNESS PATCH: nested <template name> */ if (n.c && n.g !== 'template') walk(n.c); }); })(nodes);
   return info;
 }
 function rootScope(data, info, extraWxs) {

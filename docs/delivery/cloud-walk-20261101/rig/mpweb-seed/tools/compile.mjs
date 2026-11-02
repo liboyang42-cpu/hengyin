@@ -130,7 +130,10 @@ function compileNode(el, file, ctx) {
   }
   if (el.tag === 'include' || el.tag === 'import') { node.src = resolve(file, a.src, '.wxml'); return node; }
   if (el.tag === 'template' && a.name) { node.name = a.name; node.c = el.c.map((c) => compileNode(c, file)).filter(Boolean); return node; }
-  if (el.tag === 'template' && a.is != null) { node.is = compileValue(a.is); if (a.data != null) node.data = compileValue(a.data, true); return node; }
+  if (el.tag === 'template' && a.is != null) { node.is = compileValue(a.is); if (a.data != null) node.data = compileValue(a.data, true);
+    /* CLUB-WALK HARNESS PATCH: keep wx:for / wx:if on <template is> */
+    for (const [k, v] of el.attrs) { if (k === 'wx:if') node.if = compileValue(v); else if (k === 'wx:elif') node.elif = compileValue(v); else if (k === 'wx:else') node.else = 1; else if (k === 'wx:for' || k === 'wx:for-items') node.for = compileValue(v); else if (k === 'wx:for-item') node.fi = v; else if (k === 'wx:for-index') node.fx = v; else if (k === 'wx:key') node.key = v; }
+    return node; }
   const props = {};
   for (const [k, v] of el.attrs) {
     if (k === 'wx:if') node.if = compileValue(v);
