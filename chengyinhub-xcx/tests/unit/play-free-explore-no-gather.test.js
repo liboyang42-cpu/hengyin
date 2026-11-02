@@ -18,3 +18,21 @@ test('集合屏在 freeEntry 时不显示', () => {
 test('team-progress 的 freeEntry 只认服务端的 true', () => {
   assert.match(js, /freeEntry: d\.freeEntry === true/)
 })
+
+test('P-13:自由探索不显示「带领中 · 队长带队中」条,也不为它让出顶部空位', () => {
+  assert.match(wxml, /<view class="leadbar glass" wx:if="\{\{hud\.topBanner\([^)]*\) === 'leadbar' && !lead\.freeEntry\}\}">/)
+  assert.match(wxml, /lead\.exists && !lead\.freeEntry \? 64 : 0/)
+})
+
+test('P-28:游玩工具在页面层,自由探索卡包页有入口打开同一份菜单', () => {
+  const chfullStart = wxml.indexOf('<view class="chfull')
+  const layer = wxml.indexOf('<view class="tools-layer" wx:if="{{sessionToolsOpen}}">')
+  assert.ok(layer > chfullStart, '缺工具层')
+  // 工具层不能再嵌在故事流 chfull 里(自由探索不渲染 chfull)
+  const before = wxml.slice(chfullStart, layer)
+  const opens = (before.match(/<view\b(?![^>]*\/>)/g) || []).length
+  const closes = (before.match(/<\/view>/g) || []).length
+  assert.equal(opens, closes, '工具层仍在 chfull 内')
+  assert.match(wxml, /class="fx-lhd__more"[^>]*bindtap="toggleSessionTools"/)
+  assert.match(wxml, /aria-label="入场码"/)
+})
