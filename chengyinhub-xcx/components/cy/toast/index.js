@@ -14,6 +14,10 @@ const UNDO_MS = 4000;
 
 Component({
   behaviors: [reducedMotionBehavior],
+  properties: {
+    // C-03(2026-11-02):页面底部有整宽主键时(play 开场「开始游戏」、集合屏「我到了」)抬到主键之上,不压按钮。
+    lift: { type: Boolean, value: false },
+  },
   data: {
     visible: false,
     entered: false,   // 挂上后下一拍置 true,让 transition 有起点

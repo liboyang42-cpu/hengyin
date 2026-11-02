@@ -1,5 +1,5 @@
 <view class="play {{lookClass}} {{reducedMotion ? 'play--reduced-motion' : ''}} {{story.show ? 'play--scaled' : ''}}" style="--cy-psheet-max-h: calc(100vh - {{chrome.sheetTop}}px)">
-  <cy-toast id="cy-toast" />
+  <cy-toast id="cy-toast" lift />
   <cy-look-transition id="lookTx" kind="{{lookTransition}}" reduced-motion="{{reducedMotion}}" />
   <include src="theme-backpack.wxml" />
   <include src="theme-player-ops.wxml" />

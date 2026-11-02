@@ -288,3 +288,20 @@ test('导演接管的场次不在播放页显示「解锁下一章节」', () =>
   require('node:assert/strict').ok(row, '播放页缺放行入口')
   require('node:assert/strict').match(row[0], /!lead\.directorRun/)
 })
+
+// C-03 第三轮(2026-11-02):集合签到的结果提示「已到集合点」原来落在 cy-toast 默认位置(底部 160rpx),
+// 正好压在开场页整宽主键「开始游戏」上。play 页的 toast 声明 lift,抬到底部主键之上;其它页不变。
+test('C-03: play 页轻提示抬到底部主键之上，不压「开始游戏」', () => {
+  const fs = require('node:fs')
+  const path = require('node:path')
+  const root = path.join(__dirname, '..', '..')
+  const read = (p) => fs.readFileSync(path.join(root, p), 'utf8')
+  assert.match(read('pages/play/index.wxml'), /<cy-toast id="cy-toast" lift \/>/)
+  assert.match(read('components/cy/toast/index.wxml'), /\{\{lift \? 'ct--lift' : ''\}\}/)
+  const css = read('components/cy/toast/index.wxss')
+  const lift = Number((css.match(/\.ct\.ct--lift \{ bottom: calc\(env\(safe-area-inset-bottom\) \+ (\d+)rpx\); \}/) || [])[1])
+  // 开场主键:底部留白 48 + 提示行约 53 + 按钮 104 ≈ 205rpx;rig 实测按钮顶距底 284rpx
+  assert.ok(lift >= 300, 'lifted toast clears the 104rpx start button and its tip line')
+  const play = read('pages/play/index.wxml')
+  assert.equal((play.match(/<cy-toast /g) || []).length, 1)
+})
