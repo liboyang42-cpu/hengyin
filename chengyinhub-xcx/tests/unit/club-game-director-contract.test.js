@@ -1060,8 +1060,7 @@ test('手动解锁必须填原因，且只提交章节开放动作', async () =>
 
   harness.page.openManualUnlock()
   assert.deepEqual(JSON.parse(JSON.stringify(harness.page.data.chapterOptions.map((item) => item.chapterId))), [41, 42])
-  harness.page.confirmManualUnlock()
-  assert.equal(writes.length, 0, '没有原因不得解锁')
+  // C-04(2026-11-02 用户):放行原因选填。目标章节仍必须来自服务端 chapterOptions。
   harness.page.onUnlockReasonInput({ detail: { value: '伪造章节' } })
   harness.page.setData({ unlockChapterIndex: 99 })
   harness.page.confirmManualUnlock()
@@ -1718,11 +1717,15 @@ test('路线局放行按钮点名下一章与在等队伍数，提交的仍是�
   assert.equal(harness.page.data.unlockButtonText, '放行「第二章 外滩钟声」 · 2 队在等')
   assert.equal(harness.page.data.chapterOptions[0].subtitle, '2 队已完成本章，在等放行')
   harness.page.openManualUnlock()
-  harness.page.onUnlockReasonInput({ detail: { value: '全队到齐' } })
+  // C-04:不填原因也能放行,payload 不带 reason
   harness.page.confirmManualUnlock()
   await settle()
   assert.equal(writes[0].action, 'UNLOCK_CHAPTER')
   assert.equal(writes[0].payload.chapterId, 49)
+  assert.equal('reason' in writes[0].payload, false)
+  const hostWxml = read(DIRECTOR_HOST_WXML)
+  assert.match(hostWxml, /confirm-disabled="\{\{writeLocked\}\}"/)
+  assert.match(hostWxml, /现场原因（选填）/)
   const host = read(DIRECTOR_HOST_WXML)
   assert.match(host, /\{\{unlockButtonText\}\}/)
 })

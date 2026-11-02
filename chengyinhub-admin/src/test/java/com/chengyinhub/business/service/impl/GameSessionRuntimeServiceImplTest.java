@@ -3684,7 +3684,7 @@ class GameSessionRuntimeServiceImplTest {
         stubReceiptPersistence("route-unlock-49");
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("chapterId", 49L);
-        payload.put("reason", "全队到齐");
+        // C-04(2026-11-02 用户):放行原因选填,不带 reason 也能放行
         service.command(GameActorContext.club(DIRECTOR), command("route-unlock-49", 4, "UNLOCK_CHAPTER", payload));
         assertEquals(Long.valueOf(49L), session.getCurrentChapterId());
         assertNull(service.routeChapterGateError(ACTIVITY, FALLBACK_NODE));

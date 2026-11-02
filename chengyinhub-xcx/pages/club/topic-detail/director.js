@@ -1296,12 +1296,15 @@ const DIRECTOR_METHODS = {
     if (this.data.writeLocked) return
     const reason = String(this.data.unlockReason || '').trim()
     const selected = this.data.chapterOptions[this.data.unlockChapterIndex]
-    if (!this.data.canUnlockChapter || !selected || !reason) {
-      toast('请填写手动解锁原因')
+    // C-04(2026-11-02 用户):放行原因选填,填了才带上
+    if (!this.data.canUnlockChapter || !selected) {
+      toast('请选择要放行的章节')
       return
     }
     this.setData({ unlockSheetVisible: false })
-    this.executeAction('UNLOCK_CHAPTER', { chapterId: selected.chapterId, reason: reason })
+    const payload = { chapterId: selected.chapterId }
+    if (reason) payload.reason = reason
+    this.executeAction('UNLOCK_CHAPTER', payload)
   },
 
   onToggleLeaderboard() {

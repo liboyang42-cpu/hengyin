@@ -346,15 +346,14 @@
     <cy-club-director-chapter-sheet
       show="{{unlockSheetVisible}}" title="{{unlockButtonText}}"
       chapters="{{chapterOptions}}" confirm-text="放行"
-      confirm-disabled="{{writeLocked || !unlockReason}}" caption="{{writeMessage}}"
+      confirm-disabled="{{writeLocked}}" caption="{{writeMessage}}"
       bind:close="closeManualUnlock" bind:confirm="confirmManualUnlock"
       bind:selectchapter="onUnlockChapterChange">
-      <!-- 原因必填:confirm-disabled 已经把「没填原因」挡住了,但挡住不等于填得进去 ——
-           组件本身没有输入位,靠它的 slot 补。少了这个框,手动解锁永远点不动。 -->
+      <!-- C-04(2026-11-02 用户):放行原因选填。组件本身没有输入位,靠 slot 补;填了进审计记录。 -->
       <view class="ctd-director-field">
-        <text class="ctd-director-field__label">现场原因<text class="ctd-required" aria-hidden="true">*</text></text>
+        <text class="ctd-director-field__label">现场原因（选填）</text>
         <textarea class="ctd-director-field__input" value="{{unlockReason}}" bindinput="onUnlockReasonInput"
-          placeholder="写明放行原因，会进审计记录" maxlength="200" auto-height />
+          placeholder="写明放行原因" maxlength="200" auto-height />
       </view>
     </cy-club-director-chapter-sheet>
 

@@ -3143,8 +3143,9 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
     private ActionResult unlockChapter(GameActorContext actor, GameSession session, GameSessionCommand command) {
         requireSessionStatus(session, GameSession.RUNNING);
         Long chapterId = positiveLong(command.getPayload().get("chapterId"));
-        String reason = text(command.getPayload().get("reason"), 200);
-        if (chapterId == null || StringUtils.isBlank(reason)) throw error("GAME_BAD_REQUEST", "请选择章节并填写解锁原因");
+        // C-04(2026-11-02 用户):放行原因改为选填;填了照旧进审计记录,不填记空串。
+        String reason = StringUtils.defaultString(text(command.getPayload().get("reason"), 200)).trim();
+        if (chapterId == null) throw error("GAME_BAD_REQUEST", "请选择要放行的章节");
         if (isRouteSession(session)) {
             CmsTopicChapter next = routeNextChapter(session, routeChapters(session));
             if (next == null) throw error("GAME_STATE_CONFLICT", "已是最后一章");
