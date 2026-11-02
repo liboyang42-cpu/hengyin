@@ -3,7 +3,7 @@ from common import *
 act = int(sys.argv[1]); people = sys.argv[2:]
 NAMES = {"walk-player-1": ("周一鸣", "13700000001"), "walk-player-2": ("吴佳怡", "13700000002"), "walk-player-3": ("郑浩然", "13700000003"),
          "walk-player-4": ("王小雨", "13700000004"), "walk-player-5": ("冯思远", "13700000005"), "walk-player-6": ("陈晓婷", "13700000006"),
-         "walk-player-7": ("褚子涵", "13700000007"), "walk-player-8": ("卫一凡", "13700000008"), "walk-player-9": ("蒋雨桐", "13700000009"), "walk-player-10": ("沈嘉木", "13700000010"), "walk-player-11": ("韩若溪", "13700000011"), "walk-player-12": ("杨知远", "13700000012")}
+         "walk-player-7": ("褚子涵", "13700000007"), "walk-player-8": ("卫一凡", "13700000008"), "walk-player-9": ("蒋雨桐", "13700000009"), "walk-player-10": ("沈嘉木", "13700000010"), "walk-player-11": ("韩若溪", "13700000011"), "walk-player-12": ("杨知远", "")}
 for p in people:
     tok, me = login(p)
     cl.http("POST", "/api/club/join", token=tok, json_body={"id": 990004, "joinMessage": ""})
