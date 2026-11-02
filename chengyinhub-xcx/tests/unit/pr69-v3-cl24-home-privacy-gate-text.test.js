@@ -39,8 +39,11 @@ function mountApp(currentPage) {
   return { app, needPrivacy: () => needPrivacy, navigations }
 }
 
+// P-38(2026-11-02 业主):首页这一个弹窗同时征得首页城市定位同意 —— 只在宿主声明 location 时多出一句定位用途,
+// 其余页面仍只有那一句。
+const LOCATION_CLAUSE = '<text wx:if="{{location}}">同意后将使用你的精确位置确定首页城市，不用于附近排序。</text>'
 function gateBodies() {
-  return Array.from(read('components/cy/privacy-gate/index.wxml').matchAll(/<text class="pg__(?:lead|body)"[^>]*>([^<]*)<\/text>/g)).map(m => m[1])
+  return Array.from(read('components/cy/privacy-gate/index.wxml').replace(LOCATION_CLAUSE, '').matchAll(/<text class="pg__(?:lead|body)"[^>]*>([^<]*)<\/text>/g)).map(m => m[1])
 }
 
 test('首页需要隐私授权时由页内 cy-privacy-gate 弹出，不跳路由页', () => {
@@ -61,6 +64,8 @@ test('首页需要隐私授权时由页内 cy-privacy-gate 弹出，不跳路由
 test('首页隐私弹窗正文只有一句用途说明，与隐私页待决策态一致', () => {
   const bodies = gateBodies()
   assert.deepEqual(bodies, [SENTENCE], '弹窗只能渲染一段用途正文')
+  assert.ok(read('components/cy/privacy-gate/index.wxml').includes('<text class="pg__lead">' + SENTENCE + LOCATION_CLAUSE + '</text>'),
+    '定位用途只作为 location 宿主的附加一句')
   assert.equal((bodies[0].match(/[。！？]/g) || []).length, 1)
   assert.doesNotMatch(bodies[0], /DeepSeek|CosyVoice|锁屏|附近用户/, '长篇告知留在隐私指引里，不回到首屏弹窗')
   const privacy = Array.from(read('pages/privacy/index.wxml').matchAll(/<text class="privacy-(?:lead|body)"[^>]*>([^<]*)<\/text>/g)).map(m => m[1])

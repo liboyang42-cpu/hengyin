@@ -281,4 +281,4 @@
 </view>
 
 <!-- 隐私授权闸(真弹窗):页内组件,不压页面栈。app.js 在需要授权时调本页 showPrivacyGate()。 -->
-<cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />
+<cy-privacy-gate show="{{privacyGateShow}}" location bind:settled="onPrivacyGateSettled" />

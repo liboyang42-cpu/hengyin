@@ -15,6 +15,8 @@ Component({
   properties: {
     // 宿主页把自己的显隐位传进来;组件自己不改它(所有权留在宿主,同 cy-privacy-sheet 的做法)
     show: { type: Boolean, value: false },
+    // P-38:宿主页(首页)同意后紧接着要定位时,这一个弹窗同时征得首页城市定位同意,不再叠第二个弹窗。
+    location: { type: Boolean, value: false },
   },
   data: {
     submitting: false,
@@ -37,7 +39,7 @@ Component({
       app.agreeUsageConsent(event, this.data.serviceAgreed)
         .then(() => {
           this.setData({ submitting: false });
-          this.triggerEvent('settled', { event: 'agree' });
+          this.triggerEvent('settled', this.agreeDetail({ event: 'agree' }));
         })
         .catch(() => {
           this.setData({ submitting: false });
@@ -45,11 +47,17 @@ Component({
           // 不把用户卡在不可关闭的弹窗里;本机选择也没留下(如条款已升版)才停在弹窗重试。
           if (app.getUsageConsent && app.getUsageConsent().granted()) {
             toast('已同意，联网后会自动补记同意记录');
-            this.triggerEvent('settled', { event: 'agree', recordPending: true });
+            this.triggerEvent('settled', this.agreeDetail({ event: 'agree', recordPending: true }));
             return;
           }
           toast('同意记录失败，请检查网络后重试');
         });
+    },
+
+    // P-38:只有声明了 location 的宿主(首页)才带回 location:true,其他页的结算事件保持原样
+    agreeDetail(detail) {
+      if (this.data.location) detail.location = true;
+      return detail;
     },
 
     disagreePrivacy() {

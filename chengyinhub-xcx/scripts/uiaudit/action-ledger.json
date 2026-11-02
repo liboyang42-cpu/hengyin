@@ -310195,7 +310195,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/privacy-gate/index.js:25"
+        "staticSource": "components/cy/privacy-gate/index.js:27"
       }
     },
     {
@@ -310607,7 +310607,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/privacy-gate/index.js:28"
+        "staticSource": "components/cy/privacy-gate/index.js:30"
       }
     },
     {
@@ -311006,7 +311006,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/privacy-gate/index.js:26"
+        "staticSource": "components/cy/privacy-gate/index.js:28"
       }
     },
     {
@@ -311435,7 +311435,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/privacy-gate/index.js:55"
+        "staticSource": "components/cy/privacy-gate/index.js:63"
       }
     },
     {
@@ -311876,7 +311876,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/privacy-gate/index.js:34"
+        "staticSource": "components/cy/privacy-gate/index.js:36"
       }
     },
     {
@@ -312275,7 +312275,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/privacy-gate/index.js:27"
+        "staticSource": "components/cy/privacy-gate/index.js:29"
       }
     },
     {
@@ -1001674,7 +1001674,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:1599"
+        "staticSource": "pages/index/index.js:1606"
       }
     },
     {
@@ -1001741,7 +1001741,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:1592"
+        "staticSource": "pages/index/index.js:1599"
       }
     },
     {

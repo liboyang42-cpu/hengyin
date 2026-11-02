@@ -286,7 +286,7 @@ Page({
     }
     this.setData({ _needsRedirect: false, isAppReady: true });
     this.loadPageData();
-    this.getHomeCityLocation();
+    this.getHomeCityLocation({ gateCoversLocation: event.detail.location === true }); // P-38:隐私闸已一并征得首页城市定位同意,直接进定位,不再弹「首页城市定位」
   },
 
   /**
@@ -1479,6 +1479,7 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
     if (this._unloaded || this._homeLocationHidden) return;
     const scope = captureLocationRequest(this);
     scope.userInitiated = !!(opts && opts.userInitiated);
+    scope.gateCoversLocation = !!(opts && opts.gateCoversLocation);
     if (!(Number(scope.memberId) > 0) || !scope.authorization || scope.authorization === 'dev-token') {
       if (!this.data.city) this.setData({ city: homeCity.readLastCity() || homeCity.DEFAULT_CITY, cityManual: false });
       return;
@@ -1513,6 +1514,7 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
   requestHomeCityConsent(scope) {
     const that = this;
     if (!isCurrentLocationRequest(this, scope) || this.data.privacyGateShow || (app.getUsageConsent && !app.getUsageConsent().granted())) return; // P-38:隐私闸未关不叠定位弹窗,同意后 onPrivacyGateSettled 会重新发起
+    if (scope.gateCoversLocation) { this.recordHomeCityConsent(scope); return; } // P-38:隐私闸已一并同意定位
     modal.show({
       title: '首页城市定位',
       content: '同意使用精确位置并发送给城瘾以确定首页城市，后续自动定位且不用于附近排序吗？',
@@ -1520,22 +1522,27 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
       cancelText: '暂不定位',
       success(result) {
         if (!result.confirm || !isCurrentLocationRequest(that, scope)) return;
-        Promise.resolve().then(() => {
-          if (!isCurrentLocationRequest(that, scope)) return null;
-          return app.recordConsent({ docType: 'privacy_policy', scene: 'home_city_location', eventType: 'AGREE' });
-        }).then(saved => {
-          if (!isCurrentLocationRequest(that, scope)) return;
-          const row = saved && saved.response && saved.response.data;
-          if (!saved || !saved.response || Number(saved.response.code) !== 200
-              || saved.requestId !== (row && row.requestId) || !isHomeCityAgreement(row)) {
-            throw new Error('城市定位同意记录未完成');
-          }
-          scope.consentRequestId = row.requestId;
-          that.executeHomeCityLocation(scope);
-        }).catch(() => {
-          if (isCurrentLocationRequest(that, scope)) cyToast('定位同意记录未保存，请重试');
-        });
+        that.recordHomeCityConsent(scope);
       }
+    });
+  },
+
+  recordHomeCityConsent(scope) {
+    const that = this;
+    Promise.resolve().then(() => {
+      if (!isCurrentLocationRequest(that, scope)) return null;
+      return app.recordConsent({ docType: 'privacy_policy', scene: 'home_city_location', eventType: 'AGREE' });
+    }).then(saved => {
+      if (!isCurrentLocationRequest(that, scope)) return;
+      const row = saved && saved.response && saved.response.data;
+      if (!saved || !saved.response || Number(saved.response.code) !== 200
+          || saved.requestId !== (row && row.requestId) || !isHomeCityAgreement(row)) {
+        throw new Error('城市定位同意记录未完成');
+      }
+      scope.consentRequestId = row.requestId;
+      that.executeHomeCityLocation(scope);
+    }).catch(() => {
+      if (isCurrentLocationRequest(that, scope)) cyToast('定位同意记录未保存，请重试');
     });
   },
 
