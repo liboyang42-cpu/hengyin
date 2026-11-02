@@ -288,6 +288,21 @@
     <view class="ctd-director-note" wx:if="{{sessionHint}}">{{sessionHint}}</view>
     <view class="ctd-director-note" wx:if="{{paymentNotice}}">{{paymentNotice}}</view>
 
+    <!-- C-04(2026-11-02):这一行原来在 footspacer 之后,被固定底栏盖住,放行/队伍进度点不到;挪到底栏留白之前。
+         E-04(2026-09-16 P1):导演台四个弹层(D4 手动解锁 / D5 队伍进度 / D6 角色分配 / D8 现场事件)
+         原来在页面上**没有任何入口**(方法只有单测直调,全仓 wxml 零绑定)——组件都渲染着,功能静默不可用。
+         这里按投影的能力位给最小入口:有权限/有数据才出,点了才开。 -->
+    <view class="ctd-tools" wx:if="{{directorActive && loadState === 'ready' && (canUnlockChapter || directorTeamRows.length || (canAssignRoles && roleMemberRows.length) || incidentRows.length)}}">
+      <view class="ctd-director-export" wx:if="{{canUnlockChapter}}" bindtap="openManualUnlock"
+            aria-role="button" aria-label="{{unlockButtonText}}" hover-class="cy-pressed" hover-stay-time="80">{{unlockButtonText}}</view>
+      <view class="ctd-director-export" wx:if="{{directorTeamRows.length}}" bindtap="openTeamSheet"
+            aria-role="button" aria-label="查看队伍进度" hover-class="cy-pressed" hover-stay-time="80">队伍进度</view>
+      <view class="ctd-director-export" wx:if="{{canAssignRoles && roleMemberRows.length}}" bindtap="openRoleSheet"
+            aria-role="button" aria-label="分配角色" hover-class="cy-pressed" hover-stay-time="80">角色分配</view>
+      <view class="ctd-director-export" wx:if="{{incidentRows.length}}" bindtap="openIncidentSheet"
+            aria-role="button" aria-label="处理现场事件" hover-class="cy-pressed" hover-stay-time="80">现场事件</view>
+    </view>
+
     <view class="ctd-footspacer"></view>
 
     <!-- ⑦ 固定底部条 -->
@@ -318,19 +333,6 @@
       cancel-text="再想想" confirm-text="结束活动" loading="{{writeLocked}}"
       bind:cancel="onDirectorEndCancel" bind:confirm="onDirectorEndConfirm" />
 
-    <!-- E-04(2026-09-16 P1):导演台四个弹层(D4 手动解锁 / D5 队伍进度 / D6 角色分配 / D8 现场事件)
-         原来在页面上**没有任何入口**(方法只有单测直调,全仓 wxml 零绑定)——组件都渲染着,功能静默不可用。
-         这里按投影的能力位给最小入口:有权限/有数据才出,点了才开。 -->
-    <view class="ctd-tools" wx:if="{{directorActive && loadState === 'ready' && (canUnlockChapter || directorTeamRows.length || (canAssignRoles && roleMemberRows.length) || incidentRows.length)}}">
-      <view class="ctd-director-export" wx:if="{{canUnlockChapter}}" bindtap="openManualUnlock"
-            aria-role="button" aria-label="{{unlockButtonText}}" hover-class="cy-pressed" hover-stay-time="80">{{unlockButtonText}}</view>
-      <view class="ctd-director-export" wx:if="{{directorTeamRows.length}}" bindtap="openTeamSheet"
-            aria-role="button" aria-label="查看队伍进度" hover-class="cy-pressed" hover-stay-time="80">队伍进度</view>
-      <view class="ctd-director-export" wx:if="{{canAssignRoles && roleMemberRows.length}}" bindtap="openRoleSheet"
-            aria-role="button" aria-label="分配角色" hover-class="cy-pressed" hover-stay-time="80">角色分配</view>
-      <view class="ctd-director-export" wx:if="{{incidentRows.length}}" bindtap="openIncidentSheet"
-            aria-role="button" aria-label="处理现场事件" hover-class="cy-pressed" hover-stay-time="80">现场事件</view>
-    </view>
 
     <!-- D4 章节控制 / 手动解锁 -->
     <cy-club-director-chapter-sheet
