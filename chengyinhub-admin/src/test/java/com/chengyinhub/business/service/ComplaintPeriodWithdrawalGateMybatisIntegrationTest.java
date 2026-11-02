@@ -180,6 +180,9 @@ class ComplaintPeriodWithdrawalGateMybatisIntegrationTest {
                         + "create_time DATETIME(3), update_time DATETIME(3)) ENGINE=InnoDB",
                 "CREATE TABLE coop_complaint (id BIGINT PRIMARY KEY AUTO_INCREMENT, topic_id BIGINT, registration_id BIGINT, reporter_member_id BIGINT,"
                         + "status INT, del_flag INT) ENGINE=InnoDB",
+                // 2026-11-02 退款档位:结算读「部分退款后主办方保留的实付」要回读 refund_application。
+                "CREATE TABLE refund_application (id BIGINT PRIMARY KEY AUTO_INCREMENT, source_type VARCHAR(32), source_id BIGINT,"
+                        + "paid_amount DECIMAL(12,2), refund_amount DECIMAL(12,2), status INT, del_flag INT DEFAULT 0) ENGINE=InnoDB",
                 "INSERT INTO ums_member(id,status,del_flag,balance) VALUES (" + HOST + ",1,0,0.00),(" + PLATFORM + ",1,0,0.00)");
         // 新表直接跑迁移文件本体:IT 与生产 DDL 同源,不在测试里另抄一份。
         try (Connection connection = dataSource.getConnection()) {
@@ -223,6 +226,24 @@ class ComplaintPeriodWithdrawalGateMybatisIntegrationTest {
         assertEquals(1, scalarInt("SELECT is_settlement FROM cms_activity WHERE id=8102"));
         assertMoney("90.00", balance(HOST));
         assertEquals(1, umsMemberMapper.deductWithdrawableBalance(HOST, new BigDecimal("90.00"), BigDecimal.ZERO));
+    }
+
+    /**
+     * 2026-11-02 退款档位(真 SQL):一单 100 正常,一单 60 在集合前 24 小时内退了 30(置 4/3)。
+     * 结算基数 = 100 + (60 − 30) = 130,按 90% 给主办方 117.00。旧代码只按 100 结算。
+     */
+    @Test
+    void retainedHalfOfLateRefundIsSettledFromRealRows() throws Exception {
+        seedActivity(8107L, 8);
+        seedRegistration(8207L, 8107L, "100.00");
+        seedRegistration(8208L, 8107L, "60.00");
+        execute("UPDATE cms_registration SET payment_status=4, registration_status=3 WHERE id=8208");
+        execute("INSERT INTO refund_application(source_type,source_id,paid_amount,refund_amount,status,del_flag)"
+                + " VALUES ('registration',8208,60.00,30.00,1,0)");
+
+        activityService.executeActivitySettlement();
+
+        assertMoney("117.00", balance(HOST));
     }
 
     /** ③ 两单 100 + 60,60 那单有未结客诉:只暂扣 60 那单,100 那单的 90 照放;结案后补结 54。 */
