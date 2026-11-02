@@ -1,7 +1,7 @@
 <block wx:for="{{stageKeys}}" wx:key="*this" wx:for-item="stageKey">
 <cy-play-stage id="cy-play-stage" data-stage-key="{{stageKey}}" show="{{show}}" back-label="退出"
                bind:back="onClose" bind:run="onRun" bind:verdict="onVerdict">
-  <view class="cp {{aligned || done ? 'cp--on' : ''}} {{rm ? 'cp--rm' : ''}}">
+  <view class="cp {{aligned || (done && !skipped) ? 'cp--on' : ''}} {{rm ? 'cp--rm' : ''}}">
     <view class="g-kicker pe pe--blur" style="--pe-d:.05s">{{kicker}}</view>
 
     <!-- 盘面 = 手机当前朝向(屏幕顶上永远是「你正对着的方向」),箭头指目标方位。

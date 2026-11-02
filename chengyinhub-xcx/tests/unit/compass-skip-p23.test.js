@@ -43,6 +43,8 @@ test('跳过按钮只听服务端的 canSkip;跳过过的站显示「已跳过�
   assert.match(wxml, />跳过这一站</);
   assert.match(wxml, /wx:elif="\{\{done && skipped\}\}" class="g-sub cp__s">这一站已跳过</);
   assert.match(wxml, /wx:elif="\{\{done && !skipped\}\}" class="cp__done"/);
+  // 跳过的站不亮绿:绿色是「对准了」,跳过不是对准
+  assert.match(wxml, /class="cp \{\{aligned \|\| \(done && !skipped\) \? 'cp--on' : ''\}\}/);
   assert.match(read('pages/play/components/playkit/index.wxml'),
     /can-skip="\{\{kit\.canSkip\}\}" skipped="\{\{kit\.skipped\}\}"[\s\S]*?bind:readfail="onReadFail" bind:skip="onSkip"/);
   // 跳过按钮是可点的大小
