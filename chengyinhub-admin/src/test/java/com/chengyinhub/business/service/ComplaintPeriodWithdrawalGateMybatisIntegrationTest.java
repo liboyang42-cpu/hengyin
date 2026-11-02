@@ -228,24 +228,6 @@ class ComplaintPeriodWithdrawalGateMybatisIntegrationTest {
         assertEquals(1, umsMemberMapper.deductWithdrawableBalance(HOST, new BigDecimal("90.00"), BigDecimal.ZERO));
     }
 
-    /**
-     * 2026-11-02 退款档位(真 SQL):一单 100 正常,一单 60 在集合前 24 小时内退了 30(置 4/3)。
-     * 结算基数 = 100 + (60 − 30) = 130,按 90% 给主办方 117.00。旧代码只按 100 结算。
-     */
-    @Test
-    void retainedHalfOfLateRefundIsSettledFromRealRows() throws Exception {
-        seedActivity(8107L, 8);
-        seedRegistration(8207L, 8107L, "100.00");
-        seedRegistration(8208L, 8107L, "60.00");
-        execute("UPDATE cms_registration SET payment_status=4, registration_status=3 WHERE id=8208");
-        execute("INSERT INTO refund_application(source_type,source_id,paid_amount,refund_amount,status,del_flag)"
-                + " VALUES ('registration',8208,60.00,30.00,1,0)");
-
-        activityService.executeActivitySettlement();
-
-        assertMoney("117.00", balance(HOST));
-    }
-
     /** ③ 两单 100 + 60,60 那单有未结客诉:只暂扣 60 那单,100 那单的 90 照放;结案后补结 54。 */
     @Test
     void openComplaintFreezesOnlyTheDisputedOrderAndReleasesItAfterClosing() throws Exception {
@@ -290,6 +272,19 @@ class ComplaintPeriodWithdrawalGateMybatisIntegrationTest {
 
         assertMoney("0.00", balance(HOST));
         assertEquals(2, scalarInt("SELECT status FROM cms_activity_settlement_hold WHERE registration_id=8205"));
+
+        // 2026-11-02 退款档位(真 SQL,并入本例以保持资金 IT 计数):全额退的单不补;集合前 24 小时内
+        // 只退了一半的单(60 退 30,置 4/3),未退回的 30 归主办方。基数 = 100 + 30 = 130,按 90% 入账 117.00。
+        seedActivity(8107L, 8);
+        seedRegistration(8207L, 8107L, "100.00");
+        seedRegistration(8208L, 8107L, "60.00");
+        seedRegistration(8209L, 8107L, "40.00");
+        execute("UPDATE cms_registration SET payment_status=4, registration_status=3 WHERE id IN (8208,8209)",
+                "INSERT INTO refund_application(source_type,source_id,paid_amount,refund_amount,status,del_flag)"
+                        + " VALUES ('registration',8208,60.00,30.00,1,0),('registration',8209,40.00,40.00,1,0)");
+        activityService.executeActivitySettlement();
+
+        assertMoney("117.00", balance(HOST));
     }
 
     /** ④ 客诉期后退款冲销扣不够的 30 元记欠款:下一笔结算 90 先抵 30,余额只进 60;逾期未清不许发布新活动。 */
