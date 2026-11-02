@@ -159,25 +159,23 @@ class CounterNotRedeemedMarkerTest {
 
     @Test
     void successNamesThePerkToHandOver() {
-        Object app = RegistrationRedemptionTestFixtures.application(controller);
-        com.chengyinhub.business.mapper.MerchantChapterOfferMapper offers = mock(com.chengyinhub.business.mapper.MerchantChapterOfferMapper.class);
-        com.chengyinhub.business.mapper.CoopPerkMapper perks = mock(com.chengyinhub.business.mapper.CoopPerkMapper.class);
-        ReflectionTestUtils.setField(app, "chapterOfferMapper", offers);
-        ReflectionTestUtils.setField(app, "coopPerkMapper", perks);
-        com.chengyinhub.business.domain.MerchantChapterOffer other = new com.chengyinhub.business.domain.MerchantChapterOffer();
-        other.setMerchantId(999L); other.setPerkId(1L);
-        com.chengyinhub.business.domain.MerchantChapterOffer mine = new com.chengyinhub.business.domain.MerchantChapterOffer();
-        mine.setMerchantId(MERCHANT); mine.setPerkId(2L);
-        when(offers.selectByChapter(CHAPTER)).thenReturn(java.util.List.of(other, mine));
-        com.chengyinhub.business.domain.CoopPerk perk = new com.chengyinhub.business.domain.CoopPerk();
-        perk.setName("手冲一杯");
-        when(perks.selectById(2L)).thenReturn(perk);
+        when(perkSvc.livePerkName(CHAPTER, MERCHANT)).thenReturn("手冲一杯");
         when(perkSvc.resolveScannableChapters(REG, TOPIC, MERCHANT)).thenReturn(Collections.singletonMap(CHAPTER, null));
         when(regSvc.redeemExploreChapterAndRecord(eq(reg), eq(CHAPTER), eq(TOPIC), eq(MERCHANT), eq(MERCHANT), any()))
                 .thenReturn(new ExploreChapterRedemptionResult(55L, 0));
         AjaxResult r = controller.scanDynamicCode(validCode());
         assertEquals("手冲一杯", ((Map<?, ?>) r.get(AjaxResult.DATA_TAG)).get("perkName"));
-        verify(perks, never()).selectById(1L);
+    }
+
+    @Test
+    void perkNameFailureNeverBreaksASuccessfulRedemption() {
+        when(perkSvc.livePerkName(CHAPTER, MERCHANT)).thenThrow(new RuntimeException("db"));
+        when(perkSvc.resolveScannableChapters(REG, TOPIC, MERCHANT)).thenReturn(Collections.singletonMap(CHAPTER, null));
+        when(regSvc.redeemExploreChapterAndRecord(eq(reg), eq(CHAPTER), eq(TOPIC), eq(MERCHANT), eq(MERCHANT), any()))
+                .thenReturn(new ExploreChapterRedemptionResult(55L, 0));
+        AjaxResult r = controller.scanDynamicCode(validCode());
+        assertEquals(200, r.get(AjaxResult.CODE_TAG));
+        assertNull(((Map<?, ?>) r.get(AjaxResult.DATA_TAG)).get("perkName"));
     }
 
     @Test

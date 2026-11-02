@@ -245,32 +245,18 @@ public class RegistrationRedemptionApplication {
                 merchantOwnerMemberId, operatorMemberId, actorRoleCode);
     }
 
-    @Autowired(required = false)
-    private com.chengyinhub.business.mapper.MerchantChapterOfferMapper chapterOfferMapper;
-
-    @Autowired(required = false)
-    private com.chengyinhub.business.mapper.CoopPerkMapper coopPerkMapper;
-
     /**
      * M-05:核销成功回包带上本店在该章节要提供的权益名,柜台知道该给什么。
-     * 核销已成立,查不到或查询失败只是不带,绝不影响结果。
+     * 读取经 IPerkLedgerService(本类允许的依赖);核销已成立,查不到或失败只是不带,绝不影响结果。
      */
     private String perkDisplayName(Long chapterId, Long merchantOwnerMemberId) {
-        if (chapterOfferMapper == null || coopPerkMapper == null || chapterId == null) return null;
+        if (perkLedgerService == null || chapterId == null) return null;
         try {
-            List<MerchantChapterOffer> offers = chapterOfferMapper.selectByChapter(chapterId);
-            if (offers == null) return null;
-            for (MerchantChapterOffer offer : offers) {
-                if (offer.getMerchantId() != null && offer.getMerchantId().equals(merchantOwnerMemberId)
-                        && offer.getPerkId() != null) {
-                    CoopPerk perk = coopPerkMapper.selectById(offer.getPerkId());
-                    return perk == null || StringUtils.isEmpty(perk.getName()) ? null : perk.getName();
-                }
-            }
+            return perkLedgerService.livePerkName(chapterId, merchantOwnerMemberId);
         } catch (RuntimeException e) {
             logger.warn("核销回包权益名读取失败 chapterId={}", chapterId, e);
+            return null;
         }
-        return null;
     }
 
     /** 核销回包的章节名;核销已成立,查名失败只降级为「章节 id」,与 describeChapters 的兜底一致。 */
