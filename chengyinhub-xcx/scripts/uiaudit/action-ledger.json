@@ -1036149,7 +1036149,7 @@
         "visibleCondition": "{{joinTotal + hostProjectTotal > projectCards.length}}",
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": "查看全部项目，还有 {{joinTotal + hostProjectTotal - projectCards.length}} 个",
+        "ariaLabelExpression": "查看全部项目，还有 {{(joinTotal + hostProjectTotal - projectCards.length) || 0}} 个",
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
