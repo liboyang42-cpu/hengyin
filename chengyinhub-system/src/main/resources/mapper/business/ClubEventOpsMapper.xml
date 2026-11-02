@@ -274,7 +274,7 @@
         limit 1 for update
     </select>
 
-    <select id="selectActivityTopicForUpdate" resultType="java.lang.Long">
+    <select id="selectActivityTopicForUpdate" resultType="java.lang.Long" useCache="false" flushCache="true">
         select a.topic_id
         from cms_activity a
         <!-- 俱乐部公开主题的自办场次不挂 club_id,按主题归属认(同 ClubAccessService.requireOwnedActivity) -->
