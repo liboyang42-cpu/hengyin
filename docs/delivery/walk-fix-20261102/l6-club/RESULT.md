@@ -55,4 +55,45 @@ Tap feel and animation, the GPS fix for 「我到了」 (the rig injects coordin
 
 Fixtures and steps (the same for before and after): the leader (fixture 9008, club 7002) becomes a leader through `/api/club/become-leader`. A club-owned city-orienteering theme with 2 chapters and 4 stations is published through the V2 create API and approved by the admin endpoint. A session is opened through open-session 40 minutes ahead, and 4 players sign up. Then: gather check-in over HTTP; fixture time shift (the session start moved to one minute ago through the rig's `seed-walk.py shift-session`); PREPARE; two teams through `/api/team/create|join`; START; release; two arrivals marked through the roster API; FINISH. These handlers were called directly, as the walker did, where a tap did not register in the rig runtime: `leadArrive` and `openTeamSheet`.
 
-STATUS: PARTIAL - C-13 non-zero ¥ amounts not reconciled against a DB (no paid club session possible in the rig until C-01); C-12 player end line and executing-club workbench not visible in a rig frame; C-16/C-24 tested but not shot; C-08 series-session case not reproduced; C-20 needs owner
+## Round 3
+
+Restart after the usage limit (ROUND3C). C-11, C-09 and C-03 were pushed before the stop. This run did the rest. Shots are from the walkthrough rig, not a phone. `-before-r3` is this branch at `d2ca6c3c` (before this run's changes) and `-after-r3` is the branch head. Both use the same fixtures and steps (`rig-replay/shots.mjs` sets `r3*`, plus `http_c04_noreason.py` and `http_phone_role.py`).
+
+| Item | Status | What changed | Files | How verified |
+|---|---|---|---|---|
+| C-11 | done (pushed before the stop) | Recap as its own layout: three large tiles, 完成情况 rows, 榜单, and no second leaderboard. | see commit 2c9555d4 | `club-game-director-contract`; `C-11-*` |
+| C-09 | done (pushed before the stop) | Padding, the blank box, raw `READY` and the second start button. | commit 82effe60 | `C-09-*` |
+| C-03 | done (pushed before the stop) | The 「已到集合点」 notice sits above the start button. | commit 67202d5d | `play-lead-tools-entry-contract` |
+| C-12 | done | **The large empty area:** the station sheet was fixed at the full height (`height: min(full, …)`), so a short station card left a black block under it. It now starts at the half size and grows with content up to full. **After the session ends:** a station not yet done no longer opens the 「开始任务」 sheet over the screen (a submit would only be refused). 继续探索 closes the chapter story, and the top line 「本场已结束 · 你完成了 N/M 站」 shows. Finished stations can still be opened. | `pages/play/index.js` (`openSheet`), `pages/play/index.wxss` (`.sheet`) | `play-ended-session-sheet.test.js` (5, run on the real Page object); `play-overlay-spec-contract`. Rig: `C-12-before-r3` (the sheet with the empty area, line hidden) and `C-12-after-r3` (「本场已结束 · 你完成了 0/4 站」 visible). The map is black only because the rig has no native map. |
+| C-05 | done | **Red outline:** the red badge on 已报名 was already removed in round 2 (C-10). The tabs now read 「已报名 4」, see `C-05-after-r3-roster`. **Full names:** the customer list and customer detail now show the name typed at sign-up for this club (latest registration, decrypted on the server). Before, they showed 「成员#990005」. 报名参与者 and 核销详情 no longer mask names as 「周*」. **Phones:** see the phone rule below. | `ClubCrmMapper.xml` (`ClubCustomerSignupName`), `ClubCustomerVO`, `ClubCrmAppServiceImpl` | `ClubCrmPrivacyTest.customerListAndDetailShowSignupFullName`, `freeCancelledRegistrationShowsFullParticipantNameAndIsNotSold`. Rig: `C-05-before/after-r3-customers`, `-customer`, `-roster` |
+| C-04 | done | The release reason is optional. The field reads 「现场原因（选填）」, and 放行 is enabled without a reason. The server accepts a release with no reason (stored as empty) and still writes a given reason to the receipt. A chapter is still required, and it still has to be the next one. | `GameSessionRuntimeServiceImpl.unlockChapter`, `director.js`, `topic-detail/index.wxml` | `GameSessionRuntimeServiceImplTest` (133 pass; the route release now runs with no reason). `club-game-director-contract` (no `reason` key sent). Over HTTP (`http/http-C-04-r3-noreason-after.txt`): payload `{"chapterId": 43}` returned APPLIED, and `game_session.current_chapter_id` reads back as 43. Rig: `C-04-before/after-r3-reason` |
+| C-20 | done, no change | The card says 「引流型 · 无分成」 and nothing else about money. That matches the owner's meaning (the merchant gets traffic, not money), so the card is unchanged. | `utils/coop-invite-view.js` (read only) | Read the code |
+| C-13 | not done | Waiting for the owner's reference, per ROUND3. | | |
+| Phone rule (ROUND3B) | done, **needs owner review** | See "Phone permission changes" below. | backend and 4 pages | `ClubAccessServiceImplTest.customerPhoneReadFollowsLeadRoleAndPerAssignmentCheckinToggle`, `ClubCrmPrivacyTest` (owner and co-owner full; operator masked; checkin per session with the switch), `ClubEventAttendanceServiceImplTest.rosterGivesFullPhoneOnlyToPhoneReaders`, `ClubRoleAssignmentServiceImplTest` (switch refused on other roles), `club-phone-call.test.js`, `club-role-ui-contract` (switch), `club-event-ops-pages-contract`. Over HTTP with database read-back (`http/http-phone-role-after.txt`): the 主理人 roster has 4 full numbers. A 活动核销员 with the switch off gets `phoneIncluded:false` and no numbers (row `customer_phone_visible=0`). With the switch on (row `=1`), they get 4 full numbers. `CLUB_OPERATOR` with the switch gets 400 「只有活动核销员可设置可见客户手机号」. Rig: `C-05-after-r3-roster` (numbers and call buttons), `C-05-after-r3-customer`, `R1-after-checkin-off/on` |
+| R1 角色与权限 | done | 当前委派 rows with their summary line and 撤销 already matched the frame. The new row 「可见客户手机号」 sits under 分配固定角色. It appears only when 活动核销员 is selected and defaults to 否. A delegation with it on shows 「· 可见客户手机号」. The white 分配 button already existed. | `pages/club/roles/*` | `club-role-ui-contract` (new case). Rig: `R1-after-checkin-off/on`. The role was picked by calling the picker's handler: in the rig, a tap on a row inside the open picker sheet did not register. |
+| R4 群发通知 | already matches | 选择受众 with counts, 内容 with 标题 and 内容, 投递状态 with 总人数 / 已送达站内 / 失败 / 重试, and the white send button all exist. The button reads 「发送站内通知」, not 「发送」, and I left it. | `pages/club/notify/*` (read only) | Read the code; `club-event-ops-pages-contract` |
+| 主题设置 | already matches | The theme name with its stage, 编辑主题内容, the 开放商家对接 group with per-chapter rows (「咖啡 / 轻食 · 3 家」 or 「未开放」), 在俱乐部页的展示, 结束主题 and 承接审核 are all present. | `pages/club/topic-detail/*` | Read the code |
+| CI | fixed locally | `Mini program unit shard (12/20)` and `Mini program static gates` were both caused by action-ledger drift from C-09/C-11. I rebuilt the ledger and updated the two counts in `action-ledger.test.js` (5599 → 5605 controls, 2447 → 2449 local taps). `Mini program static checks` only aggregates those two. | `action-ledger.json`, `action-ledger.test.js` | Full `node --test tests/unit/**` run locally. `UI-GATE-0:PASS` |
+
+### Phone permission changes (for owner review)
+
+This changes a permission rule. Each changed check:
+
+1. **New permission** `club:customer:phone:read` (`ClubPermission.CUSTOMER_PHONE_READ`): a full number plus a call button.
+2. **Who has it:** 主理人 (all permissions, as before) and 副主理人 (`CLUB_CO_OWNER`, added). 活动领队 (`EVENT_LEAD`, added) has it **only within their own session**, since they are the session's executing party. An executing club's 主理人 runs their own session as owner of that club, so the 主理人 rule covers them. 活动核销员 (`EVENT_CHECKIN`) has it **only** when the 主理人 turned on 「可见客户手机号」 on that delegation, and only for that session. 运营, legacy admins and members never get it.
+3. **Where the server enforces it:**
+   - `ClubAccessServiceImpl.resolve` adds the permission for a checkin delegation with `customer_phone_visible=1`.
+   - `ClubRoleAssignmentServiceImpl.assign` refuses the switch on any other role, and a replay with a different switch value is a conflict.
+   - `ClubEventAttendanceServiceImpl.roster` sends `phone` only with the permission. Otherwise the roster has no numbers, as before.
+   - `ClubCrmAppServiceImpl` (customer list and detail, 报名参与者, 核销详情) gives a full number with the permission. Otherwise it is the masked number (`MEMBER_LIST_READ`) or the 「由俱乐部带团，请联系领队」 line, as before.
+   - `phoneCallable` is set only from the permission. The client draws the call button only from it, and dials only an 11-digit number.
+4. **Logging:** no full number is logged. The rig replay prints only the last 4 digits.
+5. **Migration:** `migration_20261102_club_checkin_phone_visible.sql` adds `club_role_assignment.customer_phone_visible TINYINT NOT NULL DEFAULT 0`. It is idempotent and registered in `ci/migration-dependencies.json`. Apply it **before** the jar, like the C-03 migration.
+
+**Unverified on a real phone:** whether `wx.makePhoneCall` opens the dialer. In the rig it is a stub.
+
+### Recruiting sheet (ROUND3B)
+
+See the row below; it is updated as the work lands.
+
+STATUS: PARTIAL - recruiting sheet (承接商家) in progress; C-13 waits for the owner

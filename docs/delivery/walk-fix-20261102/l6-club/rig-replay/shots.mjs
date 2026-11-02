@@ -114,5 +114,49 @@ const sets = {
       await sl(1500); await w.shot(name('C-13')); await txt(w, 'enroll'); await w.scroll(400); await w.shot(name('C-13', '-2'));
     });
   },
+  // ---- Round 3 (2026-11-02 restart) ----
+  async r3customers() { // C-05: names (and phones) in the club customer list and one customer
+    await go(LEAD, `pages/club/customers/index?clubId=${CLUB}`, async (w) => {
+      await sl(1500); await w.shot(name('C-05', '-customers')); await txt(w, 'cust');
+      try { await w.tap(S.custName || process.env.CUST || '成员#990005'); await sl(2000); await w.shot(name('C-05', '-customer')); await txt(w, 'cd'); } catch (e) { console.log('tap', e.message); }
+    });
+  },
+  async r3roster() {
+    await go(LEAD, `pages/club/event-ops/index?clubId=${CLUB}&activityId=${S.act}`, async (w) => {
+      await scrollTo(w, '本场名册'); await w.scroll(200); await w.shot(name('C-05', '-roster')); await txt(w, 'roster');
+    });
+  },
+  async r3release() { // C-04: release sheet with the reason field
+    await go(LEAD, td, async (w) => {
+      await scrollTo(w, '排行榜'); await w.scroll(1500);
+      const d = await w.data(); console.log('DATA', JSON.stringify({ canUnlockChapter: d.canUnlockChapter, unlockButtonText: d.unlockButtonText }));
+      try { await w.tap('放行'); } catch (e) { console.log('INJECT openManualUnlock'); await w.eval(() => getCurrentPages().slice(-1)[0].openManualUnlock()); }
+      await sl(900); await w.shot(name('C-04', '-reason')); await txt(w, 'sheet');
+    });
+  },
+  async r3memberended() { // C-12: the player after the end, top line visible, no empty sheet
+    await go('walk-player-1', `pages/play/index?activityId=${S.act}&topicId=${S.topic}`, async (w) => {
+      try { await w.tap('开始游戏', { exact: true }); } catch (e) { console.log('tap', e.message); }
+      await sl(1500); try { await w.tap('轻点跳过'); } catch (e) {} await sl(1500); try { await w.tap('轻点跳过'); } catch (e) {} await sl(1200);
+      try { await w.tap('继续探索', { exact: true }); } catch (e) { console.log('tap', e.message); } await sl(2500);
+      console.log('LEAD', JSON.stringify(await w.data('lead')), 'sheet', JSON.stringify((await w.data('sheet') || {}).show));
+      await w.shot(name('C-12', '-end')); await txt(w, 'm');
+    });
+  },
+  async r3roles() { // R1 / phone: 可见客户手机号 row for 活动核销员 (event scope)
+    await go(LEAD, `pages/club/roles/index?clubId=${CLUB}&activityId=${S.act}`, async (w) => {
+      await sl(1500); await txt(w, 'roles');
+      try { await w.tap('选择成员'); await sl(800); const d = await w.data(); const m = (d.members || []).slice(-1)[0];
+        console.log('MEMBERS', JSON.stringify((d.members || []).map(x => x.nickname)), 'ROLES', JSON.stringify((d.roles || []).map(x => x.roleCode + ':' + x.name)));
+        await w.tap(m.nickname); await sl(800);
+        await w.tap('角色'); await sl(900); await w.shot(name('R1', '-rolepicker'));
+        console.log('INJECT pickRole EVENT_CHECKIN (the handler the picker row binds)');
+        await w.eval(() => getCurrentPages().slice(-1)[0].pickRole({ currentTarget: { dataset: { roleCode: 'EVENT_CHECKIN' } } })); await sl(900);
+      } catch (e) { console.log('step', e.message); }
+      await w.shot(name('R1', '-checkin')); await txt(w, 'picked');
+      try { await w.tap('可见客户手机号'); await sl(500); } catch (e) { console.log('toggle', e.message); }
+      await w.shot(name('R1', '-phone-on')); await txt(w, 'on');
+    });
+  },
 };
 await sets[set]();
