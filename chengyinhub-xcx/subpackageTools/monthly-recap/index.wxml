@@ -39,7 +39,7 @@
   </block>
 
   <view class="tu-group" wx:if="{{items.length}}">
-    <view class="tu-row cy-rise-in" style="animation-delay: {{index * 60}}ms" wx:for="{{items}}" wx:key="id">
+    <view class="tu-row cy-rise-in" style="animation-delay: {{index < 6 ? index * 60 : 360}}ms" wx:for="{{items}}" wx:key="id">
       <view class="tu-row__body"><text class="tu-row__t">{{item.title}}</text><text class="tu-row__s">{{item.dateText}} · {{kinds[kindIndex]}}</text></view>
     </view>
   </view>

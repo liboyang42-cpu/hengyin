@@ -79,11 +79,11 @@
 
       <!-- 好友 / 关注 / 粉丝 -->
       <view class="pc-stats">
-        <view class="pc-statcol"><text class="pc-stat-n">{{friendNum}}</text><text class="pc-stat-l">好友</text></view>
+        <view class="pc-statcol"><text class="pc-stat-n">{{num.n(friendNum)}}</text><text class="pc-stat-l">好友</text></view>
         <view class="pc-stat-div"></view>
-        <view class="pc-statcol"><text class="pc-stat-n">{{followNum}}</text><text class="pc-stat-l">关注</text></view>
+        <view class="pc-statcol"><text class="pc-stat-n">{{num.n(followNum)}}</text><text class="pc-stat-l">关注</text></view>
         <view class="pc-stat-div"></view>
-        <view class="pc-statcol"><text class="pc-stat-n">{{fansNum}}</text><text class="pc-stat-l">粉丝</text></view>
+        <view class="pc-statcol"><text class="pc-stat-n">{{num.n(fansNum)}}</text><text class="pc-stat-l">粉丝</text></view>
       </view>
       </view>
 
