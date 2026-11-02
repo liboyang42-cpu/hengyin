@@ -25,7 +25,7 @@ test('旧 tab 只在路由 shim 出现，未识别值不能默认进入资金页
 });
 
 
-test('项目铃铛按真实主题/活动归属打开近期收入与核销，失败与非法链接不退回全店', () => {
+test('本项目近期动态按真实主题/活动归属读取收入与核销，失败与非法链接不退回全店', () => {
   const vm = require('node:vm');
   const { normalizeMerchantFinanceRoute } = require('../../pages/merchant/utils/merchant-finance.js');
   const finance = require('../../pages/merchant/utils/merchant-finance.js');
@@ -78,10 +78,7 @@ test('项目铃铛按真实主题/活动归属打开近期收入与核销，失�
     hostList: [{ id: 7, bizType: 'activity', titleText: '活动' }], todoByProject: [], events,
   });
   for (const card of cards) {
-    const home = mount('pages/merchant/index/index.js');
-    home.page.goProjectMessages({ currentTarget: { dataset: { ownertype: card.ownerType, ownerid: card.ownerId,
-      id: 999, role: card.role } } });
-    assert.deepEqual(home.urls, ['/pages/merchant/ledger/index?view=messages&ownerType=' + card.ownerType + '&ownerId=7']);
+    // 2026-11-01 业主:工作台项目卡的铃铛已删除;本项目动态页仍按 (ownerType, ownerId) 归属读取
     const current = mount('pages/merchant/ledger/index.js');
     current.page.onLoad({ view: 'messages', ownerType: String(card.ownerType), ownerId: '7' });
     allow(current.requests[0]);
@@ -123,9 +120,6 @@ test('项目铃铛按真实主题/活动归属打开近期收入与核销，失�
     const invalid = mount('pages/merchant/ledger/index.js'); invalid.page.onLoad(options);
     assert.equal(invalid.page.data.routeError, true); assert.equal(invalid.requests.length, 0);
   }
-  const invalidHome = mount('pages/merchant/index/index.js');
-  invalidHome.page.goProjectMessages({ currentTarget: { dataset: { id: 7, ownertype: 1 } } });
-  assert.equal(invalidHome.urls.length, 0, '不能用卡片报名id猜项目id');
   const legacy = mount('pages/merchant/ledger/index.js'); legacy.page.onLoad({ view: 'messages' });
   allow(legacy.requests[0]); assert.equal(legacy.requests.length, 1, '原全局消息只保留IM入口');
   legacy.page.goInbox(); assert.deepEqual(legacy.urls, ['/subpackageB/pages/im/list/index']);

@@ -108,7 +108,7 @@ function buildValidationBag(state) {
       bag.add('chapters', '请至少添加一个章节');
     } else {
       formData.chapters.forEach((chapter, chapterIndex) => {
-        bag.require(chapter.opening === true || (chapter.nodes && chapter.nodes.length > 0), `chapter${chapterIndex}`, `第${chapterIndex + 1}章至少需要一个节点`);
+        bag.require(proEditorPolicy.chapterHasRequiredNodes(formData, chapter), `chapter${chapterIndex}`, `第${chapterIndex + 1}章至少需要一个节点`);
         // 没坐标的节点在地图上不存在、玩家走不到 —— 原先只有「下一步」那道闸查坐标(还只要求
         // 全局 ≥1 个),发布校验压根不查,于是能带着一堆没定位的节点发出去。
         (chapter.nodes || []).forEach((node, nodeIndex) => {

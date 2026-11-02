@@ -16,7 +16,7 @@ function harness(prices = [0]) {
     sendRequest: (req) => requests.push(req),
   }
   global.getApp = () => app
-  global.wx = { getStorageSync() {}, setStorageSync() {},
+  global.wx = { ...require('../helpers/memory-storage.js')(),
     showToast: (o) => toasts.push(o.title), showLoading() {}, hideLoading() {},
     pageScrollTo() {}, nextTick: (cb) => cb(),
   }

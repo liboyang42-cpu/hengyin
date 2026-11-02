@@ -10,8 +10,6 @@ const { merchantHomeUrl } = require('../../../utils/merchant-home-link.js');
 const { isRecord, isRecordList, isBizOk } = require('../../../utils/response-shape.js');
 const { inactiveAccess, normalizeMerchantAccess } = require('../../../utils/merchant-access-policy.js');
 const { ensureSession } = require('../utils/session/ensure-session.js');
-const { normalizeMerchantFinanceRoute } = require('../utils/merchant-finance.js');
-const { pendingPrerequisites } = require('../utils/merchant-prerequisites.js');
 const identitySync = require('../../../utils/identity-sync.js');
 
 // cms_topic.product_type → 展示名(与 marketing 页同口径)
@@ -45,7 +43,7 @@ const { resolveVerificationResult, classifyVerificationOutcome, createVerificati
 const { resolveVerificationScan } = require('../../../utils/verification-scan.js');
 const { getScene } = require('../../../utils/scene-registry.js');
 const { pushScene, popScene, currentScene, exitDecision } = require('../../../utils/scene-stack.js');
-const { hasTodoSummaryPayload, buildProjectCards, isEndedProject, localToday, attachVisitTexts } = require('../../../utils/merchant-workbench.js');
+const { hasTodoSummaryPayload, buildProjectCards, isHiddenProjectCard, sortProjectCards, isEndedProject, localToday, attachVisitTexts } = require('../../../utils/merchant-workbench.js');
 const { resolveApplicationResponse, decorateApplication } = require('../../../utils/merchant-identity-policy.js');
 const { offerVerificationReadback } = require('../../../utils/verification-readback.js');
 const { createGameSessionClient } = require('../../../utils/game-session-client.js');
@@ -104,7 +102,6 @@ Page({
     inboxLoaded: false,
     inboxError: false,
     // BL-85 开通前置检查未完成项(只读;全部完成/无数据/失败时为空,不展示)
-    prerequisites: [],
     todo: { biddingTopics: 0, pendingVerify: 0, verifiedCount: 0, pendingScanConfirm: 0, pendingOrders: 0, refundCount: 0 },
     todoLoading: true,
     todoError: false,
@@ -380,8 +377,8 @@ Page({
       todoByProject: this.data.todo.byProject,
       events: this._notifications || [],
       todoError: this.data.todoError,
-    }).filter((card) => card.statusLabel !== '已结束');
-    this.refreshGameStationSummaries(projectCards);
+    }).filter((card) => !isHiddenProjectCard(card));
+    this.refreshGameStationSummaries(sortProjectCards(projectCards));
   },
 
   // activityId 只来自服务端按当前登录商家过滤的 entries(只用来补出没对上承接卡的活动卡);
@@ -546,9 +543,6 @@ Page({
     // access/me 已给出可安全展示的商家摘要；完整资料接口要求 PROFILE_WRITE，
     // 核销员/运营/财务不得为了加载工作台而先撞一次 403。
     if (currentAccess.canWriteProfile) this.loadMerchantInfo(dataEpoch);
-    // 前置检查按店主主体计算(permissionRequired=MERCHANT_OWNER),只给能改资料的岗位读。
-    if (currentAccess.canWriteProfile) this.loadPrerequisites(dataEpoch);
-    else this.setData({ prerequisites: [] });
     this.loadUserInfo(dataEpoch);
     // master #807 的商家游戏模组入口:自带 client 空守卫,与角色无关,所有员工都能看到入口。
     this.loadMerchantGameEntries();
@@ -663,7 +657,6 @@ Page({
       inboxAllRead: false,
       inboxLoaded: false,
       inboxError: false,
-      prerequisites: [],
       chapterSheet: { show: false, code: '', items: [] },
       stationSheet: { show: false, code: '', items: [] },
       verificationResult: { show: false, state: '', title: '', message: '' },
@@ -897,31 +890,7 @@ Page({
     this._navigating = true; wx.navigateTo({ url: '/pages/merchant/predict/index', complete: () => { this._navigating = false; } });
   },
 
-  loadPrerequisites(dataEpoch = this._dataEpoch || 0) {
-    const that = this;
-    app.sendRequest({
-      hideLoading: true, silentError: true,
-      url: '/api/merchant/ops/prerequisites', method: 'GET',
-      success(res) {
-        if (!that.isCurrentDataEpoch(dataEpoch)) return;
-        const ok = res && (res.code === '200' || res.code === 200);
-        that.setData({ prerequisites: ok ? pendingPrerequisites(res.data) : [] });
-      },
-      fail() {
-        if (!that.isCurrentDataEpoch(dataEpoch)) return;
-        that.setData({ prerequisites: [] });
-      },
-    });
-  },
-
-  goPrerequisite(e) {
-    const key = String((e.currentTarget.dataset || {}).key || '');
-    const item = (this.data.prerequisites || []).find(row => row.key === key);
-    if (!item || !item.path || this._navigating) return; // 跳转中不响应连点,免得叠两层前置项页
-    this._navigating = true;
-    wx.navigateTo({ url: item.path, complete: () => { this._navigating = false; } });
-  },
-
+  // 2026-11-01 业主:商家页只在开通后才进得来,「开通前置检查」整块删除(接口仍保留给后台)
   loadMerchantInfo(dataEpoch = this._dataEpoch || 0) {
     const that = this;
     app.sendRequest({
@@ -1054,7 +1023,9 @@ Page({
           const confirmedRows = list.filter((item) => Number(item.status) === 1);
           const today = localToday();
           const activeRows = confirmedRows.filter((item) => !isEndedProject(item.startDate, item.endDate, today));
-          const formatted = that.formatJoinCards(activeRows.slice(0, 10).map(withStartDateStr));
+          // 2026-11-01 业主:审核中的承接申请也上工作台,卡上标「待审核」(只进卡片,不进确认关系与总数)
+          const pendingRows = list.filter((item) => Number(item.status) === 0 && !isEndedProject(item.startDate, item.endDate, today));
+          const formatted = that.formatJoinCards(activeRows.concat(pendingRows).slice(0, 10).map(withStartDateStr));
           that._legacyJoinTopicIds = new Set(activeRows
             .map((item) => String(item.topicId))
             .filter((topicId) => topicId && topicId !== 'undefined' && topicId !== 'null'));
@@ -1062,7 +1033,7 @@ Page({
           that._legacyJoinLoading = false;
           that._legacyJoinError = false;
           that.setData({
-            projectList: formatted.slice(0, 2),
+            projectList: formatted,
           });
           that.refreshJoinTotal();
           that.refreshJoinRequestState();
@@ -1182,7 +1153,7 @@ Page({
         // 状态签同源(isEndedProject:档期未知不算结束),前端不再自己数。
         const activeTotal = finiteCount(res.data.activeTotal);
         that.setData({
-          hostProjectList: rows.slice(0, 2),
+          hostProjectList: rows,
           hostProjectTotal: activeTotal === null ? 0 : activeTotal,
           hostLoading: false,
           hostError: false,
@@ -1527,14 +1498,6 @@ Page({
       return this.openScene('play-activity-detail', { id: ds.id });
     }
     return this.goHostProject(e);
-  },
-
-  // 铃铛与列表同取商家最近动态，按卡片真实项目归属筛选，不代表未读或完整历史。
-  goProjectMessages(e) {
-    const ds = e && e.currentTarget && e.currentTarget.dataset || {};
-    const route = normalizeMerchantFinanceRoute({ view: 'messages', ownerType: ds.ownertype, ownerId: ds.ownerid });
-    if (!route || this._navigating) return; // 跳转中不响应连点
-    this._navigating = true; wx.navigateTo({ url: '/pages/merchant/ledger/index?view=messages&ownerType=' + route.ownerType + '&ownerId=' + route.ownerId, complete: () => { this._navigating = false; } });
   },
 
   goPublishedProjects() {
