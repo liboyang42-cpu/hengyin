@@ -106,7 +106,8 @@ test('活动与两类大型编辑器把首载/提交失败做成可见可重试�
   assert.match(tempJs, /loadError:\s*''/)
   assert.match(tempJs, /submitError:\s*''/)
   assert.match(tempWxml, /bind:retry="retryGetData"/)
-  assert.match(tempWxml, /loading="\{\{submitting\}\}"/)
+  // CP-11(2026-11-02):提交转圈只留在保存草稿/发布按钮上,查看预览不再陪转
+  assert.match(tempWxml, /loading="\{\{submitting && submittingAction === 'draft'\}\}"/)
   assert.match(tempWxml, /submitError/)
 
   const fabuJs = read('pages/publish/fabu/index.js')

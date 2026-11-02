@@ -1389,7 +1389,7 @@
   </view>
   <view class="cg-bottombar" wx:if="{{!editorLoading && !loadError}}">
     <cy-btn wx:if="{{!previewMode && from !== 'fabu' && from !== 'citynode'}}" variant="secondary" disabled="{{submitting}}" loading="{{submitting && submittingAction === 'draft'}}" bindtap="saveDraft">保存草稿</cy-btn>
-    <cy-btn variant="{{previewMode ? 'primary' : 'secondary'}}" disabled="{{!canOpenPreview || submitting}}" aria-disabled="{{!canOpenPreview || submitting}}" loading="{{previewMode && submitting}}" bindtap="openPreview" bind:disabledtap="onPreviewDisabledTap">查看预览</cy-btn>
+    <cy-btn variant="{{previewMode ? 'primary' : 'secondary'}}" disabled="{{!canOpenPreview}}" aria-disabled="{{!canOpenPreview || submitting}}" loading="{{previewMode && submitting}}" bindtap="openPreview" bind:disabledtap="onPreviewDisabledTap">查看预览</cy-btn>
     <cy-btn wx:if="{{!previewMode}}" variant="primary" disabled="{{!canPublishGame}}" aria-disabled="{{!canPublishGame || submitting}}" loading="{{submittingAction === 'publish' || submittingAction === 'bind'}}" bindtap="publishGame" bind:disabledtap="onPreviewDisabledTap">{{from === 'citynode' ? '保存玩法' : from === 'fabu' ? '保存并绑定' : '发布玩法'}}</cy-btn>
   </view>
 

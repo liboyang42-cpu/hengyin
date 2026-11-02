@@ -2248,8 +2248,7 @@ Page({
     function isCurrent() {
       return requestSeq === that._memberRequestSeq && String(clubId) === String(that.data.clubId);
     }
-    const keepMembers = this.data.membersState === 'ready'; // CP-02:刷新保留成员快照
-    this.setData({ members: keepMembers ? this.data.members : [], membersState: keepMembers ? 'ready' : 'loading', memberStrip: keepMembers ? this.data.memberStrip : [] });
+    if (this.data.membersState !== 'ready') this.setData({ members: [], membersState: 'loading', memberStrip: [] }); // CP-02:刷新保留成员快照
     app.sendRequest({
       hideLoading: true, url: '/api/club/members', method: 'POST', data: jsonBody({ clubId: clubId }), header: jsonHeader(),
       success(res) {
