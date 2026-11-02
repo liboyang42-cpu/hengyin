@@ -1309,7 +1309,7 @@
           <view class="cg-mod-meta">
             <view class="cg-mod-name">剧情故事</view>
           </view>
-          <view class="cg-mod-del" bindtap="removeModule" data-key="story" aria-role="button" aria-label="移除剧情故事" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="cg-mod-del" bindtap="confirmRemoveModule" data-key="story" aria-role="button" aria-label="移除剧情故事" hover-class="cy-pressed" hover-stay-time="80">
             <cy-icon name="close-sm" size="32" />
           </view>
         </view>
@@ -1389,7 +1389,7 @@
   </view>
   <view class="cg-bottombar" wx:if="{{!editorLoading && !loadError}}">
     <cy-btn wx:if="{{!previewMode && from !== 'fabu' && from !== 'citynode'}}" variant="secondary" disabled="{{submitting}}" loading="{{submitting && submittingAction === 'draft'}}" bindtap="saveDraft">保存草稿</cy-btn>
-    <cy-btn variant="{{previewMode ? 'primary' : 'secondary'}}" disabled="{{!canOpenPreview}}" aria-disabled="{{!canOpenPreview || submitting}}" loading="{{submitting}}" bindtap="openPreview" bind:disabledtap="onPreviewDisabledTap">查看预览</cy-btn>
+    <cy-btn variant="{{previewMode ? 'primary' : 'secondary'}}" disabled="{{!canOpenPreview || submitting}}" aria-disabled="{{!canOpenPreview || submitting}}" loading="{{previewMode && submitting}}" bindtap="openPreview" bind:disabledtap="onPreviewDisabledTap">查看预览</cy-btn>
     <cy-btn wx:if="{{!previewMode}}" variant="primary" disabled="{{!canPublishGame}}" aria-disabled="{{!canPublishGame || submitting}}" loading="{{submittingAction === 'publish' || submittingAction === 'bind'}}" bindtap="publishGame" bind:disabledtap="onPreviewDisabledTap">{{from === 'citynode' ? '保存玩法' : from === 'fabu' ? '保存并绑定' : '发布玩法'}}</cy-btn>
   </view>
 

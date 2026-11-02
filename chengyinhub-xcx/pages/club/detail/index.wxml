@@ -196,6 +196,8 @@
         </view>
       </template>
 
+      <!-- CP-03:首载骨架占位,刷新时保留快照(见 loadTopics) -->
+      <cy-skeleton wx:if="{{topicState === 'loading' && !topicsLoaded}}" type="list" count="2" />
       <block wx:if="{{topicState !== 'error' && topicsLoaded}}">
         <view class="ev-sec-head" wx:if="{{club.isOwner || canManageActivities}}">
           <view class="ev-sec-rule"></view>
