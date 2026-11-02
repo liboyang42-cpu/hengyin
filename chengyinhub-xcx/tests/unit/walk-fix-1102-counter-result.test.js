@@ -55,18 +55,35 @@ test('M-06 他日场次照常成功，并提示场次日期', () => {
 
 const read = f => fs.readFileSync(path.join(__dirname, '../../', f), 'utf8');
 
-test('M-05/M-23 结果面板：绿色对勾、站点、权益、主按钮「继续扫码」', () => {
+test('M-05/M-23 结果面板用现成的 cy-result-sheet，无「操作结果」标题栏，主按钮「继续扫码」', () => {
   const wxml = read('pages/merchant/index/index.wxml');
   const sheet = wxml.slice(wxml.indexOf("'merchant-verification-result'"), wxml.indexOf('<tabBar'));
-  assert.match(sheet, /verify-result__badge[\s\S]*name="\{\{verificationResult\.state === 'success' \? 'check' : 'close'\}\}"/);
-  assert.match(sheet, /\{\{verificationResult\.stop\}\}/);
-  assert.match(sheet, /请提供：\{\{verificationResult\.perk\}\}/);
-  assert.match(sheet, /\{\{verificationResult\.warn\}\}/);
-  assert.match(sheet, /bindtap="continueScan"[^>]*>继续扫码</);
-  assert.doesNotMatch(sheet, />知道了</);
-  const wxss = read('pages/merchant/index/index.wxss');
-  assert.match(wxss, /\.verify-result__badge \{[^}]*background: var\(--cy-success\)/);
-  assert.match(wxss, /\.verify-result--rejected \.verify-result__badge \{ background: var\(--cy-danger\)/);
+  assert.match(sheet, /<cy-result-sheet /);
+  assert.doesNotMatch(sheet, /cy-scene-sheet|verify-result/);
+  assert.doesNotMatch(sheet, /sceneCurrent\.title/);
+  for (const k of ['kind', 'title', 'sub', 'meta', 'pill', 'why']) assert.match(sheet, new RegExp(k + '="\\{\\{verificationResult\\.' + k + '\\}\\}"'));
+  assert.match(sheet, /primary-text="\{\{merchantAccess\.canVerify \? '继续扫码' : '完成'\}\}"/);
+  assert.match(sheet, /bind:primary="onVerificationPrimary"/);
+  assert.match(sheet, /bind:secondary="closeVerificationResult"/);
+  assert.match(sheet, /bind:close="closeVerificationResult"/);
+  assert.match(sheet, /duration="\{\{0\}\}"/);
+  const json = JSON.parse(read('pages/merchant/index/index.json'));
+  assert.equal(json.usingComponents['cy-result-sheet'], '/components/cy/result-sheet/index');
+  assert.doesNotMatch(read('pages/merchant/index/index.wxss'), /\.verify-result/);
+});
+
+test('M-05/M-06 面板内容：站点、权益、他日提醒都还在；重复核销不写「请提供」', () => {
+  const { verificationSheetView } = require('../../utils/merchant-verification.js');
+  const ok = resolveVerificationResult({ code: 200, msg: '核销成功', data: { chapterName: '第1章 咖啡', perkName: '美式一杯', sessionDate: '11月12日', sessionNotToday: true } });
+  assert.deepEqual(verificationSheetView(ok), { kind: 'success', sub: '第1章 咖啡', pill: '请提供：美式一杯', meta: '这张票是 11月12日 的场次', why: '' });
+  const rej = verificationSheetView({ state: 'rejected', title: '未核销', message: '这不是城瘾的核销码' });
+  assert.equal(rej.kind, 'fail');
+  assert.equal(rej.why, '这不是城瘾的核销码');
+  const dup = resolveVerificationResult({ code: 200, msg: '核销成功', data: { replayed: true, chapterName: 'A', perkName: 'P' } });
+  const dv = verificationSheetView(dup);
+  assert.equal(dv.kind, 'fail');
+  assert.equal(dv.pill, '');
+  assert.equal(dv.sub, 'A');
 });
 
 function pageMethods() {
@@ -84,7 +101,8 @@ test('M-23 继续扫码先收起面板再打开扫码；M-25 非城瘾码进同�
   const pick = pageMethods();
   const calls = [];
   const wx = { nextTick: fn => fn() };
-  const page = new Function('wx', 'return ({' + pick('continueScan') + ',' + pick('showRejectedScan') + '});')(wx);
+  const { verificationSheetView } = require('../../utils/merchant-verification.js');
+  const page = new Function('wx', 'verificationSheetView', 'return ({' + pick('continueScan') + ',' + pick('showRejectedScan') + ',' + pick('onVerificationPrimary') + '});')(wx, verificationSheetView);
   page.closeScene = () => calls.push('close');
   page.goScanQR = () => calls.push('scan');
   page.openScene = id => calls.push('open:' + id);
@@ -92,8 +110,18 @@ test('M-23 继续扫码先收起面板再打开扫码；M-25 非城瘾码进同�
   page.continueScan();
   assert.deepEqual(calls, ['close', 'scan']);
   calls.length = 0;
+  page.closeVerificationResult = () => calls.push('done');
+  page.data = { merchantAccess: { canVerify: true } };
+  page.onVerificationPrimary();
+  page.data = { merchantAccess: { canVerify: false } };
+  page.onVerificationPrimary();
+  assert.deepEqual(calls, ['close', 'scan', 'done']);
+  calls.length = 0;
   page.showRejectedScan('这不是城瘾的核销码');
-  assert.deepEqual(calls, [{ verificationResult: { state: 'rejected', title: '未核销', message: '这不是城瘾的核销码', show: true } }, 'open:merchant-verification-result']);
+  assert.equal(calls[0].verificationResult.state, 'rejected');
+  assert.equal(calls[0].verificationResult.kind, 'fail');
+  assert.equal(calls[0].verificationResult.why, '这不是城瘾的核销码');
+  assert.equal(calls[1], 'open:merchant-verification-result');
   const src = read('pages/merchant/index/index.js');
   assert.match(src, /that\.showRejectedScan\(scan\.message === '二维码格式错误' \? '这不是城瘾的核销码' : scan\.message\)/);
 });
@@ -135,4 +163,14 @@ test('M-24 供给卡写剩余份数(主题页与承接项目组件同一字段)'
   const value = new Function('row', 'return ' + expr.replace(/^quotaLeftText:\s*/, '').replace(/,\s*(\/\/[^\n]*\s*)?$/, ''))(row);
   assert.equal(value, '剩余 15 / 20');
   assert.equal(new Function('row', 'return ' + expr.replace(/^quotaLeftText:\s*/, '').replace(/,\s*(\/\/[^\n]*\s*)?$/, ''))({}), '');
+});
+
+test('M-27 核销与退款行：无左侧状态点、副行只有时间、零现金右列不画破折号', () => {
+  const wxml = read('pages/merchant/ledger/index.wxml');
+  const row = wxml.slice(wxml.indexOf('wx:for="{{group.rows}}"'), wxml.indexOf('</view>\n            </view>\n          </view>\n        </block>'));
+  assert.doesNotMatch(row, /fin-row__dot/);
+  assert.doesNotMatch(row, /customerDisplayName|顾客信息受保护/);
+  assert.match(row, /<text wx:if="\{\{item\.timeText\}\}">\{\{item\.timeText\}\}<\/text>/);
+  const src = read('pages/merchant/ledger/index.js');
+  assert.match(src, /displayState === 'NO_CASH_SETTLEMENT' \? null : '待定'/);
 });

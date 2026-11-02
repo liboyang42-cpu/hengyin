@@ -39,7 +39,7 @@ function clearInvalidSession() {
   if (session && typeof session.clearSession === 'function') session.clearSession();
 }
 
-const { resolveVerificationResult, classifyVerificationOutcome, createVerificationWorkflow } = require('../../../utils/merchant-verification.js');
+const { resolveVerificationResult, verificationSheetView, classifyVerificationOutcome, createVerificationWorkflow } = require('../../../utils/merchant-verification.js');
 const { resolveVerificationScan } = require('../../../utils/verification-scan.js');
 const { getScene } = require('../../../utils/scene-registry.js');
 const { pushScene, popScene, currentScene, exitDecision } = require('../../../utils/scene-stack.js');
@@ -1418,7 +1418,8 @@ Page({
   },
 
   showVerificationResult(response, action) {
-    this.setData({ verificationResult: resolveVerificationResult(response, action) });
+    const result = resolveVerificationResult(response, action);
+    this.setData({ verificationResult: Object.assign(result, verificationSheetView(result)) });
     this.openScene('merchant-verification-result');
   },
 
@@ -1427,8 +1428,15 @@ Page({
   },
 
   showRejectedScan(message) {
-    this.setData({ verificationResult: { state: 'rejected', title: '未核销', message: message, show: true } });
+    const result = { state: 'rejected', title: '未核销', message: message, show: true };
+    this.setData({ verificationResult: Object.assign(result, verificationSheetView(result)) });
     this.openScene('merchant-verification-result');
+  },
+
+  // 结果面板主按钮:能核销的账号是「继续扫码」,其余只有「完成」。
+  onVerificationPrimary() {
+    if (this.data.merchantAccess && this.data.merchantAccess.canVerify) this.continueScan();
+    else this.closeVerificationResult();
   },
 
   // M-23:柜台排队时一次点按就接着扫下一位。

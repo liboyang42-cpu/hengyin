@@ -80,7 +80,7 @@
          没权限的人看到「发布第一个主题」点进去必被拒,那是个假入口。
          ⚠️ 未确认(unknown)绝不能落到这里:那会把「还没读到」画成「你什么都没有」。 -->
     <cy-empty wx:if="{{marketingLoaded && marketingDataState === 'empty'}}" kind="empty"
-              title="还没有营销数据"
+              title="还没有主题和活动"
               cta="{{merchantAccess.canManageProjects ? '发布第一个主题' : ''}}"
               bind:cta="startFirstContent" />
     <view class="mk-hold mk-hold--mine" wx:elif="{{funnelLoading && !marketingLoaded}}">

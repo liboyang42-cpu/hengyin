@@ -494,10 +494,10 @@ Page({
     const item = Object.assign({}, row);
     item.amountText = row.settlementAmount == null || Number(row.settlementAmount) === 0 ? null : money(row.settlementAmount);
     item.amountPrefix = item.amountText != null && Number(item.amountText) >= 0 ? '+' : '';
-    // 右列只放金额,一列一语义;金额未成立也占位,右缘才有稳定对齐线。
-    // 两种未成立要分开:明确不产生现金 → 破折号;金额尚未成立(①②待主题结算)→「待定」。
+    // 右列只放金额,一列一语义。两种未成立要分开:金额尚未成立(①②待主题结算)→「待定」;
+    // 明确不产生现金 → 右列留空(M-27 第3轮:不再画破折号,状态 chip 已说「无现金结算」)。
     item.amountDisplay = item.amountText != null ? `${item.amountPrefix}¥${item.amountText}`
-      : (row.displayState === 'NO_CASH_SETTLEMENT' ? '—' : '待定');
+      : (row.displayState === 'NO_CASH_SETTLEMENT' ? null : '待定');
     item.amountTone = item.amountText == null ? 'mute' : (Number(item.amountText) < 0 ? 'neg' : 'pos');
     item.dayKey = row.occurredAt ? String(row.occurredAt).slice(0, 10) : '';
     item.timeText = row.occurredAt ? String(row.occurredAt).slice(11, 16) : '';

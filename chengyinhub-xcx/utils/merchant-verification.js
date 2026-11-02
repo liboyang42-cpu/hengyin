@@ -169,4 +169,21 @@ function resolveVerificationResult(response, action) {
   };
 }
 
-module.exports = { resolveVerificationResult, completionReceiptMessage, classifyVerificationOutcome, createVerificationWorkflow, notRedeemedMessage };
+// M-05/M-23(第3轮):结果面板改用现成的 cy-result-sheet(成功 = 绿色勾章,其余 = 信息章)。
+// 内容不变:站点名、要提供的权益、他日场次提醒、原因。「请提供」只在本次真核销成功时出现 ——
+// 重复核销的回执本身就是「请勿重复提供权益」,再写「请提供」自相矛盾。
+function verificationSheetView(result) {
+  const r = record(result) ? result : {};
+  const success = r.state === 'success';
+  const stop = r.stop || '';
+  const message = r.message || '';
+  return {
+    kind: success ? 'success' : 'fail',
+    sub: success ? [stop, message].filter(Boolean).join(' · ') : stop,
+    pill: success && r.perk ? '请提供：' + r.perk : '',
+    meta: r.warn || '',
+    why: success ? '' : message,
+  };
+}
+
+module.exports = { resolveVerificationResult, verificationSheetView, completionReceiptMessage, classifyVerificationOutcome, createVerificationWorkflow, notRedeemedMessage };

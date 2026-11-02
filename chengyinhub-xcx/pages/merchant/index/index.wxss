@@ -494,24 +494,6 @@ page {
   color: var(--cy-text-secondary);
 }
 
-/* 核销必须落到可辨识的三态,不能只给一闪而过的 toast。 */
-.verify-result { padding: var(--cy-legacy-36) var(--cy-space-4) var(--cy-space-3-5); text-align: center; /* ds-ok: 36rpx和28rpx无精确匹配的spacing token */ }
-.verify-result__title { display: block; font-size: var(--cy-font-title); font-weight: 700; color: var(--cy-text-title); }
-.verify-result__message { display: block; margin-top: var(--cy-legacy-18); font-size: var(--cy-font-body); line-height: 1.6; color: var(--cy-text-secondary); }
-.verify-result__action { flex: 1; min-height: var(--cy-comp-icon-pair-standard-hit); box-sizing: border-box; display: flex; align-items: center; justify-content: center; padding: var(--cy-legacy-22) 0; border-radius: var(--cy-radius-md); background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); font-size: var(--cy-font-body); font-weight: 600; }
-.verify-result__actions { display: flex; gap: var(--cy-space-3); margin-top: var(--cy-space-4); }
-.verify-result__action--ghost { background: var(--cy-bg-page); color: var(--cy-text-title); }
-.verify-result--duplicate .verify-result__title { color: var(--cy-gold); }
-.verify-result--failure .verify-result__title { color: var(--cy-danger); }
-/* M-05:成功是绿色对勾,M-02:确定没核销是红色叉,两者一眼可分;待确认/重复不画徽章。 */
-.verify-result__badge { width: 112rpx; height: 112rpx; /* ds-ok: 徽章尺寸沿用商家入驻成功页 succ-icon 的圆章 */ margin: 0 auto var(--cy-space-3); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--cy-text-inverse); background: var(--cy-success); }
-.verify-result--rejected .verify-result__badge { background: var(--cy-danger); }
-.verify-result--success .verify-result__title { color: var(--cy-success); }
-.verify-result--rejected .verify-result__title { color: var(--cy-danger); }
-.verify-result__stop { display: block; margin-top: var(--cy-space-2); font-size: var(--cy-font-body); font-weight: 600; color: var(--cy-text-title); }
-.verify-result__perk { display: inline-block; margin-top: var(--cy-space-3); padding: var(--cy-space-2) var(--cy-space-4); border-radius: var(--cy-radius-pill); background: var(--cy-bg-page); font-size: var(--cy-font-body); font-weight: 600; color: var(--cy-text-title); }
-.verify-result__warn { margin-top: var(--cy-space-3); padding: var(--cy-space-2) var(--cy-space-3); border-radius: var(--cy-radius-md); background: var(--cy-color-status-warning-soft); color: var(--cy-gold); font-size: var(--cy-font-body); }
-
 /* ===== 我的消息(设计稿 3910:702):事件流,单卡分隔线 ===== */
 .rv-msgs {
   margin: 0 var(--cy-page-x);
