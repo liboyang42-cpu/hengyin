@@ -53,4 +53,3 @@ page { background: var(--cy-bg-page); }
   color: var(--cy-text-secondary);
   font-size: var(--cy-font-label);
 }
-.team-action--pressed { opacity: .72; }

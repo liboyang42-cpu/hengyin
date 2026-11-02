@@ -59,174 +59,6 @@ page{
   z-index: 12;
 }
 
-/* 图片横向滚动区域 */
-.detail .row3-scroll-wrapper {
-  margin-bottom: var(--cy-space-2-5);
-  width: 100%;
-}
-
-.detail .row3-scroll {
-  width: 100%;
-  white-space: nowrap;
-  height: 600rpx; /* 调整为600rpx，与JS中的imageHeight保持一致 */
-}
-
-.detail .row3-scroll .row3-images {
-  display: flex;
-  height: 100%;
-  align-items: center;
-  padding-right: var(--cy-space-3-5);
-}
-
-.detail .row3-scroll .row3-images .scroll-image {
-  display: inline-block;
-  vertical-align: middle;
-  flex-shrink: 0;
-  object-fit: contain;
-  margin-right: var(--cy-legacy-10); /* 图片间距 */
-  border-radius: 10px; /* 5px圆角 */
-  background-color: var(--cy-bg-page);
-  /* 确保图片高度占满容器 */
-  max-height: 100%;
-}
-
-/* 确保最后一个图片没有右边距 */
-.detail .row3-scroll .row3-images .scroll-image:last-child {
-  margin-right: 0;
-}
-
-/* 移除旧的row3样式 */
-.detail .row3.scroll {
-  overflow-x: auto;
-  margin-right: calc(var(--cy-space-3-5) * -1);
-  height: auto; /* 改为自动高度 */
-  padding-bottom: var(--cy-space-2);
-  display: flex;
-  align-items: center;
-}
-
-/* 移除旧的图片样式 */
-/* .detail .row3 image {
-  width: 96%; 
-  margin-right: 2%;  
-  height: 100%;
-  flex-shrink:0;
-} */
-
-/* 以下是原有样式保持不变 */
-.detail .row1 .fl .user {
-  position: relative;
-  margin-right: var(--cy-space-3);
-  width: 69rpx;
-  height: 69rpx;
-}
-
-.detail .row1 .fl .user image {
-  width: 69rpx;
-  height: 69rpx;
-  border-radius: 50%;
-}
-
-.detail .row1 .fl .user .jia {
-  width: 31rpx;
-  height: 31rpx;
-  border-radius: 50%;
-  position: absolute;
-  bottom: -5rpx;
-  right: -5rpx;
-  background: var(--cy-btn-solid-bg);
-  color: var(--cy-text-inverse);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 4rpx solid var(--cy-border-card);
-}
-
-.detail .row1 .fl .user .jia image {
-  /* icon_jia.png 本身是纯白像素(实测 RGB=255,255,255)。这颗徽标底色是白实心
-     (--cy-btn-solid-bg,或玩家域去紫后的 --cy-brand),白图标压白底会整个看不见——
-     base 规则其实早就这样了(既有缺陷),玩家域 brand 去紫后波及面变大,一并按黑图标修。 */
-  filter: brightness(0);
-  width: 13rpx;
-  height: 13rpx;
-}
-
-.detail .row1 .fl .uname {
-  font-size: var(--cy-font-label);
-  font-weight: bold;
-}
-
-.detail .row1 .fl .uname image {
-  width: 23rpx;
-  height: 23rpx;
-  margin-left: var(--cy-legacy-10);
-}
-
-.detail .row1 .fl .time {
-  font-size: var(--cy-font-caption);
-  color: var(--cy-text-secondary);
-  margin-left: var(--cy-space-1-5);
-}
-
-.detail .row1 .gz {
-  width: 131rpx;
-  height: 46rpx;
-  font-size: var(--cy-font-label);
-  border: 2rpx solid var(--cy-border-line);
-  border-radius: var(--cy-radius-sm);
-  font-weight: bold;
-}
-
-.detail .row2 {
-  font-size: var(--cy-font-label);
-  margin: var(--cy-legacy-26) 0 16rpx;
-  line-height: var(--cy-leading-normal);
-}
-
-.detail .row2 .txt text {
-  color: var(--cy-accent);
-}
-
-.detail .row4 {
-  padding: var(--cy-space-3) 0 32rpx;
-}
-
-.detail .row4 .fl .dd {
-  margin-right: var(--cy-space-3-5);
-}
-
-.detail .row4 .fl .dd image {
-  width: 30rpx;
-  height: 30rpx;
-  margin-right: var(--cy-legacy-10);
-}
-
-.detail .row4 .fl .line {
-  height: 27rpx;
-  margin: 0 var(--cy-space-2-5) 0 0;
-  border-right: 2rpx solid rgba(0, 0, 0, 0.1);
-}
-
-.detail .row4 .fr button {
-  margin: 0 0 0 var(--cy-legacy-26);
-  width: 30rpx;
-}
-
-.detail .row4 .fr button image {
-  width: 30rpx;
-  height: 30rpx;
-}
-
-.detail .row4 .fr .report-btn {
-  width: auto;
-  margin-left: var(--cy-space-3);
-  padding: 0;
-  font-size: var(--cy-font-label);
-  color: var(--cy-text-body);
-  line-height: 32rpx;
-  background: transparent;
-}
-
 .detail .item-link .comment-report {
   width: auto;
   margin-left: var(--cy-legacy-18);
@@ -236,7 +68,6 @@ page{
   line-height: 30rpx;
   background: transparent;
 }
-
 
 .detail .step {
   padding: var(--cy-space-5) 0;
@@ -315,6 +146,18 @@ page{
   align-items: center;
   justify-content: center;
   border: 4rpx solid var(--cy-border-card);
+  overflow: visible;
+}
+/* 视觉 31rpx 按稿,热区不低于 88rpx:同 .post-head .gz 的透明 ::after 做法(顺带清掉微信按钮默认边框) */
+.detail .list .dl .li .item .col1 .user .jia::after {
+  border: none;
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 88rpx;
+  height: 88rpx;
+  transform: translate(-50%, -50%);
 }
 
 .detail .list .dl .li .item .col1 .user .jia image {
@@ -425,7 +268,6 @@ page{
   margin: 0 var(--cy-space-2);
 }
 
-
 /*新加评论*/
 /* 占位块高度 = 评论条实高:输入框 16+40+16=72rpx,加上下内边距 16+20 = 108rpx,留一点余量。 */
 .david_kong{ width: 100%; overflow: hidden; height: calc(120rpx + env(safe-area-inset-bottom));}
@@ -443,23 +285,6 @@ page{
 .david_nplinu input{ height: var(--cy-space-7); line-height: 80rpx; font-size: var(--cy-font-label); margin: 0 var(--cy-space-3-5);}
 .david_nplok{width: 140rpx; height: var(--cy-space-7); border-radius: var(--cy-radius-lg); background: var(--cy-btn-solid-bg); box-shadow:0px 8rpx 8rpx 0px rgba(0, 0, 0, .25); font-weight: 700rpx; font-size: var(--cy-font-subtitle); line-height: 80rpx; text-align: center; color: var(--cy-text-inverse);} /* ds-ok */
 
-/* ===== 运动feed状态块(详情页) ===== */
-.sport-block {
-  margin-top: var(--cy-space-3);
-  padding: var(--cy-space-3);
-  background: var(--cy-bg-subtle);
-  border-radius: var(--cy-radius-md);
-  border: 1rpx solid var(--cy-border-card);
-}
-.sport-block .sport-head { margin-bottom: var(--cy-space-3); }
-.sport-block .sport-ico { width: 32rpx; height: 32rpx; margin-right: var(--cy-space-2); flex-shrink: 0; }
-.sport-block .sport-title { flex: 1; min-width: 0; font-size: var(--cy-font-subtitle); font-weight: bold; color: var(--cy-text-title); }
-.sport-block .sport-badge { flex-shrink: 0; margin-left: var(--cy-space-2); padding: var(--cy-legacy-4) 16rpx; font-size: var(--cy-font-caption); color: var(--cy-text-inverse); background: var(--cy-accent); border-radius: var(--cy-radius-pill); }
-.sport-block .sport-metrics { margin-bottom: var(--cy-space-3); }
-.sport-block .metric { flex: 1; }
-.sport-block .metric-val { font-size: var(--cy-font-subtitle); font-weight: bold; color: var(--cy-text-title); }
-.sport-block .metric-label { margin-top: var(--cy-legacy-4); font-size: var(--cy-font-caption); color: var(--cy-text-secondary); }
-
 /* ============================================================
    详情页深色 Strava 皮肤(对齐广场 feed) node 3700-11775 同款
    ============================================================ */
@@ -470,27 +295,11 @@ page { background: var(--cy-bg-page); }
 /* 暗色图标转白(点赞/踩/分享/评论;高亮态保留原色) */
 
 /* 黑→暗分隔线在深底上不可见,统一改为浅描边 */
-.detail.theme-dark .row1 { border-bottom-color: var(--cy-border-card) !important; }
-.detail.theme-dark .gbox1,
-.detail.theme-dark .row4 { border-color: var(--cy-border-card) !important; }
 
-/* 关注/小加号按钮:橙色角标(对齐 feed) */
-.detail.theme-dark .row1 .fl .user .jia { background: var(--cy-brand); border-color: var(--cy-bg-page); }
-
-/* 运动块:深色卡面 + 珊瑚橙通关角标 + 白字 */
-.detail.theme-dark .sport-block {
-  background: var(--cy-color-bg-surface-subtle);
-  border: 1rpx solid var(--cy-border-card);
-}
-.detail.theme-dark .sport-block .sport-title { font-size: var(--cy-font-display); color: var(--cy-text-title); }
-.detail.theme-dark .sport-block .sport-badge { background: var(--cy-brand); color: var(--cy-text-inverse); }
-.detail.theme-dark .sport-block .metric-val { color: var(--cy-text-title); }
-.detail.theme-dark .sport-block .metric-label { color: var(--cy-text-title); }
+.detail.theme-dark .gbox1 { border-color: var(--cy-border-card) !important; }
 
 /* 去蓝字:正文/链接/强调文本在深色下统一白色(原 var(--cy-accent)=蓝) */
-.detail.theme-dark .row2,
-.detail.theme-dark .row2 .txt,
-.detail.theme-dark .row2 .txt text { color: var(--cy-text-title); }
+
 .detail.theme-dark .item-desc { color: var(--cy-color-text-secondary); }
 .detail.theme-dark .item-tit .uname { color: var(--cy-text-title); }
 
@@ -502,18 +311,8 @@ page { background: var(--cy-bg-page); }
    比我原来的 var(--cy-brand)+text-inverse 更稳,取批1 版。 */
 .detail.theme-dark .david_nplok { background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); }
 
-
-/* 关注按钮:珊瑚橙描边胶囊(对齐 feed 强调色) */
-.detail.theme-dark .row1 .gz {
-  border: 2rpx solid var(--cy-brand);
-  color: var(--cy-brand);
-  background: transparent;
-}
 /* 举报:深底上清晰可见 */
-.detail.theme-dark .row4 .fr .report-btn,
 .detail.theme-dark .item-link .comment-report { color: rgba(255,255,255,0.55); }
-/* 点赞/踩数字白色 */
-.detail.theme-dark .row4 .fl .dd { color: var(--cy-text-title); }
 
 /* ============================================================
    详情帖子区:与创意广场 .post 完全同款(更大间距,参考Figma)

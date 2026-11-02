@@ -109,7 +109,7 @@ page {
 
 /* ADA:成功态 hero 全出血,顶部不再让位(wxml 上换成 .xb-scroll--bleed 且去掉行内 padding-top)。
    loading/error 走 .xb-state,仍各自带 statusBar+navBar 的让位。 */
-.xb-scroll--bleed { padding-top: 0; }
+.xb-scroll--bleed { padding-top: 0; animation: cy-fade-in var(--cy-motion-fade-swap) var(--cy-ease-out); } /* 成功态随加载完成挂载:与兄弟页同一挂载淡入(全局 cy-fade-in,只淡不移) */
 
 /* CTA 已按参考图搬进页面流(不再有固定底栏遮正文),这里只留常规收尾留白 + 安全区。 */
 .xb-scroll-pad {
@@ -126,7 +126,7 @@ page {
   display: flex;
   align-items: center;
   gap: var(--cy-space-4);
-  padding: var(--cy-space-4) 40rpx var(--cy-space-5);  /* ds-ok: 40rpx 与本页其余分节左右内距对齐,量表无半步 token */
+  padding: var(--cy-space-4) var(--cy-page-x) var(--cy-space-5);  /* 版心与全站页边同一 token(原 40rpx 半步值,无业主裁决) */
 }
 
 .xb-head-cover {
@@ -200,7 +200,7 @@ page {
   display: flex;
   align-items: center;
   gap: var(--cy-space-3);
-  padding: 0 40rpx;  /* ds-ok: 40rpx 与本页其余分节左右内距对齐,量表无半步 token */
+  padding: 0 var(--cy-page-x);  /* 版心与全站页边同一 token(原 40rpx 半步值,无业主裁决) */
   margin-bottom: var(--cy-space-6);
   --xb-share-bg: rgba(255, 255, 255, 0.1); /* ds-ok: 原 .xb-share 底色原值挪进变量,供「应用」与分享键共用,不改色 */
 }
@@ -249,7 +249,7 @@ page {
    靠细分隔线成组的。之前套了 --xb-card(#18151F,偏紫的深灰)当卡底,在模糊底上就是一块
    突兀的紫灰长方形,既盖掉封面色也和参考图不是一回事。分组交给下面 .xb-inforow 的行分隔线。 */
 .xb-infoblock {
-  margin: 0 40rpx var(--cy-space-7);  /* ds-ok: 40rpx 与本页其余分节左右内距对齐,量表无半步 token */
+  margin: 0 var(--cy-page-x) var(--cy-space-7);  /* 版心与全站页边同一 token(原 40rpx 半步值,无业主裁决) */
 }
 
 /* 键值行。分隔线挂在每一行自己头上,不挂容器:每行都是 wx:if 条件渲染,
@@ -294,7 +294,7 @@ page {
 }
 
 .xb-notice--solo {
-  padding: 0 40rpx var(--cy-space-7);  /* ds-ok: 40rpx 介于 --cy-space-4(32)/--cy-space-5(48) 正中间,量表无半步 token,保留字面值 */
+  padding: 0 var(--cy-page-x) var(--cy-space-7);  /* 版心与全站页边同一 token(原 40rpx 半步值,无业主裁决) */
   font-size: var(--cy-font-label);
   line-height: 44rpx;
   color: var(--xb-muted);
@@ -302,7 +302,7 @@ page {
 
 /* Tab */
 .xb-tabs-wrap {
-  padding: 0 40rpx;  /* ds-ok: 40rpx 介于 --cy-space-4(32)/--cy-space-5(48) 正中间,量表无半步 token,保留字面值 */
+  padding: 0 var(--cy-page-x);  /* 版心与全站页边同一 token(原 40rpx 半步值,无业主裁决) */
   margin-bottom: 56rpx;  /* ds-ok: 56rpx 介于 --cy-space-5(48)/--cy-space-6(64) 正中间,量表无半步 token,保留字面值 */
 }
 
@@ -319,7 +319,7 @@ page {
 .xb-mosaic-inner {
   display: inline-flex;
   gap: var(--cy-space-2-5);
-  padding: 0 40rpx;  /* ds-ok: 40rpx 介于 --cy-space-4(32)/--cy-space-5(48) 正中间,量表无半步 token,保留字面值 */
+  padding: 0 var(--cy-page-x);  /* 版心与全站页边同一 token(原 40rpx 半步值,无业主裁决) */
 }
 
 /* 参考图:单行大图横滑,16:9,右侧刻意露出下一张(544×306px → 542×305rpx 取整) */
@@ -340,7 +340,7 @@ page {
 
 /* 内容块 */
 .xb-block {
-  padding: 0 40rpx 88rpx;  /* ds-ok: 40rpx 介于 --cy-space-4(32)/--cy-space-5(48) 正中间,量表无半步 token,保留字面值 */
+  padding: 0 var(--cy-page-x) 88rpx;  /* 版心与全站页边同一 token(原 40rpx 半步值,无业主裁决) */
 }
 
 /* 2026-08-04 用户定:tab 下方的分节标题偏大。降到卡片标题档 —— 这一层是「段落名」,
@@ -411,7 +411,7 @@ page {
 .xb-stat-grid {
   display: flex;
   gap: var(--cy-space-2);
-  padding: 0 40rpx var(--cy-space-6); /* ds-ok: 与 .xb-block 同一版心 */
+  padding: 0 var(--cy-page-x) var(--cy-space-6);  /* 版心与全站页边同一 token(原 40rpx 半步值,无业主裁决) */
 }
 
 .xb-stat-card {
@@ -664,7 +664,7 @@ page {
 .xb-edition-card {
   width: 100%;
   box-sizing: border-box;
-  border-radius: var(--cy-radius-sm);
+  border-radius: var(--cy-radius-md);  /* 与同页信息卡(kv / quote / rating / notice)同一档 */
   overflow: hidden;
   background: var(--xb-card);
 }
