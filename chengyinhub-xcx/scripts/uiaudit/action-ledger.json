@@ -935218,7 +935218,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:790"
+        "staticSource": "pages/activity/baoming/baoming.js:792"
       }
     },
     {
@@ -935288,11 +935288,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:843"
+        "staticSource": "pages/activity/baoming/baoming.js:845"
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:142:bindtap:toggleDiscount:10",
+      "id": "pages/activity/baoming/baoming.wxml:143:bindtap:toggleDiscount:10",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -935315,7 +935315,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "toggleDiscount",
-        "line": 142,
+        "line": 143,
         "selectorHint": ".radio",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -935406,11 +935406,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1067"
+        "staticSource": "pages/activity/baoming/baoming.js:1069"
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:160:bindtap:cancelWaitlist:11",
+      "id": "pages/activity/baoming/baoming.wxml:161:bindtap:cancelWaitlist:11",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -935433,7 +935433,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "cancelWaitlist",
-        "line": 160,
+        "line": 161,
         "selectorHint": ".waitlist-card__link",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -935494,11 +935494,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1010"
+        "staticSource": "pages/activity/baoming/baoming.js:1012"
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:166:bindtap:retryWaitlistStatus:12",
+      "id": "pages/activity/baoming/baoming.wxml:167:bindtap:retryWaitlistStatus:12",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -935521,131 +935521,6 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "retryWaitlistStatus",
-        "line": 166,
-        "selectorHint": ".waitlist-card__link",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "read",
-      "interactionMode": "tap",
-      "baseActionClass": "read",
-      "effectClasses": [
-        "read",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/club/event-ops/waitlist/status",
-          "/api/config/features",
-          "/api/login/code",
-          "/api/registration/payment-readiness",
-          "/api/registration/quote",
-          "/api/role/info"
-        ],
-        "primaryApis": [
-          "/api/club/event-ops/waitlist/status",
-          "/api/registration/payment-readiness",
-          "/api/registration/quote"
-        ],
-        "auxiliaryApis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/club/event-ops/waitlist/status",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/registration/payment-readiness",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/registration/quote",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:936"
-      }
-    },
-    {
-      "id": "pages/activity/baoming/baoming.wxml:167:bindtap:cancelWaitlist:13",
-      "route": "pages/activity/baoming/baoming",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/activity/baoming/baoming.wxml",
-        "js": "pages/activity/baoming/baoming.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": "wx.showModal",
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "cancelWaitlist",
         "line": 167,
         "selectorHint": ".waitlist-card__link",
         "visibleCondition": null,
@@ -935661,6 +935536,131 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/club/event-ops/waitlist/status",
+          "/api/config/features",
+          "/api/login/code",
+          "/api/registration/payment-readiness",
+          "/api/registration/quote",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/club/event-ops/waitlist/status",
+          "/api/registration/payment-readiness",
+          "/api/registration/quote"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/club/event-ops/waitlist/status",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/registration/payment-readiness",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/registration/quote",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/activity/baoming/baoming.js:938"
+      }
+    },
+    {
+      "id": "pages/activity/baoming/baoming.wxml:168:bindtap:cancelWaitlist:13",
+      "route": "pages/activity/baoming/baoming",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/activity/baoming/baoming.wxml",
+        "js": "pages/activity/baoming/baoming.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": "wx.showModal",
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "cancelWaitlist",
+        "line": 168,
+        "selectorHint": ".waitlist-card__link",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
       "actionClass": "write",
       "interactionMode": "tap",
       "baseActionClass": "write",
@@ -935707,11 +935707,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1010"
+        "staticSource": "pages/activity/baoming/baoming.js:1012"
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:173:bindtap:goWaitlistOrder:14",
+      "id": "pages/activity/baoming/baoming.wxml:174:bindtap:goWaitlistOrder:14",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -935734,7 +935734,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goWaitlistOrder",
-        "line": 173,
+        "line": 174,
         "selectorHint": ".waitlist-card__link",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -935777,11 +935777,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1058"
+        "staticSource": "pages/activity/baoming/baoming.js:1060"
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:178:bindtap:goWaitlistOrder:15",
+      "id": "pages/activity/baoming/baoming.wxml:179:bindtap:goWaitlistOrder:15",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -935804,7 +935804,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goWaitlistOrder",
-        "line": 178,
+        "line": 179,
         "selectorHint": ".waitlist-card__link",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -935847,11 +935847,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1058"
+        "staticSource": "pages/activity/baoming/baoming.js:1060"
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:182:bindtap:retryWaitlistStatus:16",
+      "id": "pages/activity/baoming/baoming.wxml:183:bindtap:retryWaitlistStatus:16",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -935874,7 +935874,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "retryWaitlistStatus",
-        "line": 182,
+        "line": 183,
         "selectorHint": ".waitlist-card__link",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -935972,11 +935972,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:936"
+        "staticSource": "pages/activity/baoming/baoming.js:938"
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:187:bindtap:cancelWaitlist:17",
+      "id": "pages/activity/baoming/baoming.wxml:188:bindtap:cancelWaitlist:17",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -935999,7 +935999,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "cancelWaitlist",
-        "line": 187,
+        "line": 188,
         "selectorHint": ".waitlist-card__link",
         "visibleCondition": "{{showWaitlistCancel}}",
         "disabledCondition": null,
@@ -936060,11 +936060,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1010"
+        "staticSource": "pages/activity/baoming/baoming.js:1012"
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:188:bindtap:joinWaitlist:18",
+      "id": "pages/activity/baoming/baoming.wxml:189:bindtap:joinWaitlist:18",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -936087,7 +936087,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "joinWaitlist",
-        "line": 188,
+        "line": 189,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": "{{showWaitlistJoin}}",
         "disabledCondition": null,
@@ -936172,11 +936172,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:975"
+        "staticSource": "pages/activity/baoming/baoming.js:977"
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:193:bind:close:hideAddressPopup:19",
+      "id": "pages/activity/baoming/baoming.wxml:194:bind:close:hideAddressPopup:19",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -936199,7 +936199,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "hideAddressPopup",
-        "line": 193,
+        "line": 194,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -936239,11 +936239,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:526"
+        "staticSource": "pages/activity/baoming/baoming.js:528"
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:204:catchtap:selectAddress:22",
+      "id": "pages/activity/baoming/baoming.wxml:205:catchtap:selectAddress:22",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -936266,7 +936266,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "selectAddress",
-        "line": 204,
+        "line": 205,
         "selectorHint": ".address-item",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -936306,7 +936306,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:535"
+        "staticSource": "pages/activity/baoming/baoming.js:537"
       }
     },
     {
@@ -936376,11 +936376,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:854"
+        "staticSource": "pages/activity/baoming/baoming.js:856"
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:216:bind:cta:goToAddAddress:23",
+      "id": "pages/activity/baoming/baoming.wxml:217:bind:cta:goToAddAddress:23",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -936403,7 +936403,7 @@
         "tag": "cy-empty",
         "event": "bind:cta",
         "handler": "goToAddAddress",
-        "line": 216,
+        "line": 217,
         "selectorHint": "cy-empty[bind:cta]",
         "visibleCondition": "{{participantState === 'ready' && addressList.length === 0}}",
         "disabledCondition": null,
@@ -936487,11 +936487,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:597"
+        "staticSource": "pages/activity/baoming/baoming.js:599"
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:218:bindtap:goToAddressList:24",
+      "id": "pages/activity/baoming/baoming.wxml:219:bindtap:goToAddressList:24",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -936514,7 +936514,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "goToAddressList",
-        "line": 218,
+        "line": 219,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -936558,11 +936558,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:578"
+        "staticSource": "pages/activity/baoming/baoming.js:580"
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:235:bindtap:toggleHostShare:26",
+      "id": "pages/activity/baoming/baoming.wxml:236:bindtap:toggleHostShare:26",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -936585,7 +936585,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "toggleHostShare",
-        "line": 235,
+        "line": 236,
         "selectorHint": ".bmbottom_box",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -936625,11 +936625,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1271"
+        "staticSource": "pages/activity/baoming/baoming.js:1277"
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:240:bind:disabledtap:handlePayment:28:variant:disabled-feedback",
+      "id": "pages/activity/baoming/baoming.wxml:241:bind:disabledtap:handlePayment:28:variant:disabled-feedback",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -936659,7 +936659,7 @@
         "tag": "cy-btn",
         "event": "bind:disabledtap",
         "handler": "handlePayment",
-        "line": 240,
+        "line": 241,
         "selectorHint": "cy-btn[bind:disabledtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canPay}}",
@@ -936711,11 +936711,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1449"
+        "staticSource": "pages/activity/baoming/baoming.js:1456"
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:240:bindtap:handlePayment:27:variant:solo-free-consent-pending",
+      "id": "pages/activity/baoming/baoming.wxml:241:bindtap:handlePayment:27:variant:solo-free-consent-pending",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -936827,7 +936827,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "handlePayment",
-        "line": 240,
+        "line": 241,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canPay}}",
@@ -936905,11 +936905,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1449"
+        "staticSource": "pages/activity/baoming/baoming.js:1456"
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:240:bindtap:handlePayment:27:variant:solo-free-consent-ready",
+      "id": "pages/activity/baoming/baoming.wxml:241:bindtap:handlePayment:27:variant:solo-free-consent-ready",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -936981,7 +936981,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "handlePayment",
-        "line": 240,
+        "line": 241,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canPay}}",
@@ -937057,11 +937057,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1449"
+        "staticSource": "pages/activity/baoming/baoming.js:1456"
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:240:bindtap:handlePayment:27:variant:solo-paid-consent-pending-quote-pending",
+      "id": "pages/activity/baoming/baoming.wxml:241:bindtap:handlePayment:27:variant:solo-paid-consent-pending-quote-pending",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -937362,7 +937362,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "handlePayment",
-        "line": 240,
+        "line": 241,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canPay}}",
@@ -937474,11 +937474,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1449"
+        "staticSource": "pages/activity/baoming/baoming.js:1456"
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:240:bindtap:handlePayment:27:variant:solo-paid-consent-pending-quote-ready",
+      "id": "pages/activity/baoming/baoming.wxml:241:bindtap:handlePayment:27:variant:solo-paid-consent-pending-quote-ready",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -937691,7 +937691,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "handlePayment",
-        "line": 240,
+        "line": 241,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canPay}}",
@@ -937801,11 +937801,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1449"
+        "staticSource": "pages/activity/baoming/baoming.js:1456"
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:240:bindtap:handlePayment:27:variant:solo-paid-consent-ready-quote-pending",
+      "id": "pages/activity/baoming/baoming.wxml:241:bindtap:handlePayment:27:variant:solo-paid-consent-ready-quote-pending",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -938030,7 +938030,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "handlePayment",
-        "line": 240,
+        "line": 241,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canPay}}",
@@ -938140,11 +938140,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1449"
+        "staticSource": "pages/activity/baoming/baoming.js:1456"
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:240:bindtap:handlePayment:27:variant:solo-paid-consent-ready-quote-ready",
+      "id": "pages/activity/baoming/baoming.wxml:241:bindtap:handlePayment:27:variant:solo-paid-consent-ready-quote-ready",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -938293,7 +938293,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "handlePayment",
-        "line": 240,
+        "line": 241,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canPay}}",
@@ -938401,11 +938401,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1449"
+        "staticSource": "pages/activity/baoming/baoming.js:1456"
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:260:bind:consentchange:onResultConsentChange:29",
+      "id": "pages/activity/baoming/baoming.wxml:261:bind:consentchange:onResultConsentChange:29",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -938428,7 +938428,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:consentchange",
         "handler": "onResultConsentChange",
-        "line": 260,
+        "line": 261,
         "selectorHint": "cy-result-sheet[bind:consentchange]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -938489,11 +938489,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1206"
+        "staticSource": "pages/activity/baoming/baoming.js:1212"
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:260:bind:consentretry:onResultConsentRetry:30",
+      "id": "pages/activity/baoming/baoming.wxml:261:bind:consentretry:onResultConsentRetry:30",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -938516,7 +938516,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:consentretry",
         "handler": "onResultConsentRetry",
-        "line": 260,
+        "line": 261,
         "selectorHint": "cy-result-sheet[bind:consentretry]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -938577,11 +938577,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1218"
+        "staticSource": "pages/activity/baoming/baoming.js:1224"
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:261:bind:close:onResultSheetClose:31",
+      "id": "pages/activity/baoming/baoming.wxml:262:bind:close:onResultSheetClose:31",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -938604,7 +938604,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:close",
         "handler": "onResultSheetClose",
-        "line": 261,
+        "line": 262,
         "selectorHint": "cy-result-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -938648,11 +938648,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1242"
+        "staticSource": "pages/activity/baoming/baoming.js:1248"
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:266:bind:cancel:closeTicketSheet:33",
+      "id": "pages/activity/baoming/baoming.wxml:267:bind:cancel:closeTicketSheet:33",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -938675,7 +938675,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:cancel",
         "handler": "closeTicketSheet",
-        "line": 266,
+        "line": 267,
         "selectorHint": "cy-option-sheet[bind:cancel]",
         "visibleCondition": "{{pageState === 'ready'}}",
         "disabledCondition": null,
@@ -938715,11 +938715,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:809"
+        "staticSource": "pages/activity/baoming/baoming.js:811"
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:266:bind:select:onTicketSheetSelect:32",
+      "id": "pages/activity/baoming/baoming.wxml:267:bind:select:onTicketSheetSelect:32",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -938742,7 +938742,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onTicketSheetSelect",
-        "line": 266,
+        "line": 267,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": "{{pageState === 'ready'}}",
         "disabledCondition": null,
@@ -938840,7 +938840,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:813"
+        "staticSource": "pages/activity/baoming/baoming.js:815"
       }
     },
     {
@@ -938911,7 +938911,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:484"
+        "staticSource": "pages/activity/baoming/baoming.js:486"
       }
     },
     {
@@ -939022,7 +939022,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:371"
+        "staticSource": "pages/activity/baoming/baoming.js:373"
       }
     },
     {
@@ -939133,7 +939133,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:371"
+        "staticSource": "pages/activity/baoming/baoming.js:373"
       }
     },
     {
@@ -939204,7 +939204,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:860"
+        "staticSource": "pages/activity/baoming/baoming.js:862"
       }
     },
     {
@@ -975717,7 +975717,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:814"
+        "staticSource": "pages/club/topic-detail/index.js:818"
       }
     },
     {
@@ -975787,7 +975787,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1251"
+        "staticSource": "pages/club/topic-detail/index.js:1255"
       }
     },
     {
@@ -975857,7 +975857,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:754"
+        "staticSource": "pages/club/topic-detail/index.js:758"
       }
     },
     {
@@ -975927,7 +975927,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:760"
+        "staticSource": "pages/club/topic-detail/index.js:764"
       }
     },
     {
@@ -976201,7 +976201,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:451"
+        "staticSource": "pages/club/topic-detail/index.js:455"
       }
     },
     {
@@ -979410,7 +979410,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1122"
+        "staticSource": "pages/club/topic-detail/index.js:1126"
       }
     },
     {
@@ -979567,7 +979567,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:824"
+        "staticSource": "pages/club/topic-detail/index.js:828"
       }
     },
     {
@@ -979634,7 +979634,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1235"
+        "staticSource": "pages/club/topic-detail/index.js:1239"
       }
     },
     {
@@ -979786,7 +979786,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1236"
+        "staticSource": "pages/club/topic-detail/index.js:1240"
       }
     },
     {
@@ -979920,7 +979920,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1226"
+        "staticSource": "pages/club/topic-detail/index.js:1230"
       }
     },
     {
@@ -980054,7 +980054,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1228"
+        "staticSource": "pages/club/topic-detail/index.js:1232"
       }
     },
     {
@@ -980474,7 +980474,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1227"
+        "staticSource": "pages/club/topic-detail/index.js:1231"
       }
     },
     {
@@ -981868,7 +981868,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1229"
+        "staticSource": "pages/club/topic-detail/index.js:1233"
       }
     },
     {
@@ -982020,7 +982020,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1233"
+        "staticSource": "pages/club/topic-detail/index.js:1237"
       }
     },
     {
@@ -982087,7 +982087,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1131"
+        "staticSource": "pages/club/topic-detail/index.js:1135"
       }
     },
     {
@@ -982157,7 +982157,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:754"
+        "staticSource": "pages/club/topic-detail/index.js:758"
       }
     },
     {
@@ -982224,7 +982224,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:850"
+        "staticSource": "pages/club/topic-detail/index.js:854"
       }
     },
     {
@@ -982294,7 +982294,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:814"
+        "staticSource": "pages/club/topic-detail/index.js:818"
       }
     },
     {
@@ -982364,7 +982364,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:760"
+        "staticSource": "pages/club/topic-detail/index.js:764"
       }
     },
     {
@@ -982431,7 +982431,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1122"
+        "staticSource": "pages/club/topic-detail/index.js:1126"
       }
     },
     {
@@ -982501,7 +982501,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1214"
+        "staticSource": "pages/club/topic-detail/index.js:1218"
       }
     },
     {
@@ -982572,7 +982572,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1216"
+        "staticSource": "pages/club/topic-detail/index.js:1220"
       }
     },
     {
@@ -982684,7 +982684,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1183"
+        "staticSource": "pages/club/topic-detail/index.js:1187"
       }
     },
     {
@@ -982796,7 +982796,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1183"
+        "staticSource": "pages/club/topic-detail/index.js:1187"
       }
     },
     {
@@ -982908,7 +982908,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1183"
+        "staticSource": "pages/club/topic-detail/index.js:1187"
       }
     },
     {
@@ -982975,7 +982975,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1053"
+        "staticSource": "pages/club/topic-detail/index.js:1057"
       }
     },
     {
@@ -983042,7 +983042,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:911"
+        "staticSource": "pages/club/topic-detail/index.js:915"
       }
     },
     {
@@ -983119,7 +983119,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:949"
+        "staticSource": "pages/club/topic-detail/index.js:953"
       }
     },
     {
@@ -983186,7 +983186,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:965"
+        "staticSource": "pages/club/topic-detail/index.js:969"
       }
     },
     {
@@ -983295,7 +983295,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:967"
+        "staticSource": "pages/club/topic-detail/index.js:971"
       }
     },
     {
@@ -983362,7 +983362,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1031"
+        "staticSource": "pages/club/topic-detail/index.js:1035"
       }
     },
     {
@@ -983471,7 +983471,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1008"
+        "staticSource": "pages/club/topic-detail/index.js:1012"
       }
     },
     {
@@ -983538,7 +983538,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1064"
+        "staticSource": "pages/club/topic-detail/index.js:1068"
       }
     },
     {
@@ -983696,7 +983696,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1069"
+        "staticSource": "pages/club/topic-detail/index.js:1073"
       }
     },
     {
@@ -983763,7 +983763,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:462"
+        "staticSource": "pages/club/topic-detail/index.js:466"
       }
     },
     {
@@ -983830,7 +983830,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:468"
+        "staticSource": "pages/club/topic-detail/index.js:472"
       }
     },
     {
@@ -983897,7 +983897,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:469"
+        "staticSource": "pages/club/topic-detail/index.js:473"
       }
     },
     {
@@ -983964,7 +983964,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:462"
+        "staticSource": "pages/club/topic-detail/index.js:466"
       }
     },
     {
@@ -984116,7 +984116,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:471"
+        "staticSource": "pages/club/topic-detail/index.js:475"
       }
     },
     {
@@ -984183,7 +984183,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:556"
+        "staticSource": "pages/club/topic-detail/index.js:560"
       }
     },
     {
@@ -984250,7 +984250,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1123"
+        "staticSource": "pages/club/topic-detail/index.js:1127"
       }
     },
     {
@@ -984317,7 +984317,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:792"
+        "staticSource": "pages/club/topic-detail/index.js:796"
       }
     },
     {
@@ -984452,7 +984452,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:794"
+        "staticSource": "pages/club/topic-detail/index.js:798"
       }
     },
     {
@@ -984951,7 +984951,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:734"
+        "staticSource": "pages/club/topic-detail/index.js:738"
       }
     },
     {
@@ -1338280,7 +1338280,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/cy/session-picker/index.js:106"
+        "staticSource": "pages/topic/components/cy/session-picker/index.js:139"
       }
     },
     {
@@ -1338362,7 +1338362,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/cy/session-picker/index.js:195"
+        "staticSource": "pages/topic/components/cy/session-picker/index.js:228"
       }
     },
     {
@@ -1338441,7 +1338441,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/cy/session-picker/index.js:201"
+        "staticSource": "pages/topic/components/cy/session-picker/index.js:234"
       }
     },
     {
@@ -1338521,7 +1338521,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/cy/session-picker/index.js:213"
+        "staticSource": "pages/topic/components/cy/session-picker/index.js:246"
       }
     },
     {
@@ -1338603,7 +1338603,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/cy/session-picker/index.js:195"
+        "staticSource": "pages/topic/components/cy/session-picker/index.js:228"
       }
     },
     {
@@ -1338724,7 +1338724,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/cy/session-picker/index.js:215"
+        "staticSource": "pages/topic/components/cy/session-picker/index.js:248"
       }
     },
     {
@@ -1373162,7 +1373162,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1072"
+        "staticSource": "subpackageB/pages/im/chat/index.js:1077"
       }
     },
     {
@@ -1373284,7 +1373284,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1072"
+        "staticSource": "subpackageB/pages/im/chat/index.js:1077"
       }
     },
     {
@@ -1373399,7 +1373399,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1140"
+        "staticSource": "subpackageB/pages/im/chat/index.js:1145"
       }
     },
     {
@@ -1373514,7 +1373514,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1140"
+        "staticSource": "subpackageB/pages/im/chat/index.js:1145"
       }
     },
     {
@@ -1373636,7 +1373636,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1072"
+        "staticSource": "subpackageB/pages/im/chat/index.js:1077"
       }
     },
     {
@@ -1374333,7 +1374333,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1103"
+        "staticSource": "subpackageB/pages/im/chat/index.js:1108"
       }
     },
     {
@@ -1374442,7 +1374442,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1136"
+        "staticSource": "subpackageB/pages/im/chat/index.js:1141"
       }
     },
     {
@@ -1376358,7 +1376358,8 @@
       "successCapabilities": [],
       "targets": {
         "routes": [
-          "pages/topic/index/index?id="
+          "pages/topic/index/index?id=",
+          "subpackageMember/signup/index"
         ],
         "apis": [],
         "primaryApis": [],
@@ -1396094,7 +1396095,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:477"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:479"
       }
     },
     {
@@ -1396211,7 +1396212,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:497"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:499"
       }
     },
     {
@@ -1396345,7 +1396346,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:487"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:489"
       }
     },
     {
@@ -1396483,7 +1396484,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:441"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:443"
       }
     },
     {
@@ -1396621,7 +1396622,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:452"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:454"
       }
     },
     {
@@ -1396741,7 +1396742,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:388"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:390"
       }
     },
     {
@@ -1396861,7 +1396862,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:389"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:391"
       }
     },
     {
@@ -1397022,7 +1397023,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:757"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:759"
       }
     },
     {
@@ -1397184,7 +1397185,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:784"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:786"
       }
     },
     {
@@ -1397304,7 +1397305,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:814"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:816"
       }
     },
     {
@@ -1397514,7 +1397515,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:534"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:536"
       }
     },
     {
@@ -1397641,7 +1397642,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:525"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:527"
       }
     },
     {
@@ -1397825,7 +1397826,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:659"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:661"
       }
     },
     {
@@ -1397942,7 +1397943,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:514"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:516"
       }
     },
     {
@@ -1398079,7 +1398080,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:501"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:503"
       }
     },
     {
@@ -1398206,7 +1398207,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:518"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:520"
       }
     },
     {

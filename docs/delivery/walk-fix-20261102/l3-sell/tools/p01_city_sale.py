@@ -184,4 +184,5 @@ pay = subprocess.run([sys.executable, os.path.expanduser("~/rig/docs/delivery/cl
 print("pay", pay.stdout.strip()[-400:] or pay.stderr[-400:])
 readback("registration after callback", "SELECT id,owner_type,owner_id,ticket_id,payable_amount,payment_status,"
          "registration_status,purchase_kind FROM cms_registration WHERE id=%s", (rid,))
-readback("payment fact", "SELECT registration_id,status,amount_fen FROM registration_payment_fact WHERE registration_id=%s", (rid,))
+readback("verified payment fact", "SELECT business_out_trade_no,total_fen,verification_outcome FROM wx_verified_payment_fact "
+         "WHERE business_out_trade_no=(SELECT registration_no FROM cms_registration WHERE id=%s)", (rid,))
