@@ -35,13 +35,16 @@ are listed below as skipped.
 - `node --test "tests/unit/**/*.test.js"`: 15525 pass, 2 fail before the test fix. After it:
   - `nearby-layer-read-access.test.js`: it pinned the old 「· {{listRows.length || 0}} 个」 binding. I updated the regex (18/18 pass).
   - `action-ledger.test.js` 「release 前重建 inventory」: **expected drift**. This is a reserved file, so I did not regenerate it. `build-action-ledger.js --check`
-    reports 「台账缺失或已漂移」. The drift comes from changed controls in the roam, nearby, talent and template pages; see "Ledger drift" below.
+    reports 「台账缺失或已漂移」. See "Ledger drift" below.
 - `scripts/ds-hardcode-gate.sh --ci`: exit 0. `ui-theme-unit-lint.js --units`: 通过. `setdata-dead-field-lint.js`: 通过 (no new
   fields). `a11y-tap-target-lint.js`: no additions.
 - `template-shelf-redesign-20261028.test.js`: pass with the new placeholder.
 
 ## Ledger drift
-LEDGER_DRIFT_PLACEHOLDER
+No count drift: the control count stays 5579 → 5579. I ran `build-action-ledger.js --write` in a throwaway worktree and did not commit the result. The diff
+only re-keys line numbers and source digests: 2307 lines in `action-ledger.json`, all on `pages/roam/index.wxml` (wxml lines shift by +7 from the
+passport placeholder block), `subpackageRoam/nearby/index.wxml` (+1, the `<wxs>` import) and `subpackageRoam/my-teams/index.wxml` (+1). The integration step's single
+regeneration will absorb it.
 
 ## Notes and assumptions
 - Before shots use the base branch bundle, and after shots use this branch. Both run against the same rig backend (master a1d30fb jar) with identities
