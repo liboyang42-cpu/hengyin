@@ -262,7 +262,8 @@
 }
 .post-card__share::after { border: none; }
 .post-card__share-icon { width: 40rpx; height: 40rpx; filter: invert(1); }
-.cy-pressed { opacity: 0.78; transform: scale(0.985); }
+/* r2-shared:按压与全局 .cy-pressed 同值(.88 / .98);原 .78 / .985 是本组件独有的一档。 */
+.cy-pressed { opacity: .88; transform: scale(.98); }
 
 /* —— Roam(211:271):动作行之后的 Kudos 与 CommentPreview,几何同 completion-share-card,字号按新稿 13pt —— */
 .post-card__kudos {

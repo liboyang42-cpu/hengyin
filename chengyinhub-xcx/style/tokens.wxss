@@ -458,6 +458,9 @@ page {
    * 以用户为准 —— 稿那两条不再是 cy-sheet 的判据(club-motion-spec-contract 已同步改写)。
    * 值同 M2/M3 standard,与下面 ①''' 层的遗留别名 --cy-ease 同值,新代码读这条。 */
   --cy-ease-standard: cubic-bezier(.4, 0, .2, 1);   /* 慢快慢:弹层升起 / 落下 */
+  /* 页面入场浮起(utils/page-motion.js 的 --pm-* 列表/区块上浮)。原字面 cubic-bezier(.2,.82,.2,1) 散在 ~40 份 wxss,
+   * 值不变收成一条,日后调「再快一点」改这一处。r2-shared 2026-11-02。 */
+  --cy-ease-page-rise: cubic-bezier(.2, .82, .2, 1);
 
   /* ==========================================================
    * ①'' 组件 token 层(T2,2026-07-14;DTCG tier-3 / M3 comp)
