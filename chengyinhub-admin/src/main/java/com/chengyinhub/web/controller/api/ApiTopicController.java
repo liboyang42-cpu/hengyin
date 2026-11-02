@@ -506,11 +506,6 @@ public class ApiTopicController extends BaseController {
             boolean saveDraft = dto.getSaveDraft() != null && dto.getSaveDraft() == 1;
             boolean guardOnline = isSimplePublishMode(dto.getPublishMode()) && !saveDraft;
 
-            // P-17(owner 2026-11-02「封面应该是必须的 不能有没有封面的活动」):发布必须带封面,存草稿不拦。
-            // 只看作者提交的封面地址是否为空;封面已上传、仍在内容安全复核中的照常放行(读侧会先隐藏它)。
-            if (!saveDraft && StringUtils.isBlank(dto.getImgUrl())) {
-                return error("请上传主题封面");
-            }
 
             // 全免费发布免实名；收费发布仍登记收款主体（员工代办时为商家 owner）。
             if (!saveDraft && requiresPublisherIdentity(dto)) {
@@ -530,6 +525,11 @@ public class ApiTopicController extends BaseController {
                     secText, topicReviewTexts(dto, chapterFlowV2));
             if (textVerdict.isBlocked()) {
                 return AjaxResult.error(HttpStatus.BAD_REQUEST, textVerdict.getBlockMessage());
+            }
+            // P-17(owner 2026-11-02「封面应该是必须的 不能有没有封面的活动」):发布必须带封面,存草稿不拦。
+            // 只看作者提交的封面地址是否为空;封面已上传、仍在内容安全复核中的照常放行(读侧会先隐藏它)。
+            if (!saveDraft && StringUtils.isBlank(dto.getImgUrl())) {
+                return error("请上传主题封面");
             }
 
             // 首次存草稿带请求意图键:同一账号同一键已建过 → 直接回那份草稿(丢回包后的重试);在途 → 请稍后。

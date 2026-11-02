@@ -66,6 +66,7 @@ class JourneyNarrativeSecuritySaveTest {
         setUpTopicController(controller, topicService, security);
 
         TopicCreateDTO dto = new TopicCreateDTO();
+        dto.setImgUrl("media-asset:1"); // P-17:发布必须带封面
         dto.setProductType(ProductType.FREE_EXPLORE);
         dto.setName("正常主题名");
         dto.setJourneyStory("{\"schemaVersion\":1,\"call\":{\"npcId\":1,\"opener\":\"违规开场白\"}}");

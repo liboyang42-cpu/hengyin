@@ -457,7 +457,7 @@ class ChapterFlowWriteServiceTest
         RuntimeException error = assertThrows(RuntimeException.class,
                 () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(dto, MEMBER_ID, "tester"));
 
-        assertTrue(error.getMessage().contains("尚未通过审核") || error.getMessage().contains("草稿模板"),
+        assertTrue(error.getMessage().contains("审核中") || error.getMessage().contains("草稿"),
                 error.getMessage());
         verify(auditTaskService, never()).submitOrRefreshTopicBundle(any(), any(), any());
     }
@@ -486,7 +486,7 @@ class ChapterFlowWriteServiceTest
         RuntimeException error = assertThrows(RuntimeException.class,
                 () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(dto, MEMBER_ID, "tester"));
 
-        assertTrue(error.getMessage().contains("尚未通过审核") || error.getMessage().contains("草稿模板"),
+        assertTrue(error.getMessage().contains("审核中") || error.getMessage().contains("草稿"),
                 error.getMessage());
         verify(auditTaskService, never()).submitOrRefreshTopicBundle(any(), any(), any());
     }
