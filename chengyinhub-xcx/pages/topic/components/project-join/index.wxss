@@ -146,7 +146,8 @@
 /* ===== 四个关系入口 ===== */
 .qa {
   display: flex;
-  padding: var(--cy-space-4) var(--cy-page-x) var(--cy-space-1);
+  padding: var(--cy-space-4) var(--cy-page-x) 0;
+  margin-bottom: calc(-1 * var(--cy-space-1)); /* 抵掉 qa-label 行高留白:入口→下一块与卡→分组标题同为 16.6px */
 }
 .qa-btn {
   flex: 1;
@@ -1123,6 +1124,9 @@
 .chapter-project-item + .chapter-project-item { margin-top: var(--cy-space-2); }
 .chapter-project-meta { margin-top: var(--cy-space-1); font-size: var(--cy-font-caption); color: var(--cy-text-secondary); }
 .chapter-project-actions { display: flex; flex-wrap: wrap; gap: var(--cy-space-2); margin-top: var(--cy-space-2); }
+/* 白卡上的 ghost 按钮底色看不出来,只剩文字:往左让出按钮内距,文字与卡内其它行同一左缘;在卡底时收掉按钮下半的空白 */
+.chapter-project-actions--btn { margin-left: calc(-1 * var(--cy-space-4)); }
+.chapter-project-actions--btn:last-child { margin-bottom: calc(-1 * var(--cy-space-3)); }
 
 /* 走查 v2 R04(业主 2026-10-30):承办方的进度与主办同一套样式 —— 一张白卡、实心洋红勾、当前步洋红圈、
    状态写蓝字、连线实线;每步不再各自一张卡、不再用绿色虚线。 */
@@ -1186,3 +1190,6 @@
 .tcard-body { flex: 1 1 0; min-width: 0; min-height: 152rpx; display: flex; flex-direction: column; gap: var(--cy-space-1-5); padding-top: 4rpx; }
 .tcard-name { font-size: var(--cy-font-subtitle); font-weight: 700; color: var(--cy-text-title); }
 .tcard-more { margin-top: auto; display: flex; align-items: center; gap: 8rpx; font-size: var(--cy-font-label); font-weight: 600; color: var(--cy-text-title); }
+
+/* 客户弹层:胶囊下的联系说明原来贴着胶囊(1.8px) */
+.dfil + .dg-sub { margin-top: var(--cy-space-3); }

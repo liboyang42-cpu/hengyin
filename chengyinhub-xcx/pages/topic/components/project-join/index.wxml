@@ -87,7 +87,7 @@
         <text class="fact-main">{{chapterNode.name}}</text>
         <view class="chapter-project-meta">{{chapterNode.address || '未填地址'}} · {{chapterNode.auditLabel}}</view>
         <view class="chapter-project-meta" wx:if="{{chapterNode.nodeAuditReason}}">驳回原因：{{chapterNode.nodeAuditReason}}</view>
-        <view class="chapter-project-actions">
+        <view class="chapter-project-actions {{chapterNode.auditLabel === '已通过' ? 'chapter-project-actions--btn' : ''}}">
           <cy-btn wx:if="{{chapterNode.auditLabel === '已通过'}}" variant="ghost" size="sm"
                   data-act="openNodeNpcForm" data-node-id="{{chapterNode.id}}" data-node-name="{{chapterNode.name}}"
                   bindtap="emit">节点NPC</cy-btn>
@@ -101,7 +101,7 @@
       <view class="card chapter-project-item" wx:for="{{myChapterApplications}}" wx:key="id" wx:for-item="application">
         <text class="fact-main">{{application.chapterName || '未命名章节'}} · {{application.statusLabel}}</text>
         <view class="chapter-project-meta" wx:if="{{application.termsLabel}}">{{application.termsLabel}}</view>
-        <view class="chapter-project-actions" wx:if="{{application.canSubmitOffer || application.canWithdraw || application.canConfigureNode}}">
+        <view class="chapter-project-actions chapter-project-actions--btn" wx:if="{{application.canSubmitOffer || application.canWithdraw || application.canConfigureNode}}">
           <cy-btn wx:if="{{application.canConfigureNode}}" variant="ghost" size="sm"
                   data-act="openChapterNodeForm" data-chapter-id="{{application.chapterId}}" bindtap="emit">配置节点</cy-btn>
           <cy-btn wx:if="{{application.canSubmitOffer}}" variant="ghost" size="sm"
@@ -115,7 +115,7 @@
         <view class="chapter-project-meta" wx:if="{{application.offerPendingReview}}">实际供给待审核</view>
         <view class="chapter-project-meta" wx:if="{{application.offerWithdrawn}}">{{application.offerWithdrawReason}}</view>
         <view class="chapter-project-meta" wx:if="{{application.nodeReadOnlyReason}}">{{application.nodeReadOnlyReason}}</view>
-        <view wx:if="{{application.canReconfirmCircleSupply}}" class="chapter-project-actions">
+        <view wx:if="{{application.canReconfirmCircleSupply}}" class="chapter-project-actions chapter-project-actions--btn">
           <cy-btn variant="ghost" size="sm" data-act="reconfirmCircleSupply" data-offer-id="{{application.offerId}}" bindtap="emit">供给无变化，重新确认</cy-btn>
           <cy-btn variant="ghost" size="sm" data-act="pauseCircleSupply" data-offer-id="{{application.offerId}}" bindtap="emit">暂停供给</cy-btn>
         </view>
