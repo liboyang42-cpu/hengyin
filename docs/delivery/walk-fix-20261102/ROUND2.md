@@ -30,3 +30,12 @@ The BRIEF.md rules still bind. Work on your lane's existing branch and draft PR;
 - Merchant numbers are reviewed once by the platform after WeChat authorisation; changing the number means a new review. Without an approved number, turning on 「本章开放商家承接」 or publishing a paid theme shows a pop-up, and the ticket page says nothing about it. Clubs WeChat will not allow are told to apply. Platform-owned themes keep the platform merchant account and pay no 3%.
 - China build only. US providers, accounts and flows need a separate decision. This does not authorise payment or deployment changes.
 - **Status:** design approved; no code until 服务商 approval. `assertCollectible` stays closed until then, so paid themes launch as platform-owned for now. No lane changes this.
+
+## Other sessions' work (checked 2026-11-02)
+
+Do not revert these or build on what they remove. If your lane is still running, read them before touching the same files.
+
+- **#702** (chengyin-96, open draft): the owner chose its merchant project card over master's R01 card. It removes the bell, 「今日无待办」, `goProjectMessages` and 「开通前置检查」; status labels come from `statusLabel`/`statusTone` in `utils/merchant-workbench.js`. Lane l4: keep M-04 easy to carry onto that card, and do not restore those parts.
+- **#709** (chengyin-96, open draft): club self-hosted cancel, `ClubEventOpsServiceImpl` and `ClubEventOpsMapper.xml`. Lane l6: stay compatible with it on C-08.
+- **#710** (chengyin-26, open draft): club broadcast by member, `GameSessionRuntimeServiceImpl`, `director.js`. Lane l6: do not work around it.
+- **#711 and page polish round 2** (chengyin-28): UI detail on the same pages. #711 is merged to master. Merge master in with a normal merge before finishing, and rebuild `action-ledger.json` and its pins rather than unioning them. On the achievements page the owner's P-22 note wins: missing data shows 0.
