@@ -89,3 +89,20 @@ test('俱乐部自办进行中:底部「去核销」扫码,结束活动在「更
   assert.ok(js.indexOf("if (key === 'selfrun') { this.goScan(); return; }") < js.indexOf('if (!this._directorActivityId) { this.goSessionEntry(); return; }'));
   assert.match(js, /statusKey !== 'confirmed' && statusKey !== 'preparing'\s*&& statusKey !== 'running'\) return base;/);
 });
+
+test('台账:两边都叫台账,商家从主题进来只看这个主题', () => {
+  navigations = [];
+  makePage({ topicId: 990045, operationScope: 'MERCHANT', hostOwnerType: 'merchant' }).goLedger();
+  const club = makePage({ topicId: 990045, hostOwnerType: 'club' });
+  club._clubNotifyTarget = { clubId: 42 };
+  club.goLedger();
+  assert.deepEqual(navigations, ['/pages/merchant/ledger/index?view=redemptions&topicId=990045', '/pages/club/enroll/index?clubId=42&topicId=990045']);
+  const { normalizeMerchantFinanceRoute } = require('../../pages/merchant/utils/merchant-finance.js');
+  assert.deepEqual(normalizeMerchantFinanceRoute({ view: 'redemptions', topicId: '990045' }), { view: 'redemptions', source: '', topicId: 990045 });
+  assert.deepEqual(normalizeMerchantFinanceRoute({ view: 'redemptions', topicId: 'x' }), { view: 'redemptions', source: '' });
+  const ledger = read('pages/merchant/ledger/index.js');
+  assert.match(ledger, /canReadAftercare && !this\._topicId\) this\._loadRefundRows/, '售后退款是全店的,主题台账不掺');
+  for (const f of ['pages/topic/components/project-host/index.wxml', 'pages/topic/components/project-join/index.wxml', 'pages/club/topic-detail/index.wxml']) {
+    assert.match(read(f), /<text[^>]*>台账<\/text>/, f);
+  }
+});

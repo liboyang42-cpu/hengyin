@@ -4329,14 +4329,16 @@ Page({
     /* CU-C-67:台账按身份分流。商家那本在 pages/merchant/ledger;俱乐部主理人的「核销台账」
        是名册页 pages/club/enroll(同一个 clubId + topicId 读报名与核销态)。
        原来一律跳商家页 —— 非商家身份 active=false,整页必然「数据服务暂不可用」(P1 实证)。 */
-    if (this.data.operationScope === 'CLUB') {
-      const clubId = Number((this.data.info && this.data.info.clubId) || 0);
+    const hostClubId = this.data.hostOwnerType === 'club' && this._clubNotifyTarget ? this._clubNotifyTarget.clubId : 0;
+    if (this.data.operationScope === 'CLUB' || hostClubId) {
+      const clubId = hostClubId || Number((this.data.info && this.data.info.clubId) || 0);
       const topicId = Number(this.data.topicId || (this.data.info && this.data.info.topicId) || 0);
       if (!clubId || !topicId) { app.tips('这条主题没有关联俱乐部'); return; }
       if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/enroll/index?clubId=' + clubId + '&topicId=' + topicId, complete: () => { this._navigating = false; } });
       return;
     }
-    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/ledger/index?view=redemptions', complete: () => { this._navigating = false; } });
+    if (this._navigating) return; this._navigating = true; const topicId = Number(this.data.topicId || (this.data.info && this.data.info.topicId) || 0);
+    wx.navigateTo({ url: '/pages/merchant/ledger/index?view=redemptions' + (topicId ? '&topicId=' + topicId : ''), complete: () => { this._navigating = false; } });
   },
 
   /* 「查看结算报告」去的是结算明细页,不是核销台账 —— 稿 468:1086 标的就是 coop/settlement-detail。

@@ -537,7 +537,8 @@ test('客户入口开玩家名单抽屉，不跳全局关系页', () => {
   ledger.goLedger();
   assert.match(navigations[0].url, /merchant\/ledger/);
   assert.match(navigations[0].url, /view=redemptions/);
-  assert.doesNotMatch(navigations[0].url, /topicId=/);
+  // 2026-11-01 业主:主题工作台进台账只看这个主题(后端 /finance/redemptions 支持 topicId 收窄),原来全店一本
+  assert.match(navigations[0].url, /topicId=/);
   assert.doesNotMatch(navigations[0].url, /merchant\/relation/);
 });
 

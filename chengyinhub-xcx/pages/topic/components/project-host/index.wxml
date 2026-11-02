@@ -83,8 +83,8 @@
   <view class="sec" wx:if="{{ showVerify }}">
     <view class="sec-head">
       <text class="sec-title">核销</text>
-      <view class="sec-action" bindtap="emit" data-act="goLedger" aria-role="button" aria-label="打开核销记录" hover-class="cy-pressed" hover-stay-time="80">
-        <text>记录</text>
+      <view class="sec-action" bindtap="emit" data-act="goLedger" aria-role="button" aria-label="打开核销台账" hover-class="cy-pressed" hover-stay-time="80">
+        <text>台账</text>
         <cy-icon name="arrow-right" size="{{ 24 }}" />
       </view>
     </view>

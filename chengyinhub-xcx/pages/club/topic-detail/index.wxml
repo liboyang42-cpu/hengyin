@@ -99,8 +99,8 @@
     <view wx:if="{{showVerify}}" class="ctd-sec">
       <view class="ctd-sec__head">
         <text class="ctd-sec__tit">核销</text>
-        <view class="ctd-sec__more" bindtap="goLedger" aria-role="button" aria-label="打开核销记录" hover-class="cy-pressed" hover-stay-time="80">
-          <text class="ctd-sec__more-txt">记录</text><cy-icon name="slide-arrow" size="24" />
+        <view class="ctd-sec__more" bindtap="goLedger" aria-role="button" aria-label="打开核销台账" hover-class="cy-pressed" hover-stay-time="80">
+          <text class="ctd-sec__more-txt">台账</text><cy-icon name="slide-arrow" size="24" />
         </view>
       </view>
       <view class="ctd-metrics">

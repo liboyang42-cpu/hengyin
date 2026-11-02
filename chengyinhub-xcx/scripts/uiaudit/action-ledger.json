@@ -975929,7 +975929,7 @@
         "selectorHint": ".ctd-sec__more",
         "visibleCondition": null,
         "disabledCondition": null,
-        "ariaLabel": "打开核销记录",
+        "ariaLabel": "打开核销台账",
         "ariaLabelExpression": null,
         "ariaRole": "button",
         "ariaRoleExpression": null,
@@ -1040840,7 +1040840,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/ledger/index.js:352"
+        "staticSource": "pages/merchant/ledger/index.js:355"
       }
     },
     {
@@ -1040910,7 +1040910,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/ledger/index.js:578"
+        "staticSource": "pages/merchant/ledger/index.js:581"
       }
     },
     {
@@ -1040996,7 +1040996,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/ledger/index.js:639"
+        "staticSource": "pages/merchant/ledger/index.js:642"
       }
     },
     {
@@ -1041129,7 +1041129,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/ledger/index.js:353"
+        "staticSource": "pages/merchant/ledger/index.js:356"
       }
     },
     {
@@ -1041199,7 +1041199,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/ledger/index.js:118"
+        "staticSource": "pages/merchant/ledger/index.js:119"
       }
     },
     {
@@ -1041332,7 +1041332,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/ledger/index.js:354"
+        "staticSource": "pages/merchant/ledger/index.js:357"
       }
     },
     {
@@ -1041400,7 +1041400,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/ledger/index.js:573"
+        "staticSource": "pages/merchant/ledger/index.js:576"
       }
     },
     {
@@ -1041470,7 +1041470,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/ledger/index.js:579"
+        "staticSource": "pages/merchant/ledger/index.js:582"
       }
     },
     {
@@ -1041619,7 +1041619,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/ledger/index.js:542"
+        "staticSource": "pages/merchant/ledger/index.js:545"
       }
     },
     {
@@ -1041687,7 +1041687,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/ledger/index.js:561"
+        "staticSource": "pages/merchant/ledger/index.js:564"
       }
     },
     {
@@ -1041757,7 +1041757,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/ledger/index.js:118"
+        "staticSource": "pages/merchant/ledger/index.js:119"
       }
     },
     {
@@ -1041906,7 +1041906,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/ledger/index.js:119"
+        "staticSource": "pages/merchant/ledger/index.js:120"
       }
     },
     {
@@ -1345857,7 +1345857,7 @@
         "selectorHint": ".sec-action",
         "visibleCondition": null,
         "disabledCondition": null,
-        "ariaLabel": "打开核销记录",
+        "ariaLabel": "打开核销台账",
         "ariaLabelExpression": null,
         "ariaRole": "button",
         "ariaRoleExpression": null,
@@ -1346337,9 +1346337,9 @@
         "selectorHint": ".sec-action",
         "visibleCondition": null,
         "disabledCondition": null,
-        "ariaLabel": null,
+        "ariaLabel": "打开核销台账",
         "ariaLabelExpression": null,
-        "ariaRole": null,
+        "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
         "ariaDisabledExpression": null,
