@@ -151,12 +151,12 @@ test('M-16:行业短表覆盖书店、茶馆、画廊、手作、古着、文创
 })
 
 test('M-19:置灰的「提交申请」点了滚到经营者实名', () => {
-  const { page } = loadPage('pages/merchant/apply/index.js')
+  const scrolls = []
+  const { page } = loadPage('pages/merchant/apply/index.js', { pageScrollTo: (o) => scrolls.push(o.selector) })
   page.data.step = 4
   page.data.identityRegistered = false
   page.onNextDisabledTap()
-  assert.equal(page.data.scrollTarget, 'apply-identity')
+  assert.equal(JSON.stringify(scrolls), JSON.stringify(['#apply-identity']), '页面本身滚动(scroll-view 不定高),用 pageScrollTo')
   const wxml = fs.readFileSync(path.join(ROOT, 'pages/merchant/apply/index.wxml'), 'utf8')
-  assert.match(wxml, /scroll-into-view="\{\{scrollTarget\}\}"/)
   assert.match(wxml, /id="apply-identity"/)
 })

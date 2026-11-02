@@ -74,7 +74,7 @@ Page({
     dots: [0, 1, 2, 3],
     // 表单字段
     name: '',             // 店铺名称
-    preference: '', industryIds: [], industryNames: '', industrySheet: { show: false, options: [], value: [], loading: false, error: '' }, scrollTarget: '', // M-16 行业类型胶囊(与门店信息同一份);M-19 置灰提交滚到缺项
+    preference: '', industryIds: [], industryNames: '', industrySheet: { show: false, options: [], value: [], loading: false, error: '' }, // M-16 行业类型胶囊(与门店信息同一份)
     phone: '',
     address: '',          // 店铺地址
     // 选点坐标:wx.chooseLocation 本来就跟 address 一起返回,以前被丢掉了,
@@ -370,7 +370,7 @@ Page({
       const check = publisherIdentity.checkIdentityForm(this.identityForm());
       if (!check.ok) toast(check.message);
       // M-19:实名块在预览下面,一屏看不到;点置灰的「提交申请」直接滚过去
-      if (!check.ok) { this.setData({ scrollTarget: '' }); setTimeout(() => this.setData({ scrollTarget: 'apply-identity' }), 30); }
+      if (!check.ok) wx.pageScrollTo({ selector: '#apply-identity', duration: this.data.reducedMotion ? 0 : 300 });
     }
   },
 
