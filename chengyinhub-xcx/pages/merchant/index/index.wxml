@@ -162,7 +162,7 @@
             <image class="rv-project-cover" wx:if="{{img.first(item.thumb)}}"
                    src="{{img.first(item.thumb)}}" mode="aspectFill" lazy-load="true" />
             <view class="rv-project-line1">
-              <text class="rv-project-status" wx:if="{{item.statusLabel}}"><text class="rv-project-dot rv-project-dot--{{item.statusTone || 'wait'}}"></text>{{item.statusLabel}}</text>
+              <view class="rv-project-status" wx:if="{{item.statusLabel}}"><view class="rv-project-dot rv-project-dot--{{item.statusTone || 'wait'}}"></view><text>{{item.statusLabel}}</text></view>
               <view class="rv-project-line1-fill"></view>
               <text class="rv-project-cat" wx:if="{{item.catLabel}}">{{item.catLabel}}</text>
             </view>
