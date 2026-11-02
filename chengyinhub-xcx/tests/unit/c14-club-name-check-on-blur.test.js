@@ -115,5 +115,6 @@ test('查名失败不拦人,交给创建时的终检', () => {
 
 test('名称框绑定离开事件,原因显示在名称框下方,保留原 aria-label', () => {
   assert.match(WXML, /aria-label="俱乐部名称，必填"[^>]*bindblur="onNameBlur"/)
-  assert.match(WXML, /class="cc-field-err" wx:if="\{\{nameError\}\}"[^>]*><text class="cc-req"[^>]*>\*<\/text><text>\{\{nameError\}\}<\/text>/)
+  // 名称下方的原因走统一错误组件(U6 门禁:错误文案不得裸渲染),红色失败档
+  assert.match(WXML, /<cy-inline-error class="cc-field-err" wx:if="\{\{nameError\}\}" kind="error" title="\{\{nameError\}\}" \/>/)
 })
