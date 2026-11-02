@@ -38,7 +38,7 @@
                活动完赛帖(hasPlayCover=true)于是两边都没有时间 —— 把它提出来兜住。 -->
           <view class="ph-time">{{info.formattedCreateTime}}</view>
         </view>
-        <button class="gz" hover-class="none" catchtap="followClick" aria-label="关注{{info.memberNickname ? '：' + info.memberNickname : ''}}" wx:if="{{!info.hasPlayCover && info.isFollowTheUser==0 && info.memberId!=userId}}">关注</button>
+        <button class="gz" hover-class="cy-pressed" hover-stay-time="80" catchtap="followClick" aria-label="关注{{info.memberNickname ? '：' + info.memberNickname : ''}}" wx:if="{{!info.hasPlayCover && info.isFollowTheUser==0 && info.memberId!=userId}}">关注</button>
         <!-- 溢出入口:所有人都给(A-09)。非本人纯文本帖原先没有入口,详情页想举报只能回列表找;
              组件在 owner=false 时只渲染「举报」一行,不会露出编辑/删除。 -->
         <view class="ph-more" catchtap="openPostActions" aria-role="button" aria-label="更多操作" hover-class="cy-pressed" hover-stay-time="80">
@@ -158,18 +158,18 @@
               {{item.contents}}
             </view>
             <view class="item-link flex-ac">
-              <button class="comment-like {{item.isLiked==1 ? 'is-on' : ''}}" hover-class="none" bindtap="commentLikeClick" data-index="{{index}}" aria-label="点赞评论，当前 {{item.likeCount || 0}}">
-                <cy-icon name="heart" size="32" />
+              <button class="comment-like {{item.isLiked==1 ? 'is-on' : ''}}" hover-class="cy-pressed" hover-stay-time="80" bindtap="commentLikeClick" data-index="{{index}}" aria-label="点赞评论，当前 {{item.likeCount || 0}}">
+                <cy-icon name="{{item.isLiked==1 ? 'heart-filled' : 'heart'}}" size="32" />
                 <text>{{item.likeCount || ''}}</text>
               </button>
-              <button hover-class="none" bindtap="msgClick" aria-role="button" aria-label="回复评论" data-item="{{item}}">
+              <button hover-class="cy-pressed" hover-stay-time="80" bindtap="msgClick" aria-role="button" aria-label="回复评论" data-item="{{item}}">
                 <cy-icon name="comment" size="32" />
               </button>
-              <button class="comment-report" hover-class="none" bindtap="reportComment" data-index="{{index}}" aria-label="举报评论">
+              <button class="comment-report" hover-class="cy-pressed" hover-stay-time="80" bindtap="reportComment" data-index="{{index}}" aria-label="举报评论">
                 举报
               </button>
               <!-- A-04:自己的评论给删除入口(非本人只留举报;后端 /api/comment/delete 也校验归属) -->
-              <button class="comment-report comment-delete" hover-class="none" wx:if="{{item.memberId == userId}}" bindtap="deleteComment" data-index="{{index}}" aria-label="删除评论">
+              <button class="comment-report comment-delete" hover-class="cy-pressed" hover-stay-time="80" wx:if="{{item.memberId == userId}}" bindtap="deleteComment" data-index="{{index}}" aria-label="删除评论">
                 删除
               </button>
             </view>

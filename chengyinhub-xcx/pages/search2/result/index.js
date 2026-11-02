@@ -1,7 +1,7 @@
 // 搜索结果独立页(2026-07-31):原来搜索输入后结果直接铺在 search2 同页下方,
 // 现改成跳转到这里 —— 逻辑从 pages/search2/index.js 的 runSearch/updateVisibleResults 搬来,
 // 数据源仍是同一个 utils/discover-search.js。
-const toast = require('../../../utils/toast.js'); const pageMotion = require('../../../utils/page-motion.js');
+const toast = require('../../../utils/toast.js');
 const app = getApp();
 const discoverSearch = require('../../../utils/discover-search.js');
 const { openScene } = require('../../../utils/scene-entry.js');
@@ -50,8 +50,7 @@ Page({
     this._searchSeq = (this._searchSeq || 0) + 1;
     this._content = null;
     if (this._searchSkeletonTimer) clearTimeout(this._searchSkeletonTimer);
-    this.setData({ keyword: (e.detail && e.detail.value) || '', searchLoading: false, showSearchSkeleton: false,
-      resultGroups: [], visibleResults: [], resultTabs: DEFAULT_RESULT_TABS,
+    this.setData({ keyword: (e.detail && e.detail.value) || '', searchLoading: false, showSearchSkeleton: false, keywordEditing: true, // 改词时保留上次结果,确认后再换;未确认前不出「没有找到」
       contentLoading: false, contentHasMore: false, contentError: '', contentEnabled: false });
   },
 
@@ -112,7 +111,7 @@ Page({
     this._content = useUnified ? { seq, owner, keyword: String(keyword).trim(), cityCode: filters.cityCode || '',
       types: typeof app.canUseCommunity === 'function' && app.canUseCommunity(false)
         ? ['topic', 'activity', 'post'] : ['topic', 'activity'], page: 0, items: [], loading: false } : null;
-    this.setData({ clubLoginRequired: !owner, clubSearchDenied: '', contentEnabled: useUnified,
+    this.setData({ clubLoginRequired: !owner, clubSearchDenied: '', contentEnabled: useUnified, keywordEditing: false,
       contentLoading: false, contentHasMore: useUnified, contentError: '',
       contentFilterNotice: owner && String(keyword).trim() && !useUnified ? '清除类别、日期和价格筛选后，可同时搜索公开帖文' : '' });
     const isCurrent = () => !this._hidden && !this._unloaded && seq === this._searchSeq && owner === memberId(app);
@@ -291,7 +290,7 @@ Page({
     const visibleResults = groups.reduce((all, group) => {
       return type === 'all' || group.type === type ? all.concat(group.items) : all;
     }, []);
-    pageMotion.enter(this, 'pmList'); this.setData({ visibleResults: visibleResults });
+    this.setData({ visibleResults: visibleResults }); // 卡片入场只走 cy-fly-in(新挂上的卡才飞),不再叠一层整表重播
   },
 
   onResultTab(e) {
