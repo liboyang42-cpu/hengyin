@@ -580,7 +580,7 @@ page {
 /* P-03(2026-10-27):「主题 / 活动」tab 下的横线和第一张卡之间留 24rpx。 */
 .v3-feed .page-tab { padding: 0 var(--cy-space-4); margin-bottom: var(--cy-space-3); }
 
-.v2-feed { padding: 0 var(--cy-legacy-36); }
+.v2-feed { padding: 0 var(--cy-page-x); }
 .v2-fitem { margin-bottom: var(--cy-space-5); }
 /* 2026-10-28 业主:主题都有封面 —— 整张卡就是封面图,类型 / 名字 / 标签压在底部渐变上 */
 .v2-fcard {
