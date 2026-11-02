@@ -184067,6 +184067,15 @@
           ]
         },
         {
+          "route": "pages/club/create/index",
+          "segments": [
+            {
+              "selector": "cy-inline-error.cc-field-err",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "pages/club/customer-detail/index",
           "segments": [
             {
