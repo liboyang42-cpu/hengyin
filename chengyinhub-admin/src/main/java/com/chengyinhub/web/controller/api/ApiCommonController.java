@@ -26,6 +26,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import com.chengyinhub.common.annotation.RateLimiter;
+import com.chengyinhub.common.enums.LimitType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -101,6 +103,7 @@ public class ApiCommonController extends BaseController {
 
     @Operation(summary = "上传文件到OSS")
     @PostMapping("/uploadOSS")
+    @RateLimiter(time = 60, count = 60, limitType = LimitType.MEMBER)
     public ResponseEntity<AjaxResult> uploadOSS(@RequestParam("file") MultipartFile file,
                                                 @RequestParam(value = "bizType", required = false) String bizType,
                                                 @RequestParam(value = "refundId", required = false) Long refundId) {
@@ -174,6 +177,7 @@ public class ApiCommonController extends BaseController {
      */
     @Operation(summary = "上传文件到本地（单个）")
     @PostMapping("/upload")
+    @RateLimiter(time = 60, count = 60, limitType = LimitType.MEMBER)
     public ResponseEntity<AjaxResult> uploadFile(MultipartFile file) {
         try {
             // 上传文件路径
@@ -200,6 +204,7 @@ public class ApiCommonController extends BaseController {
      */
     @Operation(summary = "上传文件到本地（多个）")
     @PostMapping("/uploads")
+    @RateLimiter(time = 60, count = 20, limitType = LimitType.MEMBER)
     public ResponseEntity<AjaxResult> uploadFiles(List<MultipartFile> files) {
         try {
             // 上传文件路径
