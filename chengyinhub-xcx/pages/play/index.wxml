@@ -624,10 +624,7 @@
       <view class="fx-pack {{packShake ? 'is-shake' : ''}} {{packTear ? 'is-tear' : ''}} {{packGrab ? 'is-grab' : ''}} {{packSnap ? 'is-snap' : ''}} {{packTorn ? 'is-torn' : ''}} {{packSink ? 'is-sink' : ''}}">
         <view class="fx-pack__body">
           <image class="fx-pack__foil" src="/pages/play/assets/pack-foil.png" mode="scaleToFill" />
-          <view class="fx-pack__print">
-            <text class="fx-pack__t">{{topicName || chapter.name || modeLabel}}</text>
-            <text class="fx-pack__s">{{chapterCards.length || total}} 章 · {{merchantCount}} 家商家</text>
-          </view>
+          <!-- g21 第三轮(2026-11-02 业主):未拆和拆包中只出卡包本身,包面不印主题名和章数 -->
           <!-- 下封口:同一张图,把内层整幅图往上顶,只露出底部 5% 那条 -->
           <view class="fx-pack__seal fx-pack__seal--b">
             <image class="fx-pack__sealim fx-pack__sealim--b" src="/pages/play/assets/pack-foil.png" mode="scaleToFill" />
@@ -646,8 +643,6 @@
           <image class="fx-pack__sealim" src="/pages/play/assets/pack-foil.png" mode="scaleToFill" />
         </view>
       </view>
-      <!-- g21:卡包下方一句「轻点拆开」,撕开后随卡包一起退场 -->
-      <text class="fx-pack-hint" wx:if="{{!packTear && !packBurst && !(tearPct > 0)}}">轻点拆开</text>
       <!-- 碎片在包前面飞:它们是实体不是光 -->
       <view class="fx-shard" wx:if="{{packBurst}}" wx:for="{{blastShards}}" wx:key="id"
             style="width:{{item.w}}px;height:{{item.h}}px;background:{{item.c}};

@@ -1,4 +1,4 @@
-// P-14 / g21(2026-11-02 走查修复):店卡写明本店权益、给「出示入场码」、卡包下写「轻点拆开」、CTA 叫「到店打卡」。
+// P-14 / g21(2026-11-02 走查修复):店卡写明本店权益、给「出示入场码」、CTA 叫「到店打卡」。
 const { test } = require('node:test')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
@@ -23,9 +23,12 @@ test('到店三步下有「出示入场码」,只给有票、未核销的商家�
   for (const cond of ['hero.node.isMerchant', '!hero.node.done', 'regId', '!isPreview', '!isMock']) assert.ok(m[1].includes(cond), cond)
 })
 
-test('卡包下写「轻点拆开」,撕开时退场,不挡点击', () => {
-  assert.match(wxml, /<text class="fx-pack-hint" wx:if="\{\{!packTear && !packBurst[^"]*\}\}">轻点拆开<\/text>/)
-  assert.match(wxss, /\.fx-pack-hint\{[^}]*pointer-events:none/)
+test('g21 第三轮:未拆/拆包中只出卡包,没有包面标题、章数和「轻点拆开」', () => {
+  const wrap = wxml.slice(wxml.indexOf('<view class="fx-packwrap"'), wxml.indexOf('<view class="fx-shard"'))
+  assert.ok(wrap.length > 100, '找不到卡包块')
+  assert.doesNotMatch(wrap, /<text\b/, '卡包块里不许有文字节点')
+  assert.doesNotMatch(wxml, /轻点拆开|fx-pack__print|fx-pack-hint/)
+  assert.doesNotMatch(wxss, /\.fx-pack__print|\.fx-pack__t\b|\.fx-pack__s\b|\.fx-pack-hint/)
 })
 
 test('CTA 是「到店打卡」', () => {

@@ -906,9 +906,6 @@ page { background: var(--cy-color-bg-page); }
         overflow:hidden 的 __body),它们 position:absolute 需要这里有定位祖先;
      ② 有 transform 的元素等价于 z-index:0,不显式抬到 40 的话,爆炸的光效层
         (31~34)会全部盖在包**表面**上 —— 那就成了「屏幕闪了一下」。 */
-/* g21:卡包下方的拆包提示,与卡包同层,不抢卡包的光 */
-.fx-pack-hint{ position:absolute; left:0; right:0; bottom:12%; z-index:41; text-align:center;
-  font-size:var(--cy-type-caption); letter-spacing:4rpx; color:var(--cy-color-text-secondary); pointer-events:none; }
 .fx-pack{ position:relative; z-index:40; width:424rpx; height:741rpx;
   transform:rotate(-3.4deg); transform-origin:50% 62%; }
 /* 高度由包装图的原始比例定(pages/play/assets/pack-foil.png 330×577):424 × 577/330 ≈ 741rpx。
@@ -928,12 +925,6 @@ page { background: var(--cy-color-bg-page); }
 /* 内层是整幅图,靠父级 overflow:hidden 只露出该露的那一条 */
 .fx-pack__sealim{ position:absolute; left:0; top:0; width:424rpx; height:741rpx; }
 .fx-pack__sealim--b{ top:-704rpx; }                    /* -(741 - 37):把底边对齐到下封口 */
-/* 印刷:参考图的比例 —— 主标从包高 26.5% 起,副标隔一整行空档。
-   ⚠️ 膜是浅色的 ⇒ 字必须是黑的(原来是深色包装上的浅字,换图后要整个反过来)。 */
-.fx-pack__print{ position:absolute; left:52rpx; right:40rpx; top:196rpx; }
-.fx-pack__t{ display:block; font-size:74rpx; font-weight:800; line-height:.98; letter-spacing:-2rpx; /* ds-ok 包装印刷:实物尺度,不属于页面字阶 */
-  color:#0A0A0A; } /* ds-ok 浅色镭射膜上的黑色印刷 */
-.fx-pack__s{ display:block; margin-top:62rpx; font-size:26rpx; font-weight:700; color:#0A0A0A; } /* ds-ok 同上 */
 
 /* ② 蓄力 1000ms:摇 + 四周压暗。没有这层压暗,后面的闪光炸不出反差。 */
 .fx-pack.is-shake{ animation:fxShake 1s cubic-bezier(.36,.07,.19,.97) both; }
