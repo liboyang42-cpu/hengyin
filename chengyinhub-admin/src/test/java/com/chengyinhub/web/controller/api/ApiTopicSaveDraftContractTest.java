@@ -84,6 +84,7 @@ class ApiTopicSaveDraftContractTest {
 
     private TopicCreateDTO draftDto() {
         TopicCreateDTO dto = new TopicCreateDTO();
+        dto.setImgUrl("media-asset:1"); // P-17:发布必须带封面
         dto.setProductType(ProductType.FREE_EXPLORE);
         dto.setName("尚未发布的新主题");
         dto.setPublishMode("pro");

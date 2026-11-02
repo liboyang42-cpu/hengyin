@@ -39,6 +39,12 @@ Path for a paid city theme (product_type 1), in order. Gates 1–4 were hit by t
 
 Other facts the run surfaced, unchanged: a club leader must bind their own club when publishing a city theme (`ApiTopicController` D1/D2), a club-bound theme never opens the club pool (`CmsTopicServiceImpl.resolveOpenClubPool`), and guided tickets need exactly one ORGANIZER coop order (`TopicSaleFinalizationServiceImpl.assertOrganizer`), which a club can only get by inviting **another** club. A club that wants to run its own paid city theme alone therefore still cannot sell; see needs owner.
 
+## Test sweep
+
+- Mini-program: `node --test tests/unit/*.test.js` from `chengyinhub-xcx/`: 15566 pass, 0 fail. `node tests/lint/ui-integrity.js`: `UI-GATE-0:PASS` (no baseline entries added; edits in baselined files keep their line numbers). Action ledger rebuilt: line-number shifts only.
+- Java (`chengyinhub-admin`, `*Registration*Test,*Topic*Test,*Pricing*Test,*Sale*Test,*Explore*Test,*Refund*Test,*Quote*Test,*Checkout*Test`, 3237 tests): every failure caused by this branch fixed (four controller tests now send a cover; `TopicBundleReviewServiceTest` now uses the editor fallback point). The 7 remaining errors are `*MyBatisTest` classes that create their own MySQL database and fail with 「Communications link failure」 here (no local MySQL for them); not run.
+- `scripts/e2e/test_chain_platform.py`: 11 pass. Rig chains platform → merchant_club → sale_close → player: all PASS on this branch.
+
 ## Needs owner
 
 - **P-05 / C-02: may non-platform themes take online payment at launch?** Today `assertCollectible` lets only platform-owned content collect money (a 2026-07-16 decision recorded in code). You wrote 「为什么不能报名 应该是可以报名的啊」. Recommended default: keep the rule until the payment qualification is in place; this branch shows the player the real reason and blocks the empty order. If you open it, the change is one gate in `CmsRegistrationServiceImpl.assertCollectible` plus payout routing for club content; lane l6 removes its organiser notice.

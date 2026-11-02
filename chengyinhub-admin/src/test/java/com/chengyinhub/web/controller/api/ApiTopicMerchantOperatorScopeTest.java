@@ -143,6 +143,7 @@ class ApiTopicMerchantOperatorScopeTest {
 
     private TopicCreateDTO freeExploreDto() {
         TopicCreateDTO dto = new TopicCreateDTO();
+        dto.setImgUrl("media-asset:1"); // P-17:发布必须带封面
         dto.setProductType(ProductType.FREE_EXPLORE);
         dto.setName("员工代商家发起");
         return dto;

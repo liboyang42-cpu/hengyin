@@ -86,6 +86,7 @@ class ApiTopicPostReviewTest {
 
     private TopicCreateDTO createDto(String name) {
         TopicCreateDTO dto = new TopicCreateDTO();
+        dto.setImgUrl("media-asset:1"); // P-17:发布必须带封面
         dto.setProductType(ProductType.FREE_EXPLORE);
         dto.setPublishMode("simple");
         dto.setName(name);
