@@ -58,6 +58,11 @@ const OWNER_STAGE_COPY = {
   // CU-C-89:这个阶段是**俱乐部级**的(任意一个项目被承接就算到),没有单一「该项目」,
   // 入口也只能打开全团场次清单 —— 文案不能再按单项目口吻写,否则多项目的主理人认错待办对象。
   executionAccepted: { label: '活动运营', hint: '已承接项目，可查看全部项目的场次运营' },
+  // C-16(2026-11-02):「现在要做」优先说眼下真正卡着的事 —— 有合作邀约待确认、主题审核中;
+  // 城市定向主题没有商家站点也能开场,不再一律让人去邀请商家。
+  coopInvite: { label: '查看合作邀约', hint: '' },
+  review: { label: '主题审核中', hint: '审核通过后就能开一场' },
+  run: { label: '开一场', hint: '选好日期和集合时间' },
   loading: { label: '读取管理进度…', hint: '正在确认项目与邀请状态' },
   error: { label: '重试管理进度', hint: '暂时无法确认当前阶段' },
   // 管理员没有经营阶段:邀商家/发布主题/开一场都是主理人的事。
@@ -1427,6 +1432,7 @@ Page({
     }
     this._hasAcceptedExecutionProject = false;
     let stage = 'loading';
+    let receivedPending = 0;
     if (this.data.topicState === 'error') {
       stage = 'error';
     } else if (this.data.topicState === 'ready') {
@@ -1444,14 +1450,29 @@ Page({
       const pending = (this.data.sentInvites || []).some(function (item) {
         return topicIds.has(String(item.topicId)) && Number(item.status) === 0;
       });
-      if (!topicIds.size) stage = 'publish';
+      // 审核中的主题不在公开列表里,只在 /api/project/my 的 state=pending 行里。
+      const reviewing = this.data.ownerProjectState === 'ready' && (this.data.projectRows || []).some(function (item) {
+        return item.bizType === 'topic' && item.state === 'pending';
+      });
+      // 已上架主题全是城市定向(productType 1):不需要商家也能开场。
+      const allOrienteering = (this._topics || []).every(function (item) {
+        return Number(item.productType == null ? item.mode : item.productType) === 1;
+      });
+      if (!topicIds.size) stage = reviewing ? 'review' : 'publish';
       else if (acceptedExecution || (this.data.ownerProjectState === 'ready' && accepted)) stage = 'accepted';
       else if (this.data.ownerProjectState === 'error') stage = 'error';
       else if (this.data.ownerProjectState === 'ready' && this.data.inviteFeedbackState === 'error') stage = 'error';
-      else if (this.data.ownerProjectState === 'ready' && this.data.inviteFeedbackState === 'ready') stage = pending ? 'pending' : 'invite';
+      else if (this.data.ownerProjectState === 'ready' && this.data.inviteFeedbackState === 'ready') {
+        stage = pending ? 'pending' : (reviewing ? 'review' : (allOrienteering ? 'run' : 'invite'));
+      }
+      receivedPending = (this.data.messages || []).filter(function (item) {
+        return Number(item.status) === 0 && item.toType === 'club' && String(item.toId) === String(clubId);
+      }).length;
+      if (receivedPending > 0 && ['publish', 'review', 'invite', 'run', 'pending'].indexOf(stage) >= 0) stage = 'coopInvite';
     }
-    const copy = stage === 'accepted' && this._hasAcceptedExecutionProject
+    let copy = stage === 'accepted' && this._hasAcceptedExecutionProject
       ? OWNER_STAGE_COPY.executionAccepted : OWNER_STAGE_COPY[stage];
+    if (stage === 'coopInvite') copy = { label: copy.label, hint: '有 ' + receivedPending + ' 条合作邀约待确认' };
     const timeline = this._hasAcceptedExecutionProject
       ? { nodes: [], summary: '' } : this.buildLeadTimeline(stage);
     this.setData({
@@ -1504,6 +1525,14 @@ Page({
     if (this.data.ownerStage === 'publish') { this.onCreateTeam(); return; }
     const stage = this.data.ownerStage;
     if (stage === 'accepted' && this._hasAcceptedExecutionProject) { this.goEventOps(); return; }
+    if (stage === 'run') { this.goEventOps(); return; }
+    if (stage === 'review') { this.setData({ activeTab: 'manage', openCommentPost: null }); return; }
+    if (stage === 'coopInvite') {
+      this.setData({ activeTab: 'manage', openCommentPost: null, openManageSection: 'received' }, function () {
+        wx.pageScrollTo({ selector: '#manage-received-section', duration: 250, offsetTop: 24 });
+      });
+      return;
+    }
     const afterSwitch = function () {
       if (stage === 'invite') {
         wx.pageScrollTo({ selector: '#manage-merchants-section', duration: 250, offsetTop: 24 });

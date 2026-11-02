@@ -587,7 +587,7 @@
         </view>
       </view>
 
-      <view class="overview-section" wx:if="{{club.isOwner}}">
+      <view class="overview-section" id="manage-received-section" wx:if="{{club.isOwner}}">
         <view class="manage-fold-row" catchtap="toggleManageSection" data-key="received"
               aria-role="button" aria-expanded="{{openManageSection === 'received'}}" aria-label="收到的合作邀约"
               hover-class="cy-pressed" hover-stay-time="80">
