@@ -82,4 +82,35 @@
 - 「对了」那一拍和三点等待动画的观感、减弱动态下的表现。
 - 带领场放行的轮询间隔（4–10 秒）决定了「等队长放行」解开的延迟。
 
+## Round 3
+
+按 ROUND3.md（业主审阅与 Figma 核对）和 ROUND3C.md（限额中断后重做）。开工时本分支已含 origin/master（c6eac3b8，#702 已合），本轮无需再合；收尾时再取一次 master，仍无新提交。本轮全部改动只复用既有组件：章节门就是 `cy-chapter-flip mode="gate"`、作者结果反馈走既有的结算判定屏 `cy-play-verdict`（`r5Verdict`）、彩纸是通关过场自己的彩纸，没有新画任何 UI。
+
+| ID | 状态 | 改了什么 | 文件 | 怎么验证 |
+|---|---|---|---|---|
+| P-08 | done | 被挡住的章停在章节翻转门本身：底部「轻点跳过」换成「等队长放行」，门不再自己淡出、轻点也不进；地图上的 `chgate-hold` 一行和样式删除（所以门后的「继续探索」也露不出来）；队长放行后门自己淡出进正文（4.2 秒兜底）。门上的读屏文案同步为「…，等队长放行」 | `pages/play/components/chapter-flip/index.js/wxml`、`pages/play/index.js/wxml/wxss` | `chapter-flip-round3.test.js`（held 时播完不进、轻点不进、放行后自己进、未播完放行按原计时进、不带 held 照旧，旧代码 4 红）；`play-lead-chapter-hold.test.js`。**rig**：同一场（活动 14，队长停在第一章）旧包 P-08-r3-before＝门已淡出、黑屏上「继续探索」+「等队长放行」胶囊；新包 P-08-r3-after＝停在第二章翻转门上、底部「等队长放行」（开页后 18 秒仍停着）；队长 `lead/unlock-chapter` 52→53 后，P-08-r3-after-2＝门自己进了第二章正文，并有「队长放行了「第二章 · 钟楼」」 |
+| P-10 / P-11 | done | ① 老题卡：模板「文字反馈」`feedbackText` 是完成后的话（编辑器占位「恭喜你解开了老城的第一个秘密!」，后端 `CmsMemberTemplate` 也注明「完成即发」）。**答错能显示成功文案：是**——原来答错兜底是 `r.msg \|\| n.feedbackText`，服务端没带原因时就会把祝贺语当答错提示。现在答错兜底永不取它；答对时有它就写作者的话（不再叠「对了」+ 揭示），没有才用「对了」+ 揭示兜底。② 进阶题（模板「结果反馈」`outcomeRules.pass/fail` 的 `reply`/`images`）：作者的话本来就由结算回执（`lastOutcome.reply/images`）驱动既有判定屏 `cy-play-verdict` 摆出来；问题是题屏同时叠我第一轮写的「再想想 / 不对。把它清掉，再试一次。」。现在玩法视图在判完之后带 `outcomeFeedback`（只在作者给这个结果写了文字或配图时才有），题屏有它就只描红清空、不叠兜底句；作者没写时兜底照旧 | `AdvancedGameRuntimeServiceImpl.java`（`authoredOutcomeFeedback`）、`pages/play/index.js/wxml`、`utils/answer-right-moment.js`、`utils/playkit-view.js`、`components/playkit-qa/index.js`、`components/playkit/index.wxml` | `AuthoredOutcomeFeedbackTest`（判前不给、没通过给 fail、通过给 pass 与配图、作者没写不给）4 条 + `AdvancedGameRuntimeServiceImplTest` 207 条全过；`play-answer-right-moment.test.js`、`playkit-qa-authored-outcome-p10.test.js`（旧代码 7 红）。**rig**：同一道老题（模板配了文字反馈）答 1873：旧包 P-11-r3-before＝「对了」+ 揭示；新包 P-11-r3-after＝作者的「门楣认出来了：这座楼在 1873 年重建落成。」+ 碎片。**进阶题的作者结果反馈没在 rig 里拍到**：配了 `outcomeRules` 的主题能发布（参与方式须为 GPS / 扫码），但开局即报「数值状态必须为已初始化的整数：sys.hp」——R5 结算要求整套主题数值规则，走查夹具没有；这一条只有单测证据 |
+| P-09 | done | 题干看不清的原因：故事流 `.chfull__scroll` 上沿有 0–220rpx 透明、到 340rpx 才实的渐隐遮罩（防顶栏叠字），内嵌玩法块的题干落在约 310rpx，被遮成灰字。改为内嵌块上内边距至少到遮罩终点（`--chfull-fade-end:340rpx`，与遮罩同值）；为不把「就这个数」挤出一屏，内嵌时猜数字滚筒 980→860rpx。结果行被截：交过之后滚筒收成只留中间那个数（400rpx），结果行、作者揭示、按钮都在一屏内 | `pages/play/index.wxml/wxss`、`components/playkit-estimate/index.wxml/wxss` | `play-estimate-result.test.js` 新增 2 条。**rig**（活动 12，同一题同一初值 11）：P-09-r3-before＝灰色题干；P-09-r3-after＝白色题干、按钮完整；P-09-r3-before-2＝交后「约 5.4 米。」压在下沿被截；P-09-r3-after-2＝结果、揭示、「这一关结束了」「继续故事」都在屏内 |
+| g20 | done | 通关过场的彩纸代码自走查以来没变；原因是它 2.6 秒就停撒，通关卡 3 秒才立起，卡一出来屏上只剩零星几片（第一轮 g20-after 就是这样）。改成撒到卡立起之后再 2.4 秒；片子、颜色、下落不变；减弱动态时仍不撒。通关卡不变 | `pages/play/components/chapter-flip/index.js` | `chapter-flip-round3.test.js` g20 条（旧代码红）。**rig**：同一主题两个玩家，点尾声「继续」后同一时刻截图：g20-r3-before（旧包）卡上只剩几片，g20-r3-after（新包）卡上满屏彩纸；-2 是早 2 秒的一帧 |
+
+### 门禁与测试（第三轮）
+
+- 后端：`mvn -q -pl chengyinhub-admin -am -Dtest='AuthoredOutcomeFeedbackTest,AdvancedGameRuntimeServiceImplTest'` → 211 条全过（`LANG=C.UTF-8`）。
+- 小程序：全量 `node --test tests/unit/*.test.js` 15603 条全过（P-09 末次调整前跑的；之后 `play*`、`playkit*`、`chapter*` 相关 368+ 条重跑全过）。
+- `node chengyinhub-xcx/tests/lint/ui-integrity.js` → `UI-GATE-0:PASS`。唯一一条 U5 登记（loadMilestone）只是行号位移 8218→8230，按惯例换 key 重算 digest，没有新增登记。动作台账重建：只有章节门读屏文案与行号变化，控件数不变。
+
+### rig 说明（第三轮）
+
+- 新容器。rig＝`origin/claude/cloud-walk-20261101-rig` + 俱乐部 lane 的 `harness-patches.diff`（只在 rig 里）；`up.sh` 的 `SHA` 指向本分支 211fca4b（后端 jar 由它构建；P-09 末次调整只动小程序，新包按 9eb721cb 重建）。Docker Hub 仍可能限流，MySQL / Redis 从 `mirror.gcr.io` 按同一摘要拉取后打本地标签。
+- before 截图用本轮之前的提交 c353c611 打的小程序包、after 用本轮提交打的包；后端同一个。都是浏览器 rig，不是真机。
+- 夹具（全部真接口）：主理人 9003 草稿模板 6005（老文字题，带文字反馈与揭示）、6006（进阶打字题）、6007（猜数字）；主题 990018（两章 + 尾声，LINEAR，俱乐部 7001，免费票）与 990017（猜数字一站）；带领场活动 14、12；玩家 walk-player-1…6。另有 990016（带 `outcomeRules` 的版本，开局报 sys.hp，已下架）。直接写库只有 `seed-walk.py shift-session`（活动 11/12/14 改开始时间）；审核用 `/business/audit/review` + `expectedVersion`。
+- 「开启定位」弹窗在 rig 里会盖在章节门上，截图前先点掉。
+
+### 真机上仍未验证（第三轮）
+
+- 进阶题「作者在结果反馈里写了话」时题屏不叠兜底、由判定屏摆作者的话：只有单测，rig 夹具跑不起 R5 主题（见上）。
+- P-08 放行后门的淡出与自动进正文的节奏（依赖带领轮询 4–10 秒）；rig 里只走了一名成员。
+- g20 彩纸在真机帧率下的密度；`prefers-reduced-motion` 下不撒（代码路径未改）。
+- P-09 在不同机型（状态栏高度不同）上题干与遮罩的相对位置；`max()` 在基础库 WebView 上的支持按 iOS 11.3+ / Chromium 计，未在真机确认。
+
 STATUS: COMPLETE
