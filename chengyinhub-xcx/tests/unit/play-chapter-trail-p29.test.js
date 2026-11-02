@@ -34,6 +34,9 @@ test('本章各站都完成、收尾没读过才停在本章', () => {
 
 test('换章那一步先停在本章,点「继续探索」才换到下一章', () => {
   const js = fs.readFileSync(path.join(__dirname, '../../pages/play/index.js'), 'utf8');
-  assert.match(js, /if \(chapterChanged && !this\.data\.isPreview && chapterTrail\.holdForTrail\(this\.data\.chapter, nodes, this\._chapterTrailRead\)\) \{\n      this\._chapterTrailNext = activeChapter;\n      activeChapter = this\.data\.chapter;/);
+  // 站点卡开着时故事流收起(chapterFull=false),换章照样要停:判据是「要换章」,不是「故事流开着」
+  assert.match(js, /const switching = String\(activeChapter\.id\) !== String\(this\.data\.chapter\.id\);\n    let chapterChanged = this\.data\.chapterFull && switching;/);
+  assert.match(js, /if \(switching && !this\.data\.isPreview && chapterTrail\.holdForTrail\(this\.data\.chapter, nodes, trailRead\)\) \{\n      this\._chapterTrailNext = activeChapter;\n      activeChapter = this\.data\.chapter;/);
+  assert.match(js, /storyResume\.patch\(this\._runSessionScope\(\), \{ trails: /);
   assert.match(js, /continueChapterStory\(\) \{\n    const opening = [^\n]+\n    \/\/ P-29[^\n]+\n    if \(this\._chapterTrailNext && !this\.data\.isPreview\) \{[\s\S]*?this\.setData\(\{ chapter: next \}, \(\) => this\.openChapterFull\(\)\);/);
 });

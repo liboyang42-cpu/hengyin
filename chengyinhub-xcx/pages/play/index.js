@@ -3919,6 +3919,7 @@ Page({
       const next = this._chapterTrailNext;
       this._chapterTrailNext = null;
       this._chapterTrailRead = Object.assign({}, this._chapterTrailRead, { [String((this.data.chapter || {}).id)]: true });
+      storyResume.patch(this._runSessionScope(), { trails: Object.assign({}, storyResume.read(this._runSessionScope()).trails, this._chapterTrailRead) });
       this.setData({ chapter: next }, () => this.openChapterFull());
       return Promise.resolve();
     }
@@ -4627,15 +4628,18 @@ Page({
     const storyDistText = nextNode ? this._distText(nextNode) : '';
     // 伏笔:服务端只下发已得到的念头,这里原样带到菜单上(见右上角「伏笔」那一行)
     const storyThoughts = (this._routeState && this._routeState.thoughts) || [];
-    let chapterChanged = this.data.chapterFull && String(activeChapter.id) !== String(this.data.chapter.id);
+    const switching = String(activeChapter.id) !== String(this.data.chapter.id);
+    let chapterChanged = this.data.chapterFull && switching;
     /* P-29:本章最后一站刚完成、本章还有收尾文字没读 ⇒ 先停在本章把收尾铺出来,
-       点本章末尾的「继续探索」再换到下一章(见 continueChapterStory)。只在第一次停下时重铺一次。 */
-    if (chapterChanged && !this.data.isPreview && chapterTrail.holdForTrail(this.data.chapter, nodes, this._chapterTrailRead)) {
+       点本章末尾的「继续探索」再换到下一章(见 continueChapterStory)。站点卡开着时故事流是收起的,
+       所以不看 chapterFull 也要停;故事流开着时只在第一次停下时重铺一次。读过的收尾记在本局存档里,重进不重放。 */
+    const trailRead = Object.assign({}, this.data.isPreview ? {} : storyResume.read(this._runSessionScope()).trails, this._chapterTrailRead);
+    if (switching && !this.data.isPreview && chapterTrail.holdForTrail(this.data.chapter, nodes, trailRead)) {
       this._chapterTrailNext = activeChapter;
       activeChapter = this.data.chapter;
-      chapterChanged = this._chapterTrailHeldId !== String(activeChapter.id);
-      this._chapterTrailHeldId = String(activeChapter.id);
-    } else if (!chapterChanged) {
+      chapterChanged = this.data.chapterFull && this._chapterTrailHeldId !== String(activeChapter.id);
+      if (this.data.chapterFull) this._chapterTrailHeldId = String(activeChapter.id);
+    } else if (!switching) {
       this._chapterTrailNext = null;
     }
     const merchantCount = new Set(visibleNodes.filter((node) => Number(node.merchantId) > 0)
