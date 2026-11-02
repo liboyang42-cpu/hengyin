@@ -96,7 +96,9 @@
   show="{{show}}" kicker="{{kit.kicker}}" target="{{kit.bearing}}" tolerance="{{kit.tolerance}}"
   hold-seconds="{{kit.holdSeconds}}" hint="{{kit.hint}}" done="{{kit.done}}"
   attempt-id="{{kit.attemptId}}" reward-ceiling="{{kit.rewardCeiling}}"
-  bind:start="onStart" bind:submit="onSubmit" bind:verdict="onVerdict" bind:close="onClose" />
+  can-skip="{{kit.canSkip}}" skipped="{{kit.skipped}}"
+  bind:start="onStart" bind:submit="onSubmit" bind:verdict="onVerdict" bind:close="onClose"
+  bind:readfail="onReadFail" bind:skip="onSkip" />
 
 <cy-playkit-shout wx:elif="{{kit.type === 'shout'}}"
   show="{{show}}" kicker="{{kit.kicker}}" seconds="{{kit.seconds}}"

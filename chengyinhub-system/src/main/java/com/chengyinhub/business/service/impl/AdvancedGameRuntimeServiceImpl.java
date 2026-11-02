@@ -63,6 +63,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
@@ -463,6 +464,9 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         if(!selectedChallenge.isEmpty() && (normalizedAction.startsWith("SUBMIT_") || Arrays.asList("FLIP_COIN","ROLL_DICE","DRAW").contains(normalizedAction)) && !normalizedAction.equals(selectedAction))throw new IllegalArgumentException("恢复挑战只能提交选定玩法");
         if(!selectedChallenge.isEmpty() && "START_CHALLENGE".equals(normalizedAction) && !selectedChallenge.equals(safePayload.get("game")))throw new IllegalArgumentException("恢复挑战只能开始选定玩法");
         if(zeroChallengeSession && "REROLL_CHECK".equals(normalizedAction))throw new IllegalArgumentException("恢复挑战不消费幸运重掷");
+        // P-23:传感器跳过只走普通的一站;恢复挑战与按结果分支的玩法不许跳(跳过会被判成一个结果分支)
+        if (("REPORT_SENSOR_FAILURE".equals(normalizedAction) || "SKIP_SENSOR_STATION".equals(normalizedAction))
+                && (zeroChallengeSession || config.has("outcomeRules"))) throw new IllegalStateException("这一站不支持跳过");
         // R14:本次提交判定出的「选择」——分支步骤/选项、问答选项、玩法通过;判完当场写旅程本局状态。
         List<ChoiceRef> choices = new ArrayList<>();
         // 拍物成卡:这一趟真判过且节点是卡片玩法时非空。铸卡推迟到事务提交之后 ——
@@ -1138,6 +1142,64 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         if (session == null) return false;
         JsonNode config = readJson(session.getConfigSnapshotJson(), "高级玩法配置不可用");
         return !untrustedCompletionEvidence(config, objectState(session.getStateJson())).isEmpty();
+    }
+
+    @Override
+    public boolean sensorStationSkipped(Long memberId, Long activityId, Long topicId, Long nodeId) {
+        if (memberId == null || topicId == null || nodeId == null) return false;
+        GameRuntimeSession session = existingSession(memberId, activityId == null ? 0L : activityId, topicId, nodeId);
+        return session != null && AdvancedActionJudgement.skippedSensorSection(objectState(session.getStateJson())) != null;
+    }
+
+    @Override
+    public void releaseSensorStation(Long leaderMemberId, Long memberId, Long activityId, Long topicId, Long nodeId) {
+        if (leaderMemberId == null || memberId == null || activityId == null || activityId <= 0 || topicId == null || nodeId == null) {
+            throw new IllegalArgumentException("参数有误");
+        }
+        GameRuntimeSession found = existingSession(memberId, activityId, topicId, nodeId);
+        if (found == null) throw new ServiceException("该成员还没开始这一站", 409);
+        GameRuntimeSession session = sessionMapper.selectByIdForUpdate(found.getId());
+        if (session == null || !nodeId.equals(session.getNodeId()) || !activityId.equals(session.getActivityId())
+                || !topicId.equals(session.getTopicId())) throw new ServiceException("该成员还没开始这一站", 409);
+        if (!Integer.valueOf(GameRuntimeSession.STATUS_RUNNING).equals(session.getStatus())) throw new ServiceException("这一站已经结束了", 409);
+        JsonNode config = readJson(session.getConfigSnapshotJson(), "玩法配置不可用");
+        if (config.has("outcomeRules") || objectState(session.getStateJson()).has("zeroChallengeInstance")) {
+            throw new ServiceException("这一站不支持跳过", 409);
+        }
+        String game = null;
+        for (String section : AdvancedActionJudgement.SKIPPABLE_SENSOR_SECTIONS) if (enabled(config.get(section))) { game = section; break; }
+        if (game == null) throw new ServiceException("这一站不是传感器玩法，不能放行", 409);
+        ObjectNode state = objectState(session.getStateJson());
+        if (state.path(game).path("done").asBoolean(false)) throw new ServiceException("这一站已经完成了", 409);
+        ObjectNode released = state.with(game).with("releasedFor");
+        if (released.has(String.valueOf(memberId))) return;   // 重复放行:幂等
+        released.putObject(String.valueOf(memberId)).put("by", leaderMemberId).put("at", clock.now().getTime());
+        int oldVersion = session.getVersion();
+        session.setStateJson(writeJson(state));
+        session.setUpdateTime(clock.now());
+        if (sessionMapper.updateStateCas(session) != 1) throw new ServiceException("状态已更新，请重试", 409);
+        session.setVersion(oldVersion + 1);
+    }
+
+    @Override
+    public Map<Long, Long> pendingSensorSkips(Long activityId, Long topicId, Collection<Long> memberIds) {
+        Map<Long, Long> stuck = new LinkedHashMap<>();
+        if (activityId == null || topicId == null || memberIds == null) return stuck;
+        for (Long memberId : memberIds) {
+            if (memberId == null) continue;
+            for (GameRuntimeSession session : sessionMapper.selectPlayerSessionsByTopic(activityId, topicId, memberId)) {
+                if (!Integer.valueOf(GameRuntimeSession.STATUS_RUNNING).equals(session.getStatus())) continue;
+                ObjectNode state = objectState(session.getStateJson());
+                for (String game : AdvancedActionJudgement.SKIPPABLE_SENSOR_SECTIONS) {
+                    JsonNode node = state.path(game);
+                    if (node.path("done").asBoolean(false) || node.path("releasedFor").has(String.valueOf(memberId))) continue;
+                    if (AdvancedActionJudgement.failedReads(state, game, memberId) >= AdvancedActionJudgement.SKIP_AFTER_FAILED_READS) {
+                        stuck.put(memberId, session.getNodeId());
+                    }
+                }
+            }
+        }
+        return stuck;
     }
 
     /**
@@ -2997,6 +3059,13 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             putText(value, "hint", cfg);
             value.put("xp", cfg.path("xp").asInt(0));
             value.put("done", state.path("compass").path("done").asBoolean(false));
+            // P-23:读不出方向时的出路。只告诉本人自己的失败次数与能不能跳,不下发别人的
+            value.put("allowSkip", cfg.path("allowSkip").asBoolean(false));
+            value.put("skipped", state.path("compass").path("skipped").asBoolean(false));
+            value.put("failedReads", AdvancedActionJudgement.failedReads(state, "compass", actorMemberId));
+            value.put("released", actorMemberId != null
+                    && state.path("compass").path("releasedFor").has(String.valueOf(actorMemberId)));
+            value.put("canSkip", AdvancedActionJudgement.canSkip(config, state, "compass", actorMemberId));
             actionJudgement().putAttempt(value, state, "compass", actorMemberId);
             value.put("evidence", "SELF_REPORTED");
             value.put("rewardCeiling", RewardPolicy.XP_BADGE_ONLY.name());

@@ -541,6 +541,7 @@
     <input class="cg-cfg-input" value="{{advanced.compass.hint}}" placeholder="例如 它比你想的更靠右" data-section="compass" data-field="hint" bindinput="onAdvancedField" />
     <view class="cg-cfg-label">奖励分</view>
     <input class="cg-cfg-input" type="number" value="{{advanced.compass.xp}}" placeholder="0 表示不给分" data-section="compass" data-field="xp" data-numeric="1" bindinput="onAdvancedField" />
+    <view class="cg-rw-line"><view class="cg-rw-meta"><view class="cg-rw-name">允许跳过</view></view><cy-switch checked="{{advanced.compass.allowSkip}}" data-key="compass.allowSkip" bindchange="onAdvancedSubToggle" accessibility-label="允许跳过" /></view>
 
       </view>
     </view>

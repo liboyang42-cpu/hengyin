@@ -99,6 +99,20 @@
 }
 .cp__b--press { opacity: .88; }
 
+/* P-23 跳过这一站:次要按钮,描边不填色,不抢「开始」 */
+.cp__skip {
+  width: 100%;
+  min-height: 88rpx;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 44rpx;
+  box-shadow: inset 0 0 0 2rpx currentColor;
+  font-size: var(--cy-type-label);
+  font-weight: 700;
+  opacity: .8;
+  transition: opacity .16s ease;
+}
+.cp__skip--press { opacity: .6; }
+
 .cp__safe {
   font-size: var(--cy-type-label);
   color: #f0ece5;                                                   /* ds-ok */

@@ -4925,7 +4925,9 @@ Page({
           exists: true, status: d.status || 1, isLeader: !!d.isLeader,
           arrived: d.arrived || 0, total: d.total || 0, meArrived: !!d.meArrived,
           chapterName: d.chapterName || '', currentChapterId: d.currentChapterId, nextChapterId: d.nextChapterId, broadcast: d.broadcast || '',
-          members: (d.members || []).slice(0, 8)
+          members: (d.members || []).slice(0, 8),
+          // P-23:只发给队长 —— 谁在罗盘站读取失败两次、等着放行
+          skipRequests: that._leadSkipRequests(d.skipRequests),
         },
         leadLoadError: false,
         leadUnlockChecking: unlockAuditDone ? false : !!that._leadUnlockChecking,
@@ -4935,6 +4937,13 @@ Page({
       // P-35:队长放行了新的一章,给玩家一句;P-08:门前正在等的那一章放行了就接着进正文
       const cue = releaseCue(prevLead, that.data.lead);
       if (cue && !that.data.lead.isLeader) that.diegetic(cue);
+      // P-23:有成员新卡在罗盘站,给队长一句;放行在「更多」里
+      const fresh = (that.data.lead.skipRequests || []).filter(r => !(that._skipCueSeen || {})[r.key]);
+      if (fresh.length && that.data.lead.isLeader) {
+        that._skipCueSeen = Object.assign({}, that._skipCueSeen);
+        fresh.forEach(r => { that._skipCueSeen[r.key] = true; });
+        that.diegetic(fresh[0].nickname + ' 在「' + fresh[0].nodeName + '」读不出方向，可在更多里放行');
+      }
       if (that.data.chapterGate.show && that.data.chapterGate.held && !that._leadHolds((that.data.chapter || {}).id)) that.continueChapterGate();
       that._startLeadPoll();
       return true;
@@ -5093,6 +5102,36 @@ Page({
         that.diegetic(isScanCancelled(error) ? '已取消扫码' : '扫码未完成，请重试');
       }
     });
+  },
+  /** P-23:队伍进度里的放行请求 → 菜单行。站名用本页节点表,找不到就写「这一站」。 */
+  _leadSkipRequests(rows) {
+    const nodes = this.data.nodes || [];
+    return (Array.isArray(rows) ? rows : []).slice(0, 8).map((r) => {
+      const node = nodes.find(n => String(n.nodeId) === String(r.nodeId));
+      return { key: r.memberId + ':' + r.nodeId, memberId: r.memberId, nodeId: r.nodeId,
+        nickname: r.nickname || '队员', nodeName: (node && node.name) || '这一站' };
+    });
+  },
+  /** P-23 队长现场放行:成员读取失败两次后,由成员本人点「跳过这一站」0 分走完。规则全在服务端。 */
+  leadReleaseStation(e) {
+    if (!this._isPlayAccountCurrent() || !this._canUseLeadTools() || !this.data.activityId) return;
+    const ds = (e && e.currentTarget && e.currentTarget.dataset) || {};
+    if (!ds.memberId || !ds.nodeId || this._leadReleasing) return;
+    const context = this._leadOperationContext();
+    this.setData({ sessionToolsOpen: false });
+    cyModal.show({ title: '放行这一站', content: '让 ' + (ds.nickname || '队员') + ' 跳过「' + (ds.nodeName || '这一站') + '」？这一站记 0 分。', confirmText: '放行',
+      success: (result) => {
+        if (!result.confirm || !this._isLeadOperationContextCurrent(context, true)) return;
+        this._leadReleasing = true;
+        req('/api/club/lead/release-station', 'POST', { activityId: this.data.activityId, memberId: ds.memberId, nodeId: ds.nodeId })
+          .then((res) => {
+            if (!this._isLeadOperationContextCurrent(context, true)) return;
+            this.diegetic((res && res.msg) || '请稍后再试');
+            this.loadTeamProgress();
+          })
+          .catch(() => { if (this._isLeadOperationContextCurrent(context, true)) this.diegetic('放行没有发出去，请再试一次'); })
+          .finally(() => { this._leadReleasing = false; });
+      } });
   },
   leadShowGroupCode() {
     if (!this._canUseLeadTools() || !this.data.activityId) return;

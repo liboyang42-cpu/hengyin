@@ -3035,6 +3035,132 @@ class AdvancedGameRuntimeServiceImplTest {
         assertEquals("高级玩法尚未完成", error.getMessage());
     }
 
+    // ==================== P-23 罗盘读不出方向:跳过这一站 ====================
+
+    private String compassConfigSkippable(boolean allowSkip) {
+        return "{\"schemaVersion\":1,\"compass\":{\"enabled\":true,\"bearing\":135,\"tolerance\":15,"
+                + "\"holdSeconds\":3,\"xp\":8,\"allowSkip\":" + allowSkip + "}}";
+    }
+
+    private Map<String, Object> compassGame() {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("game", "compass");
+        return payload;
+    }
+
+    @Test
+    void compassSkipNeedsTwoOwnFailedReadsThenCompletesWithZeroPoints() throws Exception {
+        GameRuntimeSession session = runningSession(compassConfigSkippable(true), "{}");
+        when(sessionMapper.selectAccessibleById(51L, MEMBER_ID)).thenReturn(session);
+        when(sessionMapper.updateStateCas(any())).thenReturn(1);
+        when(attemptMapper.selectByIdempotencyKey(any())).thenReturn(null);
+
+        Map<String, Object> first = service.act(MEMBER_ID, 51L, 0, "cp-fail-1", "REPORT_SENSOR_FAILURE", compassGame());
+        assertEquals(1, ((Number) playKit(first, "compass").get("failedReads")).intValue());
+        assertEquals(Boolean.FALSE, playKit(first, "compass").get("canSkip"), "一次失败还不许跳");
+        IllegalStateException early = assertThrows(IllegalStateException.class,
+                () -> service.act(MEMBER_ID, 51L, 1, "cp-skip-early", "SKIP_SENSOR_STATION", compassGame()));
+        assertEquals("读取失败两次后才能跳过这一站", early.getMessage());
+
+        Map<String, Object> second = service.act(MEMBER_ID, 51L, 1, "cp-fail-2", "REPORT_SENSOR_FAILURE", compassGame());
+        assertEquals(Boolean.TRUE, playKit(second, "compass").get("canSkip"));
+
+        Map<String, Object> skipped = service.act(MEMBER_ID, 51L, 2, "cp-skip", "SKIP_SENSOR_STATION", compassGame());
+        Map<String, Object> cp = playKit(skipped, "compass");
+        assertEquals(Boolean.TRUE, cp.get("done"));
+        assertEquals(Boolean.TRUE, cp.get("skipped"));
+        assertNull(session.getScore(), "跳过不发这一段的 xp");
+        assertTrue(session.getStateJson().contains("\"skipVia\":\"AUTHOR\""), session.getStateJson());
+        assertTrue(session.getStateJson().contains("\"skippedBy\":" + MEMBER_ID), session.getStateJson());
+
+        // 完成链:跳过的这一站能过完成闸,且被认出是跳过的(进度记 SKIPPED / 0 分)
+        when(sessionMapper.selectPlayerByOwner(ACTIVITY_ID, TOPIC_ID, NODE_ID, MEMBER_ID)).thenReturn(session);
+        assertTrue(AdvancedActionJudgement.mechanicsReady(
+                new com.fasterxml.jackson.databind.ObjectMapper().readTree(session.getConfigSnapshotJson()),
+                (com.fasterxml.jackson.databind.node.ObjectNode) new com.fasterxml.jackson.databind.ObjectMapper().readTree(session.getStateJson())),
+                "跳过的一站算走完,能过完成闸");
+        assertTrue(service.sensorStationSkipped(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID));
+    }
+
+    @Test
+    void compassSkipIsRefusedWhenTheAuthorDidNotAllowItAndNoLeaderReleased() {
+        GameRuntimeSession session = runningSession(compassConfigSkippable(false),
+                "{\"compass\":{\"failedReads\":{\"" + MEMBER_ID + "\":2}}}");
+        when(sessionMapper.selectAccessibleById(51L, MEMBER_ID)).thenReturn(session);
+        when(attemptMapper.selectByIdempotencyKey(any())).thenReturn(null);
+
+        assertEquals(Boolean.FALSE, playKit(service.state(MEMBER_ID, 51L), "compass").get("canSkip"));
+        IllegalStateException error = assertThrows(IllegalStateException.class,
+                () -> service.act(MEMBER_ID, 51L, 0, "cp-skip-off", "SKIP_SENSOR_STATION", compassGame()));
+        assertEquals("这一站不允许跳过", error.getMessage());
+        assertFalse(session.getStateJson().contains("skipped"));
+    }
+
+    @Test
+    void anotherMembersFailedReadsDoNotOpenTheSkipForMe() {
+        // 队伍局里失败次数按人记:队友读不出方向,不替我攒跳过的门槛
+        GameRuntimeSession session = runningSession(compassConfigSkippable(true),
+                "{\"compass\":{\"failedReads\":{\"8\":2}}}");
+        when(sessionMapper.selectAccessibleById(51L, MEMBER_ID)).thenReturn(session);
+        when(attemptMapper.selectByIdempotencyKey(any())).thenReturn(null);
+
+        IllegalStateException error = assertThrows(IllegalStateException.class,
+                () -> service.act(MEMBER_ID, 51L, 0, "cp-skip-other", "SKIP_SENSOR_STATION", compassGame()));
+        assertEquals("读取失败两次后才能跳过这一站", error.getMessage());
+    }
+
+    @Test
+    void leaderReleaseLetsThatMemberSkipEvenWhenTheAuthorDidNotAllowIt() {
+        GameRuntimeSession session = runningSession(compassConfigSkippable(false),
+                "{\"compass\":{\"failedReads\":{\"" + MEMBER_ID + "\":2}}}");
+        when(sessionMapper.selectPlayerByOwner(ACTIVITY_ID, TOPIC_ID, NODE_ID, MEMBER_ID)).thenReturn(session);
+        when(sessionMapper.selectByIdForUpdate(51L)).thenReturn(session);
+        when(sessionMapper.updateStateCas(any())).thenReturn(1);
+        when(sessionMapper.selectPlayerSessionsByTopic(ACTIVITY_ID, TOPIC_ID, MEMBER_ID)).thenReturn(Collections.singletonList(session));
+
+        assertEquals(Collections.singletonMap(MEMBER_ID, NODE_ID),
+                service.pendingSensorSkips(ACTIVITY_ID, TOPIC_ID, Collections.singleton(MEMBER_ID)), "队长看得到这个成员卡在这一站");
+        service.releaseSensorStation(1L, MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID);
+        assertTrue(session.getStateJson().contains("\"releasedFor\":{\"" + MEMBER_ID + "\":{\"by\":1"), session.getStateJson());
+        assertTrue(service.pendingSensorSkips(ACTIVITY_ID, TOPIC_ID, Collections.singleton(MEMBER_ID)).isEmpty(), "放行过的不再列给队长");
+
+        when(sessionMapper.selectAccessibleById(51L, MEMBER_ID)).thenReturn(session);
+        when(attemptMapper.selectByIdempotencyKey(any())).thenReturn(null);
+        Map<String, Object> view = service.act(MEMBER_ID, 51L, 1, "cp-skip-lead", "SKIP_SENSOR_STATION", compassGame());
+        assertEquals(Boolean.TRUE, playKit(view, "compass").get("skipped"));
+        assertTrue(session.getStateJson().contains("\"skipVia\":\"LEADER\""), session.getStateJson());
+    }
+
+    @Test
+    void leaderCannotReleaseANonSensorStation() {
+        GameRuntimeSession session = runningSession(quietConfig(), "{}");
+        when(sessionMapper.selectPlayerByOwner(ACTIVITY_ID, TOPIC_ID, NODE_ID, MEMBER_ID)).thenReturn(session);
+        when(sessionMapper.selectByIdForUpdate(51L)).thenReturn(session);
+
+        ServiceException error = assertThrows(ServiceException.class,
+                () -> service.releaseSensorStation(1L, MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID));
+        assertEquals("这一站不是传感器玩法，不能放行", error.getMessage());
+    }
+
+    @Test
+    void skipIsOnlyOpenToSensorGames() {
+        GameRuntimeSession session = runningSession(quietConfig(), "{}");
+        when(sessionMapper.selectAccessibleById(51L, MEMBER_ID)).thenReturn(session);
+        when(attemptMapper.selectByIdempotencyKey(any())).thenReturn(null);
+
+        IllegalArgumentException notHere = assertThrows(IllegalArgumentException.class,
+                () -> service.act(MEMBER_ID, 51L, 0, "skip-quiet", "SKIP_SENSOR_STATION", compassGame()));
+        assertEquals("本站没有这个玩法", notHere.getMessage());
+        Map<String, Object> qa = new LinkedHashMap<>();
+        qa.put("game", "qa");
+        IllegalArgumentException notSensor = assertThrows(IllegalArgumentException.class,
+                () -> service.act(MEMBER_ID, 51L, 0, "skip-qa", "SKIP_SENSOR_STATION", qa));
+        assertEquals("这一项不支持跳过", notSensor.getMessage());
+        IllegalArgumentException reportNotSensor = assertThrows(IllegalArgumentException.class,
+                () -> service.act(MEMBER_ID, 51L, 0, "fail-qa", "REPORT_SENSOR_FAILURE", qa));
+        assertEquals("这一项不支持跳过", reportNotSensor.getMessage());
+    }
+
     // ==================== 扫码第四档 OVERLAY(AR 契约 §2.2) ====================
 
     private String overlayScanConfig() {

@@ -234,6 +234,14 @@
           <view class="dcopy"><text class="dt">解锁下一章节</text></view>
           <view class="darr"></view>
         </view>
+        <!-- P-23:成员在罗盘站读取失败两次时,队长可现场放行(成员本人点「跳过这一站」) -->
+        <view class="drow" wx:for="{{lead.isLeader ? lead.skipRequests : []}}" wx:key="key" bindtap="leadReleaseStation"
+              data-member-id="{{item.memberId}}" data-node-id="{{item.nodeId}}" data-nickname="{{item.nickname}}" data-node-name="{{item.nodeName}}"
+              aria-role="button" aria-label="放行这一站" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="dic pic pic--unlock"></view>
+          <view class="dcopy"><text class="dt">放行这一站</text><text class="ds">{{item.nickname}} · {{item.nodeName}}</text></view>
+          <view class="darr"></view>
+        </view>
         <view class="drow" wx:if="{{lead.exists && lead.isLeader}}" bindtap="leadSettleFromTools" aria-role="button" aria-label="整团结算" hover-class="cy-pressed" hover-stay-time="80">
           <view class="dic pic pic--settle"></view>
           <view class="dcopy"><text class="dt">整团结算</text></view>
