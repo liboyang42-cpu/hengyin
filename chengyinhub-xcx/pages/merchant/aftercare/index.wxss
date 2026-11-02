@@ -6,7 +6,7 @@ page { background: var(--cy-bg-page); }
 .acl-scroll { flex: 1; min-height: 0; }
 .acl-shell { box-sizing: border-box; padding: 0 var(--cy-page-x) var(--cy-space-8); }
 .acl-tabbar { padding: 0 var(--cy-page-x); }
-.acl-filter { display: block; margin-bottom: var(--cy-space-3); }
+.acl-filter { display: block; margin-top: -14rpx; /* ds-ok: 抵消 chip 热区外扩留白 */ margin-bottom: var(--cy-space-3); }
 .acl-search { display: block; margin-bottom: var(--cy-space-5); }
 .acl-search-hint { display: flex; align-items: center; justify-content: space-between; gap: var(--cy-space-2); margin: calc(0rpx - var(--cy-space-3)) var(--cy-space-1) var(--cy-space-4); color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }
 .acl-search-more { min-height: var(--cy-btn-h); display: flex; align-items: center; flex-shrink: 0; color: var(--cy-text-title); font-weight: 600; }

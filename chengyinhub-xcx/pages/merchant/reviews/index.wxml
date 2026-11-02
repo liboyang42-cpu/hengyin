@@ -78,7 +78,7 @@
             <image src="/pages/merchant/images/merchant/reviews/icon-star-outline.svg" mode="aspectFit" />
           </view>
           <text class="review-stat-value">{{averageRating}}</text>
-          <text class="review-stat-label">近 30 天均分</text>
+          <text class="review-stat-label">平均评分</text>
           
         </view>
       </view>

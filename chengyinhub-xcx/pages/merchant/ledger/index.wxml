@@ -93,7 +93,7 @@
                        
                        action="重试" bind:action="retry" />
     </view>
-    <view class="ledger-inline-state">
+    <view class="ledger-inline-state" wx:if="{{settlementLoading.overview || settlementErrors.overview}}">
       <cy-skeleton wx:if="{{settlementLoading.overview && !overview}}" type="amount" count="{{1}}" />
       <text class="ledger-sync" wx:if="{{settlementLoading.overview && overview}}" aria-role="status">正在更新结算概览…</text>
       <cy-inline-error wx:if="{{settlementErrors.overview}}" title="{{settlementErrors.overview}}"

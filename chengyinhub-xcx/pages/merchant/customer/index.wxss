@@ -95,7 +95,7 @@
   width: 100%;
   box-sizing: border-box;
   gap: var(--cy-space-2);
-  padding: var(--cy-space-3) var(--cy-page-x);
+  padding: var(--cy-space-3) 40rpx; /* ds-ok: 与标题 Figma x=20 对齐 */
 }
 .cu-seg {
   display: inline-flex;
