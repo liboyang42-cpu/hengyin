@@ -1194,16 +1194,15 @@ Page({
   loadOwnerManagement() {
     if (!this.data.club || !this.data.club.isOwner) return;
     this._sentInviteRows = null;
+    // CP-02:从子页回来刷新时保留已在屏上的快照,不回骨架(页面形状不变);首载才进 loading
+    const keepProjects = this.data.ownerProjectState === 'ready';
+    const keepStage = keepProjects && this.data.messageState === 'ready' && this.data.inviteFeedbackState === 'ready' && this.data.ownerStage !== 'loading';
     this.setData({
-      ownerProjectState: 'loading',
-      projectRows: [],
-      messageState: 'loading',
-      messages: [],
-      inviteFeedbackState: 'loading',
-      sentInvites: [],
-      ownerStage: 'loading',
-      ownerPrimaryLabel: OWNER_STAGE_COPY.loading.label,
-      ownerStageHint: OWNER_STAGE_COPY.loading.hint,
+      ownerProjectState: keepProjects ? 'ready' : 'loading',
+      projectRows: keepProjects ? this.data.projectRows : [],
+      ownerStage: keepStage ? this.data.ownerStage : 'loading',
+      ownerPrimaryLabel: keepStage ? this.data.ownerPrimaryLabel : OWNER_STAGE_COPY.loading.label,
+      ownerStageHint: keepStage ? this.data.ownerStageHint : OWNER_STAGE_COPY.loading.hint,
     });
     this.loadShareEditions();
     this.loadOwnerProjects();
@@ -1217,7 +1216,8 @@ Page({
     }
     const that = this;
     const clubId = String(this.data.clubId);
-    this.setData({ clubStatsState: 'loading', clubStats: null, clubStatsError: '' });
+    const keepStats = this.data.clubStatsState === 'ready'; // CP-02:刷新保留看板快照
+    this.setData({ clubStatsState: keepStats ? 'ready' : 'loading', clubStats: keepStats ? this.data.clubStats : null, clubStatsError: '' });
     app.sendRequest({
       hideLoading: true,
       silentError: true,
@@ -1251,8 +1251,9 @@ Page({
     const that = this;
     const clubId = this.data.clubId;
     this._editionReasonSeq = (this._editionReasonSeq || 0) + 1;
-    this.setData({ shareEditionState: 'loading', shareEditions: [] });
-    this.applyEditionEmptyReason('idle', '');
+    const keepEditions = this.data.shareEditionState === 'ready'; // CP-02:刷新保留期次快照
+    this.setData({ shareEditionState: keepEditions ? 'ready' : 'loading', shareEditions: keepEditions ? this.data.shareEditions : [] });
+    if (!keepEditions) this.applyEditionEmptyReason('idle', '');
     app.sendRequest({
       hideLoading: true,
       url: '/api/club-compensation/editions',
@@ -1353,7 +1354,15 @@ Page({
     const that = this;
     const clubId = this.data.clubId;
     this._sentInviteRows = null;
-    this.setData({ messageState: 'loading', messages: [], inviteFeedbackState: 'loading', sentInvites: [] });
+    // CP-02:刷新保留消息/邀约快照
+    const keepMessages = this.data.messageState === 'ready';
+    const keepFeedback = this.data.inviteFeedbackState === 'ready';
+    this.setData({
+      messageState: keepMessages ? 'ready' : 'loading',
+      messages: keepMessages ? this.data.messages : [],
+      inviteFeedbackState: keepFeedback ? 'ready' : 'loading',
+      sentInvites: keepFeedback ? this.data.sentInvites : [],
+    });
     app.sendRequest({
       hideLoading: true,
       silentError: true,
@@ -1749,7 +1758,7 @@ Page({
       const posts = clubPostRepost.mapClubFeedRows(mockData.getDemoClubPosts(), function (p) {
         return normalizeClubPost(p, clubOwnerFor(p, that.data.club));
       });
-      pageMotion.enter(that, 'pmPosts'); that.setData({ posts: posts, pinnedNotices: clubPinnedNotice.pick(posts, that.data.clubId), postsLoaded: true }, function () { that.scrollToRequestedPost(); });
+      pageMotion.enter(that, 'pmPosts', { once: true }); that.setData({ posts: posts, pinnedNotices: clubPinnedNotice.pick(posts, that.data.clubId), postsLoaded: true }, function () { that.scrollToRequestedPost(); });
       return;
     }
     const limit = clubPostReloadLimit(this.data.posts);
@@ -1766,7 +1775,7 @@ Page({
         const posts = clubPostRepost.mapClubFeedRows(res.data, function (p) {
           return normalizeClubPost(p, clubOwnerFor(p, that.data.club));
         });
-        pageMotion.enter(that, 'pmPosts'); that._postsHasMore = unpinnedClubPosts(res.data).length >= limit; that.setData({ posts: posts, pinnedNotices: clubPinnedNotice.pick(posts, that.data.clubId), postsLoaded: true, postsError: '' }, function () { that.scrollToRequestedPost(); });
+        pageMotion.enter(that, 'pmPosts', { once: true }); that._postsHasMore = unpinnedClubPosts(res.data).length >= limit; that.setData({ posts: posts, pinnedNotices: clubPinnedNotice.pick(posts, that.data.clubId), postsLoaded: true, postsError: '' }, function () { that.scrollToRequestedPost(); });
       },
       fail() { if (epoch === that._postsEpoch) that.setData({ postsLoaded: true, postsError: '网络异常，帖子加载失败' }); },
     });
@@ -2148,7 +2157,8 @@ Page({
 
   loadTopics(cb) {
     const that = this;
-    this.setData({ topicsLoaded: false, topicState: 'loading' });
+    const keepTopics = this.data.topicState === 'ready' && this.data.topicsLoaded; // CP-03:刷新保留活动快照
+    this.setData({ topicsLoaded: keepTopics, topicState: keepTopics ? 'ready' : 'loading' });
     if (isDemoClubId(this.data.clubId)) {
       const list = mockData.getDemoClubTopics().map(function (t) {
         return decorateTopicCard(Object.assign({}, t, {
@@ -2238,7 +2248,7 @@ Page({
     function isCurrent() {
       return requestSeq === that._memberRequestSeq && String(clubId) === String(that.data.clubId);
     }
-    this.setData({ members: [], membersState: 'loading', memberStrip: [] });
+    if (this.data.membersState !== 'ready') this.setData({ members: [], membersState: 'loading', memberStrip: [] }); // CP-02:刷新保留成员快照
     app.sendRequest({
       hideLoading: true, url: '/api/club/members', method: 'POST', data: jsonBody({ clubId: clubId }), header: jsonHeader(),
       success(res) {

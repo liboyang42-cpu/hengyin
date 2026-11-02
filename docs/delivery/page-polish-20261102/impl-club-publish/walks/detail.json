@@ -1,0 +1,92 @@
+[
+{
+"wait": 3500
+},
+{
+"tap": "帖子"
+},
+{
+"wait": 1500
+},
+{
+"shot": "cp01-feed-ready"
+},
+{
+"eval": "new Promise(r=>{const p=getCurrentPages().slice(-1)[0];const seen=[];const t0=Date.now();p.loadPosts();const iv=setInterval(()=>{const v=p.data.pmPosts;if(seen[seen.length-1]!==v)seen.push(v);if(Date.now()-t0>1800){clearInterval(iv);r({pmPostsSequence:seen})}},5)})"
+},
+{
+"eval": "new Promise(r=>{const p=getCurrentPages().slice(-1)[0];p.loadPosts();const t0=Date.now();const iv=setInterval(()=>{if(p.data.pmPosts===2||Date.now()-t0>1500){clearInterval(iv);r(p.data.pmPosts)}},5)})"
+},
+{
+"shot": "cp01-feed-after-reload"
+},
+{
+"wait": 1500
+},
+{
+"tap": "管理"
+},
+{
+"wait": 2500
+},
+{
+"scroll": 450
+},
+{
+"shot": "cp02-manage-ready"
+},
+{
+"eval": "(()=>{const o=wx.request;wx.request=function(){const a=arguments,t=this;setTimeout(()=>o.apply(t,a),1500)};return 'delay on'})()"
+},
+{
+"eval": "(getCurrentPages().slice(-1)[0].onShow(), 'onShow')"
+},
+{
+"wait": 300
+},
+{
+"shot": "cp02-manage-refreshing"
+},
+{
+"eval": "(()=>{const p=getCurrentPages().slice(-1)[0];return {clubStatsState:p.data.clubStatsState,topicState:p.data.topicState,ownerProjectState:p.data.ownerProjectState,messageState:p.data.messageState,membersState:p.data.membersState,shareEditionState:p.data.shareEditionState}})()"
+},
+{
+"wait": 1500
+},
+{
+"shot": "cp02-manage-refreshing-2"
+},
+{
+"eval": "(()=>{const p=getCurrentPages().slice(-1)[0];return {clubStatsState:p.data.clubStatsState,topicState:p.data.topicState,ownerProjectState:p.data.ownerProjectState,messageState:p.data.messageState,membersState:p.data.membersState,shareEditionState:p.data.shareEditionState,ownerStage:p.data.ownerStage}})()"
+},
+{
+"wait": 4000
+},
+{
+"scroll": -3000
+},
+{
+"tap": "活动"
+},
+{
+"wait": 1500
+},
+{
+"shot": "cp03-events-ready"
+},
+{
+"eval": "(getCurrentPages().slice(-1)[0].onShow(), 'onShow')"
+},
+{
+"wait": 300
+},
+{
+"shot": "cp03-events-refreshing"
+},
+{
+"eval": "(()=>{const p=getCurrentPages().slice(-1)[0];return {topicState:p.data.topicState,topicsLoaded:p.data.topicsLoaded}})()"
+},
+{
+"wait": 4000
+}
+]
