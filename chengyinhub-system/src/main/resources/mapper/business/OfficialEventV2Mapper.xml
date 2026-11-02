@@ -395,7 +395,7 @@
         order by p.member_id
     </select>
     <select id="selectActiveV2RoamEvents" resultType="map">
-        select distinct e.id,e.title,e.subtitle,e.city,e.status,e.activity_start activityStart,e.activity_end activityEnd,
+        select distinct e.id,e.title,e.subtitle,e.city,e.status,e.activity_start activityStart,e.activity_end activityEnd,e.sort,
                case when p.id is null then false else true end signed
         from official_event e
         join official_event_mission m on m.event_id=e.id and m.status='ACTIVE' and m.mission_type in ('ROAM_POI_ARRIVAL','EVENT_POINT_ARRIVAL')
