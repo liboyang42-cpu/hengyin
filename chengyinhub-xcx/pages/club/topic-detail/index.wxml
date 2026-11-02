@@ -250,12 +250,12 @@
       station-title="节点状态" station-sub="{{readinessText}}" stations="{{stations}}"
       team-title="队伍进度" team-sub="{{sessionStatusText}}" teams="{{directorTeamRows}}"
       primary-text="开始活动" primary-disabled="{{!readiness.canStart || writeLocked}}"
-      caption="{{writeMessage}}" caption-tone="{{writeState === 'unknown-write' ? 'warning' : 'muted'}}"
+      caption="{{writeMessage || blockerText}}" caption-tone="{{writeState === 'unknown-write' || (!writeMessage && blockerText) ? 'warning' : 'muted'}}"
       bind:primary="onStartSession" />
 
     <!-- 收编时别把这两句丢了:它们各自挡着一个误读。 -->
     <cy-empty wx:if="{{directorActive && loadState === 'ready' && stations.length === 0}}"
-      title="暂无节点状态" sub="节点数据加载中" />
+      title="开始准备后显示节点状态" />
     <view class="ctd-director-note" wx:if="{{directorActive && canUnlockChapter}}">玩家进度与发放状态保持不变</view>
 
     <block wx:if="{{directorActive && loadState === 'ready' && leaderboardVisibleKnown}}">
@@ -278,7 +278,7 @@
       wx:if="{{statusKey === 'ended' && recap}}"
       title="活动复盘"
       funnel-title="活动漏斗" funnel-sub="{{sessionStatusText}}" metrics="{{recapMetrics}}"
-      completion-title="节点完成" completion-rows="{{recap.stations}}"
+      completion-title="节点完成" completion-rows="{{recapStationRows}}"
       leaderboard-title="榜单" leaderboard-rows="{{leaderboard ? leaderboard.rows : []}}"
       caption="{{writeMessage}}"
       bind:leaderboardrowtap="onToggleLeaderboard" />

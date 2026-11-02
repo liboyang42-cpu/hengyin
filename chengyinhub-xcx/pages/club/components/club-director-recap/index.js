@@ -8,7 +8,7 @@ Component({
     title: { type: String, value: '活动复盘' },
     funnelTitle: { type: String, value: '活动漏斗' },
     funnelSub: { type: String, value: '复盘自动生成' },
-    metrics: { type: Array, value: [] }, // [{ label, value }]
+    metrics: { type: Array, value: [] }, // [{ label, valueText, unit }]
     completionTitle: { type: String, value: '完成情况' },
     completionRows: { type: Array, value: [] },
     leaderboardTitle: { type: String, value: '榜单' },

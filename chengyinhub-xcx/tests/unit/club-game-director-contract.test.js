@@ -652,7 +652,9 @@ test('导演页先显示加载态，准备未完成时只展示阻断原因且�
 
   harness.page.onStartSession()
   assert.equal(writes.length, 0)
-  assert.match(harness.toasts[0].title, /未完成|不能开局/)
+  // C-09(2026-11-02):不再只说「准备未完成」,直接说出服务端给的卡点;页面上同一句落在开始卡说明位。
+  assert.equal(harness.toasts[0].title, '还不能开始：南门店未 READY')
+  assert.equal(harness.page.data.blockerText, '还不能开始：南门店未 READY')
 
   const view = directorView()
   assert.match(view, /wx:if="\{\{loadState === 'loading'\}\}"/)
@@ -1185,7 +1187,8 @@ test('加载异常分流 empty / business / network，且失败后不得用旧�
   const view = directorView()
   assert.match(view, /wx:elif="\{\{loadState === 'business-error'\}\}"/)
   assert.match(view, /wx:elif="\{\{loadState === 'network-error'\}\}"/)
-  assert.match(view, /节点数据加载中/)
+  // C-26(2026-11-02):原「暂无节点状态 / 节点数据加载中」两句互相矛盾,并成一句说清何时出现。
+  assert.match(view, /开始准备后显示节点状态/)
 })
 
 test('unknown 写持久化：重新进入自动用原 requestId 回读，pending 保留，确认后清理', async () => {
@@ -1716,4 +1719,33 @@ test('路线局放行按钮点名下一章与在等队伍数，提交的仍是�
   assert.equal(writes[0].payload.chapterId, 49)
   const host = read(DIRECTOR_HOST_WXML)
   assert.match(host, /\{\{unlockButtonText\}\}/)
+})
+
+// C-11(2026-11-02 walk-fix):复盘指标块渲染 valueText+unit(原来绑 item.value,恒空);节点完成行映射成 {id,title,subtitle}。
+test('复盘指标显示数字与单位，节点完成行有标题与计数', async () => {
+  const projection = {
+    sessionId: 9003, activityId: 703, status: 'FINISHED', revision: 12,
+    availableActions: [],
+    readiness: { requiredStations: 1, readyStations: 1, teamsReady: true, blockers: [], canStart: false },
+    stations: [], teams: [], roles: [], roleOptions: [], broadcasts: [], leaderboard: null,
+    recap: {
+      metrics: [{ key: 'PAID_PLAYERS', label: '持票玩家', value: 6, unit: '人' }, { key: 'ARRIVED_PLAYERS', label: '到场玩家', value: 2, unit: '人' }],
+      stations: [{ nodeId: 5001, nodeName: '旧钟楼', arrivedPlayers: 4, normalCompletedCount: 3, fallbackCompletedCount: 0, rejectedCount: 1 }],
+      exportAvailable: true,
+    },
+  }
+  const harness = loadDirector({
+    load() { return Promise.resolve(projection) },
+    submit() { return Promise.resolve({}) },
+    readReceipt() { return Promise.resolve({}) },
+  })
+  harness.page.initDirector('703')
+  await settle()
+  assert.deepEqual(JSON.parse(JSON.stringify(harness.page.data.recapMetrics[0])), { label: '持票玩家', valueText: '6', unit: '人' })
+  assert.deepEqual(JSON.parse(JSON.stringify(harness.page.data.recapStationRows)),
+    [{ id: 5001, title: '旧钟楼', subtitle: '到达 4 人 · 完成 3 · 打回 1' }])
+  const recapWxml = read('pages/club/components/club-director-recap/index.wxml')
+  assert.match(recapWxml, /\{\{item\.valueText\}\}/)
+  assert.doesNotMatch(recapWxml, /\{\{item\.value\}\}/)
+  assert.match(read(DIRECTOR_HOST_WXML), /completion-rows="\{\{recapStationRows\}\}"/)
 })

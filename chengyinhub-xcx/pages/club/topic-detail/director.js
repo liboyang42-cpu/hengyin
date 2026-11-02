@@ -80,7 +80,8 @@ function teamView(team) {
     ? recentEvent.occurredAt.trim() : ''
   return Object.assign({}, item, {
     nameText: item.name || item.teamName || '未命名队伍',
-    statusText: item.status || 'UNKNOWN',
+    // C-26:队伍状态用中文,不露枚举。
+    statusText: ({ PREPARING: '未出发', RUNNING: '进行中', COMPLETED: '已完成', BLOCKED: '受阻', PAUSED: '暂停', ERROR: '异常' })[status] || '待确认',
     progressText: completed !== null && total !== null ? completed + '/' + total + ' 节点' : '—',
     issueText: item.blockedReason || item.issue || '',
     isAbnormal: status === 'BLOCKED' || status === 'PAUSED' || status === 'ERROR'
@@ -233,6 +234,19 @@ function recapMetricView(metric) {
   const value = item.value
   if (!label || value == null) return null
   return { label: label, valueText: String(value), unit: item.unit || '' }
+}
+
+// C-11:复盘「节点完成」行。服务端给的是原始计数对象,行组件要 {id,title,subtitle}。
+function recapStationRow(station) {
+  const item = station || {}
+  const id = normalizedPositiveId(item.nodeId)
+  if (!id || !item.nodeName) return null
+  const parts = []
+  if (item.arrivedPlayers != null) parts.push('到达 ' + item.arrivedPlayers + ' 人')
+  if (item.normalCompletedCount != null) parts.push('完成 ' + item.normalCompletedCount)
+  if (Number(item.fallbackCompletedCount) > 0) parts.push('兜底 ' + item.fallbackCompletedCount)
+  if (Number(item.rejectedCount) > 0) parts.push('打回 ' + item.rejectedCount)
+  return { id: id, title: item.nodeName, subtitle: parts.join(' · ') }
 }
 
 function normalizedPositiveId(value) {
@@ -541,6 +555,7 @@ const DIRECTOR_DATA = {
     canToggleLeaderboard: false,
     recap: null,
     recapMetrics: [],
+    recapStationRows: [],
     canExportRecap: false,
     exportState: 'idle',
     canFinish: false,
@@ -783,6 +798,8 @@ const DIRECTOR_METHODS = {
       readinessText: readinessText(readiness),
       canPrepare: hasAction(availableActions, 'PREPARE'),
       blockers: Array.isArray(readiness.blockers) ? readiness.blockers : [],
+      blockerText: Array.isArray(readiness.blockers) && readiness.blockers.length && projection.status !== 'RUNNING'
+        ? '还不能开始：' + readiness.blockers.filter(Boolean).join('；') : '',
       // D8 现场事件:全部由已有投影推出,不新造事实。
       // 站点暂停 / 待核验积压来自 stations,待核验与已驳回的提交来自 submissions。
       incidentRows: incidentRowList(projection.stations, projection.submissions),
@@ -808,6 +825,9 @@ const DIRECTOR_METHODS = {
       recap: recap,
       recapMetrics: recap && Array.isArray(recap.metrics)
         ? recap.metrics.map(recapMetricView).filter(function (item) { return !!item })
+        : [],
+      recapStationRows: recap && Array.isArray(recap.stations)
+        ? recap.stations.map(recapStationRow).filter(function (item) { return !!item })
         : [],
       canExportRecap: !!(recap && recap.exportAvailable === true),
       canFinish: hasAction(availableActions, 'FINISH'),
@@ -1322,7 +1342,9 @@ const DIRECTOR_METHODS = {
   onStartSession() {
     if (this.data.writeLocked) return
     if (!this.data.readiness || !this.data.readiness.canStart) {
-      toast('准备未完成，暂时不能开局')
+      // C-09:服务端已给出卡点(如「尚无有效报名队伍」),直接说出来;只有带队人能看到导演台。
+      const blockers = Array.isArray(this.data.blockers) ? this.data.blockers.filter(Boolean) : []
+      toast(blockers.length ? '还不能开始：' + blockers.join('；') : '准备未完成，暂时不能开局')
       return
     }
     const that = this

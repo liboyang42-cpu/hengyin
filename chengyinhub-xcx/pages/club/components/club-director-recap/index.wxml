@@ -6,7 +6,7 @@
     <text class="cdrecap__section-sub" wx:if="{{funnelSub}}">{{funnelSub}}</text>
     <view class="cdrecap__metrics" wx:if="{{metrics.length}}">
       <view class="cdrecap__metric" wx:for="{{metrics}}" wx:key="label">
-        <text class="cdrecap__metric-value">{{item.value}}</text>
+        <text class="cdrecap__metric-value">{{item.valueText}}<text class="cdrecap__metric-unit" wx:if="{{item.unit}}">{{item.unit}}</text></text>
         <text class="cdrecap__metric-label">{{item.label}}</text>
       </view>
     </view>

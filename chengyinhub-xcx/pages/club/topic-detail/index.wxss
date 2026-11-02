@@ -75,6 +75,7 @@
   position: absolute; left: var(--cy-space-4); right: var(--cy-space-4); top: 548rpx;  /* 设计 y323 */
   font-size: var(--ctd-type-hero); font-weight: 700; line-height: 1.35;
   color: var(--cy-color-text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;  /* C-26:长标题不压日期行 */
 }
 .ctd-head__meta { position: absolute; left: var(--cy-space-4); top: 618rpx; display: flex; align-items: center; gap: var(--cy-space-3); }
 .ctd-head__meta-item { display: flex; align-items: center; gap: 10rpx; color: var(--cy-color-text-tertiary); }
