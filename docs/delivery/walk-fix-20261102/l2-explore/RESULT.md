@@ -58,14 +58,20 @@ The repo's own chains (platform → merchant_club → sale_close → player) als
 
 ## Needs owner
 
-1. **「累计探索 N家店 · X km」 (P-22).** The number counts completed play nodes. City stations and free-exploration games both add to it; merchant redemptions do not. Mileage is added only on topic completion, from chapter mileage.
-   - **Recommended default:** rename it 「累计打卡 N 处」 and count redeemed shops plus city stations. Or show only the shop count from `redemption`. Hide km until mileage has a source.
-   - I did not change it, because either option changes what the metric means.
-2. **Free-exploration menu rows (P-28).** The menu also shows 「切换章节」 and 「队伍位置 0/2」 for free exploration. Those rows come from the existing lead and chapter logic.
-   - **Recommended default:** hide 「队伍位置」 when `lead.freeEntry` is set.
-   - Left as is, to keep the change to moving the menu.
-3. **Wallet subtitle length (P-03 / P-27).** 「11月2日 16:31 · <place> · 已核销 1/4 家」 wraps to two lines on a 390-wide card (`P-03-wallet-after`). Nothing is clipped.
-   - **Recommended default:** keep both, or drop 「家」.
+Round 1 asked three questions. The owner answered all three on 2026-11-02 (see Round 2 below). Nothing new needs the owner.
+
+## Round 2 (owner decisions, 2026-11-02)
+
+Waited for the branch to be quiet before starting, as ROUND2.md asks. Another session merged master at 09:34 (`80022816`); I kept that merge and dropped my identical local one. Nothing was force-pushed.
+
+The evidence comes from the rig, not a phone. The backend ran this branch. The "before" shots use the browser bundle built from `80022816`, the branch tip before round 2. The "after" shots use this branch. Both runs used the same database and state.
+
+| ID | Status | What changed | Files | How verified |
+|---|---|---|---|---|
+| P-22 | fixed | **Label:** the achievements card now reads 「累计打卡」 「N 处」. The km figure is hidden until mileage has a real source.<br><br>**What N counts:** shops with an active redemption on the player's tickets (counted once per chapter), plus completed city stations. A city station is a node with no merchant, in a theme that is not free exploration (counted once per node).<br><br>**No double counting:** a shop is counted only through its redemption. Finishing the game at a shop does not add to N.<br><br>**Where it comes from:** `/api/play/growth` returns the new read-only field `checkinPlaces`. The page reads it as is. If the field is missing, the page shows 0 and the rest of the card still loads.<br><br>**Unchanged:** `totalCheckins`, levels, the 首访 check and the other readers. | `PlayerGrowthMapper.{java,xml}`, `IPlayerProgressionService.java`, `PlayerProgressionServiceImpl.java`, `PlayPlayerQueryApplication.java`, `cy/profile/index.{js,wxml}`, screenshot fixtures | `PlayGrowthCheckinPlacesTest` (3), `PlayerProgressionServiceImplTest` (14): all pass.<br>`profile-first-run-state-contract.test.js`: the new cases fail on the old code.<br>**Rig HTTP and database read-back** (`proof/p22_checkin_places_proof.py`, `proof/p22-run.txt`), player 9009, P22-PROOF: PASS:<br>- 4 redeemed shops gives 4.<br>- Fixture: a shop game also done. Still 4.<br>- Fixture: a city theme station done. 5.<br>- A player with no data gets 0.<br>The SQL also passed the app's Druid wall.<br>Shots `P-22r2-before/after`: 「累计探索 0家店 · 0.0km」 becomes 「累计打卡 5 处」. The 5 includes the city-station fixture. |
+| P-28 | fixed | In free exploration (`lead.freeEntry`), the play-tools menu no longer shows 「队伍位置」. The leader-only rows and city sessions are unchanged. | `pages/play/index.wxml` | `play-free-explore-no-gather.test.js`: the new case fails on the old code.<br>Rig session 14, player 9004: shots `P-28r2-before/after`. |
+| P-28 「切换章节」 | reported, not changed | In the rig it opens 「选择章节」 with all 4 chapters (shot `P-28r2-switch-chapter`). Three things look off:<br>1. The pack page already shows every shop card, so the picker repeats what is on screen.<br>2. Each row says the chapter number twice (「第 1 章」 above 「第1章 咖啡」).<br>3. From code (`openStackOrChapters`): with one chapter or none, the row labelled 「切换章节」 opens the card pack instead. | — | Rig shot and code reading |
+| Wallet subtitle | no change, owner confirmed | Keeps both lines. | — | — |
 
 ## Notes
 
@@ -80,4 +86,4 @@ The repo's own chains (platform → merchant_club → sale_close → player) als
   - node: play-*, free-explore*, order-status*, signup-state-contract, profile-first-run-state-contract, order-detail*, topic-session-picker.
   - Java (`-Dtest`): 358 tests, all pass except `PublicActivityScopeGateMyBatisTest` (2 errors). That IT needs its own MySQL database, which was not available in this container ("Communications link failure"). It is not related to this diff.
 
-STATUS: PARTIAL - P-22 「累计探索」 metric needs an owner decision; P-12 and the city-order paths of P-20/P-22/P-27 are unit-tested but not walked in the rig (no city theme, shops already redeemed)
+STATUS: PARTIAL - P-12 and the city-order paths of P-20/P-22/P-27 are unit-tested but not walked in the rig (no city theme, shops already redeemed); the P-22 city-station count is proven only with a fixture city theme
