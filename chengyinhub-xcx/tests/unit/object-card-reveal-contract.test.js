@@ -181,7 +181,8 @@ test('★上传/提交失败时通知拍物成卡那一屏回取景,且这一模
   const page = read('../../pages/play/index.js')
   const at = page.indexOf('  _submitKitPhoto(detail, cfg) {')
   const body = strip(page.slice(at, page.indexOf('\n  },\n', at)))
-  assert.ok(/if \(cardMode\) this\._notifyPhotoFail\(\)/.test(body), '失败没通知那一屏:玩家会对着转圈干等 45 秒')
+  // P-24(2026-11-02):普通拍照审核也要收到失败(屏上写「上传失败，请重拍」),拍物成卡照旧回取景
+  assert.ok(/if \(kitNow && kitNow\.type === 'photocheck'\) this\._notifyPhotoFail\(\)/.test(body), '失败没通知那一屏:玩家会对着转圈干等 45 秒')
   const nAt = page.indexOf('  _notifyPhotoFail() {')
   const notify = strip(page.slice(nAt, page.indexOf('\n  },', nAt)))
   assert.ok(/'playKit\.kit\.photoFailSeq': this\._photoFailSeq/.test(notify), '_notifyPhotoFail 没把计数送到那一屏')

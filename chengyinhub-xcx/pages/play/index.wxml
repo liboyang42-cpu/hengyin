@@ -190,7 +190,7 @@
         <!-- 扫码到达:原来在底栏,底栏转移后这里是它唯一的入口(对账发现漏了才补上)。 -->
         <view class="drow" wx:if="{{mode!=2}}" bindtap="onScanArriveFromTools" aria-role="button" aria-label="扫码到达" hover-class="cy-pressed" hover-stay-time="80">
           <view class="dic pic pic--scan"></view>
-          <view class="dcopy"><text class="dt">扫码到达</text><text class="ds">到店后扫商家的码</text></view>
+          <view class="dcopy"><text class="dt">扫码到达</text><text class="ds">到站后扫现场的码</text></view>
           <view class="darr"></view>
         </view>
         <!-- 「一局」保留(2026-09-22 用户裁决),从底栏中键转移过来:点=开始/暂停,长按=结束。 -->

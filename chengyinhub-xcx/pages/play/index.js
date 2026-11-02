@@ -145,6 +145,7 @@ const lifeArchive = require('./utils/life-archive.js');
 const storyResume = require('./utils/story-resume.js');
 const { rightMoment, RIGHT_AUTO_MS } = require('./utils/answer-right-moment');
 const { leadHoldsChapter, releaseCue } = require('./utils/lead-chapter-hold');
+const { puzzleHintLabel } = require('./utils/puzzle-hint-label');
 /* 内心声音(原型 VOICES 表原值);第 3 档异常时两个声音改名(越往后越像机器)。 */
 const STORY_VOICE_COLORS = { 规矩: '#B9A7FF', 窗外: '#5CD6C8', 心: '#FF9F80', 精密: '#7EB6FF', 咔哒: '#FF6B6B' };   /* ds-ok 原型 VOICES */
 const STORY_VOICE_ALT = { 规矩: '进程', 窗外: '传感器' };
@@ -3858,7 +3859,9 @@ Page({
     if (!this.data.storyIntro.show || this.data.storyIntro.out) return;
     storyResume.patch(this._runSessionScope(), { intro: true });
     this._startThemeBgm();
-    const go = () => { this.setData({ 'storyIntro.show': false }); this.openChapterFull(); };
+    // P-26:城市定向有带坐标的站时,在「开始游戏」这一刻问一次定位,而不是等到第一道题交卷
+    const located = Number(this.data.mode) === 1 && (this.data.nodes || []).some((n) => n && n.lat && n.lng);
+    const go = () => { this.setData({ 'storyIntro.show': false }); this.openChapterFull(); if (located) this.requestPlayLocation(); };
     if (this.data.reducedMotion) { go(); return; }
     this.setData({ 'storyIntro.out': true });
     this._fxTimers = (this._fxTimers || []).concat(setTimeout(go, 400));
@@ -4737,6 +4740,24 @@ Page({
     };
     this._locationRequesting = true;
     this.setData({ gpsHint: '正在请求定位…' });
+    const locate = () => wx.getLocation({
+      type: 'gcj02', isHighAccuracy: true,
+      success(loc) {
+        if (!current()) return;
+        that._loc = { longitude: loc.longitude, latitude: loc.latitude, accuracy: loc.accuracy };
+        that._locationRequesting = false;
+        that.setData({ gpsOk: true, gpsHint: '定位已开启 · 靠近后会自动点亮' }, () => {
+          if (!current()) return;
+          that._noteLocAccuracy(loc.accuracy);
+          that.rebuild();
+          if (current()) that.watchLocation();
+        });
+      },
+      fail() { unavailable('定位未开启 · 可扫码完成到达'); }
+    });
+    // P-26:同意说的是「本次」—— 这一局同意过,退出重进(同一局)不再重问;新开一局照旧问
+    const scope = this._runSessionScope();
+    if (storyResume.read(scope).locationConsent) { locate(); return; }
     cyModal.show({
       title: '开启定位',
       content: '仅在你主动开始游玩后，持续获取位置，用于显示当前位置和自动判断到点。锁屏或切到后台仍会获取；暂停、结束本次或离开游玩页后停止。未开启时仍可扫码到达。',
@@ -4745,21 +4766,8 @@ Page({
       success(result) {
         if (!current()) return;
         if (!result.confirm) { unavailable('定位未开启 · 可扫码完成到达'); return; }
-        wx.getLocation({
-          type: 'gcj02', isHighAccuracy: true,
-          success(loc) {
-            if (!current()) return;
-            that._loc = { longitude: loc.longitude, latitude: loc.latitude, accuracy: loc.accuracy };
-            that._locationRequesting = false;
-            that.setData({ gpsOk: true, gpsHint: '定位已开启 · 靠近后会自动点亮' }, () => {
-              if (!current()) return;
-              that._noteLocAccuracy(loc.accuracy);
-              that.rebuild();
-              if (current()) that.watchLocation();
-            });
-          },
-          fail() { unavailable('定位未开启 · 可扫码完成到达'); }
-        });
+        storyResume.patch(scope, { locationConsent: true });
+        locate();
       },
       fail() { unavailable('定位暂不可用 · 可扫码完成到达'); }
     });
@@ -5825,6 +5833,7 @@ Page({
       canHint: node.puzzleScoring ? (node.usedHints || []).length < node.hintCount : (!!(node.hint1 || node.hint2) || !!node.hintLocked),
       canReveal: node.puzzleScoring && node.hintCount > 0 && (node.usedHints || []).length >= node.hintCount,
       hintLabel: node.hintLocked ? (node.hintCost + '积分')
+        : node.puzzleScoring ? puzzleHintLabel((node.usedHints || []).length, node.hintCount)   // P-25:下一条是第几条 + 点之前就写代价
         : (((node.usedHints || []).length || 1) + '/' + (node.hintCount || ((node.hint1 ? 1 : 0) + (node.hint2 ? 1 : 0)) || 1))
     }, () => { if (node.vm === 6) this.loadPreference(node); });
   },
@@ -6298,7 +6307,7 @@ Page({
               puzzleScoreCap: Number(r.data.scoreCap) || 40,
               canHint: hints.length < hintCount,
               canReveal: hints.length >= hintCount,
-              hintLabel: hints.length + '/' + hintCount,
+              hintLabel: puzzleHintLabel(hints.length, hintCount),
             });
             const nodeIndex = this.data.nodes.findIndex((n) => n.nodeId === g.nodeId);
             if (nodeIndex >= 0) {
@@ -7272,7 +7281,7 @@ Page({
   /** 拍物成卡那一屏在等结果:告诉它这一张没交上去,回到取景(页面计数单调递增,组件只认比见过的大)。 */
   _notifyPhotoFail() {
     const kit = this._kit();
-    if (!kit || kit.type !== 'photocheck' || kit.mode !== 'CARD') return;
+    if (!kit || kit.type !== 'photocheck') return;   // P-24:普通拍照审核也要在屏上写「上传失败，请重拍」,不只拍物成卡
     this._photoFailSeq = (this._photoFailSeq || 0) + 1;
     this.setData({ 'playKit.kit.photoFailSeq': this._photoFailSeq });
   },
@@ -7326,7 +7335,7 @@ Page({
     const cardMode = !!(kitNow && kitNow.type === 'photocheck' && kitNow.mode === 'CARD');
     const fail = (msg) => {
       cyToast(msg);
-      if (cardMode) this._notifyPhotoFail();
+      if (kitNow && kitNow.type === 'photocheck') this._notifyPhotoFail();
     };
     if (!game) { fail('玩法未就绪，请退出后重进'); return; }
     // 双击锁:同一次拍照上传在途时再收到 shoot 直接忽略,避免起第二个必被 advanced-game 静默丢掉的请求。

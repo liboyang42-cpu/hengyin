@@ -208,6 +208,7 @@
   last-url="{{kit.lastUrl}}" card="{{kit.card}}"
   photo-verified="{{kit.photoVerified}}" reward-ceiling="{{kit.rewardCeiling}}"
   frame-url="{{kit.frameUrl}}" frame-opacity="{{kit.frameOpacity}}" inline="{{inline}}"
+  photo-fail-seq="{{kit.photoFailSeq}}"
   bind:shoot="onShoot" bind:close="onClose" />
 
 <cy-playkit-note wx:elif="{{kit.type === 'note'}}"
