@@ -310,3 +310,21 @@ test('报名已成功但付款未确认、关闭、退款或缺失时，不显�
   rows.forEach((row, index) => page.goTicket({ currentTarget: { dataset: { index } } }))
   assert.deepEqual(sandbox.navigations, [])
 })
+
+test('P-03:探索票核销一家后仍留在票夹,卡面写已核销几家;全部核销后才离开', () => {
+  const { page, sandbox } = loadPage()
+  page.onLoad({})
+  sandbox.requests.find(request => request.data.owner_type === 1).success({ code: 200, data: { rows: [], total: 0 } })
+  sandbox.requests.find(request => request.data.owner_type === 2).success({
+    code: 200,
+    data: { rows: [
+      { id: 31, registrationStatus: 2, paymentStatus: 2, verificationStatus: 1, purchaseKind: 3,
+        exploreProgress: { redeemed: 1, required: 4, completed: false, ended: false, active: true }, cmsActivity: { name: '弄堂咖啡地图' } },
+      { id: 32, registrationStatus: 2, paymentStatus: 2, verificationStatus: 1, purchaseKind: 3,
+        exploreProgress: { redeemed: 4, required: 4, completed: true, ended: false, active: false }, cmsActivity: { name: '已集齐的那张' } },
+      { id: 33, registrationStatus: 2, paymentStatus: 2, verificationStatus: 1, cmsActivity: { name: '已核销的普通场次' } },
+    ], total: 3 },
+  })
+  assert.equal(JSON.stringify(page.data.ticketList.map(t => t.id)), '[31]')
+  assert.match(page.data.ticketList[0].wSub, /已核销 1\/4 家/)
+})

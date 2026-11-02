@@ -46,6 +46,14 @@ function orderClockNow(row, fallbackNow) {
   return typeof fallbackNow === 'number' ? fallbackNow : Date.now();
 }
 
+// 服务端 /api/registration/list|info 给 ③ 探索票下发的 exploreProgress;没有就返回 null,走原口径。
+function exploreProgressOf(row) {
+  const p = row && row.exploreProgress;
+  if (!p || !(Number(p.required) > 0)) return null;
+  return { redeemed: Number(p.redeemed) || 0, required: Number(p.required), active: p.active === true,
+    completed: p.completed === true, ended: p.ended === true };
+}
+
 function summarizeOrderState(row, now) {
   const value = row || {};
   const refund = payoutSummary(value.refundApplication);
@@ -79,6 +87,13 @@ function summarizeOrderState(row, now) {
 
   const free = isFreeOrder(value);
   const freeText = '免费报名，无需支付';
+  // P-03:探索票核销一家只是「核销过」(退款闸照旧),必选章没核销完、场次没结束就还在进行中。
+  const explore = exploreProgressOf(value);
+  if (explore && explore.active) {
+    const refundInfo = value.refundInfo || {};
+    return { key: 'in_progress', text: '进行中', refundText: refundInfo.reason || (free ? freeText : ''),
+      exploreProgress: explore, progressText: '已核销 ' + explore.redeemed + '/' + explore.required + ' 家' };
+  }
   if (Number(value.verificationStatus) === 1) {
     return { key: 'completed', text: '已完成', refundText: free ? freeText : '已核销订单不可退款' };
   }
@@ -121,4 +136,4 @@ function formatRefundDeadline(value) {
     + ' ' + pad(date.hours) + ':' + pad(date.minutes);
 }
 
-module.exports = { summarizeOrderState, canRequestOrderRefund, formatRefundDeadline, orderClockNow };
+module.exports = { summarizeOrderState, canRequestOrderRefund, formatRefundDeadline, orderClockNow, exploreProgressOf };

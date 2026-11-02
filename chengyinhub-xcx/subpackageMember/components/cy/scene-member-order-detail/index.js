@@ -930,6 +930,9 @@ Component({
               info.orderHint = expire ? ('请在 ' + expire + ' 前完成支付') : '请完成支付后使用票夹';
             } else if (info.orderStateKey === 'refunding' || info.orderStateKey === 'refunded' || info.orderStateKey === 'non_refundable' || info.orderStateKey === 'manual_refund') {
               info.orderHint = info.refundDeadlineDisplay || info.refundDisplayText;
+            } else if (summary.exploreProgress) {
+              // P-03:探索票核销一家不算完成,告诉玩家还剩几家
+              info.orderHint = summary.progressText;
             } else if (info.orderStateKey === 'completed') {
               info.orderHint = Number(info.verificationStatus) === 1 ? '本次订单已核销'
                 : (summary.firstScanCompleted ? '首次扫码成功，订单已完成'
