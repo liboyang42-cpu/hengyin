@@ -1,3 +1,4 @@
+<wxs src="../../../../utils/wxs/count.wxs" module="cnt" />
 <view class="order-detail theme-merchant">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
@@ -6,7 +7,7 @@
   <!-- 卡1:hero 唯一大数字 + 状态 chip + 打款事实 -->
   <view class="fin-hero" aria-role="region" aria-label="{{detail.batch.periodYm}} 批次净额 {{detail.batch.amountDisplay || detail.batch.amountFallback}}，{{detail.batch.paymentText}}">
     <text class="fin-hero__lab">{{detail.batch.periodYm}} 批次净额</text>
-    <text class="fin-hero__amt" wx:if="{{detail.batch.amountText != null}}">{{detail.batch.amountDisplay}}</text>
+    <text class="fin-hero__amt" wx:if="{{detail.batch.amountText != null}}">{{cnt.money(detail.batch.amountDisplay, bdK)}}</text>
     <text class="fin-hero__amt fin-hero__amt--mute" wx:else>{{detail.batch.amountFallback}}</text>
     <view class="fin-hero__chips">
       <cy-badge type="status" variant="{{detail.batch.stateVariant}}" label="{{detail.batch.paymentText}}" />

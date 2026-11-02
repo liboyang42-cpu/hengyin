@@ -110,7 +110,6 @@ Page({
     todoError: false,
     // 项目卡:承接的主题 + 主办的主题/活动合成一列,待办与动态按 (ownerType,ownerId) 归属
     projectCards: [],
-    revBars: [],
     sceneStack: [],
     sceneCurrent: null,
     sceneConfirm: { show: false, action: null, pending: null },
@@ -554,7 +553,6 @@ Page({
       this.setData({
         dashboardData: { revenue: null, pendingOrders: null },
         dashboardError: '',
-        revBars: [],
       });
     }
     const canReadTodo = currentAccess.canReadVerifyRecords || currentAccess.canReadOrders
@@ -640,7 +638,6 @@ Page({
       dashboardData: { revenue: null, pendingOrders: null },
       dashboardError: '',
       revenueShown: '0.00',
-      revBars: [],
       projectList: [],
       joinTotal: 0,
       joinLoading: true,
@@ -973,19 +970,12 @@ Page({
           && (res.data.revenue7d == null || isRecordList(res.data.revenue7d));
         const revenueValid = expectsRevenue ? Number.isFinite(revenue) : true;
         if ((res.code === '200' || res.code === 200) && isRecord(data) && revenueValid && r7Valid) {
-          const r7 = res.data.revenue7d || [];
-          const max = r7.reduce((m, d) => Math.max(m, parseFloat(d.amount) || 0), 0);
-          const revBars = r7.map(d => ({
-            date: d.date, amount: d.amount,
-            pct: max > 0 ? Math.max(4, Math.round((parseFloat(d.amount) || 0) / max * 100)) : 0,
-          }));
-          if (expectsRevenue && !that._revCounted) { that._revCounted = true; pageMotion.countIn(that, 'rvK'); } // 2026-10-23:累计收入第一次到达时从 0 数上去
+          // 累计收入只由 countRevenueTo 数(慢-快-慢);近 7 天流水页面不画,不再算也不写 data(2026-11-02 B-4)
           that.setData({
             dashboardData: {
               revenue: expectsRevenue ? revenue.toFixed(2) : null,
               pendingOrders: finiteCount(res.data.pendingOrders),
             },
-            revBars: revBars,
           });
           if (expectsRevenue) that.countRevenueTo(revenue);
         } else {
