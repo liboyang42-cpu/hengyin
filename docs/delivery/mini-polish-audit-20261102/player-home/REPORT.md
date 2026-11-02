@@ -7,7 +7,7 @@ plus the shared state components these pages use (`cy-error`, `cy-empty`, `cy-sk
 Method: static reading only. Nothing was rendered. Evidence `code` = read directly; `inferred` = deduced from code paths.
 
 ## 1. Summary (top 5 by player impact)
-1. **Roam "附近活动" shows a false empty state on first open.** There is no loading flag, so "附近暂无活动" renders until the request returns, then real cards replace it (R-01, P0).
+1. **Roam "附近活动" shows a false empty state on first open.** There is no loading flag, so "附近暂无活动" renders until the request returns, then real cards replace it (R-01, P0). The same false-empty and fake-0 pattern recurs on the 附近 map (「附近暂无节点」, 「· 0 个」) and in my-teams stats after a partial failure (N-01, MT-01/02, P1).
 2. **The tab bar behaves three ways across the five tabs.** Home hides it until the player scrolls 120px, 发布 hides it while scrolling down, and the other tabs keep it fixed. On a fresh home open the player sees no tab bar at all (T-01/T-02, P1).
 3. **Returning to a tab replays loading.** 发现/俱乐部 refetches on every `onShow`, adds a "正在更新俱乐部" row and re-runs the card rise. Roam's 护照 blanks to bare text "正在读取漫游护照…" on every show or tab switch (C-01, R-02, P1).
 4. **Home pull-to-refresh collapses the feed.** `loadPageData` empties both feed lists before refetching, so the page shortens and the scroll position jumps. Every section also re-runs its entrance (H-02/H-03, P1).
@@ -88,12 +88,59 @@ Already good: the bar sits fixed at the bottom with no entrance animation (match
 | T-03 | all tabs | components/tabBar/index.wxml:7-12 | selected item | icon only, recoloured purple | Ref B (selected pill with label) would be a restyle; **not proposed** | — | — | — | — | — | code |
 
 ### 2.7 subpackageRoam pages
-_Pending: being merged from the subpage pass._
+Census (wxml taps : hover-class · distinct radii · raw rpx : tokens): nearby 47:43 (4 are `catchtap="noop"`) · 21 · 359:42; session 3:2 · 3 · 14:70; official-routes 1:1 · 1 · 2:20; official-route 1:1 · 4 · 8:22; my-teams 11:11 · 6 · 56:50; citystamp 6:6 · 6 · 178:3; team-recovery-panel 5 native buttons : 0. All pages except citystamp (own nav row, prototype copy) and poi-detail (scene-sheet title) use `cy-nav-bar` (+ `cy-page-title` where titled).
+
+**nearby** — Already good: hover-class on every real tap, proto-sheet with reduced-motion path, header avoids fake 0 for teams, error card with 「重试」/「去登录」, dark throughout.
+
+| ID | page | file:line | element | now | problem | smallest edit | type | effort | risk | priority | evidence |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| N-01 | nearby | subpackageRoam/nearby/index.wxml:46, 71-73 | bottom-strip empty card + list header | 「附近暂无节点」「点这里看看全部范围」 and 「… · {{listRows.length \|\| 0}} 个」 render whenever `listRows` is empty | No loaded flag: false empty + fake 0 on first open and during failure (contradicts the error card 「附近信息获取失败」) | Expose the existing `_nearbyTeamsLoaded` as data; keep the empty card shell but show its text only when loaded and no error/access state; header shows 「—」 until loaded | empty-state / loading-state | S | low | P1 | code |
+| N-02 | nearby | nearby/index.wxss:109 (`.mdd`), 133 (`.pc.is-in`) | filter dropdown, POI card pop | `cubic-bezier(.34,1.32,.64,1)` (overshoot), `.pc` 0.5s | Bounce on popups (rule 6); comments say copied from v13 prototype | Retime to `var(--cy-ease-out)`, keep durations — owner decides whether nearby map counts as approved v13 roam motion | motion-transition | S | med | P1 if owner agrees | code |
+| N-03 | nearby | nearby/index.wxml:94,117,143,167,189,199 | full-screen scrims `.pdim`/`.mdd-mask` | `hover-class="cy-pressed"` | Pressing the dim shrinks/fades the overlay before close | `hover-class="none"` on these 6 nodes | tap-feedback | S | low | P2 | code (visual inferred) |
+| N-04 | nearby | nearby/index.wxml:45, 68, 84 | list view / bottom strip / corner buttons | plain `wx:if` mount | Pop in instantly while the sheet animates out | Add global `cy-fade-in` class to `.mt-list`, `.mt-strip`, `.mt-corners` | motion-transition | S | low | P2 | code |
+| N-05 | nearby | nearby/index.wxml:60; wxss:272 | error card vs vertical map/list switch | card full-width at hudTop+100px z20; switch spans ~hudTop+56..139 z21 | Switch likely covers the card's right end | In map mode give `.nb-load-error` a right inset ≈140rpx (same as `.mt-list` padding-right) | spacing | S | low | P2 | inferred |
+| N-06 | nearby | nearby/index.wxss | half-height pills | 44rpx (`.mt-corner`, `.pb__btn`), 36rpx (`.pb__send`), 27rpx (`.mt-strip__head`), 17rpx (`.mt-corner__n`), 999rpx | Pills spelled 5 ways, inflates the 21-radius count | Replace with `var(--cy-radius-pill)` (no visual change); leave prototype card radii 23/27/31/42 | radius | S | low | P2 | code |
+| N-07 | nearby | nearby/index.wxss:25-29, 94, 95-98, 233-234 | dead rules | `.mt-top*`, `.mt-filter` not in wxml; first `.mt-chip` block fully overridden at 103-106; `.mt-mode` base radius overridden | Misleads future edits, inflates drift counts | Delete dead rules (separate cleanup ticket) | spacing | S | low | P2 | code |
+| N-08 | nearby | nearby/index.wxml:72, 222, 237, 289 | hint captions | 「点这里看看全部范围」「点卡片看详情」「上滑看全部」「上滑展开」 | Captions without data (rule 3); part of v13 card | Drop where the gesture is already drawn (`.pb__up` arrow); owner call | structure | S | low | P2 | code |
+| N-09 | nearby | nearby/index.wxml:142-161 | 「我的队伍」 sheet (deep link `?sheet=mine`) | only title while `myLoading` | Empty sheet during load | `cy-progress-status density="compact"` while `myLoading` | loading-state | S | low | P2 | code |
+
+**my-teams** — Already good: `cy-rise-in` on stats and cards, reduced-motion class, hover on all taps, empty state CTA 「去地图找队伍」.
+
+| ID | page | file:line | element | now | problem | smallest edit | type | effort | risk | priority | evidence |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| MT-01 | my-teams | my-teams/index.wxml:13-15; index.js:37,112 | stats row | `stats: []` until loaded, then 4 numbers appear | ~85rpx row pops in and pushes segment + list down | Initialise `stats` with the 4 keys and `v:'—'` | loading-state | S | low | P1 | code |
+| MT-02 | my-teams | my-teams/index.js:80-81 | stats after partial failure | `_render(joined \|\| [], apps \|\| [])` | Failed source counts show 0 (rule 7 fake 0) | Pass 「—」 for 已通过/带队 when `joined==null`, 审核中/未通过 when `apps==null` | empty-state | S | low | P1 | code |
+| MT-03 | my-teams | my-teams/index.wxml:27, 54, 68 | card stagger | `animation-delay: index*60ms`, uncapped | Long lists: row 20 starts at 1.2s | Cap like official-routes: `{{index < 8 ? index*60 : 480}}ms` | motion-entry | S | low | P2 | code |
+| MT-04 | my-teams | my-teams/index.wxml:22, 52, 66 | loading | bare text 「正在读取你的队伍…」「正在加载…」「正在找附近的队伍…」 | Shape change, unstyled | Existing `cy-skeleton` at card height | loading-state | S | low | P2 | code |
+| MT-05 | my-teams | my-teams/index.wxss:40 | local `.cy-pressed{opacity:.82}` | overrides global .88 | Heavier press than every other page | Delete the line | tap-feedback | S | low | P2 | code |
+| MT-06 | my-teams | my-teams/index.wxml:23, 53, 67; wxss:31 | error rows | custom red pill, 「队伍获取失败 · 点按重试」「加载失败 · 轻点重试」「{{openError}} · 点按重试」, 27rpx radius | Wording/radius drift; `cy-inline-error` is declared in json but unused | Unify the two non-backend strings on 「点按重试」; 27rpx → `var(--cy-radius-lg)` | structure / radius | S | low | P2 | code |
+| MT-07 | my-teams + nearby | subpackageRoam/utils/team-recovery-panel.wxml:12-17 | 5 native `<button>` | no hover-class → WeChat default `button-hover` | Likely light-grey press flash and default `::after` border on a dark page | `hover-class="cy-pressed"` on each; `.team-command-card button::after{border:none}` | tap-feedback | S | low | P2 | inferred |
+
+**session** — Already good: retry error, `gone` state via `cy-empty` with real CTA, tokens, share card avoids fake explore % (`'--'`).
+
+| ID | page | file:line | element | now | problem | smallest edit | type | effort | risk | priority | evidence |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| S-01 | session | session/index.wxml:11 | shared-link loading | bare text 「正在打开朋友分享的足迹」 | Shape change on load | `cy-progress-status` / `cy-skeleton` in the scene-header position | loading-state | S | low | P2 | code |
+| S-02 | session | session/index.wxml:23-26; index.js:365 | share-card generation | global `loading.show('生成足迹卡')` + inline 「正在生成足迹卡」 | Two loaders; mask likely covers the sheet | Drop `loading.show/hide` in `_prepareShareCard` | loading-state | S | low | P2 | code |
+| S-03 | session | session/index.wxml:8 | page-title subtitle | `dateFull + ' · ' + s.time`; shared mode time = 「—」 → 「11月2日 周日 · —」 | Dangling separator | Append ` · time` only when time ≠ 「—」 (subtitle binding only, title untouched) | structure | S | low | P2 | code |
+
+**official-routes** — Already good: skeleton, error 「重试」, `cy-empty` 「还没有上架的官方线路」, `pageMotion` stagger capped at 240ms, tokens only.
+- R-08 | official-routes | official-routes/index.wxml:15 | card without cover | image omitted → ~100rpx card next to ~420rpx cards | mixed heights | in `wx:else` render the `.orl-card__cover` box with the elevated surface (no artwork) | structure | S | low | P2 | inferred
+
+**official-route** — Already good: skeleton, retry error, not-found and no-nodes `cy-empty`, coordinate-less nodes correctly non-tappable.
+- D-01 | official-route | official-route/index.wxml:9 | skeleton | `type="feed-card" count="2"` vs loaded 360rpx cover + label + compact rows | reflow on load | `count="1"` | loading-state | S | low | P2 | inferred
+- D-02 | official-route | official-route/index.js:39 | content entry | no motion (sibling list uses `pageMotion.enter`) | inconsistent with its own list page | `cy-fade-in` on `.orr__cover`, `.orr__sec`, `.orr-node` | motion-entry | S | low | P2 | code
+
+**poi-detail, history, citynode-code, citystamp** — already good, no findings. citystamp is a deliberate prototype copy (white paper is physical, not a theme leak; 178 raw rpx are annotated px conversions). `components/scene-roam-resume-bar` is not mounted anywhere (tests assert its absence), so not audited for players.
 
 ## 3. Real bugs noticed (out of scope to fix)
 - **B-1 (roam):** `pages/roam/index.js:760` builds 漫游 as `v: summary.trips` with no `'—'` fallback, unlike its neighbours (`value()`). Tile line 767 shows `summary.trips + ' 次已完成旅程'`, so a null `trips` renders "null 次已完成旅程". Evidence: inferred (depends on whether the reader can return null).
 - **B-2 (home):** `pages/index/index.js` `onRefresh` closes the refresher on a fixed 800ms timer, not on completion. A slow network shows "refreshed" while the sections are still empty, which compounds H-03. Evidence: code.
 - **B-3 (template):** `pages/templatedetail/shelf/index.wxml` uses `cy-error load-failure ... bindretry="retry"`. With `loadFailure` the component renders a blank veil and never shows a retry button, so the binding is dead code. On 发布 a failed shelf has no retry path at all (the page has no pull-to-refresh). Evidence: code.
+- B-4 (nearby): `subpackageRoam/nearby/index.wxss:171` `.pb__photo-note { color: var(--sub) }` — `--sub` is only defined in `pages/play` skins, so the variable is invalid here and the photo-licence note inherits white instead of secondary grey. Evidence: code.
+- B-5 (nearby): strip says 「附近暂无节点」 while the load failed or is still running (N-01). Evidence: code.
+- B-6 (my-teams): partial API failure shows fake zeros in stats (MT-02). Evidence: code.
+- B-7 (session): two loaders during share-card generation (S-02). Evidence: code.
 
 ## 4. Would need a redesign (not proposing)
 - **Recovery after `cy-error load-failure`.** The project-wide policy blanks failed loads with no copy or retry. On tabs without pull-to-refresh (漫游 entry, 发布 shelf) a failure is unrecoverable in place. Changing that is a policy decision, not a polish edit.
@@ -104,6 +151,8 @@ _Pending: being merged from the subpage pass._
 1. **`pageMotion.enter` replays on refresh and tab return** (home H-02, clubs C-01, and any page that calls `enter` inside a success handler). Add an option to `utils/page-motion.js` that skips when the container already shows content, e.g. `enter(page, key, { onlyIfEmpty: list.length === 0 })`. Callers only pass the flag. **This one fix removes most of the tab-switch flicker.**
 2. **Background refresh that inserts a status row** (`cy-progress-status` "正在更新…" in talent/list; `v3-sec-sync` on home). The row pushes content down mid-view. Option: render it as an overlay inside the existing header area, or not at all when the refresh comes from `onShow`.
 3. **Cold-start shape placeholders.** `componentPlaceholder` and first-load branches should draw the page's own geometry: template P-01, roam passport R-02, roam peek R-01, home feed H-04. The member page already does this correctly and is the model.
-4. **Tab bar visibility** should be one rule for all player tabs (T-01).
+4. **Fake 0 / false empty before data**: roam peek R-01, nearby N-01, my-teams MT-01/MT-02. One rule: gate empty copy on a loaded flag and show 「—」 until a source has loaded.
+5. **hover-class misuse**: `cy-pressed` on full-screen scrims (nearby N-03), missing on native buttons (team-recovery-panel MT-07), page-level `.cy-pressed` overrides (my-teams MT-05). Scrims → `none`, native buttons → `cy-pressed`, no local overrides.
+6. **Tab bar visibility** should be one rule for all player tabs (T-01).
 
-STATUS: PARTIAL — subpackageRoam findings still being merged.
+STATUS: COMPLETE
