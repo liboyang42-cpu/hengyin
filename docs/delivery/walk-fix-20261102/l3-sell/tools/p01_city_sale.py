@@ -153,8 +153,12 @@ if os.environ.get("P01_STOP_BEFORE_CONFIRM"):
     # Screenshot staging: leave the theme in PRICING so the real pricing page can press 确认终价.
     print("STOPPED_IN_PRICING", tid)
     sys.exit(0)
-r = http("POST", "/api/topic/pricing/confirm", token=ptok, json_body={"topicId": tid, "guidedPrice": 69})
+# P-34 (round 3): P01_CONFIRM_PRICE confirms a price different from the author's ¥69 ticket, to prove it reaches it.
+confirm_price = float(os.environ.get("P01_CONFIRM_PRICE", "69"))
+r = http("POST", "/api/topic/pricing/confirm", token=ptok, json_body={"topicId": tid, "guidedPrice": confirm_price})
 print("confirm", J(r))
+readback("authored ticket prices after confirm (P-34)",
+         "SELECT id,name,price,sub_type,total_inventory FROM oms_ticket WHERE owner_type=1 AND owner_id=%s AND del_flag=0 ORDER BY id", (tid,))
 readback("sale review task", "SELECT id,biz_type,status FROM audit_task WHERE biz_id=%s AND biz_type='TOPIC_SALE_REVIEW'", (tid,))
 
 step("admin: sale-submit (idempotent) then approve the sale review")
@@ -163,6 +167,7 @@ for task_id, ver in q("SELECT id,version FROM audit_task WHERE biz_id=%s AND biz
     print("approve", J(http("POST", "/business/audit/review", token=atok, json_body={
         "taskId": task_id, "status": 1, "reasonCode": "E2E", "reasonText": "开售放行", "expectedVersion": ver})))
 readback("lifecycle/selling_started_at", "SELECT lifecycle,selling_started_at FROM cms_topic WHERE id=%s", (tid,))
+print("preview after sale (P-34)", J(http("POST", "/api/topic/pricing/preview", token=ptok, json_body={"topicId": tid, "subType": "guided"})))
 readback("payee facts untouched (no coop_order, no corporate payee snapshot)",
          "SELECT (SELECT COUNT(*) FROM coop_order WHERE topic_id=%s) AS coop_orders, "
          "(SELECT COUNT(*) FROM product_role WHERE topic_id=%s AND slot='CONTENT' AND entity_type='CLUB' AND entity_id=7001) AS content_slot_club7001",

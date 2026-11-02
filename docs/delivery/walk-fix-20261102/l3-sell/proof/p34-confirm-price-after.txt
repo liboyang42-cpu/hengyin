@@ -1,0 +1,50 @@
+
+== publisher identity (paid publish needs it)
+{"msg": "实名信息已登记", "code": 200, "data": {"registered": true}, "_status": 200}
+
+== one text-question game (template) for the stations, approved by admin
+{"msg": "操作成功", "code": 200, "data": 6005, "_status": 200}
+approve template {"msg": "审核处理成功", "code": 200, "_status": 200}
+   [库回读] template                 ((6005, 1, 1, 1),)
+
+== executing club leader 9008 identity (open-session needs it)
+{"msg": "实名信息已登记", "code": 200, "data": {"registered": true}, "_status": 200}
+
+== publish a paid city theme (V2 create, product_type=1)
+{"msg": "主题发布成功", "code": 200, "data": {"topicId": 990014, "auditTaskId": 3, "reviewState": "PENDING", "bundledTemplateIds": [6005], "published": true, "commercialAwaitingReview": true, "commercialNextStep": "已提交立项审核，审核与定价完成前尚未开售"}, "_status": 200}
+   [库回读] topic                    ((990014, 1, 7, 1, 1, 0),)
+
+== admin approves the publish audit tasks
+TOPIC_PROJECT_REVIEW {"msg": "审核处理成功", "code": 200, "_status": 200}
+TOPIC {"msg": "审核处理成功", "code": 200, "_status": 200}
+   [库回读] lifecycle after project review ((2, 1, 1),)
+   [库回读] content slot             (('CONTENT', 'CLUB', 7001, 1),)
+
+== publisher invites club 7002 to organise; its leader accepts (ORGANIZER coop_order)
+self mode: no partner club invited
+   [库回读] coop_order               ()
+
+== recruit deadline job: RECRUITING -> PRICING
+   [库回读] lifecycle                ((2,),)
+
+== author pricing page preview + confirm the final price
+preview {"msg": "操作成功", "code": 200, "data": {"platformRate": 0.1, "sumShareRate": 0, "sumFixedFee": 0, "leadCostPerHead": 0, "perkCost": 0.0, "costC": 0.0, "priceMin": 0.0, "subType": "guided", "lineup": [], "cityReferencePrice": null, "cityReferenceSampleSize": 0, "cityReferenceLabel": null, "canConfirm": true, "confirmBlockReason": null, "currentPrice": 69.0, "priced": false}, "_status": 200}
+confirm {"msg": "终价已确认，已提交开售审核，审核通过后开售。注意：平台正在办理支付资质，开放前这个主题开售后玩家还不能在线付款报名", "code": 200, "_status": 200}
+   [库回读] authored ticket prices after confirm (P-34) ((75, '领队场', Decimal('79.00'), None, 20),)
+   [库回读] sale review task         ((4, 'TOPIC_SALE_REVIEW', 0),)
+
+== admin: sale-submit (idempotent) then approve the sale review
+sale-submit {"msg": "已提交开售审核", "lifecycle": "PRICING", "code": 200, "taskId": 4, "reviewRequired": true, "_status": 200}
+approve {"msg": "审核处理成功", "code": 200, "_status": 200}
+   [库回读] lifecycle/selling_started_at ((3, datetime.datetime(2026, 11, 3, 3, 46, 28)),)
+preview after sale (P-34) {"msg": "操作成功", "code": 200, "data": {"platformRate": 0.1, "sumShareRate": 0, "sumFixedFee": 0, "leadCostPerHead": 0, "perkCost": 0.0, "costC": 0.0, "priceMin": 0.0, "subType": "guided", "lineup": [], "cityReferencePrice": null, "cityReferenceSampleSize": 0, "cityReferenceLabel": null, "canConfirm": false, "confirmBlockReason": "主题未在定价阶段,不能确认终价", "currentPrice": 79.0, "priced": true}, "_status": 2
+   [库回读] payee facts untouched (no coop_order, no corporate payee snapshot) ((0, 1),)
+
+== club 7001 opens a session; player 9009 quotes and signs up
+open-session {"msg": "开团成功", "code": 200, "data": {"activityId": 10}, "_status": 200}
+activity 10 tickets ((77, Decimal('79.00')),)
+quote {"msg": "该产品暂不支持在线支付(平台正在办理支付资质,预计 2 个月内开放);如需报名请联系主办方", "code": 500, "_status": 200}
+RESULT_TOPIC 990014 ACTIVITY 10 TICKET 77
+
+== player 9009: consent, create the registration, pay through the rig seam -> real /api/registration/callback
+quote refused; no registration created (expected for a club-owned paid theme: assertCollectible)
