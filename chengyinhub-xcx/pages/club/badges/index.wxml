@@ -11,7 +11,7 @@
   <cy-state-shell wx:elif="{{state === 'error'}}" kind="{{errorKind}}" title="勋章列表没加载成功" sub="{{errorText}}"
                   primary="重新加载" bind:primary="retryLoad" fill size="lg" />
   <block wx:else>
-    <text wx:if="{{refreshing}}" class="badge-refreshing cy-refresh-float" aria-role="status">正在确认勋章列表…</text>
+    <text wx:if="{{refreshing}}" class="badge-refreshing cy-refresh-float" style="top: {{statusBarHeight + navBarHeight}}px;" aria-role="status">正在确认勋章列表…</text>
     <cy-inline-error wx:if="{{refreshError}}" title="列表没刷新成功" sub="{{refreshError}}" action="重新加载" bind:action="retryLoad" />
 
     <view wx:if="{{isOwner}}" class="section">
