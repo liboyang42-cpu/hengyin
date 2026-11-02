@@ -84,6 +84,26 @@ class ClubEventAttendanceServiceImplTest {
         verify(access).require(ACTOR, CLUB, ACTIVITY, ClubPermission.EVENT_CHECKIN);
     }
 
+    /** C-05(2026-11-02):名册以报名姓名示人;没填姓名、昵称是默认「城瘾用户」时给「成员#id」,不下发密文列。 */
+    @Test
+    void rosterShowsSignupNameAndNeverTheStoredColumn() {
+        Map<String, Object> named = row(51L, "城瘾用户", NOW, null, 0);
+        named.put("realNameStored", "周晓舟");
+        Map<String, Object> unnamed = row(52L, "城瘾用户", null, null, 0);
+        Map<String, Object> nick = row(54L, "阿舟", null, null, 0);
+        when(mapper.selectPaidRoster(ACTIVITY)).thenReturn(Arrays.asList(named, unnamed, nick));
+        when(mapper.selectWaitlistRoster(ACTIVITY)).thenReturn(Collections.emptyList());
+
+        Map<String, Object> roster = service.roster(ACTOR, CLUB, ACTIVITY);
+
+        Map<?, ?> arrivedRow = (Map<?, ?>) ((List<?>) roster.get("arrived")).get(0);
+        assertEquals("周晓舟", arrivedRow.get("displayName"));
+        assertEquals(false, arrivedRow.containsKey("realNameStored"));
+        List<?> noShow = (List<?>) roster.get("noShow");
+        assertEquals("成员#52", ((Map<?, ?>) noShow.get(0)).get("displayName"));
+        assertEquals("阿舟", ((Map<?, ?>) noShow.get(1)).get("displayName"));
+    }
+
     @Test
     void jdbcLocalDateTimeCheckinIsReturnedAsArrived() {
         LocalDateTime arrivedAt = LocalDateTime.of(2026, 9, 22, 8, 3, 51);

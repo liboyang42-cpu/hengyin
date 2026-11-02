@@ -560,7 +560,7 @@
         <result property="correctedArrivedAt" column="correctedArrivedAt" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
     </resultMap>
 
-    <!-- 本场必要名册：只取昵称与到场事实，禁止手机号/邮箱/地址。 -->
+    <!-- 本场必要名册：只取昵称、报名时填写的姓名(C-05,服务端解密后下发 displayName)与到场事实，禁止手机号/邮箱/地址。 -->
     <select id="selectPaidRoster" resultMap="attendanceRowResult">
         select paid.member_id as memberId,
                coalesce(nullif(m.nickname, ''), nullif(m.name, ''), concat('成员#', paid.member_id)) as nickname,
@@ -569,10 +569,12 @@
                       or progress.arrived_count &gt; 0 then 1 else 0 end as baseArrived,
                corr.new_arrived as correctedArrived,
                corr.new_arrived_at as correctedArrivedAt,
-               coalesce(corr.version, 0) as correctionVersion
+               coalesce(corr.version, 0) as correctionVersion,
+               paid.real_name_stored as realNameStored
         from (
           select member_id, sum(verification_status = 1) as verified_count,
-                 min(case when verification_status = 1 then verification_time else null end) as verified_at
+                 min(case when verification_status = 1 then verification_time else null end) as verified_at,
+                 max(nullif(real_name, '')) as real_name_stored
           from cms_registration
           where owner_type = 2 and owner_id = #{activityId}
             and payment_status = 2 and registration_status = 2
@@ -769,14 +771,19 @@
         select distinct r.member_id
         from cms_registration r
         inner join cms_activity a on a.id = r.owner_id
-          and (a.club_id = #{clubId} or (a.club_id is null and exists (select 1 from cms_topic t where t.id = a.topic_id and t.club_id = #{clubId} and t.member_id = a.member_id))) and a.id = #{activityId} and a.del_flag = 0 and a.end_date &lt;= now()
+          and (a.club_id = #{clubId} or (a.club_id is null and exists (select 1 from cms_topic t where t.id = a.topic_id and t.club_id = #{clubId} and t.member_id = a.member_id))) and a.id = #{activityId} and a.del_flag = 0 and a.start_date &lt;= now()
         left join club_lead_checkin ck on ck.activity_id = a.id and ck.member_id = r.member_id
         left join club_event_attendance_correction corr on corr.id = (
           select max(c2.id) from club_event_attendance_correction c2
           where c2.activity_id = a.id and c2.member_id = r.member_id
         )
         where r.owner_type = 2 and r.payment_status = 2 and r.registration_status = 2
-          and case when corr.id is not null then corr.new_arrived = 0 else ck.id is null end
+          <!-- C-10/C-25:与本场名册同一个到场事实(签到/核销/节点进度,更正优先);开场后即可通知未到的人,不必等散场。 -->
+          and case when corr.id is not null then corr.new_arrived = 0 else (ck.id is null
+            and not exists (select 1 from cms_registration v where v.owner_type = 2 and v.owner_id = a.id
+              and v.member_id = r.member_id and v.payment_status = 2 and v.registration_status = 2 and v.verification_status = 1)
+            and not exists (select 1 from player_node_progress p where p.activity_id = a.id
+              and p.member_id = r.member_id and p.status = 1 and p.del_flag = 0)) end
         order by r.member_id asc
     </select>
 
@@ -955,7 +962,7 @@
                   select 1 from cms_registration r
                   inner join cms_activity a on a.id = r.owner_id
                     and (a.club_id = #{clubId} or (a.club_id is null and exists (select 1 from cms_topic t where t.id = a.topic_id and t.club_id = #{clubId} and t.member_id = a.member_id))) and a.id = #{activityId}
-                    and a.del_flag = 0 and a.end_date &lt;= now()
+                    and a.del_flag = 0 and a.start_date &lt;= now()
                   inner join club c on c.id = #{clubId} and c.status = 1 and c.del_flag = 0
                   left join club_lead_checkin ck on ck.activity_id = a.id and ck.member_id = r.member_id
                   left join club_event_attendance_correction corr on corr.id = (
@@ -964,7 +971,11 @@
                   )
                   where r.owner_type = 2 and r.member_id = #{recipientMemberId}
                     and r.payment_status = 2 and r.registration_status = 2
-                    and case when corr.id is not null then corr.new_arrived = 0 else ck.id is null end
+                    and case when corr.id is not null then corr.new_arrived = 0 else (ck.id is null
+            and not exists (select 1 from cms_registration v where v.owner_type = 2 and v.owner_id = a.id
+              and v.member_id = r.member_id and v.payment_status = 2 and v.registration_status = 2 and v.verification_status = 1)
+            and not exists (select 1 from player_node_progress p where p.activity_id = a.id
+              and p.member_id = r.member_id and p.status = 1 and p.del_flag = 0)) end
                     <include refid="notificationRecipientNotBanned"/>
                 )
             </when>

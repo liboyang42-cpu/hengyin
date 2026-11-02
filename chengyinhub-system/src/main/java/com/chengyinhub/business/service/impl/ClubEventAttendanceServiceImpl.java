@@ -216,6 +216,24 @@ public class ClubEventAttendanceServiceImpl implements IClubEventAttendanceServi
         row.remove("phone");
         row.remove("email");
         row.remove("address");
+        // C-05:名册行以报名时填写的姓名示人(带队现场按名单点人);没填姓名时退回昵称,
+        // 默认昵称「城瘾用户」分不出人,改用「成员#id」。密文只在服务端解,不下发。
+        Object stored = row.remove("realNameStored");
+        String realName = null;
+        if (stored instanceof String && !((String) stored).trim().isEmpty()) {
+            try {
+                com.chengyinhub.business.security.PiiCryptoService pii =
+                        com.chengyinhub.business.security.PiiCryptoService.getInstance();
+                String plain = pii == null ? (((String) stored).startsWith("v1:") ? null : (String) stored) : pii.decrypt((String) stored);
+                realName = plain == null || plain.trim().isEmpty() ? null : plain.trim();
+            } catch (RuntimeException unreadable) {
+                realName = null;
+            }
+        }
+        Object nickname = row.get("nickname");
+        String nick = nickname == null ? "" : String.valueOf(nickname).trim();
+        row.put("displayName", realName != null ? realName
+                : (nick.isEmpty() || "城瘾用户".equals(nick) ? "成员#" + row.get("memberId") : nick));
         return row;
     }
 

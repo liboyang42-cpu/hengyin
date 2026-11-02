@@ -419,16 +419,19 @@ public class ApiClubLeadController extends BaseController {
         List<ClubLeadCheckin> checkins = clubLeadMapper.selectCheckins(activityId);
         Set<Long> arrivedIds = new HashSet<>();
         for (ClubLeadCheckin c : checkins) arrivedIds.add(c.getMemberId());
-        // 复用名册的最新更正事实；原始签到仍保留用于调证。
+        // C-10:到场人数与本场名册同一个事实 —— 名册的「已到场」= 集合签到 / 已核销 / 已有节点进度,
+        // 有更正时以最新更正为准。原来这里只认签到+更正,玩家头部、名册、复盘三处数字对不上。
         for (Map<String, Object> row : clubEventOpsMapper.selectPaidRoster(activityId)) {
+            Object memberObj = row.get("memberId");
+            if (!(memberObj instanceof Number)) continue;
+            Long rosterMemberId = ((Number) memberObj).longValue();
             Object corrected = row.get("correctedArrived");
-            if (corrected == null) continue;
-            Long correctedMemberId = ((Number) row.get("memberId")).longValue();
-            if (Boolean.TRUE.equals(corrected)
-                    || corrected instanceof Number && ((Number) corrected).intValue() == 1) {
-                arrivedIds.add(correctedMemberId);
+            Object effective = corrected != null ? corrected : row.get("baseArrived");
+            if (Boolean.TRUE.equals(effective)
+                    || effective instanceof Number && ((Number) effective).intValue() == 1) {
+                arrivedIds.add(rosterMemberId);
             } else {
-                arrivedIds.remove(correctedMemberId);
+                arrivedIds.remove(rosterMemberId);
             }
         }
         Set<Long> memberIds = new HashSet<>(arrivedIds);

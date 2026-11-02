@@ -1125,6 +1125,12 @@ Page({
       toast('现在不能更正')
       return
     }
+    // C-06:开场现场把「已报名」的人标记到场是一下点完的事,原因用预置的「现场到达」;
+    // 已到改未到、散场后补记仍要写原因(那才是更正)。
+    if (arrived && this.data.rosterTab === 'registered') {
+      this.submitCorrection(memberId, true, expectedVersion, '现场到达')
+      return
+    }
     const that = this
     cyModal.show({
       title: arrived ? '更正为已到场' : '更正为未到场',

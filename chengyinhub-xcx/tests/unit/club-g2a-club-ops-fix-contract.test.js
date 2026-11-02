@@ -346,6 +346,7 @@ test('CU-C-73:可更正时段内照旧能打开原因输入框(不许把正常�
   page.data.canCheckin = true
   page.data.activityId = 31
   page.data.correctionOperable = true
+  page.data.rosterTab = 'noShow'   // C-06 之后:散场后补记仍写原因;开场现场一键标记见下方用例
   page.correctAttendance({ currentTarget: { dataset: { memberId: 9009, version: 0, arrived: true } } })
   assert.equal(collected.modals.length, 1, '可更正时段内反而无法打开更正框')
 })
@@ -368,6 +369,7 @@ test('CU-C-73 负控:去掉前置闸,「不可更正」那条断言必须判红(
   page.data.canCheckin = true
   page.data.activityId = 31
   page.data.correctionOperable = false
+  page.data.rosterTab = 'noShow'
   page.correctAttendance({ currentTarget: { dataset: { memberId: 9009, version: 0, arrived: true } } })
   assert.equal(collected.modals.length, 1, '闸被拿掉后行为没变 —— 这条判据认不出修复被撤掉')
 })
@@ -530,4 +532,31 @@ test('CU-C-46:暗色镜像只给 portal 模式,.cdd__layer 本身不声明颜色
   const base = tokenValues(dropdown, '^\\.cdd__layer')
   assert.equal(base['--cy-color-bg-elevated'], undefined, '非 portal 的下拉必须继承页面 token')
   assert.match(read('components/cy/dropdown/index.wxml'), /\{\{portal \? 'cdd__layer--portal' : ''\}\}/)
+})
+
+/* —————————————————— C-06(2026-11-02 walk-fix)现场一键标记到场 —————————————————— */
+test('C-06:「已报名」里标记到场一下提交,原因预置「现场到达」,不弹输入框', () => {
+  const { page, collected } = loadPage(EVENT_OPS_JS)
+  page.data.canCheckin = true
+  page.data.activityId = 31
+  page.data.clubId = 9
+  page.data.correctionOperable = true
+  page.data.rosterTab = 'registered'
+  page.correctAttendance({ currentTarget: { dataset: { memberId: 9009, version: 0, arrived: true } } })
+  assert.equal(collected.modals.length, 0, '现场标记到场不该再要求打字')
+  const write = collected.requests.find(r => /attendance\/correct/.test(r.url))
+  assert.ok(write, '没有发出到场写入')
+  const body = typeof write.data === 'string' ? JSON.parse(write.data) : write.data
+  assert.equal(body.reason, '现场到达')
+  assert.equal(body.arrived, true)
+  // 已到场改未到场仍是更正,要写原因
+  page.data.rosterTab = 'arrived'
+  page.data.actingMemberId = null   // 上一条写入已返回
+  page.correctAttendance({ currentTarget: { dataset: { memberId: 9009, version: 1, arrived: false } } })
+  assert.equal(collected.modals.length, 1)
+})
+
+test('C-05:名册行优先显示报名姓名 displayName', () => {
+  const wxml = read('pages/club/event-ops/index.wxml')
+  assert.match(wxml, /<text class="member-name">\{\{item\.displayName \|\| item\.nickname\}\}<\/text>/)
 })

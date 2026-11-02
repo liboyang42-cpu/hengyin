@@ -87,9 +87,9 @@
       <block wx:elif="{{rosterState === 'ready'}}">
         <cy-empty wx:if="{{activeRoster.length === 0}}" size="sm" title="这一段暂时没有成员" />
         <view class="member-card" wx:for="{{activeRoster}}" wx:key="memberId">
-          <view class="member-mark">{{item.nickname[0]}}</view>
+          <view class="member-mark">{{(item.displayName || item.nickname)[0]}}</view>
           <view class="member-main">
-            <text class="member-name">{{item.nickname}}</text>
+            <text class="member-name">{{item.displayName || item.nickname}}</text>
             <text class="member-meta" wx:if="{{rosterTab === 'waitlist'}}">{{item.state}}</text>
           </view>
           <view wx:if="{{rosterTab !== 'waitlist'}}" class="correct-btn {{actingMemberId || !correctionOperable ? 'disabled' : ''}}"
