@@ -22,7 +22,7 @@
       <cy-empty wx:if="{{projectAccessDenied}}" kind="no-permission" title="当前身份不能查看这些项目" fill size="lg" />
       <cy-error wx:else load-failure title="项目加载失败" sub="{{projectErrorMsg}}" bind:retry="loadProjects" fill size="lg" />
     </view>
-    <view wx:if="{{loading && loaded}}" class="mp-refreshing" aria-role="status" aria-live="polite">正在同步最新项目…</view>
+    <view wx:if="{{loading && loaded}}" class="mp-refreshing cy-refresh-float" aria-role="status" aria-live="polite">正在同步最新项目…</view>
 
     <!-- 2026-10-28 业主 m693:列表上方不放发布活动的按钮(没有活动时空态里仍可发起) -->
     <!-- 上下架 / 删除按稿撤出卡面后,长按是它们唯一的入口 —— 藏起来的入口要写出来,
@@ -105,7 +105,7 @@
     <cy-skeleton wx:if="{{tplLoading && !tplLoaded}}" type="card" count="{{skeletonItems.length}}" />
     <cy-empty wx:if="{{tplAccessDenied}}" kind="no-permission" title="当前身份不能查看这些模板" fill size="lg" />
     <cy-error load-failure wx:if="{{!tplAccessDenied && !tplLoading && tplErrorMsg && !tplLoaded}}" title="{{tplErrorMsg}}" sub="" retry="重试" bind:retry="retryTemplates" />
-    <view wx:if="{{tplLoading && tplLoaded}}" class="mp-refreshing" aria-role="status" aria-live="polite">正在同步最新节点玩法…</view>
+    <view wx:if="{{tplLoading && tplLoaded}}" class="mp-refreshing cy-refresh-float" aria-role="status" aria-live="polite">正在同步最新节点玩法…</view>
     <cy-empty wx:if="{{tplLoaded && !tplErrorMsg && tplList.length===0}}" title="还没有节点玩法" />
   </block>
 

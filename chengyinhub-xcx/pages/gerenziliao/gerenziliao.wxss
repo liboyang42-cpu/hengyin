@@ -3,10 +3,10 @@ page { background: var(--cy-bg-page); }
 .profile-load-shell { padding: var(--cy-space-3) var(--cy-page-x) var(--cy-space-8); }
 .profile-refresh-state,
 .profile-save-state { margin: 0 var(--cy-page-x) var(--cy-space-4); }
+.profile-refresh-state { position: relative; }
+/* X1:刷新状态浮在内容上不占位(共用 .cy-refresh-float),列表不再被顶下去 */
 .profile-refreshing {
-  min-height: 72rpx;
-  display: flex;
-  align-items: center;
+  padding: var(--cy-space-1) var(--cy-space-3); border-radius: var(--cy-radius-pill); background: var(--cy-color-bg-elevated); white-space: nowrap;
   color: var(--cy-text-secondary);
   font-size: var(--cy-font-label);
 }

@@ -5,8 +5,9 @@
 /* flex:1 让本容器吃满 canyu-page 里除 nav/title/tabs 外的剩余高度;自身也要是 flex column
    (min-height:0 允许在 flex 布局里正确收缩)才能把这份剩余空间正确让给里面 fill 的空/错态。 */
 /* padding-top = tab 与下方第一张卡的间距 */
-.canyubox{overflow: hidden; padding-top: var(--cy-space-4); padding-bottom: var(--cy-safe-bottom); flex: 1; min-height: 0; display: flex; flex-direction: column;}
-.canyu-refreshing{ min-height: var(--cy-btn-h); display: flex; align-items: center; margin: 0 var(--cy-space-2); color: var(--cy-text-secondary); font-size: var(--cy-font-label); }
+.canyubox{position: relative; overflow: hidden; padding-top: var(--cy-space-4); padding-bottom: var(--cy-safe-bottom); flex: 1; min-height: 0; display: flex; flex-direction: column;}
+/* X1:刷新状态浮在内容上不占位(共用 .cy-refresh-float),列表不再被顶下去 */
+.canyu-refreshing{ padding: var(--cy-space-1) var(--cy-space-3); border-radius: var(--cy-radius-pill); background: var(--cy-color-bg-elevated); white-space: nowrap; color: var(--cy-text-secondary); font-size: var(--cy-font-label); }
 .canyubox cy-inline-error{ display: block; margin: 0 var(--cy-space-2) var(--cy-space-3); }
 /* 用户备注:"下面居中下移"——加载失败态整体在 tab 下方区域垂直居中并偏下,不贴顶 */
 .canyubox_li{overflow: hidden; border-radius: var(--cy-radius-lg); background: var(--cy-color-bg-surface); margin: 0 var(--cy-page-x) var(--cy-space-4); }
