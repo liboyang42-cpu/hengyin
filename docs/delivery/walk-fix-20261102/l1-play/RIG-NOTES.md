@@ -127,3 +127,7 @@ With no ending, playing and finishing the station creates no route session. The 
 - Real-device taps, the native map, GPS and timing of animations. P-13's pulsing is judged from two still frames only.
 - P-35 was seen as a toast in the rig's `showToast` rendering. P-08 and P-35 were run only with one player per session.
 - 「我到了」 self check-in (club sessions have no gather lat/lng, a known issue) was not used. The leader started without arrivals.
+
+P-10 re-shoot: `P-10-after-2.jpg` and `P-10-after-3.jpg` now come from commit **2110aafb6ffbff5988a3f2a907763783a86e3797**. Only the mpweb bundle was rebuilt from that commit's `chengyinhub-xcx`; the backend jar is still 0abf58c3.
+Fresh run on the same rig data: new club session activity 16 on theme 990019, player walk-player-2 (member 990006), `shift-session 16`, leader `lead/start` and unlock 51→52. Station 86 (advanced TYPE).
+First live wrong submit (黄浦江, attempts 1) and second (长江, attempts 2) each show a red underline, the box cleared, and a red bar 「再想想 / 不对。把它清掉，再试一次。」. This replaces Finding 1 above, which described commit 0abf58c3.
