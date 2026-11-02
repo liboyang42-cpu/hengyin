@@ -328,3 +328,15 @@ test('P-03:探索票核销一家后仍留在票夹,卡面写已核销几家;全�
   assert.equal(JSON.stringify(page.data.ticketList.map(t => t.id)), '[31]')
   assert.match(page.data.ticketList[0].wSub, /已核销 1\/4 家/)
 })
+
+test('P-27:场次票卡面写开场时间与地点,不写「场次 · 今天过期」', () => {
+  const { page, sandbox } = loadPage()
+  page.onLoad({})
+  sandbox.requests.find(request => request.data.owner_type === 1).success({ code: 200, data: { rows: [], total: 0 } })
+  sandbox.requests.find(request => request.data.owner_type === 2).success({
+    code: 200,
+    data: { rows: [{ id: 41, registrationStatus: 2, paymentStatus: 2,
+      cmsActivity: { name: '外滩钟声', startDate: '2099-11-02 13:35:00', endDate: '2099-11-02 23:59:59', addressName: '外滩源 33 号门前' } }], total: 1 },
+  })
+  assert.equal(page.data.ticketList[0].wSub, '11月2日 13:35 · 外滩源 33 号门前')
+})

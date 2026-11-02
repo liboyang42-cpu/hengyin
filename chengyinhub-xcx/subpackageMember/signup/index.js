@@ -708,7 +708,17 @@ function walletCard(item) {
   // 卡面「剩 N 天」与背面「N 天内过期」同一套自然日算法(原来卡面按 24 小时向上取整,同一张票两面差一天)
   const days = passDaysLeft(item.wUntil);
   const progress = item.wProgress ? ' · 已核销 ' + item.wProgress.redeemed + '/' + item.wProgress.required + ' 家' : '';
-  return Object.assign(item, { wSub: (days === null ? item.wType : item.wType + (days === 0 ? ' · 今天过期' : ' · 剩 ' + days + ' 天')) + progress, wExpiry: passExpiryText(item.wUntil) });
+  // P-27:场次票卡面写「几点 · 在哪」,到期留在背面(wExpiry);读不到开场时间才回落「场次 · 剩几天」
+  const session = item.kind === 'activity' ? sessionLine(item.cmsActivity) : '';
+  const head = session || (days === null ? item.wType : item.wType + (days === 0 ? ' · 今天过期' : ' · 剩 ' + days + ' 天'));
+  return Object.assign(item, { wSub: head + progress, wExpiry: passExpiryText(item.wUntil) });
+}
+/* 场次开场时间(服务端 yyyy-MM-dd HH:mm:ss,北京时间)+ 地点;缺开场时间返回空串 */
+function sessionLine(a) {
+  const m = String((a && a.startDate) || '').match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+  if (!m) return '';
+  const place = String((a && (a.addressName || a.address)) || '').trim();
+  return Number(m[2]) + '月' + Number(m[3]) + '日 ' + m[4] + ':' + m[5] + (place ? ' · ' + place : '');
 }
 /* P-03:服务端给 ③ 探索票下发的「已核销几家/共几家」;没有就 null(与 utils/order-status.js exploreProgressOf 同口径) */
 function exploreProgressOf(item) {
