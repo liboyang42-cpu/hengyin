@@ -1125,6 +1125,53 @@ class PerkLedgerServiceTest {
         verify(redemptionMapper, never()).countActiveRequiredChaptersRedeemed(REG, TOPIC);
     }
 
+    /** 编辑器每次存盘都写 nodeCompletion:它不是商家规则,不能被当成损坏而永远拒绝通关。 */
+    @Test
+    void editorNodeCompletionRuleUsesRequiredChapters() {
+        givenCompleteRule("{\"nodeCompletion\": {\"mode\": \"ALL\"}}");
+        givenRequiredChapters(CH1, CH2);
+        when(redemptionMapper.countActiveRequiredChaptersRedeemed(REG, TOPIC)).thenReturn(1, 2);
+
+        assertFalse(service.isExploreCompleted(REG, TOPIC), "必选章没核销完不得通关");
+        assertTrue(service.isExploreCompleted(REG, TOPIC));
+    }
+
+    @Test
+    void editorBingoOnlyRuleUsesRequiredChapters() {
+        givenCompleteRule("{\"bingo\":{\"enabled\":false}}");
+        givenRequiredChapters(CH1);
+        when(redemptionMapper.countActiveRequiredChaptersRedeemed(REG, TOPIC)).thenReturn(1);
+
+        assertTrue(service.isExploreCompleted(REG, TOPIC));
+    }
+
+    /** 商家规则与编辑器的键同时存在时,仍按商家规则判定。 */
+    @Test
+    void merchantThresholdsStillApplyAlongsideNodeCompletion() {
+        givenCompleteRule("{\"nodeCompletion\":{\"mode\":\"ALL\"},\"distinctMerchantRoles\":3,\"needGroups\":2}");
+        when(redemptionMapper.selectActiveCompletionCounts(REG, TOPIC)).thenReturn(completionCounts(3, 2));
+
+        assertTrue(service.isExploreCompleted(REG, TOPIC));
+        verify(redemptionMapper, never()).countActiveRequiredChaptersRedeemed(REG, TOPIC);
+    }
+
+    /** 只配了一半阈值、或根本不是对象,才是真损坏:仍然拒绝,不退回必选章。 */
+    @Test
+    void partialOrNonObjectCompletionRuleStillFailsClosed() {
+        for (String raw : new String[] { "{\"needGroups\":2}", "{\"distinctMerchantRoles\":0,\"needGroups\":2}", "[]" }) {
+            givenCompleteRule(raw);
+            assertFalse(service.isExploreCompleted(REG, TOPIC), raw);
+        }
+        verify(redemptionMapper, never()).countActiveRequiredChaptersRedeemed(REG, TOPIC);
+    }
+
+    private void givenCompleteRule(String raw) {
+        CmsTopic topic = new CmsTopic();
+        topic.setId(TOPIC);
+        topic.setCompleteRuleJson(raw);
+        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic);
+    }
+
     private Map<String, Object> completionCounts(int roles, int needGroups) {
         Map<String, Object> row = new HashMap<>();
         row.put("merchantRoles", roles);
