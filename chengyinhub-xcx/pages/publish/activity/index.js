@@ -110,8 +110,6 @@ Page({
     pageTitle: '发布活动',
     submitLabel: '发布',
     // CU-M-05 商家主办:scope=MERCHANT 从品牌中心/我的项目(商家)带进来。
-    // merchantHost 只决定「问哪个接口、说什么话」,放行与否一律由权威回包判(见 guardPublisherRole)。
-    merchantHost: false,
     deniedReason: '发布单场活动需要俱乐部主理人身份。',
     activityLoadError: '',
     editingActivityId: 0,
@@ -506,7 +504,7 @@ Page({
 
   // 提交表单
   submitForm() {
-    if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.submitForm(), { owner: this, target: () => [this.editingActivityId, this.data.merchantHost, this.data.formData.templateId] })) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.submitForm(), { owner: this, target: () => [this.editingActivityId, this.merchantHost, this.data.formData.templateId] })) return; // 2026-10-24 游客写前登录
     // 防重复发布:发布键收编 cy-btn 后视觉 disabled 不拦点击,提交中须早退(原靠原生 <button disabled> 拦)
     if (this.data.submitting) return;
     try {
@@ -548,7 +546,7 @@ Page({
       apiData.id = this.editingActivityId
     }
     // 主办身份跟着写进 body,后端据此把活动落到商家主体名下(不按「谁点的发布」记主办)。
-    if (this.data.merchantHost) {
+    if (this.merchantHost) {
       apiData.scope = 'MERCHANT'
     }
 
@@ -575,7 +573,7 @@ Page({
   },
 
   syncActivityIdentity() {
-    const required = !this.data.merchantHost && this.hasPaidTicket()
+    const required = !this.merchantHost && this.hasPaidTicket()
     const ready = !required || publisherIdentity.identitySatisfied(this.activityIdentityForm())
     if (required !== this.data.identityRequired || ready !== this.data.identityReady) {
       this.setData({ identityRequired: required, identityReady: ready })
@@ -626,7 +624,7 @@ Page({
   },
 
   // 发布提交状态机(防重/失败回退/销毁守卫走共享 publish-workflow;url/analytics/toast/跳转保持本页)
-  _activityWriteBucket() { return 'activity:' + (this.data.merchantHost ? 'MERCHANT' : '') + ':' + (this.editingActivityId || 'new'); },
+  _activityWriteBucket() { return 'activity:' + (this.merchantHost ? 'MERCHANT' : '') + ':' + (this.editingActivityId || 'new'); },
 
   getPublishWorkflow() {
     if (!this._publishWorkflow) {
@@ -724,7 +722,7 @@ Page({
     // 刚发的那场根本不在里面(/api/project/my 的 scope 就是按这个分流)。
     wx.redirectTo({
       url: '/subpackageA/pages/myproject/index'
-        + (this.data.merchantHost ? '?scope=MERCHANT' : '')
+        + (this.merchantHost ? '?scope=MERCHANT' : '')
     })
   },
 
@@ -746,8 +744,10 @@ Page({
     // CU-M-05:商家主办入口带 scope=MERCHANT 进来。判据换成岗位权限(店主的「项目管理」),
     // 因为商家域里「能发活动」的人不一定是登录过商家页的人 —— 核销员没有这个权。
     const merchantHost = !!(options && options.scope === 'MERCHANT')
+    // merchantHost 只决定「问哪个接口、说什么话」,放行与否一律由权威回包判(见 guardPublisherRole)。
+    // 不进 data:页面不渲染它(2026-11-02 pay-gate 撤掉了票价说明),与 editingActivityId 同为实例字段。
+    this.merchantHost = merchantHost
     this.setData({
-      merchantHost: merchantHost,
       deniedReason: merchantHost
         ? '发布单场活动需要店主的「项目管理」权限，请让店主在团队里给你开通。'
         : '发布单场活动需要俱乐部主理人身份。'
@@ -799,7 +799,7 @@ Page({
     app.sendRequest({
       hideLoading: true,
       silentError: true,
-      url: this.data.merchantHost ? '/api/merchant/access/me' : '/api/publish/home',
+      url: this.merchantHost ? '/api/merchant/access/me' : '/api/publish/home',
       method: 'POST',
       data: {},
       success(res) {
@@ -821,7 +821,7 @@ Page({
     if (!(res && res.code == '200' && isRecord(res.data))) {
       return this._showAccessError(res)
     }
-    if (this.data.merchantHost) {
+    if (this.merchantHost) {
       const access = merchantAccessPolicy.normalizeMerchantAccess(res.data)
       // 回包脏到判不出身份 ⇒ 停在可重试错误态。「读不懂」不能说成「没权限」,
       // 与俱乐部线 role 字段缺失同口径;真正无权的店员才给 denied。

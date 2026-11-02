@@ -148,7 +148,7 @@ test('清空价格保留未填写态，按钮不可继续；输入0才恢复免�
 })
 test('商家收费场不再被客户端挡下（2026-11-02 pay-gate），也不出旧禁令文案', () => {
   const h = harness([1])
-  h.page.data.merchantHost = true
+  h.page.merchantHost = true
   h.page.data.identityRegistered = true
   h.page.submitForm()
   assert.ok(!h.toasts.some((t) => /票价只能是 0/.test(String(t))))
@@ -179,5 +179,6 @@ test('实名输入只接受姓名与证件字段，不能改登记或权限状�
   input('identityRegistered', true)
   input('merchantHost', true)
   assert.equal(h.page.data.identityRegistered, false)
-  assert.equal(h.page.data.merchantHost, false)
+  assert.notEqual(h.page.merchantHost, true)
+  assert.equal(h.page.data.merchantHost, undefined)
 })
