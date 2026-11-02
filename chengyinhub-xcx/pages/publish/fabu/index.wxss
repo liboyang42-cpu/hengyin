@@ -1141,6 +1141,10 @@ page { background: var(--cy-btn-solid-bg); }
   border-radius: 0;
 }
 
+/* P-33 第三轮:sheet 让出胶囊区后,顶端露出的是 .slopes 根的深色底(一条黑带)。
+   满屏态根换成页面底色,状态栏区与页面同色。 */
+.fabu.slopes--full { background: var(--cy-color-bg-page); }
+
 /* 满屏态没有地图可抓,grabber 只是个装饰横条,去掉省一行空间 */
 .slopes-sheet--full .slopes-grabber {
   display: none;

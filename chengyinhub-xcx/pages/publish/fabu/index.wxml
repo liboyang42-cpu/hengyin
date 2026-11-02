@@ -9,7 +9,7 @@
 </wxs>
 <wxs src="../../../utils/time-format.wxs" module="tf" />
 <wxs src="../utils/wxs/chapter-title.wxs" module="chapterTitle" />
-<view class="fabu slopes theme-topic-editor">
+<view class="fabu slopes theme-topic-editor {{editorPage === 1 && viewMode === 'map' ? '' : 'slopes--full'}}">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
