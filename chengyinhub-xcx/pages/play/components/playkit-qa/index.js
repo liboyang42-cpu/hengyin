@@ -101,6 +101,7 @@ Component({
        直接断连,就是这么来的,而且控制台一条错都没有。 */
     optionList: [],
     typed: '',
+    typeWrong: false,
     hasImage: false,
     playing: false,
     feedback: '',
@@ -147,7 +148,11 @@ Component({
       this.setData({
         optionList: opts,
         hasImage: !!this.data.imageUrl,
-        typed: '', feedback: (passed || finished || this.data.attempts > 0) ? (this.data.feedbackText || '') : '',
+        /* P-10:打字题答错时服务端常不带反馈文案,原来整块反馈不渲染 = 玩家看不出判过了。
+           没有文案就写一句固定的「不对」,输入框描红,下一次输入即清。 */
+        typed: '', feedback: (passed || finished || this.data.attempts > 0)
+          ? (this.data.feedbackText || (mode === 'type' && !passed && !finished && this.data.attempts > 0 ? RETRY_TEXT : '')) : '',
+        typeWrong: mode === 'type' && !passed && !finished && this.data.attempts > 0,
         shownFeedbackImages: (passed || finished || this.data.attempts > 0)
           ? (this.data.feedbackImages || []).slice() : [],
         submitted: false,
@@ -198,7 +203,7 @@ Component({
     _cappedTries: cappedTries,
 
     onRun() { this.triggerEvent('run'); },
-    onInput(e) { this.setData({ typed: e.detail.value }); },
+    onInput(e) { this.setData({ typed: e.detail.value, typeWrong: false }); },   // P-10:下一次输入即清掉描红
     onToggleAudio() {
       this.setData({ playing: !this.data.playing });
       this.triggerEvent('audio', { playing: this.data.playing });
@@ -313,6 +318,7 @@ Component({
       this.setData({
         // 答错清空输入框:留着错答案,人得先自己删一遍才能再试
         typed: '',
+        typeWrong: this.data.mode === 'type',
         feedback: d.feedback || (this.data.mode === 'type' ? RETRY_TEXT : ''),
         fbHead: HEAD_NO,
         optionList: pick ? this.data.optionList.map((o, i) => {

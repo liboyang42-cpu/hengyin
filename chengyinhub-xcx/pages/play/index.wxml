@@ -79,7 +79,9 @@
      一次一段、居中,向上滑时字从小变大 + 渐显,滑走的渐隐 —— 与旅程手记(Tesseract)同一套观感。
      下面三格读数与三键栏沿用运行栈,不另做一套。 -->
 <view class="chfull {{storyChat ? 'is-chat' : ''}} {{navMap ? 'is-navmap' : ''}} {{lookLit ? 'is-lit' : ''}} {{lookOn ? chapter.atmosphereClass : ''}}" wx:if="{{chapterFull}}" hidden="{{screen === 'gamePlay' || album.show || playKit.show || (advancedPlay.show && !playKit.kit)}}">
-  <view class="fx-story__hd" style="padding-top:{{chrome.contentTop}}px">
+  <view class="fx-story__hd {{advancedPlay.show && playKit.kit ? 'is-kit' : ''}}" style="padding-top:{{chrome.contentTop}}px">
+    <!-- P-09(2026-11-02 业主):整屏玩法在场时不显示左上地图与主题标题,换成返回;题目由玩法自己写在屏上 -->
+    <view class="fx-story__act fx-story__kitback" wx:if="{{advancedPlay.show && playKit.kit}}" bindtap="closePlayKit" aria-role="button" aria-label="返回故事" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="back" size="30" /></view>
     <!-- 左上角:罗盘(2026-09-22 用户裁决「左上角还是地图切换」,按预制人生排版)。
          2026-09-23 裁决:点它打开真实小地图(下方 .story-map),没有带坐标的地点时回卡包;距离走既有的 _distText。 -->
     <!-- 2026-09-23 用户:左上角要一直看得见的小地图(像 GTA 的雷达),点一下切到大地图。
@@ -89,7 +91,7 @@
     <view class="fx-story__compass {{navMap ? 'fx-story__radar is-big' : ''}}" bindtap="onNavTap" aria-role="button" aria-label="{{navMap ? '小地图,轻点打开大地图' : '罗盘,轻点切到地图'}}{{storyDistText ? ',下一站 ' + storyDistText : ''}}" hover-class="cy-pressed" hover-stay-time="80">
       <view class="compass__dial" wx:if="{{!navMap}}"><view class="compass__n">N</view><view class="compass__dot"></view></view>
       <view class="radar__disc radar__disc--big" wx:else>
-        <free-map class="fx-story__radar-map" wx:if="{{!storyMap && !chapterGate.show && !sessionToolsOpen && !previewEnding.show && !themeBackpackOpen && !album.show && !playKit.show && !casebook.show && !journeyRewards.show && !(advancedPlay.show && !playKit.kit) && screen !== 'gamePlay'}}"
+        <free-map class="fx-story__radar-map" wx:if="{{!storyMap && !chapterGate.show && !sessionToolsOpen && !previewEnding.show && !themeBackpackOpen && !album.show && !playKit.show && !casebook.show && !journeyRewards.show && !advancedPlay.show && screen !== 'gamePlay'}}"
                   nodes="{{fmNodes}}" player="{{fmPlayer}}" target="{{nextNode}}"
                   center="{{fmPlayer && fmPlayer.lat ? fmPlayer : (nextNode && nextNode.lat ? nextNode : fmCenter)}}" scale="16" rotate="{{navHeading}}"
                   subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}" interactive="{{false}}" show-controls="{{false}}" show-photo-callouts="{{false}}"
@@ -466,6 +468,8 @@
 <!-- 开局「开机」:黑场 → 白线横扫 → 暖光 → 淡出,压在第一道开场门上面,只放一次 -->
 <view class="st-boot st-boot--{{bootStage}}" wx:if="{{bootStage}}" aria-hidden="true"><view class="st-boot__warm"></view><view class="st-boot__line"></view></view>
 <cy-chapter-flip wx:if="{{chapterFull && chapterGate.show}}" mode="gate" faces="{{chapterGate.faces}}" end-info="{{chapterGate.endInfo}}" info="{{chapterGate.info}}" reduced-motion="{{reducedMotion}}" bind:continue="continueChapterGate" />
+<!-- P-08 带领场:本章还没放行,停在门前写清楚;队长放行后自动进正文 -->
+<view class="chgate-hold" wx:if="{{chapterFull && chapterGate.show && chapterGate.held}}" aria-role="status"><view class="chgate-hold__dot"></view><text>等队长放行</text></view>
 
 <!-- ===================== 底部运行栈(Figma 3957:12602 未开始 / 3962:14212 进行中 / 3962:14341 已暂停) =====================
      一张读数卡 + 一条操作栏,三个状态共用同一套骨架,只换卡内内容与按钮组:
@@ -918,6 +922,8 @@
 
 <!-- P1 集合屏(一屏一决策:成员「我到了」/ 队长「开始行程」) -->
 <view class="leadgather" wx:if="{{lead.exists && lead.status==1}}">
+  <!-- P-13(2026-11-02 业主):等待要有动画 —— 三颗点依次缓慢明暗,减弱动态时静止 -->
+  <view class="lg-wait" aria-hidden="true"><view class="lg-wait__d"></view><view class="lg-wait__d"></view><view class="lg-wait__d"></view></view>
   <view class="lg-eyebrow">队伍集合中</view>
   <view class="lg-num">{{lead.arrived}}<text class="lg-num-sub">/{{lead.total}}</text></view>
   <view class="lg-sub">已到集合点</view>
@@ -1071,7 +1077,7 @@
   </view>
 
   <!-- 作答结果(答错 / 未到 50 米 / 未送达)只在题卡里写一次,不再弹 toast;题目长时这行在可视区下面,出现时滚到它(实走复核) -->
-  <scroll-view scroll-y class="gp2__scroll" scroll-into-view="{{gWrong ? 'gp2Feedback' : (gNetErr ? 'gp2NetErr' : '')}}" scroll-with-animation>
+  <scroll-view scroll-y class="gp2__scroll" scroll-into-view="{{gRight ? 'gp2Right' : (gWrong ? 'gp2Feedback' : (gNetErr ? 'gp2NetErr' : ''))}}" scroll-with-animation>
     <view class="gp2__card">
       <view class="gp2__audio {{audioError?'is-error':''}}" wx:if="{{game.audio}}" bindtap="toggleAudio"
             aria-role="button" aria-label="{{audioPlaying?'暂停录音':'播放录音'}}" hover-class="cy-pressed" hover-stay-time="80">
@@ -1094,7 +1100,7 @@
         <view wx:if="{{game.qAudio}}" class="gp2__qaudio" bindtap="toggleQuestionAudio" aria-role="button" aria-label="播放题目音频" hover-class="cy-pressed" hover-stay-time="80">
           <text class="gp2__qaudio-t">{{audioNodeId==='q' && audioPlaying ? '暂停' : '播放题目音频'}}</text>
         </view>
-        <input class="gp2__input" value="{{answerInput}}" bindinput="onInput" placeholder="把你找到的字填在这里" placeholder-style="color:#6A7282"/>
+        <input class="gp2__input {{gWrong ? 'is-wrong' : ''}}" value="{{answerInput}}" bindinput="onInput" disabled="{{!!gRight}}" placeholder="把你找到的字填在这里" placeholder-style="color:#6A7282"/>
       </block>
       <block wx:elif="{{game.vm==3}}">
         <text class="gp2__q">{{game.qname}}</text>
@@ -1178,6 +1184,12 @@
       </block>
 
       <view class="gp2__feedback" id="gp2Feedback" wx:if="{{gWrong}}">{{game.feedback}}</view>
+      <!-- P-11 答对那一拍:「对了」+ 作者配的揭示与本站碎片;读完点「继续」回故事流 -->
+      <view class="gp2__right" id="gp2Right" wx:if="{{gRight}}" aria-role="status">
+        <view class="gp2__right-h"><cy-icon name="check" size="32" /><text>对了</text></view>
+        <text class="gp2__right-reveal" wx:if="{{gRight.reveal}}">{{gRight.reveal}}</text>
+        <view class="gp2__right-frag" wx:if="{{gRight.fragment}}"><text class="gp2__right-k">碎片</text><text class="gp2__right-v">{{gRight.fragment}}</text></view>
+      </view>
       <view class="gp2__neterr" id="gp2NetErr" wx:if="{{gNetErr}}">
         <text class="gp2__neterr-t">{{gNetErr}}</text>
           <text class="gp2__neterr-r" wx:if="{{gNetRetryable}}" bindtap="retryGameSubmission" hover-class="cy-pressed" hover-stay-time="80">{{gRetryType === 'photo' ? '重新上传照片' : (gRetryType === 'gameScan' ? '重新扫码' : (gRetryType === 'puzzleReveal' ? '重新查看答案' : (gRetryType === 'gameCheckin' ? '重新核验' : '重新提交')))}}</text>
@@ -1185,7 +1197,7 @@
       <view class="gp2__hint" wx:for="{{lk.rows(shownHints)}}" wx:key="key">{{item.text}}</view>
       <view class="gp2__reveal" wx:if="{{revealed}}">{{game.reveal}}</view>
       <view class="gp2__scorecap" wx:if="{{game.puzzleScoring}}">当前最高 {{puzzleScoreCap}} 解谜分 · 不影响探索值</view>
-      <view class="gp2__ctl">
+      <view class="gp2__ctl" wx:if="{{!gRight}}">
         <text class="gp2__ctl-a" wx:if="{{canHint}}" bindtap="useHint" hover-class="cy-pressed" hover-stay-time="80">看提示（{{hintLabel}}）</text>
         <text class="gp2__ctl-b" wx:if="{{canReveal}}" bindtap="revealAnswer" hover-class="cy-pressed" hover-stay-time="80">实在解不出，揭示答案</text>
       </view>
@@ -1198,7 +1210,8 @@
     <view class="gp2__cta" wx:elif="{{game.vm==2}}" bindtap="photoGame" hover-class="cy-pressed" hover-stay-time="80">{{gWriteUnknown?'结果待确认':(photoTaken?'重新拍摄':'拍照上传')}}</view>
     <view class="gp2__cta" wx:elif="{{game.vm==6 && preference.result}}" bindtap="finishPreferenceResult" hover-class="cy-pressed" hover-stay-time="80">收下本站建议</view>
     <view class="gp2__cta" wx:elif="{{game.vm==6 && (!preference.inheritedTags.length || preference.answerHere)}}" bindtap="nextPreferenceStep" hover-class="cy-pressed" hover-stay-time="80">{{preference.submitting?'正在生成…':(preference.stepIndex < preference.steps.length - 1 ? '下一题':'生成我的结果')}}</view>
-    <view class="gp2__cta" wx:if="{{game.vm==1 || game.vm==3}}" bindtap="submitGame" hover-class="cy-pressed" hover-stay-time="80">{{gWriteUnknown?'结果待确认':'提交'}}</view>
+    <view class="gp2__cta" wx:if="{{gRight && (game.vm==1 || game.vm==3)}}" bindtap="continueAfterRight" hover-class="cy-pressed" hover-stay-time="80">继续</view>
+    <view class="gp2__cta" wx:elif="{{game.vm==1 || game.vm==3}}" bindtap="submitGame" hover-class="cy-pressed" hover-stay-time="80">{{gWriteUnknown?'结果待确认':'提交'}}</view>
   </view>
 </view>
 

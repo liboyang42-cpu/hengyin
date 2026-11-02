@@ -358,6 +358,19 @@ page { background: var(--cy-color-bg-page); }
   display:flex; align-items:center; justify-content:center; background:var(--cy-color-action-secondary-bg); color:var(--cy-color-play-accent); /* ds-ok Figma 实测(用户裁决字面值) */
   border-radius:var(--cy-comp-btn-radius); font-size:var(--cy-type-button); font-weight:700; }
 .lg-hint{ margin-top:var(--cy-space-3-5); font-size: var(--cy-type-label); color: var(--cy-color-text-tertiary); }
+/* P-13 集合等待:三颗点依次缓慢明暗(1.6s 一轮,只动透明度,不位移不缩放);减弱动态时静止常亮 */
+.lg-wait{ display:flex; gap:18rpx; margin-bottom:var(--cy-space-4); }
+.lg-wait__d{ width:14rpx; height:14rpx; border-radius:50%; background:var(--cy-color-text-tertiary); opacity:.25; animation:lgWait 1.6s ease-in-out infinite; }
+.lg-wait__d:nth-child(2){ animation-delay:.27s; }
+.lg-wait__d:nth-child(3){ animation-delay:.53s; }
+@keyframes lgWait{ 0%,100%{ opacity:.25; } 40%{ opacity:.9; } }
+.play--reduced-motion .lg-wait__d{ animation:none; opacity:.6; }
+/* P-08 章节门前「等队长放行」:压在章节门(z 130)之上,底部居中一行,左侧一颗同款缓慢明暗的点 */
+.chgate-hold{ position:fixed; left:50%; bottom:calc(160rpx + env(safe-area-inset-bottom)); transform:translateX(-50%); z-index:131;
+  display:flex; align-items:center; gap:14rpx; padding:0 32rpx; height:88rpx; border-radius:var(--cy-radius-pill);
+  background:rgba(10,10,10,.72); color:#F5F5F2; font-size:var(--cy-type-label); } /* ds-ok 同章节门底色系(chapter-flip .cf) */
+.chgate-hold__dot{ width:14rpx; height:14rpx; border-radius:50%; background:#F5F5F2; animation:lgWait 1.6s ease-in-out infinite; } /* ds-ok 同章节门字色 */
+.play--reduced-motion .chgate-hold__dot{ animation:none; opacity:.6; }
 
 /* P1 足迹卡保存按钮(次级白描边) */
 
@@ -643,6 +656,20 @@ page { background: var(--cy-color-bg-page); }
   display:flex; flex-direction:column; gap:15rpx; align-items:center; justify-content:center;
   color:#99A1AF; font-size:27rpx; } /* ds-ok Figma 实测(用户裁决字面值) */
 .gp2__feedback{ margin-top:23rpx; font-size:27rpx; color:#F75707; } /* ds-ok Figma 实测(用户裁决字面值) */
+/* P-10 答错:输入框描一圈红,下一次输入即清(不抖动) */
+.gp2__input{ transition:box-shadow .2s ease; }
+.gp2__input.is-wrong{ box-shadow:0 0 0 3rpx #EF4444; } /* ds-ok 游玩页状态红(原型 --red,单色契约 PLAY_STATE_COLORS) */
+/* P-11 答对那一拍:平静的一行「对了」,下方揭示与碎片;只做淡入过渡 */
+.gp2__right{ margin-top:23rpx; display:flex; flex-direction:column; gap:15rpx; }
+.gp2__right-h{ display:flex; align-items:center; gap:12rpx; font-size:32rpx; font-weight:700; color:#4ADE80; } /* ds-ok 游玩页状态绿(原型 --green-l,单色契约 PLAY_STATE_COLORS) */
+.gp2__right-reveal{ font-size:29rpx; line-height:1.6; color:#FFFFFF; } /* ds-ok 同 .gp2__reveal 字面值 */
+.gp2__right-frag{ display:flex; flex-direction:column; gap:6rpx; padding:20rpx 23rpx; border-radius:23rpx; background:#1E2028; } /* ds-ok 同 .gp2__input 底色 */
+.gp2__right-k{ font-size:23rpx; color:#99A1AF; } /* ds-ok 同 .gp2__photo 次级字色 */
+.gp2__right-v{ font-size:29rpx; line-height:1.6; color:#FFFFFF; } /* ds-ok 同 .gp2__reveal 字面值 */
+.gp2[class*="atmosphere--"] .gp2__right-reveal,
+.gp2[class*="atmosphere--"] .gp2__right-v{ color:var(--atmo-text); }
+.gp2[class*="atmosphere--"] .gp2__right-frag{ background:var(--atmo-control); }
+.gp2[class*="atmosphere--"] .gp2__right-k{ color:var(--atmo-muted); }
 .gp2__neterr{ margin-top:23rpx; display:flex; align-items:center; gap:23rpx; }
 .gp2__neterr-t{ flex:1; min-width:0; font-size:25rpx; color:#FF3B30; } /* ds-ok Figma 实测(用户裁决字面值) */
 .gp2__neterr-r{ flex:none; font-size:25rpx; font-weight:700; color:#FFFFFF; text-decoration:underline; } /* ds-ok Figma 实测(用户裁决字面值) */
@@ -1714,6 +1741,12 @@ page { background: var(--cy-color-bg-page); }
 .radar__hit{ position:absolute; left:0; top:0; right:0; bottom:0; z-index:2; }
 
 .fx-story__acts{ flex:none; display:flex; align-items:center; gap:var(--cy-space-2); }
+/* P-09 整屏玩法在场:左上地图 / 罗盘、主题标题、属性条收起,左上换成返回 */
+.fx-story__hd.is-kit .fx-story__compass,
+.fx-story__hd.is-kit .radar__fold,
+.fx-story__hd.is-kit .fx-story__t,
+.fx-story__hd.is-kit .hud2{ display:none; }
+.fx-story__kitback{ flex:none; }
 .fx-story__act{ width:88rpx; height:88rpx; border-radius:50%;
   background:var(--cy-color-bg-elevated); display:flex; align-items:center; justify-content:center; }
 

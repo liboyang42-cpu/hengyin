@@ -703,6 +703,12 @@ function pickPlayKit(view, now) {
       max: Number(seg.max) || 0,
       maxTries: seg.maxAttempts || 0,
       limitSeconds: limitSeconds,
+      // P-09:交过之后服务端才给你的估数、真值与揭示
+      submitted: !!seg.submitted,
+      tier: seg.tier || '',
+      guess: seg.submitted && Number.isFinite(Number(seg.guess)) ? Number(seg.guess) : 0,
+      answer: seg.submitted && Number.isFinite(Number(seg.answer)) ? Number(seg.answer) : 0,
+      reveal: seg.submitted ? (seg.reveal || '') : '',
     });
   }
   /* ===== R3 排序 / 连线 / 分类 =====

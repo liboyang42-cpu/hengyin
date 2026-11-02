@@ -27,7 +27,13 @@
          (服务端 submitEstimate 直接给 HIT / CLOSE / MISS),没有「事后由商家公布」这回事,
          全链路没有一处产出 revealAt/revealHour —— 留着它只会在夹具里演一句
          玩家永远看不到的话,实测还会把 CTA 压出重叠。要做揭晓就连服务端一起做。 -->
-    <view class="es__fb" wx:if="{{feedback}}">{{feedback}}</view>
+    <view class="es__fb" wx:if="{{feedback && !result}}">{{feedback}}</view>
+    <!-- P-09 / P-10:交过之后一行结果(猜中 / 差一点 / 差得有点远 + 你猜 · 实际 · 差多少),下面是作者的揭示 -->
+    <view class="es__res {{result.miss ? 'es__res--miss' : 'es__res--hit'}}" wx:if="{{result}}" aria-role="status">
+      <text class="es__res-h">{{result.head}}</text>
+      <text class="es__res-d" wx:if="{{result.detail}}">{{result.detail}}</text>
+      <text class="es__res-r" wx:if="{{result.reveal}}">{{result.reveal}}</text>
+    </view>
   </view>
 
   <view class="g-btn {{locked ? 'g-btn--disabled' : ''}} pe pe--up" style="--pe-d:.9s" bindtap="onSubmit"

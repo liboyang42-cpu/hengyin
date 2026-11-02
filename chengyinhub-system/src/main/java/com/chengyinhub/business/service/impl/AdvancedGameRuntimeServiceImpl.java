@@ -2518,7 +2518,10 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             JsonNode cfg = config.path("estimate");
             JsonNode st = state.path("estimate");
             Map<String, Object> value = new LinkedHashMap<>();
-            putText(value, "question", cfg);
+            // P-09:编辑器与校验器把题干存在 title(必填);原来这里读不存在的 question 键,玩家只看到一个滚筒。
+            String question = cfg.path("title").asText("");
+            if (question.isEmpty()) question = cfg.path("question").asText("");
+            if (!question.isEmpty()) value.put("question", question);
             putText(value, "unit", cfg);
             value.put("min", cfg.path("min").asDouble(0d));
             value.put("max", cfg.path("max").asDouble(0d));
@@ -2526,6 +2529,12 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             value.put("attempts", st.path("attempts").asInt(0));
             value.put("submitted", st.path("submitted").asBoolean(false));
             value.put("tier", st.path("tier").asText(""));
+            // P-09:这一题只交一次;交过之后才给真值、你的估数与作者的揭示,交之前一个字都不给。
+            if (st.path("submitted").asBoolean(false)) {
+                value.put("guess", st.path("guess").asDouble());
+                value.put("answer", cfg.path("answer").asDouble());
+                putText(value, "reveal", cfg);
+            }
             kit.put("estimate", value);
         }
         /* 找东西:图要给,**热区坐标一个都不给** —— 坐标就是这个玩法唯一的防线。

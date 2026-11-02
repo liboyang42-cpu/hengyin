@@ -136,6 +136,7 @@
 <cy-playkit-estimate wx:elif="{{kit.type === 'estimate'}}"
   show="{{show}}" title="{{kit.title}}" unit="{{kit.unit}}"
   min="{{kit.min}}" max="{{kit.max}}"
+  submitted="{{kit.submitted}}" tier="{{kit.tier}}" guess="{{kit.guess}}" answer="{{kit.answer}}" reveal="{{kit.reveal}}"
   limit-seconds="{{kit.limitSeconds}}" max-tries="{{kit.maxTries}}"
   bind:submit="onSubmit" bind:verdict="onVerdict" bind:close="onClose" />
 

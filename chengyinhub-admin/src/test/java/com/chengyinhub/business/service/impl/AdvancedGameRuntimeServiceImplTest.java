@@ -1203,6 +1203,31 @@ class AdvancedGameRuntimeServiceImplTest {
         assertEquals("HEADS", coinAgain.get("side"));
     }
 
+    /** P-09:猜数字的题干(编辑器存在 title)要下发;交之前不给真值与揭示,交之后给你的估数、真值与揭示。 */
+    @Test
+    void estimateShowsTheQuestionAndRevealsOnlyAfterSubmit() {
+        String config = "{\"schemaVersion\":1,\"estimate\":{\"enabled\":true,\"title\":\"海关大楼钟面的直径大约有几米？\","
+                + "\"unit\":\"米\",\"min\":1,\"max\":20,\"answer\":5.4,\"tolerance\":0.5,\"xp\":10,\"reveal\":\"约 5.4 米。\"}}";
+        GameRuntimeSession session = runningSession(config, "{}");
+        when(sessionMapper.selectAccessibleById(51L, MEMBER_ID)).thenReturn(session);
+        when(sessionMapper.updateStateCas(any())).thenReturn(1);
+        when(attemptMapper.selectByIdempotencyKey(any())).thenReturn(null);
+
+        Map<String, Object> before = playKit(service.state(MEMBER_ID, 51L), "estimate");
+        assertEquals("海关大楼钟面的直径大约有几米？", before.get("question"));
+        assertFalse(before.containsKey("answer"));
+        assertFalse(before.containsKey("reveal"));
+        assertFalse(before.containsKey("guess"));
+
+        Map<String, Object> after = playKit(service.act(MEMBER_ID, 51L, 0, "est-1", "SUBMIT_ESTIMATE",
+                Collections.singletonMap("value", 6)), "estimate");
+        assertEquals("海关大楼钟面的直径大约有几米？", after.get("question"));
+        assertEquals("CLOSE", after.get("tier"));   // 差 0.6,在 3 倍容差内
+        assertEquals(6.0, ((Number) after.get("guess")).doubleValue());
+        assertEquals(5.4, ((Number) after.get("answer")).doubleValue());
+        assertEquals("约 5.4 米。", after.get("reveal"));
+    }
+
     @Test
     void flipCoinRejectsWhenNotEnabled() {
         GameRuntimeSession session = runningSession(randomOnlyConfig(), "{\"draws\":[]}");
