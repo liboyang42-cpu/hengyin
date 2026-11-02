@@ -200,3 +200,17 @@ test('same-day sessions expose distinct server names and Beijing assembly times'
   assert.equal(vm.data.days[1].detailText, '19:00 · 俱乐部场次');
   assert.equal(vm.data.days[0].day, vm.data.days[1].day);
 });
+
+test('P-19:场次卡写执行俱乐部名,门卡沿用服务端点名的原因', () => {
+  const { vm, requests, observe } = loadComponent()
+  observe(true, [
+    { id: 9, name: '周六场', startDate: '2099-11-07 14:05:00', clubName: '执行俱乐部' },
+    { id: 10, name: '周日场', startDate: '2099-11-08 14:05:00' },
+  ])
+  assert.equal(vm.data.days[0].detailText, '14:05 · 周六场 · 执行俱乐部')
+  assert.equal(vm.data.days[1].detailText, '14:05 · 周日场')
+  vm.onPickDay({ currentTarget: { dataset: { id: 9 } } })
+  requests.at(-1).success({ code: 200, data: { gate: true, clubId: 7002, clubName: '执行俱乐部', message: '这一场由「执行俱乐部」执行，加入后查看' } })
+  assert.equal(vm.data.ticketsError, '这一场由「执行俱乐部」执行，加入后查看')
+  assert.equal(vm.data.gateClubId, 7002)
+})
