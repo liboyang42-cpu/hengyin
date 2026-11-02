@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5600,
+  "controlCount": 5601,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -54226,6 +54226,90 @@
           "route": "pages/topic/merchantinfo/merchantinfo",
           "segments": [
             {
+              "selector": "cy-chapter-target-picker",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "cy-chapter-target-picker",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "cy-chapter-target-picker",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "cy-chapter-target-picker",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
               "selector": "cy-error.browse-error",
               "index": 0
             },
@@ -98594,6 +98678,27 @@
             {
               "selector": "cy-error",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-consent-check",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "cy-chapter-target-picker",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -158802,6 +158907,19 @@
           "route": "pages/topic/merchantinfo/merchantinfo",
           "segments": [
             {
+              "selector": "cy-chapter-target-picker",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
               "selector": "cy-error.browse-error",
               "index": 0
             }
@@ -165939,6 +166057,19 @@
           "route": "pages/topic/merchantinfo/merchantinfo",
           "segments": [
             {
+              "selector": "cy-chapter-target-picker",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
               "selector": "cy-error.browse-error",
               "index": 0
             }
@@ -173069,6 +173200,19 @@
             {
               "selector": "cy-error",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "cy-chapter-target-picker",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
             }
           ]
         },
@@ -325323,6 +325467,23 @@
           "route": "pages/topic/merchantinfo/merchantinfo",
           "segments": [
             {
+              "selector": "cy-chapter-target-picker",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
               "selector": "cy-error.browse-error",
               "index": 0
             },
@@ -338704,6 +338865,23 @@
             {
               "selector": "cy-error",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "cy-chapter-target-picker",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -352107,6 +352285,23 @@
           "route": "pages/topic/merchantinfo/merchantinfo",
           "segments": [
             {
+              "selector": "cy-chapter-target-picker",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
               "selector": "cy-error.browse-error",
               "index": 0
             },
@@ -365499,6 +365694,23 @@
           "route": "pages/topic/merchantinfo/merchantinfo",
           "segments": [
             {
+              "selector": "cy-chapter-target-picker",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
               "selector": "cy-error.browse-error",
               "index": 0
             },
@@ -378880,6 +379092,23 @@
             {
               "selector": "cy-error",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "cy-chapter-target-picker",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -479884,6 +480113,48 @@
               "index": 0
             },
             {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "cy-chapter-target-picker",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "cy-chapter-target-picker",
+              "index": 0
+            },
+            {
               "selector": "cy-sheet",
               "index": 0
             }
@@ -518847,6 +519118,48 @@
             {
               "selector": "cy-error",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "cy-chapter-target-picker",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "cy-chapter-target-picker",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -557847,6 +558160,48 @@
               "index": 0
             },
             {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "cy-chapter-target-picker",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "cy-chapter-target-picker",
+              "index": 0
+            },
+            {
               "selector": "cy-sheet",
               "index": 0
             }
@@ -596809,6 +597164,48 @@
             {
               "selector": "cy-error",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "cy-chapter-target-picker",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "cy-chapter-target-picker",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -635809,6 +636206,48 @@
               "index": 0
             },
             {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "cy-chapter-target-picker",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "cy-chapter-target-picker",
+              "index": 0
+            },
+            {
               "selector": "cy-sheet",
               "index": 0
             }
@@ -674771,6 +675210,48 @@
             {
               "selector": "cy-error",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "cy-chapter-target-picker",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "cy-chapter-target-picker",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -713772,6 +714253,48 @@
               "index": 0
             },
             {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "cy-chapter-target-picker",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "cy-chapter-target-picker",
+              "index": 0
+            },
+            {
               "selector": "cy-sheet",
               "index": 0
             }
@@ -752735,6 +753258,48 @@
             {
               "selector": "cy-error",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "cy-chapter-target-picker",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "cy-chapter-target-picker",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -791736,6 +792301,48 @@
               "index": 0
             },
             {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "cy-chapter-target-picker",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "cy-chapter-target-picker",
+              "index": 0
+            },
+            {
               "selector": "cy-sheet",
               "index": 0
             }
@@ -830699,6 +831306,48 @@
             {
               "selector": "cy-error",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "cy-chapter-target-picker",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "cy-chapter-target-picker",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -869700,6 +870349,48 @@
               "index": 0
             },
             {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "cy-chapter-target-picker",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "cy-chapter-target-picker",
+              "index": 0
+            },
+            {
               "selector": "cy-sheet",
               "index": 0
             }
@@ -908663,6 +909354,48 @@
             {
               "selector": "cy-error",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "cy-chapter-target-picker",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "cy-chapter-target-picker",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -1012533,7 +1013266,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/coop-center/index.js:127"
+        "staticSource": "pages/merchant/coop-center/index.js:120"
       }
     },
     {
@@ -1012603,7 +1013336,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/coop-center/index.js:130"
+        "staticSource": "pages/merchant/coop-center/index.js:123"
       }
     },
     {
@@ -1012673,7 +1013406,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/coop-center/index.js:202"
+        "staticSource": "pages/merchant/coop-center/index.js:195"
       }
     },
     {
@@ -1012740,11 +1013473,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/coop-center/index.js:212"
+        "staticSource": "pages/merchant/coop-center/index.js:205"
       }
     },
     {
-      "id": "pages/merchant/coop-center/index.wxml:55:bind:cta:loadAvailable:6",
+      "id": "pages/merchant/coop-center/index.wxml:54:bind:cta:loadAvailable:6",
       "route": "pages/merchant/coop-center/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1012767,7 +1013500,7 @@
         "tag": "cy-empty",
         "event": "bind:cta",
         "handler": "loadAvailable",
-        "line": 55,
+        "line": 54,
         "selectorHint": "cy-empty[bind:cta]",
         "visibleCondition": "{{!routes.length}}",
         "disabledCondition": null,
@@ -1012857,11 +1013590,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/coop-center/index.js:132"
+        "staticSource": "pages/merchant/coop-center/index.js:125"
       }
     },
     {
-      "id": "pages/merchant/coop-center/index.wxml:64:bindtap:openEvent:8",
+      "id": "pages/merchant/coop-center/index.wxml:63:bindtap:openEvent:8",
       "route": "pages/merchant/coop-center/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1012884,7 +1013617,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openEvent",
-        "line": 64,
+        "line": 63,
         "selectorHint": ".cc-card",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1012927,11 +1013660,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/coop-center/index.js:207"
+        "staticSource": "pages/merchant/coop-center/index.js:200"
       }
     },
     {
-      "id": "pages/merchant/coop-center/index.wxml:76:bind:cta:loadAvailable:9",
+      "id": "pages/merchant/coop-center/index.wxml:75:bind:cta:loadAvailable:9",
       "route": "pages/merchant/coop-center/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1012954,7 +1013687,7 @@
         "tag": "cy-empty",
         "event": "bind:cta",
         "handler": "loadAvailable",
-        "line": 76,
+        "line": 75,
         "selectorHint": "cy-empty[bind:cta]",
         "visibleCondition": "{{!events.length}}",
         "disabledCondition": null,
@@ -1013044,7 +1013777,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/coop-center/index.js:132"
+        "staticSource": "pages/merchant/coop-center/index.js:125"
       }
     },
     {
@@ -1013114,7 +1013847,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/coop-center/index.js:122"
+        "staticSource": "pages/merchant/coop-center/index.js:115"
       }
     },
     {
@@ -1050356,7 +1051089,6 @@
       "targets": {
         "routes": [
           "pages/member/index/index",
-          "pages/merchant/index/index",
           "pages/privacy/index"
         ],
         "apis": [
@@ -1050559,7 +1051291,6 @@
       "targets": {
         "routes": [
           "pages/member/index/index",
-          "pages/merchant/index/index",
           "pages/privacy/index"
         ],
         "apis": [
@@ -1334642,7 +1335373,7 @@
       }
     },
     {
-      "id": "pages/topic/components/cy/chapter-target-picker/index.wxml:14:bind:cta:onGoCategory:2",
+      "id": "pages/topic/components/cy/chapter-target-picker/index.wxml:17:bind:cta:onGoCategory:2",
       "route": "component:pages/topic/components/cy/chapter-target-picker/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -1334677,7 +1335408,7 @@
         "tag": "cy-empty",
         "event": "bind:cta",
         "handler": "onGoCategory",
-        "line": 14,
+        "line": 17,
         "selectorHint": "cy-empty[bind:cta]",
         "visibleCondition": "{{chaptersState === 'category-missing'}}",
         "disabledCondition": null,
@@ -1334718,11 +1335449,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/cy/chapter-target-picker/index.js:93"
+        "staticSource": "pages/topic/components/cy/chapter-target-picker/index.js:155"
       }
     },
     {
-      "id": "pages/topic/components/cy/chapter-target-picker/index.wxml:17:bindtap:onPickChapter:3",
+      "id": "pages/topic/components/cy/chapter-target-picker/index.wxml:20:bindtap:onPickChapter:3",
       "route": "component:pages/topic/components/cy/chapter-target-picker/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -1334757,7 +1335488,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPickChapter",
-        "line": 17,
+        "line": 20,
         "selectorHint": ".ctp-card",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1334797,87 +1335528,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/cy/chapter-target-picker/index.js:81"
-      }
-    },
-    {
-      "id": "pages/topic/components/cy/chapter-target-picker/index.wxml:38:bindtap:onNext:4",
-      "route": "component:pages/topic/components/cy/chapter-target-picker/index",
-      "hostRoutes": [
-        "pages/topic/merchantinfo/merchantinfo"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/topic/merchantinfo/merchantinfo",
-          "segments": [
-            {
-              "selector": "cy-chapter-target-picker",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "pages/topic/components/cy/chapter-target-picker/index.wxml",
-        "js": "pages/topic/components/cy/chapter-target-picker/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-btn",
-        "event": "bindtap",
-        "handler": "onNext",
-        "line": 38,
-        "selectorHint": "cy-btn[bindtap]",
-        "visibleCondition": null,
-        "disabledCondition": "{{!pickedChapterId || submitting || !applicationOpen}}",
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "other",
-      "interactionMode": "tap",
-      "baseActionClass": "other",
-      "effectClasses": [
-        "other"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/topic/components/cy/chapter-target-picker/index.js:96"
+        "staticSource": "pages/topic/components/cy/chapter-target-picker/index.js:139"
       }
     },
     {
@@ -1334957,7 +1335608,166 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/cy/chapter-target-picker/index.js:86"
+        "staticSource": "pages/topic/components/cy/chapter-target-picker/index.js:148"
+      }
+    },
+    {
+      "id": "pages/topic/components/cy/chapter-target-picker/index.wxml:46:bindtap:onPickTemplate:5",
+      "route": "component:pages/topic/components/cy/chapter-target-picker/index",
+      "hostRoutes": [
+        "pages/topic/merchantinfo/merchantinfo"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "cy-chapter-target-picker",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/topic/components/cy/chapter-target-picker/index.wxml",
+        "js": "pages/topic/components/cy/chapter-target-picker/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onPickTemplate",
+        "line": 46,
+        "selectorHint": ".ctp-tpl",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "选择玩法 {{item.title}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/topic/components/cy/chapter-target-picker/index.js:144"
+      }
+    },
+    {
+      "id": "pages/topic/components/cy/chapter-target-picker/index.wxml:61:bindtap:onNext:6",
+      "route": "component:pages/topic/components/cy/chapter-target-picker/index",
+      "hostRoutes": [
+        "pages/topic/merchantinfo/merchantinfo"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "cy-chapter-target-picker",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/topic/components/cy/chapter-target-picker/index.wxml",
+        "js": "pages/topic/components/cy/chapter-target-picker/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bindtap",
+        "handler": "onNext",
+        "line": 61,
+        "selectorHint": "cy-btn[bindtap]",
+        "visibleCondition": null,
+        "disabledCondition": "{{!pickedChapterId || submitting || !applicationOpen}}",
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "tap",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/topic/components/cy/chapter-target-picker/index.js:158"
       }
     },
     {

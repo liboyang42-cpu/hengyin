@@ -38,7 +38,6 @@
             <view class="cc-route-info">
               <text class="cc-route-title">{{item.title}}</text>
               <text class="cc-route-date" wx:if="{{item.dateText || item.cityText}}">{{item.cityText ? item.cityText + ' · ' : ''}}{{item.dateText}}{{item.termsText ? ' · ' + item.termsText : ''}}</text>
-              <text class="cc-route-date" wx:if="{{item.settleText}}">{{item.settleText}}</text>
               <view class="cc-route-foot">
                 <view class="cc-route-terms">
                   <view class="cc-fact" wx:if="{{item.stationText}}"><cy-icon name="route" size="30" /><text class="cc-fact-tx">{{item.stationText}}</text></view>

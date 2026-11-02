@@ -59,14 +59,80 @@ test('M-08:从「去完善品类」回来,重拉可承接章节并把选章节�
   assert.match(src, /if \(that\._reopenAfterCategory\) \{ that\._reopenAfterCategory = false; that\.bmClick2\(\{ currentTarget: \{ dataset: \{ apply: 1 \} \} \}\); \}/)
 })
 
-test('M-09:选章节弹层只选章节,不再出玩法模板块', () => {
+function mountPicker(myListRows) {
+  let def
+  const sent = []
+  const rel = 'pages/topic/components/cy/chapter-target-picker/index.js'
+  const app = { sendRequest(o) { sent.push(o) }, getRequestErrorMessage: (r, f) => f }
+  vm.runInNewContext(fs.readFileSync(path.join(ROOT, rel), 'utf8'), {
+    getApp: () => app, Component(c) { def = c }, console,
+  }, { filename: path.join(ROOT, rel) })
+  const c = Object.assign({}, def.methods, {
+    data: JSON.parse(JSON.stringify(def.data)),
+    setData(patch) { Object.assign(this.data, patch) },
+    triggerEvent() {},
+  })
+  const observe = (show, chapters, state) => def.observers['show, chapters, chaptersState'].call(c, show, chapters, state)
+  const reply = (rows) => sent[sent.length - 1].success({ code: '200', data: { rows } })
+  return { c, sent, observe, reply }
+}
+
+test('M-09(第三轮):选章节弹层恢复玩法模板块(稿 159:346),三态各自成立', () => {
   const wxml = fs.readFileSync(path.join(ROOT, 'pages/topic/components/cy/chapter-target-picker/index.wxml'), 'utf8')
-  assert.doesNotMatch(wxml, /选择玩法模板|去创建玩法|ctp-tpl/)
-  const js = fs.readFileSync(path.join(ROOT, 'pages/topic/components/cy/chapter-target-picker/index.js'), 'utf8')
-  assert.doesNotMatch(js, /\/api\/template\/my-list/)
+  assert.match(wxml, /<view class="ctp-h">选择玩法模板<\/view>/)
+  assert.match(wxml, /<block wx:if="\{\{!noChapters \|\| templatesState !== 'ready'\}\}">\s*<view class="ctp-h">选择章节<\/view>/)
+  assert.match(wxml, /<block wx:if="\{\{templatesState !== 'empty'\}\}">\s*<view class="ctp-h">选择玩法模板<\/view>/)
   const wxss = fs.readFileSync(path.join(ROOT, 'pages/topic/components/cy/chapter-target-picker/index.wxss'), 'utf8')
   const card = wxss.slice(wxss.indexOf('.ctp-card {'), wxss.indexOf('}', wxss.indexOf('.ctp-card {')))
   assert.match(card, /background: var\(--cy-bg-card-2\)/, '未选章节卡要和 sheet 底色区分开')
+  assert.match(wxss, /\.ctp-card\.is-on \{ background: var\(--cy-text-title\); \}/)
+
+  // 章节 + 玩法
+  const both = mountPicker()
+  both.observe(true, [{ id: 7, name: '第一章' }], 'ready')
+  assert.equal(both.sent[0].url, '/api/template/my-list')
+  both.reply([{ id: 3, title: '回信藏在哪' }])
+  assert.equal(both.c.data.noChapters, false)
+  assert.equal(both.c.data.templatesState, 'ready')
+  // 只有章节:没有玩法 → 玩法块不出(templatesState=empty)
+  const onlyChapters = mountPicker()
+  onlyChapters.observe(true, [{ id: 7, name: '第一章' }], 'ready')
+  onlyChapters.reply([])
+  assert.equal(onlyChapters.c.data.templatesState, 'empty')
+  assert.equal(onlyChapters.c.data.noChapters, false)
+  // 只有玩法:没有可选章节 → 章节块不出,下一步仍要章节(服务端「缺少章节」)
+  const onlyTpl = mountPicker()
+  onlyTpl.observe(true, [], 'ready')
+  onlyTpl.reply([{ id: 3, title: '回信藏在哪' }])
+  assert.equal(onlyTpl.c.data.noChapters, true)
+  assert.equal(onlyTpl.c.data.templatesState, 'ready')
+  // 加载中不算「没有章节」
+  const loading = mountPicker()
+  loading.observe(true, [], 'loading')
+  assert.equal(loading.c.data.noChapters, false)
+})
+
+test('M-09(第三轮):回到弹层时重拉玩法,新建的玩法立刻出现;选中的玩法随确认带出', () => {
+  const p = mountPicker()
+  p.observe(true, [{ id: 7, name: '第一章' }], 'ready')
+  p.reply([])
+  assert.equal(p.c.data.templatesState, 'empty')
+  p.observe(true, [{ id: 7, name: '第一章' }], 'ready')
+  assert.equal(p.sent.length, 1, '同一次打开里章节刷新不重复拉玩法')
+  p.observe(false, [], 'ready')
+  p.observe(true, [{ id: 7, name: '第一章' }], 'ready')
+  assert.equal(p.sent.length, 2, '重新打开就重拉')
+  assert.equal(p.c.data.templatesState, 'empty', '静默刷新不闪骨架')
+  p.reply([{ id: 91, title: '新玩法' }])
+  assert.equal(p.c.data.templatesState, 'ready')
+  const events = []
+  p.c.triggerEvent = (name, detail) => events.push([name, detail])
+  p.c.onPickTemplate({ currentTarget: { dataset: { id: 91 } } })
+  p.c.onNext()
+  assert.equal(events[0][0], 'confirm')
+  assert.equal(events[0][1].chapterId, 7)
+  assert.equal(events[0][1].templateId, 91)
+  assert.equal(events[0][1].templateName, '新玩法')
 })
 
 test('M-20:置灰发布点出的奖励缺项滚到「完成奖励」卡,模块被移除时退回模块区', () => {
@@ -97,10 +163,10 @@ test('M-09:from=join 发布成功回报名表并回传新玩法,不 reLaunch 模
   assert.equal(launches.length, 0)
 })
 
-test('M-17:无封面的广场卡收拢高度;权益核销卡写明怎么结算', () => {
+test('M-17:无封面的广场卡收拢高度;卡上不加结算说明行', () => {
   const wxml = fs.readFileSync(path.join(ROOT, 'pages/merchant/coop-center/index.wxml'), 'utf8')
   assert.match(wxml, /item\.cover && !item\._coverFailed \? '' : 'cc-route-cover--bare'/)
-  assert.match(wxml, /wx:if="\{\{item\.settleText\}\}"/)
+  assert.doesNotMatch(wxml, /settleText/)
   const wxss = fs.readFileSync(path.join(ROOT, 'pages/merchant/coop-center/index.wxss'), 'utf8')
   assert.match(wxss, /\.cc-route-cover--bare \{ height: auto; \}/)
   let definition
@@ -117,7 +183,7 @@ test('M-17:无封面的广场卡收拢高度;权益核销卡写明怎么结算',
   page.setData = function (patch) { Object.assign(this.data, patch) }
   assert.ok(definition, 'coop-center 页面已注册')
   const src = fs.readFileSync(mod, 'utf8')
-  assert.match(src, /modes\.length === 1 && modes\[0\] === 'PERK' \? '玩家到店核销你的权益，平台不按次结算现金' : ''/)
+  assert.doesNotMatch(src, /平台不按次结算现金|settleText/)
 })
 
 test('M-16:入驻第一步用行业类型胶囊问一次,必选,提交带 categoryIds', () => {

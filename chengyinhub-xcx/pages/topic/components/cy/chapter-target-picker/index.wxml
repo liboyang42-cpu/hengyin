@@ -3,6 +3,9 @@
 <cy-sheet show="{{show}}" title="申请承接章节" footer="{{true}}"
           closable="{{!submitting}}" bind:close="onClose">
   <view class="ctp">
+    <!-- 稿 159:346 三态:章节+玩法 / 只有章节(没有玩法) / 只有玩法(没有可选章节)。
+         两边都没有时留章节的空态。 -->
+    <block wx:if="{{!noChapters || templatesState !== 'ready'}}">
     <view class="ctp-h">选择章节</view>
     <!-- 章节这一侧的四种取数结局分开说:拉取中 / 拉失败 / 没填品类 / 拉到了。
          合成一句「暂时没有开放的章节」会把「我还没读到」说成「主办方没开」。 -->
@@ -29,11 +32,31 @@
     <view class="ctp-facts" wx:if="{{pickedFacts.length}}">
       <text class="ctp-fact" wx:for="{{pickedFacts}}" wx:key="*this">{{item}}</text>
     </view>
+    </block>
 
+    <block wx:if="{{templatesState !== 'empty'}}">
+    <view class="ctp-h">选择玩法模板</view>
+    <cy-skeleton wx:if="{{templatesState === 'loading'}}" type="card" count="{{1}}" />
+    <!-- 读不到 ≠ 一个都没有:分开说,否则商家会去重新建一个自己已经有的玩法 -->
+    <cy-error load-failure wx:elif="{{templatesState === 'error'}}" title="玩法模板没读出来"
+              sub="{{templatesError}}" retry="重试" bind:retry="loadTemplates" />
+    <scroll-view wx:else class="ctp-scroll" scroll-x enable-flex>
+      <!-- 稿 159:346:封面方图是主体,名称与描述在图下方(不套卡) -->
+      <view class="ctp-tpl {{pickedTemplateId === item.id ? 'is-on' : ''}}"
+            wx:for="{{templates}}" wx:key="id" data-id="{{item.id}}" bindtap="onPickTemplate"
+            aria-role="button" aria-label="选择玩法 {{item.title}}"
+            hover-class="cy-pressed" hover-stay-time="80">
+        <image class="ctp-tpl-img" wx:if="{{item.cover}}" src="{{item.cover}}" mode="aspectFill" />
+        <view class="ctp-tpl-img ctp-tpl-img--fallback" wx:else><text>{{item.initial}}</text></view>
+        <text class="ctp-tpl-t">{{item.title}}</text>
+        <text class="ctp-tpl-s" wx:if="{{item.sub}}">{{item.sub}}</text>
+      </view>
+    </scroll-view>
+    </block>
   </view>
 
   <view slot="footer" class="ctp-foot">
-    <!-- M-09(2026-11-02 主人):这一屏只选承接章节;玩法在下一页的报名表里选(那里也能新建玩法) -->
+    <!-- 玩法可以留到下一页再选(那一页也有同一个选择器),所以只有章节是必选的 -->
     <cy-btn variant="primary" style="width:100%" disabled="{{!pickedChapterId || submitting || !applicationOpen}}"
             bindtap="onNext">下一步 · 填报名</cy-btn>
     <!-- 章节错误/缺品类/全关已有各自的权威反馈,不能再把它们误说成主题招商窗口关闭。 -->

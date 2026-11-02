@@ -903,13 +903,14 @@ test('经营团队当前账号前台续期成功继续读取，续期失败仍�
   }
 });
 
-test('M-15:新店员接受邀请成功后直接进店铺工作台;失败留在原页', () => {
+test('M-15(第三轮):接受邀请只落权限,不跳页', () => {
   const ok = mountTeamPage();
   ok.page._incomingInviteToken = 'safe-incoming-token-1234567890';
   ok.page.loadAccess = () => {};
   ok.page.acceptIncomingInvite();
   ok.requests[0].success({ code: 200, data: { id: 9 } });
-  assert.deepEqual(ok.relaunches, ['/pages/merchant/index/index']);
+  assert.deepEqual(ok.relaunches, []);
+  assert.equal(ok.page.data.acceptResult, '已加入经营团队');
 
   const bad = mountTeamPage();
   bad.page._incomingInviteToken = 'safe-incoming-token-1234567890';

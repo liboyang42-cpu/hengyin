@@ -55,13 +55,21 @@ Component({
   },
   data: {
     rows: [],
+    templates: [],
+    templatesState: 'idle',   // idle | loading | ready | error | empty
+    templatesError: '',
+    noChapters: false,
     pickedChapterId: 0,
+    pickedTemplateId: 0,
     // 选中章节的招募事实(品类 / 必选 / 条款 / 边界 / 名额 / 权益门槛),由宿主算好挂在章节上
     pickedFacts: [],
   },
   observers: {
-    'show, chapters': function (show, chapters) {
-      if (!show) return;
+    'show, chapters, chaptersState': function (show, chapters, chaptersState) {
+      if (!show) { this._shown = false; return; }
+      // 每次打开都重拉玩法:从「去创建玩法」回来时新玩法要立刻在这里出现(M-09)
+      const opening = !this._shown;
+      this._shown = true;
       const rows = (chapters || []).filter((c) => c && c.id).map((c) => ({
         id: c.id,
         name: text(c.name) || '未命名章节',
@@ -72,16 +80,70 @@ Component({
       const pickedChapterId = rows.length === 1 ? rows[0].id : this.data.pickedChapterId;
       this.setData({
         rows,
+        noChapters: chaptersState === 'ready' && !rows.length,
         pickedChapterId,
         pickedFacts: factsOf(rows.filter((r) => r.id === pickedChapterId)[0]),
       });
+      if (opening || this.data.templatesState === 'idle' || this.data.templatesState === 'error') this.loadTemplates();
     },
   },
   methods: {
+    /* 我已有的玩法模板。与 chapter-node-form 同一条 /api/template/my-list ——
+       两处必须是同一份「我能用哪些玩法」的定义,否则这里选得到、下一页却选不到。 */
+    loadTemplates() {
+      if (this._tplLoading) return;
+      this._tplLoading = true;
+      const that = this;
+      // 已有结果时静默刷新,不闪骨架
+      const st = this.data.templatesState;
+      if (st !== 'ready' && st !== 'empty') this.setData({ templatesState: 'loading', templatesError: '' });
+      app.sendRequest({
+        url: '/api/template/my-list', method: 'POST', hideLoading: true, silentError: true,
+        data: { scope: 'MERCHANT' },
+        success(res) {
+          that._tplLoading = false;
+          const rows = res && res.code == '200' && res.data && Array.isArray(res.data.rows)
+            ? res.data.rows.filter((t) => t && t.id && text(t.title)) : null;
+          if (!rows) {
+            // 读不到 ≠ 一个玩法都没有。两者要分开,否则商家会去重新建一个已经有的玩法。
+            that.setData({
+              templatesState: 'error',
+              templatesError: app.getRequestErrorMessage(res, '玩法模板没读出来'),
+            });
+            return;
+          }
+          that.setData({
+            templates: rows.map((t) => ({
+              id: t.id,
+              title: text(t.title),
+              sub: text(t.description),
+              // 稿 159:346 的玩法卡主体是**封面方图**,文字在图下方;
+              // 没有封面的才退回首字母占位块 —— 不留一个空方块
+              cover: firstImg(t.imgUrl),
+              initial: text(t.title).slice(0, 1),
+            })),
+            templatesState: rows.length ? 'ready' : 'empty',
+            templatesError: '',
+          });
+        },
+        fail(res) {
+          that._tplLoading = false;
+          that.setData({
+            templatesState: 'error',
+            templatesError: app.getRequestErrorMessage(res, '玩法模板没读出来，检查网络后重试'),
+          });
+        },
+      });
+    },
+
     onPickChapter(e) {
       if (this.data.submitting) return;
       const id = Number(e.currentTarget.dataset.id) || 0;
       this.setData({ pickedChapterId: id, pickedFacts: factsOf(this.data.rows.filter((r) => r.id === id)[0]) });
+    },
+    onPickTemplate(e) {
+      if (this.data.submitting) return;
+      this.setData({ pickedTemplateId: Number(e.currentTarget.dataset.id) || 0 });
     },
     onClose() {
       if (this.data.submitting) return;
@@ -96,13 +158,13 @@ Component({
     onNext() {
       const chapter = this.data.rows.filter((r) => r.id === this.data.pickedChapterId)[0];
       if (!chapter) return;
+      const template = this.data.templates.filter((t) => t.id === this.data.pickedTemplateId)[0] || null;
       this.triggerEvent('confirm', {
         chapter: chapter.raw,
         chapterId: chapter.id,
         chapterName: chapter.name,
-        // M-09:玩法改到报名表里选,这里不再预选
-        templateId: 0,
-        templateName: '',
+        templateId: template ? template.id : 0,
+        templateName: template ? template.title : '',
       });
     },
   },
