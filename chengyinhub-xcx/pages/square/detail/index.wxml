@@ -159,7 +159,7 @@
             </view>
             <view class="item-link flex-ac">
               <button class="comment-like {{item.isLiked==1 ? 'is-on' : ''}}" hover-class="cy-pressed" hover-stay-time="80" bindtap="commentLikeClick" data-index="{{index}}" aria-label="点赞评论，当前 {{item.likeCount || 0}}">
-                <cy-icon name="{{item.isLiked==1 ? 'heart-filled' : 'heart'}}" size="32" />
+                <cy-icon name="heart" size="32" />
                 <text>{{item.likeCount || ''}}</text>
               </button>
               <button hover-class="cy-pressed" hover-stay-time="80" bindtap="msgClick" aria-role="button" aria-label="回复评论" data-item="{{item}}">

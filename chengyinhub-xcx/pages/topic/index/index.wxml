@@ -508,7 +508,7 @@
 
   <!-- M2 自玩通行证:2026-10-22 业主 —— 「随时开玩」不直接付款,弹层只讲清买的是什么,按钮「去结算」进确认订单页。
        单独同意(不默认勾、不打包进按钮)随付款一起搬到确认订单页,口径不变。 -->
-  <view class="bdim {{buyIn ? 'is-in' : ''}} {{reducedMotion ? 'is-still' : ''}}" wx:if="{{selfPlayConfirmShow}}" bindtap="onSelfPlayCancel" aria-role="button" aria-label="关闭" hover-class="none"></view>
+  <view class="bdim {{buyIn ? 'is-in' : ''}} {{reducedMotion ? 'is-still' : ''}}" wx:if="{{selfPlayConfirmShow}}" bindtap="onSelfPlayCancel" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"></view>
   <view class="bsheet {{buyIn ? 'is-in' : ''}} {{reducedMotion ? 'is-still' : ''}}" wx:if="{{selfPlayConfirmShow}}" catchtouchmove="noop" aria-role="dialog" aria-label="自玩通行证">
     <view class="bsheet__grab"></view>
     <view class="bsheet__x" bindtap="onSelfPlayCancel" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"><view class="bsheet__xi"></view></view>

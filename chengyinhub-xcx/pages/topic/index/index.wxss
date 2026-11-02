@@ -2087,7 +2087,7 @@ button::after {
 
 /* —— v13 购买半屏:票面(照片 + 齿孔 + 镭射)/ 票种 / 小牌 / 合计 / 去结算 —— */
 .bdim { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 180; background: rgba(0,0,0,.55); opacity: 0; transition: opacity var(--cy-motion-sheet-out) var(--cy-ease-standard); } /* ds-ok */
-.bdim.is-in { opacity: 1; transition-duration: var(--cy-motion-sheet-in); }
+.bdim.is-in { opacity: 1; transition-duration: var(--cy-motion-sheet-in); } .bdim.cy-pressed { transform: none; } /* 按住遮罩不缩整屏,否则页边闪一下 */
 .bsheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 181; padding: 19rpx 31rpx calc(58rpx + env(safe-area-inset-bottom)); border-radius: 54rpx 54rpx 0 0; background: #1C1C1E; color: #fff; /* ds-ok */
   /* 2026-10-23 业主定:弹层不回弹、慢快慢,按档位定速(tokens 的 --cy-motion-sheet-*);原进场 .55s 过冲回弹、退场 .32s 已取消(业主确认去掉回弹) */
   transform: translateY(100%); transition: transform var(--cy-motion-sheet-out) var(--cy-ease-standard);
