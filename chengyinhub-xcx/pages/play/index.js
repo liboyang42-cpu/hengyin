@@ -144,7 +144,7 @@ const storyScene = require('./utils/story-scene.js'); const themeLook = require(
 const lifeArchive = require('./utils/life-archive.js');
 const storyResume = require('./utils/story-resume.js');
 const { rightMoment, RIGHT_AUTO_MS } = require('./utils/answer-right-moment');
-const { leadHoldsChapter, releaseCue } = require('./utils/lead-chapter-hold');
+const { leadHoldsChapter, releaseCue } = require('./utils/lead-chapter-hold'); const chapterTrail = require('./utils/chapter-trail.js');   /* P-29:换章前先读完本章收尾 */
 const { puzzleHintLabel } = require('./utils/puzzle-hint-label');
 /* 内心声音(原型 VOICES 表原值);第 3 档异常时两个声音改名(越往后越像机器)。 */
 const STORY_VOICE_COLORS = { 规矩: '#B9A7FF', 窗外: '#5CD6C8', 心: '#FF9F80', 精密: '#7EB6FF', 咔哒: '#FF6B6B' };   /* ds-ok 原型 VOICES */
@@ -3914,6 +3914,14 @@ Page({
 
   continueChapterStory() {
     const opening = this._routeState && this._routeState.opening;
+    // P-29:本章收尾读完了,这才换到下一章(章节卡随 openChapterFull 出现)
+    if (this._chapterTrailNext && !this.data.isPreview) {
+      const next = this._chapterTrailNext;
+      this._chapterTrailNext = null;
+      this._chapterTrailRead = Object.assign({}, this._chapterTrailRead, { [String((this.data.chapter || {}).id)]: true });
+      this.setData({ chapter: next }, () => this.openChapterFull());
+      return Promise.resolve();
+    }
     // 结局章读完:收起故事流,出结局卡(真实游玩与试玩同一条)
     if (this._afterEndingChapter) {
       const after = this._afterEndingChapter;
@@ -4619,7 +4627,17 @@ Page({
     const storyDistText = nextNode ? this._distText(nextNode) : '';
     // 伏笔:服务端只下发已得到的念头,这里原样带到菜单上(见右上角「伏笔」那一行)
     const storyThoughts = (this._routeState && this._routeState.thoughts) || [];
-    const chapterChanged = this.data.chapterFull && String(activeChapter.id) !== String(this.data.chapter.id);
+    let chapterChanged = this.data.chapterFull && String(activeChapter.id) !== String(this.data.chapter.id);
+    /* P-29:本章最后一站刚完成、本章还有收尾文字没读 ⇒ 先停在本章把收尾铺出来,
+       点本章末尾的「继续探索」再换到下一章(见 continueChapterStory)。只在第一次停下时重铺一次。 */
+    if (chapterChanged && !this.data.isPreview && chapterTrail.holdForTrail(this.data.chapter, nodes, this._chapterTrailRead)) {
+      this._chapterTrailNext = activeChapter;
+      activeChapter = this.data.chapter;
+      chapterChanged = this._chapterTrailHeldId !== String(activeChapter.id);
+      this._chapterTrailHeldId = String(activeChapter.id);
+    } else if (!chapterChanged) {
+      this._chapterTrailNext = null;
+    }
     const merchantCount = new Set(visibleNodes.filter((node) => Number(node.merchantId) > 0)
       .map((node) => String(node.merchantId))).size;
     // 卡包只拆一次:本局拆过的,重进直接落定发好的牌,不再每次重放撕包(实走 B11)
