@@ -123,3 +123,15 @@ test('M-26 店铺参谋高峰时段读作「中午到店最多」，不再是「
   const out = page._buildSlots({ checkin: { slotBuckets: [{ slot: '早', count: 1 }, { slot: '午', count: 4 }, { slot: '晚', count: 0 }, { slot: '夜', count: 0 }] } });
   assert.equal(out.peakText, '中午到店最多');
 });
+
+test('M-24 供给卡写剩余份数(主题页与承接项目组件同一字段)', () => {
+  for (const f of ['pages/topic/merchantinfo/merchantinfo.wxml', 'pages/topic/components/project-join/index.wxml']) {
+    assert.match(read(f), /实际供给已生效<text wx:if="\{\{application\.quotaLeftText\}\}"> · \{\{application\.quotaLeftText\}\}<\/text>/, f);
+  }
+  const js = read('pages/topic/merchantinfo/merchantinfo.js');
+  const expr = js.slice(js.indexOf('quotaLeftText:'), js.indexOf('circleSupplyCheckedAtText:', js.indexOf('quotaLeftText:')));
+  const row = { offerQuotaTotal: 20, offerQuotaUsed: 5 };
+  const value = new Function('row', 'return ' + expr.replace(/^quotaLeftText:\s*/, '').replace(/,\s*(\/\/[^\n]*\s*)?$/, ''))(row);
+  assert.equal(value, '剩余 15 / 20');
+  assert.equal(new Function('row', 'return ' + expr.replace(/^quotaLeftText:\s*/, '').replace(/,\s*(\/\/[^\n]*\s*)?$/, ''))({}), '');
+});

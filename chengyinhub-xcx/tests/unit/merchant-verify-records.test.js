@@ -45,6 +45,7 @@ test('页面只读接线:先 access/me 判 canReadVerifyRecords,再读与核销�
   assert.match(js, /url: '\/api\/merchant\/access\/me'/);
   assert.match(js, /url: '\/api\/merchant\/finance\/redemptions'/);
   assert.doesNotMatch(js, /verification-records/);
+  assert.match(js, /data: JSON\.stringify\(\{ filter: 'all', pageNum, pageSize: PAGE_SIZE \}\),\s*header: \{ 'Content-Type': 'application\/json' \}/, '@RequestBody 端点必须发 JSON');
   assert.match(js, /canReadVerifyRecords/);
   assert.doesNotMatch(js, /success\s*\(res\)\s*\{/);
   assert.doesNotMatch(js, /fail\s*\(\)\s*\{/);

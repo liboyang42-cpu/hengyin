@@ -110,7 +110,7 @@
                   data-act="withdrawChapterApplication" data-application-id="{{application.id}}" bindtap="emit">撤回申请</cy-btn>
         </view>
         <view class="chapter-project-meta" wx:if="{{application.offerActive && !application.offerWithdrawn}}">
-          实际供给已生效<text wx:if="{{application.circleSupplyCheckedAtText}}"> · 最近确认 {{application.circleSupplyCheckedAtText}}</text>
+          实际供给已生效<text wx:if="{{application.quotaLeftText}}"> · {{application.quotaLeftText}}</text><text wx:if="{{application.circleSupplyCheckedAtText}}"> · 最近确认 {{application.circleSupplyCheckedAtText}}</text>
         </view>
         <view class="chapter-project-meta" wx:if="{{application.offerPendingReview}}">实际供给待审核</view>
         <view class="chapter-project-meta" wx:if="{{application.offerWithdrawn}}">{{application.offerWithdrawReason}}</view>

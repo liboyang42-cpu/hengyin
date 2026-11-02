@@ -107,7 +107,9 @@ Page({
       silentError: true,
       url: '/api/merchant/finance/redemptions',
       method: 'POST',
-      data: { filter: 'all', pageNum, pageSize: PAGE_SIZE },
+      // 服务端按 @RequestBody 收 JSON(与核销与退款页同一写法)
+      data: JSON.stringify({ filter: 'all', pageNum, pageSize: PAGE_SIZE }),
+      header: { 'Content-Type': 'application/json' },
       success: (res) => {
         if (seq !== this._listSeq) { if (fromPull) wx.stopPullDownRefresh(); return; }
         const items = isSuccess(res) ? shapeRecordList(res.data) : null;
