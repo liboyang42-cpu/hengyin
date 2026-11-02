@@ -3050,12 +3050,17 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         return result(session, data);
     }
 
+    private static final int BROADCAST_MEMBER_LIMIT = 200;
+
     private ActionResult broadcast(GameActorContext actor, GameSession session, GameSessionCommand command) {
         requireSessionStatus(session, GameSession.READY, GameSession.RUNNING);
         String targetType = upper(command.getPayload().get("targetType"));
         String content = text(command.getPayload().get("content"), 200);
-        if (!("ALL".equals(targetType) || "TEAM".equals(targetType) || "ROLE".equals(targetType))
+        if (!("ALL".equals(targetType) || "TEAM".equals(targetType) || "ROLE".equals(targetType)
+                || "MEMBERS".equals(targetType))
                 || StringUtils.isBlank(content)) throw error("GAME_BAD_REQUEST", "广播对象或内容不正确");
+        // 2026-11-01 业主:定向广播可以点选具体玩家。范围由投递 SQL 兜底,不在本局的人不会写投递行。
+        List<Long> memberIds = "MEMBERS".equals(targetType) ? broadcastMemberIds(command.getPayload().get("memberIds")) : null;
         Long targetId = positiveLong(command.getPayload().get("targetId"));
         String roleCode = upper(command.getPayload().get("roleCode"));
         if ("TEAM".equals(targetType)
@@ -3079,8 +3084,11 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         broadcast.setCreateTime(clock.now());
         broadcast.setUpdateTime(clock.now());
         if (runtimeMapper.insertBroadcast(broadcast) != 1) throw error("GAME_STATE_CONFLICT", "广播创建失败");
-        if (runtimeMapper.insertBroadcastDeliveries(broadcast.getId(), session.getId(), session.getActivityId(),
-                targetType, broadcast.getTargetId(), broadcast.getRoleCode(), clock.now()) < 1) {
+        int deliveries = memberIds != null
+                ? runtimeMapper.insertBroadcastMemberDeliveries(broadcast.getId(), session.getActivityId(), memberIds, clock.now())
+                : runtimeMapper.insertBroadcastDeliveries(broadcast.getId(), session.getId(), session.getActivityId(),
+                targetType, broadcast.getTargetId(), broadcast.getRoleCode(), clock.now());
+        if (deliveries < 1) {
             throw error("GAME_BROADCAST_NO_RECIPIENT", "广播范围内没有可送达玩家");
         }
         int reached = dispatchBroadcast(broadcast);
@@ -3091,6 +3099,20 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         data.put("reachedCount", reached);
         data.put("failedCount", failed);
         return result(session, data);
+    }
+
+    private List<Long> broadcastMemberIds(Object raw) {
+        if (!(raw instanceof java.util.Collection) || ((java.util.Collection<?>) raw).isEmpty()
+                || ((java.util.Collection<?>) raw).size() > BROADCAST_MEMBER_LIMIT) {
+            throw error("GAME_BAD_REQUEST", "请选择要发送的玩家");
+        }
+        Set<Long> ids = new java.util.LinkedHashSet<>();
+        for (Object item : (java.util.Collection<?>) raw) {
+            Long id = positiveLong(item);
+            if (id == null) throw error("GAME_BAD_REQUEST", "选择的玩家无效");
+            ids.add(id);
+        }
+        return new ArrayList<>(ids);
     }
 
     /** 按投递行写广播终态(CAS 自当前状态),返回仍失败的投递数。 */

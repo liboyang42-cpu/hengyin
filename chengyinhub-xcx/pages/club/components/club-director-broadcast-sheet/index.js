@@ -13,7 +13,7 @@ Component({
     scope: { type: String, value: 'ALL' },
     targets: { type: Array, value: [] },
     content: { type: String, value: '' },
-    audience: { type: Array, value: [] }, // 2026-11-01 顶部横滑头像:这次会发给谁 [{id,name,initial,sub}]
+    audience: { type: Array, value: [] }, // 2026-11-01 顶部横滑头像,点了单个加减 [{id,name,initial,sub,picked}]
     countText: { type: String, value: '' },
     confirmText: { type: String, value: '确认发送' },
     confirmDisabled: { type: Boolean, value: false },
@@ -21,6 +21,7 @@ Component({
   methods: {
     onClose() { this.triggerEvent('close') },
     onScopeChange(e) { this.triggerEvent('selectscope', e.detail) },
+    onPersonTap(e) { this.triggerEvent('toggleperson', { id: e.currentTarget.dataset.id }) },
     onTargetTap(e) { this.triggerEvent('selecttarget', { id: e.currentTarget.dataset.id }) },
     onContentInput(e) {
       this.triggerEvent('input', { value: String((e && e.detail && e.detail.value) || '') })

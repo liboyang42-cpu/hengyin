@@ -135,6 +135,13 @@ class GameSessionRuntimeMapperSqlTest {
         String roster = sql("selectClubMemberProjection", params());
         String team = sql("selectTeamActionProjection", params());
         String deliveries = sql("insertBroadcastDeliveries", params());
+        // 2026-11-01 按人发:和全员广播同一范围闸(本局队伍在队 + 已支付),memberIds 只在里面收窄
+        java.util.Map<String, Object> memberParams = new java.util.HashMap<>(params());
+        memberParams.put("memberIds", java.util.Arrays.asList(1L, 2L));
+        String memberDeliveries = sql("insertBroadcastMemberDeliveries", memberParams);
+        assertTrue(memberDeliveries.contains("t.owner_type=2 and t.owner_id=?"), memberDeliveries);
+        assertTrue(memberDeliveries.contains("reg.payment_status=2"), memberDeliveries);
+        assertTrue(memberDeliveries.replace(" ", "").contains("m.member_idin(?,?)"), memberDeliveries);
 
         assertTrue(locked.contains("status in ('assigned','confirmed')"), locked);
         assertTrue(locked.endsWith("for update"), locked);
