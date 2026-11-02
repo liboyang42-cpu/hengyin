@@ -85,7 +85,6 @@
     "pages/merchant/index/index.js::dashboardData::B1",
     "pages/merchant/index/index.js::hostProjectList::A2",
     "pages/merchant/index/index.js::projectList::A2",
-    "pages/merchant/index/index.js::revBars::A1",
     "pages/merchant/index/index.js::sceneStack::A2",
     "pages/merchant/index/index.js::todoError::A2",
     "pages/merchant/ledger/batch-detail/index.js::batchId::A2",

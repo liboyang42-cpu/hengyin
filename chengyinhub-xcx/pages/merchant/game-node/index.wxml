@@ -53,6 +53,17 @@
 
       <view class="gn-inline-error" wx:if="{{writeState !== 'unknown' && writeMessage}}">{{writeMessage}}</view>
 
+      <!-- 可接待时当天操作排在须知前;未开放时仍在须知之后。两处内容相同。 -->
+      <view class="gn-card" wx:if="{{station.playable}}">
+        <view class="gn-section-head"><view><text class="gn-section-title">本站运行</text></view></view>
+        <cy-btn wx:if="{{station.playable}}" variant="primary" disabled="{{writeState !== 'idle'}}" bindtap="showLiveCheckin">出示打卡码</cy-btn>
+        <cy-btn wx:if="{{station.canPause}}" class="gn-verify-actions" variant="secondary" disabled="{{writeState !== 'idle'}}" bindtap="openPauseSheet">暂停接待</cy-btn>
+        <view class="gn-dual-actions gn-verify-actions" wx:if="{{station.canVerify}}">
+          <cy-btn class="gn-action" variant="secondary" disabled="{{writeState !== 'idle'}}" bindtap="openManualVerification">输入核验编号</cy-btn>
+          <cy-btn class="gn-action" variant="primary" disabled="{{writeState !== 'idle'}}" bindtap="scanSubmission">扫码核验</cy-btn>
+        </view>
+      </view>
+
       <view class="gn-card gn-runbook">
         <view class="gn-section-head">
           <!-- 稿 469:1002 的标题是「这一站怎么接待」——「本站执行卡」是内部叫法,
@@ -138,7 +149,7 @@
         <cy-btn wx:if="{{station.canResume}}" variant="primary" disabled="{{writeState !== 'idle'}}" loading="{{writeState === 'submitting'}}" bindtap="resumeStation">恢复接待</cy-btn>
       </view>
 
-      <view class="gn-card" wx:if="{{station.canPause || station.canVerify || station.playable}}">
+      <view class="gn-card" wx:if="{{!station.playable && (station.canPause || station.canVerify)}}">
         <view class="gn-section-head"><view><text class="gn-section-title">本站运行</text></view></view>
         <cy-btn wx:if="{{station.playable}}" variant="primary" disabled="{{writeState !== 'idle'}}" bindtap="showLiveCheckin">出示打卡码</cy-btn>
         <cy-btn wx:if="{{station.canPause}}" class="gn-verify-actions" variant="secondary" disabled="{{writeState !== 'idle'}}" bindtap="openPauseSheet">暂停接待</cy-btn>

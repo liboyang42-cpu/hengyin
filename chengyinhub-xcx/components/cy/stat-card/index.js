@@ -18,6 +18,8 @@ Component({
   properties: {
     items: { type: Array, value: [] },
     columns: { type: Number, value: 2 },
+    // 可选:钱数落地进度(utils/page-motion.js countMoney 的 0→1),只缩放显示的数字;字号按真实值定档,数的过程中不跳档
+    countK: { type: null, value: null },
   },
   data: { _cards: [], _colStyle: '' },
   observers: {

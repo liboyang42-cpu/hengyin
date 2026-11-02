@@ -26,9 +26,9 @@
 
     <view class="cu-batch" wx:if="{{selecting}}">
       <text class="cu-batch-count">已选 {{selectedIds.length}} / 100</text>
-      <button class="cu-inline-button" bindtap="toggleSelectMode">取消批量</button>
+      <button hover-class="cy-pressed" hover-stay-time="80" class="cu-inline-button" bindtap="toggleSelectMode">取消批量</button>
       <input class="cu-batch-input" value="{{batchTagName}}" maxlength="16" placeholder="输入标签名称" bindinput="onBatchTagInput" />
-      <button class="cu-inline-button cu-inline-button--primary" loading="{{batchSubmitting}}" bindtap="submitBatchTag">添加</button>
+      <button hover-class="cy-pressed" hover-stay-time="80" class="cu-inline-button cu-inline-button--primary" loading="{{batchSubmitting}}" bindtap="submitBatchTag">添加</button>
       <cy-inline-error class="cu-batch-error" wx:if="{{batchError}}" kind="data"
         title="标签未添加" sub="{{batchError}}" />
     </view>
@@ -39,9 +39,9 @@
       <text wx:elif="{{exportState === 'DOWNLOAD_FAILED'}}">导出文件已生成，这台手机没能下载下来</text>
       <text wx:elif="{{exportState === 'EXPIRED'}}">导出已过期，请重新创建</text>
       <text wx:elif="{{exportState === 'FAILED'}}">导出失败</text>
-      <button wx:if="{{exportState === 'SUCCESS' || exportState === 'DOWNLOAD_FAILED'}}"
+      <button hover-class="cy-pressed" hover-stay-time="80" wx:if="{{exportState === 'SUCCESS' || exportState === 'DOWNLOAD_FAILED'}}"
               class="cu-inline-button" bindtap="downloadExport">{{exportState === 'DOWNLOAD_FAILED' ? '重新下载' : '下载并打开'}}</button>
-      <button wx:if="{{exportError && (exportState === 'PENDING' || exportState === 'RUNNING')}}"
+      <button hover-class="cy-pressed" hover-stay-time="80" wx:if="{{exportError && (exportState === 'PENDING' || exportState === 'RUNNING')}}"
               class="cu-inline-button" bindtap="retryExportStatus">重新查询</button>
       <cy-inline-error class="cu-batch-error" wx:if="{{exportError}}" kind="data"
         title="导出状态更新中" sub="{{exportError}}" />
@@ -60,7 +60,7 @@
   <scroll-view wx:else scroll-y class="cu-scroll cy-fade-in" enhanced show-scrollbar="{{false}}" bindscrolltolower="loadMore">
     <text class="cu-sync" wx:if="{{loading && rows.length}}" aria-role="status">正在更新客户名单…</text>
     <view class="cu-list" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
-    <view class="cu-row" wx:for="{{rows}}" wx:key="memberId"
+    <view class="cu-row" wx:for="{{rows}}" wx:key="memberId" style="--pmi:{{index}};"
           data-memberid="{{item.memberId}}" bindtap="openCustomer"
           aria-role="button" aria-label="查看客户 {{item.displayName}} 详情" hover-class="cy-pressed" hover-stay-time="80">
       <view wx:if="{{selecting}}" class="cu-check {{item.selected ? 'cu-check--on' : ''}}"><cy-icon wx:if="{{item.selected}}" name="check" size="40" /></view>

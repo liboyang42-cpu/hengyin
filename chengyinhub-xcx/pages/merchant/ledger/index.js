@@ -1,4 +1,4 @@
-const toast = require('../../../utils/toast.js');
+const toast = require('../../../utils/toast.js'); const pageMotion = require('../../../utils/page-motion.js');
 const app = getApp();
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const subscribe = require('../../../utils/subscribe.js');
@@ -423,7 +423,7 @@ Page({
         if (valid) {
           anySuccess = true;
           if (section === 'overview') {
-            patch.overview = this.overviewRow(res.data);
+            patch.overview = this.overviewRow(res.data); if (!this._lgCounted) { this._lgCounted = true; pageMotion.countMoney(this, 'lgK'); } // 2026-11-02 X-1:本月主数字第一次到达时慢-快-慢落地
           } else if (section === 'entries') {
             patch.entries = res.data.rows.map(this.entryRow);
           } else {
