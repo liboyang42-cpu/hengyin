@@ -1028,10 +1028,17 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         BigDecimal pointsDeduct = BigDecimal.ZERO;
         BigDecimal memberDiscountYuan = BigDecimal.ZERO;
         StringBuilder ticketsKey = new StringBuilder();
+        // P-07/C-07:下单时会冻结的退款截止点(③ 自由探索票 = 票有效期截止)。报价必须读同一个点,
+        // 否则结算页说「不可退」、订单页与实际取消却按冻结点放行全额退款。
+        Date purchaseRefundDeadline = null;
 
         if (tickets == null || tickets.isEmpty()) {
             // 单票模式
             OmsTicket ticket = validateAndGetTicket(ticketId, ownerType, ownerId, inventoryHold != null);
+            RefundPolicy.Snapshot refundSnapshot = RefundPolicy.snapshotOnPurchase(
+                    PurchaseKind.derive(ticketId, sellerTopic == null ? null : sellerTopic.getProductType()),
+                    ticket.getEndTime());
+            if (refundSnapshot != null) purchaseRefundDeadline = refundSnapshot.deadline;
             // F03 报价与报名同一可售口径:报价成功而下单被闸拒 = 用户走到末端才失败。
             if (activity != null && sellerTopic != null) assertRegistrationSellable(activity, sellerTopic, ticket, new Date());
             if (inventoryHold == null) assertClubReservationAvailable(clubBenefit, ticket, 1);
@@ -1086,7 +1093,8 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         // 不随时间翻转而使已发出的报价失效)。非场次单(主题路径)不下发 ⇒ 前端 tri-state 保持默认。
         if (activity != null) {
             boolean free = payAmount.signum() == 0 && pointsUsed == 0;
-            Date deadline = free ? activity.getStartDate() : RefundPolicy.sessionRefundDeadline(activity.getStartDate());
+            Date deadline = free ? activity.getStartDate() : purchaseRefundDeadline != null ? purchaseRefundDeadline
+                    : RefundPolicy.sessionRefundDeadline(activity.getStartDate());
             result.setRefundDeadline(deadline);
             result.setRefundableNow(deadline == null ? null
                     : free ? new Date().before(deadline) : !new Date().after(deadline));

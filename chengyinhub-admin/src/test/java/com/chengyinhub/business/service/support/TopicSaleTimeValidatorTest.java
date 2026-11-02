@@ -44,12 +44,15 @@ class TopicSaleTimeValidatorTest {
         topic.setMerchantStatus(0);
         topic.setOpenClubPool(0);
         topic.setRecruitDeadline(start);
+        OmsTicket guided = ticket();
+        guided.setStartTime(at("2026-08-12T15:00:00Z"));
+        guided.setEndTime(at("2026-08-12T16:00:00Z"));
 
         IllegalStateException without = assertThrows(IllegalStateException.class,
-                () -> TopicSaleTimeValidator.assertValid(topic, Collections.singletonList(ticket()), start, false));
+                () -> TopicSaleTimeValidator.assertValid(topic, Collections.singletonList(guided), start, () -> false));
         assertTrue(without.getMessage().contains("未开放承接"));
         assertDoesNotThrow(() -> TopicSaleTimeValidator.assertValid(topic,
-                Collections.singletonList(ticket()), start, true));
+                Collections.singletonList(guided), start, () -> true));
     }
 
     @Test

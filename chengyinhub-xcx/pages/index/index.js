@@ -1512,7 +1512,7 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
 
   requestHomeCityConsent(scope) {
     const that = this;
-    if (!isCurrentLocationRequest(this, scope)) return;
+    if (!isCurrentLocationRequest(this, scope) || this.data.privacyGateShow || (app.getUsageConsent && !app.getUsageConsent().granted())) return; // P-38:隐私闸未关不叠定位弹窗,同意后 onPrivacyGateSettled 会重新发起
     modal.show({
       title: '首页城市定位',
       content: '同意使用精确位置并发送给城瘾以确定首页城市，后续自动定位且不用于附近排序吗？',

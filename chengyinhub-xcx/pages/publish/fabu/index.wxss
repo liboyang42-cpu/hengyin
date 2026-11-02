@@ -1134,7 +1134,10 @@ page { background: var(--cy-btn-solid-bg); }
      59fd3d6aa 已经删了,这档留白就成了纯空档:实拍返回钮与主题名之间空出一大截,
      整页像被压扁往下推。删掉那一项,标题紧跟在返回钮下面(稿子 4028:13649 的
      TopBar pb=14 + Heading 就是这个节奏)。 */
-  padding-top: var(--cy-sheet-chrome-top, 0px);
+  /* P-33(2026-11-02):满屏态从胶囊下方开始,而不是用 padding 顶开 —— padding 属于滚动内容,
+     一滚动标题与卡片就钻到状态栏和返回钮底下(票务设置页实拍)。顶端这段留给页面底色与返回钮。 */
+  top: var(--cy-sheet-chrome-top, 0px);
+  padding-top: 0;
   border-radius: 0;
 }
 

@@ -135,7 +135,8 @@
       <view wx:else class="club-benefit-text">{{isClubMember ? '优先报名已生效' : '部分名额优先留给会员'}}</view>
     </view>
   </view>
-  <view class="setly_li" wx:if="{{pointsUsable !== false}}">
+  <!-- P-32:¥0 票没有可抵扣的金额,整行不出现(不留「-¥0」) -->
+  <view class="setly_li" wx:if="{{pointsUsable !== false && selectedTicket.price > 0}}">
     <view class="setly_li_left">积分抵扣<text wx:if="{{useDiscount}}">（抵扣积分{{usedPoints}}）</text></view>
     <view class="setly_li_right">
       <view class="setly_li_right_span">-{{money.amount(discountAmount)}}</view>

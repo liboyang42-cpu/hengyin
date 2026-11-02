@@ -24,7 +24,7 @@ function harness(t, card = { title: '审核未通过', result: result() }, sende
 }
 test('signup and record sheet explicitly separate generation-time record from current audit readback', () => {
   const wxml = fs.readFileSync(CHAT.replace(/\.js$/, '.wxml'), 'utf8');
-  assert.match(wxml, /发送时：报名成功/); assert.match(wxml, /title="生成时记录"/);
+  assert.match(wxml, /class="rcard-flag">报名成功</); assert.doesNotMatch(wxml, /发送时：/); assert.match(wxml, /title="生成时记录"/);
   assert.match(wxml, /当前审核记录/); assert.match(wxml, /查看当前原单/);
 });
 test('result plus controlled action has separate record and original navigation, without second detail GET', t => {

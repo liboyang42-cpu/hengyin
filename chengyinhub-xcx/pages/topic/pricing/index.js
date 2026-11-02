@@ -120,8 +120,8 @@ Page({
           return;
         }
         const reference = res.data.cityReferencePrice == null ? null : Number(res.data.cityReferencePrice);
-        const min = Math.ceil(floor);
-        const sliderMax = Math.max(min + 100, Math.ceil(floor * 2), reference ? Math.ceil(reference * 1.5) : 0);
+        const min = Math.ceil(floor); const current = res.data.currentPrice == null ? NaN : Number(res.data.currentPrice); const start = Number.isFinite(current) && current >= min ? current : min; // P-34:从作者已填的价起步,低于地板价才回落
+        const sliderMax = Math.max(min + 100, Math.ceil(floor * 2), reference ? Math.ceil(reference * 1.5) : 0, Math.ceil(start * 1.5));
         const sample = Number(res.data.cityReferenceSampleSize || 0);
         const city = res.data.cityReferenceLabel || '同城';
         const lineup = Array.isArray(res.data.lineup)
@@ -143,12 +143,12 @@ Page({
           lineup: lineup,
           floor: floor,
           floorText: money(res.data.priceMin),
-          finalPrice: min,
+          finalPrice: start,
           // CU-M-32:未到定价阶段(canConfirm===false)事先置灰;老后端不带该字段时仍由服务端拦。
           phaseBlocked: res.data.canConfirm === false,
           // CU-C-70:floor=0(例:带队成本被静默摊成 0)时 min>=floor 恒真,旧式自校验放行零价。
           // 人数这道条件必须参与,不然按钮点得动而价格是 0。
-          canConfirmPrice: min >= floor && res.data.canConfirm !== false
+          canConfirmPrice: start >= floor && res.data.canConfirm !== false
             && teamSizeOk(that.data.subType, that.data.teamSize),
           teamSizeError: teamSizeErrorText(that.data.subType, that.data.teamSize),
           sliderMax: sliderMax,
@@ -157,7 +157,7 @@ Page({
             ? city + '同类已开售均价 ¥' + money(reference) + '（' + sample + ' 个样本）'
             : '样本不足，暂不展示参考价',
         });
-        that.updateDelta(min);
+        that.updateDelta(start);
         that.loadLineupNames();
       },
       fail(res) {

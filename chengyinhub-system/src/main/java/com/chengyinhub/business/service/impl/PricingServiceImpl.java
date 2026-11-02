@@ -299,6 +299,7 @@ public class PricingServiceImpl implements IPricingService {
         if (blockReason == null) blockReason = supplyBlockReason(cmsTopicMapper.selectProductTypeById(topicId), topicId);
         r.setCanConfirm(blockReason == null);
         r.setConfirmBlockReason(blockReason);
+        r.setCurrentPrice(currentPrice(topicId, subType));
         java.util.Map<String, Object> reference = pricingReferenceMapper == null
                 ? null : pricingReferenceMapper.selectCityReference(topicId, subType);
         if (reference != null && reference.get("referencePrice") != null) {
@@ -311,6 +312,26 @@ public class PricingServiceImpl implements IPricingService {
             r.setCityReferenceSampleSize(0);
         }
         return r;
+    }
+
+    /** P-34:定价页预填作者已填过的价;读不到就不填(页面回落到地板价)。只读。 */
+    private BigDecimal currentPrice(Long topicId, String subType) {
+        if ("self".equals(subType)) {
+            CmsTopic topic = cmsTopicMapper == null ? null : cmsTopicMapper.selectCmsTopicById(topicId);
+            return topic == null ? null : topic.getSelfPlayPrice();
+        }
+        if (omsTicketMapper == null) return null;
+        OmsTicket q = new OmsTicket();
+        q.setOwnerType(1L);
+        q.setOwnerId(topicId);
+        q.setDelFlag(0);
+        List<OmsTicket> tickets = omsTicketMapper.selectOmsTicketList(q);
+        BigDecimal best = null;
+        if (tickets != null) for (OmsTicket t : tickets) {
+            if (t == null || t.getPrice() == null) continue;
+            if (best == null || t.getPrice().compareTo(best) > 0) best = t.getPrice();
+        }
+        return best;
     }
 
     private static final String LIFECYCLE_BLOCK_REASON = "主题未在定价阶段,不能确认终价";

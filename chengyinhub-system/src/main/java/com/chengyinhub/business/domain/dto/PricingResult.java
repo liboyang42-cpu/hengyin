@@ -48,6 +48,12 @@ public class PricingResult implements Serializable {
     /** canConfirm=false 时的原因,与 confirmPrice 拒绝时的原话一致;可确认时为空。 */
     private String confirmBlockReason;
 
+    /** P-34:作者已经填过的票价(有人带取主题票最高价,无人带取自玩价);没有则为空。定价页用它预填。 */
+    private BigDecimal currentPrice;
+
+    public BigDecimal getCurrentPrice() { return currentPrice; }
+    public void setCurrentPrice(BigDecimal currentPrice) { this.currentPrice = currentPrice; }
+
     public static class Lineup implements Serializable {
         private static final long serialVersionUID = 1L;
         private Long toId;

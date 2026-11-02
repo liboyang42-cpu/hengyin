@@ -105,3 +105,7 @@ test('按钮与提示条读同一个原因', () => {
 test('P-31:勾选信息共享后按钮不再提示「请先勾选」', () => {
   assert.match(WXML, /\(hostShareConsentReady \|\| hostShareChecked\) \?/)
 })
+
+test('P-32:¥0 票不显示积分抵扣行', () => {
+  assert.match(WXML, /wx:if="\{\{pointsUsable !== false && selectedTicket\.price > 0\}\}"/)
+})

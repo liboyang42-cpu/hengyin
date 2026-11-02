@@ -15,15 +15,15 @@ public final class TopicSaleTimeValidator {
     }
 
     public static void assertValid(CmsTopic topic, Collection<OmsTicket> tickets, Date sellingStartedAt) {
-        assertValid(topic, tickets, sellingStartedAt, false);
+        assertValid(topic, tickets, sellingStartedAt, () -> false);
     }
 
     /**
-     * @param recruitedPartners 冻结阵容里已有合作方(如城市定向在招募期邀来的带队俱乐部 ORGANIZER)。
+     * @param recruitedPartners 只在「未开放承接却有 recruitDeadline」时才问:冻结阵容里已有合作方(如城市定向在招募期邀来的带队俱乐部 ORGANIZER)。
      *                          这说明主题确实走过招募期，recruitDeadline 是那段招募的真实截止，不是脏值(P-01)。
      */
     public static void assertValid(CmsTopic topic, Collection<OmsTicket> tickets, Date sellingStartedAt,
-                                   boolean recruitedPartners) {
+                                   java.util.function.BooleanSupplier recruitedPartners) {
         if (topic == null) {
             throw new IllegalStateException("topic 不能为空");
         }
@@ -44,12 +44,11 @@ public final class TopicSaleTimeValidator {
 
         boolean openRecruitment = Integer.valueOf(1).equals(topic.getMerchantStatus())
                 || Integer.valueOf(1).equals(topic.getOpenClubPool())
-                || Integer.valueOf(ProductType.FREE_EXPLORE).equals(topic.getProductType())
-                || recruitedPartners;
+                || Integer.valueOf(ProductType.FREE_EXPLORE).equals(topic.getProductType());
         if (openRecruitment && topic.getRecruitDeadline() == null) {
             throw new IllegalStateException("开放承接时 recruitDeadline 必填");
         }
-        if (!openRecruitment && topic.getRecruitDeadline() != null) {
+        if (!openRecruitment && topic.getRecruitDeadline() != null && !recruitedPartners.getAsBoolean()) {
             throw new IllegalStateException("未开放承接时 recruitDeadline 必须为空");
         }
         if (topic.getRecruitDeadline() != null && topic.getRecruitDeadline().after(sellingStartedAt)) {

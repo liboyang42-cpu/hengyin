@@ -81,8 +81,8 @@
             </cy-card>
 
             <!-- 路线卡 / 报名卡(同构:都是 {cardType,topicId},都现拉、永远最新) -->
-            <cy-card wx:else class="rcard" interactive="{{true}}" accessibility-label="查看路线或报名详情" hover-class="cy-pressed" hover-stay-time="80" catchtap="onRouteTap" data-topicid="{{item.card.topicId}}">
-              <view wx:if="{{item.card.cardType === 'signup'}}" class="rcard-flag">发送时：报名成功</view>
+            <cy-card wx:else class="rcard" interactive="{{true}}" accessibility-label="查看路线或报名详情" hover-class="cy-pressed" hover-stay-time="80" catchtap="onRouteTap" data-topicid="{{item.card.topicId}}" data-cardtype="{{item.card.cardType}}">
+              <view wx:if="{{item.card.cardType === 'signup'}}" class="rcard-flag">报名成功</view>
               <block wx:if="{{topicCache[item.card.topicId]}}">
                 <!-- CU-C-121:imgUrl 为空时 <image> 仍按 270rpx 渲染,卡面一半是死黑块。
                      没图就不是"图在加载",给一个说得清的缺图占位。 -->
@@ -100,7 +100,7 @@
               <block wx:elif="{{topicCache[item.card.topicId] === null}}">
                 <view class="rcard-img rcard-img--ph"></view>
                 <view class="rcard-tt">
-                  <view class="rcard-sub">{{item.card.cardType === 'signup' ? '活动暂不可用' : '路线暂不可用'}}</view>
+                  <view class="rcard-sub">{{item.card.cardType === 'signup' ? '票已放进票夹，点这里查看' : '路线暂不可用'}}</view>
                 </view>
               </block>
               <!-- 加载中(undefined,尚未 fetch 回来):骨架占位,shimmer 本身即为「加载中」语义(DS §5:禁裸文字) -->

@@ -146,11 +146,11 @@ public class TopicSaleFinalizationServiceImpl implements ITopicSaleFinalizationS
         terminator.terminatePendingUnderTopicLock(topicId, finalizeNow);
 
         List<OmsTicket> tickets = activeTickets(topicId);
-        CoopOrderLineupSource.ReadResult orderLineup = coopOrderLineupSource.readEffectiveLineup(topicId);
-        TopicSaleTimeValidator.assertValid(topic, tickets, finalizeNow, !orderLineup.getEntries().isEmpty());
+        TopicSaleTimeValidator.assertValid(topic, tickets, finalizeNow, () -> hasRecruitedPartners(topicId));
         List<MerchantChapterOffer> offers = validOffers(topicId, finalizeNow);
         assertRequiredChapterCoverage(topicId, offers);
 
+        CoopOrderLineupSource.ReadResult orderLineup = coopOrderLineupSource.readEffectiveLineup(topicId);
         if (!orderLineup.getRepairReasons().isEmpty()) {
             throw new IllegalStateException("合作单缺冻结快照，进入人工修复清单: " + orderLineup.getRepairReasons().get(0));
         }
@@ -442,6 +442,12 @@ public class TopicSaleFinalizationServiceImpl implements ITopicSaleFinalizationS
                     + ':' + entry.getSubjectType() + ':' + entry.getSubjectId();
             if (!keys.add(key)) throw new IllegalStateException("重复 role/scope 承接: " + key);
         }
+    }
+
+    /** P-01：招募期已邀来合作方(冻结阵容非空)⇒ recruitDeadline 是那段招募的真实截止。只读，供时间断言用。 */
+    private boolean hasRecruitedPartners(Long topicId) {
+        CoopOrderLineupSource.ReadResult lineup = coopOrderLineupSource.readEffectiveLineup(topicId);
+        return lineup != null && lineup.getEntries() != null && !lineup.getEntries().isEmpty();
     }
 
     private void assertOrganizer(CmsTopic topic, List<CoopOrderLineupSource.LineupEntry> orders) {
