@@ -225,8 +225,8 @@
 <view wx:if="{{pageState === 'ready'}}" class="bmbottom"
   style="--baoming-action-extra: {{submitError ? 'calc(var(--cy-btn-h) + var(--cy-space-2))' : '0rpx'}}">
   <cy-inline-error class="submit-inline-error" wx:if="{{submitError}}" kind="data"
-    title="这次报名还没完成" sub="{{submitError}}"
-    action="重新提交" bind:action="handlePayment" />
+    title="{{quoteRefusal ? '暂不可报名' : '这次报名还没完成'}}" sub="{{submitError}}"
+    action="{{quoteRefusal ? '' : '重新提交'}}" bind:action="handlePayment" />
   <!-- 拍板 2026-09-16 #10:商家闭店时报名入口先说清原因(点了也会被后端拒),已售不受影响。 -->
   <view class="bm-closed" wx:if="{{merchantClosed}}" aria-role="alert">商家暂停营业，暂不可报名</view>
   <!-- ★ 向主办方提供姓名/手机号 = 向第三方提供个人信息,个保法第 23 条要求【单独同意】:
@@ -237,7 +237,7 @@
     <icon wx:else class="bmbottom_box_gx" type="circle" size="20" color="var(--cy-color-text-tertiary)" />
     <view class="bmbottom_box_txt">同意将姓名、手机号提供给主办方，用于报名核验</view>
   </view>
-  <cy-btn variant="primary" style="width:686rpx;margin:0 auto;display:block" loading="{{isPaying || paymentReadinessChecking}}" bindtap="handlePayment" bind:disabledtap="handlePayment" disabled="{{!canPay}}">{{!selectedTicket ? '暂不可报名：暂无可用票' : ((ticketSoldOut && waitlistState !== 'OFFERED') || waitlistEligibility === 'ALREADY_REGISTERED' ? waitlistPaymentText : (signupClosed ? '报名已截止' : (isPaying ? '提交中...' : (paymentReadinessChecking ? '检查支付服务...' : (paymentReady === false && totalAmount > 0 ? '重新检查支付服务' : (selectedAddress ? (hostShareConsentReady ? (totalAmount > 0 ? (!quoteReady ? '确认价格并付款' : '付款') : '确认报名') : (totalAmount > 0 ? '请先勾选信息共享同意' : '请先勾选信息共享同意')) : '请选择参与人信息'))))))}}</cy-btn>
+  <cy-btn variant="primary" style="width:686rpx;margin:0 auto;display:block" loading="{{isPaying || paymentReadinessChecking}}" bindtap="handlePayment" bind:disabledtap="handlePayment" disabled="{{!canPay}}">{{!selectedTicket ? '暂不可报名：暂无可用票' : (quoteRefusal ? '暂不可报名' : ((ticketSoldOut && waitlistState !== 'OFFERED') || waitlistEligibility === 'ALREADY_REGISTERED' ? waitlistPaymentText : (signupClosed ? '报名已截止' : (isPaying ? '提交中...' : (paymentReadinessChecking ? '检查支付服务...' : (paymentReady === false && totalAmount > 0 ? '重新检查支付服务' : (selectedAddress ? ((hostShareConsentReady || hostShareChecked) ? (totalAmount > 0 ? (!quoteReady ? '确认价格并付款' : '付款') : '确认报名') : '请先勾选信息共享同意') : '请选择参与人信息')))))))}}</cy-btn>
 </view>
 
 <!-- 报名/支付结果面板。2026-09-06 用户裁决「买完直接跳」:面板不放按钮,

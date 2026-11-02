@@ -258,6 +258,8 @@ Page({
     // 结算关键前置态同时落在 data，供 UI/自动化回读；私有字段只保留兼容。
     hostShareConsentReady: false,
     quoteReady: false,
+    // P-05:服务端报价拒绝的原因(如该主题暂不支持在线支付);非空即这场现在不能报名
+    quoteRefusal: '',
     orderInfo: null,
     isPaying: false,
     paymentReady: false,
@@ -1089,7 +1091,7 @@ Page({
     that._quoteRetried = false;
     that._nonRefundableConfirmed = false;
     that._quoteRefundableNow = null;
-    that.setData({ quoteReady: false });
+    that.setData({ quoteReady: false, quoteRefusal: '' });
     app.sendRequest({
       url: '/api/registration/quote',
       method: 'POST',
@@ -1115,6 +1117,7 @@ Page({
           that._quoteRefundableNow = refundableNow;
           that.setData({
             quoteReady: !!that._quoteSign,
+            quoteRefusal: '',
             totalAmount: parseFloat(pay.toFixed(2)),
             discountAmount: parseFloat(pd.toFixed(2)),
             usedPoints: res.data.pointsUsed || 0,
@@ -1134,7 +1137,10 @@ Page({
           if (pay > 0) that.checkPaymentReadiness();
         } else if (res && res.msg) {
           // F-W1-05:报价被拒(如主题尚未开售)要说出真实原因,不能停在「重新检查支付服务」。
-          that.setData({ submitError: String(res.msg) });
+          // P-05:报价拒绝是这场当前不能报名的真实原因,记下来并关掉付款按钮,
+          // 否则点付款会带着空签名建单,只换来一句「缺少报价签名」。
+          that.setData({ submitError: String(res.msg), quoteRefusal: String(res.msg) },
+            () => that.refreshPaymentState());
           if (Number(that.data.totalAmount || 0) > 0 && !that.data.paymentReadinessChecking) {
             that.checkPaymentReadiness();
           }
@@ -1290,6 +1296,7 @@ Page({
     const signupClosed = (ticketSignupClosed(data.selectedTicket, now) || ticketWindowPassed(data.selectedTicket, now))
       && !activeOffer;
     const canPay = data.pageState === 'ready' && !!data.selectedTicket && !signupClosed
+      && !data.quoteRefusal
       && data.hostShareChecked && !!data.selectedAddress
       && !data.merchantClosed
       && waitlistAllowsCheckout
@@ -1465,6 +1472,12 @@ Page({
 
     if (that.data.isPaying) {
       app.tips('订单提交中，请勿重复点击');
+      return;
+    }
+
+    if (that.data.quoteRefusal) {
+      that.setData({ submitError: that.data.quoteRefusal });
+      app.tips(that.data.quoteRefusal);
       return;
     }
 
@@ -1662,6 +1675,14 @@ Page({
             that.setData({
               quoteReady: !!that._quoteSign
             });
+          } else if (res && res.msg) {
+            // P-05:补报价被拒就停在这里说真实原因,不带空签名去建单。
+            const refusal = String(res.msg);
+            that.setData({ isPaying: false, submitError: refusal, quoteRefusal: refusal }, function () {
+              that.refreshPaymentState();
+              cyLoading.hide();
+            });
+            return;
           }
           resumePayment();
         },

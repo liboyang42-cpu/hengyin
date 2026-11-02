@@ -506,6 +506,12 @@ public class ApiTopicController extends BaseController {
             boolean saveDraft = dto.getSaveDraft() != null && dto.getSaveDraft() == 1;
             boolean guardOnline = isSimplePublishMode(dto.getPublishMode()) && !saveDraft;
 
+            // P-17(owner 2026-11-02「封面应该是必须的 不能有没有封面的活动」):发布必须带封面,存草稿不拦。
+            // 只看作者提交的封面地址是否为空;封面已上传、仍在内容安全复核中的照常放行(读侧会先隐藏它)。
+            if (!saveDraft && StringUtils.isBlank(dto.getImgUrl())) {
+                return error("请上传主题封面");
+            }
+
             // 全免费发布免实名；收费发布仍登记收款主体（员工代办时为商家 owner）。
             if (!saveDraft && requiresPublisherIdentity(dto)) {
                 String identityErr = memberIdentityService.checkRegistered(memberId);
@@ -630,8 +636,19 @@ public class ApiTopicController extends BaseController {
         } catch (Exception e) {
             releaseDraftRequest(draftRequestKey);
             logger.warn("主题发布失败: memberId={}, topicId={}, chapterId=未生成或未知", memberId, topicId, e);
-            return AjaxResult.error(TOPIC_CREATE_GENERIC_MSG);
+            return AjaxResult.error(createFailureMessage(e));
         }
+    }
+
+    /**
+     * P-15/C-15：业务闸以裸 RuntimeException 抛出的中文原因(如「玩法还在审核中」)与 GlobalExceptionHandler 同口径
+     * 过 UserSafeMessage 后透出；NPE/解析失败等其它异常类型仍只给稳定兜底句。
+     */
+    static String createFailureMessage(Exception e) {
+        if (e != null && e.getClass() == RuntimeException.class) {
+            return UserSafeMessage.of(e.getMessage(), TOPIC_CREATE_GENERIC_MSG);
+        }
+        return TOPIC_CREATE_GENERIC_MSG;
     }
 
     private static final String DRAFT_REQUEST_PENDING = "PENDING";

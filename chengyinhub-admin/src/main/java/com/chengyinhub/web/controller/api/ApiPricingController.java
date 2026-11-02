@@ -35,6 +35,9 @@ public class ApiPricingController extends BaseController {
     @Autowired
     private com.chengyinhub.business.service.impl.MemberIdentityService memberIdentityService;
 
+    @Autowired
+    private com.chengyinhub.business.service.ITopicCommercialReviewService topicCommercialReviewService;
+
     @Operation(summary = "定价预览(阵容+成本构成+底价P_min)")
     @PostMapping("/preview")
     public AjaxResult preview(@RequestBody Map<String, Object> body) {
@@ -76,9 +79,31 @@ public class ApiPricingController extends BaseController {
             pricingService.confirmPrice(topicId, guidedPrice, selfPrice,
                     asInt(body.get("guidedInventory")), asBd(body.get("leadCost")),
                     asInt(body.get("teamSize")));
-            return AjaxResult.success("终价已确认，请等待开售审核");
+            return AjaxResult.success(afterConfirmMessage(topicId, memberId));
         } catch (IllegalStateException e) {
             return error(e.getMessage());
+        }
+    }
+
+    /**
+     * P-01：城市定向没有四店 canonical15 人工事实，锁价后直接提交开售审，回给作者真实的下一步；
+     * 自由探索仍等运营保存 canonical15 草稿后提审(原口径不变)。
+     */
+    private String afterConfirmMessage(Long topicId, Long memberId) {
+        CmsTopic topic = cmsTopicService.selectCmsTopicById(topicId);
+        if (topic == null || !Integer.valueOf(com.chengyinhub.common.constant.ProductType.ORIENTEERING)
+                .equals(topic.getProductType())) {
+            return "终价已确认，请等待开售审核";
+        }
+        try {
+            com.chengyinhub.business.domain.vo.TopicSaleReviewProgress progress =
+                    topicCommercialReviewService.submitSaleReviewIfReady(topicId, memberId);
+            if (progress != null && progress.getTaskId() != null) return "终价已确认，已提交开售审核，审核通过后开售";
+            return "终价已确认。" + (progress == null || progress.getNextStep() == null
+                    ? "请等待开售审核" : progress.getNextStep());
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            logger.warn("[P-01] 城市定向锁价后提交开售审失败 topicId={}: {}", topicId, e.getMessage());
+            return "终价已确认，开售审核暂未提交：" + e.getMessage();
         }
     }
 

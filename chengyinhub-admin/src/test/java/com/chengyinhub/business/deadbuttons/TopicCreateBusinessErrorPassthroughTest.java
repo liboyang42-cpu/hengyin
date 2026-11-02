@@ -67,7 +67,18 @@ class TopicCreateBusinessErrorPassthroughTest {
         TopicCreateDTO dto = new TopicCreateDTO();
         dto.setProductType(ProductType.FREE_EXPLORE);
         dto.setName("探店日");
+        dto.setImgUrl("/profile/upload/cover.jpg");
         return dto;
+    }
+
+    /** P-17:发布必须带封面;存草稿不拦。 */
+    @Test
+    void publishWithoutCover_isRefusedBeforeCreate() {
+        TopicCreateDTO dto = freeExploreDto();
+        dto.setImgUrl("  ");
+
+        assertEquals("请上传主题封面", msgOf(controller.createTopic(dto)));
+        org.mockito.Mockito.verify(topicService, org.mockito.Mockito.never()).createTopic(any(), anyLong(), anyString());
     }
 
     private String msgOf(AjaxResult r) {
@@ -114,6 +125,25 @@ class TopicCreateBusinessErrorPassthroughTest {
         String msg = msgOf(controller.createTopic(freeExploreDto()));
 
         assertTrue(msg.contains("第2个地点"), "缺哪个点要说清楚,实际:" + msg);
+    }
+
+    /** P-15/C-15：模板引用闸抛裸 RuntimeException,原先被压成「主题发布失败,请稍后重试」。 */
+    @Test
+    void templateGuardRuntimeException_reachesTheUserVerbatim() {
+        when(topicService.createTopic(any(), anyLong(), anyString()))
+                .thenThrow(new RuntimeException("玩法「钟楼问答」还在审核中，审核通过后才能用于发布"));
+
+        String msg = msgOf(controller.createTopic(freeExploreDto()));
+
+        assertEquals("玩法「钟楼问答」还在审核中，审核通过后才能用于发布", msg);
+    }
+
+    @Test
+    void plainRuntimeExceptionCarryingTechnicalLeak_isStillMasked() {
+        when(topicService.createTopic(any(), anyLong(), anyString()))
+                .thenThrow(new RuntimeException("Error querying database. Cause: java.sql.SQLException"));
+
+        assertEquals("主题发布失败，请稍后重试", msgOf(controller.createTopic(freeExploreDto())));
     }
 
     // ---------- 兜底不许被拆掉 ----------
