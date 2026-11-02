@@ -9,7 +9,7 @@
 .canyu-refreshing{ min-height: var(--cy-btn-h); display: flex; align-items: center; margin: 0 var(--cy-space-2); color: var(--cy-text-secondary); font-size: var(--cy-font-label); }
 .canyubox cy-inline-error{ display: block; margin: 0 var(--cy-space-2) var(--cy-space-3); }
 /* 用户备注:"下面居中下移"——加载失败态整体在 tab 下方区域垂直居中并偏下,不贴顶 */
-.canyubox_li{overflow: hidden; border-radius: var(--cy-radius-lg); background: var(--cy-color-bg-surface); margin: 0 var(--cy-space-2) var(--cy-space-4) var(--cy-space-2); }
+.canyubox_li{overflow: hidden; border-radius: var(--cy-radius-lg); background: var(--cy-color-bg-surface); margin: 0 var(--cy-page-x) var(--cy-space-4); }
 .canyubox_li_tgb{position: relative; overflow: hidden;}
 .canyubox_li_left{ position: relative; overflow: hidden;}
 .canyubox_li_left image{ width:432rpx; height: 336rpx; vertical-align: top;}
