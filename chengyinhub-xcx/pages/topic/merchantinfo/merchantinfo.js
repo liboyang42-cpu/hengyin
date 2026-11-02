@@ -369,7 +369,7 @@ Page({
     }
     const reducedMotion = readReducedMotion();
     if (this.data.reducedMotion !== reducedMotion) this.setData({ reducedMotion });
-    if (this._clubSheetReturn) { this._clubSheetReturn = false; this.loadProjectHome(); if (this.data.clubSheet.show) this.loadClubCandidates(); if (this.data.merchantSheet.show) this.loadRegApplies(); } merchantTheme.merchantPageShow(); this._navigating = false;
+    if (this._categoryReturn) { this._categoryReturn = false; this.loadMerchantRecruitmentChapters(); this.setData({ topicShow: true }); } if (this._clubSheetReturn) { this._clubSheetReturn = false; this.loadProjectHome(); if (this.data.clubSheet.show) this.loadClubCandidates(); if (this.data.merchantSheet.show) this.loadRegApplies(); } merchantTheme.merchantPageShow(); this._navigating = false;
   },
   onHide() { this._hidden = true; merchantTheme.merchantPageRestore(); },
   onUnload() {
@@ -661,7 +661,7 @@ Page({
           return;
         }
         // Q5 V1:品类缺失是可执行的前置态,不是「路线没开招募」的业务空。
-        const categoryMissing = String((res && res.msg) || '').indexOf('请先完善商家品类') >= 0;
+        const categoryMissing = String((res && res.msg) || '').indexOf('请先选择行业类型') >= 0;
         that.setData(categoryMissing ? {
           allChaptersList: [],
           chapterRecruitmentLoading: false,
@@ -1040,7 +1040,7 @@ Page({
   },
 
   goMerchantCategory() {
-    if (this._navigating) return; this.setData({ topicShow: false }); // 跳转中不响应连点,免得叠两层装修页
+    if (this._navigating) return; this.setData({ topicShow: false }); this._categoryReturn = true; // 跳转中不响应连点,免得叠两层装修页;M-08 回来要重拉章节
     this._navigating = true; wx.navigateTo({ url: '/pages/merchant/decor/index', complete: () => { this._navigating = false; } });
   },
 
@@ -1156,11 +1156,11 @@ Page({
   },
 
 
-  goCreateTemplate() {
-    if (this._navigating) return; this.setData({ topicShow: false }); // 跳转中不响应连点,免得叠两层模板编辑页
-    // 与 chapter-node-form 的「去创建玩法」同一条路,两处不能分家
-    this._navigating = true; wx.navigateTo({ url: '/pages/publish/temp/index?scope=MERCHANT', complete: () => { this._navigating = false; } });
-  },
+  /* M-09(2026-11-02 主人):「申请承接章节」弹层只选章节,原来的「选择玩法模板」块和
+     这里的去创建玩法入口一起撤掉。选玩法、去创建玩法都在下一页的报名表
+     (chapter-node-form):它带 from=join 打开玩法编辑页,发布后回到报名表并把新玩法选上,
+     不再 reLaunch 去模板库。页面返回时报名表靠 pageLifetimes.show 重拉玩法与常备权益。
+     本页只负责「去选择行业类型」回来后重拉章节(见 onShow 的 _categoryReturn)。 */
 
   goSettlement() {
     const { selectedMode, selectedNodeId, selectedTemplateId, selectedChapterId, topicId } = this.data;

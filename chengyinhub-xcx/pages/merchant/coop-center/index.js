@@ -39,6 +39,12 @@ function termsLine(item) {
   return TERMS_MODE_TEXT[mode];
 }
 
+// M-17(2026-11-02):承接前就说清钱怎么算。只在单一权益核销条款时出这一句(主人裁定是否保留,见 RESULT needs owner)。
+function settleLine(item) {
+  const modes = Array.isArray(item.termsModes) ? item.termsModes : [];
+  return modes.length === 1 && modes[0] === 'PERK' ? '玩家到店核销你的权益，平台不按次结算现金' : '';
+}
+
 function routeCards(items) {
   const now = Date.now();
   // M-23:过滤口径与营销页「N 个开放商机」同源(recruit-routes.visibleRecruitItems)
@@ -60,6 +66,7 @@ function routeCards(items) {
       deadlineShort: deadline && deadline > now ? '截止 ' + monthDay(deadline) : '',
       metaText: meta.join(' · '),
       termsText: termsLine(item),
+      settleText: settleLine(item),
       deadlineText: deadline ? '招商截止 ' + monthDay(deadline) : '',
     }, seatOf(item.remainingMerchantCount));
   });

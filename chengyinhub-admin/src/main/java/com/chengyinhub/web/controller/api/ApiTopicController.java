@@ -1687,7 +1687,7 @@ public class ApiTopicController extends BaseController {
             return new AjaxResult(e.getCode(), e.getMessage());
         }
         if (merchant == null || merchant.getCategoryId() == null || merchant.getCategoryId() <= 0) {
-            return error("请先完善商家品类");
+            return error("请先选择行业类型"); // M-16:与入驻、门店信息同一个词
         }
 
         TopicTemplateDetailVO detail = cmsTopicService.buildTopicTemplateDetail(

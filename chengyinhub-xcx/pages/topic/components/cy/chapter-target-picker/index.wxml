@@ -10,8 +10,8 @@
     <cy-error load-failure wx:elif="{{chaptersState === 'error'}}" title="可承接章节加载失败"
               sub="{{chaptersError}}" retry="重试" bind:retry="onRetryChapters" />
     <cy-empty wx:elif="{{chaptersState === 'category-missing'}}" kind="no-permission" size="lg"
-              title="请先完善商家品类" sub=""
-              cta="去完善品类" bind:cta="onGoCategory" />
+              title="请先选择行业类型" sub=""
+              cta="去选择行业类型" bind:cta="onGoCategory" />
     <scroll-view wx:else class="ctp-scroll" scroll-x enable-flex>
       <view class="ctp-card {{pickedChapterId === item.id ? 'is-on' : ''}}"
             wx:for="{{rows}}" wx:key="id" data-id="{{item.id}}" bindtap="onPickChapter"
@@ -30,30 +30,10 @@
       <text class="ctp-fact" wx:for="{{pickedFacts}}" wx:key="*this">{{item}}</text>
     </view>
 
-    <view class="ctp-h">选择玩法模板</view>
-    <cy-skeleton wx:if="{{templatesState === 'loading'}}" type="card" count="{{1}}" />
-    <!-- 读不到 ≠ 一个都没有:分开说,否则商家会去重新建一个自己已经有的玩法 -->
-    <cy-error load-failure wx:elif="{{templatesState === 'error'}}" title="玩法模板没读出来"
-              sub="{{templatesError}}" retry="重试" bind:retry="loadTemplates" />
-    <cy-empty wx:elif="{{templatesState === 'empty'}}" kind="empty" size="lg"
-              title="还没有可用的玩法" sub="先建一个玩法，回来就能选上"
-              cta="去创建玩法" bind:cta="goCreateTemplate" />
-    <scroll-view wx:else class="ctp-scroll" scroll-x enable-flex>
-      <!-- 稿 159:346:封面方图是主体,名称与描述在图下方(不套卡) -->
-      <view class="ctp-tpl {{pickedTemplateId === item.id ? 'is-on' : ''}}"
-            wx:for="{{templates}}" wx:key="id" data-id="{{item.id}}" bindtap="onPickTemplate"
-            aria-role="button" aria-label="选择玩法 {{item.title}}"
-            hover-class="cy-pressed" hover-stay-time="80">
-        <image class="ctp-tpl-img" wx:if="{{item.cover}}" src="{{item.cover}}" mode="aspectFill" />
-        <view class="ctp-tpl-img ctp-tpl-img--fallback" wx:else><text>{{item.initial}}</text></view>
-        <text class="ctp-tpl-t">{{item.title}}</text>
-        <text class="ctp-tpl-s" wx:if="{{item.sub}}">{{item.sub}}</text>
-      </view>
-    </scroll-view>
   </view>
 
   <view slot="footer" class="ctp-foot">
-    <!-- 玩法可以留到下一页再选(那一页也有同一个选择器),所以只有章节是必选的 -->
+    <!-- M-09(2026-11-02 主人):这一屏只选承接章节;玩法在下一页的报名表里选(那里也能新建玩法) -->
     <cy-btn variant="primary" style="width:100%" disabled="{{!pickedChapterId || submitting || !applicationOpen}}"
             bindtap="onNext">下一步 · 填报名</cy-btn>
     <!-- 章节错误/缺品类/全关已有各自的权威反馈,不能再把它们误说成主题招商窗口关闭。 -->

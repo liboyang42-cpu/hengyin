@@ -35,7 +35,7 @@ const INFO = 'pages/topic/merchantinfo/merchantinfo.js'
 
 const CASES = [
   ['goMerchantCategory', '/pages/merchant/decor/index'],
-  ['goCreateTemplate', '/pages/publish/temp/index?scope=MERCHANT'],
+  // M-09(2026-11-02):选章节弹层不再有玩法块,「去创建玩法」只在报名表(chapter-node-form)里
 ]
 
 for (const [name, url] of CASES) {
@@ -53,26 +53,26 @@ for (const [name, url] of CASES) {
   })
 }
 
-test('BL-249:两个入口与 goTemplateDetail 共用一把锁;锁住时不收半屏;onShow 兜底清锁', () => {
+test('BL-249:去选择行业类型与 goTemplateDetail 共用一把锁;锁住时不收半屏;onShow 兜底清锁', () => {
   const { page, navs } = loadPage(INFO)
   page.goMerchantCategory()
   page.data.topicShow = true
-  page.goCreateTemplate()
+  page.goMerchantCategory()
   page.goTemplateDetail({ currentTarget: { dataset: { id: 6 } } })
   assert.equal(navs.length, 1)
   assert.equal(page.data.topicShow, true)
   page._navigating = false // onShow 末尾已有 this._navigating = false(BL-236),onShow 依赖全局 getApp 主题,这里只验清锁后的行为
-  page.goCreateTemplate()
+  page.goMerchantCategory()
   assert.equal(navs.length, 2)
-  assert.equal(navs[1].url, '/pages/publish/temp/index?scope=MERCHANT')
+  assert.equal(navs[1].url, '/pages/merchant/decor/index')
 })
 
 test('BL-249:两个入口先判锁再收半屏,跳转带 complete 清锁;onShow 兜底清锁', () => {
   const source = fs.readFileSync(path.join(ROOT, INFO), 'utf8')
-  for (const name of ['goMerchantCategory', 'goCreateTemplate']) {
+  for (const name of ['goMerchantCategory']) {
     const body = source.slice(source.indexOf(`  ${name}() {`), source.indexOf('\n  },', source.indexOf(`  ${name}() {`)))
     assert.match(body, /if \(this\._navigating\) return; this\.setData\(\{ topicShow: false \}\);/)
     assert.match(body, /this\._navigating = true; wx\.navigateTo\(\{[^\n]*complete: \(\) => \{ this\._navigating = false; \}/)
   }
-  assert.match(source, /onShow\(\) \{[\s\S]{0,800}?merchantTheme\.merchantPageShow\(\); this\._navigating = false;\s*\},/)
+  assert.match(source, /onShow\(\) \{[\s\S]{0,1000}?merchantTheme\.merchantPageShow\(\); this\._navigating = false;\s*\},/)
 })

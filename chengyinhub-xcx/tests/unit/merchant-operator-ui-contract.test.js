@@ -37,8 +37,10 @@ function mountTeamPage(storage = {}, options = {}) {
     removeStorageSync: key => { delete storage[key]; },
     showToast: options => toasts.push(options.title),
     switchTab: options => switches.push(options.url),
+    reLaunch: options => relaunches.push(options.url),
   };
   const switches = [];
+  const relaunches = [];
   vm.runInNewContext(options.source || read('pages/merchant/team/index.js'), {
     Page: value => { definition = value; },
     getApp: () => app,
@@ -75,7 +77,7 @@ function mountTeamPage(storage = {}, options = {}) {
   const page = Object.assign({}, definition);
   page.data = JSON.parse(JSON.stringify(definition.data));
   page.setData = function setData(patch) { Object.assign(this.data, patch); };
-  return { page, requests, toasts, storage, switches, setMemberId(value) { memberId = value; } };
+  return { page, requests, toasts, storage, switches, relaunches, setMemberId(value) { memberId = value; } };
 }
 
 test('商家岗位权限只认服务端白名单，未知或脏访问上下文关闭全部经营入口', () => {
@@ -899,4 +901,19 @@ test('经营团队当前账号前台续期成功继续读取，续期失败仍�
     assert.equal(h.requests.length, ok ? 1 : 0);
     if (!ok) assert.match(h.page.data.accessError, /登录失败/);
   }
+});
+
+test('M-15:新店员接受邀请成功后直接进店铺工作台;失败留在原页', () => {
+  const ok = mountTeamPage();
+  ok.page._incomingInviteToken = 'safe-incoming-token-1234567890';
+  ok.page.loadAccess = () => {};
+  ok.page.acceptIncomingInvite();
+  ok.requests[0].success({ code: 200, data: { id: 9 } });
+  assert.deepEqual(ok.relaunches, ['/pages/merchant/index/index']);
+
+  const bad = mountTeamPage();
+  bad.page._incomingInviteToken = 'safe-incoming-token-1234567890';
+  bad.page.acceptIncomingInvite();
+  bad.requests[0].success({ code: 409, msg: '邀请已失效' });
+  assert.deepEqual(bad.relaunches, []);
 });

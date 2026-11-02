@@ -152,6 +152,11 @@
   background: linear-gradient(135deg, #2F4A58 0%, #16222A 100%); /* ds-ok: 无封面时的城市定向底色 */
 }
 .cc-route-cover--free { background: linear-gradient(135deg, #6B4A33 0%, #2A1E17 100%); } /* ds-ok: 无封面时的自由探索底色 */
+/* M-17(2026-11-02 主人:底部空了一大截):没有封面时不再撑一块 520rpx 的空渐变,卡高随文字收拢;
+   顶部留出类型章的位置,文字仍压在同一块深色底上。 */
+.cc-route-cover--bare { height: auto; }
+.cc-route-cover--bare .cc-route-shade { display: none; }
+.cc-route-cover--bare .cc-route-info { position: relative; bottom: auto; left: auto; right: auto; padding: 96rpx 32rpx 32rpx 36rpx; }
 .cc-route-cover__img {
   display: block;
   height: 100%;

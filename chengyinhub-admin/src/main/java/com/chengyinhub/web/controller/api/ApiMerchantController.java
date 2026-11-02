@@ -2006,6 +2006,27 @@ public class ApiMerchantController extends BaseController {
 
     @Operation(summary = "商家入驻")
     @Log(title = "商家入驻", businessType = BusinessType.INSERT)
+    /** 入驻行业类型:最多 5 个、去重、必须都是在用的 type=1 记录;空串 = 没选;不合法返回 null。 */
+    private String[] registrationCategoryIds(String raw) {
+        java.util.LinkedHashSet<String> ids = new java.util.LinkedHashSet<>();
+        for (String part : raw.split(",")) {
+            String id = part.trim();
+            if (id.isEmpty()) continue;
+            if (!id.matches("[1-9]\\d{0,9}")) return null;
+            ids.add(id);
+        }
+        if (ids.size() > 5) return null;
+        if (ids.isEmpty()) return new String[0];
+        String[] picked = ids.toArray(new String[0]);
+        List<SysCategory> rows = sysCategoryService.selectSysCategoryListByIds(picked);
+        int valid = 0;
+        if (rows != null) for (SysCategory row : rows) {
+            if (row != null && Long.valueOf(1L).equals(row.getType()) && Integer.valueOf(1).equals(row.getStatus())
+                    && (row.getDelFlag() == null || row.getDelFlag() == 0)) valid++;
+        }
+        return valid == picked.length ? picked : null;
+    }
+
     @PostMapping("/merchant_registration")
     @Transactional(rollbackFor = Exception.class)
     public AjaxResult merchantRegistration(@Validated @RequestBody MerchantRegistrationDTO request) {
@@ -2041,6 +2062,15 @@ public class ApiMerchantController extends BaseController {
         mmsMerchant.setMemberId(member_id);
         mmsMerchant.setName(request.getName());
         mmsMerchant.setCategoryId(request.getCategoryId());
+        if (request.getCategoryIds() != null) {
+            // M-16:入驻时就用门店信息同一份行业类型胶囊问一次;只认在用的 type=1 记录,第一个为主行业
+            String[] picked = registrationCategoryIds(request.getCategoryIds());
+            if (picked == null) return error("行业类型无效，请重新选择");
+            if (picked.length > 0) {
+                mmsMerchant.setCategoryIds(String.join(",", picked));
+                mmsMerchant.setCategoryId(Integer.valueOf(picked[0]));
+            }
+        }
         mmsMerchant.setDescription(request.getDescription());
         mmsMerchant.setDerivatives(request.getDerivatives());
         mmsMerchant.setPreference(request.getPreference());

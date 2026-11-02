@@ -785,6 +785,9 @@ Page({
         this.setData({ hasIncomingInvite: false, acceptResult: '已加入经营团队' });
         toast.success('已加入团队');
         this.loadAccess();
+        // M-15(2026-11-02 主人:店铺已经在,跳过去就好):新店员接受邀请后直接进店铺工作台(扫码核销所在),
+        // 不再留在团队页、下次打开落回玩家首页还找不到店。不新建首页。
+        if (wx.reLaunch) wx.reLaunch({ url: '/pages/merchant/index/index' });
       },
       fail: () => {
         this.setData({ acceptResult: '网络异常，请重试' });

@@ -327,7 +327,20 @@ Component({
 
     goCreateTemplate() {
       if (this.data.submitting) return;
-      wx.navigateTo({ url: '/pages/publish/temp/index?scope=MERCHANT' });
+      // M-09:from=join ⇒ 发布后回到本表单(不再 reLaunch 去模板库),新玩法直接选上
+      const version = this._formVersion;
+      wx.navigateTo({
+        url: '/pages/publish/temp/index?scope=MERCHANT&from=join',
+        events: {
+          templateCreated: (tpl) => {
+            if (version !== this._formVersion || !this.data.show || !tpl || !Number(tpl.id)) return;
+            this.setData({
+              'form.templateId': Number(tpl.id),
+              'form.templateName': String(tpl.title || ''),
+            }, () => this.refreshSubmitState());
+          },
+        },
+      });
     },
 
     goCreatePerkTemplate() {

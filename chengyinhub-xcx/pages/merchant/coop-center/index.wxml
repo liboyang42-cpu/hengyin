@@ -26,7 +26,7 @@
              下方一条信息栏(站点 / 招商截止 / 分成)+ 黑色「看详情」。 -->
         <view class="cc-route {{item.focus ? 'cc-route--focus' : ''}} {{flyClass}}" style="animation-delay: {{index < 5 ? index * 40 : 200}}ms" id="cc-route-{{item.id}}" wx:for="{{routes}}" wx:key="key"
           data-id="{{item.id}}" bindtap="openTopic" aria-role="button" aria-label="看详情：{{item.title}}" hover-class="cy-pressed" hover-stay-time="80">
-          <view class="cc-route-cover cc-route-cover--{{item.modeText === '自由探索' ? 'free' : 'orient'}}">
+          <view class="cc-route-cover cc-route-cover--{{item.modeText === '自由探索' ? 'free' : 'orient'}} {{item.cover && !item._coverFailed ? '' : 'cc-route-cover--bare'}}">
             <image class="cc-route-cover__img" wx:if="{{item.cover && !item._coverFailed}}" src="{{item.cover}}" mode="aspectFill"
               data-index="{{index}}" data-id="{{item.id}}" binderror="onRouteCoverError" />
             <view class="cc-route-shade"></view>
@@ -38,6 +38,7 @@
             <view class="cc-route-info">
               <text class="cc-route-title">{{item.title}}</text>
               <text class="cc-route-date" wx:if="{{item.dateText || item.cityText}}">{{item.cityText ? item.cityText + ' · ' : ''}}{{item.dateText}}{{item.termsText ? ' · ' + item.termsText : ''}}</text>
+              <text class="cc-route-date" wx:if="{{item.settleText}}">{{item.settleText}}</text>
               <view class="cc-route-foot">
                 <view class="cc-route-terms">
                   <view class="cc-fact" wx:if="{{item.stationText}}"><cy-icon name="route" size="30" /><text class="cc-fact-tx">{{item.stationText}}</text></view>

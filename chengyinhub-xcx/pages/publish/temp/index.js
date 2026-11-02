@@ -2314,7 +2314,7 @@ Page({
       interactionType: 'sec-basic',
       finish: 'sec-module',
       advanced: 'sec-module',
-      reward: 'sec-module',
+      reward: this.hasModule('reward') && this.data.gameKey !== 'album' ? 'sec-reward' : 'sec-module', // M-20:停在「完成奖励」卡上,模块被移除才退回模块区顶
       story: 'fieldStory'
     };
     const target = selectorMap[key];
@@ -3474,7 +3474,7 @@ Page({
                 primaryAction: 'back', secondaryAction: 'dismiss', closeAction: 'back'
               }
             });
-          } else {
+          } else if (that.data.from === 'join' && !isDraft) { that._returnToJoinForm(createdId, current); } else { // M-09
             that._submitting = false;
             that.data.dirty = false;
             that.setData({
@@ -3985,5 +3985,16 @@ Page({
     this._confirmingNewDraft = false;
     this.setData({ editorLoading: false, loadError: '' });
     return true;
+  },
+  /* M-09(2026-11-02):从「申请承接章节」的报名表进来建玩法,发布后回到报名表并选上新玩法,
+     不再跳去模板库 —— 那样商家找不回刚才那一章。 */
+  _returnToJoinForm(createdId, current) {
+    const ch = this.getOpenerEventChannel && this.getOpenerEventChannel();
+    if (ch && ch.emit) ch.emit('templateCreated', { id: createdId, title: this.data.formData.title });
+    this._submitting = false;
+    this.data.dirty = false;
+    this.setData({ submitting: false, submittingAction: '', submitError: '' });
+    toast.success('玩法已发布');
+    setTimeout(() => { if (current()) this.exitPage(); }, 600);
   },
 });

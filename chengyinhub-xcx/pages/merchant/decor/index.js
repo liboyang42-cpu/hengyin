@@ -43,21 +43,8 @@ const PREFERENCE_OPTIONS = ['城市运动', '户外活动', '健康生活', '美
   '摄影', '城市漫步', '骑行', '露营', '瑜伽', '球类', '水上运动', '花艺', '美容美发', '宠物友好'];
 const PREFERENCE_SPLIT = /[、,，·\/|]+|\s+/;
 
-// 行业类型:只给一份常见行业短表,按名称关键字映射到后端已有的分类记录(不再平铺整张分类表)。
-// label 是胶囊上显示的短名,match 用来在 /api/category/list 里认领一条真实记录(存它的 id)。
-const INDUSTRY_OPTIONS = [
-  { label: '餐饮美食', match: /美食|餐饮|烹饪|餐厅|食堂/ },
-  { label: '咖啡茶饮', match: /咖啡|茶饮|饮品|奶茶/ },
-  { label: '烘焙甜品', match: /烘焙|甜品|蛋糕/ },
-  { label: '运动健身', match: /运动|健身|体育/ },
-  { label: '户外出行', match: /户外|徒步|骑行|出行|旅行/ },
-  { label: '文化艺术', match: /文化|艺术|书|展/ },
-  { label: '生活美学', match: /生活|美学|美妆|花艺|时尚/ },
-  { label: '娱乐休闲', match: /娱乐|游戏|音乐|演出|电影|休闲/ },
-  { label: '亲子社交', match: /亲子|社交|交友|组队/ },
-  { label: '摄影', match: /摄影|相机/ },
-];
-const MAX_INDUSTRIES = 5;
+// 行业类型:与入驻申请共用 utils/merchant-industry.js 的胶囊短表(M-16)
+const { MAX_INDUSTRIES, buildIndustryOptions } = require('../../../utils/merchant-industry.js');
 
 /** 胶囊选项里勾选中的 key(按选项顺序,第一个仍是主行业)。 */
 function checkedKeys(options) {
@@ -78,35 +65,6 @@ function looksLikeUrl(value) {
 function selectedCategoryIds(m) {
   const raw = m && m.categoryIds ? m.categoryIds : (m && m.categoryId != null ? m.categoryId : '');
   return String(raw).split(',').map(x => x.trim()).filter(x => /^\d+$/.test(x) && x !== '0');
-}
-
-/**
- * 常见行业短表 → 胶囊选项。每个短表项认领一条名字匹配的真实记录;没匹配上的短表项不出现。
- * 已选中但不在短表里的记录照常列出(用其原名),老数据保持可见可取消。
- * 一个都匹配不上(分类表全是陌生名字)时退回前 10 条真实记录,别给商家一张空面板。
- */
-function buildIndustryOptions(rows, selectedIds) {
-  const list = Array.isArray(rows) ? rows.filter(r => r && r.id != null && r.categoryName) : [];
-  const used = {};
-  const out = [];
-  INDUSTRY_OPTIONS.forEach(def => {
-    const hit = list.filter(r => !used[r.id] && def.match.test(String(r.categoryName)))[0];
-    if (!hit) return;
-    used[hit.id] = true;
-    out.push({ key: String(hit.id), label: def.label, name: String(hit.categoryName), icon: tagIconName(def.label) });
-  });
-  if (!out.length) {
-    list.slice(0, 10).forEach(r => {
-      used[r.id] = true;
-      out.push({ key: String(r.id), label: String(r.categoryName), name: String(r.categoryName), icon: tagIconName(r.categoryName) });
-    });
-  }
-  (selectedIds || []).forEach(id => {
-    if (out.some(o => o.key === String(id))) return;
-    const row = list.filter(r => String(r.id) === String(id))[0];
-    if (row) out.push({ key: String(row.id), label: String(row.categoryName), name: String(row.categoryName), icon: tagIconName(row.categoryName) });
-  });
-  return out.map(o => Object.assign(o, { checked: (selectedIds || []).indexOf(o.key) >= 0 }));
 }
 
 // 特色标签预置词库(空间/体验/人群),与 E5 搜索共用
