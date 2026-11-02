@@ -231,7 +231,8 @@ function findUnitErrors(root = XCX_ROOT) {
     UNIT_PATTERN.lastIndex = 0;
     let match;
     while ((match = UNIT_PATTERN.exec(source))) {
-      if (!match[1].includes('||')) {
+      // utils/wxs/num.wxs 的 n() 也是兜底:没有数据显示「—」(2026-11-02 页面细节 brief 规则 6)
+      if (!match[1].includes('||') && !/\bnum\.n\(/.test(match[1])) {
         errors.push({
           file,
           line: lineNumber(source, match.index),
