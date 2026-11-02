@@ -97,11 +97,13 @@ const NOT_REDEEMED_REASONS = {
   '核销码无效': '这不是有效的核销码，请让玩家重新打开核销码',
   '非玩家动态核销码': '这不是玩家的核销码，请让玩家出示入场码',
   '已过期': '核销码已过期，请让玩家刷新后重新出示',
-  '您在本路线没有可核销权益或有效核销回执': '本店没有这张票的权益，无需提供',
   '本店不是这张票的核销店铺': '本店没有这张票的权益，无需提供'
 };
+// 服务端「本路线没有可核销权益…」整句含工程词,按前半句认。
+const NO_ENTITLEMENT_HERE = /^您在本路线没有可核销权益/;
 
 function notRedeemedMessage(msg) {
+  if (NO_ENTITLEMENT_HERE.test(String(msg || ''))) return '本店没有这张票的权益，无需提供';
   return NOT_REDEEMED_REASONS[msg] || msg || '未核销';
 }
 

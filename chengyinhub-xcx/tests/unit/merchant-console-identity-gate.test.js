@@ -64,6 +64,8 @@ global.wx = {
   setNavigationBarColor() {},
   setBackgroundColor() {},
   setNavigationBarTitle() {},
+  // M-13:打烊前的确认弹窗在单测里直接确认,写回时序合同不变
+  showModal: (opts) => { if (opts && opts.success) opts.success({ confirm: true }) },
 }
 
 global.Page = (config) => { pageConfig = config }

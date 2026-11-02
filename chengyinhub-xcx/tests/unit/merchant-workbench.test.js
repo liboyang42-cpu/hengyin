@@ -81,7 +81,7 @@ test('项目卡只把真实已确认承接标为承接中，保留主办档期�
     [{ startDate: today }, ''],
     [{ status: 1, startDate: '2026-08-04' }, '已结束'],
     [{ projectSource: 'chapter', status: 1, offerActive: true }, '承接中'],
-    [{ projectSource: 'chapter', status: 1, offerActive: false, startDate: today }, '待补供给'],
+    [{ projectSource: 'chapter', status: 1, offerActive: false, startDate: today }, '还差一步：设置到店权益'],
     [{ projectSource: 'chapter', status: 0, offerActive: true, startDate: today }, ''],
     [{ projectSource: 'chapter', status: 1, startDate: today }, ''],
     [{ projectSource: 'chapter', status: '1', offerActive: '1' }, '承接中'],

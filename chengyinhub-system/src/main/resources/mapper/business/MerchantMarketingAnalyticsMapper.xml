@@ -31,6 +31,13 @@
             select 1 from cms_activity a
              where a.id = r.owner_id and a.member_id = #{ownerMemberId} and a.del_flag = 0
           ))
+          <!-- M-10(2026-11-02):自由探索的章节承接商家,玩家买的票带本店章节权益即算本店报名/支付,
+               与核销(redemption.merchant_id)同一归属;只计数,不出名单。 -->
+          or (r.owner_type = 2 and r.purchase_kind = 3 and exists (
+            select 1 from registration_entitlement e
+              join merchant_chapter_offer o on o.topic_id = e.topic_id and o.chapter_id = e.chapter_id
+             where e.registration_id = r.id and o.merchant_id = #{ownerMemberId} and o.status = 1
+          ))
         )
     </sql>
 

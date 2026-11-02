@@ -41,8 +41,9 @@
                 <view class="fin-row__main">
                   <text class="fin-row__t1">{{item.title}}</text>
                   <view class="fin-row__t2">
-                    <text>{{item.customerDisplayName || '顾客信息受保护'}}</text>
-                    <text wx:if="{{item.timeText}}"> · {{item.timeText}}</text>
+                    <!-- M-27:客户名单给全名,这里不再写与之矛盾的「顾客信息受保护」;有名字才写。 -->
+                    <text wx:if="{{item.customerDisplayName}}">{{item.customerDisplayName}}</text>
+                    <text wx:if="{{item.timeText}}">{{item.customerDisplayName ? ' · ' : ''}}{{item.timeText}}</text>
                     <cy-badge class="fin-row__chip" type="status" variant="{{item.stateVariant}}" label="{{item.stateText}}" />
                   </view>
                 </view>

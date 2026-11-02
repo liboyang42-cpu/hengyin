@@ -91,7 +91,7 @@
           <cy-btn wx:if="{{chapterNode.auditLabel === '已通过'}}" variant="ghost" size="sm"
                   data-act="openNodeNpcForm" data-node-id="{{chapterNode.id}}" data-node-name="{{chapterNode.name}}"
                   bindtap="emit">节点NPC</cy-btn>
-          <text wx:else class="chapter-project-meta">审核通过后可配置节点内容</text>
+          <text wx:elif="{{chapterNode.auditLabel !== '待审核'}}" class="chapter-project-meta">审核通过后可配置节点内容</text>
         </view>
       </view>
       <cy-empty wx:if="{{myChapterNodesLoaded && !myChapterNodes.length && !myChapterNodesError}}" title="还没有自己的节点" />

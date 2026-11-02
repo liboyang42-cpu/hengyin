@@ -161,7 +161,7 @@ function buildProjectCards(input) {
          同一条路线上一家商家可以承接多个点位,卡上必须说清这一张是哪一个,
          否则两张卡除了状态徽标以外长得一模一样。缺就整行不出。 */
       acceptorName: item.addressName || '',
-      statusLabel: dateStatus === '已结束' ? dateStatus : (item.projectSource === 'chapter' && Number(item.status) === 1 && [false, 0, '0'].includes(item.offerActive) ? '待补供给' : (accepted ? '承接中' : '')),
+      statusLabel: dateStatus === '已结束' ? dateStatus : (item.projectSource === 'chapter' && Number(item.status) === 1 && [false, 0, '0'].includes(item.offerActive) ? '还差一步：设置到店权益' : (accepted ? '承接中' : '')),
       catLabel: catLabelOf(item.mode),
       // 缩略图:承接侧取主题封面(ViewRegistrationMerchant.topicImgUrl,可能是逗号分隔多图)
       thumb: item.topicImgUrl || '',

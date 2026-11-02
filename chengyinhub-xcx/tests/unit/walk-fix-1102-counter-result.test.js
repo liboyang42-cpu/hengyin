@@ -112,3 +112,14 @@ test('M-04 承接卡在开场当天写「今天 几点 · 俱乐部 · 几人已
   assert.equal(out[1].visitText, '夜跑团 · 11月12日 周四 10:00 到店');
   assert.equal(out[1].todoText, '今日无待办');
 });
+
+test('M-26 店铺参谋高峰时段读作「中午到店最多」，不再是「午上」', () => {
+  const src = fs.readFileSync(path.join(__dirname, '../../pages/merchant/marketing/ai-insight/index.js'), 'utf8');
+  let def; global.Page = d => { def = d; };
+  const start = src.indexOf('_buildSlots(facts) {');
+  const body = src.slice(start, src.indexOf('_buildSources(facts)'));
+  const numberOrNull = v => (v == null || isNaN(Number(v)) ? null : Number(v));
+  const page = new Function('numberOrNull', 'return ({' + body + '});')(numberOrNull);
+  const out = page._buildSlots({ checkin: { slotBuckets: [{ slot: '早', count: 1 }, { slot: '午', count: 4 }, { slot: '晚', count: 0 }, { slot: '夜', count: 0 }] } });
+  assert.equal(out.peakText, '中午到店最多');
+});
