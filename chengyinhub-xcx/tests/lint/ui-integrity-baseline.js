@@ -1209,7 +1209,6 @@ module.exports = {
     "chengyinhub-xcx/pages/merchant/apply/index.js#locationLat": "存量零消费债务：locationLat 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/pages/merchant/apply/index.js#locationLng": "存量零消费债务：locationLng 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/pages/merchant/decor/index.js#loadErrTitle": "存量零消费债务：loadErrTitle 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
-    "chengyinhub-xcx/pages/merchant/index/index.js#revBars": "存量零消费债务：revBars 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/pages/merchant/marketing/index.js#merchantId": "存量零消费债务：merchantId 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/pages/merchant/profile/index.js#topicId": "存量零消费债务：topicId 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/pages/merchant/profile/index.js#topicName": "存量零消费债务：topicName 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
