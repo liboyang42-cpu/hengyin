@@ -5,7 +5,7 @@
  * 这样既保住「和稿一模一样」,也不往 tokens.wxss 里塞一次性的档。 */
 .ctd-page {
   --ctd-cover-h: 480rpx;          /* 240px */
-  --ctd-head-h: 1044rpx;          /* 522px:封面顶到「主题」分区顶 */
+  --ctd-head-h: 1008rpx;          /* 圆钮标签底(976rpx)+ 分区间距 space-4:圆钮行到首个分区标题与分区之间同一档(2026-11-02 r2) */
   --ctd-logo: 128rpx;             /* 64px */
   --ctd-logo-ring: 6rpx;          /* 3px */
   --ctd-qa-circle: 104rpx;        /* 52px */
@@ -106,8 +106,8 @@
 .ctd-qa__label { margin-top: 18rpx; font-size: var(--ctd-type-meta); line-height: 1.35; color: var(--cy-color-text-primary); }
 
 /* ---------- 分区通用 ---------- */
-/* §8.3 贯穿口径:区块之间 20 · 分区标题→本组 16 · 卡与卡 12 · 页边 16 */
-.ctd-sec { padding: 0 var(--cy-space-4); margin-bottom: var(--cy-space-2-5); }
+/* §8.3 贯穿口径:区块之间 space-4(含圆钮行→首个分区)· 分区标题→本组 16 · 卡与卡 12 · 页边 16 */
+.ctd-sec { padding: 0 var(--cy-space-4); margin-bottom: var(--cy-space-4); }
 .ctd-sec__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--cy-space-2); }
 .ctd-sec__tit { font-size: var(--ctd-type-section); font-weight: 700; line-height: 1.35; color: var(--cy-color-text-primary); }
 .ctd-sec__more { display: flex; align-items: center; gap: 6rpx; }
@@ -137,8 +137,8 @@
 /* ---------- ⑤ 主题卡(整页上的卡 = elevated) ---------- */
 .ctd-topic {
   display: flex; gap: var(--cy-space-3); align-items: flex-start;
-  padding: 20rpx var(--cy-space-3) 20rpx 20rpx;
-  border-radius: var(--cy-radius-lg);
+  padding: var(--cy-space-2-5);              /* 四边同距;封面 10px 圆角 = 卡圆角 20px − 内距,同心 */
+  border-radius: var(--cy-radius-xl);        /* 与「接下来」「未通过原因」同为本页分区卡 */
   background: var(--cy-color-bg-elevated);
 }
 .ctd-topic__cover { flex: none; width: 192rpx; height: 192rpx; border-radius: var(--ctd-radius-thumb); background: var(--cy-color-bg-raised); overflow: hidden; }

@@ -38,7 +38,7 @@
     <view wx:else class="crop__frame {{round ? 'crop__frame--round' : ''}}"
           style="width:{{frameW || 0}}px;height:{{frameH || 0}}px;">
       <image wx:if="{{ready}}"
-             class="crop__img"
+             class="crop__img cy-fade-in {{settling ? 'crop__img--settling' : ''}}"
              src="{{src}}"
              mode="scaleToFill"
              style="width:{{imgW}}px;height:{{imgH}}px;transform:translate3d(calc(-50% + {{tx}}px), calc(-50% + {{ty}}px), 0) scale({{scale}});" />
@@ -58,7 +58,7 @@
     <view wx:if="{{sourceState === 'ready'}}" class="crop__action crop__action--reset" hover-class="crop__action--press" bindtap="onReset" aria-role="button" aria-label="还原">
       <text>还原</text>
     </view>
-    <view wx:if="{{sourceState === 'ready'}}" class="crop__action crop__action--confirm {{busy ? 'crop__action--busy' : ''}}" hover-class="crop__action--press" bindtap="onConfirm">
+    <view wx:if="{{sourceState === 'ready'}}" class="crop__action crop__action--confirm {{busy ? 'crop__action--busy' : ''}}" hover-class="{{busy ? 'none' : 'crop__action--press'}}" bindtap="onConfirm" aria-role="button" aria-label="{{busy ? '处理中' : (exportError ? '重试裁剪' : '选取')}}" aria-disabled="{{busy}}">
       <text>{{busy ? '处理中' : (exportError ? '重试裁剪' : '选取')}}</text>
     </view>
     <view wx:elif="{{sourceState === 'error'}}" class="crop__action crop__action--confirm" hover-class="crop__action--press" bindtap="onUseOriginal" aria-role="button" aria-label="使用未经裁剪的原图">

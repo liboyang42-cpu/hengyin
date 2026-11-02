@@ -527,8 +527,6 @@ page { background: var(--cy-bg-page); }
 .club-stats-topic { display: flex; align-items: center; gap: var(--cy-space-2); min-height: 64rpx; }
 .club-stats-topic-name { flex: 1; min-width: 0; color: var(--club-text); font-size: var(--cy-font-label); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .club-stats-topic-meta { flex-shrink: 0; color: var(--club-text-muted); font-size: var(--cy-font-caption); }
-/* CU-C-51:看板口径写在卡上 —— 「项目/游玩人次」只数自办项目,与下方项目卡的报名数不是同一口径。 */
-.club-stats-note { margin-top: var(--cy-space-2); color: var(--club-text-muted); font-size: var(--cy-font-caption); line-height: var(--cy-leading-normal); }
 
 .manage-project-list, .manage-todo-list, .manage-message-list, .manage-invite-list { display: flex; flex-direction: column; }
 .manage-project {
@@ -720,6 +718,7 @@ page { background: var(--cy-bg-page); }
   align-items: center;
   gap: var(--cy-space-3);
   padding: var(--cy-space-4) var(--cy-space-3); /* 2026-10-28 业主:贡献榜每行加高 */
+  padding-right: var(--ov-lb-float-gutter, var(--cy-space-3)); /* 未加入时右侧让给悬浮「加入」,分数不被压 */
 }
 .ov-lb-row.is-me { background: var(--cy-color-action-secondary-bg); }
 .ov-lb-rank {
@@ -760,12 +759,6 @@ page { background: var(--cy-bg-page); }
   color: var(--cy-color-text-tertiary);
 }
 .ov-lb-empty { margin: 0 var(--cy-page-x); }
-.ov-lb-note {
-  margin: 0 var(--cy-page-x);
-  padding-top: var(--cy-space-2);
-  font-size: var(--cy-font-caption);
-  color: var(--cy-color-text-tertiary);
-}
 
 /* 商家(2026-08-20 重设计:卡体样式在 components/cy/merchant-card 的 venue 变体,页面只留间距) */
 .mcard { display: block; margin-bottom: var(--cy-space-3); }

@@ -23,8 +23,8 @@
   </view>
 
   <block wx:else>
-    <!-- ① Hero + 标题区:整块按 Figma 绝对坐标排,高度固定 1044rpx(设计 522px) -->
-    <view class="ctd-head">
+    <!-- ① Hero + 标题区:整块按 Figma 绝对坐标排,高度固定 --ctd-head-h -->
+    <view class="ctd-head cy-fade-in">
       <view class="ctd-head__cover">
         <image wx:if="{{topic.cover}}" class="ctd-head__cover-img" src="{{topic.cover}}" mode="aspectFill" lazy-load="true" />
         <!-- CU-C-147:兜底要说得出"没图"。原来只有 128 的通用 image 线条图标,
@@ -88,7 +88,7 @@
     </view>
 
     <!-- ③ 未通过原因(仅 H2) -->
-    <view wx:if="{{showReject}}" class="ctd-sec">
+    <view wx:if="{{showReject}}" class="ctd-sec cy-fade-in">
       <view class="ctd-reject" aria-role="alert">
         <text class="ctd-reject__tit">未通过原因</text>
         <text class="ctd-reject__body">{{topic.rejectReason}}</text>
@@ -96,7 +96,7 @@
     </view>
 
     <!-- ④ 核销(H4 / H5 / H6) -->
-    <view wx:if="{{showVerify}}" class="ctd-sec">
+    <view wx:if="{{showVerify}}" class="ctd-sec cy-fade-in">
       <view class="ctd-sec__head">
         <text class="ctd-sec__tit">核销</text>
         <view class="ctd-sec__more" bindtap="goLedger" aria-role="button" aria-label="打开核销台账" hover-class="cy-pressed" hover-stay-time="80">
@@ -112,7 +112,7 @@
     </view>
 
     <!-- ⑤ 主题 -->
-    <view class="ctd-sec">
+    <view class="ctd-sec cy-fade-in">
       <view class="ctd-sec__head"><text class="ctd-sec__tit">主题</text></view>
       <view class="ctd-topic" bindtap="goStory" aria-role="button" aria-label="打开剧情与玩法" hover-class="cy-pressed" hover-stay-time="80">
         <!-- CU-C-147:这块封面与 ① Hero 是同一个 topic.cover,Hero 已经说明了"没图",
@@ -134,7 +134,7 @@
     </view>
 
     <!-- ⑥ 接下来(场次) -->
-    <view wx:if="{{sessions.length}}" class="ctd-sec">
+    <view wx:if="{{sessions.length}}" class="ctd-sec cy-fade-in">
       <view class="ctd-sec__head">
         <text class="ctd-sec__tit">接下来</text>
         <view wx:if="{{canManageSessions}}" class="ctd-sec__more" bindtap="goEventOps" aria-role="button" aria-label="管理场次" hover-class="cy-pressed" hover-stay-time="80">
