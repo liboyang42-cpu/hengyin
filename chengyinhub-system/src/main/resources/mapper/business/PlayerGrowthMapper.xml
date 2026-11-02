@@ -76,4 +76,27 @@
         where member_id = #{memberId}
     </update>
 
+    <!-- P-22(2026-11-02 业主批准)「累计打卡 N 处」= 核销过的店 + 完成的城市站点,两段互不重叠:
+         店只从 redemption 数(生效核销,按章去重);站点只数非商家节点(merchant_member_id is null)
+         且主题不是自由探索(product_type 2)⇒ 商家节点上的游戏完成不会再算一次。 -->
+    <select id="countRedeemedShops" resultType="java.lang.Integer">
+        select count(distinct r.chapter_id)
+        from redemption r
+        join cms_registration reg on reg.id = r.registration_id
+        where reg.member_id = #{memberId}
+          and r.status = 'ACTIVE'
+    </select>
+
+    <select id="countCompletedCityStations" resultType="java.lang.Integer">
+        select count(distinct p.node_id)
+        from player_node_progress p
+        join cms_topic_node n on n.id = p.node_id
+        join cms_topic t on t.id = p.topic_id
+        where p.member_id = #{memberId}
+          and p.status = 1
+          and p.del_flag = 0
+          and n.merchant_member_id is null
+          and (t.product_type is null or t.product_type != 2)
+    </select>
+
 </mapper>

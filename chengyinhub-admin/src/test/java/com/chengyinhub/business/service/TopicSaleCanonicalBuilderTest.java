@@ -79,7 +79,6 @@ class TopicSaleCanonicalBuilderTest {
 
         rebuilt.validateComplete();
         assertEquals(4, rebuilt.getStoreCount().intValue());
-        assertEquals(1, rebuilt.maxTicketPerAccount());
         assertEquals("20", rebuilt.getMicroExperienceCatalog().path("perks").get(0)
                 .path("retailValue").asText(), "真实 DECIMAL 整十值必须冻结为无科学计数法的 plain string");
         assertEquals("PLATFORM", rebuilt.getClubWorkPackage().path("organizerActor").path("actorType").asText());

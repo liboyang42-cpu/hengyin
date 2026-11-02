@@ -681,7 +681,10 @@ function assertFirstRunMarkup(wxml, wxss) {
   assert.match(wxml, /<block wx:if="\{\{!isMerchantView && \(orderPreviewList\.length \|\| orderErr\)\}\}">/)
   assert.match(wxml, /class="pc-achievement-metrics" wx:if="\{\{profileMetricState === 'ready'\}\}"/)
   assert.match(wxml, /aria-label="城瘾积分 \{\{profilePoint\}\}"[\s\S]*class="pc-gs-num">\{\{profilePoint\}\}/)
-  assert.match(wxml, /class="pc-rank-v">\{\{exploreStat\.shops \|\| 0\}\}家店/)
+  // P-22(2026-11-02 业主):「累计打卡 N 处」,缺数据显示 0;里程没有真实来源前不出 km
+  assert.match(wxml, /class="pc-rank-k">累计打卡<\/text>/)
+  assert.match(wxml, /class="pc-rank-v">\{\{exploreStat\.places \|\| 0\}\} 处<\/text>/)
+  assert.doesNotMatch(wxml, /累计探索|家店 · |\}\}km</)
   assert.match(wxml, /wx:elif="\{\{profileMetricState === 'empty'\}\}"[^>]*title="成长记录从第一次探索开始"/)
   // UI-04(2026-09-18):这三个数字位就是要走 || 0 兜底;仍不许把 userInfo 的原值直接兜底
   // (userInfo 真源走 metricNumber,缺字段的兜底只发生在展示字段上)。
@@ -754,7 +757,7 @@ test('开发版真实空订单和空项目保持为空，不用演示卡替代�
 })
 
 
-test('资料排名：后端无排名哨兵只显示占位，不把它当 TOP0% 或排名上升', async () => {
+test('资料排名：后端无排名哨兵显示 0(P-22 业主「没数据显示0」)，不把它当 TOP0% 或排名上升', async () => {
   for (const rank of [
     { rankPercentage: 'TOP0%', userRank: 0, totalUsers: 12 },
     { rankPercentage: 'TOP0%' },
@@ -766,7 +769,7 @@ test('资料排名：后端无排名哨兵只显示占位，不把它当 TOP0% �
     respond('/api/user/points/statistics', { code: 200, data: Object.assign({ weekPoints: 0, rankDelta: 3 }, rank) })
     respond('/api/growth/leaderboard', weekExpResponse(0))
     await pending
-    assert.deepEqual(component.data.rankDisplay, { no: '—', delta: '' })
+    assert.deepEqual(component.data.rankDisplay, { no: '0', delta: '' })
     assert.equal(component.data.pointsStat.rankPercentage, rank.rankPercentage)
     assert.equal(component.data.exploreStat.weekExp, 0)
     assert.equal(component.data.profilePoint, 50)
@@ -906,4 +909,20 @@ test('本周EXP：他人视角不发本人指标请求', async () => {
   component.data.isSelf = false
   await component.loadPointsStat()
   assert.equal(requests.length, 0)
+})
+
+test('P-22(2026-11-02 业主):「累计打卡 N 处」照读服务端 checkinPlaces,缺字段显示 0 且不拖垮整块指标', async () => {
+  const withPlaces = loadProfile()
+  await loadMetricSources(withPlaces, successSources({
+    play: { level: 1, totalCheckins: 2, totalMileage: 0, streakDays: 0, checkinPlaces: 5 },
+  }))
+  assert.equal(withPlaces.data.profileMetricState, 'ready')
+  assert.equal(withPlaces.data.exploreStat.places, 5)
+
+  const missing = loadProfile()
+  await loadMetricSources(missing, successSources({
+    play: { level: 1, totalCheckins: 2, totalMileage: 0, streakDays: 0 },
+  }))
+  assert.equal(missing.data.profileMetricState, 'ready')
+  assert.equal(missing.data.exploreStat.places, 0)
 })

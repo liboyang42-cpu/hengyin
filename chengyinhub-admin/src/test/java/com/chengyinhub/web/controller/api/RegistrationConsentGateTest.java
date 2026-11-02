@@ -63,19 +63,6 @@ class RegistrationConsentGateTest {
     }
 
     @Test
-    void topicTicketLimitReturnsReadableMessageAfterCurrentConsent() {
-        when(consentMapper.selectLatest(7L, DOC, SCENE)).thenReturn(consent("AGREE", VERSION));
-        when(checkoutService.createOrReplay(7L, request))
-                .thenThrow(new IllegalStateException("SHOP_DAY_ACCOUNT_TICKET_LIMIT_REACHED"));
-
-        AjaxResult result = controller.createRegistration(request);
-
-        assertEquals(500, result.get("code"));
-        assertEquals("已达到该主题的购票上限", result.get("msg"));
-        verify(checkoutService).createOrReplay(7L, request);
-    }
-
-    @Test
     void missingConsentBlocksOrderCreationBeforeCheckout() {
         when(consentMapper.selectLatest(7L, DOC, SCENE)).thenReturn(null);
 

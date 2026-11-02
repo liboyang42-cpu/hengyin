@@ -66,6 +66,10 @@ public class RegistrationQueryApplication {
     private IMmsMerchantService mmsMerchantService;
     @Autowired
     private ISysCategoryService sysCategoryService;
+    @Autowired(required = false)
+    private IClubService clubService;
+    @Autowired(required = false)
+    private com.chengyinhub.business.mapper.PlayerBadgeMapper playerBadgeMapper;
 
     /** 「我参与中」(myJoined)列表:活动/主题结束满 N 天后从列表隐藏该单的窗口(天)。仅影响该列表展示,不删除数据。 */
     public static final int HIDE_AFTER_END_DAYS = 7;
@@ -170,6 +174,7 @@ public class RegistrationQueryApplication {
                 if (registration.getPurchaseKind() != null
                         && registration.getPurchaseKind() == PurchaseKind.EXPLORE_PASS) {
                     registration.setEntitlements(perkLedgerService.listEntitlements(registrationId));
+                    attachExploreProgress(registration);
                     // 探店日票面要能回答「几点、在哪集合」(总纲 §1.1/§1.2):带上票种快照。
                     if (registration.getTicketId() != null) {
                         registration.setOmsTicket(omsTicketService.selectOmsTicketById(registration.getTicketId()));
@@ -191,6 +196,7 @@ public class RegistrationQueryApplication {
                 }
             }
             attachOrganizer(registration);
+            attachTopicCompleted(registration);
             attachManualRefundInfo(registration);
             registration.setRefundApplication(latestRegistrationRefund(registration.getId(), memberId));
             // 订单详情展示 enrich:脱敏手机号 / 支付方式文案 / 退款截止文案 / 权益章节名
@@ -381,12 +387,12 @@ public class RegistrationQueryApplication {
         List<CmsRegistration> list;
         //startPage();
         list = registrationService.selectCmsRegistrationList(registration);
+        for (CmsRegistration row : list) { attachExploreProgress(row); attachTopicCompleted(row); }
         if (ownerType >= 3 && ("2".equals(status) || "3".equals(status))) {
             List<CmsRegistration> filtered = new ArrayList<>();
             for (CmsRegistration row : list) {
-                boolean completed = (Integer.valueOf(2).equals(row.getPaymentStatus())
-                        && row.getFirstSuccessfulScanAt() != null)
-                        || Integer.valueOf(1).equals(row.getVerificationStatus());
+                // ③ 探索票核销一家不算完成:必选章全核销或场次结束才进「已完成」(P-03)。
+                boolean completed = com.chengyinhub.business.service.support.ExploreTicketProgress.listCompleted(row);
                 if ("3".equals(status) == completed) filtered.add(row);
             }
             list = filtered;
@@ -453,10 +459,57 @@ public class RegistrationQueryApplication {
             reg.setRefundApplication(latestRefunds.get(reg.getId()));
         }
 
+        for (CmsRegistration reg : all) { attachExploreProgress(reg); attachTopicCompleted(reg); }
         all = filterEndedOverWeek(all, new Date());
         all.sort((a, b) -> b.getCreateTime().compareTo(a.getCreateTime()));
         stampServerNow(all);
         return AjaxResult.success(all);
+    }
+
+    /** P-22:城市定向(①)本人在下单之后拿到本主题通关勋章 ⇒ 这一单已完成。勋章按 (member, topic) 唯一,用时间排除旧单之前的通关。 */
+    private void attachTopicCompleted(CmsRegistration reg) {
+        if (playerBadgeMapper == null || reg == null || reg.getMemberId() == null
+                || !Integer.valueOf(2).equals(reg.getPaymentStatus())
+                || com.chengyinhub.business.service.support.ExploreTicketProgress.isExplorePass(reg)) return;
+        try {
+            Long topicId = null;
+            if (Long.valueOf(1L).equals(reg.getOwnerType())) topicId = reg.getOwnerId();
+            CmsActivity activity = reg.getCmsActivity();
+            if (topicId == null && Long.valueOf(2L).equals(reg.getOwnerType())) {
+                if (activity == null) activity = activityService.selectCmsActivityById(reg.getOwnerId());
+                if (activity != null) topicId = activity.getTopicId();
+            }
+            if (topicId == null || topicId <= 0) return;
+            CmsTopic topic = reg.getCmsTopic() != null ? reg.getCmsTopic() : topicService.selectCmsTopicById(topicId);
+            Integer productType = topic != null && topic.getProductType() != null ? topic.getProductType() : readTopicProductType(topicId);
+            if (!Integer.valueOf(ProductType.ORIENTEERING).equals(productType)) return;
+            com.chengyinhub.business.domain.PlayerBadge badge = playerBadgeMapper.selectOne(reg.getMemberId(), "TOPIC_FINISH_" + topicId, topicId);
+            if (badge == null) return;
+            Date at = badge.getObtainTime() != null ? badge.getObtainTime() : badge.getCreateTime();
+            if (at != null && reg.getCreateTime() != null && at.before(reg.getCreateTime())) return;
+            reg.setTopicCompleted(Boolean.TRUE);
+        } catch (RuntimeException unavailable) {
+            reg.setTopicCompleted(null);
+        }
+    }
+
+    /** ③ 探索票带上「已核销几家/共几家」;先判 purchase_kind 再查库,①② 不多查。 */
+    private void attachExploreProgress(CmsRegistration reg) {
+        if (!com.chengyinhub.business.service.support.ExploreTicketProgress.isExplorePass(reg) || reg.getId() == null) return;
+        try {
+            Long topicId = null;
+            Date endDate = null;
+            CmsActivity activity = reg.getCmsActivity();
+            if (activity == null && Long.valueOf(2L).equals(reg.getOwnerType())) activity = activityService.selectCmsActivityById(reg.getOwnerId());
+            if (activity != null) { topicId = activity.getTopicId(); endDate = activity.getEndDate(); }
+            if (topicId == null) return;
+            reg.setExploreProgress(com.chengyinhub.business.service.support.ExploreTicketProgress.of(
+                    perkLedgerService.listEntitlements(reg.getId()),
+                    perkLedgerService.isExploreCompleted(reg.getId(), topicId), endDate, new Date()));
+        } catch (RuntimeException unavailable) {
+            // 读面失败不拦订单列表:留 null,客户端退回原口径。
+            reg.setExploreProgress(null);
+        }
     }
 
     /** U-033:订单状态标签(未开始/进行中/已完成)按服务端时刻判,手机时钟只作缺字段时的兜底。 */
@@ -531,6 +584,15 @@ public class RegistrationQueryApplication {
             organizerId = registration.getCmsTopic().getMemberId();
         } else if (registration.getCmsActivity() != null) {
             organizerId = registration.getCmsActivity().getMemberId();
+        }
+        // P-20:俱乐部开的场次,主办方写俱乐部名,不写主理人个人昵称
+        CmsActivity activity = registration.getCmsActivity();
+        if (clubService != null && activity != null && activity.getClubId() != null && activity.getClubId() > 0) {
+            Club club = clubService.selectClubById(activity.getClubId());
+            if (club != null && !StringUtils.isEmpty(club.getName())) {
+                registration.setOrganizerName(club.getName());
+                return;
+            }
         }
         if (organizerId == null || organizerId <= 0) {
             return;

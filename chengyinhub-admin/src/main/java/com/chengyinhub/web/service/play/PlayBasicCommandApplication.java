@@ -93,6 +93,19 @@ public class PlayBasicCommandApplication {
                 originalRun -> checkinOnce(actorMemberId, activityId, code, topicId, routeActionId, expectedRouteVersion, registrationId, nodeId, runtimeInstance, authorityEpoch, originalRun));
     }
 
+    /** 扫到了别处的码：同一主题内直说扫的是哪一家；别的主题的码不报名字。 */
+    private String wrongNodeScanMessage(CmsTopicNode scanned, String intendedNodeId)
+    {
+        CmsTopicNode intended = null;
+        try { intended = cmsTopicNodeService.selectCmsTopicNodeById(Long.valueOf(intendedNodeId)); }
+        catch (NumberFormatException ignored) { intended = null; }
+        boolean sameTopic = intended != null && scanned.getTopicId() != null && scanned.getTopicId().equals(intended.getTopicId());
+        if (sameTopic && StringUtils.isNotBlank(scanned.getName())) {
+            return "这是「" + scanned.getName().trim() + "」的码，不是这一家的";
+        }
+        return "这不是这一家的码";
+    }
+
     public AjaxResult checkin(String activityId, String code, String topicId,
             String routeActionId, Integer expectedRouteVersion, Long registrationId) {
         return error("必须提供原目标节点和运行时身份");
@@ -135,7 +148,7 @@ public class PlayBasicCommandApplication {
             }
             node = nodeList.get(0);
         }
-        if (!String.valueOf(node.getId()).equals(intendedNodeId)) return error("扫码节点与本次意图目标不一致");
+        if (!String.valueOf(node.getId()).equals(intendedNodeId)) return error(wrongNodeScanMessage(node, intendedNodeId));
         // 规则16:普通下架/停用节点停止新发现,旧码/旧链接不得再产生新完成;
         // 已正式完成者的幂等重试仍走原回执(与 photo 同口径,§7-2)
         if (playNodeContext.isDelistedNode(node) && !playNodeContext.hasCompletedNodeFact(memberId, activityId, node)) {

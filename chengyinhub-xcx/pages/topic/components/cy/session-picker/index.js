@@ -79,7 +79,7 @@ Component({
         week: dateChip(a).week,
         day: dateChip(a).day,
         whenText: singleDayText(a),
-        detailText: [chinaParts(a.startDate) ? String(chinaParts(a.startDate).hours).padStart(2, '0') + ':' + String(chinaParts(a.startDate).minutes).padStart(2, '0') : '', String(a.name || '')].filter(Boolean).join(' · '),
+        detailText: [chinaParts(a.startDate) ? String(chinaParts(a.startDate).hours).padStart(2, '0') + ':' + String(chinaParts(a.startDate).minutes).padStart(2, '0') : '', String(a.name || ''), String(a.clubName || '').trim()].filter(Boolean).join(' · '),
       }));
       const single = rows.length === 1;
       this.setData({

@@ -294,7 +294,7 @@ class ApiPlaySensorResultTest {
     }
 
     @Test
-    void freeCollectFilterShotCannotBypassLeadGate() {
+    void freeCollectFilterShotIsNotHeldByLeadGather() {
         topic.setProductType(PlayMode.FREE_COLLECT);
         template.setValidationMethod(ValidationMethod.PHOTO);
         template.setSensorType("filter_shot");
@@ -306,11 +306,9 @@ class ApiPlaySensorResultTest {
         AjaxResult result = BasicPlayCommandFixtures.photo(controller,
                 String.valueOf(ACTIVITY), String.valueOf(NODE), "filter-shot.png", null);
 
-        assertEquals(500, result.get("code"));
-        assertEquals("队伍集合中,等队长开始行程", result.get("msg"));
-        verify(proof, never()).submitPhoto(anyLong(), anyLong(), anyLong(), anyString());
-        verify(progressService, never()).insertPlayerNodeProgress(any());
-        verify(growth, never()).addExp(anyLong(), anyInt(), anyString());
+        // 自由探索不带队(P-13):集合中的带队状态不再拦玩家,开场时间仍由活动时间把关。
+        org.junit.jupiter.api.Assertions.assertNotEquals("队伍集合中,等队长开始行程", result.get("msg"));
+        verify(clubLeadMapper, never()).selectByActivity(ACTIVITY);
     }
 
     @Test

@@ -560,7 +560,7 @@ Page({
     nav: { active: false, targetNodeId: null, targetName: '', remainM: 0, totalM: 0, hit50: false, hit90: false },
     navBubble: { show: false, text: '' },
     // P1 俱乐部带领(club 场次:集合屏→队长发车→章节放行;3~5s 轮询 team-progress)
-    lead: { exists: false, status: 0, isLeader: false, arrived: 0, total: 0, meArrived: false, chapterName: '', broadcast: '', members: [] },
+    lead: { exists: false, status: 0, isLeader: false, freeEntry: false, arrived: 0, total: 0, meArrived: false, chapterName: '', broadcast: '', members: [] },
     leadLoadError: false, leadUnlockChecking: false,
     // 手记
     /* 半屏进场用的开关(原型 .sheet 的 @keyframes up 在这儿是 transition)。 */
@@ -4643,8 +4643,8 @@ Page({
       if (!next) return null;
       pick = { x: next, i: nodes.findIndex((node) => node && String(node.nodeId) === String(next.nodeId)) };
     } else {
-      // P0 推荐条(纯前端加权):距离 × 营业时间窗 × 顺路;正常行走态始终只给第一推荐。
-      const scored = this.scoreCandidates(nodes, pts, undone);
+      // P0 推荐条(纯前端加权):距离 × 营业时间窗 × 顺路;正常行走态始终只给第一推荐。P-37:玩法做完只等核销的店不当「下一站」,全都只等核销时不推荐。
+      const pending = undone.filter((o) => !o.x.gameDone); if (!pending.length) return null; const scored = this.scoreCandidates(nodes, pts, pending);
       pick = scored[0]; reason = pick.reason;
     }
     const x = pick.x, pt = pts[pick.i] || null;
@@ -4904,7 +4904,7 @@ Page({
         && Number(that.data.lead.status) !== 2 && that._playable === false;
       that.setData({
         lead: {
-          exists: true, status: d.status || 1, isLeader: !!d.isLeader,
+          exists: true, status: d.status || 1, isLeader: !!d.isLeader, freeEntry: d.freeEntry === true,
           arrived: d.arrived || 0, total: d.total || 0, meArrived: !!d.meArrived,
           chapterName: d.chapterName || '', currentChapterId: d.currentChapterId, nextChapterId: d.nextChapterId, broadcast: d.broadcast || '',
           members: (d.members || []).slice(0, 8)

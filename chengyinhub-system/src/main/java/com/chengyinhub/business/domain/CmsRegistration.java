@@ -294,6 +294,28 @@ public class CmsRegistration extends BaseEntity
      */
     private OmsTicket omsTicket;
 
+    /** 城市定向本人在本单之后已通关(TOPIC_FINISH 勋章,瞬态读面,P-22)。只读,不改任何事实。 */
+    private Boolean topicCompleted;
+
+    public Boolean getTopicCompleted() {
+        return topicCompleted;
+    }
+
+    public void setTopicCompleted(Boolean topicCompleted) {
+        this.topicCompleted = topicCompleted;
+    }
+
+    /** ③ 探索票进度读面(瞬态,见 ExploreTicketProgress):redeemed/required/completed/ended/active。其余恒 null。 */
+    private java.util.Map<String, Object> exploreProgress;
+
+    public java.util.Map<String, Object> getExploreProgress() {
+        return exploreProgress;
+    }
+
+    public void setExploreProgress(java.util.Map<String, Object> exploreProgress) {
+        this.exploreProgress = exploreProgress;
+    }
+
     public List<RegistrationEntitlement> getEntitlements() {
         return entitlements;
     }

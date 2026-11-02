@@ -89,10 +89,6 @@ public interface CmsRegistrationMapper
                                 @Param("ownerType") Long ownerType, @Param("ownerId") Long ownerId,
                                 @Param("scanTime") java.util.Date scanTime);
 
-    /** 同一源主题的一账号有效探索票；调用方先锁 cms_topic 行，再做当前读。 */
-    public List<Long> selectLiveExploreTicketIdsForUpdate(@Param("topicId") Long topicId,
-                                                          @Param("memberId") Long memberId);
-
     /**
      * 活动(owner_type=2)上仍活着的报名所引用的票 id:payment_status 0待支付/1支付中/2已支付。
      * 已售锁(2026-09-15 裁决 15)的判据:这些票的时间/集合点/价格/退款规则被锁且不许删。
@@ -115,7 +111,7 @@ public interface CmsRegistrationMapper
                                   @Param("ownerType") Long ownerType,
                                   @Param("ownerId") Long ownerId);
 
-    /** 一账号一票的全入口串行点；返回空即源 topic 不存在。 */
+    /** ③ 售票入口的源 topic 行锁；返回空即源 topic 不存在。 */
     public Long lockExploreTopicForUpdate(@Param("topicId") Long topicId);
 
     /**

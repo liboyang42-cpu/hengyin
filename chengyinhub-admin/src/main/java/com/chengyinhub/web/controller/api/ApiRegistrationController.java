@@ -147,9 +147,6 @@ public class ApiRegistrationController extends BaseController {
                     member_id, param == null ? null : param.getOwnerType(),
                     param == null ? null : param.getOwnerId(), param == null ? null : param.getTicketId(),
                     param == null ? null : param.getRequestId(), e);
-            if ("SHOP_DAY_ACCOUNT_TICKET_LIMIT_REACHED".equals(e.getMessage())) {
-                return AjaxResult.error("已达到该主题的购票上限");
-            }
             return AjaxResult.error(e.getMessage());
         }
     }

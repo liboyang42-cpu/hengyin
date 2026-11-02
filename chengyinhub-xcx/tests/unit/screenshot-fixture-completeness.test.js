@@ -91,7 +91,7 @@ const CONTRACTS = {
     sources: ['subpackageMember/components/cy/profile/index.js', 'subpackageMember/components/cy/profile/index.wxml'],
     shell: ['pages/member/index/index.wxml', 'id="profile"'],
     target: '#profile',
-    paths: ['activeTab', 'profileMetricState', 'profilePoint', 'rankDisplay.no', 'rankDisplay.delta', 'exploreStat.shops', 'exploreStat.weekExp'],
+    paths: ['activeTab', 'profileMetricState', 'profilePoint', 'rankDisplay.no', 'rankDisplay.delta', 'exploreStat.shops', 'exploreStat.places', 'exploreStat.weekExp'],
     equals: {
       activeTab: 'achievements',
       profileMetricState: 'ready',
@@ -99,6 +99,7 @@ const CONTRACTS = {
       'rankDisplay.no': '12',
       'rankDisplay.delta': '↑ 3',
       'exploreStat.shops': 12,
+      'exploreStat.places': 12,
       'exploreStat.weekExp': 80,
     },
   },

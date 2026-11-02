@@ -69,6 +69,8 @@ import com.chengyinhub.business.access.merchant.MerchantPermission;
 @RequestMapping("/api/activity")
 
 public class ApiActivityController extends BaseController {
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.chengyinhub.business.service.IClubService clubService;
     @Autowired
     private com.chengyinhub.business.service.support.AuthorWriteReceiptService authorWriteReceipts;
 
@@ -1214,7 +1216,11 @@ public class ApiActivityController extends BaseController {
                     gate.put("gate", true);
                     gate.put("clubId", cmsActivity.getClubId());
                     gate.put("activityName", cmsActivity.getName());
-                    gate.put("message", "来自俱乐部的活动，加入后查看");
+                    // P-19:门卡说清是哪个俱乐部执行这一场,与「去加入俱乐部」打开的是同一个
+                    com.chengyinhub.business.domain.Club gateClub = clubService == null ? null : clubService.selectClubById(cmsActivity.getClubId());
+                    String gateClubName = gateClub == null || gateClub.getName() == null ? "" : gateClub.getName().trim();
+                    gate.put("clubName", gateClubName);
+                    gate.put("message", gateClubName.isEmpty() ? "来自俱乐部的活动，加入后查看" : "这一场由「" + gateClubName + "」执行，加入后查看");
                     return AjaxResult.success(gate);
                 }
             }

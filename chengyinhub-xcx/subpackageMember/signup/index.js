@@ -280,7 +280,7 @@ Page({
         wKey: 'activity-' + item.id,
         wTitle: a.name || '—',
         wImg: a.imgUrl || '/images/route_city_cover.png',
-        wType: '场次', wColor: '#E8B86B', wUntil: a.endTime || a.endDate || '', // ds-ok v13 卡角色
+        wType: '场次', wColor: '#E8B86B', wUntil: a.endTime || a.endDate || '', wProgress: exploreProgressOf(item), // ds-ok v13 卡角色
       });
     });
     const seen = new Set();
@@ -707,11 +707,31 @@ const DECK_POSE = [{ y: 0, s: 1, b: 1, o: 1 }, { y: -26, s: 0.93, b: 0.5, o: 1 }
 function walletCard(item) {
   // 卡面「剩 N 天」与背面「N 天内过期」同一套自然日算法(原来卡面按 24 小时向上取整,同一张票两面差一天)
   const days = passDaysLeft(item.wUntil);
-  return Object.assign(item, { wSub: days === null ? item.wType : item.wType + (days === 0 ? ' · 今天过期' : ' · 剩 ' + days + ' 天'), wExpiry: passExpiryText(item.wUntil) });
+  const progress = item.wProgress ? ' · 已核销 ' + item.wProgress.redeemed + '/' + item.wProgress.required + ' 家' : '';
+  // P-27:场次票卡面写「几点 · 在哪」,到期留在背面(wExpiry);读不到开场时间才回落「场次 · 剩几天」
+  const session = item.kind === 'activity' ? sessionLine(item.cmsActivity) : '';
+  const head = item.topicCompleted === true ? '已通关' : (session || (days === null ? item.wType : item.wType + (days === 0 ? ' · 今天过期' : ' · 剩 ' + days + ' 天')));
+  return Object.assign(item, { wSub: head + progress, wExpiry: passExpiryText(item.wUntil) });
+}
+/* 场次开场时间(服务端 yyyy-MM-dd HH:mm:ss,北京时间)+ 地点;缺开场时间返回空串 */
+function sessionLine(a) {
+  const m = String((a && a.startDate) || '').match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+  if (!m) return '';
+  const place = String((a && (a.addressName || a.address)) || '').trim();
+  return Number(m[2]) + '月' + Number(m[3]) + '日 ' + m[4] + ':' + m[5] + (place ? ' · ' + place : '');
+}
+/* P-03:服务端给 ③ 探索票下发的「已核销几家/共几家」;没有就 null(与 utils/order-status.js exploreProgressOf 同口径) */
+function exploreProgressOf(item) {
+  const p = item && item.exploreProgress;
+  if (!p || !(Number(p.required) > 0)) return null;
+  return { redeemed: Number(p.redeemed) || 0, required: Number(p.required), active: p.active === true };
 }
 /* 能用的票:已报名(已付款 / 免费)、没核验、没取消没过期,到期日也还没过 */
 function usableTicket(item) {
-  if (Number(item.registrationStatus) !== 2 || Number(item.paymentStatus) !== 2 || item.verificationStatus == 1) return false;
+  // P-03:探索票核销过一家仍可用,直到必选章全部核销或场次结束(服务端 exploreProgress.active)
+  const exploreActive = !!(item.wProgress && item.wProgress.active);
+  if (Number(item.registrationStatus) !== 2 || Number(item.paymentStatus) !== 2 || (item.verificationStatus == 1 && !exploreActive)) return false;
+  if (item.wProgress && !item.wProgress.active) return false;
   const until = item.wUntil ? new Date(String(item.wUntil).replace(/-/g, '/')) : null;
   return !(until && !isNaN(until.getTime()) && until.getTime() < Date.now());
 }
