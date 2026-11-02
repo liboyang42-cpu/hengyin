@@ -1797,8 +1797,8 @@ button::after {
 .topic .slide1 .slide-txt { transition: transform .28s cubic-bezier(.4,0,1,1), opacity .28s ease; }
 .topic .slide1 .slide-txt--leave { transform: translateY(40rpx); opacity: 0; }
 .slide2--enter .det1 { animation: hero-drop .7s cubic-bezier(.16,1,.3,1) both; }
-.slide2--enter .hero-by, .slide2--enter .hero-title, .slide2--enter .hero-acts, .slide2--enter .statbar { animation: hero-up .6s cubic-bezier(.16,1,.3,1) both; }
-.slide2--enter .hero-title { animation-delay: .06s; }
+.slide2--enter .hero-by, .slide2--enter .hero-title, .slide2--enter .hero-desc, .slide2--enter .hero-acts, .slide2--enter .statbar { animation: hero-up .6s cubic-bezier(.16,1,.3,1) both; }
+.slide2--enter .hero-title { animation-delay: .06s; } .slide2--enter .hero-desc { animation-delay: .09s; }
 .slide2--enter .hero-acts { animation-delay: .12s; }
 .slide2--enter .statbar { animation-delay: .18s; }
 @keyframes hero-drop { from { transform: scale(1.08); opacity: .4; } to { transform: none; opacity: 1; } }
@@ -1893,7 +1893,7 @@ button::after {
 
 /* 减少动态效果:封面不推、不转场浮入,顶栏小卡堆直接出现 */
 .topic--reduced .kb__im { transition: opacity 1.2s ease; }
-.topic--reduced .det1, .topic--reduced .hero-by, .topic--reduced .hero-title, .topic--reduced .hero-acts, .topic--reduced .statbar, .topic--reduced .story-mini { animation: none; }
+.topic--reduced .det1, .topic--reduced .hero-by, .topic--reduced .hero-title, .topic--reduced .hero-desc, .topic--reduced .hero-acts, .topic--reduced .statbar, .topic--reduced .story-mini { animation: none; }
 
 /* ===================================================================
    v13 原型对齐(业主 2026-10-22:「要和 HTML 一模一样」,护照页除外)。
@@ -2152,10 +2152,12 @@ button::after {
 /* v13 切标签:每块从下方 16px 依次浮上(原型 stagger 45–60ms);故事里的章节卡带一点 X 轴倾斜飞入 */
 .topic .tabcont > view, .topic .tabcont > text, .topic .tabcont > cy-merchant-cards { transition: opacity .46s ease, transform .46s cubic-bezier(.2,.82,.2,1); }
 .topic .tab-pre.tabcont > view, .topic .tab-pre.tabcont > text, .topic .tab-pre.tabcont > cy-merchant-cards { opacity: 0; transform: translateY(31rpx); transition: none; }
-.topic .tabcont > view:nth-child(2), .topic .tabcont > text:nth-child(2) { transition-delay: .05s; } .topic .tabcont > view:nth-child(3), .topic .tabcont > text:nth-child(3) { transition-delay: .1s; }
-.topic .tabcont > view:nth-child(4), .topic .tabcont > text:nth-child(4) { transition-delay: .15s; } .topic .tabcont > view:nth-child(5), .topic .tabcont > text:nth-child(5) { transition-delay: .2s; }
-.topic .tabcont > view:nth-child(6), .topic .tabcont > text:nth-child(6) { transition-delay: .25s; } .topic .tabcont > view:nth-child(7), .topic .tabcont > text:nth-child(7) { transition-delay: .3s; }
-.topic .tabcont > view:nth-child(n+8), .topic .tabcont > text:nth-child(n+8) { transition-delay: .35s; }
+.topic .tab-run.tabcont > view:nth-child(2), .topic .tab-run.tabcont > text:nth-child(2) { transition-delay: .05s; } .topic .tab-run.tabcont > view:nth-child(3), .topic .tab-run.tabcont > text:nth-child(3) { transition-delay: .1s; }
+.topic .tab-run.tabcont > view:nth-child(4), .topic .tab-run.tabcont > text:nth-child(4) { transition-delay: .15s; } .topic .tab-run.tabcont > view:nth-child(5), .topic .tab-run.tabcont > text:nth-child(5) { transition-delay: .2s; }
+.topic .tab-run.tabcont > view:nth-child(6), .topic .tab-run.tabcont > text:nth-child(6) { transition-delay: .25s; } .topic .tab-run.tabcont > view:nth-child(7), .topic .tab-run.tabcont > text:nth-child(7) { transition-delay: .3s; }
+.topic .tab-run.tabcont > view:nth-child(n+8), .topic .tab-run.tabcont > text:nth-child(n+8) { transition-delay: .35s; }
+.topic .tabcont > view.cy-pressed, .topic .tabcont > text.cy-pressed { transition-duration: var(--cy-motion-press); } /* 入场之后按压按 press 时长走,不再跟入场的 .46s */
+.topic .story-cc.cy-pressed { transition-duration: .45s, var(--cy-motion-press), var(--cy-motion-press); } /* ds-ok: .45s 是章节卡展开高度的原值 */
 .topic .tab-pre .story-cc { opacity: 0; transform: translateY(77rpx) rotateX(-25deg) scale(.96); transition: none; }
 
 .bsheet__x::after { content: ""; position: absolute; left: 50%; top: 50%; width: 88rpx; height: 88rpx; transform: translate(-50%, -50%); } /* 透明热区撑到 44px,视觉尺寸按原型不变 */
