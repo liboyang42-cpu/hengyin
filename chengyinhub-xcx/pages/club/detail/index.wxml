@@ -309,7 +309,7 @@
       </view>
 
       <block wx:if="{{canSeeRoster}}">
-        <view class="ov-lb" wx:if="{{leaderboard.length}}">
+        <view class="ov-lb" wx:if="{{leaderboard.length}}" style="{{joinFloatW && !club.isJoined && !club.isOwner ? '--ov-lb-float-gutter:' + (joinFloatW + 8) + 'px' : ''}}">
           <block wx:for="{{leaderboard}}" wx:key="memberId">
             <view class="ov-lb-gap" wx:if="{{item.gap}}">⋯ 中间 {{item.hiddenCount || 0}} 人</view>
             <view wx:else class="ov-lb-row {{item.isMe ? 'is-me' : ''}}" catchtap="goMemberProfile" data-member-id="{{item.memberId}}"

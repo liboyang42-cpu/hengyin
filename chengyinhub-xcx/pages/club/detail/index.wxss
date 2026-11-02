@@ -718,6 +718,7 @@ page { background: var(--cy-bg-page); }
   align-items: center;
   gap: var(--cy-space-3);
   padding: var(--cy-space-4) var(--cy-space-3); /* 2026-10-28 业主:贡献榜每行加高 */
+  padding-right: var(--ov-lb-float-gutter, var(--cy-space-3)); /* 未加入时右侧让给悬浮「加入」,分数不被压 */
 }
 .ov-lb-row.is-me { background: var(--cy-color-action-secondary-bg); }
 .ov-lb-rank {
