@@ -147,5 +147,7 @@ of in Java over the full finance history (MerchantFinanceQueryService.java:63-10
 Suggested order: R-01/R-02 (client only, S) → N-01/N-02/N-12 (theme detail) → IX-01..IX-04 (one reviewed migration,
 awaiting owner approval) → N-03/N-04 → the rest.
 
-STATUS: COMPLETE. Every finding is static. Real row counts and the production index state after 2026-08-18 still need a
+Note: every finding is static. Real row counts and the production index state after 2026-08-18 still need a
 read-only `chengyin-db-migrate` precheck (`SHOW INDEX`, `information_schema.tables.table_rows`) before any DDL.
+
+STATUS: COMPLETE
