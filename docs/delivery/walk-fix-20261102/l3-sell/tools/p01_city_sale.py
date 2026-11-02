@@ -149,6 +149,10 @@ readback("lifecycle", "SELECT lifecycle FROM cms_topic WHERE id=%s", (tid,))
 step("author pricing page preview + confirm the final price")
 pv = http("POST", "/api/topic/pricing/preview", token=ptok, json_body={"topicId": tid, "subType": "guided"})
 print("preview", J(pv))
+if os.environ.get("P01_STOP_BEFORE_CONFIRM"):
+    # Screenshot staging: leave the theme in PRICING so the real pricing page can press 确认终价.
+    print("STOPPED_IN_PRICING", tid)
+    sys.exit(0)
 r = http("POST", "/api/topic/pricing/confirm", token=ptok, json_body={"topicId": tid, "guidedPrice": 69})
 print("confirm", J(r))
 readback("sale review task", "SELECT id,biz_type,status FROM audit_task WHERE biz_id=%s AND biz_type='TOPIC_SALE_REVIEW'", (tid,))
@@ -168,12 +172,18 @@ step("club %d opens a session; player 9009 quotes and signs up" % SESSION_CLUB)
 day = (now + datetime.timedelta(days=3)).strftime("%Y-%m-%d")
 print("open-session", J(http("POST", "/api/club/open-session", token=stok, json_body={
     "clubId": SESSION_CLUB, "topicId": tid, "sessionDate": day, "sessionTime": "14:00"})))
+time.sleep(2)  # selling_started_at is stored rounded up to the next second; quote after it
 acts = q("SELECT id FROM cms_activity WHERE topic_id=%s AND club_id=%s ORDER BY id DESC LIMIT 1", (tid, SESSION_CLUB))
 if not acts:
     sys.exit("no session")
 aid = acts[0][0]
 tk = q("SELECT id,price FROM oms_ticket WHERE owner_type=2 AND owner_id=%s AND del_flag=0 ORDER BY id", (aid,))
 print("activity", aid, "tickets", tk)
+if SELF:
+    # Fixture (same shape as seed_fixtures for 7002): player 9009 is also a member of club 7001.
+    ex("INSERT INTO club_member(club_id,member_id,role,status,join_time,del_flag) "
+       "SELECT 7001,9009,0,1,NOW(),0 WHERE NOT EXISTS "
+       "(SELECT 1 FROM club_member WHERE club_id=7001 AND member_id=9009 AND del_flag=0)")
 quote = http("POST", "/api/registration/quote", token=player, json_body={
     "ownerType": 2, "ownerId": aid, "ticketId": tk[0][0], "isUsePoint": 0})
 print("quote", J(quote))
