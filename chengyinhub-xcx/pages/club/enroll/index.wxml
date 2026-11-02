@@ -52,6 +52,15 @@
             {{team.summary.teamStatusText}} · 已支付 {{team.summary.paidCount != null ? team.summary.paidCount + ' 人' : '—'}} · 可退款 {{ team.summary.refundableCount || 0 }} 人
             <text wx:if="{{team.summary.signupDeadlineText}}"> · 截止 {{team.summary.signupDeadlineText}}</text>
           </view>
+          <!-- C-13:每场票款,与库逐分对账;只有主理人收得到金额。 -->
+          <view class="money" wx:if="{{team.sessionMoney.length}}">
+            <view class="money-row" wx:for="{{team.sessionMoney}}" wx:key="activityId" wx:for-item="m">
+              <view class="money-label ep1">{{m.label || '场次'}}<text class="money-tag" wx:if="{{m.cancelled}}">已取消</text></view>
+              <view class="money-nums">
+                <text>实收 {{m.paidText}}</text><text>已退 {{m.refundedText}}</text><text class="money-net">净额 {{m.netText}}</text>
+              </view>
+            </view>
+          </view>
           <cy-empty wx:if="{{team.tickets.length === 0}}" class="enroll-inline-empty" size="sm" title="该团暂无票种" />
           <view class="ticket" wx:for="{{team.tickets}}" wx:key="name" wx:for-item="tk">
             <view class="ticket-top">

@@ -114,3 +114,24 @@ test('E-08 进核销详情后返回名册必须重拉(可退款人数不落后�
 // 补上,作为 2026-08-26「有旧内容时刷新失败一律静默降级」的唯一例外 —— 断言在
 // club-roster-recovery-contract.test.js(本页旧的「不许出现 cy-inline-error+staleError」已随拍板改写)。
 // 这里只测 club/detail 三处(club-e-fixes-gate-contract.test.js)。
+
+// ───────── C-13(2026-11-02 walk-fix)报名名册每场票款 ─────────
+test('C-13 名册展开后按场次列出实收/已退/净额(¥,服务端分值原样格式化)', () => {
+  const { page, requests } = loadPage('pages/club/enroll/index.js');
+  page.onLoad({ clubId: '9', topicId: '31' });
+  requests.find((r) => r.url === '/api/club/detail').success({ code: 200, data: { isOwner: true } });
+  requests.find((r) => r.url === '/api/club/topics').success({ code: 200, data: [{ id: 31, name: '目标团' }] });
+  const roster = requests.find((r) => r.url === '/api/club/topic-registrations');
+  roster.success({ code: 200, data: { omsTicketList: [], sessionMoney: [
+    { activityId: 16, label: '11月2日 13:50', cancelled: false, paidFen: 41400, refundedFen: 6900, netFen: 34500 },
+    { activityId: 13, label: '11月13日 09:00', cancelled: true, paidFen: 13800, refundedFen: 13800, netFen: 0 },
+  ] } });
+  const money = page.data.teams[0].sessionMoney;
+  assert.deepEqual(JSON.parse(JSON.stringify(money)), [
+    { activityId: 16, label: '11月2日 13:50', cancelled: false, paidText: '¥414.00', refundedText: '¥69.00', netText: '¥345.00' },
+    { activityId: 13, label: '11月13日 09:00', cancelled: true, paidText: '¥138.00', refundedText: '¥138.00', netText: '¥0.00' },
+  ]);
+  const wxml = read('pages/club/enroll/index.wxml');
+  assert.match(wxml, /wx:for="\{\{team\.sessionMoney\}\}"/);
+  assert.match(wxml, /净额 \{\{m\.netText\}\}/);
+});

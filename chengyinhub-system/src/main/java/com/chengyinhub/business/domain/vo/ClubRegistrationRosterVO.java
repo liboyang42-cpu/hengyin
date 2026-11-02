@@ -9,6 +9,8 @@ public class ClubRegistrationRosterVO {
     private Long topicId;
     private boolean canRefund;
     private List<Ticket> omsTicketList;
+    /** C-13:按场次的实收/已退/净额(分)。仅主理人可见;其他人为 null(不是 0)。 */
+    private List<SessionMoney> sessionMoney;
 
     public Long getClubId() { return clubId; }
     public void setClubId(Long clubId) { this.clubId = clubId; }
@@ -18,6 +20,30 @@ public class ClubRegistrationRosterVO {
     public void setCanRefund(boolean canRefund) { this.canRefund = canRefund; }
     public List<Ticket> getOmsTicketList() { return omsTicketList; }
     public void setOmsTicketList(List<Ticket> omsTicketList) { this.omsTicketList = omsTicketList; }
+    public List<SessionMoney> getSessionMoney() { return sessionMoney; }
+    public void setSessionMoney(List<SessionMoney> sessionMoney) { this.sessionMoney = sessionMoney; }
+
+    public static class SessionMoney {
+        private Long activityId;
+        private String label;
+        private boolean cancelled;
+        private long paidFen;
+        private long refundedFen;
+        private long netFen;
+
+        public Long getActivityId() { return activityId; }
+        public void setActivityId(Long activityId) { this.activityId = activityId; }
+        public String getLabel() { return label; }
+        public void setLabel(String label) { this.label = label; }
+        public boolean isCancelled() { return cancelled; }
+        public void setCancelled(boolean cancelled) { this.cancelled = cancelled; }
+        public long getPaidFen() { return paidFen; }
+        public void setPaidFen(long paidFen) { this.paidFen = paidFen; }
+        public long getRefundedFen() { return refundedFen; }
+        public void setRefundedFen(long refundedFen) { this.refundedFen = refundedFen; }
+        public long getNetFen() { return netFen; }
+        public void setNetFen(long netFen) { this.netFen = netFen; }
+    }
 
     public static class Ticket {
         private Long id;

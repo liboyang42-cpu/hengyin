@@ -115,6 +115,8 @@ public class ApiClubController extends BaseController {
 
     @Autowired
     private com.chengyinhub.business.mapper.UmsMemberFollowMapper umsMemberFollowMapper;
+    @Autowired(required = false)
+    private com.chengyinhub.business.mapper.ClubCrmMapper clubCrmMapper;
 
     /** F0098:帖子引用「我的游玩记录」的写入资格与读取可见性。 */
     @Autowired
@@ -1627,6 +1629,36 @@ public class ApiClubController extends BaseController {
         // canRefund 是权限声明不是摆设:清退退款 owner-only,管理员回包写 true 就是假按钮。
         roster.setCanRefund(club.getMemberId() != null && club.getMemberId().equals(memberId));
         roster.setOmsTicketList(safeTickets);
+        // C-13:每场的实收/已退/净额(分),金额与库逐分对账。金额只给主理人(与清退退款同一判据),管理员为 null。
+        if (roster.isCanRefund() && clubCrmMapper != null && sessions != null && !sessions.isEmpty()) {
+            List<Long> activityIds = new ArrayList<>();
+            for (CmsActivity session : sessions) if (session != null && session.getId() != null) activityIds.add(session.getId());
+            Map<Long, Map<String, Object>> moneyById = new HashMap<>();
+            List<Map<String, Object>> moneyRows = activityIds.isEmpty() ? null : clubCrmMapper.selectSessionMoney(clubId, activityIds);
+            if (moneyRows != null) {
+                for (Map<String, Object> row : moneyRows) {
+                    Long id = badgeLong(row.get("activityId"));
+                    if (id != null) moneyById.put(id, row);
+                }
+            }
+            List<ClubRegistrationRosterVO.SessionMoney> money = new ArrayList<>();
+            for (CmsActivity session : sessions) {
+                if (session == null || session.getId() == null) continue;
+                Map<String, Object> row = moneyById.get(session.getId());
+                if (row == null) continue;   // 没人付过钱的场次不出一行 ¥0
+                ClubRegistrationRosterVO.SessionMoney item = new ClubRegistrationRosterVO.SessionMoney();
+                item.setActivityId(session.getId());
+                item.setLabel(sessionLabels.get(String.valueOf(session.getId())));
+                item.setCancelled(session.getCancelTime() != null);
+                long paid = row.get("paidFen") instanceof Number ? ((Number) row.get("paidFen")).longValue() : 0L;
+                long refunded = row.get("refundedFen") instanceof Number ? ((Number) row.get("refundedFen")).longValue() : 0L;
+                item.setPaidFen(paid);
+                item.setRefundedFen(refunded);
+                item.setNetFen(paid - refunded);
+                money.add(item);
+            }
+            roster.setSessionMoney(money);
+        }
         return AjaxResult.success(roster);
     }
 

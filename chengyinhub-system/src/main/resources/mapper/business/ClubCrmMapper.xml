@@ -372,4 +372,23 @@
           )
         limit 1
     </select>
+
+    <select id="selectSessionMoney" resultType="java.util.LinkedHashMap">
+        select a.id as activityId,
+               coalesce(sum(case when r.payment_status in (2, 4)
+                   then round(coalesce(r.payable_amount, r.total_amount, 0) * 100) else 0 end), 0) as paidFen,
+               coalesce(sum(ra.refunded_fen), 0) as refundedFen
+          from cms_activity a
+          join cms_registration r on r.owner_type = 2 and r.owner_id = a.id
+          left join (
+              select source_id, sum(round(refund_amount * 100)) as refunded_fen
+                from refund_application
+               where source_type = 'registration' and del_flag = 0 and status = 1
+               group by source_id
+          ) ra on ra.source_id = r.id
+         where a.club_id = #{clubId}
+           and a.id in
+           <foreach collection="activityIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+         group by a.id
+    </select>
 </mapper>
