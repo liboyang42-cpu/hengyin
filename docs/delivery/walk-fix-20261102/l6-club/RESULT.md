@@ -35,6 +35,10 @@ Screenshots come from the walkthrough rig (real backend, real MySQL and Redis, t
 
 UI gate: `node chengyinhub-xcx/tests/lint/ui-integrity.js` → `UI-GATE-0:PASS`. I rebuilt the action ledger. The diff is only the relabelled release, lock and unlock controls plus line shifts. The club, director, play-lead, waitlist, event-ops and ledger unit files pass (1409 tests). The changed backend suites pass. The MySQL-only ITs (`ClubCrmCheckinDetailMyBatisTest`, `ClubTopicManageStatsMyBatisTest`) did not run here because there is no MySQL in the unit environment; the rig ran the real SQL.
 
+## Deploy order
+
+`migration_20261102_club_session_gather_point.sql` must be applied by hand **before** the jar is deployed (read-only precheck plus your confirmation, through the chengyin-db-migrate skill). It fills only empty `cms_activity.latitude/longitude` on club sessions that have not ended or been cancelled, and it is safe to run more than once. Until it runs, sessions opened before this deploy keep failing 「我到了」. Sessions opened after the new jar is live are fine either way.
+
 ## Needs owner
 
 1. **C-20: what does 「引流型 · 无分成」 mean for the club?** The code has no clear earnings meaning for `share_mode=0`. The walker found the organiser slot is PLATFORM and the club is DISTRIBUTION, so any line about what the club earns would be a guess. **Recommended default:** leave the card as it is until you state the rule. I'll add one line once you do.
