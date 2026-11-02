@@ -5316,7 +5316,12 @@ Page({
     if (!node.done && this._routeInteractionBlocked()) { cyToast(this.data.routeNotice || '路线状态同步中'); return; }
     // C-12:本场已结束(队长结束活动)后,未完成站点不再弹「开始任务」半屏 —— 提交只会被后端拒;
     // 顶部状态条已写明「本场已结束 · 你完成了 N/M 站」,这里不再盖住它。已完成的站仍可回看。
-    if (!node.done && this.data.lead && this.data.lead.ended) { cyToast('本场已结束'); return; }
+    if (!node.done && this.data.lead && this.data.lead.ended) {
+      // 从章节故事流「继续探索」进来时故事流还盖着地图:收起它,让顶部的结束条露出来
+      if (this.data.chapterFull) this.closeChapterFull();
+      cyToast('本场已结束');
+      return;
+    }
     if (this._lockedTip(node)) return;
     // 全天开放(00:00–23:59)不是有用的营业信息,不挂在地址后(实走复核:每站都写着 00:00–23:59)
     const biz = /^\s*00:00\s*[-–~至]\s*23:59\s*$/.test(String(node.businessTime || '')) ? '' : node.businessTime;

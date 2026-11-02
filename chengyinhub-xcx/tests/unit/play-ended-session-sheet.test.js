@@ -26,6 +26,15 @@ test('本场已结束:未完成站不弹开始任务半屏', () => {
   p.openSheet(node(false));
   assert.equal(p.data.sheet.show, false);
 });
+test('本场已结束:从章节故事流进来时收起故事流,露出顶部结束条', () => {
+  const p = page({ exists: true, ended: true });
+  let closed = 0;
+  p.data.chapterFull = true;
+  p.closeChapterFull = () => { closed++; p.data.chapterFull = false; };
+  p.openSheet(node(false));
+  assert.equal(closed, 1);
+  assert.equal(p.data.sheet.show, false);
+});
 test('本场已结束:已完成站仍可回看', () => {
   const p = page({ exists: true, ended: true });
   p.openSheet(node(true));
