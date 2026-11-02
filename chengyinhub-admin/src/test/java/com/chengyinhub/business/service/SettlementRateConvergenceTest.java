@@ -571,6 +571,70 @@ class SettlementRateConvergenceTest {
         return m;
     }
 
+    /**
+     * 2026-11-02 pay-gate:俱乐部自有主题、无合作单的自玩通行证必须能结 —— 平台按主题费率(3%)留 PLATFORM 对账行,
+     * 其余 97% 记 INITIATOR_MARGIN 应付给俱乐部<b>当前</b>主理人(不是主题作者,也不是俱乐部实体)。
+     * 旧代码在这里抛 NON_COOP_TOPIC_CASH_SETTLEMENT_UNPROVEN。
+     */
+    @Test
+    void topic_clubSelfPlayWithoutCoopRecordsPrincipalDue() {
+        setUpTopic();
+        when(topicRuleService.getActiveRule(0L, "topic")).thenReturn(topicRule("0.03", "0.97", "0.00", "0.00"));
+        CmsTopic topic = primeTopic(new BigDecimal("138.00"), 88L);
+        topic.setClubId(7002L);
+        com.chengyinhub.business.domain.CmsRegistration a = paidTopicRow(1L, "69.00");
+        com.chengyinhub.business.domain.CmsRegistration b = paidTopicRow(2L, "69.00");
+        when(topicEvidenceMapper.selectTopicCashRowsForUpdate(200L)).thenReturn(java.util.List.of(a, b));
+        com.chengyinhub.business.mapper.CoopSettlementMapper settlements =
+                mock(com.chengyinhub.business.mapper.CoopSettlementMapper.class);
+        when(settlements.insertCoopSettlement(any())).thenReturn(1);
+        ReflectionTestUtils.setField(topicSvc, "coopSettlementMapper", settlements);
+        com.chengyinhub.business.service.IPricingService pricing = mock(com.chengyinhub.business.service.IPricingService.class);
+        when(pricing.platformRateOf(topic)).thenReturn(new BigDecimal("0.03"));
+        ReflectionTestUtils.setField(topicSvc, "pricingService", pricing);
+        com.chengyinhub.business.mapper.ClubMapper clubs = mock(com.chengyinhub.business.mapper.ClubMapper.class);
+        com.chengyinhub.business.domain.Club club = new com.chengyinhub.business.domain.Club();
+        club.setId(7002L);
+        club.setMemberId(9008L);
+        when(clubs.selectClubById(7002L)).thenReturn(club);
+        com.chengyinhub.business.service.support.ClubPrincipalPayee payee =
+                new com.chengyinhub.business.service.support.ClubPrincipalPayee();
+        ReflectionTestUtils.setField(payee, "clubMapper", clubs);
+        ReflectionTestUtils.setField(topicSvc, "clubPrincipalPayee", payee);
+
+        Boolean settled = ReflectionTestUtils.invokeMethod(topicSvc, "settleTopic", topic,
+                topicRule("0.03", "0.97", "0.00", "0.00"));
+
+        assertEquals(Boolean.TRUE, settled);
+        org.mockito.ArgumentCaptor<com.chengyinhub.business.domain.CoopSettlement> lines =
+                org.mockito.ArgumentCaptor.forClass(com.chengyinhub.business.domain.CoopSettlement.class);
+        verify(settlements, org.mockito.Mockito.times(2)).insertCoopSettlement(lines.capture());
+        com.chengyinhub.business.domain.CoopSettlement platform = lines.getAllValues().get(0);
+        com.chengyinhub.business.domain.CoopSettlement principal = lines.getAllValues().get(1);
+        assertEquals("PLATFORM", platform.getLineType());
+        assertEquals(0, new BigDecimal("4.14").compareTo(platform.getAmount()));
+        assertEquals(Integer.valueOf(1), platform.getStatus());
+        org.junit.jupiter.api.Assertions.assertNull(platform.getMerchantId());
+        assertEquals("INITIATOR_MARGIN", principal.getLineType());
+        assertEquals(Long.valueOf(9008L), principal.getMerchantId());
+        assertEquals(0, new BigDecimal("133.86").compareTo(principal.getAmount()));
+        assertEquals(Integer.valueOf(0), principal.getStatus());
+        verify(topicMember, never()).addBalance(anyLong(), any());
+        verify(pointsAwardService).awardPublisherSettlement(88L, 200L);
+    }
+
+    private static com.chengyinhub.business.domain.CmsRegistration paidTopicRow(Long id, String amount) {
+        com.chengyinhub.business.domain.CmsRegistration r = new com.chengyinhub.business.domain.CmsRegistration();
+        r.setId(id);
+        r.setOwnerType(1L);
+        r.setOwnerId(200L);
+        r.setPaymentStatus(2);
+        r.setRegistrationStatus(2);
+        r.setPayableAmount(new BigDecimal(amount));
+        r.setMemberId(500L + id);
+        return r;
+    }
+
     @Test
     void topic_nonCoopWithoutCashOrPayableFailsClosedBeforePoints() {
         setUpTopic();
