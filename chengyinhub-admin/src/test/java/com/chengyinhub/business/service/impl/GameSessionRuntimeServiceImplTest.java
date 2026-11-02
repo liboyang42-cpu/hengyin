@@ -2100,6 +2100,8 @@ class GameSessionRuntimeServiceImplTest {
     /** 2026-11-01 业主:按人发。不在本局的人投递 SQL 写不进去,一个都没写进去就算没有可送达的人;坏名单直接拒。 */
     @Test
     void broadcastToMembersUsesScopedDeliveriesAndRejectsBadLists() {
+        GameSession session = readySession(2);
+        when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(session);
         when(clubMemberService.isTopicOwner(TOPIC, CLUB, PLAYER)).thenReturn(true);
         stubReceiptPersistence("broadcast-members");
         when(runtimeMapper.insertBroadcast(any())).thenAnswer(invocation -> {
@@ -2123,6 +2125,8 @@ class GameSessionRuntimeServiceImplTest {
 
     @Test
     void broadcastToMembersRejectsEmptyOrInvalidList() {
+        GameSession session = readySession(2);
+        when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(session);
         when(clubMemberService.isTopicOwner(TOPIC, CLUB, PLAYER)).thenReturn(true);
         stubReceiptPersistence("broadcast-members-bad");
         Map<String, Object> payload = new LinkedHashMap<>();
