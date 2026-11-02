@@ -102,7 +102,7 @@ function emptyCompletion() {
 function stampSubText(stamp) {
   if (!stamp || !stamp.collected) return '待核销'
   const at = String(stamp.obtainedAt || '')
-  return at ? at.slice(5, 16) : '已收集'
+  return at ? at.replace('T', ' ').slice(5, 16) : '已收集'
 }
 
 /**
@@ -176,6 +176,13 @@ function resolvePrimaryCta(orderStateKey) {
   return orderStateKey === 'pending_payment' ? 'pay' : '';
 }
 
+function isCityOrder(info) {
+  const topic = (info && info.cmsTopic) || {};
+  const activity = (info && info.cmsActivity) || {};
+  const type = topic.productType != null ? topic.productType : activity.productType;
+  return Number(type) === 1;
+}
+
 function buildOrderTimeline(info) {
   const value = info || {};
   const stateKey = value.orderStateKey || '';
@@ -217,7 +224,8 @@ function buildOrderTimeline(info) {
 
   rows.push({
     key: 'verification',
-    label: verified ? '权益已核销' : (stateKey === 'manual_refund' ? '尚未核销' : '等待到店核销'),
+    // P-20:城市定向没有「到店核销」,是到集合点开场
+    label: verified ? '权益已核销' : (stateKey === 'manual_refund' ? '尚未核销' : (isCityOrder(value) ? '到集合点开场' : '等待到店核销')),
     time: verified ? toDisplayTime(value.verificationTime) : (stateKey === 'manual_refund' ? '' : '完成后更新'),
     state: verified ? 'done' : 'current',
   });

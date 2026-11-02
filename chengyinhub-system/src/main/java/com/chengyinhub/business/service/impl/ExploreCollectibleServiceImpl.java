@@ -21,6 +21,8 @@ public class ExploreCollectibleServiceImpl implements IExploreCollectibleService
     private ICmsTopicChapterService topicChapterService;
     @Autowired
     private IMmsMerchantService merchantService;
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.ICmsTopicNodeService topicNodeService;
 
     @Override
     public void record(Long memberId, Long topicId, Long chapterId, Long merchantMemberId) {
@@ -34,8 +36,11 @@ public class ExploreCollectibleServiceImpl implements IExploreCollectibleService
         stamp.setTopicId(topicId);
         stamp.setRefId(chapterId);
         String chapterName = chapter == null ? "探店章节" : chapter.getName();
-        stamp.setContent(merchant == null || merchant.getName() == null
-                ? chapterName : chapterName + " · " + merchant.getName());
+        // P-39:图鉴写玩家看到的店名(本章该商家的节点名),不写商家账号名;找不到节点才回落商家名。
+        String shopName = shopNodeName(topicId, chapterId, merchantMemberId);
+        if (shopName == null && merchant != null) shopName = merchant.getName();
+        stamp.setContent(shopName == null || shopName.trim().isEmpty()
+                ? chapterName : chapterName + " · " + shopName.trim());
         stamp.setCreateTime(new Date());
         try {
             if (memberCollectibleMapper.insertMemberCollectible(stamp) != 1) {
@@ -44,5 +49,22 @@ public class ExploreCollectibleServiceImpl implements IExploreCollectibleService
         } catch (DuplicateKeyException ignored) {
             // 唯一键是最终幂等闸；并发核销不能发出两枚同章凭证。
         }
+    }
+
+    private String shopNodeName(Long topicId, Long chapterId, Long merchantMemberId) {
+        if (topicNodeService == null || merchantMemberId == null || chapterId == null) return null;
+        com.chengyinhub.business.domain.CmsTopicNode probe = new com.chengyinhub.business.domain.CmsTopicNode();
+        probe.setTopicId(topicId);
+        probe.setChapterId(chapterId);
+        probe.setMerchantMemberId(merchantMemberId);
+        java.util.List<com.chengyinhub.business.domain.CmsTopicNode> nodes = topicNodeService.selectCmsTopicNodeList(probe);
+        if (nodes == null) return null;
+        for (com.chengyinhub.business.domain.CmsTopicNode node : nodes) {
+            if (node != null && merchantMemberId.equals(node.getMerchantMemberId())
+                    && chapterId.equals(node.getChapterId()) && node.getName() != null && !node.getName().trim().isEmpty()) {
+                return node.getName();
+            }
+        }
+        return null;
     }
 }
