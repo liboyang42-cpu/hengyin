@@ -7,8 +7,8 @@
   <cy-page-title title="退款售后" safe-top="{{false}}" />
 
   <!-- 2026-11-02 X-5:分段只挂一份、放在状态链外:切分段时只有列表区换成骨架,分段不消失不重建 -->
-  <view class="acl-tabbar" wx:if="{{pageState === 'empty' || pageState === 'ready' || (pageState === 'loading' && listShell)}}">
-    <cy-tabs class="acl-filter" variant="chip" tabs="{{tabs}}"
+  <view class="acl-tabbar">
+    <cy-tabs class="acl-filter" wx:if="{{pageState === 'empty' || pageState === 'ready' || (pageState === 'loading' && listShell)}}" variant="chip" tabs="{{tabs}}"
       active="{{bucket}}" bind:change="switchBucket" />
   </view>
 

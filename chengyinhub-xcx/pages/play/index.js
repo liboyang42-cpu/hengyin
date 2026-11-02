@@ -8487,12 +8487,17 @@ Page({
     const flag = { journal: 'journalOut', gmod: 'gmodOut', board: 'boardOut' }[which] || 'sheetOut';
     const still = () => this.data[flag];
     const unmount = () => {
-      const shown = { journal: 'showJournal', gmod: 'gameModule.sheetShow', board: 'board.show' }[which] || 'sheet.show';
-      this.setData({ [flag]: false, [shown]: false });
+      if (which === 'journal') this.setData({ journalOut: false, showJournal: false });
+      else if (which === 'gmod') this.setData({ gmodOut: false, 'gameModule.sheetShow': false });
+      else if (which === 'board') this.setData({ boardOut: false, 'board.show': false });
+      else this.setData({ sheetOut: false, 'sheet.show': false });
     };
     if (this.data.reducedMotion) { unmount(); return; }
     if (still()) return;
-    this.setData({ [flag]: true });
+    if (which === 'journal') this.setData({ journalOut: true });
+    else if (which === 'gmod') this.setData({ gmodOut: true });
+    else if (which === 'board') this.setData({ boardOut: true });
+    else this.setData({ sheetOut: true });
     // 退场期间又被打开(打开处会把标记清回 false):不再卸载新开的那一层
     setTimeout(() => { if (still()) unmount(); }, 280);
   },

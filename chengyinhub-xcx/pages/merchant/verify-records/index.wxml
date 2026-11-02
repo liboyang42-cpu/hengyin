@@ -7,8 +7,8 @@
   <cy-page-title title="核销记录" safe-top="{{false}}" />
 
   <!-- 2026-11-02 X-5:分段只挂一份,空态与列表之间切换时胶囊滑动而不是重建 -->
-  <view class="vrl-tabbar" wx:if="{{pageState === 'empty' || pageState === 'ready'}}">
-    <cy-tabs class="vrl-filter" variant="chip" tabs="{{tabs}}"
+  <view class="vrl-tabbar">
+    <cy-tabs class="vrl-filter" wx:if="{{pageState === 'empty' || pageState === 'ready'}}" variant="chip" tabs="{{tabs}}"
       active="{{bucket}}" bind:change="switchBucket" />
   </view>
 

@@ -935209,73 +935209,6 @@
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:118:bindtap:openTicketSheet:9",
-      "route": "pages/activity/baoming/baoming",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/activity/baoming/baoming.wxml",
-        "js": "pages/activity/baoming/baoming.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "openTicketSheet",
-        "line": 118,
-        "selectorHint": ".setly_li",
-        "visibleCondition": "{{ticketList.length > 1 && waitlistState !== 'OFFERED'}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": "切换票种，当前 {{selectedTicket.name}}",
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:790"
-      }
-    },
-    {
       "id": "pages/activity/baoming/baoming.wxml:12:bind:back:onNavBack:0",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
@@ -935346,7 +935279,74 @@
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:142:bindtap:toggleDiscount:10",
+      "id": "pages/activity/baoming/baoming.wxml:121:bindtap:openTicketSheet:9",
+      "route": "pages/activity/baoming/baoming",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/activity/baoming/baoming.wxml",
+        "js": "pages/activity/baoming/baoming.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "openTicketSheet",
+        "line": 121,
+        "selectorHint": ".setly_li",
+        "visibleCondition": "{{ticketList.length > 1 && waitlistState !== 'OFFERED'}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "切换票种，当前 {{selectedTicket.name}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/activity/baoming/baoming.js:790"
+      }
+    },
+    {
+      "id": "pages/activity/baoming/baoming.wxml:145:bindtap:toggleDiscount:10",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -935369,7 +935369,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "toggleDiscount",
-        "line": 142,
+        "line": 145,
         "selectorHint": ".radio",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -935464,7 +935464,7 @@
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:160:bindtap:cancelWaitlist:11",
+      "id": "pages/activity/baoming/baoming.wxml:163:bindtap:cancelWaitlist:11",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -935487,7 +935487,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "cancelWaitlist",
-        "line": 160,
+        "line": 163,
         "selectorHint": ".waitlist-card__link",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -935552,7 +935552,7 @@
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:166:bindtap:retryWaitlistStatus:12",
+      "id": "pages/activity/baoming/baoming.wxml:169:bindtap:retryWaitlistStatus:12",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -935575,7 +935575,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "retryWaitlistStatus",
-        "line": 166,
+        "line": 169,
         "selectorHint": ".waitlist-card__link",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -935677,7 +935677,7 @@
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:167:bindtap:cancelWaitlist:13",
+      "id": "pages/activity/baoming/baoming.wxml:170:bindtap:cancelWaitlist:13",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -935700,7 +935700,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "cancelWaitlist",
-        "line": 167,
+        "line": 170,
         "selectorHint": ".waitlist-card__link",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -935765,7 +935765,7 @@
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:173:bindtap:goWaitlistOrder:14",
+      "id": "pages/activity/baoming/baoming.wxml:176:bindtap:goWaitlistOrder:14",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -935788,7 +935788,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goWaitlistOrder",
-        "line": 173,
+        "line": 176,
         "selectorHint": ".waitlist-card__link",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -935835,7 +935835,7 @@
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:178:bindtap:goWaitlistOrder:15",
+      "id": "pages/activity/baoming/baoming.wxml:181:bindtap:goWaitlistOrder:15",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -935858,7 +935858,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goWaitlistOrder",
-        "line": 178,
+        "line": 181,
         "selectorHint": ".waitlist-card__link",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -935905,7 +935905,7 @@
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:182:bindtap:retryWaitlistStatus:16",
+      "id": "pages/activity/baoming/baoming.wxml:185:bindtap:retryWaitlistStatus:16",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -935928,7 +935928,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "retryWaitlistStatus",
-        "line": 182,
+        "line": 185,
         "selectorHint": ".waitlist-card__link",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -936030,7 +936030,7 @@
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:187:bindtap:cancelWaitlist:17",
+      "id": "pages/activity/baoming/baoming.wxml:190:bindtap:cancelWaitlist:17",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -936053,7 +936053,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "cancelWaitlist",
-        "line": 187,
+        "line": 190,
         "selectorHint": ".waitlist-card__link",
         "visibleCondition": "{{showWaitlistCancel}}",
         "disabledCondition": null,
@@ -936118,7 +936118,7 @@
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:188:bindtap:joinWaitlist:18",
+      "id": "pages/activity/baoming/baoming.wxml:191:bindtap:joinWaitlist:18",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -936141,7 +936141,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "joinWaitlist",
-        "line": 188,
+        "line": 191,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": "{{showWaitlistJoin}}",
         "disabledCondition": null,
@@ -936230,7 +936230,7 @@
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:193:bind:close:hideAddressPopup:19",
+      "id": "pages/activity/baoming/baoming.wxml:196:bind:close:hideAddressPopup:19",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -936253,7 +936253,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "hideAddressPopup",
-        "line": 193,
+        "line": 196,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -936297,7 +936297,7 @@
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:204:catchtap:selectAddress:22",
+      "id": "pages/activity/baoming/baoming.wxml:207:catchtap:selectAddress:22",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -936320,7 +936320,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "selectAddress",
-        "line": 204,
+        "line": 207,
         "selectorHint": ".address-item",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -936434,7 +936434,7 @@
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:216:bind:cta:goToAddAddress:23",
+      "id": "pages/activity/baoming/baoming.wxml:219:bind:cta:goToAddAddress:23",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -936457,7 +936457,7 @@
         "tag": "cy-empty",
         "event": "bind:cta",
         "handler": "goToAddAddress",
-        "line": 216,
+        "line": 219,
         "selectorHint": "cy-empty[bind:cta]",
         "visibleCondition": "{{participantState === 'ready' && addressList.length === 0}}",
         "disabledCondition": null,
@@ -936545,7 +936545,7 @@
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:218:bindtap:goToAddressList:24",
+      "id": "pages/activity/baoming/baoming.wxml:221:bindtap:goToAddressList:24",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -936568,7 +936568,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "goToAddressList",
-        "line": 218,
+        "line": 221,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -939191,7 +939191,7 @@
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:64:bind:cta:goGateClub:7",
+      "id": "pages/activity/baoming/baoming.wxml:67:bind:cta:goGateClub:7",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -939214,7 +939214,7 @@
         "tag": "cy-empty",
         "event": "bind:cta",
         "handler": "goGateClub",
-        "line": 64,
+        "line": 67,
         "selectorHint": ".page-terminal",
         "visibleCondition": "{{pageState === 'gate'}}",
         "disabledCondition": null,
@@ -1002959,7 +1002959,7 @@
         "handler": "switchBucket",
         "line": 12,
         "selectorHint": ".acl-filter",
-        "visibleCondition": null,
+        "visibleCondition": "{{pageState === 'empty' || pageState === 'ready' || (pageState === 'loading' && listShell)}}",
         "disabledCondition": null,
         "ariaLabel": null,
         "ariaLabelExpression": null,
@@ -1050879,7 +1050879,7 @@
         "handler": "switchBucket",
         "line": 12,
         "selectorHint": ".vrl-filter",
-        "visibleCondition": null,
+        "visibleCondition": "{{pageState === 'empty' || pageState === 'ready'}}",
         "disabledCondition": null,
         "ariaLabel": null,
         "ariaLabelExpression": null,
@@ -1132072,7 +1132072,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8521"
+        "staticSource": "pages/play/index.js:8526"
       }
     },
     {
@@ -1132159,7 +1132159,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8522"
+        "staticSource": "pages/play/index.js:8527"
       }
     },
     {
@@ -1305647,7 +1305647,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/search2/result/index.js:57"
+        "staticSource": "pages/search2/result/index.js:58"
       }
     },
     {
@@ -1305781,7 +1305781,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/search2/result/index.js:296"
+        "staticSource": "pages/search2/result/index.js:297"
       }
     },
     {
@@ -1305942,7 +1305942,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/search2/result/index.js:81"
+        "staticSource": "pages/search2/result/index.js:82"
       }
     },
     {
@@ -1306103,7 +1306103,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/search2/result/index.js:233"
+        "staticSource": "pages/search2/result/index.js:234"
       }
     },
     {
@@ -1306171,7 +1306171,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/search2/result/index.js:300"
+        "staticSource": "pages/search2/result/index.js:301"
       }
     },
     {
@@ -1306239,7 +1306239,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/search2/result/index.js:300"
+        "staticSource": "pages/search2/result/index.js:301"
       }
     },
     {
@@ -1306307,7 +1306307,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/search2/result/index.js:300"
+        "staticSource": "pages/search2/result/index.js:301"
       }
     },
     {
@@ -1306375,7 +1306375,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/search2/result/index.js:300"
+        "staticSource": "pages/search2/result/index.js:301"
       }
     },
     {
@@ -1306443,7 +1306443,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/search2/result/index.js:300"
+        "staticSource": "pages/search2/result/index.js:301"
       }
     },
     {
@@ -1306511,7 +1306511,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/search2/result/index.js:300"
+        "staticSource": "pages/search2/result/index.js:301"
       }
     },
     {
@@ -1306579,7 +1306579,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/search2/result/index.js:300"
+        "staticSource": "pages/search2/result/index.js:301"
       }
     },
     {
@@ -1306647,7 +1306647,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/search2/result/index.js:300"
+        "staticSource": "pages/search2/result/index.js:301"
       }
     },
     {
@@ -1306808,7 +1306808,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/search2/result/index.js:233"
+        "staticSource": "pages/search2/result/index.js:234"
       }
     },
     {
@@ -1306969,7 +1306969,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/search2/result/index.js:89"
+        "staticSource": "pages/search2/result/index.js:90"
       }
     },
     {

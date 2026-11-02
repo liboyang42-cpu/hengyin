@@ -50,7 +50,8 @@ Page({
     this._searchSeq = (this._searchSeq || 0) + 1;
     this._content = null;
     if (this._searchSkeletonTimer) clearTimeout(this._searchSkeletonTimer);
-    this.setData({ keyword: (e.detail && e.detail.value) || '', searchLoading: false, showSearchSkeleton: false, keywordEditing: !!(this.data.keywordEditing || this.data.searchLoading || this.data.contentLoading), // 改词时保留上次结果,确认后再换;打断在途搜索时不抢先说「没有找到」
+    this.setData({ keyword: (e.detail && e.detail.value) || '', searchLoading: false, showSearchSkeleton: false,
+      keywordEditing: !!(this.data.keywordEditing || this.data.searchLoading || this.data.contentLoading), // 改词时保留上次结果,确认后再换;打断在途搜索时不抢先说「没有找到」
       contentLoading: false, contentHasMore: false, contentError: '', contentEnabled: false });
   },
 
