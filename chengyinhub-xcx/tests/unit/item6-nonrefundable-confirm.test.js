@@ -18,7 +18,7 @@ test('退款性走实例属性 _quoteRefundableNow,绝不进 data(U4 死数据�
 })
 
 test('refreshQuote 每次重报价都作废旧确认与旧退款性', () => {
-  const reset = baomingJs.match(/_quoteRetried = false;\s*\n\s*that\._nonRefundableConfirmed = false;\s*\n\s*that\._quoteRefundableNow = null;\s*\n\s*that\.setData\(\{ quoteReady: false \}\);/)
+  const reset = baomingJs.match(/_quoteRetried = false;\s*\n\s*that\._nonRefundableConfirmed = false;\s*\n\s*that\._quoteRefundableNow = null;\s*\n\s*that\.setData\(\{ quoteReady: false(, quoteRefusal: '')? \}\);/)
   assert.ok(reset, 'refreshQuote 开头必须同时清 _nonRefundableConfirmed 与 _quoteRefundableNow')
 })
 
@@ -62,6 +62,8 @@ test('跨端契约:后端 quote 出参必须带 refundDeadline/refundableNow,且
     'chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java'), 'utf8')
   assert.match(svc, /RefundPolicy\.sessionRefundDeadline\(activity\.getStartDate\(\)\)/)
   assert.match(svc, /boolean free = payAmount\.signum\(\) == 0 && pointsUsed == 0;/)
-  assert.match(svc, /Date deadline = free \? activity\.getStartDate\(\) : RefundPolicy\.sessionRefundDeadline\(activity\.getStartDate\(\)\);/)
+  // P-07(2026-11-02):有下单冻结截止点(③ 票有效期)时报价读同一个点,否则才回落场次钟
+  assert.match(svc, /Date deadline = free \? activity\.getStartDate\(\) : purchaseRefundDeadline != null \? purchaseRefundDeadline\s*: RefundPolicy\.sessionRefundDeadline\(activity\.getStartDate\(\)\);/)
+  assert.match(svc, /RefundPolicy\.snapshotOnPurchase\(\s*PurchaseKind\.derive\(ticketId,/)
   assert.match(svc, /result\.setRefundableNow\(deadline == null \? null\s*: free \? new Date\(\)\.before\(deadline\) : !new Date\(\)\.after\(deadline\)\);/)
 })
