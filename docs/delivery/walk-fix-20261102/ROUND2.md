@@ -27,9 +27,21 @@ The BRIEF.md rules still bind. Work on your lane's existing branch and draft PR;
 - Each organiser (merchant or club) uses their own WeChat merchant account. Ticket money goes straight to it and never to the platform first. The platform charges a 3% commission on actual ticket revenue.
 - Co-organisers settle offline with the organiser. They confirm receipt themselves; that is a record only and cannot block withdrawal, because the platform does not hold the money.
 - Refunds use one platform-wide rule: 100% more than 24 hours before the start, 50% within 24 hours, none after the start. A merchant dropping out is handled manually, case by case, with the 3% recalculated.
-- Merchant numbers are reviewed once by the platform after WeChat authorisation; changing the number means a new review. Without an approved number, turning on 「本章开放商家承接」 or publishing a paid theme shows a pop-up, and the ticket page says nothing about it. Clubs WeChat will not allow are told to apply. Platform-owned themes keep the platform merchant account and pay no 3%.
+- Merchant numbers are reviewed once by the platform after WeChat authorisation; changing the number means a new review. Without an approved number, turning on 「本章开放商家承接」 shows a pop-up and the switch stays off. Publishing is never blocked by this, and the ticket page says nothing about it. Clubs WeChat will not allow are told to apply. Platform-owned themes keep the platform merchant account and pay no 3%.
 - China build only. US providers, accounts and flows need a separate decision. This does not authorise payment or deployment changes.
-- **Status:** design approved; no code until 服务商 approval. `assertCollectible` stays closed until then, so paid themes launch as platform-owned for now. No lane changes this.
+- **Who can publish (owner correction, 2026-11-02, supersedes the earlier publish pop-up):** the merchant number only controls hosting other merchants. An organiser with no merchant number, or restricted from hosting, can still publish paid themes and events; the player's payment goes to the platform's merchant ID.
+- **Status:** the merchant-number route has no code until 服务商 approval. Lane `pay-gate` changes `assertCollectible` on its own draft PR so these events can take payment through the platform's merchant ID. Until that PR is reviewed and merged, the old rule still applies. Other lanes do not touch the gate.
+
+## pay-gate lane
+
+Branch `claude/walk-fix-1102-pay-gate` from `origin/master`, its own draft PR. Never merge. Results in `docs/delivery/walk-fix-20261102/pay-gate/RESULT.md`.
+
+1. List every `assertCollectible` call site and every other rule refusing payment for non-platform themes or activities (for example `CmsActivityServiceImpl` standalone activity publish, the `ApiActivityController` check, `ProductRoleServiceImpl`, `IMerchantOfferService` and the paid-per-redemption rule).
+2. Change the gate so a paid theme or event from an organiser with no merchant number can take payment through the platform's merchant ID.
+3. **Do not change:** third-party paid-per-redemption terms stay refused, because hosting other merchants requires an approved merchant number and that route does not exist yet. Do not invent payouts or new settlement. Do not touch WeChat credentials or merchant config.
+4. Report exactly what the money looks like afterwards: which ledger or settlement rows record what the platform collected for the club, what the club sees, how a refund works, and what withdrawal does today. If nothing records what is owed to the club, put that at the top of RESULT.md under `needs owner`. Do not build it.
+5. Prove over real HTTP in the rig with database read-back: a club-owned paid theme quotes, signs up, pays through the real callback, and refunds; a platform-owned theme behaves as before. Update tests that pin the old refusal only where this decision changes them, and name each one in RESULT.md. Keep the player-facing refusal for anything still refused. Lane l3-sell also edits `CmsRegistrationServiceImpl` and `baoming`, so keep the diff narrow.
+
 
 ## Other sessions' work (checked 2026-11-02)
 
