@@ -158,5 +158,12 @@ const sets = {
       await w.shot(name('R1', '-phone-on')); await txt(w, 'on');
     });
   },
+  async r3recruit() { // ROUND3B 承接商家 sheet from the 商家 round button
+    await go(LEAD, td, async (w) => {
+      try { await w.tap('商家', { exact: true }); } catch (e) { console.log('INJECT openMerchants', e.message); await w.eval(() => getCurrentPages().slice(-1)[0].openMerchants()); }
+      await sl(1800); await w.shot(name('RECRUIT')); await txt(w, 'recruit');
+      await w.scroll(500); await sl(500); await w.shot(name('RECRUIT', '-2'));
+    });
+  },
 };
 await sets[set]();

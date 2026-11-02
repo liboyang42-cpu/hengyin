@@ -92,8 +92,39 @@ This changes a permission rule. Each changed check:
 
 **Unverified on a real phone:** whether `wx.makePhoneCall` opens the dialer. In the rig it is a stub.
 
-### Recruiting sheet (ROUND3B)
+### Recruiting sheet 承接商家 (ROUND3B)
 
-See the row below; it is updated as the work lands.
+**Status: done, with the gaps listed below.**
 
-STATUS: PARTIAL - recruiting sheet (承接商家) in progress; C-13 waits for the owner
+**Reused, not redrawn.** A built component already existed and was unused: `components/cy/club-topic-onboarding`, Figma J3-A 155:118 (by station) and J3-B 158:118 (by chapter), dark `cy-scene-sheet` with a close button. The 商家 round button on `pages/club/topic-detail` now opens it in place of the plain list. The layout follows `cms_topic.product_type`: 1 is by station, 2 is by chapter. Old themes with no type get the station layout.
+
+**Data:** `/api/club/recruit/overview`, with the same read gate as before (the club owns the theme, plus `ACTIVITY_READ`). Read-only additions:
+- `productType`
+- per chapter: category, recruiting / finished, terms mode, perk threshold, merchant limit, approved count and pending count (from `merchant_chapter_application`)
+- per station: the gameplay name (template title)
+
+Merchant contact: as before, the number is sent only when the merchant has confirmed and the viewer has `ACTIVITY_MANAGE`. It shows masked under the merchant with the copy action, which copies the real number.
+
+**Station layout:** 「已招 1/3 站 · 0 家待确认」 with a progress bar; stations grouped under the chapter heading with 「2 站 · 已招 1」; filled rows (number circle, station, gameplay; merchant and 已中标 in green or 待审核 in amber); unfilled rows (dashed, 「未命名站点」 or the station's name, 「玩法待配置」 when there is no gameplay, white 去招商); a full-width outline 查看候选池.
+
+**Chapter layout:** one card per chapter with 招募中 (green) or 未开放 (grey); the category line; a terms chip; 「已通过 N / 上限 M 家」 (「不限家数」 when there is no limit); 「权益门槛 ≥ ¥20 体验权益」; 设置招募条件 on the left and a white 查看申请 N on the right. An unopened chapter shows only its name, category and an outline 开放招募.
+
+**Actions:** 去招商, 查看候选池, 设置招募条件, 查看申请 and 开放招募 are drawn only for someone who can review co-op applications for this theme (`canReviewChapterApplications`, the theme's owner). Everyone else sees no buttons, so there are no dead buttons. All five open the existing 招商 page (`pages/topic/merchantinfo?scope=CLUB`), which already has invite, candidates, chapter terms, the recruit switch and application review. No new write endpoint. Its writes keep their own owner checks (`/api/topic/chapter/recruit` requires the theme owner).
+
+**Data lines dropped under the no-captions rule:**
+- the station layout's top line 「先选要招商的节点，再去招商。一个节点只能有一家承接。」
+- the chapter layout's heading 「自由探索 · 按章节招商」 and the explanatory paragraph 「章节承载招募品类…再走节点审核」
+- the unopened chapter's line 「开放后，同品类商家可申请承接本章节」
+- the bottom note 「商家申请通过后，还要各自提交节点并过节点审核…」
+- the empty state's sub-line 「回到编辑主题页配置后再来招商」
+
+**Verified:** `club-recruit-sheet.test.js` (5), `ClubChapterRecruitOverviewTest` (3: chapters and counts, gameplay name, no merchant phone for a plain member, another club's theme refused), and the updated `club-topic-detail-field-truth-contract` and `club-review-followups-contract`. Rig: `RECRUIT-before` (the old list) and `RECRUIT-after-station`. `RECRUIT-after-chapter` is the same rig theme switched to 自由探索 in the throwaway database, with chapter 1 opened for recruiting (咖啡 / 轻食, ≥ ¥20, limit 3). Merchant assignments on stations 1 and 3 were also set in the rig database for both shots.
+
+**Needs owner / not done:**
+1. **Capacity 「需可容纳 6 人」 and term chips 「场地免费」 / 「工作日 19:00 后」:** there is no field for capacity or a time window on a chapter, so they are not shown. Only the terms mode is a chip. Recommended default: leave them out until those fields exist.
+2. **The approved merchant-number pop-up on 本章开放商家承接:** I found no such rule in code or docs (searched 批准号, 审批号, 备案号 and 许可证号). The sheet does not flip the switch itself; 开放招募 opens the existing 招商 page and its switch. Recommended default: say which number you mean, and I'll add the guard to `/api/topic/chapter/recruit`.
+3. **Buttons go to one page:** all five actions open the same existing 招商 page, not separate screens. Recommended default: keep it until you want direct deep links.
+4. **A station whose merchant is still pending did not appear in the rig:** the existing station list query (`selectCmsTopicNodeList`) leaves it out. The 待审核 row is covered by unit tests only. I did not change that query.
+5. **Taps on the action buttons opening the 招商 page are not shot.**
+
+STATUS: PARTIAL - C-13 waits for the owner's reference; recruiting sheet capacity / time-window chips and the merchant-number pop-up rule need the owner (see Recruiting sheet); phone call and pop-up behaviour unverified on a real phone
