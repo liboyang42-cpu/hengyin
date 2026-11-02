@@ -284,8 +284,9 @@
             </view>
             <view class="pc-rank-sep"></view>
             <view class="pc-rank-right">
-              <text class="pc-rank-k">累计探索</text>
-              <text class="pc-rank-v">{{exploreStat.shops || 0}}家店 · {{exploreStat.km || '0.0'}}km</text>
+              <text class="pc-rank-k">累计打卡</text>
+              <!-- P-22(2026-11-02 业主):里程还没有真实来源,先不出 km -->
+              <text class="pc-rank-v">{{exploreStat.places || 0}} 处</text>
               <text class="pc-rank-exp">本周 +{{exploreStat.weekExp}} EXP</text>
             </view>
           </view>

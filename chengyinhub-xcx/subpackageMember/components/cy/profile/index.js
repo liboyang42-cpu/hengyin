@@ -480,7 +480,7 @@ Component({
 
     identityCard: { shops: 0, themes: 0, routes: 0, km: '0', medals: 0, cities: 1 },
     rankDisplay: { no: 0, delta: '' },
-    exploreStat: { shops: 0, weekExp: 0, km: '0.0' },
+    exploreStat: { shops: 0, places: 0, weekExp: 0, km: '0.0' },
     themeProgress: [],
     medals: [],
     medalCount: 0,
@@ -617,7 +617,7 @@ Component({
         friendNum: 0, followNum: 0, fansNum: 0, growthLevel: 1, streakDays: 0, exploreValue: 0, profilePoint: null,
         pointsStat: { weekPoints: 0, rankPercentage: 0 }, rankDisplay: { no: 0, delta: '' },
         identityCard: { shops: 0, themes: 0, routes: 0, km: '0', medals: 0, cities: 1 },
-        exploreStat: { shops: 0, weekExp: 0 }, themeProgress: [], medals: [], medalCount: 0,
+        exploreStat: { shops: 0, places: 0, weekExp: 0 }, themeProgress: [], medals: [], medalCount: 0,
         orderPreviewList: [], projectPreviewList: [], projectPendingCount: 0,
         orderErr: false, orderAuthError: false, projectErr: false, projectAuthError: false,
         list: [], page_no: 1, hasMore: false, nodata: false, feedErr: false, feedAuthError: false,
@@ -1364,7 +1364,7 @@ Component({
           medals: that.data.identityCard.medals, // BE-01 勋章单真源:勋章数只由 loadMedals(/api/medal/wall)写,growth 不再返 badgeCount
           cities: 1
         },
-        'exploreStat.shops': shops, 'exploreStat.km': km // BL-95: 累计里程补进现有「累计探索」块(同行写,不挪动基线行号)
+        'exploreStat.shops': shops, 'exploreStat.km': km, 'exploreStat.places': metricNumber(play.checkinPlaces) || 0 // P-22(2026-11-02 业主):「累计打卡 N 处」= 核销过的店 + 完成的城市站点(服务端去重),缺数据显示 0
       });
       // 是否开始过只看历史参与信号(totalCheckins / my-completed),绝不拿里程是否为 0 判断。
       // 这样已完成节点但真实里程为 0.0km 的老用户仍进入 ready,不会被错藏成首访。

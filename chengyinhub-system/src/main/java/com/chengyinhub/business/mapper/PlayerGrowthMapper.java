@@ -28,4 +28,10 @@ public interface PlayerGrowthMapper
     int insertPlayerGrowth(PlayerGrowth playerGrowth);
 
     int updatePlayerGrowth(PlayerGrowth playerGrowth);
+
+    /** P-22「累计打卡 N 处」之一:本人票上生效核销过的店(按章去重,一章一家店)。只读。 */
+    Integer countRedeemedShops(@Param("memberId") Long memberId);
+
+    /** P-22「累计打卡 N 处」之二:本人完成的城市站点(非商家节点、非自由探索主题,按节点去重)。只读。 */
+    Integer countCompletedCityStations(@Param("memberId") Long memberId);
 }
