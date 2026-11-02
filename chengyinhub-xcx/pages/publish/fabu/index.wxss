@@ -1348,6 +1348,8 @@ page { background: var(--cy-btn-solid-bg); }
   height: 120rpx;
   box-sizing: border-box;
   margin-bottom: var(--cy-space-2);
+  /* 拖起/放下的抬起感走一段按压时长,不在一帧里跳(系统减动效由 app.wxss 全局压到 0) */
+  transition: transform var(--cy-motion-press) var(--cy-ease-out), box-shadow var(--cy-motion-press) var(--cy-ease-out);
 }
 
 .slopes-nodes-area {
@@ -4879,6 +4881,8 @@ page { background: var(--cy-btn-solid-bg); }
   font-size: var(--cy-type-caption);
   line-height: 1.2;
   white-space: nowrap;
+  /* 自动保存每轮在「保存中 / 已存云端」间切换,底色字色过渡一下,不闪 */
+  transition: background-color var(--cy-motion-fast) var(--cy-ease-out), color var(--cy-motion-fast) var(--cy-ease-out);
 }
 .pd-save-state--saved { background: var(--cy-topic-save-saved-bg); color: var(--cy-topic-save-saved-text); }
 .pd-save-state--unsaved { background: var(--cy-topic-save-unsaved-bg); color: var(--cy-topic-save-unsaved-text); }

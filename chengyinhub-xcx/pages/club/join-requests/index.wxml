@@ -23,7 +23,7 @@
     <!-- 稿 P3 30:2 的汇总行(「N 条待审 · 可直接通过或拒绝」)就是上面那条 .intro,
          由 buildIntro 按条数生成 —— 这里不要再摆一条一模一样的。 -->
     <view wx:else class="request-list">
-      <view class="request-card" wx:for="{{requests}}" wx:key="id">
+      <view class="request-card {{item.memberId == leavingMemberId ? 'request-card--leaving' : ''}}" wx:for="{{requests}}" wx:key="id">
         <view class="request-row">
           <cy-avatar class="request-avatar" size="88" src="{{item.avatar || '/images/d_profile.png'}}" />
           <view class="request-main">

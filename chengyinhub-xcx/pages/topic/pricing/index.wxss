@@ -2,7 +2,7 @@
 
 .pg { min-height: 100vh; background: var(--cy-color-bg-page); color: var(--cy-color-text-primary); }
 .pg-scroll { height: calc(100vh - 180rpx); padding: 0 32rpx; box-sizing: border-box; }
-.pg-tabs { margin: 0 0 24rpx; }
+.pg-tabs { display: block; margin: -14rpx 0 6rpx; } /* ds-ok: 抵消 chip 上下 14rpx 热区留白:标题→胶囊约 9px、胶囊→首卡与卡间同为 20rpx(热区保留) */
 .pg-card { padding: var(--cy-space-3-5); margin-bottom: 20rpx; border-radius: var(--cy-radius-lg); background: var(--cy-color-bg-surface); }
 .pg-floor { display: flex; flex-direction: column; gap: var(--cy-space-1); }
 .pg-kicker { color: var(--cy-color-action-primary-bg); font-size: var(--cy-font-caption); }
@@ -39,3 +39,4 @@
   100% { opacity: 1; transform: translateY(0); }
 }
 .cy-motion-reduced .pg-actions { animation: none !important; }
+.pg-actions .pg-note { margin-bottom: var(--cy-space-2); } /* 说明不贴底部按钮 */

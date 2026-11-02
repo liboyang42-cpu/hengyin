@@ -98,11 +98,6 @@ const KEYFRAMES_EXEMPT = new Map([
     '(toast/toggle/chip/tab)从 0 重启导致的抖；这是长驻元素上的无限循环，没有重触发。' +
     '且它只写 translateY + rotateX、不碰 rotateY —— 旋转由 --ry 单独管,' +
     '两者挤进同一个 transform 才是真会打架的写法。'],
-  ['paysuc-spin',
-    '结算页「正在支付」那一档的 48px 加载环(稿 576:1255)。无限匀速自转,' +
-    '没有终点态可补间 —— transition 做不出来。它只在「微信收银台已收款、服务端还在确认」' +
-    '这个窗口内存在，层一关节点就卸载，不存在快速重触发从 0 重启的抖。' +
-    '且 .cy-motion-reduced / .paysuc-layer--reduced 下已显式停转。'],
   ['npcRingSpin',
     '门店分身脚下那圈地环的匀速自转(样机 .npc__ring.r2:14s linear infinite)。' +
     '无限循环、常驻、匀速，没有终点态可以补间 —— transition 只能做一次 A→B,做不出来。' +

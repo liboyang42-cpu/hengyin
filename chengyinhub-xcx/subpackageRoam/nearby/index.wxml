@@ -158,7 +158,7 @@
         </view>
         <view class="mt-sbtn mt-sbtn--{{item.action.kind === 'primary' ? 'w' : 's'}} {{busy ? 'is-busy' : ''}}" data-index="{{index}}" bindtap="onMyRowAction" aria-role="button" aria-label="{{item.action.text}}" hover-class="cy-pressed" hover-stay-time="80">{{item.action.text}}</view>
       </view>
-      <text class="mt-foot" wx:if="{{myLoaded && !myReadAccess && !myReadError && !myLoading && !myRows.length}}">暂无队伍</text>
+      <text class="mt-foot" wx:if="{{myLoaded && !myReadAccess && !myReadError && !myLoading && !myRows.length}}">暂无队伍</text><text class="mt-foot" wx:if="{{myLoading && !myRows.length}}" aria-role="status">正在读取你的队伍…</text>
     </view>
   </view>
   </block>

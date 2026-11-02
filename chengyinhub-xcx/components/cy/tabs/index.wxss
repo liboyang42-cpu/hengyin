@@ -259,7 +259,7 @@
    此处只管与 label 的间距 —— 不重复实现 badge,避免制造第 2 套角标样式。 */
 .cy-tabs__badge {
   display: inline-flex;
-  margin-left: 8rpx;
+  margin-left: var(--cy-space-1);
 }
 
 /* sm：紧凑档(账期/筛选这类二级 tab)。视觉 44rpx，但触达区用透明 ::after 撑回

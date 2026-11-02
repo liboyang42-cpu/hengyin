@@ -4,7 +4,7 @@
 const app = getApp()
 // 2026-09-15 起「提现」不再走银行卡表单:平台不打款,一律弹平台客服微信线下处理。
 const withdrawCs = require('../../../utils/withdraw-cs.js')
-const { bizFailureMessage } = require('../../../utils/response-shape.js')
+const { bizFailureMessage } = require('../../../utils/response-shape.js'); const pageMotion = require('../../../utils/page-motion.js')
 
 function identityKey() {
   const gd = app.globalData || {}
@@ -86,7 +86,7 @@ Page({
     withdrawing: false,
     // CU-C-92:可提现余额决定提现主按钮能不能用(unknown/positive/zero),
     // 数来自 cy-funds-stages 自己拉的 /api/wallet/stages,本页不重复请求。
-    withdrawState: 'unknown',
+    withdrawState: 'unknown', settledK: null, // settledK:count.wxs 的进度(null=显示真值)
   },
 
   onLoad(options) {
@@ -171,7 +171,7 @@ Page({
         }
         that._dataIdentity = that._loadIdentity
         that._dataClubId = that._loadClubId
-        that.setData({ state: summary.topics.length ? 'ready' : 'empty', summary })
+        that.setData({ state: summary.topics.length ? 'ready' : 'empty', summary }); if (summary.topics.length && summary.settledAmountStatus !== 'unverified' && !that._settledCounted) { that._settledCounted = true; pageMotion.countMoney(that, 'settledK') } // CP-15:已入账分润首次落地慢-快-慢,刷新不再重数
       },
       fail() {
         if (!that._acceptRead(epoch)) return

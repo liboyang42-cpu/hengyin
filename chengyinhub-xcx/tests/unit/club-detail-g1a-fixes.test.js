@@ -448,13 +448,12 @@ test('CU-C-97 管理 tab 的圆钮叫「设置」,不与页签同名', () => {
   assert.match(label, /设置<\/text>/);
 });
 
-test('CU-C-51 概况卡写明统计范围,「参与人次」改称「游玩人次」', () => {
+// 2026-11-02 第二轮(业主规则 3):口径说明行属于无数据的辅助小字,已撤;范围靠标签「游玩人次」本身说清。
+test('CU-C-51 概况卡「参与人次」改称「游玩人次」,不留口径小字', () => {
   const wxml = readDetailWxml();
-  const wxss = fs.readFileSync(path.join(__dirname, CLUB_WXSS), 'utf8');
   assert.doesNotMatch(wxml, /club-stat-label">参与人次</, '「参与人次」数的是节点游玩人数，不是报名人数');
   assert.match(wxml, /club-stat-label">游玩人次</);
-  assert.match(wxml, /club-stats-note">仅统计本俱乐部自办项目/, '口径要写在卡上，否则跟下方项目卡的报名数看起来是两个数');
-  assert.match(wxss, /\.club-stats-note \{/);
+  assert.doesNotMatch(wxml, /class="(club-stats-note|ov-lb-note)"/, '业主规则 3:无数据的辅助小字不出');
 });
 
 // 集成复审:CU-C-71 改文案时把加入按钮的 wx:else 弄丢了 ⇒ 审核中的人同时看到「等待审核」和可点的「加入俱乐部」,能重复申请。

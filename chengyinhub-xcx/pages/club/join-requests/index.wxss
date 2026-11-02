@@ -9,6 +9,7 @@ cy-empty { display: flex !important; flex: 1 !important; min-height: 0; }
 .request-list { padding: 0 var(--cy-page-x); }
 /* 整页上的卡 = bg-elevated。--cy-bg-card 解析到 bg-surface(#0A0A0B),与页黑几乎同色。 */
 .request-card { padding: var(--cy-space-3); margin-bottom: var(--cy-space-2); border-radius: var(--cy-radius-lg); background: var(--cy-color-bg-elevated); }
+.request-card--leaving { opacity: 0; pointer-events: none; transition: opacity var(--cy-motion-fast) var(--cy-ease-out); } /* CP-14:处理完先淡出,再摘行 */
 .request-row { display: flex; align-items: center; gap: var(--cy-space-2-5); }
 .request-avatar { flex-shrink: 0; }
 .request-main { flex: 1; min-width: 0; }

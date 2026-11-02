@@ -134,9 +134,10 @@
   align-items: flex-start;
   gap: 24rpx;
   min-height: 186rpx;
-  padding: 0 40rpx;
+  padding: var(--cy-space-3) 40rpx; /* 上下留白:名字不贴分隔线,内容多的行也不压线 */
   box-sizing: border-box;
 }
+.cu-row:first-child { min-height: calc(186rpx - var(--cy-space-3)); padding-top: 0; } /* 第一行上面没有分隔线:与搜索框的距离、行高都保持原样 */
 
 .cu-check {
   width: 40rpx;

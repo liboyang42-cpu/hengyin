@@ -166,10 +166,10 @@
       <view wx:if="{{e.collective && e.collective.enabled}}" class="od-section od-section--divided">
         <view class="od-progress-head">
           <view>
-            <text class="od-progress-value">{{e.collective.pct === 0 ? 0 : (e.collective.pct || '--')}}%</text>
+            <text class="od-progress-value">{{e.collective.pct === 0 ? '0%' : (e.collective.pct ? e.collective.pct + '%' : '—')}}</text>
             <text class="od-progress-label">全城已点亮</text>
           </view>
-          <text class="od-progress-count">{{e.collective.current}} / {{e.collective.threshold}}</text>
+          <text class="od-progress-count">{{e.collective.current != null ? e.collective.current : '—'}} / {{e.collective.threshold != null ? e.collective.threshold : '—'}}</text>
         </view>
         <view class="od-progress-track"><view class="od-progress-fill" style="width:{{e.collective.pct || 0}}%"></view></view>
         <!-- F22:集体进度区始终保留;只有真的配置了合法集体券才承诺「达标发放」,否则如实说明不承诺。 -->

@@ -28,7 +28,7 @@ page { background: var(--cy-color-bg-page); }
 .mt-act--primary { background: var(--cy-comp-sheet-player-text); color: var(--cy-color-text-inverse); }
 .mt-act--secondary { background: var(--cy-comp-sheet-player-elevated); color: var(--cy-comp-sheet-player-text); }
 .mt-state { padding: 54rpx 38rpx; text-align: center; font-size: var(--cy-type-label); color: var(--cy-comp-sheet-player-text-secondary); }
-.mt-err { margin: 31rpx; padding: 27rpx; border-radius: 27rpx; background: rgba(248,113,113,.14); color: #F87171; font-size: 25rpx; text-align: center; } /* ds-ok 同 mt-notice--bad */
+.mt-err { margin: 31rpx; padding: 27rpx; border-radius: var(--cy-radius-md); background: rgba(248,113,113,.14); color: #F87171; font-size: 25rpx; text-align: center; } /* ds-ok 同 mt-notice--bad */
 .mt-empty { display: flex; flex-direction: column; align-items: center; padding: 62rpx 62rpx 0; text-align: center; }
 /* 空态:两个 Memoji + 一个「加入」位,叠成一排 */
 .mt-empty__faces { display: flex; align-items: center; }
@@ -37,7 +37,6 @@ page { background: var(--cy-color-bg-page); }
 .mt-empty__plus { display: flex; align-items: center; justify-content: center; background: var(--cy-comp-sheet-player-surface-strong); color: var(--cy-comp-sheet-player-text); }
 .mt-empty__t { margin-top: 31rpx; font-size: var(--cy-type-section-title); font-weight: 700; }
 .mt-btn { margin-top: 38rpx; min-height: 88rpx; padding: 0 54rpx; border-radius: var(--cy-radius-pill); background: var(--cy-comp-sheet-player-text); color: var(--cy-color-text-inverse); display: flex; align-items: center; font-size: var(--cy-type-body); font-weight: 700; }
-.cy-pressed { opacity: .82; }
 /* 队伍头像叠层(替代首字方块):最多 3 个圆形头像,后一个压前一个 */
 .mt-av { flex: none; width: 100rpx; height: 100rpx; position: relative; }
 .mt-av__i { position: absolute; width: 66rpx; height: 66rpx; border-radius: 50%; border: 4rpx solid var(--cy-comp-sheet-player-bg); box-sizing: border-box; background: var(--cy-comp-sheet-player-surface-strong); transition: transform var(--cy-motion-standard) var(--cy-ease-out); }

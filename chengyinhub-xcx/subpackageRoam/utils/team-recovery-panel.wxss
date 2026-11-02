@@ -5,3 +5,4 @@
 .team-command-actions { display: flex; flex-wrap: wrap; gap: var(--cy-space-2); }
 .team-command-card button { margin: 0; font-size: var(--cy-type-label); background: var(--cy-comp-sheet-player-surface-strong); color: var(--cy-comp-sheet-player-text); }
 .team-command-card button[disabled] { opacity: .5; }
+.team-command-card button::after { border: none; } /* MT-07:去掉原生按钮默认描边,深色页上不出浅灰框 */
