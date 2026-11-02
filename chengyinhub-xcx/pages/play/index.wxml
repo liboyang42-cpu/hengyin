@@ -475,9 +475,8 @@
 
 <!-- 开局「开机」:黑场 → 白线横扫 → 暖光 → 淡出,压在第一道开场门上面,只放一次 -->
 <view class="st-boot st-boot--{{bootStage}}" wx:if="{{bootStage}}" aria-hidden="true"><view class="st-boot__warm"></view><view class="st-boot__line"></view></view>
-<cy-chapter-flip wx:if="{{chapterFull && chapterGate.show}}" mode="gate" faces="{{chapterGate.faces}}" end-info="{{chapterGate.endInfo}}" info="{{chapterGate.info}}" reduced-motion="{{reducedMotion}}" bind:continue="continueChapterGate" />
-<!-- P-08 带领场:本章还没放行,停在门前写清楚;队长放行后自动进正文 -->
-<view class="chgate-hold" wx:if="{{chapterFull && chapterGate.show && chapterGate.held}}" aria-role="status"><view class="chgate-hold__dot"></view><text>等队长放行</text></view>
+<cy-chapter-flip wx:if="{{chapterFull && chapterGate.show}}" mode="gate" faces="{{chapterGate.faces}}" end-info="{{chapterGate.endInfo}}" info="{{chapterGate.info}}" reduced-motion="{{reducedMotion}}" held="{{chapterGate.held}}" bind:continue="continueChapterGate" />
+<!-- P-08 带领场:本章还没放行时停在这张翻转门上(底部写「等队长放行」),不自己进正文;队长放行后由门自己接着进 -->
 
 <!-- ===================== 底部运行栈(Figma 3957:12602 未开始 / 3962:14212 进行中 / 3962:14341 已暂停) =====================
      一张读数卡 + 一条操作栏,三个状态共用同一套骨架,只换卡内内容与按钮组:

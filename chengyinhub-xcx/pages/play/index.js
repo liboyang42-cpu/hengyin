@@ -4091,9 +4091,19 @@ Page({
     if (Number(this.data.mode) !== 1 || this.data.isPreview || this.data.isMock) return false;
     return leadHoldsChapter(this.data.lead, chapterId, this.data.chapterCards);
   },
+  /** P-08:队长放行了门前这一章 → 解开 held,翻转门自己淡出并发 continue;门没发出来时 4.2 秒兜底进正文。 */
+  _releaseChapterGate() {
+    const key = this._pendingChapterGateKey;
+    this.setData({ 'chapterGate.held': false });
+    clearTimeout(this._gateTimer);
+    this._gateTimer = setTimeout(() => {
+      if (this.data.chapterGate.show && this._pendingChapterGateKey === key) this.continueChapterGate();
+    }, 4200);
+  },
   continueChapterGate() {
+    // P-08:门在等队长放行时不出 continue;这里只是兜底,仍被挡着就留在门上
     if (this.data.chapterGate.held) {
-      if (this._leadHolds((this.data.chapter || {}).id)) { this.diegetic('本章还没开启，等队长放行'); return; }
+      if (this._leadHolds((this.data.chapter || {}).id)) return;
       this.setData({ 'chapterGate.held': false });
     }
     clearTimeout(this._gateTimer);
@@ -4981,7 +4991,7 @@ Page({
         fresh.forEach(r => { that._skipCueSeen[r.key] = true; });
         that.diegetic(fresh[0].nickname + ' 在「' + fresh[0].nodeName + '」读不出方向，可在更多里放行');
       }
-      if (that.data.chapterGate.show && that.data.chapterGate.held && !that._leadHolds((that.data.chapter || {}).id)) that.continueChapterGate();
+      if (that.data.chapterGate.show && that.data.chapterGate.held && !that._leadHolds((that.data.chapter || {}).id)) that._releaseChapterGate();
       that._startLeadPoll();
       return true;
     }).catch(markLeadLoadFailure);

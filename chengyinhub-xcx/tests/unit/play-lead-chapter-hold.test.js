@@ -39,6 +39,9 @@ test('play 页接线:开玩前先问、章节门挡住不自动进正文、轮�
   assert.match(js, /if \(held\) return;/);
   assert.match(js, /const cue = releaseCue\(prevLead, that\.data\.lead\);/);
   const wxml = fs.readFileSync(path.join(__dirname, '../../pages/play/index.wxml'), 'utf8');
-  assert.match(wxml, /chapterGate\.held\}\}" aria-role="status">.*<text>等队长放行<\/text>/);
+  // 第三轮:停在翻转门本身上,不在地图上另挂一行
+  assert.match(wxml, /<cy-chapter-flip wx:if="\{\{chapterFull && chapterGate\.show\}\}" mode="gate"[^>]*held="\{\{chapterGate\.held\}\}"/);
+  assert.doesNotMatch(wxml, /chgate-hold/);
+  assert.match(js, /that\._releaseChapterGate\(\);/);
   assert.match(wxml, /class="lg-wait" aria-hidden="true"/);
 });

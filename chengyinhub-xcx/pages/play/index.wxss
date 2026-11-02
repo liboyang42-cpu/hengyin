@@ -364,12 +364,6 @@ page { background: var(--cy-color-bg-page); }
 .lg-wait__d:nth-child(2){ animation-delay:.3s; }
 .lg-wait__d:nth-child(3){ animation-delay:.6s; }
 .play--reduced-motion .lg-wait__d{ animation:none; opacity:.6; }
-/* P-08 章节门前「等队长放行」:压在章节门(z 130)之上,底部居中一行,左侧一颗同款缓慢明暗的点 */
-.chgate-hold{ position:fixed; left:50%; bottom:calc(160rpx + env(safe-area-inset-bottom)); transform:translateX(-50%); z-index:131;
-  display:flex; align-items:center; gap:14rpx; padding:0 32rpx; height:88rpx; border-radius:var(--cy-radius-pill);
-  background:rgba(10,10,10,.72); color:#F5F5F2; font-size:var(--cy-type-label); } /* ds-ok 同章节门底色系(chapter-flip .cf) */
-.chgate-hold__dot{ width:14rpx; height:14rpx; border-radius:50%; background:#F5F5F2; animation:fade .9s ease-in-out infinite alternate; } /* ds-ok 同章节门字色 */
-.play--reduced-motion .chgate-hold__dot{ animation:none; opacity:.6; }
 
 /* P1 足迹卡保存按钮(次级白描边) */
 
