@@ -482,6 +482,8 @@ function afterProps(el, vn, owner, isNew) {
     setupSwiper(el, p);
   } else if (tag === 'rich-text') {
     var nodes = p.nodes; if (typeof nodes === 'string' && el.__html !== nodes) { el.__html = nodes; el.innerHTML = nodes; }
+  } else if (tag === 'map') {
+    if (MP.drawMap) MP.drawMap(el, p, isNew);
   } else if (tag === 'canvas') {
     if (p['canvas-id']) el.setAttribute('data-canvas-id', p['canvas-id']);
   } else if (tag === 'slot') {

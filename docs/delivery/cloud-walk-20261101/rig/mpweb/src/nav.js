@@ -347,3 +347,41 @@ MP.pickerSeam = function (el) {
   }
 };
 })();
+/* <map> stand-in: Tencent's native map cannot run in a browser. Draws the same inputs the page passes
+   (center, markers with callout/label text, polylines, circles) on a dark street canvas so layout and
+   marker data are visible. Tiles, gestures and native callouts are NOT VERIFIED. */
+(function () {
+var MP = window.MPWEB;
+MP.drawMap = function (el, p) {
+  var cv = el.__mapCv;
+  if (!cv) { cv = el.__mapCv = document.createElement('canvas'); cv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0'; el.insertBefore(cv, el.firstChild); if (getComputedStyle(el).position === 'static') el.style.position = 'relative'; }
+  el.__mapProps = p;
+  if (el.__mapRaf) return;
+  el.__mapRaf = requestAnimationFrame(function () {
+    el.__mapRaf = 0; var p = el.__mapProps || {};
+    var W = el.clientWidth, H = el.clientHeight; if (!W || !H) { setTimeout(function () { MP.drawMap(el, p); }, 200); return; }
+    cv.width = W * 2; cv.height = H * 2; var g = cv.getContext('2d'); g.setTransform(2, 0, 0, 2, 0, 0);
+    g.fillStyle = '#1a1d21'; g.fillRect(0, 0, W, H);
+    var seed = 11; function rnd() { seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
+    for (var i = 0; i < 18; i++) { g.save(); g.translate(W * rnd(), H * rnd()); g.rotate(rnd() * Math.PI); g.fillStyle = i % 4 ? '#262a30' : '#30353c'; g.fillRect(-W * 2, -2, W * 4, i % 4 ? 3 : 6); g.restore(); }
+    var markers = (p.markers || []).filter(function (m) { return m && m.latitude != null && m.longitude != null; });
+    var lines = (p.polyline || []); var circles = p.circles || [];
+    var pts = markers.map(function (m) { return [+m.latitude, +m.longitude]; });
+    lines.forEach(function (l) { (l.points || []).forEach(function (q) { pts.push([+q.latitude, +q.longitude]); }); });
+    var c0 = [+(p.latitude || (pts[0] || [31.23])[0]), +(p.longitude || (pts[0] || [0, 121.47])[1])];
+    if (!pts.length) pts.push(c0);
+    var la = pts.map(function (x) { return x[0]; }), ln = pts.map(function (x) { return x[1]; });
+    var cx = (p['include-points'] || pts.length > 1) ? (Math.min.apply(0, ln) + Math.max.apply(0, ln)) / 2 : c0[1];
+    var cy = (p['include-points'] || pts.length > 1) ? (Math.min.apply(0, la) + Math.max.apply(0, la)) / 2 : c0[0];
+    var scale = +(p.scale || 16); var span = Math.max(Math.max.apply(0, ln) - Math.min.apply(0, ln), Math.max.apply(0, la) - Math.min.apply(0, la), 360 / Math.pow(2, scale) * 1.5);
+    var k = Math.min(W, H) * 0.72 / span;
+    function P(lat, lng) { return [W / 2 + (lng - cx) * k, H / 2 - (lat - cy) * k * 1.17]; }
+    lines.forEach(function (l) { var ps = l.points || []; if (ps.length < 2) return; g.strokeStyle = l.color || '#5A90D6'; g.lineWidth = Math.max(2, +(l.width || 4) / 2); if (l.dottedLine) g.setLineDash([6, 5]); g.beginPath(); ps.forEach(function (q, j) { var xy = P(+q.latitude, +q.longitude); j ? g.lineTo(xy[0], xy[1]) : g.moveTo(xy[0], xy[1]); }); g.stroke(); g.setLineDash([]); });
+    circles.forEach(function (c) { var xy = P(+c.latitude, +c.longitude); var r = (+c.radius || 50) / 111000 * k; g.strokeStyle = c.color || 'rgba(90,144,214,.8)'; g.fillStyle = c.fillColor || 'rgba(90,144,214,.15)'; g.beginPath(); g.arc(xy[0], xy[1], r, 0, 6.283); g.fill(); g.stroke(); });
+    markers.forEach(function (m) { var xy = P(+m.latitude, +m.longitude); g.fillStyle = '#e5e7eb'; g.beginPath(); g.arc(xy[0], xy[1], 7, 0, 6.283); g.fill(); g.strokeStyle = '#5A90D6'; g.lineWidth = 2; g.stroke();
+      var t = (m.callout && m.callout.content) || (m.label && m.label.content) || m.title || ''; if (t) { g.font = '600 11px -apple-system,sans-serif'; g.fillStyle = 'rgba(0,0,0,.65)'; var tw = g.measureText(t).width; g.fillRect(xy[0] - tw / 2 - 4, xy[1] - 26, tw + 8, 16); g.fillStyle = '#fff'; g.textAlign = 'center'; g.fillText(t, xy[0], xy[1] - 14); } });
+    if (p['show-location'] && MP.cfg && MP.location) { var me = MP.location(); var xy2 = P(me.lat, me.lng); g.fillStyle = 'rgba(74,222,128,.25)'; g.beginPath(); g.arc(xy2[0], xy2[1], 14, 0, 6.283); g.fill(); g.fillStyle = '#4ADE80'; g.beginPath(); g.arc(xy2[0], xy2[1], 5, 0, 6.283); g.fill(); }
+    g.fillStyle = 'rgba(255,255,255,.35)'; g.font = '10px sans-serif'; g.textAlign = 'left'; g.fillText('rig map stand-in · ' + markers.length + ' markers', 6, H - 6);
+  });
+};
+})();

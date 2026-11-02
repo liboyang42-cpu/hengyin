@@ -1,7 +1,7 @@
 {
   "chain": "platform",
   "command_args": [],
-  "duration_seconds": 4.9,
+  "duration_seconds": 2.3,
   "exit_code": 0,
   "log": "chains/platform.log",
   "observed": {

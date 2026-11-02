@@ -55,4 +55,10 @@ log "schema + seed"; "${CA[@]}" schema
 # 5. start app with persisted throwaway secrets
 log "start app"; "$PY" "$RIG_DIR/app.py" start
 log "probe"; curl -s -o /dev/null -w "GET /api/city/nodes (anon) -> %{http_code}\n" http://127.0.0.1:8099/api/city/nodes
+# 6. browser runtime: bundle the real mini-program, start the rig web server (also the fake jscode2session)
+log "build browser bundle"; bash "$RIG_DIR/mpweb/build.sh" >"$RIG_HOME/mpweb-build.log" 2>&1 || { tail -20 "$RIG_HOME/mpweb-build.log"; exit 1; }
+if [ -f "$RIG_HOME/web.pid" ] && kill -0 "$(cat "$RIG_HOME/web.pid")" 2>/dev/null; then kill "$(cat "$RIG_HOME/web.pid")"; sleep 1; fi
+nohup node "$RIG_DIR/mpweb/server.mjs" >"$RIG_HOME/web.log" 2>&1 & echo $! >"$RIG_HOME/web.pid"
+sleep 1; curl -s -o /dev/null -w "rig web http://127.0.0.1:8097/ -> %{http_code}\n" http://127.0.0.1:8097/
+curl -s -X POST -d code=rig-e2e-openid-9004 http://127.0.0.1:8097/__api/api/login/code | head -c 120; echo
 log "done. redis-cli shim: export PATH=$WORK/bin:\$PATH"
