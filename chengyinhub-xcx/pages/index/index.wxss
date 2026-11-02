@@ -657,29 +657,29 @@ page {
 }
 .no-more { color: var(--cy-color-text-secondary); }
 
-/* 2026-10-23 页面动效(utils/page-motion.js):容器 --pm-* 置 1 时先隐着,再依次浮上来;静止时无过渡,按压反馈不受影响;减少动态效果时从不触发 */
+/* 2026-10-23 页面动效(utils/page-motion.js):容器 --pm-* 置 1 时先隐着,再依次浮上来;静止时无过渡,按压反馈不受影响;减少动态效果时从不触发 */ /* H-01:首屏各区按自上而下错开起步(精选 0 / 附近 +60ms / 即将上线 +120ms / 主题活动流 +180ms),--pm-*-s 只在入场那一下为 1;曲线与位移不变 */
 .v3-reco-swiper { filter: opacity(calc(1 - var(--pm-r, 0))); translate: 0 calc(var(--pm-r, 0) * 31rpx); transition: filter var(--pm-r-d, 0s) ease, translate var(--pm-r-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-r-s, 0) * 0ms), calc(var(--pm-r-s, 0) * 0ms), 0s, 0s; }
 .v3-reco-swiper:nth-child(n+2) { transition-delay: calc(var(--pm-r-s, 0) * 30ms), calc(var(--pm-r-s, 0) * 30ms), 0s, 0s; }
-.v3-nearby-card { filter: opacity(calc(1 - var(--pm-n, 0))); translate: calc(var(--pm-n, 0) * 115rpx) 0; transition: filter var(--pm-n-d, 0s) ease, translate var(--pm-n-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-n-s, 0) * 0ms), calc(var(--pm-n-s, 0) * 0ms), 0s, 0s; }
-.v3-nearby-card:nth-child(2) { transition-delay: calc(var(--pm-n-s, 0) * 40ms), calc(var(--pm-n-s, 0) * 40ms), 0s, 0s; }
-.v3-nearby-card:nth-child(3) { transition-delay: calc(var(--pm-n-s, 0) * 80ms), calc(var(--pm-n-s, 0) * 80ms), 0s, 0s; }
-.v3-nearby-card:nth-child(4) { transition-delay: calc(var(--pm-n-s, 0) * 120ms), calc(var(--pm-n-s, 0) * 120ms), 0s, 0s; }
-.v3-nearby-card:nth-child(5) { transition-delay: calc(var(--pm-n-s, 0) * 160ms), calc(var(--pm-n-s, 0) * 160ms), 0s, 0s; }
-.v3-nearby-card:nth-child(6) { transition-delay: calc(var(--pm-n-s, 0) * 200ms), calc(var(--pm-n-s, 0) * 200ms), 0s, 0s; }
-.v3-nearby-card:nth-child(n+7) { transition-delay: calc(var(--pm-n-s, 0) * 240ms), calc(var(--pm-n-s, 0) * 240ms), 0s, 0s; }
-.v3-upreview { filter: opacity(calc(1 - var(--pm-u, 0))); translate: calc(var(--pm-u, 0) * 115rpx) 0; transition: filter var(--pm-u-d, 0s) ease, translate var(--pm-u-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-u-s, 0) * 0ms), calc(var(--pm-u-s, 0) * 0ms), 0s, 0s; }
-.v3-upreview:nth-child(2) { transition-delay: calc(var(--pm-u-s, 0) * 40ms), calc(var(--pm-u-s, 0) * 40ms), 0s, 0s; }
-.v3-upreview:nth-child(3) { transition-delay: calc(var(--pm-u-s, 0) * 80ms), calc(var(--pm-u-s, 0) * 80ms), 0s, 0s; }
-.v3-upreview:nth-child(4) { transition-delay: calc(var(--pm-u-s, 0) * 120ms), calc(var(--pm-u-s, 0) * 120ms), 0s, 0s; }
-.v3-upreview:nth-child(5) { transition-delay: calc(var(--pm-u-s, 0) * 160ms), calc(var(--pm-u-s, 0) * 160ms), 0s, 0s; }
-.v3-upreview:nth-child(6) { transition-delay: calc(var(--pm-u-s, 0) * 200ms), calc(var(--pm-u-s, 0) * 200ms), 0s, 0s; }
-.v3-upreview:nth-child(n+7) { transition-delay: calc(var(--pm-u-s, 0) * 240ms), calc(var(--pm-u-s, 0) * 240ms), 0s, 0s; }
-.v2-fitem { filter: opacity(calc(1 - var(--pm-f, 0))); translate: 0 calc(var(--pm-f, 0) * 31rpx); transition: filter var(--pm-f-d, 0s) ease, translate var(--pm-f-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-f-s, 0) * 0ms), calc(var(--pm-f-s, 0) * 0ms), 0s, 0s; }
-.v2-fitem:nth-child(2) { transition-delay: calc(var(--pm-f-s, 0) * 30ms), calc(var(--pm-f-s, 0) * 30ms), 0s, 0s; }
-.v2-fitem:nth-child(3) { transition-delay: calc(var(--pm-f-s, 0) * 60ms), calc(var(--pm-f-s, 0) * 60ms), 0s, 0s; }
-.v2-fitem:nth-child(4) { transition-delay: calc(var(--pm-f-s, 0) * 90ms), calc(var(--pm-f-s, 0) * 90ms), 0s, 0s; }
-.v2-fitem:nth-child(5) { transition-delay: calc(var(--pm-f-s, 0) * 120ms), calc(var(--pm-f-s, 0) * 120ms), 0s, 0s; }
-.v2-fitem:nth-child(6) { transition-delay: calc(var(--pm-f-s, 0) * 150ms), calc(var(--pm-f-s, 0) * 150ms), 0s, 0s; }
-.v2-fitem:nth-child(7) { transition-delay: calc(var(--pm-f-s, 0) * 180ms), calc(var(--pm-f-s, 0) * 180ms), 0s, 0s; }
-.v2-fitem:nth-child(8) { transition-delay: calc(var(--pm-f-s, 0) * 210ms), calc(var(--pm-f-s, 0) * 210ms), 0s, 0s; }
-.v2-fitem:nth-child(n+9) { transition-delay: calc(var(--pm-f-s, 0) * 240ms), calc(var(--pm-f-s, 0) * 240ms), 0s, 0s; }
+.v3-nearby-card { filter: opacity(calc(1 - var(--pm-n, 0))); translate: calc(var(--pm-n, 0) * 115rpx) 0; transition: filter var(--pm-n-d, 0s) ease, translate var(--pm-n-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-n-s, 0) * 60ms), calc(var(--pm-n-s, 0) * 60ms), 0s, 0s; }
+.v3-nearby-card:nth-child(2) { transition-delay: calc(var(--pm-n-s, 0) * 100ms), calc(var(--pm-n-s, 0) * 100ms), 0s, 0s; }
+.v3-nearby-card:nth-child(3) { transition-delay: calc(var(--pm-n-s, 0) * 140ms), calc(var(--pm-n-s, 0) * 140ms), 0s, 0s; }
+.v3-nearby-card:nth-child(4) { transition-delay: calc(var(--pm-n-s, 0) * 180ms), calc(var(--pm-n-s, 0) * 180ms), 0s, 0s; }
+.v3-nearby-card:nth-child(5) { transition-delay: calc(var(--pm-n-s, 0) * 220ms), calc(var(--pm-n-s, 0) * 220ms), 0s, 0s; }
+.v3-nearby-card:nth-child(6) { transition-delay: calc(var(--pm-n-s, 0) * 260ms), calc(var(--pm-n-s, 0) * 260ms), 0s, 0s; }
+.v3-nearby-card:nth-child(n+7) { transition-delay: calc(var(--pm-n-s, 0) * 300ms), calc(var(--pm-n-s, 0) * 300ms), 0s, 0s; }
+.v3-upreview { filter: opacity(calc(1 - var(--pm-u, 0))); translate: calc(var(--pm-u, 0) * 115rpx) 0; transition: filter var(--pm-u-d, 0s) ease, translate var(--pm-u-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-u-s, 0) * 120ms), calc(var(--pm-u-s, 0) * 120ms), 0s, 0s; }
+.v3-upreview:nth-child(2) { transition-delay: calc(var(--pm-u-s, 0) * 160ms), calc(var(--pm-u-s, 0) * 160ms), 0s, 0s; }
+.v3-upreview:nth-child(3) { transition-delay: calc(var(--pm-u-s, 0) * 200ms), calc(var(--pm-u-s, 0) * 200ms), 0s, 0s; }
+.v3-upreview:nth-child(4) { transition-delay: calc(var(--pm-u-s, 0) * 240ms), calc(var(--pm-u-s, 0) * 240ms), 0s, 0s; }
+.v3-upreview:nth-child(5) { transition-delay: calc(var(--pm-u-s, 0) * 280ms), calc(var(--pm-u-s, 0) * 280ms), 0s, 0s; }
+.v3-upreview:nth-child(6) { transition-delay: calc(var(--pm-u-s, 0) * 320ms), calc(var(--pm-u-s, 0) * 320ms), 0s, 0s; }
+.v3-upreview:nth-child(n+7) { transition-delay: calc(var(--pm-u-s, 0) * 360ms), calc(var(--pm-u-s, 0) * 360ms), 0s, 0s; }
+.v2-fitem { filter: opacity(calc(1 - var(--pm-f, 0))); translate: 0 calc(var(--pm-f, 0) * 31rpx); transition: filter var(--pm-f-d, 0s) ease, translate var(--pm-f-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-f-s, 0) * 180ms), calc(var(--pm-f-s, 0) * 180ms), 0s, 0s; }
+.v2-fitem:nth-child(2) { transition-delay: calc(var(--pm-f-s, 0) * 210ms), calc(var(--pm-f-s, 0) * 210ms), 0s, 0s; }
+.v2-fitem:nth-child(3) { transition-delay: calc(var(--pm-f-s, 0) * 240ms), calc(var(--pm-f-s, 0) * 240ms), 0s, 0s; }
+.v2-fitem:nth-child(4) { transition-delay: calc(var(--pm-f-s, 0) * 270ms), calc(var(--pm-f-s, 0) * 270ms), 0s, 0s; }
+.v2-fitem:nth-child(5) { transition-delay: calc(var(--pm-f-s, 0) * 300ms), calc(var(--pm-f-s, 0) * 300ms), 0s, 0s; }
+.v2-fitem:nth-child(6) { transition-delay: calc(var(--pm-f-s, 0) * 330ms), calc(var(--pm-f-s, 0) * 330ms), 0s, 0s; }
+.v2-fitem:nth-child(7) { transition-delay: calc(var(--pm-f-s, 0) * 360ms), calc(var(--pm-f-s, 0) * 360ms), 0s, 0s; }
+.v2-fitem:nth-child(8) { transition-delay: calc(var(--pm-f-s, 0) * 390ms), calc(var(--pm-f-s, 0) * 390ms), 0s, 0s; }
+.v2-fitem:nth-child(n+9) { transition-delay: calc(var(--pm-f-s, 0) * 420ms), calc(var(--pm-f-s, 0) * 420ms), 0s, 0s; }

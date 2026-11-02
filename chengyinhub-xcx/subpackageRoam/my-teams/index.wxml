@@ -1,5 +1,6 @@
 <!-- 我的队伍(2026-10-14 漫游原型):带队 / 已通过 / 审核中 / 未通过 分组,另有「附近招募」。
      数据:/api/team/my + /api/team/my-applications + /api/team/nearby;没有队伍的人也能直接看到附近在招募的队伍。 -->
+<wxs src="../../utils/wxs/num.wxs" module="num" />
 <view class="mt theme-dark {{reducedMotion ? 'cy-motion-reduced' : ''}}">
   <cy-modal-host id="cy-modal-host" />
   <cy-toast id="cy-toast" />
@@ -11,7 +12,7 @@
   <cy-page-title title="我的队伍" />
   <include src="../utils/team-recovery-panel.wxml" />
   <view class="mt-stats cy-rise-in">
-    <view class="mt-stat" wx:for="{{stats}}" wx:key="k"><text class="mt-stat__v">{{item.v}}</text><text class="mt-stat__k">{{item.k}}</text></view>
+    <view class="mt-stat" wx:for="{{stats}}" wx:key="k"><text class="mt-stat__v">{{num.n(item.v)}}</text><text class="mt-stat__k">{{item.k}}</text></view>
   </view>
   <view class="mt-seg">
     <view class="mt-seg__i {{tab === 'mine' ? 'is-on' : ''}}" data-tab="mine" bindtap="switchTab" aria-role="tab" aria-selected="{{tab === 'mine'}}" aria-label="我的" hover-class="cy-pressed" hover-stay-time="80">我的</view>
