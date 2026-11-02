@@ -96,8 +96,11 @@ class ShopDayOneTicketGateTest {
                 "../chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java")),
                 StandardCharsets.UTF_8).replaceAll("\\s+", "");
 
-        assertEquals(1, occurrences(source, "assertExploreAccountTicketAvailable(sellerTopic,memberId);"));
-        assertEquals(1, occurrences(source, "assertExploreAccountTicketAvailable(orderTopic,memberId);"));
+        // C-22:两条场次入口带上场次 id(普通自由探索按场次限购);自玩通行证入口无场次,仍按主题。
+        assertEquals(1, occurrences(source, "assertExploreAccountTicketAvailable(sellerTopic,memberId,"
+                + "registrationActivity==null?null:registrationActivity.getId());"));
+        assertEquals(1, occurrences(source, "assertExploreAccountTicketAvailable(orderTopic,memberId,"
+                + "orderActivity==null?null:orderActivity.getId());"));
         assertEquals(1, occurrences(source, "assertExploreAccountTicketAvailable(topic,memberId);"));
     }
 

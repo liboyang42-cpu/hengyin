@@ -21,5 +21,5 @@ test('保存地图中心为站点前先拦默认中心', () => {
   const src = fs.readFileSync(path.join(__dirname, '../../pages/publish/fabu/index.js'), 'utf8');
   const body = src.slice(src.indexOf('  saveNodeLocation() {'), src.indexOf('  saveNodeLocation() {') + 600);
   assert.match(body, /isUntouchedDefaultCenter\(center\)/);
-  assert.match(body, /地图还在默认位置/);
+  assert.match(body, /请先拖动地图对准站点/);
 });

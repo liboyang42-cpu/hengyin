@@ -32,8 +32,40 @@ function dateChip(activity) {
   return { week: WEEKDAY[d.getDay()], day: (d.getMonth() + 1) + '.' + d.getDate() };
 }
 
+function epochOf(value) {
+  const p = chinaParts(value);
+  return p ? Date.UTC(p.year, p.month - 1, p.day, p.hours, p.minutes) : null;
+}
+
+/**
+ * P-18:发布时按主题档期自动建的那条活动(从 0 点起、跨好几天)不是一场真的场次。
+ * 跨度超过一天的都按「档期」看待:有真场次时不出现在选场次里;只剩它一条时写「随时可玩 · 至 M.D」。
+ */
+function isWindow(activity) {
+  const start = epochOf(activity && activity.startDate);
+  const end = epochOf(activity && activity.endDate);
+  return start != null && end != null && end - start > 24 * 3600 * 1000;
+}
+
+/** P-18/P-30:只给真场次;按开始时间排;没有真场次时才保留档期那一条。 */
+function sessionRows(activities) {
+  const list = (activities || []).filter((a) => a && a.id);
+  const real = list.filter((a) => !isWindow(a));
+  const rows = real.length ? real : list;
+  return rows.slice().sort((a, b) => {
+    const ea = epochOf(a.startDate);
+    const eb = epochOf(b.startDate);
+    if (ea == null || eb == null) return ea == null ? (eb == null ? 0 : 1) : -1;
+    return ea - eb;
+  });
+}
+
 /** 稿 11a 顶部那行「2025年12月13日(周六)· 19:30 集合」——缺哪半截就少写哪半截 */
 function singleDayText(activity) {
+  if (isWindow(activity)) {
+    const end = toDate(activity.endDate);
+    return '随时可玩 · 至 ' + (end.getMonth() + 1) + '.' + end.getDate();
+  }
   const d = toDate(activity && activity.startDate);
   if (!d) return String((activity && activity.name) || '');
   const pad = (n) => (n < 10 ? '0' + n : '' + n);
@@ -73,7 +105,8 @@ Component({
         this._ticketRequestId = (this._ticketRequestId || 0) + 1;
         return;
       }
-      const rows = (activities || []).filter((a) => a && a.id).map((a) => ({
+      const sessions = sessionRows(activities);
+      const rows = sessions.map((a) => ({
         id: a.id,
         name: String(a.name || ''),
         week: dateChip(a).week,
@@ -85,7 +118,7 @@ Component({
       this.setData({
         days: rows,
         singleDay: single,
-        singleDayText: single ? singleDayText((activities || [])[0]) : '',
+        singleDayText: single ? singleDayText(sessions[0]) : '',
       });
       // 单场次不用选日期,直接进第二步
       const selectedExists = rows.some((row) => row.id === this.data.pickedActivityId);
@@ -224,3 +257,6 @@ Component({
     },
   },
 });
+
+// 单测入口(组件运行时不读)
+if (typeof module !== 'undefined') module.exports = { isWindow, sessionRows, singleDayText };

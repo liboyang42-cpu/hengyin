@@ -146,11 +146,11 @@ public class TopicSaleFinalizationServiceImpl implements ITopicSaleFinalizationS
         terminator.terminatePendingUnderTopicLock(topicId, finalizeNow);
 
         List<OmsTicket> tickets = activeTickets(topicId);
-        TopicSaleTimeValidator.assertValid(topic, tickets, finalizeNow);
+        CoopOrderLineupSource.ReadResult orderLineup = coopOrderLineupSource.readEffectiveLineup(topicId);
+        TopicSaleTimeValidator.assertValid(topic, tickets, finalizeNow, !orderLineup.getEntries().isEmpty());
         List<MerchantChapterOffer> offers = validOffers(topicId, finalizeNow);
         assertRequiredChapterCoverage(topicId, offers);
 
-        CoopOrderLineupSource.ReadResult orderLineup = coopOrderLineupSource.readEffectiveLineup(topicId);
         if (!orderLineup.getRepairReasons().isEmpty()) {
             throw new IllegalStateException("合作单缺冻结快照，进入人工修复清单: " + orderLineup.getRepairReasons().get(0));
         }

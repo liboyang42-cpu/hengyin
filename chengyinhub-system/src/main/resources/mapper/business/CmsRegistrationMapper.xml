@@ -256,6 +256,25 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         for update
     </select>
 
+    <!-- C-22：普通自由探索按场次限购；有效票口径与上面逐字一致，只把范围收到这一场。 -->
+    <select id="selectLiveExploreTicketIdsInActivityForUpdate" resultType="long">
+        select r.id
+        from cms_registration r
+        where r.member_id = #{memberId}
+          and r.owner_type = 2 and r.owner_id = #{activityId}
+          and (r.ticket_id is not null or r.purchase_kind = 2
+               or (r.ticket_id is null and r.expires_at is not null))
+          and (
+            (r.registration_status = 2
+             and (r.purchase_kind &lt;&gt; 2 or r.purchase_kind is null
+                  or r.expires_at is null or r.expires_at &gt; now()))
+            or (r.registration_status = 1 and r.payment_status in (0, 1)
+                and (r.pay_expire_time is null or r.pay_expire_time &gt; now()))
+          )
+        order by r.id
+        for update
+    </select>
+
     <!--
       主题剧情访问权：已退款/已取消报名不算有效票；② 自玩通行证还须未过期；
       ③ 自由探索票必须能回读到至少一条未失效 entitlement，防止仅凭报名半态放出完整剧情。

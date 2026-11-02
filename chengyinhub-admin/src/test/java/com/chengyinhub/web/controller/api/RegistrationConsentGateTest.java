@@ -71,7 +71,7 @@ class RegistrationConsentGateTest {
         AjaxResult result = controller.createRegistration(request);
 
         assertEquals(500, result.get("code"));
-        assertEquals("已达到该主题的购票上限", result.get("msg"));
+        assertEquals("这一期每人限购一张，你已经有票了", result.get("msg"));
         verify(checkoutService).createOrReplay(7L, request);
     }
 

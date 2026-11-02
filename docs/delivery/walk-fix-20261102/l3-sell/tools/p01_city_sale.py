@@ -29,10 +29,10 @@ def login(openid):
 
 
 def seed_cover():
-    """Fixture: one APPROVED image asset for 9003 (same shape as the Java IT MediaFixture)."""
+    """Fixture: one APPROVED image asset for the publisher (same shape as the Java IT MediaFixture)."""
     key = "upload/p01-cover-%d.jpg" % int(time.time() * 1000)
     ex("INSERT INTO app_media_asset(member_id,object_key,media_type,review_state,version,create_time,update_time) "
-       "VALUES(9003,%s,'IMAGE','APPROVED',0,NOW(),NOW())", (key,))
+       "VALUES(%s,%s,'IMAGE','APPROVED',0,NOW(),NOW())", (PUBLISHER, key))
     return q("SELECT id FROM app_media_asset WHERE object_key=%s", (key,))[0][0]
 
 
@@ -43,7 +43,11 @@ def step(t):
 now = datetime.datetime.utcnow() + datetime.timedelta(hours=8)
 fmt = lambda d: d.strftime("%Y-%m-%d %H:%M:%S")
 atok = admin_token()
-ptok, etok, player = login("e2e-openid-9003"), login("e2e-openid-9008"), login("e2e-openid-9009")
+# Both cases are club 7001's own city theme published by its leader 9003 (city themes from a club leader must
+# bind the club). "platform": the admin sets the content slot to PLATFORM (as the walkers did) and club 7002 is
+# invited as organiser during recruiting. "club": the content slot stays CLUB 7001.
+PUBLISHER = 9003
+ptok, etok, player = login("e2e-openid-%d" % PUBLISHER), login("e2e-openid-9008"), login("e2e-openid-9009")
 
 step("publisher identity (paid publish needs it)")
 st = http("POST", "/api/publisher/identity/status", token=ptok, json_body={})
@@ -53,7 +57,7 @@ if not (st.get("data") or {}).get("registered"):
 
 step("one text-question game (template) for the stations, approved by admin")
 tr = http("POST", "/api/template/publish", token=ptok, json_body={
-    "title": "门楣上的年份", "description": "正门上方刻着哪一年？", "validationMethod": 1,
+    "title": "门楣上的年份 %s" % now.strftime("%H%M%S"), "description": "正门上方刻着哪一年？", "validationMethod": 1,
     "questionName": "正门上方刻着哪一年？（四位数字）", "questionAnswer": "1873", "hint1": "抬头看。",
     "hint2": "18 开头。", "answerReveal": "1873。", "feedbackText": "对了。", "duration": 8,
     "difficulty": "普通", "players": "2-4人", "usageLocation": "户外"})
@@ -71,7 +75,7 @@ if not (st.get("data") or {}).get("registered"):
     print(J(http("POST", "/api/publisher/identity", token=etok, json_body={
         "realName": "执行主理人", "idCard": "110101199001010023", "consent": True, "source": "topic_publish"})))
 
-step("publish a paid city theme (V2 create, product_type=1, club 7001, open club pool for an organiser)")
+step("publish a paid city theme (V2 create, product_type=1)")
 start = now + datetime.timedelta(days=3)
 ticket = {"name": "领队场", "price": 69, "totalStock": 20, "mode": 1, "teamSize": 4,
           "meetingPoint": "外滩源壹号 正门台阶", "meetingPointAddress": "上海市黄浦区中山东一路33号",
@@ -89,14 +93,16 @@ nodes = [{"name": "外滩源壹号", "address": "上海市黄浦区中山东一�
 dto = {"name": "P01 外滩电报（%s %s）" % (MODE, now.strftime("%H%M%S")), "subtitle": "城市定向开售验证",
        "description": "两站城市定向，用于验证付费城市定向能开售。", "startDate": fmt(now),
        "endDate": fmt(now + datetime.timedelta(days=60)), "saleEndAt": fmt(now + datetime.timedelta(days=55)),
-       "categoryIds": "1", "productType": 1, "publishMode": "normal", "clubId": 7001,
+       "categoryIds": "1", "productType": 1, "publishMode": "normal",
        "imgUrl": cover, "teamMode": 1, "teamMaxMembers": 4,
-       "openClubPool": 1, "recruitDeadline": fmt(now + datetime.timedelta(days=1)),
        "chapters": [{"name": "第一章", "description": "从外滩源出发。", "schemaVersion": 1, "required": 1,
                      "blocks": [{"type": "text", "content": "从外滩源出发。"},
                                 {"type": "node", "nodeIndex": 0}, {"type": "node", "nodeIndex": 1}],
                      "nodes": nodes}],
        "tickets": [ticket]}
+# A recruit deadline lets the publisher invite club 7002 as organiser before pricing (the sale gate needs
+# exactly one ORGANIZER for guided tickets).
+dto.update({"clubId": 7001, "recruitDeadline": fmt(now + datetime.timedelta(days=1))})
 r = http("POST", "/api/topic/v2/create", token=ptok, json_body=dto)
 print(J(r))
 d = r.get("data")

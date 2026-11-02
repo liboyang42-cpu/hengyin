@@ -493,7 +493,8 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             sellerTopic = topic;
         }
         assertShopDayPointsUnsupported(sellerTopic, isUsePoint);
-        assertExploreAccountTicketAvailable(sellerTopic, memberId);
+        assertExploreAccountTicketAvailable(sellerTopic, memberId,
+                registrationActivity == null ? null : registrationActivity.getId());
         List<Club> lockedOwningClubs = lockActiveOwningClubs(registrationActivity, sellerTopic);
         revalidateWaitlistParticipant(waitlistClaim, memberId, lockedOwningClubs);
         // 3. 验证票种是否存在、属于当前活动且库存充足
@@ -772,7 +773,8 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         CmsActivity orderActivity = ownerType != null && ownerType == 2
                 ? cmsActivityMapper.selectCmsActivityById(ownerId) : null;
         assertShopDayPointsUnsupported(orderTopic, isUsePoint);
-        assertExploreAccountTicketAvailable(orderTopic, memberId);
+        assertExploreAccountTicketAvailable(orderTopic, memberId,
+                orderActivity == null ? null : orderActivity.getId());
         UmsMember member = validateAndGetMember(memberId);
         long userPoint = member.getPoint() != null ? member.getPoint() : 0L;
         ClubOperationBenefit clubBenefit = resolveClubOperationBenefit(memberId, orderActivity);
@@ -838,8 +840,12 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
      * 门槛只读 finalize 冻结快照，绝不回退 live 票/章/offer 或另造配置。
      */
     private void assertExploreAccountTicketAvailable(CmsTopic sellerTopic, Long memberId) {
+        assertExploreAccountTicketAvailable(sellerTopic, memberId, null);
+    }
+
+    private void assertExploreAccountTicketAvailable(CmsTopic sellerTopic, Long memberId, Long activityId) {
         ExploreAccountTicketGate.assertAvailable(
-                sellerTopic, memberId, topicSaleSnapshotMapper, cmsRegistrationMapper);
+                sellerTopic, memberId, activityId, topicSaleSnapshotMapper, cmsRegistrationMapper);
     }
 
     /**
