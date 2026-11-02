@@ -1095,6 +1095,11 @@ Page({
   },
 
   clearLocalDraft() {
+    if (this._publishAttempt || this._serverDraftAttempt || this.data.submitting || this.data.draftSaving) {
+      // 只提示不改 submitError:那块「这次还没有保存 · 重试」是发布失败的出口,点重试会重新发布,不是这里要的动作
+      cyToast('上次发布未确认，不能清空草稿');
+      return;
+    }
     if (this._draftStorageUnavailable) { this._markDraftStorageUnavailable(); return; }
     const memberId = String(app.getUserID() || '');
     if (this._unloaded) return;
@@ -1110,6 +1115,7 @@ Page({
       confirmText: '清空',
       success: (res) => {
         if (!res.confirm || this._unloaded || this._draftStorageUnavailable
+            || this._publishAttempt || this._serverDraftAttempt || this.data.submitting || this.data.draftSaving
             || memberId !== String(app.getUserID() || '')
             || memberId !== String(this.data.draftMemberId || '')
             || topicId !== this.data.editingTopicId || draftUuid !== this.data.draftUuid) return;
@@ -1121,7 +1127,8 @@ Page({
         }
         const mode = Number(this.data.formData.productType) === 2 ? 2 : 1;
         const club = this.data.formData.clubId ? ('&clubId=' + encodeURIComponent(this.data.formData.clubId)) : '';
-        wx.redirectTo({ url: '/pages/publish/fabu/index?newDraft=1&mode=' + mode + club });
+        const scope = this.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT' : '';
+        wx.redirectTo({ url: '/pages/publish/fabu/index?newDraft=1&mode=' + mode + club + scope });
       },
     });
   },

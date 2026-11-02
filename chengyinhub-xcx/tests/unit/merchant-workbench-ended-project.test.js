@@ -199,8 +199,12 @@ test('已结束判据与卡片状态签同源:复用 isEndedProject,不另算日
   assert.equal(isEndedProject('', '', TODAY), false, '档期未知不算结束');
 
   const source = fs.readFileSync(PAGE_PATH, 'utf8');
-  assert.match(source, /\.filter\(\(card\) => card\.statusLabel !== '已结束'\)/,
+  // 2026-11-01:过滤收进 isHiddenProjectCard(已结束 / 已取消 / 草稿),仍只看卡片自己的状态签
+  assert.match(source, /\.filter\(\(card\) => !isHiddenProjectCard\(card\)\)/,
     '卡片过滤必须消费卡片自己的状态签');
+  const { isHiddenProjectCard } = require('../../utils/merchant-workbench.js');
+  assert.equal(isHiddenProjectCard({ statusLabel: '已结束' }), true);
+  assert.equal(isHiddenProjectCard({ statusLabel: '进行中' }), false);
   assert.match(source, /isEndedProject\(item\.startDate, item\.endDate, today\)/,
     '承接总数必须复用 isEndedProject');
   assert.match(source, /finiteCount\(res\.data\.activeTotal\)/,
@@ -232,7 +236,7 @@ test('负控:主办总数若回到只数当前页,与后端全量总数会对不
 
 test('负控:去掉已结束过滤后,卡片列表会重新出现已结束项目,门禁必须判红', () => {
   const source = fs.readFileSync(PAGE_PATH, 'utf8');
-  const anchor = "    }).filter((card) => card.statusLabel !== '已结束');";
+  const anchor = "    }).filter((card) => !isHiddenProjectCard(card));";
   assert.ok(source.includes(anchor), '负控锚点失效:找不到卡片过滤');
   const mutated = source.replace(anchor, '    });');
 

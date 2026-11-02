@@ -3,7 +3,7 @@ const { toTimestamp, chinaDateKey, chinaParts } = require('../../../../utils/dat
 const { isRecordList, isBizOk } = require('../../../../utils/response-shape.js');
 const { decodeDisplayText } = require('../../../../utils/display-text.js');
 const { normalizeMerchantAccess } = require('../../../../utils/merchant-access-policy.js');
-const { isLoginRequired, retryLogin } = require('../../../../utils/session/login-reload.js');
+const { isLoginRequired, retryLogin, failureStatus } = require('../../../../utils/session/login-reload.js');
 const { decorate: decorateInvites } = require('../../../../utils/coop-invite-view.js');
 const roleGuard = require('../../../../utils/roleGuard.js');
 const roleViewFilter = require('../../../../utils/transport/role-view-filter.js');
@@ -25,6 +25,7 @@ Page({
     errorMsg: '',
     loginRequired: false,   // PR10 F-W1-12:读失败是未登录 ⇒ 登录引导
     refreshing: false,
+    refreshError: '',
     list: [],
     activeTab: 'in',   // 收件箱 = 全部会话 + 收到的邀请;发件箱 = 我发出的邀请
     // 竞猜待答入口:只给能结算竞猜的人看 —— 玩家看见它只会点进去撞一堵权限墙
@@ -145,6 +146,7 @@ Page({
             loaded: true,
             error: false,
             errorMsg: '',
+            refreshError: '',
           });
           that._conversationAppliedEpoch = requestEpoch;
           that.refreshView();
@@ -163,8 +165,17 @@ Page({
     const msg = app.getRequestErrorMessage
       ? app.getRequestErrorMessage(response, '消息加载失败，请重试')
       : ((response && (response.msg || response.errMsg)) || '消息加载失败，请重试');
+    const denied = failureStatus(response, statusCode) === 403 || isLoginRequired(app, response, statusCode)
+      || response && response.reason === 'sessionChanged';
+    if (denied) {
+      this._inviteEpoch = (this._inviteEpoch || 0) + 1;
+      this.setData({ list: [], viewList: [], loaded: false, invitesIn: [], invitesOut: [], canSettlePredict: false,
+        loading: false, refreshing: false, refreshError: '', error: true, errorMsg: msg,
+        loginRequired: isLoginRequired(app, response, statusCode) });
+      return;
+    }
     if (preserveConfirmed) {
-      this.setData({ loading: false, refreshing: false, error: false });
+      this.setData({ loading: false, refreshing: false, error: false, refreshError: '没刷新成功，显示的是之前的消息', loginRequired: false });
       return;
     }
     // PR10 F-W1-12:未登录(无会话 / 401)给登录引导;其余失败仍按 load-failure 留白

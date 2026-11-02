@@ -31,6 +31,8 @@
     <!-- 稿 578:2313 那张卡:标题 / 一句话 / 右上角状态词。
          2026-09-11 用户定「是退款、还是已完成、未开始,要有不同状态的」⇒
          它不是退款专用卡,每个订单态都出,右上角那个词的颜色跟着状态走。 -->
+    <!-- 刷新失败但保留上次的订单:放在头图下第一张卡的位置,一眼能看到 -->
+    <cy-inline-error wx:if="{{loadErrorText}}" kind="network" title="{{loadErrorText}}" action="重试" bind:action="reloadOrder" />
     <view class="ocard state-notice" wx:if="{{stateNotice.show}}">
       <view class="state-notice__head">
         <text class="state-notice__k">{{stateNotice.title}}</text>

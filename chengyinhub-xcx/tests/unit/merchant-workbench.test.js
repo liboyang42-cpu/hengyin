@@ -69,20 +69,22 @@ test('todo 缺失时给出空 checklist 而不是抛错', () => {
   assert.deepEqual(board.checklist, []);
 });
 
-test('项目卡只把真实已确认承接标为承接中，保留主办档期且不附加进度或核销动作', () => {
+// 2026-11-01 业主(项目卡方案 B v3):已确认承接按上海档期写「报名中 / 进行中」,审核中的写「待审核」;
+// 已确认但档期未知仍写「承接中」,驳回 / 缺状态 / 失效供给仍不写状态。
+test('项目卡状态:已确认按档期写报名中 / 进行中，审核中写待审核，其余不冒充已承接', () => {
   const today = '2026-08-05';
   const cases = [
-    [{ status: 1, startDate: today }, '承接中'],
-    [{ status: '1', startDate: '2026-08-06' }, '承接中'],
+    [{ status: 1, startDate: today }, '进行中'],
+    [{ status: '1', startDate: '2026-08-06' }, '报名中'],
     [{ status: 1 }, '承接中'],
-    [{ status: 0, startDate: today }, ''],
+    [{ status: 0, startDate: today }, '待审核'],
     [{ status: 2, startDate: today }, ''],
     [{ status: 3, startDate: today }, ''],
     [{ startDate: today }, ''],
     [{ status: 1, startDate: '2026-08-04' }, '已结束'],
     [{ projectSource: 'chapter', status: 1, offerActive: true }, '承接中'],
     [{ projectSource: 'chapter', status: 1, offerActive: false, startDate: today }, '待补供给'],
-    [{ projectSource: 'chapter', status: 0, offerActive: true, startDate: today }, ''],
+    [{ projectSource: 'chapter', status: 0, offerActive: true, startDate: today }, '待审核'],
     [{ projectSource: 'chapter', status: 1, startDate: today }, ''],
     [{ projectSource: 'chapter', status: '1', offerActive: '1' }, '承接中'],
     [{ projectSource: 'unknown', status: 1, startDate: today }, ''],
@@ -101,7 +103,7 @@ test('项目卡只把真实已确认承接标为承接中，保留主办档期�
     });
     assert.deepEqual(cards.slice(0, joinList.length).map(card => card.statusLabel), cases.map(([, label]) => label),
       '待审核/驳回/缺状态/失效供给不能因日期进行中而冒充已承接；已确认章节缺日期仍有业务签');
-    assert.deepEqual(cards.slice(joinList.length).map(card => card.statusLabel), ['进行中', '未开始', '已结束', ''],
+    assert.deepEqual(cards.slice(joinList.length).map(card => card.statusLabel), ['进行中', '报名中', '已结束', ''],
       '主办仍按上海档期，未知档期不编状态');
     assert.equal(cards.some(card => Object.prototype.hasOwnProperty.call(card, 'cardAction')), false,
       '正常/待办失败都不得附加承接进度或去核销动作');
@@ -111,6 +113,7 @@ test('项目卡只把真实已确认承接标为承接中，保留主办档期�
       assert.equal(cards[0].todoText, '', '待办失败不能冒充今日无待办');
     } else {
       assert.equal(cards[0].todoCount, 4, '移除卡面动作不能移除真实待办计数');
+      assert.equal(cards[0].verifyCount, 3, '卡上的「N 张待核销」只数待核销');
       assert.deepEqual(cards[0].todoChips.map(chip => [chip.key, chip.count]), [['pendingVerify', 3], ['pendingScanConfirm', 1]]);
     }
   }
@@ -203,10 +206,12 @@ test('工作台首屏恢复收入大数字 + 四个圆形快捷入口，待办�
     '订单/退款不上工作台:不发货 ⇒ 待发货恒 0，退款状态归客户名单');
   assert.ok(!/rv-todo-cell/.test(wxml), '旧的数字格子待办区应已被 checklist 取代');
   assert.doesNotMatch(wxml, /\bcoopCount\b/, '没有合同来源的合作计数不得渲染');
-  // 项目卡的触达高度改由封面高度(144rpx)保证,不再有 checklist 行
+  // 2026-11-01 业主(方案 B v3):项目卡是 4:3 横滑大卡,封面铺满,圆角只用 clip-path 整组裁一次
   const card = wxss.match(/\.rv-project-card \{([^}]*)\}/);
   assert.ok(card, '.rv-project-card 规则不见了');
-  assert.match(card[1], /padding:\s*var\(--cy-space-3\)/);
+  assert.match(card[1], /width:\s*600rpx;[\s\S]*height:\s*450rpx;/, '卡片保持 4:3(与主题封面同比例)');
+  assert.match(card[1], /clip-path:\s*inset\(0 round var\(--cy-radius-lg\)\)/);
+  assert.doesNotMatch(card[1], /overflow:\s*hidden/, 'overflow:hidden + 圆角会逐层裁,底边透出暗线');
 });
 
 test('工作台状态语义:加载失败落页内 inline error，不再有整屏身份/错误闸', () => {

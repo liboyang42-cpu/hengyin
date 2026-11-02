@@ -3,14 +3,18 @@ const bundle = require('../../utils/free-explore-bundle.js');
 const modal = require('../../utils/modal.js');
 const empty = () => ({ review: null, reviewPending: null, reviewBusy: false, reviewContent: '', reviewRating: 5, detail: null, catalog: null, quote: null, exitOptions: null, swapPending: null, pending: null, loading: false, error: '', notice: '' });
 
+// 自定义导航栏下的占位高度;缺了它标题和第一张卡会压在导航栏底下
+const layout = () => ({ statusBarHeight: app.globalData.statusBarHeight || 44, navBarHeight: app.globalData.navBarHeight || 44 });
+
 Page({
-  data: empty(),
+  data: Object.assign(empty(), layout()),
   clearView() {
     this._writing = false;
     this.setData({
       review: null, reviewPending: null, reviewBusy: false, reviewContent: '', reviewRating: 5,
       detail: null, catalog: null, quote: null, exitOptions: null, swapPending: null, pending: null,
       loading: false, error: '', notice: '',
+      statusBarHeight: layout().statusBarHeight, navBarHeight: layout().navBarHeight,
     });
   },
   onLoad(options) {

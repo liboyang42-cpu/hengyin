@@ -1879,6 +1879,9 @@ class MergedMasterBoundaryPolicyTest(unittest.TestCase):
                              ("C_PLAY_PREFERENCE", "C_PLAY_BASIC_INTENT"),
                              ("C_PLAY_PUZZLE_COMMAND", "C_PLAY_BASIC_INTENT")}
     expected = {
+        'M_AUTHOR_WRITE_RECEIPT_API': 'com.chengyinhub.web.controller.api.ApiAuthorWriteReceiptController',
+        'M_AUTHOR_WRITE_RECEIPT': 'com.chengyinhub.business.service.support.AuthorWriteReceiptService',
+        'M_AUTHOR_WRITE_RECEIPT_STORAGE': 'com.chengyinhub.business.mapper.AuthorWriteReceiptMapper',
         "M_API_MEMBER_ACCOUNT": "com.chengyinhub.web.controller.api.ApiMemberAccountController",
         "M_API_REVIEW_RECEIPT": "com.chengyinhub.web.controller.api.ApiMerchantReviewReplyReceiptController",
         "M_API_ORIENT_RECEIPT": "com.chengyinhub.web.controller.api.ApiOrientTaskReceiptController",
@@ -1923,7 +1926,7 @@ class MergedMasterBoundaryPolicyTest(unittest.TestCase):
             self.assertEqual(before[key], current[key], key)
         policy = gate.technical_dependency_policy()
         added = {key: owner for key, owner in policy["owners"].items() if key.startswith("M_")}
-        self.assertEqual(34, len(self.expected))
+        self.assertEqual(37, len(self.expected))
         self.assertEqual(set(self.expected), set(added))
         for key, member in self.expected.items():
             self.assertEqual([member], added[key]["members"])
