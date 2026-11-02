@@ -122,6 +122,8 @@
 .qa__opt.is-wrong .qa__opt-k { color: inherit; }
 /* 选项文案占满剩下的宽度 */
 .qa__opt-t { flex: 1; min-width: 0; }
+/* 交卷后的「你的选择 / 正确答案」只是小标签,不能跟选项文案平分宽度(原先复用 .qa__opt-t,整行被挤成三栏) */
+.qa__opt-tag { flex: none; font-size: var(--cy-type-label); font-weight: 600; }
 .qa__shot-lead {
   font-size: var(--cy-type-display);
   font-weight: 900;

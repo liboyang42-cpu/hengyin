@@ -37,7 +37,11 @@ test('案件册:有内容才在顶栏放这颗;打开时关系与日志按主题
     log: [{ at: new Date(2026, 9, 30, 10, 42).getTime(), kind: 'node', text: '答对了', hpDelta: -1, luckDelta: 0 }], found: 3, total: 8 } } })
   full.page._probeCasebook(); await flush()
   assert.equal(full.page.data.hasCasebook, true)
-  assert.deepEqual(full.calls[0], { url: '/api/play/journey/casebook', method: 'GET', data: { topicId: 9, activityId: undefined } })
+  // 主题局不带 activityId 键:GET 会把 undefined 序列化成 'undefined',后端 Long 参数整条 400(2026-11-01 VPS 实测)
+  assert.deepEqual(full.calls[0], { url: '/api/play/journey/casebook', method: 'GET', data: { topicId: 9 } })
+  full.page.data.activityId = 5
+  assert.deepEqual(full.page._scope(), { topicId: 9, activityId: 5 })
+  full.page.data.activityId = 0
   full.page.openCasebook(); await flush()
   const cb = full.page.data.casebook
   assert.equal(cb.relations[0].stateLabel, '信任')

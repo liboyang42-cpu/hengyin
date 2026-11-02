@@ -87,7 +87,7 @@ function methods(req) {
       if (this.data.navMap) this.setData({ navRim: rimPointer(this.data.fmPlayer, this.data.nextNode, this.data.navHeading) });
     },
 
-    _scope() { return { topicId: this.data.topicId, activityId: this.data.activityId || undefined }; },
+    _scope() { const scope = { topicId: this.data.topicId }; if (this.data.activityId) scope.activityId = this.data.activityId; return scope; }, // GET 里 undefined 会被序列化成字符串 'undefined',主题局整条 400
     /** 进页后静默问一次:主题有案件册内容才在顶栏放这颗。 */
     _probeCasebook() {
       if (!this.data.topicId || this.data.isPreview || this.data.isMock) return;

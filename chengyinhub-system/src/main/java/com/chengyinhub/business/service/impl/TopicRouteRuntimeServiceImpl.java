@@ -3031,6 +3031,8 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     }
     private void recordNodeResult(Long memberId,Long topicId,Long activityId,Long nodeId,String instance,String actionId,Boolean passed,boolean mistake,int outcome,List<String[]> choices,JsonNode decision,String attemptId) {
         TopicRouteSession session=currentSession(memberId,topicId,activityId);
+        // 老线性主题(无旅程状态)本就不建局:与 recordMistake 同口径 no-op;否则首站玩法交卷恒 409「本局已更新」(2026-11-01 VPS 实测)
+        if(session==null && decision==null && !journeyConfigured(requireScope(memberId,topicId,activityId,true),publicationCompiler().probe(nodes(topicId))))return;
         if(session==null || instance==null || !instance.equals(genericPlayer(session)?gameplayInstance(memberId,topicId,activityId,nodeId):session.getPlayInstanceId()))throw new ServiceException("本局已更新，请刷新",409);
         JourneyRules rules = sessionRules(session);
         if (decision!=null && !genericPlayer(session))throw new ServiceException("Outcome settlement requires a generic player session",409);

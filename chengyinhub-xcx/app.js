@@ -593,14 +593,14 @@ App({
   // 存角色缓存(委托 session-store,保留 `!role` 空值守卫):同时写 globalData 与 storage,
   // 作为前端身份单一真源(登录/重登/role-info 后调用)。getUserRole 的三级回退保持不变。
   setUserRole: function (snapOrRole) {
-    if (typeof snapOrRole === 'string') { this.getSession().setUserRole(snapOrRole); return; }
-    // 能力快照:存 role + 能力字段到 globalData(roleGuard 缓存的同时也持久化到 storage)
-    if (snapOrRole && snapOrRole.role) {
-      this.getSession().setUserRole(snapOrRole.role);
-      try {
-        wx.setStorageSync('role_permission_cache_v1', snapOrRole);
-      } catch (e) {}
-    }
+    var role = typeof snapOrRole === 'string' ? snapOrRole : snapOrRole && snapOrRole.role;
+    if (!role) return;
+    // 角色没变不回写会话:回写会推进会话版本,把同屏在途的请求作废成「登录状态已变更」(首页空栏 / 收入没更新成功)
+    if (role !== this.getSession().getUserRole()) this.getSession().setUserRole(role);
+    if (typeof snapOrRole === 'string') return;
+    try { // 能力快照:role + 能力字段持久化给 roleGuard,角色没变也照常刷新
+      wx.setStorageSync('role_permission_cache_v1', snapOrRole);
+    } catch (e) {}
   },
   // 把 N 张一次性交给裁剪页(/pages/crop/index),它内部逐张迭代,裁完一次抛回数组。
   // ⚠️ 别改回「调用方逐张开页」:emit 同步 → resolve 后同一 tick 就发下一次 navigateTo,
