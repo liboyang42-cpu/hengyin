@@ -71,4 +71,40 @@ class PricingDepositDueTest {
 
         verify(ticketMapper).updateOmsTicket(any(com.chengyinhub.business.domain.OmsTicket.class));
     }
+
+    /** P-01:编辑器发的城市定向票不带 sub_type;锁价沿用作者的票,不再插一张无时间的「有人带」票。 */
+    @Test
+    void cityConfirmAdoptsAuthoredTicketsInsteadOfInsertingATimelessGuidedOne() {
+        CmsTopic pricing = new CmsTopic();
+        pricing.setId(703L); pricing.setMemberId(900001L); pricing.setLifecycle(2);
+        pricing.setProductType(com.chengyinhub.common.constant.ProductType.ORIENTEERING);
+        when(cmsTopicMapper.selectCmsTopicByIdForUpdate(703L)).thenReturn(pricing);
+        when(coopOrderMapper.selectEffectiveOrdersByTopicId(703L)).thenReturn(Collections.emptyList());
+        com.chengyinhub.business.domain.OmsTicket authored = new com.chengyinhub.business.domain.OmsTicket();
+        authored.setId(902L); authored.setName("领队场"); authored.setPrice(new BigDecimal("69")); authored.setDelFlag(0);
+        when(ticketMapper.selectOmsTicketList(any(com.chengyinhub.business.domain.OmsTicket.class))).thenAnswer(inv -> {
+            com.chengyinhub.business.domain.OmsTicket q = inv.getArgument(0);
+            return "guided".equals(q.getSubType()) ? Collections.emptyList() : Collections.singletonList(authored);
+        });
+
+        service.confirmPrice(703L, new BigDecimal("69"), null, null, null, null);
+
+        org.mockito.Mockito.verify(ticketMapper, org.mockito.Mockito.never())
+                .insertOmsTicket(any(com.chengyinhub.business.domain.OmsTicket.class));
+    }
+
+    /** 自由探索等非城市主题照旧:没有 guided 票就插一张(原口径不动)。 */
+    @Test
+    void nonCityConfirmStillInsertsGuidedTicket() {
+        CmsTopic pricing = new CmsTopic();
+        pricing.setId(704L); pricing.setMemberId(900001L); pricing.setLifecycle(2);
+        when(cmsTopicMapper.selectCmsTopicByIdForUpdate(704L)).thenReturn(pricing);
+        when(coopOrderMapper.selectEffectiveOrdersByTopicId(704L)).thenReturn(Collections.emptyList());
+        when(ticketMapper.selectOmsTicketList(any(com.chengyinhub.business.domain.OmsTicket.class)))
+                .thenReturn(Collections.emptyList());
+
+        service.confirmPrice(704L, new BigDecimal("69"), null, null, null, null);
+
+        verify(ticketMapper).insertOmsTicket(any(com.chengyinhub.business.domain.OmsTicket.class));
+    }
 }

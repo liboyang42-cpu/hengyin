@@ -314,6 +314,22 @@ public class PricingServiceImpl implements IPricingService {
         return r;
     }
 
+    /** P-01:城市定向作者自己发的票(未标 sub_type、未删除)。 */
+    private List<OmsTicket> authoredCityTickets(Long topicId) {
+        OmsTicket q = new OmsTicket();
+        q.setOwnerType(1L);
+        q.setOwnerId(topicId);
+        q.setDelFlag(0);
+        List<OmsTicket> rows = omsTicketMapper.selectOmsTicketList(q);
+        List<OmsTicket> out = new ArrayList<>();
+        if (rows != null) for (OmsTicket t : rows) {
+            if (t != null && t.getSubType() == null && Integer.valueOf(0).equals(t.getDelFlag() == null ? 0 : t.getDelFlag())) {
+                out.add(t);
+            }
+        }
+        return out;
+    }
+
     /** P-34:定价页预填作者已填过的价;读不到就不填(页面回落到地板价)。只读。 */
     private BigDecimal currentPrice(Long topicId, String subType) {
         if ("self".equals(subType)) {
@@ -366,8 +382,9 @@ public class PricingServiceImpl implements IPricingService {
         if (supplyBlock != null) throw new IllegalStateException(supplyBlock);
 
         // 校验各票价 ≥ 各自底价(guided 摊带队成本,self 不摊)
+        BigDecimal guidedFloor = null;
         if (guidedPrice != null) {
-            BigDecimal guidedFloor = previewTopic(topicId, leadCost, teamSize, "guided").getPriceMin();
+            guidedFloor = previewTopic(topicId, leadCost, teamSize, "guided").getPriceMin();
             if (guidedPrice.compareTo(guidedFloor) < 0)
                 throw new IllegalStateException("有人带票价不能低于底价 " + guidedFloor);
         }
@@ -412,7 +429,19 @@ public class PricingServiceImpl implements IPricingService {
             q.setSubType("guided");
             List<OmsTicket> existing = omsTicketMapper.selectOmsTicketList(q);
             int inv = guidedInventory != null && guidedInventory > 0 ? guidedInventory : 100;
-            if (existing != null && !existing.isEmpty()) {
+            List<OmsTicket> authored = (existing == null || existing.isEmpty())
+                    && Integer.valueOf(ProductType.ORIENTEERING).equals(topic.getProductType())
+                    ? authoredCityTickets(topicId) : java.util.Collections.<OmsTicket>emptyList();
+            if (!authored.isEmpty()) {
+                // P-01:编辑器发的城市定向票不带 sub_type,它们本身就是有人带的场次票(带时间、集合点、库存)。
+                // 原来这里会另插一张无时间的「有人带」票 ⇒ 开售终审恒拒「ticket.startTime 与 ticket.endTime 必须同时存在」。
+                // 现在沿用作者的票:不新插、不改库存;价格低于底价的点名拒绝,作者的价已填则以作者的为准。
+                for (OmsTicket t : authored) {
+                    if (t.getPrice() != null && t.getPrice().compareTo(guidedFloor) < 0) {
+                        throw new IllegalStateException("票种「" + t.getName() + "」的价格低于底价 " + guidedFloor);
+                    }
+                }
+            } else if (existing != null && !existing.isEmpty()) {
                 OmsTicket t = new OmsTicket();
                 t.setId(existing.get(0).getId());
                 t.setPrice(guidedPrice);
