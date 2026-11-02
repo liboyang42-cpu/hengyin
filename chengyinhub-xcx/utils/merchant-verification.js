@@ -55,6 +55,10 @@ function classifyVerificationOutcome(response, channel, httpStatus, request) {
     return unknown();
   }
   if (response.code === 500 || response.code === '500') {
+    // M-02：服务端只在核销事务开始前的拒绝上带 notRedeemed=true（码无效/过期/本店无此票权益等），
+    // 只有这个显式标记可以判「未核销」；其余业务500仍按待确认处理。
+    if (!originalSeat && (ticket || chapter) && record(data) && data.notRedeemed === true
+        && typeof response.msg === 'string' && response.msg) return { status: 'failed', response };
     // Controller 在选择分支尚未调用核销事务；重复标记是服务端现有的幂等事实。
     if (ticket && (validChoice(data) || record(data) && data.alreadyVerified === true && response.msg === '该订单已核销'))
       return { status: 'failed', response };
@@ -84,6 +88,41 @@ function completionReceiptMessage(response, fallback) {
   return earnedXp > 0 ? (message + ' · 玩家通关 +' + earnedXp + ' 探索值已到账') : message;
 }
 
+// M-02：服务端原因是给开发看的短词，柜台需要一句能直接告诉顾客的话。
+const NOT_REDEEMED_REASONS = {
+  '签名不匹配': '这不是有效的核销码，请让玩家重新打开核销码',
+  '格式错误': '这不是有效的核销码，请让玩家重新打开核销码',
+  '参数错误': '这不是有效的核销码，请让玩家重新打开核销码',
+  '空码': '这不是有效的核销码，请让玩家重新打开核销码',
+  '核销码无效': '这不是有效的核销码，请让玩家重新打开核销码',
+  '非玩家动态核销码': '这不是玩家的核销码，请让玩家出示入场码',
+  '已过期': '核销码已过期，请让玩家刷新后重新出示',
+  '您在本路线没有可核销权益或有效核销回执': '本店没有这张票的权益，无需提供',
+  '本店不是这张票的核销店铺': '本店没有这张票的权益，无需提供'
+};
+
+function notRedeemedMessage(msg) {
+  return NOT_REDEEMED_REASONS[msg] || msg || '未核销';
+}
+
+function isNotRedeemed(response) {
+  return record(response) && (response.code === 500 || response.code === '500')
+    && record(response.data) && response.data.notRedeemed === true;
+}
+
+// M-05/M-06：成功回执里的站点、权益与他日场次提醒，只在服务端真给了时才出现。
+function receiptDetail(response) {
+  const d = record(response) && record(response.data) ? response.data : null;
+  const out = {};
+  if (!d) return out;
+  if (typeof d.chapterName === 'string' && d.chapterName) out.stop = d.chapterName;
+  if (typeof d.perkName === 'string' && d.perkName) out.perk = d.perkName;
+  if (d.sessionNotToday === true && typeof d.sessionDate === 'string' && d.sessionDate) {
+    out.warn = '这张票是 ' + d.sessionDate + ' 的场次';
+  }
+  return out;
+}
+
 function resolveVerificationResult(response, action) {
   const label = action || '核销';
   // 展示层不作提交结论；写闸已按端点将未知结果正规化为202。
@@ -91,9 +130,12 @@ function resolveVerificationResult(response, action) {
       || response.code == 500 && !response.msg && !isDuplicate(response)) {
     return { state: 'unknown', title: label + '结果待确认', message: UNKNOWN_MESSAGE, show: true };
   }
+  if (isNotRedeemed(response)) {
+    return { state: 'rejected', title: '未核销', message: notRedeemedMessage(response.msg), show: true };
+  }
   const message = (response && response.msg) || (isSuccess(response) ? label + '成功' : label + '失败，请重试');
   if (isReplayed(response)) {
-    return { state: 'duplicate', title: '已核销', message: completionReceiptMessage(response, message), show: true };
+    return Object.assign({ state: 'duplicate', title: '已核销', message: completionReceiptMessage(response, message), show: true }, receiptDetail(response));
   }
   if (isDuplicate(response)) {
     return {
@@ -104,12 +146,17 @@ function resolveVerificationResult(response, action) {
     };
   }
   if (isSuccess(response)) {
-    return {
+    const detail = receiptDetail(response);
+    let successMessage = completionReceiptMessage(response, message);
+    // 有站点名时，「核销成功」这句与标题重复，只留通关奖励这类额外信息。
+    if (detail.stop && successMessage === message) successMessage = '';
+    else if (detail.stop && successMessage.indexOf(message + ' · ') === 0) successMessage = successMessage.slice(message.length + 3);
+    return Object.assign({
       state: 'success',
-      title: label + '成功',
-      message: completionReceiptMessage(response, message),
+      title: detail.stop ? '核销成功' : label + '成功',
+      message: successMessage,
       show: true
-    };
+    }, detail);
   }
   return {
     state: 'failure',
@@ -119,4 +166,4 @@ function resolveVerificationResult(response, action) {
   };
 }
 
-module.exports = { resolveVerificationResult, completionReceiptMessage, classifyVerificationOutcome, createVerificationWorkflow };
+module.exports = { resolveVerificationResult, completionReceiptMessage, classifyVerificationOutcome, createVerificationWorkflow, notRedeemedMessage };

@@ -463,7 +463,9 @@ class ApiRegistrationVerifyGateTest {
 
         AjaxResult r = controller.scanQrCode("topic", CODE);
 
-        assertEquals("查询失败", r.get("msg"));
+        assertEquals("本店不是这张票的核销店铺", r.get("msg"));
+        // M-02:核销事务未开始,明确标记「未核销」
+        assertEquals(Boolean.TRUE, ((java.util.Map<?, ?>) r.get("data")).get("notRedeemed"));
         verify(regSvc, never()).verifyAndSettle(any(), anyLong(), any(), any());
     }
 

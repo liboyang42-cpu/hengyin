@@ -1382,7 +1382,8 @@ Page({
               },
             });
           } else {
-            cyToast(scan.message);
+            // M-25:不是城瘾的码也走同一张结果面板,不再是 2 秒就消失的 toast。
+            that.showRejectedScan(scan.message === '二维码格式错误' ? '这不是城瘾的核销码' : scan.message);
           }
           return;
         }
@@ -1445,6 +1446,17 @@ Page({
 
   closeVerificationResult() {
     this.closeScene();
+  },
+
+  showRejectedScan(message) {
+    this.setData({ verificationResult: { state: 'rejected', title: '未核销', message: message, show: true } });
+    this.openScene('merchant-verification-result');
+  },
+
+  // M-23:柜台排队时一次点按就接着扫下一位。
+  continueScan() {
+    this.closeScene();
+    wx.nextTick(() => this.goScanQR());
   },
 
   onChapterPick(e) {
