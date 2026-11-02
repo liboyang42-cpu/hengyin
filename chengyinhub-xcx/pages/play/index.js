@@ -560,7 +560,7 @@ Page({
     nav: { active: false, targetNodeId: null, targetName: '', remainM: 0, totalM: 0, hit50: false, hit90: false },
     navBubble: { show: false, text: '' },
     // P1 俱乐部带领(club 场次:集合屏→队长发车→章节放行;3~5s 轮询 team-progress)
-    lead: { exists: false, status: 0, isLeader: false, arrived: 0, total: 0, meArrived: false, chapterName: '', broadcast: '', members: [] },
+    lead: { exists: false, status: 0, isLeader: false, freeEntry: false, arrived: 0, total: 0, meArrived: false, chapterName: '', broadcast: '', members: [] },
     leadLoadError: false, leadUnlockChecking: false,
     // 手记
     /* 半屏进场用的开关(原型 .sheet 的 @keyframes up 在这儿是 transition)。 */
@@ -4902,7 +4902,7 @@ Page({
         && Number(that.data.lead.status) !== 2 && that._playable === false;
       that.setData({
         lead: {
-          exists: true, status: d.status || 1, isLeader: !!d.isLeader,
+          exists: true, status: d.status || 1, isLeader: !!d.isLeader, freeEntry: d.freeEntry === true,
           arrived: d.arrived || 0, total: d.total || 0, meArrived: !!d.meArrived,
           chapterName: d.chapterName || '', currentChapterId: d.currentChapterId, nextChapterId: d.nextChapterId, broadcast: d.broadcast || '',
           members: (d.members || []).slice(0, 8)

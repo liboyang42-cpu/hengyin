@@ -917,7 +917,8 @@
 
 
 <!-- P1 集合屏(一屏一决策:成员「我到了」/ 队长「开始行程」) -->
-<view class="leadgather" wx:if="{{lead.exists && lead.status==1}}">
+<!-- 自由探索不带队(P-13):服务端 freeEntry=true 时不显示集合屏,到开场时间直接进 -->
+<view class="leadgather" wx:if="{{lead.exists && lead.status==1 && !lead.freeEntry}}">
   <view class="lg-eyebrow">队伍集合中</view>
   <view class="lg-num">{{lead.arrived}}<text class="lg-num-sub">/{{lead.total}}</text></view>
   <view class="lg-sub">已到集合点</view>

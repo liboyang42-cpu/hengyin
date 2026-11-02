@@ -129,10 +129,14 @@ class PlayLeadAdmissionFailureTest {
         template.setValidationMethod(2);
         reject(() -> BasicPlayCommandFixtures.photo(controller, "500", "401", "media-asset:701", null, "lead-photo", 0));
     }
-    @Test void freeCollectFilterPhotoFaultEscapesTheInnerIllegalStateCatch() {
+    @Test void freeCollectFilterPhotoNeverReadsLeadStateSoItsFaultCannotHoldThePlayer() {
+        // P-13(2026-11-02):自由探索不带队,带队状态不再参与准入;读它的故障也就拦不住玩家。
         topic.setProductType(2); template.setValidationMethod(2); template.setSensorType("filter_shot");
         template.setSensorConfig("{\"filterStyle\":\"night_vision\"}");
-        reject(() -> BasicPlayCommandFixtures.photo(controller, "500", "401", "media-asset:701", null, "lead-filter-photo", 0));
+        try { BasicPlayCommandFixtures.photo(controller, "500", "401", "media-asset:701", null, "lead-filter-photo", 0); }
+        catch (ServiceException other) { assertNotEquals("带领状态暂时不可用，请稍后重试", other.getMessage()); }
+        catch (RuntimeException unrelatedFixtureGap) { /* 准入之后的链路不在本测范围 */ }
+        verify(leads, never()).selectByActivity(500L);
     }
     @Test void sensorFaultNeverAcquiresSensorOrAwards() {
         SensorResultRequest request = new SensorResultRequest(); request.setActivityId(500L); request.setNodeId(401L);
