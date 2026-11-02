@@ -294,6 +294,17 @@ public class CmsRegistration extends BaseEntity
      */
     private OmsTicket omsTicket;
 
+    /** ③ 探索票进度读面(瞬态,见 ExploreTicketProgress):redeemed/required/completed/ended/active。其余恒 null。 */
+    private java.util.Map<String, Object> exploreProgress;
+
+    public java.util.Map<String, Object> getExploreProgress() {
+        return exploreProgress;
+    }
+
+    public void setExploreProgress(java.util.Map<String, Object> exploreProgress) {
+        this.exploreProgress = exploreProgress;
+    }
+
     public List<RegistrationEntitlement> getEntitlements() {
         return entitlements;
     }

@@ -170,6 +170,7 @@ public class RegistrationQueryApplication {
                 if (registration.getPurchaseKind() != null
                         && registration.getPurchaseKind() == PurchaseKind.EXPLORE_PASS) {
                     registration.setEntitlements(perkLedgerService.listEntitlements(registrationId));
+                    attachExploreProgress(registration);
                     // 探店日票面要能回答「几点、在哪集合」(总纲 §1.1/§1.2):带上票种快照。
                     if (registration.getTicketId() != null) {
                         registration.setOmsTicket(omsTicketService.selectOmsTicketById(registration.getTicketId()));
@@ -381,12 +382,12 @@ public class RegistrationQueryApplication {
         List<CmsRegistration> list;
         //startPage();
         list = registrationService.selectCmsRegistrationList(registration);
+        for (CmsRegistration row : list) attachExploreProgress(row);
         if (ownerType >= 3 && ("2".equals(status) || "3".equals(status))) {
             List<CmsRegistration> filtered = new ArrayList<>();
             for (CmsRegistration row : list) {
-                boolean completed = (Integer.valueOf(2).equals(row.getPaymentStatus())
-                        && row.getFirstSuccessfulScanAt() != null)
-                        || Integer.valueOf(1).equals(row.getVerificationStatus());
+                // ③ 探索票核销一家不算完成:必选章全核销或场次结束才进「已完成」(P-03)。
+                boolean completed = com.chengyinhub.business.service.support.ExploreTicketProgress.listCompleted(row);
                 if ("3".equals(status) == completed) filtered.add(row);
             }
             list = filtered;
@@ -453,10 +454,30 @@ public class RegistrationQueryApplication {
             reg.setRefundApplication(latestRefunds.get(reg.getId()));
         }
 
+        for (CmsRegistration reg : all) attachExploreProgress(reg);
         all = filterEndedOverWeek(all, new Date());
         all.sort((a, b) -> b.getCreateTime().compareTo(a.getCreateTime()));
         stampServerNow(all);
         return AjaxResult.success(all);
+    }
+
+    /** ③ 探索票带上「已核销几家/共几家」;先判 purchase_kind 再查库,①② 不多查。 */
+    private void attachExploreProgress(CmsRegistration reg) {
+        if (!com.chengyinhub.business.service.support.ExploreTicketProgress.isExplorePass(reg) || reg.getId() == null) return;
+        try {
+            Long topicId = null;
+            Date endDate = null;
+            CmsActivity activity = reg.getCmsActivity();
+            if (activity == null && Long.valueOf(2L).equals(reg.getOwnerType())) activity = activityService.selectCmsActivityById(reg.getOwnerId());
+            if (activity != null) { topicId = activity.getTopicId(); endDate = activity.getEndDate(); }
+            if (topicId == null) return;
+            reg.setExploreProgress(com.chengyinhub.business.service.support.ExploreTicketProgress.of(
+                    perkLedgerService.listEntitlements(reg.getId()),
+                    perkLedgerService.isExploreCompleted(reg.getId(), topicId), endDate, new Date()));
+        } catch (RuntimeException unavailable) {
+            // 读面失败不拦订单列表:留 null,客户端退回原口径。
+            reg.setExploreProgress(null);
+        }
     }
 
     /** U-033:订单状态标签(未开始/进行中/已完成)按服务端时刻判,手机时钟只作缺字段时的兜底。 */
