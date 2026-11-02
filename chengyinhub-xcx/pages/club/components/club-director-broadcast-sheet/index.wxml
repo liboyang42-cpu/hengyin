@@ -7,8 +7,9 @@
     </view>
     <scroll-view class="cdbs__strip" scroll-x enhanced show-scrollbar="{{false}}" wx:if="{{audience.length}}">
       <view class="cdbs__strip-in">
-        <view class="cdbs__p" wx:for="{{audience}}" wx:key="id">
-          <view class="cdbs__av">{{item.initial}}<view class="cdbs__tick"></view></view>
+        <view class="cdbs__p {{item.picked ? 'cdbs__p--on' : ''}}" wx:for="{{audience}}" wx:key="id" bindtap="onPersonTap" data-id="{{item.id}}"
+              aria-role="checkbox" aria-checked="{{item.picked}}" aria-label="{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="cdbs__av">{{item.initial}}<view class="cdbs__tick" wx:if="{{item.picked}}"></view></view>
           <text class="cdbs__pn">{{item.name}}</text>
           <text class="cdbs__ps" wx:if="{{item.sub}}">{{item.sub}}</text>
         </view>

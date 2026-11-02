@@ -2097,6 +2097,45 @@ class GameSessionRuntimeServiceImplTest {
         verify(runtimeMapper, never()).updateBroadcastStatus(anyLong(), anyString(), anyString(), any());
     }
 
+    /** 2026-11-01 业主:按人发。不在本局的人投递 SQL 写不进去,一个都没写进去就算没有可送达的人;坏名单直接拒。 */
+    @Test
+    void broadcastToMembersUsesScopedDeliveriesAndRejectsBadLists() {
+        when(clubMemberService.isTopicOwner(TOPIC, CLUB, PLAYER)).thenReturn(true);
+        stubReceiptPersistence("broadcast-members");
+        when(runtimeMapper.insertBroadcast(any())).thenAnswer(invocation -> {
+            com.chengyinhub.business.domain.GameBroadcast row = invocation.getArgument(0);
+            row.setId(67L);
+            return 1;
+        });
+        when(runtimeMapper.insertBroadcastMemberDeliveries(anyLong(), anyLong(), any(), any())).thenReturn(0);
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("targetType", "MEMBERS");
+        payload.put("memberIds", java.util.Arrays.asList(101L, "102", 101L));
+        payload.put("content", "集合提醒");
+
+        GameSessionException none = assertThrows(GameSessionException.class, () -> service.command(
+                GameActorContext.club(PLAYER), command("broadcast-members", 2, "BROADCAST", payload)));
+        assertEquals("GAME_BROADCAST_NO_RECIPIENT", none.getErrorCode());
+        verify(runtimeMapper).insertBroadcastMemberDeliveries(anyLong(), anyLong(),
+                org.mockito.ArgumentMatchers.eq(java.util.Arrays.asList(101L, 102L)), any());
+        verify(runtimeMapper, never()).insertBroadcastDeliveries(anyLong(), anyLong(), anyLong(), anyString(), any(), any(), any());
+    }
+
+    @Test
+    void broadcastToMembersRejectsEmptyOrInvalidList() {
+        when(clubMemberService.isTopicOwner(TOPIC, CLUB, PLAYER)).thenReturn(true);
+        stubReceiptPersistence("broadcast-members-bad");
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("targetType", "MEMBERS");
+        payload.put("memberIds", Collections.emptyList());
+        payload.put("content", "集合提醒");
+
+        GameSessionException bad = assertThrows(GameSessionException.class, () -> service.command(
+                GameActorContext.club(PLAYER), command("broadcast-members-bad", 2, "BROADCAST", payload)));
+        assertEquals("GAME_BAD_REQUEST", bad.getErrorCode());
+        verify(runtimeMapper, never()).insertBroadcast(any());
+    }
+
     @Test
     void directorBroadcastIsRejectedByContentSafetyBeforeAnyBroadcastRowIsCreated() {
         when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(readySession(2));

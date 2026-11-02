@@ -142,7 +142,7 @@ function roleMemberRows(roles, selectedTeamId, selectedMemberId) {
 function broadcastView(broadcast) {
   const item = broadcast || {}
   const targetType = String(item.targetType || item.scope || '').toUpperCase()
-  const targetLabels = { ALL: '全部玩家', TEAM: '定向队伍', ROLE: '定向角色' }
+  const targetLabels = { ALL: '全部玩家', TEAM: '定向队伍', ROLE: '定向角色', MEMBERS: '指定玩家' }
   const status = String(item.receiptStatus || item.status || '').toUpperCase()
   const statusLabels = {
     CONFIRMED: '已确认送达',
@@ -203,28 +203,51 @@ function broadcastRecipientCount(targetType, selectedTarget, teams, roles) {
   return rows.reduce(function (sum, item) { return sum + item.memberCount }, 0)
 }
 
-// 2026-11-01 业主定稿(审阅页 65gFrW…):弹层顶部横滑头像。俱乐部广播接口只认全部 / 一队 / 一个角色,
-// 所以头像只展示这次会发给谁,选人靠队伍 / 角色行;名单来自导演台 roles,没下发就不出这一排。
-function broadcastAudienceRows(targetType, selectedTarget, roles) {
-  if (!selectedTarget) return []
+// 2026-11-01 业主定稿(审阅页 65gFrW…):弹层顶部横滑头像,点头像单个加减,点队伍 / 角色行整组加减。
+// 名单来自导演台 roles,一人一行。名单和队伍人数对不上(没下发全)时不给按人选,退回整组发,不拿半份名单冒充全部。
+function broadcastRoster(roles) {
   const seen = {}
   return (Array.isArray(roles) ? roles : []).filter(function (item) {
     if (!item || item.memberId == null || seen[item.memberId]) return false
-    if (targetType === 'TEAM' && String(item.teamId) !== String(selectedTarget.id)) return false
-    if (targetType === 'ROLE' && item.roleCode !== selectedTarget.id) return false
     seen[item.memberId] = true
     return true
   }).map(function (item) {
     const name = item.memberNameText || ''
-    return { id: String(item.memberId), name: name, initial: name.slice(0, 1) || '?', sub: item.roleNameText || '' }
+    return { id: String(item.memberId), teamId: String(item.teamId), roleCode: item.roleCode || '', name: name, initial: name.slice(0, 1) || '?', sub: item.roleNameText || '' }
   })
 }
 
-function broadcastCountText(targetType, recipientCount, teams) {
-  if (recipientCount === null) return ''
-  if (targetType === 'TEAM') return recipientCount + ' 人 · 1 队'
-  if (targetType === 'ALL') return recipientCount + ' 人 · ' + (teams || []).length + ' 队'
-  return recipientCount + ' 人'
+function broadcastRosterComplete(roster, teams) {
+  const rows = teams || []
+  if (!roster.length || !rows.length || rows.some(function (item) { return numeric(item.memberCount) === null })) return false
+  return rows.reduce(function (sum, item) { return sum + item.memberCount }, 0) === roster.length
+}
+
+function broadcastGroupIds(targetType, target, roster) {
+  return roster.filter(function (member) {
+    if (targetType === 'TEAM') return member.teamId === String(target.id)
+    if (targetType === 'ROLE') return member.roleCode === target.id
+    return true
+  }).map(function (member) { return member.id })
+}
+
+function sameIds(a, b) {
+  return a.length === b.length && a.every(function (id) { return b.indexOf(id) >= 0 })
+}
+
+// 选中的人恰好是全部 / 一队 / 一个角色时仍按原范围发(服务端按范围取人);否则才按人发。
+function broadcastPayloadTarget(picked, roster, targetType, options) {
+  if (sameIds(picked, roster.map(function (member) { return member.id }))) return { targetType: 'ALL' }
+  const hit = (options || []).find(function (item) { return targetType !== 'ALL' && sameIds(picked, broadcastGroupIds(targetType, item, roster)) })
+  if (hit && targetType === 'TEAM') return { targetType: 'TEAM', targetId: hit.id }
+  if (hit && targetType === 'ROLE') return { targetType: 'ROLE', roleCode: hit.id }
+  return { targetType: 'MEMBERS', memberIds: picked.map(Number) }
+}
+
+function broadcastTeamCount(picked, roster) {
+  const teams = {}
+  roster.forEach(function (member) { if (picked.indexOf(member.id) >= 0) teams[member.teamId] = true })
+  return Object.keys(teams).length
 }
 
 function recapMetricView(metric) {
@@ -1130,12 +1153,6 @@ const DIRECTOR_METHODS = {
     this._broadcastTargetOptions = targets
     this.setData({
       // 5-04:行组件要 {id,title} 并回传 {id};原来喂的是 teamView 原始行 → 空白且点不中
-      broadcastTargetRows: targets.map(function (item, index) {
-        return { id: item.id, title: item.label, subtitle: numeric(item.memberCount) === null ? '' : item.memberCount + ' 人', on: index === 0 }
-      }),
-      broadcastAudience: broadcastAudienceRows(normalized, selected, this.data.roles),
-      broadcastCountText: broadcastCountText(normalized, recipientCount, this.data.teams),
-      broadcastSendText: recipientCount ? '发送给 ' + recipientCount + ' 人' : '发送',
       broadcastPreviewReady: recipientCount !== null && recipientCount > 0 && !!selected,
       broadcastPreviewText: targetLabel + (recipientCount === null ? '' : ' · ' + recipientCount + ' 人'),
       broadcastDraft: {
@@ -1144,6 +1161,52 @@ const DIRECTOR_METHODS = {
         content: (this.data.broadcastDraft && this.data.broadcastDraft.content) || '',
       },
     })
+    const roster = broadcastRoster(this.data.roles)
+    this._broadcastRoster = broadcastRosterComplete(roster, this.data.teams) ? roster : []
+    this._broadcastPicked = selected && this._broadcastRoster.length ? broadcastGroupIds(normalized, selected, this._broadcastRoster) : []
+    this._refreshBroadcastPicks(selected, recipientCount)
+  },
+
+  // 头像、行上的「已选 / 选择」、人数、发送按钮都从这一份选中名单算,不分两处存。
+  _refreshBroadcastPicks(selected, recipientCount) {
+    const roster = this._broadcastRoster || []
+    const picked = this._broadcastPicked || []
+    const targetType = this.data.broadcastDraft.targetType
+    const options = this._broadcastTargetOptions || []
+    if (!roster.length) {
+      // 名单不全:整组单选,人数只信服务端给的成员数
+      const teamText = targetType === 'TEAM' ? ' · 1 队' : (targetType === 'ALL' ? ' · ' + (this.data.teams || []).length + ' 队' : '')
+      this.setData({
+        broadcastAudience: [],
+        broadcastTargetRows: options.map(function (item) {
+          return { id: item.id, title: item.label, subtitle: numeric(item.memberCount) === null ? '' : item.memberCount + ' 人', on: item === selected }
+        }),
+        broadcastCountText: recipientCount === null || recipientCount === undefined ? '' : recipientCount + ' 人' + teamText,
+        broadcastSendText: recipientCount ? '发送给 ' + recipientCount + ' 人' : '发送',
+      })
+      return
+    }
+    const teamCount = broadcastTeamCount(picked, roster)
+    this.setData({
+      broadcastAudience: roster.map(function (member) { return Object.assign({}, member, { picked: picked.indexOf(member.id) >= 0 }) }),
+      broadcastTargetRows: options.map(function (item) {
+        const ids = broadcastGroupIds(targetType, item, roster)
+        return { id: item.id, title: item.label, subtitle: ids.length + ' 人', on: ids.length > 0 && ids.every(function (id) { return picked.indexOf(id) >= 0 }) }
+      }),
+      broadcastCountText: picked.length + ' 人' + (teamCount ? ' · ' + teamCount + ' 队' : ''),
+      broadcastSendText: picked.length ? '发送给 ' + picked.length + ' 人' : '先选收件人',
+      broadcastPreviewReady: picked.length > 0,
+      broadcastPreviewText: picked.length + ' 人',
+    })
+  },
+
+  onBroadcastPersonToggle(e) {
+    if (this.data.writeLocked) return
+    const id = String((e && e.detail && e.detail.id) == null ? '' : e.detail.id)
+    if (!id || !(this._broadcastRoster || []).some(function (member) { return member.id === id })) return
+    const picked = this._broadcastPicked || []
+    this._broadcastPicked = picked.indexOf(id) >= 0 ? picked.filter(function (item) { return item !== id }) : picked.concat(id)
+    this._refreshBroadcastPicks()
   },
 
   openBroadcast() {
@@ -1178,14 +1241,21 @@ const DIRECTOR_METHODS = {
     const targetType = this.data.broadcastDraft.targetType
     const recipientCount = broadcastRecipientCount(targetType, selected, this.data.teams, this.data.roles)
     this.setData({
-      broadcastTargetRows: this.data.broadcastTargetRows.map(function (item, rowIndex) { return Object.assign({}, item, { on: rowIndex === index }) }),
-      broadcastAudience: broadcastAudienceRows(targetType, selected, this.data.roles),
-      broadcastCountText: broadcastCountText(targetType, recipientCount, this.data.teams),
-      broadcastSendText: recipientCount ? '发送给 ' + recipientCount + ' 人' : '发送',
       broadcastPreviewReady: recipientCount !== null && recipientCount > 0,
       broadcastPreviewText: selected.label + (recipientCount === null ? '' : ' · ' + recipientCount + ' 人'),
       broadcastDraft: Object.assign({}, this.data.broadcastDraft, { targetIndex: index }),
     })
+    const roster = this._broadcastRoster || []
+    if (roster.length) {
+      // 点一行把这一组选上或取消,其他组不动(稿:可以同时选两队)
+      const ids = broadcastGroupIds(targetType, selected, roster)
+      const current = this._broadcastPicked || []
+      const allOn = ids.length > 0 && ids.every(function (id) { return current.indexOf(id) >= 0 })
+      this._broadcastPicked = allOn
+        ? current.filter(function (id) { return ids.indexOf(id) < 0 })
+        : current.concat(ids.filter(function (id) { return current.indexOf(id) < 0 }))
+    }
+    this._refreshBroadcastPicks(selected, recipientCount)
   },
 
   onBroadcastContentInput(e) {
@@ -1209,6 +1279,11 @@ const DIRECTOR_METHODS = {
     const payload = { targetType: draft.targetType, content: content }
     if (draft.targetType === 'TEAM') payload.targetId = selected.id
     if (draft.targetType === 'ROLE') payload.roleCode = selected.id
+    if ((this._broadcastRoster || []).length) {
+      delete payload.targetId
+      delete payload.roleCode
+      Object.assign(payload, broadcastPayloadTarget(this._broadcastPicked || [], this._broadcastRoster, draft.targetType, this._broadcastTargetOptions))
+    }
     this.setData({ broadcastSheetVisible: false })
     this.executeAction('BROADCAST', payload)
   },
