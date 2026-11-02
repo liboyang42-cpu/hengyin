@@ -76,12 +76,6 @@
       <text class="section-note section-note--warning" wx:if="{{correctionWindowText}}">{{correctionWindowText}}</text>
       <cy-tabs class="roster-filter" variant="chip" tabs="{{rosterTabs}}"
         active="{{rosterTab}}" bind:change="chooseRosterTab" />
-      <view class="roster-summary" wx:if="{{rosterState === 'ready'}}">
-        <text>已报名 {{registered.length || 0}}</text>
-        <text>候补 {{waitlist.length || 0}}</text>
-        <text>已到场 {{arrived.length || 0}}</text>
-        <text>未到场 {{noShow.length || 0}}</text>
-      </view>
       <cy-skeleton wx:if="{{rosterState === 'loading'}}" type="list" count="3" />
       <cy-error load-failure wx:elif="{{rosterState === 'error'}}" title="名册加载失败" sub="{{rosterError}}" retry="重试" bind:retry="loadRoster" />
       <block wx:elif="{{rosterState === 'ready'}}">

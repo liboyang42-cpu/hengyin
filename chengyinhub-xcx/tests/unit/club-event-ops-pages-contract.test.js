@@ -365,10 +365,10 @@ test('活动名册用 cy-tabs 的 detail.key 切换真实数据段', () => {
   const vm = Object.assign({}, config, {
     data: Object.assign({}, config.data, {
       rosterTab: 'registered',
-      registered: [{ memberId: 1 }],
-      arrived: [{ memberId: 2 }],
       activeRoster: [{ memberId: 1 }],
     }),
+    // C-10(2026-11-02):四个分段存在页面实例上(人数已写进标签),不再整份进 data
+    _rosterBuckets: { registered: [{ memberId: 1 }], arrived: [{ memberId: 2 }], waitlist: [], noShow: [] },
     setData(patch) { Object.assign(this.data, patch) },
   })
 

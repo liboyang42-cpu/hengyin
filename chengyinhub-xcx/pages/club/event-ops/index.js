@@ -1107,13 +1107,14 @@ Page({
         }
         const buckets = { registered, waitlist, arrived, noShow }
         const window = normalizeCorrectionWindow(data.correctionWindow)
+        that._rosterBuckets = buckets // C-10:分段人数已写进标签,四个分段不再整份进 data
         that.setData({
-          registered, waitlist, arrived, noShow,
+          waitlist, arrived,
           rosterTotal: rosterTotal(buckets),
           correctionOperable: !window || window.operable,
           correctionWindowText: correctionWindowText(window),
           activeRoster: buckets[that.data.rosterTab] || [],
-          rosterTabs: ROSTER_TABS.map(item => Object.assign({}, item, { badge: buckets[item.key].length })),
+          rosterTabs: ROSTER_TABS.map(item => Object.assign({}, item, { label: item.label + ' ' + buckets[item.key].length })), // C-10:人数写进标签,不再用红色角标
           rosterState: 'ready',
         })
       },
@@ -1126,7 +1127,7 @@ Page({
   chooseRosterTab(e) {
     const tab = String((e.detail && e.detail.key) || '')
     if (ROSTER_TABS.some(item => item.key === tab)) {
-      this.setData({ rosterTab: tab, activeRoster: this.data[tab] || [] })
+      this.setData({ rosterTab: tab, activeRoster: (this._rosterBuckets || {})[tab] || [] })
     }
   },
   correctAttendance(e) {
@@ -1186,7 +1187,7 @@ Page({
       success(res) {
         if (ok(res) && positiveId(res.data && res.data.id)) {
           clearAttendanceRequestIntent(intent, that._attendanceRequestIntents)
-          toast.success('签到已更正')
+          toast.success(reason === '现场到达' ? '已标记到场' : '签到已更正')
           that.loadRoster()
           return
         }

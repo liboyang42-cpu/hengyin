@@ -346,7 +346,7 @@
       <view class="ctd-director-field">
         <text class="ctd-director-field__label">现场原因<text class="ctd-required" aria-hidden="true">*</text></text>
         <textarea class="ctd-director-field__input" value="{{unlockReason}}" bindinput="onUnlockReasonInput"
-          placeholder="写明为什么要手动解锁，会进审计记录" maxlength="200" auto-height />
+          placeholder="写明放行原因，会进审计记录" maxlength="200" auto-height />
       </view>
     </cy-club-director-chapter-sheet>
 

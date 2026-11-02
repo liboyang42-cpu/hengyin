@@ -560,3 +560,10 @@ test('C-05:名册行优先显示报名姓名 displayName', () => {
   const wxml = read('pages/club/event-ops/index.wxml')
   assert.match(wxml, /<text class="member-name">\{\{item\.displayName \|\| item\.nickname\}\}<\/text>/)
 })
+
+test('C-10(2026-11-02):名册分段人数写在标签里,不用红色角标,也不再在下面重复一行人数', () => {
+  const js = read(EVENT_OPS_JS)
+  assert.match(js, /rosterTabs: ROSTER_TABS\.map\(item => Object\.assign\(\{\}, item, \{ label: item\.label \+ ' ' \+ buckets\[item\.key\]\.length \}\)\)/)
+  assert.doesNotMatch(js, /badge: buckets\[item\.key\]\.length/)
+  assert.doesNotMatch(read('pages/club/event-ops/index.wxml'), /class="roster-summary"/)
+})
