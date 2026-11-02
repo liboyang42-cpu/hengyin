@@ -124,7 +124,7 @@
   answer-id="{{kit.answerId}}" answer-ids="{{kit.answerIds}}" judge="{{kit.judge !== false}}"
   last-option-id="{{kit.lastOptionId}}" last-option-ids="{{kit.lastOptionIds}}"
   feedback-images="{{kit.feedbackImages}}" failure-seq="{{kit.failureSeq}}"
-  multi="{{kit.multi}}" attempts="{{kit.attempts}}" feedback-text="{{kit.feedback}}"
+  multi="{{kit.multi}}" attempts="{{kit.attempts}}" feedback-text="{{kit.feedback}}" authored-outcome="{{kit.authoredOutcome}}"
   passed="{{kit.passed}}" finished="{{kit.finished}}"
   bind:submit="onSubmit" bind:shoot="onShoot" bind:audio="onAudio"
   bind:continue="onContinue"

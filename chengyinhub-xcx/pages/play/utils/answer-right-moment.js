@@ -1,5 +1,7 @@
 /**
- * 答对那一刻(P-11):老问答答对后先在题卡里停一拍,写「对了」,带上作者配的揭示与碎片,再回故事流。
+ * 答对那一刻(P-11):老问答答对后先在题卡里停一拍,带上本站碎片,再回故事流。
+ * 第三轮(业主):答对写作者在模板里配的完成反馈(文字反馈 feedbackText → node.passText);
+ * 作者什么都没写时才用兜底「对了」+ 答对回执里的揭示。
  *
  * 纯函数,可单测。返回 null = 不停这一拍,照旧直接走完成回执(凭证流 / 本局运行时回执 / 重复提交)。
  * - reveal:服务端答对回执里的 answerReveal(答对之后才下发,不预置在节点列表里)。
@@ -12,10 +14,11 @@ function rightMoment(input) {
   if (o.genericProof) return null;
   if (data.themeRuntime || data.sharedRuntime || data.done === false) return null;
   if (data.firstTime === false) return null;
-  const reveal = typeof data.answerReveal === 'string' ? data.answerReveal.trim() : '';
   const node = o.node || {};
+  const text = String(node.passText || '').trim();
+  const reveal = text ? '' : (typeof data.answerReveal === 'string' ? data.answerReveal.trim() : '');
   const fragment = Number(o.mode) === 2 ? '' : String(node.fragmentText || '').trim();
-  return { reveal, fragment, hold: !!(reveal || fragment) };
+  return { text, reveal, fragment, hold: !!(text || reveal || fragment) };
 }
 
 /** 只有「对了」时自动继续前停多久(毫秒)。够看清一行字,不拖节奏。 */

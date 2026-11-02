@@ -4414,7 +4414,9 @@ Page({
       usedHints: Array.isArray(n.usedHints) ? n.usedHints.filter(Boolean) : [],
       puzzleScore: n.puzzleScore == null ? null : Number(n.puzzleScore),
       completionMode: n.completionMode || '',
-      feedback: n.feedbackText || '答案还没咬合,再看看四周……',
+      // P-10:feedbackText 是模板「文字反馈」= 完成后给的话(编辑器占位就是「恭喜你解开了……」),
+      // 只在答对时用(passText);答错兜底永远不拿它,否则服务端没带原因时答错会显示一句祝贺。
+      feedback: '答案还没咬合,再看看四周……', passText: String(n.feedbackText || '').trim(),
       photoDesc: n.photoRequireDesc || '', audio: secureOwnMedia(n.audioUrl), audioDur: (n.audioDuration ? n.audioDuration + '″' : ''),
       medalName: shopDay ? '' : (n.medalName || ''), medalImg: shopDay ? '' : (n.medalImg || ''), medalStyle: shopDay ? '' : (n.medalStyle || 'glow'), couponId: shopDay ? 0 : (n.couponId || 0),
       // 后端 /nodes 新下发的券公开投影(name/amount/endTime;无 code):券页据此显示真面额
@@ -5900,7 +5902,7 @@ Page({
         qname: node.question || '依据现场线索作答', opts,
         qImg: node.questionImg, qAudio: node.questionAudio,
         audio: node.audio, audioDur: node.audioDur, photoDesc: node.photoDesc,
-        feedback: node.feedback, reveal: node.reveal, hint1: node.hint1, hint2: node.hint2,
+        feedback: node.feedback, passText: node.passText, reveal: node.reveal, hint1: node.hint1, hint2: node.hint2,
         hintLocked: !!node.hintLocked, hintCost: node.hintCost || 0, hintCount: node.hintCount || 0,
         puzzleScoring: !!node.puzzleScoring,
         medalName: node.medalName, medalImg: node.medalImg, couponId: node.couponId
@@ -5995,7 +5997,7 @@ Page({
       this.onComplete(nodeId, data);
     };
     this._answerRightPending = go;
-    this.setData({ gRight: { reveal: moment.reveal, fragment: moment.fragment, hold: moment.hold }, gWrong: false });
+    this.setData({ gRight: { text: moment.text, reveal: moment.reveal, fragment: moment.fragment, hold: moment.hold }, gWrong: false });
     if (!moment.hold) this._answerRightTimer = setTimeout(go, RIGHT_AUTO_MS);
   },
   /** 「继续」/ 关题卡 / 离页:答对的完成回执必须照常落到本页,不能因为停了一拍就丢。 */

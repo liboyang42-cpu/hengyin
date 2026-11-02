@@ -561,6 +561,9 @@ function pickPlayKit(view, now) {
         answerId: seg.judge !== false ? (seg.answerId || '') : '',
         answerIds: seg.judge !== false && Array.isArray(seg.answerIds) ? seg.answerIds.slice() : [],
         feedback: seg.lastFeedback || '',
+        // P-10:作者在「结果反馈」里给这次结果写了话(服务端判完才给 outcomeFeedback)→ 由结算判定屏摆作者的话,
+        // 这一屏不再写自己的兜底句;没写时为空串,兜底照旧
+        authoredOutcome: view.outcomeFeedback && ['PASS', 'FAIL'].includes(view.outcomeFeedback.outcome) ? view.outcomeFeedback.outcome : '',
       });
     }
     if (name === 'scan') {

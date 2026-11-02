@@ -94,6 +94,9 @@ Component({
     /* 多选的判后反馈:所选项的 fb 用空格拼起来的那段文字(服务端 lastFeedback)。
        服务端不写 fb 时是空串,那时回执条只给整体结果。 */
     feedbackText: { type: String, value: '' },
+    /* P-10 第三轮:作者在模板「结果反馈」里给这次结果写了话('PASS' / 'FAIL',服务端判完才给)。
+       作者的话由结算判定屏(cy-play-verdict)摆出来;这一屏答错时只描红清空,不再叠自己的兜底句。 */
+    authoredOutcome: { type: String, value: '' },
   },
   data: {
     /* ⚠️ 派生数据必须换个键名。写回被 observer 监听的那个属性(options)
@@ -123,7 +126,7 @@ Component({
       this._seenTypeAttempts = now;
       if (seen == null || now <= seen) return;
       if (this.data.mode !== 'type' || this.data.passed || this.data.finished) return;
-      this.setData({ typed: '', typeWrong: true, fbHead: HEAD_NO, feedback: this.data.feedbackText || RETRY_TEXT });
+      this.setData({ typed: '', typeWrong: true, fbHead: HEAD_NO, feedback: this.data.feedbackText || (this.data.authoredOutcome === 'FAIL' ? '' : RETRY_TEXT) });
     },
     failureSeq: function (value) {
       if (!value || this.data.finished || this.data.passed || this.data.judge !== false) return;
@@ -161,7 +164,7 @@ Component({
         /* P-10:打字题答错时服务端常不带反馈文案,原来整块反馈不渲染 = 玩家看不出判过了。
            没有文案就写一句固定的「不对」,输入框描红,下一次输入即清。 */
         typed: '', feedback: (passed || finished || this.data.attempts > 0)
-          ? (this.data.feedbackText || (mode === 'type' && !passed && !finished && this.data.attempts > 0 ? RETRY_TEXT : '')) : '',
+          ? (this.data.feedbackText || (mode === 'type' && !passed && !finished && this.data.attempts > 0 && this.data.authoredOutcome !== 'FAIL' ? RETRY_TEXT : '')) : '',
         typeWrong: mode === 'type' && !passed && !finished && this.data.attempts > 0,
         shownFeedbackImages: (passed || finished || this.data.attempts > 0)
           ? (this.data.feedbackImages || []).slice() : [],

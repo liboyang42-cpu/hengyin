@@ -8,12 +8,12 @@ const { rightMoment, RIGHT_AUTO_MS } = require('../../pages/play/utils/answer-ri
 
 test('有揭示或碎片:停住等玩家点继续', () => {
   const m = rightMoment({ data: { firstTime: true, answerReveal: ' 第 7 根。 ' }, node: { fragmentText: '钥匙不在锁里，在数字里' }, mode: 1 });
-  assert.deepEqual(m, { reveal: '第 7 根。', fragment: '钥匙不在锁里，在数字里', hold: true });
+  assert.deepEqual(m, { text: '', reveal: '第 7 根。', fragment: '钥匙不在锁里，在数字里', hold: true });
 });
 
 test('只有「对了」:短停后自动继续', () => {
   const m = rightMoment({ data: { firstTime: true }, node: {}, mode: 1 });
-  assert.deepEqual(m, { reveal: '', fragment: '', hold: false });
+  assert.deepEqual(m, { text: '', reveal: '', fragment: '', hold: false });
   assert.ok(RIGHT_AUTO_MS >= 800 && RIGHT_AUTO_MS <= 1600);
 });
 
@@ -38,7 +38,21 @@ test('play 页:答对走 _answerRight,题卡有「对了」与继续键,离页�
   assert.match(js, /that\._answerRight\(g\.nodeId, r\.data, r\.msg\)/);
   assert.doesNotMatch(js, /if \(r\.msg\) cyToast\(r\.msg\); that\.onComplete\(g\.nodeId, r\.data\)/);
   assert.match(js, /onHide\(\) \{\n    this\._flushAnswerRight\(\);/);
-  assert.match(wxml, /<text>对了<\/text>/);
+  assert.match(wxml, /<text>\{\{gRight\.text \|\| '对了'\}\}<\/text>/);
   assert.match(wxml, /bindtap="continueAfterRight"[^>]*>继续</);
   assert.match(wxml, /gp2__input \{\{gWrong \? 'is-wrong' : ''\}\}/);
+});
+
+// 第三轮(业主):答对 / 答错写作者在模板里配的反馈;「对了」与揭示只在作者什么都没写时兜底。
+test('作者配了完成反馈(文字反馈):答对写作者的话,不再叠「对了」+ 揭示', () => {
+  const m = rightMoment({ data: { firstTime: true, answerReveal: '第 7 根。' }, node: { passText: ' 恭喜你解开了老城的第一个秘密！ ', fragmentText: '碎片' }, mode: 1 });
+  assert.deepEqual(m, { text: '恭喜你解开了老城的第一个秘密！', reveal: '', fragment: '碎片', hold: true });
+});
+
+test('P-10:答错兜底不拿模板文字反馈(那是完成后的话)', () => {
+  const js = fs.readFileSync(path.join(__dirname, '../../pages/play/index.js'), 'utf8');
+  assert.doesNotMatch(js, /feedback: n\.feedbackText \|\|/);
+  assert.match(js, /feedback: '答案还没咬合,再看看四周……', passText: String\(n\.feedbackText \|\| ''\)\.trim\(\),/);
+  assert.match(js, /'game\.feedback': r\.msg \|\| g\.feedback/);
+  assert.match(js, /feedback: node\.feedback, passText: node\.passText,/);
 });

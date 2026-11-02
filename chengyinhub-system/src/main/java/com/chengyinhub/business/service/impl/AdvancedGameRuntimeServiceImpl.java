@@ -3250,11 +3250,34 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         Map<String, Object> vars = StoryVars.fromState(state);
         if (!vars.isEmpty()) view.put("vars", vars);
         if(config.has("outcomeRules") && enabled(config.get("check")))view.put("check",checkView(session,state,actorMemberId));
+        Map<String, Object> authored = authoredOutcomeFeedback(config, state);
+        if (authored != null) view.put("outcomeFeedback", authored);
         view.put("readyForBase", state.has("zeroChallengeInstance") ? state.path("challenge").path("success").asBoolean()
                 : Integer.valueOf(GameRuntimeSession.STATUS_COMPLETED).equals(session.getStatus())
                 || (Integer.valueOf(GameRuntimeSession.STATUS_RUNNING).equals(session.getStatus())
                 && (config.has("outcomeRules")?"PASS".equals(state.path("gameplayDecision").path("outcome").asText()):mechanicsReady(config, state))));
         return view;
+    }
+
+    /**
+     * P-10 / P-11:作者在模板「结果反馈」里给这次结果(通过 / 没通过)写了文字或配图时,判完之后告诉玩法屏。
+     * 只在本次已判出结果(gameplayDecision)之后下发,判之前一个字都不给;作者什么都没写时不出这个键,
+     * 玩法屏才用自己的兜底说法(「再想想」「对了」)。整屏判定仍由结算回执(lastOutcome)驱动,这里不另立一套结算。
+     */
+    static Map<String, Object> authoredOutcomeFeedback(JsonNode config, JsonNode state) {
+        if (config == null || !config.path("outcomeRules").isObject()) return null;
+        String outcome = state == null ? "" : state.path("gameplayDecision").path("outcome").asText("");
+        if (!"PASS".equals(outcome) && !"FAIL".equals(outcome)) return null;
+        JsonNode row = config.path("outcomeRules").path("PASS".equals(outcome) ? "pass" : "fail");
+        String reply = row.path("reply").isTextual() ? row.path("reply").asText().trim() : "";
+        List<String> images = new ArrayList<>();
+        for (JsonNode one : row.path("images")) if (one.isTextual() && !one.asText().isEmpty() && images.size() < 3) images.add(one.asText());
+        if (reply.isEmpty() && images.isEmpty()) return null;
+        Map<String, Object> value = new LinkedHashMap<>();
+        value.put("outcome", outcome);
+        value.put("reply", reply);
+        value.put("images", images);
+        return value;
     }
 
     private ObjectNode checkView(GameRuntimeSession session,ObjectNode state,Long memberId) {

@@ -1191,9 +1191,9 @@
       </block>
 
       <view class="gp2__feedback" id="gp2Feedback" wx:if="{{gWrong}}">{{game.feedback}}</view>
-      <!-- P-11 答对那一拍:「对了」+ 作者配的揭示与本站碎片;读完点「继续」回故事流 -->
+      <!-- P-11 答对那一拍:作者配的完成反馈(没配才写「对了」+ 揭示)与本站碎片;读完点「继续」回故事流 -->
       <view class="gp2__right" id="gp2Right" wx:if="{{gRight}}" aria-role="status">
-        <view class="gp2__right-h"><cy-icon name="check" size="32" /><text>对了</text></view>
+        <view class="gp2__right-h"><cy-icon name="check" size="32" /><text>{{gRight.text || '对了'}}</text></view>
         <text class="gp2__right-reveal" wx:if="{{gRight.reveal}}">{{gRight.reveal}}</text>
         <view class="gp2__right-frag" wx:if="{{gRight.fragment}}"><text class="gp2__right-k">碎片</text><text class="gp2__right-v">{{gRight.fragment}}</text></view>
       </view>
