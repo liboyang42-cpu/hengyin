@@ -197,6 +197,8 @@
 /* ── 导演台(game-director 整页收编进来后新增)── */
 .ctd-director-state { padding: var(--cy-space-4); }
 .ctd-director-note { padding: 0 var(--cy-space-4) var(--cy-space-2); font-size: var(--cy-type-caption); line-height: 1.5; color: var(--cy-color-text-tertiary); }
+/* C-11:复盘块与页面其它分区同一左右留白,不再贴屏幕边 */
+.ctd-director-recap { display: block; margin-top: var(--cy-space-3); }
 .ctd-director-recaphead { display: flex; align-items: center; justify-content: space-between; padding: 0 var(--cy-space-4); }
 .ctd-director-export { min-height: var(--cy-btn-h-sm); display: flex; align-items: center; padding: 0 var(--cy-space-3); border-radius: var(--cy-radius-pill); background: var(--cy-color-bg-raised); color: var(--cy-info); font-size: var(--cy-type-label); }
 .ctd-director-export.is-disabled { opacity: .45; pointer-events: none; }

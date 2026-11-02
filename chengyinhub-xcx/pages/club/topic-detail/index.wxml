@@ -275,6 +275,7 @@
         bindtap="copyRecap" aria-role="button" aria-label="复制复盘数据" hover-class="cy-pressed" hover-stay-time="80">{{exportState === 'loading' ? '复制中' : '复制复盘数据'}}</view>
     </view>
     <cy-club-director-recap
+      class="ctd-sec ctd-director-recap"
       wx:if="{{statusKey === 'ended' && recap}}"
       title="活动复盘"
       funnel-title="活动漏斗" funnel-sub="{{sessionStatusText}}" metrics="{{recapMetrics}}"

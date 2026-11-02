@@ -3,7 +3,7 @@
   display: block;
   margin-bottom: 20rpx;
   color: var(--cy-color-text-primary);
-  font-size: var(--cy-font-page-title);
+  font-size: var(--cy-font-title);
   font-weight: 700;
 }
 .cdrecap__section { margin-bottom: 20rpx; }
