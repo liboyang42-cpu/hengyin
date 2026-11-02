@@ -451,6 +451,12 @@ public class ProjectHomeReadServiceImpl implements IProjectHomeReadService {
 
         Map<String, Object> players = new HashMap<>();
         players.put("paidCount", paid == null ? 0 : paid.size());
+        // 2026-11-01:主办工作台「核销」三格(与俱乐部活动详情同一块)要已核销数,同一份已支付名单里数
+        int arrived = 0;
+        if (paid != null) for (CmsRegistration r : paid) {
+            if (r.getVerificationStatus() != null && r.getVerificationStatus() == 1) arrived++;
+        }
+        players.put("arrivedCount", arrived);
         return players;
     }
 

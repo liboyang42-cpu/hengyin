@@ -796,7 +796,7 @@ public class PerkLedgerServiceImpl implements IPerkLedgerService {
 
     private static final ObjectMapper COMPLETE_RULE_READER = new ObjectMapper();
 
-    /** NULL/空串 = 存量规则；非空但损坏 = fail-closed，绝不静默退回旧规则提前发奖。 */
+    /** NULL/空串/不含商家阈值键 = 存量规则；含阈值键但损坏 = fail-closed，绝不静默退回旧规则提前发奖。 */
     private CompletionRule completionRule(Long topicId) {
         CmsTopic topic = topicMapper.selectCmsTopicById(topicId);
         String raw = topic == null ? null : topic.getCompleteRuleJson();
@@ -805,6 +805,10 @@ public class PerkLedgerServiceImpl implements IPerkLedgerService {
         }
         try {
             JsonNode json = COMPLETE_RULE_READER.readTree(raw);
+            // 编辑器每次存盘都写 nodeCompletion/bingo:没有这两个阈值键就不是商家规则,按必选章判定
+            if (json.isObject() && !json.has("distinctMerchantRoles") && !json.has("needGroups")) {
+                return null;
+            }
             int roles = json.path("distinctMerchantRoles").asInt(0);
             int groups = json.path("needGroups").asInt(0);
             if (roles <= 0 || groups <= 0) {

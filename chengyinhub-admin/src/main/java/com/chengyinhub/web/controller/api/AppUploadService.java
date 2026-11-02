@@ -423,8 +423,8 @@ public class AppUploadService
             connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
             connection.setDoOutput(true);
             connection.setDoInput(true);
-            connection.setConnectTimeout(30000);
-            connection.setReadTimeout(30000);
+            connection.setConnectTimeout(5000);
+            connection.setReadTimeout(10000);
             try (DataOutputStream output = new DataOutputStream(connection.getOutputStream()))
             {
                 output.writeBytes("--" + boundary + "\r\n");
