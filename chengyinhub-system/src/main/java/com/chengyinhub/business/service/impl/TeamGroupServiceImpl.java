@@ -1892,10 +1892,30 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
             dispatch.run();
             return;
         }
+        // 2026-11-02 实证缺陷(payout_status 停在 5):Spring 在 afterCommit/afterCompletion 回调里
+        // isActualTransactionActive() 仍为 true(资源要到 cleanupAfterCompletion 才解绑),
+        // RefundPayoutServiceImpl.doPayout 的「必须在原业务事务提交并退出后执行」守卫因此每次都抛,
+        // 被 payoutAfterReview 吞成一行日志,退款单只能等 RefundReconcileTask 补派。
+        // 与 CoopDepositRefundService 同口径:只在物理提交之后,用 NOT_SUPPORTED 挂起已完成事务的资源再派发。
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
-            public void afterCommit() {
-                dispatch.run();
+            public void afterCompletion(int status) {
+                if (status != STATUS_COMMITTED) {
+                    return;
+                }
+                if (cancellationTransactions == null) {
+                    dispatch.run();
+                    return;
+                }
+                org.springframework.transaction.support.TransactionTemplate detached =
+                        new org.springframework.transaction.support.TransactionTemplate(cancellationTransactions);
+                detached.setPropagationBehavior(
+                        org.springframework.transaction.TransactionDefinition.PROPAGATION_NOT_SUPPORTED);
+                try {
+                    detached.executeWithoutResult(ignored -> dispatch.run());
+                } catch (RuntimeException e) {
+                    logger.error("退款提交后派发失败 refundId={}", refundId, e);
+                }
             }
         });
     }
