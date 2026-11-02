@@ -280,8 +280,7 @@ Page({
         wKey: 'activity-' + item.id,
         wTitle: a.name || '—',
         wImg: a.imgUrl || '/images/route_city_cover.png',
-        wType: '场次', wColor: '#E8B86B', wUntil: a.endTime || a.endDate || '', // ds-ok v13 卡角色
-        wProgress: exploreProgressOf(item),
+        wType: '场次', wColor: '#E8B86B', wUntil: a.endTime || a.endDate || '', wProgress: exploreProgressOf(item), // ds-ok v13 卡角色
       });
     });
     const seen = new Set();
