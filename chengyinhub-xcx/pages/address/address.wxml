@@ -11,7 +11,7 @@
   <cy-page-title title="参与人信息" safe-top="{{false}}" />
   <view class="dz">
     <cy-skeleton wx:if="{{loadState === 'loading'}}" type="list" count="4" />
-    <view class="dz-refreshing" wx:if="{{refreshing}}" aria-role="status" aria-live="polite">正在更新参与人信息…</view>
+    <view class="dz-refreshing cy-refresh-float" wx:if="{{refreshing}}" aria-role="status" aria-live="polite">正在更新参与人信息…</view>
     <block wx:if="{{loadState === 'ready' && list.length}}">
       <view class="dz_li" wx:for="{{list}}" wx:key="id" bindtap="selectAddress" data-address="{{item}}" hover-class="cy-pressed" hover-stay-time="80">
         <view class="dz_li_left">

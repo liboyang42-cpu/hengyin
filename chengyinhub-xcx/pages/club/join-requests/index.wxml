@@ -15,7 +15,7 @@
   <cy-error load-failure wx:elif="{{state === 'network-error'}}" title="网络连接失败" sub="{{errorText}}" retry="重新加载" bind:retry="loadRequests" />
 
   <block wx:elif="{{state === 'ready'}}">
-    <view wx:if="{{refreshing}}" class="refreshing" aria-role="status" aria-live="polite">正在更新入会申请…</view>
+    <view wx:if="{{refreshing}}" class="refreshing cy-refresh-float" aria-role="status" aria-live="polite">正在更新入会申请…</view>
     <cy-inline-error load-failure wx:if="{{staleError}}" class="list-inline-error" kind="{{staleErrorKind}}" title="入会申请暂未更新"
                      sub="{{staleError}}" action="重试更新" bind:action="loadRequests" />
     <cy-empty wx:if="{{requests.length === 0}}" fill size="lg" title="暂无待审申请" />

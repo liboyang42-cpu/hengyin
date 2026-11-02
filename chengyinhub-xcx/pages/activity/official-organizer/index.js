@@ -46,7 +46,7 @@ function stringList(value) {
 Page({
   data: {
     attendanceEventId: '',
-    commandRecovery: null,
+    commandRecovery: null, recoveryShown: false,
     phase: 'loading', // loading | missing | denied | error | ready
     refreshing: false,
     deniedReason: '',
@@ -108,15 +108,15 @@ Page({
   // ===================== 读取 =====================
 
   _openRecovery() {
-    if (this._recovery) this._recovery.dispose();
+    if (this._recovery) this._recovery.dispose(); this._freshCommand = false;
     this._recovery = createRecovery({ app, platform: wx, domain: 'EVENT', targetId: this._id,
-      changed: value => {
+      changed: value => { const fresh = this._freshCommand; if (!value.busy) this._freshCommand = false; // 本页刚发出的请求在途时不弹恢复卡(按钮自带忙态);回包未知/失败、重进页面读到存档、APPLIED 回执照常显示
         const forms = value.input ? emptyForms() : this.data.forms;
         if (value.input) {
           if (value.action === 'pause') for (const field of rules.PAUSE_FIELDS) forms.pause[field].extra = value.input[field] || '';
           if (value.action === 'resume') forms.resume.reason = value.input.reason || '';
         }
-        this.setData({ commandRecovery: value,
+        this.setData({ commandRecovery: value, recoveryShown: !!(value.state || value.busy) && !(fresh && value.busy),
           busyAction: value.state || value.busy ? value.action || 'pending' : '', forms });
       },
       terminal: (receipt, command) => {
@@ -348,7 +348,7 @@ Page({
     if (!this._recovery) this._openRecovery();
     if (this._recovery.pending()) return;
     dc.close();
-    return this._recovery.start(action, rules.buildPayload(action, this.data.forms[action]));
+    this._freshCommand = true; return this._recovery.start(action, rules.buildPayload(action, this.data.forms[action]));
   },
 
   // Legacy callers may still request a snapshot refresh; snapshots cannot settle a command receipt.

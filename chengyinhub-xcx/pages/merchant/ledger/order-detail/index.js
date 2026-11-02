@@ -1,5 +1,5 @@
 const app = getApp();
-const merchantTheme = require('../../../../utils/merchant-theme.js');
+const merchantTheme = require('../../../../utils/merchant-theme.js'); const pageMotion = require('../../../../utils/page-motion.js');
 const { isFinanceObjectPayload, money } = require('../../utils/merchant-finance.js');
 
 Page({
@@ -27,7 +27,7 @@ Page({
   onShow() { merchantTheme.merchantPageShow(); },
   onHide() { merchantTheme.merchantPageRestore(); },
   onUnload() {
-    this._loadEpoch = (this._loadEpoch || 0) + 1;
+    this._loadEpoch = (this._loadEpoch || 0) + 1; this._unloaded = true;
     this._loading = false;
     merchantTheme.merchantPageRestore();
   },
@@ -95,7 +95,7 @@ Page({
           timeline: canReadFinance ? buildTimeline(res.data) : [],
         });
         if (!settleLoad(this, epoch)) return;
-        this.setData({ detail, loadState: 'ready', errorKind: 'data', errorText: '' });
+        if (!this.data.detail) pageMotion.countMoney(this, 'odK'); this.setData({ detail, loadState: 'ready', errorKind: 'data', errorText: '' }); // 2026-11-02 X-1:主数字首次落地慢-快-慢
       },
       fail: (error) => {
         const network = isTransportFailure(error);

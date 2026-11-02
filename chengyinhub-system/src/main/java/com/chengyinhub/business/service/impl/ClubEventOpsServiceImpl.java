@@ -476,9 +476,12 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
         List<Long> waitlistRecipients = cancellationRecipients(
                 clubEventOpsMapper.selectWaitlistRecipients(request.getClubId(), request.getActivityId()));
 
-        clubRoleAssignmentService.revokeEventLeadForCancelledOccurrence(
-                actorMemberId, request.getClubId(), request.getActivityId(),
-                "event-cancel-role-" + requestId);
+        // 自办场次不挂 club_id,领队只能派给挂在俱乐部名下的场次(ClubRoleAssignmentServiceImpl.requireOwnedActivity),没有可收的领队
+        if (!prepared.selfHosted()) {
+            clubRoleAssignmentService.revokeEventLeadForCancelledOccurrence(
+                    actorMemberId, request.getClubId(), request.getActivityId(),
+                    "event-cancel-role-" + requestId);
+        }
         ActivityCancelResult refund = teamGroupService.cancelActivityWithObservedPayments(
                 request.getActivityId(), lockedOwner, actorMemberId, reason, false, observed);
         if (refund == null || refund.getRefundedOrders() < 0 || refund.getManualOrders() < 0
@@ -493,14 +496,20 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
         result.setRefundedOrders(refund.getRefundedOrders());
         result.setManualOrders(refund.getManualOrders());
         result.setClosedPendingOrders(refund.getClosedPendingOrders());
+        // club_id 为空时退款核心已在同一事务里给受影响玩家发过「场次取消通知」,这里再排一轮就是一人两条
         finishOccurrenceCancellation(actorMemberId, request.getClubId(), request.getActivityId(), reason,
-                occurrence, registeredRecipients, waitlistRecipients, requestId, result);
+                occurrence, prepared.selfHosted() ? java.util.List.<Long>of() : registeredRecipients,
+                waitlistRecipients, requestId, result);
+        if (prepared.selfHosted()) {
+            result.setRegisteredRecipientCount(registeredRecipients.size());
+            result.setRegisteredNotificationStatus(registeredRecipients.isEmpty() ? "NOT_REQUIRED" : "COMPLETED");
+        }
         return cancellationReceipts().complete(prepared.receiptRequest(),result);
     }
 
     private record OccurrencePreparation(String reason, String requestId, Long ownerMemberId,
                                           ClubEventOccurrence occurrence, ClubEventCancellationResult replay,
-                                          Request receiptRequest) { }
+                                          Request receiptRequest, boolean selfHosted) { }
     private record PreparedOccurrence(OccurrencePreparation original, RegistrationCancellationPayments payments) { }
 
     private OccurrencePreparation prepareOccurrenceCancellation(Long actorMemberId, ClubEventCancellationRequest request) {
@@ -512,8 +521,8 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
         String requestId = cancellationRequestId(request.getRequestId());
         ClubAccessContext access = requireCancellationAccess(
                 actorMemberId, request.getClubId(), request.getActivityId());
-        com.chengyinhub.business.domain.CmsActivity observedActivity = lockCancellationTopic(
-                request.getActivityId(), null, request.getClubId());
+        com.chengyinhub.business.domain.CmsActivity observedActivity = lockClubOccurrenceTopic(
+                request.getActivityId(), request.getClubId());
 
         // [F-36] open-session 开出来的独立场次没有 series/occurrence。此前这里一律 409,
         // 主理人永远取消不了。归属改按「有系列就用系列、没有就问 cms_activity」判 ——
@@ -522,8 +531,10 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
                 .selectSeriesByActivityAnyStatusForUpdate(request.getActivityId());
         com.chengyinhub.business.domain.CmsActivity currentActivity = RegistrationTopicFence.requireCurrentActivity(
                 observedActivity, cancellationActivityMapper);
-        requireCancellationActivityScope(currentActivity, request.getClubId(), series);
+        requireClubOccurrenceScope(currentActivity, request.getClubId(), series);
         boolean standalone = series == null;
+        // 自办场次:club_id 为空、归属走主题(只可能是独立场次,系列场次在上面已按系列口径拦下)
+        boolean selfHosted = currentActivity.getClubId() == null;
         if (standalone) {
             // selectActivityTopicForUpdate 只在「活动属于本俱乐部且未删」时返回,顺带上行锁。
             if (clubEventOpsMapper.selectActivityTopicForUpdate(
@@ -561,7 +572,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
         if (receipt.done()) {
             requirePersistedCancellationState(request.getClubId(), request.getActivityId());
             return new OccurrencePreparation(reason, requestId, lockedOwner, occurrence,
-                    receipt.occurrence(),receiptRequest);
+                    receipt.occurrence(),receiptRequest,selfHosted);
         }
         if (alreadyCancelled || currentActivity.getCancelTime()!=null) throw conflict("原取消状态与未完成意图不一致，请按原请求核对");
         // S531-2:系列关闭(CLOSED)只停排新场次,已排场次仍须能从 event-ops 取消并收尾退款/候补/通知。
@@ -572,7 +583,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
         if (teamGroupService == null) throw conflict("活动取消服务不可用");
 
 
-        return new OccurrencePreparation(reason, requestId, lockedOwner, occurrence, null,receiptRequest);
+        return new OccurrencePreparation(reason, requestId, lockedOwner, occurrence, null,receiptRequest,selfHosted);
     }
 
     /**
@@ -864,6 +875,30 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
         return observed;
     }
 
+    /** 俱乐部取消本场的入口:归属同 ClubAccessServiceImpl.requireOwnedActivity,含「主题归俱乐部」的自办场次。 */
+    private com.chengyinhub.business.domain.CmsActivity lockClubOccurrenceTopic(Long activityId, Long clubId) {
+        com.chengyinhub.business.domain.CmsActivity observed = cancellationActivityMapper.selectCmsActivityById(activityId);
+        if (observed == null || !activityId.equals(observed.getId()) || !activityInClubScope(observed, clubId))
+            throw conflict("场次不属于原主题或俱乐部");
+        RegistrationTopicFence.lockActivityTopic(observed, cancellationTopicMapper);
+        return observed;
+    }
+
+    private void requireClubOccurrenceScope(com.chengyinhub.business.domain.CmsActivity current,
+                                            Long clubId, ClubEventSeries series) {
+        if (!activityInClubScope(current, clubId)) throw conflict("场次当前主题或俱乐部与原系列不一致");
+        requireCancellationActivityScope(current, null, series);
+    }
+
+    /** 俱乐部公开主题的自办场次刻意不挂 club_id,按主题归属认:主题属于本俱乐部,且场次与主题同一创建人。 */
+    private boolean activityInClubScope(com.chengyinhub.business.domain.CmsActivity activity, Long clubId) {
+        if (clubId.equals(activity.getClubId())) return true;
+        if (activity.getClubId() != null || activity.getTopicId() == null) return false;
+        com.chengyinhub.business.domain.CmsTopic topic = cancellationTopicMapper.selectCmsTopicById(activity.getTopicId());
+        return topic != null && clubId.equals(topic.getClubId()) && topic.getMemberId() != null
+                && topic.getMemberId().equals(activity.getMemberId());
+    }
+
     private void requireCancellationActivityScope(com.chengyinhub.business.domain.CmsActivity current,
                                                    Long expectedClubId, ClubEventSeries series) {
         if ((expectedClubId != null && !expectedClubId.equals(current.getClubId()))
@@ -883,9 +918,9 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
 
     private ClubEventCancellationStateVO readCancellationState(Long actorMemberId,Long clubId,Long activityId) {
         requireCancellationAccess(actorMemberId, clubId, activityId);
-        var observed=lockCancellationTopic(activityId,null,clubId);
+        var observed=lockClubOccurrenceTopic(activityId,clubId);
         var activity=RegistrationTopicFence.requireCurrentActivity(observed,cancellationActivityMapper);
-        requireCancellationActivityScope(activity,clubId,null);
+        requireClubOccurrenceScope(activity,clubId,null);
         Long owner=clubEventOpsMapper.selectClubOwnerForUpdate(clubId);
         ClubAccessContext access=requireCancellationAccess(actorMemberId,clubId,activityId);
         if(!positive(owner) || !owner.equals(access.getOwnerMemberId())) throw forbidden();

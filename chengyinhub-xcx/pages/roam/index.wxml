@@ -165,12 +165,19 @@
         <view class="entry-card__copy"><text class="entry-card__tag entry-card__tag--{{item.tag === '自由探索' ? 'free' : 'city'}}">{{item.tag}}</text><text class="entry-card__title">{{item.title}}</text><text class="entry-card__meta">{{item.meta || item.address || '查看活动详情'}}</text></view>
       </view>
     </view></scroll-view>
+    <scroll-view wx:elif="{{entryLoading}}" class="entry-peek__cards" scroll-x enhanced show-scrollbar="{{false}}" aria-role="status" aria-label="正在读取附近活动"><view class="entry-peek__track"><view class="entry-card" aria-hidden="true"></view><view class="entry-card" aria-hidden="true"></view></view></scroll-view>
     <view wx:else class="entry-peek__state" bindtap="openNearbyMap" aria-role="button" aria-label="附近暂无活动，打开地图寻找附近活动" hover-class="cy-pressed" hover-stay-time="80"><text>附近暂无活动</text><text>打开地图寻找附近活动</text></view>
   </view>
   </view>
   <!-- ② 漫游护照:顶部四项读数 + 上排方卡(功能) + 下排大卡(玩法)。版式与 play 第二 tab 同一套 .pp-* -->
   <view wx:else class="intro-passport">
-    <view wx:if="{{passportLoading}}" aria-role="status">正在读取漫游护照…</view>
+    <!-- R-02 首读占位:与读完后同一套 .pp-stats / .pp-row 几何,读数位显示「—」,方卡只留底板 -->
+    <block wx:if="{{passportLoading}}">
+    <view class="pp-stats" aria-role="status" aria-label="正在读取漫游护照">
+      <view class="pp-stat" wx:for="{{['漫游', '探店', '活跃日', '公里']}}" wx:key="*this"><text class="pp-stat__v">—</text><text class="pp-stat__k">{{item}}</text></view>
+    </view>
+    <view class="pp-row" aria-hidden="true"><view class="pp-tile" wx:for="{{[1, 2, 3, 4, 5]}}" wx:key="*this"><view class="pp-tile__box"></view></view></view>
+    </block>
     <cy-error load-failure wx:elif="{{passportError}}" title="漫游护照读取失败" retry="重试" bind:retry="retryPassport" />
     <block wx:else>
     <view class="pp-stats">

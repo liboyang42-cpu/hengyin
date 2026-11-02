@@ -1,4 +1,4 @@
-<wxs src="../../../../utils/wxs/money.wxs" module="money" />
+<wxs src="../../../../utils/wxs/num.wxs" module="num" /><wxs src="../../../../utils/wxs/money.wxs" module="money" />
 <wxs src="../../../../utils/wxs/img.wxs" module="img" />
 <!-- 商家视角挂 theme-merchant:日间 token 真源在 style/tokens.wxss(.theme-light/.theme-merchant),
      本页不再手抄一份;.pc-merchant 只留本页自有语义(去品牌化 + 隐藏 hero 底图) -->
@@ -332,15 +332,15 @@
         </block>
         <view wx:else class="pc-public-achievements">
           <view class="pc-public-stat">
-            <text class="pc-public-stat-n">{{(userInfo.topicNum || 0) + (userInfo.activityNum || 0)}}</text>
+            <text class="pc-public-stat-n">{{num.n(userInfo.topicNum) === '—' && num.n(userInfo.activityNum) === '—' ? '—' : (userInfo.topicNum || 0) + (userInfo.activityNum || 0)}}</text>
             <text class="pc-public-stat-l">发布内容</text>
           </view>
           <view class="pc-public-stat">
-            <text class="pc-public-stat-n">{{userInfo.likeNum || 0}}</text>
+            <text class="pc-public-stat-n">{{num.n(userInfo.likeNum)}}</text>
             <text class="pc-public-stat-l">获赞</text>
           </view>
           <view class="pc-public-stat">
-            <text class="pc-public-stat-n">{{userInfo.fansNum || 0}}</text>
+            <text class="pc-public-stat-n">{{num.n(userInfo.fansNum)}}</text>
             <text class="pc-public-stat-l">粉丝</text>
           </view>
         </view>

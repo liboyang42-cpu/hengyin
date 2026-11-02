@@ -57,6 +57,9 @@
 
 <!-- 详情加载中:给一条可见提示,避免页面只剩参与人信息一行像加载完了 -->
 <cy-skeleton wx:if="{{pageState === 'loading'}}" type="card" count="{{skeletonItems.length}}" />
+<!-- 加载中先把底栏占住(同高、按钮不可点),加载完只换内容,「付款」不再从底下滑进来 -->
+<view wx:if="{{pageState === 'loading'}}" class="bmbottom-spacer bmbottom-placeholder"></view>
+<view wx:if="{{pageState === 'loading'}}" class="bmbottom bmbottom-placeholder" aria-hidden="true"><view class="bmbottom_box" style="height:20px"></view><cy-btn variant="primary" style="width:686rpx;margin:0 auto;display:block" disabled="{{true}}" accessibility-label="正在加载"></cy-btn></view>
 
 <!-- M1-3 门卡:俱乐部活动对非成员不下发详情。这不是加载失败,重试无意义 —— 只给「去加入俱乐部」。 -->
 <cy-empty class="page-terminal" wx:if="{{pageState === 'gate'}}" fill size="lg"

@@ -741,8 +741,8 @@ Page({
     // 底部主题 - 初始化第一页（设置pageSize为2）
     that.setData({
       bottomTopicPageNo: 1,
-      hasMoreBottomTopic: false,
-      bottomTopicList: []
+      hasMoreBottomTopic: false
+      // H-03:不先清空 bottomTopicList —— 刷新时旧的几行留在屏上,新一页到了整体替换(isRefresh),页面高度和滚动位置不跳
     }, () => {
       that.loadBottomTopicList(1, true);
     });
@@ -750,8 +750,8 @@ Page({
     // 底部活动 - 初始化第一页
     that.setData({
       bottomActivityPageNo: 1,
-      hasMoreBottomActivity: false,
-      bottomActivityList: []
+      hasMoreBottomActivity: false
+      // H-03:同上,不先清空 bottomActivityList
     }, () => {
       that.loadBottomActivityList(1, true);
     });
@@ -1179,7 +1179,7 @@ Page({
 
           const dataObj = {};
           dataObj[listName] = list;
-          dataObj['listErr.' + listName] = false; pageMotion.enter(that, 'pm_' + listName); // 2026-10-23:列表到达时依次浮上来
+          dataObj['listErr.' + listName] = false; pageMotion.enter(that, 'pm_' + listName, { once: true }); // 2026-10-23:列表到达时依次浮上来(H-02:只在首屏入场一次,下拉刷新不再藏起来重播)
           that.setData(dataObj, function () {
             if (listName === 'nearbyActivityList' || listName === 'recommendedTopicList') {
               that._buildRecoHero();
@@ -1281,7 +1281,7 @@ loadBottomTopicList: function(pageNo, isRefresh = false) {
         const totalPages = Math.ceil(total / that.data.pageSize);
         
         if (isRefresh) {
-          pageMotion.enter(that, 'pmFeed'); // 刷新时替换数据(2026-10-23:新的一页依次浮上来)
+          pageMotion.enter(that, 'pmFeed', { once: true }); // 刷新时替换数据(2026-10-23:新的一页依次浮上来;H-02 只首屏一次)
           that.setData({
             bottomTopicList: decorateImgs(list),
             bottomTopicPageNo: pageNo,
@@ -1388,7 +1388,7 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
         const totalPages = Math.ceil(total / that.data.pageSize);
         
         if (isRefresh) {
-          pageMotion.enter(that, 'pmFeed'); // 刷新时替换数据(2026-10-23:新的一页依次浮上来)
+          pageMotion.enter(that, 'pmFeed', { once: true }); // 刷新时替换数据(2026-10-23:新的一页依次浮上来;H-02 只首屏一次)
           that.setData({
             bottomActivityList: decorateImgs(list),
             bottomActivityPageNo: pageNo,

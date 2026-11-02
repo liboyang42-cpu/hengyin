@@ -274,10 +274,11 @@
         limit 1 for update
     </select>
 
-    <select id="selectActivityTopicForUpdate" resultType="java.lang.Long">
-        select topic_id
-        from cms_activity
-        where id = #{activityId} and club_id = #{clubId} and del_flag = 0
+    <select id="selectActivityTopicForUpdate" resultType="java.lang.Long" useCache="false" flushCache="true">
+        select a.topic_id
+        from cms_activity a
+        <!-- 俱乐部公开主题的自办场次不挂 club_id,按主题归属认(同 ClubAccessService.requireOwnedActivity) -->
+        where a.id = #{activityId} and (a.club_id = #{clubId} or (a.club_id is null and exists (select 1 from cms_topic t where t.id = a.topic_id and t.club_id = #{clubId} and t.member_id = a.member_id))) and a.del_flag = 0
         for update
     </select>
 
@@ -292,7 +293,7 @@
     </select>
 
     <select id="selectOccurrenceCancellationState" resultMap="cancellationStateResult">
-        select a.club_id, a.id as activity_id,
+        select coalesce(a.club_id, #{clubId}) as club_id, a.id as activity_id,
                case when o.id is null
                     then case when a.cancel_time is not null then 'CANCELLED' else 'ACTIVE' end
                     else o.status end as occurrence_status,
@@ -301,7 +302,7 @@
         from cms_activity a
         left join club_event_occurrence o on o.activity_id = a.id
         left join club_event_series s on s.id = o.series_id
-        where a.id = #{activityId} and a.club_id = #{clubId} and a.del_flag = 0
+        where a.id = #{activityId} and (a.club_id = #{clubId} or (a.club_id is null and exists (select 1 from cms_topic t where t.id = a.topic_id and t.club_id = #{clubId} and t.member_id = a.member_id))) and a.del_flag = 0
           and (o.id is null or s.club_id = #{clubId})
         limit 1
     </select>
