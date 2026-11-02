@@ -265,7 +265,7 @@ test('主题点开进卡堆预览(带商家作用域与只读标记),玩法点�
 test('模板页只留顶栏、发布入口与底栏；货架走分包异步组件，搜索进统一搜索页', () => {
   const json = JSON.parse(read('pages/template/index.json'));
   assert.equal(json.usingComponents['tpl-shelf'], '/pages/templatedetail/shelf/index');
-  assert.equal(json.componentPlaceholder['tpl-shelf'], 'view', '主包页面引用分包组件必须给占位');
+  assert.equal(json.componentPlaceholder['tpl-shelf'], 'cy-skeleton', '主包页面引用分包组件必须给占位(P-01:分包下载期间先出骨架,不留黑屏)'); assert.equal(json.usingComponents['cy-skeleton'], '/components/cy/skeleton/index');
   const js = read('pages/template/index.js');
   assert.doesNotMatch(js, /\/api\/template\/(list|topic-template)/, '列表请求只在货架组件里发');
   assert.match(js, /goSearch\(\) \{ wx\.navigateTo\(\{ url: '\/pages\/search2\/index' \}\); \}/);

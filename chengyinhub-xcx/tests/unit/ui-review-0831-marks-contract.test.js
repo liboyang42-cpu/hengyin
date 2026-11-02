@@ -425,7 +425,8 @@ test('内容区切换走 fill 下划线，不走 chip 药丸或 segmented', () =
 test('同页状态筛选走 chip 药丸，不走 fill 下划线', () => {
   const aftercare = read('pages/merchant/aftercare/index.wxml')
   const filters = aftercare.match(/<cy-tabs[^>]*class="acl-filter"[^>]*>/g)
-  assert.equal(filters && filters.length, 2)
+  // 2026-11-02 X-5:空态与列表态共用一份筛选(状态链外),不再各挂一份
+  assert.equal(filters && filters.length, 1)
   filters.forEach((tag) => {
     assert.match(tag, /variant="chip"/)
     assert.doesNotMatch(tag, /variant="fill"/)

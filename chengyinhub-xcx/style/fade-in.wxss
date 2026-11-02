@@ -17,3 +17,12 @@
   from { opacity: 0; }
   to   { opacity: 1; }
 }
+
+/* 刷新状态浮在内容上,不占位:刷新时页面形状不变,列表不被顶下去。父容器要 position: relative。 */
+.cy-refresh-float {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  animation: cy-fade-in var(--cy-motion-fade-swap) var(--cy-ease-out);
+}

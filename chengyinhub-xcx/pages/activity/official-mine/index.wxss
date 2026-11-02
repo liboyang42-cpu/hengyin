@@ -44,6 +44,7 @@
 }
 .om-stat { margin-top: var(--cy-space-2); padding: var(--cy-space-2); border-radius: var(--cy-radius-md); background: var(--cy-bg-card-2); }
 .om-reach { color: var(--cy-text-secondary); font-size: var(--cy-font-label); font-weight: 600; }
+.om-recover { display: block; margin-top: var(--cy-space-2); } /* 恢复按钮与上面的触达行隔开 */
 .om-organizer {
   min-height: var(--cy-btn-h);
   display: flex;

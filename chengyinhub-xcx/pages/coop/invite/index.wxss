@@ -32,7 +32,7 @@ page { background: var(--cy-bg-page); }
 /* 卡片 */
 .card { background: var(--cy-bg-card); border-radius: var(--cy-radius-lg); margin: 24rpx var(--cy-page-x); padding: var(--cy-space-3-5); }
 .card--targets { padding-left: 0; padding-right: 0; background: transparent; }
-.card--targets .card-tit { padding: 0 var(--cy-space-1); }
+.card--targets .card-tit { padding: 0; margin-bottom: 0; }
 .target-list { display: flex; flex-direction: column; }
 cy-page-title + .card { margin-top: 0; }
 .card-tit { font-size: var(--cy-font-body); font-weight: 700; color: var(--cy-text-title); margin-bottom: var(--cy-legacy-18); }

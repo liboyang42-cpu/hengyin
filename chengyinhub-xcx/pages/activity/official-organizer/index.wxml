@@ -5,7 +5,7 @@
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
   <cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />
-  <view wx:if="{{commandRecovery.state || commandRecovery.busy}}" class="oo-card" aria-role="status">
+  <view wx:if="{{recoveryShown}}" class="oo-card" aria-role="status">
     <text>{{commandRecovery.label}}</text>
     <text>{{commandRecovery.message}}</text>
     <text wx:if="{{commandRecovery.requestId}}">原请求号：{{commandRecovery.requestId}}</text>

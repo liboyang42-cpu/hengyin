@@ -21,7 +21,7 @@
       <cy-skeleton wx:elif="{{loading && postList.length === 0}}" type="post-card" count="3" />
       <cy-empty fill class="cy-fill-state" size="lg" wx:elif="{{postList.length === 0}}" kind="empty" title="暂无收藏的帖文" />
       <block wx:else>
-        <view class="favorite-refreshing" wx:if="{{refreshing}}" aria-role="status" aria-live="polite"></view>
+        <view class="favorite-refreshing cy-refresh-float" wx:if="{{refreshing}}" aria-role="status" aria-live="polite"></view>
         <cy-post-card wx:for="{{postList}}" wx:key="id" post="{{item}}" index="{{index}}" light="{{isMerchantView}}"
           show-more show-share accessibility-label="查看收藏的动态"
           bind:detail="goPost" bind:more="onPostMore" />
@@ -36,7 +36,7 @@
       <cy-skeleton wx:elif="{{loading && ztList1.length === 0}}" type="card" count="3" />
       <cy-empty fill class="cy-fill-state" size="lg" wx:elif="{{ztList1.length === 0}}" kind="empty" title="暂无收藏的主题" />
       <block wx:else>
-      <view class="favorite-refreshing" wx:if="{{refreshing}}" aria-role="status" aria-live="polite"></view>
+      <view class="favorite-refreshing cy-refresh-float" wx:if="{{refreshing}}" aria-role="status" aria-live="polite"></view>
       <view class="favorite-card" wx:for="{{ztList1}}" wx:key="id">
         <image class="favorite-card__cover" lazy-load="true"
           src="{{img.first(item.imgUrl) || img.first(item.imgArr) || '/images/mer1.jpg'}}"

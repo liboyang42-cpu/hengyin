@@ -1,3 +1,4 @@
+<wxs src="../../../utils/wxs/count.wxs" module="cnt" />
 <view class="ledger theme-merchant">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
@@ -93,7 +94,7 @@
                        
                        action="重试" bind:action="retry" />
     </view>
-    <view class="ledger-inline-state">
+    <view class="ledger-inline-state" wx:if="{{settlementLoading.overview || settlementErrors.overview}}">
       <cy-skeleton wx:if="{{settlementLoading.overview && !overview}}" type="amount" count="{{1}}" />
       <text class="ledger-sync" wx:if="{{settlementLoading.overview && overview}}" aria-role="status">正在更新结算概览…</text>
       <cy-inline-error wx:if="{{settlementErrors.overview}}" title="{{settlementErrors.overview}}"
@@ -103,7 +104,7 @@
     <!-- hero:每页只准一个主数字。毛额/调整/待对公降为卡内 key-value,和主数字拉开量级。 -->
     <view class="fin-hero" wx:if="{{overview}}">
       <text class="fin-hero__lab">本月个人账户{{overview.netLabel}}</text>
-      <text class="fin-hero__amt">{{overview.personalNetDisplay}}</text>
+      <text class="fin-hero__amt">{{cnt.money(overview.personalNetDisplay, lgK)}}</text>
       <view class="fin-hero__chips" wx:if="{{overview.hasAdjustmentPending}}">
         <cy-badge type="status" variant="warning" label="{{overview.adjustmentPendingDisplay}} 调整待处理" />
       </view>

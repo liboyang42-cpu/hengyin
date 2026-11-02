@@ -1,5 +1,5 @@
 <view class="team-page theme-dark" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
-  <view wx:if="{{commandRecovery.state || commandRecovery.busy}}" class="team-card" aria-role="status">
+  <view wx:if="{{recoveryShown}}" class="team-card" aria-role="status">
     <text>{{commandRecovery.label}}</text>
     <text>{{commandRecovery.message}}</text>
     <text wx:if="{{commandRecovery.requestId}}">原请求号：{{commandRecovery.requestId}}</text>

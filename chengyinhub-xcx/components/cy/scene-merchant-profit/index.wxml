@@ -5,9 +5,9 @@
 
   <!-- 入账口径以服务端 myIncomeArrived 为准；已结算不等于已入账。 -->
   <block wx:elif="{{!loadErr}}">
-    <cy-stat-card class="stat-grid" items="{{statItems}}" columns="{{1}}" />
+    <cy-stat-card class="stat-grid" items="{{statItems}}" columns="{{1}}" count-k="{{pfK}}" />
     <!-- 9-16 晚拍板第 5 条 + 9-17 总控:余额三段只给主体本人,员工不显示(isOwner 由 /api/coop/finance 判定) -->
-    <cy-funds-stages wx:if="{{isOwner}}" />
+    <cy-funds-stages class="funds" wx:if="{{isOwner}}" />
     <!-- 调整的原因(Figma G2):说清这笔扣减是哪个主题、为什么扣 -->
     <text class="adjust-reason" wx:if="{{adjustReason}}">{{adjustReason}}</text>
     <view class="withdraw-entry">

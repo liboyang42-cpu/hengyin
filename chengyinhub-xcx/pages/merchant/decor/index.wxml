@@ -113,9 +113,10 @@
         </view>
         <!-- M-31(2026-10-27):入驻审核通过(经营身份 active)后不再展示「入驻资料」——执照不用再看,
              品牌形象图与门店相册是一回事(注册时的照片并入门店相册,数据迁移在后端)。 -->
-        <view class="dc-card" wx:if="{{!merchantAccess.active}}">
+        <!-- 2026-11-02 B-1:卡里唯一一格要 canWriteProfile;没有这项权限时整卡不出,不留空白卡 -->
+        <block wx:if="{{merchantAccess.canWriteProfile}}"><view class="dc-card" wx:if="{{!merchantAccess.active}}">
           <cy-cell wx:if="{{merchantAccess.canWriteProfile}}" arrow-icon="chevron-right" title="入驻资料" value="执照 · 品牌材料" required="{{false}}" bind:tap="goSection" data-view="qualification" hairline="{{false}}" />
-        </view>
+        </view></block>
       </block>
       <block wx:elif="{{view === 'brand'}}">
         <view class="dc-heading-row"><text class="dc-brand-title">{{m.cityRole || m.name}}</text><view class="dc-edit-label" bindtap="openField" data-k="cityRole" aria-role="button" hover-class="cy-pressed">编辑</view></view>
@@ -271,6 +272,13 @@
             value="{{perks.length ? perks.length + ' 项' : '添加权益'}}"
             required="{{false}}"
             bind:tap="goPerks"
+          />
+          <!-- 2026-11-02 M-20:衍生权益与常备权益同类,并进同一张卡紧跟其后(原来单独占末尾一张卡) -->
+          <cy-cell arrow-icon="chevron-right"
+            title="衍生权益"
+            value="{{m.derivativeBenefits || '添加衍生权益'}}"
+            required="{{false}}"
+            bind:tap="openDerivatives"
             hairline="{{false}}"
           />
         </view>
@@ -331,15 +339,6 @@
             value="挂互动玩法"
             required="{{false}}"
             bind:tap="goCityNode"
-            hairline="{{false}}"
-          />
-        </view>
-        <view class="dc-card">
-          <cy-cell arrow-icon="chevron-right"
-            title="衍生权益"
-            value="{{m.derivativeBenefits || '添加衍生权益'}}"
-            required="{{false}}"
-            bind:tap="openDerivatives"
             hairline="{{false}}"
           />
         </view>

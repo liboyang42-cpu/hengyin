@@ -1,4 +1,4 @@
-<!-- 时光胶囊:漫游护照方卡进入。开启日前不显示正文,仅本人可见;封存/找回回执/删除沿用归档 capsule(index.js)。 -->
+<wxs src="../../utils/wxs/num.wxs" module="num" /><!-- 时光胶囊:漫游护照方卡进入。开启日前不显示正文,仅本人可见;封存/找回回执/删除沿用归档 capsule(index.js)。 -->
 <view class="tu theme-dark {{reducedMotion ? 'cy-motion-reduced' : ''}}">
   <cy-toast id="cy-toast" />
   <cy-modal-host id="cy-modal-host" />
@@ -61,9 +61,9 @@
       <text class="cp-k cp-k--ok">已到开启日 · {{item.createdText}} 封存</text>
       <text class="cp-t">打开看看</text>
     </view>
-    <view wx:else class="cp-card cy-rise-in" style="animation-delay: {{index * 60}}ms" data-id="{{item.id}}" bindtap="lockedTip" aria-role="button" aria-label="封存中，还有 {{item.daysLeft || 0}} 天开启" hover-class="cy-pressed" hover-stay-time="80">
+    <view wx:else class="cp-card cy-rise-in" style="animation-delay: {{index * 60}}ms" data-id="{{item.id}}" bindtap="lockedTip" aria-role="button" aria-label="封存中，还有 {{num.n(item.daysLeft)}} 天开启" hover-class="cy-pressed" hover-stay-time="80">
       <text class="cp-k">{{item.createdText}} 写下</text>
-      <text class="cp-days">{{item.daysLeft || 0}} 天</text>
+      <text class="cp-days">{{num.n(item.daysLeft)}} 天</text>
       <text class="cp-m">{{item.unlockText}} 开启</text>
     </view>
   </block>

@@ -6,7 +6,7 @@
     <cy-nav-bar plain custom-back bind:back="goBack" />
     <cy-page-title title="我的举报" safe-top="{{false}}" />
     <view class="rp__body">
-      <cy-skeleton wx:if="{{state === 'loading'}}" type="feed-card" count="3" />
+      <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="3" />
       <cy-state-shell wx:elif="{{state === 'error'}}" kind="data" title="举报记录加载失败"
                       primary="重试" bind:primary="retry" />
       <cy-state-shell wx:elif="{{state === 'empty'}}" kind="empty" title="还没有举报记录"
@@ -14,7 +14,7 @@
       <block wx:else>
         <cy-tabs variant="chip" tabs="{{tabs}}" active="{{tab}}" bind:change="onTab" />
         <cy-state-shell wx:if="{{!rows.length}}" kind="empty"
-                        title="{{tab === 'decided' ? '还没有已出结论的举报' : '没有处理中的举报'}}" sub="换个筛选试试" />
+                        title="{{tab === 'decided' ? '还没有已出结论的举报' : '没有处理中的举报'}}" />
         <view class="rp-row" wx:for="{{rows}}" wx:key="id" data-id="{{item.id}}" bindtap="openDetail"
               aria-role="button" aria-label="{{item.targetText}}，{{item.reasonText}}，{{item.stageText}}，查看进度"
               hover-class="cy-pressed" hover-stay-time="80">

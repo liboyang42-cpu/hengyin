@@ -336,7 +336,7 @@ Page({
       emptySub = c[1];
       emptyKind = c[2];
     }
-    pageMotion.enter(this, 'pmList'); this.setData(Object.assign({
+    if (!extra || extra.keyword === undefined) pageMotion.enter(this, 'pmList'); this.setData(Object.assign({ // 打字过滤不重播入场,只在加载与切标签时浮上来
       events: list, summary, emptyTitle, emptySub, emptyKind,
       curError: d.tab === 3 ? this._mineError === true : this._loadError === true,
       loading: d.tab === 3 ? this._mineLoading === true : this._publicLoading === true,
