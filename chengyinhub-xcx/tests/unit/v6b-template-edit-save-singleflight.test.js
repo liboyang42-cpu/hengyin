@@ -22,7 +22,7 @@ beforeEach(() => {
   }
   global.getApp = () => appStub
   global.wx = {
-    getStorageSync: () => undefined, setStorageSync: () => {}, removeStorageSync: () => {},
+    ...require('../helpers/memory-storage.js')(),
     getSystemInfoSync: () => ({ windowWidth: 375, statusBarHeight: 20 }),
     getAccountInfoSync: () => ({ miniProgram: { envVersion: 'release' } }),
     showToast: () => {}, hideLoading: () => {}, showLoading: () => {}, nextTick: (cb) => cb(),
@@ -91,5 +91,8 @@ test('V6b CX-11：保存失败保留内容并给出错误，之后可以重存',
   assert.equal(page.data.submitting, false)
   assert.ok(page.data.submitError)
   page.sendData({ id: 6029, status: 0, title: '我的草稿' }, '/api/template/draft', 'draft')
+  const query = requests.find(r => r.url === '/api/author-write/receipt')
+  const original = JSON.parse(drafts()[0].data)
+  query.success({ code: 200, data: { state: 'UNKNOWN', operation: 'TEMPLATE_DRAFT', requestId: original.requestId } })
   assert.equal(drafts().length, 2)
 })

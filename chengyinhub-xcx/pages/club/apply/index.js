@@ -245,15 +245,26 @@ Page({
   },
 
   // ===== 资质图片 =====
+  _certSlots() {
+    if (!this._certSlotIds || this._certSlotIds.length !== this.data.certImages.length) {
+      this._certSlotIds = this.data.certImages.map(() => this._nextCertSlot());
+    }
+    return this._certSlotIds;
+  },
+  _nextCertSlot() { return this._certSlotSequence = (this._certSlotSequence || 0) + 1; },
   addCerts() {
     var that = this;
     if (this.data.certUploading.length) return;
     var remain = 9 - this.data.certImages.length;
     if (remain <= 0) { toast('最多9张'); return; }
     var offset = this.data.certImages.length;
+    let slots = [];
     app.chooseImage(function () {}, remain, {
       onUploadStart(filePaths) {
         offset = that.data.certImages.length;
+        const existing = that._certSlots();
+        slots = filePaths.map(() => that._nextCertSlot());
+        that._certSlotIds = existing.concat(slots).slice(0, 9);
         const indexes = filePaths.map((_, index) => offset + index);
         that.setData({
           certImages: that.data.certImages.concat(filePaths).slice(0, 9),
@@ -263,9 +274,13 @@ Page({
       },
       onUploadDone(r, filePaths) {
         const images = that.data.certImages.slice();
-        filePaths.forEach((path, index) => { images[offset + index] = r.results[index] || path; });
-        const errors = that.data.certErrorIndexes.filter((index) => index < offset)
-          .concat((r.failures || []).map((failure) => offset + failure.index));
+        const currentSlots = that._certSlots();
+        filePaths.forEach((path, index) => {
+          const target = currentSlots.indexOf(slots[index]);
+          if (target >= 0) images[target] = r.results[index] || path;
+        });
+        const errors = that.data.certErrorIndexes.concat((r.failures || [])
+          .map(failure => currentSlots.indexOf(slots[failure.index])).filter(index => index >= 0));
         that.setData({ certImages: images.slice(0, 9), certUploading: [], certErrorIndexes: errors }, that.validate);
         return true;
       },
@@ -276,6 +291,7 @@ Page({
     const index = Number(e.detail.index);
     const path = this.data.certImages[index];
     if (!path || this.data.certUploading.length) return;
+    const slot = this._certSlots()[index];
     this.setData({
       certUploading: [index],
       certErrorIndexes: this.data.certErrorIndexes.filter((value) => value !== index),
@@ -283,18 +299,20 @@ Page({
     app.getUploadClient().uploadAll([path], {
       bizType: 'image_free',
       onDone: (r) => {
+        const target = this._certSlots().indexOf(slot);
+        if (target < 0) { this.setData({ certUploading: [] }, this.validate); return; }
         if (r.ok && r.results[0]) {
           const images = this.data.certImages.slice();
-          images[index] = r.results[0];
+          images[target] = r.results[0];
           this.setData({
             certImages: images,
             certUploading: [],
-            certErrorIndexes: this.data.certErrorIndexes.filter((value) => value !== index),
+            certErrorIndexes: this.data.certErrorIndexes.filter((value) => value !== target),
           }, this.validate);
         } else {
           this.setData({
             certUploading: [],
-            certErrorIndexes: Array.from(new Set(this.data.certErrorIndexes.concat(index))),
+            certErrorIndexes: Array.from(new Set(this.data.certErrorIndexes.concat(target))),
           }, this.validate);
         }
       },
@@ -304,9 +322,11 @@ Page({
   removeCert(e) {
     var i = e && e.detail ? e.detail.index : -1, arr = this.data.certImages.slice();
     if (!Number.isInteger(i) || i < 0 || i >= arr.length) return; // 异常索引直接忽略：splice(-1/undefined) 会删错图
+    this._certSlots().splice(i, 1);
     arr.splice(i, 1);
     this.setData({
       certImages: arr,
+      certUploading: this.data.certUploading.filter(index => index !== i).map(index => index > i ? index - 1 : index),
       certErrorIndexes: this.data.certErrorIndexes
         .filter((index) => index !== i)
         .map((index) => index > i ? index - 1 : index),

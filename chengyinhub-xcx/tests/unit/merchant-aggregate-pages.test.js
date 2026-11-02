@@ -415,7 +415,13 @@ test('项目卡按 (ownerType,ownerId) 拿各自的待办与动态，活动和�
 
   page.refreshProjectCards();
 
-  const [join, host, activity] = page.data.projectCards;
+  // 2026-11-01 业主:有待核销的卡排在前面(同档保持原顺序)
+  assert.deepEqual(page.data.projectCards.map((card) => card.key), ['join-11', 'act-77', 'host-88']);
+  const byKey = (key) => page.data.projectCards.find((card) => card.key === key);
+  const join = byKey('join-11'), host = byKey('host-88'), activity = byKey('act-77');
+  assert.equal(join.verifyCount, 3);
+  assert.equal(activity.verifyCount, 2);
+  assert.equal(host.verifyCount, 0);
   assert.equal(join.roleName, '承接');
   assert.deepEqual(join.todoChips.map((chip) => [chip.label, chip.count]), [['待核销', 3], ['待扫码', 1]]);
   assert.equal(join.msgCount, 2, '没有 topicId 的动态不许算进任一张卡');
@@ -432,6 +438,7 @@ test('项目卡按 (ownerType,ownerId) 拿各自的待办与动态，活动和�
   // 后端还没带 byTopic(小程序先于 ECS 上线的窗口)时,不许替后端宣布"今日无待办"
   page.data.todo = Object.assign({}, page.data.todo, { byProject: undefined });
   page.refreshProjectCards();
+  assert.equal(page.data.projectCards[0].verifyCount, 0, '待办没取到时不显示待核销');
   assert.equal(page.data.projectCards[0].todoText, '',
     '待办没取到时卡上这格留空：不谎报"无待办"，也不在每张卡上写报错文案');
 });

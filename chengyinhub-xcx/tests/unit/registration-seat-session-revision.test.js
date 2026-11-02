@@ -212,3 +212,11 @@ test('legacy issuer with unreadable mandatory session revision sends no request 
     _sessionKey: () => 'original', _isPlayAccountCurrent: () => true, setData: patch => updates.push(patch) });
   page.ensureTicket(); assert.deepEqual(requests, []); assert.deepEqual(updates, []); h.flow.destroy();
 });
+
+test('same-role refill keeps revision: home role refresh must not cancel in-flight reads', () => {
+  const h = fixture(), original = h.context(); h.run(original);
+  assert.equal(h.session.getRevision(), 1);
+  h.app.setUserRole('merchant'); h.app.setUserRole({ role: 'merchant', isClubLeader: false });
+  assert.equal(h.session.getRevision(), 1); assert.equal(h.session.getUserRole(), 'merchant');
+  assert.equal(seats.loginCurrent(h.app, h.wx, original.login), true); h.flow.destroy();
+});
