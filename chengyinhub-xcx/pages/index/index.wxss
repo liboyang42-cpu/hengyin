@@ -365,7 +365,7 @@ page {
 
 /* —— 附近活动:双列竖卡 —— */
 /* ADA 8pt:卡间恒 24rpx */
-.v3-nearby-row { display: inline-flex; gap: var(--cy-space-3); padding: 0 var(--cy-space-4); }
+.v3-nearby-row { display: inline-flex; gap: var(--cy-space-3); padding: 0 var(--cy-space-4); vertical-align: top; } /* 实测:inline-flex 落在基线上,区块底多出约 6px 字下沿空隙,区块间距 38 对 32 */
 .v3-nearby-card {
   position: relative;
   flex: none;
@@ -529,7 +529,7 @@ page {
 }
 
 /* —— 即将上线:Figma 3586:13013 图片底卡 —— */
-.v3-upcoming-row { display: inline-flex; gap: var(--cy-space-3); padding: 0 var(--cy-space-4); }
+.v3-upcoming-row { display: inline-flex; gap: var(--cy-space-3); padding: 0 var(--cy-space-4); vertical-align: top; } /* 实测:inline-flex 落在基线上,区块底多出约 6px 字下沿空隙,区块间距 38 对 32 */
 .v3-upreview {
   position: relative;
   flex: none;
@@ -580,7 +580,7 @@ page {
 /* P-03(2026-10-27):「主题 / 活动」tab 下的横线和第一张卡之间留 24rpx。 */
 .v3-feed .page-tab { padding: 0 var(--cy-space-4); margin-bottom: var(--cy-space-3); }
 
-.v2-feed { padding: 0 var(--cy-page-x); }
+.v2-feed { padding: 0 var(--cy-page-x); } .v2-feed-sk { display: block; margin: 0 calc(-1 * var(--cy-page-x)); } /* H-04:骨架自带 --cy-page-x 内边距,抵掉外层同值,骨架卡与真卡同一左缘 */
 .v2-fitem { margin-bottom: var(--cy-space-5); }
 /* 2026-10-28 业主:主题都有封面 —— 整张卡就是封面图,类型 / 名字 / 标签压在底部渐变上 */
 .v2-fcard {

@@ -228,7 +228,7 @@
             
             action="重试" bind:action="retryBottomTopic" />
           <view class="loading-more" wx:if="{{isBottomLoading && hasMoreBottomTopic}}"><text>正在加载更多</text></view>
-          <cy-skeleton wx:if="{{!listLoaded.bottomTopicList && !bottomTopicList.length && !bottomTopicFailedPage}}" type="feed-card" count="2" />
+          <cy-skeleton class="v2-feed-sk" wx:if="{{!listLoaded.bottomTopicList && !bottomTopicList.length && !bottomTopicFailedPage}}" type="feed-card" count="2" />
           <cy-empty wx:if="{{listLoaded.bottomTopicList && !bottomTopicList.length && !bottomTopicFailedPage}}" title="暂时没有主题" />
           <view class="no-more" wx:if="{{!hasMoreBottomTopic && bottomTopicList.length > 0}}"><text>· 没有更多了 ·</text></view>
         </view>
@@ -265,7 +265,7 @@
             
             action="重试" bind:action="retryBottomActivity" />
           <view class="loading-more" wx:if="{{isBottomLoading && hasMoreBottomActivity}}"><text>正在加载更多</text></view>
-          <cy-skeleton wx:if="{{!listLoaded.bottomActivityList && !bottomActivityList.length && !bottomActivityFailedPage}}" type="feed-card" count="2" />
+          <cy-skeleton class="v2-feed-sk" wx:if="{{!listLoaded.bottomActivityList && !bottomActivityList.length && !bottomActivityFailedPage}}" type="feed-card" count="2" />
           <cy-empty wx:if="{{listLoaded.bottomActivityList && !bottomActivityList.length && !bottomActivityFailedPage}}" title="暂时没有活动" />
           <view class="no-more" wx:if="{{!hasMoreBottomActivity && bottomActivityList.length > 0}}"><text>· 没有更多了 ·</text></view>
         </view>
