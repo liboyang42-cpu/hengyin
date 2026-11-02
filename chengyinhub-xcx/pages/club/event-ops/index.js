@@ -7,6 +7,7 @@ const motion = require('../../../utils/motion.js')
 const { readReducedMotion } = require('../../../utils/motion-preference.js')
 const { bizFailureMessage } = require('../../../utils/response-shape.js')
 const { safeUserMessage } = require('../../../utils/transport/safe-user-message.js')
+const { callableNumber, callMember } = require('../../../utils/club-phone-call.js')
 
 const RECURRENCES = [
   { value: 'ONCE', label: '单次' },
@@ -1100,11 +1101,17 @@ Page({
         const waitlist = data && normalizeRows(data.waitlist)
         const arrived = data && normalizeRows(data.arrived)
         const noShow = data && normalizeRows(data.noShow)
+        // 2026-11-02:有号码权限(主理人/副主理人/本场领队/勾了开关的核销员)时 phoneIncluded=true,
+        // 行上带完整号码;否则必须是 false 且行上不许有号码。其它值一律当坏回包。
         if (!data || registered === null || waitlist === null || arrived === null || noShow === null
-            || data.phoneIncluded !== false) {
+            || typeof data.phoneIncluded !== 'boolean') {
           that.setData({ rosterState: 'error', rosterError: bizFailureMessage(res, '名册加载失败') })
           return
         }
+        const keepPhone = data.phoneIncluded === true
+        ;[registered, waitlist, arrived, noShow].forEach(function (rows) {
+          rows.forEach(function (row) { row.phone = keepPhone ? callableNumber(row.phone) : '' })
+        })
         const buckets = { registered, waitlist, arrived, noShow }
         const window = normalizeCorrectionWindow(data.correctionWindow)
         that._rosterBuckets = buckets // C-10:分段人数已写进标签,四个分段不再整份进 data
@@ -1122,6 +1129,9 @@ Page({
         that.setData({ rosterState: 'error', rosterError: (res && res.msg) || '名册加载失败' })
       },
     })
+  },
+  callRosterMember(e) {
+    callMember(e.currentTarget.dataset.phone, () => toast('拨号未完成，请重试'))
   },
   chooseRosterTab(e) {
     const tab = String((e.detail && e.detail.key) || '')

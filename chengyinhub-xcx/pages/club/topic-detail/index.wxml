@@ -585,6 +585,10 @@
           <text class="cli-sub">{{item.timeText}}</text>
           <text class="cli-sub">{{item.phoneText}}</text>
         </view>
+        <view wx:if="{{item.phoneCallable}}" class="cli-call" data-phone="{{item.phoneText}}" bindtap="callCustomerRow"
+          aria-role="button" aria-label="拨打 {{item.displayName}} 的电话" hover-class="cy-pressed" hover-stay-time="80">
+          <cy-icon name="phone" size="32" />
+        </view>
         <view class="cli-right">
           <text class="cli-state cli-state--{{item.statusCode}}">{{item.statusText}}</text>
           <text wx:if="{{item.verifyText}}" class="cli-sub">{{item.verifyText}}</text>

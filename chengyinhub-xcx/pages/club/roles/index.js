@@ -173,6 +173,8 @@ Page({
     selectedMemberName: '',
     selectedRoleCode: '',
     selectedRoleName: '',
+    // 稿 R1:「可见客户手机号」只对活动核销员出现,默认否;服务端按委派逐条授权
+    customerPhoneVisible: false,
     state: 'loading', // loading | no-permission | network-error | error(业务) | empty | ready
     errorText: '',
     members: [],
@@ -344,7 +346,8 @@ Page({
       return Object.assign({}, assignment, {
         memberName: memberNames[String(assignment.targetMemberId)] || ('成员 #' + assignment.targetMemberId),
         roleName: roleNames[assignment.roleCode] || '角色',
-        roleSummary: roleSummaries[assignment.roleCode] || '',
+        roleSummary: (roleSummaries[assignment.roleCode] || '')
+          + (assignment.customerPhoneVisible === true ? ' · 可见客户手机号' : ''),
         // CU-C-57:委派行补上作用期限(后端 VO 一直带着 expiresAt,前端此前没显示)
         expiresText: expiryText(assignment.expiresAt),
       })
@@ -374,7 +377,14 @@ Page({
       selectedRoleCode: roleCode,
       selectedRoleName: (row && row.name) || '',
       rolePickerVisible: false,
+      // 换成别的角色时开关归零:只有活动核销员能带这项授权(服务端同样拒绝)
+      customerPhoneVisible: roleCode === 'EVENT_CHECKIN' ? this.data.customerPhoneVisible : false,
     })
+  },
+
+  toggleCustomerPhoneVisible() {
+    if (this.data.actingKey || this.data.selectedRoleCode !== 'EVENT_CHECKIN') return
+    this.setData({ customerPhoneVisible: !this.data.customerPhoneVisible })
   },
 
   // 稿上是一个「分配」大按钮,成员与角色都已经在上面两行选好了 —— 不再从 dataset 取角色
@@ -391,12 +401,14 @@ Page({
     }
     const payload = { clubId: this.data.clubId, targetMemberId: memberId, roleCode }
     if (role.scopeType === 'EVENT') payload.activityId = this.data.activityId
+    if (roleCode === 'EVENT_CHECKIN' && this.data.customerPhoneVisible) payload.customerPhoneVisible = true
     this.submitAssignment(payload)
   },
 
   submitAssignment(payload) {
     const that = this
     const key = 'assign:' + payload.targetMemberId + ':' + payload.roleCode
+      + (payload.customerPhoneVisible ? ':phone' : '')
     const intentKey = [key, payload.clubId, payload.activityId || 'club'].join(':')
     this._roleRequestIds = this._roleRequestIds || {}
     const requestId = this._roleRequestIds[intentKey]

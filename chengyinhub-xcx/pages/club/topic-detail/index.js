@@ -5,6 +5,7 @@
 // (「这一站玩什么」是讲给商家听的「玩家到店会跟你做什么」),不是俱乐部要看的东西。
 // 日常详情不跳 merchantinfo；只有「承接审核」显式复用它已有的主办方审核台，避免复制审核链。
 const toast = require('../../../utils/toast.js');
+const { callMember } = require('../../../utils/club-phone-call.js');
 const cancellationIntent = require('../../../utils/topic-cancellation-intent.js');
 const { resolveMenuChrome } = require('../../../utils/nav-safe-area.js');
 const app = getApp();
@@ -59,6 +60,8 @@ function flattenCustomerRows(sessions) {
         initial: name.slice(0, 1),
         timeText: timeText,
         phoneText: r.phoneText || '',
+        // 2026-11-02:服务端判了能拨(主理人/副主理人/本场领队/勾了开关的核销员)才给拨号键
+        phoneCallable: r.phoneCallable === true && /^1\d{10}$/.test(String(r.phoneText || '')),
         statusCode: r.statusCode,
         statusText: r.statusText || '',
         verifyText: r.timeText && r.timeText !== '—' ? r.timeText : '',
@@ -973,6 +976,9 @@ Page({
   },
   closeCustomers() { this._customerSeq = (this._customerSeq || 0) + 1; this.setData({ customerSheetVisible: false }); },
 
+  callCustomerRow(e) {
+    callMember(e.currentTarget.dataset.phone, () => toast('拨号未完成，请重试'))
+  },
   onCustomerFilter(e) {
     const value = e.currentTarget.dataset.value || '';
     if (value === this.data.customerFilter) return;

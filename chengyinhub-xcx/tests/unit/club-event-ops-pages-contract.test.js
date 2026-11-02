@@ -63,7 +63,10 @@ test('活动名册只有真实四段与更正接口，并覆盖加载、空、�
   assert.match(wxml, /activeRoster\.length === 0/)
   assert.match(js, /actingMemberId/)
   assert.match(js, /\/api\/club\/event-ops\/attendance\/correct/)
-  assert.match(js, /data\.phoneIncluded !== false/)
+  // 2026-11-02:phoneIncluded 必须是布尔;false 时行上的号码一律清掉,true 时只留 11 位手机号
+  assert.match(js, /typeof data\.phoneIncluded !== 'boolean'/)
+  assert.match(js, /row\.phone = keepPhone \? callableNumber\(row\.phone\) : ''/)
+  assert.match(wxml, /wx:if="\{\{item\.phone\}\}" class="member-call"[^>]*bindtap="callRosterMember"/)
 })
 
 test('活动运营页权限未知或无权时 fail-closed', () => {

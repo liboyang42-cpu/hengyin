@@ -10,6 +10,7 @@
  */
 const app = getApp();
 const toast = require('../../../utils/toast.js');
+const { callMember } = require('../../../utils/club-phone-call.js');
 const { bizFailureMessage } = require('../../../utils/response-shape.js');
 const cancellationFeedback = require('../../../utils/cancellation-feedback.js');
 const modal = require('../../../utils/modal.js');
@@ -53,6 +54,13 @@ Page({
     this.load();
   },
   onPullDownRefresh() { this.load(true); },
+
+  // 2026-11-02:服务端判了 phoneCallable(主理人/副主理人/本场领队/勾了开关的核销员)才出拨号键
+  callParticipant() {
+    const d = this.data.detail;
+    if (!d || d.phoneCallable !== true) return;
+    callMember(d.phoneText, () => toast('拨号未完成，请重试'));
+  },
 
   load(fromPull) {
     if (this.data.state !== 'ready') this.setData({ state: 'loading' });

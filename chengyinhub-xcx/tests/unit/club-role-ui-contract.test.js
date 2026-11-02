@@ -753,3 +753,54 @@ test('委派行的作用期限来自后端 expiresAt，没有期限就不编一�
   assert.match(read('pages/club/roles/index.wxml'), /\{\{item\.expiresText\}\}/,
     '算出来的期限要在委派行里渲染')
 })
+
+// 2026-11-02 用户(ROUND3B 手机号 / 稿 R1):「可见客户手机号」只在选了活动核销员时出现,默认否;
+// 打开后分配请求才带 customerPhoneVisible:true,换成别的角色自动归零。服务端另有同一条校验。
+test('活动核销员分配带「可见客户手机号」开关，默认否，其它角色不带', () => {
+  const harness = createHarness()
+  harness.page.onLoad({ clubId: '9', activityId: '71' })
+  harness.requests[0].success({
+    code: '200',
+    data: { active: true, canManageRoles: true, club: { id: 9, name: '夜行者' }, permissions: ['club:role:manage'] },
+  })
+  const list = requestByUrl(harness, '/api/club/roles/list')
+  list.success({ code: '200', data: {
+    roles: [
+      { roleCode: 'EVENT_LEAD', name: '活动领队', scopeType: 'EVENT', permissions: ['club:event:operate'] },
+      { roleCode: 'EVENT_CHECKIN', name: '活动核销员', scopeType: 'EVENT', permissions: ['club:event:checkin'] },
+    ],
+    assignments: [{ id: 5, targetMemberId: 902, roleCode: 'EVENT_CHECKIN', scopeType: 'EVENT', scopeId: 71, version: 0, customerPhoneVisible: true }],
+  } })
+  requestByUrl(harness, '/api/club/members').success({ code: '200', data: [
+    { id: 1, memberId: 900, nickname: '主理人', isOwner: true },
+    { id: 2, memberId: 901, nickname: '小林', isOwner: false },
+    { id: 3, memberId: 902, nickname: '阿青', isOwner: false },
+  ] })
+  const wxml = read('pages/club/roles/index.wxml')
+  assert.match(wxml, /wx:if="\{\{selectedRoleCode === 'EVENT_CHECKIN'\}\}"[\s\S]{0,260}可见客户手机号[\s\S]{0,120}customerPhoneVisible \? '是' : '否'/)
+  const row = harness.page.data.assignments.find((a) => a.id === 5)
+  assert.ok(row && /可见客户手机号/.test(row.roleSummary), '已授权的委派行要写明')
+
+  harness.page.pickMember({ currentTarget: { dataset: { memberId: 901 } } })
+  harness.page.pickRole({ currentTarget: { dataset: { roleCode: 'EVENT_CHECKIN' } } })
+  assert.equal(harness.page.data.customerPhoneVisible, false, '默认否')
+  let before = harness.requests.length
+  harness.page.assignRole()
+  let payload = JSON.parse(requestByUrl(harness, '/api/club/roles/assign', before).data)
+  assert.equal('customerPhoneVisible' in payload, false)
+  requestByUrl(harness, '/api/club/roles/assign', before).fail()
+
+  harness.page.toggleCustomerPhoneVisible()
+  assert.equal(harness.page.data.customerPhoneVisible, true)
+  before = harness.requests.length
+  harness.page.assignRole()
+  payload = JSON.parse(requestByUrl(harness, '/api/club/roles/assign', before).data)
+  assert.equal(payload.customerPhoneVisible, true)
+  assert.equal(payload.activityId, 71)
+  requestByUrl(harness, '/api/club/roles/assign', before).fail()
+
+  harness.page.pickRole({ currentTarget: { dataset: { roleCode: 'EVENT_LEAD' } } })
+  assert.equal(harness.page.data.customerPhoneVisible, false, '换角色归零')
+  harness.page.toggleCustomerPhoneVisible()
+  assert.equal(harness.page.data.customerPhoneVisible, false, '领队不能打开这项')
+})

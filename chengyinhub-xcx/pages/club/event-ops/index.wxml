@@ -85,6 +85,11 @@
           <view class="member-main">
             <text class="member-name">{{item.displayName || item.nickname}}</text>
             <text class="member-meta" wx:if="{{rosterTab === 'waitlist'}}">{{item.state}}</text>
+            <text class="member-meta" wx:elif="{{item.phone}}">{{item.phone}}</text>
+          </view>
+          <view wx:if="{{item.phone}}" class="member-call" data-phone="{{item.phone}}" bindtap="callRosterMember"
+            aria-role="button" aria-label="拨打 {{item.displayName || item.nickname}} 的电话" hover-class="cy-pressed" hover-stay-time="80">
+            <cy-icon name="phone" size="32" />
           </view>
           <view wx:if="{{rosterTab !== 'waitlist'}}" class="correct-btn {{actingMemberId || !correctionOperable ? 'disabled' : ''}}"
             data-member-id="{{item.memberId}}" data-version="{{item.correctionVersion}}"

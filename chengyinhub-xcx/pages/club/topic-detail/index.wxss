@@ -298,3 +298,5 @@
 .ctd-generic-ops__input { width: 100%; box-sizing: border-box; min-height: var(--cy-btn-h); padding: var(--cy-space-3); border-radius: var(--cy-radius-md); background: var(--cy-color-bg-raised); color: var(--cy-color-text-primary); font-size: var(--cy-type-body); }
 .ctd-generic-ops__confirm { margin-top: var(--cy-space-4); padding-bottom: var(--cy-space-5); }
 .ctd-plan-fallback__input{width:100%;box-sizing:border-box;padding:var(--cy-space-3);border-radius:var(--cy-radius-md);background:var(--cy-color-bg-elevated);color:var(--cy-color-text-primary);font-size:var(--cy-type-body)}
+/* 2026-11-02:有号码权限时报名参与者行的拨号键(≥88rpx 触控) */
+.cli-call { flex: none; width: 88rpx; height: 88rpx; display: flex; align-items: center; justify-content: center; color: var(--cy-color-text-primary); }

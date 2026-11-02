@@ -8,6 +8,7 @@
 //   2) 金额:paidAmount 为 null = 本岗位无金额查看权限(K2-B),不是加载失败。
 //   3) 是否能编辑标签备注:canEdit 由服务端下发,前端不按角色自行推断。
 const toast = require('../../../utils/toast.js');
+const { callMember } = require('../../../utils/club-phone-call.js');
 const app = getApp();
 const { buildTagRemarkDraft, positiveId, shapeCustomerDetail } = require('../customers/view-model.js');
 
@@ -66,6 +67,13 @@ Page({
   },
 
   onPullDownRefresh() { this.load(); },
+
+  // 2026-11-02:只有服务端判了 phoneCallable(主理人/副主理人)才出这颗键
+  callCustomer() {
+    const s = this.data.detail && this.data.detail.summary;
+    if (!s || !s.phoneCallable) return;
+    callMember(s.phoneText, () => toast('拨号未完成，请重试'));
+  },
 
   goBack() {
     if (getCurrentPages().length > 1) { wx.navigateBack({ delta: 1 }); return; }
