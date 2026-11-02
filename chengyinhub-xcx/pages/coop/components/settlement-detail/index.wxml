@@ -1,3 +1,4 @@
+<wxs src="../../../../utils/wxs/count.wxs" module="cnt" />
 <view class="sd" wx:if="{{detail}}">
   <view class="sd__hero order-summary">
     <view class="sd__hero-head">
@@ -8,7 +9,7 @@
       <cy-badge type="status" variant="{{detail.statusVariant}}" label="{{detail.status}}" />
     </view>
     <text class="sd__amount-label">{{detail.amountLabel}}</text>
-    <text class="sd__amount">{{detail.amount}}</text>
+    <text class="sd__amount">{{cnt.money(detail.amount, countK)}}</text>
   </view>
 
   <view class="sd__section" wx:if="{{detail.lines.length}}">

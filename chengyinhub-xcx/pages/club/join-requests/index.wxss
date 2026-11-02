@@ -1,8 +1,9 @@
 page { background: var(--cy-bg-page); }
-.page { min-height: 100vh; display: flex; flex-direction: column; box-sizing: border-box; padding-bottom: var(--cy-space-5); }
+.page { position: relative; min-height: 100vh; display: flex; flex-direction: column; box-sizing: border-box; padding-bottom: var(--cy-space-5); }
 cy-empty { display: flex !important; flex: 1 !important; min-height: 0; }
 .intro { padding: 0 var(--cy-page-x) var(--cy-space-3); color: var(--cy-text-secondary); font-size: var(--cy-font-label); }
-.refreshing { padding: 0 var(--cy-page-x) var(--cy-space-2); color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }
+/* CP-05:刷新提示浮在列表上不占位(.cy-refresh-float),页面形状不变 */
+.refreshing { padding: var(--cy-space-1) var(--cy-space-3); border-radius: var(--cy-radius-pill); background: var(--cy-bg-elevated); white-space: nowrap; color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }
 .request-list-error { margin: 0 var(--cy-page-x) var(--cy-space-3); }
 .list-inline-error { margin: 0 var(--cy-page-x) var(--cy-space-3); }
 .request-list { padding: 0 var(--cy-page-x); }

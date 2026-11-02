@@ -259,7 +259,7 @@
             </view>
           </view>
           <button wx:if="{{voiceFinalizing}}" class="npc-voice-hold" disabled>正在保存…</button>
-          <button wx:elif="{{voiceSentenceReady}}" class="npc-voice-hold" bindtap="confirmVoiceSentence" aria-label="确认这句">确认这句</button>
+          <button wx:elif="{{voiceSentenceReady}}" class="npc-voice-hold" hover-class="cy-pressed" hover-stay-time="80" bindtap="confirmVoiceSentence" aria-label="确认这句">确认这句</button>
           <button wx:else class="npc-voice-hold {{voiceHolding ? 'npc-voice-hold--active' : ''}}" hover-class="none" bindtouchstart="onVoiceHoldStart" bindtouchend="onVoiceHoldEnd" bindtouchcancel="onVoiceHoldEnd" aria-label="{{voiceHolding ? '松开结束' : '按住说话'}}">
             {{voiceHolding ? '松开结束' : '按住说话'}}
           </button>
@@ -268,7 +268,7 @@
             <text class="npc-voice-complete__title">三句已录好</text>
             <text class="dc-muted">{{voiceFile.duration || 0}} 秒 · 确认声音清晰、没有背景音乐</text>
           </view>
-          <button wx:if="{{voiceFile}}" class="npc-voice-hold" bindtap="playVoice" aria-label="{{voicePlaying ? '暂停试听录音' : '试听录音'}}">{{voicePlaying ? '暂停试听' : '试听录音'}}</button>
+          <button wx:if="{{voiceFile}}" class="npc-voice-hold" hover-class="cy-pressed" hover-stay-time="80" bindtap="playVoice" aria-label="{{voicePlaying ? '暂停试听录音' : '试听录音'}}">{{voicePlaying ? '暂停试听' : '试听录音'}}</button>
         </view>
         <view wx:if="{{voiceFile}}" class="dc-sheet-actions">
           <cy-btn variant="secondary" bindtap="resetVoiceRecording" disabled="{{voiceBusy || voiceUnknown}}">

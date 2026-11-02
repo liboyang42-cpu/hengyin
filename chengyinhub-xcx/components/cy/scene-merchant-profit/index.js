@@ -215,7 +215,7 @@ Component({
           const withdrawState = myIncomeTotal == null ? 'unknown' : (canWithdraw ? 'positive' : 'zero');
           const pendingCount = rows.filter(function (row) { return weight(row) < 3; }).length;
           that._dataIdentity = that._loadIdentity;
-          pageMotion.enter(that, 'pmList'); that.setData({
+          if (!that.data.loaded) pageMotion.countMoney(that, 'pfK'); pageMotion.enter(that, 'pmList'); that.setData({ // 2026-11-02 X-1:已入账分润首次落地慢-快-慢
             topics: rows,
             myIncomeTotal: myIncomeTotal,
             canWithdraw: canWithdraw,

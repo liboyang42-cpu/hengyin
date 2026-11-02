@@ -89,7 +89,7 @@ Page({
     rangeText: kmText(DEFAULT_RADIUS), pcTop: 200, mddLeft: 16,
     myTeamsN: 0,
     viewMode: 'map',        // map | list(2026-10-14 地图优化)
-    listRows: [], layer: 'all', layerSub: '', layerSheet: '', layerItems: [], poiCard: null, poiCardIn: false, poiFlip: false, poiExpand: false, pcClip: '', poiPhoto: 0, camOpen: false, privacyGateShow: false, // 2026-10-22 筛选行与地标/商家点位卡
+    listRows: [], listLoaded: false, layer: 'all', layerSub: '', layerSheet: '', layerItems: [], poiCard: null, poiCardIn: false, poiFlip: false, poiExpand: false, pcClip: '', poiPhoto: 0, camOpen: false, privacyGateShow: false, // 2026-10-22 筛选行与地标/商家点位卡
     myReadAccess: '', myReadError: false, myLoaded: false,
     rangeItems: RANGE_ITEMS,
     rangeIndex: T.RADII.indexOf(DEFAULT_RADIUS), rangeAll: false,
@@ -188,7 +188,7 @@ Page({
     this._nearbyReadOwner = owner;
     this._teamSeq = (this._teamSeq || 0) + 1;
     this._topicSeq = (this._topicSeq || 0) + 1;
-    this._nearbyTeamsLoaded = false;
+    this._nearbyTeamsLoaded = false; this._nearbyTopicsLoaded = false;
     this._nearbyFailures = { teams: false, topics: false };
     this._teams = []; this._items = []; this._icons = {}; this._far = {}; this._iconFailed = {}; this._selfIcon = '';
     this.setData({ headerText: '附近', nearbyReadAccess: '', loadError: false,
@@ -243,7 +243,7 @@ Page({
     if (!owner) return;
     const seq = (this._teamSeq = (this._teamSeq || 0) + 1);
     this._nearbyTeamsLoaded = false;
-    this.setData({ headerText: '附近', nearbyReadAccess: '' });
+    this.setData({ headerText: '附近', nearbyReadAccess: '', listLoaded: false });
     this._nearbyLayerResult('teams', false);
     const current = () => that._nearbyCurrent('teams', owner, seq);
     const failed = (res, status) => {
@@ -272,11 +272,11 @@ Page({
     const owner = this._prepareNearbyRead();
     if (!owner) return;
     const seq = (this._topicSeq = (this._topicSeq || 0) + 1);
-    this._nearbyLayerResult('topics', false);
+    this._nearbyTopicsLoaded = false; this.setData({ listLoaded: false }); this._nearbyLayerResult('topics', false);
     const current = () => that._nearbyCurrent('topics', owner, seq);
     const failed = (res, status) => {
       if (that._nearbyOutcome('topics', owner, seq, res, status)) return;
-      that._items = []; that._syncMarkers(); that._nearbyLayerResult('topics', true);
+      that._items = []; that._nearbyTopicsLoaded = false; that._syncMarkers(); that._nearbyLayerResult('topics', true);
     };
     app.sendRequest({
       url: '/api/roam/hangout/nearby', method: 'GET', hideLoading: true, silentError: true,
@@ -285,7 +285,7 @@ Page({
         if (that._nearbyOutcome('topics', owner, seq, res)) return;
         const d = res && res.code == 200 && res.data ? res.data : null;
         if (!d || !isRecordList(d.items)) { failed(res); return; }
-        that._items = d.items.filter((it) => L.keepItem(it)); that._syncLayerOptions(); that._nearbyLayerResult('topics', false);
+        that._items = d.items.filter((it) => L.keepItem(it)); that._nearbyTopicsLoaded = true; that._syncLayerOptions(); that._nearbyLayerResult('topics', false);
         that._syncMarkers();
         const items = that._items;
         that._queueIcons(() => current() ? that._genIcons(items, current) : false).then((made) => { if (made && current()) that._syncMarkers(); });
@@ -324,7 +324,7 @@ Page({
     this.setData({
       markers: L.edgeLod(P.applyPins(raw, this._pins), this._lodCenter || this.data.center, this._lodRadius || this._radius).filter((m) => !hide || m.id !== hide),
       headerText: '附近' + (this._nearbyTeamsLoaded ? ' · ' + (this._teams || []).length + ' 支队伍' : '') + (places ? ' · ' + places + ' 处地点' : '') + (shops ? ' · ' + shops + ' 家商家' : ''), // v13 计数条;队伍没读到不写 0
-      listRows: this._listRows(items, teams, pois),
+      listRows: this._listRows(items, teams, pois), listLoaded: !!(this._nearbyTeamsLoaded && this._nearbyTopicsLoaded), // N-01:两路都读到之前不说「附近暂无节点」、不写假的 0
     });
     this._wantPins(items, teams, pois);
   },

@@ -6,10 +6,11 @@
     "cy-toast": "/components/cy/toast/index",
     "cy-loading-mask": "/components/cy/loading-mask/index",
     "cy-modal-host": "/components/cy/modal-host/index",
-    "tpl-shelf": "/pages/templatedetail/shelf/index"
+    "tpl-shelf": "/pages/templatedetail/shelf/index",
+    "cy-skeleton": "/components/cy/skeleton/index"
   },
   "componentPlaceholder": {
-    "tpl-shelf": "view"
+    "tpl-shelf": "cy-skeleton"
   },
   "navigationStyle": "custom",
   "navigationBarTitleText": ""

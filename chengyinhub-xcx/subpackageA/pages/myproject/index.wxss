@@ -1,7 +1,7 @@
-@import '../../../style/merchant-light.wxss';
+@import '../../../style/merchant-light-scope.wxss';
 @import '../../../style/threads-menu.wxss';
 
-.mp-page { min-height: 100vh; background: var(--cy-bg-page); padding-bottom:var(--cy-space-4); }
+.mp-page { position: relative; min-height: 100vh; background: var(--cy-bg-page); padding-bottom:var(--cy-space-4); }
 
 .mp-tabs { padding:0 var(--cy-page-x) 0; } /* aaa v2:标题下间距由 cy-page-title space-5 独家供给 */
 
@@ -65,7 +65,8 @@
 .mp-more { text-align: center; padding:32rpx; color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }
 /* CU-M-174 同一条病的第二个实例:这一档在 wxss 里原本一条规则都没有,"正在同步最新项目…"
    就以裸文本贴在 x=0 渲染。只补左安全边距,字号/颜色不动(不在本条走查射程)。 */
-.mp-refreshing { padding-left: var(--cy-page-x); }
+/* X1:刷新状态浮在内容上不占位(共用 .cy-refresh-float),列表不再被顶下去 */
+.mp-refreshing { padding: var(--cy-space-1) var(--cy-space-3); border-radius: var(--cy-radius-pill); background: var(--cy-color-bg-elevated); white-space: nowrap; }
 
 /* aaa 标准:空态整体居中、大字、留白(此前 .mp-empty 系列缺样式,渲染成贴边裸文本) */
 .mp-state { min-height: 60vh; display: flex; flex-direction: column; }
