@@ -23,15 +23,26 @@ Component({
     failText: '',
   },
   observers: {
-    show(visible) { if (visible) this.reset() },
+    show(visible) { this._receiptEpoch = (this._receiptEpoch || 0) + 1; if (visible) this.reset() },
   },
+  lifetimes: { detached() { this._receiptEpoch = (this._receiptEpoch || 0) + 1 } },
   methods: {
     reset() {
+      this._receiptEpoch = (this._receiptEpoch || 0) + 1
       this._issues = null
       this._issueType = ''
       this._key = ''
       this._busy = false; this._navigating = false // 每次打开半屏兜底清跳转中标记
       this.setData({ stage: 'loading', issueLabels: [], issueLabel: '', description: '', descriptionError: '', receiptText: '', failText: '' })
+      try {
+        const owner = String(app.getUserID && app.getUserID() || '')
+        const saved = owner && model.loadPending(wx, owner, this.properties.merchantId)
+        if (saved) {
+          this._key = saved.idempotencyKey; this._issueType = saved.issueType
+          this.setData({ stage: 'unknown', issueLabel: model.ISSUE_LABELS[saved.issueType], description: saved.description, failText: NET_FAIL })
+          return
+        }
+      } catch (error) { this.setData({ stage: 'unknown', failText: error.message }); return }
       this.loadTaxonomy()
     },
     loadTaxonomy() {
@@ -74,13 +85,23 @@ Component({
     backToPick() { if (!this._busy) this.setData({ stage: 'pick' }) },
     submit() {
       if (this._busy) return
+      const owner = String(app.getUserID && app.getUserID() || '')
+      if (!owner) { this.setData({ stage: 'fail', failText: '登录后才能提交纠错' }); return }
       const checked = model.checkDescription(this.data.description)
       if (!checked.ok) { this.setData({ descriptionError: checked.error }); return }
       const merchantId = this.properties.merchantId
       if (!this._key) this._key = model.makeIdempotencyKey(merchantId)
-      const payload = model.buildPayload({
+      let payload = model.buildPayload({
         merchantId, issueType: this._issueType, description: checked.value, idempotencyKey: this._key,
       })
+      try {
+        payload = model.loadPending(wx, owner, merchantId) || payload
+        model.savePending(wx, owner, payload)
+      } catch (error) { this.setData({ stage: 'unknown', failText: error.message }); return }
+      const epoch = this._receiptEpoch
+      const current = () => epoch === this._receiptEpoch && owner === String(app.getUserID && app.getUserID() || '')
+        && String(merchantId) === String(this.properties.merchantId)
+      const unknown = () => { if (current()) { this._busy = false; this.setData({ stage: 'unknown', failText: NET_FAIL }) } }
       this._busy = true
       this.setData({ stage: 'busy' })
       app.sendRequest({
@@ -88,22 +109,26 @@ Component({
         data: JSON.stringify(payload),
         header: { 'Content-Type': 'application/json' },
         success: (res) => {
+          if (!current()) return
           this._busy = false
           if (!isBizOk(res)) {
-            // 业务拒绝(已提交过该商家/类型不合法等):换键,改完再提交是新请求;原话展示。
+            if (![400, 401, 403, 422].includes(Number(res && res.code))) { unknown(); return }
+            try { if (!model.clearPending(wx, owner, payload)) { unknown(); return } } catch (error) { unknown(); return }
             this._key = ''
             this.setData({ stage: 'fail', failText: (res && res.msg) || '纠错没有提交成功，请稍后再试' })
             return
           }
-          this._key = ''
           const receipt = model.receiptOf(res.data)
+          if (!receipt.id || !receipt.statusText) { unknown(); return }
+          try { if (!model.clearPending(wx, owner, payload)) { unknown(); return } } catch (error) { unknown(); return }
+          this._key = ''
           const parts = []
           if (receipt.id) parts.push('受理编号 ' + receipt.id)
           if (receipt.statusText) parts.push('当前状态：' + receipt.statusText)
           this.setData({ stage: 'ok', receiptText: parts.length ? parts.join('，') + '。' : '' })
         },
-        fail: () => { this._busy = false; this.setData({ stage: 'unknown', failText: NET_FAIL }) },
-        successStatusAbnormal: () => { this._busy = false; this.setData({ stage: 'unknown', failText: NET_FAIL }) },
+        fail: unknown,
+        successStatusAbnormal: unknown,
       })
     },
     backToForm() { if (!this._busy) this.setData({ stage: 'form' }) },

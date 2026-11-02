@@ -122,6 +122,7 @@ Component({
       this._listFetchInFlight = 0
       this.setData({ loading: false })
       if (this._workflow) this._workflow.destroy()
+      Object.values(this._paymentWorkflows || {}).forEach(flow => flow.destroy())
     },
   },
   pageLifetimes: {
@@ -130,6 +131,7 @@ Component({
       this._syncCancellationAccount()
       this._hidden = false
       if (this._detached) return
+      this._syncPaymentAccount()
       if (this._listFetchInFlight && this._listMemberId === (app.getUserID && app.getUserID())) return
       // 返回页刷新保留已确认列表；失败时给非阻断提示，不把订单替换成整屏错误。
       this.setData({ page_no: 1, nodata: false, errorMsg: '' })
@@ -138,6 +140,15 @@ Component({
     hide() { this._hidden = true },
   },
   methods: {
+    _syncPaymentAccount() {
+      const owner = String(app.getUserID && app.getUserID() || '')
+      if (this._paymentOwner === owner) return
+      if (this._workflow) this._workflow.destroy()
+      Object.values(this._paymentWorkflows || {}).forEach(flow => flow.destroy())
+      this._paymentOwner = owner
+      this._paymentWorkflows = Object.create(null)
+      this.setData({ isPaying: false, verifyingPayment: false })
+    },
     // 页面壳的 onReachBottom 转发进来。注意:后端 list 返回全量,hasMore 恒 false,
     // 这条路径当前不会真的翻页 —— 保留是为了后端改成分页时不用再接一次线。
     loadMore() {
@@ -451,34 +462,49 @@ Component({
 
     payOrderRequest(id, index) {
       const that = this
+      that._syncPaymentAccount()
+      const owner = that._paymentOwner
+      const current = () => !that._detached && owner === String(app.getUserID && app.getUserID() || '')
+      if (!that._paymentWorkflows[String(id)]) {
+        that._initWorkflow()
+        that._paymentWorkflows[String(id)] = that._workflow
+      }
+      that._workflow = that._paymentWorkflows[String(id)]
       const submitted = that._workflow.submit({ id }, {
         onOrderFail(res) {
+          if (!current()) return
           that.setData({ isPaying: false })
           toast((res && res.msg) || '支付失败', { duration: 2000 })
         },
         onFreeSuccess() {
+          if (!current()) return
           that.setData({ isPaying: false })
           that._updateOrderPaid(id, index)
         },
         onPayVerifying() {
+          if (!current()) return
           that.setData({ verifyingPayment: true })
           cyLoading.show('确认支付结果...')
         },
         onPaySuccess() {
+          if (!current()) return
           that.setData({ isPaying: false, verifyingPayment: false })
           cyLoading.hide()
           that._updateOrderPaid(id, index)
         },
         onPayCancel() {
+          if (!current()) return
           that.setData({ isPaying: false })
           toast('您已取消支付', { duration: 2000 })
         },
         onPayFail(res) {
+          if (!current()) return
           cyLoading.hide()
           that.setData({ isPaying: false, verifyingPayment: false })
           toast((res && res.errMsg) || '支付失败，请重试', { duration: 2000 })
         },
         onPayUnknown() {
+          if (!current()) return
           cyLoading.hide()
           that.setData({ isPaying: false, verifyingPayment: false })
           modal.show({
@@ -504,7 +530,8 @@ Component({
     },
 
     _updateOrderPaid(id, index) {
-      this.setData({ ['list[' + index + '].registrationStatus']: 2 })
+      const currentIndex = this.data.list.findIndex(row => String(row.id) === String(id))
+      if (currentIndex >= 0) this.setData({ ['list[' + currentIndex + '].registrationStatus']: 2 })
       modal.show({
         title: '支付成功',
         content: '票已放入票夹，可随时出示入场码',

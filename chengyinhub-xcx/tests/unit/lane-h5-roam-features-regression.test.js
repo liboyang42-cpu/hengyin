@@ -62,10 +62,13 @@ test('C1: 清除对话——危险确认、端点、先作废在途提问、成�
   assert.match(src, /dc\.open\('ai\.npc\.chatData\.delete', \{\}\)/);
   const start = src.indexOf("url: '/api/ai/npc/chat/data/delete'");
   assert.ok(start > 0);
-  const before = src.slice(src.lastIndexOf('getApp().sendRequest', start) - 400, start);
+  const before = src.slice(src.indexOf('onConfirmClearData:'), start);
   assert.match(before, /this\._invalidate\(false\)/);
-  const success = src.slice(start, src.indexOf('fail:', start));
-  assert.ok(success.indexOf("res.code != 200") < success.indexOf('messages: []'), '失败分支必须先于清空本地');
+  const clear = src.slice(src.indexOf('onConfirmClearData:'), src.indexOf('onSheetClose:'));
+  assert.match(clear, /authorWrites\.run\(/, '清空只可由持久原请求流程确认');
+  assert.match(clear, /validResult:[\s\S]*Number\.isSafeInteger\(data\.deleted\)/);
+  assert.ok(clear.indexOf('onSuccess:') < clear.indexOf('messages: []'), '只有严格核对成功回执后才清空本地');
+  assert.match(clear, /onUnknown: fail/);
   const actions = require('../../utils/danger-actions.js');
   const a = actions.getDangerAction('ai.npc.chatData.delete', {});
   assert.ok(a.consequences.some((c) => c.text.includes('此操作不可撤销')));

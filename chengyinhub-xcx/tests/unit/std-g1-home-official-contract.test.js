@@ -75,7 +75,7 @@ test('G1 六页: 白卡无描边/无卡内横线，圆角与整屏底色统一',
   const workbench = read('pages/merchant/index/index.wxss');
   assert.match(block(workbench, '.rv-project-card'), /border-radius:\s*var\(--cy-radius-lg\)/);
   assertNoDivider(workbench, '.rv-project-card');
-  assertNoDivider(workbench, '.rv-project-item + .rv-project-item');
+  // 2026-11-01 项目卡改横滑(卡与卡之间是 gap,不再有上下相邻的 item 规则)
   assertNoDivider(workbench, '.rv-project-line1');
   assertNoDivider(workbench, '.rv-msg');
 
