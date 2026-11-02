@@ -1,21 +1,47 @@
 <cy-scene-sheet show="{{show}}" variant="half" title="{{title}}" closable maskClosable bind:close="onClose">
+  <!-- 2026-11-01 业主定稿(审阅页 65gFrW…,结构来自 Figma D7):发给几人 → 横滑头像 → 范围 → 队伍 / 角色行 → 内容 → 发送 -->
   <view class="cdbs__body">
+    <view class="cdbs__to">
+      <text class="cdbs__to-t">发给</text>
+      <text class="cdbs__to-n">{{countText}}</text>
+    </view>
+    <scroll-view class="cdbs__strip" scroll-x enhanced show-scrollbar="{{false}}" wx:if="{{audience.length}}">
+      <view class="cdbs__strip-in">
+        <view class="cdbs__p" wx:for="{{audience}}" wx:key="id">
+          <view class="cdbs__av">{{item.initial}}<view class="cdbs__tick"></view></view>
+          <text class="cdbs__pn">{{item.name}}</text>
+          <text class="cdbs__ps" wx:if="{{item.sub}}">{{item.sub}}</text>
+        </view>
+      </view>
+    </scroll-view>
+
     <text class="cdbs__section-title">范围</text>
     <cy-club-director-chip-group options="{{scopeOptions}}" value="{{scope}}" bind:change="onScopeChange" />
 
-    <cy-club-director-row-list wx:if="{{targets.length}}" rows="{{targets}}" surface="raised" selectable bind:rowtap="onTargetTap" />
+    <view class="cdbs__rows" wx:if="{{scope !== 'ALL' && targets.length}}">
+      <view class="cdbs__row" wx:for="{{targets}}" wx:key="id" bindtap="onTargetTap" data-id="{{item.id}}"
+            aria-role="radio" aria-checked="{{item.on}}" aria-label="{{item.title}}" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="cdbs__row-m">
+          <text class="cdbs__row-t">{{item.title}}</text>
+          <text class="cdbs__row-s" wx:if="{{item.subtitle}}">{{item.subtitle}}</text>
+        </view>
+        <text class="cdbs__row-on" wx:if="{{item.on}}">已选</text>
+        <text class="cdbs__row-pick" wx:else>选择</text>
+      </view>
+    </view>
 
     <text class="cdbs__section-title">内容<text class="form-required" aria-hidden="true">*</text></text>
-    <textarea
-      class="cdbs__textarea"
-      maxlength="200"
-      placeholder="输入广播内容"
-      placeholder-class="cdbs__textarea-placeholder"
-      value="{{content}}"
-      bindinput="onContentInput"
-    />
-
-    <cy-club-director-row-list rows="{{previewRows}}" surface="raised" />
+    <view class="cdbs__field">
+      <textarea
+        class="cdbs__textarea"
+        maxlength="50"
+        placeholder="写点什么，比如：第 3 站临时排队，先去第 4 站"
+        placeholder-class="cdbs__textarea-placeholder"
+        value="{{content}}"
+        bindinput="onContentInput"
+      />
+      <text class="cdbs__count">{{content.length || 0}}/50</text>
+    </view>
 
     <view
       class="cdbs__primary {{confirmDisabled ? 'is-disabled' : ''}}"
@@ -23,6 +49,5 @@
       aria-role="button" aria-label="{{confirmText}}"
       hover-class="cy-pressed" hover-stay-time="80"
     >{{confirmText}}</view>
-    <text class="cdbs__caption" wx:if="{{caption}}">{{caption}}</text>
   </view>
 </cy-scene-sheet>

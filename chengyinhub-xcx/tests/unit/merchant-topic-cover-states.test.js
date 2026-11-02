@@ -53,6 +53,8 @@ function merchantInfoPageFrom(source) {
       if (request === '../../../utils/profit-split.js') return require('../../utils/profit-split.js');
       // 2026-10-31 P-6:主办工作台叠层(加载期无副作用)
       if (request === './host-layers.js') return require('../../pages/topic/merchantinfo/host-layers.js');
+      // 2026-11-01 定向广播叠层的纯整形(加载期无副作用)
+      if (request === '../utils/broadcast-sheet.js') return require('../../pages/topic/utils/broadcast-sheet.js');
       throw new Error('unexpected require: ' + request);
     },
   };

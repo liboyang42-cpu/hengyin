@@ -6,6 +6,8 @@ public class MerchantCrmBroadcastCandidate {
     private String name;
     private String teamName;
     private String roleCode;
+    private String avatar;
+    private Integer arrivedCount;
 
     public Long getMemberId() { return memberId; }
     public void setMemberId(Long value) { memberId = value; }
@@ -15,4 +17,8 @@ public class MerchantCrmBroadcastCandidate {
     public void setTeamName(String value) { teamName = value; }
     public String getRoleCode() { return roleCode; }
     public void setRoleCode(String value) { roleCode = value; }
+    public String getAvatar() { return avatar; }
+    public void setAvatar(String value) { avatar = value; }
+    public Integer getArrivedCount() { return arrivedCount; }
+    public void setArrivedCount(Integer value) { arrivedCount = value; }
 }

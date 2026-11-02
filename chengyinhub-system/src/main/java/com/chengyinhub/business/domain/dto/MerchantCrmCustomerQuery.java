@@ -16,6 +16,7 @@ public class MerchantCrmCustomerQuery {
     @JsonIgnore private Long merchantId;
     /** 仅定向广播按主题收窄时由服务端设置,客户列表请求体不接收。 */
     @JsonIgnore private Long topicId;
+    @JsonIgnore private Long hostFreeExploreTopicId;
     @JsonIgnore private String keywordLike;
     @JsonIgnore private Date sourceStartTime;
     @JsonIgnore private Date sourceEndExclusive;
@@ -30,6 +31,8 @@ public class MerchantCrmCustomerQuery {
     public void setSegment(String value) { segment = value; }
     public Long getTopicId() { return topicId; }
     public void setTopicId(Long value) { topicId = value; }
+    public Long getHostFreeExploreTopicId() { return hostFreeExploreTopicId; }
+    public void setHostFreeExploreTopicId(Long value) { hostFreeExploreTopicId = value; }
     public Long getTagId() { return tagId; }
     public void setTagId(Long value) { tagId = value; }
     public Integer getSourceType() { return sourceType; }

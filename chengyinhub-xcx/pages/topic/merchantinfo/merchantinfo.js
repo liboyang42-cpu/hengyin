@@ -1,6 +1,7 @@
 const cyModal = require('../../../utils/modal.js');
 const cyLoading = require('../../../utils/loading.js');
 const cyToast = require('../../../utils/toast.js');
+const broadcastSheet = require('../utils/broadcast-sheet.js');
 const app = getApp();
 /* 原生 showModal / showActionSheet 由微信自己渲染,读不到 WXSS token,只收字面色值。
    值是 --cy-text-title 的镜像,改主色时两处都要动(tokens 才是真源)。
@@ -310,7 +311,7 @@ Page({
     checkinVisible: false,
     checkinQrState: 'loading',
     checkinQrUrl: '',
-    checkinCode: '', checkinHost: false, hostInviteId: 0, broadcastSheet: { show: false, state: '', content: '', deliverable: 0, remaining: 0, sending: false, error: '' },
+    checkinCode: '', checkinHost: false, hostInviteId: 0, broadcastSheet: broadcastSheet.emptySheet(), playerPick: { can: false, selecting: false, ids: {}, off: {}, count: 0 },
     profitSheet: { show: false, state: '', error: '', row: null },
     clubCandidates: { state: '', rows: [] },
     regApplies: { state: '', rows: [] },
@@ -2174,7 +2175,9 @@ Page({
             : (Number(m.status) === 2 ? '已驳回' : (Number(m.status) === 1 ? '已通过' : '待审核')),
         });
       }),
-      hostPlayers: { paidCount: players.paidCount || 0 },
+      // 2026-11-01:核销三格(待核销 / 已核销 / 已售),已核销由 project/home 一起下发
+      hostPlayers: { paidCount: players.paidCount || 0, arrivedCount: players.arrivedCount || 0,
+        pendingCount: Math.max(0, (players.paidCount || 0) - (players.arrivedCount || 0)) },
     });
   },
 
@@ -2394,6 +2397,8 @@ Page({
   },
 
   closePlayerSheet() {
+    // 多选时右上角是「完成」:退出多选回到名单,不关抽屉
+    if (this.data.playerPick.selecting) { this.endPlayerPick(); return; }
     this.setData({ 'playerSheet.show': false });
   },
 
@@ -2408,7 +2413,7 @@ Page({
       'playerSheet.show': true,
       // CU-C-67:每次打开都清掉上一次的失败态 —— 错态与零单是两个态,不能互相残留
       'playerSheet.errorText': '',
-      // 走查 v2 R07(业主 2026-10-30 定稿):底部不再放「查看全店核销记录」,最后一行是「定向广播」(主办商家)
+      // 走查 v2 R07(业主 2026-10-30 定稿):底部不再放「查看全店核销记录」;2026-11-01 定向广播改成悬浮吸附底部的按钮
       playerActions: [],
     });
     app.sendRequest({
@@ -2426,6 +2431,7 @@ Page({
           return;
         }
         that.setData(that.buildPlayerSheet(res.data, that.data.playerSheet.filter));
+        that.syncPlayerPick();
       },
       fail(res) {
         if (current.handle(res)) return;
@@ -2637,11 +2643,16 @@ Page({
   /* 走查 v2 R07(业主 2026-10-30):客户弹窗最后一行「定向广播」—— 发给本主题的买票玩家。
      复用商家客户的定向广播(/api/merchant/crm/broadcast,同意过滤、每人每天 1 条、商家每天 3 条都在服务端),
      只多带一个 topicId 把名单收窄到这个主题。 */
+  // 2026-11-01 业主定稿(审阅页 65gFrW…):定向广播叠在客户抽屉上,顶部横滑头像选人。收件人名单随预览下发;
+  // 从客户名单多选进来就只勾那几个,否则默认勾上全部能收到的人。
   openBroadcast() {
     const topicId = Number(this.data.topicId || (this.data.info && this.data.info.topicId));
     if (!topicId) return;
+    const pick = this.data.playerPick;
+    const pickedFromList = pick.selecting ? Object.keys(pick.ids).filter((id) => pick.ids[id]) : null;
+    if (pickedFromList && !pickedFromList.length) return;
     this._broadcastRequestId = 'tb' + topicId + '-' + Date.now() + '-' + Math.floor(Math.random() * 1e6);
-    this.setData({ broadcastSheet: { show: true, state: 'loading', content: '', deliverable: 0, remaining: 0, sending: false, error: '' } });
+    this.setData({ broadcastSheet: broadcastSheet.derive(Object.assign(broadcastSheet.emptySheet(), { show: true, state: 'loading' })) });
     const that = this;
     app.sendRequest({
       hideLoading: true, silentError: true,
@@ -2649,11 +2660,37 @@ Page({
       data: JSON.stringify({ topicId: topicId }), header: { 'Content-Type': 'application/json' },
       success(res) {
         const d = res && res.code == '200' && res.data;
-        if (!d) { that.setData({ 'broadcastSheet.state': 'error', 'broadcastSheet.error': (res && res.msg) || '没读到可以收到的人数' }); return; }
-        that.setData({ 'broadcastSheet.state': 'ready', 'broadcastSheet.deliverable': d.deliverableCount || 0, 'broadcastSheet.remaining': d.merchantDailyRemaining || 0 });
+        if (!d) { that.setBroadcast({ state: 'error', error: (res && res.msg) || '收件人没读到' }); return; }
+        // 旧版后端不认 topicId,会按全店客户算人数、真发也发全店;没回显本主题就不让发。
+        if (Number(d.topicId) !== topicId) { that.setBroadcast({ state: 'error', error: '现在还不能只发给本主题的玩家，请稍后再试' }); return; }
+        const rows = broadcastSheet.rowsFrom(d.recipients, pickedFromList);
+        that.setBroadcast({ state: rows.some((r) => !r.off) ? 'ready' : 'none', rows: rows, scope: pickedFromList ? '' : 'all', remaining: d.merchantDailyRemaining || 0 });
       },
-      fail() { that.setData({ 'broadcastSheet.state': 'error', 'broadcastSheet.error': '网络异常，请重试' }); },
+      fail() { that.setBroadcast({ state: 'error', error: '收件人没读到' }); },
     });
+  },
+
+  setBroadcast(patch) {
+    this.setData({ broadcastSheet: broadcastSheet.derive(Object.assign({}, this.data.broadcastSheet, patch)) });
+  },
+
+  pickBroadcastRow(e) {
+    const b = this.data.broadcastSheet;
+    if (b.state !== 'ready' || b.sending) return;
+    this.setBroadcast({ rows: broadcastSheet.toggleRow(b.rows, String(e.currentTarget.dataset.id)), scope: '' });
+  },
+
+  setBroadcastScope(e) {
+    const b = this.data.broadcastSheet;
+    const scope = e.currentTarget.dataset.scope;
+    if (b.state !== 'ready' || b.sending || !scope) return;
+    this.setBroadcast({ rows: broadcastSheet.pickScope(b.rows, scope), scope: scope });
+  },
+
+  clearBroadcastPicks() {
+    const b = this.data.broadcastSheet;
+    if (b.state !== 'ready' || b.sending) return;
+    this.setBroadcast({ rows: b.rows.map((r) => Object.assign({}, r, { picked: false })), scope: '' });
   },
 
   /* 2026-11-01 业主:俱乐部也要能发通知。商家定向广播只认商家客户,俱乐部主办改进俱乐部群发通知:
@@ -2665,27 +2702,86 @@ Page({
     wx.navigateTo({ url: '/pages/club/notify/index?clubId=' + target.clubId + (target.activityId ? '&activityId=' + target.activityId : '') });
   },
 
-  closeBroadcast() { this.setData({ 'broadcastSheet.show': false }); },
+  closeBroadcast() {
+    const sent = this.data.broadcastSheet.sent;
+    this.setData({ broadcastSheet: broadcastSheet.emptySheet() });
+    if (sent) this.endPlayerPick(); // 发完回到普通名单;没发就返回,多选的勾还在
+  },
 
-  onBroadcastInput(e) { this.setData({ 'broadcastSheet.content': String((e && e.detail && e.detail.value) || '') }); },
+  onBroadcastInput(e) {
+    const value = (e && e.detail && e.detail.value) != null ? e.detail.value : (e.currentTarget.dataset || {}).value;
+    this.setBroadcast({ content: String(value || '') });
+  },
 
   sendBroadcast() {
     const b = this.data.broadcastSheet;
-    const content = String(b.content || '').trim();
     const topicId = Number(this.data.topicId || (this.data.info && this.data.info.topicId));
-    if (b.sending || b.state !== 'ready' || !content || !b.deliverable || !b.remaining || !topicId) return;
+    if (!b.canSend || !topicId) return;
     const that = this;
-    this.setData({ 'broadcastSheet.sending': true });
+    this.setBroadcast({ sending: true });
     app.sendRequest({
       url: '/api/merchant/crm/broadcast', method: 'POST',
-      data: JSON.stringify({ topicId: topicId, content: content, requestId: this._broadcastRequestId }),
+      data: JSON.stringify({ topicId: topicId, scope: 'MEMBERS', memberIds: broadcastSheet.pickedIds(b.rows).map(Number), content: String(b.content).trim(), requestId: this._broadcastRequestId }),
       header: { 'Content-Type': 'application/json' },
       success(res) {
-        that.setData({ 'broadcastSheet.sending': false });
-        if (res && res.code == '200') { cyToast.success('已发出'); that.setData({ 'broadcastSheet.show': false }); }
+        if (res && res.code == '200') { that.setBroadcast({ sending: false, sent: true, remaining: Math.max(0, b.remaining - 1) }); return; }
+        that.setBroadcast({ sending: false });
       },
-      fail() { that.setData({ 'broadcastSheet.sending': false }); },
+      fail() { that.setBroadcast({ sending: false }); },
     });
+  },
+
+  // 客户名单多选:「选择」进入,勾人,底部「给 N 人发消息」叠上定向广播。不接收的人勾不上(预览下发,读不到就先都能勾,发送时服务端再挡)。
+  playerActionsFor(pick) {
+    if (!pick.can) return [];
+    if (!pick.selecting) return [{ key: 'openBroadcast', label: '定向广播' }];
+    return [{ key: 'openBroadcast', label: pick.count ? '给 ' + pick.count + ' 人发消息' : '选择要发消息的人' }];
+  },
+
+  setPlayerPick(pick) {
+    this.setData({ playerPick: pick, playerActions: this.playerActionsFor(pick) });
+  },
+
+  syncPlayerPick() {
+    const sheet = this.data.playerSheet;
+    const can = this.data.role === 'host' && this.data.hostOwnerType !== 'club' && !sheet.notSelling && !sheet.errorText;
+    this.setPlayerPick({ can: can, selecting: false, ids: {}, off: {}, count: 0 });
+  },
+
+  togglePlayerPick() {
+    const pick = this.data.playerPick;
+    if (pick.selecting) { this.endPlayerPick(); return; }
+    if (!pick.can) return;
+    this.setPlayerPick(Object.assign({}, pick, { selecting: true, ids: {}, off: {}, count: 0 }));
+    const topicId = Number(this.data.topicId || (this.data.info && this.data.info.topicId));
+    const that = this;
+    app.sendRequest({
+      hideLoading: true,
+      url: '/api/merchant/crm/broadcast/preview', method: 'POST',
+      data: JSON.stringify({ topicId: topicId }), header: { 'Content-Type': 'application/json' },
+      success(res) {
+        const d = res && res.code == '200' && res.data;
+        const now = that.data.playerPick;
+        if (!d || !now.selecting || !Array.isArray(d.recipients)) return;
+        const off = {};
+        const ids = Object.assign({}, now.ids);
+        d.recipients.forEach((r) => { if (r.reach !== 'OK') { off[r.memberId] = true; delete ids[r.memberId]; } });
+        that.setPlayerPick(Object.assign({}, now, { off: off, ids: ids, count: Object.keys(ids).filter((id) => ids[id]).length }));
+      },
+    });
+  },
+
+  endPlayerPick() {
+    const pick = this.data.playerPick;
+    this.setPlayerPick(Object.assign({}, pick, { selecting: false, ids: {}, off: {}, count: 0 }));
+  },
+
+  pickPlayerRow(e) {
+    const pick = this.data.playerPick;
+    const id = e.currentTarget.dataset.id;
+    if (!pick.selecting || !id || pick.off[id]) return;
+    const ids = Object.assign({}, pick.ids, { [id]: !pick.ids[id] });
+    this.setPlayerPick(Object.assign({}, pick, { ids: ids, count: Object.keys(ids).filter((k) => ids[k]).length }));
   },
 
   // 走查 v2 R15:承办视图底部「联系主办」—— 已接受合作的双方取/建 1:1 会话,与协作详情「联系合作方」同一接口
@@ -3328,13 +3424,15 @@ Page({
   onJoinAct(e) {
     const detail = e.detail || {};
     const HANDLERS = {
-      goTopicDetail: 1, goTemplateDetail: 1, goLedger: 1, goVerify: 1,
+      goTopicDetail: 1, goTemplateDetail: 1, goLedger: 1, goVerify: 1, goStory: 1,
       showLiveCheckin: 1, downloadCheckinQr: 1,
       onPrimaryTap: 1, onQuickAction: 1, retryLoad: 1, toggleRules: 1, onHeroError: 1,
       closeClubSheet: 1, closePlayerSheet: 1, closeMerchantSheet: 1,
       closeMoreSheet: 1, onMorePick: 1,
       copyText: 1, goInviteClub: 1, onPlayerFilter: 1, inviteClubRow: 1, openClubHome: 1, loadClubCandidates: 1,
       loadRegApplies: 1, confirmRegRow: 1, selfTakeNode: 1, recruitNode: 1, contactHost: 1, openBroadcast: 1, openClubNotify: 1,
+      // 2026-11-01 定向广播叠层与客户多选
+      closeBroadcast: 1, onBroadcastInput: 1, sendBroadcast: 1, pickBroadcastRow: 1, setBroadcastScope: 1, clearBroadcastPicks: 1, togglePlayerPick: 1, pickPlayerRow: 1,
       // CU-C-67:客户名单读失败后的局部重试(错态与零单分开之后要有恢复动作)
       retryPlayerSheet: 1,
       // CU-C-68:抽屉里「本站运营」资格探不到时的就地重试
@@ -4113,8 +4211,25 @@ Page({
   },
 
   // 核销扫码流程(含③选章面板)整套在商家首页,这里只做交接,不复制一份出来各自演化
+  // 2026-11-01 业主:「扫码 / 去核销」直接拉起扫码。核销整套(选席位 / 选章节 / 结果待确认)只在商家首页
+  // (俱乐部主办在俱乐部页)一份,带 scan=1 进去立刻开扫码;navigateTo 而不是 reLaunch,返回仍回到主题。
   goVerify() {
-    wx.reLaunch({ url: '/pages/merchant/index/index' });
+    if (this._navigating) return;
+    const clubId = this.data.hostOwnerType === 'club' && this._clubNotifyTarget ? this._clubNotifyTarget.clubId : 0;
+    const url = clubId ? '/pages/club/detail/index?id=' + clubId + '&scan=1' : '/pages/merchant/index/index?scan=1';
+    this._navigating = true;
+    wx.navigateTo({ url: url, complete: () => { this._navigating = false; } });
+  },
+
+  // 2026-11-01 业主:主题卡 → 剧情与玩法(路线 / 玩法 / 答案),与俱乐部活动详情同一页;商家走主办 / 承接商家的答案接口
+  goStory() {
+    const topicId = Number(this.data.topicId || (this.data.info && this.data.info.topicId) || 0);
+    if (!topicId || this._navigating) return;
+    this._navigating = true;
+    const clubId = this.data.hostOwnerType === 'club' && this._clubNotifyTarget ? this._clubNotifyTarget.clubId : 0;
+    const url = '/pages/club/topic-story/index?topicId=' + topicId
+      + (clubId ? '&clubId=' + clubId : '&scope=' + (this.data.operationScope || 'MERCHANT'));
+    wx.navigateTo({ url: url, complete: () => { this._navigating = false; } });
   },
 
   _checkinNodeId() {
@@ -4308,14 +4423,16 @@ Page({
     /* CU-C-67:台账按身份分流。商家那本在 pages/merchant/ledger;俱乐部主理人的「核销台账」
        是名册页 pages/club/enroll(同一个 clubId + topicId 读报名与核销态)。
        原来一律跳商家页 —— 非商家身份 active=false,整页必然「数据服务暂不可用」(P1 实证)。 */
-    if (this.data.operationScope === 'CLUB') {
-      const clubId = Number((this.data.info && this.data.info.clubId) || 0);
+    const hostClubId = this.data.hostOwnerType === 'club' && this._clubNotifyTarget ? this._clubNotifyTarget.clubId : 0;
+    if (this.data.operationScope === 'CLUB' || hostClubId) {
+      const clubId = hostClubId || Number((this.data.info && this.data.info.clubId) || 0);
       const topicId = Number(this.data.topicId || (this.data.info && this.data.info.topicId) || 0);
       if (!clubId || !topicId) { app.tips('这条主题没有关联俱乐部'); return; }
       if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/enroll/index?clubId=' + clubId + '&topicId=' + topicId, complete: () => { this._navigating = false; } });
       return;
     }
-    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/ledger/index?view=redemptions', complete: () => { this._navigating = false; } });
+    if (this._navigating) return; this._navigating = true; const topicId = Number(this.data.topicId || (this.data.info && this.data.info.topicId) || 0);
+    wx.navigateTo({ url: '/pages/merchant/ledger/index?view=redemptions' + (topicId ? '&topicId=' + topicId : ''), complete: () => { this._navigating = false; } });
   },
 
   /* 「查看结算报告」去的是结算明细页,不是核销台账 —— 稿 468:1086 标的就是 coop/settlement-detail。

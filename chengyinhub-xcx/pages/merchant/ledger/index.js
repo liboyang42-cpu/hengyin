@@ -72,8 +72,9 @@ Page({
       return;
     }
     this._projectEventScope = route.ownerType ? { ownerType: route.ownerType, ownerId: route.ownerId } : null;
+    this._topicId = route.topicId || 0;
     this.setData({ view: route.view, source: route.source, isProjectMessages: Boolean(this._projectEventScope),
-      pageTitle: this._projectEventScope ? '本项目近期动态' : (route.view === 'redemptions' ? '核销与退款' : (route.view === 'settlement' ? '结算' : '消息与动态')) });
+      pageTitle: this._projectEventScope ? '本项目近期动态' : (route.topicId ? '台账' : route.view === 'redemptions' ? '核销与退款' : (route.view === 'settlement' ? '结算' : '消息与动态')) });
     this.revalidateCurrentView();
   },
 
@@ -281,7 +282,8 @@ Page({
     this._redemptionRows = [];
     this._refundRows = [];
     this.setData({ loading: true, error: false });
-    this.request('/api/merchant/finance/redemptions', { pageNum: 1, pageSize: PAGE_SIZE, filter }, (res) => {
+    const query = this._topicId ? { pageNum: 1, pageSize: PAGE_SIZE, filter, topicId: this._topicId } : { pageNum: 1, pageSize: PAGE_SIZE, filter };
+    this.request('/api/merchant/finance/redemptions', query, (res) => {
       if (!this._isCurrentMemberScope(scopeMemberId)
         || epoch !== this._redemptionEpoch
         || filter !== (this.data.merchantAccess.canReadFinance ? this.data.redemptionFilter : 'all')) return;
@@ -293,7 +295,8 @@ Page({
         summary: summaryView(res.data.summary, canReadFinance),
         loading: false, error: false, hasLoaded: true,
       });
-      if (this.data.merchantAccess.canReadAftercare) this._loadRefundRows(scopeMemberId, epoch, canReadFinance);
+      // 售后退款列表是全店的、不带主题,主题台账不掺进来
+      if (this.data.merchantAccess.canReadAftercare && !this._topicId) this._loadRefundRows(scopeMemberId, epoch, canReadFinance);
     });
   },
 

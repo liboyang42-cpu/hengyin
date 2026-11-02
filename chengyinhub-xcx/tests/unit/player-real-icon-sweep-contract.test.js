@@ -96,7 +96,8 @@ test('替换后的可交互图标保留读屏名称、状态语义与至少 88rp
   const joinView = read('pages/topic/components/project-join/index.wxml')
   // 2026-09-06:承接方那条按稿 88:4014 挪进底栏(类名 sec rules → rules);
   // 主办方那条还在正文里(它没有对应稿,不动)。断言按各自现状分开写,不合并。
-  assert.match(hostView, /class="sec rules"[^>]*aria-role="button"[^>]*aria-expanded=/)
+  // 2026-11-01 业主:主办方也有了底部固定条(与俱乐部活动详情 / 承接视图同一套),这条随之挪进底栏、类名同为 rules。
+  assert.match(hostView, /class="bottom-bar"[\s\S]*?class="rules"[^>]*aria-role="button"[^>]*aria-expanded=/)
   assert.match(joinView, /class="rules"[^>]*aria-role="button"[^>]*aria-expanded=/)
 
   const freeMapStyle = read('components/cy/free-map/index.wxss')

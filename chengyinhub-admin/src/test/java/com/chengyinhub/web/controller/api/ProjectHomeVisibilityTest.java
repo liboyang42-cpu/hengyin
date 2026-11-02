@@ -437,11 +437,17 @@ class ProjectHomeVisibilityTest {
         givenRegistrations(Collections.<CmsRegistrationMerchant>emptyList());
         CmsRegistration p1 = new CmsRegistration();
         p1.setId(1L);
-        when(regSvc.selectCmsRegistrationList(any())).thenReturn(Collections.singletonList(p1));
+        p1.setVerificationStatus(1);
+        CmsRegistration p2 = new CmsRegistration();
+        p2.setId(2L);
+        when(regSvc.selectCmsRegistrationList(any())).thenReturn(java.util.Arrays.asList(p1, p2));
 
         Map<String, Object> players = sub(sub(service.getProjectHome(HOST, TOPIC), "host"), "players");
-        assertEquals(1, players.get("paidCount"));
-        assertEquals(1, players.size(), "玩家段只该有聚合量;多一个键就要重新审是不是把个人信息带出来了");
+        assertEquals(2, players.get("paidCount"));
+        // 2026-11-01:主办工作台「核销」三格要已核销数 —— 仍是聚合量(同一份已支付名单里数),键集合逐一审过
+        assertEquals(1, players.get("arrivedCount"));
+        assertEquals(new java.util.HashSet<>(java.util.Arrays.asList("paidCount", "arrivedCount")), players.keySet(),
+                "玩家段只该有聚合量;多一个键就要重新审是不是把个人信息带出来了");
     }
 
     // ==================== 招商进度 / 自审标记 ====================

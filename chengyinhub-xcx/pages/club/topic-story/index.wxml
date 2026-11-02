@@ -104,7 +104,7 @@
   </block>
 
   <!-- J1-C 查看答案(T1 底部弹窗) -->
-  <cy-scene-sheet show="{{answerVisible}}" variant="half" theme="player" title="{{answerTitle}}"
+  <cy-scene-sheet show="{{answerVisible}}" variant="half" theme="{{isMerchantViewer ? 'merchant' : 'player'}}" title="{{answerTitle}}"
                   mask-closable bind:close="closeAnswer">
     <view class="ans">
       <!-- CU-C-152:完整玩法名是副信息,可换行,不再挤进 nowrap 的弹层标题里被截断。 -->
@@ -129,7 +129,7 @@
           <view class="ans__label">玩家答错时的反馈</view>
           <view class="ans__block"><view class="ans__text ans__text--muted">{{answer.feedbackText}}</view></view>
         </block>
-        <view class="ans__notice">答案只对俱乐部开放，用于现场判定玩家能否通过。玩家端看不到这一段。</view>
+        <view class="ans__notice">答案只给主办方和这一站的接待方看，用于现场判定玩家能否通过。玩家端看不到这一段。</view>
       </block>
     </view>
   </cy-scene-sheet>

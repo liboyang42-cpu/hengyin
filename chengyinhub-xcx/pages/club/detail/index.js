@@ -751,7 +751,12 @@ Page({
       // 从项目详情 → 找俱乐部 → 这里,主题一路带过来
       topicId: (opt && opt.topicId) || '',
     });
-    if (id) { this.data.clubId = id; this.loadAll(); return; }
+    if (id) {
+      this.data.clubId = id; this.loadAll();
+      // 2026-11-01 业主:活动详情「去核销」带 scan=1 进来直接拉起扫码(核销写闸只在本页一份,权限由核销接口判)
+      if (opt.scan === '1') wx.nextTick(() => this.startClubScan());
+      return;
+    }
     // owner 入口(承接原 club/index 管理台):无 id → 解析我拥有的俱乐部
     if (opt && opt.owner) { this._ownerEntry = true; this.resolveOwnerEntry(); return; }
     this.setData({ detailLoaded: true, notFound: true }); cyToast('缺少俱乐部');
@@ -955,6 +960,10 @@ Page({
   onClubScan() {
     const club = this.data.club;
     if (!club || !(this.canGovern(club) || this.data.canManageActivities)) return;
+    this.startClubScan();
+  },
+
+  startClubScan() {
     const that = this;
     const login = captureLogin(app, wx), generation = this._scanGeneration || 0;
     const clubId = this.data.clubId;

@@ -48,6 +48,8 @@
         <result property="name" column="customer_name"/>
         <result property="teamName" column="team_name"/>
         <result property="roleCode" column="role_code"/>
+        <result property="avatar" column="avatar"/>
+        <result property="arrivedCount" column="arrived_count"/>
     </resultMap>
 
     <resultMap id="SegmentCounts" type="com.chengyinhub.business.domain.vo.MerchantCrmSegmentCountsVO">
@@ -243,10 +245,20 @@
         max(<include refid="OwnedCustomerRoleCodeExpression"/>) as role_code
     </sql>
 
+    <!--
+      自由探索不进通用名册(OwnedRegistrationScope 排除 product_type=2)。只有一个例外:
+      主题工作台按主题定向广播时,商家自己发布的自由探索主题的买票玩家可以收到 ——
+      hostFreeExploreTopicId 只由广播服务在核实「这是本商家发布的自由探索主题」之后设置。
+    -->
     <sql id="OwnedCustomerAggregateFrom">
         from cms_registration r
         join ums_member u on u.id = r.member_id and u.del_flag = 0
-        where <include refid="OwnedRegistrationScope"/>
+        where (
+          <include refid="OwnedRegistrationScope"/>
+          <if test="query.hostFreeExploreTopicId != null">
+            or (r.owner_type = 1 and r.owner_id = #{query.hostFreeExploreTopicId} and r.payment_status in (2, 4))
+          </if>
+        )
         <include refid="OwnedCustomerFilters"/>
         group by r.member_id
     </sql>
@@ -338,7 +350,9 @@
         select r.member_id as member_id,
                coalesce(nullif(max(u.nickname), ''), '未留姓名') as customer_name,
                max(<include refid="OwnedCustomerTeamNameExpression"/>) as team_name,
-               max(<include refid="OwnedCustomerRoleCodeExpression"/>) as role_code
+               max(<include refid="OwnedCustomerRoleCodeExpression"/>) as role_code,
+               max(u.avatar) as avatar,
+               sum(case when r.payment_status = 2 and r.verification_status = 1 then 1 else 0 end) as arrived_count
         <include refid="OwnedCustomerAggregateFrom"/>
         <include refid="OwnedCustomerSegmentHaving"/>
         order by max(coalesce(r.verification_time, r.create_time)) desc, r.member_id desc
@@ -453,6 +467,11 @@
     <select id="countOwnedRegistrationCustomers" resultType="long">
         select count(distinct r.member_id) from cms_registration r
         where <include refid="OwnedRegistrationScope"/>
+    </select>
+
+    <select id="countFreeExploreTopicPublishedBy" resultType="int">
+        select count(1) from cms_topic t
+        where t.id = #{topicId} and t.del_flag = 0 and t.product_type = 2 and t.member_id = #{ownerMemberId}
     </select>
 
     <select id="countActiveCustomerProfiles" resultType="long">

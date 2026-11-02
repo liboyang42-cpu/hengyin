@@ -13,15 +13,15 @@ Component({
     scope: { type: String, value: 'ALL' },
     targets: { type: Array, value: [] },
     content: { type: String, value: '' },
-    previewRows: { type: Array, value: [] },
+    audience: { type: Array, value: [] }, // 2026-11-01 顶部横滑头像:这次会发给谁 [{id,name,initial,sub}]
+    countText: { type: String, value: '' },
     confirmText: { type: String, value: '确认发送' },
     confirmDisabled: { type: Boolean, value: false },
-    caption: { type: String, value: '接收范围待确认时不能发送；已送达以站内发送记录为准。' },
   },
   methods: {
     onClose() { this.triggerEvent('close') },
     onScopeChange(e) { this.triggerEvent('selectscope', e.detail) },
-    onTargetTap(e) { this.triggerEvent('selecttarget', e.detail) },
+    onTargetTap(e) { this.triggerEvent('selecttarget', { id: e.currentTarget.dataset.id }) },
     onContentInput(e) {
       this.triggerEvent('input', { value: String((e && e.detail && e.detail.value) || '') })
     },
