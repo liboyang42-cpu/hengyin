@@ -207,6 +207,20 @@ public class JourneyStory {
         }
     }
 
+    /**
+     * 是否配了结局(ending.endings 至少一项)。结局读口要求本局权威状态(选哪一个结局、是否已走完),
+     * 所以只配了结局/尾声的线性主题也必须建局,否则通关后结局恒「本局尚未开始」(P-04)。读不出返回 false。
+     */
+    public static boolean hasEnding(String rawJson) {
+        if (rawJson == null || rawJson.trim().isEmpty()) return false;
+        try {
+            JsonNode endings = MAPPER.readTree(rawJson).path("ending").path("endings");
+            return endings.isArray() && endings.size() > 0;
+        } catch (Exception unreadable) {
+            return false;
+        }
+    }
+
     /** 哪些章是结局章(ending.endings[].chapterId):玩家的章节列表里不出现它们,读结局时才播。读不出返回空集。 */
     public static java.util.Set<Long> endingChapterIds(String rawJson) {
         java.util.Set<Long> ids = new java.util.LinkedHashSet<Long>();

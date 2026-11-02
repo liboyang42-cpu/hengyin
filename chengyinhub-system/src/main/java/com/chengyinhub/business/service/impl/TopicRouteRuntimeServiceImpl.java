@@ -1201,7 +1201,8 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
                 JsonNode ruleFields = validator.readTree(frozenRules);
                 if (JourneyRules.parse(frozenRules).hasRuntimeState() || ruleFields.path("attributes").size() > 0
                         || ruleFields.path("statLinks").size() > 0 || published.path("themeConfig").isObject()
-                        || JourneyStory.openingChapterId(NodeJourneySnapshot.journeyStory(published.toString())) != null) return true;
+                        || JourneyStory.openingChapterId(NodeJourneySnapshot.journeyStory(published.toString())) != null
+                        || JourneyStory.hasEnding(NodeJourneySnapshot.journeyStory(published.toString()))) return true;
                 for (JsonNode block : published.path("nodeConfigs"))
                     if (blockNeedsJourneyState(block.toString())) return true;
                 return false;
@@ -1210,6 +1211,8 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         List<CmsTopicNode> liveNodes = probe.liveNodes;
         if (JourneyStory.openingChapterId(scope.topic.getJourneyStoryJson()) != null) return true;
         if (liveNodes.isEmpty()) return false;
+        // P-04:只配了结局(尾声章)的线性主题也要一局权威状态,结局读口才挑得出结局、判得了通关。
+        if (JourneyStory.hasEnding(scope.topic.getJourneyStoryJson())) return true;
         if (scope.topic.getPublishedThemeRuntimeConfigJson() != null) return true;
         if (journeyRules(scope.topic).hasRuntimeState()) return true;
         Map<Long, String> configByTemplate = probe.configs();
@@ -1281,15 +1284,9 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         if("ANSWER".equals(basicCompletionKind(frozen,nodeId))) {
             JsonNode answer=frozen.path(NodeJourneySnapshot.NODE_ANSWERS_KEY).path(String.valueOf(nodeId));String submitted=answers.path("answer").asText("").trim();
             if(answer.path("validationMethod").asInt()==3)return !answer.path("correctAnswer").asText().trim().isEmpty() && answer.path("correctAnswer").asText().trim().equalsIgnoreCase(submitted);
-            String expected=answer.path("questionAnswer").asText();return !expected.trim().isEmpty() && normalizeBasicAnswer(expected).equalsIgnoreCase(normalizeBasicAnswer(submitted));
+            return com.chengyinhub.business.service.support.BasicTextAnswer.matches(answer.path("questionAnswer").asText(),submitted);
         }
         return AdvancedActionJudgement.verifyObjectiveAnswers(frozen.path("nodeConfigs").path(String.valueOf(nodeId)),answers);
-    }
-
-    private String normalizeBasicAnswer(String value) {
-        String trimmed=value.trim().replaceAll("\\s+", ""); StringBuilder normalized=new StringBuilder();
-        for(char c:trimmed.toCharArray()) {if(c>='！' && c<='～')normalized.append((char)(c-0xFEE0));else if(c=='　')normalized.append(' ');else normalized.append(c);}
-        return normalized.toString();
     }
 
     private String basicCompletionKind(JsonNode frozen,Long nodeId) {
