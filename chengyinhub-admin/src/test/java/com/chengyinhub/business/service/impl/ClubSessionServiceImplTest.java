@@ -115,6 +115,33 @@ class ClubSessionServiceImplTest {
         verify(clubService).selectClubByIdForUpdate(CLUB_ID);
     }
 
+    /** C-03:开场把票种集合点抄到场次经纬度,否则集合签到恒为「集合点未配置」。 */
+    @Test
+    void openSessionCopiesTicketGatherPointToActivity() {
+        com.chengyinhub.business.domain.OmsTicket noPoint = new com.chengyinhub.business.domain.OmsTicket();
+        com.chengyinhub.business.domain.OmsTicket ticket = new com.chengyinhub.business.domain.OmsTicket();
+        ticket.setGatherLat(new java.math.BigDecimal("31.2056000"));
+        ticket.setGatherLng(new java.math.BigDecimal("121.4380000"));
+        when(ticketService.selectOmsTicketList(any())).thenReturn(Arrays.asList(noPoint, ticket));
+
+        service.open(request(), OWNER_ID, "主理人");
+
+        ArgumentCaptor<CmsActivity> captor = ArgumentCaptor.forClass(CmsActivity.class);
+        verify(activityService).insertCmsActivity(captor.capture());
+        assertEquals("31.2056", captor.getValue().getLatitude());
+        assertEquals("121.438", captor.getValue().getLongitude());
+        // 抄过来的点必须能被签到策略直接使用:500 米内放行,外面拒绝。
+        CmsActivity activity = captor.getValue();
+        activity.setDelFlag(0);
+        Date start = new Date(System.currentTimeMillis() + 10L * 60L * 1000L);
+        activity.setStartDate(start);
+        activity.setEndDate(new Date(start.getTime() + 3600_000L));
+        com.chengyinhub.business.service.support.ClubGatherArrivalPolicy policy =
+                new com.chengyinhub.business.service.support.ClubGatherArrivalPolicy();
+        assertEquals(null, policy.validate(activity, 31.2070, 121.4380, new Date()));
+        assertEquals("请到集合点500米内签到", policy.validate(activity, 31.2156, 121.4380, new Date()));
+    }
+
     /** AUDIT-G1-3:父主题被驳回 / 作者下架 / 待审时不能开场次。 */
     @Test
     void parentTopicNotLive_refusesOpening() {

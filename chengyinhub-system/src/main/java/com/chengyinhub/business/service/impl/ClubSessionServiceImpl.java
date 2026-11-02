@@ -169,6 +169,9 @@ public class ClubSessionServiceImpl implements IClubSessionService {
         activity.setImgUrl(topic.getImgUrl());
         activity.setCategoryIds(topic.getCategoryIds());
         activity.setAddressName(topic.getAddressName());
+        // C-03:集合签到(ClubGatherArrivalPolicy)只认场次自己的经纬度;开场时把票种上的集合点
+        // 抄到场次上,否则「我到了」恒为「集合点未配置」。系列开场也走这里。
+        applyGatherPoint(activity, request.getTopicId());
         activity.setStartDate(assemblyMoment);
         activity.setEndDate(dayBoundary(assemblyMoment, true));
         // 先审 ⇒ 待审(status=0/publish_status=0),审核台通过后 applyModeration 上架;先发后审 ⇒ 直接上架。
@@ -198,6 +201,22 @@ public class ClubSessionServiceImpl implements IClubSessionService {
             }
         }
         return activity.getId();
+    }
+
+    /** 取主题票(owner_type=1)里第一张带完整集合点坐标的票,写到场次 latitude/longitude。 */
+    void applyGatherPoint(CmsActivity activity, Long topicId) {
+        OmsTicket query = new OmsTicket();
+        query.setOwnerType(1L);
+        query.setOwnerId(topicId);
+        query.setDelFlag(0);
+        List<OmsTicket> tickets = ticketService.selectOmsTicketList(query);
+        if (tickets == null) return;
+        for (OmsTicket ticket : tickets) {
+            if (ticket == null || ticket.getGatherLat() == null || ticket.getGatherLng() == null) continue;
+            activity.setLatitude(ticket.getGatherLat().stripTrailingZeros().toPlainString());
+            activity.setLongitude(ticket.getGatherLng().stripTrailingZeros().toPlainString());
+            return;
+        }
     }
 
     private List<ActivityTicketRequest> topicTicketView(Long topicId) {
