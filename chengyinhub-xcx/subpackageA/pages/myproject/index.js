@@ -152,7 +152,7 @@ Page({
     if (changedOwner) this.resetPrivateState(!hasSession());
     this._ownerId = memberId;
     this._ownerToken = authorization();
-    merchantTheme.merchantPageShow();
+    if (this.data.operationScope) merchantTheme.merchantPageShow();
     if (!this.requireSession()) return;
     if (refreshAccess && this.data.operationScope === 'MERCHANT') {
       this.loadMerchantPublishEntry();

@@ -6,6 +6,6 @@
   <!-- E-01(2026-09-16 P0):去页级 merchant 守卫。/api/coop/finance 只按登录人取数
        (ApiCoopController:926-934),不要求商家行 —— 挂着它把俱乐部主理人挡在分润明细外。 -->
   <cy-nav-bar custom-back bind:back="goBack" />
-  <cy-page-title title="分润明细" safe-top="{{false}}" flush="{{true}}" />
+  <cy-page-title title="分润明细" safe-top="{{false}}" />
   <cy-scene-merchant-profit id="merchantProfit" />
 </view>

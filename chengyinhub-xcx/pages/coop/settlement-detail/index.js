@@ -1,5 +1,5 @@
 const app = getApp();
-const merchantTheme = require('../../../utils/merchant-theme.js');
+const merchantTheme = require('../../../utils/merchant-theme.js'); const pageMotion = require('../../../utils/page-motion.js');
 const {
   buildMerchantSettlementDetail,
   buildHostSettlementDetail,
@@ -255,7 +255,7 @@ Page({
           return;
         }
         if (!this.settleLoad(epoch)) return;
-        this.setData({
+        if (!this.data.detail) pageMotion.countMoney(this, 'sdK'); this.setData({ // 2026-11-02 X-1:主金额首次落地慢-快-慢
           detail: club ? buildClubSettlementDetail(record)
             : (finance ? buildHostSettlementDetail(record) : buildMerchantSettlementDetail(record)),
           loadState: 'ready',

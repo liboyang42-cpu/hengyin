@@ -16,7 +16,7 @@ Page({
   data: {
     statusBarHeight: app.globalData.statusBarHeight,
     navBarHeight: app.globalData.navBarHeight,
-    commandRecovery: null,
+    commandRecovery: null, recoveryShown: false,
     board: null,
     boardState: '',
     boardMessage: '',
@@ -62,9 +62,10 @@ Page({
   onUnload() { this._disposed = true; if (this._recovery) this._recovery.dispose(); this._resetReads(); },
 
   _openRecovery() {
-    if (this._recovery) this._recovery.dispose();
+    if (this._recovery) this._recovery.dispose(); this._freshCommand = false;
     this._recovery = createRecovery({ app, platform: wx, domain: 'TEAM', targetId: this.teamId,
-      changed: value => this.setData({ commandRecovery: value, joinModeSaving: value.busy || value.state === 'UNKNOWN' }),
+      changed: value => { const fresh = this._freshCommand; if (!value.busy) this._freshCommand = false; // 本页刚发出的请求在途时不弹恢复卡(按钮自带忙态);回包未知/失败、重进页面读到存档、APPLIED 回执照常显示
+        this.setData({ commandRecovery: value, recoveryShown: !!(value.state || value.busy) && !(fresh && value.busy), joinModeSaving: value.busy || value.state === 'UNKNOWN' }); },
       terminal: (result, command) => {
         this._resetReads();
         if (result.state === 'APPLIED' && ['quit', 'disband'].includes(command.action)) this._clearMembership();
@@ -369,7 +370,7 @@ Page({
     if (!this._recovery) this._openRecovery();
     this.setData({ joinModePublic: prevMode === 2 });
     if (this._recovery.pending()) return;
-    return this._recovery.start('join-mode', { joinMode: nextMode });
+    this._freshCommand = true; return this._recovery.start('join-mode', { joinMode: nextMode });
   },
 
   formatTime(value) {
@@ -429,7 +430,7 @@ Page({
     const dc = this.selectComponent && this.selectComponent(dcId);
     // The durable result panel owns recovery after confirmation, including re-entry.
     if (dc) dc.close();
-    return this._recovery.start(action, data.memberId == null ? {} : { memberId: exactId(data.memberId) });
+    this._freshCommand = true; return this._recovery.start(action, data.memberId == null ? {} : { memberId: exactId(data.memberId) });
   },
 
   onShareAppMessage() {

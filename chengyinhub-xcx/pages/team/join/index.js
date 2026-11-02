@@ -7,7 +7,7 @@ Page({
   data: {
     statusBarHeight: app.globalData.statusBarHeight,
     navBarHeight: app.globalData.navBarHeight,
-    commandRecovery: null,
+    commandRecovery: null, recoveryShown: false,
     team: null,
     joined: false,
     loading: true,
@@ -39,10 +39,11 @@ Page({
 
   _openRecovery() {
     this._recoveryReader = reader(app);
-    if (this._recovery) this._recovery.dispose();
+    if (this._recovery) this._recovery.dispose(); this._freshCommand = false;
     this._recovery = createRecovery({ app, platform: wx, domain: 'TEAM',
       scopeKey: 'invite:' + this.inviteCode, targetId: null,
-      changed: value => this.setData({ commandRecovery: value, joining: value.busy }),
+      changed: value => { const fresh = this._freshCommand; if (!value.busy) this._freshCommand = false; // 本页刚发出的请求在途时不弹恢复卡(按钮自带忙态);回包未知/失败、重进页面读到存档、APPLIED 回执照常显示
+        this.setData({ commandRecovery: value, recoveryShown: !!(value.state || value.busy) && !(fresh && value.busy), joining: value.busy }); },
       terminal: () => {
         this._epoch = (this._epoch || 0) + 1;
         this._inviteLoading = false;
@@ -162,7 +163,7 @@ Page({
     if (!this._recoveryReader || !sameReader(app, this._recoveryReader)) this._openRecovery();
     if (!this._recovery || this._recovery.pending() || !exactId(this.teamId)) return;
     this._recovery.setTarget(this.teamId);
-    return this._recovery.start('join', { inviteCode: this.inviteCode });
+    this._freshCommand = true; return this._recovery.start('join', { inviteCode: this.inviteCode });
   },
 
   goDetail() {

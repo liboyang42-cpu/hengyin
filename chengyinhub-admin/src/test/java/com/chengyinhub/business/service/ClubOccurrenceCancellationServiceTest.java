@@ -221,6 +221,100 @@ class ClubOccurrenceCancellationServiceTest {
         verify(mapper, never()).insertCampaign(any(ClubEventCampaign.class));
     }
 
+    /** 把夹具换成「俱乐部公开主题的自办场次」:活动不挂 club_id,主题 31 的归属与创建人由各用例指定。 */
+    private void selfHostedActivity(Long topicClubId, Long topicMemberId) {
+        com.chengyinhub.business.domain.CmsActivity activity = new com.chengyinhub.business.domain.CmsActivity();
+        activity.setId(ACTIVITY); activity.setMemberId(OWNER); activity.setClubId(null); activity.setTopicId(31L);
+        CmsActivityMapper activities = mock(CmsActivityMapper.class);
+        when(activities.selectCmsActivityById(ACTIVITY)).thenReturn(activity);
+        when(activities.selectCmsActivityByIdForUpdate(ACTIVITY)).thenReturn(activity);
+        com.chengyinhub.business.domain.CmsTopic topic = new com.chengyinhub.business.domain.CmsTopic();
+        topic.setId(31L); topic.setClubId(topicClubId); topic.setMemberId(topicMemberId);
+        com.chengyinhub.business.mapper.CmsTopicMapper topics = mock(com.chengyinhub.business.mapper.CmsTopicMapper.class);
+        when(topics.selectCmsTopicById(31L)).thenReturn(topic);
+        when(topics.selectCmsTopicByIdForUpdate(31L)).thenReturn(topic);
+        ReflectionTestUtils.setField(service,"cancellationActivityMapper",activities);
+        ReflectionTestUtils.setField(service,"cancellationTopicMapper",topics);
+        CancellationPhaseTestSupport.wireReceiptMocks(service);
+        when(mapper.selectSeriesByActivityAnyStatusForUpdate(ACTIVITY)).thenReturn(null);
+        when(mapper.selectOccurrenceByActivityAndClubForUpdate(ACTIVITY, CLUB)).thenReturn(null);
+    }
+
+    private void verifyNoRefundStarted() {
+        verify(teamGroupService, never()).cancelActivityWithObservedPayments(anyLong(), anyLong(), anyLong(), anyString(), eq(false), any(RegistrationCancellationPayments.class));
+        verify(mapper, never()).insertCampaign(any(ClubEventCampaign.class));
+    }
+
+    /**
+     * 2026-11-01 生产走查:俱乐部自办场次不挂 club_id,活动运营里取消恒报「场次不属于原主题或俱乐部」。
+     * 退款核心对 club_id 为空的场次自己发取消通知,俱乐部这边不许再排一轮(一人两条);也没有领队可收。
+     */
+    @Test
+    void selfHostedActivityOfClubsOwnTopicCancelsWithRefundAndExactlyOneNotice() {
+        selfHostedActivity(CLUB, OWNER);
+        when(mapper.selectActivityTopicForUpdate(ACTIVITY, CLUB)).thenReturn(31L);
+        when(mapper.selectOccurrenceCancellationState(ACTIVITY, CLUB))
+                .thenReturn(activeState(), activeState(), cancelledState());
+        when(mapper.selectRegisteredRecipients(CLUB, ACTIVITY)).thenReturn(Arrays.asList(101L, 102L));
+        when(mapper.selectWaitlistRecipients(CLUB, ACTIVITY)).thenReturn(Collections.<Long>emptyList());
+        when(mapper.selectActiveWaitlistsForUpdate(CLUB, ACTIVITY)).thenReturn(Collections.<ClubWaitlistEntry>emptyList());
+        when(teamGroupService.cancelActivityWithObservedPayments(ACTIVITY, OWNER, ACTOR, REASON, false, payments))
+                .thenReturn(new ActivityCancelResult(2, 0, 0));
+        AtomicLong ids = new AtomicLong(900L);
+        when(mapper.insertCampaign(any(ClubEventCampaign.class))).thenAnswer(call -> {
+            call.getArgument(0, ClubEventCampaign.class).setId(ids.incrementAndGet());
+            return 1;
+        });
+
+        ClubEventCancellationResult result = service.cancelOccurrence(
+                ACTOR, "co-owner", request("cancel-self-hosted", REASON));
+
+        assertEquals("REFUND_REQUESTED", result.getRefundStatus());
+        assertEquals(Integer.valueOf(2), result.getRefundedOrders());
+        assertEquals(Integer.valueOf(2), result.getRegisteredRecipientCount());
+        assertEquals("COMPLETED", result.getRegisteredNotificationStatus());
+        verify(teamGroupService).cancelActivityWithObservedPayments(ACTIVITY, OWNER, ACTOR, REASON, false, payments);
+        verify(mapper, never()).insertDelivery(any(ClubEventDelivery.class));
+        verify(roleService, never()).revokeEventLeadForCancelledOccurrence(anyLong(), anyLong(), anyLong(), anyString());
+    }
+
+    /** ★ 负控:主题归别的俱乐部 —— 退款链一步都不许走。 */
+    @Test
+    void selfHostedActivityOfAnotherClubsTopicIsRejectedBeforeAnyRefund() {
+        selfHostedActivity(999L, OWNER);
+
+        ServiceException error = assertThrows(ServiceException.class,
+                () -> service.cancelOccurrence(ACTOR, "co-owner", request("cancel-foreign-topic", REASON)));
+
+        assertEquals("场次不属于原主题或俱乐部", error.getMessage());
+        verifyNoRefundStarted();
+    }
+
+    /** ★ 负控:主题归本俱乐部,但场次不是主题创建人开的 —— 同 requireOwnedActivity 口径,不认。 */
+    @Test
+    void activityOpenedBySomeoneElseOnClubTopicIsRejectedBeforeAnyRefund() {
+        selfHostedActivity(CLUB, 999L);
+
+        ServiceException error = assertThrows(ServiceException.class,
+                () -> service.cancelOccurrence(ACTOR, "co-owner", request("cancel-foreign-member", REASON)));
+
+        assertEquals("场次不属于原主题或俱乐部", error.getMessage());
+        verifyNoRefundStarted();
+    }
+
+    /** ★ 负控:系列场次不走主题归属,活动 club_id 为空与系列对不上照旧拦下。 */
+    @Test
+    void seriesOccurrenceWithoutClubIdIsStillRejectedBeforeAnyRefund() {
+        selfHostedActivity(CLUB, OWNER);
+        when(mapper.selectSeriesByActivityAnyStatusForUpdate(ACTIVITY)).thenReturn(series());
+
+        ServiceException error = assertThrows(ServiceException.class,
+                () -> service.cancelOccurrence(ACTOR, "co-owner", request("cancel-series-null-club", REASON)));
+
+        assertEquals("场次当前主题或俱乐部与原系列不一致", error.getMessage());
+        verifyNoRefundStarted();
+    }
+
     @Test
     void eventOnlyRoleCannotCancelEvenIfAnAdapterAccidentallyReturnsItsContext() {
         when(accessService.require(ACTOR, CLUB, ACTIVITY, ClubPermission.ACTIVITY_MANAGE))

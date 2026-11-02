@@ -73,8 +73,8 @@ class ClubEventOpsMapperContractTest {
                 "open-session activity is the standalone occurrence truth and must anchor readback");
         assertTrue(query.contains("left join club_event_occurrence o"),
                 "series occurrence is optional for open-session activities");
-        assertTrue(query.contains("a.id = #{activityId} and a.club_id = #{clubId}"),
-                "standalone readback must remain activity-and-club scoped");
+        assertTrue(query.contains("a.id = #{activityId} and (a.club_id = #{clubId} or (a.club_id is null and exists (select 1 from cms_topic t where t.id = a.topic_id and t.club_id = #{clubId} and t.member_id = a.member_id)))"),
+                "standalone readback must stay activity-and-club scoped; a null club_id only counts through the club's own topic");
         assertTrue(query.contains("when a.cancel_time is not null then 'CANCELLED' else 'ACTIVE' end"),
                 "without an occurrence row the real activity state must drive the readback status");
     }

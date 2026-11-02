@@ -1,7 +1,8 @@
 /* CU-C-143 · 私聊路线卡把缺失里程显示为 null km、空封面渲染成一大片空白。
    样本:隔离主题 #990029 的 cms_topic.total_mileage 为 NULL、节点为 0、没有封面。
    走查在三个位置看到同一句「null km · 0 个点」:选择器、发送方气泡、接收方气泡。
-   全局规则(chengyin-ui-rulings-0918):数字没有就显示 0,不是横杠,更不是 null。 */
+   全局规则(chengyin-ui-rulings-0918):数字没有就显示 0,不是横杠,更不是 null。
+   2026-11-02 页面细节 brief 规则 6 改判:没有数据显示「—」,不是假的 0(真实 0 照常显示),走共用件 utils/wxs/num.wxs n()。 */
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
 const fs = require('node:fs');
@@ -20,10 +21,11 @@ test('走查复现的三处里程插值都还在,别把断言写成空集合', (
   assert.equal(coverSpans.length, 2, '选择器与聊天卡各一处封面');
 });
 
-test('缺里程的主题显示 0 km,不是 null km', () => {
+test('缺里程的主题显示 — km,不是 null km,也不是假的 0 km', () => {
   for (const span of mileageSpans) {
-    assert.match(span, /\|\|\s*0/, `里程裸插值无兜底: ${span}`);
+    assert.match(span, /^\{\{num\.n\([^{}]*totalMileage\)\}\}$/, `里程插值必须走 num.n 兜底: ${span}`);
   }
+  assert.match(wxml, /<wxs src="\.\.\/\.\.\/\.\.\/\.\.\/utils\/wxs\/num\.wxs" module="num" \/>/);
   assert.doesNotMatch(wxml, /totalMileage\}\}/, '不能出现 {{...totalMileage}} 这种裸结尾');
 });
 

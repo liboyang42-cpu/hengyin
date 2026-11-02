@@ -5,7 +5,7 @@
  * → --cy-color-bg-surface,比 bg-page 浅一档 ⇒ 顶栏下缘就是一条肉眼可见的色带,
  * 即"顶栏与正文断层"。会话行(.conv)保留 bg-card 做表面分层,断层点因此离开顶栏。 */
 page { background: var(--cy-bg-page); }
-.im-list { min-height: 100vh; background: var(--cy-bg-page); }
+.im-list { position: relative; min-height: 100vh; background: var(--cy-bg-page); }
 
 /* chips 行左对齐留出页边距(48rpx,量自 210.png);右侧不设 padding,让横滑内容自然出血到屏右,
    横滑手势自身就是溢出提示,不需要额外留白。
@@ -15,7 +15,8 @@ page { background: var(--cy-bg-page); }
 .tabs-row { display: block; flex: 1; min-width: 0; }
 
 .refresh-error { display: block; margin: var(--cy-space-2) var(--cy-page-x); }
-.refresh-status { min-height: 64rpx; margin: 0 var(--cy-page-x); display: flex; align-items: center; gap: var(--cy-space-1-5); color: var(--cy-color-text-secondary); font-size: var(--cy-type-caption); }
+/* X1:刷新状态浮在内容上不占位(共用 .cy-refresh-float),列表不再被顶下去 */
+.refresh-status { padding: var(--cy-space-1) var(--cy-space-3); border-radius: var(--cy-radius-pill); background: var(--cy-color-bg-elevated); white-space: nowrap; display: flex; align-items: center; gap: var(--cy-space-1-5); color: var(--cy-color-text-secondary); font-size: var(--cy-type-caption); }
 
 /* .body 只留左侧页边距;右侧改由 .conv 自己的 padding-right 承担(见下),
    这样 .conv-actions(position:absolute; right:0)才能顶到物理屏幕右边缘(Airbnb 215/216.png 左滑
