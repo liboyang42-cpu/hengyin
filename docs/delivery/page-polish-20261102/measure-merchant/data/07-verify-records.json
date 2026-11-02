@@ -1,0 +1,366 @@
+{
+ "route": "pages/merchant/verify-records/index",
+ "container": "mp-page",
+ "cTop": 0,
+ "cBottom": 844,
+ "scrollTop": 0,
+ "scrollHeight": 844,
+ "clientHeight": 844,
+ "chain": [
+  "view.vrl-page.theme-merchant"
+ ],
+ "parent": "view.vrl-page.theme-merchant",
+ "parentStyle": {
+  "radius": 0,
+  "radii": [
+   0,
+   0,
+   0,
+   0
+  ],
+  "pad": [
+   91,
+   0,
+   0,
+   0
+  ],
+  "margin": [
+   0,
+   0,
+   0,
+   0
+  ],
+  "bg": "rgb(243, 244, 244)",
+  "fw": "400",
+  "fs": "12.48px"
+ },
+ "sections": [
+  {
+   "cls": "view.pt__title",
+   "owner": "cy-page-title",
+   "top": 115.953125,
+   "bottom": 152.734375,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 36.78125,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "800",
+   "fs": "30.16px",
+   "surface": false,
+   "ink": {
+    "top": 115.953125,
+    "bottom": 151.953125,
+    "left": 16.625,
+    "right": 137.25,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "核销记录"
+  },
+  {
+   "cls": "scroll-view.cy-tabs.cy-tabs--chip",
+   "owner": "cy-tabs",
+   "top": 161.046875,
+   "bottom": 210.078125,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 49.03125,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    7.3,
+    0,
+    7.3,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": false,
+   "ink": {
+    "top": 168.3125,
+    "bottom": 202.8125,
+    "left": 16.625,
+    "right": 180.328125,
+    "n": 2
+   },
+   "titleGap": {
+    "head": "view.cy-tabs__item",
+    "next": "view.cy-tabs__item.cy-tabs__item--on",
+    "gap": -34.5,
+    "y1": 202.8125,
+    "y2": 168.3125,
+    "x": 16.625
+   },
+   "text": "已核销 0未核销 2"
+  },
+  {
+   "cls": "view.vrl-group-head",
+   "owner": "page",
+   "top": 235.03125,
+   "bottom": 261.65625,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 26.625,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    8.3,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": false,
+   "ink": {
+    "top": 238.03125,
+    "bottom": 258.03125,
+    "left": 16.625,
+    "right": 373.375,
+    "n": 2
+   },
+   "titleGap": {
+    "head": "text.vrl-group-label",
+    "next": "text.vrl-group-total",
+    "gap": -16,
+    "y1": 258.03125,
+    "y2": 242.03125,
+    "x": 16.625
+   },
+   "text": "2026-11-022 条"
+  },
+  {
+   "cls": "view.fin-card.vrl-card",
+   "owner": "page",
+   "top": 269.96875,
+   "bottom": 470.421875,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 200.453125,
+   "radius": 16.64,
+   "radii": [
+    17,
+    17,
+    17,
+    17
+   ],
+   "pad": [
+    16.6,
+    16.6,
+    16.6,
+    16.6
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgb(255, 255, 255)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": true,
+   "ink": {
+    "top": 269.96875,
+    "bottom": 470.421875,
+    "left": 16.625,
+    "right": 373.375,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "未命名节点13:13 ·未核销报名 #74样板咖啡第1站13"
+  },
+  {
+   "cls": "text.vrl-more",
+   "owner": "page",
+   "top": 491.21875,
+   "bottom": 542.765625,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 51.546875,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    16.6,
+    0,
+    16.6,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "11.44px",
+   "surface": false,
+   "ink": {
+    "top": 509.84375,
+    "bottom": 523.84375,
+    "left": 166.40625,
+    "right": 223.59375,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "已经到底了"
+  }
+ ],
+ "cards": [
+  {
+   "cls": "view.fin-card.vrl-card",
+   "owner": "page",
+   "depth": 4,
+   "nested": false,
+   "top": 269.96875,
+   "bottom": 470.421875,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 200.453125,
+   "radius": 16.64,
+   "radii": [
+    17,
+    17,
+    17,
+    17
+   ],
+   "pad": [
+    16.6,
+    16.6,
+    16.6,
+    16.6
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgb(255, 255, 255)",
+   "fw": "400",
+   "fs": "12.48px",
+   "text": "未命名节点13:13 ·未核销报名 #74样板咖",
+   "okL": true,
+   "okR": true,
+   "okRad": true
+  }
+ ],
+ "bottomBar": 844,
+ "errors": [],
+ "consoleErr": [
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico"
+ ],
+ "dump": "核销记录 | 已核销 0 | 未核销 2 | 2026-11-02 | 2 条 | 未命名节点 | 13:13 · | 未核销 | 报名 #74 | 样板咖啡第1站 | 13:10 · | 未核销 | · 图片验证 | 报名 #74 | 已经到底了 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "summary": {
+  "gapMode": 35,
+  "titleGapMode": 12,
+  "cardLeftMode": 17,
+  "cardRightMode": 17,
+  "cardRadiusMode": 17
+ },
+ "gaps": [
+  {
+   "i": 1,
+   "a": "view.pt__title",
+   "b": "scroll-view.cy-tabs.cy-tabs--chip",
+   "g": 16.359375,
+   "y1": 151.953125,
+   "y2": 168.3125,
+   "title": true,
+   "ok": false
+  },
+  {
+   "i": 2,
+   "a": "scroll-view.cy-tabs.cy-tabs--chip",
+   "b": "view.vrl-group-head",
+   "g": 35.21875,
+   "y1": 202.8125,
+   "y2": 238.03125,
+   "title": false,
+   "ok": true
+  },
+  {
+   "i": 3,
+   "a": "view.vrl-group-head",
+   "b": "view.fin-card.vrl-card",
+   "g": 11.9375,
+   "y1": 258.03125,
+   "y2": 269.96875,
+   "title": true,
+   "ok": true
+  },
+  {
+   "i": 4,
+   "a": "view.fin-card.vrl-card",
+   "b": "text.vrl-more",
+   "g": 39.421875,
+   "y1": 470.421875,
+   "y2": 509.84375,
+   "title": false,
+   "ok": false
+  }
+ ],
+ "titleGaps": [],
+ "capture": {
+  "T": 92,
+  "B": 844,
+  "maxScroll": 0,
+  "chunks": 1
+ }
+}

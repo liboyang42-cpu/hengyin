@@ -1,0 +1,786 @@
+{
+ "route": "pages/merchant/marketing/index",
+ "container": "mp-page",
+ "cTop": 0,
+ "cBottom": 844,
+ "scrollTop": 0,
+ "scrollHeight": 962,
+ "clientHeight": 844,
+ "chain": [
+  "view.page.theme-merchant",
+  "view.body"
+ ],
+ "parent": "view.body",
+ "parentStyle": {
+  "radius": 0,
+  "radii": [
+   0,
+   0,
+   0,
+   0
+  ],
+  "pad": [
+   0,
+   16.6,
+   88.1,
+   16.6
+  ],
+  "margin": [
+   0,
+   0,
+   0,
+   0
+  ],
+  "bg": "rgba(0, 0, 0, 0)",
+  "fw": "400",
+  "fs": "12.48px"
+ },
+ "sections": [
+  {
+   "cls": "text.hero-label",
+   "owner": "page",
+   "top": 99.3125,
+   "bottom": 122.609375,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 23.296875,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "14.56px",
+   "surface": false,
+   "ink": {
+    "top": 101.3125,
+    "bottom": 119.3125,
+    "left": 16.625,
+    "right": 101.171875,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "近 30 天报名"
+  },
+  {
+   "cls": "text.hero-value",
+   "owner": "page",
+   "top": 126.765625,
+   "bottom": 179.1875,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 52.421875,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    4.2,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "700",
+   "fs": "43.68px",
+   "surface": false,
+   "ink": {
+    "top": 125.765625,
+    "bottom": 178.765625,
+    "left": 16.625,
+    "right": 43.828125,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "0"
+  },
+  {
+   "cls": "text.hero-sub",
+   "owner": "page",
+   "top": 183.34375,
+   "bottom": 203.3125,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 19.96875,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    4.2,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": false,
+   "ink": {
+    "top": 185.34375,
+    "bottom": 200.34375,
+    "left": 16.625,
+    "right": 52.9375,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "核销 0"
+  },
+  {
+   "cls": "view.tiles",
+   "owner": "page",
+   "top": 228.265625,
+   "bottom": 309.375,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 81.109375,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": false,
+   "ink": {
+    "top": 228.265625,
+    "bottom": 309.375,
+    "left": 16.625,
+    "right": 373.375,
+    "n": 4
+   },
+   "titleGap": null,
+   "text": "店铺参谋店铺装修发主题发活动"
+  },
+  {
+   "cls": "view.sec-head",
+   "owner": "page",
+   "top": 334.328125,
+   "bottom": 360.953125,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 26.625,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    25,
+    0,
+    10.4,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": false,
+   "ink": {
+    "top": 337.328125,
+    "bottom": 357.328125,
+    "left": 16.625,
+    "right": 373.375,
+    "n": 3
+   },
+   "titleGap": {
+    "head": "text.sec-title",
+    "next": "view.sec-link",
+    "gap": -16,
+    "y1": 357.328125,
+    "y2": 341.328125,
+    "x": 16.625
+   },
+   "text": "我的内容管理"
+  },
+  {
+   "cls": "view.mine",
+   "owner": "page",
+   "top": 371.34375,
+   "bottom": 475.34375,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 104,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": false,
+   "ink": {
+    "top": 371.34375,
+    "bottom": 475.34375,
+    "left": 16.625,
+    "right": 373.375,
+    "n": 3
+   },
+   "titleGap": null,
+   "text": "0主题0自由探索0活动"
+  },
+  {
+   "cls": "text.sec-title",
+   "owner": "page",
+   "top": 500.296875,
+   "bottom": 526.921875,
+   "left": 16.625,
+   "right": 66.5,
+   "w": 49.875,
+   "h": 26.625,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "700",
+   "fs": "16.64px",
+   "surface": false,
+   "ink": {
+    "top": 503.296875,
+    "bottom": 523.296875,
+    "left": 16.625,
+    "right": 66.5,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "优惠券"
+  },
+  {
+   "cls": "view.cy-empty-title",
+   "owner": "cy-empty",
+   "top": 562.265625,
+   "bottom": 585.5625,
+   "left": 151.359375,
+   "right": 238.640625,
+   "w": 87.28125,
+   "h": 23.296875,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "600",
+   "fs": "14.56px",
+   "surface": false,
+   "ink": {
+    "top": 564.265625,
+    "bottom": 582.265625,
+    "left": 151.359375,
+    "right": 238.640625,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "还没有优惠券"
+  },
+  {
+   "cls": "view.cy-empty-sub",
+   "owner": "cy-empty",
+   "top": 589.71875,
+   "bottom": 608.015625,
+   "left": 109.21875,
+   "right": 280.78125,
+   "w": 171.5625,
+   "h": 18.296875,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    4.2,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "11.44px",
+   "surface": false,
+   "ink": {
+    "top": 591.71875,
+    "bottom": 605.71875,
+    "left": 109.21875,
+    "right": 280.78125,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "发一张到店券，把看过的人带进门"
+  },
+  {
+   "cls": "text.sec-title",
+   "owner": "page",
+   "top": 657.921875,
+   "bottom": 684.546875,
+   "left": 16.625,
+   "right": 83.125,
+   "w": 66.5,
+   "h": 26.625,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "700",
+   "fs": "16.64px",
+   "surface": false,
+   "ink": {
+    "top": 660.921875,
+    "bottom": 680.921875,
+    "left": 16.625,
+    "right": 83.125,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "合作机会"
+  },
+  {
+   "cls": "image.coop-img",
+   "owner": "page",
+   "top": 694.9375,
+   "bottom": 873.8125,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 178.875,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": false,
+   "ink": {
+    "top": 694.9375,
+    "bottom": 873.8125,
+    "left": 16.625,
+    "right": 373.375,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": ""
+  }
+ ],
+ "cards": [
+  {
+   "cls": "view.mine-tile",
+   "owner": "page",
+   "depth": 3,
+   "nested": false,
+   "top": 371.34375,
+   "bottom": 475.34375,
+   "left": 16.625,
+   "right": 130,
+   "w": 113.375,
+   "h": 104,
+   "radius": 20.8,
+   "radii": [
+    21,
+    21,
+    21,
+    21
+   ],
+   "pad": [
+    12.5,
+    10.4,
+    12.5,
+    12.5
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgb(255, 255, 255)",
+   "fw": "400",
+   "fs": "12.48px",
+   "text": "0主题",
+   "okL": true,
+   "okR": false,
+   "okRad": true
+  },
+  {
+   "cls": "view.mine-tile",
+   "owner": "page",
+   "depth": 3,
+   "nested": false,
+   "top": 371.34375,
+   "bottom": 475.34375,
+   "left": 138.3125,
+   "right": 251.6875,
+   "w": 113.375,
+   "h": 104,
+   "radius": 20.8,
+   "radii": [
+    21,
+    21,
+    21,
+    21
+   ],
+   "pad": [
+    12.5,
+    10.4,
+    12.5,
+    12.5
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgb(255, 255, 255)",
+   "fw": "400",
+   "fs": "12.48px",
+   "text": "0自由探索",
+   "okL": false,
+   "okR": false,
+   "okRad": true
+  },
+  {
+   "cls": "view.mine-tile",
+   "owner": "page",
+   "depth": 3,
+   "nested": false,
+   "top": 371.34375,
+   "bottom": 475.34375,
+   "left": 260,
+   "right": 373.375,
+   "w": 113.375,
+   "h": 104,
+   "radius": 20.8,
+   "radii": [
+    21,
+    21,
+    21,
+    21
+   ],
+   "pad": [
+    12.5,
+    10.4,
+    12.5,
+    12.5
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgb(255, 255, 255)",
+   "fw": "400",
+   "fs": "12.48px",
+   "text": "0活动",
+   "okL": false,
+   "okR": true,
+   "okRad": true
+  },
+  {
+   "cls": "view.coop-scrim",
+   "owner": "page",
+   "depth": 3,
+   "nested": false,
+   "top": 694.9375,
+   "bottom": 873.8125,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 178.875,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "text": "",
+   "okL": true,
+   "okR": true,
+   "okRad": false
+  }
+ ],
+ "bottomBar": 747.625,
+ "errors": [],
+ "consoleErr": [
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico"
+ ],
+ "dump": "营销 | 近 30 天报名 | 0 | 核销 0 | 店铺参谋 | 店铺装修 | 发主题 | 发活动 | 我的内容 | 管理 | 0 | 主题 | 0 | 自由探索 | 0 | 活动 | 优惠券 | 还没有优惠券 | 发一张到店券，把看过的人带进门 | 合作机会 | 2 个开放商机 | 进入合作中心 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "summary": {
+  "gapMode": 28,
+  "titleGapMode": 14,
+  "cardLeftMode": 17,
+  "cardRightMode": 17,
+  "cardRadiusMode": 21
+ },
+ "gaps": [
+  {
+   "i": 1,
+   "a": "text.hero-label",
+   "b": "text.hero-value",
+   "g": 6.453125,
+   "y1": 119.3125,
+   "y2": 125.765625,
+   "title": true,
+   "ok": false
+  },
+  {
+   "i": 2,
+   "a": "text.hero-value",
+   "b": "text.hero-sub",
+   "g": 6.578125,
+   "y1": 178.765625,
+   "y2": 185.34375,
+   "title": false,
+   "ok": false
+  },
+  {
+   "i": 3,
+   "a": "text.hero-sub",
+   "b": "view.tiles",
+   "g": 27.921875,
+   "y1": 200.34375,
+   "y2": 228.265625,
+   "title": true,
+   "ok": false
+  },
+  {
+   "i": 4,
+   "a": "view.tiles",
+   "b": "view.sec-head",
+   "g": 27.953125,
+   "y1": 309.375,
+   "y2": 337.328125,
+   "title": false,
+   "ok": true
+  },
+  {
+   "i": 5,
+   "a": "view.sec-head",
+   "b": "view.mine",
+   "g": 14.015625,
+   "y1": 357.328125,
+   "y2": 371.34375,
+   "title": true,
+   "ok": true
+  },
+  {
+   "i": 6,
+   "a": "view.mine",
+   "b": "text.sec-title",
+   "g": 27.953125,
+   "y1": 475.34375,
+   "y2": 503.296875,
+   "title": false,
+   "ok": true
+  },
+  {
+   "i": 7,
+   "a": "text.sec-title",
+   "b": "view.cy-empty-title",
+   "g": 40.96875,
+   "y1": 523.296875,
+   "y2": 564.265625,
+   "title": false,
+   "ok": false
+  },
+  {
+   "i": 8,
+   "a": "view.cy-empty-title",
+   "b": "view.cy-empty-sub",
+   "g": 9.453125,
+   "y1": 582.265625,
+   "y2": 591.71875,
+   "title": false,
+   "ok": false
+  },
+  {
+   "i": 9,
+   "a": "view.cy-empty-sub",
+   "b": "text.sec-title",
+   "g": 55.203125,
+   "y1": 605.71875,
+   "y2": 660.921875,
+   "title": false,
+   "ok": false
+  },
+  {
+   "i": 10,
+   "a": "text.sec-title",
+   "b": "image.coop-img",
+   "g": 14.015625,
+   "y1": 680.921875,
+   "y2": 694.9375,
+   "title": true,
+   "ok": true
+  }
+ ],
+ "titleGaps": [],
+ "capture": {
+  "T": 92,
+  "B": 747.625,
+  "maxScroll": 118,
+  "chunks": 2
+ }
+}

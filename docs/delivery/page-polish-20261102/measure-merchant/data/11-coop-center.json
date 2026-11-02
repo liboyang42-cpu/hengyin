@@ -1,0 +1,365 @@
+{
+ "route": "pages/merchant/coop-center/index",
+ "container": "mp-page",
+ "cTop": 0,
+ "cBottom": 844,
+ "scrollTop": 0,
+ "scrollHeight": 844,
+ "clientHeight": 844,
+ "chain": [
+  "view.cc-page.theme-merchant"
+ ],
+ "parent": "view.cc-page.theme-merchant",
+ "parentStyle": {
+  "radius": 0,
+  "radii": [
+   0,
+   0,
+   0,
+   0
+  ],
+  "pad": [
+   91,
+   0,
+   0,
+   0
+  ],
+  "margin": [
+   0,
+   0,
+   0,
+   0
+  ],
+  "bg": "rgb(243, 244, 244)",
+  "fw": "400",
+  "fs": "12.48px"
+ },
+ "sections": [
+  {
+   "cls": "view.cc-tabbar",
+   "owner": "page",
+   "top": 91,
+   "bottom": 151.296875,
+   "left": 0,
+   "right": 390,
+   "w": 390,
+   "h": 60.296875,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    14.6,
+    12.5,
+    0,
+    12.5
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": false,
+   "ink": {
+    "top": 115.9375,
+    "bottom": 140.890625,
+    "left": 37.40625,
+    "right": 367.125,
+    "n": 3
+   },
+   "titleGap": {
+    "head": "<cy-tabs>.cc-tabs",
+    "next": "view.cc-bell",
+    "gap": -20.828125,
+    "y1": 136.765625,
+    "y2": 115.9375,
+    "x": 37.40625
+   },
+   "text": ""
+  },
+  {
+   "cls": "view.cc-route-cover.cc-route-cover--free",
+   "owner": "page",
+   "top": 163.765625,
+   "bottom": 434.15625,
+   "left": 12.46875,
+   "right": 377.53125,
+   "w": 365.0625,
+   "h": 270.390625,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": true,
+   "ink": {
+    "top": 163.765625,
+    "bottom": 434.15625,
+    "left": 12.46875,
+    "right": 377.53125,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "自由探索E2E 探店日一期11月12日 – 12月12日 ·"
+  },
+  {
+   "cls": "view.cc-route-cover.cc-route-cover--free",
+   "owner": "page",
+   "top": 446.625,
+   "bottom": 717.015625,
+   "left": 12.46875,
+   "right": 377.53125,
+   "w": 365.0625,
+   "h": 270.390625,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": true,
+   "ink": {
+    "top": 446.625,
+    "bottom": 717.015625,
+    "left": 12.46875,
+    "right": 377.53125,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "自由探索E2E 探店日一期看详情"
+  }
+ ],
+ "cards": [
+  {
+   "cls": "view.cc-route-cover.cc-route-cover--free",
+   "owner": "page",
+   "depth": 4,
+   "nested": false,
+   "top": 163.765625,
+   "bottom": 434.15625,
+   "left": 12.46875,
+   "right": 377.53125,
+   "w": 365.0625,
+   "h": 270.390625,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "text": "自由探索E2E 探店日一期11月12日 – 12",
+   "okL": true,
+   "okR": true,
+   "okRad": true
+  },
+  {
+   "cls": "view.cc-route-shade",
+   "owner": "page",
+   "depth": 5,
+   "nested": true,
+   "top": 163.765625,
+   "bottom": 434.15625,
+   "left": 12.46875,
+   "right": 377.53125,
+   "w": 365.0625,
+   "h": 270.390625,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "text": "",
+   "ok": true
+  },
+  {
+   "cls": "view.cc-route-cover.cc-route-cover--free",
+   "owner": "page",
+   "depth": 4,
+   "nested": false,
+   "top": 446.625,
+   "bottom": 717.015625,
+   "left": 12.46875,
+   "right": 377.53125,
+   "w": 365.0625,
+   "h": 270.390625,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "text": "自由探索E2E 探店日一期看详情",
+   "okL": true,
+   "okR": true,
+   "okRad": true
+  },
+  {
+   "cls": "view.cc-route-shade",
+   "owner": "page",
+   "depth": 5,
+   "nested": true,
+   "top": 446.625,
+   "bottom": 717.015625,
+   "left": 12.46875,
+   "right": 377.53125,
+   "w": 365.0625,
+   "h": 270.390625,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "text": "",
+   "ok": true
+  }
+ ],
+ "bottomBar": 844,
+ "errors": [],
+ "consoleErr": [
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+ ],
+ "dump": "合作中心 | 官方活动 | 广场 | 自由探索 | E2E 探店日一期 | 11月12日 – 12月12日 · 权益核销 · 权益不低于 ¥30 | 4 站 | 看详情 | 自由探索 | E2E 探店日一期 | 看详情 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "summary": {
+  "gapMode": 12,
+  "titleGapMode": 23,
+  "cardLeftMode": 12,
+  "cardRightMode": 12,
+  "cardRadiusMode": 0
+ },
+ "gaps": [
+  {
+   "i": 1,
+   "a": "view.cc-tabbar",
+   "b": "view.cc-route-cover.cc-route-cover--free",
+   "g": 22.875,
+   "y1": 140.890625,
+   "y2": 163.765625,
+   "title": true,
+   "ok": true
+  },
+  {
+   "i": 2,
+   "a": "view.cc-route-cover.cc-route-cover--free",
+   "b": "view.cc-route-cover.cc-route-cover--free",
+   "g": 12.46875,
+   "y1": 434.15625,
+   "y2": 446.625,
+   "title": false,
+   "ok": true
+  }
+ ],
+ "titleGaps": [],
+ "capture": {
+  "T": 92,
+  "B": 844,
+  "maxScroll": 0,
+  "chunks": 1
+ }
+}

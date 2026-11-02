@@ -1,0 +1,688 @@
+{
+ "route": "pages/merchant/ledger/index",
+ "container": "mp-page",
+ "cTop": 0,
+ "cBottom": 844,
+ "scrollTop": 0,
+ "scrollHeight": 1199,
+ "clientHeight": 844,
+ "chain": [
+  "view.ledger.theme-merchant"
+ ],
+ "parent": "view.ledger.theme-merchant",
+ "parentStyle": {
+  "radius": 0,
+  "radii": [
+   0,
+   0,
+   0,
+   0
+  ],
+  "pad": [
+   0,
+   16.6,
+   25,
+   16.6
+  ],
+  "margin": [
+   0,
+   0,
+   0,
+   0
+  ],
+  "bg": "rgb(243, 244, 244)",
+  "fw": "400",
+  "fs": "12.48px"
+ },
+ "sections": [
+  {
+   "cls": "view.pt__title",
+   "owner": "cy-page-title",
+   "top": 115.953125,
+   "bottom": 152.734375,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 36.78125,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "800",
+   "fs": "30.16px",
+   "surface": false,
+   "ink": {
+    "top": 115.953125,
+    "bottom": 151.953125,
+    "left": 16.625,
+    "right": 76.9375,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "结算"
+  },
+  {
+   "cls": "view.fin-hero",
+   "owner": "page",
+   "top": 161.046875,
+   "bottom": 366.046875,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 205,
+   "radius": 16.64,
+   "radii": [
+    17,
+    17,
+    17,
+    17
+   ],
+   "pad": [
+    16.6,
+    16.6,
+    16.6,
+    16.6
+   ],
+   "margin": [
+    0,
+    0,
+    20.8,
+    0
+   ],
+   "bg": "rgb(255, 255, 255)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": true,
+   "ink": {
+    "top": 161.046875,
+    "bottom": 366.046875,
+    "left": 16.625,
+    "right": 373.375,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "本月个人账户净入账¥0.00个人账户毛额¥0.00已执行调整"
+  },
+  {
+   "cls": "view.btn.btn--primary",
+   "owner": "cy-btn",
+   "top": 386.84375,
+   "bottom": 432.59375,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 45.75,
+   "radius": 12.48,
+   "radii": [
+    12,
+    12,
+    12,
+    12
+   ],
+   "pad": [
+    8.3,
+    20.8,
+    8.3,
+    20.8
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgb(0, 0, 0)",
+   "fw": "700",
+   "fs": "14.56px",
+   "surface": true,
+   "ink": {
+    "top": 386.84375,
+    "bottom": 432.59375,
+    "left": 16.625,
+    "right": 373.375,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": ""
+  },
+  {
+   "cls": "view.fin-alert-row",
+   "owner": "page",
+   "top": 453.390625,
+   "bottom": 524.078125,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 70.6875,
+   "radius": 16.64,
+   "radii": [
+    17,
+    17,
+    17,
+    17
+   ],
+   "pad": [
+    12.5,
+    16.6,
+    12.5,
+    16.6
+   ],
+   "margin": [
+    0,
+    0,
+    20.8,
+    0
+   ],
+   "bg": "rgb(255, 255, 255)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": true,
+   "ink": {
+    "top": 453.390625,
+    "bottom": 524.078125,
+    "left": 16.625,
+    "right": 373.375,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "结算到账提醒授权状态待确认，可点击申请"
+  },
+  {
+   "cls": "view.fin-group__title",
+   "owner": "page",
+   "top": 544.875,
+   "bottom": 564.84375,
+   "left": 20.78125,
+   "right": 369.21875,
+   "w": 348.4375,
+   "h": 19.96875,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    4.2,
+    8.3,
+    4.2
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": false,
+   "ink": {
+    "top": 546.875,
+    "bottom": 561.875,
+    "left": 20.78125,
+    "right": 70.65625,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "收入明细"
+  },
+  {
+   "cls": "view.cy-empty-art",
+   "owner": "cy-empty",
+   "top": 598.109375,
+   "bottom": 777.984375,
+   "left": 101.40625,
+   "right": 288.59375,
+   "w": 187.1875,
+   "h": 179.875,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    12.5,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": false,
+   "ink": {
+    "top": 598.109375,
+    "bottom": 777.875,
+    "left": 101.453125,
+    "right": 288.515625,
+    "n": 2
+   },
+   "titleGap": null,
+   "text": ""
+  },
+  {
+   "cls": "view.cy-empty-title",
+   "owner": "cy-empty",
+   "top": 790.453125,
+   "bottom": 813.75,
+   "left": 114.984375,
+   "right": 275,
+   "w": 160.015625,
+   "h": 23.296875,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "600",
+   "fs": "14.56px",
+   "surface": false,
+   "ink": {
+    "top": 792.453125,
+    "bottom": 810.453125,
+    "left": 114.984375,
+    "right": 275,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "还没有已成立的收入明细"
+  },
+  {
+   "cls": "view.fin-group__title",
+   "owner": "page",
+   "top": 859.5,
+   "bottom": 879.46875,
+   "left": 20.78125,
+   "right": 369.21875,
+   "w": 348.4375,
+   "h": 19.96875,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    4.2,
+    8.3,
+    4.2
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": false,
+   "ink": {
+    "top": 861.5,
+    "bottom": 876.5,
+    "left": 20.78125,
+    "right": 70.65625,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "对公结算"
+  },
+  {
+   "cls": "view.cy-empty-art",
+   "owner": "cy-empty",
+   "top": 912.734375,
+   "bottom": 1092.609375,
+   "left": 101.40625,
+   "right": 288.59375,
+   "w": 187.1875,
+   "h": 179.875,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    12.5,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": false,
+   "ink": {
+    "top": 912.734375,
+    "bottom": 1092.5,
+    "left": 101.453125,
+    "right": 288.515625,
+    "n": 2
+   },
+   "titleGap": null,
+   "text": ""
+  },
+  {
+   "cls": "view.cy-empty-title",
+   "owner": "cy-empty",
+   "top": 1105.078125,
+   "bottom": 1128.375,
+   "left": 129.53125,
+   "right": 260.453125,
+   "w": 130.921875,
+   "h": 23.296875,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "600",
+   "fs": "14.56px",
+   "surface": false,
+   "ink": {
+    "top": 1107.078125,
+    "bottom": 1125.078125,
+    "left": 129.53125,
+    "right": 260.453125,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "还没有对公结算批次"
+  }
+ ],
+ "cards": [
+  {
+   "cls": "view.fin-hero",
+   "owner": "page",
+   "depth": 1,
+   "nested": false,
+   "top": 161.046875,
+   "bottom": 366.046875,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 205,
+   "radius": 16.64,
+   "radii": [
+    17,
+    17,
+    17,
+    17
+   ],
+   "pad": [
+    16.6,
+    16.6,
+    16.6,
+    16.6
+   ],
+   "margin": [
+    0,
+    0,
+    20.8,
+    0
+   ],
+   "bg": "rgb(255, 255, 255)",
+   "fw": "400",
+   "fs": "12.48px",
+   "text": "本月个人账户净入账¥0.00个人账户毛额¥0.0",
+   "okL": true,
+   "okR": true,
+   "okRad": true
+  },
+  {
+   "cls": "view.btn.btn--primary",
+   "owner": "cy-btn",
+   "depth": 2,
+   "nested": false,
+   "top": 386.84375,
+   "bottom": 432.59375,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 45.75,
+   "radius": 12.48,
+   "radii": [
+    12,
+    12,
+    12,
+    12
+   ],
+   "pad": [
+    8.3,
+    20.8,
+    8.3,
+    20.8
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgb(0, 0, 0)",
+   "fw": "700",
+   "fs": "14.56px",
+   "text": "",
+   "okL": true,
+   "okR": true,
+   "okRad": false
+  },
+  {
+   "cls": "view.fin-alert-row",
+   "owner": "page",
+   "depth": 1,
+   "nested": false,
+   "top": 453.390625,
+   "bottom": 524.078125,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 70.6875,
+   "radius": 16.64,
+   "radii": [
+    17,
+    17,
+    17,
+    17
+   ],
+   "pad": [
+    12.5,
+    16.6,
+    12.5,
+    16.6
+   ],
+   "margin": [
+    0,
+    0,
+    20.8,
+    0
+   ],
+   "bg": "rgb(255, 255, 255)",
+   "fw": "400",
+   "fs": "12.48px",
+   "text": "结算到账提醒授权状态待确认，可点击申请",
+   "okL": true,
+   "okR": true,
+   "okRad": true
+  }
+ ],
+ "bottomBar": 844,
+ "errors": [],
+ "consoleErr": [
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+ ],
+ "dump": "结算 | 本月个人账户净入账 | ¥0.00 | 个人账户毛额 | ¥0.00 | 已执行调整 | ¥0.00 | 待对公结算 | ¥0.00 | 去我的资产 | 结算到账提醒 | 授权状态待确认，可点击申请 | 收入明细 | 还没有已成立的收入明细 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "summary": {
+  "gapMode": 15,
+  "titleGapMode": 36,
+  "cardLeftMode": 17,
+  "cardRightMode": 17,
+  "cardRadiusMode": 17
+ },
+ "gaps": [
+  {
+   "i": 1,
+   "a": "view.pt__title",
+   "b": "view.fin-hero",
+   "g": 9.09375,
+   "y1": 151.953125,
+   "y2": 161.046875,
+   "title": true,
+   "ok": false
+  },
+  {
+   "i": 2,
+   "a": "view.fin-hero",
+   "b": "view.btn.btn--primary",
+   "g": 20.796875,
+   "y1": 366.046875,
+   "y2": 386.84375,
+   "title": false,
+   "ok": false
+  },
+  {
+   "i": 3,
+   "a": "view.btn.btn--primary",
+   "b": "view.fin-alert-row",
+   "g": 20.796875,
+   "y1": 432.59375,
+   "y2": 453.390625,
+   "title": false,
+   "ok": false
+  },
+  {
+   "i": 4,
+   "a": "view.fin-alert-row",
+   "b": "view.fin-group__title",
+   "g": 22.796875,
+   "y1": 524.078125,
+   "y2": 546.875,
+   "title": false,
+   "ok": false
+  },
+  {
+   "i": 5,
+   "a": "view.fin-group__title",
+   "b": "view.cy-empty-art",
+   "g": 36.234375,
+   "y1": 561.875,
+   "y2": 598.109375,
+   "title": true,
+   "ok": true
+  },
+  {
+   "i": 6,
+   "a": "view.cy-empty-art",
+   "b": "view.cy-empty-title",
+   "g": 14.578125,
+   "y1": 777.875,
+   "y2": 792.453125,
+   "title": false,
+   "ok": true
+  },
+  {
+   "i": 7,
+   "a": "view.cy-empty-title",
+   "b": "view.fin-group__title",
+   "g": 51.046875,
+   "y1": 810.453125,
+   "y2": 861.5,
+   "title": false,
+   "ok": false
+  },
+  {
+   "i": 8,
+   "a": "view.fin-group__title",
+   "b": "view.cy-empty-art",
+   "g": 36.234375,
+   "y1": 876.5,
+   "y2": 912.734375,
+   "title": true,
+   "ok": true
+  },
+  {
+   "i": 9,
+   "a": "view.cy-empty-art",
+   "b": "view.cy-empty-title",
+   "g": 14.578125,
+   "y1": 1092.5,
+   "y2": 1107.078125,
+   "title": false,
+   "ok": true
+  }
+ ],
+ "titleGaps": [],
+ "capture": {
+  "T": 92,
+  "B": 844,
+  "maxScroll": 355,
+  "chunks": 2
+ }
+}

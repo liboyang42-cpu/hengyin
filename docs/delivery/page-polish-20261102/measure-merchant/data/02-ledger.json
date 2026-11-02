@@ -1,0 +1,428 @@
+{
+ "route": "pages/merchant/ledger/index",
+ "container": "mp-page",
+ "cTop": 0,
+ "cBottom": 844,
+ "scrollTop": 0,
+ "scrollHeight": 844,
+ "clientHeight": 844,
+ "chain": [
+  "view.ledger.theme-merchant"
+ ],
+ "parent": "view.ledger.theme-merchant",
+ "parentStyle": {
+  "radius": 0,
+  "radii": [
+   0,
+   0,
+   0,
+   0
+  ],
+  "pad": [
+   0,
+   16.6,
+   25,
+   16.6
+  ],
+  "margin": [
+   0,
+   0,
+   0,
+   0
+  ],
+  "bg": "rgb(243, 244, 244)",
+  "fw": "400",
+  "fs": "12.48px"
+ },
+ "sections": [
+  {
+   "cls": "view.pt__title",
+   "owner": "cy-page-title",
+   "top": 115.953125,
+   "bottom": 152.734375,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 36.78125,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "800",
+   "fs": "30.16px",
+   "surface": false,
+   "ink": {
+    "top": 115.953125,
+    "bottom": 151.953125,
+    "left": 16.625,
+    "right": 167.40625,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "核销与退款"
+  },
+  {
+   "cls": "view.cy-tabs.cy-tabs--chip",
+   "owner": "cy-tabs",
+   "top": 161.046875,
+   "bottom": 206.796875,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 45.75,
+   "radius": 519.48,
+   "radii": [
+    519,
+    519,
+    519,
+    519
+   ],
+   "pad": [
+    3.1,
+    3.1,
+    3.1,
+    3.1
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgb(238, 238, 238)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": true,
+   "ink": {
+    "top": 161.046875,
+    "bottom": 206.796875,
+    "left": 16.625,
+    "right": 373.375,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "全部待处理已处理不结现金"
+  },
+  {
+   "cls": "view.fin-summary",
+   "owner": "page",
+   "top": 223.421875,
+   "bottom": 307.421875,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 84,
+   "radius": 16.64,
+   "radii": [
+    17,
+    17,
+    17,
+    17
+   ],
+   "pad": [
+    16.6,
+    16.6,
+    16.6,
+    16.6
+   ],
+   "margin": [
+    0,
+    0,
+    20.8,
+    0
+   ],
+   "bg": "rgb(255, 255, 255)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": true,
+   "ink": {
+    "top": 223.421875,
+    "bottom": 307.421875,
+    "left": 16.625,
+    "right": 373.375,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "本月核销1 笔待结算¥0.00已入账¥0.00"
+  },
+  {
+   "cls": "view.fin-group__title",
+   "owner": "page",
+   "top": 328.21875,
+   "bottom": 348.1875,
+   "left": 20.78125,
+   "right": 369.21875,
+   "w": 348.4375,
+   "h": 19.96875,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    4.2,
+    8.3,
+    4.2
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": false,
+   "ink": {
+    "top": 330.21875,
+    "bottom": 345.21875,
+    "left": 20.78125,
+    "right": 81.859375,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "11 月 02 日"
+  },
+  {
+   "cls": "view.fin-card",
+   "owner": "page",
+   "top": 356.5,
+   "bottom": 465.453125,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 108.953125,
+   "radius": 16.64,
+   "radii": [
+    17,
+    17,
+    17,
+    17
+   ],
+   "pad": [
+    16.6,
+    16.6,
+    16.6,
+    16.6
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgb(255, 255, 255)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": true,
+   "ink": {
+    "top": 356.5,
+    "bottom": 465.453125,
+    "left": 16.625,
+    "right": 373.375,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "E2E 探店日一期 · 第1章 咖啡顾客信息受保护 · 13"
+  }
+ ],
+ "cards": [
+  {
+   "cls": "view.cy-tabs.cy-tabs--chip",
+   "owner": "cy-tabs",
+   "depth": 2,
+   "nested": false,
+   "top": 161.046875,
+   "bottom": 206.796875,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 45.75,
+   "radius": 519.48,
+   "radii": [
+    519,
+    519,
+    519,
+    519
+   ],
+   "pad": [
+    3.1,
+    3.1,
+    3.1,
+    3.1
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgb(238, 238, 238)",
+   "fw": "400",
+   "fs": "12.48px",
+   "text": "全部待处理已处理不结现金",
+   "okL": true,
+   "okR": true,
+   "okRad": false
+  },
+  {
+   "cls": "view.fin-summary",
+   "owner": "page",
+   "depth": 2,
+   "nested": false,
+   "top": 223.421875,
+   "bottom": 307.421875,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 84,
+   "radius": 16.64,
+   "radii": [
+    17,
+    17,
+    17,
+    17
+   ],
+   "pad": [
+    16.6,
+    16.6,
+    16.6,
+    16.6
+   ],
+   "margin": [
+    0,
+    0,
+    20.8,
+    0
+   ],
+   "bg": "rgb(255, 255, 255)",
+   "fw": "400",
+   "fs": "12.48px",
+   "text": "本月核销1 笔待结算¥0.00已入账¥0.00",
+   "okL": true,
+   "okR": true,
+   "okRad": true
+  },
+  {
+   "cls": "view.fin-card",
+   "owner": "page",
+   "depth": 3,
+   "nested": false,
+   "top": 356.5,
+   "bottom": 465.453125,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 108.953125,
+   "radius": 16.64,
+   "radii": [
+    17,
+    17,
+    17,
+    17
+   ],
+   "pad": [
+    16.6,
+    16.6,
+    16.6,
+    16.6
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgb(255, 255, 255)",
+   "fw": "400",
+   "fs": "12.48px",
+   "text": "E2E 探店日一期 · 第1章 咖啡顾客信息受保",
+   "okL": true,
+   "okR": true,
+   "okRad": true
+  }
+ ],
+ "bottomBar": 844,
+ "errors": [],
+ "consoleErr": [
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico"
+ ],
+ "dump": "核销与退款 | 全部 | 待处理 | 已处理 | 不结现金 | 本月核销 | 1 笔 | 待结算 | ¥0.00 | 已入账 | ¥0.00 | 11 月 02 日 | E2E 探店日一期 · 第1章 咖啡 | 顾客信息受保护 | · 13:13 | 权益已履约 · 无现金结算 | — | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "summary": {
+  "gapMode": 17,
+  "titleGapMode": 9,
+  "cardLeftMode": 17,
+  "cardRightMode": 17,
+  "cardRadiusMode": 17
+ },
+ "gaps": [
+  {
+   "i": 1,
+   "a": "view.pt__title",
+   "b": "view.cy-tabs.cy-tabs--chip",
+   "g": 9.09375,
+   "y1": 151.953125,
+   "y2": 161.046875,
+   "title": true,
+   "ok": true
+  },
+  {
+   "i": 2,
+   "a": "view.cy-tabs.cy-tabs--chip",
+   "b": "view.fin-summary",
+   "g": 16.625,
+   "y1": 206.796875,
+   "y2": 223.421875,
+   "title": false,
+   "ok": true
+  },
+  {
+   "i": 3,
+   "a": "view.fin-summary",
+   "b": "view.fin-group__title",
+   "g": 22.796875,
+   "y1": 307.421875,
+   "y2": 330.21875,
+   "title": false,
+   "ok": false
+  },
+  {
+   "i": 4,
+   "a": "view.fin-group__title",
+   "b": "view.fin-card",
+   "g": 11.28125,
+   "y1": 345.21875,
+   "y2": 356.5,
+   "title": true,
+   "ok": false
+  }
+ ],
+ "titleGaps": [],
+ "capture": {
+  "T": 92,
+  "B": 844,
+  "maxScroll": 0,
+  "chunks": 1
+ }
+}

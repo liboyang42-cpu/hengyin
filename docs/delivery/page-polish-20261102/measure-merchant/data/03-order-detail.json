@@ -1,0 +1,196 @@
+{
+ "route": "pages/merchant/ledger/order-detail/index",
+ "container": "mp-page",
+ "cTop": 0,
+ "cBottom": 844,
+ "scrollTop": 0,
+ "scrollHeight": 844,
+ "clientHeight": 844,
+ "chain": [
+  "view.order-detail.theme-merchant"
+ ],
+ "parent": "view.order-detail.theme-merchant",
+ "parentStyle": {
+  "radius": 0,
+  "radii": [
+   0,
+   0,
+   0,
+   0
+  ],
+  "pad": [
+   0,
+   16.6,
+   25,
+   16.6
+  ],
+  "margin": [
+   0,
+   0,
+   0,
+   0
+  ],
+  "bg": "rgb(243, 244, 244)",
+  "fw": "400",
+  "fs": "12.48px"
+ },
+ "sections": [
+  {
+   "cls": "view.pt__title",
+   "owner": "cy-page-title",
+   "top": 115.953125,
+   "bottom": 152.734375,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 36.78125,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "800",
+   "fs": "30.16px",
+   "surface": false,
+   "ink": {
+    "top": 115.953125,
+    "bottom": 151.953125,
+    "left": 16.625,
+    "right": 137.25,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "核销详情"
+  },
+  {
+   "cls": "view.fin-hero.order-summary",
+   "owner": "page",
+   "top": 161.046875,
+   "bottom": 358.5625,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 197.515625,
+   "radius": 16.64,
+   "radii": [
+    17,
+    17,
+    17,
+    17
+   ],
+   "pad": [
+    16.6,
+    16.6,
+    16.6,
+    16.6
+   ],
+   "margin": [
+    0,
+    0,
+    20.8,
+    0
+   ],
+   "bg": "rgb(255, 255, 255)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": true,
+   "ink": {
+    "top": 161.046875,
+    "bottom": 358.5625,
+    "left": 16.625,
+    "right": 373.375,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "E2E 探店日一期 · 第1章 咖啡 · 我的收入—核销门店"
+  }
+ ],
+ "cards": [
+  {
+   "cls": "view.fin-hero.order-summary",
+   "owner": "page",
+   "depth": 1,
+   "nested": false,
+   "top": 161.046875,
+   "bottom": 358.5625,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 197.515625,
+   "radius": 16.64,
+   "radii": [
+    17,
+    17,
+    17,
+    17
+   ],
+   "pad": [
+    16.6,
+    16.6,
+    16.6,
+    16.6
+   ],
+   "margin": [
+    0,
+    0,
+    20.8,
+    0
+   ],
+   "bg": "rgb(255, 255, 255)",
+   "fw": "400",
+   "fs": "12.48px",
+   "text": "E2E 探店日一期 · 第1章 咖啡 · 我的收",
+   "okL": true,
+   "okR": true,
+   "okRad": true
+  }
+ ],
+ "bottomBar": 844,
+ "errors": [],
+ "consoleErr": [
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico"
+ ],
+ "dump": "核销详情 | E2E 探店日一期 · 第1章 咖啡 · 我的收入 | — | 权益已履约 · 无现金结算 | 核销门店 | 探店日样板咖啡 | 核销时间 | 2026-11-02 13:13 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "summary": {
+  "gapMode": null,
+  "titleGapMode": 9,
+  "cardLeftMode": 17,
+  "cardRightMode": 17,
+  "cardRadiusMode": 17
+ },
+ "gaps": [
+  {
+   "i": 1,
+   "a": "view.pt__title",
+   "b": "view.fin-hero.order-summary",
+   "g": 9.09375,
+   "y1": 151.953125,
+   "y2": 161.046875,
+   "title": true,
+   "ok": true
+  }
+ ],
+ "titleGaps": [],
+ "capture": {
+  "T": 92,
+  "B": 844,
+  "maxScroll": 0,
+  "chunks": 1
+ }
+}

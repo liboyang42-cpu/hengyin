@@ -1,0 +1,250 @@
+{
+ "route": "pages/merchant/ledger/batch-detail/index",
+ "container": "mp-page",
+ "cTop": 0,
+ "cBottom": 844,
+ "scrollTop": 0,
+ "scrollHeight": 844,
+ "clientHeight": 844,
+ "chain": [
+  "view.order-detail.theme-merchant",
+  "<cy-empty>.order-detail__state",
+  "view.cy-empty.cy-empty--fill"
+ ],
+ "parent": "view.cy-empty.cy-empty--fill",
+ "parentStyle": {
+  "radius": 0,
+  "radii": [
+   0,
+   0,
+   0,
+   0
+  ],
+  "pad": [
+   25,
+   16.6,
+   25,
+   16.6
+  ],
+  "margin": [
+   0,
+   0,
+   0,
+   0
+  ],
+  "bg": "rgba(0, 0, 0, 0)",
+  "fw": "400",
+  "fs": "12.48px"
+ },
+ "sections": [
+  {
+   "cls": "view.cy-empty-art",
+   "owner": "cy-empty",
+   "top": 274.796875,
+   "bottom": 534.625,
+   "left": 59.796875,
+   "right": 330.1875,
+   "w": 270.390625,
+   "h": 259.828125,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    12.5,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": false,
+   "ink": {
+    "top": 274.796875,
+    "bottom": 534.46875,
+    "left": 59.875,
+    "right": 330.09375,
+    "n": 2
+   },
+   "titleGap": null,
+   "text": ""
+  },
+  {
+   "cls": "view.cy-empty-title",
+   "owner": "cy-empty",
+   "top": 547.09375,
+   "bottom": 577.03125,
+   "left": 129.53125,
+   "right": 260.453125,
+   "w": 130.921875,
+   "h": 29.9375,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "600",
+   "fs": "18.72px",
+   "surface": false,
+   "ink": {
+    "top": 550.09375,
+    "bottom": 573.09375,
+    "left": 129.53125,
+    "right": 260.453125,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "结算批次不可见"
+  },
+  {
+   "cls": "view.cy-empty-cta",
+   "owner": "cy-empty",
+   "top": 589.5,
+   "bottom": 635.25,
+   "left": 140.96875,
+   "right": 249.03125,
+   "w": 108.0625,
+   "h": 45.75,
+   "radius": 519.48,
+   "radii": [
+    519,
+    519,
+    519,
+    519
+   ],
+   "pad": [
+    0,
+    16.6,
+    0,
+    16.6
+   ],
+   "margin": [
+    12.5,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgb(0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": true,
+   "ink": {
+    "top": 589.5,
+    "bottom": 635.25,
+    "left": 140.96875,
+    "right": 249.03125,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "返回结算列表"
+  }
+ ],
+ "cards": [
+  {
+   "cls": "view.cy-empty-cta",
+   "owner": "cy-empty",
+   "depth": 3,
+   "nested": false,
+   "top": 589.5,
+   "bottom": 635.25,
+   "left": 140.96875,
+   "right": 249.03125,
+   "w": 108.0625,
+   "h": 45.75,
+   "radius": 519.48,
+   "radii": [
+    519,
+    519,
+    519,
+    519
+   ],
+   "pad": [
+    0,
+    16.6,
+    0,
+    16.6
+   ],
+   "margin": [
+    12.5,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgb(0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "text": "返回结算列表",
+   "okL": true,
+   "okR": true,
+   "okRad": true
+  }
+ ],
+ "bottomBar": 844,
+ "errors": [],
+ "consoleErr": [
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+ ],
+ "dump": "对公结算 | 结算批次不可见 | 返回结算列表 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "summary": {
+  "gapMode": 16,
+  "titleGapMode": 16,
+  "cardLeftMode": 141,
+  "cardRightMode": 141,
+  "cardRadiusMode": 519
+ },
+ "gaps": [
+  {
+   "i": 1,
+   "a": "view.cy-empty-art",
+   "b": "view.cy-empty-title",
+   "g": 15.625,
+   "y1": 534.46875,
+   "y2": 550.09375,
+   "title": false,
+   "ok": true
+  },
+  {
+   "i": 2,
+   "a": "view.cy-empty-title",
+   "b": "view.cy-empty-cta",
+   "g": 16.40625,
+   "y1": 573.09375,
+   "y2": 589.5,
+   "title": true,
+   "ok": true
+  }
+ ],
+ "titleGaps": [],
+ "capture": {
+  "T": 92,
+  "B": 844,
+  "maxScroll": 0,
+  "chunks": 1
+ }
+}

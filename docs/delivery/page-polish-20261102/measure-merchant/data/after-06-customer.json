@@ -1,0 +1,463 @@
+{
+ "route": "pages/merchant/customer/index",
+ "container": "mp-page",
+ "cTop": 0,
+ "cBottom": 844,
+ "scrollTop": 0,
+ "scrollHeight": 844,
+ "clientHeight": 844,
+ "chain": [
+  "view.cu-page.theme-merchant"
+ ],
+ "parent": "view.cu-page.theme-merchant",
+ "parentStyle": {
+  "radius": 0,
+  "radii": [
+   0,
+   0,
+   0,
+   0
+  ],
+  "pad": [
+   91,
+   0,
+   0,
+   0
+  ],
+  "margin": [
+   0,
+   0,
+   0,
+   0
+  ],
+  "bg": "rgb(243, 244, 244)",
+  "fw": "400",
+  "fs": "12.48px"
+ },
+ "sections": [
+  {
+   "cls": "view.cu-hero-title",
+   "owner": "page",
+   "top": 113.875,
+   "bottom": 150.375,
+   "left": 20.796875,
+   "right": 369.203125,
+   "w": 348.40625,
+   "h": 36.5,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "700",
+   "fs": "27.04px",
+   "surface": false,
+   "ink": {
+    "top": 114.875,
+    "bottom": 147.875,
+    "left": 20.796875,
+    "right": 74.859375,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "客户"
+  },
+  {
+   "cls": "text.cu-hero-sub",
+   "owner": "page",
+   "top": 154.53125,
+   "bottom": 174.5,
+   "left": 20.796875,
+   "right": 369.203125,
+   "w": 348.40625,
+   "h": 19.96875,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    4.2,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": false,
+   "ink": {
+    "top": 156.53125,
+    "bottom": 171.53125,
+    "left": 20.796875,
+    "right": 116.5,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "0 位 · 本月新增 0"
+  },
+  {
+   "cls": "view.cu-segs",
+   "owner": "page",
+   "top": 174.5,
+   "bottom": 233.75,
+   "left": 0,
+   "right": 390,
+   "w": 390,
+   "h": 59.25,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    12.5,
+    20.8,
+    12.5,
+    20.8
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": false,
+   "ink": {
+    "top": 186.96875,
+    "bottom": 221.28125,
+    "left": 20.796875,
+    "right": 137.171875,
+    "n": 2
+   },
+   "titleGap": {
+    "head": "view.cu-seg",
+    "next": "view.cu-seg",
+    "gap": -34.3125,
+    "y1": 221.28125,
+    "y2": 186.96875,
+    "x": 20.796875
+   },
+   "text": "筛选管理"
+  },
+  {
+   "cls": "view.search",
+   "owner": "cy-search",
+   "top": 233.75,
+   "bottom": 279.5,
+   "left": 12.46875,
+   "right": 377.53125,
+   "w": 365.0625,
+   "h": 45.75,
+   "radius": 519.48,
+   "radii": [
+    519,
+    519,
+    519,
+    519
+   ],
+   "pad": [
+    0,
+    12.5,
+    0,
+    12.5
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgb(255, 255, 255)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": true,
+   "ink": {
+    "top": 233.75,
+    "bottom": 279.5,
+    "left": 12.46875,
+    "right": 377.53125,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": ""
+  },
+  {
+   "cls": "view.cy-empty-art",
+   "owner": "cy-empty",
+   "top": 304.453125,
+   "bottom": 564.28125,
+   "left": 59.796875,
+   "right": 330.1875,
+   "w": 270.390625,
+   "h": 259.828125,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    12.5,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": false,
+   "ink": {
+    "top": 304.453125,
+    "bottom": 564.125,
+    "left": 59.875,
+    "right": 330.09375,
+    "n": 2
+   },
+   "titleGap": null,
+   "text": ""
+  },
+  {
+   "cls": "view.cy-empty-title",
+   "owner": "cy-empty",
+   "top": 576.75,
+   "bottom": 606.6875,
+   "left": 148.234375,
+   "right": 241.75,
+   "w": 93.515625,
+   "h": 29.9375,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "600",
+   "fs": "18.72px",
+   "surface": false,
+   "ink": {
+    "top": 579.75,
+    "bottom": 602.75,
+    "left": 148.234375,
+    "right": 241.75,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "还没有客户"
+  },
+  {
+   "cls": "view.cy-empty-cta",
+   "owner": "cy-empty",
+   "top": 619.15625,
+   "bottom": 664.90625,
+   "left": 147.203125,
+   "right": 242.796875,
+   "w": 95.59375,
+   "h": 45.75,
+   "radius": 519.48,
+   "radii": [
+    519,
+    519,
+    519,
+    519
+   ],
+   "pad": [
+    0,
+    16.6,
+    0,
+    16.6
+   ],
+   "margin": [
+    12.5,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgb(0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": true,
+   "ink": {
+    "top": 619.15625,
+    "bottom": 664.90625,
+    "left": 147.203125,
+    "right": 242.796875,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "去合作中心"
+  }
+ ],
+ "cards": [
+  {
+   "cls": "view.search",
+   "owner": "cy-search",
+   "depth": 3,
+   "nested": false,
+   "top": 233.75,
+   "bottom": 279.5,
+   "left": 12.46875,
+   "right": 377.53125,
+   "w": 365.0625,
+   "h": 45.75,
+   "radius": 519.48,
+   "radii": [
+    519,
+    519,
+    519,
+    519
+   ],
+   "pad": [
+    0,
+    12.5,
+    0,
+    12.5
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgb(255, 255, 255)",
+   "fw": "400",
+   "fs": "12.48px",
+   "text": "",
+   "okL": true,
+   "okR": true,
+   "okRad": true
+  }
+ ],
+ "bottomBar": 844,
+ "errors": [],
+ "consoleErr": [
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico"
+ ],
+ "dump": "客户 | 0 位 · 本月新增 0 | 筛选 | 管理 | 还没有客户 | 去合作中心 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "summary": {
+  "gapMode": 9,
+  "titleGapMode": 12,
+  "cardLeftMode": 12,
+  "cardRightMode": 12,
+  "cardRadiusMode": 519
+ },
+ "gaps": [
+  {
+   "i": 1,
+   "a": "view.cu-hero-title",
+   "b": "text.cu-hero-sub",
+   "g": 8.65625,
+   "y1": 147.875,
+   "y2": 156.53125,
+   "title": false,
+   "ok": true
+  },
+  {
+   "i": 2,
+   "a": "text.cu-hero-sub",
+   "b": "view.cu-segs",
+   "g": 15.4375,
+   "y1": 171.53125,
+   "y2": 186.96875,
+   "title": false,
+   "ok": false
+  },
+  {
+   "i": 3,
+   "a": "view.cu-segs",
+   "b": "view.search",
+   "g": 12.46875,
+   "y1": 221.28125,
+   "y2": 233.75,
+   "title": true,
+   "ok": true
+  },
+  {
+   "i": 4,
+   "a": "view.search",
+   "b": "view.cy-empty-art",
+   "g": 24.953125,
+   "y1": 279.5,
+   "y2": 304.453125,
+   "title": false,
+   "ok": false
+  },
+  {
+   "i": 5,
+   "a": "view.cy-empty-art",
+   "b": "view.cy-empty-title",
+   "g": 15.625,
+   "y1": 564.125,
+   "y2": 579.75,
+   "title": false,
+   "ok": false
+  },
+  {
+   "i": 6,
+   "a": "view.cy-empty-title",
+   "b": "view.cy-empty-cta",
+   "g": 16.40625,
+   "y1": 602.75,
+   "y2": 619.15625,
+   "title": true,
+   "ok": false
+  }
+ ],
+ "titleGaps": [],
+ "capture": {
+  "T": 92,
+  "B": 844,
+  "maxScroll": 0,
+  "chunks": 1
+ }
+}

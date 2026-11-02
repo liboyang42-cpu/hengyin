@@ -1,0 +1,159 @@
+{
+ "route": "pages/merchant/reviews/index",
+ "container": "mp-page",
+ "cTop": 0,
+ "cBottom": 844,
+ "scrollTop": 0,
+ "scrollHeight": 844,
+ "clientHeight": 844,
+ "chain": [
+  "view.review-page.theme-merchant",
+  "<cy-empty>",
+  "view.cy-empty.cy-empty--fill"
+ ],
+ "parent": "view.cy-empty.cy-empty--fill",
+ "parentStyle": {
+  "radius": 0,
+  "radii": [
+   0,
+   0,
+   0,
+   0
+  ],
+  "pad": [
+   25,
+   16.6,
+   25,
+   16.6
+  ],
+  "margin": [
+   0,
+   0,
+   0,
+   0
+  ],
+  "bg": "rgba(0, 0, 0, 0)",
+  "fw": "400",
+  "fs": "12.48px"
+ },
+ "sections": [
+  {
+   "cls": "view.cy-empty-title",
+   "owner": "cy-empty",
+   "top": 115.953125,
+   "bottom": 145.890625,
+   "left": 110.828125,
+   "right": 279.15625,
+   "w": 168.328125,
+   "h": 29.9375,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "600",
+   "fs": "18.72px",
+   "surface": false,
+   "ink": {
+    "top": 118.953125,
+    "bottom": 141.953125,
+    "left": 110.828125,
+    "right": 279.15625,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "还没有真实到店评价"
+  },
+  {
+   "cls": "view.cy-empty-cta",
+   "owner": "cy-empty",
+   "top": 158.359375,
+   "bottom": 204.109375,
+   "left": 153.4375,
+   "right": 236.5625,
+   "w": 83.125,
+   "h": 45.75,
+   "radius": 519.48,
+   "radii": [
+    519,
+    519,
+    519,
+    519
+   ],
+   "pad": [
+    0,
+    16.6,
+    0,
+    16.6
+   ],
+   "margin": [
+    12.5,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgb(0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": true,
+   "ink": {
+    "top": 158.359375,
+    "bottom": 204.109375,
+    "left": 153.4375,
+    "right": 236.5625,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "重新加载"
+  }
+ ],
+ "cards": [],
+ "bottomBar": 844,
+ "errors": [],
+ "consoleErr": [
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico"
+ ],
+ "dump": "口碑 | 还没有真实到店评价 | 重新加载 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "summary": {
+  "gapMode": null,
+  "titleGapMode": 16,
+  "cardLeftMode": null,
+  "cardRightMode": null,
+  "cardRadiusMode": null
+ },
+ "gaps": [
+  {
+   "i": 1,
+   "a": "view.cy-empty-title",
+   "b": "view.cy-empty-cta",
+   "g": 16.40625,
+   "y1": 141.953125,
+   "y2": 158.359375,
+   "title": true,
+   "ok": true
+  }
+ ],
+ "titleGaps": [],
+ "capture": {
+  "T": 92,
+  "B": 844,
+  "maxScroll": 0,
+  "chunks": 1
+ }
+}

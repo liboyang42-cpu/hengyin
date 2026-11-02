@@ -1,0 +1,414 @@
+{
+ "route": "pages/merchant/decor/index",
+ "container": "mp-page",
+ "cTop": 0,
+ "cBottom": 844,
+ "scrollTop": 0,
+ "scrollHeight": 844,
+ "clientHeight": 844,
+ "chain": [
+  "view.dc-page.theme-merchant",
+  "scroll-view.dc-scroll",
+  "view.dc-content.dc-content--home"
+ ],
+ "parent": "view.dc-content.dc-content--home",
+ "parentStyle": {
+  "radius": 0,
+  "radii": [
+   0,
+   0,
+   0,
+   0
+  ],
+  "pad": [
+   23.9,
+   20,
+   57.9,
+   20
+  ],
+  "margin": [
+   0,
+   0,
+   0,
+   0
+  ],
+  "bg": "rgba(0, 0, 0, 0)",
+  "fw": "400",
+  "fs": "12.48px"
+ },
+ "sections": [
+  {
+   "cls": "view.dc-identity",
+   "owner": "page",
+   "top": 114.90625,
+   "bottom": 186.65625,
+   "left": 20.015625,
+   "right": 369.984375,
+   "w": 349.96875,
+   "h": 71.75,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    4.2,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": false,
+   "ink": {
+    "top": 114.90625,
+    "bottom": 186.6875,
+    "left": 20.015625,
+    "right": 256.515625,
+    "n": 3
+   },
+   "titleGap": null,
+   "text": "探探店日样板咖啡"
+  },
+  {
+   "cls": "view.dc-card",
+   "owner": "page",
+   "top": 210.828125,
+   "bottom": 470.703125,
+   "left": 20.015625,
+   "right": 369.984375,
+   "w": 349.96875,
+   "h": 259.875,
+   "radius": 20.02,
+   "radii": [
+    20,
+    20,
+    20,
+    20
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgb(255, 255, 255)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": true,
+   "ink": {
+    "top": 210.828125,
+    "bottom": 470.703125,
+    "left": 20.015625,
+    "right": 369.984375,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "添加店铺封面营业中 看公开主页"
+  },
+  {
+   "cls": "view.dc-card",
+   "owner": "page",
+   "top": 490.71875,
+   "bottom": 652.953125,
+   "left": 20.015625,
+   "right": 369.984375,
+   "w": 349.96875,
+   "h": 162.234375,
+   "radius": 20.02,
+   "radii": [
+    20,
+    20,
+    20,
+    20
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgb(255, 255, 255)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": true,
+   "ink": {
+    "top": 490.71875,
+    "bottom": 652.953125,
+    "left": 20.015625,
+    "right": 369.984375,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": ""
+  },
+  {
+   "cls": "view.dc-card",
+   "owner": "page",
+   "top": 672.96875,
+   "bottom": 781.125,
+   "left": 20.015625,
+   "right": 369.984375,
+   "w": 349.96875,
+   "h": 108.15625,
+   "radius": 20.02,
+   "radii": [
+    20,
+    20,
+    20,
+    20
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgb(255, 255, 255)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": true,
+   "ink": {
+    "top": 672.96875,
+    "bottom": 781.125,
+    "left": 20.015625,
+    "right": 369.984375,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": ""
+  }
+ ],
+ "cards": [
+  {
+   "cls": "view.dc-card",
+   "owner": "page",
+   "depth": 3,
+   "nested": false,
+   "top": 210.828125,
+   "bottom": 470.703125,
+   "left": 20.015625,
+   "right": 369.984375,
+   "w": 349.96875,
+   "h": 259.875,
+   "radius": 20.02,
+   "radii": [
+    20,
+    20,
+    20,
+    20
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgb(255, 255, 255)",
+   "fw": "400",
+   "fs": "12.48px",
+   "text": "添加店铺封面营业中 看公开主页",
+   "okL": true,
+   "okR": true,
+   "okRad": true
+  },
+  {
+   "cls": "view.dc-cover.dc-placeholder",
+   "owner": "page",
+   "depth": 5,
+   "nested": true,
+   "top": 210.828125,
+   "bottom": 420.796875,
+   "left": 20.015625,
+   "right": 369.984375,
+   "w": 349.96875,
+   "h": 209.96875,
+   "radius": 16.12,
+   "radii": [
+    16,
+    16,
+    16,
+    16
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgb(238, 238, 238)",
+   "fw": "400",
+   "fs": "11.96px",
+   "text": "添加店铺封面",
+   "ok": true
+  },
+  {
+   "cls": "view.dc-card",
+   "owner": "page",
+   "depth": 3,
+   "nested": false,
+   "top": 490.71875,
+   "bottom": 652.953125,
+   "left": 20.015625,
+   "right": 369.984375,
+   "w": 349.96875,
+   "h": 162.234375,
+   "radius": 20.02,
+   "radii": [
+    20,
+    20,
+    20,
+    20
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgb(255, 255, 255)",
+   "fw": "400",
+   "fs": "12.48px",
+   "text": "",
+   "okL": true,
+   "okR": true,
+   "okRad": true
+  },
+  {
+   "cls": "view.dc-card",
+   "owner": "page",
+   "depth": 3,
+   "nested": false,
+   "top": 672.96875,
+   "bottom": 781.125,
+   "left": 20.015625,
+   "right": 369.984375,
+   "w": 349.96875,
+   "h": 108.15625,
+   "radius": 20.02,
+   "radii": [
+    20,
+    20,
+    20,
+    20
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgb(255, 255, 255)",
+   "fw": "400",
+   "fs": "12.48px",
+   "text": "",
+   "okL": true,
+   "okR": true,
+   "okRad": true
+  }
+ ],
+ "bottomBar": 844,
+ "errors": [],
+ "consoleErr": [
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+ ],
+ "dump": "品牌中心 | 探 | 探店日样板咖啡 | 添加店铺封面 | 营业中 | 看公开主页 | 门店信息 | 名称 · 地址 · 营业时间 | 品牌介绍 | 故事 · 特色 | 门店相册 | 0 张照片 | AI 店铺角色 | 形象 · 语音 | 合作经营 | 承接 · 主推 · 权益 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "summary": {
+  "gapMode": 20,
+  "titleGapMode": null,
+  "cardLeftMode": 20,
+  "cardRightMode": 20,
+  "cardRadiusMode": 20
+ },
+ "gaps": [
+  {
+   "i": 1,
+   "a": "view.dc-identity",
+   "b": "view.dc-card",
+   "g": 24.140625,
+   "y1": 186.6875,
+   "y2": 210.828125,
+   "title": false,
+   "ok": false
+  },
+  {
+   "i": 2,
+   "a": "view.dc-card",
+   "b": "view.dc-card",
+   "g": 20.015625,
+   "y1": 470.703125,
+   "y2": 490.71875,
+   "title": false,
+   "ok": true
+  },
+  {
+   "i": 3,
+   "a": "view.dc-card",
+   "b": "view.dc-card",
+   "g": 20.015625,
+   "y1": 652.953125,
+   "y2": 672.96875,
+   "title": false,
+   "ok": true
+  }
+ ],
+ "titleGaps": [],
+ "capture": {
+  "T": 92,
+  "B": 844,
+  "maxScroll": 0,
+  "chunks": 1
+ }
+}

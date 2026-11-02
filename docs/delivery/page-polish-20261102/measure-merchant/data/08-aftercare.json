@@ -1,0 +1,268 @@
+{
+ "route": "pages/merchant/aftercare/index",
+ "container": "mp-page",
+ "cTop": 0,
+ "cBottom": 844,
+ "scrollTop": 0,
+ "scrollHeight": 844,
+ "clientHeight": 844,
+ "chain": [
+  "view.acl-page.theme-merchant"
+ ],
+ "parent": "view.acl-page.theme-merchant",
+ "parentStyle": {
+  "radius": 0,
+  "radii": [
+   0,
+   0,
+   0,
+   0
+  ],
+  "pad": [
+   91,
+   0,
+   0,
+   0
+  ],
+  "margin": [
+   0,
+   0,
+   0,
+   0
+  ],
+  "bg": "rgb(243, 244, 244)",
+  "fw": "400",
+  "fs": "12.48px"
+ },
+ "sections": [
+  {
+   "cls": "view.pt__title",
+   "owner": "cy-page-title",
+   "top": 115.953125,
+   "bottom": 152.734375,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 36.78125,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "800",
+   "fs": "30.16px",
+   "surface": false,
+   "ink": {
+    "top": 115.953125,
+    "bottom": 151.953125,
+    "left": 16.625,
+    "right": 137.25,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "退款售后"
+  },
+  {
+   "cls": "scroll-view.cy-tabs.cy-tabs--chip",
+   "owner": "cy-tabs",
+   "top": 161.046875,
+   "bottom": 210.078125,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 49.03125,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    7.3,
+    0,
+    7.3,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": false,
+   "ink": {
+    "top": 168.3125,
+    "bottom": 202.8125,
+    "left": 16.625,
+    "right": 232.75,
+    "n": 3
+   },
+   "titleGap": {
+    "head": "view.cy-tabs__item.cy-tabs__item--on",
+    "next": "view.cy-tabs__item",
+    "gap": -34.5,
+    "y1": 202.8125,
+    "y2": 168.3125,
+    "x": 16.625
+   },
+   "text": "待回应处理中已完成"
+  },
+  {
+   "cls": "view.cy-empty-art",
+   "owner": "cy-empty",
+   "top": 247.5,
+   "bottom": 507.328125,
+   "left": 59.796875,
+   "right": 330.1875,
+   "w": 270.390625,
+   "h": 259.828125,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    12.5,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": false,
+   "ink": {
+    "top": 247.5,
+    "bottom": 507.171875,
+    "left": 59.875,
+    "right": 330.09375,
+    "n": 2
+   },
+   "titleGap": null,
+   "text": ""
+  },
+  {
+   "cls": "view.cy-empty-title",
+   "owner": "cy-empty",
+   "top": 519.796875,
+   "bottom": 549.734375,
+   "left": 129.53125,
+   "right": 260.453125,
+   "w": 130.921875,
+   "h": 29.9375,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "600",
+   "fs": "18.72px",
+   "surface": false,
+   "ink": {
+    "top": 522.796875,
+    "bottom": 545.796875,
+    "left": 129.53125,
+    "right": 260.453125,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "没有待回应售后"
+  }
+ ],
+ "cards": [],
+ "bottomBar": 844,
+ "errors": [],
+ "consoleErr": [
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+ ],
+ "dump": "退款售后 | 待回应 | 处理中 | 已完成 | 没有待回应售后 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "summary": {
+  "gapMode": 16,
+  "titleGapMode": 16,
+  "cardLeftMode": null,
+  "cardRightMode": null,
+  "cardRadiusMode": null
+ },
+ "gaps": [
+  {
+   "i": 1,
+   "a": "view.pt__title",
+   "b": "scroll-view.cy-tabs.cy-tabs--chip",
+   "g": 16.359375,
+   "y1": 151.953125,
+   "y2": 168.3125,
+   "title": true,
+   "ok": true
+  },
+  {
+   "i": 2,
+   "a": "scroll-view.cy-tabs.cy-tabs--chip",
+   "b": "view.cy-empty-art",
+   "g": 44.6875,
+   "y1": 202.8125,
+   "y2": 247.5,
+   "title": false,
+   "ok": false
+  },
+  {
+   "i": 3,
+   "a": "view.cy-empty-art",
+   "b": "view.cy-empty-title",
+   "g": 15.625,
+   "y1": 507.171875,
+   "y2": 522.796875,
+   "title": false,
+   "ok": true
+  }
+ ],
+ "titleGaps": [],
+ "capture": {
+  "T": 92,
+  "B": 844,
+  "maxScroll": 0,
+  "chunks": 1
+ }
+}

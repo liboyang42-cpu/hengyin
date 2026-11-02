@@ -1,0 +1,973 @@
+{
+ "route": "pages/userinfo/userinfo",
+ "container": "scroll-view.pc-scroll",
+ "cTop": 91,
+ "cBottom": 844,
+ "scrollTop": 0,
+ "scrollHeight": 1108,
+ "clientHeight": 753,
+ "chain": [
+  "view.pc-body"
+ ],
+ "parent": "view.pc-body",
+ "parentStyle": {
+  "radius": 0,
+  "radii": [
+   0,
+   0,
+   0,
+   0
+  ],
+  "pad": [
+   4.2,
+   16.6,
+   138,
+   16.6
+  ],
+  "margin": [
+   0,
+   0,
+   0,
+   0
+  ],
+  "bg": "rgba(0, 0, 0, 0)",
+  "fw": "400",
+  "fs": "12.48px"
+ },
+ "sections": [
+  {
+   "cls": "view.pc-gamer",
+   "owner": "cy-profile",
+   "top": 103.46875,
+   "bottom": 197.03125,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 93.5625,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    10.4,
+    4.2,
+    14.6,
+    4.2
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": false,
+   "ink": {
+    "top": 112.859375,
+    "bottom": 182.484375,
+    "left": 20.78125,
+    "right": 232.796875,
+    "n": 5
+   },
+   "titleGap": null,
+   "text": "探探店日样板咖啡街角咖啡补给站"
+  },
+  {
+   "cls": "view.pc-stats",
+   "owner": "cy-profile",
+   "top": 197.03125,
+   "bottom": 274.359375,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 77.328125,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    12.5,
+    0,
+    12.5,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": false,
+   "ink": {
+    "top": 212.5,
+    "bottom": 259.59375,
+    "left": 64.3125,
+    "right": 325.6875,
+    "n": 6
+   },
+   "titleGap": null,
+   "text": "0好友0关注0粉丝"
+  },
+  {
+   "cls": "view.pc-primary",
+   "owner": "cy-profile",
+   "top": 290.984375,
+   "bottom": 336.734375,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 45.75,
+   "radius": 16.64,
+   "radii": [
+    17,
+    17,
+    17,
+    17
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgb(0, 0, 0)",
+   "fw": "700",
+   "fs": "14.56px",
+   "surface": true,
+   "ink": {
+    "top": 290.984375,
+    "bottom": 336.734375,
+    "left": 16.625,
+    "right": 373.375,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "核销"
+  },
+  {
+   "cls": "view.cy-tabs__track",
+   "owner": "cy-tabs",
+   "top": 347.125,
+   "bottom": 392.875,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 45.75,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": false,
+   "ink": {
+    "top": 360.34375,
+    "bottom": 378.34375,
+    "left": 61.53125,
+    "right": 328.453125,
+    "n": 3
+   },
+   "titleGap": {
+    "head": "view.cy-tabs__item",
+    "next": "view.cy-tabs__item",
+    "gap": -18,
+    "y1": 378.34375,
+    "y2": 360.34375,
+    "x": 61.53125
+   },
+   "text": "我的帖文关于"
+  },
+  {
+   "cls": "view.pc-sec-tit.pc-sec-tit--flush",
+   "owner": "cy-profile",
+   "top": 409.5,
+   "bottom": 439.4375,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 29.9375,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    8.3,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "700",
+   "fs": "18.72px",
+   "surface": false,
+   "ink": {
+    "top": 412.5,
+    "bottom": 435.5,
+    "left": 16.625,
+    "right": 91.4375,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "品牌故事"
+  },
+  {
+   "cls": "view.pc-card.pc-about",
+   "owner": "cy-profile",
+   "top": 447.75,
+   "bottom": 495.25,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 47.5,
+   "radius": 12.48,
+   "radii": [
+    12,
+    12,
+    12,
+    12
+   ],
+   "pad": [
+    12.5,
+    0,
+    12.5,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    12.5,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "14.56px",
+   "surface": false,
+   "ink": {
+    "top": 462.21875,
+    "bottom": 480.21875,
+    "left": 16.625,
+    "right": 278.46875,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "适合小团到店体验与城市漫步中途补给。"
+  },
+  {
+   "cls": "view.pc-sec-tit",
+   "owner": "cy-profile",
+   "top": 509.796875,
+   "bottom": 539.734375,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 29.9375,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    14.6,
+    0,
+    8.3,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "700",
+   "fs": "18.72px",
+   "surface": false,
+   "ink": {
+    "top": 512.796875,
+    "bottom": 535.796875,
+    "left": 16.625,
+    "right": 54.03125,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "品类"
+  },
+  {
+   "cls": "view.pc-tag.pc-tag--lib",
+   "owner": "cy-profile",
+   "top": 548.046875,
+   "bottom": 574.65625,
+   "left": 16.625,
+   "right": 74.828125,
+   "w": 58.203125,
+   "h": 26.609375,
+   "radius": 519.48,
+   "radii": [
+    519,
+    519,
+    519,
+    519
+   ],
+   "pad": [
+    4.2,
+    8.3,
+    4.2,
+    8.3
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgb(238, 238, 238)",
+   "fw": "400",
+   "fs": "11.44px",
+   "surface": true,
+   "ink": {
+    "top": 548.046875,
+    "bottom": 574.65625,
+    "left": 16.625,
+    "right": 74.828125,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "咖啡"
+  },
+  {
+   "cls": "view.pc-sec-tit",
+   "owner": "cy-profile",
+   "top": 589.203125,
+   "bottom": 619.140625,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 29.9375,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    14.6,
+    0,
+    8.3,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "700",
+   "fs": "18.72px",
+   "surface": false,
+   "ink": {
+    "top": 592.203125,
+    "bottom": 615.203125,
+    "left": 16.625,
+    "right": 91.4375,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "营业信息"
+  },
+  {
+   "cls": "view.pc-mrow",
+   "owner": "cy-profile",
+   "top": 627.453125,
+   "bottom": 673.203125,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 45.75,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    8.3,
+    0,
+    8.3,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": false,
+   "ink": {
+    "top": 642.34375,
+    "bottom": 657.34375,
+    "left": 16.625,
+    "right": 373.375,
+    "n": 2
+   },
+   "titleGap": {
+    "head": "text.pc-mrow-k",
+    "next": "text.pc-mrow-v",
+    "gap": -15,
+    "y1": 657.34375,
+    "y2": 642.34375,
+    "x": 16.625
+   },
+   "text": "营业状态营业中"
+  },
+  {
+   "cls": "view.pc-mrow",
+   "owner": "cy-profile",
+   "top": 673.203125,
+   "bottom": 718.953125,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 45.75,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    8.3,
+    0,
+    8.3,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": false,
+   "ink": {
+    "top": 688.59375,
+    "bottom": 703.59375,
+    "left": 16.625,
+    "right": 373.375,
+    "n": 2
+   },
+   "titleGap": {
+    "head": "text.pc-mrow-k",
+    "next": "text.pc-mrow-v",
+    "gap": -15,
+    "y1": 703.59375,
+    "y2": 688.59375,
+    "x": 16.625
+   },
+   "text": "门店地址上海市黄浦区咖啡"
+  },
+  {
+   "cls": "view.pc-mrow",
+   "owner": "cy-profile",
+   "top": 718.953125,
+   "bottom": 764.703125,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 45.75,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    8.3,
+    0,
+    8.3,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": false,
+   "ink": {
+    "top": 734.34375,
+    "bottom": 749.34375,
+    "left": 16.625,
+    "right": 373.375,
+    "n": 3
+   },
+   "titleGap": {
+    "head": "text.pc-mrow-k",
+    "next": "view.pc-mrow-v.pc-mrow-v--link",
+    "gap": -15,
+    "y1": 749.34375,
+    "y2": 734.34375,
+    "x": 16.625
+   },
+   "text": "真实评价核销用户评价与商家回复"
+  },
+  {
+   "cls": "view.pc-sec-tit",
+   "owner": "cy-profile",
+   "top": 779.25,
+   "bottom": 809.1875,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 29.9375,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    14.6,
+    0,
+    8.3,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "700",
+   "fs": "18.72px",
+   "surface": false,
+   "ink": {
+    "top": 782.25,
+    "bottom": 805.25,
+    "left": 16.625,
+    "right": 91.4375,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "承接能力"
+  },
+  {
+   "cls": "view.pc-mrow",
+   "owner": "cy-profile",
+   "top": 817.5,
+   "bottom": 863.25,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 45.75,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    8.3,
+    0,
+    8.3,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": false,
+   "ink": {
+    "top": 832.390625,
+    "bottom": 847.390625,
+    "left": 16.625,
+    "right": 373.375,
+    "n": 2
+   },
+   "titleGap": {
+    "head": "text.pc-mrow-k",
+    "next": "text.pc-mrow-v",
+    "gap": -15,
+    "y1": 847.390625,
+    "y2": 832.390625,
+    "x": 16.625
+   },
+   "text": "可容纳24 人"
+  },
+  {
+   "cls": "view.pc-mrow",
+   "owner": "cy-profile",
+   "top": 863.25,
+   "bottom": 909,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 45.75,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    8.3,
+    0,
+    8.3,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": false,
+   "ink": {
+    "top": 878.640625,
+    "bottom": 893.640625,
+    "left": 16.625,
+    "right": 373.375,
+    "n": 2
+   },
+   "titleGap": {
+    "head": "text.pc-mrow-k",
+    "next": "text.pc-mrow-v",
+    "gap": -15,
+    "y1": 893.640625,
+    "y2": 878.640625,
+    "x": 16.625
+   },
+   "text": "适合路线探店日,City Walk"
+  },
+  {
+   "cls": "view.pc-mrow",
+   "owner": "cy-profile",
+   "top": 909,
+   "bottom": 954.75,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 45.75,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    8.3,
+    0,
+    8.3,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": false,
+   "ink": {
+    "top": 924.390625,
+    "bottom": 939.390625,
+    "left": 16.625,
+    "right": 373.375,
+    "n": 2
+   },
+   "titleGap": {
+    "head": "text.pc-mrow-k",
+    "next": "text.pc-mrow-v",
+    "gap": -15,
+    "y1": 939.390625,
+    "y2": 924.390625,
+    "x": 16.625
+   },
+   "text": "可承接时段10:00-20:00"
+  }
+ ],
+ "cards": [
+  {
+   "cls": "view.pc-primary",
+   "owner": "cy-profile",
+   "depth": 2,
+   "nested": false,
+   "top": 290.984375,
+   "bottom": 336.734375,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 45.75,
+   "radius": 16.64,
+   "radii": [
+    17,
+    17,
+    17,
+    17
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgb(0, 0, 0)",
+   "fw": "700",
+   "fs": "14.56px",
+   "text": "核销",
+   "okL": true,
+   "okR": true,
+   "okRad": true
+  }
+ ],
+ "bottomBar": 844,
+ "errors": [],
+ "consoleErr": [
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico"
+ ],
+ "dump": "主页 | 探 | 探店日样板咖啡 | 街角咖啡补给站 | 0 | 好友 | 0 | 关注 | 0 | 粉丝 | 核销 | 我的 | 帖文 | 关于 | 品牌故事 | 适合小团到店体验与城市漫步中途补给。 | 品类 | 咖啡 | 营业信息 | 营业状态 | 营业中 | 门店地址 | 上海市黄浦区咖啡 | 真实评价 | 核销用户评价与商家回复 | 承接能力 | 可容纳 | 24 人 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "summary": {
+  "gapMode": 31,
+  "titleGapMode": 12,
+  "cardLeftMode": 17,
+  "cardRightMode": 17,
+  "cardRadiusMode": 17
+ },
+ "gaps": [
+  {
+   "i": 1,
+   "a": "view.pc-gamer",
+   "b": "view.pc-stats",
+   "g": 30.015625,
+   "y1": 182.484375,
+   "y2": 212.5,
+   "title": false,
+   "ok": true
+  },
+  {
+   "i": 2,
+   "a": "view.pc-stats",
+   "b": "view.pc-primary",
+   "g": 31.390625,
+   "y1": 259.59375,
+   "y2": 290.984375,
+   "title": false,
+   "ok": true
+  },
+  {
+   "i": 3,
+   "a": "view.pc-primary",
+   "b": "view.cy-tabs__track",
+   "g": 23.609375,
+   "y1": 336.734375,
+   "y2": 360.34375,
+   "title": false,
+   "ok": false
+  },
+  {
+   "i": 4,
+   "a": "view.cy-tabs__track",
+   "b": "view.pc-sec-tit.pc-sec-tit--flush",
+   "g": 34.15625,
+   "y1": 378.34375,
+   "y2": 412.5,
+   "title": false,
+   "ok": false
+  },
+  {
+   "i": 5,
+   "a": "view.pc-sec-tit.pc-sec-tit--flush",
+   "b": "view.pc-card.pc-about",
+   "g": 26.71875,
+   "y1": 435.5,
+   "y2": 462.21875,
+   "title": false,
+   "ok": false
+  },
+  {
+   "i": 6,
+   "a": "view.pc-card.pc-about",
+   "b": "view.pc-sec-tit",
+   "g": 32.578125,
+   "y1": 480.21875,
+   "y2": 512.796875,
+   "title": false,
+   "ok": true
+  },
+  {
+   "i": 7,
+   "a": "view.pc-sec-tit",
+   "b": "view.pc-tag.pc-tag--lib",
+   "g": 12.25,
+   "y1": 535.796875,
+   "y2": 548.046875,
+   "title": true,
+   "ok": true
+  },
+  {
+   "i": 8,
+   "a": "view.pc-tag.pc-tag--lib",
+   "b": "view.pc-sec-tit",
+   "g": 17.546875,
+   "y1": 574.65625,
+   "y2": 592.203125,
+   "title": false,
+   "ok": false
+  },
+  {
+   "i": 9,
+   "a": "view.pc-sec-tit",
+   "b": "view.pc-mrow",
+   "g": 27.140625,
+   "y1": 615.203125,
+   "y2": 642.34375,
+   "title": false,
+   "ok": false
+  },
+  {
+   "i": 10,
+   "a": "view.pc-mrow",
+   "b": "view.pc-mrow",
+   "g": 31.25,
+   "y1": 657.34375,
+   "y2": 688.59375,
+   "title": false,
+   "ok": true
+  },
+  {
+   "i": 11,
+   "a": "view.pc-mrow",
+   "b": "view.pc-mrow",
+   "g": 30.75,
+   "y1": 703.59375,
+   "y2": 734.34375,
+   "title": false,
+   "ok": true
+  },
+  {
+   "i": 12,
+   "a": "view.pc-mrow",
+   "b": "view.pc-sec-tit",
+   "g": 32.90625,
+   "y1": 749.34375,
+   "y2": 782.25,
+   "title": false,
+   "ok": true
+  },
+  {
+   "i": 13,
+   "a": "view.pc-sec-tit",
+   "b": "view.pc-mrow",
+   "g": 27.140625,
+   "y1": 805.25,
+   "y2": 832.390625,
+   "title": false,
+   "ok": false
+  },
+  {
+   "i": 14,
+   "a": "view.pc-mrow",
+   "b": "view.pc-mrow",
+   "g": 31.25,
+   "y1": 847.390625,
+   "y2": 878.640625,
+   "title": false,
+   "ok": true
+  },
+  {
+   "i": 15,
+   "a": "view.pc-mrow",
+   "b": "view.pc-mrow",
+   "g": 30.75,
+   "y1": 893.640625,
+   "y2": 924.390625,
+   "title": false,
+   "ok": true
+  }
+ ],
+ "titleGaps": [],
+ "capture": {
+  "T": 91,
+  "B": 844,
+  "maxScroll": 355,
+  "chunks": 2
+ }
+}

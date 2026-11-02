@@ -1,0 +1,604 @@
+{
+ "route": "pages/coop/invite/index",
+ "container": "mp-page",
+ "cTop": 0,
+ "cBottom": 844,
+ "scrollTop": 0,
+ "scrollHeight": 844,
+ "clientHeight": 844,
+ "chain": [
+  "view.page.theme-merchant"
+ ],
+ "parent": "view.page.theme-merchant",
+ "parentStyle": {
+  "radius": 0,
+  "radii": [
+   0,
+   0,
+   0,
+   0
+  ],
+  "pad": [
+   91,
+   0,
+   25,
+   0
+  ],
+  "margin": [
+   0,
+   0,
+   0,
+   0
+  ],
+  "bg": "rgba(0, 0, 0, 0)",
+  "fw": "400",
+  "fs": "12.48px"
+ },
+ "sections": [
+  {
+   "cls": "view.pt__title",
+   "owner": "cy-page-title",
+   "top": 115.953125,
+   "bottom": 152.734375,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 36.78125,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "800",
+   "fs": "30.16px",
+   "surface": false,
+   "ink": {
+    "top": 115.953125,
+    "bottom": 151.953125,
+    "left": 16.625,
+    "right": 197.5625,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "发起协作邀请"
+  },
+  {
+   "cls": "view.send-receipt",
+   "owner": "page",
+   "top": 161.046875,
+   "bottom": 206.796875,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 45.75,
+   "radius": 12.48,
+   "radii": [
+    12,
+    12,
+    12,
+    12
+   ],
+   "pad": [
+    0,
+    10.4,
+    0,
+    10.4
+   ],
+   "margin": [
+    0,
+    16.6,
+    8.3,
+    16.6
+   ],
+   "bg": "rgb(255, 255, 255)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": true,
+   "ink": {
+    "top": 161.046875,
+    "bottom": 206.796875,
+    "left": 16.625,
+    "right": 373.375,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "查找原邀请请求（含其他设备）"
+  },
+  {
+   "cls": "view.card",
+   "owner": "page",
+   "top": 219.265625,
+   "bottom": 434.890625,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 215.625,
+   "radius": 16.64,
+   "radii": [
+    17,
+    17,
+    17,
+    17
+   ],
+   "pad": [
+    14.6,
+    14.6,
+    14.6,
+    14.6
+   ],
+   "margin": [
+    12.5,
+    16.6,
+    12.5,
+    16.6
+   ],
+   "bg": "rgb(255, 255, 255)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": true,
+   "ink": {
+    "top": 219.265625,
+    "bottom": 434.890625,
+    "left": 16.625,
+    "right": 373.375,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "① 关联主题*"
+  },
+  {
+   "cls": "view.card",
+   "owner": "page",
+   "top": 447.359375,
+   "bottom": 608.921875,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 161.5625,
+   "radius": 16.64,
+   "radii": [
+    17,
+    17,
+    17,
+    17
+   ],
+   "pad": [
+    14.6,
+    14.6,
+    14.6,
+    14.6
+   ],
+   "margin": [
+    12.5,
+    16.6,
+    12.5,
+    16.6
+   ],
+   "bg": "rgb(255, 255, 255)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": true,
+   "ink": {
+    "top": 447.359375,
+    "bottom": 608.921875,
+    "left": 16.625,
+    "right": 373.375,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "② 合作条款对方接受并成单后锁定引流合作（不产生现金结算）按"
+  },
+  {
+   "cls": "view.card-tit",
+   "owner": "page",
+   "top": 635.9375,
+   "bottom": 659.234375,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 23.296875,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "700",
+   "fs": "14.56px",
+   "surface": false,
+   "ink": {
+    "top": 637.9375,
+    "bottom": 655.9375,
+    "left": 16.625,
+    "right": 98.484375,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "③ 邀请对象"
+  },
+  {
+   "cls": "view.target",
+   "owner": "page",
+   "top": 659.234375,
+   "bottom": 724.28125,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 65.046875,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    8.3,
+    0,
+    8.3,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": false,
+   "ink": {
+    "top": 669.546875,
+    "bottom": 712.046875,
+    "left": 16.625,
+    "right": 373.375,
+    "n": 4
+   },
+   "titleGap": null,
+   "text": "城瘾跑团1 位成员邀请"
+  },
+  {
+   "cls": "view.target",
+   "owner": "page",
+   "top": 724.28125,
+   "bottom": 789.328125,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 65.046875,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    8.3,
+    0,
+    8.3,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": false,
+   "ink": {
+    "top": 734.59375,
+    "bottom": 777.09375,
+    "left": 16.625,
+    "right": 373.375,
+    "n": 4
+   },
+   "titleGap": null,
+   "text": "执行俱乐部2 位成员邀请"
+  }
+ ],
+ "cards": [
+  {
+   "cls": "view.send-receipt",
+   "owner": "page",
+   "depth": 1,
+   "nested": false,
+   "top": 161.046875,
+   "bottom": 206.796875,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 45.75,
+   "radius": 12.48,
+   "radii": [
+    12,
+    12,
+    12,
+    12
+   ],
+   "pad": [
+    0,
+    10.4,
+    0,
+    10.4
+   ],
+   "margin": [
+    0,
+    16.6,
+    8.3,
+    16.6
+   ],
+   "bg": "rgb(255, 255, 255)",
+   "fw": "400",
+   "fs": "12.48px",
+   "text": "查找原邀请请求（含其他设备）",
+   "okL": true,
+   "okR": true,
+   "okRad": false
+  },
+  {
+   "cls": "view.card",
+   "owner": "page",
+   "depth": 1,
+   "nested": false,
+   "top": 219.265625,
+   "bottom": 434.890625,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 215.625,
+   "radius": 16.64,
+   "radii": [
+    17,
+    17,
+    17,
+    17
+   ],
+   "pad": [
+    14.6,
+    14.6,
+    14.6,
+    14.6
+   ],
+   "margin": [
+    12.5,
+    16.6,
+    12.5,
+    16.6
+   ],
+   "bg": "rgb(255, 255, 255)",
+   "fw": "400",
+   "fs": "12.48px",
+   "text": "① 关联主题*",
+   "okL": true,
+   "okR": true,
+   "okRad": true
+  },
+  {
+   "cls": "view.card",
+   "owner": "page",
+   "depth": 1,
+   "nested": false,
+   "top": 447.359375,
+   "bottom": 608.921875,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 161.5625,
+   "radius": 16.64,
+   "radii": [
+    17,
+    17,
+    17,
+    17
+   ],
+   "pad": [
+    14.6,
+    14.6,
+    14.6,
+    14.6
+   ],
+   "margin": [
+    12.5,
+    16.6,
+    12.5,
+    16.6
+   ],
+   "bg": "rgb(255, 255, 255)",
+   "fw": "400",
+   "fs": "12.48px",
+   "text": "② 合作条款对方接受并成单后锁定引流合作（不产生",
+   "okL": true,
+   "okR": true,
+   "okRad": true
+  },
+  {
+   "cls": "view.terms-option.on",
+   "owner": "page",
+   "depth": 3,
+   "nested": true,
+   "top": 494.5625,
+   "bottom": 540.3125,
+   "left": 31.171875,
+   "right": 358.828125,
+   "w": 327.65625,
+   "h": 45.75,
+   "radius": 12.48,
+   "radii": [
+    12,
+    12,
+    12,
+    12
+   ],
+   "pad": [
+    0,
+    10.4,
+    0,
+    10.4
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgb(238, 238, 238)",
+   "fw": "400",
+   "fs": "12.48px",
+   "text": "引流合作（不产生现金结算）",
+   "ok": true
+  },
+  {
+   "cls": "view.terms-option",
+   "owner": "page",
+   "depth": 3,
+   "nested": true,
+   "top": 548.625,
+   "bottom": 594.375,
+   "left": 31.171875,
+   "right": 358.828125,
+   "w": 327.65625,
+   "h": 45.75,
+   "radius": 12.48,
+   "radii": [
+    12,
+    12,
+    12,
+    12
+   ],
+   "pad": [
+    0,
+    10.4,
+    0,
+    10.4
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgb(238, 238, 238)",
+   "fw": "400",
+   "fs": "12.48px",
+   "text": "按核销人头付带队费",
+   "ok": true
+  }
+ ],
+ "bottomBar": 844,
+ "errors": [],
+ "consoleErr": [
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico"
+ ],
+ "dump": "发起协作邀请 | 查找原邀请请求（含其他设备） | ① 关联主题 | * | 还没有可关联的主题 | 先发布主题后再发起协作邀请 | 先发布主题 | ② 合作条款 | 对方接受并成单后锁定 | 引流合作（不产生现金结算） | 按核销人头付带队费 | ③ 邀请对象 | 城瘾跑团 | 1 位成员 | 邀请 | 执行俱乐部 | 2 位成员 | 邀请 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "summary": {
+  "gapMode": 12,
+  "titleGapMode": 9,
+  "cardLeftMode": 17,
+  "cardRightMode": 17,
+  "cardRadiusMode": 17
+ },
+ "gaps": [
+  {
+   "i": 1,
+   "a": "view.pt__title",
+   "b": "view.send-receipt",
+   "g": 9.09375,
+   "y1": 151.953125,
+   "y2": 161.046875,
+   "title": true,
+   "ok": true
+  },
+  {
+   "i": 2,
+   "a": "view.send-receipt",
+   "b": "view.card",
+   "g": 12.46875,
+   "y1": 206.796875,
+   "y2": 219.265625,
+   "title": false,
+   "ok": true
+  },
+  {
+   "i": 3,
+   "a": "view.card",
+   "b": "view.card",
+   "g": 12.46875,
+   "y1": 434.890625,
+   "y2": 447.359375,
+   "title": false,
+   "ok": true
+  },
+  {
+   "i": 4,
+   "a": "view.card",
+   "b": "view.card-tit",
+   "g": 29.015625,
+   "y1": 608.921875,
+   "y2": 637.9375,
+   "title": false,
+   "ok": false
+  },
+  {
+   "i": 5,
+   "a": "view.card-tit",
+   "b": "view.target",
+   "g": 13.609375,
+   "y1": 655.9375,
+   "y2": 669.546875,
+   "title": true,
+   "ok": false
+  },
+  {
+   "i": 6,
+   "a": "view.target",
+   "b": "view.target",
+   "g": 22.546875,
+   "y1": 712.046875,
+   "y2": 734.59375,
+   "title": false,
+   "ok": false
+  }
+ ],
+ "titleGaps": [],
+ "capture": {
+  "T": 92,
+  "B": 844,
+  "maxScroll": 0,
+  "chunks": 1
+ }
+}

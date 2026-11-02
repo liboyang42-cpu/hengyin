@@ -1,0 +1,738 @@
+{
+ "route": "pages/merchant/index/index",
+ "container": "scroll-view.rv-scroll",
+ "cTop": 0,
+ "cBottom": 844,
+ "scrollTop": 0,
+ "scrollHeight": 1436,
+ "clientHeight": 844,
+ "chain": [],
+ "parent": "scroll-view.rv-scroll",
+ "parentStyle": {
+  "radius": 0,
+  "radii": [
+   0,
+   0,
+   0,
+   0
+  ],
+  "pad": [
+   91,
+   0,
+   0,
+   0
+  ],
+  "margin": [
+   0,
+   0,
+   0,
+   0
+  ],
+  "bg": "rgba(0, 0, 0, 0)",
+  "fw": "400",
+  "fs": "12.48px"
+ },
+ "sections": [
+  {
+   "cls": "view.rv-hero-top",
+   "owner": "page",
+   "top": 99.3125,
+   "bottom": 157.734375,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 58.421875,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    25,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": false,
+   "ink": {
+    "top": 99.3125,
+    "bottom": 157.734375,
+    "left": 16.625,
+    "right": 373.375,
+    "n": 4
+   },
+   "titleGap": null,
+   "text": "Hi，探店日样板咖啡营业中"
+  },
+  {
+   "cls": "view.rv-revenue-label",
+   "owner": "page",
+   "top": 199.3125,
+   "bottom": 219.28125,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 19.96875,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": false,
+   "ink": {
+    "top": 201.3125,
+    "bottom": 216.3125,
+    "left": 169.4375,
+    "right": 220.5625,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "累计收入"
+  },
+  {
+   "cls": "view.rv-revenue-amount",
+   "owner": "page",
+   "top": 224.375,
+   "bottom": 272.421875,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 48.046875,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    4.2,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "45.76px",
+   "surface": false,
+   "ink": {
+    "top": 220.375,
+    "bottom": 275.375,
+    "left": 137.0625,
+    "right": 252.921875,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "¥0.00"
+  },
+  {
+   "cls": "view.rv-actions",
+   "owner": "page",
+   "top": 369.875,
+   "bottom": 508.78125,
+   "left": 0,
+   "right": 390,
+   "w": 390,
+   "h": 138.90625,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    16.6,
+    49.9,
+    16.6
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": false,
+   "ink": {
+    "top": 369.875,
+    "bottom": 456.578125,
+    "left": 16.625,
+    "right": 373.375,
+    "n": 8
+   },
+   "titleGap": null,
+   "text": "扫码客户财务更多"
+  },
+  {
+   "cls": "view.rv-section-head",
+   "owner": "page",
+   "top": 508.78125,
+   "bottom": 554.53125,
+   "left": 0,
+   "right": 390,
+   "w": 390,
+   "h": 45.75,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    16.6,
+    0,
+    16.6
+   ],
+   "margin": [
+    0,
+    0,
+    16.6,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": false,
+   "ink": {
+    "top": 521.1875,
+    "bottom": 540.1875,
+    "left": 16.625,
+    "right": 373.375,
+    "n": 3
+   },
+   "titleGap": {
+    "head": "text.rv-section-title",
+    "next": "view.rv-section-more",
+    "gap": -15.6875,
+    "y1": 540.1875,
+    "y2": 524.5,
+    "x": 16.625
+   },
+   "text": "项目全部 1"
+  },
+  {
+   "cls": "view.rv-project-card",
+   "owner": "page",
+   "top": 571.15625,
+   "bottom": 699.046875,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 127.890625,
+   "radius": 16.64,
+   "radii": [
+    17,
+    17,
+    17,
+    17
+   ],
+   "pad": [
+    12.5,
+    12.5,
+    12.5,
+    12.5
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgb(255, 255, 255)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": true,
+   "ink": {
+    "top": 571.15625,
+    "bottom": 699.046875,
+    "left": 16.625,
+    "right": 373.375,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "承接中E2E 探店日一期第1章 咖啡 · 周四 11月12日"
+  },
+  {
+   "cls": "text.rv-section-title",
+   "owner": "page",
+   "top": 734.40625,
+   "bottom": 759.34375,
+   "left": 16.625,
+   "right": 110.1875,
+   "w": 93.5625,
+   "h": 24.9375,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "15.6px",
+   "surface": false,
+   "ink": {
+    "top": 736.40625,
+    "bottom": 755.40625,
+    "left": 16.625,
+    "right": 110.1875,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "开通前置检查"
+  },
+  {
+   "cls": "view.rv-msg-card",
+   "owner": "page",
+   "top": 786.375,
+   "bottom": 1137.5625,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 351.1875,
+   "radius": 16.64,
+   "radii": [
+    17,
+    17,
+    17,
+    17
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    16.6,
+    0,
+    16.6
+   ],
+   "bg": "rgb(255, 255, 255)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": true,
+   "ink": {
+    "top": 786.375,
+    "bottom": 1137.5625,
+    "left": 16.625,
+    "right": 373.375,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "营业资质请提供有效营业资质店铺头像上传店铺头像去完善店铺封面"
+  },
+  {
+   "cls": "view.rv-section-head",
+   "owner": "page",
+   "top": 1162.515625,
+   "bottom": 1208.265625,
+   "left": 0,
+   "right": 390,
+   "w": 390,
+   "h": 45.75,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    16.6,
+    0,
+    16.6
+   ],
+   "margin": [
+    0,
+    0,
+    16.6,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": false,
+   "ink": {
+    "top": 1174.921875,
+    "bottom": 1193.921875,
+    "left": 16.625,
+    "right": 373.375,
+    "n": 3
+   },
+   "titleGap": {
+    "head": "text.rv-section-title",
+    "next": "view.rv-section-more",
+    "gap": -15.6875,
+    "y1": 1193.921875,
+    "y2": 1178.234375,
+    "x": 16.625
+   },
+   "text": "我的消息全部"
+  },
+  {
+   "cls": "view.rv-msg-item",
+   "owner": "page",
+   "top": 1224.890625,
+   "bottom": 1302.671875,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 77.78125,
+   "radius": 16.64,
+   "radii": [
+    17,
+    17,
+    17,
+    17
+   ],
+   "pad": [
+    18.7,
+    16.6,
+    18.7,
+    16.6
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgb(255, 255, 255)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": true,
+   "ink": {
+    "top": 1224.890625,
+    "bottom": 1302.671875,
+    "left": 16.625,
+    "right": 373.375,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "核销完成一笔到店核销17分钟前"
+  }
+ ],
+ "cards": [
+  {
+   "cls": "view.rv-project-card",
+   "owner": "page",
+   "depth": 4,
+   "nested": false,
+   "top": 571.15625,
+   "bottom": 699.046875,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 127.890625,
+   "radius": 16.64,
+   "radii": [
+    17,
+    17,
+    17,
+    17
+   ],
+   "pad": [
+    12.5,
+    12.5,
+    12.5,
+    12.5
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgb(255, 255, 255)",
+   "fw": "400",
+   "fs": "12.48px",
+   "text": "承接中E2E 探店日一期第1章 咖啡 · 周四 ",
+   "okL": true,
+   "okR": true,
+   "okRad": true
+  },
+  {
+   "cls": "view.rv-msg-card",
+   "owner": "page",
+   "depth": 1,
+   "nested": false,
+   "top": 786.375,
+   "bottom": 1137.5625,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 351.1875,
+   "radius": 16.64,
+   "radii": [
+    17,
+    17,
+    17,
+    17
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    16.6,
+    0,
+    16.6
+   ],
+   "bg": "rgb(255, 255, 255)",
+   "fw": "400",
+   "fs": "12.48px",
+   "text": "营业资质请提供有效营业资质店铺头像上传店铺头像去",
+   "okL": true,
+   "okR": true,
+   "okRad": true
+  },
+  {
+   "cls": "view.rv-msg-item",
+   "owner": "page",
+   "depth": 2,
+   "nested": false,
+   "top": 1224.890625,
+   "bottom": 1302.671875,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 77.78125,
+   "radius": 16.64,
+   "radii": [
+    17,
+    17,
+    17,
+    17
+   ],
+   "pad": [
+    18.7,
+    16.6,
+    18.7,
+    16.6
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgb(255, 255, 255)",
+   "fw": "400",
+   "fs": "12.48px",
+   "text": "核销完成一笔到店核销17分钟前",
+   "okL": true,
+   "okR": true,
+   "okRad": true
+  },
+  {
+   "cls": "view.rv-msg-item",
+   "owner": "page",
+   "depth": 2,
+   "nested": false,
+   "top": 1242.0374755859375,
+   "bottom": 1315.15185546875,
+   "left": 27.327499389648438,
+   "right": 362.67247009277344,
+   "w": 335.344970703125,
+   "h": 73.1143798828125,
+   "radius": 16.64,
+   "radii": [
+    17,
+    17,
+    17,
+    17
+   ],
+   "pad": [
+    14.6,
+    16.6,
+    14.6,
+    16.6
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgb(255, 255, 255)",
+   "fw": "400",
+   "fs": "12.48px",
+   "text": "系统通知章节申请审核结果 章节申请已通过05:0",
+   "okL": false,
+   "okR": false,
+   "okRad": true
+  }
+ ],
+ "bottomBar": 747.625,
+ "errors": [],
+ "consoleErr": [
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico"
+ ],
+ "dump": "Hi， | 探店日样板咖啡 | 营业中 | 探 | 累计收入 | ¥0.00 | 扫码 | 客户 | 财务 | 更多 | 项目 | 全部 1 | 承接中 | E2E 探店日一期 | 第1章 咖啡 · 周四 11月12日 | 今日无待办 | 开通前置检查 | 营业资质 | 请提供有效营业资质 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "summary": {
+  "gapMode": 37,
+  "titleGapMode": 31,
+  "cardLeftMode": 17,
+  "cardRightMode": 17,
+  "cardRadiusMode": 17
+ },
+ "gaps": [
+  {
+   "i": 1,
+   "a": "view.rv-hero-top",
+   "b": "view.rv-revenue-label",
+   "g": 43.578125,
+   "y1": 157.734375,
+   "y2": 201.3125,
+   "title": false,
+   "ok": false
+  },
+  {
+   "i": 2,
+   "a": "view.rv-revenue-label",
+   "b": "view.rv-revenue-amount",
+   "g": 4.0625,
+   "y1": 216.3125,
+   "y2": 220.375,
+   "title": true,
+   "ok": false
+  },
+  {
+   "i": 3,
+   "a": "view.rv-revenue-amount",
+   "b": "view.rv-actions",
+   "g": 94.5,
+   "y1": 275.375,
+   "y2": 369.875,
+   "title": false,
+   "ok": false
+  },
+  {
+   "i": 4,
+   "a": "view.rv-actions",
+   "b": "view.rv-section-head",
+   "g": 64.609375,
+   "y1": 456.578125,
+   "y2": 521.1875,
+   "title": false,
+   "ok": false
+  },
+  {
+   "i": 5,
+   "a": "view.rv-section-head",
+   "b": "view.rv-project-card",
+   "g": 30.96875,
+   "y1": 540.1875,
+   "y2": 571.15625,
+   "title": true,
+   "ok": true
+  },
+  {
+   "i": 6,
+   "a": "view.rv-project-card",
+   "b": "text.rv-section-title",
+   "g": 37.359375,
+   "y1": 699.046875,
+   "y2": 736.40625,
+   "title": false,
+   "ok": true
+  },
+  {
+   "i": 7,
+   "a": "text.rv-section-title",
+   "b": "view.rv-msg-card",
+   "g": 30.96875,
+   "y1": 755.40625,
+   "y2": 786.375,
+   "title": true,
+   "ok": true
+  },
+  {
+   "i": 8,
+   "a": "view.rv-msg-card",
+   "b": "view.rv-section-head",
+   "g": 37.359375,
+   "y1": 1137.5625,
+   "y2": 1174.921875,
+   "title": false,
+   "ok": true
+  },
+  {
+   "i": 9,
+   "a": "view.rv-section-head",
+   "b": "view.rv-msg-item",
+   "g": 30.96875,
+   "y1": 1193.921875,
+   "y2": 1224.890625,
+   "title": true,
+   "ok": true
+  }
+ ],
+ "titleGaps": [],
+ "capture": {
+  "T": 91,
+  "B": 747.625,
+  "maxScroll": 592,
+  "chunks": 2
+ }
+}

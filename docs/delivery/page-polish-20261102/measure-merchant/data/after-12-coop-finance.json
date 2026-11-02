@@ -1,0 +1,272 @@
+{
+ "route": "pages/coop/finance/index",
+ "container": "mp-page",
+ "cTop": 0,
+ "cBottom": 844,
+ "scrollTop": 0,
+ "scrollHeight": 844,
+ "clientHeight": 844,
+ "chain": [
+  "view.fin-shell.theme-merchant"
+ ],
+ "parent": "view.fin-shell.theme-merchant",
+ "parentStyle": {
+  "radius": 0,
+  "radii": [
+   0,
+   0,
+   0,
+   0
+  ],
+  "pad": [
+   91,
+   0,
+   0,
+   0
+  ],
+  "margin": [
+   0,
+   0,
+   0,
+   0
+  ],
+  "bg": "rgb(243, 244, 244)",
+  "fw": "400",
+  "fs": "12.48px"
+ },
+ "sections": [
+  {
+   "cls": "view.pt__title",
+   "owner": "cy-page-title",
+   "top": 115.953125,
+   "bottom": 152.734375,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 36.78125,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgba(0, 0, 0, 0)",
+   "fw": "800",
+   "fs": "30.16px",
+   "surface": false,
+   "ink": {
+    "top": 115.953125,
+    "bottom": 151.953125,
+    "left": 16.625,
+    "right": 137.25,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": "分润明细"
+  },
+  {
+   "cls": "<cy-scene-merchant-profit>",
+   "owner": "page",
+   "top": 161.046875,
+   "bottom": 800.4375,
+   "left": 0,
+   "right": 390,
+   "w": 390,
+   "h": 639.390625,
+   "radius": 0,
+   "radii": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgb(243, 244, 244)",
+   "fw": "400",
+   "fs": "12.48px",
+   "surface": true,
+   "ink": {
+    "top": 161.046875,
+    "bottom": 800.4375,
+    "left": 0,
+    "right": 390,
+    "n": 1
+   },
+   "titleGap": null,
+   "text": ""
+  }
+ ],
+ "cards": [
+  {
+   "cls": "view.sc__card",
+   "owner": "cy-stat-card",
+   "depth": 5,
+   "nested": false,
+   "top": 161.046875,
+   "bottom": 256.1875,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 95.140625,
+   "radius": 16.64,
+   "radii": [
+    17,
+    17,
+    17,
+    17
+   ],
+   "pad": [
+    14.6,
+    14.6,
+    14.6,
+    14.6
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgb(255, 255, 255)",
+   "fw": "400",
+   "fs": "12.48px",
+   "text": "已入账分润¥0.00",
+   "okL": true,
+   "okR": true,
+   "okRad": false
+  },
+  {
+   "cls": "view.fs",
+   "owner": "cy-funds-stages",
+   "depth": 4,
+   "nested": false,
+   "top": 268.65625,
+   "bottom": 313.5625,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 44.90625,
+   "radius": 12.48,
+   "radii": [
+    12,
+    12,
+    12,
+    12
+   ],
+   "pad": [
+    12.5,
+    16.6,
+    12.5,
+    16.6
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgb(238, 238, 238)",
+   "fw": "400",
+   "fs": "12.48px",
+   "text": "可提现¥0.00",
+   "okL": true,
+   "okR": true,
+   "okRad": true
+  },
+  {
+   "cls": "view.btn.btn--disabled",
+   "owner": "cy-btn",
+   "depth": 5,
+   "nested": false,
+   "top": 326.03125,
+   "bottom": 371.78125,
+   "left": 16.625,
+   "right": 373.375,
+   "w": 356.75,
+   "h": 45.75,
+   "radius": 12.48,
+   "radii": [
+    12,
+    12,
+    12,
+    12
+   ],
+   "pad": [
+    8.3,
+    20.8,
+    8.3,
+    20.8
+   ],
+   "margin": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "bg": "rgb(248, 250, 252)",
+   "fw": "700",
+   "fs": "14.56px",
+   "text": "",
+   "okL": true,
+   "okR": true,
+   "okRad": true
+  }
+ ],
+ "bottomBar": 844,
+ "errors": [],
+ "consoleErr": [
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+ ],
+ "dump": "分润明细 | 已入账分润 | ¥0.00 | 可提现 | ¥0.00 | 联系平台客服提现 | 还没有已入账分润 | 还没有合作结算 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "summary": {
+  "gapMode": null,
+  "titleGapMode": 9,
+  "cardLeftMode": 17,
+  "cardRightMode": 17,
+  "cardRadiusMode": 12
+ },
+ "gaps": [
+  {
+   "i": 1,
+   "a": "view.pt__title",
+   "b": "<cy-scene-merchant-profit>",
+   "g": 9.09375,
+   "y1": 151.953125,
+   "y2": 161.046875,
+   "title": true,
+   "ok": true
+  }
+ ],
+ "titleGaps": [],
+ "capture": {
+  "T": 92,
+  "B": 844,
+  "maxScroll": 0,
+  "chunks": 1
+ }
+}
