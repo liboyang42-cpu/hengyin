@@ -1388,6 +1388,20 @@ public class ApiClubController extends BaseController {
             sessionProbe.setDelFlag(0);
             List<CmsActivity> sessions = cmsActivityService.selectCmsActivityList(sessionProbe);
             if (sessions != null) {
+                // C-19:活动卡原来用主题自己的开始日期判「已开始」,场次还没开就显示已开始。
+                // 改用本俱乐部真实场次:进行中的那场优先,否则最近一场未开始的;都没有就不给,前端照旧。
+                Date nowAt = new Date();
+                Date running = null;
+                Date upcoming = null;
+                for (CmsActivity session : sessions) {
+                    if (session == null || session.getStartDate() == null || session.getCancelTime() != null) continue;
+                    Date start = session.getStartDate();
+                    boolean ended = session.getEndDate() != null && !session.getEndDate().after(nowAt);
+                    if (ended) continue;
+                    if (!start.after(nowAt)) { if (running == null || start.after(running)) running = start; }
+                    else if (upcoming == null || start.before(upcoming)) upcoming = start;
+                }
+                t.setNextSessionStart(running != null ? running : upcoming);
                 for (CmsActivity session : sessions) {
                     if (session == null || session.getId() == null) continue;
                     CmsRegistration sessionRq = new CmsRegistration();

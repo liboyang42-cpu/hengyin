@@ -200,6 +200,14 @@ public class CmsTopic extends BaseEntity
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private transient Boolean gameModuleEnabled;
 
+    /** C-19:俱乐部活动卡用的本俱乐部场次时间(进行中的那场,否则最近一场未开始的);只读富化,不落库。 */
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private transient Date nextSessionStart;
+
+    public Date getNextSessionStart() { return nextSessionStart; }
+    public void setNextSessionStart(Date nextSessionStart) { this.nextSessionStart = nextSessionStart; }
+
     /** 选择主题的ID */
     @Excel(name = "选择主题的ID")
     private Long topicId;

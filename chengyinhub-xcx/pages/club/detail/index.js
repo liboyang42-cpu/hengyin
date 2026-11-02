@@ -297,7 +297,9 @@ function eventTimeText(raw) {
 // ⚠️ 只用本页真拿得到的字段判:ended(后端 endDate 比出来的)+ startDate。
 function topicStatusOf(t) {
   if (t.ended) return { statusText: '已结束', statusTone: 'muted' };
-  const start = t.startDate ? toTimestamp(String(t.startDate)) : 0;
+  // C-19:有本俱乐部真实场次时按场次判,不再拿主题日期范围的起点说「已开始」。
+  const raw = t.nextSessionStart || t.startDate;
+  const start = raw ? toTimestamp(String(raw)) : 0;
   if (start && start <= Date.now()) return { statusText: '已开始', statusTone: 'live' };
   return { statusText: '未开始', statusTone: 'open' };
 }
@@ -313,7 +315,7 @@ function topicStatOf(value, unit) {
 
 function decorateTopicCard(t) {
   const status = topicStatusOf(t);
-  const timeText = eventTimeText(t.startDate) || t.dateText || '';
+  const timeText = eventTimeText(t.nextSessionStart || t.startDate) || t.dateText || '';
   return Object.assign({}, t, status, {
     timeText: timeText,
     // P-14:封面上的标签 = 开始时间 + 已开始/未开始
