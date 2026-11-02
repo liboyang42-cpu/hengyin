@@ -114,7 +114,8 @@
     <view style="height:100rpx"></view>
     <view class="cc-field">
       <text class="cc-field-label">俱乐部名称<text class="cc-req" aria-hidden="true">*</text></text>
-      <input class="cc-input cc-input--field {{name ? 'is-filled' : ''}}" aria-label="俱乐部名称，必填" placeholder="给你的俱乐部起个名字" value="{{name}}" data-field="name" bindinput="onInput" maxlength="30" disabled="{{submitting}}" />
+      <input class="cc-input cc-input--field {{name ? 'is-filled' : ''}}" aria-label="俱乐部名称，必填" placeholder="给你的俱乐部起个名字" value="{{name}}" data-field="name" bindinput="onInput" bindblur="onNameBlur" maxlength="30" disabled="{{submitting}}" />
+      <view class="cc-field-err" wx:if="{{nameError}}" aria-role="status" aria-live="polite"><text class="cc-req" aria-hidden="true">*</text><text>{{nameError}}</text></view>
     </view>
     <view class="cc-field">
       <text class="cc-field-label">一句话介绍(选填)</text>
