@@ -86,6 +86,13 @@ public class CmsTopic extends BaseEntity
     private Date operationEndDate;
     @JsonIgnore
     private Boolean merchantSupplyGapOnly;
+    /**
+     * C-02 提示位(不落库,只在主理人「开一场」可开团列表里填):本主题的付费场次能否在线收款。
+     * 与 CmsRegistrationServiceImpl.assertCollectible 同一判据(productRoleService.isPlatformOwned)。
+     */
+    private Boolean onlinePaymentAvailable;
+    public Boolean getOnlinePaymentAvailable() { return onlinePaymentAvailable; }
+    public void setOnlinePaymentAvailable(Boolean onlinePaymentAvailable) { this.onlinePaymentAvailable = onlinePaymentAvailable; }
     @JsonIgnore
     private Boolean pendingClubApplicationOnly;
     @JsonIgnore

@@ -180,6 +180,19 @@ class ClubSessionServiceImplTest {
         assertEquals(null, service.themeWindowWarning(TOPIC_ID, Arrays.asList(java.time.LocalDate.of(2026, 11, 2))));
     }
 
+    /** C-02 提示位:可开团列表带 onlinePaymentAvailable,与 assertCollectible 同一判据(isPlatformOwned)。 */
+    @Test
+    void openableTopicsCarryOnlinePaymentAvailability() {
+        com.chengyinhub.business.service.IProductRoleService roles =
+                mock(com.chengyinhub.business.service.IProductRoleService.class);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "productRoleService", roles);
+        when(orderMapper.selectEffectiveTopicIdsByClubId(CLUB_ID)).thenReturn(Collections.singletonList(TOPIC_ID));
+        when(roles.isPlatformOwned(TOPIC_ID)).thenReturn(false);
+        assertEquals(Boolean.FALSE, service.selectOpenableTopics(CLUB_ID, OWNER_ID).get(0).getOnlinePaymentAvailable());
+        when(roles.isPlatformOwned(TOPIC_ID)).thenReturn(true);
+        assertEquals(Boolean.TRUE, service.selectOpenableTopics(CLUB_ID, OWNER_ID).get(0).getOnlinePaymentAvailable());
+    }
+
     /** AUDIT-G1-3:父主题被驳回 / 作者下架 / 待审时不能开场次。 */
     @Test
     void parentTopicNotLive_refusesOpening() {

@@ -60,6 +60,8 @@ public class ClubSessionServiceImpl implements IClubSessionService {
     private final ActivityReviewPolicy activityReviewPolicy;
     private final IAuditTaskService auditTaskService;
     private final IUmsMemberService umsMemberService;
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.chengyinhub.business.service.IProductRoleService productRoleService;
 
     public ClubSessionServiceImpl(IClubService clubService, ICmsTopicService topicService,
                                   ICmsActivityService activityService, IOmsTicketService ticketService,
@@ -104,6 +106,8 @@ public class ClubSessionServiceImpl implements IClubSessionService {
                 topics.add(topic);
             }
         }
+        // C-02:主理人开场前就要知道付费场次能不能在线收款(与 assertCollectible 同一判据,不改收款闸本身)。
+        for (CmsTopic topic : topics) topic.setOnlinePaymentAvailable(onlinePaymentAvailable(topic.getId()));
         return topics;
     }
 
@@ -204,6 +208,12 @@ public class ClubSessionServiceImpl implements IClubSessionService {
             }
         }
         return activity.getId();
+    }
+
+    /** 与 CmsRegistrationServiceImpl.assertCollectible 的主题分支同一判据;服务不可用时返回 null,页面不出提示。 */
+    Boolean onlinePaymentAvailable(Long topicId) {
+        if (topicId == null || productRoleService == null) return null;
+        return productRoleService.isPlatformOwned(topicId);
     }
 
     @Override

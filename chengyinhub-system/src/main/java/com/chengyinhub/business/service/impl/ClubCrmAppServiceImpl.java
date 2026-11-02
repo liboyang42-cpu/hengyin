@@ -50,6 +50,8 @@ public class ClubCrmAppServiceImpl implements IClubCrmAppService {
     private static final int MAX_TAG_LENGTH = 12;
     private static final int MAX_REMARK_LENGTH = 200;
 
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.IProductRoleService productRoleService;
     @Autowired
     private ClubCrmMapper clubCrmMapper;
     @Autowired
@@ -286,6 +288,9 @@ public class ClubCrmAppServiceImpl implements IClubCrmAppService {
         data.put("canViewVerify", canViewVerify);
         data.put("canManageSessions", canManageSessions);
         data.put("canDirect", canDirect);
+        // C-02:工作台提示「非平台主题暂不能在线收款」;与 assertCollectible 同一判据,只读。
+        data.put("onlinePaymentAvailable", productRoleService == null || topicId == null ? null
+                : productRoleService.isPlatformOwned(topicId));
         data.put("canReviewChapterApplications", canReviewChapterApplications);
         return data;
     }
