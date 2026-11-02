@@ -206,6 +206,25 @@ public class ClubSessionServiceImpl implements IClubSessionService {
         return activity.getId();
     }
 
+    @Override
+    public String themeWindowWarning(Long topicId, List<LocalDate> dates) {
+        if (topicId == null || dates == null || dates.isEmpty()) return null;
+        CmsTopic topic = topicService.selectCmsTopicById(topicId);
+        if (topic == null || (topic.getStartDate() == null && topic.getEndDate() == null)) return null;
+        ZoneId zone = ZoneId.of("Asia/Shanghai");
+        LocalDate start = topic.getStartDate() == null ? null : topic.getStartDate().toInstant().atZone(zone).toLocalDate();
+        LocalDate end = topic.getEndDate() == null ? null : topic.getEndDate().toInstant().atZone(zone).toLocalDate();
+        int outside = 0;
+        for (LocalDate date : dates) {
+            if (date == null) continue;
+            if ((start != null && date.isBefore(start)) || (end != null && date.isAfter(end))) outside++;
+        }
+        if (outside == 0) return null;
+        DateTimeFormatter label = DateTimeFormatter.ofPattern("M月d日");
+        String window = (start == null ? "" : start.format(label)) + "—" + (end == null ? "" : end.format(label));
+        return (dates.size() == 1 ? "这一场" : "有 " + outside + " 场") + "不在主题日期（" + window + "）内，请确认";
+    }
+
     private void requireNoSameMomentSession(Long clubId, Long topicId, Date assemblyMoment) {
         CmsActivity probe = new CmsActivity();
         probe.setTopicId(topicId);

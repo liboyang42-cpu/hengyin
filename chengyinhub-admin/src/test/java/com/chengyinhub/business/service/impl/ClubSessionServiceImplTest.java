@@ -163,6 +163,23 @@ class ClubSessionServiceImplTest {
         assertEquals(Long.valueOf(51L), service.open(request(), OWNER_ID, "主理人"));
     }
 
+    /** C-21:场次日期落在主题日期之外只提醒(不拒),窗口内与没写日期的主题不提醒。 */
+    @Test
+    void themeWindowWarningNamesTheWindowOnlyWhenOutside() {
+        java.time.ZoneId zone = java.time.ZoneId.of("Asia/Shanghai");
+        topic.setStartDate(Date.from(java.time.LocalDate.of(2026, 11, 12).atStartOfDay(zone).toInstant()));
+        topic.setEndDate(Date.from(java.time.LocalDate.of(2026, 12, 12).atStartOfDay(zone).toInstant()));
+        assertEquals("这一场不在主题日期（11月12日—12月12日）内，请确认",
+                service.themeWindowWarning(TOPIC_ID, Arrays.asList(java.time.LocalDate.of(2026, 11, 2))));
+        assertEquals("有 1 场不在主题日期（11月12日—12月12日）内，请确认",
+                service.themeWindowWarning(TOPIC_ID, Arrays.asList(java.time.LocalDate.of(2026, 11, 12),
+                        java.time.LocalDate.of(2026, 12, 13))));
+        assertEquals(null, service.themeWindowWarning(TOPIC_ID, Arrays.asList(java.time.LocalDate.of(2026, 12, 12))));
+        topic.setStartDate(null);
+        topic.setEndDate(null);
+        assertEquals(null, service.themeWindowWarning(TOPIC_ID, Arrays.asList(java.time.LocalDate.of(2026, 11, 2))));
+    }
+
     /** AUDIT-G1-3:父主题被驳回 / 作者下架 / 待审时不能开场次。 */
     @Test
     void parentTopicNotLive_refusesOpening() {
