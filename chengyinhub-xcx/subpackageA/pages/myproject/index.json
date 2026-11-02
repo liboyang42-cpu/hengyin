@@ -16,7 +16,7 @@
     "cy-modal-host": "/components/cy/modal-host/index"
   },
   "navigationBarTitleText": "我的项目",
-  "navigationBarTextStyle": "black",
+  "navigationBarTextStyle": "white",
   "backgroundColor": "#000000",
   "navigationStyle": "custom"
 }

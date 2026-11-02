@@ -29,7 +29,8 @@ test('游玩页弹窗与全屏说明存在,且和现行 wxml 同一套层名', (
   }
 
   // 半屏
-  for (const token of ['class="sheet"', 'gp2--sheet', 'finsheet', 'chpick', 'cy-advanced-game', 'cy-playkit']) {
+  assert.match(wxml, /class="sheet[ "]/, '半屏层缺失: class="sheet"') // 2026-11-02:本局线索/同行者榜的 .sheet 带 is-out 退场类
+  for (const token of ['gp2--sheet', 'finsheet', 'chpick', 'cy-advanced-game', 'cy-playkit']) {
     assert.match(wxml, new RegExp(token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), `半屏层缺失: ${token}`)
   }
 

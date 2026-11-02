@@ -14,6 +14,9 @@ page { background: var(--cy-bg-page); }
 .review-content { padding: 0 32rpx 48rpx; }
 /* 拒权/加载失败的内联错误(替代原整屏 cy-empty/cy-error) */
 .review-inline-error { display: block; margin: 24rpx 32rpx; }
+/* 2026-11-02 B-3:回复待确认的恢复块原来没有类,原生按钮在页顶铺成灰条;改成与其它卡片同底、同页边的白卡 */
+.review-recovery { display: flex; flex-direction: column; gap: var(--cy-space-2); margin: var(--cy-space-3) var(--cy-page-x); padding: var(--cy-space-4); border-radius: var(--cy-radius-lg); background: var(--cy-bg-card); }
+.review-recovery__text { color: var(--cy-text-title); font-size: var(--cy-font-body); word-break: break-all; }
 
 .review-summary { padding-top: 12rpx; }
 .review-title {

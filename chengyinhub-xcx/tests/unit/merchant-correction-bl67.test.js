@@ -29,7 +29,8 @@ test('请求体按 MerchantContributionSubmitRequest,不带附件', () => {
 
 function loadSheet(requests) {
   let def
-  global.getApp = () => ({ sendRequest: (o) => requests.push(o) })
+  global.getApp = () => ({ getUserID: () => 9, sendRequest: (o) => requests.push(o) })
+  global.wx = require('../helpers/memory-storage.js')()
   global.Component = (d) => { def = d }
   delete require.cache[require.resolve(SHEET_JS)]
   require(SHEET_JS)
@@ -70,18 +71,17 @@ test('提交成功给回执;网络未知用同一幂等键重试', () => {
   assert.match(c.data.receiptText, /待审核/)
 })
 
-test('业务拒绝原话展示,换键', () => {
+test('409不能证明原请求未执行，保留原键与原正文', () => {
   const requests = []
   const c = loadSheet(requests)
   toForm(c, requests)
   c.submit()
   const first = requests.shift()
   first.success({ code: 409, msg: '你已提交过该商家的贡献，请在原记录补证' })
-  assert.equal(c.data.stage, 'fail')
-  assert.equal(c.data.failText, '你已提交过该商家的贡献，请在原记录补证')
-  c.backToForm()
+  assert.equal(c.data.stage, 'unknown')
+  assert.match(c.data.failText, /不知道纠错是否已提交/)
   c.submit()
-  assert.notEqual(JSON.parse(requests.shift().data).idempotencyKey, JSON.parse(first.data).idempotencyKey)
+  assert.deepEqual(JSON.parse(requests.shift().data), JSON.parse(first.data))
 })
 
 test('taxonomy 读取失败给重试,不进表单', () => {

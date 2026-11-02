@@ -1,6 +1,7 @@
 <!-- 漫游地图 · 附近的队伍(地图组队 P 方案,Figma txQoyVyKb3aQdFCnc8qmhj 590:1014 · P1–P6)
      地图只做展示层:没有开局入口;顶部深色计数条「附近的队伍 · N 支在招募」 + 地图/列表切换;
      底部只剩「范围」「我的队伍」两枚角控件,开任何半屏时收起(9-08 裁决)。 -->
+<wxs src="../../utils/wxs/num.wxs" module="num" />
 <view class="nb theme-dark {{sheet === 'poi' ? 'map-open' : ''}}">
   <cy-toast id="cy-toast" />
   <cy-modal-host id="cy-modal-host" />
@@ -43,7 +44,7 @@
 
   <!-- 列表模式:范围内全部队伍,点一行 = 点地图上的那支(同一张队伍卡) -->
   <scroll-view class="mt-list" scroll-y enhanced show-scrollbar="{{false}}" wx:if="{{viewMode === 'list'}}" style="top:{{hudTop + 56}}px;">
-    <view class="mt-list__sec">{{rangeAll ? rangeText : rangeText + '内'}} · {{listRows.length || 0}} 个</view>
+    <view class="mt-list__sec">{{rangeAll ? rangeText : rangeText + '内'}} · {{num.n(listRows.length || listLoaded ? listRows.length : null)}} 个</view>
     <view class="mt-row mt-row--list" wx:for="{{listRows}}" wx:key="key" data-kind="{{item.kind}}" data-id="{{item.id}}" bindtap="onListRowTap"
           aria-role="button" aria-label="{{item.name}}，{{item.badge}}" hover-class="cy-pressed" hover-stay-time="80">
       <image wx:if="{{item.img}}" class="mt-row__im {{item.round ? 'is-r' : ''}}" src="{{item.img}}" mode="aspectFill" lazy-load="true" />
@@ -54,7 +55,7 @@
       </view>
       <text class="mt-badge mt-badge--{{item.tone}}">{{item.badge}}</text>
     </view>
-    <view class="mt-foot" wx:if="{{!listRows.length}}">附近暂无节点</view>
+    <view class="mt-foot" wx:if="{{!listRows.length && listLoaded}}">附近暂无节点</view>
   </scroll-view>
 
   <view class="nb-load-error" wx:if="{{nearbyReadAccess || loadError}}" style="top:{{hudTop + (viewMode === 'map' ? 100 : 56)}}px;">
@@ -68,8 +69,8 @@
   <view class="mt-strip" wx:if="{{!sheet && viewMode === 'map'}}" style="padding-bottom:{{safeBottom + 16}}px;">
     <view class="mt-strip__head"><text>{{headerText}}</text></view>
     <scroll-view class="mt-strip__cards" scroll-x enhanced show-scrollbar="{{false}}"><view class="mt-strip__track">
-      <view class="mt-card mt-card--empty" wx:if="{{!listRows.length}}" data-layer="all" bindtap="onLayerTap" aria-role="button" aria-label="附近暂无节点，查看全部范围" hover-class="cy-pressed" hover-stay-time="80">
-        <view class="mt-card__copy"><text class="mt-card__title">附近暂无节点</text><text class="mt-card__meta">点这里看看全部范围</text></view>
+      <view class="mt-card mt-card--empty" wx:if="{{!listRows.length}}" data-layer="all" bindtap="onLayerTap" aria-role="button" aria-label="{{listLoaded ? '附近暂无节点，查看全部范围' : '正在读取附近节点'}}" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="mt-card__copy" wx:if="{{listLoaded && !loadError && !nearbyReadAccess}}"><text class="mt-card__title">附近暂无节点</text><text class="mt-card__meta">点这里看看全部范围</text></view>
       </view>
       <view class="mt-card" wx:for="{{listRows}}" wx:key="key" data-kind="{{item.kind}}" data-id="{{item.id}}" bindtap="onListRowTap"
             aria-role="button" aria-label="{{item.name}}，{{item.badge}}" hover-class="cy-pressed" hover-stay-time="80">

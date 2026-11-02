@@ -4,6 +4,7 @@
   "backgroundColor": "#F3F4F4",
   "usingComponents": {
     "cy-badge": "/components/cy/badge/index",
+    "cy-btn": "/components/cy/btn/index",
     "cy-nav-bar": "/components/cy/nav-bar/index",
     "cy-page-title": "/components/cy/page-title/index",
     "cy-skeleton": "/components/cy/skeleton/index",

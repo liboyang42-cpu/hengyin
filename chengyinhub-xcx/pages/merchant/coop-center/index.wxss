@@ -10,7 +10,7 @@
 }
 
 .cc-tabs {
-  padding: 0 var(--cy-space-3);
+  margin-left: calc(-1 * var(--cy-space-3));
 }
 
 .cc-scroll {

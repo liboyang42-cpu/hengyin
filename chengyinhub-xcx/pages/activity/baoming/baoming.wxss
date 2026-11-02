@@ -404,7 +404,7 @@ cy-error, cy-empty.page-terminal { flex: 1; display: flex !important; flex-direc
   height: var(--cy-space-3-5);
   position: relative;
   border: 4rpx solid var(--cy-color-border-strong);
-  border-radius: 30rpx;
+  border-radius: 50%;
   flex: none;
 }
 

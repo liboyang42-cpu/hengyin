@@ -2139,6 +2139,8 @@ Page({
     try { intent.rec.stop(); } catch (e) { intent.onError(); }
   },
 
+  onVoiceCancel() { this._cancelShopRecording(); },
+
   /** 语音走**统一上传通道的 uploadOne**,不裸调 wx.uploadFile ——
    *  裸调会漏掉认证头构造,而这条链路是要花钱的写操作。
    *  这里用 uploadOne 而不是 uploadAll:后者强制结果里带文件地址,而语音刻意不落盘,
@@ -2379,7 +2381,7 @@ Page({
    *  没有坐标就不假装能导航 —— 提示一句比打开一张空白地图诚实。 */
   openHeroNav() {
     const node = (this.data.nodes || []).find((n) => String(n.nodeId) === String(this.data.hero.node.nodeId));
-    const lng = node && Number(node.longitude), lat = node && Number(node.latitude);
+    const lng = node && Number(node.lng), lat = node && Number(node.lat);
     if (!lng || !lat) { cyToast('这家还没标坐标'); return; }
     wx.openLocation({ longitude: lng, latitude: lat, name: node.name || '', address: node.address || '', scale: 18 });
   },
@@ -2902,9 +2904,9 @@ Page({
   },
 
   openGameModule() {
-    this.setData({ 'gameModule.sheetShow': true });
+    this.setData({ 'gameModule.sheetShow': true, gmodOut: false });
   },
-  closeGameModule() { this.setData({ 'gameModule.sheetShow': false }); },
+  closeGameModule() { this._outThen('gmod'); },
   retryGameModule() { this._loadPlayerGameModule(); },
 
   submitPlayerChoice(e) {
@@ -3404,7 +3406,7 @@ Page({
       && sequence === this._boardReadSequence && this.data.board.show
       && sessionKey === this._sessionKey()
       && originalSessionId === precisePlayId((this._routeState || {}).sessionId);
-    this.setData({ board: { show: true, loading: true, list: [], me: null, error: '' } });
+    this.setData({ board: { show: true, loading: true, list: [], me: null, error: '' }, boardOut: false });
     const originalSessionId = precisePlayId((this._routeState || {}).sessionId);
     const orientBoard = this.data.mode === 1 && !!originalSessionId;
     let usingOrientBoard = orientBoard;
@@ -3437,7 +3439,7 @@ Page({
   },
   closeBoard() {
     this._boardReadSequence = (this._boardReadSequence || 0) + 1;
-    this.setData({ 'board.show': false });
+    this._outThen('board');
   },
   /** 核销入场:动态码收进场景栈(#572 单宿主收口),票面+放大码都在 scene-qr-ticket 组件里 */
   openEntryQr() {
@@ -3974,7 +3976,7 @@ Page({
    *  audioNodeId 在这里存字符串 'ch',节点侧存的是数字 nodeId,=== 比较不会撞。 */
   /** 故事流右上角的声音钮:整章旁白开/关。只有作者配了 audioUrl 时 wxml 才渲染它。 */
   toggleStoryAudio() {
-    if (this.data.audioNodeId === 'chapter' && this.data.audioPlaying) { this._stopChapAudio(); return; }
+    if (this.data.audioNodeId === 'chapter' && this.data.audioPlaying) { if (this._audio) this._audio.pause(); return; }
     this.playChapterAudio();
   },
 
@@ -7502,10 +7504,17 @@ Page({
       this._kitAudio.onPause(() => audioSession.keepAwake('kitAudio', false));
       this._kitAudio.onStop(() => audioSession.keepAwake('kitAudio', false));
       this._kitAudio.onTimeUpdate(() => {
+        if (this._kit() !== this._kitAudioKit || !this._isPlayAccountCurrent()) return;
         this.setData({
           'playKit.kit.position': Math.floor(this._kitAudio.currentTime || 0),
           'playKit.kit.duration': Math.floor(this._kitAudio.duration || 0),
+          'playKit.kit.audioSeconds': Math.ceil(this._kitAudio.duration || 0),
         });
+      });
+      this._kitAudio.onCanplay(() => {
+        if (this._kit() !== this._kitAudioKit || !this._isPlayAccountCurrent()) return;
+        const seconds = Math.ceil(this._kitAudio.duration || 0);
+        if (seconds > 0) this.setData({ 'playKit.kit.audioSeconds': seconds });
       });
       this._kitAudio.onEnded(() => {
         // 只收播放态:音乐角明确**不判定通关**(2026-08-26 拍板,utils/playkit-view.js:318)。
@@ -7521,6 +7530,7 @@ Page({
       });
     }
     if (shouldPlay) {
+      this._kitAudioKit = kit;
       // 音乐角曲目来自玩法配置,同样可能是 http 签名链接(实走复核)
       const kitSrc = secureOwnMedia(kit.audioUrl);
       if (this._kitAudio.src !== kitSrc) this._kitAudio.src = kitSrc;
@@ -8484,15 +8494,19 @@ Page({
   // 2026-10-23 弹层动效:手动关闭的面板先挂 is-out 播退场(full 档 280ms = --cy-motion-sheet-full-out),
   // 播完再卸载;减动效直接卸载。程序里一关一开的切换不走这里(那是直接换下一层,不叠)。
   _outThen(which) {
-    const journal = which === 'journal';
-    const still = () => (journal ? this.data.journalOut : this.data.sheetOut);
+    const flag = { journal: 'journalOut', gmod: 'gmodOut', board: 'boardOut' }[which] || 'sheetOut';
+    const still = () => this.data[flag];
     const unmount = () => {
-      if (journal) this.setData({ journalOut: false, showJournal: false });
+      if (which === 'journal') this.setData({ journalOut: false, showJournal: false });
+      else if (which === 'gmod') this.setData({ gmodOut: false, 'gameModule.sheetShow': false });
+      else if (which === 'board') this.setData({ boardOut: false, 'board.show': false });
       else this.setData({ sheetOut: false, 'sheet.show': false });
     };
     if (this.data.reducedMotion) { unmount(); return; }
     if (still()) return;
-    if (journal) this.setData({ journalOut: true });
+    if (which === 'journal') this.setData({ journalOut: true });
+    else if (which === 'gmod') this.setData({ gmodOut: true });
+    else if (which === 'board') this.setData({ boardOut: true });
     else this.setData({ sheetOut: true });
     // 退场期间又被打开(打开处会把标记清回 false):不再卸载新开的那一层
     setTimeout(() => { if (still()) unmount(); }, 280);

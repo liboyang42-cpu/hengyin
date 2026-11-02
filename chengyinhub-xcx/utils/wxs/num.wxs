@@ -1,0 +1,5 @@
+// 真实世界的数量(里程、粉丝、获赞…):没有数据时显示「—」,不显示假的 0。0 是真实值,照常显示。
+function n(v) {
+  return v === null || v === undefined || v === '' ? '—' : v;
+}
+module.exports = { n: n };

@@ -788,8 +788,10 @@ page {
   --cy-comp-sheet-history-value-track: -0.3125px;
   --cy-comp-sheet-history-status-track: 0.9172px;
   --cy-comp-sheet-history-label-track:  0.0645px;
-  --cy-comp-sheet-player-history-card: rgba(255,255,255,.06);
-  --cy-comp-sheet-player-history-metric: rgba(255,255,255,.05);
+  /* 2026-11-01 业主截图(邀请记录):半透明卡在玻璃弹层上透出底页的白色按钮和插画,字发虚;
+     面板仍是玻璃(见 --cy-comp-sheet-player-glass),只把面板里的记录卡改成实底 */
+  --cy-comp-sheet-player-history-card: var(--cy-comp-sheet-player-card);
+  --cy-comp-sheet-player-history-metric: var(--cy-comp-sheet-player-card);
   --cy-comp-sheet-route-arrow-size: 34rpx;
   --cy-comp-sheet-shadow-card: 0 2rpx 10rpx rgba(0,0,0,.28);
   --cy-comp-sheet-activity-scrim: linear-gradient(180deg, rgba(0,0,0,0) 25%, rgba(0,0,0,.78) 100%);

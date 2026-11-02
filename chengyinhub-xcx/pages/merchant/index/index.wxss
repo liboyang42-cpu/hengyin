@@ -238,160 +238,86 @@ page {
   font-size: var(--cy-font-title);
 }
 
-/* 项目卡 —— 1:1 落 Figma 稿 ku2oaN9ag1XUMC9lKNnrcr#4019-12757。
- * 结构:72×72 封面 + 右侧三行(标题/铃铛 · 副信息 · 待办/身份 pill)。
- * 稿面有几个色值不在 DS 色板上,逐条 ds-ok 标了来源,按稿子保留原值。 */
-.rv-project-cards { margin: 0 var(--cy-page-x); }
-.rv-project-item + .rv-project-item { margin-top: var(--cy-space-2); }
+/* 项目卡 —— 2026-11-01 业主定稿「方案 B v3」(review 页 LpqXsu44g2fi4vxqeVdYxX):
+ * 横滑大卡 600×450rpx(4:3,与主题封面同比例,封面铺满即整张不裁),左边与「项目」标题对齐;
+ * 状态 / 类型是封面上的白色毛玻璃签;底部白色半透明渐变只包住文字区,越往下越白、到底仍半透。
+ * 圆角只用 clip-path 整组裁一次:overflow:hidden + 圆角会逐层裁,深色封面在底边透出一圈暗线(原型逐像素验过)。 */
+.rv-project-cards { width: 100%; white-space: nowrap; }
+.rv-project-track { display: inline-flex; gap: var(--cy-space-3); padding: 0 var(--cy-page-x) var(--cy-space-1); }
+.rv-project-item { flex: none; }
 
 .rv-project-card {
-  display: flex;
-  /* 稿 134:185 的卡底那一行要整幅铺满,不能变成「封面 | 正文 | 卡底」三列。
-     flex-wrap + 卡底 flex-basis:100% 让它换到第二行,原来两列的排法一个字不动。 */
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: 24rpx;
-  padding: var(--cy-space-3);
+  position: relative;
+  width: 600rpx;
+  height: 450rpx;
   border-radius: var(--cy-radius-lg);
-  background: var(--cy-bg-card);
-  box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.06); /* ds-ok: 稿面 drop-shadow 0 2px 5px 6%,比 --cy-shadow-card 更紧更实 */
+  clip-path: inset(0 round var(--cy-radius-lg));
+  background: var(--cy-color-bg-surface-strong);
+  white-space: normal;
 }
+.rv-project-cover { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
 
-/* 2026-08-20 稿 3910:580:封面加大到 91×99px(182×198rpx),竖图占位更接近活动海报比例 */
-.rv-project-thumb {
-  width: 182rpx;
-  height: 198rpx;
-  flex-shrink: 0;
-  overflow: hidden;
-  border-radius: var(--cy-radius-md);
-  background: #ebebeb; /* ds-ok: 稿面 bg/fill/neutral/subdued,同时是缺图时的占位底 */
+.rv-project-line1 {
+  position: absolute; left: 20rpx; right: 20rpx; top: 20rpx;
+  display: flex; align-items: center; gap: 12rpx;
 }
-.rv-project-thumb-img { width: 100%; height: 100%; display: block; }
-
-.rv-project-body {
-  min-width: 0;
-  flex: 1;
-  min-height: 198rpx;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start; /* 稿面顶对齐,不居中 */
-  gap: 10rpx;
-}
-
-.rv-project-line1 { display: flex; align-items: center; gap: 12rpx; }
 .rv-project-line1-fill { flex: 1; min-width: 0; }
-
-/* 状态签:白底浮签蓝字(稿面 进行中);未开始/已结束 降灰 */
-.rv-project-status {
-  flex-shrink: 0;
-  padding: 4rpx 16rpx;
-  border-radius: var(--cy-radius-pill);
-  background: var(--cy-bg-card);
-  box-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.12); /* ds-ok: 稿面浮签投影 */
-  font-size: var(--cy-type-micro);
-  font-weight: 500;
-  color: #155dfc; /* ds-ok: 稿面「进行中」蓝 */
-}
-/* 类目签:实心蓝白字(稿面 自由探索),放在状态后面 */
+.rv-project-status,
 .rv-project-cat {
-  flex-shrink: 0;
-  padding: 4rpx 16rpx;
-  border-radius: var(--cy-radius-md);
-  background: #2b7fff; /* ds-ok: 稿面类目签蓝 */
-  color: var(--cy-color-text-inverse);
-  font-size: var(--cy-type-micro);
-  font-weight: 700;
+  display: inline-flex; align-items: center; gap: 10rpx;
+  height: 44rpx; padding: 0 18rpx; border-radius: var(--cy-radius-pill);
+  font-size: var(--cy-type-micro); font-weight: 600; line-height: 44rpx;
+  color: var(--cy-color-text-on-light);
+  background: rgba(255, 255, 255, 0.78); /* ds-ok: 封面上的白色毛玻璃签,业主定稿 */
+  backdrop-filter: blur(16rpx);
+  -webkit-backdrop-filter: blur(16rpx);
 }
+.rv-project-dot { width: 14rpx; height: 14rpx; border-radius: var(--cy-radius-pill); flex: none; background: var(--cy-color-text-tertiary); }
+.rv-project-dot--run { background: var(--cy-color-status-success); }
+.rv-project-dot--open { background: var(--cy-color-status-info); }
+.rv-project-dot--fix { background: var(--cy-color-status-warning); }
 
-/* 2026-08-20 稿面重排:标题独占一行加大 */
+.rv-project-thumb-logo { position: absolute; left: 50%; top: 40%; width: 128rpx; height: 128rpx; transform: translate(-50%, -50%); opacity: .28; filter: grayscale(1); }
+
+.rv-project-frost {
+  position: absolute; left: -8rpx; right: -8rpx; bottom: -8rpx; height: 216rpx;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.62) 40%, rgba(255, 255, 255, 0.9) 100%); /* ds-ok: 业主定稿的白色半透明渐变,只包住文字区 */
+}
+.rv-project-body {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  padding: 0 28rpx 26rpx;
+  display: flex; flex-direction: column; gap: 6rpx;
+}
+.rv-project-verify {
+  align-self: flex-start; margin-bottom: 4rpx;
+  height: 42rpx; padding: 0 20rpx; border-radius: var(--cy-radius-pill);
+  font-size: var(--cy-type-micro); font-weight: 700; line-height: 42rpx;
+  color: var(--cy-color-text-inverse); background: var(--cy-color-text-primary);
+}
 .rv-project-card-title {
-  min-width: 0;
-  font-size: 32rpx; /* ds-ok: 稿面标题 16px 档,比 body 大一级 */
-  font-weight: 700;
-  line-height: 42rpx;
-  letter-spacing: -0.56rpx;
-  color: #0d0d0d; /* ds-ok: 稿面标题色,比 DS 纯黑略浅 */
+  font-size: var(--cy-font-title); font-weight: 700; line-height: 1.3;
+  color: var(--cy-color-text-primary);
 }
-
-/* 铃铛:有动态=红铃铛+红角标+计数,没动态=灰铃铛占位。两张都是 Figma 导出资产,不自己画路径 */
-.rv-project-bell { flex-shrink: 0; display: flex; align-items: center; gap: 6rpx; }
-.rv-project-bell-ico { position: relative; width: 30rpx; height: 30rpx; }
-.rv-project-bell-img { width: 100%; height: 100%; display: block; }
-.rv-project-bell-dot {
-  position: absolute;
-  top: 0;
-  left: 20rpx;
-  width: 10rpx;
-  height: 10rpx;
-  border-radius: var(--cy-radius-pill);
-  background: var(--cy-color-status-danger);
-  border: 2rpx solid var(--cy-bg-card);
-}
-.rv-project-bell-count {
-  width: var(--cy-space-5);
-  height: var(--cy-space-5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--cy-radius-pill);
-  background: var(--cy-color-action-danger-bg);
-  font-size: var(--cy-type-micro);
-  font-weight: 600;
-  line-height: 22rpx;
-  color: var(--cy-color-action-danger-fg);
-  font-variant-numeric: tabular-nums;
-}
-
-.rv-project-card-meta {
-  display: block;
-  font-size: var(--cy-font-caption);
-  line-height: 31rpx;
-  color: #9a9a9a; /* ds-ok: 稿面副信息色 */
-}
-
-.rv-project-line3 { display: flex; align-items: center; justify-content: space-between; gap: 12rpx; }
-
-/* 待办:待核销=绿 / 待扫码=琥珀,标签 medium、数字 semibold,中间一个浅点分隔 */
-.rv-project-todos { min-width: 0; flex: 1; display: flex; align-items: center; }
-.rv-project-todo {
-  font-size: var(--cy-font-caption);
-  font-weight: 500;
-  line-height: 22rpx;
-}
-.rv-project-todo-num {
-  padding-left: 4rpx;
-  font-size: var(--cy-font-caption);
-  font-weight: 600;
-  line-height: 22rpx;
-  font-variant-numeric: tabular-nums;
-}
-.rv-project-todo--verify { color: #16a34a; /* ds-ok: 稿面待核销绿 */ }
-.rv-project-todo--scan { color: #d97706; /* ds-ok: 稿面待扫码琥珀 */ }
-.rv-project-todo-sep {
-  padding: 0 8rpx 0 12rpx;
-  font-size: var(--cy-type-micro);
-  line-height: 30rpx;
-  color: #dedede; /* ds-ok: 稿面分隔点 */
-}
-
-.rv-project-card-note {
-  min-width: 0;
-  font-size: var(--cy-font-caption);
-  line-height: 22rpx;
-  color: #bbbbbb; /* ds-ok: 稿面「今日无待办 / 待办没加载出来」灰 */
-}
-
-/* 承接卡「谁、哪天几点到店」(2026-09-23 裁决,取代原站点状态字):复用卡片第三行右侧。 */
+.rv-project-card-meta,
 .rv-project-visit {
-  max-width: 300rpx;
-  min-width: 0;
-  flex-shrink: 1;
-  font-size: var(--cy-type-micro);
+  font-size: var(--cy-type-micro); line-height: 1.4;
   color: var(--cy-color-text-secondary);
-  text-align: right;
 }
 
-/* 2026-08-20 用户拍板:主办/承办身份 pill 从卡面删除(样式随 wxml 一并清) */ /* ds-ok: 行内动作与说明文字的最小区分 */
+/* 最后一格:项目多时叠成一摞,点开「全部」 */
+.rv-project-more { position: relative; width: 280rpx; height: 450rpx; }
+.rv-project-more-c {
+  position: absolute; left: 0; top: 40rpx; width: 260rpx; height: 340rpx;
+  border-radius: var(--cy-radius-lg); background: var(--cy-color-bg-surface-strong);
+}
+.rv-project-more-c--3 { transform: translate(40rpx, 24rpx) scale(0.86); opacity: 0.55; }
+.rv-project-more-c--2 { transform: translate(20rpx, 12rpx) scale(0.93); opacity: 0.8; }
+.rv-project-more-c--1 {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8rpx;
+  background: var(--cy-color-bg-surface);
+}
+.rv-project-more-n { font-size: 60rpx; font-weight: 800; font-style: italic; color: var(--cy-color-text-primary); } /* ds-ok: NRC 式大号斜体数字 */
+.rv-project-more-t { font-size: var(--cy-type-micro); color: var(--cy-color-text-secondary); }
 
 /* ===== 区块 ===== */
 /* 2026-08-20 稿 3910:580 间距:区块间收紧到 48rpx(稿面 section 间约 20-24px) */
@@ -401,6 +327,7 @@ page {
 
 .rv-section-head {
   display: flex;
+  min-height: var(--cy-btn-h);
   align-items: center;
   gap: var(--cy-legacy-10);
   padding: 0 var(--cy-page-x);
@@ -741,11 +668,8 @@ page {
 .rv-hero:nth-child(n+2) { transition-delay: calc(var(--pm-w-s, 0) * 30ms), calc(var(--pm-w-s, 0) * 30ms), 0s, 0s; }
 .rv-actions { filter: opacity(calc(1 - var(--pm-w, 0))); translate: 0 calc(var(--pm-w, 0) * 31rpx); transition: filter var(--pm-w-d, 0s) ease, translate var(--pm-w-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-w-s, 0) * 40ms), calc(var(--pm-w-s, 0) * 40ms), 0s, 0s; }
 .rv-actions:nth-child(n+2) { transition-delay: calc(var(--pm-w-s, 0) * 70ms), calc(var(--pm-w-s, 0) * 70ms), 0s, 0s; }
-.rv-section { filter: opacity(calc(1 - var(--pm-w, 0))); translate: 0 calc(var(--pm-w, 0) * 31rpx); transition: filter var(--pm-w-d, 0s) ease, translate var(--pm-w-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-w-s, 0) * 80ms), calc(var(--pm-w-s, 0) * 80ms), 0s, 0s; }
-.rv-section:nth-child(2) { transition-delay: calc(var(--pm-w-s, 0) * 120ms), calc(var(--pm-w-s, 0) * 120ms), 0s, 0s; }
-.rv-section:nth-child(3) { transition-delay: calc(var(--pm-w-s, 0) * 160ms), calc(var(--pm-w-s, 0) * 160ms), 0s, 0s; }
-.rv-section:nth-child(4) { transition-delay: calc(var(--pm-w-s, 0) * 200ms), calc(var(--pm-w-s, 0) * 200ms), 0s, 0s; }
-.rv-section:nth-child(n+5) { transition-delay: calc(var(--pm-w-s, 0) * 240ms), calc(var(--pm-w-s, 0) * 240ms), 0s, 0s; }
+.rv-aftercare-alert { filter: opacity(calc(1 - var(--pm-w, 0))); translate: 0 calc(var(--pm-w, 0) * 31rpx); transition: filter var(--pm-w-d, 0s) ease, translate var(--pm-w-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-w-s, 0) * 60ms), calc(var(--pm-w-s, 0) * 60ms), 0s, 0s; }
+.rv-section { filter: opacity(calc(1 - var(--pm-w, 0))); translate: 0 calc(var(--pm-w, 0) * 31rpx); transition: filter var(--pm-w-d, 0s) ease, translate var(--pm-w-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-w-s, 0) * (80ms + min(var(--pmi, 0), 4) * 40ms)), calc(var(--pm-w-s, 0) * (80ms + min(var(--pmi, 0), 4) * 40ms)), 0s, 0s; }
 .rv-project-item { filter: opacity(calc(1 - var(--pm-j, 0))); translate: 0 calc(var(--pm-j, 0) * 31rpx); transition: filter var(--pm-j-d, 0s) ease, translate var(--pm-j-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-j-s, 0) * 0ms), calc(var(--pm-j-s, 0) * 0ms), 0s, 0s; }
 .rv-project-item:nth-child(2) { transition-delay: calc(var(--pm-j-s, 0) * 40ms), calc(var(--pm-j-s, 0) * 40ms), 0s, 0s; }
 .rv-project-item:nth-child(3) { transition-delay: calc(var(--pm-j-s, 0) * 80ms), calc(var(--pm-j-s, 0) * 80ms), 0s, 0s; }
@@ -756,74 +680,6 @@ page {
 /* 「我的消息」首载未落定:占住一行(与 72rpx 图标圈同高),不画加载 UI,落定后不跳 */
 .rv-msg-item--pending { min-height: 72rpx; }
 
-/* ===== 走查 v2 R01(2026-11-01):项目卡改大卡 —— 原型 p6 home「p6-pcard」。
-   整张封面 + 底部渐暗,状态/类目签在左上、铃铛在右上,标题 / 副信息 / 待办压在图底。
-   没有封面:浅灰底 + 城瘾 logo 灰色占位,文字回到深色。 ===== */
-.rv-project-card--cover {
-  position: relative;
-  display: block;
-  height: 416rpx;
-  padding: 0;
-  overflow: hidden;
-  border-radius: var(--cy-radius-xl);
-  background: var(--cy-color-bg-surface-subtle);
-}
-.rv-project-card--cover .rv-project-thumb {
-  position: absolute; left: 0; top: 0; right: 0; bottom: 0;
-  width: auto; height: auto;
-  border-radius: 0;
-  background: var(--cy-color-bg-surface-subtle);
-  display: flex; align-items: center; justify-content: center;
-}
-.rv-project-card--cover .rv-project-thumb-img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
-.rv-project-thumb-logo { width: 128rpx; height: 128rpx; opacity: .28; filter: grayscale(1); }
-.rv-project-shade {
-  position: absolute; left: 0; top: 0; right: 0; bottom: 0;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 38%, rgba(0, 0, 0, 0.62) 100%); /* ds-ok: 原型 p6-pcard 底部渐暗 */
-}
-.rv-project-card--cover .rv-project-body {
-  position: absolute; left: 0; top: 0; right: 0; bottom: 0;
-  min-height: 0;
-  padding: 28rpx 32rpx;
-  gap: 8rpx;
-}
-.rv-project-card--cover .rv-project-card-title { margin-top: auto; font-size: var(--cy-font-display); line-height: 1.25; }
-.rv-project-card--cover .rv-project-status,
-.rv-project-card--cover .rv-project-cat {
-  height: 48rpx; padding: 0 20rpx;
-  display: inline-flex; align-items: center;
-  border-radius: var(--cy-radius-pill);
-  box-shadow: none;
-  font-size: var(--cy-font-caption); font-weight: 600;
-  background: rgba(0, 0, 0, 0.42); /* ds-ok: 原型 p6-pcard__tag 压图半透明签 */
-  color: var(--cy-color-text-inverse);
-}
-.rv-project-card--cover .rv-project-bell {
-  width: 64rpx; height: 64rpx; justify-content: center;
-  border-radius: var(--cy-radius-pill);
-  background: rgba(255, 255, 255, 0.22); /* ds-ok: 原型 p6-pcard__bell 毛玻璃圆 */
-  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
-}
-.rv-project-card--cover .rv-project-bell-ico { width: 36rpx; height: 36rpx; }
-.rv-project-card--cover .rv-project-bell-count { display: none; }
-/* 有封面(is-cover):文字压在渐暗上一律白色 */
-.rv-project-card--cover.is-cover .rv-project-card-title,
-.rv-project-card--cover.is-cover .rv-project-card-meta,
-.rv-project-card--cover.is-cover .rv-project-card-note,
-.rv-project-card--cover.is-cover .rv-project-visit,
-.rv-project-card--cover.is-cover .rv-project-todo,
-.rv-project-card--cover.is-cover .rv-project-todo-num { color: var(--cy-color-text-inverse); }
-.rv-project-card--cover.is-cover .rv-project-card-meta { opacity: .86; }
-.rv-project-card--cover.is-cover .rv-project-bell-img { filter: brightness(0) invert(1); }
-.rv-project-card--cover:not(.is-cover) .rv-project-bell { background: var(--cy-bg-card); }
-.rv-project-card--cover:not(.is-cover) .rv-project-card-note { color: var(--cy-color-text-tertiary); }
-.rv-project-card--cover .rv-project-visit {
-  max-width: 360rpx;
-  height: 48rpx; padding: 0 20rpx;
-  display: inline-flex; align-items: center;
-  border-radius: var(--cy-radius-pill);
-  background: rgba(255, 255, 255, 0.18); /* ds-ok: 原型 p6-pcard__visit 压图浅签 */
-}
 
 /* ===== 走查 v2 R02(2026-11-01):我的消息照 ramandesigns9「通知叠层」—— 原型 p6 home 2 号。
    沿用 10-23 已定的三张叠放,只改四处:黑色方块图标、右下未读点、展开后每条 × / 底下「清空」、清完「都看完了」。 ===== */

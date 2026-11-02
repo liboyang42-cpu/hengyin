@@ -17,7 +17,8 @@
 @media (prefers-reduced-motion: reduce) { .cy-fly-in { animation: none !important; } }
 
 @keyframes cy-fly-in {
-  0% { opacity: 0; transform: translate3d(0, 96rpx, 0) scale(.92); }
-  70% { opacity: 1; transform: translate3d(0, -6rpx, 0) scale(1.005); }
-  100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  /* 用独立的 translate / scale,不占 transform:fill-mode both 留下的 transform 会盖掉 .cy-pressed 的按压缩放 */
+  0% { opacity: 0; translate: 0 96rpx; scale: .92; }
+  70% { opacity: 1; translate: 0 -6rpx; scale: 1.005; }
+  100% { opacity: 1; translate: 0 0; scale: 1; }
 }

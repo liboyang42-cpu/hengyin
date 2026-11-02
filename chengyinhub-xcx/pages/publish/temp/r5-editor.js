@@ -262,9 +262,11 @@ const methods = {
   // 移除玩法 / 完成奖励会清空已填内容:有内容时先确认(2026-10-22 原型定稿的防误操作)
   confirmRemoveModule(e) {
     const key = e.currentTarget.dataset.key;
-    const filled = key === 'finish' ? !!this.data.gameKey : key === 'reward' ? !!this.data.rwAny : false;
+    // CP-10:剧情故事有节点文字或配图时同样先确认
+    const filled = key === 'finish' ? !!this.data.gameKey : key === 'reward' ? !!this.data.rwAny
+      : key === 'story' ? (this.data.storyBeats || []).some(b => (b.text && String(b.text).trim()) || (b.imgs && b.imgs.length)) : false;
     if (!filled) { this.removeModule(e); return; }
-    require('../../../utils/modal.js').show({ title: key === 'finish' ? '移除玩法？' : '移除完成奖励？', content: key === 'finish' ? '题目、选项和结果反馈会一起清空' : '优惠券和勋章设置会一起清空', confirmText: '移除', success: res => { if (res.confirm) this.removeModule({ currentTarget: { dataset: { key } } }); } });
+    require('../../../utils/modal.js').show({ title: key === 'finish' ? '移除玩法？' : key === 'story' ? '移除剧情故事？' : '移除完成奖励？', content: key === 'finish' ? '题目、选项和结果反馈会一起清空' : key === 'story' ? '剧情节点和配图会一起清空' : '优惠券和勋章设置会一起清空', confirmText: '移除', success: res => { if (res.confirm) this.removeModule({ currentTarget: { dataset: { key } } }); } });
   },
   openVoiceSheet() { this.setData({ voiceSheetOpen: true }); },
   closeVoiceSheet() { if (typeof this.destroyPreviewAudio === 'function') this.destroyPreviewAudio(); this.setData({ voiceSheetOpen: false }); },

@@ -436,7 +436,7 @@ Page({
         joined.forEach(function (c) { c.isJoined = true; });
         var nearby = d.nearby.map(normalizeClub);
         that._clubHomeLoading = false;
-        that._nearbyAll = nearby; pageMotion.enter(that, 'pmClubs');
+        that._nearbyAll = nearby; pageMotion.enter(that, 'pmClubs', { once: true }); // C-01:切回 tab 的后台刷新不再把已在屏上的卡片藏起来重播
         that.setData({
           myClubs: owned,
           myClubCount: owned.length,

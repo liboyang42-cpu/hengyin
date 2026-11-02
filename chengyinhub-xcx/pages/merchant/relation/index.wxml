@@ -51,7 +51,7 @@ module.exports = { valid: valid };
           title="部分俱乐部资料暂不可用" sub="{{clubError}}" action="重新加载" bind:action="loadRelationHome" />
         <!-- 俱乐部换新版俱乐部卡；整卡进主页看资料，按钮「发起合作」直达 type=1 邀约表单 -->
         <view class="rel-list" wx:if="{{relation.valid(clubs).length}}">
-          <view class="rel-item" wx:for="{{relation.valid(clubs)}}" wx:key="id" wx:if="{{item.displayName}}">
+          <view class="rel-item" wx:for="{{relation.valid(clubs)}}" wx:key="id" wx:if="{{item.displayName}}" style="--pmi:{{index}};">
             <cy-club-card club="{{item}}" audience="merchant" interactive="{{true}}"
               data-id="{{item.id}}" aria-label="查看{{item.displayName}}俱乐部档案" bind:tap="goClub" bind:action="goClub"  hover-class="cy-pressed" hover-stay-time="80"/>
           </view>

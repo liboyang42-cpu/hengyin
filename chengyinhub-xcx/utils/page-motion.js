@@ -8,7 +8,7 @@
  * countTo:数字从 0 数到真实值(写到单独的显示字段,不碰业务字段)。
  * 减少动态效果时两者都不做动画。 */
 const { readReducedMotion } = require('./motion-preference.js');
-const { countUp } = require('./motion.js');
+const { countUp, easeInOutCubic } = require('./motion.js');
 
 function reduced(page) {
   return !!(page && page.data && page.data.reducedMotion) || readReducedMotion();
@@ -17,9 +17,15 @@ function reduced(page) {
 // 测试沙箱等没有计时器的环境里不做动效(内容照常显示)
 const hasTimers = () => typeof setTimeout === 'function' && typeof clearTimeout === 'function';
 
-function enter(page, key) {
+// options.once:同一页面实例同一 key 只入场一次。刷新、点赞后重拉、切回 tab、翻页都不再把已在屏上的内容藏起来重播。
+function enter(page, key, options) {
   const k = key || 'pmPre';
   if (!page || typeof page.setData !== 'function' || !hasTimers() || reduced(page)) return;
+  if (options && options.once) {
+    const seen = page._pmEntered || (page._pmEntered = {});
+    if (seen[k]) return;
+    seen[k] = true;
+  }
   page.setData({ [k]: 1 });
   clearTimeout(page['_' + k + 'Timer']);
   const alive = () => !page._unloaded && !page._detached;
@@ -48,4 +54,9 @@ function countIn(page, key, options) {
   stops[key] = () => { clearTimeout(hold); if (stopCount) stopCount(); };
 }
 
-module.exports = { enter, countIn };
+/* 钱数落地:慢-快-慢,时长与商家首页累计收入一致。模板用 count.wxs 的 money(文字, key)。 */
+function countMoney(page, key) {
+  countIn(page, key, { duration: 1300, ease: easeInOutCubic });
+}
+
+module.exports = { enter, countIn, countMoney };
