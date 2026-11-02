@@ -971518,7 +971518,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/event-ops/index.js:1127"
+        "staticSource": "pages/club/event-ops/index.js:1126"
       }
     },
     {
@@ -971636,7 +971636,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/event-ops/index.js:1133"
+        "staticSource": "pages/club/event-ops/index.js:1132"
       }
     },
     {

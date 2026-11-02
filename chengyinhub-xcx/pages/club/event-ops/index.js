@@ -1109,7 +1109,6 @@ Page({
         const window = normalizeCorrectionWindow(data.correctionWindow)
         that._rosterBuckets = buckets // C-10:分段人数已写进标签,四个分段不再整份进 data
         that.setData({
-          waitlist, arrived,
           rosterTotal: rosterTotal(buckets),
           correctionOperable: !window || window.operable,
           correctionWindowText: correctionWindowText(window),
