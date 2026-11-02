@@ -77,6 +77,7 @@ function conversationItem(c, now) {
     name: name,
     avatar: cp.avatar || '',
     type: type,
+    unread: (parseInt(c.unread) || 0) > 0,
   };
 }
 
@@ -92,6 +93,7 @@ function inviteItem(it, now) {
     ts: toTimestamp(it.createTime),
     time: fmtTime(it.createTime, now),
     inviteId: it.inviteId,
+    unread: true,
   };
 }
 
@@ -106,13 +108,25 @@ function eventItem(e, index, now) {
     ts: ts,
     time: isNaN(ts) ? String(e.time || '') : fmtTime(ts, now),
     type: e.type || '',
+    unread: true,
+    readId: 'event@' + (e.type || '') + '@' + String(e.time || '') + '@' + String(e.content || ''),
   };
+}
+
+/**
+ * 「我的消息」叠层的已读标记(走查 v2 R02,业主 10-30:× = 标为已读、清空 = 全部标为已读)。
+ * 带上时间:同一会话来了新消息、同一邀请被重新发起,会重新露出来。
+ */
+function readKey(item) {
+  if (!item) return '';
+  if (item.readId) return item.readId;
+  return item.key + '@' + (isNaN(item.ts) ? String(item.time || '') : item.ts);
 }
 
 /**
  * @param {Object} sources conversations(/api/im/conversations 原始行) / invites(decorate 后的收到的邀请)
  *                         / events(/api/merchant/events 原始行);缺哪份就当空
- * @param {Object} [options] now / limit(默认 3)
+ * @param {Object} [options] now / limit(默认 3) / isRead(readKey) 标过已读的不再露出
  */
 function buildInboxPreview(sources, options) {
   const src = sources || {};
@@ -123,7 +137,8 @@ function buildInboxPreview(sources, options) {
     .concat((src.conversations || []).filter((c) => c && c.conversationId != null && conversationTab(c) === 'in')
       .map((c) => conversationItem(c, now)))
     .concat((src.invites || []).filter((it) => it && it.inviteId).map((it) => inviteItem(it, now)))
-    .concat((src.events || []).filter(Boolean).map((e, i) => eventItem(e, i, now)));
+    .concat((src.events || []).filter(Boolean).map((e, i) => eventItem(e, i, now)))
+    .filter((item) => !opts.isRead || !opts.isRead(readKey(item)));
   // 新的在前;取不到时间的排最后(仍保持各自原顺序)
   const ranked = items.map((item, order) => ({ item, order }));
   ranked.sort((a, b) => {
@@ -135,4 +150,4 @@ function buildInboxPreview(sources, options) {
   return ranked.slice(0, limit).map((r) => r.item);
 }
 
-module.exports = { fmtPreview, fmtTime, conversationTab, eventTimestamp, buildInboxPreview };
+module.exports = { fmtPreview, fmtTime, conversationTab, eventTimestamp, buildInboxPreview, readKey };

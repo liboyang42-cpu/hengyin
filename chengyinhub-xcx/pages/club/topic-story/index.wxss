@@ -353,3 +353,9 @@
   line-height: 1.5;
   color: var(--cy-color-text-primary);
 }
+
+/* 2026-11-01:商家(浅色)也进这一页。玩法卡是压在照片 + 深色渐暗上的,文字与按钮不跟主题走,一律用压图色 */
+.play-card__badge, .play-card__seq, .play-card__title { color: var(--cy-comp-oncover-fg); }
+.play-card__meta { color: var(--cy-comp-oncover-fg-dim); }
+.play-btn--ghost { background: var(--cy-color-play-accent-soft); color: var(--cy-comp-oncover-fg); }
+.play-btn--solid { background: var(--cy-comp-oncover-fg); color: var(--cy-color-text-on-light); }

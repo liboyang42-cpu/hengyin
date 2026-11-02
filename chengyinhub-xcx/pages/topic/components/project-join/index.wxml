@@ -132,8 +132,8 @@
   <view class="sec" wx:if="{{ showFulfillment }}">
     <view class="sec-head">
       <text class="sec-title">核销</text>
-      <view class="sec-action" bindtap="emit" data-act="goLedger" hover-class="cy-pressed" hover-stay-time="80">
-        <text>记录</text>
+      <view class="sec-action" bindtap="emit" data-act="goLedger" aria-role="button" aria-label="打开核销台账" hover-class="cy-pressed" hover-stay-time="80">
+        <text>台账</text>
         <cy-icon name="arrow-right" size="{{ 24 }}" />
       </view>
     </view>
@@ -256,6 +256,18 @@
     <view class="card" wx:else>
       <view class="sec-empty sec-empty--todo" wx:if="{{ !templateReady }}">还没配置玩法模板</view>
       <view class="sec-empty" wx:else>{{ templateSubText }}</view>
+    </view>
+  </view>
+
+  <!-- 2026-11-01 业主:承接商家打开主题卡也能看整条路线的剧情、玩法,以及自己这一站的答案(与俱乐部活动详情「主题」同一块) -->
+  <view class="sec" wx:if="{{ !coopPartner }}">
+    <view class="sec-head"><text class="sec-title">主题</text></view>
+    <view class="tcard" bindtap="emit" data-act="goStory" aria-role="button" aria-label="打开剧情与玩法" hover-class="cy-pressed" hover-stay-time="80">
+      <image class="tcard-cover" wx:if="{{ heroImg && !heroFailed }}" src="{{ heroImg }}" mode="aspectFill" lazy-load="true" />
+      <view class="tcard-body">
+        <text class="tcard-name">{{ info.topicName || info.addressName || '未命名路线' }}</text>
+        <view class="tcard-more"><text>打开剧情与玩法</text><cy-icon name="arrow-right" size="{{ 24 }}" /></view>
+      </view>
     </view>
   </view>
 

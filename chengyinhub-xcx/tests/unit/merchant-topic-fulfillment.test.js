@@ -201,7 +201,10 @@ test('开始日到了就是进行中，主动作是去核销', () => {
   assert.equal(page.data.primaryAction, 'verify');
 
   page.onPrimaryTap();
-  assert.equal(relaunches.length, 1, '核销流程在商家首页，这里只做交接不复制一份');
+  // 2026-11-01 业主:去核销直接拉起扫码 —— 仍然只交接给商家首页那一份核销流程(scan=1),
+  // 但用 navigateTo 而不是 reLaunch,扫完返回还在这个主题里。
+  assert.equal(relaunches.length, 0);
+  assert.deepEqual(navigations.map((o) => o.url), ['/pages/merchant/index/index?scan=1'], '核销流程在商家首页，这里只做交接不复制一份');
 });
 
 test('UTC 下商家报名截止到中国自然日 24 点，跨日后才结束', () => {
@@ -534,7 +537,8 @@ test('客户入口开玩家名单抽屉，不跳全局关系页', () => {
   ledger.goLedger();
   assert.match(navigations[0].url, /merchant\/ledger/);
   assert.match(navigations[0].url, /view=redemptions/);
-  assert.doesNotMatch(navigations[0].url, /topicId=/);
+  // 2026-11-01 业主:主题工作台进台账只看这个主题(后端 /finance/redemptions 支持 topicId 收窄),原来全店一本
+  assert.match(navigations[0].url, /topicId=/);
   assert.doesNotMatch(navigations[0].url, /merchant\/relation/);
 });
 

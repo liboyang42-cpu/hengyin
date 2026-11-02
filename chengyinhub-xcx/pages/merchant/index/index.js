@@ -52,7 +52,7 @@ const { createGameSessionClient } = require('../../../utils/game-session-client.
 const { attachMerchantGameEntries } = require('../utils/game-session-merchant.js');
 const motion = require('../../../utils/motion.js');
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
-const { buildInboxPreview } = require('../utils/inbox-preview.js');
+const { buildInboxPreview, readKey: inboxReadKey } = require('../utils/inbox-preview.js');
 const { decorate: decorateInvites } = require('../../../utils/coop-invite-view.js');
 
 // 累计收入滚动(2026-10-22 owner 裁决):慢-快-慢,约 1.3s、60fps;帧内金额没变就不 setData。
@@ -100,7 +100,7 @@ Page({
     joinTotal: 0,
     // 「我的消息」:站内会话 + 收到的协作邀请 + 经营动态合并后的前 3 条(utils/inbox-preview.js)。
     // inboxLoaded=false 时只占一行高度不画内容,避免加载中冒充「还没有消息」。
-    inboxItems: [], msgOpen: false,
+    inboxItems: [], msgOpen: false, inboxAllRead: false,
     inboxLoaded: false,
     inboxError: false,
     // BL-85 开通前置检查未完成项(只读;全部完成/无数据/失败时为空,不展示)
@@ -152,6 +152,10 @@ Page({
     });
     // 首屏数据统一由紧随其后的 onShow 在远程身份确认后加载，避免 onLoad/onShow 并发拉两整组工作台。
     if (options && options.scene) this.openScene(options.scene, { id: options.id, tab: options.tab });
+    // 2026-11-01 业主:主题工作台「扫码 / 去核销」直接开扫码 —— 核销整套(选席位 / 选章节 / 结果待确认)
+    // 只在本页一份,工作台带 scan=1 进来就拉起扫码,返回仍回到主题。核销权限由服务端核验接口自己判。
+    // 只挂在 onLoad,不挂在身份回读回调里:那条回调「重新加载」等按钮也会走,不能顺带拉起扫码。
+    if (options && options.scan === '1') wx.nextTick(() => this.goScanQR());
   },
 
   refreshProfileHeader(merchantInfo, userInfo) {
@@ -487,13 +491,17 @@ Page({
     if (rows) box.rows[source] = rows;
     else box.failed += 1;
     if (box.pending.size) return;
-    const items = buildInboxPreview(box.rows, { limit: 3 });
     // 全部来源都失败:保留上次确认的列表,没有就如实说没读到(不冒充「还没有消息」)。
     if (box.failed === box.total) {
       this.setData({ inboxLoaded: true, inboxError: !this.data.inboxItems.length });
       return;
     }
-    this.setData({ inboxItems: items, inboxLoaded: true, inboxError: false });
+    // 走查 v2 R02:叠层里标过已读的(× / 清空)不再露出;全标完收成「都看完了」。
+    const read = this.inboxReadMap();
+    this._inboxUnread = buildInboxPreview(box.rows, { limit: 50, isRead: (k) => !!read[k] });
+    const items = this._inboxUnread.slice(0, 3);
+    const allRead = !items.length && buildInboxPreview(box.rows, { limit: 1 }).length > 0;
+    this.setData({ inboxItems: items, inboxAllRead: allRead, inboxLoaded: true, inboxError: false });
   },
 
   // 与 subpackageB/pages/im/list 同一请求(/api/im/conversations)
@@ -631,6 +639,7 @@ Page({
     this._merchantGameEntries = [];
     this._notifications = [];
     this._inbox = null;
+    this._inboxUnread = null;
     if (this._revenueCountStop) this._revenueCountStop();
     this._revenueCountStop = null;
     this.setData({
@@ -654,6 +663,7 @@ Page({
       todoError: false,
       projectCards: [],
       inboxItems: [],
+      inboxAllRead: false,
       inboxLoaded: false,
       inboxError: false,
       prerequisites: [],
@@ -1246,6 +1256,48 @@ Page({
     }
     if (!url) return;
     this._navigating = true; wx.navigateTo({ url, complete: () => { this._navigating = false; } });
+  },
+
+  // 走查 v2 R02(业主 10-30):叠层展开后每条 × = 标为已读,底下「清空」= 全部标为已读。
+  // 会话走站内消息同一个 /api/im/read(失败照常 toast 一次);邀请和经营动态没有已读接口,记在本机(按账号)。
+  inboxReadStore() { return 'merchant_inbox_read_' + String((app.getUserID && app.getUserID()) || ''); },
+
+  inboxReadMap() {
+    const map = wx.getStorageSync(this.inboxReadStore());
+    return map && typeof map === 'object' ? map : {};
+  },
+
+  markInboxRead(items) {
+    const map = this.inboxReadMap();
+    const at = Date.now();
+    items.forEach((item) => {
+      map[inboxReadKey(item)] = at;
+      if (item.kind === 'conversation' && item.unread) {
+        app.sendRequest({ url: '/api/im/read', method: 'POST', hideLoading: true,
+          data: { conversation_id: item.conversationId } });
+      }
+    });
+    const keys = Object.keys(map).sort((a, b) => map[b] - map[a]).slice(0, 300);
+    const kept = {};
+    keys.forEach((k) => { kept[k] = map[k]; });
+    wx.setStorageSync(this.inboxReadStore(), kept);
+  },
+
+  dismissInboxItem(e) {
+    const key = String(((e && e.currentTarget && e.currentTarget.dataset) || {}).key || '');
+    const item = (this.data.inboxItems || []).find((row) => row.key === key);
+    if (!item) return;
+    this.markInboxRead([item]);
+    this._inboxUnread = (this._inboxUnread || this.data.inboxItems).filter((row) => row.key !== key);
+    const items = this._inboxUnread.slice(0, 3);
+    // 展开着就一直展开到标完,最后一条也能 ×(只剩一条时不叠,× 直接露在卡上)
+    this.setData({ inboxItems: items, msgOpen: this.data.msgOpen && items.length > 0, inboxAllRead: !items.length });
+  },
+
+  clearInbox() {
+    this.markInboxRead(this._inboxUnread || this.data.inboxItems || []);
+    this._inboxUnread = [];
+    this.setData({ inboxItems: [], msgOpen: false, inboxAllRead: true });
   },
 
   goSearch() {

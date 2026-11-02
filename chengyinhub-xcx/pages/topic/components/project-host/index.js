@@ -21,6 +21,8 @@ Component({
     playerSheet: { type: Object, value: {} },
     playerFilters: { type: Array, value: [] },
     playerActions: { type: Array, value: [] },
+    playerPick:      { type: Object, value: { can: false, selecting: false, ids: {}, off: {}, count: 0 } }, // 2026-11-01 客户名单多选
+    broadcastSheet:  { type: Object, value: {} }, // 2026-11-01 定向广播叠层
     clubActions: { type: Array, value: [] },
     merchantSheet: { type: Object, value: {} },
     moreSheet:     { type: Object, value: { show: false, groups: [] } },
@@ -44,13 +46,16 @@ Component({
     'hostTopic, hostRecruit': function (topic, recruit) {
       topic = topic || {};
       let text = '状态待确认';
-      if (Number(topic.productType) === 2) {
-        const raw = topic.lifecycle;
-        const lifecycle = typeof raw === 'number' ? raw
-          : (typeof raw === 'string' && /^[0-7]$/.test(raw) ? Number(raw) : -1);
-        if (Number.isInteger(lifecycle) && lifecycle >= 0 && lifecycle < FREE_STATUS.length) {
-          text = FREE_STATUS[lifecycle];
-        }
+      const raw = topic.lifecycle;
+      const lifecycle = typeof raw === 'number' ? raw
+        : (typeof raw === 'string' && /^[0-7]$/.test(raw) ? Number(raw) : -1);
+      // 2026-11-01:城市定向也按 lifecycle 走 —— 原来只看审核态,开售后胶囊仍写「招募中」,和底部「去核销」对不上。
+      // 招募中招满了仍写「已招满」;没下发 lifecycle 的旧数据退回审核态口径。
+      const filled = recruit && recruit.nodeTotal > 0 && recruit.nodeFilled >= recruit.nodeTotal;
+      if (Number.isInteger(lifecycle) && lifecycle >= 0 && lifecycle < FREE_STATUS.length) {
+        text = lifecycle === 1 && filled && Number(topic.productType) !== 2 ? '已招满' : FREE_STATUS[lifecycle];
+      } else if (Number(topic.productType) === 2) {
+        text = '状态待确认';
       } else if (topic.status === 1) {
         text = recruit && recruit.nodeTotal > 0 && recruit.nodeFilled >= recruit.nodeTotal ? '已招满' : '招募中';
       } else if (topic.status === 0) text = '待审核';
@@ -79,12 +84,17 @@ Component({
       const total = (recruit && recruit.nodeTotal) || 0;
       const filled = (recruit && recruit.nodeFilled) || 0;
       const clubs = (sheet && sheet.items) || [];
+      const needClub = !!topic && Number(topic.productType) === 2 && this.data.hostOwnerType !== 'club'
+        && [1, 2].indexOf(Number(topic.lifecycle)) >= 0 && !clubs.some(function (c) { return c && c.accepted; });
       this.setData({
         recruitDone: total > 0 && filled >= total,
         clubCount: clubs.length,
         clubAccepted: clubs.filter(function (c) { return c && c.accepted; }).length,
-        needExecutorClub: !!topic && Number(topic.productType) === 2 && this.data.hostOwnerType !== 'club'
-          && [1, 2].indexOf(Number(topic.lifecycle)) >= 0 && !clubs.some(function (c) { return c && c.accepted; }),
+        needExecutorClub: needClub,
+        // 2026-11-01 业主:与俱乐部活动详情同一套 —— 开售后出「核销」三格,底部主键按状态变
+        showVerify: [3, 4, 5, 6].indexOf(Number(topic && topic.lifecycle)) >= 0,
+        hostPrimary: projectProgress.hostPrimary({ lifecycle: topic && topic.lifecycle, needExecutorClub: needClub }),
+        topicStructure: [Number(topic && topic.productType) === 2 ? '自由探索' : '城市定向', total ? total + ' 站' : ''].filter(Boolean).join(' · '),
         // 走查 v2 R04/R16:底部进度,只用这几份已有数据派生
         hostProgress: projectProgress.buildHostSteps({
           lifecycle: topic && topic.lifecycle,
@@ -99,7 +109,7 @@ Component({
     },
   },
   data: {
-    recruitDone: false, stationSum: { taken: 0, open: 0, pending: 0 }, clubCount: 0, clubAccepted: 0, hostProgress: [], needExecutorClub: false, anyDrawerOpen: false, hostStatusText: '状态待确认',
+    recruitDone: false, stationSum: { taken: 0, open: 0, pending: 0 }, clubCount: 0, clubAccepted: 0, hostProgress: [], needExecutorClub: false, showVerify: false, hostPrimary: { text: '', act: '', key: '', disabled: true }, topicStructure: '', anyDrawerOpen: false, hostStatusText: '状态待确认',
     circleCandidates: [], circleConfigHint: '',
     circleConfigActions: [{ key: 'submitCircleConfig', label: '保存供给角色' }],
   },

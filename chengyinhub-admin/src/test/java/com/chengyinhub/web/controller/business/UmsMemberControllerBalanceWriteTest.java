@@ -25,6 +25,8 @@ import static org.mockito.Mockito.verify;
  */
 class UmsMemberControllerBalanceWriteTest {
 
+    private static final Long POINTS = 5000L;
+
     @AfterEach
     void clear() {
         SecurityContextHolder.clearContext();
@@ -44,6 +46,27 @@ class UmsMemberControllerBalanceWriteTest {
         ArgumentCaptor<UmsMember> written = ArgumentCaptor.forClass(UmsMember.class);
         verify(service).updateUmsMember(written.capture());
         assertNull(written.getValue().getBalance(), "通用编辑写入的余额没有流水,不能落库");
+    }
+
+    @Test
+    void editAndAddCannotWritePoints() {
+        IUmsMemberService service = mock(IUmsMemberService.class);
+        UmsMemberController controller = controller(service);
+        UmsMember edited = new UmsMember();
+        edited.setId(9L);
+        edited.setPoint(POINTS);
+        UmsMember added = new UmsMember();
+        added.setPoint(POINTS);
+
+        controller.edit(edited);
+        controller.add(added);
+
+        ArgumentCaptor<UmsMember> updated = ArgumentCaptor.forClass(UmsMember.class);
+        ArgumentCaptor<UmsMember> inserted = ArgumentCaptor.forClass(UmsMember.class);
+        verify(service).updateUmsMember(updated.capture());
+        verify(service).insertUmsMember(inserted.capture());
+        assertNull(updated.getValue().getPoint(), "通用编辑写入的积分没有流水,不能落库");
+        assertNull(inserted.getValue().getPoint());
     }
 
     @Test

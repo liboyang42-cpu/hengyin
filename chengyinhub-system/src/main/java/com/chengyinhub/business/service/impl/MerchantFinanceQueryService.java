@@ -107,6 +107,14 @@ public class MerchantFinanceQueryService {
     }
 
     public MerchantFinancePage<MerchantRedemptionView> redemptions(Long memberId, String filter, int pageNum, int pageSize) {
+        return redemptions(memberId, filter, pageNum, pageSize, null);
+    }
+
+    /**
+     * 2026-11-01 业主:主题工作台「台账」只看这个主题的核销。topicId 只在本商家自己的核销集合里收窄
+     * (selectByMerchant 已按商家归属取),汇总也按收窄后的集合算 —— 回答「这个主题我接待了多少」。
+     */
+    public MerchantFinancePage<MerchantRedemptionView> redemptions(Long memberId, String filter, int pageNum, int pageSize, Long topicId) {
         int safePageNum = pageNum < 1 ? 1 : pageNum;
         int safePageSize = pageSize < 1 ? 20 : Math.min(pageSize, 50);
         List<MerchantPayable> payables = safeList(payableMapper.selectByMerchant(memberId));
@@ -123,6 +131,7 @@ public class MerchantFinanceQueryService {
         // 汇总条按【筛选前】的全集算:它回答「我这个月接待了多少」,切筛选 chip 时不该跟着变。
         List<MerchantRedemptionView> unfiltered = new ArrayList<MerchantRedemptionView>();
         for (Redemption redemption : safeList(redemptionMapper.selectByMerchant(memberId))) {
+            if (topicId != null && (redemption == null || !topicId.equals(redemption.getTopicId()))) continue;
             MerchantRedemptionView row = toRedemptionView(redemption, byRedemption.get(redemption == null ? null : redemption.getId()),
                     batches, merchant == null ? null : merchant.getName());
             if (row == null) continue;

@@ -1915,8 +1915,11 @@ public class ApiMerchantController extends BaseController {
         if (!includeFinance) filter = "all";
         int pageNum = body == null ? 1 : aggregateInt(body.get("pageNum"), 1);
         int pageSize = body == null ? 20 : aggregateInt(body.get("pageSize"), 20);
-        MerchantFinancePage<MerchantRedemptionView> page = merchantFinanceQueryService.redemptions(
-                access.getOwnerMemberId(), filter, pageNum, pageSize);
+        // 2026-11-01:主题工作台「台账」带 topicId,只看这个主题的核销(仍只在本商家自己的核销里收窄)
+        Long topicId = body == null ? null : aggregateLong(body.get("topicId"));
+        MerchantFinancePage<MerchantRedemptionView> page = topicId == null
+                ? merchantFinanceQueryService.redemptions(access.getOwnerMemberId(), filter, pageNum, pageSize)
+                : merchantFinanceQueryService.redemptions(access.getOwnerMemberId(), filter, pageNum, pageSize, topicId);
         return success(includeFinance ? page : redactRedemptionFinance(page));
     }
 

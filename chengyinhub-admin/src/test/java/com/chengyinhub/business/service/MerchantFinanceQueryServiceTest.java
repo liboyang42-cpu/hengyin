@@ -124,6 +124,36 @@ class MerchantFinanceQueryServiceTest {
         assertEquals("本次合作不产生现金分润", page.getRows().get(0).getNoCashReason(), "第三条零现金原因必须由服务端给出");
     }
 
+    /** 2026-11-01 业主:主题工作台「台账」带 topicId,只看这个主题的核销;不带时与原来全店一致。 */
+    @Test
+    void topicIdNarrowsRedemptionsToThatTopic() {
+        MerchantFinanceQueryService service = new MerchantFinanceQueryService();
+        RedemptionMapper redemptionMapper = org.mockito.Mockito.mock(RedemptionMapper.class);
+        MerchantPayableMapper payableMapper = org.mockito.Mockito.mock(MerchantPayableMapper.class);
+        MerchantPayableBatchMapper batchMapper = org.mockito.Mockito.mock(MerchantPayableBatchMapper.class);
+        ReflectionTestUtils.setField(service, "redemptionMapper", redemptionMapper);
+        ReflectionTestUtils.setField(service, "payableMapper", payableMapper);
+        ReflectionTestUtils.setField(service, "batchMapper", batchMapper);
+        Redemption mine = new Redemption();
+        mine.setId(31L);
+        mine.setTopicId(990045L);
+        mine.setStatus("ACTIVE");
+        mine.setCreateTime(atShanghai(2026, Calendar.AUGUST, 20, 9, 0));
+        Redemption other = new Redemption();
+        other.setId(32L);
+        other.setTopicId(990046L);
+        other.setStatus("ACTIVE");
+        other.setCreateTime(atShanghai(2026, Calendar.AUGUST, 21, 9, 0));
+        when(redemptionMapper.selectByMerchant(7L)).thenReturn(java.util.Arrays.asList(mine, other));
+        when(payableMapper.selectByMerchant(7L)).thenReturn(Collections.<MerchantPayable>emptyList());
+        when(batchMapper.selectByMerchant(7L)).thenReturn(Collections.<MerchantPayableBatch>emptyList());
+
+        assertEquals(2, service.redemptions(7L, "all", 1, 20).getTotal());
+        MerchantFinancePage<MerchantRedemptionView> page = service.redemptions(7L, "all", 1, 20, 990045L);
+        assertEquals(1, page.getTotal());
+        assertEquals(1, page.getRows().size());
+    }
+
     private static MerchantPayable payable(Long id, String entryType, String amount, Date createTime) {
         MerchantPayable payable = new MerchantPayable();
         payable.setId(id);
