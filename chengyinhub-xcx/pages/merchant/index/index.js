@@ -987,7 +987,7 @@ Page({
               pendingOrders: finiteCount(res.data.pendingOrders),
             },
           });
-          if (expectsRevenue) that.countRevenueTo(revenue);
+          if (expectsRevenue) { clearTimeout(that._revHoldTimer); if (that.data.pmPage) that._revHoldTimer = setTimeout(() => that.countRevenueTo(revenue), 150); else that.countRevenueTo(revenue); } // M-06:首屏还在浮上时先停 150ms 再数(同 countIn),慢起步不再耗在隐身里
         } else {
           that.setData({ dashboardError: app.getRequestErrorMessage(res, '经营数据加载失败') });
         }

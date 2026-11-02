@@ -119,7 +119,6 @@ page {
 
 .gn-section-head { margin-bottom: var(--cy-space-3); }
 .gn-section-title { display: block; font-size: var(--cy-font-body); font-weight: 600; color: var(--cy-text-title); }
-.gn-section-sub { display: block; margin-top: var(--cy-space-1); font-size: var(--cy-font-caption); line-height: 1.5; color: var(--cy-text-secondary); }
 
 .gn-runbook-row {
   padding: var(--cy-space-3) 0;
@@ -158,6 +157,7 @@ page {
   color: var(--cy-color-text-inverse);
 }
 .gn-check--on { border-color: var(--cy-color-selection); background: var(--cy-color-selection); }
+.gn-check { transition: background-color var(--cy-motion-check-fill) var(--cy-ease-out), border-color var(--cy-motion-check-fill) var(--cy-ease-out); } /* M-31:勾选框填色而不是瞬切 */
 .gn-check-label { flex: 1; font-size: var(--cy-font-label); color: var(--cy-text-body); }
 
 .gn-field { margin-bottom: var(--cy-space-3); }

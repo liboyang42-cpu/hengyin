@@ -68,7 +68,7 @@
         <view class="gn-section-head">
           <!-- 稿 469:1002 的标题是「这一站怎么接待」——「本站执行卡」是内部叫法,
                商家看不出它跟自己今晚要干的事有什么关系。 -->
-          <view><text class="gn-section-title">这一站怎么接待</text><text class="gn-section-sub">商家须知</text></view>
+          <view><text class="gn-section-title">这一站怎么接待</text></view>
         </view>
         <block wx:if="{{station.playerTask}}">
           <!-- 稿 469:1002 的顺序是「你要做的 → 玩家会做什么 → 不能说的」。
@@ -95,7 +95,7 @@
 
       <view class="gn-card" wx:if="{{station.canAccept || station.canDecline}}">
         <view class="gn-section-head">
-          <view><text class="gn-section-title">节点邀请</text><text class="gn-section-sub">接受后可填写准备清单</text></view>
+          <view><text class="gn-section-title">节点邀请</text></view>
         </view>
         <view class="gn-dual-actions">
           <cy-btn class="gn-action" wx:if="{{station.canDecline}}" variant="secondary" disabled="{{writeState !== 'idle'}}" loading="{{writeState === 'submitting'}}" bindtap="openDeclineSheet">拒绝邀请</cy-btn>
