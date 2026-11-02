@@ -68,6 +68,18 @@ Recommendations must fit the current design. Existing UI is the baseline: sugges
 
 Read the bodies of open PRs #701, #702, #703, #704 and the fix branch `fix/merchant-home-role-resync-20261101`. They are not on the tested commit. If you hit something they cover, list it under "Known, fix pending" with the PR number, and say whether the experience suggests the fix is sufficient.
 
+## Owner's addition: gameplay feel
+
+The owner expects room to improve the gameplay experience even where the code is fine. So a game or transition with no functional defect can still be a finding.
+
+Add a `Gameplay feel` section to `REPORT.md`, after Issues. The player lane covers every game type and story transition it plays; the merchant and club lanes cover only what they touch. For each, say:
+- Did I know what to do without being told, and did the result feel earned?
+- Was the pace right: where did I wait with nothing happening, or get rushed past something?
+- Was the feedback clear and satisfying on right, wrong, hint and retry?
+- Did it fit the moment in the story and the place I was standing in?
+
+Rate each `works and feels good`, `works but flat`, or `works but awkward`, with what you saw and the smallest change that would help. Keep to small edits to what exists: no redesigns, screen shake, explosions, loud colours or sound effects. Judge from what the runtime actually shows; timing and animation in it are not proof of how a real phone behaves, so say so where it matters.
+
 ## Report
 
 Write to `docs/delivery/cloud-walk-20261101/<lane>/`:
