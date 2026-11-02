@@ -49,7 +49,7 @@ class ClubAttendanceTimeMappingMyBatisIT {
              Statement sql = connection.createStatement()) {
             sql.execute("create table cms_registration (id bigint primary key, owner_type bigint,"
                     + "owner_id bigint, member_id bigint, payment_status int, registration_status int,"
-                    + "verification_status int default 0, verification_time datetime)");
+                    + "verification_status int default 0, verification_time datetime, real_name varchar(255))");
             sql.execute("create table ums_member (id bigint primary key, nickname varchar(64),"
                     + "name varchar(64), del_flag int)");
             sql.execute("create table club_lead_checkin (activity_id bigint, member_id bigint, arrived_at datetime)");
