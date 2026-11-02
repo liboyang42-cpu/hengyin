@@ -74,7 +74,7 @@ Page({
     dots: [0, 1, 2, 3],
     // 表单字段
     name: '',             // 店铺名称
-    preference: '', industryIds: [], industryNames: '', industrySheet: { show: false, options: [], value: [], loading: false, error: '' }, // M-16 行业类型胶囊(与门店信息同一份)
+    industryIds: [], industryNames: '', industrySheet: { show: false, options: [], value: [], loading: false, error: '' }, // M-16 行业类型胶囊(与门店信息同一份)
     phone: '',
     address: '',          // 店铺地址
     // 选点坐标:wx.chooseLocation 本来就跟 address 一起返回,以前被丢掉了,
@@ -143,7 +143,7 @@ Page({
       wizardMorph.cancelIntroMorph(this); this._bootstrapSettled = false;
       this.setData({
         mode: 'form', introMode: true, step: 1,
-        name: '', preference: '', phone: '', address: '',
+        name: '', phone: '', address: '',
         locationLat: null, locationLng: null, businessTime: '', description: '',
         businessLicense: '', derivatives: [], canNext: false,
         submitting: false, submitError: '', submitErrorKind: '',
@@ -251,7 +251,7 @@ Page({
             apply: apply,
             step: keepDraft ? that.data.step : 1,
             name: keepDraft ? that.data.name : apply.name,
-            preference: keepDraft ? that.data.preference : apply.preference, industryIds: keepDraft ? that.data.industryIds : industryIdsOf(source),
+            industryIds: keepDraft ? that.data.industryIds : industryIdsOf(source),
             phone: keepDraft ? that.data.phone : apply.phone,
             address: keepDraft ? that.data.address : apply.address,
             // 故意不回填坐标:回填了再提交,服务端会把它当成"商家刚在地图上点的"而标成已确认。
@@ -592,7 +592,6 @@ Page({
     var payload = {
       id: d.apply && d.apply.status === 2 ? d.apply.id : null,
       name: d.name,
-      preference: d.preference,
       categoryIds: d.industryIds.join(','),
       phone: d.phone,
       address: d.address,

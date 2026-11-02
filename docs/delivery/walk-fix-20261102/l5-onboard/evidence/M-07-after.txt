@@ -1,0 +1,9 @@
+# M-07 after (branch claude/walk-fix-1102-l5-onboard, rig), topic 990014 from chains.py platform
+# merchant 9002: apply chapter 42 -> 200; POST /api/merchant/chapter-node/submit -> 200, returned node id 71 (the placeholder)
+# DB read-back: select id,chapter_id,name,merchant_member_id,node_audit_status from cms_topic_node where topic_id=990014
+id	chapter_id	name	merchant_member_id	node_audit_status
+71	42	样板咖啡 · 本站	9002	0
+72	43	书店打卡点	NULL	NULL
+73	44	花店打卡点	NULL	NULL
+74	45	面包打卡点	NULL	NULL
+# => one row per chapter; the placeholder that the chapter story references is now the merchant's stop (pending audit).

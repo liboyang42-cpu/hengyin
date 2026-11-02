@@ -1,0 +1,12 @@
+# M-16 after (rig). Real UI: pages/merchant/apply as player 9004; chips 书店 + 咖啡茶饮; steps 2-3 fields set by eval (location/upload seams); real POST /api/publisher/identity and /api/merchant/merchant_registration.
+select id,member_id,name,category_id,category_ids,status from mms_merchant where member_id=9004
+id	member_id	name	category_id	category_ids	status
+8006	9004	梧桐里书房	30	30,4001	0
+id	category_name
+30	书店
+4001	咖啡
+
+# Negative (HTTP as 9009 after identity registration):
+categoryIds='999999' -> 500 行业类型无效，请重新选择
+categoryIds='30,abc' -> 500 行业类型无效，请重新选择
+select count(*) from mms_merchant where member_id=9009 -> 0

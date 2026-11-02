@@ -1004400,7 +1004400,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/apply/index.js:645"
+        "staticSource": "pages/merchant/apply/index.js:644"
       }
     },
     {
@@ -1004555,8 +1004555,7 @@
       "interactionMode": "event-contract",
       "baseActionClass": "read",
       "effectClasses": [
-        "read",
-        "state"
+        "read"
       ],
       "accessBoundary": null,
       "externalCapabilities": [],
@@ -1004588,7 +1004587,7 @@
         ],
         "writeApis": []
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射",
       "requiredBranches": [
         "success",
         "error",
@@ -1004802,7 +1004801,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/apply/index.js:689"
+        "staticSource": "pages/merchant/apply/index.js:688"
       }
     },
     {
@@ -1004940,7 +1004939,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/apply/index.js:662"
+        "staticSource": "pages/merchant/apply/index.js:661"
       }
     },
     {
@@ -1006108,7 +1006107,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/apply/index.js:655"
+        "staticSource": "pages/merchant/apply/index.js:654"
       }
     },
     {
@@ -1006287,7 +1006286,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/apply/index.js:668"
+        "staticSource": "pages/merchant/apply/index.js:667"
       }
     },
     {

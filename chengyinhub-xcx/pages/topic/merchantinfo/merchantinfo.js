@@ -369,7 +369,7 @@ Page({
     }
     const reducedMotion = readReducedMotion();
     if (this.data.reducedMotion !== reducedMotion) this.setData({ reducedMotion });
-    if (this._categoryReturn) { this._categoryReturn = false; this._reopenAfterCategory = true; this.loadMerchantRecruitmentChapters(); } if (this._clubSheetReturn) { this._clubSheetReturn = false; this.loadProjectHome(); if (this.data.clubSheet.show) this.loadClubCandidates(); if (this.data.merchantSheet.show) this.loadRegApplies(); } merchantTheme.merchantPageShow(); this._navigating = false;
+    this._resumeCategoryReturn(); if (this._clubSheetReturn) { this._clubSheetReturn = false; this.loadProjectHome(); if (this.data.clubSheet.show) this.loadClubCandidates(); if (this.data.merchantSheet.show) this.loadRegApplies(); } merchantTheme.merchantPageShow(); this._navigating = false;
   },
   onHide() { this._hidden = true; merchantTheme.merchantPageRestore(); },
   onUnload() {
@@ -1156,11 +1156,11 @@ Page({
   },
 
 
-  /* M-09(2026-11-02 主人):「申请承接章节」弹层只选章节,原来的「选择玩法模板」块和
-     这里的去创建玩法入口一起撤掉。选玩法、去创建玩法都在下一页的报名表
-     (chapter-node-form):它带 from=join 打开玩法编辑页,发布后回到报名表并把新玩法选上,
-     不再 reLaunch 去模板库。页面返回时报名表靠 pageLifetimes.show 重拉玩法与常备权益。
-     本页只负责「去选择行业类型」回来后重拉章节(见 onShow 的 _categoryReturn)。 */
+  /* M-09:选章节弹层只选章节;选玩法、去创建玩法都在报名表(chapter-node-form,from=join 发布后回来选上)。
+     M-08:从「去选择行业类型」回来重拉章节,拉回后按最新章节重算招商状态再开弹层(_reopenAfterCategory)。 */
+  _resumeCategoryReturn() {
+    if (this._categoryReturn) { this._categoryReturn = false; this._reopenAfterCategory = true; this.loadMerchantRecruitmentChapters(); }
+  },
 
   goSettlement() {
     const { selectedMode, selectedNodeId, selectedTemplateId, selectedChapterId, topicId } = this.data;
