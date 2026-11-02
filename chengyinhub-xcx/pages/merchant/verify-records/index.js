@@ -1,5 +1,5 @@
 // BL-76 商家核销记录(只读)。结构照 pages/merchant/aftercare:access/me 判权 → 列表四态。
-// 接口 POST /api/merchant/verification-records 要 VERIFY_RECORD_READ(核销员也有),一次全量、不分页。
+// 接口 POST /api/merchant/finance/redemptions(与「核销与退款」同源)要 VERIFY_RECORD_READ(核销员也有),分页读全。
 const app = getApp();
 const toast = require('../../../utils/toast.js'); const pageMotion = require('../../../utils/page-motion.js');
 const merchantTheme = require('../../../utils/merchant-theme.js');
@@ -10,6 +10,8 @@ const {
   countByStatus,
   groupRecords,
 } = require('./view-model.js');
+const PAGE_SIZE = 50;
+const MAX_PAGES = 20;
 
 Page({
   data: {
@@ -94,27 +96,34 @@ Page({
       if (fromPull) wx.stopPullDownRefresh();
       return seq === this._listSeq;
     };
-    app.sendRequest({
+    const collected = [];
+    const failed = (res) => {
+      if (keep) toast('刷新失败，稍后再试');
+      else this.setData({ pageState: 'error', errorMessage: res ? errorText(res, '核销记录加载失败') : '网络异常，请重试' });
+    };
+    // 与「核销与退款」同源分页读取;服务端每页最多 50 条,读满 total 或到上限为止。
+    const readPage = (pageNum) => app.sendRequest({
       hideLoading: true,
       silentError: true,
-      url: '/api/merchant/verification-records',
+      url: '/api/merchant/finance/redemptions',
       method: 'POST',
+      data: { filter: 'all', pageNum, pageSize: PAGE_SIZE },
       success: (res) => {
-        if (!settle()) return;
+        if (seq !== this._listSeq) { if (fromPull) wx.stopPullDownRefresh(); return; }
         const items = isSuccess(res) ? shapeRecordList(res.data) : null;
-        if (!items) {
-          if (keep) toast('刷新失败，稍后再试');
-          else this.setData({ pageState: 'error', errorMessage: errorText(res, '核销记录加载失败') });
-          return;
-        }
-        this.applyItems(items, this.data.bucket);
+        if (!items) { if (settle()) failed(res); return; }
+        collected.push.apply(collected, items);
+        const total = Number(res.data.total) || 0;
+        if (items.length === PAGE_SIZE && collected.length < total && pageNum < MAX_PAGES) { readPage(pageNum + 1); return; }
+        if (!settle()) return;
+        this.applyItems(collected, this.data.bucket);
       },
       fail: () => {
         if (!settle()) return;
-        if (keep) toast('刷新失败，稍后再试');
-        else this.setData({ pageState: 'error', errorMessage: '网络异常，请重试' });
+        failed(null);
       },
     });
+    readPage(1);
   },
 
   switchBucket(event) {

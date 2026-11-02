@@ -32,8 +32,9 @@ function loadPage(name) {
 }
 
 const PAGES = [
-  { name: 'verify-records', perm: 'merchant:verify:record:read', listUrl: '/api/merchant/verification-records',
-    row: (id, status) => ({ id, status: status == null ? 1 : status, verifyTime: '2026-10-18 10:00:00' }),
+  { name: 'verify-records', perm: 'merchant:verify:record:read', listUrl: '/api/merchant/finance/redemptions',
+    row: (id) => ({ recordId: String(id), fulfillmentState: 'ACTIVE', occurredAt: '2026-10-18 10:00:00' }),
+    wrap: (rows) => ({ total: rows.length, rows }),
     count: (p) => p.data.groups.reduce((n, g) => n + ((g.items || g.rows || []).length), 0) },
   { name: 'crm-campaigns', perm: 'merchant:marketing:read', listUrl: '/api/merchant/crm/campaigns',
     row: (id) => ({ id, name: '任务' + id, status: 'COMPLETED', createTime: '2026-10-18 10:00:00' }),
@@ -59,7 +60,7 @@ for (const pg of PAGES) {
       grantAccess(h, pg.perm);
       const first = h.requests.shift();
       assert.equal(first.url, pg.listUrl);
-      first.success({ code: 200, data: [pg.row(1)] });
+      first.success({ code: 200, data: (pg.wrap || (x => x))([pg.row(1)]) });
       assert.equal(h.p.data.pageState, 'ready');
       const before = pg.count(h.p);
       assert.ok(before >= 1);
@@ -75,7 +76,7 @@ for (const pg of PAGES) {
       assert.ok(h.toasts.includes('刷新失败，稍后再试'));
 
       h.p.onPullDownRefresh();
-      h.requests.shift().success({ code: 200, data: [pg.row(1), pg.row(2)] });
+      h.requests.shift().success({ code: 200, data: (pg.wrap || (x => x))([pg.row(1), pg.row(2)]) });
       assert.equal(h.stops.length, 2);
       assert.equal(pg.count(h.p), before + 1, '下拉读到新记录');
     } finally { h.restore(); }
@@ -86,14 +87,14 @@ for (const pg of PAGES) {
     try {
       h.p.onLoad();
       grantAccess(h, pg.perm);
-      h.requests.shift().success({ code: 200, data: [pg.row(1)] });
+      h.requests.shift().success({ code: 200, data: (pg.wrap || (x => x))([pg.row(1)]) });
       h.p.onPullDownRefresh();
       const pull = h.requests.shift();
       h.p.retry();
       const latest = h.requests.shift();
-      latest.success({ code: 200, data: [pg.row(1), pg.row(2), pg.row(3)] });
+      latest.success({ code: 200, data: (pg.wrap || (x => x))([pg.row(1), pg.row(2), pg.row(3)]) });
       const fresh = pg.count(h.p);
-      pull.success({ code: 200, data: [] });
+      pull.success({ code: 200, data: (pg.wrap || (x => x))([]) });
       assert.equal(h.stops.length, 1, '过期的下拉回包也收转圈');
       assert.equal(pg.count(h.p), fresh, '过期回包不覆盖');
       assert.equal(h.p.data.pageState, 'ready');

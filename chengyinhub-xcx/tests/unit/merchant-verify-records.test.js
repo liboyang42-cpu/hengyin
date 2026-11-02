@@ -7,45 +7,44 @@ const path = require('node:path');
 const root = path.resolve(__dirname, '../..');
 const vm = require('../../pages/merchant/verify-records/view-model.js');
 
-test('shapeRecordList 只认数组,丢掉无 id 行,状态只按 status===1 判已核销', () => {
+test('M-03 shapeRecordList 只认分页载荷,行来自 redemption 真源,写出站点名', () => {
   assert.equal(vm.shapeRecordList(null), null);
-  assert.equal(vm.shapeRecordList({ rows: [] }), null);
-  const items = vm.shapeRecordList([
-    { id: 'a1', registrationId: 12, name: '老码头', status: 1, validationMethod: 2, createTime: '2026-10-14 18:05:33' },
-    { id: 'a2', registrationId: 0, name: '', status: 0, createTime: '2026-10-14 09:00:00' },
-    { registrationId: 5, status: 1 },
+  assert.equal(vm.shapeRecordList([]), null, '旧的 cms_registration_scan 数组载荷不再认');
+  const items = vm.shapeRecordList({ total: 3, rows: [
+    { recordKey: 'redemption:5', recordId: '5', chapterName: '第四站·一页手写的回信', topicName: '梧桐里·武康路探店日', fulfillmentState: 'ACTIVE', occurredAt: '2026-11-02 13:24:10' },
+    { recordId: '6', storeName: '梧桐里书房', fulfillmentState: 'REVERSED', occurredAt: '2026-11-02 09:00:00' },
+    { chapterName: '无 id' },
     null,
-  ]);
+  ] });
   assert.equal(items.length, 2);
   assert.deepEqual(items[0], {
-    id: 'a1', nameText: '老码头', registrationText: '报名 #12', methodText: '图片验证',
-    statusKey: 'VERIFIED', statusText: '已核销', statusTone: 'success', dateKey: '2026-10-14', timeText: '18:05',
+    id: 'redemption:5', nameText: '第四站·一页手写的回信', subText: '梧桐里·武康路探店日',
+    statusKey: 'VERIFIED', statusText: '已核销', statusTone: 'success', dateKey: '2026-11-02', timeText: '13:24',
   });
-  assert.equal(items[1].nameText, '未命名节点');
-  assert.equal(items[1].registrationText, '');
-  assert.equal(items[1].methodText, '');
-  assert.equal(items[1].statusKey, 'UNVERIFIED');
+  assert.equal(items[1].nameText, '梧桐里书房');
+  assert.equal(items[1].statusKey, 'REVERSED');
 });
 
 test('countByStatus / groupRecords 按状态筛、按日期分组且保持后端倒序', () => {
-  const items = vm.shapeRecordList([
-    { id: '1', status: 1, createTime: '2026-10-15 10:00:00' },
-    { id: '2', status: 0, createTime: '2026-10-15 09:00:00' },
-    { id: '3', status: 1, createTime: '2026-10-14 08:00:00' },
-    { id: '4', status: 1 },
-  ]);
-  assert.deepEqual(vm.countByStatus(items), { VERIFIED: 3, UNVERIFIED: 1 });
+  const items = vm.shapeRecordList({ rows: [
+    { recordId: '1', occurredAt: '2026-10-15 10:00:00' },
+    { recordId: '2', fulfillmentState: 'REVERSED', occurredAt: '2026-10-15 09:00:00' },
+    { recordId: '3', occurredAt: '2026-10-14 08:00:00' },
+    { recordId: '4' },
+  ] });
+  assert.deepEqual(vm.countByStatus(items), { VERIFIED: 3, REVERSED: 1 });
   const groups = vm.groupRecords(items, 'VERIFIED');
   assert.deepEqual(groups.map(g => [g.label, g.items.map(i => i.id)]), [
     ['2026-10-15', ['1']], ['2026-10-14', ['3']], ['时间未知', ['4']],
   ]);
-  assert.deepEqual(vm.groupRecords(items, 'UNVERIFIED').map(g => g.items.length), [1]);
+  assert.deepEqual(vm.groupRecords(items, 'REVERSED').map(g => g.items.length), [1]);
 });
 
-test('页面只读接线:先 access/me 判 canReadVerifyRecords,再读 verification-records;回调不用 this 方法简写', () => {
+test('页面只读接线:先 access/me 判 canReadVerifyRecords,再读与核销与退款同源的 finance/redemptions;回调不用 this 方法简写', () => {
   const js = fs.readFileSync(path.join(root, 'pages/merchant/verify-records/index.js'), 'utf8');
   assert.match(js, /url: '\/api\/merchant\/access\/me'/);
-  assert.match(js, /url: '\/api\/merchant\/verification-records'/);
+  assert.match(js, /url: '\/api\/merchant\/finance\/redemptions'/);
+  assert.doesNotMatch(js, /verification-records/);
   assert.match(js, /canReadVerifyRecords/);
   assert.doesNotMatch(js, /success\s*\(res\)\s*\{/);
   assert.doesNotMatch(js, /fail\s*\(\)\s*\{/);
