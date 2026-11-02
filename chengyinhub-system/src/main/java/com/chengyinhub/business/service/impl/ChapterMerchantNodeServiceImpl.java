@@ -46,6 +46,8 @@ public class ChapterMerchantNodeServiceImpl implements IChapterMerchantNodeServi
     private CmsTopicChapterMapper chapterMapper;
     @Autowired
     private CmsTopicMapper topicMapper;
+    @Autowired(required = false)
+    private com.chengyinhub.business.mapper.CmsTopicNodeMapper nodeMapper;
     @Autowired
     private com.chengyinhub.business.mapper.RegistrationEntitlementMapper registrationEntitlementMapper;
     @Autowired
@@ -137,6 +139,9 @@ public class ChapterMerchantNodeServiceImpl implements IChapterMerchantNodeServi
         assertWithinTerms(termsOf(offer, chapter), tpl, draft);
 
         CmsTopicNode existing = findMine(chapter.getTopicId(), chapterId, merchantMemberId);
+        // M-07:主办方建期给这一章留的占位节点被章节剧情块引用。商家另插一行会让玩家看到
+        // 同一章两个点(占位 + 商家)。首个承接商家直接接管这一行，剧情引用与解锁关系不变。
+        if (existing == null && !replacement) existing = adoptablePlaceholder(chapter.getTopicId(), chapterId);
         CmsTopicNode toSave = existing == null ? new CmsTopicNode() : existing;
 
         // 白名单:只接受内容字段。归属、审核态、所属章节/主题一律服务端定,
@@ -415,6 +420,24 @@ public class ChapterMerchantNodeServiceImpl implements IChapterMerchantNodeServi
             return o;
         }
         return null;
+    }
+
+    /**
+     * 本章唯一一个未绑定商家的主办方节点，且本章还没有任何商家节点(含待审) ⇒ 可接管。
+     * 多于一个占位、或已有别家商家点位时不猜，按原样另建一行。
+     */
+    private CmsTopicNode adoptablePlaceholder(Long topicId, Long chapterId) {
+        if (nodeMapper == null || topicId == null) return null;
+        List<CmsTopicNode> all = nodeMapper.selectByTopicForUpdate(topicId);
+        if (all == null) return null;
+        CmsTopicNode placeholder = null;
+        for (CmsTopicNode node : all) {
+            if (node == null || !chapterId.equals(node.getChapterId())) continue;
+            if (node.getMerchantMemberId() != null) return null;
+            if (placeholder != null) return null;
+            placeholder = node;
+        }
+        return placeholder;
     }
 
     private CmsTopicNode findMine(Long topicId, Long chapterId, Long merchantMemberId) {
