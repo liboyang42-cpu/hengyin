@@ -6,7 +6,7 @@ page { display: flex; flex-direction: column; min-height: 100vh; }
 .result-nav-spacer { flex: none; }
 .result-search { display: block; margin: 0 var(--cy-page-x); }
 .search2-result .main { padding: 0 var(--cy-page-x); display: flex; flex-direction: column; flex: 1; }
-.search2-result .wp { display: flex; flex-direction: column; flex: 1; }
+.search2-result .wp { display: flex; flex-direction: column; flex: 1; padding: 0; }
 /* cy-empty/cy-error 是 styleIsolation:isolated 组件,宿主标签默认 display:block,
    组件内部的 flex:1 要宿主自己也是 flex 容器才生效,从页面外部补一层。 */
 .fill-slot{ display: flex !important; flex-direction: column !important; flex: 1 !important; min-height: 0 !important; }

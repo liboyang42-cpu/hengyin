@@ -584,10 +584,10 @@ page { background: var(--cy-color-bg-page); }
 /* ===================== 勋章颁发(Figma 3964:17047)=====================
  * 顶部「徽章」标题齐胶囊行;金奖杯主视觉 + 名称;底部滑动确认条(绿,爆点在组件内)。 */
 .woo{ position:absolute; inset:0; z-index:121; background:rgba(6,8,14,.92); /* ds-ok Figma 实测(用户裁决字面值) */
-  display:flex; flex-direction:column; align-items:center; justify-content:center; } /* ds-ok 颁发时刻的加深遮罩 */
+  display:flex; flex-direction:column; align-items:center; justify-content:center; animation:fade var(--cy-motion-standard) var(--cy-ease-out) both; } /* ds-ok 颁发时刻的加深遮罩 */
 .woo__title{ position:absolute; top:0; left:0; right:0; text-align:center;
   font-size:46rpx; font-weight:700; color:#FFFFFF; } /* ds-ok Figma 实测(用户裁决字面值) */
-.woo__hero{ display:flex; flex-direction:column; align-items:center; gap:31rpx; }
+.woo__hero{ display:flex; flex-direction:column; align-items:center; gap:31rpx; animation:floatUp var(--cy-motion-slow) var(--cy-ease-out) both; } /* ds-ok Figma 实测 gap(用户裁决字面值) */
 .woo__img{ width:300rpx; height:300rpx; }
 .woo__name{ font-size:31rpx; font-weight:700; color:#FFFFFF; } /* ds-ok Figma 实测(用户裁决字面值) */
 .woo__coupon{ min-height:var(--cy-btn-h); box-sizing:border-box; display:flex; align-items:center; justify-content:center; margin-top:31rpx; padding:15rpx 31rpx; border-radius:var(--cy-radius-pill);
