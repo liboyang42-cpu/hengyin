@@ -205,6 +205,7 @@ page {
 .gn-receipt-sub { display: block; margin-top: var(--cy-space-1); font-size: var(--cy-font-caption); color: var(--cy-text-secondary); }
 .gn-receipt-outcome { color: var(--cy-color-status-success); }
 .gn-muted { display: block; font-size: var(--cy-font-caption); color: var(--cy-text-secondary); }
+.gn-muted--above-btn { margin-bottom: var(--cy-space-2); } /* 说明与下方「恢复接待」留距,与本页其它按钮上方间距同为 space-2 */
 
 .gn-sheet { padding: 0 var(--cy-space-4) calc(var(--cy-space-5) + env(safe-area-inset-bottom)); }
 .gn-sheet-tip { display: block; margin-bottom: var(--cy-space-3); font-size: var(--cy-font-label); line-height: 1.5; color: var(--cy-text-secondary); }
