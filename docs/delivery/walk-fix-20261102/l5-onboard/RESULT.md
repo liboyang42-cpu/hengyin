@@ -52,4 +52,12 @@ Gates (round 3): `node --test` on every unit test that touches the picker, merch
 
 Not verified on a real phone: everything in round 3. The template reload on reopen is unit-tested; the rig shots show only a fresh open.
 
+## Round 3 restart (2026-11-02, after the usage limit)
+
+| Item | Status | Notes |
+|---|---|---|
+| Code (M-08/M-09 sheet, M-15, M-17) | done | Pushed earlier in 8abf6444; not redone. |
+| Shots of the three sheet states | done | Already pushed: `shots/M-09-r3-after.jpg` (chapters and templates), `shots/M-09-r3-after-chapters-only.jpg`, `shots/M-09-r3-after-templates-only.jpg`, plus `shots/M-09-r3-before.jpg`. I checked them again for this run. |
+| CI `Fast gates`, `Mini program static gates`, `Mini program static checks` | fixed | One cause for all three. Restoring the picker's `/api/template/my-list` call (`silentError: true`) needs the allowlist entry that round 2 had removed from `ci/silent-error-allowlist.txt`, so U5 failed with 「未进白名单:pages/topic/components/cy/chapter-target-picker/index.js(1 处)」. I put the entry back exactly as it is on master. Its reason still holds: a failed read shows the in-sheet `cy-error` with retry, separate from the empty state. `static checks` only collects the other two results. Run locally: `node ci/silent-error-gate.js` passes; `scripts/ui-validity-gates.js` passes U1/U3/U4/U5/U6; `ui-integrity.js` prints `UI-GATE-0:PASS`. |
+
 STATUS: PARTIAL - M-20 and the M-09 publish-and-return path have no rig screenshot (unit tests only); M-15 cannot be driven in the rig; nothing verified on a real phone
