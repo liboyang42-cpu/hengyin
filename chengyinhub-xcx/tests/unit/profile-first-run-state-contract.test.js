@@ -754,7 +754,7 @@ test('开发版真实空订单和空项目保持为空，不用演示卡替代�
 })
 
 
-test('资料排名：后端无排名哨兵只显示占位，不把它当 TOP0% 或排名上升', async () => {
+test('资料排名：后端无排名哨兵显示 0(P-22 业主「没数据显示0」)，不把它当 TOP0% 或排名上升', async () => {
   for (const rank of [
     { rankPercentage: 'TOP0%', userRank: 0, totalUsers: 12 },
     { rankPercentage: 'TOP0%' },
@@ -766,7 +766,7 @@ test('资料排名：后端无排名哨兵只显示占位，不把它当 TOP0% �
     respond('/api/user/points/statistics', { code: 200, data: Object.assign({ weekPoints: 0, rankDelta: 3 }, rank) })
     respond('/api/growth/leaderboard', weekExpResponse(0))
     await pending
-    assert.deepEqual(component.data.rankDisplay, { no: '—', delta: '' })
+    assert.deepEqual(component.data.rankDisplay, { no: '0', delta: '' })
     assert.equal(component.data.pointsStat.rankPercentage, rank.rankPercentage)
     assert.equal(component.data.exploreStat.weekExp, 0)
     assert.equal(component.data.profilePoint, 50)

@@ -97,6 +97,11 @@ function summarizeOrderState(row, now) {
   if (Number(value.verificationStatus) === 1) {
     return { key: 'completed', text: '已完成', refundText: free ? freeText : '已核销订单不可退款' };
   }
+  // P-22:城市定向通关(服务端 topicCompleted,按本单之后的通关勋章判)即已完成,不再停在「待核销」
+  if (value.topicCompleted === true) {
+    const refundInfo = value.refundInfo || {};
+    return { key: 'completed', text: '已完成', refundText: refundInfo.reason || (free ? freeText : '已通关'), topicCompleted: true };
+  }
 
   const refundInfo = value.refundInfo || {};
   if (Number(value.paymentStatus) === 2 && !Number.isNaN(toTimestamp(value.firstSuccessfulScanAt))) {

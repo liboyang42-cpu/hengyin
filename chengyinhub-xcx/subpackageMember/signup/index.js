@@ -710,7 +710,7 @@ function walletCard(item) {
   const progress = item.wProgress ? ' · 已核销 ' + item.wProgress.redeemed + '/' + item.wProgress.required + ' 家' : '';
   // P-27:场次票卡面写「几点 · 在哪」,到期留在背面(wExpiry);读不到开场时间才回落「场次 · 剩几天」
   const session = item.kind === 'activity' ? sessionLine(item.cmsActivity) : '';
-  const head = session || (days === null ? item.wType : item.wType + (days === 0 ? ' · 今天过期' : ' · 剩 ' + days + ' 天'));
+  const head = item.topicCompleted === true ? '已通关' : (session || (days === null ? item.wType : item.wType + (days === 0 ? ' · 今天过期' : ' · 剩 ' + days + ' 天')));
   return Object.assign(item, { wSub: head + progress, wExpiry: passExpiryText(item.wUntil) });
 }
 /* 场次开场时间(服务端 yyyy-MM-dd HH:mm:ss,北京时间)+ 地点;缺开场时间返回空串 */

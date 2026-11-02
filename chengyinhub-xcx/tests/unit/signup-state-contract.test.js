@@ -340,3 +340,16 @@ test('P-27:场次票卡面写开场时间与地点,不写「场次 · 今天过�
   })
   assert.equal(page.data.ticketList[0].wSub, '11月2日 13:35 · 外滩源 33 号门前')
 })
+
+test('P-27:城市定向通关后卡面写「已通关」,底部按钮是「查看记录」', () => {
+  const { page, sandbox } = loadPage()
+  page.onLoad({})
+  sandbox.requests.find(request => request.data.owner_type === 1).success({ code: 200, data: { rows: [], total: 0 } })
+  sandbox.requests.find(request => request.data.owner_type === 2).success({
+    code: 200,
+    data: { rows: [{ id: 51, registrationStatus: 2, paymentStatus: 2, topicCompleted: true,
+      cmsActivity: { name: '外滩钟声', startDate: '2099-11-02 13:35:00', endDate: '2099-11-02 23:59:59' } }], total: 1 },
+  })
+  assert.equal(page.data.ticketList[0].wSub, '已通关')
+  assert.match(wxml(), /topicCompleted \? '查看记录' : '开始游戏'/)
+})

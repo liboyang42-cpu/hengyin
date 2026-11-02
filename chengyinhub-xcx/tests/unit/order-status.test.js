@@ -227,3 +227,13 @@ test('P-03:探索票核销一家是进行中,不是已完成;集齐或场次结�
   const legacy = summarize(base)
   assert.equal(legacy.key, 'completed', '没有服务端进度时保持原口径')
 })
+
+test('P-22:城市定向通关后订单是已完成,不是待核销', () => {
+  const { summarizeOrderState: summarize } = require('../../utils/order-status')
+  const row = { registrationStatus: 2, paymentStatus: 2, verificationStatus: 0, payableAmount: 0, topicCompleted: true,
+    cmsActivity: { startDate: '2026-11-02 13:35:00', endDate: '2099-11-02 23:59:59' }, serverNow: Date.now() }
+  const s = summarize(row)
+  assert.equal(s.key, 'completed')
+  assert.equal(s.topicCompleted, true)
+  assert.notEqual(summarize(Object.assign({}, row, { topicCompleted: undefined })).key, 'completed')
+})

@@ -1467,11 +1467,11 @@ Component({
       var rankPercentage = isRecord(res.data) ? res.data.rankPercentage : null;
       var pointsOk = weekPoints != null && typeof rankPercentage === 'string' && !!rankPercentage.trim();
       if (pointsOk) {
-        var hasRank = rankPercentage.trim() !== 'TOP0%' && metricNumber(res.data.userRank) !== 0;
+        var hasRank = rankPercentage.trim() !== 'TOP0%' && metricNumber(res.data.userRank) !== 0; // P-22(业主「没数据显示0」):无排名哨兵显示 0
         that.setData({
           pointsStat: { weekPoints: weekPoints, rankPercentage: rankPercentage },
           rankDisplay: {
-            no: hasRank ? rankPercentage : '—',
+            no: hasRank ? rankPercentage : '0',
             delta: hasRank && res.data.rankDelta ? ('上升 ' + res.data.rankDelta) : ''
           }
         });

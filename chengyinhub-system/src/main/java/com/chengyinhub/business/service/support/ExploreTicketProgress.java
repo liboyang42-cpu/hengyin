@@ -51,6 +51,7 @@ public final class ExploreTicketProgress {
             return !Boolean.TRUE.equals(progress.get("active"));
         }
         return (Integer.valueOf(2).equals(row.getPaymentStatus()) && row.getFirstSuccessfulScanAt() != null)
-                || Integer.valueOf(1).equals(row.getVerificationStatus());
+                || Integer.valueOf(1).equals(row.getVerificationStatus())
+                || Boolean.TRUE.equals(row.getTopicCompleted());   // P-22:城市定向通关即完成
     }
 }
