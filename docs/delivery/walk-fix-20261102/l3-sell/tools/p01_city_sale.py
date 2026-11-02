@@ -4,7 +4,11 @@ content slot PLATFORM, organised by club 7002, goes from publish to SELLING and 
 through the real /api/registration/callback. Then the same path on a CLUB-owned slot must still be refused
 by assertCollectible. Every step prints the response and a DB read-back.
 
-Run with the rig venv:  $RIG_HOME/venv/bin/python p01_city_sale.py [platform|club]
+Round 2 adds "self": club 7001's own paid city theme with NO partner club (no invite, no recruiting window).
+The publishing club counts as organiser, so the sale review succeeds; 7001 opens its own session and the quote
+must still return the assertCollectible payment refusal.
+
+Run with the rig venv:  $RIG_HOME/venv/bin/python p01_city_sale.py [platform|club|self]
 Only fixture identities and the rig's throwaway DB are used. payment_status is never written:
 the rig's pay.py writes the raw payment fact and calls the real callback, as chain_player.py does."""
 import os, sys, json, datetime, time, subprocess, urllib.request, urllib.parse
@@ -48,6 +52,8 @@ atok = admin_token()
 # invited as organiser during recruiting. "club": the content slot stays CLUB 7001.
 PUBLISHER = 9003
 ptok, etok, player = login("e2e-openid-%d" % PUBLISHER), login("e2e-openid-9008"), login("e2e-openid-9009")
+SELF = MODE == "self"
+SESSION_CLUB, stok = (7001, ptok) if SELF else (7002, etok)
 
 step("publisher identity (paid publish needs it)")
 st = http("POST", "/api/publisher/identity/status", token=ptok, json_body={})
@@ -102,7 +108,7 @@ dto = {"name": "P01 外滩电报（%s %s）" % (MODE, now.strftime("%H%M%S")), "
        "tickets": [ticket]}
 # A recruit deadline lets the publisher invite club 7002 as organiser before pricing (the sale gate needs
 # exactly one ORGANIZER for guided tickets).
-dto.update({"clubId": 7001, "recruitDeadline": fmt(now + datetime.timedelta(days=1))})
+dto.update({"clubId": 7001} if SELF else {"clubId": 7001, "recruitDeadline": fmt(now + datetime.timedelta(days=1))})
 r = http("POST", "/api/topic/v2/create", token=ptok, json_body=dto)
 print(J(r))
 d = r.get("data")
@@ -123,17 +129,21 @@ if MODE == "platform":
 readback("content slot", "SELECT slot,entity_type,entity_id,status FROM product_role WHERE topic_id=%s", (tid,))
 
 step("publisher invites club 7002 to organise; its leader accepts (ORGANIZER coop_order)")
-print(J(http("POST", "/api/coop/invite", token=ptok, json_body={
+if SELF:
+    print("self mode: no partner club invited")
+else:
+  print(J(http("POST", "/api/coop/invite", token=ptok, json_body={
     "topicId": tid, "inviteType": 1, "toType": "club", "toId": 7002, "shareMode": 0, "message": "请带队"})))
-for (iid,) in q("SELECT id FROM coop_invite WHERE topic_id=%s AND status=0 ORDER BY id", (tid,)):
+  for (iid,) in q("SELECT id FROM coop_invite WHERE topic_id=%s AND status=0 ORDER BY id", (tid,)):
     print("accept", J(http("POST", "/api/coop/handle", token=etok, json_body={"id": iid, "status": 1})))
 readback("coop_order", "SELECT id,role_snapshot,status FROM coop_order WHERE topic_id=%s", (tid,))
 
 step("recruit deadline job: RECRUITING -> PRICING")
-ex("UPDATE cms_topic SET recruit_deadline = DATE_SUB(NOW(), INTERVAL 1 MINUTE) WHERE id=%s", (tid,))
-job = q("SELECT job_id,job_group FROM sys_job WHERE invoke_target=%s", (RECRUIT_JOB_TARGET,))[0]
-print(J(http("PUT", "/monitor/job/run", token=atok, json_body={"jobId": job[0], "jobGroup": job[1]})))
-time.sleep(5)
+if not SELF:
+  ex("UPDATE cms_topic SET recruit_deadline = DATE_SUB(NOW(), INTERVAL 1 MINUTE) WHERE id=%s", (tid,))
+  job = q("SELECT job_id,job_group FROM sys_job WHERE invoke_target=%s", (RECRUIT_JOB_TARGET,))[0]
+  print(J(http("PUT", "/monitor/job/run", token=atok, json_body={"jobId": job[0], "jobGroup": job[1]})))
+  time.sleep(5)
 readback("lifecycle", "SELECT lifecycle FROM cms_topic WHERE id=%s", (tid,))
 
 step("author pricing page preview + confirm the final price")
@@ -149,12 +159,16 @@ for task_id, ver in q("SELECT id,version FROM audit_task WHERE biz_id=%s AND biz
     print("approve", J(http("POST", "/business/audit/review", token=atok, json_body={
         "taskId": task_id, "status": 1, "reasonCode": "E2E", "reasonText": "开售放行", "expectedVersion": ver})))
 readback("lifecycle/selling_started_at", "SELECT lifecycle,selling_started_at FROM cms_topic WHERE id=%s", (tid,))
+readback("payee facts untouched (no coop_order, no corporate payee snapshot)",
+         "SELECT (SELECT COUNT(*) FROM coop_order WHERE topic_id=%s) AS coop_orders, "
+         "(SELECT COUNT(*) FROM product_role WHERE topic_id=%s AND slot='CONTENT' AND entity_type='CLUB' AND entity_id=7001) AS content_slot_club7001",
+         (tid, tid))
 
-step("club 7002 opens a session; player 9009 (member of 7002) quotes and signs up")
+step("club %d opens a session; player 9009 quotes and signs up" % SESSION_CLUB)
 day = (now + datetime.timedelta(days=3)).strftime("%Y-%m-%d")
-print("open-session", J(http("POST", "/api/club/open-session", token=etok, json_body={
-    "clubId": 7002, "topicId": tid, "sessionDate": day, "sessionTime": "14:00"})))
-acts = q("SELECT id FROM cms_activity WHERE topic_id=%s AND club_id=7002 ORDER BY id DESC LIMIT 1", (tid,))
+print("open-session", J(http("POST", "/api/club/open-session", token=stok, json_body={
+    "clubId": SESSION_CLUB, "topicId": tid, "sessionDate": day, "sessionTime": "14:00"})))
+acts = q("SELECT id FROM cms_activity WHERE topic_id=%s AND club_id=%s ORDER BY id DESC LIMIT 1", (tid, SESSION_CLUB))
 if not acts:
     sys.exit("no session")
 aid = acts[0][0]

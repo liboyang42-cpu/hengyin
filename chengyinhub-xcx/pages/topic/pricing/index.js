@@ -289,7 +289,14 @@ Page({
           that.setData({ submitError: '' });
           // B-04:后端确认只推进到 PRICING(ApiPricingController:"终价已确认，请等待开售审核"),
           // SELLING 要运营在后台提交开售审 —— toast 不能谎报「已开售」。
-          toast.success(res.msg || '终价已确认，请等待开售审核');
+          const msg = res.msg || '终价已确认，请等待开售审核';
+          // P-01:非平台主题开售后暂不能在线收款,后端在 msg 里写明;toast 放不下,用弹窗让主办方看全。
+          if (msg.indexOf('支付资质') >= 0) {
+            wx.showModal({ title: '终价已确认', content: msg, showCancel: false, confirmText: '知道了',
+              complete() { that.goBack(); } });
+            return;
+          }
+          toast.success(msg);
           setTimeout(function () { that.goBack(); }, 500);
         } else that.setData({ submitError: (res && res.msg) || '确认失败，请重试' });
       },
