@@ -1,4 +1,4 @@
-@import '../../../style/merchant-light.wxss';
+@import '../../../style/merchant-light-scope.wxss';
 @import '../../../style/threads-menu.wxss';
 
 .mp-page { position: relative; min-height: 100vh; background: var(--cy-bg-page); padding-bottom:var(--cy-space-4); }
