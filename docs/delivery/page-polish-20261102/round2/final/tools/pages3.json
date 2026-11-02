@@ -1,0 +1,5 @@
+[
+ {"name":"fx-merchant-pricing-990013","path":"pages/topic/pricing/index?topicId=990013","id":"e2e-openid-9002","steps":[{"wait":2500}]},
+ {"name":"fx-merchant-myproject-merchant","path":"subpackageA/pages/myproject/index?scope=MERCHANT","id":"e2e-openid-9002","steps":[{"wait":2500}]},
+ {"name":"fx-club-roles-titlegap","path":"pages/club/roles/index?clubId=7002","id":"e2e-openid-9008"}
+]
