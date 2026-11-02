@@ -3064,6 +3064,9 @@ class AdvancedGameRuntimeServiceImplTest {
 
         Map<String, Object> second = service.act(MEMBER_ID, 51L, 1, "cp-fail-2", "REPORT_SENSOR_FAILURE", compassGame());
         assertEquals(Boolean.TRUE, playKit(second, "compass").get("canSkip"));
+        when(sessionMapper.selectPlayerSessionsByTopic(ACTIVITY_ID, TOPIC_ID, MEMBER_ID)).thenReturn(Collections.singletonList(session));
+        assertTrue(service.pendingSensorSkips(ACTIVITY_ID, TOPIC_ID, Collections.singleton(MEMBER_ID)).isEmpty(),
+                "作者允许跳过的站成员自己能跳,不列给队长");
 
         Map<String, Object> skipped = service.act(MEMBER_ID, 51L, 2, "cp-skip", "SKIP_SENSOR_STATION", compassGame());
         Map<String, Object> cp = playKit(skipped, "compass");

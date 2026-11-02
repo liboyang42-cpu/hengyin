@@ -1190,9 +1190,12 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             for (GameRuntimeSession session : sessionMapper.selectPlayerSessionsByTopic(activityId, topicId, memberId)) {
                 if (!Integer.valueOf(GameRuntimeSession.STATUS_RUNNING).equals(session.getStatus())) continue;
                 ObjectNode state = objectState(session.getStateJson());
+                JsonNode config = readJson(session.getConfigSnapshotJson(), "玩法配置不可用");
                 for (String game : AdvancedActionJudgement.SKIPPABLE_SENSOR_SECTIONS) {
                     JsonNode node = state.path(game);
-                    if (node.path("done").asBoolean(false) || node.path("releasedFor").has(String.valueOf(memberId))) continue;
+                    if (!enabled(config.get(game)) || node.path("done").asBoolean(false)) continue;
+                    // 作者已允许跳过的站,成员自己就能跳,不必再麻烦队长
+                    if (config.path(game).path("allowSkip").asBoolean(false) || node.path("releasedFor").has(String.valueOf(memberId))) continue;
                     if (AdvancedActionJudgement.failedReads(state, game, memberId) >= AdvancedActionJudgement.SKIP_AFTER_FAILED_READS) {
                         stuck.put(memberId, session.getNodeId());
                     }
