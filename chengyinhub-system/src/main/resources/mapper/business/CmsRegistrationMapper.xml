@@ -231,7 +231,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
           and first_successful_scan_at is null
     </update>
 
-    <select id="lockExploreTopicForUpdate" resultType="long">
+    <select id="lockExploreTopicForUpdate" resultType="long" useCache="false" flushCache="true">
         select id from cms_topic where id = #{topicId} and del_flag &lt;&gt; 2 for update
     </select>
 
