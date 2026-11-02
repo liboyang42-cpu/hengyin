@@ -149,6 +149,9 @@ test('completed choice label and preview handler are reachable in WXML; no tries
   const source = fs.readFileSync(path.join(__dirname, '../../pages/play/components/playkit-qa/index.wxml'), 'utf8');
   assert.match(source, /wx:if="\{\{item.chosen\}\}">你的选择/);
   assert.match(source, /wx:if="\{\{item.answer\}\}">正确答案/);
+  // 两个标签不能复用占满宽度的 .qa__opt-t,否则交卷后选项文案被挤成窄栏(2026-11-01 VPS 实测)
+  assert.match(source, /<view class="qa__opt-tag" wx:if="\{\{item.chosen\}\}">你的选择/);
+  assert.match(source, /<view class="qa__opt-tag" wx:if="\{\{item.answer\}\}">正确答案/);
   assert.match(source, /bindtap="onPreviewFeedback"/);
   assert.match(source, /aria-disabled="\{\{finished \|\| passed \|\| submitted\}\}"/);
 });
