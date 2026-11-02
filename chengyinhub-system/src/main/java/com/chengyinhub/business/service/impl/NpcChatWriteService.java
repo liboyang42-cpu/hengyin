@@ -31,6 +31,7 @@ public class NpcChatWriteService
     private final NpcChatRequestMapper requests;
     private final NpcChatLogMapper logs;
     private final TransactionTemplate transaction;
+    private final TransactionTemplate deleteTransaction;
 
     public NpcChatWriteService(NpcChatRequestMapper requests, NpcChatLogMapper logs,
                                PlatformTransactionManager transactionManager)
@@ -39,6 +40,8 @@ public class NpcChatWriteService
         this.logs = logs;
         transaction = new TransactionTemplate(transactionManager);
         transaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        // 删除须加入原请求回执的事务；无外层事务时仍单独创建事务并持有用户锁。
+        deleteTransaction = new TransactionTemplate(transactionManager);
     }
 
     private <T> T locked(Long userId, Supplier<T> operation)
@@ -124,7 +127,9 @@ public class NpcChatWriteService
 
     public int deleteForUser(Long userId)
     {
-        return locked(userId, () -> {
+        return deleteTransaction.execute(status -> {
+            if (userId == null || requests.lockChatUser(userId) == null)
+                throw new IllegalStateException("NPC chat user persistence unavailable");
             asrIntents.redactForUser(userId);
             requests.redactChatRequestsByUserId(userId);
             // This count retains the existing HTTP contract: log rows only, not receipt tombstones.

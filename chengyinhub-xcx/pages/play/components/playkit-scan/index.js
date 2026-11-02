@@ -55,6 +55,7 @@ Component({
     kind: { type: String, value: '文字' },
     reply: { type: String, value: '' },
     audioUrl: { type: String, value: '' },
+    seconds: { type: Number, value: 0 },
     imageUrl: { type: String, value: '' },
     // OVERLAY 那档:扫中后叠在取景画面里的图。与 imageUrl 同一条口径 —— 扫完才有
     overlayUrl: { type: String, value: '' },
@@ -73,7 +74,6 @@ Component({
     /* 语音条那七根竖线的高度,逐值照原型 .pv-wave i:nth-child(n)。
        ⚠️ 组件 wxss 里 :nth-child 不生效(静默失效,不报错),所以高度走 data。 */
     wave: [16, 30, 42, 24, 36, 18, 26],
-    seconds: 12,
     // 显形档:页内取景是否可用。wxml 只画 camLive 这一个事实;
     // 「相机错过一次」是纯内部状态,走实例字段 —— setData 里养一个 wxml 不读的字段,
     // 就是死数据字段门禁(U4)点名的写法。

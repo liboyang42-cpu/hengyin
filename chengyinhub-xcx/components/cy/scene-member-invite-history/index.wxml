@@ -41,6 +41,8 @@
     </view>
 
     <view class="ir-more" wx:if="{{hasMore && !loading && !loadMoreError}}" bindtap="loadMore" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">加载更多</view>
+    <!-- 下一页失败:留在「加载更多」原位,同一行样式,点按重试(不另起一张大错误卡) -->
+    <view class="ir-more" wx:if="{{loadMoreError && groups.length && !loading}}" bindtap="loadMore" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">没加载出来 · 重试</view>
     <view class="ir-more ir-more--loading" wx:if="{{loading && groups.length}}">正在加载…</view>
   </block>
 </view>
