@@ -1,5 +1,4 @@
-<wxs src="../../../utils/wxs/count.wxs" module="cnt" />
-<view class="theme-dark">
+<wxs src="../../../utils/wxs/count.wxs" module="cnt" /><view class="theme-dark">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />

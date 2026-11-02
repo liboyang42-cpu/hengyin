@@ -332,6 +332,7 @@
         <!-- E-09:失败 ≠「还没有人通关」 -->
         <cy-error load-failure class="ov-lb-empty" wx:elif="{{leaderboardError}}" size="sm" title="榜单加载失败" sub="{{leaderboardError}}" retry="重试" bind:retry="loadLeaderboard" />
         <cy-empty class="ov-lb-empty" wx:elif="{{leaderboardLoaded}}" title="{{leaderboardEmptyTitle}}" />
+        <!-- 「每周一重置」小字已撤(规则 3);分区标题「本周」已说明周期 -->
       </block>
       <!-- Locked(25:5) -->
       <view wx:else class="ov-locked">
@@ -426,6 +427,9 @@
             <view class="club-stat"><text class="club-stat-value">{{clubStats.completed}}</text><text class="club-stat-label">完成人次</text></view>
             <view class="club-stat"><text class="club-stat-value">{{clubStats.overallRateText}}</text><text class="club-stat-label">完成率</text></view>
           </view>
+          <!-- CU-C-51 原有一行口径小字「仅统计本俱乐部自办项目。」;
+               2026-11-02 第二轮按业主规则 3(无数据的辅助小字不出)撤掉,范围由标签「游玩人次」自己说清。
+               本注释占住原三行,免得下方控件行号整体漂移。 -->
           <view class="club-stats-topics" wx:if="{{clubStats.topics.length}}">
             <view class="club-stats-topic" wx:for="{{clubStats.topics}}" wx:key="topicId">
               <text class="club-stats-topic-name">{{item.name}}</text>

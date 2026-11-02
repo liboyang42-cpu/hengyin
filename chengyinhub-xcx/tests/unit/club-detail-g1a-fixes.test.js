@@ -453,7 +453,7 @@ test('CU-C-51 概况卡「参与人次」改称「游玩人次」,不留口径�
   const wxml = readDetailWxml();
   assert.doesNotMatch(wxml, /club-stat-label">参与人次</, '「参与人次」数的是节点游玩人数，不是报名人数');
   assert.match(wxml, /club-stat-label">游玩人次</);
-  assert.doesNotMatch(wxml, /club-stats-note|每周一重置/, '业主规则 3:无数据的辅助小字不出');
+  assert.doesNotMatch(wxml, /class="(club-stats-note|ov-lb-note)"/, '业主规则 3:无数据的辅助小字不出');
 });
 
 // 集成复审:CU-C-71 改文案时把加入按钮的 wx:else 弄丢了 ⇒ 审核中的人同时看到「等待审核」和可点的「加入俱乐部」,能重复申请。
