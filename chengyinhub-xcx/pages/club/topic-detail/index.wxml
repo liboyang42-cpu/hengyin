@@ -388,9 +388,8 @@
       show="{{broadcastSheetVisible}}" title="定向广播"
       scope-options="{{broadcastScopeOptions}}" scope="{{broadcastDraft.targetType}}"
       targets="{{broadcastTargetRows}}" content="{{broadcastDraft.content}}"
-      preview-rows="{{broadcasts}}" confirm-text="发送"
-      confirm-disabled="{{writeLocked || !broadcastPreviewReady}}"
-      caption="{{broadcastPreviewText}}"
+      audience="{{broadcastAudience}}" count-text="{{broadcastCountText || broadcastPreviewText}}" confirm-text="{{broadcastSendText}}"
+      confirm-disabled="{{writeLocked || !broadcastPreviewReady || !broadcastDraft.content}}"
       bind:close="closeBroadcast" bind:confirm="confirmBroadcast"
       bind:input="onBroadcastContentInput" bind:selectscope="selectBroadcastTargetType"
       bind:selecttarget="onBroadcastTargetChange" />

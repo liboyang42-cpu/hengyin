@@ -21,6 +21,8 @@ Component({
     playerSheet: { type: Object, value: {} },
     playerFilters: { type: Array, value: [] },
     playerActions: { type: Array, value: [] },
+    playerPick:      { type: Object, value: { can: false, selecting: false, ids: {}, off: {}, count: 0 } }, // 2026-11-01 客户名单多选
+    broadcastSheet:  { type: Object, value: {} }, // 2026-11-01 定向广播叠层
     clubActions: { type: Array, value: [] },
     merchantSheet: { type: Object, value: {} },
     moreSheet:     { type: Object, value: { show: false, groups: [] } },

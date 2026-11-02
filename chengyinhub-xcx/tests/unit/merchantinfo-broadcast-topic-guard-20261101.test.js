@@ -75,7 +75,7 @@ test('定向广播:预览没回显本主题(旧服务端) ⇒ 报错不让发', 
   preview.success({ code: 200, data: { deliverableCount: 120, merchantDailyRemaining: 3 } });
   assert.equal(page.data.broadcastSheet.state, 'error');
   assert.match(page.data.broadcastSheet.error, /只发给本主题/);
-  page.setData({ 'broadcastSheet.content': '明天 10 点集合' });
+  page.onBroadcastInput({ detail: { value: '明天 10 点集合' } });
   page.sendBroadcast();
   assert.equal(findRequest('/api/merchant/crm/broadcast'), null, '没发出去');
 });
@@ -84,12 +84,14 @@ test('定向广播:预览回显本主题 ⇒ 可以发,发送带 topicId', () =>
   beforeEach();
   const page = makePage({ topicId: 990045 });
   page.openBroadcast();
-  findRequest('/api/merchant/crm/broadcast/preview').success({ code: 200, data: { topicId: 990045, deliverableCount: 12, merchantDailyRemaining: 3 } });
+  findRequest('/api/merchant/crm/broadcast/preview').success({ code: 200, data: { topicId: 990045, deliverableCount: 1, merchantDailyRemaining: 3, recipients: [{ memberId: 7, name: '阿乔', reach: 'OK' }, { memberId: 8, name: '老陈', reach: 'NO_CONSENT' }] } });
   assert.equal(page.data.broadcastSheet.state, 'ready');
-  assert.equal(page.data.broadcastSheet.deliverable, 12);
-  page.setData({ 'broadcastSheet.content': '明天 10 点集合' });
+  assert.equal(page.data.broadcastSheet.count, 1, '不接收的不算');
+  page.onBroadcastInput({ detail: { value: '明天 10 点集合' } });
   page.sendBroadcast();
   const sent = findRequest('/api/merchant/crm/broadcast');
   assert.equal(JSON.parse(sent.data).topicId, 990045);
+  assert.equal(JSON.parse(sent.data).scope, 'MEMBERS');
+  assert.deepEqual(JSON.parse(sent.data).memberIds, [7], '只发给选中的、能收到的人');
   assert.equal(JSON.parse(sent.data).content, '明天 10 点集合');
 });

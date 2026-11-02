@@ -102,11 +102,13 @@ public class MerchantCrmBroadcastServiceImpl implements IMerchantCrmBroadcastSer
         List<MerchantCrmBroadcastCandidate> candidates =
                 audience(access.getOwnerMemberId(), query, scope, groups, memberIds);
 
-        Reach reach = reach(access, candidates);
+        Map<Long, String> reachByMember = new LinkedHashMap<>();
+        Reach reach = reach(access, candidates, reachByMember);
         int consented = reach.consented;
         int frequencyLimited = reach.frequencyLimited;
         int used = broadcastMapper.countTodayByMerchant(access.getMerchantId());
         MerchantCrmBroadcastPreviewVO out = new MerchantCrmBroadcastPreviewVO();
+        if (query.getTopicId() != null) out.setRecipients(recipients(candidates, reachByMember));
         out.setFilterTotalCount(filterTotal);
         out.setAudienceCount(candidates.size());
         out.setConsentedCount(consented);
@@ -230,7 +232,27 @@ public class MerchantCrmBroadcastServiceImpl implements IMerchantCrmBroadcastSer
         int deliverable() { return consented - frequencyLimited; }
     }
 
+    private List<MerchantCrmBroadcastPreviewVO.Recipient> recipients(List<MerchantCrmBroadcastCandidate> candidates,
+                                                                     Map<Long, String> reachByMember) {
+        List<MerchantCrmBroadcastPreviewVO.Recipient> rows = new ArrayList<>();
+        for (MerchantCrmBroadcastCandidate candidate : candidates) {
+            MerchantCrmBroadcastPreviewVO.Recipient row = new MerchantCrmBroadcastPreviewVO.Recipient();
+            row.setMemberId(candidate.getMemberId());
+            row.setName(candidate.getName());
+            row.setAvatar(candidate.getAvatar());
+            row.setArrived(candidate.getArrivedCount() != null && candidate.getArrivedCount() > 0);
+            row.setReach(reachByMember.get(candidate.getMemberId()));
+            rows.add(row);
+        }
+        return rows;
+    }
+
     private Reach reach(MerchantAccessContext access, List<MerchantCrmBroadcastCandidate> candidates) {
+        return reach(access, candidates, null);
+    }
+
+    private Reach reach(MerchantAccessContext access, List<MerchantCrmBroadcastCandidate> candidates,
+                        Map<Long, String> reachByMember) {
         int consented = 0;
         int frequencyLimited = 0;
         for (MerchantCrmBroadcastCandidate candidate : candidates) {
@@ -239,7 +261,12 @@ public class MerchantCrmBroadcastServiceImpl implements IMerchantCrmBroadcastSer
                 consented++;
                 if (broadcastMapper.countGuardToday(access.getMerchantId(), candidate.getMemberId(), CHANNEL) > 0) {
                     frequencyLimited++;
+                    if (reachByMember != null) reachByMember.put(candidate.getMemberId(), "TODAY_SENT");
+                } else if (reachByMember != null) {
+                    reachByMember.put(candidate.getMemberId(), "OK");
                 }
+            } else if (reachByMember != null) {
+                reachByMember.put(candidate.getMemberId(), "NO_CONSENT");
             }
         }
         return new Reach(consented, frequencyLimited);

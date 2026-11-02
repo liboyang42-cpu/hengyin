@@ -197,6 +197,8 @@ public class ProjectPlayerReadServiceImpl implements IProjectPlayerReadService {
             }
             Map<String, Object> row = new HashMap<>();
             row.put("registrationId", r.getId());
+            // 2026-11-01 业主:客户名单多选后定向广播按人发(scope=MEMBERS)。只给主办 / 承接方看的名单才走到这里
+            row.put("memberId", r.getMemberId());
             row.put("ticketId", r.getTicketId());
             row.put("ticketName", r.getTicketName());
             row.put("ticketNo", r.getRegistrationNo());

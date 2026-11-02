@@ -144,6 +144,23 @@ class MerchantCrmBroadcastServiceImplTest {
         assertEquals(null, captor.getValue().getHostFreeExploreTopicId());
     }
 
+    /** 按主题预览给收件人名单:头像选人用,带可触达状态;不按主题不给。 */
+    @Test
+    void topicPreviewListsRecipientsWithReach() {
+        when(appMapper.selectOwnedBroadcastCandidates(eq(OWNER_MEMBER), any(MerchantCrmCustomerQuery.class), eq(200)))
+                .thenReturn(Arrays.asList(candidate(101L, "林青", null, null), candidate(102L, "周野", null, null)));
+        MerchantCrmBroadcastPreviewVO plain = service.preview(PRINCIPAL, request());
+        assertEquals(null, plain.getRecipients());
+
+        MerchantCrmBroadcastRequest request = request();
+        request.setTopicId(990045L);
+        MerchantCrmBroadcastPreviewVO preview = service.preview(PRINCIPAL, request);
+        assertEquals(2, preview.getRecipients().size());
+        assertEquals(Long.valueOf(101L), preview.getRecipients().get(0).getMemberId());
+        assertEquals("林青", preview.getRecipients().get(0).getName());
+        org.junit.jupiter.api.Assertions.assertNotNull(preview.getRecipients().get(0).getReach());
+    }
+
     /** 自由探索不进通用名册;本商家自己发布的自由探索主题按主题发时放开这一个主题。 */
     @Test
     void ownFreeExploreTopicOpensThatTopicsBuyers() {

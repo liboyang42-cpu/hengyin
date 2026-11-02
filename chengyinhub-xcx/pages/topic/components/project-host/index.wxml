@@ -425,7 +425,7 @@
   </project-drawer>
 
   <!-- ===== 本主题客户抽屉 ===== -->
-  <project-drawer show="{{ playerSheet.show }}" title="客户" customer-mode="{{true}}" actions="{{ playerActions }}"
+  <project-drawer show="{{ playerSheet.show }}" title="客户" under="{{ broadcastSheet.show }}" done-text="{{ playerPick.selecting ? '完成' : '' }}" customer-mode="{{true}}" actions="{{ playerActions }}"
                   bind:close="emitClosePlayer" bind:action="emitDrawerAction">
     <!-- CU-C-67:名单读失败与「一单没卖」是两个态 —— 失败时不摆三个 0(那读起来就是「没人买票」),
          就地给可重试的错态。零单空态仍在 playerSheet.emptyText 那一条里。 -->
@@ -450,6 +450,8 @@
       <view class="dfil-item {{ playerSheet.filter === item.key ? 'dfil-item--on' : '' }}"
             wx:for="{{ playerFilters }}" wx:key="key" wx:if="{{ item.key !== 'contacted' || playerSheet.summary.contactedCount }}"
             catchtap="emit" data-act="onPlayerFilter" data-key="{{ item.key }}" hover-class="cy-pressed" hover-stay-time="80">{{ item.label }}</view>
+      <!-- 2026-11-01 业主:在客户名单里直接勾人发消息 -->
+      <view class="pl-sel" wx:if="{{ playerPick.can && !playerPick.selecting }}" catchtap="emit" data-act="togglePlayerPick" aria-role="button" aria-label="选择要发消息的客户" hover-class="cy-pressed" hover-stay-time="80">选择</view>
     </view>
 
     <view class="dg-sub" wx:if="{{ playerSheet.contactHint }}">{{ playerSheet.contactHint }}</view>
@@ -459,7 +461,9 @@
       <block wx:for="{{ playerSheet.groups }}" wx:for-item="g" wx:key="key">
         <!-- 走查 v2 W2-07 / F7:「全部」里上面还没到店、下面已核销,各带人数 -->
         <view class="pl-h" wx:if="{{ g.title }}"><text>{{ g.title }}</text><text class="pl-h-n">{{ g.rows.length }}</text></view>
-        <view class="dr player-row" wx:for="{{ g.rows }}" wx:for-item="p" wx:key="registrationId">
+        <view class="dr player-row {{ playerPick.selecting && playerPick.off[p.memberId] ? 'player-row--off' : '' }}" wx:for="{{ g.rows }}" wx:for-item="p" wx:key="registrationId"
+              bindtap="emit" data-act="{{ playerPick.selecting ? 'pickPlayerRow' : '' }}" data-id="{{ p.memberId }}" hover-class="{{ playerPick.selecting ? 'cy-pressed' : 'none' }}" hover-stay-time="80">
+          <view class="pl-check {{ playerPick.ids[p.memberId] ? 'pl-check--on' : '' }}" wx:if="{{ playerPick.selecting }}"></view>
           <image class="dr-avatar dr-avatar--round" wx:if="{{ p.avatar }}" src="{{ p.avatar }}" mode="aspectFill" />
           <view class="dr-avatar dr-avatar--round dr-avatar--fallback" wx:else>{{ p.initial }}</view>
           <view class="dr-text">
@@ -470,17 +474,12 @@
               <view class="dr-copy" catchtap="emit" data-act="copyText" data-text="{{ p.phone }}" aria-role="button" aria-label="复制电话" hover-class="cy-pressed" hover-stay-time="80"><image class="dr-copy-img" src="/pages/topic/images/icon_copy.svg" mode="aspectFit" /></view>
             </view>
           </view>
-          <text class="dr-state dr-state--{{ p.state }}">{{ p.stateText }}</text>
+          <text class="pl-nomsg" wx:if="{{ playerPick.selecting && playerPick.off[p.memberId] }}">不接收</text>
+          <text class="dr-state dr-state--{{ p.state }}" wx:else>{{ p.stateText }}</text>
         </view>
       </block>
     </block>
     <view class="dempty {{ playerSheet.notSelling ? 'dempty--closed' : '' }}" wx:else>{{ playerSheet.emptyText }}</view>
-    </view>
-    <!-- 走查 v2 R07(业主 2026-10-30 定稿):最后一行定向广播,发给本主题买票玩家(俱乐部主办的主题走俱乐部那套) -->
-    <view class="bcast-row" wx:if="{{ hostOwnerType !== 'club' && !playerSheet.notSelling }}" catchtap="emit" data-act="openBroadcast" aria-role="button" aria-label="定向广播" hover-class="cy-pressed" hover-stay-time="80">
-      <text class="bcast-t">定向广播</text>
-      <text class="bcast-s">发给本主题的买票玩家</text>
-      <cy-icon name="chevron-right" size="{{ 28 }}" />
     </view>
     <!-- 2026-11-01 业主:俱乐部也要能发通知 —— 俱乐部主办走俱乐部群发通知,默认发给本主题这一场的报名玩家 -->
     <view class="bcast-row" wx:if="{{ hostOwnerType === 'club' }}" catchtap="emit" data-act="openClubNotify" aria-role="button" aria-label="发通知" hover-class="cy-pressed" hover-stay-time="80">
@@ -491,6 +490,64 @@
     </block>
   </project-drawer>
   <!-- ===== 叠层(2026-10-31 业主批准 P-6):都叠在抽屉上,不跳出主题 ===== -->
+  <!-- 2026-11-01 业主定稿(审阅页 65gFrW…):定向广播 —— 顶部横滑头像选人(头像 + 名字 + 状态),下面范围与内容,底部发送 -->
+  <project-layer show="{{ broadcastSheet.show }}" depth="{{ 2 }}" title="定向广播" data-act="closeBroadcast" bind:back="emit">
+    <block wx:if="{{ broadcastSheet.sent }}">
+      <view class="bx-sent">
+        <view class="bx-sent-ok"></view>
+        <text class="bx-sent-t">已发出</text>
+        <text class="bx-sent-n">{{ broadcastSheet.count || 0 }} 人</text>
+      </view>
+      <view class="bx-rows">
+        <view class="bx-row"><text class="bx-row-t">会收到</text><text class="bx-row-s">{{ broadcastSheet.count || 0 }} 人</text></view>
+        <view class="bx-row"><text class="bx-row-t">这次没发</text><text class="bx-row-s">{{ broadcastSheet.skipped || 0 }} 人</text></view>
+        <view class="bx-row"><text class="bx-row-t">今天还能发</text><text class="bx-row-s">{{ broadcastSheet.remaining || 0 }} 条</text></view>
+      </view>
+      <view class="bx-quote">{{ broadcastSheet.content }}</view>
+    </block>
+    <block wx:else>
+      <view class="bx-to">
+        <text class="bx-to-t">发给</text>
+        <text class="bx-to-n" wx:if="{{ broadcastSheet.state === 'ready' || broadcastSheet.state === 'none' }}">{{ broadcastSheet.count || 0 }} 人</text>
+        <view class="bx-clear" wx:if="{{ broadcastSheet.state === 'ready' && broadcastSheet.count }}" bindtap="emit" data-act="clearBroadcastPicks" aria-role="button" aria-label="清空已选" hover-class="cy-pressed" hover-stay-time="80">清空</view>
+      </view>
+      <scroll-view class="bx-strip" scroll-x enhanced show-scrollbar="{{ false }}" wx:if="{{ broadcastSheet.state === 'ready' || broadcastSheet.state === 'loading' }}">
+        <view class="bx-strip-in">
+          <block wx:if="{{ broadcastSheet.state === 'loading' }}">
+            <view class="bx-p" wx:for="{{ 5 }}" wx:key="*this"><view class="bx-av bx-av--sk"></view><view class="bx-sk-t"></view></view>
+          </block>
+          <view class="bx-p {{ item.picked ? 'bx-p--on' : '' }} {{ item.off ? 'bx-p--off' : '' }}" wx:for="{{ broadcastSheet.rows }}" wx:key="id"
+                bindtap="emit" data-act="pickBroadcastRow" data-id="{{ item.id }}" aria-role="checkbox" aria-checked="{{ item.picked }}" aria-label="{{ item.name }}，{{ item.statusText }}" hover-class="{{ item.off ? 'none' : 'cy-pressed' }}" hover-stay-time="80">
+            <view class="bx-av">
+              <image class="bx-av-img" wx:if="{{ item.avatar }}" src="{{ item.avatar }}" mode="aspectFill" lazy-load="true" />
+              <text wx:else>{{ item.initial }}</text>
+              <view class="bx-tick"></view>
+            </view>
+            <text class="bx-pn">{{ item.name }}</text>
+            <text class="bx-ps bx-ps--{{ item.statusKey }}">{{ item.statusText }}</text>
+          </view>
+        </view>
+      </scroll-view>
+      <view class="bx-quiet" wx:elif="{{ broadcastSheet.state === 'none' }}"><text>现在没有能收到消息的玩家</text></view>
+      <view class="bx-quiet" wx:elif="{{ broadcastSheet.state === 'error' }}">
+        <text>{{ broadcastSheet.error }}</text>
+        <text class="bx-quiet-a" bindtap="emit" data-act="openBroadcast" aria-role="button" aria-label="重新读取收件人" hover-class="cy-pressed" hover-stay-time="80">重试</text>
+      </view>
+      <view class="bx-seg">
+        <view class="bx-chip {{ broadcastSheet.scope === 'all' ? 'bx-chip--on' : '' }}" bindtap="emit" data-act="setBroadcastScope" data-scope="all" aria-role="button" aria-label="全部买票玩家" hover-class="cy-pressed" hover-stay-time="80">全部买票玩家</view>
+        <view class="bx-chip {{ broadcastSheet.scope === 'pending' ? 'bx-chip--on' : '' }}" bindtap="emit" data-act="setBroadcastScope" data-scope="pending" aria-role="button" aria-label="还没到店" hover-class="cy-pressed" hover-stay-time="80">还没到店</view>
+        <view class="bx-chip {{ broadcastSheet.scope === 'arrived' ? 'bx-chip--on' : '' }}" bindtap="emit" data-act="setBroadcastScope" data-scope="arrived" aria-role="button" aria-label="已核销" hover-class="cy-pressed" hover-stay-time="80">已核销</view>
+      </view>
+      <view class="bx-field">
+        <textarea class="bx-ta" maxlength="50" placeholder="写点什么，比如：周六下雨，第三站改到室内" value="{{ broadcastSheet.content }}" disabled="{{ broadcastSheet.sending }}" data-act="onBroadcastInput" bindinput="emitInput" />
+        <text class="bx-count">{{ broadcastSheet.content.length || 0 }}/50</text>
+      </view>
+    </block>
+    <view slot="foot">
+      <view class="bx-send" wx:if="{{ broadcastSheet.sent }}" bindtap="emit" data-act="closeBroadcast" aria-role="button" aria-label="完成" hover-class="cy-pressed" hover-stay-time="80">完成</view>
+      <view class="bx-send {{ broadcastSheet.canSend ? '' : 'bx-send--off' }}" wx:else bindtap="emit" data-act="sendBroadcast" aria-role="button" aria-label="{{ broadcastSheet.sendText }}" aria-disabled="{{ !broadcastSheet.canSend }}" hover-class="cy-pressed" hover-stay-time="80">{{ broadcastSheet.sendText }}</view>
+    </view>
+  </project-layer>
   <!-- 邀约俱乐部:字段照 coop/invite(按人分成金额 / 引流合作、邀请语),只是搬进叠层 -->
   <project-layer show="{{ layers.clubInvite.show }}" depth="{{ layers.clubInvite.depth }}" title="邀约俱乐部" data-act="closeLayer" data-layer="clubInvite" bind:back="emit">
     <view class="lv-to">

@@ -48,6 +48,8 @@
         <result property="name" column="customer_name"/>
         <result property="teamName" column="team_name"/>
         <result property="roleCode" column="role_code"/>
+        <result property="avatar" column="avatar"/>
+        <result property="arrivedCount" column="arrived_count"/>
     </resultMap>
 
     <resultMap id="SegmentCounts" type="com.chengyinhub.business.domain.vo.MerchantCrmSegmentCountsVO">
@@ -348,7 +350,9 @@
         select r.member_id as member_id,
                coalesce(nullif(max(u.nickname), ''), '未留姓名') as customer_name,
                max(<include refid="OwnedCustomerTeamNameExpression"/>) as team_name,
-               max(<include refid="OwnedCustomerRoleCodeExpression"/>) as role_code
+               max(<include refid="OwnedCustomerRoleCodeExpression"/>) as role_code,
+               max(u.avatar) as avatar,
+               sum(case when r.payment_status = 2 and r.verification_status = 1 then 1 else 0 end) as arrived_count
         <include refid="OwnedCustomerAggregateFrom"/>
         <include refid="OwnedCustomerSegmentHaving"/>
         order by max(coalesce(r.verification_time, r.create_time)) desc, r.member_id desc

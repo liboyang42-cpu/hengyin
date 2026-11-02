@@ -176,3 +176,14 @@
 .dw { transition: transform .3s cubic-bezier(.2, .8, .2, 1), filter .3s; }
 .dw--under { transform: scale(.94); transform-origin: 50% 0; filter: brightness(.7); }
 @media (prefers-reduced-motion: reduce) { .dw { transition: none; } }
+
+/* 2026-11-01 业主:客户抽屉的底部按钮悬浮吸附 —— 名单滚到按钮后面,不在按钮上方硬切一刀 */
+.dw--customer .dw-cta {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  padding-top: var(--cy-space-6);
+  background: linear-gradient(180deg, transparent 0%, var(--cy-bg-page) 42%);
+  pointer-events: none;
+}
+.dw--customer .dw-btn { pointer-events: auto; border-radius: var(--cy-radius-pill); }
+.dw--customer .dw-scroll-pad { height: calc(var(--cy-btn-h) + var(--cy-space-7) + env(safe-area-inset-bottom)); }
+.dw-done { flex: none; padding: var(--cy-space-2) 0 var(--cy-space-2) var(--cy-space-3); font-size: var(--cy-type-button); font-weight: 600; color: var(--cy-text-title); }
