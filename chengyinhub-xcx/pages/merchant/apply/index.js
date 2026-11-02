@@ -13,7 +13,7 @@ const STEP_HEADLINES = ['先认识你的店', '告诉大家怎样找到你', '�
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
 const wizardMorph = require('../../../utils/wizard-morph.js');
 const timeOptions = require('../../../utils/time-picker-options.js');
-const publisherIdentity = require('../../../utils/publisher-identity.js'); const merchantIndustry = require('../../../utils/merchant-industry.js'); // M-16
+const publisherIdentity = require('../../../utils/publisher-identity.js'); const merchantIndustry = require('../utils/merchant-industry.js'); // M-16
 
 function displayText(value) {
   if (value === null || value === undefined) return '';
@@ -380,7 +380,8 @@ Page({
     const ids = this.data.industryIds;
     const rows = this._industryRows;
     const options = rows ? merchantIndustry.buildIndustryOptions(rows, ids) : [];
-    this.setData({ industrySheet: { show: true, options, value: ids.slice(), loading: !rows, error: '' } });
+    // 弹层的勾选态取自已确认的 industryIds;重开时给一份新数组,组件 value 观察者会把上次没确认的勾选复位
+    this.setData({ industryIds: ids.slice(), industrySheet: { show: true, options, value: ids.slice(), loading: !rows, error: '' } });
     if (!rows) this.loadIndustryRows();
   },
   loadIndustryRows() {

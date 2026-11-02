@@ -1,7 +1,7 @@
 // 商家「行业类型」:入驻申请与门店信息共用一份胶囊短表(M-16,2026-11-02 主人:标签可以更多一些)。
 // label 是胶囊上显示的短名,match 用来在 /api/category/list(type=1)里认领一条真实记录(存它的 id)。
 // 更具体的词放前面:一条记录只被第一个命中的短表项认领。
-const { tagIconName } = require('../pages/merchant/components/cy/tag-sheet/model.js');
+const { tagIconName } = require('../components/cy/tag-sheet/model.js');
 
 const INDUSTRY_OPTIONS = [
   { label: '咖啡茶饮', match: /咖啡|饮品|奶茶/ },

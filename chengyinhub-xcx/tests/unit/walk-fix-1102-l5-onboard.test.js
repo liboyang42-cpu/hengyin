@@ -141,7 +141,7 @@ test('M-16:入驻第一步用行业类型胶囊问一次,必选,提交带 catego
 })
 
 test('M-16:行业短表覆盖书店、茶馆、画廊、手作、古着、文创、花店', () => {
-  const { buildIndustryOptions } = require('../../utils/merchant-industry.js')
+  const { buildIndustryOptions } = require('../../pages/merchant/utils/merchant-industry.js')
   const rows = ['咖啡', '茶馆', '书店', '艺术展览', '手作工坊', '古着中古', '文创杂货', '花店', '城市漫步']
     .map((categoryName, i) => ({ id: 100 + i, categoryName }))
   const labels = buildIndustryOptions(rows, ['102']).map(o => o.label)

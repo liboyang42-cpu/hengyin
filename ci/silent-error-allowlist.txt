@@ -175,7 +175,6 @@ chengyinhub-xcx/pages/club/checkin-detail/index.js 1  # 核销详情取数失败
 chengyinhub-xcx/pages/club/topic-detail/index.js 5  # 商家与成员两个弹层各持一个 cy-error 重试互不污染;主题设置取数失败落 cy-error,保存失败落精确 toast 并把开关回滚到提交前的值;结束主题的失败落确认框自己的 errorText,后端拒绝文案原样回显、框不关、按钮可再点
 chengyinhub-xcx/pages/club/topic-detail/index.js 1  # HO-26 导演台改集合时间(POST /api/club/lead/edit-ops):失败落 cy-result-sheet 失败半屏,后端拒绝原文(已售锁定/非承接方领队)进 why;传输失败/5xx/408 标「结果待确认」并回读 fetchDetail;自动 toast 会与失败半屏双弹
 chengyinhub-xcx/pages/coop/invite-detail/index.js 2  # 取数失败落整页 cy-error 带重试,并把「不在当前列表里了」与「加载失败」分成两种态;接受/拒绝/撤回提交失败落精确 toast,且不本地假设成功 —— 提交后重新问服务端要一次状态
-chengyinhub-xcx/pages/topic/components/cy/chapter-target-picker/index.js 1  # 2026-09-05 F3 选承接标的:玩法模板读失败落到组件内 cy-error(带重试),且与「一个玩法都没有」的空态分开显示 —— 混成一个会让商家去重建一个自己已经有的玩法。弹窗内再弹全局 toast 会双弹;2026-09-18 主包瘦身随 pages/topic 下沉,路径同步
 chengyinhub-xcx/pages/topic/components/cy/session-picker/index.js 1  # 2026-09-06 主题页选场次:票种读失败落到弹层内 cy-error(带重试),且与「这一场还没放票」的空态分开显示 —— 混成一个会让玩家以为场次卖光了。弹层内再弹全局 toast 会双弹;2026-09-18 主包瘦身随 pages/topic 下沉,路径同步
 chengyinhub-xcx/subpackageMember/signup/index.js 1  # /api/team/my 拉「我的队伍」索引：拉不到只让票下面那一行队伍入口不出现，票夹本身照常可用。弹全局 toast 会让人以为票没加载出来。
 

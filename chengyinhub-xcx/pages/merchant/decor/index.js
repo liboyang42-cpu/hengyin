@@ -43,8 +43,8 @@ const PREFERENCE_OPTIONS = ['城市运动', '户外活动', '健康生活', '美
   '摄影', '城市漫步', '骑行', '露营', '瑜伽', '球类', '水上运动', '花艺', '美容美发', '宠物友好'];
 const PREFERENCE_SPLIT = /[、,，·\/|]+|\s+/;
 
-// 行业类型:与入驻申请共用 utils/merchant-industry.js 的胶囊短表(M-16)
-const { MAX_INDUSTRIES, buildIndustryOptions } = require('../../../utils/merchant-industry.js');
+// 行业类型:与入驻申请共用 pages/merchant/utils/merchant-industry.js 的胶囊短表(M-16)
+const { MAX_INDUSTRIES, buildIndustryOptions } = require('../utils/merchant-industry.js');
 
 /** 胶囊选项里勾选中的 key(按选项顺序,第一个仍是主行业)。 */
 function checkedKeys(options) {

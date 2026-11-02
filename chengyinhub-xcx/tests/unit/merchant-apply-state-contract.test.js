@@ -123,7 +123,7 @@ function loadPage(options = {}) {
       }
       // M-16 行业类型胶囊短表(与门店信息同一份):纯函数真模块
       if (request.endsWith('merchant-industry.js')) {
-        return require(path.join(ROOT, 'utils/merchant-industry.js'))
+        return require(path.join(ROOT, 'pages/merchant/utils/merchant-industry.js'))
       }
       // 减动效偏好:用真模块,桩会和真值漂移
       if (request.endsWith('motion-preference.js')) {
