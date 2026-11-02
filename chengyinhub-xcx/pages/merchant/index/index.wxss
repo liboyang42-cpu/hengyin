@@ -265,14 +265,14 @@ page {
 .rv-project-status,
 .rv-project-cat {
   display: inline-flex; align-items: center; gap: 10rpx;
-  height: 44rpx; padding: 0 18rpx; border-radius: 22rpx;
+  height: 44rpx; padding: 0 18rpx; border-radius: var(--cy-radius-pill);
   font-size: var(--cy-type-micro); font-weight: 600; line-height: 44rpx;
   color: var(--cy-color-text-on-light);
   background: rgba(255, 255, 255, 0.78); /* ds-ok: 封面上的白色毛玻璃签,业主定稿 */
   backdrop-filter: blur(16rpx);
   -webkit-backdrop-filter: blur(16rpx);
 }
-.rv-project-dot { width: 14rpx; height: 14rpx; border-radius: 7rpx; flex: none; background: var(--cy-color-text-tertiary); }
+.rv-project-dot { width: 14rpx; height: 14rpx; border-radius: var(--cy-radius-pill); flex: none; background: var(--cy-color-text-tertiary); }
 .rv-project-dot--run { background: var(--cy-color-status-success); }
 .rv-project-dot--open { background: var(--cy-color-status-info); }
 .rv-project-dot--fix { background: var(--cy-color-status-warning); }
@@ -288,7 +288,7 @@ page {
 }
 .rv-project-verify {
   align-self: flex-start; margin-bottom: 4rpx;
-  height: 42rpx; padding: 0 20rpx; border-radius: 21rpx;
+  height: 42rpx; padding: 0 20rpx; border-radius: var(--cy-radius-pill);
   font-size: var(--cy-type-micro); font-weight: 700; line-height: 42rpx;
   color: var(--cy-color-text-inverse); background: var(--cy-color-text-primary);
 }
