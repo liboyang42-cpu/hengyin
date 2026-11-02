@@ -498,7 +498,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
         result.setClosedPendingOrders(refund.getClosedPendingOrders());
         // club_id 为空时退款核心已在同一事务里给受影响玩家发过「场次取消通知」,这里再排一轮就是一人两条
         finishOccurrenceCancellation(actorMemberId, request.getClubId(), request.getActivityId(), reason,
-                occurrence, prepared.selfHosted() ? Collections.<Long>emptyList() : registeredRecipients,
+                occurrence, prepared.selfHosted() ? java.util.List.<Long>of() : registeredRecipients,
                 waitlistRecipients, requestId, result);
         if (prepared.selfHosted()) {
             result.setRegisteredRecipientCount(registeredRecipients.size());
