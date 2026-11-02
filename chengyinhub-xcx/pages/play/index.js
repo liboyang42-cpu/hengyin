@@ -4740,24 +4740,6 @@ Page({
     };
     this._locationRequesting = true;
     this.setData({ gpsHint: '正在请求定位…' });
-    const locate = () => wx.getLocation({
-      type: 'gcj02', isHighAccuracy: true,
-      success(loc) {
-        if (!current()) return;
-        that._loc = { longitude: loc.longitude, latitude: loc.latitude, accuracy: loc.accuracy };
-        that._locationRequesting = false;
-        that.setData({ gpsOk: true, gpsHint: '定位已开启 · 靠近后会自动点亮' }, () => {
-          if (!current()) return;
-          that._noteLocAccuracy(loc.accuracy);
-          that.rebuild();
-          if (current()) that.watchLocation();
-        });
-      },
-      fail() { unavailable('定位未开启 · 可扫码完成到达'); }
-    });
-    // P-26:同意说的是「本次」—— 这一局同意过,退出重进(同一局)不再重问;新开一局照旧问
-    const scope = this._runSessionScope();
-    if (storyResume.read(scope).locationConsent) { locate(); return; }
     cyModal.show({
       title: '开启定位',
       content: '仅在你主动开始游玩后，持续获取位置，用于显示当前位置和自动判断到点。锁屏或切到后台仍会获取；暂停、结束本次或离开游玩页后停止。未开启时仍可扫码到达。',
@@ -4766,8 +4748,21 @@ Page({
       success(result) {
         if (!current()) return;
         if (!result.confirm) { unavailable('定位未开启 · 可扫码完成到达'); return; }
-        storyResume.patch(scope, { locationConsent: true });
-        locate();
+        wx.getLocation({
+          type: 'gcj02', isHighAccuracy: true,
+          success(loc) {
+            if (!current()) return;
+            that._loc = { longitude: loc.longitude, latitude: loc.latitude, accuracy: loc.accuracy };
+            that._locationRequesting = false;
+            that.setData({ gpsOk: true, gpsHint: '定位已开启 · 靠近后会自动点亮' }, () => {
+              if (!current()) return;
+              that._noteLocAccuracy(loc.accuracy);
+              that.rebuild();
+              if (current()) that.watchLocation();
+            });
+          },
+          fail() { unavailable('定位未开启 · 可扫码完成到达'); }
+        });
       },
       fail() { unavailable('定位暂不可用 · 可扫码完成到达'); }
     });

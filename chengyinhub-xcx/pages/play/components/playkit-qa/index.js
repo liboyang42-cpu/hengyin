@@ -115,6 +115,16 @@ Component({
     ctaDisabled: false,
   },
   observers: {
+    /* P-10:故事流里的打字题,页面不调 settle(),判过只回流 attempts / feedbackText。
+       次数涨了且仍没过 = 刚答错:清掉输入框、描红、写一句;首次挂载(_seenTypeAttempts 未定)不算。 */
+    attempts: function (value) {
+      const now = Number(value) || 0;
+      const seen = this._seenTypeAttempts;
+      this._seenTypeAttempts = now;
+      if (seen == null || now <= seen) return;
+      if (this.data.mode !== 'type' || this.data.passed || this.data.finished) return;
+      this.setData({ typed: '', typeWrong: true, fbHead: HEAD_NO, feedback: this.data.feedbackText || RETRY_TEXT });
+    },
     failureSeq: function (value) {
       if (!value || this.data.finished || this.data.passed || this.data.judge !== false) return;
       this.setData({ submitted: false, ctaDisabled: !this.data.optionList.some(o => o.state === 'is-on') });

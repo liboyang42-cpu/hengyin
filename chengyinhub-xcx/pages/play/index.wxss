@@ -358,18 +358,17 @@ page { background: var(--cy-color-bg-page); }
   display:flex; align-items:center; justify-content:center; background:var(--cy-color-action-secondary-bg); color:var(--cy-color-play-accent); /* ds-ok Figma 实测(用户裁决字面值) */
   border-radius:var(--cy-comp-btn-radius); font-size:var(--cy-type-button); font-weight:700; }
 .lg-hint{ margin-top:var(--cy-space-3-5); font-size: var(--cy-type-label); color: var(--cy-color-text-tertiary); }
-/* P-13 集合等待:三颗点依次缓慢明暗(1.6s 一轮,只动透明度,不位移不缩放);减弱动态时静止常亮 */
+/* P-13 集合等待:三颗点依次缓慢明暗(复用既有 fade 关键帧来回播,只动透明度,不位移不缩放;不新增 keyframes);减弱动态时静止常亮 */
 .lg-wait{ display:flex; gap:18rpx; margin-bottom:var(--cy-space-4); }
-.lg-wait__d{ width:14rpx; height:14rpx; border-radius:50%; background:var(--cy-color-text-tertiary); opacity:.25; animation:lgWait 1.6s ease-in-out infinite; }
-.lg-wait__d:nth-child(2){ animation-delay:.27s; }
-.lg-wait__d:nth-child(3){ animation-delay:.53s; }
-@keyframes lgWait{ 0%,100%{ opacity:.25; } 40%{ opacity:.9; } }
+.lg-wait__d{ width:14rpx; height:14rpx; border-radius:50%; background:var(--cy-color-text-tertiary); animation:fade .9s ease-in-out infinite alternate; }
+.lg-wait__d:nth-child(2){ animation-delay:.3s; }
+.lg-wait__d:nth-child(3){ animation-delay:.6s; }
 .play--reduced-motion .lg-wait__d{ animation:none; opacity:.6; }
 /* P-08 章节门前「等队长放行」:压在章节门(z 130)之上,底部居中一行,左侧一颗同款缓慢明暗的点 */
 .chgate-hold{ position:fixed; left:50%; bottom:calc(160rpx + env(safe-area-inset-bottom)); transform:translateX(-50%); z-index:131;
   display:flex; align-items:center; gap:14rpx; padding:0 32rpx; height:88rpx; border-radius:var(--cy-radius-pill);
   background:rgba(10,10,10,.72); color:#F5F5F2; font-size:var(--cy-type-label); } /* ds-ok 同章节门底色系(chapter-flip .cf) */
-.chgate-hold__dot{ width:14rpx; height:14rpx; border-radius:50%; background:#F5F5F2; animation:lgWait 1.6s ease-in-out infinite; } /* ds-ok 同章节门字色 */
+.chgate-hold__dot{ width:14rpx; height:14rpx; border-radius:50%; background:#F5F5F2; animation:fade .9s ease-in-out infinite alternate; } /* ds-ok 同章节门字色 */
 .play--reduced-motion .chgate-hold__dot{ animation:none; opacity:.6; }
 
 /* P1 足迹卡保存按钮(次级白描边) */

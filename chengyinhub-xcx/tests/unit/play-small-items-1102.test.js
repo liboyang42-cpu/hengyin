@@ -35,15 +35,35 @@ test('P-24:普通拍照审核上传失败,屏上写「上传失败，请重拍�
   assert.match(read('pages/play/components/playkit/index.wxml'), /photo-fail-seq="\{\{kit\.photoFailSeq\}\}"\n  bind:shoot="onShoot" bind:close="onClose" \/>/);
 });
 
-test('P-26:开始游戏时问定位;同一局同意过不再重问', () => {
+test('P-26:开始游戏时问定位(每次游玩仍逐次明示用途,不跨次记住同意)', () => {
   const js = read('pages/play/index.js');
   assert.match(js, /if \(located\) this\.requestPlayLocation\(\);/);
-  assert.match(js, /if \(storyResume\.read\(scope\)\.locationConsent\) \{ locate\(\); return; \}/);
-  assert.match(js, /storyResume\.patch\(scope, \{ locationConsent: true \}\);/);
+  assert.doesNotMatch(js, /locationConsent/);
 });
 
 test('P-28:城市定向菜单的扫码到达不再写「商家」', () => {
   const wxml = read('pages/play/index.wxml');
   assert.match(wxml, /<text class="dt">扫码到达<\/text><text class="ds">到站后扫现场的码<\/text>/);
   assert.doesNotMatch(wxml, /到店后扫商家的码/);
+});
+
+test('P-10:故事流打字题答错(只回流 attempts)也描红并写一句;首次挂载不算', () => {
+  let def = null;
+  const prevC = global.Component, prevB = global.Behavior;
+  global.Component = (d) => { def = d; }; global.Behavior = (d) => d;
+  try {
+    delete require.cache[require.resolve('../../pages/play/components/playkit-qa/index.js')];
+    require('../../pages/play/components/playkit-qa/index.js');
+  } finally { global.Component = prevC; global.Behavior = prevB; }
+  const ctx = { data: { mode: 'type', passed: false, finished: false, feedbackText: '', typed: '黄浦江', typeWrong: false },
+    setData(p) { Object.assign(this.data, p); } };
+  def.observers.attempts.call(ctx, 0);
+  assert.equal(ctx.data.typeWrong, false);
+  def.observers.attempts.call(ctx, 1);
+  assert.equal(ctx.data.typeWrong, true);
+  assert.equal(ctx.data.typed, '');
+  assert.equal(ctx.data.feedback, '不对。把它清掉，再试一次。');
+  ctx.data.typeWrong = false; ctx.data.passed = true;
+  def.observers.attempts.call(ctx, 2);   // 答对:不描红
+  assert.equal(ctx.data.typeWrong, false);
 });
