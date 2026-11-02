@@ -935645,7 +935645,7 @@
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:163:bindtap:cancelWaitlist:11",
+      "id": "pages/activity/baoming/baoming.wxml:181:bindtap:cancelWaitlist:11",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -935668,377 +935668,6 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "cancelWaitlist",
-        "line": 163,
-        "selectorHint": ".waitlist-card__link",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "write",
-      "interactionMode": "tap",
-      "baseActionClass": "write",
-      "effectClasses": [
-        "write",
-        "state"
-      ],
-      "accessBoundary": "owned-resource",
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/club/event-ops/waitlist/cancel"
-        ],
-        "primaryApis": [
-          "/api/club/event-ops/waitlist/cancel"
-        ],
-        "auxiliaryApis": [],
-        "apiContracts": [
-          {
-            "url": "/api/club/event-ops/waitlist/cancel",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": [
-          "/api/club/event-ops/waitlist/cancel"
-        ]
-      },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger",
-        "forbidden-owner",
-        "modal-cancelled"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1010"
-      }
-    },
-    {
-      "id": "pages/activity/baoming/baoming.wxml:169:bindtap:retryWaitlistStatus:12",
-      "route": "pages/activity/baoming/baoming",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/activity/baoming/baoming.wxml",
-        "js": "pages/activity/baoming/baoming.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "retryWaitlistStatus",
-        "line": 169,
-        "selectorHint": ".waitlist-card__link",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "read",
-      "interactionMode": "tap",
-      "baseActionClass": "read",
-      "effectClasses": [
-        "read",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/club/event-ops/waitlist/status",
-          "/api/config/features",
-          "/api/login/code",
-          "/api/registration/payment-readiness",
-          "/api/registration/quote",
-          "/api/role/info"
-        ],
-        "primaryApis": [
-          "/api/club/event-ops/waitlist/status",
-          "/api/registration/payment-readiness",
-          "/api/registration/quote"
-        ],
-        "auxiliaryApis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/club/event-ops/waitlist/status",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/registration/payment-readiness",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/registration/quote",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:936"
-      }
-    },
-    {
-      "id": "pages/activity/baoming/baoming.wxml:170:bindtap:cancelWaitlist:13",
-      "route": "pages/activity/baoming/baoming",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/activity/baoming/baoming.wxml",
-        "js": "pages/activity/baoming/baoming.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": "wx.showModal",
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "cancelWaitlist",
-        "line": 170,
-        "selectorHint": ".waitlist-card__link",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "write",
-      "interactionMode": "tap",
-      "baseActionClass": "write",
-      "effectClasses": [
-        "write",
-        "state"
-      ],
-      "accessBoundary": "owned-resource",
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/club/event-ops/waitlist/cancel"
-        ],
-        "primaryApis": [
-          "/api/club/event-ops/waitlist/cancel"
-        ],
-        "auxiliaryApis": [],
-        "apiContracts": [
-          {
-            "url": "/api/club/event-ops/waitlist/cancel",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": [
-          "/api/club/event-ops/waitlist/cancel"
-        ]
-      },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger",
-        "forbidden-owner",
-        "modal-cancelled"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1010"
-      }
-    },
-    {
-      "id": "pages/activity/baoming/baoming.wxml:176:bindtap:goWaitlistOrder:14",
-      "route": "pages/activity/baoming/baoming",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/activity/baoming/baoming.wxml",
-        "js": "pages/activity/baoming/baoming.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "goWaitlistOrder",
-        "line": 176,
-        "selectorHint": ".waitlist-card__link",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "tap",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "subpackageMember/orderinfo/orderinfo?id="
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1058"
-      }
-    },
-    {
-      "id": "pages/activity/baoming/baoming.wxml:181:bindtap:goWaitlistOrder:15",
-      "route": "pages/activity/baoming/baoming",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/activity/baoming/baoming.wxml",
-        "js": "pages/activity/baoming/baoming.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "goWaitlistOrder",
         "line": 181,
         "selectorHint": ".waitlist-card__link",
         "visibleCondition": null,
@@ -936054,39 +935683,57 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "navigation",
+      "actionClass": "write",
       "interactionMode": "tap",
-      "baseActionClass": "navigation",
+      "baseActionClass": "write",
       "effectClasses": [
-        "navigation"
+        "write",
+        "state"
       ],
-      "accessBoundary": null,
+      "accessBoundary": "owned-resource",
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
         "routes": [
-          "subpackageMember/orderinfo/orderinfo?id="
+          "pages/privacy/index"
         ],
-        "apis": [],
-        "primaryApis": [],
+        "apis": [
+          "/api/club/event-ops/waitlist/cancel"
+        ],
+        "primaryApis": [
+          "/api/club/event-ops/waitlist/cancel"
+        ],
         "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
+        "apiContracts": [
+          {
+            "url": "/api/club/event-ops/waitlist/cancel",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": [
+          "/api/club/event-ops/waitlist/cancel"
+        ]
       },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
         "success",
-        "error"
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner",
+        "modal-cancelled"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1058"
+        "staticSource": "pages/activity/baoming/baoming.js:1010"
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:185:bindtap:retryWaitlistStatus:16",
+      "id": "pages/activity/baoming/baoming.wxml:187:bindtap:retryWaitlistStatus:12",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -936109,7 +935756,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "retryWaitlistStatus",
-        "line": 185,
+        "line": 187,
         "selectorHint": ".waitlist-card__link",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -936211,7 +935858,7 @@
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:190:bindtap:cancelWaitlist:17",
+      "id": "pages/activity/baoming/baoming.wxml:188:bindtap:cancelWaitlist:13",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -936234,7 +935881,360 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "cancelWaitlist",
-        "line": 190,
+        "line": 188,
+        "selectorHint": ".waitlist-card__link",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "write",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "state"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/club/event-ops/waitlist/cancel"
+        ],
+        "primaryApis": [
+          "/api/club/event-ops/waitlist/cancel"
+        ],
+        "auxiliaryApis": [],
+        "apiContracts": [
+          {
+            "url": "/api/club/event-ops/waitlist/cancel",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": [
+          "/api/club/event-ops/waitlist/cancel"
+        ]
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner",
+        "modal-cancelled"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/activity/baoming/baoming.js:1010"
+      }
+    },
+    {
+      "id": "pages/activity/baoming/baoming.wxml:194:bindtap:goWaitlistOrder:14",
+      "route": "pages/activity/baoming/baoming",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/activity/baoming/baoming.wxml",
+        "js": "pages/activity/baoming/baoming.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "goWaitlistOrder",
+        "line": 194,
+        "selectorHint": ".waitlist-card__link",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "subpackageMember/orderinfo/orderinfo?id="
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/activity/baoming/baoming.js:1058"
+      }
+    },
+    {
+      "id": "pages/activity/baoming/baoming.wxml:199:bindtap:goWaitlistOrder:15",
+      "route": "pages/activity/baoming/baoming",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/activity/baoming/baoming.wxml",
+        "js": "pages/activity/baoming/baoming.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "goWaitlistOrder",
+        "line": 199,
+        "selectorHint": ".waitlist-card__link",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "subpackageMember/orderinfo/orderinfo?id="
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/activity/baoming/baoming.js:1058"
+      }
+    },
+    {
+      "id": "pages/activity/baoming/baoming.wxml:203:bindtap:retryWaitlistStatus:16",
+      "route": "pages/activity/baoming/baoming",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/activity/baoming/baoming.wxml",
+        "js": "pages/activity/baoming/baoming.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "retryWaitlistStatus",
+        "line": 203,
+        "selectorHint": ".waitlist-card__link",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/club/event-ops/waitlist/status",
+          "/api/config/features",
+          "/api/login/code",
+          "/api/registration/payment-readiness",
+          "/api/registration/quote",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/club/event-ops/waitlist/status",
+          "/api/registration/payment-readiness",
+          "/api/registration/quote"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/club/event-ops/waitlist/status",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/registration/payment-readiness",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/registration/quote",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/activity/baoming/baoming.js:936"
+      }
+    },
+    {
+      "id": "pages/activity/baoming/baoming.wxml:208:bindtap:cancelWaitlist:17",
+      "route": "pages/activity/baoming/baoming",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/activity/baoming/baoming.wxml",
+        "js": "pages/activity/baoming/baoming.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": "wx.showModal",
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "cancelWaitlist",
+        "line": 208,
         "selectorHint": ".waitlist-card__link",
         "visibleCondition": "{{showWaitlistCancel}}",
         "disabledCondition": null,
@@ -936299,7 +936299,7 @@
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:191:bindtap:joinWaitlist:18",
+      "id": "pages/activity/baoming/baoming.wxml:209:bindtap:joinWaitlist:18",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -936322,7 +936322,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "joinWaitlist",
-        "line": 191,
+        "line": 209,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": "{{showWaitlistJoin}}",
         "disabledCondition": null,
@@ -936411,140 +936411,6 @@
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:196:bind:close:hideAddressPopup:19",
-      "route": "pages/activity/baoming/baoming",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/activity/baoming/baoming.wxml",
-        "js": "pages/activity/baoming/baoming.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-sheet",
-        "event": "bind:close",
-        "handler": "hideAddressPopup",
-        "line": 196,
-        "selectorHint": "cy-sheet[bind:close]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:526"
-      }
-    },
-    {
-      "id": "pages/activity/baoming/baoming.wxml:207:catchtap:selectAddress:22",
-      "route": "pages/activity/baoming/baoming",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/activity/baoming/baoming.wxml",
-        "js": "pages/activity/baoming/baoming.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "catchtap",
-        "handler": "selectAddress",
-        "line": 207,
-        "selectorHint": ".address-item",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": "radio",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": "{{selectedAddress && item.id == selectedAddress.id}}"
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:535"
-      }
-    },
-    {
       "id": "pages/activity/baoming/baoming.wxml:21:bind:cta:goDiscoverActivities:1",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
@@ -936615,7 +936481,141 @@
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:219:bind:cta:goToAddAddress:23",
+      "id": "pages/activity/baoming/baoming.wxml:214:bind:close:hideAddressPopup:19",
+      "route": "pages/activity/baoming/baoming",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/activity/baoming/baoming.wxml",
+        "js": "pages/activity/baoming/baoming.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-sheet",
+        "event": "bind:close",
+        "handler": "hideAddressPopup",
+        "line": 214,
+        "selectorHint": "cy-sheet[bind:close]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/activity/baoming/baoming.js:526"
+      }
+    },
+    {
+      "id": "pages/activity/baoming/baoming.wxml:225:catchtap:selectAddress:22",
+      "route": "pages/activity/baoming/baoming",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/activity/baoming/baoming.wxml",
+        "js": "pages/activity/baoming/baoming.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "catchtap",
+        "handler": "selectAddress",
+        "line": 225,
+        "selectorHint": ".address-item",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": "radio",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": "{{selectedAddress && item.id == selectedAddress.id}}"
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/activity/baoming/baoming.js:535"
+      }
+    },
+    {
+      "id": "pages/activity/baoming/baoming.wxml:237:bind:cta:goToAddAddress:23",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -936638,7 +936638,7 @@
         "tag": "cy-empty",
         "event": "bind:cta",
         "handler": "goToAddAddress",
-        "line": 219,
+        "line": 237,
         "selectorHint": "cy-empty[bind:cta]",
         "visibleCondition": "{{participantState === 'ready' && addressList.length === 0}}",
         "disabledCondition": null,
@@ -936726,7 +936726,7 @@
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:221:bindtap:goToAddressList:24",
+      "id": "pages/activity/baoming/baoming.wxml:239:bindtap:goToAddressList:24",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -936749,7 +936749,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "goToAddressList",
-        "line": 221,
+        "line": 239,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -936797,7 +936797,7 @@
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:238:bindtap:toggleHostShare:26",
+      "id": "pages/activity/baoming/baoming.wxml:256:bindtap:toggleHostShare:26",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -936820,7 +936820,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "toggleHostShare",
-        "line": 238,
+        "line": 256,
         "selectorHint": ".bmbottom_box",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -936860,11 +936860,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1271"
+        "staticSource": "pages/activity/baoming/baoming.js:1274"
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:243:bind:disabledtap:handlePayment:28:variant:disabled-feedback",
+      "id": "pages/activity/baoming/baoming.wxml:261:bind:disabledtap:handlePayment:28:variant:disabled-feedback",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -936894,7 +936894,7 @@
         "tag": "cy-btn",
         "event": "bind:disabledtap",
         "handler": "handlePayment",
-        "line": 243,
+        "line": 261,
         "selectorHint": "cy-btn[bind:disabledtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canPay}}",
@@ -936946,11 +936946,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1449"
+        "staticSource": "pages/activity/baoming/baoming.js:1452"
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:243:bindtap:handlePayment:27:variant:solo-free-consent-pending",
+      "id": "pages/activity/baoming/baoming.wxml:261:bindtap:handlePayment:27:variant:solo-free-consent-pending",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -937062,7 +937062,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "handlePayment",
-        "line": 243,
+        "line": 261,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canPay}}",
@@ -937140,11 +937140,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1449"
+        "staticSource": "pages/activity/baoming/baoming.js:1452"
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:243:bindtap:handlePayment:27:variant:solo-free-consent-ready",
+      "id": "pages/activity/baoming/baoming.wxml:261:bindtap:handlePayment:27:variant:solo-free-consent-ready",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -937216,7 +937216,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "handlePayment",
-        "line": 243,
+        "line": 261,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canPay}}",
@@ -937292,11 +937292,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1449"
+        "staticSource": "pages/activity/baoming/baoming.js:1452"
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:243:bindtap:handlePayment:27:variant:solo-paid-consent-pending-quote-pending",
+      "id": "pages/activity/baoming/baoming.wxml:261:bindtap:handlePayment:27:variant:solo-paid-consent-pending-quote-pending",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -937597,7 +937597,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "handlePayment",
-        "line": 243,
+        "line": 261,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canPay}}",
@@ -937709,11 +937709,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1449"
+        "staticSource": "pages/activity/baoming/baoming.js:1452"
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:243:bindtap:handlePayment:27:variant:solo-paid-consent-pending-quote-ready",
+      "id": "pages/activity/baoming/baoming.wxml:261:bindtap:handlePayment:27:variant:solo-paid-consent-pending-quote-ready",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -937926,7 +937926,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "handlePayment",
-        "line": 243,
+        "line": 261,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canPay}}",
@@ -938036,11 +938036,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1449"
+        "staticSource": "pages/activity/baoming/baoming.js:1452"
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:243:bindtap:handlePayment:27:variant:solo-paid-consent-ready-quote-pending",
+      "id": "pages/activity/baoming/baoming.wxml:261:bindtap:handlePayment:27:variant:solo-paid-consent-ready-quote-pending",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -938265,7 +938265,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "handlePayment",
-        "line": 243,
+        "line": 261,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canPay}}",
@@ -938375,11 +938375,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1449"
+        "staticSource": "pages/activity/baoming/baoming.js:1452"
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:243:bindtap:handlePayment:27:variant:solo-paid-consent-ready-quote-ready",
+      "id": "pages/activity/baoming/baoming.wxml:261:bindtap:handlePayment:27:variant:solo-paid-consent-ready-quote-ready",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -938528,7 +938528,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "handlePayment",
-        "line": 243,
+        "line": 261,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canPay}}",
@@ -938636,11 +938636,82 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1449"
+        "staticSource": "pages/activity/baoming/baoming.js:1452"
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:263:bind:consentchange:onResultConsentChange:29",
+      "id": "pages/activity/baoming/baoming.wxml:27:bindtap:goMySignups:2",
+      "route": "pages/activity/baoming/baoming",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/activity/baoming/baoming.wxml",
+        "js": "pages/activity/baoming/baoming.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "goMySignups",
+        "line": 27,
+        "selectorHint": ".bm-signed",
+        "visibleCondition": "{{pageState === 'ready' && activityInfo.isSignUp === 1}}",
+        "disabledCondition": null,
+        "ariaLabel": "你已报名这场活动，点击查看我的报名",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/member/index/index",
+          "subpackageMember/mycanyu/mycanyu"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/activity/baoming/baoming.js:484"
+      }
+    },
+    {
+      "id": "pages/activity/baoming/baoming.wxml:281:bind:consentchange:onResultConsentChange:29",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -938663,7 +938734,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:consentchange",
         "handler": "onResultConsentChange",
-        "line": 263,
+        "line": 281,
         "selectorHint": "cy-result-sheet[bind:consentchange]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -938724,11 +938795,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1206"
+        "staticSource": "pages/activity/baoming/baoming.js:1209"
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:263:bind:consentretry:onResultConsentRetry:30",
+      "id": "pages/activity/baoming/baoming.wxml:281:bind:consentretry:onResultConsentRetry:30",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -938751,7 +938822,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:consentretry",
         "handler": "onResultConsentRetry",
-        "line": 263,
+        "line": 281,
         "selectorHint": "cy-result-sheet[bind:consentretry]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -938812,11 +938883,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1218"
+        "staticSource": "pages/activity/baoming/baoming.js:1221"
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:264:bind:close:onResultSheetClose:31",
+      "id": "pages/activity/baoming/baoming.wxml:282:bind:close:onResultSheetClose:31",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -938839,7 +938910,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:close",
         "handler": "onResultSheetClose",
-        "line": 264,
+        "line": 282,
         "selectorHint": "cy-result-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -938883,11 +938954,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1242"
+        "staticSource": "pages/activity/baoming/baoming.js:1245"
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:269:bind:cancel:closeTicketSheet:33",
+      "id": "pages/activity/baoming/baoming.wxml:287:bind:cancel:closeTicketSheet:33",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -938910,7 +938981,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:cancel",
         "handler": "closeTicketSheet",
-        "line": 269,
+        "line": 287,
         "selectorHint": "cy-option-sheet[bind:cancel]",
         "visibleCondition": "{{pageState === 'ready'}}",
         "disabledCondition": null,
@@ -938954,7 +939025,7 @@
       }
     },
     {
-      "id": "pages/activity/baoming/baoming.wxml:269:bind:select:onTicketSheetSelect:32",
+      "id": "pages/activity/baoming/baoming.wxml:287:bind:select:onTicketSheetSelect:32",
       "route": "pages/activity/baoming/baoming",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -938977,7 +939048,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onTicketSheetSelect",
-        "line": 269,
+        "line": 287,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": "{{pageState === 'ready'}}",
         "disabledCondition": null,
@@ -939076,77 +939147,6 @@
       "evidence": {
         "status": "pending",
         "staticSource": "pages/activity/baoming/baoming.js:813"
-      }
-    },
-    {
-      "id": "pages/activity/baoming/baoming.wxml:27:bindtap:goMySignups:2",
-      "route": "pages/activity/baoming/baoming",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/activity/baoming/baoming.wxml",
-        "js": "pages/activity/baoming/baoming.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "goMySignups",
-        "line": 27,
-        "selectorHint": ".bm-signed",
-        "visibleCondition": "{{pageState === 'ready' && activityInfo.isSignUp === 1}}",
-        "disabledCondition": null,
-        "ariaLabel": "你已报名这场活动，点击查看我的报名",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "tap",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/member/index/index",
-          "subpackageMember/mycanyu/mycanyu"
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:484"
       }
     },
     {

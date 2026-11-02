@@ -170,7 +170,9 @@ Unchanged: `assertCollectible`, coop settlement and its payees (club coop lines 
 
 Runs:
 - Wide Java set before the tiers: 2376 tests, 0 failures; 3 errors were MyBatis ITs with no MySQL in this container.
-- After the tiers: see the final run noted below.
+- After the tiers: a targeted Java set (`Refund*`, `Session*`, `*Cancel*`, `TeamGroup*`, `*Settlement*`, `Activity*`, `Erqing*`, `Standalone*` and others) ran 1144 tests with 0 failures and 0 errors. The xcx files touched pass.
+- `ProductSourceWiringTest.settlementReadsFeeSnapshotNotLive` was updated to count 2 snapshot reads; that commit came from a parallel session on this branch and was merged.
+- Action ledger: rebuilt with `--write` (only `pages/activity/baoming` line shifts, 5599 controls).
 - `ui-integrity.js`: `UI-GATE-0:PASS`.
 
 Not done:
