@@ -331,6 +331,85 @@ class TopicSaleFinalizationServiceImplTest {
         assertTrue(multipleOrganizers.getMessage().contains("当前=2"));
     }
 
+    /** P-01：俱乐部自己的城市定向、无合作俱乐部 ⇒ 发布俱乐部算主办方，可开售；不写合作单、不碰收款人。 */
+    @Test
+    void clubOwnCityThemeWithoutPartnerCountsPublishingClubAsOrganizer() {
+        ClubMapper clubMapper = selfClub(7001L, 9003L, 0, 1);
+        CmsTopic topic = pricingTopic(ProductType.ORIENTEERING);
+        topic.setClubId(7001L);
+        topic.setMemberId(9003L);
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC_ID)).thenReturn(topic);
+        when(lineupSource.readEffectiveLineup(TOPIC_ID)).thenReturn(new CoopOrderLineupSource.ReadResult(
+                Collections.emptyList(), Collections.emptyList()));
+        when(topicMapper.finalizeForSale(any(Long.class), any(Date.class), any(Date.class))).thenReturn(1);
+
+        org.junit.jupiter.api.Assertions.assertDoesNotThrow(() -> service.finalizeForSale(TOPIC_ID));
+        verify(topicMapper).finalizeForSale(any(Long.class), any(Date.class), any(Date.class));
+        verify(clubMapper).selectClubById(7001L);
+        org.mockito.Mockito.verifyNoInteractions(clubPayeeService, compensationService);
+    }
+
+    /** P-01 归属：俱乐部不是发布者的、主理人身份失效、俱乐部已删、未绑俱乐部 ⇒ 仍按 0 个主办方拒绝。 */
+    @Test
+    void cityThemeWithoutPartnerStillRefusedUnlessPublisherOwnsTheBoundClub() {
+        when(lineupSource.readEffectiveLineup(TOPIC_ID)).thenReturn(new CoopOrderLineupSource.ReadResult(
+                Collections.emptyList(), Collections.emptyList()));
+        long[][] cases = {
+                // clubOwner, delFlag, leaderStatus, boundClub
+                {9999L, 0, 1, 7001L},   // 别人的俱乐部（商家借俱乐部之名发团而无合作单）
+                {9003L, 0, 0, 7001L},   // 主理人身份已停用
+                {9003L, 2, 1, 7001L},   // 俱乐部已删除
+                {9003L, 0, 1, 0L},      // 未绑俱乐部
+        };
+        for (long[] c : cases) {
+            selfClub(7001L, c[0], (int) c[1], (int) c[2]);
+            CmsTopic topic = pricingTopic(ProductType.ORIENTEERING);
+            topic.setClubId(c[3] == 0L ? null : c[3]);
+            topic.setMemberId(9003L);
+            when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC_ID)).thenReturn(topic);
+            IllegalStateException error = assertThrows(IllegalStateException.class,
+                    () -> service.finalizeForSale(TOPIC_ID));
+            assertTrue(error.getMessage().contains("当前=0"), java.util.Arrays.toString(c) + " -> " + error.getMessage());
+        }
+        verify(topicMapper, never()).finalizeForSale(any(Long.class), any(Date.class), any(Date.class));
+    }
+
+    /** P-01：有合作俱乐部时规则不变——发布俱乐部不额外计数，两个合作主办方仍拒绝。 */
+    @Test
+    void clubOwnCityThemeWithPartnersKeepsExistingOrganizerRule() {
+        selfClub(7001L, 9003L, 0, 1);
+        CmsTopic topic = pricingTopic(ProductType.ORIENTEERING);
+        topic.setClubId(7001L);
+        topic.setMemberId(9003L);
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC_ID)).thenReturn(topic);
+        when(lineupSource.readEffectiveLineup(TOPIC_ID)).thenReturn(new CoopOrderLineupSource.ReadResult(
+                Arrays.asList(organizer(3L), organizer(4L)), Collections.emptyList()));
+        IllegalStateException error = assertThrows(IllegalStateException.class, () -> service.finalizeForSale(TOPIC_ID));
+        assertTrue(error.getMessage().contains("当前=2"));
+
+        when(lineupSource.readEffectiveLineup(TOPIC_ID)).thenReturn(new CoopOrderLineupSource.ReadResult(
+                Collections.singletonList(organizer(7002L)), Collections.emptyList()));
+        org.junit.jupiter.api.Assertions.assertDoesNotThrow(() -> service.finalizeForSale(TOPIC_ID));
+    }
+
+    private ClubMapper selfClub(long clubId, long ownerMemberId, int delFlag, int leaderStatus) {
+        ClubMapper clubMapper = mock(ClubMapper.class);
+        com.chengyinhub.business.domain.Club club = new com.chengyinhub.business.domain.Club();
+        club.setId(clubId);
+        club.setMemberId(ownerMemberId);
+        club.setDelFlag(delFlag);
+        when(clubMapper.selectClubById(clubId)).thenReturn(club);
+        com.chengyinhub.business.mapper.ClubLeaderMapper leaderMapper =
+                mock(com.chengyinhub.business.mapper.ClubLeaderMapper.class);
+        com.chengyinhub.business.domain.ClubLeader leader = new com.chengyinhub.business.domain.ClubLeader();
+        leader.setMemberId(9003L);
+        leader.setStatus(leaderStatus);
+        when(leaderMapper.selectClubLeaderByMemberId(9003L)).thenReturn(leader);
+        ReflectionTestUtils.setField(service, "clubMapper", clubMapper);
+        ReflectionTestUtils.setField(service, "clubLeaderMapper", leaderMapper);
+        return clubMapper;
+    }
+
     @Test
     void freeExploreAlsoRequiresCanonicalAndWritesFinalizationCas() {
         CmsTopic topic = pricingTopic(ProductType.FREE_EXPLORE);
