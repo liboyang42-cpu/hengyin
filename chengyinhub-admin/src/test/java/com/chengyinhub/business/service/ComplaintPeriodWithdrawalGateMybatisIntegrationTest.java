@@ -141,7 +141,7 @@ class ComplaintPeriodWithdrawalGateMybatisIntegrationTest {
                 "DROP TABLE IF EXISTS ums_member", "DROP TABLE IF EXISTS ums_member_balance_detail",
                 "DROP TABLE IF EXISTS settlement_detail", "DROP TABLE IF EXISTS coop_complaint",
                 "DROP TABLE IF EXISTS cms_activity_settlement_hold", "DROP TABLE IF EXISTS ums_member_settlement_debt",
-                "DROP TABLE IF EXISTS merchant_clawback_application");
+                "DROP TABLE IF EXISTS merchant_clawback_application", "DROP TABLE IF EXISTS refund_application");
         execute(
                 "CREATE TABLE cms_activity (id BIGINT PRIMARY KEY, member_id BIGINT, name VARCHAR(100), description VARCHAR(255), img_url VARCHAR(255), img_arr VARCHAR(255),"
                         + "category_ids VARCHAR(255), address_name VARCHAR(255), longitude VARCHAR(64), latitude VARCHAR(64), address VARCHAR(255), status INT, publish_status INT,"
