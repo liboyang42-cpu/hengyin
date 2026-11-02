@@ -171,6 +171,8 @@ class ClubRoleHttpMySqlIT {
                 String sql=Files.readString(Path.of("sql",file));int start=sql.indexOf("CREATE TABLE");int end=sql.indexOf(';',start);j.execute(sql.substring(start,end));
             }
             j.execute("ALTER TABLE business_audit_event ADD COLUMN actor_type VARCHAR(32) DEFAULT 'MEMBER'");
+            // migration_20261102_club_checkin_phone_visible.sql:核销员委派「可见客户手机号」开关(C-05),Mapper 读写都带这一列。
+            j.execute("ALTER TABLE club_role_assignment ADD COLUMN customer_phone_visible TINYINT NOT NULL DEFAULT 0 AFTER version");
             j.update("INSERT INTO club(id,member_id,status,del_flag,name) VALUES('71','7001','1','0','synthetic'),('72','7003','1','0','foreign')");
             j.update("INSERT INTO ums_member VALUES(7001,1,0,'club'),(7002,1,0,'player'),(7003,1,0,'player')");
             j.update("INSERT INTO club_member VALUES(1,71,7002,0,1,NOW(),0)");return database;
