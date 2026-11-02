@@ -236,7 +236,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </select>
 
     <!-- ownerType=2 的不同 activity shell 必须统一回溯到源 topic；主题行是并发串行点。 -->
-    <select id="selectLiveExploreTicketIdsForUpdate" resultType="long">
+    <select id="selectLiveExploreTicketIdsForUpdate" resultType="long" useCache="false" flushCache="true">
         select r.id
         from cms_registration r
         left join cms_activity a on r.owner_type = 2 and r.owner_id = a.id
@@ -257,7 +257,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </select>
 
     <!-- C-22：普通自由探索按场次限购；有效票口径与上面逐字一致，只把范围收到这一场。 -->
-    <select id="selectLiveExploreTicketIdsInActivityForUpdate" resultType="long">
+    <select id="selectLiveExploreTicketIdsInActivityForUpdate" resultType="long" useCache="false" flushCache="true">
         select r.id
         from cms_registration r
         where r.member_id = #{memberId}
