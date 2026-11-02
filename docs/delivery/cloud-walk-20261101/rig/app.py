@@ -49,6 +49,10 @@ def start(fail_path=""):
         print("app already running pid", alive()); return 0
     LOG.parent.mkdir(parents=True, exist_ok=True)
     cmd = ca.java_command(RIG_HOME / "work" / "app", fail_path)
+    # [SEAM] login: profile "local" lets the product's own non-prod switch send jscode2session to the rig's fake
+    # WeChat endpoint (mpweb/server.mjs on 8097). Only /sns/jscode2session uses this base URL.
+    cmd += ["--spring.profiles.active=druid,local",
+            "--chengyin.test.wechat-api-base-url=http://127.0.0.1:%s" % os.environ.get("RIG_WEB_PORT", "8097")]
     log = open(LOG, "ab")
     p = subprocess.Popen(cmd, cwd=str(RIG_HOME / "work"), env=env(), stdout=log, stderr=subprocess.STDOUT,
                          start_new_session=True)

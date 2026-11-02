@@ -287,10 +287,23 @@ MP.start = function (opts) {
   MP.pageStackRef = MP.pageStackRef || function () { return window.getCurrentPages.__stack(); };
   var entry = parse(opts.path || (APPJSON.entryPagePath || (APPJSON.pages || [])[0]), '');
   MP.launchOpts = { path: entry.path, query: entry.query, scene: opts.scene || 1001, referrerInfo: {} };
-  MP.bootApp(MP.launchOpts);
-  var go = function () { var p = open(entry.path, entry.query); if (tabList.indexOf(entry.path) >= 0) tabPages[entry.path] = p; return p; };
-  if (opts.identity) return MP.loginAs(opts.identity).then(go);
-  return Promise.resolve(go());
+  var go = function () {
+    // entry page opens in the same tick as onLaunch, so pages the app pushes from onLaunch timers stack above it
+    MP.bootApp(MP.launchOpts);
+    var p = open(entry.path, entry.query); if (tabList.indexOf(entry.path) >= 0) tabPages[entry.path] = p; return p;
+  };
+  if (!opts.identity) return Promise.resolve(go());
+  // [SEAM] returning user: real POST /api/login/code (fake jscode2session), session cached in storage before launch,
+  // exactly the 7 fields session-store persists; app.onLaunch then restores it like a returning user.
+  CFG.identity = opts.identity;
+  return fetch('/__api/api/login/code', { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: 'code=' + encodeURIComponent('rig-' + opts.identity) })
+    .then(function (r) { return r.json(); }).then(function (body) {
+      if (!body || !body.token || !body.data) throw new Error('login/code failed: ' + JSON.stringify(body).slice(0, 300));
+      var d = body.data; MP.identityInfo = d;
+      var snap = { authorization: body.token, user_id: d.id, user_type: d.userType, open_id: '', avatar: d.avatar || '', nickname: d.nickname || '', role: d.role };
+      for (var k in snap) if (snap[k] !== '' && snap[k] != null) wx.setStorageSync(k, snap[k]);
+      return go();
+    });
 };
 MP.tabList = tabList;
 })();
@@ -311,5 +324,26 @@ MP.openTypeSeam = function (ot, el) {
   if (ot === 'agreePrivacyAuthorization') return { event: 'agreeprivacyauthorization', detail: {} };
   if (ot === 'openSetting') return { event: 'opensetting', detail: { authSetting: {} } };
   return null;
+};
+})();
+/* <picker>: selector / multiSelector via an action sheet, date / time via a prompt-like modal. Values are real
+   change events into the page; the native wheel UI itself is not reproduced. */
+(function () {
+var MP = window.MPWEB;
+MP.pickerSeam = function (el) {
+  var p = el.__vp || {}; if (p.disabled && p.disabled !== 'false') return;
+  var mode = p.mode || 'selector';
+  if (mode === 'selector') {
+    var range = p.range || []; var key = p['range-key'];
+    var items = range.map(function (r) { return key && r && typeof r === 'object' ? String(r[key]) : String(r); });
+    MP.ui.actionSheet({ itemList: items, success: function (r) { MP.fire(el, 'change', { value: r.tapIndex }); } });
+  } else if (mode === 'multiSelector') {
+    MP.fire(el, 'change', { value: (p.value || (p.range || []).map(function () { return 0; })) });
+  } else {
+    var def = p.value || (mode === 'date' ? new Date().toISOString().slice(0, 10) : mode === 'time' ? '12:00' : '');
+    var v = window.prompt ? null : null; // headless: use MP.nextPickerValue set by the driver
+    var val = MP.nextPickerValue != null ? MP.nextPickerValue : def; MP.nextPickerValue = null;
+    MP.fire(el, 'change', { value: mode === 'region' ? (Array.isArray(val) ? val : ['上海市', '上海市', '黄浦区']) : val });
+  }
 };
 })();

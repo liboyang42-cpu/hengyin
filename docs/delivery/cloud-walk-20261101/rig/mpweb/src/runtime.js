@@ -123,6 +123,9 @@ var BASE = [
   '*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}',
   'canvas{display:block}',
   'wx-page-container{display:none!important}',
+  'wx-checkbox,wx-radio{display:inline-flex;align-items:center;vertical-align:middle}wx-checkbox::before,wx-radio::before{content:"";display:inline-block;width:18px;height:18px;margin-right:6px;border:1px solid #888;border-radius:3px;box-sizing:border-box;background:#fff;color:var(--mp-ctl,#07c160);font-size:14px;line-height:16px;text-align:center}wx-radio::before{border-radius:50%}wx-checkbox.mp-on::before,wx-radio.mp-on::before{content:"✓";border-color:var(--mp-ctl,#07c160)}',
+  'wx-switch{display:inline-block;width:52px;height:32px;border-radius:16px;background:#ddd;position:relative;vertical-align:middle}wx-switch::after{content:"";position:absolute;top:2px;left:2px;width:28px;height:28px;border-radius:50%;background:#fff;transition:left .2s}wx-switch.mp-on{background:var(--mp-ctl,#07c160)}wx-switch.mp-on::after{left:22px}',
+  'wx-label{display:inline}wx-checkbox-group,wx-radio-group{display:block}wx-picker{display:block}',
 ].join('\n');
 var sheetCache = {};
 function makeSheet(key, css) {
@@ -318,6 +321,7 @@ function createEl(vn, owner) {
   if (tag === 'swiper') patchChildren(el.__track, vn.kids, owner);
   else if (tag !== 'rich-text') patchChildren(el, vn.kids, owner);
   afterProps(el, vn, owner, true);
+  if (/^(checkbox|radio|switch|label|picker)$/.test(tag)) { installCtl(el); ctlUpdate(el); }
   return el;
 }
 function updateEl(el, vn, owner) {
@@ -331,6 +335,7 @@ function updateEl(el, vn, owner) {
   if (el.__tag === 'swiper') patchChildren(el.__track, vn.kids, owner);
   else if (el.__tag !== 'rich-text') patchChildren(el, vn.kids, owner);
   afterProps(el, vn, owner, false);
+  if (el.__ctl) ctlUpdate(el);
 }
 function destroyEl(el) {
   if (el.nodeType === 3) { el.remove(); return; }
@@ -345,6 +350,39 @@ function detachTree(el) {
   if (el.__swiperTimer) rCI(el.__swiperTimer);
   if (el.__inst) { var inst = el.__inst; (inst.__root.__kids || []).forEach(function (k) { if (k.nodeType === 1) detachTree(k); }); inst.__detached(); }
 }
+function isOn(v) { return v !== undefined && v !== null && v !== false && v !== 'false' && v !== ''; }
+// ---- form controls: checkbox / radio (+groups, label), switch, picker
+function ctlUpdate(el) {
+  var p = el.__vp || {};
+  if (el.__tag === 'checkbox' || el.__tag === 'radio' || el.__tag === 'switch') {
+    if (el.__userSet !== true || el.__lastProp !== String(p.checked)) { el.__checked = isOn(p.checked); el.__lastProp = String(p.checked); el.__userSet = false; }
+    el.classList.toggle('mp-on', !!el.__checked); el.setAttribute('aria-checked', el.__checked ? 'true' : 'false');
+    if (p.color) el.style.setProperty('--mp-ctl', p.color);
+  }
+}
+function groupOf(el, tag) { var n = el.parentNode; while (n) { if (n.__tag === tag) return n; n = n.parentNode || (n.host && null); } return null; }
+function ctlFire(el) {
+  if (el.__tag === 'switch') { fire(el, 'change', { value: !!el.__checked }); return; }
+  var gtag = el.__tag === 'checkbox' ? 'checkbox-group' : 'radio-group';
+  var g = groupOf(el, gtag); if (!g) return;
+  var boxes = g.querySelectorAll('wx-' + el.__tag);
+  if (el.__tag === 'radio') { for (var i = 0; i < boxes.length; i++) if (boxes[i] !== el) { boxes[i].__checked = false; boxes[i].__userSet = true; boxes[i].classList.remove('mp-on'); } }
+  var vals = []; for (var j = 0; j < boxes.length; j++) if (boxes[j].__checked) vals.push(String((boxes[j].__vp || {}).value == null ? '' : boxes[j].__vp.value));
+  fire(g, 'change', { value: el.__tag === 'radio' ? (vals[0] || '') : vals });
+}
+function ctlToggle(el) {
+  if (isOn((el.__vp || {}).disabled)) return;
+  if (el.__tag === 'radio' && el.__checked) return;
+  el.__checked = !el.__checked; el.__userSet = true; el.classList.toggle('mp-on', el.__checked);
+  ctlFire(el);
+}
+function installCtl(el) {
+  if (el.__ctl) return; el.__ctl = true;
+  if (el.__tag === 'checkbox' || el.__tag === 'radio' || el.__tag === 'switch') el.addEventListener('click', function (e) { e.__ctlDone = true; ctlToggle(el); });
+  if (el.__tag === 'label') el.addEventListener('click', function (e) { if (e.__ctlDone) return; var c = el.querySelector('wx-checkbox,wx-radio,wx-switch'); if (c) { e.__ctlDone = true; ctlToggle(c); } });
+  if (el.__tag === 'picker') el.addEventListener('click', function () { MP.pickerSeam ? MP.pickerSeam(el) : null; });
+}
+MP.ctlToggle = ctlToggle;
 var EVT_RE = /^(capture-bind|capture-catch|mut-bind|bind|catch):?(.+)$/;
 function compProps(props) {
   var o = {};
@@ -387,6 +425,7 @@ function applyProps(el, vn, owner, isNew) {
     el.__openTypeInstalled = true;
     el.addEventListener('click', function () {
       var ot = String((el.__vp || {})['open-type'] || '');
+      if (isOn((el.__vp || {}).disabled)) return;
       var seam = MP.openTypeSeam && MP.openTypeSeam(ot, el);
       if (seam) rST(function () { fire(el, seam.event, seam.detail); }, 30);
     });
@@ -536,6 +575,7 @@ function installEvents(el) {
           return;
         }
         if (type === 'tap' && el.__suppressClick) { el.__suppressClick = false; return; }
+        if (type === 'tap' && el.__tag === 'button' && isOn((el.__vp || {}).disabled)) return;
         if (type === 'touchstart' && (el.__on.touchmove || el.__on.touchend)) { try { el.setPointerCapture(e.pointerId); } catch (x) {} }
         if (type === 'touchmove' && !(e.buttons || e.pointerType === 'touch')) return;
         if (b.c) e.stopPropagation();

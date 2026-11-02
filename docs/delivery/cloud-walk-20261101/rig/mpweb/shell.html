@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390,initial-scale=1">
+<title>mpweb rig</title>
+<style>
+html,body{margin:0;padding:0;background:#000;width:390px;height:844px;overflow:hidden;font-family:-apple-system,"PingFang SC","Noto Sans CJK SC","Noto Sans SC","Microsoft YaHei",sans-serif;font-size:16px;-webkit-font-smoothing:antialiased}
+#screen{position:relative;width:390px;height:844px;overflow:hidden;background:#000;transform:translateZ(0)}
+#pages{position:absolute;left:0;right:0;top:0;bottom:0;transform:translateZ(0);overflow:hidden}
+#pages.has-nav{top:91px}
+mp-page{display:block;position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none}
+mp-page::-webkit-scrollbar{display:none}
+#statusBar{position:absolute;top:0;left:0;right:0;height:47px;z-index:9000;pointer-events:none;color:#fff;font:600 15px -apple-system,sans-serif;display:flex;align-items:center;justify-content:space-between;padding:6px 30px 0;box-sizing:border-box;mix-blend-mode:difference}
+#capsule{position:absolute;top:51px;left:296px;width:87px;height:32px;border-radius:16px;z-index:9001;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.25);box-sizing:border-box;display:flex;align-items:center;justify-content:space-around;color:#fff;font-size:18px;pointer-events:none}
+#capsule i{width:1px;height:18px;background:rgba(255,255,255,.3)}
+#navBar{position:absolute;top:0;left:0;right:0;height:91px;z-index:8000;box-sizing:border-box;padding-top:47px;display:flex;align-items:center;justify-content:center;font:600 17px -apple-system,sans-serif}
+#navBar[hidden]{display:none}
+#navBack{position:absolute;left:4px;bottom:0;height:44px;width:44px;border:0;background:none;color:inherit;font-size:30px;line-height:40px;cursor:pointer}
+#navBack[hidden]{display:none}
+#navTitle{max-width:200px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+#sysLayer{position:absolute;inset:0;z-index:9500;pointer-events:none}
+#sysLayer>*{pointer-events:auto}
+.wx-toast{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);background:rgba(17,17,17,.85);color:#fff;border-radius:10px;padding:12px 18px;font-size:15px;max-width:260px;text-align:center;line-height:1.4;display:flex;flex-direction:column;align-items:center;gap:8px}
+.wx-toast.is-loading,.wx-toast.is-success{min-width:120px;min-height:120px;justify-content:center}
+.wx-toast__ok::before{content:"✓";font-size:40px;font-style:normal}
+.wx-spin{width:34px;height:34px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.wx-mask{position:absolute;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center}
+.wx-mask--sheet{align-items:flex-end}
+.wx-modal{width:300px;background:#fff;color:#111;border-radius:12px;overflow:hidden;text-align:center}
+.wx-modal__t{font-weight:600;font-size:17px;padding:28px 24px 8px}
+.wx-modal__c{font-size:15px;color:#555;padding:8px 24px 24px;white-space:pre-wrap;line-height:1.5}
+.wx-modal__b{display:flex;border-top:1px solid #eee}
+.wx-modal__btn{flex:1;height:52px;border:0;background:#fff;font-size:17px;color:#111;cursor:pointer}
+.wx-modal__btn+.wx-modal__btn{border-left:1px solid #eee}
+.wx-modal__btn.is-ok{color:#576b95;font-weight:600}
+.wx-as{width:100%;background:#f7f7f7;border-radius:12px 12px 0 0;overflow:hidden;padding-bottom:34px}
+.wx-as__i{display:block;width:100%;height:56px;border:0;border-bottom:1px solid #eee;background:#fff;font-size:17px;color:#111;cursor:pointer}
+.wx-as__c{margin-top:8px}
+.wx-preview{position:absolute;inset:0;background:#000;display:flex;align-items:center;justify-content:center}
+.wx-preview img{max-width:100%;max-height:100%}
+</style>
+</head>
+<body>
+<div id="screen">
+  <div id="pages"></div>
+  <div id="navBar" hidden><button id="navBack" aria-label="返回">‹</button><span id="navTitle"></span></div>
+  <div id="statusBar"><span>9:41</span><span>▮▮▮ ◔ ▭</span></div>
+  <div id="capsule">··· <i></i> ◉</div>
+  <div id="sysLayer"></div>
+</div>
+<script>
+(function () {
+  var q = new URLSearchParams(location.search);
+  window.__DEVICE = { w: 390, h: 844, sb: 47 };
+  window.__RIG = {
+    envVersion: q.get('env') || 'release',
+    identity: q.get('identity') || '',
+    scanPayload: q.get('scan') || '',
+    loc: q.get('lat') ? { lat: +q.get('lat'), lng: +q.get('lng') } : null,
+    heading: +(q.get('heading') || 0),
+  };
+  window.__RIG_START = { path: q.get('path') || '', identity: q.get('identity') || '', scene: +(q.get('scene') || 1001) };
+  try { var st = q.get('storage'); if (st) window.__RIG_STORAGE = JSON.parse(st); } catch (e) {}
+})();
+</script>
+<script src="/build/appjson.js"></script>
+<script src="/build/bundle.js"></script>
+<script src="/src/runtime.js"></script>
+<script src="/src/ui.js"></script>
+<script src="/src/nav.js"></script>
+<script>
+(function () {
+  var MP = window.MPWEB;
+  var screen = document.getElementById('screen');
+  MP.screenEl = screen; MP.scale = 1;
+  MP.screenRect = function () { return screen.getBoundingClientRect(); };
+  document.getElementById('navBack').onclick = function () { wx.navigateBack({}); };
+  MP.ready = MP.start(window.__RIG_START).then(function () { MP.booted = true; }, function (e) { MP.bootError = String(e && e.message || e); console.error('rig boot', e); });
+})();
+</script>
+</body>
+</html>
