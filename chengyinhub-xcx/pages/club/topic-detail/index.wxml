@@ -247,12 +247,14 @@
       <view wx:if="{{planFallbackAvailable}}" class="ctd-director-export {{writeLocked ? 'is-disabled' : ''}}" bindtap="openPlanFallback" aria-role="button" aria-label="填写默认结局收尾原因" hover-class="cy-pressed" hover-stay-time="80">填写收尾原因</view>
     </view>
     <view class="ctd-plan-fallback" wx:if="{{planFallbackResult}}"><text class="ctd-director-note">{{planFallbackResult.title}}</text><text class="ctd-director-note">收尾原因：{{planFallbackResult.reason}}</text></view>
+    <!-- C-09 第三轮:与页面同一左右留白;开始活动只留底栏那一颗,卡内主键不出(primary-text 置空)。 -->
     <cy-club-director-ready
+      class="ctd-sec ctd-director-recap"
       wx:if="{{statusKey === 'preparing'}}"
       title="准备总览"
       station-title="节点状态" station-sub="{{readinessText}}" stations="{{stations}}"
       team-title="队伍进度" team-sub="{{sessionStatusText}}" teams="{{directorTeamRows}}"
-      primary-text="开始活动" primary-disabled="{{!readiness.canStart || writeLocked}}"
+      primary-text="" primary-disabled="{{!readiness.canStart || writeLocked}}"
       caption="{{writeMessage || blockerText}}" caption-tone="{{writeState === 'unknown-write' || (!writeMessage && blockerText) ? 'warning' : 'muted'}}"
       bind:primary="onStartSession" />
 

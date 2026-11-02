@@ -31,7 +31,7 @@ function readinessText(readiness) {
   const ready = numeric(readiness && readiness.readyStations)
   const required = numeric(readiness && readiness.requiredStations)
   if (ready === null || required === null) return '—'
-  return ready + '/' + required + ' 站 READY'
+  return ready + '/' + required + ' 站就绪'
 }
 
 function statusText(status) {
@@ -47,12 +47,24 @@ function statusText(status) {
   return labels[String(status || '').toUpperCase()] || '状态待确认'
 }
 
-function stationView(station) {
+// C-09 第三轮:准备总览的节点行直接喂收编行列表,要 {id,title,subtitle,value};状态码不外露。
+const STATION_STATUS_TEXT = { INVITED: '已邀请', ACCEPTED: '已接受', READY: '就绪', ACTIVE: '进行中', PAUSED: '已暂停', CLOSED: '已关闭' }
+
+function stationView(station, index) {
   const item = station || {}
+  const nameText = item.name || item.stationName || item.nodeName || '未命名节点'
+  const status = String(item.status || '').toUpperCase()
+  const statusText = STATION_STATUS_TEXT[status] || '待确认'
+  const issueText = item.issue || item.blockedReason || item.pauseReason || item.exception || ''
   return Object.assign({}, item, {
-    nameText: item.name || item.stationName || item.nodeName || '未命名节点',
-    statusText: item.status || 'UNKNOWN',
-    issueText: item.issue || item.blockedReason || item.pauseReason || item.exception || '',
+    nameText: nameText,
+    statusText: statusText,
+    issueText: issueText,
+    id: item.stationId != null ? item.stationId : (item.nodeId != null ? item.nodeId : 's' + (index || 0)),
+    title: nameText,
+    subtitle: issueText,
+    value: statusText,
+    valueTone: status === 'READY' || status === 'ACTIVE' ? 'success' : (status === 'PAUSED' ? 'warning' : 'default'),
   })
 }
 
@@ -1375,7 +1387,7 @@ const DIRECTOR_METHODS = {
     const that = this
     showDirectorModal(this, {
       title: '进入准备',
-      content: '进入后将开始收集节点和队伍 READY 状态。',
+      content: '进入后将开始收集节点和队伍的就绪状态。',
       confirmText: '开始准备',
       success(result) { if (result.confirm) that.executeAction('PREPARE', {}) },
     })

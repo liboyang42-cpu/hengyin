@@ -647,8 +647,14 @@ test('导演页先显示加载态，准备未完成时只展示阻断原因且�
   assert.equal(harness.page.data.loadState, 'loading')
   await settle()
   assert.equal(harness.page.data.loadState, 'ready')
-  assert.equal(harness.page.data.readinessText, '2/3 站 READY')
+  assert.equal(harness.page.data.readinessText, '2/3 站就绪')
   assert.deepEqual(harness.page.data.blockers, ['南门店未 READY'])
+  // C-09 第三轮:节点行带名称与中文状态(原来行组件拿不到 title,整卡是空白框;状态码 PAUSED 外露)。
+  const station = harness.page.data.stations[0]
+  assert.equal(station.title, '南门店')
+  assert.equal(station.value, '已暂停')
+  assert.equal(station.subtitle, '物料损坏')
+  assert.equal(station.id, 1)
 
   harness.page.onStartSession()
   assert.equal(writes.length, 0)
@@ -1748,6 +1754,17 @@ test('复盘指标显示数字与单位，节点完成行有标题与计数', as
   assert.match(recapWxml, /\{\{item\.valueText\}\}/)
   assert.doesNotMatch(recapWxml, /\{\{item\.value\}\}/)
   assert.match(read(DIRECTOR_HOST_WXML), /station-rows="\{\{recapStationRows\}\}"/)
+})
+
+// C-09 第三轮:准备总览与页面同一留白,卡内不再有第二颗「开始活动」(底栏那颗就是开局入口)。
+test('准备总览：页面留白、卡内无第二颗开始活动、无 READY 字样', () => {
+  const host = read(DIRECTOR_HOST_WXML)
+  const card = host.slice(host.indexOf('<cy-club-director-ready'), host.indexOf('bind:primary="onStartSession"'))
+  assert.match(card, /class="ctd-sec ctd-director-recap"/)
+  assert.match(card, /primary-text=""/)
+  const ready = read('pages/club/components/club-director-ready/index.wxml')
+  assert.match(ready, /wx:if="\{\{primaryText\}\}"/)
+  assert.doesNotMatch(read('pages/club/topic-detail/director.js'), /READY 状态|站 READY/)
 })
 
 // C-11 第三轮(Figma D9 289:523):已结束 = 复盘整页态。漏斗前三个数做大块,后两个进「完成情况」行,
