@@ -263,11 +263,8 @@ Page({
     if (this._submitting) return;
     var f = e.currentTarget.dataset.field;
     var value = e.detail.value;
-    if (f === 'name') {
-      var patch = { name: value };
-      if (this.data.submitNameTaken) Object.assign(patch, { submitError: '', submitNameTaken: false });
-      this.setData(patch, this.validate);
-    }
+    if (f === 'name' && this.data.submitNameTaken) this.setData({ name: value, submitError: '', submitNameTaken: false }, this.validate);
+    else if (f === 'name') this.setData({ name: value }, this.validate);
     else if (f === 'description') this.setData({ description: value }, this.validate);
     else if (f === 'city') this.setData({ city: value }, this.validate);
     else if (f === 'keywords') this.setData({ keywords: value }, this.validate);
