@@ -339,7 +339,7 @@ page {
 .v3-sec-first { margin-top: 0; padding-top: var(--cy-space-6); }
 /* ADA 8pt:section 间距恒 64rpx(2026-08-20 由 48 加大;标题到自己卡片 20rpx 保持不变,
    保证「离自己的卡近、离别人的卡远」的亲密性关系) */
-.v3-sec { margin-top: var(--cy-space-6); }
+.v3-sec { margin-top: var(--cy-space-6); position: relative; } /* H-03b:「正在更新…」用 cy-refresh-float 浮在区块内,刷新不占高 */
 .v3-sec-reco { margin-top: var(--cy-space-6); }
 .v3-sec-head { padding: 0 var(--cy-space-4) var(--cy-space-4); align-items: baseline; }
 /* 字阶:2026-08-20 用户要求首页模块标题比 section-title(36) 再大一档 → 回到 40rpx;

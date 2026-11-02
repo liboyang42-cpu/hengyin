@@ -5,7 +5,7 @@
   <cy-modal-host id="cy-modal-host" />
 <view class="session-shell" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
   <cy-nav-bar plain custom-back bind:back="goBack" />
-  <cy-page-title title="本次漫游" subtitle="{{s.dateFull ? s.dateFull + ' · ' + s.time : ''}}" safe-top="{{false}}" />
+  <cy-page-title title="本次漫游" subtitle="{{s.dateFull ? s.dateFull + (s.time && s.time !== '—' ? ' · ' + s.time : '') : ''}}" safe-top="{{false}}" />
   <view class="session-shell__body">
     <block wx:if="{{sharedState}}">
       <view class="session-status" wx:if="{{sharedState === 'loading'}}" aria-role="status">正在打开朋友分享的足迹</view>

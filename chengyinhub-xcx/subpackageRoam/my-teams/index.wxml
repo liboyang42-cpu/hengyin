@@ -20,12 +20,12 @@
   </view>
 
   <block wx:if="{{tab === 'mine'}}">
-    <view class="mt-state" wx:if="{{loading && !groups.length}}">正在读取你的队伍…</view>
+    <cy-skeleton wx:if="{{loading && !groups.length}}" type="list" count="2" />
     <view class="mt-err" wx:elif="{{mineError}}" bindtap="reload" aria-role="button" aria-label="队伍获取失败，点按重试" hover-class="cy-pressed" hover-stay-time="80">队伍获取失败 · 点按重试</view>
     <block wx:elif="{{groups.length}}">
       <block wx:for="{{groups}}" wx:for-item="g" wx:key="key">
         <view class="mt-sec">{{g.title}}</view>
-        <view class="mt-card cy-rise-in" style="animation-delay: {{index * 60}}ms" wx:for="{{g.rows}}" wx:key="key" data-index="{{index}}" data-group="{{g.key}}" bindtap="openRow"
+        <view class="mt-card cy-rise-in" style="animation-delay: {{index < 8 ? index * 60 : 480}}ms" wx:for="{{g.rows}}" wx:key="key" data-index="{{index}}" data-group="{{g.key}}" bindtap="openRow"
               aria-role="button" aria-label="{{item.name}}，{{item.badge}}" hover-class="cy-pressed" hover-stay-time="80">
           <view class="mt-card__top">
             <view class="mt-av mt-av--{{item.avatars.length}}"><image wx:for="{{item.avatars}}" wx:for-item="face" wx:key="k" class="mt-av__i" src="{{face.src}}" mode="aspectFill" /></view>
@@ -52,7 +52,7 @@
     <view class="mt-sec" wx:if="{{lobby.scope}}">{{lobby.scope}}</view>
     <view class="mt-state" wx:if="{{openLoading}}">正在加载…</view>
     <view class="mt-err" wx:elif="{{openError}}" bindtap="loadOpen" aria-role="button" aria-label="加载失败，轻点重试" hover-class="cy-pressed" hover-stay-time="80">加载失败 · 轻点重试</view>
-    <view class="mt-card cy-rise-in" style="animation-delay: {{index * 60}}ms" wx:for="{{openRows}}" wx:key="key" data-index="{{index}}" bindtap="openLobbyTeam" aria-role="button" aria-label="{{item.name}}，{{item.badge}}" hover-class="cy-pressed" hover-stay-time="80">
+    <view class="mt-card cy-rise-in" style="animation-delay: {{index < 8 ? index * 60 : 480}}ms" wx:for="{{openRows}}" wx:key="key" data-index="{{index}}" bindtap="openLobbyTeam" aria-role="button" aria-label="{{item.name}}，{{item.badge}}" hover-class="cy-pressed" hover-stay-time="80">
       <view class="mt-card__top">
         <view class="mt-av mt-av--{{item.avatars.length}}"><image wx:for="{{item.avatars}}" wx:for-item="face" wx:key="k" class="mt-av__i" src="{{face.src}}" mode="aspectFill" /></view>
         <view class="mt-card__body"><text class="mt-card__n">{{item.name}}</text><text class="mt-card__m">{{item.sub}}</text></view>
@@ -66,7 +66,7 @@
     <view class="mt-sec" wx:if="{{tab === 'mine'}}">附近在招募</view>
     <view class="mt-state" wx:if="{{openLoading}}">正在找附近的队伍…</view>
     <view class="mt-err" wx:elif="{{openError}}" bindtap="loadOpen" aria-role="button" aria-label="{{openError}}，点按重试" hover-class="cy-pressed" hover-stay-time="80">{{openError}} · 点按重试</view>
-    <view class="mt-card cy-rise-in" style="animation-delay: {{index * 60}}ms" wx:for="{{openRows}}" wx:key="key" data-index="{{index}}" bindtap="openNearbyTeam" aria-role="button" aria-label="{{item.name}}，{{item.badge}}" hover-class="cy-pressed" hover-stay-time="80">
+    <view class="mt-card cy-rise-in" style="animation-delay: {{index < 8 ? index * 60 : 480}}ms" wx:for="{{openRows}}" wx:key="key" data-index="{{index}}" bindtap="openNearbyTeam" aria-role="button" aria-label="{{item.name}}，{{item.badge}}" hover-class="cy-pressed" hover-stay-time="80">
       <view class="mt-card__top">
         <view class="mt-av mt-av--{{item.avatars.length}}"><image wx:for="{{item.avatars}}" wx:for-item="face" wx:key="k" class="mt-av__i" src="{{face.src}}" mode="aspectFill" /></view>
         <view class="mt-card__body"><text class="mt-card__n">{{item.name}}</text><text class="mt-card__m">{{item.sub}}</text></view>

@@ -225,7 +225,7 @@ Page({
     // 失败时列表停在 [],光判 length 会渲染成「本来就没有」甚至「正在加载」。
     listErr: {},
     // 首次加载和重试都必须立即给反馈；否则网络慢时用户点“重试”看起来完全没生效。
-    listLoading: {},
+    listLoading: {}, listLoaded: {}, // H-03b:listLoaded = 该区已落地过一次;此后刷新不回骨架、不重挂区块,页面高度不跳
 
     // 分页相关数据
     bottomTopicPageNo: 1,
@@ -1091,7 +1091,7 @@ Page({
     delete that._listControls[listName];
     that.setData({
       ['listLoading.' + listName]: true,
-      ['listErr.' + listName]: false,
+      ['listErr.' + listName]: !!((that.data.listLoaded || {})[listName] && (that.data.listErr || {})[listName]), // H-03b:落地过的区刷新时留着原错误态,等结果再换
     });
 
     // 失败标记:发起新请求时先清掉旧错误并显示 loading；失败/非 200 再进入 error。
@@ -1206,7 +1206,7 @@ Page({
         settled = true;
         if (!isCurrent()) return;
         delete that._listControls[listName];
-        that.setData({ ['listLoading.' + listName]: false });
+        const loaded = Object.assign({}, that.data.listLoaded); loaded[listName] = true; that.setData({ ['listLoading.' + listName]: false, listLoaded: loaded });
       },
     });
     if (!settled && isCurrent() && control && typeof control.abort === 'function') {
@@ -1305,7 +1305,7 @@ loadBottomTopicList: function(pageNo, isRefresh = false) {
 //           listLength: isRefresh ? list.length : that.data.bottomTopicList.length
 //         });
       }
-      that.setData({ isBottomLoading: false, bottomTopicFailedPage: 0 });
+      that.setData({ isBottomLoading: false, bottomTopicFailedPage: 0, 'listLoaded.bottomTopicList': true });
     },
     fail: function (res) {
       // A-14-2:网络失败同样落行内重试,不再只弹一次 toast。
@@ -1405,7 +1405,7 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
           ));
         }
       }
-      that.setData({ isBottomLoading: false, bottomActivityFailedPage: 0 });
+      that.setData({ isBottomLoading: false, bottomActivityFailedPage: 0, 'listLoaded.bottomActivityList': true });
     },
     fail: function (res) {
       // A-14-2:网络失败同样落行内重试,不再只弹一次 toast。
