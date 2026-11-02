@@ -101,7 +101,7 @@ page { background: var(--cy-bg-card); }
   background: var(--cy-btn-solid-bg);
 }
 /* ===== 页面内容（漫游子 tab 已拆除，tab-body 代替原 .tab-content 的 padding） ===== */
-.tab-body { padding: 0 var(--cy-page-x); }
+.tab-body { position: relative; padding: 0 var(--cy-page-x); } /* C-01:刷新提示 .cy-refresh-float 以此定位,不占高度 */
 .tab-body--feed { padding: 0; }
 .feed-state { display: block; margin: 0 var(--cy-page-x); }
 

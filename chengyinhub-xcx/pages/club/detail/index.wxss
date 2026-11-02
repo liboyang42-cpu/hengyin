@@ -1116,8 +1116,8 @@ page { background: var(--cy-bg-page); }
   font-size: var(--cy-font-caption);
   font-weight: 500;
   color: var(--cy-color-text-secondary);
-  /* CU-C-61:「邀请成员」是原生 <button open-type="share">。 */
-  margin: 0;
+  /* CU-C-61:「邀请成员」是原生 <button open-type="share">。上下负边距:留 44px 热区但不撑高标题行。 */
+  margin: -24rpx 0; /* ds-ok: 88rpx 热区减去 40rpx 行高 */
   padding: 0;
   border: 0;
   line-height: normal;

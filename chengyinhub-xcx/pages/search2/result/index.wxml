@@ -2,7 +2,7 @@
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
-<view class="search2-result" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
+<view class="search2-result">
   <cy-nav-bar />
   <view class="result-nav-spacer" style="height: {{statusBarHeight + navBarHeight}}px;"></view>
   <view class="result-search">
@@ -22,7 +22,7 @@
         <cy-skeleton type="feed-card" count="3" />
       </view>
       <cy-error load-failure class="fill-slot cy-fade-in" wx:elif="{{searchError && !visibleResults.length}}" fill="{{true}}" size="lg" title="没能完成搜索" sub="{{searchError}}" bind:retry="runSearch" auto-back="{{!everLoaded}}" />
-      <cy-empty class="fill-slot" wx:if="{{!searchLoading && !contentLoading && !contentError && !searchError && !visibleResults.length}}" fill="{{true}}" size="lg" kind="empty" title="没有找到" sub="" />
+      <cy-empty class="fill-slot" wx:if="{{!keywordEditing && !searchLoading && !contentLoading && !contentError && !searchError && !visibleResults.length}}" fill="{{true}}" size="lg" kind="empty" title="没有找到" sub="" />
       <view wx:if="{{contentFilterNotice}}" class="content-pagination">{{contentFilterNotice}}</view>
       <cy-inline-error wx:if="{{contentError}}" title="{{contentError}}" action="重试本页" bind:action="loadMoreContent" />
       <view class="result-list" wx:if="{{visibleResults.length}}">

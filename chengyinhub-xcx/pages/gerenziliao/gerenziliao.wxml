@@ -12,7 +12,7 @@
                 fill size="lg" bind:primary="retryLoad" auto-back custom-back bind:back="exitPage" />
 <block wx:else>
 <view class="profile-refresh-state">
-  <text wx:if="{{refreshing}}" class="profile-refreshing" aria-role="status">正在确认个人资料…</text>
+  <text wx:if="{{refreshing}}" class="profile-refreshing cy-refresh-float" aria-role="status">正在确认个人资料…</text>
 </view>
 <!-- 2026-10-30 业主定稿 P-2(V-15 / V-21):Revolut 式资料页 —— 页顶铺主页背景图并套模糊蒙版,头像居中放大、编辑笔在正下方居中;
      字段改成分组列表(字段名 · 当前值 · ›),整行可点,去掉每行右侧的圆形笔按钮。 -->

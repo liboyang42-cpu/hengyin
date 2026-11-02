@@ -1,3 +1,4 @@
+<wxs src="../../../../utils/wxs/count.wxs" module="cnt" />
 <view class="order-detail theme-merchant">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
@@ -17,7 +18,7 @@
       aria-label="{{detail.canReadFinance ? detail.title + '，我的收入 ' + (detail.amountDisplay || detail.amountFallback) + '，' + detail.stateText : detail.title + '，' + detail.stateText}}">
       <text class="fin-hero__lab">{{detail.canReadFinance ? detail.title + ' · 我的收入' : detail.title}}</text>
       <block wx:if="{{detail.canReadFinance}}">
-        <text class="fin-hero__amt" wx:if="{{detail.amountText != null}}">{{detail.amountDisplay}}</text>
+        <text class="fin-hero__amt" wx:if="{{detail.amountText != null}}">{{cnt.money(detail.amountDisplay, odK)}}</text>
         <text class="fin-hero__amt fin-hero__amt--mute" wx:else>{{detail.amountFallback}}</text>
       </block>
       <!-- stateText 为空时 cy-badge 只剩一个孤零零的状态点(2026-08-19 E12 实拍:金额下面一个空圆点)。

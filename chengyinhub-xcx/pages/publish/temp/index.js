@@ -2844,7 +2844,7 @@ Page({
     }, () => { this._applyPvStep(0); });
   },
 
-  openPreview: function () {
+  openPreview: function () { if (this.data.submitting) return; // CP-11:按钮不再转圈,保存中点击不开预览
     this._pvTypeStartedAt = 0; this._pvAdvanced = null;
     loadStoryFont(); // P-60:预览里的故事正文同玩家端手写体
     // 查看预览前必填校验

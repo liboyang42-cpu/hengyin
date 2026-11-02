@@ -320,7 +320,7 @@ page { background: var(--cy-color-bg-page); }
 
 /* 里程碑轴:连成一条线的档位圆点,当前档实心高亮,已过档次之,未到档最淡。
    数字来自真实累计完成主题数(见 index.js loadMilestone),接口没取到时整条不渲染。 */
-.play-loading{ position:fixed; inset:0; z-index:200; display:flex; align-items:center; justify-content:center; padding:0 var(--cy-page-x); box-sizing:border-box; background:var(--cy-color-bg-page); }
+.play-loading{ position:fixed; inset:0; z-index:200; display:flex; align-items:flex-start; justify-content:center; padding:0 var(--cy-page-x); box-sizing:border-box; background:var(--cy-color-bg-page); }
 
 /* 非阻断时间横幅 */
 .play-timebar{ position:fixed; left:0; right:0; top:0; z-index:120; padding:var(--cy-legacy-18) 24rpx; padding-top:calc(18rpx + env(safe-area-inset-top)); text-align:center; background: var(--cy-color-overlay); color: var(--cy-color-play-accent); font-size:26rpx; } /* ds-ok 非阻断时间横幅沿用既有字号 */
@@ -561,13 +561,13 @@ page { background: var(--cy-color-bg-page); }
 .chfull__fsentry-ico{ flex:none; width:96rpx; height:96rpx; border-radius:24rpx; display:flex; align-items:center; justify-content:center; /* ds-ok 故事流装饰值 */
   background:rgba(255,255,255,.08) center/cover no-repeat; color:#FFFFFF; } /* ds-ok 图标块 */
 .chfull__fsentry-title{ font-size:32rpx; font-weight:700; line-height:1.4; color:#FFFFFF; } /* ds-ok 玩法名 */
-.chfull__fsentry-go{ flex:none; height:64rpx; padding:0 36rpx; border-radius:999rpx; display:flex; align-items:center; /* ds-ok 故事流装饰值 */
+.chfull__fsentry-go{ flex:none; height:64rpx; padding:0 36rpx; border-radius:var(--cy-radius-pill); display:flex; align-items:center; /* ds-ok 故事流装饰值 */
   background:#FFFFFF; color:#0A0A0A; font-size:24rpx; font-weight:700; } /* ds-ok 白药丸墨字 */
 .chfull__fsentry.is-auto{ opacity:.6; }
 .chfull__fsentry.is-done .chfull__fsentry-go{ background:rgba(255,255,255,.14); color:#FFFFFF; } /* ds-ok 已完成弱化 */
 .chfull__fsentry.is-done{ opacity:.7; }
 .chfull__kit{ --pk-verdict-radius:32rpx; } /* ds-ok 与内嵌安静挑战卡同一档圆角(2026-10-27 实测判定色块是直角) */
-.chfull__continue{ margin-top:var(--cy-space-4); height:88rpx; border-radius:999rpx; /* ds-ok 原型 .btn 46px 高 / 全圆角;上边距:不再紧贴判定色块 */
+.chfull__continue{ margin-top:var(--cy-space-4); height:88rpx; border-radius:var(--cy-radius-pill); /* ds-ok 原型 .btn 46px 高 / 全圆角;上边距:不再紧贴判定色块 */
   display:flex; align-items:center; justify-content:center;
   color:#111111; background:#FFFFFF; font-size:29rpx; font-weight:700; } /* ds-ok 原型 .btn.w 15px/700 */
 
@@ -584,10 +584,10 @@ page { background: var(--cy-color-bg-page); }
 /* ===================== 勋章颁发(Figma 3964:17047)=====================
  * 顶部「徽章」标题齐胶囊行;金奖杯主视觉 + 名称;底部滑动确认条(绿,爆点在组件内)。 */
 .woo{ position:absolute; inset:0; z-index:121; background:rgba(6,8,14,.92); /* ds-ok Figma 实测(用户裁决字面值) */
-  display:flex; flex-direction:column; align-items:center; justify-content:center; } /* ds-ok 颁发时刻的加深遮罩 */
+  display:flex; flex-direction:column; align-items:center; justify-content:center; animation:fade var(--cy-motion-standard) var(--cy-ease-out) both; } /* ds-ok 颁发时刻的加深遮罩 */
 .woo__title{ position:absolute; top:0; left:0; right:0; text-align:center;
   font-size:46rpx; font-weight:700; color:#FFFFFF; } /* ds-ok Figma 实测(用户裁决字面值) */
-.woo__hero{ display:flex; flex-direction:column; align-items:center; gap:31rpx; }
+.woo__hero{ display:flex; flex-direction:column; align-items:center; gap:31rpx; animation:floatUp var(--cy-motion-slow) var(--cy-ease-out) both; } /* ds-ok Figma 实测 gap(用户裁决字面值) */
 .woo__img{ width:300rpx; height:300rpx; }
 .woo__name{ font-size:31rpx; font-weight:700; color:#FFFFFF; } /* ds-ok Figma 实测(用户裁决字面值) */
 .woo__coupon{ min-height:var(--cy-btn-h); box-sizing:border-box; display:flex; align-items:center; justify-content:center; margin-top:31rpx; padding:15rpx 31rpx; border-radius:var(--cy-radius-pill);
@@ -852,7 +852,7 @@ page { background: var(--cy-color-bg-page); }
   transform:translate(var(--tx1,0px), var(--ty1,0px)) scale(.78) rotate(calc(var(--rot,0deg) * .4));
   transition:transform .832s cubic-bezier(.18,.82,.26,1), opacity .12s ease-out; }
 .fx-tile.is-dealt{ opacity:1; transform:translate(0,0) scale(1) rotate(0deg);
-  transition:transform .768s cubic-bezier(.33,0,.2,1), opacity .12s ease-out; }
+  transition:transform .768s cubic-bezier(.33,0,.2,1), opacity .12s ease-out, filter var(--cy-motion-standard) var(--cy-ease-out); }
 .play--reduced-motion .fx-tile{ transition:none; opacity:1; transform:none; }
 /* 量尺寸的那一帧把变换整个关掉:待机态同时挂着 scale 和 rotate,
    从变换后的外框反推布局尺寸必然带误差(实测 4 家差 11px、6 家差 16px)。
@@ -869,7 +869,7 @@ page { background: var(--cy-color-bg-page); }
   font-size:19rpx; font-weight:600; /* ds-ok 压在图上的玻璃小标,比 caption 小 */
   background:rgba(0,0,0,.46); color:rgba(255,255,255,.90); /* ds-ok 同上 */
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.fx-tile__im{ position:absolute; left:0; top:0; width:100%; height:100%; }
+.fx-tile__im{ position:absolute; left:0; top:0; width:100%; height:100%; transition:opacity var(--cy-motion-standard) var(--cy-ease-out), filter var(--cy-motion-standard) var(--cy-ease-out); } /* 完成一站/解锁时灰化与去模糊渐变,不跳帧 */
 .fx-tile__shade{ position:absolute; left:0; right:0; top:0; bottom:0;
   background:linear-gradient(180deg, rgba(0,0,0,.10) 0%, rgba(0,0,0,.30) 40%, rgba(10,8,6,.90) 100%); } /* ds-ok 保证卡面文字可读的压暗 */
 .fx-tile__biz{ display:flex; align-items:center; gap:10rpx; max-width:100%;
@@ -1104,7 +1104,7 @@ page { background: var(--cy-color-bg-page); }
 /* ===== 升级2:角色卡(v5 语言:scrim + 深玻璃 + 紫描边 + 翻入) ===== */
 /* 2026-09-02:原 960/961 —— 夹在 toast(950)与 celebrate(990)之间,等于身份卡会压住 toast、
    又被庆祝层压住,两头都不是有意设计。居中卡 = modal 档;本页其它浮层最高 210,顺序不变。 */
-.rolemask { position: fixed; inset: 0; z-index: var(--cy-z-modal); background: rgba(0,0,0,.55); /* ds-ok 弹窗 scrim */ }
+.rolemask { position: fixed; inset: 0; z-index: var(--cy-z-modal); background: rgba(0,0,0,.55); /* ds-ok 弹窗 scrim */ animation: fade var(--cy-motion-standard) var(--cy-ease-out) both; }
 .rolecard {
   position: fixed; left: 50%; top: 50%; z-index: calc(var(--cy-z-modal) + 1); width: 600rpx;
   transform: translate(-50%, -50%);
@@ -1112,7 +1112,7 @@ page { background: var(--cy-color-bg-page); }
   background: rgba(10,10,11,.92); border: 2rpx solid rgba(255,255,255,.35); /* ds-ok 玻璃卡材质(cy-sheet 同规) */
   border-radius: var(--cy-radius-xl);
   box-shadow: 0 36rpx 72rpx rgba(0,0,0,.65); /* ds-ok 弹窗层投影 */
-  animation: rolecard-in .45s cubic-bezier(.2,.9,.3,1.15) both;
+  animation: rolecard-in var(--cy-motion-slow) var(--cy-ease-out) both; /* 弹窗不回弹 */
 }
 @keyframes rolecard-in {
   from { transform: translate(-50%, -50%) rotateY(90deg); opacity: 0; }
@@ -1750,7 +1750,7 @@ page { background: var(--cy-color-bg-page); }
 /* 结局 + 这一生的档案(2026-09-24):整屏可滚,真玩家底部一颗「继续」进完成页 */
 .pv-ending__scroll{ flex:1; min-height:0; }
 .pv-ending__k, .pv-ending__title, .pv-ending__copy, .pv-ending__cond{ display:block; }
-.pv-ending__go{ margin:64rpx 0 calc(env(safe-area-inset-bottom) + 48rpx); height:104rpx; border-radius:999rpx; display:flex; align-items:center; justify-content:center; /* ds-ok 胶囊按钮 */
+.pv-ending__go{ margin:64rpx 0 calc(env(safe-area-inset-bottom) + 48rpx); height:104rpx; border-radius:var(--cy-radius-pill); display:flex; align-items:center; justify-content:center; /* ds-ok 胶囊按钮 */
   background:#FFFFFF; color:#0A0A0A; font-size:32rpx; font-weight:700; } /* ds-ok 白药丸墨字 */
 .life-arc{ margin-top:72rpx; padding-top:40rpx; border-top:1rpx solid rgba(255,255,255,.16); } /* ds-ok 档案与结局之间一道发丝 */
 .life-arc__h{ display:block; font-size:22rpx; letter-spacing:6rpx; color:rgba(255,255,255,.55); } /* ds-ok 眉标 */
@@ -1772,7 +1772,7 @@ page { background: var(--cy-color-bg-page); }
 .pv-ending__copy{ margin-top:19rpx; font-size:29rpx; line-height:1.7; color:rgba(255,255,255,.72); } /* ds-ok 正文 15px */
 .pv-ending__cond{ margin-top:31rpx; font-size:23rpx; color:rgba(255,255,255,.5); } /* ds-ok 12px 说明 */
 .pv-ending__chips{ display:flex; flex-wrap:wrap; gap:15rpx; margin-top:46rpx; }
-.pv-ending__chip{ min-height:var(--cy-btn-h); display:flex; align-items:center; padding:0 27rpx; border-radius:999rpx; /* ds-ok 胶囊 */
+.pv-ending__chip{ min-height:var(--cy-btn-h); display:flex; align-items:center; padding:0 27rpx; border-radius:var(--cy-radius-pill); /* ds-ok 胶囊 */
   background:rgba(255,255,255,.12); color:#FFFFFF; font-size:25rpx; } /* ds-ok 同菜单行底 */
 .pv-ending__chip.is-on{ background:#FFFFFF; color:#000000; } /* ds-ok 反色中性 */
 
@@ -1780,14 +1780,14 @@ page { background: var(--cy-color-bg-page); }
 .story-map{ position:fixed; left:0; right:0; top:0; bottom:0; z-index:108; background:#000000; } /* ds-ok 压过 .chfull(106),低于结局卡(110) */
 .story-map__map{ position:absolute; left:0; right:0; top:0; bottom:0; }
 .story-map__back{ position:absolute; left:var(--cy-page-x); z-index:2; height:var(--cy-btn-h); padding:0 var(--cy-space-4);
-  display:flex; align-items:center; gap:var(--cy-space-1); border-radius:999rpx; background:rgba(0,0,0,.72); color:#FFFFFF; font-size:26rpx; } /* ds-ok 浮在地图上的深色胶囊 */
+  display:flex; align-items:center; gap:var(--cy-space-1); border-radius:var(--cy-radius-pill); background:rgba(0,0,0,.72); color:#FFFFFF; font-size:26rpx; } /* ds-ok 浮在地图上的深色胶囊 */
 .story-map__card{ position:absolute; left:var(--cy-page-x); right:var(--cy-page-x); bottom:calc(var(--cy-space-6) + env(safe-area-inset-bottom)); z-index:2;
   display:flex; align-items:center; gap:var(--cy-space-3); padding:var(--cy-space-4); border-radius:38rpx; background:#111111; } /* ds-ok 与故事玩法入口卡同底 */
 .story-map__copy{ flex:1; min-width:0; display:flex; flex-direction:column; }
 .story-map__k{ font-size:21rpx; letter-spacing:3rpx; color:rgba(255,255,255,.6); } /* ds-ok 同入口卡小标签 */
 .story-map__t{ margin-top:8rpx; font-size:33rpx; font-weight:800; color:#FFFFFF; } /* ds-ok */
 .story-map__go{ flex:none; height:var(--cy-btn-h); padding:0 var(--cy-space-4); display:flex; align-items:center;
-  border-radius:999rpx; background:#FFFFFF; color:#000000; font-size:27rpx; font-weight:700; } /* ds-ok 反色中性主按钮 */
+  border-radius:var(--cy-radius-pill); background:#FFFFFF; color:#000000; font-size:27rpx; font-weight:700; } /* ds-ok 反色中性主按钮 */
 
 /* 开始与结束(2026-09-24 用户:开始和结束要有一些动画)。照原型「开机」一组:flashl 白线 + warm 亮光(游玩页单色,改白);
    结束反过来「关机」bootout:压成一条亮线再收掉。只用 transition,不加新 keyframes。 */
@@ -1823,7 +1823,7 @@ page { background: var(--cy-color-bg-page); }
 .st-intro__step{ display:flex; align-items:baseline; gap:23rpx; }
 .st-intro__n{ font-size:29rpx; font-weight:800; color:#FFFFFF; } /* ds-ok 深底白字 */
 .st-intro__s{ font-size:25rpx; color:rgba(255,255,255,.6); } /* ds-ok 深底说明字 */
-.st-intro__go{ height:104rpx; border-radius:999rpx; display:flex; align-items:center; justify-content:center; /* ds-ok 胶囊按钮,同 .pv-ending__go */
+.st-intro__go{ height:104rpx; border-radius:var(--cy-radius-pill); display:flex; align-items:center; justify-content:center; /* ds-ok 胶囊按钮,同 .pv-ending__go */
   background:#FFFFFF; color:#000000; font-size:31rpx; font-weight:700; } /* ds-ok 玩家主按钮=反色中性 */
 .st-intro__tip{ margin-top:23rpx; text-align:center; font-size:21rpx; color:rgba(255,255,255,.45); } /* ds-ok 深底小字 */
 
@@ -1848,7 +1848,7 @@ page { background: var(--cy-color-bg-page); }
 .album__count{ position:absolute; left:0; right:0; bottom:calc(env(safe-area-inset-bottom) + 190rpx); text-align:center;
   font-size:21rpx; letter-spacing:4rpx; color:rgba(28,28,30,.45); } /* ds-ok 白底页码 */
 .album__back{ position:absolute; left:50%; bottom:calc(env(safe-area-inset-bottom) + 64rpx); transform:translateX(-50%);
-  height:var(--cy-btn-h); padding:0 46rpx; border-radius:999rpx; display:flex; align-items:center; /* ds-ok 胶囊按钮 */
+  height:var(--cy-btn-h); padding:0 46rpx; border-radius:var(--cy-radius-pill); display:flex; align-items:center; /* ds-ok 胶囊按钮 */
   background:#1C1C1E; color:#FFFFFF; font-size:27rpx; font-weight:600; } /* ds-ok 白底上的深色主按钮(反色中性) */
 
 .finsheet__records{display:flex;flex-direction:column;gap:var(--cy-space-3);padding:var(--cy-space-4);margin:var(--cy-space-4) 0;background:var(--cy-comp-sheet-player-surface);border-radius:var(--cy-radius-xl);font-size:var(--cy-type-body)}

@@ -85,7 +85,9 @@ test('我的订单空态只在真正无订单时提供返回发现页的下一�
   assert.match(stateBlock, /list\.length==0/, '空态整体只在 list 为空时渲染')
   // CU-M-103 起 cta 是三元:商家身份下这个按钮兑现不了(见下面两条),文案本身仍留在 wxml。
   assert.match(stateBlock, /wx:if="\{\{!loading && !errorMsg && list\.length==0 && !hasOrders\}\}" fill[\s\S]*?cta="\{\{canDiscoverRoutes \? '去发现城市路线' : ''\}\}"[\s\S]*?bind:cta="goDiscoverRoutes"/)
-  assert.match(stateBlock, /wx:if="\{\{!loading && !errorMsg && list\.length==0 && hasOrders\}\}" fill[\s\S]*?title="当前筛选暂无订单"[\s\S]*?换个筛选试试/)
+  assert.match(stateBlock, /wx:if="\{\{!loading && !errorMsg && list\.length==0 && hasOrders\}\}" fill[\s\S]*?title="当前筛选暂无订单"/)
+  // 2026-11-02 页面细节 X4 / brief 规则 2:筛选空态不再挂「换个筛选试试」这类无数据的第二行
+  assert.doesNotMatch(stateBlock, /换个筛选试试/)
   assert.match(
     js,
     /goDiscoverRoutes\(\)\s*\{\s*wx\.switchTab\(\{\s*url:\s*'\/pages\/index\/index'\s*}\);?\s*}/,
