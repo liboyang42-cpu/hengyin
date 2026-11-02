@@ -16,7 +16,7 @@ const { createCheckoutWorkflow, hasCompletePaymentParams, isOrderExpiredFailure,
   ORDER_REBUILD_REQUIRED, ORDER_EXPIRED_USER_MESSAGE } = require('../../../utils/checkout/checkout-workflow.js');
 const subscribe = require('../../../utils/subscribe.js');
 const { createRegistrationPaymentVerifier } = require('../../../utils/checkout/registration-payment-verifier.js');
-const { buildTopicStatBar } = require('../utils/topic-detail-facts.js');
+const { buildTopicStatBar, sessionWindowsText } = require('../utils/topic-detail-facts.js');
 const { isRecordList } = require('../../../utils/response-shape.js');
 const { haversine, distanceText } = require('../../../utils/geo.js');
 const routePreview = require('../../../utils/topic-route-preview.js');
@@ -2084,6 +2084,11 @@ Page({
           res.data['showStartDate'] = that.formatDate(res.data['startDate'])
           res.data['showEndDate'] = that.formatDate(res.data['endDate'])
           res.data['omsTicketList'] = that.processTopicDate(res.data['omsTicketList'])
+          // P-30:自由探索的场次卡写真实场次(activityList)的时间,不写主题票自己的窗口
+          if (Number(res.data.productType) === 2) {
+            const sessionText = sessionWindowsText(res.data['activityList'])
+            if (sessionText) res.data['omsTicketList'].forEach((t) => { t.sessionTimeText = sessionText })
+          }
           res.data['perkCapacityText'] = that.formatPerkCapacity(res.data['perkSellableCapacity'])
           res.data['totalHour'] = that.formatHour(res.data['totalTime'])
           res.data['totalTimeFormatted'] = that.formatTimeToChinese(res.data['totalTime'])
