@@ -40,22 +40,18 @@ function loadComponent(source) {
       // 2026-10-28 G-9:本月收入 / 我的资产的纯聚合模块,给真件
       if (p.includes('earnings-view')) return require(path.join(ROOT, 'utils/earnings-view.js'))
       if (p.includes('funds-stages/view-model')) return require(path.join(ROOT, 'components/cy/funds-stages/view-model.js'))
+      // 2026-11-02 PM-05:金额落地改走共用件 page-motion.countMoney(只写进度 key,真值不动)。
+      // 这里给一个记录调用的替身:减动效直接不动;否则把进度置 0 并登记停表句柄,与真件的停表口径一致。
+      if (p.indexOf('page-motion') >= 0) return { countMoney(page, key) {
+        if (sandbox.__reducedMotion) return
+        const stops = page._pmCounters || (page._pmCounters = {})
+        if (stops[key]) stops[key]()
+        const run = { key, stopped: false }
+        sandbox.__motions.push(run)
+        page.setData({ [key]: 0 })
+        stops[key] = () => { run.stopped = true }
+      } }
       if (vm.isUiModule(p)) return vm.loadUiModule(p, vm.createContext({ wx: sandbox.wx }))
-      // countUp 接线(2026-08-21):motion 是纯 node 兼容模块,直接给真件;
-      // 减动效偏好固定 true → 单帧直落,金额断言保持同步可判
-      if (p.indexOf('motion-preference') >= 0) return { readReducedMotion: () => sandbox.__reducedMotion }
-      if (p.indexOf('motion') >= 0) {
-        const real = require(path.join(ROOT, 'utils/motion.js'))
-        return { countUp(from, to, onFrame, options) {
-          if (!sandbox.__manualMotion) return real.countUp(from, to, onFrame, options)
-          const run = { onFrame, onDone: options.onDone, timers: [] }
-          sandbox.__motions.push(run)
-          return real.countUp(from, to, onFrame, Object.assign({}, options, {
-            setTimeout(fn) { const timer = { fn, cancelled: false }; run.timers.push(timer); return timer },
-            clearTimeout(timer) { timer.cancelled = true },
-          }))
-        } }
-      }
       throw new Error('unexpected require: ' + p)
     },
     wx: {
@@ -74,7 +70,6 @@ function loadComponent(source) {
     __deferGuard: false,
     __guardCallbacks: [],
     __reducedMotion: true,
-    __manualMotion: false,
     __motions: [],
     __navigations: [],
   }
@@ -84,14 +79,13 @@ function loadComponent(source) {
 }
 
 /** 造一个最小的组件实例:setData 直接合进 data */
-function instantiate({ globalData, withdrawable, role, source, memberId, type, deferGuard, reducedMotion, manualMotion } = {}) {
+function instantiate({ globalData, withdrawable, role, source, memberId, type, deferGuard, reducedMotion } = {}) {
   const { def, requests, sandbox } = loadComponent(source)
   if (role !== undefined) sandbox.__role = role
   if (memberId !== undefined) sandbox.__memberId = memberId
   if (type !== undefined) sandbox.__type = type
   if (deferGuard !== undefined) sandbox.__deferGuard = deferGuard
   if (reducedMotion !== undefined) sandbox.__reducedMotion = reducedMotion
-  if (manualMotion !== undefined) sandbox.__manualMotion = manualMotion
   if (globalData !== undefined) sandbox.__globalData = globalData
   if (withdrawable !== undefined) sandbox.__withdrawable = withdrawable
   const ctx = {
@@ -302,7 +296,7 @@ for (const callback of ['success', 'fail', 'successStatusAbnormal']) {
     h.requests[1][callback]({ code: 200, data: { balance: 88 } })
     assert.equal(h.ctx.data.state, 'error')
     assert.equal(h.ctx.data.balance, '')
-    assert.equal(h.ctx.data.balanceDisplay, '')
+    assert.equal(h.ctx.data.balanceK, null)
     assert.equal(h.requests.length, 2)
   })
 }
@@ -346,7 +340,7 @@ for (const callback of ['fail', 'successStatusAbnormal']) {
     h.ctx.refresh()
     assert.equal(h.ctx.data.state, 'loading')
     assert.equal(h.ctx.data.balance, '')
-    assert.equal(h.ctx.data.balanceDisplay, '')
+    assert.equal(h.ctx.data.balanceK, null)
     h.requests[1][callback]()
     assert.equal(h.ctx.data.state, 'error')
     assert.equal(h.ctx.data.balance, '')
@@ -381,28 +375,37 @@ test('页面显示时身份未变不重复取数，变更身份则清除旧金�
   assert.equal(h.ctx.data.balance, '')
 })
 
-test('真实金额动画的排队帧在换号后不得显示旧余额', () => {
-  const h = readyBalance({ reducedMotion: false, manualMotion: true }, 88)
+test('金额落地进行中换号：停表并清空旧余额，不显示旧金额', () => {
+  const h = readyBalance({ reducedMotion: false }, 88)
   const run = h.sandbox.__motions[0]
+  assert.equal(h.ctx.data.balanceK, 0)
+  assert.equal(h.ctx.data.balance, '88.00')
   h.sandbox.__memberId = 2
-  run.timers[0].fn()
+  h.def.pageLifetimes.show.call(h.ctx)
   assert.equal(h.ctx.data.balance, '')
-  assert.equal(h.ctx.data.balanceDisplay, '')
-  assert.equal(h.ctx.data.state, 'error')
-  assert.ok(run.timers.every((timer) => timer.cancelled))
+  assert.equal(h.ctx.data.balanceK, null)
+  assert.ok(run.stopped)
 })
 
-test('旧动画完成回调不能清除新动画句柄；旧帧也不能覆盖新金额', () => {
-  const h = readyBalance({ reducedMotion: false, manualMotion: true }, 88)
+test('刷新落新金额时旧落地停表；新金额只按新进度显示', () => {
+  const h = readyBalance({ reducedMotion: false }, 88)
   const old = h.sandbox.__motions[0]
   h.ctx.refresh()
+  assert.ok(old.stopped)
   h.requests[1].success({ code: 200, data: { balance: 20 } })
-  const currentStop = h.ctx._stopCountUp
-  old.onDone()
-  old.onFrame(88)
-  assert.equal(h.ctx._stopCountUp, currentStop)
+  assert.equal(h.sandbox.__motions.length, 2)
+  assert.equal(h.sandbox.__motions[1].stopped, false)
   assert.equal(h.ctx.data.balance, '20.00')
-  assert.equal(h.ctx.data.balanceDisplay, '0.00')
+  assert.equal(h.ctx.data.balanceK, 0)
+})
+
+test('减动效或零余额不做落地动画，直接显示真值', () => {
+  const h = readyBalance({ reducedMotion: true }, 88)
+  assert.equal(h.sandbox.__motions.length, 0)
+  assert.equal(h.ctx.data.balanceK, null)
+  const z = readyBalance({ reducedMotion: false }, 0)
+  assert.equal(z.sandbox.__motions.length, 0)
+  assert.equal(z.ctx.data.balance, '0.00')
 })
 
 for (const change of ['account', 'role', 'type', 'hide', 'detach', 'refresh']) {
@@ -457,6 +460,6 @@ test('收益错误态不把身份失效误报为网络原因，提现标签匹�
 test('收益真实401/403与网络异常分别是登录/权限/读取故障，均不保留旧金额', () => {
   for (const [code,state] of [[401,'login'],[403,'permission'],[500,'error']]) {
     const h=readyBalance();h.ctx.refresh();h.requests[1].success({code,msg:'真实响应'});
-    assert.equal(h.ctx.data.state,state);assert.equal(h.ctx.data.balance,'');assert.equal(h.ctx.data.balanceDisplay,'');
+    assert.equal(h.ctx.data.state,state);assert.equal(h.ctx.data.balance,'');assert.equal(h.ctx.data.balanceK,null);
   }
 });

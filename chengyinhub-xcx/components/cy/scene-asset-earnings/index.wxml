@@ -1,4 +1,4 @@
-<wxs src="../../../utils/wxs/money.wxs" module="money" />
+<wxs src="../../../utils/wxs/money.wxs" module="money" /><wxs src="../../../utils/wxs/count.wxs" module="cnt" />
 <!-- 2026-10-28 G-9 业主「参考 Revolut」:余额是主角,下面四个圆形动作(提现 / 明细 / 分析 / 更多),
      再下面是本月收入明细和我的资产(cy-earnings-overview 自读);间距和上下留白放大。商家同页浅色。 -->
 <view class="ae">
@@ -10,7 +10,7 @@
     <view class="ae-hero">
       <view class="ae-card">
         <text class="ae-card__label">账户收益（元）</text>
-        <text class="ae-card__amount">{{money.amount(balanceDisplay || balance)}}</text>
+        <text class="ae-card__amount">{{cnt.money(money.amount(balance), balanceK)}}</text>
       </view>
       <view class="ae-actions">
         <view class="ae-action" bindtap="openWithdraw" aria-role="button" aria-label="联系平台客服处理提现" hover-class="cy-pressed" hover-stay-time="80"><view class="ae-action__ic ae-action__ic--primary"><cy-icon name="arrow-right" size="40" /></view><text>提现</text></view>
