@@ -905,6 +905,9 @@ page { background: var(--cy-color-bg-page); }
         overflow:hidden 的 __body),它们 position:absolute 需要这里有定位祖先;
      ② 有 transform 的元素等价于 z-index:0,不显式抬到 40 的话,爆炸的光效层
         (31~34)会全部盖在包**表面**上 —— 那就成了「屏幕闪了一下」。 */
+/* g21:卡包下方的拆包提示,与卡包同层,不抢卡包的光 */
+.fx-pack-hint{ position:absolute; left:0; right:0; bottom:12%; z-index:41; text-align:center;
+  font-size:var(--cy-type-caption); letter-spacing:4rpx; color:var(--cy-color-text-secondary); pointer-events:none; }
 .fx-pack{ position:relative; z-index:40; width:424rpx; height:741rpx;
   transform:rotate(-3.4deg); transform-origin:50% 62%; }
 /* 高度由包装图的原始比例定(pages/play/assets/pack-foil.png 330×577):424 × 577/330 ≈ 741rpx。

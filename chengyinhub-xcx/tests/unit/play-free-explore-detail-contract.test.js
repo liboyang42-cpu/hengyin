@@ -71,8 +71,9 @@ test('章节正文只在故事流里,详情不再重复念一遍', () => {
 
 test('点大卡片进剧情,进游戏只有底部那一个 CTA', () => {
   assert.match(wxml, /class="fx-hero__card[^"]*"[\s\S]{0,220}bindtap="openChapStory"/)
-  // 底部 CTA 是唯一进玩法的入口,文案固定不带玩法名(用户 09-07 定)
-  assert.match(wxml, /bindtap="heroEnter"[\s\S]{0,200}开始互动 获得奖励！/)
+  // 底部 CTA 是唯一进玩法的入口,文案固定不带玩法名(用户 09-07 定;2026-11-02 走查 g21 改为「到店打卡」)
+  assert.match(wxml, /bindtap="heroEnter"[\s\S]{0,200}'到店打卡'/)
+  assert.doesNotMatch(wxml, /开始互动 获得奖励/)
   assert.equal((wxml.match(/bindtap="heroEnter"/g) || []).length, 2,
     '只有卡片详情与故事流两处 CTA 进玩法；多出来说明又开了旁路入口')
   // 故事流那颗按玩法名走(样机同款「开始 · 找一本 1998」),没配玩法名才回落固定文案

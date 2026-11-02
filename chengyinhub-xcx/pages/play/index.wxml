@@ -640,6 +640,8 @@
           <image class="fx-pack__sealim" src="/pages/play/assets/pack-foil.png" mode="scaleToFill" />
         </view>
       </view>
+      <!-- g21:卡包下方一句「轻点拆开」,撕开后随卡包一起退场 -->
+      <text class="fx-pack-hint" wx:if="{{!packTear && !packBurst && !(tearPct > 0)}}">轻点拆开</text>
       <!-- 碎片在包前面飞:它们是实体不是光 -->
       <view class="fx-shard" wx:if="{{packBurst}}" wx:for="{{blastShards}}" wx:key="id"
             style="width:{{item.w}}px;height:{{item.h}}px;background:{{item.c}};
@@ -747,6 +749,20 @@
         </view>
       </view>
 
+      <!-- ⑤ 本店权益:紧跟店铺,首屏就能看到这家给什么(P-14 2026-11-02 上移) -->
+      <block wx:if="{{hero.node.isMerchant && hero.node.perkName}}">
+        <view class="fx-hero__ey fx-hero__ey--gap fx-hero__in" style="--i:6">本店权益</view>
+        <view class="fx-perk fx-hero__in" style="--i:6">
+          <view class="fx-perk__ic"><cy-icon name="gift" size="34" /></view>
+          <view class="fx-perk__c">
+            <view class="fx-perk__n">{{hero.node.perkName}}</view>
+            <view class="fx-perk__m">
+              <view class="fx-perk__m-i"><cy-icon name="check" size="26" /><text>{{hero.node.perkRule}}</text></view>
+              <view class="fx-perk__m-i" wx:if="{{hero.node.perkValid}}"><cy-icon name="clock" size="26" /><text>{{hero.node.perkValid}}</text></view>
+            </view>
+          </view>
+        </view>
+      </block>
       <!-- ③ 游戏:玩法与规则是游戏的事,和上面的章节分开 -->
       <block wx:if="{{hero.node.gameTitle}}">
         <view class="fx-hero__ey fx-hero__ey--gap fx-hero__in" style="--i:4">本站游戏{{hero.node.gameKind ? ' · ' : ''}}{{hero.node.gameKind}}</view>
@@ -773,27 +789,15 @@
         <view class="fx-step {{hero.node.stepProof ? 'is-ok' : ''}}"><text class="fx-step__n">2</text><text class="fx-step__t">拍摄现场凭证 · 到店后显示拍摄要求</text></view>
         <view class="fx-step {{hero.node.stepRedeem ? 'is-ok' : ''}}"><text class="fx-step__n">3</text><text class="fx-step__t">商家核销 · 核销那一刻才算服务开始</text></view>
       </view>
+      <cy-btn class="fx-hero__in" style="--i:5;display:block;margin-top:var(--cy-space-3)" variant="secondary" wx:if="{{hero.node.isMerchant && !hero.node.done && regId && !isPreview && !isMock}}"
+              bindtap="openEntryQr" accessibility-label="出示入场码给店员核销">出示入场码</cy-btn>
 
-      <!-- ⑤ 本店权益:排在三步之后,紧挨底部按钮 -->
-      <block wx:if="{{hero.node.isMerchant && hero.node.perkName}}">
-        <view class="fx-hero__ey fx-hero__ey--gap fx-hero__in" style="--i:6">本店权益</view>
-        <view class="fx-perk fx-hero__in" style="--i:6">
-          <view class="fx-perk__ic"><cy-icon name="gift" size="34" /></view>
-          <view class="fx-perk__c">
-            <view class="fx-perk__n">{{hero.node.perkName}}</view>
-            <view class="fx-perk__m">
-              <view class="fx-perk__m-i"><cy-icon name="check" size="26" /><text>{{hero.node.perkRule}}</text></view>
-              <view class="fx-perk__m-i" wx:if="{{hero.node.perkValid}}"><cy-icon name="clock" size="26" /><text>{{hero.node.perkValid}}</text></view>
-            </view>
-          </view>
-        </view>
-      </block>
       <view class="fx-hero__pad"></view>
     </scroll-view>
     <view class="fx-hero__cta fx-hero__in" style="--i:3">
       <!-- 已核销就是禁用态:这一家的事已经结束了,按钮不该再是能点的样子 -->
       <cy-btn variant="{{hero.node.done ? 'disabled' : 'primary'}}" style="width:100%" bindtap="heroEnter"
-              accessibility-label="{{hero.node.done ? '这一家已核销' : '开始互动，直接进入本店玩法'}}">{{hero.node.done ? '已核销' : '开始互动 获得奖励！'}}</cy-btn>
+              accessibility-label="{{hero.node.done ? '这一家已核销' : '到店打卡，进入本店玩法'}}">{{hero.node.done ? '已核销' : '到店打卡'}}</cy-btn>
     </view>
   </view>
 
@@ -830,7 +834,7 @@
     </view>
     <view class="fx-story__cta {{chapStory.barAway ? 'is-away' : ''}}">
       <cy-btn variant="secondary" style="flex:1" bindtap="closeChapStory">回到卡片</cy-btn>
-      <cy-btn variant="primary" style="flex:1" bindtap="heroEnter">{{hero.node.playName ? '开始 · ' + hero.node.playName : '开始互动 获得奖励！'}}</cy-btn>
+      <cy-btn variant="primary" style="flex:1" bindtap="heroEnter">{{hero.node.playName ? '开始 · ' + hero.node.playName : '到店打卡'}}</cy-btn>
     </view>
     <page-container show="{{chapStory.show}}" duration="{{0}}" overlay="{{false}}" bind:afterleave="onStoryNativeBack" />
   </view>
