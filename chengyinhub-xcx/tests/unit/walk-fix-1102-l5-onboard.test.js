@@ -52,9 +52,11 @@ test('M-08:从「去完善品类」回来,重拉可承接章节并把选章节�
   page._projectReadOwner = undefined
   page.onShow()
   assert.equal(reloads, 1)
-  assert.equal(page.data.topicShow, true)
+  assert.equal(page._reopenAfterCategory, true, '章节拉回来后按最新章节重算招商状态并重开弹层')
   page.onShow()
   assert.equal(reloads, 1, '普通返回不重复拉')
+  const src = fs.readFileSync(path.join(ROOT, 'pages/topic/merchantinfo/merchantinfo.js'), 'utf8')
+  assert.match(src, /if \(that\._reopenAfterCategory\) \{ that\._reopenAfterCategory = false; that\.bmClick2\(\{ currentTarget: \{ dataset: \{ apply: 1 \} \} \}\); \}/)
 })
 
 test('M-09:选章节弹层只选章节,不再出玩法模板块', () => {

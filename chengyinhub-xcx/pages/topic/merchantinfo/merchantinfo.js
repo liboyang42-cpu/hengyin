@@ -369,7 +369,7 @@ Page({
     }
     const reducedMotion = readReducedMotion();
     if (this.data.reducedMotion !== reducedMotion) this.setData({ reducedMotion });
-    if (this._categoryReturn) { this._categoryReturn = false; this.loadMerchantRecruitmentChapters(); this.setData({ topicShow: true }); } if (this._clubSheetReturn) { this._clubSheetReturn = false; this.loadProjectHome(); if (this.data.clubSheet.show) this.loadClubCandidates(); if (this.data.merchantSheet.show) this.loadRegApplies(); } merchantTheme.merchantPageShow(); this._navigating = false;
+    if (this._categoryReturn) { this._categoryReturn = false; this._reopenAfterCategory = true; this.loadMerchantRecruitmentChapters(); } if (this._clubSheetReturn) { this._clubSheetReturn = false; this.loadProjectHome(); if (this.data.clubSheet.show) this.loadClubCandidates(); if (this.data.merchantSheet.show) this.loadRegApplies(); } merchantTheme.merchantPageShow(); this._navigating = false;
   },
   onHide() { this._hidden = true; merchantTheme.merchantPageRestore(); },
   onUnload() {
@@ -657,7 +657,7 @@ Page({
             chapterRecruitmentState: 'ready',
             chapterRecruitmentError: '',
           });
-          that.refreshMyChapterApplications();
+          that.refreshMyChapterApplications(); if (that._reopenAfterCategory) { that._reopenAfterCategory = false; that.bmClick2({ currentTarget: { dataset: { apply: 1 } } }); } // M-08 按最新章节重算并打开
           return;
         }
         // Q5 V1:品类缺失是可执行的前置态,不是「路线没开招募」的业务空。
