@@ -9,7 +9,6 @@ const publisherIdentity = require('../../../utils/publisher-identity.js')
 const RESULT_SHEET_MS = 2000
 /* CU-M-05 商家主办免费场的文案单一真源:票务步的常驻说明与提交时的拦截共用这一句,
    不然是两处各写一遍,改一处漏一处。 */
-const MERCHANT_FREE_ONLY_MSG = '商家主办活动还没开通收款，票价只能是 0'
 const analytics = require('../../../utils/analytics.js')
 const { createErrorBag, nonEmpty } = require('../utils/publish/publish-validator.js')
 const { createPublishWorkflow } = require('../utils/publish/publish-workflow.js')
@@ -112,7 +111,6 @@ Page({
     // CU-M-05 商家主办:scope=MERCHANT 从品牌中心/我的项目(商家)带进来。
     // merchantHost 只决定「问哪个接口、说什么话」,放行与否一律由权威回包判(见 guardPublisherRole)。
     merchantHost: false,
-    merchantFreeOnlyMsg: MERCHANT_FREE_ONLY_MSG,
     deniedReason: '发布单场活动需要俱乐部主理人身份。',
     activityLoadError: '',
     editingActivityId: 0,
@@ -514,11 +512,6 @@ Page({
       cyToast('请完善表单信息')
       return
     }
-    if (this.data.merchantHost && this.hasPaidTicket()) {
-      cyToast(MERCHANT_FREE_ONLY_MSG)
-      return
-    }
-
     this.syncActivityIdentity()
     if (this.data.identityRequired && !this.data.identityRegistered) {
       this.registerActivityIdentity()
@@ -557,9 +550,7 @@ Page({
     this.sendData(apiData)
   },
 
-  /* CU-M-05 收款缺口:全仓没有 sub_mchid,下单一律进平台商户号,商家主办收钱等于替平台收。
-     9-15 定稿「钱进商家子商户号」尚未落地 ⇒ 商家这一路先只放开免费场。这是真闸不是提示:
-     服务端同样拒(见 ApiActivityController#merchantHostViolation),客户端提前挡是为了当场看得见。 */
+  /* 2026-11-02 pay-gate:商家主办也可发收费场,票款走平台商户号(原「票价只能是 0」已撤)。 */
   hasPaidTicket() {
     return (this.data.formData.tickets || []).some(function (ticket) {
       return Number(ticket && ticket.price) > 0

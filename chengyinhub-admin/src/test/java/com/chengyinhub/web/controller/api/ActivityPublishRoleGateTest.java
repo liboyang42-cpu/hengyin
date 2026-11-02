@@ -330,19 +330,19 @@ class ActivityPublishRoleGateTest
     }
 
     /**
-     * 收款缺口(9-15 定稿「钱进商家子商户号」未落地,现码一律进平台商户号):
-     * 商家主办只放开免费场,票价>0 直接拒并给明确文案,不是静默失败。
+     * 2026-11-02 pay-gate:商家主办也可发收费场,票款走平台商户号(商户号只管承接其他商家)。
      */
     @Test
-    void merchantScopePublishRejectsPaidTicketWithExplicitMessage()
+    void merchantScopePublishAllowsPaidTicketThroughPlatformMerchant()
     {
         grantMerchantProjectManage();
+        passCreateGuardThrough();
+        when(cmsActivityService.publishActivity(any(), eq(MERCHANT_OWNER_ID), anyString(), anyBoolean())).thenReturn(9L);
 
         AjaxResult result = controller.publish(merchantRequestWithPrice("69"));
 
-        assertEquals(500, result.get(AjaxResult.CODE_TAG));
-        assertEquals("商家主办活动还没开通收款，票价只能是 0", result.get(AjaxResult.MSG_TAG));
-        verify(cmsActivityService, never()).publishActivity(any(), anyLong(), anyString(), anyBoolean());
+        assertEquals(200, result.get(AjaxResult.CODE_TAG));
+        verify(cmsActivityService).publishActivity(any(), eq(MERCHANT_OWNER_ID), anyString(), anyBoolean());
     }
 
     /** 负控的另一半:0 元票是「免费场」不是「没开通收款」,必须放行 —— 误把 >0 写成 >=0 会在这儿红。 */

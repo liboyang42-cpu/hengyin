@@ -1507,12 +1507,20 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         assertCollectible(topic, payableAmount, null);
     }
 
+    /**
+     * 收款闸。2026-11-02 拍板(walk-fix ROUND2「Who can publish」):主办方(商家/俱乐部)没有自己的
+     * 商户号时,收费主题和活动照常发布,玩家的钱走平台商户号收 —— 全仓没有 sub_mchid,下单本来就只走
+     * 平台商户号(WechatPayServiceImpl#buildPrepayRequest)。因此本闸不再按「是否平台自营」拒。
+     *
+     * <p>仍然拒的只有「查不到票款归谁」的单(fail-closed):既没解析出主题,又不是有发布者的独立活动
+     * (含主题已删的承办活动)。第三方按核销计酬(REVSHARE)不在这里放开,仍由
+     * MerchantOfferServiceImpl / CmsTopicChapterServiceImpl 的 isPlatformOwned 闸拒。
+     */
     private void assertCollectible(CmsTopic topic, BigDecimal payableAmount, CmsActivity activity) {
         if (payableAmount == null || payableAmount.signum() <= 0) return;
-        boolean platformOwned = topic != null ? productRoleService.isPlatformOwned(topic.getId())
-                : activity != null && activity.getTopicId() == null && platformMemberId != null
-                        && platformMemberId > 0L && platformMemberId.equals(activity.getMemberId());
-        if (!platformOwned) {
+        boolean payeeKnown = topic != null
+                || activity != null && activity.getTopicId() == null && activity.getMemberId() != null;
+        if (!payeeKnown) {
             throw new RuntimeException("该产品暂不支持在线支付(平台正在办理支付资质,预计 2 个月内开放);"
                     + "如需报名请联系主办方");
         }

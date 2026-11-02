@@ -51,9 +51,9 @@ class FreeClubPublisherIdentityTest {
         }
     }
 
-    /** F-L4-01/F-W2-01:实名通过的非平台发布者发收费独立活动,发布即拒(下单必被二清闸拒);平台自办放行。 */
+    /** 2026-11-02 pay-gate:实名通过的非平台发布者也可发收费独立活动(票款走平台商户号);平台自办照旧。 */
     @Test
-    void standalonePaidActivityRequiresPlatformPublisher() {
+    void standalonePaidActivityPublishesForAnyRegisteredPublisher() {
         for (Long publisher : Arrays.asList(88L, 100000L)) {
             CmsActivityServiceImpl service = new CmsActivityServiceImpl();
             MemberIdentityService identity = mock(MemberIdentityService.class);
@@ -77,15 +77,7 @@ class FreeClubPublisherIdentityTest {
             ticket.setName("测试票"); ticket.setPrice(new BigDecimal("0.01")); ticket.setTotalStock(10);
             ticket.setStartTime(request.getStartDate()); ticket.setEndTime(request.getEndDate());
             request.setTickets(Collections.singletonList(ticket));
-            if (publisher == 88L) {
-                ServiceException e = assertThrows(ServiceException.class,
-                        () -> service.publishActivity(request, publisher, "test", true));
-                assertTrue(e.getMessage().contains("票价只能是 0"), e.getMessage());
-                verify(activities, never()).insertCmsActivity(any());
-                verify(tickets, never()).insertOmsTicket(any());
-            } else {
-                assertEquals(Long.valueOf(9L), service.publishActivity(request, publisher, "test", true));
-            }
+            assertEquals(Long.valueOf(9L), service.publishActivity(request, publisher, "test", true));
         }
     }
 

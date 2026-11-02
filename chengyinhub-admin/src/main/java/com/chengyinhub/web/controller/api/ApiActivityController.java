@@ -1126,9 +1126,9 @@ public class ApiActivityController extends BaseController {
     /**
      * 商家主办这一路的约束。返 null=可放行。
      * ① club_id 有值就是俱乐部场次(公域不出、收尾走主理人那条线),两种身份不能混挂;
-     * ② 收款:全仓没有 sub_mchid,下单一律走平台商户号(WechatPayServiceImpl#buildPrepayRequest),
-     *    商家主办收钱等于替平台收 —— 9-15 定稿「钱进商家子商户号」尚未落地,故先只放开免费场,
-     *    并给明确提示而不是静默失败。
+     * ② 收款:全仓没有 sub_mchid,下单一律走平台商户号(WechatPayServiceImpl#buildPrepayRequest)。
+     *    2026-11-02 拍板:没有自己商户号的主办方(含商家)照样可发收费活动,票款走平台商户号收,
+     *    原「商家主办票价只能是 0」已撤;商户号只管「承接其他商家」。
      */
     private String merchantHostViolation(ActivityPublisher publisher, CmsActivityPublishRequest request) {
         if (!publisher.isMerchant() || request == null) {
@@ -1136,15 +1136,6 @@ public class ApiActivityController extends BaseController {
         }
         if (request.getClubId() != null && request.getClubId() > 0) {
             return "商家主办活动不能挂到俱乐部";
-        }
-        List<ActivityTicketRequest> tickets = request.getTickets();
-        if (tickets != null) {
-            for (ActivityTicketRequest ticket : tickets) {
-                BigDecimal price = ticket == null ? null : ticket.getPrice();
-                if (price != null && price.compareTo(BigDecimal.ZERO) > 0) {
-                    return "商家主办活动还没开通收款，票价只能是 0";
-                }
-            }
         }
         return null;
     }

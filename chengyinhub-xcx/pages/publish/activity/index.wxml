@@ -175,7 +175,6 @@
               <input type="number" placeholder="请输入价格" placeholder-class="fld-ph" value="{{ticket.price}}" bindinput="onTicketChange" bindfocus="onFieldFocus" bindblur="onFieldBlur" data-focuskey="ticketPrice{{ticketIndex}}" data-field="price" data-index="{{ticketIndex}}" />
             </view>
             <cy-inline-error class="form-inline-error" wx:if="{{errors['ticketPrice' + ticketIndex]}}" title="{{errors['ticketPrice' + ticketIndex]}}" />
-            <view class="field-purpose field-purpose--locked" wx:if="{{merchantHost}}">{{merchantFreeOnlyMsg}}</view>
           </view>
 
           <view class="li">

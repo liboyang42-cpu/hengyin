@@ -1,5 +1,5 @@
 // CU-M-05(9-25 裁决):商家可以主办单场活动。本文件钉死前端这一路的三件事 ——
-// 判据换成岗位权限、主办身份跟着 scope 进 body、收款未落地前先只放开免费场。
+// 判据换成岗位权限、主办身份跟着 scope 进 body;2026-11-02 pay-gate 起商家收费场照发(票款走平台商户号)。
 // 真正的闸在服务端(ApiActivityController#resolveActivityPublisher),这里只保证
 // 客户端不拿本地参数当放行依据,也不把「读不懂回包」说成「没权限」。
 const { test, beforeEach } = require('node:test');
@@ -7,7 +7,7 @@ const assert = require('node:assert/strict');
 
 const PAGE = '../../pages/publish/activity/index.js';
 const PROJECT_LIST = '/subpackageA/pages/myproject/index';
-const FREE_ONLY = '商家主办活动还没开通收款，票价只能是 0';
+const FREE_ONLY = '商家主办活动还没开通收款，票价只能是 0'; // 已撤的旧文案,只用于反向断言
 
 let sent = [];
 let navigations = [];
@@ -238,35 +238,28 @@ test('俱乐部主理人发布的 body 不得多出 scope(负控)', () => {
 
 // ---- 收款缺口:商家这一路先只放开免费场 ----------------------------------
 
-test('商家主办票价 > 0:当场挡住并说明,不发请求', () => {
+test('商家主办票价 > 0:照常发出 publish(2026-11-02 pay-gate,票款走平台商户号)', () => {
   const page = openAsMerchant([{ name: '早鸟票', price: 69, totalStock: 10, description: '' }]);
   page.submitForm();
 
-  assert.equal(last('/api/activity/publish'), undefined,
-    '全仓没有 sub_mchid,付费场下单进的是平台商家号 —— 静默放过去等于替平台收钱');
-  assert.ok(toasts.some((t) => String(t).indexOf(FREE_ONLY) >= 0),
-    '必须给明确说明而不是静默失败，实际:' + JSON.stringify(toasts));
+  const req = last('/api/activity/publish');
+  assert.ok(req, '商家收费场不再在客户端挡下');
+  assert.equal(JSON.parse(req.data).scope, 'MERCHANT');
+  assert.ok(!toasts.some((t) => String(t).indexOf(FREE_ONLY) >= 0), '旧的免费场禁令文案不得再出现');
 });
 
-test('票价为字符串 "0" 不算付费(别把免费场误挡)', () => {
+test('票价为字符串 "0" 照常发出(负控)', () => {
   const page = openAsMerchant([{ name: '免费场', price: '0', totalStock: 10, description: '' }]);
   page.submitForm();
   assert.ok(last('/api/activity/publish'), '"0" 必须发得出去');
 });
 
-test('多票种里任一票付费即挡(不能靠第一张蒙过去)', () => {
-  const page = openAsMerchant([
-    { name: '免费场', price: 0, totalStock: 10, description: '' },
-    { name: '含茶位', price: 1, totalStock: 5, description: '' },
-  ]);
-  page.submitForm();
-  assert.equal(last('/api/activity/publish'), undefined);
-});
-
-test('票面步常驻同一句免费场说明(toast 与页内说明单一真源)', () => {
+test('票面步不再常驻「票价只能是 0」说明', () => {
   const page = makePage();
   page.onLoad({ scope: 'MERCHANT' });
-  assert.equal(page.data.merchantFreeOnlyMsg, FREE_ONLY);
+  assert.equal(page.data.merchantFreeOnlyMsg, undefined);
+  const wxml = require('fs').readFileSync(require('path').join(__dirname, '../../pages/publish/activity/index.wxml'), 'utf8');
+  assert.ok(wxml.indexOf('merchantFreeOnlyMsg') < 0);
 });
 
 // ---- 闭环:发完落回「我的项目」的商家那一份列表 ---------------- ----------
