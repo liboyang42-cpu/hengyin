@@ -898,11 +898,18 @@
                   inner join cms_activity a on a.id = nc.activity_id
                     and a.club_id = nc.club_id and a.del_flag = 0
                     and a.cancel_time is not null and a.publish_status = 0
-                  inner join club_event_occurrence o on o.activity_id = a.id and o.status = 'CANCELLED'
-                  inner join club_event_series s on s.id = o.series_id and s.club_id = a.club_id
                   inner join club c on c.id = a.club_id and c.status = 1 and c.del_flag = 0
                   where nc.id = #{campaignId} and nc.club_id = #{clubId}
                     and nc.activity_id = #{activityId} and nc.audience_type = 'REGISTERED'
+                    <!-- C-08:open-session 开的独立场次没有 series/occurrence(F-36),取消后照样要通知已退款的人;
+                         有 occurrence 的场次仍须是本俱乐部系列里已取消的那一行。 -->
+                    and (exists (
+                          select 1 from club_event_occurrence o
+                          inner join club_event_series s on s.id = o.series_id and s.club_id = a.club_id
+                          where o.activity_id = a.id and o.status = 'CANCELLED'
+                        ) or not exists (
+                          select 1 from club_event_occurrence o2 where o2.activity_id = a.id
+                        ))
                     and nc.request_id like 'cancel-r-%'
                     <include refid="notificationRecipientNotBanned"/>
                   union all
@@ -930,11 +937,18 @@
                   inner join cms_activity a on a.id = nc.activity_id
                     and a.club_id = nc.club_id and a.del_flag = 0
                     and a.cancel_time is not null and a.publish_status = 0
-                  inner join club_event_occurrence o on o.activity_id = a.id and o.status = 'CANCELLED'
-                  inner join club_event_series s on s.id = o.series_id and s.club_id = a.club_id
                   inner join club c on c.id = a.club_id and c.status = 1 and c.del_flag = 0
                   where nc.id = #{campaignId} and nc.club_id = #{clubId}
                     and nc.activity_id = #{activityId} and nc.audience_type = 'WAITLIST'
+                    <!-- C-08:open-session 开的独立场次没有 series/occurrence(F-36),取消后照样要通知已退款的人;
+                         有 occurrence 的场次仍须是本俱乐部系列里已取消的那一行。 -->
+                    and (exists (
+                          select 1 from club_event_occurrence o
+                          inner join club_event_series s on s.id = o.series_id and s.club_id = a.club_id
+                          where o.activity_id = a.id and o.status = 'CANCELLED'
+                        ) or not exists (
+                          select 1 from club_event_occurrence o2 where o2.activity_id = a.id
+                        ))
                     and nc.request_id like 'cancel-w-%'
                     <include refid="notificationRecipientNotBanned"/>
                   union all
