@@ -755,3 +755,123 @@ page {
 .rv-project-item:nth-child(n+7) { transition-delay: calc(var(--pm-j-s, 0) * 240ms), calc(var(--pm-j-s, 0) * 240ms), 0s, 0s; }
 /* 「我的消息」首载未落定:占住一行(与 72rpx 图标圈同高),不画加载 UI,落定后不跳 */
 .rv-msg-item--pending { min-height: 72rpx; }
+
+/* ===== 走查 v2 R01(2026-11-01):项目卡改大卡 —— 原型 p6 home「p6-pcard」。
+   整张封面 + 底部渐暗,状态/类目签在左上、铃铛在右上,标题 / 副信息 / 待办压在图底。
+   没有封面:浅灰底 + 城瘾 logo 灰色占位,文字回到深色。 ===== */
+.rv-project-card--cover {
+  position: relative;
+  display: block;
+  height: 416rpx;
+  padding: 0;
+  overflow: hidden;
+  border-radius: var(--cy-radius-xl);
+  background: var(--cy-color-bg-surface-subtle);
+}
+.rv-project-card--cover .rv-project-thumb {
+  position: absolute; left: 0; top: 0; right: 0; bottom: 0;
+  width: auto; height: auto;
+  border-radius: 0;
+  background: var(--cy-color-bg-surface-subtle);
+  display: flex; align-items: center; justify-content: center;
+}
+.rv-project-card--cover .rv-project-thumb-img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+.rv-project-thumb-logo { width: 128rpx; height: 128rpx; opacity: .28; filter: grayscale(1); }
+.rv-project-shade {
+  position: absolute; left: 0; top: 0; right: 0; bottom: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 38%, rgba(0, 0, 0, 0.62) 100%); /* ds-ok: 原型 p6-pcard 底部渐暗 */
+}
+.rv-project-card--cover .rv-project-body {
+  position: absolute; left: 0; top: 0; right: 0; bottom: 0;
+  min-height: 0;
+  padding: 28rpx 32rpx;
+  gap: 8rpx;
+}
+.rv-project-card--cover .rv-project-card-title { margin-top: auto; font-size: var(--cy-font-display); line-height: 1.25; }
+.rv-project-card--cover .rv-project-status,
+.rv-project-card--cover .rv-project-cat {
+  height: 48rpx; padding: 0 20rpx;
+  display: inline-flex; align-items: center;
+  border-radius: var(--cy-radius-pill);
+  box-shadow: none;
+  font-size: var(--cy-font-caption); font-weight: 600;
+  background: rgba(0, 0, 0, 0.42); /* ds-ok: 原型 p6-pcard__tag 压图半透明签 */
+  color: var(--cy-color-text-inverse);
+}
+.rv-project-card--cover .rv-project-bell {
+  width: 64rpx; height: 64rpx; justify-content: center;
+  border-radius: var(--cy-radius-pill);
+  background: rgba(255, 255, 255, 0.22); /* ds-ok: 原型 p6-pcard__bell 毛玻璃圆 */
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+.rv-project-card--cover .rv-project-bell-ico { width: 36rpx; height: 36rpx; }
+.rv-project-card--cover .rv-project-bell-count { display: none; }
+/* 有封面(is-cover):文字压在渐暗上一律白色 */
+.rv-project-card--cover.is-cover .rv-project-card-title,
+.rv-project-card--cover.is-cover .rv-project-card-meta,
+.rv-project-card--cover.is-cover .rv-project-card-note,
+.rv-project-card--cover.is-cover .rv-project-visit,
+.rv-project-card--cover.is-cover .rv-project-todo,
+.rv-project-card--cover.is-cover .rv-project-todo-num { color: var(--cy-color-text-inverse); }
+.rv-project-card--cover.is-cover .rv-project-card-meta { opacity: .86; }
+.rv-project-card--cover.is-cover .rv-project-bell-img { filter: brightness(0) invert(1); }
+.rv-project-card--cover:not(.is-cover) .rv-project-bell { background: var(--cy-bg-card); }
+.rv-project-card--cover:not(.is-cover) .rv-project-card-note { color: var(--cy-color-text-tertiary); }
+.rv-project-card--cover .rv-project-visit {
+  max-width: 360rpx;
+  height: 48rpx; padding: 0 20rpx;
+  display: inline-flex; align-items: center;
+  border-radius: var(--cy-radius-pill);
+  background: rgba(255, 255, 255, 0.18); /* ds-ok: 原型 p6-pcard__visit 压图浅签 */
+}
+
+/* ===== 走查 v2 R02(2026-11-01):我的消息照 ramandesigns9「通知叠层」—— 原型 p6 home 2 号。
+   沿用 10-23 已定的三张叠放,只改四处:黑色方块图标、右下未读点、展开后每条 × / 底下「清空」、清完「都看完了」。 ===== */
+.rv-msg-card--ns .rv-msg-ico {
+  border-radius: var(--cy-radius-md);
+  background: var(--cy-color-action-primary-bg);
+  color: var(--cy-color-action-primary-fg);
+}
+.rv-msg-card--ns .rv-msg-item { position: relative; }
+.rv-msg-card--ns .rv-msg-time { align-self: flex-start; }
+.rv-msg-dot {
+  position: absolute; right: 36rpx; bottom: 32rpx;
+  width: 14rpx; height: 14rpx;
+  border-radius: var(--cy-radius-pill);
+  background: var(--cy-color-text-primary);
+}
+.rv-msg-x {
+  flex-shrink: 0; align-self: flex-end;
+  width: 48rpx; height: 48rpx;
+  margin: 0 -8rpx -8rpx 0;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--cy-radius-pill);
+  background: var(--cy-color-bg-surface-subtle);
+  color: var(--cy-color-text-secondary);
+  position: relative;
+}
+/* 圆钮画 24px,命中区放大到 44px */
+.rv-msg-x::after { content: ''; position: absolute; left: -20rpx; right: -20rpx; top: -20rpx; bottom: -20rpx; }
+.rv-msg-clear {
+  display: flex; align-items: center; justify-content: center; gap: 12rpx;
+  height: 80rpx; margin: 12rpx var(--cy-page-x) 0;
+  font-size: var(--cy-font-caption);
+  color: var(--cy-color-text-tertiary);
+}
+.rv-msg-done-row { display: flex; justify-content: center; padding: 12rpx 0; }
+.rv-msg-done {
+  display: inline-flex; align-items: center; gap: 16rpx;
+  height: 72rpx; padding: 0 28rpx 0 12rpx;
+  border-radius: var(--cy-radius-pill);
+  background: var(--cy-bg-card);
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.08); /* ds-ok: 原型 p6-done 浮起胶囊 */
+  font-size: var(--cy-font-caption); font-weight: 600;
+  color: var(--cy-color-text-primary);
+}
+.rv-msg-done-ico {
+  width: 48rpx; height: 48rpx;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--cy-radius-pill);
+  background: var(--cy-color-action-primary-bg);
+  color: var(--cy-color-action-primary-fg);
+}

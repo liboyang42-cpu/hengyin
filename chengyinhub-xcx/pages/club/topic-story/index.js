@@ -157,6 +157,7 @@ Page({
     const opts = options || {};
     this.topicId = text(opts.topicId || opts.id);
     this.clubId = text(opts.clubId);
+    this.scope = text(opts.scope);
     if (!this.topicId) {
       // E-12(2026-09-16):缺参是终态。原来只给「重试」,点一次失败一次 —— 出口改成返回。
       this.setData({ loaded: true, loadError: '缺少主题信息，请从俱乐部页面重新进入', missingParam: true });
@@ -266,16 +267,21 @@ Page({
       answer: null,
     });
     const that = this;
+    // 2026-11-01 业主:商家打开主题卡同样能看答案 —— 俱乐部从俱乐部页进来带 clubId,
+    // 商家从主题工作台进来不带,走主办 / 该站承接商家的同款接口(/api/topic/host-node-answer)。
+    const clubEntry = !!this.clubId;
     app.sendRequest({
       hideLoading: true,
       silentError: true,
-      url: '/api/club/topic-node-answer',
+      url: clubEntry ? '/api/club/topic-node-answer' : '/api/topic/host-node-answer',
       method: 'POST',
       // ⚠️ 后端是 @RequestBody 端点:不传 JSON 头就发成 urlencoded,
       //    业务一行都不执行,却照样回 HTTP 200 + code:500 —— 零告警的哑火。
       //    取答案会永远拿不到东西,而界面只会说「答案暂时取不到」。
       header: { 'Content-Type': 'application/json' },
-      data: JSON.stringify({ clubId: this.clubId, topicId: this.topicId, nodeId: nodeId }),
+      data: JSON.stringify(clubEntry
+        ? { clubId: this.clubId, topicId: this.topicId, nodeId: nodeId }
+        : { topicId: this.topicId, nodeId: nodeId, scope: this.scope }),
       success(res) {
         if (!res || res.code != '200' || !res.data) {
           that.setData({ answerLoading: false, answerError: that._msg(res, '答案暂时取不到，请稍后再试') });

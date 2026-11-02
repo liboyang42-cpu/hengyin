@@ -50,8 +50,9 @@ test('② 六个状态齐全,主键文案与核销/未通过原因的出没按�
        directorEndConfirmShow —— 读着像个查看动作、点下去弹「结束这场活动?」。
        把写操作挂在读文案下面比死按钮更危险,所以让文案跟行为走。
        ⚠️ 这条是**稿与码对不上**、由码胜出的一次:稿待同步(H6 的主键应改成「结束活动」)。
-       核销台账另有入口(主题设置半屏里的「核销台账」),没有因此丢掉。 */
-    selfrun:   { primary: '结束活动',      disabled: false, verify: true,  reject: false },
+       核销台账另有入口(主题设置半屏里的「核销台账」),没有因此丢掉。
+       2026-11-01 业主(Figma H6)定回「去核销」:点了真的扫码核销,结束活动挪进「更多」,文案与行为重新一致。 */
+    selfrun:   { primary: '去核销',        disabled: false, verify: true,  reject: false },
     ended:     { primary: '查看结算报告',   disabled: false, verify: true,  reject: false },
   }
   for (const [key, want] of Object.entries(expect)) {

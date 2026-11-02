@@ -19,7 +19,8 @@ for (const file of files) test(file + ' 相机开启后A→B→A不能用新登�
   const scans = [], sends = [], disk = {}, app = { _loginEpoch: 0, getUserID: () => 11, getSession: () => ({ getRevision: () => 0 }), getAuthorization: () => 'synthetic' };
   const wx = { scanCode: options => scans.push(options), getStorageSync: key => disk[key] };
   const page = new Function('app', 'wx', 'captureLogin', 'loginCurrent',
-    'return ({' + method(file, file.includes('/club/') ? 'onClubScan' : 'goScanQR') + '});')(app, wx, seats.captureLogin, seats.loginCurrent);
+    // 2026-11-01:俱乐部页扫码拆成 onClubScan(权限闸)+ startClubScan(扫码与提交),「去核销」带 scan=1 进页直接走后者
+    'return ({' + (file.includes('/club/') ? ['onClubScan', 'startClubScan'] : ['goScanQR']).map(name => method(file, name)).join(',') + '});')(app, wx, seats.captureLogin, seats.loginCurrent);
   page.data = { clubId: 7, club: { isOwner: true } }; page.canGovern = club => club && club.isOwner;
   page._submitVerification = page.submitClubScan = () => sends.push('sent');
   page[file.includes('/club/') ? 'onClubScan' : 'goScanQR'](); app._loginEpoch += 2;
@@ -93,7 +94,7 @@ test('俱乐部A→B→A选择递增页面代次，原相机回调不能提交�
   const scans = [], sends = [], app = { getUserID: () => 11, getSession: () => ({ getRevision: () => 0 }), getAuthorization: () => 'synthetic' };
   const wx = { scanCode: options => scans.push(options), getStorageSync() {} };
   const page = new Function('app', 'wx', 'captureLogin', 'loginCurrent', 'loading',
-    'return ({' + ['onClubScan', 'onPickOwnerClub'].map(name => method('pages/club/detail/index.js', name)).join(',') + '});')(
+    'return ({' + ['onClubScan', 'startClubScan', 'onPickOwnerClub'].map(name => method('pages/club/detail/index.js', name)).join(',') + '});')(
       app, wx, seats.captureLogin, seats.loginCurrent, { hide() {} });
   Object.assign(page, { data: { clubId: 7, club: { isOwner: true } }, canGovern: club => club && club.isOwner,
     submitClubScan: () => sends.push('sent'), setData() {}, loadAll() {} });

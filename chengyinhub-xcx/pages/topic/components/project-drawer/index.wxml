@@ -9,7 +9,8 @@
       <!-- 稿 468:*:标题下那句「这一套为什么长这样」。没传就整行不出,不留空位。 -->
       <text class="dw-sub" wx:if="{{ subtitle }}">{{ subtitle }}</text>
     </view>
-    <view class="dw-close" catchtap="onClose" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="44" /></view>
+    <view class="dw-done" wx:if="{{ doneText }}" catchtap="onClose" aria-role="button" aria-label="{{ doneText }}" hover-class="cy-pressed" hover-stay-time="80">{{ doneText }}</view>
+    <view class="dw-close" wx:else catchtap="onClose" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="44" /></view>
   </view>
 
   <scroll-view class="dw-scroll" scroll-y>

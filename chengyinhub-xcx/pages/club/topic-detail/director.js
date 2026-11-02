@@ -203,6 +203,30 @@ function broadcastRecipientCount(targetType, selectedTarget, teams, roles) {
   return rows.reduce(function (sum, item) { return sum + item.memberCount }, 0)
 }
 
+// 2026-11-01 业主定稿(审阅页 65gFrW…):弹层顶部横滑头像。俱乐部广播接口只认全部 / 一队 / 一个角色,
+// 所以头像只展示这次会发给谁,选人靠队伍 / 角色行;名单来自导演台 roles,没下发就不出这一排。
+function broadcastAudienceRows(targetType, selectedTarget, roles) {
+  if (!selectedTarget) return []
+  const seen = {}
+  return (Array.isArray(roles) ? roles : []).filter(function (item) {
+    if (!item || item.memberId == null || seen[item.memberId]) return false
+    if (targetType === 'TEAM' && String(item.teamId) !== String(selectedTarget.id)) return false
+    if (targetType === 'ROLE' && item.roleCode !== selectedTarget.id) return false
+    seen[item.memberId] = true
+    return true
+  }).map(function (item) {
+    const name = item.memberNameText || ''
+    return { id: String(item.memberId), name: name, initial: name.slice(0, 1) || '?', sub: item.roleNameText || '' }
+  })
+}
+
+function broadcastCountText(targetType, recipientCount, teams) {
+  if (recipientCount === null) return ''
+  if (targetType === 'TEAM') return recipientCount + ' 人 · 1 队'
+  if (targetType === 'ALL') return recipientCount + ' 人 · ' + (teams || []).length + ' 队'
+  return recipientCount + ' 人'
+}
+
 function recapMetricView(metric) {
   const item = metric || {}
   const label = item.label || item.name || item.key || ''
@@ -244,9 +268,9 @@ function takeoverPayload(roles, draft) {
 // 5-04:D7 的范围 chip 选项。通用 chip 组件要 {id,label},原来喂的是字符串数组 → 标签空白、
 // 点击也切不动;这里在宿主页投影,组件协议不动。
 const BROADCAST_SCOPE_OPTIONS = [
-  { id: 'ALL', label: '全部玩家' },
-  { id: 'TEAM', label: '按队伍' },
-  { id: 'ROLE', label: '按角色' },
+  { id: 'ALL', label: '全部' },
+  { id: 'TEAM', label: '队伍' },
+  { id: 'ROLE', label: '角色' },
 ]
 
 function hasAction(actions, action) {
@@ -501,6 +525,9 @@ const DIRECTOR_DATA = {
     // 5-04:D7 范围 chip 是 {id,label};目标行是 {id,title} 投影(组件读 detail.id 回传)
     broadcastScopeOptions: BROADCAST_SCOPE_OPTIONS,
     broadcastTargetRows: [],
+    broadcastAudience: [],
+    broadcastCountText: '',
+    broadcastSendText: '发送',
     broadcastPreviewReady: false,
     broadcastPreviewText: '—',
     broadcastDraft: { targetType: 'ALL', targetIndex: 0, content: '' },
@@ -1103,7 +1130,12 @@ const DIRECTOR_METHODS = {
     this._broadcastTargetOptions = targets
     this.setData({
       // 5-04:行组件要 {id,title} 并回传 {id};原来喂的是 teamView 原始行 → 空白且点不中
-      broadcastTargetRows: targets.map(function (item) { return { id: item.id, title: item.label } }),
+      broadcastTargetRows: targets.map(function (item, index) {
+        return { id: item.id, title: item.label, subtitle: numeric(item.memberCount) === null ? '' : item.memberCount + ' 人', on: index === 0 }
+      }),
+      broadcastAudience: broadcastAudienceRows(normalized, selected, this.data.roles),
+      broadcastCountText: broadcastCountText(normalized, recipientCount, this.data.teams),
+      broadcastSendText: recipientCount ? '发送给 ' + recipientCount + ' 人' : '发送',
       broadcastPreviewReady: recipientCount !== null && recipientCount > 0 && !!selected,
       broadcastPreviewText: targetLabel + (recipientCount === null ? '' : ' · ' + recipientCount + ' 人'),
       broadcastDraft: {
@@ -1146,6 +1178,10 @@ const DIRECTOR_METHODS = {
     const targetType = this.data.broadcastDraft.targetType
     const recipientCount = broadcastRecipientCount(targetType, selected, this.data.teams, this.data.roles)
     this.setData({
+      broadcastTargetRows: this.data.broadcastTargetRows.map(function (item, rowIndex) { return Object.assign({}, item, { on: rowIndex === index }) }),
+      broadcastAudience: broadcastAudienceRows(targetType, selected, this.data.roles),
+      broadcastCountText: broadcastCountText(targetType, recipientCount, this.data.teams),
+      broadcastSendText: recipientCount ? '发送给 ' + recipientCount + ' 人' : '发送',
       broadcastPreviewReady: recipientCount !== null && recipientCount > 0,
       broadcastPreviewText: selected.label + (recipientCount === null ? '' : ' · ' + recipientCount + ' 人'),
       broadcastDraft: Object.assign({}, this.data.broadcastDraft, { targetIndex: index }),

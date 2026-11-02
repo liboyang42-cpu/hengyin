@@ -104,7 +104,7 @@
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/SmsCouponController.java": "547af3490978c0fa80e0fcb55c3c2751a9904e8e3ee362a745c9b497ab55a823",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/OmsOrderController.java": "13eb3c92163952232b4b472b6a86490471196f01a15c6264d3b392896c2b2cba",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/PmsGiftController.java": "8f5a64a0651a58388f924eecd6b7717e9f53a2d47b2731d821af001d854f4863",
-    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/UmsMemberController.java": "5e7e9ca23fd8b1150bd49bfb5eeff03672e8492536895d462b1ecd30af43e25b",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/UmsMemberController.java": "0b46cf4c1b9dd262707d9313a7bffb00b4fa8bbec50134506ac78ba9fabdc99d",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsPointsSettingController.java": "4ff9de9e8075f80669d7b8cc72027627f8d4c355ccbfd4d053c1f22832cda2b1",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationController.java": "6fb40fd21f8b49ff4e32c3a755397dff771198368dd1f328ad9dce958a97bb56",
     "chengyinhub-admin/sql/migration_merchant_npc_menu_20260824.sql": "033c429fafa0b957a05d091974a0625edd04180ab8e4be04045014d9e9f5c4e3",

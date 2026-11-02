@@ -14,6 +14,8 @@ function normalizeMerchantFinanceRoute(options) {
   }
   if (opt.view !== undefined && opt.view !== null && opt.view !== '') {
     const view = String(opt.view);
+    // 2026-11-01 业主:主题工作台「台账」带 topicId,只看这个主题的核销
+    if (view === 'redemptions' && positiveId(opt.topicId)) return { view, source: '', topicId: positiveId(opt.topicId) };
     if (view === 'redemptions' || view === 'settlement' || view === 'messages') {
       return { view, source: view === 'settlement' && opt.source ? String(opt.source) : '' };
     }
