@@ -17,6 +17,7 @@ Component({
     // 所有抽屉统一走「标题 + 右上角 ✕」,主动作只在底部 actions 那一行。
     // 客户名单使用普通半屏，其余长列表避开微信导航。
     customerMode: { type: Boolean, value: false },
+    doneText: { type: String, value: '' }, // 2026-11-01 客户多选:右上角关闭换成「完成」
     // [{ key, label, ghost? }],最多两个并排
     actions: { type: Array,   value: [] },
     // 2026-10-31 P-6:上面叠了一层(邀约 / 主页 / 档位 / 附近商家)时缩小压暗、露出顶边

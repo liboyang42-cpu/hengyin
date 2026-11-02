@@ -10,12 +10,13 @@ const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8')
 
 test('★主题详情:selfrun 的主键文案必须与它真正干的事一致', () => {
   const js = read('pages/club/topic-detail/index.js')
-  // 原来是 primary: '去核销',而 onPrimary 对 selfrun 开的是结束活动确认层。
-  // 读着像查看、点下去是写操作,这种错配比死按钮更危险。
-  assert.match(js, /selfrun:\s*\{[^}]*primary:\s*'结束活动'/,
-    'selfrun 的主键干的是结束活动，文案就得是结束活动')
-  assert.doesNotMatch(js, /selfrun:\s*\{[^}]*primary:\s*'去核销'/)
-  assert.match(js, /if \(key === 'running' \|\| key === 'selfrun'\) \{ this\.setData\(\{ directorEndConfirmShow: true \}\)/)
+  // 2026-09-11:原来 primary: '去核销',而 onPrimary 对 selfrun 开的是结束活动确认层 —— 读着像查看、点下去是写操作。
+  // 2026-11-01 业主(Figma H6):自办进行中底部就是「去核销」,现在它真的去扫码核销,文案与行为重新一致;
+  // 结束活动挪进「更多」。判据不变:文案必须跟它真正干的事一致。
+  assert.match(js, /selfrun:\s*\{[^}]*primary:\s*'去核销'/,
+    'selfrun 的主键干的是扫码核销，文案就得是去核销')
+  assert.match(js, /if \(key === 'selfrun'\) \{ this\.goScan\(\); return; \}/)
+  assert.match(js, /if \(key === 'running'\) \{ this\.setData\(\{ directorEndConfirmShow: true \}\)/)
 })
 
 test('★主题详情:未通过的主题,「修改并重新提交」要排在导演台那道闸前面', () => {

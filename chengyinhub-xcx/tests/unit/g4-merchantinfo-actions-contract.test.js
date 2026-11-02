@@ -252,7 +252,8 @@ test('CU-C-67:「查看台账」按身份分流 —— 俱乐部去名册页,商
   beforeEach();
   const merchant = makePage({ topicId: 990030, operationScope: 'MERCHANT' });
   merchant.goLedger();
-  assert.equal(navigations[0].url, '/pages/merchant/ledger/index?view=redemptions');
+  // 2026-11-01 业主:主题里进台账只看这个主题
+  assert.equal(navigations[0].url, '/pages/merchant/ledger/index?view=redemptions&topicId=990030');
   beforeEach();
   const clubNoId = makePage({ topicId: 990030, operationScope: 'CLUB', info: {} });
   clubNoId.goLedger();

@@ -114,10 +114,17 @@ public class ProjectPlayerReadServiceImpl implements IProjectPlayerReadService {
                     && memberId != null && memberId.equals(topic.getMemberId())) {
                 return clubTopicRoster(memberId, topic.getClubId(), topicId);
             }
-            if (shopDayMerchantRosterService == null) {
-                throw new RuntimeException("探店日商家名单服务未就绪");
+            /* 走查 v2 R14(业主 10-30):商家也能发布自由探索。发布者看的是整张主题的买票名单(下面主办口径),
+               不是「本店门店名单」—— 发布者自己不开店时那道闸必然报「无权查看该探店日门店名单」。
+               承办俱乐部存在时联系方式照 hasOrganizerClub 不给。 */
+            boolean merchantPublisher = memberId != null && memberId.equals(topic.getMemberId())
+                    && (topic.getClubId() == null || topic.getClubId() <= 0L);
+            if (!merchantPublisher) {
+                if (shopDayMerchantRosterService == null) {
+                    throw new RuntimeException("探店日商家名单服务未就绪");
+                }
+                return shopDayMerchantRosterService.list(memberId, topicId, sensitiveContactVisible);
             }
-            return shopDayMerchantRosterService.list(memberId, topicId, sensitiveContactVisible);
         }
 
         boolean isHost = topic.getMemberId() != null && topic.getMemberId().equals(memberId);
@@ -190,6 +197,8 @@ public class ProjectPlayerReadServiceImpl implements IProjectPlayerReadService {
             }
             Map<String, Object> row = new HashMap<>();
             row.put("registrationId", r.getId());
+            // 2026-11-01 业主:客户名单多选后定向广播按人发(scope=MEMBERS)。只给主办 / 承接方看的名单才走到这里
+            row.put("memberId", r.getMemberId());
             row.put("ticketId", r.getTicketId());
             row.put("ticketName", r.getTicketName());
             row.put("ticketNo", r.getRegistrationNo());

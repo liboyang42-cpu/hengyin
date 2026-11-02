@@ -33,6 +33,8 @@
     playerSheet="{{ playerSheet }}"
     playerFilters="{{ playerFilters }}"
     playerActions="{{ playerActions }}"
+    playerPick="{{ playerPick }}"
+    broadcastSheet="{{ broadcastSheet }}"
     merchantSheet="{{ merchantSheet }}"
     moreSheet="{{ moreSheet }}"
     
@@ -518,20 +520,6 @@
   bind:close="closeLiveCheckin"
   bind:retry="retryCheckinQr"
   bind:secondary="downloadCheckinQr" />
-<!-- 走查 v2 R07:定向广播(主办商家,只发本主题买票玩家) -->
-<cy-sheet class="theme-merchant" show="{{broadcastSheet.show}}" title="定向广播" bind:close="closeBroadcast">
-  <view class="bc">
-    <textarea class="bc-input" maxlength="120" placeholder="写给本主题的买票玩家" value="{{broadcastSheet.content}}" bindinput="onBroadcastInput" />
-    <view class="bc-row">
-      <text class="bc-k">可以收到</text>
-      <text class="bc-v" wx:if="{{broadcastSheet.state === 'ready'}}">{{broadcastSheet.deliverable || 0}} 人</text>
-      <text class="bc-v" wx:elif="{{broadcastSheet.state === 'loading'}}">正在计算…</text>
-    </view>
-    <cy-inline-error wx:if="{{broadcastSheet.state === 'error'}}" kind="data" title="人数没读到" sub="{{broadcastSheet.error}}" action="重试" bind:action="openBroadcast" />
-    <view class="bc-btn {{broadcastSheet.state === 'ready' && broadcastSheet.content && broadcastSheet.deliverable && broadcastSheet.remaining && !broadcastSheet.sending ? '' : 'bc-btn--off'}}" bindtap="sendBroadcast" aria-role="button" aria-label="发送" hover-class="cy-pressed" hover-stay-time="80">{{broadcastSheet.state === 'ready' && !broadcastSheet.remaining ? '今天已发满 3 条' : '发送'}}</view>
-    <text class="bc-cap">只发给同意接收商家消息的玩家，每人每天最多收 1 条</text>
-  </view>
-</cy-sheet>
 <!-- 走查 v2 R09:分润明细弹在工作台上(不离开主题) -->
 <cy-sheet class="theme-merchant" show="{{profitSheet.show}}" title="分润明细" bind:close="closeProfitSheet">
   <view class="pf">
