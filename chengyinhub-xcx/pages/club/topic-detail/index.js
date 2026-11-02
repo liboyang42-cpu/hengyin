@@ -640,8 +640,9 @@ Page({
   resolvePrimary(state, statusKey, raw) {
     const base = { primary: { text: state.primary, disabled: state.disabled }, sessionHint: '' };
     // 只有这四个状态的主键动作挂在导演台上;rejected / ended 各有去处(编辑主题 / 结算报告)
+    // 2026-11-01:自办进行中的主键是「去核销」(扫码),不挂导演台、不需要选场,不在这里换成去开场 / 去选一场
     if (statusKey !== 'confirmed' && statusKey !== 'preparing'
-      && statusKey !== 'running' && statusKey !== 'selfrun') return base;
+      && statusKey !== 'running') return base;
     const none = { primary: { text: '', disabled: true }, sessionHint: '' };
     // 已在导演台(带 activityId 进来或已自动接管):主键是导演台写动作,只给 canDirect
     if (this._directorActivityId) return this._canDirect ? base : none;
@@ -828,12 +829,13 @@ Page({
     //    那正是它原来只会弹「修改并重新提交即将开放」的原因。真正的编辑入口就在本页「更多」里。
     if (key === 'rejected') { this.goEditTopic(); return; }
     if (key === 'ended') { this.goSettlement(); return; }
+    // 去核销只是扫码,不以某一场为对象 —— 排在导演台那道闸前面,否则没选场时会被带去场次管理
+    if (key === 'selfrun') { this.goScan(); return; }
     // 没场次:主键已被 resolvePrimary 换成真动作(去开场 / 去选一场)—— 走它,
     // 不再弹「还没有场次」那句点了没反应的 toast(§5-断6)
     if (!this._directorActivityId) { this.goSessionEntry(); return; }
     if (key === 'confirmed') { this.onPrepareSession(); return; }
     if (key === 'preparing') { this.onStartSession(); return; }
-    if (key === 'selfrun') { this.goScan(); return; }
     if (key === 'running') { this.setData({ directorEndConfirmShow: true }); return; }
     this.notReady(this.data.primary.text);
   },

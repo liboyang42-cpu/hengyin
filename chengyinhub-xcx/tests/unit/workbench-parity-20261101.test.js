@@ -83,5 +83,9 @@ test('俱乐部自办进行中:底部「去核销」扫码,结束活动在「更
   assert.match(js, /selfrun: +\{ text: '进行中', +primary: '去核销'/);
   assert.match(js, /if \(key === 'selfrun'\) \{ this\.goScan\(\); return; \}/);
   assert.match(js, /\/pages\/club\/detail\/index\?id=' \+ encodeURIComponent\(this\._clubId\) \+ '&scan=1'/);
-  assert.match(read('pages/club/topic-detail/index.wxml'), /wx:if="\{\{statusKey === 'selfrun' && primary\.text\}\}" class="tset-row" bindtap="openEndSession"/);
+  // 结束活动以某一场为对象:只有导演台接起一场时「更多」里才出这一行
+  assert.match(read('pages/club/topic-detail/index.wxml'), /wx:if="\{\{statusKey === 'selfrun' && directorActive\}\}" class="tset-row" bindtap="openEndSession"/);
+  // 去核销不以某一场为对象:排在导演台闸前,且不被换成去开场 / 去选一场
+  assert.ok(js.indexOf("if (key === 'selfrun') { this.goScan(); return; }") < js.indexOf('if (!this._directorActivityId) { this.goSessionEntry(); return; }'));
+  assert.match(js, /statusKey !== 'confirmed' && statusKey !== 'preparing'\s*&& statusKey !== 'running'\) return base;/);
 });

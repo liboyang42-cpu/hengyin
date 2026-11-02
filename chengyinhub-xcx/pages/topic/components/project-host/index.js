@@ -44,13 +44,16 @@ Component({
     'hostTopic, hostRecruit': function (topic, recruit) {
       topic = topic || {};
       let text = '状态待确认';
-      if (Number(topic.productType) === 2) {
-        const raw = topic.lifecycle;
-        const lifecycle = typeof raw === 'number' ? raw
-          : (typeof raw === 'string' && /^[0-7]$/.test(raw) ? Number(raw) : -1);
-        if (Number.isInteger(lifecycle) && lifecycle >= 0 && lifecycle < FREE_STATUS.length) {
-          text = FREE_STATUS[lifecycle];
-        }
+      const raw = topic.lifecycle;
+      const lifecycle = typeof raw === 'number' ? raw
+        : (typeof raw === 'string' && /^[0-7]$/.test(raw) ? Number(raw) : -1);
+      // 2026-11-01:城市定向也按 lifecycle 走 —— 原来只看审核态,开售后胶囊仍写「招募中」,和底部「去核销」对不上。
+      // 招募中招满了仍写「已招满」;没下发 lifecycle 的旧数据退回审核态口径。
+      const filled = recruit && recruit.nodeTotal > 0 && recruit.nodeFilled >= recruit.nodeTotal;
+      if (Number.isInteger(lifecycle) && lifecycle >= 0 && lifecycle < FREE_STATUS.length) {
+        text = lifecycle === 1 && filled && Number(topic.productType) !== 2 ? '已招满' : FREE_STATUS[lifecycle];
+      } else if (Number(topic.productType) === 2) {
+        text = '状态待确认';
       } else if (topic.status === 1) {
         text = recruit && recruit.nodeTotal > 0 && recruit.nodeFilled >= recruit.nodeTotal ? '已招满' : '招募中';
       } else if (topic.status === 0) text = '待审核';

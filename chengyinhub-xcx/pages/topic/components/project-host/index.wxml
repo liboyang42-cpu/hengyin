@@ -97,10 +97,6 @@
         <text class="metric-n">{{ hostPlayers.arrivedCount || 0 }}</text>
         <text class="metric-l">已核销</text>
       </view>
-      <view class="metric">
-        <text class="metric-n">{{ hostPlayers.paidCount || 0 }}</text>
-        <text class="metric-l">已售份数</text>
-      </view>
     </view>
   </view>
 
