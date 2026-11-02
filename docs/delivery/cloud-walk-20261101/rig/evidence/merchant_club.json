@@ -1,0 +1,69 @@
+{
+  "chain": "merchant_club",
+  "command_args": [
+    "990014"
+  ],
+  "duration_seconds": 10.0,
+  "exit_code": 0,
+  "log": "chains/merchant_club.log",
+  "observed": {
+    "failure_markers": [],
+    "http_responses": 5,
+    "http_status_counts": {
+      "200": 5
+    },
+    "readback_lines": 13,
+    "traceback": false
+  },
+  "problems": [],
+  "schema": "CY-CHAIN-ACCEPTANCE-RECEIPT-20261019",
+  "script": "scripts/e2e/chain_merchant_club.py",
+  "terminal_readbacks": [
+    {
+      "args": [
+        990014
+      ],
+      "expected": "2",
+      "label": "lifecycle 应为 2=PRICING",
+      "ok": true,
+      "rows": [
+        [
+          2
+        ]
+      ],
+      "sql": "SELECT lifecycle FROM cms_topic WHERE id=%s"
+    },
+    {
+      "args": [
+        990014
+      ],
+      "expected": "(4, 4)",
+      "label": "四章四家不同商家承接",
+      "ok": true,
+      "rows": [
+        [
+          4,
+          4
+        ]
+      ],
+      "sql": "SELECT COUNT(*),COUNT(DISTINCT merchant_member_id) FROM cms_topic_node WHERE topic_id=%s AND merchant_member_id IS NOT NULL"
+    },
+    {
+      "args": [
+        990014
+      ],
+      "expected": "1",
+      "label": "主题层票种模板只有一张",
+      "ok": true,
+      "rows": [
+        [
+          1
+        ]
+      ],
+      "sql": "SELECT COUNT(*) FROM oms_ticket WHERE owner_type=1 AND owner_id=%s AND del_flag=0"
+    }
+  ],
+  "timed_out": false,
+  "topic_id": 990014,
+  "verdict": "PASS"
+}

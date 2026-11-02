@@ -1,0 +1,94 @@
+{
+  "chain": "player",
+  "command_args": [
+    "990014"
+  ],
+  "duration_seconds": 123.6,
+  "exit_code": 0,
+  "log": "chains/player.log",
+  "observed": {
+    "failure_markers": [],
+    "http_responses": 6,
+    "http_status_counts": {
+      "2": 1,
+      "200": 4,
+      "204": 1
+    },
+    "readback_lines": 8,
+    "traceback": false
+  },
+  "problems": [],
+  "schema": "CY-CHAIN-ACCEPTANCE-RECEIPT-20261019",
+  "script": "scripts/e2e/chain_player.py",
+  "terminal_readbacks": [
+    {
+      "args": [
+        990014,
+        9009
+      ],
+      "expected": "唯一一行 payment_status=2, transaction_id=E2E-TXN-<id>",
+      "label": "玩家只有一张已支付报名单且交易号来自回调",
+      "ok": true,
+      "rows": [
+        [
+          74,
+          2,
+          "E2E-TXN-74"
+        ]
+      ],
+      "sql": "SELECT r.id,r.payment_status,r.transaction_id FROM cms_registration r JOIN cms_activity a ON a.id=r.owner_id AND r.owner_type=2 WHERE a.topic_id=%s AND r.member_id=%s"
+    },
+    {
+      "args": [
+        990014,
+        9009
+      ],
+      "expected": "(4, 4, 4)",
+      "label": "权益四条全部核销（无多扣/无漏扣）",
+      "ok": true,
+      "rows": [
+        [
+          4,
+          "4",
+          "4"
+        ]
+      ],
+      "sql": "SELECT COUNT(*),COALESCE(SUM(status=1),0),COALESCE(SUM(redeemed_at IS NOT NULL),0) FROM registration_entitlement WHERE registration_id IN (SELECT r.id FROM cms_registration r JOIN cms_activity a ON a.id=r.owner_id AND r.owner_type=2 WHERE a.topic_id=%s AND r.member_id=%s)"
+    },
+    {
+      "args": [
+        990014,
+        9009
+      ],
+      "expected": "(4, 4, 4)",
+      "label": "redemption 恰好四行 ACTIVE（无重复核销）",
+      "ok": true,
+      "rows": [
+        [
+          4,
+          "4",
+          4
+        ]
+      ],
+      "sql": "SELECT COUNT(*),COALESCE(SUM(status='ACTIVE'),0),COUNT(DISTINCT chapter_id) FROM redemption WHERE registration_id IN (SELECT r.id FROM cms_registration r JOIN cms_activity a ON a.id=r.owner_id AND r.owner_type=2 WHERE a.topic_id=%s AND r.member_id=%s)"
+    },
+    {
+      "args": [
+        9009,
+        990014
+      ],
+      "expected": "1",
+      "label": "通关勋章恰好一枚（无重复发放）",
+      "ok": true,
+      "rows": [
+        [
+          1
+        ]
+      ],
+      "sql": "SELECT COUNT(*) FROM player_badge WHERE member_id=%s AND source_id=%s"
+    }
+  ],
+  "timed_out": false,
+  "topic_id": 990014,
+  "verdict": "PASS"
+}

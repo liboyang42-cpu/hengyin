@@ -1,0 +1,56 @@
+{
+  "chain": "platform",
+  "command_args": [],
+  "duration_seconds": 4.9,
+  "exit_code": 0,
+  "log": "chains/platform.log",
+  "observed": {
+    "failure_markers": [],
+    "http_responses": 2,
+    "http_status_counts": {
+      "200": 2
+    },
+    "readback_lines": 9,
+    "traceback": false
+  },
+  "problems": [],
+  "schema": "CY-CHAIN-ACCEPTANCE-RECEIPT-20261019",
+  "script": "scripts/e2e/chain_platform.py",
+  "terminal_readbacks": [
+    {
+      "args": [
+        990014
+      ],
+      "expected": "唯一一行 (9003, 7001, 1, 1, 1)",
+      "label": "发布归属与审核终态 member_id/club_id/status/user_status/lifecycle",
+      "ok": true,
+      "rows": [
+        [
+          9003,
+          7001,
+          1,
+          1,
+          1
+        ]
+      ],
+      "sql": "SELECT member_id,club_id,status,user_status,lifecycle FROM cms_topic WHERE id=%s"
+    },
+    {
+      "args": [
+        990014
+      ],
+      "expected": "0",
+      "label": "尚未开售：无开售快照",
+      "ok": true,
+      "rows": [
+        [
+          0
+        ]
+      ],
+      "sql": "SELECT COUNT(*) FROM topic_sale_snapshot WHERE topic_id=%s"
+    }
+  ],
+  "timed_out": false,
+  "topic_id": 990014,
+  "verdict": "PASS"
+}

@@ -1,0 +1,55 @@
+{
+  "chain": "sale_close",
+  "command_args": [
+    "990014"
+  ],
+  "duration_seconds": 2.5,
+  "exit_code": 0,
+  "log": "chains/sale_close.log",
+  "observed": {
+    "failure_markers": [],
+    "http_responses": 11,
+    "http_status_counts": {
+      "200": 11
+    },
+    "readback_lines": 9,
+    "traceback": false
+  },
+  "problems": [],
+  "schema": "CY-CHAIN-ACCEPTANCE-RECEIPT-20261019",
+  "script": "scripts/e2e/chain_sale_close.py",
+  "terminal_readbacks": [
+    {
+      "args": [
+        990014
+      ],
+      "expected": "(3, 1)",
+      "label": "lifecycle 应为 3=SELLING 且 selling_started_at 非空",
+      "ok": true,
+      "rows": [
+        [
+          3,
+          1
+        ]
+      ],
+      "sql": "SELECT lifecycle,selling_started_at IS NOT NULL FROM cms_topic WHERE id=%s"
+    },
+    {
+      "args": [
+        990014
+      ],
+      "expected": "1",
+      "label": "开售快照唯一",
+      "ok": true,
+      "rows": [
+        [
+          1
+        ]
+      ],
+      "sql": "SELECT COUNT(*) FROM topic_sale_snapshot WHERE topic_id=%s"
+    }
+  ],
+  "timed_out": false,
+  "topic_id": 990014,
+  "verdict": "PASS"
+}
