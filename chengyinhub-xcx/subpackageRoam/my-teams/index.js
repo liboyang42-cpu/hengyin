@@ -34,7 +34,7 @@ Page({
     teamRecovery.manager(this, app, wx).act(ds.teamId, ds.action);
   },
 
-  data: { lobby: null, teamCommandRows: [], teamCommandError: '', reducedMotion: false, privacyGateShow: false, tab: 'mine', loading: true, mineError: false, groups: [], stats: [], openRows: [], openLoading: false, openLoaded: false, openError: '' },
+  data: { lobby: null, teamCommandRows: [], teamCommandError: '', reducedMotion: false, privacyGateShow: false, tab: 'mine', loading: true, mineError: false, groups: [], stats: [{ k: '已通过', v: null }, { k: '审核中', v: null }, { k: '带队', v: null }, { k: '未通过', v: null }], openRows: [], openLoading: false, openLoaded: false, openError: '' }, // MT-01:四格读数先占位(「—」),到数不再把下面整页往下推
 
   onLoad(options) {
     this._seq = 0; this.setData({ reducedMotion: readReducedMotion() });
@@ -53,7 +53,7 @@ Page({
     if (this._owner !== owner) {
       this._teamScopeEpoch = (this._teamScopeEpoch || 0) + 1;
       this._busy = false; this._rows = {};
-      this.setData({ groups: [], stats: [], openRows: [], openLoading: false, openLoaded: false });
+      this.setData({ groups: [], stats: [{ k: '已通过', v: null }, { k: '审核中', v: null }, { k: '带队', v: null }, { k: '未通过', v: null }], openRows: [], openLoading: false, openLoaded: false });
     }
     this._owner = owner; this.reload();
   },
@@ -77,7 +77,7 @@ Page({
     const settle = () => {
       if (--left || seq !== that._seq || !current()) return;
       if (joined == null && apps == null) { that.setData({ loading: false, mineError: true, groups: [] }); if (done) done(); return; }
-      that._render(joined || [], apps || []);
+      that._render(joined || [], apps || [], { joined: joined != null, apps: apps != null }); // MT-02:读失败的那一路显示「—」,不显示假的 0
       if (joined == null || apps == null) that.setData({ mineError: true });
       if (done) done();
     };
@@ -87,7 +87,7 @@ Page({
       success(res) { if (res && res.code == 200 && Array.isArray(res.data)) apps = res.data; settle(); }, fail() { settle(); }, successStatusAbnormal() { settle(); } });
   },
 
-  _render(joined, apps) {
+  _render(joined, apps, got) {
     const me = String(app.getUserID() || '');
     const lead = []; const ok = []; const wait = []; const bad = []; const seen = {};
     joined.forEach((t) => {
@@ -109,7 +109,7 @@ Page({
     const groups = [['lead', '我带的队', lead], ['ok', '已通过', ok], ['wait', '审核中', wait], ['bad', '未通过', bad]]
       .filter((g) => g[2].length).map((g) => ({ key: g[0], title: g[1], rows: g[2] }));
     this._rows = { lead, ok, wait, bad };
-    this.setData({ loading: false, groups, stats: [{ k: '已通过', v: ok.length }, { k: '审核中', v: wait.length }, { k: '带队', v: lead.length }, { k: '未通过', v: bad.length }] });
+    this.setData({ loading: false, groups, stats: [{ k: '已通过', v: got && !got.joined ? null : ok.length }, { k: '审核中', v: got && !got.apps ? null : wait.length }, { k: '带队', v: got && !got.joined ? null : lead.length }, { k: '未通过', v: got && !got.apps ? null : bad.length }] });
     // 没有任何队伍时,「我的」下面直接接附近招募,不让页面停在空态
     if (!groups.length || this.data.tab === 'open') this.loadOpen();
   },

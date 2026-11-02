@@ -304,7 +304,7 @@ Page({
     privacyGateShow: false,
     // BL-01 漫游点位筛选(范围 + 只看未到过),值在 utils/roam-poi-filter.js。
     poiFilter: { radiusM: 3000, unvisitedOnly: false }, poiFilterTabs: roamPoiFilter.radiusTabs(),
-    screen: 'entry-map', entryMarkers: [], entryCards: [], entryFarCards: [], entryActivity: null, entryTeam: null, entrySheet: '', entrySheetView: 'main', entrySheetIn: false, entryLayers: { activities: true, teams: true, posts: true }, entryLoadError: false, entryReadAccess: '',
+    screen: 'entry-map', entryMarkers: [], entryCards: [], entryFarCards: [], entryActivity: null, entryTeam: null, entrySheet: '', entrySheetView: 'main', entrySheetIn: false, entryLayers: { activities: true, teams: true, posts: true }, entryLoadError: false, entryReadAccess: '', entryLoading: false,
     introError: '',
     // 个性化地图透传给本页三个 <free-map>(起始预览 / 主漫游图 / 结算图),三处必须同源,
     // 否则同一次漫游里会出现一亮一暗。值在 utils/map-style.js。
@@ -740,7 +740,7 @@ Page({
     const scope = this._roamReadScope(), startGeneration = this._roamStartGen;
     const current = () => reader.current() && scope() && !this._unloaded && !this._hidden
       && startGeneration === this._roamStartGen && reader === this._passportReader;
-    this.setData({ passportLoading: true, passportError: false, passport: { stats: [], tiles: [], plays: [] } });
+    if (!(this.data.passport && this.data.passport.stats && this.data.passport.stats.length)) this.setData({ passportLoading: true, passportError: false, passport: { stats: [], tiles: [], plays: [] } }); // R-02:回到护照时保留上一份读数在屏上后台刷新,只有首读(还没有读数)才进加载态 —— 页面形状不随刷新塌掉
     let stamps = null, localRows = [];
     try { localRows = reader.local(); stamps = localRows.reduce((n, row) => n + (Array.isArray(row.photos) ? row.photos.length : 0), 0); } catch (_) { /* Keep server read independent of local storage. */ }
     let summary;
@@ -5793,13 +5793,13 @@ Page({
     const seq = (this._entrySeq = (this._entrySeq || 0) + 1);
     if (this._entryReadOwner !== owner) this._clearEntryRead();
     this._entryReadOwner = owner;
-    if (!readSession.memberId(getApp())) { this.setData({ entryReadAccess: 'login', entryLoadError: false }); return; }
+    if (!readSession.memberId(getApp())) { this.setData({ entryReadAccess: 'login', entryLoadError: false, entryLoading: false }); return; }
     this._entryErrors = { activities: false, teams: false };
-    this.setData({ entryLoadError: false, entryReadAccess: '' });
+    this.setData({ entryLoadError: false, entryReadAccess: '', entryLoading: !(this.data.entryCards.length || this.data.entryFarCards.length) }); // R-01:还没有卡片时先出卡片形状的占位,读完(有卡 / 兜底读完 / 失败)才可能出「附近暂无活动」
     const settle = (layer, failed) => {
       if (this._unloaded || seq !== this._entrySeq || owner !== this._entryIdentity()) return;
       this._entryErrors[layer] = !!failed;
-      this.setData({ entryLoadError: entryMap.hasLayerError(this._entryErrors) });
+      this.setData({ entryLoadError: entryMap.hasLayerError(this._entryErrors) }); if (layer === 'activities' && failed) this.setData({ entryLoading: false });
       this._syncEntryMap();
     };
     const auth = (res) => {
@@ -5836,7 +5836,7 @@ Page({
     const app = getApp();
     const getImgUrl = typeof app.getImgUrl === 'function' ? app.getImgUrl.bind(app) : (url) => url;
     const view = entryMap.build(this._entryItems, this._entryTeams, this.data.entryLayers, getImgUrl);
-    this.setData({ entryMarkers: view.markers, entryCards: view.cards, searchPlaces: view.searchPlaces, introTeamsLive: this._entryTeams.length ? '附近 ' + this._entryTeams.length + ' 支队伍在组队' : '附近正在组队' }); if (!view.cards.length && this._entryErrors && !this._entryErrors.activities) this._loadEntryFallback(); else if (view.cards.length) this.setData({ entryFarCards: [] }); // 2026-10-28 附近为空走兜底
+    this.setData({ entryMarkers: view.markers, entryCards: view.cards, searchPlaces: view.searchPlaces, introTeamsLive: this._entryTeams.length ? '附近 ' + this._entryTeams.length + ' 支队伍在组队' : '附近正在组队' }); if (!view.cards.length && this._entryErrors && !this._entryErrors.activities) this._loadEntryFallback(); else if (view.cards.length) this.setData({ entryFarCards: [], entryLoading: false }); // 2026-10-28 附近为空走兜底
   },
   _showEntrySheet(entrySheet, entryActivity) {
     this.setData({ entrySheet, entryActivity: entryActivity || null, entryTeam: null, entrySheetView: 'main', entrySheetIn: false }, () => {
@@ -5985,13 +5985,13 @@ Page({
       const rows = data && isRecordList(data.items) ? data.items.filter((row) => row && row.kind !== 'hangout') : [];
       if (rows.length) {
         this._entryItems = (this._entryItems || []).concat(rows.filter((row) => !(this._entryItems || []).some((it) => it.kind === row.kind && String(it.id) === String(row.id))));
-        this.setData({ entryFarCards: rows.slice(0, 8).map((row) => entryMap.activityView(row, this._entryTeams, img)) });
+        this.setData({ entryLoading: false, entryFarCards: rows.slice(0, 8).map((row) => entryMap.activityView(row, this._entryTeams, img)) });
         return;
       }
       req('/api/topic/list', 'POST', { pageNum: 1, pageSize: 8, sort_type: 1 }, { silentError: true, auth: false }).then((r2) => {
         if (stale()) return;
         const list = apiOk(r2) && r2.data && isRecordList(r2.data.rows) ? r2.data.rows : [];
-        this.setData({ entryFarCards: list.map((t) => ({ key: 'far-topic-' + t.id, id: t.id, kind: 'far-topic', title: String(t.name || '未命名主题'),
+        this.setData({ entryLoading: false, entryFarCards: list.map((t) => ({ key: 'far-topic-' + t.id, id: t.id, kind: 'far-topic', title: String(t.name || '未命名主题'),
           cover: img(String(t.imgArr || t.imgUrl || '').split(/[,;]/)[0].trim()), tag: Number(t.productType) === 2 ? '自由探索' : '城市定向', meta: String(t.city || t.addressName || '') })) });
       });
     });
