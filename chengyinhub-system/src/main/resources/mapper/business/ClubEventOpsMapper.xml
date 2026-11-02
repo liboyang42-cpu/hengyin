@@ -561,7 +561,8 @@
         <result property="correctedArrivedAt" column="correctedArrivedAt" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
     </resultMap>
 
-    <!-- 本场必要名册：只取昵称、报名时填写的姓名(C-05,服务端解密后下发 displayName)与到场事实，禁止手机号/邮箱/地址。 -->
+    <!-- 本场必要名册：只取昵称、报名时填写的姓名(C-05,服务端解密后下发 displayName)与到场事实；禁止邮箱/地址。
+         手机号(2026-11-02 用户)只给 Service 判权:有 CUSTOMER_PHONE_READ 才下发完整号码,否则 sanitizeRosterRow 删掉。 -->
     <select id="selectPaidRoster" resultMap="attendanceRowResult">
         select paid.member_id as memberId,
                coalesce(nullif(m.nickname, ''), nullif(m.name, ''), concat('成员#', paid.member_id)) as nickname,
@@ -571,7 +572,8 @@
                corr.new_arrived as correctedArrived,
                corr.new_arrived_at as correctedArrivedAt,
                coalesce(corr.version, 0) as correctionVersion,
-               paid.real_name_stored as realNameStored
+               paid.real_name_stored as realNameStored,
+               m.phone as phone
         from (
           select member_id, sum(verification_status = 1) as verified_count,
                  min(case when verification_status = 1 then verification_time else null end) as verified_at,

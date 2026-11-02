@@ -46,8 +46,15 @@ public class ClubEventAttendanceServiceImpl implements IClubEventAttendanceServi
         List<Map<String, Object>> registered = new ArrayList<>();
         List<Map<String, Object>> arrived = new ArrayList<>();
         List<Map<String, Object>> noShow = new ArrayList<>();
+        // 2026-11-02 用户:主理人、副主理人、本场领队(执行方)与勾了「可见客户手机号」的核销员
+        // 在本场名册上看到完整号码并可拨打;其余岗位名册上仍没有号码。判定只看服务端权限。
+        boolean phoneReader = access.hasPermission(ClubPermission.CUSTOMER_PHONE_READ);
         for (Map<String, Object> raw : safeMaps(mapper.selectPaidRoster(activityId))) {
+            Object phone = raw == null ? null : raw.get("phone");
             Map<String, Object> row = sanitizeRosterRow(raw);
+            if (phoneReader && phone instanceof String && ((String) phone).trim().matches("1\\d{10}")) {
+                row.put("phone", ((String) phone).trim());
+            }
             boolean effectiveArrived = effectiveArrived(row);
             Date effectiveAt = effectiveArrivedAt(row);
             row.put("arrived", effectiveArrived);
@@ -67,7 +74,7 @@ public class ClubEventAttendanceServiceImpl implements IClubEventAttendanceServi
         result.put("waitlist", waitlist);
         result.put("arrived", arrived);
         result.put("noShow", noShow);
-        result.put("phoneIncluded", false);
+        result.put("phoneIncluded", phoneReader);
         // CU-C-73:可更正时段(活动开始 → 结束后 48 小时)随名册一起下发。前端手上没有
         // 本场起止时间,只能在提交那一刻吃服务端 409;拿到这段区间就能先把按钮置灰。
         result.put("correctionWindow", correctionWindow(activity, now()));

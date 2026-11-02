@@ -32,9 +32,10 @@ import java.util.Map;
  *      EVENT_CHECKIN(核销员)两条都没有 ⇒ 拿到的是替代说明,不是号码 —— 与 R1「核销员默认
  *      看不到完整手机号」一致。
  *
- * ★ 手机号:任何一档都**不下发原始号码**。有权限的看到 PiiCryptoService.maskPhone 的脱敏串,
- *   没权限的看到一句替代说明。前端因此没有"藏起来"的机会,也就没有"藏漏了"的可能。
- *   ⚠️ 明文只在本类的局部变量里活过一行,VO 上根本没有 phone 这个字段(见 ClubCustomerVO)。
+ * ★ 手机号(2026-11-02 用户改口径):主理人、副主理人(ClubPermission.CUSTOMER_PHONE_READ)看到完整号码
+ *   并可拨打 —— 游戏中要能联系玩家;其余有 MEMBER_LIST_READ 的岗位仍是 PiiCryptoService.maskPhone 脱敏串,
+ *   没权限的看到一句替代说明。判定全在服务端,前端只照显示。号码只经 phoneText 出口,不写日志。
+ *   ⚠️ VO 上没有原始 phone 字段(见 ClubCustomerVO),号码只走 phoneText / phoneFull 两格。
  *
  * ★ 清退退款仍然是 owner-only 的另一个接口,本类一个写路径都没碰。
  */
@@ -70,6 +71,7 @@ public class ClubCrmAppServiceImpl implements IClubCrmAppService {
     public ClubCustomerVO.ListPage listCustomers(Long principalMemberId, Long clubId, String filter, String keyword) {
         Club club = requireGovernable(principalMemberId, clubId);
         boolean canSeePhone = hasPermission(principalMemberId, clubId, ClubPermission.MEMBER_LIST_READ);
+        boolean canSeeFullPhone = hasPermission(principalMemberId, clubId, ClubPermission.CUSTOMER_PHONE_READ);
 
         List<ClubCustomerVO.RawCustomer> raws =
                 clubCrmMapper.selectClubCustomers(club.getId(), normalizedFilter(filter), trimmed(keyword), LIST_LIMIT);
@@ -84,14 +86,15 @@ public class ClubCrmAppServiceImpl implements IClubCrmAppService {
             ClubCustomerVO.Profile profile = profiles.get(raw.getMemberId());
             ClubCustomerVO.Row row = new ClubCustomerVO.Row();
             row.setMemberId(raw.getMemberId());
-            row.setDisplayName(participantDisplayName(null, raw.getDisplayName(), raw.getMemberId()));
+            row.setDisplayName(participantDisplayName(raw.getParticipantName(), raw.getDisplayName(), raw.getMemberId()));
             row.setAvatar(raw.getAvatar());
             row.setVerifiedCount(nullToZero(raw.getVerifiedCount()));
             row.setPendingCount(nullToZero(raw.getPendingCount()));
             row.setLastVisitDate(formatDay(raw.getLastInteractionTime()));
             row.setLastTopicName(raw.getLastTopicName());
             row.setRemark(profile == null ? "" : trimmed(profile.getRemark()));
-            row.setPhoneText(phoneText(raw.getPhone(), canSeePhone));
+            row.setPhoneText(phoneText(raw.getPhone(), canSeeFullPhone, canSeePhone));
+            row.setPhoneCallable(canSeeFullPhone && isCallable(raw.getPhone()));
             items.add(row);
         }
         page.setItems(items);
@@ -114,13 +117,15 @@ public class ClubCrmAppServiceImpl implements IClubCrmAppService {
         if (raw == null) throw new ServiceException("这位客户没有在本俱乐部的成交记录");
 
         boolean canSeePhone = hasPermission(principalMemberId, clubId, ClubPermission.MEMBER_LIST_READ);
+        boolean canSeeFullPhone = hasPermission(principalMemberId, clubId, ClubPermission.CUSTOMER_PHONE_READ);
         boolean canSeeAmount = hasPermission(principalMemberId, clubId, ClubPermission.FINANCE_READ);
 
         ClubCustomerVO.Summary summary = new ClubCustomerVO.Summary();
         summary.setMemberId(raw.getMemberId());
-        summary.setDisplayName(participantDisplayName(null, raw.getDisplayName(), raw.getMemberId()));
+        summary.setDisplayName(participantDisplayName(raw.getParticipantName(), raw.getDisplayName(), raw.getMemberId()));
         summary.setAvatar(raw.getAvatar());
-        summary.setPhoneText(phoneText(raw.getPhone(), canSeePhone));
+        summary.setPhoneText(phoneText(raw.getPhone(), canSeeFullPhone, canSeePhone));
+        summary.setPhoneCallable(canSeeFullPhone && isCallable(raw.getPhone()));
         summary.setLastInteractionTime(raw.getLastInteractionTime());
         summary.setArrivedCount(nullToZero(raw.getVerifiedCount()));
         summary.setPendingCount(nullToZero(raw.getPendingCount()));
@@ -179,6 +184,8 @@ public class ClubCrmAppServiceImpl implements IClubCrmAppService {
         boolean checksIn = hasPermission(principalMemberId, clubId, ClubPermission.EVENT_CHECKIN);
         if (!governs && !checksIn) throw new ServiceException("当前岗位没有客户查看权限");
         boolean canSeePhone = hasPermission(principalMemberId, clubId, ClubPermission.MEMBER_LIST_READ);
+        boolean clubFullPhone = hasPermission(principalMemberId, clubId, ClubPermission.CUSTOMER_PHONE_READ);
+        Map<Long, Boolean> sessionFullPhone = new java.util.HashMap<>();
 
         List<ClubCustomerVO.RawTopicRow> raws = clubCrmMapper.selectTopicCustomers(clubId, topicId);
         String wanted = normalizedTopicFilter(filter);
@@ -214,7 +221,9 @@ public class ClubCrmAppServiceImpl implements IClubCrmAppService {
             row.setDisplayName(participantDisplayName(raw.getParticipantName(), raw.getDisplayName(), raw.getMemberId()));
             row.setAvatar(raw.getAvatar());
             row.setOrderNo(raw.getOrderNo());
-            row.setPhoneText(phoneText(raw.getPhone(), canSeePhone));
+            boolean fullPhone = clubFullPhone || sessionPhoneReader(principalMemberId, clubId, raw.getSessionId(), sessionFullPhone);
+            row.setPhoneText(phoneText(raw.getPhone(), fullPhone, canSeePhone));
+            row.setPhoneCallable(fullPhone && isCallable(raw.getPhone()));
             row.setStatusCode(statusCode);
             row.setStatusText(topicStatusText(statusCode));
             row.setTimeText(raw.getVerificationTime() == null ? "—" : clockFormat.format(raw.getVerificationTime()));
@@ -363,8 +372,11 @@ public class ClubCrmAppServiceImpl implements IClubCrmAppService {
         ClubCustomerVO.CheckinDetail out = new ClubCustomerVO.CheckinDetail();
         out.setDisplayName(participantDisplayName(raw.getParticipantName(), raw.getDisplayName(), null));
         out.setAvatar(raw.getAvatar());
-        out.setPhoneText(phoneText(raw.getPhone(), canSeePhone));
-        out.setPhoneVisible(canSeePhone);
+        boolean fullPhone = hasPermission(principalMemberId, clubId, ClubPermission.CUSTOMER_PHONE_READ)
+                || sessionPhoneReader(principalMemberId, clubId, raw.getSessionId(), new java.util.HashMap<>());
+        out.setPhoneText(phoneText(raw.getPhone(), fullPhone, canSeePhone));
+        out.setPhoneVisible(canSeePhone || fullPhone);
+        out.setPhoneCallable(fullPhone && isCallable(raw.getPhone()));
         out.setSessionTimeText(raw.getSessionTime() == null ? "时间待定" : sessionFormat.format(raw.getSessionTime()));
         out.setStatusCode(statusCode);
         out.setStatusText(topicStatusText(statusCode));
@@ -412,6 +424,22 @@ public class ClubCrmAppServiceImpl implements IClubCrmAppService {
         return club;
     }
 
+    /** 本场作用域的号码权限(本场领队 / 勾了开关的核销员)。场次不属于本俱乐部等一律按无权处理。 */
+    private boolean sessionPhoneReader(Long principalMemberId, Long clubId, Long sessionId, Map<Long, Boolean> cache) {
+        if (sessionId == null || sessionId <= 0) return false;
+        Boolean known = cache.get(sessionId);
+        if (known != null) return known;
+        boolean granted;
+        try {
+            ClubAccessContext access = clubAccessService.resolve(principalMemberId, clubId, sessionId);
+            granted = access != null && access.hasPermission(ClubPermission.CUSTOMER_PHONE_READ);
+        } catch (ServiceException outOfScope) {
+            granted = false;
+        }
+        cache.put(sessionId, granted);
+        return granted;
+    }
+
     private boolean hasPermission(Long principalMemberId, Long clubId, String permission) {
         ClubAccessContext access = clubAccessService.resolve(principalMemberId, clubId, null);
         return access != null && access.hasPermission(permission);
@@ -422,10 +450,25 @@ public class ClubCrmAppServiceImpl implements IClubCrmAppService {
      * 两条路都不返回原始号码 —— 这是"脱敏必须在服务端做"的落点。
      */
     public static String phoneText(String rawPhone, boolean canSeePhone) {
+        return phoneText(rawPhone, false, canSeePhone);
+    }
+
+    /**
+     * 2026-11-02 用户:有 CUSTOMER_PHONE_READ(主理人 / 副主理人 / 本场执行方 / 勾了开关的核销员)给完整号码,
+     * 其余同旧口径。canSeeFull 只能由服务端权限算出,调用方不得从请求参数推。
+     */
+    public static String phoneText(String rawPhone, boolean canSeeFull, boolean canSeeMasked) {
+        if (canSeeFull) return rawPhone == null ? "" : rawPhone.trim();
+        boolean canSeePhone = canSeeMasked;
         if (!canSeePhone) return PHONE_UNAVAILABLE_TEXT;
         String phone = rawPhone == null ? "" : rawPhone.trim();
         if (phone.isEmpty()) return "";
         return PiiCryptoService.maskPhone(phone);
+    }
+
+    /** 可拨打:11 位大陆手机号(去空格后)。不是号码的存量脏值不给拨号键。 */
+    public static boolean isCallable(String rawPhone) {
+        return rawPhone != null && rawPhone.trim().matches("1\\d{10}");
     }
 
     private Map<Long, ClubCustomerVO.Profile> profileMap(Long clubId) {
@@ -455,8 +498,9 @@ public class ClubCrmAppServiceImpl implements IClubCrmAppService {
 
     private String participantDisplayName(String storedName, String nickname, Long memberId) {
         if (storedName != null && !storedName.trim().isEmpty()) {
-            String masked = PiiCryptoService.maskName(piiCryptoService.decrypt(storedName));
-            if (masked != null && !masked.trim().isEmpty()) return masked;
+            // C-05(2026-11-02 用户):客户列表、报名参与者与核销详情显示报名时填写的全名,不再遮成「周*」。
+            String name = piiCryptoService.decrypt(storedName);
+            if (name != null && !name.trim().isEmpty()) return name.trim();
         }
         String fallback = nickname == null ? "" : nickname.trim();
         if (fallback.isEmpty() || "城瘾用户".equals(fallback)) {

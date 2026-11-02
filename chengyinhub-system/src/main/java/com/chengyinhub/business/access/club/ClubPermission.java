@@ -20,10 +20,12 @@ public final class ClubPermission {
     public static final String EVENT_CHECKIN = "club:event:checkin";
     public static final String FINANCE_READ = "club:finance:read";
     public static final String ROLE_MANAGE = "club:role:manage";
+    /** 客户完整手机号(可拨打)。2026-11-02 用户:主理人、副主理人与本场执行方;活动核销员须主理人逐人勾选。 */
+    public static final String CUSTOMER_PHONE_READ = "club:customer:phone:read";
 
     private static final Set<String> ALL = Collections.unmodifiableSet(new LinkedHashSet<>(Arrays.asList(
             CLUB_READ, CLUB_WRITE, MEMBER_LIST_READ, MEMBER_APPROVE, MEMBER_MANAGE, CONTENT_MANAGE, NOTIFY_SEND, ACTIVITY_READ,
-            ACTIVITY_MANAGE, EVENT_OPERATE, EVENT_CHECKIN, FINANCE_READ, ROLE_MANAGE)));
+            ACTIVITY_MANAGE, EVENT_OPERATE, EVENT_CHECKIN, FINANCE_READ, ROLE_MANAGE, CUSTOMER_PHONE_READ)));
 
     private ClubPermission() {
     }

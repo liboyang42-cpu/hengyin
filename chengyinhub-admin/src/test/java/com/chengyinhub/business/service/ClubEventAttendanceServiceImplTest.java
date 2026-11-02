@@ -84,6 +84,28 @@ class ClubEventAttendanceServiceImplTest {
         verify(access).require(ACTOR, CLUB, ACTIVITY, ClubPermission.EVENT_CHECKIN);
     }
 
+    /** 2026-11-02 用户:本场领队(执行方)在名册上看到完整号码;没有号码权限的核销员一个号码都拿不到。 */
+    @Test
+    void rosterGivesFullPhoneOnlyToPhoneReaders() {
+        Map<String, Object> lead = row(51L, "城瘾用户", NOW, null, 0);
+        lead.put("phone", "13812345621");
+        when(mapper.selectPaidRoster(ACTIVITY)).thenReturn(Collections.singletonList(lead));
+        when(mapper.selectWaitlistRoster(ACTIVITY)).thenReturn(Collections.emptyList());
+        Map<String, Object> roster = service.roster(ACTOR, CLUB, ACTIVITY);
+        assertEquals(true, roster.get("phoneIncluded"));
+        assertEquals("13812345621", ((Map<?, ?>) ((List<?>) roster.get("arrived")).get(0)).get("phone"));
+
+        Map<String, Object> again = row(51L, "城瘾用户", NOW, null, 0);
+        again.put("phone", "13812345621");
+        when(mapper.selectPaidRoster(ACTIVITY)).thenReturn(Collections.singletonList(again));
+        when(access.require(ACTOR, CLUB, ACTIVITY, ClubPermission.EVENT_CHECKIN))
+                .thenReturn(new ClubAccessContext(ACTOR, CLUB, 99L, ACTIVITY,
+                        Collections.singleton(ClubRoleCode.EVENT_CHECKIN)));
+        Map<String, Object> plain = service.roster(ACTOR, CLUB, ACTIVITY);
+        assertEquals(false, plain.get("phoneIncluded"));
+        assertEquals(false, ((Map<?, ?>) ((List<?>) plain.get("arrived")).get(0)).containsKey("phone"));
+    }
+
     /** C-05(2026-11-02):名册以报名姓名示人;没填姓名、昵称是默认「城瘾用户」时给「成员#id」,不下发密文列。 */
     @Test
     void rosterShowsSignupNameAndNeverTheStoredColumn() {

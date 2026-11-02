@@ -139,7 +139,8 @@ public class ApiClubRoleController extends BaseController {
         try {
             ClubRoleAssignment created = clubRoleAssignmentService.assign(principal,
                     request.getClubId(), request.getTargetMemberId(), request.getRoleCode(),
-                    request.getActivityId(), request.getExpiresAt(), request.getRequestId());
+                    request.getActivityId(), request.getExpiresAt(), request.getRequestId(),
+                    Boolean.TRUE.equals(request.getCustomerPhoneVisible()));
             return success(ClubRoleAssignmentVO.from(created));
         } catch (ServiceException e) {
             return serviceError(e);

@@ -2,6 +2,7 @@
   "schemaVersion": 1,
   "dependencies": {
     "20261102_club_session_gather_point": ["c3_team_fields"],
+    "20261102_club_checkin_phone_visible": ["club_role_assignment_20260823"],
     "20261101_author_write_receipt": [],
     "20261101_theme_categories": [],
     "20261101_prefab_life_template_copy": ["seed_prefab_life_20260918"],

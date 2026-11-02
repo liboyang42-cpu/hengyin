@@ -78,15 +78,21 @@ public class ClubAccessServiceImpl implements IClubAccessService {
         }
         List<ClubRoleAssignment> rows = clubRoleAssignmentMapper.selectActiveForAccess(
                 clubId, principalMemberId, activityId, now);
+        Set<String> extras = new LinkedHashSet<>();
         if (rows != null) for (ClubRoleAssignment row : rows) {
             String roleCode = validateAssignment(row, clubId, principalMemberId, activityId, now);
             if (roleCode != null) roles.add(roleCode);
+            // 2026-11-02 用户:活动核销员的「可见客户手机号」是逐条委派上的开关,只在本场作用域生效。
+            if (ClubRoleCode.EVENT_CHECKIN.equals(roleCode)
+                    && Integer.valueOf(1).equals(row.getCustomerPhoneVisible())) {
+                extras.add(ClubPermission.CUSTOMER_PHONE_READ);
+            }
         }
         List<ClubEventAccess> eventAccesses = includeEventAccesses
                 ? resolveEventAccesses(clubId, principalMemberId, now)
                 : Collections.<ClubEventAccess>emptyList();
         return new ClubAccessContext(principalMemberId, clubId, club.getMemberId(), activityId,
-                roles, eventAccesses);
+                roles, eventAccesses, extras);
     }
 
     private List<ClubEventAccess> resolveEventAccesses(Long clubId, Long memberId, Date now) {
