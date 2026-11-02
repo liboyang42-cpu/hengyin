@@ -17,7 +17,7 @@ Assumptions:
 4. **Lists replay their entrance on every keystroke or page** (A2, S3). activity/list calls `pageMotion.enter` on each search character. search2/result runs two entrance systems on the same cards and replays them on `加载更多内容`.
 5. **Loading shape jumps on the purchase path** (P-T7, A6). The topic skeleton is a short padded detail block, but the page is a 100vh cover. The baoming skeleton has no pay bar, so `立即支付` slides in after load.
 
-Play page: see the dedicated section. Its findings are added below when complete.
+Close sixth: on the play page, finishing a station flips the pack tile in one frame (PL2), two sheets cut on close (PL3), and the role card overshoots (PL1).
 
 ## 2. Per page (by how often players hit it)
 
@@ -41,7 +41,35 @@ Already good: always `theme-dark`; 30/30 view taps have hover-class; favourite h
 | P-T13 | topic | pages/topic/index/index.wxss:2005 | `.topic-teams__card` | `35rpx` radius | Sibling dark cards are all 27rpx (:2014, :2018, :2050, :2053, :2061) | 35rpx → 27rpx (needs owner nod: v13 screen) | radius | S | low | P2 | code |
 
 ### pages/play (play page and mechanics)
-Pending: the reader for this page has not reported yet.
+Already good:
+- Tap feedback is complete: every multi-line tap view in `index.wxml` has `hover-class="cy-pressed"`; the remaining taps are `cy-btn` or `noop` catchers.
+- The node and journal sheets exit through `_outThen` using sheet tokens (index.wxss:195-203).
+- There is a root reduced-motion kill-switch (index.wxss:44-55), and the scene canvas is gated.
+- Loading uses a skeleton.
+- Components are well built: `roadmap` is all tokens; the `play-stage` shake and the `play-verdict` fill → tick → text are deliberate; `play-countin` is good; all 46 playkit components with motion handle reduced motion.
+- The medal screen and finish medals are approved (E) and were not touched.
+- `play/merchant` has 17/17 hover.
+- `pageMotion` and `count.wxs` are unused here because the page has its own motion system.
+
+| ID | page | file:line | element | now | problem | smallest edit | type | effort | risk | priority | evidence |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| PL1 | play | pages/play/index.wxss:1111 (card), :1103 (mask); wxml:1655, :1669 | role card `确认身份` / `接下身份，出发` | `rolecard-in .45s cubic-bezier(.2,.9,.3,1.15)`; the scrim appears instantly | Overshoot on a popup (rule 6); the scrim pops while the card flips | `var(--cy-motion-slow) var(--cy-ease-out)`; add a fade on `.rolemask` | motion-entry | S | low | P1 | code |
+| PL2 | play | pages/play/index.wxss:892-893 (states), :852-854 (transitions) | pack tile done / unlocked | `.is-done` grayscale+dim and the locked blur apply in one frame; transitions cover only transform/opacity | Completing a station, the main "task complete" change on the pack, flips instantly | Add `filter var(--cy-motion-standard) var(--cy-ease-out)` to the `.fx-tile.is-dealt` transition and an opacity transition on `.fx-tile__im` | motion-feedback | S | low | P1 | code |
+| PL3 | play | pages/play/index.wxml:1689-1690, :1849-1850; js:2907, :3438 | game-module sheet `关闭本局线索`, board `关闭同行者榜` | Rise with `sheetUp`, but `closeGameModule` / `closeBoard` set show=false directly | Manual close cuts in one frame, unlike the other sheets on the page | Route both through the existing `_outThen` with `is-out` classes | motion-transition | S | low | P1 | code |
+| PL4 | play | pages/play/index.wxss:323; wxml:1437 | first-load skeleton | `.play-loading{align-items:center}` around `cy-skeleton type="detail"` | Skeleton is vertically centred but content starts at the top, so the shape jumps | `align-items:flex-start` plus padding-top from `chrome.contentTop` | loading-state | S | low | P1 | code/inferred |
+| PL5 | play | pages/play/index.wxss:586; wxml:1508 | per-station award `徽章` / `Woo!` | `.woo` has no animation | The reward moment hard-cuts in and out while confetti fires (this is not the approved medal screen) | `fade var(--cy-motion-standard) var(--cy-ease-out)` on `.woo`; `floatUp var(--cy-motion-slow)` on `.woo__hero` | motion-entry | S | med (owner confirm) | P1 | code |
+| PL6 | play | pages/play/index.js:2941, :3011; wxml:1712-1713 | game-module result `选择已记录` / `任务已提交` | `cyToast.success` plus the same message as an in-place `.gmod__write` line, inserted without motion | Double feedback; the toast covers the line, and the line shifts the layout | Drop the two toasts while the sheet is open; give `.gmod__write` the existing status-in entrance | motion-feedback | S | low | P2 | code |
+| PL7 | play | pages/play/index.wxss:711; wxml:1292, :1299; js:8065 | finish milestone rail | `transition:width` but mounts already at final width | The progress fill never animates (dead transition) | Mount at 0 and set progress on the next tick, or a scaleX keyframe | motion-feedback | S | low | P2 | code |
+| PL8 | play | pages/play/index.wxml:1262, :1265, :1291 | finish stats `点亮坐标` / `解谜分` / `探索值 +N` | Plain values | Numbers land without counting; the kit's `countIn` + `count.wxs` exist | `pageMotion.countIn` after the finale closes; render via `cnt.f` | motion-feedback | S | low | P2 | code |
+| PL9 | play | pages/play/components/advanced-game/index.wxss:5, :8 | advanced-game sheet | `.ag-mask` / `.ag` have no animation | Appears instantly while every other sheet rises | `sheetUp var(--cy-motion-sheet-full-in) var(--cy-ease-standard)` plus a mask fade, with a reduced off-switch | motion-entry | S | low | P2 | code |
+| PL10 | play | pages/play/components/advanced-game/index.wxml:7, :61 | `正在准备玩法…` | A single text line, then cards and a footer | Body changes shape after loading | `<cy-skeleton type="list" count="2" />` | loading-state | S | low | P2 | code |
+| PL11 | play | pages/play/index.wxml:181-184 | tools rows `本局用时` / `当前得分` | One merged row while loading, two rows when ready | The row count changes | Render both rows while loading, with the value `…` | loading-state | S | low | P2 | code |
+| PL12 | play | pages/play/components/play-stage/index.wxss:118-124 | `还能错` dots | `--used` swaps the background instantly | Losing a life has no in-place cue beyond the shake | `transition: background-color var(--cy-motion-fast) var(--cy-ease-out)` | motion-feedback | S | low | P2 | code |
+| PL13 | play | pages/play/index.wxml:539-543 | progress ring `{{doneCount}}/{{total}}` `已完成` | Arc image src swaps; the number jumps | The progress update has no transition | One-shot `is-bump` opacity/scale pulse when `doneCount` rises (no overshoot) | motion-feedback | S-M | low | P2 | code/inferred |
+| PL14 | play | pages/play/index.js:6607-6608; wxml:998 | `前往下一站` | `continueNext` sets `'sheet.show': false` directly | Skips the exit that ✕ and the mask get | Call `_outThen('sheet')` first | motion-transition | S | low | P2 | code |
+| PL15 | play | pages/play/index.wxss:274 | full-screen layer `.full` | `animation: fade .3s ease` | Literal timing | `fade var(--cy-motion-standard) var(--cy-ease-out)` | motion-transition | S | low | P2 | code |
+| PL16 | play | pages/play/index.wxss:564, :570, :1747, :1769, :1777, :1784, :1820, :1845 | pills (`继续探索`, `去发现`…) | `border-radius:999rpx` ×8 | Raw copy of the pill token | `var(--cy-radius-pill)` (no visual change) | radius | S | none | P2 | code |
+| PL17 | play | pages/play/index.wxss:610…1054 (23rpx ×8), 717…1899 (31rpx ×7) | game / option / finish cards | Raw 23rpx / 31rpx | 1rpx off `--cy-radius-md` / `-lg`, but marked `ds-ok 用户裁决字面值` | Swap only if the owner agrees | radius | S | med | P2 | code |
 
 ### pages/activity/baoming (registration / checkout, v13 B2 layout)
 Already good: double-submit guard (`订单提交中，请勿重复点击` plus a disabled button); full pay feedback (`确认支付结果` → `支付成功`, `您已取消支付`, fail sheet `这笔没有付成功` / `未扣款，可重试` with in-place `重新提交`); `—` fallbacks.
@@ -133,12 +161,22 @@ Already good: fully tokenised; three-step danger confirms; `加入中…` busy l
 - pages/square/detail/index.wxss: dead selectors `.row1`–`.row4` and `.sport-block`, which are not in the wxml.
 - pages/activity/official-detail/index.wxss:13-24: `.od-refresh-state` is `position:fixed; top:16rpx`, which lands in the status bar. Inferred.
 
+- pages/play/index.wxml:1521: the root `.play` closes here, but the role card (:1655/:1669), the game-module sheet (:1688-1690) and the board sheet (:1848-1850) sit after it. They miss the `.play--reduced-motion` kill-switch, so they still animate with motion reduced. They also miss the root `--cy-psheet-max-h` (notch-overlap risk per the wxss:198 comment; inferred). Fix with a class and style on those nodes. Do not move them, because `.play--scaled` transforms the root.
+- pages/play/index.js:5436: `flashLock()` has no callers, so `这扇门还没向你敞开。` (wxml:960) never shows; toasts are used instead.
+- pages/play/circle/index.json: `"backgroundColor":"#F3F4F4"` / `"navigationBarTextStyle":"black"` on a dark page, so the overscroll shows light grey.
+- pages/play/index.js:6501-6502, :6592: `wx.vibrateShort` ignores `reducedMotion`, unlike :1767 and :6975.
+- pages/play/index.js:6173: on a correct answer the backend `r.msg` is toasted, although the comment says a correct answer gets confetti only. If it is a generic `操作成功`, it shows on every answer (inferred; not reworded).
+
 ## 4. Would need a redesign, not proposing
 - The pass reveal shows its buttons only at 6.3s, with no skip (pass-reveal/index.js:47). This is approved B3; shortening it is the owner's call.
 - There is no player-facing node detail. templatedetail is a creator page.
 - topic/index.wxss has 27 radius and 142 spacing values, mostly `ds-ok v13 原型定值`. Tokenising them would restyle approved screens.
 - official-detail dark conversion, if more than a class swap is needed (A5).
 - A proper in-place busy and success state for TEAM/SIGNUP/EVENT commands, beyond T1's gate.
+- play: a real draw-on progress ring (the arc is an SVG-data `<image>`); PL13 is the cheap substitute.
+- play: unifying the per-station `.woo` with the approved medal screen.
+- play: a staged reveal for the chapter-finish page (`.finsheet`, owner redesign 2026-10-28). Not reopened.
+- play: restructuring the 1883-line wxml, whose overlays sit both inside and outside the root.
 - searchmap: the selected-marker sheet (`variant="full"` for one item) compared with v13 D5's grow-from-marker card.
 
 ## 5. Cross-page patterns
@@ -148,6 +186,8 @@ Already good: fully tokenised; three-step danger confirms; `加入中…` busy l
 - **`—` for null counts.** One small WXS helper (or an addition to `utils/wxs/count.wxs`) fixes P-T11, P-T12, A10 and T11.
 - **Skeleton matching the final shape.** Choose the skeleton `type` and keep fixed bars mounted (P-T7, A6, D6, S21, T12).
 - **One recovery-card gate** in `team-event-command` consumers fixes 4 pages (T1).
+- **Close through the exit, not `show:false`.** On play, route every sheet close through `_outThen` (PL3, PL14); topic's buy sheet should use the same `buyIn` → delayed unmount (P-T8).
+- **No overshoot on popups.** Three easings to swap: role card (PL1), buy-sheet underline (P-T9), and the `sc-rank` score overlay at `pages/play/components/play-overlays.wxss:66` (P2 candidate).
 - **Pressed styles differ.** `.cy-pressed` is .88/.98 over 80ms, `.team-action--pressed` is .72 with no transition, and `.om-card--pressed` is .78. Converging on `cy-pressed` is a token-only change.
 
 Numbers (taps / hover-class per wxml):
@@ -164,4 +204,10 @@ Numbers (taps / hover-class per wxml):
 
 Most of the gaps are cy-btn or components with their own feedback. `pageMotion.enter` callers in scope: activity/list and search2/result only. topic and play have their own motion.
 
-STATUS: PARTIAL — pages/play section pending.
+Play numbers:
+- Across all `pages/play` wxml: 435 taps / 378 hover. The rest are cy-btn, noop catchers, or circle `<button>`s.
+- index.wxss: 29 distinct radius values (88 of 162 via var).
+- 49 distinct raw spacing values (254 of 483 raw).
+- 69 of 78 motion declarations use literal durations. Most are prototype values marked `ds-ok`, so tokenising them is not proposed beyond PL15 and PL16.
+
+STATUS: COMPLETE
