@@ -900,9 +900,10 @@
                     <include refid="notificationRecipientNotBanned"/>
                   union all
                   select 1 from cms_registration r
+                  <!-- 投递时复核与受众同口径:俱乐部公开主题的自办场次不挂 club_id,按主题归属认 -->
                   inner join cms_activity a on a.id = r.owner_id
-                    and a.id = #{activityId} and a.club_id = #{clubId} and a.del_flag = 0
-                  inner join club c on c.id = a.club_id and c.status = 1 and c.del_flag = 0
+                    and a.id = #{activityId} and (a.club_id = #{clubId} or (a.club_id is null and exists (select 1 from cms_topic t where t.id = a.topic_id and t.club_id = #{clubId} and t.member_id = a.member_id))) and a.del_flag = 0
+                  inner join club c on c.id = #{clubId} and c.status = 1 and c.del_flag = 0
                   inner join club_event_notification_campaign nc on nc.id = #{campaignId}
                     and nc.club_id = #{clubId} and nc.activity_id = #{activityId}
                     and nc.audience_type = 'REGISTERED'
@@ -953,9 +954,9 @@
                 select exists (
                   select 1 from cms_registration r
                   inner join cms_activity a on a.id = r.owner_id
-                    and a.club_id = #{clubId} and a.id = #{activityId}
+                    and (a.club_id = #{clubId} or (a.club_id is null and exists (select 1 from cms_topic t where t.id = a.topic_id and t.club_id = #{clubId} and t.member_id = a.member_id))) and a.id = #{activityId}
                     and a.del_flag = 0 and a.end_date &lt;= now()
-                  inner join club c on c.id = a.club_id and c.status = 1 and c.del_flag = 0
+                  inner join club c on c.id = #{clubId} and c.status = 1 and c.del_flag = 0
                   left join club_lead_checkin ck on ck.activity_id = a.id and ck.member_id = r.member_id
                   left join club_event_attendance_correction corr on corr.id = (
                     select max(c2.id) from club_event_attendance_correction c2
