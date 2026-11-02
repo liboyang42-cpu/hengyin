@@ -108,6 +108,8 @@ public class ClubSessionServiceImpl implements IClubSessionService {
         }
         // C-02:主理人开场前就要知道付费场次能不能在线收款(与 assertCollectible 同一判据,不改收款闸本身)。
         for (CmsTopic topic : topics) topic.setOnlinePaymentAvailable(onlinePaymentAvailable(topic.getId()));
+        // C-17:开一场页只读显示票价与集合点(玩家结账页看到的就是票上的这两项)。
+        for (CmsTopic topic : topics) applySessionTicketFacts(topic);
         return topics;
     }
 
@@ -249,6 +251,30 @@ public class ClubSessionServiceImpl implements IClubSessionService {
                 throw new IllegalArgumentException("这个时间已有一场，请换个时间或直接修改那一场");
             }
         }
+    }
+
+    void applySessionTicketFacts(CmsTopic topic) {
+        if (topic == null || topic.getId() == null) return;
+        OmsTicket query = new OmsTicket();
+        query.setOwnerType(1L);
+        query.setOwnerId(topic.getId());
+        query.setDelFlag(0);
+        List<OmsTicket> tickets = ticketService.selectOmsTicketList(query);
+        if (tickets == null) return;
+        java.math.BigDecimal min = null;
+        String meeting = null;
+        for (OmsTicket ticket : tickets) {
+            if (ticket == null) continue;
+            if (ticket.getPrice() != null && (min == null || ticket.getPrice().compareTo(min) < 0)) min = ticket.getPrice();
+            if (meeting == null) {
+                String name = ticket.getMeetingPoint() == null ? "" : ticket.getMeetingPoint().trim();
+                String address = ticket.getMeetingPointAddress() == null ? "" : ticket.getMeetingPointAddress().trim();
+                String text = (name + (name.isEmpty() || address.isEmpty() ? "" : " · ") + address).trim();
+                if (!text.isEmpty()) meeting = text;
+            }
+        }
+        topic.setSessionPrice(min);
+        topic.setSessionMeetingPoint(meeting);
     }
 
     /** 取主题票(owner_type=1)里第一张带完整集合点坐标的票,写到场次 latitude/longitude。 */

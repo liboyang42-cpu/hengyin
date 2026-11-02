@@ -371,8 +371,17 @@ function occurrenceDateText(raw) {
   return p.month + '月' + p.day + '日 周' + week + ' ' + pad2(p.hours) + ':' + pad2(p.minutes)
 }
 
+function sessionFactsText(item) {
+  const parts = []
+  const price = Number(item && item.sessionPrice)
+  if (item && item.sessionPrice != null && Number.isFinite(price)) parts.push(price > 0 ? '票价 ¥' + (Math.round(price * 100) / 100) : '免费')
+  if (item && typeof item.sessionMeetingPoint === 'string' && item.sessionMeetingPoint.trim()) parts.push('集合点 ' + item.sessionMeetingPoint.trim())
+  return parts.join(' · ')
+}
+
 Page({
   data: {
+    seriesWindowWarning: '',
     statusBarHeight: (app.globalData || {}).statusBarHeight || 44,
     navBarHeight: (app.globalData || {}).navBarHeight || 44,
     clubId: null,
@@ -532,6 +541,11 @@ Page({
           id: positiveId(item.id),
           name: typeof item.name === 'string' && item.name.trim() ? item.name.trim() : ('主题 #' + item.id),
           dropdownLabel: topicDropdownLabel(item, that.data.clubId),
+          // C-17:玩家结账页上的票价与集合点,开场前只读给主理人看
+          factsText: sessionFactsText(item),
+          // C-02:付费主题且不能在线收款时提示主理人(L3 管玩家侧)
+          paymentNotice: item.onlinePaymentAvailable === false && Number(item.sessionPrice) > 0
+            ? '这个主题暂不能在线收款，玩家无法在线报名付费场次' : '',
         }))
         // topics 可能晚于 series 到,补一次装饰,否则清单会一直停在 `主题 #3`
         // E-07:带 topicId 进来时把下拉预选到它(找不到就维持第一个,不静默改口径)
@@ -871,6 +885,8 @@ Page({
         if (ok(res) && positiveId(res.data && res.data.id)) {
           motion.haptic({ type: 'light', reducedMotion: readReducedMotion() })
           toast.success(editingSeriesId ? '未来场次已更新' : '系列场次已创建')
+          // C-21:场次落在主题日期之外时服务端回一句提醒,留在表单上方,不拦创建
+          that.setData({ seriesWindowWarning: typeof res.data.windowWarning === 'string' ? res.data.windowWarning : '' })
           that.resetSeriesForm()
           that.loadSeries()
           return

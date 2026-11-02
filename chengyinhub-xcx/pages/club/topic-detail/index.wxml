@@ -196,7 +196,7 @@
         <text class="ctd-opstime__label">集合时间</text>
         <text class="ctd-opstime__value">{{opsTimeText}}</text>
       </view>
-      <view class="ctd-opstime__edit" bindtap="openOpsTimeSheet" aria-role="button" aria-label="{{opsTimeLocked ? '已有报名，时间地点不可改；备注仍可改' : '修改集合时间'}}" aria-disabled="{{opsTimeLocked}}" hover-class="{{opsTimeLocked ? 'none' : 'cy-pressed'}}" hover-stay-time="80">{{opsTimeLocked ? '已售锁定（备注仍可改）' : '修改'}}</view>
+      <view class="ctd-opstime__edit" bindtap="openOpsTimeSheet" aria-role="button" aria-label="{{opsTimeLocked ? '已有报名，时间地点不可改' : '修改集合时间'}}" aria-disabled="{{opsTimeLocked}}" hover-class="{{opsTimeLocked ? 'none' : 'cy-pressed'}}" hover-stay-time="80">{{opsTimeLocked ? '已有报名 · 已锁定' : '修改'}}</view>
     </view>
 
     <view class="ctd-generic-ops" wx:if="{{directorActive && loadState === 'ready' && genericOpsKnown && genericOpsActions.length}}">
@@ -285,6 +285,7 @@
 
     <!-- §5-断6:没场次时主键换成「去开场」,原因就地写出来 —— 不留点了没反应的死入口 -->
     <view class="ctd-director-note" wx:if="{{sessionHint}}">{{sessionHint}}</view>
+    <view class="ctd-director-note" wx:if="{{paymentNotice}}">{{paymentNotice}}</view>
 
     <view class="ctd-footspacer"></view>
 
@@ -623,7 +624,6 @@
 <!-- HO-26 改集合时间:日期 + 时间各一格,底部两颗小按钮并排。已售锁定由后端判(CR-63),这里先把规则说在前面。 -->
 <cy-scene-sheet show="{{opsTimeSheetVisible}}" variant="half" title="修改集合时间" closable bind:close="closeOpsTimeSheet">
   <view class="ctd-director-field">
-    <text class="ctd-opstime__hint">已有报名，集合时间和地点不可改</text>
     <text class="ctd-director-field__label">集合日期</text>
     <cy-date-field mode="date" value="{{opsTimeDraft.date}}" bind:change="onOpsDateChange">
       <view class="ctd-director-field__picker">{{opsTimeDraft.date || '选择日期'}}</view>

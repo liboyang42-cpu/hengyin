@@ -115,6 +115,23 @@ class ClubSessionServiceImplTest {
         verify(clubService).selectClubByIdForUpdate(CLUB_ID);
     }
 
+    /** C-17:开一场列表带出票价(最低)与集合点,主理人开场前就看得到玩家结账页的两项。 */
+    @Test
+    void openableTopicCarriesTicketPriceAndMeetingPoint() {
+        com.chengyinhub.business.domain.OmsTicket a = new com.chengyinhub.business.domain.OmsTicket();
+        a.setPrice(new java.math.BigDecimal("69.00"));
+        a.setMeetingPoint("武康大楼");
+        a.setMeetingPointAddress("淮海中路1842号");
+        com.chengyinhub.business.domain.OmsTicket b = new com.chengyinhub.business.domain.OmsTicket();
+        b.setPrice(new java.math.BigDecimal("39.00"));
+        when(ticketService.selectOmsTicketList(any())).thenReturn(Arrays.asList(a, b));
+        CmsTopic view = new CmsTopic();
+        view.setId(TOPIC_ID);
+        service.applySessionTicketFacts(view);
+        assertEquals(new java.math.BigDecimal("39.00"), view.getSessionPrice());
+        assertEquals("武康大楼 · 淮海中路1842号", view.getSessionMeetingPoint());
+    }
+
     /** C-03:开场把票种集合点抄到场次经纬度,否则集合签到恒为「集合点未配置」。 */
     @Test
     void openSessionCopiesTicketGatherPointToActivity() {

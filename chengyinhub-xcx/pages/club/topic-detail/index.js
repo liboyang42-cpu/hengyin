@@ -387,7 +387,8 @@ Page({
         cover: resolveTopicCover(raw) || raw.cover || raw.coverUrl || '',
         merchantLogo: raw.merchantLogo || '',
         dateRange: this.formatRange(raw.startDate, raw.endDate),
-        verifyModeText: raw.verifyModeText || '玩家可到店核销',
+        // C-27:没有任何商家信息的主题(纯城市定向)不再默认写「玩家可到店核销」
+        verifyModeText: raw.verifyModeText || (raw.merchantLogo ? '玩家可到店核销' : ''),
         chips: this.buildChips(raw, stats),
         structureText: this.buildStructureText(raw, stats),
         statusChips: this.buildTopicStatusChips(raw),
@@ -396,6 +397,8 @@ Page({
       sessions: state.sessions ? this.buildSessions(raw) : [],
       canManageSessions: this._canManageSessions,
       canReviewChapterApplications: stats.canReviewChapterApplications === true,
+      // C-02:非平台主题的付费场次暂不能在线收款,告诉主理人;平台放开后后端不再给 true,这句自然消失。
+      paymentNotice: stats.paidSessionsBlocked === true ? '这个主题暂不能在线收款，玩家无法在线报名付费场次' : '',
     });
     this.applyVerifyVisibility();
     this._topicActivities = (Array.isArray(raw.activityList) ? raw.activityList : [])
@@ -425,7 +428,8 @@ Page({
     const match = this._opsTimeMatch();
     this.setData({
       opsTimeAvailable: !!match,
-      opsTimeLocked: this._opsTimeSoldKey === this._opsTimeContextKey(),
+      // C-23:已有报名时一进页就显示已锁定,不用先点保存吃一次拒绝;最终仍以后端为准。
+      opsTimeLocked: this._opsTimeSoldKey === this._opsTimeContextKey() || this._opsTimeHasSignups(),
       opsTimeText: match ? (Number(match[2]) + '月' + Number(match[3]) + '日 ' + match[4]) : '',
     });
   },
@@ -448,9 +452,14 @@ Page({
     this.setData({ opsTimeSubmitting: false, opsTimeSheetVisible: false, 'resultSheet.show': false });
   },
 
+  _opsTimeHasSignups() {
+    const stats = this._manageStats || {};
+    return !!this._directorActivityId && Number(stats.sessionHeadcount) > 0;
+  },
+
   openOpsTimeSheet() {
     this._syncOpsTimeContext();
-    if (this.data.opsTimeSubmitting || this._opsTimeSoldKey === this._opsTimeContextKey()) return;
+    if (this.data.opsTimeSubmitting || this._opsTimeSoldKey === this._opsTimeContextKey() || this._opsTimeHasSignups()) return;
     const match = this._opsTimeMatch();
     if (!match) { this.syncOpsTime(); return; }
     this.setData({

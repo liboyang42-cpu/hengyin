@@ -182,6 +182,9 @@
         <cy-dropdown wx:else range="{{topics}}" range-key="dropdownLabel" value="{{topicIndex}}" bind:change="onTopicChange">
           <view class="field-picker">{{topics[topicIndex].dropdownLabel}}<cy-icon class="field-chevron" name="back" size="24" /></view>
         </cy-dropdown>
+        <text class="section-note" wx:if="{{topics[topicIndex].factsText}}">{{topics[topicIndex].factsText}}</text>
+        <text class="section-note section-note--warning" wx:if="{{topics[topicIndex].paymentNotice}}">{{topics[topicIndex].paymentNotice}}</text>
+        <text class="section-note section-note--warning" wx:if="{{seriesWindowWarning}}">{{seriesWindowWarning}}</text>
 
         <text class="field-label">重复方式<text class="field-required" aria-hidden="true">*</text></text>
         <view class="option-row">

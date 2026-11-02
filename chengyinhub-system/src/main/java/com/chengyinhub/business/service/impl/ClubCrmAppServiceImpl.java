@@ -289,10 +289,30 @@ public class ClubCrmAppServiceImpl implements IClubCrmAppService {
         data.put("canManageSessions", canManageSessions);
         data.put("canDirect", canDirect);
         // C-02:工作台提示「非平台主题暂不能在线收款」;与 assertCollectible 同一判据,只读。
-        data.put("onlinePaymentAvailable", productRoleService == null || topicId == null ? null
-                : productRoleService.isPlatformOwned(topicId));
+        Boolean onlinePaymentAvailable = productRoleService == null || topicId == null ? null
+                : productRoleService.isPlatformOwned(topicId);
+        data.put("onlinePaymentAvailable", onlinePaymentAvailable);
+        // 只有主题确有付费票时才需要提醒;免费主题不出这句。
+        data.put("paidSessionsBlocked", Boolean.FALSE.equals(onlinePaymentAvailable) && hasPaidTopicTicket(topicId));
         data.put("canReviewChapterApplications", canReviewChapterApplications);
         return data;
+    }
+
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.IOmsTicketService paidTicketProbe;
+
+    private boolean hasPaidTopicTicket(Long topicId) {
+        if (topicId == null || paidTicketProbe == null) return false;
+        com.chengyinhub.business.domain.OmsTicket query = new com.chengyinhub.business.domain.OmsTicket();
+        query.setOwnerType(1L);
+        query.setOwnerId(topicId);
+        query.setDelFlag(0);
+        List<com.chengyinhub.business.domain.OmsTicket> tickets = paidTicketProbe.selectOmsTicketList(query);
+        if (tickets == null) return false;
+        for (com.chengyinhub.business.domain.OmsTicket ticket : tickets) {
+            if (ticket != null && ticket.getPrice() != null && ticket.getPrice().signum() > 0) return true;
+        }
+        return false;
     }
 
     private static Integer toInt(Object value) {

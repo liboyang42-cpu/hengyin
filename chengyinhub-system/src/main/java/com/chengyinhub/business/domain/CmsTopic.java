@@ -93,6 +93,16 @@ public class CmsTopic extends BaseEntity
     private Boolean onlinePaymentAvailable;
     public Boolean getOnlinePaymentAvailable() { return onlinePaymentAvailable; }
     public void setOnlinePaymentAvailable(Boolean onlinePaymentAvailable) { this.onlinePaymentAvailable = onlinePaymentAvailable; }
+
+    /** C-17:开一场时只读展示的票价(最低价,元)与集合点,取自主题票;不落库。 */
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private transient BigDecimal sessionPrice;
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private transient String sessionMeetingPoint;
+    public BigDecimal getSessionPrice() { return sessionPrice; }
+    public void setSessionPrice(BigDecimal sessionPrice) { this.sessionPrice = sessionPrice; }
+    public String getSessionMeetingPoint() { return sessionMeetingPoint; }
+    public void setSessionMeetingPoint(String sessionMeetingPoint) { this.sessionMeetingPoint = sessionMeetingPoint; }
     @JsonIgnore
     private Boolean pendingClubApplicationOnly;
     @JsonIgnore
