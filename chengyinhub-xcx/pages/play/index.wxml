@@ -387,7 +387,7 @@
               aria-role="button" aria-label="{{item.go}}:{{item.text}}" hover-class="cy-pressed" hover-stay-time="80">
           <view class="chfull__fsentry-title">{{item.text}}</view>
         </view>
-        <view wx:elif="{{item.kind === 'kit'}}" class="chfull__kit" style="padding-top:max(var(--chfull-fade-end), calc({{chrome.contentTop}}px + var(--cy-btn-h) + var(--cy-space-3)))">
+        <view wx:elif="{{item.kind === 'kit'}}" class="chfull__kit" style="padding-top:max(var(--chfull-fade-end), calc({{chrome.contentTop}}px + var(--cy-btn-h) + var(--cy-space-3)));--pk-es-reel-h:860rpx">
           <cy-playkit kit="{{playKit.kit}}" show="{{true}}" inline="{{true}}" bind:kitaction="onPlayKitAction" />
           <view class="chfull__continue" wx:if="{{playKit.readyForBase && advancedPlay.show}}" bindtap="continueStoryGame"
                 aria-role="button" aria-label="继续故事" hover-class="cy-pressed" hover-stay-time="80">继续故事</view>

@@ -14,7 +14,7 @@
   width: 100%;
   /* 原型实测:三个数分别落在 130~284 / 291~459 / 466~620(整块约 490px),
      一格间距就是一个数的高度。560rpx 只够放一个半,上下两个会压在中间那个身上。 */
-  height: 980rpx;          /* ds-ok 原型 ~490px */
+  height: var(--pk-es-reel-h, 980rpx);          /* ds-ok 原型 ~490px;故事流内嵌时由页面给矮一点(P-09 第三轮) */
   overflow: hidden;
   /* 上下淡出,让滚筒看着是无头无尾的一条 */
   mask-image: linear-gradient(to bottom, transparent 0, #000 13%, #000 87%, transparent 100%);  /* ds-ok 滚筒上下淡出的遮罩,照原型 */

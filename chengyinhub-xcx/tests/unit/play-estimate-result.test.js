@@ -81,4 +81,8 @@ test('P-09 第三轮:交过之后滚筒收矮,只留中间那个数', () => {
   const done = Number(css.match(/\.es--done \.es__reel \{ height: (\d+)rpx; \}/)[1])
   const lane = Number(css.match(/\.es__lane--mid \{[^}]*height: (\d+)rpx;/)[1])
   assert.ok(done >= lane && done < 980, '收矮后放得下中间一格、又比原来的 980rpx 矮')
+  // 故事流内嵌时上内边距变大(避开渐隐),滚筒同时矮 120rpx,「就这个数」不被挤出一屏
+  assert.match(css, /height: var\(--pk-es-reel-h, 980rpx\);/)
+  const page = fs.readFileSync(path.join(__dirname, '../../pages/play/index.wxml'), 'utf8')
+  assert.match(page, /item\.kind === 'kit'\}\}" class="chfull__kit" style="[^"]*;--pk-es-reel-h:860rpx"/)
 })
