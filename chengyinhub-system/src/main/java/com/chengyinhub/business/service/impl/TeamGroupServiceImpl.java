@@ -181,6 +181,8 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
         }
         // 活动/场次(ownerType=2):**集合时间前 24 小时可全额退,之后不退**(产品拍板 2026-09-15,5.9)。
         // 集合时间真源 = cms_activity.start_date;窗口由 RefundPolicy 一个判定出,别在这里再减 24h。
+        // 2026-11-02 退款档位:场次票集合前 24 小时内只退实付的 50%(RefundPolicy 唯一判定),其余路径全额。
+        BigDecimal cashRatio = BigDecimal.ONE;
         if (r.getOwnerType() != null && r.getOwnerType() == 2L) {
             com.chengyinhub.business.domain.CmsActivity act = lockedOrder.activity();
             if (act != null) {
@@ -189,9 +191,13 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
                 if (!av.refundable) {
                     rejectRefund(av, r);
                 }
+                if (av.partial()) {
+                    cashRatio = av.ratio;
+                }
             }
         }
-        return refundResolvingOrder(r, ticketName, "用户申请退款", operatorMemberId)
+        return refundResolvingOrder(r, ticketName, cashRatio.compareTo(BigDecimal.ONE) < 0
+                        ? "用户申请退款(集合前24小时内,退50%)" : "用户申请退款", operatorMemberId, false, cashRatio)
                 ? CANCEL_REFUNDED : CANCEL_MANUAL_REVIEW;
     }
 
@@ -1571,11 +1577,25 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
 
     private boolean refundResolvingOrder(CmsRegistration r, String ticketName, String reason, Long actorMemberId,
                                          boolean supersedePending) {
+        return refundResolvingOrder(r, ticketName, reason, actorMemberId, supersedePending, BigDecimal.ONE);
+    }
+
+    /** @param cashRatio 本次退回现金的比例(1 = 全额;玩家集合前 24 小时内自退 = 0.5) */
+    private boolean refundResolvingOrder(CmsRegistration r, String ticketName, String reason, Long actorMemberId,
+                                         boolean supersedePending, BigDecimal cashRatio) {
         if (StringUtils.isNotEmpty(r.getParentOrderNo())) {
-            return refundWholeOrder(r, ticketName, reason, actorMemberId, supersedePending);
+            return refundWholeOrder(r, ticketName, reason, actorMemberId, supersedePending, cashRatio);
         }
-        refundOne(r, ticketName, reason);
+        refundOne(r, ticketName, reason, cashRatio);
         return true;
+    }
+
+    /** 按比例退现金:取分、向下舍入(多出的零头留给主办方,不多退)。 */
+    private static BigDecimal applyCashRatio(BigDecimal cash, BigDecimal cashRatio) {
+        if (cash == null || cashRatio == null || cashRatio.compareTo(BigDecimal.ONE) >= 0) {
+            return cash;
+        }
+        return cash.multiply(cashRatio).setScale(2, java.math.RoundingMode.DOWN);
     }
 
     /**
@@ -1599,6 +1619,11 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
 
     private boolean refundWholeOrder(CmsRegistration anyMember, String ticketName, String reason, Long actorMemberId,
                                      boolean supersedePending) {
+        return refundWholeOrder(anyMember, ticketName, reason, actorMemberId, supersedePending, BigDecimal.ONE);
+    }
+
+    private boolean refundWholeOrder(CmsRegistration anyMember, String ticketName, String reason, Long actorMemberId,
+                                     boolean supersedePending, BigDecimal cashRatio) {
         RestoreDispatchGuard.requireDispatchAllowed();
         // 查询按 parent_order_no 过滤,anyMember 自己必在结果里 ⇒ 不会为空,无需兜底分支。
         List<CmsRegistration> order = cmsRegistrationMapper.selectByParentOrderNoForUpdate(anyMember.getParentOrderNo(), Long.valueOf(2L).equals(anyMember.getOwnerType()) ? anyMember.getOwnerId() : null);
@@ -1654,6 +1679,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
             payerCash = supersedePending
                     ? OrderRefundCash.remainingForSystemSupersession(order, payer, refundService)
                     : OrderRefundCash.remaining(order, payer, refundService);
+            payerCash = applyCashRatio(payerCash, cashRatio);
             if (payerCash.signum() <= 0) {
                 payer = null; // 整单现金已退完:首单也只领退款权/回库存/返积分,不再调微信
             }
@@ -1797,6 +1823,10 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
 
     /** 单笔报名退款:结算冲销+标记已退,现金微信原路退(受理失败进§6.1人工兜底队列);积分返还;恢复库存;退款提醒 */
     private void refundOne(CmsRegistration r, String ticketName, String reason) {
+        refundOne(r, ticketName, reason, BigDecimal.ONE);
+    }
+
+    private void refundOne(CmsRegistration r, String ticketName, String reason, BigDecimal cashRatio) {
         RestoreDispatchGuard.requireDispatchAllowed();
         CmsRegistration observed = r;
         r = cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(observed.getId());
@@ -1815,6 +1845,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
         if (cash == null || cash.signum() < 0) {
             throw new ServiceException("支付现金快照未确认，请通过后台退款工单核对后处理", HttpStatus.CONFLICT);
         }
+        cash = applyCashRatio(cash, cashRatio);
         boolean hasCash = cash.compareTo(BigDecimal.ZERO) > 0;
         if (hasCash) refundService.supersedePendingRegistrationRefunds(r.getId(), reason);
         // 纯积分单没有退款申请唯一键兜底，必须先领取报名退款权；loser 不得碰库存、积分或权益。

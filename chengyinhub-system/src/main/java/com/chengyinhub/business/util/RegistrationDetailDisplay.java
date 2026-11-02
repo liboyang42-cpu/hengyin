@@ -50,6 +50,10 @@ public final class RegistrationDetailDisplay {
         if (verdict == null) {
             return null;
         }
+        // 2026-11-02 退款档位:集合前 24 小时内只退 50%,不能写「可免费取消至…」。
+        if (verdict.partial()) {
+            return verdict.reason;
+        }
         if (verdict.refundable && verdict.deadline != null) {
             String deadlineText = "可免费取消至 " + formatCnDeadline(verdict.deadline);
             // F-W5-07:¥0 免费单没有「全额退/不退」可言,不能挂收费票的退款规则句。

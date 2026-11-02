@@ -1082,8 +1082,16 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             boolean free = payAmount.signum() == 0 && pointsUsed == 0;
             Date deadline = free ? activity.getStartDate() : RefundPolicy.sessionRefundDeadline(activity.getStartDate());
             result.setRefundDeadline(deadline);
-            result.setRefundableNow(deadline == null ? null
-                    : free ? new Date().before(deadline) : !new Date().after(deadline));
+            Date quotedAt = new Date();
+            if (free) {
+                result.setRefundableNow(deadline == null ? null : quotedAt.before(deadline));
+            } else {
+                // 2026-11-02 退款档位:集合前 24 小时以上全额、24 小时内 50%、开始后不退(RefundPolicy 唯一判定)。
+                BigDecimal ratio = RefundPolicy.sessionRefundRatioAt(activity.getStartDate(), quotedAt);
+                result.setRefundableNow(ratio == null ? null : ratio.signum() > 0);
+                result.setRefundPercentNow(ratio == null ? null
+                        : ratio.multiply(BigDecimal.valueOf(100)).intValue());
+            }
         }
         return result;
     }

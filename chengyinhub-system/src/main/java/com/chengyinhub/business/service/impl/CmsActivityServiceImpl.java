@@ -261,6 +261,11 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         // 客诉期提现闸(9-16 拍板第 3 条):还有未结客诉的报名单只暂扣它自己那部分,其余照放。
         activitySettlementHoldMapper.holdOpenComplaintRegistrations(activity.getId());
         BigDecimal totalSales = cmsRegistrationMapper.selectTotalSalesByActivityId(activity.getId());
+        // 2026-11-02 退款档位:集合前 24 小时内退 50% 的报名,未退回的那一半归主办方,在这里补回。
+        BigDecimal retainedSales = cmsRegistrationMapper.selectRetainedSalesAfterPartialRefundByActivityId(activity.getId());
+        if (retainedSales != null && retainedSales.signum() > 0) {
+            totalSales = totalSales == null ? retainedSales : totalSales.add(retainedSales);
+        }
         BigDecimal heldSales = activitySettlementHoldMapper.selectHeldSalesByActivityId(activity.getId());
         if (totalSales != null && heldSales != null) {
             totalSales = totalSales.subtract(heldSales);

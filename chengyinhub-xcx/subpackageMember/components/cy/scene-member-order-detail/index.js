@@ -10,7 +10,7 @@ const { isUnknownHttpStatus } = require('../../../../utils/transport/failure-env
 const { failureStatus } = require('../../../../utils/session/login-reload.js');
 const { reader, sameReader } = require('../../../../utils/user-character.js');
 
-/* 稿 578:2312 的状态药丸:退款处理中是琥珀(#FF9E14)。其余档位按语义配到既有状态色,
+/* 稿 578:2312 的状态药丸:正在退款是琥珀(#FF9E14)。其余档位按语义配到既有状态色,
    不为这一页新起一套色 —— 药丸在本仓是 cy-badge 的语言,这里只是把订单态映射过去。 */
 /* 稿 578:2313 那张卡在稿上画的是退款态。2026-09-11 用户定:
    「是退款、还是已完成、未开始,要有不同状态的」—— 所以它不是一张退款卡,
@@ -191,7 +191,7 @@ function buildOrderTimeline(info) {
   }];
 
   if (paid) {
-    rows.push({ key: 'paid', label: isFreeOrder(value) ? '免费报名成功' : '支付已完成', time: toDisplayTime(value.paymentTime), state: 'done' });
+    rows.push({ key: 'paid', label: isFreeOrder(value) ? '免费报名成功' : '付款成功', time: toDisplayTime(value.paymentTime), state: 'done' });
   } else if (stateKey === 'cancelled') {
     rows.push({ key: 'cancelled', label: '订单已取消', time: '', state: 'done' });
     return rows;
@@ -210,7 +210,7 @@ function buildOrderTimeline(info) {
       ? (value.refundApplication.payoutTime || value.refundApplication.updateTime) : '';
     rows.push({
       key: 'refund',
-      label: stateKey === 'refunded' ? '已退款' : '退款处理中',   // 与 utils/order-status 同词
+      label: stateKey === 'refunded' ? '退款成功' : '正在退款',   // 与 utils/order-status 同词(业主定稿:付款成功 → 正在退款 → 退款成功)
       time: toDisplayTime(refundTime),
       state: stateKey === 'refunded' ? 'done' : 'current',
     });
@@ -1032,8 +1032,8 @@ Component({
               statusTone: STATUS_TONE[info.orderStateKey] || 'neutral',
               /* 稿 578:2313 那张卡:标题 / 一句话 / 右上角一个状态词。
                  ⚠️ 退款中那档含「待平台审核」,标题只能说「退款申请已提交」,没批准前不说「已受理」;
-                    当前走到哪一步由右上角那个词说(退款审核中 / 退款处理中 / 已退款)。
-                    终态在全仓统一叫「已退款」,别另起说法(cross-end-copy 契约钉着这条)。 */
+                    当前走到哪一步由右上角那个词说(退款审核中 / 正在退款 / 退款成功)。
+                    玩家订单终态统一叫「退款成功」(2026-11-02 业主定稿),别另起说法(cross-end-copy 契约钉着这条)。 */
               stateNotice: STATE_TITLE[info.orderStateKey]
                 ? { show: true,
                     title: info.isFreeOrder && (info.orderStateKey === 'not_started' || info.orderStateKey === 'in_progress')

@@ -124,4 +124,58 @@ About the screenshots:
 - Both are from the rig browser runtime, not a phone. They show the merchant scope, identity 9002, ticket step reached by `setData({step:2})`. The step dots still read 基本信息 because of that shortcut, the same in both shots.
 - Not verified on a real phone: the WeChat pay sheet, real refund to WeChat, and settlement or withdrawal jobs running on schedule.
 
-STATUS: COMPLETE
+## Round 3
+
+Round 3 (ROUND3.md §pay-gate, restarted per ROUND3C.md). Every item below has been redone and verified in this run. Nothing from the lost run was pushed before.
+
+### Needs owner (round 3)
+
+1. **The 3% rate is data, and two code fallbacks still say 10%.** Nothing is hard-coded to 3%. Before launch, set these values:
+   - `settlement_rule (merchant_id=0, biz_type='activity')`: `platform_commission_rate=0.03`, `merchant_rate=0.97`, `creator_rate=0`. Activity cash settlement reads this live (`CmsActivityServiceImpl.executeActivitySettlement`).
+   - `settlement_rule (merchant_id=0, biz_type='topic')`: `platform_commission_rate=0.03`, `merchant_rate=0.97`, `creator_rate=0` (H8 requires 0). New themes freeze this into `cms_topic.fee_platform_rate` when the price is locked (`PricingServiceImpl.snapshot…`). Self-play and coop topic settlement read that snapshot.
+   - If you use one: `settlement_rule (0,'topic_club')` with the same values. Club themes fall back to `topic` when it is missing.
+   - **Existing themes** keep the `fee_platform_rate` they froze at price lock (the rig theme has 0.1000). Changing that is a per-theme data decision and is not done here.
+   - **Flag:** `PricingServiceImpl.FALLBACK_PLATFORM_RATE = 0.10`. When the `topic` row is missing, pricing and the snapshot fall back to 10% (it logs an error). Recommended: add the rows above. Fallback default: leave the constant until the owner says to fail closed instead.
+   - The owner said platform-owned themes pay no 3%. Topic settlement still applies the same rate to them. Not changed.
+2. **Points under the 50% tier.** A late cancel refunds 50% of the cash. Points used on the order are still returned in full, because `returnPoints` is all-or-nothing. Recommended default: keep it (points are platform value, not the organiser's money).
+3. **Tiers on theme passes.** Session tickets (owner_type=2) now have three tiers. Theme self-play passes (`evaluateTopicFulfillmentWindow`, refundable until fulfillment starts) and ③ explore passes (purchase snapshot) still use the all-or-nothing rule. Applying 50% to them needs a "start" defined for a pass. Recommended default: the fulfillment-window start, with the same 24 h tiers. Not built.
+4. **When a 主理人 change takes effect.** Activity cash goes to whoever is 主理人 when settlement runs (end + 7 days). A self-play theme's 97% line is fixed to the 主理人 at topic settlement and paid T+7 to that person, even if the 主理人 changes during those 7 days. Recommended: keep it. The line is a record of what was due at that moment.
+5. **Lane overlap:** `pages/activity/baoming` (checkout refund table and the within-24 h confirm) and the player order status words are also near l3-sell's files. Read the two PRs together.
+
+### Items
+
+| ID | Status | What changed | Files | Verified |
+|---|---|---|---|---|
+| R3-payee | done | New `ClubPrincipalPayee` (service/support). A club session (`cms_activity.club_id>0`) pays the club's **current** 主理人 (`club.member_id`). Other sessions still pay `cms_activity.member_id`. Both pay sites in `CmsActivityServiceImpl` (normal settlement and the complaint-hold release) and the debt offset use it. A club with no 主理人 fails closed: the activity rolls back and retries next run. | `ClubPrincipalPayee.java`, `CmsActivityServiceImpl.java` | `ClubPrincipalPayeeSettlementTest` (3 cases; red on old code, which credits the creator) |
+| R3-refund-debit | done | When settlement has already paid, the refund clawback now debits whoever actually received the money. New mapper query `selectIncomeMemberIdsByEventTypeAndEventId` lists the people with a positive eventType=3 income for the activity, most recent first. If the ledger receiver is among them, they are debited. If not, the latest receiver is debited. With no income rows (older data), the ledger receiver is debited as before. The `settlement_detail` adjustment row keeps the original receiver so it still pairs with its ORIGIN row. | `RefundServiceImpl.java`, `UmsMemberBalanceDetailMapper.java/.xml` | `RefundSingleSidedDebitGuardTest` +2 (red on old code) |
+| R3-self-play | done | `CmsTopicServiceImpl.settleTopic`: a club's own theme (`cms_topic.club_id>0`) with no effective coop order no longer throws `NON_COOP_TOPIC_CASH_SETTLEMENT_UNPROVEN`. `settleClubSelfPlayTopic` locks the owner_type=1 cash rows only (club session tickets settle per activity), refuses if refunds block the basis, and writes two `coop_settlement` lines in the existing shape: a `PLATFORM` line (ACCOUNTING, status 1, rate from `platformRateOf(topic)`) and an `INITIATOR_MARGIN` line (status 0, payable end+7 days) for the remainder, owed to the club's current 主理人. The existing `payoutDueCoopSettlements` pays it into the balance (eventType 5). Non-club themes still throw. | `CmsTopicServiceImpl.java` | `SettlementRateConvergenceTest.topic_clubSelfPlayWithoutCoopRecordsPrincipalDue` (138.00 → 4.14 platform + 133.86 to 主理人 9008) |
+| R3-3% | done (data, needs owner 1) | No code. The exact settings are listed above. | — | code read |
+| R3-payout5 | done: **defect confirmed and fixed** | Inside Spring's `afterCommit`, `TransactionSynchronizationManager.isActualTransactionActive()` is still `true`, because resources are unbound only in `cleanupAfterCompletion`. So `RefundPayoutServiceImpl.doPayout` threw 「退款派发必须在原业务事务提交并退出后执行」 on **every** player self-refund. `payoutAfterReview` swallowed it as a log line, and the row stayed at `payout_status=5` until `RefundReconcileTask` (paused in the rig). Fix: `TeamGroupServiceImpl.dispatchPayoutAfterCommit` now dispatches in `afterCompletion(STATUS_COMMITTED)` under `PROPAGATION_NOT_SUPPORTED`, the same pattern `CoopDepositRefundService` already uses. The test helper `memoryTransactions` now allows suspending only once synchronization has been cleared, which happens only after completion. | `TeamGroupServiceImpl.java`, test `CancellationPhaseTestSupport` | `RefundDispatchAfterCommitTest`: (a) shows Spring reports an active transaction inside afterCommit; (b) payout runs with no transaction (red on old code); (c) rollback never dispatches |
+| R3-tiers | done for session tickets (needs owner 2, 3) | `RefundPolicy`: three tiers for session tickets. More than 24 h before start: 100%. Within 24 h: 50% (`SESSION_LATE_REFUND_RATIO`; `Verdict.ratio`/`partial()`). After start: none, reason 「场次已开始,不可退款」. `sessionRefundRatioAt` serves the quote. The rule text now reads 「集合前 24 小时以上全额退;24 小时内退 50%;开始后不退」. Player self-cancel passes the ratio to `refundOne`/`refundWholeOrder`: refund = cash × 0.5, rounded **down** to the cent. Owner-initiated and organiser cancels stay 100%. **Settlement nets out the refund:** a 50% refund sets the registration to 4/3, so `selectTotalSalesByActivityId` no longer counts it, and the new `selectRetainedSalesAfterPartialRefundByActivityId` adds back `payable − approved refunds` for partly refunded registrations. Checkout: the quote returns `refundPercentNow`. A 「退款规则」 block with three rows uses the existing `sec-title`/`setly_li` rows. Ordering within 24 h asks 「取消只退 50%」 first. The after-start confirm reads 「该场次已开始，支付后不可退款」. The order page shows the 50% reason instead of 「可免费取消至…」. **Status words:** player order 付款成功 → 正在退款 → 退款成功 (`utils/order-status.js`, order timeline, history filter). 退款审核中 stays for refunds waiting for review. No migration is needed (no schema change). | `RefundPolicy`, `TeamGroupServiceImpl`, `CmsActivityServiceImpl`, `CmsRegistrationMapper.java/.xml`, `RegistrationQuoteResult`, `CmsRegistrationServiceImpl` (quote only; `assertCollectible` untouched), `RegistrationDetailDisplay`, xcx `baoming`, `order-status.js`, `scene-member-order-detail`, `scene-member-order-history` | `RefundPolicyTest` +6, `FreeSessionCancelReleaseV2Test.paidSessionOrderWithin24hRefundsHalf` (9.90 → 4.95 refund), `ClubPrincipalPayeeSettlementTest.retainedHalfOfLateRefundIsSettledToOrganiser`, xcx `item6-nonrefundable-confirm` (+1), `order-status`, `cross-end-copy-contract` |
+
+Tests that pinned the old refusal and were changed because the tier decision changes them:
+- `RefundPolicyTest`: `activity_afterStart_notRefundable`. `session_1minAfterCutoff_*`, `paidOrPointSessionOrder_within24h_*` and `session_legacyMidnightAssembly_keepsTheOldCutoff` now expect 50%.
+- `SessionRefundCopyTest.missedSessionRefusalReasonSaysStarted`.
+- `FreeSessionCancelReleaseV2Test`: "within 24 h rejected" became `paidSessionOrderWithin24hRefundsHalf` plus `paidSessionOrderAfterStartRejectedWithoutTouchingInventory`.
+- xcx: `item6-nonrefundable-confirm` (quote contract and modal text), `order-status` and `cross-end-copy-contract` (refund words).
+
+What changed for the money, by path:
+- Activity settlement: the payee is the club's current 主理人 for club sessions; retained 50% is now counted.
+- Refund after settlement: the debit goes to the actual receiver.
+- Self-play theme: a new settlement branch.
+- Player self-cancel: 50% within 24 h.
+- Refund dispatch: it now actually reaches the gateway after commit.
+
+Unchanged: `assertCollectible`, coop settlement and its payees (club coop lines already pay `club.member_id` via `resolveOrderPayee`), owner/organiser cancels (still 100%), `settlement_detail` ORIGIN receivers.
+
+Runs:
+- Wide Java set before the tiers: 2376 tests, 0 failures; 3 errors were MyBatis ITs with no MySQL in this container.
+- After the tiers: see the final run noted below.
+- `ui-integrity.js`: `UI-GATE-0:PASS`.
+
+Not done:
+- **HTTP proof in the rig for the self-play pass and the tiers.** The rig (Docker, pinned images) was not brought up in this restarted run. The proof is unit and service level only. The round-2 rig evidence above predates these changes.
+- **Screenshots** of the checkout refund table and the new status words were not taken, for the same reason.
+- **Real phone:** unverified, as before.
+
+STATUS: PARTIAL - rig HTTP proof (self-play settle, 50% refund, payout dispatch) and before/after shots for the checkout refund table are missing; tiers for theme passes need an owner decision.

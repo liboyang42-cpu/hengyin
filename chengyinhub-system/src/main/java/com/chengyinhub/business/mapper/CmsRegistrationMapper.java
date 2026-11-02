@@ -67,6 +67,9 @@ public interface CmsRegistrationMapper
 
     public BigDecimal selectTotalSalesByActivityId(Long activityId);
 
+    /** 部分退款(集合前 24 小时内退 50%)后主办方保留的实付部分合计,结算时补进销售额。 */
+    BigDecimal selectRetainedSalesAfterPartialRefundByActivityId(Long activityId);
+
 
     /**
      * 查询活动/主题报名

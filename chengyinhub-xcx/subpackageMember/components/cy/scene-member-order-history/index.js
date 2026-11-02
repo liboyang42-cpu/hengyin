@@ -84,7 +84,7 @@ Component({
       { key: 'in_progress', label: '进行中' },
       { key: 'completed', label: '已完成' },
       { key: 'refunding', label: '退款中' },
-      { key: 'refunded', label: '已退款' },
+      { key: 'refunded', label: '退款成功' },
       { key: 'non_refundable', label: '不可退款' },
       { key: 'manual_refund', label: '人工售后' },
     ],

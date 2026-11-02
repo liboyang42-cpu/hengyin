@@ -141,6 +141,22 @@ class ClubPrincipalPayeeSettlementTest {
         verify(umsMemberService, never()).addBalance(anyLong(), any());
     }
 
+    /**
+     * 2026-11-02 退款档位:集合前 24 小时内退了 50% 的报名置退款态,不在已付未退合计里;
+     * 未退回的那一半(这里 4.95)必须补进结算销售额,否则主办方拿不到。旧代码只按 100.00 结算。
+     */
+    @Test
+    void retainedHalfOfLateRefundIsSettledToOrganiser() {
+        activity.setClubId(null);
+        when(cmsRegistrationMapper.selectRetainedSalesAfterPartialRefundByActivityId(ACTIVITY_ID))
+                .thenReturn(new BigDecimal("4.95"));
+
+        assertEquals(1, svc.executeActivitySettlement());
+
+        verify(umsMemberService).addBalance(CREATOR, new BigDecimal("101.80"));
+        verify(umsMemberService).addBalance(PLATFORM, new BigDecimal("3.15"));
+    }
+
     @Test
     void nonClubSessionStillCreditsCreator() {
         activity.setClubId(null);

@@ -113,14 +113,32 @@ class FreeSessionCancelReleaseV2Test {
         verify(perkLedgerService).releaseOnRefund(REG, EntitlementInvalidReason.REFUND);
     }
 
-    /** CL-13 负控:付费场次单同样在 24h 内 ⇒ 守集合前 24h 拒绝,库存不动。 */
+    /**
+     * 2026-11-02 退款档位(替换原「付费单 24h 内拒绝」):付费场次单集合前 2 小时取消 ⇒ 退实付的 50%,
+     * 名额照常释放。旧代码在这里拒绝。
+     */
     @Test
-    void paidSessionOrderWithin24hRejectedWithoutTouchingInventory() {
+    void paidSessionOrderWithin24hRefundsHalf() {
         sessionOrder(new BigDecimal("9.90"), 0L, 0);
         activityStartsIn(2 * H);
 
+        assertEquals(ITeamGroupService.CANCEL_REFUNDED, service.cancelPaidRegistration(REG, MEMBER));
+
+        org.mockito.ArgumentCaptor<com.chengyinhub.business.domain.RefundApplication> app =
+                org.mockito.ArgumentCaptor.forClass(com.chengyinhub.business.domain.RefundApplication.class);
+        verify(refundService).saveRefund(app.capture());
+        assertEquals(0, new BigDecimal("4.95").compareTo(app.getValue().getRefundAmount()));
+        verify(ticketMapper).restoreInventory(TICKET, 2L);
+    }
+
+    /** 开始后:付费场次单不可退,库存不动。 */
+    @Test
+    void paidSessionOrderAfterStartRejectedWithoutTouchingInventory() {
+        sessionOrder(new BigDecimal("9.90"), 0L, 0);
+        activityStartsIn(-60_000L);
+
         RuntimeException e = assertThrows(RuntimeException.class, () -> service.cancelPaidRegistration(REG, MEMBER));
-        assertTrue(e.getMessage().contains("集合前24小时"), e.getMessage());
+        assertEquals("场次已开始,不可退款", e.getMessage());
         verify(ticketMapper, never()).restoreInventory(anyLong(), anyLong());
         verify(regMapper, never()).claimRegistrationRefunded(anyLong(), anyString(), any(Date.class));
     }

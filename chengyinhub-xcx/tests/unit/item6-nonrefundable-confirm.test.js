@@ -32,7 +32,7 @@ test('闸门:现金单 + refundableNow===false + 未确认 ⇒ modal「本单不
   // 判据读实例属性:_quoteRefundableNow 不是渲染态,进 data 会被 U4 死数据门禁判红(2026-09-19 CI 实证)
   assert.match(baomingJs, /if \(Number\(that\.data\.totalAmount \|\| 0\) > 0\s*\n\s*&& that\._quoteRefundableNow === false && !that\._nonRefundableConfirmed\) \{/)
   assert.match(baomingJs, /title: '本单不可退'/)
-  assert.match(baomingJs, /content: '该场次已过「集合前 24 小时」退款截止时间，支付后不可退款。确认继续下单？'/)
+  assert.match(baomingJs, /content: '该场次已开始，支付后不可退款。确认继续下单？'/)
   assert.match(baomingJs, /confirmText: '继续下单'/)
   assert.match(baomingJs, /cancelText: '再想想'/)
   // 确认后只能置一次性标记重入 handlePayment,不许绕过后续存证/订阅链
@@ -63,5 +63,18 @@ test('跨端契约:后端 quote 出参必须带 refundDeadline/refundableNow,且
   assert.match(svc, /RefundPolicy\.sessionRefundDeadline\(activity\.getStartDate\(\)\)/)
   assert.match(svc, /boolean free = payAmount\.signum\(\) == 0 && pointsUsed == 0;/)
   assert.match(svc, /Date deadline = free \? activity\.getStartDate\(\) : RefundPolicy\.sessionRefundDeadline\(activity\.getStartDate\(\)\);/)
-  assert.match(svc, /result\.setRefundableNow\(deadline == null \? null\s*: free \? new Date\(\)\.before\(deadline\) : !new Date\(\)\.after\(deadline\)\);/)
+  // 2026-11-02 退款档位:收费单的可退性与比例都从 RefundPolicy.sessionRefundRatioAt 这一口钟来
+  assert.match(svc, /result\.setRefundableNow\(deadline == null \? null : quotedAt\.before\(deadline\)\);/)
+  assert.match(svc, /RefundPolicy\.sessionRefundRatioAt\(activity\.getStartDate\(\), quotedAt\)/)
+  assert.match(svc, /result\.setRefundPercentNow\(/)
+  assert.match(dto, /private Integer refundPercentNow;/)
+})
+
+test('退款档位:集合前 24 小时内下单先确认「取消只退 50%」,结算页列出三档', () => {
+  assert.match(baomingJs, /_quoteRefundPercentNow === 50/)
+  assert.match(baomingJs, /title: '取消只退 50%'/)
+  const wxml = fs.readFileSync(path.join(ROOT, 'pages/activity/baoming/baoming.wxml'), 'utf8')
+  for (const row of ['集合前 24 小时以上', '全额退', '集合前 24 小时内', '退 50%', '开始后', '不退']) {
+    assert.ok(wxml.includes(row), row)
+  }
 })
