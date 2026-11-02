@@ -133,6 +133,7 @@ public class UmsMemberController extends BaseController
     public AjaxResult add(@RequestBody UmsMember umsMember)
     {
         umsMember.setBalance(null);
+        umsMember.setPoint(null); // 积分同样只走带流水的路径
         return toAjax(umsMemberService.insertUmsMember(umsMember));
     }
 
@@ -153,6 +154,7 @@ public class UmsMemberController extends BaseController
         // 2026-09-16 提现闸:余额只能由结算/退款/提现等带流水的资金路径增减。通用编辑写进来的余额
         // 没有流水、不经结算闸,当场就是可提现的钱 —— 后台表单本就不发这个字段,这里一律丢弃。
         umsMember.setBalance(null);
+        umsMember.setPoint(null); // 积分同样只走带流水的路径
         return toAjax(umsMemberService.updateUmsMember(umsMember));
     }
 

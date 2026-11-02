@@ -1,5 +1,6 @@
 package com.chengyinhub.business.service.impl;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import com.chengyinhub.business.domain.UmsCreativeSquare;
@@ -135,16 +136,19 @@ public class ViewCreativeSquareServiceImpl implements IViewCreativeSquareService
 
     @Override
     public List<Map<String, Object>> selectNodeCountsByTopicIds(List<Long> topicIds) {
+        if (topicIds == null || topicIds.isEmpty()) return Collections.emptyList(); // 空集渲染成 and 1 = 0,Druid wall 会拒
         return viewCreativeSquareMapper.selectNodeCountsByTopicIds(topicIds);
     }
 
     @Override
     public List<Map<String, Object>> selectProgressCountsByMemberActivities(List<Map<String, Object>> pairs) {
+        if (pairs == null || pairs.isEmpty()) return Collections.emptyList(); // 空集渲染成 and 1 = 0,Druid wall 会拒
         return viewCreativeSquareMapper.selectProgressCountsByMemberActivities(pairs);
     }
 
     @Override
     public List<Map<String, Object>> selectProgressCountsByMemberTopics(List<Map<String, Object>> pairs) {
+        if (pairs == null || pairs.isEmpty()) return Collections.emptyList(); // 空集渲染成 and 1 = 0,Druid wall 会拒
         return viewCreativeSquareMapper.selectProgressCountsByMemberTopics(pairs);
     }
 
@@ -155,21 +159,25 @@ public class ViewCreativeSquareServiceImpl implements IViewCreativeSquareService
 
     @Override
     public List<Map<String, Object>> selectMedalCountsByMemberTopics(List<Map<String, Object>> pairs) {
+        if (pairs == null || pairs.isEmpty()) return Collections.emptyList(); // 空集渲染成 and 1 = 0,Druid wall 会拒
         return viewCreativeSquareMapper.selectMedalCountsByMemberTopics(pairs);
     }
 
     @Override
     public List<Map<String, Object>> selectExplorePassesByMemberActivities(List<Map<String, Object>> pairs) {
+        if (pairs == null || pairs.isEmpty()) return Collections.emptyList(); // 空集渲染成 and 1 = 0,Druid wall 会拒
         return viewCreativeSquareMapper.selectExplorePassesByMemberActivities(pairs);
     }
 
     @Override
     public List<Map<String, Object>> selectRequiredChapterCountsByTopicIds(List<Long> topicIds) {
+        if (topicIds == null || topicIds.isEmpty()) return Collections.emptyList(); // 空集渲染成 and 1 = 0,Druid wall 会拒
         return viewCreativeSquareMapper.selectRequiredChapterCountsByTopicIds(topicIds);
     }
 
     @Override
     public List<Map<String, Object>> selectRedeemedRequiredChapterCountsByRegistrations(List<Long> registrationIds) {
+        if (registrationIds == null || registrationIds.isEmpty()) return Collections.emptyList(); // 空集渲染成 and 1 = 0,Druid wall 会拒
         return viewCreativeSquareMapper.selectRedeemedRequiredChapterCountsByRegistrations(registrationIds);
     }
 }
