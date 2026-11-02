@@ -190,3 +190,11 @@
 
 /* isolated 组件内全局 .cy-pressed 进不来,本地补一份(照 scene-club-edit 的既有做法) */
 .cy-pressed { opacity: .88; }
+
+/* 2026-11-02(ROUND3B):商家接受后的联系方式行 */
+.cto__phone { margin-top: 8rpx; display: inline-flex; align-items: center; gap: 8rpx; font-size: var(--cy-type-caption); color: var(--cy-color-text-secondary); }
+/* 稿上药丸只有 64rpx 高;触控区按 88rpx 补足,外观不变 */
+.cto__cta, .cto__pill, .cto__outline-btn, .cto__link, .cto__phone { position: relative; }
+.cto__cta::after, .cto__pill::after, .cto__outline-btn::after, .cto__link::after, .cto__phone::after {
+  content: ''; position: absolute; left: -8rpx; right: -8rpx; top: -12rpx; bottom: -12rpx;
+}

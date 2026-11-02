@@ -4,7 +4,13 @@ import com.chengyinhub.business.access.club.ClubAccessContext;
 import com.chengyinhub.business.access.club.ClubPermission;
 import com.chengyinhub.business.access.club.IClubAccessService;
 import com.chengyinhub.business.domain.CmsTopic;
+import com.chengyinhub.business.domain.CmsMemberTemplate;
+import com.chengyinhub.business.domain.CmsTopicChapter;
 import com.chengyinhub.business.domain.CmsTopicNode;
+import com.chengyinhub.business.domain.MerchantChapterApplication;
+import com.chengyinhub.business.mapper.MerchantChapterApplicationMapper;
+import com.chengyinhub.business.service.ICmsMemberTemplateService;
+import com.chengyinhub.business.service.ICmsTopicChapterService;
 import com.chengyinhub.business.domain.MmsMerchant;
 import com.chengyinhub.business.service.IClubChapterRecruitService;
 import com.chengyinhub.business.service.ICmsTopicNodeService;
@@ -39,6 +45,13 @@ public class ClubChapterRecruitServiceImpl implements IClubChapterRecruitService
     @Autowired private ICmsTopicService cmsTopicService;
     @Autowired private ICmsTopicNodeService cmsTopicNodeService;
     @Autowired private IMmsMerchantService mmsMerchantService;
+    // 2026-11-02 承接商家半屏(ROUND3B):章节分组、玩法名、章节招募条件与申请数。只读,沿用同一道 club + ACTIVITY_READ 闸。
+    @Autowired(required = false) private ICmsTopicChapterService cmsTopicChapterService;
+    @Autowired(required = false) private ICmsMemberTemplateService cmsMemberTemplateService;
+    @Autowired(required = false) private MerchantChapterApplicationMapper chapterApplicationMapper;
+
+    private static final int APPLICATION_PENDING = 0;
+    private static final int APPLICATION_APPROVED = 1;
 
     @Override
     public Map<String, Object> overview(Long principalMemberId, Long clubId, Long topicId) {
@@ -49,8 +62,71 @@ public class ClubChapterRecruitServiceImpl implements IClubChapterRecruitService
         out.put("topicId", topicId);
         boolean canManage = access.hasPermission(ClubPermission.ACTIVITY_MANAGE);
         out.put("canManage", canManage);
-        out.put("nodes", nodeRows(nodesOf(topicId), canManage));
+        List<CmsTopicNode> nodes = nodesOf(topicId);
+        List<Map<String, Object>> rows = nodeRows(nodes, canManage);
+        Map<Long, String> gameplay = gameplayNames(nodes);
+        for (int i = 0; i < nodes.size(); i++) {
+            String name = gameplay.get(nodes.get(i).getTemplateId());
+            if (name != null) rows.get(i).put("gameplayName", name);
+        }
+        out.put("nodes", rows);
         out.put("topicName", topic == null ? null : topic.getName());
+        // 1 = 城市定向(按站招商),2 = 自由探索(按章节招商);NULL = 存量数据,由前端按有无站点退回站点版
+        out.put("productType", topic == null ? null : topic.getProductType());
+        out.put("chapters", chapterRows(topicId));
+        return out;
+    }
+
+    private Map<Long, String> gameplayNames(List<CmsTopicNode> nodes) {
+        Map<Long, String> out = new LinkedHashMap<>();
+        if (cmsMemberTemplateService == null) return out;
+        List<Long> ids = new ArrayList<>();
+        for (CmsTopicNode n : nodes) if (n.getTemplateId() != null && !ids.contains(n.getTemplateId())) ids.add(n.getTemplateId());
+        if (ids.isEmpty()) return out;
+        List<CmsMemberTemplate> templates = cmsMemberTemplateService.selectCmsMemberTemplateByIds(ids);
+        if (templates != null) for (CmsMemberTemplate t : templates) {
+            if (t != null && t.getId() != null && t.getTitle() != null && !t.getTitle().trim().isEmpty()) out.put(t.getId(), t.getTitle().trim());
+        }
+        return out;
+    }
+
+    private List<Map<String, Object>> chapterRows(Long topicId) {
+        List<Map<String, Object>> out = new ArrayList<>();
+        if (cmsTopicChapterService == null) return out;
+        CmsTopicChapter probe = new CmsTopicChapter();
+        probe.setTopicId(topicId);
+        List<CmsTopicChapter> chapters = cmsTopicChapterService.selectCmsTopicChapterList(probe);
+        if (chapters == null || chapters.isEmpty()) return out;
+        chapters.sort(Comparator.comparing(c -> c.getSortId() == null ? Long.MAX_VALUE : c.getSortId()));
+        List<Long> ids = new ArrayList<>();
+        for (CmsTopicChapter c : chapters) if (c.getId() != null && topicId.equals(c.getTopicId())) ids.add(c.getId());
+        Map<Long, Integer> pending = applicationCounts(ids, APPLICATION_PENDING);
+        Map<Long, Integer> approved = applicationCounts(ids, APPLICATION_APPROVED);
+        for (CmsTopicChapter c : chapters) {
+            if (c.getId() == null || !topicId.equals(c.getTopicId())) continue;
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("chapterId", c.getId());
+            row.put("name", c.getName());
+            row.put("category", c.getCategory());
+            row.put("recruiting", Integer.valueOf(1).equals(c.getRecruitEnabled()) && c.getFinishTime() == null);
+            row.put("finished", c.getFinishTime() != null);
+            row.put("termsMode", c.getTermsMode());
+            row.put("perkMinValue", c.getPerkMinValue());
+            row.put("maxMerchant", c.getMaxMerchant());
+            row.put("approvedCount", approved.getOrDefault(c.getId(), 0));
+            row.put("pendingCount", pending.getOrDefault(c.getId(), 0));
+            out.add(row);
+        }
+        return out;
+    }
+
+    private Map<Long, Integer> applicationCounts(List<Long> chapterIds, int status) {
+        Map<Long, Integer> out = new LinkedHashMap<>();
+        if (chapterApplicationMapper == null || chapterIds.isEmpty()) return out;
+        List<MerchantChapterApplication> rows = chapterApplicationMapper.selectByChapterIdsAndStatus(chapterIds, status);
+        if (rows != null) for (MerchantChapterApplication a : rows) {
+            if (a != null && a.getChapterId() != null) out.merge(a.getChapterId(), 1, Integer::sum);
+        }
         return out;
     }
 

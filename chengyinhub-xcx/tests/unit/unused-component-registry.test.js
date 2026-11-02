@@ -54,7 +54,6 @@ const REGISTERED_UNUSED = {
   'club-topic-merchants': '待接线(2026-09-02):宿主是并行分支的活动详情页,本 PR 只交付组件',
   'club-topic-settings': '待接线(2026-09-02):宿主是并行分支的活动详情页,本 PR 只交付组件',
   'club-topic-groupcode': '待接线(2026-09-02):宿主是并行分支的活动详情页,本 PR 只交付组件',
-  'club-topic-onboarding': '待接线(2026-09-02):宿主是并行分支的活动详情页,本 PR 只交付组件',
   // 2026-09-02:J2「客户 · 主题内」T3 全屏弹窗,宿主是正在并行重做的活动详情页(H3/H4)。
   // 那一页归另一条分支,两边同时改会撞;组件先落地并自带契约测试,活动详情页合并后由它接上
   // <cy-scene-topic-customers show topic-id bind:close>,那时这一条要从本表删掉。

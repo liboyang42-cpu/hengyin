@@ -6,6 +6,7 @@
 // 日常详情不跳 merchantinfo；只有「承接审核」显式复用它已有的主办方审核台，避免复制审核链。
 const toast = require('../../../utils/toast.js');
 const { callMember } = require('../../../utils/club-phone-call.js');
+const { shapeRecruitSheet } = require('../utils/recruit-sheet.js');
 const cancellationIntent = require('../../../utils/topic-cancellation-intent.js');
 const { resolveMenuChrome } = require('../../../utils/nav-safe-area.js');
 const app = getApp();
@@ -23,12 +24,6 @@ const { presentTrendRows } = require('./registration-trend.js');
 
 function jsonBody(data) { return JSON.stringify(data || {}); }
 function jsonHeader() { return { 'Content-Type': 'application/json' }; }
-// 展示用掩码。真号只在「商家已确认」时由服务端下发,拨号用真号、屏幕上只露头尾
-function maskPhone(raw) {
-  const digits = String(raw || '').replace(/\D/g, '');
-  if (digits.length < 7) return '';
-  return digits.slice(0, 3) + '****' + digits.slice(-4);
-}
 // 没有值和 0 不是一回事:0 要显示成 0,缺值才是「—」。
 function countText(v) { return v == null ? '—' : String(v); }
 
@@ -202,10 +197,8 @@ Page({
     endSubmitting: false,
     endErrorText: '',
     merchantSheetVisible: false,
-    merchantState: 'loading',
-    merchantDeniedReason: '',
     customerSheetVisible: false,
-    merchantRows: [],
+    recruit: { mode: 'node', loadState: 'loading', errorText: '' },
     customerState: 'loading',
     customerErrorReason: '',
     customerStats: [],
@@ -923,45 +916,40 @@ Page({
   closeMerchants() { this.setData({ merchantSheetVisible: false }); },
 
   loadMerchants() {
-    this.setData({ merchantState: 'loading', merchantDeniedReason: '' });
+    this.setData({ recruit: { mode: (this.data.recruit && this.data.recruit.mode) || 'node', loadState: 'loading', errorText: '' } });
     const that = this;
     app.sendRequest({
       hideLoading: true, silentError: true,
       url: '/api/club/recruit/overview', method: 'POST',
       data: jsonBody({ clubId: this._clubId, topicId: this._topicId }), header: jsonHeader(),
       success(res) {
-        if (res && Number(res.code) === 403) { that.setData({ merchantState: 'denied', merchantDeniedReason: typeof res.msg === 'string' ? res.msg.trim() : '' }); return; }
-        if (!isSuccess(res) || !res.data) { that.setData({ merchantState: 'error' }); return; }
-        that.setData({ merchantState: 'ready', merchantRows: that.buildMerchantRows(res.data) });
+        if (res && Number(res.code) === 403) {
+          that.setData({ recruit: { mode: 'node', loadState: 'denied', errorText: typeof res.msg === 'string' ? res.msg.trim() : '' } });
+          return;
+        }
+        const shaped = isSuccess(res) ? shapeRecruitSheet(res.data) : null;
+        if (!shaped) { that.setData({ recruit: { mode: 'node', loadState: 'error', errorText: '' } }); return; }
+        that.setData({ recruit: Object.assign({ topicId: String(that._topicId || ''), errorText: '' }, shaped) });
       },
-      fail() { that.setData({ merchantState: 'error' }); },
+      fail() { that.setData({ recruit: { mode: 'node', loadState: 'error', errorText: '网络没有连上' } }); },
     });
   },
 
-  buildMerchantRows(d) {
-    return (Array.isArray(d.nodes) ? d.nodes : [])
-      .filter(function (n) { return n.state !== 'OPEN'; })
-      .map(function (n) {
-        const phone = typeof n.phone === 'string' ? n.phone.trim() : '';
-        const name = n.merchantName || '未命名商家';
-        return {
-          nodeId: n.nodeId,
-          merchantName: name,
-          initial: name.slice(0, 1),
-          stationName: n.name || '未命名节点',
-          phone: phone,
-          // 未确认的商家回包里压根没有 phone —— 这里说清是「还没确认」,
-          // 不要写成空字符串,空会被读成「这家没留电话」。
-          contactText: phone ? maskPhone(phone) : '未确认，暂无联系方式',
-        };
-      });
-  },
-
-  // 屏幕上只露掩码,复制到剪贴板的是真号 —— 真号本来就只在「商家已确认」时才下发。
-  copyPhone(e) {
-    const phone = e.currentTarget.dataset.phone;
+  // 商家联系方式:屏幕上只露掩码,复制的是真号 —— 真号本来就只在「商家已确认」时才下发。
+  onRecruitCopyPhone(e) {
+    const phone = e && e.detail && e.detail.phone;
     if (!phone) return;
     wx.setClipboardData({ data: String(phone), success() { toast('手机号已复制'); }, fail() {} });
+  },
+
+  // 去招商 / 查看候选池 / 设置招募条件 / 查看申请 / 开放招募:都在现成的招商页里(邀请商家、候选、
+  // 章节条款与开关、承接审核),这里只把人送过去,不另造写接口。只有能审承接的人看得到这些按钮。
+  openRecruitDesk() {
+    if (!this.data.canReviewChapterApplications || !this._topicId) return;
+    this.setData({ merchantSheetVisible: false });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({
+      url: '/pages/topic/merchantinfo/merchantinfo?topicId=' + this._topicId + '&scope=CLUB',
+      complete: () => { this._navigating = false; } });
   },
 
   /* ——— Figma J2 报名参与者 · 主题内(弹窗)———

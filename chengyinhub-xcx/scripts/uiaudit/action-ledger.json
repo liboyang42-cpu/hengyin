@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5605,
+  "controlCount": 5618,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -15896,6 +15896,90 @@
           "route": "pages/club/topic-detail/index",
           "segments": [
             {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
               "selector": "cy-date-field",
               "index": 0
             },
@@ -16561,74 +16645,6 @@
             {
               "selector": "cy-error",
               "index": 5
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-error",
-              "index": 6
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.rs__act",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-error",
-              "index": 6
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.rs__act",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-error",
-              "index": 6
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-error",
-              "index": 6
             },
             {
               "selector": "cy-result-sheet",
@@ -88243,6 +88259,566 @@
       }
     },
     {
+      "id": "components/cy/club-topic-onboarding/index.wxml:38:bindtap:onCopyPhone:2",
+      "route": "component:components/cy/club-topic-onboarding/index",
+      "hostRoutes": [
+        "pages/club/topic-detail/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "components/cy/club-topic-onboarding/index.wxml",
+        "js": "components/cy/club-topic-onboarding/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onCopyPhone",
+        "line": 38,
+        "selectorHint": ".cto__phone",
+        "visibleCondition": "{{node.phone}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "复制 {{node.merchantName}} 的手机号",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "tap",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "components/cy/club-topic-onboarding/index.js:44"
+      }
+    },
+    {
+      "id": "components/cy/club-topic-onboarding/index.wxml:43:bindtap:onInviteNode:3",
+      "route": "component:components/cy/club-topic-onboarding/index",
+      "hostRoutes": [
+        "pages/club/topic-detail/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "components/cy/club-topic-onboarding/index.wxml",
+        "js": "components/cy/club-topic-onboarding/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onInviteNode",
+        "line": 43,
+        "selectorHint": ".cto__cta",
+        "visibleCondition": "{{canAct}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "去招商 {{node.name}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "tap",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "components/cy/club-topic-onboarding/index.js:41"
+      }
+    },
+    {
+      "id": "components/cy/club-topic-onboarding/index.wxml:48:bindtap:onViewPool:4",
+      "route": "component:components/cy/club-topic-onboarding/index",
+      "hostRoutes": [
+        "pages/club/topic-detail/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "components/cy/club-topic-onboarding/index.wxml",
+        "js": "components/cy/club-topic-onboarding/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onViewPool",
+        "line": 48,
+        "selectorHint": ".cto__pool-btn",
+        "visibleCondition": "{{canAct}}",
+        "disabledCondition": null,
+        "ariaLabel": "查看候选池",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "tap",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "components/cy/club-topic-onboarding/index.js:47"
+      }
+    },
+    {
+      "id": "components/cy/club-topic-onboarding/index.wxml:70:bindtap:onEditConditions:5",
+      "route": "component:components/cy/club-topic-onboarding/index",
+      "hostRoutes": [
+        "pages/club/topic-detail/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "components/cy/club-topic-onboarding/index.wxml",
+        "js": "components/cy/club-topic-onboarding/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "text",
+        "event": "bindtap",
+        "handler": "onEditConditions",
+        "line": 70,
+        "selectorHint": ".cto__link",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "设置招募条件",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "tap",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "components/cy/club-topic-onboarding/index.js:58"
+      }
+    },
+    {
+      "id": "components/cy/club-topic-onboarding/index.wxml:71:bindtap:onViewApplications:6",
+      "route": "component:components/cy/club-topic-onboarding/index",
+      "hostRoutes": [
+        "pages/club/topic-detail/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "components/cy/club-topic-onboarding/index.wxml",
+        "js": "components/cy/club-topic-onboarding/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onViewApplications",
+        "line": 71,
+        "selectorHint": ".cto__pill",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "查看申请 {{chapter.pendingCount}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "tap",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "components/cy/club-topic-onboarding/index.js:52"
+      }
+    },
+    {
+      "id": "components/cy/club-topic-onboarding/index.wxml:76:bindtap:onOpenRecruiting:7",
+      "route": "component:components/cy/club-topic-onboarding/index",
+      "hostRoutes": [
+        "pages/club/topic-detail/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "components/cy/club-topic-onboarding/index.wxml",
+        "js": "components/cy/club-topic-onboarding/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onOpenRecruiting",
+        "line": 76,
+        "selectorHint": ".cto__outline-btn",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "开放招募",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "tap",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "components/cy/club-topic-onboarding/index.js:55"
+      }
+    },
+    {
+      "id": "components/cy/club-topic-onboarding/index.wxml:8:bind:close:onClose:0",
+      "route": "component:components/cy/club-topic-onboarding/index",
+      "hostRoutes": [
+        "pages/club/topic-detail/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "components/cy/club-topic-onboarding/index.wxml",
+        "js": "components/cy/club-topic-onboarding/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-scene-sheet",
+        "event": "bind:close",
+        "handler": "onClose",
+        "line": 8,
+        "selectorHint": "cy-scene-sheet[bind:close]",
+        "visibleCondition": "{{show}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "event-contract",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "components/cy/club-topic-onboarding/index.js:63"
+      }
+    },
+    {
       "id": "components/cy/completion-share-card/index.wxml:8:catchtap:onDetail:0",
       "route": "component:components/cy/completion-share-card/index",
       "hostRoutes": [
@@ -91526,6 +92102,27 @@
           "route": "pages/club/topic-detail/index",
           "segments": [
             {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-consent-check",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
               "selector": "cy-error",
               "index": 0
             },
@@ -91613,23 +92210,6 @@
             {
               "selector": "cy-error",
               "index": 5
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-consent-check",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-error",
-              "index": 6
             },
             {
               "selector": "cy-result-sheet",
@@ -149323,6 +149903,32 @@
           "route": "pages/club/topic-detail/index",
           "segments": [
             {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-empty",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-empty",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
               "selector": "cy-empty",
               "index": 0
             }
@@ -149370,24 +149976,6 @@
             {
               "selector": "cy-empty",
               "index": 5
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-empty",
-              "index": 6
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-empty",
-              "index": 7
             }
           ]
         },
@@ -156155,6 +156743,19 @@
           "route": "pages/club/topic-detail/index",
           "segments": [
             {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
               "selector": "cy-error",
               "index": 0
             }
@@ -156202,15 +156803,6 @@
             {
               "selector": "cy-error",
               "index": 5
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-error",
-              "index": 6
             }
           ]
         },
@@ -163305,6 +163897,19 @@
           "route": "pages/club/topic-detail/index",
           "segments": [
             {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
               "selector": "cy-error",
               "index": 0
             }
@@ -163352,15 +163957,6 @@
             {
               "selector": "cy-error",
               "index": 5
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-error",
-              "index": 6
             }
           ]
         },
@@ -170455,6 +171051,19 @@
           "route": "pages/club/topic-detail/index",
           "segments": [
             {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
               "selector": "cy-error",
               "index": 0
             }
@@ -170502,15 +171111,6 @@
             {
               "selector": "cy-error",
               "index": 5
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-error",
-              "index": 6
             }
           ]
         },
@@ -277788,6 +278388,74 @@
           "route": "pages/club/topic-detail/index",
           "segments": [
             {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
               "selector": "cy-nav-bar",
               "index": 0
             }
@@ -277890,58 +278558,6 @@
             {
               "selector": "cy-scene-sheet",
               "index": 11
-            },
-            {
-              "selector": "cy-nav-bar",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-sheet",
-              "index": 12
-            },
-            {
-              "selector": "cy-nav-bar",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-sheet",
-              "index": 12
-            },
-            {
-              "selector": "cy-nav-bar",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-sheet",
-              "index": 13
-            },
-            {
-              "selector": "cy-nav-bar",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-sheet",
-              "index": 13
             },
             {
               "selector": "cy-nav-bar",
@@ -291422,6 +292038,90 @@
           "route": "pages/club/topic-detail/index",
           "segments": [
             {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 0
+            },
+            {
+              "selector": "cy-offline-banner",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 1
+            },
+            {
+              "selector": "cy-offline-banner",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 0
+            },
+            {
+              "selector": "cy-offline-banner",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 1
+            },
+            {
+              "selector": "cy-offline-banner",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
               "selector": "cy-nav-bar",
               "index": 0
             },
@@ -291556,74 +292256,6 @@
             {
               "selector": "cy-scene-sheet",
               "index": 11
-            },
-            {
-              "selector": "cy-nav-bar",
-              "index": 1
-            },
-            {
-              "selector": "cy-offline-banner",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-sheet",
-              "index": 12
-            },
-            {
-              "selector": "cy-nav-bar",
-              "index": 0
-            },
-            {
-              "selector": "cy-offline-banner",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-sheet",
-              "index": 12
-            },
-            {
-              "selector": "cy-nav-bar",
-              "index": 1
-            },
-            {
-              "selector": "cy-offline-banner",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-sheet",
-              "index": 13
-            },
-            {
-              "selector": "cy-nav-bar",
-              "index": 0
-            },
-            {
-              "selector": "cy-offline-banner",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-sheet",
-              "index": 13
             },
             {
               "selector": "cy-nav-bar",
@@ -319856,6 +320488,23 @@
           "route": "pages/club/topic-detail/index",
           "segments": [
             {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
               "selector": "cy-error",
               "index": 0
             },
@@ -319923,19 +320572,6 @@
             {
               "selector": "cy-error",
               "index": 5
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-error",
-              "index": 6
             },
             {
               "selector": "cy-result-sheet",
@@ -333265,6 +333901,23 @@
           "route": "pages/club/topic-detail/index",
           "segments": [
             {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
               "selector": "cy-error",
               "index": 0
             },
@@ -333332,19 +333985,6 @@
             {
               "selector": "cy-error",
               "index": 5
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-error",
-              "index": 6
             },
             {
               "selector": "cy-result-sheet",
@@ -346674,6 +347314,23 @@
           "route": "pages/club/topic-detail/index",
           "segments": [
             {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
               "selector": "cy-error",
               "index": 0
             },
@@ -346741,19 +347398,6 @@
             {
               "selector": "cy-error",
               "index": 5
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-error",
-              "index": 6
             },
             {
               "selector": "cy-result-sheet",
@@ -360083,6 +360727,23 @@
           "route": "pages/club/topic-detail/index",
           "segments": [
             {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
               "selector": "cy-error",
               "index": 0
             },
@@ -360150,19 +360811,6 @@
             {
               "selector": "cy-error",
               "index": 5
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-error",
-              "index": 6
             },
             {
               "selector": "cy-result-sheet",
@@ -373492,6 +374140,23 @@
           "route": "pages/club/topic-detail/index",
           "segments": [
             {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
               "selector": "cy-error",
               "index": 0
             },
@@ -373559,19 +374224,6 @@
             {
               "selector": "cy-error",
               "index": 5
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-error",
-              "index": 6
             },
             {
               "selector": "cy-result-sheet",
@@ -417678,6 +418330,32 @@
           "route": "pages/club/topic-detail/index",
           "segments": [
             {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
               "selector": "cy-scene-sheet",
               "index": 0
             }
@@ -417707,24 +418385,6 @@
             {
               "selector": "cy-scene-sheet",
               "index": 11
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-sheet",
-              "index": 12
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-sheet",
-              "index": 13
             }
           ]
         },
@@ -422290,6 +422950,32 @@
           "route": "pages/club/topic-detail/index",
           "segments": [
             {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
               "selector": "cy-scene-sheet",
               "index": 0
             }
@@ -422319,24 +423005,6 @@
             {
               "selector": "cy-scene-sheet",
               "index": 11
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-sheet",
-              "index": 12
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-sheet",
-              "index": 13
             }
           ]
         },
@@ -426902,6 +427570,32 @@
           "route": "pages/club/topic-detail/index",
           "segments": [
             {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
               "selector": "cy-scene-sheet",
               "index": 0
             }
@@ -426931,24 +427625,6 @@
             {
               "selector": "cy-scene-sheet",
               "index": 11
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-sheet",
-              "index": 12
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-sheet",
-              "index": 13
             }
           ]
         },
@@ -431514,6 +432190,32 @@
           "route": "pages/club/topic-detail/index",
           "segments": [
             {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
               "selector": "cy-scene-sheet",
               "index": 0
             }
@@ -431543,24 +432245,6 @@
             {
               "selector": "cy-scene-sheet",
               "index": 11
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-sheet",
-              "index": 12
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-sheet",
-              "index": 13
             }
           ]
         },
@@ -436126,6 +436810,32 @@
           "route": "pages/club/topic-detail/index",
           "segments": [
             {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
               "selector": "cy-scene-sheet",
               "index": 0
             }
@@ -436155,24 +436865,6 @@
             {
               "selector": "cy-scene-sheet",
               "index": 11
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-sheet",
-              "index": 12
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-sheet",
-              "index": 13
             }
           ]
         },
@@ -440738,6 +441430,32 @@
           "route": "pages/club/topic-detail/index",
           "segments": [
             {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
               "selector": "cy-scene-sheet",
               "index": 0
             }
@@ -440767,24 +441485,6 @@
             {
               "selector": "cy-scene-sheet",
               "index": 11
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-sheet",
-              "index": 12
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-sheet",
-              "index": 13
             }
           ]
         },
@@ -445350,6 +446050,32 @@
           "route": "pages/club/topic-detail/index",
           "segments": [
             {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
               "selector": "cy-scene-sheet",
               "index": 0
             }
@@ -445379,24 +446105,6 @@
             {
               "selector": "cy-scene-sheet",
               "index": 11
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-sheet",
-              "index": 12
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-sheet",
-              "index": 13
             }
           ]
         },
@@ -449962,6 +450670,32 @@
           "route": "pages/club/topic-detail/index",
           "segments": [
             {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
               "selector": "cy-scene-sheet",
               "index": 0
             }
@@ -449991,24 +450725,6 @@
             {
               "selector": "cy-scene-sheet",
               "index": 11
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-sheet",
-              "index": 12
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-sheet",
-              "index": 13
             }
           ]
         },
@@ -462340,6 +463056,48 @@
           "route": "pages/club/topic-detail/index",
           "segments": [
             {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
               "selector": "cy-error",
               "index": 0
             },
@@ -462529,40 +463287,6 @@
             {
               "selector": "cy-error",
               "index": 5
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-error",
-              "index": 6
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-error",
-              "index": 6
             },
             {
               "selector": "cy-result-sheet",
@@ -501338,6 +502062,48 @@
           "route": "pages/club/topic-detail/index",
           "segments": [
             {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
               "selector": "cy-error",
               "index": 0
             },
@@ -501527,40 +502293,6 @@
             {
               "selector": "cy-error",
               "index": 5
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-error",
-              "index": 6
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-error",
-              "index": 6
             },
             {
               "selector": "cy-result-sheet",
@@ -540335,6 +541067,48 @@
           "route": "pages/club/topic-detail/index",
           "segments": [
             {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
               "selector": "cy-error",
               "index": 0
             },
@@ -540524,40 +541298,6 @@
             {
               "selector": "cy-error",
               "index": 5
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-error",
-              "index": 6
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-error",
-              "index": 6
             },
             {
               "selector": "cy-result-sheet",
@@ -579332,6 +580072,48 @@
           "route": "pages/club/topic-detail/index",
           "segments": [
             {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
               "selector": "cy-error",
               "index": 0
             },
@@ -579521,40 +580303,6 @@
             {
               "selector": "cy-error",
               "index": 5
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-error",
-              "index": 6
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-error",
-              "index": 6
             },
             {
               "selector": "cy-result-sheet",
@@ -618329,6 +619077,48 @@
           "route": "pages/club/topic-detail/index",
           "segments": [
             {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
               "selector": "cy-error",
               "index": 0
             },
@@ -618518,40 +619308,6 @@
             {
               "selector": "cy-error",
               "index": 5
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-error",
-              "index": 6
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-error",
-              "index": 6
             },
             {
               "selector": "cy-result-sheet",
@@ -657326,6 +658082,48 @@
           "route": "pages/club/topic-detail/index",
           "segments": [
             {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
               "selector": "cy-error",
               "index": 0
             },
@@ -657515,40 +658313,6 @@
             {
               "selector": "cy-error",
               "index": 5
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-error",
-              "index": 6
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-error",
-              "index": 6
             },
             {
               "selector": "cy-result-sheet",
@@ -696324,6 +697088,48 @@
           "route": "pages/club/topic-detail/index",
           "segments": [
             {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
               "selector": "cy-error",
               "index": 0
             },
@@ -696513,40 +697319,6 @@
             {
               "selector": "cy-error",
               "index": 5
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-error",
-              "index": 6
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-error",
-              "index": 6
             },
             {
               "selector": "cy-result-sheet",
@@ -735322,6 +736094,48 @@
           "route": "pages/club/topic-detail/index",
           "segments": [
             {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
               "selector": "cy-error",
               "index": 0
             },
@@ -735511,40 +736325,6 @@
             {
               "selector": "cy-error",
               "index": 5
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-error",
-              "index": 6
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-error",
-              "index": 6
             },
             {
               "selector": "cy-result-sheet",
@@ -774320,6 +775100,48 @@
           "route": "pages/club/topic-detail/index",
           "segments": [
             {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
               "selector": "cy-error",
               "index": 0
             },
@@ -774509,40 +775331,6 @@
             {
               "selector": "cy-error",
               "index": 5
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-error",
-              "index": 6
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-error",
-              "index": 6
             },
             {
               "selector": "cy-result-sheet",
@@ -813318,6 +814106,48 @@
           "route": "pages/club/topic-detail/index",
           "segments": [
             {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
               "selector": "cy-error",
               "index": 0
             },
@@ -813507,40 +814337,6 @@
             {
               "selector": "cy-error",
               "index": 5
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-error",
-              "index": 6
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-error",
-              "index": 6
             },
             {
               "selector": "cy-result-sheet",
@@ -852316,6 +853112,48 @@
           "route": "pages/club/topic-detail/index",
           "segments": [
             {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
               "selector": "cy-error",
               "index": 0
             },
@@ -852505,40 +853343,6 @@
             {
               "selector": "cy-error",
               "index": 5
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-error",
-              "index": 6
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-error",
-              "index": 6
             },
             {
               "selector": "cy-result-sheet",
@@ -891314,6 +892118,48 @@
           "route": "pages/club/topic-detail/index",
           "segments": [
             {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-club-topic-onboarding",
+              "index": 0
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/topic-detail/index",
+          "segments": [
+            {
               "selector": "cy-error",
               "index": 0
             },
@@ -891503,40 +892349,6 @@
             {
               "selector": "cy-error",
               "index": 5
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-error",
-              "index": 6
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/topic-detail/index",
-          "segments": [
-            {
-              "selector": "cy-error",
-              "index": 6
             },
             {
               "selector": "cy-result-sheet",
@@ -976285,7 +977097,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:826"
+        "staticSource": "pages/club/topic-detail/index.js:819"
       }
     },
     {
@@ -976355,7 +977167,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1266"
+        "staticSource": "pages/club/topic-detail/index.js:1254"
       }
     },
     {
@@ -976425,7 +977237,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:766"
+        "staticSource": "pages/club/topic-detail/index.js:759"
       }
     },
     {
@@ -976495,7 +977307,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:772"
+        "staticSource": "pages/club/topic-detail/index.js:765"
       }
     },
     {
@@ -976769,7 +977581,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:463"
+        "staticSource": "pages/club/topic-detail/index.js:456"
       }
     },
     {
@@ -980197,7 +981009,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1241"
+        "staticSource": "pages/club/topic-detail/index.js:1229"
       }
     },
     {
@@ -980331,7 +981143,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1243"
+        "staticSource": "pages/club/topic-detail/index.js:1231"
       }
     },
     {
@@ -980398,7 +981210,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1137"
+        "staticSource": "pages/club/topic-detail/index.js:1125"
       }
     },
     {
@@ -980555,7 +981367,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:836"
+        "staticSource": "pages/club/topic-detail/index.js:829"
       }
     },
     {
@@ -980622,7 +981434,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1250"
+        "staticSource": "pages/club/topic-detail/index.js:1238"
       }
     },
     {
@@ -980774,7 +981586,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1251"
+        "staticSource": "pages/club/topic-detail/index.js:1239"
       }
     },
     {
@@ -981194,7 +982006,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1242"
+        "staticSource": "pages/club/topic-detail/index.js:1230"
       }
     },
     {
@@ -982588,7 +983400,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1244"
+        "staticSource": "pages/club/topic-detail/index.js:1232"
       }
     },
     {
@@ -982740,7 +983552,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1248"
+        "staticSource": "pages/club/topic-detail/index.js:1236"
       }
     },
     {
@@ -982807,7 +983619,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1146"
+        "staticSource": "pages/club/topic-detail/index.js:1134"
       }
     },
     {
@@ -982877,7 +983689,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:766"
+        "staticSource": "pages/club/topic-detail/index.js:759"
       }
     },
     {
@@ -982944,7 +983756,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:862"
+        "staticSource": "pages/club/topic-detail/index.js:855"
       }
     },
     {
@@ -983014,7 +983826,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:826"
+        "staticSource": "pages/club/topic-detail/index.js:819"
       }
     },
     {
@@ -983084,7 +983896,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:772"
+        "staticSource": "pages/club/topic-detail/index.js:765"
       }
     },
     {
@@ -983151,7 +983963,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1137"
+        "staticSource": "pages/club/topic-detail/index.js:1125"
       }
     },
     {
@@ -983221,7 +984033,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1229"
+        "staticSource": "pages/club/topic-detail/index.js:1217"
       }
     },
     {
@@ -983292,7 +984104,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1231"
+        "staticSource": "pages/club/topic-detail/index.js:1219"
       }
     },
     {
@@ -983404,7 +984216,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1198"
+        "staticSource": "pages/club/topic-detail/index.js:1186"
       }
     },
     {
@@ -983516,7 +984328,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1198"
+        "staticSource": "pages/club/topic-detail/index.js:1186"
       }
     },
     {
@@ -983628,7 +984440,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1198"
+        "staticSource": "pages/club/topic-detail/index.js:1186"
       }
     },
     {
@@ -983695,11 +984507,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1068"
+        "staticSource": "pages/club/topic-detail/index.js:1056"
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:535:bind:close:closeMerchants:69",
+      "id": "pages/club/topic-detail/index.wxml:542:bind:close:closeMerchants:69",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -983719,11 +984531,11 @@
       "requestMode": "ordered",
       "confirmationMode": null,
       "control": {
-        "tag": "cy-scene-sheet",
+        "tag": "cy-club-topic-onboarding",
         "event": "bind:close",
         "handler": "closeMerchants",
-        "line": 535,
-        "selectorHint": "cy-scene-sheet[bind:close]",
+        "line": 542,
+        "selectorHint": "cy-club-topic-onboarding[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
@@ -983762,11 +984574,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:923"
+        "staticSource": "pages/club/topic-detail/index.js:916"
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:549:bindtap:copyPhone:71",
+      "id": "pages/club/topic-detail/index.wxml:542:bind:copyphone:onRecruitCopyPhone:71",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -983786,16 +984598,16 @@
       "requestMode": "ordered",
       "confirmationMode": null,
       "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "copyPhone",
-        "line": 549,
-        "selectorHint": ".cli-copy",
-        "visibleCondition": "{{item.phone}}",
+        "tag": "cy-club-topic-onboarding",
+        "event": "bind:copyphone",
+        "handler": "onRecruitCopyPhone",
+        "line": 542,
+        "selectorHint": "cy-club-topic-onboarding[bind:copyphone]",
+        "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": "复制 {{item.merchantName}} 的手机号",
-        "ariaRole": "button",
+        "ariaLabelExpression": null,
+        "ariaRole": null,
         "ariaRoleExpression": null,
         "ariaDisabled": null,
         "ariaDisabledExpression": null,
@@ -983805,7 +984617,7 @@
         "ariaCheckedExpression": null
       },
       "actionClass": "external",
-      "interactionMode": "tap",
+      "interactionMode": "event-contract",
       "baseActionClass": "other",
       "effectClasses": [
         "other"
@@ -983839,11 +984651,475 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:961"
+        "staticSource": "pages/club/topic-detail/index.js:939"
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:565:bind:close:closeCustomers:72",
+      "id": "pages/club/topic-detail/index.wxml:542:bind:retry:loadMerchants:70",
+      "route": "pages/club/topic-detail/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "club",
+      "entry": {
+        "wxml": "pages/club/topic-detail/index.wxml",
+        "js": "pages/club/topic-detail/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-club-topic-onboarding",
+        "event": "bind:retry",
+        "handler": "loadMerchants",
+        "line": 542,
+        "selectorHint": "cy-club-topic-onboarding[bind:retry]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "event-contract",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/club/recruit/overview",
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/club/recruit/overview"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/club/recruit/overview",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/club/topic-detail/index.js:918"
+      }
+    },
+    {
+      "id": "pages/club/topic-detail/index.wxml:543:bind:invite:openRecruitDesk:72",
+      "route": "pages/club/topic-detail/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "club",
+      "entry": {
+        "wxml": "pages/club/topic-detail/index.wxml",
+        "js": "pages/club/topic-detail/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-club-topic-onboarding",
+        "event": "bind:invite",
+        "handler": "openRecruitDesk",
+        "line": 543,
+        "selectorHint": "cy-club-topic-onboarding[bind:invite]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "event-contract",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/topic/merchantinfo/merchantinfo?topicId="
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/club/topic-detail/index.js:947"
+      }
+    },
+    {
+      "id": "pages/club/topic-detail/index.wxml:543:bind:viewapplications:openRecruitDesk:74",
+      "route": "pages/club/topic-detail/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "club",
+      "entry": {
+        "wxml": "pages/club/topic-detail/index.wxml",
+        "js": "pages/club/topic-detail/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-club-topic-onboarding",
+        "event": "bind:viewapplications",
+        "handler": "openRecruitDesk",
+        "line": 543,
+        "selectorHint": "cy-club-topic-onboarding[bind:viewapplications]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "event-contract",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/topic/merchantinfo/merchantinfo?topicId="
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/club/topic-detail/index.js:947"
+      }
+    },
+    {
+      "id": "pages/club/topic-detail/index.wxml:543:bind:viewpool:openRecruitDesk:73",
+      "route": "pages/club/topic-detail/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "club",
+      "entry": {
+        "wxml": "pages/club/topic-detail/index.wxml",
+        "js": "pages/club/topic-detail/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-club-topic-onboarding",
+        "event": "bind:viewpool",
+        "handler": "openRecruitDesk",
+        "line": 543,
+        "selectorHint": "cy-club-topic-onboarding[bind:viewpool]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "event-contract",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/topic/merchantinfo/merchantinfo?topicId="
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/club/topic-detail/index.js:947"
+      }
+    },
+    {
+      "id": "pages/club/topic-detail/index.wxml:544:bind:editconditions:openRecruitDesk:75",
+      "route": "pages/club/topic-detail/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "club",
+      "entry": {
+        "wxml": "pages/club/topic-detail/index.wxml",
+        "js": "pages/club/topic-detail/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-club-topic-onboarding",
+        "event": "bind:editconditions",
+        "handler": "openRecruitDesk",
+        "line": 544,
+        "selectorHint": "cy-club-topic-onboarding[bind:editconditions]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "event-contract",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/topic/merchantinfo/merchantinfo?topicId="
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/club/topic-detail/index.js:947"
+      }
+    },
+    {
+      "id": "pages/club/topic-detail/index.wxml:544:bind:openrecruiting:openRecruitDesk:76",
+      "route": "pages/club/topic-detail/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "club",
+      "entry": {
+        "wxml": "pages/club/topic-detail/index.wxml",
+        "js": "pages/club/topic-detail/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-club-topic-onboarding",
+        "event": "bind:openrecruiting",
+        "handler": "openRecruitDesk",
+        "line": 544,
+        "selectorHint": "cy-club-topic-onboarding[bind:openrecruiting]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "event-contract",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/topic/merchantinfo/merchantinfo?topicId="
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/club/topic-detail/index.js:947"
+      }
+    },
+    {
+      "id": "pages/club/topic-detail/index.wxml:550:bind:close:closeCustomers:77",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -983866,7 +985142,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:close",
         "handler": "closeCustomers",
-        "line": 565,
+        "line": 550,
         "selectorHint": "cy-scene-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -983906,11 +985182,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:977"
+        "staticSource": "pages/club/topic-detail/index.js:965"
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:577:bindtap:onCustomerFilter:74",
+      "id": "pages/club/topic-detail/index.wxml:562:bindtap:onCustomerFilter:79",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -983933,7 +985209,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onCustomerFilter",
-        "line": 577,
+        "line": 562,
         "selectorHint": ".cli-chip",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -984015,11 +985291,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:982"
+        "staticSource": "pages/club/topic-detail/index.js:970"
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:588:bindtap:callCustomerRow:75",
+      "id": "pages/club/topic-detail/index.wxml:573:bindtap:callCustomerRow:80",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984044,7 +985320,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "callCustomerRow",
-        "line": 588,
+        "line": 573,
         "selectorHint": ".cli-call",
         "visibleCondition": "{{item.phoneCallable}}",
         "disabledCondition": null,
@@ -984095,11 +985371,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:979"
+        "staticSource": "pages/club/topic-detail/index.js:967"
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:600:bindtap:goBroadcast:76",
+      "id": "pages/club/topic-detail/index.wxml:585:bindtap:goBroadcast:81",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984122,7 +985398,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goBroadcast",
-        "line": 600,
+        "line": 585,
         "selectorHint": ".cli-entry",
         "visibleCondition": "{{canBroadcast}}",
         "disabledCondition": null,
@@ -984162,11 +985438,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1046"
+        "staticSource": "pages/club/topic-detail/index.js:1034"
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:620:bind:retry:loadRegistrationTrend:77",
+      "id": "pages/club/topic-detail/index.wxml:605:bind:retry:loadRegistrationTrend:82",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984189,7 +985465,7 @@
         "tag": "cy-error",
         "event": "bind:retry",
         "handler": "loadRegistrationTrend",
-        "line": 620,
+        "line": 605,
         "selectorHint": "cy-error[bind:retry]",
         "visibleCondition": "{{trendState === 'error'}}",
         "disabledCondition": null,
@@ -984271,11 +985547,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1023"
+        "staticSource": "pages/club/topic-detail/index.js:1011"
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:636:bind:cancel:closeEndTopic:79",
+      "id": "pages/club/topic-detail/index.wxml:621:bind:cancel:closeEndTopic:84",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984298,7 +985574,7 @@
         "tag": "cy-club-topic-end-confirm",
         "event": "bind:cancel",
         "handler": "closeEndTopic",
-        "line": 636,
+        "line": 621,
         "selectorHint": "cy-club-topic-end-confirm[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -984338,11 +985614,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1079"
+        "staticSource": "pages/club/topic-detail/index.js:1067"
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:636:bind:confirm:confirmEndTopic:78",
+      "id": "pages/club/topic-detail/index.wxml:621:bind:confirm:confirmEndTopic:83",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984365,7 +985641,7 @@
         "tag": "cy-club-topic-end-confirm",
         "event": "bind:confirm",
         "handler": "confirmEndTopic",
-        "line": 636,
+        "line": 621,
         "selectorHint": "cy-club-topic-end-confirm[bind:confirm]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -984496,11 +985772,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1084"
+        "staticSource": "pages/club/topic-detail/index.js:1072"
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:639:bind:close:closeOpsTimeSheet:80",
+      "id": "pages/club/topic-detail/index.wxml:624:bind:close:closeOpsTimeSheet:85",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984523,7 +985799,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:close",
         "handler": "closeOpsTimeSheet",
-        "line": 639,
+        "line": 624,
         "selectorHint": "cy-scene-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -984563,11 +985839,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:474"
+        "staticSource": "pages/club/topic-detail/index.js:467"
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:642:bind:change:onOpsDateChange:81",
+      "id": "pages/club/topic-detail/index.wxml:627:bind:change:onOpsDateChange:86",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984590,7 +985866,7 @@
         "tag": "cy-date-field",
         "event": "bind:change",
         "handler": "onOpsDateChange",
-        "line": 642,
+        "line": 627,
         "selectorHint": "cy-date-field[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -984630,11 +985906,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:480"
+        "staticSource": "pages/club/topic-detail/index.js:473"
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:646:bind:change:onOpsTimeChange:82",
+      "id": "pages/club/topic-detail/index.wxml:631:bind:change:onOpsTimeChange:87",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984657,7 +985933,7 @@
         "tag": "cy-date-field",
         "event": "bind:change",
         "handler": "onOpsTimeChange",
-        "line": 646,
+        "line": 631,
         "selectorHint": "cy-date-field[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -984697,11 +985973,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:481"
+        "staticSource": "pages/club/topic-detail/index.js:474"
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:651:bindtap:closeOpsTimeSheet:83",
+      "id": "pages/club/topic-detail/index.wxml:636:bindtap:closeOpsTimeSheet:88",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984724,7 +986000,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeOpsTimeSheet",
-        "line": 651,
+        "line": 636,
         "selectorHint": ".ctd-director-field__act",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -984764,11 +986040,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:474"
+        "staticSource": "pages/club/topic-detail/index.js:467"
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:653:bindtap:confirmOpsTime:84",
+      "id": "pages/club/topic-detail/index.wxml:638:bindtap:confirmOpsTime:89",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984791,7 +986067,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "confirmOpsTime",
-        "line": 653,
+        "line": 638,
         "selectorHint": ".ctd-director-field__act",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -984916,11 +986192,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:483"
+        "staticSource": "pages/club/topic-detail/index.js:476"
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:661:bind:close:onOpsResultClose:85",
+      "id": "pages/club/topic-detail/index.wxml:646:bind:close:onOpsResultClose:90",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984943,7 +986219,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:close",
         "handler": "onOpsResultClose",
-        "line": 661,
+        "line": 646,
         "selectorHint": "cy-result-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -984983,11 +986259,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:568"
+        "staticSource": "pages/club/topic-detail/index.js:561"
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:663:bind:close:closeRules:86",
+      "id": "pages/club/topic-detail/index.wxml:648:bind:close:closeRules:91",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -985010,7 +986286,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:close",
         "handler": "closeRules",
-        "line": 663,
+        "line": 648,
         "selectorHint": "cy-scene-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -985050,11 +986326,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1138"
+        "staticSource": "pages/club/topic-detail/index.js:1126"
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:674:bind:close:closeSessionPick:87",
+      "id": "pages/club/topic-detail/index.wxml:659:bind:close:closeSessionPick:92",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -985077,7 +986353,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:close",
         "handler": "closeSessionPick",
-        "line": 674,
+        "line": 659,
         "selectorHint": "cy-scene-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -985117,11 +986393,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:804"
+        "staticSource": "pages/club/topic-detail/index.js:797"
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:677:bindtap:onSessionPick:88",
+      "id": "pages/club/topic-detail/index.wxml:662:bindtap:onSessionPick:93",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -985144,7 +986420,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onSessionPick",
-        "line": 677,
+        "line": 662,
         "selectorHint": ".tset-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -985252,11 +986528,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:806"
+        "staticSource": "pages/club/topic-detail/index.js:799"
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:688:bind:close:closePlanFallback:89:variant:plan-local-state",
+      "id": "pages/club/topic-detail/index.wxml:673:bind:close:closePlanFallback:94:variant:plan-local-state",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -985284,7 +986560,7 @@
         "tag": "cy-club-director-chapter-sheet",
         "event": "bind:close",
         "handler": "closePlanFallback",
-        "line": 688,
+        "line": 673,
         "selectorHint": "cy-club-director-chapter-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -985328,7 +986604,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:688:bind:confirm:confirmPlanFallback:90:variant:plan-fallback",
+      "id": "pages/club/topic-detail/index.wxml:673:bind:confirm:confirmPlanFallback:95:variant:plan-fallback",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -985362,7 +986638,7 @@
         "tag": "cy-club-director-chapter-sheet",
         "event": "bind:confirm",
         "handler": "confirmPlanFallback",
-        "line": 688,
+        "line": 673,
         "selectorHint": "cy-club-director-chapter-sheet[bind:confirm]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -985450,7 +986726,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:689:bindinput:inputPlanFallbackReason:91:variant:plan-local-state",
+      "id": "pages/club/topic-detail/index.wxml:674:bindinput:inputPlanFallbackReason:96:variant:plan-local-state",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -985478,7 +986754,7 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "inputPlanFallbackReason",
-        "line": 689,
+        "line": 674,
         "selectorHint": ".ctd-plan-fallback__input",
         "visibleCondition": null,
         "disabledCondition": "{{writeLocked}}",
@@ -985522,7 +986798,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:690:bindtap:onReconcileUnknownWrite:92",
+      "id": "pages/club/topic-detail/index.wxml:675:bindtap:onReconcileUnknownWrite:97",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -985545,7 +986821,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onReconcileUnknownWrite",
-        "line": 690,
+        "line": 675,
         "selectorHint": ".ctd-director-export",
         "visibleCondition": "{{writeLocked && writeState === 'unknown-write'}}",
         "disabledCondition": null,
@@ -985751,7 +987027,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:746"
+        "staticSource": "pages/club/topic-detail/index.js:739"
       }
     },
     {

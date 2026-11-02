@@ -6,12 +6,11 @@
 // (标题左对齐 + ✕ 右)不一致 —— 按须知"复用现成组件"优先,不新起一套头部 chrome,
 // 已在 PR 里说明这处与稿子的出入。
 //
-// 纯展示组件:数据由宿主通过属性传入,不自己发请求 —— 后端目前没有聚合接口
-// (TODO 见下),真写一个指向不存在 endpoint 的 app.sendRequest 调用只会是死代码,
-// 还会被 UI-GATE-0(U1)判红。招商/查看申请/开放招募等动作也只 triggerEvent,
-// 具体审核/详情页面本次不在范围内,由宿主接线。
+// 纯展示组件:数据由宿主通过属性传入,不自己发请求。2026-11-02 起宿主是俱乐部主题页
+// (pages/club/topic-detail),数据取 /api/club/recruit/overview(扩了章节招募条件、申请数、玩法名),
+// 动作 triggerEvent 由宿主接到现成的招商页(pages/topic/merchantinfo)。
 //
-// TODO(backend):需要新增 GET /api/topic/merchant-onboarding?id=&mode=
+// 原先设想的聚合接口形状(未建,现由 recruit/overview 承担):
 //   node    → { doneCount, totalCount, pendingCount, sections: [{ chapterName, stationCount,
 //               wonCount, nodes: [{ id, seq, name, sub, state: 'won'|'pending'|'open',
 //               merchantName, statusLabel }] }] }
@@ -23,7 +22,7 @@ Component({
     show: { type: Boolean, value: false },
     topicId: { type: String, value: '' },
     mode: { type: String, value: 'node' }, // 'node' | 'chapter'
-    loadState: { type: String, value: 'loading' }, // loading | ready | empty | error
+    loadState: { type: String, value: 'loading' }, // loading | ready | empty | error | denied(403,不给重试)
     loadErrorText: { type: String, value: '' },
     doneCount: { type: Number, value: 0 },
     totalCount: { type: Number, value: 0 },
@@ -31,14 +30,19 @@ Component({
     progressPct: { type: Number, value: 0 },
     sections: { type: Array, value: [] }, // mode='node'
     chapters: { type: Array, value: [] }, // mode='chapter'
+    // 2026-11-02(ROUND3B):宿主按服务端权限给。false 时招商/开放/申请这些动作一个都不画,不留死按钮。
+    canAct: { type: Boolean, value: false },
   },
-  data: {
-    introCopy: '章节承载招募品类、容量与条款，商家选择章节而不是具体节点；通过后由商家自己在章节下建节点，再走节点审核。',
-  },
+  // 2026-11-02(ROUND3B,用户「不要说明文字」):稿上顶部与底部的解释句(按节点 / 按章节两段、底部节点审核提示、
+  // 未开放章节的「开放后…」)不再渲染,只留数据行。
+  data: {},
   methods: {
     // ===== mode='node' =====
     onInviteNode(e) {
       this.triggerEvent('invite', { topicId: this.data.topicId, nodeId: e.currentTarget.dataset.id });
+    },
+    onCopyPhone(e) {
+      this.triggerEvent('copyphone', { phone: e.currentTarget.dataset.phone });
     },
     onViewPool() {
       this.triggerEvent('viewpool', { topicId: this.data.topicId });

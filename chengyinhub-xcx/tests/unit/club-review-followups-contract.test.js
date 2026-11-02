@@ -77,5 +77,6 @@ test('★商家联系方式只下发给要对接的人,不给每一个普通成�
   const service = read('../chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubChapterRecruitServiceImpl.java')
   assert.match(service, /if \(canManage && audit != null && audit == NODE_APPROVED && merchant != null\) \{\s*item\.put\("phone"/,
     '接口门槛是 ACTIVITY_READ,而普通成员就带这一条 —— 手机号必须另跟 ACTIVITY_MANAGE')
-  assert.match(service, /nodeRows\(nodesOf\(topicId\), canManage\)/)
+  // 2026-11-02 承接商家半屏:先取 nodes 再整形(还要按同一列表补玩法名),门槛仍是 canManage
+  assert.match(service, /List<CmsTopicNode> nodes = nodesOf\(topicId\);\s*List<Map<String, Object>> rows = nodeRows\(nodes, canManage\)/)
 })
