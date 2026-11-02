@@ -1,4 +1,4 @@
-const toast = require('../../../utils/toast.js');
+const toast = require('../../../utils/toast.js'); const modal = require('../../../utils/modal.js');
 const app = getApp();
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
 
@@ -292,7 +292,7 @@ Page({
           const msg = res.msg || '终价已确认，请等待开售审核';
           // P-01:非平台主题开售后暂不能在线收款,后端在 msg 里写明;toast 放不下,用弹窗让主办方看全。
           if (msg.indexOf('支付资质') >= 0) {
-            wx.showModal({ title: '终价已确认', content: msg, showCancel: false, confirmText: '知道了',
+            modal.show({ title: '终价已确认', content: msg, showCancel: false, confirmText: '知道了',
               complete() { that.goBack(); } });
             return;
           }
