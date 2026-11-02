@@ -19,7 +19,7 @@
     <cy-inline-error class="refresh-state" wx:elif="{{loadState === 'stale-error'}}"
       kind="{{errorKind}}" title="结算详情没有更新" sub="{{errorText}}"
       action="重试" bind:action="retryLoad" />
-    <cy-settlement-detail detail="{{detail}}" />
+    <cy-settlement-detail detail="{{detail}}" count-k="{{sdK}}" />
   </block>
 
   <block wx:elif="{{loadState === 'loading'}}">

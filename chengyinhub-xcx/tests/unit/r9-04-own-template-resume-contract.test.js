@@ -35,9 +35,7 @@ function installGlobals() {
   }
   global.getApp = () => appStub
   global.wx = {
-    getStorageSync: () => undefined,
-    setStorageSync: () => {},
-    removeStorageSync: () => {},
+    ...require('../helpers/memory-storage.js')(),
     getSystemInfoSync: () => ({ windowWidth: 375, statusBarHeight: 20 }),
     getAccountInfoSync: () => ({ miniProgram: { envVersion: 'release' } }),
     showToast: () => {},

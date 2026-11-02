@@ -39,7 +39,8 @@ test('商家更多菜单不再用预约文案跳转核销台账', () => {
 test('核销记录仍由真实财务入口承载', () => {
   const js = read('pages/merchant/index/index.js');
 
-  assert.match(js, /goFinance\s*\(\)[\s\S]*pages\/merchant\/ledger\/index/);
+  // 财务入口 2026-10-28 起先进账户收益页(M-32);核销记录由「我的消息」里的经营动态 goEvent 进台账
+  assert.match(js, /goEvent\(e\)\s*\{[\s\S]*?pages\/merchant\/ledger\/index\?view=' \+ \(type === 'income' \? 'settlement' : 'redemptions'\)/);
 });
 
 test('M-07:更多里的协作邀请 = 合作中心铃铛页;「我的消息」按类型去结算/核销记录,不再落空兼容页', () => {

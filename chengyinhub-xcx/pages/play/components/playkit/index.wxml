@@ -175,7 +175,7 @@
 
 <cy-playkit-scan wx:elif="{{kit.type === 'scan'}}"
   show="{{show}}" inline="{{inline}}" title="{{kit.title}}" kind="{{kit.kind}}" reply="{{kit.reply}}"
-  audio-url="{{kit.audioUrl}}" image-url="{{kit.imageUrl}}"
+  audio-url="{{kit.audioUrl}}" seconds="{{kit.audioSeconds || 0}}" image-url="{{kit.imageUrl}}"
   overlay-url="{{kit.overlayUrl}}" overlay-scale="{{kit.overlayScale}}"
   ar-mode="{{kit.arMode}}" marker-url="{{kit.markerUrl}}" model-url="{{kit.modelUrl}}"
   bind:scanned="onScanned" bind:audio="onAudio" bind:close="onClose" />

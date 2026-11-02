@@ -20,7 +20,7 @@
           </view>
           <cy-icon class="rp-row__arrow" name="arrow-right" size="28" />
         </view>
-        <cy-skeleton wx:if="{{state === 'loading'}}" type="feed-card" count="3" />
+        <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="3" />
         <cy-state-shell wx:elif="{{state === 'error'}}" kind="data" title="申诉记录加载失败" primary="重试" bind:primary="retry" />
         <cy-state-shell wx:elif="{{state === 'empty'}}" kind="empty" title="还没有申诉记录" />
         <block wx:else>

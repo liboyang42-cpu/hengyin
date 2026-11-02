@@ -30,12 +30,13 @@ const DOMAIN_RULES = [
     // 2026-10-30 P-5 M-09 业主批注「商家是浅色 玩家是深色」:裁剪页(pages/crop)进共享域,根节点按 merchant 二选一。
     // 2026-10-28 G-9 / m680:账户收益与分析页进共享域 —— 商家「财务」进同一页浅色版(?theme=merchant),
     // 玩家从「我的收益」进来仍是暗色;根节点按 merchantView 二选一。
+    // 2026-11-02 业主:我的项目进共享域 —— 玩家/俱乐部进来是深色,商家(scope=MERCHANT)是浅色。
     // 2026-10-29 G-10 / M-35:收益明细随账户收益进共享域 —— 商家从「明细」带 ?theme=merchant 进来是浅色。
-    route: /^(?:pages\/(?:template|templatedetail|talent|shezhi|mylike|crop)\/|pages\/club\/(?:topic-story|detail)\/|pages\/activity\/(?:detail|official-(?:inbox|mine))\/|subpackageMember\/(?:mytemplate|tixianjilu)\/|subpackageA\/pages\/(?:infomation|assetcenter\/(?:earnings|analysis|income-detail))\/|subpackageB\/pages\/im\/)/
+    route: /^(?:pages\/(?:template|templatedetail|talent|shezhi|mylike|crop)\/|pages\/club\/(?:topic-story|detail)\/|pages\/activity\/(?:detail|official-(?:inbox|mine))\/|subpackageMember\/(?:mytemplate|tixianjilu)\/|subpackageA\/pages\/(?:infomation|myproject|assetcenter\/(?:earnings|analysis|income-detail))\/|subpackageB\/pages\/im\/)/
   },
   {
     domain: 'merchant',
-    route: /^(?:pages\/(?:merchant\/(?!discover\/)|coop\/|publish\/|activity\/official-(?:detail|organizer)\/|topic\/(?:merchantinfo|merchantapply|pricing)\/)|subpackageA\/pages\/myproject\/|subpackageMember\/(?:coupon\/|couponInfo\/))/
+    route: /^(?:pages\/(?:merchant\/(?!discover\/)|coop\/|publish\/|activity\/official-(?:detail|organizer)\/|topic\/(?:merchantinfo|merchantapply|pricing)\/)|subpackageMember\/(?:coupon\/|couponInfo\/))/
   }
 ];
 
@@ -231,7 +232,8 @@ function findUnitErrors(root = XCX_ROOT) {
     UNIT_PATTERN.lastIndex = 0;
     let match;
     while ((match = UNIT_PATTERN.exec(source))) {
-      if (!match[1].includes('||')) {
+      // utils/wxs/num.wxs 的 n() 也是兜底:没有数据显示「—」(2026-11-02 页面细节 brief 规则 6)
+      if (!match[1].includes('||') && !/\bnum\.n\(/.test(match[1])) {
         errors.push({
           file,
           line: lineNumber(source, match.index),

@@ -892,7 +892,7 @@
                bindinput="onShopNpcInput" bindfocus="onShopNpcFocus" bindconfirm="sendShopNpc" />
         <!-- 按住说话:和打字并列在同一条输入框里,所以「点了语音回不了打字」结构上不成立 -->
         <view class="fx-npc__mic {{shopNpc.recording ? 'is-rec' : ''}}"
-              bindtouchstart="onVoiceStart" bindtouchend="onVoiceEnd" bindtouchcancel="onVoiceEnd"
+              bindtouchstart="onVoiceStart" bindtouchend="onVoiceEnd" bindtouchcancel="onVoiceCancel"
               aria-role="button" aria-label="按住说话">
           <!-- 图标集(生成物)里没有麦克风,不手改图标集:phone 是现成里最接近「说话」的隐喻,
                录音态靠输入框文案「正在听…松开发送」+ 高亮承接 -->
@@ -1454,7 +1454,7 @@
 <!-- 足迹分享卡离屏画布(750×1000 逻辑px) -->
 <canvas type="2d" id="snapcv" style="position:fixed;left:-2000px;top:0;width:375px;height:500px;"></canvas>
 
-<view class="play-loading" wx:if="{{loading}}" aria-role="status" aria-live="polite" aria-label="正在加载路线">
+<view class="play-loading" wx:if="{{loading}}" style="padding-top:{{chrome.contentTop || 0}}px" aria-role="status" aria-live="polite" aria-label="正在加载路线">
   <cy-skeleton type="detail" />
 </view>
 
@@ -1707,8 +1707,8 @@
 </view>
 
 <block wx:if="{{gameModule.sheetShow}}">
-<view class="mask" bindtap="closeGameModule" aria-role="button" aria-label="关闭本局线索" hover-class="cy-pressed" hover-stay-time="80"></view>
-<view class="sheet" catchtap="noop">
+<view class="mask {{gmodOut ? 'is-out' : ''}}" bindtap="closeGameModule" aria-role="button" aria-label="关闭本局线索" hover-class="cy-pressed" hover-stay-time="80"></view>
+<view class="sheet {{gmodOut ? 'is-out' : ''}}" catchtap="noop">
   <view class="sheet-grab"></view>
   <view class="sheet__x" catchtap="closeGameModule" aria-role="button" aria-label="关闭本局线索" hover-class="cy-pressed" hover-stay-time="80"><view class="sheet__x-i"></view></view>
   <view class="sheet-body">
@@ -1867,8 +1867,8 @@
 
 <!-- 升级3:同行者榜(cy-sheet 玻璃半屏;score=完成关数,同分先完成者靠前) -->
 <block wx:if="{{board.show}}">
-<view class="mask" bindtap="closeBoard" aria-role="button" aria-label="关闭同行者榜" hover-class="cy-pressed" hover-stay-time="80"></view>
-<view class="sheet" catchtap="noop">
+<view class="mask {{boardOut ? 'is-out' : ''}}" bindtap="closeBoard" aria-role="button" aria-label="关闭同行者榜" hover-class="cy-pressed" hover-stay-time="80"></view>
+<view class="sheet {{boardOut ? 'is-out' : ''}}" catchtap="noop">
   <view class="sheet-grab"></view>
   <view class="sheet__x" catchtap="closeBoard" aria-role="button" aria-label="关闭同行者榜" hover-class="cy-pressed" hover-stay-time="80"><view class="sheet__x-i"></view></view>
   <view class="sheet-body">

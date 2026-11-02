@@ -1,7 +1,7 @@
 page { background: var(--cy-bg-page); }
 /* fill 真正居中(标题下方到屏幕底部的剩余空间)靠 cy-empty--fill 的 flex:1,
    前提是这层父容器是 flex column 且有确定高度——2026-07-31 根因修复配套改动 */
-.page { min-height: 100vh; padding-bottom: var(--cy-space-5); display: flex; flex-direction: column; }
+.page { position: relative; min-height: 100vh; padding-bottom: var(--cy-space-5); display: flex; flex-direction: column; }
 /* cy-empty 是 isolated 组件,:host 自带 display:block,组件内部的 flex:1 撑不动
    这层 host 本身——host 要在页面侧显式声明也是 flex item 才会真正吃满剩余空间。 */
 cy-empty { display: flex !important; flex: 1 !important; min-height: 0; }
@@ -12,7 +12,8 @@ cy-empty { display: flex !important; flex: 1 !important; min-height: 0; }
 .sub { padding: 8rpx var(--cy-page-x) var(--cy-space-2-5); font-size: var(--cy-font-label); color: var(--cy-text-secondary); }
 
 /* 状态 */
-.refreshing { padding: 0 var(--cy-page-x) var(--cy-space-2); color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }
+/* CP-05:刷新提示浮在列表上不占位(.cy-refresh-float),页面形状不变 */
+.refreshing { padding: var(--cy-space-1) var(--cy-space-3); border-radius: var(--cy-radius-pill); background: var(--cy-bg-elevated); white-space: nowrap; color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }
 .list-inline-error { margin: 0 var(--cy-page-x) var(--cy-space-3); }
 
 /* 列表 */

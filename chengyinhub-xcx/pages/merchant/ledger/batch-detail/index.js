@@ -1,5 +1,5 @@
 const app = getApp();
-const merchantTheme = require('../../../../utils/merchant-theme.js');
+const merchantTheme = require('../../../../utils/merchant-theme.js'); const pageMotion = require('../../../../utils/page-motion.js');
 const { isFinanceObjectPayload, money } = require('../../utils/merchant-finance.js');
 const { isRecord, isRecordList } = require('../../../../utils/response-shape.js');
 Page({
@@ -20,7 +20,7 @@ Page({
   onShow() { merchantTheme.merchantPageShow(); },
   onHide() { merchantTheme.merchantPageRestore(); },
   onUnload() {
-    this._loadEpoch = (this._loadEpoch || 0) + 1;
+    this._loadEpoch = (this._loadEpoch || 0) + 1; this._unloaded = true;
     this._loading = false;
     merchantTheme.merchantPageRestore();
   },
@@ -71,7 +71,7 @@ Page({
       const detail = Object.assign({}, res.data, { batch: formatBatch(res.data.batch), earningEntries: res.data.earningEntries.map(formatEntry), adjustments: res.data.adjustments.map(formatEntry) });
       detail.timeline = buildTimeline(detail.batch);
       if (!settleLoad(this, epoch)) return;
-      this.setData({ detail, loadState: 'ready', errorKind: 'data', errorText: '' });
+      if (!this.data.detail) pageMotion.countMoney(this, 'bdK'); this.setData({ detail, loadState: 'ready', errorKind: 'data', errorText: '' }); // 2026-11-02 X-1:主数字首次落地慢-快-慢
     }, fail: (error) => {
       const network = isTransportFailure(error);
       if (!settleLoad(this, epoch)) return;

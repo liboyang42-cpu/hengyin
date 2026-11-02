@@ -3,7 +3,7 @@
  * ① 触感:成功时刻必须走 motion.haptic —— 它对减动效用户不震(触感也是动效)、机型 reject 不抛。
  *    ⚠️ 这里断言的是**行为**不是文本。上一版只断言「toast 前出现过 vibrateShort」,
  *    结果把「裸调用、不降级」这个缺口反过来钉成了契约(2026-08-21 code-review 抓到)。
- * ② 金额 countUp:动画只写 balanceDisplay 展示值,balance 真值不被帧污染
+ * ② 金额落地(2026-11-02 PM-05 改走共用件 countMoney):动画只写进度 balanceK,balance 真值不被帧污染
  *    (空态判断读真值;帧写进真值的话,余额落定前会闪空态)。
  * ③ 内容挂载淡入:.cy-fade-in 单一真源在 style/fade-in.wxss,读 --cy-motion-fade-swap;
  *    隔离组件必须 @import 同一份而不是各抄一份定义。
@@ -86,13 +86,12 @@ test('七个成功时刻都走 motion.haptic 且传了减动效偏好,没有裸 
 /* ---------- ② 金额 countUp ---------- */
 
 function assertEarningsCountUp(js, wxml) {
-  assert.match(js, /motion\.countUp\(/, '收益组件必须接 utils/motion 的 countUp')
-  assert.match(js, /balanceDisplay:\s*v\.toFixed\(2\)/, 'countUp 帧只许写 balanceDisplay 展示值')
-  assert.doesNotMatch(js, /balance:\s*v\.toFixed/, 'countUp 帧不得写 balance 真值(会让空态判断闪烁)')
-  assert.match(js, /readReducedMotion\(\)\s*\|\|/, '减动效必须直接落定，不走滚动')
-  assert.match(js, /balanceDisplay:\s*'0\.00'/, '起点必须显式归零，否则 refresh 时会闪出上次的金额')
-  assert.match(js, /detached\(\)[\s\S]{0,120}_stopCountUp/, '组件销毁必须停掉滚动定时器')
-  assert.match(wxml, /money\.amount\(balanceDisplay \|\| balance\)/, '展示位读 balanceDisplay,保底真值')
+  assert.match(js, /pageMotion\.countMoney\(this, 'balanceK'\)/, '收益金额必须走共用件 page-motion.countMoney(慢-快-慢)')
+  assert.doesNotMatch(js, /balance:\s*v\.toFixed/, '动画帧不得写 balance 真值(会让空态判断闪烁)')
+  assert.match(js, /Number\(balance\) > 0\) pageMotion\.countMoney/, '非正数直接落定，不走滚动(减动效由共用件判断)')
+  assert.match(js, /_clearBalance\(\) \{[\s\S]{0,160}_pmCounters[\s\S]{0,200}balanceK: null/, '清空金额必须停掉落地计时并复位进度')
+  assert.match(js, /detached\(\)[\s\S]{0,160}_clearBalance\(\)/, '组件销毁必须停掉滚动定时器')
+  assert.match(wxml, /cnt\.money\(money\.amount\(balance\), balanceK\)/, '展示位按进度缩放真值')
   assert.match(wxml, /balance === '0\.00'/, '空态判断必须继续读 balance 真值')
 }
 
@@ -103,9 +102,9 @@ test('收益金额滚动只污染展示值,真值与空态判断不受影响', (
   )
 })
 
-test('负控:countUp 帧直接写 balance 真值必须判红', () => {
+test('负控:绕开共用件自己写 countUp 帧必须判红', () => {
   const js = read('components/cy/scene-asset-earnings/index.js')
-    .replace('balanceDisplay: v.toFixed(2)', 'balance: v.toFixed(2)')
+    .replace("pageMotion.countMoney(this, 'balanceK')", "motion.countUp(0, 1, (v) => this.setData({ balance: v.toFixed(2) }))")
   assert.throws(() => assertEarningsCountUp(js, read('components/cy/scene-asset-earnings/index.wxml')))
 })
 

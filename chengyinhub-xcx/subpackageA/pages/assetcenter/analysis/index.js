@@ -24,6 +24,9 @@ Page({
     this.load()
   },
   onUnload() { this._token = (this._token || 0) + 1 },
+  onShow() {
+    if (this._owner !== undefined && this._owner !== String(app.getUserID && app.getUserID() || '')) this.load()
+  },
   goBack() { wx.navigateBack({ fail: () => wx.redirectTo({ url: '/subpackageA/pages/assetcenter/earnings/index' }) }) },
   switchMode(e) {
     const mode = e.currentTarget.dataset.mode
@@ -33,22 +36,41 @@ Page({
   },
   load() {
     const token = this._token = (this._token || 0) + 1
-    this.setData({ state: 'loading' })
-    app.sendRequest({
-      url: '/api/user/balance/list', method: 'POST', data: { pageNum: 1, pageSize: 200 }, hideLoading: true, silentError: true,
+    const owner = this._owner = String(app.getUserID && app.getUserID() || '')
+    const current = () => token === this._token && owner === String(app.getUserID && app.getUserID() || '')
+    this._rows = null
+    this.setData({ state: 'loading', series: [], sources: [], current: { label: '', totalText: '0.00' } })
+    const rows = [], ids = new Set()
+    let total = null
+    const fail = () => { if (current()) this.setData({ state: 'error' }) }
+    const readPage = (pageNum) => app.sendRequest({
+      url: '/api/user/balance/list', method: 'POST', data: { pageNum, pageSize: 200 }, hideLoading: true, autoErrorToast: false,
       success: (res) => {
-        if (token !== this._token) return
+        if (!current()) return
         const data = res && res.code == '200' ? res.data : null
-        const rows = data && (data.rows || data.list || data)
-        if (!Array.isArray(rows)) { this.setData({ state: 'error' }); return }
+        const page = data && data.rows
+        const count = data && Number(data.total)
+        if (!Array.isArray(page) || data.total == null || !Number.isSafeInteger(count) || count < 0
+            || total !== null && total !== count || !page.length && rows.length < count) { fail(); return }
+        total = count
+        for (const row of page) {
+          const id = row && String(row.id || '')
+          if (!id || ids.has(id)) { fail(); return }
+          ids.add(id); rows.push(row)
+        }
+        if (rows.length > total) { fail(); return }
+        if (rows.length < total) { readPage(pageNum + 1); return }
         this._rows = rows
+        this.setData({ state: 'ready' })
         this._render()
       },
-      fail: () => { if (token === this._token) this.setData({ state: 'error' }) },
-      successStatusAbnormal: () => { if (token === this._token) this.setData({ state: 'error' }) },
+      fail,
+      successStatusAbnormal: fail,
     })
+    readPage(1)
   },
   _render() {
+    if (this.data.state !== 'ready' || !Array.isArray(this._rows)) return
     const now = new Date()
     const rows = this.data.mode === 'income' ? this._rows : asWithdraw(this._rows)
     const series = earningsView.monthlySeries(rows, now, 6)

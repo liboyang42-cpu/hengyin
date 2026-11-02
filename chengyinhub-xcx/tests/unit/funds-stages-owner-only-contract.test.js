@@ -46,7 +46,7 @@ test('商家分润页:只有后端判定 isOwner===true 才显示三段,员工/�
   assert.equal(run(false), false, '门店员工进入不显示')
   assert.equal(run(undefined), false, '后端没说是本人就不显示')
   assert.equal(run('true'), false, '字符串 true 不算')
-  assert.match(read('components/cy/scene-merchant-profit/index.wxml'), /<cy-funds-stages wx:if="\{\{isOwner\}\}" \/>/)
+  assert.match(read('components/cy/scene-merchant-profit/index.wxml'), /<cy-funds-stages class="funds" wx:if="\{\{isOwner\}\}" \/>/)
 })
 
 test('负控:商家分润页若把 isOwner 恒置 true,员工也会看到本人余额 ⇒ 必须判红', () => {

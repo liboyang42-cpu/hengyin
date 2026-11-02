@@ -535,7 +535,7 @@ page { background: var(--cy-bg-page); }
 .detail.theme-dark .ph-name { font-size: var(--cy-font-subtitle); font-weight: 500; color: var(--cy-color-text-primary); }
 .detail.theme-dark .ph-name--handle { min-height: var(--cy-space-7); display: flex; align-items: center; }
 /* 昵称与时间间距 2pt=4rpx;时间 12px=24rpx 正好是 --cy-font-label */
-.detail.theme-dark .ph-time { margin-top: 4rpx; font-size: var(--cy-font-label); color: var(--cy-color-text-tertiary); }
+.detail.theme-dark .ph-time { margin-top: var(--cy-space-1); font-size: var(--cy-font-label); color: var(--cy-color-text-tertiary); }
 /* 关注胶囊 58×28pt = 116×56rpx,圆角 14pt 正好是半高 ⇒ pill;1px 描边 + 透明底(不是实心) */
 .detail.theme-dark .post-head .gz {
   flex-shrink: 0; width: 116rpx; height: 56rpx; line-height: 52rpx;
@@ -599,14 +599,14 @@ page { background: var(--cy-bg-page); }
 
 /* 操作:点赞/评论/分享。稿上行高 22pt=44rpx,但触达区不能低于 88rpx(a11y 底线,
    且 square-reliability-state-contract 已把 88rpx 钉成契约)——保留 88rpx,只对齐间距与配色。 */
-.detail.theme-dark .actions { padding: 4rpx 0 0; }
+.detail.theme-dark .actions { padding: var(--cy-space-1) 0 0; }
 .detail.theme-dark .actions .act-left { flex: 1; min-width: 0; }
 .detail.theme-dark .actions .act-right { flex-shrink: 0; }
 /* 未赞/评论计数都是次级色;已赞整块(图标 + 数字)转 danger,图标走 currentColor 自动跟色 */
 .detail.theme-dark .actions .act { color: var(--cy-color-text-secondary); }
 /* 图标与计数间距 6pt=12rpx;两个动作之间 18pt=36rpx */
-.detail.theme-dark .actions .act-ico { margin-right: 12rpx; }
-.detail.theme-dark .actions .act { min-height: 88rpx; display: flex; align-items: center; margin-right: 36rpx; }
+.detail.theme-dark .actions .act-ico { margin-right: var(--cy-space-1-5); }
+.detail.theme-dark .actions .act { min-height: 88rpx; display: flex; align-items: center; margin-right: var(--cy-space-4); }
 .detail.theme-dark .actions .act text { font-size: var(--cy-font-label); color: currentColor; }
 .detail.theme-dark .actions .act--like.is-on { color: var(--cy-color-status-danger); }
 .detail.theme-dark .actions .act--favorite.is-on { color: var(--cy-color-text-primary); }

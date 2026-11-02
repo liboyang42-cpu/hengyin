@@ -18,6 +18,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "活动发布请求参数") // 添加类级别的Schema注解
 public class CmsActivityPublishRequest implements Serializable {
+    private String requestId;
+    public String getRequestId() { return requestId; }
+    public void setRequestId(String requestId) { this.requestId = requestId; }
+
 
     @Schema(description = "活动ID（小程序更新时必填；发布时忽略）")
     private Long id;

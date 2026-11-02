@@ -1,4 +1,4 @@
-<view class="{{isMerchantView ? 'theme-merchant' : 'theme-dark'}}">
+<wxs src="../../../../utils/wxs/num.wxs" module="num" /><view class="{{isMerchantView ? 'theme-merchant' : 'theme-dark'}}">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
@@ -93,7 +93,7 @@
                 </view>
                 <view class="rcard-tt">
                   <view class="rcard-title">{{topicCache[item.card.topicId].name}}</view>
-                  <view class="rcard-sub">{{topicCache[item.card.topicId].totalMileage || 0}} km · {{ topicCache[item.card.topicId].locationCount || 0 }} 个点</view>
+                  <view class="rcard-sub">{{num.n(topicCache[item.card.topicId].totalMileage)}} km · {{num.n(topicCache[item.card.topicId].locationCount)}} 个点</view>
                 </view>
               </block>
               <!-- 降级态:拉不到(下架/私密/网络失败都可能)。只认 === null,文案一律泛称「暂不可用」,不能与「加载中」混为一谈 -->
@@ -239,7 +239,7 @@
         <image class="route-item-img" src="{{item.imgUrl || '/images/route_free_cover.png'}}" mode="aspectFill" lazy-load="true" />
         <view class="route-item-tt">
           <view class="route-item-name">{{item.name}}</view>
-          <view class="route-item-sub">{{item.totalMileage || 0}} km · {{ item.locationCount || 0 }} 个点</view>
+          <view class="route-item-sub">{{num.n(item.totalMileage)}} km · {{num.n(item.locationCount)}} 个点</view>
         </view>
       </view>
     </scroll-view>

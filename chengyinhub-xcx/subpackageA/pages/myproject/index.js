@@ -152,7 +152,7 @@ Page({
     if (changedOwner) this.resetPrivateState(!hasSession());
     this._ownerId = memberId;
     this._ownerToken = authorization();
-    merchantTheme.merchantPageShow();
+    if (this.data.operationScope) merchantTheme.merchantPageShow();
     if (!this.requireSession()) return;
     if (refreshAccess && this.data.operationScope === 'MERCHANT') {
       this.loadMerchantPublishEntry();
@@ -748,11 +748,11 @@ Page({
 
   addAuditAttachment() {
     const sheet = this.data.auditSheet;
-    if (!sheet.show || !sheet.canAppeal || sheet.pending || this._appealing || (sheet.attachments || []).length >= 6) return;
+    if (!sheet.show || !sheet.canAppeal || sheet.pending || sheet.confirmed || this._appealing || (sheet.attachments || []).length >= 6) return;
     const owner = String(app.getUserID()), token = authorization(), epoch = this._auditEpoch;
     app.chooseImage(urls => {
       if (this._unloaded || owner !== String(app.getUserID()) || token !== authorization()
-        || epoch !== this._auditEpoch || !this.data.auditSheet.show || this.data.auditSheet.pending) return;
+        || epoch !== this._auditEpoch || !this.data.auditSheet.show || this.data.auditSheet.pending || this.data.auditSheet.confirmed) return;
       const refs = (this.data.auditSheet.attachments || []).concat((urls || []).filter(url => typeof url === 'string' && url)).slice(0, 6);
       this.setData({ 'auditSheet.attachments': refs });
       this.saveAuditDraft(false);
@@ -760,7 +760,7 @@ Page({
   },
 
   removeAuditAttachment(e) {
-    if (this.data.auditSheet.pending || this._appealing) return;
+    if (this.data.auditSheet.pending || this.data.auditSheet.confirmed || this._appealing) return;
     const refs = (this.data.auditSheet.attachments || []).slice();
     refs.splice(Number(e.currentTarget.dataset.index), 1);
     this.setData({ 'auditSheet.attachments': refs }); this.saveAuditDraft(false);

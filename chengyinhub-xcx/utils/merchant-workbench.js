@@ -101,6 +101,29 @@ function catLabelOf(mode) {
   return '';
 }
 
+// 2026-11-01 业主(项目卡方案 B v3):卡上的状态只写结束前的几种 —— 报名中 / 进行中 / 待审核,
+// 以及要商家处理的待补供给 / 未通过 / 已下架;tone 只给状态前的小色点用。
+// 已结束 / 已取消 / 草稿 不上工作台(见 isHiddenProjectCard),「全部」列表里仍可查。
+const HOST_STATE_LABELS = {
+  pending: ['待审核', 'wait'], rejected: ['未通过', 'fix'], offline: ['已下架', 'wait'],
+  notStarted: ['报名中', 'open'], running: ['进行中', 'run'],
+  completed: ['已结束', ''], cancelled: ['已取消', ''], draft: ['草稿', ''],
+};
+const DATE_STATE_LABELS = { 未开始: ['报名中', 'open'], 进行中: ['进行中', 'run'], 已结束: ['已结束', ''] };
+const HIDDEN_CARD_LABELS = ['已结束', '已取消', '草稿'];
+
+function isHiddenProjectCard(card) {
+  return HIDDEN_CARD_LABELS.indexOf(card && card.statusLabel) >= 0;
+}
+
+// 工作台排序:有待核销的先,其次进行中、报名中,其余(待审核 / 待补供给 / 未通过 / 已下架)在后;同档保持原顺序。
+function sortProjectCards(cards) {
+  const rank = (card) => (card.verifyCount > 0 ? 0 : ({ run: 1, open: 2 })[card.statusTone] || 3);
+  return (cards || []).map((card, index) => ({ card, index }))
+    .sort((a, b) => rank(a.card) - rank(b.card) || a.index - b.index)
+    .map((row) => row.card);
+}
+
 function makeProjectCard(base, todoByProject, eventCount, todoError) {
   const key = projectKey(base.ownerType, base.ownerId);
   const todo = todoByProject[key] || {};
@@ -113,6 +136,7 @@ function makeProjectCard(base, todoByProject, eventCount, todoError) {
   if (todoError) {
     return Object.assign({}, base, {
       counts: {},
+      verifyCount: 0,
       todoCount: 0,
       todoChips: [],
       todoText: '',
@@ -124,6 +148,7 @@ function makeProjectCard(base, todoByProject, eventCount, todoError) {
       acc[item.key] = toCount(todo[item.key]);
       return acc;
     }, {}),
+    verifyCount: toCount(todo.pendingVerify),
     todoCount: parts.reduce((sum, item) => sum + item.count, 0),
     // 每件事一枚 chip:标签和数字各自成立,不靠颜色表意(红点只是"今天有事"的信号)
     todoChips: parts,
@@ -149,6 +174,14 @@ function buildProjectCards(input) {
     const accepted = Number(item.status) === 1 && (projectSource === 'registration'
       || (projectSource === 'chapter' && (item.offerActive === true || Number(item.offerActive) === 1)));
     const dateStatus = statusLabelOf(item.startDate, item.endDate, today);
+    const pendingReview = Number(item.status) === 0;
+    const needsSupply = projectSource === 'chapter' && Number(item.status) === 1 && [false, 0, '0'].includes(item.offerActive);
+    // 已确认但档期未知:不编「报名中 / 进行中」,仍写关系本身「承接中」(灰点);未确认关系不写状态
+    const [statusLabel, statusTone] = dateStatus === '已结束' ? ['已结束', '']
+      : pendingReview ? ['待审核', 'wait']
+        : needsSupply ? ['待补供给', 'fix']
+          : !accepted ? ['', '']
+            : DATE_STATE_LABELS[dateStatus] || ['承接中', 'wait'];
     cards.push(makeProjectCard({
       key: 'join-' + item.id,
       role: 'join',
@@ -161,7 +194,8 @@ function buildProjectCards(input) {
          同一条路线上一家商家可以承接多个点位,卡上必须说清这一张是哪一个,
          否则两张卡除了状态徽标以外长得一模一样。缺就整行不出。 */
       acceptorName: item.addressName || '',
-      statusLabel: dateStatus === '已结束' ? dateStatus : (item.projectSource === 'chapter' && Number(item.status) === 1 && [false, 0, '0'].includes(item.offerActive) ? '待补供给' : (accepted ? '承接中' : '')),
+      statusLabel,
+      statusTone,
       catLabel: catLabelOf(item.mode),
       // 缩略图:承接侧取主题封面(ViewRegistrationMerchant.topicImgUrl,可能是逗号分隔多图)
       thumb: item.topicImgUrl || '',
@@ -173,6 +207,8 @@ function buildProjectCards(input) {
   });
   (src.hostList || []).forEach((item) => {
     const isActivity = item.bizType === 'activity';
+    const [statusLabel, statusTone] = HOST_STATE_LABELS[item.state]
+      || DATE_STATE_LABELS[statusLabelOf(item.startTime || item.startDate, item.endTime || item.endDate, today)] || ['', ''];
     cards.push(makeProjectCard({
       key: (isActivity ? 'act-' : 'host-') + item.id,
       role: 'host',
@@ -180,8 +216,9 @@ function buildProjectCards(input) {
       roleLabel: '我主办的',
       title: item.titleText,
       meta: item.startDateStr || (isActivity ? '查看报名与核销' : '查看商家、进度与分润'),
-      statusLabel: statusLabelOf(item.startTime || item.startDate, item.endTime || item.endDate, today),
-      catLabel: isActivity ? '活动' : catLabelOf(item.mode),
+      statusLabel,
+      statusTone,
+      catLabel: item.projectTypeText || (isActivity ? '活动' : catLabelOf(item.mode)),
       thumb: item.imgUrl || '',
       id: item.id,
       bizType: isActivity ? 'activity' : 'topic',
@@ -270,6 +307,8 @@ module.exports = {
   splitPublishedTopics,
   buildTodayBoard,
   buildProjectCards,
+  isHiddenProjectCard,
+  sortProjectCards,
   hasTodoSummaryPayload,
   pickTodayProject,
   localToday,
