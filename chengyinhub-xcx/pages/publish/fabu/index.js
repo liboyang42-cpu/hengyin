@@ -2469,11 +2469,7 @@ Page({
   saveNodeLocation() {
     const that = this;
     const proceed = (center) => {
-      const state = that.data.editorState;
-      if (routeMapView.isUntouchedDefaultCenter(center)) {
-        cyToast('地图还在默认位置，请先拖动地图对准站点');
-        return;
-      }
+      if (routeMapView.isUntouchedDefaultCenter(center)) { cyToast('地图还在默认位置，请先拖动地图对准站点'); return; } const state = that.data.editorState; // P-16
       if (state === 'addNode') {
         const ie = that.data.inlineEdit;
         if (ie) {

@@ -133,12 +133,12 @@
           <view class="v3-nearby-row">
             <view class="v3-nearby-card" wx:for="{{nearbyActivityList}}" wx:key="id"
                   bindtap="goActivity" data-index="{{index}}" data-id="{{item.id}}" hover-class="cy-pressed" hover-stay-time="80">
-              <image class="v3-nearby-bg" src="{{item.cover || item.imgUrl || '/images/index-figma/nearby-card.jpg'}}" mode="aspectFill" lazy-load="true" />
+              <image class="v3-nearby-bg" src="{{item.cover || item.imgUrl || '/images/route_city_cover.png'}}" mode="aspectFill" lazy-load="true" />
               <view class="v3-nearby-mask"></view>
               <view class="v3-nearby-body">
                 <view class="v3-nearby-title ep2">{{item.name}}</view>
                 <view class="v3-nearby-meta flex-ac">
-                  <text class="v3-nearby-live" wx:if="{{item.started}}">LIVE</text>
+                  <text class="v3-nearby-live" wx:if="{{item.started}}">进行中</text>
                   <text class="v3-nearby-time ep1" wx:else>{{item.formattedDateTime}}</text>
                   <view class="v3-nearby-viewers flex-ac" wx:if="{{item.distance}}">
                     <image class="v3-nearby-view-ic" src="/images/index-figma/icon-viewers.png" mode="aspectFit" />
@@ -170,7 +170,7 @@
           <view class="v3-upcoming-row">
             <view class="v3-upreview" wx:for="{{upcomingActivityList}}" wx:key="id"
                   bindtap="goActivity" data-index="{{index}}" data-id="{{item.id}}" hover-class="cy-pressed" hover-stay-time="80">
-              <image class="v3-upreview-bg" src="{{item.cover || '/images/index-figma/nearby-card.jpg'}}" mode="aspectFill" lazy-load="true" />
+              <image class="v3-upreview-bg" src="{{item.cover || '/images/route_city_cover.png'}}" mode="aspectFill" lazy-load="true" />
               <view class="v3-upreview-mask"></view>
               <view class="v3-upreview-body">
                 <view class="v3-upreview-txt">
