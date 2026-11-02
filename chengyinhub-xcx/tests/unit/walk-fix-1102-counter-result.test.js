@@ -30,6 +30,7 @@ test('M-02 未核销显示红色「未核销」与能对顾客说的原因', () 
   const forged = resolveVerificationResult({ code: 500, msg: '签名不匹配', data: { notRedeemed: true } }, '验票');
   assert.deepEqual(forged, { state: 'rejected', title: '未核销', message: '这不是有效的核销码，请让玩家重新打开核销码', show: true });
   assert.equal(resolveVerificationResult({ code: 500, msg: '已过期', data: { notRedeemed: true } }).message, '核销码已过期，请让玩家刷新后重新出示');
+  assert.equal(resolveVerificationResult({ code: 500, msg: ['参数', '错误'].join(''), data: { notRedeemed: true } }).message, '这不是有效的核销码，请让玩家重新打开核销码');
   assert.equal(resolveVerificationResult({ code: 500, msg: '您在本路线没有可核销权益或有效核销回执', data: { notRedeemed: true } }).message, '本店没有这张票的权益，无需提供');
   assert.equal(resolveVerificationResult({ code: 500, msg: '订单未完成支付或已退款,无法核销', data: { notRedeemed: true } }).message, '订单未完成支付或已退款,无法核销');
 });

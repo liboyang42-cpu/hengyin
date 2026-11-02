@@ -92,7 +92,6 @@ function completionReceiptMessage(response, fallback) {
 const NOT_REDEEMED_REASONS = {
   '签名不匹配': '这不是有效的核销码，请让玩家重新打开核销码',
   '格式错误': '这不是有效的核销码，请让玩家重新打开核销码',
-  '参数错误': '这不是有效的核销码，请让玩家重新打开核销码',
   '空码': '这不是有效的核销码，请让玩家重新打开核销码',
   '核销码无效': '这不是有效的核销码，请让玩家重新打开核销码',
   '非玩家动态核销码': '这不是玩家的核销码，请让玩家出示入场码',
@@ -104,6 +103,8 @@ const NO_ENTITLEMENT_HERE = /^您在本路线没有可核销权益/;
 
 function notRedeemedMessage(msg) {
   if (NO_ENTITLEMENT_HERE.test(String(msg || ''))) return '本店没有这张票的权益，无需提供';
+  // 验码工具对坏码的原话之一;只做识别,不展示
+  if (msg === '参数错误') return NOT_REDEEMED_REASONS['格式错误'];
   return NOT_REDEEMED_REASONS[msg] || msg || '未核销';
 }
 
