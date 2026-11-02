@@ -1,0 +1,343 @@
+{
+ "msg": "操作成功",
+ "code": 200,
+ "data": {
+  "sessionId": 1,
+  "activityId": 10,
+  "perspective": "CLUB",
+  "status": "RUNNING",
+  "revision": 1,
+  "authorityEpoch": null,
+  "currentChapterId": 42,
+  "snapshotAt": "2026-11-02 16:57:38",
+  "availableActions": [
+   "SET_LEADERBOARD_VISIBILITY",
+   "BROADCAST",
+   "FINISH",
+   "CLUB_STATION_PAUSE",
+   "CLUB_STATION_RESUME",
+   "UNLOCK_CHAPTER"
+  ],
+  "player": null,
+  "merchant": null,
+  "club": {
+   "readiness": {
+    "requiredStations": 4,
+    "readyStations": 4,
+    "teamsReady": true,
+    "blockers": []
+   },
+   "stations": [
+    {
+     "stationId": 1,
+     "nodeId": 71,
+     "nodeName": "外滩源壹号",
+     "stationCode": "NODE_71",
+     "status": "ACTIVE",
+     "revision": 2,
+     "serviceStartAt": "2026-11-02 16:55:55",
+     "serviceEndAt": "2026-11-02 23:19:54",
+     "capacity": null,
+     "serviceWindow": {
+      "start": "2026-11-02 16:55:55",
+      "end": "2026-11-02 23:19:54"
+     },
+     "preparationChecklist": [],
+     "pauseReasonCode": null,
+     "pauseReason": null,
+     "resumeEta": null,
+     "fallbackNodeId": null,
+     "fallbackPlanCode": null,
+     "fallbackPlanVersion": null,
+     "pendingVerificationCount": 0,
+     "fallbackPlanOptions": [],
+     "playable": true,
+     "playerTask": null,
+     "merchantInstruction": null,
+     "hiddenInfoReminder": null
+    },
+    {
+     "stationId": 2,
+     "nodeId": 72,
+     "nodeName": "真光大楼",
+     "stationCode": "NODE_72",
+     "status": "ACTIVE",
+     "revision": 2,
+     "serviceStartAt": "2026-11-02 16:55:55",
+     "serviceEndAt": "2026-11-02 23:19:54",
+     "capacity": null,
+     "serviceWindow": {
+      "start": "2026-11-02 16:55:55",
+      "end": "2026-11-02 23:19:54"
+     },
+     "preparationChecklist": [],
+     "pauseReasonCode": null,
+     "pauseReason": null,
+     "resumeEta": null,
+     "fallbackNodeId": null,
+     "fallbackPlanCode": null,
+     "fallbackPlanVersion": null,
+     "pendingVerificationCount": 0,
+     "fallbackPlanOptions": [],
+     "playable": true,
+     "playerTask": null,
+     "merchantInstruction": null,
+     "hiddenInfoReminder": null
+    },
+    {
+     "stationId": 3,
+     "nodeId": 73,
+     "nodeName": "乍浦路桥",
+     "stationCode": "NODE_73",
+     "status": "ACTIVE",
+     "revision": 2,
+     "serviceStartAt": "2026-11-02 16:55:55",
+     "serviceEndAt": "2026-11-02 23:19:54",
+     "capacity": null,
+     "serviceWindow": {
+      "start": "2026-11-02 16:55:55",
+      "end": "2026-11-02 23:19:54"
+     },
+     "preparationChecklist": [],
+     "pauseReasonCode": null,
+     "pauseReason": null,
+     "resumeEta": null,
+     "fallbackNodeId": null,
+     "fallbackPlanCode": null,
+     "fallbackPlanVersion": null,
+     "pendingVerificationCount": 0,
+     "fallbackPlanOptions": [],
+     "playable": true,
+     "playerTask": null,
+     "merchantInstruction": null,
+     "hiddenInfoReminder": null
+    },
+    {
+     "stationId": 4,
+     "nodeId": 74,
+     "nodeName": "四川路桥",
+     "stationCode": "NODE_74",
+     "status": "ACTIVE",
+     "revision": 2,
+     "serviceStartAt": "2026-11-02 16:55:55",
+     "serviceEndAt": "2026-11-02 23:19:54",
+     "capacity": null,
+     "serviceWindow": {
+      "start": "2026-11-02 16:55:55",
+      "end": "2026-11-02 23:19:54"
+     },
+     "preparationChecklist": [],
+     "pauseReasonCode": null,
+     "pauseReason": null,
+     "resumeEta": null,
+     "fallbackNodeId": null,
+     "fallbackPlanCode": null,
+     "fallbackPlanVersion": null,
+     "pendingVerificationCount": 0,
+     "fallbackPlanOptions": [],
+     "playable": true,
+     "playerTask": null,
+     "merchantInstruction": null,
+     "hiddenInfoReminder": null
+    }
+   ],
+   "roles": [
+    {
+     "teamName": "周队",
+     "teamId": 1,
+     "memberName": "城瘾用户",
+     "memberId": 990005
+    },
+    {
+     "teamName": "周队",
+     "teamId": 1,
+     "memberName": "城瘾用户",
+     "memberId": 990006
+    },
+    {
+     "teamName": "郑队",
+     "teamId": 2,
+     "memberName": "城瘾用户",
+     "memberId": 990007
+    },
+    {
+     "teamName": "郑队",
+     "teamId": 2,
+     "memberName": "城瘾用户",
+     "memberId": 990008
+    }
+   ],
+   "playMode": "ROUTE",
+   "teams": [
+    {
+     "teamName": "周队",
+     "completedNodes": 0,
+     "teamId": 1,
+     "memberCount": 2,
+     "totalNodes": 4,
+     "status": "PREPARING",
+     "members": [
+      {
+       "memberId": 990005,
+       "memberName": "城瘾用户",
+       "roleCode": null,
+       "status": null
+      },
+      {
+       "memberId": 990006,
+       "memberName": "城瘾用户",
+       "roleCode": null,
+       "status": null
+      }
+     ]
+    },
+    {
+     "teamName": "郑队",
+     "completedNodes": 0,
+     "teamId": 2,
+     "memberCount": 2,
+     "totalNodes": 4,
+     "status": "PREPARING",
+     "members": [
+      {
+       "memberId": 990007,
+       "memberName": "城瘾用户",
+       "roleCode": null,
+       "status": null
+      },
+      {
+       "memberId": 990008,
+       "memberName": "城瘾用户",
+       "roleCode": null,
+       "status": null
+      }
+     ]
+    }
+   ],
+   "roleOptions": [],
+   "currentChapterTitle": "第一章 迟到的电报",
+   "chapterOptions": [
+    {
+     "chapterId": 43,
+     "title": "第二章 苏州河上的信使",
+     "unlocked": false,
+     "unlockable": true,
+     "waitingTeams": 0
+    }
+   ],
+   "broadcasts": [],
+   "broadcastBlocker": "",
+   "leaderboardVisible": false,
+   "leaderboardRows": [],
+   "leaderboardUpdatedBy": null,
+   "leaderboardUpdatedAt": null,
+   "submissions": [],
+   "recap": {
+    "schemaVersion": "GAME_RECAP_V1",
+    "generatedAt": "2026-11-02 16:57:38",
+    "metrics": [
+     {
+      "key": "PAID_PLAYERS",
+      "label": "持票玩家",
+      "value": 4,
+      "unit": "人"
+     },
+     {
+      "key": "ARRIVED_PLAYERS",
+      "label": "到场玩家",
+      "value": 3,
+      "unit": "人"
+     },
+     {
+      "key": "NORMAL_COMPLETERS",
+      "label": "有完成进度",
+      "value": 0,
+      "unit": "人"
+     },
+     {
+      "key": "FALLBACK_COMPLETERS",
+      "label": "兜底完成",
+      "value": 0,
+      "unit": "人"
+     },
+     {
+      "key": "FINISHED_TEAMS",
+      "label": "完成队伍",
+      "value": 0,
+      "unit": "队"
+     }
+    ],
+    "funnel": {
+     "paidPlayers": 4,
+     "arrivedPlayers": 3,
+     "taskSubmitters": 0,
+     "normalCompleters": 0,
+     "fallbackCompleters": 0,
+     "finishedTeams": 0
+    },
+    "hints": {
+     "level1Uses": 0,
+     "level2Uses": 0,
+     "answerReveals": 0
+    },
+    "incidents": {
+     "merchantPauseEvents": 0,
+     "merchantFallbackCompletions": 0,
+     "playerRejectedSubmissions": 0
+    },
+    "collaboration": {
+     "eligibleTeams": 0,
+     "completedTeams": 0,
+     "ratePercent": 0
+    },
+    "takeovers": {
+     "count": 0
+    },
+    "stations": [
+     {
+      "nodeId": 71,
+      "nodeName": "外滩源壹号",
+      "arrivedPlayers": 0,
+      "submissionCount": 0,
+      "normalCompletedCount": 0,
+      "fallbackCompletedCount": 0,
+      "rejectedCount": 0,
+      "pauseEventCount": 0
+     },
+     {
+      "nodeId": 72,
+      "nodeName": "真光大楼",
+      "arrivedPlayers": 0,
+      "submissionCount": 0,
+      "normalCompletedCount": 0,
+      "fallbackCompletedCount": 0,
+      "rejectedCount": 0,
+      "pauseEventCount": 0
+     },
+     {
+      "nodeId": 73,
+      "nodeName": "乍浦路桥",
+      "arrivedPlayers": 0,
+      "submissionCount": 0,
+      "normalCompletedCount": 0,
+      "fallbackCompletedCount": 0,
+      "rejectedCount": 0,
+      "pauseEventCount": 0
+     },
+     {
+      "nodeId": 74,
+      "nodeName": "四川路桥",
+      "arrivedPlayers": 0,
+      "submissionCount": 0,
+      "normalCompletedCount": 0,
+      "fallbackCompletedCount": 0,
+      "rejectedCount": 0,
+      "pauseEventCount": 0
+     }
+    ],
+    "exportAvailable": true
+   }
+  }
+ },
+ "_status": 200
+}
