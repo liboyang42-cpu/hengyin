@@ -276,7 +276,7 @@
                   <view class="sess__left" wx:else>余席 —</view>
                 </view>
               </view>
-              <view class="sess__note">每人限购 1 张 · 场次内自由顺序，不带队</view>
+              <view class="sess__note">场次内自由顺序，不带队</view>
             </view>
           </view>
         </view>
