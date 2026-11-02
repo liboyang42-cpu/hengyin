@@ -280,3 +280,11 @@ test('整团结算的等待、成功、失败与取消都产生可观察反馈',
     harness.restore()
   }
 })
+
+// C-04(2026-11-02 walk-fix):导演运行时接管的路线局,旧带队入口放行恒被拒;播放页不再给出这一项。
+test('导演接管的场次不在播放页显示「解锁下一章节」', () => {
+  const wxml = require('node:fs').readFileSync(require('node:path').resolve(__dirname, '../../pages/play/index.wxml'), 'utf8')
+  const row = /<view class="drow"[^>]*bindtap="leadUnlockFromTools"[^>]*>/.exec(wxml)
+  require('node:assert/strict').ok(row, '播放页缺放行入口')
+  require('node:assert/strict').match(row[0], /!lead\.directorRun/)
+})

@@ -227,7 +227,7 @@
           <view class="dcopy"><text class="dt">展示整团码</text></view>
           <view class="darr"></view>
         </view>
-        <view class="drow" wx:if="{{lead.exists && lead.isLeader}}" bindtap="leadUnlockFromTools" aria-role="button" aria-label="解锁下一章节" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="drow" wx:if="{{lead.exists && lead.isLeader && !lead.directorRun}}" bindtap="leadUnlockFromTools" aria-role="button" aria-label="解锁下一章节" hover-class="cy-pressed" hover-stay-time="80">
           <view class="dic pic pic--unlock"></view>
           <view class="dcopy"><text class="dt">解锁下一章节</text></view>
           <view class="darr"></view>

@@ -23,6 +23,9 @@ public interface GameSessionRuntimeMapper {
     int readyRouteCheckpoints(@Param("sessionId") Long sessionId, @Param("startAt") Date startAt,
                               @Param("endAt") Date endAt, @Param("now") Date now);
     List<Map<String, Object>> selectClubRouteTeamProgressProjection(Long sessionId);
+
+    /** C-04:每支有效队伍已完成的本场站点(teamId,nodeId),用于统计「已完成本章、等放行」的队伍数。 */
+    List<Map<String, Object>> selectRouteTeamCompletedNodes(Long sessionId);
     int insertSession(GameSession session);
     int updateSessionCas(@Param("id") Long id, @Param("expectedRevision") Integer expectedRevision,
                          @Param("fromStatus") String fromStatus, @Param("toStatus") String toStatus,

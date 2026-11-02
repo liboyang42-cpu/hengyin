@@ -395,6 +395,8 @@ public class ApiClubLeadController extends BaseController {
         data.put("leaderMemberId", st.getLeaderMemberId());
         data.put("isLeader", memberId.equals(st.getLeaderMemberId()));
         data.put("currentChapterId", st.getCurrentChapterId());
+        // C-04:导演运行时接管的路线局,章节在俱乐部工作台放行;本入口的放行会被拒,播放页据此不再给出该项。
+        data.put("directorRun", gameSessionRuntimeService != null && gameSessionRuntimeService.routeSessionStatus(activityId) != null);
         List<CmsTopicChapter> ordered = chaptersOf(activityId);
         Long nextChapterId = null;
         if (st.getCurrentChapterId() == null && !ordered.isEmpty()) nextChapterId = ordered.get(0).getId();

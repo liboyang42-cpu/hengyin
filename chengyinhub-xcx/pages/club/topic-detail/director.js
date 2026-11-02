@@ -490,6 +490,7 @@ const DIRECTOR_DATA = {
     sessionStatusText: '状态待确认',
     revision: null,
     chapterOptions: [],
+    unlockButtonText: '手动解锁章节',
     chapterOptionLabels: [],
     readiness: { requiredStations: null, readyStations: null, teamsReady: null, canStart: false },
     readinessText: '—',
@@ -753,8 +754,15 @@ const DIRECTOR_METHODS = {
         && (projection.currentChapterId == null || String(item.chapterId) !== String(projection.currentChapterId))
     }).map(function (item) {
       // 5-04(D4):行组件按 id 找行、回传 {id};缺 id 的章节行点哪一行都落回第 0 项。
-      return { id: item.chapterId, chapterId: item.chapterId, title: item.title || '章节 #' + item.chapterId }
+      const title = item.title || '章节 #' + item.chapterId
+      // C-04:路线局只给相邻下一章,并带上已完成本章、在等放行的队伍数。
+      const waiting = numeric(item.waitingTeams)
+      return { id: item.chapterId, chapterId: item.chapterId, title: title, waitingTeams: waiting,
+        subtitle: waiting === null ? '' : (waiting > 0 ? waiting + ' 队已完成本章，在等放行' : '还没有队伍完成本章') }
     })
+    const unlockText = chapterOptions.length === 1
+      ? '放行「' + chapterOptions[0].title + '」' + (chapterOptions[0].waitingTeams > 0 ? ' · ' + chapterOptions[0].waitingTeams + ' 队在等' : '')
+      : '手动解锁章节'
     // 宿主页(index.js)提供 applyProjectionStatus:场次状态 → 页面六态。director 与宿主是同一个 Page 作用域。
     // 契约测试用裸 host 装载 director,没有这个方法;真页面(index.js)一定有
     if (typeof this.applyProjectionStatus === 'function') this.applyProjectionStatus(projection.status)
@@ -769,6 +777,7 @@ const DIRECTOR_METHODS = {
       genericOpsStatus: this._genericControl ? this._genericControl.run.operationStatus + ' · ' + this._genericControl.run.authorityMode + ' · 权威 ' + this._genericControl.run.authorityEpoch : '',
       genericOpsTeams: this._genericControl ? this._genericControl.teams.map(team => '队伍 ' + team.teamId + (team.exited ? '（已退出）' : '')).join(' · ') : '',
       chapterOptions: chapterOptions,
+      unlockButtonText: unlockText,
       chapterOptionLabels: chapterOptions.map(function (item) { return item.title }),
       readiness: readiness,
       readinessText: readinessText(readiness),

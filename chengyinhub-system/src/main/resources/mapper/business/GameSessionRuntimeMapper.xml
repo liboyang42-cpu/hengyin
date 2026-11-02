@@ -278,6 +278,16 @@
          where s.id=#{sessionId} group by s.id, t.id, t.title
     </select>
 
+    <select id="selectRouteTeamCompletedNodes" resultType="map">
+        select distinct t.id as teamId, p.node_id as nodeId
+          from game_session s
+          join play_team t on t.owner_type=2 and t.owner_id=s.activity_id and t.status in (0,1,2)
+          join play_team_member m on m.team_id=t.id and m.status=1
+          join player_node_progress p on p.member_id=m.member_id and p.activity_id=s.activity_id
+               and p.topic_id=s.topic_id and p.status=1 and p.del_flag=0
+         where s.id=#{sessionId}
+    </select>
+
     <insert id="insertStationsFromTopic">
         insert ignore into game_station_run
         (game_session_id, activity_id, node_id, node_name, station_code, merchant_member_id,

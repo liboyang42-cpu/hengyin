@@ -38,6 +38,8 @@ public interface IGameSessionRuntimeService {
     boolean isGameSessionEnabled(com.chengyinhub.business.domain.CmsTopic topic);
     String routeSessionStatus(Long activityId);
     boolean isRouteLeaderboardHidden(Long activityId);
+    /** C-04:带队路线局进行中、节点所在章节晚于已放行章节时返回「等队长放行」;否则 null。 */
+    default String routeChapterGateError(Long activityId, Long nodeId) { return null; }
     void assertRoutePlayable(Long activityId, Long nodeId);
     void assertRouteReception(Long activityId, Long nodeId);
     List<GameMerchantEntryView> merchantEntries(GameActorContext actor);

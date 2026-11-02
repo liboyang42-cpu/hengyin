@@ -321,7 +321,7 @@
          这里按投影的能力位给最小入口:有权限/有数据才出,点了才开。 -->
     <view class="ctd-tools" wx:if="{{directorActive && loadState === 'ready' && (canUnlockChapter || directorTeamRows.length || (canAssignRoles && roleMemberRows.length) || incidentRows.length)}}">
       <view class="ctd-director-export" wx:if="{{canUnlockChapter}}" bindtap="openManualUnlock"
-            aria-role="button" aria-label="手动解锁章节" hover-class="cy-pressed" hover-stay-time="80">手动解锁章节</view>
+            aria-role="button" aria-label="{{unlockButtonText}}" hover-class="cy-pressed" hover-stay-time="80">{{unlockButtonText}}</view>
       <view class="ctd-director-export" wx:if="{{directorTeamRows.length}}" bindtap="openTeamSheet"
             aria-role="button" aria-label="查看队伍进度" hover-class="cy-pressed" hover-stay-time="80">队伍进度</view>
       <view class="ctd-director-export" wx:if="{{canAssignRoles && roleMemberRows.length}}" bindtap="openRoleSheet"
@@ -332,8 +332,8 @@
 
     <!-- D4 章节控制 / 手动解锁 -->
     <cy-club-director-chapter-sheet
-      show="{{unlockSheetVisible}}" title="手动解锁章节"
-      chapters="{{chapterOptions}}" confirm-text="解锁"
+      show="{{unlockSheetVisible}}" title="{{unlockButtonText}}"
+      chapters="{{chapterOptions}}" confirm-text="放行"
       confirm-disabled="{{writeLocked || !unlockReason}}" caption="{{writeMessage}}"
       bind:close="closeManualUnlock" bind:confirm="confirmManualUnlock"
       bind:selectchapter="onUnlockChapterChange">

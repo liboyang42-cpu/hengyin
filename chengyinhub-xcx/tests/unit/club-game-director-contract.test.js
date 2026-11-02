@@ -1687,3 +1687,33 @@ test('导演宿主页透传原纪元；冲突保留原身份，重试只读回�
   assert.equal(calls.filter(call => call.method === 'POST').length, 1)
   assert.equal(harness.page.data.writeLocked, true)
 })
+
+// C-04(2026-11-02 walk-fix):路线局服务端只给相邻下一章并带 waitingTeams;入口按钮要点名章节和等待队伍数。
+test('路线局放行按钮点名下一章与在等队伍数，提交的仍是服务端给的章节', async () => {
+  const writes = []
+  const projection = {
+    sessionId: 9002, activityId: 702, status: 'RUNNING', revision: 3,
+    currentChapterId: 48, availableActions: ['UNLOCK_CHAPTER'],
+    chapterOptions: [{ chapterId: 49, title: '第二章 外滩钟声', waitingTeams: 2 }],
+    readiness: { requiredStations: 2, readyStations: 2, teamsReady: true, blockers: [], canStart: false },
+    stations: [], teams: [], roles: [], roleOptions: [], broadcasts: [], leaderboard: null, recap: null,
+  }
+  const harness = loadDirector({
+    load() { return Promise.resolve(projection) },
+    submit(input) { writes.push(input); return Promise.resolve({ state: 'unknown-write', requestId: input.requestId }) },
+    readReceipt() { return Promise.resolve({ state: 'pending' }) },
+  })
+  harness.page.initDirector('702')
+  await settle()
+  assert.equal(harness.page.data.canUnlockChapter, true)
+  assert.equal(harness.page.data.unlockButtonText, '放行「第二章 外滩钟声」 · 2 队在等')
+  assert.equal(harness.page.data.chapterOptions[0].subtitle, '2 队已完成本章，在等放行')
+  harness.page.openManualUnlock()
+  harness.page.onUnlockReasonInput({ detail: { value: '全队到齐' } })
+  harness.page.confirmManualUnlock()
+  await settle()
+  assert.equal(writes[0].action, 'UNLOCK_CHAPTER')
+  assert.equal(writes[0].payload.chapterId, 49)
+  const host = read(DIRECTOR_HOST_WXML)
+  assert.match(host, /\{\{unlockButtonText\}\}/)
+})
