@@ -2,7 +2,9 @@
 
 分支 `claude/walk-fix-1102-l1-play`（从 `origin/master` 014fc0d8 切出），草稿 PR #713。截图在 `shots/`，rig 记录在 `RIG-NOTES.md`。
 
-截图说明：`*-after*.jpg` 来自走查 rig（浏览器里跑真实小程序代码 + 真后端，候选为本分支），不是真机。`*-before*.jpg` 取自 11-01 玩家走查（同一页面同一状态，候选 a1d30fb），不是重新拍的。
+第二轮（ROUND2.md，2026-11-02）：P-23 按业主批准做完，P-26 按业主确认不改，P-29 在 rig 里走过换章后做完。第二轮截图 P-23-* / P-29-* 的 before 与 after 都是本轮在 rig 里重拍的同一页同一状态（before 用本分支第二轮之前的提交 f2f04d56 打的包，after 用本轮提交），不是真机。
+
+截图说明（第一轮）：`*-after*.jpg` 来自走查 rig（浏览器里跑真实小程序代码 + 真后端，候选为本分支），不是真机。`*-before*.jpg` 取自 11-01 玩家走查（同一页面同一状态，候选 a1d30fb），不是重新拍的。
 
 ## P-04 真实原因（业主：「你需要核对清楚」）
 
@@ -34,12 +36,12 @@
 | P-08 | fixed | 带领场：队长没放行到的章，章节门停住并显示「等队长放行」，不再自动进正文；开玩之前同样拦下并说一句。队长放行后，轮询读到就自动接着进。放行规则本身没动（服务端 `PlayNodeAccessService.leadGateError` 照旧） | `pages/play/index.js`、`index.wxml/wxss`、`utils/lead-chapter-hold.js` | `play-lead-chapter-hold.test.js`（含负控：集合中、已结束、非带领、未知章节都不拦） |
 | P-13（带领场） | fixed | 集合屏三颗点依次缓慢明暗（1.6 秒一轮，只动透明度）；减弱动态时静止 | `pages/play/index.wxml/wxss` | `play-lead-chapter-hold.test.js` 接线断言；截图 |
 | P-35 | fixed | 队长放行新的一章时，玩家看到一句「队长放行了「章名」」（队长本人不提示）。商家核销的提示属于自由探索，归 l2 | `pages/play/index.js`、`utils/lead-chapter-hold.js` | `play-lead-chapter-hold.test.js` |
-| P-23 | needs owner | 罗盘读不出方向时没有出路。「跳过」要服务端认一个不靠传感器的完成，并且要决定谁能放行（作者开关还是队长现场放行），客户端单方面做不了 | — | 见下方 needs owner |
+| P-23 | fixed（第二轮，业主已批） | 作者在罗盘玩法上可勾「允许跳过」（默认关）。玩家这台手机读不出方向时，每次失败报给服务端记一次（按人记）；本人失败满两次、且作者允许或队长放行了本人，服务端才给出「跳过这一站」。跳过由服务端完成：这一段不发 xp，进度记 `completion_mode=SKIPPED`、解谜分 0，会话里记下谁、凭什么跳的（`skipVia` AUTHOR / LEADER）。带领场里，有成员卡住且作者没开允许跳过时，队长的「更多」里出现「放行这一站 · 昵称 · 站名」，确认后放行；放行只放开本人的跳过，仍由成员自己点。只对罗盘（传感器段）开放；恢复挑战与按结果分支的玩法拒绝跳过。跳过后的罗盘不亮绿，写「这一站已跳过」 | `AdvancedActionJudgement.java`、`AdvancedGameRuntimeServiceImpl.java`、`IAdvancedGameRuntimeService.java`、`AdvancedGameConfigValidator.java`、`AdvancedGamePublicProjection.java`、`PlayNodeCompletionApplication.java`、`ApiClubLeadController.java`（`/api/club/lead/release-station`，team-progress 只给队长 `skipRequests`）；小程序 `playkit-compass/*`、`playkit/index.*`、`utils/playkit-view.js`、`pages/play/index.js/wxml`、编辑页 `publish/temp/index.wxml`、`advanced-game-config.js` | `AdvancedGameRuntimeServiceImplTest` 新增 6 条（两次失败门槛、作者关时拒绝、队友失败不算本人、队长放行后可跳、非传感器站不能放行、非传感器玩法不能跳）；`compass-skip-p23.test.js`。**rig 真 HTTP**（见 `RIG-NOTES.md` 第二轮）：他人跳过 / 报失败 → 「玩法会话不存在或无权访问」；问答站跳过 → 「本站没有这个玩法」/「这一项不支持跳过」；一次失败就跳 → 拒；作者关时跳 → 「这一站不允许跳过」；非队长放行 → 「只有本场队长可以放行」；队长放行问答站 → 「这一站不是传感器玩法，不能放行」；库里两站 `SKIPPED / 0`，会话 `score=0`。截图 P-23-before / after / after-2…5 |
 | P-24 | fixed | 拍照审核上传失败：屏上写「上传失败，请重拍」（原来只有一闪而过的 toast，拍物成卡以外的模式收不到失败通知），再拍时清掉 | `pages/play/index.js`、`playkit-photocheck/*`、`playkit/index.wxml` | `play-small-items-1102.test.js`；`object-card-reveal-contract.test.js` 同步了失败通知的断言 |
 | P-25 | fixed | 「看提示（1/2 · −30 分）」，看过一条变「（2/2 · −30 分）」。代价按服务端 `PuzzleScorePolicy` 100→70→40 展示，真扣多少仍以回执为准 | `pages/play/index.js`、`utils/puzzle-hint-label.js` | `play-small-items-1102.test.js` |
-| P-26 | 部分 | 城市定向有带坐标的站时，在「开始游戏」这一刻问定位（原来要等第一道题交卷）。**每次重进仍会再问一次**：先试过把同意记在本局存档里，结果撞了仓里的定位合规契约（`roam-location-revocation` 等 10 条：每次游玩都要明示用途，不能借上一次的许可），已撤回 | `pages/play/index.js` | `play-small-items-1102.test.js`；定位合规契约全绿 |
+| P-26 | no change, owner confirmed | 业主第二轮确认：每次游玩都问定位，不改。第一轮已做的「在开始游戏时问」保留；重进仍会再问一次，符合定位合规契约 | `pages/play/index.js`（第一轮） | 第一轮 `play-small-items-1102.test.js`；定位合规契约全绿 |
 | P-28（城市菜单） | fixed，有偏差 | 没有删掉「扫码到达」：城市定向定位没开时，它是到站的唯一入口（站卡上也写着「可扫码到达」）。只把副标题从「到店后扫商家的码」改成「到站后扫现场的码」 | `pages/play/index.wxml` | `play-small-items-1102.test.js` |
-| P-29 | not done | 章末收尾文字出现在下一章卡之后。要改故事流的换章时机（读完本章尾段再换章），得在 rig 里跟一遍换章链路才敢动，本次没做到 | — | — |
+| P-29 | fixed（第二轮，rig 里走过换章） | 原因有两层（rig 里逐帧追出来的）：① 本章最后一站一完成，渲染那一步立刻把 `chapter` 换成下一站所在的章，最后一个节点块之后的文字从没铺出来；② 服务端只把块流下发到第一个未完成节点，作答回执触发的那次重算里，本章的收尾还不在手上，紧接着那次重拉节点才带来完整块流。修复：按「上一次所在的章」判换章（重拉会把 `data.chapter` 重置成第一章，不能拿它判）；收尾到手就先停在本章把收尾铺进故事流，点本章末尾原有的「继续探索」才换章、出章节卡；章节卡是在最后一站完成前拉的（收尾可能还没到手）就先安静停着，等重拉再判。没有收尾的章照旧直接换章；读过的收尾记进本局存档，重进不重放；试玩不走这条 | `pages/play/index.js`、`utils/chapter-trail.js`（新）、`utils/story-resume.js`（注释） | `play-chapter-trail-p29.test.js`（含「收尾未到手不能当没有收尾」）。rig：旧包作答「继续」后直接是「第 1 章 · 完成」卡（P-29-before）；新包先出本章收尾「你把年份念出来的时候……第一章的门在身后合上了。」+「继续探索」（P-29-after），点了才出第 1 章完成卡与第 2 章卡（P-29-after-2） |
 
 ## 门禁与测试
 
@@ -52,8 +54,12 @@
 
 ## needs owner
 
-1. **P-23 罗盘读不出方向时的出路。** 建议默认：作者在罗盘玩法上勾「允许跳过」（默认关）；连续两次读取失败后出现「跳过这一站」，服务端按 0 分完成并记一笔「跳过」；带领场里队长也能现场放行这一站。需要后端加一个只对罗盘/传感器玩法开放的跳过完成口，并校验次数与归属。
-2. **P-26 重进是否还要再问定位。** 现行合规契约要求每次游玩逐次明示用途，所以重进仍会问。建议保持；如果业主认为「同一场次内同意一次即可」，需要先改定位合规契约（那是隐私口径，不该由本工单单方面放宽）。
+第一轮列的两条业主已在第二轮定了（P-23 按建议做、P-26 不改），本轮没有新的需要业主定的事。以下是做 P-23 时的两处取舍，默认已按括号里的做，业主不同意再改：
+
+1. **跳过的站还给不给节点探索值。** 现在：罗盘段的 xp 不发、解谜分 0、进度记 SKIPPED，但节点完成本身照旧（完成链对自报传感器段本来就只发探索值与徽章，不发积分 / 券）。建议保持（这一站人确实到了现场）。
+2. **队长放行时机。** 现在：只有成员本人读取失败满两次、且作者没开允许跳过时，才出现在队长的放行列表里；放行后仍由成员本人点「跳过这一站」。放行列表靠队伍进度轮询（4–10 秒），成员那边要再读一次失败或重进这一站才看到按钮。建议保持（放行不替成员做决定）。
+
+- **第二轮**：后端相关套件 23 个类 632 条全过（含 `AdvancedGameRuntimeServiceImplTest` 207 条）；小程序 `compass-skip-p23.test.js`、`play-chapter-trail-p29.test.js` 新增，`playkit-compass-contract` / `compass-sensor-recovery` 照过；全量 `node --test tests/unit/*.test.js` 15569 条全过。动作台账重建 5597 → 5602（罗盘「跳过这一站」、分发器 readfail / skip 两条事件、编辑页「允许跳过」开关、队长「放行这一站」），测试里的三个计数按重建实测更新；`UI-GATE-0:PASS`，唯一一条 U5 登记（loadMilestone）只是行号位移 8134 → 8208，按惯例换 key 重算 digest，没有新增登记。
 
 ## 旧代码对照
 
@@ -68,8 +74,12 @@
 
 ## 真机上仍未验证
 
+- P-23：rig 的罗盘缝每 500 毫秒必发一帧，读不出方向是在 rig 页面里把 `wx.startCompass` 改成直接 fail 模拟的（只在 rig 页面内注入，没进产品代码）。真机上「读不出方向」的几种样子（无罗盘、首帧超时、帧中断）都走同一个 `_failed`，但没在手机上跑过。
+- P-23：队长放行后，成员那边要再失败一次或重进这一站才看到「跳过这一站」（玩法视图不轮询）；队长那句「某某在某站读不出方向」的提示在 rig 截图里没拍到（提示是一闪的 diegetic 行）。
+- P-29：只在 rig 里走了「第一章 → 第二章」一次换章；带领场「等队长放行」与收尾同时出现的组合、以及多章连续换章没走。
+
 - 定位弹窗时机、罗盘、拍照上传都只在浏览器 rig 里跑过，没在手机上跑。
 - 「对了」那一拍和三点等待动画的观感、减弱动态下的表现。
 - 带领场放行的轮询间隔（4–10 秒）决定了「等队长放行」解开的延迟。
 
-STATUS: PARTIAL - P-29 未做；P-23 待业主定规则
+STATUS: COMPLETE

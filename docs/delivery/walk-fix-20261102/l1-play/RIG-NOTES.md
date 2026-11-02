@@ -131,3 +131,108 @@ With no ending, playing and finishing the station creates no route session. The 
 P-10 re-shoot: `P-10-after-2.jpg` and `P-10-after-3.jpg` now come from commit **2110aafb6ffbff5988a3f2a907763783a86e3797**. Only the mpweb bundle was rebuilt from that commit's `chengyinhub-xcx`; the backend jar is still 0abf58c3.
 Fresh run on the same rig data: new club session activity 16 on theme 990019, player walk-player-2 (member 990006), `shift-session 16`, leader `lead/start` and unlock 51→52. Station 86 (advanced TYPE).
 First live wrong submit (黄浦江, attempts 1) and second (长江, attempts 2) each show a red underline, the box cleared, and a red bar 「再想想 / 不对。把它清掉，再试一次。」. This replaces Finding 1 above, which described commit 0abf58c3.
+
+
+# Round 2 (P-23, P-29), 2026-11-02
+
+## Candidate and rig
+
+- Fresh container. Rig worktree `$HOME/rig` = `origin/claude/cloud-walk-20261101-rig` with the club lane's `docs/delivery/cloud-walk-20261101/club/tools/harness-patches.diff` applied (rig only). `up.sh` `SHA` pointed at this branch.
+- Docker Hub answered 429 again. The pinned MySQL / Redis digests were pulled from `mirror.gcr.io/library/{mysql,redis}@sha256:4af1f881… / 858f009f…` and tagged `mysql:8.0.45` / `redis:7.4-alpine`; `docker image inspect mysql:8.0.45@sha256:4af1f881…` resolves to the pinned digest.
+- Candidate commits used: backend jar first from 8648f47b (P-23 backend), then rebuilt from the commit that limits the leader's list to stations without 「允许跳过」 (the app was restarted on the re-exploded jar; data kept). Browser bundle rebuilt per step: **before** shots from `f2f04d56` (this branch before round 2), **after** shots from this round's commits.
+- Step scripts in `$HOME/rig/l1/` and `scratchpad/l1/` (not committed). Shots 390×844 JPEG q70 from the rig's own `shot`.
+
+## What I authored (all through real APIs)
+
+| What | Ids | How |
+|---|---|---|
+| Publisher identity for 9003 (fixture 俱乐部主理人, club 7001) | — | `POST /api/publisher/identity` (dummy name + checksum-valid dummy ID number) |
+| Legacy 文字问答 「门楣上的年份」 answer `1873` | template 6005 | `POST /api/template/publish` vm=1 |
+| Advanced qa TYPE 「江的另一个名字」 answer `吴淞江、吴淞` | template 6008 | `/api/template/publish` vm=0 + `advancedConfigJson` |
+| Advanced compass 「对准海关大楼的钟」 bearing 90, tol 15, hold 3 s, xp 5, **`allowSkip: true`** | template 6006 | same |
+| Advanced compass 「对准外白渡桥」 bearing 10, tol 15, hold 3 s, xp 5, **no `allowSkip`** | template 6007 | same |
+| Theme 「外滩钟声：罗盘与收尾（走查）」, LINEAR, club 7001, free ticket. Ch1 (44): text, node 75 (6005), **trailing text 「你把年份念出来的时候，钟楼里传出一声闷响。第一章的门在身后合上了。」**. Ch2 (45): text, node 76 (6008), 77 (6006), 78 (6007), trailing text | topic 990016 | `POST /api/topic/v2/create` |
+| Admin approvals | audit tasks 1–5 | `POST /business/audit/review` |
+| Club-led session | activity 10 | `POST /api/club/open-session` as 9003; `lead/start`; `lead/unlock-chapter` 44→45 |
+| Players 9009, 9004, walk-player-1…5 (990005–990009, real login via `seed-walk.py add-players`) | registrations 74–80 | `club/join` + consent + `registration/quote` + `registration/create` (¥0; the server set `payment_status=2`) |
+
+Fixture / direct DB actions: `seed-walk.py shift-session 10` (writes `cms_activity.start_date/end_date`). Everything else was a read.
+
+Rig-only injection for P-23: the rig's compass seam emits a heading every 500 ms, so a phone that cannot read a direction was simulated by replacing `wx.startCompass` in the page with one that calls `fail` (`page.evaluate`, not in product code).
+
+## P-23 over HTTP (players 9009 and 9004, leader 9003, activity 10)
+
+Run by a script against the real backend; tokens in headers, not logged.
+
+```
+start 76                                                   -> {"code": 200, "msg": "操作成功", "data": {"sessionId": 1, "version": 0}}
+SKIP_SENSOR_STATION game=compass on qa station             -> {"code": 400, "msg": "本站没有这个玩法"}
+SKIP_SENSOR_STATION game=qa                                -> {"code": 400, "msg": "这一项不支持跳过"}
+REPORT_SENSOR_FAILURE game=qa                              -> {"code": 400, "msg": "这一项不支持跳过"}
+SUBMIT_QA 吴淞江                                              -> {"code": 200, "msg": "操作成功"}
+arrive 76                                                  -> {"code": 200, "msg": "已到达，打卡成功"}
+start 77                                                   -> {"code": 200, "msg": "操作成功", "data": {"allowSkip": true, "failedReads": 0, "canSkip": false, "released": false, "skipped": false, "done": false}}
+SKIP before any failed read                                -> {"code": 400, "msg": "读取失败两次后才能跳过这一站"}
+REPORT_SENSOR_FAILURE #1                                   -> {"code": 200, "msg": "操作成功", "data": {"allowSkip": true, "failedReads": 1, "canSkip": false, "released": false, "skipped": false, "done": false}}
+other member 9004: SKIP on 9009's session                  -> {"code": 400, "msg": "玩法会话不存在或无权访问"}
+other member 9004: REPORT on 9009's session                -> {"code": 400, "msg": "玩法会话不存在或无权访问"}
+SKIP after one failed read                                 -> {"code": 400, "msg": "读取失败两次后才能跳过这一站"}
+REPORT_SENSOR_FAILURE #2                                   -> {"code": 200, "msg": "操作成功", "data": {"allowSkip": true, "failedReads": 2, "canSkip": true, "released": false, "skipped": false, "done": false}}
+SKIP_SENSOR_STATION                                        -> {"code": 200, "msg": "操作成功", "data": {"allowSkip": true, "failedReads": 2, "canSkip": false, "released": false, "skipped": true, "done": true}}
+arrive 77                                                  -> {"code": 200, "msg": "已到达，打卡成功"}
+start 78                                                   -> {"code": 200, "msg": "操作成功", "data": {"allowSkip": false, "failedReads": 0, "canSkip": false, "released": false, "skipped": false, "done": false}}
+REPORT_SENSOR_FAILURE #1                                   -> {"code": 200, "msg": "操作成功", "data": {"allowSkip": false, "failedReads": 1, "canSkip": false, "released": false, "skipped": false, "done": false}}
+REPORT_SENSOR_FAILURE #2                                   -> {"code": 200, "msg": "操作成功", "data": {"allowSkip": false, "failedReads": 2, "canSkip": false, "released": false, "skipped": false, "done": false}}
+SKIP without author permission or release                  -> {"code": 400, "msg": "这一站不允许跳过"}
+leader team-progress skipRequests -> [{"memberId": 9009, "nickname": "玩家二号", "nodeId": 78}]
+member 9004 team-progress has skipRequests key -> False
+member 9004 calls release-station for 9009/78              -> {"code": 500, "msg": "只有本场队长可以放行"}
+9004 start 76 (qa)                                         -> {"code": 200, "msg": "操作成功", "data": {"sessionId": 4}}
+leader release-station 9004/76 (qa, not sensor)            -> {"code": 500, "msg": "这一站不是传感器玩法，不能放行"}
+leader release-station 9009/78                             -> {"code": 200, "msg": "已放行，成员可以跳过这一站"}
+state 78 after release                                     -> {"code": 200, "msg": "操作成功", "data": {"allowSkip": false, "failedReads": 2, "canSkip": true, "released": true, "skipped": false, "done": false}}
+SKIP_SENSOR_STATION (released by leader)                   -> {"code": 200, "msg": "操作成功", "data": {"allowSkip": false, "failedReads": 2, "canSkip": false, "released": true, "skipped": true, "done": true}}
+arrive 78                                                  -> {"code": 200, "msg": "已到达，打卡成功"}
+# columns: id, node_id, owner_type(1=player), owner_id, status, score, state_json (originalNodeContent trimmed)
+game_runtime_session (1, 76, 1, 9009, 1, 0, state_json={"qa": {"passed": true, "attempts": 1, "finished": true, "lastInput": "吴淞江", "lastCorrect": true} ...})
+game_runtime_session (2, 77, 1, 9009, 1, 0, state_json={"compass": {"done": true, "skipVia": "AUTHOR", "skipped": true, "skippedBy": 9009, "failedReads": {"9009": 2}} ...})
+game_runtime_session (3, 78, 1, 9009, 1, 0, state_json={"compass": {"done": true, "skipVia": "LEADER", "skipped": true, "skippedBy": 9009, "failedReads": {"9009": 2}, "releasedFor": {"9009": {"at": 1793613263346, "by": 9003}}} ...})
+# columns: member_id, node_id, status, puzzle_score, completion_mode
+player_node_progress (9009, 75, 1, 100, 'SOLVED')
+player_node_progress (9009, 76, 1, None, None)
+player_node_progress (9009, 77, 1, 0, 'SKIPPED')
+player_node_progress (9009, 78, 1, 0, 'SKIPPED')
+# columns: member_id, node_id, result_json.playKit.compass.skipped
+play_attempt_log (9009, 77, 'false')
+play_attempt_log (9009, 77, 'false')
+play_attempt_log (9009, 77, 'true')
+play_attempt_log (9009, 77, None)
+play_attempt_log (9009, 78, 'false')
+play_attempt_log (9009, 78, 'false')
+play_attempt_log (9009, 78, 'true')
+play_attempt_log (9009, 78, None)
+```
+
+`game_runtime_session.score` stays 0 on both compass sessions (no compass xp on a skip). `play_attempt_log` keeps every REPORT / SKIP action with its result view (`playKit.compass.skipped` false, false, true).
+
+The same chain through the real page (walk-player-4 on node 77; 9004 on 77 and 78): `REPORT_SENSOR_FAILURE` ×2 from two failed starts → kit `canSkip: true` → 「跳过这一站」 → `SKIP_SENSOR_STATION` 200 → 「这一站已跳过」. Leader 9003: team-progress `skipRequests` = `[{memberId 9004, nodeId 78, 玩家小城, 桥头 · 桥的方向}]` → 更多 → 「放行这一站」 → confirm → `POST /api/club/lead/release-station` 200 → 9004 re-enters node 78: `canSkip: true` → skip 200.
+
+## P-29 in the browser (theme 990016, chapter 44 → 45)
+
+- Before (bundle f2f04d56, player 9004): answer `1873` → 「对了」 → 「继续」 → straight to the 「第 1 章 · 完成」 card, then the chapter-2 card and chapter-2 text. Chapter 1's trailing line never appears.
+- I traced the after-fix walk with a `setData` hook: the answer receipt triggers a rebuild while chapter 44's blocks are still `[text, node 75]` (the server cuts blocks at the first unfinished node); ~150 ms later the node reload brings `[text, node 75, text]`. The first fix attempt held only when the story flow was open and only on `data.chapter`, and both missed. The final fix keys on the last shown chapter and waits for the reload.
+- After (walk-player-4): 「继续」 → chapter 1 with the trailing line and 「继续探索」 → tap → 「第 1 章 · 完成」 → chapter-2 card.
+
+## Round 2 shots
+
+| File | Shows |
+|---|---|
+| P-23-before.jpg | Bundle f2f04d56, node 77 after two failed reads: 「这台设备还没报出方向或读数已中断，请重试或退出」, only 「开始」 |
+| P-23-after.jpg | Same station and state on this round's bundle: 「开始」 + 「跳过这一站」 (author allowed) |
+| P-23-after-2.jpg | After skipping: 「这一站已跳过」, dial not green, 「继续故事」 |
+| P-23-after-3.jpg | Leader 9003, 更多: 「放行这一站 · 玩家小城 · 桥头 · 桥的方向」 between 解锁下一章节 and 整团结算 |
+| P-23-after-4.jpg | Leader confirm: 「让 玩家小城 跳过「桥头 · 桥的方向」？这一站记 0 分。」 取消 / 放行 |
+| P-23-after-5.jpg | 9004 re-enters node 78 after the release: 「开始」 + 「跳过这一站」 (author had not allowed it) |
+| P-29-before.jpg | Bundle f2f04d56: right after 「继续」, the 「第 1 章 · 完成」 card; the trailing line was never shown |
+| P-29-after.jpg | This round: chapter 1's trailing line under its opening line, 「继续探索」 |
+| P-29-after-2.jpg | After 「继续探索」: the 「第 1 章 · 完成」 card, then chapter 2 |
