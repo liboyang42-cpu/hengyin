@@ -20,4 +20,6 @@ The walk is in progress. So far it covers Stage A: becoming a merchant, then joi
 | 21 | 「实际供给已生效」. |
 | 22 | The QR needs WeChat (HARNESS). |
 
-STATUS: PARTIAL - stages B–E pending
+Stages B–D covered in shots 23–54 (write-up pending).
+
+STATUS: PARTIAL - write-up pending
