@@ -1,4 +1,5 @@
 const test = require('node:test');
+const { beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 const cfg = require('../../pages/publish/utils/publish/advanced-game-config.js');
 const catalog = require('../../pages/publish/utils/publish/node-game-catalog.js');
@@ -129,8 +130,9 @@ test('支持矩阵用真实 r5CompletionProof，不借旧 proof；扫码不抢�
 });
 
 let definition;
-const app = { globalData: {}, tips() {}, getAuthorization: () => '', sendRequest() {} };
-global.getApp = () => app; global.Page = value => { definition = value; }; global.wx = { getStorageSync() {}, setStorageSync() {}, getBackgroundAudioManager: () => ({ stop() {} }), showToast() {} };
+const app = { globalData: {}, tips() {}, getUserID: () => 9, getAuthorization: () => '', sendRequest() {} };
+beforeEach(() => Object.assign(global.wx, require('../helpers/memory-storage.js')()));
+global.getApp = () => app; global.Page = value => { definition = value; }; global.wx = { ...require('../helpers/memory-storage.js')(), getBackgroundAudioManager: () => ({ stop() {} }), showToast() {} };
 function page() {
   delete require.cache[require.resolve('../../pages/publish/temp/index.js')]; require('../../pages/publish/temp/index.js');
   const p = Object.assign({}, definition, { data: clone(definition.data) });

@@ -14,6 +14,10 @@ import java.util.Set;
  */
 @Schema(description = "模板发布请求参数")
 public class CmsTemplatePublishRequest implements Serializable {
+    private String requestId;
+    public String getRequestId() { return requestId; }
+    public void setRequestId(String requestId) { this.requestId = requestId; }
+
 
     private static final long serialVersionUID = 1L;
 

@@ -154,6 +154,11 @@ function hasCategory(categoryIds) {
  * 发布阻断项。每条都要定位到具体对象 —— 「还有 3 个节点缺地点」没法点,
  * 「第 2 章第 1 个节点缺地点」才能把用户送到那一行。
  */
+function chapterHasRequiredNodes(formData, chapter) {
+  return !!chapter && (chapter.opening === true || (chapter.nodes || []).length > 0
+    || Number(formData.productType) === FREE_EXPLORE && Number(chapter.recruitEnabled) === 1);
+}
+
 function blockingIssuesOf(formData, pendingMaterials, chapterStates, categoryIds) {
   var issues = [];
   var isFree = Number(formData.productType) === FREE_EXPLORE;
@@ -186,7 +191,7 @@ function blockingIssuesOf(formData, pendingMaterials, chapterStates, categoryIds
       });
     }
     var chapter = (formData.chapters || [])[state.index];
-    if (!state.nodeCount && !state.opening && !(isFree && chapter && Number(chapter.recruitEnabled) === 1)) {
+    if (!chapterHasRequiredNodes(formData, chapter)) {
       issues.push({
         key: 'chapter' + state.index,
         chapterIndex: state.index,
@@ -251,6 +256,7 @@ function evaluateProfessionalDraft(input) {
 }
 
 module.exports = {
+  chapterHasRequiredNodes: chapterHasRequiredNodes,
   evaluateProfessionalDraft: evaluateProfessionalDraft,
   defaultAnchorFor: defaultAnchorFor,
   chapterStatesOf: chapterStatesOf,

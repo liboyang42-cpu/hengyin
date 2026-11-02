@@ -1,4 +1,4 @@
-const { test } = require('node:test');
+const { test, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 const support = require('../../pages/publish/utils/publish/gameplay-support-matrix.js');
 const catalog = require('../../pages/publish/utils/publish/node-game-catalog.js');
@@ -14,12 +14,13 @@ let sent, notices, definition;
 let app;
 global.getApp = () => app;
 global.wx = {
-  getStorageSync: () => undefined, setStorageSync() {}, removeStorageSync() {},
+  ...require('../helpers/memory-storage.js')(),
   getSystemInfoSync: () => ({ windowWidth: 375 }), getBackgroundAudioManager: () => ({ stop() {} }),
   showToast: o => notices.push(o.title), showLoading() {}, hideLoading() {}, showModal() {},
   createMapContext: () => ({}), nextTick: f => f(), navigateTo() {}, pageScrollTo() {}
 };
 global.Page = cfg => { definition = cfg; };
+beforeEach(() => Object.assign(global.wx, require('../helpers/memory-storage.js')()));
 const getMatrix = p => Object.prototype.hasOwnProperty.call(p, '_supportMatrix') ? p._supportMatrix : p.data.supportMatrix;
 const setMatrix = (p, value) => { if (Object.prototype.hasOwnProperty.call(p, '_supportMatrix')) p._supportMatrix = value; else p.data.supportMatrix = value; };
 function page(kind) {
