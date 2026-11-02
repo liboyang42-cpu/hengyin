@@ -36,3 +36,12 @@ test('P-28:游玩工具在页面层,自由探索卡包页有入口打开同一�
   assert.match(wxml, /class="fx-lhd__more"[^>]*bindtap="toggleSessionTools"/)
   assert.match(wxml, /aria-label="入场码"/)
 })
+
+test('P-28 第二轮(业主 2026-11-02):自由探索不带队时菜单不出「队伍位置」,其余领队行不动', () => {
+  const row = wxml.match(/<view class="drow" wx:if="\{\{([^}]*)\}\}" bindtap="leadBroadcastFromTools"[^>]*aria-label="队伍位置"/)
+  assert.ok(row, '找不到「队伍位置」行')
+  assert.match(row[1], /lead\.exists/)
+  assert.match(row[1], /!lead\.freeEntry/)
+  // 「切换章节」只报告不改:仍只按 mode==2 出
+  assert.match(wxml, /<view class="drow" wx:if="\{\{mode==2\}\}" bindtap="openStackOrChaptersFromTools"/)
+})

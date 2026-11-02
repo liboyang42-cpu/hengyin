@@ -1119883,7 +1119883,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1008:bindtap:continueNext:116",
+      "id": "pages/play/index.wxml:1009:bindtap:continueNext:116",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1119906,7 +1119906,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "continueNext",
-        "line": 1008,
+        "line": 1009,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1119950,7 +1119950,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1020:bindtap:startGame:117",
+      "id": "pages/play/index.wxml:1021:bindtap:startGame:117",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1120026,7 +1120026,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "startGame",
-        "line": 1020,
+        "line": 1021,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1120383,7 +1120383,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1024:bindtap:reverifyGuardArrival:118",
+      "id": "pages/play/index.wxml:1025:bindtap:reverifyGuardArrival:118",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1120459,7 +1120459,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "reverifyGuardArrival",
-        "line": 1024,
+        "line": 1025,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": "{{mode!=2 && guardAppealView && guardAppealView.reference.nodeId == sheet.node.nodeId && guardAppealView.state === 'FOUND' && guardAppealView.result.canReverify}}",
         "disabledCondition": null,
@@ -1120817,7 +1120817,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1025:bindtap:onSheetGoTap:119",
+      "id": "pages/play/index.wxml:1026:bindtap:onSheetGoTap:119",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1120893,7 +1120893,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "onSheetGoTap",
-        "line": 1025,
+        "line": 1026,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1121250,7 +1121250,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1030:bindtap:readGuardAppeal:120",
+      "id": "pages/play/index.wxml:1031:bindtap:readGuardAppeal:120",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1121273,7 +1121273,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "readGuardAppeal",
-        "line": 1030,
+        "line": 1031,
         "selectorHint": ".sheet-note-action",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1121348,7 +1121348,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1032:bindtap:appealArrivalFromSheet:121",
+      "id": "pages/play/index.wxml:1033:bindtap:appealArrivalFromSheet:121",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1121371,7 +1121371,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "appealArrivalFromSheet",
-        "line": 1032,
+        "line": 1033,
         "selectorHint": ".sheet-note-action",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1121447,7 +1121447,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1033:bindtap:onScanArrive:122",
+      "id": "pages/play/index.wxml:1034:bindtap:onScanArrive:122",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1121497,7 +1121497,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "onScanArrive",
-        "line": 1033,
+        "line": 1034,
         "selectorHint": ".sheet-note-action",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1121866,7 +1121866,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1034:bindtap:onScanArrive:123",
+      "id": "pages/play/index.wxml:1035:bindtap:onScanArrive:123",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1121916,7 +1121916,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "onScanArrive",
-        "line": 1034,
+        "line": 1035,
         "selectorHint": ".sheet-note-action",
         "visibleCondition": "{{!gpsOk}}",
         "disabledCondition": null,
@@ -1122285,7 +1122285,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1036:bindtap:onScanArrive:124",
+      "id": "pages/play/index.wxml:1037:bindtap:onScanArrive:124",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1122335,7 +1122335,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "onScanArrive",
-        "line": 1036,
+        "line": 1037,
         "selectorHint": ".sheet-note-action",
         "visibleCondition": "{{!gpsOk}}",
         "disabledCondition": null,
@@ -1122771,7 +1122771,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1040:bindtap:sheetNav:125",
+      "id": "pages/play/index.wxml:1041:bindtap:sheetNav:125",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1122794,7 +1122794,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "sheetNav",
-        "line": 1040,
+        "line": 1041,
         "selectorHint": ".sheet-nav",
         "visibleCondition": "{{!sheet.node.done && sheet.node.lat && !isPreview && !isMock}}",
         "disabledCondition": null,
@@ -1122848,7 +1122848,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1047:bindtap:openMerchantFromSheet:126",
+      "id": "pages/play/index.wxml:1048:bindtap:openMerchantFromSheet:126",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1122871,7 +1122871,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openMerchantFromSheet",
-        "line": 1047,
+        "line": 1048,
         "selectorHint": ".sheet-nav",
         "visibleCondition": "{{mode==2 && regId && !isPreview && !isMock}}",
         "disabledCondition": null,
@@ -1122919,7 +1122919,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1051:bindtap:openTicketFromSheet:127",
+      "id": "pages/play/index.wxml:1052:bindtap:openTicketFromSheet:127",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1122942,7 +1122942,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openTicketFromSheet",
-        "line": 1051,
+        "line": 1052,
         "selectorHint": ".sheet-nav",
         "visibleCondition": "{{sheet.node.coupon}}",
         "disabledCondition": null,
@@ -1123045,7 +1123045,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1055:bindtap:openPoiFromSheet:128",
+      "id": "pages/play/index.wxml:1056:bindtap:openPoiFromSheet:128",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1123068,7 +1123068,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openPoiFromSheet",
-        "line": 1055,
+        "line": 1056,
         "selectorHint": ".sheet-nav",
         "visibleCondition": "{{mode==2 && !sheet.node.done}}",
         "disabledCondition": null,
@@ -1123112,7 +1123112,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1066:bindtap:previewEditNode:129",
+      "id": "pages/play/index.wxml:1067:bindtap:previewEditNode:129",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1123135,7 +1123135,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "previewEditNode",
-        "line": 1066,
+        "line": 1067,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": "{{isPreview}}",
         "disabledCondition": null,
@@ -1124048,7 +1124048,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1075:bindtap:closeGame:131",
+      "id": "pages/play/index.wxml:1076:bindtap:closeGame:131",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1124071,7 +1124071,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeGame",
-        "line": 1075,
+        "line": 1076,
         "selectorHint": ".gp2mask",
         "visibleCondition": "{{screen=='gamePlay'}}",
         "disabledCondition": null,
@@ -1124126,7 +1124126,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1075:catchtouchmove:noop:130",
+      "id": "pages/play/index.wxml:1076:catchtouchmove:noop:130",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1124149,7 +1124149,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "noop",
-        "line": 1075,
+        "line": 1076,
         "selectorHint": ".gp2mask",
         "visibleCondition": "{{screen=='gamePlay'}}",
         "disabledCondition": null,
@@ -1124194,7 +1124194,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1080:bindtap:closeGame:132",
+      "id": "pages/play/index.wxml:1081:bindtap:closeGame:132",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1124217,7 +1124217,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeGame",
-        "line": 1080,
+        "line": 1081,
         "selectorHint": ".gp2__back",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1124272,7 +1124272,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1086:bindtap:toggleAudio:133",
+      "id": "pages/play/index.wxml:1087:bindtap:toggleAudio:133",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1124295,7 +1124295,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "toggleAudio",
-        "line": 1086,
+        "line": 1087,
         "selectorHint": ".gp2__audio",
         "visibleCondition": "{{game.audio}}",
         "disabledCondition": null,
@@ -1124447,7 +1124447,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1103:bindtap:previewQuestionImg:134",
+      "id": "pages/play/index.wxml:1104:bindtap:previewQuestionImg:134",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1124470,7 +1124470,7 @@
         "tag": "image",
         "event": "bindtap",
         "handler": "previewQuestionImg",
-        "line": 1103,
+        "line": 1104,
         "selectorHint": ".gp2__qimg",
         "visibleCondition": "{{game.qImg}}",
         "disabledCondition": null,
@@ -1124524,7 +1124524,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1104:bindtap:toggleQuestionAudio:135",
+      "id": "pages/play/index.wxml:1105:bindtap:toggleQuestionAudio:135",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1124547,7 +1124547,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "toggleQuestionAudio",
-        "line": 1104,
+        "line": 1105,
         "selectorHint": ".gp2__qaudio",
         "visibleCondition": "{{game.qAudio}}",
         "disabledCondition": null,
@@ -1124601,7 +1124601,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1107:bindinput:onInput:136",
+      "id": "pages/play/index.wxml:1108:bindinput:onInput:136",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1124624,7 +1124624,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onInput",
-        "line": 1107,
+        "line": 1108,
         "selectorHint": ".gp2__input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1124668,7 +1124668,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1111:bindtap:previewQuestionImg:137",
+      "id": "pages/play/index.wxml:1112:bindtap:previewQuestionImg:137",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1124691,7 +1124691,7 @@
         "tag": "image",
         "event": "bindtap",
         "handler": "previewQuestionImg",
-        "line": 1111,
+        "line": 1112,
         "selectorHint": ".gp2__qimg",
         "visibleCondition": "{{game.qImg}}",
         "disabledCondition": null,
@@ -1124745,7 +1124745,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1112:bindtap:toggleQuestionAudio:138",
+      "id": "pages/play/index.wxml:1113:bindtap:toggleQuestionAudio:138",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1124768,7 +1124768,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "toggleQuestionAudio",
-        "line": 1112,
+        "line": 1113,
         "selectorHint": ".gp2__qaudio",
         "visibleCondition": "{{game.qAudio}}",
         "disabledCondition": null,
@@ -1124822,7 +1124822,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1116:bindtap:selOpt:139",
+      "id": "pages/play/index.wxml:1117:bindtap:selOpt:139",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1124845,7 +1124845,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "selOpt",
-        "line": 1116,
+        "line": 1117,
         "selectorHint": ".gp2__opt",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1124889,7 +1124889,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1121:catchtap:toggleOptionAudio:140",
+      "id": "pages/play/index.wxml:1122:catchtap:toggleOptionAudio:140",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1124912,7 +1124912,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "toggleOptionAudio",
-        "line": 1121,
+        "line": 1122,
         "selectorHint": ".gp2__opt-audio",
         "visibleCondition": "{{item.audio}}",
         "disabledCondition": null,
@@ -1124966,7 +1124966,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1130:bindtap:retryPreference:141",
+      "id": "pages/play/index.wxml:1131:bindtap:retryPreference:141",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1124989,7 +1124989,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "retryPreference",
-        "line": 1130,
+        "line": 1131,
         "selectorHint": ".pref-error",
         "visibleCondition": "{{preference.error}}",
         "disabledCondition": null,
@@ -1125048,7 +1125048,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1145:bindtap:correctPreferenceTag:142",
+      "id": "pages/play/index.wxml:1146:bindtap:correctPreferenceTag:142",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1125071,7 +1125071,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "correctPreferenceTag",
-        "line": 1145,
+        "line": 1146,
         "selectorHint": ".pref-consent__correct",
         "visibleCondition": "{{preference.availableTagValues.length>1}}",
         "disabledCondition": null,
@@ -1125115,7 +1125115,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1147:bindtap:skipPreferenceTag:143",
+      "id": "pages/play/index.wxml:1148:bindtap:skipPreferenceTag:143",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1125138,7 +1125138,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "skipPreferenceTag",
-        "line": 1147,
+        "line": 1148,
         "selectorHint": "text[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1125182,7 +1125182,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1148:bindtap:confirmPreferenceTag:144",
+      "id": "pages/play/index.wxml:1149:bindtap:confirmPreferenceTag:144",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1125205,7 +1125205,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "confirmPreferenceTag",
-        "line": 1148,
+        "line": 1149,
         "selectorHint": ".is-primary",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1125265,7 +1125265,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1159:bindtap:useInheritedPreference:145",
+      "id": "pages/play/index.wxml:1160:bindtap:useInheritedPreference:145",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1125341,7 +1125341,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "useInheritedPreference",
-        "line": 1159,
+        "line": 1160,
         "selectorHint": ".pref-inherit__use",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1125698,7 +1125698,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1162:bindtap:answerPreferenceHere:146",
+      "id": "pages/play/index.wxml:1163:bindtap:answerPreferenceHere:146",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1125721,7 +1125721,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "answerPreferenceHere",
-        "line": 1162,
+        "line": 1163,
         "selectorHint": ".pref-inherit__again",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1125765,7 +1125765,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1173:bindtap:selectPreferenceOption:147",
+      "id": "pages/play/index.wxml:1174:bindtap:selectPreferenceOption:147",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1125788,7 +1125788,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "selectPreferenceOption",
-        "line": 1173,
+        "line": 1174,
         "selectorHint": ".pref-option",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1125832,7 +1125832,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1184:bindtap:photoGame:148",
+      "id": "pages/play/index.wxml:1185:bindtap:photoGame:148",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1125882,7 +1125882,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "photoGame",
-        "line": 1184,
+        "line": 1185,
         "selectorHint": ".gp2__photo",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1126275,7 +1126275,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1193:bindtap:retryGameSubmission:149:variant:answer",
+      "id": "pages/play/index.wxml:1194:bindtap:retryGameSubmission:149:variant:answer",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1126311,7 +1126311,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "retryGameSubmission",
-        "line": 1193,
+        "line": 1194,
         "selectorHint": ".gp2__neterr-r",
         "visibleCondition": "{{gNetRetryable}}",
         "disabledCondition": null,
@@ -1126403,7 +1126403,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1193:bindtap:retryGameSubmission:149:variant:checkin",
+      "id": "pages/play/index.wxml:1194:bindtap:retryGameSubmission:149:variant:checkin",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1126439,7 +1126439,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "retryGameSubmission",
-        "line": 1193,
+        "line": 1194,
         "selectorHint": ".gp2__neterr-r",
         "visibleCondition": "{{gNetRetryable}}",
         "disabledCondition": null,
@@ -1126531,7 +1126531,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1193:bindtap:retryGameSubmission:149:variant:photo",
+      "id": "pages/play/index.wxml:1194:bindtap:retryGameSubmission:149:variant:photo",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1126567,7 +1126567,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "retryGameSubmission",
-        "line": 1193,
+        "line": 1194,
         "selectorHint": ".gp2__neterr-r",
         "visibleCondition": "{{gNetRetryable}}",
         "disabledCondition": null,
@@ -1126659,7 +1126659,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1193:bindtap:retryGameSubmission:149:variant:reveal",
+      "id": "pages/play/index.wxml:1194:bindtap:retryGameSubmission:149:variant:reveal",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1126695,7 +1126695,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "retryGameSubmission",
-        "line": 1193,
+        "line": 1194,
         "selectorHint": ".gp2__neterr-r",
         "visibleCondition": "{{gNetRetryable}}",
         "disabledCondition": null,
@@ -1126787,7 +1126787,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1193:bindtap:retryGameSubmission:149:variant:scan",
+      "id": "pages/play/index.wxml:1194:bindtap:retryGameSubmission:149:variant:scan",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1126825,7 +1126825,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "retryGameSubmission",
-        "line": 1193,
+        "line": 1194,
         "selectorHint": ".gp2__neterr-r",
         "visibleCondition": "{{gNetRetryable}}",
         "disabledCondition": null,
@@ -1126921,7 +1126921,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1199:bindtap:useHint:150",
+      "id": "pages/play/index.wxml:1200:bindtap:useHint:150",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1126944,7 +1126944,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "useHint",
-        "line": 1199,
+        "line": 1200,
         "selectorHint": ".gp2__ctl-a",
         "visibleCondition": "{{canHint}}",
         "disabledCondition": null,
@@ -1127041,7 +1127041,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1200:bindtap:revealAnswer:151",
+      "id": "pages/play/index.wxml:1201:bindtap:revealAnswer:151",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1127089,7 +1127089,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "revealAnswer",
-        "line": 1200,
+        "line": 1201,
         "selectorHint": ".gp2__ctl-b",
         "visibleCondition": "{{canReveal}}",
         "disabledCondition": null,
@@ -1127454,7 +1127454,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1207:bindtap:scanGame:152",
+      "id": "pages/play/index.wxml:1208:bindtap:scanGame:152",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1127504,7 +1127504,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "scanGame",
-        "line": 1207,
+        "line": 1208,
         "selectorHint": ".gp2__cta",
         "visibleCondition": "{{game.vm==4}}",
         "disabledCondition": null,
@@ -1127873,7 +1127873,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1208:bindtap:photoGame:153",
+      "id": "pages/play/index.wxml:1209:bindtap:photoGame:153",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1127923,7 +1127923,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "photoGame",
-        "line": 1208,
+        "line": 1209,
         "selectorHint": ".gp2__cta",
         "visibleCondition": "{{game.vm==2}}",
         "disabledCondition": null,
@@ -1128316,7 +1128316,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1209:bindtap:finishPreferenceResult:154",
+      "id": "pages/play/index.wxml:1210:bindtap:finishPreferenceResult:154",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1128392,7 +1128392,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "finishPreferenceResult",
-        "line": 1209,
+        "line": 1210,
         "selectorHint": ".gp2__cta",
         "visibleCondition": "{{game.vm==6 && preference.result}}",
         "disabledCondition": null,
@@ -1128749,7 +1128749,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1210:bindtap:nextPreferenceStep:155",
+      "id": "pages/play/index.wxml:1211:bindtap:nextPreferenceStep:155",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1128825,7 +1128825,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "nextPreferenceStep",
-        "line": 1210,
+        "line": 1211,
         "selectorHint": ".gp2__cta",
         "visibleCondition": "{{game.vm==6 && (!preference.inheritedTags.length || preference.answerHere)}}",
         "disabledCondition": null,
@@ -1129182,7 +1129182,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1211:bindtap:submitGame:156",
+      "id": "pages/play/index.wxml:1212:bindtap:submitGame:156",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1129230,7 +1129230,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "submitGame",
-        "line": 1211,
+        "line": 1212,
         "selectorHint": ".gp2__cta",
         "visibleCondition": "{{game.vm==1 || game.vm==3}}",
         "disabledCondition": null,
@@ -1129595,7 +1129595,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1229:bindtap:closeJournal:157",
+      "id": "pages/play/index.wxml:1230:bindtap:closeJournal:157",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1129618,7 +1129618,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeJournal",
-        "line": 1229,
+        "line": 1230,
         "selectorHint": ".mask",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1129662,7 +1129662,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1230:catchtap:noop:158",
+      "id": "pages/play/index.wxml:1231:catchtap:noop:158",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1129685,7 +1129685,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "noop",
-        "line": 1230,
+        "line": 1231,
         "selectorHint": ".sheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1129730,7 +1129730,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1232:catchtap:closeJournal:159",
+      "id": "pages/play/index.wxml:1233:catchtap:closeJournal:159",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1129753,7 +1129753,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "closeJournal",
-        "line": 1232,
+        "line": 1233,
         "selectorHint": ".sheet__x",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1129797,7 +1129797,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1240:bindtap:noop:160",
+      "id": "pages/play/index.wxml:1241:bindtap:noop:160",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1129820,7 +1129820,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "noop",
-        "line": 1240,
+        "line": 1241,
         "selectorHint": ".jkv",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1129865,7 +1129865,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1240:bindtap:openStory:160",
+      "id": "pages/play/index.wxml:1241:bindtap:openStory:160",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1129888,7 +1129888,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openStory",
-        "line": 1240,
+        "line": 1241,
         "selectorHint": ".jkv",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1130365,7 +1130365,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1253:bindtap:closeFinish:162",
+      "id": "pages/play/index.wxml:1254:bindtap:closeFinish:162",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1130388,7 +1130388,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeFinish",
-        "line": 1253,
+        "line": 1254,
         "selectorHint": ".finmask",
         "visibleCondition": "{{showFinish}}",
         "disabledCondition": null,
@@ -1130436,7 +1130436,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1253:catchtouchmove:noop:161",
+      "id": "pages/play/index.wxml:1254:catchtouchmove:noop:161",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1130459,7 +1130459,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "noop",
-        "line": 1253,
+        "line": 1254,
         "selectorHint": ".finmask",
         "visibleCondition": "{{showFinish}}",
         "disabledCondition": null,
@@ -1130586,7 +1130586,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1263:bindtap:retryRouteThumb:163",
+      "id": "pages/play/index.wxml:1264:bindtap:retryRouteThumb:163",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1130609,7 +1130609,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "retryRouteThumb",
-        "line": 1263,
+        "line": 1264,
         "selectorHint": ".finsheet__map-error",
         "visibleCondition": "{{finishSnapError}}",
         "disabledCondition": null,
@@ -1130821,7 +1130821,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1325:bindtap:loadHudCharacter:164",
+      "id": "pages/play/index.wxml:1326:bindtap:loadHudCharacter:164",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1130844,7 +1130844,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "loadHudCharacter",
-        "line": 1325,
+        "line": 1326,
         "selectorHint": ".finsheet__retry-act",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1130903,7 +1130903,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1352:bindtap:revokeOsTag:165",
+      "id": "pages/play/index.wxml:1353:bindtap:revokeOsTag:165",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1130926,7 +1130926,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "revokeOsTag",
-        "line": 1352,
+        "line": 1353,
         "selectorHint": ".newos__revoke",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1131053,7 +1131053,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1381:bindtap:openThemeResultCard:166",
+      "id": "pages/play/index.wxml:1382:bindtap:openThemeResultCard:166",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1131076,7 +1131076,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openThemeResultCard",
-        "line": 1381,
+        "line": 1382,
         "selectorHint": "view[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1131143,7 +1131143,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1382:bindtap:openThemeHistory:167",
+      "id": "pages/play/index.wxml:1383:bindtap:openThemeHistory:167",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1131166,7 +1131166,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openThemeHistory",
-        "line": 1382,
+        "line": 1383,
         "selectorHint": "view[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1131225,7 +1131225,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1383:bindtap:replayThemeSession:168:variant:theme-replay",
+      "id": "pages/play/index.wxml:1384:bindtap:replayThemeSession:168:variant:theme-replay",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1131360,7 +1131360,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "replayThemeSession",
-        "line": 1383,
+        "line": 1384,
         "selectorHint": "view[bindtap]",
         "visibleCondition": "{{themeBag.replayAllowed === true}}",
         "disabledCondition": null,
@@ -1131452,7 +1131452,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1386:bindtap:openFinishJournal:169",
+      "id": "pages/play/index.wxml:1387:bindtap:openFinishJournal:169",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1131475,7 +1131475,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openFinishJournal",
-        "line": 1386,
+        "line": 1387,
         "selectorHint": ".finish-journal-entry",
         "visibleCondition": "{{canReplayJournal}}",
         "disabledCondition": null,
@@ -1131519,7 +1131519,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1394:bindtap:openScoreOverlay:170",
+      "id": "pages/play/index.wxml:1395:bindtap:openScoreOverlay:170",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1131542,7 +1131542,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openScoreOverlay",
-        "line": 1394,
+        "line": 1395,
         "selectorHint": ".finish-journal-entry",
         "visibleCondition": "{{!allDone && mode == 1 && sessStats && sessStats.state === 'ok'}}",
         "disabledCondition": null,
@@ -1131609,7 +1131609,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1399:bindtap:retryEnding:171",
+      "id": "pages/play/index.wxml:1400:bindtap:retryEnding:171",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1131632,7 +1131632,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "retryEnding",
-        "line": 1399,
+        "line": 1400,
         "selectorHint": ".finsheet__retry-act",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1131692,7 +1131692,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1400:bindtap:goFinishRouteRecommendation:172",
+      "id": "pages/play/index.wxml:1401:bindtap:goFinishRouteRecommendation:172",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1131715,7 +1131715,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goFinishRouteRecommendation",
-        "line": 1400,
+        "line": 1401,
         "selectorHint": ".finish-route-recommendation",
         "visibleCondition": "{{finishRouteRecommendation}}",
         "disabledCondition": null,
@@ -1131798,7 +1131798,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1412:bindtap:closeFinish:173",
+      "id": "pages/play/index.wxml:1413:bindtap:closeFinish:173",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1131821,7 +1131821,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeFinish",
-        "line": 1412,
+        "line": 1413,
         "selectorHint": ".finsheet__cta",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1131869,7 +1131869,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1418:bind:close:closeFinish:174",
+      "id": "pages/play/index.wxml:1419:bind:close:closeFinish:174",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1131892,7 +1131892,7 @@
         "tag": "cy-medal-screen",
         "event": "bind:close",
         "handler": "closeFinish",
-        "line": 1418,
+        "line": 1419,
         "selectorHint": "cy-medal-screen[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1131940,7 +1131940,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1418:bind:primary:saveFinishCard:175",
+      "id": "pages/play/index.wxml:1419:bind:primary:saveFinishCard:175",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1131968,7 +1131968,7 @@
         "tag": "cy-medal-screen",
         "event": "bind:primary",
         "handler": "saveFinishCard",
-        "line": 1418,
+        "line": 1419,
         "selectorHint": "cy-medal-screen[bind:primary]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1132027,7 +1132027,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1418:bind:secondary:onMedalRecords:176",
+      "id": "pages/play/index.wxml:1419:bind:secondary:onMedalRecords:176",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1132050,7 +1132050,7 @@
         "tag": "cy-medal-screen",
         "event": "bind:secondary",
         "handler": "onMedalRecords",
-        "line": 1418,
+        "line": 1419,
         "selectorHint": "cy-medal-screen[bind:secondary]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1132094,7 +1132094,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1419:bind:continue:closeFinale:177",
+      "id": "pages/play/index.wxml:1420:bind:continue:closeFinale:177",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1132117,7 +1132117,7 @@
         "tag": "cy-chapter-flip",
         "event": "bind:continue",
         "handler": "closeFinale",
-        "line": 1419,
+        "line": 1420,
         "selectorHint": "cy-chapter-flip[bind:continue]",
         "visibleCondition": "{{showFinish && finale.show}}",
         "disabledCondition": null,
@@ -1132161,7 +1132161,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1419:bind:save:saveFinale:178",
+      "id": "pages/play/index.wxml:1420:bind:save:saveFinale:178",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1132189,7 +1132189,7 @@
         "tag": "cy-chapter-flip",
         "event": "bind:save",
         "handler": "saveFinale",
-        "line": 1419,
+        "line": 1420,
         "selectorHint": "cy-chapter-flip[bind:save]",
         "visibleCondition": "{{showFinish && finale.show}}",
         "disabledCondition": null,
@@ -1132248,7 +1132248,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1423:bindtap:closeEnding:179",
+      "id": "pages/play/index.wxml:1424:bindtap:closeEnding:179",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1132271,7 +1132271,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeEnding",
-        "line": 1423,
+        "line": 1424,
         "selectorHint": ".ending__close",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1132315,7 +1132315,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1433:bindtap:saveFinishCard:180",
+      "id": "pages/play/index.wxml:1434:bindtap:saveFinishCard:180",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1132343,7 +1132343,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "saveFinishCard",
-        "line": 1433,
+        "line": 1434,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1132402,7 +1132402,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1434:bindtap:shareFinish:181",
+      "id": "pages/play/index.wxml:1435:bindtap:shareFinish:181",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1132425,7 +1132425,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "shareFinish",
-        "line": 1434,
+        "line": 1435,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": "{{communityPostWrite}}",
         "disabledCondition": null,
@@ -1132472,7 +1132472,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1439:bind:done:closeFragment:182",
+      "id": "pages/play/index.wxml:1440:bind:done:closeFragment:182",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1132495,7 +1132495,7 @@
         "tag": "cy-fragment",
         "event": "bind:done",
         "handler": "closeFragment",
-        "line": 1439,
+        "line": 1440,
         "selectorHint": "cy-fragment[bind:done]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1132536,76 +1132536,6 @@
       "evidence": {
         "status": "pending",
         "staticSource": "pages/play/index.js:7570"
-      }
-    },
-    {
-      "id": "pages/play/index.wxml:1459:bindtap:goSignup:183",
-      "route": "pages/play/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/play/index.wxml",
-        "js": "pages/play/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-btn",
-        "event": "bindtap",
-        "handler": "goSignup",
-        "line": 1459,
-        "selectorHint": "cy-btn[bindtap]",
-        "visibleCondition": "{{emptyKind=='signup'}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "tap",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "subpackageMember/signup/index"
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/play/index.js:4105"
       }
     },
     {
@@ -1132686,7 +1132616,77 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1460:bindtap:doRelogin:184",
+      "id": "pages/play/index.wxml:1460:bindtap:goSignup:183",
+      "route": "pages/play/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/play/index.wxml",
+        "js": "pages/play/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bindtap",
+        "handler": "goSignup",
+        "line": 1460,
+        "selectorHint": "cy-btn[bindtap]",
+        "visibleCondition": "{{emptyKind=='signup'}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "subpackageMember/signup/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/index.js:4105"
+      }
+    },
+    {
+      "id": "pages/play/index.wxml:1461:bindtap:doRelogin:184",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1132762,7 +1132762,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "doRelogin",
-        "line": 1460,
+        "line": 1461,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": "{{emptyKind=='auth'}}",
         "disabledCondition": null,
@@ -1133119,7 +1133119,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1462:bindtap:reloadPlay:185",
+      "id": "pages/play/index.wxml:1463:bindtap:reloadPlay:185",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1133195,7 +1133195,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "reloadPlay",
-        "line": 1462,
+        "line": 1463,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1133552,7 +1133552,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1463:bindtap:goBackDetail:186",
+      "id": "pages/play/index.wxml:1464:bindtap:goBackDetail:186",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1133575,7 +1133575,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "goBackDetail",
-        "line": 1463,
+        "line": 1464,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1133622,7 +1133622,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1466:bindtap:goBackDetail:187",
+      "id": "pages/play/index.wxml:1467:bindtap:goBackDetail:187",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1133645,7 +1133645,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "goBackDetail",
-        "line": 1466,
+        "line": 1467,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": "{{emptyKind=='missing'}}",
         "disabledCondition": null,
@@ -1133692,7 +1133692,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1468:bindtap:goGetPass:188",
+      "id": "pages/play/index.wxml:1469:bindtap:goGetPass:188",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1133715,7 +1133715,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "goGetPass",
-        "line": 1468,
+        "line": 1469,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": "{{emptyKind=='needPass'}}",
         "disabledCondition": null,
@@ -1133763,7 +1133763,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1469:bindtap:goSignup:189",
+      "id": "pages/play/index.wxml:1470:bindtap:goSignup:189",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1133786,7 +1133786,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "goSignup",
-        "line": 1469,
+        "line": 1470,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1133833,7 +1133833,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1506:bindtap:closeVoucher:190",
+      "id": "pages/play/index.wxml:1507:bindtap:closeVoucher:190",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1133856,7 +1133856,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeVoucher",
-        "line": 1506,
+        "line": 1507,
         "selectorHint": ".voucher__back",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1133900,7 +1133900,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1508:bindtap:openEntryQr:191",
+      "id": "pages/play/index.wxml:1509:bindtap:openEntryQr:191",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1133923,7 +1133923,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openEntryQr",
-        "line": 1508,
+        "line": 1509,
         "selectorHint": ".voucher__cta",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1134442,7 +1134442,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1525:bindtap:goCouponWallet:192",
+      "id": "pages/play/index.wxml:1526:bindtap:goCouponWallet:192",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1134465,7 +1134465,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goCouponWallet",
-        "line": 1525,
+        "line": 1526,
         "selectorHint": ".woo__coupon",
         "visibleCondition": "{{medal.coupon}}",
         "disabledCondition": null,
@@ -1134548,7 +1134548,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1528:bind:confirm:closeMedal:193",
+      "id": "pages/play/index.wxml:1529:bind:confirm:closeMedal:193",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1134624,7 +1134624,7 @@
         "tag": "cy-slide-confirm",
         "event": "bind:confirm",
         "handler": "closeMedal",
-        "line": 1528,
+        "line": 1529,
         "selectorHint": ".woo__cta",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1134981,7 +1134981,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1535:bind:back:onProtoSheetClose:194",
+      "id": "pages/play/index.wxml:1536:bind:back:onProtoSheetClose:194",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1135004,7 +1135004,7 @@
         "tag": "cy-back-guard",
         "event": "bind:back",
         "handler": "onProtoSheetClose",
-        "line": 1535,
+        "line": 1536,
         "selectorHint": "cy-back-guard[bind:back]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1135048,7 +1135048,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1536:catchtouchmove:blockSceneTouch:195",
+      "id": "pages/play/index.wxml:1537:catchtouchmove:blockSceneTouch:195",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1135071,7 +1135071,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 1536,
+        "line": 1537,
         "selectorHint": ".play-scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'play-activity-detail'}}",
         "disabledCondition": null,
@@ -1135116,7 +1135116,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1537:bindtap:onProtoSheetClose:196",
+      "id": "pages/play/index.wxml:1538:bindtap:onProtoSheetClose:196",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1135139,7 +1135139,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onProtoSheetClose",
-        "line": 1537,
+        "line": 1538,
         "selectorHint": ".pdim",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1135183,7 +1135183,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1538:catchtap:noop:197",
+      "id": "pages/play/index.wxml:1539:catchtap:noop:197",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1135206,7 +1135206,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "noop",
-        "line": 1538,
+        "line": 1539,
         "selectorHint": ".psheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1135251,7 +1135251,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1540:catchtap:onProtoSheetClose:198",
+      "id": "pages/play/index.wxml:1541:catchtap:onProtoSheetClose:198",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1135274,7 +1135274,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onProtoSheetClose",
-        "line": 1540,
+        "line": 1541,
         "selectorHint": ".psheet__x",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1135318,7 +1135318,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1542:bind:close:closeScene:199",
+      "id": "pages/play/index.wxml:1543:bind:close:closeScene:199",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1135341,7 +1135341,7 @@
         "tag": "cy-scene-play-activity-detail",
         "event": "bind:close",
         "handler": "closeScene",
-        "line": 1542,
+        "line": 1543,
         "selectorHint": "cy-scene-play-activity-detail[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1135385,7 +1135385,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1545:catchtouchmove:blockSceneTouch:200",
+      "id": "pages/play/index.wxml:1546:catchtouchmove:blockSceneTouch:200",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1135408,7 +1135408,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 1545,
+        "line": 1546,
         "selectorHint": ".play-scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'roam-task-list'}}",
         "disabledCondition": null,
@@ -1135453,7 +1135453,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1546:bindtap:onProtoSheetClose:201",
+      "id": "pages/play/index.wxml:1547:bindtap:onProtoSheetClose:201",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1135476,7 +1135476,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onProtoSheetClose",
-        "line": 1546,
+        "line": 1547,
         "selectorHint": ".pdim",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1135520,7 +1135520,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1547:catchtap:noop:202",
+      "id": "pages/play/index.wxml:1548:catchtap:noop:202",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1135543,7 +1135543,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "noop",
-        "line": 1547,
+        "line": 1548,
         "selectorHint": ".psheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1135588,7 +1135588,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1549:catchtap:onProtoSheetClose:203",
+      "id": "pages/play/index.wxml:1550:catchtap:onProtoSheetClose:203",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1135611,7 +1135611,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onProtoSheetClose",
-        "line": 1549,
+        "line": 1550,
         "selectorHint": ".psheet__x",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1135655,7 +1135655,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1551:bind:close:closeScene:205",
+      "id": "pages/play/index.wxml:1552:bind:close:closeScene:205",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1135678,7 +1135678,7 @@
         "tag": "cy-scene-roam-task-list",
         "event": "bind:close",
         "handler": "closeScene",
-        "line": 1551,
+        "line": 1552,
         "selectorHint": "cy-scene-roam-task-list[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1135722,7 +1135722,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1551:bind:official:openOfficialEvent:206",
+      "id": "pages/play/index.wxml:1552:bind:official:openOfficialEvent:206",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1135745,7 +1135745,7 @@
         "tag": "cy-scene-roam-task-list",
         "event": "bind:official",
         "handler": "openOfficialEvent",
-        "line": 1551,
+        "line": 1552,
         "selectorHint": "cy-scene-roam-task-list[bind:official]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1135793,7 +1135793,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1551:bind:open:openChildScene:204",
+      "id": "pages/play/index.wxml:1552:bind:open:openChildScene:204",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1135816,7 +1135816,7 @@
         "tag": "cy-scene-roam-task-list",
         "event": "bind:open",
         "handler": "openChildScene",
-        "line": 1551,
+        "line": 1552,
         "selectorHint": "cy-scene-roam-task-list[bind:open]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1135899,7 +1135899,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1554:catchtouchmove:blockSceneTouch:207",
+      "id": "pages/play/index.wxml:1555:catchtouchmove:blockSceneTouch:207",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1135922,7 +1135922,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 1554,
+        "line": 1555,
         "selectorHint": ".play-scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'roam-poi-detail'}}",
         "disabledCondition": null,
@@ -1135967,7 +1135967,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1555:bindtap:onProtoSheetClose:208",
+      "id": "pages/play/index.wxml:1556:bindtap:onProtoSheetClose:208",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1135990,7 +1135990,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onProtoSheetClose",
-        "line": 1555,
+        "line": 1556,
         "selectorHint": ".pdim",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1136034,7 +1136034,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1556:catchtap:noop:209",
+      "id": "pages/play/index.wxml:1557:catchtap:noop:209",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1136057,7 +1136057,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "noop",
-        "line": 1556,
+        "line": 1557,
         "selectorHint": ".psheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1136102,7 +1136102,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1558:catchtap:onProtoSheetClose:210",
+      "id": "pages/play/index.wxml:1559:catchtap:onProtoSheetClose:210",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1136125,7 +1136125,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onProtoSheetClose",
-        "line": 1558,
+        "line": 1559,
         "selectorHint": ".psheet__x",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1136169,7 +1136169,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1560:bind:citystamp:openCityStamp:213",
+      "id": "pages/play/index.wxml:1561:bind:citystamp:openCityStamp:213",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1136192,7 +1136192,7 @@
         "tag": "cy-scene-roam-poi-detail",
         "event": "bind:citystamp",
         "handler": "openCityStamp",
-        "line": 1560,
+        "line": 1561,
         "selectorHint": "cy-scene-roam-poi-detail[bind:citystamp]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1136240,7 +1136240,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1560:bind:close:closeScene:212",
+      "id": "pages/play/index.wxml:1561:bind:close:closeScene:212",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1136263,7 +1136263,7 @@
         "tag": "cy-scene-roam-poi-detail",
         "event": "bind:close",
         "handler": "closeScene",
-        "line": 1560,
+        "line": 1561,
         "selectorHint": "cy-scene-roam-poi-detail[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1136307,7 +1136307,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1560:bind:open:openChildScene:211",
+      "id": "pages/play/index.wxml:1561:bind:open:openChildScene:211",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1136330,7 +1136330,7 @@
         "tag": "cy-scene-roam-poi-detail",
         "event": "bind:open",
         "handler": "openChildScene",
-        "line": 1560,
+        "line": 1561,
         "selectorHint": "cy-scene-roam-poi-detail[bind:open]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1136413,7 +1136413,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1563:catchtouchmove:blockSceneTouch:214",
+      "id": "pages/play/index.wxml:1564:catchtouchmove:blockSceneTouch:214",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1136436,7 +1136436,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 1563,
+        "line": 1564,
         "selectorHint": ".play-scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'roam-discover'}}",
         "disabledCondition": null,
@@ -1136481,7 +1136481,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1564:bindtap:onProtoSheetClose:215",
+      "id": "pages/play/index.wxml:1565:bindtap:onProtoSheetClose:215",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1136504,7 +1136504,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onProtoSheetClose",
-        "line": 1564,
+        "line": 1565,
         "selectorHint": ".pdim",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1136548,7 +1136548,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1565:catchtap:noop:216",
+      "id": "pages/play/index.wxml:1566:catchtap:noop:216",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1136571,7 +1136571,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "noop",
-        "line": 1565,
+        "line": 1566,
         "selectorHint": ".psheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1136616,7 +1136616,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1567:catchtap:onProtoSheetClose:217",
+      "id": "pages/play/index.wxml:1568:catchtap:onProtoSheetClose:217",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1136639,7 +1136639,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onProtoSheetClose",
-        "line": 1567,
+        "line": 1568,
         "selectorHint": ".psheet__x",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1136683,7 +1136683,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1569:bind:close:closeScene:219",
+      "id": "pages/play/index.wxml:1570:bind:close:closeScene:219",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1136706,7 +1136706,7 @@
         "tag": "cy-scene-roam-discover",
         "event": "bind:close",
         "handler": "closeScene",
-        "line": 1569,
+        "line": 1570,
         "selectorHint": "cy-scene-roam-discover[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1136750,7 +1136750,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1569:bind:open:openChildScene:218",
+      "id": "pages/play/index.wxml:1570:bind:open:openChildScene:218",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1136773,7 +1136773,7 @@
         "tag": "cy-scene-roam-discover",
         "event": "bind:open",
         "handler": "openChildScene",
-        "line": 1569,
+        "line": 1570,
         "selectorHint": "cy-scene-roam-discover[bind:open]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1136856,7 +1136856,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1572:catchtouchmove:blockSceneTouch:220",
+      "id": "pages/play/index.wxml:1573:catchtouchmove:blockSceneTouch:220",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1136879,7 +1136879,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 1572,
+        "line": 1573,
         "selectorHint": ".play-scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'roam-history'}}",
         "disabledCondition": null,
@@ -1136924,7 +1136924,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1573:bindtap:onProtoSheetClose:221",
+      "id": "pages/play/index.wxml:1574:bindtap:onProtoSheetClose:221",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1136947,7 +1136947,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onProtoSheetClose",
-        "line": 1573,
+        "line": 1574,
         "selectorHint": ".pdim",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1136991,7 +1136991,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1574:catchtap:noop:222",
+      "id": "pages/play/index.wxml:1575:catchtap:noop:222",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1137014,7 +1137014,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "noop",
-        "line": 1574,
+        "line": 1575,
         "selectorHint": ".psheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1137059,7 +1137059,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1576:catchtap:onProtoSheetClose:223",
+      "id": "pages/play/index.wxml:1577:catchtap:onProtoSheetClose:223",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1137082,7 +1137082,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onProtoSheetClose",
-        "line": 1576,
+        "line": 1577,
         "selectorHint": ".psheet__x",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1137126,7 +1137126,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1578:bind:close:closeScene:225",
+      "id": "pages/play/index.wxml:1579:bind:close:closeScene:225",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1137149,7 +1137149,7 @@
         "tag": "cy-scene-roam-history",
         "event": "bind:close",
         "handler": "closeScene",
-        "line": 1578,
+        "line": 1579,
         "selectorHint": "cy-scene-roam-history[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1137193,7 +1137193,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1578:bind:open:openChildScene:224",
+      "id": "pages/play/index.wxml:1579:bind:open:openChildScene:224",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1137216,7 +1137216,7 @@
         "tag": "cy-scene-roam-history",
         "event": "bind:open",
         "handler": "openChildScene",
-        "line": 1578,
+        "line": 1579,
         "selectorHint": "cy-scene-roam-history[bind:open]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1137299,7 +1137299,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1581:catchtouchmove:blockSceneTouch:226",
+      "id": "pages/play/index.wxml:1582:catchtouchmove:blockSceneTouch:226",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1137322,7 +1137322,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 1581,
+        "line": 1582,
         "selectorHint": ".play-scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'roam-session'}}",
         "disabledCondition": null,
@@ -1137367,7 +1137367,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1582:bindtap:onProtoSheetClose:227",
+      "id": "pages/play/index.wxml:1583:bindtap:onProtoSheetClose:227",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1137390,7 +1137390,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onProtoSheetClose",
-        "line": 1582,
+        "line": 1583,
         "selectorHint": ".pdim",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1137434,7 +1137434,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1583:catchtap:noop:228",
+      "id": "pages/play/index.wxml:1584:catchtap:noop:228",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1137457,7 +1137457,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "noop",
-        "line": 1583,
+        "line": 1584,
         "selectorHint": ".psheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1137502,7 +1137502,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1585:catchtap:onProtoSheetClose:229",
+      "id": "pages/play/index.wxml:1586:catchtap:onProtoSheetClose:229",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1137525,7 +1137525,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onProtoSheetClose",
-        "line": 1585,
+        "line": 1586,
         "selectorHint": ".psheet__x",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1137569,7 +1137569,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1587:bind:close:closeScene:231",
+      "id": "pages/play/index.wxml:1588:bind:close:closeScene:231",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1137592,7 +1137592,7 @@
         "tag": "cy-scene-roam-session",
         "event": "bind:close",
         "handler": "closeScene",
-        "line": 1587,
+        "line": 1588,
         "selectorHint": "cy-scene-roam-session[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1137636,7 +1137636,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1587:bind:share:onSceneSessionShare:230",
+      "id": "pages/play/index.wxml:1588:bind:share:onSceneSessionShare:230",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1137659,7 +1137659,7 @@
         "tag": "cy-scene-roam-session",
         "event": "bind:share",
         "handler": "onSceneSessionShare",
-        "line": 1587,
+        "line": 1588,
         "selectorHint": "cy-scene-roam-session[bind:share]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1137713,7 +1137713,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1590:catchtouchmove:blockSceneTouch:232",
+      "id": "pages/play/index.wxml:1591:catchtouchmove:blockSceneTouch:232",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1137736,7 +1137736,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 1590,
+        "line": 1591,
         "selectorHint": ".play-scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'game-coupon-wallet'}}",
         "disabledCondition": null,
@@ -1137781,7 +1137781,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1591:bindtap:onProtoSheetClose:233",
+      "id": "pages/play/index.wxml:1592:bindtap:onProtoSheetClose:233",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1137804,7 +1137804,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onProtoSheetClose",
-        "line": 1591,
+        "line": 1592,
         "selectorHint": ".pdim",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1137848,7 +1137848,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1592:catchtap:noop:234",
+      "id": "pages/play/index.wxml:1593:catchtap:noop:234",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1137871,7 +1137871,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "noop",
-        "line": 1592,
+        "line": 1593,
         "selectorHint": ".psheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1137916,7 +1137916,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1594:catchtap:onProtoSheetClose:235",
+      "id": "pages/play/index.wxml:1595:catchtap:onProtoSheetClose:235",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1137939,7 +1137939,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onProtoSheetClose",
-        "line": 1594,
+        "line": 1595,
         "selectorHint": ".psheet__x",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1137983,7 +1137983,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1596:bind:close:closeScene:237",
+      "id": "pages/play/index.wxml:1597:bind:close:closeScene:237",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1138006,7 +1138006,7 @@
         "tag": "cy-scene-game-coupon-wallet",
         "event": "bind:close",
         "handler": "closeScene",
-        "line": 1596,
+        "line": 1597,
         "selectorHint": "cy-scene-game-coupon-wallet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1138050,7 +1138050,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1596:bind:open:openChildScene:236",
+      "id": "pages/play/index.wxml:1597:bind:open:openChildScene:236",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1138073,7 +1138073,7 @@
         "tag": "cy-scene-game-coupon-wallet",
         "event": "bind:open",
         "handler": "openChildScene",
-        "line": 1596,
+        "line": 1597,
         "selectorHint": "cy-scene-game-coupon-wallet[bind:open]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1138156,7 +1138156,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1599:catchtouchmove:blockSceneTouch:238",
+      "id": "pages/play/index.wxml:1600:catchtouchmove:blockSceneTouch:238",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1138179,7 +1138179,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 1599,
+        "line": 1600,
         "selectorHint": ".play-scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'qr-coupon'}}",
         "disabledCondition": null,
@@ -1138224,7 +1138224,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1600:bindtap:onProtoSheetClose:239",
+      "id": "pages/play/index.wxml:1601:bindtap:onProtoSheetClose:239",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1138247,7 +1138247,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onProtoSheetClose",
-        "line": 1600,
+        "line": 1601,
         "selectorHint": ".pdim",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1138291,7 +1138291,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1601:catchtap:noop:240",
+      "id": "pages/play/index.wxml:1602:catchtap:noop:240",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1138314,7 +1138314,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "noop",
-        "line": 1601,
+        "line": 1602,
         "selectorHint": ".psheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1138359,7 +1138359,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1603:catchtap:onProtoSheetClose:241",
+      "id": "pages/play/index.wxml:1604:catchtap:onProtoSheetClose:241",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1138382,7 +1138382,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onProtoSheetClose",
-        "line": 1603,
+        "line": 1604,
         "selectorHint": ".psheet__x",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1138426,7 +1138426,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1605:bind:close:backScene:242",
+      "id": "pages/play/index.wxml:1606:bind:close:backScene:242",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1138449,7 +1138449,7 @@
         "tag": "cy-scene-qr-coupon",
         "event": "bind:close",
         "handler": "backScene",
-        "line": 1605,
+        "line": 1606,
         "selectorHint": "cy-scene-qr-coupon[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1138493,7 +1138493,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1608:catchtouchmove:blockSceneTouch:243",
+      "id": "pages/play/index.wxml:1609:catchtouchmove:blockSceneTouch:243",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1138516,7 +1138516,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 1608,
+        "line": 1609,
         "selectorHint": ".play-scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'qr-group-code'}}",
         "disabledCondition": null,
@@ -1138561,7 +1138561,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1609:bindtap:onProtoSheetClose:244",
+      "id": "pages/play/index.wxml:1610:bindtap:onProtoSheetClose:244",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1138584,7 +1138584,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onProtoSheetClose",
-        "line": 1609,
+        "line": 1610,
         "selectorHint": ".pdim",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1138628,7 +1138628,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1610:catchtap:noop:245",
+      "id": "pages/play/index.wxml:1611:catchtap:noop:245",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1138651,7 +1138651,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "noop",
-        "line": 1610,
+        "line": 1611,
         "selectorHint": ".psheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1138696,7 +1138696,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1612:catchtap:onProtoSheetClose:246",
+      "id": "pages/play/index.wxml:1613:catchtap:onProtoSheetClose:246",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1138719,7 +1138719,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onProtoSheetClose",
-        "line": 1612,
+        "line": 1613,
         "selectorHint": ".psheet__x",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1138763,7 +1138763,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1614:bind:close:backScene:247",
+      "id": "pages/play/index.wxml:1615:bind:close:backScene:247",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1138786,7 +1138786,7 @@
         "tag": "cy-scene-qr-group-code",
         "event": "bind:close",
         "handler": "backScene",
-        "line": 1614,
+        "line": 1615,
         "selectorHint": "cy-scene-qr-group-code[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1138830,7 +1138830,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1617:catchtouchmove:blockSceneTouch:248",
+      "id": "pages/play/index.wxml:1618:catchtouchmove:blockSceneTouch:248",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1138853,7 +1138853,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 1617,
+        "line": 1618,
         "selectorHint": ".play-scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'qr-citynode'}}",
         "disabledCondition": null,
@@ -1138898,7 +1138898,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1618:bindtap:onProtoSheetClose:249",
+      "id": "pages/play/index.wxml:1619:bindtap:onProtoSheetClose:249",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1138921,7 +1138921,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onProtoSheetClose",
-        "line": 1618,
+        "line": 1619,
         "selectorHint": ".pdim",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1138965,7 +1138965,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1619:catchtap:noop:250",
+      "id": "pages/play/index.wxml:1620:catchtap:noop:250",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1138988,7 +1138988,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "noop",
-        "line": 1619,
+        "line": 1620,
         "selectorHint": ".psheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1139033,7 +1139033,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1621:catchtap:onProtoSheetClose:251",
+      "id": "pages/play/index.wxml:1622:catchtap:onProtoSheetClose:251",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1139056,7 +1139056,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onProtoSheetClose",
-        "line": 1621,
+        "line": 1622,
         "selectorHint": ".psheet__x",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1139100,7 +1139100,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1623:bind:close:backScene:252",
+      "id": "pages/play/index.wxml:1624:bind:close:backScene:252",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1139123,7 +1139123,7 @@
         "tag": "cy-scene-qr-citynode",
         "event": "bind:close",
         "handler": "backScene",
-        "line": 1623,
+        "line": 1624,
         "selectorHint": "cy-scene-qr-citynode[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1139167,7 +1139167,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1627:catchtouchmove:blockSceneTouch:253",
+      "id": "pages/play/index.wxml:1628:catchtouchmove:blockSceneTouch:253",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1139190,7 +1139190,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 1627,
+        "line": 1628,
         "selectorHint": ".play-scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'qr-ticket'}}",
         "disabledCondition": null,
@@ -1139235,7 +1139235,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1628:bindtap:onProtoSheetClose:254",
+      "id": "pages/play/index.wxml:1629:bindtap:onProtoSheetClose:254",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1139258,7 +1139258,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onProtoSheetClose",
-        "line": 1628,
+        "line": 1629,
         "selectorHint": ".pdim",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1139302,7 +1139302,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1629:catchtap:noop:255",
+      "id": "pages/play/index.wxml:1630:catchtap:noop:255",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1139325,7 +1139325,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "noop",
-        "line": 1629,
+        "line": 1630,
         "selectorHint": ".psheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1139370,7 +1139370,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1631:catchtap:onProtoSheetClose:256",
+      "id": "pages/play/index.wxml:1632:catchtap:onProtoSheetClose:256",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1139393,7 +1139393,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onProtoSheetClose",
-        "line": 1631,
+        "line": 1632,
         "selectorHint": ".psheet__x",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1139437,7 +1139437,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1633:bind:close:backScene:257",
+      "id": "pages/play/index.wxml:1634:bind:close:backScene:257",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1139460,7 +1139460,7 @@
         "tag": "cy-scene-qr-ticket",
         "event": "bind:close",
         "handler": "backScene",
-        "line": 1633,
+        "line": 1634,
         "selectorHint": "cy-scene-qr-ticket[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1139504,7 +1139504,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1633:bind:redeemed:onTicketRedeemed:258",
+      "id": "pages/play/index.wxml:1634:bind:redeemed:onTicketRedeemed:258",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1139580,7 +1139580,7 @@
         "tag": "cy-scene-qr-ticket",
         "event": "bind:redeemed",
         "handler": "onTicketRedeemed",
-        "line": 1633,
+        "line": 1634,
         "selectorHint": "cy-scene-qr-ticket[bind:redeemed]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1139937,7 +1139937,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1636:catchtouchmove:blockSceneTouch:259",
+      "id": "pages/play/index.wxml:1637:catchtouchmove:blockSceneTouch:259",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1139960,7 +1139960,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 1636,
+        "line": 1637,
         "selectorHint": ".play-scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'roam-stamp-album'}}",
         "disabledCondition": null,
@@ -1140005,7 +1140005,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1637:bindtap:onProtoSheetClose:260",
+      "id": "pages/play/index.wxml:1638:bindtap:onProtoSheetClose:260",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1140028,7 +1140028,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onProtoSheetClose",
-        "line": 1637,
+        "line": 1638,
         "selectorHint": ".pdim",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1140072,7 +1140072,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1638:catchtap:noop:261",
+      "id": "pages/play/index.wxml:1639:catchtap:noop:261",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1140095,7 +1140095,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "noop",
-        "line": 1638,
+        "line": 1639,
         "selectorHint": ".psheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1140207,7 +1140207,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1640:catchtap:onProtoSheetClose:262",
+      "id": "pages/play/index.wxml:1641:catchtap:onProtoSheetClose:262",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1140230,7 +1140230,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onProtoSheetClose",
-        "line": 1640,
+        "line": 1641,
         "selectorHint": ".psheet__x",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1140274,7 +1140274,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1642:bind:camera:openStampCameraFromScene:263",
+      "id": "pages/play/index.wxml:1643:bind:camera:openStampCameraFromScene:263",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1140297,7 +1140297,7 @@
         "tag": "cy-scene-roam-stamp-album",
         "event": "bind:camera",
         "handler": "openStampCameraFromScene",
-        "line": 1642,
+        "line": 1643,
         "selectorHint": "cy-scene-roam-stamp-album[bind:camera]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1140345,7 +1140345,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1642:bind:close:closeScene:264",
+      "id": "pages/play/index.wxml:1643:bind:close:closeScene:264",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1140368,7 +1140368,7 @@
         "tag": "cy-scene-roam-stamp-album",
         "event": "bind:close",
         "handler": "closeScene",
-        "line": 1642,
+        "line": 1643,
         "selectorHint": "cy-scene-roam-stamp-album[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1140412,7 +1140412,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1645:bind:cancel:cancelSceneDiscard:266",
+      "id": "pages/play/index.wxml:1646:bind:cancel:cancelSceneDiscard:266",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1140435,7 +1140435,7 @@
         "tag": "cy-modal",
         "event": "bind:cancel",
         "handler": "cancelSceneDiscard",
-        "line": 1645,
+        "line": 1646,
         "selectorHint": "cy-modal[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1140479,7 +1140479,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1645:bind:confirm:confirmSceneDiscard:265",
+      "id": "pages/play/index.wxml:1646:bind:confirm:confirmSceneDiscard:265",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1140502,7 +1140502,7 @@
         "tag": "cy-modal",
         "event": "bind:confirm",
         "handler": "confirmSceneDiscard",
-        "line": 1645,
+        "line": 1646,
         "selectorHint": "cy-modal[bind:confirm]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1140546,7 +1140546,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1657:bind:close:closeStory:267",
+      "id": "pages/play/index.wxml:1658:bind:close:closeStory:267",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1140569,7 +1140569,7 @@
         "tag": "cy-story-sheet",
         "event": "bind:close",
         "handler": "closeStory",
-        "line": 1657,
+        "line": 1658,
         "selectorHint": "cy-story-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1140613,7 +1140613,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1661:bind:settled:onPrivacyGateSettled:268",
+      "id": "pages/play/index.wxml:1662:bind:settled:onPrivacyGateSettled:268",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1140636,7 +1140636,7 @@
         "tag": "cy-privacy-gate",
         "event": "bind:settled",
         "handler": "onPrivacyGateSettled",
-        "line": 1661,
+        "line": 1662,
         "selectorHint": "cy-privacy-gate[bind:settled]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1140680,7 +1140680,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1665:bindtap:closeRoleCard:270",
+      "id": "pages/play/index.wxml:1666:bindtap:closeRoleCard:270",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1140703,7 +1140703,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeRoleCard",
-        "line": 1665,
+        "line": 1666,
         "selectorHint": ".rolemask",
         "visibleCondition": "{{roleCard.show}}",
         "disabledCondition": null,
@@ -1140747,7 +1140747,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1665:catchtouchmove:noop:269",
+      "id": "pages/play/index.wxml:1666:catchtouchmove:noop:269",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1140770,7 +1140770,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "noop",
-        "line": 1665,
+        "line": 1666,
         "selectorHint": ".rolemask",
         "visibleCondition": "{{roleCard.show}}",
         "disabledCondition": null,
@@ -1140815,7 +1140815,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1668:bind:kitaction:onPlayKitAction:271",
+      "id": "pages/play/index.wxml:1669:bind:kitaction:onPlayKitAction:271",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1141010,7 +1141010,7 @@
         "tag": "cy-playkit",
         "event": "bind:kitaction",
         "handler": "onPlayKitAction",
-        "line": 1668,
+        "line": 1669,
         "selectorHint": "#playKit",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1141211,7 +1141211,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1669:bind:close:closeR5Verdict:272",
+      "id": "pages/play/index.wxml:1670:bind:close:closeR5Verdict:272",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1141234,7 +1141234,7 @@
         "tag": "cy-play-verdict",
         "event": "bind:close",
         "handler": "closeR5Verdict",
-        "line": 1669,
+        "line": 1670,
         "selectorHint": "cy-play-verdict[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1141278,7 +1141278,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1677:bind:action:onJourneyCheckAction:273",
+      "id": "pages/play/index.wxml:1678:bind:action:onJourneyCheckAction:273",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1141301,7 +1141301,7 @@
         "tag": "cy-playkit-journey-check",
         "event": "bind:action",
         "handler": "onJourneyCheckAction",
-        "line": 1677,
+        "line": 1678,
         "selectorHint": "cy-playkit-journey-check[bind:action]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1141346,7 +1141346,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1677:bind:close:closeJourneyCheck:274",
+      "id": "pages/play/index.wxml:1678:bind:close:closeJourneyCheck:274",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1141422,7 +1141422,7 @@
         "tag": "cy-playkit-journey-check",
         "event": "bind:close",
         "handler": "closeJourneyCheck",
-        "line": 1677,
+        "line": 1678,
         "selectorHint": "cy-playkit-journey-check[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1141779,7 +1141779,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1686:bindtap:confirmPlayerRole:275",
+      "id": "pages/play/index.wxml:1687:bindtap:confirmPlayerRole:275",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1141855,7 +1141855,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "confirmPlayerRole",
-        "line": 1686,
+        "line": 1687,
         "selectorHint": ".rolecard__cta",
         "visibleCondition": "{{roleCard.confirmed || (gameModule.enabled && gameModule.activityId)}}",
         "disabledCondition": null,
@@ -1142212,7 +1142212,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1692:bindtap:retryGameModule:276",
+      "id": "pages/play/index.wxml:1693:bindtap:retryGameModule:276",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1142288,7 +1142288,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "retryGameModule",
-        "line": 1692,
+        "line": 1693,
         "selectorHint": ".rolecard__retry",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1142645,7 +1142645,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1694:bindtap:retryPlayerUnknownWrite:277",
+      "id": "pages/play/index.wxml:1695:bindtap:retryPlayerUnknownWrite:277",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1142721,7 +1142721,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "retryPlayerUnknownWrite",
-        "line": 1694,
+        "line": 1695,
         "selectorHint": ".rolecard__retry",
         "visibleCondition": "{{gameModule.write.status === 'unknown' && gameModule.write.canRetry}}",
         "disabledCondition": null,
@@ -1143078,7 +1143078,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1699:bindtap:closeGameModule:278",
+      "id": "pages/play/index.wxml:1700:bindtap:closeGameModule:278",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1143101,7 +1143101,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeGameModule",
-        "line": 1699,
+        "line": 1700,
         "selectorHint": ".mask",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1143145,7 +1143145,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1700:catchtap:noop:279",
+      "id": "pages/play/index.wxml:1701:catchtap:noop:279",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1143168,7 +1143168,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "noop",
-        "line": 1700,
+        "line": 1701,
         "selectorHint": ".sheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1143213,7 +1143213,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1702:catchtap:closeGameModule:280",
+      "id": "pages/play/index.wxml:1703:catchtap:closeGameModule:280",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1143236,7 +1143236,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "closeGameModule",
-        "line": 1702,
+        "line": 1703,
         "selectorHint": ".sheet__x",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1143280,7 +1143280,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1709:bindtap:retryGameModule:281",
+      "id": "pages/play/index.wxml:1710:bindtap:retryGameModule:281",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1143356,7 +1143356,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "retryGameModule",
-        "line": 1709,
+        "line": 1710,
         "selectorHint": ".gmod__retry",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1143713,7 +1143713,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1715:bindtap:retryGameModule:282",
+      "id": "pages/play/index.wxml:1716:bindtap:retryGameModule:282",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1143789,7 +1143789,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "retryGameModule",
-        "line": 1715,
+        "line": 1716,
         "selectorHint": ".gmod__retry",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1144146,7 +1144146,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1725:bindtap:reconcilePlayerChoice:283",
+      "id": "pages/play/index.wxml:1726:bindtap:reconcilePlayerChoice:283",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1144222,7 +1144222,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "reconcilePlayerChoice",
-        "line": 1725,
+        "line": 1726,
         "selectorHint": ".gmod__reconcile",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1144579,7 +1144579,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1727:bindtap:retryPlayerUnknownWrite:284",
+      "id": "pages/play/index.wxml:1728:bindtap:retryPlayerUnknownWrite:284",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1144655,7 +1144655,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "retryPlayerUnknownWrite",
-        "line": 1727,
+        "line": 1728,
         "selectorHint": ".gmod__reconcile",
         "visibleCondition": "{{gameModule.write.canRetry}}",
         "disabledCondition": null,
@@ -1145012,7 +1145012,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1786:bindtap:requestPlayerHint:285",
+      "id": "pages/play/index.wxml:1787:bindtap:requestPlayerHint:285",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1145088,7 +1145088,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "requestPlayerHint",
-        "line": 1786,
+        "line": 1787,
         "selectorHint": ".gmod__task-capture",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1145446,7 +1145446,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1794:bindtap:requestPlayerReveal:286",
+      "id": "pages/play/index.wxml:1795:bindtap:requestPlayerReveal:286",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1145522,7 +1145522,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "requestPlayerReveal",
-        "line": 1794,
+        "line": 1795,
         "selectorHint": ".gmod__task-capture",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1145880,7 +1145880,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1803:bindinput:onPlayerTaskTextInput:287",
+      "id": "pages/play/index.wxml:1804:bindinput:onPlayerTaskTextInput:287",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1145903,7 +1145903,7 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "onPlayerTaskTextInput",
-        "line": 1803,
+        "line": 1804,
         "selectorHint": ".gmod__task-text",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1145947,7 +1145947,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1808:bindtap:scanPlayerTaskEvidence:288",
+      "id": "pages/play/index.wxml:1809:bindtap:scanPlayerTaskEvidence:288",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1145973,7 +1145973,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "scanPlayerTaskEvidence",
-        "line": 1808,
+        "line": 1809,
         "selectorHint": ".gmod__task-capture",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1146106,7 +1146106,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1815:bindtap:photoPlayerTaskEvidence:289",
+      "id": "pages/play/index.wxml:1816:bindtap:photoPlayerTaskEvidence:289",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1146132,7 +1146132,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "photoPlayerTaskEvidence",
-        "line": 1815,
+        "line": 1816,
         "selectorHint": ".gmod__task-capture",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1146227,7 +1146227,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1832:bindtap:submitPlayerTask:290",
+      "id": "pages/play/index.wxml:1833:bindtap:submitPlayerTask:290",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1146303,7 +1146303,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "submitPlayerTask",
-        "line": 1832,
+        "line": 1833,
         "selectorHint": ".gmod__task-submit",
         "visibleCondition": "{{gameModule.canSubmitTask && item.playerTask.inputType && (!item.submission || item.submission.status === 'REJECTED')}}",
         "disabledCondition": null,
@@ -1146660,7 +1146660,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1840:bindtap:submitPlayerChoice:291",
+      "id": "pages/play/index.wxml:1841:bindtap:submitPlayerChoice:291",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1146736,7 +1146736,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "submitPlayerChoice",
-        "line": 1840,
+        "line": 1841,
         "selectorHint": ".gmod__choice",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1147093,7 +1147093,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1859:bindtap:closeBoard:292",
+      "id": "pages/play/index.wxml:1860:bindtap:closeBoard:292",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1147116,7 +1147116,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeBoard",
-        "line": 1859,
+        "line": 1860,
         "selectorHint": ".mask",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1147160,7 +1147160,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1860:catchtap:noop:293",
+      "id": "pages/play/index.wxml:1861:catchtap:noop:293",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1147183,7 +1147183,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "noop",
-        "line": 1860,
+        "line": 1861,
         "selectorHint": ".sheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1147228,7 +1147228,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1862:catchtap:closeBoard:294",
+      "id": "pages/play/index.wxml:1863:catchtap:closeBoard:294",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1147251,7 +1147251,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "closeBoard",
-        "line": 1862,
+        "line": 1863,
         "selectorHint": ".sheet__x",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1147295,7 +1147295,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1868:bindtap:openBoard:295",
+      "id": "pages/play/index.wxml:1869:bindtap:openBoard:295",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1147318,7 +1147318,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "openBoard",
-        "line": 1868,
+        "line": 1869,
         "selectorHint": ".board__retry",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1147385,7 +1147385,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1885:bind:cancel:onTagSheetCancel:297",
+      "id": "pages/play/index.wxml:1886:bind:cancel:onTagSheetCancel:297",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1147408,7 +1147408,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:cancel",
         "handler": "onTagSheetCancel",
-        "line": 1885,
+        "line": 1886,
         "selectorHint": "cy-option-sheet[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1147452,7 +1147452,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1885:bind:select:onTagSheetSelect:296",
+      "id": "pages/play/index.wxml:1886:bind:select:onTagSheetSelect:296",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1147475,7 +1147475,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onTagSheetSelect",
-        "line": 1885,
+        "line": 1886,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1147534,7 +1147534,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1891:bind:close:closeAlbum:298",
+      "id": "pages/play/index.wxml:1892:bind:close:closeAlbum:298",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1147557,7 +1147557,7 @@
         "tag": "cy-playkit-album",
         "event": "bind:close",
         "handler": "closeAlbum",
-        "line": 1891,
+        "line": 1892,
         "selectorHint": "cy-playkit-album[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1147601,7 +1147601,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1893:bind:checkreplay:checkThemeReplay:304",
+      "id": "pages/play/index.wxml:1894:bind:checkreplay:checkThemeReplay:304",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1147624,7 +1147624,7 @@
         "tag": "cy-theme-records",
         "event": "bind:checkreplay",
         "handler": "checkThemeReplay",
-        "line": 1893,
+        "line": 1894,
         "selectorHint": "cy-theme-records[bind:checkreplay]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1147701,7 +1147701,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1893:bind:closecard:closeThemeResultCard:302",
+      "id": "pages/play/index.wxml:1894:bind:closecard:closeThemeResultCard:302",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1147724,7 +1147724,7 @@
         "tag": "cy-theme-records",
         "event": "bind:closecard",
         "handler": "closeThemeResultCard",
-        "line": 1893,
+        "line": 1894,
         "selectorHint": "cy-theme-records[bind:closecard]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1147768,7 +1147768,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1893:bind:closehistory:closeThemeHistory:299",
+      "id": "pages/play/index.wxml:1894:bind:closehistory:closeThemeHistory:299",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1147791,7 +1147791,7 @@
         "tag": "cy-theme-records",
         "event": "bind:closehistory",
         "handler": "closeThemeHistory",
-        "line": 1893,
+        "line": 1894,
         "selectorHint": "cy-theme-records[bind:closehistory]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1147835,7 +1147835,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1893:bind:morehistory:loadMoreThemeHistory:300",
+      "id": "pages/play/index.wxml:1894:bind:morehistory:loadMoreThemeHistory:300",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1147858,7 +1147858,7 @@
         "tag": "cy-theme-records",
         "event": "bind:morehistory",
         "handler": "loadMoreThemeHistory",
-        "line": 1893,
+        "line": 1894,
         "selectorHint": "cy-theme-records[bind:morehistory]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1147917,7 +1147917,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1893:bind:opencard:openThemeRecordCard:301",
+      "id": "pages/play/index.wxml:1894:bind:opencard:openThemeRecordCard:301",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1147940,7 +1147940,7 @@
         "tag": "cy-theme-records",
         "event": "bind:opencard",
         "handler": "openThemeRecordCard",
-        "line": 1893,
+        "line": 1894,
         "selectorHint": "cy-theme-records[bind:opencard]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1148007,7 +1148007,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1893:bind:replay:replayThemeSession:303:variant:theme-replay",
+      "id": "pages/play/index.wxml:1894:bind:replay:replayThemeSession:303:variant:theme-replay",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1148142,7 +1148142,7 @@
         "tag": "cy-theme-records",
         "event": "bind:replay",
         "handler": "replayThemeSession",
-        "line": 1893,
+        "line": 1894,
         "selectorHint": "cy-theme-records[bind:replay]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1148234,7 +1148234,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1893:bind:retrycard:retryThemeResultCard:305",
+      "id": "pages/play/index.wxml:1894:bind:retrycard:retryThemeResultCard:305",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1148310,7 +1148310,7 @@
         "tag": "cy-theme-records",
         "event": "bind:retrycard",
         "handler": "retryThemeResultCard",
-        "line": 1893,
+        "line": 1894,
         "selectorHint": "cy-theme-records[bind:retrycard]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1155101,7 +1155101,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:304:bindtap:leadBroadcastFromTools:46",
+      "id": "pages/play/index.wxml:305:bindtap:leadBroadcastFromTools:46",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1155137,9 +1155137,9 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "leadBroadcastFromTools",
-        "line": 304,
+        "line": 305,
         "selectorHint": ".drow",
-        "visibleCondition": "{{lead.exists}}",
+        "visibleCondition": "{{lead.exists && !lead.freeEntry}}",
         "disabledCondition": null,
         "ariaLabel": "队伍位置",
         "ariaLabelExpression": null,
@@ -1155501,7 +1155501,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:310:bindtap:leadVerifyMemberTicketFromTools:47",
+      "id": "pages/play/index.wxml:311:bindtap:leadVerifyMemberTicketFromTools:47",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1155527,7 +1155527,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "leadVerifyMemberTicketFromTools",
-        "line": 310,
+        "line": 311,
         "selectorHint": ".drow",
         "visibleCondition": "{{lead.exists && lead.isLeader}}",
         "disabledCondition": null,
@@ -1155681,7 +1155681,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:315:bindtap:leadShowGroupCodeFromTools:48",
+      "id": "pages/play/index.wxml:316:bindtap:leadShowGroupCodeFromTools:48",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1155704,7 +1155704,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "leadShowGroupCodeFromTools",
-        "line": 315,
+        "line": 316,
         "selectorHint": ".drow",
         "visibleCondition": "{{lead.exists && lead.isLeader}}",
         "disabledCondition": null,
@@ -1155787,7 +1155787,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:320:bindtap:leadUnlockFromTools:49",
+      "id": "pages/play/index.wxml:321:bindtap:leadUnlockFromTools:49",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1155823,7 +1155823,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "leadUnlockFromTools",
-        "line": 320,
+        "line": 321,
         "selectorHint": ".drow",
         "visibleCondition": "{{lead.exists && lead.isLeader}}",
         "disabledCondition": null,
@@ -1156195,7 +1156195,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:325:bindtap:leadSettleFromTools:50",
+      "id": "pages/play/index.wxml:326:bindtap:leadSettleFromTools:50",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1156231,7 +1156231,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "leadSettleFromTools",
-        "line": 325,
+        "line": 326,
         "selectorHint": ".drow",
         "visibleCondition": "{{lead.exists && lead.isLeader}}",
         "disabledCondition": null,
@@ -1156595,7 +1156595,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:333:bindtap:openRightsFromTools:51",
+      "id": "pages/play/index.wxml:334:bindtap:openRightsFromTools:51",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1156618,7 +1156618,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openRightsFromTools",
-        "line": 333,
+        "line": 334,
         "selectorHint": ".drow",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1156701,7 +1156701,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:338:bindtap:openTicketFromTools:52",
+      "id": "pages/play/index.wxml:339:bindtap:openTicketFromTools:52",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1156724,7 +1156724,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openTicketFromTools",
-        "line": 338,
+        "line": 339,
         "selectorHint": ".drow",
         "visibleCondition": "{{regId && !isPreview && !isMock}}",
         "disabledCondition": null,
@@ -1156810,7 +1156810,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:343:bindtap:openJournalFromTools:53",
+      "id": "pages/play/index.wxml:344:bindtap:openJournalFromTools:53",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1156833,7 +1156833,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openJournalFromTools",
-        "line": 343,
+        "line": 344,
         "selectorHint": ".drow",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1156877,7 +1156877,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:348:bindtap:onLocationRowTap:54",
+      "id": "pages/play/index.wxml:349:bindtap:onLocationRowTap:54",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1156953,7 +1156953,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onLocationRowTap",
-        "line": 348,
+        "line": 349,
         "selectorHint": ".drow",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1157310,7 +1157310,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:359:bindtap:onLocationRowTap:55",
+      "id": "pages/play/index.wxml:360:bindtap:onLocationRowTap:55",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1157386,7 +1157386,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onLocationRowTap",
-        "line": 359,
+        "line": 360,
         "selectorHint": ".drow",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1157743,7 +1157743,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:367:bindtap:onLocationRowTap:56",
+      "id": "pages/play/index.wxml:368:bindtap:onLocationRowTap:56",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1157819,7 +1157819,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onLocationRowTap",
-        "line": 367,
+        "line": 368,
         "selectorHint": ".drow",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1158176,7 +1158176,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:373:bindtap:openTicketFromTools:57",
+      "id": "pages/play/index.wxml:374:bindtap:openTicketFromTools:57",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1158199,7 +1158199,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openTicketFromTools",
-        "line": 373,
+        "line": 374,
         "selectorHint": ".drow",
         "visibleCondition": "{{regId && !isPreview && !isMock}}",
         "disabledCondition": null,
@@ -1158285,7 +1158285,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:378:bindtap:openJournalFromTools:58",
+      "id": "pages/play/index.wxml:379:bindtap:openJournalFromTools:58",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1158308,7 +1158308,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openJournalFromTools",
-        "line": 378,
+        "line": 379,
         "selectorHint": ".drow",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1158352,7 +1158352,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:395:catchtap:toggleThemeBgm:59",
+      "id": "pages/play/index.wxml:396:catchtap:toggleThemeBgm:59",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1158375,7 +1158375,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "toggleThemeBgm",
-        "line": 395,
+        "line": 396,
         "selectorHint": ".dsw",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1158429,7 +1158429,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:400:catchtap:toggleReducedMotion:60",
+      "id": "pages/play/index.wxml:401:catchtap:toggleReducedMotion:60",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1158452,7 +1158452,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "toggleReducedMotion",
-        "line": 400,
+        "line": 401,
         "selectorHint": ".dsw",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1158496,7 +1158496,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:415:bindtap:pickPreviewEnding:61",
+      "id": "pages/play/index.wxml:416:bindtap:pickPreviewEnding:61",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1158572,7 +1158572,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "pickPreviewEnding",
-        "line": 415,
+        "line": 416,
         "selectorHint": ".pv-ending__chip",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1158929,7 +1158929,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:438:bindtap:continueLifeEnding:62",
+      "id": "pages/play/index.wxml:439:bindtap:continueLifeEnding:62",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1159005,7 +1159005,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "continueLifeEnding",
-        "line": 438,
+        "line": 439,
         "selectorHint": ".pv-ending__go",
         "visibleCondition": "{{previewEnding.real}}",
         "disabledCondition": null,
@@ -1159362,7 +1159362,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:453:bindtap:startStoryIntro:63",
+      "id": "pages/play/index.wxml:454:bindtap:startStoryIntro:63",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1159438,7 +1159438,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "startStoryIntro",
-        "line": 453,
+        "line": 454,
         "selectorHint": ".st-intro__go",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1159795,7 +1159795,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:464:bindtap:closeStartState:64",
+      "id": "pages/play/index.wxml:465:bindtap:closeStartState:64",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1159818,7 +1159818,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeStartState",
-        "line": 464,
+        "line": 465,
         "selectorHint": ".st-intro__go",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1160303,7 +1160303,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:471:bind:continue:continueChapterGate:65",
+      "id": "pages/play/index.wxml:472:bind:continue:continueChapterGate:65",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1160379,7 +1160379,7 @@
         "tag": "cy-chapter-flip",
         "event": "bind:continue",
         "handler": "continueChapterGate",
-        "line": 471,
+        "line": 472,
         "selectorHint": "cy-chapter-flip[bind:continue]",
         "visibleCondition": "{{chapterFull && chapterGate.show}}",
         "disabledCondition": null,
@@ -1160736,7 +1160736,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:482:bindtap:closeChapterPick:67",
+      "id": "pages/play/index.wxml:483:bindtap:closeChapterPick:67",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1160759,7 +1160759,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeChapterPick",
-        "line": 482,
+        "line": 483,
         "selectorHint": ".chpick-mask",
         "visibleCondition": "{{chapterPick.show}}",
         "disabledCondition": null,
@@ -1160803,7 +1160803,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:482:catchtouchmove:noop:66",
+      "id": "pages/play/index.wxml:483:catchtouchmove:noop:66",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1160826,7 +1160826,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "noop",
-        "line": 482,
+        "line": 483,
         "selectorHint": ".chpick-mask",
         "visibleCondition": "{{chapterPick.show}}",
         "disabledCondition": null,
@@ -1160871,7 +1160871,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:487:bindtap:onPickChapter:68",
+      "id": "pages/play/index.wxml:488:bindtap:onPickChapter:68",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1160894,7 +1160894,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPickChapter",
-        "line": 487,
+        "line": 488,
         "selectorHint": ".chpick__row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1160938,7 +1160938,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:511:catchtap:stopNav:69",
+      "id": "pages/play/index.wxml:512:catchtap:stopNav:69",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1161014,7 +1161014,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "stopNav",
-        "line": 511,
+        "line": 512,
         "selectorHint": ".navtop__x",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1161371,7 +1161371,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:565:bindtap:toggleSessionTools:70",
+      "id": "pages/play/index.wxml:566:bindtap:toggleSessionTools:70",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1161394,7 +1161394,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "toggleSessionTools",
-        "line": 565,
+        "line": 566,
         "selectorHint": ".fx-lhd__more",
         "visibleCondition": "{{!isPreview}}",
         "disabledCondition": null,
@@ -1161462,7 +1161462,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:573:bindtap:onSeatTap:71",
+      "id": "pages/play/index.wxml:574:bindtap:onSeatTap:71",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1161538,7 +1161538,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onSeatTap",
-        "line": 573,
+        "line": 574,
         "selectorHint": ".fx-tile",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1161895,7 +1161895,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:608:bindtap:openPack:72",
+      "id": "pages/play/index.wxml:609:bindtap:openPack:72",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1161918,7 +1161918,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openPack",
-        "line": 608,
+        "line": 609,
         "selectorHint": ".fx-packwrap",
         "visibleCondition": "{{!packOpen}}",
         "disabledCondition": null,
@@ -1161974,7 +1161974,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:609:bindtouchstart:onPackTouchStart:73",
+      "id": "pages/play/index.wxml:610:bindtouchstart:onPackTouchStart:73",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1161997,7 +1161997,7 @@
         "tag": "view",
         "event": "bindtouchstart",
         "handler": "onPackTouchStart",
-        "line": 609,
+        "line": 610,
         "selectorHint": ".fx-packwrap",
         "visibleCondition": "{{!packOpen}}",
         "disabledCondition": null,
@@ -1162042,7 +1162042,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:609:catchtouchmove:onPackTouchMove:74",
+      "id": "pages/play/index.wxml:610:catchtouchmove:onPackTouchMove:74",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1162065,7 +1162065,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "onPackTouchMove",
-        "line": 609,
+        "line": 610,
         "selectorHint": ".fx-packwrap",
         "visibleCondition": "{{!packOpen}}",
         "disabledCondition": null,
@@ -1162119,7 +1162119,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:610:bindtouchcancel:onPackTouchEnd:76",
+      "id": "pages/play/index.wxml:611:bindtouchcancel:onPackTouchEnd:76",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1162142,7 +1162142,7 @@
         "tag": "view",
         "event": "bindtouchcancel",
         "handler": "onPackTouchEnd",
-        "line": 610,
+        "line": 611,
         "selectorHint": ".fx-packwrap",
         "visibleCondition": "{{!packOpen}}",
         "disabledCondition": null,
@@ -1162196,7 +1162196,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:610:bindtouchend:onPackTouchEnd:75",
+      "id": "pages/play/index.wxml:611:bindtouchend:onPackTouchEnd:75",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1162219,7 +1162219,7 @@
         "tag": "view",
         "event": "bindtouchend",
         "handler": "onPackTouchEnd",
-        "line": 610,
+        "line": 611,
         "selectorHint": ".fx-packwrap",
         "visibleCondition": "{{!packOpen}}",
         "disabledCondition": null,
@@ -1162706,7 +1162706,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:667:bind:afterleave:onHeroNativeBack:77",
+      "id": "pages/play/index.wxml:668:bind:afterleave:onHeroNativeBack:77",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1162729,7 +1162729,7 @@
         "tag": "page-container",
         "event": "bind:afterleave",
         "handler": "onHeroNativeBack",
-        "line": 667,
+        "line": 668,
         "selectorHint": "page-container[bind:afterleave]",
         "visibleCondition": "{{mode==2}}",
         "disabledCondition": null,
@@ -1162879,7 +1162879,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:682:bindtap:closeHero:78",
+      "id": "pages/play/index.wxml:683:bindtap:closeHero:78",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1162902,7 +1162902,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeHero",
-        "line": 682,
+        "line": 683,
         "selectorHint": ".fx-hero__back",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1162946,7 +1162946,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:689:bindtap:openChapStory:79",
+      "id": "pages/play/index.wxml:690:bindtap:openChapStory:79",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1163022,7 +1163022,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openChapStory",
-        "line": 689,
+        "line": 690,
         "selectorHint": ".fx-card3d",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1163379,7 +1163379,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:689:bindtouchend:onCardTouchEnd:82",
+      "id": "pages/play/index.wxml:690:bindtouchend:onCardTouchEnd:82",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1163402,7 +1163402,7 @@
         "tag": "view",
         "event": "bindtouchend",
         "handler": "onCardTouchEnd",
-        "line": 689,
+        "line": 690,
         "selectorHint": ".fx-card3d",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1163446,7 +1163446,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:689:bindtouchmove:onCardTouchMove:81",
+      "id": "pages/play/index.wxml:690:bindtouchmove:onCardTouchMove:81",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1163469,7 +1163469,7 @@
         "tag": "view",
         "event": "bindtouchmove",
         "handler": "onCardTouchMove",
-        "line": 689,
+        "line": 690,
         "selectorHint": ".fx-card3d",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1163513,7 +1163513,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:689:bindtouchstart:onCardTouchStart:80",
+      "id": "pages/play/index.wxml:690:bindtouchstart:onCardTouchStart:80",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1163536,7 +1163536,7 @@
         "tag": "view",
         "event": "bindtouchstart",
         "handler": "onCardTouchStart",
-        "line": 689,
+        "line": 690,
         "selectorHint": ".fx-card3d",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1163581,7 +1163581,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:714:bindscroll:onHeroScroll:83",
+      "id": "pages/play/index.wxml:715:bindscroll:onHeroScroll:83",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1163604,7 +1163604,7 @@
         "tag": "scroll-view",
         "event": "bindscroll",
         "handler": "onHeroScroll",
-        "line": 714,
+        "line": 715,
         "selectorHint": ".fx-hero__body",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1163648,7 +1163648,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:729:bindtap:openShopNpc:84",
+      "id": "pages/play/index.wxml:730:bindtap:openShopNpc:84",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1163671,7 +1163671,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openShopNpc",
-        "line": 729,
+        "line": 730,
         "selectorHint": ".fx-shop__top",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1163715,7 +1163715,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:748:bindtap:openHeroNav:85",
+      "id": "pages/play/index.wxml:749:bindtap:openHeroNav:85",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1163738,7 +1163738,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openHeroNav",
-        "line": 748,
+        "line": 749,
         "selectorHint": ".fx-shop__nav",
         "visibleCondition": "{{hero.node.address}}",
         "disabledCondition": null,
@@ -1163792,7 +1163792,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:798:bindtap:openEntryQr:86",
+      "id": "pages/play/index.wxml:799:bindtap:openEntryQr:86",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1163815,7 +1163815,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "openEntryQr",
-        "line": 798,
+        "line": 799,
         "selectorHint": ".fx-hero__in",
         "visibleCondition": "{{hero.node.isMerchant && !hero.node.done && regId && !isPreview && !isMock}}",
         "disabledCondition": null,
@@ -1163901,7 +1163901,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:804:bindtap:heroEnter:87",
+      "id": "pages/play/index.wxml:805:bindtap:heroEnter:87",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1163977,7 +1163977,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "heroEnter",
-        "line": 804,
+        "line": 805,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1164334,7 +1164334,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:814:bindtap:closeChapStory:88",
+      "id": "pages/play/index.wxml:815:bindtap:closeChapStory:88",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1164357,7 +1164357,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeChapStory",
-        "line": 814,
+        "line": 815,
         "selectorHint": ".fx-story__back",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1164401,7 +1164401,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:819:bindscroll:onStoryScroll:89",
+      "id": "pages/play/index.wxml:820:bindscroll:onStoryScroll:89",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1164477,7 +1164477,7 @@
         "tag": "scroll-view",
         "event": "bindscroll",
         "handler": "onStoryScroll",
-        "line": 819,
+        "line": 820,
         "selectorHint": ".st-scroll",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1164834,7 +1164834,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:835:bindtap:toggleChapAudio:90",
+      "id": "pages/play/index.wxml:836:bindtap:toggleChapAudio:90",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1164857,7 +1164857,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "toggleChapAudio",
-        "line": 835,
+        "line": 836,
         "selectorHint": ".fx-story__aud",
         "visibleCondition": "{{chapStory.audio}}",
         "disabledCondition": null,
@@ -1164911,7 +1164911,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:841:bindtap:closeChapStory:91",
+      "id": "pages/play/index.wxml:842:bindtap:closeChapStory:91",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1164934,7 +1164934,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "closeChapStory",
-        "line": 841,
+        "line": 842,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1164978,7 +1164978,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:842:bindtap:heroEnter:92",
+      "id": "pages/play/index.wxml:843:bindtap:heroEnter:92",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1165054,7 +1165054,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "heroEnter",
-        "line": 842,
+        "line": 843,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1165411,7 +1165411,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:844:bind:afterleave:onStoryNativeBack:93",
+      "id": "pages/play/index.wxml:845:bind:afterleave:onStoryNativeBack:93",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1165434,7 +1165434,7 @@
         "tag": "page-container",
         "event": "bind:afterleave",
         "handler": "onStoryNativeBack",
-        "line": 844,
+        "line": 845,
         "selectorHint": "page-container[bind:afterleave]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1165478,7 +1165478,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:851:bindtap:closeShopNpc:94",
+      "id": "pages/play/index.wxml:852:bindtap:closeShopNpc:94",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1165501,7 +1165501,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeShopNpc",
-        "line": 851,
+        "line": 852,
         "selectorHint": ".fx-npc__back",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1165545,7 +1165545,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:856:bindtouchend:onNpcTouchEnd:97",
+      "id": "pages/play/index.wxml:857:bindtouchend:onNpcTouchEnd:97",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1165568,7 +1165568,7 @@
         "tag": "view",
         "event": "bindtouchend",
         "handler": "onNpcTouchEnd",
-        "line": 856,
+        "line": 857,
         "selectorHint": ".fx-npc__fig",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1165613,7 +1165613,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:856:bindtouchmove:onNpcTouchMove:96",
+      "id": "pages/play/index.wxml:857:bindtouchmove:onNpcTouchMove:96",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1165636,7 +1165636,7 @@
         "tag": "view",
         "event": "bindtouchmove",
         "handler": "onNpcTouchMove",
-        "line": 856,
+        "line": 857,
         "selectorHint": ".fx-npc__fig",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1165680,7 +1165680,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:856:bindtouchstart:onNpcTouchStart:95",
+      "id": "pages/play/index.wxml:857:bindtouchstart:onNpcTouchStart:95",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1165703,7 +1165703,7 @@
         "tag": "view",
         "event": "bindtouchstart",
         "handler": "onNpcTouchStart",
-        "line": 856,
+        "line": 857,
         "selectorHint": ".fx-npc__fig",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1165748,7 +1165748,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:875:bindtap:copyNpcMsg:98",
+      "id": "pages/play/index.wxml:876:bindtap:copyNpcMsg:98",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1165771,7 +1165771,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "copyNpcMsg",
-        "line": 875,
+        "line": 876,
         "selectorHint": ".fx-msg__op",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1165825,7 +1165825,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:877:bindtap:retryNpcMsg:99",
+      "id": "pages/play/index.wxml:878:bindtap:retryNpcMsg:99",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1165848,7 +1165848,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "retryNpcMsg",
-        "line": 877,
+        "line": 878,
         "selectorHint": ".fx-msg__op",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1165911,229 +1165911,6 @@
       "evidence": {
         "status": "pending",
         "staticSource": "pages/play/index.js:2288"
-      }
-    },
-    {
-      "id": "pages/play/index.wxml:889:bindconfirm:sendShopNpc:102",
-      "route": "pages/play/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/play/index.wxml",
-        "js": "pages/play/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "input",
-        "event": "bindconfirm",
-        "handler": "sendShopNpc",
-        "line": 889,
-        "selectorHint": ".fx-npc__input",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "external",
-      "interactionMode": "event-contract",
-      "baseActionClass": "read",
-      "effectClasses": [
-        "read",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [
-        "createInnerAudioContext"
-      ],
-      "successCapabilities": [
-        "createInnerAudioContext"
-      ],
-      "targets": {
-        "routes": [],
-        "apis": [
-          "/api/ai/npc/shop-chat"
-        ],
-        "primaryApis": [
-          "/api/ai/npc/shop-chat"
-        ],
-        "auxiliaryApis": [],
-        "apiContracts": [
-          {
-            "url": "/api/ai/npc/shop-chat",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
-      ],
-      "requiredPlatforms": [
-        "ios",
-        "android"
-      ],
-      "externalGate": "real-device-required",
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/play/index.js:2193"
-      }
-    },
-    {
-      "id": "pages/play/index.wxml:889:bindfocus:onShopNpcFocus:101",
-      "route": "pages/play/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/play/index.wxml",
-        "js": "pages/play/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "input",
-        "event": "bindfocus",
-        "handler": "onShopNpcFocus",
-        "line": 889,
-        "selectorHint": ".fx-npc__input",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/play/index.js:2056"
-      }
-    },
-    {
-      "id": "pages/play/index.wxml:889:bindinput:onShopNpcInput:100",
-      "route": "pages/play/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/play/index.wxml",
-        "js": "pages/play/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "input",
-        "event": "bindinput",
-        "handler": "onShopNpcInput",
-        "line": 889,
-        "selectorHint": ".fx-npc__input",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/play/index.js:2057"
       }
     },
     {
@@ -1166571,7 +1166348,230 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:892:bindtouchcancel:onVoiceEnd:105",
+      "id": "pages/play/index.wxml:890:bindconfirm:sendShopNpc:102",
+      "route": "pages/play/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/play/index.wxml",
+        "js": "pages/play/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "input",
+        "event": "bindconfirm",
+        "handler": "sendShopNpc",
+        "line": 890,
+        "selectorHint": ".fx-npc__input",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "external",
+      "interactionMode": "event-contract",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [
+        "createInnerAudioContext"
+      ],
+      "successCapabilities": [
+        "createInnerAudioContext"
+      ],
+      "targets": {
+        "routes": [],
+        "apis": [
+          "/api/ai/npc/shop-chat"
+        ],
+        "primaryApis": [
+          "/api/ai/npc/shop-chat"
+        ],
+        "auxiliaryApis": [],
+        "apiContracts": [
+          {
+            "url": "/api/ai/npc/shop-chat",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/index.js:2193"
+      }
+    },
+    {
+      "id": "pages/play/index.wxml:890:bindfocus:onShopNpcFocus:101",
+      "route": "pages/play/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/play/index.wxml",
+        "js": "pages/play/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "input",
+        "event": "bindfocus",
+        "handler": "onShopNpcFocus",
+        "line": 890,
+        "selectorHint": ".fx-npc__input",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/index.js:2056"
+      }
+    },
+    {
+      "id": "pages/play/index.wxml:890:bindinput:onShopNpcInput:100",
+      "route": "pages/play/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/play/index.wxml",
+        "js": "pages/play/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "input",
+        "event": "bindinput",
+        "handler": "onShopNpcInput",
+        "line": 890,
+        "selectorHint": ".fx-npc__input",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/index.js:2057"
+      }
+    },
+    {
+      "id": "pages/play/index.wxml:893:bindtouchcancel:onVoiceEnd:105",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1166594,7 +1166594,7 @@
         "tag": "view",
         "event": "bindtouchcancel",
         "handler": "onVoiceEnd",
-        "line": 892,
+        "line": 893,
         "selectorHint": ".fx-npc__mic",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1166639,7 +1166639,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:892:bindtouchend:onVoiceEnd:104",
+      "id": "pages/play/index.wxml:893:bindtouchend:onVoiceEnd:104",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1166662,7 +1166662,7 @@
         "tag": "view",
         "event": "bindtouchend",
         "handler": "onVoiceEnd",
-        "line": 892,
+        "line": 893,
         "selectorHint": ".fx-npc__mic",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1166707,7 +1166707,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:892:bindtouchstart:onVoiceStart:103",
+      "id": "pages/play/index.wxml:893:bindtouchstart:onVoiceStart:103",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1166732,7 +1166732,7 @@
         "tag": "view",
         "event": "bindtouchstart",
         "handler": "onVoiceStart",
-        "line": 892,
+        "line": 893,
         "selectorHint": ".fx-npc__mic",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1166823,7 +1166823,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:899:bindtap:sendShopNpc:106",
+      "id": "pages/play/index.wxml:900:bindtap:sendShopNpc:106",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1166846,7 +1166846,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "sendShopNpc",
-        "line": 899,
+        "line": 900,
         "selectorHint": ".fx-npc__send",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1166912,7 +1166912,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:902:bind:afterleave:onShopNpcNativeBack:107",
+      "id": "pages/play/index.wxml:903:bind:afterleave:onShopNpcNativeBack:107",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1166935,7 +1166935,7 @@
         "tag": "page-container",
         "event": "bind:afterleave",
         "handler": "onShopNpcNativeBack",
-        "line": 902,
+        "line": 903,
         "selectorHint": "page-container[bind:afterleave]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1166979,7 +1166979,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:905:bindtap:openEntryQr:108",
+      "id": "pages/play/index.wxml:906:bindtap:openEntryQr:108",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1167002,7 +1167002,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openEntryQr",
-        "line": 905,
+        "line": 906,
         "selectorHint": ".pscan",
         "visibleCondition": "{{regId && !isPreview && !isMock && !chapterFull && mode!=2}}",
         "disabledCondition": null,
@@ -1167088,7 +1167088,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:939:bindtap:leadArrive:109",
+      "id": "pages/play/index.wxml:940:bindtap:leadArrive:109",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1167184,7 +1167184,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "leadArrive",
-        "line": 939,
+        "line": 940,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": "{{!lead.meArrived}}",
         "disabledCondition": null,
@@ -1167269,7 +1167269,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:941:bindtap:leadStart:110",
+      "id": "pages/play/index.wxml:942:bindtap:leadStart:110",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1167345,7 +1167345,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "leadStart",
-        "line": 941,
+        "line": 942,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": "{{lead.isLeader}}",
         "disabledCondition": null,
@@ -1167710,7 +1167710,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:957:bindtap:openRewardCollection:111",
+      "id": "pages/play/index.wxml:958:bindtap:openRewardCollection:111",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1167733,7 +1167733,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openRewardCollection",
-        "line": 957,
+        "line": 958,
         "selectorHint": ".rdrop__go",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1167781,7 +1167781,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:958:bindtap:closeRewardDrop:112",
+      "id": "pages/play/index.wxml:959:bindtap:closeRewardDrop:112",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1167804,7 +1167804,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeRewardDrop",
-        "line": 958,
+        "line": 959,
         "selectorHint": ".rdrop__next",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1167848,7 +1167848,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:961:bindtap:openFinish:113",
+      "id": "pages/play/index.wxml:962:bindtap:openFinish:113",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1167924,7 +1167924,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openFinish",
-        "line": 961,
+        "line": 962,
         "selectorHint": ".banner",
         "visibleCondition": "{{hud.bottomCard(screen, allDone, nav, nextNode, null) === 'banner'}}",
         "disabledCondition": null,
@@ -1168281,7 +1168281,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:975:bindtap:closeSheet:114",
+      "id": "pages/play/index.wxml:976:bindtap:closeSheet:114",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1168304,7 +1168304,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeSheet",
-        "line": 975,
+        "line": 976,
         "selectorHint": ".mask",
         "visibleCondition": "{{sheet.show}}",
         "disabledCondition": null,
@@ -1168359,7 +1168359,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:977:bindtap:previewNodeImages:115",
+      "id": "pages/play/index.wxml:978:bindtap:previewNodeImages:115",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1168382,7 +1168382,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "previewNodeImages",
-        "line": 977,
+        "line": 978,
         "selectorHint": ".sheet-cover",
         "visibleCondition": null,
         "disabledCondition": null,

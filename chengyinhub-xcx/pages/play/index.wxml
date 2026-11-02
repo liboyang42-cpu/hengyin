@@ -301,7 +301,8 @@
         <!-- 领队工具与模式无关:只要本场确有 lead 就出(F-57,与 master PR 1140 同口径);
              无 lead 的普通局什么都不多出来 —— 每行仍由 lead.exists 自己守。 -->
         <!-- 稿「分享实时位置 · 关 ›」→ 队伍位置:右侧值 + 箭头,同形 -->
-        <view class="drow" wx:if="{{lead.exists}}" bindtap="leadBroadcastFromTools" aria-role="button" aria-label="队伍位置" hover-class="cy-pressed" hover-stay-time="80">
+        <!-- 2026-11-02 业主(P-28):自由探索不带队(lead.freeEntry)时不出「队伍位置」 -->
+        <view class="drow" wx:if="{{lead.exists && !lead.freeEntry}}" bindtap="leadBroadcastFromTools" aria-role="button" aria-label="队伍位置" hover-class="cy-pressed" hover-stay-time="80">
           <view class="dic pic pic--team"></view>
           <view class="dcopy"><text class="dt">队伍位置</text></view>
           <text class="dv">{{lead.arrived}}/{{lead.total}}</text>
