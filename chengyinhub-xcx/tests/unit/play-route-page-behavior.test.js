@@ -268,3 +268,16 @@ test('分支地图、手记与完赛足迹都消费真实 decisionLog 顺序', (
   assert.ok((source.match(/orderedJourneyNodes\(/g) || []).length >= 3,
     'buildJournal、_reviewOrderedNodes、_drawRoute 必须全部按真实路线顺序')
 })
+
+test('P-37:自由探索的下一站跳过玩法已做完、只等核销的店', () => {
+  const { definition } = loadPage()
+  const free = context(definition, { mode: 2, routeState: { routeMode: 'LINEAR' } })
+  free.scoreCandidates = (nodes, pts, pool) => pool.map((o) => Object.assign({ reason: '' }, o))
+  const shops = [
+    { nodeId: 71, name: '梧桐咖啡', done: false, gameDone: true },
+    { nodeId: 72, name: '安福路旧书铺', done: false, gameDone: false },
+    { nodeId: 73, name: '已核销的店', done: true, gameDone: true },
+  ]
+  assert.equal(free.computeNext(shops, null).nodeId, 72)
+  assert.equal(free.computeNext([shops[0], shops[2]], null), null, '只剩等核销的店时不再指路')
+})

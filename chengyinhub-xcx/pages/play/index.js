@@ -4642,7 +4642,10 @@ Page({
       pick = { x: next, i: nodes.findIndex((node) => node && String(node.nodeId) === String(next.nodeId)) };
     } else {
       // P0 推荐条(纯前端加权):距离 × 营业时间窗 × 顺路;正常行走态始终只给第一推荐。
-      const scored = this.scoreCandidates(nodes, pts, undone);
+      // P-37:玩法已做完、只等店员核销的店不再当「下一站」(否则刚做完就在门口指「0 米」);全都只等核销时不推荐。
+      const pending = undone.filter((o) => !o.x.gameDone);
+      if (!pending.length) return null;
+      const scored = this.scoreCandidates(nodes, pts, pending);
       pick = scored[0]; reason = pick.reason;
     }
     const x = pick.x, pt = pts[pick.i] || null;
