@@ -121,6 +121,10 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
     @Autowired
     private org.springframework.beans.factory.ObjectProvider<com.chengyinhub.business.service.IAuditTaskService> auditTaskServiceProvider;
 
+    /** Round5D 自建敏感内容库;可选注入,老测试直接 new 时为空(只走微信)。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.ISensitiveContentLibrary sensitiveLibrary;
+
     /** 内容安全下架关闭未结申诉时给作者的说明。 */
     static final String APPEAL_CLOSED_BY_SAFETY = "图片未通过内容安全检测已被下架，原申诉已关闭；请更换图片后重新提交审核";
     // 社区帖文图片:命中 → 帖文生命周期 HIDE。CommunityPostServiceImpl 反向依赖本服务(送检),ObjectProvider 懒取破环
@@ -165,6 +169,13 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
         if (StringUtils.isEmpty(content))
         {
             return null;
+        }
+
+        // Round5D:自建敏感词库先查,命中即拒(不论微信开关/openid/可用性);只回既有违规文案,不暴露命中词。
+        if (sensitiveLibrary != null
+                && sensitiveLibrary.blockingCategory(content, "TEXT_CHECK", null) != null)
+        {
+            return com.chengyinhub.business.service.ISensitiveContentLibrary.VIOLATION_MESSAGE;
         }
 
         if (!isEnabled())
@@ -349,14 +360,19 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
     public void submitMediaCheck(int bizType, Long bizId, String imgArr, String openid)
     {
         com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
-        if (!isEnabled() || bizId == null || StringUtils.isEmpty(imgArr))
+        if (bizId == null || StringUtils.isEmpty(imgArr))
         {
-            if (!isEnabled() && bizId != null && StringUtils.isNotEmpty(imgArr))
-            {
-                // Round5B-3:总开关关闭不再静默;公开内容已由门禁 / 调用方按 HOLD 留置待人工审核。
-                log.error("[内容安全] 图片检测总开关关闭,未送检,需人工复审 bizType={}, bizId={}", bizType, bizId);
-            }
             return;
+        }
+        if (!isEnabled())
+        {
+            // Round5B-3/5C:总开关关闭不再静默;公开内容已由门禁 HOLD 并进自动复检。
+            log.error("[内容安全] 图片检测总开关关闭,未送微信 bizType={}, bizId={}", bizType, bizId);
+            // Round5D:本地已知违规图比对不依赖微信,仍逐张做(submitMediaCheckOne 内部判断)。
+            if (sensitiveLibrary == null || !sensitiveLibrary.hasImageEntries())
+            {
+                return;
+            }
         }
         // 图片地址串支持逗号或分号分隔
         String[] imgs = imgArr.split("[,;]");
@@ -380,7 +396,12 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
     public String submitMediaCheckOne(int bizType, Long bizId, String fetchUrl, String identity, String openid)
     {
         com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
-        if (!isEnabled() || bizId == null || StringUtils.isEmpty(fetchUrl) || StringUtils.isEmpty(identity))
+        if (bizId == null || StringUtils.isEmpty(fetchUrl) || StringUtils.isEmpty(identity))
+        {
+            return null;
+        }
+        boolean localImageCheck = sensitiveLibrary != null && sensitiveLibrary.hasImageEntries();
+        if (!isEnabled() && !localImageCheck)
         {
             return null;
         }
@@ -397,6 +418,15 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                     log.error("[内容安全] 媒体引用无法解析为可抓取地址,未送检,需人工复审: bizType={}, bizId={}", bizType, bizId);
                     return null;
                 }
+            }
+            // Round5D:已知违规图(SHA-256 / dHash)本地先认;命中走与微信 risky 回调同一条自动下架路径,不再送微信。
+            if (localImageCheck && knownBadImage(bizType, bizId, img))
+            {
+                return null;
+            }
+            if (!isEnabled())
+            {
+                return null;
             }
             String traceId = checkMediaAsync(img, openid);
             if (StringUtils.isNotEmpty(traceId))
@@ -433,6 +463,75 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                     bizType, bizId, img.length(), e.getClass().getSimpleName());
             return null;
         }
+    }
+
+    /** Round5D:异步图片路径的本地已知违规图比对;命中即按 risky 自动下架并记命中。 */
+    boolean knownBadImage(int bizType, Long bizId, String fetchUrl)
+    {
+        byte[] bytes;
+        try
+        {
+            bytes = fetchImageBytes(fetchUrl);
+        }
+        catch (Exception e)
+        {
+            log.warn("[敏感内容库] 图片抓取失败,跳过本地比对 bizType={}, bizId={}, exceptionType={}",
+                    bizType, bizId, e.getClass().getSimpleName());
+            return false;
+        }
+        String category = bytes == null ? null : sensitiveLibrary.matchImage(bytes);
+        if (category == null)
+        {
+            return false;
+        }
+        sensitiveLibrary.recordHit("IMAGE", "WX_BIZ_" + bizType, bizId, category, "REMOVED");
+        log.warn("[敏感内容库] 已知违规图片,自动下架 bizType={}, bizId={}, category={}", bizType, bizId, category);
+        takeDownForSafety(bizType, bizId);
+        return true;
+    }
+
+    static final int MAX_FETCH_BYTES = 10 * 1024 * 1024;
+
+    /** HTTP 缝:测试覆写。只抓 http(s),5 秒连接 / 10 秒读取,超过 10MB 放弃。 */
+    byte[] fetchImageBytes(String url) throws java.io.IOException
+    {
+        if (url == null || !(url.startsWith("https://") || url.startsWith("http://")))
+        {
+            return null;
+        }
+        java.net.HttpURLConnection conn = (java.net.HttpURLConnection) java.net.URI.create(url).toURL().openConnection();
+        conn.setConnectTimeout(5000);
+        conn.setReadTimeout(10000);
+        conn.setInstanceFollowRedirects(false);
+        try (java.io.InputStream in = conn.getInputStream())
+        {
+            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+            byte[] buf = new byte[8192];
+            int n;
+            while ((n = in.read(buf)) > 0)
+            {
+                out.write(buf, 0, n);
+                if (out.size() > MAX_FETCH_BYTES)
+                {
+                    return null;
+                }
+            }
+            return out.toByteArray();
+        }
+        finally
+        {
+            conn.disconnect();
+        }
+    }
+
+    @Override
+    public boolean takeDownForSafety(int bizType, Long bizId)
+    {
+        if (bizId == null)
+        {
+            return false;
+        }
+        return processMediaCheckResult(bizType, bizId, "sensitive-library", true);
     }
 
     @Override

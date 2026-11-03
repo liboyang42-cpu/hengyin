@@ -239,4 +239,13 @@ public interface IWxContentSecurityService
         }
         return sb.toString();
     }
+
+    /**
+     * Round5D:按内容安全违规自动下架(与微信 risky 回调同一条路径:下架 + 通知作者,幂等)。
+     * 供敏感词存量复查使用;不支持的类型返回 false。
+     */
+    default boolean takeDownForSafety(int bizType, Long bizId)
+    {
+        return false;
+    }
 }

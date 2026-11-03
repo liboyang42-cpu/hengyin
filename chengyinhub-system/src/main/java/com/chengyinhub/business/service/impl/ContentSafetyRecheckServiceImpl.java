@@ -63,6 +63,8 @@ public class ContentSafetyRecheckServiceImpl implements IContentSafetyRecheckSer
     private IWxContentSecurityService wx;
     @Autowired
     private ObjectProvider<IAuditTaskService> auditTaskServiceProvider;
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.ISensitiveContentLibrary sensitiveLibrary;
 
     @Value("${content.safety.recheck.batch-limit:50}")
     private int batchLimit = 50;
@@ -156,6 +158,10 @@ public class ContentSafetyRecheckServiceImpl implements IContentSafetyRecheckSer
     Outcome check(ContentSafetyRecheck row, String openid, String[] code) {
         boolean hasText = row.getTextBody() != null && !row.getTextBody().trim().isEmpty();
         List<String> media = media(row);
+        if (hasText && sensitiveLibrary != null
+                && sensitiveLibrary.blockingCategory(row.getTextBody(), row.getBizType(), row.getBizId()) != null) {
+            return Outcome.RISKY; // Round5D:自建词库命中不依赖微信
+        }
         if (hasText) {
             if (!wx.isEnabled()) { code[0] = "DETECT_DISABLED"; return Outcome.UNAVAILABLE; }
             if (openid == null || openid.trim().isEmpty()) { code[0] = "NO_OPENID"; return Outcome.UNAVAILABLE; }

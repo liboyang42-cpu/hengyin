@@ -50,6 +50,10 @@ public class ContentSafetyGateImpl implements IContentSafetyGate {
     @Autowired(required = false)
     private com.chengyinhub.business.service.IContentSafetyRecheckService recheckService;
 
+    /** Round5D 自建敏感词库;可选注入。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.ISensitiveContentLibrary sensitiveLibrary;
+
     @Override
     public SafetyDecision decide(PublishSafetyRequest req) {
         if (req == null || req.getContentType() == null) {
@@ -62,6 +66,13 @@ public class ContentSafetyGateImpl implements IContentSafetyGate {
         boolean pre = mode == ReviewMode.PRE_REVIEW;
         boolean hasText = req.getText() != null && !req.getText().trim().isEmpty();
         boolean enabled = wxContentSecurityService.isEnabled();
+
+        // 0') Round5D:自建敏感词库先查,命中即 BLOCK —— 微信关闭/不可用/缺 openid 时同样生效。
+        if (hasText && sensitiveLibrary != null
+                && sensitiveLibrary.blockingCategory(req.getText(), req.getContentType(), req.getContentId()) != null) {
+            logger.info("UGC门禁 BLOCK 敏感词库命中 contentType={} id={}", req.getContentType(), req.getContentId());
+            return SafetyDecision.block("TEXT_RISK");
+        }
 
         // 1)/2) 文本检测:命中 → BLOCK;异常 → PRE: fail-safe HOLD / POST: 打标放行
         if (hasText && enabled) {
