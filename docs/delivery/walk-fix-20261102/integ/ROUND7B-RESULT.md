@@ -1,6 +1,6 @@
 # Round 7B result: approved page polish on `integ/launch-test-20261103`
 
-I started after `integ/ROUND7-RESULT.md` showed `STATUS: COMPLETE` (Round 7 head `f66f1b8c`). Each item has its own commit and was pushed on its own. Draft PR #723 runs CI.
+I started after `integ/ROUND7-RESULT.md` showed `STATUS: PARTIAL - all items done and pushed; Backend tests, Fast gates and Migration safety gate on PR #723 were cancelled mid-run twice (not failed) and need a re-run to finish` (Round 7 head `f66f1b8c`). Each item has its own commit and was pushed on its own. Draft PR #723 runs CI.
 
 - Nothing was pushed to master, no PR was merged, and production was not touched.
 - `ci/xcx-check.sh` and `ds-hardcode-gate-selftest.sh` were not run.
@@ -54,7 +54,7 @@ None of these items conflicted with a lane's approved result on this branch. One
 | Full mini unit tests, `node --test "tests/unit/**/*.test.js"` at `73b6e3aa` | **15865 / 15865 pass** (9 min) |
 | `node tests/lint/ui-integrity.js` | `UI-GATE-0:PASS` after every item |
 | `node scripts/uiaudit/build-action-ledger.js --check` | `ACTION-LEDGER PASS: 5635 controls`. The ledger was rebuilt twice; both times only line numbers moved, in `scene-merchant-profit`. |
-| CI on PR #723 | See the CI line below. |
+| CI on PR #723 | **Not fully green yet.** On the run for `73b6e3aa`, which carries all the code, 27 jobs passed. On the run for `7b4326c1` (my report commit plus the owner's AGENTS.md commit), 27 of 30 jobs passed. That includes all 20 mini unit shards, the mini static gates and the other three workflows (Funds MySQL IT, Redis recovery, mini follow-up regression). None failed. On both runs, **Backend tests**, **Fast gates** and (on the second run) **Migration safety gate** were cancelled together, with no newer push. When it was cancelled, Fast gates was inside the architecture gate's `git` network fetch (orphaned `git-remote-https`). Backend tests had passed the atomic-migration IT (88 cases) before the cancel. I did not push an empty commit to re-run them. |
 
 One test note. `action-ledger.test.js` "inventory 与可持久化动态证据分离" compares a source digest at HEAD with the working tree. It fails while shared style files are uncommitted and passes on the committed tree (46/46). This is not a product issue.
 
@@ -111,6 +111,4 @@ Odd things I noticed. All of them are the same in the BEFORE build, so this roun
 - §4-14: no reachable merchant page in the rig rendered a ghost `cy-btn`. `merchantinfo` (held page) renders blank, and the ai-npc and reviews ghosts need data the seed lacks. The token is checked by tests, and merchant pages were checked for unintended change.
 - Not rendered in the rig: customer list rows (2c), batch detail and refund lines (§4-9; covered by tests), the play `.rolemask`.
 
-CI: see the line added below once PR #723's run on the final commit finishes.
-
-STATUS: COMPLETE
+STATUS: PARTIAL - all items done and pushed; Backend tests, Fast gates and Migration safety gate on PR #723 were cancelled mid-run twice (not failed) and need a re-run to finish
