@@ -18,7 +18,7 @@
 .av__sk { width: 100%; height: 100%; background: var(--cy-color-skeleton-base); }
 
 .av--disabled { opacity: .4; }
-.av--press { opacity: .82; }
+.av--press { opacity: .88; } /* 打磨第 3 轮 §4-12:与 cy-pressed 同一减淡值 */
 
 /* 角标:压右下角,4rpx 页底色 ring 抠出 */
 .av__badge {
