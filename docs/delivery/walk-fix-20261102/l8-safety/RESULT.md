@@ -69,4 +69,4 @@
 - Java：`mvn -q -o -pl chengyinhub-admin -Dtest=… test`，相关测试类合计 0 failure（门禁、主题、活动、优惠券、审核、内容安全回调、举报、各个 6 号入口；连不上库的 MyBatis 集成测试已排除）。
 - 小程序：`node --test` 跑本轮相关的 5 个测试文件全部通过；`node chengyinhub-xcx/tests/lint/ui-integrity.js` 输出 `UI-GATE-0:PASS`。
 
-STATUS: PARTIAL - 8 项代码与单测都已完成，但跨角色的 rig 真实 HTTP 回读、MySQL 集成测试和真机截图没跑；needs owner 6 条待定
+STATUS: PARTIAL - 8 项代码与单测都已完成，但跨角色的 rig 真实 HTTP 回读、MySQL 集成测试和真机截图没跑；needs owner 7 条待定
