@@ -1,0 +1,40 @@
+{
+ "selfplay": {
+  "create": {
+   "code": 200,
+   "msg": "报名创建成功",
+   "data": {
+    "registrationId": 78,
+    "registrationNo": "T20261103F9DA214F",
+    "payableAmount": 29.99,
+    "expireTime": "2026-11-03T12:04:55.634+08:00",
+    "expiresAt": "2027-02-01T11:34:55.634+08:00",
+    "paymentType": 1,
+    "registrationIds": [
+     78
+    ],
+    "payParams": {
+     "appId": "e2e-stub-appid",
+     "timeStamp": "0",
+     "nonceStr": "e2estub",
+     "package": "prepay_id=e2e-stub",
+     "signType": "RSA",
+     "paySign": "e2e-stub"
+    }
+   }
+  },
+  "callback": 204,
+  "paid": [
+   [
+    78,
+    1,
+    990016,
+    "29.99",
+    "0.0300",
+    2,
+    2,
+    null
+   ]
+  ]
+ }
+}

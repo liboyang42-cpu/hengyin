@@ -171,10 +171,8 @@ def phase_selfplay():
 
 
 def phase_settle_topic():
-    step("主题 %d 结算:夹具把主题结束时间与自玩单退款截止挪到过去,跑 settlementTask" % TOPIC)
+    step("主题 %d 结算:夹具把主题结束时间挪到 8 天前,跑 settlementTask" % TOPIC)
     ex("UPDATE cms_topic SET end_date = DATE_SUB(NOW(), INTERVAL 8 DAY) WHERE id = %s", (TOPIC,))
-    ex("UPDATE cms_registration SET refund_deadline = DATE_SUB(NOW(), INTERVAL 9 DAY) WHERE owner_type = 1 AND owner_id = %s "
-       "AND payment_status = 2", (TOPIC,))
     readback("topic", "SELECT id,club_id,member_id,product_type,fee_platform_rate,is_settlement,end_date FROM cms_topic "
              "WHERE id=%s", (TOPIC,))
     readback("内容槽", "SELECT slot,entity_type,entity_id FROM product_role WHERE topic_id=%s AND status=1", (TOPIC,))
