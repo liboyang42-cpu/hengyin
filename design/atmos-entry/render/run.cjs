@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Renders atmos.mp4 + sheet.jpg. Needs: Node 18+, Playwright with Chromium, ffmpeg.
-// Usage: node run.cjs [--scale 0.5] [--frames 0,30,60] [--out ../] [--data ./.cache/ne] [--textures]
+// Usage: node run.cjs [--scale 0.5] [--frames 0,30,60] [--out ../] [--data ./.cache/ne] [--repaint]
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
@@ -18,6 +18,7 @@ const scale = Number(arg('scale', '1'));
 const outDir = path.resolve(arg('out', path.join(HERE, '..')));
 const dataDir = path.resolve(arg('data', path.join(HERE, '.cache', 'ne')));
 const framesDir = path.resolve(arg('frames-dir', path.join(HERE, '.cache', 'frames' + (scale === 1 ? '' : '-' + scale))));
+const texDir = path.join(HERE, '.cache', 'textures');
 const only = arg('frames') ? arg('frames').split(',').map(Number) : null;
 const W = Math.round((780 * scale) / 2) * 2;
 const H = Math.round((1688 * scale) / 2) * 2;
@@ -37,12 +38,13 @@ async function ensureData() {
 
 function serve() {
   const three = path.join(path.dirname(require.resolve('three', { paths: [HERE] })), 'three.module.js');
-  const types = { '.js': 'text/javascript', '.html': 'text/html', '.geojson': 'application/json' };
+  const types = { '.png': 'image/png', '.js': 'text/javascript', '.html': 'text/html', '.geojson': 'application/json' };
   const srv = http.createServer((req, res) => {
     const u = decodeURIComponent(req.url.split('?')[0]);
     let file;
     if (u === '/vendor/three.module.js') file = three;
     else if (u.startsWith('/data/')) file = path.join(dataDir, path.basename(u));
+    else if (u.startsWith('/tex/')) file = path.join(texDir, path.basename(u));
     else file = path.join(HERE, path.basename(u === '/' ? 'index.html' : u));
     fs.readFile(file, (err, buf) => {
       if (err) { res.writeHead(404); res.end(); return; }
@@ -66,13 +68,14 @@ function serve() {
   await page.goto(`http://127.0.0.1:${port}/`);
   await page.waitForFunction(() => window.__ready);
   const t0 = Date.now();
-  const info = await page.evaluate((o) => window.__boot(o), { width: W, height: H, cloudScale: 0.5, dumpTextures: flag('textures'), texW: 4096, noiseN: 96 });
+  // Painting the textures takes ~15 min in software Chrome; they are cached as PNG and reused.
+  const haveTex = !flag('repaint') && fs.existsSync(path.join(texDir, 'china_mask.png'));
+  const info = await page.evaluate((o) => window.__boot(o), { width: W, height: H, cloudScale: 0.5, dumpTextures: !haveTex, cachedTextures: haveTex, texW: 4096, noiseN: 96 });
   console.log('setup', ((Date.now() - t0) / 1000).toFixed(1) + 's', info);
-  if (flag('textures')) {
+  if (!haveTex) {
     const tex = await page.evaluate(() => window.__tex);
-    const td = path.join(HERE, '.cache', 'textures');
-    fs.mkdirSync(td, { recursive: true });
-    for (const [k, v] of Object.entries(tex)) fs.writeFileSync(path.join(td, k + '.jpg'), Buffer.from(v.split(',')[1], 'base64'));
+    fs.mkdirSync(texDir, { recursive: true });
+    for (const [k, v] of Object.entries(tex)) fs.writeFileSync(path.join(texDir, k + '.png'), Buffer.from(v.split(',')[1], 'base64'));
   }
   const list = only || [...Array(info.frames).keys()];
   for (const i of list) {

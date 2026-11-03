@@ -32,8 +32,8 @@ export function params(t) {
     lon: lerp(168, CHINA.lon, turn),
     lat: lerp(10, CHINA.lat, turn),
     lookY: lerp(0.95, 0.0, smoother(0.2, 2.0, t)),
-    roll: rad(lerp(-7, 0, smoother(0.0, 2.6, t))),
-    globeClouds: lerp(0.55, 0.85, smooth(1.2, 2.4, t)),
+    roll: rad(lerp(-4, 0, smoother(0.0, 2.6, t))),
+    globeClouds: lerp(0.6, 0.9, smooth(1.2, 2.4, t)),
     coverage: lerp(0.0, 1.0, smoother(1.75, 2.62, t)),
     densityBoost: 1 + 3.5 * Math.exp(-(((t - CUT) / 0.09) ** 2)),
     bgMix: t >= CUT ? 1 : 0,
@@ -84,16 +84,16 @@ const starsFrag = /* glsl */ `
     vec3 d = normalize((uCamWorld * vec4(normalize(v.xyz), 0.0)).xyz);
     float pix = 2.0 * tan(radians(25.0)) / uRes.y;
     vec3 col = vec3(0.0);
-    col += starLayer(d, 90.0, 0.06, pix) * 0.9;
-    col += starLayer(d, 200.0, 0.05, pix) * 0.45;
-    col += starLayer(d, 420.0, 0.04, pix) * 0.22;
+    col += starLayer(d, 90.0, 0.022, pix) * 0.8;
+    col += starLayer(d, 200.0, 0.012, pix) * 0.35;
+    col += starLayer(d, 420.0, 0.006, pix) * 0.18;
     // faint nebula haze, lilac and blue
     float n1 = texture(tShape, d * 0.35 + 0.2).r;
     float n2 = texture(tShape, d * 0.8 + 0.6).g;
     float band = exp(-pow(dot(d, normalize(vec3(0.35, 0.9, -0.25))) * 2.6, 2.0));
     col += vec3(0.30, 0.22, 0.48) * pow(n1, 3.0) * 0.08 * (0.4 + band);
     col += vec3(0.12, 0.20, 0.42) * pow(n2, 4.0) * 0.06 * band;
-    col += vec3(0.010, 0.012, 0.028);
+    col += vec3(0.003, 0.004, 0.010);
     outColor = vec4(col, 1.0);
   }
 `;
@@ -177,13 +177,14 @@ const earthFrag = /* glsl */ `
     col += vec3(1.0, 0.85, 0.65) * pow(max(dot(N0, H), 0.0), 48.0) * 0.45 * ocean * smoothstep(0.0, 0.2, ndl0);
 
     // clouds on the planet (shadowed surface underneath)
-    vec3 q = p * 1.35 + vec3(uTime * 0.004, 0.0, 0.0);
+    vec3 q = p * 2.1 + vec3(uTime * 0.004, 0.0, 0.0);
     vec4 cn = texture(tShape, q);
     float wf = cn.g * 0.625 + cn.b * 0.25 + cn.a * 0.125;
     float base = clamp((cn.r - (wf - 1.0)) / (2.0 - wf), 0.0, 1.0);
-    float cov = smoothstep(1.0 - uClouds * 0.62, 1.0 - uClouds * 0.18, base);
-    vec4 cs = texture(tShape, (p + uSun * 0.02) * 1.35 + vec3(uTime * 0.004, 0.0, 0.0));
-    float csh = smoothstep(1.0 - uClouds * 0.62, 1.0, clamp((cs.r - (cs.g * 0.625 + cs.b * 0.25 + cs.a * 0.125 - 1.0)), 0.0, 1.0));
+    float cov = smoothstep(0.70, 0.93, base) * uClouds;
+    vec4 cs = texture(tShape, (p + uSun * 0.015) * 2.1 + vec3(uTime * 0.004, 0.0, 0.0));
+    float cwf = cs.g * 0.625 + cs.b * 0.25 + cs.a * 0.125;
+    float csh = smoothstep(0.70, 0.93, clamp((cs.r - (cwf - 1.0)) / (2.0 - cwf), 0.0, 1.0)) * uClouds;
     col *= 1.0 - 0.35 * csh;
 
     // night lights fade in on the dark side
@@ -302,7 +303,7 @@ const cloudFrag = /* glsl */ `
     vec3 L = vec3(0.0);
     float mu = dot(rd, uSun);
     float phase = mix(hg(mu, 0.55), hg(mu, -0.25), 0.45) * 4.0 * PI * 0.6 + 0.4;
-    vec3 sunCol = vec3(1.05, 1.0, 0.97) * 2.4;
+    vec3 sunCol = vec3(1.05, 1.0, 0.97) * 1.25;
     vec3 shadowCol = vec3(0.50, 0.46, 0.70);
     vec3 skyCol = vec3(0.86, 0.84, 1.0);
     const float SIGMA = 9.0;
@@ -319,7 +320,7 @@ const cloudFrag = /* glsl */ `
         float lightT = exp(-od * SIGMA * 0.55) * 0.75 + exp(-od * SIGMA * 0.14) * 0.25;
         float powder = 1.0 - exp(-d * SIGMA * 0.35);
         float h = clamp(p.z / TOP, 0.0, 1.0);
-        vec3 amb = mix(shadowCol, skyCol, smoothstep(0.0, 0.9, h)) * 0.95;
+        vec3 amb = mix(shadowCol, skyCol, smoothstep(0.0, 0.9, h)) * 0.5;
         vec3 Sc = sunCol * lightT * phase * mix(0.55, 1.0, powder) + amb;
         float sig = d * SIGMA;
         float Ts = exp(-sig * ds);
@@ -398,10 +399,15 @@ export async function setup(data, opts) {
   renderer.autoClear = true;
 
   log('painting textures');
-  const world = paintSet(data, { lon0: -180, lon1: 180, lat0: -90, lat1: 90, w: opts.texW || 4096, h: (opts.texW || 4096) / 2 }, 1);
   const win = { lon0: 72, lon1: 138, lat0: 14, lat1: 54, w: opts.texW || 4096, h: Math.round(((opts.texW || 4096) * 40) / 66) };
-  const china = paintSet(data, win, 101);
-  if (opts.dumpTextures) opts.dumpTextures({ world, china });
+  let world, china;
+  if (data.cached) {
+    ({ world, china } = data.cached);
+  } else {
+    world = paintSet(data, { lon0: -180, lon1: 180, lat0: -90, lat1: 90, w: opts.texW || 4096, h: (opts.texW || 4096) / 2 }, 1);
+    china = paintSet(data, win, 101);
+    if (opts.dumpTextures) opts.dumpTextures({ world, china });
+  }
   log('noise volumes');
   const shape = volTex(shapeVolume(opts.noiseN || 96), opts.noiseN || 96);
   const detail = volTex(detailVolume(32), 32);
