@@ -369,6 +369,8 @@ page { background: var(--cy-color-bg-page); }
 .chhold__t{ margin-top:var(--cy-space-6); font-size:var(--cy-type-page-title); font-weight:600; letter-spacing:.08em; color:var(--cy-color-text-primary); }
 .chhold__wait{ position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); margin:0; }
 .chhold--still .lg-wait__d{ animation:none; opacity:.6; }
+/* P-08 第五轮(业主):等待屏是深底,三点照集合屏用的 tertiary 几乎看不见 —— 这一屏改用与「等待放行」同一个 text-primary token */
+.chhold__wait .lg-wait__d{ background:var(--cy-color-text-primary); }
 
 /* P1 足迹卡保存按钮(次级白描边) */
 
