@@ -74,4 +74,19 @@ Rig shots below come from the walkthrough rig (`claude/cloud-walk-20261101-rig`,
 
 **Rig note:** Docker Hub returned 429 for the pinned Redis image. The rig pulled the same digest from `mirror.gcr.io` (rig-only edit to the candidate worktree's registry file; not committed).
 
-STATUS: PARTIAL - round 3 items all done; still open from round 2: M-11 not done (needs owner), M-10 remaining window/CRM/project-status questions left to owner, M-14 checked over HTTP only (no player-page shot)
+Round 3 closing status: PARTIAL - round 3 items all done; still open from round 2: M-11 not done (needs owner), M-10 remaining window/CRM/project-status questions left to owner, M-14 checked over HTTP only (no player-page shot).
+
+## Round 4
+
+Rig shots come from the walkthrough rig (`claude/cloud-walk-20261101-rig`, club lane's `harness-patches.diff` applied, candidate pinned to this branch's `32b185e2`), not a phone. Data: fresh rig DB, `chains.py player` (all four chains PASS): topic 990014, club session 13 today at 11:58 Shanghai with one paid registration (reg 74, player 9009), stop holder 9002 (探店日样板咖啡) with one redemption. "Before" is round 3's front end (`be9055c5`) bundled against the same backend and data; "after" is this branch. Docker Hub returned 429 again; the pinned MySQL/Redis digests were pulled from `mirror.gcr.io` (rig-only edit in the candidate worktree, not committed).
+
+| Item | Status | What changed | Files | Proof |
+|---|---|---|---|---|
+| M-04 | fixed | When the card shows the today line 「今天 11:58 · 1 人已报名」, the theme's date line is dropped: the meta keeps only the chapter part (「第1章 咖啡」). Other-day cards keep the date. | `pages/merchant/index/index.js` (`assignmentPlaceText`, the meta without the date), `utils/merchant-workbench.js` (`metaNoDate`; `attachVisitTexts` swaps it in on a today run) | `shots/M-04-r4-before.jpg` (「第1章 咖啡 · 周五 11月13日」 + 「今天 11:58 · 1 人已报名」: two dates) / `M-04-r4-after.jpg` (「第1章 咖啡」 + 「今天 11:58 · 1 人已报名」). Unit tests in `walk-fix-1102-counter-result.test.js` (fail on the old code: meta unchanged). |
+| M-27 | fixed | The ledger row shows the customer's sign-up name before the time. New read-only query `RedemptionMapper.selectSignupNamesByMerchant` joins `redemption` → `cms_registration` with `r.merchant_id = <current merchant>` in SQL, reads only the encrypted `real_name`, and `MerchantFinanceQueryService` decrypts it with `PiiCryptoService` (as C-05 does in `ClubCrmAppServiceImpl` on l6-club). Fills the existing `MerchantRedemptionView.customerDisplayName` for the list and the detail. No name → field absent and nothing shown (no placeholder). Nothing logs the name (`RedemptionSignupName.toString` leaves it out). Refund rows do not reuse the activity title as a name (separate `customerName` page field). | `RedemptionMapper.{java,xml}`, `RedemptionSignupName.java` (new VO), `MerchantFinanceQueryService.java`, `pages/merchant/ledger/index.{js,wxml}` | `shots/M-27-r4-before.jpg` (title, 11:58, chip) / `M-27-r4-after.jpg` (「E2E 玩家二号 11:58」, chip). Rig HTTP + DB read-back in `http-evidence-r4.txt`: 9002 sees only redemption 1 with the decrypted name; 9005 sees only redemption 2; 9005 asking for redemption 1's detail gets 「记录不可见」; `real_name` in the DB is ciphertext (`v1:`); the name occurs 0 times in the application log. `MerchantFinanceQueryServiceTest` (6/6, new case: decrypted name, null when absent, merchant id only), `ApiMerchantLedgerControllerTest` 18/18, Druid wall tests 5/5. |
+
+Gates: `node chengyinhub-xcx/tests/lint/ui-integrity.js` → `UI-GATE-0:PASS`. Action ledger rebuilt (line-number shifts only). `node --test` of the touched unit files passes.
+
+Unverified on a real phone: both items (rig only).
+
+STATUS: COMPLETE
