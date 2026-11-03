@@ -33,9 +33,33 @@
 //   2. 控制台上只给这个 key 开「微信小程序个性化地图」,WebService/REST 另用一个不下发前端的 key。
 //   3. 把 key 填进 subkey、序号填进 layerStyle。接线(play 3 处 + roam 3 处)已经就位,不必再改。
 //   详见 components/cy/free-map/DARK_MAP.md。
+//
+// 2026-11-03 第九轮 m1 第 1 项:仓库里永远是空 subkey。上传前由 scripts/release-map-style.js 从环境变量
+// 往「上传用的那份拷贝」里填值,不写回仓库。
+//   玩家地图(漫游 / 游玩 / 附近 / 玩家进入的搜索地图)用 layerStyle = 暗色样式序号;
+//   商家与编辑器地图用 lightLayerStyle = 同一 key 绑定的浅色样式序号。
+// 一个小程序里的所有 <map> 共用同一个 subkey(微信 map 文档),样式只靠 layer-style 区分 ——
+// 所以商家地图不能留空 subkey、也不能用暗色序号:要在控制台给同一个 key 再绑一套浅色样式。
 const MAP_STYLE = {
   subkey: '',
   layerStyle: 1,
+  lightLayerStyle: 1,
 };
 
-module.exports = { MAP_STYLE };
+const DEFAULT_STYLE = { subkey: '', layerStyle: 1 };
+
+/** 玩家地图:暗色样式。没配 key 时就是微信官方默认底图。 */
+function playerMapStyle(style) {
+  const s = style || MAP_STYLE;
+  if (!s.subkey) return Object.assign({}, DEFAULT_STYLE);
+  return { subkey: s.subkey, layerStyle: Number(s.layerStyle) || 1 };
+}
+
+/** 商家 / 编辑器地图:同一个 key 上的浅色样式。没配 key 时同样是官方默认底图。 */
+function lightMapStyle(style) {
+  const s = style || MAP_STYLE;
+  if (!s.subkey) return Object.assign({}, DEFAULT_STYLE);
+  return { subkey: s.subkey, layerStyle: Number(s.lightLayerStyle) || 1 };
+}
+
+module.exports = { MAP_STYLE, playerMapStyle, lightMapStyle };

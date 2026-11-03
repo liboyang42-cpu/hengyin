@@ -80,7 +80,8 @@ const { normalizeRunners } = require('../../utils/roam-runners.js');
 const presencePrivacy = require('../../utils/roam-presence-privacy.js');
 const { currentScene, exitDecision, popScene, pushScene } = require('../../utils/scene-stack.js');
 // 个性化地图(暗色底图)与 play 页共用一份配置,见 utils/map-style.js
-const { MAP_STYLE } = require('../../utils/map-style.js');
+const { playerMapStyle } = require('../../utils/map-style.js');
+const PLAYER_MAP_STYLE = playerMapStyle();
 const { getScene } = require('../../utils/scene-registry.js');
 const { openScene: openPageScene } = require('../../utils/scene-entry.js');
 const { getNodeLevelStyle, buildNodeLevelMarkerStyle } = require('./node-level-style.js'); const entryMap = require('../../utils/roam-entry-map.js');
@@ -310,8 +311,8 @@ Page({
     introError: '',
     // 个性化地图透传给本页三个 <free-map>(起始预览 / 主漫游图 / 结算图),三处必须同源,
     // 否则同一次漫游里会出现一亮一暗。值在 utils/map-style.js。
-    fmSubkey: MAP_STYLE.subkey,
-    fmLayerStyle: MAP_STYLE.layerStyle,
+    fmSubkey: PLAYER_MAP_STYLE.subkey,
+    fmLayerStyle: PLAYER_MAP_STYLE.layerStyle,
     // 起始页(Figma 3956:12602/12809)。modeTitle 是模式名:本页恒为自由漫游,
     // 城市定向/自由探索复用同一版式时只换这三项(标题 / 卡片 / 主行动文案)。
     modeTitle: '自由漫游',

@@ -75,3 +75,15 @@
 - 同一个控制台样式(同一个 subkey + styleId)可以被 play 和 roam 两处地图同时复用,不需要建两份。
 
 用户可以在自己方便的时候把这段逻辑加到 roam 里,不影响这次提交。
+
+## 2026-11-03 第九轮:发布时填值,一个 key 两套样式
+
+- 仓库里 `utils/map-style.js` 永远 `subkey: ''`。上传前对**上传用的拷贝**运行
+  `CY_MAP_SUBKEY=… CY_MAP_LAYER_STYLE=1 CY_MAP_LIGHT_STYLE=2 node scripts/release-map-style.js --dir <拷贝目录> --require`,
+  缺任何一项都失败;脚本拒绝改仓库本身,也不打印 key。
+- 微信 `<map>` 文档:同一个小程序里的 map 组件要用**同一个 subkey**,样式只靠 `layer-style`(该 key 下绑定样式的序号)区分。
+  所以控制台要在同一个 key 上绑两套样式:暗色(玩家)和浅色(商家 / 编辑器)。只给 key 不给浅色序号,脚本直接失败 ——
+  否则商家地图会跟着变暗。
+- 玩家地图(`playerMapStyle()`):`pages/roam`、`pages/play`、`subpackageRoam/nearby`、玩家进入的 `pages/searchmap`。
+  商家 / 编辑器地图(`lightMapStyle()`):`pages/publish/fabu`、`pages/topic/index`、`pages/square/components/route-map`、商家视角进入的 `pages/searchmap`。
+- 只有真机能确认:绑定序号与控制台一致、浅色序号下底图确实是浅色、同一 key 两套样式在同一次启动里切页不串。

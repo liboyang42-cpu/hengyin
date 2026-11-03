@@ -408,6 +408,7 @@
             <cy-route-sketch wx:if="{{!routeReal}}" points="{{sketchPoints}}" tone="{{isExplore ? 'free' : 'city'}}" reduced-motion="{{reducedMotion}}" bind:open="onRouteReal" />
             <map wx:else
               id="routeMap"
+              subkey="{{mapSubkey}}" layer-style="{{mapLayerStyle}}"
               class="route-map"
               latitude="{{mapLatitude}}"
               longitude="{{mapLongitude}}"

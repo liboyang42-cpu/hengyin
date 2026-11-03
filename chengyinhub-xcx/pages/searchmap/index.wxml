@@ -43,6 +43,7 @@
     longitude="{{longitude}}"
     scale="{{scale}}"
     markers="{{markers}}"
+    subkey="{{mapSubkey}}" layer-style="{{mapLayerStyle}}"
     bindtap="onMapTap"
     bindmarkertap="onMarkerTap"
     bindregionchange="onRegionChange"

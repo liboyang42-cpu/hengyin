@@ -8,6 +8,8 @@ const { openScene } = require('../../utils/scene-entry.js');
 const { buildNodeLevelMarkerStyle } = require('../roam/node-level-style.js');
 const { isRecordList } = require('../../utils/response-shape.js');
 const { appendByIndex } = require('../../utils/list-append.js');
+const { playerMapStyle, lightMapStyle } = require('../../utils/map-style.js');
+const { isMerchantView } = require('../../utils/roleGuard.js');
 const DATE_YEARS = Array.from({ length: 81 }, (_, index) => 1970 + index);
 const DATE_MONTHS = Array.from({ length: 12 }, (_, index) => index + 1);
 
@@ -44,6 +46,9 @@ function formatUpdatedAt(date) {
 
 Page({
   data: {
+    // 第九轮 m1:玩家进来是暗色样式,商家视角进来是浅色样式(onLoad 里按身份定)
+    mapSubkey: '',
+    mapLayerStyle: 1,
     // 自定义导航(ADA:全屏地图只留浮动圆钮)。20 是状态栏兜底高,
     // globalData 取不到时至少不会把返回钮压进状态栏。
     statusBarHeight: 20,
@@ -1148,7 +1153,10 @@ Page({
     this.mapContext = wx.createMapContext('myMap', this);
 
     const navRow = this.readNavRow();
+    const mapStyle = isMerchantView() ? lightMapStyle() : playerMapStyle();
     this.setData({
+      mapSubkey: mapStyle.subkey,
+      mapLayerStyle: mapStyle.layerStyle,
       statusBarHeight: app.globalData.statusBarHeight || 20,
       navTop: navRow.navTop,
       navRight: navRow.navRight,

@@ -118,7 +118,9 @@ const templateAuthorFields = require('../utils/publish/template-author-fields.js
 const storyEnding = require('../utils/publish/story-ending');
 const routeMapView = require('../utils/publish/route-map-view.js');
 const { drawPlayStateMarker } = require('../../../utils/play-marker-draw.js');
-const { MAP_STYLE } = require('../../../utils/map-style.js');
+const { lightMapStyle } = require('../../../utils/map-style.js');
+// 第九轮 m1:编辑器地图保持浅色。同一个 subkey,浅色样式序号(见 utils/map-style.js)
+const EDITOR_MAP_STYLE = lightMapStyle();
 const publishValidationBag = require('../utils/publish/publish-validation-bag.js');
 const publisherIdentity = require('../../../utils/publisher-identity.js');
 const nodeOutcomeContract = require('../utils/publish/node-outcome-contract.js');
@@ -566,9 +568,9 @@ Page({
     mapInclude: [MAP_DEFAULT_CENTER], // include-points 自动适配视野;空数组会让腾讯 SDK fitBounds 崩,兜底中心点
     mapCenter: MAP_DEFAULT_CENTER,
     mapScale: 12,
-    // P-45 / G-12:编辑器地图与玩家地图同一套个性化样式(utils/map-style.js;key 未配置时是官方默认底图)
-    mapSubkey: MAP_STYLE.subkey,
-    mapLayerStyle: MAP_STYLE.layerStyle,
+    // 第九轮 m1:编辑器地图用同一个 key 上的浅色样式(utils/map-style.js;key 未配置时是官方默认底图)
+    mapSubkey: EDITOR_MAP_STYLE.subkey,
+    mapLayerStyle: EDITOR_MAP_STYLE.layerStyle,
     hasRoute: false,       // 是否已有有效坐标节点(空态判断)
     selectedNodeLid: '',   // 列表↔地图双向高亮选中的节点 _localId
     rowHpx: 0,             // 节点卡片行高(px),movable-view y 用 px,onLoad 由 rpx 折算

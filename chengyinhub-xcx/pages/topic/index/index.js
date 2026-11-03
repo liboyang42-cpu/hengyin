@@ -19,6 +19,8 @@ const { createRegistrationPaymentVerifier } = require('../../../utils/checkout/r
 const { buildTopicStatBar, sessionWindowsText } = require('../utils/topic-detail-facts.js');
 const { isRecordList } = require('../../../utils/response-shape.js');
 const { haversine, distanceText } = require('../../../utils/geo.js');
+const { lightMapStyle } = require('../../../utils/map-style.js');
+const LIGHT_MAP_STYLE = lightMapStyle();
 const routePreview = require('../../../utils/topic-route-preview.js');
 const marketingConsent = require('../../../utils/marketing-consent-entry.js');
 const ticketSource = require('../../../utils/ticket-source.js');
@@ -99,6 +101,8 @@ Page({
   ...themeRecords.methods(recordsRequest, false),
   openThemeRecordCard(e) { return this.openThemeResultCard({ currentTarget: { dataset: e.detail } }); },
   data: {
+    mapSubkey: LIGHT_MAP_STYLE.subkey,
+    mapLayerStyle: LIGHT_MAP_STYLE.layerStyle,
     ...themeRecords.data,
     // 选场次 / 选票种弹层(稿 11 240:401 · 11a 240:446)
     sessionPicker: { show: false },

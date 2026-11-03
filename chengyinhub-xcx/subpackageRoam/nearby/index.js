@@ -7,7 +7,8 @@ const app = getApp();
 const teamOperation = require('../utils/roam-team-operation.js');
 const teamRecovery = require('../utils/roam-team-recovery.js');
 const session = require('../../utils/session/login-reload.js');
-const { MAP_STYLE } = require('../../utils/map-style.js');
+const { playerMapStyle } = require('../../utils/map-style.js');
+const PLAYER_MAP_STYLE = playerMapStyle();
 const { getCurrentLocation } = require('../../utils/location/location-manager.js');
 const lastLocation = require('../../utils/location/last-location.js');
 const { isRecordList } = require('../../utils/response-shape.js');
@@ -78,8 +79,8 @@ Page({
   data: { teamCommandRows: [], teamCommandError: '',
     safeBottom: 0,
     hudTop: 90,
-    fmSubkey: MAP_STYLE.subkey,
-    fmLayerStyle: MAP_STYLE.layerStyle,
+    fmSubkey: PLAYER_MAP_STYLE.subkey,
+    fmLayerStyle: PLAYER_MAP_STYLE.layerStyle,
     center: DEFAULT_CENTER,
     scale: 15,
     markers: [],
