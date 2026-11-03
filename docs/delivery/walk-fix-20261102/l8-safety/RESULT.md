@@ -183,12 +183,7 @@ owner：后端自己有一套库，自动识别敏感词和敏感图片，叠加
 
 - **导入格式**（后台「批量导入」和脚本通用）：UTF-8 纯文本，一行一条，写成 `词条,分类,动作`。分类可选 `POLITICS / PORN / GAMBLING / DRUGS / VIOLENCE / FRAUD / ABUSE / AD / OTHER`，缺省是 `OTHER`；动作是 `BLOCK`（默认，提交即拒）或 `LOG`（只记命中不拦，用来试运行）。`#` 开头的行是注释。放行短语一行一个。一次最多 5000 行。
 - **误伤报告脚本**：`scripts/sensitive/run.sh <词表> [放行短语]`。它用与线上同一个匹配器，扫 `chengyinhub-admin/sql/seed*.sql` 和小程序随包的 `.wxml / .js / .json`（排除测试、脚本和 npm 目录），打印每个命中的文件:行号、命中词和原文片段，最后汇总计数。只读，不连库，不联网。
-- **本轮的数字**：手头没有真实词表，所以拿 4 个通用演示词（成人、血、杀、赌）跑了一遍，用来说明放行短语的作用：
-
-| 运行 | 扫描文件 | 扫描行 | 命中行 | 分词命中 |
-|---|---|---|---|---|
-| 4 个演示词，不带放行短语 | 1673 | 233,850 | 25 | 成人 2、杀 7、血 12、赌 5 |
-| 加上放行短语「成人票」「血量」 | 1673 | 233,850 | 18 | 成人 2、杀 7、血 5、赌 5 |
+- **本轮的数字**：Round 5E 起只用编造的记号证明脚本能跑，见下文 Round 5E 第 4 项。原先这里用 4 个通用演示词跑出的表已删掉。
 
   拿到真实词表后，owner 按同样的命令跑一遍，就能看到真实的误伤数字，再决定要加哪些放行短语。
 
@@ -221,4 +216,63 @@ owner：后端自己有一套库，自动识别敏感词和敏感图片，叠加
 5. **两个新的 Quartz 任务注册为暂停**：`contentSafetyRecheckTask`、`sensitiveContentRescanTask`。推荐默认：新 jar 部署并读回以后，先启用前者；后者等词表导入后再启用。
 6. **菜单权限**：没有授权给任何角色。推荐默认：只授给平台内容安全管理员。
 
-STATUS: PARTIAL - Round 5C 和 5D 的代码、迁移和单测都已完成并推送；跨角色的 rig 真实 HTTP 回读、MySQL 上的 Mapper SQL 读回，以及后台页面截图都没做；needs owner 6 条
+（Round 5D 原状态：PARTIAL，跨角色 rig 回读与 Mapper SQL 读回未做；Round 5E 已补，见下。）
+
+# Round 5E（l8-safety）：集成前收尾
+
+rig 跑在 `claude/cloud-walk-20261101-rig`，`up.sh` 钉到本分支 `69a25ddf`（含本轮修复），club 线的 `harness-patches.diff` 已打上，Maven 用 `LANG=C.UTF-8 LC_ALL=C.UTF-8`。真实 MySQL 8.0.45、Redis 7.4，迁移由 rig 的 `build_schema.py` 照仓库文件执行（两张新迁移都落库：`content_safety_recheck`、`content_sensitive_*`、两个暂停的 Quartz 任务、一个默认 `false` 的开关）。所有结论都来自 rig，不是真机。
+
+**微信怎么替身**：rig 自带的 `E2eWxContentSecurityStub` 把 `checkText` 整个覆盖了，会跳过 Round 5D 的自建词库，用它证明不了词库。所以本轮在 rig 里把它换成 `RigWxOutboundStub`：只覆盖包内的 `sendPost`（发往微信的那一次 HTTP），总开关、openid 闸、词库、token 缓存、errcode 处理都是真实实现。微信的结论（pass / busy / review / risky）由一个文件切换。上传时的 `img_sec_check` 没替身，rig 连不到微信，所以新图上传在 rig 里回 503。替身只在 rig 里，产品代码没动。脚本：`round5e/rig/up-l8.sh`、`RigWxOutboundStub.java`。
+
+## 逐项
+
+| ID | 状态 | 做了什么 | 文件 | 怎么验证 |
+|---|---|---|---|---|
+| 5E-1a CI `Migration safety gate` | fixed | 原因是 PR 描述的「影响分类」没标 ③。改了 PR 描述：③ 数据库迁移，写明两个迁移须在 jar 部署前由用户手动落库、互不依赖。门禁没改。 | PR #721 描述 | 本地用 `ci/migration_gates.py` 的 `check_pr_declaration` 对新描述返回 `None`（通过）。门禁读的是触发时的 PR 描述，本轮推送后的新一轮 CI 会带上新描述。 |
+| 5E-1b CI `Fast gates` 里的架构门 | needs owner | 失败的是 `ci/architecture/gate.py source`：7 个新增的服务/Mapper（`ContentSafetyRecheckMapper`、`ContentSensitiveMapper`、`IContentSafetyRecheckService`、`ISensitiveContentRescanService`、`ContentSafetyRecheckServiceImpl`、`SensitiveContentLibraryImpl`、`SensitiveContentRescanServiceImpl`）报 `NEW_UNOWNED_BOUNDARY`。门禁要求新边界在 `ci/architecture/owners.json` 登记技术 owner，而 CI 拿 master 上的受信副本比对，候选 PR 改 `owners.json` 会被判 `POLICY_CHANGE`。也就是说这一步只能由 root 先在 master 落登记，本 PR 改不了，也不该绕（比如改类名躲正则，或者把新表硬塞进旧 Mapper）。本轮写好了登记补丁，并在本地按 CI 的 `pull_request` 上下文模拟：把补丁当作受信策略、候选也带同一份 `owners.json`，门禁结果是 `PASS_WITH_REVIEW_ITEMS`，`findings: []`。 | `round5e/architecture-owner-registration.patch` | 本地复现原失败：同样 7 条 `NEW_UNOWNED_BOUNDARY`；套补丁后通过。 |
+| 5E-2 rig 跨角色真实 HTTP + 库读回 | fixed（另修 1 个 bug） | 见下表。62 项全部通过。过程中发现存量复查的真 bug，已修。 | `round5e/rig/p1..p4*.py`，读回在 `round5e/rig/evidence/` | rig，真实 HTTP，每步都查库 |
+| 5E-2 bug：存量复查命中写不进库 | fixed | `content_sensitive_hit.scan_version` 是 `VARCHAR(64)`，而词库版本串（三张表的「条数@最后修改时间」）真实长度约 65～70。在 MySQL 上第一条命中写库就报 `Data too long`，整轮中断：只报告模式什么都记不下；下架模式先下架、后记命中失败，结果内容下架了却没有记录，幂等判断也失效。修法：`scan_version` 改存版本串的 SHA-256 十六进制（正好 64 位），不改表、不改迁移。 | `SensitiveContentRescanServiceImpl.scanKey` | 新增 `SensitiveLibraryIntegrationTest.rescanScanVersionFitsTheColumnForARealisticLibraryVersion`（旧代码上是红的），该类 8 例 + 词库 10 例全过；rig 里修复前 0 条 RESCAN 命中、修复后两种模式都有记录（`p4_rescan`） |
+| 5E-3 Mapper SQL 在真 MySQL 上过 Druid wall | fixed | `MapperWallProof`：用 MyBatis 解析候选自己的 Mapper XML，经带 wall 过滤器（mysql、禁多语句，同 `application-druid.yml`）的 Druid 数据源，在 rig MySQL 上执行本分支新增或改动的每一条语句，整段事务最后回滚。负控：`BINARY word = BINARY word`、`AND 1 = 0`、多语句都被同一个 wall 拒绝；`CAST(x AS BINARY) = CAST(y AS BINARY)` 能过。本分支的 SQL 没有用 `BINARY`，也没有恒假片段。 | `round5e/rig/MapperWallProof.java`、`WallProbe.java` | 43/43（`evidence/mapper_wall.log`）。另外 p1～p4 走的是应用自己的数据源，同样经过 wall（报错栈里有 `WallFilter`）。 |
+| 5E-4 误伤工具 | fixed | 只用编造的记号（`zqvxlm` BLOCK、`qwpkzt` LOG，放行短语 `zqvxlmpark`）。先在一个临时目录里放一份假的 seed SQL 和一个 wxml，跑出 3 条命中：用符号拆开的 `z.q-v x*l_m` 被认出，被放行短语覆盖的那行不算，LOG 词也报出来。再用同一份列表扫真实仓库：1673 个文件、233,850 行，0 条命中。仓库里没有词表，5D 段落里那张用真实字词跑的表已删掉。 | `scripts/sensitive/run.sh`（没改） | `evidence/fp_fixture.log`、`evidence/fp_repo.log` |
+
+## rig 实证（62 项，全部 PASS）
+
+身份：玩家 9004、俱乐部主理人 9003（发主题）、超管（导入词库、跑任务、改开关），都走真实登录。词和图都是编造的，通过真实后台接口导入。
+
+| 场景 | 结果 | 读回 |
+|---|---|---|
+| 后台导入编造词 `zqvxlm` 和放行短语 `zqvxlmpark` | `/business/sensitive/words/import`、`/allows/import` 都回 200 | `content_sensitive_word` / `_allow` 各 1 行 |
+| 评论含词 | 拒绝「内容包含违规信息，请修改后重试」 | `ums_comment` 0 行；`content_sensitive_hit` 只有类型、分类、动作，没有词 |
+| 评论里把词用符号拆开（`z.q-v x*l_m`） | 拒绝 | 0 行 |
+| 评论含放行短语 | 通过 | 1 行 |
+| 评论带外链图片 | 拒绝「媒体来源未经审核，请重新上传」 | 0 行 |
+| 社区帖文含词 | 发布被拒（400） | 帖文停在 `DRAFT` |
+| 社区帖文含放行短语 | 发布成功 | `PUBLISHED` |
+| 主题含词（主理人建期） | 拒绝「主题内容包含违规信息」 | `cms_topic` 0 行；同样的主题换成放行短语就能建出来（对照） |
+| 微信繁忙时建主题 | 接受但留置 | `user_status=0`，`content_safety_recheck` 进队 `state=0` |
+| ↳ 留置期间 | 公开列表没有；其他玩家看详情回「主题活动不存在」；作者自己能看 | — |
+| ↳ 微信恢复，跑真实 Quartz 任务 | 自动发布 | 复检 `state=1 PASS`，`user_status=1`，其他玩家能看到 |
+| ↳ 复检判违规（risky） | 自动驳回，保持不公开 | `state=2`，作者收到 IM 系统消息「审核未通过」 |
+| ↳ 重试用完 | 自动驳回，保持不公开 | `state=3`，作者收到通知 |
+| ↳ 复检时仍繁忙 | 退避重排 | `attempt_count=1`，`TEXT_UNAVAILABLE`，仍不公开。下次约在 10 分钟后：读回差值是 489 分钟，因为 rig 的 MySQL `NOW()` 是 UTC，应用写的是 +08:00，即 8 小时加约 9 分钟 |
+| 后台登记已知违规图（只存指纹） | 200 | 表里只有 `sha256`、`dhash`，没有图片列 |
+| 玩家上传同一张图 / 近似副本（缩小、提亮 6%、重压 q70） | 都拒绝「图片未通过内容安全检查」 | `content_sensitive_hit` 记 2 条 IMAGE |
+| 玩家上传另一张图（对照） | 没被词库拦，走到微信 `img_sec_check`；rig 连不到微信，回 503 | — |
+| 先发布评论和帖文，再导入编造词 `qwpkzt`；复查任务只报告模式 | 记 2 条 REPORT，内容不动；同版本再跑不重复记 | 评论 `status=1`、帖文 `PUBLISHED` |
+| 后台 `/system/config` 打开下架开关后再跑 | 两条都下架并记 REMOVED；作者收到通知；再跑没有新记录，状态不变 | 评论 `status=2`、帖文 `HIDDEN` |
+
+为了不等 5 分钟或 16 小时，复检那几步在一次性库里把 `next_attempt_at` 改成当前时间，「重试用完」那一步把 `max_attempts` 改成 1。任务本身是用后台 `PUT /monitor/job/run` 真跑的。
+
+## 在 rig 里没验证、要说明的
+
+- 真机：没验证。微信的四种结论是 rig 替身给的；上传时的 `img_sec_check` 和异步图片回调没有在 rig 里跑（新图在 rig 里回 503）。
+- 后台敏感内容库页面没有截图：rig 不起 `chengyinhub-ui`。接口都是通过 HTTP 真实调的。
+- 俱乐部动态、活动、商家和俱乐部资料的存量复查，只证明了 `selectPublicText` 在 MySQL 上能跑（Mapper 证明），没有在 rig 里造数据走下架。
+- 优惠券留置（`status=5`）和 `releaseHeldCoupon`、回调锁 `bizType=7`，只在 Mapper 层证明，没有走 HTTP。
+
+## needs owner（Round 5E 新增，附推荐默认）
+
+1. **架构门登记**（5E-1b）：需要 root 先把 `round5e/architecture-owner-registration.patch` 审过并落到 master，然后本分支合并 master，`Fast gates` 才会绿。这是门禁本身的设计（候选不能自批）。推荐默认：按补丁登记 5 个 owner（`L8_RECHECK(_STORAGE)`、`L8_SENSITIVE_STORAGE/LIBRARY/RESCAN`）和 5 条依赖方向。另外，补丁把后台 `SensitiveLibraryController` 列为 `ContentSensitiveMapper` 的允许消费者，因为它现在直接调 Mapper。如果 owner 希望 Controller 只经 Service，那是一处小重构，本轮没做。
+2. **CI 的 e2e 内容安全替身**：`scripts/e2e/E2eWxContentSecurityStub.java.stub` 覆盖了整个 `checkText`，所以链路验收不会经过自建词库（现在 CI 里词库是空的，结果一样）。推荐默认：之后改成只替身发往微信的 HTTP，与本轮 rig 的做法一致。这一处属于共用的验收夹具，本轮没改。
+
+STATUS: PARTIAL - 架构门（Fast gates）需要 root 在 master 落 owner 登记后才能绿，补丁已备好并在本地验证通过；其余各项都已完成
