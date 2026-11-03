@@ -79,6 +79,11 @@ Component({
 
   methods: {
     openPublishSheet() {
+      const app = getApp();
+      if (!app.ensureLoginFor('publish', () => this.openPublishSheet(), {
+        owner: this,
+        target: () => [this.data.mode, this.data.activePath, this._publishRequest || 0]
+      })) return;
       const request = (this._publishRequest || 0) + 1;
       this._publishRequest = request;
       this.setData({ publishSheetShow: true, publishSnapshot: null });

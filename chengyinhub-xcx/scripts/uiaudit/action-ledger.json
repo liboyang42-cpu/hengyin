@@ -935209,7 +935209,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/tabBar/index.js:103"
+        "staticSource": "components/tabBar/index.js:108"
       }
     },
     {
@@ -935386,7 +935386,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/tabBar/index.js:132"
+        "staticSource": "components/tabBar/index.js:137"
       }
     },
     {
