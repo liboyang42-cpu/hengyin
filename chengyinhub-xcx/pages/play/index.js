@@ -11,6 +11,7 @@ const bgTracker = require('../../utils/location/bg-tracker.js');
 let playLocationOwnerSequence = 0; // 每次实际持有使用独立key，旧页面不能释放新会话。
 const analytics = require('../../utils/analytics.js');
 const { activityShareFromEvent } = require('../../utils/activity-share.js');
+const { playMenuShare } = require('../../utils/play-menu-share.js');
 const { bundledMerchantGameAudioPath } = require('./utils/merchant-game-assets.js');
 const { stripOperatorNotes } = require('../../utils/rule-steps.js');
 const geo = require('../../utils/geo.js'); // 纯地理/时间工具(haversine/营业窗判定),可单测
@@ -8656,9 +8657,9 @@ Page({
     this.setData({ audioPlaying: false, audioLoading: false, audioError: '', audioNodeId: null });
   },
 
+  // 第七轮 C 第 2 项:菜单转发落到公开的主题详情 + 固定封面(不让微信截屏暴露位置和谜面),见 utils/play-menu-share.js
   onShareAppMessage(event) {
-    return activityShareFromEvent(event)
-      || { title: '来城瘾，走一段城市探索', path: '/pages/play/index?activityId=' + this.data.activityId };
+    return activityShareFromEvent(event) || playMenuShare(this.data);
   },
   // FE-17 朋友圈分享(游玩页高传播)
   onShareTimeline() { return { title: '来城瘾，走一段城市探索', query: 'activityId=' + this.data.activityId }; },

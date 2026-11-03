@@ -233,7 +233,5 @@ Page({
     this.getList(true);
   },
 
-  onShareAppMessage() {
-    return { title: '我的参与', path: '/subpackageMember/mycanyu/mycanyu' };
-  }
+  // 第七轮 C 第 2 项:「我的参与」是登录后的私人列表,不提供转发(原先转发出去接收人只看到自己的空列表/登录弹窗)。
 });
