@@ -60,12 +60,14 @@ test('跨端契约:后端 quote 出参必须带 refundDeadline/refundableNow,且
   assert.match(dto, /private Boolean refundableNow;/)
   const svc = fs.readFileSync(path.join(BE_ROOT,
     'chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java'), 'utf8')
-  assert.match(svc, /RefundPolicy\.sessionRefundDeadline\(activity\.getStartDate\(\)\)/)
+  // 2026-11-03 通行证三档:钟 = refundAnchor(场次集合时间;③ 自由探索票为票的开始时间),仍只经 RefundPolicy
+  assert.match(svc, /Date refundAnchor = activity == null \? null : activity\.getStartDate\(\);/)
+  assert.match(svc, /RefundPolicy\.sessionRefundDeadline\(refundAnchor\)/)
   assert.match(svc, /boolean free = payAmount\.signum\(\) == 0 && pointsUsed == 0;/)
-  assert.match(svc, /Date deadline = free \? activity\.getStartDate\(\) : RefundPolicy\.sessionRefundDeadline\(activity\.getStartDate\(\)\);/)
+  assert.match(svc, /Date deadline = free \? activity\.getStartDate\(\) : RefundPolicy\.sessionRefundDeadline\(refundAnchor\);/)
   // 2026-11-02 退款档位:收费单的可退性与比例都从 RefundPolicy.sessionRefundRatioAt 这一口钟来
   assert.match(svc, /result\.setRefundableNow\(deadline == null \? null : quotedAt\.before\(deadline\)\);/)
-  assert.match(svc, /RefundPolicy\.sessionRefundRatioAt\(activity\.getStartDate\(\), quotedAt\)/)
+  assert.match(svc, /RefundPolicy\.sessionRefundRatioAt\(refundAnchor, quotedAt\)/)
   assert.match(svc, /result\.setRefundPercentNow\(/)
   assert.match(dto, /private Integer refundPercentNow;/)
 })
