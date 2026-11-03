@@ -519,13 +519,15 @@ Page({
     });
   },
 
+  // 第七轮 C 第 3 项:卡片带玩法封面(与详情页同一张);接收人不是作者,落点一律公共库视图(不带 scope=my)。
   onShareAppMessage() {
     var info = this.data.info || {};
-    return {
+    var share = {
       title: info.title || '城瘾玩法',
-      path: '/pages/templatedetail/templatedetail?id=' + this.data.id +
-        (this.data.scope === 'my' ? '&scope=my' : '')
+      path: '/pages/templatedetail/templatedetail?id=' + encodeURIComponent(this.data.id)
     };
+    if (this.data.coverUrl) share.imageUrl = this.data.coverUrl;
+    return share;
   }
 });
 

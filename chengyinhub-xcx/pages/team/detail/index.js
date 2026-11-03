@@ -2,6 +2,7 @@ const cyToast = require('../../../utils/toast.js');
 const { isLoginRequired, retryLogin } = require('../../../utils/session/login-reload.js');
 const { exactId, reader, sameReader } = require('../../../utils/user-character.js');
 const { createRecovery } = require('../../../utils/team-event-command.js');
+const { ROAM_SHARE_COVER } = require('../../../utils/roam-menu-share.js');
 const app = getApp();
 
 // Preserve numeric IDs for existing callers, but never round a Long string.
@@ -433,13 +434,16 @@ Page({
     this._freshCommand = true; return this._recovery.start(action, data.memberId == null ? {} : { memberId: exactId(data.memberId) });
   },
 
+  // 第七轮 C 第 3 项:卡片图固定用仓内插画 —— 不给 imageUrl 时微信截本页,成员名单、头像和队伍状态
+  // 都会进卡片。链接只带邀请码(加入页按码读,后端只回队伍标题、人数与成员昵称头像),不带队伍 id 或成员信息。
   onShareAppMessage() {
     if (!this.data.team || !this.data.team.inviteCode) {
-      return { title: '队伍邀请已失效', path: '/pages/index/index' };
+      return { title: '队伍邀请已失效', path: '/pages/index/index', imageUrl: ROAM_SHARE_COVER };
     }
     return {
       title: this.data.team.title || '来和我一起组队出发',
-      path: '/pages/team/join/index?code=' + encodeURIComponent(this.data.team.inviteCode)
+      path: '/pages/team/join/index?code=' + encodeURIComponent(this.data.team.inviteCode),
+      imageUrl: ROAM_SHARE_COVER
     };
   }
 });

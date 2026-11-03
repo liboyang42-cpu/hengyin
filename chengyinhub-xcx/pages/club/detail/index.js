@@ -3406,11 +3406,15 @@ Page({
     const cid = this.data.clubId;
     const postId = event && event.target && event.target.dataset
       ? event.target.dataset.postId : null;
+    // 第七轮 C 第 3 项:卡片图用俱乐部封面(无封面取 Logo),不让微信截屏。
+    const clubCover = (club && (club.cover || club.logo)) || '';
     if (postId && cid) {
-      return {
+      const postShare = {
         title: (club && club.name ? club.name + ' · ' : '') + '俱乐部帖文',
         path: '/pages/club/detail/index?id=' + cid + '&postId=' + postId,
       };
+      if (clubCover) postShare.imageUrl = clubCover;
+      return postShare;
     }
     const topicId = event && event.target && event.target.dataset
       ? event.target.dataset.topicId : null;
@@ -3436,10 +3440,12 @@ Page({
         });
       }
     }
-    return {
+    const clubShare = {
       title: (club && club.name) || '城瘾俱乐部',
       path: cid ? ('/pages/club/detail/index?id=' + cid) : '/pages/talent/list/index',
     };
+    if (clubCover) clubShare.imageUrl = clubCover;
+    return clubShare;
   },
 
   // 第七轮 C 第 1 项:朋友圈。只发俱乐部主页本身(不带帖子/带票参数);单页模式下游客读 /api/club/detail(匿名放行),

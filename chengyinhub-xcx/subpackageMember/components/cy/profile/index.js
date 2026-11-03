@@ -5,7 +5,7 @@ const modal = require('../../../../utils/modal.js');
 const cyLoading = require('../../../../utils/loading.js');
 const cyToast = require('../../../../utils/toast.js');
 const motion = require('../../../../utils/motion.js');
-const { readReducedMotion } = require('../../../../utils/motion-preference.js');
+const { readReducedMotion } = require('../../../../utils/motion-preference.js'); const { merchantHomeUrl } = require('../../../../utils/merchant-home-link.js');
 const { toTimestamp } = require('../../../../utils/datetime');
 const app = getApp();
 const session = require('../../../../utils/session/login-reload.js');
@@ -2403,6 +2403,13 @@ Component({
     }
     if (res.from === 'button') {
       return { title: '城瘾 · 城市探索', path: '/pages/square/detail/index?id=' + res.target.dataset.id };
+    }
+    // 第七轮 C 第 3 项:看的是可公开商家 ⇒ 店名 + 店铺封面 + canonical 商家主页(tab=about)。
+    var merchantShare = this.getTimelinePayload();
+    if (merchantShare) {
+      var share = { title: merchantShare.title, path: merchantHomeUrl(this.data.userId) };
+      if (merchantShare.imageUrl) share.imageUrl = merchantShare.imageUrl;
+      return share;
     }
     if (!this.data.isSelf) {
       return {

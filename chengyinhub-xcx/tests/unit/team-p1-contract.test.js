@@ -76,7 +76,8 @@ function assertTeamCompliance(sources) {
 
 // 页面合法 require 了纯函数 utils/user-character.js 与 utils/team-event-command.js(只读入参,不碰 wx):
 // 按页面目录解析,只放行这两个真模块,其余仍 unexpected require。
-const PURE_MODULES = new Set([path.join(ROOT, 'utils/user-character.js'), path.join(ROOT, 'utils/team-event-command.js')])
+// 第七轮 C 第 3 项:分享卡固定插画常量 utils/roam-menu-share.js 也是纯常量模块。
+const PURE_MODULES = new Set([path.join(ROOT, 'utils/user-character.js'), path.join(ROOT, 'utils/team-event-command.js'), path.join(ROOT, 'utils/roam-menu-share.js')])
 function teamPageRequire(relative) {
   return (request) => {
     const resolved = path.resolve(ROOT, path.dirname(relative), request)
@@ -210,6 +211,7 @@ test('独立建队页已下线，只保留详情与邀请落点', () => {
   assert.deepEqual(JSON.parse(JSON.stringify(page.onShareAppMessage())), {
     title: '夜行小队',
     path: '/pages/team/join/index?code=safe_code-31',
+    imageUrl: '/images/route_city_cover.png',
   })
 })
 
@@ -234,6 +236,7 @@ test('详情尚未加载时系统分享不抛异常或生成空邀请码链接',
   assert.deepEqual(JSON.parse(JSON.stringify(page.onShareAppMessage())), {
     title: '队伍邀请已失效',
     path: '/pages/index/index',
+    imageUrl: '/images/route_city_cover.png',
   })
 })
 

@@ -13,7 +13,7 @@ const { readReducedMotion } = require('../../utils/motion-preference.js');
 const { openScene } = require('../../utils/scene-entry.js');
 const { parseDoorScene, parseTopicScene, parseActivityScene, pathForScanEntry } = require('../../utils/game-door-entry.js');
 
-const { buildActivityShare } = require('../../utils/activity-share.js');
+const { buildActivityShare } = require('../../utils/activity-share.js'); const { ROAM_SHARE_COVER } = require('../../utils/roam-menu-share.js');
 const { appendByIndex } = require('../../utils/list-append.js');
 const { isRecordList } = require('../../utils/response-shape.js');
 const { isValidMobile } = require('../../utils/form-state.js');
@@ -934,9 +934,9 @@ Page({
       };
     }
     
-    return {
+    return { // 第七轮 C 第 3 项:固定卡片图,不让微信截首页(按本人定位排的附近活动与地图)
       title: '城瘾Hub',
-      path: '/pages/index/index',
+      path: '/pages/index/index', imageUrl: ROAM_SHARE_COVER,
       success: function (res) {
         cyToast.success('分享成功');
       }

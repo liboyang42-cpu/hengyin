@@ -7,6 +7,8 @@
 //
 // 正文与到店验证逻辑只有 components/cy/scene-roam-poi-detail 一份,这里不复制。
 const SHARE_PATH = '/subpackageRoam/poi-detail/index'
+const { ROAM_SHARE_COVER } = require('../../utils/roam-menu-share.js')
+const FALLBACK_TITLE = '这个节点等你到店打卡'
 
 function shareQuery(poiId) {
   return 'poiId=' + encodeURIComponent(poiId || '')
@@ -24,8 +26,28 @@ Page({
     this.setData({ poiId, sceneParams: { poiId }, ready: true })
   },
 
+  // 第七轮 C 第 3 项:卡片用店名与店铺封面。本页不取数,只读正文场景组件已经加载好的同一据点数据;
+  // 没加载到就用泛化标题 + 仓内不含位置的固定插画,不让微信截屏。
+  _shareSnapshot() {
+    let d = null
+    try {
+      const host = this.selectComponent && this.selectComponent('#roamDeepLink')
+      const scene = host && host.selectComponent && host.selectComponent('#roamPoiDetail')
+      d = scene && scene.data
+    } catch (e) { d = null }
+    if (!d || String(d.poiId || '') !== String(this.data.poiId || '')) return { title: FALLBACK_TITLE, imageUrl: ROAM_SHARE_COVER }
+    const merchant = d.merchant || {}
+    const node = d.node || {}
+    const gallery = Array.isArray(d.gallery) ? d.gallery : []
+    return {
+      title: merchant.displayName || node.name || FALLBACK_TITLE,
+      imageUrl: merchant.coverImage || gallery[0] || ROAM_SHARE_COVER,
+    }
+  },
+
   onShareAppMessage() {
-    return { title: '这个节点等你到店打卡', path: SHARE_PATH + '?' + shareQuery(this.data.poiId) }
+    const snap = this._shareSnapshot()
+    return { title: snap.title, path: SHARE_PATH + '?' + shareQuery(this.data.poiId), imageUrl: snap.imageUrl }
   },
 
   // 第七轮 C 第 1 项:暂不实现 onShareTimeline。节点详情读接口 GET /api/city/nodes/{id} 需要登录
