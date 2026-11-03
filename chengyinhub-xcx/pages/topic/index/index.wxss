@@ -2125,7 +2125,7 @@ button::after {
 .bseg__ic { width: 50rpx; height: 50rpx; }
 .bseg__t { font-size: 25rpx; font-weight: 700; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .bseg__s { font-size: 21rpx; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
-.bseg__u { position: absolute; left: 0; bottom: -1rpx; width: 33.33%; height: 5rpx; border-radius: 4rpx; background: #fff; transition: transform .4s cubic-bezier(.34,1.32,.64,1); } /* ds-ok */
+.bseg__u { position: absolute; left: 0; bottom: -1rpx; width: 33.33%; height: 5rpx; border-radius: 4rpx; background: #fff; transition: transform .4s var(--cy-ease-out); } /* ds-ok;打磨第 3 轮 §4-10:购买半屏下划线不回弹,时长保留 v13 */
 .bchips { display: flex; flex-wrap: wrap; gap: 15rpx; margin-top: 27rpx; }
 .bchip { height: 62rpx; padding: 0 23rpx; border-radius: 31rpx; display: flex; align-items: center; font-size: 25rpx; background: #2C2C2E; } /* ds-ok */
 .bsheet__note { display: block; margin-top: 19rpx; font-size: 21rpx; color: #8E8E93; } /* ds-ok */
