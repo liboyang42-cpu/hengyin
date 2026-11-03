@@ -56,6 +56,12 @@
                 <text class="v3-hero-mem-loc">· 选择城市</text>
               </cy-dropdown>
             </view>
+            <!-- Round5 #8:游客(没有昵称,上面这行不出)也能看到并切换城市:同一行样式,只放现有选城下拉 -->
+            <view wx:elif="{{city && cityPicker}}" class="v3-hero-guest-city flex-ac">
+              <cy-dropdown mode="selector" range="{{manualCityOptions}}" value="{{cityPickerIndex}}" bind:change="onManualCityChange" aria-label="选择城市">
+                <text class="v3-hero-guest-city__txt">{{city}}</text>
+              </cy-dropdown>
+            </view>
           </view>
         </view>
         <view class="v3-hero-dots">

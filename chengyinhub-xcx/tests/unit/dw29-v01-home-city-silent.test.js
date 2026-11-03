@@ -128,4 +128,6 @@ test('Round5 #8 游客首页城市用选城下拉,选中即改并记住;登录�
   assert.equal(p.data.cityPicker, false)
   const wxml = require('fs').readFileSync(require('path').join(__dirname, '../../pages/index/index.wxml'), 'utf8')
   assert.match(wxml, /<view wx:if="\{\{!cityPicker\}\}"[^\n]*<\/view>\s*<cy-dropdown wx:else mode="selector" range="\{\{manualCityOptions\}\}" value="\{\{cityPickerIndex\}\}" bind:change="onManualCityChange"[^>]*>\s*<text class="v3-hero-mem-loc">· \{\{city\}\}<\/text>/)
+  // 没有昵称的游客那一行不渲染,所以另有一行只放选城下拉
+  assert.match(wxml, /<view wx:if="\{\{userInfo\.nickname\}\}" class="v3-hero-mem flex-ac">[\s\S]*?<\/view>\s*<!--[^>]*-->\s*<view wx:elif="\{\{city && cityPicker\}\}" class="v3-hero-guest-city flex-ac">\s*<cy-dropdown mode="selector" range="\{\{manualCityOptions\}\}" value="\{\{cityPickerIndex\}\}" bind:change="onManualCityChange"/)
 })
