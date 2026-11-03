@@ -307,7 +307,7 @@ test('R4:零章节报名直接走 chapter-node/submit 带 topicId,不先调 chap
 
 test('R4:报名表把权益门槛挂在「常备权益」字段下,所选权益低于门槛时字段下红字并拦提交', () => {
   const wxml = fs.readFileSync(path.join(ROOT, 'pages/topic/components/cy/chapter-node-form/index.wxml'), 'utf8')
-  assert.match(wxml, /零售价不少于 ¥\{\{perkMinText\}\}/)
+  assert.match(wxml, /零售价不少于 \{\{money\.amount\(perkMinText\)\}\}/)
   assert.match(wxml, /<cy-inline-error wx:if="\{\{perkBelowMin\}\}" kind="error"/)
   const json = JSON.parse(fs.readFileSync(path.join(ROOT, 'pages/topic/components/cy/chapter-node-form/index.json'), 'utf8'))
   assert.equal(json.usingComponents['cy-inline-error'], '/components/cy/inline-error/index')

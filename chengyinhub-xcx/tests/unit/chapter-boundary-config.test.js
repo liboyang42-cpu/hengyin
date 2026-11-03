@@ -68,7 +68,7 @@ test('② 渲染侧(2026-11-03 业主):弹层不列事实行,门槛挂在报名�
   const wxml = stripWxml(read('pages/topic/components/cy/chapter-target-picker/index.wxml'));
   assert.doesNotMatch(wxml, /pickedFacts|ctp-fact/, '弹层不再印事实清单');
   const form = stripWxml(read('pages/topic/components/cy/chapter-node-form/index.wxml'));
-  assert.match(form, /常备权益[\s\S]{0,1600}?零售价不少于 ¥\{\{perkMinText\}\}/,
+  assert.match(form, /常备权益[\s\S]{0,1600}?零售价不少于 \{\{money\.amount\(perkMinText\)\}\}/,
     '门槛要印在「常备权益」字段下');
 });
 
