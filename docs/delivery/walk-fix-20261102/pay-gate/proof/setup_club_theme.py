@@ -1,6 +1,6 @@
 """Round 3D setup: club 7002's 主理人 creates a classic (ORIENTEERING) theme with a self-play pass and a session
 ticket through the real create + audit endpoints. Prints TOPIC_ID."""
-import datetime, sys
+import datetime, os, sys
 from rig_env import http, q, admin_token, app_token, step, show, readback, j, CLUB_ID, OWNER_PHONE
 
 BASE = datetime.datetime.now().replace(hour=9, minute=0, second=0, microsecond=0)
@@ -9,7 +9,7 @@ d = lambda off: (BASE + datetime.timedelta(days=off)).strftime("%Y-%m-%d %H:%M:%
 
 def main():
     atok = admin_token()
-    otok, _ = app_token(OWNER_PHONE)
+    otok, _ = app_token(os.environ.get("R3D_OWNER_PHONE", OWNER_PHONE))
     step("主理人实名(真实入口)")
     st = http("POST", "/api/publisher/identity/status", token=otok, json_body={})
     if not (st.get("data") or {}).get("registered"):
@@ -28,7 +28,7 @@ def main():
                  "nodes": [{"name": "%s点" % n, "address": "上海市黄浦区%s" % n,
                             "longitude": "%.6f" % (121.47 + i * 0.01), "latitude": "%.6f" % (31.23 + i * 0.01),
                             "nodeTime": 30, "templateId": template_id}]} for i, n in enumerate(["外滩", "豫园"])]
-    dto = {"name": "R3D 俱乐部自玩主题", "subtitle": "pay-gate", "description": "Round 3D 资金证明",
+    dto = {"name": os.environ.get("R3D_THEME_NAME", "R3D 俱乐部自玩主题"), "subtitle": "pay-gate", "description": "Round 3D 资金证明",
            "startDate": d(-1), "endDate": d(30), "saleEndAt": d(29), "categoryIds": "1", "imgUrl": "",
            "productType": 1, "publishMode": "normal", "clubId": CLUB_ID,
            "selfPlay": 1, "selfPlayPrice": "29.99", "selfPlayQuota": 50,
@@ -51,6 +51,11 @@ def main():
     readback("tickets", "SELECT id,owner_type,owner_id,name,price,refund_rule FROM oms_ticket WHERE owner_id=%s "
              "AND del_flag=0", (tid,))
     readback("content slot", "SELECT slot,entity_type,entity_id,status FROM product_role WHERE topic_id=%s", (tid,))
+    if os.environ.get("R3D_PRICE"):
+        pr = http("POST", "/api/topic/pricing/confirm", token=otok, json_body={"topicId": tid, "guidedPrice": 39.99,
+                  "guidedInventory": 20, "leadCost": 0, "teamSize": 6})
+        show("pricing/confirm", j(pr))
+        readback("lifecycle/fee", "SELECT lifecycle,fee_platform_rate FROM cms_topic WHERE id=%s", (tid,))
     print("\nTOPIC_ID=%s" % tid)
     return 0
 

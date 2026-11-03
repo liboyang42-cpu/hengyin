@@ -26,6 +26,9 @@ const { createRegistrationPaymentVerifier } = require('../../../../utils/checkou
 function refundDeadlineText(row) {
   const info = row && row.refundInfo
   if (!info) return '退款规则以提交后的平台判定为准'
+  // 2026-11-03:集合前 24 小时内只退部分(ratio<1),不是「免费取消」,照后端 reason 说。
+  const ratio = Number(info.ratio)
+  if (info.refundable && info.reason && info.ratio != null && ratio < 1) return info.reason
   if (info.refundable && info.deadline) {
     return '可免费取消至 ' + formatRefundDeadline(info.deadline)
   }

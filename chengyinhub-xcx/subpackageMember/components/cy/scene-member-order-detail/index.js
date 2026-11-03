@@ -181,7 +181,8 @@ function resolvePrimaryCta(orderStateKey) {
 function buildOrderTimeline(info) {
   const value = info || {};
   const stateKey = value.orderStateKey || '';
-  const paid = Number(value.paymentStatus) === 2;
+  // 退款单的 payment_status 是 4(已退款):它付过钱,时间线要走 付款成功 → 正在退款 / 退款成功,不能落回「等待支付」。
+  const paid = Number(value.paymentStatus) === 2 || stateKey === 'refunding' || stateKey === 'refunded';
   const verified = Number(value.verificationStatus) === 1;
   const rows = [{
     key: 'created',
