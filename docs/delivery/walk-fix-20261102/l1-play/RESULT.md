@@ -145,7 +145,7 @@
 
 ### 门禁与测试（第四轮）
 
-- 小程序：本轮新增 / 改动的测试与相关套件 `advanced-game*`、`playkit-qa*`、`play*`、`chapter*`、`playkit*`、`action-ledger*` 合计 1700+ 条全过；新增四个测试文件在旧代码上红。
+- 小程序：P-08 / P-09 提交前 `action-ledger*`、`play*`、`chapter*`、`playkit*`、`ui-integrity*` 1366 条全过；P-10 / P-11 提交前 `advanced-game*`、`playkit-qa*`、`play-generic*`、`play-kit-head*`、`play-chapter-hold*`、`action-ledger*`、`r5*`、`theme-backpack*` 343 条全过。新增的四个测试文件在旧代码上红。
 - `node chengyinhub-xcx/tests/lint/ui-integrity.js` → `UI-GATE-0:PASS`。U4-DYNAMIC 1797→1795、U5 8230→8228→8236 只是行号位移（同一调用行），按惯例换 key 重算 digest，没有新增登记。动作台账重建：控件数 5606 不变（只有行号、猜数字提交钮的显示条件、翻转门读屏文案）。
 - 后端：本轮没改 Java。
 
