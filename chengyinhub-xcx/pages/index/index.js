@@ -1485,6 +1485,11 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
     }
     const that = this;
     this.setData({ city: this.data.city || homeCity.readLastCity(), cityManual: false });
+    // Round5 #7:本机记过「暂不定位」→ 自动流程到此为止(沿用上次城市/默认城市),等用户点城市再问
+    if (!scope.userInitiated && homeCity.readLocationDeclined()) {
+      if (!this.data.city) this.setData({ city: homeCity.DEFAULT_CITY });
+      return;
+    }
     app.sendRequest({
       url: '/api/compliance/consents/latest',
       method: 'POST',
@@ -1519,7 +1524,9 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
       confirmText: '同意定位',
       cancelText: '暂不定位',
       success(result) {
-        if (!result.confirm || !isCurrentLocationRequest(that, scope)) return;
+        if (!isCurrentLocationRequest(that, scope)) return;
+        homeCity.saveLocationDeclined(!result.confirm);
+        if (!result.confirm) { if (!that.data.city) that.setData({ city: homeCity.DEFAULT_CITY }); return; }
         Promise.resolve().then(() => {
           if (!isCurrentLocationRequest(that, scope)) return null;
           return app.recordConsent({ docType: 'privacy_policy', scene: 'home_city_location', eventType: 'AGREE' });
