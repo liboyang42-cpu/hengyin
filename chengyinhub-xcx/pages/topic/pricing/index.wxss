@@ -9,7 +9,7 @@
 .pg-money { font-size: var(--cy-type-display); line-height: 1.2; font-weight: 700; }
 .pg-title { font-size: var(--cy-font-body); font-weight: 600; }
 .pg-note { color: var(--cy-color-text-secondary); font-size: var(--cy-font-caption); line-height: 1.6; }
-.pg-fields { display: flex; gap: var(--cy-space-2); margin: var(--cy-space-2-5) 0; }
+.pg-fields { display: flex; align-items: flex-start; gap: var(--cy-space-2); margin: var(--cy-space-2-5) 0; }
 .pg-input { flex: 1; min-width: 0; padding: 20rpx; border-radius: var(--cy-radius-md); background: var(--cy-color-bg-surface-subtle); }
 .pg-price-row, .pg-range { display: flex; align-items: center; justify-content: space-between; }
 .pg-final { font-size: var(--cy-type-section-title); font-weight: 700; color: var(--cy-color-action-primary-bg); }

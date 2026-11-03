@@ -106,6 +106,13 @@ dto = {"name": "P01 外滩电报（%s %s）" % (MODE, now.strftime("%H%M%S")), "
                                 {"type": "node", "nodeIndex": 0}, {"type": "node", "nodeIndex": 1}],
                      "nodes": nodes}],
        "tickets": [ticket]}
+# Round 4 (several ticket prices): P34_TWO_TICKETS=1 adds an evening ticket at ¥99 next to the ¥69 one.
+if os.environ.get("P34_TWO_TICKETS"):
+    night = dict(ticket, name="夜场", price=99, totalStock=12, description="夜场带队。",
+                 startTime=fmt(start.replace(hour=19, minute=0, second=0, microsecond=0)),
+                 endTime=fmt(start.replace(hour=21, minute=0, second=0, microsecond=0)),
+                 signupDeadline=fmt(start.replace(hour=18, minute=0, second=0, microsecond=0)))
+    dto["tickets"] = [ticket, night]
 # A recruit deadline lets the publisher invite club 7002 as organiser before pricing (the sale gate needs
 # exactly one ORGANIZER for guided tickets).
 dto.update({"clubId": 7001} if SELF else {"clubId": 7001, "recruitDeadline": fmt(now + datetime.timedelta(days=1))})
@@ -155,10 +162,21 @@ if os.environ.get("P01_STOP_BEFORE_CONFIRM"):
     sys.exit(0)
 # P-34 (round 3): P01_CONFIRM_PRICE confirms a price different from the author's ¥69 ticket, to prove it reaches it.
 confirm_price = float(os.environ.get("P01_CONFIRM_PRICE", "69"))
-r = http("POST", "/api/topic/pricing/confirm", token=ptok, json_body={"topicId": tid, "guidedPrice": confirm_price})
+body = {"topicId": tid, "guidedPrice": confirm_price}
+# Round 4: P34_TICKET_PRICES="79,109" confirms one price per authored ticket (in preview order).
+if os.environ.get("P34_TICKET_PRICES"):
+    rows = (pv.get("data") or {}).get("tickets") or []
+    prices = [float(x) for x in os.environ["P34_TICKET_PRICES"].split(",")]
+    body["ticketPrices"] = [{"ticketId": t["ticketId"], "price": p} for t, p in zip(rows, prices)]
+    body["guidedPrice"] = min(prices)
+    readback("authored tickets before confirm (round 4)",
+             "SELECT id,name,price,total_inventory,remaining_inventory FROM oms_ticket WHERE owner_type=1 AND owner_id=%s AND del_flag=0 ORDER BY id", (tid,))
+    bad = dict(body, ticketPrices=[dict(body["ticketPrices"][0], ticketId=999999)] + body["ticketPrices"][1:])
+    print("confirm with a foreign ticket id (must refuse)", J(http("POST", "/api/topic/pricing/confirm", token=ptok, json_body=bad)))
+r = http("POST", "/api/topic/pricing/confirm", token=ptok, json_body=body)
 print("confirm", J(r))
 readback("authored ticket prices after confirm (P-34)",
-         "SELECT id,name,price,sub_type,total_inventory FROM oms_ticket WHERE owner_type=1 AND owner_id=%s AND del_flag=0 ORDER BY id", (tid,))
+         "SELECT id,name,price,sub_type,total_inventory,remaining_inventory FROM oms_ticket WHERE owner_type=1 AND owner_id=%s AND del_flag=0 ORDER BY id", (tid,))
 readback("sale review task", "SELECT id,biz_type,status FROM audit_task WHERE biz_id=%s AND biz_type='TOPIC_SALE_REVIEW'", (tid,))
 
 step("admin: sale-submit (idempotent) then approve the sale review")
