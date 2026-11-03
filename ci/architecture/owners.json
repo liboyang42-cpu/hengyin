@@ -1746,6 +1746,12 @@
         "module": "chengyinhub-system",
         "members": ["com.chengyinhub.business.service.ISensitiveContentRescanService", "com.chengyinhub.business.service.impl.SensitiveContentRescanServiceImpl"],
         "forbidden_backrefs": ["com.chengyinhub.business.task.SensitiveContentRescanTask"]
+      },
+      {
+        "id": "R9_MAP_WEATHER",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.IMapWeatherService", "com.chengyinhub.business.service.impl.MapWeatherServiceImpl"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiMapController"]
       }
     ],
     "allowed_directions": [
