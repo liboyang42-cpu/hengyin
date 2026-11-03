@@ -1,0 +1,8 @@
+   FIXTURE lifecycle 2->3 rows        1
+   open-session later 2026-11-06 10:00:00 {"msg": "开团成功", "code": 200, "data": {"activityId": 14}, "_status": 200}
+   open-session within24h 2026-11-03 17:00:00 {"msg": "开团成功", "code": 200, "data": {"activityId": 15}, "_status": 200}
+Traceback (most recent call last):
+  File "/home/user/hengyin/docs/delivery/walk-fix-20261102/pay-gate/proof/shots_prep3.py", line 28, in <module>
+    body["quoteSign"] = http("POST", "/api/registration/quote", token=ptok, json_body=body)["data"]["quoteSign"]
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+KeyError: 'data'

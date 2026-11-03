@@ -1,0 +1,6 @@
+   FIXTURE lifecycle 2->3 rows        1
+   open-session later 2026-11-06 10:00:00 {"msg": "开团成功", "code": 200, "data": {"activityId": 23}, "_status": 200}
+   open-session within24h 2026-11-03 16:35:00 {"msg": "开团成功", "code": 200, "data": {"activityId": 24}, "_status": 200}
+   create                             {"msg": "报名创建成功", "code": 200, "data": {"registrationId": 80, "registrationNo": "A20261103B6C889EE", "payableAmount": 39.99, "expireTime": "2026-11-03T12:09:06.971+08:00", "expiresAt": null, "paymentType": 1, "registrationIds": [80], "payParams": {"appId": "e2e-stub-appid", "timeStamp": "0", "nonceS
+   callback (3999 fen)                {"_raw": "", "_status": 204}
+IDS {'later': 23, 'within24h': 24, 'paidOrder': 80} ((80, 2, 2),)
