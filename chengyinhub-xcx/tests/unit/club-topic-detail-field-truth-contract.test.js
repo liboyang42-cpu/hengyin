@@ -539,17 +539,14 @@ test('商家403和报名参与者业务错误显示真实原因，重读不保�
   vm._topicId = 88; vm._clubId = 9;
   vm.loadMerchants();
   requests.at(-1).success({ code: 403, msg: '该主题不属于本俱乐部' });
-  // 2026-11-02(ROUND3B):商家半屏换成承接商家组件,403 落 denied(只写原因,不给重试)
-  assert.equal(vm.data.recruit.loadState, 'denied');
-  assert.equal(vm.data.recruit.errorText, '该主题不属于本俱乐部');
+  assert.equal(vm.data.merchantState, 'denied');
+  assert.equal(vm.data.merchantDeniedReason, '该主题不属于本俱乐部');
   vm.loadMerchants();
-  assert.equal(vm.data.recruit.errorText, '');
-  requests.at(-1).success({ code: 200, data: { productType: 1, nodes: [], chapters: [] } });
-  assert.equal(vm.data.recruit.loadState, 'empty');
+  assert.equal(vm.data.merchantDeniedReason, '');
+  requests.at(-1).success({ code: 200, data: { nodes: [] } });
+  assert.equal(vm.data.merchantState, 'ready');
   const wxml = fs.readFileSync(WXML_PATH, 'utf8');
-  assert.match(wxml, /load-error-text="\{\{recruit\.errorText\}\}"/);
-  const comp = fs.readFileSync(path.join(__dirname, '../../components/cy/club-topic-onboarding/index.wxml'), 'utf8');
-  assert.match(comp, /wx:elif="\{\{loadState === 'denied'\}\}" title="\{\{loadErrorText \|\| '商家信息获取失败'\}\}"/);
+  assert.match(wxml, /title="{{merchantDeniedReason \|\| '商家信息获取失败'}}"/);
   assert.doesNotMatch(wxml, /sub="承接商家需要「活动查看」权限。"/);
   vm.loadCustomers();
   requests.at(-1).success({ code: 500, msg: '当前岗位没有客户查看权限' });

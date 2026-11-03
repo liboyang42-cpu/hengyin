@@ -6,7 +6,7 @@ const S = require('../../scripts/lib/xcx-scan.js');
 const ROOT = path.resolve(__dirname, '../..');
 const componentNames = ['play-pause', 'club-topic-merchants', 'club-publish-sheet',
   'club-topic-settings', 'level-progress', 'identity-tag', 'club-topic-groupcode',
-  'node', 'scene-topic-customers']; // 2026-11-02:club-topic-onboarding 已接进俱乐部主题页(承接商家),不再排除
+  'club-topic-onboarding', 'node', 'scene-topic-customers'];
 const selected = componentNames.flatMap((name) => ['js', 'json', 'wxml', 'wxss']
   .map((ext) => `components/cy/${name}/index.${ext}`)).concat([
   'images/home-banner-2.jpg', 'images/home-route-free-placeholder.jpg',
@@ -120,7 +120,7 @@ function runtimeFiles(directory = ROOT, rel = '') {
 }
 
 test('the reviewed exclusions remain exact files, with source files retained', () => {
-  assert.equal(selected.length, 51); // 2026-11-02:club-topic-onboarding 四个文件随接线移出排除表(55 → 51)
+  assert.equal(selected.length, 55);
   for (const file of selected) {
     assert.ok(fileIgnores.has(file), 'missing exact exclusion: ' + file);
     // This IDE-only optional file need not exist on a clean CI checkout.

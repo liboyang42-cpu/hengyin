@@ -530,18 +530,33 @@
   </view>
 </cy-scene-sheet>
 
-<!-- 2026-11-02(ROUND3B,用户:俱乐部页跟 Figma 走):「商家」圆钮打开承接商家半屏。复用现成组件
-     cy-club-topic-onboarding(稿 J3-A 155:118 按站 / J3-B 158:118 按章节),按主题类型选版式。
-     数据取 /api/club/recruit/overview;商家联系方式仍由服务端按「商家已确认 + 管理权」裁剪,接受后才出现。
-     动作只给能审承接的人(canReviewChapterApplications),一律进现成的招商页,不留死按钮。 -->
-<cy-club-topic-onboarding show="{{merchantSheetVisible}}" topic-id="{{recruit.topicId}}" mode="{{recruit.mode}}"
-  load-state="{{recruit.loadState}}" load-error-text="{{recruit.errorText}}"
-  done-count="{{recruit.doneCount}}" total-count="{{recruit.totalCount}}" pending-count="{{recruit.pendingCount}}"
-  progress-pct="{{recruit.progressPct}}" sections="{{recruit.sections}}" chapters="{{recruit.chapters}}"
-  can-act="{{canReviewChapterApplications}}"
-  bind:close="closeMerchants" bind:retry="loadMerchants" bind:copyphone="onRecruitCopyPhone"
-  bind:invite="openRecruitDesk" bind:viewpool="openRecruitDesk" bind:viewapplications="openRecruitDesk"
-  bind:editconditions="openRecruitDesk" bind:openrecruiting="openRecruitDesk" />
+<!-- Figma J7「商家(弹窗)」。商家与成员是两个圆钮、两个独立弹层。
+     联系方式由服务端按「商家已确认」裁剪:未确认的商家回包里没有 phone 这个键,不是前端藏起来。 -->
+<cy-scene-sheet show="{{merchantSheetVisible}}" variant="half" title="商家" closable maskClosable bind:close="closeMerchants">
+  <view class="tset">
+    <cy-skeleton wx:if="{{merchantState === 'loading'}}" type="list" count="2" />
+    <cy-empty wx:elif="{{merchantState === 'denied'}}" title="{{merchantDeniedReason || '商家信息获取失败'}}" />
+    <cy-error load-failure wx:elif="{{merchantState !== 'ready'}}" title="商家信息获取失败" retry="重试" bind:retry="loadMerchants" />
+    <block wx:else>
+      <cy-empty wx:if="{{!merchantRows.length}}" title="这个主题还没有承接商家" />
+      <view wx:for="{{merchantRows}}" wx:key="nodeId" class="cli-row {{index === 0 ? 'cli-row--first' : ''}}">
+        <view class="cli-ava">{{item.initial}}</view>
+        <view class="cli-main">
+          <text class="cli-name">{{item.merchantName}}</text>
+          <text class="cli-sub">{{item.stationName}}</text>
+          <view class="cli-line">
+            <text class="cli-sub {{item.phone ? '' : 'cli-sub--muted'}}">{{item.contactText}}</text>
+            <view wx:if="{{item.phone}}" class="cli-copy" bindtap="copyPhone" data-phone="{{item.phone}}"
+              aria-role="button" aria-label="复制 {{item.merchantName}} 的手机号" hover-class="cy-pressed" hover-stay-time="80">
+              <cy-icon name="copy" size="24" />
+            </view>
+          </view>
+        </view>
+      </view>
+      <text class="tset-foot">商家接受后显示联系方式</text>
+    </block>
+  </view>
+</cy-scene-sheet>
 
 <!-- Figma J2「报名参与者 · 主题内(弹窗)」。CU-C-88(用户裁决 A):这一层统计的是
      报名/购票参与者(cms_registration),不是俱乐部成员名单(club_member),所以入口与

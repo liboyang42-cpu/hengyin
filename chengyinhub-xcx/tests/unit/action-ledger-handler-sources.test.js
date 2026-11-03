@@ -29,8 +29,7 @@ test('队间交换真实方法进入台账，预览与核对不写入，发起�
 
 test('台账按混入方法真实文件提取，保留剪贴板能力与状态选择', () => {
   const rows = ledger().controls.filter(row => row.entry.wxml === 'pages/club/topic-detail/index.wxml')
-  // 2026-11-02:商家联系方式复制挪进承接商家组件,宿主接 copyphone 事件(onRecruitCopyPhone)
-  const copy = rows.find(row => row.control.handler === 'onRecruitCopyPhone')
+  const copy = rows.find(row => row.control.handler === 'copyPhone')
   assert.ok(copy.externalCapabilities.includes('setClipboardData'))
   assert.equal(copy.actionClass, 'external')
   assert.deepEqual(copy.requiredPlatforms, ['ios', 'android'])

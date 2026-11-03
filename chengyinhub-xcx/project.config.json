@@ -125,6 +125,22 @@
       },
       {
         "type": "file",
+        "value": "components/cy/club-topic-onboarding/index.js"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/club-topic-onboarding/index.json"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/club-topic-onboarding/index.wxml"
+      },
+      {
+        "type": "file",
+        "value": "components/cy/club-topic-onboarding/index.wxss"
+      },
+      {
+        "type": "file",
         "value": "components/cy/club-topic-settings/index.js"
       },
       {
