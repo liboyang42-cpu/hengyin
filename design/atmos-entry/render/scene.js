@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { paintSet } from './textures.js';
 import { shapeVolume, detailVolume } from './noise3d.js';
 
 // ---------- timeline ----------
@@ -13,33 +12,38 @@ const smoother = (a, b, t) => { const x = clamp01((t - a) / (b - a)); return x *
 const lerp = (a, b, t) => a + (b - a) * t;
 const rad = (d) => (d * Math.PI) / 180;
 
-// Dive progress: slow drift, then an accelerating fall whose speed peaks inside the clouds.
+// Dive progress: an almost still hold, then an accelerating fall whose speed peaks inside the clouds.
 function diveEase(t) {
   const x = clamp01(t / 3.05);
-  // mostly ease-in with a soft start
-  return x < 1 ? Math.pow(x, 2.6) * (1.0 - 0.18 * Math.sin(Math.PI * x)) : 1;
+  return x < 1 ? Math.pow(x, 2.9) * (1.0 - 0.15 * Math.sin(Math.PI * x)) : 1;
+}
+// Heavy rotation: already moving at a slow constant rate on frame 0 (no ease-in from rest),
+// then settling onto China as the dive takes over.
+function turnEase(t) {
+  const s = (u) => smoother(-1.6, 2.55, u);
+  return (s(t) - s(0)) / (1 - s(0));
 }
 
-export const CHINA = { lon: 104.5, lat: 32.5 };
+export const CHINA = { lon: 118.0, lat: 31.0 };
 export const CUT = 2.7;
 
 export function params(t) {
   const alt = Math.exp(lerp(Math.log(4.5), Math.log(0.06), diveEase(t)));
-  const turn = smoother(0.0, 2.55, t);
+  const turn = turnEase(t);
   return {
     t,
     alt,
-    lon: lerp(168, CHINA.lon, turn),
-    lat: lerp(10, CHINA.lat, turn),
+    lon: lerp(150, CHINA.lon, turn),
+    lat: lerp(14, CHINA.lat, turn),
     lookY: lerp(0.95, 0.0, smoother(0.2, 2.0, t)),
     roll: 0,
-    globeClouds: lerp(0.6, 0.9, smooth(1.2, 2.4, t)),
-    coverage: lerp(0.0, 1.0, smoother(1.75, 2.62, t)) - 0.22 * smoother(2.85, 3.5, t),
+    // extra cloud over the dive target so the coastline never reads as a map
+    cloudBoost: smoother(1.3, 2.2, t),
+    coverage: lerp(0.0, 1.0, smoother(2.2, 2.62, t)) - 0.22 * smoother(2.85, 3.5, t),
     densityBoost: 1 + 3.5 * Math.exp(-(((t - CUT) / 0.09) ** 2)),
     bgMix: t >= CUT ? 1 : 0,
     part: smoother(2.85, 3.8, t),
     white: smooth(3.5, 3.8, t),
-    black: 1 - smooth(0.0, 0.32, t),
   };
 }
 
@@ -56,192 +60,190 @@ const fsQuadVert = /* glsl */ `
   void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }
 `;
 
-const starsFrag = /* glsl */ `
-  ${COMMON}
-  precision highp sampler3D;
-  in vec2 vUv;
-  uniform mat4 uInvProj; uniform mat4 uCamWorld; uniform vec2 uRes; uniform sampler3D tShape;
-  out vec4 outColor;
-  vec3 starLayer(vec3 d, float scale, float prob, float pix){
-    vec3 g = d * scale; vec3 cell = floor(g); vec3 acc = vec3(0.0);
-    for(int k=-1;k<=1;k++) for(int j=-1;j<=1;j++) for(int i=-1;i<=1;i++){
-      vec3 c = cell + vec3(i,j,k);
-      vec3 h = hash33(c + 17.0);
-      if(h.x > prob) continue;
-      vec3 sp = normalize((c + 0.2 + 0.6 * hash33(c * 1.7 + 3.1)) / scale);
-      float ang = length(d - sp);
-      float sigma = pix * 0.75;
-      float m = pow(h.y, 6.0) * 3.0 + 0.25;
-      vec3 tint = mix(vec3(0.75, 0.82, 1.0), vec3(1.0, 0.86, 0.72), h.z);
-      acc += tint * m * exp(-ang * ang / (2.0 * sigma * sigma));
-    }
-    return acc;
+// Catalogue stars (Yale BSC5) as sub-pixel point sprites. Direction only, so they move with the camera's rotation and never with its travel.
+const starVert = /* glsl */ `
+  in float aFlux; in vec3 aCol;
+  out float vFlux; out vec3 vCol;
+  uniform float uSize;
+  void main(){
+    vFlux = aFlux; vCol = aCol;
+    vec3 d = mat3(viewMatrix) * normalize(position);
+    gl_Position = projectionMatrix * vec4(d, 1.0);
+    gl_PointSize = uSize;
   }
+`;
+const starFrag = /* glsl */ `
+  in float vFlux; in vec3 vCol;
+  uniform float uSize;
+  out vec4 outColor;
+  void main(){
+    vec2 d = (gl_PointCoord - 0.5) * uSize;
+    float sigma = 0.5 + 0.18 * clamp(log(vFlux + 1.0), 0.0, 1.5);
+    float psf = exp(-dot(d, d) / (2.0 * sigma * sigma)) / (2.0 * PI * sigma * sigma);
+    outColor = vec4(vCol * vFlux * psf, 0.0);
+  }
+`;
+
+// The planet is ray-traced per pixel: NASA surface, NASA cloud shell with its shadow, Black Marble lights,
+// sun glint, and single-scattering Rayleigh + Mie atmosphere at real scale heights.
+const globeFrag = /* glsl */ `
+  ${COMMON}
+  in vec2 vUv;
+  uniform sampler2D tDay, tAux, tDayC, tAuxC;
+  uniform vec4 uWin;
+  uniform mat4 uInvProj, uCamWorld; uniform vec3 uCam, uSun; uniform mat3 uW2O; uniform vec2 uRes;
+  uniform float uTime, uSunE, uCloudBoost, uFrame; uniform vec3 uTarget;
+  out vec4 outColor;
+
+  const float KM = 1.0 / 6371.0;
+  const float RC = 1.0 + 7.0 * KM;          // cloud shell
+  const float RA = 1.0 + 90.0 * KM;         // top of atmosphere
+  const float HR = 8.0 * KM, HM = 1.2 * KM; // Rayleigh / Mie scale heights
+  const vec3 BR = vec3(5.802e-3, 13.558e-3, 33.1e-3) / KM; // Rayleigh scattering per unit radius
+  const float BMS = 1.6e-3 / KM, BME = 1.8e-3 / KM;        // Mie scattering / extinction (clear maritime air)
+  const float GM = 0.8;
+
+  vec2 sph(vec3 ro, vec3 rd, float r){ float b = dot(ro, rd); float c = dot(ro, ro) - r * r; float h = b * b - c; if (h < 0.0) return vec2(1e9, -1e9); h = sqrt(h); return vec2(-b - h, -b + h); }
+
+  // Schueler's Chapman-function approximation: optical depth toward the sun without a light march.
+  float chapman(float X, float h, float c){
+    float s = sqrt(X + h);
+    if (c >= 0.0) return s / (s * c + 1.0) * exp(-h);
+    float x0 = sqrt(1.0 - c * c) * (X + h);
+    return 2.0 * sqrt(x0) * exp(X - x0) - s / (1.0 - s * c) * exp(-h);
+  }
+  vec3 sunT(vec3 p){
+    float r = length(p); float h = max(r - 1.0, 0.0); float c = dot(p / r, uSun);
+    float odR = HR * chapman(1.0 / HR, h / HR, c);
+    float odM = HM * chapman(1.0 / HM, h / HM, c);
+    return exp(-(BR * odR + BME * odM));
+  }
+
+  vec2 lonlat(vec3 n){ return vec2(atan(n.x, n.z), asin(clamp(n.y, -1.0, 1.0))); }
+  vec2 toUV(vec2 ll){ return vec2((ll.x + PI) / (2.0 * PI), (ll.y + 0.5 * PI) / PI); }
+  // seam-safe derivatives (wrap at lon = 180)
+  void grads(vec2 uv, out vec2 dx, out vec2 dy){
+    vec2 uvB = vec2(fract(uv.x + 0.5) - 0.5, uv.y);
+    vec2 dxA = dFdx(uv), dyA = dFdy(uv), dxB = dFdx(uvB), dyB = dFdy(uvB);
+    dx = abs(dxA.x) < abs(dxB.x) ? dxA : dxB;
+    dy = abs(dyA.x) < abs(dyB.x) ? dyA : dyB;
+  }
+  float cloudAt(vec3 n, float lodBias){
+    vec2 ll = lonlat(n); ll.x += uTime * 0.0025; // slow weather drift
+    vec2 uv = toUV(ll); vec2 dx, dy; grads(uv, dx, dy);
+    float s = exp2(lodBias);
+    float c = textureGrad(tAux, uv, dx * s, dy * s).r;
+    // over the dive target, lay a real overcast field from the NASA map (a North Pacific storm field near 150 W, chosen free of swath seams),
+    // so the coastline disappears under genuine weather rather than a painted blob
+    float near = smoothstep(0.32, 0.10, length(n - uTarget));
+    if (near > 0.0 && uCloudBoost > 0.0) {
+      vec2 src = toUV(vec2(radians(-150.0), radians(42.0))), tgt = toUV(vec2(radians(118.0), radians(31.0)));
+      vec2 k = vec2(cos(radians(31.0)) / cos(radians(42.0)), 1.0);
+      vec2 suv = src + (uv - tgt) * k;
+      float cs = textureGrad(tAux, suv, dx * s * k.x, dy * s).r;
+      c = mix(c, max(c, min(1.0, cs * 1.8)), uCloudBoost * near);
+    }
+    return c;
+  }
+  float cloudAlpha(float c){ float a = smoothstep(0.10, 0.92, c); return a * a * (1.6 - 0.6 * a); }
+
+  float ggx(float nh, float a){ float a2 = a * a; float d = nh * nh * (a2 - 1.0) + 1.0; return a2 / (PI * d * d); }
+
   void main(){
     vec4 ndc = vec4(vUv * 2.0 - 1.0, 1.0, 1.0);
     vec4 v = uInvProj * ndc; v /= v.w;
-    vec3 d = normalize((uCamWorld * vec4(normalize(v.xyz), 0.0)).xyz);
-    float pix = 2.0 * tan(radians(25.0)) / uRes.y;
-    vec3 col = vec3(0.0);
-    col += starLayer(d, 90.0, 0.022, pix) * 0.8;
-    col += starLayer(d, 200.0, 0.012, pix) * 0.35;
-    col += starLayer(d, 420.0, 0.006, pix) * 0.18;
-    // faint nebula haze, lilac and blue
-    float n1 = texture(tShape, d * 0.35 + 0.2).r;
-    float n2 = texture(tShape, d * 0.8 + 0.6).g;
-    float band = exp(-pow(dot(d, normalize(vec3(0.35, 0.9, -0.25))) * 2.6, 2.0));
-    col += vec3(0.30, 0.22, 0.48) * pow(n1, 3.0) * 0.08 * (0.4 + band);
-    col += vec3(0.12, 0.20, 0.42) * pow(n2, 4.0) * 0.06 * band;
-    col += vec3(0.003, 0.004, 0.010);
-    outColor = vec4(col, 1.0);
-  }
-`;
+    vec3 rdW = normalize((uCamWorld * vec4(normalize(v.xyz), 0.0)).xyz);
+    vec3 ro = uW2O * uCam; vec3 rd = normalize(uW2O * rdW); vec3 sun = uSun;
+    float pixAng = 2.0 * tan(radians(25.0)) / uRes.y;
 
-const earthVert = /* glsl */ `
-  out vec3 vObj; out vec3 vWorld; out vec3 vNormalW;
-  void main(){
-    vObj = position;
-    vec4 w = modelMatrix * vec4(position, 1.0);
-    vWorld = w.xyz;
-    vNormalW = normalize(mat3(modelMatrix) * normal);
-    gl_Position = projectionMatrix * viewMatrix * w;
-  }
-`;
+    vec2 ta = sph(ro, rd, RA);
+    if (ta.x > 1e8 || ta.y <= 0.0) { outColor = vec4(0.0); return; }
+    float tca = -dot(ro, rd); float b = length(ro + rd * tca);
+    vec2 tg = sph(ro, rd, 1.0);
+    bool hit = tg.x < 1e8 && tg.x > 0.0;
+    float cov = clamp((1.0 - b) / (pixAng * max(tca, 1e-4)) + 0.5, 0.0, 1.0); // analytic limb anti-aliasing
 
-const earthFrag = /* glsl */ `
-  ${COMMON}
-  precision highp sampler3D;
-  in vec3 vObj; in vec3 vWorld; in vec3 vNormalW;
-  uniform sampler2D tDay, tNight, tHeight, tMask, tDayC, tNightC, tHeightC, tMaskC;
-  uniform vec4 uWin; // lon0, lon1, lat0, lat1 (radians)
-  uniform sampler3D tShape;
-  uniform vec3 uSun; uniform vec3 uCam; uniform float uClouds; uniform float uTime; uniform mat3 uObjToWorld;
-  out vec4 outColor;
-
-  struct S { vec3 day; vec3 night; float h; float land; };
-
-  S sampleWorld(vec2 uv){
-    // seam-safe gradients (wrap at lon = 180)
-    vec2 uvB = vec2(fract(uv.x + 0.5) - 0.5, uv.y);
-    vec2 dxA = dFdx(uv), dyA = dFdy(uv), dxB = dFdx(uvB), dyB = dFdy(uvB);
-    vec2 dx = abs(dxA.x) < abs(dxB.x) ? dxA : dxB;
-    vec2 dy = abs(dyA.x) < abs(dyB.x) ? dyA : dyB;
-    S s;
-    s.day = textureGrad(tDay, uv, dx, dy).rgb;
-    s.night = textureGrad(tNight, uv, dx, dy).rgb;
-    s.h = textureGrad(tHeight, uv, dx, dy).r;
-    s.land = textureGrad(tMask, uv, dx, dy).r;
-    return s;
-  }
-
-  void main(){
-    vec3 p = normalize(vObj);
-    float lat = asin(clamp(p.y, -1.0, 1.0));
-    float lon = atan(p.x, p.z);
-    vec2 uv = vec2((lon + PI) / (2.0 * PI), (lat + 0.5 * PI) / PI);
-    S s = sampleWorld(uv);
-
-    // detailed window over China, blended at its edges
-    vec2 cuv = vec2((lon - uWin.x) / (uWin.y - uWin.x), (lat - uWin.z) / (uWin.w - uWin.z));
-    float cw = smoothstep(0.0, 0.08, cuv.x) * smoothstep(1.0, 0.92, cuv.x) * smoothstep(0.0, 0.1, cuv.y) * smoothstep(1.0, 0.9, cuv.y);
-    if (cw > 0.0) {
-      vec2 dx = dFdx(cuv), dy = dFdy(cuv);
-      s.day = mix(s.day, textureGrad(tDayC, cuv, dx, dy).rgb, cw);
-      s.night = mix(s.night, textureGrad(tNightC, cuv, dx, dy).rgb, cw);
-      s.h = mix(s.h, textureGrad(tHeightC, cuv, dx, dy).r, cw);
-      s.land = mix(s.land, textureGrad(tMaskC, cuv, dx, dy).r, cw);
-    }
-
-    vec3 N0 = normalize(vNormalW);
-    // derivative bump mapping
-    vec3 dPdx = dFdx(vWorld), dPdy = dFdy(vWorld);
-    float dhx = dFdx(s.h), dhy = dFdy(s.h);
-    vec3 r1 = cross(dPdy, N0), r2 = cross(N0, dPdx);
-    float det = dot(dPdx, r1);
-    vec3 grad = sign(det) * (dhx * r1 + dhy * r2);
-    vec3 N = normalize(abs(det) * N0 - 0.012 * grad);
-
-    vec3 V = normalize(uCam - vWorld);
-    float ndl0 = dot(N0, uSun);
-    float ndl = dot(N, uSun);
-
-    // stylised soft day light with a warm terminator
-    float dayL = smoothstep(-0.10, 0.55, ndl);
-    vec3 warm = mix(vec3(1.0, 0.52, 0.28), vec3(1.0, 0.96, 0.9), smoothstep(0.0, 0.4, ndl0));
-    vec3 col = s.day * dayL * warm * 0.95;
-
-    // ocean glint
-    float ocean = 1.0 - s.land;
-    col *= mix(vec3(1.06, 0.98, 0.86), vec3(0.34, 0.50, 0.74), ocean);
-    vec3 H = normalize(uSun + V);
-    col += vec3(1.0, 0.85, 0.65) * pow(max(dot(N0, H), 0.0), 40.0) * 0.22 * ocean * smoothstep(0.0, 0.2, ndl0);
-
-    // clouds on the planet (shadowed surface underneath)
-    vec3 cq = vec3(1.05, 2.3, 1.05);
-    vec3 drift = vec3(uTime * 0.004, 0.0, 0.0);
-    vec4 cn = texture(tShape, p * cq + drift);
-    float base = cn.r - (1.0 - cn.g) * 0.18 - (1.0 - texture(tShape, p * cq * 4.0).b) * 0.10;
-    float cov = smoothstep(0.58, 0.95, base) * uClouds;
-    vec4 cs = texture(tShape, (p + uSun * 0.012) * cq + drift);
-    float csh = smoothstep(0.58, 0.95, cs.r - (1.0 - cs.g) * 0.18) * uClouds;
-    col *= 1.0 - 0.35 * csh;
-
-    // night lights fade in on the dark side
-    float nightW = 1.0 - smoothstep(-0.22, 0.06, ndl0);
-    col += s.night * nightW * 1.6 * (1.0 - cov * 0.75);
-
-    vec3 cloudCol = mix(vec3(0.42, 0.40, 0.60), vec3(1.0, 0.97, 0.95), smoothstep(-0.05, 0.5, ndl0)) * warm;
-    cloudCol *= smoothstep(-0.25, 0.2, ndl0) * 1.15 + 0.02;
-    col = mix(col, cloudCol, cov * 0.92);
-
-    // limb: blue rim on the lit side, faint lilac on the dark side
-    float fres = pow(1.0 - max(dot(N0, V), 0.0), 3.0);
-    col += vec3(0.25, 0.55, 1.0) * fres * 0.9 * smoothstep(-0.35, 0.5, ndl0);
-    col += vec3(0.28, 0.22, 0.45) * fres * 0.25;
-
-    outColor = vec4(col, 1.0);
-  }
-`;
-
-const atmoVert = /* glsl */ `
-  out vec3 vWorld;
-  void main(){ vec4 w = modelMatrix * vec4(position, 1.0); vWorld = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }
-`;
-
-const atmoFrag = /* glsl */ `
-  ${COMMON}
-  in vec3 vWorld;
-  uniform vec3 uCam; uniform vec3 uSun; uniform float uRa; uniform float uHs;
-  out vec4 outColor;
-  vec2 sph(vec3 ro, vec3 rd, float r){ float b = dot(ro, rd); float c = dot(ro, ro) - r * r; float h = b * b - c; if (h < 0.0) return vec2(1e9, -1e9); h = sqrt(h); return vec2(-b - h, -b + h); }
-  void main(){
-    vec3 ro = uCam; vec3 rd = normalize(vWorld - uCam);
-    vec2 ta = sph(ro, rd, uRa);
-    vec2 tp = sph(ro, rd, 1.0);
+    // ---- atmosphere: single scattering along the view ray ----
     float t0 = max(ta.x, 0.0);
-    float t1 = tp.x > 0.0 && tp.x < 1e8 ? tp.x : ta.y;
-    if (t1 <= t0) discard;
-    const int N = 20;
+    float t1 = hit ? tg.x : ta.y;
+    const int N = 32;
     float ds = (t1 - t0) / float(N);
-    vec3 beta = vec3(0.16, 0.42, 1.0);
-    vec3 acc = vec3(0.0); float od = 0.0; float mie = 0.0;
-    float mu = dot(rd, uSun);
+    const float jit = 0.5; // fixed midpoint: per-pixel jitter showed as grain on the dark ocean
+    float odR = 0.0, odM = 0.0;
+    vec3 sR = vec3(0.0), sM = vec3(0.0);
     for (int i = 0; i < N; i++) {
-      vec3 p = ro + rd * (t0 + ds * (float(i) + 0.5));
-      float r = length(p);
-      float dens = exp(-(r - 1.0) / uHs);
-      od += dens * ds;
-      float sunVis = smoothstep(-0.18, 0.28, dot(p / r, uSun));
-      vec3 tr = exp(-beta * od * 26.0);
-      acc += dens * ds * sunVis * tr;
-      mie += dens * ds * sunVis * tr.g;
+      vec3 p = ro + rd * (t0 + ds * (float(i) + jit));
+      float h = max(length(p) - 1.0, 0.0);
+      float dR = exp(-h / HR) * ds, dM = exp(-h / HM) * ds;
+      odR += dR; odM += dM;
+      vec3 Tv = exp(-(BR * (odR - 0.5 * dR) + BME * (odM - 0.5 * dM)));
+      vec3 Ts = sunT(p);
+      sR += Tv * Ts * dR; sM += Tv * Ts * dM;
     }
-    float phaseR = 0.75 * (1.0 + mu * mu);
-    float g = 0.76; float phaseM = (1.0 - g * g) / pow(1.0 + g * g - 2.0 * g * mu, 1.5) * 0.08;
-    vec3 col = acc * beta * phaseR * 15.0 + vec3(1.0, 0.8, 0.62) * mie * phaseM * 15.0;
-    // a little lilac in the deep limb
-    col += vec3(0.22, 0.14, 0.36) * acc.g * 6.0 * (1.0 - smoothstep(-0.2, 0.3, mu));
-    outColor = vec4(col, 1.0);
+    vec3 Tview = exp(-(BR * odR + BME * odM));
+    float mu = dot(rd, sun);
+    float phR = 3.0 / (16.0 * PI) * (1.0 + mu * mu);
+    float g2 = GM * GM;
+    float phM = 3.0 / (8.0 * PI) * ((1.0 - g2) * (1.0 + mu * mu)) / ((2.0 + g2) * pow(1.0 + g2 - 2.0 * GM * mu, 1.5));
+    vec3 inscatter = uSunE * (sR * BR * phR + sM * BMS * phM);
+
+    vec3 L = inscatter;
+    if (cov > 0.0) {
+      vec3 n = hit ? normalize(ro + rd * tg.x) : normalize(ro + rd * tca);
+      vec2 ll = lonlat(n); vec2 uv = toUV(ll); vec2 dx, dy; grads(uv, dx, dy);
+      vec3 day = textureGrad(tDay, uv, dx, dy).rgb;
+      vec3 aux = textureGrad(tAux, uv, dx, dy).rgb;
+      float water = aux.b;
+      vec2 cuv = vec2((ll.x - uWin.x) / (uWin.y - uWin.x), (ll.y - uWin.z) / (uWin.w - uWin.z));
+      float cw = smoothstep(0.0, 0.08, cuv.x) * smoothstep(1.0, 0.92, cuv.x) * smoothstep(0.0, 0.1, cuv.y) * smoothstep(1.0, 0.9, cuv.y);
+      if (cw > 0.0) {
+        vec2 cdx = dFdx(cuv), cdy = dFdy(cuv);
+        day = mix(day, textureGrad(tDayC, cuv, cdx, cdy).rgb, cw);
+        water = mix(water, textureGrad(tAuxC, cuv, cdx, cdy).b, cw);
+      }
+      float lights = aux.g;
+
+      // ocean: deep navy body (BMNG paints sea-floor relief, which is not visible from orbit); only shelves keep their tint
+      float lum = dot(day, vec3(0.2126, 0.7152, 0.0722));
+      vec3 navy = vec3(0.0028, 0.0068, 0.0185);
+      vec3 sea = mix(navy, day * 0.55, smoothstep(0.035, 0.16, lum));
+      vec3 albedo = mix(day, sea, water);
+
+      vec3 V = -rd;
+      float nl = dot(n, sun);
+      vec3 Tg = sunT(n * 1.00002);
+
+      // clouds: separate shell above the ground (parallax) and its shadow cast along the sun direction
+      vec3 nc = n;
+      if (hit) { vec2 tc = sph(ro, rd, RC); if (tc.x > 0.0 && tc.x < 1e8) nc = normalize(ro + rd * tc.x); }
+      float cA = cloudAlpha(cloudAt(nc, 0.0));
+      float shadow = 0.0;
+      if (nl > 0.0) {
+        vec2 tsh = sph(n, sun, RC);
+        vec3 ns = normalize(n + sun * tsh.y);
+        shadow = cloudAlpha(cloudAt(ns, 2.5));
+      }
+
+      vec3 Lg = albedo / PI * uSunE * max(nl, 0.0) * Tg * (1.0 - 0.8 * shadow);
+      // skylight, faint
+      Lg += albedo * uSunE * 0.010 * smoothstep(0.0, 0.5, nl) * vec3(0.55, 0.75, 1.0);
+      // sun glint on open water
+      vec3 Hh = normalize(sun + V);
+      float nv = max(dot(n, V), 1e-3);
+      float F = 0.02 + 0.98 * pow(1.0 - max(dot(V, Hh), 0.0), 5.0);
+      float spec = ggx(max(dot(n, Hh), 0.0), 0.16) * F / (4.0 * nv) * 0.3;
+      Lg += water * (1.0 - 0.8 * shadow) * uSunE * spec * Tg * step(0.0, nl);
+      // Black Marble city lights, only past the terminator
+      float night = 1.0 - smoothstep(-0.12, 0.03, nl);
+      Lg += vec3(1.0, 0.66, 0.36) * pow(lights, 2.2) * 0.22 * night;
+
+      float ncl = dot(nc, sun);
+      vec3 Tc = sunT(nc * RC);
+      vec3 Lc = vec3(0.92) / PI * uSunE * max(ncl, 0.0) * Tc + vec3(0.92) * uSunE * 0.012 * smoothstep(0.0, 0.5, ncl) * vec3(0.6, 0.75, 1.0);
+      vec3 Ls = mix(Lg, Lc, cA * (1.0 - 0.0));
+      L += Ls * Tview * cov;
+    }
+    outColor = vec4(L, cov);
   }
 `;
 
@@ -335,39 +337,43 @@ const cloudFrag = /* glsl */ `
 const compFrag = /* glsl */ `
   ${COMMON}
   in vec2 vUv;
-  uniform sampler2D tGlobe, tCloud; uniform float uBgMix, uWhite, uBlack, uFrame; uniform vec2 uRes; uniform float uUseCloud;
+  uniform sampler2D tGlobe, tCloud; uniform float uBgMix, uWhite, uFrame, uExposure, uDeckAll; uniform vec2 uRes; uniform float uUseCloud;
   out vec4 outColor;
+  // ACES filmic fit (Narkowicz)
   vec3 aces(vec3 x){ return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0); }
   vec3 toSRGB(vec3 c){ return mix(c * 12.92, 1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, step(0.0031308, c)); }
   void main(){
-    vec3 bg = texture(tGlobe, vUv).rgb;
+    vec4 gl = texture(tGlobe, vUv);
+    vec3 bg = gl.rgb * uExposure;
+    // after the cut the camera is inside the weather: soft sky light behind the deck
     vec3 haze = mix(vec3(0.36, 0.38, 0.64), vec3(0.62, 0.62, 0.86), smoothstep(0.0, 1.0, vUv.y));
     haze += vec3(0.25, 0.22, 0.18) * exp(-pow(length((vUv - vec2(0.75, 0.85)) * vec2(1.0, 0.6)) * 2.2, 2.0));
     bg = mix(bg, haze, uBgMix);
     vec3 col = bg;
-    if (uUseCloud > 0.5) { vec4 c = texture(tCloud, vUv); col = bg * c.a + c.rgb; }
-    col = aces(col * 0.95);
+    // before the deck closes, weather only forms over the planet, never in empty space
+    if (uUseCloud > 0.5) { vec4 c = texture(tCloud, vUv); float m = max(gl.a, uDeckAll); col = mix(bg, bg * c.a + c.rgb, m); }
+    col = aces(col);
     col = toSRGB(col);
-    float vig = smoothstep(1.25, 0.45, length((vUv - 0.5) * vec2(1.0, 0.75)));
-    col *= mix(1.0, vig, 0.35 * (1.0 - uWhite));
     col = mix(col, vec3(0.955, 0.945, 0.975), uWhite);
-    col *= 1.0 - uBlack;
-    // triangular dither against banding
+    // triangular dither against banding (applied to every pixel, including black space)
     float n = hash12(gl_FragCoord.xy + uFrame * 37.0) + hash12(gl_FragCoord.xy * 1.37 + uFrame * 11.0) - 1.0;
-    col += n / 255.0 * 1.2;
+    col = max(col + n / 255.0, 0.0);
     outColor = vec4(col, 1.0);
   }
 `;
 
 // ---------- setup ----------
-function canvasTex(c, srgb, mip = true) {
-  const t = new THREE.CanvasTexture(c);
+function imgTex(bitmap, srgb, wrapS = THREE.RepeatWrapping) {
+  const t = new THREE.Texture(bitmap);
+  t.flipY = false; // bitmaps are created already flipped
   t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
-  t.wrapS = THREE.RepeatWrapping;
+  t.wrapS = wrapS;
   t.wrapT = THREE.ClampToEdgeWrapping;
-  t.anisotropy = 8;
-  t.generateMipmaps = mip;
-  t.minFilter = mip ? THREE.LinearMipmapLinearFilter : THREE.LinearFilter;
+  t.anisotropy = 16;
+  t.generateMipmaps = true;
+  t.minFilter = THREE.LinearMipmapLinearFilter;
+  t.magFilter = THREE.LinearFilter;
+  t.needsUpdate = true;
   return t;
 }
 
@@ -383,6 +389,17 @@ function volTex(data, n) {
   return t;
 }
 
+// colour of a star from its catalogue temperature, softened toward white as a camera sees it
+function starRGB(K) {
+  const T = Math.min(40000, Math.max(1000, K)) / 100;
+  let r = T <= 66 ? 255 : 329.7 * Math.pow(T - 60, -0.1332);
+  let g = T <= 66 ? 99.47 * Math.log(T) - 161.1 : 288.1 * Math.pow(T - 60, -0.0755);
+  let b = T >= 66 ? 255 : T <= 19 ? 0 : 138.5 * Math.log(T - 10) - 305.0;
+  const c = [r, g, b].map((x) => Math.min(255, Math.max(0, x)) / 255);
+  const m = (c[0] + c[1] + c[2]) / 3;
+  return c.map((x) => (m + (x - m) * 0.55) / m);
+}
+
 export async function setup(data, opts) {
   const W = opts.width, H = opts.height;
   const cloudScale = opts.cloudScale || 0.5;
@@ -396,64 +413,69 @@ export async function setup(data, opts) {
   renderer.setSize(W, H, false);
   renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
   renderer.autoClear = true;
+  log('max texture size ' + renderer.capabilities.maxTextureSize);
 
-  log('painting textures');
-  const win = { lon0: 72, lon1: 138, lat0: 14, lat1: 54, w: opts.texW || 4096, h: Math.round(((opts.texW || 4096) * 40) / 66) };
-  let world, china;
-  if (data.cached) {
-    ({ world, china } = data.cached);
-  } else {
-    world = paintSet(data, { lon0: -180, lon1: 180, lat0: -90, lat1: 90, w: opts.texW || 4096, h: (opts.texW || 4096) / 2 }, 1);
-    china = paintSet(data, win, 101);
-    if (opts.dumpTextures) opts.dumpTextures({ world, china });
-  }
+  const win = { lon0: 72, lon1: 138, lat0: 14, lat1: 54 };
   log('noise volumes');
   const shape = volTex(shapeVolume(opts.noiseN || 96), opts.noiseN || 96);
   const detail = volTex(detailVolume(32), 32);
 
-  const rtOpts = { type: THREE.HalfFloatType, format: THREE.RGBAFormat, depthBuffer: true, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter };
-  const globeRT = new THREE.WebGLRenderTarget(W, H, { ...rtOpts, samples: 4 });
-  const cloudRT = new THREE.WebGLRenderTarget(Math.round(W * cloudScale), Math.round(H * cloudScale), { ...rtOpts, depthBuffer: false });
+  const rtOpts = { type: THREE.HalfFloatType, format: THREE.RGBAFormat, depthBuffer: false, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter };
+  const globeRT = new THREE.WebGLRenderTarget(W, H, rtOpts);
+  const cloudRT = new THREE.WebGLRenderTarget(Math.round(W * cloudScale), Math.round(H * cloudScale), rtOpts);
 
   const camera = new THREE.PerspectiveCamera(50, W / H, 0.005, 100);
   const quad = new THREE.PlaneGeometry(2, 2);
 
-  // stars background
-  const starsMat = new THREE.ShaderMaterial({
-    glslVersion: THREE.GLSL3, vertexShader: fsQuadVert, fragmentShader: starsFrag, depthWrite: false, depthTest: false,
-    uniforms: { uInvProj: { value: new THREE.Matrix4() }, uCamWorld: { value: new THREE.Matrix4() }, uRes: { value: new THREE.Vector2(W, H) }, tShape: { value: shape } },
+  // ---- stars ----
+  // Catalogue frame rotated so a quiet, sparse part of the sky sits behind the planet.
+  const starRot = new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(rad(opts.starTilt ?? 38), rad(opts.starYaw ?? 205), 0, 'YXZ'));
+  const sPos = [], sFlux = [], sCol = [];
+  for (const [x, y, z, V, K] of data.stars) {
+    if (V > 5.6) continue;
+    const p = new THREE.Vector3(x, y, z).applyMatrix4(starRot);
+    sPos.push(p.x, p.y, p.z);
+    sFlux.push(Math.min(3.0, 2.2 * Math.pow(10, -0.4 * (V - 1.0))));
+    sCol.push(...starRGB(K));
+  }
+  const sGeo = new THREE.BufferGeometry();
+  sGeo.setAttribute('position', new THREE.Float32BufferAttribute(sPos, 3));
+  sGeo.setAttribute('aFlux', new THREE.Float32BufferAttribute(sFlux, 1));
+  sGeo.setAttribute('aCol', new THREE.Float32BufferAttribute(sCol, 3));
+  const starMat = new THREE.ShaderMaterial({
+    glslVersion: THREE.GLSL3, vertexShader: starVert, fragmentShader: '#define PI 3.14159265359\n' + starFrag,
+    depthWrite: false, depthTest: false, transparent: true, uniforms: { uSize: { value: 7 } },
+    // pure additive light; alpha untouched so the star layer never counts as planet coverage
+    blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor, blendSrcAlpha: THREE.ZeroFactor, blendDstAlpha: THREE.OneFactor,
   });
-  const bgScene = new THREE.Scene();
-  const bgMesh = new THREE.Mesh(quad, starsMat);
-  bgMesh.frustumCulled = false;
-  bgScene.add(bgMesh);
+  const starPts = new THREE.Points(sGeo, starMat);
+  starPts.frustumCulled = false;
+  const starScene = new THREE.Scene();
+  starScene.add(starPts);
 
-  const sun = new THREE.Vector3(0.86, 0.28, 0.42).normalize();
-  const scene = new THREE.Scene();
-  const earthGroup = new THREE.Group();
-  scene.add(earthGroup);
-  const earthMat = new THREE.ShaderMaterial({
-    glslVersion: THREE.GLSL3, vertexShader: earthVert, fragmentShader: earthFrag,
+  // ---- globe ----
+  const tx = data.tex;
+  const globeMat = new THREE.ShaderMaterial({
+    glslVersion: THREE.GLSL3, vertexShader: fsQuadVert, fragmentShader: globeFrag, depthWrite: false, depthTest: false,
+    transparent: true, blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor,
+    blendSrcAlpha: THREE.OneFactor, blendDstAlpha: THREE.OneMinusSrcAlphaFactor,
     uniforms: {
-      tDay: { value: canvasTex(world.day, true) }, tNight: { value: canvasTex(world.night, true) },
-      tHeight: { value: canvasTex(world.height, false) }, tMask: { value: canvasTex(world.mask, false) },
-      tDayC: { value: canvasTex(china.day, true) }, tNightC: { value: canvasTex(china.night, true) },
-      tHeightC: { value: canvasTex(china.height, false) }, tMaskC: { value: canvasTex(china.mask, false) },
+      tDay: { value: imgTex(tx.world_day, true) }, tAux: { value: imgTex(tx.world_aux, false) },
+      tDayC: { value: imgTex(tx.china_day, true, THREE.ClampToEdgeWrapping) }, tAuxC: { value: imgTex(tx.china_aux, false, THREE.ClampToEdgeWrapping) },
       uWin: { value: new THREE.Vector4(rad(win.lon0), rad(win.lon1), rad(win.lat0), rad(win.lat1)) },
-      tShape: { value: shape }, uSun: { value: sun }, uCam: { value: new THREE.Vector3() }, uClouds: { value: 0.6 }, uTime: { value: 0 },
+      uInvProj: { value: new THREE.Matrix4() }, uCamWorld: { value: new THREE.Matrix4() }, uCam: { value: new THREE.Vector3() },
+      uSun: { value: new THREE.Vector3() }, uW2O: { value: new THREE.Matrix3() }, uRes: { value: new THREE.Vector2(W, H) },
+      uTime: { value: 0 }, uSunE: { value: opts.sunE ?? 5.0 }, uCloudBoost: { value: 0 }, uFrame: { value: 0 }, uTarget: { value: new THREE.Vector3() },
     },
   });
-  for (const k of ['tDayC', 'tNightC', 'tHeightC', 'tMaskC']) earthMat.uniforms[k].value.wrapS = THREE.ClampToEdgeWrapping;
-  const earth = new THREE.Mesh(new THREE.SphereGeometry(1, 384, 192), earthMat);
-  earthGroup.add(earth);
-  const atmoMat = new THREE.ShaderMaterial({
-    glslVersion: THREE.GLSL3, vertexShader: atmoVert, fragmentShader: atmoFrag, transparent: true, depthWrite: false, depthTest: false,
-    blending: THREE.AdditiveBlending,
-    uniforms: { uCam: { value: new THREE.Vector3() }, uSun: { value: sun }, uRa: { value: 1.05 }, uHs: { value: 0.011 } },
-  });
-  const atmo = new THREE.Mesh(new THREE.SphereGeometry(1.05, 192, 96), atmoMat);
-  atmo.renderOrder = 2;
-  scene.add(atmo);
+  const globeScene = new THREE.Scene();
+  const gm = new THREE.Mesh(quad, globeMat);
+  gm.frustumCulled = false;
+  globeScene.add(gm);
+  // Sun in the camera frame: up and to the right, ~59 deg off the view axis, so most of the disc is lit and a real terminator crosses the left side.
+  const sunCam = new THREE.Vector3(...(opts.sun || [0.82, 0.25, 0.52])).normalize();
+  const target = (() => { const lo = rad(CHINA.lon), la = rad(CHINA.lat); return new THREE.Vector3(Math.cos(la) * Math.sin(lo), Math.sin(la), Math.cos(la) * Math.cos(lo)); })();
+  globeMat.uniforms.uTarget.value.copy(target);
 
   const cloudMat = new THREE.ShaderMaterial({
     glslVersion: THREE.GLSL3, vertexShader: fsQuadVert, fragmentShader: cloudFrag, depthWrite: false, depthTest: false,
@@ -473,8 +495,8 @@ export async function setup(data, opts) {
   const compMat = new THREE.ShaderMaterial({
     glslVersion: THREE.GLSL3, vertexShader: fsQuadVert, fragmentShader: compFrag, depthWrite: false, depthTest: false,
     uniforms: {
-      tGlobe: { value: globeRT.texture }, tCloud: { value: cloudRT.texture }, uBgMix: { value: 0 }, uWhite: { value: 0 }, uBlack: { value: 0 },
-      uFrame: { value: 0 }, uRes: { value: new THREE.Vector2(W, H) }, uUseCloud: { value: 0 },
+      tGlobe: { value: globeRT.texture }, tCloud: { value: cloudRT.texture }, uBgMix: { value: 0 }, uWhite: { value: 0 },
+      uFrame: { value: 0 }, uRes: { value: new THREE.Vector2(W, H) }, uUseCloud: { value: 0 }, uDeckAll: { value: 0 }, uExposure: { value: opts.exposure ?? 1.0 },
     },
   });
   const compScene = new THREE.Scene();
@@ -482,34 +504,41 @@ export async function setup(data, opts) {
   qm.frustumCulled = false;
   compScene.add(qm);
 
+  const earthQ = new THREE.Quaternion();
   function render(frame) {
     const t = frame / FPS;
     const P = params(t);
 
-    // globe camera
     camera.position.set(0, 0, 1 + P.alt);
     camera.up.set(Math.sin(P.roll), Math.cos(P.roll), 0);
     camera.lookAt(0, P.lookY * (P.alt / 4.5), 0);
     camera.updateMatrixWorld();
-    earthGroup.rotation.set(0, 0, 0);
-    earthGroup.rotateX(rad(P.lat));
-    earthGroup.rotateY(-rad(P.lon));
-    earthGroup.updateMatrixWorld(true);
-    earthMat.uniforms.uCam.value.copy(camera.position);
-    earthMat.uniforms.uClouds.value = P.globeClouds;
-    earthMat.uniforms.uTime.value = t;
-    atmoMat.uniforms.uCam.value.copy(camera.position);
-    starsMat.uniforms.uInvProj.value.copy(camera.projectionMatrixInverse);
-    starsMat.uniforms.uCamWorld.value.copy(camera.matrixWorld);
+    // Earth orientation: same convention as before (rotateX(lat) then rotateY(-lon)) so the sub-camera point is (lon, lat)
+    const eg = new THREE.Object3D();
+    eg.rotateX(rad(P.lat));
+    eg.rotateY(-rad(P.lon));
+    eg.updateMatrixWorld(true);
+    earthQ.copy(eg.quaternion);
+    const w2o = new THREE.Matrix3().setFromMatrix4(new THREE.Matrix4().makeRotationFromQuaternion(earthQ.clone().invert()));
+    const g = globeMat.uniforms;
+    g.uW2O.value.copy(w2o);
+    g.uInvProj.value.copy(camera.projectionMatrixInverse);
+    g.uCamWorld.value.copy(camera.matrixWorld);
+    g.uCam.value.copy(camera.position);
+    g.uSun.value.copy(sunCam).applyMatrix3(w2o).normalize();
+    g.uTime.value = t;
+    g.uFrame.value = frame;
+    g.uCloudBoost.value = opts.noBoost ? 0 : P.cloudBoost;
+    starPts.matrixWorld.identity();
 
     const globeVisible = P.bgMix < 1;
     renderer.setRenderTarget(globeRT);
+    renderer.setClearColor(0x000000, 0);
     renderer.clear();
     if (globeVisible) {
       renderer.autoClear = false;
-      renderer.render(bgScene, camera);
-      renderer.clearDepth();
-      renderer.render(scene, camera);
+      renderer.render(starScene, camera);
+      renderer.render(globeScene, camera);
       renderer.autoClear = true;
     }
 
@@ -521,7 +550,6 @@ export async function setup(data, opts) {
       u.uCamPos.value.set(0.4 + t * 0.05, -0.2, camZ);
       const tilt = rad(lerp(0, 9, smooth(2.4, 3.8, t)));
       const fwd = new THREE.Vector3(0, Math.sin(tilt), -Math.cos(tilt)).normalize();
-      // screen up in cloud world matches the globe camera (+y), rolled the same way
       let up = new THREE.Vector3(Math.sin(P.roll), Math.cos(P.roll), 0);
       const right = new THREE.Vector3().crossVectors(fwd, up).normalize();
       up = new THREE.Vector3().crossVectors(right, fwd).normalize();
@@ -542,9 +570,9 @@ export async function setup(data, opts) {
     const c = compMat.uniforms;
     c.uBgMix.value = P.bgMix;
     c.uWhite.value = P.white;
-    c.uBlack.value = P.black;
     c.uFrame.value = frame;
     c.uUseCloud.value = useCloud ? 1 : 0;
+    c.uDeckAll.value = smoother(2.4, 2.65, t);
     renderer.setRenderTarget(null);
     renderer.render(compScene, camera);
     renderer.getContext().finish();

@@ -9,28 +9,17 @@
 <body>
 <script type="module">
   import { setup } from './scene.js';
+  // Textures are built by prep.py from NASA imagery and served from .cache/textures.
+  const bitmap = async (n) => {
+    const blob = await (await fetch('./tex/' + n + '.png')).blob();
+    return createImageBitmap(blob, { imageOrientation: 'flipY', premultiplyAlpha: 'none', colorSpaceConversion: 'none' });
+  };
   window.__boot = async (opts) => {
-    if (opts.cachedTextures) {
-      const load = (n) => new Promise((ok, no) => { const i = new Image(); i.onload = () => { const c = document.createElement('canvas'); c.width = i.width; c.height = i.height; c.getContext('2d').drawImage(i, 0, 0); ok(c); }; i.onerror = no; i.src = './tex/' + n + '.png'; });
-      const set = async (p) => ({ day: await load(p + '_day'), night: await load(p + '_night'), height: await load(p + '_height'), mask: await load(p + '_mask') });
-      opts.log = (m) => console.log('[render] ' + m);
-      const r = await setup({ cached: { world: await set('world'), china: await set('china') } }, opts);
-      window.__render = r.render;
-      return { frames: r.FRAMES, fps: r.FPS };
-    }
-    const get = (n) => fetch('./data/' + n + '.geojson').then((r) => r.json());
-    const [land, lakes, regions, glaciers, places] = await Promise.all([
-      get('ne_50m_land'), get('ne_50m_lakes'), get('ne_50m_geography_regions_polys'), get('ne_50m_glaciated_areas'), get('ne_10m_populated_places_simple'),
-    ]);
-    if (opts.dumpTextures) {
-      opts.dumpTextures = ({ world, china }) => {
-        window.__tex = {};
-        for (const [k, v] of Object.entries(world)) window.__tex['world_' + k] = v.toDataURL('image/png');
-        for (const [k, v] of Object.entries(china)) window.__tex['china_' + k] = v.toDataURL('image/png');
-      };
-    }
     opts.log = (m) => console.log('[render] ' + m);
-    const r = await setup({ land, lakes, regions, glaciers, places }, opts);
+    const tex = {};
+    for (const n of ['world_day', 'world_aux', 'china_day', 'china_aux']) tex[n] = await bitmap(n);
+    const stars = await (await fetch('./tex/stars.json')).json();
+    const r = await setup({ tex, stars }, opts);
     window.__render = r.render;
     return { frames: r.FRAMES, fps: r.FPS };
   };

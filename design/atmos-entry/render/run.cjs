@@ -1,22 +1,33 @@
 #!/usr/bin/env node
 // Renders atmos.mp4 + sheet.jpg. Needs: Node 18+, Playwright with Chromium, ffmpeg.
-// Usage: node run.cjs [--scale 0.5] [--frames 0,30,60] [--out ../] [--data ./.cache/ne] [--repaint]
+// Usage: node run.cjs [--scale 0.5] [--frames 0,30,60] [--out ../] [--reprep] [--sun x,y,z] [--exposure 1] [--sunE 9]
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
+const crypto = require('crypto');
 const { execFileSync } = require('child_process');
 const { chromium } = require('playwright');
 
 const HERE = __dirname;
-const NE_COMMIT = 'ca96624a56bd078437bca8184e78163e5039ad19';
-const NE_FILES = ['ne_50m_land', 'ne_50m_lakes', 'ne_50m_geography_regions_polys', 'ne_50m_glaciated_areas', 'ne_10m_populated_places_simple'];
+// NASA's own servers (visibleearth / eoimages / neo) are blocked from the render container, so the same
+// public-domain NASA files are fetched from the GitHub mirrors below and pinned by SHA-256. CREDITS.md lists both.
+const SOURCES = [
+  { file: 'bmng21600.jpg', sha: '3006c58b1272362db0a8c2df02dc07cea4b12dfe820b7dc4a159a075caf5d4d4',
+    url: 'https://raw.githubusercontent.com/stdcout1/airline3d/master/airports/world.topo.bathy.200412.3x21600x10800.jpg' },
+  { file: 'clouds8192.png', sha: '396bee0a1be4284a9632806b950df1d0c8a66ed4b849f78ec23e361c57932c37',
+    url: 'https://media.githubusercontent.com/media/Prograda/Skybolt/master/Assets/Globe/Environment/Cloud/cloud_combined_8192.png' },
+  { file: 'bm2016_3km_gray.jpg', sha: '3fbc8aae3529dc1ebfcf3aa9361bd3dfc11d19950a6af6d8ed2df61bd8b0134d',
+    url: 'https://media.githubusercontent.com/media/VeljkoS2/3D-Orbital-Physics-Engine/main/Assets/Planets%20of%20the%20Solar%20System%203D/Materials/earth/BlackMarble_2016_3km_gray.jpg' },
+  { file: 'bsc5.json', sha: '94b0581379ef9ea49f1ce664734a06d2fbbff2d7487f926acad3e9ef0960e0d8',
+    url: 'https://raw.githubusercontent.com/brettonw/YaleBrightStarCatalog/master/bsc5-short.json' },
+];
 
 const argv = process.argv.slice(2);
 const arg = (k, d) => { const i = argv.indexOf('--' + k); return i >= 0 ? argv[i + 1] : d; };
 const flag = (k) => argv.includes('--' + k);
 const scale = Number(arg('scale', '1'));
 const outDir = path.resolve(arg('out', path.join(HERE, '..')));
-const dataDir = path.resolve(arg('data', path.join(HERE, '.cache', 'ne')));
+const srcDir = path.join(HERE, '.cache', 'nasa');
 const framesDir = path.resolve(arg('frames-dir', path.join(HERE, '.cache', 'frames' + (scale === 1 ? '' : '-' + scale))));
 const texDir = path.join(HERE, '.cache', 'textures');
 const only = arg('frames') ? arg('frames').split(',').map(Number) : null;
@@ -24,26 +35,32 @@ const W = Math.round((780 * scale) / 2) * 2;
 const H = Math.round((1688 * scale) / 2) * 2;
 
 async function ensureData() {
-  fs.mkdirSync(dataDir, { recursive: true });
-  for (const f of NE_FILES) {
-    const p = path.join(dataDir, f + '.geojson');
-    if (fs.existsSync(p)) continue;
-    const url = `https://raw.githubusercontent.com/nvkelso/natural-earth-vector/${NE_COMMIT}/geojson/${f}.geojson`;
-    console.log('fetch', url);
-    const r = await fetch(url);
-    if (!r.ok) throw new Error(url + ' ' + r.status);
-    fs.writeFileSync(p, Buffer.from(await r.arrayBuffer()));
+  fs.mkdirSync(srcDir, { recursive: true });
+  for (const s of SOURCES) {
+    const p = path.join(srcDir, s.file);
+    if (!fs.existsSync(p)) {
+      console.log('fetch', s.url);
+      const r = await fetch(s.url);
+      if (!r.ok) throw new Error(s.url + ' ' + r.status);
+      fs.writeFileSync(p, Buffer.from(await r.arrayBuffer()));
+    }
+    const sha = crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex');
+    if (sha !== s.sha) throw new Error(`${s.file}: sha256 ${sha} does not match pinned ${s.sha}`);
+  }
+  if (flag('reprep') || !fs.existsSync(path.join(texDir, 'stars.json'))) {
+    // needs Pillow + numpy; use a venv if the system Python lacks them
+    const py = fs.existsSync(path.join(HERE, '.cache', 'venv', 'bin', 'python')) ? path.join(HERE, '.cache', 'venv', 'bin', 'python') : 'python3';
+    execFileSync(py, [path.join(HERE, 'prep.py')], { stdio: 'inherit' });
   }
 }
 
 function serve() {
   const three = path.join(path.dirname(require.resolve('three', { paths: [HERE] })), 'three.module.js');
-  const types = { '.png': 'image/png', '.js': 'text/javascript', '.html': 'text/html', '.geojson': 'application/json' };
+  const types = { '.png': 'image/png', '.js': 'text/javascript', '.html': 'text/html', '.json': 'application/json' };
   const srv = http.createServer((req, res) => {
     const u = decodeURIComponent(req.url.split('?')[0]);
     let file;
     if (u === '/vendor/three.module.js') file = three;
-    else if (u.startsWith('/data/')) file = path.join(dataDir, path.basename(u));
     else if (u.startsWith('/tex/')) file = path.join(texDir, path.basename(u));
     else file = path.join(HERE, path.basename(u === '/' ? 'index.html' : u));
     fs.readFile(file, (err, buf) => {
@@ -68,15 +85,10 @@ function serve() {
   await page.goto(`http://127.0.0.1:${port}/`);
   await page.waitForFunction(() => window.__ready);
   const t0 = Date.now();
-  // Painting the textures takes ~15 min in software Chrome; they are cached as PNG and reused.
-  const haveTex = !flag('repaint') && fs.existsSync(path.join(texDir, 'china_mask.png'));
-  const info = await page.evaluate((o) => window.__boot(o), { width: W, height: H, cloudScale: Number(arg('cloud-scale', '1')), dumpTextures: !haveTex, cachedTextures: haveTex, texW: 4096, noiseN: 96 });
+  const num = (k) => (arg(k) === undefined ? undefined : Number(arg(k)));
+  const info = await page.evaluate((o) => window.__boot(o), { width: W, height: H, cloudScale: Number(arg('cloud-scale', '1')), noiseN: 96,
+    sun: arg('sun') ? arg('sun').split(',').map(Number) : undefined, exposure: num('exposure'), sunE: num('sunE'), starYaw: num('star-yaw'), starTilt: num('star-tilt'), noBoost: flag('no-boost') });
   console.log('setup', ((Date.now() - t0) / 1000).toFixed(1) + 's', info);
-  if (!haveTex) {
-    const tex = await page.evaluate(() => window.__tex);
-    fs.mkdirSync(texDir, { recursive: true });
-    for (const [k, v] of Object.entries(tex)) fs.writeFileSync(path.join(texDir, k + '.png'), Buffer.from(v.split(',')[1], 'base64'));
-  }
   const list = only || [...Array(info.frames).keys()];
   for (const i of list) {
     const t1 = Date.now();
