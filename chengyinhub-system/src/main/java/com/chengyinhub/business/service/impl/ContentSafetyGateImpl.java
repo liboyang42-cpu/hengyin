@@ -22,10 +22,12 @@ import org.springframework.stereotype.Service;
  * 裁决规则(优先级从上到下;「PRE / POST」= 请求的 reviewMode):
  *  0) EXEMPT                  → PASS
  *  1) 文本命中风险            → BLOCK(不公开,两种模式都拦)
- *  2) 机审要人工/审不了/异常/缺 openid → PRE: HOLD(fail-safe);POST: PASS 打标(passFlagged,留待抽检)
+ *  2) 机审要人工/审不了/异常/缺 openid → HOLD(两种模式都不公开;Round5B-3:先发后审也不再「打标放行」,
+ *     没审过的内容进人工审核台,审核通过才公开)
  *  3) 带结构化商业字段(点位/价格/报名)→ PRE: HOLD(强制人工复核后上架);POST: 放行
- *  4) 含图片                  → PRE: HOLD(仅作者可见);POST: 放行(调用方保留异步图片检测 + 违规回调下架)
- *  5) 文本检测被关闭          → PRE: HOLD(fail-safe);POST: PASS 打标
+ *  4) 含图片                  → PRE: HOLD(仅作者可见);POST: 图片能送检则放行(异步检测 + 违规回调下架),
+ *                               送不了检(总开关关 / 缺 openid)→ HOLD
+ *  5) 文本检测被关闭          → HOLD(两种模式)
  *  6) 纯文本且通过            → PASS
  * reviewMode 为空或无法识别 → 按 PRE_REVIEW:门禁分不出调用方,PRE_REVIEW 是全部存量调用方今天的语义,
  * 也是最严的一档,脏值绝不 fail-open 成先发后审/豁免。
@@ -84,6 +86,12 @@ public class ContentSafetyGateImpl implements IContentSafetyGate {
             }
         }
 
+        // 3') Round5B-3:先发后审带图,但图片送不了检(总开关关 / 缺 openid)→ 没人能审这张图,HOLD 进人工审核
+        boolean hasMedia = req.getMediaUrls() != null && !req.getMediaUrls().isEmpty();
+        if (!pre && hasMedia && !wxContentSecurityService.canSubmitMedia(req.getOpenid())) {
+            return hold(req, "MEDIA_UNCHECKED", "NORMAL");
+        }
+
         // 3) 结构化商业字段 → 先审模式强制人工复核
         if (pre && (req.isHasGeo() || req.isHasPrice() || req.isHasSignup())) {
             return hold(req, "STRUCTURED_REVIEW", "NORMAL");
@@ -116,14 +124,16 @@ public class ContentSafetyGateImpl implements IContentSafetyGate {
         return ReviewMode.PRE_REVIEW;
     }
 
-    /** 机审没给出确定结论:先审 → HOLD;先发后审 → 公开但打标 */
+    /**
+     * 机审没给出确定结论:两种模式都 HOLD(Round5B-3)。没审过的公开内容不能先上架再抽检;
+     * 先发后审只对「机审明确通过」的内容生效。调用方按 HOLD 落待审 / 下架留置并进审核台。
+     */
     private SafetyDecision unsure(PublishSafetyRequest req, boolean pre, String reasonCode, String riskLevel) {
-        if (pre) {
-            return hold(req, reasonCode, riskLevel);
+        if (!pre) {
+            logger.warn("UGC门禁 POST_REVIEW 机审未完成,转人工审核不公开 contentType={} id={} reason={}",
+                    req.getContentType(), req.getContentId(), reasonCode);
         }
-        logger.info("UGC门禁 POST_REVIEW 打标放行 contentType={} id={} reason={}",
-                req.getContentType(), req.getContentId(), reasonCode);
-        return SafetyDecision.passFlagged(reasonCode);
+        return hold(req, reasonCode, riskLevel);
     }
 
     private SafetyDecision hold(PublishSafetyRequest req, String reasonCode, String riskLevel) {

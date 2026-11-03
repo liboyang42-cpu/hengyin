@@ -309,6 +309,13 @@ public interface ICmsTopicService
     /** 先发后审打标/抽检通过:写 cms_topic.review_flag(1=进入抽检池,0=已通过)。 */
     public void markReviewFlag(Long topicId, boolean flagged);
 
+    /**
+     * Round5B-3:主题文本机审未给出结论 → 不公开。复用内容安全留置(check_status=2 + 原因,user_status=0),
+     * 非草稿立即挂复核上架单(source=content_safety_relist),审核台通过即自动上架;草稿由发布草稿时挂单。
+     * 返回复核单 id(草稿或已人工驳回返回 null)。
+     */
+    public Long holdUncheckedTopicForReview(Long topicId, Long submitterId);
+
     /** 图片内容安全违规留置(AUDIT-INT-7):置 cms_topic.content_safety_hold=1,不改人工驳回原因。 */
     public void markContentSafetyHold(Long topicId);
 

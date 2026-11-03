@@ -176,16 +176,16 @@ class ActivityPublishReviewModeTest {
         verify(cmsActivityService, never()).publishActivity(any(), anyLong(), anyString(), anyBoolean());
     }
 
-    /** 机审给不出结论:先发后审照常上架,但在审核台留一张非阻断的抽检单。 */
+    /** Round5B-3:机审给不出结论 → 不上架,落待审(publishActivity preReview=true),不再「先上架 + 抽检单」。 */
     @Test
-    void reviewRequiredTextPublishesButLeavesSpotCheckTask() {
+    void reviewRequiredTextIsHeldForHumanReviewInsteadOfPublished() {
         when(wxSec.checkText(anyString(), anyString())).thenReturn(IWxContentSecurityService.REVIEW_REQUIRED);
 
         AjaxResult result = controller.publish(activity("3"));
 
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
-        verify(cmsActivityService).publishActivity(any(), eq(MEMBER_ID), anyString(), eq(false));
-        verify(auditTaskService).submit(eq(AuditTask.BIZ_ACTIVITY), eq(9L), eq(MEMBER_ID),
+        verify(cmsActivityService).publishActivity(any(), eq(MEMBER_ID), anyString(), eq(true));
+        verify(auditTaskService, never()).submit(eq(AuditTask.BIZ_ACTIVITY), eq(9L), eq(MEMBER_ID),
                 eq("post_review_flag"), anyString());
     }
 

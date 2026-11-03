@@ -240,7 +240,8 @@ public class TopicPublicationService {
         java.util.Map<String, Object> snap = new java.util.LinkedHashMap<>();
         snap.put("bizType", AuditTask.BIZ_TOPIC);
         snap.put("bizId", topicId);
-        snap.put("holdReason", com.chengyinhub.business.util.TopicContentSafetyHold.REASON);
+        snap.put("holdReason", StringUtils.isEmpty(topic.getReason())
+                ? com.chengyinhub.business.util.TopicContentSafetyHold.REASON : topic.getReason());
         snap.put("name", topic.getName());
         snap.put("imgUrl", topic.getImgUrl());
         snap.put("imgArr", topic.getImgArr());

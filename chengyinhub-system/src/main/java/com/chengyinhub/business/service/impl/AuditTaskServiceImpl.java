@@ -2218,8 +2218,12 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                 // 官方活动先审后发:过审→上架/排期;驳回→保持不公开
                 officialEventServiceProvider.getObject().applyAuditDecision(bizId, up, reasonText, task.getSubmitterId());
             } else if (AuditTask.BIZ_COUPON.equals(bizType)) {
-                // 优惠券先发后审抽检:确认违规→平台手动失效(status=3,停止新领取);无问题→不动
-                if (up) return;
+                // 优惠券先发后审抽检:确认违规→平台手动失效(status=3,停止新领取);无问题→不动。
+                // Round5B-3:机审未完成被扣下的券(status=0,不可领)人工通过才转进行中(CAS 只动 0)。
+                if (up) {
+                    smsCouponServiceProvider.getObject().releaseHeldCoupon(bizId);
+                    return;
+                }
                 com.chengyinhub.business.domain.SmsCoupon c = new com.chengyinhub.business.domain.SmsCoupon();
                 c.setId(bizId);
                 c.setStatus(3);

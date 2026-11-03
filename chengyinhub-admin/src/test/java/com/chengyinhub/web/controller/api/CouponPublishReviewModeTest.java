@@ -152,6 +152,20 @@ class CouponPublishReviewModeTest {
         verify(couponService, never()).insertSmsCoupon(any());
     }
 
+    /** Round5B-3:门禁 HOLD(审不了)→ 券以 status=0 保存(不可领)并进审核台,不直接上架。 */
+    @Test
+    void heldDecisionSavesCouponAsNotIssuableAndQueuesReview() {
+        when(gate.decide(any())).thenReturn(SafetyDecision.hold("DETECT_DISABLED", null));
+
+        AjaxResult result = controller.publish(request());
+
+        assertTrue(result.isSuccess());
+        ArgumentCaptor<SmsCoupon> coupon = ArgumentCaptor.forClass(SmsCoupon.class);
+        verify(couponService).insertSmsCoupon(coupon.capture());
+        assertEquals(0, coupon.getValue().getStatus());
+        verify(auditTaskService).submitSafetyHold(eq(AuditTask.BIZ_COUPON), any(), eq(OWNER), eq("NORMAL"), anyString());
+    }
+
     @Test
     void flaggedDecisionPublishesAndLeavesSpotCheckTask() {
         when(gate.decide(any())).thenReturn(SafetyDecision.passFlagged("TEXT_REVIEW"));

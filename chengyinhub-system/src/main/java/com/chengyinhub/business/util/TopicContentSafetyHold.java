@@ -18,6 +18,9 @@ public final class TopicContentSafetyHold {
     /** 下架原因(写入 cms_topic.reason,作者端可见) */
     public static final String REASON = "内容安全：主题图片疑似违规，已自动下架，需人工复核通过后才能重新上架";
 
+    /** Round5B-3:文本机审没给出结论(检测关闭/繁忙/缺身份/要人工)时同一留置,原因单独说明。 */
+    public static final String REASON_UNCHECKED = "内容安全：自动检测未完成，已转人工复核，复核通过后自动上架";
+
     /** 作者申请复核上架的审核单来源 */
     public static final String SOURCE_RELIST = "content_safety_relist";
 

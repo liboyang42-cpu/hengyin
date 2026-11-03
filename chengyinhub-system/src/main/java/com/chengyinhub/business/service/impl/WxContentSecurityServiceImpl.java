@@ -287,6 +287,11 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
         com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         if (!isEnabled() || StringUtils.isBlank(mediaUrl) || StringUtils.isBlank(openid))
         {
+            // Round5B-3:不再静默跳过。能否送检由 canSubmitMedia 在发布前判定,送不了的内容由门禁 HOLD。
+            if (StringUtils.isNotBlank(mediaUrl))
+            {
+                log.error("[内容安全] 图片未送检(总开关关闭或缺 openid),需人工复审 mediaLength={}", mediaUrl.length());
+            }
             return null;
         }
         try
@@ -346,6 +351,11 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
         com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         if (!isEnabled() || bizId == null || StringUtils.isEmpty(imgArr))
         {
+            if (!isEnabled() && bizId != null && StringUtils.isNotEmpty(imgArr))
+            {
+                // Round5B-3:总开关关闭不再静默;公开内容已由门禁 / 调用方按 HOLD 留置待人工审核。
+                log.error("[内容安全] 图片检测总开关关闭,未送检,需人工复审 bizType={}, bizId={}", bizType, bizId);
+            }
             return;
         }
         // 图片地址串支持逗号或分号分隔

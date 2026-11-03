@@ -833,6 +833,7 @@ public class ApiActivityController extends BaseController {
             safety.setText(IWxContentSecurityService.joinText(request.getName(), request.getDescription()));
             safety.setHasPrice(activityReviewPolicy.hasCharge(request));
             safety.setHasSignup(true);
+            safety.setMediaUrls(safetyMedia(request.getImgUrl(), request.getImgArr()));
             safety.setReviewMode(activityReviewPolicy.modeOf(request, publisher.reviewSubject()).name());
             SafetyDecision decision = contentSafetyGate.decide(safety);
             if (decision == null || decision.isBlock()) {
@@ -954,6 +955,7 @@ public class ApiActivityController extends BaseController {
             safety.setText(IWxContentSecurityService.joinText(request.getName(), request.getDescription()));
             safety.setHasPrice(activityReviewPolicy.hasCharge(request));
             safety.setHasSignup(true);
+            safety.setMediaUrls(safetyMedia(request.getImgUrl(), request.getImgArr()));
             safety.setReviewMode(mode.name());
             decision = contentSafetyGate.decide(safety);
             if (decision == null || decision.isBlock()) {
@@ -1056,6 +1058,16 @@ public class ApiActivityController extends BaseController {
         } catch (Exception e) {
             logger.error("活动抽检单提交失败 activityId={}", activityId, e);
         }
+    }
+
+    /** Round5B-3:把封面 / 图集交给门禁,图片送不了检时先发后审也要 HOLD。 */
+    static java.util.List<String> safetyMedia(String imgUrl, String imgArr) {
+        java.util.List<String> media = new java.util.ArrayList<>();
+        for (String raw : new String[] {imgUrl, imgArr}) {
+            if (raw == null) continue;
+            for (String item : raw.split("[,;]")) if (!item.trim().isEmpty()) media.add(item.trim());
+        }
+        return media;
     }
 
     private String resolveOpenid(Long memberId) {
