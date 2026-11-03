@@ -276,4 +276,62 @@ The before shots' refund time is UTC for the same rig reason given above. The be
 
 Not verified on a real phone: the WeChat pay sheet, a real WeChat refund reaching 退款成功, and jobs running on their schedule.
 
+Round 3D items are all done (see above).
+
+## Round 4
+
+Round 4 (ROUND4.md §pay-gate, 2026-11-03). Master merged first: already up to date. Round 3D had nothing open.
+
+### Needs owner (round 4)
+
+1. **A self-play pass bought after the theme starts can never be refunded.** The pass's clock is the theme's fulfilment-window start (`cms_topic.start_date`, 00:00 Shanghai). A pass bought on day 5 of a running theme is already past "start", so it gets 0%. That was also true before this change, which refunded only before the window start. Recommended default: keep it until you decide. The alternative is to measure a pass from its own purchase time.
+2. **Any refund on a pass blocks that theme's club self-play settlement.** `selectCashBasisBlockingRefundIdsForUpdate` treats every refund in status 0 or 1 on owner_type=1 rows as blocking. Settlement then stops with `MANUAL_REPAIR:REFUND_NET_BASIS_UNPROVEN`, for 100% refunds and 50% refunds alike. This already happened before (full refunds). With the 50% tier, the retained half on a pass is not settled automatically; someone has to settle it by hand. Recommended: net partial refunds the way activity settlement already does (`selectRetainedSalesAfterPartialRefundByActivityId`). Not built: it changes settlement money.
+3. **The self-play checkout (theme page, 去结算 sheet) states no refund rule**, before or after. I added nothing because of the no-new-captions rule. Recommended: reuse the checkout's three-row 退款规则 block there if you want it shown.
+4. **③ tickets without a `start_time`** still freeze the old `EXPLORE_END_100_0` snapshot (100% until the ticket's end). There is no start time to measure the tiers from. The publisher normally sets one.
+5. **Organiser-side wording, not player views, left unchanged:** publish step 3 「集合时间前可全额退款；错过集合或已核销不退」, club topic-detail 「退款截止为集合前 24 小时」, event-ops 「退款窗口按「集合时刻前 24 小时」计算」.
+
+### Items
+
+| Item | Status | What changed | Files | Proof |
+|---|---|---|---|---|
+| Tiers on passes | done | ② self-play passes and ③ explore passes use 100/50/0 like session tickets. The clock is the fulfilment-window start, frozen at purchase under a new policy code `START_24H_100_50_0`, with `refund_deadline` = the start. For ②, `snapshotSelfPlayPass` uses `FulfillmentWindowResolver` (theme start day). For ③, `snapshotOnPurchase` uses the ticket's `start_time`. `RefundPolicy.evaluate` (13 arguments, with the code) and `evaluateTopicFulfillmentWindow` (with code and snapshot) apply the tiers only to orders carrying that code. Player self-cancel passes the 50% ratio to `refundOne`/`refundWholeOrder` on both paths; reason 「用户申请退款(开始前24小时内,退50%)」. The quote measures ③ from the ticket start too, for single-ticket and multi-ticket orders, so the checkout's 50% confirm and `refundPercentNow` match. | `RefundPolicyCode`, `RefundPolicy`, `CmsRegistrationServiceImpl` (snapshots and quote; `assertCollectible` untouched), `TeamGroupServiceImpl`, `RegistrationQueryApplication` | `PassRefundTiersTest` (7, new API), `FreeSessionCancelReleaseV2Test` +2 (`tieredExplorePassWithin24hOfTicketStartRefundsHalf` is red on old code: 9.90 instead of 4.95), `RefundSnapshotWiringTest`/`RefundPolicySnapshotTest` updated; rig HTTP below |
+| Old frozen snapshots | done (reported) | Nothing promised is taken back. **③ old orders** carry `EXPLORE_END_100_0` v1, which promised 100% until the ticket's `end_time`, 0% after, and manual review once redeemed. They keep that rule (rig E3: refunded 100% after the ticket had started). **② old orders** have no snapshot; they were promised 100% until the window start. They keep that rule, also within 24 h (rig S4). **① on a theme (owner_type=1 with a ticket)** cannot be created any more: `/api/registration/create` sends every owner_type=1 order to `createSelfPlayPass`. | as above | rig E3, S4; `PassRefundTiersTest.legacy*` |
+| Points on a 50% refund | unchanged, true by code | `returnPoints` still returns points in full on any refund. No pass can use points today: self-play passes set `point_used=0`, and explore/shop-day tickets refuse points (`assertShopDayPointsUnsupported`). The rig rows show `point_used 0`. | — | code read; rig snapshots |
+| Old refund wording | done | Player views show the platform's tier text, not the stored `oms_ticket.refund_rule`. The stored data is unchanged (rig ticket 76 still holds 「开场前24小时可退」). New `utils/refund-rule.js` produces 「集合前 / 开始前 24 小时以上全额退;24 小时内退 50%;开始后不退」 for paid tickets and nothing for free ones. The theme page session row (`pages/topic/index`) and the session picker (`cy/session-picker`) use it. The checkout 退款规则 table now also shows for ③ tickets, reading 「开始前」, and the 50% confirm says 「该场次已进入开始前 24 小时」. The order detail uses the backend verdict, which is now tier-aware for passes (「开始前 24 小时内取消,退实付的 50%…」). | `utils/refund-rule.js`, `pages/topic/index/index.js/.wxml`, `pages/topic/components/cy/session-picker/index.js`, `pages/activity/baoming/baoming.js/.wxml` | `refund-rule-player-text.test.js` (red on old code), `item6-nonrefundable-confirm.test.js` +1; shots `refund-wording-r4-*`, `pass-tiers-checkout-r4-*` |
+
+### HTTP proof (rig, DB read-back)
+
+The rig ran this branch's jar (7203da83, which carries the tier code) with the club lane's harness patches. The chains platform → merchant_club → sale_close PASSed (theme 990014). `payment_status` is written only by the real `/api/registration/callback` after `chain_player.store_trusted_payment_fact`. Logs: `proof/round4-explore.log`, `proof/round4-selfplay.log`, `proof/round4-selfplay-S4.log`, JSON `proof/round4-*.json`; script `proof/proof_round4.py`.
+
+| Case | Order | Frozen snapshot | `/api/registration/info` | `cancel-refund` → `refund_application` |
+|---|---|---|---|---|
+| E1 ③ ticket starts in ~3 days | reg 75, 69.00 | `START_24H_100_50_0`, deadline = ticket start | full refund until start − 24 h | **69.00** |
+| E2 ③ ticket starts in 5 h (activity starts 11-13) | reg 76 | same, quote `refundPercentNow 50` | 「开始前 24 小时内取消,退实付的 50%」 | **34.50** of 69.00 |
+| E3 old ③ order (row rewritten to `EXPLORE_END_100_0`, deadline = ticket end), ticket already started | reg 77 | old code | full refund until 11-13 23:59 | **69.00** (promise kept) |
+| S1 ② theme starts in 3 days | reg 78, 29.99 | `START_24H_100_50_0`, 11-06 00:00 | 「可免费取消至 11月5日 00:00」 | **29.99** |
+| S2 ② theme starts tomorrow | reg 79 | 11-04 00:00 | 50% reason | **14.99** of 29.99 (rounded down) |
+| S3 ② after start (frozen anchor moved 1 h into the past) | reg 80 | — | 「已开始,不可退款」 | refused, no refund row |
+| S4 old ② order (snapshot columns cleared), within 24 h | reg 81 (player 9004) | none | full refund | **29.99** (promise kept) |
+
+Fixture writes (test DB only, all printed in the logs): `oms_ticket.start_time` and `cms_topic.start_date` moved **before** each purchase, so the purchase itself froze the anchor; S3's frozen anchor moved into the past; E3/S4 rows rewritten to the pre-11-03 shape; `settlement_rule` activity/topic rows inserted in the pre-migration shape, then this branch's `migration_20261103_settlement_rule_three_percent.sql` and the existing `migration_20260815_tandianri_h8_publisher_points_funds.sql` applied with `ci/run_migration.py` (as in round 3D); theme 990015 lifecycle 3→2 for the real `pricing/confirm`, then 2→3 (lane l3-sell's gate). The rig's MySQL runs in UTC while the app reads CST, so the explore script adds 8 h to `NOW()`.
+
+The multi-ticket quote fix (84d47388) came after the rig jar was built. It is covered by compile and code reading only; the rig quote above is single-ticket, the way `baoming` sends it.
+
+### Screenshots
+
+Rig browser runtime (390 × 844, JPEG q70), not a phone. "Before" is master c6eac3b8's mini-program bundle against the same backend and data. Both changes shown here are client-side.
+- `refund-wording-r4-before/after`: theme 990014's session row. Before: 「退改 · 开场前24小时可退」. After: 「退改 · 开始前 24 小时以上全额退;24 小时内退 50%;开始后不退」.
+- `pass-tiers-checkout-r4-before/after`: checkout for the ③ ticket. Before: no refund rule. After: 退款规则 开始前 24 小时以上 全额退 / 开始前 24 小时内 退 50% / 开始后 不退. (The before page is shorter, so the same scroll leaves it at the top.)
+
+Not shot: the session picker sheet (same helper and test; the rig walk did not open it), and the 50% confirm for a ③ ticket.
+
+### Runs
+
+- Java (admin): `Refund*`, `*Snapshot*`, `FreeSession*`, `*Cancel*`, `TeamGroup*`, `PassRefund*`, `*Wiring*`, `*Quote*`, `RegistrationDetail*`, `SessionRefund*`: 747 tests, 0 failures. 2 errors are MySQL ITs with no database in this container. After the last fix, the refund set (`FreeSessionCancelReleaseV2Test`, `PassRefundTiersTest`, `RefundPolicy*`, `RefundSnapshotWiringTest`, `RefundFulfillmentWindowTest`) passes: 67 tests.
+- xcx: `refund-rule-player-text`, `item6-nonrefundable-confirm`, `order-list-refund-deadline-truth`, `fabu-draft-semantic-recovery`, `finish-page-redesign` pass.
+- `ui-integrity.js`: `UI-GATE-0:PASS`. Action ledger rebuilt with `--write`: only session-picker line shifts, 5599 controls.
+- Another scheduled session pushed one test fix to this branch during the run (a3743975). It was merged; my version of that test is a superset.
+
+Not verified on a real phone: the WeChat pay sheet, a real WeChat refund, and jobs on their schedule.
+
 STATUS: COMPLETE
