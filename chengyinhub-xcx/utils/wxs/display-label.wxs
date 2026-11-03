@@ -1,0 +1,27 @@
+// Round5 #4:后端代码 → 屏上中文。未知代码给通用中文,不把原始代码显示给用户。
+var PREF_TAG = {
+  space_constraints: '空间条件',
+  social_mode: '社交方式',
+  arrival_window: '到店时段',
+  expression_mode: '表达方式'
+};
+var WAITLIST = {
+  WAITING: '候补排队中',
+  OFFERED: '名额已发放，待支付',
+  CLAIMED: '已生成报名订单'
+};
+// 与 utils/voice-enrollment-journal.js STATE_LABELS 同表(测试钉住两边一致)
+var VOICE = {
+  PREPARED: '待发送',
+  IN_FLIGHT: '发送中',
+  UNKNOWN: '结果待确认',
+  NOT_SENT: '未发出',
+  PENDING: '处理中',
+  READY: '已完成'
+};
+var ATTENDANCE = { ISSUED: '未签到', CHECKED_IN: '已签到' };
+function prefTag(code) { return PREF_TAG[code] || '偏好'; }
+function waitlist(state) { return WAITLIST[state] || '候补中'; }
+function voice(state) { return VOICE[state] || '状态待确认'; }
+function attendance(state) { return ATTENDANCE[state] || '状态待确认'; }
+module.exports = { prefTag: prefTag, waitlist: waitlist, voice: voice, attendance: attendance };

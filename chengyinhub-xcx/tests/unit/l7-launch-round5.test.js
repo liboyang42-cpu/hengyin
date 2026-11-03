@@ -139,3 +139,75 @@ test('#2 talent/list 游客帖文流失败给登录入口(与俱乐部列表同�
   const wxml = read('pages/talent/list/index.wxml')
   assert.match(wxml, /load-failure="\{\{!feedLoginRequired\}\}"[^>]*title="\{\{feedLoginRequired \? '登录后查看帖文' : '动态加载失败'\}\}"[^>]*retry="\{\{feedLoginRequired \? '登录' : '重试'\}\}" bind:retry="retryFeed"/)
 })
+
+// ---------- #4 屏上不出后端代码 ----------
+
+function loadWxs(rel) {
+  const module = { exports: {} }
+  vm.runInNewContext(read(rel), { module })
+  return module.exports
+}
+
+test('#4 display-label.wxs:偏好标签 / 候补 / 声音请求 / 签到状态都出中文,未知代码不回显原值', () => {
+  const dl = loadWxs('utils/wxs/display-label.wxs')
+  assert.equal(dl.prefTag('space_constraints'), '空间条件')
+  assert.equal(dl.prefTag('social_mode'), '社交方式')
+  assert.equal(dl.prefTag('arrival_window'), '到店时段')
+  assert.equal(dl.prefTag('expression_mode'), '表达方式')
+  assert.equal(dl.prefTag('private_profile'), '偏好')
+  assert.equal(dl.waitlist('WAITING'), '候补排队中')
+  assert.equal(dl.waitlist('OFFERED'), '名额已发放，待支付')
+  assert.equal(dl.waitlist('CLAIMED'), '已生成报名订单')
+  assert.equal(dl.waitlist('SOMETHING'), '候补中')
+  assert.equal(dl.attendance('ISSUED'), '未签到')
+  assert.equal(dl.attendance('CHECKED_IN'), '已签到')
+  for (const v of ['X_CODE', undefined, '']) {
+    for (const fn of ['prefTag', 'waitlist', 'voice', 'attendance']) assert.doesNotMatch(String(dl[fn](v)), /[A-Z_]{3,}|undefined/)
+  }
+  // 声音请求两张表一致(JS 文案与 WXML 展示同口径)
+  const journal = require('../../utils/voice-enrollment-journal.js')
+  for (const [state, label] of Object.entries(journal.STATE_LABELS)) assert.equal(dl.voice(state), label)
+  assert.equal(journal.stateLabel('WHATEVER'), '状态待确认')
+})
+
+test('#4 WXML 绑定走中文映射(play 偏好标签、候补名册、声音请求、签到、暂停原因)', () => {
+  const play = read('pages/play/index.wxml')
+  assert.match(play, /<wxs src="\.\.\/\.\.\/utils\/wxs\/display-label\.wxs" module="dl" \/>/)
+  assert.doesNotMatch(play, /\{\{(?:item|preference\.pendingTag)\.tagCode\}\}/, 'tagCode 不能原样上屏')
+  assert.equal((play.match(/dl\.prefTag\(/g) || []).length, 3)
+  const ops = read('pages/club/event-ops/index.wxml')
+  assert.match(ops, /\{\{dl\.waitlist\(item\.state\)\}\}/)
+  assert.doesNotMatch(ops, /\{\{item\.state\}\}/)
+  for (const f of ['pages/merchant/decor/ai-npc/index.wxml', 'pages/topic/components/cy/node-npc-form/index.wxml']) {
+    assert.match(read(f), /原声音请求 · \{\{dl\.voice\(item\.state\)\}\}/)
+  }
+  assert.match(read('components/cy/event-attendance/index.wxml'), /\{\{dl\.attendance\(result\.data\.state\)\}\}/)
+  assert.doesNotMatch(read('pages/merchant/game-node/index.wxml'), /pauseReasonCode/)
+  // 每个用 dl. 的 wxml 都要引入模块,路径真实存在
+  for (const f of ['pages/play/index.wxml', 'pages/club/event-ops/index.wxml', 'pages/merchant/decor/ai-npc/index.wxml',
+    'pages/topic/components/cy/node-npc-form/index.wxml', 'components/cy/event-attendance/index.wxml']) {
+    const src = read(f).match(/<wxs src="([^"]+display-label\.wxs)" module="dl" \/>/)
+    assert.ok(src, f + ' 缺 dl 模块')
+    assert.ok(fs.existsSync(path.join(ROOT, path.dirname(f), src[1])), f + ' dl 路径不存在')
+  }
+})
+
+test('#4 JS 兜底不再回显原始代码:官方收件箱角色/状态、主题交易状态、声音请求结果、通用玩法运行状态', () => {
+  const inbox = read('pages/activity/official-inbox/index.js')
+  assert.match(inbox, /const role = ROLE\[item\.role\] \|\| '—';/)
+  assert.match(inbox, /_status: STATUS\[item\.status\] \|\| '状态待确认',/)
+  assert.doesNotMatch(inbox, /\|\| item\.(?:role|status) \|\|/)
+  const trade = require('../../pages/play/utils/theme-trade.js')
+  const src = read('pages/play/utils/theme-trade.js')
+  assert.doesNotMatch(src, /\[row\.status\] \|\| row\.status/)
+  assert.ok(trade)
+  for (const f of ['pages/merchant/decor/ai-npc/index.js', 'pages/topic/components/cy/node-npc-form/index.js']) {
+    assert.match(read(f), /'原请求状态：' \+ voiceJournal\.stateLabel\(value\.voiceIntentState\)/)
+  }
+  const director = read('pages/club/topic-detail/director.js')
+  const fnSrc = director.match(/const GENERIC_OPS_STATUS[\s\S]*?\n}\n/)[0]
+  const genericOpsStatusText = vm.runInNewContext(fnSrc + ';genericOpsStatusText')
+  assert.equal(genericOpsStatusText({ operationStatus: 'PAUSED', authorityMode: 'MANUAL', authorityEpoch: 3 }), '已暂停 · 人工接管 · 权威 3')
+  assert.doesNotMatch(genericOpsStatusText({ operationStatus: 'NEW_STATE', authorityMode: 'X' }), /[A-Z_]{2,}/)
+  assert.match(director, /genericOpsStatus: this\._genericControl \? genericOpsStatusText\(this\._genericControl\.run\) : ''/)
+})

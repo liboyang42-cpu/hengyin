@@ -14,6 +14,7 @@
 <!-- 文档二 L5 p-bag:背包属性行按类型画星级 / 小条(theme-backpack.wxml 用;include 不带 wxs,声明放宿主) -->
 <wxs module="tbAttr">function stars(v, max) { var a = []; for (var i = 0; i < max && i < 10; i++) a.push(i < v); return a; } function pct(v, max) { return max > 0 ? Math.max(0, Math.min(100, Math.round(v * 100 / max))) : 0; } module.exports = { stars: stars, pct: pct };</wxs>
 <wxs src="../../utils/wxs/list-key.wxs" module="lk" />
+<wxs src="../../utils/wxs/display-label.wxs" module="dl" />
 
 <cy-advanced-game id="advancedGame" hide-panel="{{(!!playKit.kit && (chapterFull || playKit.show)) || (journeyCheck.r5 && journeyCheck.show)}}" show="{{advancedPlay.show}}" node="{{advancedPlay.node}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)"
   activity-id="{{activityId}}" topic-id="{{topicId}}" preview="{{isPreview}}" mock="{{isMock}}"
@@ -1128,7 +1129,7 @@
           </view>
           <view class="pref-consent" wx:if="{{preference.pendingTag}}">
             <view class="pref-consent__head">保存为我的主题标签?</view>
-            <view class="pref-consent__value">{{preference.pendingTag.tagCode}} · {{preference.pendingTag.tagValue}}</view>
+            <view class="pref-consent__value">{{dl.prefTag(preference.pendingTag.tagCode)}} · {{preference.pendingTag.tagValue}}</view>
             <view class="pref-consent__copy">{{preference.tagDisclosure.purpose}}</view>
             <view class="pref-consent__copy">传给：{{preference.tagDisclosure.recipientLabel}}</view>
             <view class="pref-consent__copy" wx:if="{{preference.tagDisclosure.revocable}}">保存后仍可在完局页随时撤回。</view>
@@ -1144,7 +1145,7 @@
           <view class="pref-inherit__eyebrow">已沿用上一站选择</view>
           <text class="pref-inherit__title">沿用你确认过的条件</text>
           <view class="pref-inherit__tag" wx:for="{{preference.inheritedTags}}" wx:key="id">
-            <text>{{item.tagCode}}</text><text class="pref-inherit__value">{{item.tagValue}}</text>
+            <text>{{dl.prefTag(item.tagCode)}}</text><text class="pref-inherit__value">{{item.tagValue}}</text>
           </view>
           <view class="pref-inherit__use" data-code="{{preference.inheritedTags[0].tagCode}}" bindtap="useInheritedPreference" hover-class="cy-pressed" hover-stay-time="80">
             {{preference.submitting?'正在生成…':'沿用，直接生成本站建议'}}
@@ -1338,7 +1339,7 @@
     <view class="newos__title">我的新生活操作系统</view>
     <view class="newos__tags" wx:if="{{newLifeOS.tags.length}}">
       <view class="newos__tag" wx:for="{{newLifeOS.tags}}" wx:key="id">
-        <view><text>{{item.tagCode}}</text><text class="newos__tag-value">{{item.tagValue}}</text></view>
+        <view><text>{{dl.prefTag(item.tagCode)}}</text><text class="newos__tag-value">{{item.tagValue}}</text></view>
         <text class="newos__revoke" data-id="{{item.id}}" bindtap="revokeOsTag" hover-class="cy-pressed" hover-stay-time="80">撤回</text>
       </view>
     </view>

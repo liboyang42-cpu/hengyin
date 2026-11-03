@@ -832,7 +832,7 @@ Page({
       const value = res.data || res;
       voiceJournal.observe(wx, context.member, 'merchant', requestId, value);
       this.setData({ voiceHistory: voiceJournal.load(wx, context.member, 'merchant').records,
-        voiceHistoryResult: '原请求状态：' + value.voiceIntentState });
+        voiceHistoryResult: '原请求状态：' + voiceJournal.stateLabel(value.voiceIntentState) });
 
     }).catch(error => { if (context.current()) this.setData({ voiceError: error.message }); });
   },
