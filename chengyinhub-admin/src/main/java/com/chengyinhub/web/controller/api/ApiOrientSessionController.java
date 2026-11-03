@@ -1,6 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
 import com.chengyinhub.business.service.IOrientSessionService;
+import com.chengyinhub.business.service.orienteering.EventScoreVersioning;
 import com.chengyinhub.business.service.support.OrientSessionException;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
@@ -76,7 +77,15 @@ public class ApiOrientSessionController extends BaseController {
     @Operation(summary = "按幂等键读回某次写请求的原回执")
     @GetMapping("/receipt")
     public AjaxResult receipt(Long sessionId, String idempotencyKey) {
-        return call(memberId -> orientSessionService.receipt(memberId, sessionId, idempotencyKey));
+        return call(memberId -> {
+            Map<String, Object> found = orientSessionService.receipt(memberId, sessionId, idempotencyKey);
+            Map<String, Object> checked = new EventScoreVersioning().recoverFromSessionReceipt(
+                    memberId, sessionId, idempotencyKey, (m, s, k) -> found);
+            if (checked == null) {
+                throw new OrientSessionException(EventScoreVersioning.SESSION_RECEIPT_NOT_FOUND, 404, "没有这次请求的回执");
+            }
+            return checked;
+        });
     }
 
     private AjaxResult call(java.util.function.Function<Long, Map<String, Object>> action) {
