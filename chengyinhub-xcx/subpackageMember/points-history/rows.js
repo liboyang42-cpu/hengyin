@@ -15,6 +15,13 @@ function timeText(value) {
   return m ? `${m[1]} ${m[2]}` : text
 }
 
+// 行内时间:月份已在分组标题上,不再重复年份。读不出时间的行(归「时间未知」组)原样显示。
+function shortTimeText(value) {
+  const text = timeText(value)
+  const m = text.match(/^\d{4}-(\d{2})-(\d{2}) (\d{2}:\d{2})$/)
+  return m ? `${Number(m[1])}月${Number(m[2])}日 ${m[3]}` : text
+}
+
 // BL-04 月份分组键:取 createTime 的 YYYY-MM;读不出时间的行归入「时间未知」组,不丢行。
 function monthKey(value) {
   const m = (value == null ? '' : String(value).trim()).match(/^(\d{4})-(\d{2})/)
@@ -35,7 +42,7 @@ function normalizeRow(raw) {
     deltaText: delta > 0 ? `+${delta}` : String(delta),
     income: delta >= 0,
     afterText: after === null ? '' : `余额 ${after}`,
-    timeText: timeText(raw.createTime),
+    timeText: shortTimeText(raw.createTime),
     month: monthKey(raw.createTime),
   }
 }
