@@ -275,3 +275,66 @@ test('#5 没有可报名的票:按钮直接说明,不滚动不标红', () => {
   assert.match(wxml, /class="ticket-list \{\{ticketsAttention \? 'ticket-list--attention' : ''\}\}"/)
   assert.match(read('subpackageMember/components/cy/scene-play-activity-detail/index.wxss'), /\.ticket-list--attention \.ticket:not\(\.ticket--disabled\) \{ border-color: var\(--cy-color-status-danger\); \}/)
 })
+
+// ---------- #6 活动详情游客可浏览,报名前登录 ----------
+
+test('#6 游客点「立即报名」先走写前登录(signup),登录后续上;已登录直接进结算', () => {
+  const resumes = []
+  const navigations = []
+  const m = mount('subpackageMember/components/cy/scene-play-activity-detail/index.js', {
+    app: { getUserID: () => '', getUserType: () => 1,
+      ensureLoginFor: (reason, resume) => { resumes.push(reason); return false } },
+    wx: { navigateTo: (o) => navigations.push(o.url) },
+  })
+  try {
+    m.host.data.activityId = '5'
+    m.host.setData({ info: { memberId: 9, isSignUp: 0 }, tickets: [{ _id: '11', id: 11, _available: true }], selectedTicketId: '11', canConfirmSignup: true })
+    m.host.openSignup()
+    assert.deepEqual(resumes, ['signup'])
+    assert.deepEqual(navigations, [])
+  } finally { m.restore() }
+  const member = mount('subpackageMember/components/cy/scene-play-activity-detail/index.js', {
+    app: { getUserID: () => '7', getUserType: () => 1, ensureLoginFor: () => true },
+    wx: { navigateTo: (o) => navigations.push(o.url) },
+  })
+  try {
+    member.host.data.activityId = '5'
+    member.host.setData({ info: { memberId: 9, isSignUp: 0 }, tickets: [{ _id: '11', id: 11, _available: true }], selectedTicketId: '11', canConfirmSignup: true })
+    member.host.openSignup()
+    assert.deepEqual(navigations, ['/pages/activity/baoming/baoming?activityId=5&ticketId=11'])
+  } finally { member.restore() }
+})
+
+// ---------- #9 本局线索入口 ----------
+
+test('#9 「更多」里有本局线索入口(仅剧情会话投影启用时),点开即打开原线索半屏', () => {
+  const wxml = read('pages/play/index.wxml')
+  assert.match(wxml, /<view class="drow" wx:if="\{\{gameModule\.enabled\}\}" bindtap="openGameModuleFromTools"[^>]*aria-label="本局线索"[^>]*>.*<text class="dt">本局线索<\/text>/)
+  const js = read('pages/play/index.js')
+  const fn = js.match(/\n  openGameModuleFromTools\(\) \{([^\n]*)\},/)
+  assert.ok(fn, '缺 openGameModuleFromTools')
+  const calls = []
+  const host = { setData(patch) { calls.push(patch) }, openGameModule() { calls.push('open') } }
+  vm.runInNewContext('(function(){' + fn[1] + '})', {}).call(host)
+  assert.deepEqual(JSON.parse(JSON.stringify(calls)), [{ sessionToolsOpen: false }, 'open'])
+  // ROUTE 会话不启用投影 → 入口不出现
+  assert.match(js, /result\.data\.player\.playMode === 'ROUTE'\) \{[\s\S]{0,300}?this\.setData\(\{ 'gameModule\.loading': false, 'gameModule\.enabled': false,/)
+})
+
+test('#9 线索半屏节点状态与队友角色不出原始代码', () => {
+  const dl = loadWxs('utils/wxs/display-label.wxs')
+  const NODE_STATES = ['LOCKED', 'AVAILABLE', 'ARRIVED', 'IN_PROGRESS', 'AWAITING_VERIFICATION', 'COMPLETED', 'FALLBACK_COMPLETED',
+    'INVITED', 'ACCEPTED', 'READY', 'ACTIVE', 'PAUSED', 'CLOSED']
+  for (const s of NODE_STATES) assert.doesNotMatch(dl.nodeStatus(s), /[A-Z_]{2,}|待确认/, s)
+  assert.equal(dl.nodeStatus('WHAT'), '状态待确认')
+  const wxml = read('pages/play/index.wxml')
+  assert.match(wxml, /<text class="gmod__status" wx:else>\{\{dl\.nodeStatus\(item\.status\)\}\}<\/text>/)
+  assert.doesNotMatch(wxml, /\{\{item\.roleCode\}\}|\{\{item\.fallback\.planCode\}\}/)
+  const { normalizePlayerProjection } = require('../../pages/play/utils/player-game-module.js')
+  const p = normalizePlayerProjection({ perspective: 'PLAYER', sessionId: 1, activityId: 2, revision: 1, status: 'RUNNING',
+    player: { role: { code: 'detective', name: '侦探' }, teamActions: [
+      { memberId: 3, displayName: '甲', roleCode: 'detective', status: 'CONFIRMED' },
+      { memberId: 4, displayName: '乙', roleCode: 'witness_2', status: 'JOINED' }] } })
+  assert.equal(p.teamActions[0].roleName, '侦探')
+  assert.equal(p.teamActions[1].roleName, undefined)
+})

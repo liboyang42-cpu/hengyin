@@ -2906,6 +2906,9 @@ Page({
   openGameModule() {
     this.setData({ 'gameModule.sheetShow': true, gmodOut: false });
   },
+  // Round5 #9:本局线索原来没有入口。从「更多」打开(ROUTE 会话的投影在 _loadPlayerGameModule 里已置 enabled=false,
+  // 所以 gameModule.enabled 即剧情/俱乐部 STORY 会话)。
+  openGameModuleFromTools() { this.setData({ sessionToolsOpen: false }); this.openGameModule(); },
   closeGameModule() { this._outThen('gmod'); },
   retryGameModule() { this._loadPlayerGameModule(); },
 

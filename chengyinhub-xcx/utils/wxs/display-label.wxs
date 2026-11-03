@@ -20,8 +20,15 @@ var VOICE = {
   READY: '已完成'
 };
 var ATTENDANCE = { ISSUED: '未签到', CHECKED_IN: '已签到' };
+// 本局线索节点(pages/play/utils/player-game-module.js NODE_STATES)
+var NODE = {
+  LOCKED: '未解锁', AVAILABLE: '可前往', ARRIVED: '已到达', IN_PROGRESS: '进行中',
+  AWAITING_VERIFICATION: '等待核验', COMPLETED: '已完成', FALLBACK_COMPLETED: '保底完成',
+  INVITED: '已邀请', ACCEPTED: '已接受', READY: '已就绪', ACTIVE: '进行中', PAUSED: '本站暂停', CLOSED: '已关闭'
+};
 function prefTag(code) { return PREF_TAG[code] || '偏好'; }
 function waitlist(state) { return WAITLIST[state] || '候补中'; }
 function voice(state) { return VOICE[state] || '状态待确认'; }
 function attendance(state) { return ATTENDANCE[state] || '状态待确认'; }
-module.exports = { prefTag: prefTag, waitlist: waitlist, voice: voice, attendance: attendance };
+function nodeStatus(state) { return NODE[state] || '状态待确认'; }
+module.exports = { prefTag: prefTag, waitlist: waitlist, voice: voice, attendance: attendance, nodeStatus: nodeStatus };
