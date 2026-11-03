@@ -28,10 +28,9 @@ Page({
     return { title: '这个节点等你到店打卡', path: SHARE_PATH + '?' + shareQuery(this.data.poiId) }
   },
 
-  // 只能给 query;path 由平台固定为本页 —— 这正是本页要作为稳定宿主存在的原因。
-  onShareTimeline() {
-    return { title: '这个节点等你到店打卡', query: shareQuery(this.data.poiId) }
-  },
+  // 第七轮 C 第 1 项:暂不实现 onShareTimeline。节点详情读接口 GET /api/city/nodes/{id} 需要登录
+  // (SecurityConfig 未放行,控制器本身按游客 memberId=0 可读),朋友圈单页模式没有登录态 ⇒ 只能看到错误。
+  // 业主放行该只读接口后恢复:return { title, query: shareQuery(this.data.poiId) }(路径仍是本页,历史契约不变)。
 
   onAddToFavorites() {
     return { title: '节点详情', path: SHARE_PATH + '?' + shareQuery(this.data.poiId) }

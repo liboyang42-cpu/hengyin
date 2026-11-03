@@ -8661,8 +8661,8 @@ Page({
   onShareAppMessage(event) {
     return activityShareFromEvent(event) || playMenuShare(this.data);
   },
-  // FE-17 朋友圈分享(游玩页高传播)
-  onShareTimeline() { return { title: '来城瘾，走一段城市探索', query: 'activityId=' + this.data.activityId }; },
+  // 第七轮 C 第 1 项:不实现 onShareTimeline。朋友圈单页模式没有登录态、不能开局,
+  // 卡片落到本页只会是空会话;游玩的传播走 onShareAppMessage → 公开主题详情。
 
   /* v13 通关勋章页:只在整个主题走完时出。勋章取本次真拿到的;一枚没有就用这个主题本身(通关是真的)。
      四格统计只写拿得到的数(用时 / 步行 / 站点或商家 / 邮票或解谜分);新纪录只在解谜分超过个人最好时出。 */

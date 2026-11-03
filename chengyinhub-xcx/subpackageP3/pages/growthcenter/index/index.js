@@ -532,5 +532,6 @@ Page({
 
   // FE-17 分享:成就中心可传播(晒等级/勋章/排行)
   onShareAppMessage() { return { title: '来城瘾看看我的城市探索成就', path: '/subpackageP3/pages/growthcenter/index/index' }; },
-  onShareTimeline() { return { title: '来城瘾看看我的城市探索成就' }; }
+  // 第七轮 C 第 1 项:不实现 onShareTimeline。本页只显示「当前登录者」的成就,朋友圈单页模式没有登录态,
+  // 点开只有「登录后查看」且登录不可用 —— 看不到分享者的任何内容。
 })

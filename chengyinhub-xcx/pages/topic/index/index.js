@@ -2325,5 +2325,13 @@ Page({
       name: info.name,
       cover: resolveTopicCover(info, (path) => app.getImgUrl(path)),
     });
+  },
+
+  // 第七轮 C 第 1 项:朋友圈。落点固定是本页,只能给 query;单页模式下游客读 /api/topic/info(匿名放行)。
+  onShareTimeline() {
+    const share = this.onShareAppMessage();
+    const timeline = { title: share.title, query: 'id=' + (this.data.id || '') };
+    if (share.imageUrl) timeline.imageUrl = share.imageUrl;
+    return timeline;
   }
 })

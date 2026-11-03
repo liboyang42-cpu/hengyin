@@ -947,6 +947,8 @@ Component({
     });
     // 商家主题由被看者决定,与观看者角色无关
     applyTheme('light');
+    // 第七轮 C 第 1 项:被看者确认为可公开商家后,宿主页(userinfo)才打开「分享到朋友圈」
+    if (typeof this.triggerEvent === 'function') this.triggerEvent('subjectmerchant', { memberId: String(this.data.userId || '') });
     this.loadMerchantSafety(m.id);
     this.loadMerchantNode(m.id);
   },
@@ -2412,6 +2414,19 @@ Component({
       title: (this.data.userInfo.nickname || '我') + ' 的城市身份卡',
       path: '/pages/member/index/index'
     };
+  },
+
+  // 第七轮 C 第 1 项:朋友圈只发商家主页(公开、匿名可读 /api/merchant/public-home)。
+  // 落点固定是 pages/userinfo/userinfo,query 用 canonical 的 userId + tab=about(同 utils/merchant-home-link.js)。
+  // 被看者不是可公开商家 ⇒ null,宿主页不开朋友圈菜单。
+  getTimelinePayload: function () {
+    var d = this.data;
+    if (!d.subjectIsMerchant || !d.subjectMerchant || !d.userId) return null;
+    var m = d.subjectMerchant;
+    var payload = { title: m.name || '城瘾 · 商家主页', query: 'userId=' + d.userId + '&tab=about' };
+    var cover = m.coverImage || m.logo || '';
+    if (cover) payload.imageUrl = typeof app.getImgUrl === 'function' ? app.getImgUrl(cover) : cover;
+    return payload;
   }
   }
 });

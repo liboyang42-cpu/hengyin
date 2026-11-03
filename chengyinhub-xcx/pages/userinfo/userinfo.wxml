@@ -3,7 +3,7 @@
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
 <cy-profile wx:if="{{!missingUser}}" id="profile" viewer="other" user-id="{{userId}}" initial-tab="{{initialTab}}"
-  topic-id="{{topicId}}" chapter-id="{{chapterId}}" topic-name="{{topicName}}" operation-scope="{{operationScope}}" preview-self="{{previewSelf}}" />
+  topic-id="{{topicId}}" chapter-id="{{chapterId}}" topic-name="{{topicName}}" operation-scope="{{operationScope}}" preview-self="{{previewSelf}}" bind:subjectmerchant="onSubjectMerchant" />
 <view wx:else class="userinfo-missing">
   <cy-nav-bar custom-back bind:back="onBack" />
   <cy-page-title title="个人主页" />

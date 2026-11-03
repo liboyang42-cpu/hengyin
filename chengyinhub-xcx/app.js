@@ -22,6 +22,7 @@ const roleGuard = require('./utils/roleGuard.js');
 const { safeUserMessage } = require('./utils/transport/safe-user-message.js');
 const requireLoginGuard = require('./utils/auth/require-login.js');
 const { avatarSrc } = require('./utils/identity-sync.js');
+const singlePage = require('./utils/single-page-mode.js');
 App({
   // 开发版判定:只用于开发调试入口(如 debug_user_view、显式预览参数);不得用于伪造登录身份(F-W1-01)。
   isDevEnv: function () {
@@ -38,6 +39,11 @@ App({
   // 不代表已登录;需要登录态的页面/动作用 getAuthorization()/getUserID() 判定真实会话。
   onLaunch(e) {
     installUpdateManager(this, wx);
+    // 第七轮 C 第 1 项:朋友圈单页模式(场景 1154)不能登录、跳页、支付。只在这种进入方式下包一层,
+    // 点到这些动作时提示「请前往小程序使用完整服务」,不让按钮无声失效。完整模式不安装、零影响。
+    if (singlePage.isSinglePageMode(wx)) {
+      singlePage.installSinglePageGuard(wx, singlePage.createNotifier(function (text) { cyToast(text); }));
+    }
     const runtimeConfig = config.resolveFromWx(wx);
     // 全局基调:暗色(全站默认深空黑;原生导航栏/状态栏同步深色)。个别浅色页根节点挂 class="theme-light"。
     applyTheme('dark');
@@ -129,7 +135,8 @@ App({
     if (!that.getUsageConsent().granted()) {
       that.loadFeatureFlags();
       // Public initialization completes without obtaining an openid or waiting for a choice.
-      setTimeout(() => { if (!that._usageDeclined) that.openPrivacyAuthorizationPage(); }, 0);
+      // 朋友圈单页模式不能跳到隐私页;公开内容照常浏览,进完整小程序后再走同意流程。
+      if (!singlePage.isSinglePageMode(wx)) setTimeout(() => { if (!that._usageDeclined) that.openPrivacyAuthorizationPage(); }, 0);
       return Promise.resolve();
     }
     // owner 2026-10-24:「没登录也能浏览,写库时才弹窗登录」。冷启动只恢复本机已缓存的会话

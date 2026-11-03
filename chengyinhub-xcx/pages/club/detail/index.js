@@ -3442,6 +3442,16 @@ Page({
     };
   },
 
+  // 第七轮 C 第 1 项:朋友圈。只发俱乐部主页本身(不带帖子/带票参数);单页模式下游客读 /api/club/detail(匿名放行),
+  // 入会等写动作由登录闸提示去完整小程序。封面取俱乐部封面,没有再取 Logo。
+  onShareTimeline() {
+    const club = this.data.club || {};
+    const timeline = { title: club.name || '城瘾俱乐部', query: this.data.clubId ? 'id=' + this.data.clubId : '' };
+    const cover = club.cover || club.logo || '';
+    if (cover) timeline.imageUrl = cover;
+    return timeline;
+  },
+
   // 分享钮在整行 bindtap 之上,catchtap 只为阻断冒泡(否则点分享会顺带跳进管理页)。
   stopShareBubble() {},
 

@@ -43,7 +43,8 @@ test('据点冷启动先接收路由参数再打开根场景，核销子场景�
   assert.equal(host.data.sceneCurrent.id, 'roam-poi-detail')
   assert.equal(host.data.sceneCurrent.params.poiId, '990041')
   assert.equal(page.onShareAppMessage().path, '/subpackageRoam/poi-detail/index?poiId=990041')
-  assert.equal(page.onShareTimeline().query, 'poiId=990041')
+  // 第七轮 C 第 1 项:节点读接口要登录,朋友圈单页模式打不开,暂不提供朋友圈分享
+  assert.equal(page.onShareTimeline, undefined)
 })
 
 test('缺少据点参数仍打开正文错误态，不猜对象且不永久留在加载中', () => {

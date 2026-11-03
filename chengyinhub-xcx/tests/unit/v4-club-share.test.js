@@ -163,8 +163,8 @@ test('期望:失效/无效分享链接显示明确状态(如「俱乐部不存�
   assert.equal(offline.page.data.clubGoneText, '')
 })
 
-test('[现状记录] 俱乐部详情未实现 onShareTimeline,朋友圈分享不可用', () => {
+test('第七轮 C 第 1 项:俱乐部详情实现 onShareTimeline,只发主页 id', () => {
   const h = loadDetail()
   assert.equal(typeof h.definition.onShareAppMessage, 'function')
-  assert.equal(typeof h.definition.onShareTimeline, 'undefined')
+  assert.equal(typeof h.definition.onShareTimeline, 'function')
 })

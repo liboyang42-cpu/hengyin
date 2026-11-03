@@ -634,4 +634,12 @@ Page({
       imageUrl: e.coverImg || '',
     };
   },
+
+  // 第七轮 C 第 1 项:朋友圈。单页模式下游客读 GET /api/official/events/{id}(匿名放行),报名等写动作提示去完整小程序。
+  onShareTimeline() {
+    const share = this.onShareAppMessage();
+    const timeline = { title: share.title, query: 'id=' + encodeURIComponent(this.data.id) };
+    if (share.imageUrl) timeline.imageUrl = share.imageUrl;
+    return timeline;
+  },
 });
