@@ -294,7 +294,7 @@ test('B-R4 data.docType 必须描述实际展示的文档,未知 type 不得留�
 test('B-R4 协议入口已弹窗化,兜底路由表仍与真实入口对齐(入口变了这条要红)', () => {
   const shezhi = read('pages/shezhi/shezhi.js')
   const shezhiWxml = read('pages/shezhi/shezhi.wxml')
-  const dereg = read('pages/deregister/utils/deregister-flow.js')
+  const dereg = read('utils/deregister-flow.js')
   const deregWxml = read('pages/deregister/components/scene-settings-deregister/index.wxml')
 
   // ① 入口改成弹窗,且 type 传对(传错会静默回退成用户服务协议,注销须知就打不开了)

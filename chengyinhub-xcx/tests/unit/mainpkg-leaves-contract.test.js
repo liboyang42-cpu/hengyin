@@ -110,7 +110,7 @@ function violations(file, source) {
 }
 
 test('reviewed leaves remain inside existing subpackages and keep their original source files out of main', () => {
-  assert.equal(moves.length, 165)  // 2026-11-03 第七轮主包瘦身:+132 个文件(单分包组件 / 工具 / 图片与 13 个 scene 组件);
+  assert.equal(moves.length, 161)  // 2026-11-03 第七轮主包瘦身:+128 个文件(单分包组件 / 工具 / 图片与 13 个 scene 组件);
   for (const moved of moves) {
     assert.equal(owner(moved.from), 'MAIN', moved.from);
     assert.notEqual(owner(moved.to), 'MAIN', moved.to);

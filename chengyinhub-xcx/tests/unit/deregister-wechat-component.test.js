@@ -22,7 +22,7 @@ function mount() {
   app.getSessionManager = () => createSessionManager({session, isDevEnv: () => false,
     wxLogin: async () => ({code: 'renewal'}), exchangeCode: async () => ({code:401}) });
   global.getApp = () => app; global.wx = wx;
-  delete require.cache[require.resolve('../../pages/deregister/utils/deregister-flow.js')];
+  delete require.cache[require.resolve('../../utils/deregister-flow.js')];
   const file = path.join(root, 'pages/deregister/components/scene-settings-deregister/index.js');
   vm.runInNewContext(fs.readFileSync(file,'utf8'), {Component: value => { def = value; }, require:createRequire(file), console});
   const page = Object.assign({}, def.methods, {data: JSON.parse(JSON.stringify(def.data)),

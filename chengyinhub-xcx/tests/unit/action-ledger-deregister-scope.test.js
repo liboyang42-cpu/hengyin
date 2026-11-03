@@ -25,8 +25,8 @@ test('注销共享16KB owner只跟踪真实委托闭包；局部UI不借用别�
   assert.ok(cancel.includes('/api/user/deregister/cancel')); assert.ok(cancel.includes('/api/user/deregister/precheck'))
   assert.ok(!cancel.includes('/api/sms/send')); assert.ok(!cancel.includes('/api/user/deregister/apply'))
   const sources = sourceFilesFor({entry:{js:file,wxml:file.replace('.js','.wxml')}})
-  assert.ok(sources.includes('pages/deregister/utils/deregister-flow.js'))
-  assert.ok(Buffer.byteLength(fs.readFileSync(path.join(ROOT,'pages/deregister/utils/deregister-flow.js'),'utf8')) > 16 * 1024)
+  assert.ok(sources.includes('utils/deregister-flow.js'))
+  assert.ok(Buffer.byteLength(fs.readFileSync(path.join(ROOT,'utils/deregister-flow.js'),'utf8')) > 16 * 1024)
   assert.match(handlerSlices(path.join(ROOT,file)).get('apply'), /requestId\(\)/)
 })
 

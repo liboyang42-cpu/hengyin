@@ -1,9 +1,9 @@
-const modal = require('../../../utils/modal.js');
+const modal = require('./modal.js');
 const app = getApp();
-const { sendUiStateRequest } = require('../../../utils/ui-state-request.js');
-const { bizFailureMessage } = require('../../../utils/response-shape.js');
-const { formatRefundDeadline } = require('../../../utils/order-status.js');
-const { toTimestamp } = require('../../../utils/datetime.js');
+const { sendUiStateRequest } = require('./ui-state-request.js');
+const { bizFailureMessage } = require('./response-shape.js');
+const { formatRefundDeadline } = require('./order-status.js');
+const { toTimestamp } = require('./datetime.js');
 
 const STATUS_AFTER_APPLICATION = ['NORMAL', 'CANCELLED', 'FAILED'];
 

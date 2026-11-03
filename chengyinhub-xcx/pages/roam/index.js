@@ -1476,7 +1476,7 @@ Page({
       const roamPois = list.map((n) => {
         // 展示分类只认 roam:* 保留标签;业务身份仍按 type(1 平台地点 / 2 商家据点),不按名字猜。
         const m = presentationForPoi(n);
-        const color = m.cat === 'merchant' ? '#D9D9D9' : (m.cat === 'park' ? '#A6A6A6' : BRAND);
+        const color = m.cat === 'merchant' ? '#D9D9D9' : (m.cat === 'park' ? '#A6A6A6' : BRAND); /* ds-ok 与本页演示点 catMap 的 park / merchant 同色,原生 marker 只吃字面色值 */
         const st = roamPoiLocalState(n);
         const merchantAvatar = n.merchantAvatar || n.avatarUrl || n.avatar || '';
         const npcAvatar = n.npcAvatar || '';

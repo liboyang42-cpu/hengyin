@@ -34,7 +34,7 @@
         <text class="guide__reason">{{selected.visitNote}}</text>
         <view class="guide__action guide__primary" bindtap="copyAddress" aria-role="button" aria-label="复制{{selected.name}}地址" hover-class="cy-pressed" hover-stay-time="80">复制地址，在常用地图中查找</view>
         <text class="guide__section">资料来源</text>
-        <text class="guide__address">{{selected.sourceCount}} 个来源 · 资料核对 {{selected.reviewedOn}}</text>
+        <text class="guide__address">{{selected.sourceCount || 0}} 个来源 · 资料核对 {{selected.reviewedOn}}</text>
         <text class="guide__note">{{reviewNote}}</text>
         <view class="guide__action" bindtap="copySources" aria-role="button" aria-label="复制{{selected.name}}的资料来源链接" hover-class="cy-pressed" hover-stay-time="80">复制来源链接</view>
       </view>

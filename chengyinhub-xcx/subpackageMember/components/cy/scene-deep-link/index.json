@@ -25,12 +25,6 @@
     "cy-scene-member-withdraw-history": "/subpackageMember/components/cy/scene-member-withdraw-history/index"
   },
   "componentPlaceholder": {
-    "cy-scene-play-activity-detail": "view",
-    "cy-scene-qr-coupon": "view",
-    "cy-scene-game-coupon-wallet": "view",
-    "cy-scene-roam-poi-detail": "view",
-    "cy-scene-member-order-history": "view",
-    "cy-scene-member-order-detail": "view",
     "cy-scene-qr-ticket": "view",
     "cy-scene-roam-discover": "view",
     "cy-scene-asset-earnings": "view",

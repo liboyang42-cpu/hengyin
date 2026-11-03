@@ -1,4 +1,4 @@
-const { initialData, methods } = require('../../utils/deregister-flow.js');
+const { initialData, methods } = require('../../../../utils/deregister-flow.js');
 
 Component({
   properties: {

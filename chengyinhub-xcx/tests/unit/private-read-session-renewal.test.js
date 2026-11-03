@@ -11,7 +11,7 @@ const root = path.resolve(__dirname, '../..');
 const pages = {
   stamp: 'subpackageP3/pages/stamp-album/index/index.js', object: 'subpackageP3/pages/object-cards/index/index.js',
   settings: 'pages/shezhi/shezhi.js', cancelled: 'subpackageMember/components/cy/scene-play-activity-detail/index.js',
-  nearbyMy: 'subpackageRoam/nearby/index.js', roam: 'pages/roam/index.js', deregister: 'pages/deregister/utils/deregister-flow.js',
+  nearbyMy: 'subpackageRoam/nearby/index.js', roam: 'pages/roam/index.js', deregister: 'utils/deregister-flow.js',
 };
 function mount(kind, loginOK = true) {
   let app, def; const requests = [], storage = new Map();

@@ -148,8 +148,8 @@ function assertAnnotationDContract(files) {
   assert.match(files.deregisterWxml, /<cy-sheet[^>]*show="\{\{true\}\}"/)
   assert.doesNotMatch(files.deregisterWxml, /<cy-sheet[^>]*title=/)
   assert.match(files.deregisterWxml, /<cy-scene-settings-deregister id="deregisterFlow"/)
-  assert.match(files.deregisterSceneJs, /require\('\.\.\/\.\.\/utils\/deregister-flow\.js'\)/)
-  assert.match(files.deregisterFlowJs, /const\s+\{\s*sendUiStateRequest\s*\}\s*=\s*require\('\.\.\/\.\.\/\.\.\/utils\/ui-state-request\.js'\);/,
+  assert.match(files.deregisterSceneJs, /require\('\.\.\/\.\.\/\.\.\/\.\.\/utils\/deregister-flow\.js'\)/)
+  assert.match(files.deregisterFlowJs, /const\s+\{\s*sendUiStateRequest\s*\}\s*=\s*require\('\.\/ui-state-request\.js'\);/,
     '注销流程必须通过显式 UI-state 请求封装统一收口加载和错误状态')
   assert.match(files.deregisterFlowJs, /sendUiStateRequest\(app,\s*'\/api\/user\/deregister\/status'[\s\S]*sendUiStateRequest\(app,\s*'\/api\/user\/deregister\/precheck'/,
     '注销流程必须先查状态，再按服务状态执行资格预检')
@@ -205,7 +205,7 @@ function sources() {
     routeContentWxml: read('subpackageMember/components/cy/scene-route-content/index.wxml'),
     deregisterWxml: read('pages/deregister/index.wxml'),
     deregisterSceneJs: read('pages/deregister/components/scene-settings-deregister/index.js'),
-    deregisterFlowJs: read('pages/deregister/utils/deregister-flow.js'),
+    deregisterFlowJs: read('utils/deregister-flow.js'),
     uiStateRequestJs: read('utils/ui-state-request.js'),
   }
 }

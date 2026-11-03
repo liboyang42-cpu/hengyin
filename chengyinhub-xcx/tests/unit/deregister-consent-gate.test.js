@@ -2,7 +2,7 @@ const { test, beforeEach } = require('node:test')
 const assert = require('node:assert/strict')
 
 const COMPONENT = '../../pages/deregister/components/scene-settings-deregister/index.js'
-const FLOW = '../../pages/deregister/utils/deregister-flow.js'
+const FLOW = '../../utils/deregister-flow.js'
 let componentConfig
 let requests
 let consentCalls

@@ -9,7 +9,7 @@ const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '../..');
 const COMPONENT = '../../pages/deregister/components/scene-settings-deregister/index.js';
-const FLOW = '../../pages/deregister/utils/deregister-flow.js';
+const FLOW = '../../utils/deregister-flow.js';
 let def;
 let requests;
 

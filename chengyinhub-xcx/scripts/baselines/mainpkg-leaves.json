@@ -762,24 +762,9 @@
       "sourceBlob": "540cfff3e58169be38b543b371123c6d4d58258d"
     },
     {
-      "from": "utils/deregister-flow.js",
-      "to": "pages/deregister/utils/deregister-flow.js",
-      "sourceBlob": "852ac3f0e92a17aa8b62eebd57cb5bcc639c52cf"
-    },
-    {
       "from": "utils/earnings-view.js",
       "to": "subpackageA/utils/earnings-view.js",
       "sourceBlob": "83dd5671a2adc6d9889ae44a9ebd9b63ef48d274"
-    },
-    {
-      "from": "utils/features/capsule-client.js",
-      "to": "subpackageTools/utils/features/capsule-client.js",
-      "sourceBlob": "6f53e0792fa635ea5cffb28a97df0fe259023529"
-    },
-    {
-      "from": "utils/features/exploration-goals.js",
-      "to": "subpackageTools/utils/features/exploration-goals.js",
-      "sourceBlob": "6bd17e65c8796b0099369a2f58443432594b07e1"
     },
     {
       "from": "utils/free-explore-bundle.js",
@@ -820,11 +805,6 @@
       "from": "utils/roam-team-recovery.js",
       "to": "subpackageRoam/utils/roam-team-recovery.js",
       "sourceBlob": "52a1fb193c1e8f9e9b4859be0672776e8c3ae91b"
-    },
-    {
-      "from": "utils/user-invoice.js",
-      "to": "subpackageMember/utils/user-invoice.js",
-      "sourceBlob": "0e56be4ef79097126da97ab00f56eb538f1dcc34"
     }
   ]
 }
