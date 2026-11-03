@@ -4282,6 +4282,9 @@ Page({
         that._restoreRunSession(d, routeState, nodes);
         that.loadTeamProgress();   // P1 带领场探测(club 场次才 exists,内部自管轮询)
         that._loadPlayerGameModule();
+        // P-10/P-11 第四轮 rig 实测:个人局主题运行时(任务 / 背包)原来只在第一次到达的回包里带回来,
+        // 开局不读 —— 任务型主题首站「请先开始当前任务」且无处开始。已建局就读一次。
+        if (routeState.sessionId) that.refreshThemeBackpack();
         that._consumePendingStart();
         // 中途重进一局(开场已看过 / 卡包已拆):主题配乐接着放,原来只在开场与拆包时起播,重进就没了(实走 A7 复核)
         const resumed = storyResume.read(that._runSessionScope());
@@ -4894,7 +4897,7 @@ Page({
                否则做完玩法人就站在门口,卡片写着「靠近后会自动点亮」却永远不亮(2026-10-27 生产实测)。 */
             /* 0/5 站若配了玩法(hasAdvanced),也要先过玩法再靠近点亮:否则人一到门口就自动完成,主玩法根本没开
                (2026-10-30 复核:霍山公园连线被 GPS 到达直接跳过;服务端同样以 ADVANCED_FIRST 拒)。 */
-            const arrivesHere = ((node.vm === 0 || node.vm === 5) && (!node.hasAdvanced || that._advancedReadyNodeId === node.nodeId))
+            const arrivesHere = ((node.vm === 0 || node.vm === 5) && (!node.hasAdvanced || that._advancedReadyNodeId === node.nodeId || that._questAwaitsArrival(node.nodeId)))
               || ([8, 9, 10].includes(node.vm) && that._advancedReadyNodeId === node.nodeId);
             if (d <= 50 && !node.done && arrivesHere && playAccuracy.canAutoArrive(loc.accuracy)) that.arrive(node.nodeId, 'gps');
           }
@@ -6544,6 +6547,11 @@ Page({
       };
       this.setData({ fmPolyline: base.concat(line) });
     }, { reducedMotion: this.data.reducedMotion });
+  },
+  /** P-10/P-11 第四轮:任务型主题先到达、再开始任务、再玩 —— 本站任务只差到达时,带玩法的 0/5 站也靠近即到达(服务端同口径「已记录本局到达，请继续当前任务或操作」)。 */
+  _questAwaitsArrival(nodeId) {
+    if (!this._hasGenericProofFlow()) return false;
+    return ((this.data.themeBag || {}).quests || []).some(row => String(row.nodeId) === String(nodeId) && row.disabledReason === 'NOT_ARRIVED');
   },
   _hasGenericProofFlow() {
     const bag = this.data.themeBag || {};

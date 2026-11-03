@@ -128,6 +128,12 @@ Component({
       if (this.data.mode !== 'type' || this.data.passed || this.data.finished) return;
       this.setData({ typed: '', typeWrong: true, fbHead: HEAD_NO, feedback: this.data.feedbackText || (this.data.authoredOutcome === 'FAIL' ? '' : RETRY_TEXT) });
     },
+    /* P-10 第四轮 rig 实测:作者的结果反馈(authoredOutcome)可能比 attempts 晚一拍落到组件上 ——
+       先到的 attempts 已写了兜底句,这里补清;判定屏摆作者的话,题屏只留描红。 */
+    authoredOutcome: function (value) {
+      if (value !== 'FAIL' || this.data.mode !== 'type' || this.data.feedback !== RETRY_TEXT) return;
+      this.setData({ feedback: '' });
+    },
     failureSeq: function (value) {
       if (!value || this.data.finished || this.data.passed || this.data.judge !== false) return;
       this.setData({ submitted: false, ctaDisabled: !this.data.optionList.some(o => o.state === 'is-on') });

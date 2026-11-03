@@ -65,3 +65,20 @@ test('作者的话从结算回执来:没通过的 reply 与配图原样交给判
   assert.deepEqual(reply.images, ['https://x/a.jpg'])
   assert.equal(reply.outcome, 'FAIL')
 })
+
+test('第四轮:作者的结果反馈比 attempts 晚到一拍,先写上的兜底句也要清掉(rig 实测)', () => {
+  const def = loadQa()
+  const c = qa(def, { typed: '黄浦江' })
+  def.observers.attempts.call(c, 0)
+  c.data.attempts = 1
+  def.observers.attempts.call(c, 1)
+  assert.equal(c.data.feedback, '不对。把它清掉，再试一次。')
+  c.data.authoredOutcome = 'FAIL'
+  def.observers.authoredOutcome.call(c, 'FAIL')
+  assert.equal(c.data.feedback, '')
+  assert.equal(c.data.typeWrong, true, '描红留着')
+  // 作者自己在题里配的反馈文字不动
+  const d = qa(def, { feedbackText: '石碑上刻着呢', feedback: '石碑上刻着呢' })
+  def.observers.authoredOutcome.call(d, 'FAIL')
+  assert.equal(d.data.feedback, '石碑上刻着呢')
+})
