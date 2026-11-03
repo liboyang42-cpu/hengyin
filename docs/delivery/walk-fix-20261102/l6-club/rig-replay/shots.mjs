@@ -165,5 +165,14 @@ const sets = {
       await w.scroll(500); await sl(500); await w.shot(name('RECRUIT', '-2'));
     });
   },
+  async r4merchant() { // ROUND4: 商家 round button -> (after) merchantinfo?scope=CLUB&open=merchant with the P-6 招商 layer open
+    await go(LEAD, td, async (w) => {
+      await w.shot(name('MERCHANT', '-1-topic'));
+      try { await w.tap('商家', { exact: true }); } catch (e) { console.log('INJECT onQuickAction merchant', e.message); await w.eval(() => getCurrentPages().slice(-1)[0].onQuickAction({ currentTarget: { dataset: { key: 'merchant' } } })); }
+      await sl(5000); console.log('route-after-tap', JSON.stringify(await w.route()));
+      const d = await w.data(); console.log('DATA', JSON.stringify({ merchantSheet: d.merchantSheet, operationScope: d.operationScope, role: d.role, stations: (d.recruitStations || []).length, merchantSheetVisible: d.merchantSheetVisible }));
+      await w.shot(name('MERCHANT', '-2-open')); await txt(w, 'merchant');
+    });
+  },
 };
 await sets[set]();
