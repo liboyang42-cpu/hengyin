@@ -2373,13 +2373,16 @@ Page({
     const selectedCategoryIds = selectedIds || [];
     const selectedCategoryNames = selectedCategories ? selectedCategories.map(item => item.categoryName) : [];
     const selectedCategoryNamesStr = selectedCategoryNames.join('，');
-    that._setFormState({
+    const patch = {
       selectedCategoryIds: selectedCategoryIds,
       selectedCategoryNames: selectedCategoryNames,
       selectedCategoryNamesStr: selectedCategoryNamesStr,
       categoryList: withCategoryIcons(selectedCategories),
       'formData.activityCategoryids': selectedCategoryIds.join(',')
-    });
+    };
+    // 选上类别就清掉「请选择至少一个玩法类别」,与标题/描述输入时清红字同一做法
+    if (selectedCategoryIds.length) patch['errors.categoryIds'] = '';
+    that._setFormState(patch);
   },
 
   getCategoryNamesByIds: function (ids, callback) {
