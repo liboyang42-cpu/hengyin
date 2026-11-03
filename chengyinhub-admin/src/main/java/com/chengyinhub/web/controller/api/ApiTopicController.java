@@ -85,7 +85,7 @@ public class ApiTopicController extends BaseController {
     @Autowired
     private com.fasterxml.jackson.databind.ObjectMapper responseObjectMapper;
 
-    @Value("${community.post.legacy-writes-enabled:true}")
+    @Value("${community.post.legacy-writes-enabled:false}")
     private boolean legacyCommunityWritesEnabled;
 
     /** 首次存草稿的请求意图键 → 已建草稿号(丢回包后的重试据此找回,不重复建题)。 */
