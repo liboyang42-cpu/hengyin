@@ -521,3 +521,7 @@ cy-error, cy-empty.page-terminal { flex: 1; display: flex !important; flex-direc
   font-weight: 700;
   color: var(--cy-color-text-primary);
 }
+
+/* 第五轮 D:参与人信息必填星号与字段下方红字 */
+.form-required { color: var(--cy-color-status-danger); margin-left: var(--cy-space-1); }
+.participant-err { display: block; margin: var(--cy-space-2) var(--cy-page-x) 0; }

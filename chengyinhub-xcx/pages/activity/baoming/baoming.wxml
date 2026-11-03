@@ -31,7 +31,7 @@
 </view>
 
 <view wx:if="{{pageState === 'ready'}}" class="set" bindtap="checkAndShowAddressPopup" hover-class="cy-pressed" hover-stay-time="80">
-  <view class="set_left">参与人信息</view>
+  <view class="set_left">参与人信息<text class="form-required" aria-hidden="true">*</text></view>
   <view class="set_right"><cy-icon name="arrow-right" size="32" /></view>
 </view>
 
@@ -53,6 +53,8 @@
     <!-- M0-5 报名轻表单:线下活动不配送,仅需姓名+手机,不再展示四级地址 -->
   </view>
 </view>
+<!-- 第五轮 D:参与人信息的输入问题写在这一栏下方 -->
+<cy-inline-error class="participant-err" wx:if="{{pageState === 'ready' && participantError}}" kind="error" title="{{participantError}}" />
  
 
 <!-- 详情加载中:给一条可见提示,避免页面只剩参与人信息一行像加载完了 -->

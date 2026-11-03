@@ -48,7 +48,7 @@
 
   <!-- 开场屏在时这层要整个关掉:它带 flex:1,空着也占一半高度,
        会把贴底的开场屏顶上去(实测)。只在「ready+form+开场」这一态关。 -->
-  <scroll-view scroll-y class="body" wx:if="{{!(bootstrapState === 'ready' && mode==='form' && introMode && !morphing)}}">
+  <scroll-view scroll-y class="body" scroll-into-view="{{scrollIntoId}}" wx:if="{{!(bootstrapState === 'ready' && mode==='form' && introMode && !morphing)}}">
     <view class="bootstrap-state" wx:if="{{bootstrapState === 'checking-role'}}">
       <cy-state-shell kind="loading" title="正在确认申请资格" theme="merchant" />
     </view>
@@ -116,19 +116,21 @@
     <!-- ===== 步骤1:基础信息 ===== -->
     <view class="step cy-rise-in" wx:if="{{mode==='form' && step===1 && !introMode}}">
       <cy-card class="apply-card wizard-card">
-        <view class="frow frow--field">
+        <view class="frow frow--field" id="apply-field-name">
           <text class="fl">店铺名称<text class="req" aria-hidden="true">*</text></text>
           <input class="fi" data-field="name" value="{{name}}" bindinput="onInput" placeholder="品牌名称" placeholder-class="ph"
                  aria-required="true" aria-label="店铺名称，必填" />
+          <cy-inline-error class="field-err" wx:if="{{fieldErrors.name}}" kind="error" title="{{fieldErrors.name}}" />
         </view>
         <view class="frow frow--field">
           <text class="fl">经营类目</text>
           <input class="fi" data-field="preference" value="{{preference}}" bindinput="onInput" placeholder="如 餐饮、零售、文创" placeholder-class="ph" />
         </view>
-        <view class="frow frow--field last">
+        <view class="frow frow--field last" id="apply-field-phone">
           <text class="fl">联系电话<text class="req" aria-hidden="true">*</text></text>
           <input class="fi" data-field="phone" value="{{phone}}" bindinput="onInput" type="number" placeholder="11位手机号" placeholder-class="ph"
                  aria-required="true" aria-label="联系电话，必填" />
+          <cy-inline-error class="field-err" wx:if="{{fieldErrors.phone}}" kind="error" title="{{fieldErrors.phone}}" />
         </view>
       </cy-card>
       
@@ -137,13 +139,15 @@
     <!-- ===== 步骤2:经营信息 ===== -->
     <view class="step cy-rise-in" wx:if="{{mode==='form' && step===2 && !introMode}}">
       <cy-card class="apply-card wizard-card">
-        <view class="frow frow--field" bindtap="chooseLocation" aria-role="button" aria-required="true" aria-label="店铺地址，必填，点击选择位置" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="frow frow--field" id="apply-field-address" bindtap="chooseLocation" aria-role="button" aria-required="true" aria-label="店铺地址，必填，点击选择位置" hover-class="cy-pressed" hover-stay-time="80">
           <text class="fl">店铺地址<text class="req" aria-hidden="true">*</text></text>
           <view class="field-control"><text class="fi {{address ? '' : 'ph'}}">{{address || '点击选择位置'}}</text><cy-icon name="arrow-right" size="28" /></view>
+          <cy-inline-error class="field-err" wx:if="{{fieldErrors.address}}" kind="error" title="{{fieldErrors.address}}" />
         </view>
-        <view class="frow frow--field last" bindtap="openHoursPicker" aria-role="button" aria-required="true" aria-label="经营时间，必填，点击设置营业日与时段" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="frow frow--field last" id="apply-field-businessTime" bindtap="openHoursPicker" aria-role="button" aria-required="true" aria-label="经营时间，必填，点击设置营业日与时段" hover-class="cy-pressed" hover-stay-time="80">
           <text class="fl">经营时间<text class="req" aria-hidden="true">*</text></text>
           <view class="field-control"><text class="fi {{businessTime ? '' : 'ph'}}">{{businessTime || '点击设置营业日与时段'}}</text><cy-icon name="arrow-right" size="28" /></view>
+          <cy-inline-error class="field-err" wx:if="{{fieldErrors.businessTime}}" kind="error" title="{{fieldErrors.businessTime}}" />
         </view>
       </cy-card>
       <cy-card class="apply-card wizard-card mt-s">
@@ -159,7 +163,7 @@
     <!-- ===== 步骤3:资质信息 ===== -->
     <view class="step cy-rise-in" wx:if="{{mode==='form' && step===3 && !introMode}}">
       <cy-card class="apply-card wizard-card">
-        <view class="up-row" aria-role="group" aria-required="true" aria-label="营业执照，必填">
+        <view class="up-row" id="apply-field-businessLicense" aria-role="group" aria-required="true" aria-label="营业执照，必填">
           <view class="up-left">
             <text class="fl">营业执照<text class="req" aria-hidden="true">*</text></text>
           </view>
@@ -173,6 +177,7 @@
             </view>
           </view>
         </view>
+        <cy-inline-error class="field-err" wx:if="{{fieldErrors.businessLicense}}" kind="error" title="{{fieldErrors.businessLicense}}" />
       </cy-card>
 
       <view class="sec-label mt">品牌形象图（选填）</view>
@@ -220,17 +225,19 @@
       <view class="sec-label mt">经营者实名</view>
       <block wx:if="{{!identityRegistered}}">
         <view class="identity-bare">
-          <view class="frow frow--field">
+          <view class="frow frow--field" id="apply-field-realName">
             <text class="fl">真实姓名<text class="req" aria-hidden="true">*</text></text>
             <input class="fi" data-field="realName" value="{{realName}}" bindinput="onInput"
                    placeholder="与身份证一致" placeholder-class="ph"
                    aria-required="true" aria-label="真实姓名，必填" />
+            <cy-inline-error class="field-err" wx:if="{{fieldErrors.realName}}" kind="error" title="{{fieldErrors.realName}}" />
           </view>
-          <view class="frow frow--field last">
+          <view class="frow frow--field last" id="apply-field-idCard">
             <text class="fl">身份证号<text class="req" aria-hidden="true">*</text></text>
             <input class="fi" data-field="idCard" value="{{idCard}}" bindinput="onInput" type="idcard" maxlength="18"
                    placeholder="18 位" placeholder-class="ph"
                    aria-required="true" aria-label="身份证号，必填" />
+            <cy-inline-error class="field-err" wx:if="{{fieldErrors.idCard}}" kind="error" title="{{fieldErrors.idCard}}" />
           </view>
         </view>
         <cy-consent-check class="identity-consent" checked="{{identityConsented}}" text="{{identityHint}}"
@@ -304,14 +311,15 @@
   <!-- ===== 经营时间选择:周一~周日 + 起止时段(2026-07-31) ===== -->
   <cy-sheet inset footer show="{{hoursPickerShow}}" title="设置经营时间" bind:close="closeHoursPicker">
     <view class="hp-sheet">
-      <view class="hp-label">经营日</view>
+      <view class="hp-label">经营日<text class="req" aria-hidden="true">*</text></view>
       <view class="hp-days">
         <view class="hp-day {{item.on ? 'hp-day--on' : ''}}" wx:for="{{hoursDraft.days}}" wx:key="key"
               data-index="{{index}}" bindtap="toggleHoursDay"
               aria-role="checkbox" aria-checked="{{item.on}}"
               aria-label="周{{item.label}}，{{item.on ? '已选择' : '未选择'}}" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view>
       </view>
-      <view class="hp-label">营业时段</view>
+      <cy-inline-error class="hp-err" wx:if="{{hoursErrors.days}}" kind="error" title="{{hoursErrors.days}}" />
+      <view class="hp-label">营业时段<text class="req" aria-hidden="true">*</text></view>
       <view class="hp-time-row">
         <view class="hp-time-field" data-field="start" bindtap="openHoursTime" aria-role="button" aria-label="开始营业时间" hover-class="cy-pressed" hover-stay-time="80">
           <view class="hp-time-box">
@@ -327,6 +335,7 @@
           </view>
         </view>
       </view>
+      <cy-inline-error class="hp-err" wx:if="{{hoursErrors.time}}" kind="error" title="{{hoursErrors.time}}" />
     </view>
     <cy-btn slot="footer" variant="primary" bindtap="confirmHoursPicker">完成</cy-btn>
   </cy-sheet>
