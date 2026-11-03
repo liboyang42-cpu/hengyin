@@ -356,6 +356,43 @@ class WxContentSecurityServiceImplTest {
                 startsWith("wx:content-sec:callback:nonce:"), anyString());
     }
 
+    /** Round5B-4:suggest=review 不再 400 让内容继续公开,按 risky 隐藏并挂人工复核单。 */
+    @Test
+    void reviewSuggestionHidesContentAndQueuesHumanReview() {
+        RedisCache redisCache = mock(RedisCache.class);
+        ISysConfigService configService = mock(ISysConfigService.class);
+        when(configService.selectConfigByKey("wx.msgpush.token")).thenReturn("test-token");
+        when(redisCache.setIfAbsent(startsWith("wx:content-sec:callback:nonce:"), anyString(),
+                eq(10), eq(TimeUnit.MINUTES))).thenReturn(true);
+        WxContentSecurityServiceImpl service = spy(service(redisCache, mock(ImMessageMapper.class)));
+        ReflectionTestUtils.setField(service, "configService", configService);
+        ReflectionTestUtils.setField(service, "clock",
+                Clock.fixed(Instant.ofEpochSecond(1700000000L), ZoneOffset.UTC));
+        doReturn(true).when(service).handleMediaCheckResult("trace-review", true, true);
+        String body = "{\"Event\":\"wxa_media_check\",\"trace_id\":\"trace-review\",\"errcode\":0,\"result\":{\"suggest\":\"review\"}}";
+
+        assertEquals(IWxContentSecurityService.CallbackResult.SUCCESS,
+                service.processMediaCheckCallback("8e91e748d4120504e771fd0ea6687904595b9d59",
+                        "1700000000", "nonce-false", body));
+        verify(service).handleMediaCheckResult("trace-review", true, true);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void reviewedActivityImageIsQueuedOnTheAuditWorkbench() {
+        WxContentSecurityServiceImpl service = service(mock(RedisCache.class), mock(ImMessageMapper.class));
+        com.chengyinhub.business.service.IAuditTaskService audit = mock(com.chengyinhub.business.service.IAuditTaskService.class);
+        org.springframework.beans.factory.ObjectProvider<com.chengyinhub.business.service.IAuditTaskService> provider =
+                mock(org.springframework.beans.factory.ObjectProvider.class);
+        when(provider.getObject()).thenReturn(audit);
+        ReflectionTestUtils.setField(service, "auditTaskServiceProvider", provider);
+
+        service.queueMediaReview(IWxContentSecurityService.BIZ_TYPE_ACTIVITY, 77L);
+
+        verify(audit).submitSafetyHold(eq(com.chengyinhub.business.domain.AuditTask.BIZ_ACTIVITY), eq(77L),
+                org.mockito.ArgumentMatchers.isNull(), eq("HIGH"), anyString());
+    }
+
     @Test
     void reviewInfoLogContainsOnlyLengthAndNeverUserContent() {
         RedisCache redisCache = mock(RedisCache.class);

@@ -427,6 +427,12 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
     @Override
     public boolean handleMediaCheckResult(String traceId, boolean risky)
     {
+        return handleMediaCheckResult(traceId, risky, false);
+    }
+
+    /** humanReview=true:微信 suggest=review,按 risky 隐藏后再挂人工复核单。 */
+    boolean handleMediaCheckResult(String traceId, boolean risky, boolean humanReview)
+    {
         if (StringUtils.isEmpty(traceId))
         {
             return false;
@@ -452,8 +458,13 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                             // 资料图按「哪张图违规清哪个字段」处理:二维码违规不连坐作品图,反之亦然。
                             return clearRiskyMemberProfileMedia(inbox.getBizId(), inbox.getMediaHash());
                         }
-                        return processMediaCheckResult(inbox.getBizType(), inbox.getBizId(), traceId,
+                        boolean applied = processMediaCheckResult(inbox.getBizType(), inbox.getBizId(), traceId,
                                 callbackRisky);
+                        if (applied && humanReview)
+                        {
+                            queueMediaReview(inbox.getBizType(), inbox.getBizId());
+                        }
+                        return applied;
                     }
                 });
         if (handled)
@@ -477,6 +488,7 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
         }
         String traceId;
         boolean risky;
+        boolean humanReview;
         try
         {
             JSONObject obj = JSON.parseObject(body);
@@ -490,12 +502,16 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
             }
             JSONObject result = obj.getJSONObject("result");
             String suggest = result == null ? "" : Convert.toStr(result.get("suggest"), "");
-            if (!"pass".equalsIgnoreCase(suggest) && !"risky".equalsIgnoreCase(suggest))
+            if (!"pass".equalsIgnoreCase(suggest) && !"risky".equalsIgnoreCase(suggest)
+                    && !"review".equalsIgnoreCase(suggest))
             {
                 return CallbackResult.INVALID_PAYLOAD;
             }
             traceId = obj.getString("trace_id");
-            risky = "risky".equalsIgnoreCase(suggest);
+            // Round5B-4:suggest=review(微信建议人工复核)不能回 400 让内容继续公开:与 risky 同样先隐藏,
+            // 再进审核台人工复核(queueMediaReview),人工通过按各业务既有审核口恢复。
+            humanReview = "review".equalsIgnoreCase(suggest);
+            risky = humanReview || "risky".equalsIgnoreCase(suggest);
         }
         catch (Exception e)
         {
@@ -509,7 +525,7 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
         }
         try
         {
-            if (handleMediaCheckResult(traceId, risky))
+            if (humanReview ? handleMediaCheckResult(traceId, true, true) : handleMediaCheckResult(traceId, risky))
             {
                 return CallbackResult.SUCCESS;
             }
@@ -912,9 +928,38 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                 }
                 return confirmMutation(affected, "官方活动封面违规已自动下线", bizId);
             }
+            else if (bizType == BIZ_TYPE_NODE_TEMPLATE)
+            {
+                // Round5B-4:据点互动模板(cms_member_template)图片违规/需人工 ⇒ 下架(status=2,publish_status=0,
+                // check_status=2)并挂 TEMPLATE 审核单,人工通过才恢复(AuditTaskServiceImpl 既有 BIZ_TEMPLATE 裁决口)。
+                com.chengyinhub.business.domain.CmsMemberTemplate template =
+                        cmsMemberTemplateMapper.selectCmsMemberTemplateById(bizId);
+                if (template == null)
+                {
+                    return false;
+                }
+                if (Long.valueOf(0L).equals(template.getPublishStatus()) && Integer.valueOf(2).equals(template.getCheckStatus()))
+                {
+                    return confirmAlreadyApplied("据点模板图片违规已自动下架", bizId);
+                }
+                com.chengyinhub.business.domain.CmsMemberTemplate down = new com.chengyinhub.business.domain.CmsMemberTemplate();
+                down.setId(bizId);
+                down.setStatus(2L);
+                down.setCheckStatus(2);
+                down.setPublishStatus(0L);
+                down.setReason("模板图片违规已自动下架");
+                int affected = cmsMemberTemplateMapper.updateCmsMemberTemplate(down);
+                if (affected > 0)
+                {
+                    queueTemplateReview(template);
+                    notifyImageTakedown(template.getMemberId(), com.chengyinhub.business.domain.AuditTask.BIZ_TEMPLATE, bizId,
+                            com.chengyinhub.business.service.support.SystemNoticeCard.item("据点模板", template.getTitle()));
+                }
+                return confirmMutation(affected, "据点模板图片违规已自动下架", bizId);
+            }
             else
             {
-                // 其它业务类型(如据点模板,量小且权限门控)暂无自动下架,落 ERROR 告警供人工核查下架
+                // 其它业务类型暂无自动下架,落 ERROR 告警供人工核查下架
                 log.error("[内容安全] 图片违规但该业务类型无自动下架处理,需人工核查下架: bizType={}, bizId={}", bizType, bizId);
                 return false;
             }
@@ -932,6 +977,51 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
      * confirmAlreadyApplied 不通知);回调收件箱同事务置 DONE,同一 trace 重放不会再进来 —— 每次下架只通知一次。
      * 走嵌套事务 + 只告警:通知失败不能挡住违规内容下架。
      */
+    /** 微信建议人工复核的图片:内容已隐藏,这里把它挂进审核台(人工通过按各业务既有审核口恢复)。 */
+    void queueMediaReview(Integer bizType, Long bizId)
+    {
+        if (bizType == null || bizId == null) return;
+        String auditBiz;
+        switch (bizType)
+        {
+            case BIZ_TYPE_TOPIC:
+                // 主题走内容安全复核上架单(审核通过自动解除留置并上架)
+                cmsTopicService.requestContentSafetyRelistReview(bizId, null);
+                return;
+            case BIZ_TYPE_ACTIVITY: auditBiz = com.chengyinhub.business.domain.AuditTask.BIZ_ACTIVITY; break;
+            case BIZ_TYPE_CLUB_POST: auditBiz = com.chengyinhub.business.domain.AuditTask.BIZ_CLUB_POST; break;
+            case BIZ_TYPE_OFFICIAL_EVENT: auditBiz = com.chengyinhub.business.domain.AuditTask.BIZ_OFFICIAL_EVENT; break;
+            case BIZ_TYPE_SQUARE: auditBiz = com.chengyinhub.business.domain.AuditTask.BIZ_SQUARE; break;
+            case BIZ_TYPE_COMMENT: auditBiz = com.chengyinhub.business.domain.AuditTask.BIZ_COMMENT; break;
+            case BIZ_TYPE_IM_MESSAGE: auditBiz = com.chengyinhub.business.domain.AuditTask.BIZ_IM; break;
+            case BIZ_TYPE_HANGOUT: auditBiz = com.chengyinhub.business.domain.AuditTask.BIZ_HANGOUT; break;
+            case BIZ_TYPE_COMMUNITY_POST: return; // 帖文服务 applyRiskyMediaResult 已建复核单
+            case BIZ_TYPE_NODE_TEMPLATE: return;  // 下架分支已挂 TEMPLATE 审核单
+            case BIZ_TYPE_TEMPLATE: auditBiz = com.chengyinhub.business.domain.AuditTask.BIZ_TEMPLATE; break;
+            default:
+                // 资料图/NPC 头像/集邮票等:违规图已清除或隐藏,无独立审核对象,告警人工核查
+                log.error("[内容安全] 图片建议人工复核,已隐藏,无对应审核单类型需人工核查: bizType={}, bizId={}", bizType, bizId);
+                return;
+        }
+        JSONObject snap = new JSONObject();
+        snap.put("bizType", auditBiz);
+        snap.put("bizId", bizId);
+        snap.put("gateReason", "MEDIA_REVIEW");
+        auditTaskServiceProvider.getObject().submitSafetyHold(auditBiz, bizId, null, "HIGH", snap.toJSONString());
+    }
+
+    private void queueTemplateReview(com.chengyinhub.business.domain.CmsMemberTemplate template)
+    {
+        JSONObject snap = new JSONObject();
+        snap.put("bizType", com.chengyinhub.business.domain.AuditTask.BIZ_TEMPLATE);
+        snap.put("bizId", template.getId());
+        snap.put("title", template.getTitle());
+        snap.put("imgUrl", template.getImgUrl());
+        snap.put("gateReason", "MEDIA_RISKY_NODE_TEMPLATE");
+        auditTaskServiceProvider.getObject().submitSafetyHold(com.chengyinhub.business.domain.AuditTask.BIZ_TEMPLATE,
+                template.getId(), template.getMemberId(), "HIGH", snap.toJSONString());
+    }
+
     private void notifyImageTakedown(Long memberId, String bizType, Long bizId, String item)
     {
         if (memberId == null || memberId <= 0 || imServiceProvider == null)
@@ -1174,6 +1264,10 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                 com.chengyinhub.business.domain.CmsMemberTemplate template =
                         cmsMemberTemplateMapper.selectCmsMemberTemplateById(id);
                 return template != null && containsMediaHash(hash, template.getImgUrl(), template.getMedalImg());
+            case BIZ_TYPE_NODE_TEMPLATE:
+                com.chengyinhub.business.domain.CmsMemberTemplate nodeTemplate =
+                        cmsMemberTemplateMapper.selectCmsMemberTemplateById(id);
+                return nodeTemplate != null && containsMediaHash(hash, nodeTemplate.getImgUrl());
             case BIZ_TYPE_HANGOUT:
                 com.chengyinhub.business.domain.RoamHangout hangout = roamHangoutMapper.selectById(id, 0L);
                 return hangout != null && containsMediaHash(hash, hangout.getCoverUrl());
