@@ -234,7 +234,7 @@
   <!-- CU-C-126:原来 headerVariant="action" 走「取消 / 标题 / 完成」,两颗都只执行 onClose,
        面板内又没有待保存表单 —— 「完成」不完成任何业务动作,还和同类抽屉的右上 ✕ 不一致。
        退回默认标题头(右上 ✕),真正的招商动作留在底部 merchantActions(去找商家 / 收到的申请)。 -->
-  <project-drawer class="merchant-drawer {{ hostOwnerType === 'club' ? 'theme-dark' : '' }}" show="{{ merchantSheet.show }}" title="招商" actions="{{ merchantActions }}" under="{{ layers.tier.show || layers.shops.show }}"
+  <project-drawer show="{{ merchantSheet.show }}" title="招商" actions="{{ merchantActions }}" under="{{ layers.tier.show || layers.shops.show }}" class="merchant-drawer {{ hostOwnerType === 'club' ? 'theme-dark' : '' }}"
                   bind:close="emitCloseMerchant" bind:action="emitDrawerAction">
     <!-- 走查 v2 R06(业主 2026-10-30):顶部三格;每一站用主题图、给「自己承接 / 招商」;收到的申请在弹窗里确认,不跳出主题 -->
     <view class="cs-sum">
