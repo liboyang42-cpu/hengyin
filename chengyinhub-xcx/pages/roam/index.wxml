@@ -381,7 +381,9 @@
     <text class="pc-demo" wx:if="{{paceCard.demo}}">演示点 · 仅浏览（非真实地点）</text>
     <text class="pc-body" wx:if="{{paceCard.address}}">{{paceCard.address}}</text>
     <text class="pc-body" wx:if="{{paceCard.body}}">{{paceCard.body}}</text>
-    <cy-roam-place-note wx:if="{{paceCard.tags}}" tags="{{paceCard.tags}}" />
+    <text class="pc-body" wx:if="{{paceCard.reason}}">{{paceCard.reason}}</text>
+    <text class="pc-body" wx:if="{{paceCard.sources}}" user-select>{{paceCard.sources}}</text>
+    <cy-roam-place-note wx:if="{{paceCard.tags}}" tags="{{paceCard.tags}}" bind:note="onPlaceNote" />
     <text class="pc-hint" wx:if="{{paceCard.canDiscover && !paceCard.meaning && !paceCard.checkinErr}}">靠近后可确认地点</text>
     <view class="pc-action" wx:if="{{paceCard.canDiscover && !paceCard.meaning && !paceCard.checkinErr}}" bindtap="discoverRoamPoi" data-id="{{paceCard.poiId}}" aria-role="button" aria-label="确认到达漫游点" hover-class="cy-pressed" hover-stay-time="80">确认到点</view>
     <!-- 只在服务器确认到点且后端返回独立审核内容时出现；无来源不留空壳。 -->

@@ -5854,6 +5854,13 @@ Page({
   openEntryLayers() { this._showEntrySheet('layers'); },
   openCityGuide() { this.setData({ cityGuideOpen: true }); },
   closeCityGuide() { this.setData({ cityGuideOpen: false }); },
+  // 分包目录查到的理由与来源;只认当前这张卡的 tags,换卡后迟到的回填丢弃
+  onPlaceNote(e) {
+    const d = e.detail || {};
+    const card = this.data.paceCard || {};
+    if (!card.show || card.tags !== d.tags) return;
+    this.setData({ 'paceCard.reason': d.reason || '', 'paceCard.sources': d.sources || '' });
+  },
   closeEntrySheet() { this.setData({ entrySheet: '', entryActivity: null, entryTeam: null, entrySheetView: 'main', entrySheetIn: false }); },
   backEntrySheetView() { this.setData({ entrySheetView: 'main', entryTeam: null }); },
   toggleEntryLayer(e) {

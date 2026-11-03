@@ -1,3 +1,4 @@
+// 2026-11-03 第七轮(地点卡理由与来源改由页面 .pc-body 渲染):roam/index.js 加 onPlaceNote 7 行,其后 U5 锚点仅行号位移(difflib 逐行映射,调用行逐字相同),理由与条数不变、不新增登记;u5Silent keyDigest 按门禁 baselineKeyDigest 重算。
 // 2026-11-03 第七轮(城市漫游清单):roam/index.js 上方增 require、data、展示分类与地点卡透传共若干行,既有 U4-DYNAMIC / U5 锚点仅行号位移(difflib 对父提交逐行映射,调用行逐字相同),理由与条数不变、不新增登记;u4Dynamic / u5Silent keyDigest 按门禁 baselineKeyDigest 重算。
 // 2026-11-03 第七轮(发布模板页选类别清红字):publish/temp/index.js updateCategorySelection 净增 3 行,其后 U4-DYNAMIC 锚点仅行号位移(difflib 逐行映射,调用行逐字相同),理由与条数不变、不新增登记;u4Dynamic keyDigest 按门禁 baselineKeyDigest 重算。
 // 2026-11-03 第七轮(地图气泡字号跟随手机字号):roam/index.js、searchmap/index.js 上方各增 1~2 行,既有 U4-DYNAMIC / U5 锚点仅行号位移(difflib 对父提交逐行映射,调用行逐字相同),理由与条数不变、不新增登记;u4Dynamic / u5Silent keyDigest 按门禁 baselineKeyDigest 重算。
@@ -1116,7 +1117,7 @@ module.exports = {
       //   逐条回读仍是「只为读章节 recruitEnabled、失败不弹全局 toast」这一处,静默理由一字未改,条数 27 不变。
 // 2026-10-17 合并 master 进漫游上线分支:roam/index.js 14 条、nearby/index.js 2 条既有调用仅行号位移(按 master 源码逐行回读定位);漫游两栏改版删掉 /api/registration/list 静默读取(749),U5 29→28。digest 按同一算法显式重算。
 // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):锚点位移 + 举报半屏/AI 对话组件下沉会员分包换路径 + 本线 9 处新增登记,digest 按同一算法重算。
-"5ec65004be09f6c47856393d46154e936ec9cd57dbc6412797d4e5bd7f9f43b5"
+"d550dfbe860c2759210f7075c7be7a0470a0c5c4d343968c131c08d5c886378f"
 
     }
   },
@@ -1447,8 +1448,8 @@ module.exports = {
   //   落在 4945(master 侧记 4277、本分支侧记 4968,两侧对合并树都不对)。理由一字未改,digest 重算。
   "u5Silent": {
     // 2026-10-28 p74 业主「附近活动总是有的」:漫游起始页附近为空时的两级兜底读取逐项登记。
-    "chengyinhub-xcx/pages/roam/index.js:5989": "漫游起始页「附近活动」3 公里为空时的 20 公里兜底读取(同 /api/roam/entry/nearby、同权限档):主读取已成功落定(空也是真结果),这一条只往底部卡片带补同城活动,读不到就接着读其他城市公开主题;不改地图点位、不承载写入;只写回同一次进页序号与同一身份;owner=漫游,复核=2026-10-28",
-    "chengyinhub-xcx/pages/roam/index.js:5998": "漫游起始页「附近活动」同城也为空时读其他城市公开主题(/api/topic/list 公开列表):只填底部卡片带,读不到时卡片带保持主读取给出的空态卡;不改地图点位、不承载写入;只写回同一次进页序号与同一身份;owner=漫游,复核=2026-10-28",
+    "chengyinhub-xcx/pages/roam/index.js:5996": "漫游起始页「附近活动」3 公里为空时的 20 公里兜底读取(同 /api/roam/entry/nearby、同权限档):主读取已成功落定(空也是真结果),这一条只往底部卡片带补同城活动,读不到就接着读其他城市公开主题;不改地图点位、不承载写入;只写回同一次进页序号与同一身份;owner=漫游,复核=2026-10-28",
+    "chengyinhub-xcx/pages/roam/index.js:6005": "漫游起始页「附近活动」同城也为空时读其他城市公开主题(/api/topic/list 公开列表):只填底部卡片带,读不到时卡片带保持主读取给出的空态卡;不改地图点位、不承载写入;只写回同一次进页序号与同一身份;owner=漫游,复核=2026-10-28",
     // 2026-10-25 官方地点卡片:展开详情两条背景读取逐项登记。
     "chengyinhub-xcx/subpackageRoam/nearby/index.js:1001": "官方地点卡展开时补读节点(相册 / 玩法 / 完成状态 / 评分):卡片已先用地图点位数据渲染名称、地址、介绍和封面,读不到只是少相册与玩法块,开始挑战前挑战页会重新读同一节点并在失败时给错误页和重试;只写回仍开着的同一张卡;owner=上海据点,复核=2026-10-25",
     "chengyinhub-xcx/subpackageRoam/nearby/index.js:1022": "官方地点卡评价列表背景读取:失败时不显示评价区空态文案(reviewsLoaded=false),卡片其余内容与按钮照常,重新点开卡片会重读;不承载提交;只写回仍开着的同一张卡;owner=上海据点,复核=2026-10-25",

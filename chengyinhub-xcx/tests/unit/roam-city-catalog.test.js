@@ -171,5 +171,29 @@ test('目录、目录组件和地点卡理由组件都不进主包，漫游页�
   assert.doesNotMatch(js, /roam-city-catalog/, '主包漫游页不得直接 require 目录')
   const wxml = fs.readFileSync(path.join(root, 'pages/roam/index.wxml'), 'utf8')
   assert.match(wxml, /<text class="pc-body" wx:if="\{\{paceCard\.address\}\}">\{\{paceCard\.address\}\}<\/text>/)
-  assert.match(wxml, /<cy-roam-place-note wx:if="\{\{paceCard\.tags\}\}" tags="\{\{paceCard\.tags\}\}" \/>/)
+  assert.match(wxml, /<text class="pc-body" wx:if="\{\{paceCard\.reason\}\}">\{\{paceCard\.reason\}\}<\/text>/)
+  assert.match(wxml, /<cy-roam-place-note wx:if="\{\{paceCard\.tags\}\}" tags="\{\{paceCard\.tags\}\}" bind:note="onPlaceNote" \/>/)
+})
+
+test('地点卡理由组件把查表结果交回页面，换卡后的迟到回填被丢弃', () => {
+  const previousComponent = global.Component
+  let definition
+  global.Component = value => { definition = value }
+  try {
+    require('../../subpackageRoam/components/roam-place-note/index.js')
+    const events = []
+    const instance = { triggerEvent: (name, detail) => events.push([name, detail]) }
+    const tags = '["roam:shop","roam:seed:v1:bj-zhengyang-books"]'
+    definition.properties.tags.observer.call(instance, tags)
+    assert.equal(events[0][0], 'note')
+    assert.equal(events[0][1].tags, tags)
+    assert.match(events[0][1].reason, /万松老人塔/)
+    assert.match(events[0][1].sources, /beijing\.gov\.cn/)
+    definition.properties.tags.observer.call(instance, '["roam:park"]')
+    assert.deepEqual(events[1][1], { tags: '["roam:park"]', reason: '', sources: '' })
+  } finally { global.Component = previousComponent }
+  const fs = require('node:fs')
+  const path = require('node:path')
+  const js = fs.readFileSync(path.resolve(__dirname, '../../pages/roam/index.js'), 'utf8')
+  assert.match(js, /onPlaceNote\(e\) \{[\s\S]{0,200}card\.tags !== d\.tags\) return;/)
 })

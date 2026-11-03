@@ -1,4 +1,1 @@
-<block wx:if="{{note}}">
-  <text class="note">{{note.reason}}</text>
-  <text class="note" user-select>{{note.sourceText}}</text>
-</block>
+
