@@ -69,6 +69,9 @@ class ApiTopicPostReviewTest {
         when(security.checkText(anyString(), any())).thenReturn(null);
         when(security.checkText(contains("违规"), any())).thenReturn("内容包含违规信息");
         when(security.checkText(contains("待复核"), any())).thenReturn(IWxContentSecurityService.REVIEW_REQUIRED);
+        // 2026-11-03 集成:l3 P-17 起发布必带封面,l8 Round5C 对「图片送不了检」的主题留置复检。
+        // 本类只测文本机审分支,封面按「可以送检」造;图片送不了检的留置由 l8 自己的用例覆盖。
+        when(security.canSubmitMedia(any())).thenReturn(true);
         ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
         ReflectionTestUtils.setField(controller, "quotaService", quotaService);
         ReflectionTestUtils.setField(controller, "wxContentSecurityService", security);
