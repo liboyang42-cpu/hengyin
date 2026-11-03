@@ -1,5 +1,5 @@
 'use strict';
-// Lifecycle regression extracted from public PR #33. B9(L21):已付退款确认时在同一手势内申请 refund/refundRejected 订阅;
+// Lifecycle regression extracted from public PR #33. B9(L21):已付退款确认时在同一手势内申请 refund 订阅;
 // 失效的确认与未付单的普通取消都不申请。
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -84,7 +84,7 @@ test('E05-04 repeated taps and stale modal completion do not duplicate or unlock
   old.complete(); old.fail({}); h.confirm(old);
   assert.equal(h.page._cancelPromptOpen, true); assert.equal(h.requests.length, 0);
   h.confirm(); h.tap(); assert.equal(h.requests.length, 1);
-  assert.deepEqual(h.subscriptions, [['refund', 'refundRejected']]);
+  assert.deepEqual(h.subscriptions, [['refund']]);
   h.requests[0].complete(); h.tap(); h.confirm();
   h.requests[0].complete(); assert.equal(h.depth(), 1); h.requests[1].complete();
 });

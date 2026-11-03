@@ -1,6 +1,6 @@
 'use strict';
 // Refund/account lifecycle regression ported from public PR #33 (E05).
-// Refund behaviour is unchanged. B9(L21):确认退款这一下同步申请 refund/refundRejected 两个订阅模板
+// Refund behaviour is unchanged. B9(L21):确认退款这一下同步申请 refund 订阅模板(第七轮 C 去掉后端不发的 refundRejected)
 // (真 utils/subscribe.js,断言 wx.requestSubscribeMessage 在确认手势内被调用),失效确认不申请。
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -74,7 +74,7 @@ for (const [label, file, handler] of entries) {
     assert.equal(h.requests[0].data.id, 7);
     assert.equal(h.requests[0].sentAs, '11');
     assert.equal(h.subscriptions.length, 1, 'one refund confirmation asks for one subscription prompt');
-    assert.equal(h.subscriptions[0].tmplIds.length, 2, 'refund + refundRejected');
+    assert.equal(h.subscriptions[0].tmplIds.length, 1, 'refund only; backend never sends refundRejected');
     const before = plain(h.page.data);
     h.account('22');
     await Promise.resolve();

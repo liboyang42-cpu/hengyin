@@ -338,7 +338,7 @@ Component({
           if (!finishCancelPrompt() || !isCurrent()) return
           if (res.confirm) {
             // B9:退款结果(到账/被拒)订阅只在用户确认退款这一下申请;零元单没有钱可退,不弹
-            if (status === 2 && !isFreeOrder(that.data.list[index])) subscribe.request(['refund', 'refundRejected'])
+            if (status === 2 && !isFreeOrder(that.data.list[index])) subscribe.request(['refund'])
             that.cancelOrderRequest(id, index, status)
           }
         },

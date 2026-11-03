@@ -584,7 +584,7 @@ Component({
           if (!res.confirm) return;
           if (that.data.cancelling) return;
           // B9:退款结果(到账/被拒)订阅只在用户确认退款这一下申请;零元单没有钱可退,不弹
-          if (paid && !info.isFreeOrder) subscribe.request(['refund', 'refundRejected']);
+          if (paid && !info.isFreeOrder) subscribe.request(['refund']);
           that.setData({ cancelling: true });
           cyLoading.show('处理中...');
           // 请求拥有的 loading/锁须释放；账号校验只限制业务回执更新。
