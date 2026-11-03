@@ -669,7 +669,7 @@ Component({
           this._pendingCompletion = null
           const unknown = () => { if (isCurrent()) this._pendingNotice(false) }
           app.sendRequest({
-            url: '/api/city/nodes/' + poiId + '/complete', method: 'POST', hideLoading: true, silentError: true,
+            url: '/api/city/nodes/' + poiId + '/complete', method: 'POST', write: true, hideLoading: true, silentError: true,
             data: { lat: location.latitude, lng: location.longitude, answer: answer || '', photoUrl: photoUrl || '', code: code || '' },
             success: (res) => {
               const receipt = res && res.data

@@ -288,7 +288,7 @@ test('活动详情：取消、选票报名、评价分别读取独立 JS 派生�
   const js = read('subpackageMember/components/cy/scene-play-activity-detail/index.js')
   const wxml = read('subpackageMember/components/cy/scene-play-activity-detail/index.wxml')
   assert.match(wxml, /disabled="\{\{!canCancel\}\}"[^>]*>确认取消并退款<\/cy-btn>/)
-  assert.match(wxml, /disabled="\{\{!canConfirmSignup\}\}"[^>]*>立即报名<\/cy-btn>/)
+  assert.match(wxml, /disabled="\{\{!canConfirmSignup\}\}"[^>]*>\{\{noTicketText \|\| '立即报名'\}\}<\/cy-btn>/)
   assert.match(wxml, /disabled="\{\{!canSubmitComment\}\}"[^>]*>发布评价<\/cy-btn>/)
   assert.match(js, /canCancel:\s*false/)
   assert.match(js, /canConfirmSignup:\s*false/)

@@ -233,7 +233,8 @@ page {
   justify-content: center;
   color: var(--cy-color-text-primary);   /* cy-icon 走 currentColor */
 }
-.v3-hero-mem {
+.v3-hero-mem,
+.v3-hero-guest-city {
   flex: none;
   gap: var(--cy-space-1-5);
   pointer-events: auto;
@@ -251,7 +252,8 @@ page {
   font-weight: 500;
   color: var(--cy-color-text-secondary);
 }
-.v3-hero-mem-loc {
+.v3-hero-mem-loc,
+.v3-hero-guest-city__txt {
   font-size: var(--cy-type-label);
   color: var(--cy-color-text-tertiary);
 }

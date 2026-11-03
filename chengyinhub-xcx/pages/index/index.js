@@ -213,6 +213,7 @@ Page({
     // debug_user_view='user' 强制使用普通用户视角（调试用）
     _needsRedirect: isMerchantView(),
     city: '', cityManual: false, manualCityOptions: homeCity.CITY_OPTIONS,
+    cityPicker: false, cityPickerIndex: -1, // Round5 #8:游客点城市走现有选城下拉(不定位、不上传位置)
     isAppReady: false,
     isLoading: true,
     userInfo: {
@@ -1481,11 +1482,17 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
     scope.userInitiated = !!(opts && opts.userInitiated);
     scope.gateCoversLocation = !!(opts && opts.gateCoversLocation);
     if (!(Number(scope.memberId) > 0) || !scope.authorization || scope.authorization === 'dev-token') {
-      if (!this.data.city) this.setData({ city: homeCity.readLastCity() || homeCity.DEFAULT_CITY, cityManual: false });
+      const guestCity = this.data.city || homeCity.readLastCity() || homeCity.DEFAULT_CITY;
+      this.setData({ city: guestCity, cityManual: false, cityPicker: true, cityPickerIndex: homeCity.CITY_OPTIONS.indexOf(guestCity) });
       return;
     }
     const that = this;
-    this.setData({ city: this.data.city || homeCity.readLastCity(), cityManual: false });
+    this.setData({ city: this.data.city || homeCity.readLastCity(), cityManual: false, cityPicker: false });
+    // Round5 #7:本机记过「暂不定位」→ 自动流程到此为止(沿用上次城市/默认城市),等用户点城市再问
+    if (!scope.userInitiated && homeCity.readLocationDeclined()) {
+      if (!this.data.city) this.setData({ city: homeCity.DEFAULT_CITY });
+      return;
+    }
     app.sendRequest({
       url: '/api/compliance/consents/latest',
       method: 'POST',
@@ -1521,7 +1528,9 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
       confirmText: '同意定位',
       cancelText: '暂不定位',
       success(result) {
-        if (!result.confirm || !isCurrentLocationRequest(that, scope)) return;
+        if (!isCurrentLocationRequest(that, scope)) return;
+        homeCity.saveLocationDeclined(!result.confirm);
+        if (!result.confirm) { if (!that.data.city) that.setData({ city: homeCity.DEFAULT_CITY }); return; }
         that.recordHomeCityConsent(scope);
       }
     });
@@ -1599,7 +1608,7 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
   onManualCityChange(e) {
     const idx = Number(e && e.detail && e.detail.value);
     const city = String(homeCity.CITY_OPTIONS[idx] || '').trim();
-    if (city) { this.setData({ city: city, cityManual: false }); homeCity.saveLastCity(city); }
+    if (city) { this.setData({ city: city, cityManual: false, cityPickerIndex: idx }); homeCity.saveLastCity(city); }
   },
 
   // V-01:用户主动点城市重新定位，失败时才提示。

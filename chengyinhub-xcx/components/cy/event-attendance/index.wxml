@@ -1,3 +1,4 @@
+<wxs src="../../../utils/wxs/display-label.wxs" module="dl" />
 <view wx:if="{{organizer}}" class="attendance">
  <text class="title attendance__text">赛事联络与到场签到</text>
  <text class="attendance__text" wx:if="{{loading}}">正在读取</text>
@@ -28,7 +29,7 @@
   <button wx:if="{{recovery.state === 'APPLIED' || recovery.state === 'REJECTED' || recovery.state === 'CANCELLED'}}" bindtap="acknowledgeCommand">确认归档</button>
   <button wx:if="{{recovery.state === 'STORAGE_ERROR'}}" bindtap="open">重新读取原记录</button>
  </view>
- <view wx:if="{{result.data.bib}}"><text class="attendance__text">原核验结果：号码布 {{result.data.bib}} · {{result.data.state}} · {{result.data.checkedAt}}</text></view>
+ <view wx:if="{{result.data.bib}}"><text class="attendance__text">原核验结果：号码布 {{result.data.bib}} · {{dl.attendance(result.data.state)}} · {{result.data.checkedAt}}</text></view>
 </view>
 <!-- 玩家端(原型 B T-38 / T-39):集合与联系 + 到场签到,用宿主页 od-* 行形;不显示号码、岗位、坐标和请求号 -->
 <block wx:else>

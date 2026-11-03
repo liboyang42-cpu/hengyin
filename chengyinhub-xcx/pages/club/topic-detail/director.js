@@ -15,6 +15,14 @@ const { chinaParts } = require('../../../utils/datetime.js');
 'use strict'
 
 const { createClubGameDirectorAdapter, genericOpsActions, genericOpsFields, genericOpsPayload } = require('../utils/club-game-director-adapter.js')
+// Round5 #4:通用玩法运行状态只出中文,不显示 RUNNING / ONLINE 等后端代码
+const GENERIC_OPS_STATUS = { RUNNING: '进行中', PAUSED: '已暂停', INTERRUPTED: '已中断', CANCELLED: '已取消' }
+const GENERIC_OPS_AUTHORITY = { ONLINE: '线上判定', MANUAL: '人工接管' }
+function genericOpsStatusText(run) {
+  const r = run || {}
+  return (GENERIC_OPS_STATUS[r.operationStatus] || '状态待确认') + ' · ' + (GENERIC_OPS_AUTHORITY[r.authorityMode] || '判定方式待确认')
+    + (r.authorityEpoch == null ? '' : ' · 权威 ' + r.authorityEpoch)
+}
 let requestSequence = 0
 
 function genericOpsForm(action, draft, control) {
@@ -811,7 +819,7 @@ const DIRECTOR_METHODS = {
       authorityEpoch: projection.authorityEpoch == null ? null : projection.authorityEpoch,
       genericOpsKnown: !!this._genericControl,
       genericOpsActions: this._genericControl ? genericOpsActions(this._genericControl) : [],
-      genericOpsStatus: this._genericControl ? this._genericControl.run.operationStatus + ' · ' + this._genericControl.run.authorityMode + ' · 权威 ' + this._genericControl.run.authorityEpoch : '',
+      genericOpsStatus: this._genericControl ? genericOpsStatusText(this._genericControl.run) : '',
       genericOpsTeams: this._genericControl ? this._genericControl.teams.map(team => '队伍 ' + team.teamId + (team.exited ? '（已退出）' : '')).join(' · ') : '',
       chapterOptions: chapterOptions,
       unlockButtonText: unlockText,

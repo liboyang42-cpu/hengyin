@@ -434,6 +434,7 @@ Page({
     app.sendRequest({
       url: '/api/object-card/rename',
       method: 'POST',
+      write: true, // Round5 #10:rename 不在写动词表,显式标写(游客弹登录)
       hideLoading: true,
       silentError: true,
       autoErrorToast: false,

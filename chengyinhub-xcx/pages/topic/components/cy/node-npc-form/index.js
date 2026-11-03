@@ -454,7 +454,7 @@ Component({
         const value = res.data || res;
         voiceJournal.observe(wx, context.member, 'node:' + this.data.nodeId, requestId, value);
         this.setData({ voiceHistory: voiceJournal.load(wx, context.member, 'node:' + this.data.nodeId).records,
-          voiceHistoryResult: '原请求状态：' + value.voiceIntentState });
+          voiceHistoryResult: '原请求状态：' + voiceJournal.stateLabel(value.voiceIntentState) });
 
       }).catch(error => { if (context.current()) this.setData({ voiceError: error.message }); });
     },

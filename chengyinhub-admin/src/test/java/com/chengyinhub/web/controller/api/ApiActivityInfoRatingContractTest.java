@@ -143,7 +143,8 @@ class ApiActivityInfoRatingContractTest {
 
         f.controller = spy(new ApiActivityController());
         ReflectionTestUtils.setField(f.controller, "merchantBusinessStatusService", mock(IMerchantBusinessStatusService.class));
-        doReturn(0L).when(f.controller).getAppUserId();
+        // Round5 #6:/api/activity/info 对游客开放后 viewer=0 即游客(走公开投影);本契约测的是登录视角,用已登录 viewer。
+        doReturn(9001L).when(f.controller).getAppUserId();
 
         ReflectionTestUtils.setField(f.controller, "cmsActivityService", activityService);
         ReflectionTestUtils.setField(f.controller, "memberTemplateService", memberTemplateService);

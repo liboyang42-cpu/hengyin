@@ -1,3 +1,4 @@
+<wxs src="../../../utils/wxs/display-label.wxs" module="dl" />
 <view class="theme-dark">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
@@ -84,7 +85,7 @@
           <view class="member-mark">{{(item.displayName || item.nickname)[0]}}</view>
           <view class="member-main">
             <text class="member-name">{{item.displayName || item.nickname}}</text>
-            <text class="member-meta" wx:if="{{rosterTab === 'waitlist'}}">{{item.state}}</text>
+            <text class="member-meta" wx:if="{{rosterTab === 'waitlist'}}">{{dl.waitlist(item.state)}}</text>
             <text class="member-meta" wx:elif="{{item.phone}}">{{item.phone}}</text>
           </view>
           <view wx:if="{{item.phone}}" class="member-call" data-phone="{{item.phone}}" bindtap="callRosterMember"
