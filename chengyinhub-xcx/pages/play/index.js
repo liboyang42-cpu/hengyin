@@ -3622,7 +3622,25 @@ Page({
     this.setData({ storyMap: true, storyMapCenter: center, sessionToolsOpen: false });
     if (!this.data.gpsOk) this.requestPlayLocation();
   },
-  closeStoryMap() { this.setData({ storyMap: false }); },
+  closeStoryMap() {
+    // P-08 第五轮 D:从「等待放行」屏「返回地图」过来的,「回到故事」回到等待屏(仍被挡着),已放行就照常翻转门进章
+    if (this.data.chapterGate.show && this.data.chapterGate.away) { this.backToChapterHold(); return; }
+    this.setData({ storyMap: false });
+  },
+  /** P-08 第五轮 D(业主):等待放行屏最底下「返回地图」—— 收起等待屏、打开地图。章节门不撤(仍挂着这一章),
+   *  放行由带领轮询接着走 _releaseChapterGate;没有带坐标的地点时 openStoryMap 会退回关故事流,记一笔放行时再打开。 */
+  leaveChapterHold() {
+    if (!this.data.chapterGate.show || !this.data.chapterGate.held) return;
+    this._chapterHoldAway = this._pendingChapterGateKey || '';
+    this.setData({ 'chapterGate.away': true }, () => this.openStoryMap());
+  },
+  /** P-08 第五轮 D:地图上再点回这一章 → 仍被挡着就回到等待放行屏;这期间已放行就照常放翻转门进正文。 */
+  backToChapterHold() {
+    this._chapterHoldAway = '';
+    this.setData({ storyMap: false, 'chapterGate.away': false }, () => {
+      if (this.data.chapterGate.held && !this._leadHolds((this.data.chapter || {}).id)) this._releaseChapterGate();
+    });
+  },
   /** 导航交给微信地图:站内不接管导航(#1140 的口径,退出小程序用外部地图零损失)。 */
   openNextStopNav() {
     const n = this.data.nextNode;
@@ -4092,11 +4110,22 @@ Page({
   /** P-08:队长放行了这一章 → 收起「等待放行」屏,换上正常的章节翻转门,播完照常发 continue 进正文;门没发出来时按原兜底计时进。 */
   _releaseChapterGate() {
     const key = this._pendingChapterGateKey;
+    // P-08 第五轮 D:玩家「返回地图」在看地图时放行 → 收起地图,翻转门照常在故事流上播完进正文
+    if (this.data.chapterGate.away || this._chapterHoldAway) this.setData({ storyMap: false, 'chapterGate.away': false });
+    this._chapterHoldAway = '';
     this.setData({ 'chapterGate.held': false });
     clearTimeout(this._gateTimer);
     this._gateTimer = setTimeout(() => {
       if (this.data.chapterGate.show && this._pendingChapterGateKey === key) this.continueChapterGate();
     }, this.data.chapterGate.endInfo ? 7800 : 4200);
+  },
+  /** P-08:带领轮询每读到一次进度就对一次 —— 门前(或「返回地图」去了地图上)正在等的那一章放行了就接着进。 */
+  _syncChapterHold() {
+    const chapterId = (this.data.chapter || {}).id;
+    if (this.data.chapterGate.show && this.data.chapterGate.held && !this._leadHolds(chapterId)) { this._releaseChapterGate(); return; }
+    // P-08 第五轮 D:「返回地图」时没有带坐标的地点、故事流已收起 → 放行了就重开这一章,开场门照常走翻转门
+    if (this._chapterHoldAway && !this.data.chapterFull && this._chapterHoldAway === String(this.data.topicId) + ':' + String(chapterId)
+      && !this._leadHolds(chapterId)) { this._chapterHoldAway = ''; this.openChapterFull(); }
   },
   continueChapterGate() {
     // P-08:等待放行屏上不会有 continue;这里只是兜底,仍被挡着就留在等待屏上
@@ -4994,7 +5023,7 @@ Page({
         fresh.forEach(r => { that._skipCueSeen[r.key] = true; });
         that.diegetic(fresh[0].nickname + ' 在「' + fresh[0].nodeName + '」读不出方向，可在更多里放行');
       }
-      if (that.data.chapterGate.show && that.data.chapterGate.held && !that._leadHolds((that.data.chapter || {}).id)) that._releaseChapterGate();
+      that._syncChapterHold();
       that._startLeadPoll();
       return true;
     }).catch(markLeadLoadFailure);

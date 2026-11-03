@@ -371,6 +371,8 @@ page { background: var(--cy-color-bg-page); }
 .chhold--still .lg-wait__d{ animation:none; opacity:.6; }
 /* P-08 第五轮(业主):等待屏是深底,三点照集合屏用的 tertiary 几乎看不见 —— 这一屏改用与「等待放行」同一个 text-primary token */
 .chhold__wait .lg-wait__d{ background:var(--cy-color-text-primary); }
+/* P-08 第五轮 D:底部「返回地图」用既有 cy-footer-bar;它的承托底读 --cy-color-bg-page(纯黑),这一屏接到最接近本屏深灰的既有 token,不在屏底多出一条黑带 */
+.chhold{ --cy-color-bg-page:var(--cy-color-bg-elevated); }
 
 /* P1 足迹卡保存按钮(次级白描边) */
 

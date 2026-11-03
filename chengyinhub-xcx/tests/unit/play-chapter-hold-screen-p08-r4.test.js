@@ -50,14 +50,17 @@ function holdBlock() {
 
 test('被挡住时不挂翻转门,挂等待放行屏;放行后才挂翻转门', () => {
   assert.match(WXML, /<cy-chapter-flip wx:if="\{\{chapterFull && chapterGate\.show && !chapterGate\.held\}\}" mode="gate"/)
-  assert.match(WXML, /<view class="chhold[^"]*" wx:if="\{\{chapterFull && chapterGate\.show && chapterGate\.held\}\}"/)
+  // 第五轮 D:「返回地图」去了地图上(chapterGate.away)时等待屏收起
+  assert.match(WXML, /<view class="chhold[^"]*" wx:if="\{\{chapterFull && chapterGate\.show && chapterGate\.held && !chapterGate\.away\}\}"/)
 })
 
-test('布局:「等待放行」在上,三点等待在正中,没有按钮也没有说明行', () => {
+// 第五轮 D(业主):最底下加「返回地图」(cy-footer-bar),见 play-chapter-hold-map-p08-r5d.test.js;其余仍无按钮、无说明行
+test('布局:「等待放行」在上,三点等待在正中,没有说明行,唯一的按钮是底部「返回地图」', () => {
   const b = holdBlock()
   assert.ok(b.indexOf('等待放行</view>') < b.indexOf('lg-wait'), '标题在三点之前(上方)')
   assert.match(b, /<view class="lg-wait chhold__wait" aria-hidden="true">(<view class="lg-wait__d"><\/view>){3}<\/view>/)
   assert.doesNotMatch(b, /<cy-btn|bindtap/)
+  assert.equal((b.match(/<cy-footer-bar /g) || []).length, 1)
   assert.equal((b.match(/chhold__(t|wait)\b/g) || []).length, 2, '只有标题与三点两样')
   assert.equal((b.match(/<view /g) || []).length, 6, '外层 + 标题 + 三点容器 + 三颗点')
   assert.match(WXSS, /\.chhold__wait\{ position:absolute; top:50%; left:50%; transform:translate\(-50%,-50%\)/)

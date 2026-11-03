@@ -480,9 +480,12 @@
 <cy-chapter-flip wx:if="{{chapterFull && chapterGate.show && !chapterGate.held}}" mode="gate" faces="{{chapterGate.faces}}" end-info="{{chapterGate.endInfo}}" info="{{chapterGate.info}}" reduced-motion="{{reducedMotion}}" bind:continue="continueChapterGate" />
 <!-- P-08 第四轮(业主):带领场本章还没放行 → 不放翻转门,上方「等待放行」、屏幕中间集合屏同款三点等待(减弱动态时静止)。
      这一屏没有真实动作,所以不放按钮。队长放行后换回正常的章节翻转门,播完照常进正文。 -->
-<view class="chhold {{reducedMotion ? 'chhold--still' : ''}}" wx:if="{{chapterFull && chapterGate.show && chapterGate.held}}" aria-role="status" aria-label="等待放行">
+<view class="chhold {{reducedMotion ? 'chhold--still' : ''}}" wx:if="{{chapterFull && chapterGate.show && chapterGate.held && !chapterGate.away}}" aria-role="status" aria-label="等待放行">
   <view class="chhold__t" style="padding-top:{{chrome.contentTop}}px">等待放行</view>
   <view class="lg-wait chhold__wait" aria-hidden="true"><view class="lg-wait__d"></view><view class="lg-wait__d"></view><view class="lg-wait__d"></view></view>
+  <!-- P-08 第五轮 D(业主):最底下「返回地图」,用既有底部按钮条 cy-footer-bar。收起这一屏、打开地图;
+       放行时不管在地图上还是回到这一屏,都照常走章节翻转门进正文;地图上点「回到故事」回到这一屏。 -->
+  <cy-footer-bar primary="返回地图" primary-variant="secondary" bind:primarytap="leaveChapterHold" />
 </view>
 
 <!-- ===================== 底部运行栈(Figma 3957:12602 未开始 / 3962:14212 进行中 / 3962:14341 已暂停) =====================
