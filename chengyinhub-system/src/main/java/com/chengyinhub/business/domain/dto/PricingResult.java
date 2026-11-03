@@ -54,6 +54,33 @@ public class PricingResult implements Serializable {
     /** P-34:主题已过定价阶段(lifecycle>2,终价已确认),只读展示。 */
     private Boolean priced;
 
+    /**
+     * 第四轮(多票价):城市定向作者自己发的票(有人带档),每张一行,定价页逐张确认终价。
+     * 只有一张票时页面照旧走单价;非城市定向/无人带档为空。
+     */
+    private List<TicketPrice> tickets;
+
+    public List<TicketPrice> getTickets() { return tickets; }
+    public void setTickets(List<TicketPrice> tickets) { this.tickets = tickets; }
+
+    public static class TicketPrice implements Serializable {
+        private static final long serialVersionUID = 1L;
+        private Long ticketId;
+        private String name;
+        private BigDecimal price;
+
+        public TicketPrice() { }
+        public TicketPrice(Long ticketId, String name, BigDecimal price) {
+            this.ticketId = ticketId; this.name = name; this.price = price;
+        }
+        public Long getTicketId() { return ticketId; }
+        public void setTicketId(Long ticketId) { this.ticketId = ticketId; }
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+        public BigDecimal getPrice() { return price; }
+        public void setPrice(BigDecimal price) { this.price = price; }
+    }
+
     public Boolean getPriced() { return priced; }
     public void setPriced(Boolean priced) { this.priced = priced; }
 

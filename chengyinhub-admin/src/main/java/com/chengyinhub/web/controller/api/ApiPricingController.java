@@ -73,15 +73,24 @@ public class ApiPricingController extends BaseController {
             // 双票:guidedPrice(有人带)+ selfPrice(无人带,复用自玩票);兼容旧字段 finalPrice→guided
             BigDecimal guidedPrice = body.get("guidedPrice") != null ? asBd(body.get("guidedPrice")) : asBd(body.get("finalPrice"));
             BigDecimal selfPrice = asBd(body.get("selfPrice"));
+            // 第四轮(多票价):作者发了几张票时逐张确认;归属/覆盖/地板在服务层按本主题的票校验。
+            Map<Long, BigDecimal> ticketPrices = ticketPrices(body.get("ticketPrices"));
+            if (ticketPrices != null) guidedPrice = lowest(ticketPrices);
             // 2026-10-31 业主:开了承接、还在招商的主题可以先不定价,招商结束后在这里定终价。
             // 发布时票价是 0 ⇒ 按免费主题豁免了实名;终价一旦收费,实名闸必须在这一步补上(电商法 §27),
             // 否则「先发免费、后定收费」就是绕过发布者实名的口子。
             if ((isPositive(guidedPrice) || isPositive(selfPrice)) && !memberIdentityService.isRegistered(ownerOf(topicId))) {
                 return error("收费主题要先登记发布者实名(姓名与身份证号),再确认终价");
             }
-            pricingService.confirmPrice(topicId, guidedPrice, selfPrice,
-                    asInt(body.get("guidedInventory")), asBd(body.get("leadCost")),
-                    asInt(body.get("teamSize")));
+            if (ticketPrices == null) {
+                pricingService.confirmPrice(topicId, guidedPrice, selfPrice,
+                        asInt(body.get("guidedInventory")), asBd(body.get("leadCost")),
+                        asInt(body.get("teamSize")));
+            } else {
+                pricingService.confirmPrice(topicId, guidedPrice, selfPrice,
+                        asInt(body.get("guidedInventory")), asBd(body.get("leadCost")),
+                        asInt(body.get("teamSize")), ticketPrices);
+            }
             return AjaxResult.success(afterConfirmMessage(topicId, memberId,
                     isPositive(guidedPrice) || isPositive(selfPrice)));
         } catch (IllegalStateException e) {
@@ -134,6 +143,36 @@ public class ApiPricingController extends BaseController {
     private Long ownerOf(Long topicId) {
         CmsTopic topic = cmsTopicService.selectCmsTopicById(topicId);
         return topic == null ? null : topic.getMemberId();
+    }
+
+    /** ticketPrices: [{ticketId, price}];缺省/空数组返回 null(单价老路径)。格式不对按 IllegalStateException 原话退回。 */
+    static Map<Long, BigDecimal> ticketPrices(Object raw) {
+        if (raw == null) return null;
+        if (!(raw instanceof java.util.List)) throw new IllegalStateException("票价格式不正确");
+        java.util.List<?> rows = (java.util.List<?>) raw;
+        if (rows.isEmpty()) return null;
+        Map<Long, BigDecimal> out = new java.util.LinkedHashMap<>();
+        for (Object row : rows) {
+            if (!(row instanceof Map)) throw new IllegalStateException("票价格式不正确");
+            Map<?, ?> m = (Map<?, ?>) row;
+            Long id;
+            BigDecimal price;
+            try {
+                id = asLong(m.get("ticketId"));
+                price = asBd(m.get("price"));
+            } catch (NumberFormatException e) {
+                throw new IllegalStateException("票价格式不正确");
+            }
+            if (id == null || price == null) throw new IllegalStateException("每张票都要填写终价");
+            if (out.put(id, price) != null) throw new IllegalStateException("票价格式不正确");
+        }
+        return out;
+    }
+
+    private static BigDecimal lowest(Map<Long, BigDecimal> prices) {
+        BigDecimal low = null;
+        for (BigDecimal p : prices.values()) if (low == null || p.compareTo(low) < 0) low = p;
+        return low;
     }
 
     private static boolean isPositive(BigDecimal v) { return v != null && v.signum() > 0; }

@@ -302,6 +302,7 @@ public class PricingServiceImpl implements IPricingService {
         r.setPriced(lifecycleRow != null && lifecycleRow.getLifecycle() != null && lifecycleRow.getLifecycle() > 2);
         r.setConfirmBlockReason(blockReason);
         r.setCurrentPrice(currentPrice(topicId, subType));
+        r.setTickets(ticketRows(topicId, subType));
         java.util.Map<String, Object> reference = pricingReferenceMapper == null
                 ? null : pricingReferenceMapper.selectCityReference(topicId, subType);
         if (reference != null && reference.get("referencePrice") != null) {
@@ -330,6 +331,30 @@ public class PricingServiceImpl implements IPricingService {
             }
         }
         return out;
+    }
+
+    /**
+     * 第四轮(多票价):定价页逐张确认用的票行。与 confirmPrice 写作者票的条件一致:
+     * 城市定向、有人带档、还没有 sub_type=guided 的票。只读。
+     */
+    private List<PricingResult.TicketPrice> ticketRows(Long topicId, String subType) {
+        List<PricingResult.TicketPrice> out = new ArrayList<>();
+        if ("self".equals(subType) || omsTicketMapper == null || cmsTopicMapper == null) return out;
+        if (!Integer.valueOf(ProductType.ORIENTEERING).equals(cmsTopicMapper.selectProductTypeById(topicId))) return out;
+        if (!guidedTickets(topicId).isEmpty()) return out;
+        for (OmsTicket t : authoredCityTickets(topicId)) {
+            out.add(new PricingResult.TicketPrice(t.getId(), t.getName(), t.getPrice()));
+        }
+        return out;
+    }
+
+    private List<OmsTicket> guidedTickets(Long topicId) {
+        OmsTicket q = new OmsTicket();
+        q.setOwnerType(1L);
+        q.setOwnerId(topicId);
+        q.setSubType("guided");
+        List<OmsTicket> rows = omsTicketMapper.selectOmsTicketList(q);
+        return rows == null ? java.util.Collections.<OmsTicket>emptyList() : rows;
     }
 
     /** P-34:定价页预填作者已填过的价;读不到就不填(页面回落到地板价)。只读。 */
@@ -373,6 +398,24 @@ public class PricingServiceImpl implements IPricingService {
     @Transactional(rollbackFor = Exception.class)
     public int confirmPrice(Long topicId, BigDecimal guidedPrice, BigDecimal selfPrice,
                             Integer guidedInventory, BigDecimal leadCost, Integer teamSize) {
+        return confirmPrice(topicId, guidedPrice, selfPrice, guidedInventory, leadCost, teamSize, null);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int confirmPrice(Long topicId, BigDecimal guidedPrice, BigDecimal selfPrice,
+                            Integer guidedInventory, BigDecimal leadCost, Integer teamSize,
+                            java.util.Map<Long, BigDecimal> ticketPrices) {
+        boolean perTicket = ticketPrices != null && !ticketPrices.isEmpty();
+        if (perTicket) {
+            // 第四轮(多票价):地板与必亏闸按最低那张票判 —— 最低价过了,其余都过。不信任前端另传的 guidedPrice。
+            BigDecimal lowest = null;
+            for (BigDecimal p : ticketPrices.values()) {
+                if (p == null) throw new IllegalStateException("每张票都要填写终价");
+                if (lowest == null || p.compareTo(lowest) < 0) lowest = p;
+            }
+            guidedPrice = lowest;
+        }
         // [资损·TOCTOU] 行锁读主题,与 acceptInviteWithLock 的行锁串行:确保"读单算地板→lifecycle=3"
         // 期间无并发 acceptInvite 挤入新分成单,消除锁价快照与结算阵容不一致的悬空窗。
         CmsTopic topic = cmsTopicMapper.selectCmsTopicByIdForUpdate(topicId);
@@ -434,17 +477,20 @@ public class PricingServiceImpl implements IPricingService {
             List<OmsTicket> authored = (existing == null || existing.isEmpty())
                     && Integer.valueOf(ProductType.ORIENTEERING).equals(topic.getProductType())
                     ? authoredCityTickets(topicId) : java.util.Collections.<OmsTicket>emptyList();
+            if (perTicket) assertCoversAuthored(authored, ticketPrices);
             if (!authored.isEmpty()) {
                 // P-01:编辑器发的城市定向票不带 sub_type,它们本身就是有人带的场次票(带时间、集合点、库存)。
                 // 原来这里会另插一张无时间的「有人带」票 ⇒ 开售终审恒拒「ticket.startTime 与 ticket.endTime 必须同时存在」。
                 // 现在沿用作者的票:不新插、不改库存。
                 // P-34(第三轮):主办方在定价页确认的终价写进作者的票 —— 原来只校验不写,确认 ¥79 后票还是作者填的 ¥69,
                 // 玩家实际按旧价付款。终价已在上面按地板价校验过。
+                // 第四轮:作者发了几张不同价的票时,每张写自己的终价(逐张已按地板校验),库存不动。
                 for (OmsTicket a : authored) {
-                    if (a.getPrice() != null && a.getPrice().compareTo(guidedPrice) == 0) continue;
+                    BigDecimal price = perTicket ? ticketPrices.get(a.getId()) : guidedPrice;
+                    if (a.getPrice() != null && a.getPrice().compareTo(price) == 0) continue;
                     OmsTicket t = new OmsTicket();
                     t.setId(a.getId());
-                    t.setPrice(guidedPrice);
+                    t.setPrice(price);
                     t.setUpdateTime(DateUtils.getNowDate());
                     if (omsTicketMapper.updateOmsTicket(t) != 1) {
                         throw new IllegalStateException("票种「" + a.getName() + "」已变化，无法确认终价");
@@ -505,6 +551,15 @@ public class PricingServiceImpl implements IPricingService {
         // canonical15 含人工责任/授权事实，锁价流程无权替运营补值或自动提审。
         // 本事务最多推进到 PRICING；运营保存 canonical 草稿后显式提交开售审。
         return 1;
+    }
+
+    /** 逐张定价必须恰好覆盖作者的全部票:多一张(别的主题/已删)、少一张(页面过期)都拒。 */
+    private static void assertCoversAuthored(List<OmsTicket> authored, java.util.Map<Long, BigDecimal> ticketPrices) {
+        java.util.Set<Long> ids = new java.util.HashSet<>();
+        for (OmsTicket a : authored) ids.add(a.getId());
+        if (authored.isEmpty() || !ids.equals(ticketPrices.keySet())) {
+            throw new IllegalStateException("票种已变化，请刷新后重新确认终价");
+        }
     }
 
     private static BigDecimal nz(BigDecimal v) {
