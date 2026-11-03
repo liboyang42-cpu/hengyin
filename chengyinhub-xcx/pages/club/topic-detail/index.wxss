@@ -215,7 +215,8 @@
 /* 弹层里补的填写位(组件只给了 slot) */
 .ctd-director-field { display: flex; flex-direction: column; gap: var(--cy-space-2); margin-top: var(--cy-space-3); }
 .ctd-director-field__label { font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
-.ctd-director-field__input { min-height: 120rpx; padding: var(--cy-space-3); border-radius: var(--cy-radius-md); background: var(--cy-color-bg-raised); color: var(--cy-color-text-primary); font-size: var(--cy-type-body); line-height: 1.5; }
+/* C-04 R4:textarea 原生默认宽 300px,与上方章节卡同宽 */
+.ctd-director-field__input { box-sizing: border-box; width: 100%; min-height: 120rpx; padding: var(--cy-space-3); border-radius: var(--cy-radius-md); background: var(--cy-color-bg-raised); color: var(--cy-color-text-primary); font-size: var(--cy-type-body); line-height: 1.5; }
 .ctd-director-field__picker { min-height: var(--cy-btn-h); display: flex; align-items: center; padding: 0 var(--cy-space-3); border-radius: var(--cy-radius-md); background: var(--cy-color-bg-raised); color: var(--cy-color-text-primary); font-size: var(--cy-type-body); }
 .ctd-director-field__acts { display: flex; gap: var(--cy-space-2); }
 .ctd-director-field__act { flex: 1; min-height: var(--cy-btn-h); display: flex; align-items: center; justify-content: center; border-radius: var(--cy-radius-pill); background: var(--cy-color-bg-raised); color: var(--cy-color-text-primary); font-size: var(--cy-type-body); }
