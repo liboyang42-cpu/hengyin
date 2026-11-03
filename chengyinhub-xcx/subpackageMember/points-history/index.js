@@ -15,6 +15,7 @@ Page({
     filters: FILTERS,
     filter: 'all',
     filterEmpty: false,
+    paged: false,
     refreshing: false,
   },
   onLoad() { this.load() },
@@ -56,6 +57,7 @@ Page({
       groups: groupByMonth(list.slice(0, this._shown)),
       hasMore: this._shown < list.length,
       filterEmpty: !list.length,
+      paged: list.length > PAGE_SIZE,
       state: all.length ? 'ready' : 'empty',
     })
   },

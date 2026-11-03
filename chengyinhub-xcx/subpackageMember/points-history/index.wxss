@@ -3,17 +3,20 @@ page { background: var(--cy-color-bg-page); }
 /* 2026-11-02 round2:与我的订单/我的参与同一家:标题直接接筛选(顶部不再多垫 space-3),空态在标题下方剩余空间居中(fill) */
 .ph__frame { flex: 1; display: flex; flex-direction: column; }
 .ph__body { flex: 1; display: flex; flex-direction: column; padding: 0 var(--cy-page-x, var(--cy-space-4)) calc(var(--cy-space-6) + env(safe-area-inset-bottom)); }
-.ph-row { display: flex; align-items: center; gap: var(--cy-space-3); padding: var(--cy-space-3) 0; border-bottom: 1rpx solid var(--cy-color-border-subtle); }
+.ph-row { display: flex; align-items: flex-start; gap: var(--cy-space-3); padding: var(--cy-space-3) var(--cy-space-4); border-bottom: 1rpx solid var(--cy-color-border-subtle); }
+.ph-row:last-child { border-bottom: none; }
 .ph-row__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4rpx; }
+.ph-row__side { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 4rpx; }
 .ph-row__reason { font-size: var(--cy-type-body); }
-.ph-row__sub { font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
-.ph-row__delta { flex: none; font-size: var(--cy-type-card-title); font-weight: 700; }
+.ph-row__sub { font-size: var(--cy-type-caption); color: var(--cy-color-text-secondary); font-variant-numeric: tabular-nums; }
+.ph-row__delta { font-size: var(--cy-type-body); font-weight: 700; font-variant-numeric: tabular-nums; }
 .ph-row__delta.is-income { color: var(--cy-color-brand); }
 .ph-row__delta.is-expense { color: var(--cy-color-text-primary); }
 .ph__more { padding: var(--cy-space-4) 0; text-align: center; font-size: var(--cy-type-body); color: var(--cy-color-text-secondary); }
 /* BL-04 月份分组 */
-.ph-group { margin-top: var(--cy-space-4); }
-.ph-group__title { display: block; padding-bottom: var(--cy-space-1); font-size: var(--cy-type-label); font-weight: 700; color: var(--cy-color-text-secondary); }
+.ph-group { margin-top: var(--cy-space-5); }
+.ph-group__card { background: var(--cy-color-bg-surface); border: 1rpx solid var(--cy-color-border-subtle); border-radius: var(--cy-radius-lg); overflow: hidden; }
+.ph-group__title { display: block; padding-bottom: var(--cy-space-2); font-size: var(--cy-type-label); font-weight: 700; color: var(--cy-color-text-secondary); }
 
 /* pm20 */
 /* 2026-10-23 页面动效(utils/page-motion.js):容器 --pm-* 置 1 时先隐着,再依次浮上来;静止时无过渡,按压反馈不受影响;减少动态效果时从不触发 */

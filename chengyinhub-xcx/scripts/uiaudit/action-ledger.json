@@ -1431189,7 +1431189,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/points-history/index.js:22"
+        "staticSource": "subpackageMember/points-history/index.js:23"
       }
     },
     {
@@ -1431256,11 +1431256,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/points-history/index.js:62"
+        "staticSource": "subpackageMember/points-history/index.js:64"
       }
     },
     {
-      "id": "subpackageMember/points-history/index.wxml:26:bindtap:loadMore:3",
+      "id": "subpackageMember/points-history/index.wxml:31:bindtap:loadMore:3",
       "route": "subpackageMember/points-history/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1431283,7 +1431283,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "loadMore",
-        "line": 26,
+        "line": 31,
         "selectorHint": ".ph__more",
         "visibleCondition": "{{hasMore}}",
         "disabledCondition": null,
@@ -1431323,7 +1431323,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/points-history/index.js:70"
+        "staticSource": "subpackageMember/points-history/index.js:72"
       }
     },
     {
@@ -1431393,7 +1431393,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/points-history/index.js:76"
+        "staticSource": "subpackageMember/points-history/index.js:78"
       }
     },
     {
