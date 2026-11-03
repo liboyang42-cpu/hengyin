@@ -48,7 +48,7 @@
               <text class="v3-hero-mem-txt">玩家</text>
               <block wx:if="{{city}}">
                 <view wx:if="{{!cityPicker}}" class="v3-hero-mem-loc" catchtap="onTapHomeCity" aria-role="button" aria-label="重新定位城市：{{city}}" hover-class="cy-pressed" hover-stay-time="80">· {{city}}</view>
-                <cy-dropdown wx:else mode="selector" range="{{manualCityOptions}}" value="{{cityPickerIndex}}" bind:change="onManualCityChange" aria-label="选择城市">
+                <cy-dropdown wx:else mode="selector" range="{{manualCityOptions}}" value="{{cityPickerIndex}}" panel-width="{{160}}" bind:change="onManualCityChange" aria-label="选择城市">
                   <text class="v3-hero-mem-loc">· {{city}}</text>
                 </cy-dropdown>
               </block>
@@ -58,7 +58,7 @@
             </view>
             <!-- Round5 #8:游客(没有昵称,上面这行不出)也能看到并切换城市:同一行样式,只放现有选城下拉 -->
             <view wx:elif="{{city && cityPicker}}" class="v3-hero-guest-city flex-ac">
-              <cy-dropdown mode="selector" range="{{manualCityOptions}}" value="{{cityPickerIndex}}" bind:change="onManualCityChange" aria-label="选择城市">
+              <cy-dropdown mode="selector" range="{{manualCityOptions}}" value="{{cityPickerIndex}}" panel-width="{{160}}" bind:change="onManualCityChange" aria-label="选择城市">
                 <text class="v3-hero-guest-city__txt">{{city}}</text>
               </cy-dropdown>
             </view>
