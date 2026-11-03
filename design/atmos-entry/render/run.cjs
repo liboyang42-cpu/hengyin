@@ -70,7 +70,7 @@ function serve() {
   const t0 = Date.now();
   // Painting the textures takes ~15 min in software Chrome; they are cached as PNG and reused.
   const haveTex = !flag('repaint') && fs.existsSync(path.join(texDir, 'china_mask.png'));
-  const info = await page.evaluate((o) => window.__boot(o), { width: W, height: H, cloudScale: 0.5, dumpTextures: !haveTex, cachedTextures: haveTex, texW: 4096, noiseN: 96 });
+  const info = await page.evaluate((o) => window.__boot(o), { width: W, height: H, cloudScale: Number(arg('cloud-scale', '1')), dumpTextures: !haveTex, cachedTextures: haveTex, texW: 4096, noiseN: 96 });
   console.log('setup', ((Date.now() - t0) / 1000).toFixed(1) + 's', info);
   if (!haveTex) {
     const tex = await page.evaluate(() => window.__tex);

@@ -278,7 +278,7 @@ const cloudFrag = /* glsl */ `
     vec4 dt = texture(tDetail, q * 3.1 + vec3(0.0, 0.0, uTime * 0.02));
     float df = dt.r * 0.625 + dt.g * 0.25 + dt.b * 0.125;
     df = mix(df, 1.0 - df, smoothstep(0.1, 0.6, h));
-    d = clamp(remap(d, df * 0.32, 1.0, 0.0, 1.0), 0.0, 1.0);
+    d = clamp(remap(d, df * 0.45, 1.0, 0.0, 1.0), 0.0, 1.0);
     return d * uDensity;
   }
 
@@ -305,7 +305,7 @@ const cloudFrag = /* glsl */ `
     vec3 sunCol = vec3(1.05, 1.0, 0.96) * 1.7;
     vec3 shadowCol = vec3(0.40, 0.36, 0.60);
     vec3 skyCol = vec3(0.86, 0.84, 1.0);
-    const float SIGMA = 6.0;
+    const float SIGMA = 14.0;
     for (int i = 0; i < N; i++) {
       float t = tA + ds * (float(i) + jitter);
       vec3 p = ro + rd * t;
