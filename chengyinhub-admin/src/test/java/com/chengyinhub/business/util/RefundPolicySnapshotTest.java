@@ -56,10 +56,13 @@ class RefundPolicySnapshotTest {
 
     // ------------------------------------------------------- 下单时:快照打不打
 
-    /** ③ 打快照:code/version/anchor/deadline 四列齐。③ 里 deadline == anchor(没有提前量)。 */
+    /**
+     * ③ 打快照:code/version/anchor/deadline 四列齐。2026-11-03 起有开始时间的票冻三档码(见
+     * {@code PassRefundTiersTest});这里是票缺开始时间时保留的旧码,deadline == 票的 end_time。
+     */
     @Test
     void snapshot_forExplorePass() {
-        RefundPolicy.Snapshot s = RefundPolicy.snapshotOnPurchase(PurchaseKind.EXPLORE_PASS, JUL_20);
+        RefundPolicy.Snapshot s = RefundPolicy.snapshotOnPurchase(PurchaseKind.EXPLORE_PASS, null, JUL_20);
 
         assertEquals(RefundPolicyCode.EXPLORE_END_100_0, s.code);
         assertEquals(Integer.valueOf(RefundPolicyCode.CURRENT_VERSION), s.version);
@@ -72,9 +75,9 @@ class RefundPolicySnapshotTest {
      */
     @Test
     void snapshot_onlyForExplorePass() {
-        assertNull(RefundPolicy.snapshotOnPurchase(PurchaseKind.GUIDED_TICKET, JUL_20), "① 不在首轮,不落码");
-        assertNull(RefundPolicy.snapshotOnPurchase(PurchaseKind.SELF_PLAY_PASS, JUL_20), "② 依赖 P0-04 的激活态,未落码");
-        assertNull(RefundPolicy.snapshotOnPurchase(null, JUL_20), "后台手工建单/独立活动无购买类型可推");
+        assertNull(RefundPolicy.snapshotOnPurchase(PurchaseKind.GUIDED_TICKET, JUL_16, JUL_20), "① 不在首轮,不落码");
+        assertNull(RefundPolicy.snapshotOnPurchase(PurchaseKind.SELF_PLAY_PASS, JUL_16, JUL_20), "② 依赖 P0-04 的激活态,未落码");
+        assertNull(RefundPolicy.snapshotOnPurchase(null, JUL_16, JUL_20), "后台手工建单/独立活动无购买类型可推");
     }
 
     /**
@@ -83,7 +86,7 @@ class RefundPolicySnapshotTest {
      */
     @Test
     void snapshot_nullAnchorSource_noSnapshot() {
-        assertNull(RefundPolicy.snapshotOnPurchase(PurchaseKind.EXPLORE_PASS, null));
+        assertNull(RefundPolicy.snapshotOnPurchase(PurchaseKind.EXPLORE_PASS, null, null));
     }
 
     // ------------------------------------------------------- 判定时:快照优先(本类心脏)

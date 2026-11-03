@@ -577,7 +577,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         // 分开写迟早分叉。锚点源(票的 end_time)卖票后还能被后台改,现取 = 追溯改写已售单的退款窗口。
         // 只落 ③(施工图:「P0-06 只需 ③ 的档位」);①② 返回 null ⇒ 不打快照 ⇒ 读侧回落现取。
         RefundPolicy.Snapshot rp = RefundPolicy.snapshotOnPurchase(
-                registration.getPurchaseKind(), ticket.getEndTime());
+                registration.getPurchaseKind(), ticket.getStartTime(), ticket.getEndTime());
         if (rp != null) {
             registration.setRefundPolicyCode(rp.code);
             registration.setRefundPolicyVersion(rp.version);
@@ -947,6 +947,13 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         // [P0-02] 自玩通行证恒为 ②。此前「是不是自玩票」只能靠 (owner_type=1 + ticket_id 为空 + expires_at 非空)
         // 的组合约定反推,没有任何一列直说 —— 现在有了。
         r.setPurchaseKind(PurchaseKind.SELF_PLAY_PASS);
+        // 2026-11-03 业主:自玩通行证与场次票同三档,钟 = 主题履约窗开始,下单即冻结(不追溯存量单)。
+        RefundPolicy.Snapshot passPolicy = RefundPolicy.snapshotSelfPlayPass(topic);
+        if (passPolicy != null) {
+            r.setRefundPolicyCode(passPolicy.code);
+            r.setRefundPolicyVersion(passPolicy.version);
+            r.setRefundDeadline(passPolicy.deadline);
+        }
         r.setCreateBy(memberId.toString());
         r.setCreateTime(new Date());
         if (cmsRegistrationMapper.insertCmsRegistration(r) != 1 || r.getId() == null) {
@@ -1022,10 +1029,15 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         BigDecimal pointsDeduct = BigDecimal.ZERO;
         BigDecimal memberDiscountYuan = BigDecimal.ZERO;
         StringBuilder ticketsKey = new StringBuilder();
+        // 2026-11-03 通行证三档:③ 自由探索票的退款钟 = 票的开始时间(与下单快照同一锚点)。
+        Date refundAnchor = activity == null ? null : activity.getStartDate();
 
         if (tickets == null || tickets.isEmpty()) {
             // 单票模式
             OmsTicket ticket = validateAndGetTicket(ticketId, ownerType, ownerId, inventoryHold != null);
+            if (sellerTopic != null && PurchaseKind.derive(ticketId, sellerTopic.getProductType()) == PurchaseKind.EXPLORE_PASS) {
+                refundAnchor = ticket.getStartTime();
+            }
             // F03 报价与报名同一可售口径:报价成功而下单被闸拒 = 用户走到末端才失败。
             if (activity != null && sellerTopic != null) assertRegistrationSellable(activity, sellerTopic, ticket, new Date());
             if (inventoryHold == null) assertClubReservationAvailable(clubBenefit, ticket, 1);
@@ -1080,14 +1092,14 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         // 不随时间翻转而使已发出的报价失效)。非场次单(主题路径)不下发 ⇒ 前端 tri-state 保持默认。
         if (activity != null) {
             boolean free = payAmount.signum() == 0 && pointsUsed == 0;
-            Date deadline = free ? activity.getStartDate() : RefundPolicy.sessionRefundDeadline(activity.getStartDate());
+            Date deadline = free ? activity.getStartDate() : RefundPolicy.sessionRefundDeadline(refundAnchor);
             result.setRefundDeadline(deadline);
             Date quotedAt = new Date();
             if (free) {
                 result.setRefundableNow(deadline == null ? null : quotedAt.before(deadline));
             } else {
                 // 2026-11-02 退款档位:集合前 24 小时以上全额、24 小时内 50%、开始后不退(RefundPolicy 唯一判定)。
-                BigDecimal ratio = RefundPolicy.sessionRefundRatioAt(activity.getStartDate(), quotedAt);
+                BigDecimal ratio = RefundPolicy.sessionRefundRatioAt(refundAnchor, quotedAt);
                 result.setRefundableNow(ratio == null ? null : ratio.signum() > 0);
                 result.setRefundPercentNow(ratio == null ? null
                         : ratio.multiply(BigDecimal.valueOf(100)).intValue());

@@ -169,20 +169,25 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
             rejectRefund(verified, r);
         }
         String ticketName = null;
+        BigDecimal cashRatio = BigDecimal.ONE;
         if (r.getOwnerType() != null && r.getOwnerType() == 1L) {
             CmsTopic topic = lockedOrder.topic();
             OmsTicket ticket = r.getTicketId() == null ? null : omsTicketMapper.selectOmsTicketById(r.getTicketId());
             if (ticket != null) ticketName = ticket.getName();
             RefundPolicy.Verdict v = RefundPolicy.evaluateTopicFulfillmentWindow(
-                    r.getPaymentStatus(), r.getVerificationStatus(), topic, ticket, new Date());
+                    r.getPaymentStatus(), r.getVerificationStatus(), topic, ticket,
+                    r.getRefundPolicyCode(), r.getRefundDeadline(), new Date());
             if (!v.refundable) {
                 rejectRefund(v, r);
+            }
+            // 2026-11-03:通行证三档,开始前 24 小时内只退实付的 50%。
+            if (v.partial()) {
+                cashRatio = v.ratio;
             }
         }
         // 活动/场次(ownerType=2):**集合时间前 24 小时可全额退,之后不退**(产品拍板 2026-09-15,5.9)。
         // 集合时间真源 = cms_activity.start_date;窗口由 RefundPolicy 一个判定出,别在这里再减 24h。
         // 2026-11-02 退款档位:场次票集合前 24 小时内只退实付的 50%(RefundPolicy 唯一判定),其余路径全额。
-        BigDecimal cashRatio = BigDecimal.ONE;
         if (r.getOwnerType() != null && r.getOwnerType() == 2L) {
             com.chengyinhub.business.domain.CmsActivity act = lockedOrder.activity();
             if (act != null) {
@@ -196,8 +201,10 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
                 }
             }
         }
-        return refundResolvingOrder(r, ticketName, cashRatio.compareTo(BigDecimal.ONE) < 0
-                        ? "用户申请退款(集合前24小时内,退50%)" : "用户申请退款", operatorMemberId, false, cashRatio)
+        String reason = cashRatio.compareTo(BigDecimal.ONE) >= 0 ? "用户申请退款"
+                : Long.valueOf(1L).equals(r.getOwnerType()) ? "用户申请退款(开始前24小时内,退50%)"
+                : "用户申请退款(集合前24小时内,退50%)";
+        return refundResolvingOrder(r, ticketName, reason, operatorMemberId, false, cashRatio)
                 ? CANCEL_REFUNDED : CANCEL_MANUAL_REVIEW;
     }
 
@@ -319,7 +326,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
             CmsRegistration r, com.chengyinhub.business.domain.CmsActivity activity) {
         return RefundPolicy.evaluate(2L, r.getPaymentStatus(), r.getVerificationStatus(),
                 null, null, null, activity.getStartDate(), r.getPurchaseKind(),
-                r.getRefundDeadline(), r.getPayableAmount(), r.getPointUsed(), new Date());
+                r.getRefundDeadline(), r.getRefundPolicyCode(), r.getPayableAmount(), r.getPointUsed(), new Date());
     }
 
     @Override
