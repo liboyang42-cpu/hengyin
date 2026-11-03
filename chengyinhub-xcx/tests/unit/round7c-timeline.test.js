@@ -60,6 +60,15 @@ test('单页模式守卫:登录/跳页/支付不再无声失败,给提示并走 
   assert.deepEqual(singlePage.installSinglePageGuard(api, notify), [], '不重复安装');
 });
 
+test('单页模式守卫:宿主 wx 对未知键返回函数(代理)时照样安装', () => {
+  const target = { getEnterOptionsSync: () => ({ scene: 1154 }), navigateTo: () => 'native' };
+  const api = new Proxy(target, { get: (t, k) => (k in t ? t[k] : () => {}) });
+  const notes = [];
+  assert.ok(singlePage.installSinglePageGuard(api, () => notes.push(1)).includes('navigateTo'));
+  assert.equal(api.navigateTo({}), undefined);
+  assert.equal(notes.length, 1);
+});
+
 test('app.js 只在单页模式安装守卫,单页模式不跳隐私页', () => {
   const src = read('app.js');
   assert.match(src, /if \(singlePage\.isSinglePageMode\(wx\)\) \{\n\s*singlePage\.installSinglePageGuard\(wx,/);

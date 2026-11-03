@@ -15,6 +15,8 @@ const SINGLE_PAGE_NOTICE = '请前往小程序使用完整服务';
 const GUARDED_APIS = ['login', 'navigateTo', 'redirectTo', 'reLaunch', 'switchTab', 'navigateBack',
   'navigateToMiniProgram', 'requestPayment', 'requestOrderPayment'];
 const NOTICE_INTERVAL_MS = 1500;
+// 已安装过的 wx 对象。不在 wx 上挂标记属性:某些宿主(含走查 rig 的 wx 代理)对未知键返回函数,标记永远为真。
+const installedApis = new WeakSet();
 
 function entryScene(wxApi) {
   const api = wxApi || (typeof wx !== 'undefined' ? wx : null);
@@ -45,7 +47,8 @@ function createNotifier(show, now) {
 // 只在单页模式下拦截:每次调用现查场景,完整模式原样透传。返回实际包住的接口名。
 function installSinglePageGuard(wxApi, notify) {
   const api = wxApi;
-  if (!api || api.__cySinglePageGuard) return [];
+  if (!api || (typeof api !== 'object' && typeof api !== 'function') || installedApis.has(api)) return [];
+  installedApis.add(api);
   const wrapped = [];
   GUARDED_APIS.forEach(function (name) {
     const original = api[name];
@@ -65,7 +68,6 @@ function installSinglePageGuard(wxApi, notify) {
       if (api[name] === guarded) wrapped.push(name);
     } catch (e) { /* 不可写就保持原样;登录闸那条路仍有提示 */ }
   });
-  try { api.__cySinglePageGuard = true; } catch (e) {}
   return wrapped;
 }
 
