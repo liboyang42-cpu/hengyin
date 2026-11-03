@@ -491,6 +491,22 @@ public class ApiClubController extends BaseController {
         return createClubForMember(memberId, body, null);
     }
 
+    /**
+     * C-14:创建页离开名称输入框时先查一次名(只读,不占名)。与创建同一口径;
+     * 创建时仍会再查,并由 uk_club_holding_name 兜底。
+     */
+    @Operation(summary = "创建俱乐部前查名(只读)")
+    @PostMapping("/name-check")
+    public AjaxResult nameCheck(@RequestBody(required = false) Club body) {
+        Long memberId;
+        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        String reason = clubService.checkNameForCreate(body == null ? null : body.getName(), memberId);
+        Map<String, Object> data = new java.util.LinkedHashMap<>();
+        data.put("available", reason == null);
+        data.put("reason", reason == null ? "" : reason);
+        return AjaxResult.success(data);
+    }
+
     @Operation(summary = "我的俱乐部申请状态")
     @PostMapping("/my-apply")
     public AjaxResult myApply() {

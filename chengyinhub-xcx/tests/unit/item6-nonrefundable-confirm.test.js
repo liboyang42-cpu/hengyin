@@ -18,7 +18,7 @@ test('退款性走实例属性 _quoteRefundableNow,绝不进 data(U4 死数据�
 })
 
 test('refreshQuote 每次重报价都作废旧确认与旧退款性', () => {
-  const reset = baomingJs.match(/_quoteRetried = false;\s*\n\s*that\._nonRefundableConfirmed = false;\s*\n\s*that\._quoteRefundableNow = null;\s*\n\s*that\.setData\(\{ quoteReady: false \}\);/)
+  const reset = baomingJs.match(/_quoteRetried = false;\s*\n\s*that\._nonRefundableConfirmed = false;\s*\n\s*that\._quoteRefundableNow = null;\s*\n\s*that\.setData\(\{ quoteReady: false(, quoteRefusal: '')? \}\);/)
   assert.ok(reset, 'refreshQuote 开头必须同时清 _nonRefundableConfirmed 与 _quoteRefundableNow')
 })
 
@@ -64,7 +64,12 @@ test('跨端契约:后端 quote 出参必须带 refundDeadline/refundableNow,且
   assert.match(svc, /Date refundAnchor = activity == null \? null : activity\.getStartDate\(\);/)
   assert.match(svc, /refundAnchor = ticket\.getStartTime\(\);/)
   assert.match(svc, /boolean free = payAmount\.signum\(\) == 0 && pointsUsed == 0;/)
-  assert.match(svc, /Date deadline = free \? activity\.getStartDate\(\) : RefundPolicy\.sessionRefundDeadline\(refundAnchor\);/)
+  // P-07(l3)+ 通行证三档(pay-gate):报价与下单走同一个 snapshotOnPurchase;三档快照 ⇒ 钟 = refundAnchor,
+  // 旧口径快照(③ 票缺开始时间)⇒ 读冻结的有效期截止点,否则回落场次钟。
+  assert.match(svc, /Date deadline = free \? activity\.getStartDate\(\) : purchaseRefundDeadline != null \? purchaseRefundDeadline\s*: RefundPolicy\.sessionRefundDeadline\(refundAnchor\);/)
+  assert.match(svc, /RefundPolicy\.snapshotOnPurchase\(\s*PurchaseKind\.derive\(ticketId,[^;]*ticket\.getStartTime\(\), ticket\.getEndTime\(\)\);/)
+  assert.match(svc, /RefundPolicy\.isTieredPassSnapshot\(refundSnapshot\.code, refundSnapshot\.deadline\)/)
+  assert.match(svc, /boolean refundable = !quotedAt\.after\(purchaseRefundDeadline\);/)
   // 2026-11-02 退款档位:收费单的可退性与比例都从 RefundPolicy.sessionRefundRatioAt 这一口钟来
   assert.match(svc, /result\.setRefundableNow\(deadline == null \? null : quotedAt\.before\(deadline\)\);/)
   assert.match(svc, /RefundPolicy\.sessionRefundRatioAt\(refundAnchor, quotedAt\)/)

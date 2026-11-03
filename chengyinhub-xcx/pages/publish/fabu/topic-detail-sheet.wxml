@@ -132,7 +132,7 @@
         <view class="node-card__main"><text class="node-card__title">没有实际效果时也消耗</text><text class="node-card__value pd-summary-2l">{{runtimeConsumeOnNoEffectDisabledReason || (runtimeConsumeOnNoEffect ? '数值已满时使用恢复，仍扣费用并计一次' : '数值已满时使用恢复，不扣费用、不计次数')}}</text></view>
         <cy-switch checked="{{runtimeConsumeOnNoEffect}}" disabled="{{!!runtimeConsumeOnNoEffectDisabledReason}}" bindchange="onThemeConsumeOnNoEffect" accessibility-label="没有实际效果时也消耗" />
       </view>
-      <cy-inline-error wx:if="{{runtimeValueError}}" title="{{runtimeValueError}}" />
+      <cy-inline-error kind="error" wx:if="{{runtimeValueError}}" title="{{runtimeValueError}}" />
     </view>
     <!-- 玩法规则（R3 修正）：只留主题级的进行方式、结果卡与再玩一次。恢复/救助、公共设施、运行结局不在主题设置里配置——
          恢复写在独立玩法模板的原有效果里，设施即带核验/费用/次数/效果的玩法模板，结局归最终章。 -->
@@ -215,7 +215,7 @@
           <input class="pd-completion-rule__input {{completionRuleError || errors.completionRule ? 'is-error' : ''}}" type="number" value="{{completionRequiredCount}}" bindinput="onCompletionRequiredCountInput" />
           <text>/ {{totalNodes || 0}} 个节点即通关</text>
         </view>
-        <cy-inline-error class="pd-completion-rule__error" wx:if="{{completionRuleError || errors.completionRule}}" title="{{completionRuleError || errors.completionRule}}" />
+        <cy-inline-error kind="error" class="pd-completion-rule__error" wx:if="{{completionRuleError || errors.completionRule}}" title="{{completionRuleError || errors.completionRule}}" />
       </block>
     </view>
 

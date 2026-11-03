@@ -24,6 +24,12 @@ public interface IClubService
 
     public int insertClub(Club club);
 
+    /**
+     * C-14:只读查名,与创建时的 requireNameFree 同一口径(待审或在营、未删除的俱乐部占名,去掉首尾空格比较)。
+     * ownerToSkip 是本人:本人同名创建按重放处理,不算被占。返回 null 表示可用,否则是给用户看的原因。
+     */
+    public String checkNameForCreate(String name, Long ownerToSkip);
+
     /** 同事务锁 owner 会员行、校验名下俱乐部配额并插入；返回插入后的名下数量。 */
     public int insertClubWithinOwnerQuota(Club club, int maxOwnedClubs);
 

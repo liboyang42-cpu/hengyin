@@ -78,6 +78,15 @@ public class ApiRegistrationController extends BaseController {
     @Autowired
     private com.chengyinhub.business.service.support.RegistrationCancellationReadService cancellationReadService;
 
+    /**
+     * P-15：售票闸抛的内部码换成用户读得懂的一句话；其余业务句原样交给 AjaxResult(仍过 UserSafeMessage)。
+     * C-22(round 3 业主):每人限购已整体取消,闸不再抛限购码,这里也不再映射。
+     */
+    static String checkoutRefusalMessage(String raw) {
+        if ("SALE_SNAPSHOT_MISSING".equals(raw)) return "该主题的开售信息还没准备好，暂不能报名";
+        return raw;
+    }
+
     @Operation(summary = "报名报价(M0-1 实扣一致):不落库,返回应付/抵扣明细+quoteSign")
     @PostMapping("/quote")
     public AjaxResult quote(@RequestBody RegistrationRequest param) {
@@ -96,7 +105,7 @@ public class ApiRegistrationController extends BaseController {
         } catch (RegistrationCheckoutException e) {
             return new AjaxResult(e.getCode(), e.getMessage());
         } catch (Exception e) {
-            return AjaxResult.error(e.getMessage());
+            return AjaxResult.error(checkoutRefusalMessage(e.getMessage()));
         }
     }
 
@@ -147,7 +156,7 @@ public class ApiRegistrationController extends BaseController {
                     member_id, param == null ? null : param.getOwnerType(),
                     param == null ? null : param.getOwnerId(), param == null ? null : param.getTicketId(),
                     param == null ? null : param.getRequestId(), e);
-            return AjaxResult.error(e.getMessage());
+            return AjaxResult.error(checkoutRefusalMessage(e.getMessage()));
         }
     }
 

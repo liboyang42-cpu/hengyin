@@ -511,10 +511,9 @@ Page({
       const original = authorWrites.pending(wx, authorWrites.ownerOf(app), this._activityWriteBucket());
       if (original) { this.sendData(original.body); return; }
     } catch (error) { this.setData({ submitError: error.message }); return; }
-    if (!this.validateForm()) {
-      cyToast('请完善表单信息')
-      return
-    }
+    // 第四轮(业主:输入问题只在字段下方红字说):validateForm 已把每条问题写在对应字段下面,不再另弹提示。
+    // (商家主办「票价只能是 0」的拦截已由 pay-gate 撤掉,这里不再带回。)
+    if (!this.validateForm()) return
     this.syncActivityIdentity()
     if (this.data.identityRequired && !this.data.identityRegistered) {
       this.registerActivityIdentity()

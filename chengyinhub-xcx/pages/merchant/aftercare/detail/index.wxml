@@ -183,7 +183,7 @@
           </view>
         </view>
       </block>
-      <cy-inline-error class="ac-field-error" wx:if="{{submitError}}" kind="data"
+      <cy-inline-error class="ac-field-error" wx:if="{{submitError}}" kind="error"
         title="售后处理未提交" sub="{{submitError}}" />
     </view>
     <view slot="footer" class="ac-sheet-footer">

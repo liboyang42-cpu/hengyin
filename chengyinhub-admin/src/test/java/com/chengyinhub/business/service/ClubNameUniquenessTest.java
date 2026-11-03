@@ -164,6 +164,47 @@ class ClubNameUniquenessTest {
         assertEquals(1, jdbc.queryForObject("select count(*) from club where name='夜跑团'", Integer.class));
     }
 
+    // C-14:创建页离开名称框时的只读查名,与 insertClubWithinOwnerQuota 同一口径
+    @Test
+    void nameCheckReportsANameAnotherClubHoldsWithTheSameReasonAsCreate() {
+        club(60, OTHER, "夜跑团", 1, 0);
+
+        assertEquals(TAKEN, clubService.checkNameForCreate(" 夜跑团 ", OWNER));
+        assertEquals(0, ownedClubCount());
+    }
+
+    @Test
+    void nameCheckFollowsTheCreateRuleForPendingRejectedDissolvedAndOwnNames() {
+        club(61, OTHER, "待审团", 0, 0);
+        club(62, OTHER, "驳回团", 2, 0);
+        club(63, OTHER, "解散团", 1, 2);
+        club(64, OWNER, "自己团", 1, 0);
+
+        assertEquals(TAKEN, clubService.checkNameForCreate("待审团", OWNER));
+        assertEquals(null, clubService.checkNameForCreate("驳回团", OWNER));
+        assertEquals(null, clubService.checkNameForCreate("解散团", OWNER));
+        // 本人同名按重放处理,创建不拒,查名也不报占用
+        assertEquals(null, clubService.checkNameForCreate("自己团", OWNER));
+        assertEquals(TAKEN, clubService.checkNameForCreate("自己团", OTHER));
+        assertEquals("请填写俱乐部名称", clubService.checkNameForCreate("  ", OWNER));
+    }
+
+    @Test
+    void nameCheckAgreesWithCreateOnEveryCase() {
+        club(65, OTHER, "夜跑团", 1, 0);
+        for (String name : new String[] {"夜跑团", "晨跑团"}) {
+            String reason = clubService.checkNameForCreate(name, OWNER);
+            String created;
+            try {
+                clubService.insertClubWithinOwnerQuota(request(name), 2);
+                created = null;
+            } catch (ServiceException e) {
+                created = e.getMessage();
+            }
+            assertEquals(created, reason, name);
+        }
+    }
+
     private void club(long id, long memberId, String name, long status, int delFlag) {
         jdbc.update("insert into club(id,member_id,name,status,del_flag) values (?,?,?,?,?)",
                 id, memberId, name, status, delFlag);

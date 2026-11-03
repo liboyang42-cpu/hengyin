@@ -93,6 +93,9 @@ const STATES = {
   ended:     { text: '已结束',  primary: '查看结算报告',  disabled: false, verify: true,  reject: false, sessions: true  },
 };
 
+// cms_topic.lifecycle 1 招募中 / 2 定价与开售审核中:都还不能报名(3 SELLING 才能)。
+const NOT_ON_SALE_TEXT = { 1: '招募中 · 未开售', 2: '未开售 · 待开售审核' };
+
 // 场次状态(导演台 projection.status / topic-manage-stats.sessionStatus 同一套枚举)→ 页面六态
 const SESSION_STATUS_KEYS = {
   NOT_PREPARED: 'confirmed', DRAFT: 'confirmed',
@@ -378,7 +381,8 @@ Page({
       loadError: false,
       statusKey,
       // 重放详情(统计晚到/按场次重拉)时别把 projection 给的「已取消」冲回「已结束」
-      statusText: statusKey === 'ended' && this._sessionCancelled ? '已取消' : state.text,
+      // C-01/P-01:还在招募或定价/开售审核里的主题没开售,不能写「已确认」让主理人以为成员能报名了
+      statusText: statusKey === 'ended' && this._sessionCancelled ? '已取消' : (statusKey === 'confirmed' && NOT_ON_SALE_TEXT[Number(raw.lifecycle)]) || state.text,
       primary: plan.primary,
       sessionHint: plan.sessionHint,
       showReject: state.reject && !!raw.rejectReason,

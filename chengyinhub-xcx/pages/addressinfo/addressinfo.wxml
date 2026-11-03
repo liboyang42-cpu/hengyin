@@ -21,6 +21,7 @@
                value="{{form.fullName}}" bindinput="onInputChange" data-field="fullName" />
       </view>
     </view>
+    <cy-inline-error class="add_err" wx:if="{{fieldErrors.fullName}}" kind="error" title="{{fieldErrors.fullName}}" />
     <view class="add_li">
       <view class="add_li_left">手机号<text class="req" aria-hidden="true">*</text></view>
       <view class="add_li_right">
@@ -28,6 +29,7 @@
                value="{{form.mobilePhone}}" bindinput="onInputChange" data-field="mobilePhone" />
       </view>
     </view>
+    <cy-inline-error class="add_err" wx:if="{{fieldErrors.mobilePhone}}" kind="error" title="{{fieldErrors.mobilePhone}}" />
     <!-- <view class="add_li switch-li">
       <view class="add_li_left">设为默认地址</view>
       <view class="add_li_right">

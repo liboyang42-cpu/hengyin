@@ -30,6 +30,32 @@ class ExploreSaleSnapshotGateTest {
                 () -> ExploreSaleSnapshotGate.assertSnapshotFrozen(current, snapshots, registrations));
     }
 
+    /**
+     * C-22 集成(2026-11-03):l3 当初按「按场次限购」写了这条;round 3 业主改为取消全部「每人限 1 张」(含探店日),
+     * 以 l2 的实现为准。同一场景改证:普通自由探索与四店探店日快照都不再按账号数票,只校验快照、只锁主题行。
+     */
+    @Test
+    void ordinaryFreeExploreAndShopDayNoLongerCountTicketsPerAccount() throws Exception {
+        TopicSaleSnapshotMapper snapshots = mock(TopicSaleSnapshotMapper.class);
+        CmsRegistrationMapper registrations = mock(CmsRegistrationMapper.class);
+        CmsTopic topic = topic(Date.from(Instant.parse("2026-11-01T00:00:00Z")));
+        when(registrations.lockExploreTopicForUpdate(9L)).thenReturn(9L);
+        com.fasterxml.jackson.databind.node.ObjectNode value = TopicSaleCanonicalTestFixture.json();
+        ((com.fasterxml.jackson.databind.node.ObjectNode) value.path("completionPolicy"))
+                .put("evidenceRule", "ALL_REQUIRED_CHAPTERS");
+        com.chengyinhub.business.domain.TopicSaleSnapshot ordinary = new com.chengyinhub.business.domain.TopicSaleSnapshot();
+        ordinary.setSchemaVersion(com.chengyinhub.business.domain.snapshot.TopicSaleCanonicalV1.SCHEMA_VERSION);
+        ordinary.setCanonicalJson(new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(value));
+        when(snapshots.selectSnapshotByTopicId(9L)).thenReturn(ordinary);
+
+        assertDoesNotThrow(() -> ExploreSaleSnapshotGate.assertSnapshotFrozen(topic, snapshots, registrations));
+
+        when(snapshots.selectSnapshotByTopicId(9L)).thenReturn(TopicSaleCanonicalTestFixture.snapshot(9L));
+        assertDoesNotThrow(() -> ExploreSaleSnapshotGate.assertSnapshotFrozen(topic, snapshots, registrations));
+        org.mockito.Mockito.verify(registrations, org.mockito.Mockito.times(2)).lockExploreTopicForUpdate(9L);
+        org.mockito.Mockito.verifyNoMoreInteractions(registrations);
+    }
+
     private CmsTopic topic(Date sellingStartedAt) {
         CmsTopic topic = new CmsTopic();
         topic.setId(9L);

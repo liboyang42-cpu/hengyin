@@ -43,6 +43,8 @@ Page({
     clubType: '',
     activityPrefs: [],
     name: '',
+    // C-14:离开名称框或点「下一步」时查名的结果;非空时名称下方显示红 * 与原因
+    nameError: '',
     logo: '',
     cover: '',
     description: '',
@@ -239,15 +241,53 @@ Page({
 
   onNext() {
     if (this._submitting || this.data.bootstrapState !== 'ready' || !this.data.canNext) return;
+    if (this.data.step === 3) {
+      // C-14:进下一步前先查名;被占就停在这一步并显示原因。创建时服务端仍会再查一次。
+      var that = this;
+      this.checkName(function (free) { if (free && that.data.step === 3) that.refreshStep(4); });
+      return;
+    }
     if (this.data.step < 4) { this.refreshStep(this.data.step + 1); }
     else { this.submit(); }
+  },
+
+  onNameBlur() { this.checkName(); },
+
+  // C-14:只读查名(/api/club/name-check,与创建同一口径)。查不到结果(网络等)不拦人,交给创建时的终检。
+  checkName(done) {
+    var name = String(this.data.name || '').trim();
+    var finish = typeof done === 'function' ? done : function () {};
+    if (!name) { finish(false); return; }
+    if (this._nameCheckPending === name) return;
+    this._nameCheckPending = name;
+    var epoch = (this._nameCheckEpoch || 0) + 1;
+    this._nameCheckEpoch = epoch;
+    var that = this;
+    function settle(reason) {
+      if (epoch !== that._nameCheckEpoch) return;
+      that._nameCheckPending = '';
+      if (String(that.data.name || '').trim() !== name) return;
+      that.setData({ nameError: reason || '' }, that.validate);
+      finish(!reason);
+    }
+    app.sendRequest({
+      url: '/api/club/name-check',
+      method: 'POST',
+      data: JSON.stringify({ name: name }),
+      header: { 'Content-Type': 'application/json' },
+      success: function (res) {
+        var data = res && res.code == '200' ? res.data : null;
+        settle(data && data.available === false ? String(data.reason || '俱乐部名称已被使用，请换一个') : '');
+      },
+      fail: function () { settle(''); },
+    });
   },
 
   validate() {
     var d = this.data, ok = false;
     if (d.step === 1) ok = !!d.clubType;
     else if (d.step === 2) ok = true;          // 路线方向选填
-    else if (d.step === 3) ok = !!d.name;      // 名称必填
+    else if (d.step === 3) ok = !!d.name && !d.nameError;      // 名称必填,且未被占用(C-14)
     else ok = !!d.city;                        // 城市必填(地理强相关)
     this.setData({ canNext: ok });
   },
@@ -257,7 +297,12 @@ Page({
     if (this._submitting) return;
     var f = e.currentTarget.dataset.field;
     var value = e.detail.value;
-    if (f === 'name') this.setData({ name: value }, this.validate);
+    if (f === 'name') {
+      // 改了名就作废上一次查名结果,离开输入框时再查
+      this._nameCheckEpoch = (this._nameCheckEpoch || 0) + 1;
+      this._nameCheckPending = '';
+      this.setData({ name: value, nameError: '' }, this.validate);
+    }
     else if (f === 'description') this.setData({ description: value }, this.validate);
     else if (f === 'city') this.setData({ city: value }, this.validate);
     else if (f === 'keywords') this.setData({ keywords: value }, this.validate);
@@ -303,7 +348,7 @@ Page({
       this.setData({
         step: missingStep,
         canNext: false,
-        submitErrorKind: 'data',
+        submitErrorKind: 'error',
         submitError: '请先' + missingLabel,
       });
       this.validate();

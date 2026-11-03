@@ -1032,12 +1032,23 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         // 2026-11-03 通行证三档:③ 自由探索票的退款钟 = 票的开始时间(与下单快照同一锚点)。
         Date refundAnchor = activity == null ? null : activity.getStartDate();
         boolean exploreAnchorSet = false;
+        // P-07/C-07(l3):报价必须读下单时会冻结的同一个点。③ 票缺开始时间时,下单冻结的是旧口径
+        // (有效期截止前全额),这里记下那个截止点,报价按它说,别再按集合钟说。
+        Date purchaseRefundDeadline = null;
 
         if (tickets == null || tickets.isEmpty()) {
             // 单票模式
             OmsTicket ticket = validateAndGetTicket(ticketId, ownerType, ownerId, inventoryHold != null);
-            if (sellerTopic != null && PurchaseKind.derive(ticketId, sellerTopic.getProductType()) == PurchaseKind.EXPLORE_PASS) {
-                refundAnchor = ticket.getStartTime();
+            // P-07/C-07 + 通行证三档:与 createRegistration 同一个 snapshotOnPurchase 判定。
+            RefundPolicy.Snapshot refundSnapshot = RefundPolicy.snapshotOnPurchase(
+                    PurchaseKind.derive(ticketId, sellerTopic == null ? null : sellerTopic.getProductType()),
+                    ticket.getStartTime(), ticket.getEndTime());
+            if (refundSnapshot != null) {
+                if (RefundPolicy.isTieredPassSnapshot(refundSnapshot.code, refundSnapshot.deadline)) {
+                    refundAnchor = refundSnapshot.deadline;
+                } else {
+                    purchaseRefundDeadline = refundSnapshot.deadline;
+                }
             }
             // F03 报价与报名同一可售口径:报价成功而下单被闸拒 = 用户走到末端才失败。
             if (activity != null && sellerTopic != null) assertRegistrationSellable(activity, sellerTopic, ticket, new Date());
@@ -1099,11 +1110,17 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         // 不随时间翻转而使已发出的报价失效)。非场次单(主题路径)不下发 ⇒ 前端 tri-state 保持默认。
         if (activity != null) {
             boolean free = payAmount.signum() == 0 && pointsUsed == 0;
-            Date deadline = free ? activity.getStartDate() : RefundPolicy.sessionRefundDeadline(refundAnchor);
+            Date deadline = free ? activity.getStartDate() : purchaseRefundDeadline != null ? purchaseRefundDeadline
+                    : RefundPolicy.sessionRefundDeadline(refundAnchor);
             result.setRefundDeadline(deadline);
             Date quotedAt = new Date();
             if (free) {
                 result.setRefundableNow(deadline == null ? null : quotedAt.before(deadline));
+            } else if (purchaseRefundDeadline != null) {
+                // ③ 旧口径快照(票缺开始时间):有效期截止前全额,之后不退 —— 与 RefundPolicy.evaluate 同口径。
+                boolean refundable = !quotedAt.after(purchaseRefundDeadline);
+                result.setRefundableNow(refundable);
+                result.setRefundPercentNow(refundable ? 100 : 0);
             } else {
                 // 2026-11-02 退款档位:集合前 24 小时以上全额、24 小时内 50%、开始后不退(RefundPolicy 唯一判定)。
                 BigDecimal ratio = RefundPolicy.sessionRefundRatioAt(refundAnchor, quotedAt);

@@ -168,6 +168,7 @@ class ClubOwnerTransferIdentityFlowTest {
                 mock(com.chengyinhub.business.service.impl.MemberIdentityService.class));
 
         TopicCreateDTO classic = new TopicCreateDTO();
+        classic.setImgUrl("media-asset:1"); // P-17:发布必须带封面
         classic.setName("转让后的经典定向");
         classic.setProductType(ProductType.ORIENTEERING);
         classic.setClubId(CLUB_ID);

@@ -92,7 +92,7 @@ Page({
     identityConsented: false,
     identityHint: publisherIdentity.CONSENT_TEXT,
     identityDoneHint: publisherIdentity.ALREADY_REGISTERED_HINT,
-    canNext: false,
+    canNext: false, fieldErrors: {}, hoursErrors: { days: '', time: '' }, // 第五轮 D:字段下方红字(键 = 字段名)
     submitting: false,
     submitError: '',
     submitErrorKind: '',
@@ -357,19 +357,46 @@ Page({
   },
   onInput(e) { var f = e.currentTarget.dataset.field;
     this.setData({ [f]: e.detail.value }, this.validate);
+    if (this.data.fieldErrors[f]) this.setData({ fieldErrors: Object.assign({}, this.data.fieldErrors, { [f]: '' }) });
   },
 
   // 置灰的「继续/提交」被点 → 报出本步第一条没交的必填,别让按钮静默地按不动。
+  // 第五轮 D(业主):填写类问题写在对应字段下方红字并滚到第一条;同意勾选仍按原样弹提示。
   onNextDisabledTap() {
     const d = this.data;
-    if (d.step === 1) toast(!d.name ? '请填写店铺名称' : '请填写联系电话');
-    else if (d.step === 2) toast(!d.address ? '请填写店铺地址' : '请选择营业时间');
-    else if (d.step === 3) toast('请上传营业执照');
-    else if (d.step === 4) {
-      // 第 4 步唯一拦人的项是经营者实名,报第一条不满足的原因(规则在 utils/publisher-identity.js)
-      const check = publisherIdentity.checkIdentityForm(this.identityForm());
-      if (!check.ok) toast(check.message);
+    const errors = {};
+    if (d.step === 1) {
+      if (!d.name) errors.name = '请填写店铺名称';
+      if (!d.phone) errors.phone = '请填写联系电话';
+    } else if (d.step === 2) {
+      if (!d.address) errors.address = '请填写店铺地址';
+      if (!d.businessTime) errors.businessTime = '请选择营业时间';
+    } else if (d.step === 3) {
+      if (!d.businessLicense) errors.businessLicense = '请上传营业执照';
+    } else if (d.step === 4) {
+      // 第 4 步唯一拦人的项是经营者实名(规则在 utils/publisher-identity.js)
+      const form = this.identityForm();
+      if (!publisherIdentity.identitySatisfied(form)) {
+        const fe = publisherIdentity.identityFieldErrors(form);
+        if (fe.realName) errors.realName = fe.realName;
+        if (fe.idCard) errors.idCard = fe.idCard;
+        // 姓名与证件都没问题时,唯一缺的是单独同意:属同意类,保留原提示。
+        if (!fe.realName && !fe.idCard && fe.consent) toast(fe.consent);
+      }
     }
+    const keys = APPLY_FIELD_ORDER.filter(function (k) { return errors[k]; });
+    if (!keys.length) return;
+    this.setData({ fieldErrors: Object.assign({}, d.fieldErrors, errors) });
+    this.scrollToField(keys[0]);
+  },
+
+  // 本页随页面整体滚动(.page 是 min-height,scroll-view 不限高),所以用 pageScrollTo;
+  // 顶部固定导航栏会盖住目标,向上让出导航栏高度再留一点间距。
+  scrollToField(key) {
+    if (typeof wx === 'undefined' || typeof wx.pageScrollTo !== 'function') return;
+    var d = this.data;
+    var navHeight = (Number(d.statusBarHeight) || 0) + (Number(d.navBarHeight) || 0);
+    wx.pageScrollTo({ selector: '#apply-field-' + key, duration: 250, offsetTop: -(navHeight + 12) });
   },
 
   validate() {
@@ -422,7 +449,8 @@ Page({
         that.setData({
           address: res.address || res.name || '',
           locationLat: res.latitude,
-          locationLng: res.longitude
+          locationLng: res.longitude,
+          'fieldErrors.address': ''
         }, that.validate);
       },
       fail: function (err) {
@@ -446,14 +474,14 @@ Page({
 
   // ===== 经营时间:周一~周日 + 起止时段(2026-07-31) =====
   openHoursPicker() {
-    this.setData({ hoursPickerShow: true });
+    this.setData({ hoursPickerShow: true, hoursErrors: { days: '', time: '' } });
   },
   closeHoursPicker() { this.setData({ hoursPickerShow: false }); },
   toggleHoursDay(e) {
     var i = e.currentTarget.dataset.index;
     var days = this.data.hoursDraft.days.slice();
     days[i] = Object.assign({}, days[i], { on: !days[i].on });
-    this.setData({ 'hoursDraft.days': days });
+    this.setData({ 'hoursDraft.days': days, 'hoursErrors.days': '' });
   },
   openHoursTime(e) {
     const field = e.currentTarget.dataset.field;
@@ -461,16 +489,17 @@ Page({
     this.selectComponent('#hours-' + field).open();
   },
   onHoursStartChange(e) {
-    this.setData({ 'hoursDraft.start': e.detail.value });
+    this.setData({ 'hoursDraft.start': e.detail.value, 'hoursErrors.time': '' });
   },
   onHoursEndChange(e) {
-    this.setData({ 'hoursDraft.end': e.detail.value });
+    this.setData({ 'hoursDraft.end': e.detail.value, 'hoursErrors.time': '' });
   },
   confirmHoursPicker() {
     var d = this.data.hoursDraft;
     var onDays = d.days.filter(function (x) { return x.on; });
+    // 第五轮 D:两条问题写在弹层对应一栏下方红字,不再弹提示;拦截不变。
     if (!onDays.length) {
-      toast('至少选择一个经营日');
+      this.setData({ 'hoursErrors.days': '至少选择一个经营日' });
       return;
     }
     // 经营时间【允许跨夜】(酒吧 20:00-02:00 是真实场景),但必须说清是次日,
@@ -478,14 +507,15 @@ Page({
     var startMin = timeOptions.minutesOfDay.apply(null, d.start.split(':'));
     var endMin = timeOptions.minutesOfDay.apply(null, d.end.split(':'));
     if (startMin === endMin) {
-      toast('开始与结束时间不能相同');
+      this.setData({ 'hoursErrors.time': '开始与结束时间不能相同' });
       return;
     }
     var overnight = endMin < startMin;
     var dayText = onDays.length === 7 ? '周一至周日' : '周' + onDays.map(function (x) { return x.label; }).join('、');
     this.setData({
       businessTime: dayText + ' ' + d.start + '-' + (overnight ? '次日' : '') + d.end,
-      hoursPickerShow: false
+      hoursPickerShow: false,
+      'fieldErrors.businessTime': ''
     }, this.validate);
   },
 
@@ -495,7 +525,7 @@ Page({
     var identityTicket = this.identityTicket();
     app.chooseImage(function (urls) {
       if (!that.isIdentityTicketCurrent(identityTicket)) return;
-      that.setData({ businessLicense: urls[0] || '' }, that.validate);
+      that.setData({ businessLicense: urls[0] || '', 'fieldErrors.businessLicense': '' }, that.validate);
     }, 1);
   },
   removeLicense() { this.setData({ businessLicense: '' }, this.validate); },
@@ -537,7 +567,7 @@ Page({
       if (!r.ok) {
         that.setData({
           submitting: false,
-          submitErrorKind: r.network ? 'network' : 'data',
+          submitErrorKind: r.network ? 'network' : 'error',
           submitError: r.message
         });
         return;
@@ -655,3 +685,6 @@ function currentIdentityKey() {
   var userId = typeof app.getUserID === 'function' ? app.getUserID() : app.globalData && app.globalData.user_id;
   return String(userId || '');
 }
+
+// 第五轮 D:字段在页面上的先后,滚动到第一条红字时用。
+const APPLY_FIELD_ORDER = ['name', 'phone', 'address', 'businessTime', 'businessLicense', 'realName', 'idCard'];

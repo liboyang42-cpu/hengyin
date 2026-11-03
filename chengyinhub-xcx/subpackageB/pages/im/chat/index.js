@@ -1054,6 +1054,11 @@ Page({
   onRouteTap(e) {
     const id = e.currentTarget.dataset.topicid;
     if (!id || this._navigating) return; // 跳转中不响应连点
+    // P-36:报名卡的主题暂时读不到(如下架)时,票本身仍有效 —— 带去票夹,而不是一句「暂不可用」
+    if (e.currentTarget.dataset.cardtype === 'signup' && this.data.topicCache[id] === null) {
+      this._navigating = true; wx.navigateTo({ url: '/subpackageMember/signup/index', complete: () => { this._navigating = false; } });
+      return;
+    }
     // 只在「确认下架」(null)时拦;加载中(undefined)放行 —— 详情页自己会加载
     if (this.data.topicCache[id] === null || this.data.topicCache[id] && this.data.topicCache[id].name === '路线已不可用') { app.tips && app.tips('该路线暂不可用'); return; }
     this._navigating = true; wx.navigateTo({ url: '/pages/topic/index/index?id=' + id, complete: () => { this._navigating = false; } });

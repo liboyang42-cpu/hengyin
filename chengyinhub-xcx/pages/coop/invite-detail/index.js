@@ -322,7 +322,6 @@ Page({
   reject() {
     if (!String(this.data.draft || '').trim()) {
       this.setData({ draftError: '请说明拒绝理由，让对方知道如何调整。' });
-      toast('先写拒绝理由');
       return;
     }
     this.setData({ draftError: '' });
@@ -333,7 +332,6 @@ Page({
     if (!String(this.data.draft || '').trim()) {
       // 长说明落在字段旁边(draftError),toast 只做一句短提示 —— 门禁的 16 字上限就是这个意思
       this.setData({ draftError: '对方拿着这句话才知道下一步该怎么改。' });
-      toast('先写撤回理由');
       return;
     }
     this.setData({ draftError: '' });

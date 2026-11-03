@@ -6,6 +6,7 @@ from scripts.e2e.chain_platform import (
     PUBLISHER_MEMBER,
     assert_expected_sale_block,
     fixture_topic_image_fields,
+    seed_approved_cover,
     assert_topic_club_ownership,
     club_publish_fields,
 )
@@ -146,7 +147,16 @@ class ChainPlatformSaleGateTest(unittest.TestCase):
 
 
     def test_fixture_images_use_explicit_empty_fallback_not_fake_relative_urls(self):
-        self.assertEqual({"imgUrl": ""}, fixture_topic_image_fields())
+        self.assertEqual({"imgUrl": "media-asset:41"}, fixture_topic_image_fields("media-asset:41"))
+        with self.assertRaises(RuntimeError):
+            fixture_topic_image_fields("")
+        with self.assertRaises(RuntimeError):
+            fixture_topic_image_fields("cover.jpg")
+        writes = []
+        ref = seed_approved_cover(lambda sql, args=None: writes.append((sql, args)),
+                                  lambda sql, args=None: [(41,)], 9003)
+        self.assertEqual("media-asset:41", ref)
+        self.assertIn("APPROVED", writes[0][0])
         calls = []
         clear_fake_fixture_images(lambda sql, args=None: calls.append((sql, args)))
         self.assertEqual(2, len(calls))

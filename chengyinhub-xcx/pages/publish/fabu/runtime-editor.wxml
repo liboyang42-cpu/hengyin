@@ -32,7 +32,7 @@
     <block wx:else><view class="rt-photo-name" aria-label="勋章设计是俱乐部主理人的权益，当前身份暂未解锁"><image class="rt-image" wx:if="{{formData.finishMedalImg}}" src="{{formData.finishMedalImg}}" mode="aspectFill" /><text>{{formData.finishMedalName || '通关勋章'}}</text><view class="node-pill--locked">未解锁</view></view></block>
    </view>
   </block>
-  <cy-inline-error wx:if="{{runtimeEditor.kind === 'bingo' && bingoError}}" title="{{bingoError}}" />
+  <cy-inline-error kind="error" wx:if="{{runtimeEditor.kind === 'bingo' && bingoError}}" title="{{bingoError}}" />
   <block wx:if="{{runtimeEditor.kind === 'bingo'}}"><view class="rt-bingo"><view wx:for="{{bingoRows}}" wx:key="pos" class="rt-bingo-cell" data-index="{{index}}" bindtap="openRuntimeBingoCell" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">{{item.label || index + 1}}</view></view></block>
   <block wx:if="{{runtimeEditor.kind === 'bingo-cell'}}"><view class="node-card"><view class="rt-field"><text>标题</text><input value="{{bingoRows[runtimeBingoIndex].label}}" placeholder="填写标题" data-index="{{runtimeBingoIndex}}" bindinput="onBingoLabelInput" /></view><view class="rt-field"><text>完成反馈</text><input value="{{bingoRows[runtimeBingoIndex].feedbackText}}" data-index="{{runtimeBingoIndex}}" bindinput="onBingoFeedbackInput" /></view><cy-reward-selector bind:openchange="onRuntimeRewardOpen" value="{{bingoRows[runtimeBingoIndex].couponId}}" selected-name="{{bingoRows[runtimeBingoIndex].couponName}}" occasion="topic" placeholder="选择奖励" scope="{{operationScope}}" data-index="{{runtimeBingoIndex}}" bind:change="onBingoCouponChange" /></view></block>
  </view>
