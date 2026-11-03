@@ -121,9 +121,11 @@
           <input class="fi" data-field="name" value="{{name}}" bindinput="onInput" placeholder="品牌名称" placeholder-class="ph"
                  aria-required="true" aria-label="店铺名称，必填" />
         </view>
-        <view class="frow frow--field">
-          <text class="fl">经营类目</text>
-          <input class="fi" data-field="preference" value="{{preference}}" bindinput="onInput" placeholder="如 餐饮、零售、文创" placeholder-class="ph" />
+        <!-- M-16(2026-11-02):入驻时就用门店信息同一份「行业类型」胶囊问一次,承接主题按它匹配章节 -->
+        <view class="frow frow--field" bindtap="openIndustrySheet" aria-role="button" aria-required="true"
+              aria-label="行业类型，必填，{{industryNames || '未选择'}}" hover-class="cy-pressed" hover-stay-time="80">
+          <text class="fl">行业类型<text class="req" aria-hidden="true">*</text></text>
+          <view class="field-control"><text class="fi {{industryNames ? '' : 'ph'}}">{{industryNames || '选择行业'}}</text><cy-icon name="arrow-right" size="28" /></view>
         </view>
         <view class="frow frow--field last">
           <text class="fl">联系电话<text class="req" aria-hidden="true">*</text></text>
@@ -195,7 +197,7 @@
     <view class="step cy-rise-in" wx:if="{{mode==='form' && step===4 && !introMode}}">
       <cy-card class="apply-card wizard-card">
         <view class="preview-kv"><text class="pk">店铺名称</text><text class="pv">{{name || '—'}}</text></view>
-        <view class="preview-kv"><text class="pk">经营类目</text><text class="pv">{{preference || '—'}}</text></view>
+        <view class="preview-kv"><text class="pk">行业类型</text><text class="pv">{{industryNames || '—'}}</text></view>
         <view class="preview-kv"><text class="pk">联系电话</text><text class="pv">{{phone || '—'}}</text></view>
         <view class="preview-kv"><text class="pk">店铺地址</text><text class="pv">{{address || '—'}}</text></view>
         <view class="preview-kv"><text class="pk">营业时间</text><text class="pv">{{businessTime || '—'}}</text></view>
@@ -217,7 +219,7 @@
       <!-- RUN-52 经营者实名:用户裁定这一段【不套白卡】,字段直接铺在灰页底上。
            同意勾选悬在字段组外下方(同 subpackageMember/tixian 的做法),
            读起来是「对上面这一切的授权」。已登记的人只看到一句状态。 -->
-      <view class="sec-label mt">经营者实名</view>
+      <view class="sec-label mt" id="apply-identity">经营者实名</view>
       <block wx:if="{{!identityRegistered}}">
         <view class="identity-bare">
           <view class="frow frow--field">
@@ -302,6 +304,10 @@
   </view>
 
   <!-- ===== 经营时间选择:周一~周日 + 起止时段(2026-07-31) ===== -->
+  <cy-tag-sheet show="{{industrySheet.show}}" title="行业类型" items="{{industrySheet.options}}" value="{{industryIds}}"
+    max="{{5}}" hint="可多选，最多 5 个，第一个作为主行业" loading="{{industrySheet.loading}}" error="{{industrySheet.error}}"
+    saving="{{submitting}}" confirm-text="确定" bind:change="onIndustryChange" bind:confirm="confirmIndustrySheet"
+    bind:close="closeIndustrySheet" bind:retry="retryIndustrySheet" />
   <cy-sheet inset footer show="{{hoursPickerShow}}" title="设置经营时间" bind:close="closeHoursPicker">
     <view class="hp-sheet">
       <view class="hp-label">经营日</view>

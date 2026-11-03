@@ -16,7 +16,8 @@ class TopicSaleCanonicalMutationWiringTest {
         assertWired("OmsTicketServiceImpl.java", 6);
         // W3f(F05)新增 configureWorkPackage 写口时补了一处失效调用(8→9),棘轮未同步;
         // 2026-09-15 生命周期收口时改正,保持「任一写入口删线必须变红」的本意。
-        assertWired("CmsTopicChapterServiceImpl.java", 9);
+        // 2026-11-03 零章节主题替首个商家建章(openChapterForEmptyTopic)是新的真实写入口,9→10。
+        assertWired("CmsTopicChapterServiceImpl.java", 10);
         assertWired("CmsTopicNodeServiceImpl.java", 6);
         // 普通章节供给退出新增失效入口，计入原有精确删除检测。
         assertWired("MerchantOfferServiceImpl.java", 7);

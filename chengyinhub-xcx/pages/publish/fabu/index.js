@@ -3868,7 +3868,7 @@ Page({
       hideLoading: true,
       url: '/api/category/list',
       method: 'POST',
-      data: { type: 1, parentid: '0' },
+      data: { type: 'MERCHANT', parentid: '0' }, // M-16:章节招募品类 = 商家行业(type 1 + 6),不是主题类别
       success(res) {
         if (res.code == '200' && Array.isArray(res.data)) {
           that.setData({ merchantCategoryList: res.data });

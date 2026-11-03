@@ -38,6 +38,14 @@ public interface ICmsTopicChapterService
     public int insertCmsTopicChapter(CmsTopicChapter cmsTopicChapter);
 
     /**
+     * 2026-11-03 业主:自由探索主题一章都没有时,替首个报名的商家建出它要承接的那一章。
+     * 只在零章节时成立;调用方已持有 publication-task → 主题行锁,并负责随后的承接申请(仍待主办方审核)。
+     *
+     * @return 新建的章节(招商开、权益档、名额 1、必选,品类 = 商家的主行业类型)
+     */
+    CmsTopicChapter openChapterForEmptyTopic(Long topicId, Long merchantMemberId, Integer merchantCategoryId, String chapterName);
+
+    /**
      * 修改主题章节
      * 
      * @param cmsTopicChapter 主题章节

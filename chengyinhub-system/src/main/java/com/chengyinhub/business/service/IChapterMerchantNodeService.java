@@ -32,6 +32,13 @@ public interface IChapterMerchantNodeService {
      */
     CmsTopicNode submit(Long merchantMemberId, Long chapterId, CmsTopicNode draft);
 
+    /**
+     * 零章节主题报名(2026-11-03 业主)建章前的点位预检:登录、点位名称、坐标、玩法模板归属。
+     * 与 {@link #submit} 同一份规则;先验,免得替一个拿别人玩法的请求建出章节再回滚。
+     * 编排见 {@code IMerchantChapterApplicationService#submitToEmptyTopic}。
+     */
+    void assertEmptyTopicDraft(Long merchantMemberId, CmsTopicNode draft);
+
     /** 商家看自己在该主题下的节点(含待审与驳回原因)。 */
     List<CmsTopicNode> listMine(Long merchantMemberId, Long topicId);
 

@@ -96,10 +96,14 @@ public class TopicSaleCanonicalBuilder {
         CmsTopicNode query = new CmsTopicNode();
         query.setTopicId(topic.getId());
         ArrayNode stores = json.createArrayNode();
+        Map<Long, String> storeNames = new java.util.HashMap<Long, String>();
         java.util.List<CmsTopicNode> nodes = nodeMapper.selectCmsTopicNodeList(query);
         if (nodes != null) for (CmsTopicNode node : nodes) {
             if (node == null || node.getMerchantMemberId() == null
                     || !Integer.valueOf(1).equals(node.getNodeAuditStatus())) continue;
+            if (node.getName() != null && !node.getName().trim().isEmpty()) {
+                storeNames.putIfAbsent(node.getMerchantMemberId(), node.getName().trim());
+            }
             ObjectNode value = json.createObjectNode();
             value.put("nodeId", node.getId());
             value.put("chapterId", node.getChapterId());
@@ -127,14 +131,22 @@ public class TopicSaleCanonicalBuilder {
             Long perkId = offer.path("perkId").longValue();
             if (!perkIds.add(perkId)) continue;
             CoopPerk perk = perkMapper.selectById(perkId);
-            if (perk == null || Integer.valueOf(2).equals(perk.getDelFlag())) continue;
+            boolean perkOffer = "PERK".equals(offer.path("termsMode").asText());
+            if (perk == null || Integer.valueOf(2).equals(perk.getDelFlag())) {
+                if (perkOffer) throw new IllegalStateException(unusablePerkMessage(storeNames, offer, null));
+                continue;
+            }
+            if (perkOffer && (blank(perk.getName()) || perk.getPerkType() == null || perk.getRetailValue() == null)) {
+                throw new IllegalStateException(unusablePerkMessage(storeNames, offer, perk));
+            }
             ObjectNode value = json.createObjectNode();
             value.put("id", perk.getId());
             value.put("name", perk.getName());
             value.put("perkType", perk.getPerkType());
             value.put("retailValue", perk.getRetailValue() == null ? null
                     : perk.getRetailValue().stripTrailingZeros().toPlainString());
-            value.put("redeemRule", perk.getRedeemRule());
+            // M-01:商家权益表单没有核销规则字段,存量权益缺省按到店扫码核销冻结,不再让一家店卡住整个主题开售。
+            value.put("redeemRule", CoopPerk.redeemRuleOrDefault(perk.getRedeemRule()));
             perks.add(value);
         }
         experiences.set("perks", perks);
@@ -221,4 +233,17 @@ public class TopicSaleCanonicalBuilder {
         wrapped.set("manual", value == null ? json.nullNode() : value.deepCopy());
         return wrapped;
     }
+
+    private static boolean blank(String value) { return value == null || value.trim().isEmpty(); }
+
+    /** M-01:权益不可用时点名商家与权益，组织者能直接告诉对应商家去补，而不是只看到一个错误码。 */
+    private static String unusablePerkMessage(Map<Long, String> storeNames, JsonNode offer, CoopPerk perk) {
+        String store = offer.path("merchantId").canConvertToLong()
+                ? storeNames.get(offer.path("merchantId").longValue()) : null;
+        String who = store == null ? "有一家商家" : "商家「" + store + "」";
+        if (perk == null) return who + "供给的权益已删除，请该商家重新填写实际供给后再保存开售参数";
+        String name = blank(perk.getName()) ? "" : "「" + perk.getName().trim() + "」";
+        return who + "的权益" + name + "缺少名称、类型或零售价，请该商家补全后再保存开售参数";
+    }
+
 }

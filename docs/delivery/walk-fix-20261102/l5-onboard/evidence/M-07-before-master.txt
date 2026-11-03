@@ -1,0 +1,8 @@
+# M-07 before (origin/master 014fc0d8, rig), topic 990014 from chains.py platform
+# merchant 9002: POST /api/merchant/chapter-application/apply {chapterId:42} -> 200 已提交，等待主题发布者审核
+#                POST /api/merchant/chapter-node/submit {chapterId:42, templateId:6001, ...} -> 200 node id 75
+# DB read-back: select id,chapter_id,name,merchant_member_id,node_audit_status from cms_topic_node where topic_id=990014 and chapter_id=42
+id	chapter_id	name	merchant_member_id	node_audit_status
+71	42	咖啡打卡点	NULL	NULL
+75	42	样板咖啡 · 本站	9002	0
+# => two rows in one chapter: the organiser placeholder (71, referenced by the chapter story) stays, the merchant gets a second stop.

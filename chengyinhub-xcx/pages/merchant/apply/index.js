@@ -13,7 +13,7 @@ const STEP_HEADLINES = ['先认识你的店', '告诉大家怎样找到你', '�
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
 const wizardMorph = require('../../../utils/wizard-morph.js');
 const timeOptions = require('../../../utils/time-picker-options.js');
-const publisherIdentity = require('../../../utils/publisher-identity.js');
+const publisherIdentity = require('../../../utils/publisher-identity.js'); const merchantIndustry = require('../utils/merchant-industry.js'); // M-16
 
 function displayText(value) {
   if (value === null || value === undefined) return '';
@@ -74,7 +74,7 @@ Page({
     dots: [0, 1, 2, 3],
     // 表单字段
     name: '',             // 店铺名称
-    preference: '',       // 经营类目(逗号分隔)
+    industryIds: [], industryNames: '', industrySheet: { show: false, options: [], value: [], loading: false, error: '' }, // M-16 行业类型胶囊(与门店信息同一份)
     phone: '',
     address: '',          // 店铺地址
     // 选点坐标:wx.chooseLocation 本来就跟 address 一起返回,以前被丢掉了,
@@ -143,7 +143,7 @@ Page({
       wizardMorph.cancelIntroMorph(this); this._bootstrapSettled = false;
       this.setData({
         mode: 'form', introMode: true, step: 1,
-        name: '', preference: '', phone: '', address: '',
+        name: '', phone: '', address: '',
         locationLat: null, locationLng: null, businessTime: '', description: '',
         businessLicense: '', derivatives: [], canNext: false,
         submitting: false, submitError: '', submitErrorKind: '',
@@ -251,7 +251,7 @@ Page({
             apply: apply,
             step: keepDraft ? that.data.step : 1,
             name: keepDraft ? that.data.name : apply.name,
-            preference: keepDraft ? that.data.preference : apply.preference,
+            industryIds: keepDraft ? that.data.industryIds : industryIdsOf(source),
             phone: keepDraft ? that.data.phone : apply.phone,
             address: keepDraft ? that.data.address : apply.address,
             // 故意不回填坐标:回填了再提交,服务端会把它当成"商家刚在地图上点的"而标成已确认。
@@ -299,7 +299,7 @@ Page({
       step: step,
       stepIn: false
     }, this.validate);
-    if (step === 4) this.ensureIdentityStatus();
+    if (step === 4) this.ensureIdentityStatus(); if (this.data.industryIds.length && !this.data.industryNames && !this._industryRows) this.loadIndustryRows(); // M-16 回填的行业类型补名字
     var that = this;
     wx.nextTick(function () { that.setData({ stepIn: true }); });
   },
@@ -362,19 +362,59 @@ Page({
   // 置灰的「继续/提交」被点 → 报出本步第一条没交的必填,别让按钮静默地按不动。
   onNextDisabledTap() {
     const d = this.data;
-    if (d.step === 1) toast(!d.name ? '请填写店铺名称' : '请填写联系电话');
+    if (d.step === 1) toast(!d.name ? '请填写店铺名称' : (!d.industryIds.length ? '请选择行业类型' : '请填写联系电话'));
     else if (d.step === 2) toast(!d.address ? '请填写店铺地址' : '请选择营业时间');
     else if (d.step === 3) toast('请上传营业执照');
     else if (d.step === 4) {
       // 第 4 步唯一拦人的项是经营者实名,报第一条不满足的原因(规则在 utils/publisher-identity.js)
       const check = publisherIdentity.checkIdentityForm(this.identityForm());
       if (!check.ok) toast(check.message);
+      // M-19:实名块在预览下面,一屏看不到;点置灰的「提交申请」直接滚过去
+      if (!check.ok) wx.pageScrollTo({ selector: '#apply-identity', duration: this.data.reducedMotion ? 0 : 300 });
     }
   },
 
+  // ===== M-16 行业类型:入驻时问一次,与门店信息「行业类型」同一份胶囊、同一条保存口径 =====
+  openIndustrySheet() {
+    if (this.data.submitting) return;
+    const ids = this.data.industryIds;
+    const rows = this._industryRows;
+    const options = rows ? merchantIndustry.buildIndustryOptions(rows, ids) : [];
+    // 弹层的勾选态取自已确认的 industryIds;重开时给一份新数组,组件 value 观察者会把上次没确认的勾选复位
+    this.setData({ industryIds: ids.slice(), industrySheet: { show: true, options, value: ids.slice(), loading: !rows, error: '' } });
+    if (!rows) this.loadIndustryRows();
+  },
+  loadIndustryRows() {
+    const that = this;
+    app.sendRequest({ hideLoading: true, autoErrorToast: false, url: '/api/category/list', method: 'POST', data: { type: 'MERCHANT', parentid: '0' },
+      success(res) {
+        if (String(res && res.code) !== '200' || !Array.isArray(res.data)) {
+          that.setData({ 'industrySheet.loading': false, 'industrySheet.error': '行业类型没能载入，请重试' });
+          return;
+        }
+        that._industryRows = res.data;
+        const options = merchantIndustry.buildIndustryOptions(res.data, that.data.industryIds);
+        that.setData({ 'industrySheet.loading': false, 'industrySheet.error': '', 'industrySheet.options': options,
+          industryNames: industryNamesOf(options, that.data.industryIds) });
+      },
+      fail() { that.setData({ 'industrySheet.loading': false, 'industrySheet.error': '网络异常，请重试' }); },
+    });
+  },
+  onIndustryChange(e) {
+    this.setData({ 'industrySheet.value': ((e && e.detail && e.detail.value) || []).map(String) });
+  },
+  confirmIndustrySheet(e) {
+    const value = ((e && e.detail && e.detail.value) || this.data.industrySheet.value || []).map(String);
+    if (!value.length) { toast('请至少选择一个行业类型'); return; }
+    this.setData({ industryIds: value, industryNames: industryNamesOf(this.data.industrySheet.options, value),
+      'industrySheet.show': false }, this.validate);
+  },
+  closeIndustrySheet() { this.setData({ 'industrySheet.show': false }); },
+  retryIndustrySheet() { this.setData({ 'industrySheet.loading': true, 'industrySheet.error': '' }); this.loadIndustryRows(); },
+
   validate() {
     var d = this.data, ok = false;
-    if (d.step === 1) ok = !!(d.name && d.phone);
+    if (d.step === 1) ok = !!(d.name && d.phone && d.industryIds.length);
     else if (d.step === 2) ok = !!(d.address && d.businessTime);
     else if (d.step === 3) ok = !!d.businessLicense;
     // 预览确认页的硬性缺项只有实名:姓名 + 身份证号 + 单独同意三项齐了「提交申请」才亮
@@ -553,7 +593,7 @@ Page({
     var payload = {
       id: d.apply && d.apply.status === 2 ? d.apply.id : null,
       name: d.name,
-      preference: d.preference,
+      categoryIds: d.industryIds.join(','),
       phone: d.phone,
       address: d.address,
       locationLat: d.locationLat,
@@ -654,4 +694,15 @@ Page({
 function currentIdentityKey() {
   var userId = typeof app.getUserID === 'function' ? app.getUserID() : app.globalData && app.globalData.user_id;
   return String(userId || '');
+}
+
+/** M-16:申请回读里的行业类型(多选列优先,旧数据退回单值 categoryId)。 */
+function industryIdsOf(source) {
+  const raw = source && source.categoryIds ? source.categoryIds : (source && source.categoryId != null ? source.categoryId : '');
+  return String(raw).split(',').map(x => x.trim()).filter(x => /^\d+$/.test(x) && x !== '0');
+}
+
+/** 胶囊上用短名;行上显示与门店信息一致的「·」连接。 */
+function industryNamesOf(options, ids) {
+  return (ids || []).map(id => ((options || []).filter(o => o.key === String(id))[0] || {}).label).filter(Boolean).join(' · ');
 }

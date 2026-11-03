@@ -472,12 +472,12 @@
     chapters-state="{{chapterRecruitmentState}}"
     chapters-error="{{chapterRecruitmentError}}"
     application-open="{{chapterApplicationOpen}}"
+    empty-topic="{{chapterEmptyTopic}}"
     submitting="{{chapterNodeSubmitting}}"
     bind:close="topicClose"
     bind:confirm="onChapterTargetConfirm"
     bind:retrychapters="loadMerchantRecruitmentChapters"
-    bind:gocategory="goMerchantCategory"
-    bind:createtemplate="goCreateTemplate" />
+    bind:gocategory="goMerchantCategory" />
 
 </view>
   <cy-option-sheet show="{{stationSheetShow}}" title="{{stationSheetTitle}}" items="{{stationSheetItems}}"
@@ -497,6 +497,7 @@
     presetTemplateId="{{selectedTemplateId}}"
     presetTemplateName="{{selectedTemplateName}}"
     termsMode="{{selectedChapterTermsMode}}"
+    perkMinValue="{{selectedChapterPerkMin}}"
     circleMode="{{selectedChapterCircleMode}}"
     formMode="{{chapterNodeFormMode}}"
     submitting="{{chapterNodeSubmitting}}"

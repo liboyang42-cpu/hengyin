@@ -25,7 +25,7 @@ const SHIPPED = [
 const RULES = [
   { icon: 'croissant', match: /烘焙|甜品|面包/ },
   { icon: 'coffee', match: /咖啡/ },
-  { icon: 'cup-soda', match: /茶饮|奶茶|饮品/ },
+  { icon: 'cup-soda', match: /茶饮|奶茶|饮品|茶馆|茶室/ },
   { icon: 'wine', match: /酒吧|小酌|酒馆/ },
   { icon: 'noodles', match: /餐饮|美食|小吃/ },
   { icon: 'heart-pulse', match: /健康|养生/ },
@@ -54,7 +54,7 @@ const RULES = [
   { icon: 'flower-2', match: /花艺|花店/ },
   { icon: 'scissors', match: /美容|美发|美甲/ },
   { icon: 'landmark', match: /景点|地标|博物馆/ },
-  { icon: 'weixin-market', match: /零售|购物|买手/ },
+  { icon: 'weixin-market', match: /零售|购物|买手|古着|中古|文创|杂货/ },
 ];
 
 /** 标签名 → 图标文件名(未映射返回 '')。与是否已入库无关,纯映射。 */
