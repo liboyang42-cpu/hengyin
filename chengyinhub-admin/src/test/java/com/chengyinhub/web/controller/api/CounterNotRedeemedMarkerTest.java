@@ -47,7 +47,6 @@ class CounterNotRedeemedMarkerTest {
     private static final Long TOPIC = 700L;
     private static final Long CHAPTER = 101L;
     private static final String SECRET = "test-secret";
-    private static final long DAY = 24L * 3600 * 1000;
 
     private ICmsRegistrationService regSvc;
     private IPerkLedgerService perkSvc;
@@ -145,8 +144,12 @@ class CounterNotRedeemedMarkerTest {
 
     @Test
     void otherDaySessionIsRedeemedWithSessionDate() {
-        activity.setStartDate(new Date(System.currentTimeMillis() + 10 * DAY));
-        activity.setEndDate(new Date(System.currentTimeMillis() + 10 * DAY + 3600_000L));
+        // 场次放在 10 天后北京时间 12:00–13:00:原写法「现在 + 10 天、持续 1 小时」在北京时间 23 点后跑会跨零点,
+        // 回包按区间写成「M月d日–M月d日」,单日断言随运行时刻变红(2026-11-03 CI 23:11 实测)。
+        java.time.ZonedDateTime noon = java.time.ZonedDateTime.now(java.time.ZoneId.of("Asia/Shanghai"))
+                .plusDays(10).withHour(12).withMinute(0).withSecond(0).withNano(0);
+        activity.setStartDate(Date.from(noon.toInstant()));
+        activity.setEndDate(Date.from(noon.plusHours(1).toInstant()));
         when(perkSvc.resolveScannableChapters(REG, TOPIC, MERCHANT)).thenReturn(Collections.singletonMap(CHAPTER, null));
         when(regSvc.redeemExploreChapterAndRecord(eq(reg), eq(CHAPTER), eq(TOPIC), eq(MERCHANT), eq(MERCHANT), any()))
                 .thenReturn(new ExploreChapterRedemptionResult(55L, 0));
