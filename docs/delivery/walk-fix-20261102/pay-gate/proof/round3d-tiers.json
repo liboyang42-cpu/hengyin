@@ -1,0 +1,204 @@
+{
+ "T1_more_than_24h": {
+  "activityId": 17,
+  "buy": {
+   "quote": {
+    "payAmount": 39.99,
+    "pointsUsed": 0,
+    "pointsDeductYuan": 0.0,
+    "couponDeductYuan": 0,
+    "quoteSign": "0497ae687ece7632254dcc971e0c2794",
+    "memberDiscountYuan": 0.0,
+    "clubMember": true,
+    "prioritySignupEnabled": false,
+    "refundDeadline": "2026-11-05T10:00:00.000+08:00",
+    "refundableNow": true,
+    "refundPercentNow": 100
+   },
+   "registrationId": 75,
+   "callback": 204,
+   "paid": [
+    [
+     75,
+     2,
+     17,
+     "39.99",
+     "0.0300",
+     2,
+     2,
+     null
+    ]
+   ]
+  },
+  "cancel": {
+   "response": {
+    "code": 200,
+    "msg": "报名已取消，现金退款正在派发，尚未确认到账，本单未使用积分",
+    "data": {
+     "registrationId": 75,
+     "scope": "PARENT_ORDER",
+     "cancellationStatus": "CANCELLED",
+     "cashRefundStatus": "DISPATCHING",
+     "cashRefundAmount": 39.99,
+     "pointsUsed": 0,
+     "pointsReturned": 0,
+     "pointsRefundStatus": "NOT_NEEDED"
+    }
+   },
+   "registration": [
+    [
+     4,
+     3,
+     "39.99"
+    ]
+   ],
+   "refund_application": [
+    [
+     "RF75",
+     "39.99",
+     "39.99",
+     1,
+     6,
+     "LEGACY_RECONCILE",
+     null,
+     "用户申请退款"
+    ]
+   ],
+   "reconcile_job": [
+    [
+     143,
+     "refundReconcileTask.reconcile()",
+     "1"
+    ]
+   ]
+  }
+ },
+ "T2_within_24h": {
+  "activityId": 18,
+  "buy": {
+   "quote": {
+    "payAmount": 39.99,
+    "pointsUsed": 0,
+    "pointsDeductYuan": 0.0,
+    "couponDeductYuan": 0,
+    "quoteSign": "5e8df48b6d69a056a0b073cc4527b440",
+    "memberDiscountYuan": 0.0,
+    "clubMember": true,
+    "prioritySignupEnabled": false,
+    "refundDeadline": "2026-11-02T17:30:00.000+08:00",
+    "refundableNow": true,
+    "refundPercentNow": 50
+   },
+   "registrationId": 76,
+   "callback": 204,
+   "paid": [
+    [
+     76,
+     2,
+     18,
+     "39.99",
+     "0.0300",
+     2,
+     2,
+     null
+    ]
+   ]
+  },
+  "cancel": {
+   "response": {
+    "code": 200,
+    "msg": "报名已取消，现金退款正在派发，尚未确认到账，本单未使用积分",
+    "data": {
+     "registrationId": 76,
+     "scope": "PARENT_ORDER",
+     "cancellationStatus": "CANCELLED",
+     "cashRefundStatus": "DISPATCHING",
+     "cashRefundAmount": 19.99,
+     "pointsUsed": 0,
+     "pointsReturned": 0,
+     "pointsRefundStatus": "NOT_NEEDED"
+    }
+   },
+   "registration": [
+    [
+     4,
+     3,
+     "39.99"
+    ]
+   ],
+   "refund_application": [
+    [
+     "RF76",
+     "19.99",
+     "39.99",
+     1,
+     6,
+     "LEGACY_RECONCILE",
+     null,
+     "用户申请退款(集合前24小时内,退50%)"
+    ]
+   ],
+   "reconcile_job": [
+    [
+     143,
+     "refundReconcileTask.reconcile()",
+     "1"
+    ]
+   ]
+  }
+ },
+ "T3_after_start": {
+  "activityId": 19,
+  "buy": {
+   "quote": {
+    "payAmount": 39.99,
+    "pointsUsed": 0,
+    "pointsDeductYuan": 0.0,
+    "couponDeductYuan": 0,
+    "quoteSign": "d516aef428bcf1fbeaed65ce35a424f1",
+    "memberDiscountYuan": 0.0,
+    "clubMember": true,
+    "prioritySignupEnabled": false,
+    "refundDeadline": "2026-11-04T15:00:00.000+08:00",
+    "refundableNow": true,
+    "refundPercentNow": 100
+   },
+   "registrationId": 77,
+   "callback": 204,
+   "paid": [
+    [
+     77,
+     2,
+     19,
+     "39.99",
+     "0.0300",
+     2,
+     2,
+     null
+    ]
+   ]
+  },
+  "cancel": {
+   "response": {
+    "code": 500,
+    "msg": "场次已开始,不可退款",
+    "data": null
+   },
+   "registration": [
+    [
+     2,
+     2,
+     "39.99"
+    ]
+   ],
+   "refund_application": [],
+   "reconcile_job": [
+    [
+     143,
+     "refundReconcileTask.reconcile()",
+     "1"
+    ]
+   ]
+  }
+ }
+}

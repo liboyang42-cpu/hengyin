@@ -770,7 +770,9 @@ public class RefundServiceImpl implements IRefundService {
                 // 历史活路径:系统1已真打款,但支付时落的明细仍停在 status=0。
                 // 这时仍须冲销并扣回;反之,未真打款的 status=0 只作废,不能凭空造一笔已结算冲销。
                 if (Integer.valueOf(1).equals(settled.getStatus()) || system1Paid) {
-                    createSettlementAdjustment(refund, system1Paid, settled, ratio);
+                    Long debitMember = system1Paid
+                            ? actualDebitMember(registration, settled) : settled.getReceiverId();
+                    createSettlementAdjustment(refund, system1Paid, settled, ratio, debitMember);
                 }
             }
         }
@@ -1035,8 +1037,32 @@ public class RefundServiceImpl implements IRefundService {
         firstReviewPointsClawback.onRegistrationRefunded(registration);
     }
 
+    /**
+     * 退款扣回对象 = 实际收到这笔钱的人(2026-11-02)。
+     *
+     * <p>活动(owner_type=2)的 merchant 明细在<b>支付时</b>落,receiver_id 是场次创建人;
+     * 结算时钱却打给俱乐部<b>当时的</b>主理人(ClubPrincipalPayee)。其间或之后转让过主理人,
+     * 按明细上的 receiver_id 扣就扣错了人。这里回读该活动 eventType=3 的实际正向入账人:
+     * 明细收款人在其中就仍扣他;不在其中则扣最近一次入账的人;没有任何入账流水(历史数据)则按明细原样。
+     */
+    private Long actualDebitMember(CmsRegistration registration, SettlementDetail settled) {
+        Long ledgerReceiver = settled.getReceiverId();
+        if (registration == null || !Long.valueOf(2L).equals(registration.getOwnerType())
+                || registration.getOwnerId() == null || !"merchant".equals(settled.getReceiverType())) {
+            return ledgerReceiver;
+        }
+        List<Long> actual = umsMemberBalanceDetailMapper.selectIncomeMemberIdsByEventTypeAndEventId(
+                3L, registration.getOwnerId());
+        if (actual == null || actual.isEmpty() || actual.contains(ledgerReceiver)) {
+            return ledgerReceiver;
+        }
+        logger.info("退款扣回按实际入账人 refundSourceActivity={} ledgerReceiver={} actualReceiver={}",
+                registration.getOwnerId(), ledgerReceiver, actual.get(0));
+        return actual.get(0);
+    }
+
     private void createSettlementAdjustment(RefundApplication refund, boolean system1Paid,
-                                            SettlementDetail settled, BigDecimal ratio) {
+                                            SettlementDetail settled, BigDecimal ratio, Long debitMember) {
         // HF-04(A-32): 按退款比例冲销——部分退款只回扣对应比例,不再无视 refundAmount 整单全额回扣。
         // P0-B: 逐条(每个收款方)冲销,幂等键含收款方类型+id;靠 settlement_detail 的 uk_detail_idempotency
         //       + insert ignore 天然去重(重复退款审批返回 0 行→不重复扣回),不再用 existsAdjustment 粗粒度闸拦住 2..N 条。
@@ -1081,7 +1107,7 @@ public class RefundServiceImpl implements IRefundService {
                     refund.getId(), settled.getReceiverType(), settled.getReceiverId(), adjSettlement);
             return;
         }
-        debitReceiverBalance(settled.getReceiverType(), settled.getReceiverId(), adjSettlement, refund.getId());
+        debitReceiverBalance(settled.getReceiverType(), debitMember, adjSettlement, refund.getId());
     }
 
     private boolean sameAdjustment(SettlementDetail current, SettlementDetail expected) {

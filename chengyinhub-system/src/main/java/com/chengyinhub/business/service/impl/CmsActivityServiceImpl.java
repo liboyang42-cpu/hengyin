@@ -103,9 +103,13 @@ public class CmsActivityServiceImpl implements ICmsActivityService
     @Autowired
     private PlatformTransactionManager transactionManager;
 
-    /** 与报名二清闸同一判据：独立活动只有平台自办（发布者=平台会员）才可收费。 */
+    /** 平台会员 id(测试经反射注入;2026-11-02 起独立活动收费不再按它判)。 */
     @org.springframework.beans.factory.annotation.Value("${chengyin.platform.member-id:100000}")
     private Long platformMemberId;
+
+    /** 俱乐部场次的收款人 = 俱乐部当前主理人。 */
+    @Autowired
+    private com.chengyinhub.business.service.support.ClubPrincipalPayee clubPrincipalPayee;
 
     /** 客诉期提现闸:涉诉报名单结算暂扣,客诉关闭后补结。 */
     @Autowired
@@ -257,6 +261,11 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         // 客诉期提现闸(9-16 拍板第 3 条):还有未结客诉的报名单只暂扣它自己那部分,其余照放。
         activitySettlementHoldMapper.holdOpenComplaintRegistrations(activity.getId());
         BigDecimal totalSales = cmsRegistrationMapper.selectTotalSalesByActivityId(activity.getId());
+        // 2026-11-02 退款档位:集合前 24 小时内退 50% 的报名,未退回的那一半归主办方,在这里补回。
+        BigDecimal retainedSales = cmsRegistrationMapper.selectRetainedSalesAfterPartialRefundByActivityId(activity.getId());
+        if (retainedSales != null && retainedSales.signum() > 0) {
+            totalSales = totalSales == null ? retainedSales : totalSales.add(retainedSales);
+        }
         BigDecimal heldSales = activitySettlementHoldMapper.selectHeldSalesByActivityId(activity.getId());
         if (totalSales != null && heldSales != null) {
             totalSales = totalSales.subtract(heldSales);
@@ -275,10 +284,11 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         // 2. 计算各项佣金（含主题设计者，无主题来源时其份额并入商户）
         ActivitySettlementDTO settlement = calculateActivityCommissions(activity, totalSales, rule);
 
-        // 3. 分配商户分润（活动归属商户）
-        payActivityCommission(activity.getMemberId(), settlement.getMerchantCommissionAmount(),
+        // 3. 分配商户分润（活动收款人:俱乐部场次给当前主理人,其余给创建人,见 ClubPrincipalPayee）
+        Long payee = activityPayee(activity);
+        payActivityCommission(payee, settlement.getMerchantCommissionAmount(),
                 "活动分润 - " + activity.getName(), 3L, activity.getId());
-        settlementDebtLedger.offsetFromSettlement(activity.getMemberId(),
+        settlementDebtLedger.offsetFromSettlement(payee,
                 settlement.getMerchantCommissionAmount(), activity.getId());
 
         // 4. 分配平台分润（打入平台账户）。前置校验失败会抛异常并回滚本活动的原子领取。
@@ -354,14 +364,26 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         }
         requireUsablePlatformSettlementAccount(setting, rule, activity.getId());
         ActivitySettlementDTO settlement = calculateActivityCommissions(activity, sales, rule);
-        payActivityCommission(activity.getMemberId(), settlement.getMerchantCommissionAmount(),
+        Long payee = activityPayee(activity);
+        payActivityCommission(payee, settlement.getMerchantCommissionAmount(),
                 "活动分润(客诉结案补结) - " + activity.getName(), 3L, activity.getId());
-        settlementDebtLedger.offsetFromSettlement(activity.getMemberId(),
+        settlementDebtLedger.offsetFromSettlement(payee,
                 settlement.getMerchantCommissionAmount(), activity.getId());
         payActivityCommission(setting.getPlatformMemberId(), settlement.getPlatformCommissionAmount(),
                 "活动平台分润(客诉结案补结) - " + activity.getName(), 7L, activity.getId());
         settlementDetailMapper.markRegistrationDetailsSettled(registration.getId());
         return true;
+    }
+
+    /**
+     * 活动现金收款人(2026-11-02 业主口径:钱给人,不给俱乐部实体)。俱乐部场次 = 俱乐部当前主理人,
+     * 转让后新主理人收;非俱乐部场次仍是 cms_activity.member_id。退款冲回按实际入账人扣,见 RefundServiceImpl。
+     */
+    private Long activityPayee(CmsActivity activity) {
+        if (activity.getClubId() == null || activity.getClubId() <= 0) {
+            return activity.getMemberId();
+        }
+        return clubPrincipalPayee.forActivity(activity);
     }
 
     private void requireUsablePlatformSettlementAccount(CmsSetting setting, SettlementRule rule, Long activityId) {
@@ -868,8 +890,8 @@ public class CmsActivityServiceImpl implements ICmsActivityService
             }
         }
         requirePaidPublisherIdentity(request, memberId);
-        // 发布入口建的都是独立活动(topic_id 为空)。
-        assertStandalonePaidTicketsCollectible(request, memberId);
+        // 2026-11-02 拍板:没有自己商户号的主办方也可发收费独立活动,票款走平台商户号收;
+        // 原「非平台发布者票价只能是 0」的发布闸已撤(与 CmsRegistrationServiceImpl#assertCollectible 同口径)。
         // 1. 构建活动实体
         CmsActivity activity = new CmsActivity();
 
@@ -984,10 +1006,6 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         assertNoPaidTicketOnFreeTopic(request);
         requirePaidPublisherIdentity(request, memberId);
         CmsActivity currentForCollect = cmsActivityMapper.selectCmsActivityById(request.getId());
-        if (currentForCollect != null && currentForCollect.getTopicId() == null) {
-            // PR10 复审:存量收费独立活动不能因收款闸连文字都改不了;编辑只拦「新增收费票/0 元改收费/涨价」。
-            assertStandaloneEditKeepsCollectible(request, memberId);
-        }
         syncLiveActivityTickets(request, request.getId(), memberId, username);
         int rows = cmsActivityMapper.updateCmsActivityByOwner(editable);
         if (rows <= 0) {
@@ -1087,51 +1105,6 @@ public class CmsActivityServiceImpl implements ICmsActivityService
     private static boolean changedSecond(Date before, Date requested) {
         if (requested == null) return false;
         return before == null || before.getTime() / 1000L != requested.getTime() / 1000L;
-    }
-
-    /**
-     * F-L4-01/F-W2-01：独立活动没有主题内容槽，收款主体只能按发布者判。非平台发布的收费独立活动
-     * 下单必被 CmsRegistrationServiceImpl.assertCollectible 拒绝(二清)，发布时就拒，
-     * 与商家主办「票价只能是 0」同口径，避免上架一场玩家付不了款的活动。
-     */
-    private void assertStandalonePaidTicketsCollectible(CmsActivityPublishRequest request, Long memberId) {
-        if (request.getTickets() == null) return;
-        boolean paid = false;
-        for (ActivityTicketRequest ticket : request.getTickets()) {
-            if (ticket != null && ticket.getPrice() != null && ticket.getPrice().signum() > 0) {
-                paid = true;
-                break;
-            }
-        }
-        if (!paid) return;
-        if (platformMemberId != null && platformMemberId > 0L && platformMemberId.equals(memberId)) return;
-        throw new ServiceException("独立活动暂不支持在线收款(平台正在办理支付资质)，票价只能是 0");
-    }
-
-    /**
-     * 编辑口径的收款闸:存量已收费且价格不升的票原样放行(玩家下单仍由 assertCollectible 兜底),
-     * 只拒绝把收费面扩大的改动 —— 新增收费票、0 元票改收费、在库价基础上涨价。发布仍走全量闸。
-     */
-    private void assertStandaloneEditKeepsCollectible(CmsActivityPublishRequest request, Long memberId) {
-        if (request.getTickets() == null) return;
-        if (platformMemberId != null && platformMemberId > 0L && platformMemberId.equals(memberId)) return;
-        List<OmsTicket> live = null;
-        for (ActivityTicketRequest ticket : request.getTickets()) {
-            if (ticket == null || ticket.getPrice() == null || ticket.getPrice().signum() <= 0) continue;
-            if (live == null) {
-                OmsTicket query = new OmsTicket();
-                query.setOwnerType(2L);
-                query.setOwnerId(request.getId());
-                query.setDelFlag(0);
-                live = omsTicketMapper.selectOmsTicketList(query);
-                if (live == null) live = java.util.Collections.emptyList();
-            }
-            OmsTicket existing = findLiveTicket(live, ticket.getId());
-            if (existing == null || existing.getPrice() == null || existing.getPrice().signum() <= 0
-                    || ticket.getPrice().compareTo(existing.getPrice()) > 0) {
-                throw new ServiceException("独立活动暂不支持在线收款(平台正在办理支付资质)，票价只能是 0");
-            }
-        }
     }
 
     private void requirePaidPublisherIdentity(CmsActivityPublishRequest request, Long memberId) {

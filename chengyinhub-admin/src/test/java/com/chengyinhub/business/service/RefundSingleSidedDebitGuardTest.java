@@ -219,6 +219,41 @@ class RefundSingleSidedDebitGuardTest {
         verify(umsMemberMapper).deductBalance(eq(MERCHANT_ID), eq(new BigDecimal("90.00")));
     }
 
+    /**
+     * 2026-11-02 pay-gate:支付时明细记的是场次创建人(5),结算时钱打给了俱乐部当时的主理人(12)。
+     * 退款必须扣实际收到钱的 12,不能扣从没收到这笔钱的 5。旧代码按明细 receiver_id 扣 ⇒ 本测试红。
+     */
+    @Test
+    void principalChangedBeforeSettlement_debitsActualReceiver() {
+        givenPaidRegistrationOnActivity();
+        when(cmsActivityMapper.selectCmsActivityById(ACTIVITY_ID)).thenReturn(activity(1));
+        Long actualPrincipal = 12L;
+        when(umsMemberBalanceDetailMapper.selectIncomeMemberIdsByEventTypeAndEventId(3L, ACTIVITY_ID))
+                .thenReturn(java.util.List.of(actualPrincipal));
+        UmsMember principal = new UmsMember();
+        principal.setBalance(new BigDecimal("90.00"));
+        when(umsMemberMapper.selectUmsMemberById(actualPrincipal)).thenReturn(principal);
+
+        svc.reviewRefund(approve(), 42L);
+
+        verify(umsMemberMapper).deductBalance(eq(actualPrincipal), eq(new BigDecimal("90.00")));
+        verify(umsMemberMapper, never()).deductBalance(eq(MERCHANT_ID), any());
+    }
+
+    /** 明细收款人本人就在实际入账人里(未转让,或转让后又回到他)⇒ 仍扣他,不改扣最近入账人。 */
+    @Test
+    void ledgerReceiverAmongActualReceivers_keepsLedgerReceiver() {
+        givenPaidRegistrationOnActivity();
+        when(cmsActivityMapper.selectCmsActivityById(ACTIVITY_ID)).thenReturn(activity(1));
+        when(umsMemberBalanceDetailMapper.selectIncomeMemberIdsByEventTypeAndEventId(3L, ACTIVITY_ID))
+                .thenReturn(java.util.List.of(12L, MERCHANT_ID));
+
+        svc.reviewRefund(approve(), 42L);
+
+        verify(umsMemberMapper).deductBalance(eq(MERCHANT_ID), eq(new BigDecimal("90.00")));
+        verify(umsMemberMapper, never()).deductBalance(eq(12L), any());
+    }
+
     /** H8 取消 creator 现金后，is_settlement=1 不能被误当成 creator 收款凭据。 */
     @Test
     void h8ActivitySettledWithoutCreatorCash_mustNotDebitCreator() {

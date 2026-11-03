@@ -1,0 +1,8 @@
+
+──────── 步骤 1:自玩通行证:玩家 9009 买俱乐部自有主题 990016 的通行证
+   quote                              {"msg": "操作成功", "code": 200, "data": {"payAmount": 39.99, "pointsUsed": 0, "pointsDeductYuan": 0.0, "couponDeductYuan": 0, "quoteSign": "60ea6f13532e5f332af943f02f6022c5", "memberDiscountYuan": 0.0, "clubMember": false, "prioritySignupEnabled": false, "refundDeadline": null, "refundableNow": null, "refundPercentNow": null}, "_status": 200}
+   create                             {"msg": "报名创建成功", "code": 200, "data": {"registrationId": 78, "registrationNo": "T20261103F9DA214F", "payableAmount": 29.99, "expireTime": "2026-11-03T12:04:55.634+08:00", "expiresAt": "2027-02-01T11:34:55.634+08:00", "paymentType": 1, "registrationIds": [78], "payParams": {"appId": "e2e-stub-appid", "timeStamp": "0", "nonceStr": "e2estub", "package": "prepay_id=e2e-stub", "signType": "RSA", "payS
+   callback (2999 fen)                {"_raw": "", "_status": 204}
+   [库回读] cms_registration         ((78, 1, 990016, Decimal('29.99'), Decimal('0.0300'), 2, 2, None),)
+
+RESULT {"selfplay": {"create": {"code": 200, "msg": "报名创建成功", "data": {"registrationId": 78, "registrationNo": "T20261103F9DA214F", "payableAmount": 29.99, "expireTime": "2026-11-03T12:04:55.634+08:00", "expiresAt": "2027-02-01T11:34:55.634+08:00", "paymentType": 1, "registrationIds": [78], "payParams": {"appId": "e2e-stub-appid", "timeStamp": "0", "nonceStr": "e2estub", "package": "prepay_id=e2e-stub", "signType": "RSA", "paySign": "e2e-stub"}}}, "callback": 204, "paid": [[78, 1, 990016, "29.99", "0.0300", 2, 2, null]]}}

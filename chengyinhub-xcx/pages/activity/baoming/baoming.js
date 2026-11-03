@@ -1113,6 +1113,9 @@ Page({
           const refundableNow = res.data.refundableNow === true || res.data.refundableNow === false
             ? res.data.refundableNow : null;
           that._quoteRefundableNow = refundableNow;
+          // 2026-11-02 退款档位:集合前 24 小时内下单,取消只退 50%,下单前同样要确认。
+          that._quoteRefundPercentNow = Number.isFinite(Number(res.data.refundPercentNow))
+            && res.data.refundPercentNow !== null ? Number(res.data.refundPercentNow) : null;
           that.setData({
             quoteReady: !!that._quoteSign,
             totalAmount: parseFloat(pay.toFixed(2)),
@@ -1563,7 +1566,25 @@ Page({
       && that._quoteRefundableNow === false && !that._nonRefundableConfirmed) {
       modal.show({
         title: '本单不可退',
-        content: '该场次已过「集合前 24 小时」退款截止时间，支付后不可退款。确认继续下单？',
+        content: '该场次已开始，支付后不可退款。确认继续下单？',
+        confirmText: '继续下单',
+        cancelText: '再想想',
+        success: function (res) {
+          if (res && res.confirm) {
+            that._nonRefundableConfirmed = true;
+            that.handlePayment();
+          }
+        }
+      });
+      return;
+    }
+
+    if (Number(that.data.totalAmount || 0) > 0
+      && that._quoteRefundPercentNow === 50 && !that._nonRefundableConfirmed) {
+      modal.show({
+        title: '取消只退 50%',
+        content: (that.data.selectedTicket && Number(that.data.selectedTicket.mode) === 2
+          ? '该场次已进入开始前 24 小时' : '该场次已进入集合前 24 小时') + '，支付后取消只退实付的 50%。确认继续下单？',
         confirmText: '继续下单',
         cancelText: '再想想',
         success: function (res) {
@@ -1659,6 +1680,8 @@ Page({
             that._quoteSign = res.data.quoteSign || '';
             that._quoteRefundableNow = res.data.refundableNow === true || res.data.refundableNow === false
               ? res.data.refundableNow : null;
+            that._quoteRefundPercentNow = Number.isFinite(Number(res.data.refundPercentNow))
+              && res.data.refundPercentNow !== null ? Number(res.data.refundPercentNow) : null;
             that.setData({
               quoteReady: !!that._quoteSign
             });

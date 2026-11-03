@@ -1,0 +1,14 @@
+
+──────── 步骤 1:活动 18 结算:夹具把场次挪到 8 天前,跑 settlementTask
+   FIXTURE SQL                        UPDATE cms_activity SET start_date = DATE_SUB(NOW(), INTERVAL 8 DAY), end_date = DATE_SUB(NOW(), INTERVAL 8 DAY) WHERE id = 18
+   FIXTURE SQL                        INSERT IGNORE INTO cms_setting (id, platform_member_id, create_time) VALUES (1, 9001, NOW())
+   [库回读] activity                 ((18, 7002, 9008, 0),)
+   [库回读] club 当前主理人               ((7002, 9004),)
+   [库回读] 报名与退款                    ((76, Decimal('39.99'), 4, 3, Decimal('19.99')),)
+   run settlementTask.run() (145)     {"msg": "操作成功", "code": 200, "_status": 200}
+   job log                            [["1", "分润结算（活动+主题） 总共耗时：291毫秒 jobId=145 jobRunId=f293596a86ba4744b8348d4af6cee701", "InvocationTargetException"]]
+   [库回读] activity(结算后)            ((18, 0),)
+   [库回读] ums_member_balance_detail eventType 3/7 ()
+   [库回读] activity rule            ((Decimal('0.0300'), Decimal('0.9700'), Decimal('0.0000')),)
+
+RESULT {"settle_activity": {"activity": [[18, 7002, 9008, 0]], "principal": [[7002, 9004]], "registrations": [[76, "39.99", 4, 3, "19.99"]], "job": {"run": {"code": 200, "msg": "操作成功"}, "log": [["1", "分润结算（活动+主题） 总共耗时：291毫秒 jobId=145 jobRunId=f293596a86ba4744b8348d4af6cee701", "InvocationTargetException"]]}, "after": [[18, 0]], "balance_detail": [], "settlement_rule": [["0.0300", "0.9700", "0.0000"]]}}

@@ -282,6 +282,10 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     @Autowired
     private com.chengyinhub.business.service.IPricingService pricingService;
 
+    /** 俱乐部自有主题自玩现金的收款人 = 俱乐部当前主理人。 */
+    @Autowired
+    private com.chengyinhub.business.service.support.ClubPrincipalPayee clubPrincipalPayee;
+
     @Autowired
     private com.chengyinhub.business.service.INotifyService notifyService;
 
@@ -703,6 +707,10 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         }
         List<CoopOrder> effectiveOrders = coopOrderMapper.selectEffectiveOrdersByTopicId(topic.getId());
         if (effectiveOrders.isEmpty() && totalSales != null && totalSales.signum() > 0) {
+            if (isClubSelfPlayTopic(topic)) {
+                // 2026-11-02 业主口径:俱乐部自有主题无合作单也要能卖能结 —— 平台按主题费率留成,其余记给俱乐部当前主理人。
+                return settleClubSelfPlayTopic(topic);
+            }
             throw new ServiceException("NON_COOP_TOPIC_CASH_SETTLEMENT_UNPROVEN: topicId=" + topic.getId());
         }
         requireClassicTopicCashBasis(topic.getId());
@@ -749,6 +757,88 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         // 6. is_settlement 已由入口 claimTopicForSettlement 置 1(CAS),无需重复标记
         logger.info("主题结算成功: topicId={}, 总销售额={}", topic.getId(), totalSales);
 
+        return true;
+    }
+
+    /**
+     * 主题结算用的平台率(2026-11-03 业主拍板:平台自有主题不收 3%)。
+     *
+     * <p>内容槽 = PLATFORM({@code isPlatformOwned})的主题结算时平台率取 0:PLATFORM 行仍写(金额 0,
+     * 它是本主题"已分项结算"的幂等标记),原本那 3% 留在发起人保底/毛利残差里。平台主题的发起人
+     * {@code cms_topic.member_id} 就是平台配置账号({@code insertCmsTopic}/{@code resolvePayeeMemberId}),
+     * 所以这笔钱的实际收款人不变,只是不再记成从主办方抽走的佣金。其余主题仍读锁价快照。
+     * 未注入 productRoleService(纯单元装配)时按非自营处理,即旧行为。
+     */
+    private BigDecimal settlementPlatformRate(CmsTopic topic) {
+        if (productRoleService != null && topic != null && topic.getId() != null
+                && productRoleService.isPlatformOwned(topic.getId())) {
+            return BigDecimal.ZERO;
+        }
+        return pricingService.platformRateOf(topic);
+    }
+
+    /** 俱乐部自有主题(cms_topic.club_id > 0):发布者是俱乐部,收款人是俱乐部当前主理人。 */
+    private boolean isClubSelfPlayTopic(CmsTopic topic) {
+        return topic.getClubId() != null && topic.getClubId() > 0;
+    }
+
+    /**
+     * 俱乐部自有主题、无生效合作单的自玩通行证现金(owner_type=1)结算(2026-11-02)。
+     *
+     * <p>沿用 coop 分项台账的形状,不新建表:一条 PLATFORM 对账行(status=1,不放款),
+     * 一条 INITIATOR_MARGIN 行(status=0,T+7 由 {@link #payoutDueCoopSettlements} 打进余额)记给俱乐部当前主理人。
+     * 平台率读主题锁价快照 {@code cms_topic.fee_platform_rate},缺快照回落 settlement_rule(topic) 的 live 值
+     * (见 {@code PricingServiceImpl.platformRateOf})。两行之和 = 销售额,分毫不差。
+     *
+     * <p>现金基数只取本主题 owner_type=1 的锁读行:挂在本主题下的俱乐部场次报名(owner_type=2)
+     * 由活动结算按场次给主理人,不能在这里再算一遍。
+     */
+    private boolean settleClubSelfPlayTopic(CmsTopic topic) {
+        for (CoopSettlement ex : coopSettlementMapper.selectByTopicId(topic.getId())) {
+            if ("PLATFORM".equals(ex.getLineType())) {
+                throw new IllegalStateException("MANUAL_REPAIR:SELF_PLAY_TOPIC_ALREADY_SETTLED topicId=" + topic.getId());
+            }
+        }
+        requireClassicTopicCashBasis(topic.getId());
+        List<CmsRegistration> topicRows = coopSettlementEvidenceMapper.selectTopicCashRowsForUpdate(topic.getId());
+        if (topicRows == null) {
+            throw new IllegalStateException("MANUAL_REPAIR:CURRENT_CASH_ROWS_REQUIRED");
+        }
+        List<Long> refunds = coopSettlementEvidenceMapper.selectCashBasisBlockingRefundIdsForUpdate(topic.getId());
+        if (refunds == null || !refunds.isEmpty()) {
+            throw new IllegalStateException("MANUAL_REPAIR:REFUND_NET_BASIS_UNPROVEN");
+        }
+        TopicSettlementCashBasis basis = TopicSettlementCashBasis.fromLockedRows(topic.getId(), topicRows);
+        BigDecimal totalSales = basis.getTotalSales();
+        if (totalSales.signum() <= 0) {
+            logger.info("俱乐部自有主题 {} 无自玩现金,跳过结算", topic.getId());
+            return true;
+        }
+        Long principal = clubPrincipalPayee.forTopic(topic);
+        BigDecimal platformRate = settlementPlatformRate(topic);
+        if (platformRate == null || platformRate.signum() < 0 || platformRate.compareTo(BigDecimal.ONE) > 0) {
+            throw new IllegalStateException("主题平台费率无效 topicId=" + topic.getId() + " rate=" + platformRate);
+        }
+        BigDecimal platformAmount = totalSales.multiply(platformRate).setScale(2, java.math.RoundingMode.HALF_UP);
+        BigDecimal principalAmount = totalSales.subtract(platformAmount);
+        Date now = new Date();
+        Date payable = topic.getEndDate() != null
+                ? new Date(topic.getEndDate().getTime() + 7L * 24 * 3600 * 1000)
+                : new Date(now.getTime() + 7L * 24 * 3600 * 1000);
+        String regIds = joinVerifiedRegIds(basis.getVerifiedRegistrationIds());
+        CoopSettlement platformLine = newSettlementLine(topic, null, platformAmount, "PLATFORM", "platform", 1,
+                payable, now, basis.getVerifiedHeads(), basis.getVerifiedSales(), regIds);
+        CoopSettlement principalLine = newSettlementLine(topic, principal, principalAmount, "INITIATOR_MARGIN", "initiator", 0,
+                payable, now, basis.getVerifiedHeads(), basis.getVerifiedSales(), regIds);
+        for (CoopSettlement line : List.of(platformLine, principalLine)) {
+            if (coopSettlementMapper.insertCoopSettlement(line) != 1) {
+                throw new IllegalStateException("自玩结算应付写入失败 topicId=" + topic.getId()
+                        + " lineType=" + line.getLineType());
+            }
+        }
+        pointsAwardService.awardPublisherSettlement(topic.getMemberId(), topic.getId());
+        logger.info("俱乐部自有主题自玩结算: topicId={} 销售额={} 平台={}(率{}) 主理人{}应收={}",
+                topic.getId(), totalSales, platformAmount, platformRate, principal, principalAmount);
         return true;
     }
 
@@ -837,7 +927,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         }
         // [P0-28 批1] 读**主题锁价时冻的快照**,不是 live 值 —— 用 live 值 = 调一次费率
         // 追溯改写所有已售未结订单,平台多抽 → 发起人 margin<0 → 守恒断言拒结 → 款项悬空。
-        BigDecimal platformRate = pricingService.platformRateOf(topic);
+        BigDecimal platformRate = settlementPlatformRate(topic);
         BigDecimal platformAmount = totalSales.multiply(platformRate).setScale(2, java.math.RoundingMode.HALF_UP);
         BigDecimal verifiedSales = cashBasis.getVerifiedSales();
         int verifiedHeads = cashBasis.getVerifiedHeads();

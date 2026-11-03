@@ -130,14 +130,17 @@ class SessionRefundCopyTest {
         assertFalse(text.contains(RefundPolicy.SESSION_REFUND_RULE_TEXT), "实际:" + text);
     }
 
-    /** 错过窗口的拒绝理由必须换成 24h 口径 —— 展示与执行说同一句话。 */
+    /** 2026-11-02 退款档位:开始后才拒绝,理由说「已开始」;24 小时内是退 50%,不再是拒绝。 */
     @Test
-    void missedSessionRefusalReasonUses24hCopy() {
+    void missedSessionRefusalReasonSaysStarted() {
         RefundPolicy.Verdict v = RefundPolicy.evaluate(2L, 2, 0, null, null, null,
                 new Date(now.getTime() - H), now);
         assertFalse(v.refundable);
-        assertTrue(v.reason.contains("集合前24小时") || v.reason.contains("集合前 24 小时"),
-                "实际:" + v.reason);
+        assertEquals("场次已开始,不可退款", v.reason);
+        RefundPolicy.Verdict late = RefundPolicy.evaluate(2L, 2, 0, null, null, null,
+                new Date(now.getTime() + H), now);
+        assertTrue(late.partial());
+        assertTrue(late.reason.contains("50%"), "实际:" + late.reason);
     }
 
     /** 快照单(③)错过时给通用截止口径,不再说「活动开始」—— 它的钟是票面有效期。 */

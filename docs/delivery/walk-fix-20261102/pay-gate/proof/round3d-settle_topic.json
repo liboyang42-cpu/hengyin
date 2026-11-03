@@ -1,0 +1,44 @@
+{
+ "settle_topic": {
+  "job": {
+   "run": {
+    "code": 200,
+    "msg": "操作成功"
+   },
+   "log": [
+    [
+     "0",
+     "分润结算（活动+主题） 总共耗时：36毫秒 jobId=145 jobRunId=d4c63a1e3fcd44dd845611b4ada37454",
+     ""
+    ]
+   ]
+  },
+  "topic": [
+   [
+    1
+   ]
+  ],
+  "coop_settlement": [
+   [
+    1,
+    "PLATFORM",
+    "platform",
+    null,
+    "0.90",
+    1,
+    "2026-11-02 03:35:04",
+    "0.00"
+   ],
+   [
+    2,
+    "INITIATOR_MARGIN",
+    "initiator",
+    9004,
+    "29.09",
+    0,
+    "2026-11-02 03:35:04",
+    "0.00"
+   ]
+  ]
+ }
+}

@@ -14,13 +14,13 @@ function payoutSummary(application) {
   const toCode = function (v) { return v === null || v === undefined || v === '' ? NaN : Number(v); };
   const payout = toCode(application.payoutStatus);
   if (payout === 1 || payout === 4) {
-    return { key: 'refunded', text: '已退款', refundText: '退款已原路退回' };
+    return { key: 'refunded', text: '退款成功', refundText: '退款已原路退回' };
   }
   if (payout === 2) {
-    return { key: 'refunding', text: '退款处理中', refundText: '原路退款异常，平台正在人工处理' };
+    return { key: 'refunding', text: '正在退款', refundText: '原路退款异常，平台正在人工处理' };
   }
   if (payout === 3) {
-    return { key: 'refunding', text: '退款处理中', refundText: '人工退款已处理，等待复核确认' };
+    return { key: 'refunding', text: '正在退款', refundText: '人工退款已处理，等待复核确认' };
   }
   const amount = application.refundAmount;
   if (amount !== undefined && amount !== null && !(Number(amount) > 0)) return null;   // 零元单没有钱可退,不给在途承诺
@@ -30,12 +30,12 @@ function payoutSummary(application) {
     return { key: 'refunding', text: '退款审核中', refundText: '退款申请已提交，等待平台审核' };
   }
   if (payout === 0) {
-    return { key: 'refunding', text: '退款处理中', refundText: '微信已受理原路退款，到账以微信退款通知为准' };
+    return { key: 'refunding', text: '正在退款', refundText: '微信已受理原路退款，到账以微信退款通知为准' };
   }
   if (status === 1) {
-    return { key: 'refunding', text: '退款处理中', refundText: '退款已批准，正在提交原路退款' };
+    return { key: 'refunding', text: '正在退款', refundText: '退款已批准，正在提交原路退款' };
   }
-  return { key: 'refunding', text: '退款处理中', refundText: '退款进度更新中，请以微信退款通知为准' };
+  return { key: 'refunding', text: '正在退款', refundText: '退款进度更新中，请以微信退款通知为准' };
 }
 
 // U-033:未开始/进行中/已完成按服务端读时刻(row.serverNow,/api/registration/list|info|my-joined 下发)判,
