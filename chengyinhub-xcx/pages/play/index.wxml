@@ -1691,7 +1691,7 @@
 
 
 <!-- 升级2:俱乐部局角色卡(首入本场弹一次;v5 语言:scrim + 玻璃卡 + 翻入动画) -->
-<view class="rolemask" catchtouchmove="noop" wx:if="{{roleCard.show}}" bindtap="closeRoleCard" aria-role="button" aria-label="关闭身份卡" hover-class="cy-pressed" hover-stay-time="80"></view>
+<view class="rolemask" catchtouchmove="noop" wx:if="{{roleCard.show}}" bindtap="closeRoleCard" aria-role="button" aria-label="关闭身份卡" hover-class="none"></view>
 <!-- v5.1/v5.2 新玩法分发器:kit 由 cy-advanced-game 抛上来的权威会话视图派生
      (见 utils/playkit-view.js)。这些壳是独立 sheet,套不进面板自己那层 sheet,所以渲染在这里。 -->
 <cy-playkit id="playKit" kit="{{playKit.kit}}" show="{{playKit.show}}" bind:kitaction="onPlayKitAction" />
