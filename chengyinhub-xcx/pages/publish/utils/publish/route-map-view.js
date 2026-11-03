@@ -17,6 +17,7 @@
 
 const proEditorPolicy = require('./pro-editor-policy.js');
 const lastLocation = require('../../../../utils/location/last-location.js');
+const { readFontScale, mapFontSize } = require('../../../../utils/font-scale.js');
 
 const ROUTE_COLORS = ['#1A1A1A', '#155DFC', '#12B886', '#0CA5A5', '#F59F00', '#E64980'];
 const MAP_PIN = '/pages/publish/images/map-pin.png';
@@ -57,6 +58,7 @@ function buildRouteMapView(state) {
     const markers = [];
     const polyline = [];
     const allPoints = [];
+    const fontScale = readFontScale();
     let globalNo = 0; // 全局站点序号(跨章节连续)
     const selectedLid = state.selectedNodeLid; // 列表↔地图联动选中节点
     const markerMap = {}; // markerId → {chapterLid, nodeLid} 反查表(供 M1.2 bindmarkertap)
@@ -109,7 +111,7 @@ function buildRouteMapView(state) {
           ? {
               content: String(globalNo),
               color: '#ffffff',
-              fontSize: 9,
+              fontSize: mapFontSize(9, fontScale),
               bgColor: pinColor,
               borderRadius: 20,
               padding: 4,
@@ -120,7 +122,7 @@ function buildRouteMapView(state) {
           : {
               content: String(globalNo),
               color: '#ffffff',
-              fontSize: 11,
+              fontSize: mapFontSize(11, fontScale),
               bgColor: pinColor,
               borderRadius: 20,
               borderWidth: 2,
@@ -162,7 +164,7 @@ function buildRouteMapView(state) {
         label: {
           content: '待编排',
           color: '#ffffff',
-          fontSize: 10,
+          fontSize: mapFontSize(10, fontScale),
           bgColor: DRAFT_COLOR,
           borderRadius: 20,
           padding: 5,
@@ -206,7 +208,7 @@ function buildRouteMapView(state) {
         label: {
           content: state.popChapterNodesAction === 0 ? '待添加' : '编辑中',
           color: '#ffffff',
-          fontSize: 11,
+          fontSize: mapFontSize(11, fontScale),
           bgColor: SELECTED_COLOR,
           borderRadius: 20,
           borderWidth: 2,

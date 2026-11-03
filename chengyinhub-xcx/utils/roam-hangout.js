@@ -22,6 +22,7 @@ function numOrNull(v) {
 
 const { NEAR_M, markerSpec, iconKey, whenParts } = require('./roam-hangout-marker.js');
 const { MAP_AVATAR_COLORS: C } = require('./play-visual-tokens.js');
+const { readFontScale, mapFontSize } = require('./font-scale.js');
 
 /**
  * items 来自 GET /api/roam/hangout/nearby;icons = 已生成的 tempFilePath 表({key: path});farIcons = {color: path}。
@@ -31,6 +32,7 @@ const { MAP_AVATAR_COLORS: C } = require('./play-visual-tokens.js');
 function buildHangoutMarkers(items, icons, farIcons) {
   const ic = icons || {}; const far = farIcons || {};
   const out = [];
+  const fontScale = readFontScale();
   (items || []).forEach((it) => {
     if (!it) return;
     const lat = numOrNull(it.latitude);
@@ -57,7 +59,7 @@ function buildHangoutMarkers(items, icons, farIcons) {
         : spec.role === 'event'
           ? { content: spec.badge || String(it.name || ''), color: C.cream, bgColor: C.event }
           : { content: isHangout ? String(it.title || '') : String(it.name || ''), color: C.cream, bgColor: C.panel + 'E6' };
-      m.callout = Object.assign({ fontSize: 11, borderRadius: 10, padding: 6, display: 'ALWAYS' }, plate);
+      m.callout = Object.assign({ fontSize: mapFontSize(11, fontScale), borderRadius: 10, padding: 6, display: 'ALWAYS' }, plate);
     }
     out.push(m);
   });

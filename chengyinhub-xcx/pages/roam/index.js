@@ -8,7 +8,7 @@ const cyModal = require('../../utils/modal.js');
 const cyLoading = require('../../utils/loading.js');
 const cyToast = require('../../utils/toast.js');
 const publishIntent = require('../../utils/publish/publish-intent.js');
-const { readPageStyle } = require('../../utils/font-scale.js');
+const { readPageStyle, readFontScale, mapFontSize } = require('../../utils/font-scale.js');
 const motion = require('../../utils/motion.js');
 const config = require('../../utils/config.js');
 const { pickLocation } = require('../../utils/location/location-manager.js');
@@ -2422,6 +2422,8 @@ Page({
 
   _syncMarkers() {
     const mk = [];
+    // 原生气泡不吃 --cy-type-scale:按手机字号同一倍率算出字号(1~1.3,只放大)
+    const calloutFont = mapFontSize(11, readFontScale());
     const mapStates = [];
     const visit = this.data.visit || {};
     const poiFilter = this._poiFilterState();
@@ -2474,7 +2476,7 @@ Page({
         m.callout = {
           content: p.demo ? '演示点 · 非真实\n' + p.name : p.name,
           color: '#FFFFFF',
-          fontSize: 11,
+          fontSize: calloutFont,
           borderRadius: 10,
           bgColor: '#141414CC',
           padding: 6,
@@ -2485,7 +2487,7 @@ Page({
         m.callout = {
           content: '正在打卡',
           color: '#FFFFFF',
-          fontSize: 11,
+          fontSize: calloutFont,
           borderRadius: 10,
           bgColor: '#000000CC',
           padding: 6,
@@ -2496,7 +2498,7 @@ Page({
         m.callout = {
           content: '打卡未记录',
           color: '#FFFFFF',
-          fontSize: 11,
+          fontSize: calloutFont,
           borderRadius: 10,
           bgColor: '#000000CC',
           padding: 6,
@@ -2507,7 +2509,7 @@ Page({
         m.callout = {
           content: p.cat === 'merchant' ? '已探店' : '已点亮',
           color: '#FFFFFF',
-          fontSize: 11,
+          fontSize: calloutFont,
           borderRadius: 10,
           bgColor: '#000000CC',
           padding: 6,
@@ -2560,7 +2562,7 @@ Page({
         callout: {
           content: r.nickname,
           color: '#FFFFFF', /* ds-ok 与本页其它 marker callout 同一套(地图气泡不吃 wxss token) */
-          fontSize: 11,
+          fontSize: calloutFont,
           borderRadius: 10,
           bgColor: '#000000CC', /* ds-ok 同上,与「已探店 / 正在打卡」两个气泡一字不差 */
           padding: 6,

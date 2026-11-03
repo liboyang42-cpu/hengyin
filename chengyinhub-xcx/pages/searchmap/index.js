@@ -2,6 +2,7 @@ const modal = require('../../utils/modal.js');
 const toast = require('../../utils/toast.js');
 const app = getApp();
 const { resolveMenuChrome } = require('../../utils/nav-safe-area.js');
+const { mapFontSize } = require('../../utils/font-scale.js');
 const discoverSearch = require('../../utils/discover-search.js');
 const { openScene } = require('../../utils/scene-entry.js');
 const { buildNodeLevelMarkerStyle } = require('../roam/node-level-style.js');
@@ -536,7 +537,7 @@ Page({
       callout: {
         content: activity.name + (activity.mapPointKind === 'topic' ? ' · 主题节点' : ''),
         color: '#333', /* ds-ok: 原生 <map> callout 只收字面色值,不吃 CSS var */
-        fontSize: 12,
+        fontSize: mapFontSize(12),
         borderRadius: 4,
         bgColor: '#fff', /* ds-ok: 同上,marker 样式在 JS 侧注入原生层 */
         padding: 8,

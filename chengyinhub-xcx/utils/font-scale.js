@@ -58,6 +58,16 @@ function readFontScale(sys) {
   }
 }
 
+/**
+ * 原生地图 callout / label 的字号(px)。原生层不吃 --cy-type-scale,只能在 JS 里按同一倍率算好。
+ * @param {number} base 基准字号(px),如 11
+ * @param {number} [scale] 已读好的倍率;不传则现读
+ */
+function mapFontSize(base, scale) {
+  const s = scale == null ? readFontScale() : scale
+  return Math.round(base * s)
+}
+
 /** 一步到位:给页面 data 用的 page-style 串 */
 function readPageStyle(sys) {
   return pageStyleFor(readFontScale(sys))
@@ -71,4 +81,5 @@ module.exports = {
   pageStyleFor,
   readFontScale,
   readPageStyle,
+  mapFontSize,
 }

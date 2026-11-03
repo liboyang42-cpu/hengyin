@@ -1,5 +1,6 @@
 const BRAND = '#FFFFFF';
 const { getPlayMapState } = require('../../../utils/play-state-contract.js');
+const { readFontScale, mapFontSize } = require('../../../utils/font-scale.js');
 const { drawPlayStateMarker, drawNumberedMarker } = require('../../../utils/play-marker-draw.js');
 // 保留 marker id(非真实 nodeId),onMarkerTap 需一并过滤,避免撞上真实 nodeId 误触发 pintap
 const PLAYER_MARKER_ID = 99999;
@@ -172,6 +173,7 @@ Component({
       const mk = [];
       const photoCallouts = [];
       const needNum = [];
+      const fontScale = readFontScale();
       (this.data.nodes || []).forEach(n => {
         if (!n.lat || !n.lng) return;
         const isTarget = !!(t && t.nodeId != null && String(t.nodeId) === String(n.nodeId));
@@ -200,7 +202,7 @@ Component({
           // 标签为空就整个不挂 callout —— 自由探索不编号(调用方给 num=''),
           // 挂一个空胶囊等于在每个点上贴一块没有字的黑色小牌子。
           if (label && !this.data.compact && (n.reviewLabel || !numKey || !this._iconCanvas || this._numIcons[numKey] === '')) {
-            m.callout = { content: label, color: highlighted ? '#111111' : '#fff', fontSize: n.reviewLabel ? 10 : 11,  /* ds-ok 原样搬进 if 的既有行,色值一字未改;原生 callout 只吃字面量,拿不到 var() */
+            m.callout = { content: label, color: highlighted ? '#111111' : '#fff', fontSize: mapFontSize(n.reviewLabel ? 10 : 11, fontScale),  /* ds-ok 原样搬进 if 的既有行,色值一字未改;原生 callout 只吃字面量,拿不到 var() */
               bgColor: highlighted ? BRAND : 'rgba(20,20,20,.9)',
               padding: n.reviewLabel ? 6 : 5, borderRadius: 8, display: 'ALWAYS', anchorY: -2 };
           }
