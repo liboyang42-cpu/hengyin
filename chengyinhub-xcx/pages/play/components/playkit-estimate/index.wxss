@@ -3,6 +3,7 @@
 /* cy-playkit-estimate · 猜数字(逐块照抄原型 playkit.html 的 .reelstack / .lane) */
 .es { color: var(--ink); }
 .es__q {
+  display: var(--pk-es-q-display, block);   /* 故事流内嵌时题目写在页面顶栏里(P-09 第四轮),这里由页面收起 */
   font-size: var(--cy-type-sheet-title);
   font-weight: 800;
   line-height: 1.35;

@@ -36,8 +36,7 @@
     </view>
   </view>
 
-  <view class="g-btn {{locked ? 'g-btn--disabled' : ''}} pe pe--up" style="--pe-d:.9s" bindtap="onSubmit"
-        aria-role="button" aria-label="提交这个数" hover-class="g-btn--press" hover-stay-time="80">
-    {{locked ? '这一关结束了' : '就这个数'}}
-  </view>
+  <!-- P-09 第四轮:交过之后这颗钮点了什么都不做(只剩一句灰字),不是真动作 → 收起;往下走是故事流的「继续故事」 -->
+  <view class="g-btn pe pe--up" wx:if="{{!locked}}" style="--pe-d:.9s" bindtap="onSubmit"
+        aria-role="button" aria-label="提交这个数" hover-class="g-btn--press" hover-stay-time="80">就这个数</view>
 </cy-play-stage>

@@ -40,7 +40,7 @@ test('play 页接线:开玩前先问、章节门挡住不自动进正文、轮�
   assert.match(js, /const cue = releaseCue\(prevLead, that\.data\.lead\);/);
   const wxml = fs.readFileSync(path.join(__dirname, '../../pages/play/index.wxml'), 'utf8');
   // 第四轮:被挡住时挂「等待放行」屏(见 play-chapter-hold-screen-p08-r4.test.js),不在地图上另挂一行
-  assert.match(wxml, /chapterGate\.held\}\}" catchtouchmove="noop" aria-role="status" aria-label="等待放行">/);
+  assert.match(wxml, /chapterGate\.held\}\}" aria-role="status" aria-label="等待放行">/);
   assert.doesNotMatch(wxml, /chgate-hold/);
   assert.match(js, /that\._releaseChapterGate\(\);/);
   assert.match(wxml, /class="lg-wait" aria-hidden="true"/);

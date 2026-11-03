@@ -78,6 +78,7 @@ const {
 // 顶部浮层的纵向起点:必须由微信胶囊的真实位置算出。原来 .play-header-wrap 写死 top:104rpx,
 // 实拍就是压在胶囊底下、「更多」被吃掉半个字(2026-08-04)。漫游页早就用这套,这里对齐。
 const { resolveMenuChrome } = require('../../utils/nav-safe-area.js');
+const { kitHeadChrome } = require('./utils/kit-head.js');
 const { isRecord, isRecordList } = require('../../utils/response-shape.js');
 
 // 氛围跟着正文流走,读到哪一段就是哪一段的基调。配色沿用章节那套预设,
@@ -445,7 +446,7 @@ Page({
     loading: true,
     reducedMotion: false,
     statusBarHeight: 44,
-    chrome: { actionTop: 54, actionRight: 12, contentTop: 100, sheetTop: 99 },
+    chrome: { actionTop: 54, actionRight: 12, contentTop: 100, sheetTop: 99, kitTop: 48 },
     emptyTip: '', emptyKind: '',    // 空态:'' 无 / missing 缺场次参数(重试无效) / error 加载失败 / signup 未报名 / empty 无打卡点
     timeBanner: '',                 // 非阻断横幅:活动未开始/已结束(仍可看足迹)
     isPreview: false,           // 预览态:fabu 创作器经 EventChannel 喂数据,屏蔽所有写接口/GPS
@@ -620,12 +621,9 @@ Page({
     this._entryTopicName = options.topicName ? decodeURIComponent(options.topicName) : '';
     this._routeState = normalizeRouteState(null);
     const sys = wx.getSystemInfoSync();
-    this.setData({
-      chrome: resolveMenuChrome(
-        (wx.getWindowInfo && wx.getWindowInfo()) || sys,
-        wx.getMenuButtonBoundingClientRect && wx.getMenuButtonBoundingClientRect()
-      ),
-    });
+    const win = (wx.getWindowInfo && wx.getWindowInfo()) || sys;
+    const menu = wx.getMenuButtonBoundingClientRect && wx.getMenuButtonBoundingClientRect();
+    this.setData({ chrome: kitHeadChrome(resolveMenuChrome(win, menu), win, menu) });
     this.rpx = 750 / sys.windowWidth;                 // px → rpx 系数
     this.screenW = sys.windowWidth * this.rpx;        // = 750
     this.screenH = sys.windowHeight * this.rpx; this._entryLayer = options.layer === 'scoring' ? String(options.sessionId || '*') : ''; // 我的申诉点一行:落到本局成绩全屏层

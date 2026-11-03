@@ -1748,6 +1748,11 @@ page { background: var(--cy-color-bg-page); }
 .fx-story__hd.is-kit .fx-story__t,
 .fx-story__hd.is-kit .hud2{ display:none; }
 .fx-story__kitback{ flex:none; }
+/* P-09 第四轮:猜数字的题目进顶栏,和返回、胶囊一行;右边距由页面按胶囊给(chrome.actionRight),最多两行;这时右上圆钮收起 */
+.fx-story__hd.is-kitq{ gap:var(--cy-space-2); }
+.fx-story__hd.is-kitq .fx-story__acts{ display:none; }
+.fx-story__kitq{ flex:1; min-width:0; font-size:var(--cy-type-section-title); font-weight:700; line-height:1.3; color:var(--cy-color-text-primary);
+  display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; word-break:break-all; }
 .fx-story__act{ width:88rpx; height:88rpx; border-radius:50%;
   background:var(--cy-color-bg-elevated); display:flex; align-items:center; justify-content:center; }
 
