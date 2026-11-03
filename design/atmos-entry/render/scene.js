@@ -24,7 +24,7 @@ export const CHINA = { lon: 104.5, lat: 32.5 };
 export const CUT = 2.7;
 
 export function params(t) {
-  const alt = Math.exp(lerp(Math.log(5.6), Math.log(0.06), diveEase(t)));
+  const alt = Math.exp(lerp(Math.log(4.5), Math.log(0.06), diveEase(t)));
   const turn = smoother(0.0, 2.55, t);
   return {
     t,
@@ -32,14 +32,13 @@ export function params(t) {
     lon: lerp(168, CHINA.lon, turn),
     lat: lerp(10, CHINA.lat, turn),
     lookY: lerp(0.95, 0.0, smoother(0.2, 2.0, t)),
-    roll: rad(lerp(-4, 0, smoother(0.0, 2.6, t))),
+    roll: 0,
     globeClouds: lerp(0.6, 0.9, smooth(1.2, 2.4, t)),
-    coverage: lerp(0.0, 1.0, smoother(1.75, 2.62, t)),
+    coverage: lerp(0.0, 1.0, smoother(1.75, 2.62, t)) - 0.22 * smoother(2.85, 3.5, t),
     densityBoost: 1 + 3.5 * Math.exp(-(((t - CUT) / 0.09) ** 2)),
     bgMix: t >= CUT ? 1 : 0,
-    descend: 2.05 * smoother(2.35, 3.62, t),
-    part: smoother(2.95, 3.72, t),
-    white: smooth(3.42, 3.8, t),
+    part: smoother(2.85, 3.8, t),
+    white: smooth(3.5, 3.8, t),
     black: 1 - smooth(0.0, 0.32, t),
   };
 }
@@ -169,22 +168,22 @@ const earthFrag = /* glsl */ `
     // stylised soft day light with a warm terminator
     float dayL = smoothstep(-0.10, 0.55, ndl);
     vec3 warm = mix(vec3(1.0, 0.52, 0.28), vec3(1.0, 0.96, 0.9), smoothstep(0.0, 0.4, ndl0));
-    vec3 col = s.day * dayL * warm * 1.25;
+    vec3 col = s.day * dayL * warm * 0.95;
 
     // ocean glint
     float ocean = 1.0 - s.land;
+    col *= mix(vec3(1.06, 0.98, 0.86), vec3(0.34, 0.50, 0.74), ocean);
     vec3 H = normalize(uSun + V);
-    col += vec3(1.0, 0.85, 0.65) * pow(max(dot(N0, H), 0.0), 48.0) * 0.45 * ocean * smoothstep(0.0, 0.2, ndl0);
+    col += vec3(1.0, 0.85, 0.65) * pow(max(dot(N0, H), 0.0), 40.0) * 0.22 * ocean * smoothstep(0.0, 0.2, ndl0);
 
     // clouds on the planet (shadowed surface underneath)
-    vec3 q = p * 2.1 + vec3(uTime * 0.004, 0.0, 0.0);
-    vec4 cn = texture(tShape, q);
-    float wf = cn.g * 0.625 + cn.b * 0.25 + cn.a * 0.125;
-    float base = clamp((cn.r - (wf - 1.0)) / (2.0 - wf), 0.0, 1.0);
-    float cov = smoothstep(0.70, 0.93, base) * uClouds;
-    vec4 cs = texture(tShape, (p + uSun * 0.015) * 2.1 + vec3(uTime * 0.004, 0.0, 0.0));
-    float cwf = cs.g * 0.625 + cs.b * 0.25 + cs.a * 0.125;
-    float csh = smoothstep(0.70, 0.93, clamp((cs.r - (cwf - 1.0)) / (2.0 - cwf), 0.0, 1.0)) * uClouds;
+    vec3 cq = vec3(1.05, 2.3, 1.05);
+    vec3 drift = vec3(uTime * 0.004, 0.0, 0.0);
+    vec4 cn = texture(tShape, p * cq + drift);
+    float base = cn.r - (1.0 - cn.g) * 0.18 - (1.0 - texture(tShape, p * cq * 4.0).b) * 0.10;
+    float cov = smoothstep(0.58, 0.95, base) * uClouds;
+    vec4 cs = texture(tShape, (p + uSun * 0.012) * cq + drift);
+    float csh = smoothstep(0.58, 0.95, cs.r - (1.0 - cs.g) * 0.18) * uClouds;
     col *= 1.0 - 0.35 * csh;
 
     // night lights fade in on the dark side
@@ -239,7 +238,7 @@ const atmoFrag = /* glsl */ `
     }
     float phaseR = 0.75 * (1.0 + mu * mu);
     float g = 0.76; float phaseM = (1.0 - g * g) / pow(1.0 + g * g - 2.0 * g * mu, 1.5) * 0.08;
-    vec3 col = acc * beta * phaseR * 26.0 + vec3(1.0, 0.8, 0.62) * mie * phaseM * 26.0;
+    vec3 col = acc * beta * phaseR * 15.0 + vec3(1.0, 0.8, 0.62) * mie * phaseM * 15.0;
     // a little lilac in the deep limb
     col += vec3(0.22, 0.14, 0.36) * acc.g * 6.0 * (1.0 - smoothstep(-0.2, 0.3, mu));
     outColor = vec4(col, 1.0);
@@ -252,11 +251,11 @@ const cloudFrag = /* glsl */ `
   in vec2 vUv;
   uniform sampler3D tShape, tDetail;
   uniform vec3 uCamPos, uFwd, uRight, uUp; uniform float uTanY, uAspect;
-  uniform float uCoverage, uDensity, uPart, uTime; uniform vec2 uRes; uniform float uFrame;
+  uniform float uCoverage, uDensity, uPart, uTime; uniform vec2 uPartC; uniform vec2 uRes; uniform float uFrame;
   uniform vec3 uSun;
   out vec4 outColor;
   const float TOP = 1.3;
-  const float SCALE = 0.30;
+  const float SCALE = 0.8;
 
   float remap(float v, float a, float b, float c, float d){ return c + (v - a) / (b - a) * (d - c); }
 
@@ -266,14 +265,14 @@ const cloudFrag = /* glsl */ `
     vec3 q = p * SCALE + vec3(uTime * 0.018, uTime * 0.006, 0.0);
     vec4 s = texture(tShape, q);
     float wf = s.g * 0.625 + s.b * 0.25 + s.a * 0.125;
-    float base = remap(s.r, wf - 1.0, 1.0, 0.0, 1.0) * prof;
+    float base = clamp(s.r - (1.0 - wf) * 0.3, 0.0, 1.0) * prof;
     float cov = uCoverage;
     float d = clamp(remap(base, 1.0 - cov, 1.0, 0.0, 1.0), 0.0, 1.0);
     // parting: an opening that grows outward around the descent axis, ragged by noise
     if (uPart > 0.0) {
-      float r = length(p.xy - uCamPos.xy) + (s.g - 0.5) * 0.9;
-      float R = uPart * 5.0;
-      d *= smoothstep(R - 0.2, R + 1.4, r);
+      float r = length((p.xy - uPartC) * vec2(1.0, 0.62)) + (s.g - 0.5) * 0.30 + (s.b - 0.5) * 0.14;
+      float R = uPart * 0.52 - 0.08;
+      d *= smoothstep(R - 0.02, R + 0.16, r);
     }
     if (d <= 0.0 || !detail) return d * uDensity;
     vec4 dt = texture(tDetail, q * 3.1 + vec3(0.0, 0.0, uTime * 0.02));
@@ -303,10 +302,10 @@ const cloudFrag = /* glsl */ `
     vec3 L = vec3(0.0);
     float mu = dot(rd, uSun);
     float phase = mix(hg(mu, 0.55), hg(mu, -0.25), 0.45) * 4.0 * PI * 0.6 + 0.4;
-    vec3 sunCol = vec3(1.05, 1.0, 0.97) * 1.25;
-    vec3 shadowCol = vec3(0.50, 0.46, 0.70);
+    vec3 sunCol = vec3(1.05, 1.0, 0.96) * 1.7;
+    vec3 shadowCol = vec3(0.40, 0.36, 0.60);
     vec3 skyCol = vec3(0.86, 0.84, 1.0);
-    const float SIGMA = 9.0;
+    const float SIGMA = 6.0;
     for (int i = 0; i < N; i++) {
       float t = tA + ds * (float(i) + jitter);
       vec3 p = ro + rd * t;
@@ -320,7 +319,7 @@ const cloudFrag = /* glsl */ `
         float lightT = exp(-od * SIGMA * 0.55) * 0.75 + exp(-od * SIGMA * 0.14) * 0.25;
         float powder = 1.0 - exp(-d * SIGMA * 0.35);
         float h = clamp(p.z / TOP, 0.0, 1.0);
-        vec3 amb = mix(shadowCol, skyCol, smoothstep(0.0, 0.9, h)) * 0.5;
+        vec3 amb = mix(shadowCol, skyCol, smoothstep(0.0, 0.9, h)) * 0.36;
         vec3 Sc = sunCol * lightT * phase * mix(0.55, 1.0, powder) + amb;
         float sig = d * SIGMA;
         float Ts = exp(-sig * ds);
@@ -342,7 +341,7 @@ const compFrag = /* glsl */ `
   vec3 toSRGB(vec3 c){ return mix(c * 12.92, 1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, step(0.0031308, c)); }
   void main(){
     vec3 bg = texture(tGlobe, vUv).rgb;
-    vec3 haze = mix(vec3(0.80, 0.77, 0.92), vec3(0.98, 0.96, 1.02), smoothstep(0.0, 1.0, vUv.y)) * 1.15;
+    vec3 haze = mix(vec3(0.36, 0.38, 0.64), vec3(0.62, 0.62, 0.86), smoothstep(0.0, 1.0, vUv.y));
     haze += vec3(0.25, 0.22, 0.18) * exp(-pow(length((vUv - vec2(0.75, 0.85)) * vec2(1.0, 0.6)) * 2.2, 2.0));
     bg = mix(bg, haze, uBgMix);
     vec3 col = bg;
@@ -462,7 +461,7 @@ export async function setup(data, opts) {
       tShape: { value: shape }, tDetail: { value: detail },
       uCamPos: { value: new THREE.Vector3() }, uFwd: { value: new THREE.Vector3() }, uRight: { value: new THREE.Vector3() }, uUp: { value: new THREE.Vector3() },
       uTanY: { value: Math.tan(rad(25)) }, uAspect: { value: W / H },
-      uCoverage: { value: 0 }, uDensity: { value: 1 }, uPart: { value: 0 }, uTime: { value: 0 }, uRes: { value: new THREE.Vector2(cloudRT.width, cloudRT.height) }, uFrame: { value: 0 },
+      uCoverage: { value: 0 }, uDensity: { value: 1 }, uPart: { value: 0 }, uPartC: { value: new THREE.Vector2() }, uTime: { value: 0 }, uRes: { value: new THREE.Vector2(cloudRT.width, cloudRT.height) }, uFrame: { value: 0 },
       uSun: { value: new THREE.Vector3(0.45, 0.32, 0.83).normalize() },
     },
   });
@@ -490,7 +489,7 @@ export async function setup(data, opts) {
     // globe camera
     camera.position.set(0, 0, 1 + P.alt);
     camera.up.set(Math.sin(P.roll), Math.cos(P.roll), 0);
-    camera.lookAt(0, P.lookY * (P.alt / 5.6), 0);
+    camera.lookAt(0, P.lookY * (P.alt / 4.5), 0);
     camera.updateMatrixWorld();
     earthGroup.rotation.set(0, 0, 0);
     earthGroup.rotateX(rad(P.lat));
@@ -517,7 +516,7 @@ export async function setup(data, opts) {
     const useCloud = P.coverage > 0.001;
     if (useCloud) {
       const top = 1.3;
-      const camZ = top + 1.25 * P.alt - P.descend;
+      const camZ = top + 0.4 + 2.0 * P.alt;
       const u = cloudMat.uniforms;
       u.uCamPos.value.set(0.4 + t * 0.05, -0.2, camZ);
       const tilt = rad(lerp(0, 9, smooth(2.4, 3.8, t)));
@@ -532,6 +531,8 @@ export async function setup(data, opts) {
       u.uCoverage.value = P.coverage;
       u.uDensity.value = P.densityBoost;
       u.uPart.value = P.part;
+      const reach = (camZ - 0.5) / Math.max(0.2, -fwd.z);
+      u.uPartC.value.set(u.uCamPos.value.x + fwd.x * reach, u.uCamPos.value.y + fwd.y * reach);
       u.uTime.value = t;
       u.uFrame.value = frame;
       renderer.setRenderTarget(cloudRT);

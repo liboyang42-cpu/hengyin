@@ -76,7 +76,23 @@ export function shapeVolume(n = 96) {
         out[o++] = worleyFbm(u, v, w, 8, 41) * 255;
         out[o++] = worleyFbm(u, v, w, 16, 61) * 255;
       }
+  for (let c = 0; c < 4; c++) equalize(out, c);
   return out;
+}
+
+// Rank-normalise one channel so its values spread evenly over 0..255.
+// Coverage thresholds in the shaders then mean "this fraction of the sky".
+function equalize(buf, ch) {
+  const n = buf.length / 4;
+  const hist = new Uint32Array(256);
+  for (let i = 0; i < n; i++) hist[buf[i * 4 + ch]]++;
+  const map = new Uint8Array(256);
+  let acc = 0;
+  for (let v = 0; v < 256; v++) {
+    map[v] = Math.min(255, Math.round(((acc + hist[v] / 2) / n) * 255));
+    acc += hist[v];
+  }
+  for (let i = 0; i < n; i++) buf[i * 4 + ch] = map[buf[i * 4 + ch]];
 }
 
 export function detailVolume(n = 32) {
@@ -91,5 +107,6 @@ export function detailVolume(n = 32) {
         out[o++] = worleyFbm(u, v, w, 8, 91) * 255;
         out[o++] = 255;
       }
+  for (let c = 0; c < 3; c++) equalize(out, c);
   return out;
 }

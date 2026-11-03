@@ -88,6 +88,7 @@ function serve() {
   srv.close();
   if (only || flag('no-encode')) return;
 
+  fs.mkdirSync(outDir, { recursive: true });
   const mp4 = path.join(outDir, 'atmos.mp4');
   execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-framerate', String(info.fps), '-i', path.join(framesDir, 'f%04d.png'),
     '-c:v', 'libx264', '-profile:v', 'high', '-level', '4.0', '-pix_fmt', 'yuv420p', '-preset', 'veryslow', '-crf', arg('crf', '19'),
