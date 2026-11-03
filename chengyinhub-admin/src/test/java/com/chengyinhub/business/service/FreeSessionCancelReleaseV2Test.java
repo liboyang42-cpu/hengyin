@@ -186,6 +186,7 @@ class FreeSessionCancelReleaseV2Test {
                 org.mockito.ArgumentCaptor.forClass(com.chengyinhub.business.domain.RefundApplication.class);
         verify(refundService).saveRefund(app.capture());
         assertEquals(0, new BigDecimal("4.95").compareTo(app.getValue().getRefundAmount()));
+        assertEquals("用户申请退款(开始前24小时内,退50%)", app.getValue().getReason());
     }
 
     /** 存量 ③ 单(旧码,快照 = 有效期截止)仍按当初答应的「截止前全额」退。 */

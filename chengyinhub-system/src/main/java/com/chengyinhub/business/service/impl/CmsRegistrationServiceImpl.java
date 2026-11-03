@@ -1031,6 +1031,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         StringBuilder ticketsKey = new StringBuilder();
         // 2026-11-03 通行证三档:③ 自由探索票的退款钟 = 票的开始时间(与下单快照同一锚点)。
         Date refundAnchor = activity == null ? null : activity.getStartDate();
+        boolean exploreAnchorSet = false;
 
         if (tickets == null || tickets.isEmpty()) {
             // 单票模式
@@ -1061,6 +1062,12 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                 RegistrationTicketItem it = tickets.get(i);
                 int qty = (it.getCount() == null || it.getCount() <= 0) ? 1 : it.getCount();
                 OmsTicket ticket = validateAndGetTicket(it.getTicketId(), ownerType, ownerId);
+                // 通行证三档:整单里有 ③ 票时,报价按最早开始的那张票的钟(与各行下单快照同锚)。
+                if (sellerTopic != null && PurchaseKind.derive(it.getTicketId(), sellerTopic.getProductType()) == PurchaseKind.EXPLORE_PASS
+                        && ticket.getStartTime() != null) {
+                    if (!exploreAnchorSet || ticket.getStartTime().before(refundAnchor)) refundAnchor = ticket.getStartTime();
+                    exploreAnchorSet = true;
+                }
                 if (activity != null && sellerTopic != null) assertRegistrationSellable(activity, sellerTopic, ticket, new Date());
                 orderTotal = orderTotal.add(ticket.getPrice().multiply(BigDecimal.valueOf(qty)));
                 memberPriceTotal = memberPriceTotal.add(clubBenefit.effectivePrice(ticket.getPrice())

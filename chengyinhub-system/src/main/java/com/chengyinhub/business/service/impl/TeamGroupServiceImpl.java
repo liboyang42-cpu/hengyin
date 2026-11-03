@@ -202,7 +202,9 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
             }
         }
         String reason = cashRatio.compareTo(BigDecimal.ONE) >= 0 ? "用户申请退款"
-                : Long.valueOf(1L).equals(r.getOwnerType()) ? "用户申请退款(开始前24小时内,退50%)"
+                : Long.valueOf(1L).equals(r.getOwnerType())
+                        || Integer.valueOf(com.chengyinhub.common.constant.PurchaseKind.EXPLORE_PASS).equals(r.getPurchaseKind())
+                        ? "用户申请退款(开始前24小时内,退50%)"
                 : "用户申请退款(集合前24小时内,退50%)";
         return refundResolvingOrder(r, ticketName, reason, operatorMemberId, false, cashRatio)
                 ? CANCEL_REFUNDED : CANCEL_MANUAL_REVIEW;
