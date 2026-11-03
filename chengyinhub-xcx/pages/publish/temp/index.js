@@ -728,7 +728,15 @@ Page({
     this._setFormState({ 'advanced.random.items': this.data.advanced.random.items.filter((_, i) => i !== index) });
   },
   _setBranchSteps: function (steps) {
+    // Round5 #11:步骤 / 选项 ID 与结局 outcomeCode 由系统生成且不给创作者看;旧数据缺的在这里补齐,
+    // 起点步骤失效时落到第一段(旧设置分支同样适用)。
+    steps = (steps || []).map((step) => (step && step.terminal && !step.outcomeCode && step.id
+      ? Object.assign({}, step, { outcomeCode: step.id }) : step));
     const patch = { 'advanced.branch.steps': steps };
+    if (this.data.advanced.branch.enabled && this.data.advanced.outcomeRules?.version !== 1
+        && !steps.some(step => step.id === this.data.advanced.branch.startStepId)) {
+      patch['advanced.branch.startStepId'] = steps[0]?.id || '';
+    }
     if (this.data.gameKey && !this.data.r5Editor.nextDisabledReason && this.data.gameSection !== 'branch' && (this.data.advanced.outcomeRules?.version === 1 || !this.data.advanced.branch.enabled)) {
       patch['advanced.branch.enabled'] = steps.length > 0;
       patch['advanced.branch.startStepId'] = steps.some(step => step.id === this.data.advanced.branch.startStepId) ? this.data.advanced.branch.startStepId : steps[0]?.id || '';

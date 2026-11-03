@@ -1201,23 +1201,18 @@
       <view class="cg-adv-body">
       <view class="cg-r5-sec">{{advanced.branch.enabled && advanced.outcomeRules.version !== 1 ? '分支剧情（旧设置）' : '反馈分段（本站内）'}}</view>
 
-    <view wx:if="{{advanced.branch.enabled && advanced.outcomeRules.version !== 1}}" class="cg-cfg-label">起点步骤 ID <text class="req" aria-hidden="true">*</text></view><input class="cg-cfg-input" wx:if="{{advanced.branch.enabled && advanced.outcomeRules.version !== 1}}" value="{{advanced.branch.startStepId}}" data-section="branch" data-field="startStepId" bindinput="onAdvancedField" />
     <view class="cg-adv-repeat" wx:for="{{advanced.branch.steps}}" wx:key="id" wx:for-index="si" wx:for-item="step">
     <view class="cg-adv-repeat-head"><text>步骤 {{si + 1}}</text><view class="cg-adv-del" data-index="{{si}}" bindtap="removeBranchStep" aria-role="button" aria-label="删除" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view></view>
-    <input class="cg-cfg-input" wx:if="{{advanced.branch.enabled && advanced.outcomeRules.version !== 1}}" value="{{step.id}}" placeholder="步骤 ID" data-index="{{si}}" data-field="id" bindinput="updateBranchStep" />
     <input class="cg-cfg-input" value="{{step.title}}" placeholder="步骤标题" data-index="{{si}}" data-field="title" bindinput="updateBranchStep" />
     <textarea class="cg-cfg-textarea" value="{{step.body}}" placeholder="这一段的反馈内容" data-index="{{si}}" data-field="body" bindinput="updateBranchStep" />
     <view class="cg-rw-line compact"><view class="cg-rw-name">这一段结束反馈</view><cy-switch checked="{{step.terminal}}" data-index="{{si}}" bindchange="toggleBranchTerminal" /></view>
     <view wx:if="{{step.terminal && advanced.branch.enabled && advanced.outcomeRules.version !== 1}}" class="cg-outcome-fields">
-      <view class="cg-cfg-label">稳定 outcomeCode <text class="req" aria-hidden="true">*</text></view>
-      <input class="cg-cfg-input" value="{{step.outcomeCode}}" placeholder="例如 FOUND_CLOCK" data-index="{{si}}" data-field="outcomeCode" bindinput="updateBranchStep" />
       <view class="cg-cfg-label">名称（仅自己可见）</view>
       <input class="cg-cfg-input" value="{{step.outcomeLabel}}" placeholder="例如 找到钟楼" data-index="{{si}}" data-field="outcomeLabel" bindinput="updateBranchStep" />
     </view>
     <view wx:if="{{!step.terminal}}" class="cg-adv-options">
       <view class="cg-adv-repeat" wx:for="{{step.options}}" wx:key="id" wx:for-index="oi" wx:for-item="option">
         <view class="cg-adv-repeat-head"><text>选项 {{oi + 1}}</text><view class="cg-adv-del" data-stepindex="{{si}}" data-optionindex="{{oi}}" bindtap="removeBranchOption" aria-role="button" aria-label="删除选项" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view></view>
-        <input class="cg-cfg-input" wx:if="{{advanced.branch.enabled && advanced.outcomeRules.version !== 1}}" value="{{option.id}}" placeholder="选项 ID" data-stepindex="{{si}}" data-optionindex="{{oi}}" data-field="id" bindinput="updateBranchOption" />
         <input class="cg-cfg-input" value="{{option.label}}" placeholder="选项文案" data-stepindex="{{si}}" data-optionindex="{{oi}}" data-field="label" bindinput="updateBranchOption" />
         <cy-dropdown topic-editor columns="{{2}}" range="{{r5Editor.feedbackStepOptions}}" range-key="label" reason-key="reason" value="{{opt.idx(r5Editor.feedbackStepOptions, option.nextStepId)}}" data-stepindex="{{si}}" data-optionindex="{{oi}}" bind:change="pickBranchNextStep"><view class="cg-pick">{{opt.label(r5Editor.feedbackStepOptions, option.nextStepId)}}<cy-icon name="back" size="28" /></view></cy-dropdown>
         <input class="cg-cfg-input" wx:if="{{advanced.branch.enabled && advanced.outcomeRules.version !== 1}}" type="number" value="{{option.score}}" placeholder="得分" data-stepindex="{{si}}" data-optionindex="{{oi}}" data-field="score" data-numeric="1" bindinput="updateBranchOption" />

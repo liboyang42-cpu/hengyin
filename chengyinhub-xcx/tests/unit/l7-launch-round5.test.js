@@ -381,3 +381,32 @@ test('#10 complete / hint unlock / object-card rename 显式 write:true,游客�
   ]
   for (const [file, re] of sites) assert.match(read(file), re, file)
 })
+
+// ---------- #11 创作者表单不出开发字段 ----------
+
+test('#11 分支反馈编辑器不再显示步骤 ID / 选项 ID / 起点步骤 ID / outcomeCode;系统生成并补齐', () => {
+  const wxml = read('pages/publish/temp/index.wxml')
+  for (const label of ['步骤 ID', '选项 ID', '起点步骤 ID', 'outcomeCode', 'FOUND_CLOCK']) {
+    assert.ok(!wxml.includes(label), '创作者表单不得出现「' + label + '」')
+  }
+  assert.doesNotMatch(wxml, /data-field="(?:id|outcomeCode|startStepId)" bind(?:input)="(?:updateBranchStep|updateBranchOption|onAdvancedField)"/)
+  // 名称(仅自己可见)仍在 —— 只藏代码,不藏创作者要写的内容
+  assert.match(wxml, /名称（仅自己可见）/)
+
+  const js = read('pages/publish/temp/index.js')
+  const body = js.match(/\n  _setBranchSteps: function \(steps\) \{([\s\S]*?)\n  \},\n/)[1]
+  const run = (data, steps) => {
+    let patch = null
+    const host = { data, _setFormState(p) { patch = p } }
+    vm.runInNewContext('(function (steps) {' + body + '})', { require: () => ({ once: () => true }) }).call(host, steps)
+    return patch
+  }
+  const legacy = { gameKey: '', advanced: { branch: { enabled: true, startStepId: 'gone' }, outcomeRules: { version: 0 } }, r5Editor: {} }
+  const patch = run(legacy, [{ id: 'step_a', terminal: true, outcomeCode: '' }, { id: 'step_b', terminal: false, options: [] }])
+  assert.equal(patch['advanced.branch.steps'][0].outcomeCode, 'step_a', '旧数据缺结局码按步骤 ID 补齐')
+  assert.equal(patch['advanced.branch.startStepId'], 'step_a', '起点失效时落到第一段')
+  const kept = run(Object.assign({}, legacy, { advanced: { branch: { enabled: true, startStepId: 'step_b' }, outcomeRules: { version: 0 } } }),
+    [{ id: 'step_a', terminal: true, outcomeCode: 'X' }, { id: 'step_b', terminal: false, options: [] }])
+  assert.equal(kept['advanced.branch.startStepId'], undefined, '起点仍有效时不改')
+  assert.equal(kept['advanced.branch.steps'][0].outcomeCode, 'X', '已有结局码不覆盖')
+})
