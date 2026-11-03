@@ -50,6 +50,10 @@ Development/test backends, backend builds and Java tests, MySQL and Redis stay o
 - 每次改动给得出验证证据（测试输出/接口回测），别只口头说"做好了"
 - 同一问题被纠正两次以上，停下来问，别继续试错
 
+### For UI agents
+Cut taglines, helper text and secondary labels. If a screen needs them to make sense, fix the layout.
+Make the best decision that will elevate all three: the user experience (UX), developer experience (DX), and agent experience (AX) always, without breaking anything.
+
 ## 主题与玩法复用（2026-10-25 用户批准）
 
 - 范围是全部现有游戏，答题只是样例。完整目的、各 owner 工作包和收口闸见 `docs/delivery/architecture-day/COORDINATOR/全游戏资源库与主题复用完整施工方案-20261025.md`；现在只写齐代码、调用者和测试源码，全部齐后由 root 统一测试，不逐补丁跑控制或 CI。

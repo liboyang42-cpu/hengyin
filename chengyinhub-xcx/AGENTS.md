@@ -38,6 +38,10 @@
 - 每次给验证证据（模拟器截图），别只口头"做好了"
 - 同一问题被纠正两次以上，停下来问
 
+## For UI agents
+Cut taglines, helper text and secondary labels. If a screen needs them to make sense, fix the layout.
+Make the best decision that will elevate all three: the user experience (UX), developer experience (DX), and agent experience (AX) always, without breaking anything.
+
 ## 主题游戏与现有玩法组件
 
 - 全游戏共用目录、内容采用和各自权威机制的完整工作包见 `../docs/delivery/architecture-day/COORDINATOR/全游戏资源库与主题复用完整施工方案-20261025.md`。不是只复用答题；不同机制保留不同提交合同。当前只完成必要源码和测试源码，全部齐后由 root 统一执行测试。
