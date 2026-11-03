@@ -140,7 +140,8 @@ class ApiActivityInfoLifecycleContractTest
         when(statisticsMapper.statisticsSalesAmoutByOwner(any())).thenReturn(Collections.emptyList());
 
         ApiActivityController controller = spy(new ApiActivityController());
-        doReturn(0L).when(controller).getAppUserId();
+        // Round5 #6:/api/activity/info 对游客开放后 viewer=0 即游客(走公开投影);本契约测的是登录视角,用已登录 viewer。
+        doReturn(9001L).when(controller).getAppUserId();
         ReflectionTestUtils.setField(controller, "cmsActivityService", activityService);
         ICmsTopicNodeService nodes = mock(ICmsTopicNodeService.class);
         when(nodes.selectCmsTopicNodeList(any())).thenAnswer(invocation -> {

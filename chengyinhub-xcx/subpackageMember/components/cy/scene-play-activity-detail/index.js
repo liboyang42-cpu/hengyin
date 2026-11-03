@@ -394,6 +394,8 @@ Component({
 
     openSignup() {
       if (!this.data.canConfirmSignup || this._navigating) return
+      // Round5 #6:活动详情对游客只读开放后,报名前先登录(写前登录,与主题详情同口径)
+      if (app.ensureLoginFor && !app.ensureLoginFor('signup', () => this.openSignup(), { owner: this, target: () => [this.data.activityId, this.data.selectedTicketId] })) return
       if (app.getUserType() == 2) {
         toast('商家用户不可报名活动')
         return
