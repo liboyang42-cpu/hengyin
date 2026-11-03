@@ -28,6 +28,12 @@ function monthKey(value) {
   return m && Number(m[2]) >= 1 && Number(m[2]) <= 12 ? `${m[1]}-${m[2]}` : ''
 }
 
+// 排序键:YYYY-MM-DD HH:MM:SS(缺秒补 00);读不出时间返回空串,排在最后。
+function sortKey(value) {
+  const m = (value == null ? '' : String(value).trim()).match(/^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2})(?::(\d{2}))?/)
+  return m ? `${m[1]} ${m[2]}:${m[3] || '00'}` : ''
+}
+
 function normalizeRow(raw) {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null
   const change = toInt(raw.changePoints)
@@ -44,6 +50,7 @@ function normalizeRow(raw) {
     afterText: after === null ? '' : `余额 ${after}`,
     timeText: shortTimeText(raw.createTime),
     month: monthKey(raw.createTime),
+    at: sortKey(raw.createTime),
   }
 }
 
@@ -73,15 +80,38 @@ function filterRows(rows, kind) {
   return list
 }
 
+// 按时间新→旧排(不看 id 顺序);同一时间保持接口原顺序;读不出时间的行排最后。
+function sortByTime(rows) {
+  return (Array.isArray(rows) ? rows : [])
+    .map((row, index) => ({ row, index }))
+    .sort((a, b) => {
+      const ka = a.row.at || ''
+      const kb = b.row.at || ''
+      if (ka !== kb) {
+        if (!ka) return 1
+        if (!kb) return -1
+        return ka > kb ? -1 : 1
+      }
+      return a.index - b.index
+    })
+    .map((item) => item.row)
+}
+
+// 页面实际展示的行:积分变动为 0 的行(如「注册赠送 0」)不显示,其余按时间新→旧。
+// 空态与分页都以这份列表为准。
+function visibleRows(rows) {
+  return sortByTime((Array.isArray(rows) ? rows : []).filter((row) => row && row.delta !== 0))
+}
+
 function monthLabel(key) {
   const m = String(key || '').match(/^(\d{4})-(\d{2})$/)
   return m && Number(m[2]) >= 1 && Number(m[2]) <= 12 ? `${m[1]}年${Number(m[2])}月` : '时间未知'
 }
 
-// 按出现顺序分组(接口已按 id 倒序),相邻同月合成一组。
+// 按行的时间分组:先按时间新→旧排,同一个月只出现一次,组内新的在前。
 function groupByMonth(rows) {
   const groups = []
-  ;(Array.isArray(rows) ? rows : []).forEach((row) => {
+  sortByTime(rows).forEach((row) => {
     const key = row.month || ''
     const last = groups[groups.length - 1]
     if (last && last.month === key) last.rows.push(row)
@@ -90,4 +120,4 @@ function groupByMonth(rows) {
   return groups
 }
 
-module.exports = { PAGE_SIZE, FILTERS, normalizeRows, timeText, monthKey, filterRows, monthLabel, groupByMonth }
+module.exports = { PAGE_SIZE, FILTERS, normalizeRows, timeText, monthKey, filterRows, monthLabel, groupByMonth, sortByTime, visibleRows }
