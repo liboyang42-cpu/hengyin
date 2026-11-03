@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5601,
+  "controlCount": 5602,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -133159,6 +133159,24 @@
           ]
         },
         {
+          "route": "pages/index/index",
+          "segments": [
+            {
+              "selector": "cy-dropdown",
+              "index": 4
+            }
+          ]
+        },
+        {
+          "route": "pages/index/index",
+          "segments": [
+            {
+              "selector": "cy-dropdown",
+              "index": 5
+            }
+          ]
+        },
+        {
           "route": "pages/merchant/apply/index",
           "segments": [
             {
@@ -135670,6 +135688,24 @@
           ]
         },
         {
+          "route": "pages/index/index",
+          "segments": [
+            {
+              "selector": "cy-dropdown",
+              "index": 4
+            }
+          ]
+        },
+        {
+          "route": "pages/index/index",
+          "segments": [
+            {
+              "selector": "cy-dropdown",
+              "index": 5
+            }
+          ]
+        },
+        {
           "route": "pages/merchant/apply/index",
           "segments": [
             {
@@ -138176,6 +138212,24 @@
             {
               "selector": "cy-dropdown",
               "index": 3
+            }
+          ]
+        },
+        {
+          "route": "pages/index/index",
+          "segments": [
+            {
+              "selector": "cy-dropdown",
+              "index": 4
+            }
+          ]
+        },
+        {
+          "route": "pages/index/index",
+          "segments": [
+            {
+              "selector": "cy-dropdown",
+              "index": 5
             }
           ]
         },
@@ -140691,6 +140745,24 @@
           ]
         },
         {
+          "route": "pages/index/index",
+          "segments": [
+            {
+              "selector": "cy-dropdown",
+              "index": 4
+            }
+          ]
+        },
+        {
+          "route": "pages/index/index",
+          "segments": [
+            {
+              "selector": "cy-dropdown",
+              "index": 5
+            }
+          ]
+        },
+        {
           "route": "pages/merchant/apply/index",
           "segments": [
             {
@@ -143201,6 +143273,24 @@
           ]
         },
         {
+          "route": "pages/index/index",
+          "segments": [
+            {
+              "selector": "cy-dropdown",
+              "index": 4
+            }
+          ]
+        },
+        {
+          "route": "pages/index/index",
+          "segments": [
+            {
+              "selector": "cy-dropdown",
+              "index": 5
+            }
+          ]
+        },
+        {
           "route": "pages/merchant/apply/index",
           "segments": [
             {
@@ -145707,6 +145797,24 @@
             {
               "selector": "cy-dropdown",
               "index": 3
+            }
+          ]
+        },
+        {
+          "route": "pages/index/index",
+          "segments": [
+            {
+              "selector": "cy-dropdown",
+              "index": 4
+            }
+          ]
+        },
+        {
+          "route": "pages/index/index",
+          "segments": [
+            {
+              "selector": "cy-dropdown",
+              "index": 5
             }
           ]
         },
@@ -1000401,7 +1000509,7 @@
       }
     },
     {
-      "id": "pages/index/index.wxml:140:bindtap:goActivity:14",
+      "id": "pages/index/index.wxml:146:bindtap:goActivity:15",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1000424,7 +1000532,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goActivity",
-        "line": 140,
+        "line": 146,
         "selectorHint": ".v3-nearby-card",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1000469,7 +1000577,7 @@
       }
     },
     {
-      "id": "pages/index/index.wxml:177:bindtap:goActivity:16",
+      "id": "pages/index/index.wxml:183:bindtap:goActivity:17",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1000492,7 +1000600,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goActivity",
-        "line": 177,
+        "line": 183,
         "selectorHint": ".v3-upreview",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1000604,7 +1000712,7 @@
       }
     },
     {
-      "id": "pages/index/index.wxml:200:bind:change:switchTab:17",
+      "id": "pages/index/index.wxml:206:bind:change:switchTab:18",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1000627,7 +1000735,7 @@
         "tag": "cy-tabs",
         "event": "bind:change",
         "handler": "switchTab",
-        "line": 200,
+        "line": 206,
         "selectorHint": "cy-tabs[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1000721,76 +1000829,6 @@
       }
     },
     {
-      "id": "pages/index/index.wxml:206:bindtap:goTopic:18",
-      "route": "pages/index/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/index/index.wxml",
-        "js": "pages/index/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "goTopic",
-        "line": 206,
-        "selectorHint": ".v2-fcard",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "tap",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/topic/index/index?id="
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/index/index.js:967"
-      }
-    },
-    {
       "id": "pages/index/index.wxml:21:bindtap:onHeroBannerTap:4",
       "route": "pages/index/index",
       "hostRoutes": [],
@@ -1000863,7 +1000901,7 @@
       }
     },
     {
-      "id": "pages/index/index.wxml:216:bindtap:goTopic:19",
+      "id": "pages/index/index.wxml:212:bindtap:goTopic:19",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1000886,7 +1000924,77 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goTopic",
-        "line": 216,
+        "line": 212,
+        "selectorHint": ".v2-fcard",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/topic/index/index?id="
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/index/index.js:967"
+      }
+    },
+    {
+      "id": "pages/index/index.wxml:222:bindtap:goTopic:20",
+      "route": "pages/index/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/index/index.wxml",
+        "js": "pages/index/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "goTopic",
+        "line": 222,
         "selectorHint": ".v2-status",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1000933,7 +1001041,7 @@
       }
     },
     {
-      "id": "pages/index/index.wxml:241:bindtap:goActivity:21",
+      "id": "pages/index/index.wxml:247:bindtap:goActivity:22",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1000956,7 +1001064,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goActivity",
-        "line": 241,
+        "line": 247,
         "selectorHint": ".v2-fcard",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1001001,7 +1001109,7 @@
       }
     },
     {
-      "id": "pages/index/index.wxml:251:bindtap:goActivity:22",
+      "id": "pages/index/index.wxml:257:bindtap:goActivity:23",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1001024,7 +1001132,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goActivity",
-        "line": 251,
+        "line": 257,
         "selectorHint": ".v2-status",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1001069,7 +1001177,7 @@
       }
     },
     {
-      "id": "pages/index/index.wxml:279:bindtap:closePhoneModal:24",
+      "id": "pages/index/index.wxml:285:bindtap:closePhoneModal:25",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1001092,7 +1001200,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closePhoneModal",
-        "line": 279,
+        "line": 285,
         "selectorHint": ".tkbg",
         "visibleCondition": "{{showPhoneModal}}",
         "disabledCondition": null,
@@ -1001136,7 +1001244,7 @@
       }
     },
     {
-      "id": "pages/index/index.wxml:282:bindgetphonenumber:getPhoneNumber:25",
+      "id": "pages/index/index.wxml:288:bindgetphonenumber:getPhoneNumber:26",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1001159,7 +1001267,7 @@
         "tag": "button",
         "event": "bindgetphonenumber",
         "handler": "getPhoneNumber",
-        "line": 282,
+        "line": 288,
         "selectorHint": ".tkbox_but",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1001245,7 +1001353,7 @@
       }
     },
     {
-      "id": "pages/index/index.wxml:283:bindtap:closePhoneModal:26",
+      "id": "pages/index/index.wxml:289:bindtap:closePhoneModal:27",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1001268,7 +1001376,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closePhoneModal",
-        "line": 283,
+        "line": 289,
         "selectorHint": ".tkbox_skip",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1001312,7 +1001420,7 @@
       }
     },
     {
-      "id": "pages/index/index.wxml:289:bind:settled:onPrivacyGateSettled:27",
+      "id": "pages/index/index.wxml:295:bind:settled:onPrivacyGateSettled:28",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1001337,7 +1001445,7 @@
         "tag": "cy-privacy-gate",
         "event": "bind:settled",
         "handler": "onPrivacyGateSettled",
-        "line": 289,
+        "line": 295,
         "selectorHint": "cy-privacy-gate[bind:settled]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1001813,7 +1001921,74 @@
       }
     },
     {
-      "id": "pages/index/index.wxml:87:bindchange:onRecoChange:11",
+      "id": "pages/index/index.wxml:61:bind:change:onManualCityChange:9",
+      "route": "pages/index/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/index/index.wxml",
+        "js": "pages/index/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-dropdown",
+        "event": "bind:change",
+        "handler": "onManualCityChange",
+        "line": 61,
+        "selectorHint": "cy-dropdown[bind:change]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "选择城市",
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/index/index.js:1601"
+      }
+    },
+    {
+      "id": "pages/index/index.wxml:93:bindchange:onRecoChange:12",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1001836,7 +1002011,7 @@
         "tag": "swiper",
         "event": "bindchange",
         "handler": "onRecoChange",
-        "line": 87,
+        "line": 93,
         "selectorHint": ".v3-reco-swiper",
         "visibleCondition": "{{recoCards.length}}",
         "disabledCondition": null,
@@ -1001880,7 +1002055,7 @@
       }
     },
     {
-      "id": "pages/index/index.wxml:87:bindtransition:onRecoTransition:10",
+      "id": "pages/index/index.wxml:93:bindtransition:onRecoTransition:11",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1001903,7 +1002078,7 @@
         "tag": "swiper",
         "event": "bindtransition",
         "handler": "onRecoTransition",
-        "line": 87,
+        "line": 93,
         "selectorHint": ".v3-reco-swiper",
         "visibleCondition": "{{recoCards.length}}",
         "disabledCondition": null,
@@ -1001947,7 +1002122,7 @@
       }
     },
     {
-      "id": "pages/index/index.wxml:91:bindtap:goRecoHero:12",
+      "id": "pages/index/index.wxml:97:bindtap:goRecoHero:13",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1001970,7 +1002145,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goRecoHero",
-        "line": 91,
+        "line": 97,
         "selectorHint": ".v3-reco-card",
         "visibleCondition": null,
         "disabledCondition": null,

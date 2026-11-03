@@ -136,7 +136,7 @@ Page({
         var guest = !memberId(app);
         that.setData({
           bootstrapState: 'error',
-          bootstrapError: guest ? '登录后即可申请成为主理人' : '暂时无法确认当前账号的主理人资格，请重试',
+          bootstrapError: guest ? '' : '暂时无法确认当前账号的主理人资格，请重试',
           bootstrapErrorKind: guest ? 'no-permission' : '',
         });
         return;
