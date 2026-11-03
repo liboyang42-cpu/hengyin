@@ -37,7 +37,7 @@
           <view class="fin-group" wx:for="{{redemptionGroups}}" wx:for-item="group" wx:key="dayKey">
             <view class="fin-group__title">{{group.dayLabel}}</view>
             <view class="fin-card">
-              <view class="fin-row" wx:for="{{group.rows}}" wx:key="recordKey" bindtap="goRedemptionDetail" data-item="{{item}}" hover-class="fin-row--tap" aria-role="button" aria-label="{{item.recordType === 'aftercare' ? '查看退款详情' : '查看核销详情'}}">
+              <view class="fin-row" wx:for="{{group.rows}}" wx:key="recordKey" bindtap="goRedemptionDetail" data-item="{{item}}" hover-class="cy-pressed" aria-role="button" aria-label="{{item.recordType === 'aftercare' ? '查看退款详情' : '查看核销详情'}}">
                 <!-- M-27:副行 = 顾客报名姓名(服务端解密,没有就不出) + 时间 + 状态;不画左侧状态点,零现金右列留空。 -->
                 <view class="fin-row__main">
                   <text class="fin-row__t1">{{item.title}}</text>
@@ -147,7 +147,7 @@
                        
                        action="重试此部分" bind:action="retrySettlementBatches" />
       <view class="fin-card" wx:if="{{batches.length}}">
-        <view class="fin-row" wx:for="{{batches}}" wx:key="batchId" bindtap="goBatchDetail" data-id="{{item.batchId}}" hover-class="fin-row--tap" aria-role="button" aria-label="查看对公批次详情">
+        <view class="fin-row" wx:for="{{batches}}" wx:key="batchId" bindtap="goBatchDetail" data-id="{{item.batchId}}" hover-class="cy-pressed" aria-role="button" aria-label="查看对公批次详情">
           <view class="fin-row__dot fin-row__dot--{{item.stateVariant}}"></view>
           <view class="fin-row__main">
             <text class="fin-row__t1">{{item.periodYm}} 对公结算</text>
@@ -166,7 +166,7 @@
   </block>
 
   <block wx:else>
-    <view class="ledger-action" bindtap="goInbox" hover-class="ledger-action--tap"><view class="ledger-action-copy"><text class="ledger-action-title">站内消息</text></view></view>
+    <view class="ledger-action" bindtap="goInbox" hover-class="cy-pressed"><view class="ledger-action-copy"><text class="ledger-action-title">站内消息</text></view></view>
     <!-- CU-M-123:这一屏原本还挂着一行「经营动态 / 消息入口保留为兼容模式」。
          「兼容模式」是内部实现口径,对商家没有信息量;而这一路并没有任何动态数据源,
          留着标题就是给一个永远为空的分组占位。整块摘掉,只留真正可点的站内消息入口。 -->

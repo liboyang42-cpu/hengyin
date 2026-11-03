@@ -23,7 +23,6 @@
 /* 行:左状态点 + 主副文 + 右金额。分隔线只在行间,不在卡缘。 */
 .fin-row { display: flex; align-items: center; gap: var(--cy-space-2-5); }
 .fin-row + .fin-row { margin-top: 40rpx; }  /* 行距 20px;零 divider —— 密度靠间距不靠线 */
-.fin-row--tap { opacity: .72; }
 .fin-row__dot { width: 14rpx; height: 14rpx; border-radius: 50%; flex: 0 0 14rpx; background: var(--cy-text-placeholder); }
 .fin-row__dot--warning { background: var(--cy-color-status-warning); }
 .fin-row__dot--success { background: var(--cy-color-status-success); }

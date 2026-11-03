@@ -82,7 +82,7 @@
       </view>
 
       <view class="ma-card wizard-card cy-rise-in">
-        <view class="ma-row" id="field-address" hover-class="ma-row--pressed" hover-stay-time="80" bindtap="choosePoiForNode">
+        <view class="ma-row" id="field-address" hover-class="cy-pressed" hover-stay-time="80" bindtap="choosePoiForNode">
           <view class="ma-row-tit">承接地点<text class="ma-req">*</text></view>
           <view class="ma-row-cont {{focusField === 'address' ? 'is-focused' : ''}} {{errors.address ? 'is-error' : ''}} {{address ? 'is-filled' : ''}}">
             <input class="ma-inp" disabled type="text" placeholder="点击选择承接地点" placeholder-class="ma-ph" value="{{address}}" />
@@ -105,7 +105,7 @@
 
       <view class="ma-card wizard-card cy-rise-in" id="field-pic">
         <view class="ma-row-tit">承接图片<text class="ma-req">*</text></view>
-        <view class="ma-upload" wx:if="{{!picUrl}}" hover-class="ma-pgrid-add--pressed" hover-stay-time="80" bindtap="uploadPic" aria-role="button" aria-label="上传现场照片">
+        <view class="ma-upload" wx:if="{{!picUrl}}" hover-class="cy-pressed" hover-stay-time="80" bindtap="uploadPic" aria-role="button" aria-label="上传现场照片">
           <view class="ma-upload-title"><cy-icon name="plus" size="28" /><text>上传现场照片</text></view>
           <text class="ma-upload-hint">5:3 横图，1–9 张</text>
         </view>
@@ -119,7 +119,7 @@
               <view class="ma-pgrid-del__glyph"><cy-icon name="close-sm" size="24" /></view>
             </view>
           </view>
-          <view class="ma-pgrid-cell ma-pgrid-add" hover-class="ma-pgrid-add--pressed" hover-stay-time="80" bindtap="uploadPic" aria-role="button" aria-label="添加场地照片">
+          <view class="ma-pgrid-cell ma-pgrid-add" hover-class="cy-pressed" hover-stay-time="80" bindtap="uploadPic" aria-role="button" aria-label="添加场地照片">
             <view class="ma-pgrid-plus"><cy-icon name="plus" size="48" /></view>
             <text class="ma-pgrid-txt">添加照片</text>
           </view>
@@ -134,7 +134,7 @@
         <text class="ma-group-s">决定这一站能接多少团、什么时候接</text>
       </view>
       <view class="ma-card wizard-card cy-rise-in">
-        <view class="ma-row" id="field-date-range" hover-class="ma-row--pressed" hover-stay-time="80" bindtap="openAvailabilityPicker" aria-role="button" aria-label="选择可配合日期区间">
+        <view class="ma-row" id="field-date-range" hover-class="cy-pressed" hover-stay-time="80" bindtap="openAvailabilityPicker" aria-role="button" aria-label="选择可配合日期区间">
           <view class="ma-row-tit">可配合日期<text class="ma-req">*</text></view>
           <view class="ma-row-cont ma-range-cont {{errors.availabilityRange ? 'is-error' : ''}} {{startDate && endDate ? 'is-filled' : ''}}">
             <text class="{{startDate && endDate ? '' : 'ma-ph'}}">{{startDate && endDate ? startDate + '  至  ' + endDate : '点击选择日期区间'}}</text>
@@ -143,7 +143,7 @@
           <cy-inline-error class="ma-inline-error" kind="error" wx:if="{{errors.availabilityRange}}" title="{{errors.availabilityRange}}" />
         </view>
 
-        <view class="ma-row" id="field-time" hover-class="ma-row--pressed" hover-stay-time="80" bindtap="handleTimePopup" data-action="open">
+        <view class="ma-row" id="field-time" hover-class="cy-pressed" hover-stay-time="80" bindtap="handleTimePopup" data-action="open">
           <!-- 稿(Figma 133:310,2026-09-06 改)把这一项从必填改成选填,值默认取门店营业时间。
                商家答不出「我每天 18:07 到 21:53 能接待」;逼填只会得到一个随手选的假值,
                而那个值玩家在「我的参与」里看得见。后端本来就没有非空校验。 -->
