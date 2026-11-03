@@ -276,6 +276,63 @@ class CoopSettlementTest {
         verify(umsMemberService, times(0)).addBalance(any(), any());
     }
 
+    /**
+     * 2026-11-03 业主拍板:平台自有主题(内容槽 PLATFORM)不收 3%。同一组数据,平台行金额 0,
+     * 原本的 10 留在发起人毛利里(平台主题的发起人就是平台配置账号);商家与保底不变,五分项仍守恒。
+     * 旧代码平台行记 10.00,本例红。
+     */
+    @Test
+    void settleCoopTopic_platformOwnedTopicRecordsNoPlatformCommission() {
+        CmsTopic topic = new CmsTopic();
+        topic.setId(700L); topic.setMemberId(900001L);
+        com.chengyinhub.business.service.IProductRoleService roles =
+                mock(com.chengyinhub.business.service.IProductRoleService.class);
+        when(roles.isPlatformOwned(700L)).thenReturn(true);
+        ReflectionTestUtils.setField(svc, "productRoleService", roles);
+        when(cmsRegistrationMapper.selectVerifiedSalesByTopicId(700L)).thenReturn(new BigDecimal("100"));
+        when(cmsRegistrationMapper.selectVerifiedHeadsByTopicId(700L)).thenReturn(2);
+        everyMerchantServedEveryone(700L, 2, "100", 900002L);
+        when(coopOrderMapper.selectEffectiveOrdersByTopicId(700L))
+                .thenReturn(Collections.singletonList(order(1L, 900002L, 1, "30", null)));
+        when(coopSettlementMapper.countByOrderId(any())).thenReturn(0);
+        PreparedCoopPlanFixture.topic(topic.getId());
+
+        PreparedCoopPlanFixture.settle(svc, topic, new BigDecimal("100"));
+
+        Map<String, List<CoopSettlement>> lines = capturedLines();
+        assertEquals(1, lines.get("PLATFORM").size(), "平台行仍写,作幂等标记");
+        assertAmount("0.00", lines.get("PLATFORM").get(0), "平台自有主题不收平台佣金");
+        assertAmount("7.00", lines.get("INITIATOR_GUARANTEE").get(0), "保底不变");
+        assertAmount("30.00", lines.get("MERCHANT_VERIFY").get(0), "商家分成不变");
+        assertEquals(Long.valueOf(900002L), lines.get("MERCHANT_VERIFY").get(0).getMerchantId());
+        assertAmount("63.00", lines.get("INITIATOR_MARGIN").get(0), "原 10 留在发起人毛利:100-0-7-30=63");
+        assertEquals(Long.valueOf(900001L), lines.get("INITIATOR_MARGIN").get(0).getMerchantId());
+    }
+
+    /** 非平台自有主题照旧按快照收平台率(同组数据平台行 10.00)。 */
+    @Test
+    void settleCoopTopic_nonPlatformTopicStillPaysPlatformRate() {
+        CmsTopic topic = new CmsTopic();
+        topic.setId(700L); topic.setMemberId(900001L);
+        com.chengyinhub.business.service.IProductRoleService roles =
+                mock(com.chengyinhub.business.service.IProductRoleService.class);
+        when(roles.isPlatformOwned(700L)).thenReturn(false);
+        ReflectionTestUtils.setField(svc, "productRoleService", roles);
+        when(cmsRegistrationMapper.selectVerifiedSalesByTopicId(700L)).thenReturn(new BigDecimal("100"));
+        when(cmsRegistrationMapper.selectVerifiedHeadsByTopicId(700L)).thenReturn(2);
+        everyMerchantServedEveryone(700L, 2, "100", 900002L);
+        when(coopOrderMapper.selectEffectiveOrdersByTopicId(700L))
+                .thenReturn(Collections.singletonList(order(1L, 900002L, 1, "30", null)));
+        when(coopSettlementMapper.countByOrderId(any())).thenReturn(0);
+        PreparedCoopPlanFixture.topic(topic.getId());
+
+        PreparedCoopPlanFixture.settle(svc, topic, new BigDecimal("100"));
+
+        Map<String, List<CoopSettlement>> lines = capturedLines();
+        assertAmount("10.00", lines.get("PLATFORM").get(0), "平台 100×10%=10");
+        assertAmount("53.00", lines.get("INITIATOR_MARGIN").get(0), "100-10-7-30=53");
+    }
+
     @Test
     void settleTopic_coopWritesEveryPayableBeforeEvent15() {
         CmsTopic topic = new CmsTopic();

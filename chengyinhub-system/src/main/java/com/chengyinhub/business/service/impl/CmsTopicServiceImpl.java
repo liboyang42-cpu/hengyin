@@ -760,6 +760,23 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         return true;
     }
 
+    /**
+     * 主题结算用的平台率(2026-11-03 业主拍板:平台自有主题不收 3%)。
+     *
+     * <p>内容槽 = PLATFORM({@code isPlatformOwned})的主题结算时平台率取 0:PLATFORM 行仍写(金额 0,
+     * 它是本主题"已分项结算"的幂等标记),原本那 3% 留在发起人保底/毛利残差里。平台主题的发起人
+     * {@code cms_topic.member_id} 就是平台配置账号({@code insertCmsTopic}/{@code resolvePayeeMemberId}),
+     * 所以这笔钱的实际收款人不变,只是不再记成从主办方抽走的佣金。其余主题仍读锁价快照。
+     * 未注入 productRoleService(纯单元装配)时按非自营处理,即旧行为。
+     */
+    private BigDecimal settlementPlatformRate(CmsTopic topic) {
+        if (productRoleService != null && topic != null && topic.getId() != null
+                && productRoleService.isPlatformOwned(topic.getId())) {
+            return BigDecimal.ZERO;
+        }
+        return pricingService.platformRateOf(topic);
+    }
+
     /** 俱乐部自有主题(cms_topic.club_id > 0):发布者是俱乐部,收款人是俱乐部当前主理人。 */
     private boolean isClubSelfPlayTopic(CmsTopic topic) {
         return topic.getClubId() != null && topic.getClubId() > 0;
@@ -798,7 +815,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             return true;
         }
         Long principal = clubPrincipalPayee.forTopic(topic);
-        BigDecimal platformRate = pricingService.platformRateOf(topic);
+        BigDecimal platformRate = settlementPlatformRate(topic);
         if (platformRate == null || platformRate.signum() < 0 || platformRate.compareTo(BigDecimal.ONE) > 0) {
             throw new IllegalStateException("主题平台费率无效 topicId=" + topic.getId() + " rate=" + platformRate);
         }
@@ -910,7 +927,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         }
         // [P0-28 批1] 读**主题锁价时冻的快照**,不是 live 值 —— 用 live 值 = 调一次费率
         // 追溯改写所有已售未结订单,平台多抽 → 发起人 margin<0 → 守恒断言拒结 → 款项悬空。
-        BigDecimal platformRate = pricingService.platformRateOf(topic);
+        BigDecimal platformRate = settlementPlatformRate(topic);
         BigDecimal platformAmount = totalSales.multiply(platformRate).setScale(2, java.math.RoundingMode.HALF_UP);
         BigDecimal verifiedSales = cashBasis.getVerifiedSales();
         int verifiedHeads = cashBasis.getVerifiedHeads();
