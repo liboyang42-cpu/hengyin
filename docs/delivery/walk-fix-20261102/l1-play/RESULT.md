@@ -156,3 +156,55 @@
 - P-10 / P-11：配图是站内路径经媒体出口换成的地址，真机上走 CDN / 本站前缀；`getLocation` 精度 ≤80 米才自动到达，rig 的定位精度是假的。
 
 STATUS: COMPLETE
+
+## Round 5C
+
+| 项 | 状态 | 文件 | 证据 |
+|---|---|---|---|
+| P-08 等待放行屏中间的三点几乎看不见 | fixed | `pages/play/index.wxss`（只在 `.chhold__wait` 下加一行） | 三点原来用集合屏的 `--cy-color-text-tertiary`（#919191），在深灰底上又随 `fade` 动画在 0→1 之间明暗，几乎看不见。改成与标题「等待放行」同一个既有 token `--cy-color-text-primary`（#F8F8F8）。大小、动画、减弱动态的静止态、集合屏三点一律不动。`play-chapter-hold-dots-p08-r5c.test.js`（2 条，旧代码上 2 条都红）。**rig**：before = 第四轮的 `P-08-r4-after.jpg`（同一屏、同一包除这一行外相同）；after = `P-08-r5-after.jpg`。浏览器里读到三点计算色 `rgb(248, 248, 248)`（原来 #919191） |
+
+说明（照实写）：三点仍按 P-13 批准的动画依次「0 → 1」明暗，所以任一时刻总有一颗在暗端。after 截图是在三颗不透明度都高于 0.3 时拍的（0.99 / 0.84 / 0.31）。如果业主要它们任何时刻都清楚可见，就得给这一屏的动画加一个最低亮度，也就是新增一条 keyframes（门禁对 keyframes 只减不增）或改共用的 `fade`。这超出了「只换颜色」，本轮没做，**needs owner**。
+
+## Round 5D
+
+| 项 | 状态 | 文件 | 证据 |
+|---|---|---|---|
+| P-08 等待放行屏底部「返回地图」 | fixed | `pages/play/index.wxml/js/json/wxss`，`scripts/uiaudit/action-ledger.json`，`tests/lint/ui-integrity-baseline.js` | 见下 |
+
+做法：
+- 等待屏最后一个元素是既有底部按钮条 `cy-footer-bar`（`primary="返回地图"`、次按钮样式）。它的承托底读 `--cy-color-bg-page`（纯黑），所以这一屏把它接到最接近本屏深灰的既有 token `--cy-color-bg-elevated`，屏底不会多出一条黑带。
+- 点「返回地图」（`leaveChapterHold`）时，等待屏收起（`chapterGate.away`），打开故事流的大地图（`openStoryMap`，城市定向里唯一的地图层）。章节门不撤，仍挂着这一章。
+- **在地图上被放行**：带领轮询（原来末尾那段对账抽成 `_syncChapterHold`）读到放行后，收起地图，挂上正常的 `cy-chapter-flip`，播完照常进这一章；门没发 continue 时按原兜底计时（4.2 / 7.8 秒）进。
+- **地图上再点回这一章**：用地图左上的「回到故事」（`closeStoryMap`）。仍被挡着就回到等待放行屏；如果在地图上时已经放行、轮询还没轮到，就直接放翻转门进章，不再停在等待屏。
+- **回到等待屏后再被放行**：与第四轮相同，换翻转门进章。
+- 没有任何带坐标地点的主题（城市定向里极少见）：`openStoryMap` 原来就会退回收起故事流。这时记下这一章，放行后重开这一章，开场门走翻转门。普通的地图「回到故事」行为不变。
+
+测试：`play-chapter-hold-map-p08-r5d.test.js` 8 条，用页面真代码驱动，视图条件照 wxml 求值。覆盖按钮位置和样式、点按钮、在地图上放行、回到故事时仍被挡、回到故事前已放行、无坐标退回、普通地图不受影响、没被挡时按钮不动作。旧代码上 7 条红，1 条是负控（普通地图），新旧都绿。第四轮的 `play-chapter-hold-screen-p08-r4.test.js` 原来写着「这一屏没有按钮」，`play-lead-chapter-hold.test.js` 原来锚着旧 wx:if，两者按业主本轮的决定改口径。
+
+rig（浏览器 + 真后端，候选 12932a33，下文「rig 说明」）：
+- 场 10（玩家 9009）：第一章答对后停在第二章门前。`P-08-r5-after`：等待放行、三点、底部「返回地图」。点按钮后 `P-08-r5-after-2`：大地图、「回到故事」、下一站乍浦路桥，状态 `away:true, storyMap:true, held:true`。点「回到故事」后 `P-08-r5-after-3`：回到等待放行屏。再点「返回地图」，队长 `POST /api/club/lead/unlock-chapter` 42→43 → `{"msg":"已开启:第二章 · 钟楼","code":200}`。轮询读到后地图收起，`P-08-r5-after-4`：正常的章节翻转门，加上「队长放行了「第二章 · 钟楼」」；9 秒后 `P-08-r5-after-5`：第二章正文「电报的下半截被人带过了苏州河。」+「继续探索」。
+- 场 11（玩家 9004）：等待屏 → 返回地图 → 回到故事，回到等待屏后被放行。`P-08-r5-after-6`：翻转门；`P-08-r5-after-7`：第二章正文。
+- 两场页面错误都为 0。
+
+### 门禁与测试（第五轮）
+
+- `node chengyinhub-xcx/tests/lint/ui-integrity.js` → `UI-GATE-0:PASS`。U5 loadMilestone silentError 8236→8265 只是行号位移（同一调用行），按惯例换 key、重算 digest，没有新增登记。第一版用的 `Object.assign` 动态 setData 被 U4 拦下，改成两条静态 setData，没有登记。
+- 动作台账重建：控件 5606→5607（「返回地图」）。本地 tap 分母 2449→2448，是因为地图「回到故事」`closeStoryMap` 现在能接着放翻转门进章（章节旁白、存档），分类从 state 变成 external。`action-ledger.test.js` 两个计数按重建实测改，原因写在注释里。
+- 小程序全部单测 `node --test "tests/unit/**/*.test.js"`：15624 条通过，0 失败（5C + 5D 之后）。
+- 后端：本轮没改 Java。
+
+### rig 说明（第五轮）
+
+- 新容器。rig = `origin/claude/cloud-walk-20261101-rig` + 俱乐部 lane 的 `harness-patches.diff`（只在 rig 里），`up.sh` 的 `SHA` 指向 12932a33。MySQL / Redis 从 `mirror.gcr.io` 按同一摘要拉取，再打本地标签。
+- 夹具全部走真接口：作者 9003 实名登记、模板 6005 / 6006（文字题）、`/business/audit/review` 审核、主题 990015（两章各一站，LINEAR，¥0，俱乐部 7001）、`/api/club/open-session` 开场 10 / 11、`lead/start`、玩家 9009 / 9004 入会 + 同意 + quote + create（¥0）、`/api/play/answer` 答完第一章、`lead/unlock-chapter` 放行。直接写库只有 `seed-walk.py shift-session 10 / 11`（改开始时间）。
+
+### 真机上仍未验证（第五轮）
+
+- 三点在真机上的亮度和动画节奏；`cy-footer-bar` 在真机上的安全区内边距。
+- 地图在 rig 里是画布替身，真机是原生 `<map>`。从地图被拉回翻转门那一下，依赖 4–10 秒一次的带领轮询。
+
+### needs owner
+
+- 三点任何时刻都清楚可见，要给动画加最低亮度，见 Round 5C 说明。
+
+STATUS: COMPLETE
