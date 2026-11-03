@@ -356,6 +356,32 @@ class WxContentSecurityServiceImplTest {
                 startsWith("wx:content-sec:callback:nonce:"), anyString());
     }
 
+    /** Round5B-5:库里的 media-asset:N 要解析成真实地址再送微信,回调身份仍是引用本身。 */
+    @Test
+    @SuppressWarnings("unchecked")
+    void mediaAssetReferenceIsResolvedToFetchableUrlBeforeSubmitting() {
+        WxContentSecurityServiceImpl service = spy(service(mock(RedisCache.class), mock(ImMessageMapper.class)));
+        WxPayConfig wxConfig = mock(WxPayConfig.class);
+        when(wxConfig.isSecCheckEnabled()).thenReturn(true);
+        ReflectionTestUtils.setField(service, "wxConfig", wxConfig);
+        AppMediaAssetService assets = mock(AppMediaAssetService.class);
+        when(assets.securityCheckFetchUrl(9L)).thenReturn("https://oss.example.com/upload/abc.jpg?sig=1");
+        org.springframework.beans.factory.ObjectProvider<AppMediaAssetService> provider =
+                mock(org.springframework.beans.factory.ObjectProvider.class);
+        when(provider.getIfAvailable()).thenReturn(assets);
+        ReflectionTestUtils.setField(service, "mediaAssetServiceProvider", provider);
+        doReturn("trace-9").when(service).checkMediaAsync(anyString(), anyString());
+        IWxContentCallbackInboxService inbox = mock(IWxContentCallbackInboxService.class);
+        when(inbox.register("trace-9", 3, 5L, "media-asset:9")).thenReturn(true);
+        ReflectionTestUtils.setField(service, "callbackInboxService", inbox);
+
+        assertEquals("trace-9", service.submitMediaCheckOne(3, 5L, "media-asset:9", "openid-x"));
+
+        verify(service).checkMediaAsync("https://oss.example.com/upload/abc.jpg?sig=1", "openid-x");
+        verify(service, never()).checkMediaAsync(eq("media-asset:9"), anyString());
+        verify(inbox).register("trace-9", 3, 5L, "media-asset:9");
+    }
+
     /** Round5B-4:suggest=review 不再 400 让内容继续公开,按 risky 隐藏并挂人工复核单。 */
     @Test
     void reviewSuggestionHidesContentAndQueuesHumanReview() {

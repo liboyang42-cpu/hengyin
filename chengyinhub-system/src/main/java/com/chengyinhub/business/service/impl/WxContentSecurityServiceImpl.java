@@ -387,6 +387,17 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
         String img = fetchUrl.trim();
         try
         {
+            // Round5B-5:落库形态是 media-asset:N 的,先解析成真实可抓取地址再送检;identity 仍是库里的引用,
+            // 回调按引用哈希核对「当前媒体」。解析不了就不送,按未送检告警(不把引用当 URL 发给微信)。
+            if (img.matches("media-asset:[1-9][0-9]{0,18}"))
+            {
+                img = resolveMediaAssetFetchUrl(img);
+                if (StringUtils.isEmpty(img))
+                {
+                    log.error("[内容安全] 媒体引用无法解析为可抓取地址,未送检,需人工复审: bizType={}, bizId={}", bizType, bizId);
+                    return null;
+                }
+            }
             String traceId = checkMediaAsync(img, openid);
             if (StringUtils.isNotEmpty(traceId))
             {
@@ -977,6 +988,24 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
      * confirmAlreadyApplied 不通知);回调收件箱同事务置 DONE,同一 trace 重放不会再进来 —— 每次下架只通知一次。
      * 走嵌套事务 + 只告警:通知失败不能挡住违规内容下架。
      */
+    @Autowired
+    private org.springframework.beans.factory.ObjectProvider<AppMediaAssetService> mediaAssetServiceProvider;
+
+    String resolveMediaAssetFetchUrl(String reference)
+    {
+        try
+        {
+            AppMediaAssetService assets = mediaAssetServiceProvider == null ? null : mediaAssetServiceProvider.getIfAvailable();
+            if (assets == null) return null;
+            return assets.securityCheckFetchUrl(Long.valueOf(reference.substring("media-asset:".length())));
+        }
+        catch (RuntimeException unresolved)
+        {
+            log.error("[内容安全] 媒体引用解析失败 exceptionType={}", unresolved.getClass().getSimpleName());
+            return null;
+        }
+    }
+
     /** 微信建议人工复核的图片:内容已隐藏,这里把它挂进审核台(人工通过按各业务既有审核口恢复)。 */
     void queueMediaReview(Integer bizType, Long bizId)
     {
