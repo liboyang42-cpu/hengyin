@@ -1,0 +1,1359 @@
+diff --git a/chengyinhub-xcx/components/cy/roam-city-guide/index.js b/chengyinhub-xcx/components/cy/roam-city-guide/index.js
+new file mode 100644
+index 0000000000..4aebfca0e4
+--- /dev/null
++++ b/chengyinhub-xcx/components/cy/roam-city-guide/index.js
+@@ -0,0 +1,56 @@
++'use strict'
++
++const catalog = require('../../../utils/roam-city-catalog.js')
++const toast = require('../../../utils/toast.js')
++Component({
++  properties: { show: { type: Boolean, value: false, observer(value) {
++    if (value) this.setData({ selected: null })
++  } } },
++  data: {
++    cities: catalog.cities, categories: catalog.categories, cityIndex: 0,
++    cityName: catalog.cities[0].name, activeCategory: 'all',
++    places: catalog.listPlaces(catalog.cities[0].id, 'all'), selected: null, reviewNote: catalog.reviewNote,
++  },
++  methods: {
++    onCityChange(event) {
++      const index = Number(event.detail.value)
++      if (!Number.isInteger(index) || index < 0 || index >= catalog.cities.length) return
++      this.setData({
++        cityIndex: index, cityName: catalog.cities[index].name, selected: null,
++        places: catalog.listPlaces(catalog.cities[index].id, this.data.activeCategory),
++      })
++    },
++    onCategoryTap(event) {
++      const id = event.currentTarget.dataset.id
++      if (!catalog.categories.some(row => row.id === id)) return
++      this.setData({
++        activeCategory: id, selected: null,
++        places: catalog.listPlaces(catalog.cities[this.data.cityIndex].id, id),
++      })
++    },
++    onPlaceTap(event) {
++      const id = event.currentTarget.dataset.id
++      if (!this.data.places.some(row => row.id === id)) return
++      this.setData({ selected: catalog.findPlace(id) })
++    },
++    backToList() { this.setData({ selected: null }) },
++    copyAddress() {
++      const place = this.data.selected
++      if (!place) return
++      wx.setClipboardData({
++        data: place.name + '\n' + place.address,
++        fail: () => toast.error('地址未复制，请再试一次'),
++      })
++    },
++    copySources() {
++      const place = this.data.selected
++      if (!place) return
++      wx.setClipboardData({
++        data: place.sources.join('\n'),
++        fail: () => toast.error('来源未复制，请再试一次'),
++      })
++    },
++    close() { this.triggerEvent('close') },
++    blockTouch() {},
++  },
++})
+diff --git a/chengyinhub-xcx/components/cy/roam-city-guide/index.json b/chengyinhub-xcx/components/cy/roam-city-guide/index.json
+new file mode 100644
+index 0000000000..52dad47bd3
+--- /dev/null
++++ b/chengyinhub-xcx/components/cy/roam-city-guide/index.json
+@@ -0,0 +1,7 @@
++{
++  "component": true,
++  "usingComponents": {
++    "cy-icon": "/components/cy/icon/index"
++  },
++  "styleIsolation": "isolated"
++}
+diff --git a/chengyinhub-xcx/components/cy/roam-city-guide/index.wxml b/chengyinhub-xcx/components/cy/roam-city-guide/index.wxml
+new file mode 100644
+index 0000000000..4b23820397
+--- /dev/null
++++ b/chengyinhub-xcx/components/cy/roam-city-guide/index.wxml
+@@ -0,0 +1,44 @@
++<view wx:if="{{show}}" class="guide" catchtouchmove="blockTouch">
++  <view class="guide__header">
++    <text class="guide__title">城市漫游清单</text>
++    <view class="guide__action" bindtap="close" aria-role="button" aria-label="关闭城市漫游清单" hover-class="cy-pressed" hover-stay-time="80">关闭</view>
++  </view>
++  <block wx:if="{{!selected}}">
++    <picker mode="selector" range="{{cities}}" range-key="name" value="{{cityIndex}}" bindchange="onCityChange">
++      <view class="guide__city" aria-label="选择城市，当前{{cityName}}"><text>{{cityName}}</text><text>切换城市 · {{places.length}} 处</text><cy-icon name="chevron-right" size="32" /></view>
++    </picker>
++    <scroll-view class="guide__categories" scroll-x enhanced show-scrollbar="{{false}}">
++      <view wx:for="{{categories}}" wx:key="id" class="guide__category {{activeCategory === item.id ? 'is-on' : ''}}" data-id="{{item.id}}" bindtap="onCategoryTap" aria-role="button" aria-label="{{item.name}}" aria-pressed="{{activeCategory === item.id}}" hover-class="cy-pressed" hover-stay-time="80">{{item.name}}</view>
++    </scroll-view>
++    <scroll-view class="guide__body" scroll-y enhanced show-scrollbar="{{false}}">
++      <view class="guide__intro">从一段街巷、一家店、一片绿地开始。</view>
++      <view class="guide__row" wx:for="{{places}}" wx:key="id" data-id="{{item.id}}" bindtap="onPlaceTap" aria-role="button" aria-label="查看{{item.name}}，{{item.categoryLabel}}" hover-class="cy-pressed" hover-stay-time="80">
++        <text class="guide__label">{{item.categoryLabel}}</text>
++        <text class="guide__name">{{item.name}}</text>
++        <text class="guide__reason">{{item.reason}}</text>
++        <text class="guide__address">{{item.address}}</text>
++      </view>
++      <view wx:if="{{!places.length}}" class="guide__empty">这个分类还在补充中，试试其他分类。</view>
++      <view class="guide__note">{{reviewNote}}</view>
++    </scroll-view>
++  </block>
++  <block wx:else>
++    <view class="guide__action guide__back" bindtap="backToList" aria-role="button" aria-label="返回{{cityName}}地点清单" hover-class="cy-pressed" hover-stay-time="80">返回{{cityName}}清单</view>
++    <scroll-view class="guide__body" scroll-y enhanced show-scrollbar="{{false}}">
++      <view class="guide__detail">
++        <text class="guide__label">{{selected.categoryLabel}}</text>
++        <text class="guide__name">{{selected.name}}</text>
++        <text class="guide__reason">{{selected.reason}}</text>
++        <view class="guide__tags"><text class="guide__tag" wx:for="{{selected.tags}}" wx:key="*this">{{item}}</text></view>
++        <text class="guide__section">到访信息</text>
++        <text class="guide__address">{{selected.address}}</text>
++        <text class="guide__reason">{{selected.visitNote}}</text>
++        <view class="guide__action guide__primary" bindtap="copyAddress" aria-role="button" aria-label="复制{{selected.name}}地址" hover-class="cy-pressed" hover-stay-time="80">复制地址，在常用地图中查找</view>
++        <text class="guide__section">资料来源</text>
++        <text class="guide__address">{{selected.sourceCount}} 个来源 · 资料核对 {{selected.reviewedOn}}</text>
++        <text class="guide__note">{{reviewNote}}</text>
++        <view class="guide__action" bindtap="copySources" aria-role="button" aria-label="复制{{selected.name}}的资料来源链接" hover-class="cy-pressed" hover-stay-time="80">复制来源链接</view>
++      </view>
++    </scroll-view>
++  </block>
++</view>
+diff --git a/chengyinhub-xcx/components/cy/roam-city-guide/index.wxss b/chengyinhub-xcx/components/cy/roam-city-guide/index.wxss
+new file mode 100644
+index 0000000000..351dfd0adf
+--- /dev/null
++++ b/chengyinhub-xcx/components/cy/roam-city-guide/index.wxss
+@@ -0,0 +1,25 @@
++:host { display: block; }
++.guide { position: fixed; inset: 0; z-index: 3000; display: flex; flex-direction: column; box-sizing: border-box; padding: calc(var(--cy-safe-top) + var(--cy-space-8)) var(--cy-page-x) calc(var(--cy-safe-bottom) + var(--cy-space-4)); background: var(--cy-color-bg-page); color: var(--cy-color-text-primary); }
++.guide__header, .guide__city { display: flex; align-items: center; justify-content: space-between; gap: var(--cy-space-3); }
++.guide__header { flex: none; margin-bottom: var(--cy-space-3); }
++.guide__title { font-size: var(--cy-type-section-title); font-weight: 800; }
++.guide__action { display: flex; align-items: center; justify-content: center; min-width: var(--cy-btn-h); min-height: var(--cy-btn-h); box-sizing: border-box; padding: var(--cy-space-2) var(--cy-space-3); font-size: var(--cy-type-label); color: var(--cy-color-text-primary); border-radius: var(--cy-radius-pill); }
++.guide__city { min-height: var(--cy-btn-h); padding: var(--cy-space-2) var(--cy-space-3); background: var(--cy-color-bg-surface-subtle); border-radius: var(--cy-radius-md); font-size: var(--cy-type-body); }
++.guide__city text:first-child { font-weight: 700; }
++.guide__city text:nth-child(2) { flex: 1; color: var(--cy-color-text-secondary); font-size: var(--cy-type-caption); }
++.guide__categories { flex: none; width: 100%; white-space: nowrap; padding: var(--cy-space-3) 0; }
++.guide__category { display: inline-flex; align-items: center; min-height: var(--cy-btn-h); padding: 0 var(--cy-space-3); margin-right: var(--cy-space-2); border-radius: var(--cy-radius-pill); background: var(--cy-color-bg-surface-subtle); color: var(--cy-color-text-secondary); font-size: var(--cy-type-label); }
++.guide__category.is-on, .guide__primary { background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg); }
++.guide__body { flex: 1; min-height: 0; height: 100%; }
++.guide__intro, .guide__note, .guide__empty { display: block; color: var(--cy-color-text-secondary); font-size: var(--cy-type-caption); line-height: var(--cy-leading-normal); padding: var(--cy-space-3) 0; }
++.guide__row { display: flex; flex-direction: column; gap: var(--cy-space-2); padding: var(--cy-space-4); margin-bottom: var(--cy-space-3); border-radius: var(--cy-radius-card); background: var(--cy-color-bg-surface-subtle); }
++.guide__label { display: block; color: var(--cy-color-text-secondary); font-size: var(--cy-type-caption); }
++.guide__name { display: block; font-size: var(--cy-type-card-title); font-weight: 700; line-height: var(--cy-leading-tight); }
++.guide__reason, .guide__address { display: block; font-size: var(--cy-type-body); line-height: var(--cy-leading-normal); overflow-wrap: break-word; }
++.guide__address { color: var(--cy-color-text-secondary); font-size: var(--cy-type-caption); }
++.guide__detail { display: flex; flex-direction: column; gap: var(--cy-space-3); padding-bottom: var(--cy-space-4); }
++.guide__back { justify-content: flex-start; flex: none; padding-left: 0; }
++.guide__tags { display: flex; flex-wrap: wrap; gap: var(--cy-space-2); }
++.guide__tag { padding: var(--cy-space-1) var(--cy-space-2); background: var(--cy-color-bg-surface-subtle); border-radius: var(--cy-radius-sm); color: var(--cy-color-text-secondary); font-size: var(--cy-type-caption); }
++.guide__section { margin-top: var(--cy-space-3); font-weight: 700; font-size: var(--cy-type-body); }
++.cy-pressed { opacity: .88; }
+diff --git a/chengyinhub-xcx/data/roam-city-catalog.json b/chengyinhub-xcx/data/roam-city-catalog.json
+new file mode 100644
+index 0000000000..b50806352e
+--- /dev/null
++++ b/chengyinhub-xcx/data/roam-city-catalog.json
+@@ -0,0 +1,712 @@
++{
++  "version": 1,
++  "reviewNote": "公开资料交叉核对，未实地核验。营业、展览及开放安排以店家或管理方最新公告为准。",
++  "cities": [
++    {
++      "id": "SH",
++      "name": "上海"
++    },
++    {
++      "id": "BJ",
++      "name": "北京"
++    },
++    {
++      "id": "HZ",
++      "name": "杭州"
++    },
++    {
++      "id": "CD",
++      "name": "成都"
++    },
++    {
++      "id": "XA",
++      "name": "西安"
++    },
++    {
++      "id": "CQ",
++      "name": "重庆"
++    },
++    {
++      "id": "SZ",
++      "name": "深圳"
++    },
++    {
++      "id": "GZ",
++      "name": "广州"
++    },
++    {
++      "id": "WH",
++      "name": "武汉"
++    },
++    {
++      "id": "HK",
++      "name": "香港"
++    },
++    {
++      "id": "XM",
++      "name": "厦门"
++    }
++  ],
++  "places": [
++    {
++      "id": "sh-shanyin-road",
++      "city": "SH",
++      "name": "山阴路",
++      "category": "street",
++      "address": "上海市虹口区山阴路",
++      "reason": "看里弄与老公寓的门窗细节，把阅读上海的起点放在居民日常里。",
++      "tags": [
++        "里弄建筑",
++        "街巷漫步"
++      ],
++      "visitNote": "沿山阴路公共道路步行，住宅内部不作为打卡区域。",
++      "reviewedOn": "2026-10-23",
++      "reviewMethod": "public_sources",
++      "sources": [
++        "https://touch.shio.gov.cn/jsp/whjljd_detail.jsp?id=89",
++        "https://www.shhk.gov.cn/qyfwy/030002/030002002/030002002002/20181206/7cc9807d-1b83-42ec-8803-c81449ed54c5.html"
++      ],
++      "coordinate": null
++    },
++    {
++      "id": "sh-luxun-park",
++      "city": "SH",
++      "name": "鲁迅公园",
++      "category": "park",
++      "address": "上海市虹口区四川北路2288号",
++      "reason": "在树荫与湖边走一段，听听居民合唱，再接着逛周边的文学街巷。",
++      "tags": [
++        "树荫散步",
++        "文学记忆"
++      ],
++      "visitNote": "公园与园内纪念馆的开放安排不同，参观纪念馆需另查公告。",
++      "reviewedOn": "2026-10-23",
++      "reviewMethod": "public_sources",
++      "sources": [
++        "https://www.shanghai.gov.cn/nw17239/20260821/437444e8364445a1a88082f9fbca30b3.html",
++        "https://ditu.amap.com/place/B00155KZKW"
++      ],
++      "coordinate": null
++    },
++    {
++      "id": "sh-uchiyama-books",
++      "city": "SH",
++      "name": "1927·鲁迅与内山纪念书局",
++      "category": "shop",
++      "address": "上海市虹口区四川北路2056号",
++      "reason": "在老书店延续出的阅读空间里，翻翻海派文化与文学主题的书。",
++      "tags": [
++        "主题书店",
++        "文学空间"
++      ],
++      "visitNote": "这是推荐收录的阅读空间，未标记为合作商家。",
++      "reviewedOn": "2026-10-23",
++      "reviewMethod": "public_sources",
++      "sources": [
++        "https://www.chinawriter.com.cn/n1/2026/0826/c403994-40786320.html",
++        "https://whlyj.sh.gov.cn/gqfc/20240828/c93b4408b6ee4268a338c0c794a29a0a.html"
++      ],
++      "coordinate": null
++    },
++    {
++      "id": "bj-zhuanta-hutong",
++      "city": "BJ",
++      "name": "砖塔胡同",
++      "category": "street",
++      "address": "北京市西城区砖塔胡同",
++      "reason": "从胡同口的古塔读起，沿公共街巷观察老北京院落与街道的关系。",
++      "tags": [
++        "胡同漫步",
++        "古塔街角"
++      ],
++      "visitNote": "请沿公共道路行走，不进入未开放的居民院落。",
++      "reviewedOn": "2026-10-23",
++      "reviewMethod": "public_sources",
++      "sources": [
++        "https://www.visitbeijing.com.cn/article/4LblHd9FikI",
++        "https://www.beijing.gov.cn/renwen/rwzyd/qxdw/jxndqcqx/zhyshj/202309/t20230918_3261515.html"
++      ],
++      "coordinate": null
++    },
++    {
++      "id": "bj-wanshou-park",
++      "city": "BJ",
++      "name": "万寿公园",
++      "category": "park",
++      "address": "北京市西城区白纸坊东街中部路北",
++      "reason": "一座围绕日常休闲展开的小公园，适合把行程放慢，看看树木与邻里生活。",
++      "tags": [
++        "社区公园",
++        "慢走休息"
++      ],
++      "visitNote": "开放时间按季节调整，请查看公园当日公告。",
++      "reviewedOn": "2026-10-23",
++      "reviewMethod": "public_sources",
++      "sources": [
++        "https://yllhj.beijing.gov.cn/ggfw/bjsggml/zhgy/xcq/202206/t20220614_2740270.shtml",
++        "https://you.ctrip.com/sight/beijing1/112123.html"
++      ],
++      "coordinate": null
++    },
++    {
++      "id": "bj-zhengyang-books",
++      "city": "BJ",
++      "name": "正阳书局（西四店）",
++      "category": "shop",
++      "address": "北京市西城区西四南大街43号",
++      "reason": "在万松老人塔院内翻一册北京地方文献，从纸页里接着认识眼前的胡同。",
++      "tags": [
++        "地方文献",
++        "院落书店"
++      ],
++      "visitNote": "推荐店铺；阅读空间开放与活动安排以书局公告为准。",
++      "reviewedOn": "2026-10-23",
++      "reviewMethod": "public_sources",
++      "sources": [
++        "https://www.beijing.gov.cn/renwen/rwzyd/qxdw/jxndqcqx/zhyshj/202309/t20230918_3261515.html",
++        "https://www.nationalreading.gov.cn/ydkj/202512/t20251222_943225.html"
++      ],
++      "coordinate": null
++    },
++    {
++      "id": "hz-mantoushan",
++      "city": "HZ",
++      "name": "馒头山社区街巷",
++      "category": "street",
++      "address": "杭州市上城区凤凰山脚路、馒头山社区周边公共街巷",
++      "reason": "沿山脚走进白墙黑瓦的生活街巷，看杭州山水之外的社区日常。",
++      "tags": [
++        "山脚社区",
++        "生活街巷"
++      ],
++      "visitNote": "居民区仅走公共街巷；不拍摄住户室内，不将私人院落列为打卡点。",
++      "reviewedOn": "2026-10-23",
++      "reviewMethod": "public_sources",
++      "sources": [
++        "https://www.zjucce.zju.edu.cn/zh-cn/jiedaoshequkaocha/124519.html",
++        "https://hznews.hangzhou.com.cn/chengshi/content/2023-04/21/content_8517676.htm"
++      ],
++      "coordinate": null
++    },
++    {
++      "id": "hz-chengbei-park",
++      "city": "HZ",
++      "name": "城北体育公园",
++      "category": "park",
++      "address": "杭州市拱墅区白石路125号",
++      "reason": "把打卡换成一段湖边慢走，在运动场与绿地之间感受城北的日常节奏。",
++      "tags": [
++        "日常运动",
++        "湖边慢走"
++      ],
++      "visitNote": "公园公共区域与馆内体育项目分别管理，项目收费及预约另查。",
++      "reviewedOn": "2026-10-23",
++      "reviewMethod": "public_sources",
++      "sources": [
++        "https://z.hangzhou.com.cn/2023/zjyl/content/content_8651963.html",
++        "https://ditu.amap.com/place/B023B09Y7Q"
++      ],
++      "coordinate": null
++    },
++    {
++      "id": "hz-silk-museum",
++      "city": "HZ",
++      "name": "中国丝绸博物馆",
++      "category": "landmark",
++      "address": "杭州市西湖区玉皇山路73-1号",
++      "reason": "从织物纹样与服饰看杭州的另一面，留一点时间观察材料与工艺。",
++      "tags": [
++        "纺织工艺",
++        "服饰文化"
++      ],
++      "visitNote": "展览、预约与开放安排以场馆最新公告为准。",
++      "reviewedOn": "2026-10-23",
++      "reviewMethod": "public_sources",
++      "sources": [
++        "https://www.chinasilkmuseum.com/gwgk/info_4.aspx?itemid=8790",
++        "https://www.amap.com/place/B023B09JLL"
++      ],
++      "coordinate": null
++    },
++    {
++      "id": "cd-tangba-street",
++      "city": "CD",
++      "name": "镋钯街",
++      "category": "street",
++      "address": "成都市锦江区镋钯街公共道路",
++      "reason": "沿川西街巷的尺度慢走，看看旧街建筑与今日小店如何并排生活。",
++      "tags": [
++        "旧街肌理",
++        "街角观察"
++      ],
++      "visitNote": "周末与节假日可能热闹；推荐的是步行观察，不承诺人少。",
++      "reviewedOn": "2026-10-23",
++      "reviewMethod": "public_sources",
++      "sources": [
++        "https://www.nbd.com.cn/articles/2019-04-29/1326718.html",
++        "https://ditu.amap.com/place/B0FFH6JHJ6"
++      ],
++      "coordinate": null
++    },
++    {
++      "id": "cd-wangjiang-park",
++      "city": "CD",
++      "name": "望江楼公园",
++      "category": "park",
++      "address": "成都市武侯区望江路30号至50号",
++      "reason": "沿竹林与江边走一段，认识与薛涛有关的城市记忆。",
++      "tags": [
++        "竹林漫步",
++        "江边休息"
++      ],
++      "visitNote": "公共园区与文物保护区的票务、开放规则不同，请分开核对。",
++      "reviewedOn": "2026-10-23",
++      "reviewMethod": "public_sources",
++      "sources": [
++        "https://www.wangjianglou.com/about.html",
++        "https://ditu.amap.com/place/B001C06R0O"
++      ],
++      "coordinate": null
++    },
++    {
++      "id": "cd-a4-museum",
++      "city": "CD",
++      "name": "A4美术馆",
++      "category": "landmark",
++      "address": "成都市天府新区麓山大道二段18号麓镇山顶广场",
++      "reason": "留一个下午给当代艺术，在展厅与社区之间切换观看城市的方式。",
++      "tags": [
++        "当代艺术",
++        "社区文化"
++      ],
++      "visitNote": "已按迁址后的麓镇馆址收录，请勿与麓湖的A4X艺术中心混淆。",
++      "reviewedOn": "2026-10-23",
++      "reviewMethod": "public_sources",
++      "sources": [
++        "https://www.a4artmuseum.com/about-us/contact/",
++        "https://you.ctrip.com/sight/chengdu104/140776071.html"
++      ],
++      "coordinate": null
++    },
++    {
++      "id": "xa-banpo-art",
++      "city": "XA",
++      "name": "半坡国际艺术区",
++      "category": "street",
++      "address": "西安市灞桥区纺织西街238号",
++      "reason": "沿旧纺织厂的公共街巷看厂房、创作空间与工业留下的尺度。",
++      "tags": [
++        "旧厂街巷",
++        "艺术空间"
++      ],
++      "visitNote": "工作室并非全部向公众开放，入内前请征得经营者同意。",
++      "reviewedOn": "2026-10-23",
++      "reviewMethod": "public_sources",
++      "sources": [
++        "https://big5.cri.cn/gate/big5/sn.cri.cn/n/20180424/5fbab288-509d-90b8-ac21-7b63bd259273.html",
++        "https://you.ctrip.com/sight/xian7/1475462.html"
++      ],
++      "coordinate": null
++    },
++    {
++      "id": "xa-xicheng-park",
++      "city": "XA",
++      "name": "环城西苑",
++      "category": "park",
++      "address": "西安市莲湖区环城西路、西门外护城河沿线",
++      "reason": "在城墙外的公共绿地走走，看护城河、树荫与居民的晨晚活动。",
++      "tags": [
++        "护城河绿地",
++        "日常散步"
++      ],
++      "visitNote": "收录的是城墙外公共绿地，登城参观需另查票务。",
++      "reviewedOn": "2026-10-23",
++      "reviewMethod": "public_sources",
++      "sources": [
++        "https://xadfz.xa.gov.cn/xadq/dqtk/63edda39f8fd1c4c21407585.html",
++        "https://you.ctrip.com/sight/xian7/121516.html"
++      ],
++      "coordinate": null
++    },
++    {
++      "id": "xa-shaanxi-art",
++      "city": "XA",
++      "name": "陕西省美术博物馆",
++      "category": "landmark",
++      "address": "西安市碑林区长安北路14号",
++      "reason": "用一场美术展切换旅行节奏，从绘画与地方工艺接近陕西文化。",
++      "tags": [
++        "美术展览",
++        "地方工艺"
++      ],
++      "visitNote": "开放、展期与预约以馆方公告为准。",
++      "reviewedOn": "2026-10-23",
++      "reviewMethod": "public_sources",
++      "sources": [
++        "https://www.sxpam.com.cn/html/content/index.html",
++        "https://www.amap.com/place/B001D04JH6"
++      ],
++      "coordinate": null
++    },
++    {
++      "id": "cq-sujia-trail",
++      "city": "CQ",
++      "name": "苏家坝步道",
++      "category": "street",
++      "address": "重庆市南岸区铜元局站至双峰山、铜元之光城市阳台一带",
++      "reason": "沿连接轨道站与山坡社区的步道，观察重庆真实的高差与日常通行。",
++      "tags": [
++        "山城步道",
++        "立体街巷"
++      ],
++      "visitNote": "台阶与高差较多，按体力选择路段，雨天注意路面。",
++      "reviewedOn": "2026-10-23",
++      "reviewMethod": "public_sources",
++      "sources": [
++        "https://cq.gov.cn/zwgk/zfxxgkml/zdlyxxgk/ggwh/ly/zxdt/202605/t20260520_15691032.html",
++        "https://cq.people.com.cn/n2/2022/0701/c365401-40019120-3.html"
++      ],
++      "coordinate": null
++    },
++    {
++      "id": "cq-pingdingshan-park",
++      "city": "CQ",
++      "name": "平顶山文化公园",
++      "category": "park",
++      "address": "重庆市沙坪坝区石小路155号",
++      "reason": "沿山间步道慢走，在绿荫与观景处看看山城社区的另一种高度。",
++      "tags": [
++        "山间绿荫",
++        "日常登高"
++      ],
++      "visitNote": "山路与台阶较多，请选择合适的步行路段。",
++      "reviewedOn": "2026-10-23",
++      "reviewMethod": "public_sources",
++      "sources": [
++        "https://www.cq.gov.cn/ywdt/jrcq/202202/t20220203_10369346.html",
++        "https://www.amap.com/place/B00170I04F"
++      ],
++      "coordinate": null
++    },
++    {
++      "id": "cq-jiaotong-tea",
++      "city": "CQ",
++      "name": "陈安健交通茶馆",
++      "category": "shop",
++      "address": "重庆市九龙坡区黄桷坪正街7号",
++      "reason": "在木桌、茶盏与聊天声之间坐一会儿，把看城市的速度交还给日常。",
++      "tags": [
++        "老茶馆",
++        "在地生活"
++      ],
++      "visitNote": "按当前地图门店名收录，勿与同名茶馆混淆；拍摄他人请先征得同意。",
++      "reviewedOn": "2026-10-23",
++      "reviewMethod": "public_sources",
++      "sources": [
++        "https://www.cqjlp.gov.cn/zwxx/qxdt/202606/t20260618_15763966.html",
++        "https://ditu.amap.com/place/B001790I1V"
++      ],
++      "coordinate": null
++    },
++    {
++      "id": "sz-oct-loft",
++      "city": "SZ",
++      "name": "华侨城创意文化园",
++      "category": "street",
++      "address": "深圳市南山区华侨城创意文化园公共街巷",
++      "reason": "沿旧厂房之间的街巷，看设计工作室、展览空间与树木相邻的日常。",
++      "tags": [
++        "厂房更新",
++        "设计街巷"
++      ],
++      "visitNote": "园内工作室和场馆分别管理，开放与活动安排需逐店核对。",
++      "reviewedOn": "2026-10-23",
++      "reviewMethod": "public_sources",
++      "sources": [
++        "https://www.szns.gov.cn/mlns/nsgk_113865/lechuang/content/post_3780578.html",
++        "https://wtl.sz.gov.cn/ggfw/whl/whcyyqlyb/index.html"
++      ],
++      "coordinate": null
++    },
++    {
++      "id": "sz-xiangmi-park",
++      "city": "SZ",
++      "name": "香蜜公园",
++      "category": "park",
++      "address": "深圳市福田区农园路30号",
++      "reason": "在荔枝林与步道间留一段散步时间，看看深圳社区里的绿意。",
++      "tags": [
++        "城市绿地",
++        "林间步道"
++      ],
++      "visitNote": "此处为农园路香蜜公园，请勿与建设中的香蜜湖公园混淆。",
++      "reviewedOn": "2026-10-23",
++      "reviewMethod": "public_sources",
++      "sources": [
++        "https://cgj.sz.gov.cn/xsmh/gysz/twf/etly/content/post_10841297.html",
++        "https://www.amap.com/place/B0FFG1V706"
++      ],
++      "coordinate": null
++    },
++    {
++      "id": "sz-hexiangning-art",
++      "city": "SZ",
++      "name": "何香凝美术馆",
++      "category": "landmark",
++      "address": "深圳市南山区深南大道9013号",
++      "reason": "给作品与文献留一点观看时间，从艺术家的经历读到城市之外的世界。",
++      "tags": [
++        "美术文献",
++        "展厅慢看"
++      ],
++      "visitNote": "展览、开放和预约以美术馆公告为准。",
++      "reviewedOn": "2026-10-23",
++      "reviewMethod": "public_sources",
++      "sources": [
++        "https://www.sz.gov.cn/szzt2010/szwtt/wtcg/whcg/content/mpost_11131257.html",
++        "https://www.amap.com/place/B02F30248A"
++      ],
++      "coordinate": null
++    },
++    {
++      "id": "gz-xinhepu",
++      "city": "GZ",
++      "name": "新河浦公共街巷",
++      "category": "street",
++      "address": "广州市越秀区新河浦路、恤孤院路周边公共道路",
++      "reason": "沿红砖洋房与河涌观察建筑细节，读广州近代社区留下的街巷尺度。",
++      "tags": [
++        "红砖洋房",
++        "沿河街巷"
++      ],
++      "visitNote": "街区仍有居民生活，私宅不进入，沿公共道路步行。",
++      "reviewedOn": "2026-10-23",
++      "reviewMethod": "public_sources",
++      "sources": [
++        "https://www.yuexiu.gov.cn/zjyx/yxjd/bgjq/content/post_8665420.html",
++        "https://sthjj.gz.gov.cn/mlzg/sfyb/mlxb/content/post_10696347.html"
++      ],
++      "coordinate": null
++    },
++    {
++      "id": "gz-xiaogang-park",
++      "city": "GZ",
++      "name": "晓港公园",
++      "category": "park",
++      "address": "广州市海珠区前进路146号",
++      "reason": "沿竹林、湖面与老树走一段，看看老广日常休息的城市绿地。",
++      "tags": [
++        "竹林公园",
++        "邻里休息"
++      ],
++      "visitNote": "收录公园公共园林，不包含已停业的旧游乐场项目。",
++      "reviewedOn": "2026-10-23",
++      "reviewMethod": "public_sources",
++      "sources": [
++        "https://www.haizhu.gov.cn/hzdt/ztlm/tzhz/rjhj/lyjd/smgy/content/post_9055133.html",
++        "https://www.amap.com/place/B00140UFR2"
++      ],
++      "coordinate": null
++    },
++    {
++      "id": "gz-kuiyuan-art",
++      "city": "GZ",
++      "name": "逵园艺术馆",
++      "category": "landmark",
++      "address": "广州市越秀区恤孤院路9号",
++      "reason": "在老洋房里看当代展览，把建筑细节与作品放在一起慢慢看。",
++      "tags": [
++        "洋房艺术",
++        "小型展览"
++      ],
++      "visitNote": "展览与楼内经营空间的开放安排分别以现场公告为准。",
++      "reviewedOn": "2026-10-23",
++      "reviewMethod": "public_sources",
++      "sources": [
++        "https://www.gzass.gd.cn/whzc/wenhuasheshi/wenhuachangguan/326.html",
++        "https://www.amap.com/place/B00141KR0X"
++      ],
++      "coordinate": null
++    },
++    {
++      "id": "wh-qingdao-road",
++      "city": "WH",
++      "name": "青岛路公共街巷",
++      "category": "street",
++      "address": "武汉市江岸区青岛路、平和打包厂周边公共道路",
++      "reason": "沿红砖工业建筑观察老汉口的城市更新，从街道读到曾经的商贸生活。",
++      "tags": [
++        "工业建筑",
++        "老城街巷"
++      ],
++      "visitNote": "沿公共道路步行，楼内商业空间及拍摄规定以经营方公告为准。",
++      "reviewedOn": "2026-10-23",
++      "reviewMethod": "public_sources",
++      "sources": [
++        "https://wlj.wuhan.gov.cn/whly/wbsy/202201/t20220112_1894179.shtml",
++        "https://news.cjn.cn/whpd/lbt_19946/202508/t5194738.htm"
++      ],
++      "coordinate": null
++    },
++    {
++      "id": "wh-jiefang-park",
++      "city": "WH",
++      "name": "解放公园",
++      "category": "park",
++      "address": "武汉市江岸区解放大道1861号",
++      "reason": "在湖边与树荫间散步，把看展探店之间的空档留给一段城市绿地。",
++      "tags": [
++        "树荫慢走",
++        "城市公园"
++      ],
++      "visitNote": "花期、活动日可能热闹；不将园内经营项目视为全部免费。",
++      "reviewedOn": "2026-10-23",
++      "reviewMethod": "public_sources",
++      "sources": [
++        "https://ylj.wuhan.gov.cn/zwgk/zwxxgkzl_12298/jggk_12304/xsdwszjzz_12308/202001/t20200110_726396.shtml",
++        "https://ditu.amap.com/place/B001B0IZT0"
++      ],
++      "coordinate": null
++    },
++    {
++      "id": "wh-united-art",
++      "city": "WH",
++      "name": "合美术馆",
++      "category": "landmark",
++      "address": "武汉市洪山区野芷湖西路16号",
++      "reason": "从当代艺术与青年创作中看另一面的武汉，给一件作品多停留几分钟。",
++      "tags": [
++        "当代艺术",
++        "青年创作"
++      ],
++      "visitNote": "展期、预约及开放状态以场馆最新公告为准。",
++      "reviewedOn": "2026-10-23",
++      "reviewMethod": "public_sources",
++      "sources": [
++        "https://wlt.hubei.gov.cn/zfxxgk/fdzdgknr/gysyjs/ggwhfw/ggmsg/202011/t20201102_2994450.shtml",
++        "https://you.ctrip.com/sight/wuhan145/69376375.html"
++      ],
++      "coordinate": null
++    },
++    {
++      "id": "hk-tai-nan-street",
++      "city": "HK",
++      "name": "大南街",
++      "category": "street",
++      "address": "香港九龙深水埗大南街公共道路",
++      "reason": "从皮革、布料与今日创作小店之间，观察深水埗制造业与社区生活的连接。",
++      "tags": [
++        "手作街巷",
++        "社区观察"
++      ],
++      "visitNote": "街道与店铺正常经营，拍摄和入店参观请尊重店家安排。",
++      "reviewedOn": "2026-10-23",
++      "reviewMethod": "public_sources",
++      "sources": [
++        "https://www.discoverhongkong.com/tc/place-to-go/travel.guide-tai-nan-street.html",
++        "https://www.td.gov.hk/tc/traffic_notices/index_id_79034.html"
++      ],
++      "coordinate": null
++    },
++    {
++      "id": "hk-cattle-depot-park",
++      "city": "HK",
++      "name": "牛棚艺术公园",
++      "category": "park",
++      "address": "香港九龙土瓜湾新山道与东九龙走廊交界、牛棚后方",
++      "reason": "在保留工业痕迹的公共休憩空间走走，看看红砖、绿地与艺术社区如何相邻。",
++      "tags": [
++        "工业遗存",
++        "公共艺术"
++      ],
++      "visitNote": "公园与前方牛棚艺术村是不同空间，工作室开放另查。",
++      "reviewedOn": "2026-10-23",
++      "reviewMethod": "public_sources",
++      "sources": [
++        "https://www.lcsd.gov.hk/sc/parks/cdap/index.html",
++        "https://www.archsd.gov.hk/sc/exhibition/8254_Revitalisation_of_the_Rear_Portion_of_the_Cattle_Depot.html"
++      ],
++      "coordinate": null
++    },
++    {
++      "id": "hk-aco-books",
++      "city": "HK",
++      "name": "艺鵠书店",
++      "category": "shop",
++      "address": "香港湾仔轩尼诗道365–367号富德楼14楼",
++      "reason": "翻翻艺术书与独立出版，从一本小书接近本地创作的日常。",
++      "tags": [
++        "独立出版",
++        "楼上书店"
++      ],
++      "visitNote": "书店位于14楼，请按楼宇及书店的开放安排前往。",
++      "reviewedOn": "2026-10-23",
++      "reviewMethod": "public_sources",
++      "sources": [
++        "https://www.aco.hk/aco-chi",
++        "https://www.art-mate.net/tc/doc/44408?name=%E8%89%BA%E9%B5%A0%E6%9B%B8%E5%BA%97"
++      ],
++      "coordinate": null
++    },
++    {
++      "id": "xm-huaxin-road",
++      "city": "XM",
++      "name": "华新路公共街巷",
++      "category": "street",
++      "address": "厦门市思明区华新路、幸福路周边公共道路",
++      "reason": "沿华侨老别墅与树荫慢走，看一段仍与居民日常交织的厦门街巷。",
++      "tags": [
++        "老别墅",
++        "树荫街巷"
++      ],
++      "visitNote": "不将旧攻略中停业的书店作为目的地；私人住宅不进入。",
++      "reviewedOn": "2026-10-23",
++      "reviewMethod": "public_sources",
++      "sources": [
++        "https://www.hxfzzx.com/2026-05/06/content_2338096.htm",
++        "https://news.xmnn.cn/xmxw/202607/t20260710_439108.html"
++      ],
++      "coordinate": null
++    },
++    {
++      "id": "xm-zhonglun-park",
++      "city": "XM",
++      "name": "忠仑公园",
++      "category": "park",
++      "address": "厦门市湖里区金尚路、吕岭路沿线忠仑公园",
++      "reason": "沿林间步道与缓坡看看城市绿意，把远行的节奏放回一次日常散步。",
++      "tags": [
++        "林间散步",
++        "轻量登高"
++      ],
++      "visitNote": "公园入口不止一处，请按计划路段选择；花期与活动安排另查。",
++      "reviewedOn": "2026-10-23",
++      "reviewMethod": "public_sources",
++      "sources": [
++        "https://you.ctrip.com/sight/xiamen21/119140.html",
++        "https://www.amap.com/place/B025003JXK"
++      ],
++      "coordinate": null
++    },
++    {
++      "id": "xm-three-shadows",
++      "city": "XM",
++      "name": "三影堂厦门摄影艺术中心",
++      "category": "landmark",
++      "address": "厦门市集美区杏林湾商务营运中心二号楼裙楼301",
++      "reason": "用一场摄影展切换观看方式，在影像里看看城市与人的关系。",
++      "tags": [
++        "摄影艺术",
++        "影像观看"
++      ],
++      "visitNote": "从连接1号楼和2号楼的大平台进入，展期与票务以中心公告为准。",
++      "reviewedOn": "2026-10-23",
++      "reviewMethod": "public_sources",
++      "sources": [
++        "https://www.threeshadows.cn/cn/about/visit/",
++        "https://you.ctrip.com/sight/xiamen21/2105373.html"
++      ],
++      "coordinate": null
++    }
++  ]
++}
+diff --git a/chengyinhub-xcx/pages/roam/index.js b/chengyinhub-xcx/pages/roam/index.js
+index 08f9a61562..6cbe1f56fa 100644
+--- a/chengyinhub-xcx/pages/roam/index.js
++++ b/chengyinhub-xcx/pages/roam/index.js
+@@ -55,6 +55,7 @@ const { normName, groupMerchantsByName, stampProgress, doneShopCount, selectNear
+ const { npcIconKey, pixelDrawSize, collectNpcIconNeeds, markerAvatar } = require('../../utils/roam-npc-marker.js');
+ // CU-M-54:服务端 POI 行 → 本地点位态(已打卡待核销是独立一档,不能读成 passed)
+ const { roamPoiLocalState } = require('../../utils/roam-poi-state.js');
++const { presentationForPoi } = require('../../utils/roam-poi-presentation.js');
+ const { MAP_AVATAR_COLORS } = require('../../utils/play-visual-tokens.js');
+ // 本地历史只用于下次打开地图时高亮一处已走过的边缘；不画路线、不上报坐标。
+ const { buildFootprintHint } = require('../../utils/roam-footprint-hint.js');
+@@ -271,6 +272,7 @@ function buildNpcPorts(page) {
+ Page({
+   data: {
+     privacyGateShow: false,
++    cityGuideOpen: false,
+     screen: 'entry-map', entryMarkers: [], entryCards: [], entryActivity: null, entryTeam: null, entrySheet: '', entrySheetView: 'main', entrySheetIn: false, entryLayers: { activities: true, teams: true, posts: true }, entryLoadError: false,
+     introError: '',
+     // 个性化地图透传给本页三个 <free-map>(起始预览 / 主漫游图 / 结算图),三处必须同源,
+@@ -1348,21 +1350,18 @@ Page({
+       const list = res.data;
+       this.setData({ poiOffline: false, poiEmpty: !list.length }, () => this._syncGoal());
+       if (!list.length) return;
+-      const catMap = {
+-        1: { icon: 'poi-landmark', catLabel: '地标', color: BRAND, cat: 'landmark' },
+-        2: { icon: 'poi-shop', catLabel: '商家 · 探店', color: '#D9D9D9', cat: 'merchant' },
+-      };
+       const roamPois = list.map((n) => {
+-        const m = catMap[n.type] || catMap[1];
++        const m = presentationForPoi(n);
++        const color = m.cat === 'merchant' ? '#D9D9D9' : (m.cat === 'park' ? '#A6A6A6' : BRAND);
+         const st = roamPoiLocalState(n);
+         const merchantAvatar = n.merchantAvatar || n.avatarUrl || n.avatar || '';
+         const npcAvatar = n.npcAvatar || '';
+         return {
+           id: ROAM_POI_MK_BASE + Number(n.id), _roamId: n.id, cat: m.cat, isCityNode: n.type === 2, name: n.name,
+-          lat: parseFloat(n.lat), lng: parseFloat(n.lng),
++          lat: parseFloat(n.lat), lng: parseFloat(n.lng), address: n.address || '',
+           // 非商户地点的 description 不是审核意义来源，绝不直出；商户说明仍走既有确定性探店信息。
+           desc: n.type === 2 ? (n.description || '') : '', points: n.xp || 20,
+-          icon: m.icon, catLabel: m.catLabel, color: m.color,
++          icon: m.icon, catLabel: m.catLabel, color,
+           imgUrl: MOCK_IMG, state: st, first: !n.found,
+           metaLine: m.catLabel + ' · 距你很近', radiusM: n.radiusM || 80,
+           nodeLevel: Number(n.nodeLevel || 1),
+@@ -3876,6 +3875,8 @@ Page({
+       show: true,
+       title: poi.name || '地点',
+       body: poi.desc || '',
++      category: poi.catLabel || '地标',
++      address: poi.address || '',
+       demo: !!poi.demo,
+       poiId: poi.id,
+       // 只有服务端 roam 非商户 POI 需要这条到点校验；商家仍走既有确定性探店链路。
+@@ -5347,6 +5348,8 @@ Page({
+   },
+   openEntryRoamSheet() { this._showEntrySheet('roam'); },
+   openEntryLayers() { this._showEntrySheet('layers'); },
++  openCityGuide() { this.setData({ cityGuideOpen: true }); },
++  closeCityGuide() { this.setData({ cityGuideOpen: false }); },
+   closeEntrySheet() { this.setData({ entrySheet: '', entryActivity: null, entryTeam: null, entrySheetView: 'main', entrySheetIn: false }); },
+   backEntrySheetView() { this.setData({ entrySheetView: 'main', entryTeam: null }); },
+   retryEntryMap() { this._loadEntryMap(this.data.center); },
+diff --git a/chengyinhub-xcx/pages/roam/index.json b/chengyinhub-xcx/pages/roam/index.json
+index baab42cce8..d3f8b14dd8 100644
+--- a/chengyinhub-xcx/pages/roam/index.json
++++ b/chengyinhub-xcx/pages/roam/index.json
+@@ -31,7 +31,8 @@
+     "cy-loading-mask": "/components/cy/loading-mask/index",
+     "cy-modal-host": "/components/cy/modal-host/index",
+     "cy-map-address-search": "/components/cy/map-address-search/index",
+-    "cy-proto-cam": "/components/cy/proto-cam/index"
++    "cy-proto-cam": "/components/cy/proto-cam/index",
++    "cy-roam-city-guide": "/components/cy/roam-city-guide/index"
+   },
+   "componentPlaceholder": {
+     "cy-scene-play-activity-detail": "view",
+diff --git a/chengyinhub-xcx/pages/roam/index.wxml b/chengyinhub-xcx/pages/roam/index.wxml
+index 822a08d78b..0cf12713e6 100644
+--- a/chengyinhub-xcx/pages/roam/index.wxml
++++ b/chengyinhub-xcx/pages/roam/index.wxml
+@@ -15,6 +15,7 @@
+   <cy-toast id="cy-toast" />
+   <cy-loading-mask id="cy-loading" />
+   <cy-modal-host id="cy-modal-host" />
++  <cy-roam-city-guide show="{{cityGuideOpen}}" bind:close="closeCityGuide" />
+ 
+ <!-- 进入漫游 tab 的默认态：真实地图浏览，不建会话、不记轨迹、不自动申请定位。 -->
+ <view class="entry-map" wx:if="{{screen=='entry-map'}}">
+@@ -28,6 +29,7 @@
+                          entry="{{true}}" placeholder="搜索活动或地点" bind:pick="onSearchPick" />
+   <view class="entry-map__layers" style="top:{{searchTop}}px" bindtap="openEntryLayers" aria-role="button" aria-label="选择地图图层" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="map" size="40" /></view>
+   <view class="entry-map__actions">
++    <view class="entry-map__roam" bindtap="openCityGuide" aria-role="button" aria-label="按城市浏览街道、推荐店铺和公园" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="discover-shop" size="32" /><text>城市清单</text></view>
+     <view class="entry-map__roam" bindtap="openRoamHistory" aria-role="button" aria-label="记录" hover-class="cy-pressed" hover-stay-time="80"><text>记录</text></view>
+     <view class="entry-map__roam" bindtap="openEntryRoamSheet" aria-role="button" aria-label="打开开始漫游弹窗" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="route" size="32" /><text>开始漫游</text></view>
+   </view>
+@@ -366,6 +368,8 @@
+       <view class="pc-close" bindtap="closePaceCard" aria-role="button" aria-label="关闭地点提示" hover-class="cy-pressed" hover-stay-time="80"><view class="pc-close__glyph"><cy-icon name="close-sm" size="32" /></view></view>
+     </view>
+     <text class="pc-demo" wx:if="{{paceCard.demo}}">演示点 · 仅浏览（非真实地点）</text>
++    <text class="pc-body">{{paceCard.category}}</text>
++    <text class="pc-body" wx:if="{{paceCard.address}}">{{paceCard.address}}</text>
+     <text class="pc-body" wx:if="{{paceCard.body}}">{{paceCard.body}}</text>
+     <text class="pc-hint" wx:if="{{paceCard.canDiscover && !paceCard.meaning && !paceCard.checkinErr}}">靠近后可确认地点</text>
+     <view class="pc-action" wx:if="{{paceCard.canDiscover && !paceCard.meaning && !paceCard.checkinErr}}" bindtap="discoverRoamPoi" data-id="{{paceCard.poiId}}" aria-role="button" aria-label="确认到达漫游点" hover-class="cy-pressed" hover-stay-time="80">确认到点</view>
+diff --git a/chengyinhub-xcx/tests/unit/roam-city-catalog.test.js b/chengyinhub-xcx/tests/unit/roam-city-catalog.test.js
+new file mode 100644
+index 0000000000..cfdcd6a18c
+--- /dev/null
++++ b/chengyinhub-xcx/tests/unit/roam-city-catalog.test.js
+@@ -0,0 +1,139 @@
++'use strict'
++const { test } = require('node:test')
++const assert = require('node:assert/strict')
++const raw = require('../../data/roam-city-catalog.json')
++const catalog = require('../../utils/roam-city-catalog.js')
++const { presentationForPoi } = require('../../utils/roam-poi-presentation.js')
++const { buildImport, coordinateTemplate } = require('../../../scripts/roam-catalog-import.js')
++
++test('11城33处真实目录身份独立，四类与来源可检查，未伪造坐标或合作身份', () => {
++  assert.equal(raw.cities.length, 11)
++  assert.equal(raw.places.length, 33)
++  assert.equal(new Set(raw.places.map(row => row.id)).size, raw.places.length)
++  for (const city of raw.cities) assert.equal(catalog.listPlaces(city.id, 'all').length, 3)
++  for (const place of raw.places) {
++    assert.ok(raw.cities.some(city => city.id === place.city))
++    assert.ok(['street','park','shop','landmark'].includes(place.category))
++    assert.equal(place.coordinate, null)
++    assert.ok(place.address && place.reason && place.visitNote)
++    assert.equal(place.reviewMethod, 'public_sources')
++    assert.ok(new Set(place.sources).size >= 2)
++    for (const url of place.sources) assert.match(url, /^https:\/\/[^\s]+$/)
++    for (const key of ['merchantId','templateId','couponId','found','xp']) assert.equal(Object.hasOwn(place, key), false)
++  }
++})
++test('城市和分类严格筛选，未知条件不会泄漏其他城市，行选择保持稳定', () => {
++  assert.deepEqual(catalog.listPlaces('BJ','shop').map(row => row.id), ['bj-zhengyang-books'])
++  assert.equal(catalog.listPlaces('HZ','shop').length, 0)
++  assert.equal(catalog.listPlaces('unknown','all').length, 0)
++  assert.equal(catalog.listPlaces('SH','unknown').length, 0)
++  assert.equal(catalog.findPlace('unknown'), null)
++  const row = catalog.findPlace('bj-zhengyang-books')
++  row.name = 'local edit'
++  assert.equal(catalog.findPlace('bj-zhengyang-books').name, '正阳书局（西四店）')
++})
++test('公园与街道按明确标签展示，普通推荐店铺不进入商家打卡链', () => {
++  assert.equal(presentationForPoi({type:1,tags:'["roam:park"]'}).cat, 'park')
++  assert.equal(presentationForPoi({type:1,tags:['roam:street']}).catLabel, '宝藏街道')
++  const shop = presentationForPoi({type:1,tags:['roam:shop']})
++  assert.equal(shop.cat, 'landmark')
++  assert.equal(shop.catLabel, '推荐店铺')
++  assert.equal(presentationForPoi({type:1,name:'公园咖啡',tags:'bad json'}).cat, 'landmark')
++  assert.equal(presentationForPoi({type:1,tags:'{"roam:park":true}'}).cat, 'landmark')
++})
++test('合作标签必须有真实商家关联，分类标签不能覆盖type=2的既有业务链', () => {
++  assert.equal(presentationForPoi({type:2,merchantId:7,tags:['roam:park']}).cat, 'merchant')
++  assert.equal(presentationForPoi({type:2,merchantId:7}).catLabel, '合作商家 · 探店')
++  assert.equal(presentationForPoi({type:2,merchantId:null}).catLabel, '商家据点')
++  assert.equal(presentationForPoi({type:2,merchantId:'invalid'}).catLabel, '商家据点')
++})
++
++const example = raw.places[0]
++const fixtureCatalog = {places:[example]}
++const now = new Date('2026-10-24T06:00:00Z')
++// Synthetic fixture only. This is not a production coordinate manifest.
++function verified(overrides) {
++  return Object.assign({}, coordinateTemplate(fixtureCatalog)[0], {
++    provider:'amap',providerPoiId:'fixture-only',verificationSource:'https://www.amap.com/place/fixture-only',
++    lat:31.25,lng:121.5,verifiedOn:'2026-10-23',matchConfirmed:true,
++  }, overrides)
++}
++test('原始坐标模板不能生成导入文件，缺行、空值和未确认入口全部拒绝', () => {
++  assert.equal(coordinateTemplate(raw).length, 33)
++  assert.throws(() => buildImport(fixtureCatalog, coordinateTemplate(fixtureCatalog), null, now))
++  assert.throws(() => buildImport(fixtureCatalog, [], null, now))
++  for (const overrides of [{lat:null},{lng:''},{matchConfirmed:false},{lat:Infinity},{lat:NaN}]) {
++    assert.throws(() => buildImport(fixtureCatalog, [verified(overrides)], null, now))
++  }
++})
++test('坐标城市、坐标系、名称地址及来源必须一致，不接受同名误匹配', () => {
++  for (const overrides of [
++    {city:'BJ'},{lat:39.9,lng:116.4},{coordinateSystem:'WGS-84'},
++    {name:'other'},{address:'other'},{providerPoiId:''},{provider:'unknown'},
++    {verificationSource:'https://www.amap.com.evil.invalid/place/1'},
++  ]) assert.throws(() => buildImport(fixtureCatalog, [verified(overrides)], null, now))
++})
++test('过期、未来或伪日期核验不发布，重复与未知身份不合并', () => {
++  for (const verifiedOn of ['2025-01-01','2026-10-25','2026-02-30','yesterday']) {
++    assert.throws(() => buildImport(fixtureCatalog, [verified({verifiedOn})], null, now))
++  }
++  assert.throws(() => buildImport(fixtureCatalog, [verified(),verified()], null, now))
++  assert.throws(() => buildImport(fixtureCatalog, [verified({id:'unknown'})], null, now))
++  assert.throws(() => buildImport(fixtureCatalog, [verified()], 'unknown', now))
++})
++test('导入保持下架type=1，不造合作商家和券；按稳定标签去重并附回读', () => {
++  const sql = buildImport(fixtureCatalog, [verified()], 'SH', now)
++  assert.match(sql, /START TRANSACTION;/)
++  assert.match(sql, /, 1, 31\.250000, 121\.500000, 80,/)
++  assert.match(sql, /, 0, NULL, NULL, NULL,/)
++  assert.match(sql, /WHERE NOT EXISTS/)
++  assert.match(sql, /JSON_CONTAINS/)
++  assert.match(sql, /COMMIT;/)
++  assert.match(sql, /SELECT id, name, type, city_code, status/)
++  assert.doesNotMatch(sql, /UPDATE |DELETE |DROP |TRUNCATE |CREATE TABLE/i)
++})
++test('SQL文本使用UTF8十六进制，目录文字不能注入额外语句', () => {
++  const hostile = Object.assign({},example,{name:"quote'; DELETE FROM roam_poi; --"})
++  const sql = buildImport({places:[hostile]}, [verified({name:hostile.name})], null, now)
++  assert.doesNotMatch(sql, /DELETE FROM/)
++  assert.match(sql, /CONVERT\(0x[0-9a-f]+ USING utf8mb4\)/)
++})
++
++test('目录组件可切城筛选、点开详情和复制地址，旧列表点击不会选到另一城市', () => {
++  const previousComponent = global.Component
++  const previousWx = global.wx
++  const copied = []
++  let definition
++  global.Component = value => { definition = value }
++  global.wx = { setClipboardData: options => copied.push(options.data) }
++  try {
++    require('../../components/cy/roam-city-guide/index.js')
++    const instance = Object.assign({
++      data:JSON.parse(JSON.stringify(definition.data)),
++      setData(patch) { Object.assign(this.data,patch) },
++      triggerEvent(name) { this.closedEvent = name },
++    }, definition.methods)
++    instance.onCityChange({detail:{value:1}})
++    assert.equal(instance.data.cityName, '北京')
++    instance.onCategoryTap({currentTarget:{dataset:{id:'shop'}}})
++    assert.equal(instance.data.places.length, 1)
++    instance.onPlaceTap({currentTarget:{dataset:{id:'sh-uchiyama-books'}}})
++    assert.equal(instance.data.selected, null)
++    instance.onPlaceTap({currentTarget:{dataset:{id:'bj-zhengyang-books'}}})
++    assert.equal(instance.data.selected.name, '正阳书局（西四店）')
++    instance.copyAddress()
++    instance.copySources()
++    assert.match(copied[0], /西四南大街43号/)
++    assert.equal(copied[1].split('\n').length, 2)
++    instance.backToList()
++    instance.copyAddress()
++    assert.equal(copied.length, 2)
++    instance.onCityChange({detail:{value:999}})
++    assert.equal(instance.data.cityName, '北京')
++    instance.close()
++    assert.equal(instance.closedEvent, 'close')
++  } finally {
++    global.Component = previousComponent
++    global.wx = previousWx
++  }
++})
+diff --git a/chengyinhub-xcx/utils/roam-city-catalog.js b/chengyinhub-xcx/utils/roam-city-catalog.js
+new file mode 100644
+index 0000000000..427fc08036
+--- /dev/null
++++ b/chengyinhub-xcx/utils/roam-city-catalog.js
+@@ -0,0 +1,20 @@
++'use strict'
++
++const catalog = require('../data/roam-city-catalog.json')
++const { CATEGORY_LABELS } = require('./roam-poi-presentation.js')
++const categories = Object.keys(CATEGORY_LABELS).map(id => ({ id, name: CATEGORY_LABELS[id] }))
++const cities = catalog.cities.map(city => Object.assign({}, city, {
++  count: catalog.places.filter(place => place.city === city.id).length,
++}))
++function listPlaces(city, category) {
++  if (!cities.some(row => row.id === city) || !categories.some(row => row.id === category)) return []
++  return catalog.places.filter(place => place.city === city && (category === 'all' || place.category === category))
++    .map(place => Object.assign({}, place, {
++      categoryLabel: CATEGORY_LABELS[place.category], sourceCount: place.sources.length,
++    }))
++}
++function findPlace(id) {
++  const place = catalog.places.find(row => row.id === id)
++  return place ? listPlaces(place.city, 'all').find(row => row.id === id) : null
++}
++module.exports = { cities, categories, listPlaces, findPlace, reviewNote: catalog.reviewNote }
+diff --git a/chengyinhub-xcx/utils/roam-poi-presentation.js b/chengyinhub-xcx/utils/roam-poi-presentation.js
+new file mode 100644
+index 0000000000..61f12b8eb2
+--- /dev/null
++++ b/chengyinhub-xcx/utils/roam-poi-presentation.js
+@@ -0,0 +1,26 @@
++'use strict'
++
++// Presentation is separate from the server's reward/ownership type.
++// Reserved tags are written by the reviewed catalog importer, never inferred from names.
++const CATEGORY_LABELS = Object.freeze({
++  all: '全部', street: '宝藏街道', shop: '推荐店铺', park: '公园绿地', landmark: '文化地标',
++})
++function readTags(value) {
++  if (Array.isArray(value)) return value
++  if (typeof value !== 'string') return []
++  try { const tags = JSON.parse(value); return Array.isArray(tags) ? tags : [] } catch (_) { return [] }
++}
++function presentationForPoi(row) {
++  const poi = row || {}
++  if (Number(poi.type) === 2) {
++    const linked = /^[1-9]\d*$/.test(String(poi.merchantId || ''))
++    return { cat: 'merchant', icon: 'poi-shop', catLabel: linked ? '合作商家 · 探店' : '商家据点' }
++  }
++  const tags = readTags(poi.tags)
++  if (tags.includes('roam:park')) return { cat: 'park', icon: 'poi-park', catLabel: CATEGORY_LABELS.park }
++  if (tags.includes('roam:street')) return { cat: 'landmark', icon: 'poi-landmark', catLabel: CATEGORY_LABELS.street }
++  // A recommended shop remains an official discovery point (type=1), outside shop visits/coupons.
++  if (tags.includes('roam:shop')) return { cat: 'landmark', icon: 'poi-shop', catLabel: CATEGORY_LABELS.shop }
++  return { cat: 'landmark', icon: 'poi-landmark', catLabel: CATEGORY_LABELS.landmark }
++}
++module.exports = { CATEGORY_LABELS, readTags, presentationForPoi }
+diff --git a/docs/roam-city-catalog-20261023.md b/docs/roam-city-catalog-20261023.md
+new file mode 100644
+index 0000000000..8c261ecae5
+--- /dev/null
++++ b/docs/roam-city-catalog-20261023.md
+@@ -0,0 +1,55 @@
++# 城市漫游目录与地图布点交接
++
++本次给漫游入口增加「城市清单」，按城市和分类浏览、点开详情，能复制地址和资料来源。首批 11 城、33 处内容随小程序提供，不依赖附近活动接口成功或定位授权。用户主动浏览的远方城市不改动当前漫游锚点、定位、轨迹或会话。
++
++## 分类与身份
++
++- 展示分类：宝藏街道、推荐店铺、公园绿地、文化地标。
++- 后端业务类型继续保持 type=1 平台地点、type=2 商家据点。
++- 平台地点通过 tags 中的保留标签 roam:street / roam:shop / roam:park / roam:landmark 指定展示分类。
++- 推荐店铺的业务类型是 1，沿平台地点确认到点链路，不进入商家探店、集章或领券链路。
++- type=2 沿用原有业务链；只有 merchantId 是有效正整数时显示「合作商家」，无关联显示「商家据点」。分类标签不能把它改成平台地点。
++- 旧地点没有分类标签时保持地标展示，不按名字猜测「公园」或批量回填身份。
++- 非商户的 description 仍不作为审核后的「地点记忆」展示；地点意义沿用独立内容审核链。
++
++## 首批数据与核验边界
++
++数据文件：chengyinhub-xcx/data/roam-city-catalog.json。
++
++上海、北京、杭州、成都、西安、重庆、深圳、广州、武汉、香港、厦门，每城 3 处；11 段街巷/步道、11 处公园、4 处推荐书店/茶馆、7 处文化空间。已排除停业信息冲突的不在书店，避免把 A4 美术馆旧址、香蜜湖公园和香蜜公园混用，也未收录晓港公园已停业的旧游乐场项目。
++
++每条保留稳定 ID、城市、类别、地址、原创推荐理由、标签、到访说明、两个来源链接和公开资料核对日期。收录依据是公开资料交叉核对，不是实地探访；不声称实时营业、人少、免费或已成为合作商家。目录界面明确显示核对日期和来源，并提示以经营方或管理方最新公告为准。
++
++首批坐标一律为空，不把街区中心或猜测坐标变成可领取奖励的地图点。目录已可浏览和复制地址，但这些条目不会凭空成为已上架的附近点位。
++
++## 地图布点工具
++
++工具只在本机编译 SQL，不连接数据库、不自动发布。没有新依赖，没有新增表或列。
++
++生成坐标核验模板：
++
++```sh
++node scripts/roam-catalog-import.js --template > /tmp/roam-coordinate-review.json
++```
++
++运营用腾讯/高德地图逐条确认同名门店、城市、地址、可公开到达的入口，填写 provider、providerPoiId、verificationSource、lat、lng、verifiedOn，并在确认匹配后设置 matchConfirmed=true。坐标必须由地图服务明确返回为 GCJ-02，不猜测坐标系、不自动偏移转换。街道和大型公园的入口必须适合步行，不使用几何中心代替。
++
++按一个城市编译待审核数据，例如：
++
++```sh
++node scripts/roam-catalog-import.js --coordinates /tmp/roam-coordinate-review.json --city SH --output /tmp/roam-sh-review.sql
++```
++
++未确认、缺失、重复、过期超过 90 天、未来日期、坐标系错误、跨城或名称地址不一致的记录会拒绝生成。模板中的空值不会变成 0,0。输出文件使用独占创建，不覆盖已有文件。
++
++SQL 将新点位设为 status=0（下架）、type=1、无 merchant_id/template_id/coupon_template_id，沿用平台地点探索值配置。种子标识写入 tags，顺序重跑不重复导入；不覆盖旧地点、已有归属或已下架状态。SQL 附带回读，执行前需在隔离测试库确认现有列、同名重复点和生成语句。并发执行不受此种子标签的唯一约束保护，须由单个运营者串行执行。
++
++数据上线继续使用仓库既有迁移/运营审核路径：核对同名点、入口与来源 → 测试库执行和回读 → 按生产变更流程执行 → 后台审核上架。直接连生产数据库及绕过审核均不属于此工具。商家认领、互动模板、优惠券仍走原有申请审核流程。
++
++## 验证与验收
++
++自动测试：chengyinhub-xcx/tests/unit/roam-city-catalog.test.js，覆盖分类与业务身份隔离、目录筛选、过时选择、详情和复制动作、坐标空值/错城/过期/未来/伪日期/重复身份、SQL 下架和去重以及文本注入。
++
++本次执行环境启动失败，未获得微信开发者工具或 MySQL。提交前可运行的 V8 内存验证仅覆盖纯逻辑与组件状态；实际 Node 测试和全仓静态门禁以 PR CI 结果为准，不将内存验证表述为微信编译通过。
++
++发布前还需在微信开发者工具截图验收：入口按钮在小屏、字体放大下不遮挡；城市选择与分类切换；每城详情与复制成功/失败；关闭后地图和活动抽屉仍可操作；未授权定位或接口离线时仍可浏览目录；普通推荐店铺无合作任务或领券按钮。坐标导入工具生成的 SQL 尚须测试库执行验收，不能把文本断言当成数据库执行成功。
+diff --git a/scripts/roam-catalog-import.js b/scripts/roam-catalog-import.js
+new file mode 100644
+index 0000000000..b2e3f9cb60
+--- /dev/null
++++ b/scripts/roam-catalog-import.js
+@@ -0,0 +1,108 @@
++#!/usr/bin/env node
++'use strict'
++
++// Offline compiler only: emits a reviewable SQL file, never connects to a database.
++const fs = require('node:fs')
++const path = require('node:path')
++const CATALOG_PATH = path.resolve(__dirname, '../chengyinhub-xcx/data/roam-city-catalog.json')
++const BOUNDS = {
++  SH: [30.6,31.9,120.8,122], BJ: [39.3,40.6,115.6,117.5], HZ: [29.7,30.8,119.6,120.8],
++  CD: [30.2,31,103.4,104.8], XA: [33.8,34.8,108.3,109.8], CQ: [29.1,30.2,105.9,107.2],
++  SZ: [22.4,22.9,113.7,114.7], GZ: [22.7,23.7,112.9,114.1], WH: [30,31.1,113.8,115.1],
++  HK: [22.1,22.6,113.8,114.5], XM: [24.3,24.9,117.8,118.5],
++}
++function textSql(value) {
++  return 'CONVERT(0x' + Buffer.from(String(value), 'utf8').toString('hex') + ' USING utf8mb4)'
++}
++function checkedDate(value, now) {
++  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false
++  const date = new Date(value + 'T00:00:00Z')
++  return Number.isFinite(date.getTime()) && date.toISOString().slice(0,10) === value &&
++    date.getTime() <= now.getTime() && now.getTime() - date.getTime() <= 90 * 86400000
++}
++function coordinateTemplate(catalog) {
++  return catalog.places.map(place => ({
++    id: place.id, city: place.city, name: place.name, address: place.address,
++    provider: null, coordinateSystem: 'GCJ-02', providerPoiId: null, verificationSource: null,
++    lat: null, lng: null, verifiedOn: null, matchConfirmed: false,
++  }))
++}
++function buildImport(catalog, coordinates, city, now = new Date()) {
++  if (!catalog || !Array.isArray(catalog.places) || !Array.isArray(coordinates)) throw new Error('地点目录或坐标清单格式错误')
++  if (city && !BOUNDS[city]) throw new Error('未知城市码')
++  const places = catalog.places.filter(place => !city || place.city === city)
++  if (!places.length || new Set(places.map(place => place.id)).size !== places.length) throw new Error('地点清单为空或身份重复')
++  const known = new Set(catalog.places.map(place => place.id))
++  if (new Set(coordinates.map(row => row && row.id)).size !== coordinates.length ||
++      coordinates.some(row => !row || !known.has(row.id))) throw new Error('坐标清单包含重复或未知地点')
++  const checked = places.map(place => {
++    const geo = coordinates.find(row => row.id === place.id)
++    const bounds = BOUNDS[place.city]
++    const validSource = geo && typeof geo.verificationSource === 'string' &&
++      /^https:\/\/(?:[\w-]+\.)*(?:amap\.com|gaode\.com|map\.qq\.com)(?:\/|$)/.test(geo.verificationSource)
++    if (typeof place.id !== 'string' || !/^[a-z]{2}-[a-z0-9-]+$/.test(place.id) || !geo || geo.city !== place.city || geo.name !== place.name || geo.address !== place.address ||
++        !bounds || !['street','park','shop','landmark'].includes(place.category) ||
++        !['amap','tencent'].includes(geo.provider) || geo.coordinateSystem !== 'GCJ-02' ||
++        geo.matchConfirmed !== true || typeof geo.providerPoiId !== 'string' || !geo.providerPoiId.trim() ||
++        !validSource || !checkedDate(geo.verifiedOn, now) ||
++        typeof geo.lat !== 'number' || !Number.isFinite(geo.lat) ||
++        typeof geo.lng !== 'number' || !Number.isFinite(geo.lng) ||
++        geo.lat < bounds[0] || geo.lat > bounds[1] || geo.lng < bounds[2] || geo.lng > bounds[3]) {
++      throw new Error('坐标与入口未完成核验：' + place.id)
++    }
++    if (!Array.isArray(place.sources) || new Set(place.sources).size < 2 ||
++        place.sources.some(source => typeof source !== 'string' || !/^https:\/\/[^\s]+$/.test(source)) ||
++        !checkedDate(place.reviewedOn, now) || place.reviewMethod !== 'public_sources') {
++      throw new Error('来源核验缺失或超过90天：' + place.id)
++    }
++    const tag = 'roam:seed:v1:' + place.id
++    const tags = JSON.stringify(['roam:' + place.category, tag].concat(place.tags))
++    for (const [value, limit] of [[place.name,80],[place.address,255],[place.reason,255],[tags,255]]) {
++      if (typeof value !== 'string' || !value.trim() || Array.from(value).length > limit) throw new Error('内容字段超长或为空：' + place.id)
++    }
++    return { place, geo, tag, tags }
++  })
++  const sql = [
++    '-- 城市漫游目录：仅离线编译，未执行任何数据库操作。',
++    '-- 预先核对现有 roam_poi 的 address/tags/sort 列及同名点位；先在隔离测试库执行并回读。',
++    '-- 新点位 status=0（下架）；运营审核并上架后才进入附近点位接口。',
++    '-- 所有条目 type=1，无商家归属、玩法模板、券模板；商家认领仍走既有审核链。',
++    '-- 按种子标签防止顺序重复导入；仅供单个运营者串行执行，不替代并发唯一约束。',
++    'START TRANSACTION;',
++  ]
++  checked.forEach(({ place, geo, tag, tags }, index) => {
++    sql.push('-- ' + place.id + ' / ' + geo.provider + ' / ' + geo.verifiedOn)
++    sql.push('INSERT INTO roam_poi (name, type, lat, lng, radius_m, address, description, xp, city_code, status, merchant_id, template_id, coupon_template_id, tags, sort, create_time)')
++    sql.push('SELECT ' + [
++      textSql(place.name), '1', geo.lat.toFixed(6), geo.lng.toFixed(6), '80', textSql(place.address),
++      textSql(place.reason), '20', textSql(place.city), '0', 'NULL', 'NULL', 'NULL', textSql(tags), String(index), 'NOW()',
++    ].join(', ') + ' FROM DUAL')
++    sql.push('WHERE NOT EXISTS (SELECT 1 FROM roam_poi WHERE JSON_CONTAINS(CASE WHEN JSON_VALID(tags) THEN tags ELSE ' +
++      textSql('[]') + ' END, JSON_QUOTE(' + textSql(tag) + ')));')
++  })
++  sql.push('COMMIT;', '-- 回读刚导入的下架点位；零行或数量不符时停止，不直接上架。')
++  sql.push('SELECT id, name, type, city_code, status, merchant_id, template_id, coupon_template_id, lat, lng, tags FROM roam_poi WHERE ' +
++    checked.map(({ tag }) => 'JSON_CONTAINS(CASE WHEN JSON_VALID(tags) THEN tags ELSE ' + textSql('[]') + ' END, JSON_QUOTE(' + textSql(tag) + '))').join(' OR ') + ';')
++  return sql.join('\n') + '\n'
++}
++function main(args) {
++  const catalog = JSON.parse(fs.readFileSync(CATALOG_PATH, 'utf8'))
++  if (args.length === 1 && args[0] === '--template') {
++    process.stdout.write(JSON.stringify(coordinateTemplate(catalog), null, 2) + '\n')
++    return
++  }
++  const allowed = new Set(['--coordinates','--city','--output'])
++  const options = {}
++  for (let i = 0; i < args.length; i += 2) {
++    if (!allowed.has(args[i]) || !args[i+1] || options[args[i]]) throw new Error('参数无效')
++    options[args[i]] = args[i+1]
++  }
++  if (!options['--coordinates'] || !options['--output']) throw new Error('用法：--template 或 --coordinates 文件 --output SQL文件 [--city SH]')
++  // Validate every selected row before creating/truncating the output.
++  const sql = buildImport(catalog, JSON.parse(fs.readFileSync(options['--coordinates'], 'utf8')), options['--city'])
++  fs.writeFileSync(path.resolve(options['--output']), sql, { encoding: 'utf8', flag: 'wx' })
++}
++if (require.main === module) {
++  try { main(process.argv.slice(2)) } catch (error) { process.stderr.write(error.message + '\n'); process.exitCode = 1 }
++}
++module.exports = { buildImport, coordinateTemplate }
