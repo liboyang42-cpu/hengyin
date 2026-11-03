@@ -81,3 +81,15 @@ test('首页:菜单转发固定插画', () => {
   assert.equal(share.imageUrl, ROAM_SHARE_COVER);
   assert.equal(share.path, '/pages/index/index');
 });
+
+test('第 4 项:官方活动列表可转发,落默认公开页签,固定插画', () => {
+  const def = loadDefinition('pages/activity/list/index.js');
+  assert.deepEqual(plain(def.onShareAppMessage.call({ data: { tab: 3 } })),
+    { title: '城瘾 · 官方活动', path: '/pages/activity/list/index', imageUrl: ROAM_SHARE_COVER });
+});
+
+test('第 4 项:私有页不加转发(徽章墙是本人的、游戏内探店页带核销凭证)', () => {
+  ['subpackageP3/pages/badge-wall/index/index.js', 'pages/play/merchant/index.js', 'subpackageMember/mycanyu/mycanyu.js'].forEach((file) => {
+    assert.doesNotMatch(read(file).replace(/\/\/[^\n]*/g, ''), /onShareAppMessage\s*\(/, file);
+  });
+});
