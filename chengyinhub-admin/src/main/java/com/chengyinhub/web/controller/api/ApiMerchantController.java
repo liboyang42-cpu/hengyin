@@ -93,6 +93,9 @@ import com.chengyinhub.common.utils.OwnershipUtils;
 @RequestMapping("/api/merchant")
 public class ApiMerchantController extends BaseController {
     @Autowired
+    private com.chengyinhub.business.service.support.UgcSubmissionSafety submissionSafety;
+
+    @Autowired
     private com.chengyinhub.business.service.ConsentGuard consentGuard;
 
     @Autowired
@@ -2019,6 +2022,15 @@ public class ApiMerchantController extends BaseController {
 
         if (member_id == null || member_id <= 0) {
             return error("请先登录");
+        }
+
+        // Round5B-6:入驻资料(店名/简介/周边/偏好/地址/营业时间)审核通过后公开,提交时先过文本机审;
+        // 入驻本身还有平台人审,机审只「要人工」不拒。
+        try {
+            submissionSafety.requireText(member_id, true, request.getName(), request.getDescription(),
+                    request.getDerivatives(), request.getPreference(), request.getAddress(), request.getBusinessTime());
+        } catch (com.chengyinhub.common.exception.ServiceException unsafe) {
+            return error(unsafe.getMessage());
         }
 
         // 新入驻与接受员工邀请统一先锁会员行，避免并发把同一账号写成“商家 Owner + 其他店员工”。

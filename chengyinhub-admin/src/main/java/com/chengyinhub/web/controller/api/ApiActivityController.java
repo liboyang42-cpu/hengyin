@@ -108,6 +108,10 @@ public class ApiActivityController extends BaseController {
     @Autowired
     private IContentSafetyGate contentSafetyGate;
 
+    /** Round5B-6:活动封面 / 图集只收本站登记、本人上传或已审核通过的媒体,不收客户端外链。 */
+    @Autowired
+    private com.chengyinhub.business.service.support.UgcSubmissionSafety submissionSafety;
+
     @Autowired
     private com.chengyinhub.business.service.support.ActivityReviewPolicy activityReviewPolicy;
 
@@ -825,6 +829,8 @@ public class ApiActivityController extends BaseController {
 
             // UGC 内容安全门禁(2026-10-20 分级审核):活动按内容先发后审;高风险类目 / 未审核商家 / 总闸 → 先审后发。
             // 明确违规两种模式都拦;先审时门禁 HOLD → 落库待审并建 BIZ_ACTIVITY 审核单(活动尚未落库,门禁不建单)。
+            submissionSafety.requireOwnImages(member_id, request.getImgUrl());
+            submissionSafety.requireOwnImages(member_id, request.getImgArr());
             String secOpenid = resolveOpenid(member_id);
             PublishSafetyRequest safety = new PublishSafetyRequest();
             safety.setContentType(com.chengyinhub.business.domain.AuditTask.BIZ_ACTIVITY);
@@ -936,6 +942,12 @@ public class ApiActivityController extends BaseController {
         }
         // F-L5C-02 / AUDIT-G1-2:改文案与 /publish 同一道统一门禁 + 同一套分级(ActivityReviewPolicy),
         // 不能先发干净文本再改成违规内容。明确违规两种模式都拒;先审模式下改了内容即退回待审(见 service)。
+        try {
+            submissionSafety.requireOwnImages(memberId, request.getImgUrl());
+            submissionSafety.requireOwnImages(memberId, request.getImgArr());
+        } catch (ServiceException invalidMedia) {
+            return error(invalidMedia.getMessage());
+        }
         final boolean preReview;
         final SafetyDecision decision;
         try {

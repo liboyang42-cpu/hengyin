@@ -82,6 +82,9 @@ public class OfficialEventV2ServiceImpl implements IOfficialEventV2Service {
     /** 发布检查 WARN：报名期/距开场不足该时长时提示(不阻断)。 */
     private static final long PUBLISH_WARN_LEAD_MILLIS = 24L * 3600_000L;
 
+    /** Round5B-6:官方活动封面只收本站登记媒体。 */
+    @Autowired private com.chengyinhub.business.service.support.UgcSubmissionSafety submissionSafety;
+
     @Autowired
     private OfficialEventMapper eventMapper;
     @Autowired
@@ -189,6 +192,7 @@ public class OfficialEventV2ServiceImpl implements IOfficialEventV2Service {
         if (!isEffectiveOfficialMember(operatorId)) {
             throw new ServiceException("当前账号不是有效官方发布会员");
         }
+        submissionSafety.requireOwnImages(operatorId, event.getCoverImg());
         boolean existingDraft = event.getId() != null;
         List<OfficialEventParty> parties;
         List<OfficialEventParty> preservedParties = new ArrayList<>();

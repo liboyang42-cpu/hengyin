@@ -76,6 +76,7 @@ class ActivityUpdateReviewModeTest {
         ActivityReviewPolicy policy = new ActivityReviewPolicy();
         ReflectionTestUtils.setField(policy, "configService", config);
 
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(controller, "umsMemberService", umsMemberService);
         ReflectionTestUtils.setField(controller, "roleService", roleService);
         ReflectionTestUtils.setField(controller, "cmsActivityService", cmsActivityService);

@@ -75,6 +75,7 @@ class OfficialEventPreReviewTest {
         when(auditTaskService.submit(anyString(), anyLong(), anyLong(), anyString(), anyString())).thenReturn(501L);
 
         v2 = new OfficialEventV2ServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(v2, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(v2, "eventMapper", eventMapper);
         ReflectionTestUtils.setField(v2, "v2Mapper", v2Mapper);
         ReflectionTestUtils.setField(v2, "signupMapper", mock(EventSignupMapper.class));
@@ -84,6 +85,7 @@ class OfficialEventPreReviewTest {
         ReflectionTestUtils.setField(v2, "cmsTopicMapper", topicMapper);
         ISysConfigService configService = mock(ISysConfigService.class);
         when(configService.selectConfigByKey("official_publish_whitelist")).thenReturn("1,2");
+        org.springframework.test.util.ReflectionTestUtils.setField(v2, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(v2, "configService", configService);
         IUmsMemberService members = mock(IUmsMemberService.class);
         UmsMember member = new UmsMember();
@@ -91,6 +93,7 @@ class OfficialEventPreReviewTest {
         member.setDelFlag(0);
         member.setWxOpenId("openid-organizer");
         when(members.selectUmsMemberById(anyLong())).thenReturn(member);
+        org.springframework.test.util.ReflectionTestUtils.setField(v2, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(v2, "umsMemberService", members);
         ReflectionTestUtils.setField(v2, "sysUserService", mock(ISysUserService.class));
         ReflectionTestUtils.setField(v2, "officialBroadcastService", mock(IOfficialBroadcastService.class));

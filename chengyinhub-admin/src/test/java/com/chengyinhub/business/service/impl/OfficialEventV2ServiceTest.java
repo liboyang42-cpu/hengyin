@@ -56,6 +56,7 @@ class OfficialEventV2ServiceTest {
                                                IOfficialBroadcastService officialBroadcastService,
                                                OfficialBroadcastMapper officialBroadcastMapper) {
         OfficialEventV2ServiceImpl service = new OfficialEventV2ServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(service, "eventMapper", eventMapper);
         ReflectionTestUtils.setField(service, "v2Mapper", v2Mapper);
         ReflectionTestUtils.setField(service, "signupMapper", mock(EventSignupMapper.class));
@@ -65,15 +66,18 @@ class OfficialEventV2ServiceTest {
         ReflectionTestUtils.setField(service, "cmsTopicMapper", mock(CmsTopicMapper.class));
         ISysConfigService configService = mock(ISysConfigService.class);
         when(configService.selectConfigByKey("official_publish_whitelist")).thenReturn("1,2,9,101,202");
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(service, "configService", configService);
         IUmsMemberService umsMemberService = mock(IUmsMemberService.class);
         when(umsMemberService.selectUmsMemberById(org.mockito.ArgumentMatchers.anyLong())).thenReturn(activeMember());
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(service, "umsMemberService", umsMemberService);
         ISysUserService sysUserService = mock(ISysUserService.class);
         com.chengyinhub.common.core.domain.entity.SysUser activeUser = new com.chengyinhub.common.core.domain.entity.SysUser();
         activeUser.setStatus("0");
         activeUser.setDelFlag("0");
         when(sysUserService.selectUserById(org.mockito.ArgumentMatchers.anyLong())).thenReturn(activeUser);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(service, "sysUserService", sysUserService);
         ReflectionTestUtils.setField(service, "officialBroadcastService", officialBroadcastService);
         ReflectionTestUtils.setField(service, "officialBroadcastMapper", officialBroadcastMapper);
@@ -556,11 +560,13 @@ class OfficialEventV2ServiceTest {
             topic.setStatus(1); topic.setUserStatus(1); topic.setDelFlag(0);
             CmsTopicMapper topics = mock(CmsTopicMapper.class);
             when(topics.selectCmsTopicById(99L)).thenReturn(topic);
+            org.springframework.test.util.ReflectionTestUtils.setField(service, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
             ReflectionTestUtils.setField(service, "cmsTopicMapper", topics);
             MmsMerchantMapper merchants = mock(MmsMerchantMapper.class);
             com.chengyinhub.business.domain.MmsMerchant available = new com.chengyinhub.business.domain.MmsMerchant();
             available.setStatus(1L); available.setDelFlag(0);
             when(merchants.selectMmsMerchantById(88L)).thenReturn(available);
+            org.springframework.test.util.ReflectionTestUtils.setField(service, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
             ReflectionTestUtils.setField(service, "merchantMapper", merchants);
         }
 
@@ -1586,6 +1592,7 @@ class OfficialEventV2ServiceTest {
         issuance.setStatus(com.chengyinhub.business.domain.OfficialEventRewardIssuance.PENDING_ISSUE);
         OfficialEventV2SettlementHelper helper = mock(OfficialEventV2SettlementHelper.class);
         OfficialEventV2ServiceImpl service = service(eventMapper, v2Mapper);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(service, "settlementHelper", helper);
         when(eventMapper.selectOfficialEventByIdForUpdate(7L)).thenReturn(settling);
         when(v2Mapper.selectMissionsByEvent(7L)).thenReturn(Collections.singletonList(mission));
@@ -1970,6 +1977,7 @@ class OfficialEventV2ServiceTest {
         com.chengyinhub.business.domain.RoamPoi poi = new com.chengyinhub.business.domain.RoamPoi();
         poi.setId(99L);
         when(roamMapper.selectPoisByIds(Collections.singletonList(99L))).thenReturn(Collections.singletonList(poi));
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(service, "roamMapper", roamMapper);
         ISysConfigService configService = (ISysConfigService) ReflectionTestUtils.getField(service, "configService");
         when(configService.selectConfigByKey(ROAM_ARRIVAL_FLAG)).thenReturn("true");

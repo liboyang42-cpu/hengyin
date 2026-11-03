@@ -57,12 +57,14 @@ class MerchantRegistrationEditGateTest {
     private ICmsRegistrationMerchantService regSvc;
     private ICmsTopicService topicSvc;
     private MerchantRegistrationEditServiceImpl service;
+    private com.chengyinhub.business.service.support.UgcSubmissionSafety safety;
 
     @BeforeEach
     void setUp() {
         regSvc = mock(ICmsRegistrationMerchantService.class);
         topicSvc = mock(ICmsTopicService.class);
-        service = new MerchantRegistrationEditServiceImpl(regSvc, topicSvc);
+        safety = mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class);
+        service = new MerchantRegistrationEditServiceImpl(regSvc, topicSvc, safety);
         when(regSvc.updateEditableFieldsIfStateMatches(any(), any(), any(), any(), anyBoolean())).thenReturn(1);
     }
 
@@ -98,6 +100,30 @@ class MerchantRegistrationEditGateTest {
         ArgumentCaptor<CmsRegistrationMerchant> cap = ArgumentCaptor.forClass(CmsRegistrationMerchant.class);
         verify(regSvc).updateEditableFieldsIfStateMatches(cap.capture(), any(), any(), any(), anyBoolean());
         return cap.getValue();
+    }
+
+    /** Round5B-6:外链 / 他人未审核图片被媒体闸拒绝时,报名不改写。 */
+    @Test
+    @Timeout(5)
+    void externalPictureIsRefusedBeforeSaving() {
+        given(ME, 0L, 5);
+        org.mockito.Mockito.doThrow(new com.chengyinhub.common.exception.ServiceException("媒体来源未经审核，请重新上传", 422))
+                .when(safety).requireOwnImages(ME, "new.jpg");
+
+        org.junit.jupiter.api.Assertions.assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                () -> service.updateByMerchant(REG, ME, dto(), "u"));
+        verify(regSvc, org.mockito.Mockito.never()).updateEditableFieldsIfStateMatches(any(), any(), any(), any(), anyBoolean());
+        verify(safety, org.mockito.Mockito.never()).requireText(any(), anyBoolean(), any(String[].class));
+    }
+
+    /** Round5B-6:接待说明 / 地址名称送文本机审(严格,不因「要人工」放行)。 */
+    @Test
+    @Timeout(5)
+    void descriptionTextIsMachineChecked() {
+        given(ME, 0L, 5);
+        assertTrue(service.updateByMerchant(REG, ME, dto(), "u"));
+        verify(safety).requireText(org.mockito.ArgumentMatchers.eq(ME), org.mockito.ArgumentMatchers.eq(false),
+                any(String[].class));
     }
 
     /** 审核中 + 主题未开始 = 可改,这是最常见的正常路径。 */
@@ -187,7 +213,7 @@ class MerchantRegistrationEditGateTest {
         Instant starts = Instant.parse("2026-08-23T16:00:00Z"); // 中国 2026-08-24 00:00
         try {
             TimeZone.setDefault(TimeZone.getTimeZone("America/Los_Angeles"));
-            service = new MerchantRegistrationEditServiceImpl(regSvc, topicSvc) {
+            service = new MerchantRegistrationEditServiceImpl(regSvc, topicSvc, safety) {
                 @Override
                 protected Instant currentInstant() {
                     return now;
