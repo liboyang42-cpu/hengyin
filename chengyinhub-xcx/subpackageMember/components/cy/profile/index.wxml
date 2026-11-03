@@ -220,7 +220,7 @@
               aria-role="button" aria-label="我的资产，账户余额{{balanceText || 0}}元">
           <view class="pc-asset__main">
             <text class="pc-asset__label">账户余额</text>
-            <text class="pc-asset__value">{{money.amount(balanceText == null ? 0 : balanceText)}}</text>
+            <text class="pc-asset__value">{{money.amount2(balanceText == null ? 0 : balanceText)}}</text>
           </view>
           <cy-icon class="pc-asset__arrow" name="arrow-right" size="32" />
         </view>

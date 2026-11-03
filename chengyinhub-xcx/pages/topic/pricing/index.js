@@ -14,7 +14,7 @@ function termsText(row) {
   if (row.termsMode === 'TRAFFIC') return '章节供给 · 引流';
   if (row.termsMode === 'REVSHARE') return '章节供给 · ¥' + money(row.fixedFee) + '/核销人次';
   if (row.shareMode === 1) return '分成型 · ' + (row.shareRate != null && row.shareRate !== '' ? row.shareRate + '%' : '—');
-  if (row.shareMode === 2) return '固定 · ¥' + (row.fixedFee != null && row.fixedFee !== '' ? row.fixedFee : '—') + '/人';
+  if (row.shareMode === 2) return '固定 · ¥' + (row.fixedFee != null && row.fixedFee !== '' ? money(row.fixedFee) : '—') + '/人';
   return '引流型';
 }
 

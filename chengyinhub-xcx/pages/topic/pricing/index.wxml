@@ -39,7 +39,7 @@
       <view class="pg-card pg-floor cy-rise-in">
         <!-- CU-C-99:「乙-2」是内部条款编号,不该出现在给主理人看的标题里。 -->
         <text class="pg-kicker">最低价</text>
-        <text class="pg-money">{{money.amount(floorText)}}</text>
+        <text class="pg-money">{{money.amount2(floorText)}}</text>
         <text class="pg-note">终价不可低于此值</text>
       </view>
 
@@ -58,12 +58,12 @@
       <view class="pg-card cy-rise-in" wx:else>
         <view class="pg-price-row">
           <text class="pg-title">你的终价</text>
-          <text class="pg-final">{{money.amount(finalPrice)}}</text>
+          <text class="pg-final">{{money.amount2(finalPrice)}}</text>
         </view>
         <slider min="{{floor}}" max="{{sliderMax}}" value="{{finalPrice}}" step="1"
                 activeColor="var(--cy-color-action-primary-bg)" backgroundColor="var(--cy-color-border-subtle)"
                 block-size="24" bindchange="onSliderChange" />
-        <view class="pg-range"><text>地板 {{money.amount(floorText)}}</text><text>{{money.amount(sliderMax)}}</text></view>
+        <view class="pg-range"><text>地板 {{money.amount2(floorText)}}</text><text>{{money.amount2(sliderMax)}}</text></view>
         <view class="pg-reference">
           <text>{{referenceText}}</text>
           <text wx:if="{{referenceDeltaText}}" class="pg-delta">{{referenceDeltaText}}</text>
