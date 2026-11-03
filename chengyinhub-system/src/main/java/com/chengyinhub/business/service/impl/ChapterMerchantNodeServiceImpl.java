@@ -54,11 +54,6 @@ public class ChapterMerchantNodeServiceImpl implements IChapterMerchantNodeServi
     private com.chengyinhub.business.service.support.CommittedBusinessNotice businessNotice;
     @Autowired
     private com.chengyinhub.business.service.INotifyService notifyService;
-    @Autowired
-    private com.chengyinhub.business.mapper.MmsMerchantMapper merchantMapper;
-    @Autowired
-    @org.springframework.context.annotation.Lazy
-    private com.chengyinhub.business.service.IMerchantChapterApplicationService chapterApplicationService;
 
     public ChapterMerchantNodeServiceImpl(ICmsTopicNodeService nodeService,
                                           ICmsTopicChapterService chapterService,
@@ -190,24 +185,11 @@ public class ChapterMerchantNodeServiceImpl implements IChapterMerchantNodeServi
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public CmsTopicNode submitToEmptyTopic(Long merchantMemberId, Long topicId, String message, CmsTopicNode draft) {
+    public void assertEmptyTopicDraft(Long merchantMemberId, CmsTopicNode draft) {
         if (merchantMemberId == null || merchantMemberId <= 0) throw new IllegalStateException("请先登录");
-        if (topicId == null || topicId <= 0) throw new IllegalStateException("缺少主题");
         if (draft == null || blank(draft.getName())) throw new IllegalStateException("请填写点位名称");
         assertLocation(draft);
-        // 先验模板归属,免得替一个拿别人玩法的请求建出章节再回滚
         requireOwnTemplate(draft.getTemplateId(), merchantMemberId);
-        // 与 apply / submit 同一锁序:publication task → 主题行 → 章节
-        supplyReviewService.lockTopic(topicId);
-        com.chengyinhub.business.domain.MmsMerchant merchant = merchantMapper.selectMmsMerchantByMemberId(merchantMemberId);
-        Integer categoryId = merchant == null || merchant.getCategoryId() == null
-                ? null : merchant.getCategoryId().intValue();
-        CmsTopicChapter chapter = chapterService.openChapterForEmptyTopic(
-                topicId, merchantMemberId, categoryId, draft.getName());
-        // 原申请入口:启用商家、品类匹配、招商窗口、自己的主题 —— 全部再走一遍;申请待主办方审核
-        chapterApplicationService.apply(chapter.getId(), merchantMemberId, message);
-        return submit(merchantMemberId, chapter.getId(), draft);
     }
 
     @Override

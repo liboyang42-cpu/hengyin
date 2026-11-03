@@ -53,6 +53,8 @@ public class ApiChapterMerchantNodeController extends BaseController {
     @Autowired
     private IChapterMerchantNodeService chapterMerchantNodeService;
     @Autowired
+    private com.chengyinhub.business.service.impl.EmptyTopicMerchantJoinService emptyTopicMerchantJoinService;
+    @Autowired
     private ICmsTopicNodeService nodeService;
     @Autowired
     private ICmsTopicService topicService;
@@ -104,7 +106,7 @@ public class ApiChapterMerchantNodeController extends BaseController {
             if ((body.getChapterId() == null || body.getChapterId() <= 0)
                     && body.getTopicId() != null && body.getTopicId() > 0) {
                 merchantAccessService.require(memberId, MerchantPermission.COOP_MANAGE);
-                return success(chapterMerchantNodeService.submitToEmptyTopic(
+                return success(emptyTopicMerchantJoinService.submit(
                         access.getOwnerMemberId(), body.getTopicId(), body.getMessage(), body.toDraft()));
             }
             return success(chapterMerchantNodeService.submit(
@@ -412,7 +414,7 @@ public class ApiChapterMerchantNodeController extends BaseController {
      */
     public static class ChapterNodeRequest {
         private Long chapterId;
-        /** 仅零章节主题用:没有 chapterId 时指明主题,服务端建章(见 submitToEmptyTopic) */
+        /** 仅零章节主题用:没有 chapterId 时指明主题,服务端建章(见 EmptyTopicMerchantJoinService) */
         private Long topicId;
         /** 仅零章节主题用:随建章一起提交的承接申请说明 */
         private String message;

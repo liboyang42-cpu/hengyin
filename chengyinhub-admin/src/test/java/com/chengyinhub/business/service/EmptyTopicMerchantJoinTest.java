@@ -14,6 +14,7 @@ import com.chengyinhub.business.mapper.MerchantChapterOfferMapper;
 import com.chengyinhub.business.mapper.MmsMerchantMapper;
 import com.chengyinhub.business.service.impl.ChapterMerchantNodeServiceImpl;
 import com.chengyinhub.business.service.impl.CmsTopicChapterServiceImpl;
+import com.chengyinhub.business.service.impl.EmptyTopicMerchantJoinService;
 import com.chengyinhub.business.service.support.CommercialTopicPolicy;
 import com.chengyinhub.business.service.support.TopicContentBudgetTestWiring;
 import com.chengyinhub.business.service.support.TopicSupplyReviewService;
@@ -174,7 +175,8 @@ class EmptyTopicMerchantJoinTest {
         MerchantChapterApplicationMapper applicationMapper;
         IMerchantChapterApplicationService applicationSvc;
         TopicSupplyReviewService supplyReview;
-        ChapterMerchantNodeServiceImpl service;
+        ChapterMerchantNodeServiceImpl nodeService;
+        EmptyTopicMerchantJoinService service;
 
         @BeforeEach
         void setUp() {
@@ -187,13 +189,13 @@ class EmptyTopicMerchantJoinTest {
             CmsTopicChapterMapper chapterMapper = mock(CmsTopicChapterMapper.class);
             CmsTopicMapper topicMapper = mock(CmsTopicMapper.class);
             MmsMerchantMapper merchantMapper = mock(MmsMerchantMapper.class);
-            service = new ChapterMerchantNodeServiceImpl(nodeSvc, chapterSvc, mock(ICmsTopicService.class), tplSvc,
+            // 真实点位服务 + 真实编排:建章 → 原申请 → 原点位提交
+            nodeService = new ChapterMerchantNodeServiceImpl(nodeSvc, chapterSvc, mock(ICmsTopicService.class), tplSvc,
                     mock(MerchantChapterOfferMapper.class), applicationMapper);
-            ReflectionTestUtils.setField(service, "supplyReviewService", supplyReview);
-            ReflectionTestUtils.setField(service, "chapterMapper", chapterMapper);
-            ReflectionTestUtils.setField(service, "topicMapper", topicMapper);
-            ReflectionTestUtils.setField(service, "merchantMapper", merchantMapper);
-            ReflectionTestUtils.setField(service, "chapterApplicationService", applicationSvc);
+            ReflectionTestUtils.setField(nodeService, "supplyReviewService", supplyReview);
+            ReflectionTestUtils.setField(nodeService, "chapterMapper", chapterMapper);
+            ReflectionTestUtils.setField(nodeService, "topicMapper", topicMapper);
+            service = new EmptyTopicMerchantJoinService(nodeService, chapterSvc, applicationSvc, supplyReview, merchantMapper);
 
             MmsMerchant merchant = new MmsMerchant();
             merchant.setMemberId(ME);
@@ -236,7 +238,7 @@ class EmptyTopicMerchantJoinTest {
 
         @Test
         void createsChapterThenAppliesThenSavesPendingNodeInThatChapter() {
-            CmsTopicNode saved = service.submitToEmptyTopic(ME, TOPIC, "想承接", draft(700L));
+            CmsTopicNode saved = service.submit(ME, TOPIC, "想承接", draft(700L));
             InOrder order = inOrder(supplyReview, chapterSvc, applicationSvc, nodeSvc);
             order.verify(supplyReview).lockTopic(TOPIC);
             order.verify(chapterSvc).openChapterForEmptyTopic(TOPIC, ME, CATEGORY, "街角书店");
@@ -255,7 +257,7 @@ class EmptyTopicMerchantJoinTest {
             foreign.setId(701L);
             foreign.setMemberId(99L);
             when(tplSvc.selectCmsMemberTemplateById(701L)).thenReturn(foreign);
-            assertThrows(IllegalStateException.class, () -> service.submitToEmptyTopic(ME, TOPIC, "", draft(701L)));
+            assertThrows(IllegalStateException.class, () -> service.submit(ME, TOPIC, "", draft(701L)));
             verify(chapterSvc, never()).openChapterForEmptyTopic(anyLong(), anyLong(), any(), anyString());
             verify(applicationSvc, never()).apply(anyLong(), anyLong(), any());
         }
