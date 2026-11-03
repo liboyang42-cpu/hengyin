@@ -4,6 +4,12 @@ The owner's final check before go-live: "you need to review every part of it. Af
 
 Judge everything as the real user would. A passing API with a confusing screen is a finding. You find; you don't fix. The root triages findings and routes the fixes, because several lanes would otherwise edit the same files.
 
+## Owner's standing rule for UI
+
+"Cut taglines, helper text and secondary labels. If a screen needs them to make sense, fix the layout. Make the best decision that will elevate all three: the user experience (UX), developer experience (DX), and agent experience (AX) always, without breaking anything."
+
+Every tagline, helper line and secondary label you see is a finding, with the layout change that would make it unnecessary. A second line carrying real data (a time, a count, a status, an amount) isn't a secondary label. Legal text and consent aren't either; mark those as such.
+
 ## Rules for every lane
 
 - Test only the exact commit named in your prompt, on `integ/launch-test-20261103`. Create your own branch `claude/check-1103-<lane>` from it, and commit only under `docs/delivery/check-20261103/<lane>/`. Never edit product code, never touch `integ/launch-test-20261103`, never push to master, never merge a PR, never touch production. Don't run `ci/xcx-check.sh` or `ds-hardcode-gate-selftest.sh`.
