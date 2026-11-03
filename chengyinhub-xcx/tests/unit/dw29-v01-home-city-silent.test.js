@@ -68,7 +68,7 @@ test('V-01 用户主动点定位失败才提示',()=>{
 })
 test('V-01 首页城市文字可点击重新定位',()=>{
   const wxml=require('fs').readFileSync(require('path').join(__dirname,'../../pages/index/index.wxml'),'utf8')
-  assert.match(wxml,/<view wx:if="\{\{city && !cityPicker\}\}" class="v3-hero-mem-loc" catchtap="onTapHomeCity"[^>]*hover-class="cy-pressed"[^>]*>· \{\{city\}\}<\/view>/)
+  assert.match(wxml,/<block wx:if="\{\{city\}\}">\s*<view wx:if="\{\{!cityPicker\}\}" class="v3-hero-mem-loc" catchtap="onTapHomeCity"[^>]*hover-class="cy-pressed"[^>]*>· \{\{city\}\}<\/view>/)
 })
 
 test('V-01 各类自动定位失败与未登录都默认上海市',()=>{
@@ -127,5 +127,5 @@ test('Round5 #8 游客首页城市用选城下拉,选中即改并记住;登录�
   token = 'normal-session'; p.getHomeCityLocation()
   assert.equal(p.data.cityPicker, false)
   const wxml = require('fs').readFileSync(require('path').join(__dirname, '../../pages/index/index.wxml'), 'utf8')
-  assert.match(wxml, /<cy-dropdown wx:if="\{\{city && cityPicker\}\}" mode="selector" range="\{\{manualCityOptions\}\}" value="\{\{cityPickerIndex\}\}" bind:change="onManualCityChange"[^>]*>\s*<text class="v3-hero-mem-loc">· \{\{city\}\}<\/text>/)
+  assert.match(wxml, /<view wx:if="\{\{!cityPicker\}\}"[^\n]*<\/view>\s*<cy-dropdown wx:else mode="selector" range="\{\{manualCityOptions\}\}" value="\{\{cityPickerIndex\}\}" bind:change="onManualCityChange"[^>]*>\s*<text class="v3-hero-mem-loc">· \{\{city\}\}<\/text>/)
 })
