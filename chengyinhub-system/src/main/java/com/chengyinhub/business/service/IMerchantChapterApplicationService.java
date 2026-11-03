@@ -12,6 +12,13 @@ public interface IMerchantChapterApplicationService {
 
     MerchantChapterApplication apply(Long chapterId, Long merchantId, String message);
 
+    /**
+     * 2026-11-03 业主:自由探索主题一章都没有时,商家只带玩法模板报名:建章 → {@link #apply} → 原点位提交,一个事务。
+     * 主题已有任何章节时拒绝。
+     */
+    com.chengyinhub.business.domain.CmsTopicNode submitToEmptyTopic(Long merchantMemberId, Long topicId, String message,
+                                                                   com.chengyinhub.business.domain.CmsTopicNode draft);
+
     /** 商家撤回自己的待审申请；重复撤回幂等，已通过或已拒绝不可撤。 */
     MerchantChapterApplication withdraw(Long applicationId, Long merchantId);
 

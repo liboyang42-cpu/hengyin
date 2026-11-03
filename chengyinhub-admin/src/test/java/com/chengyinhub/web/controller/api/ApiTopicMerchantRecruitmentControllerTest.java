@@ -10,6 +10,8 @@ import com.chengyinhub.business.domain.vo.TopicTemplateChapterVO;
 import com.chengyinhub.business.domain.vo.TopicTemplateDetailVO;
 import com.chengyinhub.business.domain.vo.TopicTemplateRecruitVO;
 import com.chengyinhub.business.service.ICapabilityService;
+import com.chengyinhub.business.domain.CmsTopicChapter;
+import com.chengyinhub.business.service.ICmsTopicChapterService;
 import com.chengyinhub.business.service.ICmsTopicService;
 import com.chengyinhub.business.service.IMmsMerchantService;
 import com.chengyinhub.common.constant.ProductType;
@@ -40,6 +42,7 @@ class ApiTopicMerchantRecruitmentControllerTest {
     private ICapabilityService capabilityService;
     private IMmsMerchantService merchantService;
     private IMerchantAccessService merchantAccessService;
+    private ICmsTopicChapterService chapterService;
 
     @BeforeEach
     void setUp() {
@@ -47,12 +50,14 @@ class ApiTopicMerchantRecruitmentControllerTest {
         capabilityService = mock(ICapabilityService.class);
         merchantService = mock(IMmsMerchantService.class);
         merchantAccessService = mock(IMerchantAccessService.class);
+        chapterService = mock(ICmsTopicChapterService.class);
         controller = spy(new ApiTopicController());
         doReturn(7L).when(controller).getAppUserId();
         ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
         ReflectionTestUtils.setField(controller, "capabilityService", capabilityService);
         ReflectionTestUtils.setField(controller, "mmsMerchantService", merchantService);
         ReflectionTestUtils.setField(controller, "merchantAccessService", merchantAccessService);
+        ReflectionTestUtils.setField(controller, "cmsTopicChapterService", chapterService);
     }
 
     @Test
@@ -66,10 +71,15 @@ class ApiTopicMerchantRecruitmentControllerTest {
         detail.setProductType(ProductType.FREE_EXPLORE);
         detail.setChapters(Arrays.asList(chapter(1L, true), chapter(2L, false), chapter(3L, null)));
         when(topicService.buildTopicTemplateDetail(42L, true, 18)).thenReturn(detail);
+        when(chapterService.selectCmsTopicChapterList(any())).thenReturn(
+                Arrays.asList(new CmsTopicChapter(), new CmsTopicChapter(), new CmsTopicChapter()));
 
         AjaxResult result = controller.merchantRecruitmentChapters("42", null);
 
         assertEquals(200, result.get("code"));
+        // 有章节(哪怕都没开)就不是零章节主题,不能借建章绕过主办方的招商
+        assertEquals(3, result.get("chapterCount"));
+        assertEquals(false, result.get("emptyTopicJoinable"));
         List<TopicTemplateChapterVO> chapters = (List<TopicTemplateChapterVO>) result.get("data");
         assertEquals(1, chapters.size(), "不匹配、已满或关闭的章节不能泄给商家发现端点");
         assertEquals(1L, chapters.get(0).getId());
@@ -127,6 +137,8 @@ class ApiTopicMerchantRecruitmentControllerTest {
         detail.setProductType(ProductType.FREE_EXPLORE);
         detail.setChapters(Arrays.asList(chapter(1L, true)));
         when(topicService.buildTopicTemplateDetail(42L, true, 18)).thenReturn(detail);
+
+        when(chapterService.selectCmsTopicChapterList(any())).thenReturn(Arrays.asList(new CmsTopicChapter()));
 
         AjaxResult result = controller.merchantRecruitmentChapters("42", "MERCHANT");
 

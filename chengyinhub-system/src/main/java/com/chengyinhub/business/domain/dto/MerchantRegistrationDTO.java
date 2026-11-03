@@ -16,6 +16,9 @@ public class MerchantRegistrationDTO implements Serializable {
 
     private Integer categoryId;
 
+    /** M-16:入驻时选的行业类型(逗号分隔 sys_category.id,第一个是主行业),与门店信息同口径 */
+    private String categoryIds;
+
     /** 商家名称 */
     @Schema(description = "商家名称", example = "")
     //@NotBlank(message = "商家名称不能为空")
@@ -79,6 +82,14 @@ public class MerchantRegistrationDTO implements Serializable {
 
     public Integer getCategoryId() {
         return categoryId;
+    }
+
+    public String getCategoryIds() {
+        return categoryIds;
+    }
+
+    public void setCategoryIds(String categoryIds) {
+        this.categoryIds = categoryIds;
     }
 
     public void setCategoryId(Integer categoryId) {

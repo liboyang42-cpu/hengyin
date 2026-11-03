@@ -75,6 +75,38 @@ public class MerchantChapterApplicationServiceImpl implements IMerchantChapterAp
     @Lazy
     private com.chengyinhub.business.service.IChapterMerchantNodeService chapterMerchantNodeService;
 
+    /** 零章节主题建章(submitToEmptyTopic)。章节服务反向依赖本服务,这里必须惰性。 */
+    @org.springframework.beans.factory.annotation.Autowired
+    @Lazy
+    private com.chengyinhub.business.service.ICmsTopicChapterService chapterService;
+
+    /**
+     * 2026-11-03 业主:自由探索主题一章都没有时,商家只带玩法模板报名。
+     * 服务端建出这一章,走本服务原 {@link #apply}(待主办方审核,同一套品类/启用/招商窗口闸),
+     * 再走原点位提交。主题已有任何章节时由建章一步拒绝 —— 那时按主办方的招商走。
+     *
+     * <p>放在申请服务里而不是点位服务里:申请服务已依赖点位服务,反过来调会成启动期循环
+     * ({@code SupportedStackServiceCyclesTest} 的 topic/application/node 契约)。
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public com.chengyinhub.business.domain.CmsTopicNode submitToEmptyTopic(Long merchantMemberId, Long topicId,
+                                                                          String message,
+                                                                          com.chengyinhub.business.domain.CmsTopicNode draft) {
+        if (topicId == null || topicId <= 0) throw new IllegalStateException("缺少主题");
+        // 先验点位与模板归属,免得替一个拿别人玩法的请求建出章节再回滚
+        chapterMerchantNodeService.assertEmptyTopicDraft(merchantMemberId, draft);
+        // 与 apply / submit 同一锁序:publication task → 主题行 → 章节
+        supplyReviewService.lockTopic(topicId);
+        MmsMerchant merchant = merchantMapper.selectMmsMerchantByMemberId(merchantMemberId);
+        Integer categoryId = merchant == null || merchant.getCategoryId() == null
+                ? null : merchant.getCategoryId().intValue();
+        CmsTopicChapter chapter = chapterService.openChapterForEmptyTopic(
+                topicId, merchantMemberId, categoryId, draft.getName());
+        apply(chapter.getId(), merchantMemberId, message);
+        return chapterMerchantNodeService.submit(merchantMemberId, chapter.getId(), draft);
+    }
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public MerchantChapterApplication apply(Long chapterId, Long merchantId, String message) {

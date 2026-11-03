@@ -1,0 +1,23 @@
+# M-01 after (branch claude/walk-fix-1102-l5-onboard, rig). Same steps as M-01-before-master.txt: perk created through /api/coop/perk-template/save with the merchant form's fields (no redeemRule).
+id	merchant_id	name	redeem_rule
+990031	9002	手冲一杯 + 日期章明信片	到店出示核销码，店员扫码核销
+16:    {"phone": "13900000002", "member": 9002, "template": 6001, "perk": 990031, "store": "样板咖啡"},
+platform       PASS     topic=990014 exit=0 1.4s problems=[]
+merchant_club  PASS     topic=990014 exit=0 7.8s problems=[]
+sale_close     PASS     topic=990014 exit=0 1.6s problems=[]
+logs: /root/walk-rig/out/chains-run/chains
+chains rc=0
+id	merchant_id	name	redeem_rule
+2	9002	手冲一杯 + 日期章明信片	到店出示核销码，店员扫码核销
+
+## sale_close.log (excerpt)
+41:──────── 步骤 8:canonical15 人工事实草稿(PUT /business/audit/topic/{id}/sale-canonical-draft)
+42:   PUT sale-canonical-draft           {"msg": "操作成功", "code": 200, "data": {"topicId": 990014, "schemaVersion": "CANONICAL_15_V1", "parameterVersion": 1, "canonicalJson": "{\"storeCount\":4,\"ticketPricingPolicy\":{\"pointsAllowed\":false
+45:──────── 步骤 9:开售提审 → 审核通过 → SELLING
+46:   sale-submit                        {"msg": "已提交开售审核", "lifecycle": "PRICING", "code": 200, "taskId": 3, "reviewRequired": true, "_status": 200}
+48:   [库回读] lifecycle/selling_started_at ((3, datetime.datetime(2026, 11, 2, 16, 4, 28)),)
+50:──────── 步骤 10:★开售快照 15 项非空回读(真 SQL 直读 canonical_json,不问接口)
+
+## DB read-back
+id	lifecycle	selling
+990014	3	1

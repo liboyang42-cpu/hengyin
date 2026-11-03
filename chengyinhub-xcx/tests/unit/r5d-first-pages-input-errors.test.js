@@ -62,6 +62,8 @@ function loadApply() {
         return { load() {}, isClubLeader() { return false }, hasSnapshot() { return true }, ownedClubs() { return [] }, clear() {} }
       }
       if (request.endsWith('merchant-theme.js')) return { merchantPageShow() {}, merchantPageRestore() {} }
+      // 2026-11-03 集成:l5 M-16 入驻第 1 步加了必填「行业类型」,页面 require 行业短表
+      if (request.endsWith('merchant-industry.js')) return require(path.join(ROOT, 'pages/merchant/utils/merchant-industry.js'))
       for (const rel of ['merchant-identity-policy.js', 'time-picker-options.js', 'motion-preference.js']) {
         if (request.endsWith(rel)) return require(path.join(ROOT, 'utils', rel))
       }
@@ -120,6 +122,13 @@ test('商家入驻第 1 步:漏填写在各栏下方红字、滚到第一条、�
   input(page, 'name', '小店')
   assert.equal(page.data.fieldErrors.name, '', '改填店名即清')
   assert.equal(page.data.fieldErrors.phone, '请填写联系电话', '另一栏不受影响')
+  // 2026-11-03 集成:l5 M-16 行业类型必填,同样写在该行下方红字、按页面顺序排在店名与电话之间
+  assert.equal(page.data.fieldErrors.industryIds, '请选择行业类型')
+  page.onNextDisabledTap()
+  assert.equal(lastScroll(), '#apply-field-industryIds', '滚到剩下的第一条')
+  page.data.industrySheet = { show: true, options: [{ key: '3', label: '书店' }], value: ['3'] }
+  page.confirmIndustrySheet({ detail: { value: ['3'] } })
+  assert.equal(page.data.fieldErrors.industryIds, '', '选好行业即清')
   page.onNextDisabledTap()
   assert.equal(lastScroll(), '#apply-field-phone', '滚到剩下的第一条')
   input(page, 'phone', '13800138000')
@@ -211,6 +220,9 @@ test('商家入驻:报过错再改正后提交,载荷与直接填对完全一致
     input(page, 'name', '小店')
     input(page, 'preference', '餐饮')
     input(page, 'phone', '13800138000')
+    // 2026-11-03 集成:l5 M-16 第 1 步必填行业类型
+    page.data.industrySheet = { show: true, options: [{ key: '3', label: '书店' }], value: ['3'] }
+    page.confirmIndustrySheet({ detail: { value: ['3'] } })
     page.onNext()
     if (withErrors) page.onNextDisabledTap()
     page.openLocationPicker()
@@ -235,13 +247,14 @@ test('商家入驻:报过错再改正后提交,载荷与直接填对完全一致
   }
   const clean = fillAndSubmit(false)
   assert.deepEqual(fillAndSubmit(true), clean)
-  assert.deepEqual(Object.keys(clean).sort(), ['address', 'businessLicense', 'businessTime', 'derivatives',
-    'description', 'id', 'locationLat', 'locationLng', 'name', 'phone', 'preference'].sort(), '载荷字段不增不减')
+  // 2026-11-03 集成:l5 M-16 以行业类型 categoryIds 取代原 preference,其余不增不减
+  assert.deepEqual(Object.keys(clean).sort(), ['address', 'businessLicense', 'businessTime', 'categoryIds', 'derivatives',
+    'description', 'id', 'locationLat', 'locationLng', 'name', 'phone'].sort(), '载荷字段不增不减')
 })
 
 test('商家入驻页面结构:每个必填栏有红色 * 和其下方 kind="error" 的 cy-inline-error,供 pageScrollTo 定位的 id', () => {
   const wxml = fs.readFileSync(APPLY_WXML, 'utf8')
-  for (const key of ['name', 'phone', 'address', 'businessTime', 'businessLicense', 'realName', 'idCard']) {
+  for (const key of ['name', 'industryIds', 'phone', 'address', 'businessTime', 'businessLicense', 'realName', 'idCard']) {
     const start = wxml.indexOf(`id="apply-field-${key}"`)
     assert.ok(start > 0, `缺少 #apply-field-${key}`)
     const block = wxml.slice(start, start + 2000)

@@ -1,0 +1,69 @@
+== after schema build (build_schema.py applied migrations incl. this one)
+id	type	category_name	status
+21	1	城市漫步	1
+4001	1	咖啡	1
+22	1	历史人文	1
+23	1	解谜冒险	1
+24	1	夜游	1
+25	1	摄影打卡	1
+26	1	户外徒步	1
+27	1	亲子同行	1
+28	6	咖啡茶饮	1
+29	6	茶馆	1
+30	6	书店	1
+31	6	手作工坊	1
+32	6	古着中古	1
+33	6	文创杂货	1
+34	6	花店	1
+35	6	烘焙甜品	1
+36	6	酒馆小酌	1
+37	6	宠物友好	1
+== manual run 1
+merchant_industry_categories_ready
+1
+== manual run 2
+merchant_industry_categories_ready
+1
+== read-back
+type	count(*)
+1	8
+6	10
+id	type	category_name
+28	6	咖啡茶饮
+29	6	茶馆
+30	6	书店
+31	6	手作工坊
+32	6	古着中古
+33	6	文创杂货
+34	6	花店
+35	6	烘焙甜品
+36	6	酒馆小酌
+37	6	宠物友好
+
+== existing-row handling: simulate the 11-02 first version (rows 28-37 as type=1) with 书店(30) referenced by a theme
+id	category_ids
+990013	0
+id	category_ids
+990013	0,30
+-- run 1
+merchant_industry_categories_ready
+1
+-- run 2
+merchant_industry_categories_ready
+1
+id	type	category_name
+28	6	咖啡茶饮
+29	6	茶馆
+30	1	书店
+31	6	手作工坊
+32	6	古着中古
+33	6	文创杂货
+34	6	花店
+35	6	烘焙甜品
+36	6	酒馆小酌
+37	6	宠物友好
+-- restore the theme row and move 30 to type 6 for the shots
+id	category_ids
+990013	0
+POST /api/category/list type=1 -> code 200: 城市漫步 咖啡 历史人文 解谜冒险 夜游 摄影打卡 户外徒步 亲子同行
+POST /api/category/list type=MERCHANT -> code 200: 城市漫步 咖啡 历史人文 解谜冒险 夜游 摄影打卡 户外徒步 亲子同行 咖啡茶饮 茶馆 书店 手作工坊 古着中古 文创杂货 花店 烘焙甜品 酒馆小酌 宠物友好

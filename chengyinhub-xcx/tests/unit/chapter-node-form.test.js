@@ -344,7 +344,23 @@ test('申请点位无玩法时列出商家全部模板并提供去创建', () =>
   assert.deepEqual(state.component.data.templates, []);
 
   state.component.goCreateTemplate();
-  assert.equal(navigations[0].url, '/pages/publish/temp/index?scope=MERCHANT');
+  assert.equal(navigations[0].url, '/pages/publish/temp/index?scope=MERCHANT&from=join');
+});
+
+test('M-09:报名表里去创建玩法,发布回来新玩法直接选上;表单已换一版则不串', () => {
+  const state = makeComponent({});
+  state.component._formVersion = 3;
+  state.component.goCreateTemplate();
+  navigations[0].events.templateCreated({ id: 91, title: '回信藏在哪' });
+  assert.equal(state.component.data.form.templateId, 91);
+  assert.equal(state.component.data.form.templateName, '回信藏在哪');
+
+  const stale = makeComponent({});
+  stale.component._formVersion = 3;
+  stale.component.goCreateTemplate();
+  stale.component._formVersion = 4;
+  navigations[1].events.templateCreated({ id: 92, title: '别的' });
+  assert.equal(stale.component.data.form.templateId, 0);
 });
 
 test('PERK 选择器过滤历史缺零售价或份数的无效模板', () => {

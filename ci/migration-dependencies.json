@@ -2,6 +2,7 @@
   "schemaVersion": 1,
   "dependencies": {
     "20261103_settlement_rule_three_percent": ["p3_phase_c_web_rules_refund", "20260815_tandianri_h8_rate_convergence"],
+    "20261102_merchant_industry_categories": ["20261101_theme_categories"],
     "20261101_author_write_receipt": [],
     "20261101_theme_categories": [],
     "20261101_prefab_life_template_copy": ["seed_prefab_life_20260918"],

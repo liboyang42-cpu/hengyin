@@ -1657,6 +1657,7 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
 
     @Override
     public Long savePerkTemplate(CoopPerkTemplate t) {
+        t.setRedeemRule(CoopPerk.redeemRuleOrDefault(t.getRedeemRule()));
         t.setDelFlag(0);
         t.setCreateTime(DateUtils.getNowDate());
         coopPerkTemplateMapper.insertCoopPerkTemplate(t);
@@ -1692,7 +1693,7 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
         p.setUnitCost(t.getUnitCost());
         p.setRetailValue(t.getRetailValue());
         p.setQuota(quota);
-        p.setRedeemRule(t.getRedeemRule());
+        p.setRedeemRule(CoopPerk.redeemRuleOrDefault(t.getRedeemRule()));
         p.setValidEnd(t.getValidEnd());
         p.setDelFlag(0);
         p.setCreateTime(DateUtils.getNowDate());
@@ -1752,7 +1753,7 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
             p.setUnitCost(t.getUnitCost());
             p.setRetailValue(t.getRetailValue());
             p.setQuota(t.getQuota());
-            p.setRedeemRule(t.getRedeemRule());
+            p.setRedeemRule(CoopPerk.redeemRuleOrDefault(t.getRedeemRule()));
             p.setValidEnd(t.getValidEnd());
             p.setDelFlag(0);
             p.setCreateTime(DateUtils.getNowDate());
