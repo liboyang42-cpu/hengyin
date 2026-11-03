@@ -1075,45 +1075,7 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         String type = upper(targetType);
         if ("CONTENT".equals(type)) return applyPostEnforcement(operatorUserId, targetId, request, reportCaseId);
         if ("COMMENT".equals(type)) return applyCommentEnforcement(operatorUserId, targetId, request, reportCaseId);
-        // Round5B-7:成员 / 商家 / 俱乐部举报裁定成立 → 对被举报账号(商家与俱乐部为其负责人账号)落账号级处置,
-        // 复用同一张处置表(post_id 留空),发帖/评论闸 countActiveMemberEnforcement 即刻生效,作者可在「我的处置」申诉。
-        if ("MEMBER".equals(type)) return applyAccountEnforcement(operatorUserId, targetId, request, reportCaseId);
         throw error("该举报对象不支持内容处置", 400);
-    }
-
-    private Long applyAccountEnforcement(Long operatorUserId, Long memberId, CommunityPostRequests.Enforcement request,
-                                         Long reportCaseId) {
-        validateEnforcementRequest(request);
-        String type = upper(request.getEnforcementType());
-        if (!MEMBER_ENFORCEMENTS.contains(type) && !"WARNING".equals(type)) {
-            throw error("账号举报只支持账号级处置", 400);
-        }
-        if (request.getTargetMemberId() != null && !memberId.equals(request.getTargetMemberId())) {
-            throw error("账号级处置必须指向被举报账号", 400);
-        }
-        String ruleCode = upper(request.getRuleCode());
-        String commandType = fingerprintedCommand("ACCOUNT_ENFORCE", memberId, type, ruleCode,
-                request.getGuidelineVersionId(), request.getReasonCode(), request.getEvidenceJson(),
-                request.getStartsAt(), request.getEndsAt());
-        if (isCommandReplay(operatorUserId, request.getRequestId(), commandType, memberId)) {
-            return number(value(mapper.selectEnforcementByRequest(operatorUserId, request.getRequestId()), "id"));
-        }
-        Date now = new Date();
-        Date startsAt = request.getStartsAt() == null ? now : request.getStartsAt();
-        if (request.getEndsAt() != null && !request.getEndsAt().after(startsAt)) {
-            throw error("处置结束时间必须晚于开始时间", 400);
-        }
-        try {
-            mapper.insertEnforcement(null, memberId, type, ruleCode, request.getGuidelineVersionId(),
-                    request.getReasonCode(), request.getEvidenceJson().trim(), null,
-                    operatorUserId, startsAt, request.getEndsAt(), request.getRequestId(), now);
-        } catch (DuplicateKeyException e) { throw error("处置请求号已使用", 409); }
-        Map<String, Object> enforcement = mapper.selectEnforcementByRequest(operatorUserId, request.getRequestId());
-        if (enforcement == null) throw error("处置记录保存失败", 500);
-        Long enforcementId = number(value(enforcement, "id"));
-        if (mapper.linkEnforcement(enforcementId, reportCaseId, null) != 1) throw error("处置与举报单关联失败", 500);
-        saveCommandReceipt(operatorUserId, request.getRequestId(), commandType, memberId, now);
-        return enforcementId;
     }
 
     private void validateEnforcementRequest(CommunityPostRequests.Enforcement request) {
