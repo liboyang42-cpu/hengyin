@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5600,
+  "controlCount": 5601,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -187180,6 +187180,24 @@
           "route": "pages/topic/pricing/index",
           "segments": [
             {
+              "selector": "cy-inline-error.pg-field-err",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/pricing/index",
+          "segments": [
+            {
+              "selector": "cy-inline-error.pg-field-err",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/pricing/index",
+          "segments": [
+            {
               "selector": "cy-inline-error",
               "index": 0
             }
@@ -187191,15 +187209,6 @@
             {
               "selector": "cy-inline-error",
               "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/topic/pricing/index",
-          "segments": [
-            {
-              "selector": "cy-inline-error",
-              "index": 2
             }
           ]
         },
@@ -1364790,7 +1364799,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/pricing/index.js:227"
+        "staticSource": "pages/topic/pricing/index.js:236"
       }
     },
     {
@@ -1364857,11 +1364866,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/pricing/index.js:229"
+        "staticSource": "pages/topic/pricing/index.js:238"
       }
     },
     {
-      "id": "pages/topic/pricing/index.wxml:34:bindtap:recalculate:7",
+      "id": "pages/topic/pricing/index.wxml:36:bindtap:recalculate:7",
       "route": "pages/topic/pricing/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1364884,7 +1364893,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "recalculate",
-        "line": 34,
+        "line": 36,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1364982,11 +1364991,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/pricing/index.js:239"
+        "staticSource": "pages/topic/pricing/index.js:248"
       }
     },
     {
-      "id": "pages/topic/pricing/index.wxml:53:bindchange:onSliderChange:8",
+      "id": "pages/topic/pricing/index.wxml:52:bindinput:onTicketPriceInput:8",
       "route": "pages/topic/pricing/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1365006,15 +1365015,15 @@
       "requestMode": "ordered",
       "confirmationMode": null,
       "control": {
-        "tag": "slider",
-        "event": "bindchange",
-        "handler": "onSliderChange",
-        "line": 53,
-        "selectorHint": "slider[bindchange]",
+        "tag": "input",
+        "event": "bindinput",
+        "handler": "onTicketPriceInput",
+        "line": 52,
+        "selectorHint": ".pg-input",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": null,
+        "ariaLabelExpression": "{{item.name || '票种 ' + (index + 1)}}终价",
         "ariaRole": null,
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -1365049,7 +1365058,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/pricing/index.js:248"
+        "staticSource": "pages/topic/pricing/index.js:227"
       }
     },
     {
@@ -1365124,7 +1365133,74 @@
       }
     },
     {
-      "id": "pages/topic/pricing/index.wxml:65:bindtap:goPartner:9",
+      "id": "pages/topic/pricing/index.wxml:65:bindchange:onSliderChange:9",
+      "route": "pages/topic/pricing/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/topic/pricing/index.wxml",
+        "js": "pages/topic/pricing/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "slider",
+        "event": "bindchange",
+        "handler": "onSliderChange",
+        "line": 65,
+        "selectorHint": "slider[bindchange]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/topic/pricing/index.js:257"
+      }
+    },
+    {
+      "id": "pages/topic/pricing/index.wxml:77:bindtap:goPartner:10",
       "route": "pages/topic/pricing/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1365147,7 +1365223,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goPartner",
-        "line": 65,
+        "line": 77,
         "selectorHint": ".pg-lineup-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1365195,7 +1365271,7 @@
       }
     },
     {
-      "id": "pages/topic/pricing/index.wxml:79:bind:action:confirmPrice:10",
+      "id": "pages/topic/pricing/index.wxml:91:bind:action:confirmPrice:11",
       "route": "pages/topic/pricing/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1365218,7 +1365294,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "confirmPrice",
-        "line": 79,
+        "line": 91,
         "selectorHint": "cy-inline-error[bind:action]",
         "visibleCondition": "{{submitError}}",
         "disabledCondition": null,
@@ -1365306,11 +1365382,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/pricing/index.js:271"
+        "staticSource": "pages/topic/pricing/index.js:290"
       }
     },
     {
-      "id": "pages/topic/pricing/index.wxml:82:bind:disabledtap:onConfirmDisabledTap:12",
+      "id": "pages/topic/pricing/index.wxml:94:bind:disabledtap:onConfirmDisabledTap:13",
       "route": "pages/topic/pricing/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1365333,7 +1365409,7 @@
         "tag": "cy-btn",
         "event": "bind:disabledtap",
         "handler": "onConfirmDisabledTap",
-        "line": 82,
+        "line": 94,
         "selectorHint": "cy-btn[bind:disabledtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canConfirmPrice}}",
@@ -1365373,11 +1365449,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/pricing/index.js:256"
+        "staticSource": "pages/topic/pricing/index.js:265"
       }
     },
     {
-      "id": "pages/topic/pricing/index.wxml:82:bindtap:confirmPrice:11",
+      "id": "pages/topic/pricing/index.wxml:94:bindtap:confirmPrice:12",
       "route": "pages/topic/pricing/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1365400,7 +1365476,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "confirmPrice",
-        "line": 82,
+        "line": 94,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canConfirmPrice}}",
@@ -1365488,7 +1365564,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/pricing/index.js:271"
+        "staticSource": "pages/topic/pricing/index.js:290"
       }
     },
     {
