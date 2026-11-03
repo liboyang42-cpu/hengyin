@@ -1916,6 +1916,21 @@ public class ApiTopicController extends BaseController {
     }
 
     @Operation(summary = "主题详情--对用户显示")
+    private int countJoinedShopMerchants(Long topicId) {
+        CmsTopicNode probe = new CmsTopicNode();
+        probe.setTopicId(topicId);
+        probe.setStatus(1L);
+        java.util.Set<Long> merchants = new java.util.HashSet<>();
+        List<CmsTopicNode> nodes = cmsTopicNodeService.selectCmsTopicNodeList(probe);
+        if (nodes != null) for (CmsTopicNode node : nodes) {
+            // 商家节点只认审核通过的(与 selectCmsTopicNodeList 的玩家侧口径一致,这里再显式核一次)
+            if (node != null && node.getMerchantMemberId() != null && Integer.valueOf(1).equals(node.getNodeAuditStatus())) {
+                merchants.add(node.getMerchantMemberId());
+            }
+        }
+        return merchants.size();
+    }
+
     @PostMapping("/info-to-user")
     @Parameters({
             @Parameter(name = "id", description = "主题id")
@@ -2097,6 +2112,11 @@ public class ApiTopicController extends BaseController {
             cmsRegistrationMerchant.setStatus(1L);
             List<CmsRegistrationMerchant> cmsRegistrationMerchantList = cmsRegistrationMerchantService.selectCmsRegistrationMerchantList(cmsRegistrationMerchant);
             topicInfoVO.setRegistrationMerchantCount(cmsRegistrationMerchantList.size());
+            // P-21:自由探索的商家是以「承接章节的商家节点」加入的,不写 cms_registration_merchant;
+            // 按已上架(status=1)且审核通过的商家节点去重计数,与玩家实际能去的店一致。
+            if (Integer.valueOf(ProductType.FREE_EXPLORE).equals(cmsTopic.getProductType())) {
+                topicInfoVO.setRegistrationMerchantCount(countJoinedShopMerchants(topicId));
+            }
 
             //主题评价
             ViewComment viewComment = new ViewComment();
@@ -2180,8 +2200,18 @@ public class ApiTopicController extends BaseController {
                     cmsActivityService.selectPublicCmsActivityList(activityProbe, PublicActivityScope.TOPIC_SHELF);
             List<PublicActivitySummaryVO> activitySummaries = new ArrayList<>();
             if (visibleActivities != null) {
+                Map<Long, String> clubNames = new HashMap<>();
                 for (CmsActivity activity : visibleActivities) {
-                    activitySummaries.add(PublicActivitySummaryVO.from(activity, cmsTopic));
+                    PublicActivitySummaryVO summary = PublicActivitySummaryVO.from(activity, cmsTopic);
+                    // P-19:场次卡写执行俱乐部(不是主题的内容俱乐部),与报名门卡指向的俱乐部一致
+                    Long clubId = activity.getClubId();
+                    if (!summary.isSelfHostShell() && clubId != null && clubId > 0) {
+                        summary.setClubName(clubNames.computeIfAbsent(clubId, cid -> {
+                            Club club = clubService.selectClubById(cid);
+                            return club == null ? "" : club.getName();
+                        }));
+                    }
+                    activitySummaries.add(summary);
                 }
             }
             topicInfoVO.setActivityList(activitySummaries);

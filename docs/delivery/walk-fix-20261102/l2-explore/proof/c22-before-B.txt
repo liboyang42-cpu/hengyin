@@ -1,0 +1,6 @@
+
+──────── 步骤 1:场次 B:执行俱乐部开一场 2026-11-04 03:19
+   open-session                       {"msg": "开团成功", "code": 200, "data": {"activityId": 15}, "_status": 200}
+   9004 入会                            {"msg": "加入成功", "code": 200, "data": {"state": "joined"}, "_status": 200}
+   quote                              {"msg": "操作成功", "code": 200, "data": {"payAmount": 69.0, "pointsUsed": 0, "pointsDeductYuan": 0.0, "couponDeductYuan": 0, "quoteSign": "daf327351331ed4c8f150769e50d7b31", "memberDiscountYuan": 0.0, "c
+   create                             {"msg": "已达到该主题的购票上限", "code": 500, "_status": 200}

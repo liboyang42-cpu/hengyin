@@ -18,6 +18,9 @@ public interface IPlayerProgressionService
     /** 读成长(无则返回默认值对象,不落库) */
     PlayerGrowth getGrowth(Long memberId);
 
+    /** P-22「累计打卡 N 处」:核销过的店 + 完成的城市站点,不重复计。只读,无数据为 0。 */
+    int countCheckinPlaces(Long memberId);
+
     /**
      * RUN-13 等级单一真源的批量读口(动态广场/评论/俱乐部名单等「看别人等级」的路径)。
      * 兜底口径与 {@link #getGrowth} 一致:player_growth 无行 = Lv.1,返回 map 覆盖每个入参 id。

@@ -22,6 +22,7 @@ function isOpenOrder(row, phoneNow) {
   const source = row.cmsActivity || row.cmsTopic || {};
   const end = toTimestamp(source.endDate || source.endTime);
   if (Number.isFinite(end) && end && (typeof now === 'number' ? now : Date.now()) > end) return false;
+  if (state.exploreProgress) return true;   // P-03:探索票核销一家后仍是待用(summarizeOrderState 已按服务端进度判过)
   return Number(row.verificationStatus) !== 1;
 }
 

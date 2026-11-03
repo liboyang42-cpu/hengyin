@@ -189,7 +189,7 @@ const RAW = [
     profileMetricState: 'ready',
     profilePoint: 128,
     rankDisplay: { no: '12', delta: '↑ 3' },
-    exploreStat: { shops: 12, weekExp: 80 },
+    exploreStat: { shops: 12, places: 12, weekExp: 80 },
   }, undefined, { selector: '.pc-achievement-metrics', min: 1 }, 'identity+setData', 'P1', '', '成就 Tab 进入已加载指标态；积分、排名、探索数必须是填充数据，不能把 null 当证据', '#profile'],
   ['A38', 'A38-member-tab-about.png', '/pages/member/index/index', 'player', 'normal', { activeTab: 'about', merchantState: 'not-merchant', subjectIsMerchant: false }, undefined, { selector: '.pc-about-head', min: 1 }, 'identity+setData', 'P1', '', '玩家关于 Tab 在商家探测完成后兑现', '#profile'],
   ['A39', 'A39-signup-tickets.png', '/subpackageMember/signup/index', 'player', 'normal', null, undefined, TITLE, 'real-data', 'P0', '', '★删优惠券 Tab 后重排'],

@@ -97,6 +97,29 @@ class ApiPlayCheckinLiveCodeTest {
     }
 
     @Test
+    void wrongShopCodeNamesTheScannedShopInPlainWords() {
+        when(liveCodes.inspect(STATIC)).thenReturn(ConsumeResult.invalid());
+        CmsTopicNode other = new CmsTopicNode(); other.setId(78L); other.setTopicId(44L); other.setName("安福路旧书铺");
+        when(nodeService.selectCmsTopicNodeList(any())).thenReturn(Collections.singletonList(other));
+
+        AjaxResult r = BasicPlayCommandFixtures.checkin(controller,"43",STATIC,null,null,null,null,String.valueOf(NODE));
+
+        assertEquals(500, r.get(AjaxResult.CODE_TAG));
+        assertEquals("这是「安福路旧书铺」的码，不是这一家的", r.get(AjaxResult.MSG_TAG));
+    }
+
+    @Test
+    void codeFromAnotherThemeDoesNotNameThatShop() {
+        when(liveCodes.inspect(STATIC)).thenReturn(ConsumeResult.invalid());
+        CmsTopicNode other = new CmsTopicNode(); other.setId(99L); other.setTopicId(55L); other.setName("别的主题的店");
+        when(nodeService.selectCmsTopicNodeList(any())).thenReturn(Collections.singletonList(other));
+
+        AjaxResult r = BasicPlayCommandFixtures.checkin(controller,"43",STATIC,null,null,null,null,String.valueOf(NODE));
+
+        assertEquals("这不是这一家的码", r.get(AjaxResult.MSG_TAG));
+    }
+
+    @Test
     void usedLiveCodeDoesNotFallBackToStaticLookup() {
         when(liveCodes.inspect(LIVE)).thenReturn(ConsumeResult.used());
 

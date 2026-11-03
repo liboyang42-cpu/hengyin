@@ -20,6 +20,11 @@ public class PublicActivitySummaryVO {
      * 玩家购买仍要用它,所以不从列表里删;俱乐部「接下来」场次列表按此过滤。
      */
     private boolean selfHostShell;
+    /** P-19:执行这一场的俱乐部名(cms_activity.club_id),场次卡上写明是谁执行;没有俱乐部为 null。 */
+    private String clubName;
+
+    public String getClubName() { return clubName; }
+    public void setClubName(String clubName) { this.clubName = clubName; }
 
     public static PublicActivitySummaryVO from(CmsActivity source) {
         PublicActivitySummaryVO view = new PublicActivitySummaryVO();

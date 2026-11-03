@@ -2,15 +2,11 @@ package com.chengyinhub.business.service;
 
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.TopicSaleSnapshot;
-import com.chengyinhub.business.domain.snapshot.TopicSaleCanonicalV1;
 import com.chengyinhub.business.mapper.CmsRegistrationMapper;
 import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.mapper.TopicSaleSnapshotMapper;
 import com.chengyinhub.business.service.impl.CmsRegistrationServiceImpl;
-import com.chengyinhub.business.service.support.TopicSaleCanonicalCodec;
 import com.chengyinhub.common.constant.ProductType;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -18,52 +14,48 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Collections;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-class ShopDayOneTicketGateTest {
+/**
+ * C-22(2026-11-02 业主裁决)：取消「每人限 1 张」，探店日四店版同样取消。
+ * 售票前只剩开售快照门禁，不再按账号查现有票。
+ */
+class ShopDayNoTicketLimitTest {
     private static final Long TOPIC_ID = 83L;
-    private static final Long MEMBER_ID = 901L;
 
     private CmsRegistrationServiceImpl service;
     private CmsRegistrationMapper registrationMapper;
-    private CmsTopicMapper topicMapper;
     private TopicSaleSnapshotMapper snapshotMapper;
 
     @BeforeEach
     void setUp() {
         service = new CmsRegistrationServiceImpl();
         registrationMapper = mock(CmsRegistrationMapper.class);
-        topicMapper = mock(CmsTopicMapper.class);
         snapshotMapper = mock(TopicSaleSnapshotMapper.class);
         ReflectionTestUtils.setField(service, "cmsRegistrationMapper", registrationMapper);
-        ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
+        ReflectionTestUtils.setField(service, "cmsTopicMapper", mock(CmsTopicMapper.class));
         ReflectionTestUtils.setField(service, "topicSaleSnapshotMapper", snapshotMapper);
         when(snapshotMapper.selectSnapshotByTopicId(TOPIC_ID)).thenReturn(snapshot());
         when(registrationMapper.lockExploreTopicForUpdate(TOPIC_ID)).thenReturn(TOPIC_ID);
     }
 
     @Test
-    void secondTicketIsRejectedFromFrozenPolicyAfterTopicLock() {
-        when(registrationMapper.selectLiveExploreTicketIdsForUpdate(TOPIC_ID, MEMBER_ID))
-                .thenReturn(Collections.singletonList(7001L));
+    void shopDayGateReadsOnlyFrozenSnapshotAndNeverCountsTheMembersTickets() {
+        assertDoesNotThrow(() -> invoke(topic(ProductType.FREE_EXPLORE)));
 
-        IllegalStateException error = assertThrows(IllegalStateException.class,
-                () -> invoke(topic(ProductType.FREE_EXPLORE)));
-
-        assertEquals("SHOP_DAY_ACCOUNT_TICKET_LIMIT_REACHED", error.getMessage());
         org.mockito.InOrder order = inOrder(snapshotMapper, registrationMapper);
         order.verify(snapshotMapper).selectSnapshotByTopicId(TOPIC_ID);
         order.verify(registrationMapper).lockExploreTopicForUpdate(TOPIC_ID);
-        order.verify(registrationMapper).selectLiveExploreTicketIdsForUpdate(TOPIC_ID, MEMBER_ID);
+        verifyNoMoreInteractions(registrationMapper);
     }
 
     @Test
@@ -72,33 +64,30 @@ class ShopDayOneTicketGateTest {
 
         verify(snapshotMapper, never()).selectSnapshotByTopicId(TOPIC_ID);
         verify(registrationMapper, never()).lockExploreTopicForUpdate(TOPIC_ID);
-        verify(registrationMapper, never()).selectLiveExploreTicketIdsForUpdate(TOPIC_ID, MEMBER_ID);
     }
 
     @Test
-    void mapperCurrentReadCoversDifferentActivityShellsOfSameSourceTopic() throws Exception {
-        String xml = new String(Files.readAllBytes(Paths.get(
-                "../chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml")),
-                StandardCharsets.UTF_8);
-        int start = xml.indexOf("<select id=\"selectLiveExploreTicketIdsForUpdate\"");
-        int end = xml.indexOf("</select>", start);
-        String statement = xml.substring(start, end);
-
-        assertTrue(statement.contains("left join cms_activity a"));
-        assertTrue(statement.contains("a.topic_id = #{topicId}"));
-        assertTrue(statement.contains("r.member_id = #{memberId}"));
-        assertTrue(statement.contains("for update"));
+    void perAccountLiveTicketQueryAndLimitMessageAreGone() throws Exception {
+        String xml = read("../chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml");
+        assertFalse(xml.contains("selectLiveExploreTicketIdsForUpdate"));
+        String controller = read("src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java");
+        assertFalse(controller.contains("SHOP_DAY_ACCOUNT_TICKET_LIMIT_REACHED"));
+        assertFalse(controller.contains("购票上限"));
     }
 
     @Test
-    void allThreeRealPurchaseEntrypointsInvokeTheOneTicketGate() throws Exception {
-        String source = new String(Files.readAllBytes(Paths.get(
-                "../chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java")),
-                StandardCharsets.UTF_8).replaceAll("\\s+", "");
+    void allThreeRealPurchaseEntrypointsStillInvokeTheSnapshotGate() throws Exception {
+        String source = read(
+                "../chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java")
+                .replaceAll("\\s+", "");
 
-        assertEquals(1, occurrences(source, "assertExploreAccountTicketAvailable(sellerTopic,memberId);"));
-        assertEquals(1, occurrences(source, "assertExploreAccountTicketAvailable(orderTopic,memberId);"));
-        assertEquals(1, occurrences(source, "assertExploreAccountTicketAvailable(topic,memberId);"));
+        assertEquals(1, occurrences(source, "assertExploreSaleSnapshotFrozen(sellerTopic);"));
+        assertEquals(1, occurrences(source, "assertExploreSaleSnapshotFrozen(orderTopic);"));
+        assertEquals(1, occurrences(source, "assertExploreSaleSnapshotFrozen(topic);"));
+    }
+
+    private static String read(String path) throws Exception {
+        return new String(Files.readAllBytes(Paths.get(path)), StandardCharsets.UTF_8);
     }
 
     private static int occurrences(String source, String needle) {
@@ -108,7 +97,7 @@ class ShopDayOneTicketGateTest {
     }
 
     private void invoke(CmsTopic topic) {
-        ReflectionTestUtils.invokeMethod(service, "assertExploreAccountTicketAvailable", topic, MEMBER_ID);
+        ReflectionTestUtils.invokeMethod(service, "assertExploreSaleSnapshotFrozen", topic);
     }
 
     private static CmsTopic topic(int productType) {

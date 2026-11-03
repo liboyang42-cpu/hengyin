@@ -206,7 +206,6 @@ public class TopicSaleCanonicalBuilder {
         try {
             TopicSaleCanonicalV1 rebuilt = json.treeToValue(out, TopicSaleCanonicalV1.class);
             rebuilt.validateComplete(topic.getProductType());
-            rebuilt.maxTicketPerAccount(topic.getProductType());
             return rebuilt;
         } catch (IllegalStateException e) {
             throw e;

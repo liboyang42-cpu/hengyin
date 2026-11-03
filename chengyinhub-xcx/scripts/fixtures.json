@@ -1301,6 +1301,7 @@
    },
    "exploreStat": {
     "shops": 12,
+    "places": 12,
     "weekExp": 80
    }
   },

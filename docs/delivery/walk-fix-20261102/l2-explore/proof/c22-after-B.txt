@@ -1,0 +1,9 @@
+
+──────── 步骤 1:场次 B:执行俱乐部开一场 2026-11-04 03:27
+   open-session                       {"msg": "开团成功", "code": 200, "data": {"activityId": 15}, "_status": 200}
+   9004 入会                            {"msg": "加入成功", "code": 200, "data": {"state": "joined"}, "_status": 200}
+   quote                              {"msg": "操作成功", "code": 200, "data": {"payAmount": 69.0, "pointsUsed": 0, "pointsDeductYuan": 0.0, "couponDeductYuan": 0, "quoteSign": "daf327351331ed4c8f150769e50d7b31", "memberDiscountYuan": 0.0, "c
+   create                             {"msg": "报名创建成功", "code": 200, "data": {"registrationId": 76, "registrationNo": "A202611031E1B37FF", "payableAmount": 69.0, "expireTime": "2026-11-03T03:57:07.693+08:00", "expiresAt": null, "paymentTy
+   callback                           status=204
+
+ACTIVITY_ID=15 REGISTRATION_ID=76

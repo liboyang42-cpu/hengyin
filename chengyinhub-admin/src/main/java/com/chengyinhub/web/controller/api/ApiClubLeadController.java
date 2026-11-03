@@ -101,6 +101,8 @@ public class ApiClubLeadController extends BaseController {
     private IGrowthService growthService;
     @Autowired(required = false)
     private com.chengyinhub.business.service.IAdvancedGameRuntimeService advancedGameRuntimeService;
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.support.PlayNodeAccessService playNodeAccessService;
 
     private Long uid() {
         try { return getAppUserId(); } catch (Exception e) { return 0L; }
@@ -142,6 +144,13 @@ public class ApiClubLeadController extends BaseController {
             st.setCurrentChapterId(null);
         }
         return st;
+    }
+
+    private boolean isFreeCollect(Long activityId) {
+        if (playNodeAccessService == null) return false;
+        CmsActivity act = cmsActivityService.selectCmsActivityById(activityId);
+        return act != null && playNodeAccessService.resolveMode(activityId, act.getTopicId())
+                == com.chengyinhub.common.constant.PlayMode.FREE_COLLECT;
     }
 
     /** 口径已抽到 ClubEventLeadResolver;这里只保留调用点,避免两处实现分叉。 */
@@ -394,6 +403,8 @@ public class ApiClubLeadController extends BaseController {
         }
         data.put("exists", true);
         data.put("status", st.getStatus());
+        // 自由探索不带队:到开场时间直接进,玩家端不显示集合屏(服务端闸见 PlayNodeAccessService.leadGateError)。
+        data.put("freeEntry", isFreeCollect(activityId));
         data.put("leaderMemberId", st.getLeaderMemberId());
         data.put("isLeader", memberId.equals(st.getLeaderMemberId()));
         data.put("currentChapterId", st.getCurrentChapterId());

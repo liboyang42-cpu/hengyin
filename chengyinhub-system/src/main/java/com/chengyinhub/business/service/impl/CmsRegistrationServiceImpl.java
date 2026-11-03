@@ -25,7 +25,7 @@ import com.chengyinhub.business.service.IWxPaymentCallbackInboxService;
 import com.chengyinhub.business.service.support.CommercialTopicPolicy;
 import com.chengyinhub.business.service.support.SaleAvailabilityPolicy;
 import com.chengyinhub.business.service.support.TopicSaleCanonicalCodec;
-import com.chengyinhub.business.service.support.ExploreAccountTicketGate;
+import com.chengyinhub.business.service.support.ExploreSaleSnapshotGate;
 import com.chengyinhub.business.service.support.ExploreTicketUsePolicy;
 import com.chengyinhub.business.util.RefundPolicy;
 import com.chengyinhub.common.constant.EntitlementInvalidReason;
@@ -493,7 +493,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             sellerTopic = topic;
         }
         assertShopDayPointsUnsupported(sellerTopic, isUsePoint);
-        assertExploreAccountTicketAvailable(sellerTopic, memberId);
+        assertExploreSaleSnapshotFrozen(sellerTopic);
         List<Club> lockedOwningClubs = lockActiveOwningClubs(registrationActivity, sellerTopic);
         revalidateWaitlistParticipant(waitlistClaim, memberId, lockedOwningClubs);
         // 3. 验证票种是否存在、属于当前活动且库存充足
@@ -772,7 +772,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         CmsActivity orderActivity = ownerType != null && ownerType == 2
                 ? cmsActivityMapper.selectCmsActivityById(ownerId) : null;
         assertShopDayPointsUnsupported(orderTopic, isUsePoint);
-        assertExploreAccountTicketAvailable(orderTopic, memberId);
+        assertExploreSaleSnapshotFrozen(orderTopic);
         UmsMember member = validateAndGetMember(memberId);
         long userPoint = member.getPoint() != null ? member.getPoint() : 0L;
         ClubOperationBenefit clubBenefit = resolveClubOperationBenefit(memberId, orderActivity);
@@ -834,12 +834,12 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     }
 
     /**
-     * 探店日一期一票。主题行锁把“查现有票→插新单”串行化，跨 activity shell 仍共用同一源 topic。
-     * 门槛只读 finalize 冻结快照，绝不回退 live 票/章/offer 或另造配置。
+     * ③ 售票前快照门禁：只读 finalize 冻结快照，绝不回退 live 票/章/offer 或另造配置。
+     * 2026-11-02 业主裁决(C-22)取消每人限 1 张(含探店日)，不再按账号数票。
      */
-    private void assertExploreAccountTicketAvailable(CmsTopic sellerTopic, Long memberId) {
-        ExploreAccountTicketGate.assertAvailable(
-                sellerTopic, memberId, topicSaleSnapshotMapper, cmsRegistrationMapper);
+    private void assertExploreSaleSnapshotFrozen(CmsTopic sellerTopic) {
+        ExploreSaleSnapshotGate.assertSnapshotFrozen(
+                sellerTopic, topicSaleSnapshotMapper, cmsRegistrationMapper);
     }
 
     /**
@@ -872,7 +872,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         } else {
             topic = validateTopicSellable(topic);
         }
-        assertExploreAccountTicketAvailable(topic, memberId);
+        assertExploreSaleSnapshotFrozen(topic);
         lockActiveOwningClubs(null, topic);
         if (!freeTopic) SaleAvailabilityPolicy.assertSellable(topic, null, new Date());
         if (topic.getSelfPlay() == null || topic.getSelfPlay() != 1) {

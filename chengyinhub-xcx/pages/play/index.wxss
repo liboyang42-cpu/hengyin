@@ -859,6 +859,7 @@ page { background: var(--cy-color-bg-page); }
 
 .fx-lhd{ display:flex; align-items:baseline; gap:var(--cy-space-2); padding:0 var(--cy-page-x) var(--cy-space-2); }
 .fx-lhd__t{ font-size:27rpx; font-weight:700; color:var(--cy-color-text-primary); } /* ds-ok 分区小标题,body 与 caption 之间没有对应 token */
+.fx-lhd__more{ margin-left:auto; width:88rpx; height:88rpx; margin-top:-22rpx; margin-bottom:-22rpx; display:flex; align-items:center; justify-content:center; color:var(--cy-color-text-secondary); }
 .fx-lhd__s{ font-size:21rpx; color:var(--cy-color-text-tertiary); } /* ds-ok 同上,比 caption 再小一档 */
 
 /* 六宫格:六家同尺寸同时落在首屏,「谁排第一」的价值被摊平到接近零 */
@@ -956,12 +957,6 @@ page { background: var(--cy-color-bg-page); }
 /* 内层是整幅图,靠父级 overflow:hidden 只露出该露的那一条 */
 .fx-pack__sealim{ position:absolute; left:0; top:0; width:424rpx; height:741rpx; }
 .fx-pack__sealim--b{ top:-704rpx; }                    /* -(741 - 37):把底边对齐到下封口 */
-/* 印刷:参考图的比例 —— 主标从包高 26.5% 起,副标隔一整行空档。
-   ⚠️ 膜是浅色的 ⇒ 字必须是黑的(原来是深色包装上的浅字,换图后要整个反过来)。 */
-.fx-pack__print{ position:absolute; left:52rpx; right:40rpx; top:196rpx; }
-.fx-pack__t{ display:block; font-size:74rpx; font-weight:800; line-height:.98; letter-spacing:-2rpx; /* ds-ok 包装印刷:实物尺度,不属于页面字阶 */
-  color:#0A0A0A; } /* ds-ok 浅色镭射膜上的黑色印刷 */
-.fx-pack__s{ display:block; margin-top:62rpx; font-size:26rpx; font-weight:700; color:#0A0A0A; } /* ds-ok 同上 */
 
 /* ② 蓄力 1000ms:摇 + 四周压暗。没有这层压暗,后面的闪光炸不出反差。 */
 .fx-pack.is-shake{ animation:fxShake 1s cubic-bezier(.36,.07,.19,.97) both; }
@@ -1761,6 +1756,8 @@ page { background: var(--cy-color-bg-page); }
   background:var(--cy-color-bg-elevated); display:flex; align-items:center; justify-content:center; }
 
 /* 工具抽屉转移到右上角(2026-09-22):行样式 .drow/.dic/.dcopy 原样复用,只改容器定位。 */
+/* P-28:菜单提到页面层后由这层承接 chfull 原来的定位上下文(fixed 满屏,压在故事流之上) */
+.tools-layer{ position:fixed; inset:0; z-index:107; }
 .tools-mask{ position:absolute; inset:0; z-index:40; }
 .tools--corner{ position:absolute; top:calc(var(--cy-btn-h) + var(--cy-space-6)); right:var(--cy-page-x);
   z-index:41; width:560rpx; max-height:60vh; border-radius:var(--cy-radius-lg);

@@ -231,29 +231,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
           and first_successful_scan_at is null
     </update>
 
-    <select id="lockExploreTopicForUpdate" resultType="long">
+    <select id="lockExploreTopicForUpdate" resultType="long" useCache="false" flushCache="true">
         select id from cms_topic where id = #{topicId} and del_flag &lt;&gt; 2 for update
-    </select>
-
-    <!-- ownerType=2 的不同 activity shell 必须统一回溯到源 topic；主题行是并发串行点。 -->
-    <select id="selectLiveExploreTicketIdsForUpdate" resultType="long">
-        select r.id
-        from cms_registration r
-        left join cms_activity a on r.owner_type = 2 and r.owner_id = a.id
-        where r.member_id = #{memberId}
-          and (r.ticket_id is not null or r.purchase_kind = 2
-               or (r.ticket_id is null and r.expires_at is not null))
-          and ((r.owner_type = 1 and r.owner_id = #{topicId})
-               or (r.owner_type = 2 and a.topic_id = #{topicId}))
-          and (
-            (r.registration_status = 2
-             and (r.purchase_kind &lt;&gt; 2 or r.purchase_kind is null
-                  or r.expires_at is null or r.expires_at &gt; now()))
-            or (r.registration_status = 1 and r.payment_status in (0, 1)
-                and (r.pay_expire_time is null or r.pay_expire_time &gt; now()))
-          )
-        order by r.id
-        for update
     </select>
 
     <!--

@@ -69,6 +69,15 @@ public class PlayerProgressionServiceImpl implements IPlayerProgressionService
     }
 
     @Override
+    public int countCheckinPlaces(Long memberId)
+    {
+        if (memberId == null || memberId <= 0) return 0;
+        Integer shops = playerGrowthMapper.countRedeemedShops(memberId);
+        Integer stations = playerGrowthMapper.countCompletedCityStations(memberId);
+        return (shops == null ? 0 : shops) + (stations == null ? 0 : stations);
+    }
+
+    @Override
     public Map<Long, Integer> levelsByMemberIds(Collection<Long> memberIds)
     {
         Map<Long, Integer> out = new HashMap<Long, Integer>();

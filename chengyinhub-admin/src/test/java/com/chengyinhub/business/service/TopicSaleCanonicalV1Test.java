@@ -72,12 +72,6 @@ class TopicSaleCanonicalV1Test {
                 assertThrows(IllegalStateException.class,
                         () -> snapshot.validateComplete(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE))
                         .getMessage(), "③ 已启用故事流后不得再豁免 blocksJson");
-        assertEquals("SALE_SNAPSHOT_MISSING_MICRO_EXPERIENCES",
-                assertThrows(IllegalStateException.class, () -> snapshot.maxTicketPerAccount(
-                        com.chengyinhub.common.constant.ProductType.FREE_EXPLORE)).getMessage());
-        assertEquals("SALE_SNAPSHOT_MISSING_MICRO_EXPERIENCES",
-                assertThrows(IllegalStateException.class, snapshot::maxTicketPerAccount).getMessage(),
-                "maxTicketPerAccount 的无参重载同样是严格版");
 
         // 其余产品类型与未知类型同样严格。
         assertEquals("SALE_SNAPSHOT_MISSING_MICRO_EXPERIENCES",
@@ -150,12 +144,23 @@ class TopicSaleCanonicalV1Test {
     }
 
     @Test
-    void validTypedCanonicalPassesAndFreeExploreLimitIsFrozenAtOne() throws Exception {
+    void validTypedCanonicalPasses() throws Exception {
         TopicSaleCanonicalV1 value = JSON.treeToValue(completeJson(), TopicSaleCanonicalV1.class);
 
         value.validateComplete();
+    }
 
-        assertEquals(1, value.maxTicketPerAccount());
+    /** C-22(2026-11-02 业主裁决)：取消每人限 1 张。旧快照带 1、带其它值或不带，都不再拦开售。 */
+    @Test
+    void perAccountTicketLimitIsNoLongerPartOfTheSaleContract() throws Exception {
+        for (Integer limit : new Integer[]{null, 1, 3}) {
+            ObjectNode json = completeJson();
+            ObjectNode unit = (ObjectNode) json.path("participationUnitPolicy");
+            if (limit == null) unit.remove("maxTicketPerAccount"); else unit.put("maxTicketPerAccount", limit);
+            TopicSaleCanonicalV1 value = JSON.treeToValue(json, TopicSaleCanonicalV1.class);
+            value.validateComplete();
+            value.validateComplete(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE);
+        }
     }
 
     @Test

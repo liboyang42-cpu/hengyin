@@ -52,7 +52,7 @@
        各自承载过的入口去处:「更多」→ .pbar 的上滑横杠;用时与完成数 → .pcard 的暂停态读数。
        退出钮按新稿一并删除(稿上地图是满屏的),返回走系统手势 / 结束后的结算页。 -->
 <!-- 带领行进条:顶部状态条下方的团队状态 -->
-<view class="leadbar glass" wx:if="{{hud.topBanner(couponToast, screen, leadLoadError, lead) === 'leadbar'}}">
+<view class="leadbar glass" wx:if="{{hud.topBanner(couponToast, screen, leadLoadError, lead) === 'leadbar' && !lead.freeEntry}}">
   <view class="lb-left">
     <view class="lb-dot"></view>
     <text class="lb-txt">带领中 · {{lead.arrived}}/{{lead.total}} 人{{lead.chapterName ? ' · ' + lead.chapterName : ''}}</text>
@@ -150,6 +150,96 @@
       <view class="story-map__go" wx:if="{{nextNode.lat && nextNode.lng}}" bindtap="openNextStopNav" aria-role="button" aria-label="用微信地图导航到{{nextNode.name}}" hover-class="cy-pressed" hover-stay-time="80">导航过去</view>
     </view>
   </view>
+  <canvas type="2d" id="stBack" class="fx-story__dust"></canvas><view class="look-tex"></view>
+  <view class="chfull__stage">
+    <scroll-view class="chfull__scroll st-scroll" scroll-y enhanced bounces show-scrollbar="{{false}}"
+                 bindscroll="onChapterScroll" scroll-into-view="{{chapterGameAnchor}}" scroll-with-animation>
+      <view class="chfull__pad"></view>
+      <!-- ⚠️ 外层 .chfull__para 每项一个,不能按类型拆成不同类名:measureChapter 用
+           selectAll('.chfull__para') 按下标对齐 chapterParas,少一个就整屏焦点错位。 -->
+      <view wx:for="{{chapterParas}}" wx:key="i" id="{{item.nodeId ? 'chapter-game-' + item.nodeId : 'chapter-block-' + item.i}}" class="chfull__para st-line {{item.kind !== 'text' ? 'chfull__para--wide' : 'cy-story-hand'}} {{item.in ? 'is-in' : ''}} {{item.dir === 'down' ? 'from-top' : ''}} {{item.odd ? 'odd' + item.odd : ''}} {{oddFlick === item.i ? 'is-flick' : ''}} {{item.fx ? 'tfx tfx--' + item.fx : ''}}"
+            style="--d:{{item.d}}s">
+        <image wx:if="{{item.kind === 'cover'}}" class="chfull__cover" src="{{item.url}}" mode="aspectFit" />
+        <image wx:elif="{{item.kind === 'image'}}" class="chfull__img" src="{{item.url}}" mode="widthFix" lazy-load="true"
+               aria-role="img" aria-label="{{item.altText || '章节配图'}}" />
+        <!-- 相册(块类型 dream;2026-09-24 用户):故事流里一条圆角照片带,一直匀速往前滚,下面带镜面倒影;点一下打开白底全屏(下方 .album)。
+             连续滚动用 swiper 线性缓动 + 时长等于间隔做,不加 keyframes(门禁只减不增)。
+             ⚠️ 整块必须仍是一个 .chfull__para —— measureChapter 用 selectAll('.chfull__para') 按下标对齐 chapterParas。 -->
+        <view wx:elif="{{item.kind === 'dream'}}" class="chfull__album" data-i="{{item.i}}" bindtap="openAlbum"
+              aria-role="button" aria-label="打开相册，{{item.images.length}} 张" hover-class="cy-pressed" hover-stay-time="80">
+          <swiper class="chfull__album-strip" circular autoplay="{{!reducedMotion}}" interval="3200" duration="3200"
+                  easing-function="linear" display-multiple-items="2" next-margin="90rpx" disable-touch>
+            <swiper-item wx:for="{{item.strip}}" wx:for-item="shot" wx:key="k">
+              <view class="chfull__album-tile">
+                <image class="chfull__album-img" src="{{shot.url}}" mode="aspectFill" lazy-load="true" />
+                <view class="chfull__album-mirror">
+                  <image class="chfull__album-mirror-img" src="{{shot.url}}" mode="aspectFill" lazy-load="true" />
+                </view>
+              </view>
+            </swiper-item>
+          </swiper>
+          <text class="chfull__album-k">{{item.title || '相册'}} · {{item.images.length}} 张 · 点开看</text>
+        </view>
+        <!-- 音频文字稿(#18,altText):播放按钮下方可见、读屏可读;仍在同一个 .chfull__para 里 -->
+        <block wx:elif="{{item.kind === 'audio'}}">
+          <view class="chfull__audio" data-i="{{item.i}}" bindtap="toggleChapterAudio"
+                aria-role="button" aria-label="{{audioNodeId === item.audioKey && audioPlaying ? '暂停本段音频' : '播放本段音频'}}" hover-class="cy-pressed" hover-stay-time="80">
+            <text class="chfull__audio-label">{{audioNodeId === item.audioKey && audioPlaying ? '暂停' : '播放这段音频'}}</text>
+          </view>
+          <text wx:if="{{item.altText}}" class="chfull__audio-transcript" user-select aria-role="text" aria-label="音频文字稿：{{item.altText}}">文字稿：{{item.altText}}</text>
+        </block>
+        <!-- 内嵌玩法(契约 §1.5):一块一个 .chfull__para(整块玩法都在这一层里,
+             ⚠️ 里面再多元素也不进 measureChapter 的 selectAll 选择器,但外层少一个就整屏错位)。
+             kit 直接绑页面上的 playKit.kit:作答/提交后 setData 更新它,这一块就地跟着变,
+             不必重铺整章。show 传 true —— 它在流里露着,不由弹层那套控制。 -->
+        <!-- 终章反转:对面回的话,左侧气泡;读到这一块整章翻成对话框(.chfull.is-chat) -->
+        <view wx:elif="{{item.kind === 'reveal'}}" class="chfull__reveal" aria-role="text" aria-label="{{item.who || '对面'}}回复">
+          <view wx:if="{{item.who}}" class="chfull__reveal-who">{{item.who}}</view>
+          <view class="chfull__reveal-b cy-story-hand" wx:for="{{lk.rows(item.lines)}}" wx:for-item="line" wx:key="key">{{line.text}}</view>
+        </view>
+        <!-- 内心声音(咔哒等):原型 .voice —— 左对齐,名字前一颗发光的点,颜色随说话的那个声音 -->
+        <view wx:elif="{{item.kind === 'voice'}}" class="chfull__voice" style="--vc:{{item.color}}" aria-role="text" aria-label="{{item.who}}:{{item.text}}">
+          <text class="chfull__cond" wx:if="{{item.cond}}">{{item.cond}}</text>
+          <view class="chfull__voice-n"><text class="chfull__voice-dot"></text>{{item.who}}</view>
+          <view class="chfull__voice-t cy-story-hand">{{item.text}}</view>
+        </view>
+        <view wx:elif="{{item.kind === 'thought'}}" class="chfull__thought" aria-role="text" aria-label="得到一个念头:{{item.name}}">
+          <view class="chfull__thought-orb"></view>
+          <view class="chfull__thought-k">得到一个念头</view>
+          <view class="chfull__thought-t">{{item.name}}</view>
+          <view wx:if="{{item.desc}}" class="chfull__thought-d">{{item.desc}}</view>
+          <view wx:if="{{item.need}}" class="chfull__thought-e">{{weRunDenied ? '微信运动未开启，仍可继续游玩' : '边走边想 · 走 ' + item.need + ' 步后想通'}}</view>
+          <view wx:if="{{item.need && weRunDenied}}" class="chfull__thought-e" bindtap="openWeRunSettings" aria-role="button" aria-label="开启微信运动" hover-class="cy-pressed" hover-stay-time="80">开启微信运动</view>
+        </view>
+        <!-- 2026-09-24 用户:故事流的卡片要居中,不写「故事玩法」。图标 / 名字 / 动作竖排居中,与居中的正文同一条中线。
+             内嵌玩法(auto)不出动作钮:读到就直接铺开成玩法本身,这张卡只是铺开前那一瞬的占位。 -->
+        <view wx:elif="{{item.kind === 'game'}}" class="chfull__game-cue" data-nodeid="{{item.nodeId}}" bindtap="startStoryGame"
+              aria-role="button" aria-label="{{item.go}}:{{item.text}}" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="chfull__fsentry-title">{{item.text}}</view>
+        </view>
+        <view wx:elif="{{item.kind === 'kit'}}" class="chfull__kit" style="padding-top:max(var(--chfull-fade-end), calc({{chrome.contentTop}}px + var(--cy-btn-h) + var(--cy-space-3)));--pk-es-reel-h:860rpx;--pk-es-q-display:none">
+          <cy-playkit kit="{{playKit.kit}}" show="{{true}}" inline="{{true}}" bind:kitaction="onPlayKitAction" />
+          <view class="chfull__continue" wx:if="{{playKit.readyForBase && advancedPlay.show}}" bindtap="continueStoryGame"
+                aria-role="button" aria-label="继续故事" hover-class="cy-pressed" hover-stay-time="80">继续故事</view>
+        </view>
+        <view wx:elif="{{item.kind === 'journeyCheck'}}" class="chfull__kit" style="padding-top:max(var(--chfull-fade-end), calc({{chrome.contentTop}}px + var(--cy-btn-h) + var(--cy-space-3)))">
+          <cy-playkit-journey-check show="{{journeyCheck.show}}" loading="{{journeyCheck.loading}}" unknown="{{journeyCheck.unknown}}"
+            skill="{{journeyCheck.skill}}" tier="{{journeyCheck.tier}}" mods="{{journeyCheck.mods}}"
+            advantage="{{journeyCheck.advantage}}" disadvantage="{{journeyCheck.disadvantage}}"
+            receipt="{{journeyCheck.receipt}}" r5="{{journeyCheck.r5}}" allowed-actions="{{journeyCheck.allowedActions}}" disabled-reason="{{journeyCheck.disabledReason}}" bind:action="onJourneyCheckAction" bind:close="closeJourneyCheck" />
+        </view>
+        <block wx:else><text class="chfull__cond" wx:if="{{item.cond}}">{{item.cond}}</text><text wx:if="{{item.chars}}" wx:for="{{item.chars}}" wx:for-item="c" wx:key="i" class="tfx__c {{c.raw ? 'is-raw' : ''}}" style="--i:{{c.i}};--r:{{c.r}};--dx:{{c.dx}}px;--dy:{{c.dy}}px" aria-hidden="true">{{c.ch}}</text><block wx:if="{{!item.chars}}">{{item.text}}</block><text wx:if="{{item.chars}}" class="tfx__sr">{{item.text}}</text></block>
+      </view>
+      <view class="chfull__end" wx:if="{{(chapterParas[chapterParas.length - 1].kind !== 'game' && chapterParas[chapterParas.length - 1].kind !== 'kit' && chapterParas[chapterParas.length - 1].kind !== 'journeyCheck') || chapterParas[chapterParas.length - 1].done}}">
+        <view class="chfull__continue" bindtap="continueChapterStory" aria-role="button" aria-label="{{chapter.opening ? '出发' : (chapter.ending ? '继续' : '继续探索')}}" hover-class="cy-pressed" hover-stay-time="80">{{chapter.opening ? '出发' : (chapter.ending ? '继续' : '继续探索')}}</view>
+      </view>
+      <view class="chfull__pad"></view>
+    </scroll-view>
+  </view>
+  <canvas type="2d" id="stFront" class="fx-story__dust fx-story__dust--front"></canvas>
+</view>
+<!-- 游玩工具层:P-28(2026-11-02)从故事流里提到页面层,自由探索的卡包页也能打开同一份菜单。行内容未改。 -->
+<view class="tools-layer" wx:if="{{sessionToolsOpen}}">
   <!-- 游玩工具:2026-09-22 起从底栏抽屉转移到故事流右上角(用户裁决)。行内容一行未改,只换了容器与定位。 -->
   <view class="tools-mask {{toolsOut ? 'is-out' : ''}}" catchtouchmove="noop" wx:if="{{sessionToolsOpen}}" bindtap="toggleSessionTools" aria-role="button" aria-label="收起游玩工具" hover-class="cy-pressed" hover-stay-time="80"></view>
     <scroll-view class="tools tools--corner {{toolsOut ? 'is-out' : ''}}" wx:if="{{sessionToolsOpen}}" scroll-y enhanced show-scrollbar="{{false}}">
@@ -215,7 +305,8 @@
         <!-- 领队工具与模式无关:只要本场确有 lead 就出(F-57,与 master PR 1140 同口径);
              无 lead 的普通局什么都不多出来 —— 每行仍由 lead.exists 自己守。 -->
         <!-- 稿「分享实时位置 · 关 ›」→ 队伍位置:右侧值 + 箭头,同形 -->
-        <view class="drow" wx:if="{{lead.exists}}" bindtap="leadBroadcastFromTools" aria-role="button" aria-label="队伍位置" hover-class="cy-pressed" hover-stay-time="80">
+        <!-- 2026-11-02 业主(P-28):自由探索不带队(lead.freeEntry)时不出「队伍位置」 -->
+        <view class="drow" wx:if="{{lead.exists && !lead.freeEntry}}" bindtap="leadBroadcastFromTools" aria-role="button" aria-label="队伍位置" hover-class="cy-pressed" hover-stay-time="80">
           <view class="dic pic pic--team"></view>
           <view class="dcopy"><text class="dt">队伍位置</text></view>
           <text class="dv">{{lead.arrived}}/{{lead.total}}</text>
@@ -322,93 +413,6 @@
           <view class="dsw {{reducedMotion ? '' : 'is-on'}}" catchtap="toggleReducedMotion" aria-role="switch" aria-checked="{{!reducedMotion}}" aria-label="动态效果" hover-class="cy-pressed" hover-stay-time="80"><view class="dsw-i"></view></view>
         </view>
     </scroll-view>
-  <canvas type="2d" id="stBack" class="fx-story__dust"></canvas><view class="look-tex"></view>
-  <view class="chfull__stage">
-    <scroll-view class="chfull__scroll st-scroll" scroll-y enhanced bounces show-scrollbar="{{false}}"
-                 bindscroll="onChapterScroll" scroll-into-view="{{chapterGameAnchor}}" scroll-with-animation>
-      <view class="chfull__pad"></view>
-      <!-- ⚠️ 外层 .chfull__para 每项一个,不能按类型拆成不同类名:measureChapter 用
-           selectAll('.chfull__para') 按下标对齐 chapterParas,少一个就整屏焦点错位。 -->
-      <view wx:for="{{chapterParas}}" wx:key="i" id="{{item.nodeId ? 'chapter-game-' + item.nodeId : 'chapter-block-' + item.i}}" class="chfull__para st-line {{item.kind !== 'text' ? 'chfull__para--wide' : 'cy-story-hand'}} {{item.in ? 'is-in' : ''}} {{item.dir === 'down' ? 'from-top' : ''}} {{item.odd ? 'odd' + item.odd : ''}} {{oddFlick === item.i ? 'is-flick' : ''}} {{item.fx ? 'tfx tfx--' + item.fx : ''}}"
-            style="--d:{{item.d}}s">
-        <image wx:if="{{item.kind === 'cover'}}" class="chfull__cover" src="{{item.url}}" mode="aspectFit" />
-        <image wx:elif="{{item.kind === 'image'}}" class="chfull__img" src="{{item.url}}" mode="widthFix" lazy-load="true"
-               aria-role="img" aria-label="{{item.altText || '章节配图'}}" />
-        <!-- 相册(块类型 dream;2026-09-24 用户):故事流里一条圆角照片带,一直匀速往前滚,下面带镜面倒影;点一下打开白底全屏(下方 .album)。
-             连续滚动用 swiper 线性缓动 + 时长等于间隔做,不加 keyframes(门禁只减不增)。
-             ⚠️ 整块必须仍是一个 .chfull__para —— measureChapter 用 selectAll('.chfull__para') 按下标对齐 chapterParas。 -->
-        <view wx:elif="{{item.kind === 'dream'}}" class="chfull__album" data-i="{{item.i}}" bindtap="openAlbum"
-              aria-role="button" aria-label="打开相册，{{item.images.length}} 张" hover-class="cy-pressed" hover-stay-time="80">
-          <swiper class="chfull__album-strip" circular autoplay="{{!reducedMotion}}" interval="3200" duration="3200"
-                  easing-function="linear" display-multiple-items="2" next-margin="90rpx" disable-touch>
-            <swiper-item wx:for="{{item.strip}}" wx:for-item="shot" wx:key="k">
-              <view class="chfull__album-tile">
-                <image class="chfull__album-img" src="{{shot.url}}" mode="aspectFill" lazy-load="true" />
-                <view class="chfull__album-mirror">
-                  <image class="chfull__album-mirror-img" src="{{shot.url}}" mode="aspectFill" lazy-load="true" />
-                </view>
-              </view>
-            </swiper-item>
-          </swiper>
-          <text class="chfull__album-k">{{item.title || '相册'}} · {{item.images.length}} 张 · 点开看</text>
-        </view>
-        <!-- 音频文字稿(#18,altText):播放按钮下方可见、读屏可读;仍在同一个 .chfull__para 里 -->
-        <block wx:elif="{{item.kind === 'audio'}}">
-          <view class="chfull__audio" data-i="{{item.i}}" bindtap="toggleChapterAudio"
-                aria-role="button" aria-label="{{audioNodeId === item.audioKey && audioPlaying ? '暂停本段音频' : '播放本段音频'}}" hover-class="cy-pressed" hover-stay-time="80">
-            <text class="chfull__audio-label">{{audioNodeId === item.audioKey && audioPlaying ? '暂停' : '播放这段音频'}}</text>
-          </view>
-          <text wx:if="{{item.altText}}" class="chfull__audio-transcript" user-select aria-role="text" aria-label="音频文字稿：{{item.altText}}">文字稿：{{item.altText}}</text>
-        </block>
-        <!-- 内嵌玩法(契约 §1.5):一块一个 .chfull__para(整块玩法都在这一层里,
-             ⚠️ 里面再多元素也不进 measureChapter 的 selectAll 选择器,但外层少一个就整屏错位)。
-             kit 直接绑页面上的 playKit.kit:作答/提交后 setData 更新它,这一块就地跟着变,
-             不必重铺整章。show 传 true —— 它在流里露着,不由弹层那套控制。 -->
-        <!-- 终章反转:对面回的话,左侧气泡;读到这一块整章翻成对话框(.chfull.is-chat) -->
-        <view wx:elif="{{item.kind === 'reveal'}}" class="chfull__reveal" aria-role="text" aria-label="{{item.who || '对面'}}回复">
-          <view wx:if="{{item.who}}" class="chfull__reveal-who">{{item.who}}</view>
-          <view class="chfull__reveal-b cy-story-hand" wx:for="{{lk.rows(item.lines)}}" wx:for-item="line" wx:key="key">{{line.text}}</view>
-        </view>
-        <!-- 内心声音(咔哒等):原型 .voice —— 左对齐,名字前一颗发光的点,颜色随说话的那个声音 -->
-        <view wx:elif="{{item.kind === 'voice'}}" class="chfull__voice" style="--vc:{{item.color}}" aria-role="text" aria-label="{{item.who}}:{{item.text}}">
-          <text class="chfull__cond" wx:if="{{item.cond}}">{{item.cond}}</text>
-          <view class="chfull__voice-n"><text class="chfull__voice-dot"></text>{{item.who}}</view>
-          <view class="chfull__voice-t cy-story-hand">{{item.text}}</view>
-        </view>
-        <view wx:elif="{{item.kind === 'thought'}}" class="chfull__thought" aria-role="text" aria-label="得到一个念头:{{item.name}}">
-          <view class="chfull__thought-orb"></view>
-          <view class="chfull__thought-k">得到一个念头</view>
-          <view class="chfull__thought-t">{{item.name}}</view>
-          <view wx:if="{{item.desc}}" class="chfull__thought-d">{{item.desc}}</view>
-          <view wx:if="{{item.need}}" class="chfull__thought-e">{{weRunDenied ? '微信运动未开启，仍可继续游玩' : '边走边想 · 走 ' + item.need + ' 步后想通'}}</view>
-          <view wx:if="{{item.need && weRunDenied}}" class="chfull__thought-e" bindtap="openWeRunSettings" aria-role="button" aria-label="开启微信运动" hover-class="cy-pressed" hover-stay-time="80">开启微信运动</view>
-        </view>
-        <!-- 2026-09-24 用户:故事流的卡片要居中,不写「故事玩法」。图标 / 名字 / 动作竖排居中,与居中的正文同一条中线。
-             内嵌玩法(auto)不出动作钮:读到就直接铺开成玩法本身,这张卡只是铺开前那一瞬的占位。 -->
-        <view wx:elif="{{item.kind === 'game'}}" class="chfull__game-cue" data-nodeid="{{item.nodeId}}" bindtap="startStoryGame"
-              aria-role="button" aria-label="{{item.go}}:{{item.text}}" hover-class="cy-pressed" hover-stay-time="80">
-          <view class="chfull__fsentry-title">{{item.text}}</view>
-        </view>
-        <view wx:elif="{{item.kind === 'kit'}}" class="chfull__kit" style="padding-top:max(var(--chfull-fade-end), calc({{chrome.contentTop}}px + var(--cy-btn-h) + var(--cy-space-3)));--pk-es-reel-h:860rpx;--pk-es-q-display:none">
-          <cy-playkit kit="{{playKit.kit}}" show="{{true}}" inline="{{true}}" bind:kitaction="onPlayKitAction" />
-          <view class="chfull__continue" wx:if="{{playKit.readyForBase && advancedPlay.show}}" bindtap="continueStoryGame"
-                aria-role="button" aria-label="继续故事" hover-class="cy-pressed" hover-stay-time="80">继续故事</view>
-        </view>
-        <view wx:elif="{{item.kind === 'journeyCheck'}}" class="chfull__kit" style="padding-top:max(var(--chfull-fade-end), calc({{chrome.contentTop}}px + var(--cy-btn-h) + var(--cy-space-3)))">
-          <cy-playkit-journey-check show="{{journeyCheck.show}}" loading="{{journeyCheck.loading}}" unknown="{{journeyCheck.unknown}}"
-            skill="{{journeyCheck.skill}}" tier="{{journeyCheck.tier}}" mods="{{journeyCheck.mods}}"
-            advantage="{{journeyCheck.advantage}}" disadvantage="{{journeyCheck.disadvantage}}"
-            receipt="{{journeyCheck.receipt}}" r5="{{journeyCheck.r5}}" allowed-actions="{{journeyCheck.allowedActions}}" disabled-reason="{{journeyCheck.disabledReason}}" bind:action="onJourneyCheckAction" bind:close="closeJourneyCheck" />
-        </view>
-        <block wx:else><text class="chfull__cond" wx:if="{{item.cond}}">{{item.cond}}</text><text wx:if="{{item.chars}}" wx:for="{{item.chars}}" wx:for-item="c" wx:key="i" class="tfx__c {{c.raw ? 'is-raw' : ''}}" style="--i:{{c.i}};--r:{{c.r}};--dx:{{c.dx}}px;--dy:{{c.dy}}px" aria-hidden="true">{{c.ch}}</text><block wx:if="{{!item.chars}}">{{item.text}}</block><text wx:if="{{item.chars}}" class="tfx__sr">{{item.text}}</text></block>
-      </view>
-      <view class="chfull__end" wx:if="{{(chapterParas[chapterParas.length - 1].kind !== 'game' && chapterParas[chapterParas.length - 1].kind !== 'kit' && chapterParas[chapterParas.length - 1].kind !== 'journeyCheck') || chapterParas[chapterParas.length - 1].done}}">
-        <view class="chfull__continue" bindtap="continueChapterStory" aria-role="button" aria-label="{{chapter.opening ? '出发' : (chapter.ending ? '继续' : '继续探索')}}" hover-class="cy-pressed" hover-stay-time="80">{{chapter.opening ? '出发' : (chapter.ending ? '继续' : '继续探索')}}</view>
-      </view>
-      <view class="chfull__pad"></view>
-    </scroll-view>
-  </view>
-  <canvas type="2d" id="stFront" class="fx-story__dust fx-story__dust--front"></canvas>
 </view>
 
 <!-- W-15 试玩末尾的结局卡:只在作者预览出现。默认看兜底那条,chip 切换看每个结局与它的触发条件。
@@ -541,7 +545,7 @@
        ★ 卡包发牌是把「洗牌」演给用户看,顺序仍然是后端给的(nodes 的下发次序),
          前端一律按 seatTiles 原序渲染,不许自己 shuffle —— 否则商家看板的曝光对不上账。 -->
   <scroll-view class="fx" wx:if="{{mode==2 && !freeMap}}" scroll-y enhanced show-scrollbar="{{false}}"
-               style="padding-top:{{chrome.contentTop + (lead.exists ? 64 : 0)}}px">
+               style="padding-top:{{chrome.contentTop + (lead.exists && !lead.freeEntry ? 64 : 0)}}px">
     <!-- 页面底:主题封面 + 模糊 + 压暗蒙版。主题封面(topicCover)优先,没有退回章节封面链;都缺时整层不渲染,退回纯深色底。
          图放大到 120% 是因为 blur 会把边缘糊出透明边,不撑开就露出一圈亮边。减淡档判据见 wxss .fx-bg--pack。 -->
     <view class="fx-bg {{headIn || packOpen ? '' : 'fx-bg--pack'}}" wx:if="{{topicCover || chapter.cover}}">
@@ -579,6 +583,8 @@
 
     <view class="fx-lhd fx-veil {{headIn || packOpen ? 'is-in' : ''}}">
       <text class="fx-lhd__t">探索节点</text>
+      <!-- P-28:自由探索也有游玩工具(我的权益 / 入场码 / 旅程手记),与城市定向同一份菜单 -->
+      <view class="fx-lhd__more" wx:if="{{!isPreview}}" bindtap="toggleSessionTools" aria-role="button" aria-label="{{sessionToolsOpen ? '收起游玩工具' : '游玩工具'}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="more" size="30" /></view>
     </view>
 
     <!-- 商家格:同尺寸同时在首屏,「谁排第一」的价值被摊平。
@@ -639,10 +645,7 @@
       <view class="fx-pack {{packShake ? 'is-shake' : ''}} {{packTear ? 'is-tear' : ''}} {{packGrab ? 'is-grab' : ''}} {{packSnap ? 'is-snap' : ''}} {{packTorn ? 'is-torn' : ''}} {{packSink ? 'is-sink' : ''}}">
         <view class="fx-pack__body">
           <image class="fx-pack__foil" src="/pages/play/assets/pack-foil.png" mode="scaleToFill" />
-          <view class="fx-pack__print">
-            <text class="fx-pack__t">{{topicName || chapter.name || modeLabel}}</text>
-            <text class="fx-pack__s">{{chapterCards.length || total}} 章 · {{merchantCount}} 家商家</text>
-          </view>
+          <!-- g21 第三轮(2026-11-02 业主):未拆和拆包中只出卡包本身,包面不印主题名和章数 -->
           <!-- 下封口:同一张图,把内层整幅图往上顶,只露出底部 5% 那条 -->
           <view class="fx-pack__seal fx-pack__seal--b">
             <image class="fx-pack__sealim fx-pack__sealim--b" src="/pages/play/assets/pack-foil.png" mode="scaleToFill" />
@@ -768,6 +771,20 @@
         </view>
       </view>
 
+      <!-- ⑤ 本店权益:紧跟店铺,首屏就能看到这家给什么(P-14 2026-11-02 上移) -->
+      <block wx:if="{{hero.node.isMerchant && hero.node.perkName}}">
+        <view class="fx-hero__ey fx-hero__ey--gap fx-hero__in" style="--i:6">本店权益</view>
+        <view class="fx-perk fx-hero__in" style="--i:6">
+          <view class="fx-perk__ic"><cy-icon name="gift" size="34" /></view>
+          <view class="fx-perk__c">
+            <view class="fx-perk__n">{{hero.node.perkName}}</view>
+            <view class="fx-perk__m">
+              <view class="fx-perk__m-i"><cy-icon name="check" size="26" /><text>{{hero.node.perkRule}}</text></view>
+              <view class="fx-perk__m-i" wx:if="{{hero.node.perkValid}}"><cy-icon name="clock" size="26" /><text>{{hero.node.perkValid}}</text></view>
+            </view>
+          </view>
+        </view>
+      </block>
       <!-- ③ 游戏:玩法与规则是游戏的事,和上面的章节分开 -->
       <block wx:if="{{hero.node.gameTitle}}">
         <view class="fx-hero__ey fx-hero__ey--gap fx-hero__in" style="--i:4">本站游戏{{hero.node.gameKind ? ' · ' : ''}}{{hero.node.gameKind}}</view>
@@ -794,27 +811,15 @@
         <view class="fx-step {{hero.node.stepProof ? 'is-ok' : ''}}"><text class="fx-step__n">2</text><text class="fx-step__t">拍摄现场凭证 · 到店后显示拍摄要求</text></view>
         <view class="fx-step {{hero.node.stepRedeem ? 'is-ok' : ''}}"><text class="fx-step__n">3</text><text class="fx-step__t">商家核销 · 核销那一刻才算服务开始</text></view>
       </view>
+      <cy-btn class="fx-hero__in" style="--i:5;display:block;margin-top:var(--cy-space-3)" variant="secondary" wx:if="{{hero.node.isMerchant && !hero.node.done && regId && !isPreview && !isMock}}"
+              bindtap="openEntryQr" accessibility-label="出示入场码给店员核销">出示入场码</cy-btn>
 
-      <!-- ⑤ 本店权益:排在三步之后,紧挨底部按钮 -->
-      <block wx:if="{{hero.node.isMerchant && hero.node.perkName}}">
-        <view class="fx-hero__ey fx-hero__ey--gap fx-hero__in" style="--i:6">本店权益</view>
-        <view class="fx-perk fx-hero__in" style="--i:6">
-          <view class="fx-perk__ic"><cy-icon name="gift" size="34" /></view>
-          <view class="fx-perk__c">
-            <view class="fx-perk__n">{{hero.node.perkName}}</view>
-            <view class="fx-perk__m">
-              <view class="fx-perk__m-i"><cy-icon name="check" size="26" /><text>{{hero.node.perkRule}}</text></view>
-              <view class="fx-perk__m-i" wx:if="{{hero.node.perkValid}}"><cy-icon name="clock" size="26" /><text>{{hero.node.perkValid}}</text></view>
-            </view>
-          </view>
-        </view>
-      </block>
       <view class="fx-hero__pad"></view>
     </scroll-view>
     <view class="fx-hero__cta fx-hero__in" style="--i:3">
       <!-- 已核销就是禁用态:这一家的事已经结束了,按钮不该再是能点的样子 -->
       <cy-btn variant="{{hero.node.done ? 'disabled' : 'primary'}}" style="width:100%" bindtap="heroEnter"
-              accessibility-label="{{hero.node.done ? '这一家已核销' : '开始互动，直接进入本店玩法'}}">{{hero.node.done ? '已核销' : '开始互动 获得奖励！'}}</cy-btn>
+              accessibility-label="{{hero.node.done ? '这一家已核销' : '到店打卡，进入本店玩法'}}">{{hero.node.done ? '已核销' : '到店打卡'}}</cy-btn>
     </view>
   </view>
 
@@ -851,7 +856,7 @@
     </view>
     <view class="fx-story__cta {{chapStory.barAway ? 'is-away' : ''}}">
       <cy-btn variant="secondary" style="flex:1" bindtap="closeChapStory">回到卡片</cy-btn>
-      <cy-btn variant="primary" style="flex:1" bindtap="heroEnter">{{hero.node.playName ? '开始 · ' + hero.node.playName : '开始互动 获得奖励！'}}</cy-btn>
+      <cy-btn variant="primary" style="flex:1" bindtap="heroEnter">{{hero.node.playName ? '开始 · ' + hero.node.playName : '到店打卡'}}</cy-btn>
     </view>
     <page-container show="{{chapStory.show}}" duration="{{0}}" overlay="{{false}}" bind:afterleave="onStoryNativeBack" />
   </view>
@@ -938,7 +943,8 @@
 
 
 <!-- P1 集合屏(一屏一决策:成员「我到了」/ 队长「开始行程」) -->
-<view class="leadgather" wx:if="{{lead.exists && lead.status==1}}">
+<!-- 自由探索不带队(P-13):服务端 freeEntry=true 时不显示集合屏,到开场时间直接进 -->
+<view class="leadgather" wx:if="{{lead.exists && lead.status==1 && !lead.freeEntry}}">
   <!-- P-13(2026-11-02 业主):等待要有动画 —— 三颗点依次缓慢明暗,减弱动态时静止 -->
   <view class="lg-wait" aria-hidden="true"><view class="lg-wait__d"></view><view class="lg-wait__d"></view><view class="lg-wait__d"></view></view>
   <view class="lg-eyebrow">队伍集合中</view>
