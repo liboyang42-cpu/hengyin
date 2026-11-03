@@ -93,7 +93,7 @@ The card path is always the page it was shared from; only the query can be set.
 | Gameplay (`templatedetail`) | Title, screenshot, `&scope=my` for the author | Detail cover; the link never carries `scope=my`, because the receiver isn't the author |
 | Station | Generic title, screenshot | Shop name and shop cover, read from the already-loaded scene component (the page still fetches nothing, per its contract). Fixed picture if not loaded; another station's data is never used. |
 | Team | Team title, screenshot of member list and avatars | Fixed picture. The link still carries only the invite code. `/api/team/info` with a code returns the team row and member nicknames and avatars, which is the existing invite contract and wasn't changed. |
-| Old merchant link (`merchant/profile`) | 「城瘾 · 商家主页」 | Real shop name and cover from the `public-home` reply it already reads |
+| Old merchant link (`merchant/profile`) | 「城瘾 · 商家主页」 | Real shop name and cover from the `public-home` reply it already reads. They are kept on the page instance, not in `data`, because they are never rendered; CI's dead-field gate caught the first version. |
 | Merchant home (`cy/profile`) | 「<nickname> 的城市主页」, path without `tab=about` | Shop name, shop cover, canonical `merchantHomeUrl` |
 | Home (menu) | 「城瘾Hub」, screenshot of a location-sorted feed | Same title, fixed picture. In-card buttons unchanged. |
 
