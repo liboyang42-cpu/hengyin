@@ -113,4 +113,46 @@
 - g20 彩纸在真机帧率下的密度；`prefers-reduced-motion` 下不撒（代码路径未改）。
 - P-09 在不同机型（状态栏高度不同）上题干与遮罩的相对位置；`max()` 在基础库 WebView 上的支持按 iOS 11.3+ / Chromium 计，未在真机确认。
 
+## Round 4
+
+按 ROUND4.md（2026-11-03 业主审阅第三轮）。开工时本分支已含 origin/master（c6eac3b8），收尾时再取一次仍无新提交，本轮无需合并。全部只复用既有件：等待动画就是集合屏的 `lg-wait` 三点、放行后的过场仍是 `cy-chapter-flip`、作者结果反馈仍由既有判定屏 `cy-play-verdict` 摆。没有加说明行。
+
+| ID | 状态 | 改了什么 | 文件 | 证明 |
+|---|---|---|---|---|
+| P-08 | fixed | 被挡住的章不再停在翻转门上：换成一屏「等待放行」——标题在上（胶囊下沿）、集合屏同款三点在屏幕正中（减弱动态时静止）。这一屏没有真实动作，所以不放按钮（故事流本身也没有退出钮，微信胶囊照常可用）。队长放行后收起这一屏、挂上正常的章节翻转门，播完照常进正文（兜底计时与平常的门同值 4.2 / 7.8 秒）。翻转门组件退回第三轮之前、不再认识 `held` | `pages/play/index.wxml/wxss/js`、`components/chapter-flip/index.js/wxml` | `play-chapter-hold-screen-p08-r4.test.js`（布局、减弱动态、组件不认 held、放行换门与兜底、仍被挡时不进）；`chapter-flip-round3.test.js` 去掉 held 三条、`play-lead-chapter-hold.test.js` 改认新屏。**rig**：带领场 12（主题 990018 两章），同一时刻同一状态——P-08-r4-before（第三轮包：翻转门 +「等队长放行」）、P-08-r4-after（新包：「等待放行」+ 三点）；队长 `lead/unlock-chapter` 47→48 后 P-08-r4-after-2（正常翻转门在播，玩家侧弹「队长放行了「第二章 · 钟楼」」），随后进第二章正文 |
+| P-09 | fixed | 故事流里的猜数字，题目移进顶栏：和返回钮、微信胶囊同一行（顶栏按胶囊竖向居中对齐，右边距让开胶囊 `chrome.actionRight`），最多两行、超出省略；这时右上的圆钮（案件册 / 游玩工具）收起，组件里原来那行题目由页面用 CSS 变量收起（整屏单独打开时题目照旧）。交过之后只写「这一关结束了」的灰钮点了什么都不做，去掉；「继续故事」不变 | `pages/play/index.wxml/wxss/js`、`pages/play/utils/kit-head.js`（新，18 行）、`components/playkit-estimate/index.wxml/wxss` | `play-kit-head-p09-r4.test.js`（对齐几何、胶囊右边距、两行截断、组件题目收起、灰钮没了且「继续故事」还在）；`play-estimate-result.test.js` 随内嵌变量更新。**rig**：同一站同一猜数 11——P-09-r4-before / -before-2（第三轮包：题目单独一行在三颗圆钮下、交后灰钮「这一关结束了」）、P-09-r4-after / -after-2（新包：题目在返回钮右边、胶囊左边两行，交后只剩结果与「继续故事」） |
+| P-10 / P-11 | fixed（真走通）+ 1 条 needs owner | **夹具**（全部真接口，见下）：带 `journeyRules`（`stateEnabled`、`hp` 初始 10）与 `themeRuntimeConfig.gameplayRuntime`（PLAYER，一幕一任务绑在这一站，`survival.zeroHpPolicy=BLOCK_HP_COST`、`actionLimitPolicy=BLOCK_OVERFLOW`）的主题 990021，站点是进阶打字题（GPS 参与），模板「结果反馈」`outcomeRules.pass/fail` 各配 `reply` + 一张图。**真走暴露并修了三处**：① 开局从不读个人局主题运行时（`/api/play/theme/state` 只在第一次到达的回包里带回来），任务不可见——已建局就读一次；② 带玩法的 GPS 站要「先过玩法再到达」，任务要「先到达再开始任务再玩」，两边互等，首站只出「请先开始当前任务 · 点击重新读取」——任务只差到达（`disabledReason=NOT_ARRIVED`）时也靠近即到达，服务端本来就收（「已记录本局到达，请继续当前任务或操作」）；③ 第三轮的 `outcomeFeedback` 在 `cy-advanced-game.emitSession` 这一层被丢掉，页面永远拿不到，作者判定屏下面仍叠「再想想 / 不对。把它清掉，再试一次。」——补上抛字段；题卡在作者反馈晚到一拍时补清兜底句 | `pages/play/index.js`、`components/advanced-game/index.js`、`components/playkit-qa/index.js` | `play-generic-quest-arrival-p10-r4.test.js`、`advanced-game-outcome-feedback-relay-p10.test.js`（走真 action → hydrate → emitSession，旧代码 2 红）、`playkit-qa-authored-outcome-p10.test.js` 加晚到一条。**rig + HTTP + 库回读**：见下 |
+
+### P-10 / P-11 真走记录（rig，浏览器 + 真后端）
+
+- 走法（全部是产品自己的按钮）：开始游戏 → 开启定位 → 靠近即到达 → 背包「任务」页自动打开 → 「开始任务」（`QUEST_START`）→ 站点「开始任务」打开题目 → 作答。
+- **答错**（walk-player-8 = 会员 990012，答「黄浦江」）：`POST /api/play/advanced/action` → `status:FAILED`，`outcomeFeedback:{outcome:FAIL, reply:「不是这个名字。去桥头看看那块石碑，上面刻着它的旧称。」, images:[…/rigfbfail.jpg]}`；屏上 P-10-r4-after＝判定屏「失败」+ 作者的话 + 作者配图 +「继续」；点继续后 P-10-r4-after-2＝题屏只描红清空，不再叠兜底句。
+- **答对**（walk-player-10 = 会员 990014，答「吴淞江」）：题屏「答对了」+「继续故事」（P-11-r4-after-2）→ 背包「待确认结算 · 凭证已通过，可结算」→「结算任务」→ 奖励预览「确认装载」→ P-11-r4-after＝判定屏对勾 + 作者的话「对，就是吴淞江。老周的第三张字条压在桥头石碑下面。」+ 作者配图 +「继续」。
+- **before**（P-10-r4-before / P-11-r4-before，同一主题同一站，第三轮包）：首站只出「请先开始当前任务 · 点击重新读取」，答对答错都走不到。
+- **库回读**（`topic_route_session.state_json` 的 `themeRuntime.lastOutcome`）：会话 6 / 会员 990012 → `FAIL`、作者 fail reply、`["/profile/upload/2026/11/03/rigfbfail.jpg"]`；会话 9 / 会员 990014 → `PASS`、作者 pass reply、`["/profile/upload/2026/11/03/rigfbpass.jpg"]`。`/api/play/theme/state` 回包的 `lastOutcome` 与之一致（图片按媒体出口换成可见地址）。
+
+### needs owner
+
+1. **作者判了「没通过」之后，这一站卡住。** 实测：答错一次，进阶会话 `FAILED`、`canRetry:false`；但任务仍挂着（`activeQuest=q1`，结算 `QUEST_RESOLVE` 置灰为 `PROOF_PENDING`，剩 1 次），路线该站仍 `PLAYABLE`。题屏还摆着可点的「提交」，再交（哪怕交对）服务端照回 `FAILED`，屏上什么都不变（rig 里会员 990013 复现）。这是 R5 结算规则（没通过后任务该结束、可重开还是可重试），不是展示问题，本 lane 没改。**建议默认**：作者配了 `fail` 且玩法不可重试时，没通过即按 FAIL 结算这一任务（扣作者配的代价），题屏收起「提交」只留「继续故事」；需要重试的由作者开「可重试」。
+2. **P-09 只改了猜数字。** 第三轮截图里「题目单独一行在圆钮下面」的只有猜数字这一屏；打字题 / 选项题的题目是在屏幕中间排的（P-11-r4-after-2），没改。若业主要所有题型都把题目提到胶囊那一行，需要逐个玩法组件收起自己的题目，建议另开一项。
+
+### rig 说明（第四轮）
+
+- 新容器。rig＝`origin/claude/cloud-walk-20261101-rig` + 俱乐部 lane 的 `harness-patches.diff`；`up.sh` 副本的 `SHA` 指向本分支 4228efcd（后端 jar 由它构建；本轮没有改 Java）。MySQL / Redis 从 `mirror.gcr.io` 按同一摘要拉取后打本地标签。
+- before 包＝第三轮末 b1c40e9b，after 包＝9288f8cf；后端同一个。都是浏览器 rig，不是真机。
+- **只在 rig 里**的两处：① rig 的 `app.py` 加了一个开关，把 `--app.media.public-base-url=http://127.0.0.1:8097/__api` 传给应用（新库没配媒体公网前缀时，作者配图在回包里是空串——这是部署配置，生产有）；② 作者配图是放进 rig 上传目录的两张仓内图（`pages/templatedetail/art/covers/game/` 的 city-camera / branch-story），因为 rig 的上传要过微信内容安全、连不到。另在 rig 的 Redis 种过一个假的 `wx:mini:access_token`（没起作用，库是一次性的）。
+- 夹具（全部真接口）：作者 9003 实名登记（`/api/publisher/identity`，假名 + 校验位合法的假证件号）；模板 6005 / 6007 / 6010 / 6011（打字题 + 结果反馈，GPS 参与）、6006 / 6009（猜数字）、6008（打字题）；主题 990017（只配 journeyRules，没有任务，开局「请先开始当前任务」且无处开始，已下架）、990018（两章，P-08 / P-09）、990020（已下架）、990021（草稿后补任务再发布，P-10 / P-11）；审核 `/business/audit/review` + `expectedVersion`；带领场 11 / 12 / 15（`/api/club/open-session`、`lead/start`）；玩家 walk-player-1…11（真登录、入会、报名同意、¥0 报名）。直接写库只有 `seed-walk.py shift-session`（活动 11 / 12 / 15 改开始时间）。玩家 3 的第一次到达是直接调 `/api/play/arrive`（为确认服务端收不收「先到达」），之后的玩家都由页面自己到达。
+
+### 门禁与测试（第四轮）
+
+- 小程序：本轮新增 / 改动的测试与相关套件 `advanced-game*`、`playkit-qa*`、`play*`、`chapter*`、`playkit*`、`action-ledger*` 合计 1700+ 条全过；新增四个测试文件在旧代码上红。
+- `node chengyinhub-xcx/tests/lint/ui-integrity.js` → `UI-GATE-0:PASS`。U4-DYNAMIC 1797→1795、U5 8230→8228→8236 只是行号位移（同一调用行），按惯例换 key 重算 digest，没有新增登记。动作台账重建：控件数 5606 不变（只有行号、猜数字提交钮的显示条件、翻转门读屏文案）。
+- 后端：本轮没改 Java。
+
+### 真机上仍未验证（第四轮）
+
+- P-08 等待屏三点的明暗在真机帧率下的观感；放行后从「等待放行」换到翻转门的那一下（依赖带领轮询 4–10 秒）。
+- P-09 顶栏按 `getMenuButtonBoundingClientRect` 对齐：rig 的胶囊是固定位置，不同机型的胶囊高度 / 位置没在手机上看过；两行题目和胶囊的距离以真机为准。
+- P-10 / P-11：配图是站内路径经媒体出口换成的地址，真机上走 CDN / 本站前缀；`getLocation` 精度 ≤80 米才自动到达，rig 的定位精度是假的。
+
 STATUS: COMPLETE
