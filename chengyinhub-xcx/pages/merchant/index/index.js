@@ -239,12 +239,15 @@ Page({
       const assignment = [];
       if (item.chapterName) assignment.push(item.chapterName);
       if (item.nodeName && item.nodeName !== item.chapterName) assignment.push(item.nodeName);
+      // M-04 第4轮:不带日期的那半段单独留一份,卡上出现「今天 几点」时只写它,免得一张卡两个日期。
+      const placeText = assignment.join(' · ');
       if (item.startDateStr) assignment.push(item.startDateStr);
       // ⚠️ 这里曾按 searchStatus 编出 62/38 两个数,当「售出/购买比例」渲染给商家看 ——
       // 后端从来不下发这个数据,它是纯捏造的。真实数据到位前一律不显示。
       return Object.assign({}, item, {
         reportVolume: reportVolume,
         assignmentText: assignment.join(' · '),
+        assignmentPlaceText: placeText,
         // 类型标签只在后端确实下发 productType 时才出;拿不到就不显示,别猜
         productTypeText: PRODUCT_TYPE_TEXT[item.productType] || '',
       });

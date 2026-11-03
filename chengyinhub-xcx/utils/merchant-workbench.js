@@ -189,6 +189,7 @@ function buildProjectCards(input) {
       roleLabel: '我承接的',
       title: item.topicName || item.addressName || '未命名项目',
       meta: item.assignmentText || '',
+      metaNoDate: item.assignmentPlaceText || '',
       /* 稿 134:185(M15)卡底那一行:「承接方 · 幸会咖啡」。
          承接方 = 商家自己报名时填的那个点位名(ViewRegistrationMerchant.addressName)——
          同一条路线上一家商家可以承接多个点位,卡上必须说清这一张是哪一个,
@@ -311,6 +312,8 @@ function attachVisitTexts(cards, runs, now) {
     const patch = { visitText: visitTextOf(run, now) };
     // 当天有人要来时,「今日无待办」与之矛盾,不再写。
     if (run && isTodayRun(run, now) && card.todoText === '今日无待办') patch.todoText = '';
+    // M-04 第4轮:写了「今天 几点」就不再写主题日期,一张卡只出一个日期。
+    if (run && isTodayRun(run, now)) patch.meta = card.metaNoDate || '';
     return Object.assign({}, card, patch);
   });
 }

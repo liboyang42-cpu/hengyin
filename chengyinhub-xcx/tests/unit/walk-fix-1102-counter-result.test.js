@@ -130,8 +130,8 @@ test('M-04 承接卡在开场当天写「今天 几点 · 几人已报名」并�
   const { attachVisitTexts } = require('../../utils/merchant-workbench.js');
   const now = Date.parse('2026-11-02T05:00:00.000Z'); // 上海 13:00
   const out = attachVisitTexts([
-    { role: 'join', ownerId: 990014, todoText: '今日无待办' },
-    { role: 'join', ownerId: 5, todoText: '今日无待办' },
+    { role: 'join', ownerId: 990014, todoText: '今日无待办', meta: '第1章 · 咖啡 · 周四 11月12日', metaNoDate: '第1章 · 咖啡' },
+    { role: 'join', ownerId: 5, todoText: '今日无待办', meta: '第2章 · 周四 11月12日', metaNoDate: '第2章' },
   ], [
     { topicId: 990014, clubName: '执行俱乐部', paidCount: 4, startTime: '2026-11-02 13:23:00' },
     { topicId: 5, clubName: '夜跑团', paidCount: 2, startTime: '2026-11-12 10:00:00' },
@@ -140,6 +140,23 @@ test('M-04 承接卡在开场当天写「今天 几点 · 几人已报名」并�
   assert.equal(out[0].todoText, '');
   assert.equal(out[1].visitText, '夜跑团 · 11月12日 周四 10:00 到店');
   assert.equal(out[1].todoText, '今日无待办');
+  // 第4轮:当天那张卡收起主题日期,只留章节;他日场次的卡日期照旧
+  assert.equal(out[0].meta, '第1章 · 咖啡');
+  assert.equal(out[1].meta, '第2章 · 周四 11月12日');
+});
+
+test('M-04 第4轮 承接卡数据带一份不含日期的章节行', () => {
+  const src = read('pages/merchant/index/index.js');
+  assert.match(src, /assignmentPlaceText: placeText/);
+  const { buildProjectCards, attachVisitTexts } = require('../../utils/merchant-workbench.js');
+  const cards = buildProjectCards({
+    todoByProject: [],
+    joinList: [{ id: 1, topicId: 990014, topicName: '链', status: 1, assignmentText: '第1章 · 咖啡 · 周四 11月12日', assignmentPlaceText: '第1章 · 咖啡' }],
+  });
+  const now = Date.parse('2026-11-02T05:00:00.000Z');
+  const out = attachVisitTexts(cards, [{ topicId: 990014, clubName: '俱乐部', paidCount: 1, startTime: '2026-11-02 13:23:00' }], now);
+  assert.equal(out[0].visitText, '今天 13:23 · 1 人已报名');
+  assert.equal(out[0].meta, '第1章 · 咖啡');
 });
 
 test('M-26 店铺参谋高峰时段读作「中午到店最多」，不再是「午上」', () => {
