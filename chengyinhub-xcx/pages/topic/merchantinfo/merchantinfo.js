@@ -325,9 +325,7 @@ Page({
     this._hidden = false;
     options = options || {};
     this._projectRouteRegId = options.topicId && options.id ? parseInt(options.id) : 0;
-    this.setData({ operationScope: ['MERCHANT', 'CLUB'].includes(options.scope) ? options.scope : '' });
-    // ROUND4:俱乐部主题页「商家」带 open=merchant 进来,主办视图就绪后直接打开现成招商层
-    this._openOnHost = options.open === 'merchant' ? 'merchant' : '';
+    this.setData({ operationScope: ['MERCHANT', 'CLUB'].includes(options.scope) ? options.scope : '' }); this._openOnHost = options.open === 'merchant' ? 'merchant' : ''; // ROUND4:俱乐部「商家」直达现成招商层
     try {
       const w = (wx.getWindowInfo && wx.getWindowInfo()) || wx.getSystemInfoSync();
       const mb = wx.getMenuButtonBoundingClientRect && wx.getMenuButtonBoundingClientRect();
@@ -1856,11 +1854,7 @@ Page({
           that.setData({ loadFailed: false, role: 'host', chapterProject: false });
           that.applyHome(d);
           that.loadOwnerChapterApplications();
-          that.loadPendingMerchantNodes();
-          if (that._openOnHost === 'merchant') {
-            that._openOnHost = '';
-            that.onQuickAction({ currentTarget: { dataset: { key: 'merchant' } } });
-          }
+          that.loadPendingMerchantNodes(); if (that._openOnHost === 'merchant') { that._openOnHost = ''; that.onQuickAction({ currentTarget: { dataset: { key: 'merchant' } } }); }
           return;
         }
         // 承接方:聚合接口里带着报名记录,拿它的 id 回到既有详情流程
