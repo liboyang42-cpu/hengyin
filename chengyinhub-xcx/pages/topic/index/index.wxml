@@ -214,7 +214,7 @@
                           <view class="tit ep1">{{ node.cmsMemberTemplate.title }}</view>
                           <view class="david_mbxi">
                             <view class="david_mbxi_li">{{ node.cmsMemberTemplate.players }}</view>
-                            <view class="david_mbxi_li">{{ node.cmsMemberTemplate.duration === 0 ? 0 : (node.cmsMemberTemplate.duration || '--') }}分钟</view>
+                            <view class="david_mbxi_li">{{ node.cmsMemberTemplate.duration === 0 ? '0分钟' : (node.cmsMemberTemplate.duration ? node.cmsMemberTemplate.duration + '分钟' : '—') }}</view>
                           </view>
                         </view>
                       </view>
@@ -328,7 +328,7 @@
           </view>
           <block wx:else>
             <view class="row1 flex-cb">
-              <view class="col1">{{ info.averageRating || 0 }}</view>
+              <view class="col1">{{ info.averageRating || '—' }}</view>
               <view class="col2 flex-a">
                 <view class="star flex-ac"><cy-icon wx:for="{{ratingStars}}" wx:key="star" name="star-filled" size="24" /></view>
                 <view class="row2">基于{{ info.commentCount || 0 }}条评论</view>

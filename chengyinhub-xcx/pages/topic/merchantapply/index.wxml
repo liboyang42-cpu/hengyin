@@ -76,9 +76,9 @@
             <text class="ma-shop-addr" wx:if="{{shop.address}}">{{shop.address}}</text>
           </view>
         </view>
-        <view class="ma-shop-note">
-          <text class="ma-shop-note-t">你的门店</text>
-        </view>
+        <!-- 2026-11-02 r2:卡内原来又写了一遍「你的门店」(卡上方的分组标题已有),删掉重复;
+             这里留三行注释占位,行号不动, -->
+        <!-- 台账按行号的条目不漂。 -->
       </view>
 
       <view class="ma-card wizard-card cy-rise-in">

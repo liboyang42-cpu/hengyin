@@ -427,7 +427,7 @@ Page({
     const scrollToTarget = () => {
       wx.pageScrollTo({
         scrollTop: this.data.screen2Top,
-        duration: 500,
+        duration: 0, // 只在减弱动态时走这里:直接到位,不滚 500ms
         success: () => {
           this.setData({
             currentScreen: 1,
@@ -1070,7 +1070,7 @@ Page({
 
     wx.pageScrollTo({
       scrollTop: 0,
-      duration: 500,
+      duration: this.data.reducedMotion ? 0 : 500, // 减弱动态直接到位;常规档保留 v13 时长
       success: () => {
         this.setData({
           currentScreen: 0,

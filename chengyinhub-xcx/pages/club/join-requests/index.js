@@ -12,7 +12,7 @@ Page({
     statusBarHeight: app.globalData.statusBarHeight,
     navBarHeight: app.globalData.navBarHeight,
     clubId: null,
-    requests: [],
+    requests: [], leavingMemberId: null, // CP-14:处理完的那张卡先淡出再从列表摘掉
     // 副标题带待审条数(Figma 30:11)。
     // ⚠️ 2026-09-11 复核:上一版注释写「后端 owner-only」是错的 ——
     //    ClubMemberServiceImpl.canApproveMembers 放行三种人:主理人、role=1 管理员、
@@ -214,10 +214,10 @@ Page({
           actingAction: '',
           actionErrorMemberId: null,
           actionErrorText: '',
-          requests: that.data.requests.filter(function (item) { return item.memberId != memberId }),
+          leavingMemberId: memberId,
           introText: that.buildIntro(that.data.requests.filter(function (item) { return item.memberId != memberId }).length),
         })
-        toast.success(approve ? '已通过' : '已拒绝')
+        toast.success(approve ? '已通过' : '已拒绝'); setTimeout(function () { that.setData({ leavingMemberId: null, requests: that.data.requests.filter(function (item) { return item.memberId != memberId }) }) }, 160)
         const channel = that.getOpenerEventChannel && that.getOpenerEventChannel()
         if (channel && channel.emit) channel.emit('joinRequestsChanged')
       },

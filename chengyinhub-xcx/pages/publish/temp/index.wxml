@@ -58,7 +58,7 @@
   </view>
 
   <!-- ============ 编辑态 ============ -->
-  <scroll-view wx:else scroll-y class="cg-scroll" style="padding-top: {{statusBarHeight + navBarHeight}}px;" enhanced show-scrollbar="{{false}}" scroll-into-view="{{scrollIntoView}}">
+  <scroll-view wx:else scroll-y class="cg-scroll" style="padding-top: {{statusBarHeight + navBarHeight}}px;" enhanced show-scrollbar="{{false}}" scroll-into-view="{{scrollIntoView}}" scroll-with-animation>
     <text wx:if="{{supportMatrixLoading}}" aria-live="polite">正在读取玩法支持范围</text>
 <cy-inline-error load-failure class="cg-inline-error" wx:if="{{supportMatrixLoadError}}" title="{{supportMatrixLoadError}}" action="重试" bind:action="retrySupportMatrix" />
 

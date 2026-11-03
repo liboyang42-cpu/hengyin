@@ -9,6 +9,7 @@ page { background: var(--cy-bg-page); }
 .ledger { min-height: 100vh; display: flex; flex-direction: column; background: var(--cy-bg-page); padding: 0 var(--cy-page-x) 48rpx; box-sizing: border-box; }
 
 .ledger-inline-state { margin-bottom: var(--cy-space-3); }
+.ledger-inline-state--hold { min-height: 394rpx; margin-bottom: 40rpx; } /* ds-ok: M-09 首次加载时占住金额卡的实测高度(205px)与其下 20px,数据到了按钮不再下跳 */
 .ledger-sync {
   display: block;
   margin-bottom: var(--cy-space-2);

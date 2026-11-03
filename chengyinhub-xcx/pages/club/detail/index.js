@@ -550,7 +550,7 @@ Page({
     canSeeMembers: false,
     // 成员名单/贡献榜的可见位:成员 + 公开加入团的访客(拍板 2026-10-22)。发帖/评论/举报仍看 canSeeMembers。
     canSeeRoster: false,
-    joinHidden: false,   // 2026-10-22 owner:往下滑时收起底部「加入俱乐部」
+    joinHidden: false, joinFloatW: 0,   // 2026-10-22 owner:往下滑时收起底部「加入俱乐部」;joinFloatW=悬浮钮实宽,贡献榜行据此让出分数位
     joinFx: '',          // 加入按钮动效:'' | 'busy'(请求中)| 'done'(变绿 + 打勾)
     welcomeShow: false,  // 加入后「在这个俱乐部你可以做什么」弹层
     welcomeItems: [],
@@ -2171,7 +2171,7 @@ Page({
           membersExpanded: canSeeRoster ? that.data.membersExpanded : false,
         });
         // 2026-10-22 owner:审核团通过后第一次进来,补弹「在这里你可以做什么」(已看过不弹)
-        if (!that.data.joinFx) that.maybeWelcome(club);
+        if (!that.data.joinFx) that.maybeWelcome(club); that._measureJoinFloat();
         that.applyClubOwnerBadge();  // CU-C-108:club 到了,把早到的帖子徽标补上
         if (canSeeRoster) that.loadMembers();
         if (canSee) {
@@ -3727,5 +3727,15 @@ Page({
     else if (top - last > 6) hidden = true;
     else if (last - top > 6) hidden = false;
     if (hidden !== this.data.joinHidden) this.setData({ joinHidden: hidden });
+  },
+
+  // 2026-11-02 r2:悬浮「加入」固定在右下,首屏正好压在贡献榜第一行的分数上。量一次钮宽,
+  // 贡献榜行右侧让出「钮宽 + 8px」,分数落在钮左边;钮本身的位置、样式与收起逻辑都不动。
+  _measureJoinFloat() {
+    if (typeof wx === 'undefined' || !wx.createSelectorQuery) return;
+    wx.createSelectorQuery().in(this).select('.join-float__btn').boundingClientRect((rect) => {
+      const w = rect && rect.width ? Math.ceil(rect.width) : 0;
+      if (w !== this.data.joinFloatW) this.setData({ joinFloatW: w });
+    }).exec();
   },
 });

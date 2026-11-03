@@ -31,7 +31,7 @@
     <cy-skeleton class="feed-state" wx:if="{{feedState === 'loading'}}" type="card" count="{{3}}" />
     <cy-error load-failure="{{!feedLoginRequired}}" class="feed-state cy-fade-in" wx:elif="{{feedState === 'error'}}" title="{{feedLoginRequired ? '登录后查看帖文' : '动态加载失败'}}" sub="{{feedError}}" retry="{{feedLoginRequired ? '登录' : '重试'}}" bind:retry="retryFeed" />
     <block wx:else>
-      <cy-progress-status class="talent-state" wx:if="{{feedState === 'refreshing'}}" title="正在更新帖文" />
+      <cy-progress-status class="talent-state cy-refresh-float" wx:if="{{feedState === 'refreshing'}}" title="正在更新帖文" />
       <block wx:if="{{feed.length}}">
         <!-- 帖文第三轮:发现 / 俱乐部详情 / 我的 同一张卡同一套动作(点赞、评论、转发、分享、头像「+」关注、点图全屏) -->
         <cy-post-card class="cy-fade-in" wx:for="{{feed}}" wx:key="feedKey" post="{{item}}" index="{{index}}" light="{{isMerchantViewer}}" user-id="{{viewerId}}" interactive-actions interactive-user interactive-club show-follow show-share show-repost
@@ -76,7 +76,7 @@
           <cy-club-card class="club-card" wx:for="{{nearbyClubs}}" wx:key="id" club="{{item}}" interactive="{{true}}"
             data-id="{{item.id}}" bind:tap="goClubDetail" bind:action="onClubCardAction" aria-role="button" aria-label="打开俱乐部主页"  hover-class="cy-pressed" hover-stay-time="80"/>
         </view>
-        <cy-empty wx:elif="{{!isMerchantViewer}}" title="还没有俱乐部" cta="创建俱乐部" bindcta="onClubApply" />
+        <cy-empty wx:elif="{{!isMerchantViewer}}" title="还没有俱乐部" />
         <cy-empty wx:else title="本城还没有俱乐部" />
       </view>
       </block>

@@ -75,17 +75,17 @@
         <view class="v3-sec-head">
           <text class="v3-sec-title">编辑精选</text>
         </view>
-        <view class="v3-sec-state" wx:if="{{listLoading.recommendedTopicList && !recoHero}}">
+        <view class="v3-sec-state" wx:if="{{listLoading.recommendedTopicList && !recoHero && !listLoaded.recommendedTopicList}}">
           <cy-skeleton type="feed-card" count="1" />
         </view>
         <view class="v3-sec-state" wx:elif="{{listErr.recommendedTopicList && !recoHero}}">
           <cy-error load-failure title="编辑精选加载失败"
                     retry="重试" data-list="recommendedTopicList" bind:retry="retryList" />
         </view>
-        <view class="v3-sec-state" wx:elif="{{!listLoading.recommendedTopicList && !recoHero}}">
+        <view class="v3-sec-state" wx:elif="{{!listLoading.recommendedTopicList && !recoHero || listLoaded.recommendedTopicList && !recoHero}}">
           <cy-empty title="暂时没有精选主题" />
         </view>
-        <text class="v3-sec-sync" wx:if="{{listLoading.recommendedTopicList && recoHero}}"
+        <text class="v3-sec-sync cy-refresh-float" wx:if="{{listLoading.recommendedTopicList && recoHero}}"
               aria-role="status" aria-live="polite">正在更新编辑精选…</text>
         <swiper class="v3-reco-swiper" wx:if="{{recoCards.length}}" current="{{recoCurrent}}"
                 circular="{{recoCards.length > 1}}" previous-margin="40rpx" next-margin="60rpx"
@@ -128,17 +128,17 @@
           <text class="v3-sec-title">附近活动</text>
         </view>
         <!-- 错误与空态必须分开:请求失败时原码停在 [] 并渲染「正在搜寻…」= 页面永久假装在加载 -->
-        <view class="v3-sec-state" wx:if="{{listLoading.nearbyActivityList && !nearbyActivityList.length}}">
+        <view class="v3-sec-state" wx:if="{{listLoading.nearbyActivityList && !nearbyActivityList.length && !listLoaded.nearbyActivityList}}">
           <cy-skeleton type="feed-card" count="2" />
         </view>
         <view class="v3-sec-state" wx:elif="{{listErr.nearbyActivityList && !nearbyActivityList.length}}">
           <cy-error load-failure title="附近活动加载失败"
                     retry="重试" data-list="nearbyActivityList" bind:retry="retryList" />
         </view>
-        <view class="v3-sec-state" wx:elif="{{!listLoading.nearbyActivityList && !nearbyActivityList.length}}">
+        <view class="v3-sec-state" wx:elif="{{!listLoading.nearbyActivityList && !nearbyActivityList.length || listLoaded.nearbyActivityList && !nearbyActivityList.length}}">
           <cy-empty title="你附近暂时没有可点亮的节点" />
         </view>
-        <text class="v3-sec-sync" wx:if="{{listLoading.nearbyActivityList && nearbyActivityList.length}}"
+        <text class="v3-sec-sync cy-refresh-float" wx:if="{{listLoading.nearbyActivityList && nearbyActivityList.length}}"
               aria-role="status" aria-live="polite">正在更新附近活动…</text>
         <scroll-view wx:if="{{nearbyActivityList.length}}" scroll-x="{{true}}" class="v3-rail" show-scrollbar="{{false}}">
           <view class="v3-nearby-row">
@@ -163,19 +163,19 @@
       </view>
 
       <!-- 即将上线：Figma 紧凑评论卡横滑 -->
-      <view id="sec-upcoming" class="v3-sec" wx:if="{{listLoading.upcomingActivityList || listErr.upcomingActivityList || upcomingActivityList.length}}" style="{{pm_upcomingActivityList === 1 ? '--pm-u:1;' : (pm_upcomingActivityList === 2 ? '--pm-u-d:.32s;--pm-u-s:1;' : '')}}">
+      <view id="sec-upcoming" class="v3-sec" wx:if="{{(listLoading.upcomingActivityList && !listLoaded.upcomingActivityList) || listErr.upcomingActivityList || upcomingActivityList.length}}" style="{{pm_upcomingActivityList === 1 ? '--pm-u:1;' : (pm_upcomingActivityList === 2 ? '--pm-u-d:.32s;--pm-u-s:1;' : '')}}">
         <view class="v3-sec-head">
           <text class="v3-sec-title">即将上线</text>
         </view>
         <!-- 原码只判 length:请求失败时整段静默消失,用户看不出「加载失败」还是「本来就没有」 -->
-        <view class="v3-sec-state" wx:if="{{listLoading.upcomingActivityList && !upcomingActivityList.length}}">
+        <view class="v3-sec-state" wx:if="{{listLoading.upcomingActivityList && !upcomingActivityList.length && !listLoaded.upcomingActivityList}}">
           <cy-skeleton type="feed-card" count="2" />
         </view>
         <view class="v3-sec-state" wx:elif="{{listErr.upcomingActivityList && !upcomingActivityList.length}}">
           <cy-error load-failure title="即将上线加载失败"
                     retry="重试" data-list="upcomingActivityList" bind:retry="retryList" />
         </view>
-        <text class="v3-sec-sync" wx:if="{{listLoading.upcomingActivityList && upcomingActivityList.length}}"
+        <text class="v3-sec-sync cy-refresh-float" wx:if="{{listLoading.upcomingActivityList && upcomingActivityList.length}}"
               aria-role="status" aria-live="polite">正在更新即将上线…</text>
         <scroll-view wx:if="{{upcomingActivityList.length}}" scroll-x="{{true}}" class="v3-rail" show-scrollbar="{{false}}">
           <view class="v3-upcoming-row">
@@ -238,7 +238,9 @@
             title="{{bottomTopicFailedPage > 1 ? '更多主题加载失败' : '主题列表加载失败'}}"
             
             action="重试" bind:action="retryBottomTopic" />
-          <view class="loading-more" wx:if="{{isBottomLoading}}"><text>正在加载更多</text></view>
+          <view class="loading-more" wx:if="{{isBottomLoading && hasMoreBottomTopic}}"><text>正在加载更多</text></view>
+          <cy-skeleton class="v2-feed-sk" wx:if="{{!listLoaded.bottomTopicList && !bottomTopicList.length && !bottomTopicFailedPage}}" type="feed-card" count="2" />
+          <cy-empty wx:if="{{listLoaded.bottomTopicList && !bottomTopicList.length && !bottomTopicFailedPage}}" title="暂时没有主题" />
           <view class="no-more" wx:if="{{!hasMoreBottomTopic && bottomTopicList.length > 0}}"><text>· 没有更多了 ·</text></view>
         </view>
 
@@ -273,7 +275,9 @@
             title="{{bottomActivityFailedPage > 1 ? '更多活动加载失败' : '活动列表加载失败'}}"
             
             action="重试" bind:action="retryBottomActivity" />
-          <view class="loading-more" wx:if="{{isBottomLoading}}"><text>正在加载更多</text></view>
+          <view class="loading-more" wx:if="{{isBottomLoading && hasMoreBottomActivity}}"><text>正在加载更多</text></view>
+          <cy-skeleton class="v2-feed-sk" wx:if="{{!listLoaded.bottomActivityList && !bottomActivityList.length && !bottomActivityFailedPage}}" type="feed-card" count="2" />
+          <cy-empty wx:if="{{listLoaded.bottomActivityList && !bottomActivityList.length && !bottomActivityFailedPage}}" title="暂时没有活动" />
           <view class="no-more" wx:if="{{!hasMoreBottomActivity && bottomActivityList.length > 0}}"><text>· 没有更多了 ·</text></view>
         </view>
       </view>

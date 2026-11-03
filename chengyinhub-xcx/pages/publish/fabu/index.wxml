@@ -683,7 +683,7 @@
     </view>
   </view>
 
-  <view class="pending-undo" wx:if="{{pendingUndo.show}}">
+  <view class="pending-undo cy-rise-in" wx:if="{{pendingUndo.show}}">
     <text>{{pendingUndo.text}}</text>
     <text class="pending-undo__action" bindtap="undoPendingRemoval" hover-class="cy-pressed" hover-stay-time="80">撤销</text>
   </view>

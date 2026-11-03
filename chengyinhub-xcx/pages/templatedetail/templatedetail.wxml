@@ -225,11 +225,7 @@
           <view class="xb-rating-num">{{ info.rating }}</view>
           <view class="xb-rating-copy">
             <view class="xb-rating-stars">
-              <cy-icon name="star" size="24" />
-              <cy-icon name="star" size="24" />
-              <cy-icon name="star" size="24" />
-              <cy-icon name="star" size="24" />
-              <cy-icon name="star" size="24" />
+              <cy-icon wx:for="{{[1,2,3,4,5]}}" wx:key="*this" name="{{info.rating >= item ? 'star-filled' : 'star'}}" size="24" />
             </view>
             <text>{{ info.commentCount ? info.commentCount + ' 条来自真实玩家' : '来自真实到店玩家' }}</text>
           </view>

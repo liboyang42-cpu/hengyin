@@ -207,7 +207,7 @@ Page({
     everLoaded: false,
     loadErrorMsg: '',
     gateClubId: 0,
-    skeletonItems: [1, 2, 3],
+    skeletonItems: [1, 2], // 加载中两张卡:第三张会被底栏占位切掉一半(p08-baoming-loading)
     ticketList: [],
     selectedTicket: null,
     signupState: 'loading',

@@ -1,4 +1,4 @@
-<view class="theme-dark">
+<wxs src="../../../utils/wxs/count.wxs" module="cnt" /><view class="theme-dark">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
@@ -19,7 +19,7 @@
     <view class="section">
       <view class="settled-card">
         <text class="settled-label">已入账分润</text>
-        <text class="settled-amount">{{summary.settledAmountStatus === 'unverified' ? '金额待核验' : summary.settledAmountText}}</text>
+        <text class="settled-amount">{{summary.settledAmountStatus === 'unverified' ? '金额待核验' : cnt.money(summary.settledAmountText, settledK)}}</text>
         <text class="settled-label" wx:if="{{summary.unverifiedSettledCount}}">{{summary.unverifiedSettledCount || 0}} 笔已结算记录缺少入账证据，合计待核验</text>
       </view>
 

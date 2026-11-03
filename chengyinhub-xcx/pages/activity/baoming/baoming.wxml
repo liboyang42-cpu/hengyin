@@ -122,7 +122,7 @@
   <view wx:if="{{ticketList.length > 1 && waitlistState !== 'OFFERED'}}" class="setly_li"
         bindtap="openTicketSheet" aria-role="button" aria-label="切换票种，当前 {{selectedTicket.name}}"
         hover-class="cy-pressed" hover-stay-time="80">
-    <view class="setly_li_left">{{selectedTicket.name}}<text>（点击切换）</text></view>
+    <view class="setly_li_left">{{selectedTicket.name}}</view>
     <view class="setly_li_right"><text>{{money.amount(selectedTicket.price)}}</text><cy-icon name="arrow-right" size="28" /></view>
   </view>
   <view wx:else class="setly_li">

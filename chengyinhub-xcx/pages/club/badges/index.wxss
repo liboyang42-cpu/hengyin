@@ -1,6 +1,7 @@
 page { background: var(--cy-bg-page); }
 .page { position: relative; min-height: 100vh; box-sizing: border-box; padding-bottom: calc(var(--cy-space-6) + var(--cy-safe-bottom)); }
 .section { margin: var(--cy-space-5) var(--cy-page-x) 0; }
+cy-page-title + .section, cy-page-title + .badge-refreshing + .section { margin-top: 0; } /* 2026-11-02 r2:页标题直接接首个区块时不再叠区块间距,标题→首块约 9px(与全站 cy-page-title 口径一致) */
 .section-title { color: var(--cy-text-title); font-size: var(--cy-font-body); font-weight: 700; }
 .ds-card { margin-top: var(--cy-space-4); padding: 0 var(--cy-space-3-5); border-radius: var(--cy-comp-card-radius); background: var(--cy-comp-card-bg); }
 /* CP-05:刷新提示浮在列表上不占位(.cy-refresh-float),页面形状不变 */

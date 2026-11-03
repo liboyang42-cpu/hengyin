@@ -105,7 +105,7 @@ Page({
     }).then(function (page) {
       if (!page || !that._feedCurrent(ctx)) return;
       ctx.done = true;
-      that._feedLoading = false; pageMotion.enter(that, 'pmFeed');
+      that._feedLoading = false; pageMotion.enter(that, 'pmFeed', { once: true }); // 只首屏入场一次:下拉刷新不再藏起重播;切帖文/俱乐部标签(77 行)照旧浮上来
       that._feedHasMore = page.hasMore;
       that.setData({
         feed: page.rows,
