@@ -1937,9 +1937,16 @@ class MergedMasterBoundaryPolicyTest(unittest.TestCase):
         now = current["technical_dependency_policy"]
         for key in old.keys() - {"owners", "allowed_directions"}:
             self.assertEqual(old[key], now[key], key)
-        self.assertEqual(old["owners"], [o for o in now["owners"] if not o["id"].startswith("M_")])
+        l8_owners = {"L8_RECHECK_STORAGE", "L8_RECHECK", "L8_SENSITIVE_STORAGE", "L8_SENSITIVE_LIBRARY", "L8_SENSITIVE_RESCAN"}
+        l8_edges = {("L8_RECHECK", "L8_RECHECK_STORAGE"), ("L8_RECHECK", "L8_SENSITIVE_LIBRARY"),
+                    ("L8_SENSITIVE_LIBRARY", "L8_SENSITIVE_STORAGE"), ("L8_SENSITIVE_RESCAN", "L8_SENSITIVE_STORAGE"),
+                    ("L8_SENSITIVE_RESCAN", "L8_SENSITIVE_LIBRARY")}
+        self.assertEqual(l8_owners, {o["id"] for o in now["owners"] if o["id"] in l8_owners})
+        self.assertEqual(l8_edges, {tuple(e) for e in now["allowed_directions"] if tuple(e) in l8_edges})
+        self.assertEqual(old["owners"], [o for o in now["owners"] if not o["id"].startswith("M_") and o["id"] not in l8_owners])
         self.assertEqual(old["allowed_directions"], [e for e in now["allowed_directions"]
-                         if not any(n.startswith("M_") for n in e) and tuple(e) not in self.original_intent_edges])
+                         if not any(n.startswith("M_") for n in e) and tuple(e) not in self.original_intent_edges
+                         and tuple(e) not in l8_edges])
         self.assertEqual(self.original_intent_edges, {tuple(e) for e in now["allowed_directions"]
                                                     if tuple(e) in self.original_intent_edges})
 
