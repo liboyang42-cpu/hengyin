@@ -184,6 +184,9 @@ Component({
         /* 拍物成卡:判过这一次的回包带着刚铸的卡(契约 §10.2「当场看到卡」)。只有那一次动作的回包有,
            回读 /state 没有 —— 页面据此当场揭晓。丢在这一层,那一屏就永远只说「这张过了」。 */
         objectCard: (state && state.objectCard) || null,
+        /* P-10/P-11 第四轮 rig 实测:作者「结果反馈」判完那一次的回包带 outcomeFeedback,丢在这一层的话
+           题屏不知道作者写了话,判定屏下面仍叠兜底句「再想想 / 不对…」。 */
+        outcomeFeedback: (state && state.outcomeFeedback) || null,
       });
     },
     /** 这一步没提交成功:页面据此让拍物成卡那一屏回到取景,别让玩家对着「处理中」干等。 */

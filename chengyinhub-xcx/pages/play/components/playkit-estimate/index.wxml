@@ -1,7 +1,7 @@
 <cy-play-stage id="cy-play-stage" skin="estimate" show="{{show}}" back-label="退出"
                limit-seconds="{{limitSeconds}}" tries="{{maxTries}}"
                bind:back="onClose" bind:verdict="onVerdict">
-  <view class="g-col es">
+  <view class="g-col es {{result ? 'es--done' : ''}}">
     <!-- ⚠️ 原型里 header(title, sub) 的第二个参数**不显示**:.hdr .s{display:none}。
          那是「删除提示语」那条拍板的结果 —— 屏幕上已经摆着能点的东西了,
          再写一句怎么点,等于承认那个东西自己说不清楚。副标题只留给读屏器。 -->
@@ -27,11 +27,16 @@
          (服务端 submitEstimate 直接给 HIT / CLOSE / MISS),没有「事后由商家公布」这回事,
          全链路没有一处产出 revealAt/revealHour —— 留着它只会在夹具里演一句
          玩家永远看不到的话,实测还会把 CTA 压出重叠。要做揭晓就连服务端一起做。 -->
-    <view class="es__fb" wx:if="{{feedback}}">{{feedback}}</view>
+    <view class="es__fb" wx:if="{{feedback && !result}}">{{feedback}}</view>
+    <!-- P-09 / P-10:交过之后一行结果(猜中 / 差一点 / 差得有点远 + 你猜 · 实际 · 差多少),下面是作者的揭示 -->
+    <view class="es__res {{result.miss ? 'es__res--miss' : 'es__res--hit'}}" wx:if="{{result}}" aria-role="status">
+      <text class="es__res-h">{{result.head}}</text>
+      <text class="es__res-d" wx:if="{{result.detail}}">{{result.detail}}</text>
+      <text class="es__res-r" wx:if="{{result.reveal}}">{{result.reveal}}</text>
+    </view>
   </view>
 
-  <view class="g-btn {{locked ? 'g-btn--disabled' : ''}} pe pe--up" style="--pe-d:.9s" bindtap="onSubmit"
-        aria-role="button" aria-label="提交这个数" hover-class="g-btn--press" hover-stay-time="80">
-    {{locked ? '这一关结束了' : '就这个数'}}
-  </view>
+  <!-- P-09 第四轮:交过之后这颗钮点了什么都不做(只剩一句灰字),不是真动作 → 收起;往下走是故事流的「继续故事」 -->
+  <view class="g-btn pe pe--up" wx:if="{{!locked}}" style="--pe-d:.9s" bindtap="onSubmit"
+        aria-role="button" aria-label="提交这个数" hover-class="g-btn--press" hover-stay-time="80">就这个数</view>
 </cy-play-stage>

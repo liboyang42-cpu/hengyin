@@ -66,3 +66,6 @@ d417bb12a173c528bcb5595203552cf9efc33373:chengyinhub-xcx/tests/unit/safe-user-me
 6f74b609af105b3139d0de2edc3d31bee764c6a8:chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/OrientSwitches.java:generic-api-key:14
 6f74b609af105b3139d0de2edc3d31bee764c6a8:chengyinhub-admin/sql/migration_orient_geo_ar_team_20261022.sql:generic-api-key:114
 6f74b609af105b3139d0de2edc3d31bee764c6a8:chengyinhub-admin/sql/migration_orient_geo_ar_team_20261022.sql:generic-api-key:142
+# walk-fix 1102 l1-play rig 记录(RIG-NOTES.md)里抄录的请求体:idempotencyKey 是客户端为一次玩法动作生成的幂等键
+# (adv-<会话>-v<版本>-<短哈希>),来自一次性 rig 库,不是凭据,被 generic-api-key 误判。只精确忽略该提交的这一处指纹。
+2110aafb6ffbff5988a3f2a907763783a86e3797:docs/delivery/walk-fix-20261102/l1-play/RIG-NOTES.md:generic-api-key:64

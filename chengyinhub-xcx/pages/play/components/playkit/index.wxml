@@ -96,7 +96,9 @@
   show="{{show}}" kicker="{{kit.kicker}}" target="{{kit.bearing}}" tolerance="{{kit.tolerance}}"
   hold-seconds="{{kit.holdSeconds}}" hint="{{kit.hint}}" done="{{kit.done}}"
   attempt-id="{{kit.attemptId}}" reward-ceiling="{{kit.rewardCeiling}}"
-  bind:start="onStart" bind:submit="onSubmit" bind:verdict="onVerdict" bind:close="onClose" />
+  can-skip="{{kit.canSkip}}" skipped="{{kit.skipped}}"
+  bind:start="onStart" bind:submit="onSubmit" bind:verdict="onVerdict" bind:close="onClose"
+  bind:readfail="onReadFail" bind:skip="onSkip" />
 
 <cy-playkit-shout wx:elif="{{kit.type === 'shout'}}"
   show="{{show}}" kicker="{{kit.kicker}}" seconds="{{kit.seconds}}"
@@ -122,7 +124,7 @@
   answer-id="{{kit.answerId}}" answer-ids="{{kit.answerIds}}" judge="{{kit.judge !== false}}"
   last-option-id="{{kit.lastOptionId}}" last-option-ids="{{kit.lastOptionIds}}"
   feedback-images="{{kit.feedbackImages}}" failure-seq="{{kit.failureSeq}}"
-  multi="{{kit.multi}}" attempts="{{kit.attempts}}" feedback-text="{{kit.feedback}}"
+  multi="{{kit.multi}}" attempts="{{kit.attempts}}" feedback-text="{{kit.feedback}}" authored-outcome="{{kit.authoredOutcome}}"
   passed="{{kit.passed}}" finished="{{kit.finished}}"
   bind:submit="onSubmit" bind:shoot="onShoot" bind:audio="onAudio"
   bind:continue="onContinue"
@@ -136,6 +138,7 @@
 <cy-playkit-estimate wx:elif="{{kit.type === 'estimate'}}"
   show="{{show}}" title="{{kit.title}}" unit="{{kit.unit}}"
   min="{{kit.min}}" max="{{kit.max}}"
+  submitted="{{kit.submitted}}" tier="{{kit.tier}}" guess="{{kit.guess}}" answer="{{kit.answer}}" reveal="{{kit.reveal}}"
   limit-seconds="{{kit.limitSeconds}}" max-tries="{{kit.maxTries}}"
   bind:submit="onSubmit" bind:verdict="onVerdict" bind:close="onClose" />
 
@@ -207,6 +210,7 @@
   last-url="{{kit.lastUrl}}" card="{{kit.card}}"
   photo-verified="{{kit.photoVerified}}" reward-ceiling="{{kit.rewardCeiling}}"
   frame-url="{{kit.frameUrl}}" frame-opacity="{{kit.frameOpacity}}" inline="{{inline}}"
+  photo-fail-seq="{{kit.photoFailSeq}}"
   bind:shoot="onShoot" bind:close="onClose" />
 
 <cy-playkit-note wx:elif="{{kit.type === 'note'}}"

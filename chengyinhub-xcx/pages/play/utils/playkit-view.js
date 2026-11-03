@@ -561,6 +561,9 @@ function pickPlayKit(view, now) {
         answerId: seg.judge !== false ? (seg.answerId || '') : '',
         answerIds: seg.judge !== false && Array.isArray(seg.answerIds) ? seg.answerIds.slice() : [],
         feedback: seg.lastFeedback || '',
+        // P-10:作者在「结果反馈」里给这次结果写了话(服务端判完才给 outcomeFeedback)→ 由结算判定屏摆作者的话,
+        // 这一屏不再写自己的兜底句;没写时为空串,兜底照旧
+        authoredOutcome: view.outcomeFeedback && ['PASS', 'FAIL'].includes(view.outcomeFeedback.outcome) ? view.outcomeFeedback.outcome : '',
       });
     }
     if (name === 'scan') {
@@ -703,6 +706,12 @@ function pickPlayKit(view, now) {
       max: Number(seg.max) || 0,
       maxTries: seg.maxAttempts || 0,
       limitSeconds: limitSeconds,
+      // P-09:交过之后服务端才给你的估数、真值与揭示
+      submitted: !!seg.submitted,
+      tier: seg.tier || '',
+      guess: seg.submitted && Number.isFinite(Number(seg.guess)) ? Number(seg.guess) : 0,
+      answer: seg.submitted && Number.isFinite(Number(seg.answer)) ? Number(seg.answer) : 0,
+      reveal: seg.submitted ? (seg.reveal || '') : '',
     });
   }
   /* ===== R3 排序 / 连线 / 分类 =====
@@ -828,6 +837,9 @@ function pickPlayKit(view, now) {
       holdSeconds: seg.holdSeconds || 3,
       hint: seg.hint || '',
       done: !!seg.done,
+      // P-23:能不能跳、是不是跳过的,都只听服务端
+      canSkip: seg.canSkip === true,
+      skipped: seg.skipped === true,
     }, sensorContract.kitFields(seg));
   }
   /* 喊一嗓子:下发要喊满的秒数与标题。阈值不下发,由组件开局现场校准(与 quietHold 同一把尺)。 */
@@ -946,6 +958,9 @@ const ACTION_OF = {
   /* 罗盘指向没有「用时」要按服务器时间复核 —— 服务端只复核报来的方位在不在容差内(防误发);
      上面那条开表只为领挑战身份,做完那一下 SUBMIT_COMPASS 带上它。 */
   'compass:submit': 'SUBMIT_COMPASS',
+  /* P-23:读不出方向报一次失败;服务端记够两次、且作者允许或队长放行后,才收「跳过这一站」 */
+  'compass:readfail': 'REPORT_SENSOR_FAILURE',
+  'compass:skip': 'SKIP_SENSOR_STATION',
   'shout:submit': 'SUBMIT_SHOUT',
   'countdown:finish': 'SUBMIT_COUNTDOWN',
   'stopwatch:submit': 'SUBMIT_STOPWATCH',
@@ -1008,6 +1023,7 @@ function serverPayload(type, action, detail) {
     const game = CHALLENGE_GAME[type];
     return game ? { game: game } : {};
   }
+  if (type === 'compass' && (action === 'readfail' || action === 'skip')) return { game: 'compass' };
   switch (type + ':' + action) {
     case 'estimate:submit': return { value: d.guess };
     case 'pricepair:submit': return { pickId: d.pickId };

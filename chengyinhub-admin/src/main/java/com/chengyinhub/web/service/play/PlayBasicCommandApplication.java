@@ -350,23 +350,25 @@ public class PlayBasicCommandApplication {
         int vm;
         String questionAnswer;
         String correctAnswer;
+        String answerReveal; // P-11:只在答对后的回执里下发,不预置在节点列表里
         if (frozenAnswer != null) {
             vm = frozenAnswer.path("validationMethod").asInt(0);
             if (vm == 0) return error("该节点未配置答题");
             questionAnswer = frozenAnswer.path("questionAnswer").asText(null);
             correctAnswer = frozenAnswer.path("correctAnswer").asText(null);
+            answerReveal = frozenAnswer.path("answerReveal").asText(null);
         } else {
             CmsMemberTemplate liveTpl = cmsMemberTemplateService.selectCmsMemberTemplateById(node.getTemplateId());
             if (liveTpl == null || liveTpl.getValidationMethod() == null) return error("该节点未配置答题");
             vm = liveTpl.getValidationMethod();
             questionAnswer = liveTpl.getQuestionAnswer();
             correctAnswer = liveTpl.getCorrectAnswer();
+            answerReveal = liveTpl.getAnswerReveal();
         }
         String ans = answer == null ? "" : answer.trim();
         boolean ok;
         if (vm == 1) { // 文字验证：去全部空白 + 全角→半角归一后比对(中文 equalsIgnoreCase 无意义但无害)
-            ok = StringUtils.isNotBlank(questionAnswer)
-                    && playNodeContext.normalizeAnswer(questionAnswer).equalsIgnoreCase(playNodeContext.normalizeAnswer(ans));
+            ok = com.chengyinhub.business.service.support.BasicTextAnswer.matches(questionAnswer, ans); // P-02:、/逗号分隔的多个答案命中任一即过
         } else if (vm == 3) { // 选项验证(A/B/C/D)
             ok = StringUtils.isNotBlank(correctAnswer)
                     && correctAnswer.trim().equalsIgnoreCase(ans);
@@ -410,6 +412,8 @@ public class PlayBasicCommandApplication {
                     routeActionId, expectedRouteVersion, null, null, originalRun);
         }
         if (ctx.nightWarning) data.put("nightWarning", true); // M2 自玩夜间提示(不阻断)
+        // P-11:答对之后才把作者的揭示随回执给出,题卡停一拍写「对了」+ 揭示
+        if (StringUtils.isNotBlank(answerReveal)) data.put("answerReveal", answerReveal.trim());
         boolean firstTime = Boolean.TRUE.equals(data.get("firstTime"));
         return AjaxResult.success(firstTime ? "答对了！" : "该节点已完成", data);
     }

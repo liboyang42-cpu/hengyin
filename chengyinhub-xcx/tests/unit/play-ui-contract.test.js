@@ -590,7 +590,8 @@ test('「点亮坐标」必须取已完成数(doneCount),部分完成时不得�
   //    而不是抄一遍 wx:if 的字面量(字面量一变就假红,且证明不了门还在)。
   // 2026-08-15 F3:banner 文案改为按 mode 三元(探店日不再念「旧址点亮」),
   // 契约意图不变 —— 全量口径的那句话仍只出现在 allDone 门控的 banner 槽里,且仍用 total。
-  assert.match(wxml, /=== 'banner'\}\}"[\s\S]{0,260}本章' \+ total \+ '处旧址已全部点亮/)
+  // g20(2026-11-02):整个主题走完时不再说「本章」
+  assert.match(wxml, /=== 'banner'\}\}"[\s\S]{0,260}: total \+ '处旧址已全部点亮/)
   assert.match(readXcx('utils/wxs/hud-slots.wxs'), /banner:\s*!screen && !!allDone/)
 })
 

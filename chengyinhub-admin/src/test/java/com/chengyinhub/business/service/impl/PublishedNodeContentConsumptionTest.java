@@ -129,6 +129,24 @@ class PublishedNodeContentConsumptionTest {
         verify(routes,never()).insertSession(any()); verify(routes,never()).updateStateCas(any());
     }
 
+    /** P-04:只配了结局(尾声章)的线性主题也建局;冻结分支与实时分支同口径,纯老线性主题照旧不建。 */
+    @Test void endingOnlyLinearThemeNeedsTheRunOnBothFrozenAndLiveBranches() throws Exception {
+        var routes=mock(TopicRouteSessionMapper.class);
+        var runtime=contentRuntime(routes,mock(CmsTopicMapper.class));
+        String endingOnly="{\"schemaVersion\":1,\"ending\":{\"endings\":[{\"code\":\"ending1\",\"title\":\"尾声\",\"chapterId\":204,\"fallback\":true}]}}";
+        String original=compiler.freezePublication(topic,null);
+        topic.setPublishedRouteGraphJson(original); assertFalse(journeyConfigured(runtime));
+        var frozen=(ObjectNode)json.readTree(original);
+        frozen.put("journeyStory",endingOnly);
+        topic.setPublishedRouteGraphJson(frozen.toString()); assertTrue(journeyConfigured(runtime));
+        frozen.put("journeyStory","{\"schemaVersion\":1,\"ending\":{\"endings\":[]}}");
+        topic.setPublishedRouteGraphJson(frozen.toString()); assertFalse(journeyConfigured(runtime));
+        topic.setPublishedRouteGraphJson(null);
+        topic.setJourneyStoryJson(null); assertFalse(journeyConfigured(runtime));
+        topic.setJourneyStoryJson(endingOnly); assertTrue(journeyConfigured(runtime));
+        verify(routes,never()).insertSession(any()); verify(routes,never()).updateStateCas(any());
+    }
+
     @Test void existingRunAndOldV1RetainPriorityWhileDamagedNewContentCannotUseLiveFallback() throws Exception {
         var routes=mock(TopicRouteSessionMapper.class);
         var runtime=contentRuntime(routes,mock(CmsTopicMapper.class));

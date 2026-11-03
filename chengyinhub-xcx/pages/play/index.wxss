@@ -358,6 +358,21 @@ page { background: var(--cy-color-bg-page); }
   display:flex; align-items:center; justify-content:center; background:var(--cy-color-action-secondary-bg); color:var(--cy-color-play-accent); /* ds-ok Figma 实测(用户裁决字面值) */
   border-radius:var(--cy-comp-btn-radius); font-size:var(--cy-type-button); font-weight:700; }
 .lg-hint{ margin-top:var(--cy-space-3-5); font-size: var(--cy-type-label); color: var(--cy-color-text-tertiary); }
+/* P-13 集合等待:三颗点依次缓慢明暗(复用既有 fade 关键帧来回播,只动透明度,不位移不缩放;不新增 keyframes);减弱动态时静止常亮 */
+.lg-wait{ display:flex; gap:18rpx; margin-bottom:var(--cy-space-4); }
+.lg-wait__d{ width:14rpx; height:14rpx; border-radius:50%; background:var(--cy-color-text-tertiary); animation:fade .9s ease-in-out infinite alternate; }
+.lg-wait__d:nth-child(2){ animation-delay:.3s; }
+.lg-wait__d:nth-child(3){ animation-delay:.6s; }
+.play--reduced-motion .lg-wait__d{ animation:none; opacity:.6; }
+/* P-08 第四轮 等待放行:盖住故事流(与章节翻转门同层 130、同底色),标题在上,集合屏三点在屏幕正中 */
+.chhold{ position:fixed; inset:0; z-index:130; background:#1F1F21; display:flex; flex-direction:column; align-items:center; } /* ds-ok 同章节翻转门底色(chapter-flip .cf) */
+.chhold__t{ margin-top:var(--cy-space-6); font-size:var(--cy-type-page-title); font-weight:600; letter-spacing:.08em; color:var(--cy-color-text-primary); }
+.chhold__wait{ position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); margin:0; }
+.chhold--still .lg-wait__d{ animation:none; opacity:.6; }
+/* P-08 第五轮(业主):等待屏是深底,三点照集合屏用的 tertiary 几乎看不见 —— 这一屏改用与「等待放行」同一个 text-primary token */
+.chhold__wait .lg-wait__d{ background:var(--cy-color-text-primary); }
+/* P-08 第五轮 D:底部「返回地图」用既有 cy-footer-bar;它的承托底读 --cy-color-bg-page(纯黑),这一屏接到最接近本屏深灰的既有 token,不在屏底多出一条黑带 */
+.chhold{ --cy-color-bg-page:var(--cy-color-bg-elevated); }
 
 /* P1 足迹卡保存按钮(次级白描边) */
 
@@ -482,7 +497,9 @@ page { background: var(--cy-color-bg-page); }
  * 原型逐条:眉标 11px #E2C489 800 · 标题 .h2 26px/700 白 · 图 180px r20 ·
  *          正文 15px #D5DAE1 行高 1.85 · 三格 .g3(#101418 r18) · CTA .btn.w。
  * 1px = 1.923rpx。 */
-.chfull{position:fixed;inset:0;z-index:106;padding:0;background:#000;} /* ds-ok 玩家指定纯黑故事背景 */
+/* --chfull-fade-end(P-09 第三轮):内嵌玩法块顶到故事流顶时,题干不能落在 .chfull__scroll 上沿那段渐隐里
+   (原来题干在 ~310rpx,被压成灰字);块的上内边距至少到渐隐终点。值与遮罩的 340rpx 同一个数,改一处要改两处。 */
+.chfull{position:fixed;inset:0;z-index:106;padding:0;background:#000;--chfull-fade-end:340rpx;} /* ds-ok 玩家指定纯黑故事背景;340rpx 同遮罩终点 */
 .chfull__game-cue { text-align:center; padding:var(--cy-space-4); }
 .chfull__head{ padding:0 46rpx 15rpx; text-align:center; } /* ds-ok 原型 .settle padding 0 24px */
 .chfull__eyebrow{display:block;margin-top:var(--cy-space-1);font-size:var(--cy-type-caption);color:var(--cy-color-text-tertiary);font-weight:400;} /* ds-ok 原型 11px #E2C489 800 */
@@ -492,6 +509,7 @@ page { background: var(--cy-color-bg-page); }
   /* 顶栏(标题/罗盘/…)透明压在正文上:上沿渐隐,滚上去的字和图在顶栏下方淡出,不与按钮叠字(实走 A26) */
   -webkit-mask-image:linear-gradient(to bottom, transparent 0, transparent 220rpx, #000 340rpx); /* ds-ok 遮罩只取 alpha,与颜色主题无关 */
   mask-image:linear-gradient(to bottom, transparent 0, transparent 220rpx, #000 340rpx); } /* ds-ok 同上 */
+
 .chfull__pad{height:440rpx;}
 .chfull__cover{ display:block; width:100%; height:346rpx; border-radius:38rpx; background:#101418; } /* ds-ok 原型 图 180px / r20 / 底 #101418 */
 .chfull__para{display:block;min-height:0;padding:0;font-size:34rpx;line-height:1.95;color:var(--cy-color-text-primary);} /* ds-ok 用户指定原型正文 17px/1.95 */
@@ -643,6 +661,20 @@ page { background: var(--cy-color-bg-page); }
   display:flex; flex-direction:column; gap:15rpx; align-items:center; justify-content:center;
   color:#99A1AF; font-size:27rpx; } /* ds-ok Figma 实测(用户裁决字面值) */
 .gp2__feedback{ margin-top:23rpx; font-size:27rpx; color:#F75707; } /* ds-ok Figma 实测(用户裁决字面值) */
+/* P-10 答错:输入框描一圈红,下一次输入即清(不抖动) */
+.gp2__input{ transition:box-shadow .2s ease; }
+.gp2__input.is-wrong{ box-shadow:0 0 0 3rpx #EF4444; } /* ds-ok 游玩页状态红(原型 --red,单色契约 PLAY_STATE_COLORS) */
+/* P-11 答对那一拍:平静的一行「对了」,下方揭示与碎片;只做淡入过渡 */
+.gp2__right{ margin-top:23rpx; display:flex; flex-direction:column; gap:15rpx; }
+.gp2__right-h{ display:flex; align-items:center; gap:12rpx; font-size:32rpx; font-weight:700; color:#4ADE80; } /* ds-ok 游玩页状态绿(原型 --green-l,单色契约 PLAY_STATE_COLORS) */
+.gp2__right-reveal{ font-size:29rpx; line-height:1.6; color:#FFFFFF; } /* ds-ok 同 .gp2__reveal 字面值 */
+.gp2__right-frag{ display:flex; flex-direction:column; gap:6rpx; padding:20rpx 23rpx; border-radius:23rpx; background:#1E2028; } /* ds-ok 同 .gp2__input 底色 */
+.gp2__right-k{ font-size:23rpx; color:#99A1AF; } /* ds-ok 同 .gp2__photo 次级字色 */
+.gp2__right-v{ font-size:29rpx; line-height:1.6; color:#FFFFFF; } /* ds-ok 同 .gp2__reveal 字面值 */
+.gp2[class*="atmosphere--"] .gp2__right-reveal,
+.gp2[class*="atmosphere--"] .gp2__right-v{ color:var(--atmo-text); }
+.gp2[class*="atmosphere--"] .gp2__right-frag{ background:var(--atmo-control); }
+.gp2[class*="atmosphere--"] .gp2__right-k{ color:var(--atmo-muted); }
 .gp2__neterr{ margin-top:23rpx; display:flex; align-items:center; gap:23rpx; }
 .gp2__neterr-t{ flex:1; min-width:0; font-size:25rpx; color:#FF3B30; } /* ds-ok Figma 实测(用户裁决字面值) */
 .gp2__neterr-r{ flex:none; font-size:25rpx; font-weight:700; color:#FFFFFF; text-decoration:underline; } /* ds-ok Figma 实测(用户裁决字面值) */
@@ -1714,6 +1746,17 @@ page { background: var(--cy-color-bg-page); }
 .radar__hit{ position:absolute; left:0; top:0; right:0; bottom:0; z-index:2; }
 
 .fx-story__acts{ flex:none; display:flex; align-items:center; gap:var(--cy-space-2); }
+/* P-09 整屏玩法在场:左上地图 / 罗盘、主题标题、属性条收起,左上换成返回 */
+.fx-story__hd.is-kit .fx-story__compass,
+.fx-story__hd.is-kit .radar__fold,
+.fx-story__hd.is-kit .fx-story__t,
+.fx-story__hd.is-kit .hud2{ display:none; }
+.fx-story__kitback{ flex:none; }
+/* P-09 第四轮:猜数字的题目进顶栏,和返回、胶囊一行;右边距由页面按胶囊给(chrome.actionRight),最多两行;这时右上圆钮收起 */
+.fx-story__hd.is-kitq{ gap:var(--cy-space-2); }
+.fx-story__hd.is-kitq .fx-story__acts{ display:none; }
+.fx-story__kitq{ flex:1; min-width:0; font-size:var(--cy-type-section-title); font-weight:700; line-height:1.3; color:var(--cy-color-text-primary);
+  display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; word-break:break-all; }
 .fx-story__act{ width:88rpx; height:88rpx; border-radius:50%;
   background:var(--cy-color-bg-elevated); display:flex; align-items:center; justify-content:center; }
 

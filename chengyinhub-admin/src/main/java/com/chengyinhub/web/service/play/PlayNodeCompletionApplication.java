@@ -300,6 +300,12 @@ public class PlayNodeCompletionApplication {
         boolean rewardCapped = rewardPolicy == RewardPolicy.FULL && advancedGameRuntimeService != null
                 && advancedGameRuntimeService.rewardCappedToXpBadge(memberId, actId, node.getTopicId(), node.getId());
         if (rewardCapped) rewardPolicy = RewardPolicy.XP_BADGE_ONLY;
+        // P-23:读不出方向被跳过的一站 —— 0 解谜分,完成方式记成 SKIPPED,回看时知道这一站是跳过的
+        if (advancedGameRuntimeService != null
+                && advancedGameRuntimeService.sensorStationSkipped(memberId, actId, node.getTopicId(), node.getId())) {
+            puzzleScore = 0;
+            completionMode = "SKIPPED";
+        }
         Map<String, Object> conditionalReward = null;
         // ③ 与 ①② 在本方法里有两处分歧(首完判据 + 发奖范围),求一次共用,免得两处各判各的再漂开。
         boolean shopDay = playNodeContext.resolveMode(actId, node.getTopicId()) == PlayMode.FREE_COLLECT;
