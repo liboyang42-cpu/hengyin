@@ -1070,7 +1070,7 @@ Page({
 
     wx.pageScrollTo({
       scrollTop: 0,
-      duration: this.data.reducedMotion ? 0 : 500, // 减弱动态直接到位;常规档保留 v13 时长
+      duration: this.data.reducedMotion ? 0 : 350, // 减弱动态直接到位;常规档 350ms(打磨第 3 轮 §4-11,原 v13 500ms 偏慢)
       success: () => {
         this.setData({
           currentScreen: 0,
