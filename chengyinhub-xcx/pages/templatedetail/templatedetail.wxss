@@ -729,7 +729,7 @@ page {
 
 /* 节点预览弹窗 */
 .pop-model::before {
-  background-image: url('/images/home-route-city-placeholder.jpg');
+  background-image: url('/images/index-figma/nearby-card.jpg');
   background-size: cover;
 }
 

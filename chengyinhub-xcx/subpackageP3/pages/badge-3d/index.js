@@ -1,7 +1,7 @@
 // 徽章双样式详情页。enamel=3D珐琅转台(xr-badge WebGL);glow=勋章墙同一台波点引擎渲染单枚。
 const ENGINE = require('../badge-wall/index/engine.js');
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
-const DEFAULT_BADGE_ASSET = '/images/cy_logo_mark.png'; // Round5B-8:默认徽章面用应用标识
+const DEFAULT_BADGE_ASSET = '/subpackageP3/assets/badge-demo.png';
 
 function decodeQueryValue(value, fallback) {
   if (typeof value !== 'string' || !value) return fallback;

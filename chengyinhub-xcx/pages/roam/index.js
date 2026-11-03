@@ -48,7 +48,7 @@ const { resolveMenuChrome } = require('../../utils/nav-safe-area.js');
 const { bindPlayerRoamMemory } = require('../../utils/roam-player-memory.js');
 const { syncRoamTileMemory } = require('../../utils/roam-tile-memory-sync.js');
 const { ALBUM_SAVE, classifyAlbumSaveError, normalizeAlbumOutcome } = require('../../utils/album-save-outcome.js');
-const MOCK_IMG = '/images/home-route-city-placeholder.jpg'; // Round5B-8:中性占位图,原图是别家直播截图
+const MOCK_IMG = '/images/index-figma/nearby-card.jpg';
 const { onRoamCacheInvalidated } = require('../../utils/roam-cache-epoch.js');
 function roamMemory(page) {
   const memory = bindPlayerRoamMemory(page, getApp(), wx);

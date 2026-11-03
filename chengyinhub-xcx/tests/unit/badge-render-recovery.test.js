@@ -6,7 +6,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const file = path.resolve(__dirname, '../../subpackageP3/pages/badge-3d/index.js');
 const viewFile = file.replace(/index\.js$/, 'index.wxml');
-const DEFAULT = '/images/cy_logo_mark.png';
+const DEFAULT = '/subpackageP3/assets/badge-demo.png';
 const actual = 'https://cdn.example.com/badge.png';
 function mount(style, reduced = false, staticCapable = true) {
   let definition, preference = reduced, engineOptions, createFails = false;

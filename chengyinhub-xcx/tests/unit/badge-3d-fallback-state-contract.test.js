@@ -10,7 +10,7 @@ const PAGE_PATH = path.join(ROOT, 'subpackageP3/pages/badge-3d/index.js')
 const WXML_PATH = path.join(ROOT, 'subpackageP3/pages/badge-3d/index.wxml')
 const COMPONENT_PATH = path.join(ROOT, 'subpackageP3/components/xr-badge/index.js')
 const ENGINE_PATH = path.join(ROOT, 'subpackageP3/pages/badge-wall/index/engine.js')
-const DEMO = '/images/cy_logo_mark.png'
+const DEMO = '/subpackageP3/assets/badge-demo.png'
 
 function loadPage() {
   let definition

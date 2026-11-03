@@ -95,7 +95,7 @@ function buildGeometry() {
 
 Component({
   properties: {
-    src: { type: String, value: '/images/cy_logo_mark.png' },
+    src: { type: String, value: '/subpackageP3/assets/badge-demo.png' },
     reduced: { type: Boolean, value: false },
   },
   lifetimes: {

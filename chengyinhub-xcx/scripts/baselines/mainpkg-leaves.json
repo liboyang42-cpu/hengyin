@@ -77,6 +77,11 @@
       "sourceBlob": "385f28718f654d9caea9119ad32f4d5355c7fcda"
     },
     {
+      "from": "images/d_frametu.jpg",
+      "to": "pages/club/images/d_frametu.jpg",
+      "sourceBlob": "24db5cc5363bf36108992959ba9d08c211b9c9fb"
+    },
+    {
       "from": "images/d_location2.png",
       "to": "pages/searchmap/images/d_location2.png",
       "sourceBlob": "d2f9e5ef5d95b354b0a9c436c1570e49bb0d873a"

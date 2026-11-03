@@ -441,7 +441,7 @@ const CONTRACTS = {
   F02: {
     sources: ['subpackageP3/pages/badge-3d/index.js', 'subpackageP3/pages/badge-3d/index.wxml'],
     paths: ['name', 'sub', 'unsupported', 'renderState', 'fallbackSrc'],
-    equals: { unsupported: true, renderState: 'fallback', fallbackSrc: '/images/cy_logo_mark.png' },
+    equals: { unsupported: true, renderState: 'fallback', fallbackSrc: '/subpackageP3/assets/badge-demo.png' },
   },
 }
 
