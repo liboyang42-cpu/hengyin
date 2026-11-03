@@ -68,7 +68,7 @@ test('V-01 用户主动点定位失败才提示',()=>{
 })
 test('V-01 首页城市文字可点击重新定位',()=>{
   const wxml=require('fs').readFileSync(require('path').join(__dirname,'../../pages/index/index.wxml'),'utf8')
-  assert.match(wxml,/<view wx:if="\{\{city\}\}" class="v3-hero-mem-loc" catchtap="onTapHomeCity"[^>]*hover-class="cy-pressed"[^>]*>· \{\{city\}\}<\/view>/)
+  assert.match(wxml,/<view wx:if="\{\{city && !cityPicker\}\}" class="v3-hero-mem-loc" catchtap="onTapHomeCity"[^>]*hover-class="cy-pressed"[^>]*>· \{\{city\}\}<\/view>/)
 })
 
 test('V-01 各类自动定位失败与未登录都默认上海市',()=>{
@@ -113,4 +113,19 @@ test('Round5 #7 拒绝定位后不再自动询问,点城市才再问', () => {
   assert.equal(modals.length, 1)
   modals[0].success({ confirm: true })
   assert.equal(store.home_city_location_declined, undefined)
+})
+
+// Round5 #8:游客点首页城市 → 现有选城下拉(只改本地展示,不定位不上传);登录后回到点城市重新定位
+test('Round5 #8 游客首页城市用选城下拉,选中即改并记住;登录后恢复点城市定位', () => {
+  token = ''
+  const p = page(); p.getHomeCityLocation()
+  assert.equal(p.data.cityPicker, true)
+  assert.equal(p.data.city, '上海市'); assert.equal(p.data.cityPickerIndex, 1)
+  p.onManualCityChange({ detail: { value: 4 } })
+  assert.equal(p.data.city, '杭州市'); assert.equal(p.data.cityPickerIndex, 4); assert.equal(store.home_city_last, '杭州市')
+  assert.equal(requests.length, 0, '游客选城不发任何请求'); assert.equal(locations.length, 0)
+  token = 'normal-session'; p.getHomeCityLocation()
+  assert.equal(p.data.cityPicker, false)
+  const wxml = require('fs').readFileSync(require('path').join(__dirname, '../../pages/index/index.wxml'), 'utf8')
+  assert.match(wxml, /<cy-dropdown wx:if="\{\{city && cityPicker\}\}" mode="selector" range="\{\{manualCityOptions\}\}" value="\{\{cityPickerIndex\}\}" bind:change="onManualCityChange"[^>]*>\s*<text class="v3-hero-mem-loc">· \{\{city\}\}<\/text>/)
 })
