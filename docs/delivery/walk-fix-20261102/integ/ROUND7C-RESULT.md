@@ -202,4 +202,21 @@ The rig is the walkthrough rig from `claude/cloud-walk-20261101-rig` with the cl
 
 ## CI
 
-PENDING
+All runs are on draft PR #723.
+
+**CI found two problems I had missed. Both are fixed:**
+- **Backend tests on `19424d79`:** 16243 tests, 1 failure. `MerchantGamePortfolio35ContractTest` still required `onShareTimeline()` on the play page. The brief removes it on purpose, so the test now pins its absence and `playMenuShare` (`a695ea43`). The test passes locally (7/7).
+- **Mini program static gates on `a695ea43`:** the dead-`setData` gate flagged `shareName` and `shareCover` on the old merchant link page. They now live on the page instance (`32a1b1c0`), and `setdata-dead-field-lint.js` passes.
+
+**Final head `0d7d4c86` (run 41722358336):**
+- 28/31 jobs passed on the first attempt, including:
+  - all 20 mini unit shards;
+  - mini static gates and static checks;
+  - gitleaks.
+- **Re-runs.** Fast gates, Migration safety gate and Backend tests were cancelled mid-step with no newer push, so I re-ran just those three. Fast gates and Migration safety gate then passed.
+- **Backend tests.** On the re-run, 「Build and test backend」, 「Verify isolated full application startup」, the atomic-migration MySQL IT and every contract step after them passed. The job was then cancelled at 「Describe the tested Boot Jar」, after all tests had passed, and the three steps after it were skipped. No step failed.
+- **Other workflows on `0d7d4c86`:** Funds MySQL IT, isolated Redis recovery and mini follow-up regression all passed.
+
+I did not push an empty commit to re-trigger CI.
+
+STATUS: PARTIAL - all 8 items done and pushed, and every test passes in CI. The Backend tests job was cancelled at its post-test 「Describe the tested Boot Jar」 step (not failed), so the Boot Jar compiled-reference checks after it did not run. Two pages need the owner to allow guest reads before they can join Moments (see Needs owner).
