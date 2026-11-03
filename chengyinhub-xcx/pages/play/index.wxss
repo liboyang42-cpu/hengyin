@@ -364,6 +364,11 @@ page { background: var(--cy-color-bg-page); }
 .lg-wait__d:nth-child(2){ animation-delay:.3s; }
 .lg-wait__d:nth-child(3){ animation-delay:.6s; }
 .play--reduced-motion .lg-wait__d{ animation:none; opacity:.6; }
+/* P-08 第四轮 等待放行:盖住故事流(与章节翻转门同层 130、同底色),标题在上,集合屏三点在屏幕正中 */
+.chhold{ position:fixed; inset:0; z-index:130; background:#1F1F21; display:flex; flex-direction:column; align-items:center; } /* ds-ok 同章节翻转门底色(chapter-flip .cf) */
+.chhold__t{ margin-top:var(--cy-space-6); font-size:var(--cy-type-page-title); font-weight:600; letter-spacing:.08em; color:var(--cy-color-text-primary); }
+.chhold__wait{ position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); margin:0; }
+.chhold--still .lg-wait__d{ animation:none; opacity:.6; }
 
 /* P1 足迹卡保存按钮(次级白描边) */
 

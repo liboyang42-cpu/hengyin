@@ -475,8 +475,13 @@
 
 <!-- 开局「开机」:黑场 → 白线横扫 → 暖光 → 淡出,压在第一道开场门上面,只放一次 -->
 <view class="st-boot st-boot--{{bootStage}}" wx:if="{{bootStage}}" aria-hidden="true"><view class="st-boot__warm"></view><view class="st-boot__line"></view></view>
-<cy-chapter-flip wx:if="{{chapterFull && chapterGate.show}}" mode="gate" faces="{{chapterGate.faces}}" end-info="{{chapterGate.endInfo}}" info="{{chapterGate.info}}" reduced-motion="{{reducedMotion}}" held="{{chapterGate.held}}" bind:continue="continueChapterGate" />
-<!-- P-08 带领场:本章还没放行时停在这张翻转门上(底部写「等队长放行」),不自己进正文;队长放行后由门自己接着进 -->
+<cy-chapter-flip wx:if="{{chapterFull && chapterGate.show && !chapterGate.held}}" mode="gate" faces="{{chapterGate.faces}}" end-info="{{chapterGate.endInfo}}" info="{{chapterGate.info}}" reduced-motion="{{reducedMotion}}" bind:continue="continueChapterGate" />
+<!-- P-08 第四轮(业主):带领场本章还没放行 → 不放翻转门,上方「等待放行」、屏幕中间集合屏同款三点等待(减弱动态时静止)。
+     这一屏没有真实动作,所以不放按钮。队长放行后换回正常的章节翻转门,播完照常进正文。 -->
+<view class="chhold {{reducedMotion ? 'chhold--still' : ''}}" wx:if="{{chapterFull && chapterGate.show && chapterGate.held}}" catchtouchmove="noop" aria-role="status" aria-label="等待放行">
+  <view class="chhold__t" style="padding-top:{{chrome.contentTop}}px">等待放行</view>
+  <view class="lg-wait chhold__wait" aria-hidden="true"><view class="lg-wait__d"></view><view class="lg-wait__d"></view><view class="lg-wait__d"></view></view>
+</view>
 
 <!-- ===================== 底部运行栈(Figma 3957:12602 未开始 / 3962:14212 进行中 / 3962:14341 已暂停) =====================
      一张读数卡 + 一条操作栏,三个状态共用同一套骨架,只换卡内内容与按钮组:

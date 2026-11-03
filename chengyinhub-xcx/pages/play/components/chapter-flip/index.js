@@ -18,11 +18,6 @@ Component({
     endInfo: { type: Object, value: null },         // 上一章完成:{ number:'01', kicker, title, stats:[{v,k}] }
     info: { type: Object, value: {} },              // 这一章 / 通关:{ kicker, title, desc, stats:[{v,k}] }
     reducedMotion: { type: Boolean, value: false },
-    // P-08 带领场:队长还没放行这一章 → 停在这一面,不自己进正文、轻点也不进;放行(held 变 false)后自己接着进
-    held: { type: Boolean, value: false },
-  },
-  observers: {
-    held(v) { if (!v && this._ready) this._continue(); },
   },
   data: { copy: null, quiet: false, cta: false, out: false },
   lifetimes: {
@@ -127,7 +122,7 @@ Component({
         this._showScene();
       }
       this._decode(this.data.info, fromEnd ? 700 : 300);
-      this._at(() => { this._ready = true; if (!this.data.held) this._continue(); }, fromEnd ? 3600 : 3000);
+      this._at(() => this._continue(), fromEnd ? 3600 : 3000);
     },
     _finale() {
       this._stage = 'finale';
@@ -162,7 +157,7 @@ Component({
       this._at(() => { this.setData({ quiet: false, cta: true }); this._decode(this.data.info, 0); }, CARD_AT_MS);
     },
     _continue() {
-      if (this._left || this.data.mode !== 'gate' || this.data.held) return;
+      if (this._left || this.data.mode !== 'gate') return;
       this._left = true;
       this._clear();
       this.setData({ out: true });

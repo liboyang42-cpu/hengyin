@@ -4060,7 +4060,7 @@ Page({
     const index = cards.findIndex(card => String(card.id) === String(chapter.id));
     this._pendingChapterGateKey = key;
     const flip = chapterFlip.buildGateFlip({ cards, chapterId: chapter.id, nodes: this.data.nodes, topicCover: this.data.topicCover, topicName: this.data.topicName, desc: introLine(chapter.description) }); if (chapter.opening) Object.assign(flip, { endInfo: null, info: { kicker: chapter.name === '序章' ? '' : '序章', title: chapter.name || '', desc: introLine(chapter.description), stats: [] } });
-    const held = !chapter.opening && this._leadHolds(chapter.id);   // P-08:停在门前等队长放行
+    const held = !chapter.opening && this._leadHolds(chapter.id);   // P-08:先停在「等待放行」屏,放行后才放翻转门
     this.setData({ chapterGate: Object.assign({ show: true, held, number: chapter.opening ? 0 : (index < 0 ? 1 : index + 1), // 眉标已写「序章 / 第 N 章 / 共 M 章」,副标题再放序数标签就是同一句印两遍(2026-09-22 走查)。
       total: Math.max(cards.length, 1), title: chapter.name || '', subtitle: '' }, flip) });
     // 2026-09-24 用户:章节门每章都要点一次太打断 —— 停 2.8 秒自己进正文,点一下仍可提前
@@ -4091,17 +4091,17 @@ Page({
     if (Number(this.data.mode) !== 1 || this.data.isPreview || this.data.isMock) return false;
     return leadHoldsChapter(this.data.lead, chapterId, this.data.chapterCards);
   },
-  /** P-08:队长放行了门前这一章 → 解开 held,翻转门自己淡出并发 continue;门没发出来时 4.2 秒兜底进正文。 */
+  /** P-08:队长放行了这一章 → 收起「等待放行」屏,换上正常的章节翻转门,播完照常发 continue 进正文;门没发出来时按原兜底计时进。 */
   _releaseChapterGate() {
     const key = this._pendingChapterGateKey;
     this.setData({ 'chapterGate.held': false });
     clearTimeout(this._gateTimer);
     this._gateTimer = setTimeout(() => {
       if (this.data.chapterGate.show && this._pendingChapterGateKey === key) this.continueChapterGate();
-    }, 4200);
+    }, this.data.chapterGate.endInfo ? 7800 : 4200);
   },
   continueChapterGate() {
-    // P-08:门在等队长放行时不出 continue;这里只是兜底,仍被挡着就留在门上
+    // P-08:等待放行屏上不会有 continue;这里只是兜底,仍被挡着就留在等待屏上
     if (this.data.chapterGate.held) {
       if (this._leadHolds((this.data.chapter || {}).id)) return;
       this.setData({ 'chapterGate.held': false });
