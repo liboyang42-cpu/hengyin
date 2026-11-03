@@ -133,6 +133,36 @@ public final class SensitiveWordMatcher {
         return logged;
     }
 
+    /**
+     * 仅供离线误伤报告脚本使用:列出文本里命中(且不在放行短语内)的归一后词条。
+     * 线上路径一律用 {@link #find},命中词不得回给用户或写进日志。
+     */
+    public List<String> matchedWordsForReport(String text) {
+        List<String> out = new ArrayList<String>();
+        if (size == 0 || text == null || text.isEmpty()) return out;
+        int[] cps = SensitiveTextNormalizer.normalize(text).codePoints().toArray();
+        int[] allowEnd = new int[cps.length];
+        for (int i = 0; i < cps.length; i++) {
+            Node n = root;
+            for (int j = i; j < cps.length; j++) {
+                n = n.next.get(cps[j]);
+                if (n == null) break;
+                if (n.allow) allowEnd[i] = j + 1;
+            }
+        }
+        for (int i = 0; i < cps.length; i++) {
+            Node n = root;
+            for (int j = i; j < cps.length; j++) {
+                n = n.next.get(cps[j]);
+                if (n == null) break;
+                if (n.action != null && !coveredByAllow(allowEnd, i, j + 1)) {
+                    out.add(new String(cps, i, j + 1 - i));
+                }
+            }
+        }
+        return out;
+    }
+
     private static boolean coveredByAllow(int[] allowEnd, int start, int end) {
         for (int s = 0; s <= start; s++) {
             if (allowEnd[s] >= end) return true;
