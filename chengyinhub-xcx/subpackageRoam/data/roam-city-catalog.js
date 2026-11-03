@@ -102,7 +102,7 @@ module.exports = {
         "主题书店",
         "文学空间"
       ],
-      "visitNote": "这是推荐收录的阅读空间，未标记为合作商家。",
+      "visitNote": "这是收录的阅读空间，未标记为合作商家。",
       "reviewedOn": "2026-10-23",
       "reviewMethod": "public_sources",
       "sources": [
@@ -162,7 +162,7 @@ module.exports = {
         "地方文献",
         "院落书店"
       ],
-      "visitNote": "推荐店铺；阅读空间开放与活动安排以书局公告为准。",
+      "visitNote": "书店；阅读空间开放与活动安排以书局公告为准。",
       "reviewedOn": "2026-10-23",
       "reviewMethod": "public_sources",
       "sources": [
@@ -242,7 +242,7 @@ module.exports = {
         "旧街肌理",
         "街角观察"
       ],
-      "visitNote": "周末与节假日可能热闹；推荐的是步行观察，不承诺人少。",
+      "visitNote": "周末与节假日可能热闹；收录看重的是步行观察，不承诺人少。",
       "reviewedOn": "2026-10-23",
       "reviewMethod": "public_sources",
       "sources": [
