@@ -10,6 +10,18 @@ Judge everything as the real user would. A passing API with a confusing screen i
 
 Every tagline, helper line and secondary label you see is a finding, with the layout change that would make it unnecessary. A second line carrying real data (a time, a count, a status, an amount) isn't a secondary label. Legal text and consent aren't either; mark those as such.
 
+## Leads from earlier rounds to run down
+
+Not yet explained; each owner lane says what's true:
+- 13 `scene-*` components now load asynchronously from subpackages, reached through `componentPlaceholder` (see `integ/ROUND7-RESULT.md`). First open of settings, merchant home scenes, coop finance, deep links and earnings: anything blank, flashing or stuck (p1, p2).
+- `pages/club/edit` showed 「当前账号无权进入该俱乐部」 for club lead 9003 with `?id=7001` while still rendering its form (j2, p3).
+- `pages/privacy/index` as a launch path jumps to home with a page error, same before the moves (p1).
+- `pages/topic/merchantinfo` rendered blank in the Round 7B walk when opened as a merchant (j2, p2).
+- 确认终价: 「请填写大于 0 的成团人数」 shows as a pink block with an icon. The owner's rule is red text under the field (p2).
+- Rig's anonymous `GET /api/city/nodes` returned 401 (j4).
+- Club settlement builds 「¥ -2.00」 in the backend, while the app now shows 「−¥」 (j2).
+- 「确认到点」 on the new platform places was not proven over HTTP (j4).
+
 ## Rules for every lane
 
 - Test only the exact commit named in your prompt, on `integ/launch-test-20261103`. Create your own branch `claude/check-1103-<lane>` from it, and commit only under `docs/delivery/check-20261103/<lane>/`. Never edit product code, never touch `integ/launch-test-20261103`, never push to master, never merge a PR, never touch production. Don't run `ci/xcx-check.sh` or `ds-hardcode-gate-selftest.sh`.
