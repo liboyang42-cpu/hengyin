@@ -566,7 +566,7 @@ function defaultConfig() {
     /* 罗盘指向(现场感契约 §3):bearing 初始留空 —— 它没有「没填也能过」的默认方向,
        编辑页的「对准当前方向取值」按钮(或手填 0 至 359)才是它的来源。
        容差与保持时长有合法默认,商家看得见、改得动,不算凭空代填。 */
-    compass: { enabled: false, kicker: '', bearing: '', tolerance: 15, holdSeconds: 3, hint: '', xp: 0 },
+    compass: { enabled: false, kicker: '', bearing: '', tolerance: 15, holdSeconds: 3, hint: '', xp: 0, allowSkip: false },
     /* 喊一嗓子(现场感契约 §4):阈值不入配置,由客户端开局现场校准 —— 与 quietHold 同一把尺。
        seconds 是「要连续喊满几秒」,掉线清零。 */
     shout: { enabled: false, kicker: '', seconds: 5, xp: 10 },
@@ -1005,6 +1005,8 @@ function normalize(model) {
     cmp.xp = num(cmp.xp, 0);
     cmp.tolerance = num(cmp.tolerance, 15);
     cmp.holdSeconds = num(cmp.holdSeconds, 3);
+    // P-23:读不出方向时允许 0 分跳过,默认关
+    cmp.allowSkip = cmp.allowSkip === true;
     const bearing = Number(cmp.bearing);
     if (cmp.bearing !== '' && cmp.bearing != null && Number.isFinite(bearing)) {
       cmp.bearing = bearing;

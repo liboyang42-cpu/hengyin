@@ -63,6 +63,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
@@ -463,6 +464,9 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         if(!selectedChallenge.isEmpty() && (normalizedAction.startsWith("SUBMIT_") || Arrays.asList("FLIP_COIN","ROLL_DICE","DRAW").contains(normalizedAction)) && !normalizedAction.equals(selectedAction))throw new IllegalArgumentException("恢复挑战只能提交选定玩法");
         if(!selectedChallenge.isEmpty() && "START_CHALLENGE".equals(normalizedAction) && !selectedChallenge.equals(safePayload.get("game")))throw new IllegalArgumentException("恢复挑战只能开始选定玩法");
         if(zeroChallengeSession && "REROLL_CHECK".equals(normalizedAction))throw new IllegalArgumentException("恢复挑战不消费幸运重掷");
+        // P-23:传感器跳过只走普通的一站;恢复挑战与按结果分支的玩法不许跳(跳过会被判成一个结果分支)
+        if (("REPORT_SENSOR_FAILURE".equals(normalizedAction) || "SKIP_SENSOR_STATION".equals(normalizedAction))
+                && (zeroChallengeSession || config.has("outcomeRules"))) throw new IllegalStateException("这一站不支持跳过");
         // R14:本次提交判定出的「选择」——分支步骤/选项、问答选项、玩法通过;判完当场写旅程本局状态。
         List<ChoiceRef> choices = new ArrayList<>();
         // 拍物成卡:这一趟真判过且节点是卡片玩法时非空。铸卡推迟到事务提交之后 ——
@@ -1138,6 +1142,67 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         if (session == null) return false;
         JsonNode config = readJson(session.getConfigSnapshotJson(), "高级玩法配置不可用");
         return !untrustedCompletionEvidence(config, objectState(session.getStateJson())).isEmpty();
+    }
+
+    @Override
+    public boolean sensorStationSkipped(Long memberId, Long activityId, Long topicId, Long nodeId) {
+        if (memberId == null || topicId == null || nodeId == null) return false;
+        GameRuntimeSession session = existingSession(memberId, activityId == null ? 0L : activityId, topicId, nodeId);
+        return session != null && AdvancedActionJudgement.skippedSensorSection(objectState(session.getStateJson())) != null;
+    }
+
+    @Override
+    public void releaseSensorStation(Long leaderMemberId, Long memberId, Long activityId, Long topicId, Long nodeId) {
+        if (leaderMemberId == null || memberId == null || activityId == null || activityId <= 0 || topicId == null || nodeId == null) {
+            throw new IllegalArgumentException("参数有误");
+        }
+        GameRuntimeSession found = existingSession(memberId, activityId, topicId, nodeId);
+        if (found == null) throw new ServiceException("该成员还没开始这一站", 409);
+        GameRuntimeSession session = sessionMapper.selectByIdForUpdate(found.getId());
+        if (session == null || !nodeId.equals(session.getNodeId()) || !activityId.equals(session.getActivityId())
+                || !topicId.equals(session.getTopicId())) throw new ServiceException("该成员还没开始这一站", 409);
+        if (!Integer.valueOf(GameRuntimeSession.STATUS_RUNNING).equals(session.getStatus())) throw new ServiceException("这一站已经结束了", 409);
+        JsonNode config = readJson(session.getConfigSnapshotJson(), "玩法配置不可用");
+        if (config.has("outcomeRules") || objectState(session.getStateJson()).has("zeroChallengeInstance")) {
+            throw new ServiceException("这一站不支持跳过", 409);
+        }
+        String game = null;
+        for (String section : AdvancedActionJudgement.SKIPPABLE_SENSOR_SECTIONS) if (enabled(config.get(section))) { game = section; break; }
+        if (game == null) throw new ServiceException("这一站不是传感器玩法，不能放行", 409);
+        ObjectNode state = objectState(session.getStateJson());
+        if (state.path(game).path("done").asBoolean(false)) throw new ServiceException("这一站已经完成了", 409);
+        ObjectNode released = state.with(game).with("releasedFor");
+        if (released.has(String.valueOf(memberId))) return;   // 重复放行:幂等
+        released.putObject(String.valueOf(memberId)).put("by", leaderMemberId).put("at", clock.now().getTime());
+        int oldVersion = session.getVersion();
+        session.setStateJson(writeJson(state));
+        session.setUpdateTime(clock.now());
+        if (sessionMapper.updateStateCas(session) != 1) throw new ServiceException("状态已更新，请重试", 409);
+        session.setVersion(oldVersion + 1);
+    }
+
+    @Override
+    public Map<Long, Long> pendingSensorSkips(Long activityId, Long topicId, Collection<Long> memberIds) {
+        Map<Long, Long> stuck = new LinkedHashMap<>();
+        if (activityId == null || topicId == null || memberIds == null) return stuck;
+        for (Long memberId : memberIds) {
+            if (memberId == null) continue;
+            for (GameRuntimeSession session : sessionMapper.selectPlayerSessionsByTopic(activityId, topicId, memberId)) {
+                if (!Integer.valueOf(GameRuntimeSession.STATUS_RUNNING).equals(session.getStatus())) continue;
+                ObjectNode state = objectState(session.getStateJson());
+                JsonNode config = readJson(session.getConfigSnapshotJson(), "玩法配置不可用");
+                for (String game : AdvancedActionJudgement.SKIPPABLE_SENSOR_SECTIONS) {
+                    JsonNode node = state.path(game);
+                    if (!enabled(config.get(game)) || node.path("done").asBoolean(false)) continue;
+                    // 作者已允许跳过的站,成员自己就能跳,不必再麻烦队长
+                    if (config.path(game).path("allowSkip").asBoolean(false) || node.path("releasedFor").has(String.valueOf(memberId))) continue;
+                    if (AdvancedActionJudgement.failedReads(state, game, memberId) >= AdvancedActionJudgement.SKIP_AFTER_FAILED_READS) {
+                        stuck.put(memberId, session.getNodeId());
+                    }
+                }
+            }
+        }
+        return stuck;
     }
 
     /**
@@ -2518,7 +2583,10 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             JsonNode cfg = config.path("estimate");
             JsonNode st = state.path("estimate");
             Map<String, Object> value = new LinkedHashMap<>();
-            putText(value, "question", cfg);
+            // P-09:编辑器与校验器把题干存在 title(必填);原来这里读不存在的 question 键,玩家只看到一个滚筒。
+            String question = cfg.path("title").asText("");
+            if (question.isEmpty()) question = cfg.path("question").asText("");
+            if (!question.isEmpty()) value.put("question", question);
             putText(value, "unit", cfg);
             value.put("min", cfg.path("min").asDouble(0d));
             value.put("max", cfg.path("max").asDouble(0d));
@@ -2526,6 +2594,12 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             value.put("attempts", st.path("attempts").asInt(0));
             value.put("submitted", st.path("submitted").asBoolean(false));
             value.put("tier", st.path("tier").asText(""));
+            // P-09:这一题只交一次;交过之后才给真值、你的估数与作者的揭示,交之前一个字都不给。
+            if (st.path("submitted").asBoolean(false)) {
+                value.put("guess", st.path("guess").asDouble());
+                value.put("answer", cfg.path("answer").asDouble());
+                putText(value, "reveal", cfg);
+            }
             kit.put("estimate", value);
         }
         /* 找东西:图要给,**热区坐标一个都不给** —— 坐标就是这个玩法唯一的防线。
@@ -2988,6 +3062,13 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             putText(value, "hint", cfg);
             value.put("xp", cfg.path("xp").asInt(0));
             value.put("done", state.path("compass").path("done").asBoolean(false));
+            // P-23:读不出方向时的出路。只告诉本人自己的失败次数与能不能跳,不下发别人的
+            value.put("allowSkip", cfg.path("allowSkip").asBoolean(false));
+            value.put("skipped", state.path("compass").path("skipped").asBoolean(false));
+            value.put("failedReads", AdvancedActionJudgement.failedReads(state, "compass", actorMemberId));
+            value.put("released", actorMemberId != null
+                    && state.path("compass").path("releasedFor").has(String.valueOf(actorMemberId)));
+            value.put("canSkip", AdvancedActionJudgement.canSkip(config, state, "compass", actorMemberId));
             actionJudgement().putAttempt(value, state, "compass", actorMemberId);
             value.put("evidence", "SELF_REPORTED");
             value.put("rewardCeiling", RewardPolicy.XP_BADGE_ONLY.name());
@@ -3169,11 +3250,34 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         Map<String, Object> vars = StoryVars.fromState(state);
         if (!vars.isEmpty()) view.put("vars", vars);
         if(config.has("outcomeRules") && enabled(config.get("check")))view.put("check",checkView(session,state,actorMemberId));
+        Map<String, Object> authored = authoredOutcomeFeedback(config, state);
+        if (authored != null) view.put("outcomeFeedback", authored);
         view.put("readyForBase", state.has("zeroChallengeInstance") ? state.path("challenge").path("success").asBoolean()
                 : Integer.valueOf(GameRuntimeSession.STATUS_COMPLETED).equals(session.getStatus())
                 || (Integer.valueOf(GameRuntimeSession.STATUS_RUNNING).equals(session.getStatus())
                 && (config.has("outcomeRules")?"PASS".equals(state.path("gameplayDecision").path("outcome").asText()):mechanicsReady(config, state))));
         return view;
+    }
+
+    /**
+     * P-10 / P-11:作者在模板「结果反馈」里给这次结果(通过 / 没通过)写了文字或配图时,判完之后告诉玩法屏。
+     * 只在本次已判出结果(gameplayDecision)之后下发,判之前一个字都不给;作者什么都没写时不出这个键,
+     * 玩法屏才用自己的兜底说法(「再想想」「对了」)。整屏判定仍由结算回执(lastOutcome)驱动,这里不另立一套结算。
+     */
+    static Map<String, Object> authoredOutcomeFeedback(JsonNode config, JsonNode state) {
+        if (config == null || !config.path("outcomeRules").isObject()) return null;
+        String outcome = state == null ? "" : state.path("gameplayDecision").path("outcome").asText("");
+        if (!"PASS".equals(outcome) && !"FAIL".equals(outcome)) return null;
+        JsonNode row = config.path("outcomeRules").path("PASS".equals(outcome) ? "pass" : "fail");
+        String reply = row.path("reply").isTextual() ? row.path("reply").asText().trim() : "";
+        List<String> images = new ArrayList<>();
+        for (JsonNode one : row.path("images")) if (one.isTextual() && !one.asText().isEmpty() && images.size() < 3) images.add(one.asText());
+        if (reply.isEmpty() && images.isEmpty()) return null;
+        Map<String, Object> value = new LinkedHashMap<>();
+        value.put("outcome", outcome);
+        value.put("reply", reply);
+        value.put("images", images);
+        return value;
     }
 
     private ObjectNode checkView(GameRuntimeSession session,ObjectNode state,Long memberId) {

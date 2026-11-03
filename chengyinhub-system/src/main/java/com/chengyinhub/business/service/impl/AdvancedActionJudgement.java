@@ -58,7 +58,9 @@ public final class AdvancedActionJudgement {
         SUBMIT_MATCH,
         SUBMIT_CLASSIFY,
         SUBMIT_COMPARE,
-        SUBMIT_TYPE_IN
+        SUBMIT_TYPE_IN,
+        REPORT_SENSOR_FAILURE,
+        SKIP_SENSOR_STATION
     }
     record Input(JsonNode config, ObjectNode state, Map<String,Object> payload, Integer score, Long memberId) {}
     record ChoiceRef(String stepOrKit, String optionId) {}
@@ -107,6 +109,8 @@ public final class AdvancedActionJudgement {
             case SUBMIT_CLASSIFY -> addIfPresent(choices, submitClassify(config, state, payload, score));
             case SUBMIT_COMPARE -> submitCompare(config, state, payload, score);
             case SUBMIT_TYPE_IN -> submitTypeIn(config, state, payload, score);
+            case REPORT_SENSOR_FAILURE -> reportSensorFailure(config, state, payload, input.memberId());
+            case SKIP_SENSOR_STATION -> skipSensorStation(config, state, payload, input.memberId());
         }
         return new Plan(state, score.getScore(), score.scoreAssigned, List.copyOf(choices), score.photoEvidence);
     }
@@ -143,6 +147,16 @@ public final class AdvancedActionJudgement {
     static final List<String> SELF_REPORTED_SECTIONS = Collections.unmodifiableList(
             Arrays.asList("reaction", "ballShake", "quietHold", "shout", "stopwatch", "compass"));
     private static final String TEAM_MEMBER_CHALLENGES = "teamMemberChallenges";
+
+    /**
+     * P-23(2026-11-02 业主批准):传感器读不出数时的出路。只对这几段开放 —— 它们的完成全靠本机传感器,
+     * 设备没有这个传感器就永远过不去。有对错的玩法(问答、排序……)不在这里,跳过等于送答案。
+     */
+    static final List<String> SKIPPABLE_SENSOR_SECTIONS = Collections.unmodifiableList(Arrays.asList("compass"));
+    /** 本人连续读取失败几次后才许跳过 */
+    static final int SKIP_AFTER_FAILED_READS = 2;
+    /** 失败次数只为跨过门槛,封顶免得刷成大数 */
+    private static final int MAX_COUNTED_FAILED_READS = 9;
 
     /** 选中选项的“选中后的反馈”图片(每个选项最多 3 张,多选按选择顺序),写进本局状态供重入回读。 */
     private static void putFeedbackImages(ObjectNode node, List<JsonNode> picked) {
@@ -366,6 +380,8 @@ public final class AdvancedActionJudgement {
             // 罗盘只有「对准了」这一个终局(没对准直接拒收),计步只有「达标」这一个终局。
             case "SUBMIT_COMPASS": return state.path("compass").path("done").asBoolean(false) ? Boolean.TRUE : null;
             case "SUBMIT_STEPS": return state.path("steps").path("reached").asBoolean(false) ? Boolean.TRUE : null;
+            // P-23:跳过记成「没过」—— 这一站走完了,但不是对准的;不扣血(不在 judgedOutcome 里)
+            case "SKIP_SENSOR_STATION": return skippedSensorSection(state) != null ? Boolean.FALSE : null;
             // 猜数字:猜中才算过;接近(CLOSE)有安慰分,但不是「猜中」。
             case "SUBMIT_ESTIMATE": {
                 String tier = state.path("estimate").path("tier").asText("");
@@ -1396,6 +1412,76 @@ public final class AdvancedActionJudgement {
             node.put("awarded", true);
             score.setScore(value(score.getScore()) + xp);
         }
+    }
+
+    /** 跳过/报失败的那一段:payload.game 必须是可跳过的传感器段,且本局开着它。 */
+    private static String skippableSection(JsonNode config, Map<String, Object> payload) {
+        Object raw = payload == null ? null : payload.get("game");
+        String game = raw == null ? "" : String.valueOf(raw).trim();
+        if (!SKIPPABLE_SENSOR_SECTIONS.contains(game)) throw new IllegalArgumentException("这一项不支持跳过");
+        if (!enabled(config.get(game))) throw new IllegalArgumentException("本站没有这个玩法");
+        return game;
+    }
+
+    /** 本人在这一段上记下的读取失败次数 */
+    static int failedReads(JsonNode state, String game, Long memberId) {
+        return memberId == null ? 0 : state.path(game).path("failedReads").path(String.valueOf(memberId)).asInt(0);
+    }
+
+    /** 本人能否跳过:作者勾了「允许跳过」或队长现场放行了本人,且本人已连续读取失败够次数。 */
+    static String skipGrant(JsonNode config, JsonNode state, String game, Long memberId) {
+        if (memberId == null) return null;
+        if (config.path(game).path("allowSkip").asBoolean(false)) return "AUTHOR";
+        return state.path(game).path("releasedFor").has(String.valueOf(memberId)) ? "LEADER" : null;
+    }
+
+    static boolean canSkip(JsonNode config, JsonNode state, String game, Long memberId) {
+        return !state.path(game).path("done").asBoolean(false)
+                && skipGrant(config, state, game, memberId) != null
+                && failedReads(state, game, memberId) >= SKIP_AFTER_FAILED_READS;
+    }
+
+    /** 被跳过的那一段(没有 = null) */
+    static String skippedSensorSection(JsonNode state) {
+        for (String game : SKIPPABLE_SENSOR_SECTIONS) if (state.path(game).path("skipped").asBoolean(false)) return game;
+        return null;
+    }
+
+    /**
+     * 客户端报「这台设备没读出数」。只计数,不改完成;本人各计各的,队友的失败不替本人攒门槛。
+     * 已经完成的一段不再计。
+     */
+    private static void reportSensorFailure(JsonNode config, ObjectNode state, Map<String, Object> payload, Long memberId) {
+        String game = skippableSection(config, payload);
+        if (memberId == null) throw new IllegalArgumentException("参数有误");
+        ObjectNode node = state.with(game);
+        if (node.path("done").asBoolean(false)) return;
+        ObjectNode reads = node.with("failedReads");
+        String key = String.valueOf(memberId);
+        reads.put(key, Math.min(MAX_COUNTED_FAILED_READS, reads.path(key).asInt(0) + 1));
+    }
+
+    /**
+     * P-23 跳过这一站:0 分完成并记下是谁、凭什么跳的。门槛三条全在服务端:
+     * 段可跳过、本人读取失败够次数、作者允许或队长放行了本人。不发这一段的 xp。
+     */
+    private static void skipSensorStation(JsonNode config, ObjectNode state, Map<String, Object> payload, Long memberId) {
+        String game = skippableSection(config, payload);
+        if (memberId == null) throw new IllegalArgumentException("参数有误");
+        ObjectNode node = state.with(game);
+        if (node.path("done").asBoolean(false)) {
+            if (node.path("skipped").asBoolean(false)) return;   // 重放:已经跳过了
+            throw new IllegalStateException("这一站已经完成了");
+        }
+        if (failedReads(state, game, memberId) < SKIP_AFTER_FAILED_READS) {
+            throw new IllegalStateException("读取失败两次后才能跳过这一站");
+        }
+        String grant = skipGrant(config, state, game, memberId);
+        if (grant == null) throw new IllegalStateException("这一站不允许跳过");
+        node.put("done", true);
+        node.put("skipped", true);
+        node.put("skippedBy", memberId);
+        node.put("skipVia", grant);
     }
 
     /** 两方位角的最小夹角:罗盘绕 360,359° 与 1° 相差 2° 而不是 358°(契约 §6.2 钉死的口径)。 */

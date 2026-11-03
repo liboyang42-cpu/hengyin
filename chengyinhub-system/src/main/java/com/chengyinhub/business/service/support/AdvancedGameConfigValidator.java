@@ -2468,6 +2468,10 @@ public class AdvancedGameConfigValidator {
             throw new IllegalArgumentException("罗盘保持时长须为 1 至 10 秒");
         }
         optionalText(cfg, "hint", 60, "罗盘提示语不能超过 60 字");
+        // P-23:作者可勾「允许跳过」,默认关;读取失败两次后玩家才能 0 分跳过
+        if (cfg.has("allowSkip") && !cfg.get("allowSkip").isBoolean()) {
+            throw new IllegalArgumentException("罗盘「允许跳过」须为是或否");
+        }
         validateXp(cfg, "罗盘指向");
     }
 

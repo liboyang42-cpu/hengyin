@@ -566,6 +566,38 @@ class ApiPlayProgressCompletionTruthTest
         verify(proofService,never()).hasArrived(anyLong(),anyLong(),anyLong());
     }
 
+    /** P-02 + P-11:作者用、分隔的任一答案都能过;答对回执才带上作者的揭示。 */
+    @Test
+    void alternativeAnswerPassesAndOnlyTheCorrectReceiptCarriesTheReveal() {
+        topic.setProductType(ProductType.FREE_EXPLORE);
+        topic.setJourneyRulesJson("{\"schemaVersion\":1,\"checkEnabled\":false,\"thoughts\":["
+                + "{\"key\":\"echo\",\"name\":\"回声\",\"need\":1}]}");
+        node.setTemplateId(900L);
+        CmsMemberTemplate tpl = new CmsMemberTemplate();
+        tpl.setValidationMethod(1); tpl.setQuestionAnswer("7、七、第七根");
+        when(templateService.selectCmsMemberTemplateById(900L)).thenReturn(tpl);
+        when(progressService.insertPlayerNodeProgress(any())).thenAnswer(call -> {
+            ((PlayerNodeProgress) call.getArgument(0)).setId(901L);
+            return 1;
+        });
+        com.chengyinhub.web.service.TopicRouteCompletionCoordinator coordinator =
+                mock(com.chengyinhub.web.service.TopicRouteCompletionCoordinator.class);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller,"topicRouteCompletionCoordinator",coordinator);
+        com.chengyinhub.business.domain.route.TopicRouteState state =
+                new com.chengyinhub.business.domain.route.TopicRouteState();
+        state.setRouteMode("LINEAR"); state.setStatus("ACTIVE");
+        when(coordinator.advanceOriginal(eq(PLAYER),eq(TOPIC),eq(ACTIVITY),eq(NODE),eq(99L),eq("answer-1"),eq(2),
+                eq("player-node-progress:901"),isNull(),isNull())).thenReturn(state);
+        BasicPlayCommandFixtures.frozenRun(controller,ACTIVITY,TOPIC,NODE,2,new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode()
+                .put("validationMethod",1).put("questionAnswer","7、七、第七根").put("answerReveal","第 7 根。老周在这里留下了第二张字条。"));
+        AjaxResult wrong = BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "6", null, "answer-0", 2);
+        assertNotEquals(200, wrong.get("code"));
+        org.junit.jupiter.api.Assertions.assertFalse(String.valueOf(wrong.get("data")).contains("老周"), "答错不得带揭示");
+        AjaxResult result = BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "第七根", null, "answer-1", 2);
+        assertEquals(200, result.get("code"));
+        assertEquals("第 7 根。老周在这里留下了第二张字条。", ((Map<String, Object>) result.get("data")).get("answerReveal"));
+    }
+
     /** 负控:业务拒绝(下架站)不许带 answerWrong —— 否则连碰两次业务错误就解锁「揭示答案」。 */
     @Test
     void businessRefusalResponseDoesNotCarryTheAnswerWrongMarker()

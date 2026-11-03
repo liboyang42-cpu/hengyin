@@ -99,6 +99,8 @@ public class ApiClubLeadController extends BaseController {
     private ICmsRegistrationScanService registrationScanService;
     @Autowired
     private IGrowthService growthService;
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.IAdvancedGameRuntimeService advancedGameRuntimeService;
 
     private Long uid() {
         try { return getAppUserId(); } catch (Exception e) { return 0L; }
@@ -468,7 +470,51 @@ public class ApiClubLeadController extends BaseController {
             members.add(m);
         }
         data.put("members", members);
+        // P-23:只给队长看谁卡在传感器站上(读取失败两次、没完成、还没放行),队长可现场放行
+        if (memberId.equals(st.getLeaderMemberId()) && advancedGameRuntimeService != null) {
+            CmsActivity act = cmsActivityService.selectCmsActivityById(activityId);
+            List<Map<String, Object>> skipRequests = new ArrayList<>();
+            if (act != null && act.getTopicId() != null) {
+                Map<Long, String> names = new HashMap<>();
+                for (Map<String, Object> m : members) names.put((Long) m.get("memberId"), (String) m.get("nickname"));
+                Set<Long> players = new HashSet<>(paidIds);
+                players.remove(st.getLeaderMemberId());
+                for (Map.Entry<Long, Long> stuck : advancedGameRuntimeService.pendingSensorSkips(activityId, act.getTopicId(), players).entrySet()) {
+                    Map<String, Object> row = new LinkedHashMap<>();
+                    row.put("memberId", stuck.getKey());
+                    row.put("nickname", names.getOrDefault(stuck.getKey(), ""));
+                    row.put("nodeId", stuck.getValue());
+                    skipRequests.add(row);
+                }
+            }
+            data.put("skipRequests", skipRequests);
+        }
         return success(data);
+    }
+
+    @Operation(summary = "队长现场放行成员卡住的传感器站(P-23;放行后由成员本人点跳过)")
+    @PostMapping("/release-station")
+    @Transactional(rollbackFor = Exception.class)
+    public AjaxResult releaseStation(Long activityId, Long memberId, Long nodeId) {
+        Long leaderId = uid();
+        if (leaderId <= 0) return error("请先登录");
+        if (activityId == null || activityId <= 0 || memberId == null || memberId <= 0 || nodeId == null || nodeId <= 0) {
+            return error("参数有误");
+        }
+        if (advancedGameRuntimeService == null) return error("暂不支持现场放行");
+        CmsActivity activity = cmsActivityService.selectCmsActivityById(activityId);
+        if (activity == null || activity.getClubId() == null || activity.getClubId() <= 0) return error("该场次不是带领场");
+        if (!leaderId.equals(resolveLeaderMemberId(activity))) return error("只有本场队长可以放行");
+        ClubLeadState st = ensureState(activityId);
+        if (st == null) return error("该场次不是带领场");
+        if (!Integer.valueOf(2).equals(st.getStatus())) return error("仅行进中的场次可放行");
+        if (memberId.equals(leaderId) || !canAccessLeadActivity(activityId, memberId, null)) return error("该成员不在本场");
+        try {
+            advancedGameRuntimeService.releaseSensorStation(leaderId, memberId, activityId, activity.getTopicId(), nodeId);
+        } catch (com.chengyinhub.common.exception.ServiceException | IllegalArgumentException | IllegalStateException e) {
+            return error(e.getMessage());
+        }
+        return AjaxResult.success("已放行，成员可以跳过这一站");
     }
 
     /** 队伍实时数据只向本场领队或已完成支付的本场报名者开放。 */

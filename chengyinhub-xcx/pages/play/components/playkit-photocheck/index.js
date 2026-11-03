@@ -42,9 +42,12 @@ Component({
     frameOpacity: { type: Number, value: 40 },
     // 拍物成卡:判过时服务端随本次回包带回来的那张卡(契约 §10.2)。null = 这一屏没有卡。
     card: { type: Object, value: null },
+    // P-24:页面上传失败一次就 +1(单调递增);组件只认比见过的大,屏上写「上传失败，请重拍」
+    photoFailSeq: { type: Number, value: 0 },
   },
   data: {
     busy: false,
+    uploadFail: '',
     triesLabel: '',
     verdict: '',
     verdictKind: '',
@@ -58,6 +61,12 @@ Component({
     outlineFailed: false,
   },
   observers: {
+    photoFailSeq: function (seq) {
+      const n = Number(seq) || 0;
+      if (n <= (this._seenFailSeq || 0)) return;
+      this._seenFailSeq = n;
+      this.setData({ uploadFail: '上传失败，请重拍', busy: false });
+    },
     'photoVerified, rewardCeiling, passed': function (photoVerified, rewardCeiling, passed) {
       this.setData({
         verifiedNote: passed && photoVerified === true ? PHOTO_VERIFIED_NOTE : '',
@@ -118,6 +127,7 @@ Component({
      */
     onShoot() {
       if (this.data.busy || this.data.passed || this.data.flagged) return;
+      if (this.data.uploadFail) this.setData({ uploadFail: '' });
       /* ⚠️ 内嵌呈现(故事流里就地玩)不进页内取景:.chfull__para 恒带 transform:scale() 与
          filter:blur()(见 pages/play/index.wxml 那一行的行内样式,值永远是数字、不是 none),
          非 none 的 transform/filter 会成为 position:fixed 后代的包含块 —— 取景层会被圈进
