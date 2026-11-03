@@ -895,6 +895,78 @@ test('定向广播先用权威队伍成员数预览范围，再按锁定契约�
   })
 })
 
+test('2026-11-01 广播按人选:点头像加减,恰好整组仍按组发,否则按人发;名单不全不给按人选', async () => {
+  const writes = []
+  const projection = {
+    sessionId: 9001, activityId: 701, status: 'RUNNING', revision: 9,
+    availableActions: ['BROADCAST'], currentChapterId: 31,
+    readiness: { requiredStations: null, readyStations: null, teamsReady: null, blockers: [], canStart: false },
+    stations: [],
+    teams: [{ teamId: 11, name: '三队', memberCount: 2 }, { teamId: 12, name: '四队', memberCount: 1 }],
+    roles: [
+      { teamId: 11, memberId: 101, memberName: '林', roleCode: 'SCOUT', roleName: '侦察员', confirmationStatus: 'CONFIRMED' },
+      { teamId: 11, memberId: 102, memberName: '周', roleCode: 'KEEPER', roleName: '守护员', confirmationStatus: 'CONFIRMED' },
+      { teamId: 12, memberId: 103, memberName: '鹿', roleCode: 'SCOUT', roleName: '侦察员', confirmationStatus: 'CONFIRMED' },
+    ],
+    roleOptions: [{ roleCode: 'SCOUT', roleName: '侦察员' }, { roleCode: 'KEEPER', roleName: '守护员' }],
+    broadcasts: [], leaderboard: null, recap: null,
+  }
+  const harness = loadDirector({
+    load() { return Promise.resolve(projection) },
+    submit(input) { writes.push(input); return Promise.resolve({ state: 'unknown-write', requestId: input.requestId }) },
+    readReceipt() { return Promise.resolve({ state: 'pending' }) },
+  })
+  harness.page.initDirector('701')
+  await settle()
+  const page = harness.page
+
+  page.openBroadcast()
+  assert.equal(page.data.broadcastCountText, '3 人 · 2 队')
+  assert.deepEqual(page.data.broadcastAudience.map((m) => m.picked), [true, true, true])
+  page.onBroadcastPersonToggle({ detail: { id: '103' } })
+  assert.equal(page.data.broadcastCountText, '2 人 · 1 队')
+  assert.equal(page.data.broadcastSendText, '发送给 2 人')
+  page.onBroadcastPersonToggle({ detail: { id: '102' } })
+  page.onBroadcastContentInput({ detail: { value: '集合' } })
+  page.confirmBroadcast()
+  await settle()
+  assert.deepEqual(JSON.parse(JSON.stringify(writes[0].payload)), { targetType: 'MEMBERS', memberIds: [101], content: '集合' })
+})
+
+test('2026-11-01 广播按队伍:一行整队加减可选两队;全部取消不能发', async () => {
+  const projection = {
+    sessionId: 9001, activityId: 701, status: 'RUNNING', revision: 9,
+    availableActions: ['BROADCAST'], currentChapterId: 31,
+    readiness: { requiredStations: null, readyStations: null, teamsReady: null, blockers: [], canStart: false },
+    stations: [],
+    teams: [{ teamId: 11, name: '三队', memberCount: 2 }, { teamId: 12, name: '四队', memberCount: 1 }],
+    roles: [
+      { teamId: 11, memberId: 101, memberName: '林', roleCode: 'SCOUT' }, { teamId: 11, memberId: 102, memberName: '周', roleCode: 'KEEPER' },
+      { teamId: 12, memberId: 103, memberName: '鹿', roleCode: 'SCOUT' },
+    ],
+    roleOptions: [], broadcasts: [], leaderboard: null, recap: null,
+  }
+  const harness = loadDirector({
+    load() { return Promise.resolve(projection) },
+    submit() { return Promise.resolve({ state: 'confirmed' }) },
+    readReceipt() { return Promise.resolve({ state: 'pending' }) },
+  })
+  harness.page.initDirector('701')
+  await settle()
+  const page = harness.page
+  page.openBroadcast()
+  page.selectBroadcastTargetType({ detail: { id: 'TEAM' } })
+  assert.equal(page.data.broadcastCountText, '2 人 · 1 队')
+  assert.deepEqual(page.data.broadcastTargetRows.map((r) => r.on), [true, false])
+  page.onBroadcastTargetChange({ detail: { id: 12 } })
+  assert.equal(page.data.broadcastCountText, '3 人 · 2 队')
+  assert.deepEqual(page.data.broadcastTargetRows.map((r) => r.on), [true, true])
+  page.onBroadcastTargetChange({ detail: { id: 11 } })
+  page.onBroadcastTargetChange({ detail: { id: 12 } })
+  assert.equal(page.data.broadcastSendText, '先选收件人')
+  assert.equal(page.data.broadcastPreviewReady, false)
+})
+
 test('广播范围缺成员数时显示待确认且禁止发送，不写成 0 人', async () => {
   const writes = []
   const projection = {

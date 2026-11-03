@@ -140,6 +140,10 @@ public interface GameSessionRuntimeMapper {
                                   @Param("targetId") Long targetId,
                                   @Param("roleCode") String roleCode,
                                   @Param("now") Date now);
+    int insertBroadcastMemberDeliveries(@Param("broadcastId") Long broadcastId,
+                                        @Param("activityId") Long activityId,
+                                        @Param("memberIds") List<Long> memberIds,
+                                        @Param("now") Date now);
     List<GameBroadcastDelivery> selectPendingDeliveries(Long broadcastId);
     GameBroadcast selectBroadcast(Long id);
     int resetFailedDeliveries(@Param("broadcastId") Long broadcastId, @Param("now") Date now);
