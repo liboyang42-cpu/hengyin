@@ -30,6 +30,7 @@ function setByPath(target, dataPath, value) {
 function loadApply() {
   const requests = []
   const toasts = []
+  const scrolls = []
   const imageCallbacks = []
   const locationRequests = []
   let definition
@@ -49,6 +50,7 @@ function loadApply() {
     chooseLocation(options) { locationRequests.push(options) },
     openSetting() {},
     nextTick() {},
+    pageScrollTo(options) { scrolls.push(options) },
   }
   const sandbox = {
     Array, Date, Math, Object, RegExp, String,
@@ -88,7 +90,8 @@ function loadApply() {
   }
   page.ensureIdentityStatus = () => {}
   Object.assign(page.data, { bootstrapState: 'ready', mode: 'form', introMode: false })
-  return { page, requests, toasts, imageCallbacks, locationRequests }
+  const lastScroll = () => (scrolls.length ? scrolls[scrolls.length - 1].selector : '')
+  return { page, requests, toasts, imageCallbacks, locationRequests, scrolls, lastScroll }
 }
 
 function input(page, field, value) {
@@ -100,7 +103,7 @@ function registrationRequests(requests) {
 }
 
 test('商家入驻第 1 步:漏填写在各栏下方红字、滚到第一条、不弹提示也不前进;改填即清', () => {
-  const { page, requests, toasts } = loadApply()
+  const { page, requests, toasts, lastScroll, scrolls } = loadApply()
   page.refreshStep(1)
   assert.equal(page.data.canNext, false)
 
@@ -108,7 +111,8 @@ test('商家入驻第 1 步:漏填写在各栏下方红字、滚到第一条、�
   assert.deepEqual(toasts, [], '不再弹提示')
   assert.equal(page.data.fieldErrors.name, '请填写店铺名称')
   assert.equal(page.data.fieldErrors.phone, '请填写联系电话')
-  assert.equal(page.data.scrollIntoId, 'apply-field-name', '滚到第一条')
+  assert.equal(lastScroll(), '#apply-field-name', '滚到第一条')
+  assert.equal(scrolls[0].offsetTop, -(20 + 44 + 12), '让出固定导航栏')
   page.onNext()
   assert.equal(page.data.step, 1, '拦截不变:按钮仍置灰,点了不前进')
   assert.equal(registrationRequests(requests).length, 0)
@@ -117,20 +121,20 @@ test('商家入驻第 1 步:漏填写在各栏下方红字、滚到第一条、�
   assert.equal(page.data.fieldErrors.name, '', '改填店名即清')
   assert.equal(page.data.fieldErrors.phone, '请填写联系电话', '另一栏不受影响')
   page.onNextDisabledTap()
-  assert.equal(page.data.scrollIntoId, 'apply-field-phone', '滚到剩下的第一条')
+  assert.equal(lastScroll(), '#apply-field-phone', '滚到剩下的第一条')
   input(page, 'phone', '13800138000')
   assert.equal(page.data.fieldErrors.phone, '')
   assert.equal(page.data.canNext, true)
 })
 
 test('商家入驻第 2、3 步:地址、经营时间、营业执照漏填写在各栏下方;选好即清', () => {
-  const { page, toasts, imageCallbacks, locationRequests } = loadApply()
+  const { page, toasts, imageCallbacks, locationRequests, lastScroll } = loadApply()
   page.refreshStep(2)
   page.onNextDisabledTap()
   assert.deepEqual(toasts, [])
   assert.equal(page.data.fieldErrors.address, '请填写店铺地址')
   assert.equal(page.data.fieldErrors.businessTime, '请选择营业时间')
-  assert.equal(page.data.scrollIntoId, 'apply-field-address')
+  assert.equal(lastScroll(), '#apply-field-address')
 
   page.openLocationPicker()
   locationRequests[0].success({ address: '上海市某路 1 号', latitude: 31.2, longitude: 121.4 })
@@ -144,20 +148,20 @@ test('商家入驻第 2、3 步:地址、经营时间、营业执照漏填写在
   page.onNextDisabledTap()
   assert.deepEqual(toasts, [])
   assert.equal(page.data.fieldErrors.businessLicense, '请上传营业执照')
-  assert.equal(page.data.scrollIntoId, 'apply-field-businessLicense')
+  assert.equal(lastScroll(), '#apply-field-businessLicense')
   page.uploadLicense()
   imageCallbacks[0](['https://example.invalid/license.jpg'])
   assert.equal(page.data.fieldErrors.businessLicense, '')
 })
 
 test('商家入驻第 4 步:姓名/证件号问题写在各栏下方;只差单独同意时仍按原样弹提示', () => {
-  const { page, toasts } = loadApply()
+  const { page, toasts, lastScroll } = loadApply()
   page.refreshStep(4)
   page.onNextDisabledTap()
   assert.deepEqual(toasts, [])
   assert.equal(page.data.fieldErrors.realName, '请填写真实姓名')
   assert.equal(page.data.fieldErrors.idCard, '身份证号格式不正确，请确认后重填')
-  assert.equal(page.data.scrollIntoId, 'apply-field-realName')
+  assert.equal(lastScroll(), '#apply-field-realName')
 
   input(page, 'realName', '林一2')
   page.onNextDisabledTap()
@@ -235,9 +239,8 @@ test('商家入驻:报过错再改正后提交,载荷与直接填对完全一致
     'description', 'id', 'locationLat', 'locationLng', 'name', 'phone', 'preference'].sort(), '载荷字段不增不减')
 })
 
-test('商家入驻页面结构:每个必填栏有红色 * 和其下方 kind="error" 的 cy-inline-error,滚动容器接 scrollIntoId', () => {
+test('商家入驻页面结构:每个必填栏有红色 * 和其下方 kind="error" 的 cy-inline-error,供 pageScrollTo 定位的 id', () => {
   const wxml = fs.readFileSync(APPLY_WXML, 'utf8')
-  assert.match(wxml, /<scroll-view scroll-y class="body" scroll-into-view="\{\{scrollIntoId\}\}"/)
   for (const key of ['name', 'phone', 'address', 'businessTime', 'businessLicense', 'realName', 'idCard']) {
     const start = wxml.indexOf(`id="apply-field-${key}"`)
     assert.ok(start > 0, `缺少 #apply-field-${key}`)

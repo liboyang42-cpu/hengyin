@@ -9,8 +9,6 @@ const { isLoginRequired, retryLogin } = require('../../../utils/session/login-re
 const STEP_TITLES = ['基础信息', '经营信息', '资质信息', '预览确认'];
 const STEP_EYEBROWS = ['商家入驻', '经营信息', '资质审核', '提交前确认'];
 const STEP_HEADLINES = ['先认识你的店', '告诉大家怎样找到你', '补齐审核需要的资料', '确认这份入驻信息'];
-// 第五轮 D:字段在页面上的先后,滚动到第一条红字时用。
-const APPLY_FIELD_ORDER = ['name', 'phone', 'address', 'businessTime', 'businessLicense', 'realName', 'idCard'];
 // 时/分选项与 HH:mm 格式化的单一真源(补零口径全仓一致)
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
 const wizardMorph = require('../../../utils/wizard-morph.js');
@@ -94,11 +92,7 @@ Page({
     identityConsented: false,
     identityHint: publisherIdentity.CONSENT_TEXT,
     identityDoneHint: publisherIdentity.ALREADY_REGISTERED_HINT,
-    canNext: false,
-    // 第五轮 D(业主):输入问题写在对应字段下方红字,不再弹提示。键 = 字段名。
-    fieldErrors: {},
-    hoursErrors: { days: '', time: '' },
-    scrollIntoId: '',
+    canNext: false, fieldErrors: {}, hoursErrors: { days: '', time: '' }, // 第五轮 D:字段下方红字(键 = 字段名)
     submitting: false,
     submitError: '',
     submitErrorKind: '',
@@ -362,7 +356,8 @@ Page({
     else { this.submit(); }
   },
   onInput(e) { var f = e.currentTarget.dataset.field;
-    this.setData({ [f]: e.detail.value, ['fieldErrors.' + f]: '' }, this.validate);
+    this.setData({ [f]: e.detail.value }, this.validate);
+    if (this.data.fieldErrors[f]) this.setData({ fieldErrors: Object.assign({}, this.data.fieldErrors, { [f]: '' }) });
   },
 
   // 置灰的「继续/提交」被点 → 报出本步第一条没交的必填,别让按钮静默地按不动。
@@ -395,12 +390,13 @@ Page({
     this.scrollToField(keys[0]);
   },
 
-  // scroll-into-view 同值不会再滚,先清空再设。
+  // 本页随页面整体滚动(.page 是 min-height,scroll-view 不限高),所以用 pageScrollTo;
+  // 顶部固定导航栏会盖住目标,向上让出导航栏高度再留一点间距。
   scrollToField(key) {
-    var that = this;
-    this.setData({ scrollIntoId: '' }, function () {
-      that.setData({ scrollIntoId: 'apply-field-' + key });
-    });
+    if (typeof wx === 'undefined' || typeof wx.pageScrollTo !== 'function') return;
+    var d = this.data;
+    var navHeight = (Number(d.statusBarHeight) || 0) + (Number(d.navBarHeight) || 0);
+    wx.pageScrollTo({ selector: '#apply-field-' + key, duration: 250, offsetTop: -(navHeight + 12) });
   },
 
   validate() {
@@ -689,3 +685,6 @@ function currentIdentityKey() {
   var userId = typeof app.getUserID === 'function' ? app.getUserID() : app.globalData && app.globalData.user_id;
   return String(userId || '');
 }
+
+// 第五轮 D:字段在页面上的先后,滚动到第一条红字时用。
+const APPLY_FIELD_ORDER = ['name', 'phone', 'address', 'businessTime', 'businessLicense', 'realName', 'idCard'];

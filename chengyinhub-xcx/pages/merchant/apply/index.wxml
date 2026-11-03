@@ -48,7 +48,7 @@
 
   <!-- 开场屏在时这层要整个关掉:它带 flex:1,空着也占一半高度,
        会把贴底的开场屏顶上去(实测)。只在「ready+form+开场」这一态关。 -->
-  <scroll-view scroll-y class="body" scroll-into-view="{{scrollIntoId}}" wx:if="{{!(bootstrapState === 'ready' && mode==='form' && introMode && !morphing)}}">
+  <scroll-view scroll-y class="body" wx:if="{{!(bootstrapState === 'ready' && mode==='form' && introMode && !morphing)}}">
     <view class="bootstrap-state" wx:if="{{bootstrapState === 'checking-role'}}">
       <cy-state-shell kind="loading" title="正在确认申请资格" theme="merchant" />
     </view>

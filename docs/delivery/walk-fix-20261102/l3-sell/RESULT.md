@@ -202,4 +202,92 @@ Not included: load and network failures, permission and state notices, success m
 - `<input type="digit">` on iOS and Android for the per-ticket fields.
 - Safe-area insets.
 
-STATUS: PARTIAL - P-34 and several ticket prices are fixed and proven over HTTP. In the sweep, every blue input-error box and every repeated pop-up is fixed. About 160 input pop-ups that need per-field error state built page by page are listed with file:line and left for follow-up (see "Needs owner (round 4)").
+Round 4 status: PARTIAL - P-34 and several ticket prices are fixed and proven over HTTP. In the sweep, every blue input-error box and every repeated pop-up is fixed. About 160 input pop-ups that need per-field error state built page by page are listed with file:line and left for follow-up (see "Needs owner (round 4)").
+
+## Round 5D (2026-11-03): input pop-ups on 结算 (`activity/baoming`) and 商家入驻 (`merchant/apply`)
+
+Scope as the owner set it: these two pages and the components they own (`baoming` uses only shared `cy-*` components; `merchant/apply` owns `merchant-claim-sheet`). The editor pages are untouched.
+
+### Every pop-up on the two pages, listed before changing (file:line at `c27169e6`, the branch head before this round)
+
+**Converted** (reports a problem with what the user just filled in or left empty):
+
+| File:line | Trigger | Type | Now |
+|---|---|---|---|
+| `activity/baoming/baoming.js:1542` | Pay with no participant chosen | `app.tips` toast | Red line under 参与人信息, scroll to top. Still opens the picker sheet, or the add page when the list is empty, as before. |
+| `baoming.js:1554` | The chosen participant has no name | toast | Same red line, same picker. |
+| `baoming.js:1560` | The chosen participant has no phone | toast | Same red line, same picker. |
+| `baoming.js:1567` | The chosen participant's phone is malformed | toast | Same red line, same picker. |
+| `merchant/apply/index.js:365` | Tapping the grey 继续 on step 1 (name or phone empty) | toast (first problem only) | A red line under each empty field, scroll to the first. |
+| `merchant/apply/index.js:366` | Grey 继续 on step 2 (address or hours empty) | toast | Same, per field. |
+| `merchant/apply/index.js:367` | Grey 继续 on step 3 (no licence) | toast | Red line under 营业执照. |
+| `merchant/apply/index.js:371` | Grey 提交申请 on step 4: name or ID number invalid | toast (`checkIdentityForm` message) | Red lines under 真实姓名 and 身份证号. The wording and rules are unchanged; `publisher-identity.js` gains `identityFieldErrors`, and `checkIdentityForm` returns its first entry in the same order. |
+| `merchant/apply/index.js:473` | 经营时间 sheet, 完成 with no day selected | toast | Red line under 经营日 in the sheet. The sheet stays open, as before. |
+| `merchant/apply/index.js:481` | 经营时间 sheet, start equals end | toast | Red line under 营业时段 in the sheet. The sheet stays open. |
+
+Labels: 参与人信息 now has a red `*`, and so do 经营日 and 营业时段 in the sheet. The 入驻 fields already had theirs. Each line clears as soon as that field changes: on typing, picking a location, confirming the hours, uploading, or choosing another participant.
+
+**Left as they are:**
+
+- `baoming.js:1548` 「请同意向主办方提供报名信息」 and `merchant/apply/index.js:371` when **only** the consent is missing (「请先同意提供真实姓名与身份证号」): consent.
+- `baoming.js:1577` 本单不可退 and `:1016` 退出候补: confirmations with two buttons.
+- `baoming.js:1813`, `:1828` 支付结果待确认, `:1792` 您已取消支付, `:1521`/`:1852` 支付服务, and `:1604`, `:1633`, `:1724` (consent save, order and payment failures): server, network and payment results.
+- `baoming.js:1363` 价格已更新, `:1135` 暂无可用积分 / 该票不支持积分抵扣, and `:1480` the quote refusal: decided or relayed by the backend.
+- `baoming.js:983`, `:987`, `:1062`, `:1462`, `:1468`, `:1474`, `:1487`, `:1493`, `:1509`, `:1514`, `:1527`, `:1537`: the state of the session, the waitlist, the shop or the order, not something the user typed.
+- `baoming.js:574` 「参与人信息已选择」: a success notice.
+- `baoming.js:560` (`confirmAddressSelection`, 「请选择参与人信息」): unreachable. No WXML binds it, so it is left alone rather than changed blind.
+- `merchant/apply/index.js:406`, `:433`: the map-permission explanation and the location-failure dialog (permission and confirmation).
+- `merchant/apply/index.js:508` 「最多6张」: a count limit, not a judgement of what was typed (the same rule as round 4).
+- `merchant/apply/index.js:611` 「审核中，请耐心等待」: application state.
+- `merchant-claim-sheet`: no pop-ups. Its form error is already a red `cy-inline-error`.
+
+### Blocking and payloads are unchanged
+
+The early returns are the same: the participant checks still `return` before any consent record, subscription or order call, and still open the picker or the add page. The 入驻 button is still greyed by the same `validate()`, and `onNextDisabledTap` only reports. Each step's scroll-to-first-error uses `wx.pageScrollTo` with the selector and an offset for the fixed nav bar, because the 入驻 page scrolls at page level: `.page` has a `min-height`, so the scroll-view grows with its content and does not scroll itself.
+
+### Tests
+
+- New: `tests/unit/r5d-first-pages-input-errors.test.js`, 11 tests. For each converted pop-up it checks three things: the invalid case shows the line, makes no pop-up and does not submit (no `merchant_registration` request; no `_workflow.submit`); fixing the field clears the line; and valid input submits. Two of the tests compare payloads: a run that hit every error and then fixed it sends **exactly** the payload of a clean run (baoming: all fields except the random `requestId`; 入驻: identical, with the same key set). Consent stays a pop-up (both pages). Structure: red `*`, `kind="error"` under each field. **On the old code 9 of 11 fail.** The two payload-equality tests pass on both, as they should.
+- Updated: `cl29-phone-entries-contract.test.js`. It pinned the toast 「参与人信息需要包含手机号」; it now pins the red line, and the no-order and go-to-add-page assertions are unchanged.
+- Every existing unit test that touches either page or `publisher-identity` passes: 740 tests across the matching files, 0 failures. Action ledger: 46/46. The ledger was rebuilt: still 5601 controls, with only line shifts and the new error selectors as evidence. `node tests/lint/ui-integrity.js` → `UI-GATE-0:PASS`, with no baseline entries added. The baselined dynamic `setData` in `merchant/apply` `onInput` stays at line 359. `scripts/ui-validity-gates.js` U3–U6 pass.
+
+### Rig walk (cloud rig, not a phone)
+
+The rig ran this branch's code (`60a55fe1` plus this round's follow-up, copied into the candidate worktree) with the club lane's two runtime patches. The rig-only changes are in `tools/r5d-rig-patches.diff` and stay out of product code:
+- `wx.pageScrollTo` was a no-op in the rig, so it is implemented there for `scrollTop` and `selector + offsetTop`.
+- `app.py` passes dummy `CHENGYIN_OSS_*` values, as in round 4, so `/api/activity/info` serialises.
+
+**商家入驻, player 9004, end to end.** Every invalid case was walked: step 1 empty, then name filled (that line cleared). Step 2 empty. The hours sheet with no days, then a day picked (cleared). Start equal to end, then end changed (cleared). Step 3 with no licence. Step 4 with name and ID empty: the page scrolls to 真实姓名. Then step 4 with only consent missing: the pop-up is kept. Then valid input. The submission reached 「提交成功」, and the DB read-back of `mms_merchant` 8006 has exactly the typed values plus the identity registration (`proof/r5d-first-pages-readback.txt`). Harness notes:
+- The licence upload's WeChat image check cannot reach WeChat from the rig (`UnknownHostException`), so `app.chooseImage` was stubbed in the browser to return a path.
+- The 18:00 / 10:00 end times were set through the page's own `onHoursEndChange`, because the time wheel cannot be scrolled from the driver.
+
+**结算, player 9004, session 10 (¥69), end to end.**
+- With no participants: the line appears and the add page opens as before. After coming back, the line is still there.
+- To show the legacy-record case, two participant rows were inserted as fixtures into the throwaway DB, one with phone `1380013` and one valid. The backend refuses such a phone today; the row stands for an old record.
+- Paying with the bad one shows the line and opens the picker as before. Closing the picker leaves the line. Choosing the valid one clears it.
+- Paying then went through the rig payment seam to the real callback. The DB shows exactly one `cms_registration` for 9004, `payment_status=2`: the blocked attempts created nothing.
+
+Shots in `shots/` (390 wide, q70, same page and state before and after; before = `c27169e6` code, players 9005 / walk-player-1, because 9004 already had an order and an application):
+
+| Shot | State |
+|---|---|
+| `R5D-MA-1-*` | 入驻 step 1, grey 继续 tapped with both fields empty. Before: a toast with only the first problem. After: a line under each field. |
+| `R5D-MA-2-*` | Step 2, both empty. |
+| `R5D-MA-3-*` | The hours sheet with no day selected. |
+| `R5D-MA-4-*` | The hours sheet with start equal to end. |
+| `R5D-MA-5-*` | Step 3 with no licence. |
+| `R5D-MA-6-*` | Step 4 with name and ID empty. After: scrolled to the identity fields. |
+| `R5D-BM-1-*` | 结算 after coming back from the add page with no participant. Before: no trace; the toast was gone under the navigation (`R5D-BM-1-before-nav`). After: the line. |
+| `R5D-BM-2-sheet-*` | Paying with the bad-phone participant: the picker opens. Before: a toast over the sheet. After: the line on the page behind it. |
+| `R5D-BM-2-*` | The same with the picker closed. |
+| After only | `MA-1b` (line cleared on typing), `MA-3b` (day picked, cleared), `MA-4b` (end changed, cleared), `MA-6b` (fields filled, cleared), `MA-8` (submitted), `BM-1-addressinfo` (the add page still opens), `BM-2b` (valid participant, cleared), `BM-3` (paid, order detail). |
+
+The rig doesn't draw the `<icon>` tick on the consent checkbox (a harness limit noted in round 3).
+
+### Not verified on a real phone
+
+- Whether `wx.pageScrollTo` with `selector` and a negative `offsetTop` lands exactly below the nav bar on iOS and Android. It needs base library ≥ 2.23.1 for `offsetTop`; older versions ignore the offset.
+- The keyboard covering a field when a line appears.
+- The baoming scroll back to the top while the picker sheet animates in.
+
+STATUS: COMPLETE
