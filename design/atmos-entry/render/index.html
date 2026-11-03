@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Atmosphere entry render</title>
+<style>html,body{margin:0;background:#000}canvas{display:block}</style>
+<script type="importmap">{ "imports": { "three": "./vendor/three.module.js" } }</script>
+</head>
+<body>
+<script type="module">
+  import { setup } from './scene.js';
+  window.__boot = async (opts) => {
+    const get = (n) => fetch('./data/' + n + '.geojson').then((r) => r.json());
+    const [land, lakes, regions, glaciers, places] = await Promise.all([
+      get('ne_50m_land'), get('ne_50m_lakes'), get('ne_50m_geography_regions_polys'), get('ne_50m_glaciated_areas'), get('ne_10m_populated_places_simple'),
+    ]);
+    if (opts.dumpTextures) {
+      opts.dumpTextures = ({ world, china }) => {
+        window.__tex = {};
+        for (const [k, v] of Object.entries(world)) window.__tex['world_' + k] = v.toDataURL('image/jpeg', 0.9);
+        for (const [k, v] of Object.entries(china)) window.__tex['china_' + k] = v.toDataURL('image/jpeg', 0.9);
+      };
+    }
+    opts.log = (m) => console.log('[render] ' + m);
+    const r = await setup({ land, lakes, regions, glaciers, places }, opts);
+    window.__render = r.render;
+    return { frames: r.FRAMES, fps: r.FPS };
+  };
+  window.__ready = true;
+</script>
+</body>
+</html>

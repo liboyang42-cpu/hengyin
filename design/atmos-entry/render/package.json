@@ -1,0 +1,7 @@
+{
+  "name": "atmos-entry-render",
+  "private": true,
+  "description": "Renders the 漫游 atmosphere-entry video (three.js + GLSL in headless Chrome, frame by frame, then ffmpeg).",
+  "scripts": { "render": "node run.cjs" },
+  "dependencies": { "three": "0.170.0" }
+}
