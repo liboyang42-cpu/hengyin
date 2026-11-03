@@ -1714,6 +1714,38 @@
           "com.chengyinhub.business.mapper.": [],
           "com.chengyinhub.web.": []
         }
+      },
+      {
+        "id": "L8_RECHECK_STORAGE",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.mapper.ContentSafetyRecheckMapper"],
+        "forbidden_backrefs": ["com.chengyinhub.business.service.impl.ContentSafetyRecheckServiceImpl"],
+        "allowed_consumers": ["com.chengyinhub.business.service.impl.ContentSafetyRecheckServiceImpl"]
+      },
+      {
+        "id": "L8_RECHECK",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.IContentSafetyRecheckService", "com.chengyinhub.business.service.impl.ContentSafetyRecheckServiceImpl"],
+        "forbidden_backrefs": ["com.chengyinhub.business.task.ContentSafetyRecheckTask", "com.chengyinhub.web.controller.api.ApiTopicController"]
+      },
+      {
+        "id": "L8_SENSITIVE_STORAGE",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.mapper.ContentSensitiveMapper"],
+        "forbidden_backrefs": ["com.chengyinhub.business.service.impl.SensitiveContentLibraryImpl", "com.chengyinhub.business.service.impl.SensitiveContentRescanServiceImpl", "com.chengyinhub.web.controller.business.SensitiveLibraryController"],
+        "allowed_consumers": ["com.chengyinhub.business.service.impl.SensitiveContentLibraryImpl", "com.chengyinhub.business.service.impl.SensitiveContentRescanServiceImpl", "com.chengyinhub.web.controller.business.SensitiveLibraryController"]
+      },
+      {
+        "id": "L8_SENSITIVE_LIBRARY",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.ISensitiveContentLibrary", "com.chengyinhub.business.service.impl.SensitiveContentLibraryImpl"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.business.SensitiveLibraryController", "com.chengyinhub.web.controller.api.AppUploadService"]
+      },
+      {
+        "id": "L8_SENSITIVE_RESCAN",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.ISensitiveContentRescanService", "com.chengyinhub.business.service.impl.SensitiveContentRescanServiceImpl"],
+        "forbidden_backrefs": ["com.chengyinhub.business.task.SensitiveContentRescanTask"]
       }
     ],
     "allowed_directions": [
@@ -2166,7 +2198,12 @@
       [
         "G_SETTLEMENT_EVIDENCE",
         "G_STATION_FULFILLMENT_RECORD"
-      ]
+      ],
+      ["L8_RECHECK", "L8_RECHECK_STORAGE"],
+      ["L8_RECHECK", "L8_SENSITIVE_LIBRARY"],
+      ["L8_SENSITIVE_LIBRARY", "L8_SENSITIVE_STORAGE"],
+      ["L8_SENSITIVE_RESCAN", "L8_SENSITIVE_STORAGE"],
+      ["L8_SENSITIVE_RESCAN", "L8_SENSITIVE_LIBRARY"]
     ],
     "exact_directions": [
       {
