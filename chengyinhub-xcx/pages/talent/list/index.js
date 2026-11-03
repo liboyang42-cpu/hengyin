@@ -12,6 +12,7 @@ const community = require('../../../utils/community-post-api.js').createClient(a
 const FEED_PAGE_SIZE = 20;
 const clubPostRepost = require('../../../utils/club-post-repost.js');
 const postFeedActions = require('../../../utils/post-feed-actions.js');
+const { isLoginRequired, retryLogin } = require('../../../utils/session/login-reload.js');
 
 // 主理人 L1-L5 等级对外文案(俱乐部继承展示;level=0 不显示)
 const LEVEL_LABELS = ['', 'L1 新手', 'L2 稳定', 'L3 成熟', 'L4 城市运营者', 'L5 区域策划方'];
@@ -69,6 +70,7 @@ Page({
     feed: [],
     feedState: 'idle',      // idle | loading | refreshing | ready | empty | error | stale-error
     feedError: '',
+    feedLoginRequired: false, // Round5 #2:俱乐部帖文流要登录;游客给与俱乐部列表同款登录入口,不报「加载失败」
   },
 
   onTopTabChange(e) {
@@ -92,7 +94,7 @@ Page({
     this._feedLoading = true;
     this.setData({
       feedState: hasSnapshot ? 'refreshing' : 'loading',
-      feedError: '',
+      feedError: '', feedLoginRequired: false,
     });
     const gate = typeof app.canUseCommunity === 'function' && !app.canUseCommunity(false)
       && typeof app.loadFeatureFlags === 'function' ? app.loadFeatureFlags() : Promise.resolve();
@@ -140,10 +142,17 @@ Page({
     ctx.done = true;
     this._feedLoading = false;
     if (ctx.loadMore) return;
+    const loginRequired = !ctx.hasSnapshot && isLoginRequired(app, res);
     this.setData({
       feedState: ctx.hasSnapshot ? 'stale-error' : 'error',
-      feedError: requestError(res, '动态加载失败，请重试'),
+      feedLoginRequired: loginRequired,
+      feedError: loginRequired ? '' : requestError(res, '动态加载失败，请重试'),
     });
+  },
+
+  retryFeed() {
+    if (!this.data.feedLoginRequired) return this.loadFeed();
+    retryLogin(this, app, function () { this.loadFeed(); this.loadClubHome(); });
   },
 
   _feedSources(requestId) {
@@ -352,6 +361,7 @@ Page({
       if (this.data.activeTopTab !== 'feed') { pageMotion.enter(this, 'pmFeed'); this.setData({ activeTopTab: 'feed' }); }
       if (!this._feedLoading) this.loadFeed();
     }
+    else if (this.data.feedLoginRequired && app.getUserID() && this.data.activeTopTab === 'feed' && !this._feedLoading) this.loadFeed();
     if (this._skipInitialShow) this._skipInitialShow = false;
     else this.loadClubHome();
     this.loadImUnread();

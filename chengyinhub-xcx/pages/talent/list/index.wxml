@@ -29,7 +29,7 @@
   <!-- ===== 帖文 ===== -->
   <view class="tab-body tab-body--feed" wx:if="{{activeTopTab === 'feed'}}" style="{{pmFeed === 1 ? '--pm-p:1;' : (pmFeed === 2 ? '--pm-p-d:.32s;--pm-p-s:1;' : '')}}">
     <cy-skeleton class="feed-state" wx:if="{{feedState === 'loading'}}" type="card" count="{{3}}" />
-    <cy-error load-failure class="feed-state cy-fade-in" wx:elif="{{feedState === 'error'}}" title="动态加载失败" sub="{{feedError}}" retry="重试" bind:retry="loadFeed" />
+    <cy-error load-failure="{{!feedLoginRequired}}" class="feed-state cy-fade-in" wx:elif="{{feedState === 'error'}}" title="{{feedLoginRequired ? '登录后查看帖文' : '动态加载失败'}}" sub="{{feedError}}" retry="{{feedLoginRequired ? '登录' : '重试'}}" bind:retry="retryFeed" />
     <block wx:else>
       <cy-progress-status class="talent-state" wx:if="{{feedState === 'refreshing'}}" title="正在更新帖文" />
       <block wx:if="{{feed.length}}">
