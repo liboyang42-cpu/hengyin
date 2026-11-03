@@ -1707,7 +1707,19 @@ public class ApiTopicController extends BaseController {
                 }
             }
         }
-        return success(eligibleChapters);
+        AjaxResult result = success(eligibleChapters);
+        // 2026-11-03 业主:零章节 ≠ 章节都没开。前者商家只带玩法也能报名(服务端建章),
+        // 后者按主办方的招商走,弹层出关闭空态。前端据这两个字段分开两种空。
+        CmsTopicChapter chapterProbe = new CmsTopicChapter();
+        chapterProbe.setTopicId(topicId);
+        List<CmsTopicChapter> allChapters = cmsTopicChapterService.selectCmsTopicChapterList(chapterProbe);
+        int chapterCount = allChapters == null ? 0 : allChapters.size();
+        result.put("chapterCount", chapterCount);
+        result.put("emptyTopicJoinable", chapterCount == 0
+                && com.chengyinhub.business.support.EmptyTopicChapterPolicy.blocker(
+                        cmsTopicService.selectCmsTopicById(topicId), merchant.getMemberId(),
+                        merchant.getCategoryId(), com.chengyinhub.common.utils.DateUtils.getNowDate()) == null);
+        return result;
     }
 
     /**

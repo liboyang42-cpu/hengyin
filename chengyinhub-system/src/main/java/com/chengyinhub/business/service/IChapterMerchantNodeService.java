@@ -32,6 +32,13 @@ public interface IChapterMerchantNodeService {
      */
     CmsTopicNode submit(Long merchantMemberId, Long chapterId, CmsTopicNode draft);
 
+    /**
+     * 2026-11-03 业主:自由探索主题一章都没有时,商家只带玩法模板报名。服务端建出这一章,
+     * 走原承接申请(待主办方审核,同一套品类/启用/招商窗口闸),再走 {@link #submit} 落点位。
+     * 主题已有任何章节时拒绝 —— 那时按主办方的招商走。
+     */
+    CmsTopicNode submitToEmptyTopic(Long merchantMemberId, Long topicId, String message, CmsTopicNode draft);
+
     /** 商家看自己在该主题下的节点(含待审与驳回原因)。 */
     List<CmsTopicNode> listMine(Long merchantMemberId, Long topicId);
 

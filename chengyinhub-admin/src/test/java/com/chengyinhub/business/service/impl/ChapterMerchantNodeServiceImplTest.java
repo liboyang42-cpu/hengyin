@@ -775,6 +775,11 @@ class ChapterMerchantNodeServiceImplTest {
                     () -> mock(com.chengyinhub.business.service.support.CommittedBusinessNotice.class));
             context.registerBean(com.chengyinhub.business.service.INotifyService.class,
                     () -> mock(com.chengyinhub.business.service.INotifyService.class));
+            // 2026-11-03 零章节报名:建章前读商家主行业类型,随后走原承接申请
+            context.registerBean(com.chengyinhub.business.mapper.MmsMerchantMapper.class,
+                    () -> mock(com.chengyinhub.business.mapper.MmsMerchantMapper.class));
+            context.registerBean(com.chengyinhub.business.service.IMerchantChapterApplicationService.class,
+                    () -> mock(com.chengyinhub.business.service.IMerchantChapterApplicationService.class));
             context.register(ChapterMerchantNodeServiceImpl.class);
             context.refresh();
             context.getBean(ChapterMerchantNodeServiceImpl.class).submit(ME, CHAPTER, draft());

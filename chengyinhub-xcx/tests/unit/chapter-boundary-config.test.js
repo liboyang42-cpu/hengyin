@@ -58,19 +58,18 @@ test('② 商家申请前看得到 · 数据侧:边界要从服务端读进来�
   assert.match(js, /boundaryLabel/);
 });
 
-/* ⚠️ 渲染单独一条:与数据侧合成一条时,只要 js 里还有 boundaryLabel,
-   把渲染删掉也不会红(实测过)—— 那就是假绿。
-   2026-09-08 稿 159:346 把「选承接标的」换成 cy-chapter-target-picker,
-   章节卡只有 140×60 放不下六条标签,所以改成「选中章节后在下面列出来」。
-   于是这条要查两截:组件把 boundaryLabel 收进 pickedFacts,wxml 把 pickedFacts 印出来。
-   少任何一截,边界就又变成算了不给看。 */
-test('② 商家申请前看得到 · 渲染侧:选中章节后必须把边界印出来', () => {
+/* ⚠️ 渲染单独一条。2026-11-03 业主(ROUND4 l5-onboard):申请承接章节弹层**不再**在章节下列灰色事实行
+   (品类 / 必选 / 条款 / 边界 / 名额 / 门槛);权益门槛改挂在报名表「常备权益」字段下。
+   边界仍由服务端 assertWithinTerms 在提交时把关(见 ③)。这条锁住:弹层不再渲染事实清单,
+   报名表把门槛印在权益字段旁。 */
+test('② 渲染侧(2026-11-03 业主):弹层不列事实行,门槛挂在报名表的权益字段', () => {
   const js = stripJs(read('pages/topic/components/cy/chapter-target-picker/index.js'));
-  assert.match(js, /function factsOf[\s\S]{0,400}?c\.boundaryLabel/,
-    '边界必须进选中章节的事实清单');
+  assert.doesNotMatch(js, /pickedFacts|function factsOf/, '弹层不再算事实清单');
   const wxml = stripWxml(read('pages/topic/components/cy/chapter-target-picker/index.wxml'));
-  assert.match(wxml, /wx:for="\{\{pickedFacts\}\}"[\s\S]{0,120}?\{\{item\}\}/,
-    '算出来了但不渲染 = 看不到 = 不叫公示');
+  assert.doesNotMatch(wxml, /pickedFacts|ctp-fact/, '弹层不再印事实清单');
+  const form = stripWxml(read('pages/topic/components/cy/chapter-node-form/index.wxml'));
+  assert.match(form, /常备权益[\s\S]{0,1600}?零售价不少于 ¥\{\{perkMinText\}\}/,
+    '门槛要印在「常备权益」字段下');
 });
 
 test('③ 承接时冻结:新供给取章节边界，补位沿用原退出供给的冻结边界', () => {

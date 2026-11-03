@@ -87,6 +87,8 @@
           <text>{{perkTemplatesLoading ? '正在读取常备权益…' : '还没有常备权益，先创建后再回来选择'}}</text>
           <cy-btn wx:if="{{!perkTemplatesLoading}}" variant="ghost" size="sm" bindtap="goCreatePerkTemplate">去创建常备权益</cy-btn>
         </view>
+        <view class="cnf-note cnf-note--field" wx:if="{{perkMinText && !perkBelowMin}}">零售价不少于 ¥{{perkMinText}}</view>
+        <cy-inline-error wx:if="{{perkBelowMin}}" kind="error" title="本章节要求权益零售价不少于 ¥{{perkMinText}}" />
       </view>
     </block>
     <view class="cnf-field" wx:if="{{termsMode === 'REVSHARE'}}">

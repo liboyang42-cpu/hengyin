@@ -96,8 +96,17 @@ public class ApiChapterMerchantNodeController extends BaseController {
             MerchantAccessContext access = merchantAccessService.require(
                     memberId, MerchantPermission.PROJECT_MANAGE);
             String risk = textRisk(memberId, com.chengyinhub.business.service.IWxContentSecurityService.joinText(
-                    body.getName(), body.getDescription(), body.getAddress(), body.getBusinessTime()));
+                    body.getName(), body.getDescription(), body.getAddress(), body.getBusinessTime(),
+                    body.getMessage()));
             if (risk != null) return error(risk);
+            // 2026-11-03 业主:一章都没有的自由探索主题,只带 topicId 报名;建章 + 承接申请 + 点位一个事务。
+            // 申请本身要 COOP_MANAGE(与 /chapter-application/apply 同一权限),两样都得有。
+            if ((body.getChapterId() == null || body.getChapterId() <= 0)
+                    && body.getTopicId() != null && body.getTopicId() > 0) {
+                merchantAccessService.require(memberId, MerchantPermission.COOP_MANAGE);
+                return success(chapterMerchantNodeService.submitToEmptyTopic(
+                        access.getOwnerMemberId(), body.getTopicId(), body.getMessage(), body.toDraft()));
+            }
             return success(chapterMerchantNodeService.submit(
                     access.getOwnerMemberId(), body.getChapterId(), body.toDraft()));
         } catch (ServiceException e) {
@@ -403,6 +412,10 @@ public class ApiChapterMerchantNodeController extends BaseController {
      */
     public static class ChapterNodeRequest {
         private Long chapterId;
+        /** 仅零章节主题用:没有 chapterId 时指明主题,服务端建章(见 submitToEmptyTopic) */
+        private Long topicId;
+        /** 仅零章节主题用:随建章一起提交的承接申请说明 */
+        private String message;
         private Long templateId;
         private String name;
         private String description;
@@ -427,6 +440,10 @@ public class ApiChapterMerchantNodeController extends BaseController {
             return n;
         }
 
+        public Long getTopicId() { return topicId; }
+        public void setTopicId(Long topicId) { this.topicId = topicId; }
+        public String getMessage() { return message; }
+        public void setMessage(String message) { this.message = message; }
         public Long getChapterId() { return chapterId; }
         public void setChapterId(Long chapterId) { this.chapterId = chapterId; }
         public Long getTemplateId() { return templateId; }

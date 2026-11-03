@@ -95,10 +95,11 @@
   margin-top: var(--cy-space-1);
   font-size: var(--cy-font-caption);
   color: var(--cy-text-secondary);
+  /* 2026-11-03 业主:玩法卡只要封面 + 名称 + 至多一行短描述 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .ctp-foot { width: 100%; }
 
-/* 选中章节的招募事实:一行一行摞着,不做成标签云 —— 条款和名额是要读的,不是装饰 */
-.ctp-facts { display: flex; flex-direction: column; gap: var(--cy-space-1); margin-top: var(--cy-space-2); }
-.ctp-fact { font-size: var(--cy-font-caption); color: var(--cy-text-muted); }
 .ctp-foot-note { margin-top: var(--cy-space-2); font-size: var(--cy-font-caption); color: var(--cy-text-muted); text-align: center; }

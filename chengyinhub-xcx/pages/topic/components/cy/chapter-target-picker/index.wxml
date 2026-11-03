@@ -1,11 +1,12 @@
 <!-- F3 选承接标的(Figma 159:346)。两组都横滑,底部一个「下一步 · 填报名」。
      T1 = cy-sheet 默认 bottom 半屏(full 只留给多步向导,见 sheet-halfscreen-glass-contract)。 -->
-<cy-sheet show="{{show}}" title="申请承接章节" footer="{{true}}"
+<cy-sheet show="{{show}}" title="申请承接章节" footer="{{!(noChapters && !emptyTopic)}}"
           closable="{{!submitting}}" bind:close="onClose">
   <view class="ctp">
-    <!-- 稿 159:346 三态:章节+玩法 / 只有章节(没有玩法) / 只有玩法(没有可选章节)。
-         两边都没有时留章节的空态。 -->
-    <block wx:if="{{!noChapters || templatesState !== 'ready'}}">
+    <!-- 稿 159:346 三态:章节+玩法 / 只有章节(没有玩法) / 只有玩法。
+         2026-11-03 业主:「只有玩法」只给一章都没有的主题(emptyTopic,服务端提交时建章);
+         有章节但都没开时出章节的关闭空态,不出玩法块和按钮。 -->
+    <block wx:if="{{!noChapters || !emptyTopic}}">
     <view class="ctp-h">选择章节</view>
     <!-- 章节这一侧的四种取数结局分开说:拉取中 / 拉失败 / 没填品类 / 拉到了。
          合成一句「暂时没有开放的章节」会把「我还没读到」说成「主办方没开」。 -->
@@ -27,14 +28,10 @@
     </scroll-view>
     <cy-empty wx:if="{{chaptersState === 'ready' && !rows.length}}" kind="empty" size="lg"
               title="这条路线暂时没有开放的章节" />
-    <!-- 选中章节的招募事实:品类 / 必选 / 条款 / 边界 / 名额 / 权益门槛。
-         卡上放不下,但这是决定要不要接的依据,选中后必须看得到。 -->
-    <view class="ctp-facts" wx:if="{{pickedFacts.length}}">
-      <text class="ctp-fact" wx:for="{{pickedFacts}}" wx:key="*this">{{item}}</text>
-    </view>
     </block>
 
-    <block wx:if="{{templatesState !== 'empty'}}">
+    <!-- 章节都没开(且不是零章节):只留关闭空态,玩法块与按钮都不出 -->
+    <block wx:if="{{templatesState !== 'empty' && !(noChapters && !emptyTopic)}}">
     <view class="ctp-h">选择玩法模板</view>
     <cy-skeleton wx:if="{{templatesState === 'loading'}}" type="card" count="{{1}}" />
     <!-- 读不到 ≠ 一个都没有:分开说,否则商家会去重新建一个自己已经有的玩法 -->
@@ -53,11 +50,16 @@
       </view>
     </scroll-view>
     </block>
+    <block wx:if="{{noChapters && emptyTopic && templatesState === 'empty'}}">
+    <view class="ctp-h">选择玩法模板</view>
+    <cy-empty kind="empty" size="lg" title="还没有玩法模板" />
+    </block>
   </view>
 
   <view slot="footer" class="ctp-foot">
     <!-- 玩法可以留到下一页再选(那一页也有同一个选择器),所以只有章节是必选的 -->
-    <cy-btn variant="primary" style="width:100%" disabled="{{!pickedChapterId || submitting || !applicationOpen}}"
+    <cy-btn wx:if="{{!(noChapters && !emptyTopic)}}" variant="primary" style="width:100%"
+            disabled="{{(!pickedChapterId && !(emptyTopic && noChapters)) || submitting || !applicationOpen}}"
             bindtap="onNext">下一步 · 填报名</cy-btn>
     <!-- 章节错误/缺品类/全关已有各自的权威反馈,不能再把它们误说成主题招商窗口关闭。 -->
     <view class="ctp-foot-note" wx:if="{{!applicationOpen && chaptersState === 'ready' && rows.length}}">本条路线的招商窗口已关闭，暂时不能提交申请</view>

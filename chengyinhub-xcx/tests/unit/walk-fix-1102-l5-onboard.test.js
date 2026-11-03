@@ -38,7 +38,7 @@ function loadPage(rel, extraWx) {
       if (cb) cb.call(this)
     },
   })
-  return { page, navs }
+  return { page, navs, app }
 }
 
 test('M-08:从「去完善品类」回来,重拉可承接章节并把选章节弹层原样打开', () => {
@@ -80,8 +80,9 @@ function mountPicker(myListRows) {
 test('M-09(第三轮):选章节弹层恢复玩法模板块(稿 159:346),三态各自成立', () => {
   const wxml = fs.readFileSync(path.join(ROOT, 'pages/topic/components/cy/chapter-target-picker/index.wxml'), 'utf8')
   assert.match(wxml, /<view class="ctp-h">选择玩法模板<\/view>/)
-  assert.match(wxml, /<block wx:if="\{\{!noChapters \|\| templatesState !== 'ready'\}\}">\s*<view class="ctp-h">选择章节<\/view>/)
-  assert.match(wxml, /<block wx:if="\{\{templatesState !== 'empty'\}\}">\s*<view class="ctp-h">选择玩法模板<\/view>/)
+  // 第四轮(2026-11-03):「只有玩法」只给零章节主题(emptyTopic);章节都没开时出关闭空态
+  assert.match(wxml, /<block wx:if="\{\{!noChapters \|\| !emptyTopic\}\}">\s*<view class="ctp-h">选择章节<\/view>/)
+  assert.match(wxml, /<block wx:if="\{\{templatesState !== 'empty' && !\(noChapters && !emptyTopic\)\}\}">\s*<view class="ctp-h">选择玩法模板<\/view>/)
   const wxss = fs.readFileSync(path.join(ROOT, 'pages/topic/components/cy/chapter-target-picker/index.wxss'), 'utf8')
   const card = wxss.slice(wxss.indexOf('.ctp-card {'), wxss.indexOf('}', wxss.indexOf('.ctp-card {')))
   assert.match(card, /background: var\(--cy-bg-card-2\)/, '未选章节卡要和 sheet 底色区分开')
@@ -225,4 +226,91 @@ test('M-19:置灰的「提交申请」点了滚到经营者实名', () => {
   assert.equal(JSON.stringify(scrolls), JSON.stringify(['#apply-identity']), '页面本身滚动(scroll-view 不定高),用 pageScrollTo')
   const wxml = fs.readFileSync(path.join(ROOT, 'pages/merchant/apply/index.wxml'), 'utf8')
   assert.match(wxml, /id="apply-identity"/)
+})
+
+// ---------- 第四轮(2026-11-03 业主) ----------
+
+test('R4:申请承接章节弹层不列灰色事实行;玩法卡只留封面、名称和一行截断的描述', () => {
+  const wxml = fs.readFileSync(path.join(ROOT, 'pages/topic/components/cy/chapter-target-picker/index.wxml'), 'utf8')
+  const js = fs.readFileSync(path.join(ROOT, 'pages/topic/components/cy/chapter-target-picker/index.js'), 'utf8')
+  assert.doesNotMatch(wxml, /ctp-fact|pickedFacts/)
+  assert.doesNotMatch(js, /pickedFacts|factsOf/)
+  const wxss = fs.readFileSync(path.join(ROOT, 'pages/topic/components/cy/chapter-target-picker/index.wxss'), 'utf8')
+  const sub = wxss.slice(wxss.indexOf('.ctp-tpl-s {'), wxss.indexOf('}', wxss.indexOf('.ctp-tpl-s {')))
+  assert.match(sub, /white-space: nowrap/)
+  assert.match(sub, /text-overflow: ellipsis/)
+  // 选中章节后也不再算事实
+  const p = mountPicker()
+  p.observe(true, [{ id: 7, name: '第一章', categoryLabel: '书店', perkMinValueLabel: '权益零售价不少于 ¥30' }], 'ready')
+  assert.equal(p.c.data.pickedFacts, undefined)
+})
+
+test('R4:零章节主题只选玩法就能下一步,确认带 emptyTopic 且没有 chapterId', () => {
+  const p = mountPicker()
+  p.c.data.emptyTopic = true
+  p.observe(true, [], 'ready')
+  p.reply([{ id: 3, title: '回信藏在哪' }])
+  assert.equal(p.c.data.noChapters, true)
+  const events = []
+  p.c.triggerEvent = (name, detail) => events.push([name, detail])
+  p.c.onPickTemplate({ currentTarget: { dataset: { id: 3 } } })
+  p.c.onNext()
+  assert.equal(events.length, 1)
+  assert.equal(events[0][1].emptyTopic, true)
+  assert.equal(events[0][1].chapterId, 0)
+  assert.equal(events[0][1].templateId, 3)
+  // 有章节但都没开(emptyTopic=false):不出按钮,onNext 也不放行
+  const closed = mountPicker()
+  closed.observe(true, [], 'ready')
+  closed.reply([{ id: 3, title: '回信藏在哪' }])
+  const ev2 = []
+  closed.c.triggerEvent = (name, detail) => ev2.push([name, detail])
+  closed.c.onPickTemplate({ currentTarget: { dataset: { id: 3 } } })
+  closed.c.onNext()
+  assert.equal(ev2.length, 0, '章节都没开时不能绕过主办方招商')
+  const wxml = fs.readFileSync(path.join(ROOT, 'pages/topic/components/cy/chapter-target-picker/index.wxml'), 'utf8')
+  assert.match(wxml, /<cy-btn wx:if="\{\{!\(noChapters && !emptyTopic\)\}\}"/, '关闭空态不留死按钮')
+})
+
+test('R4:零章节报名直接走 chapter-node/submit 带 topicId,不先调 chapter-application/apply', () => {
+  const { page, app } = loadPage('pages/topic/merchantinfo/merchantinfo.js')
+  const sent = []
+  page.data.topicId = 990020
+  page.data.chapterEmptyTopic = true
+  page.data.chapterNodeFormMode = 'application'
+  page.data.info = { memberId: 1 }
+  page.loadMerchantRecruitmentChapters = () => sent.push({ url: 'reload' })
+  page.loadMyChapterNodes = () => {}
+  page.loadMyChapterApplications = () => {}
+  const original = app.sendRequest
+  app.sendRequest = (o) => { sent.push(o); return { abort() {} } }
+  try {
+    page.onChapterNodeFormSubmit({ detail: { chapterId: 0, name: '街角书店', templateId: 3, address: 'a', longitude: '1', latitude: '2', message: '想承接' } })
+  } finally { app.sendRequest = original }
+  const urls = sent.map((o) => o.url)
+  assert.ok(!urls.includes('/api/merchant/chapter-application/apply'))
+  const submit = sent.find((o) => o.url === '/api/merchant/chapter-node/submit')
+  assert.ok(submit, '要直接提交点位')
+  const body = JSON.parse(submit.data)
+  assert.equal(body.topicId, 990020)
+  assert.equal(body.chapterId, undefined)
+  assert.equal(body.message, '想承接')
+  // 非零章节主题、没有 chapterId:什么都不发
+  const second = loadPage('pages/topic/merchantinfo/merchantinfo.js')
+  const again = second.page
+  again.data.chapterEmptyTopic = false
+  const sent2 = []
+  second.app.sendRequest = (o) => { sent2.push(o); return { abort() {} } }
+  again.onChapterNodeFormSubmit({ detail: { chapterId: 0, name: 'x', templateId: 3 } })
+  assert.equal(sent2.length, 0)
+})
+
+test('R4:报名表把权益门槛挂在「常备权益」字段下,所选权益低于门槛时字段下红字并拦提交', () => {
+  const wxml = fs.readFileSync(path.join(ROOT, 'pages/topic/components/cy/chapter-node-form/index.wxml'), 'utf8')
+  assert.match(wxml, /零售价不少于 ¥\{\{perkMinText\}\}/)
+  assert.match(wxml, /<cy-inline-error wx:if="\{\{perkBelowMin\}\}" kind="error"/)
+  const json = JSON.parse(fs.readFileSync(path.join(ROOT, 'pages/topic/components/cy/chapter-node-form/index.json'), 'utf8'))
+  assert.equal(json.usingComponents['cy-inline-error'], '/components/cy/inline-error/index')
+  const host = fs.readFileSync(path.join(ROOT, 'pages/topic/merchantinfo/merchantinfo.wxml'), 'utf8')
+  assert.match(host, /perkMinValue="\{\{selectedChapterPerkMin\}\}"/)
 })

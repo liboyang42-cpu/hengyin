@@ -284,13 +284,13 @@ Page({
     selectedTemplateName: '',
     selectedChapterId: 0,
     selectedChapterText: '',
-    selectedChapterTermsMode: '',
+    selectedChapterTermsMode: '', selectedChapterPerkMin: '', // 本章权益零售价门槛,挂在报名表「常备权益」下
     selectedChapterCircleMode: false,
     allNodesList: [],
     allChaptersList: [],
     chapterRecruitmentLoading: false,
     chapterRecruitmentState: 'loading', // loading | error | category-missing | ready
-    chapterRecruitmentError: '',
+    chapterRecruitmentError: '', chapterEmptyTopic: false, // 2026-11-03 业主:零章节且招商开着 ⇒ 只带玩法报名,服务端建章
     ownerChapterApplications: [],
     ownerChapterApplicationsLoaded: false,
     ownerChapterApplicationsState: 'idle',
@@ -486,13 +486,13 @@ Page({
       selectedTemplateName: "",
       selectedChapterId: 0,
       selectedChapterText: "",
-      selectedChapterTermsMode: "",
+      selectedChapterTermsMode: "", selectedChapterPerkMin: "",
       selectedChapterCircleMode: false,
       allNodesList: [],
       allChaptersList: [],
       chapterRecruitmentLoading: false,
       chapterRecruitmentState: "idle",
-      chapterRecruitmentError: "",
+      chapterRecruitmentError: "", chapterEmptyTopic: false,
       ownerChapterApplications: [],
       ownerChapterApplicationsLoaded: false,
       ownerChapterApplicationsState: "idle",
@@ -652,7 +652,7 @@ Page({
         if (current.handle(res)) return;
         if (res && res.code == '200' && Array.isArray(res.data)) {
           that.setData({
-            allChaptersList: that.buildMerchantChapters(res.data),
+            allChaptersList: that.buildMerchantChapters(res.data), chapterEmptyTopic: Number(res.chapterCount) === 0 && res.emptyTopicJoinable === true, // 零章节 ≠ 章节都没开
             chapterRecruitmentLoading: false,
             chapterRecruitmentState: 'ready',
             chapterRecruitmentError: '',
@@ -986,7 +986,7 @@ Page({
     const endDate = hasApplicationWindow ? chinaDayEnd(endDateStr) : 0;
     const chapterApplicationOpen = isFreeExplore
       ? that.data.chapterRecruitmentState === 'ready'
-        && hasOpenRecruitmentChapter
+        && (hasOpenRecruitmentChapter || that.data.chapterEmptyTopic)
         && that.data.info.memberId != app.getUserID()
       : hasApplicationWindow
         && now >= startDate && now <= endDate
@@ -1092,19 +1092,19 @@ Page({
   onChapterTargetConfirm(e) {
     const d = e.detail || {};
     const chapter = d.chapter || {};
-    if (!d.chapterId) return;
-    if (!this.guardChapterNodeConfiguration(d.chapterId)) return;
+    const emptyTopic = !d.chapterId && d.emptyTopic === true && this.data.chapterEmptyTopic; // 零章节:服务端提交时建章
+    if (d.chapterId ? !this.guardChapterNodeConfiguration(d.chapterId) : !emptyTopic) return;
     this.setData({
       topicShow: false,
       selectedChapterId: d.chapterId,
       selectedChapterText: d.chapterName || chapter.name || '',
-      selectedChapterTermsMode: chapter.termsMode,
+      selectedChapterTermsMode: emptyTopic ? 'PERK' : chapter.termsMode, selectedChapterPerkMin: String((chapter.recruitStatus || {}).perkMinValue || ''),
       selectedChapterCircleMode: !!(this.data.info && this.data.info.circleThemeCode),
       selectedTemplateId: Number(d.templateId) || 0,
       selectedTemplateName: d.templateName || '',
-      presetChapterNode: this.myNodeOfChapter(d.chapterId),
+      presetChapterNode: emptyTopic ? null : this.myNodeOfChapter(d.chapterId),
       chapterNodeFormVisible: true,
-      chapterNodeFormMode: this.myConfigurableChapterApplication(d.chapterId) ? 'node' : 'application',
+      chapterNodeFormMode: !emptyTopic && this.myConfigurableChapterApplication(d.chapterId) ? 'node' : 'application',
     });
   },
 
@@ -1255,9 +1255,9 @@ Page({
       return;
     }
     if (this._chapterApplying) return;
-    const draft = (e && e.detail) || {};
-    if (!draft.chapterId || !draft.name || !draft.templateId) return;
-    if (!this.guardChapterNodeConfiguration(draft.chapterId)) return;
+    const draft = (e && e.detail) || {}; const emptyTopic = !draft.chapterId && this.data.chapterEmptyTopic && this.data.chapterNodeFormMode === 'application';
+    if ((!draft.chapterId && !emptyTopic) || !draft.name || !draft.templateId) return;
+    if (!emptyTopic && !this.guardChapterNodeConfiguration(draft.chapterId)) return;
     if (this.data.chapterNodeFormMode === 'node') {
       const application = this.myConfigurableChapterApplication(draft.chapterId);
       if (!application || Number(draft.chapterId) !== Number(this.data.selectedChapterId)) return;
@@ -1269,7 +1269,7 @@ Page({
     }
     this._chapterApplying = true;
     this.setData({ chapterNodeSubmitting: true });
-    cyLoading.show('提交申请中...');
+    cyLoading.show('提交申请中...'); if (emptyTopic) return this.submitChapterNodeDraft(draft, true); // 零章节:建章+申请+点位一个事务,不先 apply
     app.sendRequest({
       url: '/api/merchant/chapter-application/apply',
       method: 'POST',
@@ -1360,7 +1360,7 @@ Page({
       presetChapterNode: null,
       selectedChapterId: chapterId,
       selectedChapterText: application.chapterName || '',
-      selectedChapterTermsMode: application.termsMode,
+      selectedChapterTermsMode: application.termsMode, selectedChapterPerkMin: String(application.perkMinValue || ((this.data.allChaptersList || []).find(c => Number(c.id) === Number(chapterId)) || { recruitStatus: {} }).recruitStatus.perkMinValue || ''),
       selectedChapterCircleMode: !!(this.data.info && this.data.info.circleThemeCode),
     });
   },
@@ -1511,8 +1511,8 @@ Page({
     });
   },
 
-  submitChapterNodeDraft(draft) {
-    if (!this.guardChapterNodeConfiguration(draft.chapterId)) {
+  submitChapterNodeDraft(draft, emptyTopic) {
+    if (!emptyTopic && !this.guardChapterNodeConfiguration(draft.chapterId)) {
       this.finishChapterNodeSubmit();
       return;
     }
@@ -1521,7 +1521,7 @@ Page({
       method: 'POST',
       header: { 'Content-Type': 'application/json' },
       data: JSON.stringify({
-        chapterId: draft.chapterId,
+        ...(emptyTopic ? { topicId: this.data.topicId, message: draft.message || '' } : { chapterId: draft.chapterId }),
         templateId: draft.templateId,
         name: String(draft.name).trim(),
         address: draft.address || '',
@@ -1533,7 +1533,7 @@ Page({
         if (res.code == '200') {
           this.setData({ chapterNodeFormVisible: false });
           this.loadMyChapterNodes(true);
-          this.loadMyChapterApplications(true);
+          this.loadMyChapterApplications(true); if (emptyTopic) this.loadMerchantRecruitmentChapters(); // 章节已建出
           cyToast.success(this.data.chapterNodeFormMode === 'node' ? '节点已保存，请查看承接进度' : '已提交，等待审核');
           return;
         }
