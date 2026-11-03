@@ -382,7 +382,7 @@
   <!-- ===== 圈层供给角色抽屉(BL-183) ===== -->
   <project-drawer show="{{ circleConfig.show }}" title="选择供给角色" subtitle="选 3–4 个，每类至少一个"
                   actions="{{ circleConfig.submitting ? [] : circleConfigActions }}"
-                  bind:close="emitCloseCircleConfig" bind:action="emitCircleConfigSubmit">
+                  bind:close="emitCloseCircleConfig" bind:action="emitCircleConfigSubmit" class="circle-drawer {{ hostOwnerType === 'club' ? 'theme-dark' : '' }}">
     <view class="dg-sub">保存后需重新确认</view>
     <view class="dcard">
       <view class="dpick" wx:for="{{ circleCandidates }}" wx:key="code"
@@ -402,7 +402,7 @@
   </project-drawer>
 
   <!-- ===== 「更多」抽屉:按 role + 状态分组(2026-09-05) ===== -->
-  <project-drawer show="{{ moreSheet.show }}" title="更多" bind:close="emitCloseMore"> <!-- 2026-10-31 P-6:与合作俱乐部 / 招商 / 客户同一档全屏 -->
+  <project-drawer show="{{ moreSheet.show }}" title="更多" bind:close="emitCloseMore" class="more-drawer {{ hostOwnerType === 'club' ? 'theme-dark' : '' }}"> <!-- 2026-10-31 P-6:与合作俱乐部 / 招商 / 客户同一档全屏 -->
     <!-- CU-C-68:站点资格探不到时给一行可见且可重试的说明 —— 探不到 ≠ 没资格,
          不能静静把「本站运营」那一组灰着不解释。 -->
     <cy-inline-error wx:if="{{ stationOpsErrorText }}" kind="data" title="本站运营项没能确认"
@@ -426,7 +426,7 @@
 
   <!-- ===== 本主题客户抽屉 ===== -->
   <project-drawer show="{{ playerSheet.show }}" title="客户" under="{{ broadcastSheet.show }}" done-text="{{ playerPick.selecting ? '完成' : '' }}" customer-mode="{{true}}" actions="{{ playerActions }}"
-                  bind:close="emitClosePlayer" bind:action="emitDrawerAction">
+                  bind:close="emitClosePlayer" bind:action="emitDrawerAction" class="customer-drawer {{ hostOwnerType === 'club' ? 'theme-dark' : '' }}">
     <!-- CU-C-67:名单读失败与「一单没卖」是两个态 —— 失败时不摆三个 0(那读起来就是「没人买票」),
          就地给可重试的错态。零单空态仍在 playerSheet.emptyText 那一条里。 -->
     <cy-inline-error load-failure wx:if="{{ playerSheet.errorText }}" kind="data" title="客户名单加载失败"

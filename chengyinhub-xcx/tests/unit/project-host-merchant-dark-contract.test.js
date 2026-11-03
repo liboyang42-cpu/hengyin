@@ -70,3 +70,35 @@ test('招商层用到的颜色别名,凡被 merchant-light 浅色重声明的,.t
   assert.match(darkBlock(), /--cy-color-text-primary:\s*#F8F8F8;/)
   assert.match(darkBlock(), /--cy-text-title:\s*var\(--cy-color-text-primary\);/)
 })
+
+// ROUND5E l6-club(业主 2026-11-03):俱乐部主办深色宿主里其余同用 project-drawer 的层 ——
+// 「客户」「更多」「选择供给角色」—— 在走查 rig 里同样标题、数字与行名深字压深底;
+// 抽屉主动作按钮底色写死 #000,字色却跟 theme-dark 的主 CTA 字色(深墨)走,也是深压深。
+// 修法同 5C:这三层挂同一条 theme-dark 条件;按钮底色改读现成的 --cy-btn-solid-bg(浅色主题仍是 #000)。
+// 「合作俱乐部」抽屉在俱乐部主办下没有入口(俱乐部不邀俱乐部),不改。
+const drawerTag = (title) => {
+  const m = HOST_WXML.match(new RegExp(`<project-drawer\\b[^>]*title="${title}"[^>]*>`))
+  assert.ok(m, `${title} 抽屉仍在 project-host 里`)
+  return m[0]
+}
+const CLUB_DARK = "{{ hostOwnerType === 'club' ? 'theme-dark' : '' }}\""
+
+test('ROUND5E:客户、更多、选择供给角色三层与招商同一条件挂 theme-dark', () => {
+  for (const t of ['客户', '更多', '选择供给角色']) assert.ok(drawerTag(t).includes(CLUB_DARK), t)
+  assert.ok(!drawerTag('合作俱乐部').includes('theme-dark'), '合作俱乐部在俱乐部主办下无入口,不改')
+})
+
+test('ROUND5E:抽屉主动作底色读 --cy-btn-solid-bg,浅色下仍是纯黑、深色下是浅底', () => {
+  const rule = DRAWER_WXSS.match(/\.dw-btn \{([\s\S]*?)\n\}/)[1]
+  assert.match(rule, /background: var\(--cy-btn-solid-bg\);/)
+  assert.match(rule, /color: var\(--cy-btn-solid-fg\);/)
+  assert.doesNotMatch(rule, /background: #000;/)
+  // 浅色:merchant-light 与 .theme-merchant 的主 CTA 底都是纯黑,商家主办看起来不变
+  assert.match(lightPageBlock(), /--cy-color-action-primary-bg:\s*#000000;/)
+  const merchant = TOKENS.match(/page\.theme-light,\s*\.theme-light,\s*\.theme-merchant \{([\s\S]*?)\n\}/)[1]
+  assert.match(merchant, /--cy-color-action-primary-bg:\s*#000000;/)
+  assert.match(merchant, /--cy-btn-solid-bg: var\(--cy-color-action-primary-bg\);/)
+  // 深色:主 CTA 底是浅色、字是深墨,能读
+  assert.match(darkBlock(), /--cy-btn-solid-bg: var\(--cy-color-action-primary-bg\);/)
+  assert.match(darkBlock(), /--cy-btn-solid-fg: var\(--cy-color-action-primary-fg\);/)
+})

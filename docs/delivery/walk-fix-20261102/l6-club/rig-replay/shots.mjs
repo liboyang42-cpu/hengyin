@@ -174,5 +174,47 @@ const sets = {
       await w.shot(name('MERCHANT', '-2-open')); await txt(w, 'merchant');
     });
   },
+  async r5edark() { // ROUND5E: every dark layer of the club-host project-host / project-drawer on merchantinfo?scope=CLUB
+    const call = (w, m, ds) => w.eval(`(() => { const p = getCurrentPages().slice(-1)[0]; p[${JSON.stringify(m)}]({ currentTarget: { dataset: ${JSON.stringify(ds || {})} }, detail: {} }); return true; })()`);
+    const reset = (w) => w.eval(() => { const p = getCurrentPages().slice(-1)[0];
+      p.setData({ 'merchantSheet.show': false, 'moreSheet.show': false, 'playerSheet.show': false, 'broadcastSheet.show': false, checkinVisible: false,
+        'layers.tier': { show: false }, 'layers.shops': { show: false }, 'layers.shopInvite': { show: false } }); return true; });
+    const mi = `pages/topic/merchantinfo/merchantinfo?topicId=${S.topic}&scope=CLUB`;
+    await go(LEAD, mi, async (w) => {
+      const d0 = await w.data(); console.log('DATA0', JSON.stringify({ role: d0.role, hostOwnerType: d0.hostOwnerType, operationScope: d0.operationScope, qa: (d0.quickActions || []).map((q) => q.key) }));
+      await w.shot(name('DARK-0-host')); await txt(w, 'host');
+      // 招商 drawer (fixed in 5C, control)
+      await call(w, 'onQuickAction', { key: 'merchant' }); await sl(2500); await w.shot(name('DARK-1-merchant')); await txt(w, 'merchant');
+      const st = ((await w.data()).recruitStations || [])[0] || {}; console.log('STATION', JSON.stringify(st).slice(0, 300));
+      if (st.chapterId) {
+        await call(w, 'openTierLayer', { id: st.chapterId }); await sl(1500); await w.shot(name('DARK-2-tier')); await txt(w, 'tier');
+        await w.eval(() => { getCurrentPages().slice(-1)[0].setData({ 'layers.tier': { show: false } }); return true; }); await sl(400);
+        await call(w, 'openShopsLayer', { id: st.chapterId }); await sl(2500); await w.shot(name('DARK-3-shops')); await txt(w, 'shops');
+        const shop = ((await w.data()).layers.shops.rows || [])[0];
+        if (shop) { await call(w, 'openShopInvite', { id: shop.memberId }); await sl(1500); await w.shot(name('DARK-4-shopinvite')); await txt(w, 'shopinvite'); }
+      }
+      await reset(w); await sl(600);
+      // 客户 drawer, then 定向广播 layer on top
+      await call(w, 'onQuickAction', { key: 'customer' }); await sl(2500); await w.shot(name('DARK-5-customer')); await txt(w, 'customer');
+      const d1 = await w.data(); console.log('PLAYERACTIONS', JSON.stringify(d1.playerActions), JSON.stringify(d1.playerPick || {}).slice(0, 200));
+      if ((d1.playerActions || []).some((a) => a.key === 'openBroadcast')) { await call(w, 'openBroadcast'); await sl(2000); await w.shot(name('DARK-6-broadcast')); await txt(w, 'broadcast'); }
+      await reset(w); await sl(600);
+      // 更多 drawer
+      await call(w, 'onQuickAction', { key: 'more' }); await sl(2500); await w.shot(name('DARK-7-more')); await txt(w, 'more');
+      await reset(w); await sl(600);
+      // 二维码 (page-level cy-qr-voucher)
+      await call(w, 'onQuickAction', { key: 'themeQr' }); await sl(2500); await w.shot(name('DARK-8-qr')); await txt(w, 'qr');
+    });
+  },
+  async r5ecircle() { // ROUND5E: 选择供给角色 drawer. The fixture is not a circle theme, so the drawer's data is set in the page (FORCED STATE, rig only)
+    const mi = `pages/topic/merchantinfo/merchantinfo?topicId=${S.topic}&scope=CLUB`;
+    await go(LEAD, mi, async (w) => {
+      await w.eval(`(() => { const p = getCurrentPages().slice(-1)[0]; p.setData({ circleCandidates: [
+        { code: 'A', name: '老街咖啡', roleLabel: '补给', merchant: '探店日样板咖啡', picked: true },
+        { code: 'B', name: '桥头书店', roleLabel: '线索', merchant: '探店日样板书店', picked: false } ],
+        circleConfig: { show: true, submitting: false, errorText: '', errorTitle: '' } }); return true; })()`);
+      await sl(1500); await w.shot(name('DARK-9-circle-forced')); await txt(w, 'circle');
+    });
+  },
 };
 await sets[set]();

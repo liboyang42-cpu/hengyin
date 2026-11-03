@@ -157,4 +157,41 @@ Owner's correction (ROUND5C.md, l6-club): in the dark club-host P-6 招商 layer
 
 **Unverified on a real phone:** on a real phone, WeChat may ignore `page{}` inside a component's wxss. If it does, the phone may never have shown this defect. Either way the fix is harmless there, because it only re-applies the dark tokens the page root already sets.
 
-STATUS: PARTIAL - P-6 item done and shot in the rig; not checked on a real phone; the other club-host drawers likely have the same contrast issue and wait for the owner; C-13 still waits for the owner's reference
+## Round 5E
+
+Task (ROUND5E.md, l6-club): check every dark layer of the club-host `project-host`, `project-drawer` and `merchantinfo?scope=CLUB` for the P-6 dark-on-dark defect, shoot each one, and fix dark text on a dark background through the same theme tokens. Change nothing else.
+
+Shots come from the walkthrough rig, not from a phone: real backend, MySQL and Redis, and the real bundle in the rig browser. `up.sh` was pinned to this branch (1d6de8f6). The same fixtures as 5C were used (`fixtures.py theme`, `session 40`, `members`), with identity 9008 (club 7002 lead), route `pages/topic/merchantinfo/merchantinfo?topicId=<topic>&scope=CLUB`, `role=host`, `hostOwnerType=club`. Steps: `node rig-replay/shots.mjs <phase> r5edark` and `r5ecircle`. Each layer is opened by calling the page's own handler (`onQuickAction`, `openTierLayer`, `openShopsLayer`). `-before` is 1d6de8f6; `-after` is the same rig with this round's two files rebuilt into the bundle.
+
+### Every dark layer in the club host
+
+| Layer | Kind | Before | After | Shots |
+|---|---|---|---|---|
+| Host page (`project-host` root, `.theme-dark`) | page | readable | unchanged | `R5E-host-before/after.jpg` |
+| 招商 | `project-drawer` | readable (fixed in 5C; control) | unchanged | `R5E-merchant-before/after.jpg` |
+| 这一站的档位 | `project-layer` (over 招商) | readable | unchanged | `R5E-tier-before/after.jpg` |
+| 附近商家 | `project-layer` (over 招商) | readable (empty list in the rig) | unchanged | `R5E-shops-before/after.jpg` |
+| 邀约承接 | `project-layer` (over 附近商家) | **not reached**: the rig has no nearby shops to invite. Same `project-layer` component as the two rows above, which does not import merchant-light, so the defect does not apply | unchanged | — |
+| 客户 | `project-drawer` | **dark on dark**: title 客户, the three — values, empty-state text 未售票, 发通知 | **fixed**: all readable | `R5E-customer-before/after.jpg` |
+| 更多 | `project-drawer` | **dark on dark**: title 更多, rows 权益票夹 and 开放商家承接申请 (only the red 结束本章 showed) | **fixed**: all readable | `R5E-more-before/after.jpg` |
+| 选择供给角色 | `project-drawer` | **dark on dark**: title, and the bottom button 保存供给角色 (black text on a black button) | **fixed**: title readable, white button with dark text, matching the host page's 继续编辑 | `R5E-circle-forced-before/after.jpg` **(forced state)**: this drawer opens only on circle themes. The rig fixture is not a circle theme, so the shot sets `circleConfig.show` in the page. The drawer itself is real |
+| 二维码 (`cy-qr-voucher`, page level) | sheet | readable. The rig's QR service answers 「个人码生成服务繁忙」 (HARNESS) | unchanged | `R5E-qr-before/after.jpg` |
+| 定向广播 | `project-layer` | not offered to club hosts (`playerPick.can=false`; the 客户 drawer shows 发通知 instead) | — | — |
+| 合作俱乐部 (+ 邀约俱乐部 / 俱乐部主页 layers) | `project-drawer` | no entry in club hosts (a club does not invite clubs: no 俱乐部 quick action) | not changed | — |
+
+### Fix
+
+| Item | Status | What changed | Files | Proof |
+|---|---|---|---|---|
+| 客户 / 更多 / 选择供给角色 dark on dark | fixed | Same cause and same fix as 5C. `project-drawer` imports merchant-light, and that file's `page{}` redefines the text tokens with light values on the drawer host. Each of the three drawers now gets the class `{{ hostOwnerType === 'club' ? 'theme-dark' : '' }}`, placed at the end of its opening tag. Each also gets a static hook class with no styles (`customer-drawer`, `more-drawer`, `circle-drawer`), the same way 5C did `merchant-drawer`, so the action ledger's selector hints stay stable instead of becoming `.{{`. Merchant hosts get only the hook class and render as before. | `pages/topic/components/project-host/index.wxml` (one attribute on each of three tags), `scripts/uiaudit/action-ledger.json` (5 selector hints) | Rig shots above. `project-host-merchant-dark-contract.test.js` adds two tests that fail on 1d6de8f6 and pass now (5/5). |
+| Drawer action button dark on dark | fixed | `.dw-btn` hard-coded `background: #000`, while its text read `--cy-btn-solid-fg`. Under club dark that token is ink (#0A0A0A), so the text was black on black. It is now `background: var(--cy-btn-solid-bg)`. That is #000000 on light/merchant hosts (merchant-light and `.theme-merchant` both set `--cy-color-action-primary-bg: #000000`), so merchant drawers look the same. Under `.theme-dark` it is #F8F8F8. The same button exists in the 招商 drawer (收到的申请) whenever it has actions. | `pages/topic/components/project-drawer/index.wxss` (one declaration) | `R5E-circle-forced-after.jpg`. The test checks the light and dark token values. |
+
+**Gates (local, final tree):** `UI-GATE-0:PASS`, `build-action-ledger.js --check` PASS (5605 controls), `--test-shard=9/20` 674 pass, and 95/95 in the 8 unit files that reference `project-drawer`. CI result is below.
+
+**Not changed:** the 合作俱乐部 drawer, because club hosts cannot reach it. The `project-layer` stacks were readable. Nothing else.
+
+**Unverified:**
+- A merchant-host drawer button was not shot after this change. The token values prove it is still #000, but there is no picture.
+- None of this was checked on a real phone. The text-token defect depends on how WeChat applies `page{}` inside component wxss. The button defect does not: with the dark host tokens the text colour is ink on a #000 background either way, so it also affects phones.
+
+STATUS: PARTIAL - Round 5E club-host dark layers checked and fixed in the rig (not on a real phone; 邀约承接 not reached in the rig; 选择供给角色 shot in a forced state); C-13 still waits for the owner's reference
