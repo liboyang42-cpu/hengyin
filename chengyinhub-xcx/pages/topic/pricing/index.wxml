@@ -74,7 +74,7 @@
         <view class="pg-title">合作阵容</view>
         
         <view class="pg-lineup-row" wx:for="{{lineup}}" wx:key="lineupKey" data-idx="{{index}}"
-              bindtap="goPartner" hover-class="pg-lineup-row--pressed" hover-stay-time="80"
+              bindtap="goPartner" hover-class="cy-pressed" hover-stay-time="80"
               aria-role="button" aria-label="查看{{item.name || (item.toType==='club' ? '合作俱乐部' : '承接商家')}}的结算条款">
           <view class="pg-lineup-info">
             <text class="pg-lineup-name ep1">{{item.name || (item.toType==='club' ? '合作俱乐部' : '承接商家')}}</text>

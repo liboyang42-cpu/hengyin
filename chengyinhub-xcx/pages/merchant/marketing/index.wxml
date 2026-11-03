@@ -56,7 +56,7 @@
     <!-- 工具入口。前两个是真工具,后两个是发布快捷方式 —— 都是现有路由,不新开页。 -->
     <view class="tiles">
       <view class="tile" wx:for="{{entries}}" wx:key="action" bindtap="go" data-action="{{item.action}}"
-            hover-class="tile--tap" hover-stay-time="80"
+            hover-class="cy-pressed" hover-stay-time="80"
             aria-role="button" aria-label="{{item.title}}">
         <cy-icon class="tile-ico" name="{{item.icon}}" size="44" />
         <text class="tile-label">{{item.title}}</text>
@@ -70,7 +70,7 @@
       <!-- 箭头走 cy-icon 真图标(字符 › 撞 global-real-icon 契约);
            可点元素必须带按压反馈(press-feedback-coverage 契约)。 -->
       <view class="sec-link" wx:if="{{marketingLoaded}}" bindtap="goManage"
-            hover-class="sec-link--tap" hover-stay-time="80"
+            hover-class="cy-pressed" hover-stay-time="80"
             aria-role="button" aria-label="管理我发布的内容">
         <text class="sec-link-txt">管理</text>
         <cy-icon class="sec-link-ico" name="arrow-right" size="24" />
@@ -89,7 +89,7 @@
     <view class="mine" wx:else>
       <view class="mine-tile" wx:for="{{myContent}}" wx:key="key"
             bindtap="goMyContent" data-key="{{item.key}}" data-count="{{item.count}}"
-            hover-class="mine-tap" hover-stay-time="80"
+            hover-class="cy-pressed" hover-stay-time="80"
             aria-role="button" aria-label="{{item.ariaLabel}}">
         <text class="mine-num">{{cnt.f(item.countText, mkK)}}</text>
         <text class="mine-label">{{item.title}}</text>
@@ -113,7 +113,7 @@
          拆成两个各自绑定 go 的可点元素会撞 ui-placeholder-cleanup 的
          「优惠券入口只能有一处」(它按 wxml 里的裸字符串计数,注释也算)。 -->
     <view class="deck-slot" wx:else bindtap="go" data-action="coupon"
-          hover-class="deck-tap" hover-stay-time="80"
+          hover-class="cy-pressed" hover-stay-time="80"
           aria-role="button" aria-label="{{couponCard ? couponCard.ariaLabel : '还没有优惠券，去发一张'}}">
       <view class="deck deck--g{{deckGhosts}}" wx:if="{{couponCard}}">
         <view class="deck-ghost deck-ghost--2" wx:if="{{deckGhosts > 1}}" aria-hidden="true"></view>
@@ -133,7 +133,7 @@
     <view class="sec-head">
       <text class="sec-title">合作机会</text>
     </view>
-    <view class="coop" bindtap="goCoopCenter" hover-class="coop--tap" hover-stay-time="80"
+    <view class="coop" bindtap="goCoopCenter" hover-class="cy-pressed" hover-stay-time="80"
           aria-role="button" aria-label="进入合作中心">
       <image class="coop-img" src="/pages/merchant/images/merchant_coop_banner.jpg" mode="aspectFill" />
       <view class="coop-scrim" aria-hidden="true"></view>

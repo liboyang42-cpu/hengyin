@@ -40,7 +40,6 @@ page { background: var(--cy-bg-page); }
   background: var(--cy-bg-card);
 }
 .ledger-action--secondary { margin-top: var(--cy-space-4); }
-.ledger-action--tap { opacity: .72; }
 .ledger-action-icon {
   width: var(--cy-btn-h);
   height: var(--cy-btn-h);
