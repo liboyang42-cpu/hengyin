@@ -16,12 +16,16 @@ import com.chengyinhub.business.service.ICmsTopicService;
 import com.chengyinhub.business.service.IMerchantFulfillmentReadService;
 import com.chengyinhub.business.service.IOmsTicketService;
 import com.chengyinhub.business.mapper.CmsRegistrationMapper;
+import com.chengyinhub.business.mapper.MerchantChapterOfferMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Map;
 
 @Service
@@ -34,6 +38,14 @@ public class MerchantFulfillmentReadServiceImpl implements IMerchantFulfillmentR
     private final ICmsRegistrationService registrationService;
     private final CmsRegistrationMapper registrationMapper;
     private final ICmsActivityService activityService;
+
+    /** M-04:自由探索主题的承接商家走 merchant_chapter_offer,不在 cms_registration_merchant 里。 */
+    private MerchantChapterOfferMapper chapterOfferMapper;
+
+    @Autowired(required = false)
+    public void setChapterOfferMapper(MerchantChapterOfferMapper chapterOfferMapper) {
+        this.chapterOfferMapper = chapterOfferMapper;
+    }
 
     public MerchantFulfillmentReadServiceImpl(ICmsRegistrationMerchantService registrationMerchantService,
                                                ICmsTopicService topicService, IClubService clubService,
@@ -61,10 +73,25 @@ public class MerchantFulfillmentReadServiceImpl implements IMerchantFulfillmentR
 
         List<Map<String, Object>> runs = new ArrayList<>();
         Date now = new Date();
+        Set<Long> covered = new LinkedHashSet<>();
         for (CmsRegistrationMerchant registration : won) {
             if (registration.getTopicId() == null) continue;
             if (topicIdFilter != null && !topicIdFilter.equals(registration.getTopicId())) continue;
+            covered.add(registration.getTopicId());
             runs.addAll(buildRunsForTopic(registration, now));
+        }
+        // M-04(2026-11-02 走查):自由探索的章节承接商家(生效 merchant_chapter_offer)也要看到当天场次;
+        // 之前只读城市定向中标行,承接商家在开场当天首页仍显示「今日无待办」。
+        if (chapterOfferMapper != null) {
+            List<Long> offerTopics = chapterOfferMapper.selectLiveTopicIdsByMerchant(memberId);
+            if (offerTopics != null) for (Long topicId : offerTopics) {
+                if (topicId == null) continue;
+                if (topicIdFilter != null && !topicIdFilter.equals(topicId)) continue;
+                if (!covered.add(topicId)) continue;
+                CmsRegistrationMerchant chapterHolder = new CmsRegistrationMerchant();
+                chapterHolder.setTopicId(topicId);
+                runs.addAll(buildRunsForTopic(chapterHolder, now));
+            }
         }
         runs.sort((left, right) -> Long.compare(runStartMillis(left), runStartMillis(right)));
         return runs;

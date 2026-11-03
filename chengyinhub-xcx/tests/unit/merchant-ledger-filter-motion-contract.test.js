@@ -253,7 +253,7 @@ test('核销岗位只看履约事实：筛选、金额、结算态与金额汇�
   const wxml = read('pages/merchant/ledger/index.wxml')
   assert.match(wxml, /<cy-tabs[^>]*wx:if="\{\{merchantAccess\.canReadFinance\}\}"/)
   assert.match(wxml, /fin-summary__cell[^>]*wx:if="\{\{merchantAccess\.canReadFinance\}\}"/)
-  assert.match(wxml, /fin-row__v[^>]*wx:if="\{\{merchantAccess\.canReadFinance\}\}"/)
+  assert.match(wxml, /fin-row__v[^>]*wx:if="\{\{merchantAccess\.canReadFinance( && item\.amountDisplay)?\}\}"/)
 })
 
 test('负控：动效降级、epoch 或错误空态互斥任一回退都必须判红', () => {

@@ -79,6 +79,19 @@
           and id = #{id}
     </select>
 
+    <!-- M-27(2026-11-03 业主):台账行显示顾客报名姓名。只读;按 r.merchant_id 收在本商家自己的核销里,
+         只取密文列,解密在 MerchantFinanceQueryService 做。 -->
+    <select id="selectSignupNamesByMerchant" resultType="com.chengyinhub.business.domain.vo.RedemptionSignupName">
+        select r.id as redemptionId, reg.real_name as realName
+        from redemption r
+        join cms_registration reg on reg.id = r.registration_id
+        where r.merchant_id = #{merchantId}
+          and reg.real_name is not null and reg.real_name &lt;&gt; ''
+        <if test="id != null">
+          and r.id = #{id}
+        </if>
+    </select>
+
     <!-- 请求级幂等查。
          为什么查生成列 active_idem_key 而不是 `idempotency_key = #{key} and status = 'ACTIVE'`:
          前者直接命中唯一索引 uk_redemption_idem_active(等值查,至多 1 行);

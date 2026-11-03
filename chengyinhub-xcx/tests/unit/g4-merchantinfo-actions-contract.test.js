@@ -285,6 +285,8 @@ test('CU-M-59:待审核/已驳回的节点不给「节点NPC」入口,就地说�
   const block = wxml.slice(wxml.indexOf('data-node-id="{{chapterNode.id}}"') - 600);
   assert.match(block, /wx:if="\{\{chapterNode\.auditLabel === '已通过'\}\}"/, '入口要与后端闸同一判据');
   assert.match(wxml, /审核通过后可配置节点内容/, '不给入口就要说什么时候能配');
+  // M-29:待审核的节点已写明「待审核」,不再补这句
+  assert.match(wxml, /wx:elif="\{\{chapterNode\.auditLabel !== '待审核'\}\}"[^>]*>审核通过后可配置节点内容/);
 });
 
 test('CU-M-89:节点介绍缺图不留固定高空白', () => {

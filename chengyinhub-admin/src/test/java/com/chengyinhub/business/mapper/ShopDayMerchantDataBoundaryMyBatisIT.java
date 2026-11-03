@@ -66,6 +66,11 @@ class ShopDayMerchantDataBoundaryMyBatisIT {
         }
     }
 
+    private static String statusOf(List<ShopDayMerchantRosterFact> rows, long registrationId) {
+        return rows.stream().filter(f -> Long.valueOf(registrationId).equals(f.getRegistrationId()))
+                .map(ShopDayMerchantRosterFact::getEntitlementStatus).findFirst().orElse(null);
+    }
+
     @Test
     void rosterIsIntersectionOfOwnStoreOwnTopicAndArrivalOrRedemption() throws Exception {
         try (SqlSession session = factory.openSession(true); Statement s = session.getConnection().createStatement()) {
@@ -81,11 +86,18 @@ class ShopDayMerchantDataBoundaryMyBatisIT {
             assertEquals(2, mapper.selectRoster(23L, 2001L).size(),
                     "服务中队列已由到店事实锁定，节点重审不得让玩家消失");
 
+            assertEquals("ARRIVED", statusOf(merchantA, 301L));
+            assertEquals("REDEEMED", statusOf(merchantA, 303L));
+
             s.executeUpdate("update cms_topic_node set merchant_member_id=2002 where id=41");
             session.clearCache();
             List<ShopDayMerchantRosterFact> mutated = mapper.selectRoster(23L, 2001L);
-            assertEquals(1, mutated.size(), "负控：把进店节点改归对店后，本店必须立即少一行");
-            assertEquals(303L, mutated.get(0).getRegistrationId());
+            // M-12(2026-11-02):已付款、本站权益未用的玩家在到店前也列出(「还没到店」);
+            // 负控改为:进店节点改归对店后,本店不再把他算作已到店。
+            assertEquals(2, mutated.size());
+            assertEquals("NOT_ARRIVED", statusOf(mutated, 301L), "负控：进店节点改归对店后不得再算本店到店");
+            assertEquals("REDEEMED", statusOf(mutated, 303L));
+            assertTrue(mutated.stream().noneMatch(f -> Long.valueOf(302L).equals(f.getRegistrationId())), "别店的玩家仍不可见");
 
             s.executeUpdate("update mms_merchant set account_status=2 where member_id=2001");
             session.clearCache();

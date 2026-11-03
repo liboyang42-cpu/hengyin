@@ -154,6 +154,48 @@ class MerchantFinanceQueryServiceTest {
         assertEquals(1, page.getRows().size());
     }
 
+    /** M-27 第4轮:台账行显示报名姓名,服务端解密;只问本商家的核销,没有姓名的行留空。 */
+    @Test
+    void ledgerRowsCarryDecryptedSignupNameOnlyForThisMerchantsRedemptions() {
+        MerchantFinanceQueryService service = new MerchantFinanceQueryService();
+        RedemptionMapper redemptionMapper = org.mockito.Mockito.mock(RedemptionMapper.class);
+        MerchantPayableMapper payableMapper = org.mockito.Mockito.mock(MerchantPayableMapper.class);
+        MerchantPayableBatchMapper batchMapper = org.mockito.Mockito.mock(MerchantPayableBatchMapper.class);
+        com.chengyinhub.business.security.PiiCryptoService pii = new com.chengyinhub.business.security.PiiCryptoService(
+                java.util.Base64.getEncoder().encodeToString(new byte[32]), "hmac-secret");
+        ReflectionTestUtils.setField(service, "redemptionMapper", redemptionMapper);
+        ReflectionTestUtils.setField(service, "payableMapper", payableMapper);
+        ReflectionTestUtils.setField(service, "batchMapper", batchMapper);
+        ReflectionTestUtils.setField(service, "piiCryptoService", pii);
+        Redemption named = new Redemption();
+        named.setId(31L);
+        named.setStatus("ACTIVE");
+        named.setCreateTime(atShanghai(2026, Calendar.AUGUST, 20, 9, 0));
+        Redemption nameless = new Redemption();
+        nameless.setId(32L);
+        nameless.setStatus("ACTIVE");
+        nameless.setCreateTime(atShanghai(2026, Calendar.AUGUST, 21, 9, 0));
+        com.chengyinhub.business.domain.vo.RedemptionSignupName signup = new com.chengyinhub.business.domain.vo.RedemptionSignupName();
+        signup.setRedemptionId(31L);
+        signup.setRealName(pii.encrypt("林野"));
+        when(redemptionMapper.selectByMerchant(7L)).thenReturn(java.util.Arrays.asList(named, nameless));
+        when(redemptionMapper.selectSignupNamesByMerchant(7L, null)).thenReturn(Collections.singletonList(signup));
+        when(redemptionMapper.selectByMerchantAndId(7L, 31L)).thenReturn(named);
+        when(redemptionMapper.selectSignupNamesByMerchant(7L, 31L)).thenReturn(Collections.singletonList(signup));
+        when(payableMapper.selectByMerchant(7L)).thenReturn(Collections.<MerchantPayable>emptyList());
+        when(batchMapper.selectByMerchant(7L)).thenReturn(Collections.<MerchantPayableBatch>emptyList());
+
+        MerchantFinancePage<MerchantRedemptionView> page = service.redemptions(7L, "all", 1, 20);
+        java.util.Map<String, String> byId = new java.util.HashMap<>();
+        for (MerchantRedemptionView row : page.getRows()) byId.put(row.getRecordId(), row.getCustomerDisplayName());
+        assertEquals("林野", byId.get("31"), "密文在服务端解密后下发");
+        assertEquals(null, byId.get("32"), "没有报名姓名就不下发,不写占位");
+        assertEquals("林野", service.redemptionDetail(7L, "redemption", "31").getCustomerDisplayName());
+        org.mockito.Mockito.verify(redemptionMapper, org.mockito.Mockito.never())
+                .selectSignupNamesByMerchant(org.mockito.ArgumentMatchers.argThat(id -> !Long.valueOf(7L).equals(id)),
+                        org.mockito.ArgumentMatchers.any());
+    }
+
     private static MerchantPayable payable(Long id, String entryType, String amount, Date createTime) {
         MerchantPayable payable = new MerchantPayable();
         payable.setId(id);

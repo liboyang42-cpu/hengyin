@@ -713,6 +713,11 @@ Page({
 
   refreshMyChapterApplications() {
     const rows = Array.isArray(this.data.myChapterApplications) ? this.data.myChapterApplications : [];
+    // M-21:填好供给后重读申请,头部状态签跟着变,不再留着「还差一步」与「实际供给已生效」并存。
+    if (this.data.chapterProject && rows.length) {
+      const active = rows.some(row => row.offerState !== 'WITHDRAWN' && (row.offerActive === true || Number(row.offerActive) === 1));
+      this.setData({ stateText: active ? '承接中' : '还差一步：设置到店权益' });
+    }
     this.setData({
       myChapterApplications: rows.map(row => {
         const termsMode = this.chapterTermsMode(row.chapterId, row.termsMode);
@@ -733,6 +738,9 @@ Page({
           canConfigureNode: !nodeReadOnlyReason && (status === 0 || status === 1),
           nodeReadOnlyReason,
           canReconfirmCircleSupply: !offerWithdrawn && offerActive && !!Number(row.offerId) && !!row.circleThemeCode,
+          // M-24:剩余 = 核销额度 − 已用;额度未知就不写。
+          quotaLeftText: Number(row.offerQuotaTotal) > 0
+            ? '剩余 ' + Math.max(0, Number(row.offerQuotaTotal) - (Number(row.offerQuotaUsed) || 0)) + ' / ' + Number(row.offerQuotaTotal) : '',
           circleSupplyCheckedAtText: row.circleSupplyCheckedAt
             ? String(row.circleSupplyCheckedAt).slice(0, 10) : '',
           canWithdraw: !offerWithdrawn && status === 0,
@@ -1897,7 +1905,7 @@ Page({
             scheduleValue: topic.startDate && topic.endDate
               ? (that.formatDayMonth(topic.startDate) + ' – ' + that.formatDayMonth(topic.endDate)) : '',
             stateText: chapterApplications.some(row => row.offerActive === true || Number(row.offerActive) === 1)
-              ? '承接中' : '待填写供给', stateClass: 'state-ok',
+              ? '承接中' : '还差一步：设置到店权益', stateClass: 'state-ok',
             myChapterApplications: chapterApplications,
             myChapterApplicationsLoaded: true,
             myChapterNodes: [], myChapterNodesLoaded: false, myChapterNodesError: '',
@@ -2476,7 +2484,8 @@ Page({
       || sourceRows.some(function (r) { return !!r.entitlementStatus; });
     const rows = sourceRows.map(function (r) {
       const state = shopDay
-        ? (r.serviceStartedAt ? 'redeemed' : 'arrived')
+        // M-12:已付款、本站权益未用、还没到店的玩家也在名单里(NOT_ARRIVED),归「还没到店」。
+        ? (r.serviceStartedAt ? 'redeemed' : (r.entitlementStatus === 'NOT_ARRIVED' ? 'pending' : 'arrived'))
         : (r.state || (r.arrived ? 'arrived' : 'pending'));
       return Object.assign({}, r, {
         state: state,
@@ -2510,7 +2519,7 @@ Page({
       { key: 'done', title: '已核销', has: function (s) { return s === 'arrived' || s === 'redeemed'; } },
       { key: 'refunded', title: '已退款', has: function (s) { return s === 'refunded'; } },
     ];
-    const groups = filter === 'all' && !shopDay
+    const groups = filter === 'all'
       ? SECTIONS.map(function (sec) {
         return { key: sec.key, title: sec.title, rows: kept.filter(function (r) { return sec.has(r.state); }) };
       }).filter(function (g) { return g.rows.length; })

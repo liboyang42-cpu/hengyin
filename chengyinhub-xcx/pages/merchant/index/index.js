@@ -39,7 +39,7 @@ function clearInvalidSession() {
   if (session && typeof session.clearSession === 'function') session.clearSession();
 }
 
-const { resolveVerificationResult, classifyVerificationOutcome, createVerificationWorkflow } = require('../../../utils/merchant-verification.js');
+const { resolveVerificationResult, verificationSheetView, classifyVerificationOutcome, createVerificationWorkflow } = require('../../../utils/merchant-verification.js');
 const { resolveVerificationScan } = require('../../../utils/verification-scan.js');
 const { getScene } = require('../../../utils/scene-registry.js');
 const { pushScene, popScene, currentScene, exitDecision } = require('../../../utils/scene-stack.js');
@@ -165,8 +165,25 @@ Page({
   // 切换营业状态是资料写操作；员工页即使误触方法也必须在请求前关闭。
   toggleBusiness() {
     if (!this.data.merchantAccess.canWriteProfile) return;
-    const that = this;
     const next = this.data.businessStatus === 1 ? 0 : 1;
+    if (next === 0) {
+      // M-13:一次误触就打烊,先确认;打烊不挡核销,话要说实。
+      const that = this;
+      modal.show({
+        title: '暂停营业？',
+        content: '玩家会看到本店今日已打烊，到店仍可核销。',
+        confirmText: '暂停营业',
+        cancelText: '继续营业',
+        success(r) { if (r && r.confirm) that._applyBusinessStatus(0); },
+      });
+      return;
+    }
+    this._applyBusinessStatus(next);
+  },
+
+  _applyBusinessStatus(next) {
+    if (!this.data.merchantAccess.canWriteProfile) return;
+    const that = this;
     const actionEpoch = (this._businessActionEpoch || 0) + 1;
     this._businessActionEpoch = actionEpoch;
     const scopeKey = this._merchantScopeKey || '';
@@ -222,12 +239,15 @@ Page({
       const assignment = [];
       if (item.chapterName) assignment.push(item.chapterName);
       if (item.nodeName && item.nodeName !== item.chapterName) assignment.push(item.nodeName);
+      // M-04 第4轮:不带日期的那半段单独留一份,卡上出现「今天 几点」时只写它,免得一张卡两个日期。
+      const placeText = assignment.join(' · ');
       if (item.startDateStr) assignment.push(item.startDateStr);
       // ⚠️ 这里曾按 searchStatus 编出 62/38 两个数,当「售出/购买比例」渲染给商家看 ——
       // 后端从来不下发这个数据,它是纯捏造的。真实数据到位前一律不显示。
       return Object.assign({}, item, {
         reportVolume: reportVolume,
         assignmentText: assignment.join(' · '),
+        assignmentPlaceText: placeText,
         // 类型标签只在后端确实下发 productType 时才出;拿不到就不显示,别猜
         productTypeText: PRODUCT_TYPE_TEXT[item.productType] || '',
       });
@@ -1343,7 +1363,8 @@ Page({
               },
             });
           } else {
-            cyToast(scan.message);
+            // M-25:不是城瘾的码也走同一张结果面板,不再是 2 秒就消失的 toast。
+            that.showRejectedScan(scan.message === '二维码格式错误' ? '这不是城瘾的核销码' : scan.message);
           }
           return;
         }
@@ -1400,12 +1421,31 @@ Page({
   },
 
   showVerificationResult(response, action) {
-    this.setData({ verificationResult: resolveVerificationResult(response, action) });
+    const result = resolveVerificationResult(response, action);
+    this.setData({ verificationResult: Object.assign(result, verificationSheetView(result)) });
     this.openScene('merchant-verification-result');
   },
 
   closeVerificationResult() {
     this.closeScene();
+  },
+
+  showRejectedScan(message) {
+    const result = { state: 'rejected', title: '未核销', message: message, show: true };
+    this.setData({ verificationResult: Object.assign(result, verificationSheetView(result)) });
+    this.openScene('merchant-verification-result');
+  },
+
+  // 结果面板主按钮:能核销的账号是「继续扫码」,其余只有「完成」。
+  onVerificationPrimary() {
+    if (this.data.merchantAccess && this.data.merchantAccess.canVerify) this.continueScan();
+    else this.closeVerificationResult();
+  },
+
+  // M-23:柜台排队时一次点按就接着扫下一位。
+  continueScan() {
+    this.closeScene();
+    wx.nextTick(() => this.goScanQR());
   },
 
   onChapterPick(e) {

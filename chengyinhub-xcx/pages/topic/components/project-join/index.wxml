@@ -91,7 +91,7 @@
           <cy-btn wx:if="{{chapterNode.auditLabel === '已通过'}}" variant="ghost" size="sm"
                   data-act="openNodeNpcForm" data-node-id="{{chapterNode.id}}" data-node-name="{{chapterNode.name}}"
                   bindtap="emit">节点NPC</cy-btn>
-          <text wx:else class="chapter-project-meta">审核通过后可配置节点内容</text>
+          <text wx:elif="{{chapterNode.auditLabel !== '待审核'}}" class="chapter-project-meta">审核通过后可配置节点内容</text>
         </view>
       </view>
       <cy-empty wx:if="{{myChapterNodesLoaded && !myChapterNodes.length && !myChapterNodesError}}" title="还没有自己的节点" />
@@ -110,7 +110,7 @@
                   data-act="withdrawChapterApplication" data-application-id="{{application.id}}" bindtap="emit">撤回申请</cy-btn>
         </view>
         <view class="chapter-project-meta" wx:if="{{application.offerActive && !application.offerWithdrawn}}">
-          实际供给已生效<text wx:if="{{application.circleSupplyCheckedAtText}}"> · 最近确认 {{application.circleSupplyCheckedAtText}}</text>
+          实际供给已生效<text wx:if="{{application.quotaLeftText}}"> · {{application.quotaLeftText}}</text><text wx:if="{{application.circleSupplyCheckedAtText}}"> · 最近确认 {{application.circleSupplyCheckedAtText}}</text>
         </view>
         <view class="chapter-project-meta" wx:if="{{application.offerPendingReview}}">实际供给待审核</view>
         <view class="chapter-project-meta" wx:if="{{application.offerWithdrawn}}">{{application.offerWithdrawReason}}</view>

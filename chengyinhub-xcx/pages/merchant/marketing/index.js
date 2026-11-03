@@ -6,9 +6,10 @@ const { openOpportunityCount } = require('../utils/recruit-routes.js');
 const { isRecord } = require('../../../utils/response-shape.js');
 const { inactiveAccess, normalizeMerchantAccess } = require('../../../utils/merchant-access-policy.js');
 
+// M-10(2026-11-02 业主):商家的内容只有主题和活动。自由探索是主题的一种玩法,计入主题;
+// 活动是组织者自己办的一场。没有第三类,也没有「营销」这一类。
 const CONTENT_TYPES = [
   { key: 'topic', title: '主题' },
-  { key: 'free', title: '自由探索' },
   { key: 'activity', title: '活动' },
 ];
 
@@ -384,9 +385,10 @@ Page({
   },
 
   _buildContentItems(content) {
+    const topicCount = finiteNonNegative(content.topicCount);
+    const freeCount = finiteNonNegative(content.freeExploreCount);
     const countByKey = {
-      topic: content.topicCount,
-      free: content.freeExploreCount,
+      topic: topicCount === null && freeCount === null ? null : (topicCount || 0) + (freeCount || 0),
       activity: content.activityCount,
     };
     return CONTENT_TYPES.map(function (item) {

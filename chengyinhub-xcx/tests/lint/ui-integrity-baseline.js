@@ -915,7 +915,9 @@ module.exports = {
 // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):45 个既有锚点仅行号位移换 key + 本线 6 处新增登记,digest 按门禁同一算法(sha256 of sorted keys joined by \n)重算。
 // 2026-10-20 合并 master(#327 等)进 #293:两侧重锚逐条按合并后源码同一行文本定位一致(fabu 12 条、merchantinfo 2 条、scene-club-edit 1 条),square/list 196/1259 随 #325 点赞修复后移一行;digest 按门禁同一算法重算。
 // 2026-10-27 devfix L07(21 处动态 setData 仅行号位移):逐条以 master 原行与新行逐字比对一致,理由一字未改,digest 按门禁同算法重算。
-"0bc17d60ab539fcb5b98db1312c1e8708021021ec9d50eeecae3cdcbde3ac3b6",
+// 2026-11-02 走查修复 l4-counter(M-12/M-21/M-24 在 merchantinfo.js 前段 +8 行):2 条 U4-DYNAMIC 锚点仅行号位移(2433→2441、2465→2473),调用行逐字相同、理由与条数不变;digest 按门禁 baselineKeyDigest 重算。
+// 2026-11-03 集成 l4-counter 合 pay-gate/l1/l2/l3:两侧登记取并集,不新增登记;u4Dynamic digest 按门禁 baselineKeyDigest 在合并树重算。
+"1b1626fd16e7057d1e86018470b59d329adfe72aad2469cc5761bc06fe6bb7b2",
 // 2026-10-28 模板页货架改版(#652)合 master(#610):本线删 template/index 两条 + master play 1621→1624 重锚，合并树 60 条，digest 按同一算法重算。
 // 2026-10-20 R5 尾段(#327,owner 批准 12 条重锚):fabu 729→731、898→900、2524→2530、3570→3588、3951→3969、4957→4990、5215→5248、5866→5899、5876→5909、5929→5962、6270→6303、7936→8060,逐行比对 master 原行一字未改,理由与条数 58 不变;digest 按同一算法显式重算。
       // 2026-08-20 开卡包四拍动效:u5Silent 条数不变(12),只是 play/index.js 的调用点
@@ -1416,8 +1418,8 @@ module.exports = {
       "chengyinhub-xcx/pages/templatedetail/templatedetail.js:220": "onLoad 的 data 由本方法构造：先写路由参数派生的固定键，dev 环境命中 mock 时交给 patchNormalized；patchNormalized 以 info/gallery/coverUrl/capRows/detailStats/materialChips/sceneChips/isTopicTemplate/difficultyLetter/difficultyLabel 十项逐个赋值，服务端对象只作为值参与归一化，不展开为 setData 字段名；owner=小程序，复核=2026-09-30",
       "chengyinhub-xcx/pages/templatedetail/templatedetail.js:336": "checkTextOverflow 的 patch 在 query.exec 回调内从空对象开始，只在 #tpl-desc / #tpl-rule 实测高度超过 110 时分别写入固定键 descNeedMore / ruleNeedMore（两键均为 true，被 WXML 的「展开」入口消费），且仅在请求令牌与详情上下文仍为当前时写入；键名不来自服务端或路由参数；owner=小程序，复核=2026-09-30",
       "chengyinhub-xcx/subpackageRoam/session/index.js:187": "动态 setData 需精确登记：...this._route(s)；owner=小程序，复核=2026-09-30",
-      "chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js:2433": "客户名单成功回读只调用本页 buildPlayerSheet；返回对象仅含 playerSheet 的十个固定子路径，服务端数据只作值。主办/承办组件消费 groups/filter/summary/shopDay/计数/contactHint/emptyText；raw 供同页重筛，rows 是归一名单值，字段名不取服务端输入；owner=小程序，复核=2026-09-30",
-      "chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js:2465": "客户筛选只调用本页 buildPlayerSheet 重建同一组十个固定 playerSheet 子路径；筛选 key 仅作值与状态比较，不拼字段名。主办/承办组件消费筛选、分组、汇总与空态，raw 提供重筛源，rows 是归一名单值；owner=小程序，复核=2026-09-30",
+      "chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js:2441": "客户名单成功回读只调用本页 buildPlayerSheet；返回对象仅含 playerSheet 的十个固定子路径，服务端数据只作值。主办/承办组件消费 groups/filter/summary/shopDay/计数/contactHint/emptyText；raw 供同页重筛，rows 是归一名单值，字段名不取服务端输入；owner=小程序，复核=2026-09-30",
+      "chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js:2473": "客户筛选只调用本页 buildPlayerSheet 重建同一组十个固定 playerSheet 子路径；筛选 key 仅作值与状态比较，不拼字段名。主办/承办组件消费筛选、分组、汇总与空态，raw 提供重筛源，rows 是归一名单值；owner=小程序，复核=2026-09-30",
       "chengyinhub-xcx/components/cy/scene-club-edit/index.js:173": "动态 setData 需精确登记：[f]: e.detail.value；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/publish/fabu/index.js:7040": "onIdentityFieldInput 的键来自同页 wxml data-field，枚举只有 identityRealName/identityIdCard 两个（grep 全页仅此两处绑定），另追加固定 identityError；owner=小程序，复核=2026-09-30",
   },

@@ -990,6 +990,18 @@ public class PerkLedgerServiceImpl implements IPerkLedgerService {
         return mode == null ? TermsMode.PERK : mode;
     }
 
+    @Autowired(required = false)
+    private com.chengyinhub.business.mapper.CoopPerkMapper coopPerkMapper;
+
+    @Override
+    public String livePerkName(Long chapterId, Long merchantId) {
+        if (chapterId == null || merchantId == null || coopPerkMapper == null) return null;
+        MerchantChapterOffer offer = findLiveOffer(chapterId, merchantId);
+        if (offer == null || offer.getPerkId() == null) return null;
+        com.chengyinhub.business.domain.CoopPerk perk = coopPerkMapper.selectById(offer.getPerkId());
+        return perk == null || perk.getName() == null || perk.getName().trim().isEmpty() ? null : perk.getName();
+    }
+
     /** uk_offer_merchant_chapter 保证一个商家一章最多一行,故取到即唯一。 */
     private MerchantChapterOffer findLiveOffer(Long chapterId, Long merchantId) {
         List<MerchantChapterOffer> offers = offerMapper.selectByChapter(chapterId);

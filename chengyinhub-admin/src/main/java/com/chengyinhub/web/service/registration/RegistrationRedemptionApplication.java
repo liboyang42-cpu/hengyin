@@ -212,7 +212,7 @@ public class RegistrationRedemptionApplication {
      * <p>⚠️ <b>刻意不调 {@code recordPaidRegistration}</b>:它是「整单票款给单一 payee」的口径,
      * 而 ③ 一张票跨 N 家核销 ⇒ 照搬 = 最后扫的那家白拿全额 = 资损。**这条别为了「接上入账」去动它。**
      */
-    private AjaxResult redeemExploreChapter(CmsRegistration registration, Long topicId,
+    private AjaxResult redeemExploreChapter(CmsRegistration registration, CmsActivity activity, Long topicId,
                                              Long merchantOwnerMemberId, Long operatorMemberId,
                                              String actorRoleCode) {
         if (topicId == null) {
@@ -223,7 +223,7 @@ public class RegistrationRedemptionApplication {
                 registration.getId(), topicId, merchantOwnerMemberId);
         List<Long> candidates = new ArrayList<>(scannable.keySet());
         if (candidates.isEmpty()) {
-            return AjaxResult.error("您在本路线没有可核销权益或有效核销回执");
+            return notRedeemed("您在本路线没有可核销权益或有效核销回执");
         }
         if (candidates.size() > 1) {
             Map<String, Object> d = new HashMap<>();
@@ -241,8 +241,22 @@ public class RegistrationRedemptionApplication {
             // 也是契约的一部分,改名 = 前端静默失效。
             return AjaxResult.error("请选择要核销的章节", d);
         }
-        return doRedeemExploreChapter(registration, candidates.get(0), topicId,
+        return doRedeemExploreChapter(registration, activity, candidates.get(0), topicId,
                 merchantOwnerMemberId, operatorMemberId, actorRoleCode);
+    }
+
+    /**
+     * M-05:核销成功回包带上本店在该章节要提供的权益名,柜台知道该给什么。
+     * 读取经 IPerkLedgerService(本类允许的依赖);核销已成立,查不到或失败只是不带,绝不影响结果。
+     */
+    private String perkDisplayName(Long chapterId, Long merchantOwnerMemberId) {
+        if (perkLedgerService == null || chapterId == null) return null;
+        try {
+            return perkLedgerService.livePerkName(chapterId, merchantOwnerMemberId);
+        } catch (RuntimeException e) {
+            logger.warn("核销回包权益名读取失败 chapterId={}", chapterId, e);
+            return null;
+        }
     }
 
     /** 核销回包的章节名;核销已成立,查名失败只降级为「章节 id」,与 describeChapters 的兜底一致。 */
@@ -333,7 +347,7 @@ public class RegistrationRedemptionApplication {
 
         ScanContext ctx = resolveExploreScanContext(code);
         if (ctx.error != null) return ctx.error;
-        return doRedeemExploreChapter(ctx.registration, chapterId, ctx.activity.getTopicId(),
+        return doRedeemExploreChapter(ctx.registration, ctx.activity, chapterId, ctx.activity.getTopicId(),
                 access.getOwnerMemberId(), principalMemberId, access.getRoleCode());
     }
 
@@ -461,24 +475,24 @@ public class RegistrationRedemptionApplication {
     private ScanContext resolveScanContext(String type, String code) {
         CmsRegistration reg = resolveRegistrationByScanCode(code);
         if (reg == null) {
-            return ScanContext.fail(AjaxResult.error("核销码无效"));
+            return ScanContext.fail(notRedeemed("核销码无效"));
         }
         // ① type 必须与 ownerType 一致 —— 详见 assertScanTypeMatchesOwner
         AjaxResult mismatch = assertScanTypeMatchesOwner(type, reg);
         if (mismatch != null) {
-            return ScanContext.fail(mismatch);
+            return ScanContext.fail(notRedeemed(mismatch));
         }
         // ② 资损闸:仅已支付单可核销
         Integer ps = reg.getPaymentStatus();
         if (ps == null || ps != 2) {
-            return ScanContext.fail(AjaxResult.error("订单未完成支付或已退款,无法核销"));
+            return ScanContext.fail(notRedeemed("订单未完成支付或已退款,无法核销"));
         }
         CmsActivity act = cmsActivityService.selectCmsActivityById(reg.getOwnerId());
         if (act == null) {
-            return ScanContext.fail(AjaxResult.error("活动不存在"));
+            return ScanContext.fail(notRedeemed("活动不存在"));
         }
         String rejection = ExploreTicketUsePolicy.rejection(reg.getPurchaseKind(), act.getEndDate(), new Date());
-        if (rejection != null) return ScanContext.fail(AjaxResult.error(rejection));
+        if (rejection != null) return ScanContext.fail(notRedeemed(rejection));
         return ScanContext.ok(reg, act);
     }
 
@@ -495,13 +509,13 @@ public class RegistrationRedemptionApplication {
         }
         // ③ 必须真是 ③ —— ①② 走整单核销那条路,别让它们进按章核销
         if (!isExplorePass(ctx.registration, ctx.activity)) {
-            return ScanContext.fail(AjaxResult.error("该订单不是探索票,请走普通核销"));
+            return ScanContext.fail(notRedeemed("该订单不是探索票,请走普通核销"));
         }
         return ctx;
     }
 
     /** ③ 核销的公共收尾:走 service 的事务收口 + 事务外发积分/勋章。 */
-    private AjaxResult doRedeemExploreChapter(CmsRegistration registration, Long chapterId,
+    private AjaxResult doRedeemExploreChapter(CmsRegistration registration, CmsActivity activity, Long chapterId,
                                               Long topicId, Long merchantOwnerMemberId,
                                               Long operatorMemberId, String actorRoleCode) {
         if (topicId == null) {
@@ -537,6 +551,9 @@ public class RegistrationRedemptionApplication {
         d.put("chapterId", chapterId);
         // 首次与重放共用同一个 chapterName 字段:商家认章节名,回包丢失重试后也要看得到核的是哪一章。
         d.put("chapterName", chapterDisplayName(chapterId));
+        putSessionDateWarning(d, activity, new Date());
+        String perkName = perkDisplayName(chapterId, merchantOwnerMemberId);
+        if (perkName != null) d.put("perkName", perkName);
         if (redemption.isReplayed()) {
             d.put("replayed", true);
             return AjaxResult.success("该章节已核销，请勿重复提供权益", d);
@@ -570,13 +587,13 @@ public class RegistrationRedemptionApplication {
      */
     public AjaxResult scanDynamicCode(Actor actorContext, String code) {
         if (StringUtils.isEmpty(code)) {
-            return AjaxResult.error("核销码无效");
+            return notRedeemed("核销码无效");
         }
         VerifyDynCodeUtil.Result result = rejectSuperseded(VerifyDynCodeUtil.verify(code, System.currentTimeMillis(), dynSecret), code);
         if (!result.valid) {
             AjaxResult original = replayOriginalSeat(actorContext, "activity", code, null, false);
             if (original != null) return original;
-            return AjaxResult.error(result.reason == null ? "核销码无效" : result.reason);
+            return notRedeemed(result.reason == null ? "核销码无效" : result.reason);
         }
         // The existing activity path retains its real permission/time-window gates before seat verification.
         if (result.type != null && result.type.startsWith("activity_seat_")
@@ -585,7 +602,7 @@ public class RegistrationRedemptionApplication {
         }
         // type 来自 HMAC 已验签的码，不能再收小程序回传的 type；团码/据点码各走自己的专用端点。
         if (!"activity".equals(result.type) && !"topic".equals(result.type)) {
-            return AjaxResult.error("非玩家动态核销码");
+            return notRedeemed("非玩家动态核销码");
         }
         return scanQrCode(actorContext, result.type, code);
     }
@@ -707,7 +724,7 @@ public class RegistrationRedemptionApplication {
                 if (isExplorePass(cmsRegistration, cmsActivity)) {
                     MerchantAccessContext access = merchantAccessService.require(
                             memberId, MerchantPermission.VERIFY);
-                    return redeemExploreChapter(cmsRegistration, cmsActivity.getTopicId(),
+                    return redeemExploreChapter(cmsRegistration, cmsActivity, cmsActivity.getTopicId(),
                             access.getOwnerMemberId(), memberId, access.getRoleCode());
                 }
                 Long activityOwnerMemberId = cmsActivity.getMemberId();
@@ -719,7 +736,7 @@ public class RegistrationRedemptionApplication {
                     MerchantAccessContext access = merchantAccessService.require(
                             memberId, MerchantPermission.VERIFY);
                     if (!activityOwnerMemberId.equals(access.getOwnerMemberId())) {
-                        return AjaxResult.error("该店无权核销本场玩家票；俱乐部带队请扫描领队团码");
+                        return notRedeemed("该店无权核销本场玩家票；俱乐部带队请扫描领队团码");
                     }
                     actorRoleCode = access.getRoleCode();
                 }
@@ -728,13 +745,13 @@ public class RegistrationRedemptionApplication {
                 if (tooEarly != null) {
                     AjaxResult original = replayOriginalSeat(actorContext, type, code, activityId, false);
                     if (original != null) return original;
-                    return tooEarly;
+                    return notRedeemed(tooEarly);
                 }
                 if (cmsRegistration.getOrderNum() != null && cmsRegistration.getOrderNum() > 1) {
                     VerifyDynCodeUtil.Result explicitSeat = rejectSuperseded(VerifyDynCodeUtil.verify(code, System.currentTimeMillis(), dynSecret), code);
                     Integer seatNo = explicitSeat.valid && explicitSeat.type != null && explicitSeat.type.startsWith("activity_seat_")
                             ? com.chengyinhub.business.service.RegistrationSeatService.seatNumber(explicitSeat.type) : null;
-                    if (seatNo == null) return AjaxResult.error("多人订单请逐席位出示核销码，整单码不能代替逐人核销");
+                    if (seatNo == null) return notRedeemed("多人订单请逐席位出示核销码，整单码不能代替逐人核销");
                     try {
                         var receipt = registrationSeatService.redeemActivitySeat(cmsRegistration.getId(), seatNo, memberId);
                         applyOriginalSeatRewards(cmsRegistration, receipt);
@@ -812,12 +829,12 @@ public class RegistrationRedemptionApplication {
                     // ⇒ verifyAndSettle 把整单票款结算给这个跟本单毫无关系的商家。①(owner_type=2 的活动票)同型。
                     AjaxResult mismatch = assertScanTypeMatchesOwner(type, cmsRegistration);
                     if (mismatch != null) {
-                        return mismatch;
+                        return notRedeemed(mismatch);
                     }
                     // [资损闸] 同 activity 分支:仅已支付单可核销,拒已退款/未支付。
                     Integer ps = cmsRegistration.getPaymentStatus();
                     if (ps == null || ps != 2) {
-                        return AjaxResult.error("订单未完成支付或已退款,无法核销");
+                        return notRedeemed("订单未完成支付或已退款,无法核销");
                     }
                     // 闸过了 ⇒ 这里保证是 owner_type=1 的主题单 ⇒ 下面把 ownerId 当 topicId 用是安全的。
                     Long topicId = cmsRegistration.getOwnerId();
@@ -825,7 +842,7 @@ public class RegistrationRedemptionApplication {
                     boolean isOrganizerMember = hasOrganizer && isTopicOrganizer(topicId, memberId);
                     boolean isOrganizer = hasOrganizer && clubMemberService.isTopicOwner(topicId, memberId);
                     if (isOrganizerMember && !isOrganizer) {
-                        return AjaxResult.error("仅俱乐部主理人可核销玩家票");
+                        return notRedeemed("仅俱乐部主理人可核销玩家票");
                     }
 
                     Long merchantOwnerMemberId = null;
@@ -937,11 +954,11 @@ public class RegistrationRedemptionApplication {
                         return AjaxResult.success("核销成功");
                     }
                     if (hasOrganizer) {
-                        return AjaxResult.error("本主题由俱乐部带团，请扫领队出示的团码");
+                        return notRedeemed("本主题由俱乐部带团，请扫领队出示的团码");
                     }
-                    return AjaxResult.error("查询失败");
+                    return notRedeemed("本店不是这张票的核销店铺");
                 } else {
-                    return AjaxResult.error("查询失败");
+                    return notRedeemed("核销码无效");
                 }
             }
             return AjaxResult.error("查询失败");
@@ -957,6 +974,39 @@ public class RegistrationRedemptionApplication {
     /** 保持 Java 调用方/既有测试的两参数契约；HTTP 入口由三参数方法接收可选 activityId。 */
     public AjaxResult scanQrCode(Actor actorContext, String type, String code) {
         return scanQrCode(actorContext, type, code, null);
+    }
+
+    /**
+     * M-02:核销事务尚未开始就被拒绝(码无效/过期/本店无此票权益/未支付/时间未到等),肯定没有核销。
+     * 只在确知未进入核销事务的分支使用;事务内或事务后的异常不得带此标记 —— 客户端仍按「待确认」处理。
+     */
+    static AjaxResult notRedeemed(String message) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("notRedeemed", true);
+        return AjaxResult.error(message, data);
+    }
+
+    private static AjaxResult notRedeemed(AjaxResult refusal) {
+        Object msg = refusal == null ? null : refusal.get(AjaxResult.MSG_TAG);
+        return notRedeemed(msg == null ? "核销码无效" : String.valueOf(msg));
+    }
+
+    /**
+     * M-06:他日场次的票照常可核销,但回包带上场次日期,柜台据此提醒。今天落在场次日期区间内则不带。
+     */
+    static void putSessionDateWarning(Map<String, Object> data, CmsActivity activity, Date now) {
+        if (activity == null || activity.getStartDate() == null || now == null) return;
+        java.time.ZoneId zone = java.time.ZoneId.of("Asia/Shanghai");
+        java.time.LocalDate today = now.toInstant().atZone(zone).toLocalDate();
+        java.time.LocalDate start = activity.getStartDate().toInstant().atZone(zone).toLocalDate();
+        java.time.LocalDate end = activity.getEndDate() == null ? start
+                : activity.getEndDate().toInstant().atZone(zone).toLocalDate();
+        if (end.isBefore(start)) end = start;
+        if (!today.isBefore(start) && !today.isAfter(end)) return;
+        String text = start.getMonthValue() + "月" + start.getDayOfMonth() + "日";
+        if (!end.equals(start)) text += "–" + end.getMonthValue() + "月" + end.getDayOfMonth() + "日";
+        data.put("sessionDate", text);
+        data.put("sessionNotToday", true);
     }
 
     private AjaxResult duplicateVerificationResult() {

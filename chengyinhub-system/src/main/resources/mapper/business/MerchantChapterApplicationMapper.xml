@@ -38,6 +38,8 @@
         <result property="offerId" column="offer_id" />
         <result property="circleThemeCode" column="circle_theme_code" />
         <result property="circleSupplyCheckedAt" column="circle_supply_checked_at" />
+        <result property="offerQuotaTotal" column="offer_quota_total" />
+        <result property="offerQuotaUsed" column="offer_quota_used" />
     </resultMap>
 
     <sql id="selectMerchantChapterApplicationVo">
@@ -119,6 +121,7 @@
                t.name as topic_name, t.img_url as topic_img_url, t.start_date, t.end_date,
                t.circle_theme_code, c.name as chapter_name, m.name as merchant_name,
                o.id as offer_id, o.withdraw_reason as offer_withdraw_reason, p.checked_at as circle_supply_checked_at,
+               o.quota_total as offer_quota_total, o.quota_used as offer_quota_used,
                case when o.id is not null and o.status = 1
                           and (o.valid_end is null or o.valid_end &gt; now())
                     then 1 else 0 end as offer_active,

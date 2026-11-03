@@ -186,7 +186,7 @@ test('首载呈现骨架;未确认的数字位写 0、状态位说实话', () =>
   assert.equal(page.data.couponCard.sub, '数据待同步')
   assert.equal(page.data.myContent.every((item) => item.count === null), true,
     '内部真值仍是 null:零内容与未确认在路由上必须可分(见「未知内容数量不会被当作零内容」)')
-  assert.deepEqual(page.data.myContent.map((item) => item.countText), ['0', '0', '0'])
+  assert.deepEqual(page.data.myContent.map((item) => item.countText), ['0', '0'])
   assert.equal(page.data.funnelLoading, true)
   assertStateMarkup(fs.readFileSync(WXML_PATH, 'utf8'))
 })
@@ -200,7 +200,7 @@ test('服务端明确全零后才进入业务空态，零值仍保留为已确�
 
   assert.equal(page.data.marketingLoaded, true)
   assert.equal(page.data.couponCard, null, '服务端明确回零张才允许是 null(落虚线空态)')
-  assert.deepEqual(page.data.myContent.map((item) => item.count), [0, 0, 0])
+  assert.deepEqual(page.data.myContent.map((item) => item.count), [0, 0])
   assert.equal(page.data.funnelLoading, false)
 
   const wxml = fs.readFileSync(WXML_PATH, 'utf8')
@@ -555,7 +555,7 @@ test('营销页数字位不许出现横杠占位(用户裁决 2026-09-19)', () =
   const page = loadPage()
   startMarketing(page)
   assert.equal(page.data.hero.value, '0')
-  assert.deepEqual(page.data.myContent.map((item) => item.countText), ['0', '0', '0'])
+  assert.deepEqual(page.data.myContent.map((item) => item.countText), ['0', '0'])
   assert.equal(page.data.couponCard.title, '0 张在投放')
   // 负控:把未知态改回横杠,上面那条扫描必须抓到(证明它不是恒绿的空扫)
   // 锚点跟的是 heroPlaceholder 的返回字面量(#1088 把 HERO_UNKNOWN 常量重构成了函数,
@@ -563,4 +563,14 @@ test('营销页数字位不许出现横杠占位(用户裁决 2026-09-19)', () =
   const regressed = js.replace("return { value: '0', sub: '', label: label", "return { value: '—', sub: '', label: label")
   assert.notEqual(regressed, js, '负控锚点失效:heroPlaceholder 字面量已改名,扫描口径需同步')
   assert.match(regressed, /(['"])—+\1/, '把未知态改回横杠时裁决必须转红')
+})
+
+test('M-10 我的内容只有主题和活动：自由探索计入主题', () => {
+  const page = loadPage()
+  const items = page._buildContentItems({ topicCount: 1, freeExploreCount: 2, activityCount: 3 })
+  assert.deepEqual(items.map((item) => [item.key, item.title, item.count]), [['topic', '主题', 3], ['activity', '活动', 3]])
+  assert.equal(page._buildContentItems({}).every((item) => item.count == null), true, '未读到仍是 null,不当成零')
+  const wxml = fs.readFileSync(WXML_PATH, 'utf8')
+  assert.doesNotMatch(wxml, /title="还没有营销数据"/)
+  assert.match(wxml, /title="还没有主题和活动"/)
 })

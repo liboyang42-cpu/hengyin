@@ -1,0 +1,21 @@
+# l4-counter HTTP evidence (rig, branch build). 2026-11-02T08:48:06Z
+## M-02 expired code (issued 08:39:26Z, scanned >5 min later by stop holder 9002)
+scanner 13900000002 reg 79 -> {"code": 500, "msg": "已过期", "data": {"notRedeemed": true}}
+  read-back redemption rows before/after: 0 0  entitlements: ((42, 0), (43, 0), (44, 0), (45, 0))
+## M-04 upcoming runs for stop holder 9002
+upcoming-runs(9002): [{"topicId": 990014, "activityId": 13, "clubName": "执行俱乐部", "paidCount": 1, "startTime": "2026-11-02T16:38:00.000+08:00"}, {"topicId": 990014, "activityId": 14, "clubName": "执行俱乐部", "paidCount": 4, "startTime": "2026-11-02T17:08:00.000+08:00"}, {"topicId": 990014, "activityId": 9, "clubName": "执行俱乐部", "paidCount": 1, "startTime": "2026-11-12T10:00:00.000+08:00"}, {"topicId": 990014, "activityId": null, "clubName": "城瘾跑团", "paidCount": 0, "startTime": "2026-11-12T10:00:00.000+08:00"}, {"topicId": 990014, "activityId": 10, "clubName": "执行俱乐部", "paidCount": 0, "startTime": "2026-11-13T10:00:00.000+08:00"}, {"topicId": 990014, "activityId": 11, "clubName": "执行俱乐部", "paidCount": 0, "startTime": "2026-11-14T10:00:00.000+08:00"}, {"topicId": 990014, "activityId": 12, "clubName": "执行俱乐部", "paidCount": 0, "startTime": "2026-11-15T10:00:00.000+08:00"}]
+  read-back: ((9, datetime.datetime(2026, 11, 12, 10, 0), 1), (10, datetime.datetime(2026, 11, 13, 10, 0), 0), (11, datetime.datetime(2026, 11, 14, 10, 0), 0), (12, datetime.datetime(2026, 11, 15, 10, 0), 0), (13, datetime.datetime(2026, 11, 2, 16, 38), 1), (14, datetime.datetime(2026, 11, 2, 17, 8), 4))
+## M-12 / M-27 roster scope
+roster(9002): [[75, "孙望舒", "REDEEMED"], [76, "林一舟", "REDEEMED"], [74, "E2E 玩家二号", "REDEEMED"], [79, "陈一舟", "NOT_ARRIVED"], [78, "许知夏", "NOT_ARRIVED"], [77, "吴桐", "NOT_ARRIVED"]]
+  read-back (chapter 42 entitlements, paid): ((74, 1, 1), (75, 1, 1), (76, 1, 1), (77, 0, 1), (78, 0, 1), (79, 0, 1))
+roster(9005, other stop): [[74, "REDEEMED"], [79, "NOT_ARRIVED"], [78, "NOT_ARRIVED"], [77, "NOT_ARRIVED"], [76, "NOT_ARRIVED"], [75, "NOT_ARRIVED"]]
+## M-14 closed shop -> player node openStatus
+player nodes (open): [["样板咖啡第1站", 9002, ""], ["样板书店第2站", 9005, ""], ["样板花店第3站", 9006, ""], ["样板面包第4站", 9007, ""]]
+close: 已打烊
+  read-back: ((9002, 0),)
+player nodes (closed): [["样板咖啡第1站", 9002, "今日已打烊"], ["样板书店第2站", 9005, ""], ["样板花店第3站", 9006, ""], ["样板面包第4站", 9007, ""]]
+reopen: 已营业 ((1,),)
+## M-02 wrong shop (run 08:40Z; FIXTURE: merchant_chapter_offer id=4 set status=0 for the scan, restored to 1 right after)
+scanner 13900000007 reg 77 -> {"code": 500, "msg": "您在本路线没有可核销权益或有效核销回执", "data": {"notRedeemed": true}}
+  read-back redemption rows before/after: 0 0  entitlements: ((42, 0), (43, 0), (44, 0), (45, 0))
+## M-02 forged code (browser, after shot M-02-after): server msg 签名不匹配 + notRedeemed; sheet shows 未核销
