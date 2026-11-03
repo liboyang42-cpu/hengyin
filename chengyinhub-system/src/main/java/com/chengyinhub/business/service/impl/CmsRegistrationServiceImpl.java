@@ -1016,6 +1016,11 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             } else {
                 validateTopicSellable(topic);
             }
+            // ownerType=1 下单一律走 createSelfPlayPassInternal(金额 = selfPlayPrice,不看票价、不抵积分),
+            // 报价必须说同一个数(2026-11-03:rig 实测报价按主题票价 39.99,实收 29.99)。
+            if (ownerType != null && ownerType == 1 && inventoryHold == null) {
+                return quoteSelfPlayPass(memberId, ownerType, ownerId, ticketId, tickets, isUsePoint, topic);
+            }
         }
         CmsTopic sellerTopic = resolveSellerTopic(Convert.toLong(ownerType), ownerId);
         assertShopDayPointsUnsupported(sellerTopic, isUsePoint);
@@ -1124,6 +1129,67 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             } else {
                 // 2026-11-02 退款档位:集合前 24 小时以上全额、24 小时内 50%、开始后不退(RefundPolicy 唯一判定)。
                 BigDecimal ratio = RefundPolicy.sessionRefundRatioAt(refundAnchor, quotedAt);
+                result.setRefundableNow(ratio == null ? null : ratio.signum() > 0);
+                result.setRefundPercentNow(ratio == null ? null
+                        : ratio.multiply(BigDecimal.valueOf(100)).intValue());
+            }
+        }
+        return result;
+    }
+
+    /**
+     * 自玩通行证报价:与 {@link #createSelfPlayPassInternal} 同一套取价与退款快照。
+     * 金额 = 俱乐部权益后的 selfPlayPrice;不抵积分(下单 pointUsed 恒 0);
+     * 退款字段读下单会冻结的通行证三档快照({@link RefundPolicy#snapshotSelfPlayPass}),快照算不出时不另说。
+     * 签名的 ticketsKey 与幂等重放 {@code RegistrationOrderServiceImpl#matchesPersistedQuote} 同一拼法。
+     */
+    private RegistrationQuoteResult quoteSelfPlayPass(Long memberId, Integer ownerType, Long ownerId, Long ticketId,
+                                                      List<RegistrationTicketItem> tickets, Integer isUsePoint,
+                                                      CmsTopic topic) {
+        boolean freeTopic = isFreeTopic(topic);
+        if (freeTopic && topic.getSelfPlayPrice() != null && topic.getSelfPlayPrice().signum() != 0) {
+            throw new RuntimeException("票价已变更,请刷新后重新下单");
+        }
+        if (!freeTopic) SaleAvailabilityPolicy.assertSellable(topic, null, new Date());
+        if (topic.getSelfPlay() == null || topic.getSelfPlay() != 1) {
+            throw new RuntimeException("该主题未开放自玩");
+        }
+        if (topic.getSelfPlayPrice() == null || topic.getSelfPlayPrice().compareTo(BigDecimal.ZERO) < 0) {
+            throw new RuntimeException("自玩票价未配置");
+        }
+        validateAndGetMember(memberId);
+        ClubOperationBenefit clubBenefit = resolveClubOperationBenefit(memberId, topic.getClubId());
+        BigDecimal originalPrice = topic.getSelfPlayPrice();
+        BigDecimal price = clubBenefit.effectivePrice(originalPrice);
+        if (price.compareTo(BigDecimal.ZERO) > 0) {
+            assertCollectible(topic, price);
+        }
+        BigDecimal payAmount = price.setScale(2, BigDecimal.ROUND_HALF_UP);
+        StringBuilder ticketsKey = new StringBuilder();
+        if (tickets == null || tickets.isEmpty()) {
+            ticketsKey.append(ticketId).append(":1");
+        } else {
+            for (int i = 0; i < tickets.size(); i++) {
+                RegistrationTicketItem it = tickets.get(i);
+                int qty = (it == null || it.getCount() == null || it.getCount() <= 0) ? 1 : it.getCount();
+                if (i > 0) ticketsKey.append('|');
+                ticketsKey.append(it == null ? null : it.getTicketId()).append(':').append(qty);
+            }
+        }
+        int usePoint = (isUsePoint != null && isUsePoint == 1) ? 1 : 0;
+        BigDecimal couponDeductYuan = BigDecimal.ZERO;
+        String quoteSign = buildQuoteSign(memberId, ownerType, ownerId, ticketsKey.toString(),
+                usePoint, payAmount, 0, couponDeductYuan);
+        RegistrationQuoteResult result = new RegistrationQuoteResult(payAmount, 0,
+                BigDecimal.ZERO.setScale(2, BigDecimal.ROUND_HALF_UP), couponDeductYuan, quoteSign,
+                originalPrice.subtract(price).setScale(2, BigDecimal.ROUND_HALF_UP), clubBenefit.isMember,
+                clubBenefit.prioritySignupEnabled);
+        if (payAmount.signum() > 0) {
+            RefundPolicy.Snapshot passPolicy = RefundPolicy.snapshotSelfPlayPass(topic);
+            if (passPolicy != null && passPolicy.deadline != null) {
+                Date quotedAt = new Date();
+                result.setRefundDeadline(RefundPolicy.sessionRefundDeadline(passPolicy.deadline));
+                BigDecimal ratio = RefundPolicy.sessionRefundRatioAt(passPolicy.deadline, quotedAt);
                 result.setRefundableNow(ratio == null ? null : ratio.signum() > 0);
                 result.setRefundPercentNow(ratio == null ? null
                         : ratio.multiply(BigDecimal.valueOf(100)).intValue());
