@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>图片裁剪</title>
+<style>
+:root{
+  --ease-out:cubic-bezier(.22,.61,.36,1); --std:cubic-bezier(.4,0,.2,1); --spring:cubic-bezier(.2,1.4,.5,1);
+  --doc-bg:#E6E8EC; --doc-card:#FFFFFF; --doc-ink:#111111; --doc-muted:#5B6270; --doc-line:#DADDE3; --doc-chip:#F1F2F4;
+  /* 裁剪页：tokens.wxss crop 组件 token + 玩家深色基础 token */
+  --crop-stage:#000000; --crop-frame:rgba(255,255,255,.72);
+  --d-page:#000000; --d-surface:#0A0A0B; --d-subtle:#141416; --d-elev:#1C1C1E;
+  --d-t1:#F8F8F8; --d-t2:#B7B7B7; --d-t3:#919191; --d-line:rgba(255,255,255,.08);
+  /* 商家浅色（结果预览）*/
+  --m-page:#F3F4F4; --m-surface:#FFFFFF; --m-subtle:#EEEEEE; --m-t1:#000000; --m-t2:#404040; --m-t3:#6B6B6B; --m-line:#E8E8E8; --m-soft:#EAEBEE;
+  --r-md:12px; --r-lg:16px; --pill:999px; --px:16px;
+  --mono:"SF Mono","DIN Alternate",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --doc-bg:#141518; --doc-card:#1D1F23; --doc-ink:#F2F3F5; --doc-muted:#A3A9B4; --doc-line:#2E3138; --doc-chip:#262930; }
+}
+:root[data-theme="dark"]{ --doc-bg:#141518; --doc-card:#1D1F23; --doc-ink:#F2F3F5; --doc-muted:#A3A9B4; --doc-line:#2E3138; --doc-chip:#262930; }
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--doc-bg);color:var(--doc-ink);font-family:-apple-system,"PingFang SC","Helvetica Neue","Microsoft YaHei",sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit;padding:0}
+.wrap{display:flex;gap:32px;justify-content:center;align-items:flex-start;padding:32px 16px;flex-wrap:wrap}
+.panel{width:340px;background:var(--doc-card);border:1px solid var(--doc-line);border-radius:16px;padding:20px;font-size:13px;line-height:1.6}
+.panel h1{font-size:18px;margin:0 0 4px}
+.panel .id{display:inline-block;font-family:var(--mono);font-size:12px;padding:2px 8px;border-radius:999px;background:var(--doc-chip);margin-bottom:8px}
+.panel h2{font-size:13px;margin:16px 0 6px;color:var(--doc-muted);font-weight:600}
+.panel ul{margin:0;padding-left:18px}
+.panel li{margin:2px 0}
+.ctl{display:flex;flex-wrap:wrap;gap:8px}
+.ctl button{padding:6px 12px;border-radius:999px;border:1px solid var(--doc-line);background:var(--doc-chip);font-size:12px}
+.ctl button.on{background:var(--doc-ink);color:var(--doc-card);border-color:var(--doc-ink)}
+.q{background:var(--doc-chip);border-radius:10px;padding:8px 10px;margin-top:6px}
+
+.phone{position:relative;width:375px;height:812px;border-radius:44px;overflow:hidden;flex:none;box-shadow:0 0 0 10px #101010,0 24px 60px rgba(0,0,0,.28);background:var(--crop-stage);color:var(--d-t1);display:flex;flex-direction:column}
+@media (max-width:420px){
+  .wrap{flex-direction:column;align-items:center;padding:16px 12px;gap:24px}
+  .phone{width:calc(100vw - 24px);max-width:375px}
+  .panel{width:100%}
+}
+.status{height:44px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 26px 0 32px;font-size:15px;font-weight:600}
+.status svg{display:block}
+.nav{height:44px;flex:none;position:relative;display:flex;align-items:center}
+.nav__back{width:44px;height:44px;display:flex;align-items:center;justify-content:center;margin-left:4px}
+.nav__title{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:17px;font-weight:600;white-space:nowrap}
+.capsule{position:absolute;right:7px;top:6px;width:87px;height:32px;border-radius:16px;display:flex;align-items:center;background:rgba(0,0,0,.15);border:1px solid rgba(255,255,255,.28)}
+.capsule span{flex:1;display:flex;align-items:center;justify-content:center;height:100%}
+.capsule i{width:1px;height:18px;background:rgba(255,255,255,.3)}
+.ico{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ico--s{width:16px;height:16px}
+
+/* 取景台 */
+.stage{position:relative;flex:1;min-height:0;overflow:hidden;touch-action:none;cursor:grab;background:var(--crop-stage)}
+.stage.dragging{cursor:grabbing}
+.photo{position:absolute;left:50%;top:50%;transform-origin:center center;will-change:transform;user-select:none;-webkit-user-drag:none;pointer-events:none}
+.photo.anim{transition:transform .28s var(--ease-out)}
+.frame{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;box-shadow:0 0 0 2000px rgba(0,0,0,.62);border:1.5px solid var(--crop-frame);transition:width .3s var(--ease-out),height .3s var(--ease-out),border-radius .3s var(--ease-out)}
+.frame.round{border-radius:50%}
+.grid{position:absolute;inset:0;opacity:0;transition:opacity .2s;border-radius:inherit;overflow:hidden;
+  background:
+    linear-gradient(90deg,transparent calc(33.33% - .5px),rgba(255,255,255,.4) calc(33.33% - .5px),rgba(255,255,255,.4) calc(33.33% + .5px),transparent calc(33.33% + .5px),transparent calc(66.66% - .5px),rgba(255,255,255,.4) calc(66.66% - .5px),rgba(255,255,255,.4) calc(66.66% + .5px),transparent calc(66.66% + .5px)),
+    linear-gradient(180deg,transparent calc(33.33% - .5px),rgba(255,255,255,.4) calc(33.33% - .5px),rgba(255,255,255,.4) calc(33.33% + .5px),transparent calc(33.33% + .5px),transparent calc(66.66% - .5px),rgba(255,255,255,.4) calc(66.66% - .5px),rgba(255,255,255,.4) calc(66.66% + .5px),transparent calc(66.66% + .5px))}
+.stage.dragging .grid{opacity:1}
+.ratio-tag{position:absolute;left:50%;transform:translateX(-50%);top:12px;height:24px;padding:0 10px;border-radius:999px;background:rgba(255,255,255,.12);color:var(--d-t2);font-size:11px;display:flex;align-items:center;gap:4px;pointer-events:none;white-space:nowrap}
+.guide{position:absolute;border:1px dashed rgba(255,214,10,.75);pointer-events:none;display:none}
+.guide.show{display:block}
+.guide b{position:absolute;left:4px;top:2px;font-size:10px;color:rgba(255,214,10,.9);font-weight:500}
+
+/* 缩放条 + 底栏 */
+.zoom{flex:none;height:52px;display:flex;align-items:center;gap:10px;padding:0 20px;border-top:1px solid var(--d-line)}
+.zoom .zbtn{width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:var(--d-t2);border-radius:50%}
+.zoom input{flex:1;-webkit-appearance:none;appearance:none;height:2px;background:linear-gradient(90deg,var(--d-t1) var(--p,0%),rgba(255,255,255,.22) var(--p,0%));border-radius:2px;outline:none}
+.zoom input::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.4);cursor:pointer}
+.zoom input::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:0}
+.zoom output{width:40px;text-align:right;font-family:var(--mono);font-size:12px;color:var(--d-t2)}
+.hint{position:absolute;left:0;right:0;bottom:10px;text-align:center;color:var(--d-t2);font-size:12px;pointer-events:none;transition:opacity .4s}
+.hint.gone{opacity:0}
+.bar{flex:none;height:56px;margin-bottom:34px;display:flex;align-items:center;justify-content:space-between;padding:0 12px 0 8px}
+.bar .txt{height:44px;padding:0 12px;font-size:15px;color:var(--d-t1);border-radius:10px}
+.bar .tools{display:flex;gap:4px}
+.tool{width:52px;height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--d-t1);font-size:10px;border-radius:10px}
+.tool span{color:var(--d-t2)}
+.tool:disabled{opacity:.35;cursor:default}
+.tool:not(:disabled):active,.bar .txt:active{background:rgba(255,255,255,.08)}
+.done{height:32px;padding:0 16px;border-radius:999px;background:#F8F8F8;color:#0A0A0A;font-size:14px;font-weight:600}
+.done:active{transform:scale(.96)}
+.home-ind{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:rgba(255,255,255,.85);z-index:60;pointer-events:none}
+
+/* 弹层（深色）*/
+.mask{position:absolute;inset:0;z-index:20;background:rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .25s var(--std)}
+.mask.show{opacity:1;pointer-events:auto}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:21;background:var(--d-elev);border-radius:20px 20px 0 0;padding:8px var(--px) 40px;transform:translateY(105%);transition:transform .32s var(--ease-out)}
+.sheet.show{transform:none}
+.handle{width:100%;height:20px;display:flex;align-items:center;justify-content:center}
+.handle::before{content:"";width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,.24)}
+.sheet h3{margin:6px 0 6px;font-size:18px}
+.sheet p{margin:0 0 18px;color:var(--d-t2);font-size:13px;line-height:1.6}
+.row{display:flex;gap:10px}
+.sbtn{flex:1;height:44px;border-radius:999px;font-size:15px;font-weight:600;background:rgba(255,255,255,.1);color:var(--d-t1)}
+.sbtn--danger{background:#E5484D;color:#fff}
+
+/* 结果预览（商家浅色）*/
+.result{position:absolute;inset:0;z-index:30;background:var(--m-page);color:var(--m-t1);display:flex;flex-direction:column;transform:translateY(100%);transition:transform .38s var(--ease-out)}
+.result.show{transform:none}
+.result .capsule{background:#fff;border-color:rgba(0,0,0,.1)}
+.result .capsule i{background:rgba(0,0,0,.14)}
+.rbody{flex:1;overflow:auto;padding:4px var(--px) 40px;scrollbar-width:none}
+.rbody::-webkit-scrollbar{display:none}
+.rcard{background:var(--m-surface);border-radius:var(--r-lg);padding:16px;box-shadow:0 1px 4px rgba(15,23,43,.08)}
+.rcard h4{margin:0;font-size:16px;font-weight:700}
+.rprev{display:flex;justify-content:center;align-items:center;margin:16px 0 10px}
+.rprev canvas{display:block;background:var(--m-subtle)}
+.rprev .c-logo{width:128px;height:128px;border-radius:50%}
+.rprev .c-cover{width:100%;aspect-ratio:5/3;height:auto;border-radius:12px}
+.rcap{text-align:center;color:var(--m-t3);font-size:12px}
+.rrow{display:flex;gap:10px;margin-top:14px}
+.mbtn{flex:1;height:44px;border-radius:999px;font-size:15px;font-weight:600;background:var(--m-soft);color:var(--m-t1)}
+.mbtn--primary{background:#111;color:#fff}
+.rlabel{margin:22px 0 8px;font-size:12px;color:var(--m-t3);font-weight:600;display:flex;justify-content:space-between}
+.shop{background:var(--m-surface);border-radius:var(--r-lg);overflow:hidden;box-shadow:0 1px 4px rgba(15,23,43,.08)}
+.shop-cover{position:relative;aspect-ratio:5/3;background:linear-gradient(135deg,#C9CED6,#E7E9ED)}
+.shop-cover canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.shop-cover .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--m-t3);font-size:12px}
+.shop-main{padding:0 16px 16px;position:relative}
+.shop-logo{width:64px;height:64px;border-radius:50%;margin-top:-32px;position:relative;background:#D9DCE1;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.shop-logo canvas{width:100%;height:100%;display:block}
+.shop-name{margin-top:8px;font-size:18px;font-weight:700}
+.shop-meta{margin-top:4px;color:var(--m-t3);font-size:12px}
+.shop-tags{display:flex;gap:6px;margin-top:10px}
+.shop-tags span{height:24px;padding:0 10px;border-radius:999px;background:var(--m-subtle);font-size:11px;display:flex;align-items:center;gap:4px;color:var(--m-t2)}
+.ok-line{display:flex;align-items:center;gap:6px;margin-top:10px;color:#15803D;font-size:12px}
+.mini{display:flex;align-items:center;gap:10px;margin-top:10px;background:var(--m-surface);border-radius:var(--r-lg);padding:12px 16px;box-shadow:0 1px 4px rgba(15,23,43,.08)}
+.mini .av{width:40px;height:40px;border-radius:50%;overflow:hidden;background:#D9DCE1;flex:none}
+.mini .av canvas{width:100%;height:100%;display:block}
+.mini b{font-size:15px}
+.mini small{display:block;color:var(--m-t3);font-size:12px}
+
+.toast{position:absolute;left:50%;top:40%;z-index:50;transform:translate(-50%,-50%) scale(.96);max-width:260px;padding:10px 16px;border-radius:12px;background:rgba(40,40,42,.94);color:#fff;font-size:13px;line-height:1.5;text-align:center;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s var(--ease-out)}
+.toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="phone" id="phone">
+    <div class="status"><span>9:41</span>
+      <svg width="68" height="12" viewBox="0 0 68 12" fill="#fff"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/><path d="M29 3.2a9 9 0 0 1 12 0l-1.3 1.4a7 7 0 0 0-9.4 0zM31.6 6a5.3 5.3 0 0 1 6.8 0L37 7.4a3.3 3.3 0 0 0-4 0zM35 11.2l-1.6-1.7a2.3 2.3 0 0 1 3.2 0z"/><rect x="45.5" y=".5" width="20" height="11" rx="3" fill="none" stroke="#fff" opacity=".4"/><rect x="47" y="2" width="17" height="8" rx="1.6"/><rect x="66.5" y="4" width="1.5" height="4" rx=".7" opacity=".4"/></svg>
+    </div>
+    <div class="nav">
+      <button class="nav__back" data-act="back" aria-label="返回"><svg class="ico" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+      <div class="nav__title" id="navTitle">裁剪 Logo</div>
+      <div class="capsule" aria-hidden="true"><span><svg width="18" height="4" viewBox="0 0 18 4" fill="#fff"><circle cx="2" cy="2" r="2"/><circle cx="9" cy="2" r="2"/><circle cx="16" cy="2" r="2"/></svg></span><i></i><span><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#fff" stroke-width="1.6"><circle cx="9" cy="9" r="7.5"/><circle cx="9" cy="9" r="2.6" fill="#fff"/></svg></span></div>
+    </div>
+
+    <div class="stage" id="stage" aria-label="裁剪区域，拖动移动图片，滚轮或双指缩放">
+      <img class="photo" id="photo" alt="待裁剪的示例图片" draggable="false">
+      <div class="frame round" id="frame"><div class="grid"></div></div>
+      <div class="guide" id="guide"><b>安全边距</b></div>
+      <div class="ratio-tag" id="ratioTag">1:1 · 主页显示为圆形</div>
+      <div class="hint" id="hint">拖动图片调整位置 · 双指或滚轮缩放</div>
+    </div>
+
+    <div class="zoom">
+      <button class="zbtn" data-act="zoomStep" data-arg="-1" aria-label="缩小"><svg class="ico ico--s" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M8 11h6M20 20l-3.5-3.5"/></svg></button>
+      <input type="range" id="zoomRange" data-act="zoomSlider" min="100" max="400" value="100" aria-label="缩放">
+      <button class="zbtn" data-act="zoomStep" data-arg="1" aria-label="放大"><svg class="ico ico--s" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M8 11h6M11 8v6M20 20l-3.5-3.5"/></svg></button>
+      <output id="zoomOut">100%</output>
+    </div>
+    <div class="bar">
+      <button class="txt" data-act="cancel">取消</button>
+      <div class="tools">
+        <button class="tool" id="resetBtn" data-act="reset" disabled aria-label="还原"><svg class="ico" viewBox="0 0 24 24"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-15-6.7L3 13"/></svg><span>还原</span></button>
+        <button class="tool" data-act="rotate" aria-label="旋转 90 度"><svg class="ico" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg><span>旋转</span></button>
+      </div>
+      <button class="done" data-act="done">完成</button>
+    </div>
+    <div class="home-ind"></div>
+
+    <div class="mask" id="mask" data-act="closeSheet"></div>
+    <div class="sheet" id="cancelSheet" role="dialog" aria-label="放弃调整">
+      <button class="handle" data-act="closeSheet" aria-label="关闭"></button>
+      <h3>放弃这次调整？</h3>
+      <p>位置和缩放的修改不会保存，回到店铺装修。</p>
+      <div class="row"><button class="sbtn" data-act="closeSheet">继续调整</button><button class="sbtn sbtn--danger" data-act="discard">放弃</button></div>
+    </div>
+
+    <!-- 完成后的结果预览：回到店铺装修（商家浅色）-->
+    <div class="result" id="result" aria-hidden="true">
+      <div class="status"><span>9:41</span>
+        <svg width="68" height="12" viewBox="0 0 68 12" fill="#000"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/><path d="M29 3.2a9 9 0 0 1 12 0l-1.3 1.4a7 7 0 0 0-9.4 0zM31.6 6a5.3 5.3 0 0 1 6.8 0L37 7.4a3.3 3.3 0 0 0-4 0zM35 11.2l-1.6-1.7a2.3 2.3 0 0 1 3.2 0z"/><rect x="45.5" y=".5" width="20" height="11" rx="3" fill="none" stroke="#000" opacity=".4"/><rect x="47" y="2" width="17" height="8" rx="1.6"/></svg>
+      </div>
+      <div class="nav">
+        <button class="nav__back" data-act="closeResult" aria-label="返回裁剪"><svg class="ico" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+        <div class="nav__title">店铺装修</div>
+        <div class="capsule" aria-hidden="true"><span><svg width="18" height="4" viewBox="0 0 18 4"><circle cx="2" cy="2" r="2"/><circle cx="9" cy="2" r="2"/><circle cx="16" cy="2" r="2"/></svg></span><i></i><span><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#000" stroke-width="1.6"><circle cx="9" cy="9" r="7.5"/><circle cx="9" cy="9" r="2.6" fill="#000"/></svg></span></div>
+      </div>
+      <div class="rbody">
+        <div class="rcard">
+          <h4 id="rTitle">修改 Logo</h4>
+          <div class="rprev"><canvas id="cMain" class="c-logo" width="512" height="512" aria-label="裁剪结果预览"></canvas></div>
+          <div class="rcap" id="rCap">正方形图片，在主页显示为圆形</div>
+          <div class="rrow"><button class="mbtn" data-act="closeResult">重新裁剪</button><button class="mbtn mbtn--primary" data-act="useIt" id="useBtn">使用这个 Logo</button></div>
+        </div>
+        <div class="rlabel"><span>主页效果</span><span id="syncTag">保存后首页、我的同步更新</span></div>
+        <div class="shop">
+          <div class="shop-cover" id="shopCover"><div class="ph">店铺封面</div><canvas id="cCover" width="1000" height="600" style="display:none"></canvas></div>
+          <div class="shop-main">
+            <div class="shop-logo"><canvas id="cLogo" width="256" height="256"></canvas></div>
+            <div class="shop-name">示例咖啡馆</div>
+            <div class="shop-meta">咖啡 · 示例市老城区</div>
+            <div class="shop-tags"><span>☕ 精品咖啡</span><span>🐾 宠物友好</span></div>
+          </div>
+        </div>
+        <div class="mini"><div class="av"><canvas id="cMini" width="128" height="128"></canvas></div><div><b>示例咖啡馆</b><small>首页 · 我的 页头头像</small></div></div>
+        <div class="ok-line"><svg class="ico ico--s" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg><span id="okTxt">取景框内的内容完整保留，四边没有被裁掉</span></div>
+      </div>
+    </div>
+    <div class="toast" id="toast" role="status"></div>
+  </div>
+
+  <aside class="panel">
+    <span class="id">M-09 · M-08 · pages/crop</span>
+    <h1>裁剪页重做</h1>
+    <p style="margin:0;color:var(--doc-muted)">由 pages/merchant/decor 的「修改 Logo（1:1）/ 修改封面图（5:3）」经 app.chooseImage → /pages/crop 打开。</p>
+    <h2>状态切换</h2>
+    <div class="ctl">
+      <button data-act="mode" data-arg="logo" id="mLogo" class="on">修改 Logo（圆形 1:1）</button>
+      <button data-act="mode" data-arg="cover" id="mCover">修改封面（5:3）</button>
+    </div>
+    <div class="ctl" style="margin-top:8px">
+      <button data-act="src" data-arg="land" id="sLand" class="on">横图</button>
+      <button data-act="src" data-arg="port" id="sPort">竖图</button>
+      <button data-act="guides" id="gBtn">显示安全边距</button>
+    </div>
+    <h2>相对现状改了什么</h2>
+    <ul>
+      <li>取景框不再贴边：左右至少 32px、上下至少 24px 安全边距，在导航栏和缩放条之间按比例居中，顶部不会被导航栏压住（现状框宽 = 屏宽）。</li>
+      <li>Logo 用圆形取景框（M-08），框外半透明压暗而不是纯黑，能看到被裁掉的部分；拖动时出现三分线。</li>
+      <li>新增缩放滑杆（100%–400%）+ 滚轮 / 双指缩放，图片始终铺满取景框，拖不出黑边。</li>
+      <li>底栏改小：取消（文字）· 还原 · 旋转 · 完成（32px 高的小胶囊），替换现在的大号「选取」白按钮。</li>
+      <li>完成后回到店铺装修：弹层中间直接显示裁剪结果（修掉 M-08「中间一大块空白」），下方给主页效果预览。</li>
+      <li>取消时如果改过，先弹「放弃这次调整？」；有弹层时返回先关弹层（G-2）。</li>
+    </ul>
+    <h2>我做的决定（待确认）</h2>
+    <div class="q">1. 裁剪页保持沉浸式深色，商家也一样：看图编辑类页面行业惯例都是深底（照片对比准确），且裁剪页是一次性全屏工具，不属于商家浅色页面体系。结果预览回到商家浅色。可以吗？</div>
+    <div class="q">2. 框外用 62% 黑压暗（不是纯黑），方便判断取景；现状注释写的是「参考 Threads 纯黑」。</div>
+    <div class="q">3. 加了「旋转 90°」，导出时一并旋转；需要的话也可以去掉。</div>
+    <div class="q">4. 封面 5:3 的后端白名单（M-10，UploadImagePolicy.RATIOS 缺 5:3）和保存后各页同步（G-5）不在本原型范围。</div>
+  </aside>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const SVG_LAND = `<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='900' viewBox='0 0 1200 900'><defs><linearGradient id='s' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#F6B48A'/><stop offset='.55' stop-color='#F9D9B5'/><stop offset='1' stop-color='#9CC3D8'/></linearGradient><linearGradient id='w' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#6E9CB8'/><stop offset='1' stop-color='#2F5470'/></linearGradient></defs><rect width='1200' height='900' fill='url(#s)'/><circle cx='860' cy='260' r='90' fill='#FFF3D6'/><path d='M0 560 L180 400 L330 520 L520 330 L760 560 L940 420 L1200 580 V900 H0Z' fill='#7E8FA6'/><path d='M0 640 C200 600 400 690 600 650 S1000 600 1200 660 V900 H0Z' fill='url(#w)'/><g transform='translate(470 420)'><rect x='0' y='60' width='260' height='190' fill='#F5EFE6'/><path d='M-20 70 L130 0 L280 70Z' fill='#B5523B'/><rect x='-10' y='120' width='280' height='26' fill='#2E6B4F'/><rect x='30' y='160' width='60' height='60' fill='#3D4F63'/><rect x='170' y='160' width='60' height='90' fill='#6B3F2A'/><text x='130' y='139' font-size='18' text-anchor='middle' fill='#fff' font-family='sans-serif'>示例咖啡馆</text></g><circle cx='600' cy='450' r='6' fill='#fff' opacity='.9'/><g fill='none' stroke='#fff' stroke-width='6' opacity='.85'><path d='M24 24h80M24 24v80M1176 24h-80M1176 24v80M24 876h80M24 876v-80M1176 876h-80M1176 876v-80'/></g></svg>`;
+const SVG_PORT = `<svg xmlns='http://www.w3.org/2000/svg' width='900' height='1400' viewBox='0 0 900 1400'><defs><linearGradient id='s' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#3B4A7A'/><stop offset='.5' stop-color='#C47A8A'/><stop offset='1' stop-color='#F0C99A'/></linearGradient></defs><rect width='900' height='1400' fill='url(#s)'/><circle cx='450' cy='300' r='110' fill='#FFE9C7'/><text x='450' y='120' font-size='44' text-anchor='middle' fill='#fff' font-family='sans-serif'>顶部</text><path d='M0 980 L220 760 L420 900 L640 700 L900 960 V1400 H0Z' fill='#4A3F5C'/><g transform='translate(300 1000)'><circle cx='150' cy='150' r='150' fill='#F5EFE6'/><path d='M80 120h140v60a70 70 0 0 1-140 0z' fill='#6B3F2A'/><path d='M220 135h20a25 25 0 0 1 0 50h-20' fill='none' stroke='#6B3F2A' stroke-width='14'/></g><text x='450' y='1360' font-size='44' text-anchor='middle' fill='#fff' font-family='sans-serif'>底部</text><g fill='none' stroke='#fff' stroke-width='6' opacity='.85'><path d='M24 24h80M24 24v80M876 24h-80M876 24v80M24 1376h80M24 1376v-80M876 1376h-80M876 1376v-80'/></g></svg>`;
+const SOURCES = { land:{svg:SVG_LAND,w:1200,h:900}, port:{svg:SVG_PORT,w:900,h:1400} };
+const MARGIN_X = 32, MARGIN_Y = 24, MIN_S = 1, MAX_S = 4;
+const S = { mode:'logo', src:'land', W:1200, H:900, s:1, tx:0, ty:0, rot:0, fw:0, fh:0, base:1, touched:false, sheet:null, resultOpen:false, guides:false, coverDone:false, logoDone:false };
+const img = new Image();
+
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove('show'),1700); }
+
+function layout(){
+  const st=$('stage').getBoundingClientRect();
+  const aw = st.width - MARGIN_X*2, ah = st.height - MARGIN_Y*2 - 44; // 上方比例标签 + 下方提示各让 22px
+  const ratio = S.mode==='logo' ? 1 : 5/3;
+  let fw = aw, fh = fw/ratio; if (fh > ah){ fh = ah; fw = fh*ratio; }
+  S.fw = Math.round(fw); S.fh = Math.round(fh);
+  const f=$('frame'); f.style.width=S.fw+'px'; f.style.height=S.fh+'px'; f.classList.toggle('round', S.mode==='logo');
+  const g=$('guide'); g.style.left=MARGIN_X+'px'; g.style.right=MARGIN_X+'px'; g.style.top=(MARGIN_Y+22)+'px'; g.style.bottom=(MARGIN_Y+22)+'px';
+  computeBase(); clamp(); apply();
+}
+function effDims(){ return (S.rot%180===0) ? [S.W,S.H] : [S.H,S.W]; }
+function computeBase(){ const [ew,eh]=effDims(); S.base=Math.max(S.fw/ew, S.fh/eh); }
+function clamp(){
+  S.s=Math.min(MAX_S,Math.max(MIN_S,S.s));
+  const [ew,eh]=effDims(); const dw=ew*S.base*S.s, dh=eh*S.base*S.s;
+  const mx=Math.max(0,(dw-S.fw)/2), my=Math.max(0,(dh-S.fh)/2);
+  S.tx=Math.min(mx,Math.max(-mx,S.tx)); S.ty=Math.min(my,Math.max(-my,S.ty));
+}
+function apply(anim){
+  const p=$('photo'); p.classList.toggle('anim',!!anim);
+  p.style.width=S.W+'px'; p.style.height=S.H+'px'; p.style.marginLeft=(-S.W/2)+'px'; p.style.marginTop=(-S.H/2)+'px';
+  p.style.transform=`translate(${S.tx}px,${S.ty}px) rotate(${S.rot}deg) scale(${S.base*S.s})`;
+  const v=Math.round(S.s*100); const r=$('zoomRange'); r.value=v; r.style.setProperty('--p',((v-100)/3)+'%'); $('zoomOut').textContent=v+'%';
+  $('resetBtn').disabled = !(S.s!==1||S.tx!==0||S.ty!==0||S.rot!==0);
+}
+function touch(){ if(!S.touched){ S.touched=true; $('hint').classList.add('gone'); } }
+function zoomAt(ns, px, py){ // px,py 相对舞台中心
+  const old=S.s; ns=Math.min(MAX_S,Math.max(MIN_S,ns)); const k=ns/old;
+  S.tx = px - (px - S.tx)*k; S.ty = py - (py - S.ty)*k; S.s=ns; clamp(); apply(); touch();
+}
+function loadSource(){
+  const src=SOURCES[S.src]; S.W=src.w; S.H=src.h; S.s=1; S.tx=0; S.ty=0; S.rot=0;
+  const url='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(src.svg);
+  $('photo').src=url; img.src=url; layout();
+}
+
+/* 手势：单指拖动、双指缩放、滚轮缩放 */
+const ptrs=new Map(); let pinch=null;
+const stage=$('stage');
+function rel(ev){ const r=stage.getBoundingClientRect(); return [ev.clientX-r.left-r.width/2, ev.clientY-r.top-r.height/2]; }
+stage.addEventListener('pointerdown',ev=>{ if(S.sheet) return; stage.setPointerCapture(ev.pointerId); ptrs.set(ev.pointerId,rel(ev)); stage.classList.add('dragging');
+  if(ptrs.size===2){ const [a,b]=[...ptrs.values()]; pinch={d:Math.hypot(a[0]-b[0],a[1]-b[1]), s:S.s}; } });
+stage.addEventListener('pointermove',ev=>{ if(!ptrs.has(ev.pointerId)) return; const prev=ptrs.get(ev.pointerId); const cur=rel(ev); ptrs.set(ev.pointerId,cur);
+  if(ptrs.size===1){ S.tx+=cur[0]-prev[0]; S.ty+=cur[1]-prev[1]; clamp(); apply(); touch(); }
+  else if(ptrs.size===2 && pinch){ const [a,b]=[...ptrs.values()]; const d=Math.hypot(a[0]-b[0],a[1]-b[1]); zoomAt(pinch.s*d/pinch.d,(a[0]+b[0])/2,(a[1]+b[1])/2); } });
+function up(ev){ ptrs.delete(ev.pointerId); if(ptrs.size<2) pinch=null; if(!ptrs.size) stage.classList.remove('dragging'); }
+stage.addEventListener('pointerup',up); stage.addEventListener('pointercancel',up);
+stage.addEventListener('wheel',ev=>{ ev.preventDefault(); const [px,py]=rel(ev); zoomAt(S.s*Math.exp(-ev.deltaY*0.0018),px,py); },{passive:false});
+$('zoomRange').addEventListener('input',e=>{ zoomAt(+e.target.value/100,0,0); });
+window.addEventListener('resize',layout);
+
+function renderTo(canvas){
+  const ctx=canvas.getContext('2d'); const w=canvas.width, h=canvas.height; const k=w/S.fw;
+  ctx.clearRect(0,0,w,h); ctx.save(); ctx.translate(w/2+S.tx*k, h/2+S.ty*k); ctx.rotate(S.rot*Math.PI/180); const sc=S.base*S.s*k; ctx.scale(sc,sc);
+  ctx.drawImage(img,-S.W/2,-S.H/2,S.W,S.H); ctx.restore();
+}
+function openSheet(id){ S.sheet=id; $('mask').classList.add('show'); $(id).classList.add('show'); }
+function closeSheet(){ if(!S.sheet) return false; $(S.sheet).classList.remove('show'); $('mask').classList.remove('show'); S.sheet=null; return true; }
+function showResult(){
+  const logo=S.mode==='logo';
+  const main=$('cMain'); main.className = logo?'c-logo':'c-cover'; main.width = logo?512:1000; main.height = logo?512:600; renderTo(main);
+  if (logo){ S.logoDone=true; [$('cLogo'),$('cMini')].forEach(renderTo); }
+  else { S.coverDone=true; const c=$('cCover'); renderTo(c); c.style.display='block'; }
+  $('rTitle').textContent = logo?'修改 Logo':'修改封面图';
+  $('rCap').textContent = logo?'正方形图片，在主页显示为圆形':'按 5:3 裁剪，就是店铺主页的背景';
+  $('useBtn').textContent = logo?'使用这个 Logo':'使用这张封面';
+  $('okTxt').textContent = logo?'圆形内的内容完整保留，没有被裁掉':'5:3 画面完整保留，四边没有被裁掉';
+  S.resultOpen=true; $('result').classList.add('show'); $('result').setAttribute('aria-hidden','false');
+}
+function closeResult(){ S.resultOpen=false; $('result').classList.remove('show'); $('result').setAttribute('aria-hidden','true'); }
+
+const ACT = {
+  back(){ if(closeSheet()){ toast('已关闭弹层（返回先关弹层）'); return; } if(S.resultOpen){ closeResult(); return; } ACT.cancel(); },
+  cancel(){ if(S.touched && !$('resetBtn').disabled){ openSheet('cancelSheet'); } else toast('已取消，回到店铺装修'); },
+  discard(){ closeSheet(); loadSource(); S.touched=false; $('hint').classList.remove('gone'); toast('已放弃，回到店铺装修'); },
+  closeSheet(){ closeSheet(); },
+  reset(){ S.s=1; S.tx=0; S.ty=0; S.rot=0; computeBase(); clamp(); apply(true); toast('已还原'); },
+  rotate(){ S.rot=(S.rot+90)%360; computeBase(); clamp(); apply(true); touch(); toast('已旋转 90°'); },
+  zoomStep(el){ zoomAt(S.s + (+el.dataset.arg)*0.25, 0, 0); },
+  zoomSlider(){ /* 拖动由 input 事件处理；点击轨道同样生效 */ },
+  done(){ if(!img.complete){ toast('图片还在加载'); return; } showResult(); },
+  closeResult(){ closeResult(); },
+  useIt(){ closeResult(); toast(S.mode==='logo'?'Logo 已保存，首页和我的同步更新':'封面已保存，店铺主页背景已更新'); },
+  mode(el){ S.mode=el.dataset.arg; $('mLogo').classList.toggle('on',S.mode==='logo'); $('mCover').classList.toggle('on',S.mode==='cover');
+    $('navTitle').textContent = S.mode==='logo'?'裁剪 Logo':'裁剪封面';
+    $('ratioTag').textContent = S.mode==='logo'?'1:1 · 主页显示为圆形':'5:3 · 店铺主页背景';
+    closeResult(); closeSheet(); S.s=1; S.tx=0; S.ty=0; S.rot=0; layout(); toast(S.mode==='logo'?'修改 Logo：圆形取景':'修改封面：5:3 取景'); },
+  src(el){ S.src=el.dataset.arg; $('sLand').classList.toggle('on',S.src==='land'); $('sPort').classList.toggle('on',S.src==='port'); closeResult(); loadSource(); toast(S.src==='land'?'换成横图':'换成竖图（看顶部不会被裁）'); },
+  guides(el){ S.guides=!S.guides; el.classList.toggle('on',S.guides); $('guide').classList.toggle('show',S.guides); toast(S.guides?'黄色虚线 = 取景框可用范围':'已隐藏安全边距'); }
+};
+document.addEventListener('click', ev => {
+  const el = ev.target.closest('[data-act]'); if (!el || el.disabled) return;
+  const fn = ACT[el.dataset.act]; if (fn) fn(el, ev);
+});
+img.onload = () => apply();
+loadSource();
+</script>
+</body>
+</html>
