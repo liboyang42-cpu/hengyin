@@ -167,7 +167,7 @@ public class ApiCouponController extends BaseController {
             return error("商家未通过入驻审核，暂不能发布优惠券");
         }
         // 2026-10-20 分级审核:优惠券先发后审。名称/描述过统一门禁(POST_REVIEW),明确违规直接拒;
-        // Round5B-3:审不了(HOLD)的券以 status=0 保存(不可领),进审核台,人工通过才转进行中。
+        // Round5B-3:审不了(HOLD)的券以 status=5(待审核)保存,发券 SQL 排除 5 即不可领,进审核台,人工通过才转进行中。
         PublishSafetyRequest safety = new PublishSafetyRequest();
         safety.setContentType(AuditTask.BIZ_COUPON);
         safety.setMemberId(ownerMemberId);
@@ -197,7 +197,7 @@ public class ApiCouponController extends BaseController {
             smsCoupon.setScopeType(1);
             smsCoupon.setMerchantId(operation.merchantId);
         }
-        smsCoupon.setStatus(decision.isHold() ? 0 : 1);
+        smsCoupon.setStatus(decision.isHold() ? SmsCoupon.STATUS_PENDING_REVIEW : 1);
         smsCoupon.setDelFlag(0);
         smsCoupon.setName(request.getName());
         smsCoupon.setCouponType(request.getCouponType());
@@ -531,7 +531,7 @@ public class ApiCouponController extends BaseController {
      * 先发后审时机审没给出结论:券照常上架,在审核台留一张非阻断抽检单(source=post_review_flag),
      * 驳回即平台手动失效。best-effort:失败只记日志,不影响已发布的券。
      */
-    /** Round5B-3:机审未完成的券已按 status=0 保存(不可领),这里挂进审核台;审核通过由审核服务转 status=1。 */
+    /** Round5B-3:机审未完成的券已按 status=5 保存(不可领),这里挂进审核台;审核通过由审核服务转 status=1。 */
     private void holdForReview(Long couponId, Long ownerMemberId, String reason, String name) {
         logger.warn("优惠券机审未完成,待人工审核后上架 couponId={} reason={}", couponId, reason);
         com.alibaba.fastjson2.JSONObject snap = new com.alibaba.fastjson2.JSONObject();

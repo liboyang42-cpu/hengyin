@@ -86,7 +86,7 @@ public interface ISmsCouponService
      */
     public int stopIssuingCoupon(Long id, Long ownerMemberId);
 
-    /** Round5B-3:机审未完成扣下的券(status=0)人工审核通过后转进行中;返回影响行数 */
+    /** Round5B-3:机审未完成扣下的券(status=5)人工审核通过后转进行中;返回影响行数 */
     public int releaseHeldCoupon(Long id);
 
     /** M0-2 生成优惠券动态二维码 token = historyId.epochSec.md5(签名)，60s 由前端刷新 */

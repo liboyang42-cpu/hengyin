@@ -230,7 +230,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <update id="tryIncrementIssuableReceiveCount">
         update sms_coupon set receive_count = ifnull(receive_count, 0) + 1, update_time = now()
         where id = #{id}
-        and (status is null or status not in (0, 3, 4))
+        and (status is null or status not in (3, 4, 5))
         and (enable_time is null or enable_time &lt;= now())
         and (start_time is null or start_time &lt;= now())
         and (end_time is null or end_time &gt; now())
@@ -257,10 +257,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         </foreach>
     </select>
 
-    <!-- Round5B-3:机审未完成扣下的券(status=0)人工审核通过 → 进行中;CAS 只动 0,不复活已停发/失效的券 -->
+    <!-- Round5B-3:机审未完成扣下的券(status=5 待审核,不可领)人工审核通过 → 进行中;CAS 只动 5,不复活已停发/失效的券 -->
     <update id="releaseHeldCoupon">
         update sms_coupon set status = 1, update_time = now()
-        where id = #{id} and del_flag = 0 and status = 0
+        where id = #{id} and del_flag = 0 and status = 5
     </update>
 
     <!-- 商家停发(0 未开始 / 1 进行中 → 4):已结束(2)/已手动失效(3)/已停发(4)不可再停 -->
