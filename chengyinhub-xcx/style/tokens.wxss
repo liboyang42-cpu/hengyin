@@ -473,6 +473,8 @@ page {
   --cy-comp-btn-primary-fg:   var(--cy-color-action-primary-fg);
   --cy-comp-btn-secondary-bg: var(--cy-bg-subtle);
   --cy-comp-btn-secondary-fg: var(--cy-color-text-secondary);
+  /* --cy-comp-btn-ghost-bg 故意不在这里声明:未声明时 .btn--ghost 在按钮自身上取 var(--cy-bg-glass),
+     页面在按钮上局部改 --cy-bg-glass(如模板详情分享键)仍然生效;只有日间商家域声明它(打磨第 3 轮 §4-14)。 */
   /* 搜索输入框 */
   --cy-comp-search-idle-bg:     var(--cy-color-input-idle-bg);
   --cy-comp-search-filled-bg:   var(--cy-color-input-filled-bg);
@@ -1044,6 +1046,8 @@ page.theme-light,
   --cy-color-bg-raised:         #E6E6E6;   /* 2026-09-01 日间对应档:比 surface-subtle 再深一级 */
   --cy-color-bg-interactive:    #FFFFFF;   /* 日间控件底=白卡,与手册 Merchant/Topic editor 模式一致 */
   --cy-color-bg-glass:          rgba(255,255,255,.88);
+  /* 打磨第 3 轮 §4-14:白玻璃底的 ghost 按钮压在白卡上看不出按钮形,日间商家域改用浅灰底 */
+  --cy-comp-btn-ghost-bg:       var(--cy-bg-subtle);
 
   --cy-color-text-primary:      #000000;   /* 2026-08-07 用户拍板:商家版黑=纯黑 */
   --cy-color-text-secondary:    #404040;              /* 2026-07-31 去墨蓝:原 #334155 B-R=+34 */
@@ -1442,6 +1446,7 @@ page.theme-dark,
   /* 与 page{} 同步去紫相，理由见上面那段 */
   /* 浅端块覆盖过它，深端逃生口必须写回，否则嵌套时弹窗底停在浅值 */
   --cy-comp-sheet-bg: var(--cy-color-bg-glass);
+  --cy-comp-btn-ghost-bg: initial;   /* 商家日间块覆成浅灰;嵌套暗色子树撤销声明,回落到按钮自身的玻璃底 */
   --cy-color-bg-page: #000000;
   --cy-color-bg-surface: #0A0A0B;
   --cy-color-bg-surface-subtle: #141416;
