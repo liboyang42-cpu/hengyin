@@ -72,6 +72,14 @@ public class WxSubscribeMsgServiceImpl implements IWxSubscribeMsgService {
     @Value("${wx.subscribe.page:pages/index/index}")
     private String defaultPage;
 
+    /**
+     * 第七轮 C 第 5 项:订单与结算类提醒点开直接落到对应列表页,不再落首页。
+     * 只给页面路径、不带任何 id:列表页按当前登录者读自己的订单 / 商家流水,原有的归属校验一处没动,
+     * 也不存在「改个 id 看别人订单」的入口。两个路径都在 chengyinhub-xcx/app.json 注册(单测钉住)。
+     */
+    static final String ORDER_PAGE = "subpackageMember/order/order";
+    static final String MERCHANT_LEDGER_PAGE = "pages/merchant/ledger/index";
+
     /** 已告警过的未配模板。每 JVM 只警一次:批量通知逐条告警会刷屏。 */
     private final Set<String> warnedMissingTpl = ConcurrentHashMap.newKeySet();
 
@@ -195,7 +203,7 @@ public class WxSubscribeMsgServiceImpl implements IWxSubscribeMsgService {
         f.put("time2", nowTime());
         f.put("character_string3", "AUTOREFUND");
         f.put("phrase5", "已退款");
-        return sendToMember(memberId, "tplRefund", "refund", tplRefund, defaultPage, f);
+        return sendToMember(memberId, "tplRefund", "refund", tplRefund, ORDER_PAGE, f);
     }
 
     @Override
@@ -207,7 +215,7 @@ public class WxSubscribeMsgServiceImpl implements IWxSubscribeMsgService {
         f.put("date3", nowDate());
         f.put("time12", nowTime());
         f.put("thing10", nickOf(memberId));
-        return sendToMember(memberId, "tplSignupSuccess", "signup_success", tplSignupSuccess, defaultPage, f);
+        return sendToMember(memberId, "tplSignupSuccess", "signup_success", tplSignupSuccess, ORDER_PAGE, f);
     }
 
     @Override
@@ -231,7 +239,7 @@ public class WxSubscribeMsgServiceImpl implements IWxSubscribeMsgService {
         }
         String openid = openidOf(memberId);
         if (StringUtils.isEmpty(openid)) return null;
-        return new PreparedBeforeStart(memberId, openid, tplBeforeStart, defaultPage, f);
+        return new PreparedBeforeStart(memberId, openid, tplBeforeStart, ORDER_PAGE, f);
     }
 
     @Override
@@ -293,7 +301,7 @@ public class WxSubscribeMsgServiceImpl implements IWxSubscribeMsgService {
         f.put("thing2", clip(desc));
         f.put("time3", whenText == null ? "" : whenText);
         f.put("character_string4", orderNo == null ? "" : orderNo);
-        return sendToMember(merchantId, "tplCoopSettle", "coop_settle", tplCoopSettle, defaultPage, f);
+        return sendToMember(merchantId, "tplCoopSettle", "coop_settle", tplCoopSettle, MERCHANT_LEDGER_PAGE, f);
     }
 
     @Override
