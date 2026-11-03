@@ -357,7 +357,6 @@ page {
 .v3-sec-state { padding: 0 var(--cy-space-4); }
 .v3-sec-sync {
   display: block;
-  padding: 0 var(--cy-space-4) var(--cy-space-2);
   color: var(--cy-color-text-tertiary);
   font-size: var(--cy-type-caption);
 }

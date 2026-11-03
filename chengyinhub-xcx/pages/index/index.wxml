@@ -85,7 +85,7 @@
         <view class="v3-sec-state" wx:elif="{{!listLoading.recommendedTopicList && !recoHero || listLoaded.recommendedTopicList && !recoHero}}">
           <cy-empty title="暂时没有精选主题" />
         </view>
-        <text class="v3-sec-sync cy-refresh-float" wx:if="{{listLoading.recommendedTopicList && recoHero}}"
+        <text class="v3-sec-sync cy-refresh-float cy-refresh-float--pill" wx:if="{{listLoading.recommendedTopicList && recoHero}}"
               aria-role="status" aria-live="polite">正在更新编辑精选…</text>
         <swiper class="v3-reco-swiper" wx:if="{{recoCards.length}}" current="{{recoCurrent}}"
                 circular="{{recoCards.length > 1}}" previous-margin="40rpx" next-margin="60rpx"
@@ -138,7 +138,7 @@
         <view class="v3-sec-state" wx:elif="{{!listLoading.nearbyActivityList && !nearbyActivityList.length || listLoaded.nearbyActivityList && !nearbyActivityList.length}}">
           <cy-empty title="你附近暂时没有可点亮的节点" />
         </view>
-        <text class="v3-sec-sync cy-refresh-float" wx:if="{{listLoading.nearbyActivityList && nearbyActivityList.length}}"
+        <text class="v3-sec-sync cy-refresh-float cy-refresh-float--pill" wx:if="{{listLoading.nearbyActivityList && nearbyActivityList.length}}"
               aria-role="status" aria-live="polite">正在更新附近活动…</text>
         <scroll-view wx:if="{{nearbyActivityList.length}}" scroll-x="{{true}}" class="v3-rail" show-scrollbar="{{false}}">
           <view class="v3-nearby-row">
@@ -175,7 +175,7 @@
           <cy-error load-failure title="即将上线加载失败"
                     retry="重试" data-list="upcomingActivityList" bind:retry="retryList" />
         </view>
-        <text class="v3-sec-sync cy-refresh-float" wx:if="{{listLoading.upcomingActivityList && upcomingActivityList.length}}"
+        <text class="v3-sec-sync cy-refresh-float cy-refresh-float--pill" wx:if="{{listLoading.upcomingActivityList && upcomingActivityList.length}}"
               aria-role="status" aria-live="polite">正在更新即将上线…</text>
         <scroll-view wx:if="{{upcomingActivityList.length}}" scroll-x="{{true}}" class="v3-rail" show-scrollbar="{{false}}">
           <view class="v3-upcoming-row">
