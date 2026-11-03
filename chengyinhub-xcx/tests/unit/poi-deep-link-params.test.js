@@ -10,7 +10,7 @@ function mount(options) {
   global.getCurrentPages = () => []
   global.Page = definition => { pageDefinition = definition }
   global.Component = definition => { hostDefinition = definition }
-  for (const file of ['subpackageRoam/poi-detail/index.js', 'components/cy/scene-deep-link/index.js']) {
+  for (const file of ['subpackageRoam/poi-detail/index.js', 'subpackageMember/components/cy/scene-deep-link/index.js']) {
     const absolute = path.join(root, file)
     delete require.cache[require.resolve(absolute)]
     require(absolute)

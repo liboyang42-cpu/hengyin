@@ -29,7 +29,7 @@ const NATIVE_PRIMARY_CTAS = [
   ['components/cy/empty/index.wxss', '.cy-empty-cta'],
   ['components/cy/error/index.wxss', '.cy-error-retry'],
   ['subpackageMember/components/scene-member-participation-detail/index.wxss', '.cyinfobottom_box_but'],
-  ['components/cy/scene-qr-ticket/index.wxss', '.voucher__cta'],
+  ['pages/play/components/scene-qr-ticket/index.wxss', '.voucher__cta'],
 ]
 
 function ruleBody(source, selector) {

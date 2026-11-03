@@ -14,7 +14,7 @@ function mount(items) {
   const toast = msg => toasts.push(msg);
   toast.success = msg => toasts.push('ok:' + msg);
   vm.runInNewContext(
-    fs.readFileSync(path.join(ROOT, 'components/cy/scene-route-content/index.js'), 'utf8'),
+    fs.readFileSync(path.join(ROOT, 'subpackageMember/components/cy/scene-route-content/index.js'), 'utf8'),
     {
       Component: value => { definition = value; },
       getApp: () => ({ globalData: {}, sendRequest(request) { requests.push(request); } }),

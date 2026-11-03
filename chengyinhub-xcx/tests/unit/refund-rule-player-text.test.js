@@ -5,7 +5,7 @@ const assert = require('node:assert')
 const fs = require('fs')
 const path = require('path')
 const ROOT = path.resolve(__dirname, '../..')
-const { refundRuleText } = require('../../utils/refund-rule.js')
+const { refundRuleText } = require('../../pages/topic/utils/refund-rule.js')
 
 test('收费票显示平台三档,不看存的 refund_rule', () => {
   const t = { price: 39.99, mode: 1, refundRule: '开场前24小时可退' }
@@ -24,7 +24,7 @@ test('主题页场次行与选场次弹层都不再读 refundRule 原文', () =>
   assert.doesNotMatch(wxml, /item\.refundRule\b(?!Text)/)
   assert.match(wxml, /退改 · \{\{item\.refundRuleText\}\}/)
   const js = fs.readFileSync(path.join(ROOT, 'pages/topic/index/index.js'), 'utf8')
-  assert.match(js, /list\[i\]\['refundRuleText'\] = require\('\.\.\/\.\.\/\.\.\/utils\/refund-rule\.js'\)\.refundRuleText\(list\[i\]\)/)
+  assert.match(js, /list\[i\]\['refundRuleText'\] = require\('\.\.\/utils\/refund-rule\.js'\)\.refundRuleText\(list\[i\]\)/)
   const picker = fs.readFileSync(path.join(ROOT, 'pages/topic/components/cy/session-picker/index.js'), 'utf8')
   assert.match(picker, /rule: refundRuleText\(t\)/)
   assert.doesNotMatch(picker, /t\.refundRule/)

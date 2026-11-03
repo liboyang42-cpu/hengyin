@@ -36,8 +36,8 @@ test('成为节点常显主动作、驳回理由与三项运营动作', () => {
 // 契约随孤儿页整页退役 —— 页面已从 app.json 摘除，该断言没有宿主。
 
 test('俱乐部分润显式区分已结算与已入账', () => {
-  const js = read('components/cy/scene-merchant-profit/index.js')
-  const wxml = read('components/cy/scene-merchant-profit/index.wxml')
+  const js = read('subpackageA/components/scene-merchant-profit/index.js')
+  const wxml = read('subpackageA/components/scene-merchant-profit/index.wxml')
   assert.match(wxml, /已结算不等于已入账/)
   assert.match(wxml, /class="fc-settled-badge"/)
   assert.match(wxml, /class="fc-arrived-date"/)

@@ -27,6 +27,8 @@ test('启用微信隐私检查,并按后台定位形态完整声明', () => {
   assert.equal(appConfig.permission['scope.userFuzzyLocation'], undefined);
   assert.equal(appConfig.requiredPrivateInfos.includes('startLocationUpdate'), true);
   assert.equal(appConfig.requiredPrivateInfos.includes('onLocationChange'), true);
-  assert.equal(appConfig.pages.includes('pages/privacy/index'), true);
-  assert.equal(appConfig.pages.includes('pages/deregister/index'), true);
+  // 第七轮主包瘦身:隐私政策 / 注销页随各自分包下发,路由不变,查「仍注册」。
+  const routes = appConfig.pages.concat((appConfig.subPackages || []).flatMap((pkg) => pkg.pages.map((page) => pkg.root + '/' + page)));
+  assert.equal(routes.includes('pages/privacy/index'), true);
+  assert.equal(routes.includes('pages/deregister/index'), true);
 });

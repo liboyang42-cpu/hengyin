@@ -45,7 +45,7 @@ function mount(identity) {
       if (request === '../../../utils/modal.js') {
         return { show: (o) => modals.push(o) }
       }
-      if (request === '../../../utils/club-phone-call.js') return require('../../utils/club-phone-call.js')
+      if (request === '../utils/club-phone-call.js') return require('../../pages/club/utils/club-phone-call.js')
       throw new Error('unexpected require: ' + request)
     },
     wx: { navigateBack() {}, switchTab() {}, stopPullDownRefresh() {} },

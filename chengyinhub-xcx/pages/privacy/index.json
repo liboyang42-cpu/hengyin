@@ -9,7 +9,7 @@
     "cy-loading-mask": "/components/cy/loading-mask/index",
     "cy-modal-host": "/components/cy/modal-host/index",
     "cy-agreement-sheet": "/components/cy/agreement-sheet/index",
-    "cy-media-model-preview": "/components/cy/media-model-preview/index"
+    "cy-media-model-preview": "/pages/privacy/components/media-model-preview/index"
   },
   "navigationStyle": "custom",
   "navigationBarTextStyle": "white"

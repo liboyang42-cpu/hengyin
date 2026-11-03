@@ -8,8 +8,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '../..');
-const COMPONENT = '../../components/cy/scene-settings-deregister/index.js';
-const FLOW = '../../utils/deregister-flow.js';
+const COMPONENT = '../../pages/deregister/components/scene-settings-deregister/index.js';
+const FLOW = '../../pages/deregister/utils/deregister-flow.js';
 let def;
 let requests;
 
@@ -164,7 +164,7 @@ test('SC-DEREG-01 两个入口共用同一注销 scene:设置页走 scene,路由
   assert.match(shezhiWxml, /wx:if="\{\{sceneCurrent && sceneCurrent\.id !== 'settings-identity-picker'\}\}"/);
   const pageWxml = fs.readFileSync(path.join(ROOT, 'pages/deregister/index.wxml'), 'utf8');
   assert.match(pageWxml, /<cy-scene-settings-deregister/);
-  const wxml = fs.readFileSync(path.join(ROOT, 'components/cy/scene-settings-deregister/index.wxml'), 'utf8');
+  const wxml = fs.readFileSync(path.join(ROOT, 'pages/deregister/components/scene-settings-deregister/index.wxml'), 'utf8');
   // ERROR 与无法识别的状态各自落在错误卡,不会进入 ELIGIBLE 卡
   assert.match(wxml, /wx:elif="\{\{status === 'ERROR'\}\}"[^>]*bind:retry="loadStatus"/);
   assert.match(wxml, /<cy-error wx:else[^>]*bind:retry="loadStatus"/);

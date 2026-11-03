@@ -4,9 +4,9 @@ const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const path = require('node:path')
 const vm = require('node:vm')
-const drafts = require('../../utils/club-edit-draft.js')
+const drafts = require('../../pages/club/utils/club-edit-draft.js')
 const { decodeDisplayText } = require('../../utils/display-text.js')
-const COMPONENT = path.resolve(__dirname, '../../components/cy/scene-club-edit/index.js')
+const COMPONENT = path.resolve(__dirname, '../../pages/club/components/cy/scene-club-edit/index.js')
 // PublicClubVO.from/getters: nullable Java String/Integer fields are explicit null;
  // detail adds Boolean viewer flags. It exposes no updateTime.
 const CLUB = { id: 9, memberId: 1, name: '原俱乐部', logo: null, cover: null,

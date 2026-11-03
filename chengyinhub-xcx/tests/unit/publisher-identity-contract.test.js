@@ -38,8 +38,8 @@ const ENTRY = {
   },
 }
 const FABU_INDEX_WXML = 'pages/publish/fabu/index.wxml'
-const SCENE_JS = 'components/cy/scene-route-content/index.js'
-const SCENE_WXML = 'components/cy/scene-route-content/index.wxml'
+const SCENE_JS = 'subpackageMember/components/cy/scene-route-content/index.js'
+const SCENE_WXML = 'subpackageMember/components/cy/scene-route-content/index.wxml'
 const UTIL = 'utils/publisher-identity.js'
 
 /** 从某个字面量签名起取到配平的 } —— 只用在已经缩窄到一小段文本里的匿名回调。 */

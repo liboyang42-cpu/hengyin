@@ -218,7 +218,7 @@ function mountRouteContent() {
     sendRequest(request) { requests.push(request); },
   };
   vm.runInNewContext(
-    fs.readFileSync(path.join(ROOT, 'components/cy/scene-route-content/index.js'), 'utf8'),
+    fs.readFileSync(path.join(ROOT, 'subpackageMember/components/cy/scene-route-content/index.js'), 'utf8'),
     {
       Component: value => { definition = value; },
       getApp: () => app,

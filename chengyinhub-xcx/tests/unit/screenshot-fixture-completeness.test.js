@@ -357,7 +357,7 @@ const CONTRACTS = {
     equals: { step: 1 },
   },
   C46: {
-    sources: ['components/cy/scene-club-edit/index.js', 'components/cy/scene-club-edit/index.wxml'],
+    sources: ['pages/club/components/cy/scene-club-edit/index.js', 'pages/club/components/cy/scene-club-edit/index.wxml'],
     shell: ['pages/club/edit/index.wxml', '<cy-scene-club-edit'],
     target: 'cy-scene-club-edit',
     paths: ['loadState', 'name', 'city', 'description', 'activityPrefs', 'typeOptions[].val', 'dirOptions', 'memberReservedQuota'],
@@ -389,7 +389,7 @@ const CONTRACTS = {
     equals: { tab: 0, tabKey: '0', listState: 'ready', 'received[].decisionReady': true },
   },
   C60: {
-    sources: ['components/cy/scene-merchant-profit/index.js', 'components/cy/scene-merchant-profit/index.wxml'],
+    sources: ['subpackageA/components/scene-merchant-profit/index.js', 'subpackageA/components/scene-merchant-profit/index.wxml'],
     shell: ['pages/coop/finance/index.wxml', 'id="merchantProfit"'],
     target: '#merchantProfit',
     paths: ['loaded', 'loadErr', 'statItems', 'myIncomeTotal', 'canWithdraw', 'pendingCount', 'topics[].topicName', 'topics[].incomeText'],
@@ -412,14 +412,14 @@ const CONTRACTS = {
     equals: { loadState: 'ready', 'info.status': 1 },
   },
   D21: {
-    sources: ['components/cy/scene-member-withdraw-history/index.js', 'components/cy/scene-member-withdraw-history/index.wxml'],
+    sources: ['subpackageMember/components/cy/scene-member-withdraw-history/index.js', 'subpackageMember/components/cy/scene-member-withdraw-history/index.wxml'],
     shell: ['subpackageMember/tixianjilu/tixianjilu.wxml', 'id="withdrawHistory"'],
     target: '#withdrawHistory',
     paths: ['loading', 'loadErr', 'nodata', 'list[].createTimeText', 'list[].receivedAmountText', 'list[].statusText', 'list[].statusVariant'],
     equals: { loading: false, loadErr: false, nodata: false, 'list[].statusText': '提现中', 'list[].statusVariant': 'warn' },
   },
   D30: {
-    sources: ['components/cy/scene-asset-income-detail/index.js', 'components/cy/scene-asset-income-detail/index.wxml'],
+    sources: ['subpackageA/components/scene-asset-income-detail/index.js', 'subpackageA/components/scene-asset-income-detail/index.wxml'],
     shell: ['subpackageA/pages/assetcenter/income-detail/income-detail.wxml', 'id="incomeDetail"'],
     target: '#incomeDetail',
     paths: ['activeFilter', 'loading', 'loadErr', 'hasMore', 'list'],
@@ -427,7 +427,7 @@ const CONTRACTS = {
     equals: { activeFilter: 'all', loading: false, loadErr: false, hasMore: false },
   },
   D31: {
-    sources: ['components/cy/scene-asset-income-detail/index.js', 'components/cy/scene-asset-income-detail/index.wxml'],
+    sources: ['subpackageA/components/scene-asset-income-detail/index.js', 'subpackageA/components/scene-asset-income-detail/index.wxml'],
     shell: ['subpackageA/pages/assetcenter/income-detail/income-detail.wxml', 'id="incomeDetail"'],
     target: '#incomeDetail',
     paths: ['loading', 'loadErr', 'list'],

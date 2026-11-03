@@ -4,8 +4,8 @@ const fs = require('node:fs')
 const path = require('node:path')
 
 const ROOT = path.resolve(__dirname, '../..')
-const INCOME_DIR = path.join(ROOT, 'components/cy/scene-asset-income-detail')
-const PROFIT_DIR = path.join(ROOT, 'components/cy/scene-merchant-profit')
+const INCOME_DIR = path.join(ROOT, 'subpackageA/components/scene-asset-income-detail')
+const PROFIT_DIR = path.join(ROOT, 'subpackageA/components/scene-merchant-profit')
 
 function read(dir, file) {
   return fs.readFileSync(path.join(dir, file), 'utf8')
@@ -58,7 +58,7 @@ test('收益明细提供俱乐部筛选分支，并委托给财务唯一正文',
   assert.equal(requests.length, 0, '页面触底也不得误请求普通收益流水')
 
   const json = JSON.parse(read(INCOME_DIR, 'index.json'))
-  assert.equal(json.usingComponents['cy-scene-merchant-profit'], '/components/cy/scene-merchant-profit/index')
+  assert.equal(json.usingComponents['cy-scene-merchant-profit'], '/subpackageA/components/scene-merchant-profit/index')
 
   const wxml = read(INCOME_DIR, 'index.wxml')
   const branchStart = wxml.indexOf('<cy-scene-merchant-profit')
@@ -135,8 +135,8 @@ test('俱乐部分支可见地保留由应收与已付金额推导的打款状�
 })
 
 test('资产正文不再保留独立俱乐部分润入口', () => {
-  const wxml = read(path.join(ROOT, 'components/cy/scene-asset-earnings'), 'index.wxml')
-  const js = read(path.join(ROOT, 'components/cy/scene-asset-earnings'), 'index.js')
+  const wxml = read(path.join(ROOT, 'subpackageA/components/scene-asset-earnings'), 'index.wxml')
+  const js = read(path.join(ROOT, 'subpackageA/components/scene-asset-earnings'), 'index.js')
   assert.doesNotMatch(wxml, /bind:tap="openCoopFinance"/)
   assert.doesNotMatch(js, /openCoopFinance\s*\(/)
 })

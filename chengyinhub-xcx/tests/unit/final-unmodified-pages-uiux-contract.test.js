@@ -29,19 +29,19 @@ function assertInviteQrLifecycle({ js, json, wxml, wxss }) {
 
 test('邀请二维码区分加载、成功、失败和未提供，并移除无功能的 CSS home indicator', () => {
   assertInviteQrLifecycle({
-    js: read('components/cy/scene-share-invite/index.js'),
-    json: read('components/cy/scene-share-invite/index.json'),
-    wxml: read('components/cy/scene-share-invite/index.wxml'),
-    wxss: read('components/cy/scene-share-invite/index.wxss'),
+    js: read('subpackageMember/components/cy/scene-share-invite/index.js'),
+    json: read('subpackageMember/components/cy/scene-share-invite/index.json'),
+    wxml: read('subpackageMember/components/cy/scene-share-invite/index.wxml'),
+    wxss: read('subpackageMember/components/cy/scene-share-invite/index.wxss'),
   })
 })
 
 test('negative control：摘掉二维码失败回调会被生命周期契约判红', () => {
   const source = {
-    js: read('components/cy/scene-share-invite/index.js'),
-    json: read('components/cy/scene-share-invite/index.json'),
-    wxml: read('components/cy/scene-share-invite/index.wxml'),
-    wxss: read('components/cy/scene-share-invite/index.wxss'),
+    js: read('subpackageMember/components/cy/scene-share-invite/index.js'),
+    json: read('subpackageMember/components/cy/scene-share-invite/index.json'),
+    wxml: read('subpackageMember/components/cy/scene-share-invite/index.wxml'),
+    wxss: read('subpackageMember/components/cy/scene-share-invite/index.wxss'),
   }
   const mutated = { ...source, wxml: source.wxml.replace(' binderror="onQrError"', '') }
   assert.notEqual(mutated.wxml, source.wxml, '变异锚点必须真实摘掉 binderror')

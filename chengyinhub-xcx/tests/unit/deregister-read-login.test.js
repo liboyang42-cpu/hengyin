@@ -5,7 +5,7 @@ beforeEach(() => {
   actor = 7; requests = [];
   app = { getUserID: () => actor, sendRequest: o => requests.push(o) };
   global.getApp = () => app;
-  const modulePath = require.resolve('../../utils/deregister-flow.js');
+  const modulePath = require.resolve('../../pages/deregister/utils/deregister-flow.js');
   delete require.cache[modulePath];
   const { initialData, methods } = require(modulePath);
   flow = Object.assign({data: initialData(), setData(patch) {Object.assign(this.data, patch);}}, methods);

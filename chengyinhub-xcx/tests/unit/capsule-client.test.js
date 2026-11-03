@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { createCapsuleClient } = require('../../utils/features/capsule-client');
+const { createCapsuleClient } = require('../../subpackageTools/utils/features/capsule-client');
 const draft = { requestId: 'capsule-request-0001', body: '未来见', unlockDate: '2027-01-01' };
 function setup() {
   let owner = '7:login-1'; const sent = [];

@@ -10,7 +10,7 @@
  */
 const app = getApp();
 const toast = require('../../../utils/toast.js');
-const { callMember } = require('../../../utils/club-phone-call.js');
+const { callMember } = require('../utils/club-phone-call.js');
 const { bizFailureMessage } = require('../../../utils/response-shape.js');
 const cancellationFeedback = require('../../../utils/cancellation-feedback.js');
 const modal = require('../../../utils/modal.js');

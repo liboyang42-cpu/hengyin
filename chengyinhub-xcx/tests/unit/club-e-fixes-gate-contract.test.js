@@ -236,7 +236,7 @@ test('E-15f 场次工具加载失败不再谎报「没有可管理的具体场�
 
 test('E-15g 解散确认框带的是俱乐部真名,而不是回退成「这一项」', () => {
   let opened = null;
-  const { page } = mountWithLastPage('components/cy/scene-club-edit/index.js', {}, {
+  const { page } = mountWithLastPage('pages/club/components/cy/scene-club-edit/index.js', {}, {
     './danger-actions.js': { open() {} },
     '../../../utils/danger-actions.js': { open() {} },
   });

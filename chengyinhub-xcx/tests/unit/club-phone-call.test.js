@@ -5,7 +5,7 @@ const { test } = require('node:test')
 const assert = require('node:assert/strict')
 const calls = []
 global.wx = { makePhoneCall: o => { calls.push(o.phoneNumber); if (o.phoneNumber === '13900000000') o.fail({ errMsg: 'makePhoneCall:fail' }) } }
-const { callableNumber, callMember } = require('../../utils/club-phone-call.js')
+const { callableNumber, callMember } = require('../../pages/club/utils/club-phone-call.js')
 
 test('只有完整 11 位手机号可拨', () => {
   assert.equal(callableNumber(' 13812345621 '), '13812345621')

@@ -7,7 +7,7 @@ const motion = require('../../../utils/motion.js')
 const { readReducedMotion } = require('../../../utils/motion-preference.js')
 const { bizFailureMessage } = require('../../../utils/response-shape.js')
 const { safeUserMessage } = require('../../../utils/transport/safe-user-message.js')
-const { callableNumber, callMember } = require('../../../utils/club-phone-call.js')
+const { callableNumber, callMember } = require('../utils/club-phone-call.js')
 
 const RECURRENCES = [
   { value: 'ONCE', label: '单次' },

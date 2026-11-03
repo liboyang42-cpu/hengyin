@@ -258,7 +258,7 @@
         <!-- 工作台没有铃铛,协作邀请(=合作中心铃铛那一页)从这里进;接口要 COOP_MANAGE,核销/财务岗不给入口。
              CU-M-150:这一页只有「收到的 / 我发出的」协作记录,聊天与系统通知在「站内消息」,入口名不再写「消息中心」。 -->
         <view class="rv-more-item" wx:if="{{merchantAccess.canManageCoop}}" bindtap="onMoreItem" data-action="messages" aria-role="button" aria-label="打开协作邀请" hover-class="cy-pressed" hover-stay-time="80">
-          <image class="rv-more-ico" src="/images/nav_msg.svg" mode="aspectFit" />
+          <image class="rv-more-ico" src="/pages/merchant/images/nav_msg.svg" mode="aspectFit" />
           <text class="rv-more-label">协作邀请</text>
         </view>
         <view class="rv-more-item" wx:if="{{merchantAccess.canReadAftercare}}" bindtap="onMoreItem" data-action="aftercare" aria-role="button" aria-label="打开退款售后" hover-class="cy-pressed" hover-stay-time="80">

@@ -1,0 +1,7 @@
+{
+  "component": true,
+  "usingComponents": {
+    "cy-sheet": "../../../../components/cy/sheet/index",
+    "cy-inline-error": "../../../../components/cy/inline-error/index"
+  }
+}

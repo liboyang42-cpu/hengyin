@@ -41,15 +41,15 @@ function sources() {
     productionWxml: productionWxml(),
     wxml: {
       mylike: read('pages/mylike/mylike.wxml'),
-      scene: read('components/cy/scene-route-content/index.wxml'),
+      scene: read('subpackageMember/components/cy/scene-route-content/index.wxml'),
     },
     css: {
       mylike: read('pages/mylike/mylike.wxss'),
-      scene: read('components/cy/scene-route-content/index.wxss'),
+      scene: read('subpackageMember/components/cy/scene-route-content/index.wxss'),
     },
     json: {
       mylike: read('pages/mylike/mylike.json'),
-      scene: read('components/cy/scene-route-content/index.json'),
+      scene: read('subpackageMember/components/cy/scene-route-content/index.json'),
     },
   }
 }

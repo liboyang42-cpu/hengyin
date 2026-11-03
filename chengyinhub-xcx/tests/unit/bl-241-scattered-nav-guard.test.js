@@ -60,7 +60,7 @@ const CASES = [
     tap(page) { page.goPrimary() },
   },
   {
-    name: '解散阻断项', file: 'components/cy/scene-club-edit/index.js', show: 'pageShow',
+    name: '解散阻断项', file: 'pages/club/components/cy/scene-club-edit/index.js', show: 'pageShow',
     url: '/pages/club/customers/index?clubId=7',
     prep(page) { page.data.dissolutionBlockerItems = [{ url: '/pages/club/customers/index?clubId=7' }] },
     tap(page) { page.openDissolutionBlockerItem({ currentTarget: { dataset: { index: 0 } } }) },

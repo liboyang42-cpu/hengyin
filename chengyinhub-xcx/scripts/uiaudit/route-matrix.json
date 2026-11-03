@@ -73,68 +73,6 @@
       "hasWxml": true
     },
     {
-      "pagePath": "pages/privacy/index",
-      "pkg": "main",
-      "tabBar": false,
-      "role": "player",
-      "needsLogin": true,
-      "needsData": false,
-      "dataKeys": [],
-      "hasJs": true,
-      "hasWxml": true
-    },
-    {
-      "pagePath": "pages/agreement/index",
-      "pkg": "main",
-      "tabBar": false,
-      "role": "player",
-      "needsLogin": false,
-      "needsData": true,
-      "dataKeys": [
-        "type"
-      ],
-      "hasJs": true,
-      "hasWxml": true
-    },
-    {
-      "pagePath": "pages/deregister/index",
-      "pkg": "main",
-      "tabBar": false,
-      "role": "player",
-      "needsLogin": false,
-      "needsData": false,
-      "dataKeys": [],
-      "hasJs": true,
-      "hasWxml": true
-    },
-    {
-      "pagePath": "pages/team/detail/index",
-      "pkg": "main",
-      "tabBar": false,
-      "role": "player",
-      "needsLogin": true,
-      "needsData": true,
-      "dataKeys": [
-        "teamId"
-      ],
-      "hasJs": true,
-      "hasWxml": true
-    },
-    {
-      "pagePath": "pages/team/join/index",
-      "pkg": "main",
-      "tabBar": false,
-      "role": "player",
-      "needsLogin": true,
-      "needsData": true,
-      "dataKeys": [
-        "code",
-        "teamId"
-      ],
-      "hasJs": true,
-      "hasWxml": true
-    },
-    {
       "pagePath": "pages/play/index",
       "pkg": "pages/play",
       "tabBar": false,
@@ -1950,12 +1888,74 @@
       "dataKeys": [],
       "hasJs": true,
       "hasWxml": true
+    },
+    {
+      "pagePath": "pages/privacy/index",
+      "pkg": "pages/privacy",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/agreement/index",
+      "pkg": "pages/agreement",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": false,
+      "needsData": true,
+      "dataKeys": [
+        "type"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/deregister/index",
+      "pkg": "pages/deregister",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": false,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/team/detail/index",
+      "pkg": "pages/team",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "teamId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/team/join/index",
+      "pkg": "pages/team",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "code",
+        "teamId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
     }
   ],
   "scenes": [
     {
       "component": "scene-asset-earnings",
-      "dir": "components/cy/scene-asset-earnings",
+      "dir": "subpackageA/components/scene-asset-earnings",
       "twin": {
         "route": "subpackageA/pages/assetcenter/earnings/index",
         "score": 13
@@ -1963,7 +1963,7 @@
     },
     {
       "component": "scene-asset-income-detail",
-      "dir": "components/cy/scene-asset-income-detail",
+      "dir": "subpackageA/components/scene-asset-income-detail",
       "twin": {
         "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
         "score": 17
@@ -1971,7 +1971,7 @@
     },
     {
       "component": "scene-club-edit",
-      "dir": "components/cy/scene-club-edit",
+      "dir": "pages/club/components/cy/scene-club-edit",
       "twin": {
         "route": "pages/club/edit/index",
         "score": 8
@@ -1995,7 +1995,7 @@
     },
     {
       "component": "scene-member-invite-history",
-      "dir": "components/cy/scene-member-invite-history",
+      "dir": "subpackageA/components/scene-member-invite-history",
       "twin": {
         "route": "subpackageMember/points-history/index",
         "score": 13
@@ -2027,7 +2027,7 @@
     },
     {
       "component": "scene-member-withdraw-history",
-      "dir": "components/cy/scene-member-withdraw-history",
+      "dir": "subpackageMember/components/cy/scene-member-withdraw-history",
       "twin": {
         "route": "subpackageMember/points-history/index",
         "score": 13
@@ -2035,7 +2035,7 @@
     },
     {
       "component": "scene-merchant-profit",
-      "dir": "components/cy/scene-merchant-profit",
+      "dir": "subpackageA/components/scene-merchant-profit",
       "twin": {
         "route": "pages/play/merchant/index",
         "score": 8
@@ -2075,12 +2075,12 @@
     },
     {
       "component": "scene-qr-ticket",
-      "dir": "components/cy/scene-qr-ticket",
+      "dir": "pages/play/components/scene-qr-ticket",
       "twin": null
     },
     {
       "component": "scene-roam-discover",
-      "dir": "components/cy/scene-roam-discover",
+      "dir": "pages/play/components/scene-roam-discover",
       "twin": null
     },
     {
@@ -2127,12 +2127,12 @@
     },
     {
       "component": "scene-route-content",
-      "dir": "components/cy/scene-route-content",
+      "dir": "subpackageMember/components/cy/scene-route-content",
       "twin": null
     },
     {
       "component": "scene-settings-deregister",
-      "dir": "components/cy/scene-settings-deregister",
+      "dir": "pages/deregister/components/scene-settings-deregister",
       "twin": {
         "route": "pages/deregister/index",
         "score": 10
@@ -2140,7 +2140,7 @@
     },
     {
       "component": "scene-share-invite",
-      "dir": "components/cy/scene-share-invite",
+      "dir": "subpackageMember/components/cy/scene-share-invite",
       "twin": null
     },
     {

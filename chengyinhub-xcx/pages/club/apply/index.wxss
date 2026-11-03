@@ -1,4 +1,4 @@
-@import '../../../style/club-apply-form.wxss';
+@import '../style/club-apply-form.wxss';
 @import '../../../style/wizard-intro.wxss';
 
 page { background: var(--cy-bg-page); }

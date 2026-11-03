@@ -5,8 +5,8 @@ const path = require('node:path')
 const vm = require('node:vm')
 
 const ROOT = path.resolve(__dirname, '../..')
-const JS_PATH = 'components/cy/scene-merchant-profit/index.js'
-const WXSS_PATH = 'components/cy/scene-merchant-profit/index.wxss'
+const JS_PATH = 'subpackageA/components/scene-merchant-profit/index.js'
+const WXSS_PATH = 'subpackageA/components/scene-merchant-profit/index.wxss'
 const read = (relativePath) => fs.readFileSync(path.join(ROOT, relativePath), 'utf8')
 
 function loadScene(mutate) {

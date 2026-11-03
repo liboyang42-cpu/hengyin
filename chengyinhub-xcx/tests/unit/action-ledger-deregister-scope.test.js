@@ -5,7 +5,7 @@ const path = require('node:path')
 const fs = require('node:fs')
 const { targetsForHandler, deregisterRequestPlan, sourceFilesFor, handlerSlices } = require('../../scripts/uiaudit/build-action-ledger')
 const ROOT = path.resolve(__dirname, '../..')
-const file = 'components/cy/scene-settings-deregister/index.js'
+const file = 'pages/deregister/components/scene-settings-deregister/index.js'
 const targets = handler => targetsForHandler(path.join(ROOT, file), handler)
 const urls = handler => targets(handler).apiContracts.map(row => row.url)
 
@@ -25,8 +25,8 @@ test('注销共享16KB owner只跟踪真实委托闭包；局部UI不借用别�
   assert.ok(cancel.includes('/api/user/deregister/cancel')); assert.ok(cancel.includes('/api/user/deregister/precheck'))
   assert.ok(!cancel.includes('/api/sms/send')); assert.ok(!cancel.includes('/api/user/deregister/apply'))
   const sources = sourceFilesFor({entry:{js:file,wxml:file.replace('.js','.wxml')}})
-  assert.ok(sources.includes('utils/deregister-flow.js'))
-  assert.ok(Buffer.byteLength(fs.readFileSync(path.join(ROOT,'utils/deregister-flow.js'),'utf8')) > 16 * 1024)
+  assert.ok(sources.includes('pages/deregister/utils/deregister-flow.js'))
+  assert.ok(Buffer.byteLength(fs.readFileSync(path.join(ROOT,'pages/deregister/utils/deregister-flow.js'),'utf8')) > 16 * 1024)
   assert.match(handlerSlices(path.join(ROOT,file)).get('apply'), /requestId\(\)/)
 })
 

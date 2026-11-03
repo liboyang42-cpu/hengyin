@@ -5,7 +5,7 @@
 // (「这一站玩什么」是讲给商家听的「玩家到店会跟你做什么」),不是俱乐部要看的东西。
 // 日常详情不跳 merchantinfo；只有「承接审核」显式复用它已有的主办方审核台，避免复制审核链。
 const toast = require('../../../utils/toast.js');
-const { callMember } = require('../../../utils/club-phone-call.js');
+const { callMember } = require('../utils/club-phone-call.js');
 const cancellationIntent = require('../../../utils/topic-cancellation-intent.js');
 const { resolveMenuChrome } = require('../../../utils/nav-safe-area.js');
 const app = getApp();

@@ -232,7 +232,7 @@
                 <image lazy-load="true" src="{{item.imgUrl}}" mode="aspectFill" class="pic" />
                 <!-- <view class="attr flex-ce">
                   <view class="dd flex-cc">
-                    <image lazy-load="true" src="/images/icon_star.png" mode="widthFix" />{{item.rating}}
+                    <image lazy-load="true" src="/subpackageMember/images/icon_star.png" mode="widthFix" />{{item.rating}}
                   </view>
                   <view class="dd flex-cc">
                     {{item.useNum}} 使用

@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
-const wire = require('../../utils/free-explore-bundle.js');
+const wire = require('../../subpackageMember/utils/free-explore-bundle.js');
 const source = fs.readFileSync(path.join(__dirname, '../../subpackageMember/free-explore/index.js'), 'utf8');
 const ID = '9223372036854775807';
 function raw(owner = '11', status = 'BOOKED') {

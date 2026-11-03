@@ -73,7 +73,7 @@ test('M-25:玩家视角订单页照旧(带 detailId 打开订单详情,不跳转
 });
 
 test('G-10 / M-35:商家从账户收益进收益明细带 theme=merchant', () => {
-  const js = read('components/cy/scene-asset-earnings/index.js');
+  const js = read('subpackageA/components/scene-asset-earnings/index.js');
   const m = js.match(/openIncomeDetail\(\)\s*\{([^\n]*)\n/);
   assert.ok(m, '缺少 openIncomeDetail');
   assert.match(m[1], /income-detail\/income-detail' \+ \(this\.data\.theme === 'merchant' \? '\?theme=merchant' : ''\)/);

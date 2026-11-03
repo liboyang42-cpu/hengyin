@@ -25,7 +25,7 @@ function readWxss(relativePath) {
 
 // CU-M-122:提现记录弹层标题由宿主出(scene-registry 的「提现记录」),屏上只许再有一行。
 test('CU-M-122 提现记录弹层空态只留一行,不再重复标题', () => {
-  const wxml = readWxml('components/cy/scene-member-withdraw-history/index.wxml')
+  const wxml = readWxml('subpackageMember/components/cy/scene-member-withdraw-history/index.wxml')
   assert.match(wxml, /<cy-empty\b[^>]*title="还没有发起提现"[^>]*\/>/)
   assert.doesNotMatch(wxml, /暂无提现记录/)
   assert.doesNotMatch(wxml, /提现记录会显示在这里/)
@@ -33,8 +33,8 @@ test('CU-M-122 提现记录弹层空态只留一行,不再重复标题', () => {
 
 // CU-M-122:收益明细的四个筛选各说各的空态,不许再用一句「当前筛选暂无收益记录」糊过去。
 test('CU-M-122 收益明细空态按筛选给一句话,不带重复说明', () => {
-  const wxml = readWxml('components/cy/scene-asset-income-detail/index.wxml')
-  const js = read('components/cy/scene-asset-income-detail/index.js')
+  const wxml = readWxml('subpackageA/components/scene-asset-income-detail/index.wxml')
+  const js = read('subpackageA/components/scene-asset-income-detail/index.js')
   assert.match(wxml, /title="\{\{emptyTitle\}\}"/)
   assert.doesNotMatch(wxml, /当前筛选暂无收益记录|暂无收益记录|产生收益后，明细会显示在这里/)
   assert.match(js, /emptyTitle: '还没有收益记录'/)
@@ -42,7 +42,7 @@ test('CU-M-122 收益明细空态按筛选给一句话,不带重复说明', () =
 })
 
 test('CU-M-122 分润与结算空态删去重复说明,不再写「暂无」', () => {
-  const profit = readWxml('components/cy/scene-merchant-profit/index.wxml')
+  const profit = readWxml('subpackageA/components/scene-merchant-profit/index.wxml')
   assert.match(profit, /title="还没有合作结算"/)
   assert.doesNotMatch(profit, /完成合作结算后，收入明细会显示在此/)
   assert.doesNotMatch(profit, /暂无已入账分润/)

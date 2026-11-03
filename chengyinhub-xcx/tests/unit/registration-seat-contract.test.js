@@ -29,7 +29,7 @@ function workflow(disk = storage()) {
     invalidate() { current = false; }, get starts() { return startCount; }, finish(result) { finishWrite(result); } };
 }
 function component() {
-  const file = path.resolve(__dirname, '../../components/cy/scene-qr-ticket/index.js');
+  const file = path.resolve(__dirname, '../../pages/play/components/scene-qr-ticket/index.js');
   let definition, owner = '11';
   const disk = storage(), requests = [], polls = [], events = [], intervals = [];
   // 发码请求单独记;码亮着时的核销轮询(探店完局面)另记,不打乱发码序号

@@ -198,9 +198,11 @@ function assertFullTeamInvitationHidden(source) {
 
 test('独立建队页已下线，只保留详情与邀请落点', () => {
   const app = JSON.parse(read('app.json'))
-  assert.ok(!app.pages.includes('pages/team/create/index'))
-  assert.ok(app.pages.includes('pages/team/detail/index'))
-  assert.ok(app.pages.includes('pages/team/join/index'))
+  // 第七轮主包瘦身:队伍详情 / 邀请落点随 pages/team 分包下发,路由不变,这里查的是「仍注册」而不是「在主包」。
+  const routes = app.pages.concat((app.subPackages || app.subpackages || []).flatMap((pkg) => pkg.pages.map((page) => pkg.root + '/' + page)))
+  assert.ok(!routes.includes('pages/team/create/index'))
+  assert.ok(routes.includes('pages/team/detail/index'))
+  assert.ok(routes.includes('pages/team/join/index'))
 
   const page = loadDetailPage()
   page.teamId = '31'

@@ -8,7 +8,7 @@ const app = getApp();
    写法与现码 pages/publish/fabu/index.js:69 的同名局部常量一致 —— 不抽成公共模块:
    小程序这批单测用的是 `unexpected require` 白名单沙箱,多一个跨文件 require
    会同时打破十几个测试装置,代价远大于这一行重复。 */
-const { readReducedMotion } = require('../../../utils/motion-preference.js'); const profitSplit = require('../../../utils/profit-split.js'); // 走查 v2 R09:分润明细口径
+const { readReducedMotion } = require('../../../utils/motion-preference.js'); const profitSplit = require('../utils/profit-split.js'); // 走查 v2 R09:分润明细口径
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const { chinaDayStart, chinaDayEnd, chinaParts } = require('../../../utils/datetime');
 /* 数据条的格子只有一份实现:玩家深色版(214:384)与本页浅色版(181:575)是同一块。 */

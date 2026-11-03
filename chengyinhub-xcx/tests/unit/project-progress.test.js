@@ -1,7 +1,7 @@
 // 走查 v2 R04/R16(2026-10-30):主题工作台底部进度按 lifecycle 推进,子项只指向工作台已有入口。
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { buildHostSteps } = require('../../utils/project-progress.js');
+const { buildHostSteps } = require('../../pages/topic/utils/project-progress.js');
 
 test('招募中:招商是当前步,子项写俱乐部与商家进度并指向招商/俱乐部弹窗', () => {
   const steps = buildHostSteps({ lifecycle: 1, productType: 1, nodeTotal: 4, nodeFilled: 2, pendingCount: 1, clubCount: 1, paidCount: 0 });

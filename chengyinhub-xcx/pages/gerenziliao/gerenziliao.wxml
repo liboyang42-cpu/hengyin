@@ -108,7 +108,7 @@
       <view class="david_tk_con">
         <view class="david_tk_con_sc" wx:for="{{tempCasePics}}" wx:key="index" wx:for-item="pic" wx:for-index="index">
           <image lazy-load="true" src="{{pic}}" mode="aspectFill" />
-          <view class="david_del-hit" bindtap="deleteCasePic" aria-role="button" aria-label="删除这张作品图" data-index="{{index}}" hover-class="cy-pressed" hover-stay-time="80"><image lazy-load="true" class="david_del" src="/images/del.png" mode="aspectFill" /></view>
+          <view class="david_del-hit" bindtap="deleteCasePic" aria-role="button" aria-label="删除这张作品图" data-index="{{index}}" hover-class="cy-pressed" hover-stay-time="80"><image lazy-load="true" class="david_del" src="/pages/gerenziliao/images/del.png" mode="aspectFill" /></view>
         </view>
         <button class="david_tk_con_tgb" bindtap="uploadCasePics" wx:if="{{tempCasePics.length < 9}}">
           <view class="david_tk_con_tgb_tu"><image lazy-load="true" src="/pages/gerenziliao/images/d_sctb.png" mode="widthFix" /></view>
@@ -127,7 +127,7 @@
       <view class="david_tk_con profile-contact-media">
         <view class="david_tk_con_sc" wx:if="{{tempWechat}}">
           <image lazy-load="true" src="{{tempWechat}}" mode="aspectFit" />
-          <view class="david_del-hit" bindtap="deleteWechat" aria-role="button" aria-label="清除微信号" hover-class="cy-pressed" hover-stay-time="80"><image lazy-load="true" class="david_del" src="/images/del.png" mode="aspectFill" /></view>
+          <view class="david_del-hit" bindtap="deleteWechat" aria-role="button" aria-label="清除微信号" hover-class="cy-pressed" hover-stay-time="80"><image lazy-load="true" class="david_del" src="/pages/gerenziliao/images/del.png" mode="aspectFill" /></view>
         </view>
         <button class="david_tk_con_tgb" bindtap="uploadWechat" wx:if="{{!tempWechat}}">
           <view class="david_tk_con_tgb_tu"><image lazy-load="true" src="/pages/gerenziliao/images/d_sctb.png" mode="widthFix" /></view>

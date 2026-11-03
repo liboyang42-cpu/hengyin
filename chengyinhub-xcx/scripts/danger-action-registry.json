@@ -17,7 +17,7 @@
   "sites": [
     {
       "endpoint": "/api/club/dissolve",
-      "file": "components/cy/scene-club-edit/index.js",
+      "file": "pages/club/components/cy/scene-club-edit/index.js",
       "irreversible": true,
       "confirmKey": "club.dissolve",
       "reason": "俱乐部整体消失,成员关系与内容都拿不回来"

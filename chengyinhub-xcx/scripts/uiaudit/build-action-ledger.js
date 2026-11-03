@@ -335,13 +335,13 @@ const ACTION_VARIANTS = new Map([
     },
   }]],
   // 身份失效会清除金额，但这三个场景入口仍须验成功与拒绝分支。
-  ['components/cy/scene-asset-earnings/index.js:openWithdraw', [
+  ['subpackageA/components/scene-asset-earnings/index.js:openWithdraw', [
     { id: null, handler: 'openWithdraw', requiredBranches: ['success', 'error'] },
   ]],
-  ['components/cy/scene-asset-earnings/index.js:openWithdrawHistory', [
+  ['subpackageA/components/scene-asset-earnings/index.js:openWithdrawHistory', [
     { id: null, handler: 'openWithdrawHistory', requiredBranches: ['success', 'error'] },
   ]],
-  ['components/cy/scene-asset-earnings/index.js:openInvite', [
+  ['subpackageA/components/scene-asset-earnings/index.js:openInvite', [
     { id: null, handler: 'openInvite', requiredBranches: ['success', 'error'] },
   ]],
   ...['closePlayerOperations', 'openPlayerOperation', 'closePlayerOperation', 'choosePlayerOperationTarget', 'inputPlayerOperationTime', 'inputPlayerOperationReason', 'cancelPlayerExit'].map(handler => [`pages/play/index.js:${handler}`, [{ id: 'player-operation-local', handler, apis: [], writeApis: [], effectClasses: ['state'], externalCapabilities: [] }]]),
@@ -634,7 +634,7 @@ const ACTION_VARIANTS = new Map([
       apis: ['/api/club/join-request/reject'],
     },
   ]],
-  ['components/cy/scene-route-content/index.js:submitForm', [
+  ['subpackageMember/components/cy/scene-route-content/index.js:submitForm', [
     // 2026-09-15 收款模型定稿 §3:平台不打款,member-withdraw 不再建提现单,只弹平台客服微信(纯 state)。
     { id: 'member-withdraw', handler: 'submitForm', predicate: { sceneId: 'member-withdraw' }, predicateScope: 'component', apis: [], effectClasses: ['state'] },
     { id: 'settings-profile', handler: 'submitForm', predicate: { sceneId: 'settings-profile' }, predicateScope: 'component', apis: ['/api/user/update'] },
@@ -777,7 +777,7 @@ const ACTION_VARIANTS = new Map([
     { id: 'update-draft', handler: 'saveServerDraft', predicate: { editingTopicId: { $not: '' } }, apis: ['/api/topic/v2/update'] },
   ]],
   // W8 赛事联络/签到组件:主办侧(organizer)走 EVENT 原命令，参赛侧走 SIGNUP 原命令；终止未执行请求只发本侧一条 cancel。
-  ['components/cy/event-attendance/index.js:cancelCommand', [
+  ['pages/activity/components/event-attendance/index.js:cancelCommand', [
     { id: 'organizer', handler: 'cancelCommand', predicate: { organizer: true }, predicateScope: 'component', apis: ['/api/official/command/cancel'] },
     { id: 'participant', handler: 'cancelCommand', predicate: { organizer: { $not: true } }, predicateScope: 'component', apis: ['/api/official/signup-command/cancel'] },
   ]],
@@ -1709,11 +1709,11 @@ function requireBindings(src, dir) {
 // This shared controller exposes an object of methods, not flat module functions. Follow only
 // the component's explicit methods.X.call(this, ...) delegates; never add the entire 16KB flow.
 function deregisterDelegates(jsFile, slices) {
-  if (rel(jsFile) !== 'components/cy/scene-settings-deregister/index.js') return
+  if (rel(jsFile) !== 'pages/deregister/components/scene-settings-deregister/index.js') return
   const component = fs.readFileSync(jsFile, 'utf8')
-  if (!/const\s*\{\s*initialData,\s*methods\s*\}\s*=\s*require\(['"]\.\.\/\.\.\/\.\.\/utils\/deregister-flow\.js['"]\)/.test(component))
+  if (!/const\s*\{\s*initialData,\s*methods\s*\}\s*=\s*require\(['"]\.\.\/\.\.\/utils\/deregister-flow\.js['"]\)/.test(component))
     throw new Error('注销组件共享 owner 导入不再符合已证明合同')
-  const file = path.join(ROOT, 'utils/deregister-flow.js'), source = fs.readFileSync(file, 'utf8')
+  const file = path.join(ROOT, 'pages/deregister/utils/deregister-flow.js'), source = fs.readFileSync(file, 'utf8')
   const ast = parseJavaScript(source)
   const declaration = ast.body.flatMap(node => node.type === 'VariableDeclaration' ? node.declarations : [])
     .find(node => node.id.name === 'methods' && node.init && node.init.type === 'ObjectExpression')
@@ -2296,7 +2296,7 @@ function voiceConfirmedRequestPlan(relative, handler, contracts) {
 }
 
 function deregisterRequestPlan(relative, handler, contracts) {
-  if (relative !== 'components/cy/scene-settings-deregister/index.js' || handler !== 'apply') return null
+  if (relative !== 'pages/deregister/components/scene-settings-deregister/index.js' || handler !== 'apply') return null
   const consent = { urlTemplate: '/api/compliance/consents', method: 'POST', kind: 'write' }
   const apply = { urlTemplate: '/api/user/deregister/apply', method: 'POST', kind: 'write' }
   const status = { urlTemplate: '/api/user/deregister/status', method: 'GET', kind: 'read' }
@@ -2357,7 +2357,7 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
     }
   }
   const fileSource = fs.readFileSync(jsFile, 'utf8')
-  if (rel(jsFile) === 'components/cy/scene-settings-deregister/index.js') {
+  if (rel(jsFile) === 'pages/deregister/components/scene-settings-deregister/index.js') {
     const code = maskNonCodeSafely(source)
     for (const call of source.matchAll(/\bsendUiStateRequest\(app,\s*['"](\/api\/[^'"]+)['"],\s*\{/g)) {
       if (!code.slice(call.index).startsWith('sendUiStateRequest')) continue
@@ -2441,10 +2441,10 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
       if (!dependency) return
       if (dependency === 'utils/community-post-api.js') return
       // X5（10-28）：发票拆成 5 页，各页经 subpackageMember/invoice/base.js 混入同一套 read/mutate。
-      if (['utils/user-invoice.js', 'subpackageMember/invoice/base.js'].includes(dependency)
+      if (['subpackageMember/utils/user-invoice.js', 'subpackageMember/invoice/base.js'].includes(dependency)
           && /^subpackageMember\/invoice(?:-[a-z-]+)?\/index\.js$/.test(rel(scanFile))) {
         // Resolve the page's finite dispatch arguments instead of importing every invoice write.
-        const adapter = fs.readFileSync(path.join(ROOT, 'utils/user-invoice.js'), 'utf8')
+        const adapter = fs.readFileSync(path.join(ROOT, 'subpackageMember/utils/user-invoice.js'), 'utf8')
         const endpoints = new Map([...adapter.matchAll(/case '([^']+)':[^\n]+url: '([^']+)'/g)].map(match => [match[1], match[2]]))
         for (const call of expandedSource.matchAll(/this\.(?:read|mutate)\(\s*'([^']+)'|invoice\.send\(\s*app,\s*'([^']+)'/g)) {
           if (!/^(?:this|invoice)\./.test(maskNonCodeSafely(expandedSource).slice(call.index))) continue
@@ -2455,8 +2455,8 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
         }
         return
       }
-      if (dependency === 'utils/deregister-flow.js'
-          && rel(scanFile) === 'components/cy/scene-settings-deregister/index.js'
+      if (dependency === 'pages/deregister/utils/deregister-flow.js'
+          && rel(scanFile) === 'pages/deregister/components/scene-settings-deregister/index.js'
           && !/\bmethods\b/.test(maskNonCodeSafely(expandedSource))) {
         // handlerSlices already proved and expanded the exact method plus its local helper closure.
         // Re-adding the module here would turn initialData() into all three unrelated write commands.

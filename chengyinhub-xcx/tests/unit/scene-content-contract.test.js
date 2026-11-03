@@ -58,7 +58,7 @@ test('探索护照场景已下线,不许再复活成第二份漫游档案', () =
   const root = path.join(__dirname, '..', '..')
   assert.ok(!fs.existsSync(path.join(root, 'components/cy/scene-roam-passport')), 'scene-roam-passport 组件不该回来')
   assert.doesNotMatch(read('utils/scene-registry.js'), /'roam-passport'/, '注册表不该再登记 roam-passport')
-  for (const host of ['pages/roam/index.wxml', 'pages/play/index.wxml', 'components/cy/scene-deep-link/index.wxml']) {
+  for (const host of ['pages/roam/index.wxml', 'pages/play/index.wxml', 'subpackageMember/components/cy/scene-deep-link/index.wxml']) {
     assert.doesNotMatch(read(host), /cy-scene-roam-passport/, host + ' 不该还挂着已删场景')
   }
   // 读数的唯一去处:护照 tab 顶部
@@ -98,10 +98,10 @@ test('发现商家场景使用真实商家列表接口，并把卡片点击推�
      所以宿主断言从漫游改成游玩页;组件自身的接口与事件契约一字未改。 */
   const hostJson = JSON.parse(read('pages/play/index.json'))
   const hostWxml = read('pages/play/index.wxml')
-  const componentWxml = read('components/cy/scene-roam-discover/index.wxml')
-  const componentJs = read('components/cy/scene-roam-discover/index.js')
+  const componentWxml = read('pages/play/components/scene-roam-discover/index.wxml')
+  const componentJs = read('pages/play/components/scene-roam-discover/index.js')
 
-  assert.equal(hostJson.usingComponents['cy-scene-roam-discover'], '/components/cy/scene-roam-discover/index')
+  assert.equal(hostJson.usingComponents['cy-scene-roam-discover'], '/pages/play/components/scene-roam-discover/index')
   assert.match(hostWxml, /sceneCurrent && sceneCurrent\.id === 'roam-discover'/)
   assert.match(hostWxml, /<cy-scene-roam-discover[^>]*bind:open="openChildScene"[^>]*bind:close="closeScene"/)
   // 漫游那边确实换成了横滑白卡,钉死不许悄悄退回半屏
@@ -165,7 +165,7 @@ test('节点深链宿主是薄壳：挂已有组件、透传 poiId、输出稳�
   const hostWxml = read(`${HOST}.wxml`)
   const hostJs = read(`${HOST}.js`)
   const registry = read('utils/scene-registry.js')
-  const deepLinkWxml = read('components/cy/scene-deep-link/index.wxml')
+  const deepLinkWxml = read('subpackageMember/components/cy/scene-deep-link/index.wxml')
 
   // 注册表的 route 必须落在本宿主上,否则 openScene 会原地绕回旧页
   assert.match(
@@ -179,7 +179,7 @@ test('节点深链宿主是薄壳：挂已有组件、透传 poiId、输出稳�
   )
 
   // 薄壳:只挂组件 + 透传 poiId
-  assert.equal(hostJson.usingComponents['cy-scene-deep-link'], '/components/cy/scene-deep-link/index')
+  assert.equal(hostJson.usingComponents['cy-scene-deep-link'], '/subpackageMember/components/cy/scene-deep-link/index')
   assert.match(hostWxml, /<cy-scene-deep-link[^>]*scene-id="roam-poi-detail"[^>]*params="\{\{sceneParams\}\}"/)
   assert.match(hostJs, /sceneParams:\s*\{\s*poiId\s*\}/, 'onLoad 拿到的 poiId 必须透传给场景')
   assert.match(deepLinkWxml, /<cy-scene-roam-poi-detail[^>]*poi-id="\{\{sceneCurrent\.params\.poiId\}\}"/)
@@ -261,11 +261,11 @@ test('入场码是场景栈内的真实动态码，不再保留旧 ticket 页面
   const hostJson = JSON.parse(read('pages/play/index.json'))
   const hostWxml = read('pages/play/index.wxml')
   const hostJs = read('pages/play/index.js')
-  const ticketJs = read('components/cy/scene-qr-ticket/index.js')
-  const ticketWxml = read('components/cy/scene-qr-ticket/index.wxml')
+  const ticketJs = read('pages/play/components/scene-qr-ticket/index.js')
+  const ticketWxml = read('pages/play/components/scene-qr-ticket/index.wxml')
 
   assert.match(registry, /'qr-ticket': \{[\s\S]*canBack: true/)
-  assert.equal(hostJson.usingComponents['cy-scene-qr-ticket'], '/components/cy/scene-qr-ticket/index')
+  assert.equal(hostJson.usingComponents['cy-scene-qr-ticket'], '/pages/play/components/scene-qr-ticket/index')
   assert.match(hostWxml, /sceneCurrent && sceneCurrent\.id === 'qr-ticket'/)
   assert.match(hostWxml, /<cy-scene-qr-ticket[^>]*registration-id=/)
   assert.match(hostJs, /openScene\('qr-ticket'/)
@@ -287,14 +287,14 @@ test('表单主 CTA 位于 scene-sheet footer 槽，不再粘在可滚动正文�
     assert.match(wxml, /<cy-scene-route-content[^>]*id="sceneRouteContent"/)
     assert.match(wxml, /<view wx:if="\{\{sceneCurrent\.footer\}\}" slot="footer"[\s\S]*<cy-btn/)
   }
-  const contentWxml = read('components/cy/scene-route-content/index.wxml')
+  const contentWxml = read('subpackageMember/components/cy/scene-route-content/index.wxml')
   assert.doesNotMatch(contentWxml, /src-form__footer/)
 })
 
 test('统一场景内容的关键表单字段可见且提现请求使用真实字段契约', () => {
-  const wxml = read('components/cy/scene-route-content/index.wxml')
-  const js = read('components/cy/scene-route-content/index.js')
-  const wxss = read('components/cy/scene-route-content/index.wxss')
+  const wxml = read('subpackageMember/components/cy/scene-route-content/index.wxml')
+  const js = read('subpackageMember/components/cy/scene-route-content/index.js')
+  const wxss = read('subpackageMember/components/cy/scene-route-content/index.wxss')
   assert.match(wxml, /提现金额/)
   assert.match(wxml, /银行卡号/)
   assert.match(wxml, /aria-label="银行卡号"/)
@@ -317,10 +317,10 @@ test('Figma 三个弹窗接入真实入口，并锁定玩家深色/商户浅色�
   const profileJson = JSON.parse(read('subpackageMember/components/cy/profile/index.json'))
   const profileJs = read('subpackageMember/components/cy/profile/index.js')
   const profileWxml = read('subpackageMember/components/cy/profile/index.wxml')
-  const deepLinkWxml = read('components/cy/scene-deep-link/index.wxml')
+  const deepLinkWxml = read('subpackageMember/components/cy/scene-deep-link/index.wxml')
   const sheetWxss = read('components/cy/scene-sheet/index.wxss')
-  const shareJs = read('components/cy/scene-share-invite/index.js')
-  const shareWxml = read('components/cy/scene-share-invite/index.wxml')
+  const shareJs = read('subpackageMember/components/cy/scene-share-invite/index.js')
+  const shareWxml = read('subpackageMember/components/cy/scene-share-invite/index.wxml')
   const historyWxml = read('components/cy/scene-roam-history/index.wxml')
   const historyJs = read('components/cy/scene-roam-history/index.js')
 
@@ -331,7 +331,7 @@ test('Figma 三个弹窗接入真实入口，并锁定玩家深色/商户浅色�
   assert.doesNotMatch(settingsJs, /openScene\('settings-sound'\)/)
   assert.doesNotMatch(settingsWxml, /声音与触感/)
   assert.doesNotMatch(settingsWxml, /cy-scene-sound-haptics/)
-  assert.equal(profileJson.usingComponents['cy-scene-share-invite'], '/components/cy/scene-share-invite/index')
+  assert.equal(profileJson.usingComponents['cy-scene-share-invite'], '/subpackageMember/components/cy/scene-share-invite/index')
   assert.match(profileJs, /goInvite: function \(\) \{ this\.openScene\('share-invite'\); \}/)
   assert.match(profileJs, /shareKind === 'invite'/)
   assert.match(profileWxml, /<cy-scene-share-invite[^>]*theme="\{\{sceneCurrent\.theme\}\}"/)
@@ -362,7 +362,7 @@ function assertProfileUserAssetEntries(profileJs, registry, hostWxml, hostJson, 
     /'game-coupon-wallet':\s*\{[^}]*route:\s*'\/subpackageMember\/coupon-wallet\/index'/,
     '玩家券夹注册表必须指向自己的页面宿主',
   )
-  assert.equal(hostJson.usingComponents['cy-scene-deep-link'], '/components/cy/scene-deep-link/index')
+  assert.equal(hostJson.usingComponents['cy-scene-deep-link'], '/subpackageMember/components/cy/scene-deep-link/index')
   assert.match(hostWxml, /<cy-scene-deep-link[^>]*scene-id="game-coupon-wallet"/)
   assert.ok(
     appJson.subPackages.find((pkg) => pkg.root === 'subpackageMember').pages.includes('coupon-wallet/index'),
@@ -397,7 +397,7 @@ test('个人页优惠券与投诉建议进入完整的玩家业务链路', () =>
     JSON.parse(read('subpackageMember/coupon-wallet/index.json')),
     JSON.parse(read('app.json')),
   )
-  assertCouponWalletFallback(read('components/cy/scene-deep-link/index.js'))
+  assertCouponWalletFallback(read('subpackageMember/components/cy/scene-deep-link/index.js'))
 })
 
 test('负控：个人页入口接回商家券管理或缩水反馈时必须判红', () => {
@@ -419,11 +419,11 @@ test('负控：个人页入口接回商家券管理或缩水反馈时必须判�
   assert.throws(() => assertProfileUserAssetEntries(wrongCoupon, registry, hostWxml, hostJson, appJson), assert.AssertionError)
   assert.throws(() => assertProfileUserAssetEntries(profileJs, wrongComplaint, hostWxml, hostJson, appJson), assert.AssertionError)
 
-  const wrongFallback = read('components/cy/scene-deep-link/index.js')
+  const wrongFallback = read('subpackageMember/components/cy/scene-deep-link/index.js')
     .replace("if (id === 'game-coupon-wallet') return '/pages/member/index/index'", '')
   assert.throws(() => assertCouponWalletFallback(wrongFallback), assert.AssertionError)
 
-  const wrongOrder = read('components/cy/scene-deep-link/index.js')
+  const wrongOrder = read('subpackageMember/components/cy/scene-deep-link/index.js')
     .replace(
       "  if (id === 'game-coupon-wallet') return '/pages/member/index/index'\n  if (PLAYER_PLAY_SCENES.has(id)) return '/pages/play/index'",
       "  if (PLAYER_PLAY_SCENES.has(id)) return '/pages/play/index'\n  if (id === 'game-coupon-wallet') return '/pages/member/index/index'",

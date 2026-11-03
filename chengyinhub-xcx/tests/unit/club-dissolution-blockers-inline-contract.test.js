@@ -4,7 +4,7 @@ const { test } = require('node:test')
 const assert = require('node:assert/strict')
 const path = require('node:path')
 
-const COMPONENT = path.resolve(__dirname, '../../components/cy/scene-club-edit/index.js')
+const COMPONENT = path.resolve(__dirname, '../../pages/club/components/cy/scene-club-edit/index.js')
 
 function loadComponent() {
   const requests = [], navigations = []

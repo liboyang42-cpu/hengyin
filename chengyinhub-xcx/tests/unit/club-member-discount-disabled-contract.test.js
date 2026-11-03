@@ -4,8 +4,8 @@ const path = require('node:path')
 const test = require('node:test')
 
 const ROOT = path.resolve(__dirname, '../..')
-const EDIT_SCENE_JS = 'components/cy/scene-club-edit/index.js'
-const EDIT_SCENE_WXML = 'components/cy/scene-club-edit/index.wxml'
+const EDIT_SCENE_JS = 'pages/club/components/cy/scene-club-edit/index.js'
+const EDIT_SCENE_WXML = 'pages/club/components/cy/scene-club-edit/index.wxml'
 
 function read(rel) {
   return fs.readFileSync(path.join(ROOT, rel), 'utf8')

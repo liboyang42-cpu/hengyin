@@ -1039,7 +1039,7 @@ test('动作分类追踪 app 全局 helper，图片选择不能落回本地 stat
   //   (稿的原话是「头像和封面可以之后在编辑资料里补」),create 页不再有 chooseCover。
   //   锚点跟着功能走 —— scene-club-edit 的 pickCover 是同一条 app.chooseImage() 路径,
   //   这条断言要证的「App 全局 helper 必须判 external + 真机门」一字未改。
-  const control = ledger.controls.find((item) => item.entry.js === 'components/cy/scene-club-edit/index.js'
+  const control = ledger.controls.find((item) => item.entry.js === 'pages/club/components/cy/scene-club-edit/index.js'
     && item.control.handler === 'pickCover')
   assert.ok(control)
   assert.equal(control.actionClass, 'external')
@@ -1649,7 +1649,7 @@ test('合并后可达动作 variant 全部进入台账且 handler 真源可定�
   assert.equal(fallbackError[0].interactionMode, 'event-contract')
   // 本机草稿恢复、删除草稿、资料回读、原票导航及查读重试均保留。
   for (const handler of ['restoreDraft', 'discardDraft', 'loadClub']) {
-    const action = ledger.controls.filter(item => item.entry.wxml === 'components/cy/scene-club-edit/index.wxml'
+    const action = ledger.controls.filter(item => item.entry.wxml === 'pages/club/components/cy/scene-club-edit/index.wxml'
       && item.control.tag === 'cy-btn' && item.control.event === 'bindtap' && item.control.handler === handler)
     assert.equal(action.length, 1, handler)
     assert.equal(action[0].interactionMode, 'tap', handler)

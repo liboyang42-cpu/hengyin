@@ -2,7 +2,7 @@
 // 读写、原请求号恢复与身份切换的逻辑原样取自 W8 subpackageMember/invoice/index.js，只按页拆开；
 // 待确认申请 / 抬头保存都存在按会员隔离的本机待办里，任一页打开都读同一份。
 const app = getApp();
-const invoice = require('../../utils/user-invoice.js');
+const invoice = require('../utils/user-invoice.js');
 const { createVerificationWorkflow } = require('../../utils/verification-readback.js');
 const { retryLogin, waitForInitialSession } = require('../../utils/session/login-reload.js');
 const modal = require('../../utils/modal.js');

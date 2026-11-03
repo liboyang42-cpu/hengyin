@@ -47,7 +47,7 @@
             <image wx:if="{{_avatarSrc}}" class="pc-avatar" src="{{img.one(_avatarSrc)}}" mode="aspectFill" />
             <view wx:else class="pc-avatar pc-avatar--initial">{{_avatarInitial}}</view>
           </view>
-          <view class="pc-avatar-edit" wx:if="{{isSelf}}"><image class="pc-avatar-edit-ico" src="/images/icon_pen.svg" mode="aspectFit" /></view>
+          <view class="pc-avatar-edit" wx:if="{{isSelf}}"><image class="pc-avatar-edit-ico" src="/subpackageMember/images/icon_pen.svg" mode="aspectFit" /></view>
           <view class="pc-avatar-dot"></view>
         </view>
         <view class="pc-gamer-main">
@@ -235,7 +235,7 @@
                    bind:tap="goClubWorkbench" />
         </view>
         <view class="pc-team-entry" wx:if="{{merchantAccess.active}}">
-          <cy-cell icon="/images/icon_qa_person.svg"
+          <cy-cell icon="/subpackageMember/images/icon_qa_person.svg"
                    title="经营团队"
                    description=""
                    value="{{merchantTeamEntryValue}}"

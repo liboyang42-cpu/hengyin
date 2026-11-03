@@ -55,7 +55,7 @@ test('一级页不得用 openScene 打开二级大功能', () => {
 
 test('D38 注销是用户指定的弹窗例外，设置页直接托管完整注销 scene', () => {
   assert.match(read('pages/shezhi/shezhi.js'), /openScene\('settings-deregister'\)/)
-  assert.match(read('components/cy/scene-route-content/index.wxml'),
+  assert.match(read('subpackageMember/components/cy/scene-route-content/index.wxml'),
     /<cy-scene-settings-deregister[^>]*sceneId === 'settings-deregister'/)
 })
 
@@ -101,13 +101,13 @@ test('地图宿主是技术例外:play / roam 的二级内容仍走弹窗', () =
 })
 
 test('club-edit 复用完整编辑组件,不得退化成通用七字段表单', () => {
-  const routeJson = JSON.parse(read('components/cy/scene-route-content/index.json'))
-  const routeWxml = read('components/cy/scene-route-content/index.wxml')
-  const routeJs = read('components/cy/scene-route-content/index.js')
-  const clubWxml = read('components/cy/scene-club-edit/index.wxml')
-  const clubJs = read('components/cy/scene-club-edit/index.js')
+  const routeJson = JSON.parse(read('subpackageMember/components/cy/scene-route-content/index.json'))
+  const routeWxml = read('subpackageMember/components/cy/scene-route-content/index.wxml')
+  const routeJs = read('subpackageMember/components/cy/scene-route-content/index.js')
+  const clubWxml = read('pages/club/components/cy/scene-club-edit/index.wxml')
+  const clubJs = read('pages/club/components/cy/scene-club-edit/index.js')
 
-  assert.equal(routeJson.usingComponents['cy-scene-club-edit'], '/components/cy/scene-club-edit/index')
+  assert.equal(routeJson.usingComponents['cy-scene-club-edit'], '/pages/club/components/cy/scene-club-edit/index')
   assert.match(routeWxml, /<cy-scene-club-edit[\s\S]*club-id="\{\{params\.id \|\| params\.clubId\}\}"/)
   assert.doesNotMatch(routeWxml, /formType === 'club-create' \|\| formType === 'club-edit'/)
   assert.doesNotMatch(routeJs, /'club-edit':\s*\{[^\n]*formType:\s*'club-edit'/)
@@ -121,7 +121,7 @@ test('club-edit 复用完整编辑组件,不得退化成通用七字段表单', 
   assert.match(clubWxml, /memberReservedQuota/)
   assert.match(clubJs, /triggerEvent\('dirtychange',\s*\{\s*dirty:\s*true\s*\}\)/)
   for (const host of [
-    'components/cy/scene-deep-link/index.wxml',
+    'subpackageMember/components/cy/scene-deep-link/index.wxml',
     'subpackageMember/components/cy/profile/index.wxml',
     'pages/merchant/index/index.wxml',
     'pages/shezhi/shezhi.wxml',
@@ -136,17 +136,17 @@ test('club-edit 复用完整编辑组件,不得退化成通用七字段表单', 
 
 test('scene-sheet 是唯一纵向滚动区,club-edit 深链也保留脏表单确认闸', () => {
   const verticalSceneComponents = [
-    'components/cy/scene-club-edit/index.wxml',
+    'pages/club/components/cy/scene-club-edit/index.wxml',
     'subpackageMember/components/cy/scene-game-coupon-wallet/index.wxml',
     'components/cy/scene-roam-history/index.wxml',
-    'components/cy/scene-roam-discover/index.wxml',
+    'pages/play/components/scene-roam-discover/index.wxml',
     'components/cy/scene-roam-task-list/index.wxml',
   ]
   for (const component of verticalSceneComponents) {
     assert.doesNotMatch(read(component), /<scroll-view[^>]*\bscroll-y\b/, `${component} 不得在 scene-sheet 正文内再造纵向滚动区`)
   }
 
-  const clubWxssPath = path.join(ROOT, 'components/cy/scene-club-edit/index.wxss')
+  const clubWxssPath = path.join(ROOT, 'pages/club/components/cy/scene-club-edit/index.wxss')
   const clubWxss = fs.readFileSync(clubWxssPath, 'utf8')
   const imported = clubWxss.match(/@import\s+"([^"]+)"/)
   assert.ok(imported, 'club-edit 必须导入完整表单样式')

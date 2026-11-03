@@ -70,7 +70,7 @@ test('guest and unsettled privacy authorization never request private author med
 test('normal settings reaches real author route and model preview loads actual GLTF without camera', () => {
   assert.match(fs.readFileSync(path.join(ROOT, 'pages/shezhi/components/privacy-sheet/index.js'), 'utf8'), /url: '\/pages\/privacy\/index'/);
   assert.match(fs.readFileSync(path.join(ROOT, 'pages/shezhi/components/privacy-sheet/index.wxml'), 'utf8'), /bindtap="openOwnMedia"/);
-  const xr = fs.readFileSync(path.join(ROOT, 'components/cy/media-model-preview/index.wxml'), 'utf8');
+  const xr = fs.readFileSync(path.join(ROOT, 'pages/privacy/components/media-model-preview/index.wxml'), 'utf8');
   assert.match(xr, /type="gltf"[^>]*src="\{\{src\}\}"/); assert.doesNotMatch(xr, /ar-system|is-ar-camera/);
 });
 test('private XR preview uses existing fit math, rotates and cancels its bounded loader on detach', () => {
@@ -78,7 +78,7 @@ test('private XR preview uses existing fit math, rotates and cancels its bounded
   const transform = { scale: { setValue: (...value) => scale.push(value) }, position: { setValue: (...value) => position.push(value) } };
   const model = { calcTotalBoundBox: () => ({ center: { x: 2, y: 1, z: 0 }, size: { x: 4, y: 2, z: 1 } }) };
   const sys = { GLTF: 'gltf', Transform: 'transform' };
-  vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'components/cy/media-model-preview/index.js'), 'utf8'), {
+  vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'pages/privacy/components/media-model-preview/index.js'), 'utf8'), {
     require: () => require(path.join(ROOT, 'pages/play/components/playkit-scan/ar/ar-math.js')),
     Component: value => { definition = value; }, wx: { getXrFrameSystem: () => sys },
     setTimeout: callback => { timer = callback; return 1; }, clearTimeout: () => { cleared++; },
@@ -92,7 +92,7 @@ test('private XR preview uses existing fit math, rotates and cancels its bounded
 });
 test('private XR refuses malformed geometry and emits recoverable error instead of displaying NaN', () => {
   const vm = require('node:vm'); let definition; const events = [];
-  vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'components/cy/media-model-preview/index.js'), 'utf8'), {
+  vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'pages/privacy/components/media-model-preview/index.js'), 'utf8'), {
     require: () => require(path.join(ROOT, 'pages/play/components/playkit-scan/ar/ar-math.js')),
     Component: value => { definition = value; }, wx: { getXrFrameSystem: () => ({ GLTF: 'gltf' }) },
     setTimeout: () => 1, clearTimeout() {},

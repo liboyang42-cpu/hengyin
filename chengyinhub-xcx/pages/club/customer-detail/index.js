@@ -8,7 +8,7 @@
 //   2) 金额:paidAmount 为 null = 本岗位无金额查看权限(K2-B),不是加载失败。
 //   3) 是否能编辑标签备注:canEdit 由服务端下发,前端不按角色自行推断。
 const toast = require('../../../utils/toast.js');
-const { callMember } = require('../../../utils/club-phone-call.js');
+const { callMember } = require('../utils/club-phone-call.js');
 const app = getApp();
 const { buildTagRemarkDraft, positiveId, shapeCustomerDetail } = require('../customers/view-model.js');
 

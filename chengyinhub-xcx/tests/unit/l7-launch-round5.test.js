@@ -181,11 +181,11 @@ test('#4 WXML 绑定走中文映射(play 偏好标签、候补名册、声音请
   for (const f of ['pages/merchant/decor/ai-npc/index.wxml', 'pages/topic/components/cy/node-npc-form/index.wxml']) {
     assert.match(read(f), /原声音请求 · \{\{dl\.voice\(item\.state\)\}\}/)
   }
-  assert.match(read('components/cy/event-attendance/index.wxml'), /\{\{dl\.attendance\(result\.data\.state\)\}\}/)
+  assert.match(read('pages/activity/components/event-attendance/index.wxml'), /\{\{dl\.attendance\(result\.data\.state\)\}\}/)
   assert.doesNotMatch(read('pages/merchant/game-node/index.wxml'), /pauseReasonCode/)
   // 每个用 dl. 的 wxml 都要引入模块,路径真实存在
   for (const f of ['pages/play/index.wxml', 'pages/club/event-ops/index.wxml', 'pages/merchant/decor/ai-npc/index.wxml',
-    'pages/topic/components/cy/node-npc-form/index.wxml', 'components/cy/event-attendance/index.wxml']) {
+    'pages/topic/components/cy/node-npc-form/index.wxml', 'pages/activity/components/event-attendance/index.wxml']) {
     const src = read(f).match(/<wxs src="([^"]+display-label\.wxs)" module="dl" \/>/)
     assert.ok(src, f + ' 缺 dl 模块')
     assert.ok(fs.existsSync(path.join(ROOT, path.dirname(f), src[1])), f + ' dl 路径不存在')

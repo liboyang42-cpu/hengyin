@@ -105,7 +105,7 @@ const ENTRIES = [
   },
   {
     id: '商家分润明细「提现到银行卡」',
-    file: 'components/cy/scene-merchant-profit/index.js',
+    file: 'subpackageA/components/scene-merchant-profit/index.js',
     signature: /^    goWithdraw\(\)/m,
     prepare(runtime) {
       runtime.page.load()
@@ -117,7 +117,7 @@ const ENTRIES = [
   },
   {
     id: '场景表单「确认提现」',
-    file: 'components/cy/scene-route-content/index.js',
+    file: 'subpackageMember/components/cy/scene-route-content/index.js',
     signature: /^    submitForm\(\)/m,
     drive(page) {
       page.data.sceneId = 'member-withdraw'

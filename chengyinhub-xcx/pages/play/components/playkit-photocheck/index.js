@@ -11,7 +11,7 @@
 // 这一屏只说清「这次没能审」,不许出现「审核通过 / 不通过」这类假结论。
 
 const reducedMotionBehavior = require('../../../../behaviors/reduced-motion.js');
-const replayMotionBehavior = require('../../../../behaviors/replay-motion.js');
+const replayMotionBehavior = require('../../behaviors/replay-motion.js');
 const motion = require('../../../../utils/motion.js');
 const cyToast = require('../../../../utils/toast.js');
 // C1:核验说明只认服务端 photoVerified=true;兜底放行另有一句,不说「这张过了」

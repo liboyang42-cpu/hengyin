@@ -8,10 +8,10 @@ const ROOT = path.resolve(__dirname, '../..')
 const DETAIL_WXML = 'pages/club/detail/index.wxml'
 const DETAIL_WXSS = 'pages/club/detail/index.wxss'
 const EDIT_PAGE_JS = 'pages/club/edit/index.js'
-const EDIT_SCENE_JS = 'components/cy/scene-club-edit/index.js'
-const EDIT_SCENE_WXML = 'components/cy/scene-club-edit/index.wxml'
-const EDIT_SCENE_JSON = 'components/cy/scene-club-edit/index.json'
-const EDIT_SCENE_WXSS = 'components/cy/scene-club-edit/index.wxss'
+const EDIT_SCENE_JS = 'pages/club/components/cy/scene-club-edit/index.js'
+const EDIT_SCENE_WXML = 'pages/club/components/cy/scene-club-edit/index.wxml'
+const EDIT_SCENE_JSON = 'pages/club/components/cy/scene-club-edit/index.json'
+const EDIT_SCENE_WXSS = 'pages/club/components/cy/scene-club-edit/index.wxss'
 const MIN_TOUCH_RPX = 88
 const OWNER_STAGES = ['publish', 'invite', 'pending', 'accepted']
 
@@ -125,7 +125,7 @@ function loadEditScene(source = read(EDIT_SCENE_JS)) {
     Component(config) { definition = config },
     setTimeout() { return 0 },
     require(request) {
-      if (request.endsWith('/club-edit-draft.js')) return require('../../utils/club-edit-draft.js')
+      if (request.endsWith('/club-edit-draft.js')) return require('../../pages/club/utils/club-edit-draft.js')
       throw new Error('unexpected require: ' + request)
     },
     wx: {

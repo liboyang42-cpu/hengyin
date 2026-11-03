@@ -308,7 +308,7 @@ test('本文件覆盖混入方法后仍只提取获胜方法自身', () => {
 })
 
 function assertEarningsGuardBranches(controls) {
-  const rows = controls.filter(row => row.entry.wxml === 'components/cy/scene-asset-earnings/index.wxml')
+  const rows = controls.filter(row => row.entry.wxml === 'subpackageA/components/scene-asset-earnings/index.wxml')
   for (const handler of ['openWithdraw', 'openWithdrawHistory', 'openInvite']) {
     const matches = rows.filter(row => row.control.handler === handler)
     assert.equal(matches.length, 1, handler + '不得增加或重复入口')
@@ -326,7 +326,7 @@ test('收益场景的身份拒绝状态不得删掉原成功与错误验收分�
 
 test('负控：任一收益场景入口删去错误验收分支必须判红', () => {
   for (const handler of ['openWithdraw', 'openWithdrawHistory', 'openInvite']) {
-    const controls = ledger().controls.map(row => row.entry.wxml === 'components/cy/scene-asset-earnings/index.wxml'
+    const controls = ledger().controls.map(row => row.entry.wxml === 'subpackageA/components/scene-asset-earnings/index.wxml'
       && row.control.handler === handler ? { ...row, requiredBranches: ['success'] } : row)
     assert.throws(() => assertEarningsGuardBranches(controls), assert.AssertionError)
   }

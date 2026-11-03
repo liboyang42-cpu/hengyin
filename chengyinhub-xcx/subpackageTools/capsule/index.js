@@ -1,5 +1,5 @@
 const { page, storage, uuid } = require('../cloud-ten-runtime');
-const { createCapsuleClient } = require('../../utils/features/capsule-client');
+const { createCapsuleClient } = require('../utils/features/capsule-client');
 const modal = require('../../utils/modal');
 const cyToast = require('../../utils/toast.js');
 const DAY = 86400000;

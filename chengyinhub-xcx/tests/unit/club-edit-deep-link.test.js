@@ -19,7 +19,7 @@ function mount(options) {
   global.getApp = () => ({ globalData: {}, sendRequest(request) { requests.push(request) } })
   global.Page = definition => { pageDefinition = definition }
   global.Component = definition => { componentDefinition = definition }
-  for (const file of ['pages/club/edit/index.js', 'components/cy/scene-club-edit/index.js']) {
+  for (const file of ['pages/club/edit/index.js', 'pages/club/components/cy/scene-club-edit/index.js']) {
     const absolute = path.join(root, file)
     delete require.cache[require.resolve(absolute)]
     require(absolute)

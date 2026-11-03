@@ -78,8 +78,8 @@ test('旧 role 数字不能绕过后端，但 detail 权威管理员与新权限
 })
 
 test('编辑弹窗仅主理人可见 danger 解散入口，并发送两层确认事实', () => {
-  const js = read('components/cy/scene-club-edit/index.js')
-  const wxml = read('components/cy/scene-club-edit/index.wxml')
+  const js = read('pages/club/components/cy/scene-club-edit/index.js')
+  const wxml = read('pages/club/components/cy/scene-club-edit/index.wxml')
 
   // 2026-09-02:解散钮从底栏的 cy-btn variant="danger" 换成「危险操作」区块里的整宽描边胶囊。
   // 断言改钉**结构事实**(owner 门 + danger 视觉档 + 绑到 dissolveClub),不再钉某个组件属性 ——

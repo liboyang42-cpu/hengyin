@@ -7,7 +7,7 @@
 //   · settle 回执才有 text / failCostLabel —— 结算后才出文案。
 // ★ 失败也推进:结算后照常可以退出,这一屏不拦节点完成(产品口径)。
 const reducedMotionBehavior = require('../../../../behaviors/reduced-motion.js');
-const replayMotionBehavior = require('../../../../behaviors/replay-motion.js');
+const replayMotionBehavior = require('../../behaviors/replay-motion.js');
 const motion = require('../../../../utils/motion.js');
 const { createD20Renderer } = require('../../utils/d20-renderer.js');
 

@@ -164,7 +164,7 @@ test('legacy ticket issuer cannot open a new seat scene from a response belongin
 
 test('real role change invalidates issuer callbacks and retry without selecting another seat or issuing another code', () => {
   const h = fixture(); let definition;
-  const file = path.join(root, 'components/cy/scene-qr-ticket/index.js');
+  const file = path.join(root, 'pages/play/components/scene-qr-ticket/index.js');
   vm.runInNewContext(fs.readFileSync(file, 'utf8'), { Component: value => { definition = value; }, getApp: () => h.app,
     wx: h.wx, require: id => require(path.resolve(path.dirname(file), id)), Date, setInterval: () => 1, clearInterval() {} });
   const page = { ...definition.methods, data: { ...definition.data, registrationId: '71' }, _attached: true,

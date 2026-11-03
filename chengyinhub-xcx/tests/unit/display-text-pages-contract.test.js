@@ -135,7 +135,7 @@ test('俱乐部页:帖子、评论、修改历史、简介与审核原因解码;
 });
 
 test('俱乐部资料:enrichClub 解码名称、简介、审核原因;编辑表单回填解码值', async () => {
-  const h = load('components/cy/scene-club-edit/index.js', {
+  const h = load('pages/club/components/cy/scene-club-edit/index.js', {
     '/api/club/detail': ok({
       // PublicClubVO.from/getters: explicit nullable DTO fields, no updateTime.
       id: 5, memberId: 1, name: 'A&lt;B 社', logo: null, cover: null,

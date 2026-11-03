@@ -9,7 +9,7 @@ const path = require('node:path')
 
 function loadFlow(response) {
   global.getApp = () => ({ getUserID: () => 7, sendRequest(o) { o.success(response) } })
-  const mod = path.resolve(__dirname, '../../utils/deregister-flow.js')
+  const mod = path.resolve(__dirname, '../../pages/deregister/utils/deregister-flow.js')
   delete require.cache[mod]
   const { initialData, methods } = require(mod)
   const host = Object.assign({ data: initialData() }, methods, {

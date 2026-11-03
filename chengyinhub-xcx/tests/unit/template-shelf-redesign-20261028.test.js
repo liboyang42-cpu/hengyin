@@ -281,7 +281,7 @@ test('包内图齐全：25 个玩法封面与道具、全部主题封面、标�
   Object.keys(art.GAMES).forEach((t) => { const a = art.gameArt(t); files.push(a.cover, a.prop); });
   Object.keys(art.THEMES).forEach((n) => files.push(art.topicArt(n).cover));
   art.TOPIC_TAGS.concat(art.GAME_TAGS).forEach((t) => files.push(art.propSrc(t.icon)));
-  files.push('/images/tpl-tab-topic.svg', '/images/tpl-tab-game.svg');
+  files.push('/pages/templatedetail/images/tpl-tab-topic.svg', '/pages/templatedetail/images/tpl-tab-game.svg');
   files.forEach((f) => assert.ok(fs.existsSync(path.join(ROOT, f)), f + ' 不存在'));
   let bytes = 0;
   const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => {
