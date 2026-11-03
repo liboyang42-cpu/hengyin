@@ -1,7 +1,21 @@
 {
-  "desc": "关于本文件的更多信息，请参考文档 https://developers.weixin.qq.com/miniprogram/dev/framework/sitemap.html",
-  "rules": [{
-  "action": "allow",
-  "page": "*"
-  }]
+  "desc": "只允许公开内容页被微信搜索收录:首页、主题、玩法、活动、俱乐部主页、商家主页、官方路线与站点。其余页面(商家后台、俱乐部管理、提现、发票、订单、个人页等)一律不收录。文档 https://developers.weixin.qq.com/miniprogram/dev/framework/sitemap.html",
+  "rules": [
+    { "action": "allow", "page": "pages/index/index" },
+    { "action": "allow", "page": "pages/topic/index/index" },
+    { "action": "allow", "page": "pages/templatedetail/templatedetail" },
+    { "action": "allow", "page": "pages/templatedetail/topic-detail/index" },
+    { "action": "allow", "page": "pages/templatedetail/topic-preview/index" },
+    { "action": "allow", "page": "pages/activity/list/index" },
+    { "action": "allow", "page": "pages/activity/detail/index" },
+    { "action": "allow", "page": "pages/activity/official-detail/index" },
+    { "action": "allow", "page": "pages/club/detail/index" },
+    { "action": "allow", "page": "pages/userinfo/userinfo", "params": { "tab": "about" }, "matching": "inclusive" },
+    { "action": "allow", "page": "subpackageRoam/official-routes/index" },
+    { "action": "allow", "page": "subpackageRoam/official-route/index" },
+    { "action": "allow", "page": "subpackageRoam/poi-detail/index" },
+    { "action": "allow", "page": "pages/privacy/index" },
+    { "action": "allow", "page": "pages/agreement/index" },
+    { "action": "disallow", "page": "*" }
+  ]
 }
