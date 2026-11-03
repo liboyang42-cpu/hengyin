@@ -229,6 +229,7 @@ rig 跑在 `claude/cloud-walk-20261101-rig`，`up.sh` 钉到本分支 `69a25ddf`
 | ID | 状态 | 做了什么 | 文件 | 怎么验证 |
 |---|---|---|---|---|
 | 5E-1a CI `Migration safety gate` | fixed | 原因是 PR 描述的「影响分类」没标 ③。改了 PR 描述：③ 数据库迁移，写明两个迁移须在 jar 部署前由用户手动落库、互不依赖。门禁没改。 | PR #721 描述 | 本地用 `ci/migration_gates.py` 的 `check_pr_declaration` 对新描述返回 `None`（通过）。门禁读的是触发时的 PR 描述，本轮推送后的新一轮 CI 会带上新描述。 |
+| 5E-1c CI `Migration safety gate` 的后一步 | fixed | 补上声明后，同一 job 的后一步 `ci/test_prelaunch_business_seeds.py` 报新后台页 `business/sensitive/index.vue` 没有登记。照 userInvoice 页面的先例，在 `ci/prelaunch-seed-provenance.json` 补了 menuRows 和 viewCoverage 两行：来源是本 PR 的迁移，控制器带 `business:sensitive:list`。没有加例外。 | `ci/prelaunch-seed-provenance.json` | 本地 4 个测试文件 43 例全过；CI 在 `e4c40c22` 上 `Migration safety gate` 通过 |
 | 5E-1b CI `Fast gates` 里的架构门 | needs owner | 失败的是 `ci/architecture/gate.py source`：7 个新增的服务/Mapper（`ContentSafetyRecheckMapper`、`ContentSensitiveMapper`、`IContentSafetyRecheckService`、`ISensitiveContentRescanService`、`ContentSafetyRecheckServiceImpl`、`SensitiveContentLibraryImpl`、`SensitiveContentRescanServiceImpl`）报 `NEW_UNOWNED_BOUNDARY`。门禁要求新边界在 `ci/architecture/owners.json` 登记技术 owner，而 CI 拿 master 上的受信副本比对，候选 PR 改 `owners.json` 会被判 `POLICY_CHANGE`。也就是说这一步只能由 root 先在 master 落登记，本 PR 改不了，也不该绕（比如改类名躲正则，或者把新表硬塞进旧 Mapper）。本轮写好了登记补丁，并在本地按 CI 的 `pull_request` 上下文模拟：把补丁当作受信策略、候选也带同一份 `owners.json`，门禁结果是 `PASS_WITH_REVIEW_ITEMS`，`findings: []`。 | `round5e/architecture-owner-registration.patch` | 本地复现原失败：同样 7 条 `NEW_UNOWNED_BOUNDARY`；套补丁后通过。 |
 | 5E-2 rig 跨角色真实 HTTP + 库读回 | fixed（另修 1 个 bug） | 见下表。62 项全部通过。过程中发现存量复查的真 bug，已修。 | `round5e/rig/p1..p4*.py`，读回在 `round5e/rig/evidence/` | rig，真实 HTTP，每步都查库 |
 | 5E-2 bug：存量复查命中写不进库 | fixed | `content_sensitive_hit.scan_version` 是 `VARCHAR(64)`，而词库版本串（三张表的「条数@最后修改时间」）真实长度约 65～70。在 MySQL 上第一条命中写库就报 `Data too long`，整轮中断：只报告模式什么都记不下；下架模式先下架、后记命中失败，结果内容下架了却没有记录，幂等判断也失效。修法：`scan_version` 改存版本串的 SHA-256 十六进制（正好 64 位），不改表、不改迁移。 | `SensitiveContentRescanServiceImpl.scanKey` | 新增 `SensitiveLibraryIntegrationTest.rescanScanVersionFitsTheColumnForARealisticLibraryVersion`（旧代码上是红的），该类 8 例 + 词库 10 例全过；rig 里修复前 0 条 RESCAN 命中、修复后两种模式都有记录（`p4_rescan`） |
@@ -275,4 +276,8 @@ rig 跑在 `claude/cloud-walk-20261101-rig`，`up.sh` 钉到本分支 `69a25ddf`
 1. **架构门登记**（5E-1b）：需要 root 先把 `round5e/architecture-owner-registration.patch` 审过并落到 master，然后本分支合并 master，`Fast gates` 才会绿。这是门禁本身的设计（候选不能自批）。推荐默认：按补丁登记 5 个 owner（`L8_RECHECK(_STORAGE)`、`L8_SENSITIVE_STORAGE/LIBRARY/RESCAN`）和 5 条依赖方向。另外，补丁把后台 `SensitiveLibraryController` 列为 `ContentSensitiveMapper` 的允许消费者，因为它现在直接调 Mapper。如果 owner 希望 Controller 只经 Service，那是一处小重构，本轮没做。
 2. **CI 的 e2e 内容安全替身**：`scripts/e2e/E2eWxContentSecurityStub.java.stub` 覆盖了整个 `checkText`，所以链路验收不会经过自建词库（现在 CI 里词库是空的，结果一样）。推荐默认：之后改成只替身发往微信的 HTTP，与本轮 rig 的做法一致。这一处属于共用的验收夹具，本轮没改。
 
-STATUS: PARTIAL - 架构门（Fast gates）需要 root 在 master 落 owner 登记后才能绿，补丁已备好并在本地验证通过；其余各项都已完成
+## CI 现状（`e4c40c22`）
+
+除 `Fast gates` 外都通过，`Backend tests` 和 `Migration safety gate` 也在内。`Fast gates` 只有架构门这一步失败（日志里只有这一处 error，它也是这个 job 的最后一个检查步骤），原因见 5E-1b。
+
+STATUS: PARTIAL - CI 的 Fast gates（架构门）要等 root 在 master 落 owner 登记才能绿；补丁已备好，并在本地按 CI 上下文验证通过。其余各项都已完成
