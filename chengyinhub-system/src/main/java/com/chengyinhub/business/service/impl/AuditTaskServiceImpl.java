@@ -686,6 +686,12 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         }
     }
 
+    @Override
+    public Long findOpenContentTaskId(String bizType, Long bizId) {
+        if (bizType == null || bizId == null) return null;
+        return findOpenTaskId(bizType, bizId);
+    }
+
     /** 返回同 bizType+bizId 内容审核槽的未结(PENDING/ESCALATED)审核单 id,无则 null;举报单不算。 */
     private Long findOpenTaskId(String bizType, Long bizId) {
         return findOpenTaskId(bizType, bizId, false);
@@ -2218,8 +2224,12 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                 // 官方活动先审后发:过审→上架/排期;驳回→保持不公开
                 officialEventServiceProvider.getObject().applyAuditDecision(bizId, up, reasonText, task.getSubmitterId());
             } else if (AuditTask.BIZ_COUPON.equals(bizType)) {
-                // 优惠券先发后审抽检:确认违规→平台手动失效(status=3,停止新领取);无问题→不动
-                if (up) return;
+                // 优惠券先发后审抽检:确认违规→平台手动失效(status=3,停止新领取);无问题→不动。
+                // Round5B-3/5C:机审未完成被扣下的券(status=5 待审核,不可领)审核通过(自动复检以系统身份)才转进行中(CAS 只动 5)。
+                if (up) {
+                    smsCouponServiceProvider.getObject().releaseHeldCoupon(bizId);
+                    return;
+                }
                 com.chengyinhub.business.domain.SmsCoupon c = new com.chengyinhub.business.domain.SmsCoupon();
                 c.setId(bizId);
                 c.setStatus(3);

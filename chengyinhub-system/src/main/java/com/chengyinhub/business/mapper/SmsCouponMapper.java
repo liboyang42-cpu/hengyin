@@ -113,5 +113,8 @@ public interface SmsCouponMapper
      *
      * @return 受影响行数(1=本次停发,0=未改动)
      */
+    /** Round5B-3:审核通过放行被扣下(status=0)的券 */
+    public int releaseHeldCoupon(@Param("id") Long id);
+
     public int stopIssuingCoupon(@Param("id") Long id, @Param("ownerMemberId") Long ownerMemberId);
 }

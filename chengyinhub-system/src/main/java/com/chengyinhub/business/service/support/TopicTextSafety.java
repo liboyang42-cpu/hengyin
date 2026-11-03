@@ -22,10 +22,11 @@ import java.util.Set;
  * {@link IContentSafetyGate#decide},审核模式 POST_REVIEW:
  * <ul>
  *   <li>明确违规 → BLOCK,拒绝保存(叙事文本逐条复检,提示里带字段名);</li>
- *   <li>机审要人工 / 审不了 / 缺 openid / 检测关闭 → 照常发布,但打标(flagged)留待抽检;</li>
+ *   <li>机审要人工 / 审不了 / 缺 openid / 检测关闭 → 门禁 HOLD(Round5B-3):照常保存,但调用方须下架留置
+ *       并送人工复核,通过后才公开(flagged 即「待人工复核」);</li>
  *   <li>通过 → 照常发布。</li>
  * </ul>
- * 本类只裁决,不建审核单;打标后的抽检单由调用方在主题落库后建(门禁拿不到 bizId)。
+ * 本类只裁决,不建审核单(送门禁时不带 contentId);留置与复核单由调用方在主题落库后处理。
  */
 public final class TopicTextSafety {
 
@@ -67,7 +68,7 @@ public final class TopicTextSafety {
         if (mainText != null && !mainText.trim().isEmpty()) {
             SafetyDecision d = decide(gate, memberId, openid, contentId, mainText);
             if (d == null || d.isBlock()) return new Verdict(BLOCK_MESSAGE, null);
-            if (d.isFlagged()) flag = d.getFlagReason();
+            if (needsReview(d)) flag = reviewReason(d);
         }
         List<JourneyReviewTexts.Entry> batch = new ArrayList<JourneyReviewTexts.Entry>();
         int chars = 0;
@@ -99,9 +100,9 @@ public final class TopicTextSafety {
         boolean blocked = whole == null || whole.isBlock();
         // 合并文本只得到「要人工」时也逐条复检(与旧 JourneyReviewTexts.check 同口径):
         // 一条要人工的段落不能把同批里另一条违规段落盖过去。审不了/缺身份/检测关闭逐条也审不了,不复检。
-        boolean reviewOnly = !blocked && whole.isFlagged() && "TEXT_REVIEW".equals(whole.getFlagReason())
+        boolean reviewOnly = !blocked && needsReview(whole) && "TEXT_REVIEW".equals(reviewReason(whole))
                 && batch.size() > 1;
-        if (!blocked && !reviewOnly) return new Verdict(null, whole.isFlagged() ? whole.getFlagReason() : null);
+        if (!blocked && !reviewOnly) return new Verdict(null, needsReview(whole) ? reviewReason(whole) : null);
         // 逐条复检找出字段,给作者能改的提示;合并命中而单条都不命中,仍按合并结果拦(上下文拼接后违规)
         for (JourneyReviewTexts.Entry entry : batch) {
             SafetyDecision one = decide(gate, memberId, openid, contentId, entry.getText());
@@ -109,14 +110,24 @@ public final class TopicTextSafety {
                 return new Verdict(BLOCK_MESSAGE + "（字段：" + entry.getField() + "）", null);
             }
         }
-        return blocked ? new Verdict(BLOCK_MESSAGE, null) : new Verdict(null, whole.getFlagReason());
+        return blocked ? new Verdict(BLOCK_MESSAGE, null) : new Verdict(null, reviewReason(whole));
+    }
+
+    /** 门禁 HOLD(机审未完成)或旧口径打标都算「待人工复核」,不能直接公开。 */
+    private static boolean needsReview(SafetyDecision d) {
+        return d != null && (d.isHold() || d.isFlagged());
+    }
+
+    private static String reviewReason(SafetyDecision d) {
+        return d.isHold() ? d.getReasonCode() : d.getFlagReason();
     }
 
     private static SafetyDecision decide(IContentSafetyGate gate, Long memberId, String openid, Long contentId,
                                          String text) {
         PublishSafetyRequest req = new PublishSafetyRequest();
         req.setContentType(AuditTask.BIZ_TOPIC);
-        req.setContentId(contentId);
+        // 不带 contentId:门禁 HOLD 时不在这里建单,主题留置与复核单由调用方落库后统一处理(避免分批送检建出多张单)。
+        req.setContentId(null);
         req.setMemberId(memberId);
         req.setOpenid(openid);
         req.setText(text);

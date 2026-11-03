@@ -55,7 +55,7 @@ class ApiCreativeSquareActivityAttachGuardTest {
         ReflectionTestUtils.setField(controller, "umsCreativeSquareService", squareService);
         ReflectionTestUtils.setField(controller, "umsMemberService", mock(IUmsMemberService.class));
         ReflectionTestUtils.setField(controller, "wxContentSecurityService", mock(IWxContentSecurityService.class));
-        // 生产默认 legacy-writes-enabled=true;不打开的话发帖路径会先被旧入口闸(426)短路,挂活动闸根本走不到。
+        // Round5B 起默认 legacy-writes-enabled=false;不打开的话发帖路径会先被旧入口闸(426)短路,挂活动闸根本走不到。
         ReflectionTestUtils.setField(controller, "legacyCommunityWritesEnabled", true);
     }
 

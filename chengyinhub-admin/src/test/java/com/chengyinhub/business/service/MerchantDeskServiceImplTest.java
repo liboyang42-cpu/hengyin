@@ -52,6 +52,7 @@ class MerchantDeskServiceImplTest {
         when(media.requireAttachment(anyLong(), any(), eq(false))).thenAnswer(i -> "media-asset:1");
         when(media.requireAttachments(anyLong(), any(), eq(false))).thenAnswer(i -> "media-asset:1;media-asset:2");
         service = new MerchantDeskServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(service, "mapper", mapper);
         ReflectionTestUtils.setField(service, "mediaReferences", media);
         access = new MerchantAccessContext(STAFF, MERCHANT_ID, OWNER, MerchantRoleCode.MERCHANT_MANAGER);

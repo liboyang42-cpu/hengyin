@@ -37,6 +37,8 @@ public class CircleExploreServiceImpl implements ICircleExploreService {
     @Autowired private ICircleThemeSupplyService supplyService;
     @Autowired private IUmsMemberService memberService;
     @Autowired private ICmsRegistrationService registrationService;
+    /** Round5B-6:同行记录的文字会给同行成员看,先过文本机审。 */
+    @Autowired private com.chengyinhub.business.service.support.UgcSubmissionSafety submissionSafety;
 
     @Override
     public void assertEligible(Long topicId, Long memberId) {
@@ -128,6 +130,10 @@ public class CircleExploreServiceImpl implements ICircleExploreService {
         String cleanNote = note == null ? null : note.trim();
         if (cleanNote != null && cleanNote.length() > 500) {
             throw new IllegalStateException("记录不能超过500字");
+        }
+        if (cleanNote != null && !cleanNote.isEmpty()) {
+            String verdict = submissionSafety.textVerdict(memberId, cleanNote);
+            if (verdict != null) throw new IllegalStateException(verdict);
         }
         CircleExploreRecord record = new CircleExploreRecord();
         record.setSessionId(sessionId);

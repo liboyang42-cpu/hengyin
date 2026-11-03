@@ -79,17 +79,20 @@ class ActivityAppUpdateTest {
         controller = org.mockito.Mockito.spy(new ApiActivityController());
         org.mockito.Mockito.doReturn(ME).when(controller).getAppUserId();
         org.mockito.Mockito.doReturn("me").when(controller).getAppUserName();
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(controller, "cmsActivityService", service);
         ReflectionTestUtils.setField(controller, "wxContentSecurityService", org.mockito.Mockito.mock(com.chengyinhub.business.service.IWxContentSecurityService.class));
         // /update 走统一门禁 + 分级(AUDIT-G1-2):本类只测改单锁,门禁放行、配置为空 ⇒ 先发后审。
         com.chengyinhub.business.service.IContentSafetyGate gate =
                 org.mockito.Mockito.mock(com.chengyinhub.business.service.IContentSafetyGate.class);
         when(gate.decide(ArgumentMatchers.any())).thenReturn(com.chengyinhub.business.domain.dto.SafetyDecision.pass());
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(controller, "contentSafetyGate", gate);
         com.chengyinhub.business.service.support.ActivityReviewPolicy policy =
                 new com.chengyinhub.business.service.support.ActivityReviewPolicy();
         ReflectionTestUtils.setField(policy, "configService",
                 org.mockito.Mockito.mock(com.chengyinhub.system.service.ISysConfigService.class));
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(controller, "activityReviewPolicy", policy);
 
         IUmsMemberService umsMemberService = org.mockito.Mockito.mock(IUmsMemberService.class);
@@ -98,6 +101,7 @@ class ActivityAppUpdateTest {
         me.setId(ME);
         when(umsMemberService.selectUmsMemberById(ME)).thenReturn(me);
         when(roleService.resolveRole(ArgumentMatchers.any())).thenReturn(IRoleService.ROLE_CLUB);
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(controller, "umsMemberService", umsMemberService);
         ReflectionTestUtils.setField(controller, "roleService", roleService);
 

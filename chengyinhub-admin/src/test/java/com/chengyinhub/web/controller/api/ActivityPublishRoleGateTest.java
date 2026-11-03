@@ -73,6 +73,7 @@ class ActivityPublishRoleGateTest
         member = new UmsMember();
         member.setId(MEMBER_ID);
         when(umsMemberService.selectUmsMemberById(MEMBER_ID)).thenReturn(member);
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(controller, "umsMemberService", umsMemberService);
         ReflectionTestUtils.setField(controller, "roleService", roleService);
         ReflectionTestUtils.setField(controller, "quotaService", quotaService);
@@ -85,6 +86,7 @@ class ActivityPublishRoleGateTest
         when(contentSafetyGate.decide(any())).thenReturn(SafetyDecision.pass());
         ActivityReviewPolicy activityReviewPolicy = new ActivityReviewPolicy();
         ReflectionTestUtils.setField(activityReviewPolicy, "configService", mock(ISysConfigService.class));
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(controller, "contentSafetyGate", contentSafetyGate);
         ReflectionTestUtils.setField(controller, "activityReviewPolicy", activityReviewPolicy);
         ReflectionTestUtils.setField(controller, "auditTaskService", mock(IAuditTaskService.class));
@@ -196,6 +198,7 @@ class ActivityPublishRoleGateTest
         IClubEventOpsService clubEventOpsService = mock(IClubEventOpsService.class);
         when(clubEventOpsService.cancelActivityByOwnerWithClubWrapUp(MEMBER_ID, 9L, "天气原因"))
                 .thenReturn(new ActivityCancelResult(1, 0, 0));
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(controller, "clubEventOpsService", clubEventOpsService);
 
         AjaxResult result = controller.activityCancel("9", "天气原因", null);
@@ -248,6 +251,7 @@ class ActivityPublishRoleGateTest
         ReflectionTestUtils.setField(realWrapUp, "cancellationTopicMapper",
                 mock(com.chengyinhub.business.mapper.CmsTopicMapper.class));
         com.chengyinhub.business.service.CancellationPhaseTestSupport.wireReceiptMocks(realWrapUp);
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(controller, "clubEventOpsService", realWrapUp);
 
         AjaxResult result = controller.activityCancel("9", "天气原因", null);

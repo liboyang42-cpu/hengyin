@@ -832,6 +832,16 @@
       "permission": "business:userInvoice:list",
       "source": "chengyinhub-admin/sql/migration_20261026_user_invoice_menu.sql",
       "controller": "UserInvoiceProcessingController.java"
+    },
+    {
+      "name": "敏感内容库",
+      "parentPath": "audit-center",
+      "order": 40,
+      "path": "sensitive",
+      "component": "business/sensitive/index",
+      "permission": "business:sensitive:list",
+      "source": "chengyinhub-admin/sql/migration_20261103_sensitive_content_library.sql",
+      "controller": "SensitiveLibraryController.java"
     }
   ],
   "functionRows": [
@@ -3019,6 +3029,21 @@
         "permission": "business:userInvoice:list",
         "source": "chengyinhub-admin/sql/migration_20261026_user_invoice_menu.sql",
         "controller": "UserInvoiceProcessingController.java"
+      }
+    },
+    {
+      "component": "business/sensitive",
+      "vue": "chengyinhub-ui/src/views/business/sensitive/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "敏感内容库",
+        "parentPath": "audit-center",
+        "order": 40,
+        "path": "sensitive",
+        "component": "business/sensitive/index",
+        "permission": "business:sensitive:list",
+        "source": "chengyinhub-admin/sql/migration_20261103_sensitive_content_library.sql",
+        "controller": "SensitiveLibraryController.java"
       }
     }
   ]

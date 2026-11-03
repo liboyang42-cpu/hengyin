@@ -2049,6 +2049,27 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long holdUncheckedTopicForReview(Long topicId, Long submitterId) {
+        if (topicId == null || topicId <= 0L) return null;
+        CmsTopic current = cmsTopicMapper.selectCmsTopicById(topicId);
+        if (current == null) return null;
+        cmsTopicMapper.updateReviewFlag(topicId, 1);
+        // 人工已驳回(status=2)的不改写驳回原因,本来就不公开。
+        if (Integer.valueOf(2).equals(current.getStatus())) return null;
+        CmsTopic held = new CmsTopic();
+        held.setId(topicId);
+        held.setUserStatus(0);
+        held.setCheckStatus(2);
+        held.setReason(com.chengyinhub.business.util.TopicContentSafetyHold.REASON_UNCHECKED);
+        if (cmsTopicMapper.updateCmsTopic(held) != 1) throw new ServiceException("主题待复核状态保存失败");
+        syncCreativeSquarePostVisibility(topicId, false);
+        Integer isDraft = cmsTopicMapper.selectTopicIsDraft(topicId);
+        if (isDraft != null && isDraft == 1) return null;
+        return topicPublicationService.requestContentSafetyRelistReview(topicId, submitterId);
+    }
+
+    @Override
     public void markContentSafetyHold(Long topicId) {
         if (topicId == null || topicId <= 0L) return;
         cmsTopicMapper.markContentSafetyHold(topicId);

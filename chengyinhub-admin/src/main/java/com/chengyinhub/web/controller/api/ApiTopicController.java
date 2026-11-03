@@ -85,7 +85,7 @@ public class ApiTopicController extends BaseController {
     @Autowired
     private com.fasterxml.jackson.databind.ObjectMapper responseObjectMapper;
 
-    @Value("${community.post.legacy-writes-enabled:true}")
+    @Value("${community.post.legacy-writes-enabled:false}")
     private boolean legacyCommunityWritesEnabled;
 
     /** 首次存草稿的请求意图键 → 已建草稿号(丢回包后的重试据此找回,不重复建题)。 */
@@ -234,6 +234,9 @@ public class ApiTopicController extends BaseController {
 
     @Autowired
     private IContentSafetyGate contentSafetyGate;
+
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.IContentSafetyRecheckService recheckService;
 
     @Autowired
     private IAuditTaskService auditTaskService;
@@ -516,7 +519,7 @@ public class ApiTopicController extends BaseController {
             }
 
             // UGC 内容安全(2026-10-20 分级审核 P1):主题内容先发后审 —— 统一门禁 POST_REVIEW。
-            // 明确违规拒绝保存;机审要人工/审不了只打标、照常发布,落库后建抽检单(见 flagForSpotCheck)。
+            // 明确违规拒绝保存;机审要人工/审不了 → 保存后下架留置并送人工复核(见 flagForSpotCheck)。
             // 内容送检使用实际操作者的微信身份；主题、额度与结算归发布主体。
             // R12/R19:剧情配置、章节故事流 beat 块等叙事文本同一道闸;命中时提示里带字段名。
             String openid = resolveOpenid(principalMemberId);
@@ -577,7 +580,10 @@ public class ApiTopicController extends BaseController {
             }
 
             if (textVerdict.isFlagged()) {
-                flagForSpotCheck(topicId, memberId, textVerdict.getFlagReason(), dto.getName());
+                flagForSpotCheck(topicId, memberId, textVerdict.getFlagReason(),
+                        recheckText(secText, topicReviewTexts(dto, chapterFlowV2)), dto.getImgUrl(), dto.getImgArr());
+            } else if (mediaUncheckable(dto.getImgUrl(), dto.getImgArr(), openid)) {
+                flagForSpotCheck(topicId, memberId, "MEDIA_UNCHECKED", null, dto.getImgUrl(), dto.getImgArr());
             }
 
             // UGC 图片内容安全:异步送检封面/图集,命中违规由消息推送回调自动下架(best-effort,不阻断)
@@ -812,7 +818,10 @@ public class ApiTopicController extends BaseController {
             return error(e.getMessage());
         }
         if (textVerdict.isFlagged()) {
-            flagForSpotCheck(topicId, memberId, textVerdict.getFlagReason(), dto.getName());
+            flagForSpotCheck(topicId, memberId, textVerdict.getFlagReason(), recheckText(secText, storyTexts),
+                    dto.getImgUrl(), dto.getImgArr());
+        } else if (mediaUncheckable(dto.getImgUrl(), dto.getImgArr(), openid)) {
+            flagForSpotCheck(topicId, memberId, "MEDIA_UNCHECKED", null, dto.getImgUrl(), dto.getImgArr());
         }
         wxContentSecurityService.submitMediaCheck(
                 IWxContentSecurityService.BIZ_TYPE_TOPIC,
@@ -1139,41 +1148,60 @@ public class ApiTopicController extends BaseController {
     }
 
     /**
-     * 先发后审打标(2026-10-20 分级审核 P1):机审没给出结论的主题照常发布,在审核台留一张
-     * BIZ_TOPIC 非阻断抽检单(source=post_review_flag,与活动 P0 同口径,不改主题状态),驳回即走既有下架。
-     * 跳过建单:草稿(未公开,且过审会把草稿直接上架;只打 review_flag,发布草稿时补挂);
-     * 已有未结 BIZ_TOPIC 单(专业版组合审核已在人工队列)。
-     * best-effort:失败只记日志,不影响已保存的主题。
+     * Round5B-3:机审没给出结论的主题不公开。保存照常,随后复用内容安全留置(下架 + check_status=2 + 原因),
+     * 非草稿立即挂复核上架单(content_safety_relist),审核台通过后自动上架;草稿在发布草稿时挂单。
+     * (旧口径是「照常发布 + post_review_flag 抽检单」,没审过的内容会先公开。)
      */
-    private void flagForSpotCheck(Long topicId, Long ownerMemberId, String reason, String name) {
+    /**
+     * 机审没结论:主题留置为仅作者可见,并进自动复检队列(Round5C)。复检通过自动解除留置上架,
+     * 违规或耗尽自动驳回并通知作者,全程不需要人。
+     */
+    private void flagForSpotCheck(Long topicId, Long ownerMemberId, String reason, String recheckText,
+                                  String imgUrl, String imgArr) {
         if (topicId == null) return;
-        logger.warn("主题先发后审打标待抽检 topicId={} reason={}", topicId, reason);
+        logger.warn("主题机审未完成,留置为仅作者可见并自动复检 topicId={} reason={}", topicId, reason);
         try {
-            // AUDIT-INT-8:放行但进入抽检池(#377 cms_topic.review_flag);抽检通过由审核台清 0。
-            // #380:草稿也要打标(只跳过建单),publish-draft 据此不记 check_status=1 并补挂抽检单。
-            cmsTopicService.markReviewFlag(topicId, true);
-            Integer isDraft = cmsTopicService.selectTopicIsDraft(topicId);
-            if (isDraft != null && isDraft == 1) return;
-            com.chengyinhub.business.domain.AuditTask q = new com.chengyinhub.business.domain.AuditTask();
-            q.setBizType(com.chengyinhub.business.domain.AuditTask.BIZ_TOPIC);
-            q.setBizId(topicId);
-            java.util.List<com.chengyinhub.business.domain.AuditTask> tasks = auditTaskService.selectAuditTaskList(q);
-            if (tasks != null) for (com.chengyinhub.business.domain.AuditTask t : tasks) {
-                // AUDIT-INT-5:开着的举报单不顶替抽检单(两者各占一个开放槽)
-                if ((com.chengyinhub.business.domain.AuditTask.STATUS_PENDING.equals(t.getStatus())
-                        || com.chengyinhub.business.domain.AuditTask.STATUS_ESCALATED.equals(t.getStatus()))
-                        && !t.isOpenReport()) {
-                    return;
-                }
-            }
-            String snap = "{\"bizType\":\"TOPIC\",\"bizId\":" + topicId
-                    + ",\"flagReason\":\"" + reason + "\""
-                    + ",\"name\":\"" + (name == null ? "" : name.replace("\"", "'")) + "\"}";
-            auditTaskService.submit(com.chengyinhub.business.domain.AuditTask.BIZ_TOPIC, topicId,
-                    ownerMemberId, "post_review_flag", snap);
+            cmsTopicService.holdUncheckedTopicForReview(topicId, ownerMemberId);
         } catch (Exception e) {
-            logger.error("主题抽检单提交失败 topicId={}", topicId, e);
+            logger.error("主题待复检留置失败 topicId={}", topicId, e);
         }
+        if (recheckService != null) {
+            try {
+                recheckService.enqueue(com.chengyinhub.business.domain.AuditTask.BIZ_TOPIC, topicId, ownerMemberId,
+                        recheckText, recheckMedia(imgUrl, imgArr), false);
+            } catch (Exception e) {
+                logger.error("主题自动复检进队失败 topicId={}", topicId, e);
+            }
+        }
+    }
+
+    static String recheckText(String mainText, java.util.List<JourneyReviewTexts.Entry> entries) {
+        StringBuilder sb = new StringBuilder();
+        if (mainText != null && !mainText.trim().isEmpty()) sb.append(mainText);
+        if (entries != null) for (JourneyReviewTexts.Entry e : entries) {
+            if (e == null || e.getText() == null || e.getText().trim().isEmpty()) continue;
+            if (sb.length() > 0) sb.append('\n');
+            sb.append(e.getText());
+        }
+        return sb.length() == 0 ? null : sb.toString();
+    }
+
+    private static java.util.List<String> recheckMedia(String imgUrl, String imgArr) {
+        java.util.List<String> out = new java.util.ArrayList<String>();
+        for (String raw : new String[]{imgArr, imgUrl}) {
+            if (raw == null) continue;
+            for (String one : raw.split(",")) {
+                String v = one.trim();
+                if (!v.isEmpty() && !out.contains(v)) out.add(v);
+            }
+        }
+        return out;
+    }
+
+    /** Round5B-3:带封面/图集但图片送不了检(总开关关 / 缺 openid)= 没人审过这张图,不能直接公开。 */
+    private boolean mediaUncheckable(String imgUrl, String imgArr, String openid) {
+        boolean hasMedia = StringUtils.isNotEmpty(imgUrl) || StringUtils.isNotEmpty(imgArr);
+        return hasMedia && !wxContentSecurityService.canSubmitMedia(openid);
     }
 
     private String resolveOpenid(Long memberId) {
