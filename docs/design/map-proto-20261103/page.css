@@ -3,7 +3,7 @@
 .mz-base{position:absolute;inset:0;width:100%;height:100%}
 .mz-basewrap{position:absolute;inset:0}
 .mz-search{position:absolute;left:16px;right:112px;top:54px;height:40px;border-radius:20px;background:#fff;display:flex;align-items:center;padding:0 16px;color:#8A8A8A;font-size:14px;z-index:6}
-.mz-pcard{position:absolute!important;left:12px;right:12px;bottom:20px;z-index:6}
+.mz-pcard{position:absolute!important;left:12px;right:12px;top:auto!important;bottom:30px!important;z-index:6}
 .mz-pin{position:absolute;width:var(--sz);height:var(--sz);transform:translate(-50%,-50%);z-index:3}
 .mz-pin__img{display:block;width:100%;height:100%;border-radius:50%;object-fit:cover;border:2px solid #fff;box-sizing:border-box;box-shadow:0 4px 12px rgba(0,0,0,.55)}
 .mz-pin--edge .mz-pin__img{border-width:1.5px;opacity:.9}
@@ -27,10 +27,10 @@
 .mz-card__close::before{transform:rotate(45deg)}.mz-card__close::after{transform:rotate(-45deg)}
 .mz-zoomwrap{position:absolute;inset:0;transform:scale(1);transition:transform 1.5s cubic-bezier(.2,.7,.2,1)}
 .mz-zoom.is-far .mz-zoomwrap{transform:scale(.42);transition:none}
-.mz-cloud{position:absolute;border-radius:50%;background:radial-gradient(closest-side,rgba(226,228,236,.98),rgba(190,194,206,.75) 62%,rgba(160,165,180,0));opacity:0;pointer-events:none;transition:transform 1.5s cubic-bezier(.2,.7,.2,1),opacity 1.5s ease-out;z-index:5}
-.mz-cloud--a{left:-160px;top:40px;width:640px;height:520px}
-.mz-cloud--b{left:-120px;top:360px;width:600px;height:520px}
-.mz-cloud--c{left:-60px;top:180px;width:520px;height:460px}
+.mz-cloud{position:absolute;opacity:0;pointer-events:none;background:radial-gradient(circle at 30% 40%,#fff 0,rgba(255,255,255,.96) 26%,rgba(245,246,250,0) 50%),radial-gradient(circle at 62% 34%,#fff 0,rgba(250,250,253,.95) 24%,rgba(240,241,247,0) 48%),radial-gradient(circle at 48% 66%,#F7F7FB 0,rgba(236,238,245,.96) 30%,rgba(226,228,238,0) 58%),radial-gradient(circle at 78% 62%,#F1F2F7 0,rgba(226,229,238,.9) 22%,rgba(214,217,230,0) 46%),radial-gradient(circle at 18% 72%,#EEF0F6 0,rgba(222,225,235,.9) 22%,rgba(210,214,228,0) 46%);filter:blur(10px);transition:transform 1.5s cubic-bezier(.2,.7,.2,1),opacity 1.3s ease-out;z-index:5}
+.mz-cloud--a{left:-180px;top:-60px;width:760px;height:620px}
+.mz-cloud--b{left:-180px;top:300px;width:760px;height:620px}
+.mz-cloud--c{left:-140px;top:120px;width:680px;height:600px}
 .mz-zoom.is-far .mz-cloud{opacity:1;transform:none;transition:none}
 .mz-zoom.is-run .mz-cloud--a{transform:translate(-300px,-260px) scale(1.5)}
 .mz-zoom.is-run .mz-cloud--b{transform:translate(300px,280px) scale(1.5)}
@@ -42,3 +42,18 @@
 .mz-stn--done{background:#3A3A3E;color:#A8A8AE}
 .mz-navbtn{position:absolute;left:16px;right:16px;bottom:34px;height:50px;border-radius:25px;background:#F8F8F8;color:#0A0A0A;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;z-index:6}
 @media (prefers-reduced-motion:reduce){.mz-zoomwrap,.mz-cloud{transition:none!important}}
+.mz-drag{touch-action:none;cursor:grab;user-select:none}
+.mz-world{position:absolute;left:0;top:0;will-change:transform}
+.mz-dpins{position:absolute;inset:0;z-index:3;pointer-events:none}
+.mz-dpin{position:absolute;left:0;top:0;width:40px;height:40px;will-change:transform}
+.mz-dpin .mz-tag{white-space:nowrap}
+.mz-dpin.is-edge .mz-tag{display:none}
+.mz-drift{position:absolute;pointer-events:none;z-index:4;width:520px;height:300px;opacity:.16;background:radial-gradient(closest-side,#E6E8F0,rgba(230,232,240,0));filter:blur(14px)}
+.mz-drift--a{left:-120px;top:120px}
+.mz-drift--b{left:120px;top:520px;opacity:.11}
+.mz-rain{position:absolute;inset:0;width:100%;height:100%;z-index:4;pointer-events:none}
+.mz-wxfog{position:absolute;inset:0;z-index:4;opacity:0;pointer-events:none;background:linear-gradient(rgba(170,176,190,.34),rgba(120,126,140,.5));backdrop-filter:blur(1.5px);transition:opacity .4s}
+.mz-wxfog.is-on{opacity:1}
+.mz-wxpick{position:absolute;left:16px;right:16px;bottom:36px;height:44px;border-radius:22px;background:#1C1C1E;display:flex;padding:3px;gap:3px;z-index:7;box-sizing:border-box}
+.mz-wxopt{flex:1;border-radius:19px;display:flex;align-items:center;justify-content:center;color:#A8A8AE;font-size:14px}
+.mz-wxopt.is-on{background:#F8F8F8;color:#0A0A0A;font-weight:600}

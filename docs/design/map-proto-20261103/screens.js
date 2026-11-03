@@ -44,10 +44,10 @@
   }
 
   function pinsDark(mkPins, mkTag, mkEdge, go) {
-    return pin(150, 212, 'flavor-tour', { size: 46, label: '咖啡', mk: mkTag, go: go }) +
-      pin(258, 300, 'old-movie', { label: '书店' }) +
+    return pin(150, 212, 'flavor-tour', { size: 46, label: '城市画廊咖啡', mk: mkTag, go: go }) +
+      pin(258, 300, 'old-movie', { label: '黑石书屋' }) +
       pin(82, 356, 'life-backup', { mk: mkPins }) +
-      pin(226, 438, 'time-pollution', { label: '展览' }) +
+      pin(226, 438, 'time-pollution', { label: '半坡展览' }) +
       pin(112, 492, 'heat-escape') +
       pin(4, 176, 'midlife-day', { edge: 1, size: 26, mk: mkEdge }) +
       pin(360, 412, 'treasure-hunter', { edge: 1, size: 26 }) +
@@ -86,7 +86,7 @@
     ['m-dark', '深色地图与照片图钉', '地图', 'cyp theme-dark pg-roam', dark, 'pages/roam/index.wxml', notes([
       [1, '底图换成黑灰单色：路是灰线，水更暗，地名压低。这一层用你的 key 和腾讯样式实现。这里是按样式能力画的预览，真机要等你绑定样式后才能对照。'],
       [2, '地点从文字气泡换成圆形照片图钉（参考 rybinandy）。'],
-      [3, '只有放大或被选中的地点带一枚小标签，其余只留照片，避免满屏文字。'],
+      [3, '参与我们的商铺显示店名，其余只留照片，避免满屏文字（你的批注：有一些商铺名称要显示，尤其是参与我们的）。'],
       [4, '靠近屏幕边的地点缩小贴边，不消失；更远的不显示（你 10-22 定的规则）。']])],
     ['m-card', '点图钉打开地点卡', '地图', 'cyp theme-dark pg-roam', card, 'subpackageRoam/poi-detail', notes([
       [1, '点图钉，地图把地点移到中间，卡片从图钉处展开：照片在上，地址、评分、距离在下。'],
