@@ -349,7 +349,6 @@
   "__usePrivacyCheck__": true,
   "requiredPrivateInfos": [
     "chooseLocation",
-    "choosePoi",
     "getLocation",
     "onLocationChange",
     "startLocationUpdate",
