@@ -60,12 +60,14 @@ test('跨端契约:后端 quote 出参必须带 refundDeadline/refundableNow,且
   assert.match(dto, /private Boolean refundableNow;/)
   const svc = fs.readFileSync(path.join(BE_ROOT,
     'chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java'), 'utf8')
-  assert.match(svc, /RefundPolicy\.sessionRefundDeadline\(activity\.getStartDate\(\)\)/)
+  // 2026-11-03 通行证三档:钟 = refundAnchor(场次开始;③ 自由探索票改为票的开始时间)
+  assert.match(svc, /Date refundAnchor = activity == null \? null : activity\.getStartDate\(\);/)
+  assert.match(svc, /refundAnchor = ticket\.getStartTime\(\);/)
   assert.match(svc, /boolean free = payAmount\.signum\(\) == 0 && pointsUsed == 0;/)
-  assert.match(svc, /Date deadline = free \? activity\.getStartDate\(\) : RefundPolicy\.sessionRefundDeadline\(activity\.getStartDate\(\)\);/)
+  assert.match(svc, /Date deadline = free \? activity\.getStartDate\(\) : RefundPolicy\.sessionRefundDeadline\(refundAnchor\);/)
   // 2026-11-02 退款档位:收费单的可退性与比例都从 RefundPolicy.sessionRefundRatioAt 这一口钟来
   assert.match(svc, /result\.setRefundableNow\(deadline == null \? null : quotedAt\.before\(deadline\)\);/)
-  assert.match(svc, /RefundPolicy\.sessionRefundRatioAt\(activity\.getStartDate\(\), quotedAt\)/)
+  assert.match(svc, /RefundPolicy\.sessionRefundRatioAt\(refundAnchor, quotedAt\)/)
   assert.match(svc, /result\.setRefundPercentNow\(/)
   assert.match(dto, /private Integer refundPercentNow;/)
 })
@@ -74,7 +76,14 @@ test('退款档位:集合前 24 小时内下单先确认「取消只退 50%」,�
   assert.match(baomingJs, /_quoteRefundPercentNow === 50/)
   assert.match(baomingJs, /title: '取消只退 50%'/)
   const wxml = fs.readFileSync(path.join(ROOT, 'pages/activity/baoming/baoming.wxml'), 'utf8')
-  for (const row of ['集合前 24 小时以上', '全额退', '集合前 24 小时内', '退 50%', '开始后', '不退']) {
+  for (const row of ["'集合前'}} 24 小时以上", '全额退', "'集合前'}} 24 小时内", '退 50%', '开始后', '不退']) {
     assert.ok(wxml.includes(row), row)
   }
+})
+
+test('2026-11-03 通行证三档:③ 自由探索票(mode=2)也列三档,写「开始前」,不再被隐藏', () => {
+  const wxml = fs.readFileSync(path.join(ROOT, 'pages/activity/baoming/baoming.wxml'), 'utf8')
+  assert.doesNotMatch(wxml, /selectedTicket\.mode != 2\}\}" class="(sec-title|setly)"/)
+  assert.match(wxml, /selectedTicket\.mode == 2 \? '开始前' : '集合前'/)
+  assert.match(baomingJs, /该场次已进入开始前 24 小时/)
 })

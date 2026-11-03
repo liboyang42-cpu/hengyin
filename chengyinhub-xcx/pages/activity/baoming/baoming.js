@@ -1583,7 +1583,8 @@ Page({
       && that._quoteRefundPercentNow === 50 && !that._nonRefundableConfirmed) {
       modal.show({
         title: '取消只退 50%',
-        content: '该场次已进入集合前 24 小时，支付后取消只退实付的 50%。确认继续下单？',
+        content: (that.data.selectedTicket && Number(that.data.selectedTicket.mode) === 2
+          ? '该场次已进入开始前 24 小时' : '该场次已进入集合前 24 小时') + '，支付后取消只退实付的 50%。确认继续下单？',
         confirmText: '继续下单',
         cancelText: '再想想',
         success: function (res) {
