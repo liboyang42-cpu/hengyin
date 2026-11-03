@@ -43,7 +43,7 @@ test('前提:project-drawer 引入 merchant-light,其 page{} 会把文字别名�
 
 test('俱乐部主办时,「招商」抽屉宿主挂现成的 theme-dark;商家主办不挂', () => {
   const tag = merchantDrawerTag()
-  assert.match(tag, /class="\{\{ hostOwnerType === 'club' \? 'theme-dark' : '' \}\}"/)
+  assert.match(tag, /class="merchant-drawer \{\{ hostOwnerType === 'club' \? 'theme-dark' : '' \}\}"/)
   // 页面根节点同一条件
   assert.match(HOST_WXML, /<view class="page \{\{ hostOwnerType === 'club' \? 'theme-dark' : 'theme-merchant' \}\}">/)
 })
