@@ -11,7 +11,7 @@
 |---|---|---|---|---|
 | 5B-1 评论图片 | fixed | 先核对了调用方：`pages/topic/index`（主题评价）和 `scene-play-activity-detail`（活动评价）确实会传 `img_arr`，`pages/square/detail` 传空，所以接 guard，没有整体拒绝。`img_arr` 改走 `AppMediaReferenceGuard.requireAttachments(member, …, false)`：外链和他人未审核的媒体返回 422；本人上传的媒体落库为 `media-asset:N`，读侧由既有 `AppMediaOutputConfiguration` 按审核状态出图（未审核只有本人能看到）。 | `ApiCommentController` | `ApiCommentMediaGuardTest`：外链被拒，且不发布、不送检；本人上传落成 `media-asset:41`。旧代码上这个测试是红的。 |
 | 5B-2 旧广场 | fixed | 当前客户端的发帖、点赞、收藏、删除、举报和广场评论，都由 `utils/community-post-api.js` 映射到 `/posts`，已经不走旧入口。所以三个控制器里的 `community.post.legacy-writes-enabled` 默认值改为 `false`，旧入口回 426。 | `ApiCreativeSquareController` / `ApiCommentController` / `ApiTopicController` | `ApiCreativeSquareCommunityPolicyTest.legacyCommunityWritesDefaultOffBecauseCurrentClientUsesPostsApi`（旧代码上是红的）。 |
-| 5B-3 先发后审门禁 | fixed | `ContentSafetyGateImpl` 在 POST_REVIEW 下遇到「要人工 / 审不了 / 异常 / 缺 openid / 检测关闭」，以前是打标后照常公开，现在改为 HOLD。带图但图片送不了检（总开关关或缺 openid）也 HOLD（`MEDIA_UNCHECKED`）。各调用方的处理：**主题**（create 与 update）复用内容安全留置，做法是 `user_status=0`、`check_status=2` 加原因，再挂一张复核上架单 `content_safety_relist`，审核台通过后由既有 `review()` 自动上架；草稿只留置，发布草稿时走既有的留置分支。**活动**的 create 与 update 都把图片交给门禁，HOLD 走既有待审（`preReview=true`）。**优惠券**被 HOLD 时以 `status=0` 保存，不能领取（发券 SQL 已排除 0），并挂进审核台，人工通过后由 `releaseHeldCoupon` 用 CAS 从 0 改为 1。`WxContentSecurityServiceImpl` 在检测关闭或缺 openid 时，原本静默跳过图片送检，现在会打 ERROR 日志。 | `ContentSafetyGateImpl`、`TopicTextSafety`、`CmsTopicServiceImpl.holdUncheckedTopicForReview`、`ApiTopicController`、`ApiActivityController`、`ApiCouponController`、`AuditTaskServiceImpl`、`SmsCouponMapper.xml`、`IWxContentSecurityService.canSubmitMedia` | `ContentSafetyGateImplTest`（5 个「审不了 → HOLD」，外加图片送不了检 → HOLD）、`TopicUncheckedHoldTest`、`CouponPublishReviewModeTest.heldDecisionSavesCouponAsNotIssuableAndQueuesReview`、`ApiTopicPostReviewTest`、`ActivityPublishReviewModeTest` / `ActivityUpdate*Test`（旧的「先公开 + 抽检单」断言已改为 HOLD）。机审明确通过时仍然直接发布：`cleanText_pass…`、`simpleTopicWithCleanText_publishesWithoutAnyAuditTask` 都通过。 |
+| 5B-3 先发后审门禁 | fixed | `ContentSafetyGateImpl` 在 POST_REVIEW 下遇到「要人工 / 审不了 / 异常 / 缺 openid / 检测关闭」，以前是打标后照常公开，现在改为 HOLD。带图但图片送不了检（总开关关或缺 openid）也 HOLD（`MEDIA_UNCHECKED`）。各调用方的处理：**主题**（create 与 update）复用内容安全留置，做法是 `user_status=0`、`check_status=2` 加原因，再挂一张复核上架单 `content_safety_relist`，审核台通过后由既有 `review()` 自动上架；草稿只留置，发布草稿时走既有的留置分支。**活动**的 create 与 update 都把图片交给门禁，HOLD 走既有待审（`preReview=true`）。**优惠券**被 HOLD 时以新的 `status=5`（待审核）保存，发券 SQL 排除 5 所以不能领取（0「未开始」仍按既有合同可发放），并挂进审核台，人工通过后由 `releaseHeldCoupon` 用 CAS 从 5 改为 1。`WxContentSecurityServiceImpl` 在检测关闭或缺 openid 时，原本静默跳过图片送检，现在会打 ERROR 日志。 | `ContentSafetyGateImpl`、`TopicTextSafety`、`CmsTopicServiceImpl.holdUncheckedTopicForReview`、`ApiTopicController`、`ApiActivityController`、`ApiCouponController`、`AuditTaskServiceImpl`、`SmsCouponMapper.xml`、`IWxContentSecurityService.canSubmitMedia` | `ContentSafetyGateImplTest`（5 个「审不了 → HOLD」，外加图片送不了检 → HOLD）、`TopicUncheckedHoldTest`、`CouponPublishReviewModeTest.heldDecisionSavesCouponAsNotIssuableAndQueuesReview`、`ApiTopicPostReviewTest`、`ActivityPublishReviewModeTest` / `ActivityUpdate*Test`（旧的「先公开 + 抽检单」断言已改为 HOLD）。机审明确通过时仍然直接发布：`cleanText_pass…`、`simpleTopicWithCleanText_publishesWithoutAnyAuditTask` 都通过。 |
 | 5B-4 review 回调和据点模板 | fixed | 回调里 `suggest=review` 以前回 400，内容继续公开；现在按 risky 走既有下架或隐藏分支，再由 `queueMediaReview` 挂进审核台（主题挂复核上架单，其它类型挂 `submitSafetyHold`）。据点模板（bizType 7）的 risky 以前被 `WxContentCallbackMutationService` 记成「人工」后丢掉，现在照常锁行、核对当前媒体，然后下架（`status=2`、`publish_status=0`、`check_status=2`），并挂 TEMPLATE 审核单。 | `WxContentSecurityServiceImpl`、`WxContentCallbackMutationService`、`WxContentCallbackInboxMapper.xml` | `WxContentSecurityServiceImplTest.reviewSuggestionHidesContentAndQueuesHumanReview`、`reviewedActivityImageIsQueuedOnTheAuditWorkbench`、`WxContentCallbackMutationServiceTest.nodeTemplateLocksTargetAndMutatesInsteadOfDiscardingRisky`。 |
 | 5B-5 media-asset 当成 URL 送检 | fixed | 在送检的唯一出口 `submitMediaCheckOne` 统一解析：`media-asset:N` 先用 `AppMediaAssetService.securityCheckFetchUrl` 换成可抓取的地址（本地图用发布地址，OSS 用 1 小时短签名）再送微信；回调身份仍是库里的引用，用来比对哈希。解析失败就不送检，只记 ERROR。俱乐部资料、俱乐部帖文 outbox 和评论都走这一个出口。 | `WxContentSecurityServiceImpl`、`AppMediaAssetService` | `WxContentSecurityServiceImplTest.mediaAssetReferenceIsResolvedToFetchableUrlBeforeSubmitting` 断言送给微信的值是解析后的 URL，不是 `media-asset:9`，inbox 登记的身份是 `media-asset:9`。 |
 | 5B-6 其它缺检查的入口 | fixed | 新增 `UgcSubmissionSafety`，只把既有的 `checkText` 和 `AppMediaReferenceGuard` 组合起来用。接入点见下方入口表。 | 见入口表 | `UgcSubmissionSafetyTest`、`MerchantRegistrationEditGateTest`（外链拒绝 + 文本送检）、`CircleExploreServiceTest.recordNoteThatFailsTextCheckIsRefusedBeforeInsert`、`ApiCreatorCenterControllerTest.applyWithExternalAvatarIsRefusedBeforeInsert`。 |
@@ -28,7 +28,7 @@
 | 主题 create / update | 门禁 POST_REVIEW | 送不了检则 HOLD，能送就异步检测 + 回调下架 | 留置 + 复核上架单 | 不公开，等人审 |
 | 主题发布草稿 | 草稿期已留置 | 同上 | 既有留置分支挂单 | 不公开，等人审 |
 | 活动 create / update（App） | 门禁 | guard（拒外链）+ 门禁 MEDIA_UNCHECKED | 待审 | 不公开，等人审 |
-| 优惠券发布 | 门禁 | — | `status=0` 不可领，等审核单 | 不公开，等人审 |
+| 优惠券发布 | 门禁 | — | `status=5` 不可领，等审核单 | 不公开，等人审 |
 | 官方活动 V1 publish / V2 submit | 门禁 PRE_REVIEW（原有） | V2 草稿封面接 guard | 原本就是先审 | 已检 |
 | 社区帖文 `/posts` | 门禁 PRE_REVIEW（原有） | 原有 | 原有 | 已检（未改） |
 | 据点报名编辑（`MerchantRegistrationEditServiceImpl`） | `checkText`，严格 | guard | 拒绝 | 已检 |
@@ -56,12 +56,13 @@
 3. **账号级处置通知**：成员、商家、俱乐部举报的处置只落了处置行和举报单时间线，没有给被处置账号发系统消息。原因是 `notifyGovernance` 依赖 `postId`，账号级处置没有这个值。推荐默认：补一条不带帖文的治理通知。
 4. **商家和俱乐部本身的下架**：举报成立时处置落在负责人账号上，商家或俱乐部本身没有自动下架。下架仍然走后台商家和俱乐部管理。推荐默认：维持现状，由管理员人工判断。
 5. **管理后台没有举报处置的 UI**：处置走 `CommunityTrustPlatformController` 的平台接口。
-6. **门禁通过之后图片送检又失败**（token 或网络异常，`submitMediaCheckOne` 返回 null）：这时内容已经公开，只记了 ERROR，没有回滚。门禁在发布前用 `canSubmitMedia` 挡住了开关关闭和缺 openid 两种情况，挡不住瞬时故障。推荐默认：后续加一条「未送检媒体」的补偿作业。
+6. **后台优惠券页的状态名**：`chengyinhub-ui` 的 `statusLabel` 没有 5，待审核的券在后台会显示「状态未知」。本轮不改 UI。推荐默认：补一个「待审核」。
+7. **门禁通过之后图片送检又失败**（token 或网络异常，`submitMediaCheckOne` 返回 null）：这时内容已经公开，只记了 ERROR，没有回滚。门禁在发布前用 `canSubmitMedia` 挡住了开关关闭和缺 openid 两种情况，挡不住瞬时故障。推荐默认：后续加一条「未送检媒体」的补偿作业。
 
 ## 未验证
 
 - 没在 rig 里跑跨角色的真实 HTTP 回读，比如主题留置后玩家端看不到、审核台通过后自动上架。原因是本轮时间和 VPS 限制；单测覆盖到了服务和控制器两层。
-- MySQL 集成测试（`*MyBatisTest`、`*MySqlIT`）在本容器里没有数据库连不上，没有跑。新增的 SQL 只有两处：`SmsCouponMapper.releaseHeldCoupon`，以及 `tryIncrementIssuableReceiveCount` 排除 status 0；`WxContentCallbackInboxMapper.lockBusinessTarget` 新增 `bizType == 7` 分支。都是简单的等值条件，不会撞 Druid wall。
+- MySQL 集成测试（`*MyBatisTest`、`*MySqlIT`）在本容器里没有数据库连不上，没有跑。新增的 SQL 只有两处：`SmsCouponMapper.releaseHeldCoupon`，以及 `tryIncrementIssuableReceiveCount` 排除 status 5（`CouponLifecycleMybatisIntegrationTest` 补了 status=5 拒发，由 CI 的 MySQL IT 跑）；`WxContentCallbackInboxMapper.lockBusinessTarget` 新增 `bizType == 7` 分支。都是简单的等值条件，不会撞 Druid wall。
 - 真机：没验证。只在静态层面确认了 8 号图片替换，没有截图。
 
 ## 测试
