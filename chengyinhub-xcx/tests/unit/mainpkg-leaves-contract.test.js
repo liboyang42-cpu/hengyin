@@ -109,7 +109,7 @@ function violations(file, source) {
 }
 
 test('reviewed leaves remain inside existing subpackages and keep their original source files out of main', () => {
-  assert.equal(moves.length, 33);
+  assert.equal(moves.length, 32); // Round5B-8 删除了一张仅开发用的俱乐部示例图
   for (const moved of moves) {
     assert.equal(owner(moved.from), 'MAIN', moved.from);
     assert.notEqual(owner(moved.to), 'MAIN', moved.to);

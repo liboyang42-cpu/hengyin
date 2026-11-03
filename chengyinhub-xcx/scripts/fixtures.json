@@ -14863,7 +14863,7 @@
    "sub": "2026 限定",
    "unsupported": true,
    "renderState": "fallback",
-   "fallbackSrc": "/subpackageP3/assets/badge-demo.png"
+   "fallbackSrc": "/images/cy_logo_mark.png"
   },
   "dropped": [],
   "switchKeys": [
@@ -16692,11 +16692,11 @@
     "title": "梦",
     "images": [
      {
-      "url": "/images/index-figma/nearby-card.jpg",
+      "url": "/images/home-route-city-placeholder.jpg",
       "line": "那天的风"
      },
      {
-      "url": "/images/index-figma/reco-hero.jpg",
+      "url": "/images/home-route-free-placeholder.jpg",
       "line": "走过的街角"
      }
     ]

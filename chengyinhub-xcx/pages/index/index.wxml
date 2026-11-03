@@ -84,7 +84,7 @@
             <view class="v3-reco-slide">
               <view class="v3-reco-card" style="{{recoCardStyles[index]}}" data-index="{{index}}"
                     bindtap="goRecoHero" hover-class="cy-pressed" hover-stay-time="80">
-                <image class="v3-reco-hero-img" src="{{item.cover || '/images/index-figma/reco-hero.jpg'}}" mode="aspectFill" />
+                <image class="v3-reco-hero-img" src="{{item.cover || '/images/home-route-city-placeholder.jpg'}}" mode="aspectFill" />
                 <view class="v3-reco-hero-mask"></view>
                 <view class="v3-reco-club flex-ac" wx:if="{{item.clubLabel}}">
                   <image class="v3-reco-club-av" src="{{item.clubAvatar || item.cover}}" mode="aspectFill" />
@@ -133,7 +133,7 @@
           <view class="v3-nearby-row">
             <view class="v3-nearby-card" wx:for="{{nearbyActivityList}}" wx:key="id"
                   bindtap="goActivity" data-index="{{index}}" data-id="{{item.id}}" hover-class="cy-pressed" hover-stay-time="80">
-              <image class="v3-nearby-bg" src="{{item.cover || item.imgUrl || '/images/index-figma/nearby-card.jpg'}}" mode="aspectFill" lazy-load="true" />
+              <image class="v3-nearby-bg" src="{{item.cover || item.imgUrl || '/images/home-route-city-placeholder.jpg'}}" mode="aspectFill" lazy-load="true" />
               <view class="v3-nearby-mask"></view>
               <view class="v3-nearby-body">
                 <view class="v3-nearby-title ep2">{{item.name}}</view>
@@ -170,7 +170,7 @@
           <view class="v3-upcoming-row">
             <view class="v3-upreview" wx:for="{{upcomingActivityList}}" wx:key="id"
                   bindtap="goActivity" data-index="{{index}}" data-id="{{item.id}}" hover-class="cy-pressed" hover-stay-time="80">
-              <image class="v3-upreview-bg" src="{{item.cover || '/images/index-figma/nearby-card.jpg'}}" mode="aspectFill" lazy-load="true" />
+              <image class="v3-upreview-bg" src="{{item.cover || '/images/home-route-city-placeholder.jpg'}}" mode="aspectFill" lazy-load="true" />
               <view class="v3-upreview-mask"></view>
               <view class="v3-upreview-body">
                 <view class="v3-upreview-txt">
