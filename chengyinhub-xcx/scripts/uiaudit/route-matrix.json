@@ -1757,7 +1757,8 @@
       "needsLogin": false,
       "needsData": true,
       "dataKeys": [
-        "poiId"
+        "poiId",
+        "merchantId"
       ],
       "hasJs": true,
       "hasWxml": true

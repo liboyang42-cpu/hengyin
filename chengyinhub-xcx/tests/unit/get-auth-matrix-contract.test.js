@@ -105,6 +105,8 @@ const MATRIX = [
   // 2026-10-29 V-06:漫游顶部搜地点在腾讯地点搜索回空/失败时查商家节点库兜底(同 searchmap 一档)
   ['components/cy/map-address-search/index.js', "url: '/api/city/nodes'", 'required', 'member', 'global-read+viewer-personalization'],
   ['subpackageMember/components/cy/scene-roam-poi-detail/index.js', "url: '/api/city/nodes/' + this.data.poiId", 'required', 'member', 'global-read+viewer-personalization'],
+  // 第九轮 m1 第 3 项:漫游地点卡只读同一个节点详情接口里的评分(与上一条同一后端、同一权限)
+  ['subpackageRoam/components/roam-place-card/index.js', "url: '/api/city/nodes/' + p.shareId", 'required', 'member', 'global-read+viewer-personalization'],
   // 2026-10-25 官方地点:地图点位卡展开读节点(相册 / 玩法 / 完成状态),挑战页读同一节点,与据点详情同端点同权限档。
   ['subpackageRoam/nearby/index.js', "url: '/api/city/nodes/' + id", 'required', 'member', 'global-read+viewer-personalization'],
   ['pages/play/poi-challenge/index.js', "url: '/api/city/nodes/' + this._poiId", 'required', 'member', 'global-read+viewer-personalization'],
@@ -426,7 +428,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // R03/R12 原写入结果仅按登录actor、操作种类和原请求号回读；新增一条本人回执GET。
   // 2026-11-01:商家工作台删除开通前置检查,少一处 GET(/api/merchant/ops/prerequisites) 111 → 110
   // 2026-11-03 第九轮 m-rain:漫游地图天气氛围一处匿名 GET /api/map/weather(已入 MATRIX),110 → 111。
-  assert.equal(directCount, 111, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-11-04 第九轮 m-card:漫游地点卡读节点评分一处 GET /api/city/nodes/{id}(与据点详情同一接口,已入 MATRIX),111 → 112。
+  assert.equal(directCount, 112, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。

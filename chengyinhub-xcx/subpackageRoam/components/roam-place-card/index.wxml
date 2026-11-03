@@ -1,0 +1,22 @@
+<!-- 第九轮 m1 第 3 项(m-card):点图钉 → 地图把它移到中间,卡片从图钉处展开。
+     正文与到店验证仍是原来的据点详情 / 商家卡:点卡片本身就进那里,这张卡只是入口。 -->
+<view wx:if="{{show}}" class="rpc-scrim {{shown ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" bindtap="onClose" aria-role="button" aria-label="关闭地点卡" hover-class="none"></view>
+<view wx:if="{{show}}" class="rpc {{shown ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}} {{place.photo ? '' : 'rpc--bare'}}" style="transform-origin:50% {{originY}}px;top:{{top}}px">
+  <view class="rpc__hero" bindtap="onOpen" aria-role="button" aria-label="打开{{place.name}}" hover-class="rpc-pressed" hover-stay-time="80">
+    <image wx:if="{{place.photo}}" class="rpc__img" src="{{place.photo}}" mode="aspectFill" />
+    <view wx:if="{{place.photo}}" class="rpc__shade"></view>
+    <text class="rpc__title">{{place.name}}</text>
+  </view>
+  <view class="rpc__body">
+    <text wx:if="{{place.address}}" class="rpc__addr" bindtap="onNavigate" aria-role="link" aria-label="{{place.address}}，在地图中打开" hover-class="rpc-pressed" hover-stay-time="80">{{place.address}}</text>
+    <view wx:if="{{rating || ratingError || place.distText}}" class="rpc__row">
+      <text wx:if="{{rating || ratingError}}" class="rpc__rate">{{rating || '—'}}</text>
+      <text wx:if="{{place.distText}}" class="rpc__dist">{{place.distText}}</text>
+    </view>
+    <view class="rpc__acts">
+      <view class="rpc-act rpc-act--main" bindtap="onNavigate" aria-role="button" aria-label="导航到{{place.name}}" hover-class="rpc-pressed" hover-stay-time="80">导航</view>
+      <button wx:if="{{place.shareId}}" class="rpc-act" open-type="share" data-share-type="place" data-share-kind="{{place.shareKind}}" data-share-id="{{place.shareId}}" data-share-name="{{place.name}}" data-share-image="{{place.photo}}" aria-label="分享{{place.name}}" hover-class="rpc-pressed" hover-stay-time="80">分享</button>
+    </view>
+  </view>
+  <view class="rpc__close" bindtap="onClose" aria-role="button" aria-label="关闭" hover-class="rpc-pressed" hover-stay-time="80"><view class="rpc__x"></view></view>
+</view>

@@ -275,10 +275,11 @@ test('漫游 marker 消费四级 icon，而不是只改尺寸和 zIndex', () => 
     '/tmp/node-level-3.png',
     '/tmp/node-level-4.png',
   ])
-  assert.deepEqual(page.data.markers.map((marker) => marker.callout.content.split(' · ')[0]), [
-    '● 普通节点',
-    '◆ 精选节点',
-    '★ 官方合作',
-    '⬟ 主题路线',
-  ])
+  // 第九轮 m1 第 2 项:等级仍由图形区分;地图上不再挂等级文字气泡(地名只留给底图样式),
+  // 参与商铺(挂了商家的据点)改贴店名小标签
+  assert.ok(page.data.markers.every((marker) => !marker.callout))
+  assert.deepEqual(page.data.explorePins, [])
+  page._pois[3].merchantId = 9
+  page._syncMarkers()
+  assert.deepEqual(page.data.explorePins.map((pin) => pin.label), ['节点4'])
 })

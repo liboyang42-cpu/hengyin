@@ -225,9 +225,14 @@
   <free-map id="roamMap" class="rmap" scene="explore"
        center="{{center}}" scale="{{mapScale}}" show-controls="{{false}}"
        subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}"
-       map-markers="{{markers}}" map-polyline="{{polyline}}" map-polygons="{{fogOff ? noFogPolys : fogPolys}}" map-circles="{{sparkCircles}}"
+       map-markers="{{markers}}" explore-pins="{{explorePins}}" map-polyline="{{polyline}}" map-polygons="{{fogOff ? noFogPolys : fogPolys}}" map-circles="{{sparkCircles}}"
        accessibility-label="{{roamMapA11y}}" reduced-motion="{{reducedMotion}}"
        bind:updated="onMapUpdated" bind:markertap="onMarkerTap" bind:regionchange="onRegionChange" bind:poitap="onPoiTap" />
+  <!-- 第九轮 m1 第 6 项(m-drag):薄云比地图慢一拍。只是画面,不吃手势;减弱动态时不出现。 -->
+  <view wx:if="{{!reducedMotion && screen=='map'}}" class="roam-clouds {{cloudOn ? 'is-on' : ''}}" style="{{cloudStyle}}" aria-hidden="true">
+    <view class="roam-cloud roam-cloud--a"></view>
+    <view class="roam-cloud roam-cloud--b"></view>
+  </view>
   <canvas type="2d" id="fogscreen" class="fogscreen-buffer"></canvas>
   <!-- P-32:设置里关掉迷雾时整层不画(足迹照常记录) -->
   <block wx:if="{{!fogOff}}">
@@ -287,6 +292,9 @@
                        placeholder="输入地址" bind:pick="onSearchPick" />
 
 <view class="roam-topstack" style="top:{{promptTop}}px">
+
+<!-- 第九轮 m1 第 5 项(m-zoom):拉远时的附近真实点数,数少时不出 -->
+<view class="pin-count" wx:if="{{screen=='map' && pinCountLabel}}" aria-role="status">{{pinCountLabel}}</view>
 
 <!-- 2026-09-15 地图组队 P 方案:原型 f-hangout「在雾里发现一个局」整卡退场 —— 搭子局已下线,
      这条 120 s 轮询永远推不出东西,留着就是一张点进去落空的死入口。附近的队伍走
@@ -601,6 +609,10 @@
 <!-- 原型 f-cam 的取景卡:浮在地图上,地图与三键都还在,不是另开一页。
      与组局(citystamp)、集邮册用同一件 cy-proto-cam。 -->
 <cy-proto-cam show="{{camOpen}}" bind:shot="onProtoCamShot" bind:close="closeProtoCam" />
+
+<!-- 第九轮 m1 第 3 项(m-card):点图钉打开的地点卡。分包组件,异步加载;没加载出来时点卡片退回原详情 -->
+<cy-roam-place-card wx:if="{{screen=='map' && placeCard}}" place="{{placeCard}}" top="{{placeCardTop}}" origin-y="{{placeCardOrigin}}"
+                    reduced-motion="{{reducedMotion}}" bind:open="onPlaceCardOpen" bind:close="closePlaceCard" />
 
 <!-- ══ 点主题针 · 主题半屏(原型 f-topic 自由探索 / f-city 城市定向)══
      与组局的 h-topic 同构,共用 style/proto-sheet.wxss 里那一套。 -->
@@ -1141,3 +1153,6 @@
     <view class="pp-open__tx"><text class="pp-open__t">{{ppOpen.title}}</text><text class="pp-open__s">{{ppOpen.value}}</text></view>
   </view>
 </view>
+
+<!-- 第九轮 m1 第 8 项:首次进漫游的大气层转场(分包组件,地址为空时不挂) -->
+<cy-roam-atmos-entry wx:if="{{atmosOn && atmosSrc}}" src="{{atmosSrc}}" reduced-motion="{{reducedMotion}}" bind:done="onAtmosDone" />

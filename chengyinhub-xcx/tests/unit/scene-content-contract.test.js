@@ -181,7 +181,9 @@ test('节点深链宿主是薄壳：挂已有组件、透传 poiId、输出稳�
   // 薄壳:只挂组件 + 透传 poiId
   assert.equal(hostJson.usingComponents['cy-scene-deep-link'], '/subpackageMember/components/cy/scene-deep-link/index')
   assert.match(hostWxml, /<cy-scene-deep-link[^>]*scene-id="roam-poi-detail"[^>]*params="\{\{sceneParams\}\}"/)
-  assert.match(hostJs, /sceneParams:\s*\{\s*poiId\s*\}/, 'onLoad 拿到的 poiId 必须透传给场景')
+  // 第九轮 m1:地图地点卡分享只有商家(无据点)时带 merchantId,有 poiId 时只透传 poiId
+  assert.match(hostJs, /sceneParams:\s*merchantId \? \{\s*poiId,\s*merchantId\s*\} : \{\s*poiId\s*\}/, 'onLoad 拿到的 poiId 必须透传给场景')
+  assert.match(hostJs, /const merchantId = poiId \? '' :/, '有 poiId 时不读 merchantId')
   assert.match(deepLinkWxml, /<cy-scene-roam-poi-detail[^>]*poi-id="\{\{sceneCurrent\.params\.poiId\}\}"/)
 
   // 不复制正文与到店验证逻辑
@@ -190,7 +192,7 @@ test('节点深链宿主是薄壳：挂已有组件、透传 poiId、输出稳�
   assert.doesNotMatch(hostWxml, /wx:for=/, '宿主不得自绘正文')
 
   // 分享/收藏输出稳定深链;onShareTimeline 只能给 query(平台不支持自定义 path)
-  assert.match(hostJs, /path:\s*SHARE_PATH \+ '\?' \+ shareQuery\(this\.data\.poiId\)/)
+  assert.match(hostJs, /path:\s*SHARE_PATH \+ '\?' \+ shareQuery\(this\.data\.poiId, this\.data\.merchantId\)/)
   assert.match(hostJs, /const SHARE_PATH = '\/subpackageRoam\/poi-detail\/index'/)
   // 第七轮 C 第 1 项:节点读接口要登录,朋友圈单页模式没有登录态,暂不实现 onShareTimeline(恢复时 query 仍只能是 shareQuery)
   assert.doesNotMatch(hostJs.replace(/\/\/[^\n]*/g, ''), /onShareTimeline\s*\(/)

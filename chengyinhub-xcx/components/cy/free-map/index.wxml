@@ -9,12 +9,18 @@
        enable-zoom="{{interactive}}" enable-scroll="{{interactive}}"
        enable-poi="{{true}}" enable-building="{{false}}"
        subkey="{{subkey}}" layer-style="{{layerStyle}}"
-       bindupdated="onUpdated" bindmarkertap="onMarkerTap"
+       bindupdated="onUpdated" bindmarkertap="onMarkerTap" bindcallouttap="onCalloutTap"
        bindregionchange="onRegionChange" bindpoitap="onPoiTap">
     <cover-view slot="callout">
       <cover-view wx:for="{{photoCallouts}}" wx:key="id" marker-id="{{item.id}}" class="fmap-photo">
         <cover-image class="fmap-photo__image" src="{{item.imgUrl}}"></cover-image>
         <cover-view class="fmap-photo__badge">{{item.num}}</cover-view>
+      </cover-view>
+      <!-- 第九轮 m1 第 2 项:漫游照片图钉(圆形照片 + 参与商铺的店名小标签)。marker 本身是深色圆,
+           照片 cover-view 盖在它正上方;没照片的只挂店名标签,圆还是 marker 自己的。 -->
+      <cover-view wx:for="{{explorePins}}" wx:key="id" marker-id="{{item.id}}" class="fmap-xpin">
+        <cover-view wx:if="{{item.label}}" class="fmap-xpin__tag">{{item.label}}</cover-view>
+        <cover-image wx:if="{{item.img}}" class="fmap-xpin__img {{item.done ? 'is-done' : ''}}" style="width:{{item.size}}px;height:{{item.size}}px;border-radius:{{item.size}}px;" src="{{item.img}}"></cover-image>
       </cover-view>
     </cover-view>
     <!-- 外层 = 真实命中区(横纵均 ≥88rpx = 44pt),内层 = 64rpx 高的「退出」文字胶囊。

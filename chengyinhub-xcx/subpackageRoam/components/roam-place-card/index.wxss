@@ -1,0 +1,28 @@
+/* 第九轮 m1 第 3 项:玩家侧深色卡,照原型 .mz-card。 */
+.rpc-scrim { position: fixed; inset: 0; z-index: 140; background: rgba(0,0,0,.36); opacity: 0; transition: opacity .2s ease-out; } /* ds-ok 原型 .mz-scrim */
+.rpc-scrim.is-in { opacity: 1; }
+.rpc { position: fixed; left: 32rpx; right: 32rpx; z-index: 141; border-radius: 48rpx; overflow: hidden; background: var(--cy-color-play-surface-solid, #1C1C1E); box-shadow: 0 36rpx 100rpx rgba(0,0,0,.6); /* ds-ok 原型 .mz-card 阴影 */
+  opacity: 0; transform: scale(.2); transition: transform .32s cubic-bezier(.2,.7,.2,1), opacity .2s ease-out; }
+.rpc.is-in { opacity: 1; transform: none; }
+.rpc.is-reduced, .rpc-scrim.is-reduced { transition: none; }
+.rpc__hero { position: relative; height: 460rpx; }
+.rpc--bare .rpc__hero { height: auto; padding: 40rpx 104rpx 0 36rpx; }
+.rpc__img { display: block; width: 100%; height: 100%; }
+.rpc__shade { position: absolute; left: 0; right: 0; bottom: 0; height: 200rpx; background: linear-gradient(transparent, rgba(0,0,0,.72)); } /* ds-ok 原型 .mz-card__shade */
+.rpc__title { position: absolute; left: 36rpx; right: 36rpx; bottom: 28rpx; color: #FFFFFF; font-size: 48rpx; font-weight: 700; line-height: 1.25; } /* ds-ok 照片上的白字 */
+.rpc--bare .rpc__title { position: static; display: block; color: var(--cy-color-text-primary); }
+.rpc__body { padding: 32rpx 36rpx 36rpx; display: flex; flex-direction: column; gap: 20rpx; }
+.rpc__addr { display: block; color: var(--cy-color-text-primary); font-size: 30rpx; line-height: 1.4; }
+.rpc__row { display: flex; gap: 28rpx; color: var(--cy-color-text-secondary); font-size: 28rpx; }
+.rpc__rate { font-weight: 700; color: var(--cy-color-text-primary); }
+.rpc__acts { display: flex; gap: 20rpx; margin-top: 12rpx; }
+.rpc-act { flex: 1; min-height: 88rpx; margin: 0; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: var(--cy-radius-pill); background: var(--cy-color-play-surface, rgba(255,255,255,.12)); color: var(--cy-color-text-primary); font-size: 30rpx; font-weight: 700; line-height: 88rpx; border: 0; }
+.rpc-act::after { border: 0; }
+.rpc-act--main { background: var(--cy-color-action-primary-bg, #FFFFFF); color: var(--cy-color-action-primary-fg, #111111); }
+.rpc__close { position: absolute; right: 12rpx; top: 12rpx; width: 88rpx; height: 88rpx; display: flex; align-items: center; justify-content: center; }
+.rpc__x { position: relative; width: 64rpx; height: 64rpx; border-radius: 50%; background: rgba(0,0,0,.5); } /* ds-ok 原型 .mz-card__close */
+.rpc__x::before, .rpc__x::after { content: ""; position: absolute; left: 18rpx; right: 18rpx; top: 30rpx; height: 4rpx; background: #FFFFFF; } /* ds-ok 同上 */
+.rpc__x::before { transform: rotate(45deg); }
+.rpc__x::after { transform: rotate(-45deg); }
+/* 组件样式隔离:全局 .cy-pressed 进不来,本地一份,只减淡不位移 */
+.rpc-pressed { opacity: .88; }

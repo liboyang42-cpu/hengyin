@@ -10,7 +10,9 @@ const SHARE_PATH = '/subpackageRoam/poi-detail/index'
 const { ROAM_SHARE_COVER } = require('../../utils/roam-menu-share.js')
 const FALLBACK_TITLE = '这个节点等你到店打卡'
 
-function shareQuery(poiId) {
+function shareQuery(poiId, merchantId) {
+  // 第九轮 m1:地图地点卡分享只有商家(没有据点)时按 merchantId 落地,正文组件本来就支持只给 merchantId
+  if (!poiId && merchantId) return 'merchantId=' + encodeURIComponent(merchantId)
   return 'poiId=' + encodeURIComponent(poiId || '')
 }
 
@@ -18,12 +20,14 @@ Page({
   data: {
     ready: false,
     poiId: '',
+    merchantId: '',
     sceneParams: {},
   },
 
   onLoad(options) {
     const poiId = (options && options.poiId) || ''
-    this.setData({ poiId, sceneParams: { poiId }, ready: true })
+    const merchantId = poiId ? '' : ((options && /^\d+$/.test(String(options.merchantId || ''))) ? String(options.merchantId) : '')
+    this.setData({ poiId, merchantId, sceneParams: merchantId ? { poiId, merchantId } : { poiId }, ready: true })
   },
 
   // 第七轮 C 第 3 项:卡片用店名与店铺封面。本页不取数,只读正文场景组件已经加载好的同一据点数据;
@@ -47,7 +51,7 @@ Page({
 
   onShareAppMessage() {
     const snap = this._shareSnapshot()
-    return { title: snap.title, path: SHARE_PATH + '?' + shareQuery(this.data.poiId), imageUrl: snap.imageUrl }
+    return { title: snap.title, path: SHARE_PATH + '?' + shareQuery(this.data.poiId, this.data.merchantId), imageUrl: snap.imageUrl }
   },
 
   // 第七轮 C 第 1 项:暂不实现 onShareTimeline。节点详情读接口 GET /api/city/nodes/{id} 需要登录
@@ -55,6 +59,6 @@ Page({
   // 业主放行该只读接口后恢复:return { title, query: shareQuery(this.data.poiId) }(路径仍是本页,历史契约不变)。
 
   onAddToFavorites() {
-    return { title: '节点详情', path: SHARE_PATH + '?' + shareQuery(this.data.poiId) }
+    return { title: '节点详情', path: SHARE_PATH + '?' + shareQuery(this.data.poiId, this.data.merchantId) }
   },
 })

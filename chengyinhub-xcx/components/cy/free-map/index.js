@@ -53,6 +53,8 @@ Component({
     mapPolyline:  { type: Array, value: [] },
     mapPolygons:  { type: Array, value: [] },
     mapCircles:   { type: Array, value: [] },
+    // 第九轮 m1 第 2 项:explore 场景的照片图钉 [{id,img,label,size,done}],id 与 mapMarkers 里同 id 的 marker 配对
+    explorePins:  { type: Array, value: [] },
     showControls: { type: Boolean, value: true },
     showPhotoCallouts: { type: Boolean, value: true },
     interactive:  { type: Boolean, value: true },
@@ -248,6 +250,12 @@ Component({
       }
       if (id === PLAYER_MARKER_ID || id === ARROW_MARKER_ID) return; // 保留 id 钉(玩家/方向箭头)不响应,防撞上真实 nodeId
       this.triggerEvent('pintap', { nodeId: id });
+    },
+    // 照片图钉是 customCallout:点在照片上派发的是 callouttap,按点 marker 同一条路走
+    onCalloutTap(e) {
+      const markerId = e && e.detail && e.detail.markerId;
+      if (markerId == null) return;
+      this.onMarkerTap({ detail: { markerId } });
     },
     onUpdated(e) {
       if (this.data.fit && this._fitKey && !this._fitRendered) { this._fitRendered = true; this._applyFit(); }

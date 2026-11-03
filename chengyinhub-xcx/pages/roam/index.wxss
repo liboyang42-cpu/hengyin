@@ -172,6 +172,15 @@ page{ background:var(--cy-color-bg-page); }
 .fogscreen-guard{ position:absolute; inset:0; z-index:5; background:var(--cy-color-play-page); pointer-events:none; }
 .fogscreen{ position:absolute; inset:0; width:100%; height:100%; z-index:3; pointer-events:none; opacity:0; }
 .fogscreen--ready{ opacity:1; }
+/* 第九轮 m1 第 6 项(m-drag):薄云层,比地图慢一拍。两团柔边径向渐变,不用 filter(省 GPU),不吃手势。
+   松手后由 JS 给一个位移,缓出漂过去;按下时略显形。深浅底图上都只是一层极淡的白。 */
+.roam-clouds{ position:absolute; inset:-120rpx; z-index:4; pointer-events:none; opacity:.55;
+  transition:transform .9s cubic-bezier(.2,.7,.2,1), opacity .4s ease-out; }
+.roam-clouds.is-on{ opacity:.85; }
+.roam-cloud{ position:absolute; width:1040rpx; height:600rpx; border-radius:50%;
+  background:radial-gradient(closest-side, rgba(230,232,240,.2), rgba(230,232,240,0)); } /* ds-ok 原型 .mz-drift 云色,装饰层无 token */
+.roam-cloud--a{ left:-120rpx; top:240rpx; }
+.roam-cloud--b{ left:300rpx; top:1100rpx; opacity:.7; }
 .vignette{ position:absolute; inset:0; pointer-events:none;
   background:radial-gradient(120% 80% at 50% 42%,rgba(0,0,0,0) 52%,rgba(0,0,0,.3) 100%); /* ds-ok 四角压暗晕影:token 层无渐变表达,纯装饰不承载文字 */
   z-index:4; } /* ds-ok Figma 实测(用户裁决字面值) */
@@ -223,6 +232,9 @@ page{ background:var(--cy-color-bg-page); }
 /* 读数芯片:靠左成行,不撑满,右侧留白给地图 */
 .roam-hud-chips{ align-self:flex-start; margin:0 var(--cy-space-3-5); }
 .roam-topstack > view{ pointer-events:auto; }
+/* 第九轮 m1 第 5 项(m-zoom):拉远时的附近点数胶囊,居中压在搜索框下 */
+.roam-topstack > .pin-count{ align-self:center; pointer-events:none; padding:12rpx 28rpx; border-radius:var(--cy-radius-pill);
+  background:var(--cy-color-play-surface); color:var(--cy-color-text-primary); font-size:var(--cy-type-label); font-weight:700; }
 
 /* 底图加载异常提示条(看门狗超时才出现,点击重试) */
 /* ★ 浮动提示条逐条照原型 .bar 抄:底 #101418 · 1px 描边 · 满圆角 ·
