@@ -1,0 +1,43 @@
+<view wx:if="{{show}}" class="guide" catchtouchmove="blockTouch">
+  <view class="guide__header">
+    <text class="guide__title">城市漫游清单</text>
+    <view class="guide__action" bindtap="close" aria-role="button" aria-label="关闭城市漫游清单" hover-class="cy-pressed" hover-stay-time="80">关闭</view>
+  </view>
+  <block wx:if="{{!selected}}">
+    <cy-dropdown mode="selector" range="{{cities}}" range-key="name" value="{{cityIndex}}" bind:change="onCityChange" aria-label="选择城市，当前{{cityName}}">
+      <view class="guide__city"><text class="guide__city-name">{{cityName}}</text><text class="guide__city-meta">切换城市 · {{places.length}} 处</text><cy-icon name="chevron-right" size="32" /></view>
+    </cy-dropdown>
+    <scroll-view class="guide__categories" scroll-x enhanced show-scrollbar="{{false}}">
+      <view wx:for="{{categories}}" wx:key="id" class="guide__category {{activeCategory === item.id ? 'is-on' : ''}}" data-id="{{item.id}}" bindtap="onCategoryTap" aria-role="button" aria-label="{{item.name}}" aria-pressed="{{activeCategory === item.id}}" hover-class="cy-pressed" hover-stay-time="80">{{item.name}}</view>
+    </scroll-view>
+    <scroll-view class="guide__body" scroll-y enhanced show-scrollbar="{{false}}">
+      <view class="guide__row" wx:for="{{places}}" wx:key="id" data-id="{{item.id}}" bindtap="onPlaceTap" aria-role="button" aria-label="查看{{item.name}}，{{item.categoryLabel}}" hover-class="cy-pressed" hover-stay-time="80">
+        <text class="guide__label">{{item.categoryLabel}}</text>
+        <text class="guide__name">{{item.name}}</text>
+        <text class="guide__reason">{{item.reason}}</text>
+        <text class="guide__address">{{item.address}}</text>
+      </view>
+      <view wx:if="{{!places.length}}" class="guide__empty">这个分类还在补充中，试试其他分类。</view>
+      <view class="guide__note">{{reviewNote}}</view>
+    </scroll-view>
+  </block>
+  <block wx:else>
+    <view class="guide__action guide__back" bindtap="backToList" aria-role="button" aria-label="返回{{cityName}}地点清单" hover-class="cy-pressed" hover-stay-time="80">返回{{cityName}}清单</view>
+    <scroll-view class="guide__body" scroll-y enhanced show-scrollbar="{{false}}">
+      <view class="guide__detail">
+        <text class="guide__label">{{selected.categoryLabel}}</text>
+        <text class="guide__name">{{selected.name}}</text>
+        <text class="guide__reason">{{selected.reason}}</text>
+        <view class="guide__tags"><text class="guide__tag" wx:for="{{selected.tags}}" wx:key="*this">{{item}}</text></view>
+        <text class="guide__section">到访信息</text>
+        <text class="guide__address">{{selected.address}}</text>
+        <text class="guide__reason">{{selected.visitNote}}</text>
+        <view class="guide__action guide__primary" bindtap="copyAddress" aria-role="button" aria-label="复制{{selected.name}}地址" hover-class="cy-pressed" hover-stay-time="80">复制地址，在常用地图中查找</view>
+        <text class="guide__section">资料来源</text>
+        <text class="guide__address">{{selected.sourceCount}} 个来源 · 资料核对 {{selected.reviewedOn}}</text>
+        <text class="guide__note">{{reviewNote}}</text>
+        <view class="guide__action" bindtap="copySources" aria-role="button" aria-label="复制{{selected.name}}的资料来源链接" hover-class="cy-pressed" hover-stay-time="80">复制来源链接</view>
+      </view>
+    </scroll-view>
+  </block>
+</view>

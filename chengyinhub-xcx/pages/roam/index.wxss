@@ -137,6 +137,7 @@ page{ background:var(--cy-color-bg-page); }
 .intro-head{ flex:none; display:flex; align-items:center; padding-left:35rpx; }
 .intro-ava{ display:block; width:77rpx; height:77rpx; border-radius:var(--cy-radius-pill); background:var(--cy-color-bg-elevated); }
 .intro-ava-hit{ position:relative; width:77rpx; height:77rpx; flex:none; }
+.intro-guide-hit{ margin-left:auto; margin-right:23rpx; width:88rpx; height:88rpx; flex:none; display:flex; align-items:center; justify-content:center; color:var(--cy-color-text-primary); }
 .intro-ava-hit::after{ content:''; position:absolute; left:50%; top:50%; width:88rpx; height:88rpx; transform:translate(-50%, -50%); }
 .intro-top{ position:relative; z-index:3; flex:none; margin-top:39rpx; height:108rpx; padding:0 46rpx; box-sizing:border-box; }
 .intro-title{ font-size:54rpx; font-weight:700; line-height:65rpx; color:var(--cy-color-text-primary); letter-spacing:-2rpx; } /* ds-ok 漫游首页定稿值(用户裁决不改) */

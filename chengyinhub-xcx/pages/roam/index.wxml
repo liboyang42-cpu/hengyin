@@ -15,6 +15,7 @@
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
+  <cy-roam-city-guide show="{{cityGuideOpen}}" bind:close="closeCityGuide" />
 
 <!-- 地图入口弹层只服务开始前浏览态；开始后的 psheet 与 HUD 保持原样。 -->
 <!-- G-2:手写 psheet 浮层开着时,物理返回 / 侧滑先关最上层,不退出本页 -->
@@ -85,6 +86,7 @@
 <view class="intro" wx:if="{{screen=='entry-map'||screen=='intro'}}">
   <view class="intro-head" style="padding-top:{{chrome.actionTop}}px;">
     <view class="intro-ava-hit" bindtap="goProfile" aria-role="button" aria-label="打开我的" hover-class="cy-pressed" hover-stay-time="80"><image class="intro-ava" src="{{avatar || '/images/d_profile.png'}}" mode="aspectFill" /></view>
+    <view class="intro-guide-hit" bindtap="openCityGuide" aria-role="button" aria-label="按城市浏览街道、推荐店铺和公园" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="discover-shop" size="40" /></view>
   </view>
   <!-- 2026-10-27 owner P-25:头部结构与间距还原到 7f4bcee9(票根卡)之前,只保留票根卡本身 -->
   <view class="intro-top"><view class="intro-title">漫游</view></view>
@@ -377,7 +379,9 @@
       <view class="pc-close" bindtap="closePaceCard" aria-role="button" aria-label="关闭地点提示" hover-class="cy-pressed" hover-stay-time="80"><view class="pc-close__glyph"><cy-icon name="close-sm" size="32" /></view></view>
     </view>
     <text class="pc-demo" wx:if="{{paceCard.demo}}">演示点 · 仅浏览（非真实地点）</text>
+    <text class="pc-body" wx:if="{{paceCard.address}}">{{paceCard.address}}</text>
     <text class="pc-body" wx:if="{{paceCard.body}}">{{paceCard.body}}</text>
+    <cy-roam-place-note wx:if="{{paceCard.tags}}" tags="{{paceCard.tags}}" />
     <text class="pc-hint" wx:if="{{paceCard.canDiscover && !paceCard.meaning && !paceCard.checkinErr}}">靠近后可确认地点</text>
     <view class="pc-action" wx:if="{{paceCard.canDiscover && !paceCard.meaning && !paceCard.checkinErr}}" bindtap="discoverRoamPoi" data-id="{{paceCard.poiId}}" aria-role="button" aria-label="确认到达漫游点" hover-class="cy-pressed" hover-stay-time="80">确认到点</view>
     <!-- 只在服务器确认到点且后端返回独立审核内容时出现；无来源不留空壳。 -->

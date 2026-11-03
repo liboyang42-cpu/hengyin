@@ -32,12 +32,16 @@
     "cy-map-address-search": "/components/cy/map-address-search/index",
     "cy-proto-cam": "/components/cy/proto-cam/index",
     "cy-back-guard": "/components/cy/back-guard/index",
-    "cy-share-card": "/components/cy/share-card/index"
+    "cy-share-card": "/components/cy/share-card/index",
+    "cy-roam-city-guide": "/subpackageRoam/components/roam-city-guide/index",
+    "cy-roam-place-note": "/subpackageRoam/components/roam-place-note/index"
   },
   "componentPlaceholder": {
     "cy-scene-play-activity-detail": "view",
     "cy-scene-qr-coupon": "view",
     "cy-scene-game-coupon-wallet": "view",
-    "cy-scene-roam-poi-detail": "view"
+    "cy-scene-roam-poi-detail": "view",
+    "cy-roam-city-guide": "view",
+    "cy-roam-place-note": "view"
   }
 }

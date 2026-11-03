@@ -1,0 +1,2 @@
+/* 与漫游地点卡 .pc-body 同一套 token,不另起样式 */
+.note { display: block; font-size: var(--cy-type-body); line-height: var(--cy-leading-normal); color: var(--cy-color-text-secondary); overflow-wrap: break-word; }

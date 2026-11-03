@@ -70,6 +70,7 @@ const { normName, groupMerchantsByName, stampProgress, doneShopCount, selectNear
 const { npcIconKey, pixelDrawSize, collectNpcIconNeeds, markerAvatar } = require('../../utils/roam-npc-marker.js');
 // CU-M-54:服务端 POI 行 → 本地点位态(已打卡待核销是独立一档,不能读成 passed)
 const { roamPoiLocalState } = require('../../utils/roam-poi-state.js');
+const { presentationForPoi } = require('../../utils/roam-poi-presentation.js');
 const { createRoamSyncStatus, OFFLINE_TEXT: ROAM_SYNC_OFFLINE_TEXT } = require('../../utils/roam-sync-status.js');
 const roamPoiFilter = require('../../utils/roam-poi-filter.js');
 const { MAP_AVATAR_COLORS } = require('../../utils/play-visual-tokens.js');
@@ -302,6 +303,7 @@ function buildNpcPorts(page) {
 Page({
   data: {
     privacyGateShow: false,
+    cityGuideOpen: false,
     // BL-01 漫游点位筛选(范围 + 只看未到过),值在 utils/roam-poi-filter.js。
     poiFilter: { radiusM: 3000, unvisitedOnly: false }, poiFilterTabs: roamPoiFilter.radiusTabs(),
     screen: 'entry-map', entryMarkers: [], entryCards: [], entryFarCards: [], entryActivity: null, entryTeam: null, entrySheet: '', entrySheetView: 'main', entrySheetIn: false, entryLayers: { activities: true, teams: true, posts: true }, entryLoadError: false, entryReadAccess: '', entryLoading: false,
@@ -1471,21 +1473,19 @@ Page({
         }
         return;
       }
-      const catMap = {
-        1: { icon: 'poi-landmark', catLabel: '地标', color: BRAND, cat: 'landmark' },
-        2: { icon: 'poi-shop', catLabel: '商家 · 探店', color: '#D9D9D9', cat: 'merchant' },
-      };
       const roamPois = list.map((n) => {
-        const m = catMap[n.type] || catMap[1];
+        // 展示分类只认 roam:* 保留标签;业务身份仍按 type(1 平台地点 / 2 商家据点),不按名字猜。
+        const m = presentationForPoi(n);
+        const color = m.cat === 'merchant' ? '#D9D9D9' : (m.cat === 'park' ? '#A6A6A6' : BRAND);
         const st = roamPoiLocalState(n);
         const merchantAvatar = n.merchantAvatar || n.avatarUrl || n.avatar || '';
         const npcAvatar = n.npcAvatar || '';
         return {
           id: ROAM_POI_MK_BASE + Number(n.id), _roamId: n.id, cat: m.cat, isCityNode: n.type === 2 || !!n.templateId, name: n.name,
-          lat: parseFloat(n.lat), lng: parseFloat(n.lng),
+          lat: parseFloat(n.lat), lng: parseFloat(n.lng), address: n.address || '', tags: n.tags || '',
           // 非商户地点的 description 不是审核意义来源，绝不直出；商户说明仍走既有确定性探店信息。
           desc: n.type === 2 ? (n.description || '') : '', points: n.xp || 20,
-          icon: m.icon, catLabel: m.catLabel, color: m.color,
+          icon: m.icon, catLabel: m.catLabel, color,
           imgUrl: MOCK_IMG, state: st, first: !n.found,
           metaLine: m.catLabel + ' · 距你很近', radiusM: n.radiusM || 80,
           nodeLevel: Number(n.nodeLevel || 1),
@@ -4218,6 +4218,9 @@ Page({
       show: true,
       title: poi.name || '地点',
       body: poi.desc || '',
+      address: poi.address || '',
+      // 推荐理由与资料来源由分包里的目录按种子标签查,主包只透传 tags
+      tags: poi.tags || '',
       demo: !!poi.demo,
       poiId: poi.id,
       // 只有服务端 roam 非商户 POI 需要这条到点校验；商家仍走既有确定性探店链路。
@@ -5849,6 +5852,8 @@ Page({
   },
   openEntryRoamSheet() { this._showEntrySheet('roam'); },
   openEntryLayers() { this._showEntrySheet('layers'); },
+  openCityGuide() { this.setData({ cityGuideOpen: true }); },
+  closeCityGuide() { this.setData({ cityGuideOpen: false }); },
   closeEntrySheet() { this.setData({ entrySheet: '', entryActivity: null, entryTeam: null, entrySheetView: 'main', entrySheetIn: false }); },
   backEntrySheetView() { this.setData({ entrySheetView: 'main', entryTeam: null }); },
   toggleEntryLayer(e) {
