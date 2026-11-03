@@ -88,4 +88,118 @@ Round 3 observations, not changed:
 
 Not verified on a real phone: WeChat's system location prompt after the gate, safe-area insets for P-33, and the keyboard closing when the name field loses focus.
 
-STATUS: COMPLETE
+## Round 4 (2026-11-03, owner review of round 3)
+
+`origin/master` was already merged into this branch, so there was nothing new to merge. Shots come from the walkthrough rig (`claude/cloud-walk-20261101-rig` with the club lane's two runtime patches, `up.sh` pinned to this branch), **not from a phone**. One backend (this branch) serves both bundles: "before" is the round-3 tip `497875d8`, "after" is this branch.
+
+| Item | Status | What changed | Files | Proof |
+|---|---|---|---|---|
+| P-34 (blue box, sold theme) | fixed | The blue 「有人带定价需填写成团人数…」 box under 重新计算地板 is gone. The problem now shows under 成团人数 as `cy-inline-error kind="error"` with the shorter text 「请填写大于 0 的成团人数」, and the 成团人数 label has the red `*`. Tapping the grey confirm button no longer repeats it in a box at the bottom: the red line under the field is the answer. On a sold theme (`priced`) the whole 带队成本 card, including 重新计算地板, is hidden. The 终价确认失败 box at the bottom is now red (`kind="error"`). | `pages/topic/pricing/index.wxml/.wxss/.js` | `tests/unit/p34-r4-pricing-tickets-and-team-size.test.js` (fails on old code). `pricing-page-gate-and-copy-contract.test.js` was updated on purpose: the grey-button answer is now the field error, not `submitError`. Shots `P-34-r4-*` (theme in pricing, team size empty) and `P-34b-r4-*` (sold theme: before shows 带队成本, after hides it). |
+| Several ticket prices | fixed | **Preview** returns `tickets` (`ticketId`, `name`, `price`) for the author's own tickets. This applies to city themes, 有人带 only, while no `sub_type=guided` ticket exists: the same condition under which confirm adopts the author's tickets. **The page:** with two or more tickets, the slider card becomes 「你的终价」, with one price field per ticket. Each field is prefilled with the author's price and labelled with the ticket name and a red `*`. A price below the floor, or an empty field, shows red under that ticket and greys out the button. **Confirm** sends `ticketPrices: [{ticketId, price}]`. **Server checks:** the set must exactly match that theme's authored tickets, otherwise 「票种已变化，请刷新后重新确认终价」. That rejects another theme's ticket and a missing ticket. The floor and the 必亏闸 (guaranteed-loss check) are checked against the lowest price, so every ticket clears them. Each ticket gets its own price, and inventory is not touched. One-ticket themes, and requests without `ticketPrices`, behave as before. The owner check (`requireOwner`) and the lifecycle and supply gates are unchanged. | `PricingResult`, `IPricingService`, `PricingServiceImpl`, `ApiPricingController`, pricing page | `PricingPerTicketConfirmTest` (7), `ApiPricingTicketPricesParseTest` (3), plus the page test above. **HTTP** (`proof/p34-r4-two-tickets.txt`, `tools/p01_city_sale.py self` with `P34_TWO_TICKETS=1 P34_TICKET_PRICES=79,109`): authored 领队场 ¥69 / 20 and 夜场 ¥99 / 12. A confirm with a foreign ticket id is refused. The real confirm then reads back DB `oms_ticket` 领队场 **79.00** (20/20) and 夜场 **109.00** (12/12), with inventory unchanged. After sale approval, the club session's tickets are ¥79 and ¥109. Shots `P-34c-r4-*`, with 带队成本 280 / 4 人 → floor ¥82.36: before = one slider at ¥99 (which would have set both tickets to 99); after = two fields, 领队场 ¥69 red 「不能低于最低价 ¥82.36」, 夜场 ¥99 OK. |
+| Sweep | done in part (see the list) | All 77 blue boxes that report an input problem are now red (`kind="error"`), each under its field. Pop-ups that repeated an error already shown under the field were removed. Three toast-only forms now show their errors under each field. The remaining pop-ups are listed below, each marked left with the reason. | see the list | `tests/unit/r4-input-error-under-field-sweep.test.js` (5). Three existing tests were updated on purpose: `date-range-sheet-overrange` used to require blue, `merchant-apply-state-contract` the identity failure kind, `merchant-decor-cu-g5a` the perks validity toast. Shots `S-temp-r4-*` (玩法模板: before blue, after red) and `S-addr-r4-*` (参与人信息: before toast 「请填写姓名」, after red under 姓名 and 手机号). |
+
+### Sweep findings (`chengyinhub-xcx/pages`, input problems only)
+
+Not included: load and network failures, permission and state notices, success messages, and yes/no confirm dialogs. Messages mirrored from the backend keep their text unchanged; where they sit in a box that was changed to red, only the box colour changed.
+
+**Replaced: blue box → red `cy-inline-error kind="error"` under the field**
+- `publish/activity/index.wxml`: 38, 46, 66, 84, 95, 114, 130, 168, 177, 186 (title, place, dates, type, description, cover, template, ticket name / price / stock).
+- `topic/merchantapply/index.wxml`: 90, 103, 127, 143, 154.
+- `publish/temp/index.wxml`: 84, 105, 136, 150, 180, 228, 233, 418, 687, 692, 851, 856, 881, 886, 970, 1038, 1099, 1301, 1306, 1605, 1642, 1650, 1828, 1850, 1853, 1867, 1870, 1880, 1884, 1888, 1905, 1914, 1921, 1930, 1933 (all page and sheet field errors). The `errors.finish` box at 180 is now the same red as at 210.
+- `publish/fabu/index.wxml`: 1692, 1743, 1760, 1771, 1799.
+- `publish/fabu/topic-detail-sheet.wxml`: 135, 218.
+- `publish/fabu/survival-editor.wxml`: 17.
+- `publish/fabu/runtime-structure-editor.wxml`: 20, 39, 59.
+- `publish/fabu/runtime-editor.wxml`: 35.
+- `publish/components/topic-state-keys/index.wxml`: 50.
+- `topic/components/cy/date-range-sheet/index.wxml`: 23.
+- `activity/official-organizer/index.wxml`: 72, 84.
+- `coop/invite-detail/index.wxml`: 117.
+- `merchant/reviews/index.wxml`: 130, 245. At 232 it is red unless the reply is still pending (「回复待确认」 is not an error, so it stays blue).
+- `merchant/customer/index.wxml`: 32.
+- `merchant/customer/detail/index.wxml`: 114, 125.
+- `merchant/aftercare/detail/index.wxml`: 186.
+- `club/create/index.js`: 351. A missing type, name or city now uses `kind:'error'`; the name field already used red.
+- `merchant/apply/index.js`: 540. A failed identity check is red; network failures keep the network style.
+
+**Replaced: pop-up removed or moved under the field**
+- `publish/activity/index.js`: 519 `cyToast('请完善表单信息')` removed. The field errors are already shown.
+- `publish/temp/index.js`: 3280 `toast(errors[first])` removed. It still scrolls to the first field, which already shows the error.
+- `topic/merchantapply/index.js`: 415–418 (the four toasts from tapping the grey button) and 622 `toast(errors[first])` replaced. Tapping the grey button now runs `validateForm`, which writes each problem under its field.
+- `coop/invite-detail/index.js`: 325 and 336 toasts removed. `draftError` already shows under the reason box.
+- `addressinfo/addressinfo.js`: 159, 160, 248, 253, 259 replaced by `fieldErrors` under 姓名 and 手机号.
+- `club/notify/index.js`: 185, 189 replaced by `titleError` and `contentError` under each field.
+- `merchant/decor/perks/index.js`: 253–258 replaced by `fieldErrors` under name, retail price, cost, quota and validity.
+
+**Left: these need per-field error state built on each page.** Each needs its own wiring, tests and shots; that work is not done in this round. All are pop-ups.
+
+*Activity, club and coop pages:*
+- `activity/baoming/baoming.js`: 560, 1542, 1548, 1554, 1560, 1567 (participant picker, which lives in a sheet or the addressinfo page). Also `activity/official-detail/index.js`: 577.
+- `club/detail/index.js`: 1554, 1944, 3277.
+- `club/event-ops/index.js`: 796, 803, 808, 812, 817, 825, 831, 838.
+- `club/governance/index.js`: 424, 538.
+- `club/roles/index.js`: 386, 387.
+- `club/topic-detail/director.js`: 614, 616, 1038, 1117, 1206, 1249 (all inside sheets).
+- `club/topic-detail/index.js`: 482.
+- `coop/invite/index.js`: 617, 619, 710, 718, 723, 784.
+- `gerenziliao/gerenziliao.js`: 701.
+
+*Merchant pages:*
+- `merchant/apply/index.js`: 365–371, 473, 481.
+- `merchant/citynode/create/index.js`: 377–379.
+- `merchant/decor/index.js`: 860, 931–933, 1047, 1053, 1169, 1173.
+- `merchant/decor/ai-npc/index.js`: 382, 386, 413, 426, 725.
+- `merchant/decor/coop-setting/index.js`: 82, 193, 196.
+- `merchant/game-node/index.js`: 421, 439, 500, 652.
+
+*Play, publish and search pages:*
+- `play/index.js`: 2974, 5929. Also `play/utils/playkit-r5-segments.js`: 48, 79, `play/circle/index.js`: 404, 409, 421, and `play/components/playkit-dailysign/index.js`: 275.
+- `publish/activity/index.js`: 481, 620 (identity check), 1076, 1141, 1148, 1435 (sheets).
+- `publish/components/reward-selector/index.js`: 258.
+- `publish/fabu/index.js`: 1248, 1347, 1712, 2070, 2111, 2479, 2500, 3327, 4104, 4108, 4113, 4121, 4139, 4168, 4664, 4668, 5601, 5610, 5672, 6266, 6268, 6454, 6462, 6945, 7008, 6958, 7011, 7318, 7509, 7571, 7608, 8009, 8524.
+- `publish/fabu/theme-runtime.js`: 238, 261, 318, 390, 403, 412, 452, 601, 625, 631, 653. Also `publish/fabu/theme-d20-page.js`: 111, 118, 119.
+- `publish/temp/index.js`: 1111, 1130, 2550, 2762.
+- `search/search2/index.js`: 118, 322, 347, 452, 456. Also `search/searchmap/index.js`: 824, 849, 954, 958.
+
+*Square, template and topic pages:*
+- `square/detail/index.js`: 235, 312. Also `square/components/cy/post-compose/index.js`: 586.
+- `templatedetail/templatedetail.js`: 492.
+- `topic/merchantapply/index.js`: 587.
+- `topic/merchantinfo/merchantinfo.js`: 1179, 1183, 1309, 1313, 1324.
+- `topic/components/cy/chapter-node-form/index.js`: 270, 378, 382, 386, 390, 409, 413, 419.
+- `topic/index/index.js`: 1171, 1176.
+
+**Left: a different kind of notice, or not a pop-up about an input field**
+- `topic/components/cy/node-npc-form/index.js` (313, 315, 317): a result sheet titled 「没有成功」 inside a sheet. It needs a decision on the sheet pattern.
+- `publish/fabu/theme-runtime-structure.js` (337): an alert asking the author to pick the chapter again after a structure change. It is a notice about the structure, not a single field.
+- `club/topic-detail/plan-fallback.js` (12/44): a warning-coloured caption inside a sheet. It is not blue or grey; it is left alone.
+- Count-limit and "keep at least one" guards, such as 「至少保留一个票单」 (`publish/activity`: 354, and others listed in the audit). They block an action and do not judge what was typed.
+- Conflict and capability reasons, such as `publish/temp` 2553, 2727, 2761, 2773 and `publish/fabu` 8502, 8722, 9041, 6623. They explain why something can't be used.
+
+**Left: validated inside the editable modal** (the modal's `validate` hook shows the error inside the modal): `club/governance` 438/548/614, `club/event-ops` 987–993, `club/join-requests` 168, `coop/list` 1055, `merchant/customer` 717/748.
+
+**Left: modal closes, then a pop-up** (needs the modal's `validate` hook added): `coop/invite-detail` 476; `coop/list` 609 (its blue `actionError` box at wxml:22 is shared with server failures, so it was left); `club/topic-detail/director.js` 639, 670; `topic/merchantinfo/merchantinfo.js` 2078, 2125; `play/index.js` 5527.
+
+**Left: backend-mirrored, wording unchanged.**
+- These boxes stay blue because they also carry server and state failures: `club/apply` wxml:160, `gerenziliao` wxml:76, `merchant/apply` 587/599, `activity/baoming` 1142, `publish/simple` 42 (AI planning failure).
+- `publish/temp` 3681 is a toast relaying `res.msg`, also left.
+
+### Round 4 checks
+
+- **Mini-program:** full `node --test tests/unit/*.test.js` run, 15605 tests. The four failures were all caused by this round and are fixed: three tests now pin the new red / no-toast behaviour, and the action-ledger count was rebuilt. After the fixes the affected files pass: 257 files / 3180 tests, plus the action ledger 46/46 and the new sweep test.
+- **Action ledger:** rebuilt. The pricing ticket input adds one control, 5600 → 5601, and the event contract goes 2726 → 2727 (counts updated with a note).
+- **Gates:** `node tests/lint/ui-integrity.js` → `UI-GATE-0:PASS`, with no baseline entries added. The `publish/temp` edit keeps its line count, so baselined line numbers do not move. `scripts/ui-validity-gates.js` U1, U3–U6 pass.
+- **Java** (`chengyinhub-admin`): `PricingPerTicketConfirmTest`, `ApiPricingTicketPricesParseTest`, `PricingDepositDueTest`, `FreeExplorePriceLockAcceptanceTest`, `ApiPricingControllerPaymentNoteTest`, `PricingServiceImplTest`: 46 run, 0 failures.
+
+### Needs owner (round 4)
+
+- **The remaining pop-ups in the sweep list.** About 160 input pop-ups would each need per-field error state, mostly inside editor sheets in `publish/fabu`, `theme-runtime`, the club director and merchant decor. My recommendation is to convert them page by page in follow-up work, starting with the participant flow in `activity/baoming` and `merchant/apply`, which players and new merchants see first.
+- **Several ticket prices: the 「无人带」 tab is unchanged** (a single self-play price). Recommended default: keep it, since a theme has only one self-play price.
+
+### Not verified on a real phone
+
+- The keyboard and the field scrolling into view when a red line appears.
+- `<input type="digit">` on iOS and Android for the per-ticket fields.
+- Safe-area insets.
+
+STATUS: PARTIAL - P-34 and several ticket prices are fixed and proven over HTTP. In the sweep, every blue input-error box and every repeated pop-up is fixed. About 160 input pop-ups that need per-field error state built page by page are listed with file:line and left for follow-up (see "Needs owner (round 4)").
