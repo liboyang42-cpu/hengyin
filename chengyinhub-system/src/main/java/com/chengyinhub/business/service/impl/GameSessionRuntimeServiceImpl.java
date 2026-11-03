@@ -8,6 +8,8 @@ import com.chengyinhub.common.exception.ServiceException;
 import com.chengyinhub.business.access.merchant.MerchantPermission;
 import com.chengyinhub.business.access.merchant.MerchantPermissionPolicy;
 import com.chengyinhub.business.domain.CmsActivity;
+import com.chengyinhub.business.domain.CmsTopicChapter;
+import com.chengyinhub.business.domain.CmsTopicNode;
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.GameBroadcast;
 import com.chengyinhub.business.domain.GameBroadcastDelivery;
@@ -83,6 +85,8 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -158,6 +162,10 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
     private IPlayerNodeProgressService playerNodeProgressService;
     @Autowired
     private IImService imService;
+    @Autowired(required = false)
+    private com.chengyinhub.business.mapper.CmsTopicChapterMapper routeChapterMapper;
+    @Autowired(required = false)
+    private com.chengyinhub.business.mapper.CmsTopicNodeMapper routeNodeMapper;
 
     // Shared route reads call this runtime too; resolve the reverse edge after both services initialize.
     @Autowired
@@ -2089,6 +2097,98 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
     }
 
     @Override
+    public String routeChapterGateError(Long activityId, Long nodeId) {
+        if (activityId == null || activityId <= 0) return null;
+        GameSession session = runtimeMapper.selectSessionByActivity(activityId);
+        if (!isRouteSession(session) || !GameSession.RUNNING.equals(session.getStatus())) return null;
+        return routeChapterGate(session, nodeId);
+    }
+
+    /**
+     * C-04:带队路线局(ROUTE)的章节放行。路线局的冻结配置没有顶层 chapters,所以 chapterOptions 恒空、
+     * UNLOCK_CHAPTER 也从未给出;旧带队入口又因「导演运行时拥有本场」拒绝。章节权威统一落在
+     * game_session.current_chapter_id(与剧情局同一列),章节序取主题里拥有本场站点的章节、按 sort_id。
+     * current_chapter_id 为空(开局前或存量场次)时不设闸,保持原行为。
+     */
+    private String routeChapterGate(GameSession session, Long nodeId) {
+        if (session.getCurrentChapterId() == null || nodeId == null || routeNodeMapper == null) return null;
+        CmsTopicNode node = routeNodeMapper.selectCmsTopicNodeById(nodeId);
+        if (node == null || node.getChapterId() == null || node.getChapterId().equals(session.getCurrentChapterId())) return null;
+        List<CmsTopicChapter> chapters = routeChapters(session);
+        int current = routeChapterIndex(chapters, session.getCurrentChapterId());
+        int mine = routeChapterIndex(chapters, node.getChapterId());
+        return current >= 0 && mine > current ? "本章还没开启,等队长放行" : null;
+    }
+
+    private List<CmsTopicChapter> routeChapters(GameSession session) {
+        List<CmsTopicChapter> result = new ArrayList<>();
+        if (routeChapterMapper == null || routeNodeMapper == null || session == null || session.getTopicId() == null) return result;
+        CmsTopicNode nodeProbe = new CmsTopicNode();
+        nodeProbe.setTopicId(session.getTopicId());
+        Map<Long, Long> chapterByNode = new HashMap<>();
+        for (CmsTopicNode node : safe(routeNodeMapper.selectCmsTopicNodeList(nodeProbe))) {
+            if (node != null && node.getId() != null && node.getChapterId() != null) chapterByNode.put(node.getId(), node.getChapterId());
+        }
+        Set<Long> withStations = new HashSet<>();
+        for (GameStationRun station : safe(runtimeMapper.selectStations(session.getId()))) {
+            Long chapterId = chapterByNode.get(station.getNodeId());
+            if (chapterId != null) withStations.add(chapterId);
+        }
+        CmsTopicChapter probe = new CmsTopicChapter();
+        probe.setTopicId(session.getTopicId());
+        for (CmsTopicChapter chapter : safe(routeChapterMapper.selectCmsTopicChapterList(probe))) {
+            if (chapter != null && chapter.getId() != null && withStations.contains(chapter.getId())) result.add(chapter);
+        }
+        result.sort(Comparator.comparing(c -> c.getSortId() == null ? 0L : c.getSortId()));
+        return result;
+    }
+
+    private int routeChapterIndex(List<CmsTopicChapter> chapters, Long chapterId) {
+        if (chapterId == null) return -1;
+        for (int i = 0; i < chapters.size(); i++) if (chapterId.equals(chapters.get(i).getId())) return i;
+        return -1;
+    }
+
+    private CmsTopicChapter routeNextChapter(GameSession session, List<CmsTopicChapter> chapters) {
+        if (chapters.isEmpty()) return null;
+        if (session.getCurrentChapterId() == null) return chapters.get(0);
+        int index = routeChapterIndex(chapters, session.getCurrentChapterId());
+        return index >= 0 && index + 1 < chapters.size() ? chapters.get(index + 1) : null;
+    }
+
+    /** 已完成当前章(及之前各章)全部站点、正在等放行的队伍数。 */
+    private int routeWaitingTeams(GameSession session, List<CmsTopicChapter> chapters) {
+        List<Long> teams = safe(runtimeMapper.selectActiveTeamIds(session.getActivityId()));
+        int current = routeChapterIndex(chapters, session.getCurrentChapterId());
+        if (current < 0) return session.getCurrentChapterId() == null ? teams.size() : 0;
+        Set<Long> released = new HashSet<>();
+        for (int i = 0; i <= current; i++) released.add(chapters.get(i).getId());
+        CmsTopicNode nodeProbe = new CmsTopicNode();
+        nodeProbe.setTopicId(session.getTopicId());
+        Map<Long, Long> chapterByNode = new HashMap<>();
+        for (CmsTopicNode node : safe(routeNodeMapper.selectCmsTopicNodeList(nodeProbe))) {
+            if (node != null && node.getId() != null && node.getChapterId() != null) chapterByNode.put(node.getId(), node.getChapterId());
+        }
+        Set<Long> required = new HashSet<>();
+        for (GameStationRun station : safe(runtimeMapper.selectStations(session.getId()))) {
+            if (released.contains(chapterByNode.get(station.getNodeId()))) required.add(station.getNodeId());
+        }
+        if (required.isEmpty()) return 0;
+        Map<Long, Set<Long>> doneByTeam = new HashMap<>();
+        for (Map<String, Object> row : safe(runtimeMapper.selectRouteTeamCompletedNodes(session.getId()))) {
+            Long teamId = positiveLong(row.get("teamId"));
+            Long nodeId = positiveLong(row.get("nodeId"));
+            if (teamId != null && nodeId != null) doneByTeam.computeIfAbsent(teamId, k -> new HashSet<>()).add(nodeId);
+        }
+        int waiting = 0;
+        for (Long teamId : teams) {
+            Set<Long> done = doneByTeam.get(teamId);
+            if (done != null && done.containsAll(required)) waiting++;
+        }
+        return waiting;
+    }
+
+    @Override
     public boolean isRouteLeaderboardHidden(Long activityId) {
         if (activityId == null || activityId <= 0) return false;
         GameSession session = runtimeMapper.selectSessionByActivity(activityId);
@@ -2106,6 +2206,8 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
             throw new IllegalStateException("本场带队尚未开局或已结束");
         }
         if (GameplaySurvivalEngine.challengeNode(sessionConfig(session).path("themeConfig"), nodeId)) return;
+        String chapterGate = routeChapterGate(session, nodeId);
+        if (chapterGate != null) throw new IllegalStateException(chapterGate);
         GameStationRun station = runtimeMapper.selectStation(session.getId(), nodeId);
         if (station == null || !GameStationRun.ACTIVE.equals(station.getStatus())) {
             throw new IllegalStateException("本站尚未开放或已暂停，请联系带队主理人");
@@ -2153,7 +2255,8 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         GameSession session = runtimeMapper.selectSessionByActivity(activityId);
         if (session == null) {
             if ("CLUB".equals(actor.getPerspective())
-                    && clubMemberService.isTopicOwner(activity.getTopicId(), activity.getClubId(), actor.getMemberId())) {
+                    && (clubMemberService.isTopicOwner(activity.getTopicId(), activity.getClubId(), actor.getMemberId())
+                        || clubMemberService.isSessionDirector(activity.getTopicId(), activity.getClubId(), actor.getMemberId()))) {
                 GameSessionView notPrepared = baseView(null, activityId, "CLUB", "NOT_PREPARED", 0, null);
                 notPrepared.setAvailableActions(Collections.singletonList("PREPARE"));
                 return notPrepared;
@@ -2432,7 +2535,13 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         if (activated != stations.size()) {
             throw error("GAME_STATE_CONFLICT", "站点状态已变化，未能完整启动，请刷新后重试");
         }
-        bumpSession(session, GameSession.RUNNING, session.getCurrentChapterId(), actor.getMemberId(), now);
+        Long startChapterId = session.getCurrentChapterId();
+        if (startChapterId == null && isRouteSession(session)) {
+            // C-04:多章路线局开局只开第一章,后续章节由带队人在工作台放行;单章主题不设闸。
+            List<CmsTopicChapter> chapters = routeChapters(session);
+            if (chapters.size() > 1) startChapterId = chapters.get(0).getId();
+        }
+        bumpSession(session, GameSession.RUNNING, startChapterId, actor.getMemberId(), now);
         return result(session, singleton("startedAt", formatDate(now)));
     }
 
@@ -3034,8 +3143,20 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
     private ActionResult unlockChapter(GameActorContext actor, GameSession session, GameSessionCommand command) {
         requireSessionStatus(session, GameSession.RUNNING);
         Long chapterId = positiveLong(command.getPayload().get("chapterId"));
-        String reason = text(command.getPayload().get("reason"), 200);
-        if (chapterId == null || StringUtils.isBlank(reason)) throw error("GAME_BAD_REQUEST", "请选择章节并填写解锁原因");
+        // C-04(2026-11-02 用户):放行原因改为选填;填了照旧进审计记录,不填记空串。
+        String reason = StringUtils.defaultString(text(command.getPayload().get("reason"), 200)).trim();
+        if (chapterId == null) throw error("GAME_BAD_REQUEST", "请选择要放行的章节");
+        if (isRouteSession(session)) {
+            CmsTopicChapter next = routeNextChapter(session, routeChapters(session));
+            if (next == null) throw error("GAME_STATE_CONFLICT", "已是最后一章");
+            if (!chapterId.equals(next.getId())) throw error("GAME_STATE_CONFLICT", "只能放行下一章，请刷新后重试");
+            bumpSession(session, session.getStatus(), chapterId, actor.getMemberId(), clock.now());
+            Map<String, Object> data = new LinkedHashMap<>();
+            data.put("chapterId", chapterId);
+            data.put("chapterTitle", next.getName());
+            data.put("reason", reason);
+            return result(session, data);
+        }
         if (!configuredChapterIds(sessionConfig(session)).contains(chapterId)) {
             throw error("GAME_FORBIDDEN_SCOPE", "章节不属于本场游戏配置");
         }
@@ -3555,7 +3676,25 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
                 ? runtimeMapper.selectClubRouteTeamProgressProjection(session.getId())
                 : runtimeMapper.selectClubTeamProgressProjection(session.getId()))));
         club.put("roleOptions", roleOptions(config));
-        club.put("chapterOptions", chapterOptions(config, session.getCurrentChapterId()));
+        if (isRouteSession(session)) {
+            List<CmsTopicChapter> chapters = routeChapters(session);
+            CmsTopicChapter next = GameSession.RUNNING.equals(session.getStatus()) ? routeNextChapter(session, chapters) : null;
+            int current = routeChapterIndex(chapters, session.getCurrentChapterId());
+            club.put("currentChapterTitle", current >= 0 ? chapters.get(current).getName() : null);
+            List<Map<String, Object>> options = new ArrayList<>();
+            if (next != null) {
+                Map<String, Object> option = new LinkedHashMap<>();
+                option.put("chapterId", next.getId());
+                option.put("title", next.getName());
+                option.put("unlocked", false);
+                option.put("unlockable", true);
+                option.put("waitingTeams", routeWaitingTeams(session, chapters));
+                options.add(option);
+            }
+            club.put("chapterOptions", options);
+        } else {
+            club.put("chapterOptions", chapterOptions(config, session.getCurrentChapterId()));
+        }
         club.put("broadcasts", broadcastViews(safe(runtimeMapper.selectBroadcasts(session.getId()))));
         // CU-C-76:入口「能不能发」以前只由场次状态决定,零成员的场子照样让人点进去吃一句笼统提示。
         club.put("broadcastBlocker", broadcastBlocker(session, hasAudience));
@@ -3572,7 +3711,13 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         club.put("recap", buildClubRecap(session, activity));
         GameSessionView view = baseView(session, activity.getId(), "CLUB", session.getStatus(),
                 session.getRevision(), session.getCurrentChapterId());
-        view.setAvailableActions(clubActions(session));
+        List<String> actions = clubActions(session);
+        if (isRouteSession(session) && GameSession.RUNNING.equals(session.getStatus())
+                && !((List<?>) club.get("chapterOptions")).isEmpty()) {
+            actions = new ArrayList<>(actions);
+            actions.add("UNLOCK_CHAPTER");
+        }
+        view.setAvailableActions(actions);
         view.setClub(club);
         return view;
     }
@@ -3787,7 +3932,8 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
             throw error("GAME_FORBIDDEN_SCOPE", "仅该场俱乐部主理人可操作");
         }
         if (activity.getTopicId() == null || activity.getClubId() == null
-                || !clubMemberService.isTopicOwner(activity.getTopicId(), activity.getClubId(), actor.getMemberId())) {
+                || !(clubMemberService.isTopicOwner(activity.getTopicId(), activity.getClubId(), actor.getMemberId())
+                    || clubMemberService.isSessionDirector(activity.getTopicId(), activity.getClubId(), actor.getMemberId()))) {
             throw error("GAME_FORBIDDEN_SCOPE", "仅该场俱乐部主理人可操作");
         }
     }

@@ -1,0 +1,5 @@
+member header /api/club/lead/team-progress arrived/total: 2 / 5
+roster /api/club/event-ops/roster registered/arrived/noShow: 2 2 0
+roster names: ['城瘾用户', '城瘾用户', '城瘾用户', '城瘾用户']
+recap funnel arrivedPlayers: 0
+audience-counts: {"msg": "操作成功", "code": 200, "data": {"counts": {"ALL_MEMBERS": 6, "ADMINS": 1, "INACTIVE": 2, "REGISTERED": 4, "WAITLIST": 0, "NO_SHOW": 0}, "activityScoped": true}, "_status": 200}

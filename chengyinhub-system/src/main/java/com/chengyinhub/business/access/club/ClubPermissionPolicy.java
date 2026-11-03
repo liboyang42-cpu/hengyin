@@ -21,7 +21,7 @@ public final class ClubPermissionPolicy {
                 ClubPermission.NOTIFY_SEND,
                 ClubPermission.ACTIVITY_READ, ClubPermission.ACTIVITY_MANAGE,
                 ClubPermission.EVENT_OPERATE, ClubPermission.EVENT_CHECKIN,
-                ClubPermission.FINANCE_READ));
+                ClubPermission.FINANCE_READ, ClubPermission.CUSTOMER_PHONE_READ));
         policy.put(ClubRoleCode.CLUB_OPERATOR, permissions(
                 ClubPermission.CLUB_READ, ClubPermission.MEMBER_LIST_READ,
                 ClubPermission.MEMBER_APPROVE, ClubPermission.CONTENT_MANAGE,
@@ -32,9 +32,11 @@ public final class ClubPermissionPolicy {
                 ClubPermission.CONTENT_MANAGE, ClubPermission.ACTIVITY_READ));
         policy.put(ClubRoleCode.CLUB_MEMBER, permissions(
                 ClubPermission.CLUB_READ, ClubPermission.ACTIVITY_READ));
+        // 本场领队 = 本场执行方:游戏中要能给玩家打电话(2026-11-02 用户),只在本场作用域内生效。
         policy.put(ClubRoleCode.EVENT_LEAD, permissions(
                 ClubPermission.CLUB_READ, ClubPermission.ACTIVITY_READ,
-                ClubPermission.EVENT_OPERATE, ClubPermission.EVENT_CHECKIN));
+                ClubPermission.EVENT_OPERATE, ClubPermission.EVENT_CHECKIN,
+                ClubPermission.CUSTOMER_PHONE_READ));
         policy.put(ClubRoleCode.EVENT_CHECKIN, permissions(
                 ClubPermission.CLUB_READ, ClubPermission.ACTIVITY_READ,
                 ClubPermission.EVENT_CHECKIN));

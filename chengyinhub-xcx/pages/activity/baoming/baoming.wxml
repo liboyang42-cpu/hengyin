@@ -209,7 +209,7 @@
     <view class="waitlist-card__status">{{waitlistStatusTitle}}</view>
     <view class="waitlist-card__text">{{waitlistStatusDetail}}</view>
     <view wx:if="{{showWaitlistCancel}}" class="waitlist-card__link" bindtap="cancelWaitlist" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">退出候补</view>
-    <cy-btn wx:if="{{showWaitlistJoin}}" variant="secondary" loading="{{waitlistLoading}}" bindtap="joinWaitlist">重新加入候补</cy-btn>
+    <cy-btn wx:if="{{showWaitlistJoin}}" variant="secondary" loading="{{waitlistLoading}}" bindtap="joinWaitlist">{{waitlistState === 'CANCELLED' || waitlistState === 'EXPIRED' ? '重新加入候补' : '加入候补'}}</cy-btn>
   </block>
 </view>
 

@@ -1,0 +1,4 @@
+before: currentChapterId 42 chapterOptions [{"chapterId": 43, "title": "第二章 苏州河上的信使", "unlocked": false, "unlockable": true, "waitingTeams": 0}]
+request payload (no reason): {"chapterId": 43}
+director UNLOCK_CHAPTER -> {"msg": "操作成功", "code": 200, "data": {"receiptId": 3, "activityId": 10, "requestId": "l6-unlock-noreason-1793650305063", "action": "UNLOCK_CHAPTER", "outcome": "APPLIED", "reasonCode": null, "revision": 2, "replayed": false, "result": {"chapterId": 43, "chapterTitle": "第二章 苏州河上的信使", "reason": ""}}, "_status": 200}
+game_session read-back ((1, 'RUNNING', 43, 2),)

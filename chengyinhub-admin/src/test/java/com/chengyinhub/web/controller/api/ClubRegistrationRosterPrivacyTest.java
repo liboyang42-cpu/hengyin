@@ -169,6 +169,52 @@ class ClubRegistrationRosterPrivacyTest {
         assertEquals(Long.valueOf(601L), roster.getOmsTicketList().get(0).getId());
     }
 
+    /** C-13(2026-11-02):每场实收/已退/净额(分),主理人可见、管理员为 null;已取消场次也列出。 */
+    @Test
+    void ownerSeesPerSessionMoneyInFenAdminDoesNot() {
+        com.chengyinhub.business.mapper.ClubCrmMapper crm = mock(com.chengyinhub.business.mapper.ClubCrmMapper.class);
+        ReflectionTestUtils.setField(controller, "clubCrmMapper", crm);
+        Club ownerClub = clubOwnedBy(9L);
+        when(clubService.selectClubById(CLUB)).thenReturn(ownerClub);
+        when(memberService.canGovernClub(any(Club.class), any(Long.class))).thenReturn(true);
+        CmsTopic topic = new CmsTopic();
+        topic.setId(TOPIC);
+        topic.setClubId(CLUB);
+        when(topicService.selectCmsTopicById(TOPIC)).thenReturn(topic);
+        CmsActivity live = new CmsActivity();
+        live.setId(16L);
+        live.setClubId(CLUB);
+        live.setStartDate(new java.util.Date(1793598600000L));
+        CmsActivity cancelled = new CmsActivity();
+        cancelled.setId(13L);
+        cancelled.setClubId(CLUB);
+        cancelled.setStartDate(new java.util.Date(1794544200000L));
+        cancelled.setCancelTime(new java.util.Date());
+        when(activityService.selectCmsActivityList(any())).thenReturn(java.util.Arrays.asList(live, cancelled));
+        when(ticketService.selectOmsTicketList(any())).thenReturn(Collections.emptyList());
+        Map<String, Object> r16 = new HashMap<>();
+        r16.put("activityId", 16L); r16.put("paidFen", 41400L); r16.put("refundedFen", 6900L);
+        Map<String, Object> r13 = new HashMap<>();
+        r13.put("activityId", 13L); r13.put("paidFen", 13800); r13.put("refundedFen", 13800);
+        when(crm.selectSessionMoney(any(), any())).thenReturn(java.util.Arrays.asList(r16, r13));
+
+        doReturn(9L).when(controller).getAppUserId();
+        ClubRegistrationRosterVO roster = (ClubRegistrationRosterVO) controller.topicRegistrations(request()).get(AjaxResult.DATA_TAG);
+        assertEquals(2, roster.getSessionMoney().size());
+        ClubRegistrationRosterVO.SessionMoney first = roster.getSessionMoney().get(0);
+        assertEquals(41400L, first.getPaidFen());
+        assertEquals(6900L, first.getRefundedFen());
+        assertEquals(34500L, first.getNetFen());
+        assertFalse(first.isCancelled());
+        ClubRegistrationRosterVO.SessionMoney second = roster.getSessionMoney().get(1);
+        assertTrue(second.isCancelled());
+        assertEquals(0L, second.getNetFen());
+
+        doReturn(7L).when(controller).getAppUserId();   // 管理员:能看名册,看不到金额
+        ClubRegistrationRosterVO adminView = (ClubRegistrationRosterVO) controller.topicRegistrations(request()).get(AjaxResult.DATA_TAG);
+        assertEquals(null, adminView.getSessionMoney());
+    }
+
     @Test
     void ownerRosterResponseUsesWhitelistAndContainsNoFullPiiOrCodes() throws Exception {
         doReturn(9L).when(controller).getAppUserId();

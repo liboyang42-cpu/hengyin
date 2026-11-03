@@ -21,6 +21,10 @@ public class ClubEventSeries extends BaseEntity {
     private Long createdByMemberId;
     private String requestId;
     private String requestFingerprint;
+    /** C-21:仅创建响应携带的提醒(不落库):场次日期在主题日期之外。 */
+    private String windowWarning;
+    public String getWindowWarning() { return windowWarning; }
+    public void setWindowWarning(String windowWarning) { this.windowWarning = windowWarning; }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

@@ -58,5 +58,9 @@ public class ClubRoleAssignment extends BaseEntity {
     public Integer getVersion() { return version; }
     public void setVersion(Integer version) { this.version = version; }
     public Long getScopeTopicId() { return scopeTopicId; }
+    /** 仅 EVENT_CHECKIN 有效:1 = 可见客户完整手机号。其它角色恒 0。 */
+    private Integer customerPhoneVisible;
+    public Integer getCustomerPhoneVisible() { return customerPhoneVisible; }
+    public void setCustomerPhoneVisible(Integer customerPhoneVisible) { this.customerPhoneVisible = customerPhoneVisible; }
     public void setScopeTopicId(Long scopeTopicId) { this.scopeTopicId = scopeTopicId; }
 }

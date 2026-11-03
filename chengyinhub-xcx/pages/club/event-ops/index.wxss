@@ -50,7 +50,6 @@ button.primary-btn::after { border: 0; }
 .field-picker--locked { color: var(--cy-color-text-secondary); }
 .roster-section { margin-top: var(--cy-space-2-5); }
 .roster-filter { display: block; margin: var(--cy-space-1-5) 0 var(--cy-space-3); }
-.roster-summary { display: flex; flex-wrap: wrap; gap: var(--cy-space-1-5) var(--cy-space-2-5); margin: 0 0 var(--cy-space-3); color: var(--cy-color-text-secondary); font-size: var(--cy-font-caption); }
 .member-card { display: flex; align-items: center; min-height: 104rpx; border-bottom: 1rpx solid var(--cy-border-card); }
 .member-mark { width: 62rpx; height: 62rpx; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--cy-brand-soft); color: var(--cy-brand); font-size: var(--cy-font-label); font-weight: 800; }
 .member-main { min-width: 0; flex: 1; margin-left: var(--cy-space-2); }
@@ -74,3 +73,5 @@ button.primary-btn::after { border: 0; }
 .occurrence-note { display: block; padding: 24rpx 0; color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }
 
 .field-required { color: var(--cy-color-status-danger); margin-left: var(--cy-space-1); }
+/* 2026-11-02:有号码权限时名册行右侧的拨号键(≥88rpx 触控) */
+.member-call { flex: none; width: 88rpx; height: 88rpx; display: flex; align-items: center; justify-content: center; margin-right: var(--cy-space-2); color: var(--cy-color-text-primary); }

@@ -60,3 +60,12 @@ test('D6:弹层成员列表喂 roleMemberRows(带 teamId:memberId),行点击有�
   DIRECTOR_METHODS.openRoleSheet.call(noPerm);
   assert.equal(noPerm.data.roleSheetVisible, undefined, '没有 ASSIGN_ROLES 不许开弹层');
 });
+
+// C-04(2026-11-02 walk-fix):现场工具行(放行 / 队伍进度 / 角色 / 现场事件)必须在底栏留白之前,
+// 否则被固定底栏盖住,放行按钮在手机上点不到(走查 rig 实测 队伍进度 就是这样)。
+test('导演台现场工具行排在 footspacer 之前', () => {
+  const wxml = require('node:fs').readFileSync(require('node:path').resolve(__dirname, '../../pages/club/topic-detail/index.wxml'), 'utf8')
+  const tools = wxml.indexOf('<view class="ctd-tools"')
+  const spacer = wxml.indexOf('<view class="ctd-footspacer">')
+  require('node:assert/strict').ok(tools > 0 && spacer > 0 && tools < spacer, '工具行跑到了底栏留白之后')
+})

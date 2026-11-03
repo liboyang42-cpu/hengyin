@@ -23,6 +23,25 @@ const {
   permissionFailureCode, isPermissionFailure, identityKey,
 } = require('../utils/owner-action-guard.js');
 
+// C-13:后端给分(整数),这里只做 ¥ 格式化,不做任何加减 —— 净额由服务端算,与库逐分一致。
+function yuanText(fen) {
+  const n = Number(fen)
+  if (!Number.isFinite(n)) return '—'
+  const sign = n < 0 ? '-' : ''
+  const abs = Math.abs(Math.round(n))
+  return sign + '¥' + Math.floor(abs / 100) + '.' + String(abs % 100).padStart(2, '0')
+}
+
+function sessionMoneyRows(list) {
+  if (!Array.isArray(list)) return []
+  return list.filter(function (m) { return m && m.activityId != null }).map(function (m) {
+    return {
+      activityId: m.activityId, label: m.label || '', cancelled: m.cancelled === true,
+      paidText: yuanText(m.paidFen), refundedText: yuanText(m.refundedFen), netText: yuanText(m.netFen),
+    }
+  })
+}
+
 Page({
   data: {
     statusBarHeight: getApp().globalData.statusBarHeight,
@@ -404,6 +423,7 @@ Page({
         teams[targetIndex] = Object.assign({}, teams[targetIndex], {
           tickets: tickets,
           summary: summary,
+          sessionMoney: sessionMoneyRows(res.data.sessionMoney),
           _detailState: 'ready',
         });
         // 2026-09-09:退款挪到核销详情页,这里原来那段「未知回执落地后回读本团、

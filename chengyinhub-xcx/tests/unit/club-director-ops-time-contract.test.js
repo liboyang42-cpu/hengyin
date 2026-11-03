@@ -219,7 +219,8 @@ test('页面接入:导演台区域有入口、有编辑半屏与结果半屏,不
   assert.match(wxml, /bindtap="openOpsTimeSheet"/);
   assert.match(wxml, /bindtap="confirmOpsTime"/);
   assert.match(wxml, /<cy-scene-sheet show="\{\{opsTimeSheetVisible\}\}" variant="half"[\s\S]*?cy-date-field[\s\S]*?<\/cy-scene-sheet>/, '编辑半屏沿用本页 cy-scene-sheet half + cy-date-field');
-  assert.match(wxml, /已有报名，集合时间和地点不可改/, '已售不可改必须先说在前面，不能靠隐藏入口');
+  // C-23(2026-11-02):锁定在入口上直接写明(进页就按本场报名人数判),不再先给「保存」再拒。
+  assert.match(wxml, /已有报名 · 已锁定/, '已售不可改必须先说在前面，不能靠隐藏入口');
   assert.match(wxml, /<cy-result-sheet show="\{\{resultSheet.show\}\}"/, '结果必须走结果半屏');
   const json = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../pages/club/topic-detail/index.json'), 'utf8'));
   ['cy-scene-sheet', 'cy-date-field', 'cy-result-sheet'].forEach((name) => {
@@ -308,7 +309,7 @@ test('已售拒绝:只有明确错误码锁本场时间并回读，不阻止备�
   vm.openOpsTimeSheet(); vm.confirmOpsTime();
   assert.equal(vm.data.opsTimeSheetVisible, false);
   assert.equal(requests.filter(r => r.url === '/api/club/lead/edit-ops').length, 1);
-  assert.match(fs.readFileSync(WXML, 'utf8'), /已售锁定（备注仍可改）/);
+  assert.match(fs.readFileSync(WXML, 'utf8'), /已有报名 · 已锁定/);
   const ordinary = openDirector();
   ordinary.vm.openOpsTimeSheet(); ordinary.vm.confirmOpsTime();
   ordinary.requests.at(-1).success({ code: 500, msg: '没有权限' });
@@ -410,3 +411,25 @@ test('新会话详情先发出后，旧写的sessionChanged收尾不作废它', 
   freshRead.success({ statusCode: 200, data: { code: 200, data: { ...RAW, name: '新会话详情' } } });
   assert.equal(h.vm.data.topic.name, '新会话详情');
 });
+
+// C-23(2026-11-02 walk-fix):本场已有报名时进页即锁定,不打开带「保存」的半屏。
+test('C-23:本场已有报名人数时入口一进页就是锁定态', () => {
+  const js = fs.readFileSync(path.join(__dirname, '../../pages/club/topic-detail/index.js'), 'utf8')
+  assert.match(js, /opsTimeLocked: this\._opsTimeSoldKey === this\._opsTimeContextKey\(\) \|\| this\._opsTimeHasSignups\(\)/)
+  const m = /_opsTimeHasSignups\(\) \{([\s\S]*?)\n  \},/.exec(js)
+  assert.ok(m)
+  const fn = new Function(m[1])
+  assert.equal(fn.call({ _directorActivityId: 18, _manageStats: { sessionHeadcount: 8 } }), true)
+  assert.equal(fn.call({ _directorActivityId: 18, _manageStats: { sessionHeadcount: 0 } }), false)
+  assert.equal(fn.call({ _directorActivityId: null, _manageStats: { sessionHeadcount: 8 } }), false, '没选定场次时人数是全部场次之和,不能拿来锁')
+})
+
+// C-02 / C-27(2026-11-02 walk-fix)
+test('C-02:工作台在付费场次无法在线收款时提示主理人;C-27:无商家信息的主题不默认写「玩家可到店核销」', () => {
+  const js = fs.readFileSync(path.join(__dirname, '../../pages/club/topic-detail/index.js'), 'utf8')
+  const wxml = fs.readFileSync(path.join(__dirname, '../../pages/club/topic-detail/index.wxml'), 'utf8')
+  assert.match(js, /paymentNotice: stats\.paidSessionsBlocked === true \? '这个主题暂不能在线收款，玩家无法在线报名付费场次' : ''/)
+  assert.match(wxml, /wx:if="\{\{paymentNotice\}\}">\{\{paymentNotice\}\}/)
+  assert.match(js, /verifyModeText: raw\.verifyModeText \|\| \(raw\.merchantLogo \? '玩家可到店核销' : ''\)/)
+  assert.doesNotMatch(js, /verifyModeText: raw\.verifyModeText \|\| '玩家可到店核销'/)
+})

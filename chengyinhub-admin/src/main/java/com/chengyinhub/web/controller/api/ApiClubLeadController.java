@@ -408,6 +408,11 @@ public class ApiClubLeadController extends BaseController {
         data.put("leaderMemberId", st.getLeaderMemberId());
         data.put("isLeader", memberId.equals(st.getLeaderMemberId()));
         data.put("currentChapterId", st.getCurrentChapterId());
+        // C-04:导演运行时接管的路线局,章节在俱乐部工作台放行;本入口的放行会被拒,播放页据此不再给出该项。
+        String directorStatus = gameSessionRuntimeService == null ? null : gameSessionRuntimeService.routeSessionStatus(activityId);
+        data.put("directorRun", directorStatus != null);
+        // C-12:带队人结束本场后,玩家播放页据此显示「本场已结束」与自己的完成数,不再让人提交后才撞上拒绝。
+        data.put("sessionEnded", Integer.valueOf(3).equals(st.getStatus()) || "FINISHED".equals(directorStatus));
         List<CmsTopicChapter> ordered = chaptersOf(activityId);
         Long nextChapterId = null;
         if (st.getCurrentChapterId() == null && !ordered.isEmpty()) nextChapterId = ordered.get(0).getId();
@@ -427,16 +432,19 @@ public class ApiClubLeadController extends BaseController {
         List<ClubLeadCheckin> checkins = clubLeadMapper.selectCheckins(activityId);
         Set<Long> arrivedIds = new HashSet<>();
         for (ClubLeadCheckin c : checkins) arrivedIds.add(c.getMemberId());
-        // 复用名册的最新更正事实；原始签到仍保留用于调证。
+        // C-10:到场人数与本场名册同一个事实 —— 名册的「已到场」= 集合签到 / 已核销 / 已有节点进度,
+        // 有更正时以最新更正为准。原来这里只认签到+更正,玩家头部、名册、复盘三处数字对不上。
         for (Map<String, Object> row : clubEventOpsMapper.selectPaidRoster(activityId)) {
+            Object memberObj = row.get("memberId");
+            if (!(memberObj instanceof Number)) continue;
+            Long rosterMemberId = ((Number) memberObj).longValue();
             Object corrected = row.get("correctedArrived");
-            if (corrected == null) continue;
-            Long correctedMemberId = ((Number) row.get("memberId")).longValue();
-            if (Boolean.TRUE.equals(corrected)
-                    || corrected instanceof Number && ((Number) corrected).intValue() == 1) {
-                arrivedIds.add(correctedMemberId);
+            Object effective = corrected != null ? corrected : row.get("baseArrived");
+            if (Boolean.TRUE.equals(effective)
+                    || effective instanceof Number && ((Number) effective).intValue() == 1) {
+                arrivedIds.add(rosterMemberId);
             } else {
-                arrivedIds.remove(correctedMemberId);
+                arrivedIds.remove(rosterMemberId);
             }
         }
         Set<Long> memberIds = new HashSet<>(arrivedIds);

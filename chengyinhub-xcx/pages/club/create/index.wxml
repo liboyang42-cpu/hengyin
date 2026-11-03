@@ -141,7 +141,7 @@
 
   <cy-inline-error class="cc-alert" wx:if="{{bootstrapState === 'ready' && submitState !== 'success' && !introMode && submitError}}"
     kind="{{submitErrorKind}}" title="创建没有完成" sub="{{submitError}}"
-    action="重试" bind:action="retrySubmit" />
+    action="{{submitNameTaken ? '去改名称' : '重试'}}" bind:action="retrySubmit" />
 
   <!-- 底部 CTA -->
   <view class="cc-bottom" wx:if="{{bootstrapState === 'ready' && submitState !== 'success' && !introMode}}">

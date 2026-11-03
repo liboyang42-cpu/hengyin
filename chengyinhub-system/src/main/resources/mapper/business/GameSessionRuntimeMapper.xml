@@ -278,6 +278,16 @@
          where s.id=#{sessionId} group by s.id, t.id, t.title
     </select>
 
+    <select id="selectRouteTeamCompletedNodes" resultType="map">
+        select distinct t.id as teamId, p.node_id as nodeId
+          from game_session s
+          join play_team t on t.owner_type=2 and t.owner_id=s.activity_id and t.status in (0,1,2)
+          join play_team_member m on m.team_id=t.id and m.status=1
+          join player_node_progress p on p.member_id=m.member_id and p.activity_id=s.activity_id
+               and p.topic_id=s.topic_id and p.status=1 and p.del_flag=0
+         where s.id=#{sessionId}
+    </select>
+
     <insert id="insertStationsFromTopic">
         insert ignore into game_station_run
         (game_session_id, activity_id, node_id, node_name, station_code, merchant_member_id,
@@ -636,17 +646,24 @@
                        join play_team_member m on m.team_id=t.id and m.member_id=reg.member_id and m.status=1
                        where t.owner_type=2 and t.owner_id=s.activity_id and t.status in (0,1,2)
                    )) as paidPlayers,
-               (select count(distinct p.member_id)
-                  from player_node_progress p
-                 where p.activity_id=s.activity_id and p.topic_id=s.topic_id
-                   and p.checkin_time is not null and p.del_flag=0
-                   and exists (
-                       select 1
-                         from play_team t
-                         join play_team_member m on m.team_id=t.id and m.member_id=p.member_id and m.status=1
-                        where t.owner_type=2 and t.owner_id=s.activity_id and t.status in (0,1,2)
-                          and <include refid="paidActivityMemberExists"/>
-                   )) as arrivedPlayers,
+               <!-- C-10:到场与本场名册同一事实(签到/核销/节点进度,更正优先),口径同 ClubEventOpsMapper.selectPaidRoster。 -->
+               (select count(distinct reg.member_id)
+                  from cms_registration reg
+                  left join club_event_attendance_correction corr on corr.id = (
+                      select max(c2.id) from club_event_attendance_correction c2
+                       where c2.activity_id=reg.owner_id and c2.member_id=reg.member_id)
+                 where reg.owner_type=2 and reg.owner_id=s.activity_id
+                   and reg.payment_status=2 and reg.registration_status=2
+                   and case when corr.id is not null then corr.new_arrived=1
+                       else (exists (select 1 from club_lead_checkin ck
+                                      where ck.activity_id=reg.owner_id and ck.member_id=reg.member_id)
+                             or exists (select 1 from cms_registration v
+                                         where v.owner_type=2 and v.owner_id=reg.owner_id and v.member_id=reg.member_id
+                                           and v.payment_status=2 and v.registration_status=2 and v.verification_status=1)
+                             or exists (select 1 from player_node_progress p
+                                         where p.activity_id=reg.owner_id and p.member_id=reg.member_id
+                                           and p.status=1 and p.del_flag=0)) end
+               ) as arrivedPlayers,
                (select count(distinct q.member_id) from game_task_submission q
                  where q.game_session_id=s.id) as taskSubmitters,
                case when json_unquote(json_extract(s.module_config_snapshot_json, '$.playMode'))='ROUTE'

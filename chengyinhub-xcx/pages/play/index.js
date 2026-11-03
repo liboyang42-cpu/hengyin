@@ -5003,7 +5003,7 @@ Page({
         lead: {
           exists: true, status: d.status || 1, isLeader: !!d.isLeader, freeEntry: d.freeEntry === true,
           arrived: d.arrived || 0, total: d.total || 0, meArrived: !!d.meArrived,
-          chapterName: d.chapterName || '', currentChapterId: d.currentChapterId, nextChapterId: d.nextChapterId, broadcast: d.broadcast || '',
+          chapterName: d.chapterName || '', currentChapterId: d.currentChapterId, nextChapterId: d.nextChapterId, broadcast: d.broadcast || '', directorRun: d.directorRun === true, ended: d.sessionEnded === true,
           members: (d.members || []).slice(0, 8),
           // P-23:只发给队长 —— 谁在罗盘站读取失败两次、等着放行
           skipRequests: that._leadSkipRequests(d.skipRequests),
@@ -5460,6 +5460,14 @@ Page({
     // 进详情卡 —— 逐个入口加守卫必漏一个,
     // 所以闸放在这一层。(服务端四个完成入口另有硬闸,这里是 UX 层:先说清「还差什么」。)
     if (!node.done && this._routeInteractionBlocked()) { cyToast(this.data.routeNotice || '路线状态同步中'); return; }
+    // C-12:本场已结束(队长结束活动)后,未完成站点不再弹「开始任务」半屏 —— 提交只会被后端拒;
+    // 顶部状态条已写明「本场已结束 · 你完成了 N/M 站」,这里不再盖住它。已完成的站仍可回看。
+    if (!node.done && this.data.lead && this.data.lead.ended) {
+      // 从章节故事流「继续探索」进来时故事流还盖着地图:收起它,让顶部的结束条露出来
+      if (this.data.chapterFull) this.closeChapterFull();
+      cyToast('本场已结束');
+      return;
+    }
     if (this._lockedTip(node)) return;
     // 全天开放(00:00–23:59)不是有用的营业信息,不挂在地址后(实走复核:每站都写着 00:00–23:59)
     const biz = /^\s*00:00\s*[-–~至]\s*23:59\s*$/.test(String(node.businessTime || '')) ? '' : node.businessTime;

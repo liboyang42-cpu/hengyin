@@ -196,7 +196,8 @@ page { background: var(--cy-color-bg-page); }
 .sheet{ position:absolute; left:0; right:0; bottom:0; z-index:109; background:#000000; /* ds-ok 原型 .sheet */
   border-radius:var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0; /* ds-ok 原型 28px */
   /* 88% 在刘海机上顶边会落进胶囊行(12% 高≈101px vs 胶囊底≈103px)——与 .psheet 同法,页面根给实测值,取两者较小 */
-  height:min(var(--cy-comp-sheet-full), var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); max-height:min(var(--cy-comp-sheet-full), var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); overflow-y:auto; animation:sheetUp var(--cy-motion-sheet-full-in) var(--cy-ease-standard); }
+  /* C-12(2026-11-02 用户):站点卡内容短时整张撑到 full 档,下面空出一大块黑底。改为 half 档起步、随内容长到 full 档封顶 */
+  min-height:min(var(--cy-comp-sheet-half), var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); max-height:min(var(--cy-comp-sheet-full), var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); overflow-y:auto; animation:sheetUp var(--cy-motion-sheet-full-in) var(--cy-ease-standard); }
 /* 2026-10-23 弹层动效:手动关闭先播退场再卸载(index.js 的 _outThen);面板 full 档 280ms,遮罩同档 */
 .mask.is-out{ animation:none; opacity:0; transition:opacity var(--cy-motion-sheet-full-out) var(--cy-ease-standard); pointer-events:none; }
 .sheet.is-out{ animation:none; transform:translateY(105%); transition:transform var(--cy-motion-sheet-full-out) var(--cy-ease-standard); pointer-events:none; }

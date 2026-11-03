@@ -25,10 +25,11 @@
         <view class="ckd-phone-row">
           <!-- 服务端已按岗位权限裁过:有权限是号码,没权限是替代说明。前端原样显示。 -->
           <text class="ckd-phone {{detail.phoneVisible ? '' : 'ckd-phone--masked'}}">{{detail.phoneText}}</text>
-          <!-- 2026-09-09 去掉「复制」:这一格服务端只可能给掩码
-               (ClubCrmAppServiceImpl.phoneText 有权限也走 maskPhone),复制过去是
-               「1385621」这种废字符串。和成员弹层同一个判断,两处保持一致。
-               要真能复制,得后端另开一条按 MEMBER_LIST_READ 下发真号的口子。 -->
+          <!-- 2026-11-02 用户:有号码权限的岗位拿到完整号码(phoneCallable),给拨号键;其余仍是掩码或替代说明,不给。 -->
+          <view wx:if="{{detail.phoneCallable}}" class="ckd-call" bindtap="callParticipant"
+            aria-role="button" aria-label="拨打 {{detail.displayName}} 的电话" hover-class="cy-pressed" hover-stay-time="80">
+            <cy-icon name="phone" size="32" />
+          </view>
         </view>
       </view>
       <view class="ckd-head-state">

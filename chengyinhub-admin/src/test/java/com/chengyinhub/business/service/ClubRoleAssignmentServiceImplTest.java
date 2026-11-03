@@ -160,6 +160,9 @@ class ClubRoleAssignmentServiceImplTest {
                 ClubRoleCode.CLUB_OWNER, null, null, "req-owner"));
         assertThrows(ServiceException.class, () -> service.assign(OWNER, CLUB, TARGET,
                 ClubRoleCode.CLUB_MEMBER, null, null, "req-member"));
+        // 2026-11-02:「可见客户手机号」只属于活动核销员,别的角色带上一律拒绝
+        assertThrows(ServiceException.class, () -> service.assign(OWNER, CLUB, TARGET,
+                ClubRoleCode.CLUB_OPERATOR, null, null, "req-op-phone", true));
         verify(assignments, never()).insertClubRoleAssignment(any());
     }
 
