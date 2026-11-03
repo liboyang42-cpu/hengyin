@@ -52,7 +52,7 @@ function assertG4Contract(overrides = {}) {
   assert.doesNotMatch(rule(financeWxss, '.fc-card'), /border-bottom\s*:/)
   assert.doesNotMatch(rule(financeWxss, '.fc-bottom'), /background\s*:/,
     '结算状态行不再嵌套灰底卡，只靠文字与徽章分层')
-  assert.match(financeWxml, /class="fc-arrived-date"[^>]*>\{\{item\.statusText\}\}/)
+  assert.match(financeWxml, /class="fc-arrived-date" wx:if="\{\{item\.settled\}\}">\{\{item\.statusText\}\}/) // M-14:未结算时徽章已说状态,不再重复一行
   assert.match(financeWxml, /class="fc-meta[^>]*>\{\{item\.merchantStatus\s*\|\|/)
   assert.match(financeWxml, /class="fc-settled-badge"/)
 

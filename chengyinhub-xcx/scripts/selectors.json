@@ -1061,8 +1061,8 @@
   "_why": "合作分润筛选内容态至少显示资金 hero 与一条合作收入。"
  },
  "C60": {
-  "selector": ".stat-grid, .fc-card, .fc-explainer",
-  "min": 3,
+  "selector": ".stat-grid, .fc-card",
+  "min": 2,
   "forbid": [
    "cy-empty",
    "cy-error",

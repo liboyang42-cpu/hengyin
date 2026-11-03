@@ -28,7 +28,7 @@
             </view>
             <view class="fc-bottom">
               <view class="fc-state-copy">
-                <text class="fc-arrived-date">{{item.statusText}}</text>
+                <text class="fc-arrived-date" wx:if="{{item.settled}}">{{item.statusText}}</text>
                 <text class="fc-meta ep1">{{item.merchantStatus || '结算信息待补充'}}</text>
               </view>
               <cy-badge class="fc-settled-badge" type="status" variant="{{item.settled ? 'success' : item.badgeVariant}}" label="{{item.settled ? '已结算' : item.statusText}}" />
@@ -37,7 +37,6 @@
           <cy-icon class="fc-arrow" name="arrow-right" size="32" />
         </view>
       </view>
-      <view class="fc-explainer">已结算：金额已核算 · 已入账：已到账</view>
     </block>
     <cy-empty size="lg" style="flex:1;min-height:0;" kind="empty" wx:else fill title="还没有合作结算" />
   </block>

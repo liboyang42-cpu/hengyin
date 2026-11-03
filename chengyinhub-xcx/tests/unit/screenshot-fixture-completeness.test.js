@@ -588,8 +588,9 @@ test('A14/A15、B66、C03 与子组件正文使用状态专属 DOM 断言', () =
     assert.equal(SELECTORS[id].selector, '.team')
     assert.ok(SELECTORS[id].forbid.includes('cy-error'))
   }
-  assert.equal(SELECTORS.C60.selector, '.stat-grid, .fc-card, .fc-explainer')
-  assert.equal(SELECTORS.C60.min, 3)
+  // 打磨第 3 轮 §4-13 M-15:列表下的口径说明 .fc-explainer 已删
+  assert.equal(SELECTORS.C60.selector, '.stat-grid, .fc-card')
+  assert.equal(SELECTORS.C60.min, 2)
   assert.equal(SELECTORS.D21.selector, '.txjl_li')
   assert.equal(SELECTORS.A24.selector, '.hot-keys .li, .search-actions')
   assert.equal(SELECTORS.A24.min, 2)
