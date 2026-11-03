@@ -165,12 +165,21 @@ From `proof/lane-test-counts.py`: for each lane, the test files it added or chan
 - The patch is **not** on this branch and `ci/architecture/owners.json` is unchanged.
 - The gate selftests pass in CI (325 OK). Locally 6 of them error only because this container's clone is shallow.
 
-## CI state (run on `aa21e8ebe`)
+## CI state
 
-- **Green:** all 20 mini-program unit shards, Admin UI build and E2E contract, Migration layout, gitleaks, Funds MySQL IT, Followup 39 backend cases, Redis recovery.
-- **Fast gates:** red only at "Check architecture changes against trusted CI base", the known gate above. Every other step passes (CWD, API existence, silentError, architecture selftests).
-- **Migration safety gate:** red only because the PR description had no ③ marking. The description now has an `## 影响分类` section with ③ and the apply order. This gate reads the description as it was at push time, so it is re-checked on the push that carries this file.
-- Backend tests and Mini program static gates were still running when this was written. See the PR for their final state.
+**All CI jobs are green on `a3c9e8fbd`** (run 41628910753, finished 11:50 UTC on 2026-11-03).
+
+- Green: Backend tests, Migration safety gate (with the ③ description), Mini program static gates and static checks, all 20 unit shards, Admin UI build and E2E contract, Migration layout, SBOM + dependency scan, gitleaks, Funds MySQL IT, Followup 39 backend cases, Redis recovery.
+- Earlier backend runs on this branch did not count as final:
+  - `441bd89e7` failed on the two cross-lane tests fixed in `2da689994`.
+  - Later runs were cancelled by the next push.
+
+**Fast gates is green for a reason outside this round.** At 11:15 UTC another Claude session (not this integrator) pushed three commits onto this branch:
+- `3cf453808`: merges `arch-owner-l8`, i.e. the l8 owner registration in `ci/architecture/owners.json` plus a re-pin of the trusted verifier in `ci.yml`.
+- `59124be29`: merges #666.
+- `a3c9e8fbd`: a map font-size fix.
+
+ROUND6 said not to put the owner registration on this branch, so the architecture gate is green here only because of that push. I did not revert those commits; the owner decides. Without them the gate behaves as shown in the proof above: blocked, 7 boundaries.
 
 ## Could not verify
 
