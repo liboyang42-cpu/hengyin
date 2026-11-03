@@ -1617,12 +1617,12 @@ page {
 .cg-sec { margin: 44rpx 26rpx 0; padding: 0 8rpx; }                                 /* ds-ok 原型 .sh 22px 4px 10px */
 .cg-sec + .cg-card, .cg-sec + .cg-gcfg, .cg-sec + .cg-inline-error + .cg-gcfg,
 .cg-inline-cfg > .cg-sec + .cg-gcfg, .cg-inline-cfg > .cg-sec + .cg-inline-error + .cg-gcfg { margin-top: var(--cy-space-2-5); }
-.cg-card { margin-left: 26rpx; margin-right: 26rpx; --cy-comp-card-pad: var(--cy-space-4); --cy-comp-card-radius: 28rpx; } /* ds-ok 原型 .card 16px / 14px,页边 13px */
-.cg-inline-cfg > .cg-gcfg, .cg-inline-cfg > .cg-cfg { margin-left: 26rpx; margin-right: 26rpx; padding: var(--cy-space-4); border-radius: 28rpx; } /* ds-ok 同上 */
+.cg-card { margin-left: var(--cy-page-x); margin-right: var(--cy-page-x); --cy-comp-card-pad: var(--cy-space-4); --cy-comp-card-radius: var(--cy-radius-lg); } /* 打磨第 3 轮:页边与圆角对齐全站(原 13px / 14px) */
+.cg-inline-cfg > .cg-gcfg, .cg-inline-cfg > .cg-cfg { margin-left: var(--cy-page-x); margin-right: var(--cy-page-x); padding: var(--cy-space-4); border-radius: var(--cy-radius-lg); } /* 同上 */
 .cg-line { display: flex; align-items: center; min-height: 88rpx; margin-top: var(--cy-space-4); padding-top: var(--cy-space-1-5); } /* ds-ok 原型 .frow.line 44px */
 .cg-scan-reply { padding-top: var(--cy-space-1); }
 .cg-game-opts { margin-top: var(--cy-space-4); }
-.cg-addmod { margin: 44rpx 26rpx 0; }                                                 /* ds-ok 原型 .addmod margin-top 22px */
+.cg-addmod { margin: 44rpx var(--cy-page-x) 0; }                                       /* ds-ok 原型 .addmod margin-top 22px;左右与卡片同页边 */
 
 /* 底部两颗按钮直接浮在页面上(2026-10-23 主人:不要白底栏)。
    栏本身只留一层页面底色的透明度渐隐,滚到下面的字不会和按钮叠在一起;
