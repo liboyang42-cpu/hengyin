@@ -238,7 +238,9 @@ test('CU-M-79 有效期最早到明天(今天到期=一建就过期),明天放�
 
   h.page.save()
   assert.equal(h.requests.length, 0, '今天及更早的有效期不得写入')
-  assert.deepEqual(h.toasts, ['有效期至少要到明天'])
+  // 第四轮业主标准:写在有效期下方红字,不再弹提示
+  assert.deepEqual(h.toasts, [])
+  assert.equal(h.page.data.fieldErrors.validEnd, '有效期至少要到明天')
 
   h.page.data.form = Object.assign({}, h.page.data.form, { validEnd: '2026-09-25' })
   h.page.save()

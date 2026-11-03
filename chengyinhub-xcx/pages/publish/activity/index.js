@@ -515,10 +515,8 @@ Page({
       const original = authorWrites.pending(wx, authorWrites.ownerOf(app), this._activityWriteBucket());
       if (original) { this.sendData(original.body); return; }
     } catch (error) { this.setData({ submitError: error.message }); return; }
-    if (!this.validateForm()) {
-      cyToast('请完善表单信息')
-      return
-    }
+    // 第四轮(业主:输入问题只在字段下方红字说):validateForm 已把每条问题写在对应字段下面,不再另弹提示。
+    if (!this.validateForm()) return
     if (this.data.merchantHost && this.hasPaidTicket()) {
       cyToast(MERCHANT_FREE_ONLY_MSG)
       return

@@ -51,3 +51,6 @@ page { background: var(--cy-bg-page); }
 .row-count { flex: none; margin-right: var(--cy-space-2); font-size: var(--cy-font-caption); color: var(--cy-color-text-tertiary); }
 
 .form-required { color: var(--cy-color-status-danger); margin-left: var(--cy-space-1); }
+
+/* 第四轮:字段下方红字 */
+.field-err { margin-top: var(--cy-space-1); }

@@ -39,6 +39,8 @@ function presentCampaign(campaign) {
 
 Page({
   data: {
+    titleError: '',
+    contentError: '',
     statusBarHeight: (app.globalData || {}).statusBarHeight || 44,
     navBarHeight: (app.globalData || {}).navBarHeight || 44,
     clubId: null,
@@ -160,10 +162,10 @@ Page({
     this.setData({ audienceType: value, previewState: 'idle', campaign: null, draftRequestId: '' })
   },
   onTitleInput(e) {
-    this.setData({ title: e.detail.value, previewState: 'idle', campaign: null, draftRequestId: '' })
+    this.setData({ title: e.detail.value, titleError: '', previewState: 'idle', campaign: null, draftRequestId: '' })
   },
   onContentInput(e) {
-    this.setData({ content: e.detail.value, previewState: 'idle', campaign: null, draftRequestId: '' })
+    this.setData({ content: e.detail.value, contentError: '', previewState: 'idle', campaign: null, draftRequestId: '' })
   },
 
   payload(sending) {
@@ -181,15 +183,11 @@ Page({
   validDraft() {
     const title = this.data.title.trim()
     const content = this.data.content.trim()
-    if (!title || title.length > 80) {
-      toast('标题需为 1–80 字')
-      return false
-    }
-    if (!content || content.length > 1000) {
-      toast('内容需为 1–1000 字')
-      return false
-    }
-    return true
+    // 第四轮(业主:输入问题只在字段下方红字说)
+    const titleError = !title || title.length > 80 ? '标题需为 1–80 字' : ''
+    const contentError = !content || content.length > 1000 ? '内容需为 1–1000 字' : ''
+    this.setData({ titleError, contentError })
+    return !titleError && !contentError
   },
 
   preview() {

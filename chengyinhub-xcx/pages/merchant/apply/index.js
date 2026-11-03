@@ -537,7 +537,7 @@ Page({
       if (!r.ok) {
         that.setData({
           submitting: false,
-          submitErrorKind: r.network ? 'network' : 'data',
+          submitErrorKind: r.network ? 'network' : 'error',
           submitError: r.message
         });
         return;

@@ -114,7 +114,7 @@
         <text class="field-label">{{inputLabel}}</text>
         <textarea class="field" value="{{draft}}" placeholder="{{inputPlaceholder}}" placeholder-class="field-ph"
                   maxlength="100" bindinput="onDraftInput" auto-height="{{false}}" />
-        <cy-inline-error wx:if="{{draftError}}" kind="data" title="{{inputKind === 'withdraw' ? '撤回要写个理由' : '拒绝要写个理由'}}" sub="{{draftError}}" />
+        <cy-inline-error wx:if="{{draftError}}" kind="error" title="{{inputKind === 'withdraw' ? '撤回要写个理由' : '拒绝要写个理由'}}" sub="{{draftError}}" />
         <text class="field-count">{{draft.length}} / 100</text>
       </block>
       <text wx:elif="{{invite.status === 1}}" class="bubble-empty">需要对齐事项时，请点击上方“联系合作方”进入单聊。</text>

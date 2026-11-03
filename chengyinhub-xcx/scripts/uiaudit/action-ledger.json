@@ -183924,6 +183924,24 @@
           "route": "pages/addressinfo/addressinfo",
           "segments": [
             {
+              "selector": "cy-inline-error.add_err",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/addressinfo/addressinfo",
+          "segments": [
+            {
+              "selector": "cy-inline-error.add_err",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/addressinfo/addressinfo",
+          "segments": [
+            {
               "selector": "cy-inline-error",
               "index": 0
             }
@@ -184292,6 +184310,24 @@
             {
               "selector": "cy-inline-error.mh__error",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/notify/index",
+          "segments": [
+            {
+              "selector": "cy-inline-error.field-err",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/notify/index",
+          "segments": [
+            {
+              "selector": "cy-inline-error.field-err",
+              "index": 1
             }
           ]
         },
@@ -185206,6 +185242,51 @@
             {
               "selector": "cy-inline-error.mh__error",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/decor/perks/index",
+          "segments": [
+            {
+              "selector": "cy-inline-error.dp-field-err",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/decor/perks/index",
+          "segments": [
+            {
+              "selector": "cy-inline-error.dp-field-err",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/decor/perks/index",
+          "segments": [
+            {
+              "selector": "cy-inline-error.dp-field-err",
+              "index": 2
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/decor/perks/index",
+          "segments": [
+            {
+              "selector": "cy-inline-error.dp-field-err",
+              "index": 3
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/decor/perks/index",
+          "segments": [
+            {
+              "selector": "cy-inline-error.dp-field-err",
+              "index": 4
             }
           ]
         },
@@ -944637,7 +944718,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/addressinfo/addressinfo.js:59"
+        "staticSource": "pages/addressinfo/addressinfo.js:60"
       }
     },
     {
@@ -944746,7 +944827,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/addressinfo/addressinfo.js:120"
+        "staticSource": "pages/addressinfo/addressinfo.js:121"
       }
     },
     {
@@ -944813,11 +944894,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/addressinfo/addressinfo.js:127"
+        "staticSource": "pages/addressinfo/addressinfo.js:128"
       }
     },
     {
-      "id": "pages/addressinfo/addressinfo.wxml:28:bindinput:onInputChange:4",
+      "id": "pages/addressinfo/addressinfo.wxml:29:bindinput:onInputChange:4",
       "route": "pages/addressinfo/addressinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -944840,7 +944921,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onInputChange",
-        "line": 28,
+        "line": 29,
         "selectorHint": "input[bindinput]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -944880,11 +944961,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/addressinfo/addressinfo.js:127"
+        "staticSource": "pages/addressinfo/addressinfo.js:128"
       }
     },
     {
-      "id": "pages/addressinfo/addressinfo.wxml:46:bind:action:saveAddress:5",
+      "id": "pages/addressinfo/addressinfo.wxml:48:bind:action:saveAddress:5",
       "route": "pages/addressinfo/addressinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -944907,7 +944988,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "saveAddress",
-        "line": 46,
+        "line": 48,
         "selectorHint": "cy-inline-error[bind:action]",
         "visibleCondition": "{{saveError}}",
         "disabledCondition": null,
@@ -944994,11 +945075,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/addressinfo/addressinfo.js:166"
+        "staticSource": "pages/addressinfo/addressinfo.js:167"
       }
     },
     {
-      "id": "pages/addressinfo/addressinfo.wxml:50:bind:disabledtap:onSaveDisabledTap:7",
+      "id": "pages/addressinfo/addressinfo.wxml:52:bind:disabledtap:onSaveDisabledTap:7",
       "route": "pages/addressinfo/addressinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -945021,7 +945102,7 @@
         "tag": "cy-btn",
         "event": "bind:disabledtap",
         "handler": "onSaveDisabledTap",
-        "line": 50,
+        "line": 52,
         "selectorHint": "cy-btn[bind:disabledtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canSubmit}}",
@@ -945036,11 +945117,11 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "other",
+      "actionClass": "state",
       "interactionMode": "event-contract",
-      "baseActionClass": "other",
+      "baseActionClass": "state",
       "effectClasses": [
-        "other"
+        "state"
       ],
       "accessBoundary": null,
       "externalCapabilities": [],
@@ -945053,20 +945134,19 @@
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success",
-        "error"
+        "success"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/addressinfo/addressinfo.js:157"
+        "staticSource": "pages/addressinfo/addressinfo.js:159"
       }
     },
     {
-      "id": "pages/addressinfo/addressinfo.wxml:50:bindtap:saveAddress:6",
+      "id": "pages/addressinfo/addressinfo.wxml:52:bindtap:saveAddress:6",
       "route": "pages/addressinfo/addressinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -945089,7 +945169,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "saveAddress",
-        "line": 50,
+        "line": 52,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canSubmit}}",
@@ -945176,7 +945256,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/addressinfo/addressinfo.js:166"
+        "staticSource": "pages/addressinfo/addressinfo.js:167"
       }
     },
     {
@@ -945246,7 +945326,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/addressinfo/addressinfo.js:59"
+        "staticSource": "pages/addressinfo/addressinfo.js:60"
       }
     },
     {
@@ -974139,7 +974219,7 @@
       }
     },
     {
-      "id": "pages/club/notify/index.wxml:105:bindtap:retryFailed:9",
+      "id": "pages/club/notify/index.wxml:107:bindtap:retryFailed:9",
       "route": "pages/club/notify/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -974162,7 +974242,7 @@
         "tag": "button",
         "event": "bindtap",
         "handler": "retryFailed",
-        "line": 105,
+        "line": 107,
         "selectorHint": ".retry-btn",
         "visibleCondition": "{{campaign.failedCount > 0}}",
         "disabledCondition": "{{retrying}}",
@@ -974244,11 +974324,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/notify/index.js:254"
+        "staticSource": "pages/club/notify/index.js:252"
       }
     },
     {
-      "id": "pages/club/notify/index.wxml:110:bindtap:send:10",
+      "id": "pages/club/notify/index.wxml:112:bindtap:send:10",
       "route": "pages/club/notify/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -974271,7 +974351,7 @@
         "tag": "button",
         "event": "bindtap",
         "handler": "send",
-        "line": 110,
+        "line": 112,
         "selectorHint": ".send-btn",
         "visibleCondition": null,
         "disabledCondition": "{{sending || previewState !== 'ready'}}",
@@ -974353,7 +974433,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/notify/index.js:223"
+        "staticSource": "pages/club/notify/index.js:221"
       }
     },
     {
@@ -974420,7 +974500,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/notify/index.js:155"
+        "staticSource": "pages/club/notify/index.js:157"
       }
     },
     {
@@ -974487,11 +974567,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/notify/index.js:162"
+        "staticSource": "pages/club/notify/index.js:164"
       }
     },
     {
-      "id": "pages/club/notify/index.wxml:44:bindinput:onContentInput:5",
+      "id": "pages/club/notify/index.wxml:45:bindinput:onContentInput:5",
       "route": "pages/club/notify/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -974514,7 +974594,7 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "onContentInput",
-        "line": 44,
+        "line": 45,
         "selectorHint": ".field-textarea",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -974554,11 +974634,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/notify/index.js:165"
+        "staticSource": "pages/club/notify/index.js:167"
       }
     },
     {
-      "id": "pages/club/notify/index.wxml:50:bindtap:preview:6",
+      "id": "pages/club/notify/index.wxml:52:bindtap:preview:6",
       "route": "pages/club/notify/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -974581,7 +974661,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "preview",
-        "line": 50,
+        "line": 52,
         "selectorHint": ".preview-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -974663,11 +974743,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/notify/index.js:195"
+        "staticSource": "pages/club/notify/index.js:193"
       }
     },
     {
-      "id": "pages/club/notify/index.wxml:56:bindtap:preview:7",
+      "id": "pages/club/notify/index.wxml:58:bindtap:preview:7",
       "route": "pages/club/notify/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -974690,7 +974770,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "preview",
-        "line": 56,
+        "line": 58,
         "selectorHint": ".inline-retry",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -974772,7 +974852,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/notify/index.js:195"
+        "staticSource": "pages/club/notify/index.js:193"
       }
     },
     {
@@ -974842,11 +974922,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/notify/index.js:80"
+        "staticSource": "pages/club/notify/index.js:82"
       }
     },
     {
-      "id": "pages/club/notify/index.wxml:72:bindtap:refreshCampaign:8",
+      "id": "pages/club/notify/index.wxml:74:bindtap:refreshCampaign:8",
       "route": "pages/club/notify/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -974869,7 +974949,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "refreshCampaign",
-        "line": 72,
+        "line": 74,
         "selectorHint": ".inline-retry",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -974951,7 +975031,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/notify/index.js:289"
+        "staticSource": "pages/club/notify/index.js:287"
       }
     },
     {
@@ -986123,7 +986203,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:403"
+        "staticSource": "pages/coop/invite-detail/index.js:401"
       }
     },
     {
@@ -986234,7 +986314,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:429"
+        "staticSource": "pages/coop/invite-detail/index.js:427"
       }
     },
     {
@@ -986351,7 +986431,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:489"
+        "staticSource": "pages/coop/invite-detail/index.js:487"
       }
     },
     {
@@ -986460,7 +986540,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:587"
+        "staticSource": "pages/coop/invite-detail/index.js:585"
       }
     },
     {
@@ -986603,7 +986683,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:460"
+        "staticSource": "pages/coop/invite-detail/index.js:458"
       }
     },
     {
@@ -986670,7 +986750,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:484"
+        "staticSource": "pages/coop/invite-detail/index.js:482"
       }
     },
     {
@@ -987098,7 +987178,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:332"
+        "staticSource": "pages/coop/invite-detail/index.js:331"
       }
     },
     {
@@ -987169,7 +987249,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:672"
+        "staticSource": "pages/coop/invite-detail/index.js:670"
       }
     },
     {
@@ -987236,7 +987316,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:539"
+        "staticSource": "pages/coop/invite-detail/index.js:537"
       }
     },
     {
@@ -987303,7 +987383,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:546"
+        "staticSource": "pages/coop/invite-detail/index.js:544"
       }
     },
     {
@@ -987413,7 +987493,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:551"
+        "staticSource": "pages/coop/invite-detail/index.js:549"
       }
     },
     {
@@ -987480,7 +987560,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:600"
+        "staticSource": "pages/coop/invite-detail/index.js:598"
       }
     },
     {
@@ -987600,7 +987680,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:604"
+        "staticSource": "pages/coop/invite-detail/index.js:602"
       }
     },
     {
@@ -987670,7 +987750,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:681"
+        "staticSource": "pages/coop/invite-detail/index.js:679"
       }
     },
     {
@@ -987740,7 +987820,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:420"
+        "staticSource": "pages/coop/invite-detail/index.js:418"
       }
     },
     {
@@ -1031494,7 +1031574,7 @@
       }
     },
     {
-      "id": "pages/merchant/decor/perks/index.wxml:149:bindinput:onInput:9",
+      "id": "pages/merchant/decor/perks/index.wxml:150:bindinput:onInput:9",
       "route": "pages/merchant/decor/perks/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1031517,7 +1031597,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onInput",
-        "line": 149,
+        "line": 150,
         "selectorHint": ".dp-input",
         "visibleCondition": null,
         "disabledCondition": "{{saving || refreshing || saveReadbackPending}}",
@@ -1031561,7 +1031641,7 @@
       }
     },
     {
-      "id": "pages/merchant/decor/perks/index.wxml:164:bindinput:onInput:10",
+      "id": "pages/merchant/decor/perks/index.wxml:166:bindinput:onInput:10",
       "route": "pages/merchant/decor/perks/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1031584,7 +1031664,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onInput",
-        "line": 164,
+        "line": 166,
         "selectorHint": ".dp-input",
         "visibleCondition": null,
         "disabledCondition": "{{saving || refreshing || saveReadbackPending}}",
@@ -1031628,7 +1031708,7 @@
       }
     },
     {
-      "id": "pages/merchant/decor/perks/index.wxml:181:bindinput:onInput:11",
+      "id": "pages/merchant/decor/perks/index.wxml:184:bindinput:onInput:11",
       "route": "pages/merchant/decor/perks/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1031651,7 +1031731,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onInput",
-        "line": 181,
+        "line": 184,
         "selectorHint": ".dp-input",
         "visibleCondition": null,
         "disabledCondition": "{{saving || refreshing || saveReadbackPending}}",
@@ -1031695,7 +1031775,7 @@
       }
     },
     {
-      "id": "pages/merchant/decor/perks/index.wxml:189:bind:open:openCalendar:12",
+      "id": "pages/merchant/decor/perks/index.wxml:193:bind:open:openCalendar:12",
       "route": "pages/merchant/decor/perks/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1031718,7 +1031798,7 @@
         "tag": "cy-date-field",
         "event": "bind:open",
         "handler": "openCalendar",
-        "line": 189,
+        "line": 193,
         "selectorHint": "cy-date-field[bind:open]",
         "visibleCondition": null,
         "disabledCondition": "{{saving || refreshing || saveReadbackPending}}",
@@ -1031762,7 +1031842,7 @@
       }
     },
     {
-      "id": "pages/merchant/decor/perks/index.wxml:190:bind:close:closeCalendar:13",
+      "id": "pages/merchant/decor/perks/index.wxml:194:bind:close:closeCalendar:13",
       "route": "pages/merchant/decor/perks/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1031785,7 +1031865,7 @@
         "tag": "cy-date-field",
         "event": "bind:close",
         "handler": "closeCalendar",
-        "line": 190,
+        "line": 194,
         "selectorHint": "cy-date-field[bind:close]",
         "visibleCondition": null,
         "disabledCondition": "{{saving || refreshing || saveReadbackPending}}",
@@ -1031829,7 +1031909,7 @@
       }
     },
     {
-      "id": "pages/merchant/decor/perks/index.wxml:195:bind:change:onDate:14",
+      "id": "pages/merchant/decor/perks/index.wxml:199:bind:change:onDate:14",
       "route": "pages/merchant/decor/perks/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1031852,7 +1031932,7 @@
         "tag": "cy-date-field",
         "event": "bind:change",
         "handler": "onDate",
-        "line": 195,
+        "line": 199,
         "selectorHint": "cy-date-field[bind:change]",
         "visibleCondition": null,
         "disabledCondition": "{{saving || refreshing || saveReadbackPending}}",
@@ -1031896,7 +1031976,7 @@
       }
     },
     {
-      "id": "pages/merchant/decor/perks/index.wxml:208:bind:action:retrySave:15",
+      "id": "pages/merchant/decor/perks/index.wxml:213:bind:action:retrySave:15",
       "route": "pages/merchant/decor/perks/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1031919,7 +1031999,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "retrySave",
-        "line": 208,
+        "line": 213,
         "selectorHint": "cy-inline-error[bind:action]",
         "visibleCondition": "{{saveError}}",
         "disabledCondition": null,
@@ -1032012,11 +1032092,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/perks/index.js:301"
+        "staticSource": "pages/merchant/decor/perks/index.js:306"
       }
     },
     {
-      "id": "pages/merchant/decor/perks/index.wxml:214:bindtap:save:16",
+      "id": "pages/merchant/decor/perks/index.wxml:219:bindtap:save:16",
       "route": "pages/merchant/decor/perks/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1032039,7 +1032119,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "save",
-        "line": 214,
+        "line": 219,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canSave || saveReadbackPending}}",
@@ -1032136,7 +1032216,7 @@
       }
     },
     {
-      "id": "pages/merchant/decor/perks/index.wxml:221:bind:close:keepForm:17",
+      "id": "pages/merchant/decor/perks/index.wxml:226:bind:close:keepForm:17",
       "route": "pages/merchant/decor/perks/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1032159,7 +1032239,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "keepForm",
-        "line": 221,
+        "line": 226,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1032203,7 +1032283,7 @@
       }
     },
     {
-      "id": "pages/merchant/decor/perks/index.wxml:221:bindtap:discardForm:18",
+      "id": "pages/merchant/decor/perks/index.wxml:226:bindtap:discardForm:18",
       "route": "pages/merchant/decor/perks/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1032226,7 +1032306,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "discardForm",
-        "line": 221,
+        "line": 226,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1032270,7 +1032350,7 @@
       }
     },
     {
-      "id": "pages/merchant/decor/perks/index.wxml:221:bindtap:keepForm:19",
+      "id": "pages/merchant/decor/perks/index.wxml:226:bindtap:keepForm:19",
       "route": "pages/merchant/decor/perks/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1032293,7 +1032373,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "keepForm",
-        "line": 221,
+        "line": 226,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1032337,7 +1032417,7 @@
       }
     },
     {
-      "id": "pages/merchant/decor/perks/index.wxml:227:bind:afterleave:onNativeBackGuard:20",
+      "id": "pages/merchant/decor/perks/index.wxml:232:bind:afterleave:onNativeBackGuard:20",
       "route": "pages/merchant/decor/perks/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1032360,7 +1032440,7 @@
         "tag": "page-container",
         "event": "bind:afterleave",
         "handler": "onNativeBackGuard",
-        "line": 227,
+        "line": 232,
         "selectorHint": "page-container[bind:afterleave]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1032520,7 +1032600,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/perks/index.js:426"
+        "staticSource": "pages/merchant/decor/perks/index.js:431"
       }
     },
     {
@@ -1032659,7 +1032739,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/perks/index.js:364"
+        "staticSource": "pages/merchant/decor/perks/index.js:369"
       }
     },
     {
@@ -1032726,7 +1032806,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/perks/index.js:376"
+        "staticSource": "pages/merchant/decor/perks/index.js:381"
       }
     },
     {
@@ -1032846,7 +1032926,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/perks/index.js:379"
+        "staticSource": "pages/merchant/decor/perks/index.js:384"
       }
     },
     {
@@ -1188415,7 +1188495,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:1456"
+        "staticSource": "pages/publish/activity/index.js:1454"
       }
     },
     {
@@ -1188482,7 +1188562,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:1379"
+        "staticSource": "pages/publish/activity/index.js:1377"
       }
     },
     {
@@ -1188549,7 +1188629,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:1343"
+        "staticSource": "pages/publish/activity/index.js:1341"
       }
     },
     {
@@ -1188616,7 +1188696,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:1352"
+        "staticSource": "pages/publish/activity/index.js:1350"
       }
     },
     {
@@ -1188683,7 +1188763,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:1348"
+        "staticSource": "pages/publish/activity/index.js:1346"
       }
     },
     {
@@ -1188754,7 +1188834,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:890"
+        "staticSource": "pages/publish/activity/index.js:888"
       }
     },
     {
@@ -1189878,7 +1189958,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:603"
+        "staticSource": "pages/publish/activity/index.js:601"
       }
     },
     {
@@ -1189968,7 +1190048,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:603"
+        "staticSource": "pages/publish/activity/index.js:601"
       }
     },
     {
@@ -1190058,7 +1190138,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:614"
+        "staticSource": "pages/publish/activity/index.js:612"
       }
     },
     {
@@ -1190125,7 +1190205,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:1398"
+        "staticSource": "pages/publish/activity/index.js:1396"
       }
     },
     {
@@ -1190234,7 +1190314,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:1406"
+        "staticSource": "pages/publish/activity/index.js:1404"
       }
     },
     {
@@ -1190304,7 +1190384,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:740"
+        "staticSource": "pages/publish/activity/index.js:738"
       }
     },
     {
@@ -1190371,7 +1190451,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:1415"
+        "staticSource": "pages/publish/activity/index.js:1413"
       }
     },
     {
@@ -1190462,7 +1190542,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:1433"
+        "staticSource": "pages/publish/activity/index.js:1431"
       }
     },
     {
@@ -1190722,7 +1190802,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:745"
+        "staticSource": "pages/publish/activity/index.js:743"
       }
     },
     {
@@ -1191337,7 +1191417,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:1128"
+        "staticSource": "pages/publish/activity/index.js:1126"
       }
     },
     {
@@ -1191404,7 +1191484,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:1035"
+        "staticSource": "pages/publish/activity/index.js:1033"
       }
     },
     {
@@ -1191471,7 +1191551,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:1035"
+        "staticSource": "pages/publish/activity/index.js:1033"
       }
     },
     {
@@ -1191538,7 +1191618,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:1055"
+        "staticSource": "pages/publish/activity/index.js:1053"
       }
     },
     {
@@ -1191605,7 +1191685,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:1064"
+        "staticSource": "pages/publish/activity/index.js:1062"
       }
     },
     {
@@ -1191696,7 +1191776,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:1123"
+        "staticSource": "pages/publish/activity/index.js:1121"
       }
     },
     {
@@ -1191924,7 +1192004,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:730"
+        "staticSource": "pages/publish/activity/index.js:728"
       }
     },
     {
@@ -1192345,7 +1192425,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:1518"
+        "staticSource": "pages/publish/activity/index.js:1516"
       }
     },
     {
@@ -1192412,7 +1192492,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:959"
+        "staticSource": "pages/publish/activity/index.js:957"
       }
     },
     {
@@ -1192483,7 +1192563,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:890"
+        "staticSource": "pages/publish/activity/index.js:888"
       }
     },
     {
@@ -1192618,7 +1192698,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:792"
+        "staticSource": "pages/publish/activity/index.js:790"
       }
     },
     {
@@ -1245867,7 +1245947,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/index.js:3277"
+        "staticSource": "pages/publish/temp/index.js:3280"
       }
     },
     {
@@ -1246031,7 +1246111,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/index.js:3277"
+        "staticSource": "pages/publish/temp/index.js:3280"
       }
     },
     {
@@ -1357289,7 +1357369,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:489"
+        "staticSource": "pages/topic/merchantapply/index.js:486"
       }
     },
     {
@@ -1357356,7 +1357436,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:485"
+        "staticSource": "pages/topic/merchantapply/index.js:482"
       }
     },
     {
@@ -1357423,7 +1357503,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:482"
+        "staticSource": "pages/topic/merchantapply/index.js:479"
       }
     },
     {
@@ -1357490,7 +1357570,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:626"
+        "staticSource": "pages/topic/merchantapply/index.js:621"
       }
     },
     {
@@ -1357611,7 +1357691,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:494"
+        "staticSource": "pages/topic/merchantapply/index.js:491"
       }
     },
     {
@@ -1357678,7 +1357758,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:503"
+        "staticSource": "pages/topic/merchantapply/index.js:500"
       }
     },
     {
@@ -1357799,7 +1357879,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:494"
+        "staticSource": "pages/topic/merchantapply/index.js:491"
       }
     },
     {
@@ -1357866,7 +1357946,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:512"
+        "staticSource": "pages/topic/merchantapply/index.js:509"
       }
     },
     {
@@ -1357933,7 +1358013,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:560"
+        "staticSource": "pages/topic/merchantapply/index.js:557"
       }
     },
     {
@@ -1358000,7 +1358080,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:489"
+        "staticSource": "pages/topic/merchantapply/index.js:486"
       }
     },
     {
@@ -1358067,7 +1358147,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:485"
+        "staticSource": "pages/topic/merchantapply/index.js:482"
       }
     },
     {
@@ -1358134,7 +1358214,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:479"
+        "staticSource": "pages/topic/merchantapply/index.js:476"
       }
     },
     {
@@ -1358229,7 +1358309,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:630"
+        "staticSource": "pages/topic/merchantapply/index.js:625"
       }
     },
     {
@@ -1358326,7 +1358406,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:630"
+        "staticSource": "pages/topic/merchantapply/index.js:625"
       }
     },
     {
@@ -1358368,11 +1358448,11 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "other",
+      "actionClass": "state",
       "interactionMode": "event-contract",
-      "baseActionClass": "other",
+      "baseActionClass": "state",
       "effectClasses": [
-        "other"
+        "state"
       ],
       "accessBoundary": null,
       "externalCapabilities": [],
@@ -1358385,16 +1358465,15 @@
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success",
-        "error"
+        "success"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:413"
+        "staticSource": "pages/topic/merchantapply/index.js:414"
       }
     },
     {
@@ -1358491,7 +1358570,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:690"
+        "staticSource": "pages/topic/merchantapply/index.js:685"
       }
     },
     {
@@ -1358533,11 +1358612,11 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "other",
+      "actionClass": "state",
       "interactionMode": "event-contract",
-      "baseActionClass": "other",
+      "baseActionClass": "state",
       "effectClasses": [
-        "other"
+        "state"
       ],
       "accessBoundary": null,
       "externalCapabilities": [],
@@ -1358550,16 +1358629,15 @@
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success",
-        "error"
+        "success"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:413"
+        "staticSource": "pages/topic/merchantapply/index.js:414"
       }
     },
     {
@@ -1358654,7 +1358732,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:685"
+        "staticSource": "pages/topic/merchantapply/index.js:680"
       }
     },
     {
@@ -1358725,7 +1358803,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:712"
+        "staticSource": "pages/topic/merchantapply/index.js:707"
       }
     },
     {
@@ -1358795,7 +1358873,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:721"
+        "staticSource": "pages/topic/merchantapply/index.js:716"
       }
     },
     {
@@ -1358866,7 +1358944,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:712"
+        "staticSource": "pages/topic/merchantapply/index.js:707"
       }
     },
     {
@@ -1358933,7 +1359011,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:515"
+        "staticSource": "pages/topic/merchantapply/index.js:512"
       }
     },
     {
@@ -1359000,7 +1359078,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:518"
+        "staticSource": "pages/topic/merchantapply/index.js:515"
       }
     },
     {
@@ -1359067,7 +1359145,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:560"
+        "staticSource": "pages/topic/merchantapply/index.js:557"
       }
     },
     {
@@ -1359134,7 +1359212,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:596"
+        "staticSource": "pages/topic/merchantapply/index.js:593"
       }
     },
     {
@@ -1359201,7 +1359279,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:601"
+        "staticSource": "pages/topic/merchantapply/index.js:598"
       }
     },
     {
@@ -1359268,7 +1359346,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:560"
+        "staticSource": "pages/topic/merchantapply/index.js:557"
       }
     },
     {
@@ -1359338,7 +1359416,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:431"
+        "staticSource": "pages/topic/merchantapply/index.js:428"
       }
     },
     {
@@ -1359409,7 +1359487,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:426"
+        "staticSource": "pages/topic/merchantapply/index.js:423"
       }
     },
     {
@@ -1359480,7 +1359558,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:437"
+        "staticSource": "pages/topic/merchantapply/index.js:434"
       }
     },
     {
@@ -1359667,7 +1359745,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:724"
+        "staticSource": "pages/topic/merchantapply/index.js:719"
       }
     },
     {
@@ -1359754,7 +1359832,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:458"
+        "staticSource": "pages/topic/merchantapply/index.js:455"
       }
     },
     {

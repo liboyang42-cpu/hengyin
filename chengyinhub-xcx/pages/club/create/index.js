@@ -348,7 +348,7 @@ Page({
       this.setData({
         step: missingStep,
         canNext: false,
-        submitErrorKind: 'data',
+        submitErrorKind: 'error',
         submitError: '请先' + missingLabel,
       });
       this.validate();

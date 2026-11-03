@@ -1689,7 +1689,7 @@
         <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">下降时一起扣{{runtimeHpLabel}}</text></view><cy-switch checked="{{valueEditor.links.length > 0}}" bindchange="onValueLinkSwitch" /></view>
       </view>
       <view class="node-card node-card--danger" wx:if="{{valueEditor.index >= 0 && !valueEditor.definitionReadOnly}}" bindtap="removeValue" aria-role="button" aria-label="删除数值" hover-class="cy-pressed">删除数值</view>
-      <cy-inline-error wx:if="{{valueEditor.error}}" title="{{valueEditor.error}}" />
+      <cy-inline-error kind="error" wx:if="{{valueEditor.error}}" title="{{valueEditor.error}}" />
     </view>
   </cy-sheet>
 
@@ -1740,7 +1740,7 @@
     <text class="ic-label">数值</text>
     <view class="node-card">
       <attribute-binding-editor wx:if="{{initialStateEditor.show}}" rules="{{formData.journeyRules}}" snapshot="{{attributeRegistrySnapshot}}" topic-id="{{editingTopicId}}" config-version="{{formData.configVersion}}" read-only="{{editScope === 'WHITELIST'}}" bind:confirm="onAttributeBindingConfirm" bind:manage="manageAttributeDefinitions" bind:refresh="loadAttributeRegistry" />
-      <cy-inline-error wx:if="{{attributeRegistryError}}" title="{{attributeRegistryError}}" />
+      <cy-inline-error kind="error" wx:if="{{attributeRegistryError}}" title="{{attributeRegistryError}}" />
     </view>
     <view class="node-card" wx:if="{{initialStateEditor.rules.hp.enabled}}">
       <view class="story-initial__row"><text class="node-card__title">{{runtimeHpInitialLabel}}</text><cy-switch checked="{{true}}" disabled="{{editScope === 'WHITELIST'}}" data-field="hp.enabled" bind:change="onInitialStateField" accessibility-label="启用{{runtimeHpInitialLabel}}" /></view>
@@ -1757,7 +1757,7 @@
     <view class="node-card" wx:for="{{initialStateEditor.values}}" wx:key="key">
       <view class="story-initial__row"><text class="node-card__title">{{item.label}}</text><text class="node-card__value">{{item.min}} 至 {{item.max}}</text></view>
       <view class="story-initial__row"><text>开局{{item.label}}</text><cy-stepper label="开局{{item.label}}" value="{{item.initial}}" min="{{item.min}}" max="{{item.max}}" data-index="{{item.index}}" data-field="attribute.initial" bind:change="onInitialStateField" disabled="{{editScope === 'WHITELIST' || !!initialStateEditor.rules.attributeBinding}}" /></view>
-      <cy-inline-error wx:if="{{item.invalidInitial}}" title="开局值超出当前范围，请修改后完成" />
+      <cy-inline-error kind="error" wx:if="{{item.invalidInitial}}" title="开局值超出当前范围，请修改后完成" />
     </view>
     <view class="story-initial__choices" wx:if="{{editScope !== 'WHITELIST'}}">
       <text class="story-initial__heading">添加初始状态</text>
@@ -1768,7 +1768,7 @@
         </view>
       </view>
     </view>
-    <cy-inline-error wx:if="{{initialStateEditor.error}}" title="{{initialStateEditor.error}}" />
+    <cy-inline-error kind="error" wx:if="{{initialStateEditor.error}}" title="{{initialStateEditor.error}}" />
   </view>
 </cy-sheet>
 
@@ -1796,7 +1796,7 @@
         </view>
       </block>
     </view>
-    <cy-inline-error wx:if="{{carryPicker.error}}" title="{{carryPicker.error}}" />
+    <cy-inline-error kind="error" wx:if="{{carryPicker.error}}" title="{{carryPicker.error}}" />
     <text wx:if="{{carryPicker.state === 'error'}}" class="ic-note ic-note--error" bindtap="retryCarryPicker" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">没有读取成功，请再试一次。</text>
     <block wx:for="{{carryPicker.groups}}" wx:key="kind" wx:for-item="group">
       <text class="ic-label">{{group.label}}</text>

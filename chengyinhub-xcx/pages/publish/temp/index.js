@@ -3273,11 +3273,11 @@ Page({
   },
 
   // 「查看预览」置灰 = 还有必填没交。点它不空转:走一遍发布同款全量校验,
-  // toast 报第一条缺项 + 定位滚动(errors 落字段旁红字),比「点了没反应」给得多。
+  // 定位滚动到第一条缺项,问题写在字段下方红字(errors 落字段旁)。
+  // 2026-11-03 第四轮业主标准:输入问题只在字段下方用红色 cy-inline-error 说,
+  // 不再另弹 toast 报第一条缺项;滚动定位照旧由 validateForm 完成。
+  // (本段保持原行数,下方登记在基线里的行号不挪。)
   onPreviewDisabledTap: function () {
-    const errors = this._collectValidationErrors(false);
-    const firstKey = PUBLISH_ERROR_ORDER.find(k => errors[k]);
-    if (firstKey) toast(errors[firstKey]);
     this.validateForm(this.data.formData, false);
   },
 
