@@ -9,8 +9,6 @@ const { isLoginRequired, retryLogin } = require('../../../utils/session/login-re
 const STEP_TITLES = ['基础信息', '经营信息', '资质信息', '预览确认'];
 const STEP_EYEBROWS = ['商家入驻', '经营信息', '资质审核', '提交前确认'];
 const STEP_HEADLINES = ['先认识你的店', '告诉大家怎样找到你', '补齐审核需要的资料', '确认这份入驻信息'];
-// 第五轮 D:字段在页面上的先后,滚动到第一条红字时用。
-const APPLY_FIELD_ORDER = ['name', 'phone', 'address', 'businessTime', 'businessLicense', 'realName', 'idCard'];
 // 时/分选项与 HH:mm 格式化的单一真源(补零口径全仓一致)
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
 const wizardMorph = require('../../../utils/wizard-morph.js');
@@ -94,11 +92,7 @@ Page({
     identityConsented: false,
     identityHint: publisherIdentity.CONSENT_TEXT,
     identityDoneHint: publisherIdentity.ALREADY_REGISTERED_HINT,
-    canNext: false,
-    // 第五轮 D(业主):输入问题写在对应字段下方红字,不再弹提示。键 = 字段名。
-    fieldErrors: {},
-    hoursErrors: { days: '', time: '' },
-    scrollIntoId: '',
+    canNext: false, fieldErrors: {}, hoursErrors: { days: '', time: '' }, scrollIntoId: '', // 第五轮 D(业主):输入问题写在对应字段下方红字,不再弹提示;fieldErrors 键 = 字段名。
     submitting: false,
     submitError: '',
     submitErrorKind: '',
@@ -389,6 +383,8 @@ Page({
         if (!fe.realName && !fe.idCard && fe.consent) toast(fe.consent);
       }
     }
+    // 字段在页面上的先后,滚动到第一条红字时用。
+    const APPLY_FIELD_ORDER = ['name', 'phone', 'address', 'businessTime', 'businessLicense', 'realName', 'idCard'];
     const keys = APPLY_FIELD_ORDER.filter(function (k) { return errors[k]; });
     if (!keys.length) return;
     this.setData({ fieldErrors: Object.assign({}, d.fieldErrors, errors) });

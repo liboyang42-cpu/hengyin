@@ -1004152,7 +1004152,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/apply/index.js:364"
+        "staticSource": "pages/merchant/apply/index.js:358"
       }
     },
     {
@@ -1004219,7 +1004219,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/apply/index.js:364"
+        "staticSource": "pages/merchant/apply/index.js:358"
       }
     },
     {
@@ -1004286,7 +1004286,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/apply/index.js:364"
+        "staticSource": "pages/merchant/apply/index.js:358"
       }
     },
     {
@@ -1004374,7 +1004374,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/apply/index.js:434"
+        "staticSource": "pages/merchant/apply/index.js:430"
       }
     },
     {
@@ -1004441,7 +1004441,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/apply/index.js:480"
+        "staticSource": "pages/merchant/apply/index.js:476"
       }
     },
     {
@@ -1004508,7 +1004508,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/apply/index.js:364"
+        "staticSource": "pages/merchant/apply/index.js:358"
       }
     },
     {
@@ -1004629,7 +1004629,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/apply/index.js:527"
+        "staticSource": "pages/merchant/apply/index.js:523"
       }
     },
     {
@@ -1004696,7 +1004696,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/apply/index.js:535"
+        "staticSource": "pages/merchant/apply/index.js:531"
       }
     },
     {
@@ -1004763,7 +1004763,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/apply/index.js:548"
+        "staticSource": "pages/merchant/apply/index.js:544"
       }
     },
     {
@@ -1004884,7 +1004884,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/apply/index.js:538"
+        "staticSource": "pages/merchant/apply/index.js:534"
       }
     },
     {
@@ -1004951,7 +1004951,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/apply/index.js:364"
+        "staticSource": "pages/merchant/apply/index.js:358"
       }
     },
     {
@@ -1005018,7 +1005018,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/apply/index.js:364"
+        "staticSource": "pages/merchant/apply/index.js:358"
       }
     },
     {
@@ -1005085,7 +1005085,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/apply/index.js:429"
+        "staticSource": "pages/merchant/apply/index.js:425"
       }
     },
     {
@@ -1005210,7 +1005210,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/apply/index.js:639"
+        "staticSource": "pages/merchant/apply/index.js:635"
       }
     },
     {
@@ -1005319,7 +1005319,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/apply/index.js:190"
+        "staticSource": "pages/merchant/apply/index.js:184"
       }
     },
     {
@@ -1005409,7 +1005409,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/apply/index.js:370"
+        "staticSource": "pages/merchant/apply/index.js:364"
       }
     },
     {
@@ -1005534,7 +1005534,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/apply/index.js:359"
+        "staticSource": "pages/merchant/apply/index.js:353"
       }
     },
     {
@@ -1005604,7 +1005604,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/apply/index.js:683"
+        "staticSource": "pages/merchant/apply/index.js:679"
       }
     },
     {
@@ -1005671,7 +1005671,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/apply/index.js:344"
+        "staticSource": "pages/merchant/apply/index.js:338"
       }
     },
     {
@@ -1005742,7 +1005742,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/apply/index.js:656"
+        "staticSource": "pages/merchant/apply/index.js:652"
       }
     },
     {
@@ -1005809,7 +1005809,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/apply/index.js:483"
+        "staticSource": "pages/merchant/apply/index.js:479"
       }
     },
     {
@@ -1005876,7 +1005876,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/apply/index.js:484"
+        "staticSource": "pages/merchant/apply/index.js:480"
       }
     },
     {
@@ -1005944,7 +1005944,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/apply/index.js:490"
+        "staticSource": "pages/merchant/apply/index.js:486"
       }
     },
     {
@@ -1006012,7 +1006012,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/apply/index.js:490"
+        "staticSource": "pages/merchant/apply/index.js:486"
       }
     },
     {
@@ -1006102,7 +1006102,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/apply/index.js:325"
+        "staticSource": "pages/merchant/apply/index.js:319"
       }
     },
     {
@@ -1006169,7 +1006169,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/apply/index.js:501"
+        "staticSource": "pages/merchant/apply/index.js:497"
       }
     },
     {
@@ -1006236,7 +1006236,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/apply/index.js:495"
+        "staticSource": "pages/merchant/apply/index.js:491"
       }
     },
     {
@@ -1006303,7 +1006303,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/apply/index.js:498"
+        "staticSource": "pages/merchant/apply/index.js:494"
       }
     },
     {
@@ -1006370,7 +1006370,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/apply/index.js:132"
+        "staticSource": "pages/merchant/apply/index.js:126"
       }
     },
     {
@@ -1006437,7 +1006437,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/apply/index.js:343"
+        "staticSource": "pages/merchant/apply/index.js:337"
       }
     },
     {
@@ -1006531,7 +1006531,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/apply/index.js:649"
+        "staticSource": "pages/merchant/apply/index.js:645"
       }
     },
     {
@@ -1006640,7 +1006640,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/apply/index.js:190"
+        "staticSource": "pages/merchant/apply/index.js:184"
       }
     },
     {
@@ -1006710,7 +1006710,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/apply/index.js:662"
+        "staticSource": "pages/merchant/apply/index.js:658"
       }
     },
     {
