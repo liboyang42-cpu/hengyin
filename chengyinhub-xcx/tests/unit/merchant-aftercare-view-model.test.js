@@ -181,7 +181,7 @@ test('负控：把 pending 映成 refunded 时，款项状态断言必须判红'
     "const refunded = source.processing === 'WAITING_PLATFORM_REVIEW';",
   );
   assert.notEqual(mutated, source, '负控锚点失效');
-  const sandbox = { module: { exports: {} }, exports: {} };
+  const sandbox = { module: { exports: {} }, exports: {}, require: (request) => require(path.resolve(path.dirname(file), request)) };
   vm.runInNewContext(mutated, sandbox);
   assert.throws(
     () => assertPendingNotRefunded(sandbox.module.exports.shapeAftercareDetail),

@@ -13,7 +13,7 @@ function ledgerPage() {
     Page: definition => { page = definition; },
     getApp: () => ({}),
     require: request => request.includes('merchant-finance')
-      ? { money: value => Number(value).toFixed(2) }
+      ? { money: value => Number(value).toFixed(2), yuan: require(path.resolve(__dirname, '../../utils/money-format.js')).yuan }
       : {},
     console,
   });
@@ -31,7 +31,7 @@ function detailPage(file, payload, query) {
     Page: definition => { page = definition; },
     getApp: () => app,
     require: requestPath => requestPath.includes('merchant-finance')
-      ? { isFinanceObjectPayload: result => !!result && result.code === 200 && !!result.data, money: value => Number(value).toFixed(2) }
+      ? { isFinanceObjectPayload: result => !!result && result.code === 200 && !!result.data, money: value => Number(value).toFixed(2), yuan: require(path.resolve(__dirname, '../../utils/money-format.js')).yuan }
       : requestPath.includes('page-motion') ? { countMoney() {}, countIn() {}, enter() {} } // 动效是装饰,合同测试里置空
       : (requestPath.includes('response-shape')
         ? {

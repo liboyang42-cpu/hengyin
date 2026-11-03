@@ -1,6 +1,6 @@
 const app = getApp();
 const merchantTheme = require('../../../../utils/merchant-theme.js'); const pageMotion = require('../../../../utils/page-motion.js');
-const { isFinanceObjectPayload, money } = require('../../utils/merchant-finance.js');
+const { isFinanceObjectPayload, money, yuan } = require('../../utils/merchant-finance.js');
 
 Page({
   data: {
@@ -81,7 +81,7 @@ Page({
         const detail = Object.assign({}, res.data, {
           canReadFinance,
           amountText,
-          amountDisplay: amountText == null ? null : `¥${amountText}`,
+          amountDisplay: amountText == null ? null : yuan(amountText),
           title: [res.data.topicName, res.data.chapterName].filter(Boolean).join(' · ') || '核销记录',
           stateText: canReadFinance ? stateText(res.data) : fulfillmentStateText(res.data.fulfillmentState),
           stateVariant: canReadFinance
@@ -189,7 +189,7 @@ function accrualRuleText(detail) {
     && detail.headCount !== ''
     && Number.isFinite(Number(detail.headCount));
   if (unitFee == null || !hasHeadCount) return '';
-  return `¥${unitFee}/人 × ${detail.headCount}`;
+  return `${yuan(unitFee)}/人 × ${detail.headCount}`;
 }
 
 /**

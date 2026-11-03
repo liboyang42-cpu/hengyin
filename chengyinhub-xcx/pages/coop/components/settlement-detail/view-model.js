@@ -9,9 +9,11 @@ function canonicalStatus(value) {
   return text === '0' || text === '1' || text === '2' ? Number(text) : null;
 }
 
+const { yuan } = require('../../../../utils/money-format.js');
+
 function money(value) {
   if (typeof value !== 'number' || !Number.isFinite(value)) return null;
-  return `¥${value.toFixed(2)}`;
+  return yuan(value);
 }
 
 function numericValue(value) {

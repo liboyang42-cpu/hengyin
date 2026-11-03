@@ -1356843,7 +1356843,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/components/scene-merchant-profit/index.js:258"
+        "staticSource": "subpackageA/components/scene-merchant-profit/index.js:260"
       }
     },
     {
@@ -1356999,7 +1356999,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/components/scene-merchant-profit/index.js:250"
+        "staticSource": "subpackageA/components/scene-merchant-profit/index.js:252"
       }
     },
     {
@@ -1357194,7 +1357194,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/components/scene-merchant-profit/index.js:245"
+        "staticSource": "subpackageA/components/scene-merchant-profit/index.js:247"
       }
     },
     {

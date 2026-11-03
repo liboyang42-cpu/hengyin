@@ -3,6 +3,7 @@
 const app = getApp()
 const { memberId, failureStatus, retryLogin, waitForInitialSession, recoverReadSession } = require('../../../utils/session/login-reload.js'); const pageMotion = require('../../../utils/page-motion.js');
 const merchantTheme = require('../../../utils/merchant-theme.js');
+const { yuan } = require('../../../utils/money-format.js');
 // 2026-09-15 起「提现」不再跳银行卡表单:平台不打款,一律弹平台客服微信线下处理。
 const withdrawCs = require('../../../utils/withdraw-cs.js');
 
@@ -29,14 +30,14 @@ function statItems(myIncomeTotal, adjustments) {
   const pending = money(a.pendingAmount);
   const executed = money(a.executedAmount);
   const items = [
-    { key: 'income', label: '已入账分润', value: myIncomeTotal != null ? ('¥' + myIncomeTotal) : null },
+    { key: 'income', label: '已入账分润', value: myIncomeTotal != null ? yuan(myIncomeTotal) : null },
   ];
   // 待处理为 0 时不占一行:0 元待处理不是需要主理人知道的事。取不到(null)则要显示「—」。
   if (pending === null || Number(pending) > 0) {
-    items.push({ key: 'adjustPending', label: '调整待处理', value: pending === null ? null : ('¥' + pending) });
+    items.push({ key: 'adjustPending', label: '调整待处理', value: pending === null ? null : yuan(pending) });
   }
   if (executed === null || Number(executed) > 0) {
-    items.push({ key: 'adjustExecuted', label: '已执行调整', value: executed === null ? null : ('−¥' + executed) });
+    items.push({ key: 'adjustExecuted', label: '已执行调整', value: executed === null ? null : yuan(-Math.abs(Number(executed))) });
   }
   return items;
 }
@@ -190,6 +191,7 @@ Component({
               badgeVariant: statusText === '已入账' ? 'success'
                 : (/待确认/.test(statusText) ? 'neutral' : 'warning'),
               incomeText: incomeText,
+              incomeDisplay: incomeText == null ? null : yuan(incomeText),
               totalSalesText: money(t.totalSales),
               verifiedSalesText: money(t.verifiedSales),
               platformText: money(t.platformAmount),

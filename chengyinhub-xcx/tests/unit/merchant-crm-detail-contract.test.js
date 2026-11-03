@@ -94,7 +94,7 @@ test('负控：若详情不再核对 customerMemberId，跨客户响应必须被
     'if (false) return null;',
   );
   assert.notEqual(mutated, source, '负控锚点失效');
-  const sandbox = { module: { exports: {} }, exports: {} };
+  const sandbox = { module: { exports: {} }, exports: {}, require: (request) => require(path.resolve(path.dirname(file), request)) };
   vm.runInNewContext(mutated, sandbox);
   assert.notEqual(
     sandbox.module.exports.shapeCustomerDetail({ summary: { customerMemberId: 99, arrivedCount: 0, pendingCount: 0, refundedCount: 0 }, systemTags: [], merchantTags: [], timeline: [] }, 41),
@@ -125,6 +125,7 @@ function mountPage() {
     require(request) {
       if (request.includes('merchant-theme')) return { merchantPageShow() {}, merchantPageRestore() {} };
       if (request.includes('utils/datetime')) return require(path.resolve(__dirname, '../../utils/datetime.js'));
+      if (request.includes('utils/money-format')) return require(path.resolve(__dirname, '../../utils/money-format.js'));
       if (request.includes('merchant-access-policy')) return {
         inactiveAccess: () => ({ active: false, canReadCrm: false, canSegmentCrm: false }),
         normalizeMerchantAccess: raw => ({

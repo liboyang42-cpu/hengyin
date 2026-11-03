@@ -1,3 +1,4 @@
+const { yuan } = require('../../../../utils/money-format.js');
 const PROCESSING = {
   WAITING_PLATFORM_REVIEW: {
     text: '平台审核中',
@@ -149,7 +150,7 @@ function shapeAftercareDetail(raw) {
     refundedHint: refunded ? '款项结果已由平台确认' : '不要根据商家意见推断退款结果',
     refundedVariant: refunded ? 'success' : 'neutral',
     hasRefundAmount: refundAmount != null,
-    refundAmountText: refundAmount == null ? '金额待确认' : `¥${refundAmount}`,
+    refundAmountText: refundAmount == null ? '金额待确认' : yuan(refundAmount),
     refundNoText: typeof source.refundNo === 'string' && source.refundNo.trim()
       ? source.refundNo.trim() : `#${refundId}`,
     sourceText: sourceTypeText(source.sourceType),
@@ -362,7 +363,7 @@ function groupAftercareItems(items, now) {
     key: group.key,
     label: group.label,
     items: group.items,
-    totalText: group.complete ? `¥${(group.cents / 100).toFixed(2)}` : '',
+    totalText: group.complete ? yuan(group.cents / 100) : '',
   }));
 }
 
@@ -414,7 +415,7 @@ function shapeAftercareListPage(raw, expectedBucket) {
       processingText: processing.text,
       processingVariant: processing.variant,
       merchantOpinionText: opinion.text,
-      refundAmountText: amount == null ? '金额待确认' : `¥${amount}`,
+      refundAmountText: amount == null ? '金额待确认' : yuan(amount),
       refundNoText: typeof item.refundNo === 'string' && item.refundNo.trim()
         ? item.refundNo.trim() : `#${refundId}`,
       sourceText: sourceTypeText(item.sourceType),

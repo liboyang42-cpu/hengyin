@@ -23,7 +23,7 @@
           <view class="fc-main">
             <view class="fc-top">
               <text class="fc-name ep1">{{item.topicName}}</text>
-              <text class="fc-income" wx:if="{{item.settled && item.incomeText != null}}">{{'¥' + item.incomeText}}</text>
+              <text class="fc-income" wx:if="{{item.settled && item.incomeText != null}}">{{item.incomeDisplay}}</text>
               <text class="fc-income" wx:else>—</text>
             </view>
             <view class="fc-bottom">

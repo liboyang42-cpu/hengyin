@@ -2,7 +2,7 @@ const toast = require('../../../utils/toast.js'); const pageMotion = require('..
 const app = getApp();
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const subscribe = require('../../../utils/subscribe.js');
-const { normalizeMerchantFinanceRoute, isFinancePagePayload, isFinanceObjectPayload, isMerchantEventsPayload, money } = require('../utils/merchant-finance.js');
+const { normalizeMerchantFinanceRoute, isFinancePagePayload, isFinanceObjectPayload, isMerchantEventsPayload, money, yuan } = require('../utils/merchant-finance.js');
 const { normalizeMerchantAccess } = require('../../../utils/merchant-access-policy.js');
 // UI-06(2026-09-18 用户走查):退款售后不再单独一张卡,并进核销记录的 全部/待处理/已处理 三个 tab。
 // 复用售后列表页的同一份行解析,不在台账里再写一套字段兜底。
@@ -485,7 +485,7 @@ Page({
       stateText: '退款 · ' + (row.statusText || '状态待确认'),
       stateVariant: row.statusTone || 'neutral',
       amountText: amount,
-      amountDisplay: canReadFinance === false ? null : (amount == null ? '待定' : '¥' + amount),
+      amountDisplay: canReadFinance === false ? null : (amount == null ? '待定' : yuan(amount)),
       amountTone: amount == null ? 'mute' : 'neg',
     });
   },
@@ -496,7 +496,7 @@ Page({
     item.amountPrefix = item.amountText != null && Number(item.amountText) >= 0 ? '+' : '';
     // 右列只放金额,一列一语义。两种未成立要分开:金额尚未成立(①②待主题结算)→「待定」;
     // 明确不产生现金 → 右列留空(M-27 第3轮:不再画破折号,状态 chip 已说「无现金结算」)。
-    item.amountDisplay = item.amountText != null ? `${item.amountPrefix}¥${item.amountText}`
+    item.amountDisplay = item.amountText != null ? yuan(item.amountText, { signed: true })
       : (row.displayState === 'NO_CASH_SETTLEMENT' ? null : '待定');
     item.amountTone = item.amountText == null ? 'mute' : (Number(item.amountText) < 0 ? 'neg' : 'pos');
     item.dayKey = row.occurredAt ? String(row.occurredAt).slice(0, 10) : '';
@@ -524,7 +524,7 @@ Page({
     const item = Object.assign({}, row);
     item.amountText = money(row.signedAmount);
     item.amountPrefix = item.amountText != null && Number(item.amountText) >= 0 ? '+' : '';
-    item.amountDisplay = item.amountText == null ? '待定' : `${item.amountPrefix}¥${item.amountText}`;
+    item.amountDisplay = item.amountText == null ? '待定' : yuan(item.amountText, { signed: true });
     item.amountTone = item.amountText == null ? 'mute' : (Number(item.amountText) < 0 ? 'neg' : 'pos');
     item.timeText = row.occurredAt ? String(row.occurredAt).slice(5, 10) : '';
     item.sourceText = { REDEMPTION_FEE: '核销计酬', COOP_SHARE: '合作分润', ACTIVITY_SHARE: '活动分润', MERCHANT_CLAWBACK: '已执行扣划' }[row.source] || '调整';
@@ -535,7 +535,7 @@ Page({
   batchRow(row) {
     const item = Object.assign({}, row);
     item.amountText = money(row.amountTotal);
-    item.amountDisplay = item.amountText == null ? '待定' : `¥${item.amountText}`;
+    item.amountDisplay = item.amountText == null ? '待定' : yuan(item.amountText);
     item.tone = row.displayState === 'LEDGER_ERROR' ? 'void' : (row.paymentState === 'PAID' ? 'settled' : 'pending');
     item.stateText = row.displayState === 'LEDGER_ERROR' ? '结算数据对不上，请联系客服' : (row.netDirection === 'ZERO' ? '本期无需打款' : (row.netDirection === 'MERCHANT_OWES_PLATFORM' ? '调整待处理' : batchStateText(row)));
     item.stateVariant = row.displayState === 'LEDGER_ERROR' ? 'danger'
@@ -734,14 +734,14 @@ function summaryView(summary, canReadFinance) {
   if (pending == null || arrived == null) return null;
   return {
     countText: `${count} 笔`,
-    pendingDisplay: `¥${pending}`,
-    arrivedDisplay: `¥${arrived}`,
+    pendingDisplay: yuan(pending),
+    arrivedDisplay: yuan(arrived),
   };
 }
 
 function moneyDisplay(value) {
   const amount = money(value);
-  return amount == null ? '待定' : `¥${amount}`;
+  return amount == null ? '待定' : yuan(amount);
 }
 
 function financeStateText(item) {
