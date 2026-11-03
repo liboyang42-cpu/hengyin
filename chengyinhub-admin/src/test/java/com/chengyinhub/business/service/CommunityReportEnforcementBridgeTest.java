@@ -110,10 +110,59 @@ class CommunityReportEnforcementBridgeTest {
         assertEquals(400, assertThrows(ServiceException.class,
                 () -> service.transitionReport(OPERATOR, triage)).getCode());
 
+        // 找不到责任账号的商家(已不存在)与无处置口的类型(活动)仍拒绝
         when(mapper.selectReportForUpdate(REPORT)).thenReturn(report("MERCHANT", 201L));
         assertEquals(400, assertThrows(ServiceException.class,
                 () -> service.transitionReport(OPERATOR, resolve(enforcement()))).getCode());
+        when(mapper.selectReportForUpdate(REPORT)).thenReturn(report("ACTIVITY", 9L));
+        assertEquals(400, assertThrows(ServiceException.class,
+                () -> service.transitionReport(OPERATOR, resolve(enforcement()))).getCode());
         verify(posts, never()).enforceReportedTarget(anyLong(), anyLong(), anyString(), anyLong(), any());
+    }
+
+    /** Round5B-7:成员举报成立 → 对被举报账号落账号级处置,不再 400。 */
+    @Test
+    void memberReportEnforcesAgainstTheReportedAccount() {
+        when(mapper.selectReportForUpdate(REPORT)).thenReturn(report("MEMBER", 88L));
+        CommunityPostRequests.Enforcement enforcement = enforcement();
+        when(posts.enforceReportedTarget(OPERATOR, REPORT, "MEMBER", 88L, enforcement)).thenReturn(51L);
+
+        service.transitionReport(OPERATOR, resolve(enforcement));
+
+        verify(posts).enforceReportedTarget(OPERATOR, REPORT, "MEMBER", 88L, enforcement);
+    }
+
+    /** Round5B-7:商家举报成立 → 对商家入驻账号落账号级处置。 */
+    @Test
+    void merchantReportEnforcesAgainstTheMerchantAccount() {
+        MmsMerchantMapper merchants = mock(MmsMerchantMapper.class);
+        com.chengyinhub.business.domain.MmsMerchant merchant = new com.chengyinhub.business.domain.MmsMerchant();
+        merchant.setId(201L);
+        merchant.setMemberId(77L);
+        when(merchants.selectMmsMerchantById(201L)).thenReturn(merchant);
+        ReflectionTestUtils.setField(service, "mmsMerchantMapper", merchants);
+        when(mapper.selectReportForUpdate(REPORT)).thenReturn(report("MERCHANT", 201L));
+        CommunityPostRequests.Enforcement enforcement = enforcement();
+
+        service.transitionReport(OPERATOR, resolve(enforcement));
+
+        verify(posts).enforceReportedTarget(OPERATOR, REPORT, "MEMBER", 77L, enforcement);
+    }
+
+    /** Round5B-7:俱乐部举报成立 → 对俱乐部创建者账号落账号级处置。 */
+    @Test
+    void clubReportEnforcesAgainstTheClubOwner() {
+        com.chengyinhub.business.mapper.ClubMapper clubs = mock(com.chengyinhub.business.mapper.ClubMapper.class);
+        com.chengyinhub.business.domain.Club club = new com.chengyinhub.business.domain.Club();
+        club.setMemberId(66L);
+        when(clubs.selectClubById(301L)).thenReturn(club);
+        ReflectionTestUtils.setField(service, "clubMapper", clubs);
+        when(mapper.selectReportForUpdate(REPORT)).thenReturn(report("CLUB", 301L));
+        CommunityPostRequests.Enforcement enforcement = enforcement();
+
+        service.transitionReport(OPERATOR, resolve(enforcement));
+
+        verify(posts).enforceReportedTarget(OPERATOR, REPORT, "MEMBER", 66L, enforcement);
     }
 
     private CommunityReportCase report(String targetType, long targetId) {

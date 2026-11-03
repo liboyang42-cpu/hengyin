@@ -79,6 +79,8 @@ public class CommunityTrustServiceImpl implements CommunityTrustService {
     @Autowired private CommunityTrustMapper communityTrustMapper;
     @Autowired private CommunityPostMapper communityPostMapper;
     @Autowired private MmsMerchantMapper mmsMerchantMapper;
+    /** Round5B-7:俱乐部举报处置落到创建者账号。 */
+    @Autowired private com.chengyinhub.business.mapper.ClubMapper clubMapper;
     /** 帖文服务反向依赖本服务(举报受理),ObjectProvider 懒取破环。 */
     @Autowired private ObjectProvider<ICommunityPostService> communityPostServiceProvider;
 
@@ -349,9 +351,14 @@ public class CommunityTrustServiceImpl implements CommunityTrustService {
         }
         if (!allowedStageTransition(row.getStage(), next)) throw conflict("举报阶段跳变不合法");
         if (!request.getExpectedVersion().equals(row.getVersion())) throw conflict("举报版本已变化");
+        // Round5B-7:成员 / 商家 / 俱乐部举报也能裁定处置(落到被举报账号或其负责人账号的账号级处置)。
+        String enforceType = row.getTargetType();
+        Long enforceTargetId = row.getTargetId();
         if (enforcement != null && !CommunityReportCase.TARGET_CONTENT.equals(row.getTargetType())
                 && !CommunityReportCase.TARGET_COMMENT.equals(row.getTargetType())) {
-            throw badRequest("该举报对象不支持内容处置");
+            enforceTargetId = accountableMember(row.getTargetType(), row.getTargetId());
+            if (enforceTargetId == null) throw badRequest("该举报对象不支持内容处置");
+            enforceType = CommunityReportCase.TARGET_MEMBER;
         }
         if (communityTrustMapper.transitionReportCas(row.getId(), row.getStage(), next,
                 request.getExpectedVersion(), decisionSummary, request.getEstimatedResolveAt()) != 1) {
@@ -364,7 +371,7 @@ public class CommunityTrustServiceImpl implements CommunityTrustService {
         if (enforcement != null) {
             // AUDIT-G3-5:举报裁定违规 → 同一事务里落处置(处置行带 report_case_id),处置 id 回写到举报时间线。
             Long enforcementId = communityPostServiceProvider.getObject().enforceReportedTarget(operatorUserId,
-                    row.getId(), row.getTargetType(), row.getTargetId(), enforcement);
+                    row.getId(), enforceType, enforceTargetId, enforcement);
             if (communityTrustMapper.insertReportTimeline(timeline(row.getId(), "ENFORCE:" + requestId,
                     transitionHash, "PLATFORM", "ENFORCEMENT_APPLIED", next, next, "平台已按社区规范处置",
                     "enforcementId=" + enforcementId + ";type=" + upper(enforcement.getEnforcementType()),
@@ -378,6 +385,20 @@ public class CommunityTrustServiceImpl implements CommunityTrustService {
         row.setVersion(row.getVersion() + 1);
         enqueueReportProgress(row, "REPORT_STAGE_" + next, publicNote, new Date());
         return row;
+    }
+
+    /** 举报对象对应的责任账号:成员即本人,商家取入驻账号,俱乐部取创建者;其它类型返回 null(不支持)。 */
+    private Long accountableMember(String targetType, Long targetId) {
+        if (CommunityReportCase.TARGET_MEMBER.equals(targetType)) return targetId;
+        if (CommunityReportCase.TARGET_MERCHANT.equals(targetType)) {
+            MmsMerchant merchant = mmsMerchantMapper.selectMmsMerchantById(targetId);
+            return merchant == null || !positive(merchant.getMemberId()) ? null : merchant.getMemberId();
+        }
+        if (CommunityReportCase.TARGET_CLUB.equals(targetType)) {
+            com.chengyinhub.business.domain.Club club = clubMapper == null ? null : clubMapper.selectClubById(targetId);
+            return club == null || !positive(club.getMemberId()) ? null : club.getMemberId();
+        }
+        return null;
     }
 
     @Override
