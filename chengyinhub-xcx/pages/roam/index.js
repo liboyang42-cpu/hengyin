@@ -350,7 +350,7 @@ Page({
     paused: false,
     roamIdle: false,
     roamPanelExpanded: false,
-    reducedMotion: false,
+    reducedMotion: false, roamPageShown: false, // roamPageShown:地图天气氛围只在本页可见时动画(onShow/onHide)
     openingEmojis: [],
     sceneStack: [],
     sceneCurrent: null,
@@ -1015,7 +1015,7 @@ Page({
     this._roamCacheUnsubscribe = null;
   },
   onHide() {
-    this._hidden = true;
+    this._hidden = true; this.setData({ roamPageShown: false });
     this._roamStartGen = (this._roamStartGen || 0) + 1;
     this._roamStartPending = false;
     this._shootAfterStart = false;
@@ -1046,7 +1046,7 @@ Page({
     // P1-6:兜里短接的读数立即补一次,不等下一拍 1s
     this._hidden = false;
     if (this._clock) this._syncStats();
-    this.setData({ fontScaleStyle: readPageStyle() });
+    this.setData({ fontScaleStyle: readPageStyle(), roamPageShown: true });
     this._syncPresencePrivacy(); this._eventNavigating = false; this._navigating = false; // 返回时兜底清「官方活动」与其余入口的跳转锁
     // 系统定位权限与位置分享偏好分别回读。
     const app = getApp();

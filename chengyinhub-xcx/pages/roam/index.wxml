@@ -237,6 +237,7 @@
          data-generation="{{item.generation}}" data-version="{{item.version}}"
          bindload="onFogScreenLoad" binderror="onFogScreenError" />
   </block>
+  <cy-map-weather lat="{{center.lat}}" lng="{{center.lng}}" active="{{roamPageShown}}" reduced-motion="{{reducedMotion}}" />
 </view>
 <view class="vignette"></view>
 <!-- GO → 地图：粗弧线切场 → 品牌开场 → 露出已预热的真实地图。结构对齐 docs/prototypes/roam-opening-animation.html -->

@@ -206,6 +206,18 @@ class PublicReadEndpointsSecurityChainTest {
     }
 
     @Test
+    void mapWeatherIsAnonymousOnlyForExactGetAndMapSiblingsAreNot() throws Exception {
+        mockMvc.perform(get("/api/map/weather").param("lat", "30.27").param("lng", "120.15"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
+        // 负控:写成 /api/map/** 或不限方法时以下会变 200。
+        mockMvc.perform(post("/api/map/weather")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/map/weather/extra")).andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/map/reverse-geocode")).andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/map/nearby")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void legacyUserInfoAndSiblingsStillRequireAuthentication() throws Exception {
         // 负控:放行必须精确到路径。写成 /api/user/** 或 /api/merchant/** 时这几条会变 200。
         mockMvc.perform(post("/api/user/info"))
@@ -388,7 +400,8 @@ class PublicReadEndpointsSecurityChainTest {
         @org.springframework.web.bind.annotation.RequestMapping({"/api/roam/share/snapshot",
                 "/api/roam/share/revoke", "/api/play/run-session/list",
                 "/api/official/events", "/api/official/events/123", "/api/official/events/123/signup",
-                "/api/city/nodes", "/api/city/nodes/123"})
+                "/api/city/nodes", "/api/city/nodes/123",
+                "/api/map/weather", "/api/map/weather/extra", "/api/map/reverse-geocode", "/api/map/nearby"})
         AjaxResult probeAnyMethod() {
             return AjaxResult.success();
         }

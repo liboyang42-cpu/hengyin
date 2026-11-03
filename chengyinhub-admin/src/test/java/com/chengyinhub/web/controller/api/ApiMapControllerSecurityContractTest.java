@@ -82,4 +82,34 @@ class ApiMapControllerSecurityContractTest {
         assertTrue(((java.util.List<?>) limited.get(AjaxResult.DATA_TAG)).isEmpty(), "额度用完返回空列表,不再打供应商");
         verify(geocodeService, times(1)).searchPlaces("海星市场", 121.37D, 31.10D);
     }
+
+    @Test
+    void weatherValidatesCoordinatesIsIpRateLimitedAndReturnsOnlyTheTinyDto() throws Exception {
+        com.chengyinhub.business.service.IMapWeatherService weatherService =
+                mock(com.chengyinhub.business.service.IMapWeatherService.class);
+        when(weatherService.weatherAt(30.27D, 120.15D))
+                .thenReturn(new com.chengyinhub.business.domain.vo.MapWeatherVO("rain", 0.6D));
+        ApiMapController controller = new ApiMapController();
+        ReflectionTestUtils.setField(controller, "mapWeatherService", weatherService);
+
+        for (String[] bad : new String[][]{{null, "120"}, {"30", ""}, {"91", "120"}, {"-91", "120"},
+                {"30", "181"}, {"30", "-180.5"}, {"NaN", "120"}, {"abc", "120"}}) {
+            assertEquals(500, controller.weather(bad[0], bad[1]).get(AjaxResult.CODE_TAG), Arrays.toString(bad));
+        }
+        verify(weatherService, times(0)).weatherAt(org.mockito.ArgumentMatchers.anyDouble(),
+                org.mockito.ArgumentMatchers.anyDouble());
+
+        AjaxResult ok = controller.weather("30.27", "120.15");
+        assertEquals(200, ok.get(AjaxResult.CODE_TAG));
+        com.chengyinhub.business.domain.vo.MapWeatherVO vo =
+                (com.chengyinhub.business.domain.vo.MapWeatherVO) ok.get(AjaxResult.DATA_TAG);
+        assertEquals("rain", vo.getKind());
+
+        java.lang.reflect.Method method = ApiMapController.class.getMethod("weather", String.class, String.class);
+        assertTrue(Arrays.asList(method.getAnnotation(org.springframework.web.bind.annotation.GetMapping.class).value())
+                .contains("/weather"));
+        com.chengyinhub.common.annotation.RateLimiter limiter =
+                method.getAnnotation(com.chengyinhub.common.annotation.RateLimiter.class);
+        assertEquals(com.chengyinhub.common.enums.LimitType.IP, limiter.limitType());
+    }
 }

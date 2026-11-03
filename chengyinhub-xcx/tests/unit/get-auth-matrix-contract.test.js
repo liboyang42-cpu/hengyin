@@ -154,6 +154,8 @@ const MATRIX = [
   // 2026-09-17 第二轮拍板 22:首页「继续游戏」只列本人仍可继续的游戏会话(服务端按 uid 取,不收 memberId 参数)。
   // 2026-09-17 第二轮拍板 17:朋友分享的足迹快照,未登录可读;只凭随机 32 位令牌取已裁剪/平移的快照,不带分享者身份。
   ['utils/roam-share-snapshot.js', "url: '/api/roam/share/snapshot', method: 'GET'", 'optional', 'visitor/member', 'share-token-snapshot'],
+  // 2026-11-03 第九轮 m-rain:漫游地图天气氛围,匿名可读(SecurityConfig 精确 GET),只回 kind/intensity,按 IP 限流。
+  ['subpackageRoam/components/map-weather/index.js', "url: '/api/map/weather', method: 'GET'", 'optional', 'visitor/member', 'public-map-weather'],
   // 2026-09-15 地图组队 P 方案:附近公开队伍。ApiPlayTeamController#nearby 走 getAppUserId 未登录即拒;viewerStatus/pendingCount 按 viewer 算。
   // (同日下线组局的 /api/roam/pois 与 /api/roam/hangout/detail 两条 GET:地图上不再有局卡与打卡点列表。
   //  同日撤掉漫游地图 f-hangout 一档:roam 不再调 /api/roam/hangout/nearby,搭子局已下线,该卡整卡退场。)
@@ -279,7 +281,7 @@ const VALID_SCOPES = new Set([
   'self-member-history', 'activity-perspective-access',
   'self-merchant-game-entry', 'club-owned-activity',
   'owned-merchant-resource', 'self-marketing-consent',
-  'share-token-snapshot', 'owned-merchant-or-club-receivable', 'owned-media-asset',
+  'share-token-snapshot', 'public-map-weather', 'owned-merchant-or-club-receivable', 'owned-media-asset',
   'controlled-event-operator', 'public-profile-gallery', 'active-team-member', 'owned-topic-target-merchant-stations',
 ]);
 
@@ -423,7 +425,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-10-29 M-32:账户收益本月收入明细读俱乐部计酬一处(同 club-direct-ledger 端点与权限档,已入 MATRIX),109 → 110。
   // R03/R12 原写入结果仅按登录actor、操作种类和原请求号回读；新增一条本人回执GET。
   // 2026-11-01:商家工作台删除开通前置检查,少一处 GET(/api/merchant/ops/prerequisites) 111 → 110
-  assert.equal(directCount, 110, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-11-03 第九轮 m-rain:漫游地图天气氛围一处匿名 GET /api/map/weather(已入 MATRIX),110 → 111。
+  assert.equal(directCount, 111, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。
@@ -457,7 +460,7 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
 });
 
 // 仅接受两种完整 DSL；参数中不允许嵌套调用，括号必须成对。
-// 固定全部 15 条 matcher 的参数、HTTP 方法、权限及顺序，避免跨规则匹配假绿。
+// 固定全部 16 条 matcher 的参数、HTTP 方法、权限及顺序，避免跨规则匹配假绿。
 const SECURITY_RULES = [
   'url=>permitAll',
   '"/login","/register","/captchaImage"=>permitAll',
@@ -473,6 +476,7 @@ const SECURITY_RULES = [
   '"/api/merchant/public-detail"=>permitAll',
   '"/api/merchant/public-home","/api/user/public-info"=>permitAll',
   'HttpMethod.GET,"/api/roam/share/snapshot"=>permitAll',
+  'HttpMethod.GET,"/api/map/weather"=>permitAll',
   'HttpMethod.POST,"/api/merchant/list"=>permitAll'
 ];
 
@@ -503,7 +507,7 @@ for (const dsl of ['legacy', 'boot4']) {
     ? `.requestMatchers(legacyMatchers(${args})).permitAll()`
     : `.antMatchers(${args}).permitAll()`;
 
-  test(`${dsl} DSL 正例保留全部 15 条权限规则`, () => assertSecurityRules(source));
+  test(`${dsl} DSL 正例保留全部 16 条权限规则`, () => assertSecurityRules(source));
   const mutations = [
     ['official POST 改写 GET', (s) => s.replace('HttpMethod.GET, "/api/official/events"', 'HttpMethod.POST, "/api/official/events"')],
     ['official 移除 GET 限制', (s) => s.replace('HttpMethod.GET, "/api/official/events"', '"/api/official/events"')],
@@ -513,6 +517,8 @@ for (const dsl of ['legacy', 'boot4']) {
     ['city nodes 所有方法放行', (s) => s.replace('.anyRequest().authenticated()', rule('"/api/city/nodes/**"') + '.anyRequest().authenticated()')],
     ['roam share POST 放行', (s) => s.replace('HttpMethod.GET, "/api/roam/share/snapshot"', 'HttpMethod.POST, "/api/roam/share/snapshot"')],
     ['roam share 扩大通配符', (s) => s.replace('"/api/roam/share/snapshot"', '"/api/roam/share/**"')],
+    ['map weather 不限方法', (s) => s.replace('HttpMethod.GET, "/api/map/weather"', '"/api/map/weather"')],
+    ['map weather 扩大通配符', (s) => s.replace('"/api/map/weather"', '"/api/map/**"')],
     ['兜底匿名', (s) => s.replace('.anyRequest().authenticated()', '.anyRequest().permitAll()')],
     ['GET 正例藏入注释', (s) => s.replace(rule('HttpMethod.GET, "/api/roam/share/snapshot"'), (r) => `/* ${r} */`)],
   ];

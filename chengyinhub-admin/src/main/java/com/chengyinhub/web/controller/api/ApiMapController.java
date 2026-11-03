@@ -3,9 +3,12 @@ package com.chengyinhub.web.controller.api;
 import com.chengyinhub.business.domain.vo.NearbyNodeVO;
 import com.chengyinhub.business.service.IApiMapService;
 import com.chengyinhub.business.service.IMapGeocodeService;
+import com.chengyinhub.business.service.IMapWeatherService;
+import com.chengyinhub.common.annotation.RateLimiter;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.core.text.Convert;
+import com.chengyinhub.common.enums.LimitType;
 import com.chengyinhub.common.utils.StringUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -13,6 +16,7 @@ import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -42,6 +46,9 @@ public class ApiMapController extends BaseController {
 
     @Autowired
     private IMapGeocodeService mapGeocodeService;
+
+    @Autowired
+    private IMapWeatherService mapWeatherService;
 
     @Value("${tencent.map.reverse-geocode-per-minute:60}")
     private int reverseGeocodePerMinute;
@@ -135,6 +142,19 @@ public class ApiMapController extends BaseController {
             return AjaxResult.success(Collections.emptyList());
         }
         return AjaxResult.success(mapGeocodeService.searchPlaces(kw, lng, lat));
+    }
+
+    /** 第九轮地图氛围:匿名可读(SecurityConfig 精确放行 GET 这一条),只回 kind/intensity,供应商失败一律 clear。 */
+    @GetMapping("/weather")
+    @Operation(summary = "地图天气氛围")
+    @RateLimiter(time = 60, count = 20, limitType = LimitType.IP)
+    public AjaxResult weather(String lat, String lng) {
+        Double la = Convert.toDouble(lat);
+        Double lo = Convert.toDouble(lng);
+        if (la == null || lo == null || !(la >= -90D && la <= 90D) || !(lo >= -180D && lo <= 180D)) {
+            return AjaxResult.error("经纬度格式不正确");
+        }
+        return AjaxResult.success(mapWeatherService.weatherAt(la, lo));
     }
 
     private synchronized boolean tryConsumeReverseGeocodeBudget() {
