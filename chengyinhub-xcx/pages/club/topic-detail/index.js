@@ -751,7 +751,8 @@ Page({
     //(剧情与玩法 / 核销台账 / 场次管理 / 退出与暂停规则)。
     // 主题内容仍去编辑主题页,由弹层里那一行带过去;结束主题不放在俱乐部这一层。
     if (key === 'more') { this.openTopicSetting(); return; }
-    if (key === 'merchant') { this.openMerchants(); return; }
+    // ROUND4:能审承接的人直接进主题工作台的 P-6 招商层(merchantinfo 内现成),其他人仍看只读商家列表
+    if (key === 'merchant') { if (this.data.canReviewChapterApplications) { this.goMerchantRecruit(); return; } this.openMerchants(); return; }
     if (key === 'customer') { this.openCustomers(); return; }
     if (key === 'groupcode') { this.goGroupCode(); return; }
     this.notReady(action.label);
@@ -1236,7 +1237,13 @@ Page({
       complete: () => { this._navigating = false; } });
   },
 
-  /* ——— Figma J3-A(按节点)/ J3-B(按章节)招商台 ——— */
+  goMerchantRecruit() {
+    if (!this.data.canReviewChapterApplications || !this._topicId) return;
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({
+      url: '/pages/topic/merchantinfo/merchantinfo?topicId=' + this._topicId + '&scope=CLUB&open=merchant',
+      complete: () => { this._navigating = false; } });
+  },
+
 
   openTeamSheet() { this.setData({ teamSheetVisible: true }); },
   closeTeamSheet() { this.setData({ teamSheetVisible: false }); },

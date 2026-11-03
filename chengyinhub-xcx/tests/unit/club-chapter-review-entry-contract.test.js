@@ -101,3 +101,26 @@ test('merchantinfo 保留 CLUB scope，并将它原样传给既有 owner-list/au
     /url: '\/api\/merchant\/chapter-application\/audit',[\s\S]{0,360}?scope: that\.data\.operationScope/,
     'audit 必须继续复用 operationScope')
 })
+
+// ROUND4(业主否决 J3 半屏):能审承接的人点「商家」直接进 merchantinfo 现成的 P-6 招商层
+test('ROUND4:能审承接者点「商家」直达 merchantinfo P-6 招商层(scope=CLUB&open=merchant),不再开只读弹层', () => {
+  const { page, navigations } = applyAs(true)
+  page.onQuickAction({ currentTarget: { dataset: { key: 'merchant' } } })
+  assert.deepEqual(navigations, [
+    '/pages/topic/merchantinfo/merchantinfo?topicId=990028&scope=CLUB&open=merchant',
+  ])
+  assert.notEqual(page.data.merchantSheetVisible, true)
+})
+
+test('ROUND4:不能审承接的人点「商家」仍是今天的只读商家列表,不跳招商层', () => {
+  const { page, navigations } = applyAs(false)
+  page.onQuickAction({ currentTarget: { dataset: { key: 'merchant' } } })
+  assert.deepEqual(navigations, [])
+  assert.equal(page.data.merchantSheetVisible, true)
+})
+
+test('ROUND4:merchantinfo 只认 open=merchant,并在主办视图就绪后复用现成「商家」快捷格打开招商层', () => {
+  assert.match(MERCHANTINFO_JS, /this\._openOnHost = options\.open === 'merchant' \? 'merchant' : ''/)
+  assert.match(MERCHANTINFO_JS,
+    /d\.role === 'host'\) \{[\s\S]{0,400}?that\._openOnHost === 'merchant'[\s\S]{0,120}?that\.onQuickAction\(\{ currentTarget: \{ dataset: \{ key: 'merchant' \} \} \}\)/)
+})
