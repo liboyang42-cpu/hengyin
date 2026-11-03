@@ -1,0 +1,4 @@
+{
+ "commercial-press": {"cover": {"title": "铅火暗线", "subtitle": "跟着一本无名手记，走完商务印书馆的半个世纪", "meta": "上海 · 6站 · 约4.8公里 · 2.5小时", "motif": "type", "glyphs": "商务印书馆涵芬楼东方图书馆读书", "accent": [214, 96, 11], "seed": 3}},
+ "post": {"cover": {"title": "暗流信筒", "subtitle": "七张没有邮戳的明信片，从外滩寄到苏州河", "meta": "上海 · 7站 · 约3公里 · 2小时", "motif": "post", "accent": [46, 139, 96], "seed": 11}}
+}
