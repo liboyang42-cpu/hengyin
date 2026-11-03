@@ -62,9 +62,9 @@ test('队伍:固定插画,链接只带邀请码', () => {
 
 test('商家:旧壳与统一主页都用真实店名与封面,落 canonical 商家主页', () => {
   const shell = loadDefinition('pages/merchant/profile/index.js');
-  assert.deepEqual(plain(shell.onShareAppMessage.call({ data: { memberId: '88', shareName: '巷口咖啡', shareCover: 'https://img.example/m.jpg' } })),
+  assert.deepEqual(plain(shell.onShareAppMessage.call({ data: { memberId: '88' }, _shareName: '巷口咖啡', _shareCover: 'https://img.example/m.jpg' })),
     { title: '巷口咖啡', path: '/pages/userinfo/userinfo?userId=88&tab=about', imageUrl: 'https://img.example/m.jpg' });
-  assert.equal(shell.onShareAppMessage.call({ data: { memberId: '', shareName: '', shareCover: '' } }).title, '城瘾 · 商家主页');
+  assert.equal(shell.onShareAppMessage.call({ data: { memberId: '' } }).title, '城瘾 · 商家主页');
   const comp = loadDefinition('subpackageMember/components/cy/profile/index.js', 'Component');
   const ctx = { data: { userId: '88', isSelf: false, userInfo: {}, subjectIsMerchant: true, subjectMerchant: { name: '巷口咖啡', coverImage: 'https://img.example/m.jpg' } } };
   ctx.getTimelinePayload = comp.methods.getTimelinePayload;
