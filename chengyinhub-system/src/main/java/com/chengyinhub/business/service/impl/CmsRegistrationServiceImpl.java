@@ -1162,7 +1162,9 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         BigDecimal originalPrice = topic.getSelfPlayPrice();
         BigDecimal price = clubBenefit.effectivePrice(originalPrice);
         if (price.compareTo(BigDecimal.ZERO) > 0) {
+            // 与下单同一对收费闸:报价放行而下单被拒 = 用户走到末端才失败
             assertCollectible(topic, price);
+            assertFeeRateValid(topic.getFeePlatformRate());
         }
         BigDecimal payAmount = price.setScale(2, BigDecimal.ROUND_HALF_UP);
         StringBuilder ticketsKey = new StringBuilder();
