@@ -74,7 +74,7 @@ public class SensitiveContentRescanServiceImpl implements ISensitiveContentResca
 
     @Override
     public Result runOnce() {
-        String version = library.currentVersion();
+        String version = scanKey(library.currentVersion());
         if (version == null) {
             log.error("[敏感词复查] 词库不可用,本轮跳过");
             return new Result(0, 0, 0, false);
@@ -140,6 +140,23 @@ public class SensitiveContentRescanServiceImpl implements ISensitiveContentResca
         saveState(state);
         log.info("[敏感词复查] mode={} scanned={} hits={} removed={} finished={}", mode, scanned, hits, removed, finished);
         return new Result(scanned, hits, removed, finished);
+    }
+
+    /**
+     * 词库版本指纹(三张表的条数与最后修改时间,常见长度 60~70 字符)压成定长 SHA-256 十六进制,
+     * 正好放进 {@code content_sensitive_hit.scan_version VARCHAR(64)};原串超长会让命中写库失败、整轮中断。
+     */
+    static String scanKey(String libraryVersion) {
+        if (libraryVersion == null) return null;
+        try {
+            byte[] d = java.security.MessageDigest.getInstance("SHA-256")
+                    .digest(libraryVersion.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder(64);
+            for (byte b : d) hex.append(String.format("%02x", b));
+            return hex.toString();
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     private void recordHit(String type, Long id, String category, String action, String scanVersion) {

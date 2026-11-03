@@ -159,7 +159,7 @@ class SensitiveLibraryIntegrationTest {
         for (ContentSensitiveHit h : hits.getAllValues()) {
             assertEquals("REPORT", h.getAction());
             assertEquals("RESCAN", h.getSource());
-            assertEquals("v1", h.getScanVersion());
+            assertEquals(SensitiveContentRescanServiceImpl.scanKey("v1"), h.getScanVersion());
         }
     }
 
@@ -170,7 +170,7 @@ class SensitiveLibraryIntegrationTest {
         when(wx.takeDownForSafety(IWxContentSecurityService.BIZ_TYPE_TOPIC, 12L)).thenReturn(true);
         RedisCache redis = mock(RedisCache.class);
         // 同一版本、同一模式已处理过的 21 号商家资料不重复记
-        when(mapper.countRescanHit("MERCHANT_PROFILE", 21L, "v1", "REMOVED")).thenReturn(1);
+        when(mapper.countRescanHit("MERCHANT_PROFILE", 21L, SensitiveContentRescanServiceImpl.scanKey("v1"), "REMOVED")).thenReturn(1);
 
         com.chengyinhub.business.service.ISensitiveContentRescanService.Result r =
                 rescan(mapper, wx, redis, "true").runOnce();
@@ -188,6 +188,28 @@ class SensitiveLibraryIntegrationTest {
                 rescan(mapper, wx, redis, "true").runOnce();
         assertEquals(0, again.scanned);
         verify(wx, times(1)).takeDownForSafety(anyInt(), anyLong());
+    }
+
+    /** Round5E rig:真实词库版本串(三表 条数@最后修改时间)约 66 字符,超出 scan_version VARCHAR(64),命中写库失败整轮中断。 */
+    @Test
+    void rescanScanVersionFitsTheColumnForARealisticLibraryVersion() {
+        ContentSensitiveMapper mapper = mapperWithTopicRows();
+        RedisCache redis = mock(RedisCache.class);
+        SensitiveContentRescanServiceImpl svc = rescan(mapper, mock(IWxContentSecurityService.class), redis, "false");
+        ISensitiveContentLibrary lib = (ISensitiveContentLibrary) ReflectionTestUtils.getField(svc, "library");
+        String real = "1200@2026-11-03 15:24:56|38@2026-11-03 15:21:35|17@2026-11-03 15:24:27";
+        when(lib.currentVersion()).thenReturn(real);
+
+        svc.runOnce();
+
+        ArgumentCaptor<ContentSensitiveHit> hits = ArgumentCaptor.forClass(ContentSensitiveHit.class);
+        verify(mapper, times(2)).insertHit(hits.capture());
+        for (ContentSensitiveHit h : hits.getAllValues()) {
+            assertTrue(h.getScanVersion().length() <= 64, h.getScanVersion());
+            assertEquals(SensitiveContentRescanServiceImpl.scanKey(real), h.getScanVersion());
+        }
+        assertFalse(SensitiveContentRescanServiceImpl.scanKey(real).equals(
+                SensitiveContentRescanServiceImpl.scanKey(real.replace("1200@", "1201@"))));
     }
 
     @Test
