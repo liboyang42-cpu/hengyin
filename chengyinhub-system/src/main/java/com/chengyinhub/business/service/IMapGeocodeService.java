@@ -23,6 +23,12 @@ public interface IMapGeocodeService {
     double[] suggestCoords(String address, String region);
 
     /**
+     * 只读展示用的「点地址开地图」:同 {@link #suggestCoords} 的可信度闸,结果按地址+城市缓存,
+     * 同一地址反复点不再打供应商。拿不准返回 null,前端就不开地图。
+     */
+    double[] locateAddress(String address, String region);
+
+    /**
      * 关键词搜地点(漫游地图顶部搜索框):按当前位置就近排序。
      * 每条只给 name / address / lat / lng / distance(米),不透传供应商的其它字段。
      * 供应商不可用或没有结果时返回空列表,调用方按「这附近没有搜到」处理。

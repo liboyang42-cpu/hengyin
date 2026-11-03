@@ -112,4 +112,24 @@ class ApiMapControllerSecurityContractTest {
                 method.getAnnotation(com.chengyinhub.common.annotation.RateLimiter.class);
         assertEquals(com.chengyinhub.common.enums.LimitType.IP, limiter.limitType());
     }
+
+    @Test
+    void geocodeValidatesInputReturnsCoordsAndSharesTheProviderRateBudget() {
+        IMapGeocodeService geocodeService = mock(IMapGeocodeService.class);
+        when(geocodeService.locateAddress("闵行区都市路 1 号", "上海")).thenReturn(new double[]{121.38D, 31.11D});
+        ApiMapController controller = new ApiMapController();
+        ReflectionTestUtils.setField(controller, "mapGeocodeService", geocodeService);
+        ReflectionTestUtils.setField(controller, "reverseGeocodePerMinute", 1);
+
+        assertEquals(500, controller.geocode("  ", "上海").get(AjaxResult.CODE_TAG));
+        assertEquals(500, controller.geocode("x".repeat(121), "上海").get(AjaxResult.CODE_TAG));
+        AjaxResult ok = controller.geocode(" 闵行区都市路 1 号 ", " 上海 ");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> data = (Map<String, Object>) ok.get(AjaxResult.DATA_TAG);
+        assertEquals(121.38D, data.get("lng"));
+        assertEquals(31.11D, data.get("lat"));
+        AjaxResult limited = controller.geocode("闵行区都市路 1 号", "上海");
+        assertTrue(((Map<?, ?>) limited.get(AjaxResult.DATA_TAG)).isEmpty(), "额度用完回空,不再打供应商");
+        verify(geocodeService, times(1)).locateAddress("闵行区都市路 1 号", "上海");
+    }
 }
