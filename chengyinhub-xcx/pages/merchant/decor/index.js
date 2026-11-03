@@ -1085,7 +1085,7 @@ Page({
       if (error) this.setData({ 'chipSheet.loading': false, 'chipSheet.error': error });
       else this.setData({ 'chipSheet.loading': false, 'chipSheet.error': '', 'chipSheet.options': options, 'chipSheet.value': checkedKeys(options) });
     };
-    app.sendRequest({hideLoading:true, url:'/api/category/list', method:'POST', data:{type:1,parentid:0},
+    app.sendRequest({hideLoading:true, url:'/api/category/list', method:'POST', data:{type:'MERCHANT',parentid:0},
       success: res => {
         if (String(res.code) !== '200' || !Array.isArray(res.data)) return done('行业类型没能载入，请重试');
         this._categoryRows = res.data;

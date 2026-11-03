@@ -1,5 +1,5 @@
 // 商家「行业类型」:入驻申请与门店信息共用一份胶囊短表(M-16,2026-11-02 主人:标签可以更多一些)。
-// label 是胶囊上显示的短名,match 用来在 /api/category/list(type=1)里认领一条真实记录(存它的 id)。
+// label 是胶囊上显示的短名,match 用来在 /api/category/list(type=MERCHANT:存量 type 1 在前,商家行业 type 6 在后)里认领一条真实记录(存它的 id)。
 // 更具体的词放前面:一条记录只被第一个命中的短表项认领。
 const { tagIconName } = require('../components/cy/tag-sheet/model.js');
 

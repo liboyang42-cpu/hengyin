@@ -225,7 +225,7 @@
   </view>
 </cy-sheet>
 
-<cy-category-sheet show="{{merchantCategorySheetVisible}}" type="{{1}}" num="{{1}}"
+<cy-category-sheet show="{{merchantCategorySheetVisible}}" type="MERCHANT" num="{{1}}"
   ids="{{filterConditions.categoryId || ''}}" bind:select="onMerchantCategoryChange" bind:close="closeMerchantCategorySheet" />
 
 <cy-date-sheet show="{{dateSheetVisible}}" title="{{datePickerTitle}}" dark="{{true}}"

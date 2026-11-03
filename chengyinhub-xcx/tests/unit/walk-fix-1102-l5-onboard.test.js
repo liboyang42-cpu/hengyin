@@ -314,3 +314,21 @@ test('R4:报名表把权益门槛挂在「常备权益」字段下,所选权益�
   const host = fs.readFileSync(path.join(ROOT, 'pages/topic/merchantinfo/merchantinfo.wxml'), 'utf8')
   assert.match(host, /perkMinValue="\{\{selectedChapterPerkMin\}\}"/)
 })
+
+test('R4 M-16:商家侧读 type=MERCHANT(商家行业),主题类别与路线偏好仍读 type=1', () => {
+  const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8')
+  assert.match(read('pages/merchant/decor/index.js'), /url:'\/api\/category\/list', method:'POST', data:\{type:'MERCHANT',parentid:0\}/)
+  assert.match(read('pages/merchant/apply/index.js'), /url: '\/api\/category\/list', method: 'POST', data: \{ type: 'MERCHANT', parentid: '0' \}/)
+  const fabu = read('pages/publish/fabu/index.js')
+  const recruit = fabu.slice(fabu.indexOf('  loadMerchantCategories() {'), fabu.indexOf('  _updateChapterRecruitConfig('))
+  assert.match(recruit, /data: \{ type: 'MERCHANT', parentid: '0' \}/, '章节招募品类 = 商家行业')
+  assert.match(read('pages/searchmap/index.wxml'), /<cy-category-sheet show="\{\{merchantCategorySheetVisible\}\}" type="MERCHANT"/)
+  // 主题类别(发布页)与玩家路线偏好不变
+  assert.match(read('pages/publish/fabu/index.wxml'), /<cy-category-sheet show="\{\{categorySheetVisible\}\}" type="\{\{1\}\}"/)
+  assert.match(read('pages/gerenziliao/gerenziliao.wxml'), /<cy-category-sheet class="profile-edit-sheet" show="\{\{categorySheetVisible\}\}" type="\{\{1\}\}"/)
+  // 组件 type 属性要能收字符串 MERCHANT
+  assert.match(read('components/cy/category-sheet/index.js'), /type: \{ type: null, value: 0 \}/)
+  const sql = fs.readFileSync(path.join(ROOT, '../chengyinhub-admin/sql/migration_20261102_merchant_industry_categories.sql'), 'utf8')
+  assert.match(sql, /SELECT 6, 0, n\.name/)
+  assert.doesNotMatch(sql, /SELECT 1, 0, n\.name/)
+})

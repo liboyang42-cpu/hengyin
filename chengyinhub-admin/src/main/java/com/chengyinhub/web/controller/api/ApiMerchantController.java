@@ -2006,7 +2006,7 @@ public class ApiMerchantController extends BaseController {
 
     @Operation(summary = "商家入驻")
     @Log(title = "商家入驻", businessType = BusinessType.INSERT)
-    /** 入驻行业类型:最多 5 个、去重、必须都是在用的 type=1 记录;空串 = 没选;不合法返回 null。 */
+    /** 入驻行业类型:最多 5 个、去重、必须都是在用的商家行业记录(type 6,或存量商家用的 type 1);空串 = 没选;不合法返回 null。 */
     private String[] registrationCategoryIds(String raw) {
         java.util.LinkedHashSet<String> ids = new java.util.LinkedHashSet<>();
         for (String part : raw.split(",")) {
@@ -2021,7 +2021,8 @@ public class ApiMerchantController extends BaseController {
         List<SysCategory> rows = sysCategoryService.selectSysCategoryListByIds(picked);
         int valid = 0;
         if (rows != null) for (SysCategory row : rows) {
-            if (row != null && Long.valueOf(1L).equals(row.getType()) && Integer.valueOf(1).equals(row.getStatus())
+            if (row != null && com.chengyinhub.business.support.ChapterRecruitmentRules.isMerchantCategoryType(row.getType())
+                    && Long.valueOf(0L).equals(row.getParentId()) && Integer.valueOf(1).equals(row.getStatus())
                     && (row.getDelFlag() == null || row.getDelFlag() == 0)) valid++;
         }
         return valid == picked.length ? picked : null;

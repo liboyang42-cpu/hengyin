@@ -386,7 +386,7 @@ Page({
   },
   loadIndustryRows() {
     const that = this;
-    app.sendRequest({ hideLoading: true, autoErrorToast: false, url: '/api/category/list', method: 'POST', data: { type: 1, parentid: '0' },
+    app.sendRequest({ hideLoading: true, autoErrorToast: false, url: '/api/category/list', method: 'POST', data: { type: 'MERCHANT', parentid: '0' },
       success(res) {
         if (String(res && res.code) !== '200' || !Array.isArray(res.data)) {
           that.setData({ 'industrySheet.loading': false, 'industrySheet.error': '行业类型没能载入，请重试' });
