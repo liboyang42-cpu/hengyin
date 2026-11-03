@@ -17,6 +17,8 @@ import com.chengyinhub.business.domain.vo.MerchantSettlementEntry;
 import com.chengyinhub.business.domain.vo.MerchantSettlementOverview;
 import com.chengyinhub.business.domain.vo.PublicTransferBatch;
 import com.chengyinhub.business.domain.vo.PublicTransferBatchDetail;
+import com.chengyinhub.business.domain.vo.RedemptionSignupName;
+import com.chengyinhub.business.security.PiiCryptoService;
 import com.chengyinhub.business.mapper.CmsTopicChapterMapper;
 import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.mapper.CoopSettlementMapper;
@@ -59,6 +61,7 @@ public class MerchantFinanceQueryService {
     @Autowired private CmsTopicMapper topicMapper;
     @Autowired private CmsTopicChapterMapper chapterMapper;
     @Autowired private IMmsMerchantService merchantService;
+    @Autowired private PiiCryptoService piiCryptoService;
 
     public MerchantSettlementOverview overview(Long memberId) {
         List<UmsMemberBalanceDetail> balanceRows = personalBalanceRows(memberId);
@@ -130,11 +133,13 @@ public class MerchantFinanceQueryService {
         List<MerchantRedemptionView> all = new ArrayList<MerchantRedemptionView>();
         // 汇总条按【筛选前】的全集算:它回答「我这个月接待了多少」,切筛选 chip 时不该跟着变。
         List<MerchantRedemptionView> unfiltered = new ArrayList<MerchantRedemptionView>();
+        Map<Long, String> signupNames = signupNames(memberId, null);
         for (Redemption redemption : safeList(redemptionMapper.selectByMerchant(memberId))) {
             if (topicId != null && (redemption == null || !topicId.equals(redemption.getTopicId()))) continue;
             MerchantRedemptionView row = toRedemptionView(redemption, byRedemption.get(redemption == null ? null : redemption.getId()),
                     batches, merchant == null ? null : merchant.getName());
             if (row == null) continue;
+            row.setCustomerDisplayName(signupNames.get(redemption.getId()));
             unfiltered.add(row);
             if (matchesRedemptionFilter(row, filter)) all.add(row);
         }
@@ -164,7 +169,24 @@ public class MerchantFinanceQueryService {
             if (payable != null && redemptionId.equals(payable.getRedemptionId())) facts.add(payable);
         }
         MmsMerchant merchant = merchantService == null ? null : merchantService.selectMmsMerchantByMemberId(memberId);
-        return toRedemptionView(redemption, facts, batchesByPeriod(memberId), merchant == null ? null : merchant.getName());
+        MerchantRedemptionView row = toRedemptionView(redemption, facts, batchesByPeriod(memberId), merchant == null ? null : merchant.getName());
+        if (row != null) row.setCustomerDisplayName(signupNames(memberId, redemptionId).get(redemptionId));
+        return row;
+    }
+
+    /**
+     * M-27(2026-11-03 业主):核销对应报名的报名姓名,服务端解密(同 C-05 ClubCrmAppServiceImpl)。
+     * SQL 已按本商家归属收窄;为空就不放进来,页面那一格不出,不写占位。姓名不写日志。
+     */
+    private Map<Long, String> signupNames(Long memberId, Long redemptionId) {
+        Map<Long, String> out = new HashMap<Long, String>();
+        if (memberId == null || redemptionMapper == null) return out;
+        for (RedemptionSignupName raw : safeList(redemptionMapper.selectSignupNamesByMerchant(memberId, redemptionId))) {
+            if (raw == null || raw.getRedemptionId() == null || blank(raw.getRealName())) continue;
+            String name = piiCryptoService == null ? null : piiCryptoService.decrypt(raw.getRealName());
+            if (!blank(name)) out.put(raw.getRedemptionId(), name.trim());
+        }
+        return out;
     }
 
     public MerchantFinancePage<PublicTransferBatch> publicTransferBatches(Long memberId, int pageNum, int pageSize) {

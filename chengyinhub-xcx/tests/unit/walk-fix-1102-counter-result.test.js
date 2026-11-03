@@ -182,12 +182,26 @@ test('M-24 供给卡写剩余份数(主题页与承接项目组件同一字段)'
   assert.equal(new Function('row', 'return ' + expr.replace(/^quotaLeftText:\s*/, '').replace(/,\s*(\/\/[^\n]*\s*)?$/, ''))({}), '');
 });
 
-test('M-27 核销与退款行：无左侧状态点、副行只有时间、零现金右列不画破折号', () => {
+test('M-27 核销与退款行：无左侧状态点、副行是顾客姓名(有才出)与时间、零现金右列不画破折号', () => {
   const wxml = read('pages/merchant/ledger/index.wxml');
   const row = wxml.slice(wxml.indexOf('wx:for="{{group.rows}}"'), wxml.indexOf('</view>\n            </view>\n          </view>\n        </block>'));
   assert.doesNotMatch(row, /fin-row__dot/);
-  assert.doesNotMatch(row, /customerDisplayName|顾客信息受保护/);
-  assert.match(row, /<text wx:if="\{\{item\.timeText\}\}">\{\{item\.timeText\}\}<\/text>/);
+  assert.doesNotMatch(row, /顾客信息受保护/);
+  assert.match(row, /<text wx:if="\{\{item\.customerName\}\}">\{\{item\.customerName\}\}<\/text>\s*<text wx:if="\{\{item\.timeText\}\}">\{\{item\.timeText\}\}<\/text>/);
   const src = read('pages/merchant/ledger/index.js');
   assert.match(src, /displayState === 'NO_CASH_SETTLEMENT' \? null : '待定'/);
+});
+
+test('M-27 第4轮 核销行取服务端报名姓名,没有就空着;退款行不借用活动名当顾客', () => {
+  const src = read('pages/merchant/ledger/index.js');
+  const start = src.indexOf('  refundRow(row, canReadFinance) {');
+  const end = src.indexOf('  entryRow(row) {');
+  const money = (v) => (v == null || isNaN(Number(v)) ? null : Number(v).toFixed(2));
+  const page = new Function('money', 'financeStateText', 'stateVariant', 'return ({' + src.slice(start, end) + '});')(money, () => '已入账', () => 'success');
+  const named = page.redemptionRow({ topicName: '链', occurredAt: '2026-11-03 03:51:00', customerDisplayName: ' 林野 ', settlementAmount: 0, displayState: 'NO_CASH_SETTLEMENT' }, true);
+  assert.equal(named.customerName, '林野');
+  const nameless = page.redemptionRow({ topicName: '链', occurredAt: '2026-11-03 03:51:00' }, false);
+  assert.equal(nameless.customerName, '');
+  const refund = page.refundRow({ refundId: 1, titleText: '链', activityTitleText: '某活动' }, true);
+  assert.ok(!refund.customerName);
 });

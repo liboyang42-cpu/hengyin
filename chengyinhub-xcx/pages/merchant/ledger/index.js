@@ -503,6 +503,8 @@ Page({
     item.timeText = row.occurredAt ? String(row.occurredAt).slice(11, 16) : '';
     item.sortKey = row.occurredAt ? String(row.occurredAt).slice(0, 16) : '';
     item.title = [row.topicName, row.chapterName].filter(Boolean).join(' · ') || '核销记录';
+    // M-27 第4轮:顾客报名姓名(服务端按本商家核销解密下发);没有就空着,不写占位。
+    item.customerName = typeof row.customerDisplayName === 'string' ? row.customerDisplayName.trim() : '';
     if (!financeVisible) {
       item.amountText = null;
       item.amountPrefix = '';
