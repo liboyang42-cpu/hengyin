@@ -235,6 +235,9 @@ public class ApiTopicController extends BaseController {
     @Autowired
     private IContentSafetyGate contentSafetyGate;
 
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.IContentSafetyRecheckService recheckService;
+
     @Autowired
     private IAuditTaskService auditTaskService;
 
@@ -571,9 +574,10 @@ public class ApiTopicController extends BaseController {
             }
 
             if (textVerdict.isFlagged()) {
-                flagForSpotCheck(topicId, memberId, textVerdict.getFlagReason(), dto.getName());
+                flagForSpotCheck(topicId, memberId, textVerdict.getFlagReason(),
+                        recheckText(secText, topicReviewTexts(dto, chapterFlowV2)), dto.getImgUrl(), dto.getImgArr());
             } else if (mediaUncheckable(dto.getImgUrl(), dto.getImgArr(), openid)) {
-                flagForSpotCheck(topicId, memberId, "MEDIA_UNCHECKED", dto.getName());
+                flagForSpotCheck(topicId, memberId, "MEDIA_UNCHECKED", null, dto.getImgUrl(), dto.getImgArr());
             }
 
             // UGC 图片内容安全:异步送检封面/图集,命中违规由消息推送回调自动下架(best-effort,不阻断)
@@ -797,9 +801,10 @@ public class ApiTopicController extends BaseController {
             return error(e.getMessage());
         }
         if (textVerdict.isFlagged()) {
-            flagForSpotCheck(topicId, memberId, textVerdict.getFlagReason(), dto.getName());
+            flagForSpotCheck(topicId, memberId, textVerdict.getFlagReason(), recheckText(secText, storyTexts),
+                    dto.getImgUrl(), dto.getImgArr());
         } else if (mediaUncheckable(dto.getImgUrl(), dto.getImgArr(), openid)) {
-            flagForSpotCheck(topicId, memberId, "MEDIA_UNCHECKED", dto.getName());
+            flagForSpotCheck(topicId, memberId, "MEDIA_UNCHECKED", null, dto.getImgUrl(), dto.getImgArr());
         }
         wxContentSecurityService.submitMediaCheck(
                 IWxContentSecurityService.BIZ_TYPE_TOPIC,
@@ -1130,14 +1135,50 @@ public class ApiTopicController extends BaseController {
      * 非草稿立即挂复核上架单(content_safety_relist),审核台通过后自动上架;草稿在发布草稿时挂单。
      * (旧口径是「照常发布 + post_review_flag 抽检单」,没审过的内容会先公开。)
      */
-    private void flagForSpotCheck(Long topicId, Long ownerMemberId, String reason, String name) {
+    /**
+     * 机审没结论:主题留置为仅作者可见,并进自动复检队列(Round5C)。复检通过自动解除留置上架,
+     * 违规或耗尽自动驳回并通知作者,全程不需要人。
+     */
+    private void flagForSpotCheck(Long topicId, Long ownerMemberId, String reason, String recheckText,
+                                  String imgUrl, String imgArr) {
         if (topicId == null) return;
-        logger.warn("主题机审未完成,下架留置待人工复核 topicId={} reason={}", topicId, reason);
+        logger.warn("主题机审未完成,留置为仅作者可见并自动复检 topicId={} reason={}", topicId, reason);
         try {
             cmsTopicService.holdUncheckedTopicForReview(topicId, ownerMemberId);
         } catch (Exception e) {
-            logger.error("主题待复核留置失败,需人工下架 topicId={}", topicId, e);
+            logger.error("主题待复检留置失败 topicId={}", topicId, e);
         }
+        if (recheckService != null) {
+            try {
+                recheckService.enqueue(com.chengyinhub.business.domain.AuditTask.BIZ_TOPIC, topicId, ownerMemberId,
+                        recheckText, recheckMedia(imgUrl, imgArr), false);
+            } catch (Exception e) {
+                logger.error("主题自动复检进队失败 topicId={}", topicId, e);
+            }
+        }
+    }
+
+    static String recheckText(String mainText, java.util.List<JourneyReviewTexts.Entry> entries) {
+        StringBuilder sb = new StringBuilder();
+        if (mainText != null && !mainText.trim().isEmpty()) sb.append(mainText);
+        if (entries != null) for (JourneyReviewTexts.Entry e : entries) {
+            if (e == null || e.getText() == null || e.getText().trim().isEmpty()) continue;
+            if (sb.length() > 0) sb.append('\n');
+            sb.append(e.getText());
+        }
+        return sb.length() == 0 ? null : sb.toString();
+    }
+
+    private static java.util.List<String> recheckMedia(String imgUrl, String imgArr) {
+        java.util.List<String> out = new java.util.ArrayList<String>();
+        for (String raw : new String[]{imgArr, imgUrl}) {
+            if (raw == null) continue;
+            for (String one : raw.split(",")) {
+                String v = one.trim();
+                if (!v.isEmpty() && !out.contains(v)) out.add(v);
+            }
+        }
+        return out;
     }
 
     /** Round5B-3:带封面/图集但图片送不了检(总开关关 / 缺 openid)= 没人审过这张图,不能直接公开。 */

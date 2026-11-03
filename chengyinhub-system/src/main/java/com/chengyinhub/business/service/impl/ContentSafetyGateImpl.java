@@ -22,10 +22,10 @@ import org.springframework.stereotype.Service;
  * 裁决规则(优先级从上到下;「PRE / POST」= 请求的 reviewMode):
  *  0) EXEMPT                  → PASS
  *  1) 文本命中风险            → BLOCK(不公开,两种模式都拦)
- *  2) 机审要人工/审不了/异常/缺 openid → HOLD(两种模式都不公开;Round5B-3:先发后审也不再「打标放行」,
- *     没审过的内容进人工审核台,审核通过才公开)
+ *  2) 机审要人工/审不了/异常/缺 openid → HOLD(两种模式都不公开)。Round5C:不等人工,
+ *     进 IContentSafetyRecheckService 自动复检队列,通过自动发布、违规/耗尽自动驳回并通知作者
  *  3) 带结构化商业字段(点位/价格/报名)→ PRE: HOLD(强制人工复核后上架);POST: 放行
- *  4) 含图片                  → PRE: HOLD(仅作者可见);POST: 图片能送检则放行(异步检测 + 违规回调下架),
+ *  4) 含图片                  → PRE: HOLD(仅作者可见,Round5C 自动复检后发布);POST: 图片能送检则放行(异步检测 + 违规回调下架),
  *                               送不了检(总开关关 / 缺 openid)→ HOLD
  *  5) 文本检测被关闭          → HOLD(两种模式)
  *  6) 纯文本且通过            → PASS
@@ -45,6 +45,10 @@ public class ContentSafetyGateImpl implements IContentSafetyGate {
 
     @Autowired
     private IAuditTaskService auditTaskService;
+
+    /** Round5C:机审没结论的 HOLD 进自动复检队列;可选注入,老测试直接 new 门禁时为空。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.IContentSafetyRecheckService recheckService;
 
     @Override
     public SafetyDecision decide(PublishSafetyRequest req) {
@@ -146,6 +150,10 @@ public class ContentSafetyGateImpl implements IContentSafetyGate {
                 withGateReason(req.getSnapshot(), reasonCode, riskLevel));
         logger.info("UGC门禁 HOLD contentType={} id={} reason={} auditTaskId={}",
                 req.getContentType(), req.getContentId(), reasonCode, taskId);
+        if (recheckService != null
+                && com.chengyinhub.business.service.IContentSafetyRecheckService.UNCHECKED_REASONS.contains(reasonCode)) {
+            recheckService.enqueue(req, req.getContentId());
+        }
         return SafetyDecision.hold(reasonCode, taskId);
     }
 

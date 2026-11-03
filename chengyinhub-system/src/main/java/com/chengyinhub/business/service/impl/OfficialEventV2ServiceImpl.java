@@ -105,6 +105,8 @@ public class OfficialEventV2ServiceImpl implements IOfficialEventV2Service {
     private IUmsMemberService umsMemberService;
     @Autowired
     private IContentSafetyGate contentSafetyGate;
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.IContentSafetyRecheckService recheckService;
     @Autowired
     private IAuditTaskService auditTaskService;
     @Autowired
@@ -497,6 +499,10 @@ public class OfficialEventV2ServiceImpl implements IOfficialEventV2Service {
         snap.put("city", event.getCity());
         snap.put("gateReason", decision.getReasonCode());
         auditTaskService.submit(AuditTask.BIZ_OFFICIAL_EVENT, eventId, operatorId, "user_publish", snap.toJSONString());
+        // Round5C:文本机审没结论 → 自动复检;违规自动驳回,通过后官方活动的排期审批仍由平台人工决定。
+        if (recheckService != null && com.chengyinhub.business.service.IContentSafetyRecheckService.needsRecheck(decision)) {
+            recheckService.enqueue(safety, eventId);
+        }
         return null;
     }
 

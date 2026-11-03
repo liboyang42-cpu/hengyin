@@ -356,4 +356,27 @@ class ContentSafetyGateImplTest {
         assertEquals("[1,2]", wrapped.getString("_raw"));
         assertEquals("HIGH", wrapped.getJSONObject("_gate").getString("riskLevel"));
     }
+
+    /** Round5C:机审没结论的 HOLD 自动进复检队列;业务审批类(结构化字段)不进,仍由人工。 */
+    @Test
+    void uncheckedHoldIsQueuedForAutomaticRecheckButStructuredReviewIsNot() {
+        com.chengyinhub.business.service.IContentSafetyRecheckService recheck =
+                mock(com.chengyinhub.business.service.IContentSafetyRecheckService.class);
+        ReflectionTestUtils.setField(gate, "recheckService", recheck);
+        when(wxSec.checkText(anyString(), anyString())).thenReturn(IWxContentSecurityService.MSG_BUSY);
+
+        PublishSafetyRequest busy = postReq("正常文本");
+        SafetyDecision d = gate.decide(busy);
+
+        assertTrue(d.isHold());
+        assertFalse(d.isVisible());
+        verify(recheck).enqueue(busy, 1L);
+
+        when(wxSec.checkText(anyString(), anyString())).thenReturn(null);
+        PublishSafetyRequest structured = req("正常文本");
+        structured.setHasPrice(true);
+        SafetyDecision s2 = gate.decide(structured);
+        assertEquals("STRUCTURED_REVIEW", s2.getReasonCode());
+        verify(recheck, never()).enqueue(structured, 1L);
+    }
 }

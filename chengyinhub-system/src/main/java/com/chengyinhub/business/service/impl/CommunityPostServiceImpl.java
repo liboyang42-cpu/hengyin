@@ -1321,6 +1321,15 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         mapper.upsertSearchDocument(postId, approved ? "VISIBLE" : "HIDDEN", now);
         notifyMember(post.getAuthorId(), postId, 0L, "SYSTEM_GOVERNANCE", approved ? "APPROVED" : "REMOVED", now);
         outbox(postId, approved ? "POST_REVIEW_APPROVED" : "POST_REVIEW_REJECTED", payload("postId", postId), now);
+        if (approved && CommunityPost.LIFECYCLE_CHECKING.equals(post.getLifecycle())) {
+            // Round5C:先审带图的帖文由自动复检放行后,图片照直发帖一样送微信异步检测,违规回调自动下架。
+            List<String> mediaUrls = new ArrayList<>();
+            for (Map<String, Object> row : mediaForRead(mapper.selectMediaForSafety(postId))) {
+                Object url = value(row, "derived_object_key");
+                if (url != null && !blank(url.toString())) mediaUrls.add(url.toString());
+            }
+            submitMediaForAsyncCheck(postId, mapper.selectMemberWxOpenId(post.getAuthorId()), mediaUrls);
+        }
     }
 
     /**

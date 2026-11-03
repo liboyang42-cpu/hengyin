@@ -57,6 +57,8 @@ public class ClubSessionServiceImpl implements IClubSessionService {
     private final CoopOrderMapper orderMapper;
     private final com.chengyinhub.business.service.support.SettlementDebtLedger settlementDebtLedger;
     private final IContentSafetyGate contentSafetyGate;
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.chengyinhub.business.service.IContentSafetyRecheckService recheckService;
     private final ActivityReviewPolicy activityReviewPolicy;
     private final IAuditTaskService auditTaskService;
     private final IUmsMemberService umsMemberService;
@@ -183,6 +185,10 @@ public class ClubSessionServiceImpl implements IClubSessionService {
             throw new IllegalStateException("开团场次创建失败");
         }
         ticketService.copyTopicTicketsToActivity(request.getTopicId(), activity.getId(), memberId);
+        // Round5C:机审没结论的开团场次进自动复检(通过自动上架;先审的业务审批仍留人工)。
+        if (recheckService != null && com.chengyinhub.business.service.IContentSafetyRecheckService.needsRecheck(decision)) {
+            recheckService.enqueue(safety, activity.getId());
+        }
         if (preReview || decision.isFlagged()) {
             String snap = ActivityAuditSnapshot.of(activity.getId(), activity,
                     activityTickets(activity.getId()), decision.isFlagged() ? decision.getFlagReason() : null);

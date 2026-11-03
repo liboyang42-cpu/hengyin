@@ -89,6 +89,9 @@ public class ApiCouponController extends BaseController {
     @Autowired
     private IContentSafetyGate contentSafetyGate;
 
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.IContentSafetyRecheckService recheckService;
+
     @Autowired
     private IAuditTaskService auditTaskService;
 
@@ -224,7 +227,7 @@ public class ApiCouponController extends BaseController {
                 com.chengyinhub.business.service.IQuotaService.TYPE_COUPON,
                 () -> smsCouponService.insertSmsCoupon(smsCoupon));
         if (rows != null && rows > 0 && decision.isHold()) {
-            holdForReview(smsCoupon.getId(), ownerMemberId, decision.getReasonCode(), request.getName());
+            holdForReview(smsCoupon.getId(), ownerMemberId, decision.getReasonCode(), request.getName(), safety);
         } else if (rows != null && rows > 0 && decision.isFlagged()) {
             flagForSpotCheck(smsCoupon.getId(), ownerMemberId, decision.getFlagReason(), request.getName());
         }
@@ -531,15 +534,22 @@ public class ApiCouponController extends BaseController {
      * 先发后审时机审没给出结论:券照常上架,在审核台留一张非阻断抽检单(source=post_review_flag),
      * 驳回即平台手动失效。best-effort:失败只记日志,不影响已发布的券。
      */
-    /** Round5B-3:机审未完成的券已按 status=5 保存(不可领),这里挂进审核台;审核通过由审核服务转 status=1。 */
-    private void holdForReview(Long couponId, Long ownerMemberId, String reason, String name) {
-        logger.warn("优惠券机审未完成,待人工审核后上架 couponId={} reason={}", couponId, reason);
+    /**
+     * 机审未完成的券已按 status=5 保存(不可领)。挂一张待审单作为裁决锚点,并进自动复检(Round5C):
+     * 复检通过由审核服务以系统身份转 status=1,违规/耗尽自动驳回并通知商家,不需要人。
+     */
+    private void holdForReview(Long couponId, Long ownerMemberId, String reason, String name,
+                               PublishSafetyRequest safety) {
+        logger.warn("优惠券机审未完成,不可领并自动复检 couponId={} reason={}", couponId, reason);
         com.alibaba.fastjson2.JSONObject snap = new com.alibaba.fastjson2.JSONObject();
         snap.put("bizType", AuditTask.BIZ_COUPON);
         snap.put("bizId", couponId);
         snap.put("gateReason", reason);
         snap.put("name", name);
         auditTaskService.submitSafetyHold(AuditTask.BIZ_COUPON, couponId, ownerMemberId, "NORMAL", snap.toJSONString());
+        if (recheckService != null) {
+            recheckService.enqueue(AuditTask.BIZ_COUPON, couponId, ownerMemberId, safety.getText(), null, false);
+        }
     }
 
     private void flagForSpotCheck(Long couponId, Long ownerMemberId, String reason, String name) {
