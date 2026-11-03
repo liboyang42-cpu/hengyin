@@ -211,3 +211,67 @@ test('#4 JS 兜底不再回显原始代码:官方收件箱角色/状态、主题
   assert.doesNotMatch(genericOpsStatusText({ operationStatus: 'NEW_STATE', authorityMode: 'X' }), /[A-Z_]{2,}/)
   assert.match(director, /genericOpsStatus: this\._genericControl \? genericOpsStatusText\(this\._genericControl\.run\) : ''/)
 })
+
+// ---------- #5 灰色「立即报名」 ----------
+
+function loadDetail(tickets) {
+  const scrolls = []
+  const m = mount('subpackageMember/components/cy/scene-play-activity-detail/index.js', {
+    app: { getUserID: () => '7', getUserType: () => 1 },
+    wx: { pageScrollTo: (opts) => scrolls.push(opts) },
+  })
+  m.host.data.activityId = '5'
+  m.host._activityReadIdentity = () => '7'
+  m.host._activityReadCurrent = () => true
+  m.host.createSelectorQuery = () => {
+    const q = { select() { return q }, boundingClientRect() { return q }, selectViewport() { return q }, scrollOffset() { return q },
+      exec(cb) { cb([{ top: 600 }, { scrollTop: 100 }]) } }
+    return q
+  }
+  m.host.load('5')
+  const req = m.requests.find((r) => r.url === '/api/activity/info')
+  req.success({ code: 200, data: { id: 5, name: '城市夜跑', isSignUp: 0, memberId: 9, omsTicketList: tickets,
+    collaboratorsList: [], sysCategoryList: [], registrationList: [], memberTemplateList: [], commentList: [] } })
+  return Object.assign(m, { scrolls })
+}
+
+test('#5 只有一张可报名的票:自动选中,「立即报名」可点', () => {
+  const m = loadDetail([{ id: 11, name: '标准票', price: 0, remainingInventory: 3 }, { id: 12, name: '早鸟', price: 0, remainingInventory: 0 }])
+  try {
+    assert.equal(m.host.data.state, 'ready')
+    assert.equal(m.host.data.selectedTicketId, '11')
+    assert.equal(m.host.data.canConfirmSignup, true)
+    assert.equal(m.host.data.noTicketText, '')
+  } finally { m.restore() }
+})
+
+test('#5 多张票未选:点灰按钮滚到票种并标红线;选票后红线消失', () => {
+  const m = loadDetail([{ id: 11, name: 'A', price: 0, remainingInventory: 3 }, { id: 12, name: 'B', price: 0 }])
+  try {
+    assert.equal(m.host.data.selectedTicketId, '')
+    assert.equal(m.host.data.canConfirmSignup, false)
+    m.host.onSignupDisabledTap()
+    assert.equal(m.host.data.ticketsAttention, true)
+    assert.equal(m.scrolls.length, 1)
+    assert.equal(m.scrolls[0].scrollTop, 580)
+    m.host.selectTicket({ currentTarget: { dataset: { id: '12' } } })
+    assert.equal(m.host.data.ticketsAttention, false)
+    assert.equal(m.host.data.canConfirmSignup, true)
+  } finally { m.restore() }
+})
+
+test('#5 没有可报名的票:按钮直接说明,不滚动不标红', () => {
+  for (const [tickets, text] of [[[], '暂未开放票种'], [[{ id: 1, name: 'A', price: 0, remainingInventory: 0 }], '暂无可报名票种']]) {
+    const m = loadDetail(tickets)
+    try {
+      assert.equal(m.host.data.noTicketText, text)
+      m.host.onSignupDisabledTap()
+      assert.equal(m.host.data.ticketsAttention, false)
+      assert.equal(m.scrolls.length, 0)
+    } finally { m.restore() }
+  }
+  const wxml = read('subpackageMember/components/cy/scene-play-activity-detail/index.wxml')
+  assert.match(wxml, /disabled="\{\{!canConfirmSignup\}\}" bindtap="openSignup" bind:disabledtap="onSignupDisabledTap">\{\{noTicketText \|\| '立即报名'\}\}<\/cy-btn>/)
+  assert.match(wxml, /class="ticket-list \{\{ticketsAttention \? 'ticket-list--attention' : ''\}\}"/)
+  assert.match(read('subpackageMember/components/cy/scene-play-activity-detail/index.wxss'), /\.ticket-list--attention \.ticket:not\(\.ticket--disabled\) \{ border-color: var\(--cy-color-status-danger\); \}/)
+})

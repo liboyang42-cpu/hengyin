@@ -68,6 +68,11 @@ function normalizeTicket(ticket) {
   }
 }
 
+// Round5 #5:可直接下单的票(有库存且场次未过)。只有一张时自动选中;一张都没有时按钮直接说明。
+function selectableTickets(tickets) {
+  return (tickets || []).filter((ticket) => ticket._available !== false && !ticket._windowPassed)
+}
+
 function actionFor(info) {
   if (!info || (info.isSignUp !== 0 && info.isSignUp !== 1)) return { state: 'unavailable', text: '—' }
   if (info.isSignUp === 0) return { state: 'signup', text: '立即报名' }
@@ -127,6 +132,8 @@ Component({
     cancelError: '',
     cancelBlocked: false,
     canConfirmSignup: false,
+    ticketsAttention: false,
+    noTicketText: '',
     voteShow: false,
     starsBox: [1, 1, 1, 1, 1],
     answer: -1,
@@ -205,6 +212,8 @@ Component({
         selectedTicketId: '',
         expandedTicketId: '',
         canConfirmSignup: false,
+        ticketsAttention: false,
+        noTicketText: '',
         cancelShow: false,
         voteShow: false,
         cancelling: false,
@@ -270,6 +279,8 @@ Component({
           const tickets = info.omsTicketList ? info.omsTicketList.map(normalizeTicket) : []
           const host = info.collaboratorsList[0] || {}
           const action = actionFor(info)
+          const selectable = selectableTickets(tickets)
+          const onlyTicket = selectable.length === 1 ? selectable[0]._id : ''
           const latitude = coordinate(info.latitude, 90)
           const longitude = coordinate(info.longitude, 180)
           const averageRating = nonNegativeNumber(info.averageRating)
@@ -298,6 +309,11 @@ Component({
             hasLocation: latitude !== null && longitude !== null,
             actionState: action.state,
             actionText: action.text,
+            selectedTicketId: onlyTicket,
+            expandedTicketId: onlyTicket,
+            canConfirmSignup: !!onlyTicket,
+            ticketsAttention: false,
+            noTicketText: selectable.length ? '' : tickets.length ? '暂无可报名票种' : '暂未开放票种',
             isOwner: info.memberId != null && info.memberId == app.getUserID(),
           })
           this.triggerEvent('loaded', { id: requestedId, name: info.name || '', imgUrl: info.imgUrl || '' })
@@ -358,7 +374,22 @@ Component({
         toast('该票种已售罄')
         return
       }
-      this.setData({ selectedTicketId: id, expandedTicketId: id, canConfirmSignup: true })
+      this.setData({ selectedTicketId: id, expandedTicketId: id, canConfirmSignup: true, ticketsAttention: false })
+    },
+
+    // Round5 #5:多张票还没选时点灰按钮 —— 滚到票种并用红线标出,而不是没反应。
+    onSignupDisabledTap() {
+      if (this.data.canConfirmSignup || this.data.noTicketText || !this.data.tickets.length) return
+      this.setData({ ticketsAttention: true })
+      const query = this.createSelectorQuery()
+      query.select('.ticket-list').boundingClientRect()
+      query.selectViewport().scrollOffset()
+      query.exec((res) => {
+        const rect = res && res[0]
+        const viewport = res && res[1]
+        if (!rect || !viewport || typeof wx.pageScrollTo !== 'function') return
+        wx.pageScrollTo({ scrollTop: Math.max(0, viewport.scrollTop + rect.top - 120), duration: 300 })
+      })
     },
 
     openSignup() {

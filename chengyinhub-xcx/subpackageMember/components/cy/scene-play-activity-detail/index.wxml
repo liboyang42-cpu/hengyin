@@ -78,7 +78,7 @@
 
     <view class="activity-section">
       <text class="activity-section__title">票种</text>
-      <view wx:if="{{tickets.length}}" class="ticket-list">
+      <view wx:if="{{tickets.length}}" class="ticket-list {{ticketsAttention ? 'ticket-list--attention' : ''}}">
         <view wx:for="{{tickets}}" wx:key="id" class="ticket {{item._id === selectedTicketId ? 'ticket--selected' : ''}} {{!item._available || item._windowPassed ? 'ticket--disabled' : ''}}" data-id="{{item._id}}" bindtap="selectTicket" hover-class="cy-pressed" hover-stay-time="80" style="--pmi:{{index}};">
           <view class="ticket__head"><text class="ticket__name">{{item._nameText}}</text><text class="ticket__price">{{item._priceText}}</text></view>
           <!-- CU-C-32:过期/已开始的场次在卡面上就说清楚(原来只在点下去的那一刻给一句 toast,
@@ -150,7 +150,7 @@
       <button class="activity-share" open-type="share" bindtap="trackShare" data-share-type="activity" data-activity-id="{{activityId}}" data-activity-name="{{info.name}}" data-activity-image="{{info.imgUrl}}"><cy-icon class="activity-share__icon" name="share" size="28" /><text class="activity-share__label">分享</text></button>
       <cy-btn wx:if="{{info.cancelTime}}" class="activity-action__main" variant="primary" disabled="{{true}}">活动已取消</cy-btn>
       <cy-btn wx:elif="{{isOwner}}" class="activity-action__main" variant="danger" bindtap="openCancel">取消活动并退款</cy-btn>
-      <cy-btn wx:elif="{{actionState === 'signup'}}" class="activity-action__main" variant="primary" disabled="{{!canConfirmSignup}}" bindtap="openSignup">立即报名</cy-btn>
+      <cy-btn wx:elif="{{actionState === 'signup'}}" class="activity-action__main" variant="primary" disabled="{{!canConfirmSignup}}" bindtap="openSignup" bind:disabledtap="onSignupDisabledTap">{{noTicketText || '立即报名'}}</cy-btn>
       <cy-btn wx:elif="{{actionState === 'view' || actionState === 'play' || actionState === 'trace'}}" class="activity-action__main" variant="primary" bindtap="goPlay">{{actionText}}</cy-btn>
       <cy-btn wx:else class="activity-action__main" variant="primary" disabled="{{true}}">{{actionText}}</cy-btn>
     </view>
