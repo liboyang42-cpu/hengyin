@@ -304,6 +304,23 @@ class ApiGameSessionControllerTest {
         assertFalse(String.valueOf(result).contains("jdbc password leaked"));
     }
 
+    @Test
+    void receiptKeepsMatchingActivityAndRejectsAnotherActivity() {
+        when(service.receipt(any(), org.mockito.ArgumentMatchers.eq(10L), org.mockito.ArgumentMatchers.eq("game-req-01")))
+                .thenReturn(receipt(10L, "game-req-01"));
+        AjaxResult kept = controller.receipt("10", "game-req-01");
+        assertEquals(200, kept.get("code"));
+        assertEquals(10L, ((GameCommandReceiptView) kept.get(AjaxResult.DATA_TAG)).getActivityId());
+
+        when(service.receipt(any(), org.mockito.ArgumentMatchers.eq(10L), org.mockito.ArgumentMatchers.eq("game-req-other")))
+                .thenReturn(receipt(99L, "game-req-other"));
+        AjaxResult rejected = controller.receipt("10", "game-req-other");
+        assertEquals(500, rejected.get("code"));
+        @SuppressWarnings("unchecked")
+        Map<String, Object> data = (Map<String, Object>) rejected.get(AjaxResult.DATA_TAG);
+        assertEquals("GAME_RECEIPT_IDENTITY", data.get("reasonCode"));
+    }
+
     private GameCommandReceiptView receipt(Long activityId, String requestId) {
         GameCommandReceiptView receipt = new GameCommandReceiptView();
         receipt.setActivityId(activityId);
