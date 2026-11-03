@@ -1,0 +1,356 @@
+[
+ {
+  "check": "[rig 复检通过] create while WeChat busy is accepted but held",
+  "pass": true,
+  "resp": {
+   "msg": "主题发布成功",
+   "code": 200,
+   "data": {
+    "topicId": 990015,
+    "auditTaskId": 4,
+    "reviewState": "PENDING",
+    "bundledTemplateIds": [],
+    "published": true,
+    "commercialAwaitingReview": true,
+    "commercialNextStep": "已提交立项审核，审核与定价完成前尚未开售"
+   },
+   "_status": 200
+  },
+  "topic": 990015,
+  "topic_state": [
+   0,
+   2
+  ],
+  "recheck": [
+   [
+    0,
+    0,
+    null
+   ]
+  ]
+ },
+ {
+  "check": "[rig 复检通过] queued for automatic recheck",
+  "pass": true,
+  "recheck": [
+   [
+    0,
+    0,
+    null
+   ]
+  ]
+ },
+ {
+  "check": "[rig 复检通过] not on public list (player 9004)",
+  "pass": true
+ },
+ {
+  "check": "[rig 复检通过] not visible to another player",
+  "pass": true,
+  "resp": [
+   false,
+   "主题活动不存在"
+  ]
+ },
+ {
+  "check": "[rig 复检通过] visible to its author",
+  "pass": true,
+  "resp": [
+   true,
+   "操作成功"
+  ]
+ },
+ {
+  "check": "[pass] job run",
+  "pass": true,
+  "resp": {
+   "msg": "操作成功",
+   "code": 200,
+   "_status": 200
+  }
+ },
+ {
+  "check": "[pass] recheck row state=1 PASS",
+  "pass": true,
+  "recheck": [
+   [
+    1,
+    0,
+    "PASS"
+   ]
+  ]
+ },
+ {
+  "check": "[pass] topic published (user_status=1)",
+  "pass": true,
+  "topic_state": [
+   1,
+   1
+  ]
+ },
+ {
+  "check": "[pass] now visible to other players",
+  "pass": true,
+  "resp": [
+   true,
+   "操作成功"
+  ]
+ },
+ {
+  "check": "[rig 复检违规] create while WeChat busy is accepted but held",
+  "pass": true,
+  "resp": {
+   "msg": "主题发布成功",
+   "code": 200,
+   "data": {
+    "topicId": 990016,
+    "auditTaskId": 6,
+    "reviewState": "PENDING",
+    "bundledTemplateIds": [],
+    "published": true,
+    "commercialAwaitingReview": true,
+    "commercialNextStep": "已提交立项审核，审核与定价完成前尚未开售"
+   },
+   "_status": 200
+  },
+  "topic": 990016,
+  "topic_state": [
+   0,
+   2
+  ],
+  "recheck": [
+   [
+    0,
+    0,
+    null
+   ]
+  ]
+ },
+ {
+  "check": "[rig 复检违规] queued for automatic recheck",
+  "pass": true,
+  "recheck": [
+   [
+    0,
+    0,
+    null
+   ]
+  ]
+ },
+ {
+  "check": "[rig 复检违规] not on public list (player 9004)",
+  "pass": true
+ },
+ {
+  "check": "[rig 复检违规] not visible to another player",
+  "pass": true,
+  "resp": [
+   false,
+   "主题活动不存在"
+  ]
+ },
+ {
+  "check": "[rig 复检违规] visible to its author",
+  "pass": true,
+  "resp": [
+   true,
+   "操作成功"
+  ]
+ },
+ {
+  "check": "[risky] recheck row state=2 REJECTED",
+  "pass": true,
+  "recheck": [
+   [
+    2,
+    0,
+    "RISKY"
+   ]
+  ]
+ },
+ {
+  "check": "[risky] topic stays hidden",
+  "pass": true,
+  "topic_state": [
+   0,
+   2
+  ]
+ },
+ {
+  "check": "[risky] author notified (im_message to 9003)",
+  "pass": true,
+  "before": 1,
+  "after": 2,
+  "last": [
+   [
+    3,
+    "审核未通过"
+   ]
+  ]
+ },
+ {
+  "check": "[rig 复检耗尽] create while WeChat busy is accepted but held",
+  "pass": true,
+  "resp": {
+   "msg": "主题发布成功",
+   "code": 200,
+   "data": {
+    "topicId": 990017,
+    "auditTaskId": 8,
+    "reviewState": "PENDING",
+    "bundledTemplateIds": [],
+    "published": true,
+    "commercialAwaitingReview": true,
+    "commercialNextStep": "已提交立项审核，审核与定价完成前尚未开售"
+   },
+   "_status": 200
+  },
+  "topic": 990017,
+  "topic_state": [
+   0,
+   2
+  ],
+  "recheck": [
+   [
+    0,
+    0,
+    null
+   ]
+  ]
+ },
+ {
+  "check": "[rig 复检耗尽] queued for automatic recheck",
+  "pass": true,
+  "recheck": [
+   [
+    0,
+    0,
+    null
+   ]
+  ]
+ },
+ {
+  "check": "[rig 复检耗尽] not on public list (player 9004)",
+  "pass": true
+ },
+ {
+  "check": "[rig 复检耗尽] not visible to another player",
+  "pass": true,
+  "resp": [
+   false,
+   "主题活动不存在"
+  ]
+ },
+ {
+  "check": "[rig 复检耗尽] visible to its author",
+  "pass": true,
+  "resp": [
+   true,
+   "操作成功"
+  ]
+ },
+ {
+  "check": "[exhausted] recheck row state=3 EXHAUSTED",
+  "pass": true,
+  "recheck": [
+   [
+    3,
+    0,
+    "TEXT_UNAVAILABLE"
+   ]
+  ]
+ },
+ {
+  "check": "[exhausted] topic stays hidden",
+  "pass": true,
+  "topic_state": [
+   0,
+   2
+  ]
+ },
+ {
+  "check": "[exhausted] author notified",
+  "pass": true,
+  "before": 2,
+  "after": 3,
+  "last": [
+   [
+    3,
+    "审核未通过"
+   ]
+  ]
+ },
+ {
+  "check": "[rig 复检重试] create while WeChat busy is accepted but held",
+  "pass": true,
+  "resp": {
+   "msg": "主题发布成功",
+   "code": 200,
+   "data": {
+    "topicId": 990018,
+    "auditTaskId": 10,
+    "reviewState": "PENDING",
+    "bundledTemplateIds": [],
+    "published": true,
+    "commercialAwaitingReview": true,
+    "commercialNextStep": "已提交立项审核，审核与定价完成前尚未开售"
+   },
+   "_status": 200
+  },
+  "topic": 990018,
+  "topic_state": [
+   0,
+   2
+  ],
+  "recheck": [
+   [
+    0,
+    0,
+    null
+   ]
+  ]
+ },
+ {
+  "check": "[rig 复检重试] queued for automatic recheck",
+  "pass": true,
+  "recheck": [
+   [
+    0,
+    0,
+    null
+   ]
+  ]
+ },
+ {
+  "check": "[rig 复检重试] not on public list (player 9004)",
+  "pass": true
+ },
+ {
+  "check": "[rig 复检重试] not visible to another player",
+  "pass": true,
+  "resp": [
+   false,
+   "主题活动不存在"
+  ]
+ },
+ {
+  "check": "[rig 复检重试] visible to its author",
+  "pass": true,
+  "resp": [
+   true,
+   "操作成功"
+  ]
+ },
+ {
+  "check": "[retry] still busy -> rescheduled with backoff, hidden",
+  "pass": true,
+  "recheck": [
+   [
+    0,
+    1,
+    "TEXT_UNAVAILABLE",
+    489
+   ]
+  ]
+ }
+]

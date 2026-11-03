@@ -1,0 +1,115 @@
+[
+ {
+  "check": "setup: comment and post are public before the word exists",
+  "pass": true,
+  "comment": 61,
+  "comment_status": [
+   1,
+   0
+  ],
+  "post": 3,
+  "lifecycle": "PUBLISHED"
+ },
+ {
+  "check": "admin imports the made-up word afterwards",
+  "pass": true,
+  "resp": {
+   "msg": "操作成功",
+   "code": 200,
+   "data": {
+    "imported": 1,
+    "skipped": 0
+   },
+   "_status": 200
+  }
+ },
+ {
+  "check": "removal switch is off (default)",
+  "pass": true
+ },
+ {
+  "check": "report-only run writes hits for both",
+  "pass": true,
+  "hits": [
+   [
+    "COMMENT",
+    61,
+    "OTHER",
+    "REPORT"
+   ],
+   [
+    "COMMUNITY_POST",
+    3,
+    "OTHER",
+    "REPORT"
+   ]
+  ]
+ },
+ {
+  "check": "report-only run removes nothing",
+  "pass": true,
+  "comment_status": [
+   1,
+   0
+  ],
+  "lifecycle": "PUBLISHED"
+ },
+ {
+  "check": "report-only rerun adds no duplicate hits (same library version)",
+  "pass": true,
+  "before": 2,
+  "after": 2
+ },
+ {
+  "check": "admin turns removal on via /system/config",
+  "pass": true,
+  "resp": {
+   "msg": "操作成功",
+   "code": 200,
+   "_status": 200
+  }
+ },
+ {
+  "check": "removal run removes both and records REMOVED",
+  "pass": true,
+  "hits": [
+   [
+    "COMMENT",
+    61,
+    "OTHER",
+    "REMOVED"
+   ],
+   [
+    "COMMUNITY_POST",
+    3,
+    "OTHER",
+    "REMOVED"
+   ]
+  ]
+ },
+ {
+  "check": "comment no longer public",
+  "pass": true,
+  "comment_status": [
+   2,
+   0
+  ]
+ },
+ {
+  "check": "post no longer public",
+  "pass": true,
+  "lifecycle": "HIDDEN"
+ },
+ {
+  "check": "author notified",
+  "pass": true,
+  "before": 0,
+  "after": 1
+ },
+ {
+  "check": "removal rerun is idempotent (no new hits, state unchanged)",
+  "pass": true,
+  "before": 2,
+  "after": 2
+ }
+]
