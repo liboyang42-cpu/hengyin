@@ -143,3 +143,18 @@ Owner's review of round 3 (ROUND4.md). origin/master (c6eac3b8) was already merg
 **Unverified on a real phone:** the navigate-then-open timing on a slow network (the layer opens after `/api/project/home` returns), and the textarea width in the native WeChat textarea.
 
 STATUS: PARTIAL - C-13 waits for the owner's reference; the round-3 recruiting-sheet questions no longer apply after the revert; the P-6 dark-layer text contrast seen in the rig needs the P-6 owner; phone behaviour unverified on a real phone
+
+## Round 5C
+
+Owner's correction (ROUND5C.md, l6-club): in the dark club-host P-6 招商 layer of `pages/topic/components/project-host`, the summary numbers and the chapter and station names showed dark text on a dark background. Shots come from the walkthrough rig at this branch's head (real backend, MySQL and Redis, and the real bundle in the rig browser), not from a phone. Steps: `rig-replay/run-all.sh` fixtures (`theme`, `session 40`, `members`), then `node shots.mjs <phase> r4merchant`.
+
+| Item | Status | What changed | Files | Proof |
+|---|---|---|---|---|
+| P-6 招商 layer unreadable on dark | done | **Cause:** `project-drawer/index.wxss` starts with `@import '/style/merchant-light.wxss'`. That file's `page{}` block lands on the drawer's own host and redefines the text tokens (`--cy-text-title`, `--cy-text-secondary`, `--cy-color-text-primary` …) with light-theme values, which give dark text. This overrides the club host's outer `.theme-dark`. The background tokens are not redefined there, so they stayed dark, which gave dark text on dark. **Fix:** when `hostOwnerType === 'club'`, the 招商 `<project-drawer>` gets the existing `theme-dark` class, the same condition the page root already uses. The existing dark tokens then apply again inside the layer. No new colour, no wxss change, no new line, so the ledger and U4-DYNAMIC anchors stay where they are. Merchant hosts get no class and are unchanged. | `pages/topic/components/project-host/index.wxml` (one attribute on the 招商 drawer) | `project-host-merchant-dark-contract.test.js` (3 tests; the class test fails on the old code). It also checks that every colour token the layer uses and merchant-light redefines has a dark value in `.theme-dark`. Rig: `shots/MERCHANT-r5c-before.jpg` (dark-on-dark title, numbers, chapter and station names) and `shots/MERCHANT-r5c-after.jpg` (招商 title, 0/2 · 0 · 0, 站点 / 还没人接, both chapter names and all four station names readable). Same fixtures, route `club/topic-detail → topic/merchantinfo`, `operationScope=CLUB`, `role=host`. |
+| Gates | done | Nothing to rebuild. The ledger has no line shifts. | | `node chengyinhub-xcx/tests/lint/ui-integrity.js` → `UI-GATE-0:PASS` |
+
+**Seen, not changed (the owner said to change nothing else):** the other drawers in the same club-dark host also use `project-drawer`, so they likely have the same issue: 合作俱乐部, 更多, 客户, 选择供给角色. I did not shoot them. Recommended default: apply the same one-attribute fix to them in a separate change after the owner agrees. The stacked layers (`project-layer`) do not import merchant-light and are not affected.
+
+**Unverified on a real phone:** on a real phone, WeChat may ignore `page{}` inside a component's wxss. If it does, the phone may never have shown this defect. Either way the fix is harmless there, because it only re-applies the dark tokens the page root already sets.
+
+STATUS: PARTIAL - P-6 item done; real-phone rendering not verified; CI result pending at time of writing (see below)
