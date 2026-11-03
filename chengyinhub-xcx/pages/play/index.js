@@ -6305,7 +6305,7 @@ Page({
         confirmed = true;
         if (!res.confirm) { that._finishLegacyHint(intent); return; }
         app.sendRequest({
-          url: '/api/play/hint/unlock', method: 'POST',
+          url: '/api/play/hint/unlock', method: 'POST', write: true, // Round5 #10:末段 unlock 不在写动词表,显式标写(游客弹登录)
           // 必须带会话上下文:后端按它验「真的在这场/这个主题里」(与解谜提示同口径),
           // 只发 nodeId 会被拒 —— 否则任何登录用户拿到节点 id 就能读走提示正文。
           data: payload,

@@ -338,3 +338,46 @@ test('#9 线索半屏节点状态与队友角色不出原始代码', () => {
   assert.equal(p.teamActions[0].roleName, '侦探')
   assert.equal(p.teamActions[1].roleName, undefined)
 })
+
+// ---------- #10 POI 挑战游客 & 写请求标记 ----------
+
+test('#10 POI 挑战游客读地点 401:登录入口(不是「网络异常」),登录后重读;已登录断网仍是网络异常', async () => {
+  for (const [userId, expectLogin] of [['', true], ['7', false]]) {
+    let user = userId
+    const m = mount('pages/play/poi-challenge/index.js', { app: {
+      getUserID: () => user,
+      firstLogin: () => { user = '7'; return Promise.resolve({ ok: true }) },
+    } })
+    try {
+      m.host.onLoad({ poiId: '12' })
+      const read = m.requests.find((r) => r.url === '/api/city/nodes/12')
+      read.fail({ code: userId ? 0 : 401, errMsg: userId ? 'request:fail timeout' : '' })
+      assert.equal(m.host.data.step, expectLogin ? 'login' : 'error')
+      if (expectLogin) {
+        m.host.loginRetry()
+        await flush()
+        assert.equal(m.requests.filter((r) => r.url === '/api/city/nodes/12').length, 2)
+      } else {
+        assert.equal(m.host.data.errorText, '网络异常，请重试')
+      }
+    } finally { m.restore() }
+  }
+  const wxml = read('pages/play/poi-challenge/index.wxml')
+  assert.match(wxml, /wx:elif="\{\{step === 'login'\}\}"[\s\S]*?<cy-empty kind="no-permission" title="登录后开始挑战" cta="登录" bind:cta="loginRetry" \/>/)
+  assert.match(read('pages/play/poi-challenge/index.json'), /"cy-empty": "\/components\/cy\/empty\/index"/)
+})
+
+test('#10 complete / hint unlock / object-card rename 显式 write:true,游客会弹登录', () => {
+  const { isWriteRequest } = require('../../utils/transport/request-client.js')
+  // 负控:不标 write 时这三条路径都被判成读
+  for (const url of ['/api/city/nodes/1/complete', '/api/play/hint/unlock', '/api/object-card/rename']) {
+    if (typeof isWriteRequest === 'function') assert.equal(isWriteRequest({ url }, 'POST'), false, url + ' 默认被判读,所以必须显式标写')
+  }
+  const sites = [
+    ['pages/play/poi-challenge/index.js', /url: '\/api\/city\/nodes\/' \+ this\._poiId \+ '\/complete', method: 'POST', write: true,/],
+    ['subpackageMember/components/cy/scene-roam-poi-detail/index.js', /url: '\/api\/city\/nodes\/' \+ poiId \+ '\/complete', method: 'POST', write: true,/],
+    ['pages/play/index.js', /url: '\/api\/play\/hint\/unlock', method: 'POST', write: true,/],
+    ['subpackageP3/pages/object-cards/index/index.js', /url: '\/api\/object-card\/rename',\s*method: 'POST',\s*write: true,/],
+  ]
+  for (const [file, re] of sites) assert.match(read(file), re, file)
+})
