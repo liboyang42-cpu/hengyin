@@ -4322,7 +4322,10 @@ Page({
         } else if (String(that.data.mode) !== '2') {
           // 城市定向:打开就是故事流(2026-09-22 裁决「按预制人生来」)。
           // 地图没有删 —— 左上角罗盘随时切回去,只是它不再是第一屏。
-          that._openStory();
+          /* R11 g1(j3 F5):已通关(rebuild 按服务端路线态算出的 allDone)的主题重开,回到它的结局与通关卡,
+             不再当成新开局放「开始游戏」、序章和定位提示。「继续」照旧回详情(closeFinish)。 */
+          if (that.data.allDone) { that.setData({ screen: '' }); that.openFinish(); }
+          else that._openStory();
         } else if (!first && that.data.chapterFull) that.openChapterFull();
         // R9-21:服务端态允许继续时,把上次暂停的会话恢复成 paused(不重开、不丢用时)
         that._restoreRunSession(d, routeState, nodes);

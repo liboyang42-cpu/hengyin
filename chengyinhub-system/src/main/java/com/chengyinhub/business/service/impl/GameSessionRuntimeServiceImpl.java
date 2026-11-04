@@ -2124,6 +2124,14 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
     }
 
     @Override
+    public Long routeCurrentChapterId(Long activityId) {
+        if (activityId == null || activityId <= 0) return null;
+        GameSession session = runtimeMapper.selectSessionByActivity(activityId);
+        if (!isRouteSession(session) || !GameSession.RUNNING.equals(session.getStatus())) return null;
+        return session.getCurrentChapterId();
+    }
+
+    @Override
     public String routeChapterGateError(Long activityId, Long nodeId) {
         if (activityId == null || activityId <= 0) return null;
         GameSession session = runtimeMapper.selectSessionByActivity(activityId);

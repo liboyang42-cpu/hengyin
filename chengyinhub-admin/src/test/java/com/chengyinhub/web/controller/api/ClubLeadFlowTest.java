@@ -217,6 +217,28 @@ class ClubLeadFlowTest {
         return queryValue == null || queryValue.equals(actualValue);
     }
 
+    /* R11 g1(j3 F4):导演运行时接管的路线局,玩家轮询读到的是运行时的进行态与已放行章节,
+       不再是旧带队行(那一行没人更新,玩家端「等队长放行」屏永远不出现) */
+    @Test
+    void teamProgressUnderDirectorRuntimeReportsRuntimeChapter() {
+        member.teamProgress(100L);   // 懒建旧带队行:status=1、currentChapterId=null
+        com.chengyinhub.business.service.IGameSessionRuntimeService runtime = mock(com.chengyinhub.business.service.IGameSessionRuntimeService.class);
+        when(runtime.routeSessionStatus(100L)).thenReturn("RUNNING");
+        when(runtime.routeCurrentChapterId(100L)).thenReturn(10L);
+        ReflectionTestUtils.setField(member, "gameSessionRuntimeService", runtime);
+        java.util.Map<?, ?> d = (java.util.Map<?, ?>) member.teamProgress(100L).get("data");
+        assertEquals(2, d.get("status"), "运行时进行中 ⇒ 玩家端按已发车判闸");
+        assertEquals(10L, d.get("currentChapterId"));
+        assertEquals(20L, d.get("nextChapterId"));
+        assertEquals("第一章·集合", d.get("chapterName"));
+        assertEquals(Boolean.TRUE, d.get("directorRun"));
+        // 运行时结束后不再顶替(sessionEnded 由原口径给出)
+        when(runtime.routeSessionStatus(100L)).thenReturn("FINISHED");
+        java.util.Map<?, ?> ended = (java.util.Map<?, ?>) member.teamProgress(100L).get("data");
+        assertEquals(Boolean.TRUE, ended.get("sessionEnded"));
+        assertEquals(stateHolder[0].getStatus(), ended.get("status"));
+    }
+
     @Test
     void twoAccountLeadFlow_start_arrive_unlock_reject_aggregate() {
         // ① 成员越权发车 → 拒(此时懒建 state,leader=9,成员7 非队长)

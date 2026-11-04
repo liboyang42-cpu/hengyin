@@ -57,7 +57,8 @@
   <view class="lb-left">
     <view class="lb-dot"></view>
     <text class="lb-txt" wx:if="{{lead.ended}}">本场已结束 · 你完成了 {{doneCount}}/{{total}} 站</text>
-    <text class="lb-txt" wx:else>带领中 · {{lead.arrived}}/{{lead.total}} 人{{lead.chapterName ? ' · ' + lead.chapterName : ''}}</text>
+    <!-- R11 g1(j3 F4):这个数是到场人数(集合签到 / 核销 / 已有站点进度,C-10 同口径),写明「到场」,别让人读成完成人数 -->
+    <text class="lb-txt" wx:else>到场 {{lead.arrived}}/{{lead.total}} 人{{lead.chapterName ? ' · ' + lead.chapterName : ''}}</text>
   </view>
   <text class="lb-wait" wx:if="{{!lead.ended}}">{{lead.isLeader ? '队长带领中 · 工具在更多' : '队长带队中'}}</text>
 </view>

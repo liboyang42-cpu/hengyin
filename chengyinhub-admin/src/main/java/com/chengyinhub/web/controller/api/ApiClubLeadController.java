@@ -413,16 +413,26 @@ public class ApiClubLeadController extends BaseController {
         data.put("directorRun", directorStatus != null);
         // C-12:带队人结束本场后,玩家播放页据此显示「本场已结束」与自己的完成数,不再让人提交后才撞上拒绝。
         data.put("sessionEnded", Integer.valueOf(3).equals(st.getStatus()) || "FINISHED".equals(directorStatus));
+        /* R11 g1(j3 F4):导演运行时接管的路线局,章节放行写在 game_session.current_chapter_id,
+           旧带队状态行不再更新 —— 玩家端「等队长放行」屏读的是这里的 status=2 与 currentChapterId,
+           照旧读旧行就永远等不到闸,玩家读完锁着的一章、走到站上才被服务端拒。进行中的路线局以运行时为准。 */
+        Long currentChapterId = st.getCurrentChapterId();
+        if (gameSessionRuntimeService != null && "RUNNING".equals(directorStatus)) {
+            data.put("status", 2);
+            Long directorChapter = gameSessionRuntimeService.routeCurrentChapterId(activityId);
+            if (directorChapter != null) currentChapterId = directorChapter;
+            data.put("currentChapterId", currentChapterId);
+        }
         List<CmsTopicChapter> ordered = chaptersOf(activityId);
         Long nextChapterId = null;
-        if (st.getCurrentChapterId() == null && !ordered.isEmpty()) nextChapterId = ordered.get(0).getId();
+        if (currentChapterId == null && !ordered.isEmpty()) nextChapterId = ordered.get(0).getId();
         for (int i = 0; i + 1 < ordered.size(); i++) {
-            if (ordered.get(i).getId().equals(st.getCurrentChapterId())) nextChapterId = ordered.get(i + 1).getId();
+            if (ordered.get(i).getId().equals(currentChapterId)) nextChapterId = ordered.get(i + 1).getId();
         }
         data.put("nextChapterId", nextChapterId);
         // 当前章节名
-        if (st.getCurrentChapterId() != null) {
-            CmsTopicChapter c = cmsTopicChapterService.selectCmsTopicChapterById(st.getCurrentChapterId());
+        if (currentChapterId != null) {
+            CmsTopicChapter c = cmsTopicChapterService.selectCmsTopicChapterById(currentChapterId);
             data.put("chapterName", c != null ? c.getName() : "");
         }
         data.put("broadcast", st.getBroadcastText());
