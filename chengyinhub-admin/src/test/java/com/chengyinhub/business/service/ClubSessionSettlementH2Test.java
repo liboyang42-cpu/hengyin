@@ -55,6 +55,10 @@ class ClubSessionSettlementH2Test {
                 + " event_type int, event_id bigint, create_time datetime)");
         jdbc.execute("create table cms_topic (id bigint primary key, name varchar(255), del_flag int default 0)");
         jdbc.execute("create table cms_activity (id bigint primary key, name varchar(255), club_id bigint, start_date datetime)");
+        jdbc.execute("create table settlement_detail (id bigint auto_increment primary key, source_type varchar(32),"
+                + " source_id bigint, receiver_type varchar(32), receiver_id bigint, settlement_amount decimal(12,2), status int)");
+        jdbc.execute("create table refund_application (id bigint primary key, source_type varchar(32), source_id bigint)");
+        jdbc.execute("create table cms_registration (id bigint primary key, owner_type int, owner_id bigint)");
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean();
         factory.setDataSource(ds);
         factory.setTypeAliasesPackage("com.chengyinhub.business.domain");
@@ -122,6 +126,30 @@ class ClubSessionSettlementH2Test {
         assertEquals("3%", row.get("feeRateText"));
         assertEquals("¥ 151.32", row.get("netText"), "提现那笔支出不得混进到账");
         assertEquals("已入你的账户", row.get("payeeText"));
+    }
+
+    private void refundAfterSettlement(long refundId, long registrationId, long activityId,
+                                       String merchantClawback, String platformClawback, int status) {
+        jdbc.update("insert into cms_registration values (?, 2, ?)", registrationId, activityId);
+        jdbc.update("insert into refund_application values (?, 'registration', ?)", refundId, registrationId);
+        jdbc.update("insert into settlement_detail (source_type, source_id, receiver_type, receiver_id, settlement_amount, status)"
+                + " values ('refund', ?, 'merchant', ?, -" + merchantClawback + ", ?)", refundId, FORMER, status);
+        jdbc.update("insert into settlement_detail (source_type, source_id, receiver_type, receiver_id, settlement_amount, status)"
+                + " values ('refund', ?, 'platform', 0, -" + platformClawback + ", ?)", refundId, status);
+    }
+
+    @Test
+    void refundAfterSettlementIsSubtractedFromTheSessionRow() {
+        // 第十一轮 h4 L7:¥39 票结算后退一半(¥19.50),冲销明细按 3% 分到商户 −18.92、平台 −0.58。
+        // 场次行要变成「已收 − 已退」:销售 136.50、服务费 4.10、到账 132.40;别的场次的退款与未落定冲销不算进来。
+        viewer = FORMER;
+        refundAfterSettlement(501, 74, 9, "18.92", "0.58", 1);
+        refundAfterSettlement(502, 80, 10, "40.00", "1.00", 1);   // 别的俱乐部场次
+        refundAfterSettlement(503, 75, 9, "5.00", "0.10", 0);     // 未落定(status=0)不算
+        Map<String, Object> row = sessions(summary()).get(0);
+        assertEquals("¥ 136.50", row.get("grossText"));
+        assertEquals("¥ 4.10", row.get("feeText"));
+        assertEquals("¥ 132.40", row.get("netText"));
     }
 
     @Test

@@ -219,11 +219,26 @@
         <result property="settledAt" column="settled_at"/>
     </resultMap>
 
+    <!-- 第十一轮 h4 L7:结算后再退款,RefundServiceImpl 按比例写负数冲销明细(settlement_detail source_type=refund,
+         status=1,含扣不动记欠款的部分)。场次行的到账与服务费都要减去本场报名的冲销,与「已收 − 已退」一致。
+         只认已结算(status=1)的冲销;结算前退款已在 settleActivity 的销售额里扣掉,不会产生冲销行。 -->
+    <sql id="clubSessionRefundAdjustmentFrom">
+        from settlement_detail adj
+        join refund_application ra on ra.id = adj.source_id and ra.source_type = 'registration'
+        join cms_registration rr on rr.id = ra.source_id
+        where adj.source_type = 'refund' and adj.status = 1
+          and rr.owner_type = 2 and rr.owner_id = a.id
+    </sql>
+
     <select id="selectClubSessionSettlements" resultMap="ClubSessionSettlementResult">
         select a.id as activity_id, a.name as activity_name, a.start_date,
-               sum(pay.change_balance) as net_amount,
+               sum(pay.change_balance)
+                 + (select coalesce(sum(adj.settlement_amount), 0) <include refid="clubSessionRefundAdjustmentFrom"/>
+                     and adj.receiver_type = 'merchant') as net_amount,
                (select coalesce(sum(fee.change_balance), 0) from ums_member_balance_detail fee
-                 where fee.event_type = 7 and fee.change_type = 1 and fee.del_flag = 0 and fee.event_id = a.id) as platform_amount,
+                 where fee.event_type = 7 and fee.change_type = 1 and fee.del_flag = 0 and fee.event_id = a.id)
+                 + (select coalesce(sum(adj.settlement_amount), 0) <include refid="clubSessionRefundAdjustmentFrom"/>
+                     and adj.receiver_type = 'platform') as platform_amount,
                min(pay.member_id) as payee_min_member_id, max(pay.member_id) as payee_max_member_id,
                max(pay.create_time) as settled_at
         from cms_activity a
