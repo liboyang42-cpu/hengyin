@@ -210,6 +210,8 @@ Rig setup for these shots (rig-only, nothing in product code):
 - **CI on `9375086f`:** Backend tests, Fast gates, Migration safety and the other workflows are green. Two jobs failed:
   "Mini program unit shard 12/20" (the ledger count above) and "Mini program static checks", which only summarises
   the shards. The count fix is in the last push.
+- **CI on `8b78f5ca`** (which contains the count fix; the `caa3ece4` run was cancelled by the newer push): GitHub CI
+  run 41763058228, **31 of 31 jobs succeeded**, including Backend tests, Fast gates, Migration safety and all 20 mini unit shards.
 - **Why CI was cut off.** On `3f7414f6`, "Backend tests" showed as *cancelled* at 「Describe the tested Boot Jar」. That
   job has `timeout-minutes: 15`. It started 01:05:36 and was stopped 01:20:41, exactly 15 minutes. Build+test took
   9m41s, isolated startup 1m55s and the migration MySQL IT 1m54s, which leaves seconds for the jar description. On
@@ -222,3 +224,13 @@ Rig setup for these shots (rig-only, nothing in product code):
   - New components and the weather renderer are in `subpackageRoam` behind `componentPlaceholder`.
   - **The main package was already above the ~3,150,000 target before this round started.** I did not move unrelated
     components to make room.
+
+## Needs owner
+
+- A guest who opens a shared place gets a 401, because `SecurityConfig` does not let guests read
+  `/api/city/nodes/{id}`. This is the same open question as Round 7C. Recommended default: allow guests to read
+  that one endpoint (the controller already treats a guest as memberId 0).
+- "Backend tests" sits close to its 15-minute limit. Recommended: raise `timeout-minutes` to 20, or split the job.
+- Main package source is about 3.21 MB, above the ~3.15 MB target. It was already 3.18 MB before this round.
+
+STATUS: COMPLETE
