@@ -3,7 +3,7 @@
        aria-role="img" aria-label="{{accessibilityLabel}}"
        longitude="{{center.lng}}" latitude="{{center.lat}}" scale="{{scale}}"
        markers="{{scene === 'explore' ? mapMarkers : markers}}"
-       polyline="{{mapPolyline}}" polygons="{{mapPolygons}}"
+       polyline="{{lines}}" polygons="{{mapPolygons}}"
        circles="{{scene === 'explore' ? mapCircles : circles}}"
        rotate="{{rotate}}" show-location="{{false}}" enable-rotate="{{false}}" enable-overlooking="{{false}}"
        enable-zoom="{{interactive}}" enable-scroll="{{interactive}}"

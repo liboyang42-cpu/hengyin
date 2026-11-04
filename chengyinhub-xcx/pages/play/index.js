@@ -33,6 +33,7 @@ const journeyCheckRecovery = require('./utils/journey-check-recovery.js');
 const { reportBlocksParseFailure } = require('./utils/chapter-blocks-health.js');   // P1-021 块流回落埋点
 const audioSession = require('./utils/audio-session.js');       // 音频打断/恢复 + 长音频不熄屏
 const { createPoller } = require('./utils/poller.js');           // 带领场进度:退避轮询
+const { createPlayTrail } = require('./utils/play-trail.js');
 const playAccuracy = require('./utils/play-accuracy.js');       // 到达定位精度阈值(80m)与提示
 const {
   normalizePlayerProjection,
@@ -532,7 +533,7 @@ Page({
     tileH: 0,                     // 瓦片行高:按剩余高度等分,4 家竖版大卡 / 6 家近方卡
     nodes: [], total: 0, merchantCount: 0, doneCount: 0, allDone: false, topicCompleted: false,
     remainingGameCount: 0,
-    fmNodes: [], fmPolyline: [], fmPlayer: null, fmCenter: { lat: 31.2304, lng: 121.4737 },
+    fmNodes: [], fmPolyline: [], fmTrail: [], fmPlayer: null, fmCenter: { lat: 31.2304, lng: 121.4737 },
     fmSubkey: MAP_DARK.subkey, fmLayerStyle: MAP_DARK.layerStyle, // S9 暗色底图预留,见上方 MAP_DARK 注释
     nextNode: null,
     sheet: { show: false, node: null, continueText: '前往下一站' },
@@ -741,6 +742,7 @@ Page({
     this.restoreGuardAppeal();
     this._syncCommunityEntry();
     this._themeHidden = false; this._startThemePoll();
+    this._flushTrail(true);
     this._startZeroHpTimer();
     if (this.data.chapterFull && !this.data.chapterGate.show) this.measureChapter();
     else if (this.data.chapStory.show) this._startStoryDust();
@@ -1007,6 +1009,7 @@ Page({
   },
 
   onUnload() {
+    if (this._trail) this._trail.persist();
     if (this._answerRightTimer) { clearTimeout(this._answerRightTimer); this._answerRightTimer = null; }
     this._answerRightPending = null;
     this._stopStationBgm();
@@ -1059,6 +1062,7 @@ Page({
   //    只把 master 那侧的 _watching=false / offLocationChange / stopLocationUpdate 三句拿掉。
   onHide() {
     this._flushAnswerRight();
+    if (this._trail) this._trail.persist();
     this.suspendOrientLifecycle(); this._stopTopbar();
     this.setData({ arrivalGuard: null });
     this._leadArrivalEpoch = (this._leadArrivalEpoch || 0) + 1; this._leadArriving = false;
@@ -3626,6 +3630,7 @@ Page({
     const center = n && n.lat && n.lng ? { lat: Number(n.lat), lng: Number(n.lng) } : this.data.fmCenter;
     this.setData({ storyMap: true, storyMapCenter: center, sessionToolsOpen: false });
     if (!this.data.gpsOk) this.requestPlayLocation();
+    this._flushTrail(true);
   },
   closeStoryMap() {
     // P-08 第五轮 D:从「等待放行」屏「返回地图」过来的,「回到故事」回到等待屏(仍被挡着),已放行就照常翻转门进章
@@ -4858,6 +4863,27 @@ Page({
     if (low) this.setData({ gpsLowAcc: true, gpsHint: playAccuracy.LOW_ACCURACY_HINT });
     else this.setData({ gpsLowAcc: false, gpsHint: '定位已开启 · 靠近后会自动点亮' });
   },
+  /* 第九轮 m2 第 1 项:我走过的路(亮线 + 光晕),只在地图露出、页面在前台时推给地图 */
+  _playTrail() {
+    const key = this._sessionKey();
+    if (!this._trail || this._trail.key !== key) this._trail = createPlayTrail(wx, key);
+    return this._trail;
+  },
+  _noteMyTrail(loc) {
+    if (this.data.isPreview || this.data.isMock) return;
+    if (this._playTrail().note(loc)) this._flushTrail(false);
+  },
+  _trailVisible() {
+    return !!(this.data.navMap || this.data.storyMap || this.data.chapterFull || (this.data.nav && this.data.nav.active));
+  },
+  _flushTrail(force) {
+    if (this._themeHidden || this._playDisposed || !this._trail) return;
+    if (!force && !this._trailVisible()) return;
+    const now = Date.now();
+    if (!force && this._trailAt && now - this._trailAt < 3000) return;
+    this._trailAt = now;
+    this.setData({ fmTrail: this._trail.lines().concat(this._teamTrailLines ? this._teamTrailLines() : []) });
+  },
   watchLocation() {
     const that = this;
     if (!this._isPlayAccountCurrent()) { this._stopTracking(); return; }
@@ -4904,6 +4930,7 @@ Page({
           if (!current() || !that._watching) { release(); return; }
           that._loc = { longitude: loc.longitude, latitude: loc.latitude, accuracy: loc.accuracy };
           that._noteLocAccuracy(loc.accuracy);
+          that._noteMyTrail(loc);
           // S2 陪伴态:仅 nav.active 时才把玩家位置回灌地图(箭头需要跟着走)+ 刷新剩余距离/途中气泡阈值
           // 性能:回灌地图会触发 free-map 全量 _rebuild(重画节点+circles+箭头),GPS 每 1-3s 一次太频繁,
           // 节流成"移动 ≥5 米才回灌";nav.remainM/气泡阈值仍每 tick 刷(便宜,不受影响)。

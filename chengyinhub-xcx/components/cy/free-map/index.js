@@ -50,7 +50,9 @@ Component({
     center: { type: Object, value: { lat: 31.2304, lng: 121.4737 } },
     scale:  { type: Number, value: 16 },
     mapMarkers:   { type: Array, value: [] },
-    mapPolyline:  { type: Array, value: [] },
+    mapPolyline:  { type: Array, value: [], observer() { this._mergeLines(); } },
+    // 第九轮 m2:叠在路线之上的「走过的路 / 同场队伍」线,调用方不传就和以前一样
+    trailPolyline: { type: Array, value: [], observer() { this._mergeLines(); } },
     mapPolygons:  { type: Array, value: [] },
     mapCircles:   { type: Array, value: [] },
     // 第九轮 m1 第 2 项:explore 场景的照片图钉 [{id,img,label,size,done}],id 与 mapMarkers 里同 id 的 marker 配对
@@ -82,7 +84,7 @@ Component({
     showExit: { type: Boolean, value: false },
     exitTop: { type: Number, value: 52 }
   },
-  data: { markers: [], circles: [], photoCallouts: [] },
+  data: { markers: [], circles: [], photoCallouts: [], lines: [] },
   lifetimes: {
     attached() {
       if (this.data.scene === 'explore') { this._icons = {}; return; }
@@ -93,6 +95,10 @@ Component({
   },
   methods: {
     onExitTap() { this.triggerEvent('exit'); },
+    _mergeLines() {
+      const base = this.data.mapPolyline || [], trail = this.data.trailPolyline || [];
+      this.setData({ lines: trail.length ? base.concat(trail) : base });
+    },
     // 五种点位态 + 玩家图标离屏生成；定位/离线/打卡失败由地图外的状态卡承载。
     async _genIcons() {
       this._icons = {};

@@ -99,7 +99,7 @@
                   nodes="{{fmNodes}}" player="{{fmPlayer}}" target="{{nextNode}}"
                   center="{{fmPlayer && fmPlayer.lat ? fmPlayer : (nextNode && nextNode.lat ? nextNode : fmCenter)}}" scale="16" rotate="{{navHeading}}"
                   subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}" interactive="{{false}}" show-controls="{{false}}" show-photo-callouts="{{false}}"
-                  accessibility-label="小地图" reduced-motion="{{reducedMotion}}" compact="{{true}}" />
+                  trail-polyline="{{fmTrail}}" accessibility-label="小地图" reduced-motion="{{reducedMotion}}" compact="{{true}}" />
         <view class="radar__me"></view>
         <view class="radar__n" style="transform:rotate({{-navHeading}}deg)"><text style="transform:rotate({{navHeading}}deg)">N</text></view>
         <view class="radar__rim" wx:if="{{navRim !== null}}" style="transform:rotate({{navRim}}deg)"><view class="radar__rim-tip"></view></view>
@@ -138,7 +138,7 @@
        下一站给「导航过去」(微信地图),站内不接管导航。 -->
   <view class="story-map" wx:if="{{storyMap}}">
     <free-map class="story-map__map" wx:if="{{storyMap}}" nodes="{{fmNodes}}" player="{{fmPlayer}}" target="{{nextNode}}"
-              center="{{storyMapCenter}}" scale="16" map-polyline="{{fmPolyline}}" fit="{{true}}" fit-padding="{{[140, 48, 240, 48]}}"
+              center="{{storyMapCenter}}" scale="16" map-polyline="{{fmPolyline}}" trail-polyline="{{fmTrail}}" fit="{{true}}" fit-padding="{{[140, 48, 240, 48]}}"
               subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}" show-controls="{{false}}" show-photo-callouts="{{false}}"
               reduced-motion="{{reducedMotion}}" />
     <view class="story-map__back" style="top:{{chrome.contentTop}}px" bindtap="closeStoryMap" aria-role="button" aria-label="收起地图，回到故事" hover-class="cy-pressed" hover-stay-time="80">

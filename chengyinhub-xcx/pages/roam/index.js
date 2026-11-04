@@ -41,6 +41,7 @@ const { readNonNegative } = require('../../utils/roam-history-metrics.js');
 const { createIdleDetector } = require('../../utils/roam-idle.js');
 const { acceptRoamLocation } = require('../../utils/roam-track-filter.js');
 const { simplifyTrack, limitTrack } = require('../../utils/roam-track-simplify.js');
+const { createRouteLine } = require('../../utils/my-route-line.js');
 const { isRecordList } = require('../../utils/response-shape.js');
 const readSession = require('../../utils/session/login-reload.js');
 const { fromHttpStatusAbnormal } = require('../../utils/transport/failure-envelope.js');
@@ -1080,6 +1081,7 @@ Page({
     // P1-6:兜里短接的读数立即补一次,不等下一拍 1s
     this._hidden = false;
     if (this._clock) this._syncStats();
+    if (this._realOn) this._flushTrackLine();
     this.setData({ fontScaleStyle: readPageStyle(), roamPageShown: true });
     this._syncPresencePrivacy(); this._eventNavigating = false; this._navigating = false; // 返回时兜底清「官方活动」与其余入口的跳转锁
     // 系统定位权限与位置分享偏好分别回读。
@@ -3815,17 +3817,14 @@ Page({
     return changed;
   },
 
+  _myRouteLine() {
+    if (!this._routeLine) this._routeLine = createRouteLine();
+    return this._routeLine;
+  },
+
   _flushTrackLine() {
     if (!this._track || !this._track.length) return;
-    this.setData({
-      polyline: [{
-        points: this._track.map((q) => ({ latitude: q.lat, longitude: q.lng })),
-        color: '#FFFFFF',
-        width: 3,
-        borderColor: '#FFFFFF66',
-        borderWidth: 1,
-      }],
-    });
+    this.setData({ polyline: this._myRouteLine().lines(this._track) });
   },
 
   _enterWalkZoom() {
@@ -4175,15 +4174,7 @@ Page({
     }
     if (!this._lineTimer || now - this._lineTimer >= LINE_MS) {
       this._lineTimer = now;
-      if (this._track.length > 1) {
-        patch.polyline = [{
-          points: this._track.map((q) => ({ latitude: q.lat, longitude: q.lng })),
-          color: '#FFFFFF',
-          width: 3,
-          borderColor: '#FFFFFF66',
-          borderWidth: 1,
-        }];
-      }
+      if (this._track.length > 1 && !this._hidden) patch.polyline = this._myRouteLine().lines(this._track);
     }
 
     if (Object.keys(patch).length) this.setData(patch);
