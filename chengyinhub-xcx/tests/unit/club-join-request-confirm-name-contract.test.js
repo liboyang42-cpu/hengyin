@@ -86,12 +86,13 @@ test('拿不到该行昵称时退回中性称呼，不显示 memberId 或少一�
 
 test('待审为 0 时顶部状态条不再重复空态的「暂无待审申请」', () => {
   const empty = openWithRequests([])
-  assert.equal(empty.page.data.introText, '可直接通过或拒绝',
-    '中央空态已经写着「暂无待审申请」,顶部条只留动作口径(CU-C-133:数谁能处理的名单会漏掉被委派成员)')
+  // 第十轮 f3 第 5 项(p3 F7):动作口径那句属说明小字,按 owner 新规则撤掉;0 条时顶部条不出。
+  assert.equal(empty.page.data.introText, '',
+    '中央空态已经写着「暂无待审申请」,顶部条不再重复')
   assert.doesNotMatch(empty.page.data.introText, /暂无待审申请/)
 
   const busy = openWithRequests(TWO_APPLICANTS)
-  assert.equal(busy.page.data.introText, '2 条待审 · 可直接通过或拒绝')
+  assert.equal(busy.page.data.introText, '2 条待审')
 
   // 空态那一句本身要留着 —— 这次是去重叠,不是把提示删掉
   assert.match(read('pages/club/join-requests/index.wxml'), /title="暂无待审申请"/)

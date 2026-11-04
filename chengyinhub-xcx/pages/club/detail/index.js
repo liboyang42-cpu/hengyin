@@ -2592,17 +2592,18 @@ Page({
     const c = club || {};
     const items = [];
     items.push(Number(c.memberPostAllowed) === 0
-      ? { key: 'posts', icon: 'comment', title: '看大家的动态', sub: '在「帖子」看主理人和成员发的内容，可以点亮、评论' }
-      : { key: 'posts', icon: 'comment', title: '发帖和大家聊', sub: '在「帖子」发动态、带上你的漫游成绩，大家都能点亮和评论' });
+      ? { key: 'posts', icon: 'comment', title: '看大家的动态', sub: '' }
+      : { key: 'posts', icon: 'comment', title: '发帖和大家聊', sub: '' });
+    // 第十轮 f3 第 5 项(j2 F-24):每条的说明行撤掉,只留标题;副行只放本团真实设置(成员优先、成员价)和商家不能报名这条规则。
     if (this.data.isMerchantViewer) {
-      items.push({ key: 'events', icon: 'calendar', title: '看看俱乐部的局', sub: '可以浏览俱乐部活动，在活动卡上邀约承接；商家身份不能报名' });
+      items.push({ key: 'events', icon: 'calendar', title: '看看俱乐部的局', sub: '商家身份不能报名' });
     } else {
       const perks = [];
       if (Number(c.prioritySignupEnabled) === 1) perks.push('成员优先报名');
       if (Number(c.memberDiscountPrice) > 0) perks.push('成员价 ¥' + Number(c.memberDiscountPrice));
-      items.push({ key: 'events', icon: 'calendar', title: '报名俱乐部的局', sub: '在「活动」报名最近的局' + (perks.length ? '，' + perks.join('、') : '') });
+      items.push({ key: 'events', icon: 'calendar', title: '报名俱乐部的局', sub: perks.join('、') });
     }
-    items.push({ key: 'overview', icon: 'tab-club', title: '认识成员、攒贡献', sub: '在「概览」看成员和本周贡献榜，参加活动就会攒贡献分' });
+    items.push({ key: 'overview', icon: 'tab-club', title: '认识成员、攒贡献', sub: '' });
     return items;
   },
   openWelcome(club) {
@@ -2801,7 +2802,7 @@ Page({
     const cid = (this.data.club && this.data.club.id) || this.data.clubId;
     this.openChoiceSheet(
       '发布主题',
-      '选定后会先进入连续选点，随时取消即可回到编辑器继续填写',
+      '',
       [
         { key: '1', label: '城市定向 · 顺序探索' },
         { key: '2', label: '自由探索 · 全点开放' },

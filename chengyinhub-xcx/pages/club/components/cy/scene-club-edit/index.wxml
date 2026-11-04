@@ -45,7 +45,6 @@
         </view>
       </view>
     </view>
-    <view class="foot">头像 1:1 · 封面 16:9</view>
 
     <!-- 基础信息 -->
     <view class="sec-label mt">基础信息</view>
@@ -67,7 +66,6 @@
         <input disabled="{{saving || draftAvailable || draftBlocked}}" class="fi" data-field="style" value="{{style}}" bindinput="onInput" placeholder="如:轻松、沉浸、硬核(选填)" placeholder-class="ph" aria-label="俱乐部风格，选填" />
       </view>
     </view>
-    <view class="foot">在主理人资料中修改</view>
 
     <!-- 介绍 -->
     <view class="sec-label mt">俱乐部介绍</view>

@@ -751,7 +751,7 @@
             aria-role="button" aria-expanded="{{settingsPanel === 'members'}}" aria-label="{{club.isOwner || club.viewerIsAdmin || canManageMembers || canManageRoles ? '成员管理' : '查看成员'}}" hover-class="cy-pressed" hover-stay-time="80">
         <view class="cset-main">
           <view class="cset-titlerow"><text class="cset-title">{{club.isOwner || club.viewerIsAdmin || canManageMembers || canManageRoles ? '成员管理' : '成员'}}</text><text class="cset-count">{{club.memberCount != null ? club.memberCount : '—'}}</text></view>
-          <text class="cset-sub">{{club.isOwner || club.viewerIsAdmin || canManageMembers || canManageRoles ? '设管理员、移除成员、邀请新成员' : '查看成员名单，点成员进公开主页'}}</text>
+          <!-- 第十轮 f3 第 5 项(j2 F-24):副文案撤掉,标题「成员管理 / 成员」已按同一权限口径分档。 -->
         </view>
         <cy-icon class="cset-chevron {{settingsPanel === 'members' ? 'open' : ''}}" name="arrow-right" size="28" />
       </view>
@@ -1044,7 +1044,7 @@
         <view class="welcome-item__ico"><cy-icon name="{{item.icon}}" size="36" /></view>
         <view class="welcome-item__main">
           <text class="welcome-item__title">{{item.title}}</text>
-          <text class="welcome-item__sub">{{item.sub}}</text>
+          <text class="welcome-item__sub" wx:if="{{item.sub}}">{{item.sub}}</text>
         </view>
       </view>
     </view>

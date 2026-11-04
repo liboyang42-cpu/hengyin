@@ -73,7 +73,6 @@
       <cy-empty wx:if="{{members.length === 0}}" size="sm" title="暂无成员" />
     </view>
 
-    <text class="page-note">撤销后立即生效</text>
   </block>
 </view>
 </view>

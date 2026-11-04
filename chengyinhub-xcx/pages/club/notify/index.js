@@ -111,9 +111,8 @@ Page({
           disabled: item.eventOnly
             ? !canOperateEvent
             : !canNotifyAllMembers,
-          hint: item.eventOnly
-            ? (!activityId ? '从具体活动进入后才可选' : (!canOperateEvent ? '当前角色没有本场通知权限' : ''))
-            : '',
+          hidden: !!item.eventOnly && !activityId,
+          hint: item.eventOnly && activityId && !canOperateEvent ? '当前角色没有本场通知权限' : '',
         }))
         const audienceType = activityId && canOperateEvent ? 'REGISTERED' : 'ALL_MEMBERS'
         that.setData({ state: 'ready', audiences, audienceType })

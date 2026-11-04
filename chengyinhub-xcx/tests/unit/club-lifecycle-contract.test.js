@@ -131,7 +131,7 @@ test('入会申请页已注册，且通过与拒绝调用真实状态机接口',
   // 副标题改成按待审条数生成(buildIntro),所以钉「这句话对谁成立」这条事实 ——
   // CU-C-133 实证:后端 canApproveMembers 放行主理人、role=1 管理员**和被委派
   // club:member:approve 的成员**。任何数名单的写法都漏一档,所以文案只报动作。
-  assert.match(wxml, /class="intro">\{\{introText\}\}</)
+  assert.match(wxml, /class="intro" wx:if="\{\{introText\}\}">\{\{introText\}\}</)
   // ⚠️ 原断言钉的是「仅主理人可处理」,上一版钉的是「主理人与管理员可处理」——
   //    两句都是把一部分能按的人挡在门外,钉进契约等于把 bug 焊死。改钉两件事:
   //    (a) buildIntro 的返回只报动作,不再数谁能处理;
@@ -139,8 +139,9 @@ test('入会申请页已注册，且通过与拒绝调用真实状态机接口',
   //    ⚠️ 只断言 js 里出现某串会被 data 默认值 introText 兜住 —— 必须钉 buildIntro 的返回。
   const buildIntro = /buildIntro\(count\)\s*\{[\s\S]*?\n  \},/.exec(js)
   assert.ok(buildIntro, '找不到 buildIntro —— 副标题的真源换地方了')
-  assert.match(buildIntro[0], /可直接通过或拒绝/,
-    '副标题必须只报动作:能打开本页的人一律按得动(access-gate 拦在 club:member:approve)')
+  // 第十轮 f3 第 5 项(p3 F7):owner 删说明小字规则取代了「副标题报动作」的旧决定,只留待审条数。
+  assert.match(buildIntro[0], /条待审/, '副标题只报待审条数')
+  assert.doesNotMatch(buildIntro[0], /可直接通过或拒绝/, '说明小字不得回来')
   assert.doesNotMatch(buildIntro[0], /主理人/,
     'CU-C-133:数「谁能处理」的名单会排掉被委派的成员，别再把它写回文案')
   // ⚠️ 判据先剥注释再扫:解释这次更正的注释里必然出现那句错文案,

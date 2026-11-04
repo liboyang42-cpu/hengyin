@@ -42,7 +42,6 @@
 .simple-ai__kicker { display: block; color: var(--cy-color-ai-accent-strong); font-size: var(--cy-type-label); font-weight: 800; letter-spacing: .05em; }
 .simple-ai__title { display: block; margin-top: var(--cy-space-3); color: var(--cy-color-ai-ink); font-size: var(--cy-type-display); font-weight: 800; letter-spacing: -.04em; line-height: 1.12; }
 .simple-ai__lead { display: block; margin-top: var(--cy-space-4); color: var(--cy-color-ai-muted); font-size: var(--cy-type-body); line-height: var(--cy-leading-loose); }
-.simple-ai__prompt-label { margin-top: var(--cy-space-6); color: var(--cy-color-ai-muted); font-size: var(--cy-type-label); font-weight: 700; }
 .simple-ai__section-heading { display: flex; align-items: center; justify-content: space-between; margin-top: var(--cy-space-6); color: var(--cy-color-ai-ink); font-size: var(--cy-type-section-title); font-weight: 800; }
 .simple-ai__section-state, .simple-ai__section-count { padding: var(--cy-legacy-10) 16rpx; border-radius: var(--cy-radius-pill); background: var(--cy-color-ai-accent-soft); color: var(--cy-color-ai-accent-strong); font-size: var(--cy-type-micro); font-weight: 800; }
 .simple-ai__section-heading--locations { align-items: flex-start; }
@@ -74,13 +73,14 @@
 .simple-ai__blob--c { left: 240rpx; bottom: 260rpx; background: #D5F2E1; } /* ds-ok: 柔光绿 */
 .simple-ai__scroll, .simple-ai__composer-wrap { position: relative; z-index: 1; }
 .simple-ai__kicker { color: var(--cy-color-ai-muted); font-weight: 500; letter-spacing: 0; }
-.simple-ai__prompt-label { margin-top: 96rpx; font-weight: 500; }
-.simple-ai__bubbles { position: relative; height: 440rpx; margin-top: var(--cy-space-4); }
+.simple-ai__bubbles { position: relative; height: 440rpx; margin-top: 136rpx; } /* 原「你喜欢什么」一行(96rpx 顶距 + 行高)让给气泡区,版面高度不变 */
 .simple-ai__bubble { position: absolute; width: var(--b); height: var(--b); margin-left: calc(var(--b) / -2); border-radius: 50%; display: flex; align-items: center; justify-content: center;
   background: rgba(255,255,255,.86); color: var(--cy-color-ai-ink); box-shadow: 0 12rpx 40rpx rgba(31,85,200,.08); /* ds-ok: 气泡白底与投影 */
   transition: transform 260ms cubic-bezier(.34,1.56,.64,1), background 200ms; }
 .simple-ai__bubble.is-on { background: var(--cy-color-ai-accent); color: #fff; transform: scale(1.08); box-shadow: 0 16rpx 48rpx rgba(47,109,240,.35); } /* ds-ok: 选中气泡 */
 .simple-ai--reduced .simple-ai__bubble { transition: none; }
+.simple-ai__bubble { flex-direction: column; gap: 4rpx; }
+.simple-ai__bubble-t { font-size: var(--cy-type-caption); font-weight: 600; line-height: 1.2; }
 .simple-ai__picked { display: flex; flex-direction: column; align-items: center; gap: var(--cy-space-1); margin-top: var(--cy-space-4); }
 .simple-ai__picked-t { font-size: var(--cy-type-card-title); font-weight: 700; color: var(--cy-color-ai-ink); }
 .simple-ai__picked-n { font-size: var(--cy-type-caption); color: var(--cy-color-ai-muted); }

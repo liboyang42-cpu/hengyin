@@ -500,7 +500,10 @@ test('通知人数与权限和预览使用同一场次，未指定场次不伪�
   assert.equal(wide.data.audiences.find(x => x.value === 'ADMINS').countText, '0 人')
   assert.equal(wide.data.audiences.find(x => x.value === 'INACTIVE').countText, '1 人')
   assert.equal(wide.data.audiences.find(x => x.value === 'REGISTERED').disabled, true)
-  assert.equal(wide.data.audiences.find(x => x.value === 'REGISTERED').hint, '从具体活动进入后才可选')
+  // 第十轮 f3 第 5 项(p3 F7):不从活动进来时本场受众整行不出(旧断言钉的说明句是被 owner 新规则取代的旧决定)。
+  assert.equal(wide.data.audiences.find(x => x.value === 'REGISTERED').hidden, true)
+  assert.equal(wide.data.audiences.find(x => x.value === 'REGISTERED').hint, '')
+  assert.equal(wide.data.audiences.find(x => x.value === 'ALL_MEMBERS').hidden, false)
   const restricted = page()
   restricted.onLoad({ clubId: '21', activityId: '31' })
   requests.at(-1).success({ code: 200, data: { active: true, club: { id: 21 }, permissions: ['club:notify:send'] } })

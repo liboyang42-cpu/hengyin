@@ -21,7 +21,8 @@
     <view class="section">
       <text class="section-title">选择受众</text>
       <view class="ds-card">
-        <view wx:for="{{audiences}}" wx:key="value"
+        <!-- 第十轮 f3 第 5 项(p3 F7):不是从具体活动进来时,本场受众三行整行不出,不再挂三遍同一句说明。 -->
+        <block wx:for="{{audiences}}" wx:key="value"><view wx:if="{{!item.hidden}}"
           class="row audience {{audienceType === item.value ? 'audience--active' : ''}} {{item.disabled ? 'row--disabled' : ''}}"
           data-value="{{item.value}}" bindtap="chooseAudience" aria-role="button" aria-pressed="{{audienceType === item.value}}"
           aria-disabled="{{item.disabled}}" hover-class="{{sending || retrying || item.disabled ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
@@ -31,7 +32,7 @@
           </view>
           <text class="row-count" wx:if="{{item.countText}}">{{item.countText}}</text>
           <text class="row-value">{{audienceType === item.value ? '已选' : '选择'}}</text>
-        </view>
+        </view></block>
       </view>
     </view>
 
