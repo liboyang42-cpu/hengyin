@@ -42,8 +42,7 @@ test('「发布主题」带俱乐部 id 进发布页', () => {
 })
 
 test('无主题无系列时空态在前,日期清单与重复方式两节都不画', () => {
-  const empty = /wx:if="\{\{canManage && topicsLoaded && topics\.length === 0 && seriesState === 'empty'\}\}">\s*<cy-empty title="暂无可开场的主题" cta="发布主题" bind:cta="goPublishTopic" \/>/
+  const empty = /<cy-empty wx:if="\{\{topicsLoaded && topics\.length === 0 && seriesState === 'empty'\}\}" title="暂无可开场的主题" cta="发布主题" bind:cta="goPublishTopic" \/>\s*<block wx:else>\s*<text class="section-title">日期清单<\/text>/
   assert.match(wxml, empty)
-  assert.match(wxml, /wx:elif="\{\{canManage\}\}">\s*<text class="section-title">日期清单<\/text>/)
   assert.match(wxml, /wx:if="\{\{canManage && !\(topicsLoaded && topics\.length === 0 && seriesState === 'empty'\)\}\}">\s*<text class="section-title">\{\{editingSeriesId \? '编辑未来场次' : '重复方式'\}\}<\/text>/)
 })
