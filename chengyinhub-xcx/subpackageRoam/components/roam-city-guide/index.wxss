@@ -1,3 +1,4 @@
+@import "../../../style/addr-tap.wxss";
 :host { display: block; }
 .guide { position: fixed; inset: 0; z-index: 3000; display: flex; flex-direction: column; box-sizing: border-box; padding: calc(var(--cy-safe-top) + var(--cy-space-8)) var(--cy-page-x) calc(var(--cy-safe-bottom) + var(--cy-space-4)); background: var(--cy-color-bg-page); color: var(--cy-color-text-primary); }
 .guide__header, .guide__city { display: flex; align-items: center; justify-content: space-between; gap: var(--cy-space-3); }

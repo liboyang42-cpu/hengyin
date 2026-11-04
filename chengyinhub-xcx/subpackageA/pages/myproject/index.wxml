@@ -52,7 +52,7 @@
               <view class="mp-dot" wx:if="{{item._dot}}"></view>
               <view class="mp-tit">{{item.title}}</view>
             </view>
-            <view class="mp-addr" wx:if="{{item._address}}">{{item._address}}</view>
+            <view class="cy-addr-tap" wx:if="{{item._address}}" catchtap="onAddressTap" data-lat="{{item.latitude}}" data-lng="{{item.longitude}}" data-name="{{item.title}}" data-address="{{item._address}}" data-geo="1" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation aria-role="button" aria-label="在地图中打开 {{item._address}}"><view class="mp-addr">{{item._address}}</view></view>
             <view class="mp-stats">
               <text class="mp-stat" wx:if="{{item._showPendingVerify}}">{{item._pendingVerifyText}}</text>
               <text class="mp-stat" wx:elif="{{item._showAccept}}">{{item.acceptStatusText}}</text>

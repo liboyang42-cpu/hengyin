@@ -16,6 +16,7 @@
 const reducedMotionBehavior = require('../../../../behaviors/reduced-motion.js');
 const motion = require('../../../../utils/motion.js');
 const toast = require('../../../../utils/toast.js');
+function openAddress() { return require('../../../../utils/open-address.js') }
 const { readReducedMotion } = require('../../../../utils/motion-preference.js');
 const { resolveMenuChrome } = require('../../../../utils/nav-safe-area.js');
 
@@ -134,6 +135,8 @@ Component({
     detached() { this._clearTimers(); },
   },
   methods: {
+    // 第九轮 m1-9:这一站的地址一点开地图(签上只有文字,走缓存的地址解析)
+    onAddressTap() { openAddress().openAddress({ address: this.data.address }, { geocode: true }); },
     _open() {
       this._clearTimers();
       if (!this.data.stagePadTop) {

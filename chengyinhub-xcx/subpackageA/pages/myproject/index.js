@@ -1,5 +1,6 @@
 const toast = require('../../../utils/toast.js'); const pageMotion = require('../../../utils/page-motion.js');
 const roleGuard = require('../../../utils/roleGuard.js');
+function openAddress() { return require('../../../utils/open-address.js') }
 const app = getApp();
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const merchantAccessPolicy = require('../../../utils/merchant-access-policy.js');
@@ -355,6 +356,9 @@ Page({
   },
 
   // ===== 项目卡交互(沿旧版) =====
+  // 第九轮 m1-9:卡上地址点开地图(活动有选点坐标,主题只有文字走缓存的地址解析)
+  onAddressTap(e) { openAddress().openFromEvent(e); },
+
   onCardTap(e) {
     const item = e.currentTarget.dataset.item;
     if (!item || this._navigating) return; // 跳转中不响应连点

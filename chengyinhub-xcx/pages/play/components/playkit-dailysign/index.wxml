@@ -38,7 +38,7 @@
           <view class="ds__row"><text class="ds__t">今日城市签</text><text class="ds__d">{{dateLabel}}</text></view>
           <view class="ds__hr"></view>
           <view class="ds__od">
-            <view class="ds__od-c"><text class="ds__k">出发</text><text class="ds__addr">{{address}}</text><text class="ds__sm">{{timeLabel}}</text></view>
+            <view class="ds__od-c"><text class="ds__k">出发</text><text wx:if="{{address}}" class="ds__addr cy-addr-tap" catchtap="onAddressTap" aria-role="button" aria-label="在地图中打开 {{address}}" hover-class="cy-pressed" hover-stay-time="80">{{address}}</text><text class="ds__sm">{{timeLabel}}</text></view>
             <view class="ds__od-c ds__od-c--r"><text class="ds__k">签号</text><text class="ds__big">{{serialLabel}}</text><text class="ds__sm">你是第几位</text></view>
           </view>
           <view class="ds__hr"></view>

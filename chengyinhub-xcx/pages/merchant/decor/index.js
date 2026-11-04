@@ -5,6 +5,7 @@
 const modal = require('../../../utils/modal.js');
 const mediaPreview = require('../../../utils/media-preview.js');
 const toast = require('../../../utils/toast.js');
+function openAddress() { return require('../../../utils/open-address.js') }
 const app = getApp();
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const { resolveMenuChrome } = require('../../../utils/nav-safe-area.js');
@@ -902,7 +903,12 @@ Page({
     if (!this.data.saving) this.setData({basicEditing: !this.data.basicEditing});
   },
   onBasicAction(e) {
-    if (!this.data.basicEditing) return;
+    // 第九轮 m1-9:不在编辑时,店铺地址这一行只用来看 —— 有坐标就开地图
+    if (!this.data.basicEditing) {
+      const m = this.data.m || {};
+      if (e.currentTarget.dataset.action === 'geoLocate') openAddress().openAddress({ lat: m.locationLat, lng: m.locationLng, name: m.name, address: m.address });
+      return;
+    }
     const action = e.currentTarget.dataset.action;
     if (['openField','geoLocate','goStory','previewLicense','previewBrandImages',
       'openPreference','goCategory','openHours','chooseQrcode'].includes(action)) this[action](e);
@@ -1220,13 +1226,14 @@ Page({
   geoLocate() {
     if (this.data.saving || this.data.refreshing) return;
     const that = this;
-    wx.chooseLocation({
+    const lat = Number((this.data.m || {}).locationLat), lng = Number((this.data.m || {}).locationLng);
+    wx.chooseLocation(Object.assign(lat && lng ? { latitude: lat, longitude: lng } : {}, {
       success(r) {
         if (that.data.saving || that.data.refreshing) return;
         that.saveDecor({locationLat:r.latitude, locationLng:r.longitude, address:r.address || r.name || ''});
       },
       fail() {}
-    });
+    }));
   },
 
   goBack() { wx.navigateBack({ delta: 1 }); }

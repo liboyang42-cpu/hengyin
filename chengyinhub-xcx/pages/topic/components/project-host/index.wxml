@@ -325,7 +325,7 @@
         <view class="review-row" wx:for="{{ pendingMerchantNodes }}" wx:key="id">
           <view class="review-main">
             <view class="dr-line1"><text class="dr-name ep1">{{ item.name || '未命名节点' }}</text></view>
-            <text class="dr-sub" wx:if="{{ item.address }}">{{ item.address }}</text>
+            <text class="dr-sub cy-addr-tap" wx:if="{{ item.address }}" bindtap="onAddressTap" data-lat="{{item.latitude}}" data-lng="{{item.longitude}}" data-name="{{item.name}}" data-address="{{item.address}}" data-geo="1" aria-role="button" aria-label="在地图中打开 {{item.address}}" hover-class="cy-pressed" hover-stay-time="80">{{ item.address }}</text>
             <text class="dr-sub" wx:if="{{ item.description }}">{{ item.description }}</text>
           </view>
           <view class="review-actions">

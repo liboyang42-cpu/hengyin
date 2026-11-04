@@ -97,7 +97,7 @@
                随 /api/activity/info 到了,只是本页从来没渲染过。它和下面那行活动 address
                (场馆地址)不是一回事:一个是这场集合在哪里。没填就不出这一行。 -->
           <view wx:if="{{selectedTicket.meetingPoint}}" class="setbox_lb_li_top_con_dz"><cy-icon class="d_location" name="poi-landmark" size="24" />集合点 · {{selectedTicket.meetingPoint}}</view>
-          <view class="setbox_lb_li_top_con_dz"><cy-icon class="d_location" name="poi-landmark" size="24" />{{activityInfo.address || activityInfo.addressName || '—'}}</view>
+          <view class="cy-addr-tap" bindtap="onAddressTap" data-lat="{{activityInfo.latitude}}" data-lng="{{activityInfo.longitude}}" data-name="{{activityInfo.addressName || activityInfo.name}}" data-address="{{activityInfo.address || activityInfo.addressName}}" data-geo="1" aria-role="{{activityInfo.address || activityInfo.addressName ? 'button' : ''}}" aria-label="在地图中打开 {{activityInfo.address || activityInfo.addressName}}" hover-class="{{activityInfo.address || activityInfo.addressName ? 'cy-pressed' : 'none'}}" hover-stay-time="80"><view class="setbox_lb_li_top_con_dz"><cy-icon class="d_location" name="poi-landmark" size="24" />{{activityInfo.address || activityInfo.addressName || '—'}}</view></view>
         </view>
       </view>
     </view>

@@ -53,7 +53,8 @@ function show(src, c) {
 
 // 换不到坐标:不开地图,只给一句轻提示
 function missed(resolve) {
-  if (typeof wx !== 'undefined' && wx.showToast) wx.showToast({ title: '暂时无法定位', icon: 'none' });
+  const toast = require('./toast.js');
+  toast('暂时无法定位');
   resolve(null);
 }
 

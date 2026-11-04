@@ -2257,7 +2257,7 @@ Page({
     const that = this;
     // pickLocation 已经保证:回调进来的 poi 一定带可用坐标(没坐标它自己 toast + 走 onFail),
     // 所以这里不再判空写空串 —— 那正是「地址显示得好好的、下一步却说没加地点」的成因。
-    pickLocation({
+    pickLocation({ latitude: pickedNodeAt(that, chapterindex, nodeindex).latitude, longitude: pickedNodeAt(that, chapterindex, nodeindex).longitude, // 第九轮 m1-9:选点器从原来的点打开
       onPick(poi) {
         that._commitInlineNodeAt(chapterindex, nodeindex, {
           name: ((that.data.formData.chapters || [])[chapterindex].nodes || [])[nodeindex].name || poi.name || '',
@@ -9194,7 +9194,7 @@ Page({
   choosePoiForNode() {
     const that = this;
     // wx.chooseLocation(经 pickLocation)返回坐标系为 gcj02,与 <map> 一致,无需转换
-    pickLocation({
+    pickLocation({ latitude: (that.data.nodesForm || {}).latitude, longitude: (that.data.nodesForm || {}).longitude, // 第九轮 m1-9:选点器从原来的点打开
       onPick(poi) {
         // 更新节点表单数据(保留 nodesForm 其它字段)
         that.setData({
@@ -9391,3 +9391,9 @@ Page({
     });
   },
 });
+
+// 第九轮 m1-9:行内节点已选的点(放文件尾:上方 UI 基线按行号锚定,不挪既有行)
+function pickedNodeAt(page, chapterIndex, nodeIndex) {
+  const chapter = ((page.data.formData && page.data.formData.chapters) || [])[chapterIndex] || {};
+  return (chapter.nodes || [])[nodeIndex] || {};
+}

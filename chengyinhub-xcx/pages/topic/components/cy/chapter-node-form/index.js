@@ -4,6 +4,7 @@ const { isAlbumTemplate, ALBUM_ONLY_IN_STORY } = require('../../../../../utils/a
 const cyToast = require('../../../../../utils/toast.js');
 const cyModal = require('../../../../../utils/modal.js');
 const { pickLocation, hasCoords } = require('../../../../../utils/location/location-manager.js');
+function openAddress() { return require('../../../../../utils/open-address.js') }
 const { resolveMenuChrome } = require('../../../../../utils/nav-safe-area.js');
 
 function emptyForm(address) {
@@ -267,6 +268,8 @@ Component({
         success: (res) => {
           if (!res || !res.confirm || !isCurrent()) return;
           pickLocation({
+            latitude: this.data.locationReady ? this.data.form.latitude : '',
+            longitude: this.data.locationReady ? this.data.form.longitude : '',
             onPick: (poi) => {
               if (!isCurrent()) return;
                const address = String(poi.address || '').trim() || String(poi.name || '').trim();
@@ -285,6 +288,12 @@ Component({
           });
         },
       });
+    },
+
+    // 第九轮 m1-9:已确认的到店位置点开地图看;改位置走「地图选点」
+    viewNodeLocation() {
+      const f = this.data.form || {};
+      if (this.data.locationReady) openAddress().openAddress({ latitude: f.latitude, longitude: f.longitude, name: f.name, address: f.address });
     },
 
     onTemplatePick(e) {

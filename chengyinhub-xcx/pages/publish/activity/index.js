@@ -1513,6 +1513,7 @@ Page({
     }
     const that = this;
     pickLocation({
+      latitude: that.data.formData.latitude, longitude: that.data.formData.longitude,
       onPick(poi) {
         // 更新表单数据
         that.data.dirty = true;

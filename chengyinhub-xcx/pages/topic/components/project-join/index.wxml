@@ -85,7 +85,7 @@
                 retry="重试" data-act="retryMyChapterNodes" bind:retry="emit" />
       <view class="card chapter-project-item" wx:for="{{myChapterNodes}}" wx:key="id" wx:for-item="chapterNode">
         <text class="fact-main">{{chapterNode.name}}</text>
-        <view class="chapter-project-meta">{{chapterNode.address || '未填地址'}} · {{chapterNode.auditLabel}}</view>
+        <view class="chapter-project-meta"><text wx:if="{{chapterNode.address}}" class="cy-addr-tap" bindtap="onAddressTap" data-lat="{{chapterNode.latitude}}" data-lng="{{chapterNode.longitude}}" data-name="{{chapterNode.name}}" data-address="{{chapterNode.address}}" data-geo="1" aria-role="button" aria-label="在地图中打开 {{chapterNode.address}}" hover-class="cy-pressed" hover-stay-time="80">{{chapterNode.address}}</text><text wx:else>未填地址</text> · {{chapterNode.auditLabel}}</view>
         <view class="chapter-project-meta" wx:if="{{chapterNode.nodeAuditReason}}">驳回原因：{{chapterNode.nodeAuditReason}}</view>
         <view class="chapter-project-actions">
           <cy-btn wx:if="{{chapterNode.auditLabel === '已通过'}}" variant="ghost" size="sm"

@@ -492,6 +492,9 @@ public class ApiProjectController extends BaseController {
         // 活动这边两个字段都有:addressName 是地点名,address 是详细地址,优先给地点名
         m.put("addressName", a.getAddressName() != null && !a.getAddressName().isEmpty()
                 ? a.getAddressName() : a.getAddress());
+        // 第九轮 m1-9:卡上地址点开地图,活动本来就存了选点坐标(GCJ-02),照原值带出
+        m.put("latitude", a.getLatitude());
+        m.put("longitude", a.getLongitude());
         m.put("createTime", a.getCreateTime());
         return m;
     }

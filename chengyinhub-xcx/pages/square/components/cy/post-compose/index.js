@@ -459,7 +459,9 @@ Component({
 
     onPickLocation() {
       const that = this;
+      // 第九轮 m1-9:已选过地点时,点地点胶囊从原来那个点打开选点器
       pickLocation({
+        latitude: that._lat, longitude: that._lng,
         onPick(poi) {
           that._lng = poi.longitude;
           that._lat = poi.latitude;

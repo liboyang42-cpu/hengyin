@@ -315,7 +315,7 @@
           <view class="dt">我的节点</view>
           <view class="dd merchant-chapter-option" wx:for="{{myChapterNodes}}" wx:key="id" wx:for-item="chapterNode">
             <view>{{chapterNode.name}}</view>
-            <view class="merchant-chapter-meta">{{chapterNode.address || '未填地址'}} · {{chapterNode.auditLabel}}</view>
+            <view class="merchant-chapter-meta"><text wx:if="{{chapterNode.address}}" class="cy-addr-tap" bindtap="onAddressTap" data-lat="{{chapterNode.latitude}}" data-lng="{{chapterNode.longitude}}" data-name="{{chapterNode.name}}" data-address="{{chapterNode.address}}" data-geo="1" aria-role="button" aria-label="在地图中打开 {{chapterNode.address}}" hover-class="cy-pressed" hover-stay-time="80">{{chapterNode.address}}</text><text wx:else>未填地址</text> · {{chapterNode.auditLabel}}</view>
             <view class="merchant-chapter-meta" wx:if="{{chapterNode.nodeAuditReason}}">驳回原因：{{chapterNode.nodeAuditReason}}</view>
             <view class="merchant-chapter-actions">
               <!-- CU-M-59:待审核/已驳回的点位还没有生效供给,后端 saveNpcContent 的闸

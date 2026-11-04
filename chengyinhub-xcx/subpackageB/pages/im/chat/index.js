@@ -7,6 +7,7 @@ const { auditDetailUrl, shapeAuditDetail, shouldLoadAuditDetail, isRetryableAudi
 const { reportNoticeRows, makeReadRequestId } = require('../list/report-notices.js');
 const systemCard = require('./system-card-target.js');
 const roleGuard = require('../../../../utils/roleGuard.js');
+function openAddress() { return require('../../../../utils/open-address.js') }
 const merchantTheme = require('../../../../utils/merchant-theme.js');
 const app = getApp();
 // 距底部不超过这个距离(px)视为「在看最新消息」,轮询到新消息时跟随滚动(U-142)
@@ -1040,14 +1041,8 @@ Page({
 
   // 位置卡:写死 openLocation,不读 extra_json 里的 action(spec §3.3 防钓鱼)
   onLocationTap(e) {
-    const ds = e.currentTarget.dataset;
-    wx.openLocation({
-      latitude: Number(ds.lat),
-      longitude: Number(ds.lng),
-      name: ds.name || '',
-      address: ds.address || '',
-      scale: 16,
-    });
+    // 第九轮 m1-9:统一走 utils/open-address.js;坐标不合法就不开,不再把 NaN 交给 openLocation
+    openAddress().openAddress(e.currentTarget.dataset);
   },
 
   // 路线卡:写死主题详情,不读 extra_json 里的 action

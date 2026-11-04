@@ -2,6 +2,7 @@
 
 const modal = require('../../../../utils/modal.js'); const pageMotion = require('../../../../utils/page-motion.js');
 const cyLoading = require('../../../../utils/loading.js');
+function openAddress() { return require('../../../../utils/open-address.js') }
 const toast = require('../../../../utils/toast.js');
 const { recoverReadSession } = require('../../../../utils/session/login-reload.js');
 const cancellationFeedback = require('../../../../utils/cancellation-feedback.js');
@@ -219,6 +220,10 @@ Component({
               const product = item.cmsActivity || item.cmsTopic || {}
               const address = typeof product.addressName === 'string' ? product.addressName.trim() : ''
               item.addressText = address && address.toLowerCase() !== 'null' ? address : '—'
+              // 第九轮 m1-9:地点一点开地图。活动有选点坐标;主题只有文字,走缓存的地址解析
+              item.addrTap = item.addressText !== '—'
+              item.addrLat = product.latitude
+              item.addrLng = product.longitude
               if (item.createTime) item.createTimeFormatted = formatDateTime(item.createTime)
               if (item.cmsActivity && item.cmsActivity.startDate && item.cmsActivity.endDate) {
                 item.cmsActivity.timeRangeFormatted = formatActivityTimeRange(item.cmsActivity.startDate, item.cmsActivity.endDate)
@@ -291,6 +296,12 @@ Component({
       const id = e.currentTarget.dataset.id
       if (!id) return
       this.triggerEvent('open', { id: 'member-order-detail', params: { id } })
+    },
+
+    // 第九轮 m1-9:地点行开地图;没有地点就照旧进订单详情
+    onAddressTap(e) {
+      if (e.currentTarget.dataset.address) openAddress().openFromEvent(e)
+      else this.openDetail(e)
     },
 
     goDiscoverRoutes() {

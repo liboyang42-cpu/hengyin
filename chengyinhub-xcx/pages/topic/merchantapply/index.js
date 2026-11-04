@@ -1,6 +1,6 @@
 const modal = require('../../../utils/modal.js');
 const cyLoading = require('../../../utils/loading.js');
-const toast = require('../../../utils/toast.js');
+const toast = require('../../../utils/toast.js'); function openAddress() { return require('../../../utils/open-address.js') }
 const app = getApp();
 const { memberId, failureStatus, retryLogin, recoverReadSession } = require('../../../utils/session/login-reload.js');
 // 时/分选项与 HH:mm 格式化的单一真源(补零口径全仓一致)
@@ -237,6 +237,8 @@ Page({
             businessTime: String(d.businessTime || '').trim(),
             // 封面优先门头图,没有再退店招 logo;都没有就不出图(不摆灰方块)
             cover: String(d.coverImage || d.logo || '').split(',')[0].trim(),
+            // 第九轮 m1-9:门店地址一点开地图
+            lat: d.locationLat, lng: d.locationLng,
           },
         });
         that.applyShopBusinessTime(String(d.businessTime || '').trim());
@@ -452,10 +454,13 @@ Page({
   },
 
   // ===== 位置 =====
+  onAddressTap(e) { openAddress().openFromEvent(e); },
+
   choosePoiForNode() {
     const that = this;
     pickLocation({
       guideOnDeny: false,
+      latitude: that.data.latitude, longitude: that.data.longitude,
       onPick(poi) {
         that.setData({
           address: poi.address,

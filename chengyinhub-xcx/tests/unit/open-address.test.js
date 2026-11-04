@@ -23,6 +23,7 @@ function load(responder) {
       setStorageSync: (k, v) => { storage[k] = JSON.parse(JSON.stringify(v)); },
     },
     getApp: () => ({ sendRequest: (o) => { requests.push(o); (responder || (() => {}))(o); } }),
+    require: (p) => { if (p === './toast.js') return (msg) => toasts.push(msg); throw new Error('unexpected require ' + p); },
     Promise,
   };
   sandbox.exports = sandbox.module.exports;

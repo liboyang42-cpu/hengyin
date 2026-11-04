@@ -4,6 +4,7 @@
 const app = getApp()
 const { isBizOk } = require('../../utils/response-shape.js')
 const { normalizeRouteDetail } = require('../utils/official-route.js')
+function openAddress() { return require('../../utils/open-address.js') }
 
 Page({
   data: {
@@ -44,7 +45,7 @@ Page({
   openNode(e) {
     const node = this.data.route && this.data.route.nodes[Number(e.currentTarget.dataset.index)]
     if (!node || node.lat == null || node.lng == null) return
-    wx.openLocation({ latitude: node.lat, longitude: node.lng, name: node.name, address: node.address || '' })
+    openAddress().openAddress({ lat: node.lat, lng: node.lng, name: node.name, address: node.address || '' })
   },
   goBack() {
     if (getCurrentPages().length > 1) wx.navigateBack()

@@ -35,9 +35,13 @@
               <view class="stop-card__text">
                 <view class="stop-card__time">{{stop.time}}</view>
                 <view class="stop-card__name">{{stop.name}}</view>
-                <view class="stop-card__addr">
+                <view wx:if="{{stop.address}}" class="stop-card__addr cy-addr-tap" bindtap="onAddressTap" data-lat="{{stop.lat}}" data-lng="{{stop.lng}}" data-name="{{stop.name}}" data-address="{{stop.address}}" data-geo="1" aria-role="button" aria-label="在地图中打开 {{stop.address}}" hover-class="cy-pressed" hover-stay-time="80">
                   <cy-icon name="gps" size="24" />
-                  <view class="stop-card__addr-text">{{stop.address || '未填写地址'}}</view>
+                  <view class="stop-card__addr-text">{{stop.address}}</view>
+                </view>
+                <view wx:else class="stop-card__addr">
+                  <cy-icon name="gps" size="24" />
+                  <view class="stop-card__addr-text">未填写地址</view>
                 </view>
               </view>
             </view>

@@ -224,7 +224,8 @@
       </view>
       <view class="pc__b">
         <view class="pb__hd"><text class="pb__t">{{poiCard.title}}</text><view class="pb__x" bindtap="closePoiCard" aria-role="button" aria-label="收起" hover-class="cy-pressed" hover-stay-time="80"><view class="pb__xi"></view></view></view>
-        <text class="pb__sub" wx:if="{{poiCard.address}}">{{poiCard.address}}</text>
+        <text class="pb__sub cy-addr-tap" wx:if="{{poiCard.address && poiCard.lat != null && poiCard.lng != null}}" bindtap="onPoiNavigate" aria-role="button" aria-label="在地图中打开 {{poiCard.address}}" hover-class="cy-pressed" hover-stay-time="80">{{poiCard.address}}</text>
+        <text class="pb__sub" wx:elif="{{poiCard.address}}">{{poiCard.address}}</text>
         <text class="pb__rt" wx:if="{{poiCard.ratingText || poiCard.metaStrong}}">{{poiCard.ratingText}}{{poiCard.ratingText && poiCard.metaStrong ? ' · ' : ''}}{{poiCard.metaStrong}}</text>
         <scroll-view class="pb__sc" scroll-y="{{poiExpand}}" enhanced show-scrollbar="{{false}}">
           <!-- 官方地点展开后:照片在最上面左右滑,点开看原图 -->

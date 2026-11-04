@@ -1,6 +1,7 @@
 const modal = require('../../../utils/modal.js');
 const cyLoading = require('../../../utils/loading.js');
 const toast = require('../../../utils/toast.js');
+function openAddress() { return require('../../../utils/open-address.js') }
 const app = getApp();
 const analytics = require('../../../utils/analytics.js');
 const subscribe = require('../../../utils/subscribe.js');
@@ -283,6 +284,9 @@ Page({
    * 生命周期函数--监听页面加载
    */
   /** U-168:置灰判断用的「现在」—— 按服务器时刻校准过的手机时钟。 */
+  // 第九轮 m1-9:活动地址一点开地图(有选点坐标直接开,只有文字走缓存的地址解析)
+  onAddressTap(e) { openAddress().openFromEvent(e); },
+
   clockNow() {
     return Date.now() + (this._serverClockOffset || 0);
   },

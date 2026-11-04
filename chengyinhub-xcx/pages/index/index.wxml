@@ -228,7 +228,7 @@
                 <text class="v2-status-k">时间</text>
                 <text class="v2-status-v">{{item.formattedDateTime || '长期开放'}}</text>
               </view>
-              <view class="v2-status-row flex-b last">
+              <view class="v2-status-row flex-b last cy-addr-tap" catchtap="onAddressTap" data-kind="topic" data-index="{{index}}" data-id="{{item.id}}" data-lat="{{item.latitude}}" data-lng="{{item.longitude}}" data-name="{{item.addressName || item.name}}" data-address="{{item.address || item.addressName}}" data-geo="1" hover-class="{{item.address || item.addressName ? 'cy-pressed' : 'none'}}" hover-stay-time="80" hover-stop-propagation aria-role="button" aria-label="{{item.address || item.addressName ? '在地图中打开 ' + (item.addressName || item.address) : '查看详情'}}">
                 <text class="v2-status-k">地点</text>
                 <text class="v2-status-v ep1">{{item.addressName || item.address || ''}}</text>
               </view>
@@ -265,7 +265,7 @@
                 <text class="v2-status-k">时间</text>
                 <text class="v2-status-v">{{item.formattedDateTime || '长期开放'}}</text>
               </view>
-              <view class="v2-status-row flex-b last">
+              <view class="v2-status-row flex-b last cy-addr-tap" catchtap="onAddressTap" data-kind="activity" data-index="{{index}}" data-id="{{item.id}}" data-lat="{{item.latitude}}" data-lng="{{item.longitude}}" data-name="{{item.addressName || item.name}}" data-address="{{item.address || item.addressName}}" data-geo="1" hover-class="{{item.address || item.addressName ? 'cy-pressed' : 'none'}}" hover-stay-time="80" hover-stop-propagation aria-role="button" aria-label="{{item.address || item.addressName ? '在地图中打开 ' + (item.addressName || item.address) : '查看详情'}}">
                 <text class="v2-status-k">地点</text>
                 <text class="v2-status-v ep1">{{item.addressName || item.address || ''}}</text>
               </view>

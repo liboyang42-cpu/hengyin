@@ -529,7 +529,7 @@
           city-role="{{item.cityRole || ''}}"
           status="{{item.businessStatus == 0 ? 'closed' : 'open'}}"
           capacity="{{item.capacity}}"
-          address="{{item.address || ''}}" available-time="{{item.businessTime || item.availableTime || ''}}"
+          address="{{item.address || ''}}" latitude="{{item.locationLat}}" longitude="{{item.locationLng}}" available-time="{{item.businessTime || item.availableTime || ''}}"
           charge-type="{{item.chargeType}}"
           suit-types="{{item.suitActivityTypes || ''}}"
           coop-open="{{item.coopOpen}}"  aria-role="button" aria-label="打开商家主页"/>
@@ -956,7 +956,7 @@
             <text class="ai-plan-node-no">{{index + 1}}</text>
             <view class="ai-plan-node-body">
               <view class="ai-plan-node-name">{{item.merchantName || ('节点' + (index + 1))}}</view>
-              <view class="ai-plan-node-addr" wx:if="{{item.address}}">{{item.address}}</view>
+              <view class="ai-plan-node-addr cy-addr-tap" wx:if="{{item.address}}" bindtap="onAddressTap" data-lat="{{item.latitude}}" data-lng="{{item.longitude}}" data-name="{{item.merchantName}}" data-address="{{item.address}}" data-geo="1" aria-role="button" aria-label="在地图中打开 {{item.address}}" hover-class="cy-pressed" hover-stay-time="80">{{item.address}}</view>
             </view>
           </view>
 

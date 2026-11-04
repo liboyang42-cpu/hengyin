@@ -9,6 +9,7 @@
 /* 加载结束后内容挂载淡入:定义在 style/fade-in.wxss(隔离组件也要 @import 同一份,见该文件抬头) */
 @import './fade-in.wxss';
 @import './motion-entry.wxss';
+@import './addr-tap.wxss';
 
 /* —— 按钮 —— */
 .cy-btn {
@@ -506,9 +507,6 @@ button.tkbox_but,
  * ============================================================ */
 .cy-pressed    { opacity: .88; transform: scale(.98); transition: transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); }
 .cy-pressed-bg { background: var(--cy-color-state-pressed); }
-/* 第九轮 m1-9 地址点开地图:一行小字的触达区垂直撑到 88rpx,版面不动 */
-.cy-addr-tap { position: relative; }
-.cy-addr-tap::after { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: var(--cy-comp-icon-pair-standard-hit); transform: translateY(-50%); }
 /* 只减淡不位移的按压是「变暗」不是「按下去」——补一档 scale 才有物理反馈(Emil 的
    按压区间 0.95–0.98;这里取最轻的 .98,因为 .cy-pressed 也用在整行宽元素上,
    收得太狠会变成明显的挤压)。列表行换底仍走 .cy-pressed-bg,不叠位移。

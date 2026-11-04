@@ -2,6 +2,7 @@
 
 const catalog = require('../../utils/roam-city-catalog.js')
 const toast = require('../../../utils/toast.js')
+function openAddress() { return require('../../../utils/open-address.js') }
 Component({
   properties: { show: { type: Boolean, value: false, observer(value) {
     if (value) this.setData({ selected: null })
@@ -34,6 +35,8 @@ Component({
       this.setData({ selected: catalog.findPlace(id) })
     },
     backToList() { this.setData({ selected: null }) },
+    // 第九轮 m1-9:目录地点只有文字地址,走缓存的地址解析后开地图
+    openPlace(event) { openAddress().openFromEvent(event) },
     copyAddress() {
       const place = this.data.selected
       if (!place) return

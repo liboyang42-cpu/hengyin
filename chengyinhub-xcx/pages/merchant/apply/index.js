@@ -1,5 +1,5 @@
 const modal = require('../../../utils/modal.js');
-const toast = require('../../../utils/toast.js');
+const toast = require('../../../utils/toast.js'); function openAddress() { return require('../../../utils/open-address.js') }
 const app = getApp();
 const roleGuard = require('../../../utils/roleGuard.js');
 const merchantTheme = require('../../../utils/merchant-theme.js');
@@ -468,6 +468,10 @@ Page({
     this.setData({ identityConsented: !!e.detail.checked }, this.validate);
   },
 
+  // 第九轮 m1-9:预览与申请状态里的店铺地址一点开地图
+  onApplyAddressTap() { const a = this.data.apply || {}; openAddress().openAddress({ lat: a.locationLat, lng: a.locationLng, name: a.name, address: a.address }, { geocode: true }); },
+  onPickedAddressTap() { const d = this.data; openAddress().openAddress({ lat: d.locationLat, lng: d.locationLng, name: d.name, address: d.address }); },
+
   // ===== 店铺地址:微信原生位置选择(2026-07-31) =====
   chooseLocation() {
     const that = this;
@@ -485,7 +489,9 @@ Page({
   openLocationPicker(identityTicket) {
     var that = this;
     var ticket = identityTicket || this.identityTicket();
-    wx.chooseLocation({
+    // 第九轮 m1-9:改店址时选点器从已选的点打开
+    var lat = Number(this.data.locationLat), lng = Number(this.data.locationLng);
+    wx.chooseLocation(Object.assign(lat && lng ? { latitude: lat, longitude: lng } : {}, {
       success: function (res) {
         if (!that.isIdentityTicketCurrent(ticket)) return;
         that.setData({
@@ -511,7 +517,7 @@ Page({
           }
         });
       }
-    });
+    }));
   },
 
   // ===== 经营时间:周一~周日 + 起止时段(2026-07-31) =====

@@ -1,6 +1,7 @@
 // 主办方「我发的这条路线」视图 —— 纯展示组件,与 project-join 同构。
 const circleTheme = require('../../utils/circle-theme.js');
 const projectProgress = require('../../utils/project-progress.js');
+function openAddress() { return require('../../../../utils/open-address.js') }
 const FREE_STATUS = ['草稿', '招募中', '待定价', '售票中', '进行中', '结算中', '已关闭', '立项待审'];
 Component({
   options: { addGlobalClass: true },
@@ -114,6 +115,8 @@ Component({
     circleConfigActions: [{ key: 'submitCircleConfig', label: '保存供给角色' }],
   },
   methods: {
+    // 第九轮 m1-9:待审节点地址一点开地图
+    onAddressTap(e) { openAddress().openFromEvent(e); },
     noop() {},
     // 每次打开都从零开始选:没有读当前已开启候选的接口,预选任何一项都是编造。
     resetCircleCandidates() {

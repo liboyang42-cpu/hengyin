@@ -6,6 +6,7 @@
 //   据点端点比普通模板发布多两道闸(validationMethodError + 微信内容安全),绕过去等于把闸拆了。
 const modal = require('../../../../utils/modal.js');
 const toast = require('../../../../utils/toast.js');
+function openAddress() { return require('../../../../utils/open-address.js') }
 const { isAlbumTemplate, ALBUM_ONLY_IN_STORY } = require('../../../../utils/album-template.js');
 const app = getApp();
 const { memberId, failureStatus, retryLogin, waitForInitialSession, recoverReadSession } = require('../../../../utils/session/login-reload.js');
@@ -291,13 +292,21 @@ Page({
     });
   },
 
+  /** 第九轮 m1-9:店址点开地图看;改店址走「重新选择」 */
+  viewPicked() {
+    const p = this.data.picked;
+    if (p) openAddress().openAddress(p);
+  },
+
   /** 挪一下:打开地图重选,选完就不再是「档案坐标」了 */
   repick() {
     if (!this.data.merchantAccess.canManageProjects) {
       return toast('当前岗位没有节点管理权限');
     }
     const that = this;
+    const lat = Number((this.data.picked || {}).lat), lng = Number((this.data.picked || {}).lng);
     wx.chooseLocation({
+      ...(lat && lng ? { latitude: lat, longitude: lng } : {}),
       success(r) {
         that.setData({
           picked: { lat: r.latitude, lng: r.longitude, name: r.name, address: r.address },

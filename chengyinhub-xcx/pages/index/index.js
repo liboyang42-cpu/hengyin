@@ -1,6 +1,6 @@
 const modal = require('../../utils/modal.js'); const pageMotion = require('../../utils/page-motion.js');
 const cyLoading = require('../../utils/loading.js');
-const cyToast = require('../../utils/toast.js');
+const cyToast = require('../../utils/toast.js'); function openAddress() { return require('../../utils/open-address.js') }
 const { readPageStyle } = require('../../utils/font-scale.js');
 const { toTimestamp } = require('../../utils/datetime');
 const app = getApp();
@@ -11,7 +11,7 @@ const { decorateFeedCards } = require('../../utils/index/feed-card.js');
 const { buildHomeActionBanners, openHomeActionBanner } = require('../../utils/index/home-action-banner.js');
 const { readReducedMotion } = require('../../utils/motion-preference.js');
 const { openScene } = require('../../utils/scene-entry.js');
-const { parseDoorScene, parseTopicScene, parseActivityScene, pathForScanEntry } = require('../../utils/game-door-entry.js');
+const { parseDoorScene, parseTopicScene, parseActivityScene, parseShopScene, pathForScanEntry } = require('../../utils/game-door-entry.js');
 
 const { buildActivityShare } = require('../../utils/activity-share.js'); const { ROAM_SHARE_COVER } = require('../../utils/roam-menu-share.js');
 const { appendByIndex } = require('../../utils/list-append.js');
@@ -369,11 +369,11 @@ Page({
       wx.redirectTo({ url: path, fail() { wx.reLaunch({ url: path }); } });
       return true;
     }
-    // 2026-10-31 P-8:活动分享卡的码 → 官方活动详情
-    const activityId = parseActivityScene(options && options.scene) || parseActivityScene(app.pendingDoorScene);
-    if (activityId) {
+    const activityId = parseActivityScene(options && options.scene) || parseActivityScene(app.pendingDoorScene); // 2026-10-31 P-8:活动分享卡的码 → 官方活动详情
+    const shopId = !activityId && (parseShopScene(options && options.scene) || parseShopScene(app.pendingDoorScene)); // 第九轮 m1-9:店铺码 → 商家主页
+    if (activityId || shopId) {
       app.pendingDoorScene = null;
-      const path = '/pages/activity/official-detail/index?id=' + activityId;
+      const path = activityId ? '/pages/activity/official-detail/index?id=' + activityId : '/pages/userinfo/userinfo?userId=' + shopId + '&tab=about';
       wx.redirectTo({ url: path, fail() { wx.reLaunch({ url: path }); } });
       return true;
     }
@@ -1614,6 +1614,14 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
   // V-01:用户主动点城市重新定位，失败时才提示。
   onTapHomeCity() {
     this.getHomeCityLocation({ userInitiated: true });
+  },
+
+  // 第九轮 m1-9:卡上「地点」一点开地图;没有地点照旧进详情(放文件尾:上方 UI 基线按行号锚定)
+  onAddressTap: function (e) {
+    const d = e.currentTarget.dataset;
+    if (d.address) openAddress().openFromEvent(e);
+    else if (d.kind === 'topic') this.goTopic(e);
+    else this.goActivity(e);
   },
 })
 

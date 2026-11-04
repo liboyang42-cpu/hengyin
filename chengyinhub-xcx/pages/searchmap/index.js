@@ -1,5 +1,5 @@
 const modal = require('../../utils/modal.js');
-const toast = require('../../utils/toast.js');
+const toast = require('../../utils/toast.js'); function openAddress() { return require('../../utils/open-address.js') }
 const app = getApp();
 const { resolveMenuChrome } = require('../../utils/nav-safe-area.js');
 const { mapFontSize } = require('../../utils/font-scale.js');
@@ -1026,6 +1026,12 @@ Page({
   goActivity(e) {
     const id = e.currentTarget.dataset.id;
     if (id) openScene('play-activity-detail', { id });
+  },
+
+  // 第九轮 m1-9:卡上地址有坐标就开地图,没有坐标照旧进活动
+  onAddressTap(e) {
+    if (openAddress().coords(e.currentTarget.dataset)) openAddress().openFromEvent(e);
+    else this.goActivity(e);
   },
 
   // 主题点位仅在活动真实关联 topicId 时提供入口，避免独立活动被误标。

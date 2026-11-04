@@ -30,7 +30,7 @@
         <text class="guide__reason">{{selected.reason}}</text>
         <view class="guide__tags"><text class="guide__tag" wx:for="{{selected.tags}}" wx:key="*this">{{item}}</text></view>
         <text class="guide__section">到访信息</text>
-        <text class="guide__address">{{selected.address}}</text>
+        <view class="guide__address cy-addr-tap" bindtap="openPlace" data-name="{{selected.name}}" data-address="{{selected.address}}" data-city="{{cityName}}" data-geo="1" aria-role="button" aria-label="在地图中打开 {{selected.name}}" hover-class="cy-pressed" hover-stay-time="80">{{selected.address}}</view>
         <text class="guide__reason">{{selected.visitNote}}</text>
         <view class="guide__action guide__primary" bindtap="copyAddress" aria-role="button" aria-label="复制{{selected.name}}地址" hover-class="cy-pressed" hover-stay-time="80">复制地址，在常用地图中查找</view>
         <text class="guide__section">资料来源</text>

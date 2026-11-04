@@ -21,6 +21,7 @@ function aiDraftStorageKey() {
 }
 const mockData = require('../utils/mockData.js');
 const { aiPlanToDraft } = require('../utils/aiPlanToDraft.js');
+function openAddress() { return require('../../../utils/open-address.js') }
 const { buildGroupCodeIssuePayload, listGroupCodeActivities } = require('../../../utils/group-code-session.js');
 const { merchantHomeUrl } = require('../../../utils/merchant-home-link.js');
 const ticketSource = require('../../../utils/ticket-source.js');
@@ -518,6 +519,8 @@ function isDemoClubId(id) {
 
 Page({
   onHide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; },
+  // 第九轮 m1-9:路线节点地址一点开地图
+  onAddressTap(e) { openAddress().openFromEvent(e); },
   _clubAccessState: 'idle',
   data: {
     // 稿 40:3 末行「★ 减少动态效果兜底」的接线端。index.wxss 里 .cy-motion-reduced 的

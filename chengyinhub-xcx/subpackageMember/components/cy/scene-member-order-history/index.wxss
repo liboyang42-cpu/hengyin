@@ -1,5 +1,6 @@
 /* 骨架屏→内容淡切:isolated 组件收不到全局 components.wxss,@import 同一份定义 */
 @import '../../../../style/fade-in.wxss';
+@import '../../../../style/addr-tap.wxss';
 /* H09 订单卡样式沿用 subpackageMember/order/order.wxss 的 D04 范式(§11.1 认定它已达标),
    只去掉页面级 chrome:.order-page 整页 flex 容器、.order-tabs-wrap 吸顶、
    .order-state/.order-error*(错误态已换成共享 cy-error)。

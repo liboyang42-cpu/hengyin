@@ -7,7 +7,7 @@ const app = getApp();
 const teamOperation = require('../utils/roam-team-operation.js');
 const teamRecovery = require('../utils/roam-team-recovery.js');
 const session = require('../../utils/session/login-reload.js');
-const { playerMapStyle } = require('../../utils/map-style.js');
+const { playerMapStyle } = require('../../utils/map-style.js'); function openAddress() { return require('../../utils/open-address.js') }
 const PLAYER_MAP_STYLE = playerMapStyle();
 const { getCurrentLocation } = require('../../utils/location/location-manager.js');
 const lastLocation = require('../../utils/location/last-location.js');
@@ -1139,7 +1139,7 @@ Page({
   onPoiNavigate() {
     const c = this.data.poiCard;
     if (!c || c.lat == null || c.lng == null) return;
-    wx.openLocation({ latitude: c.lat, longitude: c.lng, name: c.title, address: c.address, scale: 17 });
+    openAddress().openAddress({ lat: c.lat, lng: c.lng, name: c.title, address: c.address });
   },
 
   /* 主题照片条贴在半屏上沿:本页半屏高随内容走,共用样式里按 70vh 算的位置会飘到筛选行上 */

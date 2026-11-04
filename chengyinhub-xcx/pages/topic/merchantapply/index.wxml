@@ -73,7 +73,7 @@
           <view class="ma-shop-lines">
             <text class="ma-shop-time" wx:if="{{shop.businessTime}}">{{shop.businessTime}}</text>
             <text class="ma-shop-name" wx:if="{{shop.name}}">{{shop.name}}</text>
-            <text class="ma-shop-addr" wx:if="{{shop.address}}">{{shop.address}}</text>
+            <text class="ma-shop-addr cy-addr-tap" wx:if="{{shop.address}}" bindtap="onAddressTap" data-lat="{{shop.lat}}" data-lng="{{shop.lng}}" data-name="{{shop.name}}" data-address="{{shop.address}}" data-geo="1" aria-role="button" aria-label="在地图中打开 {{shop.address}}" hover-class="cy-pressed" hover-stay-time="80">{{shop.address}}</text>
           </view>
         </view>
         <!-- 2026-11-02 r2:卡内原来又写了一遍「你的门店」(卡上方的分组标题已有),删掉重复;

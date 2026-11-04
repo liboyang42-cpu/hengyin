@@ -403,6 +403,21 @@ class ApiProjectControllerTest {
         assertEquals(18, row.get("signupCount"));
     }
 
+    /** 第九轮 m1-9:活动卡带选点坐标,地址一点开地图;没选过点就是空,前端走文字地址。 */
+    @Test
+    void activityRowsCarryPickedCoordinatesForTheAddressTap() {
+        CmsActivity picked = activity(104L, null, null);
+        picked.setAddressName("海星市场");
+        picked.setLatitude("31.11");
+        picked.setLongitude("121.38");
+        when(cmsActivityService.selectCmsActivityList(any(CmsActivity.class)))
+                .thenReturn(new ArrayList<>(Collections.singletonList(picked)));
+        Map<String, Object> row = rowById(rows(call(null)), 104L);
+        assertEquals("31.11", row.get("latitude"));
+        assertEquals("121.38", row.get("longitude"));
+        assertEquals("海星市场", row.get("addressName"));
+    }
+
     // ---- helpers ----
 
     private AjaxResult call(String ownerType) {        return call(ownerType, null);

@@ -1,5 +1,5 @@
 const cyModal = require('../../../utils/modal.js');
-const cyLoading = require('../../../utils/loading.js');
+const cyLoading = require('../../../utils/loading.js'); function openAddress() { return require('../../../utils/open-address.js') }
 const cyToast = require('../../../utils/toast.js');
 const broadcastSheet = require('../utils/broadcast-sheet.js');
 const app = getApp();
@@ -4524,4 +4524,7 @@ Page({
   contactService() {
     if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/shezhi/shezhi', complete: () => { this._navigating = false; } });
   },
+
+  // 第九轮 m1-9:我的节点地址一点开地图(放页尾:上方 UI 基线按行号锚定)
+  onAddressTap(e) { openAddress().openFromEvent(e); }
 });
