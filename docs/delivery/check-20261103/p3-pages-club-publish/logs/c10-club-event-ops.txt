@@ -1,0 +1,4 @@
+c10-club-event-ops route pages/index/index>pages/club/event-ops/index controls 2 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  NO VISIBLE EFFECT resetSeriesForm            "添加日期 按重复方式批量生成"                     
+TEXT: 活动运营 | 日期清单 | 仅可修改无报名的未来场次 | 还没有系列场次 | 添加日期 | 按重复方式批量生成 | 重复方式 | 最多排未来 90 天（64 期） | 暂无可开场的主题 | 先发布主题或完成商家合作 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

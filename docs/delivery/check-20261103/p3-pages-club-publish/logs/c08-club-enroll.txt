@@ -1,0 +1,3 @@
+c08-club-enroll route pages/index/index>pages/club/enroll/index controls 1 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+TEXT: 报名名册 | 我的俱乐部 · 0 个团 · 报名费由平台担保托管 | 还没有城市定向团 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

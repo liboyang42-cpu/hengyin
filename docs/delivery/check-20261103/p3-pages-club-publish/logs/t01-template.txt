@@ -1,0 +1,12 @@
+t01-template route pages/template/index controls 10 errors 0 badNet 0
+  navigates        goInbox                    ""                               -> subpackageB/pages/im/list/index    
+  NO VISIBLE EFFECT onTab                      "主题"                                 
+  ui change        onTab                      "玩法"                                 
+  navigates        goSearch                   "搜索主题与玩法模板"                      -> pages/search2/index    
+  off-screen       onChange                   ""                                   
+  off-screen       onChange                   ""                                   
+  off-screen       onChange                   ""                                   
+  off-screen       onChange                   ""                                   
+  off-screen       onChange                   ""                                   
+  ui change        openPublishSheet           ""                                   
+TEXT: 主题 | 玩法 | 搜索主题与玩法模板 | 还没有可复用的主题模板 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

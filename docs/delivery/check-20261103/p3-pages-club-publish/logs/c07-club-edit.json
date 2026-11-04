@@ -1,0 +1,124 @@
+{
+ "id": "c07-club-edit",
+ "path": "pages/club/edit/index?id=990004",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "pickLogo|头像|{}",
+   "h": "pickLogo",
+   "txt": "头像",
+   "w": 324,
+   "hgt": 51,
+   "y": 197,
+   "route": "pages/crop/index",
+   "newText": "裁剪 | 取消 | 还原 | 选取",
+   "shot": "c07-club-edit-t01",
+   "result": "navigates"
+  },
+  {
+   "key": "pickCover|封面 未上传|{}",
+   "h": "pickCover",
+   "txt": "封面 未上传",
+   "w": 324,
+   "hgt": 50,
+   "y": 260,
+   "route": "pages/crop/index",
+   "newText": "裁剪 | 取消 | 还原 | 选取",
+   "shot": "c07-club-edit-t02",
+   "result": "navigates"
+  },
+  {
+   "key": "openTypePicker|俱乐部类型 兴趣社群|{}",
+   "h": "openTypePicker",
+   "txt": "俱乐部类型 兴趣社群",
+   "w": 324,
+   "hgt": 54,
+   "y": 901,
+   "route": "pages/club/edit/index",
+   "newText": "定位 | 俱乐部类型 | 兴趣社群 | 活动倾向 | 城市定向 | 会员经营配置 | 成员优先报名 | 入会需要审批 | 成员保留名额 | 个 | 危险操作 | 解散俱乐部",
+   "shot": "c07-club-edit-t03",
+   "result": "ui change"
+  },
+  {
+   "key": "openPrefsPicker|活动倾向 城市定向|{}",
+   "h": "openPrefsPicker",
+   "txt": "活动倾向 城市定向",
+   "w": 324,
+   "hgt": 54,
+   "y": 955,
+   "route": "pages/club/edit/index",
+   "newText": "定位 | 俱乐部类型 | 兴趣社群 | 活动倾向 | 城市定向 | 会员经营配置 | 成员优先报名 | 入会需要审批 | 成员保留名额 | 个 | 危险操作 | 解散俱乐部",
+   "shot": "c07-club-edit-t04",
+   "result": "ui change"
+  },
+  {
+   "key": "dissolveClub|解散俱乐部|{}",
+   "h": "dissolveClub",
+   "txt": "解散俱乐部",
+   "w": 328,
+   "hgt": 46,
+   "y": 1345,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  },
+  {
+   "key": "__onTap||{}",
+   "h": "__onTap",
+   "txt": "",
+   "w": 357,
+   "hgt": 46,
+   "y": 752,
+   "route": "pages/index/index",
+   "newText": "成为俱乐部 | 聚集同好，发起属于你们的城市活动 | 成为商家 | 把空间、服务和好内容带给更多玩家 | 和朋友报名活动 | 和朋友一起，发现附近正在发生的有趣体验 | Hi, 玩家二号! | 玩家 | · 上海市 | 编辑精选 | 暂时没有精选主题 | 附近活动",
+   "shot": "c07-club-edit-t05",
+   "result": "navigates"
+  },
+  {
+   "key": "save|保存修改|{}",
+   "h": "save",
+   "txt": "保存修改",
+   "w": 357,
+   "hgt": 46,
+   "y": 752,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "pages/club/edit/index"
+ ],
+ "text": "编辑资料 | 俱乐部形象 | 头像 | 封面 | 未上传 | 头像 1:1 · 封面 16:9 | 基础信息 | 名称 | * | 城市 | * | 关键词 | 风格 | 在主理人资料中修改 | 俱乐部介绍 | 0 / 200 | 保存修改 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "text_s1": "0 / 200 | 定位 | 俱乐部类型 | 兴趣社群 | 活动倾向 | 城市定向 | 会员经营配置 | 成员优先报名 | 入会需要审批 | 成员保留名额 | 个 | 危险操作 | 解散俱乐部 | 成员将失去俱乐部与群聊入口，已报名不会自动退款。 | 解散俱乐部 | 保存修改 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "text_s2": "0 / 200 | 定位 | 俱乐部类型 | 兴趣社群 | 活动倾向 | 城市定向 | 会员经营配置 | 成员优先报名 | 入会需要审批 | 成员保留名额 | 个 | 危险操作 | 解散俱乐部 | 成员将失去俱乐部与群聊入口，已报名不会自动退款。 | 解散俱乐部 | 保存修改 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 8,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/club/edit/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

@@ -1,0 +1,56 @@
+{
+ "id": "c18-club-topic-story",
+ "path": "pages/club/topic-story/index?topicId=990013&clubId=990004",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "onTab|路线|{\"key\":\"route\"}",
+   "h": "onTab",
+   "txt": "路线",
+   "w": 54,
+   "hgt": 46,
+   "y": 91,
+   "route": "pages/club/topic-story/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "onTab|玩法|{\"key\":\"play\"}",
+   "h": "onTab",
+   "txt": "玩法",
+   "w": 54,
+   "hgt": 46,
+   "y": 91,
+   "route": "pages/club/topic-story/index",
+   "result": "NO VISIBLE EFFECT"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "pages/club/topic-story/index"
+ ],
+ "text": "剧情与玩法 | 路线 | 玩法 | 暂无路线 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 3,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/club/topic-story/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

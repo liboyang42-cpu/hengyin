@@ -1,0 +1,46 @@
+{
+ "id": "t03-topic-preview",
+ "path": "pages/templatedetail/topic-preview/index?id=990013",
+ "identity": "e2e-openid-9003",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "load|重试|{}",
+   "h": "load",
+   "txt": "重试",
+   "w": 64,
+   "hgt": 33,
+   "y": 161,
+   "route": "pages/templatedetail/topic-preview/index",
+   "result": "NO VISIBLE EFFECT"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "pages/templatedetail/topic-preview/index"
+ ],
+ "text": "模板不存在 | 重试 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 2,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/templatedetail/topic-preview/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

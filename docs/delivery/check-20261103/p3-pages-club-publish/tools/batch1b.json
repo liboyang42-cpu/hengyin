@@ -1,0 +1,110 @@
+[
+{
+"id": "c01-club-detail",
+"path": "pages/club/detail/index?id=990004",
+"identity": "e2e-openid-9009",
+"skip": [
+"解散",
+"退出",
+"删除"
+]
+},
+{
+"id": "c03-club-badges",
+"path": "pages/club/badges/index?clubId=990004",
+"identity": "e2e-openid-9009"
+},
+{
+"id": "c05-club-customer-detail",
+"path": "pages/club/customer-detail/index?clubId=990004&memberId=9003",
+"identity": "e2e-openid-9009"
+},
+{
+"id": "c06-club-customers",
+"path": "pages/club/customers/index?clubId=990004",
+"identity": "e2e-openid-9009"
+},
+{
+"id": "c07-club-edit",
+"path": "pages/club/edit/index?id=990004",
+"identity": "e2e-openid-9009",
+"skip": [
+"save|提交|保存|解散|dissolve"
+]
+},
+{
+"id": "c08-club-enroll",
+"path": "pages/club/enroll/index?clubId=990004&topicId=990013",
+"identity": "e2e-openid-9009",
+"skip": [
+"submit|提交|发布"
+]
+},
+{
+"id": "c09-club-checkin-detail",
+"path": "pages/club/checkin-detail/index?clubId=990004&registrationId=1",
+"identity": "e2e-openid-9009"
+},
+{
+"id": "c10-club-event-ops",
+"path": "pages/club/event-ops/index?clubId=990004",
+"identity": "e2e-openid-9009",
+"skip": [
+"submit|发布|开场|确认"
+]
+},
+{
+"id": "c11-club-governance",
+"path": "pages/club/governance/index?clubId=990004",
+"identity": "e2e-openid-9009",
+"skip": [
+"submit|提交|转让|transfer"
+]
+},
+{
+"id": "c12-club-group-code",
+"path": "pages/club/group-code/index?topicId=990013&topicName=E2E",
+"identity": "e2e-openid-9009"
+},
+{
+"id": "c13-club-join-requests",
+"path": "pages/club/join-requests/index?clubId=990004",
+"identity": "e2e-openid-9009"
+},
+{
+"id": "c14-club-notify",
+"path": "pages/club/notify/index?clubId=990004",
+"identity": "e2e-openid-9009",
+"skip": [
+"send|发送"
+]
+},
+{
+"id": "c15-club-roles",
+"path": "pages/club/roles/index?clubId=990004",
+"identity": "e2e-openid-9009",
+"skip": [
+"remove|移除"
+]
+},
+{
+"id": "c16-club-settlement",
+"path": "pages/club/settlement/index?clubId=990004",
+"identity": "e2e-openid-9009"
+},
+{
+"id": "c17-club-topic-detail",
+"path": "pages/club/topic-detail/index?id=990013&clubId=990004",
+"identity": "e2e-openid-9009"
+},
+{
+"id": "c18-club-topic-story",
+"path": "pages/club/topic-story/index?topicId=990013&clubId=990004",
+"identity": "e2e-openid-9009"
+},
+{
+"id": "c19-club-workbench",
+"path": "pages/club/workbench/index?clubId=990004",
+"identity": "e2e-openid-9009"
+}
+]

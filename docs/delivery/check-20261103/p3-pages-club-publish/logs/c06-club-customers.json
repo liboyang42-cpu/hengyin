@@ -1,0 +1,87 @@
+{
+ "id": "c06-club-customers",
+ "path": "pages/club/customers/index?clubId=990004",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "onFilterTap|全部|{\"key\":\"all\"}",
+   "h": "onFilterTap",
+   "txt": "全部",
+   "w": 54,
+   "hgt": 35,
+   "y": 198,
+   "route": "pages/club/customers/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "onFilterTap|回头客|{\"key\":\"repeat\"}",
+   "h": "onFilterTap",
+   "txt": "回头客",
+   "w": 67,
+   "hgt": 35,
+   "y": 198,
+   "route": "pages/club/customers/index",
+   "newText": "没有符合条件的客户 | 换个筛选试试 | 查看全部客户",
+   "result": "ui change"
+  },
+  {
+   "key": "onFilterTap|新客|{\"key\":\"new\"}",
+   "h": "onFilterTap",
+   "txt": "新客",
+   "w": 54,
+   "hgt": 35,
+   "y": 198,
+   "route": "pages/club/customers/index",
+   "newText": "没有符合条件的客户 | 换个筛选试试 | 查看全部客户",
+   "result": "ui change"
+  },
+  {
+   "key": "onFilterTap|有备注|{\"key\":\"remark\"}",
+   "h": "onFilterTap",
+   "txt": "有备注",
+   "w": 67,
+   "hgt": 35,
+   "y": 198,
+   "route": "pages/club/customers/index",
+   "newText": "没有符合条件的客户 | 换个筛选试试 | 查看全部客户",
+   "result": "ui change"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "pages/club/customers/index"
+ ],
+ "text": "客户 | 0 位 · 本月新增 0 | 全部 | 回头客 | 新客 | 有备注 | 还没有客户 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 5,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/club/customers/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

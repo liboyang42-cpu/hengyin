@@ -1,0 +1,135 @@
+{
+ "id": "t01-template",
+ "path": "pages/template/index",
+ "identity": "e2e-openid-9003",
+ "controls": [
+  {
+   "key": "goInbox||{}",
+   "h": "goInbox",
+   "txt": "",
+   "w": 46,
+   "hgt": 46,
+   "y": 46,
+   "route": "subpackageB/pages/im/list/index",
+   "newText": "消息 | 收件箱 | 发件箱 | 还没有消息 | 去发现找人",
+   "shot": "t01-template-t01",
+   "result": "navigates"
+  },
+  {
+   "key": "onTab|主题|{\"key\":\"topic\"}",
+   "h": "onTab",
+   "txt": "主题",
+   "w": 42,
+   "hgt": 70,
+   "y": 95,
+   "route": "pages/template/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "onTab|玩法|{\"key\":\"game\"}",
+   "h": "onTab",
+   "txt": "玩法",
+   "w": 42,
+   "hgt": 70,
+   "y": 95,
+   "route": "pages/template/index",
+   "newText": "还没有玩法模板",
+   "result": "ui change"
+  },
+  {
+   "key": "goSearch|搜索主题与玩法模板|{}",
+   "h": "goSearch",
+   "txt": "搜索主题与玩法模板",
+   "w": 242,
+   "hgt": 46,
+   "y": 106,
+   "route": "pages/search2/index",
+   "newText": "搜索 | 筛选 | 推荐搜索 | 骑行 | 城市 | 外滩 | 书店 | 美术馆 | 摄影 | 苏州河 | 菜场 | 类别",
+   "shot": "t01-template-t02",
+   "result": "navigates"
+  },
+  {
+   "key": "onChange||{\"index\":0}",
+   "h": "onChange",
+   "txt": "",
+   "w": 76,
+   "hgt": 46,
+   "y": 756,
+   "result": "off-screen"
+  },
+  {
+   "key": "onChange||{\"index\":1}",
+   "h": "onChange",
+   "txt": "",
+   "w": 76,
+   "hgt": 46,
+   "y": 756,
+   "result": "off-screen"
+  },
+  {
+   "key": "onChange||{\"index\":2}",
+   "h": "onChange",
+   "txt": "",
+   "w": 76,
+   "hgt": 46,
+   "y": 756,
+   "result": "off-screen"
+  },
+  {
+   "key": "onChange||{\"index\":3}",
+   "h": "onChange",
+   "txt": "",
+   "w": 76,
+   "hgt": 46,
+   "y": 756,
+   "result": "off-screen"
+  },
+  {
+   "key": "onChange||{\"index\":4}",
+   "h": "onChange",
+   "txt": "",
+   "w": 76,
+   "hgt": 46,
+   "y": 756,
+   "result": "off-screen"
+  },
+  {
+   "key": "openPublishSheet||{}",
+   "h": "openPublishSheet",
+   "txt": "",
+   "w": 54,
+   "hgt": 54,
+   "y": 689,
+   "route": "pages/template/index",
+   "newText": "自由探索 | 城市定向 | 互动 | 返回",
+   "result": "ui change"
+  }
+ ],
+ "route": [
+  "pages/template/index"
+ ],
+ "text": "主题 | 玩法 | 搜索主题与玩法模板 | 还没有可复用的主题模板 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 10,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/template/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

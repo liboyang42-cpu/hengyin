@@ -1,0 +1,3 @@
+t07-mytemplate route subpackageMember/mytemplate/mytemplate controls 1 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+TEXT: 我的节点玩法 | 还没有节点玩法 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

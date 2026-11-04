@@ -1,0 +1,10 @@
+c07-club-edit route pages/index/index>pages/club/edit/index controls 8 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  navigates        pickLogo                   "头像"                             -> pages/crop/index    
+  navigates        pickCover                  "封面 未上传"                         -> pages/crop/index    
+  ui change        openTypePicker             "俱乐部类型 兴趣社群"                         
+  ui change        openPrefsPicker            "活动倾向 城市定向"                          
+  SKIPPED (destructive / writes; walked by hand) dissolveClub               "解散俱乐部"                              
+  navigates        __onTap                    ""                               -> pages/index/index    
+  SKIPPED (destructive / writes; walked by hand) save                       "保存修改"                               
+TEXT: 编辑资料 | 俱乐部形象 | 头像 | 封面 | 未上传 | 头像 1:1 · 封面 16:9 | 基础信息 | 名称 | * | 城市 | * | 关键词 | 风格 | 在主理人资料中修改 | 俱乐部介绍 | 0 / 200 | 保存修改 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

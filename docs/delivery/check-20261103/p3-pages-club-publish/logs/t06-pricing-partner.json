@@ -1,0 +1,51 @@
+{
+ "id": "t06-pricing-partner",
+ "path": "pages/topic/pricing/partner/index?topicId=990013&toType=MERCHANT&toId=8001",
+ "identity": "e2e-openid-9003",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "onCta|返回上一页|{}",
+   "h": "onCta",
+   "txt": "返回上一页",
+   "w": 96,
+   "hgt": 46,
+   "y": 249,
+   "route": "pages/index/index",
+   "newText": "成为俱乐部 | 聚集同好，发起属于你们的城市活动 | 成为商家 | 把空间、服务和好内容带给更多玩家 | 和朋友报名活动 | 和朋友一起，发现附近正在发生的有趣体验 | Hi, 俱乐部主理人! | 玩家 | · 上海市 | 编辑精选 | 暂时没有精选主题 | 附近活动",
+   "shot": "t06-pricing-partner-t01",
+   "result": "navigates"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "pages/topic/pricing/partner/index"
+ ],
+ "text": "合作方 | 合作链接已失效 | 链接已失效，请返回重新进入 | 返回上一页 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 2,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/topic/pricing/partner/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

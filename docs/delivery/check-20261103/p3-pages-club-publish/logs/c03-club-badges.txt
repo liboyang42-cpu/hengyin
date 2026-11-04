@@ -2,4 +2,4 @@ c03-club-badges route pages/index/index>pages/club/badges/index controls 3 error
   back (not tapped) onBack                     ""                                   
   ui change        __onTap                    ""                                   
   ui change        openCreate                 "创建勋章"                               
-TEXT: 俱乐部勋章 | 城瘾跑团 | 创建勋章 | 还没有俱乐部勋章 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+TEXT: 俱乐部勋章 | 夜行者测试社 | 创建勋章 | 还没有俱乐部勋章 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

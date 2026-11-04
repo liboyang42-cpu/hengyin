@@ -1,0 +1,7 @@
+c06-club-customers route pages/index/index>pages/club/customers/index controls 5 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  NO VISIBLE EFFECT onFilterTap                "全部"                                 
+  ui change        onFilterTap                "回头客"                                
+  ui change        onFilterTap                "新客"                                 
+  ui change        onFilterTap                "有备注"                                
+TEXT: 客户 | 0 位 · 本月新增 0 | 全部 | 回头客 | 新客 | 有备注 | 还没有客户 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

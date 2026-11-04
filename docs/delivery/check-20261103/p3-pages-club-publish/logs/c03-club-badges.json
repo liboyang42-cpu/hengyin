@@ -1,7 +1,7 @@
 {
  "id": "c03-club-badges",
- "path": "pages/club/badges/index?clubId=7001",
- "identity": "e2e-openid-9003",
+ "path": "pages/club/badges/index?clubId=990004",
+ "identity": "e2e-openid-9009",
  "controls": [
   {
    "key": "onBack||{}",
@@ -39,7 +39,7 @@
   "pages/index/index",
   "pages/club/badges/index"
  ],
- "text": "俱乐部勋章 | 城瘾跑团 | 创建勋章 | 还没有俱乐部勋章 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "text": "俱乐部勋章 | 夜行者测试社 | 创建勋章 | 还没有俱乐部勋章 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
  "controlCount": 3,
  "report": {
   "route": [

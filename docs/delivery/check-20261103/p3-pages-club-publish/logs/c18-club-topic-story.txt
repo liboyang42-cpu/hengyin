@@ -1,0 +1,5 @@
+c18-club-topic-story route pages/index/index>pages/club/topic-story/index controls 3 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  NO VISIBLE EFFECT onTab                      "路线"                                 
+  NO VISIBLE EFFECT onTab                      "玩法"                                 
+TEXT: 剧情与玩法 | 路线 | 玩法 | 暂无路线 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

@@ -1,0 +1,31 @@
+{
+ "id": "t07-mytemplate",
+ "path": "subpackageMember/mytemplate/mytemplate",
+ "identity": "e2e-openid-9003",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  }
+ ],
+ "route": [
+  "subpackageMember/mytemplate/mytemplate"
+ ],
+ "text": "我的节点玩法 | 还没有节点玩法 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 1,
+ "report": {
+  "route": [
+   "subpackageMember/mytemplate/mytemplate"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

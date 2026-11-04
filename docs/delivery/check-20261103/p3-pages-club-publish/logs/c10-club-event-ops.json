@@ -1,0 +1,46 @@
+{
+ "id": "c10-club-event-ops",
+ "path": "pages/club/event-ops/index?clubId=990004",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "resetSeriesForm|添加日期 按重复方式批量生成|{}",
+   "h": "resetSeriesForm",
+   "txt": "添加日期 按重复方式批量生成",
+   "w": 357,
+   "hgt": 62,
+   "y": 298,
+   "route": "pages/club/event-ops/index",
+   "result": "NO VISIBLE EFFECT"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "pages/club/event-ops/index"
+ ],
+ "text": "活动运营 | 日期清单 | 仅可修改无报名的未来场次 | 还没有系列场次 | 添加日期 | 按重复方式批量生成 | 重复方式 | 最多排未来 90 天（64 期） | 暂无可开场的主题 | 先发布主题或完成商家合作 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 2,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/club/event-ops/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

@@ -1,0 +1,36 @@
+{
+ "id": "c13-club-join-requests",
+ "path": "pages/club/join-requests/index?clubId=990004",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "pages/club/join-requests/index"
+ ],
+ "text": "入会申请 | 可直接通过或拒绝 | 暂无待审申请 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 1,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/club/join-requests/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

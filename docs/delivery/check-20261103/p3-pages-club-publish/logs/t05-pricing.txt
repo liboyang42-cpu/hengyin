@@ -1,0 +1,8 @@
+t05-pricing route pages/index/index>pages/topic/pricing/index controls 6 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  NO VISIBLE EFFECT onTab                      "有人带"                                
+  NO VISIBLE EFFECT onTab                      "无人带"                                
+  NO VISIBLE EFFECT __onTap                    ""                                   
+  NO VISIBLE EFFECT recalculate                "重新计算地板"                             
+  SKIPPED (destructive / writes; walked by hand) confirmPrice               "确认终价并提交开售审核"                        
+TEXT: 确认终价 | 有人带 | 无人带 | 带队成本 | 本团带队总成本 | 成团人数 | * | 请填写大于 0 的成团人数 | 重新计算地板 | 最低价 | ¥0.00 | 终价不可低于此值 | 你的终价 | ¥0.00 | 地板 ¥0.00 | ¥100.00 | 样本不足，暂不展示参考价 | 合作阵容锁定后可定价 | 确认终价并提交开售审核 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

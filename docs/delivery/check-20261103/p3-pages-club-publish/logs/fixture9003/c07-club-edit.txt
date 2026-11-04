@@ -1,0 +1,11 @@
+file:///root/walk-rig/mpweb/node_modules/puppeteer-core/lib/esm/puppeteer/util/decorators.js:99
+                throw new Error(message(this));
+                      ^
+
+Error: Attempted to use detached Frame '7626EBE16095BE6100187C7903C944C0'.
+    at CdpFrame.<anonymous> (file:///root/walk-rig/mpweb/node_modules/puppeteer-core/lib/esm/puppeteer/util/decorators.js:99:23)
+    at CdpPage.evaluate (file:///root/walk-rig/mpweb/node_modules/puppeteer-core/lib/esm/puppeteer/api/Page.js:808:43)
+    at Object.route (file:///root/rig/docs/delivery/cloud-walk-20261101/rig/mpweb/walk.mjs:44:23)
+    at file:///home/user/hengyin/docs/delivery/check-20261103/p3-pages-club-publish/tools/sweep.mjs:52:25
+
+Node.js v22.23.4

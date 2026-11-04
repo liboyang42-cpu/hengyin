@@ -1,0 +1,461 @@
+{
+ "id": "p03-publish-temp",
+ "path": "pages/publish/temp/index",
+ "identity": "e2e-openid-9003",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "uploadPic|上传玩法封面|{}",
+   "h": "uploadPic",
+   "txt": "上传玩法封面",
+   "w": 357,
+   "hgt": 357,
+   "y": 103,
+   "route": "pages/publish/temp/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "openVenueSheet|请选择|{}",
+   "h": "openVenueSheet",
+   "txt": "请选择",
+   "w": 154,
+   "hgt": 46,
+   "y": 782,
+   "route": "pages/publish/temp/index",
+   "newText": "* | 模板信息 | 玩法看点 | * | 0/30 | 所需材料 | 商铺类型 | 请选择 | 玩法类别 | * | 添加类别 | 先保存为我的玩法",
+   "shot": "p03-publish-temp-t01",
+   "result": "ui change"
+  },
+  {
+   "key": "navigateToCategorySelect|添加类别|{}",
+   "h": "navigateToCategorySelect",
+   "txt": "添加类别",
+   "w": 96,
+   "hgt": 46,
+   "y": 881,
+   "route": "pages/publish/temp/index",
+   "newText": "* | 模板信息 | 玩法看点 | * | 0/30 | 所需材料 | 商铺类型 | 请选择 | 玩法类别 | * | 添加类别 | 先保存为我的玩法",
+   "shot": "p03-publish-temp-t02",
+   "result": "ui change"
+  },
+  {
+   "key": "addRuleStep|添加一步|{}",
+   "h": "addRuleStep",
+   "txt": "添加一步",
+   "w": 290,
+   "hgt": 47,
+   "y": 1267,
+   "route": "pages/publish/temp/index",
+   "newText": "玩法类别 | * | 添加类别 | 先保存为我的玩法 | 玩法规则 | * | 1",
+   "shot": "p03-publish-temp-t03",
+   "result": "ui change"
+  },
+  {
+   "key": "onTrigger||{}",
+   "h": "onTrigger",
+   "txt": "",
+   "w": 324,
+   "hgt": 46,
+   "y": 1407,
+   "route": "pages/publish/temp/index",
+   "newText": "玩法规则 | * | 1",
+   "result": "ui change"
+  },
+  {
+   "key": "confirmRemoveModule|移除|{\"key\":\"finish\"}",
+   "h": "confirmRemoveModule",
+   "txt": "移除",
+   "w": 29,
+   "hgt": 46,
+   "y": 1493,
+   "route": "pages/publish/temp/index",
+   "newText": "1",
+   "result": "ui change"
+  },
+  {
+   "key": "openR5GameSheet|选择玩法 选择|{}",
+   "h": "openR5GameSheet",
+   "txt": "选择玩法 选择",
+   "w": 324,
+   "hgt": 50,
+   "y": 1565,
+   "route": "pages/publish/temp/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "confirmRemoveModule|移除|{\"key\":\"reward\"}",
+   "h": "confirmRemoveModule",
+   "txt": "移除",
+   "w": 29,
+   "hgt": 46,
+   "y": 1655,
+   "route": "pages/publish/temp/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "openToolPicker|添加互动工具|{}",
+   "h": "openToolPicker",
+   "txt": "添加互动工具",
+   "w": 324,
+   "hgt": 46,
+   "y": 1923,
+   "route": "pages/publish/temp/index",
+   "newText": "拍一张，写清要拍到什么，提交后等待判定 | 预览",
+   "result": "ui change"
+  },
+  {
+   "key": "__onTap||{}",
+   "h": "__onTap",
+   "txt": "",
+   "w": 113,
+   "hgt": 46,
+   "y": 752,
+   "route": "pages/publish/temp/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "saveDraft|保存草稿|{}",
+   "h": "saveDraft",
+   "txt": "保存草稿",
+   "w": 113,
+   "hgt": 46,
+   "y": 752,
+   "route": "pages/publish/temp/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "openPreview|查看预览|{}",
+   "h": "openPreview",
+   "txt": "查看预览",
+   "w": 113,
+   "hgt": 46,
+   "y": 752,
+   "route": "pages/publish/temp/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "publishGame|发布玩法|{}",
+   "h": "publishGame",
+   "txt": "发布玩法",
+   "w": 113,
+   "hgt": 46,
+   "y": 752,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  },
+  {
+   "key": "cgDismiss||{\"close\":\"closeR5GameSheet\",\"out\":\"game\"}",
+   "h": "cgDismiss",
+   "txt": "",
+   "w": 390,
+   "hgt": 844,
+   "y": 0,
+   "route": "pages/publish/temp/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "cgDismiss|退出|{\"close\":\"closeR5GameSheet\",\"out\":\"game\"}",
+   "h": "cgDismiss",
+   "txt": "退出",
+   "w": 67,
+   "hgt": 46,
+   "y": 389,
+   "route": "pages/publish/temp/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "confirmR5GameSheet|完成|{}",
+   "h": "confirmR5GameSheet",
+   "txt": "完成",
+   "w": 67,
+   "hgt": 46,
+   "y": 389,
+   "route": "pages/publish/temp/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "jumpR5GameGroup|问答|{\"index\":0}",
+   "h": "jumpR5GameGroup",
+   "txt": "问答",
+   "w": 50,
+   "hgt": 29,
+   "y": 451,
+   "route": "pages/publish/temp/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "jumpR5GameGroup|推理|{\"index\":1}",
+   "h": "jumpR5GameGroup",
+   "txt": "推理",
+   "w": 50,
+   "hgt": 29,
+   "y": 451,
+   "route": "pages/publish/temp/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "jumpR5GameGroup|互动|{\"index\":2}",
+   "h": "jumpR5GameGroup",
+   "txt": "互动",
+   "w": 50,
+   "hgt": 29,
+   "y": 451,
+   "route": "pages/publish/temp/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "jumpR5GameGroup|挑战|{\"index\":3}",
+   "h": "jumpR5GameGroup",
+   "txt": "挑战",
+   "w": 50,
+   "hgt": 29,
+   "y": 451,
+   "route": "pages/publish/temp/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "pickR5GameTag|选项问答|{\"key\":\"qaPick\",\"reason\":\"\"}",
+   "h": "pickR5GameTag",
+   "txt": "选项问答",
+   "w": 135,
+   "hgt": 49,
+   "y": 526,
+   "route": "pages/publish/temp/index",
+   "newText": "2-4 个选项里选一个 | 预览",
+   "result": "ui change"
+  },
+  {
+   "key": "pickR5GameTag|文字问答|{\"key\":\"text\",\"reason\":\"\"}",
+   "h": "pickR5GameTag",
+   "txt": "文字问答",
+   "w": 135,
+   "hgt": 49,
+   "y": 526,
+   "route": "pages/publish/temp/index",
+   "newText": "预览",
+   "result": "ui change"
+  },
+  {
+   "key": "pickR5GameTag|猜图|{\"key\":\"pricePair\",\"reason\":\"\"}",
+   "h": "pickR5GameTag",
+   "txt": "猜图",
+   "w": 106,
+   "hgt": 49,
+   "y": 585,
+   "route": "pages/publish/temp/index",
+   "newText": "几张图里挑出正确的那张 | 预览",
+   "result": "ui change"
+  },
+  {
+   "key": "pickR5GameTag|拍照打卡|{\"key\":\"qaShot\",\"reason\":\"\"}",
+   "h": "pickR5GameTag",
+   "txt": "拍照打卡",
+   "w": 135,
+   "hgt": 49,
+   "y": 585,
+   "route": "pages/publish/temp/index",
+   "newText": "给一句提示词，玩家拍一张交上来 | 预览",
+   "result": "ui change"
+  },
+  {
+   "key": "pickR5GameTag|闭眼盲品|{\"key\":\"blindTaste\",\"reason\":\"\"}",
+   "h": "pickR5GameTag",
+   "txt": "闭眼盲品",
+   "w": 135,
+   "hgt": 49,
+   "y": 644,
+   "route": "pages/publish/temp/index",
+   "newText": "预览",
+   "result": "ui change"
+  },
+  {
+   "key": "pickR5GameTag|拍照审核|{\"key\":\"photoCheck\",\"reason\":\"\"}",
+   "h": "pickR5GameTag",
+   "txt": "拍照审核",
+   "w": 135,
+   "hgt": 49,
+   "y": 644,
+   "route": "pages/publish/temp/index",
+   "newText": "拍一张，写清要拍到什么，提交后等待判定 | 预览",
+   "result": "ui change"
+  },
+  {
+   "key": "pickR5GameTag|竞猜|{\"key\":\"predict\",\"reason\":\"\"}",
+   "h": "pickR5GameTag",
+   "txt": "竞猜",
+   "w": 106,
+   "hgt": 49,
+   "y": 704,
+   "route": "pages/publish/temp/index",
+   "newText": "今天押一个，到期商家给答案 | 预览",
+   "result": "ui change"
+  },
+  {
+   "key": "pickR5GameTag|拍物成卡|{\"key\":\"objectCard\",\"reason\":\"\"}",
+   "h": "pickR5GameTag",
+   "txt": "拍物成卡",
+   "w": 135,
+   "hgt": 49,
+   "y": 704,
+   "route": "pages/publish/temp/index",
+   "newText": "拍下一件东西，生成一张能转着看的藏品卡 | 预览",
+   "result": "ui change"
+  },
+  {
+   "key": "pickR5GameTag|排序|{\"key\":\"sort\",\"reason\":\"\"}",
+   "h": "pickR5GameTag",
+   "txt": "排序",
+   "w": 106,
+   "hgt": 49,
+   "y": 526,
+   "route": "pages/publish/temp/index",
+   "newText": "把几条按正确顺序排好 | 预览",
+   "result": "ui change"
+  },
+  {
+   "key": "pickR5GameTag|连线|{\"key\":\"match\",\"reason\":\"\"}",
+   "h": "pickR5GameTag",
+   "txt": "连线",
+   "w": 106,
+   "hgt": 49,
+   "y": 585,
+   "route": "pages/publish/temp/index",
+   "newText": "两列里一一配对 | 预览",
+   "result": "ui change"
+  },
+  {
+   "key": "pickR5GameTag|分类|{\"key\":\"classify\",\"reason\":\"\"}",
+   "h": "pickR5GameTag",
+   "txt": "分类",
+   "w": 106,
+   "hgt": 49,
+   "y": 644,
+   "route": "pages/publish/temp/index",
+   "newText": "每条归到对的那一类 | 预览",
+   "result": "ui change"
+  },
+  {
+   "key": "pickR5GameTag|抛硬币|{\"key\":\"coin\",\"reason\":\"\"}",
+   "h": "pickR5GameTag",
+   "txt": "抛硬币",
+   "w": 121,
+   "hgt": 49,
+   "y": 526,
+   "route": "pages/publish/temp/index",
+   "newText": "正反面各配一句，抛完照做 | 预览",
+   "result": "ui change"
+  },
+  {
+   "key": "pickR5GameTag|找东西|{\"key\":\"hidden\",\"reason\":\"\"}",
+   "h": "pickR5GameTag",
+   "txt": "找东西",
+   "w": 121,
+   "hgt": 49,
+   "y": 526,
+   "route": "pages/publish/temp/index",
+   "newText": "在你上传的图上点中藏起来的目标 | 预览",
+   "result": "ui change"
+  },
+  {
+   "key": "pickR5GameTag|相册|{\"key\":\"album\",\"reason\":\"\"}",
+   "h": "pickR5GameTag",
+   "txt": "相册",
+   "w": 106,
+   "hgt": 49,
+   "y": 526,
+   "route": "pages/publish/temp/index",
+   "newText": "上传照片，翻阅一段回忆 | 预览",
+   "result": "ui change"
+  },
+  {
+   "key": "pickR5GameTag|掷骰子|{\"key\":\"dice\",\"reason\":\"\"}",
+   "h": "pickR5GameTag",
+   "txt": "掷骰子",
+   "w": 121,
+   "hgt": 49,
+   "y": 585,
+   "route": "pages/publish/temp/index",
+   "newText": "掷到几就做第几件事 | 预览",
+   "result": "ui change"
+  },
+  {
+   "key": "pickR5GameTag|角色建档|{\"key\":\"profile\",\"reason\":\"\"}",
+   "h": "pickR5GameTag",
+   "txt": "角色建档",
+   "w": 135,
+   "hgt": 49,
+   "y": 585,
+   "route": "pages/publish/temp/index",
+   "newText": "设置问题，填写角色资料 | 预览",
+   "result": "ui change"
+  },
+  {
+   "key": "pickR5GameTag|九宫格|{\"key\":\"bingo\",\"reason\":\"在主题里配置\"}",
+   "h": "pickR5GameTag",
+   "txt": "九宫格",
+   "w": 137,
+   "hgt": 49,
+   "y": 585,
+   "route": "pages/publish/temp/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "pickR5GameTag|抽卡|{\"key\":\"random\",\"reason\":\"\"}",
+   "h": "pickR5GameTag",
+   "txt": "抽卡",
+   "w": 106,
+   "hgt": 49,
+   "y": 644,
+   "route": "pages/publish/temp/index",
+   "newText": "一副卡池抽一张，翻开就是这一关的任务 | 预览",
+   "result": "ui change"
+  },
+  {
+   "key": "pickR5GameTag|留言|{\"key\":\"note\",\"reason\":\"\"}",
+   "h": "pickR5GameTag",
+   "txt": "留言",
+   "w": 106,
+   "hgt": 49,
+   "y": 644,
+   "route": "pages/publish/temp/index",
+   "newText": "写一句话，留给下一个来这里的人 | 预览",
+   "result": "ui change"
+  }
+ ],
+ "route": [
+  "pages/publish/temp/index"
+ ],
+ "text": "编辑玩法模板 | 上传玩法封面 | * | 模板信息 | 玩法看点 | * | 0/30 | 所需材料 | 商铺类型 | 请选择 | 保存草稿 | 查看预览 | 发布玩法 | 退出 | 选择玩法 | 完成 | 问答 | 推理 | 互动 | 挑战 | 问答 | 选项问答 | 文字问答 | 猜图 | 拍照打卡 | 闭眼盲品 | 拍照审核 | 竞猜 | 拍物成卡 | 推理 | 排序 | 连线 | 分类 | 互动 | 抛硬币 | 找东西 | 相册 | 掷骰子 | 角色建档 | 九宫格 | 抽卡 | 留言 | 猜数字 | 今日城市签 | 挑战 | D20 | 弹球 | 倒计时 | D20 加值 | 安静挑战 | 精准停表 | 计步挑战 | 罗盘指向 | 输入挑战 | 变色就点 | 喊一嗓子 | 在主题里配置 | 九宫格 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "text_s1": "编辑玩法模板 | 所需材料 | 商铺类型 | 请选择 | 玩法类别 | * | 添加类别 | 先保存为我的玩法 | 玩法规则 | * | 1 | 添加一步 | 参与方式 | 直接参与 | 玩法 | 移除 | 保存草稿 | 查看预览 | 发布玩法 | 退出 | 选择玩法 | 完成 | 问答 | 推理 | 互动 | 挑战 | 问答 | 选项问答 | 文字问答 | 猜图 | 拍照打卡 | 闭眼盲品 | 拍照审核 | 竞猜 | 拍物成卡 | 推理 | 排序 | 连线 | 分类 | 互动 | 抛硬币 | 找东西 | 相册 | 掷骰子 | 角色建档 | 九宫格 | 抽卡 | 留言 | 猜数字 | 今日城市签 | 挑战 | D20 | 弹球 | 倒计时 | D20 加值 | 安静挑战 | 精准停表 | 计步挑战 | 罗盘指向 | 输入挑战 | 变色就点 | 喊一嗓子 | 在主题里配置 | 九宫格 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "text_s2": "编辑玩法模板 | 添加一步 | 参与方式 | 直接参与 | 玩法 | 移除 | 选择玩法 | 选择 | 完成奖励 | 移除 | 优惠券 | 勋章 | 互动工具 | 添加互动工具 | 保存草稿 | 查看预览 | 发布玩法 | 退出 | 选择玩法 | 完成 | 问答 | 推理 | 互动 | 挑战 | 问答 | 选项问答 | 文字问答 | 猜图 | 拍照打卡 | 闭眼盲品 | 拍照审核 | 竞猜 | 拍物成卡 | 推理 | 排序 | 连线 | 分类 | 互动 | 抛硬币 | 找东西 | 相册 | 掷骰子 | 角色建档 | 九宫格 | 抽卡 | 留言 | 猜数字 | 今日城市签 | 挑战 | D20 | 弹球 | 倒计时 | D20 加值 | 安静挑战 | 精准停表 | 计步挑战 | 罗盘指向 | 输入挑战 | 变色就点 | 喊一嗓子 | 在主题里配置 | 九宫格 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 53,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/publish/temp/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

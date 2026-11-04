@@ -1,0 +1,3 @@
+c09-club-checkin-detail route pages/index/index>pages/club/checkin-detail/index controls 1 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+TEXT: 核销详情 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

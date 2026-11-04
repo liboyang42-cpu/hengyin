@@ -1,0 +1,3 @@
+c16-club-settlement route pages/index/index>pages/club/settlement/index controls 1 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+TEXT: 俱乐部结算 | 商家计酬 | 0 人次 | 俱乐部直接付款 | 待结清 | ¥0.00 | 已结清 | ¥0.00 | 待退回 | ¥0.00 | 还没有计酬核销记录 | 可提现 | ¥0.00 | 还没有平台分润记录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

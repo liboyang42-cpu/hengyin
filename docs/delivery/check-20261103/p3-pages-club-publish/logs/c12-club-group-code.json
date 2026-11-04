@@ -1,0 +1,36 @@
+{
+ "id": "c12-club-group-code",
+ "path": "pages/club/group-code/index?topicId=990013&topicName=E2E",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "pages/club/group-code/index"
+ ],
+ "text": "选择场次 | 选择本次带队场次 | 暂无可带队的场次 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 1,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/club/group-code/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

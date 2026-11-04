@@ -1,0 +1,3 @@
+c11-club-governance route pages/index/index>pages/club/governance/index controls 1 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+TEXT: 成员治理 | 暂无可治理成员 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

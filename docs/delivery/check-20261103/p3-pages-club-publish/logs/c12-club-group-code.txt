@@ -1,0 +1,3 @@
+c12-club-group-code route pages/index/index>pages/club/group-code/index controls 1 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+TEXT: 选择场次 | 选择本次带队场次 | 暂无可带队的场次 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

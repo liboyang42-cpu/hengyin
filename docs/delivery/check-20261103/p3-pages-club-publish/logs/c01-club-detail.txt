@@ -1,0 +1,17 @@
+c01-club-detail route pages/index/index>pages/club/detail/index controls 15 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  ui change        onSettings                 ""                                   
+  ui change        onTab                      "帖子"                                 
+  ui change        onTab                      "活动"                                 
+  NO VISIBLE EFFECT onTab                      "概览"                                 
+  ui change        onTab                      "管理"                                 
+  navigates        goClubBadges               "俱乐部勋章"                          -> pages/club/badges/index    
+  ui change        goMemberProfile            "玩家二号 群主"                            
+  ui change        onTap                      ""                                   
+  ui change        goMemberProfile            ""                                   
+  ui change        goMemberProfile            "玩家二号群主 Lv.1 · 公开资料 · 创建俱乐部"         
+  ui change        onRankSortTap              "综合"                                 
+  ui change        goMemberProfile            "1 你 我 0 场 · 0.0 km · 用时 0分 0.0"     
+  navigates        goClubAppeal               "封禁申诉"                           -> pages/club/governance/index    
+  navigates        reportClub                 "举报俱乐部"                          -> pages/club/governance/index    
+TEXT: 夜行者测试社 | 兴趣社群 · 1 名成员 | 公开加入 | 帖子 | 活动 | 概览 | 管理 | 暂无简介 | 林测试 | 主理人 | 兴趣社群 | 俱乐部类型 | 上海 | 所在城市 | 俱乐部勋章 | 成员 · 1 | 邀请成员 | 玩家二号 | 群主 | 玩家二号 | 群主 | Lv.1 · | 公开资料 | · 创建俱乐部 | 综合 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
