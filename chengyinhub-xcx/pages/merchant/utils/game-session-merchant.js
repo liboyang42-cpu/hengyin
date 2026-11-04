@@ -346,7 +346,10 @@ function attachMerchantGameEntries(cards, entries, stateByActivity) {
       matched = authorizedEntries.filter((entry) => entry.topicId === positiveId(card.ownerId)
         && !exactActivityIds.has(entry.activityId))
     }
-    matched.forEach((entry) => attachedActivityIds.add(entry.activityId))
+    // 第十一轮 h4 L2:项目卡(主题级「承接」卡)不渲染 gameEntries,挂在它上面的场次站点等于看不见,
+    // 商家只能绕「承接页 › 更多 › 服务时段」两步进本站页。只有同一场次的活动卡才算已有入口;
+    // 主题卡上的场次照样补出直达本站页的场次卡(一场一张,不与主题卡重复)。
+    if (card.bizType === 'activity') matched.forEach((entry) => attachedActivityIds.add(entry.activityId))
     const gameEntries = matched.map(decorateEntry)
     return Object.assign({}, card, { gameEntries })
   })

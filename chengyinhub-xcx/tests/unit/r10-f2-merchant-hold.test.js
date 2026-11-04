@@ -13,6 +13,18 @@ const read = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 const { attachMerchantGameEntries } = require('../../pages/merchant/utils/game-session-merchant.js');
 const { DIRECTOR_DATA, DIRECTOR_METHODS } = require('../../pages/club/topic-detail/director.js');
 
+// 第十一轮 h4 L2:同主题已有项目卡(承接)时,场次站点卡原来不出(项目卡又不渲染场次入口)。
+test('工作台:同主题已有项目卡时,场次站点卡照样出,一场一张;同场次活动卡在时不重复', () => {
+  const { attachMerchantGameEntries } = require('../../pages/merchant/utils/game-session-merchant.js');
+  const entry = { activityId: 9, topicId: 990015, activityName: '人民广场 · 喷泉报时', stationCount: 1 };
+  const withProject = attachMerchantGameEntries([{ key: 'join-1', id: 1, role: 'join', ownerType: 1, ownerId: 990015, title: '喷泉报时' }], [entry], {});
+  assert.equal(withProject.length, 2);
+  assert.equal(withProject[1].gameStationCard, true);
+  assert.equal(withProject[1].id, 9);
+  const withSameActivity = attachMerchantGameEntries([{ key: 'act-9', id: 9, role: 'host', bizType: 'activity', ownerType: 2, ownerId: 9, title: '场次' }], [entry], {});
+  assert.equal(withSameActivity.length, 1, '同一场次已有活动卡就不再补卡');
+});
+
 test('工作台:场次里有本店站点、又不挂在任何项目卡上时,补出一张直达本站页的卡', () => {
   const cards = attachMerchantGameEntries([], [{ activityId: 9, topicId: 990015, activityName: '人民广场 · 喷泉报时', stationCount: 1, startAt: '2026-11-05 00:30' }], {});
   assert.equal(cards.length, 1);
