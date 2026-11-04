@@ -22,9 +22,11 @@ function createPage(overrides) {
     getRequestErrorMessage(_res, fallback) { return fallback },
     getUserID() { return state.memberId },
     getSession() { return { clearSession() { sessionClears += 1 } } },
+    firstLogin() { state.firstLogins = (state.firstLogins || 0) + 1; state.memberId = 'merchant-a'; return Promise.resolve({ ok: true }) },
     getSessionManager() {
       return {
         ensureSession() {
+          state.managerCalls = (state.managerCalls || 0) + 1
           if (state.sessionResult.ok && !state.memberId) state.memberId = 'merchant-a'
           return Promise.resolve(state.sessionResult)
         },
@@ -209,18 +211,20 @@ test('负控:把未登录整屏 cy-empty 加回合作页必须判红', () => {
   assert.throws(() => assertNoLoginGate(mutated), /整屏登录\/无权限闸必须删除/)
 })
 
-test('合作页未登录先静默登录,失败只落页内错误态', async () => {
-  const first = createPage({ memberId: '', sessionResult: { ok: false } })
-  first.page.onLoad({ tab: 'club' })
-  assert.equal(first.requests.length, 0, '登录没成功不该发合作请求')
+// 2026-10-24 owner 规则(app.js:142-144)取代旧「合作页未登录先静默登录」:游客不在打开页面时建号(j6 F1)。
+test('合作页游客落「登录后查看合作」,不静默登录、不发请求;点「登录」后自动加载', async () => {
+  const guest = createPage({ memberId: '' })
+  guest.page.onLoad({ tab: 'club' })
   await flush()
-  assert.equal(first.page.data.pageState, 'error')
-  assert.equal(first.page.data.error, '登录失败，请重试')
+  assert.equal(guest.page.data.guestLogin, true)
+  assert.equal(guest.state.managerCalls || 0, 0, '游客打开页面不得走 wx.login → /api/login/code')
+  assert.equal(guest.requests.length, 0)
 
-  const second = createPage({ memberId: '' })
-  second.page.onLoad({ tab: 'club' })
+  guest.page.onGuestLogin()
   await flush()
-  assert.equal(second.requests.length, 1, '静默登录成功后必须自动加载')
+  assert.equal(guest.state.firstLogins, 1)
+  assert.equal(guest.page.data.guestLogin, false)
+  assert.equal(guest.requests.length, 1, '登录成功后必须自动加载')
 })
 
 test('合作页异常回调与缺少可访问主体的商家卡都不会落成空态', () => {

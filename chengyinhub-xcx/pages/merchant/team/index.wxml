@@ -8,7 +8,7 @@
   <view class="tm-state" wx:if="{{accessState === 'loading'}}">
     <view class="tm-skeleton-card"><cy-skeleton type="list" count="3" /></view>
   </view>
-  <!-- 未登录不再整屏拦:静默登录后自动加载;登录/身份确认失败只留这条内联错误。 -->
+  <cy-empty wx:elif="{{accessState === 'login'}}" kind="no-permission" fill size="lg" title="{{hasIncomingInvite ? '登录后查看邀请' : '登录后查看经营团队'}}" cta="登录" bind:cta="onTeamLogin" />
   <view class="tm-state" wx:elif="{{accessState === 'error'}}">
     <cy-inline-error load-failure="{{!accessErrorIsDenied}}" title="{{accessErrorIsDenied ? '请确认登录或经营权限' : '经营团队加载失败'}}" sub="{{accessError}}" action="重新加载" bind:action="retryAccess" />
   </view>

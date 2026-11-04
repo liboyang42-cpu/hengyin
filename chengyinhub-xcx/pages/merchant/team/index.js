@@ -1,7 +1,7 @@
 const toast = require('../../../utils/toast.js');
 const { chinaParts } = require('../../../utils/datetime.js');
 const app = getApp();
-const { failureStatus, recoverReadSession } = require('../../../utils/session/login-reload.js');
+const { failureStatus, recoverReadSession, retryLogin, waitForInitialSession } = require('../../../utils/session/login-reload.js');
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const { isRecord, isRecordList, isBizOk } = require('../../../utils/response-shape.js');
 const {
@@ -274,17 +274,13 @@ Page({
       this.loadAccess();
       return;
     }
-    this.setData({ accessState: 'loading', accessError: '', accessErrorIsDenied: false });
-    const that = this;
-    ensureSession(app).then(function (ok) {
-      if (that._hidden || that._unloaded || that._inviteRequestIds === null || entryEpoch !== that._teamEntryEpoch) return;
-      if (!ok || !app.getUserID()) {
-        that.setData({ accessState: 'error', accessError: '登录失败，请重试', accessErrorIsDenied: true });
-        return;
-      }
-      that.enterTeam(that._authRetryUsed);
-    });
+    // owner 2026-10-24(app.js:142-144):游客不在打开页面时静默建号(j6 F1)。落「登录后查看」,点「登录」才登录;
+    // 邀请 token 已在 onLoad 存进内存 handoff,登录回来照常进邀请落地页。
+    this.setData({ accessState: 'login', accessError: '', accessErrorIsDenied: false });
+    waitForInitialSession(this, app, function () { if (entryEpoch === this._teamEntryEpoch) this.enterTeam(false); });
   },
+
+  onTeamLogin() { retryLogin(this, app, function () { this.enterTeam(false); }); },
 
   // 401:静默重登一次后自动重载;重登失败落页内错误态,不整屏「去登录」。
   recoverSession() {
@@ -297,7 +293,7 @@ Page({
     const that = this;
     const entryEpoch = this._teamEntryEpoch;
     const owner = String(app.getUserID() || '');
-    ensureSession(app).then(function (ok) {
+    ensureSession(app, true).then(function (ok) {
       if (that._hidden || that._unloaded || that._inviteRequestIds === null || entryEpoch !== that._teamEntryEpoch
           || (app.getUserID() && owner !== String(app.getUserID()))) return;
       if (!ok || !app.getUserID()) {

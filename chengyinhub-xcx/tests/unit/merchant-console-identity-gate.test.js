@@ -1,6 +1,7 @@
 // 2026-09-16 商家页去闸:工作台的「登录后查看商家工作台 / 正在确认商家身份 / 没有商家身份」
 // 整屏闸全部删除。新契约:
-//   未登录 → 静默 ensureSession 后自动加载;失败 → 页内 cy-inline-error + 重试;
+//   未登录 → 2026-10-24 owner 规则(app.js:142-144)取代旧「静默登录」:游客不在打开页面时建号(j6 F1),
+//            落「登录后查看经营台 · 登录」,点「登录」才登录;身份失败 → 页内 cy-inline-error + 重试;
 //   401 → 静默重登一次;无商家身份 → 静默 switchTab 回会员中心。
 // 负控:把整屏闸(consoleState + rv-gate)加回去必须判红。
 const { beforeEach, test } = require('node:test')
@@ -19,6 +20,8 @@ let authorization
 let switched
 let toasts
 let sessionResults
+let managerCalls
+let firstLogins
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
 
@@ -33,8 +36,10 @@ global.getApp = () => ({
     },
   }),
   // 成功即等价于 session-store 落地(真实 session-manager 会写 user_id)。
+  firstLogin: () => { firstLogins += 1; userId = 9; return Promise.resolve({ ok: true }) },
   getSessionManager: () => ({
     ensureSession: () => {
+      managerCalls += 1
       const result = sessionResults.length ? sessionResults.shift() : { ok: true }
       if (result.ok && !userId) userId = 9
       return Promise.resolve(result)
@@ -112,51 +117,37 @@ beforeEach(() => {
   switched = []
   toasts = []
   sessionResults = []
+  managerCalls = 0
+  firstLogins = 0
   userId = 0
   authorization = 'old-token'
 })
 
-test('未登录不再整屏拦:静默登录成功后自动拉身份并渲染工作台', async () => {
+test('游客打开工作台:不静默建号,落「登录后查看经营台」,不发任何请求(j6 F1)', async () => {
   userId = 0
   const page = loadPage()
   page.onShow()
-  assert.equal(page.data.consoleError, '', '静默登录期间不先摆错误态')
-
   await flush()
-  const identityRequest = requested('/api/merchant/access/me')[0]
-  assert.ok(identityRequest, '静默登录成功后必须自动继续身份确认')
-  identityRequest.success(merchantAccess())
+  assert.equal(page.data.consoleLogin, true)
   assert.equal(page.data.consoleError, '')
-  assert.equal(page.data.merchantAccess.active, true)
-  assert.deepEqual(switched, [], '正常商家不得被整屏闸赶走')
-})
-
-test('静默登录失败只落页内内联错误,不发工作台请求', async () => {
-  userId = 0
-  sessionResults.push({ ok: false, reason: 'networkFail' })
-  const page = loadPage()
-  page.onShow()
-  await flush()
-
-  assert.equal(page.data.consoleError, '登录失败，请重试')
-  assert.equal(requests.length, 0, '登录没成功不该发工作台请求')
+  assert.equal(managerCalls, 0, '游客打开页面不得走 wx.login → /api/login/code')
+  assert.equal(firstLogins, 0)
+  assert.equal(requests.length, 0)
   assert.deepEqual(switched, [])
 })
 
-test('登录失败后点重新加载:再走一次静默登录并正常加载', async () => {
+test('游客点「登录」才登录,登录后自动确认身份并渲染工作台', async () => {
   userId = 0
-  sessionResults.push({ ok: false })
   const page = loadPage()
   page.onShow()
+  page.onConsoleLogin()
   await flush()
-  assert.ok(page.data.consoleError)
-
-  page.reloadConsole()
-  await flush()
-  assert.equal(page.data.consoleError, '')
-  userId = 9
-  await flush()
-  assert.ok(requested('/api/merchant/access/me').length, '重试必须真的再走一次身份链路')
+  assert.equal(firstLogins, 1, '登录只在用户点「登录」时发生')
+  const identityRequest = requested('/api/merchant/access/me')[0]
+  assert.ok(identityRequest, '登录成功后必须自动继续身份确认')
+  identityRequest.success(merchantAccess())
+  assert.equal(page.data.consoleLogin, false)
+  assert.equal(page.data.merchantAccess.active, true)
 })
 
 test('身份接口 401 静默重登后自动重拉,不落整屏去登录', async () => {
@@ -583,24 +574,23 @@ test('页面卸载后身份成功、降级或失败回调都不得写页、跳�
 function assertNoConsoleGate(wxml) {
   assert.doesNotMatch(wxml, /rv-gate/, '整屏闸容器必须删除')
   assert.doesNotMatch(wxml, /consoleState/, 'consoleState 身份状态机必须删除')
-  assert.doesNotMatch(wxml, /登录后查看|去登录|正在确认商家身份|没有商家身份/, '整屏闸文案必须删除')
+  assert.doesNotMatch(wxml, /登录后查看商家工作台|去登录|正在确认商家身份|没有商家身份/, '整屏闸文案必须删除')
   assert.match(wxml, /<cy-inline-error\b[^>]*wx:if="\{\{consoleError\}\}"[^>]*bind:action="reloadConsole"/,
     '登录/身份失败必须落页内内联错误并可重试')
   assert.doesNotMatch(wxml, /wx:if="\{\{consoleError\}\}"[\s\S]{0,120}<cy-empty/, '错误态不得退回整屏空态')
+  // 游客(只有游客)看到的是全站同款「登录后查看 · 登录」,点了才登录。
+  assert.match(wxml, /<cy-empty wx:if="\{\{consoleLogin\}\}"[^>]*title="登录后查看经营台" cta="登录" bind:cta="onConsoleLogin"/)
 }
 
 test('wxml 不再有整屏身份闸,未登录的出路是页内错误 + 重试', () => {
   assertNoConsoleGate(fs.readFileSync(WXML_PATH, 'utf8'))
 })
 
-test('负控:恢复「未登录直接落整屏登录态并 return」必须让静默登录断言转红', () => {
+test('负控:游客分支恢复静默登录必须判红', async () => {
   const source = fs.readFileSync(PAGE_PATH, 'utf8')
-  const anchor = '      // 静默登录:成功自动继续加载;失败只留页内错误,由 reloadConsole 重试。\n      ensureSession(app).then((ok) => {'
+  const anchor = '      waitForInitialSession(this, app, this.enterConsole);\n      return;'
   assert.ok(source.includes(anchor), '负控锚点失效')
-  const mutated = source.replace(anchor,
-    "      this.setData({ consoleError: '登录后查看商家工作台' });\n      return;\n      ensureSession(app).then((ok) => {")
-
-  // 变异体必须落在原页面目录里,否则相对 require 解析不到
+  const mutated = source.replace(anchor, '      app.getSessionManager().ensureSession();\n      return;')
   const tmp = path.join(ROOT, 'pages/merchant/index/.index.mutant.js')
   fs.writeFileSync(tmp, mutated)
   try {
@@ -611,8 +601,8 @@ test('负控:恢复「未登录直接落整屏登录态并 return」必须让静
     page.setData = function (patch) { Object.assign(this.data, patch) }
     userId = 0
     page.onShow()
-    // 正向测试的第一条断言就是「静默登录期间不先摆错误态」;闸一加回来它必然红。
-    assert.throws(() => assert.equal(page.data.consoleError, ''), assert.AssertionError)
+    await flush()
+    assert.throws(() => assert.equal(managerCalls, 0), assert.AssertionError)
   } finally {
     fs.unlinkSync(tmp)
   }

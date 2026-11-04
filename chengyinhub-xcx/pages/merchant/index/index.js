@@ -9,7 +9,7 @@ const merchantTheme = require('../../../utils/merchant-theme.js');
 const { merchantHomeUrl } = require('../../../utils/merchant-home-link.js');
 const { isRecord, isRecordList, isBizOk } = require('../../../utils/response-shape.js');
 const { inactiveAccess, normalizeMerchantAccess } = require('../../../utils/merchant-access-policy.js');
-const { ensureSession } = require('../utils/session/ensure-session.js');
+const { ensureSession } = require('../utils/session/ensure-session.js'); const { retryLogin, waitForInitialSession } = require('../../../utils/session/login-reload.js');
 const identitySync = require('../../../utils/identity-sync.js');
 
 // cms_topic.product_type → 展示名(与 marketing 页同口径)
@@ -90,7 +90,7 @@ Page({
     // 默认 fail closed，避免首帧把上一商家或假零报表先露出来。
     merchantAccess: inactiveAccess(),
     // 身份/加载没能确认时的页内错误(cy-inline-error 承接),不再是整屏身份闸。
-    consoleError: '',
+    consoleError: '', consoleLogin: false,
     // 入驻申请审核中/未通过/停用时的页内状态卡(来源 /api/merchant/info + decorateApplication)。
     // 无商家身份的普通玩家仍走静默 switchTab,不在这里渲染。
     consoleStatus: null,
@@ -626,6 +626,8 @@ Page({
   },
 
   // 重新加载:清掉页内错误再走一遍 onShow 的身份+数据链路。
+  onConsoleLogin() { retryLogin(this, app, this.enterConsole); },
+
   reloadConsole() {
     this.setData({ consoleError: '' });
     this.onShow();
@@ -746,18 +748,13 @@ Page({
       this._dataMemberId = '';
       this._accessMemberId = '';
       this.closeScene();
-      this.setData({ consoleError: '', consoleStatus: null, merchantAccess: inactiveAccess() });
-      // 静默登录:成功自动继续加载;失败只留页内错误,由 reloadConsole 重试。
-      ensureSession(app).then((ok) => {
-        if (version !== this._consoleVersion) return;
-        if (!ok || !String(app.getUserID() || '')) {
-          this.setData({ consoleError: '登录失败，请重试' });
-          return;
-        }
-        this.enterConsole(authRetryUsed === true);
-      });
+      // owner 2026-10-24(app.js:142-144):游客不在打开页面时静默建号(j6 F1)。落「登录后查看」,
+      // 点「登录」才走 retryLogin;冷启动还在恢复缓存会话时,恢复完自动重进。
+      this.setData({ consoleError: '', consoleStatus: null, merchantAccess: inactiveAccess(), consoleLogin: true });
+      waitForInitialSession(this, app, this.enterConsole);
       return;
     }
+    if (this.data.consoleLogin) this.setData({ consoleLogin: false });
     const dataEpoch = (this._dataEpoch || 0) + 1;
     this._dataEpoch = dataEpoch;
     this._dataMemberId = identityMemberId;
@@ -788,7 +785,7 @@ Page({
       return;
     }
     clearInvalidSession();
-    ensureSession(app).then((ok) => {
+    ensureSession(app, true).then((ok) => {
       if (version !== this._consoleVersion) return;
       if (!ok) {
         this.setData({ consoleError: '登录失败，请重试' });

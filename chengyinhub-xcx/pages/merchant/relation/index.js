@@ -2,7 +2,7 @@ const pageMotion = require('../../../utils/page-motion.js');
 const app = getApp();
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const { normalizeRelationHome } = require('../utils/merchant-aggregate.js');
-const { ensureSession } = require('../utils/session/ensure-session.js');
+const { ensureSession } = require('../utils/session/ensure-session.js'); const { retryLogin, waitForInitialSession } = require('../../../utils/session/login-reload.js');
 // CU-M-61:品类名取法与发现页共用一份(utils/category-icon.js),两页不再各写一套。
 const { firstCategoryName } = require('../../../utils/category-icon.js');
 // 帖子流与 pages/talent/list 的「帖文」tab 同一套投影/判定,别写第二份。
@@ -119,21 +119,21 @@ Page({
   // 入口:未登录先静默登录,成功自动加载;失败只留页内错误态(重试走 loadRelationHome)。
   enterRelation(authRetryUsed) {
     this._authRetryUsed = authRetryUsed === true;
-    if (app.getUserID()) {
+    if (app.getUserID()) { if (this.data.guestLogin) this.setData({ guestLogin: false });
       if (this.data.activeTab === 'feed') this.loadFeed();
       this.loadRelationHome();
       return;
     }
-    this.setData({ pageState: 'loading', error: '' });
-    const that = this;
-    ensureSession(app).then(function (ok) {
-      if (that._destroyed) return;
-      if (!ok || !app.getUserID()) {
-        that.setData({ pageState: 'error', error: '登录失败，请重试', clubs: [] });
-        return;
-      }
-      that.enterRelation(that._authRetryUsed);
+    this.setData({ // owner 2026-10-24(app.js:142-144):游客不在打开页面时静默建号(j6 F1),点「登录」才登录
+      guestLogin: true,
+      pageState: 'idle',
+      error: '',
+      clubs: [],
     });
+    waitForInitialSession(this, app, function () { this.enterRelation(false); });
+  },
+  onGuestLogin() {
+    retryLogin(this, app, function () { this.enterRelation(false); });
   },
 
   // 页内错误态上的「重新加载」:用户主动重试要重置自动重登次数,再走一遍入口链路。
@@ -151,7 +151,7 @@ Page({
     }
     this._authRetryUsed = true;
     const that = this;
-    ensureSession(app).then(function (ok) {
+    ensureSession(app, true).then(function (ok) {
       if (that._destroyed) return;
       if (!ok) {
         that.setData({ pageState: 'error', error: '登录失败，请重试', clubs: [] });

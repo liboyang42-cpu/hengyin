@@ -1,6 +1,6 @@
 const app = getApp();
 const merchantTheme = require('../../../utils/merchant-theme.js'); const pageMotion = require('../../../utils/page-motion.js');
-const { ensureSession } = require('../utils/session/ensure-session.js');
+const { ensureSession } = require('../utils/session/ensure-session.js'); const { retryLogin, waitForInitialSession } = require('../../../utils/session/login-reload.js');
 const { normalizeMarketingHome } = require('../utils/merchant-aggregate.js');
 const { openOpportunityCount } = require('../utils/recruit-routes.js');
 const { isRecord } = require('../../../utils/response-shape.js');
@@ -208,21 +208,17 @@ Page({
     if (this._unloaded) return;
     this._authRetryUsed = authRetryUsed === true;
     if (!currentMemberId()) {
-      const that = this;
-      ensureSession(app).then(function (ok) {
-        if (that._unloaded) return;
-        if (!ok) {
-          that.setData({ entryError: '登录失败，请重试', accessState: 'checking', funnelLoading: false });
-          return;
-        }
-        that._scopeMemberId = currentMemberId();
-        that.enterMarketing(that._authRetryUsed);
-      });
+      // owner 2026-10-24(app.js:142-144):游客不在打开页面时静默建号(j6 F1);落「登录后查看」,点「登录」才登录。
+      this.setData({ guestLogin: true, entryError: '', accessState: 'checking', funnelLoading: false });
+      waitForInitialSession(this, app, function () { this.enterMarketing(false); });
       return;
     }
+    if (this.data.guestLogin) this.setData({ guestLogin: false });
     this._scopeMemberId = currentMemberId();
     this.loadMerchantAccess();
   },
+
+  onGuestLogin() { retryLogin(this, app, function () { this.enterMarketing(false); }); },
 
   // 会话失效(401):静默重登一次,成功重走权限确认;失败落页内错误,不整屏「去登录」。
   recoverSession() {
@@ -233,7 +229,7 @@ Page({
     }
     this._authRetryUsed = true;
     const that = this;
-    ensureSession(app).then(function (ok) {
+    ensureSession(app, true).then(function (ok) {
       if (that._unloaded) return;
       if (!ok) {
         that.setData({ entryError: '登录失败，请重试', funnelLoading: false });
