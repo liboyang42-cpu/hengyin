@@ -169,4 +169,64 @@ class RefundMultiPartyClawbackTest {
         assertEquals(0, new BigDecimal("-100.00").compareTo(totalReversed),
                 "两条冲销合计应 = -100.00(商家-90 + 平台-10),实际 " + totalReversed);
     }
+
+    /**
+     * 第十轮 f4 第 5 项:半分值。实付 ¥97.50、平台费 3%(平台 2.93、商家 94.57),退一半 ¥48.75。
+     * 旧算法各方各自四舍五入:平台 1.465→1.47、商家 47.285→47.29,合计扣 48.76,多扣 1 分。
+     * 现在各方冲销合计恰等于退款额,商家拿余数 47.28。
+     */
+    @Test
+    void halfFenPartialRefundClawbacksSumToRefundedAmount() {
+        RefundReviewDTO req = new RefundReviewDTO();
+        req.setId(1L);
+        req.setStatus(1);
+        RefundApplication refund = new RefundApplication();
+        refund.setId(1L);
+        refund.setSourceType("registration");
+        refund.setSourceId(10L);
+        refund.setRefundAmount(new BigDecimal("48.75"));
+        refund.setPaidAmount(new BigDecimal("97.50"));
+        when(refundApplicationMapper.selectRefundApplicationById(1L)).thenReturn(refund);
+        CmsRegistration reg = new CmsRegistration();
+        reg.setPaymentStatus(2);
+        reg.setPayableAmount(new BigDecimal("97.50"));
+        reg.setId(10L);
+        reg.setOwnerType(2L);
+        reg.setOwnerId(77L);
+        when(cmsRegistrationMapper.selectCmsRegistrationById(10L)).thenReturn(reg);
+        CmsActivity activity = new CmsActivity();
+        activity.setId(77L);
+        activity.setIsSettlement(1);
+        when(cmsActivityMapper.selectCmsActivityById(77L)).thenReturn(activity);
+        when(refundApplicationMapper.updateRefundStatusIfPending(anyLong(), anyInt(), any(), any(), any()))
+                .thenReturn(1);
+        SettlementDetail merchant = detail("merchant", 5L, "94.57");
+        SettlementDetail platform = detail("platform", 0L, "2.93");
+        when(settlementDetailMapper.selectSettledDetails("registration", 10L))
+                .thenReturn(Arrays.asList(platform, merchant));
+        when(settlementDetailMapper.insertAdjustment(any())).thenReturn(1);
+        UmsMember m = new UmsMember();
+        m.setBalance(new BigDecimal("94.57"));
+        when(umsMemberMapper.selectUmsMemberById(5L)).thenReturn(m);
+
+        svc.reviewRefund(req, 42L);
+
+        ArgumentCaptor<SettlementDetail> cap = ArgumentCaptor.forClass(SettlementDetail.class);
+        verify(settlementDetailMapper, times(2)).insertAdjustment(cap.capture());
+        BigDecimal totalReversed = BigDecimal.ZERO;
+        BigDecimal totalGross = BigDecimal.ZERO;
+        for (SettlementDetail adjustment : cap.getAllValues()) {
+            totalReversed = totalReversed.add(adjustment.getSettlementAmount());
+            totalGross = totalGross.add(adjustment.getGrossAmount());
+            if ("platform".equals(adjustment.getReceiverType())) {
+                assertEquals(0, new BigDecimal("-1.47").compareTo(adjustment.getSettlementAmount()));
+            } else {
+                assertEquals(0, new BigDecimal("-47.28").compareTo(adjustment.getSettlementAmount()),
+                        "商家拿余数:48.75 - 1.47");
+            }
+        }
+        assertEquals(0, new BigDecimal("-48.75").compareTo(totalReversed), "冲销合计 " + totalReversed);
+        assertEquals(0, new BigDecimal("-48.75").compareTo(totalGross), "gross 合计 " + totalGross);
+        verify(umsMemberMapper).deductBalance(eq(5L), eq(new BigDecimal("47.28")));
+    }
 }

@@ -762,18 +762,28 @@ public class RefundServiceImpl implements IRefundService {
             for (SettlementDetail d : settledList) {
                 totalGross = totalGross.add(defaultZero(d.getGrossAmount()));
             }
-            BigDecimal ratio = refundRatio(refund, totalGross);
             // 父级打款态只解析一次,再按收款方逐条套用(见 resolveSystem1PaidCheck)
             Predicate<SettlementDetail> paidBySystem1 = resolveSystem1PaidCheck(registration, settledList);
+            List<SettlementDetail> toAdjust = new ArrayList<>();
+            List<Boolean> paidFlags = new ArrayList<>();
             for (SettlementDetail settled : settledList) {
                 boolean system1Paid = paidBySystem1.test(settled);
                 // 历史活路径:系统1已真打款,但支付时落的明细仍停在 status=0。
                 // 这时仍须冲销并扣回;反之,未真打款的 status=0 只作废,不能凭空造一笔已结算冲销。
                 if (Integer.valueOf(1).equals(settled.getStatus()) || system1Paid) {
-                    Long debitMember = system1Paid
-                            ? actualDebitMember(registration, settled) : settled.getReceiverId();
-                    createSettlementAdjustment(refund, system1Paid, settled, ratio, debitMember);
+                    toAdjust.add(settled);
+                    paidFlags.add(system1Paid);
                 }
+            }
+            // 第十轮 f4 第 5 项:各收款方按比例冲销后合计必须等于退款对应的那一份,不能各自四舍五入再相加
+            // (¥97.50 付款 3% 平台费退一半:平台 1.465→1.47、商家 47.285→47.29,合计多扣 1 分)。
+            BigDecimal[][] amounts = allocateClawback(toAdjust, refund, totalGross);
+            for (int i = 0; i < toAdjust.size(); i++) {
+                SettlementDetail settled = toAdjust.get(i);
+                boolean system1Paid = paidFlags.get(i);
+                Long debitMember = system1Paid
+                        ? actualDebitMember(registration, settled) : settled.getReceiverId();
+                createSettlementAdjustment(refund, system1Paid, settled, amounts[i], debitMember);
             }
         }
         // 无论是否产生冲销,退款后都必须作废遗留 status=0,防后续批次把已退款报名重新纳入。
@@ -1061,14 +1071,69 @@ public class RefundServiceImpl implements IRefundService {
         return actual.get(0);
     }
 
+    /**
+     * 各收款方本次冲销的 gross / commission / settlement 三列。
+     *
+     * <p>每列先按比例算出合计(合计四舍五入一次),非商家收款方各自四舍五入,商家拿余数 ——
+     * 与结算时「商家份额 = 销售额减平台与设计者份额」同一规则,所以各方冲销相加恒等于退款对应的那一份。
+     * 没有商家行时余数落在份额最大的那一行。比例口径不变:退款额 / 实付(实付缺失时用已结算合计),封顶 1。
+     */
+    static BigDecimal[][] allocateClawback(List<SettlementDetail> details, RefundApplication refund,
+                                           BigDecimal settledGross) {
+        BigDecimal[][] out = new BigDecimal[details.size()][3];
+        if (details.isEmpty()) return out;
+        BigDecimal numerator = defaultZero(refund.getRefundAmount());
+        BigDecimal denominator = defaultZero(refund.getPaidAmount());
+        if (denominator.compareTo(BigDecimal.ZERO) <= 0) denominator = defaultZero(settledGross);
+        if (denominator.compareTo(BigDecimal.ZERO) <= 0 || numerator.compareTo(denominator) > 0) {
+            numerator = BigDecimal.ONE;
+            denominator = BigDecimal.ONE;
+        } else if (numerator.compareTo(BigDecimal.ZERO) < 0) {
+            numerator = BigDecimal.ZERO;
+            denominator = BigDecimal.ONE;
+        }
+        int remainderRow = -1;
+        for (int i = 0; i < details.size(); i++) {
+            if ("merchant".equals(details.get(i).getReceiverType())) { remainderRow = i; break; }
+        }
+        if (remainderRow < 0) {
+            remainderRow = 0;
+            for (int i = 1; i < details.size(); i++) {
+                if (defaultZero(details.get(i).getSettlementAmount())
+                        .compareTo(defaultZero(details.get(remainderRow).getSettlementAmount())) > 0) remainderRow = i;
+            }
+        }
+        for (int column = 0; column < 3; column++) {
+            BigDecimal total = BigDecimal.ZERO;
+            for (SettlementDetail detail : details) total = total.add(clawbackColumn(detail, column));
+            BigDecimal target = total.multiply(numerator).divide(denominator, 2, RoundingMode.HALF_UP);
+            BigDecimal others = BigDecimal.ZERO;
+            for (int i = 0; i < details.size(); i++) {
+                if (i == remainderRow) continue;
+                BigDecimal part = clawbackColumn(details.get(i), column).multiply(numerator)
+                        .divide(denominator, 2, RoundingMode.HALF_UP);
+                out[i][column] = part;
+                others = others.add(part);
+            }
+            out[remainderRow][column] = target.subtract(others).setScale(2, RoundingMode.HALF_UP);
+        }
+        return out;
+    }
+
+    private static BigDecimal clawbackColumn(SettlementDetail detail, int column) {
+        return defaultZero(column == 0 ? detail.getGrossAmount()
+                : column == 1 ? detail.getCommissionAmount() : detail.getSettlementAmount());
+    }
+
     private void createSettlementAdjustment(RefundApplication refund, boolean system1Paid,
-                                            SettlementDetail settled, BigDecimal ratio, Long debitMember) {
+                                            SettlementDetail settled, BigDecimal[] amounts, Long debitMember) {
         // HF-04(A-32): 按退款比例冲销——部分退款只回扣对应比例,不再无视 refundAmount 整单全额回扣。
         // P0-B: 逐条(每个收款方)冲销,幂等键含收款方类型+id;靠 settlement_detail 的 uk_detail_idempotency
         //       + insert ignore 天然去重(重复退款审批返回 0 行→不重复扣回),不再用 existsAdjustment 粗粒度闸拦住 2..N 条。
-        BigDecimal adjGross = defaultZero(settled.getGrossAmount()).multiply(ratio).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal adjCommission = defaultZero(settled.getCommissionAmount()).multiply(ratio).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal adjSettlement = defaultZero(settled.getSettlementAmount()).multiply(ratio).setScale(2, RoundingMode.HALF_UP);
+        // 金额由 allocateClawback 统一分好,各方合计 = 退款对应的那一份。
+        BigDecimal adjGross = amounts[0];
+        BigDecimal adjCommission = amounts[1];
+        BigDecimal adjSettlement = amounts[2];
 
         SettlementDetail adjustment = new SettlementDetail();
         adjustment.setBatchId(0L);
@@ -1239,29 +1304,6 @@ public class RefundServiceImpl implements IRefundService {
         return income != null && income.compareTo(BigDecimal.ZERO) > 0;
     }
 
-    /**
-     * HF-04(A-32): 退款冲销比例 = refundAmount / 实付额,夹取到 [0,1]。
-     * 优先用退款单实付额 paidAmount 作分母(退款是实付的一部分);缺失时退回结算gross;仍无则按全额(1)兜底。
-     */
-    private BigDecimal refundRatio(RefundApplication refund, BigDecimal settledGross) {
-        BigDecimal refundAmount = defaultZero(refund.getRefundAmount());
-        BigDecimal base = defaultZero(refund.getPaidAmount());
-        if (base.compareTo(BigDecimal.ZERO) <= 0) {
-            base = settledGross;
-        }
-        if (base.compareTo(BigDecimal.ZERO) <= 0) {
-            return BigDecimal.ONE;
-        }
-        BigDecimal ratio = refundAmount.divide(base, 6, RoundingMode.HALF_UP);
-        if (ratio.compareTo(BigDecimal.ONE) > 0) {
-            return BigDecimal.ONE;
-        }
-        if (ratio.compareTo(BigDecimal.ZERO) < 0) {
-            return BigDecimal.ZERO;
-        }
-        return ratio;
-    }
-
     /** 已打款的收款方（商家/创作者）在冲销时把对应金额扣回；平台账(receiverId=0)只记账。 */
     private void debitReceiverBalance(String receiverType, Long receiverId, BigDecimal amount, Long refundId) {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
@@ -1321,7 +1363,7 @@ public class RefundServiceImpl implements IRefundService {
         }
     }
 
-    private BigDecimal defaultZero(BigDecimal value) {
+    private static BigDecimal defaultZero(BigDecimal value) {
         return value == null ? BigDecimal.ZERO : value;
     }
     private WechatVerifiedPaymentFactService.Stored checkedVerifiedRefund(Map<String, String> facts) {
