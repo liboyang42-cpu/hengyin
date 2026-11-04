@@ -1,0 +1,260 @@
+{
+ "id": "c19-club-workbench",
+ "path": "pages/club/workbench/index?clubId=990004",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "onSettings||{}",
+   "h": "onSettings",
+   "txt": "",
+   "w": 46,
+   "hgt": 46,
+   "y": 46,
+   "route": "pages/club/detail/index",
+   "newText": "俱乐部设置 | 客户与项目 | 查看客户 | 报名名册 | 活动运营 | 项目工具 | 成员与权限 | 入会申请 | 成员管理 | 1 | 设管理员、移除成员、邀请新成员 | 角色与权限",
+   "shot": "c19-club-workbench-t01",
+   "result": "ui change"
+  },
+  {
+   "key": "onTab|帖子|{\"key\":\"posts\"}",
+   "h": "onTab",
+   "txt": "帖子",
+   "w": 54,
+   "hgt": 46,
+   "y": 361,
+   "route": "pages/club/detail/index",
+   "newText": "玩家二号 | 有什么新鲜好玩的分享吗？ | 暂无帖文",
+   "result": "ui change"
+  },
+  {
+   "key": "onTab|活动|{\"key\":\"events\"}",
+   "h": "onTab",
+   "txt": "活动",
+   "w": 54,
+   "hgt": 46,
+   "y": 361,
+   "route": "pages/club/detail/index",
+   "newText": "发布 | 暂时俱乐部还没有活动",
+   "result": "ui change"
+  },
+  {
+   "key": "onTab|概览|{\"key\":\"overview\"}",
+   "h": "onTab",
+   "txt": "概览",
+   "w": 54,
+   "hgt": 46,
+   "y": 361,
+   "route": "pages/club/detail/index",
+   "newText": "夜里一起走城市的社团 | 林测试 | 主理人 | 兴趣社群 | 俱乐部类型 | 上海 | 所在城市 | 俱乐部勋章 | 成员 · 1 | 邀请成员 | 玩家二号 | 群主",
+   "shot": "c19-club-workbench-t02",
+   "result": "ui change"
+  },
+  {
+   "key": "onTab|管理|{\"key\":\"manage\"}",
+   "h": "onTab",
+   "txt": "管理",
+   "w": 54,
+   "hgt": 46,
+   "y": 361,
+   "route": "pages/club/detail/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "onClubScan|扫码|{}",
+   "h": "onClubScan",
+   "txt": "扫码",
+   "w": 71,
+   "hgt": 74,
+   "y": 433,
+   "route": "pages/club/detail/index",
+   "newText": "还没有可统计的项目数据",
+   "result": "ui change"
+  },
+  {
+   "key": "onClubGroupCode|出示二维码|{}",
+   "h": "onClubGroupCode",
+   "txt": "出示二维码",
+   "w": 71,
+   "hgt": 74,
+   "y": 433,
+   "route": "pages/club/detail/index",
+   "newText": "还没有项目，先发布一个主题 | 还没有可统计的项目数据",
+   "result": "ui change"
+  },
+  {
+   "key": "goClubFinance|结算|{}",
+   "h": "goClubFinance",
+   "txt": "结算",
+   "w": 71,
+   "hgt": 74,
+   "y": 433,
+   "route": "pages/club/settlement/index",
+   "newText": "俱乐部结算 | 商家计酬 | 0 人次 | 俱乐部直接付款 | 待结清 | ¥0.00 | 已结清 | ¥0.00 | 待退回 | ¥0.00 | 还没有计酬核销记录 | 可提现",
+   "shot": "c19-club-workbench-t03",
+   "result": "navigates"
+  },
+  {
+   "key": "onSettings|设置|{}",
+   "h": "onSettings",
+   "txt": "设置",
+   "w": 71,
+   "hgt": 74,
+   "y": 433,
+   "route": "pages/club/detail/index",
+   "newText": "还没有可统计的项目数据 | 俱乐部设置 | 客户与项目 | 查看客户 | 报名名册 | 活动运营 | 项目工具 | 成员与权限 | 入会申请 | 成员管理 | 1 | 设管理员、移除成员、邀请新成员",
+   "shot": "c19-club-workbench-t04",
+   "result": "ui change"
+  },
+  {
+   "key": "onToggle|带队进度 · 发布主题|{}",
+   "h": "onToggle",
+   "txt": "带队进度 · 发布主题",
+   "w": 322,
+   "hgt": 33,
+   "y": 631,
+   "route": "pages/club/detail/index",
+   "newText": "邀请商家 | 选择一个项目，开始对接商家 | 等待商家回应 | 邀请发出后在这里等回应 | 商家已接受 | 商家已接受，可进入项目主办视图",
+   "shot": "c19-club-workbench-t05",
+   "result": "ui change"
+  },
+  {
+   "key": "onOwnerPrimary|发布主题|{}",
+   "h": "onOwnerPrimary",
+   "txt": "发布主题",
+   "w": 243,
+   "hgt": 46,
+   "y": 677,
+   "route": "pages/club/detail/index",
+   "newText": "还没有可统计的项目数据 | 还没有项目 | 选定后会先进入连续选点，随时取消即可回到编辑器继续填写 | 城市定向 · 顺序探索 | 自由探索 · 全点开放",
+   "shot": "c19-club-workbench-t06",
+   "result": "ui change"
+  },
+  {
+   "key": "onOpenClubSession|开一场|{}",
+   "h": "onOpenClubSession",
+   "txt": "开一场",
+   "w": 71,
+   "hgt": 46,
+   "y": 677,
+   "route": "pages/club/event-ops/index",
+   "newText": "活动运营 | 日期清单 | 仅可修改无报名的未来场次 | 还没有系列场次 | 添加日期 | 按重复方式批量生成 | 重复方式 | 最多排未来 90 天（64 期） | 暂无可开场的主题 | 先发布主题或完成商家合作",
+   "result": "navigates"
+  },
+  {
+   "key": "onCta|发布主题|{}",
+   "h": "onCta",
+   "txt": "发布主题",
+   "w": 83,
+   "hgt": 46,
+   "y": 983,
+   "route": "pages/club/detail/index",
+   "newText": "还没有可统计的项目数据 | 还没有项目 | 自由探索期次 | 可对接商家 | 可对接的活动 | 收到的合作邀约 | 选定后会先进入连续选点，随时取消即可回到编辑器继续填写 | 城市定向 · 顺序探索 | 自由探索 · 全点开放",
+   "result": "ui change"
+  },
+  {
+   "key": "onCreateTeam|发布主题|{}",
+   "h": "onCreateTeam",
+   "txt": "发布主题",
+   "w": 357,
+   "hgt": 46,
+   "y": 1054,
+   "route": "pages/club/detail/index",
+   "newText": "还没有可统计的项目数据 | 还没有项目 | 自由探索期次 | 可对接商家 | 可对接的活动 | 收到的合作邀约 | 我发出的邀约 | 选定后会先进入连续选点，随时取消即可回到编辑器继续填写 | 城市定向 · 顺序探索 | 自由探索 · 全点开放",
+   "result": "ui change"
+  },
+  {
+   "key": "toggleManageSection|自由探索期次|{\"key\":\"editions\"}",
+   "h": "toggleManageSection",
+   "txt": "自由探索期次",
+   "w": 357,
+   "hgt": 48,
+   "y": 1130,
+   "route": "pages/club/detail/index",
+   "newText": "还没有可统计的项目数据 | 还没有项目 | 自由探索期次 | 本俱乐部还没有承接自由探索期次 | 可对接商家 | 可对接的活动 | 收到的合作邀约 | 我发出的邀约",
+   "result": "ui change"
+  },
+  {
+   "key": "toggleManageSection|可对接商家|{\"key\":\"merchants\"}",
+   "h": "toggleManageSection",
+   "txt": "可对接商家",
+   "w": 357,
+   "hgt": 48,
+   "y": 1208,
+   "route": "pages/club/detail/index",
+   "newText": "还没有可统计的项目数据 | 还没有项目 | 自由探索期次 | 可对接商家 | 我的合作 | 场地免费 | 可承接 24 人 | 探店日样板咖啡 | 10:00-20:00 | 上海市黄浦区咖啡 | 探店日 · City Walk",
+   "result": "ui change"
+  },
+  {
+   "key": "toggleManageSection|可对接的活动|{\"key\":\"coop-pool\"}",
+   "h": "toggleManageSection",
+   "txt": "可对接的活动",
+   "w": 357,
+   "hgt": 48,
+   "y": 1286,
+   "route": "pages/club/detail/index",
+   "newText": "还没有可统计的项目数据 | 还没有项目 | 自由探索期次 | 可对接商家 | 可对接的活动 | 暂无开放承接的主题 | 收到的合作邀约 | 我发出的邀约",
+   "result": "ui change"
+  },
+  {
+   "key": "toggleManageSection|收到的合作邀约|{\"key\":\"received\"}",
+   "h": "toggleManageSection",
+   "txt": "收到的合作邀约",
+   "w": 357,
+   "hgt": 48,
+   "y": 1365,
+   "route": "pages/club/detail/index",
+   "newText": "还没有可统计的项目数据 | 还没有项目 | 自由探索期次 | 可对接商家 | 可对接的活动 | 收到的合作邀约 | 暂无合作邀约 | 我发出的邀约",
+   "result": "ui change"
+  },
+  {
+   "key": "toggleManageSection|我发出的邀约|{\"key\":\"sent\"}",
+   "h": "toggleManageSection",
+   "txt": "我发出的邀约",
+   "w": 357,
+   "hgt": 48,
+   "y": 1443,
+   "route": "pages/club/detail/index",
+   "newText": "还没有可统计的项目数据 | 还没有项目 | 自由探索期次 | 可对接商家 | 可对接的活动 | 收到的合作邀约 | 我发出的邀约 | 还没有发出邀约",
+   "result": "ui change"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "pages/club/detail/index"
+ ],
+ "text": "夜行者测试社 | 兴趣社群 · 1 名成员 | 公开加入 | 帖子 | 活动 | 概览 | 管理 | 扫码 | 出示二维码 | 分享 | 结算 | 设置 | 现在要做 | 发布主题 | 先发布一个俱乐部项目 | 带队进度 · 发布主题 | 发布主题 | 开一场 | 成员与活动概况 | 0 | 项目 | 0 | 游玩人次 | 0 | 完成人次 | — | 完成率 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "text_s1": "发布主题 | 开一场 | 成员与活动概况 | 0 | 项目 | 0 | 游玩人次 | 0 | 完成人次 | — | 完成率 | 还没有可统计的项目数据 | 还没有项目 | 发布主题 | 发布主题 | 自由探索期次 | 可对接商家 | 可对接的活动 | 收到的合作邀约 | 我发出的邀约 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "text_s2": "成员与活动概况 | 0 | 项目 | 0 | 游玩人次 | 0 | 完成人次 | — | 完成率 | 还没有可统计的项目数据 | 还没有项目 | 发布主题 | 发布主题 | 自由探索期次 | 可对接商家 | 可对接的活动 | 收到的合作邀约 | 我发出的邀约 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 20,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/club/detail/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}
