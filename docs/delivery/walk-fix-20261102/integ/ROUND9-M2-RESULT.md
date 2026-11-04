@@ -213,7 +213,19 @@ Not verified:
   - `test_gate` has the same 6 errors with and without this change. They come from the shallow clone missing an old
     commit (`54c524ca`), not from this lane.
 - **Migrations:** none. No rehearsal was needed, and PR #723's ③ section needs no change.
-- **CI:** see the last section.
+- **Full mini unit suite, final** (local, on `bd6d9e83`): 15,978 tests, 0 failures.
+- **DS hard-code gate** (`ds-hardcode-gate.sh --ci`, not its selftest): CI caught new literal font sizes in the roam strip
+  and literal colours in native polyline / canvas code. Fixed in `283cfb35`: the font sizes now use `--cy-type-*`, and
+  the colours that native map data and canvas can only take as literals carry `/* ds-ok */` with the reason. The gate
+  passes locally.
+- **CI.**
+  - GitHub CI run 41793117767 on `31ee554e`, the branch tip containing all of this lane's commits: **31 of 31 jobs
+    succeeded**. That includes Fast gates (4m00s), Mini program static gates, all 20 mini unit shards, Backend tests and
+    Migration safety (4m13s).
+  - Backend tests took **14m10s**. That is under the new 20-minute limit and only 50 s under the old 15, so the raise
+    was needed.
+  - Earlier runs on this branch show as *cancelled* only because a newer push (this lane's or lane m4's) replaced them.
+    No job was cut off at its time limit in this lane's runs.
 
 ## Needs owner
 
@@ -222,4 +234,4 @@ Not verified:
 - Team-route polling budget is 12 per minute per member. Recommended: keep it. A player who reopens the page several
   times a minute gets a short 「访问过于频繁」, and the client backs off silently.
 
-STATUS: PARTIAL - main package still 3,233,569 bytes (item 6 not done, needs owner); CI on the final commit pending at time of writing
+STATUS: PARTIAL - extra item 6 not done: main package source is 3,233,569 bytes, above the ~3,150,000 target; moving roam logic out needs require.async, which could not be verified here (needs owner)
