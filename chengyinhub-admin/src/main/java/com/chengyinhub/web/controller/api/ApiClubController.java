@@ -1421,6 +1421,14 @@ public class ApiClubController extends BaseController {
         // 富化每团已报名人数(已支付报名)
         for (CmsTopic t : topics) {
             t.setGameModuleEnabled(gameSessionRuntimeService.isGameSessionEnabled(t));
+            // 第十轮 f2 walk:这是公开读侧,原样下发会把已发布路线图里的各站答案(nodeAnswers.questionAnswer)
+            // 和玩法配置交给任何能看俱乐部的人。答案只走 /topic-node-answer 的闸;列表卡用不到这几项。
+            t.setPublishedRouteGraphJson(null);
+            t.setRouteGraphJson(null);
+            t.setGameModuleConfigJson(null);
+            t.setJourneyRulesJson(null);
+            t.setJourneyStoryJson(null);
+            t.setCompleteRuleJson(null);
             CmsRegistration rq = new CmsRegistration();
             rq.setOwnerType(1L);
             rq.setOwnerId(t.getId());

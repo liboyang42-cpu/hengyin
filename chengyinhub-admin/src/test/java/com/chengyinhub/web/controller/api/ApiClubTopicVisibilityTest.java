@@ -223,4 +223,48 @@ class ApiClubTopicVisibilityTest {
         List<?> rows = (List<?>) controller.topics(body).get("data");
         assertEquals(Integer.valueOf(4), ((CmsTopic) rows.get(0)).getSignupCount(), "4 张已付场次票必须计入团卡人数");
     }
+
+    // 第十轮 f2 walk:公开团卡列表原样下发 publishedRouteGraphJson,任何登录用户都能读到各站答案。
+    @Test
+    void topicListNeverCarriesRouteAnswersOrPlayConfig() {
+        ICmsTopicService topicService = mock(ICmsTopicService.class);
+        CmsTopic published = topic(9L, "{\"schemaVersion\":1}");
+        published.setPublishedRouteGraphJson("{\"nodeAnswers\":{\"71\":{\"questionAnswer\":\"8\",\"answerReveal\":\"8\"}}}");
+        published.setRouteGraphJson("{\"nodeAnswers\":{\"71\":{\"questionAnswer\":\"8\"}}}");
+        published.setJourneyRulesJson("{\"rules\":[]}");
+        published.setJourneyStoryJson("{\"endings\":[]}");
+        published.setCompleteRuleJson("{\"mode\":\"ALL\"}");
+        published.setName("人民广场 · 喷泉报时");
+        when(topicService.selectPublicCmsTopicList(any())).thenReturn(Collections.singletonList(published));
+        ApiClubController controller = new ApiClubController();
+        ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
+        IGameSessionRuntimeService runtimeService = mock(IGameSessionRuntimeService.class);
+        when(runtimeService.isGameSessionEnabled(published)).thenReturn(true);
+        ReflectionTestUtils.setField(controller, "gameSessionRuntimeService", runtimeService);
+        ICmsRegistrationService registrationService = mock(ICmsRegistrationService.class);
+        when(registrationService.selectCmsRegistrationList(any())).thenReturn(Collections.emptyList());
+        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
+        IOmsTicketService ticketService = mock(IOmsTicketService.class);
+        when(ticketService.selectOmsTicketList(any())).thenReturn(Collections.emptyList());
+        ReflectionTestUtils.setField(controller, "omsTicketService", ticketService);
+        ReflectionTestUtils.setField(controller, "cmsActivityService",
+                mock(com.chengyinhub.business.service.ICmsActivityService.class));
+        IClubService clubService = mock(IClubService.class);
+        Club club = new Club();
+        club.setId(73L);
+        when(clubService.selectClubById(73L)).thenReturn(club);
+        ReflectionTestUtils.setField(controller, "clubService", clubService);
+
+        Club body = new Club();
+        body.setId(73L);
+        CmsTopic row = (CmsTopic) ((List<?>) controller.topics(body).get("data")).get(0);
+        assertEquals(null, row.getPublishedRouteGraphJson(), "已发布路线图带各站答案,不能出公开列表");
+        assertEquals(null, row.getRouteGraphJson());
+        assertEquals(null, row.getGameModuleConfigJson());
+        assertEquals(null, row.getJourneyRulesJson());
+        assertEquals(null, row.getJourneyStoryJson());
+        assertEquals(null, row.getCompleteRuleJson());
+        assertTrue(row.getGameModuleEnabled(), "开关先按原配置算好再清掉配置");
+        assertEquals("人民广场 · 喷泉报时", row.getName());
+    }
 }
