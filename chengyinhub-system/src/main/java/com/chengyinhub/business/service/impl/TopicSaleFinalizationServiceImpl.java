@@ -513,7 +513,7 @@ public class TopicSaleFinalizationServiceImpl implements ITopicSaleFinalizationS
             missing.add("「" + name + "」");
         }
         if (!missing.isEmpty()) {
-            throw new IllegalStateException(String.join("、", missing) + "的商家还没有生效的合作单，不能开售：请先发出合作邀约并等商家接受");
+            throw new IllegalStateException(String.join("、", missing) + "的商家还没有生效的合作单，不能开售");
         }
     }
 
