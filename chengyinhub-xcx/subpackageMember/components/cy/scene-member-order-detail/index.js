@@ -977,7 +977,7 @@ Component({
             info.isExploreOrder = isExploreOrder;
             info.organizerLabel = isTopicOrder ? '主理人' : '主办方';
             info.organizerDisplayName = info.organizerName || (isTopicOrder ? '主题主理人' : '活动主办方');
-            info.typeLabel = isTopicOrder ? '城市路线' : (isExploreOrder ? '探店日' : '城市定向场次');
+            info.typeLabel = isTopicOrder ? '城市路线' : (isExploreOrder ? '自由探索' : '城市定向场次');
             info.primaryActionText = isTopicOrder ? '进入路线' : (isExploreOrder ? '进入游玩' : '继续探索');
             info.secondaryActionText = isTopicOrder ? '路线详情' : '回场次详情';
             // 探店日票面:场次时间槽与集合点来自票种快照(omsTicket),拿不到就不显示、不编

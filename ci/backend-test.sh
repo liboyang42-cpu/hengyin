@@ -89,6 +89,9 @@ MYBATIS_ITS=(
   # 2026-09-15 F15 联系号码接口:归属/负责/同意/日限与审计在真库上的边界(越权拒、撤回同意拒、
   # 俱乐部带团拒、昨日不占今日额度、第 51 次拒且不写审计)。不点名 = 没人看着这条链。
   MerchantCrmContactRevealMySqlIT
+  # 2026-11-04 ROUND10 f4 3a:自由探索买家进商家名册 —— 主题方与审核通过的参与商家可见、待审/外店零行;
+  #   参与商家不经通用名册拿号码(单店另有授权)。
+  MerchantCrmFreeExploreRosterMySqlIT
   # 2026-09-15 R9-41 假绿修复后登记:待审/驳回/下线的 *在线* 投放(status=1)只有
   # RoamMapper.xml 的 cityNodeContentApproved 能挡,删闸即红。不点名 = CI 永远跑不到这条边界。
   CityNodePendingVisibilityMySqlIT

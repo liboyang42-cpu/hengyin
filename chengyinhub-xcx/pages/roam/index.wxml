@@ -1023,7 +1023,7 @@
       </view>
       <view class="dr-opt" wx:if="{{discoverReward.exploreDay}}" bindtap="onDiscoverExploreDay" hover-class="cy-pressed" hover-stay-time="80">
         <view class="dr-oi"><cy-icon name="route" size="40" /></view>
-        <view class="dr-ot">{{discoverReward.exploreDay.title || '看看探店日'}}</view>
+        <view class="dr-ot">{{discoverReward.exploreDay.title || '看看自由探索'}}</view>
         <view class="dr-od">{{discoverReward.exploreDay.distanceM}}m · 自由探索</view>
       </view>
     </view>

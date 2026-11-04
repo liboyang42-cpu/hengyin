@@ -11,6 +11,7 @@ public class MerchantCrmCustomerRowVO {
     private String avatar;
     private String phone;
     private Boolean merchantResponsibleForContact;
+    private Boolean freeExploreShopContact;
     private String contactHint;
     private Integer arrivedCount;
     private Integer pendingCount;
@@ -39,6 +40,10 @@ public class MerchantCrmCustomerRowVO {
     @JsonIgnore
     public Boolean getMerchantResponsibleForContact() { return merchantResponsibleForContact; }
     public void setMerchantResponsibleForContact(Boolean value) { merchantResponsibleForContact = value; }
+    /** 本商家只是该客户自由探索票的参与商家:联系方式走单店授权,不在通用名册下发。 */
+    @JsonIgnore
+    public Boolean getFreeExploreShopContact() { return freeExploreShopContact; }
+    public void setFreeExploreShopContact(Boolean value) { freeExploreShopContact = value; }
     public String getContactHint() { return contactHint; }
     public void setContactHint(String value) { contactHint = value; }
     public Integer getArrivedCount() { return arrivedCount; }

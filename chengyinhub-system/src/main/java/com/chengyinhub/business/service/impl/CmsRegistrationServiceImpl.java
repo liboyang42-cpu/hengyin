@@ -1616,7 +1616,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     private void assertShopDayPointsUnsupported(CmsTopic sellerTopic, Integer isUsePoint) {
         if (Integer.valueOf(1).equals(isUsePoint) && sellerTopic != null
                 && Integer.valueOf(ProductType.FREE_EXPLORE).equals(sellerTopic.getProductType())) {
-            throw new RuntimeException("探店日不支持积分抵扣，请关闭积分后按全价购买");
+            throw new RuntimeException("自由探索不支持积分抵扣，请关闭积分后按全价购买");
         }
     }
 
@@ -3759,7 +3759,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         if (perkLedgerService.isExploreCompleted(registration.getId(), topicId)) {
             com.chengyinhub.business.domain.Redemption redemption = redemptionMapper.selectById(redemptionId);
             if (redemption == null || redemption.getCreateTime() == null) {
-                throw new IllegalStateException("探店日通关来源时间缺失");
+                throw new IllegalStateException("自由探索通关来源时间缺失");
             }
             TopicCompletionAwardVO award = topicCompletionAwardService.grantOnce(registration.getMemberId(), topicId,
                     registration.getOwnerId(), redemption.getCreateTime());

@@ -217,8 +217,8 @@ test('CU-C-67:客户名单读失败与「一单没卖」是两个态', () => {
   page.openPlayerSheet();
   const req = findRequest('/api/project/players');
   assert.ok(req, '打开客户抽屉还是要读本主题名单');
-  req.success({ code: 500, msg: '无权查看该探店日门店名单' });
-  assert.equal(page.data.playerSheet.errorText, '无权查看该探店日门店名单');
+  req.success({ code: 500, msg: '无权查看该自由探索门店名单' });
+  assert.equal(page.data.playerSheet.errorText, '无权查看该自由探索门店名单');
   assert.equal(page.data.playerSheet.emptyText, '', '失败不得占用零单那句空态文案');
   assert.deepEqual(page.data.playerSheet.summary, {}, '失败时不许摆一排 0(那读起来是没人买票)');
   const hostWxml = stripWxmlComments(read('pages/topic/components/project-host/index.wxml'));

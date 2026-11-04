@@ -229,7 +229,7 @@ public class RegistrationQueryApplication {
         // 空壳会让 ①② 的订单详情也渲染出一块「图鉴 0/0」的假读面。
         if (registration.getPurchaseKind() == null
                 || registration.getPurchaseKind() != PurchaseKind.EXPLORE_PASS) {
-            return AjaxResult.error("该订单没有探店日完局面");
+            return AjaxResult.error("该订单没有自由探索完局面");
         }
         CmsActivity activity = registration.getOwnerId() == null ? null
                 : activityService.selectCmsActivityById(registration.getOwnerId());

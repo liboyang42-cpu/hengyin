@@ -8,7 +8,7 @@ const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8')
 
 function assertOrderDetailContract(js, wxml) {
   // 探店日订单必须有自己的字面与集合信息,不得再被标成「经典定向场次」
-  assert.match(js, /'探店日'/)
+  assert.match(js, /'自由探索'/)
   assert.match(js, /'进入游玩'/)
   assert.match(js, /info\.sessionTimeText/)
   assert.match(js, /info\.meetingPointText/)

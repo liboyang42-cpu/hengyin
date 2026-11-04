@@ -25,6 +25,7 @@
         <result property="avatar" column="avatar"/>
         <result property="phone" column="phone" typeHandler="com.chengyinhub.business.security.PiiCryptoTypeHandler"/>
         <result property="merchantResponsibleForContact" column="merchant_responsible_contact"/>
+        <result property="freeExploreShopContact" column="free_explore_shop_contact"/>
         <result property="arrivedCount" column="arrived_count"/>
         <result property="pendingCount" column="pending_count"/>
         <result property="refundedCount" column="refunded_count"/>
@@ -104,14 +105,15 @@
         <result property="createTime" column="create_time"/>
     </resultMap>
 
-    <!-- 与现有客户名册同源：商家自办/中标主题 + 商家自办活动；探店日不并入通用 CRM。 -->
+    <!-- 与现有客户名册同源：商家自办/中标主题 + 商家自办活动。
+         自由探索(product_type = 2,旧名探店日)同样并入(2026-11-04 业主拍板):主题方与审核通过的
+         参与商家看到该主题全部已付款买家,与其它主题同一规则;不在主题上的商家看不到。 -->
     <sql id="OwnedRegistrationScope">
         r.payment_status in (2, 4)
         and (
           (r.owner_type = 1 and exists (
             select 1 from cms_topic t
             where t.id = r.owner_id and t.del_flag = 0
-              and (t.product_type is null or t.product_type &lt;&gt; 2)
               and (t.member_id = #{ownerMemberId} or exists (
                 select 1 from cms_registration_merchant rm
                 where rm.topic_id = t.id and rm.member_id = #{ownerMemberId}
@@ -121,10 +123,22 @@
           or
           (r.owner_type = 2 and exists (
             select 1 from cms_activity a
-            left join cms_topic activity_topic on activity_topic.id = a.topic_id
-            where a.id = r.owner_id and a.member_id = #{ownerMemberId}
-              and a.del_flag = 0
-              and (activity_topic.id is null or activity_topic.product_type is null or activity_topic.product_type &lt;&gt; 2)
+            where a.id = r.owner_id and a.del_flag = 0
+              and (a.member_id = #{ownerMemberId} or exists (
+                select 1 from cms_topic ft
+                where ft.id = a.topic_id and ft.del_flag = 0 and ft.product_type = 2
+                  and (ft.member_id = #{ownerMemberId}
+                    or exists (
+                      select 1 from cms_registration_merchant frm
+                      where frm.topic_id = ft.id and frm.member_id = #{ownerMemberId}
+                        and frm.audit_status = 1 and frm.del_flag = 0
+                    )
+                    or exists (
+                      select 1 from merchant_chapter_application fca
+                      where fca.topic_id = ft.id and fca.merchant_id = #{ownerMemberId}
+                        and fca.status = 1 and fca.del_flag = 0
+                    ))
+              ))
           ))
         )
     </sql>
@@ -170,15 +184,21 @@
       客户仍属于经营名册，但联系方式只来自商家自己负责联系的报名：
       自办活动直接成立；主题存在 club_id 挂靠或已接受俱乐部邀约时均由俱乐部负责。
     -->
+    <!--
+      自由探索的参与商家(非主题方)不算联系负责方:玩家的联系方式对单店另有授权
+      (merchant_onsite_data_sharing,主题页名单按单店同意下发),这里不拿通用报名同意替它放开。
+    -->
     <sql id="MerchantResponsibleRegistration">
         (
-          r.owner_type = 2
+          (r.owner_type = 2 and not <include refid="FreeExploreShopRegistration"/>)
           or (
             r.owner_type = 1
             and exists (
               select 1 from cms_topic contact_topic
               where contact_topic.id = r.owner_id and contact_topic.del_flag = 0
                 and coalesce(contact_topic.club_id, 0) = 0
+                and (coalesce(contact_topic.product_type, 0) &lt;&gt; 2
+                     or contact_topic.member_id = #{ownerMemberId})
                 and not exists (
                   select 1 from coop_invite contact_club_invite
                   where contact_club_invite.topic_id = contact_topic.id
@@ -188,6 +208,29 @@
                 )
             )
           )
+        )
+    </sql>
+
+    <!--
+      本商家只是这张自由探索票的参与商家(不是主题方,也不是活动壳的主办):联系方式走单店授权,
+      不在通用名册里下发。自由探索的票挂在活动壳上(owner_type = 2),存量也有直接挂主题的(owner_type = 1)。
+    -->
+    <sql id="FreeExploreShopRegistration">
+        (
+          (r.owner_type = 1 and exists (
+            select 1 from cms_topic shop_topic
+            where shop_topic.id = r.owner_id and shop_topic.del_flag = 0
+              and shop_topic.product_type = 2
+              and shop_topic.member_id &lt;&gt; #{ownerMemberId}
+          ))
+          or (r.owner_type = 2 and exists (
+            select 1 from cms_activity shop_shell
+            join cms_topic shop_shell_topic on shop_shell_topic.id = shop_shell.topic_id
+            where shop_shell.id = r.owner_id
+              and shop_shell_topic.product_type = 2
+              and shop_shell.member_id &lt;&gt; #{ownerMemberId}
+              and shop_shell_topic.member_id &lt;&gt; #{ownerMemberId}
+          ))
         )
     </sql>
 
@@ -233,6 +276,8 @@
         <include refid="OwnedResponsiblePhoneExpression"/> as phone,
         max(case when <include refid="MerchantResponsibleRegistration"/> then 1 else 0 end)
           as merchant_responsible_contact,
+        max(case when <include refid="FreeExploreShopRegistration"/> then 1 else 0 end)
+          as free_explore_shop_contact,
         sum(case when r.payment_status = 2 and r.verification_status = 1 then 1 else 0 end) as arrived_count,
         sum(case when r.payment_status = 2 and (r.verification_status is null or r.verification_status &lt;&gt; 1) then 1 else 0 end) as pending_count,
         sum(case when r.payment_status = 4 then 1 else 0 end) as refunded_count,
@@ -245,20 +290,10 @@
         max(<include refid="OwnedCustomerRoleCodeExpression"/>) as role_code
     </sql>
 
-    <!--
-      自由探索不进通用名册(OwnedRegistrationScope 排除 product_type=2)。只有一个例外:
-      主题工作台按主题定向广播时,商家自己发布的自由探索主题的买票玩家可以收到 ——
-      hostFreeExploreTopicId 只由广播服务在核实「这是本商家发布的自由探索主题」之后设置。
-    -->
     <sql id="OwnedCustomerAggregateFrom">
         from cms_registration r
         join ums_member u on u.id = r.member_id and u.del_flag = 0
-        where (
-          <include refid="OwnedRegistrationScope"/>
-          <if test="query.hostFreeExploreTopicId != null">
-            or (r.owner_type = 1 and r.owner_id = #{query.hostFreeExploreTopicId} and r.payment_status in (2, 4))
-          </if>
-        )
+        where <include refid="OwnedRegistrationScope"/>
         <include refid="OwnedCustomerFilters"/>
         group by r.member_id
     </sql>
@@ -320,7 +355,9 @@
                coalesce(nullif(max(u.nickname), ''), '未留姓名') as customer_name,
                <include refid="OwnedResponsiblePhoneExpression"/> as phone,
                max(case when <include refid="MerchantResponsibleRegistration"/> then 1 else 0 end)
-                 as merchant_responsible_contact
+                 as merchant_responsible_contact,
+               max(case when <include refid="FreeExploreShopRegistration"/> then 1 else 0 end)
+                 as free_explore_shop_contact
         from cms_registration r
         join ums_member u on u.id = r.member_id and u.del_flag = 0
         where <include refid="OwnedRegistration"/>
@@ -467,11 +504,6 @@
     <select id="countOwnedRegistrationCustomers" resultType="long">
         select count(distinct r.member_id) from cms_registration r
         where <include refid="OwnedRegistrationScope"/>
-    </select>
-
-    <select id="countFreeExploreTopicPublishedBy" resultType="int">
-        select count(1) from cms_topic t
-        where t.id = #{topicId} and t.del_flag = 0 and t.product_type = 2 and t.member_id = #{ownerMemberId}
     </select>
 
     <select id="countActiveCustomerProfiles" resultType="long">
