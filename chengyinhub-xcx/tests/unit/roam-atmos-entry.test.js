@@ -64,7 +64,7 @@ test('开播才记已看过;播完淡出;超时没开播就撤掉、下次还能
     assert.equal(t.c.data.phase, 'play');
     assert.equal(t.store.cy_roam_atmos_seen_v1, 1);
     t.c.onEnded();
-    assert.equal(t.c.data.phase, 'fade');
+    assert.equal(t.c.data.phase, 'dim', '第九轮 m2 补充第 5 项:片尾先压暗,不直接把近白的云淡到深色地图上');
     t.def.lifetimes.detached.call(t.c);
   } finally { t.restore(); }
 
@@ -83,7 +83,7 @@ test('点一下跳过 = 记已看过;加载失败直接撤', () => {
   try {
     t.def.lifetimes.attached.call(t.c);
     t.c.onPlay(); t.c.skip();
-    assert.equal(t.c.data.phase, 'fade');
+    assert.equal(t.c.data.phase, 'dim');
     t.def.lifetimes.detached.call(t.c);
   } finally { t.restore(); }
   const u = make({ src: URL }, {});
@@ -133,4 +133,22 @@ test('地点卡:评分来自 /api/city/nodes/{id};读失败显示「—」;导�
   const wxml = fs.readFileSync(path.join(ROOT, 'subpackageRoam/components/roam-place-card/index.wxml'), 'utf8');
   assert.match(wxml, /\{\{rating \|\| '—'\}\}/);
   assert.match(wxml, /open-type="share" data-share-type="place"/);
+});
+
+test('第九轮 m2 补充第 5 项:压暗 → 淡出 → 撤,顺序与时长固定', async () => {
+  const t = make({ src: URL }, {});
+  try {
+    t.def.lifetimes.attached.call(t.c);
+    t.c.onPlay(); t.c.onEnded();
+    assert.equal(t.c.data.phase, 'dim');
+    t.c.skip();
+    assert.equal(t.c.data.phase, 'dim', '压暗中再点不打断');
+    await new Promise((r) => setTimeout(r, t.mod.DIM_MS + 30));
+    assert.equal(t.c.data.phase, 'fade');
+    await new Promise((r) => setTimeout(r, t.mod.FADE_MS + 30));
+    assert.equal(t.c.data.phase, 'off');
+    assert.deepEqual(t.events[t.events.length - 1], ['done', { reason: 'played' }]);
+  } finally { t.restore(); }
+  const wxss = fs.readFileSync(path.join(__dirname, '../../subpackageRoam/components/roam-atmos-entry/index.wxss'), 'utf8');
+  assert.match(wxss, /\.atm__dim \{[^}]*transition: opacity \.36s/);
 });

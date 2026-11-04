@@ -9,6 +9,7 @@ const SEEN_KEY = 'cy_roam_atmos_seen_v1'
 const START_TIMEOUT_MS = 1500
 const MAX_PLAY_MS = 6000
 const FADE_MS = 600
+const DIM_MS = 360
 const SLOW_NETWORKS = ['2g', '3g', 'none', 'unknown']
 
 function trusted(src) {
@@ -37,7 +38,7 @@ Component({
   },
   methods: {
     _clear() {
-      ;['_startTimer', '_maxTimer', '_fadeTimer'].forEach((k) => { if (this[k]) { clearTimeout(this[k]); this[k] = null } })
+      ;['_startTimer', '_maxTimer', '_fadeTimer', '_dimTimer'].forEach((k) => { if (this[k]) { clearTimeout(this[k]); this[k] = null } })
     },
     _start() {
       const src = this.data.src
@@ -64,20 +65,25 @@ Component({
     onEnded() { this._finish(true) },
     onError() { this._finish(false) },
     skip() {
-      if (this.data.phase === 'off' || this.data.phase === 'fade') return
+      if (this.data.phase === 'off' || this.data.phase === 'fade' || this.data.phase === 'dim') return
       markSeen()
       this._finish(true)
     },
     // played=true:播过(或用户跳过)⇒ 淡出;false:没播成 ⇒ 直接撤,不留黑屏
     _finish(played) {
-      if (this._dead || this.data.phase === 'off' || this.data.phase === 'fade') return
+      if (this._dead || this.data.phase === 'off' || this.data.phase === 'fade' || this.data.phase === 'dim') return
       this._clear()
       if (!played || this.data.phase === 'load') { this.setData({ phase: 'off' }); this._done(played ? 'skip' : 'fail'); return }
-      this.setData({ phase: 'fade' })
-      this._fadeTimer = setTimeout(() => { if (!this._dead) { this.setData({ phase: 'off' }); this._done('played') } }, FADE_MS)
+      // 先压暗成黑(片尾近白),再整层淡出
+      this.setData({ phase: 'dim' })
+      this._dimTimer = setTimeout(() => {
+        if (this._dead) return
+        this.setData({ phase: 'fade' })
+        this._fadeTimer = setTimeout(() => { if (!this._dead) { this.setData({ phase: 'off' }); this._done('played') } }, FADE_MS)
+      }, DIM_MS)
     },
     _done(reason) { this.triggerEvent('done', { reason }) },
   },
 })
 
-module.exports = { SEEN_KEY, resetSeen, START_TIMEOUT_MS }
+module.exports = { SEEN_KEY, resetSeen, START_TIMEOUT_MS, DIM_MS, FADE_MS }
