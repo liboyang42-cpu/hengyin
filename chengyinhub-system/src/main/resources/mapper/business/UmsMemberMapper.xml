@@ -343,19 +343,19 @@
 
     <select id="selectHomeDataList" parameterType="com.chengyinhub.business.domain.vo.HomeDataVO" resultMap="HomeDataVOResult">
         SELECT
-            #用户总数
+            <!-- 用户总数 -->
             (SELECT COUNT(*) FROM ums_member where del_flag=0) AS userNum,
-            #商家总数
+            <!-- 商家总数 -->
             (SELECT COUNT(*) FROM mms_merchant WHERE del_flag=0) AS merchantNum,
-            #商家待审核数
+            <!-- 商家待审核数 -->
             (SELECT COUNT(*) FROM mms_merchant WHERE del_flag=0 AND `status`=0) AS merchantAuditNum,
-            #待审核帖文数
+            <!-- 待审核帖文数 -->
             (SELECT COUNT(*) FROM ums_creative_square WHERE del_flag=0 AND check_status=0) AS creativeSquareNum,
-            #主题数量
+            <!-- 主题数量 -->
             (SELECT COUNT(*) FROM cms_topic WHERE del_flag=0 and check_status=0) AS topicNum,
-            #活动数量
+            <!-- 活动数量 -->
             (SELECT COUNT(*) FROM cms_activity WHERE del_flag=0 and check_status=0) AS activityNum,
-            #用户模板数量
+            <!-- 用户模板数量 -->
             (SELECT COUNT(*) FROM cms_member_template WHERE del_flag=0 and check_status=0) AS memberTemplateNum
             <!-- totalSalesAmount 已移除:它是平台全量已支付营收(SUM(total_amount) WHERE payment_status=2),
                  但首页从来没渲染过它 —— index.vue 只读 merchantAuditNum / creativeSquareNum /

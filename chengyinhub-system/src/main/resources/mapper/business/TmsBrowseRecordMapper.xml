@@ -110,7 +110,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         SELECT
         browse_type,
         target_id,
-        COUNT(*) AS browse_count  -- 总浏览次数
+        COUNT(*) AS browse_count
         FROM
         tms_browse_record
         <where>
