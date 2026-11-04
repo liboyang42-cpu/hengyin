@@ -59,6 +59,8 @@ EXPLICIT_AUXILIARY_SQL = {
     "chengyinhub-admin/src/test/resources/it-schema/official-broadcast-delivery-it-schema.sql": "TEST_FIXTURE",
     "docs/delivery/architecture-day/A/schema-candidate.sql": "AUXILIARY_NOT_EXECUTED",
     "docs/delivery/architecture-day/A/schema-preflight.sql": "AUXILIARY_NOT_EXECUTED",
+    # 第十一轮 h2 的只读证据(存量文字预检 SELECT),不进发布台账、不在任何库上执行。
+    "docs/delivery/walk-fix-20261102/integ/proof/round11-h2/stored-text-precheck.sql": "AUXILIARY_NOT_EXECUTED",
     # Historical source-only station proposal; canonical executable DDL is the
     # separately managed migration_20261025_coop_order_station_fulfillment.sql.
     "docs/delivery/architecture-day/G/supply-order-fulfillment-contract/PROPOSED_TABLE.sql":
