@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5695,
+  "controlCount": 5696,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -149193,6 +149193,15 @@
           "route": "pages/coop/nearby/index",
           "segments": [
             {
+              "selector": "cy-empty.retry-lg",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/nearby/index",
+          "segments": [
+            {
               "selector": "cy-empty",
               "index": 0
             }
@@ -149231,6 +149240,15 @@
             {
               "selector": "cy-empty",
               "index": 4
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/nearby/index",
+          "segments": [
+            {
+              "selector": "cy-empty",
+              "index": 5
             }
           ]
         },
@@ -975753,7 +975771,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/nearby/index.js:509"
+        "staticSource": "pages/coop/nearby/index.js:517"
       }
     },
     {
@@ -975824,7 +975842,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/nearby/index.js:408"
+        "staticSource": "pages/coop/nearby/index.js:416"
       }
     },
     {
@@ -975904,7 +975922,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/nearby/index.js:394"
+        "staticSource": "pages/coop/nearby/index.js:402"
       }
     },
     {
@@ -976031,11 +976049,138 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/nearby/index.js:509"
+        "staticSource": "pages/coop/nearby/index.js:517"
       }
     },
     {
-      "id": "pages/coop/nearby/index.wxml:46:bind:cta:openLocationSettings:6",
+      "id": "pages/coop/nearby/index.wxml:46:bind:cta:loginToView:6",
+      "route": "pages/coop/nearby/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/coop/nearby/index.wxml",
+        "js": "pages/coop/nearby/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {
+        "denied": "getLocation"
+      },
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-empty",
+        "event": "bind:cta",
+        "handler": "loginToView",
+        "line": 46,
+        "selectorHint": ".retry-lg",
+        "visibleCondition": "{{pageState === 'guest'}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "external",
+      "interactionMode": "event-contract",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [
+        "getLocation"
+      ],
+      "successCapabilities": [
+        "getLocation"
+      ],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/merchant/chapter-application/invitable",
+          "/api/merchant/nearby",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/merchant/chapter-application/invitable",
+          "/api/merchant/nearby"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/chapter-application/invitable",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/nearby",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "denied"
+      ],
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/coop/nearby/index.js:523"
+      }
+    },
+    {
+      "id": "pages/coop/nearby/index.wxml:47:bind:cta:openLocationSettings:7",
       "route": "pages/coop/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -976062,7 +976207,7 @@
         "tag": "cy-empty",
         "event": "bind:cta",
         "handler": "openLocationSettings",
-        "line": 46,
+        "line": 47,
         "selectorHint": ".retry-lg",
         "visibleCondition": "{{pageState === 'permission'}}",
         "disabledCondition": null,
@@ -976163,11 +976308,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/nearby/index.js:515"
+        "staticSource": "pages/coop/nearby/index.js:525"
       }
     },
     {
-      "id": "pages/coop/nearby/index.wxml:48:bind:cta:goBack:7",
+      "id": "pages/coop/nearby/index.wxml:49:bind:cta:goBack:8",
       "route": "pages/coop/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -976190,7 +976335,7 @@
         "tag": "cy-empty",
         "event": "bind:cta",
         "handler": "goBack",
-        "line": 48,
+        "line": 49,
         "selectorHint": "cy-empty[bind:cta]",
         "visibleCondition": "{{pageState === 'missing-param'}}",
         "disabledCondition": null,
@@ -976233,11 +976378,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/nearby/index.js:513"
+        "staticSource": "pages/coop/nearby/index.js:521"
       }
     },
     {
-      "id": "pages/coop/nearby/index.wxml:55:bind:settled:onPrivacyGateSettled:12",
+      "id": "pages/coop/nearby/index.wxml:56:bind:settled:onPrivacyGateSettled:13",
       "route": "pages/coop/nearby/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -976260,7 +976405,7 @@
         "tag": "cy-privacy-gate",
         "event": "bind:settled",
         "handler": "onPrivacyGateSettled",
-        "line": 55,
+        "line": 56,
         "selectorHint": "cy-privacy-gate[bind:settled]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -976300,7 +976445,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/nearby/index.js:155"
+        "staticSource": "pages/coop/nearby/index.js:156"
       }
     },
     {
@@ -976367,7 +976512,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/nearby/index.js:462"
+        "staticSource": "pages/coop/nearby/index.js:470"
       }
     },
     {
@@ -976503,7 +976648,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/nearby/index.js:450"
+        "staticSource": "pages/coop/nearby/index.js:458"
       }
     },
     {
