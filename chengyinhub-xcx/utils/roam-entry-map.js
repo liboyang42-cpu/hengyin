@@ -14,11 +14,11 @@ function coverOf(row, getImgUrl) {
   const raw = row && (row.picUrl || row.coverUrl || row.imgUrl);
   return raw && getImgUrl ? getImgUrl(raw) : (raw || '');
 }
+// j4 F6:场次行只认本场次的队伍(队伍要本场票);主题行才按主题汇总各场次的队伍。
 function teamsFor(row, teams) {
+  if (row && row.kind === 'activity') return (teams || []).filter((team) => String(team.activityId) === String(row.id));
   const topicId = row && (row.topicId || (row.kind === 'topic' ? row.id : null));
-  return (teams || []).filter((team) =>
-    (topicId && String(team.topicId) === String(topicId)) ||
-    (row && row.kind === 'activity' && String(team.activityId) === String(row.id)));
+  return (teams || []).filter((team) => topicId && String(team.topicId) === String(topicId));
 }
 
 function buildTeamMarkers(teams) {

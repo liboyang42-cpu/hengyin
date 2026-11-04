@@ -230,6 +230,8 @@ test('C 漫游开局:游客走 app.requireLogin({ reason: roam }),不再静默 f
   const body = src.slice(src.indexOf('  goStart() {'), src.indexOf('if (this._roamCompleted) this._resetRoamRecoverySession();'));
   assert.match(body, /loginApp\.requireLogin\(\{ reason: 'roam' \}\)/);
   assert.match(body, /if \(ok === false\) return;/);
+  // 第十一轮 g2,j4 F13:登录成功后入口的「附近活动」按新身份重读,不再停在「登录后查看附近活动与队伍」
+  assert.match(body, /getUserID\(\)\) \{ this\._loadEntryMap\(this\.data\.center\); this\.goStart\(\); return; \}/);
 });
 
 test('C 写入口在游客下的真实运行:俱乐部「加入」先弹窗,登录成功后恢复并只发一次 /api/club/join', async () => {

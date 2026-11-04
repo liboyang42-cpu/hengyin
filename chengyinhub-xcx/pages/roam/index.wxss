@@ -966,3 +966,7 @@ cy-proto-cam{ position:fixed; left:0; right:0; top:0; bottom:0; z-index:58; poin
 .rsh-ch-btn { width: 152rpx !important; min-width: 0; margin: 0; padding: 0; line-height: normal; background: transparent; border-radius: 0; } /* 原生 button 默认宽度会把第一格撑宽 */
 .rsh-ch-btn::after { border: 0; }
 .rsh-ci { width: 128rpx; height: 128rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, .14); } /* ds-ok P-8 渠道圆钮 64px */
+
+/* 第十一轮 g2,j4 F5:没有真实定位时「附近活动」右侧一行「开启定位」;点区 88rpx */
+.entry-peek__head { display: flex; align-items: center; justify-content: space-between; }
+.entry-peek__locate { min-height: 88rpx; margin: -26rpx 0; display: flex; align-items: center; color: var(--cy-color-play-accent); font-size: var(--cy-type-label); font-weight: 600; } /* ds-ok 点区 88rpx,负边距让行高不撑开定稿的 entry-peek 高度 */

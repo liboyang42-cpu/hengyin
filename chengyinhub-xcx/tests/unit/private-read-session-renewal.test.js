@@ -40,6 +40,7 @@ function mount(kind, loginOK = true) {
   const page = Object.assign({}, def, def.methods, { data: JSON.parse(JSON.stringify(def.data)),
     setData(v, cb) { Object.assign(this.data, v); if (cb) cb(); }, triggerEvent() {}, syncViewStateAndTheme() {} });
   page.data.activityId = 42;
+  if (kind === 'roam') page.data.entryLocated = true; // 第十一轮 g2 j4 F5:附近读取只对已定位玩家发出
   const load = () => kind === 'settings' ? page.getUserData() : kind === 'deregister' ? page.loadStatus()
     : kind === 'cancelled' ? page.load(42) : kind === 'nearbyMy' ? page.loadMyTeams(false)
       : kind === 'roam' ? page._loadEntryMap(page.data.center) : page.onLoad();

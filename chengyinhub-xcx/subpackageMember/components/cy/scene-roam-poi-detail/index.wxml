@@ -63,7 +63,7 @@
   </view>
   <view wx:if="{{node}}" class="poi-section">
     <text class="poi-section__title">玩家评价</text>
-    <text class="poi-status">{{node.ratingCount ? (node.averageRating + ' 分 · ' + node.ratingCount + ' 条评价') : '暂无评分，等你来体验'}}</text>
+    <text wx:if="{{node.ratingCount || !reviewsError}}" class="poi-status">{{node.ratingCount ? (node.averageRating + ' 分 · ' + node.ratingCount + ' 条评价') : '暂无评分，等你来体验'}}</text>
     <cy-error wx:if="{{reviewsError}}" title="评价暂时无法读取" retry="重试" bind:retry="loadReviews" />
     <view class="poi-review" wx:for="{{reviews}}" wx:key="id">
       <text class="poi-review__name">{{item.memberNickname || '玩家'}} · 已完成挑战</text>
@@ -79,7 +79,6 @@
       <textarea class="poi-review-input" value="{{reviewText}}" maxlength="500" placeholder="写下真实游玩感受" bindinput="onReviewInput" aria-label="游玩评价" />
       <cy-btn loading="{{reviewSubmitting}}" disabled="{{reviewSubmitting}}" bind:tap="submitReview">提交评价</cy-btn>
     </view>
-    <text wx:else class="poi-status">完成据点挑战后可以评分和评论。</text>
   </view>
   <view wx:if="{{node}}" class="poi-footer">
     <cy-btn class="poi-footer__button" variant="secondary" bind:tap="openLocation" disabled="{{!hasLocation}}">导航</cy-btn>

@@ -318,7 +318,7 @@ Page({
     cityGuideOpen: false,
     // BL-01 漫游点位筛选(范围 + 只看未到过),值在 utils/roam-poi-filter.js。
     poiFilter: { radiusM: 3000, unvisitedOnly: false }, poiFilterTabs: roamPoiFilter.radiusTabs(),
-    screen: 'entry-map', entryMarkers: [], entryCards: [], entryFarCards: [], entryActivity: null, entryTeam: null, entrySheet: '', entrySheetView: 'main', entrySheetIn: false, entryLayers: { activities: true, teams: true, posts: true }, entryLoadError: false, entryReadAccess: '', entryLoading: false,
+    screen: 'entry-map', entryMarkers: [], entryCards: [], entryFarCards: [], entryActivity: null, entryTeam: null, entrySheet: '', entrySheetView: 'main', entrySheetIn: false, entryLayers: { activities: true, teams: true, posts: true }, entryLoadError: false, entryReadAccess: '', entryLoading: false, entryLocated: false,
     introError: '',
     // 个性化地图透传给本页三个 <free-map>(起始预览 / 主漫游图 / 结算图),三处必须同源,
     // 否则同一次漫游里会出现一亮一暗。值在 utils/map-style.js。
@@ -336,9 +336,9 @@ Page({
     introCardIdx: 0,
     fogOff: false, noFogPolys: [], // P-32:迷雾开关(本机偏好);关时 map-polygons 换成空数组
     introCards: [
-      { key: 'start', icon: 'route', title: '开始漫游', sub: '走到哪，雾散到哪' },
+      { key: 'start', icon: 'route', title: '开始漫游', sub: '' },
       { key: 'map', nav: '/subpackageRoam/nearby/index', icon: 'map', title: '打开地图', sub: '寻找组队' },
-      { key: 'my-teams', nav: '/subpackageRoam/nearby/index?sheet=mine', icon: 'tab-club', title: '我的队伍', sub: '已加入 · 申请中' },
+      { key: 'my-teams', nav: '/subpackageRoam/nearby/index?sheet=mine', icon: 'tab-club', title: '我的队伍', sub: '' },
     ], introStartLive: '', introTeamsLive: '附近正在组队', // 卡片实时行只放页面已有真数据;空串=隐藏,不摆占位
     boundEvent: null, // 官方活动绑定横幅(带 eventId 进入时显示)
     // V2 活动叠层只在玩家显式从活动进入或重新打开时显示；关闭后不影响日常漫游。
@@ -966,7 +966,7 @@ Page({
     });
     // BL-23:入口地图首屏不再固定落在默认城市坐标 —— 有上次成功定位就从那里开始
     const lastPoint = lastLocation.load();
-    if (lastPoint) this.setData({ center: { lat: lastPoint.latitude, lng: lastPoint.longitude } });
+    if (lastPoint) this.setData({ center: { lat: lastPoint.latitude, lng: lastPoint.longitude }, entryLocated: true }); // j4 F5:没有真实定位时入口不按默认坐标算「距你」
     this._entryItems = []; this._entryTeams = []; this._loadEntryMap(this.data.center);
     this._loadIntroPassport();
     this._reveals = [];
@@ -2925,7 +2925,7 @@ Page({
         : Promise.resolve(loginApp.firstLogin ? loginApp.firstLogin() : null);
       Promise.resolve(asked).then((ok) => {
         this._roamStartPending = false;
-        if (typeof loginApp.getUserID === 'function' && loginApp.getUserID()) { this.goStart(); return; }
+        if (typeof loginApp.getUserID === 'function' && loginApp.getUserID()) { this._loadEntryMap(this.data.center); this.goStart(); return; } // j4 F13:登录后入口的「附近活动」一并按新身份重读
         if (ok === false) return; // 用户选「暂不登录」:不报错,留在游客浏览态
         this.setData({ introError: '登录失败，请重试', locErr: false });
       });
@@ -2970,7 +2970,7 @@ Page({
           if (stale()) { abandon(); return; }
           this._roamStartPending = false;
           lastLocation.save(r);
-          this.setData({ introError: '', locErr: false });
+          this.setData({ introError: '', locErr: false, entryLocated: true });
           this._openRoamMap({ lat: r.latitude, lng: r.longitude }, true);
         },
         fail: () => {
@@ -6068,7 +6068,7 @@ Page({
     const seq = (this._entrySeq = (this._entrySeq || 0) + 1);
     if (this._entryReadOwner !== owner) this._clearEntryRead();
     this._entryReadOwner = owner;
-    if (!readSession.memberId(getApp())) { this.setData({ entryReadAccess: 'login', entryLoadError: false, entryLoading: false }); return; }
+    if (!readSession.memberId(getApp())) { this.setData({ entryReadAccess: 'login', entryLoadError: false, entryLoading: false }); return; } if (!this.data.entryLocated) { this._loadEntryAnyCity(seq, owner); return; }
     this._entryErrors = { activities: false, teams: false };
     this.setData({ entryLoadError: false, entryReadAccess: '', entryLoading: !(this.data.entryCards.length || this.data.entryFarCards.length) }); // R-01:还没有卡片时先出卡片形状的占位,读完(有卡 / 兜底读完 / 失败)才可能出「附近暂无活动」
     const settle = (layer, failed) => {
@@ -6279,6 +6279,32 @@ Page({
           cover: img(String(t.imgArr || t.imgUrl || '').split(/[,;]/)[0].trim()), tag: Number(t.productType) === 2 ? '自由探索' : '城市定向', meta: String(t.city || t.addressName || '') })) });
       });
     });
+  },
+
+  /* 第十一轮 g2,j4 F5:没有真实定位时不拿默认城市坐标去读「附近」—— 那会给任何城市的人算出离人民广场的「距你」、
+     把那里的队伍打在入口地图上。改读不分城市的公开主题(卡上不写距离),「附近活动」头上只留一行「开启定位」。 */
+  _loadEntryAnyCity(seq, owner) {
+    const app = getApp(), img = typeof app.getImgUrl === 'function' ? app.getImgUrl.bind(app) : (url) => url;
+    this._entryItems = []; this._entryTeams = []; this._entryErrors = { activities: false, teams: false };
+    this.setData({ entryLoadError: false, entryReadAccess: '', entryMarkers: [], entryCards: [], introTeamsLive: '', entryLoading: !this.data.entryFarCards.length });
+    req('/api/topic/list', 'POST', { pageNum: 1, pageSize: 8, sort_type: 1 }, { auth: false }).then((r2) => {
+      if (this._unloaded || seq !== this._entrySeq || owner !== this._entryIdentity()) return;
+      if (!(apiOk(r2) && r2.data && isRecordList(r2.data.rows))) { this.setData({ entryLoading: false, entryLoadError: true }); return; }
+      this.setData({ entryLoading: false, entryFarCards: r2.data.rows.map((t) => ({ key: 'far-topic-' + t.id, id: t.id, kind: 'far-topic', title: String(t.name || '未命名主题'),
+        cover: img(String(t.imgArr || t.imgUrl || '').split(/[,;]/)[0].trim()), tag: Number(t.productType) === 2 ? '自由探索' : '城市定向', meta: String(t.city || t.addressName || '') })) });
+    });
+  },
+  enableEntryLocation() {
+    if (this._entryLocating) return;
+    this._entryLocating = true;
+    wx.getLocation({ type: 'gcj02',
+      success: (r) => {
+        if (this._unloaded || !lastLocation.save(r)) return;
+        this.setData({ center: { lat: r.latitude, lng: r.longitude }, entryLocated: true, entryFarCards: [] });
+        this._loadEntryMap(this.data.center);
+      },
+      fail: () => { if (!this._unloaded) wx.openSetting({ fail() {} }); },
+      complete: () => { this._entryLocating = false; } });
   },
 
   /* 第九轮 m1 第 9 项:地点卡与商家横滑卡上的地址,点一下用微信地图打开(全站同一个 utils/open-address.js) */

@@ -115,8 +115,8 @@
           <view class="intro-card__tear"></view>
           <view class="intro-card__body">
             <view class="intro-card__row"><text class="intro-card__title">{{introCards[0].title}}</text></view>
-            <text class="intro-card__sub">{{introCards[0].sub}}</text>
-            <text class="intro-card__livetx">{{introStartLive || '城瘾 · CITY ROAM'}}</text>
+            <text class="intro-card__sub" wx:if="{{introCards[0].sub}}">{{introCards[0].sub}}</text>
+            <text class="intro-card__livetx" wx:if="{{introStartLive}}">{{introStartLive}}</text>
           </view>
         </view>
       </swiper-item>
@@ -129,8 +129,8 @@
           <view class="intro-card__tear"></view>
           <view class="intro-card__body">
             <view class="intro-card__row"><text class="intro-card__title">{{introCards[1].title}}</text></view>
-            <text class="intro-card__sub">{{introCards[1].sub}}</text>
-            <text class="intro-card__livetx">{{introTeamsLive || '城瘾 · CITY ROAM'}}</text>
+            <text class="intro-card__sub" wx:if="{{introCards[1].sub}}">{{introCards[1].sub}}</text>
+            <text class="intro-card__livetx" wx:if="{{introTeamsLive}}">{{introTeamsLive}}</text>
           </view>
         </view>
       </swiper-item>
@@ -143,8 +143,7 @@
           <view class="intro-card__tear"></view>
           <view class="intro-card__body">
             <view class="intro-card__row"><text class="intro-card__title">{{introCards[2].title}}</text></view>
-            <text class="intro-card__sub">{{introCards[2].sub}}</text>
-            <text class="intro-card__livetx">城瘾 · CITY ROAM</text>
+            <text class="intro-card__sub" wx:if="{{introCards[2].sub}}">{{introCards[2].sub}}</text>
           </view>
         </view>
       </swiper-item>
@@ -153,7 +152,7 @@
     <view class="intro-map-space"></view>
   <!-- 2026-10-27 owner P-26(取代 10-22「整块不出」):「附近活动」始终显示,附近没有活动时出一张空态卡 -->
   <view class="entry-peek">
-    <view class="entry-peek__head"><text>附近活动</text></view>
+    <view class="entry-peek__head"><text>附近活动</text><view wx:if="{{!entryLocated && !entryReadAccess}}" class="entry-peek__locate" bindtap="enableEntryLocation" aria-role="button" aria-label="开启定位" hover-class="cy-pressed" hover-stay-time="80">开启定位</view></view>
     <!-- 2026-10-17 合并 master:附近内容读权限态(未登录 / 无权)先于错误与列表 -->
     <cy-state-shell wx:if="{{entryReadAccess}}" kind="no-permission"
                     title="{{entryReadAccess === 'login' ? '登录后查看附近活动与队伍' : '当前账号无法查看'}}"
