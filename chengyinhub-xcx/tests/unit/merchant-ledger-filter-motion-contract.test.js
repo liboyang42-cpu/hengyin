@@ -321,7 +321,10 @@ test('退款行映射成台账条目:标题/状态带退款前缀,仍路由售�
   assert.equal(row.recordKey, 'aftercare:9')
   assert.equal(row.title, '退款 · 张三')
   assert.equal(row.stateText, '退款 · 待回应')
-  assert.equal(row.amountDisplay, '¥12.00')
+  // 第十轮 f3 j1 F21:退款是流出,红字带负号
+  assert.equal(row.amountDisplay, '−¥12.00')
+  assert.equal(page.refundRow({ refundId: 10, statusText: '退款处理中', amountCents: 500 }, true).stateText, '退款处理中',
+    '状态自带「退款」时不叠前缀')
   assert.equal(row.dayKey, '2026-09-18')
   assert.equal(row.sortKey, '2026-09-18 10:00')
 

@@ -154,7 +154,7 @@ public class MerchantOperatorServiceImpl implements IMerchantOperatorService {
         requireCurrentInviter(invite, merchant);
         Date now = new Date();
         if (invite.getExpiresAt() == null || !invite.getExpiresAt().after(now)) throw conflict("邀请已过期");
-        if (principalMemberId.equals(merchant.getMemberId())) throw conflict("商家 Owner 无需接受员工邀请");
+        if (principalMemberId.equals(merchant.getMemberId())) throw conflict("你是店主，无需接受员工邀请");
         UmsMember member = lockActiveMember(principalMemberId);
         requireNoActiveClubIdentity(principalMemberId);
         if (mmsMerchantMapper.countMmsMerchantRowsByMemberIdForUpdate(principalMemberId) > 0) {

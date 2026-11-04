@@ -482,10 +482,12 @@ Page({
       timeText: row.timeText,
       dayKey: row.dateKey,
       sortKey: row.createTimeText,
-      stateText: '退款 · ' + (row.statusText || '状态待确认'),
+      // j1 F21(第十轮 f3):状态本身以「退款」开头时不再叠前缀(原「退款 · 退款处理中」)
+      stateText: /^退款/.test(row.statusText || '') ? row.statusText : '退款 · ' + (row.statusText || '状态待确认'),
       stateVariant: row.statusTone || 'neutral',
       amountText: amount,
-      amountDisplay: canReadFinance === false ? null : (amount == null ? '待定' : yuan(amount)),
+      // j1 F21:退款是流出,红字同时带负号(−¥),与核销行的 +¥ 对称
+      amountDisplay: canReadFinance === false ? null : (amount == null ? '待定' : yuan(Number(amount) > 0 ? '-' + amount : amount)),
       amountTone: amount == null ? 'mute' : 'neg',
     });
   },
