@@ -1429,6 +1429,17 @@ public class ApiClubController extends BaseController {
             t.setJourneyRulesJson(null);
             t.setJourneyStoryJson(null);
             t.setCompleteRuleJson(null);
+            // 第十轮 f2 walk:定价中分两段 —— 还没确认终价 / 已确认、开售审核在等平台。最新一条开售审核待审(或升级)
+            // 才算后者;驳回后回到「确认终价」。只查 lifecycle 2 的主题。
+            if (Integer.valueOf(2).equals(t.getLifecycle()) && auditTaskService != null) {
+                com.chengyinhub.business.domain.AuditTask saleQuery = new com.chengyinhub.business.domain.AuditTask();
+                saleQuery.setBizType(com.chengyinhub.business.domain.AuditTask.BIZ_TOPIC_SALE_REVIEW);
+                saleQuery.setBizId(t.getId());
+                List<com.chengyinhub.business.domain.AuditTask> sale = auditTaskService.selectAuditTaskList(saleQuery);
+                Integer latest = sale == null || sale.isEmpty() || sale.get(0) == null ? null : sale.get(0).getStatus();
+                t.setSaleReviewPending(com.chengyinhub.business.domain.AuditTask.STATUS_PENDING.equals(latest)
+                        || com.chengyinhub.business.domain.AuditTask.STATUS_ESCALATED.equals(latest));
+            }
             CmsRegistration rq = new CmsRegistration();
             rq.setOwnerType(1L);
             rq.setOwnerId(t.getId());

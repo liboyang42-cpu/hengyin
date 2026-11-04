@@ -67,6 +67,18 @@ test('定价中 → 确认终价,主按钮打开定价页', () => {
   assert.deepEqual(page.navigations, ['/pages/topic/pricing/index?topicId=11'])
 })
 
+// 第十轮 f2 walk:确认终价成功后主题仍是 lifecycle 2,「现在要做」原来照旧叫人「确认终价」。
+test('终价已提交、开售审核在等平台 → 开售审核中,主按钮不再打开定价页', () => {
+  const page = loadPage()
+  owner(page, [{ id: 11, name: '喷泉报时', productType: 1, lifecycle: 2, saleReviewPending: true }])
+  assert.deepEqual([page.data.ownerStage, page.data.ownerPrimaryLabel, page.data.ownerStageHint], ['saleReview', '开售审核中', '喷泉报时'])
+  page.onOwnerPrimary()
+  assert.deepEqual(page.navigations, [])
+  owner(page, [{ id: 11, name: '喷泉报时', productType: 1, lifecycle: 2, saleReviewPending: true },
+    { id: 12, name: '大世界', productType: 1, lifecycle: 2, saleReviewPending: false }])
+  assert.deepEqual([page.data.ownerStage, page.data.ownerStageHint], ['price', '大世界'], '还没确认终价的主题优先')
+})
+
 test('已开售 → 开一场只出现一次(主按钮),不再并排两个开一场', () => {
   const page = loadPage()
   owner(page, [{ id: 11, productType: 1, lifecycle: 3 }])

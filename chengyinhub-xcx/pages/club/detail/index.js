@@ -67,6 +67,8 @@ const OWNER_STAGE_COPY = {
   // 第十轮 f2 第 1 项(j2 F-05 / F-14):开了商家承接的主题先招商、再定价、开售后才开一场;提示行写主题名。
   recruit: { label: '去招商', hint: '' },
   price: { label: '确认终价', hint: '' },
+  // 第十轮 f2 walk:终价已提交、开售审核在等平台 —— 不再叫主理人再去确认终价。
+  saleReview: { label: '开售审核中', hint: '' },
   loading: { label: '读取管理进度…', hint: '正在确认项目与邀请状态' },
   error: { label: '重试管理进度', hint: '暂时无法确认当前阶段' },
   // 管理员没有经营阶段:邀商家/发布主题/开一场都是主理人的事。
@@ -1482,7 +1484,9 @@ Page({
       };
       const topics = this._topics || [];
       const recruitingTopic = topics.find(function (item) { return lifecycleOf(item) === 1; });
-      const pricingTopic = topics.find(function (item) { return lifecycleOf(item) === 2; });
+      // 还没确认终价的优先;都在等开售审核时再说「开售审核中」。
+      const pricingTopic = topics.find(function (item) { return lifecycleOf(item) === 2 && item.saleReviewPending !== true; })
+        || topics.find(function (item) { return lifecycleOf(item) === 2; });
       const projectReviewing = topics.some(function (item) { return lifecycleOf(item) === 7; });
       const sellable = topics.some(function (item) {
         const lc = lifecycleOf(item);
@@ -1501,7 +1505,7 @@ Page({
       // 执行俱乐部(接了别人的项目)不走这条。
       if (!acceptedExecution && ['run', 'invite', 'review', 'pending', 'accepted'].indexOf(stage) >= 0) {
         if (recruitingTopic) { stage = 'recruit'; this._stageTopic = recruitingTopic; }
-        else if (pricingTopic) { stage = 'price'; this._stageTopic = pricingTopic; }
+        else if (pricingTopic) { stage = pricingTopic.saleReviewPending === true ? 'saleReview' : 'price'; this._stageTopic = pricingTopic; }
         else if (stage === 'run' && !sellable && projectReviewing) stage = 'review';
       }
       receivedPending = (this.data.messages || []).filter(function (item) {
@@ -1512,7 +1516,7 @@ Page({
     let copy = stage === 'accepted' && this._hasAcceptedExecutionProject
       ? OWNER_STAGE_COPY.executionAccepted : OWNER_STAGE_COPY[stage];
     if (stage === 'coopInvite') copy = { label: copy.label, hint: '有 ' + receivedPending + ' 条合作邀约待确认' };
-    if ((stage === 'recruit' || stage === 'price') && this._stageTopic) copy = { label: copy.label, hint: this._stageTopic.name || '' };
+    if ((stage === 'recruit' || stage === 'price' || stage === 'saleReview') && this._stageTopic) copy = { label: copy.label, hint: this._stageTopic.name || '' };
     const timeline = this._hasAcceptedExecutionProject
       ? { nodes: [], summary: '' } : this.buildLeadTimeline(stage);
     this.setData({
@@ -1575,7 +1579,7 @@ Page({
       wx.navigateTo({ url: url, complete: () => { this._navigating = false; } });
       return;
     }
-    if (stage === 'review') { this.setData({ activeTab: 'manage', openCommentPost: null }); return; }
+    if (stage === 'review' || stage === 'saleReview') { this.setData({ activeTab: 'manage', openCommentPost: null }); return; }
     if (stage === 'coopInvite') {
       this.setData({ activeTab: 'manage', openCommentPost: null, openManageSection: 'received' }, function () {
         wx.pageScrollTo({ selector: '#manage-received-section', duration: 250, offsetTop: 24 });

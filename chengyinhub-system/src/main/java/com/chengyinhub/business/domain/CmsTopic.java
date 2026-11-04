@@ -94,6 +94,12 @@ public class CmsTopic extends BaseEntity
     public Boolean getOnlinePaymentAvailable() { return onlinePaymentAvailable; }
     public void setOnlinePaymentAvailable(Boolean onlinePaymentAvailable) { this.onlinePaymentAvailable = onlinePaymentAvailable; }
 
+    /** 第十轮 f2 walk:定价中(lifecycle 2)且终价已提交、开售审核在等平台(俱乐部「现在要做」用);不落库。 */
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private transient Boolean saleReviewPending;
+    public Boolean getSaleReviewPending() { return saleReviewPending; }
+    public void setSaleReviewPending(Boolean saleReviewPending) { this.saleReviewPending = saleReviewPending; }
+
     /** C-17:开一场时只读展示的票价(最低价,元)与集合点,取自主题票;不落库。 */
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private transient BigDecimal sessionPrice;
