@@ -29,7 +29,7 @@
       <cy-merchant-card variant="venue" interactive="{{!!item.memberId}}"
         bind:tap="openMerchant" aria-label="查看{{item.name}}商家档案" data-memberid="{{item.memberId}}"
         name="{{item.name}}" cover="{{item.coverUrl || item.coverImage || item.photo || ''}}" logo="{{item.logo || ''}}"
-        address="{{item.address || ''}}" available-time="{{item.businessTime || item.availableTime || ''}}"
+        address="{{item.address || ''}}" latitude="{{item.latitude}}" longitude="{{item.longitude}}" nav="{{true}}" available-time="{{item.businessTime || item.availableTime || ''}}"
         capacity="{{item.capacity}}" charge-type="{{item.chargeType}}" coop-open="{{item.coopOpen}}"
         suit-types="{{item.suitActivityTypes || item.chapterText || ''}}" />
       <view class="contact-action" wx:if="{{!item.memberId && item.canCall}}">

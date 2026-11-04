@@ -326,8 +326,43 @@ public class ApiCouponController extends BaseController {
 
         List<ViewCouponHistory> sysCategoryList = viewCouponHistoryService.selectViewCouponHistoryList(viewCouponHistory);
         projectManuallyInvalidated(sysCategoryList);
+        projectShopPlace(sysCategoryList);
 
         return success(sysCategoryList);
+    }
+
+    @Autowired
+    private com.chengyinhub.business.service.IMmsMerchantService mmsMerchantService;
+
+    /**
+     * 第九轮 m1-9:钱包里每张券带上发券门店的店名 / 地址 / 坐标,前端给「地址一点开地图」和「导航」。
+     * 只投影公开可见的门店(审核通过、账号启用、未删除,同 /api/merchant/public-home);
+     * 每个券、每个门店一次请求内只查一次。查不到就留空,券照常显示。
+     */
+    void projectShopPlace(List<ViewCouponHistory> rows) {
+        if (rows == null || rows.isEmpty() || mmsMerchantService == null) return;
+        java.util.Map<Long, com.chengyinhub.business.domain.MmsMerchant> shopByCoupon = new java.util.HashMap<>();
+        for (ViewCouponHistory row : rows) {
+            if (row == null || row.getCouponId() == null) continue;
+            com.chengyinhub.business.domain.MmsMerchant shop;
+            if (shopByCoupon.containsKey(row.getCouponId())) {
+                shop = shopByCoupon.get(row.getCouponId());
+            } else {
+                SmsCoupon coupon = smsCouponService.selectSmsCouponById(row.getCouponId());
+                shop = null;
+                if (coupon != null && coupon.getMerchantId() != null) shop = mmsMerchantService.selectMmsMerchantById(coupon.getMerchantId());
+                else if (coupon != null && coupon.getMemberId() != null) shop = mmsMerchantService.selectMmsMerchantByMemberId(coupon.getMemberId());
+                if (shop != null && !(shop.getStatus() != null && shop.getStatus() == 1L
+                        && shop.getAccountStatus() != null && shop.getAccountStatus() == 1L
+                        && shop.getDelFlag() != null && shop.getDelFlag() == 0)) shop = null;
+                shopByCoupon.put(row.getCouponId(), shop);
+            }
+            if (shop == null) continue;
+            row.setShopName(shop.getName());
+            row.setShopAddress(shop.getAddress());
+            row.setShopLat(shop.getLocationLat());
+            row.setShopLng(shop.getLocationLng());
+        }
     }
 
     /**

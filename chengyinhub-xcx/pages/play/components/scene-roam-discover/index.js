@@ -48,7 +48,7 @@ Component({
       if (!Array.isArray(tags)) tags = []
       // 2026-08-20 重设计:cover/logo 分开喂(封面头图),cityRole 走金色副标题位不再折进标签
       const status = row.businessStatus === 0 ? 'closed' : row.businessStatus === 1 ? 'open' : 'none'
-      return { id: row.id, name: row.name || '名称待补充', logo: row.logo || '', cover: row.coverImage || '', cityRole: row.cityRole || '', slogan: row.slogan || row.description || '', status, serviceTag: row.serviceTag || '', serviceText: row.serviceText || '', address: row.address || '', availableTime: row.businessTime || row.availableTime || '', tags, categoryName: firstCategoryName(row) }
+      return { id: row.id, name: row.name || '名称待补充', logo: row.logo || '', cover: row.coverImage || '', cityRole: row.cityRole || '', slogan: row.slogan || row.description || '', status, serviceTag: row.serviceTag || '', serviceText: row.serviceText || '', address: row.address || '', lat: row.locationLat, lng: row.locationLng, availableTime: row.businessTime || row.availableTime || '', tags, categoryName: firstCategoryName(row) }
     },
     onKeyword(event) { this.setData({ keyword: event.detail.value }) },
     search() { this.load() },
