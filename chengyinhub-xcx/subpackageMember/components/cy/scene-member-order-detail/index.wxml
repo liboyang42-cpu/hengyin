@@ -19,7 +19,7 @@
     <image class="hero-img" lazy-load="true" src="{{heroImage}}" mode="aspectFill" />
     <view class="hero-mask"></view>
     <view class="hero-text">
-      <view class="hero-amt">{{money.amount(cnt.f(info.actualPaidAmount, odK))}}</view>
+      <view class="hero-amt">{{money.amount2(cnt.f(info.actualPaidAmount, odK))}}</view>
       <view class="hero-title ep1">{{productTitle}}</view>
       <view class="hero-when" wx:if="{{whenText}}">{{whenText}}</view>
       <view class="hero-pill hero-pill--{{statusTone}}" wx:if="{{info.statusText}}">{{info.statusText}}</view>
@@ -84,23 +84,23 @@
     <view class="ocard">
       <view class="orow">
         <text class="orow-k">票价</text>
-        <text class="orow-v">{{money.amount(ticketPriceShown)}} × {{orderQty}}</text>
+        <text class="orow-v">{{money.amount2(ticketPriceShown)}} × {{orderQty}}</text>
       </view>
       <view class="orow" wx:if="{{showPointPay}}">
         <text class="orow-k">积分抵扣{{info.pointUsed ? '（' + info.pointUsed + ' 积分）' : ''}}</text>
-        <text class="orow-v">-{{money.amount(info.pointPaymentAmount)}}</text>
+        <text class="orow-v">-{{money.amount2(info.pointPaymentAmount)}}</text>
       </view>
       <view class="orow" wx:if="{{showWechatPay}}">
         <text class="orow-k">微信实付</text>
-        <text class="orow-v">{{money.amount(info.wechatPaymentAmount)}}</text>
+        <text class="orow-v">{{money.amount2(info.wechatPaymentAmount)}}</text>
       </view>
       <view class="orow orow--total">
         <text class="orow-k">合计</text>
-        <text class="orow-v">{{money.amount(info.payableAmount)}}</text>
+        <text class="orow-v">{{money.amount2(info.payableAmount)}}</text>
       </view>
       <view class="orow" wx:if="{{info.refundAmountShown}}">
         <text class="orow-k">退款</text>
-        <text class="orow-v">{{money.amount(info.refundAmountShown)}}</text>
+        <text class="orow-v">{{money.amount2(info.refundAmountShown)}}</text>
       </view>
     </view>
 
@@ -170,11 +170,11 @@
       </view>
       <view class="orow" wx:if="{{showWechatPay}}">
         <text class="orow-k">微信实付</text>
-        <text class="orow-v">{{money.amount(info.wechatPaymentAmount)}}</text>
+        <text class="orow-v">{{money.amount2(info.wechatPaymentAmount)}}</text>
       </view>
       <view class="orow" wx:if="{{showPointPay}}">
         <text class="orow-k">积分实付</text>
-        <text class="orow-v">{{money.amount(info.pointPaymentAmount)}}</text>
+        <text class="orow-v">{{money.amount2(info.pointPaymentAmount)}}</text>
       </view>
       <!-- 与订单号行一致:动作不进信息卡,交易单号只是一行纯值 -->
       <view class="orow" wx:if="{{info.transactionId}}">
