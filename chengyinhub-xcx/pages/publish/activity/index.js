@@ -143,7 +143,7 @@ Page({
       tickets: [ // 票务信息 - 初始一个空票单
         {
           name: '',
-          price: 0,
+          price: '', // j1 F6(第十轮 f3):不预填 0,票价必须由发布者自己写(写 0 即免费)
           totalStock: 0,
           description: '',
           startTime: '',
@@ -328,7 +328,7 @@ Page({
     const { tickets } = this.data.formData
     const newTickets = [...tickets, {
       name: '',
-      price: 0,
+      price: '',
       totalStock: 0,
       description: '',
       startTime: '',
@@ -382,7 +382,7 @@ Page({
     });
     const canContinue = this.stepIsComplete(d.step, d);
     const dateText = nonEmpty(f.startDate, '开始日期') && nonEmpty(f.endDate, '结束日期')
-      ? `${f.startDate} 至 ${f.endDate}` : '时间待补充';
+      ? `${String(f.startDate).slice(0, 16)} 至 ${String(f.endDate).slice(0, 16)}` : '时间待补充'; // j1 F6:摘要不露秒
     const publishSummary = `${f.name || '未命名活动'}，${dateText}，地点：${f.addressName || '待选择'}，共 ${f.tickets.length} 种票单。`;
     if (errorsChanged || canContinue !== d.canContinue || publishSummary !== d.publishSummary) {
       this.setData({ errors, canContinue, publishSummary });

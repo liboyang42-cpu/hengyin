@@ -1,5 +1,5 @@
 <wxs src="../../../utils/time-format.wxs" module="tf" />
-<view class="fabu theme-topic-editor">
+<view class="fabu theme-topic-editor {{step === 2 ? 'fabu--review' : ''}}">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
@@ -40,8 +40,8 @@
 
       <view class="li" id="field-address">
         <view class="item-tit">活动地点<text>*</text></view>
-        <view class="item-cont {{errors.addressName ? 'is-error' : ''}} {{timeLocationLocked ? 'is-sold-locked' : ''}}" bindtap="choosePoiForNode" aria-role="button" aria-label="为该节点选点" hover-class="cy-pressed" hover-stay-time="80">
-          <input type="text" placeholder="请输入活动地点" placeholder-class="fld-ph" value="{{formData.addressName}}" disabled   data-field="addressName" />
+        <view class="item-cont {{errors.addressName ? 'is-error' : ''}} {{timeLocationLocked ? 'is-sold-locked' : ''}}" bindtap="choosePoiForNode" aria-role="button" aria-label="选择活动地点" hover-class="cy-pressed" hover-stay-time="80">
+          <input type="text" placeholder="选择活动地点" placeholder-class="fld-ph" value="{{formData.addressName}}" disabled   data-field="addressName" />
         </view>
         <cy-inline-error class="form-inline-error" kind="error" wx:if="{{errors.addressName}}" title="{{errors.addressName}}" />
         <view class="field-purpose">用于地图与到场导航，拒绝不影响填写</view>
@@ -135,7 +135,6 @@
       <cy-inline-error load-failure wx:if="{{ownerLoadError}}" title="发起人信息未加载" sub="{{ownerLoadError}}" action="重试" bind:action="getUserData" />
       <view class="li">
         <view class="item-tit">合作者<text>*</text></view>
-        <view class="item-tip">合作者可编辑内容，不参与结算</view>
         <view class="item-cont2 hezuo">
           <view class="dl" wx:for="{{formData.collaboratorList}}" wx:key="id">
             <view class="dd flex-cb" style="padding: 16rpx 26rpx;">
@@ -170,7 +169,7 @@
 
         <view class="ul flex-b">
           <view class="li">
-            <view class="item-tit">票面价格</view>
+            <view class="item-tit">票面价格<text>*</text></view>
             <view class="item-cont {{focusField === 'ticketPrice' + ticketIndex ? 'is-focused' : ''}} {{errors['ticketPrice' + ticketIndex] ? 'is-error' : ''}}">
               <input type="number" placeholder="请输入价格" placeholder-class="fld-ph" value="{{ticket.price}}" bindinput="onTicketChange" bindfocus="onFieldFocus" bindblur="onFieldBlur" data-focuskey="ticketPrice{{ticketIndex}}" data-field="price" data-index="{{ticketIndex}}" />
             </view>
@@ -263,7 +262,8 @@
            不碰 publish_status,也不重新送审)。 -->
       <view class="publish-review__title">{{editingActivityId ? '修改摘要' : '发布前摘要'}}</view>
       <view class="publish-review__text">{{publishSummary}}</view>
-      <view class="publish-review__visibility">{{editingActivityId ? '本次保存只更新上面这些内容，不会改变活动的公开范围。' : '默认公开：发布后会在活动列表展示，继续即按当前公开范围发布。'}}</view>
+      <!-- j1 F6 / 文案表(第十轮 f3):新建那一路的「默认公开…」提示删去,摘要框变矮;编辑态仍说明保存不改公开范围 -->
+      <view class="publish-review__visibility" wx:if="{{editingActivityId}}">本次保存只更新上面这些内容，不会改变活动的公开范围。</view>
     </view>
     <cy-inline-error wx:if="{{submitError}}" title="活动尚未发布" sub="{{submitError}}" action="重试" bind:action="submitForm" />
     <view class="wrap flex-cb">

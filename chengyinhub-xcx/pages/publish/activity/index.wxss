@@ -3,6 +3,10 @@
 .fabu {
   padding-bottom: 250rpx; /* ds-ok: 底部固定CTA栏预留高度,不是排版间距 */
 }
+/* j1 F6:第 3 步底栏多一张发布摘要,预留高度跟着加,否则「添加票单」压在摘要下 */
+.fabu.fabu--review {
+  padding-bottom: 460rpx; /* ds-ok: 摘要卡 + CTA 栏预留高度,不是排版间距 */
+}
 
 .publish-access-state { min-height: calc(100vh - 96rpx); display: flex; flex-direction: column; }
 .publish-access-state > cy-skeleton { margin: 0 var(--cy-page-x); }
