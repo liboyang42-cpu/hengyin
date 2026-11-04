@@ -249,11 +249,13 @@
       <block wx:if="{{activeTab === 'posts'}}">
         <view class="pc-feed">
           <cy-error class="pc-feed-state" load-failure wx:if="{{feedErr}}" title="{{feedAuthError ? '登录未成功' : '帖文加载失败'}}" sub="{{feedAuthError ? '请重新进入小程序' : ''}}" retry="重试" bind:retry="reloadFeed" />
-          <cy-empty class="pc-feed-state" wx:elif="{{nodata}}" title="还没有帖文" />
+          <cy-empty class="pc-feed-state" wx:elif="{{nodata && !clubPostList.length}}" title="还没有帖文" />
           <!-- 帖文第三轮(业主定稿 P-1,V-16):我的帖文和发现、俱乐部详情用同一张帖文卡,不再是自己那套 pc-post -->
           <cy-post-card wx:for="{{list}}" wx:key="id" post="{{item}}" index="{{index}}" light="{{isMerchantView}}"
             interactive-actions show-share accessibility-label="查看帖文"
             bind:detail="onPostCardDetail" bind:comment="onPostCardDetail" bind:like="onPostCardLike" />
+          <cy-post-card wx:if="{{!feedErr}}" wx:for="{{clubPostList}}" wx:key="id" post="{{item}}" index="{{index}}" light="{{isMerchantView}}"
+            accessibility-label="查看帖文" bind:detail="onClubPostCardDetail" bind:comment="onClubPostCardDetail" />
         </view>
       </block>
 

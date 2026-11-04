@@ -8,6 +8,7 @@
 // 2026-11-04 第九轮 m2 第 2 项(同场队伍路线):play/index.js 增行,既有 U4-DYNAMIC / U5 锚点仅行号位移(difflib 对父提交逐行映射,调用行逐字相同),理由与条数不变、不新增登记;keyDigest 按门禁 baselineKeyDigest 重算。
 // 2026-11-04 第九轮 m2 第 1 项(我走过的路:亮线加光晕):roam/index.js 与 play/index.js 增减行,既有 U4-DYNAMIC / U5 锚点仅行号位移(difflib 对父提交逐行映射,调用行逐字相同),理由与条数不变、不新增登记;keyDigest 按门禁 baselineKeyDigest 重算。
 // 2026-11-04 第九轮 m1 第 9 项(漫游地点卡与横滑卡地址点开地图):roam/index.js 增 1 行 lat/lng 透传与末尾 onAddrTap,既有 U4-DYNAMIC / U5 锚点仅行号位移(difflib 对父提交逐行映射,调用行逐字相同),理由与条数不变、不新增登记;keyDigest 按门禁 baselineKeyDigest 重算。
+// 2026-11-04 第十轮 f3 j5 H4:cy/profile data 初值加 clubPostList 一行,U1-VARIABLE 720→721、U4-DYNAMIC 1295→1296 / 2142→2143 仅行号位移(调用行逐字相同),理由与条数不变、不新增登记;u1Variable / u4Dynamic keyDigest 按门禁 baselineKeyDigest 重算。
 // 2026-11-04 第九轮 m1(rig 走查修正:封面走 getImgUrl、照片避让、贴边小照片、地标不给分享):roam/index.js 上方增行,既有 U4-DYNAMIC / U5 锚点仅行号位移(difflib 对父提交逐行映射,调用行逐字相同),理由与条数不变、不新增登记;keyDigest 按门禁 baselineKeyDigest 重算。
 // 2026-11-03 第九轮 m1(个性化地图接线 / 地图照片图钉 / 地点卡 / 密度 / 拖动 / 转场):roam、play、searchmap、fabu、topic、route-map、nearby 上方增行,既有 U1-VARIABLE / U4-DYNAMIC / U5 锚点仅行号位移(difflib 对第九轮前父提交逐行映射,调用行逐字相同),理由与条数不变、不新增登记;keyDigest 按门禁 baselineKeyDigest 重算。
 // 2026-11-03 第七轮 C(微信分享):app.js 上方增单页模式 require 与守卫 7 行(U1-VARIABLE 428→435)、play/index.js 增 play-menu-share require 1 行(U4-DYNAMIC 1795→1796、U5 8276→8277)、cy/profile 增 subjectmerchant 事件 2 行(U4-DYNAMIC 1293→1295、2140→2142),仅行号位移(同一调用行逐字核对),理由与条数不变、不新增登记;u1Variable / u4Dynamic / u5Silent keyDigest 按门禁 baselineKeyDigest 重算。
@@ -518,7 +519,7 @@ module.exports = {
       // 2026-10-11 登录隔离及正常失败状态兼容：App consent wrapper 329→343，同一调用及理由，数量仍11。
       // 2026-10-14 W5尾项:profile 544→559/870→885、参与详情 176→177 仅行号下移，同一调用及理由，数量仍11。
       // 2026-11-03 Round5 l7-launch:search2/result 合并搜索 503 退回列表请求(+11 行),193→199 仅行号位移,同一调用及理由,数量不变;digest 按门禁同一算法重算。
-      "u1Variable": "c60e62958f6c373325218948488a00bc7c0170d317f6cf237cc004279b7f75ca",
+      "u1Variable": "1c6ca27fddb57a09b8ef790629d59af8caee6ffa7a777e2c99bf1258e0c11f29",
       // 2026-08-25 816 并入:key 集合按上面的逐条核对结果变化,digest 显式更新。
       "u3Debt": // 2026-09-09 一枚圆钮:roam#onCenterHoldStart / onCenterHoldEnd 两笔零绑定债务已还
       //   —— 长按 3 秒结束的逻辑接到了主键的 touchstart/touchend 上。99→97,digest 显式更新。
@@ -1151,7 +1152,7 @@ module.exports = {
   // (本支) "chengyinhub-xcx/subpackageA/pages/myproject/index.js:394": "上下架 URL 只由 bizType 在 activity/update_publish_status 与 topic/update_user_status 两个字面量间选择，未知 bizType 仍落固定 topic 路由；owner=小程序，复核=2026-09-15",
   // (本支) "chengyinhub-xcx/subpackageMember/components/scene-member-participation-detail/index.js:154": "会员快捷核销只消费 verification-scan.js 的有限核销路由，非法扫码在 sendRequest 前显示 toast 并返回；owner=小程序，复核=2026-09-15"
     "chengyinhub-xcx/app.js:435": "consent adapter 的 options 只由 utils/compliance/consent-client.js 构造，该模块把唯一 endpoint 固定为 /api/compliance/consents；owner=小程序，复核=2026-09-15",
-    "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:720": "_submitVerification 的 options 仅来自本页1678扫码、1741选章、1772选站三处：verification-scan.js只产出groupcode/redeem、scan_dynamic_code、coupon/verification、scan_qr_code四个固定/api路由，另两处为scan_qr_code_chapter/station字面量；非法扫码先返回，Object.assign仅复制原options并替换反馈回调，不改url/data/method；seat分支保留原actor/login revision/页面代次与UNKNOWN只读原receipt，不存在外部URL直传；owner=小程序，复核=2026-10-24",
+    "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:721": "_submitVerification 的 options 仅来自本页1678扫码、1741选章、1772选站三处：verification-scan.js只产出groupcode/redeem、scan_dynamic_code、coupon/verification、scan_qr_code四个固定/api路由，另两处为scan_qr_code_chapter/station字面量；非法扫码先返回，Object.assign仅复制原options并替换反馈回调，不改url/data/method；seat分支保留原actor/login revision/页面代次与UNKNOWN只读原receipt，不存在外部URL直传；owner=小程序，复核=2026-10-24",
     "chengyinhub-xcx/subpackageMember/components/cy/scene-route-content/index.js:238": "config 只由本文件 sceneRequest(sceneId) 的有限映射生成，所有请求 URL 均为映射内 /api 字面量，未知 sceneId 返回 null、缺必需 id 也在请求前终止；owner=小程序，复核=2026-09-15",
     "chengyinhub-xcx/subpackageMember/components/cy/scene-route-content/index.js:551": "request 只取自本方法内 requests[sceneId] 的七个非提现固定写接口对象，未知 sceneId 显示提交错误并返回；提现分支在此前已转交 withdrawal-preflight，不会走到本调用；owner=小程序，复核=2026-09-15",
     "chengyinhub-xcx/pages/index/index.js:1077": "retry 只回放 _listReq 中由 getListData 首次字面量调用冻结的 topic/list 或 activity/list，外部输入不能写该缓存；owner=小程序，复核=2026-09-15",

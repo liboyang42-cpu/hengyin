@@ -487,6 +487,7 @@ Component({
     joinDate: '—',
 
     list: [],
+    clubPostList: [],
     page_no: 1,
     hasMore: false,
     nodata: false,
@@ -620,7 +621,7 @@ Component({
         exploreStat: { shops: 0, places: 0, weekExp: 0 }, themeProgress: [], medals: [], medalCount: 0,
         orderPreviewList: [], projectPreviewList: [], projectPendingCount: 0,
         orderErr: false, orderAuthError: false, projectErr: false, projectAuthError: false,
-        list: [], page_no: 1, hasMore: false, nodata: false, feedErr: false, feedAuthError: false,
+        list: [], clubPostList: [], page_no: 1, hasMore: false, nodata: false, feedErr: false, feedAuthError: false,
         pointsSheet: { show: false, loading: false, loaded: false, failed: false, tasks: [] },
         sceneStack: [], sceneCurrent: null, sceneConfirm: { show: false, action: null, pending: null } });
     },
@@ -772,7 +773,7 @@ Component({
       const tabs = profileTabs(this.data.isSelf, this.data.isMerchantView);
       if (!communityReadable()) {
         this._postsRequestGeneration = (this._postsRequestGeneration || 0) + 1;
-        this.setData({ memberTabs: tabs, list: [], hasMore: false, feedErr: false, feedAuthError: false,
+        this.setData({ memberTabs: tabs, list: [], clubPostList: [], hasMore: false, feedErr: false, feedAuthError: false,
           activeTab: this.data.activeTab === 'posts' ? 'about' : this.data.activeTab });
       } else {
         const activatePosts = this._pendingCommunityTab;
@@ -833,7 +834,7 @@ Component({
       primaryCta: isSelf ? '开始探索' : '关注',
       followSubmitting: false,
       followReceipt: false,
-      list: [],
+      list: [], clubPostList: [],
       page_no: 1,
       hasMore: false,
       nodata: false,
@@ -1030,7 +1031,7 @@ Component({
   refreshPublicProfile: function (silent) {
     var that = this;
     if (!silent) {
-      this.setData({ page_no: 1, list: [], hasMore: false, nodata: false, feedErr: false });
+      this.setData({ page_no: 1, list: [], clubPostList: [], hasMore: false, nodata: false, feedErr: false });
     }
     return this.loadUserData().then(function () {
       if (!silent && that.data.activeTab === 'posts') that.getCreativesquareList();
@@ -1170,7 +1171,7 @@ Component({
     const read = this._captureProfileRead(true);
     if (!read) return Promise.resolve();
     var that = this;
-    if (!silent) this.setData({ page_no: 1, list: [], hasMore: false, nodata: false, feedErr: false });
+    if (!silent) this.setData({ page_no: 1, list: [], clubPostList: [], hasMore: false, nodata: false, feedErr: false });
     this.resetProfileMetricState();
     // ⚠️ 按视角分流，不能无条件拉全部：下面这些接口要么用 app.getUserID()（当前登录用户）、
     // 要么只对「自己」有意义（订单/项目/积分/加入信息）。他人主页调它们既白跑一轮请求，
@@ -2157,8 +2158,36 @@ Component({
         hasMore: result.hasMore === true,
         nodata: newlist.length < 1
       });
+      if (that.data.isSelf) that.loadMyClubPosts(read, generation);
       return true;
     });
+  },
+
+  // 第十轮 f3 j5 H4:/me/posts 只有社区帖文,自己发在俱乐部里的帖文另取一路(俱乐部全站流按作者=本人),
+  // 排在社区帖文之后;两路都空才算「还没有帖文」。俱乐部帖文的可见性、删除与拉黑仍由后端判。
+  loadMyClubPosts: function (read, generation) {
+    var that = this;
+    return req('/api/club/post/feed', { scope: 'all', author: 'me', limit: 20 }).then(function (res) {
+      if (!that._currentProfileRead(read, res) || generation !== that._postsRequestGeneration) return;
+      var rows = res && res.code == 200 && isRecord(res.data) && isRecordList(res.data.rows) ? res.data.rows : [];
+      that.setData({ clubPostList: rows.map(function (p) {
+        return Object.assign({}, p, {
+          source: 'club',
+          memberId: p.authorMemberId,
+          memberNickname: p.nickname || (that.data.userInfo && that.data.userInfo.nickname),
+          memberAvatar: p.avatar || that.data._avatarSrc,
+          contents: p.content,
+          picList: String(p.images || '').split(/[;,]/).filter(Boolean).slice(0, 3),
+          formattedCreateTime: p.createTime ? that.formatTimeDifference(p.createTime) : ''
+        });
+      }) });
+    });
+  },
+  onClubPostCardDetail: function (e) {
+    var post = (this.data.clubPostList || [])[e.detail && e.detail.index];
+    if (!post || !post.clubId || this._navigating) return;
+    this._navigating = true;
+    wx.navigateTo({ url: '/pages/club/detail/index?id=' + post.clubId + '&postId=' + post.id, complete: () => { this._navigating = false; } });
   },
 
   // cy-error 的重试:各自只重拉自己那条链路,不整页刷新(别的区块的数据没坏,不该被连坐)

@@ -1991,7 +1991,10 @@ public class ApiClubController extends BaseController {
             if (body.get("beforeId") != null) {
                 try { beforeId = Long.parseLong(String.valueOf(body.get("beforeId")).trim()); } catch (Exception ignored) { }
             }
-            List<ClubPost> page = clubPostService.selectSiteFeed(memberId, beforeId, limit + 1);
+            // 第十轮 f3 j5 H4:author=me 只取本人帖文(我的主页 → 帖文)。只认 "me",不收任意作者 id。
+            List<ClubPost> page = "me".equals(String.valueOf(body.get("author")))
+                    ? clubPostService.selectSiteFeedByAuthor(memberId, beforeId, limit + 1, memberId)
+                    : clubPostService.selectSiteFeed(memberId, beforeId, limit + 1);
             boolean hasMore = page.size() > limit;
             List<ClubPost> rows = hasMore ? new ArrayList<>(page.subList(0, limit)) : page;
             decorateFeedRows(rows, memberId);

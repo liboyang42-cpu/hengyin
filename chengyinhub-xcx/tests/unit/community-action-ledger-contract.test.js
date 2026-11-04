@@ -20,7 +20,8 @@ test('bookmark and comment likes keep distinct POST and DELETE',()=>{
 test('actual feed handlers resolve only their genuine branches',()=>{
  for (const [file,handler,expected] of [
   ['pages/mylike/mylike.js','getPostFavoriteList',['/api/v1/community/me/bookmarks']],
-  ['subpackageMember/components/cy/profile/index.js','getCreativesquareList',['/api/v1/community/feeds/LATEST','/api/v1/community/me/posts']],
+  // 第十轮 f3 j5 H4:本人帖文首屏另取本人俱乐部帖文(loadMyClubPosts → /api/club/post/feed author=me),是真实分支。
+  ['subpackageMember/components/cy/profile/index.js','getCreativesquareList',['/api/club/post/feed','/api/v1/community/feeds/LATEST','/api/v1/community/me/posts']],
  ]) assert.deepEqual(g.targetsForHandler(path.resolve(__dirname,'../..',file),handler).primaryApis,expected);
 });
 test('publish retains guideline ordering, edit version and conditional publish',()=>{

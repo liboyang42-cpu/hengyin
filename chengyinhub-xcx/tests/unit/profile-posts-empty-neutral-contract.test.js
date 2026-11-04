@@ -17,7 +17,8 @@ test('RED 锚点:帖文 tab 空态不得再催本人发帖(没有入口的 CTA �
 
 // 第十轮 f3 第 4 项(j5 L9):owner「删说明小字」规则取代了 CR-309 时的副标题文案,空态只留标题。
 test('空态只有中性标题,没有催发帖的副标题', () => {
-  assert.match(WXML, /<cy-empty class="pc-feed-state" wx:elif="\{\{nodata\}\}" title="还没有帖文" \/>/)
+  // 第十轮 f3 j5 H4:本人的俱乐部帖文也算「有帖文」,空态条件随之变为两路都空。
+  assert.match(WXML, /<cy-empty class="pc-feed-state" wx:elif="\{\{nodata && !clubPostList\.length\}\}" title="还没有帖文" \/>/)
   assert.doesNotMatch(WXML, /你还没有发布过帖文|TA 还没有发布帖文/)
 })
 
