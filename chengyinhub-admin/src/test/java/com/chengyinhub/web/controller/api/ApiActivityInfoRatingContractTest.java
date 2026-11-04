@@ -94,6 +94,36 @@ class ApiActivityInfoRatingContractTest {
         assertEquals(Integer.valueOf(0), condition.getDelFlag(), "只统计未删除(del_flag=0)的评价");
     }
 
+    /** check-1104 j1 F14:商家自己发的活动,详情主办方给店铺名;俱乐部场次与非生效商家不给。 */
+    @Test
+    void merchantOwnActivityNamesTheShopAsOrganizer() {
+        Fixture f = fixture(Collections.<ViewComment>emptyList(), null);
+        f.activity.setMemberId(990005L);
+        com.chengyinhub.business.service.IMmsMerchantService shops = mock(com.chengyinhub.business.service.IMmsMerchantService.class);
+        com.chengyinhub.business.domain.MmsMerchant shop = new com.chengyinhub.business.domain.MmsMerchant();
+        shop.setId(8006L);
+        shop.setMemberId(990005L);
+        shop.setName("梧桐里书房");
+        shop.setLogo("media-asset:9");
+        shop.setStatus(1L);
+        shop.setAccountStatus(1L);
+        shop.setDelFlag(0);
+        when(shops.selectMmsMerchantByMemberId(990005L)).thenReturn(shop);
+        ReflectionTestUtils.setField(f.controller, "mmsMerchantService", shops);
+
+        ActivityInfoVO vo = info(f);
+        assertEquals("梧桐里书房", vo.getOrganizerShopName());
+        assertEquals("media-asset:9", vo.getOrganizerShopLogo());
+
+        CmsActivity clubSession = new CmsActivity();
+        clubSession.setMemberId(990005L);
+        clubSession.setClubId(7L);
+        assertEquals(null, com.chengyinhub.business.util.ActivityShopOrganizer.shopOf(shops, clubSession),
+                "俱乐部场次主办方是俱乐部,不写店铺");
+        shop.setStatus(0L);
+        assertEquals(null, info(f).getOrganizerShopName(), "入驻未通过的不算商家场次");
+    }
+
     private ActivityInfoVO info(Fixture f) {
         AjaxResult res = f.controller.activityInfo(String.valueOf(ACTIVITY_ID));
         assertNotNull(res, "详情应正常返回");
@@ -130,6 +160,7 @@ class ApiActivityInfoRatingContractTest {
         when(statisticsMapper.statisticsSalesAmoutByOwner(any())).thenReturn(Collections.emptyList());
 
         Fixture f = new Fixture();
+        f.activity = activity;
         f.umsCommentService = mock(IUmsCommentService.class);
         when(f.umsCommentService.selectAvgRatingByCondition(any())).thenReturn(avgRating);
 
@@ -162,6 +193,7 @@ class ApiActivityInfoRatingContractTest {
     /** 只留测试断言用得到的句柄。 */
     private static class Fixture {
         ApiActivityController controller;
+        CmsActivity activity;
         IUmsCommentService umsCommentService;
     }
 }

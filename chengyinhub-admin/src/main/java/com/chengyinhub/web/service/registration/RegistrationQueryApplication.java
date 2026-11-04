@@ -595,6 +595,13 @@ public class RegistrationQueryApplication {
                 return;
             }
         }
+        // check-1104 j1 F14:商家自己发的场次,主办方写店铺名,不写发起人昵称。
+        com.chengyinhub.business.domain.MmsMerchant shop =
+                com.chengyinhub.business.util.ActivityShopOrganizer.shopOf(mmsMerchantService, activity);
+        if (shop != null) {
+            registration.setOrganizerName(shop.getName().trim());
+            return;
+        }
         if (organizerId == null || organizerId <= 0) {
             return;
         }

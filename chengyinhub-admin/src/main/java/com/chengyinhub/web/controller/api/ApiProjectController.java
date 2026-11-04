@@ -452,7 +452,9 @@ public class ApiProjectController extends BaseController {
         m.put("id", a.getId());
         m.put("bizType", "activity");
         m.put("projectType", "club_activity");
-        m.put("projectTypeText", projectTypeText("club_activity"));
+        // check-1104 j1 F14:projectType 键沿用(「我的项目」活动 tab 与营销「管理活动」按它过滤),
+        // 但商家/个人自己发的活动不是俱乐部活动,标签只对挂俱乐部的场次写「俱乐部活动」。
+        m.put("projectTypeText", a.getClubId() != null ? projectTypeText("club_activity") : "活动");
         m.put("title", a.getName());
         m.put("cover", a.getImgUrl());
         int publishStatus = a.getPublishStatus() == null ? 0 : a.getPublishStatus().intValue();

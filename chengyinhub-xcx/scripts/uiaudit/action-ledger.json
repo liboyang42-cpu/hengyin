@@ -1180587,7 +1180587,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:1475"
+        "staticSource": "pages/publish/activity/index.js:1480"
       }
     },
     {
@@ -1180654,7 +1180654,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:1396"
+        "staticSource": "pages/publish/activity/index.js:1401"
       }
     },
     {
@@ -1180721,7 +1180721,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:1360"
+        "staticSource": "pages/publish/activity/index.js:1365"
       }
     },
     {
@@ -1180788,7 +1180788,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:1369"
+        "staticSource": "pages/publish/activity/index.js:1374"
       }
     },
     {
@@ -1180855,7 +1180855,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:1365"
+        "staticSource": "pages/publish/activity/index.js:1370"
       }
     },
     {
@@ -1180926,7 +1180926,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:907"
+        "staticSource": "pages/publish/activity/index.js:910"
       }
     },
     {
@@ -1182297,7 +1182297,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:1415"
+        "staticSource": "pages/publish/activity/index.js:1420"
       }
     },
     {
@@ -1182406,7 +1182406,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:1423"
+        "staticSource": "pages/publish/activity/index.js:1428"
       }
     },
     {
@@ -1182543,7 +1182543,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:1432"
+        "staticSource": "pages/publish/activity/index.js:1437"
       }
     },
     {
@@ -1182634,7 +1182634,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:1450"
+        "staticSource": "pages/publish/activity/index.js:1455"
       }
     },
     {
@@ -1183509,7 +1183509,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:1145"
+        "staticSource": "pages/publish/activity/index.js:1148"
       }
     },
     {
@@ -1183576,7 +1183576,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:1052"
+        "staticSource": "pages/publish/activity/index.js:1055"
       }
     },
     {
@@ -1183643,7 +1183643,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:1052"
+        "staticSource": "pages/publish/activity/index.js:1055"
       }
     },
     {
@@ -1183710,7 +1183710,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:1072"
+        "staticSource": "pages/publish/activity/index.js:1075"
       }
     },
     {
@@ -1183777,7 +1183777,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:1081"
+        "staticSource": "pages/publish/activity/index.js:1084"
       }
     },
     {
@@ -1183868,7 +1183868,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:1140"
+        "staticSource": "pages/publish/activity/index.js:1143"
       }
     },
     {
@@ -1184517,7 +1184517,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:1537"
+        "staticSource": "pages/publish/activity/index.js:1542"
       }
     },
     {
@@ -1184584,7 +1184584,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:976"
+        "staticSource": "pages/publish/activity/index.js:979"
       }
     },
     {
@@ -1184655,7 +1184655,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/activity/index.js:907"
+        "staticSource": "pages/publish/activity/index.js:910"
       }
     },
     {
@@ -1398769,11 +1398769,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:502"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:503"
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:117:bindchange:onTeamInviteOnlyChange:3",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:121:bindchange:onTeamInviteOnlyChange:3",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1398846,7 +1398846,7 @@
         "tag": "cy-switch",
         "event": "bindchange",
         "handler": "onTeamInviteOnlyChange",
-        "line": 117,
+        "line": 121,
         "selectorHint": "cy-switch[bindchange]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1398886,11 +1398886,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:522"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:523"
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:119:bindtap:startOrderTeam:4",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:123:bindtap:startOrderTeam:4",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1398963,7 +1398963,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "startOrderTeam",
-        "line": 119,
+        "line": 123,
         "selectorHint": ".link-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1399020,11 +1399020,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:512"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:513"
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:143:bind:change:onConsentChange:5",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:147:bind:change:onConsentChange:5",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1399097,7 +1399097,7 @@
         "tag": "cy-consent-check",
         "event": "bind:change",
         "handler": "onConsentChange",
-        "line": 143,
+        "line": 147,
         "selectorHint": "cy-consent-check[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1399158,11 +1399158,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:464"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:465"
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:147:bindtap:onConsentRetry:6",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:151:bindtap:onConsentRetry:6",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1399235,7 +1399235,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "onConsentRetry",
-        "line": 147,
+        "line": 151,
         "selectorHint": ".consent-err-act",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1399296,11 +1399296,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:475"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:476"
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:195:bindtap:goInvoiceApply:7",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:199:bindtap:goInvoiceApply:7",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1399373,7 +1399373,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goInvoiceApply",
-        "line": 195,
+        "line": 199,
         "selectorHint": ".orow",
         "visibleCondition": "{{invoiceRow.state === 'can'}}",
         "disabledCondition": null,
@@ -1399416,11 +1399416,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:411"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:412"
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:199:bindtap:goInvoiceDetail:8",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:203:bindtap:goInvoiceDetail:8",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1399493,7 +1399493,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goInvoiceDetail",
-        "line": 199,
+        "line": 203,
         "selectorHint": ".orow",
         "visibleCondition": "{{invoiceRow.state === 'ing' || invoiceRow.state === 'issued'}}",
         "disabledCondition": null,
@@ -1399536,11 +1399536,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:412"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:413"
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:277:bindtap:followClub:9",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:281:bindtap:followClub:9",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1399613,7 +1399613,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "followClub",
-        "line": 277,
+        "line": 281,
         "selectorHint": ".revisit-btn",
         "visibleCondition": "{{completion.revisit.canFollow}}",
         "disabledCondition": null,
@@ -1399697,11 +1399697,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:782"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:783"
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:279:bindtap:joinClub:10",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:283:bindtap:joinClub:10",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1399774,7 +1399774,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "joinClub",
-        "line": 279,
+        "line": 283,
         "selectorHint": ".revisit-btn",
         "visibleCondition": "{{completion.revisit.canJoin}}",
         "disabledCondition": null,
@@ -1399859,11 +1399859,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:809"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:810"
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:284:bindtap:goNextEdition:11",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:288:bindtap:goNextEdition:11",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1399936,7 +1399936,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goNextEdition",
-        "line": 284,
+        "line": 288,
         "selectorHint": ".revisit-next",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1399979,11 +1399979,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:839"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:840"
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:304:bindtap:cancelRegistration:12",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:308:bindtap:cancelRegistration:12",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1400058,7 +1400058,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "cancelRegistration",
-        "line": 304,
+        "line": 308,
         "selectorHint": ".sec-btn",
         "visibleCondition": "{{info.registrationStatus==1 || info.canRequestRefund}}",
         "disabledCondition": null,
@@ -1400189,11 +1400189,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:559"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:560"
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:308:bindtap:copyOrderNo:13",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:312:bindtap:copyOrderNo:13",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1400266,7 +1400266,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "copyOrderNo",
-        "line": 308,
+        "line": 312,
         "selectorHint": ".sec-pair-btn",
         "visibleCondition": "{{info.registrationNo}}",
         "disabledCondition": null,
@@ -1400316,11 +1400316,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:550"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:551"
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:315:bindtap:payOrder:14",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:319:bindtap:payOrder:14",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1400393,7 +1400393,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "payOrder",
-        "line": 315,
+        "line": 319,
         "selectorHint": ".primary-cta",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1400500,11 +1400500,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:684"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:685"
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:320:bind:cancel:onTeamSheetCancel:16",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:324:bind:cancel:onTeamSheetCancel:16",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1400577,7 +1400577,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:cancel",
         "handler": "onTeamSheetCancel",
-        "line": 320,
+        "line": 324,
         "selectorHint": "cy-option-sheet[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1400617,11 +1400617,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:539"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:540"
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:320:bind:select:onTeamSheetSelect:15",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:324:bind:select:onTeamSheetSelect:15",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1400694,7 +1400694,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onTeamSheetSelect",
-        "line": 320,
+        "line": 324,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1400754,7 +1400754,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:526"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:527"
       }
     },
     {
@@ -1400937,7 +1400937,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:417"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:418"
       }
     },
     {
@@ -1401064,7 +1401064,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:543"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:544"
       }
     },
     {
@@ -1403193,7 +1403193,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:562"
+        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:565"
       }
     },
     {
@@ -1403343,7 +1403343,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:651"
+        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:654"
       }
     },
     {
@@ -1403490,7 +1403490,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:490"
+        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:493"
       }
     },
     {
@@ -1403679,7 +1403679,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:465"
+        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:468"
       }
     },
     {
@@ -1403826,7 +1403826,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:495"
+        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:498"
       }
     },
     {
@@ -1404026,7 +1404026,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:500"
+        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:503"
       }
     },
     {
@@ -1404227,7 +1404227,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:500"
+        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:503"
       }
     },
     {
@@ -1404374,7 +1404374,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:566"
+        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:569"
       }
     },
     {
@@ -1404521,7 +1404521,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:596"
+        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:599"
       }
     },
     {
@@ -1404668,7 +1404668,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:600"
+        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:603"
       }
     },
     {
@@ -1404815,7 +1404815,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:585"
+        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:588"
       }
     },
     {
@@ -1404972,7 +1404972,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:591"
+        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:594"
       }
     },
     {
@@ -1405173,7 +1405173,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:577"
+        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:580"
       }
     },
     {
@@ -1405371,7 +1405371,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:609"
+        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:612"
       }
     },
     {
@@ -1405569,7 +1405569,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:609"
+        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:612"
       }
     },
     {
@@ -1405728,7 +1405728,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:646"
+        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:649"
       }
     },
     {
@@ -1405917,7 +1405917,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:465"
+        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:468"
       }
     },
     {
@@ -1406064,7 +1406064,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:381"
+        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:384"
       }
     },
     {
@@ -1406212,7 +1406212,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:395"
+        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:398"
       }
     },
     {
@@ -1406362,7 +1406362,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:440"
+        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:443"
       }
     },
     {
@@ -1406519,7 +1406519,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:454"
+        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:457"
       }
     },
     {
@@ -1406669,7 +1406669,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:183"
+        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:184"
       }
     },
     {
@@ -1406817,7 +1406817,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:444"
+        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:447"
       }
     },
     {
@@ -1407006,7 +1407006,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:343"
+        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:346"
       }
     },
     {
@@ -1407154,7 +1407154,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:444"
+        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:447"
       }
     },
     {
@@ -1407304,7 +1407304,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:435"
+        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:438"
       }
     },
     {
@@ -1407452,7 +1407452,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:449"
+        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:452"
       }
     },
     {
@@ -1407600,7 +1407600,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:660"
+        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:663"
       }
     },
     {
@@ -1407747,7 +1407747,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:363"
+        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:366"
       }
     },
     {
@@ -1407894,7 +1407894,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:358"
+        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:361"
       }
     },
     {
@@ -1408042,7 +1408042,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:660"
+        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:663"
       }
     },
     {
@@ -1408190,7 +1408190,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:444"
+        "staticSource": "subpackageMember/components/cy/scene-play-activity-detail/index.js:447"
       }
     },
     {

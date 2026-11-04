@@ -28,7 +28,9 @@ test('CU-C-33:结算页补上所选票种的集合点,没填就整行不出', ()
 
 test('CU-C-102:合作者徽标说中文', () => {
   const wxml = read('pages/publish/activity/index.wxml')
-  assert.match(wxml, /<view class="zw" wx:if="\{\{item\.isOwner==1\}\}">主理人<\/view>/)
+  // 第十轮 f1(j1 F14):商家主办时首行标「商家」,其余仍是「主理人」—— 两个标签都是中文
+  assert.match(wxml, /<view class="zw" wx:if="\{\{item\.isOwner==1\}\}">\{\{item\.ownerLabel \|\| '主理人'\}\}<\/view>/)
+  assert.match(read('pages/publish/activity/index.js'), /ownerLabel: shop \? '商家' : ''/)
   assert.doesNotMatch(wxml, />Owner</, '同一页其余标题/字段/按钮全中文，不混语言')
 })
 

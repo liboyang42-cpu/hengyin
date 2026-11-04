@@ -153,6 +153,16 @@ class ApiProjectControllerTest {
         assertTrue(ids(rows).containsAll(Arrays.asList(2L, 101L)));
     }
 
+    /** check-1104 j1 F14:不挂俱乐部的活动(商家/个人自己发的)不再标「俱乐部活动」;projectType 键不变。 */
+    @Test
+    void onlyClubActivitiesAreLabelledClubActivity() {
+        List<Map<String, Object>> rows = rows(call(null));
+        assertEquals("俱乐部活动", rowById(rows, 101L).get("projectTypeText"));
+        assertEquals("活动", rowById(rows, 103L).get("projectTypeText"));
+        assertEquals("活动", rowById(rows, 102L).get("projectTypeText"));
+        assertEquals("club_activity", rowById(rows, 103L).get("projectType"), "活动 tab / 营销「管理活动」按这个键过滤,不改");
+    }
+
     @Test
     void merchant_tab_returns_only_won_undertaken_activity() {
         List<Map<String, Object>> rows = rows(call("merchant"));

@@ -115,6 +115,7 @@ Component({
     dateText: '',
     hostName: '',
     hostAvatar: '',
+    hostIsShop: false,
     categoryText: '',
     titleText: '—',
     registrationCountText: '0',
@@ -299,8 +300,10 @@ Component({
             dateText: info.startDate
               ? `活动时间 · ${dateText(info.startDate)}${info.endDate ? ` - ${dateText(info.endDate)}` : ''}`
               : '时间待定',
-            hostName: nonEmptyString(host.memberRealName),
-            hostAvatar: nonEmptyString(host.memberAvatar),
+            // check-1104 j1 F14:商家自己发的活动,主办方是店铺(服务端给店铺名/头像),不写发起人昵称
+            hostName: nonEmptyString(info.organizerShopName) || nonEmptyString(host.memberRealName),
+            hostAvatar: nonEmptyString(info.organizerShopName) ? nonEmptyString(info.organizerShopLogo) : nonEmptyString(host.memberAvatar),
+            hostIsShop: !!nonEmptyString(info.organizerShopName),
             titleText: nonEmptyString(info.name) || '—',
             categoryText: info.sysCategoryList.map((item) => nonEmptyString(item.categoryName)).filter(Boolean).join(' · '),
             registrationCountText: countText(info.registrationCount),

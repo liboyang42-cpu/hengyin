@@ -145,7 +145,7 @@
                 </view>
                 <view class="name">{{item.nickname}}</view>
               </view>
-              <view class="zw" wx:if="{{item.isOwner==1}}">主理人</view>
+              <view class="zw" wx:if="{{item.isOwner==1}}">{{item.ownerLabel || '主理人'}}</view>
               <view class="david_ty_rl_hcz_li_right" wx:if="{{item.isOwner!=1}}" bindtap="removeCollaborator" data-index="{{index}}" aria-role="button" aria-label="移除合作者 {{item.nickname}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close" size="32" /></view>
             </view>
           </view>

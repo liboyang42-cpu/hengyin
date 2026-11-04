@@ -826,6 +826,9 @@ Page({
       // 回包脏到判不出身份 ⇒ 停在可重试错误态。「读不懂」不能说成「没权限」,
       // 与俱乐部线 role 字段缺失同口径;真正无权的店员才给 denied。
       if (access.invalid) return this._showAccessError(res)
+      // j1 F14:商家主办时合作者首行署店铺名(主办方是店,不是登录人的昵称)
+      const shop = isRecord(res.data.merchant) && String(res.data.merchant.name || '').trim()
+      this._hostShop = shop ? { name: shop, logo: res.data.merchant.logo || '' } : null
       return access.canManageProjects ? this._precheckPublish(onAllow) : this.rejectNonPublisher()
     }
     if (typeof res.data.role !== 'string') {
@@ -1329,10 +1332,12 @@ Page({
         if (res && res.code == "200" && isRecord(res.data)
             && Number.isSafeInteger(ownerId) && ownerId > 0
             && String(res.data.nickname || '').trim()) {
+          const shop = that.merchantHost ? that._hostShop : null
           let userData = {
-            name: res.data.nickname,
-            nickname: res.data.nickname,
-            avatar: res.data.avatar,
+            name: shop ? shop.name : res.data.nickname,
+            nickname: shop ? shop.name : res.data.nickname,
+            avatar: shop ? shop.logo : res.data.avatar,
+            ownerLabel: shop ? '商家' : '',
             id: ownerId,
             isOwner: 1
           }

@@ -85,4 +85,18 @@ class RegistrationCancelRefundAmountTest {
         assertNull(detail(-HOUR, "39.00", null).getCancelRefundAmount(), "开始后不可退,不出金额");
         assertNull(detail(72 * HOUR, "39.00", "P-1").getCancelRefundAmount(), "多票从单不代表整单现金,不推算");
     }
+
+    /** check-1104 j1 F14:商家自己发的场次,订单「主办方」写店铺名,不写「城瘾用户」。 */
+    @Test
+    void merchantOwnActivityOrderNamesTheShop() {
+        shops = mock(com.chengyinhub.business.service.IMmsMerchantService.class);
+        com.chengyinhub.business.domain.MmsMerchant shop = new com.chengyinhub.business.domain.MmsMerchant();
+        shop.setName("梧桐里书房");
+        shop.setStatus(1L);
+        shop.setAccountStatus(1L);
+        shop.setDelFlag(0);
+        when(shops.selectMmsMerchantByMemberId(990005L)).thenReturn(shop);
+        activityOwner = 990005L;
+        assertEquals("梧桐里书房", detail(72 * HOUR, "39.00", null).getOrganizerName());
+    }
 }

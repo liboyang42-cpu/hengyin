@@ -112,6 +112,10 @@ public class ApiActivityController extends BaseController {
     @Autowired
     private IContentSafetyGate contentSafetyGate;
 
+    /** check-1104 j1 F14:商家场次的主办店铺(只读店铺名/头像)。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.IMmsMerchantService mmsMerchantService;
+
     @Autowired(required = false)
     private com.chengyinhub.business.service.IContentSafetyRecheckService recheckService;
 
@@ -1356,6 +1360,12 @@ public class ApiActivityController extends BaseController {
                 activityInfoVO.setPlayNodeCount(cmsTopicNodeService.selectCmsTopicNodeList(nodeProbe).size());
             } else {
                 activityInfoVO.setPlayNodeCount(listMemberTemplate.size());
+            }
+            com.chengyinhub.business.domain.MmsMerchant organizerShop =
+                    com.chengyinhub.business.util.ActivityShopOrganizer.shopOf(mmsMerchantService, cmsActivity);
+            if (organizerShop != null) {
+                activityInfoVO.setOrganizerShopName(organizerShop.getName().trim());
+                activityInfoVO.setOrganizerShopLogo(organizerShop.getLogo());
             }
             //活动阵容
             ViewCollaborators viewCollaborators = new ViewCollaborators();

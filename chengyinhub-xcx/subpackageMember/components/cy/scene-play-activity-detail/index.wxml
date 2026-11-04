@@ -45,10 +45,10 @@
     </view>
 
     <view wx:if="{{hostName}}" class="activity-section activity-host">
-      <text class="activity-section__title">主理人</text>
+      <text class="activity-section__title">{{hostIsShop ? '主办方' : '主理人'}}</text>
       <view class="activity-host__row" bindtap="goUserInfo" hover-class="activity-row--press" hover-stay-time="80" data-id="{{info.collaboratorsList[0].memberId}}">
         <cy-avatar size="72" src="{{hostAvatar || ''}}" name="{{hostName}}" />
-        <view class="activity-host__copy"><text class="activity-host__name">{{hostName}}</text><text class="activity-host__role">发起人 · 主理人</text></view>
+        <view class="activity-host__copy"><text class="activity-host__name">{{hostName}}</text><text class="activity-host__role">{{hostIsShop ? '商家' : '发起人 · 主理人'}}</text></view>
       </view>
     </view>
 
