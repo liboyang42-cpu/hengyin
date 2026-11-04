@@ -257,12 +257,14 @@
       primary-text="" primary-disabled="{{!readiness.canStart || writeLocked}}"
       caption="{{writeMessage || startFailText || blockerText}}" caption-tone="{{writeState === 'unknown-write' || (!writeMessage && (startFailText || blockerText)) ? 'warning' : 'muted'}}"
       bind:primary="onStartSession" />
-    <view wx:if="{{statusKey === 'preparing' && merchantHoldBlocked}}" class="tset-row ctd-sec" bindtap="goStationMerchants"
-      aria-role="button" aria-label="联系商家" hover-class="cy-pressed" hover-stay-time="80">
-      <view class="tset-row-main">
-        <text class="tset-row-title">联系商家</text>
+    <view wx:if="{{statusKey === 'preparing' && merchantHoldBlocked}}" class="ctd-sec">
+      <view class="tset-row" bindtap="goStationMerchants"
+        aria-role="button" aria-label="联系商家" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="tset-row-main">
+          <text class="tset-row-title">联系商家</text>
+        </view>
+        <cy-icon name="arrow-right" size="28" />
       </view>
-      <cy-icon name="arrow-right" size="28" />
     </view>
 
     <!-- 收编时别把这两句丢了:它们各自挡着一个误读。 -->
