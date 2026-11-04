@@ -30,7 +30,7 @@
             <text class="pg-field-label">成团人数<text class="pg-req" aria-hidden="true">*</text></text>
             <input class="pg-input" type="number" value="{{teamSize}}" placeholder="0" bindinput="onTeamInput" />
             <!-- CU-C-70 + P-34(第四轮):成团人数空/0 时当场在这一栏下面用红字说清,不再是卡片底部的蓝色提示框。 -->
-            <text class="pg-field-err" wx:if="{{teamSizeError}}" aria-role="alert">{{teamSizeError}}</text>
+            <cy-inline-error class="pg-field-err" wx:if="{{teamSizeError}}" kind="field" title="{{teamSizeError}}" />
           </view>
         </view>
         <cy-btn variant="secondary" bindtap="recalculate">重新计算地板</cy-btn>

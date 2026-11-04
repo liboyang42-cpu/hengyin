@@ -46,9 +46,13 @@ const TWO = [{ ticketId: 931, name: '日场', price: 69 }, { ticketId: 932, name
 test('成团人数的问题显示在成团人数栏下的红字,标签带红 *;卡片底部不再有蓝色提示框', () => {
   const field = wxml.match(/成团人数<text class="pg-req"[^>]*>\*<\/text><\/text>[\s\S]*?<\/view>/);
   assert.ok(field, '成团人数标签要带红 *');
-  assert.match(field[0], /<text class="pg-field-err" wx:if="\{\{teamSizeError\}\}" aria-role="alert">\{\{teamSizeError\}\}<\/text>/);
-  assert.doesNotMatch(wxml, /<cy-inline-error[^>]*teamSizeError/, '人数提示不再是粉底图标块');
-  assert.match(fs.readFileSync(path.join(ROOT, 'pages/topic/pricing/index.wxss'), 'utf8'), /\.pg-field-err \{[^}]*color: var\(--cy-color-status-danger\)/);
+  // 用 cy-inline-error 的 field 档(无底色、无图标的栏下红字):既是纯红字,又过 U6 裸错误门。
+  assert.match(field[0], /<cy-inline-error class="pg-field-err" wx:if="\{\{teamSizeError\}\}" kind="field" title="\{\{teamSizeError\}\}" \/>/);
+  assert.doesNotMatch(wxml, /<cy-inline-error(?![^>]*kind="field")[^>]*teamSizeError/, '人数提示不再是粉底图标块');
+  const ie = fs.readFileSync(path.join(ROOT, 'components/cy/inline-error/index.wxss'), 'utf8');
+  assert.match(ie, /\.inline-error--field \{[^}]*background: none/);
+  assert.match(ie, /\.inline-error--field \.inline-error__title \{[^}]*color: var\(--cy-color-status-danger\)/);
+  assert.match(fs.readFileSync(path.join(ROOT, 'components/cy/inline-error/index.wxml'), 'utf8'), /wx:if="\{\{kind !== 'field'\}\}" class="inline-error__icon"/);
   const between = wxml.slice(wxml.indexOf('重新计算地板'), wxml.indexOf('pg-floor'));
   assert.doesNotMatch(between, /teamSizeError/, '「重新计算地板」下面不再有人数提示框');
   assert.doesNotMatch(wxml, /<cy-inline-error(?![^>]*kind=)[^>]*teamSizeError/, '人数提示不能用默认(蓝色 data)档');

@@ -187310,6 +187310,15 @@
           "route": "pages/topic/pricing/index",
           "segments": [
             {
+              "selector": "cy-inline-error.pg-field-err",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/pricing/index",
+          "segments": [
+            {
               "selector": "cy-inline-error",
               "index": 0
             }
@@ -188430,7 +188439,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/inline-error/index.js:44"
+        "staticSource": "components/cy/inline-error/index.js:45"
       }
     },
     {
@@ -1244155,7 +1244164,7 @@
       }
     },
     {
-      "id": "pages/publish/simple/index.wxml:105:bindinput:onAiNodeNameInput:10",
+      "id": "pages/publish/simple/index.wxml:104:bindinput:onAiNodeNameInput:10",
       "route": "pages/publish/simple/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1244178,7 +1244187,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onAiNodeNameInput",
-        "line": 105,
+        "line": 104,
         "selectorHint": ".simple-ai__node-name",
         "visibleCondition": null,
         "disabledCondition": "{{!aiPlanModeKnown}}",
@@ -1244222,7 +1244231,7 @@
       }
     },
     {
-      "id": "pages/publish/simple/index.wxml:106:bindinput:onAiNodeStoryInput:11",
+      "id": "pages/publish/simple/index.wxml:105:bindinput:onAiNodeStoryInput:11",
       "route": "pages/publish/simple/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1244245,7 +1244254,7 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "onAiNodeStoryInput",
-        "line": 106,
+        "line": 105,
         "selectorHint": ".simple-ai__node-story",
         "visibleCondition": null,
         "disabledCondition": "{{!aiPlanModeKnown}}",
@@ -1244289,7 +1244298,7 @@
       }
     },
     {
-      "id": "pages/publish/simple/index.wxml:109:bindtap:confirmAiNodePoi:12",
+      "id": "pages/publish/simple/index.wxml:108:bindtap:confirmAiNodePoi:12",
       "route": "pages/publish/simple/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1244317,7 +1244326,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "confirmAiNodePoi",
-        "line": 109,
+        "line": 108,
         "selectorHint": ".simple-ai__poi",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1244450,7 +1244459,7 @@
       }
     },
     {
-      "id": "pages/publish/simple/index.wxml:117:bind:disabledtap:enterAiEditor:14",
+      "id": "pages/publish/simple/index.wxml:116:bind:disabledtap:enterAiEditor:14",
       "route": "pages/publish/simple/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1244473,7 +1244482,7 @@
         "tag": "cy-btn",
         "event": "bind:disabledtap",
         "handler": "enterAiEditor",
-        "line": 117,
+        "line": 116,
         "selectorHint": "cy-btn[bind:disabledtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canEnterAiEditor}}",
@@ -1244594,7 +1244603,7 @@
       }
     },
     {
-      "id": "pages/publish/simple/index.wxml:117:bindtap:enterAiEditor:13",
+      "id": "pages/publish/simple/index.wxml:116:bindtap:enterAiEditor:13",
       "route": "pages/publish/simple/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1244617,7 +1244626,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "enterAiEditor",
-        "line": 117,
+        "line": 116,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canEnterAiEditor}}",
@@ -1244738,7 +1244747,7 @@
       }
     },
     {
-      "id": "pages/publish/simple/index.wxml:125:bindtap:useAiPrompt:15",
+      "id": "pages/publish/simple/index.wxml:124:bindtap:useAiPrompt:15",
       "route": "pages/publish/simple/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1244761,7 +1244770,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "useAiPrompt",
-        "line": 125,
+        "line": 124,
         "selectorHint": ".simple-ai__chip",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1244805,7 +1244814,7 @@
       }
     },
     {
-      "id": "pages/publish/simple/index.wxml:129:bindinput:onAiIdeaInput:16",
+      "id": "pages/publish/simple/index.wxml:128:bindinput:onAiIdeaInput:16",
       "route": "pages/publish/simple/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1244828,7 +1244837,7 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "onAiIdeaInput",
-        "line": 129,
+        "line": 128,
         "selectorHint": ".simple-ai__input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1244940,7 +1244949,7 @@
       }
     },
     {
-      "id": "pages/publish/simple/index.wxml:132:bindtap:generateAiPlan:17",
+      "id": "pages/publish/simple/index.wxml:131:bindtap:generateAiPlan:17",
       "route": "pages/publish/simple/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1244963,7 +1244972,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "generateAiPlan",
-        "line": 132,
+        "line": 131,
         "selectorHint": ".simple-ai__send",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1245083,7 +1245092,7 @@
       }
     },
     {
-      "id": "pages/publish/simple/index.wxml:139:bind:cancel:onAiHistoryCancel:19",
+      "id": "pages/publish/simple/index.wxml:138:bind:cancel:onAiHistoryCancel:19",
       "route": "pages/publish/simple/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1245106,7 +1245115,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:cancel",
         "handler": "onAiHistoryCancel",
-        "line": 139,
+        "line": 138,
         "selectorHint": "#ai-history-sheet",
         "visibleCondition": "{{aiHistoryShow}}",
         "disabledCondition": null,
@@ -1245150,7 +1245159,7 @@
       }
     },
     {
-      "id": "pages/publish/simple/index.wxml:139:bind:select:onAiHistorySelect:18",
+      "id": "pages/publish/simple/index.wxml:138:bind:select:onAiHistorySelect:18",
       "route": "pages/publish/simple/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1245173,7 +1245182,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onAiHistorySelect",
-        "line": 139,
+        "line": 138,
         "selectorHint": "#ai-history-sheet",
         "visibleCondition": "{{aiHistoryShow}}",
         "disabledCondition": null,
@@ -1245293,7 +1245302,7 @@
       }
     },
     {
-      "id": "pages/publish/simple/index.wxml:28:bindtap:toggleInterest:1",
+      "id": "pages/publish/simple/index.wxml:27:bindtap:toggleInterest:1",
       "route": "pages/publish/simple/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1245316,7 +1245325,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "toggleInterest",
-        "line": 28,
+        "line": 27,
         "selectorHint": ".simple-ai__bubble",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1245360,7 +1245369,7 @@
       }
     },
     {
-      "id": "pages/publish/simple/index.wxml:46:bind:action:retryAiPlan:2",
+      "id": "pages/publish/simple/index.wxml:45:bind:action:retryAiPlan:2",
       "route": "pages/publish/simple/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1245383,7 +1245392,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "retryAiPlan",
-        "line": 46,
+        "line": 45,
         "selectorHint": "cy-inline-error[bind:action]",
         "visibleCondition": "{{aiError}}",
         "disabledCondition": null,
@@ -1245503,7 +1245512,7 @@
       }
     },
     {
-      "id": "pages/publish/simple/index.wxml:55:bindtap:openAiHistory:3",
+      "id": "pages/publish/simple/index.wxml:54:bindtap:openAiHistory:3",
       "route": "pages/publish/simple/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1245526,7 +1245535,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "openAiHistory",
-        "line": 55,
+        "line": 54,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1245646,7 +1245655,7 @@
       }
     },
     {
-      "id": "pages/publish/simple/index.wxml:56:bindtap:openLocalAiHistory:4",
+      "id": "pages/publish/simple/index.wxml:55:bindtap:openLocalAiHistory:4",
       "route": "pages/publish/simple/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1245669,7 +1245678,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "openLocalAiHistory",
-        "line": 56,
+        "line": 55,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1245789,7 +1245798,7 @@
       }
     },
     {
-      "id": "pages/publish/simple/index.wxml:60:bindtap:continueAiDraft:5",
+      "id": "pages/publish/simple/index.wxml:59:bindtap:continueAiDraft:5",
       "route": "pages/publish/simple/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1245812,7 +1245821,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "continueAiDraft",
-        "line": 60,
+        "line": 59,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": "{{aiCanContinue}}",
         "disabledCondition": null,
@@ -1245932,7 +1245941,7 @@
       }
     },
     {
-      "id": "pages/publish/simple/index.wxml:61:bindtap:requestConfirmedNewAiAction:6",
+      "id": "pages/publish/simple/index.wxml:60:bindtap:requestConfirmedNewAiAction:6",
       "route": "pages/publish/simple/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1245955,7 +1245964,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "requestConfirmedNewAiAction",
-        "line": 61,
+        "line": 60,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": "{{aiCanConfirmNew}}",
         "disabledCondition": "{{aiGenerating || aiRecoveryLoading}}",
@@ -1246076,7 +1246085,7 @@
       }
     },
     {
-      "id": "pages/publish/simple/index.wxml:72:bindtap:openDraft:7",
+      "id": "pages/publish/simple/index.wxml:71:bindtap:openDraft:7",
       "route": "pages/publish/simple/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1246099,7 +1246108,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openDraft",
-        "line": 72,
+        "line": 71,
         "selectorHint": ".simple-ai__draft-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1246143,7 +1246152,7 @@
       }
     },
     {
-      "id": "pages/publish/simple/index.wxml:90:bindinput:onAiPlanTitleInput:8",
+      "id": "pages/publish/simple/index.wxml:89:bindinput:onAiPlanTitleInput:8",
       "route": "pages/publish/simple/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1246166,7 +1246175,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onAiPlanTitleInput",
-        "line": 90,
+        "line": 89,
         "selectorHint": ".simple-ai__field-input",
         "visibleCondition": null,
         "disabledCondition": "{{!aiPlanModeKnown}}",
@@ -1246210,7 +1246219,7 @@
       }
     },
     {
-      "id": "pages/publish/simple/index.wxml:92:bindinput:onAiPlanStoryInput:9",
+      "id": "pages/publish/simple/index.wxml:91:bindinput:onAiPlanStoryInput:9",
       "route": "pages/publish/simple/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1246233,7 +1246242,7 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "onAiPlanStoryInput",
-        "line": 92,
+        "line": 91,
         "selectorHint": ".simple-ai__story",
         "visibleCondition": null,
         "disabledCondition": "{{!aiPlanModeKnown}}",

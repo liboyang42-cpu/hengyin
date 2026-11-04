@@ -241,7 +241,7 @@
                   <view class="tit ep1">{{item.title}}</view>
                   <view class="david_mbxi">
                   <view class="david_mbxi_li"><image lazy-load="true" src="/pages/publish/images/d_mbico1.png" mode="widthFix" />{{ item.players }}</view>
-                  <view wx:if="{{item.duration > 0}}" class="david_mbxi_li"><image lazy-load="true" src="/pages/publish/images/d_mbico2.png" mode="widthFix" />{{ item.duration }}分钟</view>
+                  <view wx:if="{{item.duration > 0}}" class="david_mbxi_li"><image lazy-load="true" src="/pages/publish/images/d_mbico2.png" mode="widthFix" />{{ item.duration || 0 }}分钟</view>
                 </view>
                 </view>
               </view>
