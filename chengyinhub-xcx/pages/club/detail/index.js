@@ -480,7 +480,7 @@ function enrichClub(club) {
   club.levelText = levelTextOf(club.level);
   // 稿 N1b 47:2 / N3 20:137 写的是「42 名成员」,不是光秃秃一个数字
   club.memberCountText = formatMemberCount(club.memberCount);
-  club.clubTypeText = club.clubType || club.city || '城市探索';
+  club.clubTypeText = club.clubType || '城市探索'; // j5 L1:类型格不拿城市顶替
   club.joinPolicyText = Number(club.joinPolicy) === 1 ? '需审核' : '公开';
   // 拍板 2026-10-22:元信息两行 —— 第一行「类型 · N 名成员」,第二行入会方式。
   club.metaLine = club.clubTypeText + ' · ' + club.memberCountText;
