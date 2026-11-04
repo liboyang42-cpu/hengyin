@@ -44,7 +44,8 @@ Page({
       navBarHeight: (app.globalData && app.globalData.navBarHeight) || 44,
     });
     if (this._customerMemberId == null) {
-      this.setData({ pageState: 'error', errorMessage: '客户ID无效' });
+      // p2 F-9:缺参不是加载失败(load-failure 会留白),单独一个终态:原因 + 返回客户列表
+      this.setData({ pageState: 'missing', errorMessage: '客户ID无效' });
       return;
     }
     this.loadAccess();

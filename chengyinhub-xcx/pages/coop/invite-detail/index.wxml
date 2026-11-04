@@ -23,7 +23,8 @@
   <cy-page-title title="协作详情" safe-top="{{false}}" flush="{{true}}" />
 
   <cy-skeleton wx:if="{{state === 'loading'}}" type="card" count="3" loading-label="正在加载协作详情" />
-  <cy-error load-failure wx:elif="{{state === 'missing'}}" fill size="lg" title="无法打开这条邀约" sub="{{errorText}}"
+  <!-- p2 F-9:缺参不是加载失败,不能挂 load-failure 留白;只给原因标题 + 一个返回 -->
+  <cy-error wx:elif="{{state === 'missing'}}" fill size="lg" title="无法打开这条邀约"
             retry="回协作邀请" bind:retry="goBack" />
   <cy-error wx:elif="{{state === 'notfound'}}" fill size="lg" title="这条邀约不在当前列表里了"
             sub=""

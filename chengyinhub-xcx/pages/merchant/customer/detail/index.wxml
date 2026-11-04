@@ -10,6 +10,9 @@
   <cy-error load-failure wx:elif="{{pageState === 'error'}}" fill size="lg" title="客户详情加载失败"
             sub="{{errorMessage}}" retry="重新加载" bind:retry="retry" auto-back />
 
+  <cy-empty wx:elif="{{pageState === 'missing'}}" fill size="lg" kind="empty"
+            title="找不到这位客户" cta="返回客户列表" bind:cta="onNavBack" />
+
   <!-- D 无客户权限(Figma 71:442) -->
   <cy-empty wx:elif="{{pageState === 'no-permission'}}" fill size="lg" kind="no-permission"
             title="当前岗位没有客户查看权限" sub="请联系店主开通"

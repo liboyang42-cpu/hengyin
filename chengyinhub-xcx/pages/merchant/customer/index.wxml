@@ -8,6 +8,8 @@
     <text class="cu-hero-sub" wx:if="{{!error && customerSummaryText}}">{{customerSummaryText}}</text>
   </view>
 
+  <!-- p2 F-9:无客户权限时不再露出筛选 / 管理 / 搜索 -->
+  <block wx:if="{{!noPermission}}">
   <view class="cu-segs">
     <!-- 2026-10-30 P-5 M-03:有筛选条件时「筛选」变实心并带条件数 -->
     <view class="cu-seg {{segment !== 'all' || sourceType || sourceStart || sourceEnd || tagId ? 'cu-seg--filtered' : ''}}" bindtap="toggleFilters" aria-role="button" aria-label="筛选客户" hover-class="cy-pressed" hover-stay-time="80">
@@ -21,6 +23,7 @@
   <view class="cu-search">
     <cy-search value="{{keyword}}" placeholder="搜索" bind:input="onKeywordInput" bind:confirm="onKeywordConfirm" />
   </view>
+  </block>
 
 
 
