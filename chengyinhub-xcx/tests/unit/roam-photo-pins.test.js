@@ -228,3 +228,16 @@ test('普通地标不是据点:地点卡不给分享、不读评分', () => {
   page.onMarkerTap({ detail: { markerId: 700014 } });
   assert.deepEqual([page.data.placeCard.shareKind, page.data.placeCard.shareId], ['', '']);
 });
+
+test('第九轮 m1 第 9 项:漫游地点卡与商家横滑卡的地址点开地图', () => {
+  const wxml = read('pages/roam/index.wxml');
+  assert.match(wxml, /class="pc-body cy-addr-tap"[^>]*catchtap="onAddrTap" data-lat="\{\{paceCard\.lat\}\}"/);
+  assert.match(wxml, /class="poi__addr cy-addr-tap"[^>]*catchtap="onAddrTap" data-lat="\{\{item\.lat\}\}"/);
+  const page = loadRoamPage();
+  assert.deepEqual([page._paceCardFor({ lat: 31.2, lng: 121.4, address: 'A' }).lat, page._paceCardFor({ lat: 31.2, lng: 121.4 }).lng], [31.2, 121.4]);
+  const opened = [];
+  const prev = global.wx;
+  global.wx = { openLocation: (o) => opened.push(o) };
+  try { page.onAddrTap({ currentTarget: { dataset: { lat: 31.2, lng: 121.4, name: '店', address: '路' } } }); } finally { global.wx = prev; }
+  assert.equal(opened[0].latitude, 31.2);
+});

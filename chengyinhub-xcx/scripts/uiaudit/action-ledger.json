@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5676,
+  "controlCount": 5678,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -1269394,7 +1269394,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:1008:bindtap:closeDiscoverReward:189",
+      "id": "pages/roam/index.wxml:1008:bindtap:closeDiscoverReward:191",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1269457,11 +1269457,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:4749"
+        "staticSource": "pages/roam/index.js:4750"
       }
     },
     {
-      "id": "pages/roam/index.wxml:1009:catchtap:noop:190",
+      "id": "pages/roam/index.wxml:1009:catchtap:noop:192",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1269529,7 +1269529,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:1011:catchtap:closeDiscoverReward:191",
+      "id": "pages/roam/index.wxml:1011:catchtap:closeDiscoverReward:193",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1269592,11 +1269592,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:4749"
+        "staticSource": "pages/roam/index.js:4750"
       }
     },
     {
-      "id": "pages/roam/index.wxml:1018:bindtap:onDiscoverCoupon:192",
+      "id": "pages/roam/index.wxml:1018:bindtap:onDiscoverCoupon:194",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1269709,11 +1269709,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:4754"
+        "staticSource": "pages/roam/index.js:4755"
       }
     },
     {
-      "id": "pages/roam/index.wxml:1023:bindtap:onDiscoverTask:193",
+      "id": "pages/roam/index.wxml:1023:bindtap:onDiscoverTask:195",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1269826,11 +1269826,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:4759"
+        "staticSource": "pages/roam/index.js:4760"
       }
     },
     {
-      "id": "pages/roam/index.wxml:1028:bindtap:onDiscoverExploreDay:194",
+      "id": "pages/roam/index.wxml:1028:bindtap:onDiscoverExploreDay:196",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1269943,11 +1269943,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:4802"
+        "staticSource": "pages/roam/index.js:4803"
       }
     },
     {
-      "id": "pages/roam/index.wxml:1034:bindtap:closeDiscoverReward:195",
+      "id": "pages/roam/index.wxml:1034:bindtap:closeDiscoverReward:197",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1270010,11 +1270010,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:4749"
+        "staticSource": "pages/roam/index.js:4750"
       }
     },
     {
-      "id": "pages/roam/index.wxml:1042:bindtap:openBadge3d:196",
+      "id": "pages/roam/index.wxml:1042:bindtap:openBadge3d:198",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1270080,11 +1270080,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5996"
+        "staticSource": "pages/roam/index.js:5997"
       }
     },
     {
-      "id": "pages/roam/index.wxml:1047:bindtap:shareMedal:197",
+      "id": "pages/roam/index.wxml:1047:bindtap:shareMedal:199",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1270158,11 +1270158,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:4991"
+        "staticSource": "pages/roam/index.js:4992"
       }
     },
     {
-      "id": "pages/roam/index.wxml:1049:bind:confirm:closeMedal:198",
+      "id": "pages/roam/index.wxml:1049:bind:confirm:closeMedal:200",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1270236,7 +1270236,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:4978"
+        "staticSource": "pages/roam/index.js:4979"
       }
     },
     {
@@ -1270307,11 +1270307,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:6130"
+        "staticSource": "pages/roam/index.js:6131"
       }
     },
     {
-      "id": "pages/roam/index.wxml:1056:catchtouchmove:blockSceneTouch:199",
+      "id": "pages/roam/index.wxml:1056:catchtouchmove:blockSceneTouch:201",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1270379,7 +1270379,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:1057:bindtap:onProtoSheetClose:200",
+      "id": "pages/roam/index.wxml:1057:bindtap:onProtoSheetClose:202",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1270446,7 +1270446,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:1058:catchtap:noop:201",
+      "id": "pages/roam/index.wxml:1058:catchtap:noop:203",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1270514,7 +1270514,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:1060:catchtap:onProtoSheetClose:202",
+      "id": "pages/roam/index.wxml:1060:catchtap:onProtoSheetClose:204",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1270648,7 +1270648,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:1085:bindtap:onShareColor:203",
+      "id": "pages/roam/index.wxml:1085:bindtap:onShareColor:205",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1270711,11 +1270711,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5278"
+        "staticSource": "pages/roam/index.js:5279"
       }
     },
     {
-      "id": "pages/roam/index.wxml:1092:bindtap:onShareVisibility:204",
+      "id": "pages/roam/index.wxml:1092:bindtap:onShareVisibility:206",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1270778,11 +1270778,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5252"
+        "staticSource": "pages/roam/index.js:5253"
       }
     },
     {
-      "id": "pages/roam/index.wxml:1094:bindtap:onShareVisibility:205",
+      "id": "pages/roam/index.wxml:1094:bindtap:onShareVisibility:207",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1270845,11 +1270845,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5252"
+        "staticSource": "pages/roam/index.js:5253"
       }
     },
     {
-      "id": "pages/roam/index.wxml:1096:bindtap:onShareVisibility:206",
+      "id": "pages/roam/index.wxml:1096:bindtap:onShareVisibility:208",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1270912,7 +1270912,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5252"
+        "staticSource": "pages/roam/index.js:5253"
       }
     },
     {
@@ -1271104,7 +1271104,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:1103:bindtap:shareTo:207",
+      "id": "pages/roam/index.wxml:1103:bindtap:shareTo:209",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1272585,11 +1272585,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5303"
+        "staticSource": "pages/roam/index.js:5304"
       }
     },
     {
-      "id": "pages/roam/index.wxml:1104:bindtap:shareTo:208",
+      "id": "pages/roam/index.wxml:1104:bindtap:shareTo:210",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1274070,11 +1274070,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5303"
+        "staticSource": "pages/roam/index.js:5304"
       }
     },
     {
-      "id": "pages/roam/index.wxml:1105:bindtap:shareTo:209",
+      "id": "pages/roam/index.wxml:1105:bindtap:shareTo:211",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1275555,11 +1275555,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5303"
+        "staticSource": "pages/roam/index.js:5304"
       }
     },
     {
-      "id": "pages/roam/index.wxml:1106:bindtap:shareTo:210",
+      "id": "pages/roam/index.wxml:1106:bindtap:shareTo:212",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1277040,11 +1277040,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5303"
+        "staticSource": "pages/roam/index.js:5304"
       }
     },
     {
-      "id": "pages/roam/index.wxml:1107:bindtap:shareMore:211",
+      "id": "pages/roam/index.wxml:1107:bindtap:shareMore:213",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1277108,11 +1277108,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5284"
+        "staticSource": "pages/roam/index.js:5285"
       }
     },
     {
-      "id": "pages/roam/index.wxml:1119:bind:close:onShareCardClose:212",
+      "id": "pages/roam/index.wxml:1119:bind:close:onShareCardClose:214",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1277175,11 +1277175,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5283"
+        "staticSource": "pages/roam/index.js:5284"
       }
     },
     {
-      "id": "pages/roam/index.wxml:1125:catchtouchmove:blockSceneTouch:213",
+      "id": "pages/roam/index.wxml:1125:catchtouchmove:blockSceneTouch:215",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1277247,7 +1277247,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:1126:bindtap:onProtoSheetClose:214",
+      "id": "pages/roam/index.wxml:1126:bindtap:onProtoSheetClose:216",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1277314,7 +1277314,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:1127:catchtap:noop:215",
+      "id": "pages/roam/index.wxml:1127:catchtap:noop:217",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1277382,7 +1277382,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:1128:catchtap:onProtoSheetClose:216",
+      "id": "pages/roam/index.wxml:1128:catchtap:onProtoSheetClose:218",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1277449,7 +1277449,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:1129:catchtap:onProtoSheetClose:217",
+      "id": "pages/roam/index.wxml:1129:catchtap:onProtoSheetClose:219",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1277516,7 +1277516,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:1133:bind:change:onPoiFilterRadius:218",
+      "id": "pages/roam/index.wxml:1133:bind:change:onPoiFilterRadius:220",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1277594,11 +1277594,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5895"
+        "staticSource": "pages/roam/index.js:5896"
       }
     },
     {
-      "id": "pages/roam/index.wxml:1137:catchtap:togglePoiFilterUnvisited:219",
+      "id": "pages/roam/index.wxml:1137:catchtap:togglePoiFilterUnvisited:221",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1277661,11 +1277661,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5902"
+        "staticSource": "pages/roam/index.js:5903"
       }
     },
     {
-      "id": "pages/roam/index.wxml:1145:bind:settled:onPrivacyGateSettled:220",
+      "id": "pages/roam/index.wxml:1145:bind:settled:onPrivacyGateSettled:222",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1277732,7 +1277732,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:1158:bind:done:onAtmosDone:221",
+      "id": "pages/roam/index.wxml:1158:bind:done:onAtmosDone:223",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1278033,7 +1278033,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:6041"
+        "staticSource": "pages/roam/index.js:6042"
       }
     },
     {
@@ -1278104,7 +1278104,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:6124"
+        "staticSource": "pages/roam/index.js:6125"
       }
     },
     {
@@ -1278241,7 +1278241,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:6107"
+        "staticSource": "pages/roam/index.js:6108"
       }
     },
     {
@@ -1279111,7 +1279111,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:6115"
+        "staticSource": "pages/roam/index.js:6116"
       }
     },
     {
@@ -1279382,7 +1279382,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:6116"
+        "staticSource": "pages/roam/index.js:6117"
       }
     },
     {
@@ -1279763,7 +1279763,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:6115"
+        "staticSource": "pages/roam/index.js:6116"
       }
     },
     {
@@ -1280452,7 +1280452,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:4565"
+        "staticSource": "pages/roam/index.js:4566"
       }
     },
     {
@@ -1280590,7 +1280590,89 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:395:bind:note:onPlaceNote:48",
+      "id": "pages/roam/index.wxml:391:catchtap:onAddrTap:48",
+      "route": "pages/roam/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/roam/index.wxml",
+        "js": "pages/roam/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "text",
+        "event": "catchtap",
+        "handler": "onAddrTap",
+        "line": 391,
+        "selectorHint": ".pc-body",
+        "visibleCondition": "{{paceCard.address}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{paceCard.address}}，在地图中打开",
+        "ariaRole": "link",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "write",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [
+          "/api/map/geocode"
+        ],
+        "primaryApis": [
+          "/api/map/geocode"
+        ],
+        "auxiliaryApis": [],
+        "apiContracts": [
+          {
+            "url": "/api/map/geocode",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/roam/index.js:6267"
+      }
+    },
+    {
+      "id": "pages/roam/index.wxml:395:bind:note:onPlaceNote:49",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1280653,11 +1280735,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:6109"
+        "staticSource": "pages/roam/index.js:6110"
       }
     },
     {
-      "id": "pages/roam/index.wxml:397:bindtap:discoverRoamPoi:49",
+      "id": "pages/roam/index.wxml:397:bindtap:discoverRoamPoi:50",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1280744,11 +1280826,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:4483"
+        "staticSource": "pages/roam/index.js:4484"
       }
     },
     {
-      "id": "pages/roam/index.wxml:405:bindtap:retryRoamPoiDiscover:50",
+      "id": "pages/roam/index.wxml:405:bindtap:retryRoamPoiDiscover:51",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1280835,11 +1280917,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:4488"
+        "staticSource": "pages/roam/index.js:4489"
       }
     },
     {
-      "id": "pages/roam/index.wxml:416:bindtap:closeFootprintHint:51",
+      "id": "pages/roam/index.wxml:416:bindtap:closeFootprintHint:52",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1280984,11 +1281066,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:6141"
+        "staticSource": "pages/roam/index.js:6142"
       }
     },
     {
-      "id": "pages/roam/index.wxml:450:bindtap:onMapRetry:52",
+      "id": "pages/roam/index.wxml:450:bindtap:onMapRetry:53",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1281118,11 +1281200,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:6149"
+        "staticSource": "pages/roam/index.js:6150"
       }
     },
     {
-      "id": "pages/roam/index.wxml:463:bindtap:recoverRoam:53",
+      "id": "pages/roam/index.wxml:463:bindtap:recoverRoam:54",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1281258,7 +1281340,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:491:bindchange:onShopStripSwipe:54",
+      "id": "pages/roam/index.wxml:491:bindchange:onShopStripSwipe:55",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1281325,7 +1281407,89 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:505:catchtap:onShopStripGo:55",
+      "id": "pages/roam/index.wxml:499:catchtap:onAddrTap:56",
+      "route": "pages/roam/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/roam/index.wxml",
+        "js": "pages/roam/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "text",
+        "event": "catchtap",
+        "handler": "onAddrTap",
+        "line": 499,
+        "selectorHint": ".poi__addr",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{item.address}}，在地图中打开",
+        "ariaRole": "link",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "write",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [
+          "/api/map/geocode"
+        ],
+        "primaryApis": [
+          "/api/map/geocode"
+        ],
+        "auxiliaryApis": [],
+        "apiContracts": [
+          {
+            "url": "/api/map/geocode",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/roam/index.js:6267"
+      }
+    },
+    {
+      "id": "pages/roam/index.wxml:505:catchtap:onShopStripGo:57",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1281498,11 +1281662,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:6141"
+        "staticSource": "pages/roam/index.js:6142"
       }
     },
     {
-      "id": "pages/roam/index.wxml:518:catchtap:closeShopStrip:56",
+      "id": "pages/roam/index.wxml:518:catchtap:closeShopStrip:58",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1281569,7 +1281733,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:522:bindtap:onGoalTap:57:variant:discover",
+      "id": "pages/roam/index.wxml:522:bindtap:onGoalTap:59:variant:discover",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1281646,7 +1281810,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:522:bindtap:onGoalTap:57:variant:event",
+      "id": "pages/roam/index.wxml:522:bindtap:onGoalTap:59:variant:event",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1281723,7 +1281887,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:522:bindtap:onGoalTap:57:variant:gps",
+      "id": "pages/roam/index.wxml:522:bindtap:onGoalTap:59:variant:gps",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1281829,7 +1281993,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:522:bindtap:onGoalTap:57:variant:nearby",
+      "id": "pages/roam/index.wxml:522:bindtap:onGoalTap:59:variant:nearby",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1281906,7 +1282070,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:522:bindtap:onGoalTap:57:variant:retry-poi",
+      "id": "pages/roam/index.wxml:522:bindtap:onGoalTap:59:variant:retry-poi",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1281998,7 +1282162,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:526:catchtap:openRoamRules:58",
+      "id": "pages/roam/index.wxml:526:catchtap:openRoamRules:60",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1282104,7 +1282268,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:534:catchtap:openRoamRules:59",
+      "id": "pages/roam/index.wxml:534:catchtap:openRoamRules:61",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1282210,7 +1282374,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:555:bindtap:openRoamMore:60",
+      "id": "pages/roam/index.wxml:555:bindtap:openRoamMore:62",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1282312,11 +1282476,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5851"
+        "staticSource": "pages/roam/index.js:5852"
       }
     },
     {
-      "id": "pages/roam/index.wxml:559:bindtap:togglePause:61",
+      "id": "pages/roam/index.wxml:559:bindtap:togglePause:63",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1282379,11 +1282543,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5804"
+        "staticSource": "pages/roam/index.js:5805"
       }
     },
     {
-      "id": "pages/roam/index.wxml:560:bindtouchcancel:onCenterHoldEnd:64",
+      "id": "pages/roam/index.wxml:560:bindtouchcancel:onCenterHoldEnd:66",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1282446,11 +1282610,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:4676"
+        "staticSource": "pages/roam/index.js:4677"
       }
     },
     {
-      "id": "pages/roam/index.wxml:560:bindtouchend:onCenterHoldEnd:63",
+      "id": "pages/roam/index.wxml:560:bindtouchend:onCenterHoldEnd:65",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1282513,11 +1282677,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:4676"
+        "staticSource": "pages/roam/index.js:4677"
       }
     },
     {
-      "id": "pages/roam/index.wxml:560:bindtouchstart:onCenterHoldStart:62",
+      "id": "pages/roam/index.wxml:560:bindtouchstart:onCenterHoldStart:64",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1282659,11 +1282823,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:4655"
+        "staticSource": "pages/roam/index.js:4656"
       }
     },
     {
-      "id": "pages/roam/index.wxml:576:bindtap:onRoamRightAction:65",
+      "id": "pages/roam/index.wxml:576:bindtap:onRoamRightAction:67",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1282750,11 +1282914,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5989"
+        "staticSource": "pages/roam/index.js:5990"
       }
     },
     {
-      "id": "pages/roam/index.wxml:585:catchtouchmove:blockSceneTouch:66",
+      "id": "pages/roam/index.wxml:585:catchtouchmove:blockSceneTouch:68",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1282822,7 +1282986,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:586:bindtap:onProtoSheetClose:67",
+      "id": "pages/roam/index.wxml:586:bindtap:onProtoSheetClose:69",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1282889,7 +1283053,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:587:catchtap:noop:68",
+      "id": "pages/roam/index.wxml:587:catchtap:noop:70",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1282957,7 +1283121,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:589:catchtap:onProtoSheetClose:69",
+      "id": "pages/roam/index.wxml:589:catchtap:onProtoSheetClose:71",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1283024,7 +1283188,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:592:bindtap:chooseLocationFromTencent:70",
+      "id": "pages/roam/index.wxml:592:bindtap:chooseLocationFromTencent:72",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1283169,7 +1283333,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:4868"
+        "staticSource": "pages/roam/index.js:4869"
       }
     },
     {
@@ -1283260,11 +1283424,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:6117"
+        "staticSource": "pages/roam/index.js:6118"
       }
     },
     {
-      "id": "pages/roam/index.wxml:603:bindtap:chooseLocationFromTencent:71",
+      "id": "pages/roam/index.wxml:603:bindtap:chooseLocationFromTencent:73",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1283409,7 +1283573,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:4868"
+        "staticSource": "pages/roam/index.js:4869"
       }
     },
     {
@@ -1283500,11 +1283664,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:6117"
+        "staticSource": "pages/roam/index.js:6118"
       }
     },
     {
-      "id": "pages/roam/index.wxml:611:bind:close:closeProtoCam:73",
+      "id": "pages/roam/index.wxml:611:bind:close:closeProtoCam:75",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1283567,11 +1283731,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:4897"
+        "staticSource": "pages/roam/index.js:4898"
       }
     },
     {
-      "id": "pages/roam/index.wxml:611:bind:shot:onProtoCamShot:72",
+      "id": "pages/roam/index.wxml:611:bind:shot:onProtoCamShot:74",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1283647,11 +1283811,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:4898"
+        "staticSource": "pages/roam/index.js:4899"
       }
     },
     {
-      "id": "pages/roam/index.wxml:615:bind:close:closePlaceCard:75",
+      "id": "pages/roam/index.wxml:615:bind:close:closePlaceCard:77",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1283718,7 +1283882,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:615:bind:open:onPlaceCardOpen:74",
+      "id": "pages/roam/index.wxml:615:bind:open:onPlaceCardOpen:76",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1283952,11 +1284116,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:6117"
+        "staticSource": "pages/roam/index.js:6118"
       }
     },
     {
-      "id": "pages/roam/index.wxml:620:bindtap:closeTopicView:76",
+      "id": "pages/roam/index.wxml:620:bindtap:closeTopicView:78",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1284023,7 +1284187,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:624:catchtap:noop:77",
+      "id": "pages/roam/index.wxml:624:catchtap:noop:79",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1284091,7 +1284255,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:626:catchtap:closeTopicView:78",
+      "id": "pages/roam/index.wxml:626:catchtap:closeTopicView:80",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1284158,7 +1284322,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:638:bindtap:openTopicPageFromView:79",
+      "id": "pages/roam/index.wxml:638:bindtap:openTopicPageFromView:81",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1284229,7 +1284393,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:652:bindtap:closeCheckinView:80",
+      "id": "pages/roam/index.wxml:652:bindtap:closeCheckinView:82",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1284296,7 +1284460,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:653:catchtap:noop:81",
+      "id": "pages/roam/index.wxml:653:catchtap:noop:83",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1284364,7 +1284528,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:655:catchtap:closeCheckinView:82",
+      "id": "pages/roam/index.wxml:655:catchtap:closeCheckinView:84",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1284431,7 +1284595,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:659:bindtap:onCheckinStamp:83",
+      "id": "pages/roam/index.wxml:659:bindtap:onCheckinStamp:85",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1284502,7 +1284666,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:664:bindtap:onCheckinSign:84",
+      "id": "pages/roam/index.wxml:664:bindtap:onCheckinSign:86",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1284573,7 +1284737,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:676:catchtouchmove:blockSceneTouch:85",
+      "id": "pages/roam/index.wxml:676:catchtouchmove:blockSceneTouch:87",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1284641,7 +1284805,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:677:bindtap:onProtoSheetClose:86",
+      "id": "pages/roam/index.wxml:677:bindtap:onProtoSheetClose:88",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1284708,7 +1284872,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:678:catchtap:noop:87",
+      "id": "pages/roam/index.wxml:678:catchtap:noop:89",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1284776,7 +1284940,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:679:catchtap:onProtoSheetClose:88",
+      "id": "pages/roam/index.wxml:679:catchtap:onProtoSheetClose:90",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1284911,11 +1285075,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:6154"
+        "staticSource": "pages/roam/index.js:6155"
       }
     },
     {
-      "id": "pages/roam/index.wxml:680:bindtap:openNearestRunner:89",
+      "id": "pages/roam/index.wxml:680:bindtap:openNearestRunner:91",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1285039,11 +1285203,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5963"
+        "staticSource": "pages/roam/index.js:5964"
       }
     },
     {
-      "id": "pages/roam/index.wxml:685:bindtap:openRoamRules:90",
+      "id": "pages/roam/index.wxml:685:bindtap:openRoamRules:92",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1285149,7 +1285313,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:690:bindtap:openRoamSettings:91",
+      "id": "pages/roam/index.wxml:690:bindtap:openRoamSettings:93",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1285273,11 +1285437,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5951"
+        "staticSource": "pages/roam/index.js:5952"
       }
     },
     {
-      "id": "pages/roam/index.wxml:700:bindtap:cancelClearRoamLocal:92",
+      "id": "pages/roam/index.wxml:700:bindtap:cancelClearRoamLocal:94",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1285340,11 +1285504,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5972"
+        "staticSource": "pages/roam/index.js:5973"
       }
     },
     {
-      "id": "pages/roam/index.wxml:701:catchtap:noop:93",
+      "id": "pages/roam/index.wxml:701:catchtap:noop:95",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1285412,7 +1285576,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:707:bindtap:cancelClearRoamLocal:94",
+      "id": "pages/roam/index.wxml:707:bindtap:cancelClearRoamLocal:96",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1285475,11 +1285639,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5972"
+        "staticSource": "pages/roam/index.js:5973"
       }
     },
     {
-      "id": "pages/roam/index.wxml:708:bindtap:confirmClearRoamLocal:95",
+      "id": "pages/roam/index.wxml:708:bindtap:confirmClearRoamLocal:97",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1285595,11 +1285759,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5973"
+        "staticSource": "pages/roam/index.js:5974"
       }
     },
     {
-      "id": "pages/roam/index.wxml:714:catchtouchmove:blockSceneTouch:96",
+      "id": "pages/roam/index.wxml:714:catchtouchmove:blockSceneTouch:98",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1285667,7 +1285831,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:715:bindtap:onProtoSheetClose:97",
+      "id": "pages/roam/index.wxml:715:bindtap:onProtoSheetClose:99",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1285734,7 +1285898,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:716:catchtap:noop:98",
+      "id": "pages/roam/index.wxml:716:catchtap:noop:100",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1285802,7 +1285966,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:717:catchtap:onProtoSheetClose:99",
+      "id": "pages/roam/index.wxml:717:catchtap:onProtoSheetClose:101",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1285869,7 +1286033,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:718:catchtap:onProtoSheetClose:100",
+      "id": "pages/roam/index.wxml:718:catchtap:onProtoSheetClose:102",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1285936,7 +1286100,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:725:catchtap:toggleFogOff:101",
+      "id": "pages/roam/index.wxml:725:catchtap:toggleFogOff:103",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1286003,7 +1286167,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:730:catchtap:toggleReducedMotion:102",
+      "id": "pages/roam/index.wxml:730:catchtap:toggleReducedMotion:104",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1286070,7 +1286234,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:735:catchtap:togglePresenceSharing:103",
+      "id": "pages/roam/index.wxml:735:catchtap:togglePresenceSharing:105",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1286166,7 +1286330,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5927"
+        "staticSource": "pages/roam/index.js:5928"
       }
     },
     {
@@ -1286358,7 +1286522,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:740:bindtap:openRoamLocationSetting:104",
+      "id": "pages/roam/index.wxml:740:bindtap:openRoamLocationSetting:106",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1286441,7 +1286605,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:746:bindtap:openRoamLocationSetting:105",
+      "id": "pages/roam/index.wxml:746:bindtap:openRoamLocationSetting:107",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1286587,11 +1286751,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:6169"
+        "staticSource": "pages/roam/index.js:6170"
       }
     },
     {
-      "id": "pages/roam/index.wxml:752:bindtap:openRoamLocationSetting:106",
+      "id": "pages/roam/index.wxml:752:bindtap:openRoamLocationSetting:108",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1286674,7 +1286838,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:758:bindtap:clearRoamLocal:107",
+      "id": "pages/roam/index.wxml:758:bindtap:clearRoamLocal:109",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1286737,11 +1286901,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5971"
+        "staticSource": "pages/roam/index.js:5972"
       }
     },
     {
-      "id": "pages/roam/index.wxml:767:catchtouchmove:blockSceneTouch:108",
+      "id": "pages/roam/index.wxml:767:catchtouchmove:blockSceneTouch:110",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1286809,7 +1286973,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:768:bindtap:onProtoSheetClose:109",
+      "id": "pages/roam/index.wxml:768:bindtap:onProtoSheetClose:111",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1286876,7 +1287040,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:769:catchtap:noop:110",
+      "id": "pages/roam/index.wxml:769:catchtap:noop:112",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1286944,7 +1287108,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:771:catchtap:onProtoSheetClose:111",
+      "id": "pages/roam/index.wxml:771:catchtap:onProtoSheetClose:113",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1287011,7 +1287175,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:797:catchtouchmove:blockSceneTouch:112",
+      "id": "pages/roam/index.wxml:797:catchtouchmove:blockSceneTouch:114",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1287079,7 +1287243,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:798:bindtap:onProtoSheetClose:113",
+      "id": "pages/roam/index.wxml:798:bindtap:onProtoSheetClose:115",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1287146,7 +1287310,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:799:catchtap:noop:114",
+      "id": "pages/roam/index.wxml:799:catchtap:noop:116",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1287402,7 +1287566,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:801:catchtap:onProtoSheetClose:115",
+      "id": "pages/roam/index.wxml:801:catchtap:onProtoSheetClose:117",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1287469,7 +1287633,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:823:bindtap:runnerSayHi:116",
+      "id": "pages/roam/index.wxml:823:bindtap:runnerSayHi:118",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1287553,7 +1287717,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:824:bindtap:runnerOpenProfile:117",
+      "id": "pages/roam/index.wxml:824:bindtap:runnerOpenProfile:119",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1287623,7 +1287787,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:830:catchtouchmove:blockSceneTouch:118",
+      "id": "pages/roam/index.wxml:830:catchtouchmove:blockSceneTouch:120",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1287691,7 +1287855,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:831:bindtap:onProtoSheetClose:119",
+      "id": "pages/roam/index.wxml:831:bindtap:onProtoSheetClose:121",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1287758,7 +1287922,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:832:catchtap:noop:120",
+      "id": "pages/roam/index.wxml:832:catchtap:noop:122",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1287826,7 +1287990,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:834:catchtap:onProtoSheetClose:121",
+      "id": "pages/roam/index.wxml:834:catchtap:onProtoSheetClose:123",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1287893,7 +1288057,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:836:bind:close:closeScene:124",
+      "id": "pages/roam/index.wxml:836:bind:close:closeScene:126",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1287960,7 +1288124,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:836:bind:open:openChildScene:123",
+      "id": "pages/roam/index.wxml:836:bind:open:openChildScene:125",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1288066,7 +1288230,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:836:bind:tool:openRoamTool:122",
+      "id": "pages/roam/index.wxml:836:bind:tool:openRoamTool:124",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1288138,7 +1288302,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:840:catchtouchmove:blockSceneTouch:125",
+      "id": "pages/roam/index.wxml:840:catchtouchmove:blockSceneTouch:127",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1288206,7 +1288370,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:841:bindtap:onProtoSheetClose:126",
+      "id": "pages/roam/index.wxml:841:bindtap:onProtoSheetClose:128",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1288273,7 +1288437,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:842:catchtap:noop:127",
+      "id": "pages/roam/index.wxml:842:catchtap:noop:129",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1288341,7 +1288505,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:844:catchtap:onProtoSheetClose:128",
+      "id": "pages/roam/index.wxml:844:catchtap:onProtoSheetClose:130",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1288408,7 +1288572,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:846:bind:back:backScene:129",
+      "id": "pages/roam/index.wxml:846:bind:back:backScene:131",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1288475,7 +1288639,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:846:bind:close:closeScene:130",
+      "id": "pages/roam/index.wxml:846:bind:close:closeScene:132",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1288542,7 +1288706,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:846:bind:share:onSceneSessionShare:131",
+      "id": "pages/roam/index.wxml:846:bind:share:onSceneSessionShare:133",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1288644,11 +1288808,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5141"
+        "staticSource": "pages/roam/index.js:5142"
       }
     },
     {
-      "id": "pages/roam/index.wxml:851:catchtouchmove:blockSceneTouch:132",
+      "id": "pages/roam/index.wxml:851:catchtouchmove:blockSceneTouch:134",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1288716,7 +1288880,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:852:bindtap:onProtoSheetClose:133",
+      "id": "pages/roam/index.wxml:852:bindtap:onProtoSheetClose:135",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1288783,7 +1288947,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:853:catchtap:noop:134",
+      "id": "pages/roam/index.wxml:853:catchtap:noop:136",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1288851,7 +1289015,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:855:catchtap:onProtoSheetClose:135",
+      "id": "pages/roam/index.wxml:855:catchtap:onProtoSheetClose:137",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1288918,7 +1289082,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:857:bind:close:closeScene:137",
+      "id": "pages/roam/index.wxml:857:bind:close:closeScene:139",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1288985,7 +1289149,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:857:bind:open:openChildScene:136",
+      "id": "pages/roam/index.wxml:857:bind:open:openChildScene:138",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1289091,7 +1289255,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:861:catchtouchmove:blockSceneTouch:138",
+      "id": "pages/roam/index.wxml:861:catchtouchmove:blockSceneTouch:140",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1289159,7 +1289323,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:862:bindtap:onProtoSheetClose:139",
+      "id": "pages/roam/index.wxml:862:bindtap:onProtoSheetClose:141",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1289226,7 +1289390,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:863:catchtap:noop:140",
+      "id": "pages/roam/index.wxml:863:catchtap:noop:142",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1289294,7 +1289458,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:865:catchtap:onProtoSheetClose:141",
+      "id": "pages/roam/index.wxml:865:catchtap:onProtoSheetClose:143",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1289361,7 +1289525,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:867:bind:close:closeScene:143",
+      "id": "pages/roam/index.wxml:867:bind:close:closeScene:145",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1289428,7 +1289592,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:867:bind:open:openChildScene:142",
+      "id": "pages/roam/index.wxml:867:bind:open:openChildScene:144",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1289534,7 +1289698,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:871:catchtouchmove:blockSceneTouch:144",
+      "id": "pages/roam/index.wxml:871:catchtouchmove:blockSceneTouch:146",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1289602,7 +1289766,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:872:bindtap:onProtoSheetClose:145",
+      "id": "pages/roam/index.wxml:872:bindtap:onProtoSheetClose:147",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1289669,7 +1289833,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:873:catchtap:noop:146",
+      "id": "pages/roam/index.wxml:873:catchtap:noop:148",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1289737,7 +1289901,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:875:catchtap:onProtoSheetClose:147",
+      "id": "pages/roam/index.wxml:875:catchtap:onProtoSheetClose:149",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1289804,7 +1289968,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:877:bind:close:backScene:148",
+      "id": "pages/roam/index.wxml:877:bind:close:backScene:150",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1289941,7 +1290105,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:881:catchtouchmove:blockSceneTouch:149",
+      "id": "pages/roam/index.wxml:881:catchtouchmove:blockSceneTouch:151",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1290009,7 +1290173,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:882:bindtap:onProtoSheetClose:150",
+      "id": "pages/roam/index.wxml:882:bindtap:onProtoSheetClose:152",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1290076,7 +1290240,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:883:catchtap:noop:151",
+      "id": "pages/roam/index.wxml:883:catchtap:noop:153",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1290144,7 +1290308,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:885:catchtap:onProtoSheetClose:152",
+      "id": "pages/roam/index.wxml:885:catchtap:onProtoSheetClose:154",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1290211,7 +1290375,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:887:bind:close:backScene:153",
+      "id": "pages/roam/index.wxml:887:bind:close:backScene:155",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1290341,11 +1290505,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:6106"
+        "staticSource": "pages/roam/index.js:6107"
       }
     },
     {
-      "id": "pages/roam/index.wxml:891:catchtouchmove:blockSceneTouch:154",
+      "id": "pages/roam/index.wxml:891:catchtouchmove:blockSceneTouch:156",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1290413,7 +1290577,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:892:bindtap:onProtoSheetClose:155",
+      "id": "pages/roam/index.wxml:892:bindtap:onProtoSheetClose:157",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1290480,7 +1290644,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:893:catchtap:noop:156",
+      "id": "pages/roam/index.wxml:893:catchtap:noop:158",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1290548,7 +1290712,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:895:catchtap:onProtoSheetClose:157",
+      "id": "pages/roam/index.wxml:895:catchtap:onProtoSheetClose:159",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1290615,7 +1290779,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:897:bind:close:backScene:158",
+      "id": "pages/roam/index.wxml:897:bind:close:backScene:160",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1290682,7 +1290846,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:901:catchtouchmove:blockSceneTouch:159",
+      "id": "pages/roam/index.wxml:901:catchtouchmove:blockSceneTouch:161",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1290750,7 +1290914,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:902:bindtap:onProtoSheetClose:160",
+      "id": "pages/roam/index.wxml:902:bindtap:onProtoSheetClose:162",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1290817,7 +1290981,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:903:catchtap:noop:161",
+      "id": "pages/roam/index.wxml:903:catchtap:noop:163",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1290885,7 +1291049,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:905:catchtap:onProtoSheetClose:162",
+      "id": "pages/roam/index.wxml:905:catchtap:onProtoSheetClose:164",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1290952,7 +1291116,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:907:bind:camera:openStampCamera:163",
+      "id": "pages/roam/index.wxml:907:bind:camera:openStampCamera:165",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1291023,7 +1291187,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:907:bind:close:closeScene:164",
+      "id": "pages/roam/index.wxml:907:bind:close:closeScene:166",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1291090,7 +1291254,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:911:catchtouchmove:blockSceneTouch:165",
+      "id": "pages/roam/index.wxml:911:catchtouchmove:blockSceneTouch:167",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1291158,7 +1291322,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:912:bindtap:onProtoSheetClose:166",
+      "id": "pages/roam/index.wxml:912:bindtap:onProtoSheetClose:168",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1291225,7 +1291389,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:913:catchtap:noop:167",
+      "id": "pages/roam/index.wxml:913:catchtap:noop:169",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1291293,7 +1291457,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:915:catchtap:onProtoSheetClose:168",
+      "id": "pages/roam/index.wxml:915:catchtap:onProtoSheetClose:170",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1291360,7 +1291524,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:917:bind:close:closeScene:170",
+      "id": "pages/roam/index.wxml:917:bind:close:closeScene:172",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1291427,7 +1291591,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:917:bind:official:openOfficialEvent:171",
+      "id": "pages/roam/index.wxml:917:bind:official:openOfficialEvent:173",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1291493,11 +1291657,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5868"
+        "staticSource": "pages/roam/index.js:5869"
       }
     },
     {
-      "id": "pages/roam/index.wxml:917:bind:open:openChildScene:169",
+      "id": "pages/roam/index.wxml:917:bind:open:openChildScene:171",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1291603,7 +1291767,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:924:catchtouchmove:blockSceneTouch:172",
+      "id": "pages/roam/index.wxml:924:catchtouchmove:blockSceneTouch:174",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1291671,7 +1291835,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:925:bindtap:onProtoSheetClose:173",
+      "id": "pages/roam/index.wxml:925:bindtap:onProtoSheetClose:175",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1291738,7 +1291902,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:926:catchtap:noop:174",
+      "id": "pages/roam/index.wxml:926:catchtap:noop:176",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1291806,7 +1291970,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:928:catchtap:onProtoSheetClose:175",
+      "id": "pages/roam/index.wxml:928:catchtap:onProtoSheetClose:177",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1291987,7 +1292151,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:930:bind:citystamp:openCityStamp:179",
+      "id": "pages/roam/index.wxml:930:bind:citystamp:openCityStamp:181",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1292058,7 +1292222,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:930:bind:close:closeScene:177",
+      "id": "pages/roam/index.wxml:930:bind:close:closeScene:179",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1292125,7 +1292289,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:930:bind:completed:onScenePoiCompleted:178",
+      "id": "pages/roam/index.wxml:930:bind:completed:onScenePoiCompleted:180",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1292188,11 +1292352,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:6020"
+        "staticSource": "pages/roam/index.js:6021"
       }
     },
     {
-      "id": "pages/roam/index.wxml:930:bind:open:openChildScene:176",
+      "id": "pages/roam/index.wxml:930:bind:open:openChildScene:178",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1292298,7 +1292462,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:934:bind:cancel:cancelSceneDiscard:181",
+      "id": "pages/roam/index.wxml:934:bind:cancel:cancelSceneDiscard:183",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1292365,7 +1292529,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:934:bind:confirm:confirmSceneDiscard:180",
+      "id": "pages/roam/index.wxml:934:bind:confirm:confirmSceneDiscard:182",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1292432,7 +1292596,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:944:bindtap:closeSettle:182",
+      "id": "pages/roam/index.wxml:944:bindtap:closeSettle:184",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1292566,7 +1292730,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5822"
+        "staticSource": "pages/roam/index.js:5823"
       }
     },
     {
@@ -1292653,7 +1292817,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:974:bind:retry:retrySettle:183",
+      "id": "pages/roam/index.wxml:974:bind:retry:retrySettle:185",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1292789,7 +1292953,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:976:bindtap:continueUnstartedRoam:184",
+      "id": "pages/roam/index.wxml:976:bindtap:continueUnstartedRoam:186",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1292856,7 +1293020,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:981:bind:retry:retryEventReport:185",
+      "id": "pages/roam/index.wxml:981:bind:retry:retryEventReport:187",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1292934,7 +1293098,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5064"
+        "staticSource": "pages/roam/index.js:5065"
       }
     },
     {
@@ -1293074,7 +1293238,7 @@
       }
     },
     {
-      "id": "pages/roam/index.wxml:994:bindtap:openPassport:186",
+      "id": "pages/roam/index.wxml:994:bindtap:openPassport:188",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1293140,11 +1293304,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5716"
+        "staticSource": "pages/roam/index.js:5717"
       }
     },
     {
-      "id": "pages/roam/index.wxml:997:bindtap:openShare:187",
+      "id": "pages/roam/index.wxml:997:bindtap:openShare:189",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1293246,11 +1293410,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5122"
+        "staticSource": "pages/roam/index.js:5123"
       }
     },
     {
-      "id": "pages/roam/index.wxml:999:bindtap:openSettleHistory:188",
+      "id": "pages/roam/index.wxml:999:bindtap:openSettleHistory:190",
       "route": "pages/roam/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1293387,7 +1293551,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/roam/index.js:5830"
+        "staticSource": "pages/roam/index.js:5831"
       }
     },
     {

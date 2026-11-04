@@ -4468,6 +4468,7 @@ Page({
       title: poi.name || '地点',
       body: poi.desc || '',
       address: poi.address || '',
+      lat: poi.lat, lng: poi.lng,   // 第九轮 m1 第 9 项:地址可点开地图
       // 推荐理由与资料来源由分包里的目录按种子标签查,主包只透传 tags
       tags: poi.tags || '',
       demo: !!poi.demo,
@@ -6260,5 +6261,8 @@ Page({
           cover: img(String(t.imgArr || t.imgUrl || '').split(/[,;]/)[0].trim()), tag: Number(t.productType) === 2 ? '自由探索' : '城市定向', meta: String(t.city || t.addressName || '') })) });
       });
     });
-  }
+  },
+
+  /* 第九轮 m1 第 9 项:地点卡与商家横滑卡上的地址,点一下用微信地图打开(全站同一个 utils/open-address.js) */
+  onAddrTap(e) { require('../../utils/open-address.js').openFromEvent(e); },
 });

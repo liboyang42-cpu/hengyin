@@ -12,13 +12,13 @@
 .rpc__title { position: absolute; left: 36rpx; right: 36rpx; bottom: 28rpx; color: #FFFFFF; font-size: 48rpx; font-weight: 700; line-height: 1.25; } /* ds-ok 照片上的白字 */
 .rpc--bare .rpc__title { position: static; display: block; color: var(--cy-color-text-primary); }
 .rpc__body { padding: 32rpx 36rpx 36rpx; display: flex; flex-direction: column; gap: 20rpx; }
-.rpc__addr { display: block; color: var(--cy-color-text-primary); font-size: 30rpx; line-height: 1.4; }
-.rpc__row { display: flex; gap: 28rpx; color: var(--cy-color-text-secondary); font-size: 28rpx; }
+.rpc__addr { display: block; color: var(--cy-color-text-primary); font-size: var(--cy-type-body); line-height: 1.4; }
+.rpc__row { display: flex; gap: 28rpx; color: var(--cy-color-text-secondary); font-size: var(--cy-type-body); }
 .rpc__rate { font-weight: 700; color: var(--cy-color-text-primary); }
 .rpc__acts { display: flex; gap: 20rpx; margin-top: 12rpx; }
-.rpc-act { flex: 1; min-height: 88rpx; margin: 0; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: var(--cy-radius-pill); background: var(--cy-color-play-surface, rgba(255,255,255,.12)); color: var(--cy-color-text-primary); font-size: 30rpx; font-weight: 700; line-height: 88rpx; border: 0; }
+.rpc-act { flex: 1; min-height: 88rpx; margin: 0; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: var(--cy-radius-pill); background: var(--cy-color-play-surface); color: var(--cy-color-text-primary); font-size: var(--cy-type-button); font-weight: 700; line-height: 88rpx; border: 0; }
 .rpc-act::after { border: 0; }
-.rpc-act--main { background: var(--cy-color-action-primary-bg, #FFFFFF); color: var(--cy-color-action-primary-fg, #111111); }
+.rpc-act--main { background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg); }
 .rpc__close { position: absolute; right: 12rpx; top: 12rpx; width: 88rpx; height: 88rpx; display: flex; align-items: center; justify-content: center; }
 .rpc__x { position: relative; width: 64rpx; height: 64rpx; border-radius: 50%; background: rgba(0,0,0,.5); } /* ds-ok 原型 .mz-card__close */
 .rpc__x::before, .rpc__x::after { content: ""; position: absolute; left: 18rpx; right: 18rpx; top: 30rpx; height: 4rpx; background: #FFFFFF; } /* ds-ok 同上 */

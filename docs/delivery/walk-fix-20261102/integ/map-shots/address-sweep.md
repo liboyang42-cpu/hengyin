@@ -37,10 +37,10 @@ Status key:
 | 22 | pages/activity/baoming/baoming.wxml:220 | `addressList` | N | Not an address (participants). |
 | 23 | pages/activity/baoming/baoming.wxml:227 | `addressList` | N | Not an address (participants). |
 | 24 | pages/activity/baoming/baoming.wxml:239 | `addressList` | N | Not an address (participants). |
-| 25 | pages/roam/index.wxml:40 | entry activity card meta | L | The card opens the activity. The address is a fallback for `meta`. Lead's file. |
-| 26 | pages/roam/index.wxml:167 | entry card meta | L | Same as row 25. |
-| 27 | pages/roam/index.wxml:382 | pace card address | L | Needs `openAddress.openAddress(paceCard)` on the address text. Lead to wire. |
-| 28 | pages/roam/index.wxml:490 | POI list address | L | Needs a catchtap on `poi__addr` to `openAddress`. Lead to wire. |
+| 25 | pages/roam/index.wxml:40 | entry activity card meta | N | The whole card opens the activity; the address is only a fallback for `meta`. A second tap target inside it would compete. |
+| 26 | pages/roam/index.wxml:167 | entry card meta | N | Same as row 25. |
+| 27 | pages/roam/index.wxml:382 | pace card address | C | Wired by the lead: `catchtap="onAddrTap"` → `open-address.openFromEvent` with the place's coordinates. |
+| 28 | pages/roam/index.wxml:490 | POI list address | C | Wired by the lead: `poi__addr` `catchtap="onAddrTap"` with the row's coordinates. |
 | 29 | pages/coop/nearby/index.wxml:32 | nearby merchant list | C | Passes `latitude/longitude` and `nav`. The address opens the map, and there is a new 导航 pill. |
 | 30 | pages/coop/invite/index.wxml:104 | invite target row data | N | The row is a toggle to select a merchant. The address is only a fallback meta line, and a second tap target would fight the selection. |
 | 31 | pages/coop/invite/index.wxml:107 | same row meta | N | Same as row 30. |
@@ -104,13 +104,13 @@ Status key:
 
 | Status | Lines |
 |---|---|
-| C, covered by this change, including E→C | 31 |
+| C, covered by this change, including E→C | 33 |
 | E, already opened the map | 11 |
 | P, editor (picker for edit, map for view) | 14 |
-| L, `pages/roam/index.wxml` (lead) | 4 |
-| N, not covered | 26 |
+| N, not covered | 28 |
 
 Not covered, by reason:
+- Roam entry cards (25, 26): the whole card opens the activity and the address is only the `meta` fallback, 2 lines.
 - Not an address, 15 lines: `addressList` participants (20, 22-24), the `addressConfirmed` flag and its status text (60, 61, 63-65), error text (40, 58, 75), a city name (33) and title fallbacks (66, 68).
 - No coordinates on the record and no text worth geocoding, so the line stays plain, 3 lines: the merchant card fallback (3), the activity meeting point (12) and the nearby POI (17). Each is the `wx:else` of a covered element.
 - The tap on that spot already does something else, 6 lines: a selection toggle (30, 31), an event card (32), a list row that opens a detail where the address is tappable (13), the story-map node card that opens the node editor (44) and a full-bleed home card (79).

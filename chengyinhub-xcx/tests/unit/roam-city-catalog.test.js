@@ -170,7 +170,8 @@ test('目录、目录组件和地点卡理由组件都不进主包，漫游页�
   const js = fs.readFileSync(path.join(root, 'pages/roam/index.js'), 'utf8')
   assert.doesNotMatch(js, /roam-city-catalog/, '主包漫游页不得直接 require 目录')
   const wxml = fs.readFileSync(path.join(root, 'pages/roam/index.wxml'), 'utf8')
-  assert.match(wxml, /<text class="pc-body" wx:if="\{\{paceCard\.address\}\}">\{\{paceCard\.address\}\}<\/text>/)
+  // 第九轮 m1 第 9 项:地址行仍是同一行 .pc-body,只加了点开地图
+  assert.match(wxml, /<text class="pc-body cy-addr-tap" wx:if="\{\{paceCard\.address\}\}" catchtap="onAddrTap"[^>]*>\{\{paceCard\.address\}\}<\/text>/)
   assert.match(wxml, /<text class="pc-body" wx:if="\{\{paceCard\.reason\}\}">\{\{paceCard\.reason\}\}<\/text>/)
   assert.match(wxml, /<cy-roam-place-note wx:if="\{\{paceCard\.tags\}\}" tags="\{\{paceCard\.tags\}\}" bind:note="onPlaceNote" \/>/)
 })

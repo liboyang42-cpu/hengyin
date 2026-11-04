@@ -388,7 +388,7 @@
       <view class="pc-close" bindtap="closePaceCard" aria-role="button" aria-label="关闭地点提示" hover-class="cy-pressed" hover-stay-time="80"><view class="pc-close__glyph"><cy-icon name="close-sm" size="32" /></view></view>
     </view>
     <text class="pc-demo" wx:if="{{paceCard.demo}}">演示点 · 仅浏览（非真实地点）</text>
-    <text class="pc-body" wx:if="{{paceCard.address}}">{{paceCard.address}}</text>
+    <text class="pc-body cy-addr-tap" wx:if="{{paceCard.address}}" catchtap="onAddrTap" data-lat="{{paceCard.lat}}" data-lng="{{paceCard.lng}}" data-name="{{paceCard.title}}" data-address="{{paceCard.address}}" aria-role="link" aria-label="{{paceCard.address}}，在地图中打开" hover-class="cy-pressed" hover-stay-time="80">{{paceCard.address}}</text>
     <text class="pc-body" wx:if="{{paceCard.body}}">{{paceCard.body}}</text>
     <text class="pc-body" wx:if="{{paceCard.reason}}">{{paceCard.reason}}</text>
     <text class="pc-body" wx:if="{{paceCard.sources}}" user-select>{{paceCard.sources}}</text>
@@ -496,7 +496,7 @@
           <view class="poi__title">
             <text class="poi__name">{{item.name}}</text>
           </view>
-          <text class="poi__addr">{{item.address}}</text>
+          <text class="poi__addr cy-addr-tap" catchtap="onAddrTap" data-lat="{{item.lat}}" data-lng="{{item.lng}}" data-name="{{item.name}}" data-address="{{item.address}}" aria-role="link" aria-label="{{item.address}}，在地图中打开" hover-class="cy-pressed" hover-stay-time="80">{{item.address}}</text>
           <view class="poi__biz">
             <view class="poi__dot" style="background:{{item.dot}}"></view>
             <text>{{item.meta}}</text>
