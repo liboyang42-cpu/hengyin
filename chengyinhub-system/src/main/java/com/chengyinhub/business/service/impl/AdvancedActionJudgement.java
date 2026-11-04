@@ -237,8 +237,10 @@ public final class AdvancedActionJudgement {
                 && !state.path("pricePair").path("finished").asBoolean(false)) return false;
         // 竞猜:押了就算走完这一站。答案要等商家次日才给,不这样玩家会卡在一个
         // 当天根本无法判定的节点上,整条路线断在这里(施工文档 §1.3)。
+        // R11 g1 F1:这一轮已关、玩家没选而跳过,也算走完(0 分、不发这一段 xp)
         if (enabled(config.get("predict"))
-                && state.path("predict").path("optionKey").asText("").isEmpty()) return false;
+                && state.path("predict").path("optionKey").asText("").isEmpty()
+                && !state.path("predict").path("skipped").asBoolean(false)) return false;
         // 找东西反过来:它有确定答案,必须全找齐才算过,可以无限点
         if (enabled(config.get("hiddenObject"))) {
             int need = config.path("hiddenObject").path("hotspots").size();

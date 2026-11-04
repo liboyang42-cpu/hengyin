@@ -171,7 +171,8 @@ function segmentComplete(name, seg) {
   // 走到终点那一步就算这段剧情完了 —— 终点没有选项,再弹一次也没得选
   if (name === 'branch') return !!(seg.currentStep && seg.currentStep.terminal);
   // 押过就算完:答案由商家事后给,玩家这边没有第二个动作
-  if (name === 'predict') return !!String(seg.myOptionKey || '').trim();
+  // R11 g1 F1:这一轮已截止、玩家不选直接走,服务端记 skipped,同样算完
+  if (name === 'predict') return !!String(seg.myOptionKey || '').trim() || seg.skipped === true;
   // 抽满次数才算完。还能抽就该继续弹,不然剩下的次数玩家永远用不掉
   if (name === 'random') return ((seg.drawn || []).length >= (seg.drawCount || 0));
   // 问答:答完就算(答错次数用完也算完),与猜数字同一条口径
@@ -627,6 +628,10 @@ function pickPlayKit(view, now) {
         settleStatus: seg.settleStatus,
         settledOption: seg.settledOption || '',
         won: !!seg.won,
+        // R11 g1 F1:这一轮已关(过了截止整点或已揭晓)且没选 ⇒ 只给「不选，继续」
+        closed: seg.closed === true,
+        // 本站有承接商家才说「由商家给出答案」;没有就不承诺
+        shopAnswers: seg.shopAnswers !== false,
       });
     }
     if (name === 'random') {
@@ -942,6 +947,7 @@ const ACTION_OF = {
   'compare:submit': 'SUBMIT_COMPARE',
   'hidden:submit': 'SUBMIT_HIDDEN_OBJECT',
   'predict:submit': 'SUBMIT_PREDICT',
+  'predict:skip': 'SKIP_CLOSED_PREDICT',
   /* 七个挑战类都要先开表(原来六个 + 喊一嗓子):服务端拿 START_CHALLENGE 那一刻的**服务器时间**复核成绩,
      不先发这一条,提交会被判成「还没开始」。设备时钟玩家改得动,所以不能只信客户端报的毫秒。 */
   'reaction:start': 'START_CHALLENGE',

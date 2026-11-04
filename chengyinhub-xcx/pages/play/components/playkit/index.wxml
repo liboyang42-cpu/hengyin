@@ -160,7 +160,8 @@
   close-at-hour="{{kit.closeAtHour}}" reveal-days="{{kit.revealDays}}" reveal-hour="{{kit.revealHour}}"
   settle-status="{{kit.settleStatus}}" settled-option="{{kit.settledOption}}"
   won="{{kit.won}}" my-option-key="{{kit.myOptionKey}}"
-  bind:submit="onSubmit" bind:close="onClose" />
+  closed="{{kit.closed}}" shop-answers="{{kit.shopAnswers}}"
+  bind:submit="onSubmit" bind:skip="onSkip" bind:close="onClose" />
 
 <cy-playkit-random wx:elif="{{kit.type === 'random'}}" style="{{inline ? '--pk-stage-height:1180rpx;--pk-stage-body-pos:absolute' : ''}}"
   show="{{show}}" deck-name="{{kit.deckName}}" cards="{{kit.cards}}"

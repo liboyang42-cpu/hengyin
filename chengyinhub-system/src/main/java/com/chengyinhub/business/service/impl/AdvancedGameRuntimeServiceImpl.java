@@ -555,6 +555,10 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
                     case "SUBMIT_PREDICT":
                         submitPredict(config, state, safePayload, session, memberId);
                         break;
+                    case "SKIP_CLOSED_PREDICT":
+                        if (zeroChallengeSession) throw new IllegalStateException("这一站不支持跳过");
+                        skipClosedPredict(config, state, session);
+                        break;
                     case "ROLL_CHECK":
                     case "REROLL_CHECK":
                         if(!config.has("outcomeRules") || !enabled(config.get("check")))throw new IllegalStateException("本局未启用结果检定");
@@ -1125,6 +1129,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             reasons.add("photoCheck:FALLBACK");
         }
         if (config.path("scan").path("enabled").asBoolean(false)) reasons.add("scan:TASK_CODE_MATCH");
+        if (state != null && state.path("predict").path("skipped").asBoolean(false)) reasons.add("predict:SKIPPED_CLOSED");
         return reasons;
     }
 
@@ -1148,7 +1153,10 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
     public boolean sensorStationSkipped(Long memberId, Long activityId, Long topicId, Long nodeId) {
         if (memberId == null || topicId == null || nodeId == null) return false;
         GameRuntimeSession session = existingSession(memberId, activityId == null ? 0L : activityId, topicId, nodeId);
-        return session != null && AdvancedActionJudgement.skippedSensorSection(objectState(session.getStateJson())) != null;
+        if (session == null) return false;
+        ObjectNode state = objectState(session.getStateJson());
+        return AdvancedActionJudgement.skippedSensorSection(state) != null
+                || state.path("predict").path("skipped").asBoolean(false);
     }
 
     @Override
@@ -2031,7 +2039,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         int closeAtHour = cfg.path("closeAtHour").asInt(23);
         // 截止之后不再收注:否则玩家可以等商家结算完再回来押,那就不是猜了
         if (local.getHour() >= closeAtHour) {
-            throw new IllegalStateException("今天这一轮已经截止,明天再来");
+            throw new IllegalStateException("今天这一轮已经截止");
         }
         java.sql.Date playDay = java.sql.Date.valueOf(local.toLocalDate());
 
@@ -2089,6 +2097,33 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         }
     }
 
+
+    /**
+     * R11 g1 F1:截止或这一轮已经结束、本人又没选的预测站,允许不选直接往下走。
+     * 一条线性路线不能断在「明天再来」上。跳过不发这一段的 xp,完成链按 SKIPPED 记 0 分、
+     * 奖励封顶到探索值与徽章(见 sensorStationSkipped / untrustedCompletionEvidence)。
+     * 按结果分支的预测不许跳:跳过会被判成一个分支结果。
+     */
+    private void skipClosedPredict(JsonNode config, ObjectNode state, GameRuntimeSession session) {
+        JsonNode cfg = config.get("predict");
+        if (!enabled(cfg)) throw new IllegalArgumentException("该玩法未开启预测");
+        if (config.has("outcomeRules")) throw new IllegalStateException("这一站不支持跳过");
+        ObjectNode node = state.with("predict");
+        if (node.path("skipped").asBoolean(false)) return;   // 重放:已经跳过了
+        if (!node.path("optionKey").asText("").isEmpty()) throw new IllegalStateException("这一轮你已经选过了");
+        if (!predictClosed(cfg, session.getNodeId())) throw new IllegalStateException("这一轮还没截止");
+        node.put("skipped", true);
+    }
+
+    /** 本站今天这一轮还收不收:过了截止整点,或这一轮已经揭晓/作废,就是关了。 */
+    private boolean predictClosed(JsonNode cfg, Long nodeId) {
+        ZonedDateTime local = Instant.ofEpochMilli(clock.now().getTime()).atZone(BUSINESS_ZONE);
+        if (local.getHour() >= cfg.path("closeAtHour").asInt(23)) return true;
+        com.chengyinhub.business.domain.PlayPredictResult round =
+                predictMapper.selectResult(nodeId, java.sql.Date.valueOf(local.toLocalDate()));
+        return round != null && round.getSettleStatus() != null
+                && !Integer.valueOf(com.chengyinhub.business.domain.PlayPredictResult.SETTLE_PENDING).equals(round.getSettleStatus());
+    }
 
     private String dayKey(Date now) {
         Date source = now == null ? new Date() : now;
@@ -3348,6 +3383,15 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         Object raw = kit.get("predict");
         if (!(raw instanceof Map)) return;
         Map<String, Object> predict = (Map<String, Object>) raw;
+        // R11 g1 F1:没选、这一轮已关 ⇒ 客户端给「不选，继续」;本站没有承接商家就别承诺「商家给答案」
+        boolean skipped = state.path("predict").path("skipped").asBoolean(false);
+        predict.put("skipped", skipped);
+        if (!skipped && state.path("predict").path("optionKey").asText("").isEmpty()) {
+            JsonNode frozen = readJson(session.getConfigSnapshotJson(), "预测冻结配置不可用");
+            predict.put("closed", !frozen.has("outcomeRules") && predictClosed(frozen.path("predict"), session.getNodeId()));
+        }
+        CmsTopicNode answerNode = nodeMapper == null ? null : nodeMapper.selectCmsTopicNodeById(session.getNodeId());
+        predict.put("shopAnswers", answerNode != null && answerNode.getMerchantMemberId() != null);
         String playDay = state.path("predict").path("playDay").asText("");
         if (playDay.isEmpty()) return;              // 还没押,就没有可揭晓的
         java.sql.Date day;

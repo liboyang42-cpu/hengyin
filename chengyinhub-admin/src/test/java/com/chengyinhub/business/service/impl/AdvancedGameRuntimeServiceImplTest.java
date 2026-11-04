@@ -2000,6 +2000,33 @@ class AdvancedGameRuntimeServiceImplTest {
         assertThrows(IllegalStateException.class,()->service.act(8L,51L,0,"second-member","SUBMIT_PREDICT",Collections.singletonMap("optionKey","sun")));verify(predictions,never()).insertBet(any());assertTrue(session.getStateJson().contains("rain"));assertTrue(session.getStateJson().contains("101"));
     }
 
+    /* R11 g1 F1:过了截止整点、本人没选 ⇒ 可以不选直接走完这一站,0 分、奖励封顶、不发 xp;没截止不许跳 */
+    private String closedPredictConfig(int closeAtHour) { return "{\"schemaVersion\":1,\"predict\":{\"enabled\":true,\"question\":\"q\",\"xp\":30,\"options\":[{\"key\":\"a\",\"label\":\"A\"},{\"key\":\"b\",\"label\":\"B\"}],\"closeAtHour\":"+closeAtHour+"}}"; }
+    @Test void r11ClosedPredictCanBeSkippedWithoutReward() throws Exception {
+        com.chengyinhub.business.mapper.PlayPredictMapper predict=mock(com.chengyinhub.business.mapper.PlayPredictMapper.class);ReflectionTestUtils.setField(service,"predictMapper",predict);
+        GameRuntimeSession session=runningSession(closedPredictConfig(0),"{\"attemptOrdinal\":1}");when(sessionMapper.selectAccessibleById(51L,MEMBER_ID)).thenReturn(session);when(sessionMapper.updateStateCas(any())).thenReturn(1);
+        Map<String,Object> kit=playKit(service.state(MEMBER_ID,51L),"predict");assertEquals(Boolean.TRUE,kit.get("closed"));assertEquals(Boolean.FALSE,kit.get("shopAnswers"));
+        service.act(MEMBER_ID,51L,0,"predict-skip","SKIP_CLOSED_PREDICT",Collections.emptyMap());
+        com.fasterxml.jackson.databind.JsonNode state=new com.fasterxml.jackson.databind.ObjectMapper().readTree(session.getStateJson());
+        assertTrue(state.path("predict").path("skipped").asBoolean());assertEquals("",state.path("predict").path("optionKey").asText(""));
+        assertEquals(0,session.getScore()==null?0:session.getScore().intValue());verify(predict,never()).insertBet(any());
+        assertTrue(AdvancedActionJudgement.mechanicsReady(new com.fasterxml.jackson.databind.ObjectMapper().readTree(closedPredictConfig(0)),(com.fasterxml.jackson.databind.node.ObjectNode)state));
+        assertTrue(AdvancedGameRuntimeServiceImpl.untrustedCompletionEvidence(new com.fasterxml.jackson.databind.ObjectMapper().readTree(closedPredictConfig(0)),state).contains("predict:SKIPPED_CLOSED"));
+        assertTrue(playKit(service.state(MEMBER_ID,51L),"predict").get("skipped").equals(Boolean.TRUE));
+    }
+    @Test void r11OpenPredictCannotBeSkipped() {
+        com.chengyinhub.business.mapper.PlayPredictMapper predict=mock(com.chengyinhub.business.mapper.PlayPredictMapper.class);ReflectionTestUtils.setField(service,"predictMapper",predict);
+        GameRuntimeSession session=runningSession(closedPredictConfig(24),"{\"attemptOrdinal\":1}");when(sessionMapper.selectAccessibleById(51L,MEMBER_ID)).thenReturn(session);
+        assertThrows(IllegalStateException.class,()->service.act(MEMBER_ID,51L,0,"predict-skip","SKIP_CLOSED_PREDICT",Collections.emptyMap()));
+        assertFalse(session.getStateJson().contains("skipped"));
+    }
+    @Test void r11SettledRoundClosesPredictEvenBeforeCloseHour() {
+        com.chengyinhub.business.mapper.PlayPredictMapper predict=mock(com.chengyinhub.business.mapper.PlayPredictMapper.class);ReflectionTestUtils.setField(service,"predictMapper",predict);
+        com.chengyinhub.business.domain.PlayPredictResult round=new com.chengyinhub.business.domain.PlayPredictResult();round.setSettleStatus(1);when(predict.selectResult(any(),any())).thenReturn(round);
+        GameRuntimeSession session=runningSession(closedPredictConfig(24),"{\"attemptOrdinal\":1}");when(sessionMapper.selectAccessibleById(51L,MEMBER_ID)).thenReturn(session);when(sessionMapper.updateStateCas(any())).thenReturn(1);
+        service.act(MEMBER_ID,51L,0,"predict-skip","SKIP_CLOSED_PREDICT",Collections.emptyMap());assertTrue(session.getStateJson().contains("\"skipped\":true"));
+    }
+
     @Test void r5PredictSubmissionFreezesRealBetIdentityWithoutPassing() throws Exception {
         com.chengyinhub.business.mapper.PlayPredictMapper predict=mock(com.chengyinhub.business.mapper.PlayPredictMapper.class);ReflectionTestUtils.setField(service,"predictMapper",predict);com.chengyinhub.business.domain.PlayPredictResult round=new com.chengyinhub.business.domain.PlayPredictResult();round.setSettleStatus(0);when(predict.selectResultForUpdate(any(),any())).thenReturn(round);when(predict.insertBet(any())).thenAnswer(i->{((com.chengyinhub.business.domain.PlayPredictBet)i.getArgument(0)).setId(101L);return 1;});
         ITopicRouteRuntimeService route=mock(ITopicRouteRuntimeService.class);ReflectionTestUtils.setField(service,"topicRouteRuntimeService",route);when(route.canPlay(any(),any(),any(),any())).thenReturn(true);when(route.nodeRuntimeConfig(any(),any(),any(),any())).thenReturn(new com.fasterxml.jackson.databind.ObjectMapper().readTree(r5PredictConfig()));

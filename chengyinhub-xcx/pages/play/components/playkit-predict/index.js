@@ -90,14 +90,19 @@ Component({
     settledOption: { type: String, value: '' },
     won: { type: Boolean, value: false },
     myOptionKey: { type: String, value: '' },
+    /* R11 g1 F1:今天这一轮已关(过了截止整点或已揭晓)且本人没选。服务端下发,
+       此时只给「不选，继续」—— 一条线性路线不能停在「明天再来」上。 */
+    closed: { type: Boolean, value: false },
+    /* 本站有承接商家才说「由商家给出答案」。默认 true:老服务端不下发这个字段时口径不变 */
+    shopAnswers: { type: Boolean, value: true },
   },
   data: {
-    cards: [], picked: -1, committed: false, waitLabel: '',
+    cards: [], picked: -1, committed: false, skipping: false, waitLabel: '',
     // 派生:换个键名,别写回被 observer 监听的那几个属性
     revealKind: '', revealHead: '', revealText: '',
   },
   observers: {
-    'show, settleStatus, settledOption, won': function (show) {
+    'show, settleStatus, settledOption, won, shopAnswers': function (show) {
       if (!show) return;
       // 字段写死成字面量:动态 setData 门禁核不出写了哪些顶层字段
       const reveal = revealOf(this.data);
@@ -107,15 +112,15 @@ Component({
         revealText: reveal.revealText,
       });
     },
-    'show, options, closeAtHour, revealDays, revealHour': function (show) {
+    'show, options, closeAtHour, revealDays, revealHour, shopAnswers': function (show) {
       if (!show) { this._stop(); return; }
       const d = this.data;
       this._angle = 0;
       this._n = (d.options || []).length || 1;
       this._slices = slicesFor();
       this.setData({
-        picked: -1, committed: false,
-        waitLabel: waitLabelOf(d.closeAtHour, d.revealDays, d.revealHour),
+        picked: -1, committed: false, skipping: false,
+        waitLabel: waitLabelOf(d.closeAtHour, d.revealDays, d.revealHour, d.shopAnswers),
       });
       this._paint();
       if (!d.reducedMotion) this._spin();
@@ -164,11 +169,18 @@ Component({
     },
 
     onPick(e) {
-      if (this.data.committed) return;
+      if (this.data.committed || this.data.closed) return;
       this.setData({ picked: Number(e.currentTarget.dataset.i) });
       this._paint();
     },
     onCommit() {
+      // 这一轮已关:不选，继续。服务端复核确实已关才记跳过,0 分、不发这一段的奖励
+      if (this.data.closed && !this.data.myOptionKey) {
+        if (this.data.skipping) return;
+        this.setData({ skipping: true });
+        this.triggerEvent('skip', {});
+        return;
+      }
       if (this.data.committed || this.data.picked < 0) return;
       // 「做成了」= 押定这一下。它不可逆,给 medium
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
@@ -193,7 +205,9 @@ function revealOf(d) {
   if (Number(status) === 2) {
     return {
       revealKind: 'void', revealHead: '这一轮作废了',
-      revealText: '商家没有在期限内给出答案。这一轮不发奖，你选的那一下不算数。',
+      revealText: d.shopAnswers === false
+        ? '这一轮没有公布答案。这一轮不发奖，你选的那一下不算数。'
+        : '商家没有在期限内给出答案。这一轮不发奖，你选的那一下不算数。',
     };
   }
   if (Number(status) === 1) {
@@ -203,6 +217,8 @@ function revealOf(d) {
       ? { revealKind: 'won', revealHead: '猜中了', revealText: '答案是「' + answer + '」,你选的就是它。' }
       : { revealKind: 'lost', revealHead: '没猜中', revealText: '答案是「' + answer + '」,你选的是「' + mine + '」。' };
   }
+  // 本站没有承接商家:没人会给答案,不许诺「等商家」
+  if (d.shopAnswers === false) return { revealKind: '', revealHead: '', revealText: '' };
   return { revealKind: 'wait', revealHead: '等商家给答案', revealText: '答案给出来之后，这里会告诉你中没中。' };
 }
 
@@ -232,8 +248,10 @@ function dayText(days) {
   return '第 ' + days + ' 天';
 }
 
-function waitLabelOf(closeAtHour, revealDays, revealHour) {
+function waitLabelOf(closeAtHour, revealDays, revealHour, shopAnswers) {
   const close = hourText(closeAtHour);
+  // 本站没有承接商家:只说截止,不承诺谁给答案
+  if (shopAnswers === false) return close ? '今天 ' + close + ' 截止。' : '';
   const reveal = hourText(revealHour);
   const days = typeof revealDays === 'number' && Number.isInteger(revealDays)
     && revealDays >= 0 && revealDays <= 30 ? revealDays : -1;
