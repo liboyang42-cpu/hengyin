@@ -324,7 +324,6 @@
           <view class="det-type">评价</view>
           <view class="det6-empty" wx:if="{{!info.commentCount}}" bindtap="voteClick" aria-role="button" aria-label="成为第一个评价的人" hover-class="cy-pressed" hover-stay-time="80">
             <text class="det6-empty-t">还没有评价</text>
-            <text class="det6-empty-s">未参与也可以评价。已支付或已核销报名后的首条评价可按当前规则获得积分，以实际积分记录为准。</text>
           </view>
           <block wx:else>
             <view class="row1 flex-cb">
