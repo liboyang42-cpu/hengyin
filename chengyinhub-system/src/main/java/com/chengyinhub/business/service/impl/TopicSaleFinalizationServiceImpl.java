@@ -59,6 +59,8 @@ import java.util.Objects;
 public class TopicSaleFinalizationServiceImpl implements ITopicSaleFinalizationService {
 
     @Autowired private com.chengyinhub.business.service.support.PureContentExploreService pureContentExploreService;
+    @Autowired(required = false) private com.chengyinhub.business.mapper.CmsRegistrationMerchantMapper registrationMerchantMapper;
+    @Autowired(required = false) private com.chengyinhub.business.mapper.CmsTopicNodeMapper topicNodeMapper;
 
     /** A1 已拍板：活动结束后 T+7 收齐证据。 */
     private static final long EVIDENCE_DUE_DAYS = 7L;
@@ -166,6 +168,7 @@ public class TopicSaleFinalizationServiceImpl implements ITopicSaleFinalizationS
         transferGate.assertTransferred(topic, orderLineup);
         assertNoDuplicateLineup(offers, orderLineup.getEntries());
         assertOrganizer(topic, orderLineup.getEntries());
+        assertStationMerchantsContracted(topic, orderLineup.getEntries());
         assertFrozenCommercialFacts(topic, tickets, offers);
 
         if (canonicalExplore) {
@@ -479,6 +482,38 @@ public class TopicSaleFinalizationServiceImpl implements ITopicSaleFinalizationS
         }
         if (!guided && organizers > 1) {
             throw new IllegalStateException("FREE_EXPLORE ORGANIZER 至多一个，当前=" + organizers);
+        }
+    }
+
+    /**
+     * 第十轮 f2 第 6 项(j2 F-01e):城市定向里已中标某站的商家(承接报名审核通过且选定),
+     * 开售前必须已有生效的合作单 —— 商家扫团码只认合作单(GroupCodeServiceImpl),没有它开局后
+     * 玩家过了上一站就卡住。开售就在这里拦下,并说清是哪一站。
+     */
+    void assertStationMerchantsContracted(CmsTopic topic, List<CoopOrderLineupSource.LineupEntry> entries) {
+        if (registrationMerchantMapper == null || topic == null
+                || !Integer.valueOf(ProductType.ORIENTEERING).equals(topic.getProductType())) return;
+        com.chengyinhub.business.domain.CmsRegistrationMerchant query = new com.chengyinhub.business.domain.CmsRegistrationMerchant();
+        query.setTopicId(topic.getId());
+        query.setAuditStatus(1L);
+        query.setStatus(1L);
+        query.setDelFlag(0);
+        List<com.chengyinhub.business.domain.CmsRegistrationMerchant> winners = registrationMerchantMapper.selectCmsRegistrationMerchantList(query);
+        if (winners == null || winners.isEmpty()) return;
+        java.util.Set<Long> contracted = new java.util.HashSet<>();
+        for (CoopOrderLineupSource.LineupEntry entry : entries) {
+            if ("MERCHANT".equals(entry.getSubjectType()) && entry.getSubjectId() != null) contracted.add(entry.getSubjectId());
+        }
+        java.util.Set<String> missing = new java.util.LinkedHashSet<>();
+        for (com.chengyinhub.business.domain.CmsRegistrationMerchant winner : winners) {
+            if (winner == null || winner.getMemberId() == null || contracted.contains(winner.getMemberId())) continue;
+            com.chengyinhub.business.domain.CmsTopicNode node = topicNodeMapper == null || winner.getNodeId() == null
+                    ? null : topicNodeMapper.selectCmsTopicNodeById(winner.getNodeId());
+            String name = node == null || node.getName() == null || node.getName().trim().isEmpty() ? "未命名站点" : node.getName().trim();
+            missing.add("「" + name + "」");
+        }
+        if (!missing.isEmpty()) {
+            throw new IllegalStateException(String.join("、", missing) + "的商家还没有生效的合作单，不能开售：请先发出合作邀约并等商家接受");
         }
     }
 

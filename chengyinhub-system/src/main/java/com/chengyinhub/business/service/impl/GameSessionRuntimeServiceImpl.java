@@ -2007,6 +2007,33 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
     }
 
     @Autowired(required = false) private com.chengyinhub.business.mapper.ThemeStateKeyMapper themeStateKeyMapper;
+    @Autowired(required = false) private com.chengyinhub.business.mapper.CoopOrderMapper coopOrderMapper;
+
+    /**
+     * 第十轮 f2 第 6 项(j2 F-01e):俱乐部场次里由中标商家接待的站,商家扫团码要本主题生效的合作单
+     * (GroupCodeServiceImpl 同一判据)。没有合作单 ⇒ 开局后玩家过了上一站就卡死。开局前就把这站列为卡点。
+     */
+    List<String> merchantOrderBlockers(GameSession session) {
+        if (coopOrderMapper == null || session == null || session.getTopicId() == null
+                || session.getClubId() == null || session.getClubId() <= 0) return Collections.emptyList();
+        List<GameStationRun> winners = new ArrayList<>();
+        for (GameStationRun station : safe(runtimeMapper.selectStations(session.getId()))) {
+            if (station != null && station.getMerchantMemberId() != null && station.getMerchantMemberId() > 0
+                    && "REGISTRATION_WINNER".equals(station.getSourceType())) winners.add(station);
+        }
+        if (winners.isEmpty()) return Collections.emptyList();
+        Set<Long> effective = new HashSet<>();
+        for (com.chengyinhub.business.domain.CoopOrder order : safe(coopOrderMapper.selectEffectiveOrdersByTopicId(session.getTopicId()))) {
+            if (order != null && "merchant".equals(order.getToType()) && order.getToId() != null) effective.add(order.getToId());
+        }
+        List<String> blockers = new ArrayList<>();
+        for (GameStationRun station : winners) {
+            if (effective.contains(station.getMerchantMemberId())) continue;
+            String name = text(station.getNodeName(), 120);
+            blockers.add((StringUtils.isBlank(name) ? "未命名站点" : name) + "（商家没有生效的合作单）");
+        }
+        return blockers;
+    }
     /** 主题登记的线索名称（clue.* → label）。 */
     private Map<String,String> clueLabels(GameSession session) {
         Map<String,String> labels=new LinkedHashMap<>();
@@ -4165,6 +4192,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
             if (StringUtils.isBlank(name)) name = "未命名站点";
             blockers.add(name + "（" + readinessStatusLabel(status) + "）");
         }
+        blockers.addAll(merchantOrderBlockers(session));
         if (runtimeMapper.countActiveTeams(session.getActivityId()) < 1) {
             blockers.add("尚无有效报名队伍");
         } else if (!teamsReady) {
