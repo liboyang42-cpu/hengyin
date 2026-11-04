@@ -268,6 +268,26 @@
           )
     </select>
 
+    <!-- 第九轮 m2 同场路线:只回 UI 要的昵称、头像、队名;队伍 id 只在服务端分组用,不出接口。 -->
+    <select id="selectTrailParticipants" resultType="java.util.LinkedHashMap">
+        select r.member_id as memberId, m.nickname as nickname, m.avatar as avatar,
+               (select t.id from play_team t
+                  join play_team_member tm on tm.team_id = t.id and tm.member_id = r.member_id and tm.status = 1
+                 where t.owner_type = 2 and t.owner_id = #{activityId} and t.status in (0, 1, 2)
+                 order by t.id asc limit 1) as teamId,
+               (select t.title from play_team t
+                  join play_team_member tm on tm.team_id = t.id and tm.member_id = r.member_id and tm.status = 1
+                 where t.owner_type = 2 and t.owner_id = #{activityId} and t.status in (0, 1, 2)
+                 order by t.id asc limit 1) as teamTitle
+        from cms_registration r
+        join ums_member m on m.id = r.member_id
+        where r.owner_type = 2 and r.owner_id = #{activityId}
+          and r.payment_status = 2 and r.registration_status = 2
+          and r.member_id in
+          <foreach collection="memberIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+        group by r.member_id, m.nickname, m.avatar
+    </select>
+
     <select id="selectMyTeams" resultMap="PlayTeamResult">
         select t.id, t.owner_type, t.owner_id, t.leader_member_id, t.invite_code, t.title, t.join_mode,
                t.max_members, t.joined_count, t.status, t.expire_time, t.create_time, t.update_time

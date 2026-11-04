@@ -34,6 +34,7 @@ const { reportBlocksParseFailure } = require('./utils/chapter-blocks-health.js')
 const audioSession = require('./utils/audio-session.js');       // 音频打断/恢复 + 长音频不熄屏
 const { createPoller } = require('./utils/poller.js');           // 带领场进度:退避轮询
 const { createPlayTrail } = require('./utils/play-trail.js');
+const teamTrailKit = require('./utils/team-trail.js');
 const playAccuracy = require('./utils/play-accuracy.js');       // 到达定位精度阈值(80m)与提示
 const {
   normalizePlayerProjection,
@@ -533,7 +534,7 @@ Page({
     tileH: 0,                     // 瓦片行高:按剩余高度等分,4 家竖版大卡 / 6 家近方卡
     nodes: [], total: 0, merchantCount: 0, doneCount: 0, allDone: false, topicCompleted: false,
     remainingGameCount: 0,
-    fmNodes: [], fmPolyline: [], fmTrail: [], fmPlayer: null, fmCenter: { lat: 31.2304, lng: 121.4737 },
+    fmNodes: [], fmPolyline: [], fmTrail: [], fmTeamPins: [], teamRail: [], teamFollowKey: '', teamConsent: { show: false, share: true }, fmPlayer: null, fmCenter: { lat: 31.2304, lng: 121.4737 },
     fmSubkey: MAP_DARK.subkey, fmLayerStyle: MAP_DARK.layerStyle, // S9 暗色底图预留,见上方 MAP_DARK 注释
     nextNode: null,
     sheet: { show: false, node: null, continueText: '前往下一站' },
@@ -742,6 +743,8 @@ Page({
     this.restoreGuardAppeal();
     this._syncCommunityEntry();
     this._themeHidden = false; this._startThemePoll();
+    if (this._teamTrail && this._watching) this._teamTrail.start();
+    if (this._teamPatchPending) { this._teamPatchPending = false; this._applyTeams(this._teams); }
     this._flushTrail(true);
     this._startZeroHpTimer();
     if (this.data.chapterFull && !this.data.chapterGate.show) this.measureChapter();
@@ -1010,6 +1013,7 @@ Page({
 
   onUnload() {
     if (this._trail) this._trail.persist();
+    if (this._teamTrail) this._teamTrail.pause();
     if (this._answerRightTimer) { clearTimeout(this._answerRightTimer); this._answerRightTimer = null; }
     this._answerRightPending = null;
     this._stopStationBgm();
@@ -1063,6 +1067,7 @@ Page({
   onHide() {
     this._flushAnswerRight();
     if (this._trail) this._trail.persist();
+    if (this._teamTrail) this._teamTrail.pause();
     this.suspendOrientLifecycle(); this._stopTopbar();
     this.setData({ arrivalGuard: null });
     this._leadArrivalEpoch = (this._leadArrivalEpoch || 0) + 1; this._leadArriving = false;
@@ -1253,6 +1258,7 @@ Page({
     // 长按满 3 秒已经走了结束链路,松手时还会补一记 tap —— 不吞掉它，结束完会紧接着又开始一局
     if (this._runHoldTriggered) { this._runHoldTriggered = false; return; }
     if (this.data.runState === 'idle') {
+      if (this._teamConsentGate(() => this.onRunToggle())) return;
       this._runStarted = true;
       this._restoredRun = false;
       // 新起一局必须作废旧暂停快照:否则「开了新的、还没落盘就杀进程」会把上一局的用时还魂。
@@ -4884,6 +4890,85 @@ Page({
     this._trailAt = now;
     this.setData({ fmTrail: this._trail.lines().concat(this._teamTrailLines ? this._teamTrailLines() : []) });
   },
+  /* 第九轮 m2 第 2 项:同场队伍路线。只有场次局(activityId>0)才有「同一场」;预览、演示、自玩都不碰。 */
+  _teamTrailEligible() {
+    return !!(Number(this.data.activityId) > 0 && !this.data.isPreview && !this.data.isMock);
+  },
+  _ensureTeamTrail() {
+    if (!this._teamTrailEligible()) return null;
+    const aid = String(this.data.activityId);
+    if (this._teamTrail && this._teamTrailAid === aid) return this._teamTrail;
+    if (this._teamTrail) this._teamTrail.pause();
+    this._teamTrailAid = aid;
+    this._teamTrail = teamTrailKit.createTeamTrail({
+      activityId: aid,
+      api: {
+        state: (data) => req('/api/team/trail/state', 'GET', data, undefined, true),
+        consent: (data) => req('/api/team/trail/consent', 'POST', data, undefined, true),
+        sync: (data) => req('/api/team/trail/sync', 'POST', data, undefined, true),
+      },
+      readPoints: () => this._playTrail().points(),
+      done: () => (this.data.nodes || []).filter((n) => n && n.done).length,
+      onTeams: (teams) => this._applyTeams(teams),
+    });
+    this._teamTrailReady = this._teamTrail.load();
+    return this._teamTrail;
+  },
+  /** 开局前本人表态:还没表过态就先弹,开始按钮把表态和开局一起落下 */
+  _teamConsentGate(next) {
+    const tt = this._ensureTeamTrail();
+    if (!tt) return false;
+    const st = tt.state();
+    if (!st.available || st.decided || this._teamConsentAsked) return false;
+    this._teamConsentAsked = true;
+    this._teamConsentNext = next || null;
+    this.setData({ teamConsent: { show: true, share: !!st.share } });
+    return true;
+  },
+  closeTeamConsent() {
+    this._teamConsentAsked = false; this._teamConsentNext = null;
+    this.setData({ 'teamConsent.show': false });
+  },
+  onTeamConsentSwitch(e) { this.setData({ 'teamConsent.share': !!(e && e.detail && e.detail.value) }); },
+  onTeamConsentStart() {
+    const share = !!this.data.teamConsent.share;
+    const next = this._teamConsentNext; this._teamConsentNext = null;
+    this.setData({ 'teamConsent.show': false });
+    const tt = this._teamTrail;
+    if (tt) tt.consent(share).then((st) => { if (st.share && this.data.gpsOk) tt.start(); if (!st.share) this._applyTeams([]); });
+    if (typeof next === 'function') next();
+  },
+  _startTeamTrail() {
+    const tt = this._ensureTeamTrail();
+    if (!tt) return;
+    Promise.resolve(this._teamTrailReady).then(() => {
+      if (this._themeHidden || this._playDisposed || this._teamTrail !== tt) return;
+      if (this._teamConsentGate(null)) return;
+      tt.start();
+    });
+  },
+  _endTeamTrail() {
+    if (this._teamTrail) this._teamTrail.finish();
+    this._applyTeams([]);
+  },
+  _applyTeams(teams) {
+    this._teams = Array.isArray(teams) ? teams : [];
+    const pins = teamTrailKit.teamPins(this._teams);
+    const rail = this._teams.map((t) => ({ key: t.key, img: t.avatar, color: t.color, name: t.name }));
+    const follow = this.data.teamFollowKey && this._teams.find((t) => t.key === this.data.teamFollowKey);
+    if (this._themeHidden) { this._teamPatchPending = true; return; }
+    this.setData({ fmTeamPins: pins, teamRail: rail, teamFollowKey: follow ? follow.key : '' });
+    if (follow && this.data.storyMap) this.setData({ storyMapCenter: { lat: follow.last.latitude, lng: follow.last.longitude } });
+    this._flushTrail(true);
+  },
+  _teamTrailLines() { return teamTrailKit.teamLines(this._teams || []); },
+  /** 右侧一排:点一队,地图跟着这一队;再点一次取消 */
+  onTeamRailTap(e) {
+    const key = e && e.currentTarget && e.currentTarget.dataset ? String(e.currentTarget.dataset.key || '') : '';
+    const team = (this._teams || []).find((t) => t.key === key);
+    if (!team || this.data.teamFollowKey === key) { this.setData({ teamFollowKey: '' }); return; }
+    this.setData({ teamFollowKey: key, storyMapCenter: { lat: team.last.latitude, lng: team.last.longitude } });
+  },
   watchLocation() {
     const that = this;
     if (!this._isPlayAccountCurrent()) { this._stopTracking(); return; }
@@ -4964,6 +5049,7 @@ Page({
           }
         };
         wx.onLocationChange(that._playLocationHandler);
+        that._startTeamTrail();
       }
     });
   },
@@ -7962,6 +8048,7 @@ Page({
       && context.routeSessionId === String((this._routeState || {}).sessionId || '');
   },
   openFinish() {
+    this._endTeamTrail();
     // R9-21 + R1:通关是会话终点,不管从哪条入口进来都要走统一收尾 —— 只清快照不置 _runStarted,
     // 离页时会被写回;正在跑的那局也在这一刻停表,不能再被当成「暂停中」恢复。
     // (先于下面的结局页:结局页也是通关之后,这一刻就得停表)

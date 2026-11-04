@@ -5,6 +5,7 @@
   "usingComponents": {
     "free-map": "/components/cy/free-map/index",
     "cy-btn": "/components/cy/btn/index",
+    "cy-switch": "/components/cy/switch/index",
     "cy-footer-bar": "/components/cy/footer-bar/index",
     "cy-icon": "/components/cy/icon/index",
     "cy-skeleton": "/components/cy/skeleton/index",

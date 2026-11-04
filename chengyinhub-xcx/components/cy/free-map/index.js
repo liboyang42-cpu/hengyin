@@ -57,6 +57,8 @@ Component({
     mapCircles:   { type: Array, value: [] },
     // 第九轮 m1 第 2 项:explore 场景的照片图钉 [{id,img,label,size,done}],id 与 mapMarkers 里同 id 的 marker 配对
     explorePins:  { type: Array, value: [] },
+    // 第九轮 m2 第 2 项:同场其他队伍 [{id,lat,lng,img,color,tag}]。位置变了用 translateMarker 平滑挪过去
+    teamPins: { type: Array, value: [], observer(next, prev) { this._moveTeamPins(next, prev); } },
     showControls: { type: Boolean, value: true },
     showPhotoCallouts: { type: Boolean, value: true },
     interactive:  { type: Boolean, value: true },
@@ -84,7 +86,7 @@ Component({
     showExit: { type: Boolean, value: false },
     exitTop: { type: Number, value: 52 }
   },
-  data: { markers: [], circles: [], photoCallouts: [], lines: [] },
+  data: { markers: [], circles: [], photoCallouts: [], teamCallouts: [], lines: [] },
   lifetimes: {
     attached() {
       if (this.data.scene === 'explore') { this._icons = {}; return; }
@@ -121,6 +123,9 @@ Component({
         g.beginPath(); g.arc(S / 2, S / 2, 20, 0, 7); g.fillStyle = '#FFFFFF'; g.fill();
         g.lineWidth = 8; g.strokeStyle = '#111111'; g.stroke();
         this._icons.player = await save();
+        g.clearRect(0, 0, S, S);
+        g.beginPath(); g.arc(S / 2, S / 2, 30, 0, 7); g.fillStyle = '#111111'; g.fill();
+        this._icons.team = await save();
         // S2 方向箭头(简单三角,尖端朝上/正北;实际朝向由 marker.rotate=bearing 顺时针转出)
         g.clearRect(0, 0, S, S);
         g.beginPath();
@@ -230,6 +235,15 @@ Component({
           anchor: { x: .5, y: .5 }, iconPath: this._icons.arrow,
           rotate: bearingDeg(p.lat, p.lng, t.lat, t.lng), zIndex: 11 });
       }
+      const teamCallouts = [];
+      (this.data.teamPins || []).forEach((tp) => {
+        if (!tp || !Number.isFinite(Number(tp.lat)) || !Number.isFinite(Number(tp.lng)) || !this._icons.team) return;
+        const tsz = this.data.compact ? 18 : 30;
+        mk.push({ id: Number(tp.id), latitude: Number(tp.lat), longitude: Number(tp.lng), width: tsz, height: tsz,
+          anchor: { x: .5, y: .5 }, iconPath: this._icons.team, zIndex: 8,
+          customCallout: { display: 'ALWAYS', anchorX: 0, anchorY: tsz } });
+        teamCallouts.push({ id: Number(tp.id), img: tp.img || '', color: tp.color || '', tag: this.data.compact ? '' : (tp.tag || '') });
+      });
       const circles = [];
       // 非强制候选用柔光外圈，与当前目标/已完成/受限态区分。
       (this.data.nodes || []).forEach(n => {
@@ -244,9 +258,27 @@ Component({
         circles.push({ latitude: t.lat, longitude: t.lng, radius: 34,
           fillColor: 'rgba(255,255,255,.22)', color: 'rgba(255,255,255,.55)', strokeWidth: 2 });
       }
-      this.setData({ markers: mk, circles, photoCallouts });
+      this.setData({ markers: mk, circles, photoCallouts, teamCallouts });
       this._fit(mk);
       this._ensureNumIcons(Array.from(new Set(needNum)));
+    },
+    _moveTeamPins(next, prev) {
+      const before = {};
+      (prev || []).forEach((p) => { if (p) before[p.id] = p; });
+      const moved = (next || []).filter((p) => p && before[p.id] && (before[p.id].lat !== p.lat || before[p.id].lng !== p.lng));
+      const same = (next || []).length === (prev || []).length && (next || []).every((p) => p && before[p.id]);
+      if (!moved.length || !same || this.data.reducedMotion) { this._rebuild(); return; }
+      let ctx = null;
+      try { ctx = wx.createMapContext('fmap', this); } catch (e) { ctx = null; }
+      if (!ctx || !ctx.translateMarker) { this._rebuild(); return; }
+      let left = moved.length;
+      const settle = () => { left -= 1; if (left <= 0) this._rebuild(); };
+      moved.forEach((p) => {
+        try {
+          ctx.translateMarker({ markerId: Number(p.id), destination: { latitude: Number(p.lat), longitude: Number(p.lng) },
+            autoRotate: false, rotate: 0, duration: 1600, animationEnd: settle, fail: settle });
+        } catch (e) { settle(); }
+      });
     },
     onMarkerTap(e) {
       const id = e.detail.markerId;

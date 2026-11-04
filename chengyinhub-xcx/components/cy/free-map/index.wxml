@@ -22,6 +22,13 @@
         <cover-view wx:if="{{item.label}}" class="fmap-xpin__tag">{{item.label}}</cover-view>
         <cover-image wx:if="{{item.img}}" class="fmap-xpin__img {{item.done ? 'is-done' : ''}}" style="width:{{item.size}}px;height:{{item.size}}px;border-radius:{{item.size}}px;" src="{{item.img}}"></cover-image>
       </cover-view>
+      <!-- 第九轮 m2 第 2 项:同场其他队伍的头像图钉,描边是这一队的颜色,下挂进度 -->
+      <cover-view wx:for="{{teamCallouts}}" wx:key="id" marker-id="{{item.id}}" class="fmap-tpin">
+        <cover-view class="fmap-tpin__ring" style="border-color:{{item.color}};">
+          <cover-image wx:if="{{item.img}}" class="fmap-tpin__img" src="{{item.img}}"></cover-image>
+        </cover-view>
+        <cover-view wx:if="{{item.tag}}" class="fmap-tpin__tag" style="background-color:{{item.color}};">{{item.tag}}</cover-view>
+      </cover-view>
     </cover-view>
     <!-- 外层 = 真实命中区(横纵均 ≥88rpx = 44pt),内层 = 64rpx 高的「退出」文字胶囊。
          tap 挂在外层,不是视觉层。⚠️「退出」二字是显式特殊控制的判据,不得收成裸箭头。 -->

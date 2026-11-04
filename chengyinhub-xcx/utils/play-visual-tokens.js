@@ -23,6 +23,10 @@ const MAP_AVATAR_COLORS = Object.freeze({
   gameStar: '#F5B301',
 })
 
+// 2026-11-03 业主批准第九轮「同场队伍路线」(原型 m-team):每支队伍一种颜色。前三色取原型原值,
+// 后三色复用本色板已审定的值。只画在同场队伍的路线、头像描边与右侧一排上。
+const TEAM_ROUTE_COLORS = Object.freeze(['#3DE08A', '#FF7A45', '#5AA9FF', '#F5B301', '#D77BB4', '#4FD3D0'])
+
 function routeColorForKey(key) {
   const text = String(key == null ? '' : key)
   let hash = 0
@@ -35,5 +39,6 @@ module.exports = {
   ROUTE_BORDER_COLOR,
   TOPIC_EDITOR_SWITCH_COLOR,
   MAP_AVATAR_COLORS,
+  TEAM_ROUTE_COLORS,
   routeColorForKey,
 }

@@ -1814,6 +1814,14 @@ page { background: var(--cy-color-bg-page); }
 /* 罗盘小地图(2026-09-23):盖在故事流之上、预览顶条之下;地图原生层整屏铺满,返回钮与下一站卡浮在上面。 */
 .story-map{ position:fixed; left:0; right:0; top:0; bottom:0; z-index:108; background:#000000; } /* ds-ok 压过 .chfull(106),低于结局卡(110) */
 .story-map__map{ position:absolute; left:0; right:0; top:0; bottom:0; }
+/* 第九轮 m2 第 2 项:同场队伍头像一排(原型 m-team .mz-rail),点一队地图跟随 */
+.team-rail{ position:absolute; right:var(--cy-page-x); z-index:2; display:flex; flex-direction:column; gap:var(--cy-space-3); }
+.team-rail__i{ width:88rpx; height:88rpx; border-radius:50%; border:6rpx solid; box-sizing:border-box; overflow:hidden; background:var(--cy-color-play-surface-solid); transition:transform var(--cy-motion-fast) ease-out; }
+.team-rail__i.is-on{ transform:scale(1.12); }
+.team-rail__img{ width:100%; height:100%; }
+.team-consent{ min-height:0; padding-bottom:var(--cy-space-6); }
+.team-consent__row{ display:flex; align-items:center; justify-content:space-between; min-height:112rpx; margin-bottom:var(--cy-space-5); }
+.team-consent__label{ font-size:var(--cy-type-body); }
 .story-map__back{ position:absolute; left:var(--cy-page-x); z-index:2; height:var(--cy-btn-h); padding:0 var(--cy-space-4);
   display:flex; align-items:center; gap:var(--cy-space-1); border-radius:var(--cy-radius-pill); background:rgba(0,0,0,.72); color:#FFFFFF; font-size:26rpx; } /* ds-ok 浮在地图上的深色胶囊 */
 .story-map__card{ position:absolute; left:var(--cy-page-x); right:var(--cy-page-x); bottom:calc(var(--cy-space-6) + env(safe-area-inset-bottom)); z-index:2;

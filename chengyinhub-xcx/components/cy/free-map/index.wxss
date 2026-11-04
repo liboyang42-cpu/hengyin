@@ -22,6 +22,10 @@
 .fmap-xpin { display: flex; flex-direction: column; align-items: center; }
 .fmap-xpin__img { border: 4rpx solid #FFFFFF; box-sizing: border-box; box-shadow: 0 8rpx 24rpx rgba(0,0,0,.55); } /* ds-ok 原型照片白边与投影;cover-image 尺寸由 marker 实测 px 决定 */
 .fmap-xpin__img.is-done { opacity: .72; }
+.fmap-tpin { display: flex; flex-direction: column; align-items: center; }
+.fmap-tpin__ring { width: 76rpx; height: 76rpx; border-radius: 50%; border: 6rpx solid; box-sizing: border-box; overflow: hidden; background: var(--cy-color-play-surface-solid); box-shadow: 0 8rpx 24rpx rgba(0,0,0,.5); } /* ds-ok 原型 .mz-tpin 头像描边,颜色由队伍色内联 */
+.fmap-tpin__img { width: 100%; height: 100%; }
+.fmap-tpin__tag { margin-top: 6rpx; padding: 2rpx 14rpx; border-radius: var(--cy-radius-pill); color: var(--cy-color-action-primary-fg); font-size: var(--cy-type-micro); font-weight: 700; line-height: 1.4; white-space: nowrap; }
 .fmap-xpin__tag { margin-bottom: 6rpx; padding: 4rpx 16rpx; border-radius: 999rpx; background: #FFFFFF; color: #111111; font-size: 22rpx; font-weight: 700; line-height: 1.3; white-space: nowrap; transform: rotate(-4deg); box-shadow: 0 4rpx 12rpx rgba(0,0,0,.45); } /* ds-ok 原型 .mz-tag 贴纸,深浅底图都可读 */
 .fmap-photo__badge { position: absolute; right: 7rpx; bottom: 7rpx; min-width: 34rpx; height: 34rpx; padding: 0 var(--cy-legacy-6); box-sizing: border-box; display: flex; align-items: center; justify-content: center; color: var(--cy-color-action-primary-fg); background: var(--cy-color-action-primary-bg); border-radius: var(--cy-radius-pill); font-size: var(--cy-type-micro); font-weight: 700; }
 .iconcv { position: absolute; width: 54px; height: 54px; left: -9999px; top: -9999px; } /* 离屏 */

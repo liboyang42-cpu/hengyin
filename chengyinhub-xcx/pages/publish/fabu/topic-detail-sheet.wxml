@@ -171,6 +171,13 @@
         <cy-switch checked="{{themeReplayEnabled}}" bindchange="toggleThemeReplay" accessibility-label="允许再玩一次" />
       </view>
       <cy-inline-error class="node-binding__error pd-rules__error" wx:if="{{themeReplayError}}" kind="error" title="{{themeReplayError}}" />
+      <!-- 第九轮 m2 第 2 项:作者可以整体关掉同场队伍互相看到路线(默认开) -->
+      <view class="node-card__hr"></view>
+      <view class="node-card__row">
+        <view class="node-card__ico"><cy-icon name="route" size="32" /></view>
+        <view class="node-card__main"><text class="node-card__title">同场路线</text></view>
+        <cy-switch checked="{{themeTeamTrail}}" bindchange="toggleThemeTeamTrail" accessibility-label="同场路线" />
+      </view>
       <!-- 文档二 L1(10-27 业主):d20、RPG 规则、角色属性合成一个入口。开关关着时下面那一行不出现。 -->
       <view class="node-card__hr"></view>
       <view class="node-card__row">

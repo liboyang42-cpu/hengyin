@@ -4,6 +4,9 @@ import com.chengyinhub.business.domain.dto.TeamEventCommand;
 import com.chengyinhub.business.service.impl.TeamEventCommandService;
 import com.chengyinhub.business.domain.PlayTeam;
 import com.chengyinhub.business.service.IPlayTeamService;
+import com.chengyinhub.business.service.ITeamTrailService;
+import com.chengyinhub.common.annotation.RateLimiter;
+import com.chengyinhub.common.enums.LimitType;
 import com.chengyinhub.common.annotation.Anonymous;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
@@ -20,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /** 玩家组队:邀请制 + 公开申请制(地图附近队伍)。队伍与报名订单只做建队/入队资格校验，不承载退款动作。 */
@@ -239,6 +243,53 @@ public class ApiPlayTeamController extends BaseController {
         } catch (RuntimeException e) {
             return fail(e);
         }
+    }
+
+    @Autowired
+    private ITeamTrailService teamTrailService;
+
+    /* 第九轮 m2 第 2 项:同场队伍路线。只认登录的本人;是否这一场已付费、作者是否关掉都在服务里判,
+       不满足一律只回 available=false,不回任何队伍。 */
+    @Operation(summary = "同场路线:我能否使用与当前分享表态")
+    @GetMapping("/trail/state")
+    public AjaxResult trailState(Long activityId) {
+        Long me = optionalMemberId();
+        if (me == null || me <= 0L) return error("请先登录");
+        return AjaxResult.success(teamTrailService.state(me, activityId));
+    }
+
+    @Operation(summary = "同场路线:开局前本人表态(关掉即删除本人已存的点)")
+    @PostMapping("/trail/consent")
+    @RateLimiter(time = 60, count = 20, limitType = LimitType.MEMBER)
+    public AjaxResult trailConsent(@RequestBody Map<String, Object> body) {
+        Long me = optionalMemberId();
+        if (me == null || me <= 0L) return error("请先登录");
+        Long activityId = body == null ? null : Convert.toLong(body.get("activityId"), null);
+        return AjaxResult.success(teamTrailService.consent(me, activityId, body != null && approved(body.get("share"))));
+    }
+
+    @Operation(summary = "同场路线:上报本人新走的点并取回同场其他队伍(约 12 秒一次)")
+    @PostMapping("/trail/sync")
+    @RateLimiter(time = 60, count = 12, limitType = LimitType.MEMBER)
+    @SuppressWarnings("unchecked")
+    public AjaxResult trailSync(@RequestBody Map<String, Object> body) {
+        Long me = optionalMemberId();
+        if (me == null || me <= 0L) return error("请先登录");
+        if (body == null) return AjaxResult.success(teamTrailService.state(me, null));
+        Long activityId = Convert.toLong(body.get("activityId"), null);
+        List<List<Double>> pts = new java.util.ArrayList<>();
+        Object raw = body.get("pts");
+        if (raw instanceof List) {
+            for (Object row : (List<Object>) raw) {
+                if (!(row instanceof List) || ((List<Object>) row).size() < 2) continue;
+                List<Object> pair = (List<Object>) row;
+                Double lat = Convert.toDouble(pair.get(0), null), lng = Convert.toDouble(pair.get(1), null);
+                if (lat != null && lng != null) pts.add(java.util.Arrays.asList(lat, lng));
+                if (pts.size() >= 40) break;
+            }
+        }
+        Integer done = Convert.toInt(body.get("done"), 0);
+        return AjaxResult.success(teamTrailService.sync(me, activityId, pts, done, approved(body.get("finished"))));
     }
 
     private AjaxResult fail(RuntimeException e) {
