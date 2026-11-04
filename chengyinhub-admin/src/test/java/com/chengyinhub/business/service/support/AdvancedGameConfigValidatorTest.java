@@ -233,7 +233,7 @@ class AdvancedGameConfigValidatorTest {
 
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
                 () -> validator.validateAndNormalize(json));
-        assertEquals("盲盒物品 ID 不能重复", error.getMessage());
+        assertEquals("卡片 ID 不能重复", error.getMessage());
     }
 
     @Test
@@ -255,7 +255,7 @@ class AdvancedGameConfigValidatorTest {
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
                 () -> validator.validateAndNormalize(json));
 
-        assertEquals("盲盒音频地址最多 500 个字", error.getMessage());
+        assertEquals("卡片音频地址最多 500 个字", error.getMessage());
     }
 
     @Test
@@ -269,8 +269,8 @@ class AdvancedGameConfigValidatorTest {
         IllegalArgumentException schemeError = assertThrows(IllegalArgumentException.class,
                 () -> validator.validateAndNormalize(insecureUrl));
 
-        assertEquals("盲盒音频地址格式不正确", typeError.getMessage());
-        assertEquals("盲盒音频地址格式不正确", schemeError.getMessage());
+        assertEquals("卡片音频地址格式不正确", typeError.getMessage());
+        assertEquals("卡片音频地址格式不正确", schemeError.getMessage());
     }
 
     @Test

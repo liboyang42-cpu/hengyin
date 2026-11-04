@@ -16,7 +16,7 @@
        超过 48 小时不给,那一轮由平台作废、谁都拿不到奖。
        所以它放在消息里:商家是在这儿被提醒的,不该等到自己想起来去翻点位。
        没有待答的轮次就整行不出 —— 一个常驻的「0 条」入口等于每天骗一次点击。 -->
-  <cy-cell wx:if="{{canSettlePredict}}" class="pool-entry" title="竞猜待答"
+  <cy-cell wx:if="{{canSettlePredict}}" class="pool-entry" title="预测待答"
            description="待公布答案" bind:tap="goPredictInbox" />
 
   <view wx:if="{{refreshing}}" class="refresh-status cy-refresh-float" aria-role="status" aria-live="polite">

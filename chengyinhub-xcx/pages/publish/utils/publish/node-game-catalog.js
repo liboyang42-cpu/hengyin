@@ -37,7 +37,7 @@ const GROUPS = [
       { key: 'estimate', icon: 'finance', label: '猜数字', sub: '猜一个数，按接近程度分档给分', section: 'estimate', validationMethod: 8 },
       { key: 'pricePair', icon: 'image', label: '猜图', sub: '几张图里挑出正确的那张', section: 'pricePair', validationMethod: 9 },
       { key: 'hidden', icon: 'search', label: '找东西', sub: '在你上传的图上点中藏起来的目标', section: 'hiddenObject', validationMethod: 10 },
-      { key: 'predict', icon: 'flag', label: '竞猜', sub: '今天押一个，到期商家给答案', section: 'predict', validationMethod: 0 },
+      { key: 'predict', icon: 'flag', label: '预测', sub: '今天选一个，到期商家给答案', section: 'predict', validationMethod: 0 },
       { key: 'random', icon: 'gift', label: '抽卡', sub: '一副卡池抽一张，翻开就是这一关的任务', section: 'random', validationMethod: 0 },
       /* 《预制人生》两段(契约 §2.1 / §2.4)。问答式交互,但结果都写进会话状态:
          建档写角色档案(后面的故事能引用),留言写给下一个来的人。 */

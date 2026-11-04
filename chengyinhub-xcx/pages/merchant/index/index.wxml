@@ -127,9 +127,9 @@
     <view class="rv-aftercare-alert"
           wx:if="{{merchantAccess.canManageProjects && todo.pendingPredict > 0}}"
           bindtap="goPredictInbox" hover-class="rv-tap"
-          aria-role="button" aria-label="有 {{todo.pendingPredict || 0}} 轮竞猜待给答案，打开竞猜待办">
+          aria-role="button" aria-label="有 {{todo.pendingPredict || 0}} 轮预测待给答案，打开预测待办">
       <view class="rv-aftercare-alert__mark"></view>
-      <text class="rv-aftercare-alert__text">有 {{todo.pendingPredict || 0}} 轮竞猜待给答案</text>
+      <text class="rv-aftercare-alert__text">有 {{todo.pendingPredict || 0}} 轮预测待给答案</text>
       <view class="rv-aftercare-alert__chev" aria-hidden="true"><cy-icon name="arrow-right" size="24" /></view>
     </view>
 

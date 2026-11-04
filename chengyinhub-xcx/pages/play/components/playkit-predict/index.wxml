@@ -12,7 +12,7 @@
              这样文字是连续流过整张卡的,不会被切成十段各自排版。 -->
         <view class="pd__card {{item.sel ? 'is-sel' : ''}}" wx:for="{{cards}}" wx:key="key"
               data-i="{{index}}" bindtap="onPick" style="{{item.wrap}}"
-              aria-role="button" aria-label="押 {{item.label}}"
+              aria-role="button" aria-label="选 {{item.label}}"
               hover-class="pd__card--press" hover-stay-time="60">
           <view class="pd__sl" wx:for="{{item.slices}}" wx:for-item="sl" wx:key="i" style="{{sl.box}}">
             <view class="pd__fc" style="{{sl.face}}">
@@ -40,14 +40,14 @@
   <view class="pd__seal" wx:if="{{committed}}" aria-hidden="true">
     <view class="pd__seal-wax"></view>
     <view class="pd__seal-rim"></view>
-    <view class="pd__seal-ch">押</view>
+    <view class="pd__seal-ch">选</view>
   </view>
 
   <!-- 提示单独放在按钮上方,不跟着内容流 —— 跟着流的话会被绝对定位的按钮压住 -->
-  <view class="pd__hint" wx:if="{{!revealKind}}">{{committed ? waitLabel : '转到想押的那张，点它'}}</view>
+  <view class="pd__hint" wx:if="{{!revealKind}}">{{committed ? waitLabel : '转到想选的那张，点它'}}</view>
 
   <view class="g-btn {{(committed || picked < 0) ? 'g-btn--disabled' : ''}}" bindtap="onCommit"
-        aria-role="button" aria-label="押定这一个" hover-class="g-btn--press" hover-stay-time="80">
-    {{committed ? '已经押了' : '就押这个'}}
+        aria-role="button" aria-label="选定这一个" hover-class="g-btn--press" hover-stay-time="80">
+    {{committed ? '已经选了' : '就选这个'}}
   </view>
 </cy-play-stage>

@@ -243,7 +243,7 @@
     <input class="cg-cfg-input" type="number" value="{{item.weight}}" placeholder="权重" data-index="{{ri}}" data-field="weight" data-numeric="1" bindinput="updateRandomItem" />
     <textarea class="cg-cfg-textarea" value="{{item.content}}" placeholder="抽中后展示的内容" data-index="{{ri}}" data-field="content" bindinput="updateRandomItem" />
     </view>
-    <view class="cg-adv-add" bindtap="addRandomItem" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加盲盒物品</view>
+    <view class="cg-adv-add" bindtap="addRandomItem" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加卡片</view>
       </view>
     </view>
     <view class="cg-gcfg" wx:if="{{gameSection === 'steps'}}">

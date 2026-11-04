@@ -47,7 +47,7 @@ function view(config, validationMethod, support, context, category = '全部') {
 }
 // 结果反馈(2026-10-22 主人定稿):三步说明 + 成功/失败各一行;其余「选了某项之后」单独列出,标签写清是哪一项。
 const FB_KEYS = { 'outcomeRules.pass': 'pass', 'outcomeRules.fail': 'fail' };
-const FIRST_STEP = { coinFlip: '玩家抛硬币', check: '玩家掷 D20', estimate: '玩家猜一个数', pricePair: '玩家挑一张图', hiddenObject: '玩家在图上找目标', random: '玩家抽一张卡', predict: '玩家押一个答案', blindTaste: '玩家闭眼尝一口再选', sort: '玩家把几条排好顺序', match: '玩家把两列一一连好', classify: '玩家把每条归到一类', photoCheck: '玩家拍照提交', steps: '玩家走够步数', reaction: '玩家等屏幕变色再点', ballShake: '玩家倾斜手机让球撞够次数', quietHold: '玩家保持安静到时间', compass: '玩家把手机对准方位', shout: '玩家喊到声音够大', countdown: '玩家在倒计时里完成', stopwatch: '玩家盲停在目标秒数', typeIn: '玩家照着一行字打出来' };
+const FIRST_STEP = { coinFlip: '玩家抛硬币', check: '玩家掷 D20', estimate: '玩家猜一个数', pricePair: '玩家挑一张图', hiddenObject: '玩家在图上找目标', random: '玩家抽一张卡', predict: '玩家选一个答案', blindTaste: '玩家闭眼尝一口再选', sort: '玩家把几条排好顺序', match: '玩家把两列一一连好', classify: '玩家把每条归到一类', photoCheck: '玩家拍照提交', steps: '玩家走够步数', reaction: '玩家等屏幕变色再点', ballShake: '玩家倾斜手机让球撞够次数', quietHold: '玩家保持安静到时间', compass: '玩家把手机对准方位', shout: '玩家喊到声音够大', countdown: '玩家在倒计时里完成', stopwatch: '玩家盲停在目标秒数', typeIn: '玩家照着一行字打出来' };
 function feedbackSteps(config, section, isOnce) {
   if (!section) return [];
   let first = FIRST_STEP[section] || '玩家完成这一关';

@@ -193,15 +193,15 @@ function revealOf(d) {
   if (Number(status) === 2) {
     return {
       revealKind: 'void', revealHead: '这一轮作废了',
-      revealText: '商家没有在期限内给出答案。这一轮不发奖，你押的那一下不算数。',
+      revealText: '商家没有在期限内给出答案。这一轮不发奖，你选的那一下不算数。',
     };
   }
   if (Number(status) === 1) {
     const answer = pickLabel(d.options, d.settledOption);
     const mine = pickLabel(d.options, d.myOptionKey);
     return d.won
-      ? { revealKind: 'won', revealHead: '猜中了', revealText: '答案是「' + answer + '」,你押的就是它。' }
-      : { revealKind: 'lost', revealHead: '没猜中', revealText: '答案是「' + answer + '」,你押的是「' + mine + '」。' };
+      ? { revealKind: 'won', revealHead: '猜中了', revealText: '答案是「' + answer + '」,你选的就是它。' }
+      : { revealKind: 'lost', revealHead: '没猜中', revealText: '答案是「' + answer + '」,你选的是「' + mine + '」。' };
   }
   return { revealKind: 'wait', revealHead: '等商家给答案', revealText: '答案给出来之后，这里会告诉你中没中。' };
 }

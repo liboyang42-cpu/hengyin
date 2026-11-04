@@ -31,7 +31,7 @@ test('returns actionable validation errors instead of emitting broken config', (
   const model = config.defaultConfig();
   model.random.enabled = true;
   model.random.items = [];
-  assert.match(config.validate(model), /盲盒/);
+  assert.match(config.validate(model), /随机卡/);
 
   model.random.enabled = false;
   model.branch.enabled = true;

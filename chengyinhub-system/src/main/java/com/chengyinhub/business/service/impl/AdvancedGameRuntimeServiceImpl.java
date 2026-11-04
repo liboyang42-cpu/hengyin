@@ -2016,10 +2016,10 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
     private void submitPredict(JsonNode config, ObjectNode state, Map<String, Object> payload,
             GameRuntimeSession session, Long memberId) {
         JsonNode cfg = config.get("predict");
-        if (!enabled(cfg)) throw new IllegalArgumentException("该玩法未开启竞猜");
+        if (!enabled(cfg)) throw new IllegalArgumentException("该玩法未开启预测");
         ObjectNode node = state.with("predict");
         if (!node.path("optionKey").asText("").isEmpty()) {
-            throw new IllegalStateException("这一轮你已经押过了");
+            throw new IllegalStateException("这一轮你已经选过了");
         }
         String key = text(payload, "optionKey");
         if (findOptionByKey(cfg.path("options"), key) == null) {
@@ -2061,7 +2061,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
                 predictMapper.selectResultForUpdate(session.getNodeId(), playDay);
         if (locked == null || !Integer.valueOf(com.chengyinhub.business.domain.PlayPredictResult.SETTLE_PENDING)
                 .equals(locked.getSettleStatus())) {
-            throw new IllegalStateException("这一轮已经结束,不能再押了");
+            throw new IllegalStateException("这一轮已经结束,不能再选了");
         }
 
         node.put("optionKey", key);
@@ -2081,11 +2081,11 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         bet.setCreateTime(now);
         try {
             int inserted=predictMapper.insertBet(bet);
-            if(config.has("outcomeRules")){if(inserted!=1)throw new IllegalStateException("竞猜下注未保存");if(bet.getId()==null)throw new IllegalStateException("竞猜下注凭证缺失");node.put("betId",bet.getId()).put("memberId",memberId);}
+            if(config.has("outcomeRules")){if(inserted!=1)throw new IllegalStateException("预测未保存");if(bet.getId()==null)throw new IllegalStateException("预测凭证缺失");node.put("betId",bet.getId()).put("memberId",memberId);}
         } catch (org.springframework.dao.DuplicateKeyException e) {
             // uk_round_member 撞了 = 这一轮已经押过。state 那边的判断可能因为
             // 会话重建而落空,以库为准。
-            throw new IllegalStateException("这一轮你已经押过了");
+            throw new IllegalStateException("这一轮你已经选过了");
         }
     }
 
@@ -3312,15 +3312,15 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         return clock.now().getTime()>=revealAt;
     }
     private GameRuntimeSession synchronizePredictSession(GameRuntimeSession input,Long actor) {
-        JsonNode config=readJson(input.getConfigSnapshotJson(),"竞猜冻结配置不可用");ObjectNode state=objectState(input.getStateJson());JsonNode stored=state.path("predict");
+        JsonNode config=readJson(input.getConfigSnapshotJson(),"预测冻结配置不可用");ObjectNode state=objectState(input.getStateJson());JsonNode stored=state.path("predict");
         if(!config.has("outcomeRules") || !enabled(config.path("predict")) || !stored.has("betId") || stored.path("revealRecorded").asBoolean())return input;
         java.sql.Date day=java.sql.Date.valueOf(stored.path("playDay").asText());if(!predictRevealDue(config,day))return input;
         com.chengyinhub.business.domain.PlayPredictResult round=predictMapper.selectResult(input.getNodeId(),day);
         if(round==null || round.getSettleStatus()==null || round.getSettleStatus()==0)return input;
         com.chengyinhub.business.domain.PlayPredictBet bet=predictMapper.selectBet(input.getNodeId(),day,stored.path("memberId").asLong());
-        if(bet==null || !Objects.equals(bet.getId(),stored.path("betId").asLong()) || !Objects.equals(bet.getTopicId(),input.getTopicId()) || !Objects.equals(bet.getActivityId(),input.getActivityId()) || !Objects.equals(bet.getOptionKey(),stored.path("optionKey").asText()))throw new IllegalStateException("原竞猜下注凭证不匹配");
+        if(bet==null || !Objects.equals(bet.getId(),stored.path("betId").asLong()) || !Objects.equals(bet.getTopicId(),input.getTopicId()) || !Objects.equals(bet.getActivityId(),input.getActivityId()) || !Objects.equals(bet.getOptionKey(),stored.path("optionKey").asText()))throw new IllegalStateException("原预测凭证不匹配");
         if(bet.getRewardStatus()==null || bet.getRewardStatus()==0)return input;
-        GameRuntimeSession session=sessionMapper.selectByIdForUpdate(input.getId());if(session==null)throw new IllegalStateException("原竞猜会话不存在");
+        GameRuntimeSession session=sessionMapper.selectByIdForUpdate(input.getId());if(session==null)throw new IllegalStateException("原预测会话不存在");
         state=objectState(session.getStateJson());if(state.path("predict").path("revealRecorded").asBoolean())return session;
         if(state.path("predict").path("betId").asLong()!=bet.getId())return session;
         boolean running=Integer.valueOf(GameRuntimeSession.STATUS_RUNNING).equals(session.getStatus());
@@ -3328,7 +3328,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         if(round.getSettleStatus()==com.chengyinhub.business.domain.PlayPredictResult.SETTLE_VOID){predict.put("outcomeSettlement","VOID");if(running)session.setStatus(GameRuntimeSession.STATUS_EXPIRED);}
         else if(state.has("gameplayDecision"))predict.put("outcomeSettlement","FIXED_RESULT");
         else {
-            String answer=round.getSettledOption();if(findOptionByKey(config.path("predict").path("options"),answer)==null)throw new IllegalStateException("真实竞猜答案不属于原冻结题目");
+            String answer=round.getSettledOption();if(findOptionByKey(config.path("predict").path("options"),answer)==null)throw new IllegalStateException("真实预测答案不属于原冻结题目");
             ObjectNode decision=objectMapper.createObjectNode().put("nodeId",session.getNodeId()).put("outcome",answer.equals(bet.getOptionKey())?"PASS":"FAIL").put("reason","PREDICT_REVEAL");
             decision.putObject("selection").put("kit","predict").put("optionId",bet.getOptionKey());
             String attempt="advanced:"+session.getId()+":"+state.path("attemptOrdinal").asLong(1);List<String[]> choices=Collections.singletonList(new String[]{"predict",bet.getOptionKey()});boolean recorded=false;
@@ -3339,8 +3339,8 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             else session.setStatus(GameRuntimeSession.STATUS_EXPIRED);
         }
         int old=session.getVersion();session.setStateJson(writeJson(state));session.setUpdateTime(clock.now());
-        if(running){if(sessionMapper.updateStateCas(session)!=1)throw new IllegalStateException("竞猜揭晓状态已更新，请刷新");}
-        else if(sessionMapper.updateFeedbackStateCas(session)!=1)throw new IllegalStateException("竞猜揭晓状态已更新，请刷新");
+        if(running){if(sessionMapper.updateStateCas(session)!=1)throw new IllegalStateException("预测揭晓状态已更新，请刷新");}
+        else if(sessionMapper.updateFeedbackStateCas(session)!=1)throw new IllegalStateException("预测揭晓状态已更新，请刷新");
         session.setVersion(old+1);return session;
     }
 
@@ -3359,7 +3359,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         com.chengyinhub.business.domain.PlayPredictResult round =
                 predictMapper.selectResult(session.getNodeId(), day);
         if (round == null) return;
-        JsonNode config=readJson(session.getConfigSnapshotJson(),"竞猜冻结配置不可用");
+        JsonNode config=readJson(session.getConfigSnapshotJson(),"预测冻结配置不可用");
         if(config.has("outcomeRules") && (!predictRevealDue(config,day) || !state.path("predict").path("revealRecorded").asBoolean())){predict.put("settleStatus",0);return;}
         if(config.has("outcomeRules"))predict.put("outcomeSettlement",state.path("predict").path("outcomeSettlement").asText());
         int status = round.getSettleStatus() == null

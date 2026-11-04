@@ -19,14 +19,14 @@
       <view class="ag__status"><text class="ag__status-text">{{state.status === 'RUNNING' ? '进行中' : (state.status === 'COMPLETED' ? '已完成' : (state.status === 'FAILED' ? '未通过' : (state.status === 'EXPIRED' ? '已超时' : '')))}}</text><text class="ag__status-text" wx:if="{{remainingSeconds !== null}}">剩余 {{remainingSeconds || 0}} 秒</text><text class="ag__status-text" wx:if="{{state.score > 0}}">得分 {{state.score}}</text></view>
 
       <view class="ag-card" wx:if="{{state.config.random.enabled}}">
-        <text class="ag-card__title">随机盲盒</text><text class="ag-card__sub">已抽 {{state.draws.length || 0}} / {{state.config.random.drawCount}}</text>
+        <text class="ag-card__title">随机卡</text><text class="ag-card__sub">已翻开 {{state.draws.length || 0}} / {{state.config.random.drawCount}}</text>
         <view class="ag-draw" wx:for="{{state.draws}}" wx:key="id">
           <view class="ag-draw__copy"><text class="ag-draw__label">{{item.label}}</text><text>{{item.content}}</text></view>
           <view wx:if="{{item.audioUrl}}" class="ag-draw__audio" data-id="{{item.id}}" data-url="{{item.audioUrl}}" bindtap="toggleDrawAudio" aria-role="button" aria-label="{{playingDrawId === item.id ? '暂停' : '播放'}}{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">
             {{playingDrawId === item.id ? '暂停' : '播放'}}
           </view>
         </view>
-        <cy-btn variant="primary" disabled="{{acting || unknown || state.draws.length >= state.config.random.drawCount}}" bindtap="draw">{{acting ? '抽取中…' : '抽一次'}}</cy-btn>
+        <cy-btn variant="primary" disabled="{{acting || unknown || state.draws.length >= state.config.random.drawCount}}" bindtap="draw">{{acting ? '翻开中…' : '翻开一张'}}</cy-btn>
       </view>
 
       <view class="ag-card" wx:if="{{state.config.branch.enabled && currentStep}}">

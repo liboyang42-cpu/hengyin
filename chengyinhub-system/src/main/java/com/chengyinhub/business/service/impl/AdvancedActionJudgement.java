@@ -1635,10 +1635,10 @@ public final class AdvancedActionJudgement {
 
     private void draw(JsonNode config, ObjectNode state) {
         JsonNode randomConfig = config.get("random");
-        if (!enabled(randomConfig)) throw new IllegalArgumentException("该玩法未开启盲盒");
+        if (!enabled(randomConfig)) throw new IllegalArgumentException("该玩法未开启随机卡");
         ArrayNode draws = state.withArray("draws");
         int drawCount = randomConfig.path("drawCount").asInt();
-        if (draws.size() >= drawCount) throw new IllegalStateException("盲盒已经抽完");
+        if (draws.size() >= drawCount) throw new IllegalStateException("卡片已经全部翻开");
         List<JsonNode> remaining = new ArrayList<>();
         int totalWeight = 0;
         for (JsonNode item : randomConfig.path("items")) {
