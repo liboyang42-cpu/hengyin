@@ -174,7 +174,8 @@
 .ctd-next__kind-txt { font-size: var(--ctd-type-kind); line-height: 1.35; color: var(--cy-color-text-primary); }
 
 /* ---------- ⑦ 固定底部条 ---------- */
-.ctd-footspacer { height: 258rpx; }
+/* F-15:底栏自带 safe-area 内边距,留白也要加上,否则最后一行停在底栏底下 */
+.ctd-footspacer { height: calc(258rpx + env(safe-area-inset-bottom)); }
 .ctd-footbar {
   position: fixed; left: 0; right: 0; bottom: 0;
   z-index: var(--cy-z-sticky);

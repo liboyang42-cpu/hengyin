@@ -957597,7 +957597,275 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:269:bindtap:onToggleLeaderboard:21",
+      "id": "pages/club/topic-detail/index.wxml:271:bindtap:openManualUnlock:21",
+      "route": "pages/club/topic-detail/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "club",
+      "entry": {
+        "wxml": "pages/club/topic-detail/index.wxml",
+        "js": "pages/club/topic-detail/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "openManualUnlock",
+        "line": 271,
+        "selectorHint": ".ctd-director-export",
+        "visibleCondition": "{{canUnlockChapter}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{unlockButtonText}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/club/topic-detail/director.js:1350"
+      }
+    },
+    {
+      "id": "pages/club/topic-detail/index.wxml:273:bindtap:openTeamSheet:22",
+      "route": "pages/club/topic-detail/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "club",
+      "entry": {
+        "wxml": "pages/club/topic-detail/index.wxml",
+        "js": "pages/club/topic-detail/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "openTeamSheet",
+        "line": 273,
+        "selectorHint": ".ctd-director-export",
+        "visibleCondition": "{{directorTeamRows.length}}",
+        "disabledCondition": null,
+        "ariaLabel": "查看队伍进度",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/club/topic-detail/index.js:1252"
+      }
+    },
+    {
+      "id": "pages/club/topic-detail/index.wxml:275:bindtap:openRoleSheet:23",
+      "route": "pages/club/topic-detail/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "club",
+      "entry": {
+        "wxml": "pages/club/topic-detail/index.wxml",
+        "js": "pages/club/topic-detail/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "openRoleSheet",
+        "line": 275,
+        "selectorHint": ".ctd-director-export",
+        "visibleCondition": "{{canAssignRoles && roleMemberRows.length}}",
+        "disabledCondition": null,
+        "ariaLabel": "分配角色",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/club/topic-detail/director.js:1082"
+      }
+    },
+    {
+      "id": "pages/club/topic-detail/index.wxml:277:bindtap:openIncidentSheet:24",
+      "route": "pages/club/topic-detail/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "club",
+      "entry": {
+        "wxml": "pages/club/topic-detail/index.wxml",
+        "js": "pages/club/topic-detail/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "openIncidentSheet",
+        "line": 277,
+        "selectorHint": ".ctd-director-export",
+        "visibleCondition": "{{incidentRows.length}}",
+        "disabledCondition": null,
+        "ariaLabel": "处理现场事件",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/club/topic-detail/index.js:1254"
+      }
+    },
+    {
+      "id": "pages/club/topic-detail/index.wxml:285:bindtap:onToggleLeaderboard:25",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -957620,7 +957888,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onToggleLeaderboard",
-        "line": 269,
+        "line": 285,
         "selectorHint": ".ctd-director-export",
         "visibleCondition": "{{canToggleLeaderboard}}",
         "disabledCondition": null,
@@ -957749,7 +958017,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:279:bindtap:onToggleLeaderboard:22",
+      "id": "pages/club/topic-detail/index.wxml:295:bindtap:onToggleLeaderboard:26",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -957772,7 +958040,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onToggleLeaderboard",
-        "line": 279,
+        "line": 295,
         "selectorHint": ".ctd-director-export",
         "visibleCondition": "{{recap && canToggleLeaderboard}}",
         "disabledCondition": null,
@@ -957901,7 +958169,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:282:bindtap:copyRecap:23",
+      "id": "pages/club/topic-detail/index.wxml:298:bindtap:copyRecap:27",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -957924,7 +958192,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "copyRecap",
-        "line": 282,
+        "line": 298,
         "selectorHint": ".ctd-director-export",
         "visibleCondition": "{{canExportRecap}}",
         "disabledCondition": null,
@@ -957990,7 +958258,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:293:bind:leaderboardrowtap:onToggleLeaderboard:24",
+      "id": "pages/club/topic-detail/index.wxml:309:bind:leaderboardrowtap:onToggleLeaderboard:28",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -958013,7 +958281,7 @@
         "tag": "cy-club-director-recap",
         "event": "bind:leaderboardrowtap",
         "handler": "onToggleLeaderboard",
-        "line": 293,
+        "line": 309,
         "selectorHint": ".ctd-sec",
         "visibleCondition": "{{statusKey === 'ended' && recap}}",
         "disabledCondition": null,
@@ -958142,275 +958410,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:304:bindtap:openManualUnlock:25",
-      "route": "pages/club/topic-detail/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "club",
-      "entry": {
-        "wxml": "pages/club/topic-detail/index.wxml",
-        "js": "pages/club/topic-detail/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "openManualUnlock",
-        "line": 304,
-        "selectorHint": ".ctd-director-export",
-        "visibleCondition": "{{canUnlockChapter}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": "{{unlockButtonText}}",
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/club/topic-detail/director.js:1350"
-      }
-    },
-    {
-      "id": "pages/club/topic-detail/index.wxml:306:bindtap:openTeamSheet:26",
-      "route": "pages/club/topic-detail/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "club",
-      "entry": {
-        "wxml": "pages/club/topic-detail/index.wxml",
-        "js": "pages/club/topic-detail/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "openTeamSheet",
-        "line": 306,
-        "selectorHint": ".ctd-director-export",
-        "visibleCondition": "{{directorTeamRows.length}}",
-        "disabledCondition": null,
-        "ariaLabel": "查看队伍进度",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1252"
-      }
-    },
-    {
-      "id": "pages/club/topic-detail/index.wxml:308:bindtap:openRoleSheet:27",
-      "route": "pages/club/topic-detail/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "club",
-      "entry": {
-        "wxml": "pages/club/topic-detail/index.wxml",
-        "js": "pages/club/topic-detail/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "openRoleSheet",
-        "line": 308,
-        "selectorHint": ".ctd-director-export",
-        "visibleCondition": "{{canAssignRoles && roleMemberRows.length}}",
-        "disabledCondition": null,
-        "ariaLabel": "分配角色",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/club/topic-detail/director.js:1082"
-      }
-    },
-    {
-      "id": "pages/club/topic-detail/index.wxml:310:bindtap:openIncidentSheet:28",
-      "route": "pages/club/topic-detail/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "club",
-      "entry": {
-        "wxml": "pages/club/topic-detail/index.wxml",
-        "js": "pages/club/topic-detail/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "openIncidentSheet",
-        "line": 310,
-        "selectorHint": ".ctd-director-export",
-        "visibleCondition": "{{incidentRows.length}}",
-        "disabledCondition": null,
-        "ariaLabel": "处理现场事件",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/club/topic-detail/index.js:1254"
-      }
-    },
-    {
-      "id": "pages/club/topic-detail/index.wxml:318:bindtap:goRules:29",
+      "id": "pages/club/topic-detail/index.wxml:319:bindtap:goRules:29",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -958433,7 +958433,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goRules",
-        "line": 318,
+        "line": 319,
         "selectorHint": ".ctd-footbar__note",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -958477,7 +958477,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:326:bindtap:onPrimary:30",
+      "id": "pages/club/topic-detail/index.wxml:327:bindtap:onPrimary:30",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -958500,7 +958500,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPrimary",
-        "line": 326,
+        "line": 327,
         "selectorHint": ".ctd-footbar__cta",
         "visibleCondition": "{{primary.text}}",
         "disabledCondition": null,
@@ -958634,7 +958634,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:342:bind:cancel:onDirectorEndCancel:31",
+      "id": "pages/club/topic-detail/index.wxml:343:bind:cancel:onDirectorEndCancel:31",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -958657,7 +958657,7 @@
         "tag": "cy-club-director-end-confirm",
         "event": "bind:cancel",
         "handler": "onDirectorEndCancel",
-        "line": 342,
+        "line": 343,
         "selectorHint": "cy-club-director-end-confirm[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -958701,7 +958701,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:342:bind:confirm:onDirectorEndConfirm:32",
+      "id": "pages/club/topic-detail/index.wxml:343:bind:confirm:onDirectorEndConfirm:32",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -958724,7 +958724,7 @@
         "tag": "cy-club-director-end-confirm",
         "event": "bind:confirm",
         "handler": "onDirectorEndConfirm",
-        "line": 342,
+        "line": 343,
         "selectorHint": "cy-club-director-end-confirm[bind:confirm]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -958853,7 +958853,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:350:bind:close:closeManualUnlock:33",
+      "id": "pages/club/topic-detail/index.wxml:351:bind:close:closeManualUnlock:33",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -958876,7 +958876,7 @@
         "tag": "cy-club-director-chapter-sheet",
         "event": "bind:close",
         "handler": "closeManualUnlock",
-        "line": 350,
+        "line": 351,
         "selectorHint": "cy-club-director-chapter-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -958920,7 +958920,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:350:bind:confirm:confirmManualUnlock:34",
+      "id": "pages/club/topic-detail/index.wxml:351:bind:confirm:confirmManualUnlock:34",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -958943,7 +958943,7 @@
         "tag": "cy-club-director-chapter-sheet",
         "event": "bind:confirm",
         "handler": "confirmManualUnlock",
-        "line": 350,
+        "line": 351,
         "selectorHint": "cy-club-director-chapter-sheet[bind:confirm]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -959072,7 +959072,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:351:bind:selectchapter:onUnlockChapterChange:35",
+      "id": "pages/club/topic-detail/index.wxml:352:bind:selectchapter:onUnlockChapterChange:35",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -959095,7 +959095,7 @@
         "tag": "cy-club-director-chapter-sheet",
         "event": "bind:selectchapter",
         "handler": "onUnlockChapterChange",
-        "line": 351,
+        "line": 352,
         "selectorHint": "cy-club-director-chapter-sheet[bind:selectchapter]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -959139,7 +959139,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:355:bindinput:onUnlockReasonInput:36",
+      "id": "pages/club/topic-detail/index.wxml:356:bindinput:onUnlockReasonInput:36",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -959162,7 +959162,7 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "onUnlockReasonInput",
-        "line": 355,
+        "line": 356,
         "selectorHint": ".ctd-director-field__input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -959206,7 +959206,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:364:bind:close:closeTeamSheet:37",
+      "id": "pages/club/topic-detail/index.wxml:365:bind:close:closeTeamSheet:37",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -959229,7 +959229,7 @@
         "tag": "cy-club-director-team-sheet",
         "event": "bind:close",
         "handler": "closeTeamSheet",
-        "line": 364,
+        "line": 365,
         "selectorHint": "cy-club-director-team-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -959273,7 +959273,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:376:bind:close:closeRoleAssignment:38",
+      "id": "pages/club/topic-detail/index.wxml:377:bind:close:closeRoleAssignment:38",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -959296,7 +959296,7 @@
         "tag": "cy-club-director-role-sheet",
         "event": "bind:close",
         "handler": "closeRoleAssignment",
-        "line": 376,
+        "line": 377,
         "selectorHint": "cy-club-director-role-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -959340,7 +959340,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:376:bind:confirm:confirmRoleAssignment:39",
+      "id": "pages/club/topic-detail/index.wxml:377:bind:confirm:confirmRoleAssignment:39",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -959363,7 +959363,7 @@
         "tag": "cy-club-director-role-sheet",
         "event": "bind:confirm",
         "handler": "confirmRoleAssignment",
-        "line": 376,
+        "line": 377,
         "selectorHint": "cy-club-director-role-sheet[bind:confirm]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -959492,7 +959492,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:377:bind:selectmember:onRoleMemberPick:40",
+      "id": "pages/club/topic-detail/index.wxml:378:bind:selectmember:onRoleMemberPick:40",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -959515,7 +959515,7 @@
         "tag": "cy-club-director-role-sheet",
         "event": "bind:selectmember",
         "handler": "onRoleMemberPick",
-        "line": 377,
+        "line": 378,
         "selectorHint": "cy-club-director-role-sheet[bind:selectmember]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -959559,7 +959559,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:378:bind:selectrole:onRoleOptionChange:41",
+      "id": "pages/club/topic-detail/index.wxml:379:bind:selectrole:onRoleOptionChange:41",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -959582,7 +959582,7 @@
         "tag": "cy-club-director-role-sheet",
         "event": "bind:selectrole",
         "handler": "onRoleOptionChange",
-        "line": 378,
+        "line": 379,
         "selectorHint": "cy-club-director-role-sheet[bind:selectrole]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -959626,7 +959626,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:378:bind:takeovertap:openTakeoverRole:42",
+      "id": "pages/club/topic-detail/index.wxml:379:bind:takeovertap:openTakeoverRole:42",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -959649,7 +959649,7 @@
         "tag": "cy-club-director-role-sheet",
         "event": "bind:takeovertap",
         "handler": "openTakeoverRole",
-        "line": 378,
+        "line": 379,
         "selectorHint": "cy-club-director-role-sheet[bind:takeovertap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -959693,7 +959693,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:383:bind:change:onTakeoverTargetChange:43",
+      "id": "pages/club/topic-detail/index.wxml:384:bind:change:onTakeoverTargetChange:43",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -959716,7 +959716,7 @@
         "tag": "cy-dropdown",
         "event": "bind:change",
         "handler": "onTakeoverTargetChange",
-        "line": 383,
+        "line": 384,
         "selectorHint": "cy-dropdown[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -959760,7 +959760,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:387:bindinput:onTakeoverReasonInput:44",
+      "id": "pages/club/topic-detail/index.wxml:388:bindinput:onTakeoverReasonInput:44",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -959783,7 +959783,7 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "onTakeoverReasonInput",
-        "line": 387,
+        "line": 388,
         "selectorHint": ".ctd-director-field__input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -959827,7 +959827,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:390:bindtap:closeTakeoverRole:45",
+      "id": "pages/club/topic-detail/index.wxml:391:bindtap:closeTakeoverRole:45",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -959850,7 +959850,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeTakeoverRole",
-        "line": 390,
+        "line": 391,
         "selectorHint": ".ctd-director-field__act",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -959894,7 +959894,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:392:bindtap:confirmTakeoverRole:46",
+      "id": "pages/club/topic-detail/index.wxml:393:bindtap:confirmTakeoverRole:46",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -959917,7 +959917,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "confirmTakeoverRole",
-        "line": 392,
+        "line": 393,
         "selectorHint": ".ctd-director-field__act",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -960046,7 +960046,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:404:bind:close:closeBroadcast:47",
+      "id": "pages/club/topic-detail/index.wxml:405:bind:close:closeBroadcast:47",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -960069,7 +960069,7 @@
         "tag": "cy-club-director-broadcast-sheet",
         "event": "bind:close",
         "handler": "closeBroadcast",
-        "line": 404,
+        "line": 405,
         "selectorHint": "cy-club-director-broadcast-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -960113,7 +960113,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:404:bind:confirm:confirmBroadcast:48",
+      "id": "pages/club/topic-detail/index.wxml:405:bind:confirm:confirmBroadcast:48",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -960136,7 +960136,7 @@
         "tag": "cy-club-director-broadcast-sheet",
         "event": "bind:confirm",
         "handler": "confirmBroadcast",
-        "line": 404,
+        "line": 405,
         "selectorHint": "cy-club-director-broadcast-sheet[bind:confirm]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -960265,7 +960265,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:405:bind:input:onBroadcastContentInput:49",
+      "id": "pages/club/topic-detail/index.wxml:406:bind:input:onBroadcastContentInput:49",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -960288,7 +960288,7 @@
         "tag": "cy-club-director-broadcast-sheet",
         "event": "bind:input",
         "handler": "onBroadcastContentInput",
-        "line": 405,
+        "line": 406,
         "selectorHint": "cy-club-director-broadcast-sheet[bind:input]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -960332,7 +960332,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:405:bind:selectscope:selectBroadcastTargetType:50",
+      "id": "pages/club/topic-detail/index.wxml:406:bind:selectscope:selectBroadcastTargetType:50",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -960355,7 +960355,7 @@
         "tag": "cy-club-director-broadcast-sheet",
         "event": "bind:selectscope",
         "handler": "selectBroadcastTargetType",
-        "line": 405,
+        "line": 406,
         "selectorHint": "cy-club-director-broadcast-sheet[bind:selectscope]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -960399,7 +960399,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:406:bind:selecttarget:onBroadcastTargetChange:51",
+      "id": "pages/club/topic-detail/index.wxml:407:bind:selecttarget:onBroadcastTargetChange:51",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -960422,7 +960422,7 @@
         "tag": "cy-club-director-broadcast-sheet",
         "event": "bind:selecttarget",
         "handler": "onBroadcastTargetChange",
-        "line": 406,
+        "line": 407,
         "selectorHint": "cy-club-director-broadcast-sheet[bind:selecttarget]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -960466,7 +960466,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:406:bind:toggleperson:onBroadcastPersonToggle:52",
+      "id": "pages/club/topic-detail/index.wxml:407:bind:toggleperson:onBroadcastPersonToggle:52",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -960489,7 +960489,7 @@
         "tag": "cy-club-director-broadcast-sheet",
         "event": "bind:toggleperson",
         "handler": "onBroadcastPersonToggle",
-        "line": 406,
+        "line": 407,
         "selectorHint": "cy-club-director-broadcast-sheet[bind:toggleperson]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -960533,7 +960533,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:414:bind:selectincident:onIncidentSelect:53",
+      "id": "pages/club/topic-detail/index.wxml:415:bind:selectincident:onIncidentSelect:53",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -960556,7 +960556,7 @@
         "tag": "cy-club-director-incident-sheet",
         "event": "bind:selectincident",
         "handler": "onIncidentSelect",
-        "line": 414,
+        "line": 415,
         "selectorHint": "cy-club-director-incident-sheet[bind:selectincident]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -960600,7 +960600,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:414:bind:selectmode:onIncidentModeChange:54",
+      "id": "pages/club/topic-detail/index.wxml:415:bind:selectmode:onIncidentModeChange:54",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -960623,7 +960623,7 @@
         "tag": "cy-club-director-incident-sheet",
         "event": "bind:selectmode",
         "handler": "onIncidentModeChange",
-        "line": 414,
+        "line": 415,
         "selectorHint": "cy-club-director-incident-sheet[bind:selectmode]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -960667,7 +960667,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:415:bind:close:closeIncidentSheet:56",
+      "id": "pages/club/topic-detail/index.wxml:416:bind:close:closeIncidentSheet:56",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -960690,7 +960690,7 @@
         "tag": "cy-club-director-incident-sheet",
         "event": "bind:close",
         "handler": "closeIncidentSheet",
-        "line": 415,
+        "line": 416,
         "selectorHint": "cy-club-director-incident-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -960734,7 +960734,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:415:bind:confirm:confirmIncident:55",
+      "id": "pages/club/topic-detail/index.wxml:416:bind:confirm:confirmIncident:55",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -960757,7 +960757,7 @@
         "tag": "cy-club-director-incident-sheet",
         "event": "bind:confirm",
         "handler": "confirmIncident",
-        "line": 415,
+        "line": 416,
         "selectorHint": "cy-club-director-incident-sheet[bind:confirm]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -960886,7 +960886,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:426:bind:close:closeTopicSetting:57",
+      "id": "pages/club/topic-detail/index.wxml:427:bind:close:closeTopicSetting:57",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -960909,7 +960909,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:close",
         "handler": "closeTopicSetting",
-        "line": 426,
+        "line": 427,
         "selectorHint": "cy-scene-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -960953,7 +960953,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:428:bindtap:goStory:58",
+      "id": "pages/club/topic-detail/index.wxml:429:bindtap:goStory:58",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -960976,7 +960976,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goStory",
-        "line": 428,
+        "line": 429,
         "selectorHint": ".tset-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -961023,7 +961023,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:436:bindtap:openEndSession:59",
+      "id": "pages/club/topic-detail/index.wxml:437:bindtap:openEndSession:59",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -961046,7 +961046,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openEndSession",
-        "line": 436,
+        "line": 437,
         "selectorHint": ".tset-row",
         "visibleCondition": "{{statusKey === 'selfrun' && directorActive}}",
         "disabledCondition": null,
@@ -961090,7 +961090,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:443:bindtap:goLedger:60",
+      "id": "pages/club/topic-detail/index.wxml:444:bindtap:goLedger:60",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -961113,7 +961113,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goLedger",
-        "line": 443,
+        "line": 444,
         "selectorHint": ".tset-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -961160,7 +961160,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:451:bindtap:goEventOps:61",
+      "id": "pages/club/topic-detail/index.wxml:452:bindtap:goEventOps:61",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -961183,7 +961183,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goEventOps",
-        "line": 451,
+        "line": 452,
         "selectorHint": ".tset-row",
         "visibleCondition": "{{canManageSessions}}",
         "disabledCondition": null,
@@ -961230,7 +961230,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:459:bindtap:goRules:62",
+      "id": "pages/club/topic-detail/index.wxml:460:bindtap:goRules:62",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -961253,7 +961253,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goRules",
-        "line": 459,
+        "line": 460,
         "selectorHint": ".tset-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -961297,7 +961297,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:476:bindtap:goEditTopic:64",
+      "id": "pages/club/topic-detail/index.wxml:477:bindtap:goEditTopic:64",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -961320,7 +961320,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goEditTopic",
-        "line": 476,
+        "line": 477,
         "selectorHint": ".tset-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -961367,7 +961367,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:485:bindtap:goChapterApplications:65",
+      "id": "pages/club/topic-detail/index.wxml:486:bindtap:goChapterApplications:65",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -961390,7 +961390,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goChapterApplications",
-        "line": 485,
+        "line": 486,
         "selectorHint": ".tset-row",
         "visibleCondition": "{{canReviewChapterApplications}}",
         "disabledCondition": null,
@@ -961438,7 +961438,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:500:bind:change:onSettingToggle:66",
+      "id": "pages/club/topic-detail/index.wxml:501:bind:change:onSettingToggle:66",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -961461,7 +961461,7 @@
         "tag": "cy-switch",
         "event": "bind:change",
         "handler": "onSettingToggle",
-        "line": 500,
+        "line": 501,
         "selectorHint": "cy-switch[bind:change]",
         "visibleCondition": null,
         "disabledCondition": "{{!setting.canManage || settingSaving}}",
@@ -961550,7 +961550,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:510:bind:change:onSettingToggle:67",
+      "id": "pages/club/topic-detail/index.wxml:511:bind:change:onSettingToggle:67",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -961573,7 +961573,7 @@
         "tag": "cy-switch",
         "event": "bind:change",
         "handler": "onSettingToggle",
-        "line": 510,
+        "line": 511,
         "selectorHint": "cy-switch[bind:change]",
         "visibleCondition": null,
         "disabledCondition": "{{!setting.canManage || settingSaving}}",
@@ -961662,7 +961662,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:517:bind:change:onSettingToggle:68",
+      "id": "pages/club/topic-detail/index.wxml:518:bind:change:onSettingToggle:68",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -961685,7 +961685,7 @@
         "tag": "cy-switch",
         "event": "bind:change",
         "handler": "onSettingToggle",
-        "line": 517,
+        "line": 518,
         "selectorHint": "cy-switch[bind:change]",
         "visibleCondition": null,
         "disabledCondition": "{{!setting.canManage || settingSaving}}",
@@ -961774,7 +961774,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:520:bindtap:openEndTopic:69",
+      "id": "pages/club/topic-detail/index.wxml:521:bindtap:openEndTopic:69",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -961797,7 +961797,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openEndTopic",
-        "line": 520,
+        "line": 521,
         "selectorHint": ".tset-row",
         "visibleCondition": "{{setting.canManage}}",
         "disabledCondition": null,
@@ -961841,7 +961841,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:535:bind:close:closeMerchants:70",
+      "id": "pages/club/topic-detail/index.wxml:536:bind:close:closeMerchants:70",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -961864,7 +961864,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:close",
         "handler": "closeMerchants",
-        "line": 535,
+        "line": 536,
         "selectorHint": "cy-scene-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -961908,7 +961908,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:549:bindtap:copyPhone:72",
+      "id": "pages/club/topic-detail/index.wxml:550:bindtap:copyPhone:72",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -961931,7 +961931,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "copyPhone",
-        "line": 549,
+        "line": 550,
         "selectorHint": ".cli-copy",
         "visibleCondition": "{{item.phone}}",
         "disabledCondition": null,
@@ -961985,7 +961985,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:565:bind:close:closeCustomers:73",
+      "id": "pages/club/topic-detail/index.wxml:566:bind:close:closeCustomers:73",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -962008,7 +962008,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:close",
         "handler": "closeCustomers",
-        "line": 565,
+        "line": 566,
         "selectorHint": "cy-scene-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -962052,7 +962052,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:577:bindtap:onCustomerFilter:75",
+      "id": "pages/club/topic-detail/index.wxml:578:bindtap:onCustomerFilter:75",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -962075,7 +962075,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onCustomerFilter",
-        "line": 577,
+        "line": 578,
         "selectorHint": ".cli-chip",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -962161,7 +962161,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:588:bindtap:callCustomerRow:76",
+      "id": "pages/club/topic-detail/index.wxml:589:bindtap:callCustomerRow:76",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -962186,7 +962186,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "callCustomerRow",
-        "line": 588,
+        "line": 589,
         "selectorHint": ".cli-call",
         "visibleCondition": "{{item.phoneCallable}}",
         "disabledCondition": null,
@@ -962241,7 +962241,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:600:bindtap:goBroadcast:77",
+      "id": "pages/club/topic-detail/index.wxml:601:bindtap:goBroadcast:77",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -962264,7 +962264,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goBroadcast",
-        "line": 600,
+        "line": 601,
         "selectorHint": ".cli-entry",
         "visibleCondition": "{{canBroadcast}}",
         "disabledCondition": null,
@@ -962308,7 +962308,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:620:bind:retry:loadRegistrationTrend:78",
+      "id": "pages/club/topic-detail/index.wxml:621:bind:retry:loadRegistrationTrend:78",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -962331,7 +962331,7 @@
         "tag": "cy-error",
         "event": "bind:retry",
         "handler": "loadRegistrationTrend",
-        "line": 620,
+        "line": 621,
         "selectorHint": "cy-error[bind:retry]",
         "visibleCondition": "{{trendState === 'error'}}",
         "disabledCondition": null,
@@ -962417,7 +962417,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:636:bind:cancel:closeEndTopic:80",
+      "id": "pages/club/topic-detail/index.wxml:637:bind:cancel:closeEndTopic:80",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -962440,7 +962440,7 @@
         "tag": "cy-club-topic-end-confirm",
         "event": "bind:cancel",
         "handler": "closeEndTopic",
-        "line": 636,
+        "line": 637,
         "selectorHint": "cy-club-topic-end-confirm[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -962484,7 +962484,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:636:bind:confirm:confirmEndTopic:79",
+      "id": "pages/club/topic-detail/index.wxml:637:bind:confirm:confirmEndTopic:79",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -962507,7 +962507,7 @@
         "tag": "cy-club-topic-end-confirm",
         "event": "bind:confirm",
         "handler": "confirmEndTopic",
-        "line": 636,
+        "line": 637,
         "selectorHint": "cy-club-topic-end-confirm[bind:confirm]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -962642,7 +962642,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:639:bind:close:closeOpsTimeSheet:81",
+      "id": "pages/club/topic-detail/index.wxml:640:bind:close:closeOpsTimeSheet:81",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -962665,7 +962665,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:close",
         "handler": "closeOpsTimeSheet",
-        "line": 639,
+        "line": 640,
         "selectorHint": "cy-scene-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -962709,7 +962709,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:642:bind:change:onOpsDateChange:82",
+      "id": "pages/club/topic-detail/index.wxml:643:bind:change:onOpsDateChange:82",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -962732,7 +962732,7 @@
         "tag": "cy-date-field",
         "event": "bind:change",
         "handler": "onOpsDateChange",
-        "line": 642,
+        "line": 643,
         "selectorHint": "cy-date-field[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -962776,7 +962776,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:646:bind:change:onOpsTimeChange:83",
+      "id": "pages/club/topic-detail/index.wxml:647:bind:change:onOpsTimeChange:83",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -962799,7 +962799,7 @@
         "tag": "cy-date-field",
         "event": "bind:change",
         "handler": "onOpsTimeChange",
-        "line": 646,
+        "line": 647,
         "selectorHint": "cy-date-field[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -962843,7 +962843,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:651:bindtap:closeOpsTimeSheet:84",
+      "id": "pages/club/topic-detail/index.wxml:652:bindtap:closeOpsTimeSheet:84",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -962866,7 +962866,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeOpsTimeSheet",
-        "line": 651,
+        "line": 652,
         "selectorHint": ".ctd-director-field__act",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -962910,7 +962910,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:653:bindtap:confirmOpsTime:85",
+      "id": "pages/club/topic-detail/index.wxml:654:bindtap:confirmOpsTime:85",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -962933,7 +962933,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "confirmOpsTime",
-        "line": 653,
+        "line": 654,
         "selectorHint": ".ctd-director-field__act",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -963062,7 +963062,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:661:bind:close:onOpsResultClose:86",
+      "id": "pages/club/topic-detail/index.wxml:662:bind:close:onOpsResultClose:86",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -963085,7 +963085,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:close",
         "handler": "onOpsResultClose",
-        "line": 661,
+        "line": 662,
         "selectorHint": "cy-result-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -963129,7 +963129,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:663:bind:close:closeRules:87",
+      "id": "pages/club/topic-detail/index.wxml:664:bind:close:closeRules:87",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -963152,7 +963152,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:close",
         "handler": "closeRules",
-        "line": 663,
+        "line": 664,
         "selectorHint": "cy-scene-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -963196,7 +963196,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:674:bind:close:closeSessionPick:88",
+      "id": "pages/club/topic-detail/index.wxml:675:bind:close:closeSessionPick:88",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -963219,7 +963219,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:close",
         "handler": "closeSessionPick",
-        "line": 674,
+        "line": 675,
         "selectorHint": "cy-scene-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -963263,7 +963263,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:677:bindtap:onSessionPick:89",
+      "id": "pages/club/topic-detail/index.wxml:678:bindtap:onSessionPick:89",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -963286,7 +963286,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onSessionPick",
-        "line": 677,
+        "line": 678,
         "selectorHint": ".tset-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -963398,7 +963398,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:688:bind:close:closePlanFallback:90:variant:plan-local-state",
+      "id": "pages/club/topic-detail/index.wxml:689:bind:close:closePlanFallback:90:variant:plan-local-state",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -963426,7 +963426,7 @@
         "tag": "cy-club-director-chapter-sheet",
         "event": "bind:close",
         "handler": "closePlanFallback",
-        "line": 688,
+        "line": 689,
         "selectorHint": "cy-club-director-chapter-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -963470,7 +963470,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:688:bind:confirm:confirmPlanFallback:91:variant:plan-fallback",
+      "id": "pages/club/topic-detail/index.wxml:689:bind:confirm:confirmPlanFallback:91:variant:plan-fallback",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -963504,7 +963504,7 @@
         "tag": "cy-club-director-chapter-sheet",
         "event": "bind:confirm",
         "handler": "confirmPlanFallback",
-        "line": 688,
+        "line": 689,
         "selectorHint": "cy-club-director-chapter-sheet[bind:confirm]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -963592,7 +963592,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:689:bindinput:inputPlanFallbackReason:92:variant:plan-local-state",
+      "id": "pages/club/topic-detail/index.wxml:690:bindinput:inputPlanFallbackReason:92:variant:plan-local-state",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -963620,7 +963620,7 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "inputPlanFallbackReason",
-        "line": 689,
+        "line": 690,
         "selectorHint": ".ctd-plan-fallback__input",
         "visibleCondition": null,
         "disabledCondition": "{{writeLocked}}",
@@ -963664,7 +963664,7 @@
       }
     },
     {
-      "id": "pages/club/topic-detail/index.wxml:690:bindtap:onReconcileUnknownWrite:93",
+      "id": "pages/club/topic-detail/index.wxml:691:bindtap:onReconcileUnknownWrite:93",
       "route": "pages/club/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -963687,7 +963687,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onReconcileUnknownWrite",
-        "line": 690,
+        "line": 691,
         "selectorHint": ".ctd-director-export",
         "visibleCondition": "{{writeLocked && writeState === 'unknown-write'}}",
         "disabledCondition": null,
