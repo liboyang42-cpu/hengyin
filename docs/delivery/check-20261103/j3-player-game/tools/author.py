@@ -14,7 +14,7 @@ import time
 prev = (state().get(skey) or {}).get('templates') or {}
 for k in keys.split(','):
     if prev.get(k): tids.append(prev[k]); continue
-    time.sleep(3)
+    time.sleep(4)
     v = cfg[k]
     if v['err']: print('CFGERR', k, v['err']); tids.append(None); continue
     body = {"title": v['label'] + '·' + name[:6], "description": v['label'], "validationMethod": 0, "isSync": 0, "advancedConfigJson": v['json']}
