@@ -188,6 +188,12 @@ public class ApiTemplateController extends BaseController {
                 } catch (IllegalArgumentException e) {
                     return error(e.getMessage());
                 }
+                // check-1104 j5 B1:主题里「保存并绑定」的节点玩法走的就是草稿口,随主题直接给玩家看,
+                // 文字必须与 /publish 同一道内容安全闸(名称/规则/题干/选项/提示/反馈/故事块)。
+                String secMsg = templateTextSecurity(request, memberId);
+                if (secMsg != null) {
+                    return error(secMsg);
+                }
             }
             String username = getAppUserName();
             // 草稿不做全局重名拦截(覆盖更新自己的草稿不应被拦)

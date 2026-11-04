@@ -291,6 +291,27 @@ public final class JourneyReviewTexts {
         return entries;
     }
 
+    /**
+     * 主题节点绑定的节点玩法(cms_member_template)的全部玩家可见文字:名称、简介、规则、题干、答案、
+     * 反馈、选项、提示、揭晓、故事块、奖励文案与节点块配置叙事段。随主题发布/编辑时与主题文本同一道闸
+     * (check-1104 j5 B1:主题内节点玩法原先只走媒体闸,文字未送机审就随主题公开)。
+     */
+    public static List<Entry> collectBoundTemplate(com.chengyinhub.business.domain.CmsMemberTemplate t) {
+        List<Entry> entries = new ArrayList<Entry>();
+        if (t == null) return entries;
+        add(entries, "title", t.getTitle());
+        add(entries, "description", t.getDescription());
+        add(entries, "players", t.getPlayers());
+        add(entries, "usageLocation", t.getUsageLocation());
+        add(entries, "requiredMaterials", t.getRequiredMaterials());
+        add(entries, "questionName", t.getQuestionName());
+        add(entries, "questionAnswer", t.getQuestionAnswer());
+        add(entries, "feedbackText", t.getFeedbackText());
+        entries.addAll(collectTemplateFields(t));
+        entries.addAll(collectBlocks(t.getAdvancedConfigJson()));
+        return entries;
+    }
+
     /** 模板库提交里、既有 joinText 之外的玩家可见散字段(选项/规则说明/勋章名已在 joinText 内)。 */
     public static List<Entry> collectTemplateFields(com.chengyinhub.business.domain.dto.CmsTemplatePublishRequest r) {
         List<Entry> entries = new ArrayList<Entry>();

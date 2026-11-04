@@ -1100,6 +1100,42 @@ public class ApiTopicController extends BaseController {
         if (chapterFlowV2) {
             entries.addAll(JourneyReviewTexts.collectChapterNarrativeBlocks(dto.getChapters()));
         }
+        java.util.Set<Long> templateIds = new java.util.LinkedHashSet<Long>();
+        if (dto.getChapters() != null) for (com.chengyinhub.business.domain.dto.ChapterDTO chapter : dto.getChapters()) {
+            if (chapter == null || chapter.getNodes() == null) continue;
+            for (com.chengyinhub.business.domain.dto.NodeDTO node : chapter.getNodes()) {
+                if (node != null && node.getTemplateId() != null && node.getTemplateId() > 0L) templateIds.add(node.getTemplateId());
+            }
+        }
+        entries.addAll(boundTemplateReviewTexts(templateIds));
+        return entries;
+    }
+
+    /**
+     * check-1104 j5 B1:主题节点绑定的节点玩法文字(名称/规则/题干/选项/提示/反馈/故事块)随主题一起过同一道
+     * 内容安全闸。玩法草稿只随主题公开,原先只走媒体闸 ⇒ 违规词经主题直接给全部玩家看。
+     * 只读取文字送检,不改归属判定(归属仍由 service 内 assertTemplateOwned 管)。
+     */
+    private java.util.List<JourneyReviewTexts.Entry> persistedBoundTemplateReviewTexts(Long topicId) {
+        CmsTopicNode query = new CmsTopicNode();
+        query.setTopicId(topicId);
+        java.util.Set<Long> templateIds = new java.util.LinkedHashSet<Long>();
+        for (CmsTopicNode node : cmsTopicNodeService.selectCmsTopicNodeList(query)) {
+            if (node != null && node.getTemplateId() != null && node.getTemplateId() > 0L) templateIds.add(node.getTemplateId());
+        }
+        return boundTemplateReviewTexts(templateIds);
+    }
+
+    private java.util.List<JourneyReviewTexts.Entry> boundTemplateReviewTexts(java.util.Collection<Long> templateIds) {
+        java.util.List<JourneyReviewTexts.Entry> entries = new java.util.ArrayList<JourneyReviewTexts.Entry>();
+        if (templateIds == null || templateIds.isEmpty()) return entries;
+        for (com.chengyinhub.business.domain.CmsMemberTemplate template
+                : memberTemplateService.selectCmsMemberTemplateByIds(new java.util.ArrayList<Long>(templateIds))) {
+            if (template == null) continue;
+            for (JourneyReviewTexts.Entry entry : JourneyReviewTexts.collectBoundTemplate(template)) {
+                entries.add(new JourneyReviewTexts.Entry("节点玩法「" + template.getTitle() + "」." + entry.getField(), entry.getText()));
+            }
+        }
         return entries;
     }
 
@@ -1577,6 +1613,7 @@ public class ApiTopicController extends BaseController {
         if (memberId == null || memberId <= 0) {
             return error("请先登录");
         }
+        final Long principalMemberId = memberId;
         try {
             memberId = resolveProjectOwnerMemberId(memberId, scope);
         } catch (ServiceException e) {
@@ -1593,6 +1630,13 @@ public class ApiTopicController extends BaseController {
         Integer isDraft = cmsTopicService.selectTopicIsDraft(cid);
         if ((isDraft == null || isDraft != 1) && !cmsTopicService.canResubmitSupplyReview(cid, memberId)) {
             return error("该主题不是草稿，无法发布");
+        }
+        // check-1104 j5 B1:草稿发布口按库内节点实际绑定的节点玩法再过一次文字闸(玩法可能在主题存草稿后才改)。
+        java.util.List<JourneyReviewTexts.Entry> templateTexts = persistedBoundTemplateReviewTexts(cid);
+        TopicTextSafety.Verdict templateVerdict = TopicTextSafety.check(contentSafetyGate, memberId,
+                resolveOpenid(principalMemberId), cid, null, templateTexts);
+        if (templateVerdict.isBlocked()) {
+            return AjaxResult.error(HttpStatus.BAD_REQUEST, templateVerdict.getBlockMessage());
         }
         TopicCreateDTO publication = new TopicCreateDTO();
         publication.setSelfPlay(topic.getSelfPlay());
@@ -1622,6 +1666,10 @@ public class ApiTopicController extends BaseController {
                     () -> configVersion == null && registryVersion == null
                             ? cmsTopicService.publishDraft(fCid, fMemberId)
                             : cmsTopicService.publishDraftWithBinding(fCid, fMemberId, configVersion, registryVersion) != null);
+            if (ok != null && ok && templateVerdict.isFlagged()) {
+                flagForSpotCheck(cid, memberId, templateVerdict.getFlagReason(), recheckText(null, templateTexts),
+                        topic.getImgUrl(), topic.getImgArr());
+            }
             return (ok != null && ok) ? success("已发布") : error("该主题不是草稿，无法发布");
         }
         com.chengyinhub.business.domain.vo.TopicBundleSubmitResultVO result =
@@ -1629,6 +1677,10 @@ public class ApiTopicController extends BaseController {
                         : cmsTopicService.publishDraftWithBinding(cid, memberId, configVersion, registryVersion);
         if (result == null) {
             return error("该主题不是草稿，无法发布");
+        }
+        if (result.isPublished() && templateVerdict.isFlagged()) {
+            flagForSpotCheck(cid, memberId, templateVerdict.getFlagReason(), recheckText(null, templateTexts),
+                    topic.getImgUrl(), topic.getImgArr());
         }
         return AjaxResult.success(result.isPublished() ? "已发布" : "已提交审核", result);
     }

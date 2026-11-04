@@ -32,6 +32,9 @@ class ApiTopicDraftPublisherIdentityTest {
         tickets = mock(IOmsTicketService.class);
         identity = mock(MemberIdentityService.class);
         ReflectionTestUtils.setField(controller, "cmsTopicService", topics);
+        // 草稿发布口会读库内节点绑定的玩法去复检文字(j5 B1);这里没有绑定玩法
+        ReflectionTestUtils.setField(controller, "cmsTopicNodeService",
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.ICmsTopicNodeService.class));
         ReflectionTestUtils.setField(controller, "omsTicketService", tickets);
         ReflectionTestUtils.setField(controller, "memberIdentityService", identity);
         quota = mock(IQuotaService.class);
