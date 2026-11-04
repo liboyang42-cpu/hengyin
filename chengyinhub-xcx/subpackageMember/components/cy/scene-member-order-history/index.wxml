@@ -73,7 +73,7 @@
       </view>
 
       <view class="orderbox_li_bot">
-        <view class="orderbox_li_bot_left">实付款：<text class="moh-amount">{{money.amount(item.actualPaidAmount)}}</text></view>
+        <view class="orderbox_li_bot_left">{{item.registrationStatus==1 ? '待付款' : '实付款'}}：<text class="moh-amount">{{money.amount(item.actualPaidAmount)}}</text></view>
         <view class="orderbox_li_bot_right" wx:if="{{item.registrationStatus==1}}">
           <view class="orderbut1" catchtap="cancelOrder" data-id="{{item.id}}" data-index="{{index}}" data-status="{{item.registrationStatus}}" aria-role="button" aria-label="{{cancellingId==item.id ? '正在取消订单' : '取消订单'}}" aria-disabled="{{cancellingId!=0}}" hover-class="{{cancellingId!=0 ? 'none' : 'cy-pressed'}}" hover-stay-time="80" hover-stop-propagation="true"><view class="orderbut__visual">{{cancellingId==item.id ? '处理中' : '取消订单'}}</view></view>
           <view class="orderbut2" catchtap="payOrder" data-id="{{item.id}}" data-index="{{index}}" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true"><view class="orderbut__visual">立即支付</view></view>
