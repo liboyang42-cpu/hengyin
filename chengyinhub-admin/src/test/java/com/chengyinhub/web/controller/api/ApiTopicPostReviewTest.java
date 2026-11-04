@@ -106,6 +106,25 @@ class ApiTopicPostReviewTest {
         verify(topicService).holdUncheckedTopicForReview(TOPIC, MEMBER);
         verify(auditTaskService, never()).submit(eq(AuditTask.BIZ_TOPIC), eq(TOPIC), eq(MEMBER), eq("post_review_flag"),
                 anyString());
+        // 第十一轮 h5 第 4 项(j5 H2):留置的主题回执说「已提交审核」,不说「主题发布成功」
+        assertEquals("已提交审核", result.get(AjaxResult.MSG_TAG));
+    }
+
+    @Test
+    void cleanPublishStillSaysPublished() {
+        AjaxResult result = controller.createTopic(createDto("正常主题名"));
+
+        assertEquals("主题发布成功", result.get(AjaxResult.MSG_TAG));
+    }
+
+    @Test
+    void heldProReceipt_isMarkedPendingNotPublished() {
+        com.chengyinhub.business.domain.vo.TopicBundleSubmitResultVO receipt =
+                new com.chengyinhub.business.domain.vo.TopicBundleSubmitResultVO(TOPIC, 9L, "NOT_REQUIRED", java.util.Collections.<Long>emptyList());
+        receipt.setPublished(true);
+        receipt.markHeldForReview();
+        assertEquals(false, receipt.isPublished());
+        assertEquals("PENDING", receipt.getReviewState());
     }
 
     @Test

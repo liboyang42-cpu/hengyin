@@ -11,7 +11,7 @@ public class TopicBundleSubmitResultVO {
     private String commercialNextStep;
     private final Long topicId;
     private final Long auditTaskId;
-    private final String reviewState;
+    private String reviewState;
     private final List<Long> bundledTemplateIds;
 
     public TopicBundleSubmitResultVO(Long topicId, Long auditTaskId, String reviewState,
@@ -31,5 +31,7 @@ public class TopicBundleSubmitResultVO {
     public Long getTopicId() { return topicId; }
     public Long getAuditTaskId() { return auditTaskId; }
     public String getReviewState() { return reviewState; }
+    /** 第十一轮 h5 第 4 项(j5 H2):机审没过、主题留置为仅作者可见时,回执按「审核中」报,不报已发布。 */
+    public void markHeldForReview() { this.published = false; this.reviewState = "PENDING"; }
     public List<Long> getBundledTemplateIds() { return bundledTemplateIds; }
 }

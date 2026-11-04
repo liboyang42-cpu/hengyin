@@ -579,12 +579,14 @@ public class ApiTopicController extends BaseController {
                 draftRequestKey = null;
             }
 
+            boolean held = false;
             if (textVerdict.isFlagged()) {
-                flagForSpotCheck(topicId, memberId, textVerdict.getFlagReason(),
+                held = flagForSpotCheck(topicId, memberId, textVerdict.getFlagReason(),
                         recheckText(secText, topicReviewTexts(dto, chapterFlowV2)), dto.getImgUrl(), dto.getImgArr());
             } else if (mediaUncheckable(dto.getImgUrl(), dto.getImgArr(), openid)) {
-                flagForSpotCheck(topicId, memberId, "MEDIA_UNCHECKED", null, dto.getImgUrl(), dto.getImgArr());
+                held = flagForSpotCheck(topicId, memberId, "MEDIA_UNCHECKED", null, dto.getImgUrl(), dto.getImgArr());
             }
+            if (held && !saveDraft && v2Result != null) v2Result.markHeldForReview();
 
             // UGC 图片内容安全:异步送检封面/图集,命中违规由消息推送回调自动下架(best-effort,不阻断)
             wxContentSecurityService.submitMediaCheck(
@@ -622,6 +624,7 @@ public class ApiTopicController extends BaseController {
 
             // saveDraft 时返回的真实语义是「草稿」而不是「发布」——前端直接用 msg 弹提示时会说反。
             return AjaxResult.success(saveDraft ? "草稿已保存"
+                            : held ? "已提交审核"
                             : v2Result != null && !v2Result.isPublished() && ("PENDING".equals(v2Result.getReviewState())
                                     || "ESCALATED".equals(v2Result.getReviewState()))
                                     ? "已提交审核" : "主题发布成功",
@@ -817,18 +820,20 @@ public class ApiTopicController extends BaseController {
             logger.warn("主题保存失败: topicId={}, chapterId=未生成或未知", dto.getId(), e);
             return error(e.getMessage());
         }
+        boolean held = false;
         if (textVerdict.isFlagged()) {
-            flagForSpotCheck(topicId, memberId, textVerdict.getFlagReason(), recheckText(secText, storyTexts),
+            held = flagForSpotCheck(topicId, memberId, textVerdict.getFlagReason(), recheckText(secText, storyTexts),
                     dto.getImgUrl(), dto.getImgArr());
         } else if (mediaUncheckable(dto.getImgUrl(), dto.getImgArr(), openid)) {
-            flagForSpotCheck(topicId, memberId, "MEDIA_UNCHECKED", null, dto.getImgUrl(), dto.getImgArr());
+            held = flagForSpotCheck(topicId, memberId, "MEDIA_UNCHECKED", null, dto.getImgUrl(), dto.getImgArr());
         }
+        if (held && v2Result != null) v2Result.markHeldForReview();
         wxContentSecurityService.submitMediaCheck(
                 IWxContentSecurityService.BIZ_TYPE_TOPIC,
                 topicId,
                 StringUtils.isNotEmpty(dto.getImgArr()) ? dto.getImgArr() : dto.getImgUrl(),
                 openid);
-        return AjaxResult.success(v2Result != null && !v2Result.isPublished() && ("PENDING".equals(v2Result.getReviewState())
+        return AjaxResult.success(held || v2Result != null && !v2Result.isPublished() && ("PENDING".equals(v2Result.getReviewState())
                         || "ESCALATED".equals(v2Result.getReviewState())) ? "已提交审核" : "保存成功",
                 v2Result == null ? topicId : v2Result);
     }
@@ -1192,12 +1197,15 @@ public class ApiTopicController extends BaseController {
      * 机审没结论:主题留置为仅作者可见,并进自动复检队列(Round5C)。复检通过自动解除留置上架,
      * 违规或耗尽自动驳回并通知作者,全程不需要人。
      */
-    private void flagForSpotCheck(Long topicId, Long ownerMemberId, String reason, String recheckText,
+    /** @return 主题已留置为仅作者可见(回执要按审核中报)。 */
+    private boolean flagForSpotCheck(Long topicId, Long ownerMemberId, String reason, String recheckText,
                                   String imgUrl, String imgArr) {
-        if (topicId == null) return;
+        if (topicId == null) return false;
         logger.warn("主题机审未完成,留置为仅作者可见并自动复检 topicId={} reason={}", topicId, reason);
+        boolean held = false;
         try {
             cmsTopicService.holdUncheckedTopicForReview(topicId, ownerMemberId);
+            held = true;
         } catch (Exception e) {
             logger.error("主题待复检留置失败 topicId={}", topicId, e);
         }
@@ -1209,6 +1217,7 @@ public class ApiTopicController extends BaseController {
                 logger.error("主题自动复检进队失败 topicId={}", topicId, e);
             }
         }
+        return held;
     }
 
     static String recheckText(String mainText, java.util.List<JourneyReviewTexts.Entry> entries) {
@@ -1666,11 +1675,10 @@ public class ApiTopicController extends BaseController {
                     () -> configVersion == null && registryVersion == null
                             ? cmsTopicService.publishDraft(fCid, fMemberId)
                             : cmsTopicService.publishDraftWithBinding(fCid, fMemberId, configVersion, registryVersion) != null);
-            if (ok != null && ok && templateVerdict.isFlagged()) {
-                flagForSpotCheck(cid, memberId, templateVerdict.getFlagReason(), recheckText(null, templateTexts),
+            boolean held = ok != null && ok && templateVerdict.isFlagged()
+                    && flagForSpotCheck(cid, memberId, templateVerdict.getFlagReason(), recheckText(null, templateTexts),
                         topic.getImgUrl(), topic.getImgArr());
-            }
-            return (ok != null && ok) ? success("已发布") : error("该主题不是草稿，无法发布");
+            return (ok != null && ok) ? success(held ? "已提交审核" : "已发布") : error("该主题不是草稿，无法发布");
         }
         com.chengyinhub.business.domain.vo.TopicBundleSubmitResultVO result =
                 configVersion == null && registryVersion == null ? cmsTopicService.publishDraftWithReview(cid, memberId)
@@ -1678,9 +1686,10 @@ public class ApiTopicController extends BaseController {
         if (result == null) {
             return error("该主题不是草稿，无法发布");
         }
-        if (result.isPublished() && templateVerdict.isFlagged()) {
-            flagForSpotCheck(cid, memberId, templateVerdict.getFlagReason(), recheckText(null, templateTexts),
-                    topic.getImgUrl(), topic.getImgArr());
+        if (result.isPublished() && templateVerdict.isFlagged()
+                && flagForSpotCheck(cid, memberId, templateVerdict.getFlagReason(), recheckText(null, templateTexts),
+                    topic.getImgUrl(), topic.getImgArr())) {
+            result.markHeldForReview();
         }
         return AjaxResult.success(result.isPublished() ? "已发布" : "已提交审核", result);
     }
