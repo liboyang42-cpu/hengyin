@@ -751,6 +751,10 @@ page { background: var(--cy-color-bg-page); }
 .finsheet__map-native{ position:absolute; inset:0; width:100%; height:100%; display:block; }
 .finsheet__map-error{ position:absolute; right:var(--cy-space-2); bottom:var(--cy-space-2); z-index:2; padding:var(--cy-space-1) var(--cy-space-2); border:1rpx solid var(--cy-color-play-line); border-radius:var(--cy-radius-pill); background:var(--cy-color-play-surface-solid); color:var(--cy-color-play-accent); font-size:var(--cy-type-caption); }
 .finsheet__map-fallback{ position:absolute; inset:0; width:100%; height:100%; }
+/* 第九轮 m2 第 3 项:路线分享卡 750×1000 画布,按屏宽 3:4 显示 */
+.finsheet__card{ padding:var(--cy-space-4) var(--cy-page-x) 0; }
+.finsheet__routecv{ display:block; width:100%; height:calc((100vw - 2 * var(--cy-page-x)) * 4 / 3); border-radius:var(--cy-radius-lg); overflow:hidden; background:var(--cy-color-play-surface-solid); }
+.finsheet__card-acts{ display:flex; gap:var(--cy-space-3); margin-top:var(--cy-space-4); }
 .finsheet__grid{ display:flex; margin-top:31rpx; }
 .fst{ flex:1; display:flex; flex-direction:column; align-items:center; gap:8rpx; }
 .fst__v{ font-size:56rpx; font-weight:700; color:var(--cy-color-play-story-text); } /* ds-ok Figma 实测(用户裁决字面值) */

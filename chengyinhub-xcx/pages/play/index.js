@@ -35,6 +35,7 @@ const audioSession = require('./utils/audio-session.js');       // 音频打断/
 const { createPoller } = require('./utils/poller.js');           // 带领场进度:退避轮询
 const { createPlayTrail } = require('./utils/play-trail.js');
 const teamTrailKit = require('./utils/team-trail.js');
+const routeCard = require('./utils/route-card.js');
 const playAccuracy = require('./utils/play-accuracy.js');       // 到达定位精度阈值(80m)与提示
 const {
   normalizePlayerProjection,
@@ -534,7 +535,7 @@ Page({
     tileH: 0,                     // 瓦片行高:按剩余高度等分,4 家竖版大卡 / 6 家近方卡
     nodes: [], total: 0, merchantCount: 0, doneCount: 0, allDone: false, topicCompleted: false,
     remainingGameCount: 0,
-    fmNodes: [], fmPolyline: [], fmTrail: [], fmTeamPins: [], teamRail: [], teamFollowKey: '', teamConsent: { show: false, share: true }, fmPlayer: null, fmCenter: { lat: 31.2304, lng: 121.4737 },
+    fmNodes: [], fmPolyline: [], fmTrail: [], fmTeamPins: [], teamRail: [], teamFollowKey: '', teamConsent: { show: false, share: true }, routeCard: { on: false, ready: false }, fmPlayer: null, fmCenter: { lat: 31.2304, lng: 121.4737 },
     fmSubkey: MAP_DARK.subkey, fmLayerStyle: MAP_DARK.layerStyle, // S9 暗色底图预留,见上方 MAP_DARK 注释
     nextNode: null,
     sheet: { show: false, node: null, continueText: '前往下一站' },
@@ -8098,7 +8099,7 @@ Page({
       if (!this._isFinishViewCurrent(finishView) || !this.data.showFinish) return;
       this._triggerCelebration(this.data.mode === 2 ? 'free-finish' : 'classic-finish');
       this.paintRouteThumb();   // finish-map 盒内=路线缩略图(全卡仅保存时生成,避免和 HTML 数字行重复)
-      this.buildReview(); if (!this._openFinale(isShopDay)) this._openMedalScreen(); // g20:通关过场本身就是那一张通关卡,不再在它下面再垫一层勋章页;B:轨迹回顾层(渐进描线 + 成就气泡 + 用时/距离);v13 整个主题走完时盖上通关勋章页
+      this.buildReview(); this._startRouteCard(); if (!this._openFinale(isShopDay)) this._openMedalScreen(); // g20:通关过场本身就是那一张通关卡,不再在它下面再垫一层勋章页;B:轨迹回顾层(渐进描线 + 成就气泡 + 用时/距离);v13 整个主题走完时盖上通关勋章页
     });
     this.loadMilestone(); this.loadStageEnd(); // BL-186 本章结算与里程碑并列读,不挡完成页
     if (!this.data.allDone) { this.loadSessionStats(); this.loadHudCharacter(); } // 文档二 L5:章节结算的本局成绩名次与 RPG 小结
@@ -8545,8 +8546,97 @@ Page({
   retryRouteThumb() {
     this.setData({ finishSnapError: false }, () => this.paintRouteThumb());
   },
+  /* 第九轮 m2 第 3 项:路线分享卡。真实走过的轨迹优先(首尾各剪 150 米),没有就用完成站的连线;
+     单人、队伍、自由探索都一样。路线先在卡上画一遍,再出数字和主题码。不要求分享,也不奖励分享。 */
+  _routeCardModel(city) {
+    const ordered = typeof this._reviewOrderedNodes === 'function' ? this._reviewOrderedNodes() : [];
+    return routeCard.cardModel({
+      track: this._trail ? this._trail.points() : [],
+      stops: ordered.map((n) => ({ lat: n.lat, lng: n.lng })),
+      fallbackKm: this.data.reviewDistance,
+      name: this.data.topicName || (this.data.info && this.data.info.name) || '',
+      time: this.data.reviewElapsed, doneCount: this.data.doneCount, city: city || '',
+    });
+  },
+  _routeCardExtras(model) {
+    const topicId = String(this.data.topicId || '');
+    const mid = model.route[Math.floor(model.route.length / 2)];
+    const wait = (p, ms) => Promise.race([p, new Promise((r) => setTimeout(() => r(null), ms))]);
+    const code = /^\d{1,18}$/.test(topicId) ? wait(new Promise((resolve) => {
+      app.sendRequest({ url: '/api/topic/share-code', method: 'POST', hideLoading: true, autoErrorToast: false, data: { id: topicId },
+        success: (res) => resolve(res && String(res.code) === '200' && res.data && res.data.qrcodeUrl ? (app.getImgUrl ? app.getImgUrl(res.data.qrcodeUrl) : res.data.qrcodeUrl) : null),
+        fail: () => resolve(null) });
+    }), 5000) : Promise.resolve(null);
+    const city = mid ? wait(new Promise((resolve) => {
+      app.sendRequest({ url: '/api/map/reverse-geocode', method: 'POST', hideLoading: true, autoErrorToast: false,
+        data: { latitude: Number(mid.lat.toFixed(3)), longitude: Number(mid.lng.toFixed(3)) },
+        success: (res) => resolve((res && String(res.code) === '200' && res.data && res.data.city) || ''),
+        fail: () => resolve('') });
+    }), 4000) : Promise.resolve('');
+    return Promise.all([code, city]);
+  },
+  _startRouteCard() {
+    if (this.data.isPreview || this.data.isMock) return;
+    const artwork = this._captureFinishArtwork('_route');
+    const current = () => this._isFinishArtworkCurrent(artwork);
+    const model = this._routeCardModel('');
+    this._routeCardFile = '';
+    if (model.route.length < 2) { this.setData({ routeCard: { on: false, ready: false } }); return; }
+    this.setData({ routeCard: { on: true, ready: false } }, () => {
+      wx.createSelectorQuery().select('#routecv').fields({ node: true }).exec((res) => {
+        if (!current() || !res || !res[0] || !res[0].node) { if (current()) this.setData({ routeCard: { on: false, ready: false } }); return; }
+        const cv = res[0].node, dpr = 2;
+        cv.width = routeCard.W * dpr; cv.height = routeCard.H * dpr;
+        const g = cv.getContext('2d'); g.scale(dpr, dpr);
+        const extras = this._routeCardExtras(model);
+        const finish = () => extras.then(([codeUrl, city]) => {
+          if (!current()) return;
+          const full = this._routeCardModel(city);
+          const draw = (img) => { if (!current()) return; routeCard.drawCard(g, full, 1, img); this.setData({ 'routeCard.ready': true }); };
+          if (!codeUrl) { draw(null); return; }
+          const img = cv.createImage();
+          const timer = setTimeout(() => draw(null), 5000);
+          img.onload = () => { clearTimeout(timer); draw(img); };
+          img.onerror = () => { clearTimeout(timer); draw(null); };
+          img.src = codeUrl;
+        });
+        if (this.data.reducedMotion || typeof cv.requestAnimationFrame !== 'function') { routeCard.drawCard(g, model, 0.999); finish(); return; }
+        const t0 = Date.now(), DUR = 1600;
+        const step = () => {
+          if (!current()) return;
+          const t = Math.min(1, (Date.now() - t0) / DUR);
+          routeCard.drawCard(g, model, (1 - Math.pow(1 - t, 3)) * 0.999);
+          if (t < 1) cv.requestAnimationFrame(step); else finish();
+        };
+        step();
+      });
+    });
+  },
+  _routeCardPath(cb) {
+    if (!this.data.routeCard.on || !this.data.routeCard.ready) { cb(''); return; }
+    wx.createSelectorQuery().select('#routecv').fields({ node: true }).exec((res) => {
+      const cv = res && res[0] && res[0].node;
+      if (!cv) { cb(''); return; }
+      wx.canvasToTempFilePath({ canvas: cv, fileType: 'jpg', quality: 0.92, success: (r) => cb(r.tempFilePath), fail: () => cb('') });
+    });
+  },
+  shareRouteCard() {
+    const artwork = this._captureFinishArtwork('_routeShare');
+    const current = () => this._isFinishArtworkCurrent(artwork);
+    this._routeCardPath((path) => {
+      if (!current()) return;
+      if (!path) { this.diegetic('路线卡还没画好，再试一次'); return; }
+      if (typeof wx.showShareImageMenu === 'function') wx.showShareImageMenu({ path, fail: () => {} });
+      else wx.previewImage({ urls: [path], current: path });
+    });
+  },
   // 保存/分享用全卡(眉标+衬线题+路线+三列大数字+带领行+品牌脚);回调拿临时路径,不占 finishSnap
+  // 第九轮 m2 第 3 项:有路线分享卡时保存的就是那张卡(同一张,不出第二种通关卡)
   paintFinishCard(cb) {
+    if (this.data.routeCard.on && this.data.routeCard.ready) { this._routeCardPath((path) => { if (path) cb(path); else this._paintLegacyFinishCard(cb); }); return; }
+    this._paintLegacyFinishCard(cb);
+  },
+  _paintLegacyFinishCard(cb) {
     const that = this, artwork = this._captureFinishArtwork('_card');
     const current = () => this._isFinishArtworkCurrent(artwork);
     if (!current()) return;
