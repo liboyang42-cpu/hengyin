@@ -96,12 +96,18 @@ function createTeamTrail(opts) {
         return state;
       }, () => state);
     },
+    /** 本人表态。服务端没确认时按本人刚选的来:选了关就本机也关(不轮询、不上传),不能沿用服务端默认的开 */
     consent(share) {
+      const failed = () => {
+        state = { available: state.available, share: !!share && state.share, decided: false };
+        return Object.assign({ ok: false }, state);
+      };
       return Promise.resolve(o.api.consent({ activityId: o.activityId, share: !!share })).then((res) => {
         const d = res && String(res.code) === '200' && res.data ? res.data : null;
-        if (d) state = { available: !!d.available, share: !!d.share, decided: true };
-        return state;
-      }, () => state);
+        if (!d) return failed();
+        state = { available: !!d.available, share: !!d.share, decided: true };
+        return Object.assign({ ok: true }, state);
+      }, failed);
     },
     start() { if (!stopped && state.available && state.share) poller.start(); },
     pause() { poller.stop(); },

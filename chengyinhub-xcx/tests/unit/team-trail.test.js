@@ -101,3 +101,22 @@ test('游玩页:开始前先表态,藏后台暂停,通关收尾;作者开关在�
   const fm = fs.readFileSync(path.join(__dirname, '../../components/cy/free-map/index.js'), 'utf8')
   assert.match(fm, /translateMarker\(/)
 })
+
+test('rig 走查修正:表态与上报发 JSON;表态没确认时选了关就本机也关,不轮询', async () => {
+  const src = fs.readFileSync(path.join(__dirname, '../../pages/play/index.js'), 'utf8')
+  assert.match(src, /req\('\/api\/team\/trail\/consent', 'POST', data, \{ 'content-type': 'application\/json' \}, true\)/)
+  assert.match(src, /req\('\/api\/team\/trail\/sync', 'POST', data, \{ 'content-type': 'application\/json' \}, true\)/)
+  assert.match(src, /if \(st\.ok && st\.share && this\.data\.gpsOk\) tt\.start\(\);/)
+  const calls = []
+  const tt = kit.createTeamTrail({ activityId: '14', readPoints: () => [], done: () => 0, onTeams() {},
+    api: { state: () => Promise.resolve(ok({ available: true, share: true, decided: false })),
+      consent: () => Promise.reject(new Error('offline')),
+      sync: (d) => { calls.push(d); return Promise.resolve(ok({ available: true, share: true, teams: [] })) } } })
+  await tt.load()
+  const st = await tt.consent(false)
+  assert.strictEqual(st.ok, false)
+  assert.strictEqual(st.share, false)
+  tt.start()
+  assert.strictEqual(tt.isRunning(), false, '选了关又没确认:绝不开始上传')
+  assert.strictEqual(calls.length, 0)
+})

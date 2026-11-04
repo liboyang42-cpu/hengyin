@@ -1289,7 +1289,7 @@
 <view class="finsheet" wx:if="{{showFinish}}">
   <!-- 2026-10-28 业主定稿(claude.ai/artifact/DF1tPhSNWFrzQhDu8hoUAy):整屏深色,NRC 跑步总结顺序 —— 地图 → 标题 → 大数字 → 成绩行 → 分组卡 → 一颗按钮 -->
   <!-- 第九轮 m2 第 3 项:路线分享卡(原型 m-card2)。有路线时代替上面的地图盒 -->
-  <view class="finsheet__card" wx:if="{{routeCard.on && !newLifeOS.show}}">
+  <view class="finsheet__card" wx:if="{{routeCard.on && !newLifeOS.show}}" style="padding-top:calc({{chrome.contentTop}}px + var(--cy-space-2))">
     <canvas type="2d" id="routecv" class="finsheet__routecv" aria-role="img" aria-label="路线卡"></canvas>
     <view class="finsheet__card-acts" wx:if="{{routeCard.ready}}">
       <cy-btn variant="secondary" style="flex:1" bindtap="saveFinishCard">保存图片</cy-btn>

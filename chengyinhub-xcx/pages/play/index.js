@@ -4905,8 +4905,9 @@ Page({
       activityId: aid,
       api: {
         state: (data) => req('/api/team/trail/state', 'GET', data, undefined, true),
-        consent: (data) => req('/api/team/trail/consent', 'POST', data, undefined, true),
-        sync: (data) => req('/api/team/trail/sync', 'POST', data, undefined, true),
+        // 后端是 @RequestBody:必须发 JSON(默认 POST 是表单编码,rig 实测 500)
+        consent: (data) => req('/api/team/trail/consent', 'POST', data, { 'content-type': 'application/json' }, true),
+        sync: (data) => req('/api/team/trail/sync', 'POST', data, { 'content-type': 'application/json' }, true),
       },
       readPoints: () => this._playTrail().points(),
       done: () => (this.data.nodes || []).filter((n) => n && n.done).length,
@@ -4936,7 +4937,8 @@ Page({
     const next = this._teamConsentNext; this._teamConsentNext = null;
     this.setData({ 'teamConsent.show': false });
     const tt = this._teamTrail;
-    if (tt) tt.consent(share).then((st) => { if (st.share && this.data.gpsOk) tt.start(); if (!st.share) this._applyTeams([]); });
+    // 只有服务端确认了「分享」才开始轮询;选了关或没确认成「关」,都不上传
+    if (tt) tt.consent(share).then((st) => { if (st.ok && st.share && this.data.gpsOk) tt.start(); if (!st.share) { tt.pause(); this._applyTeams([]); } });
     if (typeof next === 'function') next();
   },
   _startTeamTrail() {

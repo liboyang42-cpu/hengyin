@@ -1,0 +1,164 @@
+# Round 9 m2 · team trail negative access (rig, 2026-11-04 06:19 UTC)
+# backend: candidate 40b4dcdb on 127.0.0.1:8099, Redis db 9. Activity 14 = session under test (topic 990014).
+# Fixture state: see m2-rig-notes.md. All bodies sent as application/json except where marked.
+
+## 0. clean start for activity 14
+$ redis-cli -p 6379 -n 9 DEL team_trail:pts:14 team_trail:opt:14   (docker exec into the rig Redis container cy-chain-local-1-redis)
+  1
+
+## 1. paid members of activity 14 seed points (A=9004, B=990005, C=990007 team of one)
+$ curl -s -X POST -H 'Authorization: Bearer <JWT>' -H 'Content-Type: application/json' -d '{"activityId": 14, "pts": [[31.2296, 121.473], [31.2299, 121.4733], [31.2302, 121.4736]], "done": 0}' http://127.0.0.1:8099/api/team/trail/sync
+  -> HTTP 200 {"msg":"操作成功","code":200,"data":{"available":true,"share":true,"teams":[]}}
+$ curl -s -X POST -H 'Authorization: Bearer <JWT>' -H 'Content-Type: application/json' -d '{"activityId": 14, "pts": [[31.231, 121.475], [31.2313, 121.4753]], "done": 1}' http://127.0.0.1:8099/api/team/trail/sync
+  -> HTTP 200 {"msg":"操作成功","code":200,"data":{"available":true,"share":true,"teams":[{"key":"5e86494f4a48","done":0,"name":"晨光队","avatar":"https://www.chengyinhub.com/prod-api/profile/upload/2026/11/04/104b60cbbec7b4d166f9280f3d1301f6.png","pts":[[31.2296,121.473],[31.2299,121.4733],[31.2302,121.4736]],"ago":0}]}}
+$ curl -s -X POST -H 'Authorization: Bearer <JWT>' -H 'Content-Type: application/json' -d '{"activityId": 14, "pts": [[31.229, 121.476], [31.2293, 121.4763]], "done": 0}' http://127.0.0.1:8099/api/team/trail/sync
+  -> HTTP 200 {"msg":"操作成功","code":200,"data":{"available":true,"share":true,"teams":[{"key":"10209a4df59f","done":1,"name":"夜航队","avatar":"https://www.chengyinhub.com/prod-api/profile/upload/2026/11/04/a36acdb976d18912dd478eab39c72a4d.png","pts":[[31.231,121.475],[31.2313,121.4753]],"ago":0},{"key":"5e86494f4a48","done":0,"name":"晨光队","avatar":"https://www.chengyinhub.com/prod-api/profile/upload/2026/11/04/104b60cbbec7b4d166f9280f3d1301f6.png","pts":[[31.2296,121.473],[31.2299,121.4733],[31.2302,121.4736]],"ago":0}]}}
+$ redis-cli -p 6379 -n 9 HKEYS team_trail:pts:14   (docker exec into the rig Redis container cy-chain-local-1-redis)
+  9004
+  990007
+  990005
+
+## 2. another-session players (paid in activity 13 / 9, not in 14)
+### 9009 (paid in activity 13)
+$ curl -s -X GET -H 'Authorization: Bearer <JWT>' http://127.0.0.1:8099/api/team/trail/state?activityId=14
+  -> HTTP 200 {"msg":"操作成功","code":200,"data":{"available":false}}
+$ curl -s -X POST -H 'Authorization: Bearer <JWT>' -H 'Content-Type: application/json' -d '{"activityId": 14, "share": true}' http://127.0.0.1:8099/api/team/trail/consent
+  -> HTTP 200 {"msg":"操作成功","code":200,"data":{"available":false}}
+$ curl -s -X POST -H 'Authorization: Bearer <JWT>' -H 'Content-Type: application/json' -d '{"activityId": 14, "pts": [[31.24, 121.48], [31.2403, 121.4803]], "done": 2}' http://127.0.0.1:8099/api/team/trail/sync
+  -> HTTP 200 {"msg":"操作成功","code":200,"data":{"available":false}}
+### 990008 (paid in activity 9)
+$ curl -s -X GET -H 'Authorization: Bearer <JWT>' http://127.0.0.1:8099/api/team/trail/state?activityId=14
+  -> HTTP 200 {"msg":"操作成功","code":200,"data":{"available":false}}
+$ curl -s -X POST -H 'Authorization: Bearer <JWT>' -H 'Content-Type: application/json' -d '{"activityId": 14, "share": true}' http://127.0.0.1:8099/api/team/trail/consent
+  -> HTTP 200 {"msg":"操作成功","code":200,"data":{"available":false}}
+$ curl -s -X POST -H 'Authorization: Bearer <JWT>' -H 'Content-Type: application/json' -d '{"activityId": 14, "pts": [[31.24, 121.48], [31.2403, 121.4803]], "done": 2}' http://127.0.0.1:8099/api/team/trail/sync
+  -> HTTP 200 {"msg":"操作成功","code":200,"data":{"available":false}}
+$ redis-cli -p 6379 -n 9 HKEYS team_trail:pts:14   (docker exec into the rig Redis container cy-chain-local-1-redis)
+  9004
+  990007
+  990005
+$ redis-cli -p 6379 -n 9 HKEYS team_trail:opt:14   (docker exec into the rig Redis container cy-chain-local-1-redis)
+  (empty)
+
+## 3. guest (no token)
+$ curl -s -X GET http://127.0.0.1:8099/api/team/trail/state?activityId=14
+  -> HTTP 401 {"msg":"登录状态已失效，请重新登录","code":401}
+$ curl -s -X POST -H 'Content-Type: application/json' -d '{"activityId": 14, "share": true}' http://127.0.0.1:8099/api/team/trail/consent
+  -> HTTP 401 {"msg":"登录状态已失效，请重新登录","code":401}
+$ curl -s -X POST -H 'Content-Type: application/json' -d '{"activityId": 14, "pts": [[31.2296, 121.473], [31.2299, 121.4733], [31.2302, 121.4736]], "done": 0}' http://127.0.0.1:8099/api/team/trail/sync
+  -> HTTP 401 {"msg":"登录状态已失效，请重新登录","code":401}
+
+## 4. unpaid registrant of activity 14 (990006, cms_registration payment_status=1 created through the real /api/registration/create, never paid)
+$ curl -s -X GET -H 'Authorization: Bearer <JWT>' http://127.0.0.1:8099/api/team/trail/state?activityId=14
+  -> HTTP 200 {"msg":"操作成功","code":200,"data":{"available":false}}
+$ curl -s -X POST -H 'Authorization: Bearer <JWT>' -H 'Content-Type: application/json' -d '{"activityId": 14, "share": true}' http://127.0.0.1:8099/api/team/trail/consent
+  -> HTTP 200 {"msg":"操作成功","code":200,"data":{"available":false}}
+$ curl -s -X POST -H 'Authorization: Bearer <JWT>' -H 'Content-Type: application/json' -d '{"activityId": 14, "pts": [[31.2296, 121.473], [31.2299, 121.4733], [31.2302, 121.4736]], "done": 0}' http://127.0.0.1:8099/api/team/trail/sync
+  -> HTTP 200 {"msg":"操作成功","code":200,"data":{"available":false}}
+$ redis-cli -p 6379 -n 9 HKEYS team_trail:pts:14   (docker exec into the rig Redis container cy-chain-local-1-redis)
+  9004
+  990007
+  990005
+
+## 5. what A sees before C opts out (C = team of one, appears as its own group)
+$ curl -s -X POST -H 'Authorization: Bearer <JWT>' -H 'Content-Type: application/json' -d '{"activityId": 14, "pts": [], "done": 0}' http://127.0.0.1:8099/api/team/trail/sync
+  -> HTTP 200 {"msg":"操作成功","code":200,"data":{"available":true,"share":true,"teams":[{"key":"10209a4df59f","done":1,"name":"夜航队","avatar":"https://www.chengyinhub.com/prod-api/profile/upload/2026/11/04/a36acdb976d18912dd478eab39c72a4d.png","pts":[[31.231,121.475],[31.2313,121.4753]],"ago":0},{"key":"2f08015b7f02","done":0,"name":"独行阿青","avatar":"https://www.chengyinhub.com/prod-api/profile/upload/2026/11/04/aed0b032749e2201fa4bdc827b50ee27.png","pts":[[31.229,121.476],[31.2293,121.4763]],"ago":0}]}}
+
+## 6. C opts out: consent share=false -> C points deleted, C no longer returned to others, later syncs store nothing
+$ curl -s -X POST -H 'Authorization: Bearer <JWT>' -H 'Content-Type: application/json' -d '{"activityId": 14, "share": false}' http://127.0.0.1:8099/api/team/trail/consent
+  -> HTTP 200 {"msg":"操作成功","code":200,"data":{"available":true,"share":false,"decided":true}}
+$ redis-cli -p 6379 -n 9 HGETALL team_trail:pts:14   (docker exec into the rig Redis container cy-chain-local-1-redis)
+  9004
+  "{\"p\":[[31.2296,121.473],[31.2299,121.4733],[31.2302,121.4736]],\"d\":0,\"t\":1793773155282}"
+  990005
+  "{\"p\":[[31.231,121.475],[31.2313,121.4753]],\"d\":1,\"t\":1793773154751}"
+$ redis-cli -p 6379 -n 9 HGETALL team_trail:opt:14   (docker exec into the rig Redis container cy-chain-local-1-redis)
+  990007
+  "0"
+$ curl -s -X POST -H 'Authorization: Bearer <JWT>' -H 'Content-Type: application/json' -d '{"activityId": 14, "pts": [[31.2296, 121.4766], [31.2299, 121.4769]], "done": 0}' http://127.0.0.1:8099/api/team/trail/sync
+  -> HTTP 200 {"msg":"操作成功","code":200,"data":{"available":true,"share":false,"teams":[]}}
+$ redis-cli -p 6379 -n 9 HGET team_trail:pts:14 990007   (docker exec into the rig Redis container cy-chain-local-1-redis)
+  (empty)
+$ curl -s -X POST -H 'Authorization: Bearer <JWT>' -H 'Content-Type: application/json' -d '{"activityId": 14, "pts": [], "done": 0}' http://127.0.0.1:8099/api/team/trail/sync
+  -> HTTP 200 {"msg":"操作成功","code":200,"data":{"available":true,"share":true,"teams":[{"key":"10209a4df59f","done":1,"name":"夜航队","avatar":"https://www.chengyinhub.com/prod-api/profile/upload/2026/11/04/a36acdb976d18912dd478eab39c72a4d.png","pts":[[31.231,121.475],[31.2313,121.4753]],"ago":0}]}}
+
+## 7. finished=true removes the caller (B) points
+$ redis-cli -p 6379 -n 9 HKEYS team_trail:pts:14   (docker exec into the rig Redis container cy-chain-local-1-redis)
+  9004
+  990005
+$ curl -s -X POST -H 'Authorization: Bearer <JWT>' -H 'Content-Type: application/json' -d '{"activityId": 14, "pts": [], "done": 1, "finished": true}' http://127.0.0.1:8099/api/team/trail/sync
+  -> HTTP 200 {"msg":"操作成功","code":200,"data":{"available":true,"share":true,"teams":[]}}
+$ redis-cli -p 6379 -n 9 HKEYS team_trail:pts:14   (docker exec into the rig Redis container cy-chain-local-1-redis)
+  9004
+$ curl -s -X POST -H 'Authorization: Bearer <JWT>' -H 'Content-Type: application/json' -d '{"activityId": 14, "pts": [], "done": 0}' http://127.0.0.1:8099/api/team/trail/sync
+  -> HTTP 200 {"msg":"操作成功","code":200,"data":{"available":true,"share":true,"teams":[]}}
+
+## 8. PRODUCT BUG reproduction: the mini program sends these POSTs form-encoded (request-client default for POST
+##    without a header; pages/play/index.js:4908-4909 pass none). Same call as the client makes:
+$ curl -s -X POST -H 'Authorization: Bearer <JWT>' -H 'Content-Type: application/x-www-form-urlencoded;' -d 'activityId=14&share=false' http://127.0.0.1:8099/api/team/trail/consent
+  -> HTTP 200 {"msg":"Content-Type 'application/x-www-form-urlencoded;charset=UTF-8' is not supported","code":500}
+$ curl -s -X POST -H 'Authorization: Bearer <JWT>' -H 'Content-Type: application/x-www-form-urlencoded;' -d 'activityId=14&pts=%5B%5B31.23%2C121.47%5D%5D&done=0' http://127.0.0.1:8099/api/team/trail/sync
+  -> HTTP 200 {"msg":"Content-Type 'application/x-www-form-urlencoded;charset=UTF-8' is not supported","code":500}
+
+## 9. restore: A and C back to share=true so the rig state is as before
+$ curl -s -X POST -H 'Authorization: Bearer <JWT>' -H 'Content-Type: application/json' -d '{"activityId": 14, "share": true}' http://127.0.0.1:8099/api/team/trail/consent
+  -> HTTP 200 {"msg":"操作成功","code":200,"data":{"available":true,"share":true,"decided":true}}
+
+## 10. Browser evidence (rig, real mini-program code, no shim): 9004 presses 开始 on the 同场路线 sheet, then walks 4 loc steps
+##     and waits 15 s. Network log of the page (wx.request -> real backend):
+A net trail after walk [
+ [
+  "GET",
+  "/__api/api/team/trail/state?activityId=14",
+  200,
+  "",
+  "{\"msg\":\"操作成功\",\"code\":200,\"data\":{\"available\":true,\"share\":true,\"decided\":false}}"
+ ],
+ [
+  "POST",
+  "/__api/api/team/trail/consent",
+  200,
+  "activityId=14&share=true",
+  "{\"msg\":\"Content-Type 'application/x-www-form-urlencoded;charset=UTF-8' is not supported\",\"code\":500}"
+ ],
+ [
+  "POST",
+  "/__api/api/team/trail/sync",
+  200,
+  "activityId=14&pts=%5B%5B31.2304%2C121.473962%5D%2C%5B31.2304%2C121.474224%5D%2C%5B31.2304%2C121.47448600000001%5D%2C%5B31.2304%2C121.47474800000002%5D%5D&done=0",
+  "{\"msg\":\"Content-Type 'application/x-www-form-urlencoded;charset=UTF-8' is not supported\",\"code\":500}"
+ ]
+]
+A state {"runState":"idle","navMap":false,"storyMap":false,"consent":{"show":false,"share":true},"rail":[],"trail":[[3,"#FFFFFF38",14],[3,"#FFFFFFF2",4]],"pins":[],"tt":{"available":true,"share":true,"decided":false},"my":4,"follow":""}
+
+## 11. Consequence of a failed consent POST (rig shim makes ONLY /sync JSON, i.e. as if the header were fixed on sync but the
+##     consent request failed - with the shipped code it always fails). walk-player-3 (990007), undecided, turns the switch
+##     「让同场队伍看到我的路线」 OFF and presses 开始. team-trail.js consent() keeps the old state (share:true from /state)
+##     on failure, onTeamConsentStart (pages/play/index.js:4939; team-trail.js:99-104) then calls tt.start(), and the server stores the points
+##     because there is no opt row (default share=true):
+switch {"show":true,"share":false}
+tt {"available":true,"share":true,"decided":false}
+net [
+ [
+  "GET",
+  "/api/team/trail/state?activityId=14",
+  "",
+  "{\"msg\":\"操作成功\",\"code\":200,\"data\":{\"available\":true,\"share\":true,\"decided\":false}}"
+ ],
+ [
+  "POST",
+  "/api/team/trail/consent",
+  "activityId=14&share=false",
+  "{\"msg\":\"Content-Type 'application/x-www-form-urlencoded;charset=UTF-8' is not supported\",\"code\":500}"
+ ],
+ [
+  "POST",
+  "/api/team/trail/sync",
+  "{\"activityId\":\"14\",\"pts\":[[31.229,121.476],[31.2293,121.4763],[31.2296,121.4766],[31.2299,",
+  "{\"msg\":\"操作成功\",\"code\":200,\"data\":{\"available\":true,\"share\":true,\"teams\":[{\"key\":\"5e86494f4a48\",\"done\":0,\"name\":\"晨光队\",\"avatar\":\"https://www.ch"
+ ]
+]
+$ redis-cli -p 6379 -n 9 HGETALL team_trail:opt:14   -> (no 990007 row)
+$ redis-cli -p 6379 -n 9 HGET team_trail:pts:14 990007
+  "{\"p\":[[31.229,121.476],[31.2293,121.4763],[31.2296,121.4766],[31.2299,121.4769]],\"d\":0,\"t\":1793773133817}"
+  -> the player said no, but their points are stored server-side with no opt-out row, so other teams' syncs return them (section 5 shows a sharing team-of-one is returned to A). Not re-checked from A's side in this run.

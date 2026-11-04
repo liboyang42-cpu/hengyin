@@ -1918,6 +1918,8 @@ page { background: var(--cy-color-bg-page); }
 .finsheet__map::after{ content:''; position:absolute; inset:0; z-index:2; pointer-events:none; background:linear-gradient(180deg,rgba(0,0,0,.55) 0,rgba(0,0,0,0) 22%,rgba(0,0,0,0) 62%,#000 100%); } /* ds-ok 地图压进黑底 */
 .finsheet__map-error{ z-index:3; }
 .finsheet__head{ position:relative; z-index:3; margin-top:-35rpx; padding:0 38rpx; display:flex; flex-direction:column; align-items:flex-start; gap:12rpx; }
+/* 第九轮 m2 第 3 项:路线卡下面没有地图渐变可以压,标题行不再上提;卡片从胶囊下方开始(rig 走查发现重叠) */
+.finsheet__card + .finsheet__head{ margin-top:var(--cy-space-5); }
 .finsheet__eyebrow{ font-size:25rpx; color:var(--cy-color-play-story-muted); } /* ds-ok 定稿字号 */
 .finsheet .finsheet__title{ margin:0; text-align:left; font-size:58rpx; line-height:1.15; } /* ds-ok 定稿字号 */
 .finsheet .finsheet__result{ margin:8rpx 0 0; padding:8rpx 19rpx; font-size:23rpx; font-weight:600; background:#2C2C2E; color:#FFFFFF; } /* ds-ok 定稿 */
