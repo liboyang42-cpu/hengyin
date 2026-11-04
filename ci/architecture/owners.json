@@ -1752,6 +1752,12 @@
         "module": "chengyinhub-system",
         "members": ["com.chengyinhub.business.service.IMapWeatherService", "com.chengyinhub.business.service.impl.MapWeatherServiceImpl"],
         "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiMapController"]
+      },
+      {
+        "id": "R9_TEAM_TRAIL",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.ITeamTrailService", "com.chengyinhub.business.service.impl.TeamTrailServiceImpl"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiPlayTeamController"]
       }
     ],
     "allowed_directions": [

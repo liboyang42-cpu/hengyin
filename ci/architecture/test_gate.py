@@ -1944,7 +1944,8 @@ class MergedMasterBoundaryPolicyTest(unittest.TestCase):
         self.assertEqual(l8_owners, {o["id"] for o in now["owners"] if o["id"] in l8_owners})
         self.assertEqual(l8_edges, {tuple(e) for e in now["allowed_directions"] if tuple(e) in l8_edges})
         # 第九轮 m1 第 7 项:地图天气氛围服务,无新增方向边(只被 ApiMapController 调用,不回调它)。
-        r9_owners = {"R9_MAP_WEATHER"}
+        # 第九轮 m2 第 2 项:同场队伍路线服务,只被 ApiPlayTeamController 调用,不回调它。
+        r9_owners = {"R9_MAP_WEATHER", "R9_TEAM_TRAIL"}
         self.assertEqual(r9_owners, {o["id"] for o in now["owners"] if o["id"] in r9_owners})
         self.assertEqual(old["owners"], [o for o in now["owners"] if not o["id"].startswith("M_")
                                          and o["id"] not in l8_owners and o["id"] not in r9_owners])
