@@ -222,6 +222,28 @@ class ClubSessionServiceImplTest {
         verify(activityService, never()).insertCmsActivity(any());
     }
 
+    /** 第十一轮 h4 L5:主题还没开售(立项待审 7 / 招募 1 / 定价与开售审核 2)或已结束(5 / 6)时不能开一场。 */
+    @Test
+    void topicNotOnSale_refusesOpeningBeforeAnyWrite() {
+        for (int lc : new int[]{7, 1, 2}) {
+            topic.setLifecycle(lc);
+            IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+                    () -> service.open(request(), OWNER_ID, "主理人"));
+            assertEquals("主题还没开售，开售后才能开一场", error.getMessage());
+        }
+        for (int lc : new int[]{5, 6}) {
+            topic.setLifecycle(lc);
+            IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+                    () -> service.open(request(), OWNER_ID, "主理人"));
+            assertEquals("主题已结束售卖，不能再开一场", error.getMessage());
+        }
+        verify(activityService, never()).insertCmsActivity(any());
+        for (Integer lc : new Integer[]{null, 0, 3, 4}) {
+            topic.setLifecycle(lc);
+            ClubSessionServiceImpl.requireTopicOpenForSessions(lc);
+        }
+    }
+
     /** AUDIT-G1-3:场次文本走统一门禁,明确违规拒绝。 */
     @Test
     void blockedTopicText_refusesOpening() {

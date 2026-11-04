@@ -113,6 +113,14 @@ public class ClubSessionServiceImpl implements IClubSessionService {
         return topics;
     }
 
+    static void requireTopicOpenForSessions(Integer lifecycle) {
+        if (lifecycle == null || lifecycle == 0 || lifecycle == 3 || lifecycle == 4) return;
+        if (lifecycle == 5 || lifecycle == 6) {
+            throw new IllegalArgumentException("主题已结束售卖，不能再开一场");
+        }
+        throw new IllegalArgumentException("主题还没开售，开售后才能开一场");
+    }
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long open(ClubSessionOpenRequest request, Long memberId, String username) {
@@ -141,6 +149,10 @@ public class ClubSessionServiceImpl implements IClubSessionService {
         if (!Integer.valueOf(1).equals(topic.getStatus()) || !Integer.valueOf(1).equals(topic.getUserStatus())) {
             throw new IllegalArgumentException("主题未上架或已下架，不能开团");
         }
+        // 第十一轮 h4 L5:商业主题在立项待审 / 招募中 / 定价与开售审核中时玩家还买不了票,不能先开一场;
+        // 结算中 / 已关闭也不再开。口径与俱乐部页「开一场」入口(pages/club/detail sellable)一致:
+        // 无生命周期(老主题、纯 UGC)、草稿、售票中、进行中可开。
+        requireTopicOpenForSessions(topic.getLifecycle());
         boolean clubOwned = topic.getClubId() != null && topic.getClubId().equals(request.getClubId());
         if (!clubOwned && !hasEffectiveClubOrder(request.getTopicId(), request.getClubId())) {
             throw new IllegalArgumentException("该俱乐部对本主题没有生效的合作单");
