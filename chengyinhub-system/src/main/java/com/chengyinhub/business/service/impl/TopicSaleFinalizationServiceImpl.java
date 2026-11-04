@@ -425,8 +425,12 @@ public class TopicSaleFinalizationServiceImpl implements ITopicSaleFinalizationS
                 }
             }
             if (!covered) {
-                throw new IllegalStateException("必选章节 chapterId=" + (chapter == null ? null : chapter.getId())
-                        + " 缺有效 SUPPLY 供给");
+                // 第十一轮 h4 L1:审核员与主理人读的是这句话,写人话并点名章节;chapterId 留在括号里便于排查。
+                String chapterName = chapter == null || chapter.getName() == null || chapter.getName().trim().isEmpty()
+                        ? "未命名章节" : chapter.getName().trim();
+                throw new IllegalStateException("「" + chapterName + "」还没有商家承接成功，不能开售。"
+                        + (city ? "请主理人在这一章关闭商家承接，或等商家承接后再提交" : "请等商家承接后再提交")
+                        + "(章节 " + (chapter == null ? null : chapter.getId()) + ")");
             }
         }
     }

@@ -423,7 +423,7 @@ class ExploreAllianceMvpRealDbIT {
             seed(s, BigDecimal.ZERO, null, CHAPTER_COUNT - 1);
             IllegalStateException ex = assertThrows(IllegalStateException.class,
                     () -> service(s).finalizeForSale(TOPIC));
-            assertTrue(ex.getMessage().contains("缺有效 SUPPLY 供给"),
+            assertTrue(ex.getMessage().contains("还没有商家承接成功，不能开售"),
                     "应因必选章缺供给被拒,实际:" + ex.getMessage());
             assertEquals(Integer.valueOf(2), lifecycleOf(s), "被拒后必须仍停在 PRICING");
         }

@@ -3842,6 +3842,23 @@ Page({
     const c = this.chapterRecruitChapter();
     if (!c || !c.id) { app.tips('还没读到章节，稍后再试'); return; }
     if (this._chapterRecruitBusy) return;
+    // 第十一轮 h4 L1:开放后这一章必须有商家承接成功才能过开售审核(TopicSaleFinalizationServiceImpl
+    // 必选章供给闸)。以前开了就静默生效,到开售审核才被拒;在开的这一刻讲清后果。
+    if (Number(c.recruitEnabled) !== 1) {
+      const that = this;
+      cyModal.show({
+        title: '开放商家承接',
+        content: '开放后，这一章要有商家承接成功才能开售。没有商家承接时，提交开售前请回到这里关闭。',
+        confirmText: '开放',
+        success(res) { if (res && res.confirm) that.submitChapterRecruit(c); },
+      });
+      return;
+    }
+    this.submitChapterRecruit(c);
+  },
+
+  submitChapterRecruit(c) {
+    if (this._chapterRecruitBusy) return;
     this._chapterRecruitBusy = true;
     this.setData({ 'moreSheet.groups': this.buildMoreGroups().groups });
     const next = Number(c.recruitEnabled) === 1 ? 0 : 1;

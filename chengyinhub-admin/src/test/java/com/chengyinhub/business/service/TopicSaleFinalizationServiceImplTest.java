@@ -300,7 +300,14 @@ class TopicSaleFinalizationServiceImplTest {
 
         IllegalStateException error = assertThrows(IllegalStateException.class, () -> service.finalizeForSale(TOPIC_ID));
 
-        assertTrue(error.getMessage().contains("chapterId=991"), "必选章空缺必须点名被拦字段");
+        // 第十一轮 h4 L1:审核员读人话 —— 点名章节、说清后果与下一步,不再是「chapterId=… 缺有效 SUPPLY 供给」。
+        assertEquals("「未命名章节」还没有商家承接成功，不能开售。请主理人在这一章关闭商家承接，或等商家承接后再提交(章节 991)",
+                error.getMessage());
+
+        required.setName("第一章 · 喷泉");
+        IllegalStateException named = assertThrows(IllegalStateException.class, () -> service.finalizeForSale(TOPIC_ID));
+        assertTrue(named.getMessage().startsWith("「第一章 · 喷泉」还没有商家承接成功，不能开售。"), named.getMessage());
+        assertTrue(!named.getMessage().contains("SUPPLY") && !named.getMessage().contains("chapterId"), named.getMessage());
     }
 
     /** P-01:城市定向未开商家承接的必选章(编辑器默认 required=1)不要求商家供给。 */
@@ -825,7 +832,7 @@ class TopicSaleFinalizationServiceImplTest {
         stubSuccessfulCanonicalFreeze(ordinaryCanonical());
 
         assertTrue(assertThrows(IllegalStateException.class, () -> service.finalizeForSale(TOPIC_ID))
-                .getMessage().contains("缺有效 SUPPLY"));
+                .getMessage().contains("还没有商家承接成功，不能开售。请等商家承接后再提交"));
         verify(topicMapper, never()).finalizeForSale(any(), any(), any());
     }
 
