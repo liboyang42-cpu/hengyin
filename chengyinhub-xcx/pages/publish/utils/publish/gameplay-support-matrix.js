@@ -135,7 +135,9 @@ function context(runtime, node) {
   const vote = (runtime.plans || []).some(row => id > 0 && Number(row.operationNodeId) === id);
   return { challengeVersion: zero.version, runtime: { runtimeScope: runtime.runtimeScope, worldMode: runtime.worldMode },
     challenge, settled: ['PLAYER', 'TEAM'].includes(runtime.runtimeScope) && rules.length > 0,
-    rules: rules.map(row => ({ scope: row.scope, targetScope: row.targetScope })), vote };
+    rules: rules.map(row => ({ scope: row.scope, targetScope: row.targetScope })), vote,
+    // 第十一轮 g4 第 5 项:本站有没有承接商家。预测只有这家商家能给答案;没有就别让作者配结果反馈(那样这站永远等不到答案)
+    shop: Number(node && node.merchantMemberId) > 0 };
 }
 function choice(matrix, key, advanced, ctx = {}) {
   if (!matrix) return '';

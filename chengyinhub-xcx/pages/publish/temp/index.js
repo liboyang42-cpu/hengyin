@@ -1378,7 +1378,7 @@ Page({
     this.setData({ creatorLoginRequired: false });
     this._editorMemberId = editorMemberId();
     options = options || {};
-    this._supportContext = supportMatrix.parse(safeDecode(options.supportContext));
+    this._supportContext = supportMatrix.parse(safeDecode(options.supportContext)); if (options.scope === 'MERCHANT') this._supportContext.shop = true; // 第十一轮 g4 第 5 项:商家自己的玩法就是承接商家
     this._loadSupportMatrix();
     this._focusTool = safeDecode(options.focusTool);
     this._focusPlan = safeDecode(options.focusPlan);

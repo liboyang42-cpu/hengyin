@@ -26,7 +26,7 @@ function view(config, validationMethod, support, context, category = '全部') {
     const reason = item.reason || matrix.choice(support, key, config, context);
     return Object.assign({}, item, { sub: item.sub || '', disabled: !!reason, reason });
   });
-  const rows = section ? after.paths(config).filter(path => path.startsWith('outcomeRules.') || path.startsWith(section + '.') && !(section === 'qa' && config.qa.mode !== 'PICK') && !(section === 'diceRoll' && config.diceRoll.mode === 'd20')).map(path => {
+  const predictNoShop = section === 'predict' && !(context && context.shop) && config.outcomeRules == null; /* 第十一轮 g4 第 5 项:预测站没有承接商家就不提供结果反馈(有了 outcomeRules 要等商家给答案才算完,没商家永远完不了);已配过的旧模板照常列出,作者还能关掉 */ const rows = section && !predictNoShop ? after.paths(config).filter(path => path.startsWith('outcomeRules.') || path.startsWith(section + '.') && !(section === 'qa' && config.qa.mode !== 'PICK') && !(section === 'diceRoll' && config.diceRoll.mode === 'd20')).map(path => {
     const reason = after.get(config, path)?.nextStepId && support?.outcomeRules?.nextStepId !== 'SETTLED_FEEDBACK' ? '旧后段只读，暂未开放' : after.localReason(config, path);
     return { path, label: path === 'outcomeRules.pass' ? after.once(config) ? '完成之后' : '通过之后' : path === 'outcomeRules.fail' ? '没通过之后' : '选了之后', draft: after.draft(after.get(config, path)), summary: summary(after.get(config, path)), disabled: !!reason, reason };
   }) : [];
