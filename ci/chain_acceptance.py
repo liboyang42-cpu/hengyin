@@ -1330,6 +1330,8 @@ def run_post_restart(args, environ, planned, first_proof, first_process, config)
         result["settlement_rejection"] = invoke("settlementReconciliationTask.run()", settlement_negative=True)
         result["final_readback"] = post.restart_effect_state(connect, server)
         result["final_jobs"] = post.restart_rows(connect, server, post.ALL_JOBS)
+        # 内容安全两条暂停行不进六任务效果场景;重启全程不得被动过(与 postdeploy 回读逐字相等,汇总时核对)。
+        result["content_safety_jobs"] = post.read_content_safety_state(connect, server)["rows"]
         result["passive_queues"] = post.passive_queues(connect, server)
         result["local_files"] = restart_local_files(args.work)
     except Exception as error:
@@ -1438,6 +1440,8 @@ def cmd_run(args, environ):
             if planned["through"] == "post_deploy":
                 fixture = post.prepare_operator_fixture(connect, proof["server_uuid"])
             result = post.register_jobs(args.source, connect, proof["server_uuid"])
+            # ROUND10 f4:内容安全两条 sys_job 的 POST_DEPLOY 文件,同一停机窗口内原样执行并独立回读。
+            result["content_safety"] = post.register_content_safety_jobs(args.source, connect, proof["server_uuid"])
         except post.PostDeployError as error:
             stage(args.out, "postdeploy", "FAIL", proof=proof, stopped_before_sql=True,
                   sql_started=True, result=error.evidence)
@@ -1512,6 +1516,7 @@ def summarize(out_dir):
             raise post.PostDeployError("post_stop_proof_missing")
         post.validate_result(result, proof, (receipt.get("plan") or {}).get("source_sha"),
                              stages.get("explode", {}).get("jar_sha256"))
+        post.validate_content_safety_result(result.get("content_safety"), proof.get("server_uuid"))
         if (receipt.get("plan") or {}).get("through") == "post_deploy":
             admin = proof.get("admin") or {}
             post.require(admin.get("status") == "PASS_FIXTURE_SUPERADMIN_HTTP_SQL_ONLY" and
@@ -1563,6 +1568,9 @@ def summarize(out_dir):
             post.require(value["server_uuid"] == proof["server_uuid"], "restart_original_database_changed")
             post.validate_result(result, value["proof"], receipt["plan"]["source_sha"],
                                  stages["explode"]["jar_sha256"])
+            post.require(value.get("content_safety_jobs") ==
+                         ((result.get("content_safety") or {}).get("after") or {}).get("rows"),
+                         "restart_content_safety_jobs_changed")
             if value["proof"]["process"]["pid"] == proof["process"]["pid"]:
                 raise post.PostDeployError("restart_same_pid")
         except Exception:
