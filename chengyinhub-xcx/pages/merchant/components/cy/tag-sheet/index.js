@@ -31,6 +31,7 @@ Component({
     error: { type: String, value: '' },     // 载入失败文案,配「重试」发 retry
     saving: { type: Boolean, value: false },
     confirmText: { type: String, value: '保存' },
+    primaryFirst: { type: Boolean, value: false }, // 第一个选中的胶囊标「主」(行业类型:第一个作为主行业)
   },
   data: {
     _sel: [],
@@ -54,7 +55,7 @@ Component({
     // 排行(只在列表变化 / 打开时)
     _layoutRows() {
       const d = this.data;
-      const rows = buildRows(d.items, d._sel, d.rows);
+      const rows = this._mark(buildRows(d.items, d._sel, d.rows));
       this._layout = rows.map(r => r.map(t => t.key));
       this.setData({ _rows: rows });
     },
@@ -62,8 +63,12 @@ Component({
     _paint() {
       if (!this._layout) { this._layoutRows(); return; }
       const sel = this.data._sel;
-      const rows = this.data._rows.map(r => r.map(t => Object.assign({}, t, { checked: sel.indexOf(t.key) >= 0 })));
+      const rows = this._mark(this.data._rows.map(r => r.map(t => Object.assign({}, t, { checked: sel.indexOf(t.key) >= 0 }))));
       this.setData({ _rows: rows });
+    },
+    _mark(rows) {
+      const first = this.data.primaryFirst ? this.data._sel[0] : null;
+      return rows.map(r => r.map(t => Object.assign(t, { primary: first != null && String(t.key) === first })));
     },
     onTap(e) {
       if (this.data.saving) return;

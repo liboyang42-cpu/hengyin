@@ -307,7 +307,7 @@
 
   <!-- ===== 经营时间选择:周一~周日 + 起止时段(2026-07-31) ===== -->
   <cy-tag-sheet show="{{industrySheet.show}}" title="行业类型" items="{{industrySheet.options}}" value="{{industryIds}}"
-    max="{{5}}" hint="可多选，最多 5 个，第一个作为主行业" loading="{{industrySheet.loading}}" error="{{industrySheet.error}}"
+    max="{{5}}" primary-first loading="{{industrySheet.loading}}" error="{{industrySheet.error}}"
     saving="{{submitting}}" confirm-text="确定" bind:change="onIndustryChange" bind:confirm="confirmIndustrySheet"
     bind:close="closeIndustrySheet" bind:retry="retryIndustrySheet" />
   <cy-sheet inset footer show="{{hoursPickerShow}}" title="设置经营时间" bind:close="closeHoursPicker">
