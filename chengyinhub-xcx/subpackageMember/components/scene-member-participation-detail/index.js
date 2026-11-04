@@ -379,7 +379,7 @@ Component({
       displayInfo.formatDateRange = this.formatDateRange(source.startDate, source.endDate);
 
       // 3. 计算时间状态
-      const timeStatus = this.calculateTimeStatus(source.startDate, source.endDate);
+      const timeStatus = this.calculateTimeStatus(source.startDate, source.endDate, isTopic ? '路线' : '活动');
       displayInfo.isActivityEnded = timeStatus.isEnded;
       displayInfo.isActivityStarted = timeStatus.isStarted;
       displayInfo.isInThreeDaysRange = timeStatus.isInThreeDaysRange;
@@ -476,7 +476,7 @@ Component({
     },
 
     // 计算时间状态
-    calculateTimeStatus(startDateStr, endDateStr) {
+    calculateTimeStatus(startDateStr, endDateStr, noun) {
       const result = {
         isEnded: false,
         isStarted: false,
@@ -513,7 +513,12 @@ Component({
           result.daysToStart = diffDays;
 
           if (diffDays > 0) {
-            result.remainingDaysText = `距离路线开始还剩${diffDays}天`;
+            // 第十轮 f4(f1 遗留):12 小时后开始的活动按自然日差会写成「还剩1天」;不足 24 小时按小时说。
+            const hoursLeft = (startDate.getTime() - now.getTime()) / (60 * 60 * 1000);
+            const subject = noun || '路线';
+            result.remainingDaysText = hoursLeft < 24
+              ? `距离${subject}开始还剩${Math.max(1, Math.ceil(hoursLeft))}小时`
+              : `距离${subject}开始还剩${diffDays}天`;
 
             // 检查是否在开始前3天内
             result.isInThreeDaysRange = diffDays <= 3;
