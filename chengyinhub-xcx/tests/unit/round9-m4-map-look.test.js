@@ -63,10 +63,10 @@ test('play 三张地图都等 fmStyleReady 并带 tone;初值:没配 key 立即�
   const wxml = read('pages/play/index.wxml');
   const maps = wxml.match(/<free-map\b[^>]*>/g);
   assert.equal(maps.length, 3);
-  maps.forEach((tag) => {
-    assert.match(tag, /wx:if="\{\{[^"]*fmStyleReady/, tag.slice(0, 60));
-    assert.match(tag, /tone="\{\{fmTone\}\}"/);
-  });
+  maps.forEach((tag) => assert.match(tag, /tone="\{\{fmTone\}\}"/));
+  assert.match(maps[0], /screen !== 'gamePlay' && fmStyleReady\}\}"/, '罗盘雷达等外观');
+  assert.match(wxml, /<view class="story-map" wx:if="\{\{storyMap && fmStyleReady\}\}">/, '小地图整层等外观');
+  assert.match(maps[2], /wx:if="\{\{fmStyleReady\}\}"/, '完成页回放等外观');
   assert.match(read('pages/play/index.js'), /fmTone: '', fmStyleReady: !mapStyleConfigured\(\),/);
 });
 
