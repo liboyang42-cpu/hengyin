@@ -306,7 +306,7 @@
             style="width:100%" bindtap="onNext">{{step===4 ? (submitting ? '提交中…' : '提交申请') : '继续'}}</cy-btn>
   </view>
   <view class="bottom" wx:if="{{bootstrapState === 'ready' && mode==='form' && step===5}}">
-    <cy-btn variant="primary" bindtap="onHome">返回首页</cy-btn>
+    <cy-btn variant="primary" style="width:100%" bindtap="onHome">返回首页</cy-btn>
   </view>
   <cy-merchant-claim-sheet show="{{claimShow}}" bind:close="closeClaim" />
   <view class="bottom" wx:if="{{bootstrapState === 'ready' && mode==='status'}}">
