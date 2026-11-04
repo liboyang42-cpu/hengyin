@@ -773,6 +773,76 @@ class RegistrationFundsMybatisIntegrationTest {
         assertEquals(1, number("SELECT COUNT(*) FROM ums_member_points_detail WHERE member_id=99 AND event_type=6"));
     }
 
+    /**
+     * ROUND11 h3(2026-11-04 业主拍板:后台「停用」开关必须真停发放)对照组:
+     * id 2/3/5/6 全部启用时,支付回调照原值发分;同一回调重放不重复写流水、不重复加分。
+     */
+    @Test
+    void enabledPointsRulesPayAsBeforeAndCallbackReplayDoesNotDuplicate() throws Exception {
+        execute("UPDATE ums_member SET invite_user_id='99' WHERE id=7",
+                "INSERT INTO ums_member(id,status,point,del_flag) VALUES (99,1,0,0)",
+                "INSERT INTO cms_points_setting(id,title,value,type,event_type,status,del_flag) VALUES "
+                        + "(5,'邀请1位完成首次购买的用户',500,1,5,1,0),(6,'被邀请用户报名任意活动',100,1,6,1,0)");
+
+        assertEquals("SUCCESS", registrationService.handleWechatPayCallback(callback()));
+        assertEquals("SUCCESS", registrationService.handleWechatPayCallback(callback()));
+
+        assertEquals(2, number("SELECT payment_status FROM cms_registration WHERE id=11"));
+        assertEquals(115, number("SELECT point FROM ums_member WHERE id=7"));
+        assertEquals(600, number("SELECT point FROM ums_member WHERE id=99"));
+        assertEquals(1, number("SELECT COUNT(*) FROM ums_member_points_detail WHERE member_id=7 AND event_type=2"));
+        assertEquals(1, number("SELECT COUNT(*) FROM ums_member_points_detail WHERE member_id=7 AND event_type=3"));
+        assertEquals(1, number("SELECT COUNT(*) FROM ums_member_points_detail WHERE member_id=99 AND event_type=5"));
+        assertEquals(1, number("SELECT COUNT(*) FROM ums_member_points_detail WHERE member_id=99 AND event_type=6"));
+    }
+
+    /**
+     * ROUND11 h3:id 2/3/5/6 在后台「停用」(status=0)而 value 仍是原值时,支付回调一分不发,
+     * 订单照常完成;重放回调同样不发;规则行的存量值不被改动。
+     */
+    @Test
+    void disabledPointsRulesPayNothingAndOrderStillCompletes() throws Exception {
+        execute("UPDATE ums_member SET invite_user_id='99' WHERE id=7",
+                "INSERT INTO ums_member(id,status,point,del_flag) VALUES (99,1,0,0)",
+                "UPDATE cms_points_setting SET status=0 WHERE id IN (2,3)",
+                "INSERT INTO cms_points_setting(id,title,value,type,event_type,status,del_flag) VALUES "
+                        + "(5,'邀请1位完成首次购买的用户',500,1,5,0,0),(6,'被邀请用户报名任意活动',100,1,6,0,0)");
+
+        assertEquals("SUCCESS", registrationService.handleWechatPayCallback(callback()));
+        assertEquals("SUCCESS", registrationService.handleWechatPayCallback(callback()));
+
+        assertEquals(2, number("SELECT payment_status FROM cms_registration WHERE id=11"));
+        assertEquals(2, number("SELECT registration_status FROM cms_registration WHERE id=11"));
+        assertEquals(100, number("SELECT point FROM ums_member WHERE id=7"));
+        assertEquals(0, number("SELECT point FROM ums_member WHERE id=99"));
+        assertEquals(0, number("SELECT COUNT(*) FROM ums_member_points_detail WHERE event_type IN (2,3,5,6)"),
+                "停用的规则不得写任何积分流水");
+        assertEquals(615, number("SELECT SUM(value) FROM cms_points_setting WHERE id IN (2,3,5,6)"),
+                "不改存量规则值(10+5+500+100)");
+    }
+
+    /**
+     * ROUND11 h3:规则行仍 status=1 但已删除(del_flag=1,以及 RuoYi 口径 del_flag=2)时同样一分不发,订单照常完成。
+     */
+    @Test
+    void deletedPointsRulesPayNothingAndOrderStillCompletes() throws Exception {
+        execute("UPDATE ums_member SET invite_user_id='99' WHERE id=7",
+                "INSERT INTO ums_member(id,status,point,del_flag) VALUES (99,1,0,0)",
+                "UPDATE cms_points_setting SET del_flag=1 WHERE id=2",
+                "UPDATE cms_points_setting SET del_flag=2 WHERE id=3",
+                "INSERT INTO cms_points_setting(id,title,value,type,event_type,status,del_flag) VALUES "
+                        + "(5,'邀请1位完成首次购买的用户',500,1,5,1,1),(6,'被邀请用户报名任意活动',100,1,6,1,1)");
+
+        assertEquals("SUCCESS", registrationService.handleWechatPayCallback(callback()));
+        assertEquals("SUCCESS", registrationService.handleWechatPayCallback(callback()));
+
+        assertEquals(2, number("SELECT payment_status FROM cms_registration WHERE id=11"));
+        assertEquals(2, number("SELECT registration_status FROM cms_registration WHERE id=11"));
+        assertEquals(100, number("SELECT point FROM ums_member WHERE id=7"));
+        assertEquals(0, number("SELECT point FROM ums_member WHERE id=99"));
+        assertEquals(0, number("SELECT COUNT(*) FROM ums_member_points_detail WHERE event_type IN (2,3,5,6)"));
+    }
+
     @Test
     void concurrentRefundClawbacksSerializeBalanceAndFlowsWithoutGoingNegative() throws Exception {
         execute("UPDATE ums_member SET balance=50.00 WHERE id=7");

@@ -2831,9 +2831,23 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         return transactionId.equals(registration.getTransactionId());
     }
 
+    /**
+     * 支付成功回调发 id 2/3/5/6 积分时读规则值。后台「停用」(status != 1)或已删除(del_flag != 0)
+     * 的规则一分不发(2026-11-04 业主拍板:停用开关必须真停发放)。启用规则按原值发,不改存量数据;
+     * 只返回 0,订单照常完成。
+     */
     private int pointsSettingValue(Long settingId) {
         CmsPointsSetting setting = cmsPointsSettingService.selectCmsPointsSettingById(settingId);
-        return setting == null || setting.getValue() == null ? 0 : setting.getValue().intValue();
+        if (setting == null || setting.getValue() == null) {
+            return 0;
+        }
+        if (!Long.valueOf(1L).equals(setting.getStatus())) {
+            return 0;
+        }
+        if (setting.getDelFlag() != null && setting.getDelFlag() != 0L) {
+            return 0;
+        }
+        return setting.getValue().intValue();
     }
 
     /** 先用奖励业务键抢占流水，再更新余额；任一步失败由支付回调外层事务整体回滚。 */
