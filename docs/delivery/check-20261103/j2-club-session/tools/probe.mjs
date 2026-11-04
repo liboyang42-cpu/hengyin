@@ -1,6 +1,7 @@
 import { run, S } from './lib.mjs';
-await run({ path: 'pages/club/topic-detail/index?topicId=990014&clubId=990004', identity: 'j2-lead-a', agree: true }, async (w) => {
-  await S(3000); await w.tap('商家', { exact: true }); await S(3500);
-  console.log('KEYS', JSON.stringify(await w.eval(`(()=>{const d=getCurrentPages().slice(-1)[0].data;const o={};for(const k in d){if(/show|open|layer|sheet|visible/i.test(k))o[k]=typeof d[k]==='object'?Object.keys(d[k]||{}).slice(0,8):d[k];}return o;})()`)));
-  console.log('OPTS', JSON.stringify(await w.eval(`getCurrentPages().slice(-1)[0].options`)));
+import { call } from './f2.mjs';
+await run({ path: 'pages/topic/index/index?id=990014', identity: 'j2-m2', agree: true }, async (w) => {
+  await S(3000); await call(w, 'bmClick'); await S(2000);
+  const r = await w.eval(`(()=>{let target=null;function walk(root){for(const el of root.querySelectorAll('*')){if(el.shadowRoot)walk(el.shadowRoot);let own='';for(const n of el.childNodes)if(n.nodeType===3)own+=n.data;if(own.includes('下一步 · 去结算'))target=el;}}walk(document);if(!target)return 'none';const b=target.getBoundingClientRect();const x=b.x+b.width/2,y=b.y+b.height/2;let t=document.elementFromPoint(x,y);const chain=[];while(t){chain.push((t.tagName||'')+'.'+(t.className||'').toString().slice(0,40));if(!t.shadowRoot)break;const n=t.shadowRoot.elementFromPoint(x,y);if(!n||n===t)break;t=n;}return {b:[x,y],chain, target: target.tagName+'.'+target.className, parentStyle: getComputedStyle(target).pointerEvents};})()`);
+  console.log('PROBE', JSON.stringify(r));
 });

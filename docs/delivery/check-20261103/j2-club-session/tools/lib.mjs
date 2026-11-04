@@ -1,6 +1,7 @@
 // j2 walk helpers: wraps the rig driver; shots at 390x844 @2x, JPEG under 200 KB.
 import fs from 'node:fs';
 import path from 'node:path';
+process.env.TZ = 'Asia/Shanghai'; // phones in China run at +08:00; the container is UTC
 import { launch as rigLaunch } from '/root/rig/docs/delivery/cloud-walk-20261101/rig/mpweb/walk.mjs';
 export const SHOTS = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../shots');
 export const S = (ms) => new Promise((r) => setTimeout(r, ms));
