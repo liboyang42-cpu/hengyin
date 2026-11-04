@@ -336,22 +336,25 @@ test('F-L3-09 入会申请拒绝原因用多行框,保留 500 字上限与校验
 
 // ---------- F-L5C-06 设置页「我的收藏」副标题跟社区开关 ----------
 
-test('F-L5C-06 设置页「我的收藏」副标题跟 canUseCommunity(false):关时只说主题,开关晚到再补', async () => {
-  let open = false
+// R11 p1 F-12(业主改口):「我的收藏」不再配副标题(收藏页自己的 tab 已经说了);
+// R11 p1 F-7:发票入口跟服务端同一个开关,开关晚到再补。
+test('设置页:我的收藏不带副标题;发票入口只在 userInvoice 开时出现,开关晚到再补', async () => {
   let resolveFlags
   const flags = new Promise((resolve) => { resolveFlags = resolve })
+  const globalData = { features: {} }
   const { host } = mount('pages/shezhi/shezhi.js', { app: {
-    getUserID: () => '7', canUseCommunity: () => open, loadFeatureFlags: () => flags,
+    getUserID: () => '7', canUseCommunity: () => false, loadFeatureFlags: () => flags, globalData,
   } })
   host.syncCommunityEntry()
-  assert.equal(host.data.communityPostRead, false)
-  open = true
+  assert.equal(host.data.invoiceOn, false)
+  globalData.features = { userInvoice: true }
   resolveFlags()
   await flush()
-  assert.equal(host.data.communityPostRead, true)
+  assert.equal(host.data.invoiceOn, true)
   const wxml = read('pages/shezhi/shezhi.wxml')
-  assert.match(wxml, /title="我的收藏" description="\{\{communityPostRead \? '收藏的帖文与主题' : '收藏的主题'\}\}"/)
-  assert.doesNotMatch(wxml, /description="收藏的帖文与主题"/, '负控:写死「帖文」的副标题不能回来')
+  assert.match(wxml, /title="我的收藏" bind:tap="goMylike" \/>/)
+  assert.doesNotMatch(wxml, /收藏的帖文与主题/, '负控:副标题不能回来')
+  assert.match(wxml, /<cy-cell wx:if="\{\{invoiceOn\}\}" id="settings-invoice"/)
 })
 
 // ---------- 成长中心:无头像成员的头像位 ----------

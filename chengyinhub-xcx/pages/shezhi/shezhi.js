@@ -16,7 +16,7 @@ Page({
     settingsAuthRequired: false,
     settingsAccessDenied: false,
     // PR10 F-L5C-06:社区读闸关(含开关拉取失败)时「我的收藏」只剩主题,副标题不再提帖文
-    communityPostRead: false,
+    invoiceOn: false,
     isMerchantView: false,
     settingsTheme: 'player',
     statusBarHeight: app.globalData.statusBarHeight || 44,
@@ -58,7 +58,9 @@ Page({
     const memberId = app.getUserID && app.getUserID();
     const sync = () => {
       if (this._unloaded || memberId !== (app.getUserID && app.getUserID())) return;
-      this.setData({ communityPostRead: typeof app.canUseCommunity === 'function' && app.canUseCommunity(false) });
+      // R11 p1 F-7:发票关着就不摆「发票」入口(与 /api/user/invoice 端点同一个开关)
+      this.setData({
+        invoiceOn: !!(app.globalData && app.globalData.features && app.globalData.features.userInvoice === true) });
     };
     const pending = typeof app.loadFeatureFlags === 'function' ? app.loadFeatureFlags() : null;
     sync();

@@ -80,7 +80,8 @@ Page({
     this.setData({ loading: true });
     this.apiRequest('/api/free-explore/bundle/order', 'GET', { registrationId: this._registrationId }, (ok, res) => {
       this.setData({ loading: false });
-      if (!ok) { this.setData({ error: res && res.msg || '权益加载失败，请重试；待确认操作不会清除' }); return; }
+      // R11 p1 F-7:套票功能关着时刷新也不会变,不再摆「刷新」按钮
+      if (!ok) { this.setData({ error: res && res.msg || '权益加载失败，请重试；待确认操作不会清除', featureOff: !!(res && res.businessCode === 'BUNDLE_LEDGER_OFF') }); return; }
       try {
         const detail = bundle.order(res.data, this._owner, this._registrationId);
         this.setData({ detail });

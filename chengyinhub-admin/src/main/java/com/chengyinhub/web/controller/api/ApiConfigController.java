@@ -38,6 +38,12 @@ public class ApiConfigController extends BaseController {
     @Autowired
     private SpeechToTextService speechToTextService;
 
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.compliance.ComplianceFeatureSwitches complianceFeatureSwitches;
+
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.support.FreeExploreBundleSwitches freeExploreBundleSwitches;
+
     /**
      * 通用特性键(短名)；实际 sys_config key = "feature.flag." + 短名。
      *
@@ -76,6 +82,9 @@ public class ApiConfigController extends BaseController {
         Long memberId = viewer();
         data.put("communityPostRead", communityPostFeatureGate.canRead(memberId));
         data.put("communityPostWrite", communityPostFeatureGate.canWrite(memberId));
+        // R11 p1 F-7:入口按服务端同一个闸显示 —— 功能关着就不摆「发票」「自由探索权益」入口(端点闸照旧)
+        data.put("userInvoice", complianceFeatureSwitches != null && complianceFeatureSwitches.userInvoiceOn());
+        data.put("freeExploreBundle", freeExploreBundleSwitches != null && freeExploreBundleSwitches.ledgerEnabled());
         return success(data);
     }
 

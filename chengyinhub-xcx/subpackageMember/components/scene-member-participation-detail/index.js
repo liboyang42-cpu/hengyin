@@ -40,6 +40,8 @@ Component({
       bundleRegistrationId: '',
       resultTopicId: '',
       resultEntryError: '',
+      scoreEntry: false,
+      characterEntry: false,
       // R1-C04:本页此前没有加载/失败态,接口失败只弹 toast,页面照样把空值渲染成完整骨架。
       // loadState: loading | missing-param | error | ready —— 四态互斥由 WXML 承接。
       loadState: 'loading',
@@ -196,6 +198,8 @@ Component({
     },
     _bundleEntry() {
       if (!this._resultEntry()) return '';
+      // R11 p1 F-7:套票关着时不摆「自由探索权益」入口(与 /api/free-explore 套票端点同一个开关)
+      if (!(app.globalData && app.globalData.features && app.globalData.features.freeExploreBundle === true)) return '';
       const info = this.data.info || {};
       if (Number(info.ownerType) !== 1 || !info.cmsTopic
           || !(Number(info.purchaseKind) === 3 || Number(info.cmsTopic.productType) === 2)) return '';
@@ -209,6 +213,16 @@ Component({
       this._resultLeaving = true;
       this._leave('/subpackageMember/free-explore/index?registrationId=' + encodeURIComponent(registrationId),
         () => character.sameReader(app, reader));
+    },
+    _probeCharacter(topicId, reader) {
+      const seq = this._characterProbe = (this._characterProbe || 0) + 1;
+      const settle = (res) => {
+        if (this._detailDisposed || seq !== this._characterProbe || !character.sameReader(app, reader)) return;
+        const card = res && character.responseCode(res.code) === 200 ? character.projectCard(res.data, topicId) : null;
+        this.setData({ characterEntry: !!card && (card.created || card.attributes.length > 0) });
+      };
+      app.sendRequest({ url: '/api/play/character', method: 'GET', data: { topicId }, hideLoading: true, autoErrorToast: false,
+        success: settle, fail: () => settle(null), successStatusAbnormal: () => settle(null) });
     },
     goCharacter() { this._openResult('character'); },
     goScore() { this._openResult('score'); },
@@ -341,8 +355,12 @@ Component({
             });
             that._resultReader = reader;
             const entry = that._resultEntry();
+            // R11 p1 F-7:定向成绩只给城市定向;角色卡只在主题真有角色属性时给
+            const source = info.cmsActivity || info.cmsTopic || {};
             that.setData({ bundleRegistrationId: that._bundleEntry(), resultTopicId: entry ? entry.topicId : '',
+              scoreEntry: !!entry && Number(source.productType) === 1, characterEntry: false,
               resultEntryError: entry || !character.hasTopicRelation(info) ? '' : '无法确认当前账号的报名与主题关联，请重新加载参与详情；若仍不可用请联系客服。' });
+            if (entry) that._probeCharacter(entry.topicId, reader);
           } else {
             const fallback = res && res.code == "200" ? '参与详情数据暂不可用' : '获取参与详情失败，请重试';
             const msg = app.getRequestErrorMessage
