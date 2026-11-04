@@ -248,7 +248,7 @@ Page({
     if (!id) {
       this.data.loadErrActionType = 'back';
       this.setData({ loading: false, e: null, organizerEntry: false,
-        loadErrKind: 'data', loadErrTitle: '活动参数无效', loadErrSub: '',
+        loadErrKind: 'missing-param', loadErrTitle: '链接已失效', loadErrSub: '',
         loadErrAction: '返回活动列表' });
       return;
     }
@@ -278,7 +278,7 @@ Page({
             this.data.loadErrActionType = 'back';
             this.setData({
               e: null,
-              loadErrKind: 'data',
+              loadErrKind: 'missing-param', // p3 F3 / j6:内容没了是终态,讲原因并返回;不是加载失败留白
               loadErrTitle: '活动内容不可用',
               loadErrSub: '',
               loadErrAction: '返回活动列表'

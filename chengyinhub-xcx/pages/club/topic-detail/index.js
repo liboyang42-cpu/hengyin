@@ -71,6 +71,8 @@ function flattenCustomerRows(sessions) {
   return out;
 }
 
+// p3 F3:服务端明确拒绝(不是本俱乐部的主题 / 不存在)要讲原因并给返回;网络与系统繁忙仍按加载失败留白。
+function refusalOf(res) { var c = Number(res && res.code), m = String(res && res.msg || ''); return c && c !== 200 && c !== 401 && c !== 2 && m && m !== '系统繁忙，请稍后重试' ? m : ''; }
 function isSuccess(res) { return !!res && (res.code === '200' || res.code === 200); }
 function positiveId(v) { const n = Number(v); return Number.isFinite(n) && n > 0 ? n : null; }
 
@@ -166,6 +168,7 @@ Page({
   data: {
     loaded: false,
     loadError: false,
+    loadRefusal: '',
     chromeClearTop: 0,
     // PR10 F-W5-08(c):滚过封面后导航转实底(cy-nav-bar scrolled),内容不再从状态栏/返回键底下透出来
     navScrolled: false,
@@ -308,7 +311,7 @@ Page({
       header: jsonHeader(),
       success(res) {
         if (seq !== that._manageStatsSeq) return;
-        if (!isSuccess(res) || !res.data) { that.failManageStats(); return; }
+        if (!isSuccess(res) || !res.data) { that.failManageStats(res); return; }
         that._manageStats = res.data;
         if (that._lastRaw) that.applyDetail(that._lastRaw);
         if (refreshActiveDirector && res.data.canDirect === true) that.loadProjection();
@@ -318,17 +321,18 @@ Page({
   },
 
   // 记下失败再出错误态:详情可能晚到,applyDetail 不能把这次失败盖成「加载成功的普通成员视图」。
-  failManageStats() {
+  failManageStats(res) {
     // 已展示过内容(onShow 后台刷新)时失败:保留旧统计与已加载内容,只给非阻塞提示;首屏失败照旧整页错误。
     if (this._manageStats && this._lastRaw && this.data.loaded && !this.data.loadError) { toast('刷新失败，请重试'); return; }
     this._manageStatsFailed = true;
-    this.setData({ loaded: true, loadError: true });
+    this._loadRefusal = refusalOf(res);
+    this.setData({ loaded: true, loadError: true, loadRefusal: this._loadRefusal });
   },
 
   onRetry() {
     // 缺 topicId 时重发什么都是同一个 400/失败 —— 出口只能是回去,不是再来一次(E-12)。
     if (this.data.missingParam) { this.goBack(); return; }
-    this.setData({ loaded: false, loadError: false });
+    this.setData({ loaded: false, loadError: false, loadRefusal: '' });
     this.fetchDetail();
     this.loadManageStats(true);
   },
@@ -353,7 +357,7 @@ Page({
       header: { 'Content-Type': 'application/x-www-form-urlencoded' },
       success(res) {
         if (!current()) return;
-        if (!isSuccess(res) || !res.data) { if (!that._lastRaw) that.setData({ loaded: true, loadError: true }); else toast('刷新失败，请重试'); return; }
+        if (!isSuccess(res) || !res.data) { if (!that._lastRaw) that.setData({ loaded: true, loadError: true, loadRefusal: refusalOf(res) }); else toast('刷新失败，请重试'); return; }
         that.applyDetail(res.data);
       },
       fail() { if (!current()) return; if (!that._lastRaw) that.setData({ loaded: true, loadError: true }); else toast('刷新失败，请重试'); },
@@ -362,7 +366,7 @@ Page({
 
   applyDetail(raw) {
     this._lastRaw = raw;
-    if (this._manageStatsFailed) { this.setData({ loaded: true, loadError: true }); return; }
+    if (this._manageStatsFailed) { this.setData({ loaded: true, loadError: true, loadRefusal: this._loadRefusal || '' }); return; }
     // 俱乐部视角下身份还没拿到就不渲染,免得主理人先看到一闪普通成员视图;统计到了会用 _lastRaw 重放
     if (this._clubId && !this._manageStats) return;
     // P0(2026-09-05 审核):/api/topic/info-to-user 不返回 preparingAt/startedAt/endedAt 这类场次字段,

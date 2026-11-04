@@ -16,7 +16,8 @@
     <cy-skeleton type="detail" />
   </view>
   <view class="xb-state" style="padding-top:{{statusBarHeight + navBarHeight + 24}}px;" wx:if="{{ loadError && !loading }}">
-    <cy-error load-failure class="fill-slot" fill="{{true}}" size="lg" title="主题模板没能打开" sub="{{loadErrorMsg}}" bind:retry="onRetry" auto-back />
+    <cy-empty wx:if="{{refusal}}" class="fill-slot" kind="not-found" fill size="lg" title="{{refusal}}" cta="返回" bind:cta="goBack" />
+    <cy-error wx:else load-failure class="fill-slot" fill="{{true}}" size="lg" title="主题模板没能打开" sub="{{loadErrorMsg}}" bind:retry="onRetry" auto-back />
   </view>
 
   <scroll-view wx:if="{{ !loading && !loadError }}" class="xb-scroll xb-scroll--bleed" scroll-y enhanced show-scrollbar="{{ false }}">

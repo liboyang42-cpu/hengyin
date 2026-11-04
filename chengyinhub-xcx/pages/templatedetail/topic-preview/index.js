@@ -5,6 +5,8 @@ const art = require('../shelf/art.js');
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
 
 const app = getApp();
+// p3 F3:服务端明确拒绝(模板不存在)时「重试」永远不会成功,改给返回。
+function refusalOf(res) { var c = Number(res && res.code), m = String(res && res.msg || ''); return c && c !== 200 && c !== 401 && c !== 2 && m && m !== '系统繁忙，请稍后重试' ? m : ''; }
 // 同一张封面在每张卡上取不同局部:[水平%, 垂直%, 放大倍数]
 const CROP = [[50, 50, 1], [18, 40, 1.7], [82, 35, 1.8], [30, 75, 1.9], [70, 70, 1.7], [45, 20, 2], [60, 55, 2.2], [25, 25, 1.9]];
 const STEPS = {
@@ -56,6 +58,7 @@ Page({
   data: {
     loading: true,
     errorMsg: '',
+    errorRefused: false,
     name: '',
     cover: '',
     glow: 'hsla(270,45%,34%,.85)',
@@ -94,10 +97,12 @@ Page({
     if (this._settleTimer) clearTimeout(this._settleTimer);
   },
 
+  goBack() { wx.navigateBack({ fail: () => wx.switchTab({ url: '/pages/template/index' }) }); },
+
   load() {
     const that = this;
     const seq = this._seq = (this._seq || 0) + 1;
-    this.setData({ loading: true, errorMsg: '' });
+    this.setData({ loading: true, errorMsg: '', errorRefused: false });
     app.sendRequest({
       hideLoading: true,
       silentError: true,
@@ -108,7 +113,7 @@ Page({
         if (seq !== that._seq) return;
         const info = res && res.code == '200' ? res.data : null;
         if (!info || typeof info !== 'object') {
-          that.setData({ loading: false, errorMsg: app.getRequestErrorMessage(res, '主题模板加载失败') });
+          that.setData({ loading: false, errorRefused: Boolean(refusalOf(res)), errorMsg: app.getRequestErrorMessage(res, '主题模板加载失败') });
           return;
         }
         const a = art.topicArt(info.name);

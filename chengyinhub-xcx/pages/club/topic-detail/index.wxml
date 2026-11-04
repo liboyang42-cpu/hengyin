@@ -17,9 +17,9 @@
        让位以胶囊底实测(chromeClearTop,onLoad 走 resolveMenuChrome)为准;
        --cy-safe-top 只在拿不到胶囊坐标时兜底 —— env 在无刘海机/模拟器解析为 0,裸 token 会压胶囊行。 -->
   <view wx:if="{{loadError || !loaded}}" class="ctd-chrome-clear" style="{{chromeClearTop ? 'padding-top:' + chromeClearTop + 'px;' : ''}}">
-    <cy-error load-failure wx:if="{{loadError}}" title="活动无法打开"
-              sub="{{missingParam ? '请返回重新进入' : ''}}"
-              retry="{{missingParam ? '返回上一页' : '重新加载'}}" bind:retry="onRetry" />
+    <cy-empty wx:if="{{loadError && (missingParam || loadRefusal)}}" kind="not-found" fill size="lg"
+              title="{{loadRefusal || '链接已失效'}}" cta="返回" bind:cta="goBack" />
+    <cy-error load-failure wx:elif="{{loadError}}" title="活动无法打开" retry="重新加载" bind:retry="onRetry" />
     <cy-skeleton wx:else type="detail" loading-label="正在加载活动详情" />
   </view>
 

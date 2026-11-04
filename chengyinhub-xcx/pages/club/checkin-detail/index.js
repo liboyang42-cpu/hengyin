@@ -9,6 +9,7 @@
  *   空会被读成「这客户没留电话」。前端原样显示,不自己拼、不自己判条件。
  */
 const app = getApp();
+function refusalOf(res) { var c = Number(res && res.code), m = String(res && res.msg || ''); return c && c !== 200 && c !== 401 && c !== 2 && m && m !== '系统繁忙，请稍后重试' ? m : ''; }
 const toast = require('../../../utils/toast.js');
 const { callMember } = require('../utils/club-phone-call.js');
 const { bizFailureMessage } = require('../../../utils/response-shape.js');
@@ -48,7 +49,7 @@ Page({
     this._clubId = query && query.clubId ? String(query.clubId) : '';
     this._registrationId = query && query.registrationId ? String(query.registrationId) : '';
     if (!this._clubId || !this._registrationId) {
-      this.setData({ state: 'missing', errorText: '缺少核销记录编号，请从名册或客户列表重新进入' });
+      this.setData({ state: 'missing', errorText: '链接已失效' });
       return;
     }
     this.load();
@@ -81,6 +82,8 @@ Page({
         }
         if (code !== 200 || !res.data) {
           // 200 但缺 data 时 msg 是「操作成功」,不能当失败原因(2026-09-17 拍板)。
+          // p3 F3:服务端明确拒绝(不是本俱乐部的报名 / 不存在)讲原因并给返回;其余仍按加载失败留白。
+          if (refusalOf(res)) { that.setData({ state: 'missing', errorText: refusalOf(res) }); return; }
           that.setData({ state: 'error', errorText: bizFailureMessage(res, '网络异常，请检查连接后重试') });
           return;
         }

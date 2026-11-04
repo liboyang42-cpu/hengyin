@@ -12,6 +12,7 @@
   <cy-error wx:elif="{{state === 'no-permission'}}" fill size="lg"
             title="当前岗位没有客户查看权限" sub="{{errorText}}"
             retry="" bind:back="goBack" auto-back custom-back />
+  <cy-empty wx:elif="{{state === 'refused'}}" kind="not-found" fill size="lg" title="{{errorText}}" cta="返回" bind:cta="goBack" />
   <!-- K2-E 加载失败 -->
   <cy-error load-failure wx:elif="{{state === 'network-error'}}" fill size="lg" title="客户详情加载失败"
             sub="{{errorText}}" retry="重试加载" bind:retry="retry" auto-back />

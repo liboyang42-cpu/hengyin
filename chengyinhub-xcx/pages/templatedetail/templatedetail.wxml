@@ -18,7 +18,8 @@
     <cy-skeleton type="detail" />
   </view>
   <view class="xb-state" style="padding-top:{{statusBarHeight + navBarHeight + 24}}px;" wx:if="{{ loadError && !loading }}">
-    <cy-error load-failure class="fill-slot" fill="{{true}}" size="lg" title="玩法没能打开" sub="{{loadErrorMsg}}" bind:retry="onRetry" auto-back />
+    <cy-empty wx:if="{{refusal}}" class="fill-slot" kind="not-found" fill size="lg" title="{{refusal}}" cta="返回" bind:cta="goBack" />
+    <cy-error wx:else load-failure class="fill-slot" fill="{{true}}" size="lg" title="玩法没能打开" sub="{{loadErrorMsg}}" bind:retry="onRetry" auto-back />
   </view>
 
   <!-- ADA:成功态 hero 全出血,故 scroll 不再让顶(padding-top:0);nav 是 overlay pill,

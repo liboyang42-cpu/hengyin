@@ -775,7 +775,8 @@ Page({
     }
     // owner 入口(承接原 club/index 管理台):无 id → 解析我拥有的俱乐部
     if (opt && opt.owner) { this._ownerEntry = true; this.resolveOwnerEntry(); return; }
-    this.setData({ detailLoaded: true, notFound: true }); cyToast('缺少俱乐部');
+    // j6 F3:无 id 的旧链接给原因,不留空白(返回走常驻导航栏返回)
+    this.setData({ detailLoaded: true, clubGoneText: '链接已失效' });
   },
 
   // 首展由 onLoad 负责，避免双请求；从发布/邀请/主办视图返回后重拉阶段真源。

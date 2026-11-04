@@ -336,7 +336,8 @@ test('官方活动详情区分网络失败与内容不可用', () => {
   missing.page.setData({ id: 12 });
   missing.page.fetch();
   missing.requests[0].success({ code: 404, msg: 'not found' });
-  assert.equal(missing.page.data.loadErrKind, 'data');
+  // 第十轮 f3:内容没了是终态,用 missing-param(讲原因并返回),不再是加载失败留白类 data
+  assert.equal(missing.page.data.loadErrKind, 'missing-param');
   assert.match(missing.page.data.loadErrTitle, /内容/);
 
   const businessMissing = loadOfficialDetailPage();

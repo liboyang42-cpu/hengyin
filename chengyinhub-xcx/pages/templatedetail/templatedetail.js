@@ -350,10 +350,10 @@ Page({
     }
     that._detailContext = context;
     if (!that.data.id) {
-      that.setData({ loading: false, loadError: true, loadErrorMsg: '玩法链接不完整，请从玩法列表重新进入。' });
+      that.setData({ loading: false, loadError: true, refusal: '链接已失效' });
       return;
     }
-    that.setData({ loading: true, loadError: false, loadErrorMsg: '' });
+    that.setData({ loading: true, loadError: false, loadErrorMsg: '', refusal: '' });
     app.sendRequest({
       hideLoading: true,
       silentError: true,
@@ -367,6 +367,7 @@ Page({
         } else {
           that.setData({
             loadError: true,
+            refusal: refusalOf(res),
             loadErrorMsg: app.getRequestErrorMessage(res, '玩法详情加载失败，请重试。')
           });
         }
@@ -536,3 +537,6 @@ function detailCover(normalized) {
   const a = shelfArt.gameArt(normalized.info && normalized.info.title);
   return a ? a.cover : normalized.coverUrl;
 }
+
+// p3 F3:服务端明确拒绝(不存在 / 不是你的)要讲原因并给返回;网络与系统繁忙仍按加载失败留白。
+function refusalOf(res) { var c = Number(res && res.code), m = String(res && res.msg || ''); return c && c !== 200 && c !== 401 && c !== 2 && m && m !== '系统繁忙，请稍后重试' ? m : ''; }

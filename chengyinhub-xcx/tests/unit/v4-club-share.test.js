@@ -124,11 +124,11 @@ test('项目卡带票分享:sourceClubId 取本页 clubId,clubCode 与期次一�
   assert.deepEqual(route.query, { id: '77', sourceClubId: '9', clubCode: 'club-9-t77' })
 })
 
-test('无 id 的链接:不发 id:null 请求,并给出「缺少俱乐部」提示', () => {
+test('无 id 的链接:不发 id:null 请求,并给出可见的「链接已失效」(第十轮 f3 j6 F3,不再留白 + toast)', () => {
   const h = loadDetail()
   h.page.onLoad({})
   assert.equal(h.requests.filter((r) => r.url === '/api/club/detail').length, 0)
-  assert.equal(h.page.data.notFound, true)
+  assert.equal(h.page.data.clubGoneText, '链接已失效')
 })
 
 // ---- SC-CL-SHARE(已修):失效/无效链接给显式状态;网络失败仍走既有 load-failure(F-W1-12) ----
