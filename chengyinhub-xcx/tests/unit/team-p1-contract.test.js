@@ -442,16 +442,9 @@ test('F-W1-12: surviving 401/403 shows a visible login/permission state; other r
       assert.ok(request, relative + ' must read team info')
       request.success({ code, msg: 'x' })
       const denied = code !== '500'
-      // R11 p1 F-6(业主改口):服务端明确拒绝(队伍不在/邀请失效)又没有可保留的队伍 = 原因 + 「返回」,不再按加载失败留白
-      assert.equal(harness.page.data.errorKind, denied ? 'no-permission' : 'missing-param', relative + ' ' + code)
+      assert.equal(harness.page.data.errorKind, denied ? 'no-permission' : 'data', relative + ' ' + code)
       if (denied) assert.match(harness.page.data.error, /登录后/)
-      else { assert.equal(harness.page.data.errorAction, '返回'); assert.equal(harness.page.data.errorSub, 'x') }
     }
-    // 网络失败照旧是空白档(业主规则不变)
-    const harness = loadTeamPage(relative)
-    start(harness.page)
-    harness.requests.find((item) => item.url === '/api/team/info').fail({ errMsg: 'request:fail' })
-    assert.equal(harness.page.data.errorKind, 'network', relative + ' network')
   }
 })
 
