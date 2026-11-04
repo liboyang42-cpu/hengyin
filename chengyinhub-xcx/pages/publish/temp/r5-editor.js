@@ -179,12 +179,16 @@ const methods = {
     const query = this.createSelectorQuery();
     query.select('.cg-tstrip').boundingClientRect();
     query.selectAll('.cg-tblock').boundingClientRect();
-    query.exec(res => { const strip = res && res[0], blocks = res && res[1]; if (!strip || !blocks) return; this._tstripWidth = strip.width; this._tblockLefts = blocks.map(rect => rect.left - strip.left); });
+    query.select('.cg-tstrip__in').boundingClientRect();
+    query.exec(res => { const strip = res && res[0], blocks = res && res[1], inner = res && res[2]; if (!strip || !blocks) return; this._tstripWidth = strip.width; this._tstripInnerWidth = inner && inner.width; this._tblockLefts = blocks.map(rect => rect.left - strip.left); });
   },
   onGameStripScroll(e) {
     const lefts = this._tblockLefts; if (!lefts || !lefts.length) return;
     const x = e.detail.scrollLeft; let index = 0;
-    lefts.forEach((left, i) => { if (left <= x + 40) index = i; });
+    // 第十轮 f3 第 4 项(p3 F10):半屏还在入场缩放时量到的位置偏小,按「真实滚动宽 / 量到的内宽」换回实际坐标,
+    // 否则一滚就把高亮推到后面的分组(停在「问答」列却亮「互动」)。
+    const ratio = e.detail.scrollWidth && this._tstripInnerWidth ? e.detail.scrollWidth / this._tstripInnerWidth : 1;
+    lefts.forEach((left, i) => { if (left * ratio <= x + 40) index = i; });
     if (e.detail.scrollWidth && x + 8 >= e.detail.scrollWidth - (this._tstripWidth || 0)) index = lefts.length - 1;
     if (index !== this.data.sheetGroup) this.setData({ sheetGroup: index, sheetNavAnchor: 'gnav-' + index });
   },
