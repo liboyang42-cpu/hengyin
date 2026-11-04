@@ -13,6 +13,16 @@ from scripts.e2e.chain_sale_close import (
 
 
 class ChainSaleCloseSessionPlanTest(unittest.TestCase):
+    def test_sessions_open_only_after_the_topic_is_selling(self):
+        # 第十一轮 h4:主题还没开售(定价与开售审核中)不能开一场 ⇒ 开团在开售审核通过、快照回读之后。
+        import inspect
+        from scripts.e2e import chain_sale_close
+        source = inspect.getsource(chain_sale_close.main)
+        self.assertNotIn("/api/club/open-session", source)
+        self.assertLess(source.index("sale-submit"), source.index("open_sessions(tid, etok)"))
+        self.assertLess(source.index("15/15 非空"), source.index("open_sessions(tid, etok)"))
+        self.assertIn("/api/club/open-session", inspect.getsource(chain_sale_close.open_sessions))
+
     def test_key_bound_e2e_payee_is_reset_only_after_decrypt_failure(self):
         rows = ((1, PAYEE_LICENSE_OBJECT_KEY, PAYEE_LICENSE_HASH),)
         deletes = []

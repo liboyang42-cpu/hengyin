@@ -75,18 +75,8 @@ def assert_payee_readback(response, expected_status):
     return data
 
 
-def main(tid):
-    atok = admin_token()
-    etok, _ = app_token(EXEC_CLUB_PHONE)
-
-    step("执行俱乐部主理人:通过真实入口登记发布者实名(开场次同属发布行为)")
-    status = http("POST", "/api/publisher/identity/status", token=etok, json_body={})
-    if not ((status.get("data") or {}).get("registered")):
-        status = http("POST", "/api/publisher/identity", token=etok, json_body={
-            "realName": "测试执行主理人", "idCard": "110101199001010031",
-            "consent": True, "source": "topic_publish"})
-    show("publisher/identity", json.dumps(status, ensure_ascii=False)[:180])
-
+def open_sessions(tid, etok):
+    """第十一轮 h5 第 3 项:第十一轮 h4 起主题还没开售时不能开一场,开团挪到 SELLING 之后。"""
     step("俱乐部开团:一天一场,开 4 场(POST /api/club/open-session)")
     # ★ 这就是任务书里「俱乐部接手主题 → 定 4 个场次」的真实入口。
     #   ClubSessionServiceImpl.open 要求该俱乐部对本主题有【生效合作单】,然后建 cms_activity
@@ -127,6 +117,20 @@ def main(tid):
     readback("活动票投影(每场应与主题票同数)",
              "SELECT owner_id,COUNT(*) FROM oms_ticket WHERE owner_type=2 AND owner_id IN "
              "(SELECT id FROM cms_activity WHERE topic_id=%s) GROUP BY owner_id", (tid,))
+    return 0
+
+
+def main(tid):
+    atok = admin_token()
+    etok, _ = app_token(EXEC_CLUB_PHONE)
+
+    step("执行俱乐部主理人:通过真实入口登记发布者实名(开场次同属发布行为)")
+    status = http("POST", "/api/publisher/identity/status", token=etok, json_body={})
+    if not ((status.get("data") or {}).get("registered")):
+        status = http("POST", "/api/publisher/identity", token=etok, json_body={
+            "realName": "测试执行主理人", "idCard": "110101199001010031",
+            "consent": True, "source": "topic_publish"})
+    show("publisher/identity", json.dumps(status, ensure_ascii=False)[:180])
 
     step("俱乐部对公收款人:建资料 → 审核通过(SALE_PAYEE_NOT_VERIFIED 就是缺它)")
     # 明显假值,不编得像真的;真实入口在后台 /business/club-payee。
@@ -242,7 +246,9 @@ def main(tid):
                                        json.dumps(value, ensure_ascii=False)[:80]))
     print("\n  15/15 非空: %s | 顶层字段数: %d | 字段顺序与持久化合同一致: %s"
           % (ok, len(canonical), list(canonical.keys()) == CANONICAL_FIELDS))
-    return 0 if ok else 1
+    if not ok:
+        return 1
+    return open_sessions(tid, etok)
 
 
 if __name__ == "__main__":
