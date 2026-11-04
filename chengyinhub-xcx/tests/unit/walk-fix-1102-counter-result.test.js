@@ -205,3 +205,17 @@ test('M-27 第4轮 核销行取服务端报名姓名,没有就空着;退款行�
   const refund = page.refundRow({ refundId: 1, titleText: '链', activityTitleText: '某活动' }, true);
   assert.ok(!refund.customerName);
 });
+
+test('F-13 团码在写接待台账前被拒(带 notRedeemed)显示原因；未带标记或网络失败仍待确认', () => {
+  const GROUP = { url: '/api/verify/groupcode/redeem', data: { code: 'v1.2.group_v2_3_4.9.1.sig' } };
+  const refused = { code: 500, msg: '您在本主题没有生效的合作单,无法核销', data: { notRedeemed: true } };
+  const out = classifyVerificationOutcome(refused, 'success', undefined, GROUP);
+  assert.equal(out.status, 'failed');
+  const shown = resolveVerificationResult(out.response, '核销');
+  assert.equal(shown.state, 'rejected');
+  assert.equal(shown.message, '您在本主题没有生效的合作单,无法核销');
+  for (const res of [{ code: 500, msg: '您在本主题没有生效的合作单,无法核销' }, { code: 500, msg: 'x', data: {} }])
+    assert.equal(classifyVerificationOutcome(res, 'success', undefined, GROUP).status, 'unknown');
+  assert.equal(classifyVerificationOutcome(undefined, 'fail', undefined, GROUP).status, 'unknown');
+  assert.equal(classifyVerificationOutcome(refused, 'success', 502, GROUP).status, 'unknown');
+});

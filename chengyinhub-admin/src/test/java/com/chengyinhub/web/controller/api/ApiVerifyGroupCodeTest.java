@@ -378,6 +378,29 @@ class ApiVerifyGroupCodeTest {
 
         assertTrue(String.valueOf(r.get("msg")).contains("没有生效的合作单"));
         verify(groupVerifyMapper, never()).insertIgnoreCoopGroupVerify(any());
+        assertNotRedeemed(r);
+    }
+
+    /** F-13:写接待台账前的拒绝都带 notRedeemed,商家端显示原因而不是「核销结果待确认」;写过的成功回执不带。 */
+    @Test
+    void redeem_refusalsBeforeLedgerWrite_markNotRedeemed() {
+        doReturn(MERCHANT).when(controller).getAppUserId();
+        assertNotRedeemed(controller.redeemGroupCode("v1.300.group_v2_301_42.bad"));
+        assertNotRedeemed(controller.redeemGroupCode(VerifyDynCodeUtil.issue(TOPIC, "group_" + ACTIVITY,
+                System.currentTimeMillis(), 300_000L, 9L, SECRET)));
+        activity.setDelFlag(2);
+        assertNotRedeemed(controller.redeemGroupCode(issuedBy(LEADER)));
+        activity.setDelFlag(0);
+        when(groupVerifyMapper.insertIgnoreCoopGroupVerify(any())).thenReturn(1);
+        AjaxResult ok = controller.redeemGroupCode(issuedBy(LEADER));
+        assertEquals(200, ok.get("code"));
+        assertEquals(null, ((Map<?, ?>) ok.get("data")).get("notRedeemed"));
+    }
+
+    private static void assertNotRedeemed(AjaxResult r) {
+        assertEquals(500, r.get("code"));
+        assertTrue(r.get("data") instanceof Map, String.valueOf(r));
+        assertEquals(Boolean.TRUE, ((Map<?, ?>) r.get("data")).get("notRedeemed"), String.valueOf(r));
     }
 
     /** 软删场次不可继续扫旧团码，避免写入无法在履约视图解释的结算台账。 */

@@ -55,9 +55,8 @@ function classifyVerificationOutcome(response, channel, httpStatus, request) {
     return unknown();
   }
   if (response.code === 500 || response.code === '500') {
-    // M-02：服务端只在核销事务开始前的拒绝上带 notRedeemed=true（码无效/过期/本店无此票权益等），
-    // 只有这个显式标记可以判「未核销」；其余业务500仍按待确认处理。
-    if (!originalSeat && (ticket || chapter) && record(data) && data.notRedeemed === true
+    // M-02：服务端只在核销事务开始前的拒绝上带 notRedeemed=true，只有这个标记判「未核销」；其余业务500仍待确认。
+    if (!originalSeat && (ticket || chapter || group) && record(data) && data.notRedeemed === true
         && typeof response.msg === 'string' && response.msg) return { status: 'failed', response };
     // Controller 在选择分支尚未调用核销事务；重复标记是服务端现有的幂等事实。
     if (ticket && (validChoice(data) || record(data) && data.alreadyVerified === true && response.msg === '该订单已核销'))
