@@ -219,9 +219,9 @@ public class CmsRegistration extends BaseEntity
     @Excel(name = "核销状态：0未核销 1已核销")
     private Integer verificationStatus;
 
-    /** 核销时间 */
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    @Excel(name = "核销时间", width = 30, dateFormat = "yyyy-MM-dd")
+    /** 核销时间(列是 datetime,核销写 now();带钟点下发,订单进度不再显示成当天 00:00、排到付款之前) */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Excel(name = "核销时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
     private Date verificationTime;
 
     /** 核销人ID */

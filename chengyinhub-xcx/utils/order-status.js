@@ -6,6 +6,19 @@ function sourceOf(row) {
   return row && (row.cmsActivity || row.cmsTopic) || {};
 }
 
+// 主题日期是 date-only(yyyy-MM-dd):结束日当天整天都算,不能在 00:00 就判「已结束」。
+function endOf(value) {
+  const ts = toTimestamp(value);
+  return typeof value === 'string' && /^\d{4}-\d{1,2}-\d{1,2}$/.test(value.trim()) ? ts + 86399999 : ts;
+}
+
+// 自玩通行证(purchase_kind=2;存量 NULL 按 主题单 + 无票种 + 有到期 认):没有核销、没有集合点,有效期只看 expiresAt。
+function isSelfPlayPass(row) {
+  const v = row || {};
+  if (v.purchaseKind !== null && v.purchaseKind !== undefined && v.purchaseKind !== '') return Number(v.purchaseKind) === 2;
+  return Number(v.ownerType) === 1 && !v.ticketId && !!v.expiresAt;
+}
+
 // 取值真源 = 后端 RefundApplication:status 0 待审核 / 1 批准 / 2 驳回;
 // payout_status 建单即 5,批准后 6 派发中 → 0 微信已受理 → 1 到账 / 2 待人工 / 3 人工已退 / 4 复核完成。
 // 不在 1–4 时只说真实走到的那一步,不给「预计 N 个工作日」这种没人兑现的承诺。
@@ -87,11 +100,17 @@ function summarizeOrderState(row, now) {
 
   const free = isFreeOrder(value);
   const freeText = '免费报名，无需支付';
+  const source = sourceOf(value);
+  const current = typeof now === 'number' ? now : orderClockNow(value);
+  const start = toTimestamp(source.startDate || source.startTime);
   // P-03:探索票核销一家只是「核销过」(退款闸照旧),必选章没核销完、场次没结束就还在进行中。
+  // R11 p1 F-1:场次还没开始就是「未开始」,买完不等于进行中。
   const explore = exploreProgressOf(value);
   if (explore && explore.active) {
     const refundInfo = value.refundInfo || {};
-    return { key: 'in_progress', text: '进行中', refundText: refundInfo.reason || (free ? freeText : ''),
+    const early = !Number.isNaN(start) && current < start;
+    return { key: early ? 'not_started' : 'in_progress', text: early ? '未开始' : '进行中',
+      refundText: refundInfo.reason || (free ? freeText : ''),
       exploreProgress: explore, progressText: '已核销 ' + explore.redeemed + '/' + explore.required + ' 家' };
   }
   if (Number(value.verificationStatus) === 1) {
@@ -107,16 +126,17 @@ function summarizeOrderState(row, now) {
   if (Number(value.paymentStatus) === 2 && !Number.isNaN(toTimestamp(value.firstSuccessfulScanAt))) {
     return { key: 'completed', text: '已完成', refundText: refundInfo.reason || (free ? freeText : ''), firstScanCompleted: true };
   }
-  if (!free && refundInfo.refundable === false) {
+  // R11 j3 F9:自玩通行证的状态是能不能玩(未开始/进行中/已结束),「不可退款」只在退款卡说一次。
+  const pass = isSelfPlayPass(value);
+  if (!pass && !free && refundInfo.refundable === false) {
     return { key: 'non_refundable', text: '不可退款', refundText: refundInfo.reason || '当前订单不可自助退款' };
   }
 
-  const source = sourceOf(value);
-  const start = toTimestamp(source.startDate || source.startTime);
-  const end = toTimestamp(source.endDate || source.endTime || source.startDate || source.startTime);
-  const current = typeof now === 'number' ? now : orderClockNow(value);
+  const end = pass ? toTimestamp(value.expiresAt)
+    : endOf(source.endDate || source.endTime || source.startDate || source.startTime);
   if (!Number.isNaN(end) && current > end) {
-    return { key: 'completed', text: '已完成', refundText: '活动已结束' };
+    return pass ? { key: 'completed', text: '已结束', refundText: '通行证已到期' }
+      : { key: 'completed', text: '已完成', refundText: '活动已结束' };
   }
   if (!Number.isNaN(start) && current < start) {
     return { key: 'not_started', text: '未开始', refundText: free ? freeText : (refundInfo.reason || '可在退款截止前申请原路退款') };
@@ -137,8 +157,10 @@ function formatRefundDeadline(value) {
   const date = chinaParts(value);
   if (!date) return '';
   const pad = function (number) { return String(number).padStart(2, '0'); };
-  return date.year + '-' + pad(date.month) + '-' + pad(date.day)
-    + ' ' + pad(date.hours) + ':' + pad(date.minutes);
+  const day = date.year + '-' + pad(date.month) + '-' + pad(date.day);
+  // date-only 值没有钟点,不补一个假的 00:00(R11 j3 F12)
+  return typeof value === 'string' && /^\d{4}-\d{1,2}-\d{1,2}$/.test(value.trim()) ? day
+    : day + ' ' + pad(date.hours) + ':' + pad(date.minutes);
 }
 
-module.exports = { summarizeOrderState, canRequestOrderRefund, formatRefundDeadline, orderClockNow, exploreProgressOf };
+module.exports = { summarizeOrderState, canRequestOrderRefund, formatRefundDeadline, orderClockNow, exploreProgressOf, isSelfPlayPass, endOf };

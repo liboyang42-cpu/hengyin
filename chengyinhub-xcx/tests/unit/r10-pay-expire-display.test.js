@@ -9,7 +9,8 @@ const { formatRefundDeadline } = require('../../utils/order-status.js');
 
 test('待支付截止:线上「yyyy-MM-dd HH:mm:ss」显示到分钟,不落成 00:00', () => {
   assert.equal(formatRefundDeadline('2026-11-04 13:15:29'), '2026-11-04 13:15');
-  assert.equal(formatRefundDeadline('2026-11-04'), '2026-11-04 00:00', '只给日期就是旧 bug 的样子');
+  // R11 g3(j3 F12,业主):date-only 值没有钟点,不再补一个假的 00:00
+  assert.equal(formatRefundDeadline('2026-11-04'), '2026-11-04', 'date-only 不显示 00:00');
   const detail = fs.readFileSync(path.join(__dirname, '../../subpackageMember/components/cy/scene-member-order-detail/index.js'), 'utf8');
   assert.match(detail, /const expire = toDisplayTime\(info\.payExpireTime\);\s*info\.orderHint = expire \? \('请在 ' \+ expire \+ ' 前完成支付'\)/);
 });

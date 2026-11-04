@@ -412,8 +412,8 @@
         <el-form-item label="核销时间" prop="verificationTime">
           <el-date-picker clearable
             v-model="form.verificationTime"
-            type="date"
-            value-format="yyyy-MM-dd"
+            type="datetime"
+            value-format="yyyy-MM-dd HH:mm:ss"
             placeholder="请选择核销时间">
           </el-date-picker>
         </el-form-item>

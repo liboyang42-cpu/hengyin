@@ -948,7 +948,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         r.setPaymentStatus(0);
         r.setRegistrationStatus(1);
         r.setPayExpireTime(DateUtils.addMinutes(new Date(), 30));
-        r.setExpiresAt(DateUtils.addDays(new Date(), 90)); // M2 通行证有效期 90 天
+        r.setExpiresAt(selfPlayPassExpiry(topic, new Date())); // M2 通行证有效期 90 天,不越过主题履约窗
         // [P0-02] 自玩通行证恒为 ②。此前「是不是自玩票」只能靠 (owner_type=1 + ticket_id 为空 + expires_at 非空)
         // 的组合约定反推,没有任何一列直说 —— 现在有了。
         r.setPurchaseKind(PurchaseKind.SELF_PLAY_PASS);
@@ -965,6 +965,21 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             throw new IllegalStateException("自玩报名原订单写入失败");
         }
         return r;
+    }
+
+    /**
+     * 自玩通行证到期 = 购后 90 天与主题履约窗结束(结束日次日 00:00,上海)取早者。
+     * 购买半屏承诺的「可玩至 X(主题结束)」与订单详情「权益到期」、扫码/开玩闸读的 expires_at 是同一个日子(R11 j3 F9)。
+     */
+    static Date selfPlayPassExpiry(CmsTopic topic, Date now) {
+        Date ninety = DateUtils.addDays(now, 90);
+        if (topic == null || topic.getEndDate() == null) {
+            return ninety;
+        }
+        java.time.ZoneId shanghai = java.time.ZoneId.of("Asia/Shanghai");
+        Date windowEnd = Date.from(topic.getEndDate().toInstant().atZone(shanghai).toLocalDate()
+                .plusDays(1).atStartOfDay(shanghai).toInstant());
+        return windowEnd.after(now) && windowEnd.before(ninety) ? windowEnd : ninety;
     }
 
     /**
