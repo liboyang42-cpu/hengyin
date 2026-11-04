@@ -147,15 +147,15 @@ function hideLocationLoading(page, scope) {
   cyLoading.hide();
 }
 
-// 即将上线倒计时格式化:>1天→还剩Nd,<1天→还剩Nh,已过→已开始(红)。不到分秒。
+// 即将上线倒计时:还剩N天 / 还剩N小时 / 已开始(j1 F23 不用英文单位)
 function fmtRemain(startDateStr) {
   if (!startDateStr) return { remainingTime: '', started: false };
   const diff = toTimestamp(String(startDateStr)) - Date.now();
   if (diff <= 0) return { remainingTime: '已开始', started: true };
   const days = Math.floor(diff / 86400000);
-  if (days >= 1) return { remainingTime: `还剩${days}d`, started: false };
+  if (days >= 1) return { remainingTime: `还剩${days}天`, started: false };
   const hours = Math.max(1, Math.floor(diff / 3600000));
-  return { remainingTime: `还剩${hours}h`, started: false };
+  return { remainingTime: `还剩${hours}小时`, started: false };
 }
 
 const RECO_INACTIVE_SCALE = 280 / 306;
@@ -499,7 +499,7 @@ Page({
     
     let updated = false;
 
-    // 更新每个活动的倒计时(缩写格式:还剩Nd / 还剩Nh / 已开始)
+    // 更新倒计时
     const updatedList = upcomingList.map(item => {
       if (!item.startDate) return item;
       const r = fmtRemain(item.startDate);
@@ -1139,7 +1139,7 @@ Page({
                 list[i]['formattedStartDate'] = `${month}.${day} ${hourMinute}`;
               }
               
-              // 初始化倒计时(缩写格式:还剩Nd / 还剩Nh / 已开始)
+              // 初始化倒计时
               const r = fmtRemain(list[i]['startDate']);
               list[i]['remainingTime'] = r.remainingTime;
               list[i]['started'] = r.started;

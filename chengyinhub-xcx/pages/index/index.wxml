@@ -186,8 +186,8 @@
               <view class="v3-upreview-body">
                 <view class="v3-upreview-txt">
                   <view class="v3-upreview-title ep1">{{item.name}}</view>
-                  <view class="v3-upreview-sub ep1">{{item.addressName || item.formattedDateTime}}</view>
-                  <view class="v3-upreview-desc ep1">{{item.description || item.formattedDateTime}}</view>
+                  <view class="v3-upreview-sub ep1" wx:if="{{item.addressName || item.formattedDateTime}}">{{item.addressName || item.formattedDateTime}}</view>
+                  <view class="v3-upreview-desc ep1" wx:if="{{item.description}}">{{item.description}}</view>
                   <view class="v3-upreview-foot flex-ac">
                     <image class="v3-upreview-star" src="/images/index-figma/icon-star.png" mode="aspectFit" />
                     <text class="v3-upreview-djs {{item.started ? 'is-started' : ''}}">{{item.rating || item.remainingTime || '即将开始'}}</text>
