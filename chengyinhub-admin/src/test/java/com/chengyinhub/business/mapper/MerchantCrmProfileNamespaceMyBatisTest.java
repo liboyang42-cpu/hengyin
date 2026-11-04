@@ -385,6 +385,10 @@ class MerchantCrmProfileNamespaceMyBatisTest {
                     + "member_id bigint not null, status int not null)");
             statement.execute("create table player_activity_role(id bigint primary key, activity_id bigint not null, "
                     + "member_id bigint not null, role_code varchar(32))");
+            // 第十一轮 h2:名册对自由探索参与商家读单店同意(merchant_onsite_data_sharing)的最新一条。
+            statement.execute("create table consent_record(id bigint primary key auto_increment, member_id bigint not null, "
+                    + "doc_type varchar(64), doc_version varchar(32), scene varchar(64), scope_type varchar(32), "
+                    + "scope_id bigint, event_type varchar(16), occurred_at timestamp, request_id varchar(64))");
         }
     }
 

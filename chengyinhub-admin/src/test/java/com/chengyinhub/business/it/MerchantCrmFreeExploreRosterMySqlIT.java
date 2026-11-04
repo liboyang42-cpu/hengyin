@@ -61,6 +61,9 @@ import static org.mockito.Mockito.when;
  * ② 审核通过的参与商家看到同一买家,但号码不经通用名册下发(玩家对单店另有授权),揭示接口 403;
  * ③ 待审核的参与商家、不在主题上的商家一行都看不到,揭示接口 404;
  * ④ 普通主题的口径不变(对照行)。</p>
+ *
+ * <p>第十一轮 h2 第 1 项(2026-11-04 业主):玩家撤回对某参与商家的单店同意后,该店名册不再列他,
+ * 重新同意后回来;主题方视图不变。</p>
  */
 class MerchantCrmFreeExploreRosterMySqlIT {
 
@@ -76,6 +79,7 @@ class MerchantCrmFreeExploreRosterMySqlIT {
 
     private IMerchantAccessService access;
     private IMerchantCrmAppService service;
+    private MerchantCrmAppMapper mapper;
 
     @Test
     void freeExploreBuyersReachHostAndApprovedShopsOnlyWithoutRelaxingPhoneConsent() throws Exception {
@@ -113,6 +117,37 @@ class MerchantCrmFreeExploreRosterMySqlIT {
             // ②b 章节承接申请已通过的参与商家:同样可见、同样不下发号码。
             stubOwner(CHAPTER_SHOP, 804L);
             assertNull(only(service.listCustomers(OPERATOR, query()), BUYER).getPhone());
+
+            // ②c 第十一轮 h2 第 1 项:玩家撤回对参与商家 66 的单店同意 → 66 的客户名册不再列这位买家
+            //     (与现场名单跳过 REVOKED 整行一致),揭示 404;其它参与商家与主题方不受影响。
+            consent(url, BUYER, SHOP, "AGREE", "2026-11-04 09:00:00", "it-fe-shop-agree-1");
+            consent(url, BUYER, SHOP, "REVOKE", "2026-11-04 10:00:00", "it-fe-shop-revoke-1");
+            consent(url, BUYER, HOST, "REVOKE", "2026-11-04 10:00:00", "it-fe-host-revoke-1");
+            stubOwner(SHOP, 802L);
+            MerchantCrmCustomerPageVO revokedPage = service.listCustomers(OPERATOR, query());
+            assertTrue(revokedPage.getRows().stream().noneMatch(row -> Long.valueOf(BUYER).equals(row.getMemberId())),
+                    "撤回单店同意后参与商家不该再看到这位买家");
+            assertEquals(1L, revokedPage.getTotal().longValue(), "只剩普通主题买家");
+            assertEquals(1L, mapper.countOwnedRegistrationCustomers(SHOP), "名册计数同口径");
+            ServiceException revokedReveal = assertThrows(ServiceException.class,
+                    () -> service.revealContact(OPERATOR, BUYER, "call"));
+            assertEquals(404, revokedReveal.getCode());
+            stubOwner(CHAPTER_SHOP, 804L);
+            only(service.listCustomers(OPERATOR, query()), BUYER);
+            stubOwner(HOST, 801L);
+            assertEquals("138****8061", only(service.listCustomers(OPERATOR, query()), BUYER).getPhone(),
+                    "主题方视图不变:单店同意撤回不影响主题方");
+
+            // ②d 重新同意(同一时刻、更大的 id 也算更新)→ 这位买家回到 66 的名册,号码仍不经通用名册下发。
+            consent(url, BUYER, SHOP, "AGREE", "2026-11-04 10:00:00", "it-fe-shop-agree-2");
+            stubOwner(SHOP, 802L);
+            assertNull(only(service.listCustomers(OPERATOR, query()), BUYER).getPhone());
+            assertEquals(2L, mapper.countOwnedRegistrationCustomers(SHOP));
+            // 再撤回一次又消失:看的是最新一条,不是「有没有撤回过」。
+            consent(url, BUYER, SHOP, "REVOKE", "2026-11-04 11:00:00", "it-fe-shop-revoke-2");
+            assertTrue(service.listCustomers(OPERATOR, query()).getRows().stream()
+                    .noneMatch(row -> Long.valueOf(BUYER).equals(row.getMemberId())));
+            consent(url, BUYER, SHOP, "AGREE", "2026-11-04 12:00:00", "it-fe-shop-agree-3");
 
             // ③ 待审核参与商家 / 不在主题上的商家:一行都没有,揭示 404。
             for (long otherOwner : new long[]{PENDING_SHOP, OUTSIDER}) {
@@ -226,7 +261,8 @@ class MerchantCrmFreeExploreRosterMySqlIT {
         MerchantCustomerTagMapper tags = mock(MerchantCustomerTagMapper.class);
         MerchantCrmAppServiceImpl target = new MerchantCrmAppServiceImpl();
         ReflectionTestUtils.setField(target, "merchantAccessService", access);
-        ReflectionTestUtils.setField(target, "merchantCrmAppMapper", template.getMapper(MerchantCrmAppMapper.class));
+        mapper = template.getMapper(MerchantCrmAppMapper.class);
+        ReflectionTestUtils.setField(target, "merchantCrmAppMapper", mapper);
         ReflectionTestUtils.setField(target, "merchantCustomerTagMapper", tags);
         ReflectionTestUtils.setField(target, "businessAuditEventMapper",
                 template.getMapper(BusinessAuditEventMapper.class));
@@ -307,6 +343,17 @@ class MerchantCrmFreeExploreRosterMySqlIT {
                         + " date_sub(current_timestamp, interval 1 hour),'it-fe-consent-61',NULL,current_timestamp)");
                 statement.execute("UPDATE ums_member SET phone='" + crypto.encrypt(BUYER_PHONE) + "' WHERE id=61");
             }
+        }
+    }
+
+    private static void consent(String url, long member, long merchantOwner, String event, String at,
+                                String requestId) throws Exception {
+        try (Connection connection = DriverManager.getConnection(url, MybatisItDatabase.user(),
+                MybatisItDatabase.password()); Statement statement = connection.createStatement()) {
+            statement.execute("INSERT INTO consent_record (member_id,doc_type,doc_version,scene,scope_type,scope_id,"
+                    + " event_type,occurred_at,request_id,ip_address,create_time) VALUES (" + member
+                    + ",'merchant_onsite_data_sharing','v1','merchant_redeem','MERCHANT'," + merchantOwner + ",'"
+                    + event + "','" + at + "','" + requestId + "',NULL,current_timestamp)");
         }
     }
 

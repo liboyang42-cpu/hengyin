@@ -141,6 +141,40 @@
               ))
           ))
         )
+        and not (
+          <include refid="FreeExploreShopRegistration"/>
+          and <include refid="FreeExploreShopConsentRevoked"/>
+        )
+    </sql>
+
+    <!--
+      第十一轮 h2 第 1 项(2026-11-04 业主拍板):玩家撤回了对本店的单店同意(merchant_onsite_data_sharing,
+      最新一条是 REVOKE)时,非主题方的参与商家在客户名册里也看不到这张票,与现场名单
+      (ShopDayMerchantRosterServiceImpl 跳过 REVOKED 整行)一致;重新同意后最新一条是 AGREE,票回到名册。
+      「最新」与 ConsentRecordMapper.selectLatestScoped 同序:occurred_at desc, id desc。
+      主题方(FreeExploreShopRegistration 不成立)与其它同意规则不变。
+    -->
+    <sql id="FreeExploreShopConsentRevoked">
+        exists (
+          select 1 from consent_record shop_consent
+          where shop_consent.member_id = r.member_id
+            and shop_consent.doc_type = 'merchant_onsite_data_sharing'
+            and shop_consent.scene = 'merchant_redeem'
+            and shop_consent.scope_type = 'MERCHANT'
+            and shop_consent.scope_id = #{ownerMemberId}
+            and shop_consent.event_type = 'REVOKE'
+            and not exists (
+              select 1 from consent_record newer_consent
+              where newer_consent.member_id = shop_consent.member_id
+                and newer_consent.doc_type = shop_consent.doc_type
+                and newer_consent.scene = shop_consent.scene
+                and newer_consent.scope_type = shop_consent.scope_type
+                and newer_consent.scope_id = shop_consent.scope_id
+                and (newer_consent.occurred_at &gt; shop_consent.occurred_at
+                  or (newer_consent.occurred_at = shop_consent.occurred_at
+                    and newer_consent.id &gt; shop_consent.id))
+            )
+        )
     </sql>
 
     <sql id="OwnedRegistration">
