@@ -15,9 +15,9 @@
       action="重试" bind:action="retryLoad" />
     <!-- 卡1:hero(唯一大数字)+ 记录信息并进来。原「记录信息」只有一两行,单开一卡是纯浪费。 -->
     <view class="fin-hero order-summary" aria-role="region"
-      aria-label="{{detail.canReadFinance ? detail.title + '，我的收入 ' + (detail.amountDisplay || detail.amountFallback) + '，' + detail.stateText : detail.title + '，' + detail.stateText}}">
-      <text class="fin-hero__lab">{{detail.canReadFinance ? detail.title + ' · 我的收入' : detail.title}}</text>
-      <block wx:if="{{detail.canReadFinance}}">
+      aria-label="{{detail.canReadFinance && !detail.noCash ? detail.title + '，我的收入 ' + (detail.amountDisplay || detail.amountFallback) + '，' + detail.stateText : detail.title + '，' + detail.stateText}}">
+      <text class="fin-hero__lab">{{detail.canReadFinance && !detail.noCash ? detail.title + ' · 我的收入' : detail.title}}</text>
+      <block wx:if="{{detail.canReadFinance && !detail.noCash}}">
         <text class="fin-hero__amt" wx:if="{{detail.amountText != null}}">{{cnt.money(detail.amountDisplay, odK)}}</text>
         <text class="fin-hero__amt fin-hero__amt--mute" wx:else>{{detail.amountFallback}}</text>
       </block>

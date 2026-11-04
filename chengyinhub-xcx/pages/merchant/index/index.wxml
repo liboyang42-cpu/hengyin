@@ -137,7 +137,8 @@
          一个项目都没有时整块不显示(含「项目」标题与空态)——去合作中心的入口不在这里
          (2026-09-18 用户走查 UI-01)。仍在加载或加载失败时整块保留,骨架/错误才有地方渲染。 -->
     <view class="rv-section" wx:if="{{merchantAccess.canManageProjects && (projectCards.length || joinLoading || hostLoading || todoLoading || gameEntryLoading || joinError || hostError)}}">
-      <view class="rv-section-head">
+      <!-- p2 F-5:加载失败(错误按业主规则留白)且一张卡都没有时,不留孤零零的「项目」标题 -->
+      <view class="rv-section-head" wx:if="{{projectCards.length || !(joinError || hostError)}}">
         <text class="rv-section-title">项目</text>
         <!-- 卡片只铺前几条,总数得报真实的 joinTotal/hostProjectTotal(取自全量 list,
              不是被截断的那份),否则 30 个项目会被说成 4 个;2026-09-16 起只数未结束的,
