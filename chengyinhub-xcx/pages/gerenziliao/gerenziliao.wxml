@@ -24,11 +24,12 @@
   <cy-icon name="image" size="30" /><text>更换背景</text>
 </view>
 <view class="rv-head">
-  <view class="rv-ava" bindtap="uploadPic" aria-role="button" aria-label="修改头像" hover-class="cy-pressed" hover-stay-time="80">
+  <!-- 第九轮 m1-9:头像走微信头像选择器(用微信头像 / 相册 / 拍照),选完照旧裁剪、上传、审核 -->
+  <button class="rv-ava rv-ava--btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" aria-label="修改头像" hover-class="cy-pressed" hover-stay-time="80">
     <cy-avatar src="{{avatarSrc || '/images/d_profile.png'}}" size="208" />
     <view class="rv-ring {{avatarUploading ? 'is-on' : ''}}" aria-hidden="true"></view>
-  </view>
-  <view class="rv-ava-edit" bindtap="uploadPic" aria-role="button" aria-label="修改头像" hover-class="cy-pressed" hover-stay-time="80"><view class="rv-ava-edit__dot"><cy-icon name="edit" size="26" /></view></view>
+  </button>
+  <button class="rv-ava-edit rv-ava--btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" aria-label="修改头像" hover-class="cy-pressed" hover-stay-time="80"><view class="rv-ava-edit__dot"><cy-icon name="edit" size="26" /></view></button>
   <text class="rv-name">{{userInfo.name || '城瘾玩家'}}</text>
   <!-- 只有未通过时才提示;审核中新头像直接显示,不再写「复核中」 -->
   <text wx:if="{{avatarReviewText}}" class="rv-review" aria-role="status">{{avatarReviewText}}</text>
@@ -143,7 +144,7 @@
 <cy-sheet class="profile-edit-sheet" inset show="{{ popDavid4 }}" title="昵称" footer bind:close="cancel4">
   <view class="pop-model pop-temp">
     <view class="david_tk">
-      <cy-field class="profile-name-field" value="{{tempName}}" placeholder="请输入昵称" disabled="{{saving}}" maxlength="{{24}}"
+      <cy-field class="profile-name-field" input-type="nickname" value="{{tempName}}" placeholder="请输入昵称" disabled="{{saving}}" maxlength="{{24}}"
                 bind:input="onInputChange" data-field="name"
                 error="{{nicknameState === 'taken' || nicknameState === 'invalid'}}" errorText="{{nicknameHint}}"
                 success="{{nicknameState === 'available'}}"

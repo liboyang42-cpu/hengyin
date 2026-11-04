@@ -210,6 +210,9 @@ button.david_tk_con_tgb{border: 2rpx dashed var(--cy-border-line); width:100%; h
 .rv-row + .rv-row::before { content: ""; position: absolute; left: var(--cy-space-4); right: 0; top: 0; height: 1rpx; background: var(--cy-border-line); }
 button.rv-row--btn { width: 100%; margin: 0; border: 0; border-radius: 0; background: transparent; line-height: normal; text-align: left; font-size: inherit; color: inherit; }
 button.rv-row--btn::after { border: 0; }
+/* 第九轮 m1-9:头像两处换成 open-type="chooseAvatar" 的 button,去掉原生按钮的底、边、内距,版面不变 */
+button.rv-ava--btn { padding: 0; margin-left: 0; margin-right: 0; background: transparent; line-height: normal; font-size: inherit; color: inherit; overflow: visible; }
+button.rv-ava--btn::after { border: 0; }
 .rv-row__k { flex: none; font-size: var(--cy-font-body); color: var(--cy-text-title); }
 .rv-row__v { flex: 1; min-width: 0; text-align: right; font-size: var(--cy-font-body); color: var(--cy-text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rv-row__v.is-empty, .rv-row__intro.is-empty { color: var(--cy-text-tertiary); }

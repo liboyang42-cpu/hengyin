@@ -780,7 +780,13 @@ Page({
     }, 1, { crop: true, cropScale: '16:9' });
   },
 
-  uploadPic() {
+  // 第九轮 m1-9:微信头像选择器回来的临时图,走同一条裁剪、上传、审核链路
+  onChooseAvatar(e) {
+    const url = e && e.detail && e.detail.avatarUrl;
+    if (url) this.uploadPic([url]);
+  },
+
+  uploadPic(paths) {
     let that = this;
     const context = this.profileContext();
     let previousSrc = null;
@@ -792,6 +798,7 @@ Page({
       });
     }, 1, {
       crop: true, cropScale: '1:1',
+      paths: Array.isArray(paths) ? paths : undefined,
       // V-15:裁完就把本机图换上头像位,上传、审核期间都不留空圈
       onUploadStart(filePaths) {
         if (!that.currentProfileContext(context) || !filePaths || !filePaths[0]) return;

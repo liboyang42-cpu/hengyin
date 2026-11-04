@@ -687,6 +687,23 @@ App({
     // ⚠️ 响应结构不同:chooseImage 给 res.tempFilePaths(字符串数组),
     //    chooseMedia 给 res.tempFiles(对象数组,路径在 .tempFilePath)。下面两种都兜,
     //    因为低版本基础库回退到 chooseImage 时仍是旧结构。
+    var usePaths = function (paths) {
+      if (!paths.length) { operation.finish(); return; }
+      if (options.skipCrop) { doUpload(paths); return; }
+      that.cropAll(paths, ratio, options.cropShape).then(function (out) {
+        if (operation.isAborted()) return;
+        // null = 用户取消整批。给一次提示:选了 9 张裁到第 9 张才取消,
+        // 无声返回会让人以为卡住了(旧代码单张时无声尚可,排队后是随张数放大的悬崖)
+        if (!out) { operation.finish(); cyToast('已取消上传'); return; }
+        doUpload(out);
+      }).catch(function () {
+        if (operation.isAborted()) return;
+        operation.finish();
+        that.showModal({ content: '图片处理失败，请重试' });
+      });
+    };
+    // 第九轮 m1-9:微信头像选择器(button open-type="chooseAvatar")已经给了临时图,跳过相册,照常裁剪、上传
+    if (Array.isArray(options.paths)) { usePaths(options.paths.filter(function (p) { return typeof p === 'string' && p; })); return operation; }
     wx.chooseMedia({
       count: pickCount,
       mediaType: ['image'],
@@ -695,20 +712,7 @@ App({
       sourceType: options.cameraOnly ? ['camera'] : ['album', 'camera'],
       success: function (res) {
         if (operation.isAborted()) return;
-        var paths = pickImagePaths(res);
-        if (!paths.length) { operation.finish(); return; }
-        if (options.skipCrop) { doUpload(paths); return; }
-        that.cropAll(paths, ratio, options.cropShape).then(function (out) {
-          if (operation.isAborted()) return;
-          // null = 用户取消整批。给一次提示:选了 9 张裁到第 9 张才取消,
-          // 无声返回会让人以为卡住了(旧代码单张时无声尚可,排队后是随张数放大的悬崖)
-          if (!out) { operation.finish(); cyToast('已取消上传'); return; }
-          doUpload(out);
-        }).catch(function () {
-          if (operation.isAborted()) return;
-          operation.finish();
-          that.showModal({ content: '图片处理失败，请重试' });
-        });
+        usePaths(pickImagePaths(res));
       },
       fail: function (res) {
         if (operation.isAborted()) return;
