@@ -80,6 +80,11 @@ public class TeamEventCommandService {
                 if (OfficialEventAttendanceService.handles(input.getAction()) && rejected instanceof ServiceException) {
                     result.put("message", rejected.getMessage());
                 }
+                // 队伍命令:队伍服务抛出的拒绝理由本就是给玩家看的中文(如「暂时无法加入该队伍」),回执照原样带回,
+                // 页面贴在按钮旁(第十一轮 g2,j4 F1)。只放行纯中文短句,基础设施异常的英文文本仍不入回执。
+                if ("TEAM".equals(domain) && playerReadable(rejected.getMessage())) {
+                    result.put("message", rejected.getMessage());
+                }
                 if (rejected instanceof IPlayTeamService.TeamRejection teamRejection) {
                     result.put("errorCode", teamRejection.getErrorCode());
                     result.put("message", teamRejection.getMessage());
@@ -139,6 +144,18 @@ public class TeamEventCommandService {
         result.put("requestId", key);
         result.put("state", state);
         return result;
+    }
+
+    /** 玩家可读的拒绝理由:含中文、不含英文字母、不超过 60 字。 */
+    static boolean playerReadable(String message) {
+        if (message == null || message.isBlank() || message.length() > 60) return false;
+        boolean han = false;
+        for (int i = 0; i < message.length(); i++) {
+            char c = message.charAt(i);
+            if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) return false;
+            if (Character.UnicodeScript.of(c) == Character.UnicodeScript.HAN) han = true;
+        }
+        return han;
     }
 
     private static void requireActorKey(Long actor, String key) {

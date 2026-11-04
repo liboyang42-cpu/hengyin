@@ -104,6 +104,11 @@ public class ApiPlayTeamController extends BaseController {
             return AjaxResult.success(playTeamService.info(
                     Convert.toLong(input.get("teamId"), 0L),
                     Convert.toStr(input.get("inviteCode"), null), optionalMemberId()));
+        } catch (IllegalArgumentException refused) {
+            // j4 F2:邀请已失效 / 无权查看该队伍是业务结论,带 errorCode 让页面写出理由与返回出路;其他失败仍按加载失败处理。
+            AjaxResult result = error(refused.getMessage());
+            result.put("errorCode", "TEAM_INFO_REFUSED");
+            return result;
         } catch (RuntimeException e) {
             return fail(e);
         }

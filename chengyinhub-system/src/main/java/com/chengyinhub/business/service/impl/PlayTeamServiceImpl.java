@@ -153,13 +153,15 @@ public class PlayTeamServiceImpl implements IPlayTeamService {
         }
         List<PlayTeamMember> members = teamMapper.selectActiveMembers(teamId);
         Map<String, Object> result = new HashMap<>();
-        result.put("team", team);
+        // j4 F10:非成员凭邀请码只看邀请页要用的:标题、人数、状态、加入方式与成员昵称头像。
+        // 不回邀请码、队长 / 成员 id、场次归属与创建时间。队伍 id 留着:入队命令按它冻结目标(邀请换队即拒)。
+        result.put("team", joined ? team : invitePreview(team));
         List<Map<String, Object>> visibleMembers = new ArrayList<>();
         if (members != null) {
             for (PlayTeamMember member : members) {
                 if (member == null) continue;
                 Map<String, Object> visible = new LinkedHashMap<>();
-                visible.put("memberId", member.getMemberId());
+                if (joined) visible.put("memberId", member.getMemberId());
                 visible.put("role", member.getRole());
                 visible.put("memberName", member.getMemberName());
                 visible.put("memberAvatar", member.getMemberAvatar());
@@ -170,6 +172,17 @@ public class PlayTeamServiceImpl implements IPlayTeamService {
         result.put("joined", joined);
         result.put("leader", joined && viewerMemberId.equals(team.getLeaderMemberId()));
         return result;
+    }
+
+    private static Map<String, Object> invitePreview(PlayTeam team) {
+        Map<String, Object> preview = new LinkedHashMap<>();
+        preview.put("id", team.getId());
+        preview.put("title", team.getTitle());
+        preview.put("status", team.getStatus());
+        preview.put("joinMode", team.getJoinMode());
+        preview.put("joinedCount", team.getJoinedCount());
+        preview.put("maxMembers", team.getMaxMembers());
+        return preview;
     }
 
     @Override

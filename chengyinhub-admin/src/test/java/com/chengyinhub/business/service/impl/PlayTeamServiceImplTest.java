@@ -140,11 +140,55 @@ class PlayTeamServiceImplTest {
         team.setInviteCode("secure-invite");
         when(teamMapper.selectPlayTeamByInviteCode("secure-invite")).thenReturn(team);
 
+        when(teamMapper.selectActiveMembers(TEAM_ID)).thenReturn(Arrays.asList(member(LEADER_ID, 1)));
+
         Map<String, Object> result = service.info(null, "secure-invite", 0L);
 
-        assertEquals(team, result.get("team"));
+        assertInvitePreviewOnly(result);
         assertEquals(false, result.get("joined"));
         verify(teamMapper).selectActiveMembers(TEAM_ID);
+    }
+
+    // 第十一轮 g2,j4 F10:另一场次的玩家拿到转发的邀请码,和游客看到的一样少。
+    @Test
+    void infoByInviteCodeForOtherSessionPlayerReturnsPreviewOnly() {
+        PlayTeam team = recruitingTeam();
+        team.setInviteCode("secure-invite");
+        when(teamMapper.selectPlayTeamByInviteCode("secure-invite")).thenReturn(team);
+        when(teamMapper.selectActiveMember(TEAM_ID, MEMBER_ID)).thenReturn(null);
+        when(teamMapper.selectActiveMembers(TEAM_ID)).thenReturn(Arrays.asList(member(LEADER_ID, 1)));
+
+        Map<String, Object> result = service.info(null, "secure-invite", MEMBER_ID);
+
+        assertInvitePreviewOnly(result);
+        assertEquals(false, result.get("joined"));
+        assertEquals(false, result.get("leader"));
+    }
+
+    @Test
+    void infoByInviteCodeForMemberKeepsFullTeam() {
+        PlayTeam team = recruitingTeam();
+        team.setInviteCode("secure-invite");
+        when(teamMapper.selectPlayTeamByInviteCode("secure-invite")).thenReturn(team);
+        when(teamMapper.selectActiveMember(TEAM_ID, LEADER_ID)).thenReturn(member(LEADER_ID, 1));
+        when(teamMapper.selectActiveMembers(TEAM_ID)).thenReturn(Arrays.asList(member(LEADER_ID, 1)));
+
+        Map<String, Object> result = service.info(null, "secure-invite", LEADER_ID);
+
+        assertEquals(team, result.get("team"));
+        assertEquals(true, result.get("joined"));
+        List<Map<String, Object>> visible = (List<Map<String, Object>>) result.get("members");
+        assertEquals(LEADER_ID, visible.get(0).get("memberId"));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void assertInvitePreviewOnly(Map<String, Object> result) {
+        Map<String, Object> team = (Map<String, Object>) result.get("team");
+        assertEquals(new HashSet<>(Arrays.asList("id", "title", "status", "joinMode", "joinedCount", "maxMembers")), team.keySet());
+        List<Map<String, Object>> visible = (List<Map<String, Object>>) result.get("members");
+        for (Map<String, Object> row : visible) {
+            assertEquals(new HashSet<>(Arrays.asList("role", "memberName", "memberAvatar")), row.keySet());
+        }
     }
 
     @Test
@@ -171,7 +215,7 @@ class PlayTeamServiceImplTest {
 
         Map<String, Object> result = service.info(null, "started-invite", 0L);
 
-        assertEquals(team, result.get("team"));
+        assertInvitePreviewOnly(result);
         verify(teamMapper).selectActiveMembers(TEAM_ID);
     }
 
