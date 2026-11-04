@@ -2306,6 +2306,12 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             node.put("lastConfidence", 0);
             if (fallbackPass) {
                 node.put("passed", true);
+            } else if (tries >= Math.max(1, cfg.path("maxTries").asInt(1))) {
+                /* R11 g1 F3:审核通道不可用且重拍机会用完 —— 不把玩家留在这一站。
+                   普通站放行(verdict 仍是 DEGRADED:photoVerified=false ⇒ 奖励封顶、不发本段 xp);
+                   按结果分支的站记成没过,走作者配的「没通过之后」。 */
+                if (r5) node.put("verdict", "REJECT");
+                else node.put("passed", true);
             }
             return null;
         }

@@ -123,3 +123,14 @@ test('★降级(degraded)只说「没能审」,不许出现通过 / 不通过这
   assert.equal(/['"][^'"]*审核(通过|不通过)/.test(src), false, '文案里出现了「审核通过/不通过」')
   assert.ok(src.includes('degraded'), 'degraded 没有接进组件')
 })
+
+/* R11 g1 F3:跟服务端的 fallback 走 —— 降级还有机会时让玩家重拍,服务端放行后才说先往下走 */
+test('★R11 降级未放行:说再拍一张、带服务端理由;降级已放行:说先往下走', () => {
+  const retake = runVerdict({ tries: 1, maxTries: 3, flagged: true, degraded: true, lastReason: '照片读取失败,请重拍' })
+  assert.equal(retake.verdict, '这次没能审，再拍一张')
+  assert.equal(retake.reason, '照片读取失败,请重拍')
+  const released = runVerdict({ tries: 3, maxTries: 3, flagged: true, degraded: true, passed: true })
+  assert.equal(released.verdict, '这次没能审，先往下走')
+  const wxml = read(REL.replace(/\.js$/, '.wxml'))
+  assert.match(wxml, /\{\{busy \|\| passed \? 'g-btn--disabled' : ''\}\}/, '按钮只在服务端 passed 后才停用')
+})

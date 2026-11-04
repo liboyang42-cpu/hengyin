@@ -193,7 +193,8 @@ test('★轮廓图自己加载失败：只藏掉那条线，取景与快门照�
 })
 
 test('★过了 / 定局之后不再进取景层', () => {
-  for (const flag of [{ passed: true }, { flagged: true }]) {
+  // R11 g1 F3:定局只认服务端 passed(含保底放过 passed+flagged);只有 flagged 是降级后还要重拍
+  for (const flag of [{ passed: true }, { passed: true, flagged: true }]) {
     const inst = instanceOf(loadComponent(COMPONENT_ABS), Object.assign({ frameUrl: '/profile/a.png' }, flag))
     const wx = fakeWx()
     try {

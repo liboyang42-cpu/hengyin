@@ -1079554,7 +1079554,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-photocheck/index.js:128"
+        "staticSource": "pages/play/components/playkit-photocheck/index.js:127"
       }
     },
     {

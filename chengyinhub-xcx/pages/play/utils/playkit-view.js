@@ -209,7 +209,8 @@ function segmentComplete(name, seg) {
      · 打字:打对算完,限次用尽也算(tries=0 表示不限,永远不会用尽)。 */
   if (name === 'profile') return !!seg.done;
   if (name === 'album') return !!seg.done;
-  if (name === 'photoCheck') return !!seg.passed || !!seg.flagged;
+  // R11 g1 F3:只认服务端 passed(服务端 mechanicsReady 同口径)。flagged 是降级痕迹,降级后还要重拍
+  if (name === 'photoCheck') return !!seg.passed;
   if (name === 'note') return !!seg.done;
   if (name === 'typeIn') {
     const tries = Number(seg.tries) || 0;
