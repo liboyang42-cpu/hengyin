@@ -68,6 +68,11 @@ class ClubSettlementTopicNameH2Test {
         jdbc.execute("create table cms_topic (id bigint primary key, name varchar(255), del_flag int default 0)");
         // F-16:同一 summary 还读俱乐部场次的活动结算流水
         jdbc.execute("create table cms_activity (id bigint primary key, name varchar(255), club_id bigint, start_date datetime)");
+        // 第十一轮 h4 L7:场次行的冲销子查询读这三张表
+        jdbc.execute("create table settlement_detail (id bigint auto_increment primary key, source_type varchar(32),"
+                + " source_id bigint, receiver_type varchar(32), receiver_id bigint, settlement_amount decimal(12,2), status int)");
+        jdbc.execute("create table refund_application (id bigint primary key, source_type varchar(32), source_id bigint)");
+        jdbc.execute("create table cms_registration (id bigint primary key, owner_type int, owner_id bigint)");
 
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean();
         factory.setDataSource(ds);
