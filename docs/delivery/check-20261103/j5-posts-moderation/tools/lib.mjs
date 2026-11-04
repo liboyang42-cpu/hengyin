@@ -18,7 +18,7 @@ export async function start(opts) {
     if (!h) throw new Error('no ' + sel);
     await h.click(); await w.page.keyboard.down('Control'); await w.page.keyboard.press('KeyA'); await w.page.keyboard.up('Control'); for (let k = 0; k < 4; k++) await w.page.keyboard.press('Backspace'); for (let k = 0; k < 120; k++) await w.page.keyboard.press('Backspace'); await h.type(String(text), { delay: 10 }); await sleep(400);
   };
-  w.photo = async (dataUrl) => w.page.evaluate((d) => { MP.photoForShot = () => d; }, dataUrl);
+  w.photo = async (dataUrl) => w.page.evaluate((d) => { MPWEB.photoForShot = () => d; MPWEB.samplePhoto = () => d; }, dataUrl);
   w.finish = async () => {
     const errs = w.errors(); console.log('--- page errors', errs.length); errs.slice(0, 8).forEach((e) => console.log('  ', e.split('\n')[0].slice(0, 250)));
     const net = (await w.net()).filter((n) => n.status >= 400 || /comment|post|im\/|upload|follow|like|club|merchant|topic/.test(n.url));

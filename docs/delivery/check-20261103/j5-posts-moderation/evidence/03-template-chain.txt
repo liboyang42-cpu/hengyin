@@ -1,0 +1,7 @@
+create {"msg": "主题发布成功", "code": 200, "data": {"topicId": 990015, "auditTaskId": 4, "reviewState": "PENDING", "bundledTemplateIds": [6005], "published": true, "commercialAwaitingReview": true, "commercialNextStep": "已提交立项审核，审核与定价完成前尚未开售"}, "_status": 200}
+((990014, 'j5 桥边主题', 1, 1, 0), (990015, 'j5 桥边主题', 1, 1, 0))
+((71, 990014, 6005), (72, 990015, 6005))
+((6005, '桥边问答 zqvxlm', 0, 0, 0, 0),)
+((4, 'TOPIC', 990015, 0), (3, 'TOPIC_PROJECT_REVIEW', 990015, 0), (2, 'TOPIC', 990014, 0))
+player /api/template/info {"msg": "参数不合规", "code": 500, "_status": 200}
+player /api/template/detail {"msg": "请求路径不存在", "code": 404, "_status": 404}
