@@ -259,3 +259,4 @@ chengyinhub-xcx/pages/roam/index.js 2  # 2026-10-28 p74「附近活动总是有�
 chengyinhub-xcx/subpackageMember/signup/index.js 1  # 2026-10-28 票夹翻面入场码(/api/verify/dyncode/issue):失败在卡背显示入场码没取到 + 重试(qrState:error),通用 toast 会与卡背提示双弹;翻回正面或换卡即作废旧请求
 
 chengyinhub-xcx/subpackageA/pages/myproject/index.js 1  # W8 原申诉回执读取：失败/不匹配写 auditSheet.appealError 并保留原请求号及冻结输入供重试；离页换号回包被 same 拦截，避免通用 toast 污染新页面。
+chengyinhub-xcx/subpackageA/pages/myproject/index.js 2  # 第十轮 f1 p2 F-3 商家态承接项目两路只读(报名承接/章节承接):任一路业务/网络/畸形失败走 readFailure(project) 落页内错误态或登录/权限态,不出半截列表;迟到或换号回包被 current/seq 丢弃,通用 toast 会双弹。merchant-myproject-join-count 覆盖。

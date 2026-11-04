@@ -1367681,7 +1367681,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:925"
+        "staticSource": "subpackageA/pages/myproject/index.js:958"
       }
     },
     {
@@ -1367748,7 +1367748,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:414"
+        "staticSource": "subpackageA/pages/myproject/index.js:447"
       }
     },
     {
@@ -1367814,7 +1367814,9 @@
           "/api/audit/timeline",
           "/api/config/features",
           "/api/login/code",
+          "/api/merchant/chapter-application/mine",
           "/api/project/my",
+          "/api/registration/merchant/list",
           "/api/role/info",
           "/api/template/my-list",
           "/api/template/topic-template/save-as",
@@ -1367825,7 +1367827,9 @@
           "/api/activity/cancel_preview",
           "/api/activity/update_publish_status",
           "/api/audit/timeline",
+          "/api/merchant/chapter-application/mine",
           "/api/project/my",
+          "/api/registration/merchant/list",
           "/api/template/my-list",
           "/api/template/topic-template/save-as",
           "/api/topic/cancel_preview",
@@ -1367868,7 +1367872,19 @@
             "source": "server-controller"
           },
           {
+            "url": "/api/merchant/chapter-application/mine",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
             "url": "/api/project/my",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/registration/merchant/list",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1367921,7 +1367937,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:418"
+        "staticSource": "subpackageA/pages/myproject/index.js:451"
       }
     },
     {
@@ -1367987,7 +1368003,9 @@
           "/api/audit/timeline",
           "/api/config/features",
           "/api/login/code",
+          "/api/merchant/chapter-application/mine",
           "/api/project/my",
+          "/api/registration/merchant/list",
           "/api/role/info",
           "/api/template/my-list",
           "/api/template/topic-template/save-as",
@@ -1367998,7 +1368016,9 @@
           "/api/activity/cancel_preview",
           "/api/activity/update_publish_status",
           "/api/audit/timeline",
+          "/api/merchant/chapter-application/mine",
           "/api/project/my",
+          "/api/registration/merchant/list",
           "/api/template/my-list",
           "/api/template/topic-template/save-as",
           "/api/topic/cancel_preview",
@@ -1368041,7 +1368061,19 @@
             "source": "server-controller"
           },
           {
+            "url": "/api/merchant/chapter-application/mine",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
             "url": "/api/project/my",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/registration/merchant/list",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1368094,7 +1368126,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:418"
+        "staticSource": "subpackageA/pages/myproject/index.js:451"
       }
     },
     {
@@ -1368160,7 +1368192,9 @@
           "/api/audit/timeline",
           "/api/config/features",
           "/api/login/code",
+          "/api/merchant/chapter-application/mine",
           "/api/project/my",
+          "/api/registration/merchant/list",
           "/api/role/info",
           "/api/template/my-list",
           "/api/template/topic-template/save-as",
@@ -1368171,7 +1368205,9 @@
           "/api/activity/cancel_preview",
           "/api/activity/update_publish_status",
           "/api/audit/timeline",
+          "/api/merchant/chapter-application/mine",
           "/api/project/my",
+          "/api/registration/merchant/list",
           "/api/template/my-list",
           "/api/template/topic-template/save-as",
           "/api/topic/cancel_preview",
@@ -1368214,7 +1368250,19 @@
             "source": "server-controller"
           },
           {
+            "url": "/api/merchant/chapter-application/mine",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
             "url": "/api/project/my",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/registration/merchant/list",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1368267,7 +1368315,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:418"
+        "staticSource": "subpackageA/pages/myproject/index.js:451"
       }
     },
     {
@@ -1368333,7 +1368381,9 @@
           "/api/audit/timeline",
           "/api/config/features",
           "/api/login/code",
+          "/api/merchant/chapter-application/mine",
           "/api/project/my",
+          "/api/registration/merchant/list",
           "/api/role/info",
           "/api/template/my-list",
           "/api/template/topic-template/save-as",
@@ -1368344,7 +1368394,9 @@
           "/api/activity/cancel_preview",
           "/api/activity/update_publish_status",
           "/api/audit/timeline",
+          "/api/merchant/chapter-application/mine",
           "/api/project/my",
+          "/api/registration/merchant/list",
           "/api/template/my-list",
           "/api/template/topic-template/save-as",
           "/api/topic/cancel_preview",
@@ -1368387,7 +1368439,19 @@
             "source": "server-controller"
           },
           {
+            "url": "/api/merchant/chapter-application/mine",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
             "url": "/api/project/my",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/registration/merchant/list",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1368440,7 +1368504,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:418"
+        "staticSource": "subpackageA/pages/myproject/index.js:451"
       }
     },
     {
@@ -1368506,7 +1368570,9 @@
           "/api/audit/timeline",
           "/api/config/features",
           "/api/login/code",
+          "/api/merchant/chapter-application/mine",
           "/api/project/my",
+          "/api/registration/merchant/list",
           "/api/role/info",
           "/api/template/my-list",
           "/api/template/topic-template/save-as",
@@ -1368517,7 +1368583,9 @@
           "/api/activity/cancel_preview",
           "/api/activity/update_publish_status",
           "/api/audit/timeline",
+          "/api/merchant/chapter-application/mine",
           "/api/project/my",
+          "/api/registration/merchant/list",
           "/api/template/my-list",
           "/api/template/topic-template/save-as",
           "/api/topic/cancel_preview",
@@ -1368560,7 +1368628,19 @@
             "source": "server-controller"
           },
           {
+            "url": "/api/merchant/chapter-application/mine",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
             "url": "/api/project/my",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/registration/merchant/list",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1368613,7 +1368693,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:418"
+        "staticSource": "subpackageA/pages/myproject/index.js:451"
       }
     },
     {
@@ -1368679,7 +1368759,9 @@
           "/api/audit/timeline",
           "/api/config/features",
           "/api/login/code",
+          "/api/merchant/chapter-application/mine",
           "/api/project/my",
+          "/api/registration/merchant/list",
           "/api/role/info",
           "/api/template/my-list",
           "/api/template/topic-template/save-as",
@@ -1368690,7 +1368772,9 @@
           "/api/activity/cancel_preview",
           "/api/activity/update_publish_status",
           "/api/audit/timeline",
+          "/api/merchant/chapter-application/mine",
           "/api/project/my",
+          "/api/registration/merchant/list",
           "/api/template/my-list",
           "/api/template/topic-template/save-as",
           "/api/topic/cancel_preview",
@@ -1368733,7 +1368817,19 @@
             "source": "server-controller"
           },
           {
+            "url": "/api/merchant/chapter-application/mine",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
             "url": "/api/project/my",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/registration/merchant/list",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1368786,7 +1368882,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:418"
+        "staticSource": "subpackageA/pages/myproject/index.js:451"
       }
     },
     {
@@ -1368852,7 +1368948,9 @@
           "/api/audit/timeline",
           "/api/config/features",
           "/api/login/code",
+          "/api/merchant/chapter-application/mine",
           "/api/project/my",
+          "/api/registration/merchant/list",
           "/api/role/info",
           "/api/template/my-list",
           "/api/template/topic-template/save-as",
@@ -1368863,7 +1368961,9 @@
           "/api/activity/cancel_preview",
           "/api/activity/update_publish_status",
           "/api/audit/timeline",
+          "/api/merchant/chapter-application/mine",
           "/api/project/my",
+          "/api/registration/merchant/list",
           "/api/template/my-list",
           "/api/template/topic-template/save-as",
           "/api/topic/cancel_preview",
@@ -1368906,7 +1369006,19 @@
             "source": "server-controller"
           },
           {
+            "url": "/api/merchant/chapter-application/mine",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
             "url": "/api/project/my",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/registration/merchant/list",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1368959,7 +1369071,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:418"
+        "staticSource": "subpackageA/pages/myproject/index.js:451"
       }
     },
     {
@@ -1369026,7 +1369138,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:729"
+        "staticSource": "subpackageA/pages/myproject/index.js:762"
       }
     },
     {
@@ -1369135,7 +1369247,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:699"
+        "staticSource": "subpackageA/pages/myproject/index.js:732"
       }
     },
     {
@@ -1369195,13 +1369307,17 @@
           "/api/config/features",
           "/api/login/code",
           "/api/merchant/access/me",
+          "/api/merchant/chapter-application/mine",
           "/api/project/my",
+          "/api/registration/merchant/list",
           "/api/role/info",
           "/api/template/my-list"
         ],
         "primaryApis": [
           "/api/merchant/access/me",
+          "/api/merchant/chapter-application/mine",
           "/api/project/my",
+          "/api/registration/merchant/list",
           "/api/template/my-list"
         ],
         "auxiliaryApis": [
@@ -1369229,7 +1369345,19 @@
             "source": "server-controller"
           },
           {
+            "url": "/api/merchant/chapter-application/mine",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
             "url": "/api/project/my",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/registration/merchant/list",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1369327,7 +1369455,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:766"
+        "staticSource": "subpackageA/pages/myproject/index.js:799"
       }
     },
     {
@@ -1369448,7 +1369576,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:753"
+        "staticSource": "subpackageA/pages/myproject/index.js:786"
       }
     },
     {
@@ -1369565,7 +1369693,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:773"
+        "staticSource": "subpackageA/pages/myproject/index.js:806"
       }
     },
     {
@@ -1369691,7 +1369819,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:814"
+        "staticSource": "subpackageA/pages/myproject/index.js:847"
       }
     },
     {
@@ -1369751,14 +1369879,18 @@
           "/api/activity/update_publish_status",
           "/api/config/features",
           "/api/login/code",
+          "/api/merchant/chapter-application/mine",
           "/api/project/my",
+          "/api/registration/merchant/list",
           "/api/role/info",
           "/api/template/my-list",
           "/api/topic/update_user_status"
         ],
         "primaryApis": [
           "/api/activity/update_publish_status",
+          "/api/merchant/chapter-application/mine",
           "/api/project/my",
+          "/api/registration/merchant/list",
           "/api/template/my-list",
           "/api/topic/update_user_status"
         ],
@@ -1369787,7 +1369919,19 @@
             "source": "server-controller"
           },
           {
+            "url": "/api/merchant/chapter-application/mine",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
             "url": "/api/project/my",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/registration/merchant/list",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1369827,7 +1369971,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:1038"
+        "staticSource": "subpackageA/pages/myproject/index.js:1071"
       }
     },
     {
@@ -1369887,13 +1370031,17 @@
           "/api/activity/delete",
           "/api/config/features",
           "/api/login/code",
+          "/api/merchant/chapter-application/mine",
           "/api/project/my",
+          "/api/registration/merchant/list",
           "/api/role/info",
           "/api/template/my-list"
         ],
         "primaryApis": [
           "/api/activity/delete",
+          "/api/merchant/chapter-application/mine",
           "/api/project/my",
+          "/api/registration/merchant/list",
           "/api/template/my-list"
         ],
         "auxiliaryApis": [
@@ -1369921,7 +1370069,19 @@
             "source": "server-controller"
           },
           {
+            "url": "/api/merchant/chapter-application/mine",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
             "url": "/api/project/my",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/registration/merchant/list",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1369955,7 +1370115,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:938"
+        "staticSource": "subpackageA/pages/myproject/index.js:971"
       }
     },
     {
@@ -1370015,13 +1370175,17 @@
           "/api/activity/cancel",
           "/api/config/features",
           "/api/login/code",
+          "/api/merchant/chapter-application/mine",
           "/api/project/my",
+          "/api/registration/merchant/list",
           "/api/role/info",
           "/api/template/my-list"
         ],
         "primaryApis": [
           "/api/activity/cancel",
+          "/api/merchant/chapter-application/mine",
           "/api/project/my",
+          "/api/registration/merchant/list",
           "/api/template/my-list"
         ],
         "auxiliaryApis": [
@@ -1370049,7 +1370213,19 @@
             "source": "server-controller"
           },
           {
+            "url": "/api/merchant/chapter-application/mine",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
             "url": "/api/project/my",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/registration/merchant/list",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1370083,7 +1370259,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:941"
+        "staticSource": "subpackageA/pages/myproject/index.js:974"
       }
     },
     {
@@ -1370142,13 +1370318,17 @@
         "apis": [
           "/api/config/features",
           "/api/login/code",
+          "/api/merchant/chapter-application/mine",
           "/api/project/my",
+          "/api/registration/merchant/list",
           "/api/role/info",
           "/api/template/my-list",
           "/api/topic/cancel"
         ],
         "primaryApis": [
+          "/api/merchant/chapter-application/mine",
           "/api/project/my",
+          "/api/registration/merchant/list",
           "/api/template/my-list",
           "/api/topic/cancel"
         ],
@@ -1370171,7 +1370351,19 @@
             "source": "server-controller"
           },
           {
+            "url": "/api/merchant/chapter-application/mine",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
             "url": "/api/project/my",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/registration/merchant/list",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1370211,7 +1370403,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:962"
+        "staticSource": "subpackageA/pages/myproject/index.js:995"
       }
     },
     {
@@ -1370271,14 +1370463,18 @@
           "/api/activity/update_publish_status",
           "/api/config/features",
           "/api/login/code",
+          "/api/merchant/chapter-application/mine",
           "/api/project/my",
+          "/api/registration/merchant/list",
           "/api/role/info",
           "/api/template/my-list",
           "/api/topic/update_user_status"
         ],
         "primaryApis": [
           "/api/activity/update_publish_status",
+          "/api/merchant/chapter-application/mine",
           "/api/project/my",
+          "/api/registration/merchant/list",
           "/api/template/my-list",
           "/api/topic/update_user_status"
         ],
@@ -1370307,7 +1370503,19 @@
             "source": "server-controller"
           },
           {
+            "url": "/api/merchant/chapter-application/mine",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
             "url": "/api/project/my",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/registration/merchant/list",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1370347,7 +1370555,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:1038"
+        "staticSource": "subpackageA/pages/myproject/index.js:1071"
       }
     },
     {
@@ -1370406,13 +1370614,17 @@
         "apis": [
           "/api/config/features",
           "/api/login/code",
+          "/api/merchant/chapter-application/mine",
           "/api/project/my",
+          "/api/registration/merchant/list",
           "/api/role/info",
           "/api/template/my-list",
           "/api/topic/delete"
         ],
         "primaryApis": [
+          "/api/merchant/chapter-application/mine",
           "/api/project/my",
+          "/api/registration/merchant/list",
           "/api/template/my-list",
           "/api/topic/delete"
         ],
@@ -1370435,7 +1370647,19 @@
             "source": "server-controller"
           },
           {
+            "url": "/api/merchant/chapter-application/mine",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
             "url": "/api/project/my",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/registration/merchant/list",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1370475,7 +1370699,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:939"
+        "staticSource": "subpackageA/pages/myproject/index.js:972"
       }
     },
     {
@@ -1370595,7 +1370819,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:1043"
+        "staticSource": "subpackageA/pages/myproject/index.js:1076"
       }
     },
     {
@@ -1370715,7 +1370939,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:1016"
+        "staticSource": "subpackageA/pages/myproject/index.js:1049"
       }
     },
     {
@@ -1370782,7 +1371006,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:391"
+        "staticSource": "subpackageA/pages/myproject/index.js:424"
       }
     },
     {
@@ -1370854,7 +1371078,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:362"
+        "staticSource": "subpackageA/pages/myproject/index.js:395"
       }
     },
     {
@@ -1370922,7 +1371146,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:360"
+        "staticSource": "subpackageA/pages/myproject/index.js:393"
       }
     },
     {
@@ -1370993,7 +1371217,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:480"
+        "staticSource": "subpackageA/pages/myproject/index.js:513"
       }
     },
     {
@@ -1371063,7 +1371287,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:864"
+        "staticSource": "subpackageA/pages/myproject/index.js:897"
       }
     },
     {
@@ -1371289,7 +1371513,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:870"
+        "staticSource": "subpackageA/pages/myproject/index.js:903"
       }
     },
     {
@@ -1371409,7 +1371633,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:896"
+        "staticSource": "subpackageA/pages/myproject/index.js:929"
       }
     },
     {
@@ -1371518,7 +1371742,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:678"
+        "staticSource": "subpackageA/pages/myproject/index.js:711"
       }
     },
     {

@@ -312,14 +312,19 @@ Page({
         if (!current(res) || that._seq !== seq) return;
         if (res && res.code == '200' && res.data && isRecordList(res.data.rows)) {
           const rows = res.data.rows.map(decorate);
-          that._all = rows;
-          that.setData({
-            loaded: true,
-            projectState: 'ready',
-            projectErrorMsg: '',
-            capped: (res.data.total || 0) > rows.length
-          });
-          that.applyView();
+          const show = function (joined) {
+            that._all = rows.concat(joined);
+            that.setData({
+              loaded: true,
+              projectState: 'ready',
+              projectErrorMsg: '',
+              capped: (res.data.total || 0) > rows.length
+            });
+            that.applyView();
+          };
+          // p2 F-3:商家态把工作台「全部 N」里的承接项目一并列出(与工作台同两个来源、同口径)
+          if (that.data.operationScope !== 'MERCHANT') { show([]); return; }
+          that.loadJoinProjects(current, seq, show);
         } else { that.readFailure('project', res); }
       },
       fail(res, statusCode) {
@@ -329,6 +334,34 @@ Page({
         if (current(res, statusCode) && that._seq === seq) that.readFailure('project', res, statusCode);
       },
       complete() { if (current() && that._seq === seq) that.setData({ loading: false }); }
+    });
+  },
+
+  loadJoinProjects(current, seq, done) {
+    const that = this;
+    const got = {};
+    let failed = false;
+    const finish = function (key, value, res, statusCode) {
+      if (!current(res, statusCode) || that._seq !== seq || failed) return;
+      if (value === null) { failed = true; that.readFailure('project', res, statusCode); return; }
+      got[key] = value;
+      if (!got.legacy || !got.chapter) return;
+      done(joinProjects(got.legacy, got.chapter).items.map(decorateJoin));
+    };
+    const rowsOk = function (res, rows) { return res && res.code == '200' && isRecordList(rows) ? rows : null; };
+    app.sendRequest({
+      hideLoading: true, silentError: true, method: 'POST',
+      url: '/api/registration/merchant/list', data: { status: '0' },
+      success(res) { finish('legacy', rowsOk(res, res && res.data && res.data.rows ? res.data.rows : res && res.data), res); },
+      fail(res, statusCode) { if (current(res, statusCode)) that.readFailure('project', res, statusCode); },
+      successStatusAbnormal(res, statusCode) { if (current(res, statusCode)) that.readFailure('project', res, statusCode); }
+    });
+    app.sendRequest({
+      hideLoading: true, silentError: true, method: 'POST',
+      url: '/api/merchant/chapter-application/mine', data: {},
+      success(res) { finish('chapter', rowsOk(res, res && res.data), res); },
+      fail(res, statusCode) { if (current(res, statusCode)) that.readFailure('project', res, statusCode); },
+      successStatusAbnormal(res, statusCode) { if (current(res, statusCode)) that.readFailure('project', res, statusCode); }
     });
   },
 
@@ -1058,6 +1091,14 @@ function rankOf(p) {
   return PENDING_RANK[p.state] != null ? PENDING_RANK[p.state] : 9;
 }
 
+// p2 F-3 承接卡只读:编辑/上下架/删除/取消都不归承接商家,点卡进项目页
+function decorateJoin(p) {
+  return Object.assign(decorate(p), {
+    _canToggle: false, _canDelete: false, _canEdit: false, _canCancel: false, _canAudit: false,
+    _canSaveAsTemplate: false, _canViewApplies: false, _showAccept: false, _roleText: '承办'
+  });
+}
+
 function decorate(p) {
   const stateClass = {
     draft: 'st-draft', pending: 'st-pending', notStarted: 'st-notstarted',
@@ -1133,3 +1174,4 @@ function decorate(p) {
 // FOLLOWUP-A-2 的依赖放在文件尾:上方 U1 基线(tests/lint/ui-integrity-baseline.js)按行号锚定,不挪既有行。
 // 页面方法都在模块求值完成后才被调用,此处的 const 届时已初始化。
 const auditTimeline = require('../../utils/audit-timeline.js');
+const { joinProjects } = require('../../utils/merchant-join-projects.js');
