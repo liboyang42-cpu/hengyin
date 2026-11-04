@@ -573,7 +573,9 @@ Page({
         that.setData({ actingKey: '' })
         if (!isSuccess(res)) { toast((res && res.msg) || '转让失败'); return }
         toast.success('主理人已转让')
-        wx.navigateBack({ delta: 1 })
+        // 第十轮 f3 第 4 项(j2 F-23):转让后本页的转让/封禁控件已不归你,深链直达(栈深 1)时也要离开本页。
+        if (getCurrentPages().length > 1) wx.navigateBack({ delta: 1 })
+        else wx.redirectTo({ url: '/pages/club/detail/index?id=' + that.data.clubId })
       },
       fail() { that.setData({ actingKey: '' }); toast('网络异常，请重试') },
       successStatusAbnormal(res) {

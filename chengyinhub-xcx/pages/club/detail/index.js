@@ -2613,6 +2613,11 @@ Page({
   },
   // 审核团:通过后第一次进来补弹一次;公开团在加入那一下已经弹过并记过。
   maybeWelcome(club) {
+    // 第十轮 f3 第 4 项(j2 F-23):主理人看过自己的团就算「见过」,转让后变回成员也不再弹「欢迎加入」。
+    if (club && club.isOwner && club.id) {
+      try { wx.setStorageSync(this.welcomeSeenKey(club.id), 1); } catch (e) { /* 存不下不影响使用 */ }
+      return;
+    }
     if (!club || !club.isJoined || club.isOwner || this.data.welcomeShow) return;
     let seen = false;
     try { seen = !!wx.getStorageSync(this.welcomeSeenKey(club.id)); } catch (e) { seen = true; }

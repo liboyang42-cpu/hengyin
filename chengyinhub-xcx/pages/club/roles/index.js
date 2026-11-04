@@ -433,6 +433,8 @@ Page({
         delete that._roleRequestIds[intentKey]
         clearRequestIntent(intentKey)
         toast.success('角色已分配')
+        // 第十轮 f3 第 4 项(j2 F-21):分配成功后清空成员与角色选择,下一次分配从空表单开始。
+        that.setData({ selectedMemberId: null, selectedMemberName: '', selectedRoleCode: '', selectedRoleName: '', customerPhoneVisible: false })
         that.loadRoleData(that._loadCycle)
       },
       fail() { that.setData({ actingKey: '' }); toast('网络异常，请重试') },

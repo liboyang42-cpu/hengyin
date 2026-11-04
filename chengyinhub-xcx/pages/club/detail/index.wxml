@@ -347,7 +347,7 @@
 
         <view class="governance-actions">
           <view class="governance-action" bindtap="goClubAppeal" aria-role="button" aria-label="进入俱乐部封禁申诉" hover-class="cy-pressed" hover-stay-time="80">封禁申诉</view>
-          <view wx:if="{{canSeeMembers}}" class="governance-action governance-action--warning" catchtap="reportClub"
+          <view wx:if="{{canSeeMembers && !club.isOwner}}" class="governance-action governance-action--warning" catchtap="reportClub"
             aria-role="button" aria-label="向平台举报本俱乐部" hover-class="cy-pressed" hover-stay-time="80">举报俱乐部</view>
         </view>
       </view>
