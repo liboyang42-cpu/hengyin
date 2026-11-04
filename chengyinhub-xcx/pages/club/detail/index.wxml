@@ -151,7 +151,7 @@
         </view>
       </block>
       <!-- E-09:失败不能渲染成「还没有帖子」——错误态给重试,空态只在成功且真的为空时出 -->
-      <cy-error load-failure wx:elif="{{postsError}}" size="sm" title="帖子加载失败" sub="{{postsError}}" retry="重试" bind:retry="loadPosts" />
+      <cy-error load-failure wx:elif="{{postsError}}" size="sm" title="帖文加载失败" sub="{{postsError}}" retry="重试" bind:retry="loadPosts" />
       <cy-empty wx:elif="{{postsLoaded}}" title="暂无帖文" sub="{{canSeeMembers ? '' : '入会后可发布'}}" />
     </view>
 

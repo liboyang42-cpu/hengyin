@@ -80,7 +80,7 @@ const OWNER_STAGE_COPY = {
 const LEAD_STAGE_STATIONS = ['发布主题', '邀请商家', '等待商家回应', '商家已接受'];
 const LEAD_STAGE_INDEX = { publish: 0, invite: 1, pending: 2, accepted: 3 };
 const PUBLIC_TABS = [
-  { key: 'posts', label: '帖子' },
+  { key: 'posts', label: '帖文' },
   { key: 'events', label: '活动' },
   { key: 'overview', label: '概览' },
 ];
@@ -1851,7 +1851,7 @@ Page({
         if (epoch !== that._postsEpoch) return;
         // E-09(2026-09-16):失败原来是 rows=[] → 渲染成「还没有帖子」(把「不知道」说成「没有」)。
         if (res.code != '200' || !Array.isArray(res.data)) {
-          that.setData({ postsLoaded: true, postsError: bizFailureMessage(res, '帖子加载失败') });
+          that.setData({ postsLoaded: true, postsError: bizFailureMessage(res, '帖文加载失败') });
           return;
         }
         const posts = clubPostRepost.mapClubFeedRows(res.data, function (p) {
@@ -1859,7 +1859,7 @@ Page({
         });
         pageMotion.enter(that, 'pmPosts', { once: true }); that._postsHasMore = unpinnedClubPosts(res.data).length >= limit; that.setData({ posts: posts, pinnedNotices: clubPinnedNotice.pick(posts, that.data.clubId), postsLoaded: true, postsError: '' }, function () { that.scrollToRequestedPost(); });
       },
-      fail() { if (epoch === that._postsEpoch) that.setData({ postsLoaded: true, postsError: '网络异常，帖子加载失败' }); },
+      fail() { if (epoch === that._postsEpoch) that.setData({ postsLoaded: true, postsError: '网络异常，帖文加载失败' }); },
     });
   },
 
@@ -1876,7 +1876,7 @@ Page({
       success(res) {
         if (epoch !== that._postsEpoch) return;
         that._postsMoreEpoch = null;
-        if (res.code != '200' || !Array.isArray(res.data)) { cyToast(bizFailureMessage(res, '更早的帖子没能加载出来')); return; }
+        if (res.code != '200' || !Array.isArray(res.data)) { cyToast(bizFailureMessage(res, '更早的帖文没能加载出来')); return; }
         const seen = {};
         (that.data.posts || []).forEach(function (p) { seen[p.feedKey || String(p.id)] = true; });
         const rows = res.data.filter(function (p) { return p && (p.itemType === 'repost' || unpinnedClubPosts([p]).length); });
@@ -1889,7 +1889,7 @@ Page({
       fail() {
         if (epoch !== that._postsEpoch) return;
         that._postsMoreEpoch = null;
-        cyToast('更早的帖子没能加载出来');
+        cyToast('更早的帖文没能加载出来');
       },
     });
   },
@@ -2597,7 +2597,7 @@ Page({
     const items = [];
     items.push(Number(c.memberPostAllowed) === 0
       ? { key: 'posts', icon: 'comment', title: '看大家的动态', sub: '' }
-      : { key: 'posts', icon: 'comment', title: '发帖和大家聊', sub: '' });
+      : { key: 'posts', icon: 'comment', title: '发帖文和大家聊', sub: '' });
     // 第十轮 f3 第 5 项(j2 F-24):每条的说明行撤掉,只留标题;副行只放本团真实设置(成员优先、成员价)和商家不能报名这条规则。
     if (this.data.isMerchantViewer) {
       items.push({ key: 'events', icon: 'calendar', title: '看看俱乐部的局', sub: '商家身份不能报名' });
