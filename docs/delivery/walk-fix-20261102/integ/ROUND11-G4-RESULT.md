@@ -108,9 +108,19 @@ Branch `integ/launch-test-20261103`. My commits: `746e5efd` (item 4, F19 font), 
   - my new tests 4/4 and 5/5, and `story-font-loader` 7/7.
 - No backend change, no migration, no `@Test` added to a gated suite.
 - Secrets: grep of my diff for keys and tokens found nothing.
-- **CI** on `c02d461a` (contains all my code):
+- **CI.** The runs on `c02d461a` were cancelled by my docs push. The runs on `c3605a27` (contains all my work):
   - Mini followup focused regression: success.
-  - GitHub CI and Funds MySQL IT: still running when I wrote this.
-  - Isolated authenticated Redis recovery: failure. It also failed on the two commits before mine (`aacd393c`, `14a4e674`), so it is not from this lane.
+  - Funds MySQL IT: success.
+  - Isolated authenticated Redis recovery: failure. It failed the same way on the two commits before mine.
+  - GitHub CI: failure, in four jobs, none from this lane's files:
+    - Mini program static gates:
+      - U6 bare error text in `pages/topic/components/cy/session-picker/index.wxml:26` (`ticketsError`);
+      - the orphan-unit gate at `subpackageP3/pages/growthcenter/index/index.wxml:29` (`{{me.rank}}名`);
+      - the dead-field gate at `pages/topic/merchantinfo/merchantinfo.js:459` (`hostMerchants`).
+      - I re-ran the last two locally and they name only those files.
+    - Backend tests: `CityDirectorConsoleMySqlIT` 3 failures (the roster includes member 10). I changed no Java.
+    - Migration safety gate: 「无法验证共享 migration 台账执行序: SQL inventory is unsafe」. I added no migration.
+    - Mini program static checks: aggregate of the above.
+  - So there is no fully green CI on a commit with my work. The reds belong to the lanes that own those files.
 
-STATUS: PARTIAL - blocker found and not fixed (any theme with 结果反馈 stops at sys.hp; needs a design decision); D20/相册, photo-check fallback and led-session wait screen not walked; items 3 (except F15), 6 and 7 not done; full CI on c02d461a not yet confirmed green
+STATUS: PARTIAL - blocker found and not fixed (any theme with 结果反馈 stops at sys.hp; needs a design decision); D20/相册, photo-check fallback and led-session wait screen not walked; items 3 (except F15), 6 and 7 not done; CI on c3605a27 red in other lanes' gates (session-picker, growthcenter, merchantinfo, CityDirectorConsoleMySqlIT, migration ledger), none from this lane
