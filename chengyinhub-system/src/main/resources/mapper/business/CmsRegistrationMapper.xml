@@ -279,6 +279,15 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         order by id
     </select>
 
+    <!-- check-1104 j1 F7:取消确认显示退回金额只对单票单成立(多票单整单退,从单不带现金);一次查完整页。 -->
+    <select id="countByParentOrderNos" resultType="java.util.HashMap">
+        select parent_order_no as parentOrderNo, count(*) as cnt
+        from cms_registration
+        where parent_order_no in
+        <foreach item="no" collection="parentOrderNos" open="(" separator="," close=")">#{no}</foreach>
+        group by parent_order_no
+    </select>
+
     <select id="selectByParentOrderNoForUpdate" resultMap="CmsRegistrationResult">
         <include refid="selectCmsRegistrationVo"/>
         where parent_order_no = #{parentOrderNo}

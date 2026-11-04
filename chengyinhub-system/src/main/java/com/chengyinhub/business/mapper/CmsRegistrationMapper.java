@@ -233,6 +233,10 @@ public interface CmsRegistrationMapper
      */
     public List<CmsRegistration> selectByParentOrderNo(@Param("parentOrderNo") String parentOrderNo);
 
+    /** 订单详情/列表只读:每个父订单号下有几张报名(一张 = 单票单,可按本行现金算取消退回额)。 */
+    public List<java.util.Map<String, Object>> countByParentOrderNos(
+            @Param("parentOrderNos") java.util.Collection<String> parentOrderNos);
+
     /**
      * 活动取消冻结同一父订单当前全量报名状态，避免核销/支付并发改变人工退款资格快照。
      * SQL 不预过滤 owner/activity；调用方必须在锁后逐行校验范围，避免异常行被过滤成假绿。

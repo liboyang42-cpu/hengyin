@@ -30,6 +30,7 @@ class RegistrationCancelRefundAmountTest {
     private static final long HOUR = 3600_000L;
 
     private com.chengyinhub.business.service.IMmsMerchantService shops;
+    private com.chengyinhub.business.mapper.CmsRegistrationMapper registrationMapper;
     private Long activityOwner;
 
     private CmsRegistration detail(long startsInMs, String wechatCash, String parentOrderNo) {
@@ -60,6 +61,9 @@ class RegistrationCancelRefundAmountTest {
         ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "refundService", mock(IRefundService.class));
         ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "cancellationReadService",
                 mock(com.chengyinhub.business.service.support.RegistrationCancellationReadService.class));
+        if (registrationMapper != null) {
+            ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "cmsRegistrationMapper", registrationMapper);
+        }
         if (shops != null) {
             ReflectionTestUtils.setField(RegistrationQueryTestFixtures.application(controller), "mmsMerchantService", shops);
         }
@@ -98,5 +102,18 @@ class RegistrationCancelRefundAmountTest {
         when(shops.selectMmsMerchantByMemberId(990005L)).thenReturn(shop);
         activityOwner = 990005L;
         assertEquals("梧桐里书房", detail(72 * HOUR, "39.00", null).getOrganizerName());
+    }
+
+    /** rig 2026-11-04:新下单路径单票也带 parent_order_no。父单下只有这一张 = 单票单,照样给金额;多张不推算。 */
+    @Test
+    void singleTicketOrderWithParentOrderNoStillShowsAmount() {
+        registrationMapper = mock(com.chengyinhub.business.mapper.CmsRegistrationMapper.class);
+        java.util.Map<String, Object> one = new java.util.HashMap<>();
+        one.put("parentOrderNo", "P1");
+        one.put("cnt", 1L);
+        when(registrationMapper.countByParentOrderNos(org.mockito.ArgumentMatchers.any())).thenReturn(java.util.List.of(one));
+        assertEquals(new BigDecimal("19.50"), detail(12 * HOUR, "39.00", "P1").getCancelRefundAmount());
+        one.put("cnt", 2L);
+        assertNull(detail(12 * HOUR, "39.00", "P1").getCancelRefundAmount(), "多票单整单退,不在读侧推算");
     }
 }

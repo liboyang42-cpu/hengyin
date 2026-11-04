@@ -42,6 +42,8 @@ public class RegistrationQueryApplication {
     private IRefundService refundService;
     @Autowired
     private com.chengyinhub.business.service.support.RegistrationCancellationReadService cancellationReadService;
+    @Autowired(required = false)
+    private com.chengyinhub.business.mapper.CmsRegistrationMapper cmsRegistrationMapper;
     @Autowired
     private ICmsTopicService topicService;
     @Autowired
@@ -199,6 +201,7 @@ public class RegistrationQueryApplication {
             attachOrganizer(registration);
             attachTopicCompleted(registration);
             attachManualRefundInfo(registration);
+            attachSoleTicketCancelAmounts(java.util.Collections.singletonList(registration));
             registration.setRefundApplication(latestRegistrationRefund(registration.getId(), memberId));
             // 订单详情展示 enrich:脱敏手机号 / 支付方式文案 / 退款截止文案 / 权益章节名
             com.chengyinhub.business.util.RegistrationDetailDisplay.enrich(registration, topicChapterService);
@@ -427,6 +430,7 @@ public class RegistrationQueryApplication {
         // 本接口就是「我的订单」账本,客户端七态 Tab 里的「已完成 / 已退款 / 不可退款」天生指结束过的单;
         // 按 owner.end_date 隐藏结束超 7 天的单,会让这些 Tab 恒空 —— 真实商家号(有已支付订单)打开看到整屏空列表。
         // 7 天视觉收纳只为「我参与中」(myJoined,进行中 Tab)保留,那条链路独立调用该 helper。
+        attachSoleTicketCancelAmounts(list);
         stampServerNow(list);
         return AjaxResult.success(list);
     }
@@ -463,6 +467,7 @@ public class RegistrationQueryApplication {
         for (CmsRegistration reg : all) { attachExploreProgress(reg); attachTopicCompleted(reg); }
         all = filterEndedOverWeek(all, new Date());
         all.sort((a, b) -> b.getCreateTime().compareTo(a.getCreateTime()));
+        attachSoleTicketCancelAmounts(all);
         stampServerNow(all);
         return AjaxResult.success(all);
     }
@@ -671,12 +676,43 @@ public class RegistrationQueryApplication {
         registration.setRefundInfo(verdict);
         // check-1104 j1 F7:取消确认里给出这一单此刻能退回多少。只算单张单(多票父单的现金挂在首单,
         // 从单金额不代表整单);现金快照未知时不推算,页面只讲规则。
+        // 新下单路径单票也带 parent_order_no(rig 2026-11-04 实测),父单号非空的由 attachSoleTicketCancelAmounts 按整页一次查张数补。
+        registration.setCancelRefundAmount(StringUtils.isEmpty(registration.getParentOrderNo())
+                ? cancelCash(registration, verdict) : null);
+    }
+
+    private static java.math.BigDecimal cancelCash(CmsRegistration registration,
+                                                   com.chengyinhub.business.util.RefundPolicy.Verdict verdict) {
         java.math.BigDecimal wechatCash = registration.getWechatPaymentAmount();
-        registration.setCancelRefundAmount(verdict != null && verdict.refundable && !verdict.manualReview
-                && StringUtils.isEmpty(registration.getParentOrderNo())
+        return verdict != null && verdict.refundable && !verdict.manualReview
                 && Integer.valueOf(2).equals(registration.getPaymentStatus())
                 && wechatCash != null && wechatCash.signum() > 0
-                ? com.chengyinhub.business.util.RefundPolicy.applyCashRatio(wechatCash, verdict.ratio) : null);
+                ? com.chengyinhub.business.util.RefundPolicy.applyCashRatio(wechatCash, verdict.ratio) : null;
+    }
+
+    /**
+     * 父单号下只有这一张报名 = 单票单:取消退回额 = 本行现金 × 档位比例(与 TeamGroupServiceImpl 整单退一致)。
+     * 多票单整单退、现金只挂首单且可能已有同单退款,不在读侧推算,页面只讲规则。整页一次 group by,不逐行查。
+     */
+    private void attachSoleTicketCancelAmounts(List<CmsRegistration> rows) {
+        if (rows == null || cmsRegistrationMapper == null) return;
+        java.util.Set<String> parents = new java.util.HashSet<>();
+        for (CmsRegistration row : rows) {
+            if (row != null && StringUtils.isNotEmpty(row.getParentOrderNo())
+                    && cancelCash(row, row.getRefundInfo()) != null) parents.add(row.getParentOrderNo());
+        }
+        if (parents.isEmpty()) return;
+        java.util.Map<String, Long> counts = new java.util.HashMap<>();
+        for (java.util.Map<String, Object> c : cmsRegistrationMapper.countByParentOrderNos(parents)) {
+            Object no = c.get("parentOrderNo"), cnt = c.get("cnt");
+            if (no != null && cnt instanceof Number) counts.put(String.valueOf(no), ((Number) cnt).longValue());
+        }
+        for (CmsRegistration row : rows) {
+            if (row != null && StringUtils.isNotEmpty(row.getParentOrderNo())
+                    && Long.valueOf(1L).equals(counts.get(row.getParentOrderNo()))) {
+                row.setCancelRefundAmount(cancelCash(row, row.getRefundInfo()));
+            }
+        }
     }
 
     private void attachManualRefundInfo(CmsRegistration registration) {
