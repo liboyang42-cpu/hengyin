@@ -868,8 +868,13 @@ cy-proto-cam{ position:fixed; left:0; right:0; top:0; bottom:0; z-index:58; poin
 .pois .poi__dist{ margin-top:12rpx; font-size:24rpx; color:var(--cy-color-text-secondary); }
 .pois .poi__go{ background:var(--cy-color-text-primary); color:var(--cy-color-play-surface-solid); }
 .pois .poi__face{ border-color:var(--cy-color-play-surface-solid); }
-.pois .poi__more{ color:var(--cy-color-text-secondary); } /* ds-ok 与读数卡同一档:原型说「读数卡让位给横滑条」 */
-.pois__dots{ bottom:calc(250rpx + 265rpx + 15rpx + env(safe-area-inset-bottom)); } /* ds-ok 卡高 138px + 8px 缝 */
+.pois .poi__more{ color:var(--cy-color-text-secondary); }
+/* 只剩名字、距离、动作:卡高 265 → 200rpx,不留空的下半截;计数点跟着下移 */
+.pois{ height:200rpx; }
+.pois .poi{ height:200rpx; padding:24rpx 27rpx; }
+.pois .poi__main{ width:auto; flex:1; }
+.pois .poi__im{ flex:none; width:152rpx; height:152rpx; border-radius:var(--cy-radius-md); }
+.pois__dots{ bottom:calc(250rpx + 200rpx + 15rpx + env(safe-area-inset-bottom)); } /* ds-ok 卡高 200rpx + 8px 缝 */
 
 /* ══ 多人 · 谁点亮了哪块(原型 f-multi 的 topcard + terrlist)══ 1px = 1.923rpx。 */
 .pc-copy{ flex:1; min-width:0; }
