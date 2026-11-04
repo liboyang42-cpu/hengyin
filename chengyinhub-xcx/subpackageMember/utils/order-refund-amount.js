@@ -6,10 +6,14 @@ function positive(value) {
   return value != null && value !== '' && Number.isFinite(n) && n > 0 ? n.toFixed(2) : null;
 }
 
-/** 取消确认里 {deadline} 那一句:有金额时在规则前写明这次退回多少。 */
-function cancelConfirmDeadline(info) {
+/**
+ * 取消确认里 {deadline} 那一句:有金额时在规则前写明这次退回多少。
+ * rule 不传 = 订单详情/参与详情的 refundDeadlineDisplay;订单列表传它自己的规则句。
+ * 列表与详情的 cancelRefundAmount 都来自后端 attachRefundVerdict(列表随行下发,不逐行补查)。
+ */
+function cancelConfirmDeadline(info, rule) {
   const value = info || {};
-  const rule = value.refundDeadlineDisplay || '已核销或已过开始时间不可退';
+  rule = rule || value.refundDeadlineDisplay || '已核销或已过开始时间不可退';
   const amount = positive(value.cancelRefundAmount);
   return amount ? '本次取消将原路退回 ¥' + amount + '，' + rule : rule;
 }

@@ -18,6 +18,7 @@ const app = getApp()
 const policy = require('../../../../utils/identity/identity-policy.js')
 const { summarizeOrderState, canRequestOrderRefund, formatRefundDeadline } = require('../../../../utils/order-status.js')
 const { resolveActualPaidAmount, isFreeOrder } = require('../../../../utils/order-actual-pay.js')
+const refundAmount = require('../../../utils/order-refund-amount.js')
 const { createCheckoutWorkflow, hasCompletePaymentParams, isCompletedZeroAmountOrder } = require('../../../../utils/checkout/checkout-workflow.js')
 const { createRegistrationPaymentVerifier } = require('../../../../utils/checkout/registration-payment-verifier.js')
 
@@ -344,7 +345,7 @@ Component({
       that._finishCancelPrompt = finishCancelPrompt
       modal.show({
         dangerKey: status === 2 ? (isFreeOrder(that.data.list[index]) ? 'order.cancel-free' : 'order.cancel-refund') : 'order.cancel',   // 三段式文案在 utils/danger-actions.js
-        dangerParams: { deadline: refundDeadlineText(that.data.list[index]) },
+        dangerParams: { deadline: refundAmount.cancelConfirmDeadline(that.data.list[index], refundDeadlineText(that.data.list[index])) },
         success(res) {
           if (!finishCancelPrompt() || !isCurrent()) return
           if (res.confirm) {

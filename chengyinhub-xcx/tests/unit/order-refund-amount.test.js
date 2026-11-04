@@ -34,3 +34,15 @@ test('订单详情接线:取消确认用这份文案,支付明细出「退款」
   assert.match(js, /info\.refundAmountShown = refundAmount\.refundedAmount\(info\)/);
   assert.match(wxml, /wx:if="\{\{info\.refundAmountShown\}\}"[\s\S]*?退款[\s\S]*?money\.amount\(info\.refundAmountShown\)/);
 });
+
+test('订单列表与参与详情的取消确认同样写明退回金额(第十轮 f1 F7 补全)', () => {
+  // 列表行的 cancelRefundAmount 由后端列表同一处 attachRefundVerdict 随行下发,前端不逐行补查
+  assert.strictEqual(view.cancelConfirmDeadline({ cancelRefundAmount: '19.50' }, '集合前 24 小时内取消,退实付的 50%'),
+    '本次取消将原路退回 ¥19.50，集合前 24 小时内取消,退实付的 50%');
+  assert.strictEqual(view.cancelConfirmDeadline({}, '退款规则以提交后的平台判定为准'), '退款规则以提交后的平台判定为准');
+  const list = fs.readFileSync(path.join(__dirname, '../../subpackageMember/components/cy/scene-member-order-history/index.js'), 'utf8');
+  assert.match(list, /deadline: refundAmount\.cancelConfirmDeadline\(that\.data\.list\[index\], refundDeadlineText\(that\.data\.list\[index\]\)\)/);
+  assert.doesNotMatch(list, /\/api\/registration\/info/, '列表不逐行补查详情');
+  const participation = fs.readFileSync(path.join(__dirname, '../../subpackageMember/components/scene-member-participation-detail/index.js'), 'utf8');
+  assert.match(participation, /deadline: require\('\.\.\/\.\.\/utils\/order-refund-amount\.js'\)\.cancelConfirmDeadline\(this\.data\.info\)/);
+});

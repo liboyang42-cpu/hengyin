@@ -572,7 +572,8 @@ Component({
         // F-W5-07:零元单没有钱可退,确认框与订单详情/列表同用「取消报名」文案。
         dangerKey: paid ? (isFreeOrder(this.data.info) ? 'order.cancel-free' : 'order.cancel-refund') : 'order.cancel',
         dangerParams: {
-          deadline: (this.data.info || {}).refundDeadlineDisplay || '已核销或已过开始时间不可退',
+          // j1 F7:/api/registration/info 下发 cancelRefundAmount,确认框写明这次退回多少
+          deadline: require('../../utils/order-refund-amount.js').cancelConfirmDeadline(this.data.info),
         },
         success: (res) => {
           if (!finishCancelPrompt() || !isCurrent() || !res.confirm) return;
