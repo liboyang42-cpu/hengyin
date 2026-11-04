@@ -843,7 +843,7 @@ public class ApiActivityController extends BaseController {
             safety.setContentType(com.chengyinhub.business.domain.AuditTask.BIZ_ACTIVITY);
             safety.setMemberId(publisher.ownerMemberId());
             safety.setOpenid(secOpenid);
-            safety.setText(IWxContentSecurityService.joinText(request.getName(), request.getDescription()));
+            safety.setText(activitySafetyText(request));
             safety.setHasPrice(activityReviewPolicy.hasCharge(request));
             safety.setHasSignup(true);
             safety.setMediaUrls(safetyMedia(request.getImgUrl(), request.getImgArr()));
@@ -972,7 +972,7 @@ public class ApiActivityController extends BaseController {
             safety.setContentType(com.chengyinhub.business.domain.AuditTask.BIZ_ACTIVITY);
             safety.setMemberId(publisher.ownerMemberId());
             safety.setOpenid(resolveOpenid(memberId));
-            safety.setText(IWxContentSecurityService.joinText(request.getName(), request.getDescription()));
+            safety.setText(activitySafetyText(request));
             safety.setHasPrice(activityReviewPolicy.hasCharge(request));
             safety.setHasSignup(true);
             safety.setMediaUrls(safetyMedia(request.getImgUrl(), request.getImgArr()));
@@ -1057,6 +1057,28 @@ public class ApiActivityController extends BaseController {
     }
 
     /** Round5C:机审没结论的待审活动进自动复检(通过自动上架;先审的业务审批仍留人工)。 */
+    /**
+     * 活动送门禁的玩家可见文字:名称、简介、场地名与地址、各票种的名称/说明/集合点/退款说明。
+     * check-1104 j5 B2:原先只送名称+简介,场地与票种文字先发后审模式下不经机审直接公开;
+     * 口径与主题票种(ApiTopicController.combinedThemeReviewTexts)一致。
+     */
+    static String activitySafetyText(CmsActivityPublishRequest request) {
+        java.util.List<String> parts = new java.util.ArrayList<String>();
+        parts.add(request.getName());
+        parts.add(request.getDescription());
+        parts.add(request.getAddressName());
+        parts.add(request.getAddress());
+        if (request.getTickets() != null) for (com.chengyinhub.business.domain.dto.ActivityTicketRequest ticket : request.getTickets()) {
+            if (ticket == null) continue;
+            parts.add(ticket.getName());
+            parts.add(ticket.getDescription());
+            parts.add(ticket.getMeetingPoint());
+            parts.add(ticket.getMeetingPointAddress());
+            parts.add(ticket.getRefundRule());
+        }
+        return IWxContentSecurityService.joinText(parts.toArray(new String[0]));
+    }
+
     private void enqueueRecheck(SafetyDecision decision, PublishSafetyRequest safety, Long activityId) {
         if (recheckService == null || activityId == null
                 || !com.chengyinhub.business.service.IContentSafetyRecheckService.needsRecheck(decision)) return;
