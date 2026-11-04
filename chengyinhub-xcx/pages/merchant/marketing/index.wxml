@@ -125,7 +125,7 @@
           <text class="deck-sub">{{couponCard.sub}}</text>
         </view>
       </view>
-      <cy-empty wx:else title="还没有优惠券" sub="发一张到店券，把看过的人带进门" />
+      <cy-empty wx:else title="还没有优惠券" />
     </view>
 
     <!-- 商家合作的唯一入口:商机与定向邀约都在合作中心处理。
