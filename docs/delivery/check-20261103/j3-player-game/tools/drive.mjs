@@ -11,7 +11,7 @@ await run(Object.assign({ agree: true }, opts), async (w) => {
       if (k === 'tap') await w.tap(v);
       else if (k === 'tapx') await w.tap(v, { exact: true });
       else if (k === 'tapn') { const [t, n] = v.split('|'); await w.tap(t, { nth: +n }); }
-      else if (k === 'sel') await w.tapSel(v);
+      else if (k === 'sel') { const h = await w.page.$('pierce/' + v); if (h) { await h.evaluate((el) => el.scrollIntoView({ block: 'center' })); await S(400); } await w.tapSel(v); }
       else if (k === 'shot') await w.shot(v);
       else if (k === 'say') await w.say(v);
       else if (k === 'wait') await S(+v);
@@ -39,7 +39,34 @@ await run(Object.assign({ agree: true }, opts), async (w) => {
           if (cur[pos] !== want[pos]) { await w.tap(cur[pos], { exact: true }); await S(500); await w.tap(want[pos], { exact: true }); await S(800); }
         }
       }
-      else if (k === 'route')console.log('ROUTENOW', JSON.stringify(await w.route()));
+      else if (k === 'react') {
+        const log = [];
+        for (let i = 0; i < 80; i++) {
+          const st = await w.page.evaluate(() => { let r = null; (function wk(root) { for (const el of root.querySelectorAll('*')) { if (el.shadowRoot) wk(el.shadowRoot); if (el.classList && el.classList.contains('rx') && el.getBoundingClientRect().height > 0) r = el; } })(document); if (!r) return null; const b = r.getBoundingClientRect(); const m = r.className.match(/rx--(\w+)/); return { ph: m ? m[1] : '?', x: b.left + b.width / 2, y: b.top + b.height / 2 }; });
+          if (!st) break; log.push(st.ph);
+          if (st.ph === 'done') break;
+          if (st.ph === 'idle' || st.ph === 'early') { await w.page.mouse.click(st.x, st.y); await S(300); }
+          else if (st.ph === 'go') { await S(260); await w.page.mouse.click(st.x, st.y); await S(300); }
+          else await S(120);
+        }
+        console.log('REACT', log.join(',').slice(0, 400));
+      }
+      else if (k === 'hold') {
+        const [t, ms] = v.split('|');
+        const pt = await w.page.evaluate((tt) => { let r = null; (function walk(root) { for (const el of root.querySelectorAll('*')) { if (el.shadowRoot) walk(el.shadowRoot); let own = ''; for (const n of el.childNodes) if (n.nodeType === 3) own += n.data; if (own.trim() === tt) { const b = el.getBoundingClientRect(); if (b.height > 0) r = { x: b.left + b.width / 2, y: b.top + b.height / 2 }; } } })(document); return r; }, t);
+        if (!pt) throw new Error('hold: no ' + t);
+        await w.page.mouse.move(pt.x, pt.y); await w.page.mouse.down(); await S(+ms || 3000); await w.page.mouse.up(); await S(800);
+      }
+      else if (k === 'drag') {
+        const [x1, y1, x2, y2, n] = v.split(',').map(Number);
+        for (let r = 0; r < (n || 1); r++) {
+          const yy = y1 + (y2 - y1) * r / Math.max(1, (n || 1) - 1);
+          await w.page.mouse.move(x1, yy); await w.page.mouse.down();
+          for (let s = 1; s <= 12; s++) await w.page.mouse.move(x1 + (x2 - x1) * s / 12, yy, { steps: 2 });
+          await w.page.mouse.up(); await S(80);
+        }
+      }
+      else if (k === 'route') console.log('ROUTENOW', JSON.stringify(await w.route()));
       else console.log('UNKNOWN', st);
       if (['tap', 'tapx', 'tapn', 'sel'].includes(k)) await S(1200);
     } catch (e) { console.log('MISS', st, e.message.slice(0, 120)); }
