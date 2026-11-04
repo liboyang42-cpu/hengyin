@@ -1,0 +1,1 @@
+[{"clear":1},{"wait":1500},{"clear":1},{"open":"/pages/topic/index/index?id=990014"},{"wait":4000},{"shot":"05-old-topic-detail"},{"scroll":900},{"wait":1500},{"shot":"06-old-topic-detail-info"},{"tapSel":".hero-cta"},{"wait":3500},{"eval":"window.MPWEB.net.slice(-5).map(x=>x.status+' '+String(x.url).replace(/^.*__api/,''))"},{"shot":"07-old-signup-sheet"},{"dump":1}]

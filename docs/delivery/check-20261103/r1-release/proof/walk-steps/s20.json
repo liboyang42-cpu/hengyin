@@ -1,0 +1,1 @@
+[{"clear":1},{"wait":1500},{"clear":1},{"open":"/subpackageMember/orderinfo/orderinfo?id=76"},{"wait":4000},{"route":1},{"shot":"15-old-order-detail-76"},{"dump":1}]

@@ -1,0 +1,1 @@
+[{"clear":1},{"wait":1500},{"clear":1},{"open":"/pages/topic/index/index?id=990014"},{"wait":4000},{"scroll":900},{"wait":1500},{"data":"heroCta"},{"eval":"(function(){var p=getCurrentPages().slice(-1)[0];p.onHeroCta();return 'ok'})()"},{"wait":6000},{"route":1},{"clear":1},{"shot":"16-old-play-start"},{"dump":1}]

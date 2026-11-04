@@ -1,0 +1,1 @@
+[{"clear":1},{"wait":1500},{"clear":1},{"open":"/pages/topic/index/index?id=990014"},{"wait":4000},{"scroll":900},{"wait":1500},{"eval":"(function(){var p=getCurrentPages().slice(-1)[0];p.onHeroCta();return p.data.sessionPicker})()"},{"wait":2000},{"shot":"07-old-session-picker"},{"tap":"11.14"},{"wait":1500},{"shot":"08-old-session-picked"},{"dump":1}]

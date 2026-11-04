@@ -1,0 +1,1 @@
+[{"clear":1},{"wait":1500},{"clear":1},{"open":"/pages/play/index?topicId=990014"},{"wait":7000},{"clear":1},{"route":1},{"shot":"16-old-play-open"},{"dump":1},{"eval":"window.MPWEB.net.slice(-14).map(x=>x.status+' '+String(x.url).replace(/^.*__api\\/api/,'').slice(0,60)+' '+String(x.resBody||'').slice(0,90))"}]
