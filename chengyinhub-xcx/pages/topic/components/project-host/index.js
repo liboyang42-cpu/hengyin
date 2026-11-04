@@ -1,6 +1,7 @@
 // 主办方「我发的这条路线」视图 —— 纯展示组件,与 project-join 同构。
 const circleTheme = require('../../utils/circle-theme.js');
 const projectProgress = require('../../utils/project-progress.js');
+const recruitSum = require('../../utils/recruit-summary.js');
 function openAddress() { return require('../../../../utils/open-address.js') }
 const FREE_STATUS = ['草稿', '招募中', '待定价', '售票中', '进行中', '结算中', '已关闭', '立项待审'];
 Component({
@@ -74,11 +75,12 @@ Component({
       if (show && !this._circleConfigOpen) this.resetCircleCandidates();
       this._circleConfigOpen = !!show;
     },
-    // 招商第三版站点行的汇总:已承接几站 / 还开着没人接几站
-    'recruitStations, ownerChapterApplications': function (rows, apps) {
-      const list = rows || [];
-      this.setData({ stationSum: { taken: list.filter((r) => r.state === 'taken').length, open: list.filter((r) => r.state === 'open').length,
-        pending: (apps || []).filter((a) => a && a.actionable).length } });
+    // 招商顶部三格:j2 F-09 起与下面的列表同一来源(数字 = 列表行数),见 utils/recruit-summary.js
+    'recruitStations, ownerChapterApplications, hostRecruit, regApplies, hostTopic, hostMerchants': function (rows, apps, recruit, applies, topic, merchants) {
+      this.setData({
+        stationSum: recruitSum.recruitSummary({ stations: rows, chapterApps: apps, recruit, applies, topic }),
+        confirmedMerchants: recruitSum.confirmedMerchants(merchants),
+      });
     },
     // 派生量放 observer 而不是让页面再多存两个字段:它们只有这个视图用得上
     'hostRecruit, clubSheet, hostTopic, hostPlayers': function (recruit, sheet, topic, players) {
@@ -110,7 +112,7 @@ Component({
     },
   },
   data: {
-    recruitDone: false, stationSum: { taken: 0, open: 0, pending: 0 }, clubCount: 0, clubAccepted: 0, hostProgress: [], needExecutorClub: false, showVerify: false, hostPrimary: { text: '', act: '', key: '', disabled: true }, topicStructure: '', anyDrawerOpen: false, hostStatusText: '状态待确认',
+    recruitDone: false, stationSum: { taken: 0, total: 0, open: 0, pending: 0 }, confirmedMerchants: [], clubCount: 0, clubAccepted: 0, hostProgress: [], needExecutorClub: false, showVerify: false, hostPrimary: { text: '', act: '', key: '', disabled: true }, topicStructure: '', anyDrawerOpen: false, hostStatusText: '状态待确认',
     circleCandidates: [], circleConfigHint: '',
     circleConfigActions: [{ key: 'submitCircleConfig', label: '保存供给角色' }],
   },

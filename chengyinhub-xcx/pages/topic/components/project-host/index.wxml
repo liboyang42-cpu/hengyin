@@ -239,9 +239,9 @@
     <!-- 走查 v2 R06(业主 2026-10-30):顶部三格;每一站用主题图、给「自己承接 / 招商」;收到的申请在弹窗里确认,不跳出主题 -->
     <view class="cs-sum">
       <!-- 2026-10-31 P-6:有站点行(自由探索每站一个档位)时按站点数;城市定向仍按节点 -->
-      <view class="cs-sum-i"><text class="cs-sum-n">{{ recruitStations.length ? stationSum.taken + '/' + recruitStations.length : hostRecruit.nodeFilled + '/' + hostRecruit.nodeTotal }}</text><text class="cs-sum-l">已招站点</text></view>
-      <view class="cs-sum-i"><text class="cs-sum-n">{{ recruitStations.length ? stationSum.pending : (hostRecruit.pendingCount || 0) }}</text><text class="cs-sum-l">待处理申请</text></view>
-      <view class="cs-sum-i"><text class="cs-sum-n">{{ recruitStations.length ? stationSum.open : hostRecruit.openNodes.length }}</text><text class="cs-sum-l">还没人接</text></view>
+      <view class="cs-sum-i"><text class="cs-sum-n">{{ stationSum.taken + '/' + stationSum.total }}</text><text class="cs-sum-l">已招站点</text></view>
+      <view class="cs-sum-i"><text class="cs-sum-n">{{ stationSum.pending }}</text><text class="cs-sum-l">待处理申请</text></view>
+      <view class="cs-sum-i"><text class="cs-sum-n">{{ stationSum.open }}</text><text class="cs-sum-l">还没人接</text></view>
     </view>
 
     <!-- 2026-10-31 业主批准 P-6 招商第三版:档位挂在每一站上(cms_topic_chapter.terms_mode),同一站所有商家条件相同;
@@ -338,10 +338,10 @@
       </view>
     </block>
 
-    <block wx:if="{{ hostMerchants.length }}">
+    <block wx:if="{{ confirmedMerchants.length }}">
       <view class="dg-label">已确认</view>
       <view class="dcard">
-      <view class="dr" wx:for="{{ hostMerchants }}" wx:key="registrationId">
+      <view class="dr" wx:for="{{ confirmedMerchants }}" wx:key="registrationId">
         <image class="dr-avatar" wx:if="{{ item.logo }}" src="{{ item.logo }}" mode="aspectFill" />
         <view class="dr-avatar dr-avatar--fallback" wx:else><cy-icon name="discover-shop" size="{{ 32 }}" /></view>
         <view class="dr-text">
@@ -376,7 +376,7 @@
     <!-- CU-M-181:原来这句写着「先去编辑里加站点」,但抽屉底部那颗按钮恒写「去找商家」,
          照着空态做找不到「编辑」,照按钮点又落进没有站点可承接的空页。空态只陈述前置条件,
          怎么补交给底部那颗按 nodeTotal 换出来的「去加站点」。 -->
-    <cy-empty wx:if="{{ !recruitStations.length && !hostMerchants.length && !hostRecruit.openNodes.length }}" title="这条路线还没有配置节点" sub="先把节点配好，商家才有可承接的站。" />
+    <cy-empty wx:if="{{ !recruitStations.length && !confirmedMerchants.length && !hostRecruit.openNodes.length }}" title="这条路线还没有配置节点" sub="先把节点配好，商家才有可承接的站。" />
   </project-drawer>
 
   <!-- ===== 圈层供给角色抽屉(BL-183) ===== -->
