@@ -388,9 +388,10 @@ page {
   opacity: 0.35;
 }
 
+/* 第十轮 f4(f1 遗留):页内底栏实高 ≈ 16 + 88 + 16rpx + 安全区 = 120rpx + 安全区,原来的 120rpx 垫底
+ * 刚好与底栏等高,滚到底项目卡下沿就贴在底栏渐变里,看着被盖住一截。与玩家首页 .v3-scroll-pad 同口径留一档间距。 */
 .rv-scroll-pad {
-  height: calc(120rpx + constant(safe-area-inset-bottom));
-  height: calc(120rpx + env(safe-area-inset-bottom));
+  height: calc(var(--cy-tabbar-h) + var(--cy-space-6));
 }
 
 .rv-tap {
