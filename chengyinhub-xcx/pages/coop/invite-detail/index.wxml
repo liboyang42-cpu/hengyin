@@ -8,6 +8,7 @@
      要翻就整域一起翻。theme-merchant 重映射的是同名 token,所以下面的样式与暗色版一致。 -->
 <view class="coop-detail theme-merchant">
   <cy-toast id="cy-toast" />
+  <cy-access-gate kind="login" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
   <!-- E-01(2026-09-16 P0):去掉页面级 cy-access-gate kind="merchant"。

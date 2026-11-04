@@ -10,7 +10,8 @@
     "cy-icon": "/components/cy/icon/index",
     "cy-toast": "/components/cy/toast/index",
     "cy-modal-host": "/components/cy/modal-host/index",
-    "cy-inline-error": "/components/cy/inline-error/index"
+    "cy-inline-error": "/components/cy/inline-error/index",
+    "cy-access-gate": "/components/cy/access-gate/index"
   },
   "navigationStyle": "custom",
   "enablePullDownRefresh": true

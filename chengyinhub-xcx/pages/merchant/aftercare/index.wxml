@@ -1,5 +1,6 @@
 <view class="acl-page theme-merchant" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
   <cy-toast id="cy-toast" />
+  <cy-access-gate kind="login" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
   <!-- 2026-09-17 用户裁决:结构照 Revolut Business 316-318(左对齐大标题 + 文字标签 + 搜索 + 按日分组行),颜色走商家主题。 -->

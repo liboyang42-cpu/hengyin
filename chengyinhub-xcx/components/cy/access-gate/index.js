@@ -5,7 +5,7 @@ const { decideMerchantGate, decideClubGate } = require('../../../utils/access-ga
 // 页面级守卫:读 access/me,没权限就整屏盖住,弹 fail 半屏讲原因,2s 自动出去;state 事件报给页面。
 Component({
   properties: {
-    kind: { type: String, value: 'merchant' },   // merchant | club
+    kind: { type: String, value: 'merchant' },   // merchant | club | login(只要求已登录,不读 access/me)
     need: { type: String, value: '' },           // merchant: canXxx 字段名;club: club:xxx 权限串
     clubId: { type: null, value: '' },
     activityId: { type: null, value: '' },
@@ -21,7 +21,7 @@ Component({
       this._page = pages[pages.length - 1];
       const g = app.globalData || {};
       this.setData({ top: (g.statusBarHeight || 0) + (g.navBarHeight || 0) });
-      if (this.data.kind === 'merchant') this.check();
+      if (this.data.kind !== 'club') this.check();
     },
   },
   pageLifetimes: {
@@ -31,11 +31,13 @@ Component({
   methods: {
     check() {
       const kind = this.data.kind;
-      if (kind === 'club' && !this.data.clubId && !this.data.activityId) return;   // 还没拿到范围,等 observer
       const owner = String(app.getUserID && app.getUserID() || '');
       const epoch = (this._epoch || 0) + 1;
       this._epoch = epoch;
-      if (!owner || owner === '0') { this.setData({ state: 'login', reason: '登录后才能确认当前账号的查看权限', _sheet: false }); return; }
+      // 第十轮 f3(j6 F3):游客先给登录,不等范围参数 —— 否则缺 clubId 的俱乐部页对游客整屏空白。
+      if (!owner || owner === '0') { this.setData({ state: 'login', reason: '', _sheet: false }); return; }
+      if (kind === 'login') { this.setData({ state: 'allow' }); return; }
+      if (kind === 'club' && !this.data.clubId && !this.data.activityId) return;   // 还没拿到范围,等 observer
       const that = this;
       const settle = (decision) => {
         if (that._detached || epoch !== that._epoch || owner !== String(app.getUserID && app.getUserID() || '')) return;
@@ -98,7 +100,13 @@ Component({
         : typeof app.firstLogin === 'function' ? app.firstLogin() : null;
       Promise.resolve(login).then(result => {
         this._loginPending = false;
-        if (!this._detached && app.getUserID && app.getUserID() && !(result && result.ok === false)) this.check();
+        if (this._detached || !(app.getUserID && app.getUserID()) || (result && result.ok === false)) return;
+        // 页面自己的读请求在游客态已被 401 拒掉:登录后原地重开本页,带原参数重读,而不是只揭掉盖层。
+        const page = this._page || {};
+        const opts = page.options || {};
+        const query = Object.keys(opts).map(k => k + '=' + encodeURIComponent(opts[k])).join('&');
+        if (page.route) wx.redirectTo({ url: '/' + page.route + (query ? '?' + query : ''), fail: () => this.check() });
+        else this.check();
       }).catch(() => { this._loginPending = false; });
     },
     onExit() {

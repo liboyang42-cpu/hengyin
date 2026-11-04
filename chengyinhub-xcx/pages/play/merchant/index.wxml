@@ -1,6 +1,7 @@
 <wxs src="../../../utils/wxs/img.wxs" module="img" />
 <view class="mp">
   <cy-toast id="cy-toast" />
+  <cy-access-gate kind="login" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
   <cy-error class="mp-empty" wx:if="{{notFound}}" load-failure="{{true}}" style="padding-top:{{statusBarHeight + 120}}px" />

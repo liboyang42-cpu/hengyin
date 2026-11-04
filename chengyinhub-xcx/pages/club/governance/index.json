@@ -11,7 +11,8 @@
     "cy-loading-mask": "/components/cy/loading-mask/index",
     "cy-modal-host": "/components/cy/modal-host/index",
     "cy-sheet": "/components/cy/sheet/index",
-    "cy-icon": "/components/cy/icon/index"
+    "cy-icon": "/components/cy/icon/index",
+    "cy-access-gate": "/components/cy/access-gate/index"
   },
   "enablePullDownRefresh": true
 }

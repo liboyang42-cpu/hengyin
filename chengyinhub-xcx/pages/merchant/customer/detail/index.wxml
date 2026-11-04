@@ -1,5 +1,6 @@
 <view class="cd-page theme-merchant m-flush-nav" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
   <cy-toast id="cy-toast" />
+  <cy-access-gate kind="login" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
   <cy-nav-bar plain custom-back bind:back="onNavBack" />

@@ -13,7 +13,8 @@
     "cy-loading-mask": "/components/cy/loading-mask/index",
     "cy-modal-host": "/components/cy/modal-host/index",
     "cy-sheet": "/components/cy/sheet/index",
-    "cy-inline-error": "/components/cy/inline-error/index"
+    "cy-inline-error": "/components/cy/inline-error/index",
+    "cy-access-gate": "/components/cy/access-gate/index"
   },
   "backgroundColorTop": "#F3F4F4",
   "backgroundColorBottom": "#F3F4F4"

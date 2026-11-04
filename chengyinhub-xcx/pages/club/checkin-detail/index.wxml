@@ -3,6 +3,7 @@
      F 无权限、G 加载失败是整屏态;H 是手机号无查看权限的变体(由服务端决定,不是前端分支)。 -->
 <view class="ckd theme-dark">
   <cy-toast id="cy-toast" />
+  <cy-access-gate kind="login" />
   <cy-nav-bar plain />
   <cy-nav-spacer />
   <cy-page-title title="核销详情" safe-top="{{false}}" flush="{{true}}" />
