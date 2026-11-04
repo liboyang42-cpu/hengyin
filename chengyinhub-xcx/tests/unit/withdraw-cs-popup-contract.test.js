@@ -96,7 +96,7 @@ const ENTRIES = [
     prepare(runtime) {
       runtime.page.onLoad({ clubId: 21 })
       runtime.requests[0].success({ code: 200, data: { settledAmountText: '¥10.00',
-        settledAmountStatus: 'verified', unverifiedSettledCount: 0, topics: [], isOwner: true } })
+        settledAmountStatus: 'verified', unverifiedSettledCount: 0, topics: [], sessions: [], isOwner: true } })
       runtime.page.onStages({ detail: { known: true, positive: true } })
     },
     // CU-C-92:可提现 >0 才放行(余额由 cy-funds-stages 经 bind:stages 回报);零余额不弹见 club-settlement 自己的用例

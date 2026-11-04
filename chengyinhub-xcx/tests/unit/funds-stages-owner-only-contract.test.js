@@ -68,7 +68,7 @@ function loadClubSettlement() {
   return (isOwner) => {
     requests.length = 0
     page.onLoad({ clubId: '21' })
-    const data = { settledAmountText: '¥0.00', settledAmountStatus: 'verified', unverifiedSettledCount: 0, pendingAdjustment: null, topics: [] }
+    const data = { settledAmountText: '¥0.00', settledAmountStatus: 'verified', unverifiedSettledCount: 0, pendingAdjustment: null, topics: [], sessions: [] }
     if (isOwner !== undefined) data.isOwner = isOwner
     requests[0].success({ code: 200, data })
     return page.data.summary.isOwner

@@ -44,6 +44,7 @@ const VALID_SUMMARY = {
   topics: [
     { id: 31, topicId: 9001, name: '外滩夜行', amountText: '¥128.00', amountStatus: 'verified', originalAmountText: '¥130.00', executedAdjustmentText: '¥-2.00', netAmountText: '¥128.00', arrivedText: '已入账', paidText: '已打款', status: 'settled' },
   ],
+  sessions: [],
 }
 
 const contextSummary = amount => ({ code: 200, data: { ...VALID_SUMMARY, settledAmountText: amount } })
@@ -318,4 +319,33 @@ test('CU-C-93:chip 已经说清的状态不再在 meta 行重复一次', () => {
   assert.ok(paidLine, 'paidText 行还在(作废细节仍要说)')
   assert.match(paidLine[0], /wx:if="\{\{item\.status === 'void' \|\| item\.amountStatus !== 'verified'\}\}"/,
     'pending/已入账 两档与 chip 同词，不得再渲染一次')
+})
+
+// F-16(j2 走查):只有场次结算、没有主题分润时,原来落「还没有平台分润记录」,钱从哪来看不到。
+const SESSION = { activityId: 9, name: '人民广场 · 喷泉报时', dateText: '11月4日', grossText: '¥ 156.00',
+  feeText: '¥ 4.68', feeRateText: '3%', netText: '¥ 151.32', payeeText: '已入你的账户' }
+test('F-16 只有场次结算时列出场次、销售额、平台服务费与到账，不落空态', () => {
+  const { vm, requests } = mount()
+  vm.onLoad({ clubId: '21' })
+  requests[0].success({ code: 200, data: { ...VALID_SUMMARY, settledAmountText: '¥0.00', topics: [], sessions: [SESSION] } })
+  assert.equal(vm.data.state, 'ready')
+  const row = vm.data.summary.sessions[0]
+  assert.equal(row.netText, '¥ 151.32'); assert.equal(row.grossText, '¥ 156.00')
+  assert.equal(row.feeLabel, '平台服务费 3%'); assert.equal(row.payeeText, '已入你的账户')
+  const wxml = fs.readFileSync(path.join(root, 'pages/club/settlement/index.wxml'), 'utf8')
+  assert.match(wxml, /wx:for="\{\{summary\.sessions\}\}"/)
+  assert.match(wxml, /<view class="settled-card" wx:if="\{\{summary\.topics\.length\}\}">/, '没有主题分润时不显示「已入账分润 ¥0.00」')
+  // 费率还原不出实际服务费时服务端给 null,只写「平台服务费」
+  requests.length = 0; vm.loadSummary()
+  requests[0].success({ code: 200, data: { ...VALID_SUMMARY, sessions: [{ ...SESSION, feeRateText: null }] } })
+  assert.equal(vm.data.summary.sessions[0].feeLabel, '平台服务费')
+})
+test('F-16 场次行缺字段或 sessions 缺失时整页拒收，不按 0 显示', () => {
+  for (const sessions of [undefined, null, [{ ...SESSION, netText: '' }], [{ ...SESSION, activityId: 0 }], [{ ...SESSION, feeRateText: 3 }]]) {
+    const { vm, requests } = mount()
+    vm.onLoad({ clubId: '21' })
+    requests[0].success({ code: 200, data: { ...VALID_SUMMARY, sessions } })
+    assert.equal(vm.data.state, 'error', JSON.stringify(sessions))
+    assert.equal(vm.data.summary, null)
+  }
 })

@@ -17,7 +17,7 @@
 
   <block wx:elif="{{state === 'ready'}}">
     <view class="section">
-      <view class="settled-card">
+      <view class="settled-card" wx:if="{{summary.topics.length}}">
         <text class="settled-label">已入账分润</text>
         <text class="settled-amount">{{summary.settledAmountStatus === 'unverified' ? '金额待核验' : cnt.money(summary.settledAmountText, settledK)}}</text>
         <text class="settled-label" wx:if="{{summary.unverifiedSettledCount}}">{{summary.unverifiedSettledCount || 0}} 笔已结算记录缺少入账证据，合计待核验</text>
@@ -38,7 +38,26 @@
            稿 G2 105:6 只在最底下写一次,这里就不再重复了。 -->
     </view>
 
-    <view class="section">
+    <!-- F-16:俱乐部场次的钱由活动结算直接入主理人余额,不在主题分润里;逐场写出来源。 -->
+    <view class="section" wx:if="{{summary.sessions.length}}">
+      <text class="section-title">各场次结算</text>
+      <view class="topic-row" wx:for="{{summary.sessions}}" wx:key="activityId">
+        <view class="topic-row-head">
+          <text class="topic-row-name">{{item.name}}</text>
+          <text class="topic-row-amount">{{item.netText}}</text>
+        </view>
+        <view class="topic-row-body">
+          <view class="topic-row-meta">
+            <text class="topic-row-meta-line">{{item.dateText}}</text>
+            <text class="topic-row-meta-line">销售额 {{item.grossText}}</text>
+            <text class="topic-row-meta-line">{{item.feeLabel}} {{item.feeText}}</text>
+            <text class="topic-row-meta-line">{{item.payeeText}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="section" wx:if="{{summary.topics.length}}">
       <text class="section-title">各主题结算</text>
       <view class="topic-row" wx:for="{{summary.topics}}" wx:key="id"
         data-topic-id="{{item.topicId}}" data-id="{{item.id}}" bindtap="goTopicSettlement" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">

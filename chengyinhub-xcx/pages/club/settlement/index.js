@@ -71,9 +71,27 @@ function normalizeSummary(data) {
       executedAdjustmentText, netAmountText, arrivedText, paidText, status })
   }
   if (missing !== unverifiedSettledCount) return null
+  const sessions = normalizeSessions(data.sessions)
+  if (!sessions) return null
   // 余额三段只给主理人本人(9-17 总控裁定);服务端没明确说是本人一律不显示
   const isOwner = data.isOwner === true
-  return { settledAmountText, settledAmountStatus, unverifiedSettledCount, topics, isOwner }
+  return { settledAmountText, settledAmountStatus, unverifiedSettledCount, topics, sessions, isOwner }
+}
+
+/** F-16:俱乐部场次的活动结算(销售额、平台服务费、到账、入了谁的账户),全部是服务端格式化好的文本。 */
+function normalizeSessions(raw) {
+  if (!Array.isArray(raw)) return null
+  const out = []
+  for (let i = 0; i < raw.length; i += 1) {
+    const row = raw[i] || {}
+    const activityId = positiveId(row.activityId)
+    const texts = ['name', 'dateText', 'grossText', 'feeText', 'netText', 'payeeText'].map(k => nonEmptyString(row[k]))
+    if (!activityId || texts.some(t => !t) || !(row.feeRateText === null || nonEmptyString(row.feeRateText))) return null
+    const [name, dateText, grossText, feeText, netText, payeeText] = texts
+    out.push({ activityId, name, dateText, grossText, feeText, netText, payeeText,
+      feeLabel: row.feeRateText ? '平台服务费 ' + row.feeRateText : '平台服务费' })
+  }
+  return out
 }
 
 Page({
@@ -171,7 +189,7 @@ Page({
         }
         that._dataIdentity = that._loadIdentity
         that._dataClubId = that._loadClubId
-        that.setData({ state: summary.topics.length ? 'ready' : 'empty', summary }); if (summary.topics.length && summary.settledAmountStatus !== 'unverified' && !that._settledCounted) { that._settledCounted = true; pageMotion.countMoney(that, 'settledK') } // CP-15:已入账分润首次落地慢-快-慢,刷新不再重数
+        that.setData({ state: summary.topics.length || summary.sessions.length ? 'ready' : 'empty', summary }); if (summary.topics.length && summary.settledAmountStatus !== 'unverified' && !that._settledCounted) { that._settledCounted = true; pageMotion.countMoney(that, 'settledK') } // CP-15:已入账分润首次落地慢-快-慢,刷新不再重数
       },
       fail() {
         if (!that._acceptRead(epoch)) return

@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -269,5 +270,14 @@ class ApiClubSettlementControllerTest {
     private static Object isOwnerOf(AjaxResult result) {
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
         return ((Map<String, Object>) result.get(AjaxResult.DATA_TAG)).get("isOwner");
+    }
+
+    /** F-16:平台费率由入账金额反推,只有能还原出实际服务费时才写比例。 */
+    @Test
+    void feeRateIsOnlyShownWhenItReproducesTheRecordedFee() {
+        assertEquals("3%", ApiClubSettlementController.feeRate(new java.math.BigDecimal("19.90"), new java.math.BigDecimal("0.60")));
+        assertEquals("3%", ApiClubSettlementController.feeRate(new java.math.BigDecimal("97.50"), new java.math.BigDecimal("2.93")));
+        assertNull(ApiClubSettlementController.feeRate(new java.math.BigDecimal("100.00"), new java.math.BigDecimal("3.33")));
+        assertNull(ApiClubSettlementController.feeRate(java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO));
     }
 }

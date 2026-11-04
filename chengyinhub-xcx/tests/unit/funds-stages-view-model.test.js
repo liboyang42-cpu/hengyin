@@ -195,7 +195,7 @@ test('余额旧组件结果不会把俱乐部新账号的零余额改成可提�
   })
   const page = { ...definition, data: { ...definition.data }, setData(p) { Object.assign(this.data, p) } }
   const summary = { code: 200, data: { settledAmountText: '¥20.00', settledAmountStatus: 'verified',
-    unverifiedSettledCount: 0, topics: [], isOwner: true } }
+    unverifiedSettledCount: 0, topics: [], sessions: [], isOwner: true } }
   page.onLoad({ clubId: 21 }); requests[0].success(summary)
   const oldChild = mountStages(app); oldChild.comp.triggerEvent = (name, detail) => page.onStages({ detail })
   oldChild.comp.load(); app.globalData.user_id = 990002; page.loadSummary(); requests[1].success(summary)

@@ -205,6 +205,35 @@
         order by s.create_time desc, s.id desc
     </select>
 
+    <!-- F-16:俱乐部场次的钱不走 coop_settlement,由 settleActivity 直接入收款人余额(event_type=3)与
+         平台账户(event_type=7),event_id=活动 id,change_type=1 收入;提现申请也用 3 但 change_type=2,不混入。
+         按场次聚合:客诉结案补结会给同一场再记一笔。 -->
+    <resultMap id="ClubSessionSettlementResult" type="com.chengyinhub.business.domain.vo.ClubSessionSettlementRow">
+        <result property="activityId" column="activity_id"/>
+        <result property="activityName" column="activity_name"/>
+        <result property="startDate" column="start_date"/>
+        <result property="netAmount" column="net_amount"/>
+        <result property="platformAmount" column="platform_amount"/>
+        <result property="payeeMinMemberId" column="payee_min_member_id"/>
+        <result property="payeeMaxMemberId" column="payee_max_member_id"/>
+        <result property="settledAt" column="settled_at"/>
+    </resultMap>
+
+    <select id="selectClubSessionSettlements" resultMap="ClubSessionSettlementResult">
+        select a.id as activity_id, a.name as activity_name, a.start_date,
+               sum(pay.change_balance) as net_amount,
+               (select coalesce(sum(fee.change_balance), 0) from ums_member_balance_detail fee
+                 where fee.event_type = 7 and fee.change_type = 1 and fee.del_flag = 0 and fee.event_id = a.id) as platform_amount,
+               min(pay.member_id) as payee_min_member_id, max(pay.member_id) as payee_max_member_id,
+               max(pay.create_time) as settled_at
+        from cms_activity a
+        join ums_member_balance_detail pay on pay.event_id = a.id and pay.event_type = 3
+             and pay.change_type = 1 and pay.del_flag = 0
+        where a.club_id = #{clubId}
+        group by a.id, a.name, a.start_date
+        order by max(pay.create_time) desc, a.id desc
+    </select>
+
     <select id="selectSummaryByTopicId" resultMap="ClubSummaryResult">
         <include refid="summarySelectFrom"/>
         where s.del_flag = 0 and s.topic_id = #{topicId}

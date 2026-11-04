@@ -1,6 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
 import com.chengyinhub.business.domain.vo.ClubSettlementSummaryRow;
+import com.chengyinhub.business.domain.vo.ClubSessionSettlementRow;
 
 import com.chengyinhub.business.access.club.ClubAccessContext;
 import com.chengyinhub.business.access.club.ClubPermission;
@@ -113,16 +114,59 @@ public class ApiClubSettlementController extends BaseController {
             t.put("status", isVoid ? "void" : isSettled ? "settled" : "pending");
             topics.add(t);
         }
+        Club club = clubService.selectClubById(clubId);
+        List<Map<String, Object>> sessions = sessions(coopSettlementMapper.selectClubSessionSettlements(clubId),
+                memberId, club == null ? null : club.getMemberId());
+        if (sessions == null) return error("结算金额或状态缺失，待核验");
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("settledAmountText", unverified == 0 ? money(settled) : null);
         data.put("settledAmountStatus", unverified == 0 ? "verified" : "unverified");
         data.put("unverifiedSettledCount", unverified);
         data.put("pendingAdjustment", null);
         data.put("topics", topics);
+        data.put("sessions", sessions);
         // 2026-09-17 总控裁定:余额三段只给俱乐部主理人本人看,联席主理人不显示。
-        Club club = clubService.selectClubById(clubId);
         data.put("isOwner", club != null && memberId.equals(club.getMemberId()));
         return AjaxResult.success(data);
+    }
+
+    /**
+     * F-16:俱乐部场次的钱由活动结算直接入收款人余额,不在 coop_settlement 里。按真实入账流水逐场列出
+     * 销售额、平台服务费与到账,并说明钱入了谁的账户(主理人转让后,前任主理人的场次仍入其本人余额)。
+     * 任一行缺金额返回 null,整页拒收,不按 0 显示。
+     */
+    static List<Map<String, Object>> sessions(List<ClubSessionSettlementRow> rows, Long viewerId, Long ownerId) {
+        if (rows == null) return null;
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (ClubSessionSettlementRow row : rows) {
+            if (row == null || row.getActivityId() == null || row.getNetAmount() == null
+                    || row.getPlatformAmount() == null || row.getPayeeMinMemberId() == null
+                    || row.getPayeeMaxMemberId() == null) return null;
+            BigDecimal net = row.getNetAmount(), fee = row.getPlatformAmount(), gross = net.add(fee);
+            Map<String, Object> s = new LinkedHashMap<>();
+            s.put("activityId", row.getActivityId());
+            String name = row.getActivityName();
+            s.put("name", name == null || name.trim().isEmpty() ? "场次 #" + row.getActivityId() : name);
+            s.put("dateText", row.getStartDate() == null ? "日期待确认" : day(row.getStartDate()));
+            s.put("grossText", money(gross));
+            s.put("feeText", money(fee));
+            s.put("feeRateText", feeRate(gross, fee));
+            s.put("netText", money(net));
+            Long payee = row.getPayeeMinMemberId();
+            s.put("payeeText", !payee.equals(row.getPayeeMaxMemberId()) ? "分笔入账"
+                    : payee.equals(viewerId) ? "已入你的账户"
+                    : payee.equals(ownerId) ? "已入主理人账户" : "已入原主理人账户");
+            out.add(s);
+        }
+        return out;
+    }
+
+    /** 由入账金额反推的平台费率;只有按该费率四舍五入能还原出实际服务费时才给,否则不写比例。 */
+    static String feeRate(BigDecimal gross, BigDecimal fee) {
+        if (gross.signum() <= 0 || fee.signum() < 0) return null;
+        BigDecimal pct = fee.multiply(BigDecimal.valueOf(100)).divide(gross, 1, java.math.RoundingMode.HALF_UP);
+        BigDecimal back = gross.multiply(pct).divide(BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
+        return back.compareTo(fee) == 0 ? pct.stripTrailingZeros().toPlainString() + "%" : null;
     }
 
     @PostMapping("/withdraw")

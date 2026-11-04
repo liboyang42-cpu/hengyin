@@ -51,6 +51,10 @@ public interface CoopSettlementMapper {
             @org.apache.ibatis.annotations.Param("role") String role,
             @org.apache.ibatis.annotations.Param("beneficiaryId") Long beneficiaryId);
 
+    /** F-16:本俱乐部已结算场次的活动结算流水(收款人到账 + 平台服务费),俱乐部分润页只读展示。 */
+    java.util.List<com.chengyinhub.business.domain.vo.ClubSessionSettlementRow> selectClubSessionSettlements(
+            @org.apache.ibatis.annotations.Param("clubId") Long clubId);
+
     /** 同 selectSummaryByBeneficiary 口径,按主题取(发起人分润页 clubFinance)。 */
     java.util.List<com.chengyinhub.business.domain.vo.ClubSettlementSummaryRow> selectSummaryByTopicId(
             @org.apache.ibatis.annotations.Param("topicId") Long topicId);

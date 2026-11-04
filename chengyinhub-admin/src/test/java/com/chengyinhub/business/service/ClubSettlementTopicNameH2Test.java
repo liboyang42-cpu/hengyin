@@ -64,8 +64,10 @@ class ClubSettlementTopicNameH2Test {
                 + "settlement_id bigint, amount decimal(12,2), status varchar(20))");
         jdbc.execute("create table ums_member_balance_detail ("
                 + "member_id bigint, change_balance decimal(12,2), change_type int, del_flag int,"
-                + "coop_settlement_payout_id bigint, create_time datetime)");
+                + "coop_settlement_payout_id bigint, event_type int, event_id bigint, create_time datetime)");
         jdbc.execute("create table cms_topic (id bigint primary key, name varchar(255), del_flag int default 0)");
+        // F-16:同一 summary 还读俱乐部场次的活动结算流水
+        jdbc.execute("create table cms_activity (id bigint primary key, name varchar(255), club_id bigint, start_date datetime)");
 
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean();
         factory.setDataSource(ds);

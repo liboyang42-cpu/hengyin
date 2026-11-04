@@ -41,7 +41,7 @@ class ClubSettlementSummaryMybatisIntegrationTest {
         jdbc = new JdbcTemplate(dataSource);
         String base = new String(Files.readAllBytes(Paths.get("../sql/base_schema_20260818.sql")), StandardCharsets.UTF_8);
         // cms_topic:CU-C-40 汇总行 left join 主题名,真库 schema 要有这张表
-        for (String table : new String[]{"coop_settlement", "coop_settlement_adjustment", "ums_member_balance_detail", "cms_topic"}) {
+        for (String table : new String[]{"coop_settlement", "coop_settlement_adjustment", "ums_member_balance_detail", "cms_topic", "cms_activity"}) {
             int start = base.indexOf("CREATE TABLE `" + table + "` (");
             jdbc.execute(base.substring(start, base.indexOf(";", start)));
         }
