@@ -413,6 +413,32 @@ public class ApiMerchantController extends BaseController {
         return success(vo);
     }
 
+    /**
+     * 第九轮 m1-9:商家主页「分享」里的店铺小程序码。只给公开可见的商家出码;
+     * scene = {@code sh.<商家会员ID>},落地页 pages/index/index 转商家主页(userId=会员ID&tab=about)。
+     * 码按 scene 永久复用(同主题 / 活动分享码,服务内缓存),不会每次分享都生成。
+     */
+    @Operation(summary = "商家主页分享卡的店铺小程序码")
+    @PostMapping("/share-code")
+    public AjaxResult shareCode(String memberId) {
+        Long principal;
+        try { principal = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        if (principal == null || principal <= 0) return error("请先登录");
+        Long subject = com.chengyinhub.common.core.text.Convert.toLong(memberId, 0L);
+        if (subject <= 0) return error("商家不存在或未开放");
+        if (!isPubliclyVisible(mmsMerchantService.selectMmsMerchantByMemberId(subject))) return error("商家不存在或未开放");
+        Map<String, Object> data = new HashMap<>();
+        try {
+            data.put("qrcodeUrl", playerWxacodeService.getOrCreateScene("sh." + subject));
+        } catch (IllegalStateException e) {
+            return error(e.getMessage());
+        }
+        return success(data);
+    }
+
+    @Autowired
+    private com.chengyinhub.business.service.IPlayerWxacodeService playerWxacodeService;
+
     /** 公开可见 = 审核通过 && 账号启用 && 未删除。未知值一律失败关闭。 */
     private boolean isPubliclyVisible(MmsMerchant m) {
         return m != null

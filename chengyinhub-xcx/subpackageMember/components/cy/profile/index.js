@@ -424,7 +424,7 @@ Component({
     reportTargetType: '',
     reportTargetId: '',
     reportTitle: '举报',
-    correctionShow: false,
+    correctionShow: false, shopShareShow: false, shopShareCard: null,
     correctionMerchantId: '',
     subjectIsMerchant: false,
     subjectMerchant: null,
@@ -2046,7 +2046,7 @@ Component({
   },
 
   onShareProfile: function () {
-    this.closeMoreMenu();
+    this.closeMoreMenu(); if (this.data.subjectIsMerchant && this.data.subjectMerchant) { this.openShopShare(); return; }
     cyToast('点击右上角分享主页');
   },
 
@@ -2401,7 +2401,7 @@ Component({
         path: '/pages/index/index?inviter=' + app.getUserID()
       };
     }
-    if (res.from === 'button') {
+    if (res.from === 'button' && !(res.target && res.target.dataset && res.target.dataset.shareKind === 'card')) {
       return { title: '城瘾 · 城市探索', path: '/pages/square/detail/index?id=' + res.target.dataset.id };
     }
     // 第七轮 C 第 3 项:看的是可公开商家 ⇒ 店名 + 店铺封面 + canonical 商家主页(tab=about)。
@@ -2434,6 +2434,21 @@ Component({
     var cover = m.coverImage || m.logo || '';
     if (cover) payload.imageUrl = typeof app.getImgUrl === 'function' ? app.getImgUrl(cover) : cover;
     return payload;
+  },
+
+  // 第九轮 m1-9:商家主页的分享按钮 —— 通用分享层出店铺卡,右下是店铺小程序码(/api/merchant/share-code),
+  // 「微信好友」走宿主页 onShareAppMessage → getSharePayload 的商家主页落点。
+  openShopShare: function () {
+    var m = this.data.subjectMerchant;
+    if (!m || !this.data.userId) return;
+    this.setData({
+      shopShareShow: true,
+      shopShareCard: { kind: 'shop', id: String(this.data.userId), title: m.name || '', cover: (m.coverImage || m.logo || '').split(',')[0], when: m.address || '' },
+    });
+  },
+
+  closeShopShare: function () {
+    this.setData({ shopShareShow: false });
   }
   }
 });

@@ -120,6 +120,7 @@
         </view>
         <!-- UI-12:公开视角也要有「···」更多(分享主页/屏蔽)。
              M-16(2026-10-27):本人商家视角「核销」右边的「···」删除 —— 店铺资料/分享/设置在别处都有,重复。 -->
+        <view class="pc-more" wx:if="{{!isSelf && !viewingOwn && subjectIsMerchant && subjectMerchant}}" bindtap="openShopShare" hover-class="pc-btn-press" aria-role="button" aria-label="分享店铺"><cy-icon name="share" size="32" /></view>
         <view class="pc-more" wx:if="{{!isSelf && !viewingOwn}}" bindtap="openMoreMenu" hover-class="pc-btn-press" aria-role="button" aria-label="打开更多操作"><cy-icon name="more" size="32" /></view>
       </view>
 
@@ -570,6 +571,7 @@
 
 <cy-report-sheet wx:if="{{!isSelf}}" show="{{reportShow}}" target-type="{{reportTargetType}}" target-id="{{reportTargetId}}" title="{{reportTitle}}" bind:close="onReportClose" />
 <!-- 挂在 .pc-page 外,照 cy-coop-invite-sheet 包一层主题,商家日间页才取得到 theme-merchant token。 -->
+<cy-share-card wx:if="{{subjectIsMerchant}}" show="{{shopShareShow}}" card="{{shopShareCard}}" bind:close="closeShopShare" />
 <view class="{{isMerchantView ? 'theme-merchant' : ''}}"><cy-merchant-correction-sheet wx:if="{{!isSelf}}" show="{{correctionShow}}" merchant-id="{{correctionMerchantId}}" bind:close="onCorrectionClose" /></view>
 
 <!-- [P0-2] ③ 选章核销:一商家在同一路线承接多章是常态 ⇒ 交集≥2 时由他自己选,

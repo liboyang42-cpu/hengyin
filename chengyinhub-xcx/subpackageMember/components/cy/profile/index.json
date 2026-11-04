@@ -23,6 +23,7 @@
     "cy-npc-chat": "/subpackageMember/components/cy/npc-chat/index",
     "cy-coop-invite-sheet": "/subpackageMember/components/cy/coop-invite-sheet/index",
     "cy-report-sheet": "/subpackageMember/components/cy/report-sheet/index",
-    "cy-merchant-correction-sheet": "/subpackageMember/components/cy/merchant-correction-sheet/index"
+    "cy-merchant-correction-sheet": "/subpackageMember/components/cy/merchant-correction-sheet/index",
+    "cy-share-card": "/components/cy/share-card/index"
   }
 }
