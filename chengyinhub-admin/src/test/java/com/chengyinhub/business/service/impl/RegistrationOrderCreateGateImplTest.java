@@ -246,4 +246,33 @@ class RegistrationOrderCreateGateImplTest {
         when(capabilityService.hasCapability(8L, MemberCapability.CAP_MERCHANT)).thenReturn(false);
         assertDoesNotThrow(() -> gate().validate(8L, topicRequest(302L)));
     }
+
+    /** 第十轮 f1 item 8(r1 F3):报价与建单同一道买家门禁 —— 商家报俱乐部活动,报价就拒,不先报出一个下单必拒的价格。 */
+    @Test
+    void quoteRefusesMerchantOnClubActivityWithTheSameMessageAsCreate() {
+        CmsActivity clubActivity = new CmsActivity();
+        clubActivity.setClubId(7001L);
+        when(activityService.selectCmsActivityById(500L)).thenReturn(clubActivity);
+        when(capabilityService.hasCapability(9006L, MemberCapability.CAP_MERCHANT)).thenReturn(true);
+        RegistrationCheckoutServiceImpl checkout = new RegistrationCheckoutServiceImpl();
+        ReflectionTestUtils.setField(checkout, "registrationService", registrationService);
+        ReflectionTestUtils.setField(checkout, "registrationOrderCreateGate", gate());
+
+        RegistrationCheckoutException quoteRefusal = assertThrows(RegistrationCheckoutException.class,
+                () -> checkout.quote(9006L, activityRequest(null)));
+        RegistrationCheckoutException createRefusal = assertThrows(RegistrationCheckoutException.class,
+                () -> gate().validate(9006L, activityRequest("sig")));
+
+        assertEquals(403, quoteRefusal.getCode());
+        assertEquals(RegistrationOrderCreateGateImpl.MERCHANT_CLUB_SIGNUP_MESSAGE, quoteRefusal.getMessage());
+        assertEquals(createRefusal.getCode(), quoteRefusal.getCode());
+        assertEquals(createRefusal.getMessage(), quoteRefusal.getMessage());
+        verify(registrationService, never()).quoteRegistration(any(), any(), any(), any(), any(), any());
+
+        // 玩家照常拿到报价
+        when(capabilityService.hasCapability(9004L, MemberCapability.CAP_MERCHANT)).thenReturn(false);
+        when(registrationService.quoteRegistration(eq(9004L), any(), any(), any(), any(), any()))
+                .thenReturn(new RegistrationQuoteResult());
+        assertDoesNotThrow(() -> checkout.quote(9004L, activityRequest(null)));
+    }
 }

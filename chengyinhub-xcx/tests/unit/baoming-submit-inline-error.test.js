@@ -162,3 +162,21 @@ test('报名与支付事实携带Checkout原registrationId及稳定原事件键'
     analytics.track = original
   }
 })
+
+// 第十轮 f1 item 8(j6 F5 / r1 F3):参与人列表先回包、/api/user/info 后回包时,资料不能把已选参与人的
+// 姓名冲掉 —— 否则第一次付款必误报「参与人信息需要包含姓名」。错误仍写在参与人一栏下方(红字,kind=error)。
+test('资料晚于参与人回包:已选参与人的姓名/手机保留,付款不误报缺姓名', () => {
+  const page = loadReadyPage()
+  page.data.userInfo = {}
+  page.updateUserInfoFromAddress(page.data.selectedAddress)
+  page.getUserInfo()
+  const info = requests.find((r) => r.url === '/api/user/info')
+  info.success({ code: 200, data: { id: 9, name: '城瘾用户', nickname: '城瘾用户', point: 50 } })
+  assert.equal(page.data.userInfo.realName, '林一')
+  assert.equal(page.data.userInfo.phone, '13800138000')
+  page.handlePayment()
+  assert.equal(page.data.participantError, '', '已选了有姓名的参与人,不得报「需要包含姓名」')
+  assert.ok(latestHandlers, '校验通过后必须进入下单')
+  const wxml = fs.readFileSync(path.join(PAGE_DIR, 'baoming.wxml'), 'utf8')
+  assert.match(wxml, /<cy-inline-error class="participant-err" wx:if="\{\{pageState === 'ready' && participantError\}\}" kind="error"/)
+})

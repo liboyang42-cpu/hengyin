@@ -349,6 +349,9 @@ Page({
             editPhone: res.data.phone || res.data.mobilePhone || '',
             editRealName: res.data.name || res.data.realName || res.data.fullName || ''
           });
+          // j6 F5 / r1 F3:参与人列表与资料并发,参与人先回包时资料会把已选参与人的姓名/手机冲掉,
+          // 付款就误报「参与人信息需要包含姓名」。已选了参与人就以参与人为准。
+          if (that.data.selectedAddress) that.updateUserInfoFromAddress(that.data.selectedAddress);
         } else {
           // 如果获取失败，使用默认信息
           that.setData({

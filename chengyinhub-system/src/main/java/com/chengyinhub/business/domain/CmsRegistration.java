@@ -159,7 +159,7 @@ public class CmsRegistration extends BaseEntity
     private Integer registrationStatus;
 
     /** 支付过期时间 */
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Excel(name = "支付过期时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
     private Date payExpireTime;
 

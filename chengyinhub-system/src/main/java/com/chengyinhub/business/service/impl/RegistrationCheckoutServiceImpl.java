@@ -42,12 +42,16 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
     /** 只读:多票父单找支付中的主单。 */
     @Autowired
     private CmsRegistrationMapper cmsRegistrationMapper;
+    /** r1 F3:报价与建单同一道买家门禁(商家打烊、商家报俱乐部活动)。 */
+    @Autowired
+    private com.chengyinhub.business.service.IRegistrationOrderCreateGate registrationOrderCreateGate;
 
     @Override
     public RegistrationQuoteResult quote(Long memberId, RegistrationRequest request) {
         if (request == null) {
             throw new RegistrationCheckoutException(400, "报名参数不能为空");
         }
+        registrationOrderCreateGate.validateBuyer(memberId, request);
         if (request.getWaitlistOfferId() != null || request.getWaitlistOfferToken() != null) {
             return registrationService.quoteRegistrationForOffer(memberId, request);
         }

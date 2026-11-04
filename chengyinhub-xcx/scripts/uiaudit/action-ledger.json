@@ -904251,7 +904251,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:863"
+        "staticSource": "pages/activity/baoming/baoming.js:866"
       }
     },
     {
@@ -904318,7 +904318,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:810"
+        "staticSource": "pages/activity/baoming/baoming.js:813"
       }
     },
     {
@@ -904436,7 +904436,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1087"
+        "staticSource": "pages/activity/baoming/baoming.js:1090"
       }
     },
     {
@@ -904524,7 +904524,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1030"
+        "staticSource": "pages/activity/baoming/baoming.js:1033"
       }
     },
     {
@@ -904649,7 +904649,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:956"
+        "staticSource": "pages/activity/baoming/baoming.js:959"
       }
     },
     {
@@ -904737,7 +904737,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1030"
+        "staticSource": "pages/activity/baoming/baoming.js:1033"
       }
     },
     {
@@ -904807,7 +904807,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1078"
+        "staticSource": "pages/activity/baoming/baoming.js:1081"
       }
     },
     {
@@ -904877,7 +904877,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1078"
+        "staticSource": "pages/activity/baoming/baoming.js:1081"
       }
     },
     {
@@ -905002,7 +905002,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:956"
+        "staticSource": "pages/activity/baoming/baoming.js:959"
       }
     },
     {
@@ -905072,7 +905072,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:874"
+        "staticSource": "pages/activity/baoming/baoming.js:877"
       }
     },
     {
@@ -905160,7 +905160,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1030"
+        "staticSource": "pages/activity/baoming/baoming.js:1033"
       }
     },
     {
@@ -905272,7 +905272,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:995"
+        "staticSource": "pages/activity/baoming/baoming.js:998"
       }
     },
     {
@@ -905339,7 +905339,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:546"
+        "staticSource": "pages/activity/baoming/baoming.js:549"
       }
     },
     {
@@ -905406,7 +905406,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:555"
+        "staticSource": "pages/activity/baoming/baoming.js:558"
       }
     },
     {
@@ -905517,7 +905517,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:617"
+        "staticSource": "pages/activity/baoming/baoming.js:620"
       }
     },
     {
@@ -905588,7 +905588,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:598"
+        "staticSource": "pages/activity/baoming/baoming.js:601"
       }
     },
     {
@@ -905655,7 +905655,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1298"
+        "staticSource": "pages/activity/baoming/baoming.js:1301"
       }
     },
     {
@@ -905741,7 +905741,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1477"
+        "staticSource": "pages/activity/baoming/baoming.js:1480"
       }
     },
     {
@@ -905935,7 +905935,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1477"
+        "staticSource": "pages/activity/baoming/baoming.js:1480"
       }
     },
     {
@@ -906087,7 +906087,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1477"
+        "staticSource": "pages/activity/baoming/baoming.js:1480"
       }
     },
     {
@@ -906504,7 +906504,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1477"
+        "staticSource": "pages/activity/baoming/baoming.js:1480"
       }
     },
     {
@@ -906831,7 +906831,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1477"
+        "staticSource": "pages/activity/baoming/baoming.js:1480"
       }
     },
     {
@@ -907170,7 +907170,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1477"
+        "staticSource": "pages/activity/baoming/baoming.js:1480"
       }
     },
     {
@@ -907431,7 +907431,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1477"
+        "staticSource": "pages/activity/baoming/baoming.js:1480"
       }
     },
     {
@@ -907502,7 +907502,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:495"
+        "staticSource": "pages/activity/baoming/baoming.js:498"
       }
     },
     {
@@ -907590,7 +907590,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1233"
+        "staticSource": "pages/activity/baoming/baoming.js:1236"
       }
     },
     {
@@ -907678,7 +907678,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1245"
+        "staticSource": "pages/activity/baoming/baoming.js:1248"
       }
     },
     {
@@ -907749,7 +907749,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1269"
+        "staticSource": "pages/activity/baoming/baoming.js:1272"
       }
     },
     {
@@ -907816,7 +907816,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:829"
+        "staticSource": "pages/activity/baoming/baoming.js:832"
       }
     },
     {
@@ -907941,7 +907941,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:833"
+        "staticSource": "pages/activity/baoming/baoming.js:836"
       }
     },
     {
@@ -908052,7 +908052,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:382"
+        "staticSource": "pages/activity/baoming/baoming.js:385"
       }
     },
     {
@@ -908163,7 +908163,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:382"
+        "staticSource": "pages/activity/baoming/baoming.js:385"
       }
     },
     {
@@ -908234,7 +908234,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:880"
+        "staticSource": "pages/activity/baoming/baoming.js:883"
       }
     },
     {

@@ -2949,6 +2949,7 @@ class RegistrationFundsMybatisIntegrationTest {
         ReflectionTestUtils.setField(target, "registrationService", registrationService);
         ReflectionTestUtils.setField(target, "registrationOrderService", registrationOrderService);
         ReflectionTestUtils.setField(target, "wechatPayService", wechatPayService);
+        ReflectionTestUtils.setField(target, "registrationOrderCreateGate", mock(IRegistrationOrderCreateGate.class));
         return target;
     }
 
