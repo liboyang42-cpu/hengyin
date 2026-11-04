@@ -443,3 +443,34 @@ test('DTO显式nullable字段允许按既有表单语义比较，缺字段仍不
   assert.equal(h.c._draftConfirmed, null)
   assert.equal(drafts.read(h.wx, drafts.key(1, 9)).record.form.name, '续编')
 })
+test('F-12：头像保存后回读为同一存储对象的新签名地址，不报资料已变化并正常关闭', () => {
+  const hex = 'a'.repeat(32), uploaded = 'https://bucket.example.com/upload/' + hex + '.jpg?Expires=100&Signature=up'
+  const h = mount(); h.ready()
+  h.c.pickLogo(); h.media.shift().callback([uploaded])
+  assert.equal(h.c.data.logo, uploaded)
+  preflight(h).success({ code: 200 })
+  // 服务端落库 media-asset:N，回读按次重签：同一对象、不同签名参数。
+  const latest = { ...CLUB, logo: 'https://bucket.example.com/upload/' + hex + '.jpg?Expires=999&Signature=read' }
+  h.requests.shift().success({ code: 200, data: latest })
+  assert.equal(h.c.data.draftBlocked, false)
+  assert.doesNotMatch(h.c.data.draftNotice, /保存后资料已变化/)
+  h.timers.forEach(fn => fn())
+  assert.equal(h.events.some(e => e.name === 'saved'), true)
+  // 重开时基线也按对象比较：本机旧稿不会因重签被判冲突。
+  assert.equal(drafts.base(latest), drafts.base({ ...latest, logo: uploaded }))
+  assert.equal(drafts.sameBase(drafts.base(latest), JSON.stringify({ updateTime: '', form: drafts.form({ ...latest, logo: uploaded }) })), true)
+  assert.equal(drafts.compare({ ...latest, logo: uploaded }, latest), '')
+})
+test('F-12：真换了另一张图仍报差异，非本站地址按原文比较', () => {
+  const a = 'https://bucket.example.com/upload/' + 'a'.repeat(32) + '.jpg?Signature=1'
+  const b = 'https://bucket.example.com/upload/' + 'b'.repeat(32) + '.jpg?Signature=1'
+  assert.notEqual(drafts.base({ ...CLUB, logo: a }), drafts.base({ ...CLUB, logo: b }))
+  assert.match(drafts.compare({ ...CLUB, cover: a }, { ...CLUB, cover: b }), /封面/)
+  assert.notEqual(drafts.base({ ...CLUB, logo: 'https://x.example.com/a.jpg?v=1' }), drafts.base({ ...CLUB, logo: 'https://x.example.com/a.jpg?v=2' }))
+  const h = mount(); h.ready()
+  h.c.pickLogo(); h.media.shift().callback([a])
+  preflight(h).success({ code: 200 })
+  h.requests.shift().success({ code: 200, data: { ...CLUB, logo: b } })
+  assert.equal(h.c.data.draftBlocked, true)
+  assert.match(h.c.data.draftNotice, /保存后资料已变化/)
+})

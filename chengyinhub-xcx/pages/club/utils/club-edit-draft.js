@@ -15,9 +15,23 @@ function form(value) {
   result.joinPolicy = Number(source.joinPolicy) === 1 ? 1 : 0;
   return result;
 }
+// 头像/封面的身份是存储对象：上传回的地址与回读的签名地址(服务端存 media-asset:N,出参按次重签)指向同一对象即同一张图。
+function media(value) {
+  const raw = String(value || ''), m = /^https?:\/\/[^/?#]+(\/[^?#]*)(?:\?[^#]*)?$/i.exec(raw);
+  const local = m && /\/profile\/upload\/\d{4}\/\d{2}\/\d{2}\/[A-Za-z0-9_-]+\.(?:jpg|jpeg|png|gif)$/i.exec(m[1]);
+  return local ? local[0] : m && /^\/upload\/[0-9a-f]{32}\.(?:jpg|jpeg|png|gif)$/i.test(m[1]) ? m[1] : raw;
+}
+function comparable(value) {
+  const result = form(value);
+  result.logo = media(result.logo); result.cover = media(result.cover);
+  return result;
+}
 // PublicClubVO has no updateTime/version. This fingerprint compares editable facts,
  // not an atomic server revision. Keep the old record envelope readable.
-function base(value) { return JSON.stringify({ updateTime: '', form: form(value) }); }
+function base(value) { return JSON.stringify({ updateTime: '', form: comparable(value) }); }
+function sameBase(a, b) {
+  try { return a === b || base(JSON.parse(a).form) === base(JSON.parse(b).form); } catch (e) { return false; }
+}
 function detail(value, clubId) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const own = field => Object.prototype.hasOwnProperty.call(value, field);
@@ -84,10 +98,10 @@ function remove(storage, storageKey, expected) {
   } catch (e) { return false; }
 }
 function compare(saved, latest) {
-  const a = form(saved), b = form(latest);
-  return FIELDS.filter(field => JSON.stringify(a[field]) !== JSON.stringify(b[field])).map(field => {
+  const a = form(saved), b = form(latest), ca = comparable(saved), cb = comparable(latest);
+  return FIELDS.filter(field => JSON.stringify(ca[field]) !== JSON.stringify(cb[field])).map(field => {
     const show = value => field === 'logo' || field === 'cover' ? (value ? '已上传' : '未上传') : (Array.isArray(value) ? value.join('、') : (value === false ? '关闭' : value === true ? '开启' : String(value === '' || value == null ? '未填写' : value)));
     return LABELS[FIELDS.indexOf(field)] + '：草稿「' + show(a[field]) + '」／当前「' + show(b[field]) + '」';
   }).join('\n');
 }
-module.exports = { key, form, base, read, write, remove, compare, detail };
+module.exports = { key, form, comparable, base, sameBase, read, write, remove, compare, detail };

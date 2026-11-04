@@ -519,7 +519,7 @@ Component({
       this._draftReadState = found.state;
       this._savedDraft = found.record || null;
       this._draftExpected = found.record ? JSON.stringify(found.record) : '';
-      const conflict = found.record && (found.record.base !== this._draftBase || !!found.record.confirmed);
+      const conflict = found.record && (!drafts.sameBase(found.record.base, this._draftBase) || !!found.record.confirmed);
       this.setData({
         draftAvailable: !!found.record && !conflict,
         draftBlocked: !!conflict || ['corrupt', 'error'].includes(found.state),
@@ -606,7 +606,7 @@ Component({
     // A confirmed write is not a new server baseline. Only a matching authoritative
     // detail response supplies the complete editable form; keep interim edits.
     confirmedDraftMatches(confirmed, latest) {
-      const a = drafts.form(confirmed), b = drafts.form(this.draftServer(latest));
+      const a = drafts.comparable(confirmed), b = drafts.comparable(this.draftServer(latest));
       // Empty quota is submitted as zero by the existing update contract.
       if (a.memberReservedQuota === '') a.memberReservedQuota = '0';
       if (b.memberReservedQuota === '') b.memberReservedQuota = '0';
