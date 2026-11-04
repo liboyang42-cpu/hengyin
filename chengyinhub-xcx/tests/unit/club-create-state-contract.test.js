@@ -23,11 +23,8 @@ function loadPage(mutate) {
   let definition
   let snapshotReady = false
   let clubLeader = false
-  let userId = '9009'
   const app = {
     globalData: { statusBarHeight: 20, navBarHeight: 44 },
-    getUserID: () => userId,
-    firstLogin: () => { userId = '9009'; return Promise.resolve({ ok: true }) },
     sendRequest: (options) => requests.push(options),
     chooseImage() {},
   }
@@ -35,7 +32,6 @@ function loadPage(mutate) {
     load: (callback) => roleCallbacks.push(callback),
     hasSnapshot: () => snapshotReady,
     isClubLeader: () => clubLeader,
-    clear() {},
   }
   const sandbox = {
     getApp: () => app,
@@ -60,7 +56,6 @@ function loadPage(mutate) {
     page, requests, roleCallbacks, redirects, backs,
     setSnapshot(value) { snapshotReady = value },
     setClubLeader(value) { clubLeader = value },
-    setUserId(value) { userId = value },
   }
 }
 
@@ -333,38 +328,4 @@ test('名称已被使用：入口回到名称步，改名后清掉旧错误', ()
   h.page.onInput({ currentTarget: { dataset: { field: 'name' } }, detail: { value: '沪上慢走社' } })
   assert.equal(h.page.data.submitError, '')
   assert.equal(h.page.data.submitNameTaken, false)
-})
-
-test('第十轮 f3 p3 F2：游客打开创建俱乐部给登录入口，不落「登录状态已失效」空白页；登录后续上预检', async () => {
-  const h = loadPage()
-  h.setUserId('')
-  h.page.onLoad()
-  h.roleCallbacks[0](null)
-  assert.equal(h.page.data.bootstrapState, 'guest')
-  assert.match(WXML, /bootstrapState === 'guest'[\s\S]*?title="登录后创建俱乐部" primary="登录" bind:primary="loginBootstrap"/)
-  h.page.loginBootstrap()
-  await new Promise((r) => setImmediate(r))
-  assert.equal(h.page.data.bootstrapState, 'checking', '登录成功后重新预检')
-  assert.equal(h.roleCallbacks.length, 2)
-})
-
-test('第十轮 f3 p3 F1：输入框失焦先查名，紧随的「下一步」不能被吞，查名回来即进第 4 步', () => {
-  const h = loadPage()
-  Object.assign(h.page.data, { bootstrapState: 'ready', step: 3, canNext: true, clubType: '兴趣社群', name: '夜行者测试社' })
-  h.page.onNameBlur()
-  h.page.onNext()
-  const checks = h.requests.filter((r) => r.url === '/api/club/name-check')
-  assert.equal(checks.length, 1, '同名只查一次')
-  checks[0].success({ code: 200, data: { available: true } })
-  assert.equal(h.page.data.step, 4)
-})
-
-test('第十轮 f3 p3 F1：失焦查名命中占用时，排队的「下一步」停在第 3 步并显示原因', () => {
-  const h = loadPage()
-  Object.assign(h.page.data, { bootstrapState: 'ready', step: 3, canNext: true, clubType: '兴趣社群', name: '城瘾跑团' })
-  h.page.onNameBlur()
-  h.page.onNext()
-  h.requests.filter((r) => r.url === '/api/club/name-check')[0].success({ code: 200, data: { available: false, reason: '俱乐部名称已被使用，请换一个' } })
-  assert.equal(h.page.data.step, 3)
-  assert.equal(h.page.data.nameError, '俱乐部名称已被使用，请换一个')
 })

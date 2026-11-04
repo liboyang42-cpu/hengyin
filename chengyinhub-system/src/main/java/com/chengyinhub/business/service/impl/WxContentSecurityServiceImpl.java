@@ -762,7 +762,8 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                 if (!Integer.valueOf(2).equals(current.getStatus()))
                 {
                     t.setCheckStatus(2);
-                    t.setReason(TopicContentSafetyHold.REASON);
+                    t.setReason(com.chengyinhub.business.service.support.SystemNoticeCard.isTextHit()
+                            ? TopicContentSafetyHold.REASON_TEXT : TopicContentSafetyHold.REASON);
                 }
                 int affected = cmsTopicService.updateCmsTopic(t);
                 if (affected <= 0)

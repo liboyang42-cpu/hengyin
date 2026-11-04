@@ -120,7 +120,11 @@ public class SensitiveContentRescanServiceImpl implements ISensitiveContentResca
                 String action = ACTION_REPORT;
                 if (remove && wxType != null) {
                     try {
-                        if (wx.takeDownForSafety(wxType, id)) {
+                        // j5 H3:文字命中走同一下架路径,但通知作者的原因写文字而不是图片。
+                        final int takeDownType = wxType;
+                        final Long takeDownId = id;
+                        if (com.chengyinhub.business.service.support.SystemNoticeCard.underTextHit(
+                                () -> wx.takeDownForSafety(takeDownType, takeDownId))) {
                             action = ACTION_REMOVED;
                             removed++;
                         }

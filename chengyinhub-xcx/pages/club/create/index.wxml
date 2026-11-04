@@ -16,8 +16,6 @@
   <cy-state-shell class="cc-state" wx:elif="{{bootstrapState === 'error'}}"
     kind="{{bootstrapErrorKind}}" size="lg" fill title="创建资格未确认" sub="{{bootstrapError}}"
     primary="重新检查" secondary="返回上一页" bind:primary="retryBootstrap" bind:secondary="onClose" auto-back custom-back bind:back="onClose" />
-  <cy-state-shell class="cc-state" wx:elif="{{bootstrapState === 'guest'}}"
-    kind="no-permission" size="lg" fill title="登录后创建俱乐部" primary="登录" bind:primary="loginBootstrap" />
   <cy-state-shell class="cc-state" wx:elif="{{bootstrapState === 'no-permission'}}"
     kind="no-permission" size="lg" fill title="请先成为俱乐部主理人"
     sub="申请通过后即可创建与管理俱乐部" primary="前往申请" secondary="返回上一页"

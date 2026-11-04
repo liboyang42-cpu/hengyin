@@ -188,6 +188,31 @@ class ContentSafetyImageTakedownNoticeTest {
         assertTrue(noticeTo(AUTHOR).contains("俱乐部动态「今晚集合」"));
     }
 
+    /** 第十轮 f3 j5 H3:敏感词复查按文字命中下架的帖文,通知原因写文字,不再说「图片未通过内容安全检测」。 */
+    @Test
+    void clubPostTakenDownForATextHitSaysTextNotImage() {
+        IClubPostService posts = mock(IClubPostService.class);
+        ReflectionTestUtils.setField(service, "clubPostService", posts);
+        ClubPost live = new ClubPost();
+        live.setId(ID);
+        live.setAuthorMemberId(AUTHOR);
+        live.setContent("今晚集合");
+        live.setDelFlag(0);
+        when(posts.selectClubPostByIdForUpdate(ID)).thenReturn(live);
+        when(posts.deleteClubPostById(ID)).thenReturn(1);
+
+        assertTrue(com.chengyinhub.business.service.support.SystemNoticeCard.underTextHit(
+                () -> service.takeDownForSafety(IWxContentSecurityService.BIZ_TYPE_CLUB_POST, ID)));
+
+        ArgumentCaptor<String> extra = ArgumentCaptor.forClass(String.class);
+        verify(im).sendSystemInNestedTransaction(eq(AUTHOR), eq(ImMessage.MSG_CARD), eq("内容已下架"), extra.capture());
+        assertTrue(extra.getValue().contains("原因：文字未通过内容安全检测"), extra.getValue());
+        assertTrue(extra.getValue().contains("TEXT_RISK"), extra.getValue());
+        assertTrue(!extra.getValue().contains("图片"), extra.getValue());
+        // 标记只在包住的调用里有效,之后的图片回调仍写图片原因
+        assertTrue(!com.chengyinhub.business.service.support.SystemNoticeCard.isTextHit());
+    }
+
     @Test
     void templateTakedownNotifiesTheAuthorOnceForAllProjections() {
         CmsMemberTemplateMapper templates = mock(CmsMemberTemplateMapper.class);

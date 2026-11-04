@@ -190,6 +190,23 @@ class SensitiveLibraryIntegrationTest {
         verify(wx, times(1)).takeDownForSafety(anyInt(), anyLong());
     }
 
+    /** 第十轮 f3 j5 H3:复查是文字命中,下架调用必须带上文字标记,作者通知才不会写成图片原因。 */
+    @Test
+    void rescanTakedownIsMarkedAsATextHit() {
+        ContentSensitiveMapper mapper = mapperWithTopicRows();
+        IWxContentSecurityService wx = mock(IWxContentSecurityService.class);
+        List<Boolean> marked = new java.util.ArrayList<>();
+        when(wx.takeDownForSafety(IWxContentSecurityService.BIZ_TYPE_TOPIC, 12L)).thenAnswer(inv -> {
+            marked.add(com.chengyinhub.business.service.support.SystemNoticeCard.isTextHit());
+            return true;
+        });
+
+        rescan(mapper, wx, mock(RedisCache.class), "true").runOnce();
+
+        assertEquals(Collections.singletonList(Boolean.TRUE), marked);
+        assertFalse(com.chengyinhub.business.service.support.SystemNoticeCard.isTextHit());
+    }
+
     /** Round5E rig:真实词库版本串(三表 条数@最后修改时间)约 66 字符,超出 scan_version VARCHAR(64),命中写库失败整轮中断。 */
     @Test
     void rescanScanVersionFitsTheColumnForARealisticLibraryVersion() {
