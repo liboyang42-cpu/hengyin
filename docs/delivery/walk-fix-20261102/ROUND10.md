@@ -11,6 +11,15 @@ Owner decisions, final:
 - Guests on a club page: members and leaderboard stay behind login, one 登录后查看 row replaces the empty sections.
 - Platform fee is 3%. C-22 stands: several tickets across orders, one per order.
 
+## Parallel from 2026-11-04 14:55 UTC (owner asked for simultaneous work)
+
+f2, f3 and f4 now run at the same time on `integ/launch-test-20261103`. Fetch this file again before starting.
+- `git pull --rebase` before every push. On a conflict, keep the other lane's change and reapply yours. Never force-push.
+- Files `ROUND10-F2-RESULT.md` and `ROUND10-F3-RESULT.md` hold a `STATUS: RELEASED` placeholder that only opens the next lane. The lane that owns the file replaces it with its real result. Ignore it as evidence: f2 and f3 aren't finished because of it.
+- Stay out of each other's way: f2 owns the 招商, pricing, sale and start flow. f3 leaves those screens' logic to f2 and rechecks them when f2 reports. f4 owns the CRM roster, wording sweeps and package size.
+- CI on your own mid-work commits may be cancelled by others' pushes: that isn't a failure. Your lane's report needs CI green on a commit that contains all your work; if another lane is pushing, wait for a quiet spell and say which commit you relied on.
+- Run mini and backend tests for what you changed before each push, since CI may not finish between pushes.
+
 ## Lane f1-money-safety
 
 Start after `integ/ROUND9-M4-RESULT.md` has a `STATUS:` line.
