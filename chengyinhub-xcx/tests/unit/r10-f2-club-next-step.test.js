@@ -90,3 +90,14 @@ test('俱乐部主题页头部与「更多」阶段同一口径,定价中可直�
   const wxml = fs.readFileSync(path.join(ROOT, 'pages/club/topic-detail/index.wxml'), 'utf8')
   assert.match(wxml, /setting\.canManage && lifecycle === 2[^>]*bindtap="goPricing"/)
 })
+
+test('商家已接受但主题还在招募中:仍是去招商,截止后进定价,不跳成管理项目', () => {
+  const page = loadPage()
+  owner(page, [{ id: 11, name: '喷泉报时', productType: 1, lifecycle: 1 }])
+  page.data.projectRows = [{ clubId: 1, acceptStatus: 'merchantAccepted' }]
+  page.updateOwnerStage()
+  assert.equal(page.data.ownerStage, 'recruit')
+  page._topics = [{ id: 11, name: '喷泉报时', productType: 1, lifecycle: 2 }]
+  page.updateOwnerStage()
+  assert.equal(page.data.ownerStage, 'price')
+})

@@ -1496,11 +1496,13 @@ Page({
       else if (this.data.ownerProjectState === 'ready' && this.data.inviteFeedbackState === 'error') stage = 'error';
       else if (this.data.ownerProjectState === 'ready' && this.data.inviteFeedbackState === 'ready') {
         stage = pending ? 'pending' : (reviewing ? 'review' : (allOrienteering ? 'run' : 'invite'));
-        if (stage === 'run' || stage === 'invite' || stage === 'review') {
-          if (recruitingTopic) { stage = 'recruit'; this._stageTopic = recruitingTopic; }
-          else if (pricingTopic) { stage = 'price'; this._stageTopic = pricingTopic; }
-          else if (stage === 'run' && !sellable && projectReviewing) stage = 'review';
-        }
+      }
+      // 本俱乐部主题的生命周期优先:招募中 → 去招商,定价中 → 确认终价(商家接受、邀约待回应都还在招商这一步里)。
+      // 执行俱乐部(接了别人的项目)不走这条。
+      if (!acceptedExecution && ['run', 'invite', 'review', 'pending', 'accepted'].indexOf(stage) >= 0) {
+        if (recruitingTopic) { stage = 'recruit'; this._stageTopic = recruitingTopic; }
+        else if (pricingTopic) { stage = 'price'; this._stageTopic = pricingTopic; }
+        else if (stage === 'run' && !sellable && projectReviewing) stage = 'review';
       }
       receivedPending = (this.data.messages || []).filter(function (item) {
         return Number(item.status) === 0 && item.toType === 'club' && String(item.toId) === String(clubId);
