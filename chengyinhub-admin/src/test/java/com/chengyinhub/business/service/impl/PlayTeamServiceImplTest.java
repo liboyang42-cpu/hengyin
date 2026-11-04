@@ -462,6 +462,27 @@ class PlayTeamServiceImplTest {
         verify(imService, never()).getOrCreateTeamGroup(any(), any());
     }
 
+    // 第十一轮 g2(j4 F1):被移出的人凭旧链接再来,拒绝理由是「暂时无法加入该队伍」,不是「你已在队伍中」。
+    @Test
+    void join_removedMemberWithOldLinkGetsNeutralRefusalNotAlreadyInTeam() {
+        PlayTeam team = recruitingTeam();
+        team.setInviteCode("secure-invite");
+        when(teamMapper.selectPlayTeamByInviteCode("secure-invite")).thenReturn(team);
+        when(blockMapper.existsBetween(LEADER_ID, MEMBER_ID)).thenReturn(0);
+        when(teamMapper.hasPaidRegistration(MEMBER_ID, 2, team.getOwnerId())).thenReturn(1);
+        when(teamMapper.reserveSlot(TEAM_ID)).thenReturn(1);
+        when(teamMapper.insertPlayTeamMember(any())).thenThrow(new org.springframework.dao.DuplicateKeyException("dup"));
+        when(teamMapper.reactivateMember(TEAM_ID, MEMBER_ID)).thenReturn(0);
+        when(teamMapper.selectActiveMember(TEAM_ID, MEMBER_ID)).thenReturn(null);
+
+        IllegalStateException removed = assertThrows(IllegalStateException.class, () -> service.join("secure-invite", MEMBER_ID));
+        assertEquals("暂时无法加入该队伍", removed.getMessage());
+
+        when(teamMapper.selectActiveMember(TEAM_ID, MEMBER_ID)).thenReturn(member(MEMBER_ID, 0));
+        IllegalStateException active = assertThrows(IllegalStateException.class, () -> service.join("secure-invite", MEMBER_ID));
+        assertEquals("你已在队伍中", active.getMessage());
+    }
+
     @Test
     void quit_lastLeaderDisbandsInsteadOfInventingAutoRefund() {
         PlayTeam team = recruitingTeam();

@@ -218,7 +218,9 @@ public class PlayTeamServiceImpl implements IPlayTeamService {
             teamMapper.insertPlayTeamMember(member);
         } catch (DuplicateKeyException duplicate) {
             if (teamMapper.reactivateMember(teamId, memberId) == 0) {
-                throw new IllegalStateException("你已在队伍中或不能重复加入");
+                // 第十一轮 g2(j4 F1):被移出 / 被拒的人凭旧链接再来,按钮旁要看到真话 —— 不说「你已在队伍中」。
+                throw new IllegalStateException(teamMapper.selectActiveMember(teamId, memberId) != null
+                        ? "你已在队伍中" : "暂时无法加入该队伍");
             }
         }
         expirePendingIfFull(teamId);
