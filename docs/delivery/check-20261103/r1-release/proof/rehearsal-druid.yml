@@ -1,0 +1,7 @@
+spring:
+  datasource:
+    druid:
+      master:
+        url: jdbc:mysql://127.0.0.1:3316/cy_e2e_51?useUnicode=true
+        username: root
+        password: ${RIG_EMPTY_PW:-}

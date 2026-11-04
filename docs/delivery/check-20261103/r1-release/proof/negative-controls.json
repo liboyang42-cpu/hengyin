@@ -1,0 +1,38 @@
+[
+ {
+  "control": "generic topic rule missing; activity row must stay 0.10",
+  "exit": 1,
+  "unchanged": true,
+  "tail": "CHENGYIN_DB_SSH_HOST 显式声明目标就是本机,不开隧道\n连接 127.0.0.1:3316/cy_e2e_51 (用户 root)\nMySQL 版本:8.0.45; version_comment:MySQL Community Server - GPL\n分句器:/root/wt/cand/ci/sql_splitter.py\n\n[1/3] -- runner: assert=scalar-true SELECT (SELECT COUNT(*) FROM settlement_rule WHERE merchant_id = 0 AND biz_type = 'activity' AND status = 1 AND del_flag = 0) = 1 AND (SELECT COUNT(*) FROM settlement_rul\n  失败: 第 1 句 runner 断言 scalar-true 失败: readback=(0,)\n"
+ },
+ {
+  "control": "empty settlement_rule",
+  "exit": 1,
+  "rows_after": 0,
+  "tail": "隧道\n连接 127.0.0.1:3316/cy_e2e_51 (用户 root)\nMySQL 版本:8.0.45; version_comment:MySQL Community Server - GPL\n分句器:/root/wt/cand/ci/sql_splitter.py\n\n[1/3] -- runner: assert=scalar-true SELECT (SELECT COUNT(*) FROM settlement_rule WHERE merchant_id = 0 AND biz_type = 'activity' AND status = 1 AND del_flag = 0) = 1 AND (SELECT COUNT(*) FROM settlement_rul\n  失败: 第 1 句 runner 断言 scalar-true 失败: readback=(0,)\n"
+ },
+ {
+  "restored": [
+   [
+    9801,
+    "0.1000"
+   ],
+   [
+    9802,
+    "0.1000"
+   ],
+   [
+    9803,
+    "0.1000"
+   ],
+   [
+    9804,
+    "0.0500"
+   ],
+   [
+    9805,
+    "0.2000"
+   ]
+  ]
+ }
+]

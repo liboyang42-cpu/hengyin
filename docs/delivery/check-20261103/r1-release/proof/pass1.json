@@ -1,0 +1,332 @@
+{
+ "results": [
+  {
+   "migration": "migration_20261101_author_write_receipt.sql",
+   "exit": 0,
+   "changed": [
+    "new_tables"
+   ],
+   "assert_lines": [
+    "[2/2] -- runner: assert=scalar-true SELECT COUNT(*) = 1 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'app_author_write_receipt'",
+    "  断言通过:scalar-true; readback=1"
+   ],
+   "tail": "_bin NOT NULL, request_id VARCHAR(64) CHARACTER SET ascii \n  OK\n\n[2/2] -- runner: assert=scalar-true SELECT COUNT(*) = 1 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'app_author_write_receipt'\n  断言通过:scalar-true; readback=1\n  OK\n\nSQL 提交完成；仍须从新连接回读业务表，提交回执不能代替效果观测。\n"
+  },
+  {
+   "migration": "migration_20261102_merchant_industry_categories.sql",
+   "exit": 0,
+   "changed": [
+    "sys_category_6"
+   ],
+   "assert_lines": [
+    "[3/3] -- runner: assert=scalar-true SELECT (SELECT COUNT(*) FROM sys_category WHERE type IN (1, 6) AND parent_id = 0 AND status = 1 AND del_flag = 0 AND (category_name LIKE '%咖啡%' OR category_name LIKE '%茶馆",
+    "  断言通过:scalar-true; readback=1"
+   ],
+   "tail": "OM (SELECT '咖啡\n  OK\n\n[3/3] -- runner: assert=scalar-true SELECT (SELECT COUNT(*) FROM sys_category WHERE type IN (1, 6) AND parent_id = 0 AND status = 1 AND del_flag = 0 AND (category_name LIKE '%咖啡%' OR category_name LIKE '%茶馆\n  断言通过:scalar-true; readback=1\n  OK\n\nSQL 提交完成；仍须从新连接回读业务表，提交回执不能代替效果观测。\n"
+  },
+  {
+   "migration": "migration_20261103_content_safety_recheck.sql",
+   "exit": 0,
+   "changed": [
+    "jobs_new",
+    "new_tables"
+   ],
+   "assert_lines": [
+    "[3/3] -- runner: assert=scalar-true SELECT (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'content_safety_recheck' AND engine = 'InnoDB') = 1 AND (SELECT CO",
+    "  断言通过:scalar-true; readback=1"
+   ],
+   "tail": "RecheckTask.ru\n  OK\n\n[3/3] -- runner: assert=scalar-true SELECT (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'content_safety_recheck' AND engine = 'InnoDB') = 1 AND (SELECT CO\n  断言通过:scalar-true; readback=1\n  OK\n\nSQL 提交完成；仍须从新连接回读业务表，提交回执不能代替效果观测。\n"
+  },
+  {
+   "migration": "migration_20261103_sensitive_content_library.sql",
+   "exit": 0,
+   "changed": [
+    "jobs_new",
+    "config_rescan",
+    "menus",
+    "new_tables"
+   ],
+   "assert_lines": [
+    "[15/15] -- runner: assert=scalar-true SELECT (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND engine = 'InnoDB' AND table_name IN ('content_sensitive_word','content_sensitiv",
+    "  断言通过:scalar-true; readback=1"
+   ],
+   "tail": "e_menu_guard\n  OK\n\n[15/15] -- runner: assert=scalar-true SELECT (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND engine = 'InnoDB' AND table_name IN ('content_sensitive_word','content_sensitiv\n  断言通过:scalar-true; readback=1\n  OK\n\nSQL 提交完成；仍须从新连接回读业务表，提交回执不能代替效果观测。\n"
+  },
+  {
+   "migration": "migration_20261102_club_session_gather_point.sql",
+   "exit": 0,
+   "changed": [
+    "gather"
+   ],
+   "assert_lines": [],
+   "tail": " Server - GPL\n分句器:/root/wt/cand/ci/sql_splitter.py\n\n[1/1] UPDATE cms_activity a JOIN ( SELECT t.owner_id AS activity_id, MIN(t.id) AS ticket_id FROM oms_ticket t WHERE t.owner_type = 2 AND t.del_flag = 0 AND t.gather_lat IS NOT NULL AND t.gather_lng IS NOT N\n  OK\n\nSQL 提交完成；仍须从新连接回读业务表，提交回执不能代替效果观测。\n"
+  },
+  {
+   "migration": "migration_20261103_settlement_rule_three_percent.sql",
+   "exit": 0,
+   "changed": [
+    "settlement_rule"
+   ],
+   "assert_lines": [
+    "[1/3] -- runner: assert=scalar-true SELECT (SELECT COUNT(*) FROM settlement_rule WHERE merchant_id = 0 AND biz_type = 'activity' AND status = 1 AND del_flag = 0) = 1 AND (SELECT COUNT(*) FROM settlement_rul",
+    "  断言通过:scalar-true; readback=1",
+    "[3/3] -- runner: assert=scalar-true SELECT (SELECT COUNT(*) FROM settlement_rule WHERE merchant_id = 0 AND biz_type IN ('activity', 'topic', 'topic_club') AND status = 1 AND del_flag = 0 AND NOT (platform_c",
+    "  断言通过:scalar-true; readback=1"
+   ],
+   "tail": "', 'topic_club\n  OK\n\n[3/3] -- runner: assert=scalar-true SELECT (SELECT COUNT(*) FROM settlement_rule WHERE merchant_id = 0 AND biz_type IN ('activity', 'topic', 'topic_club') AND status = 1 AND del_flag = 0 AND NOT (platform_c\n  断言通过:scalar-true; readback=1\n  OK\n\nSQL 提交完成；仍须从新连接回读业务表，提交回执不能代替效果观测。\n"
+  },
+  {
+   "migration": "migration_20261102_club_checkin_phone_visible.sql",
+   "exit": 0,
+   "changed": [
+    "cra"
+   ],
+   "assert_lines": [
+    "[6/6] -- runner: assert=scalar-true SELECT (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='club_role_assignment' AND column_name='customer_phone_visible')=1 AS",
+    "  断言通过:scalar-true; readback=1"
+   ],
+   "tail": "e_visible_stmt\n  OK\n\n[6/6] -- runner: assert=scalar-true SELECT (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='club_role_assignment' AND column_name='customer_phone_visible')=1 AS\n  断言通过:scalar-true; readback=1\n  OK\n\nSQL 提交完成；仍须从新连接回读业务表，提交回执不能代替效果观测。\n"
+  }
+ ],
+ "state_after": {
+  "settlement_rule": [
+   [
+    9801,
+    0,
+    "activity",
+    "0.0300",
+    "0.9700",
+    "0.0000",
+    1,
+    0
+   ],
+   [
+    9802,
+    0,
+    "topic",
+    "0.0300",
+    "0.9700",
+    "0.0000",
+    1,
+    0
+   ],
+   [
+    9803,
+    0,
+    "topic_club",
+    "0.0300",
+    "0.9700",
+    "0.0000",
+    1,
+    0
+   ],
+   [
+    9804,
+    8001,
+    "activity",
+    "0.0500",
+    "0.9500",
+    "0.0000",
+    1,
+    0
+   ],
+   [
+    9805,
+    0,
+    "activity",
+    "0.2000",
+    "0.8000",
+    "0.0000",
+    0,
+    0
+   ]
+  ],
+  "sys_category_6": [
+   [
+    9811,
+    6,
+    "茶馆",
+    90,
+    1,
+    0
+   ],
+   [
+    9812,
+    1,
+    "书店",
+    91,
+    1,
+    0
+   ],
+   [
+    9813,
+    6,
+    "手作工坊",
+    24,
+    1,
+    0
+   ],
+   [
+    9814,
+    6,
+    "古着中古",
+    25,
+    1,
+    0
+   ],
+   [
+    9815,
+    6,
+    "文创杂货",
+    26,
+    1,
+    0
+   ],
+   [
+    9816,
+    6,
+    "花店",
+    27,
+    1,
+    0
+   ],
+   [
+    9817,
+    6,
+    "烘焙甜品",
+    28,
+    1,
+    0
+   ],
+   [
+    9818,
+    6,
+    "酒馆小酌",
+    29,
+    1,
+    0
+   ],
+   [
+    9819,
+    6,
+    "宠物友好",
+    30,
+    1,
+    0
+   ]
+  ],
+  "gather": [
+   [
+    9801,
+    7001,
+    "31.230400",
+    "121.473700"
+   ],
+   [
+    9802,
+    7001,
+    null,
+    null
+   ],
+   [
+    9803,
+    7001,
+    "30.100000",
+    "120.100000"
+   ],
+   [
+    9804,
+    null,
+    null,
+    null
+   ],
+   [
+    9805,
+    7001,
+    null,
+    null
+   ]
+  ],
+  "jobs_new": [
+   [
+    "内容安全自动复检",
+    "contentSafetyRecheckTask.run()",
+    "21 1/5 * * * ?",
+    "3",
+    "1",
+    "1"
+   ],
+   [
+    "敏感词存量复查",
+    "sensitiveContentRescanTask.run()",
+    "33 2/10 * * * ?",
+    "3",
+    "1",
+    "1"
+   ]
+  ],
+  "config_rescan": [
+   [
+    "content.sensitive.rescan.remove",
+    "false",
+    "Y"
+   ]
+  ],
+  "menus": [
+   [
+    "敏感内容库维护",
+    "business:sensitive:edit",
+    "F",
+    "0",
+    "0",
+    0
+   ],
+   [
+    "敏感内容库",
+    "business:sensitive:list",
+    "C",
+    "0",
+    "0",
+    1
+   ]
+  ],
+  "menu_grants": [
+   [
+    0
+   ]
+  ],
+  "cra": [
+   [
+    9831,
+    "EVENT_CHECKIN",
+    0
+   ]
+  ],
+  "new_tables": [
+   [
+    "app_author_write_receipt",
+    "InnoDB"
+   ],
+   [
+    "content_safety_recheck",
+    "InnoDB"
+   ],
+   [
+    "content_sensitive_allow",
+    "InnoDB"
+   ],
+   [
+    "content_sensitive_hit",
+    "InnoDB"
+   ],
+   [
+    "content_sensitive_image",
+    "InnoDB"
+   ],
+   [
+    "content_sensitive_word",
+    "InnoDB"
+   ]
+  ]
+ }
+}
