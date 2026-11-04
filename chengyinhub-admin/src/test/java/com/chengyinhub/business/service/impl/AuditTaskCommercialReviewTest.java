@@ -408,6 +408,27 @@ class AuditTaskCommercialReviewTest {
         verify(imService, never()).sendSystem(eq(1L), any(), any(), any());
     }
 
+    /** 第十轮 f3 j5 L5:通知点名是哪个主题;没填原因时不再写「已通过审核。原因：已通过审核」。 */
+    @Test
+    void approvalNoticeNamesTheTopicAndDoesNotRepeatTheOutcomeAsReason() {
+        CmsTopic named = new CmsTopic();
+        named.setId(9L);
+        named.setMemberId(990009L);
+        named.setName("外滩夜行");
+        when(cmsTopicMapper.selectCmsTopicById(9L)).thenReturn(named);
+        AuditTask task = task(92L, AuditTask.STATUS_PENDING, "{}");
+        task.setBizType(AuditTask.BIZ_TOPIC_SALE_REVIEW);
+        AuditReviewDTO noReason = review(AuditTask.STATUS_APPROVED);
+        noReason.setReasonText(null);
+        ReflectionTestUtils.invokeMethod(service, "notifyReviewResult", task, noReason);
+
+        ArgumentCaptor<String> json = ArgumentCaptor.forClass(String.class);
+        verify(imService).sendSystem(eq(990009L), any(), eq("审核通过"), json.capture());
+        String card = json.getValue();
+        org.junit.jupiter.api.Assertions.assertTrue(card.contains("\"sub\":\"你提交的主题「外滩夜行」已通过审核\""), card);
+        org.junit.jupiter.api.Assertions.assertFalse(card.contains("原因：你提交的"), card);
+    }
+
     @Test
     void commercialReviewWithoutCurrentOwnerDoesNotFallBackToPlatformSubmitter() {
         AuditTask task = task(92L, AuditTask.STATUS_PENDING, "{}");

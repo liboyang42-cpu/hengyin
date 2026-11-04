@@ -1097,6 +1097,8 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             }
         }
         boolean report = SOURCE_REPORT.equals(task.getSourceType()) || !reporters.isEmpty();
+        // j5 L5:通知点名是哪一条(目前只有主题商业审核拿得到名字),其余仍写「你提交的内容」
+        String reviewedItem = "内容";
         if (!report && (AuditTask.BIZ_TOPIC_PROJECT_REVIEW.equals(task.getBizType())
                 || AuditTask.BIZ_TOPIC_SALE_REVIEW.equals(task.getBizType()))) {
             // 商业审核也可由后台代提交，后台 userId 不能当作小程序 memberId 通知。
@@ -1105,6 +1107,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                 throw new ServiceException("主题主办方不存在，审核通知无法送达");
             }
             reporters.add(topic.getMemberId());
+            reviewedItem = com.chengyinhub.business.service.support.SystemNoticeCard.item("主题", topic.getName());
         } else if (task.getSubmitterId() != null && (SOURCE_REPORT.equals(task.getSourceType()) || !report)) {
             reporters.add(task.getSubmitterId());
         }
@@ -1133,7 +1136,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                 ? "举报成立，组局聊天已关闭" : "举报成立，已按规则处理") : (AuditTask.BIZ_HANGOUT.equals(task.getBizType())
                         ? "本次举报不成立，既有处理不变" : "你举报的内容未发现违规"))
                 : appeal ? (upheld ? "你的申诉未通过，原处理维持" : "你的申诉成立，内容已恢复")
-                : (upheld ? "你提交的内容未通过审核" : "你提交的内容已通过审核");
+                : (upheld ? "你提交的" + reviewedItem + "未通过审核" : "你提交的" + reviewedItem + "已通过审核");
         if (isGuardType(task.getBizType())) outcome = upheld ? "守卫申诉未通过，原到达判定维持"
                 : "守卫申诉成立；仍有效原局可重新现场核验，仍须通过原定位与风控条件，不补记完成或奖励";
         String reason = request.getReasonText() == null || request.getReasonText().isEmpty()
@@ -1158,7 +1161,8 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             result.put("followUp", "本通知保留处理结果；如有异议，请通过客服提供审核任务编号补充材料。");
             java.util.Map<String, Object> card = new java.util.LinkedHashMap<>();
             card.put("title", recipient.getValue());
-            card.put("sub", outcome + "。原因：" + reasonLine);
+            // j5 L5:没填原因时原因就是结论本身,不再写「已通过审核。原因：已通过审核」
+            card.put("sub", reasonLine.equals(outcome) ? outcome : outcome + "。原因：" + reasonLine);
             card.put("result", result);
             String json;
             try {
