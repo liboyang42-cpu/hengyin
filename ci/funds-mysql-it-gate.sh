@@ -94,6 +94,7 @@ if [ "$MODE" = "atomic-migration" ]; then
     ci.test_merchant_offer_withdrawal_columns_mysql_integration.MerchantOfferWithdrawalColumnsMysqlIntegrationTest \
     ci.test_community_legacy_owner_mysql_integration.CommunityLegacyOwnerMysqlIntegrationTest \
     ci.test_community_legacy_comment_like_counts_mysql_integration.CommunityLegacyCommentLikesMysqlIntegrationTest \
+    ci.test_review_wording_seeded_text_mysql_integration.ReviewWordingSeededTextMysqlIntegrationTest \
     >"$atomic_it_log" 2>&1
   atomic_it_status=$?
   set -e
@@ -118,6 +119,10 @@ if [ "$MODE" = "atomic-migration" ]; then
   fi
   if [ "$atomic_ran" -lt 78 ]; then
     echo "❌ 原子迁移 IT 实际只跑了 $atomic_ran 条(原68条加留存任务登记10条，应至少78条)" >&2
+    exit 1
+  fi
+  if [ "$atomic_ran" -lt 80 ]; then
+    echo "❌ 原子迁移 IT 实际只跑了 $atomic_ran 条(78 条加第十一轮 h2 种子文字改名演练 2 条，应至少80条)" >&2
     exit 1
   fi
   echo "✅ 原子迁移 IT 实际执行 $atomic_ran 条，skipped=0，回读通过"
