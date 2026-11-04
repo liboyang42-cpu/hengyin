@@ -30,7 +30,7 @@
             <text class="pg-field-label">成团人数<text class="pg-req" aria-hidden="true">*</text></text>
             <input class="pg-input" type="number" value="{{teamSize}}" placeholder="0" bindinput="onTeamInput" />
             <!-- CU-C-70 + P-34(第四轮):成团人数空/0 时当场在这一栏下面用红字说清,不再是卡片底部的蓝色提示框。 -->
-            <cy-inline-error class="pg-field-err" wx:if="{{teamSizeError}}" kind="error" title="{{teamSizeError}}" />
+            <text class="pg-field-err" wx:if="{{teamSizeError}}" aria-role="alert">{{teamSizeError}}</text>
           </view>
         </view>
         <cy-btn variant="secondary" bindtap="recalculate">重新计算地板</cy-btn>
@@ -50,7 +50,7 @@
           <text class="pg-field-label">{{item.name || '票种 ' + (index + 1)}}<text class="pg-req" aria-hidden="true">*</text></text>
           <input class="pg-input" type="digit" value="{{item.price}}" placeholder="0" data-idx="{{index}}"
                  aria-label="{{item.name || '票种 ' + (index + 1)}}终价" bindinput="onTicketPriceInput" />
-          <cy-inline-error class="pg-field-err" wx:if="{{item.error}}" kind="error" title="{{item.error}}" />
+          <text class="pg-field-err" wx:if="{{item.error}}" aria-role="alert">{{item.error}}</text>
         </view>
         <view class="pg-reference"><text>{{referenceText}}</text></view>
       </view>
@@ -63,7 +63,7 @@
         <slider min="{{floor}}" max="{{sliderMax}}" value="{{finalPrice}}" step="1"
                 activeColor="var(--cy-color-action-primary-bg)" backgroundColor="var(--cy-color-border-subtle)"
                 block-size="24" bindchange="onSliderChange" />
-        <view class="pg-range"><text>地板 {{money.amount2(floorText)}}</text><text>{{money.amount2(sliderMax)}}</text></view>
+        <view class="pg-range"><text>地板 {{money.amount2(floorText)}}</text><text>最高 {{money.amount2(sliderMax)}}</text></view>
         <view class="pg-reference">
           <text>{{referenceText}}</text>
           <text wx:if="{{referenceDeltaText}}" class="pg-delta">{{referenceDeltaText}}</text>

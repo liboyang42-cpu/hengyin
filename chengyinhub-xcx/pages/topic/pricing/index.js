@@ -150,7 +150,7 @@ Page({
           // 人数这道条件必须参与,不然按钮点得动而价格是 0。
           canConfirmPrice: pricesOk(ticketRows(that.data.subType, res.data.tickets, floor), start, floor) && res.data.canConfirm !== false
             && teamSizeOk(that.data.subType, that.data.teamSize),
-          teamSizeError: teamSizeErrorText(that.data.subType, that.data.teamSize),
+          teamSizeError: that._teamTouched ? teamSizeErrorText(that.data.subType, that.data.teamSize) : '', // p3 F6:动过人数或点了确认才报
           sliderMax: sliderMax,
           referencePrice: reference,
           referenceText: reference && sample > 0
@@ -219,7 +219,7 @@ Page({
     if (type === this.data.subType) return;
     this.setData({
       subType: type, hasPreview: false, errorText: '', tickets: [],
-      teamSizeError: teamSizeErrorText(type, this.data.teamSize),
+      teamSizeError: this._teamTouched ? teamSizeErrorText(type, this.data.teamSize) : '',
     });
     this.preview();
   },
@@ -237,6 +237,7 @@ Page({
 
   onTeamInput(e) {
     const teamSize = e.detail.value;
+    this._teamTouched = true;
     // CU-C-70:成团人数就地参与可提交判定 —— 改成 0 后不重算也能点确认的那条路必须堵上。
     this.setData({
       teamSize,
@@ -266,8 +267,10 @@ Page({
     if (this.data.saving) return;
     // P-34:开售后人数提示已无意义,先说终价已确认
     // 第四轮(业主:输入问题只在字段下方红字说):人数/票价不对时回执就是那一栏下的红字,不再在底部另起提示框。
-    if (!this.data.priced && this.data.teamSizeError) {
-      this.setData({ teamSizeError: this.data.teamSizeError, submitError: '' });
+    const teamSizeError = teamSizeErrorText(this.data.subType, this.data.teamSize);
+    if (!this.data.priced && teamSizeError) {
+      this._teamTouched = true;
+      this.setData({ teamSizeError, submitError: '' });
       return;
     }
     if (!this.data.priced && !pricesOk(this.data.tickets, this.data.finalPrice, this.data.floor)) {

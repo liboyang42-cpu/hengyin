@@ -1,6 +1,6 @@
 'use strict';
 // P-34 第四轮(业主):
-// ① 成团人数缺失不再是卡片底部的蓝色提示框,而是成团人数栏下的 cy-inline-error(红,kind=error),标签带红 *;
+// ① 成团人数缺失不再是卡片底部的蓝色提示框,而是成团人数栏下的红字(第十轮 f3 起不再用粉底 cy-inline-error),标签带红 *;
 // ② 已开售主题整块隐藏带队成本与「重新计算地板」;
 // ③ 作者发了几张票时逐张确认终价:每张预填作者的价、各自对地板校验,确认时逐张提交;一张票照旧用滑块。
 const test = require('node:test');
@@ -41,10 +41,14 @@ function preview(page, data) {
 
 const TWO = [{ ticketId: 931, name: '日场', price: 69 }, { ticketId: 932, name: '夜场', price: 99 }];
 
-test('成团人数的问题显示在成团人数栏下,红色 kind=error,标签带红 *;卡片底部不再有蓝色提示框', () => {
+// 第十轮 f3 p3 F6(ROUND10 业主口径「输入问题是字段下的红字」):原来的 cy-inline-error 是粉底带图标的块,
+// 改成栏下纯红字;且打开页面未动人数时不报,改过人数或点确认后才报。
+test('成团人数的问题显示在成团人数栏下的红字,标签带红 *;卡片底部不再有蓝色提示框', () => {
   const field = wxml.match(/成团人数<text class="pg-req"[^>]*>\*<\/text><\/text>[\s\S]*?<\/view>/);
   assert.ok(field, '成团人数标签要带红 *');
-  assert.match(field[0], /<cy-inline-error[^>]*kind="error"[^>]*title="\{\{teamSizeError\}\}"/);
+  assert.match(field[0], /<text class="pg-field-err" wx:if="\{\{teamSizeError\}\}" aria-role="alert">\{\{teamSizeError\}\}<\/text>/);
+  assert.doesNotMatch(wxml, /<cy-inline-error[^>]*teamSizeError/, '人数提示不再是粉底图标块');
+  assert.match(fs.readFileSync(path.join(ROOT, 'pages/topic/pricing/index.wxss'), 'utf8'), /\.pg-field-err \{[^}]*color: var\(--cy-color-status-danger\)/);
   const between = wxml.slice(wxml.indexOf('重新计算地板'), wxml.indexOf('pg-floor'));
   assert.doesNotMatch(between, /teamSizeError/, '「重新计算地板」下面不再有人数提示框');
   assert.doesNotMatch(wxml, /<cy-inline-error(?![^>]*kind=)[^>]*teamSizeError/, '人数提示不能用默认(蓝色 data)档');
@@ -52,7 +56,16 @@ test('成团人数的问题显示在成团人数栏下,红色 kind=error,标签�
   page.data.subType = 'guided';
   page.data.teamSize = '';
   preview(page, {});
+  assert.equal(page.data.teamSizeError, '', '打开页面、还没动过人数时不报错');
+  page.onTeamInput({ detail: { value: '0' } });
   assert.equal(page.data.teamSizeError, '请填写大于 0 的成团人数');
+  // 动过之后刷新预览仍保留提示
+  preview(page, {});
+  assert.equal(page.data.teamSizeError, '请填写大于 0 的成团人数');
+});
+
+test('第十轮 f3 p3 F6:滑块右端标出「最高」,不再是一个看着像第二个价格的裸金额', () => {
+  assert.match(wxml, /<text>地板 \{\{money\.amount2\(floorText\)\}\}<\/text><text>最高 \{\{money\.amount2\(sliderMax\)\}\}<\/text>/);
 });
 
 test('已开售主题隐藏带队成本整块(含重新计算地板)', () => {

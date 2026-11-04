@@ -81,6 +81,9 @@ test('有人带:人数缺失时同样不能确认(空值不是「已填 0 人」
   page.setData({ topicId: 8, subType: 'guided', leadCost: '120', teamSize: '' })
   previewWith(page, { priceMin: '0.00', canConfirm: true })
   assert.equal(page.data.canConfirmPrice, false)
+  // 第十轮 f3 p3 F6(ROUND10 业主口径):打开页面还没动过人数时不报错;点确认或改人数后才在栏下红字说。
+  assert.equal(page.data.teamSizeError, '')
+  page.onConfirmDisabledTap()
   assert.match(page.data.teamSizeError, /成团人数/)
 })
 
