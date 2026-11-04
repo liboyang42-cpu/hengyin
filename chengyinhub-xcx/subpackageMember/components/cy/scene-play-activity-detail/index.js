@@ -264,8 +264,8 @@ Component({
               ...item,
               _titleText: nonEmptyString(item.title) || '—',
               _imageUrl: nonEmptyString(item.imgUrl),
-              _playersText: players ? (/人$/.test(players) ? players : `${players}人`) : '—',
-              _durationText: duration === null ? '—' : `${duration} 分钟`,
+              // j1 F11:没填的人数/时长(模板已不配时长)不再显示成「— · 0 分钟」
+              _metaText: [players ? (/人$/.test(players) ? players : `${players}人`) : '', duration ? `${duration} 分钟` : ''].filter(Boolean).join(' · '),
             }
           })
           const info = {

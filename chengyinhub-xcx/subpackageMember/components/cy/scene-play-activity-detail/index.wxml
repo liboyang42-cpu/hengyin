@@ -70,7 +70,7 @@
         <view class="activity-node" wx:for="{{info.memberTemplateList}}" wx:key="id" bindtap="goTemplateDetail" data-id="{{item.id}}" hover-class="activity-row--press" hover-stay-time="80" style="--pmi:{{index}};">
           <image wx:if="{{item._imageUrl}}" class="activity-node__image" src="{{item._imageUrl}}" mode="aspectFill" />
           <view wx:else class="activity-node__placeholder"><cy-icon name="image" size="32" /></view>
-          <view class="activity-node__copy"><text class="activity-node__name">{{item._titleText}}</text><text class="activity-node__meta">{{item._playersText}} · {{item._durationText}}</text></view>
+          <view class="activity-node__copy"><text class="activity-node__name">{{item._titleText}}</text><text wx:if="{{item._metaText}}" class="activity-node__meta">{{item._metaText}}</text></view>
           <cy-icon class="activity-node__arrow" name="arrow-right" size="28" />
         </view>
       </view>

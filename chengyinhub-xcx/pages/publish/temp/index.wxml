@@ -211,7 +211,7 @@
           <block wx:else>
             <view class="cg-r5-row">
               <view class="cg-game-ico cg-game-ico--{{r5Editor.gameTint}}"><cy-icon name="{{gameCurrent.icon}}" size="36" /></view>
-              <view class="cg-r5-row__main"><text class="cg-r5-row__title">{{gameCurrent.label}}</text><text class="cg-r5-row__sub" wx:if="{{gameCurrent.sub}}">{{gameCurrent.sub}}</text></view>
+              <view class="cg-r5-row__main"><text class="cg-r5-row__title">{{gameCurrent.label}}</text></view>
               <view class="cg-r5-pill" bindtap="openR5GameSheet" aria-role="button" aria-label="更换玩法" hover-class="cy-pressed" hover-stay-time="80">更换</view>
             </view>
             <!-- 2026-10-23 主人:「形式」不在卡里选了(每种形式在选择玩法里各是一枚标签),卡里只留呈现方式。
