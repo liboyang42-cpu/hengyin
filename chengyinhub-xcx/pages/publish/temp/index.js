@@ -39,7 +39,7 @@ const templateAuthorFields = require('../utils/publish/template-author-fields.js
 const merchantAccessPolicy = require('../../../utils/merchant-access-policy.js');
 const { formatDurationMinutes, gameTemplateCover } = require('../../../utils/template-display.js');
 const { resolveCategoryIcon } = require('../../../utils/category-icon.js');
-const { loadStoryFont } = require('../utils/publish/story-font.js');
+const { loadStoryFont } = require('../utils/publish/story-font.js'); const { storyFontUrl: STORY_FONT_URL } = require('../../../utils/config.js');
 const { splitRuleSteps } = require('../../../utils/rule-steps.js');
 const { rejectionNamesCover } = require('../utils/publish/cover-rejection.js');
 
@@ -2866,7 +2866,7 @@ Page({
 
   openPreview: function () { if (this.data.submitting) return; // CP-11:按钮不再转圈,保存中点击不开预览
     this._pvTypeStartedAt = 0; this._pvAdvanced = null;
-    loadStoryFont(); // P-60:预览里的故事正文同玩家端手写体
+    loadStoryFont(STORY_FONT_URL); // P-60:预览里的故事正文同玩家端手写体
     // 查看预览前必填校验
     const formData = this.prepareFormData();
     if (!this.validateForm(formData, false)) return;

@@ -11,14 +11,16 @@ const read = rel => fs.readFileSync(path.join(ROOT, rel), 'utf8')
 
 function fresh(url, wxStub) {
   delete require.cache[require.resolve(MODULE)]
-  const source = fs.readFileSync(MODULE, 'utf8').replace(/var STORY_FONT_URL = '[^']*';/, 'var STORY_FONT_URL = ' + JSON.stringify(url) + ';')
+  const source = fs.readFileSync(MODULE, 'utf8')
   const Module = require('node:module')
   const m = new Module(MODULE)
   m.filename = MODULE
   m.paths = Module._nodeModulePaths(path.dirname(MODULE))
   global.wx = wxStub
   m._compile(source, MODULE)
-  return m.exports
+  // 第十一轮 g4(j3 F19):地址由调用方从 utils/config.js 传入
+  const load = m.exports.loadStoryFont
+  return Object.assign({}, m.exports, { loadStoryFont: done => load(url, done) })
 }
 
 test('URL 未配置:不调 loadFontFace,回调 false(回落系统字体)', () => {
@@ -78,8 +80,30 @@ test('两份分包副本逐字一致,且不放进主包 utils/(3 MiB 棘轮)', (
   assert.equal(fs.existsSync(path.join(ROOT, 'utils/story-font.js')), false)
 })
 
-test('业主选定龙藏体:两份副本都指向已验证的官方完整 https 字库', () => {
+test('第十一轮 g4(j3 F19):不再从 fonts.gstatic.com 加载;地址走 utils/config.js 的自有 https 静态主机', () => {
+  const config = require(path.join(ROOT, 'utils/config.js'))
   for (const f of ['pages/play/utils/story-font.js', 'pages/publish/utils/publish/story-font.js']) {
-    assert.match(read(f), /var STORY_FONT_URL = 'https:\/\/fonts\.gstatic\.com\/s\/longcang\/v21\/LYjAdGP8kkgoTec8zkRgrQ\.ttf';/)
+    assert.doesNotMatch(read(f), /gstatic|googleapis/)
+    assert.doesNotMatch(read(f), /https:\/\//, '副本里不写死地址')
   }
+  assert.equal(typeof config.storyFontUrl, 'string')
+  if (config.storyFontUrl) {
+    assert.ok(config.isTrustedAssetUrl(config.storyFontUrl), '只指向我们自己的主机')
+    assert.match(config.storyFontUrl, /longcang/i)
+  }
+  assert.match(read('pages/play/index.js'), /loadStoryFont\(STORY_FONT_URL\)/)
+  assert.match(read('pages/play/index.js'), /storyFontUrl: STORY_FONT_URL \} = require\('\.\.\/\.\.\/utils\/config\.js'\)/)
+  assert.match(read('pages/publish/temp/index.js'), /loadStoryFont\(STORY_FONT_URL\)/)
+  assert.match(read('pages/publish/temp/index.js'), /storyFontUrl: STORY_FONT_URL \} = require\('\.\.\/\.\.\/\.\.\/utils\/config\.js'\)/)
+  assert.match(read('docs/发版checklist.md'), /故事手写体[\s\S]*storyFontUrl[\s\S]*CORS/)
+})
+
+test('第十一轮 g4(j3 F19):配置为空时不调 loadFontFace,干净回落系统字体', () => {
+  delete require.cache[require.resolve(MODULE)]
+  global.wx = { loadFontFace() { throw new Error('不该加载') } }
+  const font = require(MODULE)
+  let result = null
+  font.loadStoryFont('', ok => { result = ok })
+  assert.equal(result, false)
+  delete require.cache[require.resolve(MODULE)]
 })

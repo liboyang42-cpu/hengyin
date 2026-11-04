@@ -406,7 +406,7 @@ const themeRecords = require('../../utils/theme-records.js');
 const themeTrade = require('./utils/theme-trade.js');
 const themePlans = require('./utils/theme-plans.js');
 const playerOps = require('./utils/theme-player-ops.js');
-const { loadStoryFont } = require('./utils/story-font.js');
+const { loadStoryFont } = require('./utils/story-font.js'); const { storyFontUrl: STORY_FONT_URL } = require('../../utils/config.js');
 const playOverlays = require('./utils/play-hud-overlays.js'); const playTopbar = require('./utils/play-topbar.js'); const playLook = require('./utils/play-look.js'); /* 故事流顶栏:罗盘⇄地图、背包、案件册、各站奖励 */
 Page({
   ...journeyCheckRecovery.methods(req),
@@ -618,7 +618,7 @@ Page({
   },
 
   onLoad(options) {
-    loadStoryFont(); /* P-60:故事流手写体(未配置 / 失败时 .cy-story-hand 回落系统字体) */ this._initTopbar(); /* 左上角上次选的显示(罗盘 / 地图) */
+    loadStoryFont(STORY_FONT_URL); /* P-60:故事流手写体(未配置 / 失败时 .cy-story-hand 回落系统字体) */ this._initTopbar(); /* 左上角上次选的显示(罗盘 / 地图) */
     this._playOwner = this._playMember();
     this._playLoginContext = this._capturePlayLoginContext();
     this._playDisposed = false;

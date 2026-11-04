@@ -41,6 +41,19 @@
          同时在微信后台「开发管理 → 服务器域名」的 downloadFile 合法域名里确认有这台主机。
       4. 把地址填进 `utils/config.js` 的 `roamAtmosVideoUrl`(默认空 = 不播)。地址不是密钥,可以随发版提交。
       5. 真机确认:首次进漫游播一次、点一下能跳过、播完先压暗再整层淡出到地图上不闪白;再进不重播;弱网 / 减弱动态直接不播。
+- [ ] **故事手写体(第十一轮 g4,j3 F19)**:龙藏体 Long Cang 不再从 fonts.gstatic.com 加载(国内不可靠),
+      `utils/config.js` 的 `storyFontUrl` 指向自己的 OSS:`https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/static/fonts/longcang-v21.ttf`。
+      字体**不进仓库、不进小程序包**(约 5.15 MB)。没传之前玩家看到的是系统字体,不报错。
+      1. 文件取 Google Fonts 官方 `ofl/longcang/LongCang-Regular.ttf`(与原 gstatic v21 同一份,5,150,664 字节,
+         sha256 `ad407b7857f81eeaa0deca4088a8862511fe92ba02c23c54ddbf8bce8b7d1a19`),上传到 `chengyin-oss` 桶 `static/fonts/longcang-v21.ttf`;
+         同目录放一份 `OFL.txt`(SIL OFL 1.1 原文,随字体分发是许可证要求)。换字体就换文件名,不覆盖旧文件。
+      2. 对象 **公共读**,`Content-Type: font/ttf`,走 HTTPS,建议 `Cache-Control: public, max-age=31536000`。
+      3. **CORS**:`wx.loadFontFace` 的网络字体要求跨域可读。桶的跨域规则加一条:来源 `https://servicewechat.com`(或 `*`),
+         方法 `GET, HEAD`,允许头 `*`。没有这条,真机 loadFontFace 会失败并回落系统字体。
+         验证:`curl -sI -H 'Origin: https://servicewechat.com' <地址>` 要带 `Access-Control-Allow-Origin`。
+      4. 微信后台「开发管理 → 服务器域名」的 downloadFile 合法域名里确认有 `chengyin-oss.oss-cn-shanghai.aliyuncs.com`。
+      5. 真机确认(国内网络):故事正文 / 对白是手写体,标题、按钮、数字不变;断网时是系统字体、没有报错。
+         地址改成空字符串 = 全部用系统字体。
 
 ## C. 发布三件套顺序(自有服务器 <生产库主机> / www.chengyinhub.com)
 
