@@ -1,0 +1,46 @@
+### e2e-openid-9004 GET /api/team/trail/state?activityId=9
+{"msg":"操作成功","code":200,"data":{"available":true,"share":true,"decided":true}}
+### redis --scan --pattern team_trail*
+team_trail:pts:9
+team_trail:opt:9
+### redis HKEYS team_trail:pts:9
+990006
+9004
+### e2e-openid-9009 GET /api/team/trail/state?activityId=9
+{"msg":"操作成功","code":200,"data":{"available":false}}
+### e2e-openid-9009 POST /api/team/trail/sync {"activityId":9,"points":[[31.23,121.47]]}
+{"msg":"操作成功","code":200,"data":{"available":false}}
+### e2e-openid-9009 POST /api/team/trail/consent {"activityId":9,"share":true}
+{"msg":"操作成功","code":200,"data":{"available":false}}
+### walk-player-4 GET /api/team/trail/state?activityId=9
+{"msg":"操作成功","code":200,"data":{"available":false}}
+### walk-player-4 POST /api/team/trail/sync {"activityId":9,"points":[[31.23,121.47]]}
+{"msg":"操作成功","code":200,"data":{"available":false}}
+### guest GET /api/team/trail/state?activityId=9
+{"msg":"登录状态已失效，请重新登录","code":401}
+### guest POST /api/team/trail/sync {"activityId":9,"points":[[31.23,121.47]]}
+{"msg":"登录状态已失效，请重新登录","code":401}
+### e2e-openid-9004 GET /api/team/trail/state?activityId=13
+{"msg":"操作成功","code":200,"data":{"available":false}}
+### redis HKEYS team_trail:pts:9
+990006
+9004
+### e2e-openid-9004 POST /api/team/trail/sync {"activityId":9,"points":[[31.2319,121.4750]]}
+{"msg":"操作成功","code":200,"data":{"available":true,"share":true,"teams":[{"key":"3d1d11bd8170","done":0,"name":"城瘾用户","avatar":"","pts":[[31.2303,121.4731],[31.2304,121.4729],[31.2305,121.4727],[31.2306,121.4726],[31.2307,121.4724],[31.2308,121.4722],[31.2309,121.4721]],"ago":54}]}}
+### walk-player-2 POST /api/team/trail/consent {"activityId":9,"share":false}
+{"msg":"操作成功","code":200,"data":{"available":true,"share":false,"decided":true}}
+### redis HKEYS team_trail:pts:9
+9004
+### redis HGETALL team_trail:opt:9
+9004
+"1"
+990006
+"0"
+### e2e-openid-9004 POST /api/team/trail/sync {"activityId":9,"points":[[31.2320,121.4751]]}
+{"msg":"操作成功","code":200,"data":{"available":true,"share":true,"teams":[]}}
+### walk-player-2 POST /api/team/trail/sync {"activityId":9,"points":[[31.2310,121.4720]]}
+{"msg":"操作成功","code":200,"data":{"available":true,"share":false,"teams":[]}}
+### redis HKEYS team_trail:pts:9
+9004
+### redis TTL team_trail:pts:9
+21600

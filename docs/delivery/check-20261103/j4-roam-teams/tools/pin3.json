@@ -1,0 +1,1 @@
+[{"wait": 3500}, {"tap": ["\u5f00\u59cb\u6f2b\u6e38", {"nth": 1}]}, {"wait": 2000}, {"shot": "31-roam-location-consent"}, {"tap": "\u540c\u610f\u5e76\u5f00\u542f"}, {"wait": 6000}, {"eval": "MPWEB.mapTrueScale=true"}, {"wait": 3000}, {"eval": "JSON.stringify((getCurrentPages().slice(-1)[0].data.explorePins||[]).slice(0,12))"}]

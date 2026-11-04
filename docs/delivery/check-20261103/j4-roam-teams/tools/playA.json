@@ -1,0 +1,1 @@
+[{"wait":5000},{"tap":"开始游戏"},{"wait":2500},{"tap":["开启定位",{"nth":1}]},{"wait":3000},{"tap":["开始",{"exact":true}]},{"wait":2000},{"dump":1},{"tap":"我到了"},{"wait":2500},{"shot":"59-gather-arrived-A"},{"dump":1}]
