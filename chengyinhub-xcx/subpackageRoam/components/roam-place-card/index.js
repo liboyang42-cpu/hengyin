@@ -36,7 +36,7 @@ Component({
       if (!app || typeof app.sendRequest !== 'function') return
       const done = (avg, count) => { if (seq === this._seq) this.setData({ rating: ratingText(avg, count) }) }
       if (p.shareKind === 'poi' && p.shareId) {
-        app.sendRequest({ url: '/api/city/nodes/' + p.shareId, method: 'GET', hideLoading: true, silentError: true,
+        app.sendRequest({ url: '/api/city/nodes/' + p.shareId, method: 'GET', hideLoading: true, autoErrorToast: false,
           // 评分只是卡上的一格:读不到时这一格显示「—」(ratingError),不弹错,卡上其余内容照常
           success: (res) => { const d = ok(res) && res.data; if (d) done(d.averageRating, d.ratingCount); else if (seq === this._seq) this.setData({ ratingError: true }) },
           successStatusAbnormal: () => { if (seq === this._seq) this.setData({ ratingError: true }) },

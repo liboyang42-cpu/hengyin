@@ -4,6 +4,7 @@ const PIN_SIZE = 40;
 const PIN_SIZE_NEAR = 46;
 const PIN_SIZE_FOCUS = 60;
 const EDGE_SIZE = 26;
+const DEMOTED_SIZE = 20;
 const EDGE_INSET = 0.06;
 const NEAR_SPAN = 0.6;
 const MAX_PHOTO_PINS = 40;
@@ -74,6 +75,27 @@ function bucketDots(points, region, viewport, cellPx) {
   return Array.from(cells.values()).map((c) => ({ lat: c.lat / c.count, lng: c.lng / c.count, count: c.count }));
 }
 
+// 经纬度 → 屏幕 px(视口内线性近似,够做图钉避让)
+function toScreen(lat, lng, region, viewport) {
+  const b = regionBox(region);
+  if (!b) return null;
+  const w = Number(viewport && viewport.width) || 390, h = Number(viewport && viewport.height) || 844;
+  return { x: (lng - b.w) / b.wd * w, y: (b.n - lat) / b.h * h };
+}
+
+// 照片图钉避让:按离视野中心由近到远放,和已放下的照片重叠的,降成不挂照片的小深色圆
+function declutter(items, region, viewport) {
+  const placed = [];
+  return items.filter((it) => {
+    const s = toScreen(it.lat, it.lng, region, viewport);
+    if (!s) return true;
+    const r = it.size * 1.05;
+    if (placed.some((q) => (q.x - s.x) * (q.x - s.x) + (q.y - s.y) * (q.y - s.y) < r * r)) return false;
+    placed.push(s);
+    return true;
+  });
+}
+
 function nearbyCountLabel(n) {
   const count = Number(n) || 0;
   return count >= COUNT_MIN ? '附近 ' + count + ' 个地点' : '';
@@ -91,6 +113,6 @@ function markerSignature(markers, pins) {
 }
 
 module.exports = {
-  DOT_SCALE, PIN_SIZE, PIN_SIZE_NEAR, PIN_SIZE_FOCUS, EDGE_SIZE, MAX_PHOTO_PINS, COUNT_MIN,
-  pinPhoto, isParticipating, placeInView, densityMode, bucketDots, nearbyCountLabel, markerSignature, regionBox,
+  DOT_SCALE, PIN_SIZE, PIN_SIZE_NEAR, PIN_SIZE_FOCUS, EDGE_SIZE, DEMOTED_SIZE, MAX_PHOTO_PINS, COUNT_MIN,
+  pinPhoto, isParticipating, placeInView, densityMode, bucketDots, nearbyCountLabel, markerSignature, regionBox, toScreen, declutter,
 };

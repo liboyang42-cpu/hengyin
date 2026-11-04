@@ -1528,7 +1528,7 @@ Page({
           icon: m.icon, catLabel: m.catLabel, color,
           imgUrl: MOCK_IMG, state: st, first: !n.found,
           // 第九轮 m1:据点封面(roam_poi.cover_img)才是照片图钉;没有封面就是深色圆
-          photo: n.coverImg ? (/^https?:/.test(n.coverImg) ? n.coverImg : (config.baseImgUrl || '') + n.coverImg) : '',
+          photo: n.coverImg && typeof getApp().getImgUrl === 'function' ? getApp().getImgUrl(n.coverImg) : '',
           merchantId: n.merchantId || null,
           metaLine: m.catLabel + ' · 距你很近', radiusM: n.radiusM || 80,
           nodeLevel: Number(n.nodeLevel || 1),
@@ -2611,15 +2611,22 @@ Page({
           m.width = size; m.height = size;
         } else if (edge) { m.width = photoPins.EDGE_SIZE; m.height = photoPins.EDGE_SIZE; }
         m.zIndex = focused ? 30 : (edge ? 4 : m.zIndex);
-        if ((photo && !edge) || label) {
-          pinCandidates.push({ m, pin: { id: m.id, img: photo && !edge ? photo : '', label, size, done: stateKey === 'completed' },
+        if (photo || label) {
+          pinCandidates.push({ m, pin: { id: m.id, img: photo, label, size, done: stateKey === 'completed' }, lat: place.lat, lng: place.lng, size,
             d: pinCenter ? Math.abs(place.lat - pinCenter.lat) + Math.abs(place.lng - pinCenter.lng) : 0 });
         }
       }
       mk.push(m);
     });
     // 一屏最多 MAX_PHOTO_PINS 枚照片 / 标签(cover-view 有数量上限,也压住 setData 体积),离视野中心近的优先
-    pinCandidates.sort((x, y) => x.d - y.d).slice(0, photoPins.MAX_PHOTO_PINS).forEach(({ m, pin }) => {
+    // 选中的那枚永远排第一;挤在一起的照片按离中心远近避让,远的降成深色圆(点开地点卡时仍有照片)
+    pinCandidates.forEach((c) => { if (this._pinFocusId != null && String(c.pin.id) === String(this._pinFocusId)) c.d = -1; });
+    const keep = photoPins.declutter(pinCandidates.sort((x, y) => x.d - y.d), pinRegion, this._fogScreenSize).slice(0, photoPins.MAX_PHOTO_PINS);
+    pinCandidates.forEach((c) => {
+      if (keep.indexOf(c) >= 0 || c.m.iconPath !== (this._icons && this._icons['pin-dark'])) return;
+      c.m.width = photoPins.DEMOTED_SIZE; c.m.height = photoPins.DEMOTED_SIZE;
+    });
+    keep.forEach(({ m, pin }) => {
       m.customCallout = { display: 'ALWAYS', anchorX: 0, anchorY: pin.img ? pin.size : 4 };
       explorePins.push(pin);
     });
@@ -4345,7 +4352,7 @@ Page({
     // 第九轮 m1 第 5 项:拉远时点一个小圆点 = 放大到那一片(照片图钉在近处才出现)
     if (e.detail.markerId >= DOT_MK_BASE && e.detail.markerId < DOT_MK_BASE + 100000) {
       const dot = (this.data.markers || []).find((m) => m.id === e.detail.markerId);
-      if (dot) { this._hold = Date.now(); this.setData({ center: { lat: dot.latitude, lng: dot.longitude }, mapScale: photoPins.DOT_SCALE + 2 }); }
+      if (dot && dot.iconPath === (this._icons && this._icons['pin-dot'])) { this._hold = Date.now(); this.setData({ center: { lat: dot.latitude, lng: dot.longitude }, mapScale: photoPins.DOT_SCALE + 2 }); }
       return;
     }
     // 别人的头像:id 是 RUNNER_MK_BASE + 下标,按下标回本地那一批取人
@@ -4387,7 +4394,8 @@ Page({
     const me = this._player;
     const d = me && me.lat != null ? distM(me, poi) : (Number.isFinite(Number(poi.distM)) ? Number(poi.distM) : null);
     const distText = d == null ? '' : (d < 1000 ? Math.max(1, Math.round(d)) + ' 米' : (d / 1000).toFixed(1) + ' 公里');
-    const shareKind = poi._roamId && !poi.demo ? 'poi' : (poi.merchantId && !poi.demo ? 'merchant' : '');
+    // 只有据点(城市节点)有深链落地页与评分;普通地标(type 1)读节点接口是 410,不给分享、不读评分
+    const shareKind = poi._roamId && poi.isCityNode && !poi.demo ? 'poi' : (poi.merchantId && !poi.demo ? 'merchant' : '');
     return {
       id: poi.id, name: poi.name || '地点', address: poi.address || '',
       photo: photoPins.pinPhoto(poi, MOCK_IMG), distText, lat: poi.lat, lng: poi.lng,

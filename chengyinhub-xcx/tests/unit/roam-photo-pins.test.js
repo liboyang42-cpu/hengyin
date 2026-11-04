@@ -102,7 +102,8 @@ test('漫游 marker:照片图钉 + 仅参与商铺贴店名;没照片是深色�
   assert.ok(byId[4].longitude < 121.42);
   [1, 2, 3, 6].forEach((id) => { assert.equal(byId[id].iconPath, 'dark.png'); assert.equal(byId[id].callout, undefined, '地图上不挂文字气泡'); });
   const pinById = Object.fromEntries(page.data.explorePins.map((p) => [p.id, p]));
-  assert.deepEqual(Object.keys(pinById).map(Number).sort(), [1, 2]);
+  assert.deepEqual(Object.keys(pinById).map(Number).sort(), [1, 2, 4]);
+  assert.deepEqual([pinById[4].size, pinById[4].label], [pins.EDGE_SIZE, ''], '贴边的是小照片,不挂店名');
   assert.equal(pinById[1].label, '店1', '参与商铺贴店名');
   assert.equal(pinById[2].label, '', '其余只有照片');
   assert.equal(pinById[1].img, 'https://img/1.jpg');
@@ -205,4 +206,25 @@ test('free-map 接照片图钉:callout 槽里画圆照片 + 标签,点照片等�
   const json = JSON.parse(read('pages/roam/index.json'));
   assert.equal(json.usingComponents['cy-roam-place-card'], '/subpackageRoam/components/roam-place-card/index');
   assert.equal(json.componentPlaceholder['cy-roam-place-card'], 'view', '地点卡在分包,异步加载');
+});
+
+test('照片避让:挨得太近的照片降成深色圆,选中的那枚优先', () => {
+  const items = [{ id: 1, lat: 31.21, lng: 121.41, size: 40 }, { id: 2, lat: 31.21001, lng: 121.41001, size: 40 }, { id: 3, lat: 31.215, lng: 121.415, size: 40 }];
+  assert.deepEqual(pins.declutter(items, REGION, { width: 390, height: 844 }).map((x) => x.id), [1, 3]);
+  const page = loadRoamPage();
+  page.data.center = { lat: 31.21, lng: 121.41 };
+  page._mapScale = 16; page._pinRegion = REGION;
+  page._pois = [poi(1, 31.21, 121.41, { photo: 'https://img/1.jpg' }), poi(2, 31.21001, 121.41001, { photo: 'https://img/2.jpg' })];
+  page._pinFocusId = 2;
+  page._syncMarkers();
+  assert.deepEqual(page.data.explorePins.map((p) => p.id), [2]);
+  assert.equal(page.data.markers.find((m) => m.id === 1).customCallout, undefined);
+});
+
+test('普通地标不是据点:地点卡不给分享、不读评分', () => {
+  const page = loadRoamPage();
+  page._mapCtx = { moveToLocation() {} };
+  page._pois = [poi(700014, 31.21, 121.41, { _roamId: 14, isCityNode: false, photo: 'https://img/14.jpg' })];
+  page.onMarkerTap({ detail: { markerId: 700014 } });
+  assert.deepEqual([page.data.placeCard.shareKind, page.data.placeCard.shareId], ['', '']);
 });
