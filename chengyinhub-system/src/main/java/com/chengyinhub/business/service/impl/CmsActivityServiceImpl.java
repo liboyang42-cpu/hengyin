@@ -442,6 +442,13 @@ public class CmsActivityServiceImpl implements ICmsActivityService
                 .subtract(designerAmount);
         settlement.setMerchantCommissionAmount(merchantAmount);
         settlement.setDesignerCommissionAmount(designerAmount);
+        // 第十一轮 h4 L6:活动结算(settleActivity / 客诉补结)只给商户与平台两方打款,没有设计者打款步骤。
+        // 设计者份额一旦非零就会被静默扣下不付;在算出它的地方就拒绝结算(回滚本活动领取),不依赖批前闸。
+        // 不改分润规则:H8 要求 creator_rate=0,这里只把违反它的情况从「静默丢钱」变成「拒结」。
+        if (designerAmount.signum() != 0) {
+            throw new ServiceException("活动设计者份额 " + designerAmount + " 没有打款步骤，拒绝结算 activityId="
+                    + activity.getId() + "(settlement_rule biz_type=activity 的 creator_rate 必须为 0)");
+        }
 
         // 验证佣金分配是否合理
         validateActivityCommissionDistribution(settlement, totalSales);

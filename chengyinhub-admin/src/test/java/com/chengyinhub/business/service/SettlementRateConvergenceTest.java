@@ -377,6 +377,22 @@ class SettlementRateConvergenceTest {
     }
 
     @Test
+    void activity_nonZeroDesignerShareIsRefusedWhereItIsComputedNotSilentlyDropped() {
+        // 第十一轮 h4 L6:活动结算没有设计者打款步骤。批前闸之外,算出非零设计者份额的地方也必须拒结,
+        // 否则该份额会被静默扣下(商户拿余数时已扣掉,却没人收)。对照:creator 0 时三份分毫不差。
+        CmsActivity a = primeActivity(new BigDecimal("97.50"), 77L, 7L);
+        ServiceException refused = assertThrows(ServiceException.class, () -> ReflectionTestUtils.invokeMethod(
+                activitySvc, "calculateActivityCommissions", a, new BigDecimal("97.50"),
+                rule("0.03", "0.87", "0.10", "0.00")));
+        assertTrue(refused.getMessage().contains("没有打款步骤"), refused.getMessage());
+
+        Object ok = ReflectionTestUtils.invokeMethod(activitySvc, "calculateActivityCommissions", a,
+                new BigDecimal("97.50"), rule("0.03", "0.97", "0.00", "0.00"));
+        assertEquals(new BigDecimal("2.93"), ReflectionTestUtils.invokeGetterMethod(ok, "platformCommissionAmount"));
+        assertEquals(new BigDecimal("94.57"), ReflectionTestUtils.invokeGetterMethod(ok, "merchantCommissionAmount"));
+    }
+
+    @Test
     void h8AwardsOnlyPositiveSalesAndDoesNotUseActivityIdAsIdempotencyObject() {
         when(settlementRuleService.getActiveRule(0L, "activity"))
                 .thenReturn(rule("0.10", "0.90", "0.00", "0.00"));
