@@ -399,9 +399,10 @@
           <text>现在要做</text>
         </view>
         <view class="manage-now-title">{{ownerPrimaryLabel}}</view>
-        <view class="manage-now-hint">{{ownerStageHint}}</view>
-        <!-- 带队进度:默认折叠成一行摘要,展开看自己走到哪一站(参考 Revolut 208)。 -->
-        <cy-timeline wx:if="{{leadTimelineNodes.length}}" class="manage-now-timeline"
+        <view wx:if="{{ownerStageHint && ownerStage !== 'publish'}}" class="manage-now-hint">{{ownerStageHint}}</view>
+        <!-- 带队进度:默认折叠成一行摘要,展开看自己走到哪一站(参考 Revolut 208)。
+             第十轮 f3 第 4 项(p3 F5):还没发布主题时一站都没走,不画时间线,只留「现在要做」一张卡。 -->
+        <cy-timeline wx:if="{{leadTimelineNodes.length && ownerStage !== 'publish'}}" class="manage-now-timeline"
           nodes="{{leadTimelineNodes}}" summary="{{leadTimelineSummary}}"
           collapsible expanded="{{leadTimelineOpen}}" bind:toggle="onLeadTimelineToggle" />
         <!-- 管理员没有经营动作:邀商家 / 发布主题 / 开一场都是主理人的事。
@@ -416,7 +417,8 @@
       </view>
       <!-- owner-cta-end -->
 
-      <view class="overview-section club-stats-section" wx:if="{{club.isOwner}}">
+      <!-- 第十轮 f3 第 4 项(p3 F5):没有项目时不出一排 0 的数据看板。 -->
+      <view class="overview-section club-stats-section" wx:if="{{club.isOwner && !(ownerStage === 'publish' && topicState === 'ready' && !manageTopics.length)}}">
         <view class="overview-section-tit">成员与活动概况</view>
         <cy-skeleton wx:if="{{clubStatsState === 'loading'}}" type="list" count="2" />
         <cy-error load-failure wx:elif="{{clubStatsState === 'error'}}" title="数据看板加载失败" sub="{{clubStatsError}}" retry="重新加载" bind:retry="loadClubStats" />
@@ -440,7 +442,8 @@
         </block>
       </view>
 
-      <view class="overview-section">
+      <!-- 第十轮 f3 第 4 项(p3 F5):主理人没有项目时「现在要做」已经是发布主题,不再叠空项目卡和「+ 发布主题」行。 -->
+      <view class="overview-section" wx:if="{{!(club.isOwner && ownerStage === 'publish' && topicState === 'ready' && !manageTopics.length)}}">
         <view class="manage-group">
         <cy-skeleton wx:if="{{topicState === 'loading'}}" type="list" count="2" />
         <cy-error load-failure class="cy-fade-in" wx:elif="{{topicState === 'error'}}" title="项目列表加载失败" retry="重新加载" bind:retry="loadTopics" />
