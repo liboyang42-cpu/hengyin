@@ -57,6 +57,21 @@ Start after `integ/ROUND10-F2-RESULT.md` has a `STATUS:` line.
 
 Write `integ/ROUND10-F3-RESULT.md`.
 
+## Lane f4-review-rules
+
+Start after `integ/ROUND10-F3-RESULT.md` has a `STATUS:` line. The owner delegated these WeChat-review choices on 2026-11-04.
+
+1. **Wording, final.** Everywhere a user sees it (mini-program, admin, backend messages, editor, system notices), changed together so mirrored messages stay in step; code identifiers such as `betCount` stay.
+   - 「随机盲盒」 becomes 「随机卡」, and 「已抽 N / M」 becomes 「已翻开 N / M」.
+   - 「竞猜」 becomes 「预测」: 「竞猜待答」 is 「预测待答」, 「登录后竞猜待答」 is 「登录后查看预测」, 「当前岗位不能结算竞猜」 is 「当前岗位不能公布预测答案」, 「没有等你给答案的竞猜」 is 「没有等你给答案的预测」.
+   - 「押」 becomes 「选」: 「N 个人押了这一轮」 is 「N 个人选了这一轮」, 「这一轮还没有人押」 is 「这一轮还没有人选」, 「押中的人」 is 「选对的人」.
+   Sweep `盲盒|竞猜|押|下注|赔率|赌|抽奖` across the repo's user-visible text and list every hit as changed or why not. Confirm no points or money can be staked in these games: if they can, stop and report. List any such words in seeded or stored content for me; don't change stored data.
+2. **Inviter points.** New migration turns off only `cms_points_setting` id 6 (「被邀请用户报名任意活动」, 100 points per signup, active on production), with a runner assertion; id 5 (500 points for a first purchase) stays. Prove signup, payment and settlement still work with id 6 off, including any check that a rule must exist. Remove or correct any screen copy promising the per-signup reward. No team or tiered rewards.
+3. **Paid merchant extras stay closed at launch** (`pages/merchant/decor`: 高级模板, 推广曝光位, 品牌主页, 活动定制). Find how they're gated today. If a merchant could start a payment under production config, close them with the existing switch; if there's no switch, hide the purchase entries and refuse on the backend. No new captions. The ¥30 merchant referral stays as it is.
+4. **Main package.** If item 0 of f1 wasn't done, do it now. It must end under 3,145,728 bytes by preflight's count.
+
+Write `integ/ROUND10-F4-RESULT.md`.
+
 ## Verify and report
 
 Every lane: full mini unit tests, `ui-integrity.js`, `build-action-ledger.js --check`, backend tests for what changed, all CI on the final commit, migration rehearsal for new migrations. Rig walks at 390x844 with screenshots viewed by you, under `integ/fix-shots/`. Plain words. Per item: status, files, proof, unverified. End with `STATUS: COMPLETE` or `STATUS: PARTIAL - <reason>`.
