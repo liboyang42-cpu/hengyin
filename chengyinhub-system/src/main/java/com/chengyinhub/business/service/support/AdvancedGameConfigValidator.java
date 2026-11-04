@@ -466,6 +466,28 @@ public class AdvancedGameConfigValidator {
         }
     }
 
+    /**
+     * R11 g1 F2:作为一站玩法开不了局的配置 —— {@link #hasEnabledMechanic} 不认它,玩家到站只看到
+     * 「该模板未配置高级玩法」,线性路线断在这一站。两种:
+     * 只启用相册(album)却没有 outcomeRules;只启用 D20 三档难度(check)却没有 outcomeRules,
+     * 且主题没开检定(主题开了检定时 check 走旅程检定 Encounter,不靠 outcomeRules)。
+     * 可玩返回 null,否则返回给作者看的原因。主题发布检查调用。
+     */
+    public String outcomeRulesMissingReason(String rawJson, boolean journeyCheckEnabled) {
+        String normalized = validateAndNormalize(rawJson);
+        if (normalized == null) return null;
+        final JsonNode root;
+        try {
+            root = objectMapper.readTree(normalized);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("高级玩法配置不是合法 JSON");
+        }
+        if (root.has("outcomeRules") || hasEnabledMechanic(normalized)) return null;
+        if (enabled(root.get("album"))) return "相册请配置完成之后";
+        if (enabled(root.get("check")) && !journeyCheckEnabled) return "D20 三档难度请配置通过和没通过之后";
+        return null;
+    }
+
     public boolean hasEnabledMechanic(String rawJson) {
         String normalized = validateAndNormalize(rawJson);
         if (normalized == null) return false;

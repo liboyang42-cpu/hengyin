@@ -1,4 +1,6 @@
 const templateAdoption = require('../utils/publish/template-adoption.js');
+// R11 g1 F2:服务端只在带 outcomeRules 时才把这两段当作一站玩法(AdvancedGameConfigValidator.hasEnabledMechanic)
+const OUTCOME_REQUIRED_SECTIONS = ['check', 'album'];
 const authorWrites = require('../../../utils/author-write-recovery.js');
 const { applyTheme } = require('../../../utils/theme.js');
 const { memberId, failureStatus, retryLogin, waitForInitialSession, recoverReadSession } = require('../../../utils/session/login-reload.js');
@@ -2791,6 +2793,12 @@ Page({
       if (k !== game.section && k !== this.data.gameSection && this.data.advanced[k] && this.data.advanced[k].enabled && advanced[k]) advanced[k].enabled = true;
     });
     if (key === 'typeIn' && e.currentTarget.dataset.r5 && !advanced.outcomeRules) advanced.outcomeRules = { version: 1, pass: {}, fail: {} };
+    /* R11 g1 F2:D20 三档难度(check)与相册(album)只有带 outcomeRules 时服务端才当它是玩法,
+       没有就开局报「该模板未配置高级玩法」,整条线性路线断在这一站。选中时就落一份,形状同结果反馈编辑器。
+       (主题开了检定时 check 也能走旅程检定;带上结果规则两条路都开得了局。) */
+    if (advanced && OUTCOME_REQUIRED_SECTIONS.includes(game.section) && !advanced.outcomeRules) {
+      advanced.outcomeRules = Object.assign({ version: 1, pass: {} }, require('../utils/publish/outcome-after.js').once(advanced) ? {} : { fail: {} });
+    }
     /* R14 检定的 checkId 是这一处检定的稳定标识。选中时就在本地模型里落一个 ——
        拖到保存时才由 normalize 补,会让同一次编辑里两次存盘生成两个不同的 id。 */
     if (advanced && advanced.check && advanced.check.enabled && !advanced.check.checkId) {

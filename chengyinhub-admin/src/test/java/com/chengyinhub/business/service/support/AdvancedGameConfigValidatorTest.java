@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AdvancedGameConfigValidatorTest {
@@ -1530,5 +1531,25 @@ class AdvancedGameConfigValidatorTest {
                         "{\"enabled\":true,\"checkId\":\"lift\",\"tier\":\"easy\","
                                 + "\"mods\":[{\"when\":{\"op\":\"HAS_TAG\",\"value\":\"tag.ready\"},\"var\":\"sys.luck\"}]}")));
         assertTrue(foreign.getMessage().contains("counter."), foreign.getMessage());
+    }
+
+    /* R11 g1 F2:编辑器选 D20 三档难度时没带 outcomeRules,存得进去、开局却报「该模板未配置高级玩法」。
+       主题发布检查:这两段单独启用又没有结果规则时给出原因(check 在主题开了检定时走旅程检定,放行)。 */
+    @Test
+    void r11CheckOrAlbumAloneWithoutOutcomeRulesIsUnplayable() {
+        AdvancedGameConfigValidator v = new AdvancedGameConfigValidator();
+        String check = "{\"schemaVersion\":1,\"check\":{\"enabled\":true,\"checkId\":\"c1\",\"tier\":\"medium\",\"successText\":\"成\",\"failText\":\"败\"}";
+        assertFalse(v.hasEnabledMechanic(check + "}"));
+        assertEquals("D20 三档难度请配置通过和没通过之后", v.outcomeRulesMissingReason(check + "}", false));
+        assertNull(v.outcomeRulesMissingReason(check + "}", true), "主题开了检定:check 走旅程检定");
+        String withRules = check + ",\"outcomeRules\":{\"version\":1,\"pass\":{},\"fail\":{}}}";
+        assertTrue(v.hasEnabledMechanic(withRules));
+        assertNull(v.outcomeRulesMissingReason(withRules, false));
+        String withQa = check + ",\"qa\":{\"enabled\":true,\"mode\":\"TYPE\",\"title\":\"t\",\"answerText\":\"a\"}}";
+        assertNull(v.outcomeRulesMissingReason(withQa, false), "另有可玩玩法时检定照旧走旅程检定");
+        String album = "{\"schemaVersion\":1,\"album\":{\"enabled\":true,\"images\":[{\"url\":\"https://www.chengyinhub.com/a.png\",\"line\":\"x\"}]}}";
+        assertEquals("相册请配置完成之后", v.outcomeRulesMissingReason(album, true));
+        assertNull(v.outcomeRulesMissingReason("{\"schemaVersion\":1,\"coinFlip\":{\"enabled\":true,\"heads\":{\"label\":\"正面\",\"action\":\"a\"},\"tails\":{\"label\":\"反面\",\"action\":\"b\"}}}", false));
+        assertNull(v.outcomeRulesMissingReason("", false));
     }
 }
