@@ -464,11 +464,18 @@ public class ApiClubLeadController extends BaseController {
         regProbe.setRegistrationStatus(2);
         List<CmsRegistration> regs = cmsRegistrationService.selectCmsRegistrationList(regProbe);
         Set<Long> paidIds = new HashSet<>();
-        if (regs != null) for (CmsRegistration r : regs) if (r.getMemberId() != null) paidIds.add(r.getMemberId());
+        if (regs != null) for (CmsRegistration r : regs) {
+            if (r.getMemberId() != null && Integer.valueOf(2).equals(r.getPaymentStatus())) paidIds.add(r.getMemberId());
+        }
         memberIds.addAll(paidIds);
         memberIds.add(st.getLeaderMemberId());
-        data.put("arrived", arrivedIds.size());
-        data.put("total", memberIds.size());
+        // 第十一轮 h4 L3(j2 F-18):头部「到场 x/N 人」的 N 是已付款未退的玩家人数,x 是其中到场的人。
+        // 以前 N 把不买票的带队主理人也算进去(4 人付款显示 /5),x 也会数到主理人自己的签到。
+        // 名单(members)照旧带上队长,只是不进这两个数。
+        Set<Long> arrivedPaid = new HashSet<>(arrivedIds);
+        arrivedPaid.retainAll(paidIds);
+        data.put("arrived", arrivedPaid.size());
+        data.put("total", paidIds.size());
         data.put("meArrived", arrivedIds.contains(memberId));
 
         // 成员完成数(player_node_progress 按 activityId 聚合)

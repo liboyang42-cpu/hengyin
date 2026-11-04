@@ -266,12 +266,12 @@ class ClubLeadFlowTest {
         assertEquals("已是最后一章", r5.get("msg"));
         assertEquals(20L, stateHolder[0].getCurrentChapterId().longValue());
 
-        // ⑥ 轮询聚合:集合 arrived=1(成员7)/ total 去重含队长9+成员7=2 / 当前章名
+        // ⑥ 轮询聚合:集合 arrived=1(成员7)/ total=已付款玩家 1(第十一轮 h4 L3:不买票的队长9 不再进 N)/ 当前章名
         AjaxResult prog = leader.teamProgress(100L);
         assertEquals(2, ((java.util.Map<?, ?>) prog.get("data")).get("status"));
         java.util.Map<?, ?> d = (java.util.Map<?, ?>) prog.get("data");
         assertEquals(1, d.get("arrived"));
-        assertEquals(2, d.get("total"));
+        assertEquals(1, d.get("total"));
         assertEquals("第二章·街巷", d.get("chapterName"));
         assertEquals(Boolean.TRUE, d.get("isLeader"));
     }
@@ -318,8 +318,12 @@ class ClubLeadFlowTest {
 
         Map<?, ?> retracted = (Map<?, ?>) member.teamProgress(100L).get("data");
         assertEquals(Boolean.FALSE, retracted.get("meArrived"));
-        assertEquals(1, retracted.get("arrived"), "领队签到保留，成员撤销应即时扣除");
-        assertEquals(2, retracted.get("total"));
+        // 第十一轮 h4 L3:到场 x/N 只数付款玩家;不买票的领队签到仍记录(名单里 arrived=true),但不进 x。
+        assertEquals(0, retracted.get("arrived"), "成员撤销应即时扣除,不买票的领队不进到场人数");
+        assertEquals(1, retracted.get("total"));
+        Map<?, ?> leaderRow = ((List<Map<?, ?>>) retracted.get("members")).stream()
+                .filter(row -> Long.valueOf(9L).equals(row.get("memberId"))).findFirst().get();
+        assertEquals(Boolean.TRUE, leaderRow.get("arrived"), "领队签到保留");
         Map<?, ?> retractedMember = ((List<Map<?, ?>>) retracted.get("members")).stream()
                 .filter(row -> Long.valueOf(7L).equals(row.get("memberId"))).findFirst().get();
         assertEquals(Boolean.FALSE, retractedMember.get("arrived"));
@@ -328,7 +332,7 @@ class ClubLeadFlowTest {
         corrected.put("baseArrivedAt", null);
         Map<?, ?> supplemented = (Map<?, ?>) member.teamProgress(100L).get("data");
         assertEquals(Boolean.TRUE, supplemented.get("meArrived"));
-        assertEquals(2, supplemented.get("arrived"), "补记到场应进入集合人数");
+        assertEquals(1, supplemented.get("arrived"), "补记到场应进入集合人数");
         assertEquals(2, checkins.size(), "更正读回不得重写原始签到");
     }
 
