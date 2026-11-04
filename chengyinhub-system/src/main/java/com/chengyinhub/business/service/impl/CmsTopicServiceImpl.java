@@ -867,12 +867,14 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
                 totalSales.multiply(settlement.getPlatformCommissionRate()).setScale(2, RoundingMode.HALF_UP)
         );
 
-        settlement.setMerchantTotalCommissionAmount(
-                totalSales.multiply(settlement.getMerchantCommissionRate()).setScale(2, RoundingMode.HALF_UP)
-        );
-
         settlement.setPublisherCommissionAmount(
                 totalSales.multiply(settlement.getPublisherCommissionRate()).setScale(2, RoundingMode.HALF_UP)
+        );
+
+        // 商家份额取余数(ROUND10 j1 F3,与 CmsActivityServiceImpl 同口径):三份之和恒等于销售额。
+        settlement.setMerchantTotalCommissionAmount(
+                totalSales.subtract(settlement.getPlatformCommissionAmount())
+                        .subtract(settlement.getPublisherCommissionAmount())
         );
 
         // 验证佣金分配是否合理

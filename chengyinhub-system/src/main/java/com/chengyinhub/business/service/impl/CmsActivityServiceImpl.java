@@ -431,14 +431,15 @@ public class CmsActivityServiceImpl implements ICmsActivityService
                 totalSales.multiply(settlement.getPlatformCommissionRate()).setScale(2, RoundingMode.HALF_UP)
         );
 
-        BigDecimal merchantAmount = totalSales.multiply(settlement.getMerchantCommissionRate()).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal designerAmount = totalSales.multiply(settlement.getDesignerCommissionRate()).setScale(2, RoundingMode.HALF_UP);
-
-        if (designerMemberId == null) {
-            // 无主题设计者（独立活动）：设计者份额并入商户
-            merchantAmount = merchantAmount.add(designerAmount);
-            designerAmount = BigDecimal.ZERO;
-        }
+        // 商户份额取余数(ROUND10 j1 F3):各份分别 HALF_UP 时,半分值会让三份之和多出 1 分
+        //(¥97.50×3%=2.925→2.93,×97%=94.575→94.58,合计 97.51)。平台与设计者各自四舍五入,
+        // 商户拿「销售额 − 平台 − 设计者」,三份之和恒等于销售额。
+        // 无主题设计者（独立活动）：设计者份额为 0,即并入商户余数。
+        BigDecimal designerAmount = designerMemberId == null ? BigDecimal.ZERO
+                : totalSales.multiply(settlement.getDesignerCommissionRate()).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal merchantAmount = totalSales
+                .subtract(settlement.getPlatformCommissionAmount())
+                .subtract(designerAmount);
         settlement.setMerchantCommissionAmount(merchantAmount);
         settlement.setDesignerCommissionAmount(designerAmount);
 
@@ -473,9 +474,11 @@ public class CmsActivityServiceImpl implements ICmsActivityService
 
         BigDecimal difference = totalSales.subtract(distributedAmount);
 
-        if (difference.abs().compareTo(new BigDecimal("0.01")) > 0) {
-            logger.warn("活动佣金分配存在差异: 总销售额={}, 已分配金额={}, 差异={}",
+        // 商户取余数后三份必须分毫不差;商户为负说明费率越界。任一不成立就拒绝结算(回滚本活动的领取)。
+        if (difference.signum() != 0 || settlement.getMerchantCommissionAmount().signum() < 0) {
+            logger.error("活动佣金分配不守恒: 总销售额={}, 已分配金额={}, 差异={}",
                     totalSales, distributedAmount, difference);
+            throw new ServiceException("活动佣金分配不守恒，拒绝结算 activityId=" + settlement.getActivityId());
         }
     }
 

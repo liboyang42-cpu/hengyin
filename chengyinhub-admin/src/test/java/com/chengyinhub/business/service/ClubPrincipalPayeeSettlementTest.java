@@ -157,6 +157,29 @@ class ClubPrincipalPayeeSettlementTest {
         verify(umsMemberService).addBalance(PLATFORM, new BigDecimal("3.15"));
     }
 
+    /**
+     * ROUND10 j1 F3:销售额落在半分时,两份分别 HALF_UP 会多付 1 分
+     *(实测 ¥97.50×3%:平台 2.93 + 商户 94.58 = 97.51)。商户取余数后 2.93 + 94.57 = 97.50。
+     * 旧代码在这里给商户 94.58,本测试红。
+     */
+    @Test
+    void halfFenSalesSplitSumsExactlyToSales() {
+        activity.setClubId(null);
+        when(cmsRegistrationMapper.selectTotalSalesByActivityId(ACTIVITY_ID)).thenReturn(new BigDecimal("78.00"));
+        when(cmsRegistrationMapper.selectRetainedSalesAfterPartialRefundByActivityId(ACTIVITY_ID))
+                .thenReturn(new BigDecimal("19.50"));
+
+        assertEquals(1, svc.executeActivitySettlement());
+
+        verify(umsMemberService).addBalance(CREATOR, new BigDecimal("94.57"));
+        verify(umsMemberService).addBalance(PLATFORM, new BigDecimal("2.93"));
+        verify(debtLedger).offsetFromSettlement(CREATOR, new BigDecimal("94.57"), ACTIVITY_ID);
+        // 商家页「预计到账」与结算同一口径
+        CmsActivity standalone = new CmsActivity();
+        standalone.setId(ACTIVITY_ID);
+        assertEquals(new BigDecimal("94.57"), svc.estimateMerchantShare(standalone, new BigDecimal("97.50")));
+    }
+
     @Test
     void nonClubSessionStillCreditsCreator() {
         activity.setClubId(null);
