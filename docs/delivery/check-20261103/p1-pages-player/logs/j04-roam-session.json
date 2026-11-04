@@ -1,0 +1,47 @@
+{
+ "id": "j04-roam-session",
+ "path": "subpackageRoam/session/index",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "onCta|返回漫游历史|{}",
+   "h": "onCta",
+   "txt": "返回漫游历史",
+   "w": 108,
+   "hgt": 46,
+   "y": 366,
+   "route": "pages/roam/index",
+   "newText": "漫游 | 开始漫游 | 漫游护照 | NO.01 | 开始漫游 | 走到哪，雾散到哪 | 城瘾 · CITY ROAM | NO.02 | 打开地图 | 寻找组队 | 附近正在组队 | NO.03",
+   "shot": "j04-roam-session-t01",
+   "result": "navigates"
+  }
+ ],
+ "route": [
+  "subpackageRoam/session/index"
+ ],
+ "text": "本次漫游 | 找不到这次漫游 | 请返回重新进入 | 返回漫游历史 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 2,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageRoam/session/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

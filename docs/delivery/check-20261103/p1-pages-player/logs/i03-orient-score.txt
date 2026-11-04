@@ -1,0 +1,3 @@
+i03-orient-score route subpackageMember/orient-score/index controls 1 errors 0 badNet 0
+  NO VISIBLE EFFECT onCta                      "重新读取"                               
+TEXT: 缺少合法对局参数 | 请返回重新进入 | 重新读取 | 本局计分 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

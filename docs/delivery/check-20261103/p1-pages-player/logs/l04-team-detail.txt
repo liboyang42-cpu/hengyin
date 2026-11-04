@@ -1,0 +1,3 @@
+l04-team-detail route pages/index/index>pages/team/detail/index controls 1 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+TEXT: 队伍详情 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

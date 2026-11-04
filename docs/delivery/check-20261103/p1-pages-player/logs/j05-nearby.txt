@@ -1,0 +1,16 @@
+j05-nearby route subpackageRoam/nearby/index controls 14 errors 0 badNet 0
+  back (not tapped) goBack                     ""                                   
+  ui change        onLayerTap                 "全部"                                 
+  ui change        onLayerTap                 "主题队伍"                               
+  ui change        onLayerTap                 "地点玩法"                               
+  ui change        onLayerTap                 "商家"                                 
+  NO VISIBLE EFFECT setViewMode                ""                                   
+  ui change        setViewMode                ""                                   
+  ui change        onListRowTap               "热门活动 E2E 探店日一期 上海市黄浦区咖啡 · 2m"       
+  ui change        onListRowTap               "热门活动 E2E 探店日一期 上海市黄浦区咖啡 · 2m"       
+  ui change        onListRowTap               "热门活动 E2E 探店日一期 上海市黄浦区咖啡 · 2m"       
+  ui change        onListRowTap               "热门活动 E2E 探店日一期 上海市黄浦区咖啡 · 2m"       
+  ui change        onListRowTap               "热门活动 E2E 探店日一期 上海市黄浦区咖啡 · 2m"       
+  ui change        openRange                  ""                                   
+  navigates        openMyTeamsPage            ""                               -> subpackageRoam/my-teams/index    
+TEXT: 全部 | 主题队伍 | 地点玩法 | 商家 | 附近 · 0 支队伍 · 5 处地点 | 热门活动 | E2E 探店日一期 | 上海市黄浦区咖啡 · 2m | 热门活动 | E2E 探店日一期 | 上海市黄浦区咖啡 · 2m | 热门活动 | E2E 探店日一期 | 上海市黄浦区咖啡 · 2m | 热门活动 | E2E 探店日一期 | 上海市黄浦区咖啡 · 2m | 热门活动 | E2E 探店日一期 | 上海市黄浦区咖啡 · 2m | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

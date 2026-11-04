@@ -1,0 +1,80 @@
+{
+ "id": "i15-mycanyuinfo",
+ "path": "subpackageMember/mycanyuinfo/mycanyuinfo?id=74",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "goCharacter|我的角色卡|{}",
+   "h": "goCharacter",
+   "txt": "我的角色卡",
+   "w": 390,
+   "hgt": 53,
+   "y": 426,
+   "route": "subpackageMember/character/index",
+   "newText": "角色模板 | 尚未建卡 | 以下为角色模板的初始属性，尚未创建角色 | 模板暂无可展示属性 | 该主题尚未配置可见属性 | 刷新角色卡",
+   "shot": "i15-mycanyuinfo-t01",
+   "result": "navigates"
+  },
+  {
+   "key": "goScore|定向成绩|{}",
+   "h": "goScore",
+   "txt": "定向成绩",
+   "w": 390,
+   "hgt": 53,
+   "y": 480,
+   "route": "subpackageMember/orient-score/index",
+   "toast": "城市定向新流程暂未开放",
+   "newText": "城市定向计分尚未启用 | 重新读取 | ‹ | 本局计分 | 城市定向新流程暂未开放",
+   "shot": "i15-mycanyuinfo-t02",
+   "result": "navigates"
+  },
+  {
+   "key": "goPlay|开始玩|{}",
+   "h": "goPlay",
+   "txt": "开始玩",
+   "w": 195,
+   "hgt": 46,
+   "y": 752,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "subpackageMember/mycanyuinfo/mycanyuinfo"
+ ],
+ "text": "参与详情 | E2E 探店日一期 | 2026.11.04 - 2026.11.04 | 线下活动 | 已完成 | 5-1 链路真跑 | 我的角色卡 | 定向成绩 | 开始玩 | 联系客服 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "text_s1": "E2E 探店日一期 | 2026.11.04 - 2026.11.04 | 线下活动 | 已完成 | 5-1 链路真跑 | 我的角色卡 | 定向成绩 | 开始玩 | 联系客服 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "text_s2": "E2E 探店日一期 | 2026.11.04 - 2026.11.04 | 线下活动 | 已完成 | 5-1 链路真跑 | 我的角色卡 | 定向成绩 | 开始玩 | 联系客服 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 4,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageMember/mycanyuinfo/mycanyuinfo"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/e2e-topic-cover-9003.jpg?Expires=2109166130&OSSAccessKeyId=rigdummy&Signature=OMWOu%2BBkl1ojizEmk%2BmAj4qpQ4w%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/e2e-topic-cover-9003.jpg?Expires=2109166143&OSSAccessKeyId=rigdummy&Signature=tLv8QwDx4%2FYkIq9mUuYXlP0xffk%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

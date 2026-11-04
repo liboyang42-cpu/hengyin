@@ -1,0 +1,48 @@
+{
+ "id": "h09-crop",
+ "path": "pages/crop/index",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onCancel|返回上一页|{}",
+   "h": "onCancel",
+   "txt": "返回上一页",
+   "w": 357,
+   "hgt": 46,
+   "y": 759,
+   "route": "pages/index/index",
+   "newText": "成为俱乐部 | 聚集同好，发起属于你们的城市活动 | 成为商家 | 把空间、服务和好内容带给更多玩家 | 和朋友报名活动 | 和朋友一起，发现附近正在发生的有趣体验 | Hi, 玩家二号! | 玩家 | · 上海市 | 编辑精选 | 暂时没有精选主题 | 附近活动",
+   "runtime": "navigateBack:fail cannot navigate back at first page.",
+   "pageError": "Object: Object",
+   "shot": "h09-crop-t01",
+   "result": "navigates"
+  }
+ ],
+ "route": [
+  "pages/crop/index"
+ ],
+ "text": "裁剪 | 没有可裁剪的图片 | 请返回重新进入 | 返回上一页 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 1,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/crop/index"
+  ],
+  "pageErrors": [
+   "Object: Object /     at fail (http://127.0.0.1:8097/src/nav.js:218:194)"
+  ],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

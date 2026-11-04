@@ -1,0 +1,3 @@
+i25-tixianjilu route subpackageMember/tixianjilu/tixianjilu controls 1 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+TEXT: 提现记录 | 还没有发起提现 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

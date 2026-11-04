@@ -1,0 +1,94 @@
+{
+ "id": "k02-monthly-recap",
+ "path": "subpackageTools/monthly-recap/index",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "prevMonth||{}",
+   "h": "prevMonth",
+   "txt": "",
+   "w": 46,
+   "hgt": 46,
+   "y": 175,
+   "route": "subpackageTools/monthly-recap/index",
+   "newText": "2026 年 10 月",
+   "result": "ui change"
+  },
+  {
+   "key": "nextMonth||{}",
+   "h": "nextMonth",
+   "txt": "",
+   "w": 46,
+   "hgt": 46,
+   "y": 175,
+   "route": "subpackageTools/monthly-recap/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "pickKind|路线|{\"index\":0}",
+   "h": "pickKind",
+   "txt": "路线",
+   "w": 59,
+   "hgt": 34,
+   "y": 457,
+   "route": "subpackageTools/monthly-recap/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "pickKind|首次地点|{\"index\":1}",
+   "h": "pickKind",
+   "txt": "首次地点",
+   "w": 88,
+   "hgt": 34,
+   "y": 457,
+   "route": "subpackageTools/monthly-recap/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "pickKind|城市签|{\"index\":2}",
+   "h": "pickKind",
+   "txt": "城市签",
+   "w": 74,
+   "hgt": 34,
+   "y": 457,
+   "route": "subpackageTools/monthly-recap/index",
+   "result": "NO VISIBLE EFFECT"
+  }
+ ],
+ "route": [
+  "subpackageTools/monthly-recap/index"
+ ],
+ "text": "月度回顾 | 2026 年 11 月 | 0 | 次路线完成 | 0 | 首次地点 | 0 | 城市签 | 路线 | 首次地点 | 城市签 | 这一类本月没有记录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 6,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageTools/monthly-recap/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

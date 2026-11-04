@@ -1,0 +1,5 @@
+i09-complaint route subpackageMember/complaint/index>pages/privacy/index controls 6 errors 0 badNet 0
+  NO VISIBLE EFFECT onMask                     ""                                   
+  NO VISIBLE EFFECT noop                       "隐私保护"                               
+                   openService                "《用户服务协议》"                           
+TEXT: 隐私保护 | 我们只在你使用相关功能时处理必要信息。 | 我已阅读并同意 | 《用户服务协议》 | 《隐私保护指引》 | 暂不同意 | 同意并继续 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

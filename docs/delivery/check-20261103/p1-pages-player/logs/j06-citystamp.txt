@@ -1,0 +1,6 @@
+j06-citystamp route subpackageRoam/citystamp/index controls 4 errors 0 badNet 0
+  navigates        onCamClose                 ""                               -> pages/roam/index    
+  NO VISIBLE EFFECT onCamFull                  ""                                   
+  NO VISIBLE EFFECT onCamFlip                  ""                                   
+  sheet            onShoot                    ""                                   
+TEXT: 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

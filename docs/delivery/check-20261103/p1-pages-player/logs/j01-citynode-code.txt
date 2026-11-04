@@ -1,0 +1,4 @@
+j01-citynode-code route subpackageRoam/citynode-code/index controls 2 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  navigates        onCta                      "返回"                             -> pages/roam/index    
+TEXT: 这个核销码无法打开 | 请返回重新进入 | 返回 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

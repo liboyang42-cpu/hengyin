@@ -1,0 +1,12 @@
+i14-mycanyu route subpackageMember/mycanyu/mycanyu controls 10 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  NO VISIBLE EFFECT onTab                      "全部"                                 
+  SKIPPED (destructive / writes; walked by hand) onTab                      "未开始"                                
+  NO VISIBLE EFFECT onTab                      "进行中"                                
+  NO VISIBLE EFFECT onTab                      "已完成"                                
+  ui change        goOrder                    "E2E 探店日一期 11.14 - 11.14 线下活动 ·"     
+  navigates        __onTap                    ""                               -> subpackageMember/signup/index    
+  navigates        viewVoucher                "查看报名凭证"                         -> subpackageMember/signup/index    
+  ui change        goOrder                    "E2E 探店日一期 11.04 - 11.04 线下活动 ·"     
+  navigates        viewVoucher                "查看报名凭证"                         -> subpackageMember/signup/index    
+TEXT: 我的参与 | 全部 | 未开始 | 进行中 | 已完成 | 进行中 | E2E 探店日一期 | 11.14 - 11.14 | 线下活动 · 上海市黄浦区咖啡 | 未核销 | 查看报名凭证 | 已完成 | E2E 探店日一期 | 11.04 - 11.04 | 线下活动 · 上海市黄浦区咖啡 | 已核销 | 查看报名凭证 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

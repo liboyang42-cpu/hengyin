@@ -1,0 +1,7 @@
+i08-invoice-title-edit route subpackageMember/invoice-title-edit/index controls 5 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  NO VISIBLE EFFECT titleType                  "单位"                                 
+  NO VISIBLE EFFECT titleType                  "个人"                                 
+  NO VISIBLE EFFECT __onTap                    ""                                   
+  SKIPPED (destructive / writes; walked by hand) saveTitle                  "保存"                                 
+TEXT: 发票抬头 | 抬头类型 | * | 单位 | 个人 | 抬头名称 | * | 税号 | * | 设为默认 | 保存 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

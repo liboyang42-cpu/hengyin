@@ -1,0 +1,77 @@
+{
+ "id": "i08-invoice-title-edit",
+ "path": "subpackageMember/invoice-title-edit/index",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "titleType|单位|{\"type\":\"COMPANY\"}",
+   "h": "titleType",
+   "txt": "单位",
+   "w": 58,
+   "hgt": 33,
+   "y": 205,
+   "route": "subpackageMember/invoice-title-edit/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "titleType|个人|{\"type\":\"PERSONAL\"}",
+   "h": "titleType",
+   "txt": "个人",
+   "w": 58,
+   "hgt": 33,
+   "y": 205,
+   "route": "subpackageMember/invoice-title-edit/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "__onTap||{}",
+   "h": "__onTap",
+   "txt": "",
+   "w": 357,
+   "hgt": 46,
+   "y": 752,
+   "route": "subpackageMember/invoice-title-edit/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "saveTitle|保存|{}",
+   "h": "saveTitle",
+   "txt": "保存",
+   "w": 357,
+   "hgt": 46,
+   "y": 752,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  }
+ ],
+ "route": [
+  "subpackageMember/invoice-title-edit/index"
+ ],
+ "text": "发票抬头 | 抬头类型 | * | 单位 | 个人 | 抬头名称 | * | 税号 | * | 设为默认 | 保存 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 5,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageMember/invoice-title-edit/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

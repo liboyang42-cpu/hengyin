@@ -1,0 +1,7 @@
+l03-deregister route pages/deregister/index controls 5 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  NO VISIBLE EFFECT onMask                     ""                                   
+  NO VISIBLE EFFECT noop                       ""                                   
+  NO VISIBLE EFFECT __onTap                    ""                                   
+  NO VISIBLE EFFECT recheck                    "我已处理，重新检查"                          
+TEXT: 注销账号 | 暂时无法注销 | 请先处理以下事项： | · 存在待支付或未核销的有效报名 | 我已处理，重新检查 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

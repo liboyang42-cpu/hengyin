@@ -1,0 +1,3 @@
+l05-team-join route pages/team/join/index controls 1 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+TEXT: 加入队伍 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

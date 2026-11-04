@@ -1,0 +1,8 @@
+i13-couponInfo route subpackageMember/couponInfo/couponInfo controls 6 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  SKIPPED (destructive / writes; walked by hand) showStartTimePicker        "开始日期 - 结束日期"                        
+  ui change        openCouponTypeSheet        "请选择"                                
+  navigates        __onTap                    ""                               -> pages/index/index    
+  navigates        onCancel                   "取消"                             -> pages/index/index    
+  SKIPPED (destructive / writes; walked by hand) onSubmit                   "发布优惠券"                              
+TEXT: 优惠券设置 | 优惠券名称 | * | 优惠券日期 | * | 开始日期 | - | 结束日期 | 投放数 | * | 优惠券类型 | * | 请选择 | 优惠券说明 | 取消 | 发布优惠券 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

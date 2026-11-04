@@ -1,0 +1,8 @@
+k05-export route subpackageTools/exploration-export/index controls 6 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  NO VISIBLE EFFECT pickRange                  "近 30 天"                             
+  ui change        pickRange                  "今年"                                 
+  ui change        pickRange                  "近一年"                                
+  ui change        open                       ""                                   
+  ui change        prepare                    "准备导出"                               
+TEXT: 导出探索记录 | 近 30 天 | 今年 | 近一年 | 开始 | 2026-10-06 | 结束（不含） | 2026-11-05 | 准备导出 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

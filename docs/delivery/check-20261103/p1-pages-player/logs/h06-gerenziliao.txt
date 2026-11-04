@@ -1,0 +1,12 @@
+h06-gerenziliao route pages/gerenziliao/gerenziliao controls 10 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  navigates        changeHeroBg               "更换背景"                           -> pages/crop/index    
+  navigates        onTap                      ""                               -> pages/crop/index   R:open-type chooseAvatar 
+  ui change        openPop4                   "昵称 未填写"                             
+  ui change        openPop                    "个人介绍 介绍一下你自己"                       
+  ui change        openPop2                   "探索作品 未填写"                           
+  ui change        openPop3                   "联系二维码 未填写"                          
+  ui change        navigateToCategorySelect   "路线偏好 未填写"                           
+  NO VISIBLE EFFECT __onTap                    ""                                   
+  SKIPPED (destructive / writes; walked by hand) saveInfo                   "保存"                                 
+TEXT: 更换背景 | 城瘾玩家 | 昵称 | 未填写 | 个人介绍 | 介绍一下你自己 | 手机号 | 139****0009 | 探索作品 | 未填写 | 联系二维码 | 未填写 | 路线偏好 | 未填写 | 保存 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

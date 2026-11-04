@@ -1,0 +1,3 @@
+i21-report-detail route pages/index/index>subpackageMember/report-detail/index controls 1 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+TEXT: 举报进度 | 暂时不能查看这条举报 | 仅举报人可查看 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

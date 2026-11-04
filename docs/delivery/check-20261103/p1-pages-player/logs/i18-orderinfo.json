@@ -1,0 +1,72 @@
+{
+ "id": "i18-orderinfo",
+ "path": "subpackageMember/orderinfo/orderinfo?id=74",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "openMeetingPoint|集合点 人民广场1号口 · 查看|{}",
+   "h": "openMeetingPoint",
+   "txt": "集合点 人民广场1号口 · 查看",
+   "w": 324,
+   "hgt": 49,
+   "y": 558,
+   "route": "subpackageMember/orderinfo/orderinfo",
+   "toast": "打开微信地图：人民广场1号口",
+   "newText": "订单进度 | 订单已创建 | 2026-11-04 23:07 | 付款成功 | 2026-11-04 23:07 | 权益已核销 | 打开微信地图：人民广场1号口",
+   "shot": "i18-orderinfo-t01",
+   "result": "toast"
+  },
+  {
+   "key": "copyOrderNo|复制订单号|{}",
+   "h": "copyOrderNo",
+   "txt": "复制订单号",
+   "w": 172,
+   "hgt": 33,
+   "y": 2415,
+   "route": "subpackageMember/orderinfo/orderinfo",
+   "toast": "内容已复制",
+   "newText": "已复制订单号 | 第1章 咖啡 | 已核销 | 第2章 书店 | 已核销 | 第3章 花店 | 已核销 | 第4章 面包 | 已核销 | 探店图鉴 | 第1章 咖啡 · 样板咖啡第1站 | 11-04 23:10",
+   "shot": "i18-orderinfo-t02",
+   "result": "toast"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "subpackageMember/orderinfo/orderinfo"
+ ],
+ "text": "¥69 | E2E 探店日一期 | 11-04 23:10–23:59 | 已完成 | 已经完成 | 已完成 | 本次订单已核销 | 订单明细 | 订单号 | A20261104CFD5FB19 | 票种 | 标准场次票 × 1 | 日期与时间 | 11-04 23:10–23:59 | 集合点 | 人民广场1号口 · 查看 | 支付明细 | 票价 | ¥69 × 1 | 微信实付 | ¥69 | 合计 | ¥69 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "text_s1": "票价 | ¥69 × 1 | 微信实付 | ¥69 | 合计 | ¥69 | 订单进度 | 订单已创建 | 2026-11-04 23:07 | 付款成功 | 2026-11-04 23:07 | 权益已核销 | 2026-11-04 00:00 | 支付信息 | 支付时间 | 2026-11-04 23:07 | 支付方式 | 微信 | 微信实付 | ¥69 | 微信交易单号 | E2E-TXN-74 | 报名人信息 | 姓名 | E2E 玩家二号 | 手机 | 139****0009 | 凭证与有效期 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "text_s2": "姓名 | E2E 玩家二号 | 手机 | 139****0009 | 凭证与有效期 | 核销时间 | 2026-11-04 00:00 | 权益明细 | 第1章 咖啡 | 已核销 | 第2章 书店 | 已核销 | 第3章 花店 | 已核销 | 第4章 面包 | 已核销 | 探店图鉴 | 第1章 咖啡 · 样板咖啡第1站 | 11-04 23:10 | 第2章 书店 · 样板书店第2站 | 11-04 23:10 | 第3章 花店 · 样板花店第3站 | 11-04 23:10 | 第4章 面包 · 样板面包第4站 | 11-04 23:10 | 已集齐 4/4 | 通关奖励 | E2E 探店日一期 · 通关 | 通关探索值 | +1200 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 3,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageMember/orderinfo/orderinfo"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/e2e-topic-cover-9003.jpg?Expires=2109166161&OSSAccessKeyId=rigdummy&Signature=ijzj8zZkxa58m6l79pD8S9edRgs%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

@@ -1,0 +1,8 @@
+l01-privacy route pages/index/index controls 15 errors 1 badNet 0
+  NO VISIBLE EFFECT onHeroBannerTap            "成为俱乐部 聚集同好，发起属于你们的城市活动"             
+  NO VISIBLE EFFECT onHeroBannerTap            "成为商家 把空间、服务和好内容带给更多玩家"              
+                   onHeroBannerTap            "和朋友报名活动 和朋友一起，发现附近正在发生的有趣体验"    -> pages/activity/list/index    
+TEXT: 成为俱乐部 | 聚集同好，发起属于你们的城市活动 | 成为商家 | 把空间、服务和好内容带给更多玩家 | 和朋友报名活动 | 和朋友一起，发现附近正在发生的有趣体验 | Hi, 玩家二号! | 玩家 | · 上海市 | 编辑精选 | 暂时没有精选主题 | 附近活动 | 你附近暂时没有可点亮的节点 | 主题 | 活动 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+PAGEERR [
+  'Object: Object /     at fail (http://127.0.0.1:8097/src/nav.js:218:194)'
+]

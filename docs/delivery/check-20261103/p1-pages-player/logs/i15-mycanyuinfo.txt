@@ -1,0 +1,6 @@
+i15-mycanyuinfo route pages/index/index>subpackageMember/mycanyuinfo/mycanyuinfo controls 4 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  navigates        goCharacter                "我的角色卡"                          -> subpackageMember/character/index    
+  navigates        goScore                    "定向成绩"                           -> subpackageMember/orient-score/index  T:城市定向新流程暂未开放  
+  SKIPPED (destructive / writes; walked by hand) goPlay                     "开始玩"                                
+TEXT: 参与详情 | E2E 探店日一期 | 2026.11.04 - 2026.11.04 | 线下活动 | 已完成 | 5-1 链路真跑 | 我的角色卡 | 定向成绩 | 开始玩 | 联系客服 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

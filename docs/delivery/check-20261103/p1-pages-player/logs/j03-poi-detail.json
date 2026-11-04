@@ -1,0 +1,79 @@
+{
+ "id": "j03-poi-detail",
+ "path": "subpackageRoam/poi-detail/index?poiId=1",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onMask||{}",
+   "h": "onMask",
+   "txt": "",
+   "w": 390,
+   "hgt": 844,
+   "y": 0,
+   "route": "subpackageRoam/poi-detail/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "noop|节点详情|{}",
+   "h": "noop",
+   "txt": "节点详情",
+   "w": 390,
+   "hgt": 675,
+   "y": 169,
+   "route": "subpackageRoam/poi-detail/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "onClose||{\"testid\":\"scene-sheet-close\"}",
+   "h": "onClose",
+   "txt": "",
+   "w": 46,
+   "hgt": 46,
+   "y": 178,
+   "route": "pages/index/index",
+   "newText": "成为俱乐部 | 聚集同好，发起属于你们的城市活动 | 成为商家 | 把空间、服务和好内容带给更多玩家 | 和朋友报名活动 | 和朋友一起，发现附近正在发生的有趣体验 | Hi, 玩家二号! | 玩家 | · 上海市 | 编辑精选 | 暂时没有精选主题 | 附近活动",
+   "shot": "j03-poi-detail-t01",
+   "result": "navigates"
+  },
+  {
+   "key": "onCta|返回地图|{}",
+   "h": "onCta",
+   "txt": "返回地图",
+   "w": 83,
+   "hgt": 46,
+   "y": 311,
+   "route": "pages/index/index",
+   "newText": "成为俱乐部 | 聚集同好，发起属于你们的城市活动 | 成为商家 | 把空间、服务和好内容带给更多玩家 | 和朋友报名活动 | 和朋友一起，发现附近正在发生的有趣体验 | Hi, 玩家二号! | 玩家 | · 上海市 | 编辑精选 | 暂时没有精选主题 | 附近活动",
+   "shot": "j03-poi-detail-t02",
+   "result": "navigates"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "subpackageRoam/poi-detail/index"
+ ],
+ "text": "节点详情 | 节点未开放或已下线 | 据点未开放或已下线 | 返回地图 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 4,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageRoam/poi-detail/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

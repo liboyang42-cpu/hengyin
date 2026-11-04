@@ -1,0 +1,7 @@
+j07-my-teams route subpackageRoam/my-teams/index controls 5 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  navigates        openMap                    "地图"                             -> subpackageRoam/nearby/index    
+  NO VISIBLE EFFECT switchTab                  "我的"                                 
+  NO VISIBLE EFFECT switchTab                  "附近招募"                               
+  navigates        openMap                    "去地图找队伍"                         -> subpackageRoam/nearby/index    
+TEXT: 地图 | 我的队伍 | 0 | 已通过 | 0 | 审核中 | 0 | 带队 | 0 | 未通过 | 我的 | 附近招募 | 还没有队伍 | 去地图找队伍 | 附近在招募 | 附近暂时没有在招募的队伍 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

@@ -1,0 +1,61 @@
+{
+ "id": "i09-complaint",
+ "path": "subpackageMember/complaint/index",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onMask||{}",
+   "h": "onMask",
+   "txt": "",
+   "w": 390,
+   "hgt": 844,
+   "y": 0,
+   "route": "pages/privacy/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "noop|隐私保护|{}",
+   "h": "noop",
+   "txt": "隐私保护",
+   "w": 390,
+   "hgt": 223,
+   "y": 621,
+   "route": "pages/privacy/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "openService|《用户服务协议》|{}",
+   "h": "openService",
+   "txt": "《用户服务协议》",
+   "w": 92,
+   "hgt": 18,
+   "y": 704,
+   "route": "pages/privacy/index",
+   "newText": "用户服务协议 | 欢迎使用城瘾。本协议由西安吾令文化传媒有限公司（以下简称“我们”）与城瘾用户共同订立。请在注册、登录或使用服务前仔细阅读并充分理解本协议。 | 一、协议主体与生效 | 城瘾由西安吾令文化传媒有限公司运营，注册地址为陕西省西安市高新区锦业路1号绿地领海B座6层604室A043号。本协议自2026年8月12日起生效。本协议在你明确选择同意后对你生效。 | 二、账号注册与安全 | 你应使用真实、合法、有效的信息注册账号，并妥善保管登录凭证。不得出借、转让账号，不得利用账号实施违法、侵权、欺诈或扰乱平台秩序的行为。因你未妥善保管账号造成的损失，由你依法承担相应责任；因平台原因造成的损",
+   "shot": "i09-complaint-t01",
+   "note": "could not reopen"
+  }
+ ],
+ "route": [
+  "subpackageMember/complaint/index",
+  "pages/privacy/index"
+ ],
+ "text": "隐私保护 | 我们只在你使用相关功能时处理必要信息。 | 我已阅读并同意 | 《用户服务协议》 | 《隐私保护指引》 | 暂不同意 | 同意并继续 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 6,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageMember/complaint/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED http://127.0.0.1:8097/__api/api/coop/complaint/topics net::ERR_ABORTED",
+   "[error] FAILED http://127.0.0.1:8097/__api/api/coop/complaint/mine net::ERR_ABORTED",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

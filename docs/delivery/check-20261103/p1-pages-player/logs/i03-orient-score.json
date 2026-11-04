@@ -1,0 +1,32 @@
+{
+ "id": "i03-orient-score",
+ "path": "subpackageMember/orient-score/index",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onCta|重新读取|{}",
+   "h": "onCta",
+   "txt": "重新读取",
+   "w": 83,
+   "hgt": 46,
+   "y": 329,
+   "route": "subpackageMember/orient-score/index",
+   "result": "NO VISIBLE EFFECT"
+  }
+ ],
+ "route": [
+  "subpackageMember/orient-score/index"
+ ],
+ "text": "缺少合法对局参数 | 请返回重新进入 | 重新读取 | 本局计分 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 1,
+ "report": {
+  "route": [
+   "subpackageMember/orient-score/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

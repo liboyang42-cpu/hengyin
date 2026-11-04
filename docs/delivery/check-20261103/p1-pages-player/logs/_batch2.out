@@ -16,3 +16,15 @@ i01-free-explore rc=0
 i04-invoice rc=0
 i07-invoice-titles rc=0
 i10-coupon-wallet rc=0
+i13-couponInfo rc=0
+i16-myinvite rc=0
+i19-points rc=0
+i22-appeal-mine rc=0
+i25-tixianjilu rc=0
+j03-poi-detail rc=0
+j06-citystamp rc=0
+j09-official-route rc=0
+k03-goals rc=0
+l01-privacy rc=0
+l04-team-detail rc=0
+BATCH DONE batch2.json

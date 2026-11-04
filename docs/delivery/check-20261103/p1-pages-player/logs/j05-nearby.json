@@ -1,0 +1,191 @@
+{
+ "id": "j05-nearby",
+ "path": "subpackageRoam/nearby/index",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "goBack||{}",
+   "h": "goBack",
+   "txt": "",
+   "w": 32,
+   "hgt": 32,
+   "y": 51,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "onLayerTap|全部|{\"layer\":\"all\"}",
+   "h": "onLayerTap",
+   "txt": "全部",
+   "w": 46,
+   "hgt": 34,
+   "y": 103,
+   "route": "subpackageRoam/nearby/index",
+   "newText": "附近 · 0 支队伍 · 6 处地点 | 自由探索 | 上海市黄浦区咖啡 · 1.2km",
+   "shot": "j05-nearby-t01",
+   "result": "ui change"
+  },
+  {
+   "key": "onLayerTap|主题队伍|{\"layer\":\"team\"}",
+   "h": "onLayerTap",
+   "txt": "主题队伍",
+   "w": 71,
+   "hgt": 34,
+   "y": 103,
+   "route": "subpackageRoam/nearby/index",
+   "newText": "附近暂无节点 | 点这里看看全部范围",
+   "result": "ui change"
+  },
+  {
+   "key": "onLayerTap|地点玩法|{\"layer\":\"place\"}",
+   "h": "onLayerTap",
+   "txt": "地点玩法",
+   "w": 80,
+   "hgt": 34,
+   "y": 103,
+   "route": "subpackageRoam/nearby/index",
+   "newText": "全部地点 | 5 | 活动 | 本周 | 5",
+   "result": "ui change"
+  },
+  {
+   "key": "onLayerTap|商家|{\"layer\":\"shop\"}",
+   "h": "onLayerTap",
+   "txt": "商家",
+   "w": 55,
+   "hgt": 34,
+   "y": 103,
+   "route": "subpackageRoam/nearby/index",
+   "newText": "全部商家 | 0",
+   "result": "ui change"
+  },
+  {
+   "key": "setViewMode||{\"mode\":\"map\"}",
+   "h": "setViewMode",
+   "txt": "",
+   "w": 38,
+   "hgt": 38,
+   "y": 151,
+   "route": "subpackageRoam/nearby/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "setViewMode||{\"mode\":\"list\"}",
+   "h": "setViewMode",
+   "txt": "",
+   "w": 38,
+   "hgt": 38,
+   "y": 192,
+   "route": "subpackageRoam/nearby/index",
+   "newText": "范围 1 公里内 · 5 个",
+   "result": "ui change"
+  },
+  {
+   "key": "onListRowTap|热门活动 E2E 探店日一期 上海市黄浦区咖啡 · 2m|{\"kind\":\"activity\",\"id\":9}",
+   "h": "onListRowTap",
+   "txt": "热门活动 E2E 探店日一期 上海市黄浦区咖啡 · 2m",
+   "w": 322,
+   "hgt": 135,
+   "y": 643,
+   "route": "subpackageRoam/nearby/index",
+   "newText": "活 | 点卡片看详情 | 上海市黄浦区咖啡 | 这里还没有介绍。 | 上滑看全部 | 上滑展开",
+   "shot": "j05-nearby-t02",
+   "result": "ui change"
+  },
+  {
+   "key": "onListRowTap|热门活动 E2E 探店日一期 上海市黄浦区咖啡 · 2m|{\"kind\":\"activity\",\"id\":10}",
+   "h": "onListRowTap",
+   "txt": "热门活动 E2E 探店日一期 上海市黄浦区咖啡 · 2m",
+   "w": 322,
+   "hgt": 135,
+   "y": 643,
+   "route": "subpackageRoam/nearby/index",
+   "newText": "活 | 点卡片看详情 | 上海市黄浦区咖啡 | 这里还没有介绍。 | 上滑看全部 | 上滑展开",
+   "shot": "j05-nearby-t03",
+   "result": "ui change"
+  },
+  {
+   "key": "onListRowTap|热门活动 E2E 探店日一期 上海市黄浦区咖啡 · 2m|{\"kind\":\"activity\",\"id\":11}",
+   "h": "onListRowTap",
+   "txt": "热门活动 E2E 探店日一期 上海市黄浦区咖啡 · 2m",
+   "w": 322,
+   "hgt": 135,
+   "y": 643,
+   "route": "subpackageRoam/nearby/index",
+   "newText": "活 | 点卡片看详情 | 上海市黄浦区咖啡 | 这里还没有介绍。 | 上滑看全部 | 上滑展开",
+   "shot": "j05-nearby-t04",
+   "result": "ui change"
+  },
+  {
+   "key": "onListRowTap|热门活动 E2E 探店日一期 上海市黄浦区咖啡 · 2m|{\"kind\":\"activity\",\"id\":12}",
+   "h": "onListRowTap",
+   "txt": "热门活动 E2E 探店日一期 上海市黄浦区咖啡 · 2m",
+   "w": 322,
+   "hgt": 135,
+   "y": 643,
+   "route": "subpackageRoam/nearby/index",
+   "newText": "活 | 点卡片看详情 | 上海市黄浦区咖啡 | 这里还没有介绍。 | 上滑看全部 | 上滑展开",
+   "shot": "j05-nearby-t05",
+   "result": "ui change"
+  },
+  {
+   "key": "onListRowTap|热门活动 E2E 探店日一期 上海市黄浦区咖啡 · 2m|{\"kind\":\"activity\",\"id\":13}",
+   "h": "onListRowTap",
+   "txt": "热门活动 E2E 探店日一期 上海市黄浦区咖啡 · 2m",
+   "w": 322,
+   "hgt": 135,
+   "y": 643,
+   "route": "subpackageRoam/nearby/index",
+   "newText": "活 | 点卡片看详情 | 上海市黄浦区咖啡 | 这里还没有介绍。 | 上滑看全部 | 上滑展开",
+   "shot": "j05-nearby-t06",
+   "result": "ui change"
+  },
+  {
+   "key": "openRange||{}",
+   "h": "openRange",
+   "txt": "",
+   "w": 46,
+   "hgt": 46,
+   "y": 551,
+   "route": "subpackageRoam/nearby/index",
+   "newText": "范围 | 1 km | 3 km | 5 km | 10 km | 20 km | 确定",
+   "result": "ui change"
+  },
+  {
+   "key": "openMyTeamsPage||{}",
+   "h": "openMyTeamsPage",
+   "txt": "",
+   "w": 46,
+   "hgt": 46,
+   "y": 551,
+   "route": "subpackageRoam/my-teams/index",
+   "newText": "地图 | 我的队伍 | 0 | 已通过 | 0 | 审核中 | 0 | 带队 | 0 | 未通过 | 我的 | 附近招募",
+   "result": "navigates"
+  }
+ ],
+ "route": [
+  "subpackageRoam/nearby/index"
+ ],
+ "text": "全部 | 主题队伍 | 地点玩法 | 商家 | 附近 · 0 支队伍 · 5 处地点 | 热门活动 | E2E 探店日一期 | 上海市黄浦区咖啡 · 2m | 热门活动 | E2E 探店日一期 | 上海市黄浦区咖啡 · 2m | 热门活动 | E2E 探店日一期 | 上海市黄浦区咖啡 · 2m | 热门活动 | E2E 探店日一期 | 上海市黄浦区咖啡 · 2m | 热门活动 | E2E 探店日一期 | 上海市黄浦区咖啡 · 2m | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 14,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageRoam/nearby/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

@@ -1,0 +1,4 @@
+k01-capsule route subpackageTools/capsule/index controls 2 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  ui change        toggleCompose              ""                                   
+TEXT: 时光胶囊 | 我的胶囊 | 还没有胶囊 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

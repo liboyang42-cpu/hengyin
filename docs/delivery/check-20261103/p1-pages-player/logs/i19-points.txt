@@ -1,0 +1,3 @@
+i19-points route subpackageMember/points-history/index controls 1 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+TEXT: 积分明细 | 还没有积分记录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

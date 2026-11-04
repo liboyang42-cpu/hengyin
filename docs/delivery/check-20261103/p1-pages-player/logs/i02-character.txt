@@ -1,0 +1,5 @@
+i02-character route pages/index/index>subpackageMember/character/index controls 3 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  NO VISIBLE EFFECT __onTap                    ""                                   
+  NO VISIBLE EFFECT loadCharacter              "刷新角色卡"                              
+TEXT: 我的角色卡 | 角色模板 | 尚未建卡 | 以下为角色模板的初始属性，尚未创建角色 | 模板暂无可展示属性 | 该主题尚未配置可见属性 | 刷新角色卡 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

@@ -1,0 +1,143 @@
+{
+ "id": "h06-gerenziliao",
+ "path": "pages/gerenziliao/gerenziliao",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "changeHeroBg|更换背景|{}",
+   "h": "changeHeroBg",
+   "txt": "更换背景",
+   "w": 93,
+   "hgt": 29,
+   "y": 244,
+   "route": "pages/crop/index",
+   "newText": "裁剪 | 取消 | 还原 | 选取",
+   "shot": "h06-gerenziliao-t01",
+   "result": "navigates"
+  },
+  {
+   "key": "onTap||{}",
+   "h": "onTap",
+   "txt": "",
+   "w": 108,
+   "hgt": 108,
+   "y": 123,
+   "route": "pages/crop/index",
+   "newText": "裁剪 | 取消 | 还原 | 选取",
+   "runtime": "open-type chooseAvatar",
+   "shot": "h06-gerenziliao-t02",
+   "result": "navigates"
+  },
+  {
+   "key": "openPop4|昵称 未填写|{}",
+   "h": "openPop4",
+   "txt": "昵称 未填写",
+   "w": 357,
+   "hgt": 54,
+   "y": 314,
+   "route": "pages/gerenziliao/gerenziliao",
+   "newText": "2–24 个字，可用文字、数字和 _ # - . · 空格 | 完成",
+   "result": "ui change"
+  },
+  {
+   "key": "openPop|个人介绍 介绍一下你自己|{}",
+   "h": "openPop",
+   "txt": "个人介绍 介绍一下你自己",
+   "w": 357,
+   "hgt": 72,
+   "y": 368,
+   "route": "pages/gerenziliao/gerenziliao",
+   "newText": "0/140 | 完成",
+   "result": "ui change"
+  },
+  {
+   "key": "openPop2|探索作品 未填写|{}",
+   "h": "openPop2",
+   "txt": "探索作品 未填写",
+   "w": 357,
+   "hgt": 54,
+   "y": 528,
+   "route": "pages/gerenziliao/gerenziliao",
+   "newText": "上传 | 路线照片 | 完成",
+   "result": "ui change"
+  },
+  {
+   "key": "openPop3|联系二维码 未填写|{}",
+   "h": "openPop3",
+   "txt": "联系二维码 未填写",
+   "w": 357,
+   "hgt": 54,
+   "y": 582,
+   "route": "pages/gerenziliao/gerenziliao",
+   "newText": "上传 | 完成",
+   "result": "ui change"
+  },
+  {
+   "key": "navigateToCategorySelect|路线偏好 未填写|{}",
+   "h": "navigateToCategorySelect",
+   "txt": "路线偏好 未填写",
+   "w": 357,
+   "hgt": 54,
+   "y": 636,
+   "route": "pages/gerenziliao/gerenziliao",
+   "newText": "选择分类 | 城市漫步 | 咖啡 | 历史人文 | 解谜冒险 | 夜游 | 摄影打卡 | 户外徒步 | 亲子同行",
+   "shot": "h06-gerenziliao-t03",
+   "result": "ui change"
+  },
+  {
+   "key": "__onTap||{}",
+   "h": "__onTap",
+   "txt": "",
+   "w": 357,
+   "hgt": 46,
+   "y": 752,
+   "route": "pages/gerenziliao/gerenziliao",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "saveInfo|保存|{}",
+   "h": "saveInfo",
+   "txt": "保存",
+   "w": 357,
+   "hgt": 46,
+   "y": 752,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  }
+ ],
+ "route": [
+  "pages/gerenziliao/gerenziliao"
+ ],
+ "text": "更换背景 | 城瘾玩家 | 昵称 | 未填写 | 个人介绍 | 介绍一下你自己 | 手机号 | 139****0009 | 探索作品 | 未填写 | 联系二维码 | 未填写 | 路线偏好 | 未填写 | 保存 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 10,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/gerenziliao/gerenziliao"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}
