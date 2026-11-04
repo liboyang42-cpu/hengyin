@@ -361,6 +361,10 @@ const BROADCAST_REJECTED_TEXT = {
 function rejectedActionText(action, result) {
   const code = String((result && result.reasonCode) || '').toUpperCase()
   if (action === 'BROADCAST' && BROADCAST_REJECTED_TEXT[code]) return BROADCAST_REJECTED_TEXT[code]
+  // 第十轮 f2(j2 F-07):开始活动被服务端拒(如「当前不在活动服务时段」)要说出原因,不能只剩一句笼统的未生效。
+  const reason = result && typeof result.reason === 'string' ? result.reason.trim()
+    : (result && typeof result.message === 'string' ? result.message.trim() : '')
+  if (action === 'START' && reason) return reason
   return null
 }
 
@@ -558,6 +562,8 @@ const DIRECTOR_DATA = {
     readinessText: '—',
     canPrepare: false,
     blockers: [],
+    startFailText: '',
+    merchantHoldBlocked: false,
     incidentRows: [],
     incidentSelectedKey: '',
     incidentModes: [],
@@ -853,6 +859,10 @@ const DIRECTOR_METHODS = {
       blockers: Array.isArray(readiness.blockers) ? readiness.blockers : [],
       blockerText: Array.isArray(readiness.blockers) && readiness.blockers.length && projection.status !== 'RUNNING'
         ? '还不能开始：' + readiness.blockers.filter(Boolean).join('；') : '',
+      // 第十轮 f2 第 5 项:卡在商家(待商家接受 / 没有合作单)时,主理人能直接去联系那家商家。
+      merchantHoldBlocked: projection.status !== 'RUNNING' && Array.isArray(readiness.blockers)
+        && readiness.blockers.some(function (item) { return /待商家接受|合作单/.test(String(item || '')) }),
+      startFailText: projection.status === 'RUNNING' ? '' : this.data.startFailText,
       // D8 现场事件:全部由已有投影推出,不新造事实。
       // 站点暂停 / 待核验积压来自 stations,待核验与已驳回的提交来自 submissions。
       incidentRows: incidentRowList(projection.stations, projection.submissions),
@@ -1464,6 +1474,18 @@ const DIRECTOR_METHODS = {
     })
   },
 
+  goStationMerchants() {
+    const topicId = this._topicId
+    if (!topicId) return
+    if (this._navigating) return
+    this._navigating = true
+    wx.navigateTo({
+      url: '/pages/coop/list/index?tab=sent&topicId=' + topicId
+        + (this.data.topic && this.data.topic.name ? '&topicName=' + encodeURIComponent(this.data.topic.name) : ''),
+      complete: () => { this._navigating = false },
+    })
+  },
+
   onPrepareSession() {
     if (this.data.writeLocked) return
     if (!this.data.canPrepare) {
@@ -1557,7 +1579,9 @@ const DIRECTOR_METHODS = {
         that.setData({ writeState: 'idle', writeMessage: '', writeLocked: false, canRetryUnknownWrite: false })
         // CU-C-76:后端把驳回原因放在 reasonCode 里(如 GAME_BROADCAST_NO_RECIPIENT),
         // 以前这里不分原因统一一句「操作未生效」,把可执行的下一步抹掉了。
-        toast(rejectedActionText(command.action, result.raw) || '操作未生效，请刷新后重试')
+        const rejectedText = rejectedActionText(command.action, result.raw)
+        if (command.action === 'START') that.setData({ startFailText: rejectedText ? '没能开始：' + rejectedText : '没能开始，请刷新后重试' })
+        toast(rejectedText || '操作未生效，请刷新后重试')
         // F-L3-01:驳回(含 GAME_STATE_CONFLICT)说明本地投影已落后，自动重读，下一次操作带新 revision
         that.loadProjection()
         return

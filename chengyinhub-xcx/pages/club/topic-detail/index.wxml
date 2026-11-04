@@ -255,8 +255,15 @@
       station-title="节点状态" station-sub="{{readinessText}}" stations="{{stations}}"
       team-title="队伍进度" team-sub="{{sessionStatusText}}" teams="{{directorTeamRows}}"
       primary-text="" primary-disabled="{{!readiness.canStart || writeLocked}}"
-      caption="{{writeMessage || blockerText}}" caption-tone="{{writeState === 'unknown-write' || (!writeMessage && blockerText) ? 'warning' : 'muted'}}"
+      caption="{{writeMessage || startFailText || blockerText}}" caption-tone="{{writeState === 'unknown-write' || (!writeMessage && (startFailText || blockerText)) ? 'warning' : 'muted'}}"
       bind:primary="onStartSession" />
+    <view wx:if="{{statusKey === 'preparing' && merchantHoldBlocked}}" class="tset-row ctd-sec" bindtap="goStationMerchants"
+      aria-role="button" aria-label="联系商家" hover-class="cy-pressed" hover-stay-time="80">
+      <view class="tset-row-main">
+        <text class="tset-row-title">联系商家</text>
+      </view>
+      <cy-icon name="arrow-right" size="28" />
+    </view>
 
     <!-- 收编时别把这两句丢了:它们各自挡着一个误读。 -->
     <cy-empty wx:if="{{directorActive && loadState === 'ready' && stations.length === 0}}"

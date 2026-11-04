@@ -429,7 +429,7 @@ test('CU-C-76:广播入口按 canBroadcast 出两态,不可发送时写明是哪
 test('CU-C-76:发送被驳回时按后端原因码出话,不再统一「操作未生效」', () => {
   const director = read(TOPIC_DETAIL_DIRECTOR_JS)
   assert.match(director, /GAME_BROADCAST_NO_RECIPIENT/, '后端这个原因码前端没接住')
-  assert.match(director, /toast\(rejectedActionText\(command\.action, result\.raw\)/,
+  assert.match(director, /const rejectedText = rejectedActionText\(command\.action, result\.raw\)[\s\S]{0,200}toast\(rejectedText/,
     '驳回分支没读原因码')
 })
 

@@ -350,6 +350,7 @@ function attachMerchantGameEntries(cards, entries, stateByActivity) {
     .filter((entry) => !attachedActivityIds.has(entry.activityId))
     .map((entry) => ({
       key: 'game-station-' + entry.activityId,
+      gameStationCard: true,
       role: 'join',
       roleName: '承接',
       roleLabel: '我承接的',

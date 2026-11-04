@@ -157,7 +157,7 @@
           <view class="rv-project-track">
           <view class="rv-project-item" wx:for="{{projectCards}}" wx:key="key">
           <view class="rv-project-card" bindtap="openProjectCard"
-                data-role="{{item.role}}" data-id="{{item.id}}" data-topicid="{{item.ownerId}}" data-biztype="{{item.bizType}}" data-source="{{item.projectSource}}"
+                data-role="{{item.role}}" data-id="{{item.id}}" data-topicid="{{item.ownerId}}" data-biztype="{{item.bizType}}" data-source="{{item.projectSource}}" data-gameactivityid="{{item.gameStationCard ? item.id : ''}}"
                 hover-class="rv-tap" aria-role="button"
                 aria-label="打开{{item.roleLabel || ''}}项目{{item.title}}{{item.statusLabel ? '，' + item.statusLabel : ''}}{{item.verifyCount ? '，' + item.verifyCount + ' 张待核销' : ''}}">
             <image class="rv-project-cover" wx:if="{{img.first(item.thumb)}}"

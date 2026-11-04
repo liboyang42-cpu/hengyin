@@ -1530,6 +1530,13 @@ Page({
 
   openProjectCard(e) {
     const ds = e.currentTarget.dataset;
+    // 第十轮 f2 第 5 项(j2 F-01d):场次里有本店站点的卡(/api/game/session/merchant/entries)直接进本站页
+    // 接受与准备 —— 不经过报名窗口会关掉的合作中心与承接页。
+    if (ds.gameactivityid) {
+      if (this._navigating) return; this._navigating = true;
+      wx.navigateTo({ url: '/pages/merchant/game-node/index?activityId=' + ds.gameactivityid, complete: () => { this._navigating = false; } });
+      return;
+    }
     if (ds.biztype === 'activity') {
       if (ds.id == null || ds.id === '') return;
       return this.openScene('play-activity-detail', { id: ds.id });
