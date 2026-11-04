@@ -530,8 +530,8 @@ Page({
     wx.switchTab({ url: '/pages/index/index', fail: () => wx.navigateBack({ fail: () => {} }) })
   },
 
-  // FE-17 分享:成就中心可传播(晒等级/勋章/排行)
-  onShareAppMessage() { return { title: '来城瘾看看我的城市探索成就', path: '/subpackageP3/pages/growthcenter/index/index' }; },
+  // 第九轮 m2 补充第 7 项:不实现 onShareAppMessage。收到的人点开看到的是他自己的成就页,
+  // 标题却说「来看看我的城市探索成就」,对不上 —— 好友分享整条撤掉,右上菜单不出「转发」。
   // 第七轮 C 第 1 项:不实现 onShareTimeline。本页只显示「当前登录者」的成就,朋友圈单页模式没有登录态,
   // 点开只有「登录后查看」且登录不可用 —— 看不到分享者的任何内容。
 })

@@ -138,7 +138,7 @@ class OfficialBroadcastDeliveryMySqlIT {
         audience = mock(OfficialAudienceMapper.class);
         when(audience.selectPlayerIds(any())).thenReturn(Collections.singletonList(10L));
         wx = mock(IWxSubscribeMsgService.class);
-        when(wx.notifyOfficialBroadcast(anyLong(), anyString(), anyString())).thenReturn(true);
+        when(wx.notifyOfficialBroadcast(anyLong(), anyString(), anyString(), nullable(String.class))).thenReturn(true);
     }
 
     @AfterAll
@@ -237,14 +237,14 @@ class OfficialBroadcastDeliveryMySqlIT {
         assertEquals(1, logs.countInappReached(bc.getId()));
         assertEquals(2, logs.countReached(bc.getId()));
         assertEquals(OfficialBroadcast.ST_SENT, broadcasts.selectOfficialBroadcastById(bc.getId()).getStatus());
-        verify(wx, times(1)).notifyOfficialBroadcast(anyLong(), anyString(), anyString());
+        verify(wx, times(1)).notifyOfficialBroadcast(anyLong(), anyString(), anyString(), nullable(String.class));
     }
 
     @Test
     void responseLostAfterRemoteAcceptanceRemainsUnknownAcrossServiceRestart() {
         OfficialBroadcast bc = seed("inapp,subscribe");
         AtomicInteger accepted = new AtomicInteger();
-        when(wx.notifyOfficialBroadcast(anyLong(), anyString(), anyString())).thenAnswer(call -> {
+        when(wx.notifyOfficialBroadcast(anyLong(), anyString(), anyString(), nullable(String.class))).thenAnswer(call -> {
             assertFalse(TransactionSynchronizationManager.isActualTransactionActive());
             assertEquals(OfficialBroadcastLog.UNKNOWN, state(bc.getId(), "subscribe"));
             accepted.incrementAndGet(); // simulated provider accepted, response was lost
@@ -264,7 +264,7 @@ class OfficialBroadcastDeliveryMySqlIT {
     void concurrentWorkersDoNotRepeatConfirmedOrUnknownChannel() throws Exception {
         OfficialBroadcast bc = seed("inapp,subscribe");
         CountDownLatch sending = new CountDownLatch(1), release = new CountDownLatch(1);
-        when(wx.notifyOfficialBroadcast(anyLong(), anyString(), anyString())).thenAnswer(call -> {
+        when(wx.notifyOfficialBroadcast(anyLong(), anyString(), anyString(), nullable(String.class))).thenAnswer(call -> {
             sending.countDown();
             assertTrue(release.await(10, TimeUnit.SECONDS));
             return true;
@@ -281,7 +281,7 @@ class OfficialBroadcastDeliveryMySqlIT {
             assertEquals(1, first.get(10, TimeUnit.SECONDS));
             assertEquals(1, messages());
             assertEquals(2, db.queryForObject("select count(*) from official_broadcast_log", Integer.class));
-            verify(wx, times(1)).notifyOfficialBroadcast(anyLong(), anyString(), anyString());
+            verify(wx, times(1)).notifyOfficialBroadcast(anyLong(), anyString(), anyString(), nullable(String.class));
         } finally {
             release.countDown();
             workers.shutdownNow();
@@ -291,14 +291,14 @@ class OfficialBroadcastDeliveryMySqlIT {
     @Test
     void unknownClaimSurvivesLongPauseAndNoLeaseMakesItRetryable() {
         OfficialBroadcast bc = seed("subscribe");
-        when(wx.notifyOfficialBroadcast(anyLong(), anyString(), anyString()))
+        when(wx.notifyOfficialBroadcast(anyLong(), anyString(), anyString(), nullable(String.class)))
                 .thenThrow(new IllegalStateException("crash boundary"));
         service(logs).dispatch(bc);
         db.update("update official_broadcast_log set create_time=date_sub(now(), interval 30 day) where broadcast_id=?", bc.getId());
         service(logs).runDueScheduled();
         assertEquals(OfficialBroadcastLog.UNKNOWN, state(bc.getId(), "subscribe"));
         assertEquals(0, logs.countReached(bc.getId()));
-        verify(wx, times(1)).notifyOfficialBroadcast(anyLong(), anyString(), anyString());
+        verify(wx, times(1)).notifyOfficialBroadcast(anyLong(), anyString(), anyString(), nullable(String.class));
     }
 
     @Test
@@ -314,7 +314,7 @@ class OfficialBroadcastDeliveryMySqlIT {
         assertEquals(1, messages());
         assertEquals(2, logs.countReached(bc.getId()));
         assertEquals(1, logs.countClicked(bc.getId()));
-        verify(wx, times(1)).notifyOfficialBroadcast(anyLong(), anyString(), anyString());
+        verify(wx, times(1)).notifyOfficialBroadcast(anyLong(), anyString(), anyString(), nullable(String.class));
     }
 
     @Test
@@ -354,7 +354,7 @@ class OfficialBroadcastDeliveryMySqlIT {
         });
         assertEquals(1, messages());
         assertEquals(2, logs.countReached(committed.getId()));
-        verify(wx, times(1)).notifyOfficialBroadcast(anyLong(), anyString(), anyString());
+        verify(wx, times(1)).notifyOfficialBroadcast(anyLong(), anyString(), anyString(), nullable(String.class));
     }
 
     /** Separate disposable legacy schema: never mutate the main IT fixture's already-migrated tables. */

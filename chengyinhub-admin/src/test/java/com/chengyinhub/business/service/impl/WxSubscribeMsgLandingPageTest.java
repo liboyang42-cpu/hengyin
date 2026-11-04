@@ -67,9 +67,28 @@ class WxSubscribeMsgLandingPageTest {
         assertEquals("pages/merchant/ledger/index", page());
     }
 
-    @Test void otherNoticesKeepConfiguredDefault() {
+    /** 第九轮 m2 补充第 7 项:合作、招募、广播不再落首页,按角色落到能处理这件事的页 */
+    @Test void coopRecruitAndBroadcastOpenTheRightPagePerRole() {
+        ReflectionTestUtils.setField(wx, "tplClubInterest", "tpl-interest");
+        ReflectionTestUtils.setField(wx, "tplCoopStatus", "tpl-status");
+        ReflectionTestUtils.setField(wx, "tplRecruit", "tpl-recruit");
+        ReflectionTestUtils.setField(wx, "tplOfficialEvent", "tpl-official");
         assertTrue(wx.notifyCoopInvited(100L, "主题", "某商家"));
-        assertEquals("pages/index/index", page());
+        assertEquals("pages/coop/list/index", page(), "被邀请方看「收到的」");
+        assertTrue(wx.notifyClubInterested(100L, "主题", "某俱乐部"));
+        assertEquals("pages/coop/list/index", page());
+        assertTrue(wx.notifyCoopStatus(100L, "主题", "对方", "已接受", "等待开售"));
+        assertEquals("pages/coop/list/index?tab=sent", page(), "邀请方看「我发出的」");
+        assertTrue(wx.notifyRecruit(100L, "主题", "2026-11-05 14:00", "招募已满"));
+        assertEquals("subpackageA/pages/myproject/index", page(), "发布者看我的项目");
+        assertTrue(wx.notifyOfficialBroadcast(100L, "标题", "说明", WxSubscribeMsgServiceImpl.officialBroadcastPage("player", 7L)));
+        assertEquals("pages/activity/official-detail/index?id=7", page());
+        assertTrue(wx.notifyOfficialBroadcast(100L, "标题", "说明", WxSubscribeMsgServiceImpl.officialBroadcastPage("merchant", null)));
+        assertEquals("pages/merchant/index/index", page());
+        assertTrue(wx.notifyOfficialBroadcast(100L, "标题", "说明", WxSubscribeMsgServiceImpl.officialBroadcastPage("club", null)));
+        assertEquals("pages/club/workbench/index", page());
+        assertTrue(wx.notifyOfficialBroadcast(100L, "标题", "说明", WxSubscribeMsgServiceImpl.officialBroadcastPage("player", null)));
+        assertEquals("pages/index/index", page(), "玩家纯公告仍落首页");
     }
 
     @Test void landingPagesCarryNoIdAndAreRegisteredInMiniProgram() throws Exception {
@@ -87,6 +106,11 @@ class WxSubscribeMsgLandingPageTest {
             JSONObject pkg = subs.getJSONObject(i);
             String root = pkg.getString("root").replaceAll("/$", "");
             pkg.getJSONArray("pages").forEach(p -> routes.add(root + "/" + p));
+        }
+        for (String p : new String[] { WxSubscribeMsgServiceImpl.COOP_RECEIVED_PAGE, WxSubscribeMsgServiceImpl.COOP_SENT_PAGE,
+                WxSubscribeMsgServiceImpl.MY_PROJECT_PAGE, WxSubscribeMsgServiceImpl.OFFICIAL_EVENT_PAGE,
+                WxSubscribeMsgServiceImpl.MERCHANT_HOME_PAGE, WxSubscribeMsgServiceImpl.CLUB_HOME_PAGE }) {
+            assertTrue(routes.contains(p.replaceAll("\\?.*$", "")), "已注册: " + p);
         }
         assertTrue(routes.contains(WxSubscribeMsgServiceImpl.ORDER_PAGE));
         assertTrue(routes.contains(WxSubscribeMsgServiceImpl.MERCHANT_LEDGER_PAGE));

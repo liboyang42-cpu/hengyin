@@ -16,3 +16,9 @@ test('补充第 4 项:店铺分享卡用店铺照片铺满,右下是放大的店
   const profile = read('subpackageMember/components/cy/profile/index.js')
   assert.match(profile, /cover: String\(m\.coverImage \|\| \(this\.data\.merchantGallery \|\| \[\]\)\[0\] \|\| m\.logo \|\| m\.avatar \|\| ''\)/)
 })
+
+test('补充第 7 项:成长中心不再提供好友分享(收到的人看到的是他自己的页)', () => {
+  const src = read('subpackageP3/pages/growthcenter/index/index.js').replace(/\/\/[^\n]*/g, '')
+  assert.doesNotMatch(src, /onShareAppMessage\s*\(/)
+  assert.doesNotMatch(src, /来城瘾看看我的城市探索成就/)
+})

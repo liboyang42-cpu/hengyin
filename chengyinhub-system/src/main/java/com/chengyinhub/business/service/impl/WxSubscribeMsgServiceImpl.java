@@ -79,6 +79,25 @@ public class WxSubscribeMsgServiceImpl implements IWxSubscribeMsgService {
      */
     static final String ORDER_PAGE = "subpackageMember/order/order";
     static final String MERCHANT_LEDGER_PAGE = "pages/merchant/ledger/index";
+    /* 第九轮 m2 补充第 7 项:合作、招募、广播提醒不再落首页,落各自角色能处理这件事的页。只给页面路径,不带业务 id。 */
+    /** 协作邀请「收到的」:被邀请方(商家 / 俱乐部 / 主办)处理邀请与承接意向 */
+    static final String COOP_RECEIVED_PAGE = "pages/coop/list/index";
+    /** 协作邀请「我发出的」:邀请方看对方接受 / 拒绝 / 待缴保证金 */
+    static final String COOP_SENT_PAGE = "pages/coop/list/index?tab=sent";
+    /** 我的项目:招募状态是发布者自己的活动 */
+    static final String MY_PROJECT_PAGE = "subpackageA/pages/myproject/index";
+    /** 官方活动详情(公开活动,按活动 id 打开) */
+    static final String OFFICIAL_EVENT_PAGE = "pages/activity/official-detail/index";
+    static final String MERCHANT_HOME_PAGE = "pages/merchant/index/index";
+    static final String CLUB_HOME_PAGE = "pages/club/workbench/index";
+
+    /** 官方广播按收件角色落页:挂了活动 → 活动详情;纯公告 → 商家工作台 / 俱乐部工作台 / 玩家首页 */
+    static String officialBroadcastPage(String role, Long eventId) {
+        if (eventId != null && eventId > 0) return OFFICIAL_EVENT_PAGE + "?id=" + eventId;
+        if ("merchant".equals(role)) return MERCHANT_HOME_PAGE;
+        if ("club".equals(role)) return CLUB_HOME_PAGE;
+        return null;
+    }
 
     /** 已告警过的未配模板。每 JVM 只警一次:批量通知逐条告警会刷屏。 */
     private final Set<String> warnedMissingTpl = ConcurrentHashMap.newKeySet();
@@ -259,7 +278,7 @@ public class WxSubscribeMsgServiceImpl implements IWxSubscribeMsgService {
         Map<String, String> f = new HashMap<>();
         f.put("thing2", clip(fromName));
         f.put("thing3", clip("邀你合作:" + (topicName == null ? "" : topicName)));
-        return sendToMember(toMemberId, "tplCoopInvited", "coop_invited", tplCoopInvited, defaultPage, f);
+        return sendToMember(toMemberId, "tplCoopInvited", "coop_invited", tplCoopInvited, COOP_RECEIVED_PAGE, f);
     }
 
     @Override
@@ -269,7 +288,7 @@ public class WxSubscribeMsgServiceImpl implements IWxSubscribeMsgService {
         Map<String, String> f = new HashMap<>();
         f.put("thing2", clip(clubName));
         f.put("thing3", clip("想承接《" + (topicName == null ? "" : topicName) + "》带队"));
-        return sendToMember(toMemberId, "tplClubInterest", "club_interest", tplClubInterest, defaultPage, f);
+        return sendToMember(toMemberId, "tplClubInterest", "club_interest", tplClubInterest, COOP_RECEIVED_PAGE, f);
     }
 
     @Override
@@ -280,7 +299,7 @@ public class WxSubscribeMsgServiceImpl implements IWxSubscribeMsgService {
         f.put("thing2", clip(topicName));
         f.put("thing3", clip(toName));
         f.put("thing6", clip(progress));
-        return sendToMember(fromMemberId, "tplCoopStatus", "coop_status", tplCoopStatus, defaultPage, f);
+        return sendToMember(fromMemberId, "tplCoopStatus", "coop_status", tplCoopStatus, COOP_SENT_PAGE, f);
     }
 
     @Override
@@ -290,7 +309,7 @@ public class WxSubscribeMsgServiceImpl implements IWxSubscribeMsgService {
         f.put("thing1", clip(topicName));
         f.put("time2", activityTime == null ? "" : activityTime);
         f.put("thing3", clip(tip));
-        return sendToMember(publisherId, "tplRecruit", "recruit_status", tplRecruit, defaultPage, f);
+        return sendToMember(publisherId, "tplRecruit", "recruit_status", tplRecruit, MY_PROJECT_PAGE, f);
     }
 
     @Override
@@ -362,6 +381,11 @@ public class WxSubscribeMsgServiceImpl implements IWxSubscribeMsgService {
 
     @Override
     public boolean notifyOfficialBroadcast(Long memberId, String title, String sub) {
+        return notifyOfficialBroadcast(memberId, title, sub, null);
+    }
+
+    @Override
+    public boolean notifyOfficialBroadcast(Long memberId, String title, String sub, String page) {
         // 模板【官方活动通知】:活动名称 thing1 / 活动时间 time2 / 温馨提示 thing3。best-effort。
         // 未配专用模板 ⇒ 不发。不回退 tplRecruit:那是「新活动招募→发布者」的真实模板,
         // 拿它给玩家发官方广播既是模板语义错配,又会烧掉用户为招募授权的配额(一次授权=一次发送)。
@@ -373,7 +397,8 @@ public class WxSubscribeMsgServiceImpl implements IWxSubscribeMsgService {
         f.put("thing1", clip(title));
         f.put("time2", nowTime());
         f.put("thing3", clip(sub));
-        return sendToMember(memberId, "tplOfficialEvent", "official_broadcast", tplOfficialEvent, defaultPage, f);
+        return sendToMember(memberId, "tplOfficialEvent", "official_broadcast", tplOfficialEvent,
+                StringUtils.isEmpty(page) ? defaultPage : page, f);
     }
 
     @Override
