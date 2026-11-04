@@ -56,7 +56,8 @@ test('① state-shell:读取失败留白且不自动离页；参数/权限错误
 })
 
 const SHELL_PAGES = [
-  ['subpackageMember/signup/index.wxml', /kind="error" title="票夹没能打开"[^>]*auto-back/],
+  // 第十轮 f3 j6 F3(owner):票夹读失败改为可见「票夹没能打开 · 重试」,不再 auto-back 留白
+  ['subpackageMember/signup/index.wxml', /<cy-empty class="fill-slot" kind="data" title="票夹没能打开" cta="重试"[^>]*bind:cta="retryWallet"/],
   ['subpackageMember/coupon-qr/index.wxml', /kind="missing-param"[\s\S]*?auto-back[\s\S]*?custom-back[\s\S]*?bind:back="onClose"/],
   ['pages/club/apply/index.wxml', /title="\{\{bootstrapErrorKind === 'no-permission' \? '登录后申请成为主理人' : '主理人资格未确认'\}\}"[^>]*auto-back custom-back bind:back="onExit"/],
   ['pages/club/create/index.wxml', /title="创建资格未确认"[\s\S]*?auto-back custom-back bind:back="onClose"/],

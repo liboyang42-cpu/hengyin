@@ -31,7 +31,8 @@
     <cy-skeleton class="fill-slot" type="ticket" count="1" loading-label="正在加载我的票" />
   </view>
   <view class="davidwu" wx:elif="{{walletState === 'error'}}">
-    <cy-state-shell class="fill-slot" kind="error" title="票夹没能打开" sub="{{walletErrorMsg}}" primary="重试" fill="{{true}}" size="lg" theme="player" bind:primary="retryWallet" auto-back />
+    <!-- j6 F3(第十轮 owner):票夹读失败要看得见并能重试,不按「加载失败留白」 -->
+    <cy-empty class="fill-slot" kind="data" title="票夹没能打开" cta="重试" fill="{{true}}" size="lg" bind:cta="retryWallet" />
   </view>
   <!-- PR10 F-W1-12:未登录(无会话 / 401)给登录引导,不与加载失败一起留白 -->
   <view class="davidwu" wx:elif="{{walletState === 'login'}}">
