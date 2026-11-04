@@ -4930,7 +4930,7 @@ Page({
     this._teamConsentAsked = false; this._teamConsentNext = null;
     this.setData({ 'teamConsent.show': false });
   },
-  onTeamConsentSwitch(e) { this.setData({ 'teamConsent.share': !!(e && e.detail && e.detail.value) }); },
+  onTeamConsentSwitch() { this.setData({ 'teamConsent.share': !this.data.teamConsent.share }); },
   onTeamConsentStart() {
     const share = !!this.data.teamConsent.share;
     const next = this._teamConsentNext; this._teamConsentNext = null;
@@ -5016,7 +5016,7 @@ Page({
           if (!current() || !that._watching) { release(); return; }
           that._loc = { longitude: loc.longitude, latitude: loc.latitude, accuracy: loc.accuracy };
           that._noteLocAccuracy(loc.accuracy);
-          that._noteMyTrail(loc);
+          if (typeof that._noteMyTrail === 'function') that._noteMyTrail(loc);
           // S2 陪伴态:仅 nav.active 时才把玩家位置回灌地图(箭头需要跟着走)+ 刷新剩余距离/途中气泡阈值
           // 性能:回灌地图会触发 free-map 全量 _rebuild(重画节点+circles+箭头),GPS 每 1-3s 一次太频繁,
           // 节流成"移动 ≥5 米才回灌";nav.remainM/气泡阈值仍每 tick 刷(便宜,不受影响)。
@@ -5050,7 +5050,7 @@ Page({
           }
         };
         wx.onLocationChange(that._playLocationHandler);
-        that._startTeamTrail();
+        if (typeof that._startTeamTrail === 'function') that._startTeamTrail();
       }
     });
   },
@@ -8613,7 +8613,8 @@ Page({
     });
   },
   _routeCardPath(cb) {
-    if (!this.data.routeCard.on || !this.data.routeCard.ready) { cb(''); return; }
+    const rc = this.data.routeCard || {};
+    if (!rc.on || !rc.ready) { cb(''); return; }
     wx.createSelectorQuery().select('#routecv').fields({ node: true }).exec((res) => {
       const cv = res && res[0] && res[0].node;
       if (!cv) { cb(''); return; }
@@ -8633,7 +8634,8 @@ Page({
   // 保存/分享用全卡(眉标+衬线题+路线+三列大数字+带领行+品牌脚);回调拿临时路径,不占 finishSnap
   // 第九轮 m2 第 3 项:有路线分享卡时保存的就是那张卡(同一张,不出第二种通关卡)
   paintFinishCard(cb) {
-    if (this.data.routeCard.on && this.data.routeCard.ready) { this._routeCardPath((path) => { if (path) cb(path); else this._paintLegacyFinishCard(cb); }); return; }
+    const rc = this.data.routeCard || {};
+    if (rc.on && rc.ready && typeof this._routeCardPath === 'function') { this._routeCardPath((path) => { if (path) cb(path); else this._paintLegacyFinishCard(cb); }); return; }
     this._paintLegacyFinishCard(cb);
   },
   _paintLegacyFinishCard(cb) {

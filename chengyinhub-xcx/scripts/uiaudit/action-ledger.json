@@ -896565,7 +896565,6 @@
         "pages/merchant/decor/index",
         "pages/merchant/index/index",
         "pages/merchant/ledger/index",
-        "pages/play/index",
         "pages/publish/fabu/index",
         "pages/publish/temp/index",
         "pages/shezhi/marketing/index",
@@ -896800,15 +896799,6 @@
         },
         {
           "route": "pages/merchant/ledger/index",
-          "segments": [
-            {
-              "selector": "cy-switch",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
           "segments": [
             {
               "selector": "cy-switch",
@@ -1109433,7 +1109423,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8785"
+        "staticSource": "pages/play/index.js:8787"
       }
     },
     {
@@ -1110456,7 +1110446,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8838"
+        "staticSource": "pages/play/index.js:8840"
       }
     },
     {
@@ -1110533,7 +1110523,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8828"
+        "staticSource": "pages/play/index.js:8830"
       }
     },
     {
@@ -1110677,7 +1110667,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8838"
+        "staticSource": "pages/play/index.js:8840"
       }
     },
     {
@@ -1110754,7 +1110744,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8828"
+        "staticSource": "pages/play/index.js:8830"
       }
     },
     {
@@ -1110898,7 +1110888,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8832"
+        "staticSource": "pages/play/index.js:8834"
       }
     },
     {
@@ -1116576,7 +1116566,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8711"
+        "staticSource": "pages/play/index.js:8713"
       }
     },
     {
@@ -1116653,7 +1116643,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8623"
+        "staticSource": "pages/play/index.js:8624"
       }
     },
     {
@@ -1118649,7 +1118639,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8711"
+        "staticSource": "pages/play/index.js:8713"
       }
     },
     {
@@ -1118716,7 +1118706,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8893"
+        "staticSource": "pages/play/index.js:8895"
       }
     },
     {
@@ -1118783,7 +1118773,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8937"
+        "staticSource": "pages/play/index.js:8939"
       }
     },
     {
@@ -1118870,7 +1118860,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8938"
+        "staticSource": "pages/play/index.js:8940"
       }
     },
     {
@@ -1119024,7 +1119014,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8711"
+        "staticSource": "pages/play/index.js:8713"
       }
     },
     {
@@ -1119094,7 +1119084,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8741"
+        "staticSource": "pages/play/index.js:8743"
       }
     },
     {
@@ -1136553,7 +1136543,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1944:bindchange:onTeamConsentSwitch:315",
+      "id": "pages/play/index.wxml:1942:bindtap:onTeamConsentSwitch:315",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1136573,26 +1136563,26 @@
       "requestMode": "ordered",
       "confirmationMode": null,
       "control": {
-        "tag": "cy-switch",
-        "event": "bindchange",
+        "tag": "view",
+        "event": "bindtap",
         "handler": "onTeamConsentSwitch",
-        "line": 1944,
-        "selectorHint": "cy-switch[bindchange]",
+        "line": 1942,
+        "selectorHint": ".team-consent__row",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": "让同场队伍看到我的路线",
         "ariaLabelExpression": null,
-        "ariaRole": null,
+        "ariaRole": "switch",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
         "ariaDisabledExpression": null,
         "ariaExpanded": null,
         "ariaExpandedExpression": null,
         "ariaChecked": null,
-        "ariaCheckedExpression": null
+        "ariaCheckedExpression": "{{teamConsent.share}}"
       },
       "actionClass": "state",
-      "interactionMode": "event-contract",
+      "interactionMode": "tap",
       "baseActionClass": "state",
       "effectClasses": [
         "state"

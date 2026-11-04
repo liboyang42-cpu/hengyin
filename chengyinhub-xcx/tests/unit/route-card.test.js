@@ -65,7 +65,7 @@ test('画卡:进度未满时只画路线,满了才出字和码', () => {
 test('游玩页:通关面板里就是这张卡,保存走同一张,不另加通关页,不奖励分享', () => {
   const src = fs.readFileSync(path.join(__dirname, '../../pages/play/index.js'), 'utf8')
   assert.match(src, /this\.buildReview\(\); this\._startRouteCard\(\);/)
-  assert.match(src, /paintFinishCard\(cb\) \{\s*if \(this\.data\.routeCard\.on && this\.data\.routeCard\.ready\)/)
+  assert.match(src, /paintFinishCard\(cb\) \{\s*const rc = this\.data\.routeCard \|\| \{\};\s*if \(rc\.on && rc\.ready/)
   const share = src.slice(src.indexOf('  shareRouteCard() {'), src.indexOf('  paintFinishCard(cb) {'))
   assert.doesNotMatch(share, /reward|grant|coupon|xp/i)
   const wxml = fs.readFileSync(path.join(__dirname, '../../pages/play/index.wxml'), 'utf8')

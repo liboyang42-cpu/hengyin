@@ -1939,9 +1939,9 @@
 <cy-sheet show="{{teamConsent.show}}" title="" closable="{{false}}" handle="{{true}}" footer="{{false}}" bind:close="closeTeamConsent">
   <view class="tb-sheet ptb team-consent">
     <text class="tb-title">同场路线</text>
-    <view class="team-consent__row">
+    <view class="team-consent__row" bindtap="onTeamConsentSwitch" aria-role="switch" aria-checked="{{teamConsent.share}}" aria-label="让同场队伍看到我的路线" hover-class="cy-pressed" hover-stay-time="80">
       <text class="team-consent__label">让同场队伍看到我的路线</text>
-      <cy-switch checked="{{teamConsent.share}}" bindchange="onTeamConsentSwitch" accessibility-label="让同场队伍看到我的路线" />
+      <view class="dsw {{teamConsent.share ? 'is-on' : ''}}"><view class="dsw-i"></view></view>
     </view>
     <cy-btn variant="primary" style="width:100%" bindtap="onTeamConsentStart" accessibility-label="开始">开始</cy-btn>
   </view>

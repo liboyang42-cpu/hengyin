@@ -273,6 +273,8 @@ const MATRIX = [
   ['pages/play/utils/play-topbar.js', "req('/api/play/journey/casebook'", 'required', 'member', 'current-session'],
   ['pages/play/utils/play-topbar.js', "req('/api/play/journey/casebook', 'GET', this._scope(), undefined, true).then", 'required', 'member', 'current-session'],
   ['pages/play/utils/play-topbar.js', "req('/api/play/journey/backpack'", 'required', 'member', 'current-session'],
+  // 2026-11-04 第九轮 m2 第 2 项:同场路线表态读取。只认登录本人,服务端再核这一场已付费、作者没关(ApiPlayTeamController /trail/state)。
+  ['pages/play/index.js', "req('/api/team/trail/state', 'GET'", 'required', 'member', 'current-session'],
 ];
 
 const VALID_SCOPES = new Set([
@@ -439,7 +441,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-10-28 L9 集成:游玩菜单联系主办 / 商家改读 L8 GET /api/play/contact(已入 MATRIX),38 → 39。
   // 2026-10-28 并 master(#658 后)合流 integrate/devfix-20261027:master 39 叠加本线 p74 20km 兜底读一处,39 → 40。
   // 2026-10-30 #686 故事流顶栏:案件册两处 + 各站奖励一处 req 包装 GET(本人本局,已逐条入 MATRIX),41 → 44。
-  assert.equal(wrapperCount, 44, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-11-04 第九轮 m2 第 2 项:同场路线表态读取一条(本人、本场、已付费),44 → 45。
+  assert.equal(wrapperCount, 45, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
   assert.equal(ownMediaWrapperCount, 5, '作者媒体实际GET调用点变化需显式复核');
   assert.equal(MATRIX.length, directCount + wrapperCount + ownMediaWrapperCount);
 

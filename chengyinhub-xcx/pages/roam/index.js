@@ -1081,8 +1081,8 @@ Page({
     // P1-6:兜里短接的读数立即补一次,不等下一拍 1s
     this._hidden = false;
     if (this._clock) this._syncStats();
-    if (this._realOn) this._flushTrackLine();
     this.setData({ fontScaleStyle: readPageStyle(), roamPageShown: true });
+    if (this._realOn) this._flushTrackLine();
     this._syncPresencePrivacy(); this._eventNavigating = false; this._navigating = false; // 返回时兜底清「官方活动」与其余入口的跳转锁
     // 系统定位权限与位置分享偏好分别回读。
     const app = getApp();
