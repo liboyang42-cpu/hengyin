@@ -104,7 +104,8 @@ const MATRIX = [
   ['pages/searchmap/index.js', "url: '/api/city/nodes'", 'required', 'member', 'global-read+viewer-personalization'],
   // 2026-10-29 V-06:漫游顶部搜地点在腾讯地点搜索回空/失败时查商家节点库兜底(同 searchmap 一档)
   ['components/cy/map-address-search/index.js', "url: '/api/city/nodes'", 'required', 'member', 'global-read+viewer-personalization'],
-  ['subpackageMember/components/cy/scene-roam-poi-detail/index.js', "url: '/api/city/nodes/' + this.data.poiId", 'required', 'member', 'global-read+viewer-personalization'],
+  // 2026-11-04 第九轮 m4(owner 批准):分享来的据点游客可读(SecurityConfig 精确 GET 数字 id),游客走 CityNodeGuestProjection。
+  ['subpackageMember/components/cy/scene-roam-poi-detail/index.js', "url: '/api/city/nodes/' + this.data.poiId", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
   // 第九轮 m1 第 3 项:漫游地点卡只读同一个节点详情接口里的评分(与上一条同一后端、同一权限)
   ['subpackageRoam/components/roam-place-card/index.js', "url: '/api/city/nodes/' + p.shareId", 'required', 'member', 'global-read+viewer-personalization'],
   // 2026-10-25 官方地点:地图点位卡展开读节点(相册 / 玩法 / 完成状态),挑战页读同一节点,与据点详情同端点同权限档。
@@ -173,8 +174,9 @@ const MATRIX = [
   // 文档二 L3：下一站条件与效果读同一个注册表补名字（主题本人或商家代管 scope）。
   ['pages/publish/fabu/theme-route-names.js', "url: '/api/topic/state-keys', method: 'GET'", 'required', 'publisher', 'self-publisher'],
   ['pages/publish/fabu/theme-d20-page.js', "url: '/api/topic/play-setup', method: 'GET'", 'required', 'publisher', 'self-publisher'],
-  ['subpackageRoam/official-routes/index.js', "url: '/api/preset/route/list'", 'required', 'member', 'global-authenticated-read'],
-  ['subpackageRoam/official-route/index.js', "url: '/api/preset/route/info'", 'required', 'member', 'global-authenticated-read'],
+  // 2026-11-04 第九轮 m4(owner 批准):官方路线列表与详情游客可读,只回已上架路线,游客走 PresetRouteGuestProjection。
+  ['subpackageRoam/official-routes/index.js', "url: '/api/preset/route/list'", 'optional', 'visitor/member', 'public-official-route'],
+  ['subpackageRoam/official-route/index.js', "url: '/api/preset/route/info'", 'optional', 'visitor/member', 'public-official-route'],
   ['pages/roam/index.js', "req('/api/ai/npc/profile'", 'required', 'member', 'global-authenticated-read'],
   ['pages/roam/index.js', "req('/api/ai/npc/event'", 'required', 'member', 'global-authenticated-read'],
   ['pages/roam/index.js', "req('/api/roam/tiles/page'", 'required', 'member', 'self-member-history'],
@@ -285,7 +287,7 @@ const VALID_SCOPES = new Set([
   'self-member-history', 'activity-perspective-access',
   'self-merchant-game-entry', 'club-owned-activity',
   'owned-merchant-resource', 'self-marketing-consent',
-  'share-token-snapshot', 'public-map-weather', 'owned-merchant-or-club-receivable', 'owned-media-asset',
+  'share-token-snapshot', 'public-map-weather', 'public-official-route', 'owned-merchant-or-club-receivable', 'owned-media-asset',
   'controlled-event-operator', 'public-profile-gallery', 'active-team-member', 'owned-topic-target-merchant-stations',
 ]);
 
@@ -466,7 +468,7 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
 });
 
 // 仅接受两种完整 DSL；参数中不允许嵌套调用，括号必须成对。
-// 固定全部 16 条 matcher 的参数、HTTP 方法、权限及顺序，避免跨规则匹配假绿。
+// 固定全部 17 条 matcher 的参数、HTTP 方法、权限及顺序，避免跨规则匹配假绿。
 const SECURITY_RULES = [
   'url=>permitAll',
   '"/login","/register","/captchaImage"=>permitAll',
@@ -483,7 +485,8 @@ const SECURITY_RULES = [
   '"/api/merchant/public-home","/api/user/public-info"=>permitAll',
   'HttpMethod.GET,"/api/roam/share/snapshot"=>permitAll',
   'HttpMethod.GET,"/api/map/weather"=>permitAll',
-  'HttpMethod.POST,"/api/merchant/list"=>permitAll'
+  'HttpMethod.POST,"/api/merchant/list"=>permitAll',
+  'HttpMethod.GET,"/api/preset/route/list","/api/preset/route/info","/api/city/nodes/{id:\\\\d+}"=>permitAll'
 ];
 
 function assertSecurityRules(source) {
@@ -500,7 +503,7 @@ function assertSecurityRules(source) {
   assert.match(code, /\.anyRequest\(\)\.authenticated\(\)/);
 }
 
-test('后端权限真源：official events/roam share 仅精确 GET 匿名，city nodes 仍需鉴权', () => {
+test('后端权限真源：official events/roam share 仅精确 GET 匿名，city nodes 只放行单个数字 id 的 GET', () => {
   assertSecurityRules(fs.readFileSync(SECURITY, 'utf8'));
 });
 
@@ -513,7 +516,7 @@ for (const dsl of ['legacy', 'boot4']) {
     ? `.requestMatchers(legacyMatchers(${args})).permitAll()`
     : `.antMatchers(${args}).permitAll()`;
 
-  test(`${dsl} DSL 正例保留全部 16 条权限规则`, () => assertSecurityRules(source));
+  test(`${dsl} DSL 正例保留全部 17 条权限规则`, () => assertSecurityRules(source));
   const mutations = [
     ['official POST 改写 GET', (s) => s.replace('HttpMethod.GET, "/api/official/events"', 'HttpMethod.POST, "/api/official/events"')],
     ['official 移除 GET 限制', (s) => s.replace('HttpMethod.GET, "/api/official/events"', '"/api/official/events"')],
@@ -525,6 +528,9 @@ for (const dsl of ['legacy', 'boot4']) {
     ['roam share 扩大通配符', (s) => s.replace('"/api/roam/share/snapshot"', '"/api/roam/share/**"')],
     ['map weather 不限方法', (s) => s.replace('HttpMethod.GET, "/api/map/weather"', '"/api/map/weather"')],
     ['map weather 扩大通配符', (s) => s.replace('"/api/map/weather"', '"/api/map/**"')],
+    ['city node 详情放成单层通配', (s) => s.replace('"/api/city/nodes/{id:\\\\d+}"', '"/api/city/nodes/*"')],
+    ['preset 列表不限方法', (s) => s.replace('HttpMethod.GET, "/api/preset/route/list"', '"/api/preset/route/list"')],
+    ['preset 扩大通配符', (s) => s.replace('"/api/preset/route/list", "/api/preset/route/info"', '"/api/preset/**"')],
     ['兜底匿名', (s) => s.replace('.anyRequest().authenticated()', '.anyRequest().permitAll()')],
     ['GET 正例藏入注释', (s) => s.replace(rule('HttpMethod.GET, "/api/roam/share/snapshot"'), (r) => `/* ${r} */`)],
   ];

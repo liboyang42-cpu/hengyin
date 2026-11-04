@@ -127,8 +127,34 @@ test('商家主页朋友圈:只对可公开商家开放,query 为 canonical user
   assert.match(read('subpackageMember/components/cy/profile/index.js'), /this\.triggerEvent\('subjectmerchant'/);
 });
 
-test('单页模式下打不开的页面不提供朋友圈:游玩页、成长中心、节点详情', () => {
-  ['pages/play/index.js', 'subpackageP3/pages/growthcenter/index/index.js', 'subpackageRoam/poi-detail/index.js'].forEach((file) => {
+test('单页模式下打不开的页面不提供朋友圈:游玩页、成长中心', () => {
+  ['pages/play/index.js', 'subpackageP3/pages/growthcenter/index/index.js'].forEach((file) => {
     assert.doesNotMatch(read(file).replace(/\/\/[^\n]*/g, ''), /onShareTimeline\s*\(/, file);
   });
+});
+
+test('第九轮 m4:据点详情恢复朋友圈,路径仍是本页,只带 poiId / merchantId', () => {
+  const def = loadDefinition('subpackageRoam/poi-detail/index.js');
+  const ctx = { data: { poiId: '77' }, _merchantId: '', selectComponent: () => null };
+  ctx._shareSnapshot = def._shareSnapshot;
+  const tl = plain(def.onShareTimeline.call(ctx));
+  assert.equal(tl.query, 'poiId=77');
+  assert.equal(tl.title, '这个节点等你到店打卡');
+  assert.ok(tl.imageUrl);
+  assert.equal(tl.path, undefined, '朋友圈不能自定义路径');
+  const m = { data: { poiId: '' }, _merchantId: '9', selectComponent: () => null, _shareSnapshot: def._shareSnapshot };
+  assert.equal(def.onShareTimeline.call(m).query, 'merchantId=9');
+});
+
+test('第九轮 m4:官方路线详情有好友与朋友圈分享,落到同一详情页同一 id', () => {
+  const def = loadDefinition('subpackageRoam/official-route/index.js');
+  const ctx = { _id: '12', data: { state: 'ready', route: { name: '西湖一圈', cover: 'https://img.example/r.jpg' } } };
+  ctx._shareCard = def._shareCard;
+  assert.deepEqual(plain(def.onShareAppMessage.call(ctx)),
+    { title: '西湖一圈', path: '/subpackageRoam/official-route/index?id=12', imageUrl: 'https://img.example/r.jpg' });
+  assert.deepEqual(plain(def.onShareTimeline.call(ctx)), { title: '西湖一圈', query: 'id=12', imageUrl: 'https://img.example/r.jpg' });
+  const loading = { _id: '12', data: { state: 'loading', route: null }, _shareCard: def._shareCard };
+  const card = def.onShareAppMessage.call(loading);
+  assert.equal(card.title, '城瘾官方路线');
+  assert.ok(card.imageUrl, '没加载到时用固定封面,不让微信截屏');
 });

@@ -5,6 +5,8 @@ const app = getApp()
 const { isBizOk } = require('../../utils/response-shape.js')
 const { normalizeRouteDetail } = require('../utils/official-route.js')
 function openAddress() { return require('../../utils/open-address.js') }
+const { ROAM_SHARE_COVER } = require('../../utils/roam-menu-share.js')
+const SHARE_PATH = '/subpackageRoam/official-route/index'
 
 Page({
   data: {
@@ -46,6 +48,19 @@ Page({
     const node = this.data.route && this.data.route.nodes[Number(e.currentTarget.dataset.index)]
     if (!node || node.lat == null || node.lng == null) return
     openAddress().openAddress({ lat: node.lat, lng: node.lng, name: node.name, address: node.address || '' })
+  },
+  // 第九轮 m4:好友与朋友圈分享(owner 2026-11-04 放行路线详情 GET,游客与朋友圈单页模式都能读到已上架路线)。
+  _shareCard() {
+    const route = this.data.state === 'ready' ? this.data.route : null
+    return { title: (route && route.name) || '城瘾官方路线', imageUrl: (route && route.cover) || ROAM_SHARE_COVER }
+  },
+  onShareAppMessage() {
+    const card = this._shareCard()
+    return { title: card.title, path: SHARE_PATH + '?id=' + encodeURIComponent(this._id || ''), imageUrl: card.imageUrl }
+  },
+  onShareTimeline() {
+    const card = this._shareCard()
+    return { title: card.title, query: 'id=' + encodeURIComponent(this._id || ''), imageUrl: card.imageUrl }
   },
   goBack() {
     if (getCurrentPages().length > 1) wx.navigateBack()

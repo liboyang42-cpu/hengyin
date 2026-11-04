@@ -560,6 +560,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
               select 1 from roam_poi_reward_log r
               where r.poi_id = p.id and r.member_id = #{memberId} and r.status in (0, 1)
           )))
+          <!-- 第九轮 m4:游客(memberId=0)只看商家仍在营业的据点:商家停用、封号或删除按不存在处理 -->
+          and (#{memberId} > 0 or p.merchant_id is null or exists (
+              select 1 from mms_merchant mm
+              where mm.id = p.merchant_id and mm.status = 1 and mm.account_status = 1 and mm.del_flag = 0
+          ))
     </select>
 
     <select id="selectPendingCityNodeCouponId" resultType="java.lang.Long">

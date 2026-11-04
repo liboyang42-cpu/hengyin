@@ -121,11 +121,35 @@ class PublicReadEndpointsSecurityChainTest {
     }
 
     @Test
-    void cityNodesRequireAuthenticationForGetAndPost() throws Exception {
+    void cityNodeListAndAllWritesRequireAuthenticationButSingleNodeGetIsPublic() throws Exception {
+        // 第九轮 m4(owner 2026-11-04):只开 GET /api/city/nodes/{数字 id};列表、写和本人接口照旧 401。
+        mockMvc.perform(get("/api/city/nodes/123")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
+        mockMvc.perform(get("/api/city/nodes")).andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(401));
         for (String route : new String[]{"/api/city/nodes", "/api/city/nodes/123"}) {
+            mockMvc.perform(post(route)).andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.code").value(401));
+        }
+        for (String route : new String[]{"/api/city/nodes/favorites", "/api/city/nodes/merchant/5",
+                "/api/city/nodes/123/complete", "/api/city/nodes/123/favorite", "/api/city/nodes/12a"}) {
             mockMvc.perform(get(route)).andExpect(status().isUnauthorized())
                     .andExpect(jsonPath("$.code").value(401));
             mockMvc.perform(post(route)).andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.code").value(401));
+        }
+    }
+
+    @Test
+    void officialRouteListAndInfoAreAnonymousOnlyForGetAndSiblingsAreNot() throws Exception {
+        for (String route : new String[]{"/api/preset/route/list", "/api/preset/route/info"}) {
+            mockMvc.perform(get(route)).andExpect(status().isOk()).andExpect(jsonPath("$.code").value(200));
+            mockMvc.perform(post(route)).andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.code").value(401));
+        }
+        for (String route : new String[]{"/api/preset/style/list", "/api/preset/route/info/extra",
+                "/api/preset/route/listing", "/api/preset/route"}) {
+            mockMvc.perform(get(route)).andExpect(status().isUnauthorized())
                     .andExpect(jsonPath("$.code").value(401));
         }
     }
@@ -401,6 +425,10 @@ class PublicReadEndpointsSecurityChainTest {
                 "/api/roam/share/revoke", "/api/play/run-session/list",
                 "/api/official/events", "/api/official/events/123", "/api/official/events/123/signup",
                 "/api/city/nodes", "/api/city/nodes/123",
+                "/api/city/nodes/favorites", "/api/city/nodes/merchant/5", "/api/city/nodes/123/complete",
+                "/api/city/nodes/123/favorite", "/api/city/nodes/12a",
+                "/api/preset/route/list", "/api/preset/route/info", "/api/preset/style/list",
+                "/api/preset/route/info/extra", "/api/preset/route/listing", "/api/preset/route",
                 "/api/map/weather", "/api/map/weather/extra", "/api/map/reverse-geocode", "/api/map/nearby"})
         AjaxResult probeAnyMethod() {
             return AjaxResult.success();

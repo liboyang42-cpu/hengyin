@@ -54,9 +54,12 @@ Page({
     return { title: snap.title, path: SHARE_PATH + '?' + shareQuery(this.data.poiId, this._merchantId), imageUrl: snap.imageUrl }
   },
 
-  // 第七轮 C 第 1 项:暂不实现 onShareTimeline。节点详情读接口 GET /api/city/nodes/{id} 需要登录
-  // (SecurityConfig 未放行,控制器本身按游客 memberId=0 可读),朋友圈单页模式没有登录态 ⇒ 只能看到错误。
-  // 业主放行该只读接口后恢复:return { title, query: shareQuery(this.data.poiId) }(路径仍是本页,历史契约不变)。
+  // 第九轮 m4(owner 2026-11-04 放行单个据点 GET):恢复朋友圈分享。朋友圈只能自定义 query,路径恒为本页(历史契约不变);
+  // 单页模式没有登录态,读接口按游客投影只回公开字段。
+  onShareTimeline() {
+    const snap = this._shareSnapshot()
+    return { title: snap.title, query: shareQuery(this.data.poiId, this._merchantId), imageUrl: snap.imageUrl }
+  },
 
   onAddToFavorites() {
     return { title: '节点详情', path: SHARE_PATH + '?' + shareQuery(this.data.poiId, this._merchantId) }

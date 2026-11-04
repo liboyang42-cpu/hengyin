@@ -214,7 +214,7 @@ Component({
         silentError: true,
         url: '/api/city/nodes/' + this.data.poiId,
         method: 'GET',
-        // SecurityConfig 未匿名放行 city/nodes，使用 request-client 默认认证。
+        // 第九轮 m4:单个据点 GET 游客可读(SecurityConfig 精确放行数字 id),游客只拿公开字段;已登录照常带会话。
         success: (nodeRes) => {
           if (token !== this._loadToken || this._closed || loadedOwner !== ownerId() || poiId !== this.data.poiId) return
           this.setData({ reverifyChecking: false })
@@ -344,7 +344,7 @@ Component({
       if (current) mediaPreview.open(this.data.gallery || [current], current)
     },
     toggleFavorite() {
-      if (this.data.favoriteBusy || !this.data.poiId) return
+      if (this.data.favoriteBusy || !this.data.poiId) return; if (!ownerId() && app.ensureLoginFor && !app.ensureLoginFor('like', () => this._load(), { owner: this, target: () => [this.data.poiId] })) return
       const token = (this._favoriteToken || 0) + 1
       this._favoriteToken = token
       const poiId = this.data.poiId
@@ -450,8 +450,8 @@ Component({
       this._clearInteractionRecovery()
       this._retryInteraction(retry)
     },
-    startInteract(resume) {
-      const reverify = this.data.checkinPending ? this._currentReverification() : null
+    startInteract(resume) { // 第九轮 m4:游客能看分享来的据点;打卡是写,先登录,登录后按新身份重读(题面与本人进度游客拿不到)
+      if (!ownerId() && app.ensureLoginFor && !app.ensureLoginFor('roam', () => this._load(), { owner: this, target: () => [this.data.poiId] })) return; const reverify = this.data.checkinPending ? this._currentReverification() : null
       if (!reverify) {
         if (this.data.checkinPending) return
       }
