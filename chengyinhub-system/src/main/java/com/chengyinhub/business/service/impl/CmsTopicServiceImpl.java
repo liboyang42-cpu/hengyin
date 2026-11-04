@@ -2464,6 +2464,30 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     }
 
     /**
+     * 第十轮 f2 第 2 项(j2 F-01a):商家报名窗口没有任何 app 端写入口,开了商家承接(merchant_status=1)的主题商家一点
+     * 「申请承接」就是「报名时间信息不完整」。这里从主题自身日期补齐:开始 = 现在,结束 = 招商截止
+     * (有则用;招商截止之后会锁价,再报名也发不出邀约),否则主题结束日。
+     *
+     * <p>只补「库里两头都空」的主题:已有值(含生产存量、运营在后台设过的)一律不动;
+     * {@code updateCmsTopic} 的动态 SET 对 null 跳过,patch 不填 = 不改。
+     */
+    static void fillMerchantSignUpWindow(CmsTopic target, CmsTopic existing, Date now) {
+        if (target == null || now == null || !Integer.valueOf(1).equals(target.getMerchantStatus())) return;
+        boolean existingHas = existing != null
+                && (existing.getMerchantSignUpStartDate() != null || existing.getMerchantSignUpEndDate() != null);
+        if (existingHas || target.getMerchantSignUpStartDate() != null || target.getMerchantSignUpEndDate() != null) {
+            return;
+        }
+        Date end = target.getRecruitDeadline() != null ? target.getRecruitDeadline()
+                : target.getEndDate() != null ? target.getEndDate()
+                : existing == null ? null
+                : existing.getRecruitDeadline() != null ? existing.getRecruitDeadline() : existing.getEndDate();
+        if (end == null || end.before(now)) return;
+        target.setMerchantSignUpStartDate(now);
+        target.setMerchantSignUpEndDate(end);
+    }
+
+    /**
      * 公开承接池(open_club_pool)建题落值口 —— 2026-09-15 裁决 12B:专业版与简易版统一默认开,
      * 主办仍可手动关。
      *
@@ -2663,6 +2687,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         if (dto.getRecruitDeadline() != null) {
             topic.setRecruitDeadline(dto.getRecruitDeadline());
         }
+        fillMerchantSignUpWindow(topic, null, new Date());
         topic.setDelFlag(0);
         // 首次写入先落兼容的 LINEAR；BRANCH_GRAPH 必须等节点取得 DB id 后再同事务重映射并发布。
         topic.setRouteMode("LINEAR");
@@ -3097,6 +3122,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         if (dto.getRecruitDeadline() != null) {
             patch.setRecruitDeadline(dto.getRecruitDeadline());
         }
+        fillMerchantSignUpWindow(patch, exist, new Date());
         patch.setAddressName(firstLocationAddress(dto.getChapters()));
         patch.setUpdateBy(username);
         patch.setUpdateTime(new Date());
