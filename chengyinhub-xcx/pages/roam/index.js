@@ -2294,6 +2294,17 @@ Page({
       g.beginPath(); g.arc(S / 2, S / 2, 24, 0, 7); g.fillStyle = '#F8F8F8'; g.fill();               /* ds-ok 白点 */
       g.lineWidth = 6; g.strokeStyle = 'rgba(17,17,17,.6)'; g.stroke();                              /* ds-ok 浅色底图上的描边 */
       this._icons['pin-dot'] = await save();
+      /* 第九轮 m2 补充第 2 项:拉远的热度点(原型 m-zoom):白芯 + 柔光,叠得越多越亮、光晕越大。仍是单色。 */
+      for (let lv = 1; lv <= 3; lv++) {
+        g.clearRect(0, 0, S, S);
+        const glow = g.createRadialGradient(S / 2, S / 2, 4, S / 2, S / 2, S / 2);
+        glow.addColorStop(0, 'rgba(255,255,255,' + (0.42 + lv * 0.16) + ')');   /* ds-ok 热度柔光,canvas 拿不到 var() */
+        glow.addColorStop(0.45, 'rgba(255,255,255,' + (0.1 + lv * 0.08) + ')'); /* ds-ok 同上 */
+        glow.addColorStop(1, 'rgba(255,255,255,0)');                             /* ds-ok 同上 */
+        g.fillStyle = glow; g.beginPath(); g.arc(S / 2, S / 2, S / 2, 0, 7); g.fill();
+        g.beginPath(); g.arc(S / 2, S / 2, 9 + lv * 3, 0, 7); g.fillStyle = '#F8F8F8'; g.fill(); /* ds-ok 白芯 */
+        this._icons['pin-heat' + lv] = await save();
+      }
       // 2026-09-09 删:原来这里生成一枚整星 merchant_star,给「雾揭开过的商家(seen)」当整个点位用 ——
       // 于是星星表示「去过了」。星星现在只表示「这家有玩法」(挂在角上,见 hangStar),
       // 「打过卡」改由图钉表示(stickPin)。一枚符号两个意思,看不出区别。
@@ -2618,33 +2629,43 @@ Page({
           m.width = size; m.height = size;
         } else if (edge) { m.width = photoPins.EDGE_SIZE; m.height = photoPins.EDGE_SIZE; }
         m.zIndex = focused ? 30 : (edge ? 4 : m.zIndex);
-        if (photo || label) {
-          pinCandidates.push({ m, pin: { id: m.id, img: photo, label, size, done: stateKey === 'completed' }, lat: place.lat, lng: place.lng, size,
-            d: pinCenter ? Math.abs(place.lat - pinCenter.lat) + Math.abs(place.lng - pinCenter.lng) : 0 });
-        }
+        // 第九轮 m2 补充第 2 项:所有非状态图钉(照片、形象、据点图、深色圆)一起参加避让
+        pinCandidates.push({ m, pin: (photo || label) ? { id: m.id, img: photo, label, size, done: stateKey === 'completed' } : null,
+          lat: place.lat, lng: place.lng, size: Math.max(size, Number(m.width) || 0), label, photo: !!photo, focused, demo: !!p.demo,
+          participating: photoPins.isParticipating(p),
+          d: pinCenter ? Math.abs(place.lat - pinCenter.lat) + Math.abs(place.lng - pinCenter.lng) : 0 });
       }
       mk.push(m);
     });
-    // 一屏最多 MAX_PHOTO_PINS 枚照片 / 标签(cover-view 有数量上限,也压住 setData 体积),离视野中心近的优先
-    // 选中的那枚永远排第一;挤在一起的照片按离中心远近避让,远的降成深色圆(点开地点卡时仍有照片)
-    pinCandidates.forEach((c) => { if (this._pinFocusId != null && String(c.pin.id) === String(this._pinFocusId)) c.d = -1; });
-    const keep = photoPins.declutter(pinCandidates.sort((x, y) => x.d - y.d), pinRegion, this._fogScreenSize).slice(0, photoPins.MAX_PHOTO_PINS);
+    // 第九轮 m2 补充第 2 项:相关度高的先放(选中 > 参与商铺 > 有照片 > 离中心近),和已放下的任何一枚重叠的降成小圆点,
+    // 拉近后自然放出来。一屏最多 MAX_PHOTO_PINS 枚照片 / 标签(cover-view 有数量上限,也压住 setData 体积)。
+    const layoutRegion = pinRegion || photoPins.fallbackRegion(pinCenter, pinScale, this._fogScreenSize);
+    const placedPins = photoPins.layoutPins(pinCandidates, layoutRegion, this._fogScreenSize);
+    let photoSlots = photoPins.MAX_PHOTO_PINS;
     pinCandidates.forEach((c) => {
-      if (keep.indexOf(c) >= 0 || c.m.iconPath !== (this._icons && this._icons['pin-dark'])) return;
+      const placed = placedPins.indexOf(c) >= 0;
+      if (placed && c.pin && photoSlots > 0) {
+        photoSlots -= 1;
+        c.m.customCallout = { display: 'ALWAYS', anchorX: 0, anchorY: c.pin.img ? c.pin.size : 4 };
+        explorePins.push(c.pin);
+        return;
+      }
+      if (placed) return;
+      if (this._icons && this._icons['pin-dot']) c.m.iconPath = this._icons['pin-dot'];
       c.m.width = photoPins.DEMOTED_SIZE; c.m.height = photoPins.DEMOTED_SIZE;
-    });
-    keep.forEach(({ m, pin }) => {
-      m.customCallout = { display: 'ALWAYS', anchorX: 0, anchorY: pin.img ? pin.size : 4 };
-      explorePins.push(pin);
+      c.m.zIndex = 2;
+      if (!c.demo) delete c.m.callout;
     });
     if (pinMode === 'dots') {
       // 拉远:真实点位按屏幕格合并成小圆点(雾里的点也算 —— 迷雾层盖在地图上面,点不会被剧透)
       const dots = photoPins.bucketDots((this._pois || []).filter((p) => !p.demo), pinRegion, this._fogScreenSize);
+      // 第九轮 m2 补充第 3 项:热度——位置仍是真实点位的平均;叠得多的点更大、更亮
       dots.forEach((d, i) => {
-        if (!this._icons || !this._icons['pin-dot']) return;
-        const sz = d.count >= 4 ? 12 : 9;
-        mk.push({ id: DOT_MK_BASE + i, latitude: d.lat, longitude: d.lng, width: sz, height: sz,
-          anchor: { x: 0.5, y: 0.5 }, iconPath: this._icons['pin-dot'], zIndex: 2 });
+        const heat = photoPins.heatLevel(d.count);
+        const icon = this._icons && (this._icons['pin-heat' + heat.level] || this._icons['pin-dot']);
+        if (!icon) return;
+        mk.push({ id: DOT_MK_BASE + i, latitude: d.lat, longitude: d.lng, width: heat.size, height: heat.size,
+          anchor: { x: 0.5, y: 0.5 }, iconPath: icon, zIndex: 2 + heat.level });
       });
     }
     const goalStateKey = this.data.goal && this.data.goal.stateKey;
@@ -4348,7 +4369,7 @@ Page({
     // 第九轮 m1 第 5 项:拉远时点一个小圆点 = 放大到那一片(照片图钉在近处才出现)
     if (e.detail.markerId >= DOT_MK_BASE && e.detail.markerId < DOT_MK_BASE + 100000) {
       const dot = (this.data.markers || []).find((m) => m.id === e.detail.markerId);
-      if (dot && dot.iconPath === (this._icons && this._icons['pin-dot'])) { this._hold = Date.now(); this.setData({ center: { lat: dot.latitude, lng: dot.longitude }, mapScale: photoPins.DOT_SCALE + 2 }); }
+      if (dot && dot.id >= DOT_MK_BASE) { this._hold = Date.now(); this.setData({ center: { lat: dot.latitude, lng: dot.longitude }, mapScale: photoPins.DOT_SCALE + 2 }); }
       return;
     }
     // 别人的头像:id 是 RUNNER_MK_BASE + 下标,按下标回本地那一批取人

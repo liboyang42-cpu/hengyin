@@ -88,9 +88,10 @@ test('漫游 marker:照片图钉 + 仅参与商铺贴店名;没照片是深色�
   page._mapScale = 16;
   page._pinRegion = REGION;
   page._pois = [
-    poi(1, 31.21, 121.41, { photo: 'https://img/1.jpg', cat: 'merchant', regId: 11 }),
-    poi(2, 31.211, 121.411, { photo: 'https://img/2.jpg' }),
-    poi(3, 31.212, 121.412),
+    // 第九轮 m2 补充第 2 项起图钉互不重叠:四个点在屏上拉开,各自放得下
+    poi(1, 31.205, 121.405, { photo: 'https://img/1.jpg', cat: 'merchant', regId: 11 }),
+    poi(2, 31.205, 121.413, { photo: 'https://img/2.jpg' }),
+    poi(3, 31.213, 121.405),
     poi(4, 31.21, 121.425, { photo: 'https://img/4.jpg' }),
     poi(5, 31.21, 121.6, { photo: 'https://img/5.jpg' }),
     poi(6, 31.213, 121.413, { photo: MOCK, imgUrl: MOCK }),
@@ -242,4 +243,60 @@ test('第九轮 m1 第 9 项:漫游地点卡与商家横滑卡的地址点开地
   global.wx = { openLocation: (o) => opened.push(o) };
   try { page.onAddrTap({ currentTarget: { dataset: { lat: 31.2, lng: 121.4, name: '店', address: '路' } } }); } finally { global.wx = prev; }
   assert.equal(opened[0].latitude, 31.2);
+});
+
+// 第九轮 m2 补充第 2 项:任意缩放下图钉互不重叠,参与商铺优先;46 枚与 200 枚都核对
+function crowd(n, seed) {
+  let x = seed || 7;
+  const rnd = () => { x = (x * 1103515245 + 12345) % 2147483648; return x / 2147483648; };
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    const r = Math.sqrt(rnd()) * 0.01, a = rnd() * Math.PI * 2;
+    out.push({ id: i, lat: 31.23 + r * Math.sin(a), lng: 121.47 + r * Math.cos(a), size: [40, 46, 52, 34, 44][i % 5],
+      label: i % 7 === 0 ? 'shop' : '', photo: i % 3 !== 0, participating: i % 7 === 0, focused: false, d: r });
+  }
+  return out;
+}
+function assertNoOverlap(kept, region, vp) {
+  for (let i = 0; i < kept.length; i++) for (let j = i + 1; j < kept.length; j++) {
+    const a = pins.toScreen(kept[i].lat, kept[i].lng, region, vp), b = pins.toScreen(kept[j].lat, kept[j].lng, region, vp);
+    const min = pins.footprint(kept[i]) + pins.footprint(kept[j]);
+    assert.ok(Math.hypot(a.x - b.x, a.y - b.y) >= min, 'overlap ' + kept[i].id + '/' + kept[j].id);
+  }
+}
+test('第九轮 m2 补充第 2 项:46 枚与 200 枚,各缩放级别都不重叠,参与商铺先放', () => {
+  const vp = { width: 390, height: 844 };
+  for (const n of [46, 200]) {
+    const all = crowd(n, n);
+    for (const scale of [15, 16, 17, 18]) {
+      const region = pins.fallbackRegion({ lat: 31.23, lng: 121.47 }, scale, vp);
+      const kept = pins.layoutPins(all, region, vp);
+      assertNoOverlap(kept, region, vp);
+      assert.ok(kept.length >= 1);
+      // 放不下的参与商铺,一定是被另一枚参与商铺挡住的
+      const keptIds = new Set(kept.map((k) => k.id));
+      all.filter((c) => c.participating && !keptIds.has(c.id)).forEach((c) => {
+        const s = pins.toScreen(c.lat, c.lng, region, vp);
+        assert.ok(kept.some((k) => k.participating && (() => { const q = pins.toScreen(k.lat, k.lng, region, vp); return Math.hypot(q.x - s.x, q.y - s.y) < pins.footprint(k) + pins.footprint(c) + pins.PIN_GAP; })()));
+      });
+    }
+    // 拉近放出更多
+    const near = pins.layoutPins(all, pins.fallbackRegion({ lat: 31.23, lng: 121.47 }, 18, vp), vp).length;
+    const far = pins.layoutPins(all, pins.fallbackRegion({ lat: 31.23, lng: 121.47 }, 15, vp), vp).length;
+    assert.ok(near > far, n + ': near ' + near + ' far ' + far);
+  }
+});
+test('第九轮 m2 补充第 2 项:漫游页所有非状态图钉都参与避让,放不下的降成小圆点', () => {
+  const js = read('pages/roam/index.js');
+  assert.match(js, /photoPins\.layoutPins\(pinCandidates, layoutRegion, this\._fogScreenSize\)/);
+  assert.match(js, /if \(this\._icons && this\._icons\['pin-dot'\]\) c\.m\.iconPath = this\._icons\['pin-dot'\];/);
+});
+
+test('第九轮 m2 补充第 3 项:拉远是热度——叠得越多越大越亮,位置仍取真实点位', () => {
+  assert.ok(pins.heatLevel(1).size > 12, '比原来的 9px 点略大');
+  assert.ok(pins.heatLevel(3).size > pins.heatLevel(1).size && pins.heatLevel(9).size > pins.heatLevel(3).size);
+  assert.deepEqual([1, 3, 9].map((n) => pins.heatLevel(n).level), [1, 2, 3]);
+  const js = read('pages/roam/index.js');
+  assert.match(js, /this\._icons\['pin-heat' \+ lv\] = await save\(\);/);
+  assert.match(js, /iconPath: icon, zIndex: 2 \+ heat\.level/);
 });

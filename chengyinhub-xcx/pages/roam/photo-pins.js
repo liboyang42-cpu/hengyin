@@ -4,7 +4,7 @@ const PIN_SIZE = 40;
 const PIN_SIZE_NEAR = 46;
 const PIN_SIZE_FOCUS = 60;
 const EDGE_SIZE = 26;
-const DEMOTED_SIZE = 20;
+const DEMOTED_SIZE = 10;
 const EDGE_INSET = 0.06;
 const NEAR_SPAN = 0.6;
 const MAX_PHOTO_PINS = 40;
@@ -96,6 +96,55 @@ function declutter(items, region, viewport) {
   });
 }
 
+// 第九轮 m2 补充第 2 项:任意缩放下图钉互不重叠。
+// 按相关度从高到低放:选中的 > 参与商铺 > 有照片 > 离视野中心近;和已放下的任何一枚(照片、形象、深色圆都算)
+// 圆心距小于两者半径之和加间隙的,降成小圆点,拉近后自然会放出来。带店名贴纸的按更大的占位算。
+const PIN_GAP = 6;
+const LABEL_EXTRA = 14;
+function footprint(c) {
+  return (Number(c.size) || PIN_SIZE) / 2 + (c.label ? LABEL_EXTRA : 0);
+}
+function relevance(c) {
+  return (c.focused ? 1e6 : 0) + (c.demo ? 5e5 : 0) + (c.participating ? 1e5 : 0) + (c.photo ? 1e4 : 0) - (Number(c.d) || 0);
+}
+/** 视野还没上报过(首帧)时,按中心与缩放估一个视野,避让照样能做 */
+function fallbackRegion(center, scale, viewport) {
+  const lat = Number(center && center.lat), lng = Number(center && center.lng), z = Number(scale);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng) || !Number.isFinite(z)) return null;
+  const w = Number(viewport && viewport.width) || 390, h = Number(viewport && viewport.height) || 844;
+  const mPerPx = 156543.03392 * Math.cos(lat * Math.PI / 180) / Math.pow(2, z);
+  const dLat = (h * mPerPx / 2) / 111320, dLng = (w * mPerPx / 2) / (111320 * Math.cos(lat * Math.PI / 180));
+  return { southwest: { latitude: lat - dLat, longitude: lng - dLng }, northeast: { latitude: lat + dLat, longitude: lng + dLng } };
+}
+/** 返回放得下的候选(按相关度排好);没放下的由调用方降成小圆点 */
+function layoutPins(cands, region, viewport) {
+  const sorted = (cands || []).slice().sort((a, b) => relevance(b) - relevance(a));
+  if (!regionBox(region)) return sorted;
+  const placed = [];
+  const kept = [];
+  sorted.forEach((c) => {
+    const s = toScreen(c.lat, c.lng, region, viewport);
+    if (!s) { kept.push(c); return; }
+    const r = footprint(c);
+    const hit = placed.some((q) => {
+      const min = q.r + r + PIN_GAP;
+      return (q.x - s.x) * (q.x - s.x) + (q.y - s.y) * (q.y - s.y) < min * min;
+    });
+    if (hit) return;
+    placed.push({ x: s.x, y: s.y, r });
+    kept.push(c);
+  });
+  return kept;
+}
+
+/** 第九轮 m2 补充第 3 项:一格里叠了几个真实点 → 热度档与图标尺寸(比 m1 的 9/12px 略大,带柔光) */
+function heatLevel(count) {
+  const n = Number(count) || 0;
+  if (n >= 8) return { level: 3, size: 34 };
+  if (n >= 3) return { level: 2, size: 26 };
+  return { level: 1, size: 18 };
+}
+
 function nearbyCountLabel(n) {
   const count = Number(n) || 0;
   return count >= COUNT_MIN ? '附近 ' + count + ' 个地点' : '';
@@ -115,4 +164,5 @@ function markerSignature(markers, pins) {
 module.exports = {
   DOT_SCALE, PIN_SIZE, PIN_SIZE_NEAR, PIN_SIZE_FOCUS, EDGE_SIZE, DEMOTED_SIZE, MAX_PHOTO_PINS, COUNT_MIN,
   pinPhoto, isParticipating, placeInView, densityMode, bucketDots, nearbyCountLabel, markerSignature, regionBox, toScreen, declutter,
+  layoutPins, fallbackRegion, footprint, PIN_GAP, heatLevel,
 };
