@@ -289,7 +289,7 @@
             <view class="member" wx:for="{{members}}" wx:key="id">
               <cy-avatar class="member-avatar" size="72" src="{{item.avatar || '/images/d_profile.png'}}" name="{{item.nickname || '城瘾玩家'}}" clickable="{{true}}" catchtap="goMemberProfile" data-member-id="{{item.memberId}}" aria-role="button" aria-label="打开成员主页" hover-class="cy-pressed" hover-stay-time="80" />
               <view class="member-info" catchtap="goMemberProfile" data-member-id="{{item.memberId}}" hover-class="cy-pressed" hover-stay-time="80">
-                <view class="member-name">{{item.nickname || '城瘾玩家'}}<text wx:if="{{item.isOwner}}" class="member-owner">群主</text><text wx:elif="{{item.role == 1}}" class="member-admin">管理员</text></view>
+                <view class="member-name">{{item.nickname || '城瘾玩家'}}<text wx:if="{{item.isOwner}}" class="member-owner">主理人</text><text wx:elif="{{item.role == 1}}" class="member-admin">管理员</text></view>
                 <view class="member-meta"><text wx:if="{{item.levelId != null && item.levelId > 0}}">Lv.{{item.levelId}} · </text><text>公开资料</text><cy-icon class="member-meta-arrow" name="arrow-right" size="20" /><text wx:if="{{item.isOwner}}"> · 创建俱乐部</text><text wx:elif="{{item.joinTime}}"> · 加入 {{item.joinTime}}</text></view>
               </view>
               <view class="member-report" wx:if="{{canSeeMembers && item.memberId != myMemberId}}" catchtap="reportClubMember" data-member-id="{{item.memberId}}" data-nickname="{{item.nickname || ''}}" aria-role="button" aria-label="向平台举报 {{item.nickname || '该成员'}}" hover-class="cy-pressed" hover-stay-time="80">举报</view>
@@ -764,7 +764,7 @@
           <view class="member member--managed" wx:for="{{members}}" wx:key="id">
             <cy-avatar class="member-avatar" size="72" src="{{item.avatar || '/images/d_profile.png'}}" name="{{item.nickname || '城瘾玩家'}}" clickable="{{true}}" catchtap="goMemberProfile" data-member-id="{{item.memberId}}" aria-role="button" aria-label="打开成员主页" hover-class="cy-pressed" hover-stay-time="80" />
             <view class="member-info" catchtap="goMemberProfile" data-member-id="{{item.memberId}}" hover-class="cy-pressed" hover-stay-time="80">
-              <view class="member-name">{{item.nickname || '城瘾玩家'}}<text wx:if="{{item.isOwner}}" class="member-owner">群主</text><text wx:elif="{{item.role == 1}}" class="member-admin">管理员</text></view>
+              <view class="member-name">{{item.nickname || '城瘾玩家'}}<text wx:if="{{item.isOwner}}" class="member-owner">主理人</text><text wx:elif="{{item.role == 1}}" class="member-admin">管理员</text></view>
               <view class="member-meta"><text wx:if="{{item.levelId != null && item.levelId > 0}}">Lv.{{item.levelId}} · </text><text>公开资料</text><cy-icon class="member-meta-arrow" name="arrow-right" size="20" /><text wx:if="{{item.isOwner}}"> · 创建俱乐部</text><text wx:elif="{{item.joinTime}}"> · 加入 {{item.joinTime}}</text></view>
             </view>
             <view class="member-actions" wx:if="{{item.memberId != club.memberId && (club.isOwner || club.viewerIsAdmin || canManageRoles || canManageMembers)}}">

@@ -372,7 +372,7 @@ function buildMemberStrip(members, total) {
     memberId: m.memberId,
     avatar: m.avatar || '/images/d_profile.png',
     name: m.nickname || '城瘾玩家',
-    role: m.isOwner ? '群主' : (Number(m.role) === 1 ? '管理员' : ''),
+    role: m.isOwner ? '主理人' : (Number(m.role) === 1 ? '管理员' : ''),
     roleTone: m.isOwner ? 'owner' : 'admin',
   }));
   const rest = (Number(total) || list.length) - strip.length;
