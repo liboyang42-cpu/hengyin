@@ -7200,7 +7200,7 @@ Page({
     /* 拍物成卡那一屏的「地点」:会话视图里只有 nodeId,主题名与节点名在本页手里 */
     const placeNode = this.data.advancedPlay && this.data.advancedPlay.node;
     const placeName = [this.data.topicName, placeNode && placeNode.name].filter(Boolean).join(' · ');
-    const picked = this.data.isPreview && view.previewKit ? view.previewKit : pickPlayKit(Object.assign({}, view, { placeName }), new Date());
+    const picked = this.data.isPreview && view.previewKit ? view.previewKit : pickPlayKit(Object.assign({}, view, { placeName, plainOutcome: !((this.data.themeBag || {}).quests || []).length }), new Date());
     const kit = dailySignRevealState(previous, picked);
     if (kit && kit.type === 'album' && !kit.done && kit.sessionId === previous.sessionId && kit.version === previous.version) kit.uploaded = !!previous.uploaded;
     if (!kit) { this.setData({ playKit: { show: false, kit: null } }); return; }

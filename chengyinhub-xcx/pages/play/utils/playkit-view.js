@@ -516,7 +516,7 @@ function pickPlayKit(view, now) {
     present: presentOf(view),
   };
   if ((['FAILED', 'EXPIRED'].includes(view.status) || view.status === 'COMPLETED' && view.challenge && view.canRetry === true)
-      && (!isR5(view) || !!view.challenge)) {
+      && (!isR5(view) || !!view.challenge || view.plainOutcome === true)) { // 没有通用局的主题:结果反馈没过就在本站重来
     base.terminal = true;
     base.sessionStatus = view.status;
     base.canRetry = view.canRetry === true;

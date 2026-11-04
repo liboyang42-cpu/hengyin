@@ -279,7 +279,8 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         if(config.has("outcomeRules") && zeroChallenge==null) {
             if(shared!=null)gameSessionRuntimeService.assertSharedGameplayOutcomeStart(memberId,topicId,input.activityId,nodeId,sharedInstance(shared),shared.path("authorityEpoch").asInt());
             else if(personalGameplay)topicRouteRuntimeService.assertGameplayOutcomeStart(memberId,topicId,input.activityId,nodeId,topicRouteRuntimeService.gameplayInstance(memberId,topicId,input.activityId,nodeId));
-            else throw new IllegalStateException("Outcome settlement requires a frozen theme play-through");
+            // 第十一轮 h5:非通用主题里站点自己的结果反馈按普通站点判过/没过;要动通用局的结果(检定、预测、分支、数值)发布时已编成通用局。
+            else if(TopicRoutePublicationCompiler.outcomeNeedsGenericRun(config))throw new IllegalStateException("Outcome settlement requires a frozen theme play-through");
         }
         // 时段只限制新尝试；恢复已有会话仍按原 deadline 过期，不能被作者的新时段挡住。
         requireWithinTimeWindow(config.get("timeWindow"));
@@ -334,7 +335,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         // 重试是同一局的新尝试，规则和模板版本保持首次开局时的快照。
         if(config.has("outcomeRules") && !readJson(session.getStateJson(),"Invalid attempt state").has("zeroChallengeInstance")) {
             if(runtimeEpoch(session)!=null)gameSessionRuntimeService.assertSharedGameplayOutcomeStart(memberId,session.getTopicId(),session.getActivityId(),session.getNodeId(),session.getPlayInstanceId(),runtimeEpoch(session));
-            else topicRouteRuntimeService.assertGameplayOutcomeStart(memberId,session.getTopicId(),session.getActivityId(),session.getNodeId(),session.getPlayInstanceId());
+            else if(topicRouteRuntimeService.genericPlayer(memberId,session.getTopicId(),session.getActivityId()) || TopicRoutePublicationCompiler.outcomeNeedsGenericRun(config))topicRouteRuntimeService.assertGameplayOutcomeStart(memberId,session.getTopicId(),session.getActivityId(),session.getNodeId(),session.getPlayInstanceId());
         }
         ObjectNode restarted = initialState(config, team, teamMembers);
         if (config.has("outcomeRules")) restarted.put("attemptOrdinal", readJson(session.getStateJson(), "Invalid attempt state").path("attemptOrdinal").asLong(1) + 1);
@@ -633,9 +634,11 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         // 玩法判错在本事务内落进旅程本局:扣血/计数与本次玩法状态更新同生共死;
         // 非旅程主题在旅程运行时里 no-op,行为零变化。
         boolean scopedTheme=topicRouteRuntimeService!=null && topicRouteRuntimeService.nodeRuntimeConfig(memberId,session.getTopicId(),session.getNodeId(),session.getActivityId())!=null;
+        // 非通用主题里结果反馈判出的过/没过,按普通站点的成败事实记(没判出结果的动作不记)。
+        Boolean r5Fact = gameplayDecision == null ? null : Boolean.valueOf("PASS".equals(gameplayDecision.path("outcome").asText()));
         if (zeroChallengeSession) {
             // 挑战只写恢复回执，不产生普通任务完成事实。
-        } else if (config.has("outcomeRules")) {
+        } else if (config.has("outcomeRules") && (sharedRun != null || scopedTheme && topicRouteRuntimeService.genericPlayer(memberId,session.getTopicId(),session.getActivityId()))) {
             if (gameplayDecision != null) {
                 String attemptId = "advanced:" + session.getId() + ":" + state.path("attemptOrdinal").asLong(1);
                 List<String[]> refs = new ArrayList<>(); for (ChoiceRef choice : choices) if (choice != null) refs.add(new String[]{choice.stepOrKit, choice.optionId});
@@ -649,7 +652,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             gameSessionRuntimeService.recordSharedRouteResult(memberId, session.getTopicId(), session.getActivityId(), session.getNodeId(),
                     session.getPlayInstanceId(), idempotencyKey, sharedMechanicsReady(config, state), refs, runtimeEpoch(session));
         } else if(scopedTheme) {
-            Boolean judged=judgedOutcome(normalizedAction,state);Boolean fact=topicRouteRuntimeService.genericPlayer(memberId,session.getTopicId(),session.getActivityId())?Boolean.valueOf(sharedMechanicsReady(config,state)):(judged!=null?judged:passedFact(normalizedAction,state));
+            Boolean judged=r5Fact!=null?r5Fact:judgedOutcome(normalizedAction,state);Boolean fact=topicRouteRuntimeService.genericPlayer(memberId,session.getTopicId(),session.getActivityId())?Boolean.valueOf(sharedMechanicsReady(config,state)):(judged!=null?judged:passedFact(normalizedAction,state));
             List<String[]> refs=new ArrayList<>();for(ChoiceRef choice:choices)if(choice!=null)refs.add(new String[]{choice.stepOrKit,choice.optionId});
             if(topicRouteRuntimeService.genericPlayer(memberId,session.getTopicId(),session.getActivityId()) && Boolean.TRUE.equals(fact)) {
                 refs.clear();
@@ -662,7 +665,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             }
             topicRouteRuntimeService.recordNodeResult(memberId,session.getTopicId(),session.getActivityId(),session.getNodeId(),session.getPlayInstanceId(),idempotencyKey,fact,Boolean.FALSE.equals(judged),randomOutcome(normalizedAction,config,state),refs);
         } else {
-        Boolean passed = judgedOutcome(normalizedAction, state);   // null = 非判定型动作
+        Boolean passed = r5Fact != null ? r5Fact : judgedOutcome(normalizedAction, state);   // null = 非判定型动作
         if (passed != null && !passed && topicRouteRuntimeService != null) {
             topicRouteRuntimeService.recordMistake(memberId, session.getTopicId(), session.getActivityId(), session.getNodeId());
         }
@@ -1388,7 +1391,18 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
     private boolean settledR5(GameRuntimeSession session) {
         return session != null && session.getStatus() != null
                 && !Integer.valueOf(GameRuntimeSession.STATUS_RUNNING).equals(session.getStatus())
+                && genericAttempt(session)
                 && readJson(session.getConfigSnapshotJson(), "玩法配置不可用").path("outcomeRules").path("version").asInt() == 1;
+    }
+
+    /** 通用局 / 共享局的每次尝试另开实例(quest: / operation: / challenge: / game:),判完即封存;
+     *  第十一轮 h5:没有通用局的主题沿用本局实例,结果反馈没过时可在本站重来,不封存成死路。 */
+    private boolean genericAttempt(GameRuntimeSession session) {
+        String instance = session.getPlayInstanceId();
+        if (instance != null && (instance.startsWith("quest:") || instance.startsWith("operation:")
+                || instance.startsWith("challenge:") || instance.startsWith("game:"))) return true;
+        ObjectNode state = objectState(session.getStateJson());
+        return state.has("originalRouteSessionId") || state.has("originalGameSessionId") || state.has("runtimeAuthorityEpoch");
     }
 
     private GameRuntimeSession existingSession(Long memberId, Long activityId, Long topicId, Long nodeId) {

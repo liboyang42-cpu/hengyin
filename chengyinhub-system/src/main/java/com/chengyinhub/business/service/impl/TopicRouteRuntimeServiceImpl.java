@@ -3249,9 +3249,12 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             themeEngine.reconcileHeld(config,state,rules);
             JourneyInitialState.clamp(rules,state);
             if (actionBefore != null && reason != null) JourneyStatLinks.apply(rules,actionBefore,state,"MEMBER:"+session.getMemberId(),eventId,reason);
-            int beforeRecovery=JourneyInitialState.numericValue(state,SYS_HP);
-            gameplaySurvival.syncChallenge(validator.readTree(session.getConfigSnapshotJson()),rules,state,clock.millis());
-            if(beforeRecovery!=JourneyInitialState.numericValue(state,SYS_HP)){themeEngine.reconcileHeld(config,state,rules);JourneyInitialState.clamp(rules,state);}
+            // 第十一轮 h5:主题没开体力(检定/相册等通用局)就没有 sys.hp,不读也不做体力恢复。
+            if (rules.hasRuntimeState() && rules.getHp().isEnabled()) {
+                int beforeRecovery=JourneyInitialState.numericValue(state,SYS_HP);
+                gameplaySurvival.syncChallenge(validator.readTree(session.getConfigSnapshotJson()),rules,state,clock.millis());
+                if(beforeRecovery!=JourneyInitialState.numericValue(state,SYS_HP)){themeEngine.reconcileHeld(config,state,rules);JourneyInitialState.clamp(rules,state);}
+            }
             if (state.getThemeRuntime().has("result")) {
                 freezeThemeStory(session,state); session.setStatus(statusOf(state)); session.setCompletedAt(new Date(clock.millis()));
             }

@@ -64,6 +64,7 @@ function methods() {
       }
     },
     _applyR5AdvancedView(view) {
+      this._applyR5PlainOutcome(view);
       if (view.challenge && (['FAILED', 'EXPIRED'].includes(view.status) || view.status === 'COMPLETED' && view.canRetry === true)) {
         this._r5CheckView = null;
         this.setData({ 'journeyCheck.show': false });
@@ -82,6 +83,15 @@ function methods() {
       }
       this.refreshThemeBackpack();
       return false;
+    },
+    // 没有通用局回执的主题(themeBag 无 quests):判完那一次直接摆作者写的结果反馈;进页第一份视图只记下,不补弹。
+    _applyR5PlainOutcome(view) {
+      if (!isR5(view) || view.sessionId == null || ((this.data.themeBag || {}).quests || []).length) return;
+      const fb = view.outcomeFeedback, seen = this._r5PlainSeen || (this._r5PlainSeen = {}), key = String(view.sessionId);
+      const id = fb ? key + ':' + view.version : '';
+      if (!(key in seen) || !fb || seen[key] === id) { seen[key] = id; return; }
+      seen[key] = id;
+      this.setData({ r5Verdict: { show: true, kind: fb.outcome === 'PASS' ? 'win' : 'fail', text: fb.reply || '', images: (fb.images || []).slice(0, 3) } });
     },
     _r5CheckAction(action) {
       const kit = this.data.journeyCheck;

@@ -195,6 +195,13 @@ public class PlayEntryApplication {
                 return error(e.getMessage());
             }
         }
+        // 第十一轮 h5:通用个人局的站点完成记在本局状态(任务结算),不写打卡进度表;节点 done 跟本局走,
+        // 否则结算过的站仍是「下一站」,后面的站永远不自动到达。
+        if (routeState != null && routeState.getNodeStates() != null && topicRouteRuntimeService.genericPlayer(memberId, tId, progActId)) {
+            for (Map.Entry<Long, String> state : routeState.getNodeStates().entrySet()) {
+                if ("COMPLETED".equals(state.getValue()) && completedNodeIds.add(state.getKey())) doneNodeIds.add(state.getKey());
+            }
+        }
         PlayNodeQueryApplication.NodeProjection read = new PlayNodeQueryApplication.NodeProjection(
                 memberId, selfPlay, tId, progActId, timeErr, registered, leadSpectator, passExpiresAt,
                 nodeList, doneNodeIds, doneAtMap, progressByNode, completedNodeIds, hintCost,

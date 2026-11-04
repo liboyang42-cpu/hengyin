@@ -229,10 +229,11 @@ final class TopicRoutePublicationCompiler {
         actual.sort(Comparator.comparing(CmsTopicNode::getSortId, Comparator.nullsLast(Long::compareTo)).thenComparing(CmsTopicNode::getId, Comparator.nullsLast(Long::compareTo)));
         JourneyTemplateProbe probe = new JourneyTemplateProbe(actual);
         ObjectNode configs = JSON.createObjectNode(); boolean configured = false;
+        boolean stateRules = JourneyRules.parse(topic.getJourneyRulesJson()).hasRuntimeState();
         for (CmsTopicNode node : actual) {
             JsonNode config = readBlockConfig(probe.configs().get(node.getTemplateId()));
             configs.set(String.valueOf(node.getId()), config == null ? JSON.createObjectNode() : config);
-            configured |= hasTemplateInteraction(config);
+            configured |= hasTemplateInteraction(config, stateRules);
         }
         ObjectNode chapterDefinition = null;
         String authorJson = topic.getThemeRuntimeConfigJson();
@@ -254,7 +255,7 @@ final class TopicRoutePublicationCompiler {
         }
         if(!configured && topic.getThemeRuntimeConfigJson()!=null && (topic.getThemeRuntimeConfigJson().contains("interactionRules") || topic.getThemeRuntimeConfigJson().contains("interactionTools") || topic.getThemeRuntimeConfigJson().contains("outcomeRules"))) {
             ObjectNode sceneDefinition=ThemeRuntimeConfig.parseDraft(topic.getThemeRuntimeConfigJson());
-            for(JsonNode scene:sceneDefinition.path("scenes"))for(JsonNode block:scene.path("nodeConfigs"))configured |= hasTemplateInteraction(block);
+            for(JsonNode scene:sceneDefinition.path("scenes"))for(JsonNode block:scene.path("nodeConfigs"))configured |= hasTemplateInteraction(block, stateRules);
         }
         boolean regenerateQuests = authored != null && authored.path("gameplayRuntime").path("acts").size() > 0 && authored.path("gameplayRuntime").path("quests").size() == 0;
         boolean effectSlots=false;for(JsonNode config:configs)effectSlots |= config.path("interactionRules").has("resourceSlots");
@@ -456,7 +457,32 @@ final class TopicRoutePublicationCompiler {
         for(JsonNode plan:config.path("gameplayRuntime").path("plans"))if(plan.has("storyEndingId") && !ids.contains(plan.path("endingChapterId").asLong()))throw new IllegalArgumentException("节点 "+plan.path("operationNodeId").asText()+" 方案 "+plan.path("endingKey").asText()+" 结局章不属于本主题");
     }
 
-    private boolean hasTemplateInteraction(JsonNode config) { return config!=null && (GameplayTemplateRules.hasSettlementRules(config) || config.has("interactionTools") || config.has("outcomeRules")); }
+    private boolean hasTemplateInteraction(JsonNode config, boolean stateRules) {
+        if (config == null) return false;
+        if (GameplayTemplateRules.hasSettlementRules(config) || config.has("interactionTools")) return true;
+        // 站点自己的结果反馈(只有回复文字/配图)不再把整个主题编成通用玩法局:主题没配状态时通用局没有 sys.hp,一开就停。
+        return config.has("outcomeRules") && (stateRules || outcomeNeedsGenericRun(config));
+    }
+
+    /** 第十一轮 h5:D20 三档站点要主题打开「d20 检定」才掷得出骰子;没开时发布就拒,不让玩家进站后对着空屏。 */
+    private void assertCheckStationsEnabled(CmsTopic topic, List<CmsTopicNode> liveNodes, JourneyTemplateProbe probe) {
+        if (JourneyRules.parse(topic.getJourneyRulesJson()).isCheckEnabled()) return;
+        for (CmsTopicNode node : liveNodes) {
+            JsonNode config = readBlockConfig(probe.configs().get(node.getTemplateId()));
+            if (config != null && config.has("outcomeRules") && config.path("check").path("enabled").asBoolean())
+                throw new IllegalArgumentException("节点 " + node.getId() + "（" + node.getName() + "）：D20 检定要先在主题设置里打开「d20 检定」");
+        }
+    }
+
+    /** 这条结果反馈要动通用局:检定、预测、分支,或结果行带数值费用/效果、进入下一段。 */
+    static boolean outcomeNeedsGenericRun(JsonNode config) {
+        if (config == null || !config.has("outcomeRules")) return false;
+        for (String kit : Arrays.asList("check", "predict", "branch")) if (config.path(kit).path("enabled").asBoolean()) return true;
+        boolean[] needs = {false};
+        com.chengyinhub.business.service.support.GameplayOutcomeRules.visit(config, (path, row) ->
+                needs[0] |= row.path("costs").size() > 0 || row.path("effects").size() > 0 || row.has("nextStepId"));
+        return needs[0];
+    }
 
     /** 模板「线索」工具按线索名称生成 clue.h_ 标识（同名同键），保存/发布时自动登记为有/无标记，名称取模板里写的线索名。 */
     private List<ThemeStateKey> declarationRows(Long topicId) {
@@ -542,6 +568,7 @@ final class TopicRoutePublicationCompiler {
         JourneyTemplateProbe publicationProbe=new JourneyTemplateProbe(liveNodes);
         com.chengyinhub.business.service.support.AdvancedGameConfigValidator authorValidator=new com.chengyinhub.business.service.support.AdvancedGameConfigValidator();
         for(Map.Entry<Long,String> entry:publicationProbe.configs().entrySet())if(entry.getValue()!=null && validator.readTree(entry.getValue()).path("outcomeRules").path("version").asInt()==1)entry.setValue(authorValidator.validateAndNormalize(entry.getValue()));
+        assertCheckStationsEnabled(topic, liveNodes, publicationProbe);
         String compiled = compileTemplateRules(topic);
         ObjectNode authoredDefinition=ThemeRuntimeConfig.parseDraft(topic.getThemeRuntimeConfigJson());
         if(authoredDefinition!=null)for(JsonNode scene:authoredDefinition.path("scenes"))for(JsonNode block:scene.path("nodeConfigs"))if(block.path("outcomeRules").path("version").asInt()==1)authorValidator.validateAndNormalize(block.toString());
