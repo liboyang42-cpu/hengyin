@@ -118,7 +118,6 @@
       <cy-empty wx:else size="sm" title="还没有评价" />
     </view>
 
-    <view class="activity-points"><cy-icon class="activity-points__icon" name="star" size="30" /><text class="activity-points__text">首次真实评价的积分以平台当前规则为准</text></view>
 
     <view wx:if="{{cancelShow}}" class="activity-form activity-form--danger">
       <view class="activity-form__head"><text class="activity-form__title">取消活动</text><text class="activity-form__close" bindtap="closeCancel" hover-class="cy-pressed" hover-stay-time="80">关闭</text></view>

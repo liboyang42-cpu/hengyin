@@ -50,7 +50,7 @@ Page({
     reportPeerId: '',
     // 只读会话:能读不能写。判据只有「对方是不是一个可交流的人」,不是 loadState。
     readOnly: false,
-    readOnlyTip: '系统通知不支持回复，有新动态会出现在这里',
+    readOnlyTip: '系统通知不支持回复',
     // M-01 / G-10:商家视角整页浅色;商家的系统通知会话标题进导航栏、去掉「更多」、通知改整宽卡片。
     isMerchantView: false,
     sysNotice: false,
@@ -319,7 +319,7 @@ Page({
           // 拉黑只存服务端:重进会话按回包禁用输入框,不然能打字、一发就失败(3-22)
           const blockedByMe = res.data.blockedByMe === true;
           that._blockedByMe = blockedByMe;
-          that.setData({ disabled: that.data.readOnly || res.data.blocked === true, disabledText: that.data.readOnly ? '系统通知不支持回复，有新动态会出现在这里' : res.data.blocked === true ? (blockedByMe ? '你已拉黑对方，无法发送消息' : '对方暂不可联系，无法发送消息') : '',
+          that.setData({ disabled: that.data.readOnly || res.data.blocked === true, disabledText: that.data.readOnly ? '系统通知不支持回复' : res.data.blocked === true ? (blockedByMe ? '你已拉黑对方，无法发送消息' : '对方暂不可联系，无法发送消息') : '',
             moreSheetItems: that.data.readOnly ? ['隐藏会话'] : ['举报这条消息', '举报对方', blockedByMe ? '解除拉黑' : '拉黑', '隐藏会话'] });
           if (toBottom) that.scrollBottom();
           that._markReadWhenVisible(conversationId, memberId);

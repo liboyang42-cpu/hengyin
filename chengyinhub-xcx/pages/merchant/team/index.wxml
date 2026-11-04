@@ -50,7 +50,7 @@
       <view class="tm-share-card" wx:if="{{createdInvite}}">
         <view class="tm-share-main">
           <text class="tm-share-title">{{createdInvite.roleName}}邀请已创建</text>
-          <text class="tm-share-sub">{{createdInvite.expiresAtText}} 前有效，请在本页分享</text>
+          <text class="tm-share-sub">{{createdInvite.expiresAtText}} 前有效</text>
         </view>
         <button wx:if="{{canShareCreatedInvite}}" class="tm-share-btn" open-type="share" aria-label="立即分享团队邀请">立即分享</button>
       </view>

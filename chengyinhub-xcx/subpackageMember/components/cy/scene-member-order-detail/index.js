@@ -1010,9 +1010,7 @@ Component({
                 : (summary.firstScanCompleted ? '首次扫码成功，订单已完成'
                   : (isTopicOrder ? '本次路线已结束' : '本次活动已结束'));
             } else if (Number(info.registrationStatus) === 2 && Number(info.paymentStatus) === 2) {
-              info.orderHint = isTopicOrder
-                ? '票夹已生成，可进入路线查看城市节点与打卡反馈'
-                : (isExploreOrder ? '票夹已生成，请按场次时间到集合点开场' : '票夹已生成，可继续探索或现场核验');
+              info.orderHint = '';
             } else if (Number(info.registrationStatus) === 1 || [0, 1].includes(Number(info.paymentStatus))) {
               info.orderHint = '请完成支付后使用票夹';
             } else if (Number(info.registrationStatus) === 2 && info.paymentStatus == null) {
