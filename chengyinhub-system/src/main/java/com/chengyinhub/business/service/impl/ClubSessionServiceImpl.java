@@ -62,8 +62,6 @@ public class ClubSessionServiceImpl implements IClubSessionService {
     private final ActivityReviewPolicy activityReviewPolicy;
     private final IAuditTaskService auditTaskService;
     private final IUmsMemberService umsMemberService;
-    @org.springframework.beans.factory.annotation.Autowired(required = false)
-    private com.chengyinhub.business.service.IProductRoleService productRoleService;
 
     public ClubSessionServiceImpl(IClubService clubService, ICmsTopicService topicService,
                                   ICmsActivityService activityService, IOmsTicketService ticketService,
@@ -108,8 +106,8 @@ public class ClubSessionServiceImpl implements IClubSessionService {
                 topics.add(topic);
             }
         }
-        // C-02:主理人开场前就要知道付费场次能不能在线收款(与 assertCollectible 同一判据,不改收款闸本身)。
-        for (CmsTopic topic : topics) topic.setOnlinePaymentAvailable(onlinePaymentAvailable(topic.getId()));
+        // C-02 / F-04(j2):主理人开场前就要知道付费场次能不能在线收款(与 assertCollectible 同一判据,不改收款闸本身)。
+        for (CmsTopic topic : topics) topic.setOnlinePaymentAvailable(onlinePaymentAvailable(topic));
         // C-17:开一场页只读显示票价与集合点(玩家结账页看到的就是票上的这两项)。
         for (CmsTopic topic : topics) applySessionTicketFacts(topic);
         return topics;
@@ -218,10 +216,12 @@ public class ClubSessionServiceImpl implements IClubSessionService {
         return activity.getId();
     }
 
-    /** 与 CmsRegistrationServiceImpl.assertCollectible 的主题分支同一判据;服务不可用时返回 null,页面不出提示。 */
-    Boolean onlinePaymentAvailable(Long topicId) {
-        if (topicId == null || productRoleService == null) return null;
-        return productRoleService.isPlatformOwned(topicId);
+    /**
+     * 与 CmsRegistrationServiceImpl.assertCollectible 的主题分支同一判据:自 2026-11-02 起收款闸只拒「查不到票款归谁」,
+     * 主题能解析出来就照常走平台商户号收款,不再按「是否平台自营」区分(F-04:原先按自营判,主理人被误告知收不了款)。
+     */
+    static Boolean onlinePaymentAvailable(CmsTopic topic) {
+        return topic != null;
     }
 
     @Override

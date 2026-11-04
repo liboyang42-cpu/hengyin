@@ -38,9 +38,6 @@ public class ApiPricingController extends BaseController {
     @Autowired
     private com.chengyinhub.business.service.ITopicCommercialReviewService topicCommercialReviewService;
 
-    @Autowired
-    private com.chengyinhub.business.service.IProductRoleService productRoleService;
-
     @Operation(summary = "定价预览(阵容+成本构成+底价P_min)")
     @PostMapping("/preview")
     public AjaxResult preview(@RequestBody Map<String, Object> body) {
@@ -91,8 +88,7 @@ public class ApiPricingController extends BaseController {
                         asInt(body.get("guidedInventory")), asBd(body.get("leadCost")),
                         asInt(body.get("teamSize")), ticketPrices);
             }
-            return AjaxResult.success(afterConfirmMessage(topicId, memberId,
-                    isPositive(guidedPrice) || isPositive(selfPrice)));
+            return AjaxResult.success(afterConfirmMessage(topicId, memberId));
         } catch (IllegalStateException e) {
             return error(e.getMessage());
         }
@@ -101,18 +97,12 @@ public class ApiPricingController extends BaseController {
     /**
      * P-01：城市定向没有四店 canonical15 人工事实，锁价后直接提交开售审，回给作者真实的下一步；
      * 自由探索仍等运营保存 canonical15 草稿后提审(原口径不变)。
+     * F-04(j2)：收款闸 assertCollectible 自 2026-11-02 起对有主题的票照常收款(走平台商户号)，
+     * 锁价回执不再附「平台正在办理支付资质…玩家还不能在线付款」；付费与否只影响上面的实名闸。
      */
-    private String afterConfirmMessage(Long topicId, Long memberId, boolean paid) {
-        String message = saleReviewMessage(topicId, memberId);
-        // P-01：非平台主题开售后仍收不了款(assertCollectible 未放开)，锁价时就如实告诉主办方，不等玩家报名才发现。
-        if (paid && !productRoleService.isPlatformOwned(topicId)) {
-            message += (message.endsWith("。") ? "" : "。") + PAYMENT_NOT_OPEN_NOTE;
-        }
-        return message;
+    private String afterConfirmMessage(Long topicId, Long memberId) {
+        return saleReviewMessage(topicId, memberId);
     }
-
-    /** 与报价拒绝同一事实(只有平台主题能在线收款)；措辞面向主办方。 */
-    static final String PAYMENT_NOT_OPEN_NOTE = "注意：平台正在办理支付资质，开放前这个主题开售后玩家还不能在线付款报名";
 
     private String saleReviewMessage(Long topicId, Long memberId) {
         CmsTopic topic = cmsTopicService.selectCmsTopicById(topicId);

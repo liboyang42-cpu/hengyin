@@ -337,10 +337,6 @@ class FreeExplorePriceLockAcceptanceTest {
         when(topicService.selectCmsTopicById(TOPIC_ID)).thenReturn(topic);
         ReflectionTestUtils.setField(controller, "pricingService", pricing);
         ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
-        // P-01:锁价后会查主题是否平台所有,决定是否附「暂不能在线收款」的说明。
-        com.chengyinhub.business.service.IProductRoleService roles = mock(com.chengyinhub.business.service.IProductRoleService.class);
-        when(roles.isPlatformOwned(TOPIC_ID)).thenReturn(true);
-        ReflectionTestUtils.setField(controller, "productRoleService", roles);
         ReflectionTestUtils.setField(controller, "topicCommercialReviewService",
                 mock(com.chengyinhub.business.service.ITopicCommercialReviewService.class));
         doReturn(caller).when(controller).getAppUserId();

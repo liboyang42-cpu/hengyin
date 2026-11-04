@@ -3,7 +3,6 @@ package com.chengyinhub.web.controller.api;
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.vo.TopicSaleReviewProgress;
 import com.chengyinhub.business.service.ICmsTopicService;
-import com.chengyinhub.business.service.IProductRoleService;
 import com.chengyinhub.business.service.ITopicCommercialReviewService;
 import com.chengyinhub.common.constant.ProductType;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,19 +11,18 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-/** P-01：俱乐部自己的付费主题能开售，但在线收款仍关；锁价回执要如实告诉主办方。 */
+/**
+ * P-01 → F-04(j2)：俱乐部自己的付费主题能开售，也能在线收款(assertCollectible 自 2026-11-02 起只拒查不到票款归属的单)。
+ * 旧断言「锁价回执附『平台正在办理支付资质』」编码的是改前的决定，已随业主拍板改为：回执不再提收不了款。
+ */
 class ApiPricingControllerPaymentNoteTest {
 
     private static final long TOPIC = 77L;
     private static final long MEMBER = 9003L;
     private ApiPricingController controller;
-    private IProductRoleService roles;
 
     @BeforeEach
     void setUp() {
@@ -38,35 +36,15 @@ class ApiPricingControllerPaymentNoteTest {
         TopicSaleReviewProgress progress = mock(TopicSaleReviewProgress.class);
         when(progress.getTaskId()).thenReturn(501L);
         when(review.submitSaleReviewIfReady(TOPIC, MEMBER)).thenReturn(progress);
-        roles = mock(IProductRoleService.class);
         ReflectionTestUtils.setField(controller, "cmsTopicService", topics);
         ReflectionTestUtils.setField(controller, "topicCommercialReviewService", review);
-        ReflectionTestUtils.setField(controller, "productRoleService", roles);
-    }
-
-    private String message(boolean paid) {
-        return ReflectionTestUtils.invokeMethod(controller, "afterConfirmMessage", TOPIC, MEMBER, paid);
     }
 
     @Test
-    void paidClubThemeSaysPaymentIsNotOpenYet() {
-        when(roles.isPlatformOwned(TOPIC)).thenReturn(false);
-        assertEquals("终价已确认，已提交开售审核，审核通过后开售。" + ApiPricingController.PAYMENT_NOT_OPEN_NOTE,
-                message(true));
-    }
-
-    @Test
-    void platformThemeAndFreeThemeKeepTheOldMessage() {
-        when(roles.isPlatformOwned(TOPIC)).thenReturn(true);
-        assertFalse(message(true).contains("支付资质"));
-        String free = message(false);
-        assertFalse(free.contains("支付资质"));
-        assertTrue(free.startsWith("终价已确认"));
-    }
-
-    @Test
-    void freeThemeDoesNotEvenAsk() {
-        message(false);
-        verify(roles, never()).isPlatformOwned(TOPIC);
+    void paidClubThemeNoLongerSaysPlayersCannotPay() {
+        String message = ReflectionTestUtils.invokeMethod(controller, "afterConfirmMessage", TOPIC, MEMBER);
+        assertEquals("终价已确认，已提交开售审核，审核通过后开售", message);
+        assertFalse(message.contains("支付资质"));
+        assertFalse(message.contains("不能在线付款"));
     }
 }
