@@ -244,6 +244,49 @@ class ClubSessionServiceImplTest {
         }
     }
 
+    /** 第十一轮 i1:自由探索在开售审核(2)时、本俱乐部有生效合作单,可先开一场给开售审核投影场次票。 */
+    @Test
+    void freeExploreInSaleReview_withClubCoopOrder_opensSession() {
+        topic.setProductType(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE);
+        topic.setLifecycle(2);
+
+        Long activityId = service.open(request(), OWNER_ID, "主理人");
+
+        assertEquals(Long.valueOf(51L), activityId);
+        verify(activityService).insertCmsActivity(any());
+    }
+
+    /** 第十一轮 i1:放行只给「自由探索 + 开售审核 + 本俱乐部生效合作单」,其余仍按 h4 规则拒。 */
+    @Test
+    void saleReviewException_isNarrow_otherProductsStagesAndOrderlessStillRefused() {
+        topic.setLifecycle(2);
+        for (Integer productType : new Integer[]{null, com.chengyinhub.common.constant.ProductType.ORIENTEERING}) {
+            topic.setProductType(productType);
+            IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+                    () -> service.open(request(), OWNER_ID, "主理人"));
+            assertEquals("主题还没开售，开售后才能开一场", error.getMessage());
+        }
+        topic.setProductType(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE);
+        for (int lc : new int[]{7, 1}) {
+            topic.setLifecycle(lc);
+            IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+                    () -> service.open(request(), OWNER_ID, "主理人"));
+            assertEquals("主题还没开售，开售后才能开一场", error.getMessage());
+        }
+        for (int lc : new int[]{5, 6}) {
+            topic.setLifecycle(lc);
+            IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+                    () -> service.open(request(), OWNER_ID, "主理人"));
+            assertEquals("主题已结束售卖，不能再开一场", error.getMessage());
+        }
+        topic.setLifecycle(2);
+        when(orderMapper.selectEffectiveOrdersByTopicId(TOPIC_ID)).thenReturn(java.util.Collections.emptyList());
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+                () -> service.open(request(), OWNER_ID, "主理人"));
+        assertEquals("主题还没开售，开售后才能开一场", error.getMessage());
+        verify(activityService, never()).insertCmsActivity(any());
+    }
+
     /** AUDIT-G1-3:场次文本走统一门禁,明确违规拒绝。 */
     @Test
     void blockedTopicText_refusesOpening() {

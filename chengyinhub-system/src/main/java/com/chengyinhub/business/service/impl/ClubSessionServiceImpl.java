@@ -114,7 +114,17 @@ public class ClubSessionServiceImpl implements IClubSessionService {
     }
 
     static void requireTopicOpenForSessions(Integer lifecycle) {
+        requireTopicOpenForSessions(lifecycle, false);
+    }
+
+    /**
+     * 第十一轮 i1:自由探索(product_type=2)的开售审核要先见到场次与场次票
+     * ({@code SALE_TICKET_PROJECTION_MISSING}),所以只有这一种产品、在定价与开售审核(2)时、
+     * 且本俱乐部持有生效合作单,才放行开一场;其余产品与其余阶段仍按 h4 规则,已结束的永远拒。
+     */
+    static void requireTopicOpenForSessions(Integer lifecycle, boolean freeExploreSaleReviewWithClubOrder) {
         if (lifecycle == null || lifecycle == 0 || lifecycle == 3 || lifecycle == 4) return;
+        if (lifecycle == 2 && freeExploreSaleReviewWithClubOrder) return;
         if (lifecycle == 5 || lifecycle == 6) {
             throw new IllegalArgumentException("主题已结束售卖，不能再开一场");
         }
@@ -152,9 +162,12 @@ public class ClubSessionServiceImpl implements IClubSessionService {
         // 第十一轮 h4 L5:商业主题在立项待审 / 招募中 / 定价与开售审核中时玩家还买不了票,不能先开一场;
         // 结算中 / 已关闭也不再开。口径与俱乐部页「开一场」入口(pages/club/detail sellable)一致:
         // 无生命周期(老主题、纯 UGC)、草稿、售票中、进行中可开。
-        requireTopicOpenForSessions(topic.getLifecycle());
+        boolean clubOrder = hasEffectiveClubOrder(request.getTopicId(), request.getClubId());
+        requireTopicOpenForSessions(topic.getLifecycle(),
+                Integer.valueOf(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE).equals(topic.getProductType())
+                        && clubOrder);
         boolean clubOwned = topic.getClubId() != null && topic.getClubId().equals(request.getClubId());
-        if (!clubOwned && !hasEffectiveClubOrder(request.getTopicId(), request.getClubId())) {
+        if (!clubOwned && !clubOrder) {
             throw new IllegalArgumentException("该俱乐部对本主题没有生效的合作单");
         }
         // AUDIT-G1-3:场次是一条新的公开售卖面,与 /api/activity/publish 同一道门禁 + 同一套分级。

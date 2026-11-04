@@ -76,7 +76,8 @@ def assert_payee_readback(response, expected_status):
 
 
 def open_sessions(tid, etok):
-    """第十一轮 h5 第 3 项:第十一轮 h4 起主题还没开售时不能开一场,开团挪到 SELLING 之后。"""
+    """开团在开售提审之前(主题停在 2=PRICING):自由探索的开售审核要先见到场次票(SALE_TICKET_PROJECTION_MISSING)。
+    第十一轮 i1:h4「未开售不能开一场」只对自由探索 + 本俱乐部生效合作单在 PRICING 放行,正是这一步要的状态。"""
     step("俱乐部开团:一天一场,开 4 场(POST /api/club/open-session)")
     # ★ 这就是任务书里「俱乐部接手主题 → 定 4 个场次」的真实入口。
     #   ClubSessionServiceImpl.open 要求该俱乐部对本主题有【生效合作单】,然后建 cms_activity
@@ -131,6 +132,9 @@ def main(tid):
             "realName": "测试执行主理人", "idCard": "110101199001010031",
             "consent": True, "source": "topic_publish"})
     show("publisher/identity", json.dumps(status, ensure_ascii=False)[:180])
+
+    if open_sessions(tid, etok) != 0:
+        return 1
 
     step("俱乐部对公收款人:建资料 → 审核通过(SALE_PAYEE_NOT_VERIFIED 就是缺它)")
     # 明显假值,不编得像真的;真实入口在后台 /business/club-payee。
@@ -246,9 +250,7 @@ def main(tid):
                                        json.dumps(value, ensure_ascii=False)[:80]))
     print("\n  15/15 非空: %s | 顶层字段数: %d | 字段顺序与持久化合同一致: %s"
           % (ok, len(canonical), list(canonical.keys()) == CANONICAL_FIELDS))
-    if not ok:
-        return 1
-    return open_sessions(tid, etok)
+    return 0 if ok else 1
 
 
 if __name__ == "__main__":
