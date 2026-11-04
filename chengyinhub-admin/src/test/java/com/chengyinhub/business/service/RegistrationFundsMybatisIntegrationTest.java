@@ -732,6 +732,47 @@ class RegistrationFundsMybatisIntegrationTest {
         }
     }
 
+    /**
+     * ROUND10 f4 第 2 项:「被邀请用户报名任意活动」(id 6,100 分/每次报名)由迁移关掉后,
+     * 支付成功仍落 SUCCESS、票状态照常迁移;邀请人只拿 id 5 的首购奖励,不再拿每次报名的 100 分。
+     * 对照组:迁移前同一笔回调会给邀请人写 event_type = 6 的流水。
+     */
+    @Test
+    void inviteeSignupRuleOffStillPaysAndOnlyAwardsFirstPurchase() throws Exception {
+        execute("UPDATE ums_member SET invite_user_id='99' WHERE id=7",
+                "INSERT INTO ums_member(id,status,point,del_flag) VALUES (99,1,0,0)",
+                "INSERT INTO cms_points_setting(id,title,value,type,event_type,status,del_flag) VALUES "
+                        + "(5,'邀请1位完成首次购买的用户',500,1,5,1,0),(6,'被邀请用户报名任意活动',100,1,6,1,0)");
+        applyInviteeSignupPointsOffMigration();
+        applyInviteeSignupPointsOffMigration(); // 可重跑
+
+        assertEquals(1, number("SELECT COUNT(*) FROM cms_points_setting WHERE id=6 AND status=0 AND value=0"));
+        assertEquals(1, number("SELECT COUNT(*) FROM cms_points_setting WHERE id=5 AND status=1 AND value=500"),
+                "id 5 首购奖励不动");
+
+        assertEquals("SUCCESS", registrationService.handleWechatPayCallback(callback()));
+
+        assertEquals(2, number("SELECT payment_status FROM cms_registration WHERE id=11"));
+        assertEquals(2, number("SELECT registration_status FROM cms_registration WHERE id=11"));
+        assertEquals(500, number("SELECT point FROM ums_member WHERE id=99"));
+        assertEquals(1, number("SELECT COUNT(*) FROM ums_member_points_detail WHERE member_id=99 AND event_type=5"));
+        assertEquals(0, number("SELECT COUNT(*) FROM ums_member_points_detail WHERE member_id=99 AND event_type=6"),
+                "关掉后不再按每次报名给邀请人发分");
+    }
+
+    @Test
+    void inviteeSignupRuleStillOnBeforeMigrationAwardsPerSignup() throws Exception {
+        execute("UPDATE ums_member SET invite_user_id='99' WHERE id=7",
+                "INSERT INTO ums_member(id,status,point,del_flag) VALUES (99,1,0,0)",
+                "INSERT INTO cms_points_setting(id,title,value,type,event_type,status,del_flag) VALUES "
+                        + "(5,'邀请1位完成首次购买的用户',500,1,5,1,0),(6,'被邀请用户报名任意活动',100,1,6,1,0)");
+
+        assertEquals("SUCCESS", registrationService.handleWechatPayCallback(callback()));
+
+        assertEquals(600, number("SELECT point FROM ums_member WHERE id=99"));
+        assertEquals(1, number("SELECT COUNT(*) FROM ums_member_points_detail WHERE member_id=99 AND event_type=6"));
+    }
+
     @Test
     void concurrentRefundClawbacksSerializeBalanceAndFlowsWithoutGoingNegative() throws Exception {
         execute("UPDATE ums_member SET balance=50.00 WHERE id=7");
@@ -2992,6 +3033,19 @@ class RegistrationFundsMybatisIntegrationTest {
                 + "AND table_name='" + tableName + "' AND index_name='" + indexName + "'";
         String definition = text(sql);
         return definition == null ? "" : definition;
+    }
+
+    private void applyInviteeSignupPointsOffMigration() throws Exception {
+        java.nio.file.Path root = java.nio.file.Paths.get(System.getProperty("user.dir")).toAbsolutePath();
+        if (root.getFileName() != null && "chengyinhub-admin".equals(root.getFileName().toString())) {
+            root = root.getParent();
+        }
+        try (Connection connection = dataSource.getConnection()) {
+            ScriptUtils.executeSqlScript(connection, new FileSystemResource(root.resolve(
+                    "chengyinhub-admin/sql/migration_20261104_invitee_signup_points_off.sql")));
+        }
+        assertEquals(0, number("SELECT COUNT(*) FROM cms_points_setting WHERE id = 6 "
+                + "AND (status IS NULL OR status <> 0 OR value IS NULL OR value <> 0)"), "迁移读回断言");
     }
 
     private void applyFundsMigration() throws Exception {
