@@ -2615,7 +2615,7 @@ Page({
         that.setData({ regApplies: { state: 'ready', rows: rows.filter(function (r) {
           return r && Number(r.topicId) === topicId && Number(r.auditStatus) === 0;
         }).map(function (r) {
-          return { id: r.id, name: r.merchantName || '未具名商家', logo: r.merchantLogo || '', initial: String(r.merchantName || '商').slice(0, 1),
+          return { id: r.id, memberId: r.memberId, name: r.merchantName || '未具名商家', logo: r.merchantLogo || '', initial: String(r.merchantName || '商').slice(0, 1),
             place: r.nodeName || r.addressName || r.address || '' };
         }) } });
       },
@@ -2641,11 +2641,29 @@ Page({
           success(res) {
             that._regConfirming = false;
             // 确认后这一行从「收到的申请」里消失、已招数跟着变,界面本身就是回执,不再弹成功提示(成功 toast 棘轮)
-            if (res && res.code == '200') { that.loadRegApplies(); that.loadProjectHome(); }
+            if (res && res.code == '200') {
+              that.loadRegApplies(); that.loadProjectHome();
+              // 第十轮 f2(j2 F-10):确认只是占位,下一步是发带条款的合作邀约 —— 直接进邀约页,别让流程断在这里。
+              that.goTermsInvite(ds.id, ds.name);
+            }
           },
           fail() { that._regConfirming = false; },
         });
       },
+    });
+  },
+
+  goTermsInvite(regId, name) {
+    const topicId = Number(this.data.topicId || (this.data.info && this.data.info.topicId));
+    const row = ((this.data.regApplies && this.data.regApplies.rows) || []).find((item) => String(item.id) === String(regId));
+    const toId = row && row.memberId;
+    if (!topicId || !toId) return;
+    if (this._navigating) return; this._navigating = true;
+    wx.navigateTo({
+      url: '/pages/coop/invite/index?type=0&toId=' + toId + '&toName=' + encodeURIComponent(name || row.name || '')
+        + (row.logo ? '&toLogo=' + encodeURIComponent(row.logo) : '')
+        + '&topicId=' + topicId + (this.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT' : ''),
+      complete: () => { this._navigating = false; },
     });
   },
 
