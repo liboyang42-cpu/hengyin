@@ -97,7 +97,9 @@ const STATES = {
 };
 
 // cms_topic.lifecycle 1 招募中 / 2 定价与开售审核中:都还不能报名(3 SELLING 才能)。
-const NOT_ON_SALE_TEXT = { 1: '招募中 · 未开售', 2: '未开售 · 待开售审核' };
+// 第十轮 f2(j2 F-05):与「更多」里的阶段同一口径(ClubTopicSettingServiceImpl.lifecycleText),不再头部说
+// 「待开售审核」、更多里说「定价中」。
+const NOT_ON_SALE_TEXT = { 1: '招募中 · 未开售', 2: '定价中 · 未开售', 7: '立项待审 · 未开售' };
 
 // 场次状态(导演台 projection.status / topic-manage-stats.sessionStatus 同一套枚举)→ 页面六态
 const SESSION_STATUS_KEYS = {
@@ -170,6 +172,7 @@ Page({
     topic: {},
     statusKey: 'reviewing',
     statusText: '',
+    lifecycle: null,
     // 胶囊圆点的展示态(空=跟 statusKey);只影响展示,不参与主键判定
     statusDisplayKey: '',
     primary: { text: '', disabled: true },
@@ -383,6 +386,7 @@ Page({
       loaded: true,
       loadError: false,
       statusKey,
+      lifecycle: Number(raw.lifecycle),
       // 重放详情(统计晚到/按场次重拉)时别把 projection 给的「已取消」冲回「已结束」
       // C-01/P-01:还在招募或定价/开售审核里的主题没开售,不能写「已确认」让主理人以为成员能报名了
       statusText: statusKey === 'ended' && this._sessionCancelled ? '已取消' : (statusKey === 'confirmed' && NOT_ON_SALE_TEXT[Number(raw.lifecycle)]) || state.text,
@@ -1232,6 +1236,15 @@ Page({
   // 5-04:fabu 的编辑入口只读 options.id(pages/publish/fabu/index.js onLoad),
   // 原来拼 ?topicId= 会打开空白新建表单 —— 保存多出一条主题,原主题没改。
   goEditTopic() { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/publish/fabu/index?id=' + this._topicId, complete: () => { this._navigating = false; } }); },
+
+  // 第十轮 f2 第 1 项(j2 F-05):定价中的主题,主理人从俱乐部这边就能去确认终价。
+  goPricing() {
+    if (!this._topicId) return;
+    this.setData({ settingSheetVisible: false });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({
+      url: '/pages/topic/pricing/index?topicId=' + this._topicId,
+      complete: () => { this._navigating = false; } });
+  },
 
   goChapterApplications() {
     if (!this.data.canReviewChapterApplications || !this._topicId) return;

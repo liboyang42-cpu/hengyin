@@ -64,6 +64,9 @@ const OWNER_STAGE_COPY = {
   coopInvite: { label: '查看合作邀约', hint: '' },
   review: { label: '主题审核中', hint: '审核通过后就能开一场' },
   run: { label: '开一场', hint: '选好日期和集合时间' },
+  // 第十轮 f2 第 1 项(j2 F-05 / F-14):开了商家承接的主题先招商、再定价、开售后才开一场;提示行写主题名。
+  recruit: { label: '去招商', hint: '' },
+  price: { label: '确认终价', hint: '' },
   loading: { label: '读取管理进度…', hint: '正在确认项目与邀请状态' },
   error: { label: '重试管理进度', hint: '暂时无法确认当前阶段' },
   // 管理员没有经营阶段:邀商家/发布主题/开一场都是主理人的事。
@@ -613,6 +616,7 @@ Page({
     inviteFeedbackState: 'idle',
     sentInvites: [],
     ownerStage: 'loading',
+    ownerCanOpenSession: false,
     ownerPrimaryLabel: OWNER_STAGE_COPY.loading.label,
     ownerStageHint: OWNER_STAGE_COPY.loading.hint,
     // 带队进度时间线:「现在要做」只说下一步,这条说的是「我走到哪一站了」。
@@ -1472,12 +1476,31 @@ Page({
       const allOrienteering = (this._topics || []).every(function (item) {
         return Number(item.productType == null ? item.mode : item.productType) === 1;
       });
+      // 生命周期:1 招募中 → 去招商;2 定价中 → 确认终价;7 立项待审 → 审核中;3/4 或非商业主题才能开一场。
+      const lifecycleOf = function (item) {
+        return item && item.lifecycle != null && item.lifecycle !== '' ? Number(item.lifecycle) : null;
+      };
+      const topics = this._topics || [];
+      const recruitingTopic = topics.find(function (item) { return lifecycleOf(item) === 1; });
+      const pricingTopic = topics.find(function (item) { return lifecycleOf(item) === 2; });
+      const projectReviewing = topics.some(function (item) { return lifecycleOf(item) === 7; });
+      const sellable = topics.some(function (item) {
+        const lc = lifecycleOf(item);
+        return lc === null || lc === 0 || lc === 3 || lc === 4;
+      });
+      this._stageTopic = null;
+      this._canOpenSession = sellable;
       if (!topicIds.size) stage = reviewing ? 'review' : 'publish';
       else if (acceptedExecution || (this.data.ownerProjectState === 'ready' && accepted)) stage = 'accepted';
       else if (this.data.ownerProjectState === 'error') stage = 'error';
       else if (this.data.ownerProjectState === 'ready' && this.data.inviteFeedbackState === 'error') stage = 'error';
       else if (this.data.ownerProjectState === 'ready' && this.data.inviteFeedbackState === 'ready') {
         stage = pending ? 'pending' : (reviewing ? 'review' : (allOrienteering ? 'run' : 'invite'));
+        if (stage === 'run' || stage === 'invite' || stage === 'review') {
+          if (recruitingTopic) { stage = 'recruit'; this._stageTopic = recruitingTopic; }
+          else if (pricingTopic) { stage = 'price'; this._stageTopic = pricingTopic; }
+          else if (stage === 'run' && !sellable && projectReviewing) stage = 'review';
+        }
       }
       receivedPending = (this.data.messages || []).filter(function (item) {
         return Number(item.status) === 0 && item.toType === 'club' && String(item.toId) === String(clubId);
@@ -1487,12 +1510,14 @@ Page({
     let copy = stage === 'accepted' && this._hasAcceptedExecutionProject
       ? OWNER_STAGE_COPY.executionAccepted : OWNER_STAGE_COPY[stage];
     if (stage === 'coopInvite') copy = { label: copy.label, hint: '有 ' + receivedPending + ' 条合作邀约待确认' };
+    if ((stage === 'recruit' || stage === 'price') && this._stageTopic) copy = { label: copy.label, hint: this._stageTopic.name || '' };
     const timeline = this._hasAcceptedExecutionProject
       ? { nodes: [], summary: '' } : this.buildLeadTimeline(stage);
     this.setData({
       ownerStage: stage,
       ownerPrimaryLabel: copy.label,
       ownerStageHint: copy.hint,
+      ownerCanOpenSession: stage !== 'run' && this._canOpenSession !== false,
       leadTimelineNodes: timeline.nodes,
       leadTimelineSummary: timeline.summary,
     });
@@ -1540,6 +1565,14 @@ Page({
     const stage = this.data.ownerStage;
     if (stage === 'accepted' && this._hasAcceptedExecutionProject) { this.goEventOps(); return; }
     if (stage === 'run') { this.goEventOps(); return; }
+    if ((stage === 'recruit' || stage === 'price') && this._stageTopic && this._stageTopic.id) {
+      const url = stage === 'recruit'
+        ? '/pages/topic/merchantinfo/merchantinfo?topicId=' + this._stageTopic.id + '&scope=CLUB&open=merchant'
+        : '/pages/topic/pricing/index?topicId=' + this._stageTopic.id;
+      if (this._navigating) return; this._navigating = true;
+      wx.navigateTo({ url: url, complete: () => { this._navigating = false; } });
+      return;
+    }
     if (stage === 'review') { this.setData({ activeTab: 'manage', openCommentPost: null }); return; }
     if (stage === 'coopInvite') {
       this.setData({ activeTab: 'manage', openCommentPost: null, openManageSection: 'received' }, function () {
