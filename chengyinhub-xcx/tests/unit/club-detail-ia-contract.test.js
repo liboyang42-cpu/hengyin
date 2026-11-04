@@ -21,6 +21,7 @@ function loadDetail() {
     globalData: {},
     sendRequest(request) { requests.push(request) },
     getUserRole: () => 'member',
+    getUserID: () => '9004',   // 第十轮 f3 j6 F7:名单/榜单只给已登录访客,桩默认已登录
     getAvatar: () => '',
   }
   vm.runInNewContext(read(DETAIL_JS), {

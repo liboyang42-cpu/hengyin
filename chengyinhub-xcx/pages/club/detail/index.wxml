@@ -247,6 +247,7 @@
         <cy-icon class="ov-badge-entry-arrow" name="arrow-right" size="24" />
       </view>
 
+      <block wx:if="{{myMemberId}}">
       <!-- MembersHead(23:14)。「邀请成员 ›」只给主理人/管理员:照 N3 无条件铺开,
            会把邀请入口开给无角色的普通成员(N5 稿里这一行只有标题+分隔线)。 -->
       <view class="ov-head">
@@ -339,6 +340,9 @@
         <text class="ov-locked-tit">{{club.joinPolicy == 1 ? '通过审核后可看贡献榜' : '加入后可看贡献榜'}}</text>
         
       </view>
+      </block>
+      <!-- j6 F7(owner 2026-11-04):游客看俱乐部,成员与贡献榜都在登录后,只留一行「登录后查看」 -->
+      <cy-empty wx:else size="sm" kind="no-permission" title="登录后查看" cta="登录" bind:cta="onLoginRetry" />
 
       <!-- 治理与安全:Figma 没画,但封禁申诉/举报俱乐部只有这一个入口,保留。
            2026-10-27 P-19 owner:刚加入的普通成员不展示,只给主理人和管理员。 -->

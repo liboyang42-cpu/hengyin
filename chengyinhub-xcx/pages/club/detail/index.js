@@ -9,7 +9,7 @@ const cyToast = require('../../../utils/toast.js');
 const motion = require('../../../utils/motion.js');
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
 const { getScene } = require('../../../utils/scene-registry.js');
-const { isLoginRequired, retryLogin } = require('../../../utils/session/login-reload.js');
+const { isLoginRequired, retryLogin, memberId } = require('../../../utils/session/login-reload.js');
 // 城瘾 · 俱乐部详情页(方案B:俱乐部=经典定向带团组织)
 // 俱乐部信息 + TA 办的经典定向团(/api/club/topics)+ 成员;团卡片点进主题报名页复用现有报名/扫码。
 const { toTimestamp, chinaParts } = require('../../../utils/datetime');
@@ -842,7 +842,7 @@ Page({
   // 登录引导「登录」:重登成功后按原入口重读(有 clubId 读详情,owner 入口重新解析)
   onLoginRetry() {
     retryLogin(this, app, function () {
-      this.setData({ loginRequired: false, notFound: false, detailLoaded: false });
+      this.setData({ loginRequired: false, notFound: false, detailLoaded: false, myMemberId: memberId(app) });
       if (this.data.clubId) this.loadAll();
       else if (this._ownerEntry) this.resolveOwnerEntry();
     });
@@ -1724,6 +1724,7 @@ Page({
   // sortBy: composite(综合分,默认) / mileage(里程) / duration(完成用时,升序)。排序在后端做,
   // 因为综合分的权重是后端常量 —— 前端自己排会两边口径漂移。
   loadLeaderboard() {
+    if (!memberId(app)) return;   // j6 F7:游客不读榜单(要登录),由「登录后查看」一行承接
     const that = this;
     const sortBy = this._leaderboardSort || 'composite';
     app.sendRequest({
@@ -2186,7 +2187,7 @@ Page({
         if (!isCurrent()) return;
         const club = enrichClub((res.code == '200' && res.data) || null);
         const canSee = !!(club && (club.isOwner || club.isJoined));
-        const canSeeRoster = canSeeClubRoster(club);
+        const canSeeRoster = !!memberId(app) && canSeeClubRoster(club);   // j6 F7:游客不读成员/榜单(都要登录)
         const legacyCanGovern = that.canGovern(club);
         const sameClub = !!club && that.data.club && String(that.data.club.id) === String(club.id);
         const immediateCanUseManageTab = legacyCanGovern || (sameClub && that.data.canUseManageTab);

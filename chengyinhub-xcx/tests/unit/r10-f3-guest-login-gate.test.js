@@ -77,6 +77,15 @@ test('游客空白页逐页挂 login 守卫(或已挂 club/merchant 守卫)并�
   }
 });
 
+test('j6 F7:游客看俱乐部,成员与贡献榜整块在登录后,只留一行「登录后查看 · 登录」;游客不读成员与榜单', () => {
+  const wxml = read('pages/club/detail/index.wxml');
+  assert.match(wxml, /<block wx:if="\{\{myMemberId\}\}">\s*\n\s*<!-- MembersHead/);
+  assert.match(wxml, /<\/block>\s*\n\s*<!-- j6 F7[^\n]*\n\s*<cy-empty wx:else size="sm" kind="no-permission" title="登录后查看" cta="登录" bind:cta="onLoginRetry" \/>/);
+  const js = read('pages/club/detail/index.js');
+  assert.match(js, /const canSeeRoster = !!memberId\(app\) && canSeeClubRoster\(club\);/);
+  assert.match(js, /loadLeaderboard\(\) \{\n\s*if \(!memberId\(app\)\) return;/);
+});
+
 test('申诉页的游客态不能用加载失败类 kind(会被渲染成空白)', () => {
   assert.match(read('subpackageMember/appeal-mine/index.wxml'), /state === 'login'\}\}" kind="no-permission" title="登录后查看申诉"/);
 });
