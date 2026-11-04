@@ -1,0 +1,9 @@
+f01-im-list route subpackageB/pages/im/list/index controls 7 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  NO VISIBLE EFFECT onTab                      "收件箱"                                
+  ui change        onTab                      "发件箱"                                
+  navigates        onRowRead                  "标已读"                            -> subpackageB/pages/im/chat/index    
+  navigates        onRowMute                  "免打扰"                            -> subpackageB/pages/im/chat/index    
+  SKIPPED (destructive / writes; walked by hand) onRowDelete                "删除"                                 
+  not reachable after earlier taps openChat                   "系统通知 15:07 报名成功 1"                  
+TEXT: 消息 | 收件箱 | 1 | 发件箱 | 标已读 | 免打扰 | 删除 | 系统通知 | 15:07 | 报名成功 | 1 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

@@ -1,0 +1,44 @@
+{
+ "id": "e03-stamp-camera",
+ "path": "subpackageP3/pages/stamp-camera/index/index",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 32,
+   "hgt": 32,
+   "y": 111,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "onShutter||{}",
+   "h": "onShutter",
+   "txt": "",
+   "w": 62,
+   "hgt": 62,
+   "y": 371,
+   "route": "subpackageP3/pages/stamp-camera/index/index",
+   "sheet": "拍摄 从手机相册选择 取消",
+   "newText": "拍摄 | 从手机相册选择 | 取消",
+   "shot": "e03-stamp-camera-t01",
+   "result": "sheet"
+  }
+ ],
+ "route": [
+  "subpackageP3/pages/stamp-camera/index/index"
+ ],
+ "text": "双指缩放裁切 57% | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 2,
+ "report": {
+  "route": [
+   "subpackageP3/pages/stamp-camera/index/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

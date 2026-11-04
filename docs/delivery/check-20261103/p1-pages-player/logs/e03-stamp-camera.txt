@@ -1,0 +1,4 @@
+e03-stamp-camera route subpackageP3/pages/stamp-camera/index/index controls 2 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  sheet            onShutter                  ""                                   
+TEXT: 双指缩放裁切 57% | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

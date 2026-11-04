@@ -1,0 +1,123 @@
+{
+ "id": "c02-baoming",
+ "path": "pages/activity/baoming/baoming?activityId=13&ticketId=80",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "goMySignups|你已报名这场活动 查看我的报名|{}",
+   "h": "goMySignups",
+   "txt": "你已报名这场活动 查看我的报名",
+   "w": 357,
+   "hgt": 48,
+   "y": 103,
+   "route": "subpackageMember/mycanyu/mycanyu",
+   "newText": "我的参与 | 全部 | 未开始 | 进行中 | 已完成 | 已完成 | 11.04 - 11.04 | 线下活动 · 上海市黄浦区咖啡 | 已核销 | 查看报名凭证",
+   "shot": "c02-baoming-t01",
+   "result": "navigates"
+  },
+  {
+   "key": "checkAndShowAddressPopup|参与人信息*|{}",
+   "h": "checkAndShowAddressPopup",
+   "txt": "参与人信息*",
+   "w": 357,
+   "hgt": 21,
+   "y": 168,
+   "route": "pages/addressinfo/addressinfo",
+   "newText": "姓名 | 手机号 | 保存参与人信息",
+   "shot": "c02-baoming-t02",
+   "result": "navigates"
+  },
+  {
+   "key": "onAddressTap|上海市黄浦区咖啡|{\"lat\":\"31.230416\",\"lng\":\"121.473701\",\"name\":\"上海市黄浦区咖啡\",\"add",
+   "h": "onAddressTap",
+   "txt": "上海市黄浦区咖啡",
+   "w": 257,
+   "hgt": 12,
+   "y": 332,
+   "route": "pages/activity/baoming/baoming",
+   "toast": "打开微信地图：上海市黄浦区咖啡",
+   "newText": "打开微信地图：上海市黄浦区咖啡",
+   "result": "toast"
+  },
+  {
+   "key": "toggleDiscount||{}",
+   "h": "toggleDiscount",
+   "txt": "",
+   "w": 15,
+   "hgt": 15,
+   "y": 685,
+   "route": "pages/activity/baoming/baoming",
+   "newText": "探店日不支持积分抵扣，请关闭积分后按全价购买 | （抵扣积分0） | 退款规则 | 开始前 24 小时以上 | 全额退 | 开始前 24 小时内 | 退 50% | 开始后 | 不退 | 探店日不支持积分抵扣，请关闭积分后按全价购买",
+   "shot": "c02-baoming-t03",
+   "result": "ui change"
+  },
+  {
+   "key": "toggleHostShare|同意将姓名、手机号提供给主办方，用于报名核验|{}",
+   "h": "toggleHostShare",
+   "txt": "同意将姓名、手机号提供给主办方，用于报名核验",
+   "w": 357,
+   "hgt": 18,
+   "y": 729,
+   "route": "pages/activity/baoming/baoming",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "__onTap||{}",
+   "h": "__onTap",
+   "txt": "",
+   "w": 357,
+   "hgt": 46,
+   "y": 755,
+   "result": "off-screen"
+  },
+  {
+   "key": "handlePayment|暂不可报名|{}",
+   "h": "handlePayment",
+   "txt": "暂不可报名",
+   "w": 357,
+   "hgt": 46,
+   "y": 755,
+   "route": "pages/activity/baoming/baoming",
+   "result": "NO VISIBLE EFFECT"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "pages/activity/baoming/baoming"
+ ],
+ "text": "结算 | 你已报名这场活动 | 查看我的报名 | 参与人信息 | * | 活动信息 | E2E 探店日一期 | 2026年11月4日 周三 下午11:10 | 集合点 · 人民广场1号口 | 上海市黄浦区咖啡 | 报名已截止 | 费用明细 | 标准场次票 | ¥69 | 订单金额 | ¥69 | 积分抵扣 | -¥0 | 总计 | ¥69 | 暂不可报名 | 该场次已开始，不能再报名 | 同意将姓名、手机号提供给主办方，用于报名核验 | 暂不可报名 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "text_s1": "结算 | 报名已截止 | 费用明细 | 标准场次票 | ¥69 | 订单金额 | ¥69 | 积分抵扣 | -¥0 | 总计 | ¥69 | 退款规则 | 开始前 24 小时以上 | 全额退 | 开始前 24 小时内 | 退 50% | 开始后 | 不退 | 暂不可报名 | 该场次已开始，不能再报名 | 同意将姓名、手机号提供给主办方，用于报名核验 | 暂不可报名 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "text_s2": "结算 | 报名已截止 | 费用明细 | 标准场次票 | ¥69 | 订单金额 | ¥69 | 积分抵扣 | -¥0 | 总计 | ¥69 | 退款规则 | 开始前 24 小时以上 | 全额退 | 开始前 24 小时内 | 退 50% | 开始后 | 不退 | 暂不可报名 | 该场次已开始，不能再报名 | 同意将姓名、手机号提供给主办方，用于报名核验 | 暂不可报名 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 8,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/activity/baoming/baoming"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/e2e-topic-cover-9003.jpg?Expires=2109165367&OSSAccessKeyId=rigdummy&Signature=XM37PJDmYIKwaZPsHtpLMOP4MLI%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] FAILED https://oss-rig.invalid/upload/e2e-topic-cover-9003.jpg?Expires=2109165367&OSSAccessKeyId=rigdummy&Signature=XM37PJDmYIKwaZPsHtpLMOP4MLI%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] FAILED https://oss-rig.invalid/upload/e2e-topic-cover-9003.jpg?Expires=2109165375&OSSAccessKeyId=rigdummy&Signature=HHnMcdFvpTLV8%2FksIzYTYRPAhqo%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

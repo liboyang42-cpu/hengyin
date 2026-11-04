@@ -1,0 +1,8 @@
+d02-infomation route subpackageA/pages/infomation/infomation controls 6 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  navigates        __onTap                    ""                               -> pages/index/index    
+  navigates        goMode                     "去看看"                            -> pages/index/index    
+  navigates        goMode                     "去看看"                            -> pages/index/index    
+  navigates        goMode                     "去看看"                            -> pages/roam/index    
+  SKIPPED (destructive / writes; walked by hand) onCta                      "去发布广场"                              
+TEXT: 城瘾玩法 | 三种玩法, | 即开即玩 | 城市定向 | 组队 · 按顺序 | 按顺序打卡，到点集合出发 | 去看看 | 自由探索 | 随时 · 自己走 | 节点全开，随时开玩 | 去看看 | 漫游 | 无终点 · 散步 | 边走边点亮城市 | 去看看 | 现成玩法 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

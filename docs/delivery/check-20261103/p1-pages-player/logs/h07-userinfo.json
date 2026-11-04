@@ -1,0 +1,125 @@
+{
+ "id": "h07-userinfo",
+ "path": "pages/userinfo/userinfo?id=9009",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "goBack||{}",
+   "h": "goBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 46,
+   "y": 46,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "onAvatarTap||{}",
+   "h": "onAvatarTap",
+   "txt": "",
+   "w": 69,
+   "hgt": 69,
+   "y": 114,
+   "route": "pages/gerenziliao/gerenziliao",
+   "newText": "更换背景 | 城瘾玩家 | 昵称 | 未填写 | 个人介绍 | 介绍一下你自己 | 手机号 | 139****0009 | 探索作品 | 未填写 | 联系二维码 | 未填写",
+   "shot": "h07-userinfo-t01",
+   "result": "navigates"
+  },
+  {
+   "key": "goSignup|票夹|{}",
+   "h": "goSignup",
+   "txt": "票夹",
+   "w": 357,
+   "hgt": 46,
+   "y": 292,
+   "route": "subpackageMember/signup/index",
+   "newText": "还没有票",
+   "shot": "h07-userinfo-t02",
+   "result": "navigates"
+  },
+  {
+   "key": "onTab|我的|{\"key\":\"projects\"}",
+   "h": "onTab",
+   "txt": "我的",
+   "w": 89,
+   "hgt": 46,
+   "y": 349,
+   "route": "pages/userinfo/userinfo",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "onTab|帖文|{\"key\":\"posts\"}",
+   "h": "onTab",
+   "txt": "帖文",
+   "w": 89,
+   "hgt": 46,
+   "y": 349,
+   "route": "pages/userinfo/userinfo",
+   "newText": "还没有帖文 | 你还没有发布过帖文",
+   "result": "ui change"
+  },
+  {
+   "key": "onTab|成就|{\"key\":\"achievements\"}",
+   "h": "onTab",
+   "txt": "成就",
+   "w": 89,
+   "hgt": 46,
+   "y": 349,
+   "route": "pages/userinfo/userinfo",
+   "newText": "G | 如何获取积分 | 总积分排名 | TOP100% | 累计打卡 | 4 处 | 本周 +1200 EXP | 查看详情 | 收集册 | 勋章 | 1 | 邮票",
+   "shot": "h07-userinfo-t03",
+   "result": "ui change"
+  },
+  {
+   "key": "onTab|关于|{\"key\":\"about\"}",
+   "h": "onTab",
+   "txt": "关于",
+   "w": 89,
+   "hgt": 46,
+   "y": 349,
+   "route": "pages/userinfo/userinfo",
+   "newText": "个人介绍 | 编辑 | 还没有个人介绍 | 兴趣标签 | 添加兴趣 | 加入时间 | 2026.11.04 | 探索与更多 | 我的优惠券 | 邀请好友 | 当前权益",
+   "shot": "h07-userinfo-t04",
+   "result": "ui change"
+  },
+  {
+   "key": "goEarnings|账户余额 ¥0.00|{}",
+   "h": "goEarnings",
+   "txt": "账户余额 ¥0.00",
+   "w": 357,
+   "hgt": 108,
+   "y": 468,
+   "route": "subpackageA/pages/assetcenter/earnings/index",
+   "newText": "账户收益 | 账户收益（元） | 提现 | 明细 | 分析 | 更多 | 还没有收益 | 去发布路线",
+   "shot": "h07-userinfo-t05",
+   "result": "navigates"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "pages/userinfo/userinfo"
+ ],
+ "text": "主页 | 玩家二号 | Lv.1 城市探索者 | 连续探索：0天 | 0 | 好友 | 0 | 关注 | 0 | 粉丝 | 票夹 | 我的 | 帖文 | 成就 | 关于 | 我的资产 | 账户余额 | ¥0.00 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 8,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/userinfo/userinfo"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

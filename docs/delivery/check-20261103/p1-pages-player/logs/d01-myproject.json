@@ -1,0 +1,79 @@
+{
+ "id": "d01-myproject",
+ "path": "subpackageA/pages/myproject/index",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "onTab|主题|{\"key\":\"topic\"}",
+   "h": "onTab",
+   "txt": "主题",
+   "w": 119,
+   "hgt": 46,
+   "y": 161,
+   "route": "subpackageA/pages/myproject/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "onTab|活动|{\"key\":\"activity\"}",
+   "h": "onTab",
+   "txt": "活动",
+   "w": 119,
+   "hgt": 46,
+   "y": 161,
+   "route": "subpackageA/pages/myproject/index",
+   "newText": "还没有活动",
+   "result": "ui change"
+  },
+  {
+   "key": "onTab|模板|{\"key\":\"template\"}",
+   "h": "onTab",
+   "txt": "模板",
+   "w": 119,
+   "hgt": 46,
+   "y": 161,
+   "route": "subpackageA/pages/myproject/index",
+   "newText": "还没有节点玩法",
+   "result": "ui change"
+  },
+  {
+   "key": "onCta|去发布|{}",
+   "h": "onCta",
+   "txt": "去发布",
+   "w": 71,
+   "hgt": 46,
+   "y": 551,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  }
+ ],
+ "route": [
+  "subpackageA/pages/myproject/index"
+ ],
+ "text": "我的项目 | 主题 | 活动 | 模板 | 还没有主题 | 去发布 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 5,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageA/pages/myproject/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

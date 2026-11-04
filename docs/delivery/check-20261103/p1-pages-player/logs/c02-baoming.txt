@@ -1,0 +1,10 @@
+c02-baoming route pages/index/index>pages/activity/baoming/baoming controls 8 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  navigates        goMySignups                "你已报名这场活动 查看我的报名"                -> subpackageMember/mycanyu/mycanyu    
+  navigates        checkAndShowAddressPopup   "参与人信息*"                         -> pages/addressinfo/addressinfo    
+  toast            onAddressTap               "上海市黄浦区咖啡"                         T:打开微信地图：上海市黄浦区咖啡  
+  ui change        toggleDiscount             ""                                   
+  NO VISIBLE EFFECT toggleHostShare            "同意将姓名、手机号提供给主办方，用于报名核验"             
+  off-screen       __onTap                    ""                                   
+  NO VISIBLE EFFECT handlePayment              "暂不可报名"                              
+TEXT: 结算 | 你已报名这场活动 | 查看我的报名 | 参与人信息 | * | 活动信息 | E2E 探店日一期 | 2026年11月4日 周三 下午11:10 | 集合点 · 人民广场1号口 | 上海市黄浦区咖啡 | 报名已截止 | 费用明细 | 标准场次票 | ¥69 | 订单金额 | ¥69 | 积分抵扣 | -¥0 | 总计 | ¥69 | 暂不可报名 | 该场次已开始，不能再报名 | 同意将姓名、手机号提供给主办方，用于报名核验 | 暂不可报名 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

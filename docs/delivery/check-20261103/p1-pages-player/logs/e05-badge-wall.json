@@ -1,0 +1,97 @@
+{
+ "id": "e05-badge-wall",
+ "path": "subpackageP3/pages/badge-wall/index/index",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "go|勋章|{\"key\":\"medal\"}",
+   "h": "go",
+   "txt": "勋章",
+   "w": 58,
+   "hgt": 33,
+   "y": 150,
+   "route": "subpackageP3/pages/badge-wall/index/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "go|邮票|{\"key\":\"stamp\"}",
+   "h": "go",
+   "txt": "邮票",
+   "w": 58,
+   "hgt": 33,
+   "y": 150,
+   "route": "subpackageP3/pages/stamp-album/index/index",
+   "newText": "0 | 枚 | 还没有邮票 | 打开集邮相机",
+   "shot": "e05-badge-wall-t01",
+   "result": "navigates"
+  },
+  {
+   "key": "go|藏品|{\"key\":\"object\"}",
+   "h": "go",
+   "txt": "藏品",
+   "w": 58,
+   "hgt": 33,
+   "y": 150,
+   "route": "subpackageP3/pages/object-cards/index/index",
+   "newText": "全部 | 还没有收过东西",
+   "shot": "e05-badge-wall-t02",
+   "result": "navigates"
+  },
+  {
+   "key": "onFbTap|E2E 探店日一期 · 通关 2026-11-04|{\"idx\":0}",
+   "h": "onFbTap",
+   "txt": "E2E 探店日一期 · 通关 2026-11-04",
+   "w": 187,
+   "hgt": 263,
+   "y": 333,
+   "route": "subpackageP3/pages/badge-wall/index/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "closeSheet||{}",
+   "h": "closeSheet",
+   "txt": "",
+   "w": 390,
+   "hgt": 844,
+   "y": 0,
+   "route": "subpackageP3/pages/badge-wall/index/index",
+   "result": "NO VISIBLE EFFECT"
+  }
+ ],
+ "route": [
+  "subpackageP3/pages/badge-wall/index/index"
+ ],
+ "text": "收集册 | 勋章 | 邮票 | 藏品 | 1 | 共 1 | 一枚勋章。 一枚不少。 | 已点亮 | E2E 探店日一期 · 通关 | 2026-11-04 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 6,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageP3/pages/badge-wall/index/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

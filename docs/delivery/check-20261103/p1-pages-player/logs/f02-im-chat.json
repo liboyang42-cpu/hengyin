@@ -1,0 +1,70 @@
+{
+ "id": "f02-im-chat",
+ "path": "subpackageB/pages/im/chat/index?conversationId=1",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "onMore|更多|{}",
+   "h": "onMore",
+   "txt": "更多",
+   "w": 50,
+   "hgt": 46,
+   "y": 46,
+   "route": "subpackageB/pages/im/chat/index",
+   "newText": "举报这条消息 | 举报对方 | 拉黑 | 隐藏会话",
+   "result": "ui change"
+  },
+  {
+   "key": "onPlus||{}",
+   "h": "onPlus",
+   "txt": "",
+   "w": 46,
+   "hgt": 46,
+   "y": 764,
+   "route": "subpackageB/pages/im/chat/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "onSend||{}",
+   "h": "onSend",
+   "txt": "",
+   "w": 46,
+   "hgt": 46,
+   "y": 764,
+   "route": "subpackageB/pages/im/chat/index",
+   "result": "NO VISIBLE EFFECT"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "subpackageB/pages/im/chat/index"
+ ],
+ "text": "更多 | 对话 | 消息加载失败，点上方「重试」再试 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 4,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageB/pages/im/chat/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

@@ -1,0 +1,7 @@
+e07-object-cards route subpackageP3/pages/object-cards/index/index controls 5 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  navigates        go                         "勋章"                             -> subpackageP3/pages/badge-wall/index/index    
+  navigates        go                         "邮票"                             -> subpackageP3/pages/stamp-album/index/index    
+  NO VISIBLE EFFECT go                         "藏品"                                 
+  ui change        openCats                   "全部"                                 
+TEXT: 收集册 | 勋章 | 邮票 | 藏品 | 全部 | 还没有收过东西 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

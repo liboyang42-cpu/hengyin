@@ -1,0 +1,10 @@
+h07-userinfo route pages/index/index>pages/userinfo/userinfo controls 8 errors 0 badNet 0
+  back (not tapped) goBack                     ""                                   
+  navigates        onAvatarTap                ""                               -> pages/gerenziliao/gerenziliao    
+  navigates        goSignup                   "票夹"                             -> subpackageMember/signup/index    
+  NO VISIBLE EFFECT onTab                      "我的"                                 
+  ui change        onTab                      "帖文"                                 
+  ui change        onTab                      "成就"                                 
+  ui change        onTab                      "关于"                                 
+  navigates        goEarnings                 "账户余额 ¥0.00"                     -> subpackageA/pages/assetcenter/earnings/index    
+TEXT: 主页 | 玩家二号 | Lv.1 城市探索者 | 连续探索：0天 | 0 | 好友 | 0 | 关注 | 0 | 粉丝 | 票夹 | 我的 | 帖文 | 成就 | 关于 | 我的资产 | 账户余额 | ¥0.00 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

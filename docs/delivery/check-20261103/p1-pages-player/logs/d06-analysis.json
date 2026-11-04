@@ -1,0 +1,56 @@
+{
+ "id": "d06-analysis",
+ "path": "subpackageA/pages/assetcenter/analysis/index",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "switchMode|收入|{\"mode\":\"income\"}",
+   "h": "switchMode",
+   "txt": "收入",
+   "w": 75,
+   "hgt": 33,
+   "y": 161,
+   "route": "subpackageA/pages/assetcenter/analysis/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "switchMode|提现|{\"mode\":\"withdraw\"}",
+   "h": "switchMode",
+   "txt": "提现",
+   "w": 75,
+   "hgt": 33,
+   "y": 161,
+   "route": "subpackageA/pages/assetcenter/analysis/index",
+   "newText": "11月提现",
+   "result": "ui change"
+  }
+ ],
+ "route": [
+  "subpackageA/pages/assetcenter/analysis/index"
+ ],
+ "text": "分析 | 收入 | 提现 | 11月收入 | ¥0.00 | 6月 | 7月 | 8月 | 9月 | 10月 | 11月 | 收入来源 | 这个月还没有收入 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 3,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageA/pages/assetcenter/analysis/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

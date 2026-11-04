@@ -1,0 +1,7 @@
+b04-poi-challenge route pages/play/poi-challenge/index controls 2 errors 1 badNet 0
+  NO VISIBLE EFFECT onRetry                    "重试"                                 
+  navigates        exit                       "返回地图"                           -> subpackageRoam/nearby/index   R:navigateBack:fail cannot navigate back at first page. E:Object: Object
+TEXT: 挑战暂时打不开 | 没有找到这个地点 | 重试 | 返回地图 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+PAGEERR [
+  'Object: Object /     at fail (http://127.0.0.1:8097/src/nav.js:218:194)'
+]

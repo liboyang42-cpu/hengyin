@@ -1,0 +1,8 @@
+c03-activity-list route pages/activity/list/index controls 6 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  NO VISIBLE EFFECT onTab                      "进行中"                                
+  ui change        onTab                      "即将"                                 
+  ui change        onTab                      "已结束"                                
+  ui change        onTab                      "我的"                                 
+  navigates        goInbox                    "邀约"                             -> pages/activity/official-inbox/index    
+TEXT: 官方活动 | 进行中 | 即将 | 已结束 | 我的 | 进行中 · 共 0 个活动 | 邀约 | 暂无进行中的活动 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

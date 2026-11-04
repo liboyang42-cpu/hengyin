@@ -1,0 +1,61 @@
+{
+ "id": "e01-growth",
+ "path": "subpackageP3/pages/growthcenter/index/index",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "goLeaderboard|总积分榜 · 第 9 名 查看榜单|{}",
+   "h": "goLeaderboard",
+   "txt": "总积分榜 · 第 9 名 查看榜单",
+   "w": 358,
+   "hgt": 48,
+   "y": 209,
+   "route": "subpackageP3/pages/growthcenter/leaderboard/index",
+   "newText": "完整排行榜 | 周榜 | 总榜 | 2 | 商家老板 | 平台运营 | 3 | 俱乐部主理人 | 积分榜 | 成长榜 | 4 | 玩家小城",
+   "shot": "e01-growth-t01",
+   "result": "navigates"
+  },
+  {
+   "key": "onBadgeTap|E E2E 探店日一期 · 通关 查看获得时刻 查看|{\"code\":\"TOPIC_FINISH_990014\"}",
+   "h": "onBadgeTap",
+   "txt": "E E2E 探店日一期 · 通关 查看获得时刻 查看",
+   "w": 358,
+   "hgt": 80,
+   "y": 573,
+   "route": "subpackageP3/pages/growthcenter/index/index",
+   "newText": "获得于 2026年11月4日 23:10 | 收起",
+   "result": "ui change"
+  }
+ ],
+ "route": [
+  "subpackageP3/pages/growthcenter/index/index"
+ ],
+ "text": "成长中心 | 玩家二号 | 0 | 积分 | 总积分榜 · 第 9 名 | 查看榜单 | 我的足迹 | Lv.13 | 探索值 | 1,200 | EXP | 徽章 | 1 | 枚 | 完成主题 | 1 | 个 | 累计距离 | 0 | km | 我的徽章 | 1 | E | E2E 探店日一期 · 通关 | 查看获得时刻 | 查看 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 3,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageP3/pages/growthcenter/index/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

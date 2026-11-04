@@ -1,0 +1,87 @@
+{
+ "id": "e02-leaderboard",
+ "path": "subpackageP3/pages/growthcenter/leaderboard/index",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "onTab|周榜|{\"key\":\"week\"}",
+   "h": "onTab",
+   "txt": "周榜",
+   "w": 54,
+   "hgt": 35,
+   "y": 168,
+   "route": "subpackageP3/pages/growthcenter/leaderboard/index",
+   "newText": "这张榜还没有人上榜 | 完成一次城市探索即可累计积分 | 去探索",
+   "result": "ui change"
+  },
+  {
+   "key": "onTab|总榜|{\"key\":\"total\"}",
+   "h": "onTab",
+   "txt": "总榜",
+   "w": 54,
+   "hgt": 35,
+   "y": 168,
+   "route": "subpackageP3/pages/growthcenter/leaderboard/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "onTab|积分榜|{\"key\":\"point\"}",
+   "h": "onTab",
+   "txt": "积分榜",
+   "w": 67,
+   "hgt": 35,
+   "y": 438,
+   "route": "subpackageP3/pages/growthcenter/leaderboard/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "onTab|成长榜|{\"key\":\"exp\"}",
+   "h": "onTab",
+   "txt": "成长榜",
+   "w": 67,
+   "hgt": 35,
+   "y": 438,
+   "route": "subpackageP3/pages/growthcenter/leaderboard/index",
+   "newText": "1,200 | EXP | 我 | 1,200 | EXP",
+   "result": "ui change"
+  }
+ ],
+ "route": [
+  "subpackageP3/pages/growthcenter/leaderboard/index"
+ ],
+ "text": "完整排行榜 | 周榜 | 总榜 | 2 | 商家老板 | 0 | 积分 | 1 | 平台运营 | 0 | 积分 | 3 | 俱乐部主理人 | 0 | 积分 | 积分榜 | 成长榜 | 4 | 玩家小城 | 0 | 积分 | 5 | 商家二号 | 0 | 积分 | 6 | 商家三号 | 0 | 积分 | 7 | 商家四号 | 0 | 积分 | 8 | 执行俱乐部主理人 | 0 | 积分 | 9 | 玩家二号 | 0 | 积分 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "text_s1": "完整排行榜 | 周榜 | 总榜 | 2 | 商家老板 | 0 | 积分 | 1 | 平台运营 | 0 | 积分 | 3 | 俱乐部主理人 | 0 | 积分 | 积分榜 | 成长榜 | 4 | 玩家小城 | 0 | 积分 | 5 | 商家二号 | 0 | 积分 | 6 | 商家三号 | 0 | 积分 | 7 | 商家四号 | 0 | 积分 | 8 | 执行俱乐部主理人 | 0 | 积分 | 9 | 玩家二号 | 0 | 积分 | 9 | 玩家二号 | 我 | 0 | 积分 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "text_s2": "完整排行榜 | 周榜 | 总榜 | 2 | 商家老板 | 0 | 积分 | 1 | 平台运营 | 0 | 积分 | 3 | 俱乐部主理人 | 0 | 积分 | 积分榜 | 成长榜 | 4 | 玩家小城 | 0 | 积分 | 5 | 商家二号 | 0 | 积分 | 6 | 商家三号 | 0 | 积分 | 7 | 商家四号 | 0 | 积分 | 8 | 执行俱乐部主理人 | 0 | 积分 | 9 | 玩家二号 | 0 | 积分 | 9 | 玩家二号 | 我 | 0 | 积分 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 5,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageP3/pages/growthcenter/leaderboard/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

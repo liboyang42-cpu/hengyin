@@ -1,0 +1,22 @@
+g03-search route pages/search2/index controls 20 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  ui change        __onTap                    ""                                   
+  ui change        popShow                    "筛选"                                 
+  navigates        onHotKeyClick              "骑行"                             -> pages/search2/result/index    
+  navigates        onHotKeyClick              "城市"                             -> pages/search2/result/index    
+  navigates        onHotKeyClick              "外滩"                             -> pages/search2/result/index    
+  navigates        onHotKeyClick              "书店"                             -> pages/search2/result/index    
+  navigates        onHotKeyClick              "美术馆"                            -> pages/search2/result/index    
+  navigates        onHotKeyClick              "摄影"                             -> pages/search2/result/index    
+  navigates        onHotKeyClick              "苏州河"                            -> pages/search2/result/index    
+  navigates        onHotKeyClick              "菜场"                             -> pages/search2/result/index    
+  navigates        onCategoryClick            "城市漫步"                           -> pages/search2/result/index    
+  navigates        onCategoryClick            "咖啡"                             -> pages/search2/result/index    
+  navigates        onCategoryClick            "历史人文"                           -> pages/search2/result/index    
+  navigates        onCategoryClick            "解谜冒险"                           -> pages/search2/result/index    
+  navigates        onCategoryClick            "夜游"                             -> pages/search2/result/index    
+  navigates        onCategoryClick            "摄影打卡"                           -> pages/search2/result/index    
+  navigates        onCategoryClick            "户外徒步"                           -> pages/search2/result/index    
+  navigates        onCategoryClick            "亲子同行"                           -> pages/search2/result/index    
+  navigates        goMap                      "在地图上找活动与主题节点"                   -> pages/searchmap/index    
+TEXT: 搜索 | 筛选 | 推荐搜索 | 骑行 | 城市 | 外滩 | 书店 | 美术馆 | 摄影 | 苏州河 | 菜场 | 类别 | 城市漫步 | 咖啡 | 历史人文 | 解谜冒险 | 夜游 | 摄影打卡 | 户外徒步 | 亲子同行 | 在地图上找活动与主题节点 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

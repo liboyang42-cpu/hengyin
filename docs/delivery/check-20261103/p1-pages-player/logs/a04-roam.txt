@@ -1,0 +1,20 @@
+a04-roam route pages/roam/index controls 18 errors 0 badNet 0
+  navigates        goProfile                  ""                               -> pages/member/index/index    
+  ui change        openCityGuide              ""                                   
+  SKIPPED (destructive / writes; walked by hand) onTab                      "开始漫游"                               
+  ui change        onTab                      "漫游护照"                               
+  SKIPPED (destructive / writes; walked by hand) goStart                    "NO.01 开始漫游 走到哪，雾散到哪 城瘾 · CITY "     
+  navigates        openNearbyMap              "NO.02 打开地图 寻找组队 附近正在组队"         -> subpackageRoam/nearby/index    
+  navigates        openMyTeams                "NO.03 我的队伍 已加入 · 申请中 城瘾 · CITY" -> subpackageRoam/my-teams/index    
+  not reachable after earlier taps onEntryCardTap             "自由探索 E2E 探店日一期 距你 0m"               
+  not reachable after earlier taps onEntryCardTap             "自由探索 E2E 探店日一期 距你 0m"               
+  not reachable after earlier taps onEntryCardTap             "自由探索 E2E 探店日一期 距你 0m"               
+  not reachable after earlier taps onEntryCardTap             "自由探索 E2E 探店日一期 距你 0m"               
+  not reachable after earlier taps onEntryCardTap             "自由探索 E2E 探店日一期 距你 0m"               
+  ui change        onEntryCardTap             "自由探索 E2E 探店日一期 距你 1.2km"            
+  off-screen       onChange                   ""                                   
+  off-screen       onChange                   ""                                   
+  off-screen       onChange                   ""                                   
+  off-screen       onChange                   ""                                   
+  off-screen       onChange                   ""                                   
+TEXT: 漫游 | 开始漫游 | 漫游护照 | NO.01 | 开始漫游 | 走到哪，雾散到哪 | 城瘾 · CITY ROAM | NO.02 | 打开地图 | 寻找组队 | 附近正在组队 | NO.03 | 我的队伍 | 已加入 · 申请中 | 城瘾 · CITY ROAM | 附近活动 | 自由探索 | E2E 探店日一期 | 距你 0m | 自由探索 | E2E 探店日一期 | 距你 0m | 自由探索 | E2E 探店日一期 | 距你 0m | 自由探索 | E2E 探店日一期 | 距你 0m | 自由探索 | E2E 探店日一期 | 距你 0m | 自由探索 | E2E 探店日一期 | 距你 1.2km | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

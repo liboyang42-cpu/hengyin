@@ -1,0 +1,52 @@
+{
+ "id": "b04-poi-challenge",
+ "path": "pages/play/poi-challenge/index",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onRetry|重试|{}",
+   "h": "onRetry",
+   "txt": "重试",
+   "w": 75,
+   "hgt": 46,
+   "y": 208,
+   "route": "pages/play/poi-challenge/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "exit|返回地图|{}",
+   "h": "exit",
+   "txt": "返回地图",
+   "w": 357,
+   "hgt": 46,
+   "y": 295,
+   "route": "subpackageRoam/nearby/index",
+   "newText": "全部 | 主题队伍 | 地点玩法 | 商家 | 附近 · 0 支队伍 · 5 处地点 | 热门活动 | E2E 探店日一期 | 上海市黄浦区咖啡 · 2m | 热门活动 | E2E 探店日一期 | 上海市黄浦区咖啡 · 2m | 热门活动",
+   "runtime": "navigateBack:fail cannot navigate back at first page.",
+   "pageError": "Object: Object",
+   "shot": "b04-poi-challenge-t01",
+   "result": "navigates"
+  }
+ ],
+ "route": [
+  "pages/play/poi-challenge/index"
+ ],
+ "text": "挑战暂时打不开 | 没有找到这个地点 | 重试 | 返回地图 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 2,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/play/poi-challenge/index"
+  ],
+  "pageErrors": [
+   "Object: Object /     at fail (http://127.0.0.1:8097/src/nav.js:218:194)"
+  ],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

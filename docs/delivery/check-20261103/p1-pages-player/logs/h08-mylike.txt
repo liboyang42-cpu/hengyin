@@ -1,0 +1,5 @@
+h08-mylike route pages/mylike/mylike controls 3 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  ui change        onTab                      "帖文"                                 
+  ui change        onTab                      "主题"                                 
+TEXT: 我的收藏 | 帖文 | 主题 | 暂无收藏的主题 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

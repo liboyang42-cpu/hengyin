@@ -1,0 +1,3 @@
+c06-official-mine route pages/activity/official-mine/index controls 1 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+TEXT: 我发布的 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

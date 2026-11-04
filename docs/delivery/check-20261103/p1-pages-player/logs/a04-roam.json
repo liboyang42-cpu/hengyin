@@ -1,0 +1,213 @@
+{
+ "id": "a04-roam",
+ "path": "pages/roam/index",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "goProfile||{}",
+   "h": "goProfile",
+   "txt": "",
+   "w": 40,
+   "hgt": 40,
+   "y": 58,
+   "route": "pages/member/index/index",
+   "newText": "主页 | 玩家二号 | Lv.1 城市探索者 | 连续探索：0天 | 0 | 好友 | 0 | 关注 | 0 | 粉丝 | 票夹 | 我的",
+   "shot": "a04-roam-t01",
+   "result": "navigates"
+  },
+  {
+   "key": "openCityGuide||{}",
+   "h": "openCityGuide",
+   "txt": "",
+   "w": 46,
+   "hgt": 46,
+   "y": 55,
+   "route": "pages/roam/index",
+   "newText": "城市漫游清单 | 关闭 | 上海 | 切换城市 · 3 处 | 全部 | 宝藏街道 | 推荐店铺 | 公园绿地 | 文化地标 | 宝藏街道 | 山阴路 | 看里弄与老公寓的门窗细节，把阅读上海的起点放在居民日常里。",
+   "shot": "a04-roam-t02",
+   "result": "ui change"
+  },
+  {
+   "key": "onTab|开始漫游|{\"key\":\"start\"}",
+   "h": "onTab",
+   "txt": "开始漫游",
+   "w": 83,
+   "hgt": 39,
+   "y": 177,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  },
+  {
+   "key": "onTab|漫游护照|{\"key\":\"passport\"}",
+   "h": "onTab",
+   "txt": "漫游护照",
+   "w": 83,
+   "hgt": 39,
+   "y": 177,
+   "route": "pages/roam/index",
+   "newText": "0 | 0 | 探店 | 0 | 活跃日 | 0.0 | 公里 | 漫游记录 | 0 次已完成旅程 | 集邮册 | 0 张本机邮票 | 勋章墙",
+   "shot": "a04-roam-t03",
+   "result": "ui change"
+  },
+  {
+   "key": "goStart|NO.01 开始漫游 走到哪，雾散到哪 城瘾 · CITY |{}",
+   "h": "goStart",
+   "txt": "NO.01 开始漫游 走到哪，雾散到哪 城瘾 · CITY ",
+   "w": 242,
+   "hgt": 100,
+   "y": 217,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  },
+  {
+   "key": "openNearbyMap|NO.02 打开地图 寻找组队 附近正在组队|{}",
+   "h": "openNearbyMap",
+   "txt": "NO.02 打开地图 寻找组队 附近正在组队",
+   "w": 242,
+   "hgt": 100,
+   "y": 217,
+   "route": "subpackageRoam/nearby/index",
+   "newText": "全部 | 主题队伍 | 地点玩法 | 商家 | 附近 · 0 支队伍 · 5 处地点 | 热门活动 | 上海市黄浦区咖啡 · 2m | 热门活动 | 上海市黄浦区咖啡 · 2m | 热门活动 | 上海市黄浦区咖啡 · 2m | 热门活动",
+   "shot": "a04-roam-t04",
+   "result": "navigates"
+  },
+  {
+   "key": "openMyTeams|NO.03 我的队伍 已加入 · 申请中 城瘾 · CITY|{}",
+   "h": "openMyTeams",
+   "txt": "NO.03 我的队伍 已加入 · 申请中 城瘾 · CITY",
+   "w": 242,
+   "hgt": 100,
+   "y": 217,
+   "route": "subpackageRoam/my-teams/index",
+   "newText": "地图 | 0 | 已通过 | 0 | 审核中 | 0 | 带队 | 0 | 未通过 | 我的 | 附近招募 | 还没有队伍",
+   "shot": "a04-roam-t05",
+   "result": "navigates"
+  },
+  {
+   "key": "onEntryCardTap|自由探索 E2E 探店日一期 距你 0m|{\"kind\":\"activity\",\"id\":9}",
+   "h": "onEntryCardTap",
+   "txt": "自由探索 E2E 探店日一期 距你 0m",
+   "w": 281,
+   "hgt": 172,
+   "y": 561,
+   "result": "not reachable after earlier taps"
+  },
+  {
+   "key": "onEntryCardTap|自由探索 E2E 探店日一期 距你 0m|{\"kind\":\"activity\",\"id\":10}",
+   "h": "onEntryCardTap",
+   "txt": "自由探索 E2E 探店日一期 距你 0m",
+   "w": 281,
+   "hgt": 172,
+   "y": 561,
+   "result": "not reachable after earlier taps"
+  },
+  {
+   "key": "onEntryCardTap|自由探索 E2E 探店日一期 距你 0m|{\"kind\":\"activity\",\"id\":11}",
+   "h": "onEntryCardTap",
+   "txt": "自由探索 E2E 探店日一期 距你 0m",
+   "w": 281,
+   "hgt": 172,
+   "y": 561,
+   "result": "not reachable after earlier taps"
+  },
+  {
+   "key": "onEntryCardTap|自由探索 E2E 探店日一期 距你 0m|{\"kind\":\"activity\",\"id\":12}",
+   "h": "onEntryCardTap",
+   "txt": "自由探索 E2E 探店日一期 距你 0m",
+   "w": 281,
+   "hgt": 172,
+   "y": 561,
+   "result": "not reachable after earlier taps"
+  },
+  {
+   "key": "onEntryCardTap|自由探索 E2E 探店日一期 距你 0m|{\"kind\":\"activity\",\"id\":13}",
+   "h": "onEntryCardTap",
+   "txt": "自由探索 E2E 探店日一期 距你 0m",
+   "w": 281,
+   "hgt": 172,
+   "y": 561,
+   "result": "not reachable after earlier taps"
+  },
+  {
+   "key": "onEntryCardTap|自由探索 E2E 探店日一期 距你 1.2km|{\"kind\":\"topic\",\"id\":990014}",
+   "h": "onEntryCardTap",
+   "txt": "自由探索 E2E 探店日一期 距你 1.2km",
+   "w": 281,
+   "hgt": 172,
+   "y": 561,
+   "route": "pages/roam/index",
+   "newText": "发起组队 | 现场动态 | 还没有现场动态",
+   "result": "ui change"
+  },
+  {
+   "key": "onChange||{\"index\":0}",
+   "h": "onChange",
+   "txt": "",
+   "w": 76,
+   "hgt": 46,
+   "y": 756,
+   "result": "off-screen"
+  },
+  {
+   "key": "onChange||{\"index\":1}",
+   "h": "onChange",
+   "txt": "",
+   "w": 76,
+   "hgt": 46,
+   "y": 756,
+   "result": "off-screen"
+  },
+  {
+   "key": "onChange||{\"index\":2}",
+   "h": "onChange",
+   "txt": "",
+   "w": 76,
+   "hgt": 46,
+   "y": 756,
+   "result": "off-screen"
+  },
+  {
+   "key": "onChange||{\"index\":3}",
+   "h": "onChange",
+   "txt": "",
+   "w": 76,
+   "hgt": 46,
+   "y": 756,
+   "result": "off-screen"
+  },
+  {
+   "key": "onChange||{\"index\":4}",
+   "h": "onChange",
+   "txt": "",
+   "w": 76,
+   "hgt": 46,
+   "y": 756,
+   "result": "off-screen"
+  }
+ ],
+ "route": [
+  "pages/roam/index"
+ ],
+ "text": "漫游 | 开始漫游 | 漫游护照 | NO.01 | 开始漫游 | 走到哪，雾散到哪 | 城瘾 · CITY ROAM | NO.02 | 打开地图 | 寻找组队 | 附近正在组队 | NO.03 | 我的队伍 | 已加入 · 申请中 | 城瘾 · CITY ROAM | 附近活动 | 自由探索 | E2E 探店日一期 | 距你 0m | 自由探索 | E2E 探店日一期 | 距你 0m | 自由探索 | E2E 探店日一期 | 距你 0m | 自由探索 | E2E 探店日一期 | 距你 0m | 自由探索 | E2E 探店日一期 | 距你 0m | 自由探索 | E2E 探店日一期 | 距你 1.2km | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 18,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/roam/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

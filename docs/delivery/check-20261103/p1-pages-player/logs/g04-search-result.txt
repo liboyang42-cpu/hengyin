@@ -1,0 +1,12 @@
+g04-search-result route pages/index/index>pages/search2/result/index controls 10 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  NO VISIBLE EFFECT onClear                    ""                                   
+  NO VISIBLE EFFECT onTab                      "全部"                                 
+  NO VISIBLE EFFECT onTab                      "主题 1"                               
+  ui change        onTab                      "活动 0"                               
+  ui change        onTab                      "俱乐部 0"                              
+  ui change        onTab                      "商家 0"                               
+  ui change        onTab                      "主题模板 0"                             
+  ui change        onTab                      "玩法模板 0"                             
+  navigates        goResult                   "主题 E2E 探店日一期 上海市黄浦区咖啡"          -> pages/topic/index/index    
+TEXT: 全部 | 主题 1 | 活动 0 | 俱乐部 0 | 商家 0 | 主题模板 0 | 玩法模板 0 | 主题 | E2E 探店日一期 | 上海市黄浦区咖啡 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

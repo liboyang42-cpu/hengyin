@@ -1,0 +1,172 @@
+{
+ "id": "a02-talent",
+ "path": "pages/talent/list/index",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onMsgTap|1|{}",
+   "h": "onMsgTap",
+   "txt": "1",
+   "w": 46,
+   "hgt": 46,
+   "y": 46,
+   "route": "subpackageB/pages/im/list/index",
+   "newText": "消息 | 收件箱 | 发件箱 | 标已读 | 免打扰 | 删除 | 系统通知 | 15:07 | 报名成功",
+   "shot": "a02-talent-t01",
+   "result": "navigates"
+  },
+  {
+   "key": "onTab|帖文|{\"key\":\"feed\"}",
+   "h": "onTab",
+   "txt": "帖文",
+   "w": 188,
+   "hgt": 46,
+   "y": 91,
+   "route": "pages/talent/list/index",
+   "newText": "还没有帖文",
+   "result": "ui change"
+  },
+  {
+   "key": "onTab|俱乐部|{\"key\":\"club\"}",
+   "h": "onTab",
+   "txt": "俱乐部",
+   "w": 202,
+   "hgt": 46,
+   "y": 91,
+   "route": "pages/talent/list/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "onClubApply|创建俱乐部|{}",
+   "h": "onClubApply",
+   "txt": "创建俱乐部",
+   "w": 93,
+   "hgt": 37,
+   "y": 153,
+   "route": "pages/club/apply/index",
+   "newText": "把你带的人， 变成你的俱乐部 | 填完身份立即生效，不用等审核 | 最多可以建 2 个俱乐部 | 开始申请",
+   "shot": "a02-talent-t02",
+   "result": "navigates"
+  },
+  {
+   "key": "onTap|已加入 执行俱乐部 2 位成员 · 0 个近期团|{}",
+   "h": "onTap",
+   "txt": "已加入 执行俱乐部 2 位成员 · 0 个近期团",
+   "w": 357,
+   "hgt": 223,
+   "y": 219,
+   "route": "pages/club/detail/index",
+   "newText": "城市探索 · 2 名成员 | 公开加入 | 退出 | 帖子 | 活动 | 概览 | 暂无简介 | 执行俱乐部主理人 | 主理人 | 城市探索 | 俱乐部类型 | —",
+   "shot": "a02-talent-t03",
+   "result": "navigates"
+  },
+  {
+   "key": "goClubDetail|已加入执行俱乐部2 位成员 · 0 个近期团|{\"id\":7002}",
+   "h": "goClubDetail",
+   "txt": "已加入执行俱乐部2 位成员 · 0 个近期团",
+   "w": 357,
+   "hgt": 223,
+   "y": 219,
+   "route": "pages/club/detail/index",
+   "newText": "城市探索 · 2 名成员 | 公开加入 | 退出 | 帖子 | 活动 | 概览 | 暂无简介 | 执行俱乐部主理人 | 主理人 | 城市探索 | 俱乐部类型 | —",
+   "shot": "a02-talent-t04",
+   "result": "navigates"
+  },
+  {
+   "key": "onTap|城瘾跑团 1 位成员 · 1 个近期团 免费加入|{}",
+   "h": "onTap",
+   "txt": "城瘾跑团 1 位成员 · 1 个近期团 免费加入",
+   "w": 357,
+   "hgt": 223,
+   "y": 454,
+   "route": "pages/club/detail/index",
+   "newText": "城市探索 · 1 名成员 | 公开加入 | 帖子 | 活动 | 概览 | 暂无简介 | 俱乐部主理人 | 主理人 | 城市探索 | 俱乐部类型 | — | 所在城市",
+   "shot": "a02-talent-t05",
+   "result": "navigates"
+  },
+  {
+   "key": "goClubDetail|城瘾跑团1 位成员 · 1 个近期团免费加入|{\"id\":7001}",
+   "h": "goClubDetail",
+   "txt": "城瘾跑团1 位成员 · 1 个近期团免费加入",
+   "w": 357,
+   "hgt": 223,
+   "y": 454,
+   "route": "pages/club/detail/index",
+   "newText": "城市探索 · 1 名成员 | 公开加入 | 帖子 | 活动 | 概览 | 暂无简介 | 俱乐部主理人 | 主理人 | 城市探索 | 俱乐部类型 | — | 所在城市",
+   "shot": "a02-talent-t06",
+   "result": "navigates"
+  },
+  {
+   "key": "onChange||{\"index\":0}",
+   "h": "onChange",
+   "txt": "",
+   "w": 76,
+   "hgt": 46,
+   "y": 756,
+   "result": "off-screen"
+  },
+  {
+   "key": "onChange||{\"index\":1}",
+   "h": "onChange",
+   "txt": "",
+   "w": 76,
+   "hgt": 46,
+   "y": 756,
+   "result": "off-screen"
+  },
+  {
+   "key": "onChange||{\"index\":2}",
+   "h": "onChange",
+   "txt": "",
+   "w": 76,
+   "hgt": 46,
+   "y": 756,
+   "result": "off-screen"
+  },
+  {
+   "key": "onChange||{\"index\":3}",
+   "h": "onChange",
+   "txt": "",
+   "w": 76,
+   "hgt": 46,
+   "y": 756,
+   "result": "off-screen"
+  },
+  {
+   "key": "onChange||{\"index\":4}",
+   "h": "onChange",
+   "txt": "",
+   "w": 76,
+   "hgt": 46,
+   "y": 756,
+   "result": "off-screen"
+  }
+ ],
+ "route": [
+  "pages/talent/list/index"
+ ],
+ "text": "1 | 发现 | 帖文 | 俱乐部 | 创建你自己的俱乐部 | 创建俱乐部 | 已加入 | 执行俱乐部 | 2 位成员 · 0 个近期团 | 城瘾跑团 | 1 位成员 · 1 个近期团 | 免费加入 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 13,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/talent/list/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

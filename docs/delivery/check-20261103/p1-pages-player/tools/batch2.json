@@ -1,0 +1,263 @@
+[
+{
+"id": "a03-member",
+"path": "pages/member/index/index",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start"
+],
+"max": 30
+},
+{
+"id": "b02-play-merchant",
+"path": "pages/play/merchant/index?nodeId=1",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start"
+],
+"max": 30
+},
+{
+"id": "c01-activity-detail",
+"path": "pages/activity/detail/index?id=13",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start"
+],
+"max": 30
+},
+{
+"id": "c04-official-detail",
+"path": "pages/activity/official-detail/index?id=1",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start"
+],
+"max": 30
+},
+{
+"id": "c07-official-organizer",
+"path": "pages/activity/official-organizer/index",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start"
+],
+"max": 30
+},
+{
+"id": "d03-infomationdetail",
+"path": "subpackageA/pages/infomationdetail/infomationdetail?id=1",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start"
+],
+"max": 30
+},
+{
+"id": "d06-analysis",
+"path": "subpackageA/pages/assetcenter/analysis/index",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start"
+],
+"max": 30
+},
+{
+"id": "e03-stamp-camera",
+"path": "subpackageP3/pages/stamp-camera/index/index",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start"
+],
+"max": 30
+},
+{
+"id": "e06-badge-3d",
+"path": "subpackageP3/pages/badge-3d/index",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start"
+],
+"max": 30
+},
+{
+"id": "f02-im-chat",
+"path": "subpackageB/pages/im/chat/index?conversationId=1",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start"
+],
+"max": 30
+},
+{
+"id": "g03-search",
+"path": "pages/search2/index",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start"
+],
+"max": 30
+},
+{
+"id": "h01-address",
+"path": "pages/address/address",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start"
+],
+"max": 30
+},
+{
+"id": "h04-about",
+"path": "pages/shezhi/about/index",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start"
+],
+"max": 30
+},
+{
+"id": "h07-userinfo",
+"path": "pages/userinfo/userinfo?id=9009",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start"
+],
+"max": 30
+},
+{
+"id": "i01-free-explore",
+"path": "subpackageMember/free-explore/index?topicId=990014&registrationId=74",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start"
+],
+"max": 30
+},
+{
+"id": "i04-invoice",
+"path": "subpackageMember/invoice/index",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start"
+],
+"max": 30
+},
+{
+"id": "i07-invoice-titles",
+"path": "subpackageMember/invoice-titles/index",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start"
+],
+"max": 30
+},
+{
+"id": "i10-coupon-wallet",
+"path": "subpackageMember/coupon-wallet/index",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start"
+],
+"max": 30
+},
+{
+"id": "i13-couponInfo",
+"path": "subpackageMember/couponInfo/couponInfo",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start"
+],
+"max": 30
+},
+{
+"id": "i16-myinvite",
+"path": "subpackageMember/myinvite/myinvite",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start"
+],
+"max": 30
+},
+{
+"id": "i19-points",
+"path": "subpackageMember/points-history/index",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start"
+],
+"max": 30
+},
+{
+"id": "i22-appeal-mine",
+"path": "subpackageMember/appeal-mine/index",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start"
+],
+"max": 30
+},
+{
+"id": "i25-tixianjilu",
+"path": "subpackageMember/tixianjilu/tixianjilu",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start"
+],
+"max": 30
+},
+{
+"id": "j03-poi-detail",
+"path": "subpackageRoam/poi-detail/index?poiId=1",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start"
+],
+"max": 30
+},
+{
+"id": "j06-citystamp",
+"path": "subpackageRoam/citystamp/index",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start"
+],
+"max": 30
+},
+{
+"id": "j09-official-route",
+"path": "subpackageRoam/official-route/index?id=1",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start"
+],
+"max": 30
+},
+{
+"id": "k03-goals",
+"path": "subpackageTools/exploration-goals/index",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start"
+],
+"max": 30
+},
+{
+"id": "l01-privacy",
+"path": "pages/privacy/index",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start"
+],
+"max": 30
+},
+{
+"id": "l04-team-detail",
+"path": "pages/team/detail/index?teamId=1",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start"
+],
+"max": 30
+}
+]

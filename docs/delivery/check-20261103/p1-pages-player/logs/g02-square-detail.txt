@@ -1,0 +1,5 @@
+g02-square-detail route pages/index/index>pages/square/detail/index controls 3 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  navigates        __onTap                    ""                               -> pages/index/index    
+  back (not tapped) goBack                     "返回上一页"                              
+TEXT: 返回上一页 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

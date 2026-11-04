@@ -1,0 +1,5 @@
+i01-free-explore route pages/index/index>subpackageMember/free-explore/index controls 3 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  NO VISIBLE EFFECT __onTap                    ""                                   
+  NO VISIBLE EFFECT reload                     "刷新权益与预约结果"                          
+TEXT: 自由探索权益 | 自由探索套票暂未开放 | 刷新权益与预约结果 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

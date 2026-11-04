@@ -1,0 +1,60 @@
+{
+ "id": "g02-square-detail",
+ "path": "pages/square/detail/index?id=1",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "__onTap||{}",
+   "h": "__onTap",
+   "txt": "",
+   "w": 357,
+   "hgt": 46,
+   "y": 798,
+   "route": "pages/index/index",
+   "newText": "成为俱乐部 | 聚集同好，发起属于你们的城市活动 | 成为商家 | 把空间、服务和好内容带给更多玩家 | 和朋友报名活动 | 和朋友一起，发现附近正在发生的有趣体验 | Hi, 玩家二号! | 玩家 | · 上海市 | 编辑精选 | 暂时没有精选主题 | 附近活动",
+   "shot": "g02-square-detail-t01",
+   "result": "navigates"
+  },
+  {
+   "key": "goBack|返回上一页|{}",
+   "h": "goBack",
+   "txt": "返回上一页",
+   "w": 357,
+   "hgt": 46,
+   "y": 798,
+   "result": "back (not tapped)"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "pages/square/detail/index"
+ ],
+ "text": "返回上一页 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 3,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/square/detail/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

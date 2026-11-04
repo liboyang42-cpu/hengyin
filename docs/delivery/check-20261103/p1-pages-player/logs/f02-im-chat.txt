@@ -1,0 +1,6 @@
+f02-im-chat route pages/index/index>subpackageB/pages/im/chat/index controls 4 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  ui change        onMore                     "更多"                                 
+  NO VISIBLE EFFECT onPlus                     ""                                   
+  NO VISIBLE EFFECT onSend                     ""                                   
+TEXT: 更多 | 对话 | 消息加载失败，点上方「重试」再试 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

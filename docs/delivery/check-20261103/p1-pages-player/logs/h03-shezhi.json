@@ -1,0 +1,353 @@
+{
+ "id": "h03-shezhi",
+ "path": "pages/shezhi/shezhi",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "onTap|个人资料|{}",
+   "h": "onTap",
+   "txt": "个人资料",
+   "w": 390,
+   "hgt": 58,
+   "y": 161,
+   "route": "pages/gerenziliao/gerenziliao",
+   "newText": "更换背景 | 城瘾玩家 | 昵称 | 未填写 | 个人介绍 | 介绍一下你自己 | 手机号 | 139****0009 | 探索作品 | 未填写 | 联系二维码 | 未填写",
+   "shot": "h03-shezhi-t01",
+   "result": "navigates"
+  },
+  {
+   "key": "goUserInfo|个人资料|{}",
+   "h": "goUserInfo",
+   "txt": "个人资料",
+   "w": 390,
+   "hgt": 58,
+   "y": 161,
+   "route": "pages/gerenziliao/gerenziliao",
+   "newText": "更换背景 | 城瘾玩家 | 昵称 | 未填写 | 个人介绍 | 介绍一下你自己 | 手机号 | 139****0009 | 探索作品 | 未填写 | 联系二维码 | 未填写",
+   "shot": "h03-shezhi-t02",
+   "result": "navigates"
+  },
+  {
+   "key": "onTap|成为俱乐部主理人|{}",
+   "h": "onTap",
+   "txt": "成为俱乐部主理人",
+   "w": 390,
+   "hgt": 58,
+   "y": 228,
+   "route": "pages/club/apply/index",
+   "newText": "把你带的人， 变成你的俱乐部 | 填完身份立即生效，不用等审核 | 最多可以建 2 个俱乐部 | 开始申请",
+   "shot": "h03-shezhi-t03",
+   "result": "navigates"
+  },
+  {
+   "key": "pickClub|成为俱乐部主理人|{}",
+   "h": "pickClub",
+   "txt": "成为俱乐部主理人",
+   "w": 390,
+   "hgt": 58,
+   "y": 228,
+   "route": "pages/club/apply/index",
+   "newText": "把你带的人， 变成你的俱乐部 | 填完身份立即生效，不用等审核 | 最多可以建 2 个俱乐部 | 开始申请",
+   "shot": "h03-shezhi-t04",
+   "result": "navigates"
+  },
+  {
+   "key": "onTap|成为商家|{}",
+   "h": "onTap",
+   "txt": "成为商家",
+   "w": 390,
+   "hgt": 58,
+   "y": 294,
+   "route": "pages/merchant/apply/index",
+   "newText": "商家入驻 | 把你的店 放进玩家的路线里 | 基础信息 · 经营信息 · 资质 · 确认 | 提交后可随时回来看进度与驳回原因 | 开始入驻 | 门店已在城瘾上线？认领已有门店",
+   "shot": "h03-shezhi-t05",
+   "result": "navigates"
+  },
+  {
+   "key": "pickMerchant|成为商家|{}",
+   "h": "pickMerchant",
+   "txt": "成为商家",
+   "w": 390,
+   "hgt": 58,
+   "y": 294,
+   "route": "pages/merchant/apply/index",
+   "newText": "商家入驻 | 把你的店 放进玩家的路线里 | 基础信息 · 经营信息 · 资质 · 确认 | 提交后可随时回来看进度与驳回原因 | 开始入驻 | 门店已在城瘾上线？认领已有门店",
+   "shot": "h03-shezhi-t06",
+   "result": "navigates"
+  },
+  {
+   "key": "onTap|城瘾玩法|{}",
+   "h": "onTap",
+   "txt": "城瘾玩法",
+   "w": 390,
+   "hgt": 58,
+   "y": 361,
+   "route": "subpackageA/pages/infomation/infomation",
+   "newText": "三种玩法, | 即开即玩 | 城市定向 | 组队 · 按顺序 | 按顺序打卡，到点集合出发 | 去看看 | 自由探索 | 随时 · 自己走 | 节点全开，随时开玩 | 去看看 | 漫游 | 无终点 · 散步",
+   "result": "navigates"
+  },
+  {
+   "key": "goInfomation|城瘾玩法|{}",
+   "h": "goInfomation",
+   "txt": "城瘾玩法",
+   "w": 390,
+   "hgt": 58,
+   "y": 361,
+   "route": "subpackageA/pages/infomation/infomation",
+   "newText": "三种玩法, | 即开即玩 | 城市定向 | 组队 · 按顺序 | 按顺序打卡，到点集合出发 | 去看看 | 自由探索 | 随时 · 自己走 | 节点全开，随时开玩 | 去看看 | 漫游 | 无终点 · 散步",
+   "result": "navigates"
+  },
+  {
+   "key": "onTap|我的收藏 收藏的帖文与主题|{}",
+   "h": "onTap",
+   "txt": "我的收藏 收藏的帖文与主题",
+   "w": 390,
+   "hgt": 67,
+   "y": 427,
+   "route": "pages/mylike/mylike",
+   "newText": "帖文 | 主题 | 暂无收藏的帖文",
+   "result": "navigates"
+  },
+  {
+   "key": "goMylike|我的收藏收藏的帖文与主题|{}",
+   "h": "goMylike",
+   "txt": "我的收藏收藏的帖文与主题",
+   "w": 390,
+   "hgt": 67,
+   "y": 427,
+   "route": "pages/mylike/mylike",
+   "newText": "帖文 | 主题 | 暂无收藏的帖文",
+   "result": "navigates"
+  },
+  {
+   "key": "onTap|隐私与定位|{}",
+   "h": "onTap",
+   "txt": "隐私与定位",
+   "w": 390,
+   "hgt": 58,
+   "y": 502,
+   "route": "pages/shezhi/shezhi",
+   "newText": "用户服务协议 | 账号注销 | 定位只在你漫游、游玩或开启首页城市定位时使用；照片、文字和录音只在你单独同意后才会交给第三方模型处理。 | 查看《用户隐私保护指引》 | 更多隐私设置 | 城市定位与更多隐私设置 | 附近的人位置分享 | 关闭后他人看不到你的位置 | 关闭附近的人位置分享 | 漫游定位 | 撤回后停止记录轨迹 | 撤回漫游定位同意",
+   "result": "ui change"
+  },
+  {
+   "key": "goPrivacy|隐私与定位|{}",
+   "h": "goPrivacy",
+   "txt": "隐私与定位",
+   "w": 390,
+   "hgt": 58,
+   "y": 502,
+   "route": "pages/shezhi/shezhi",
+   "newText": "用户服务协议 | 账号注销 | 定位只在你漫游、游玩或开启首页城市定位时使用；照片、文字和录音只在你单独同意后才会交给第三方模型处理。 | 查看《用户隐私保护指引》 | 更多隐私设置 | 城市定位与更多隐私设置 | 附近的人位置分享 | 关闭后他人看不到你的位置 | 关闭附近的人位置分享 | 漫游定位 | 撤回后停止记录轨迹 | 撤回漫游定位同意",
+   "result": "ui change"
+  },
+  {
+   "key": "onTap|营销消息与优惠券|{}",
+   "h": "onTap",
+   "txt": "营销消息与优惠券",
+   "w": 390,
+   "hgt": 58,
+   "y": 569,
+   "route": "pages/shezhi/marketing/index",
+   "newText": "完成一次真实报名后，可在这里管理对应商家的消息。",
+   "result": "navigates"
+  },
+  {
+   "key": "openMarketingConsent|营销消息与优惠券|{}",
+   "h": "openMarketingConsent",
+   "txt": "营销消息与优惠券",
+   "w": 390,
+   "hgt": 58,
+   "y": 569,
+   "route": "pages/shezhi/marketing/index",
+   "newText": "完成一次真实报名后，可在这里管理对应商家的消息。",
+   "result": "navigates"
+  },
+  {
+   "key": "onTap|帖子处置与申诉|{}",
+   "h": "onTap",
+   "txt": "帖子处置与申诉",
+   "w": 390,
+   "hgt": 58,
+   "y": 635,
+   "route": "pages/shezhi/shezhi",
+   "newText": "用户服务协议 | 账号注销 | 关于 | 退出账号 | 复核前的处置不是最终结论 | 暂无处置记录。",
+   "result": "ui change"
+  },
+  {
+   "key": "openPostGovernance|帖子处置与申诉|{}",
+   "h": "openPostGovernance",
+   "txt": "帖子处置与申诉",
+   "w": 390,
+   "hgt": 58,
+   "y": 635,
+   "route": "pages/shezhi/shezhi",
+   "newText": "用户服务协议 | 账号注销 | 关于 | 退出账号 | 复核前的处置不是最终结论 | 暂无处置记录。",
+   "result": "ui change"
+  },
+  {
+   "key": "onTap|我的申诉|{}",
+   "h": "onTap",
+   "txt": "我的申诉",
+   "w": 390,
+   "hgt": 58,
+   "y": 702,
+   "route": "subpackageMember/appeal-mine/index",
+   "newText": "账号信誉 | 正常 | 还没有申诉记录",
+   "result": "navigates"
+  },
+  {
+   "key": "goAppeals|我的申诉|{}",
+   "h": "goAppeals",
+   "txt": "我的申诉",
+   "w": 390,
+   "hgt": 58,
+   "y": 702,
+   "route": "subpackageMember/appeal-mine/index",
+   "newText": "账号信誉 | 正常 | 还没有申诉记录",
+   "result": "navigates"
+  },
+  {
+   "key": "onTap|发票|{}",
+   "h": "onTap",
+   "txt": "发票",
+   "w": 390,
+   "hgt": 58,
+   "y": 768,
+   "route": "subpackageMember/invoice/index",
+   "newText": "我的发票 | 发票功能暂未开放",
+   "result": "navigates"
+  },
+  {
+   "key": "goInvoice|发票|{}",
+   "h": "goInvoice",
+   "txt": "发票",
+   "w": 390,
+   "hgt": 58,
+   "y": 768,
+   "route": "subpackageMember/invoice/index",
+   "newText": "我的发票 | 发票功能暂未开放",
+   "result": "navigates"
+  },
+  {
+   "key": "onTap|用户服务协议|{}",
+   "h": "onTap",
+   "txt": "用户服务协议",
+   "w": 390,
+   "hgt": 58,
+   "y": 835,
+   "route": "pages/shezhi/shezhi",
+   "newText": "用户服务协议 | 账号注销 | 关于 | 退出账号 | 用户服务协议 | 欢迎使用城瘾。本协议由西安吾令文化传媒有限公司（以下简称“我们”）与城瘾用户共同订立。请在注册、登录或使用服务前仔细阅读并充分理解本协议。 | 一、协议主体与生效 | 城瘾由西安吾令文化传媒有限公司运营，注册地址为陕西省西安市高新区锦业路1号绿地领海B座6层604室A043号。本协议自2026年8月12日起生效。本协议在你明确选择同意后对你生效。 | 二、账号注册与安全 | 你应使用真实、合法、有效的信息注册账号，并妥善保管登录凭证。不得出借、转让账号，不得利用账号实施违法、侵权、欺诈或扰乱平台秩序的行为。因你未妥善保管",
+   "result": "ui change"
+  },
+  {
+   "key": "goUserAgreement|用户服务协议|{}",
+   "h": "goUserAgreement",
+   "txt": "用户服务协议",
+   "w": 390,
+   "hgt": 58,
+   "y": 835,
+   "route": "pages/shezhi/shezhi",
+   "newText": "用户服务协议 | 账号注销 | 关于 | 退出账号 | 用户服务协议 | 欢迎使用城瘾。本协议由西安吾令文化传媒有限公司（以下简称“我们”）与城瘾用户共同订立。请在注册、登录或使用服务前仔细阅读并充分理解本协议。 | 一、协议主体与生效 | 城瘾由西安吾令文化传媒有限公司运营，注册地址为陕西省西安市高新区锦业路1号绿地领海B座6层604室A043号。本协议自2026年8月12日起生效。本协议在你明确选择同意后对你生效。 | 二、账号注册与安全 | 你应使用真实、合法、有效的信息注册账号，并妥善保管登录凭证。不得出借、转让账号，不得利用账号实施违法、侵权、欺诈或扰乱平台秩序的行为。因你未妥善保管",
+   "result": "ui change"
+  },
+  {
+   "key": "onTap|账号注销|{}",
+   "h": "onTap",
+   "txt": "账号注销",
+   "w": 390,
+   "hgt": 58,
+   "y": 901,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  },
+  {
+   "key": "goDeregister|账号注销|{}",
+   "h": "goDeregister",
+   "txt": "账号注销",
+   "w": 390,
+   "hgt": 58,
+   "y": 901,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  },
+  {
+   "key": "onTap|关于|{}",
+   "h": "onTap",
+   "txt": "关于",
+   "w": 390,
+   "hgt": 58,
+   "y": 968,
+   "route": "pages/shezhi/about/index",
+   "newText": "关于 | 城瘾 | 版本 开发版本 | 发现城市，也发现新的自己 | 我的二维码 | 活动现场出示 | 玩家个人码待生成 | 用户服务协议 | 联系我们",
+   "result": "navigates"
+  },
+  {
+   "key": "goAbout|关于|{}",
+   "h": "goAbout",
+   "txt": "关于",
+   "w": 390,
+   "hgt": 58,
+   "y": 968,
+   "route": "pages/shezhi/about/index",
+   "newText": "关于 | 城瘾 | 版本 开发版本 | 发现城市，也发现新的自己 | 我的二维码 | 活动现场出示 | 玩家个人码待生成 | 用户服务协议 | 联系我们",
+   "result": "navigates"
+  },
+  {
+   "key": "__onTap||{}",
+   "h": "__onTap",
+   "txt": "",
+   "w": 357,
+   "hgt": 46,
+   "y": 1043,
+   "route": "pages/shezhi/shezhi",
+   "newText": "用户服务协议 | 账号注销 | 关于 | 退出账号 | 退出当前账号? | 本机登录态清除,下次进入需要重新登录 | 已购通行证、订单和券都保留在账号里,不会丢 | 取消 | 退出登录",
+   "result": "ui change"
+  },
+  {
+   "key": "logout|退出账号|{}",
+   "h": "logout",
+   "txt": "退出账号",
+   "w": 357,
+   "hgt": 46,
+   "y": 1043,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  }
+ ],
+ "route": [
+  "pages/shezhi/shezhi"
+ ],
+ "text": "设置 | 个人资料 | 成为俱乐部主理人 | 成为商家 | 城瘾玩法 | 我的收藏 | 收藏的帖文与主题 | 隐私与定位 | 营销消息与优惠券 | 帖子处置与申诉 | 我的申诉 | 发票 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "text_s1": "成为商家 | 城瘾玩法 | 我的收藏 | 收藏的帖文与主题 | 隐私与定位 | 营销消息与优惠券 | 帖子处置与申诉 | 我的申诉 | 发票 | 用户服务协议 | 账号注销 | 关于 | 退出账号 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "text_s2": "成为商家 | 城瘾玩法 | 我的收藏 | 收藏的帖文与主题 | 隐私与定位 | 营销消息与优惠券 | 帖子处置与申诉 | 我的申诉 | 发票 | 用户服务协议 | 账号注销 | 关于 | 退出账号 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 29,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/shezhi/shezhi"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

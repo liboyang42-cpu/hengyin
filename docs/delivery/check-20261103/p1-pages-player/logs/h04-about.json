@@ -1,0 +1,108 @@
+{
+ "id": "h04-about",
+ "path": "pages/shezhi/about/index",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "onTap|用户服务协议|{}",
+   "h": "onTap",
+   "txt": "用户服务协议",
+   "w": 357,
+   "hgt": 50,
+   "y": 697,
+   "route": "pages/shezhi/about/index",
+   "newText": "素材署名 | game-icons.net 游戏图标 · Creative Commons BY 3.0（要求署名） | 作者：Delapouite、Lorc、Skoll、Sbed、Quoting、Lord Berandas | 复制来源地址 · game-icons.net | 像素城市场景 · Luis Zuno（ansimuz）· CC0 1.0 | 底图：Synth Cities、Warped City、Warped Miami Synth | 复制来源地址 · ansimuz.itch.io | Lucide 图标 · ISC License | Lucide Contributor",
+   "shot": "h04-about-t01",
+   "result": "ui change"
+  },
+  {
+   "key": "openAgreement|用户服务协议|{}",
+   "h": "openAgreement",
+   "txt": "用户服务协议",
+   "w": 357,
+   "hgt": 50,
+   "y": 697,
+   "route": "pages/shezhi/about/index",
+   "newText": "素材署名 | game-icons.net 游戏图标 · Creative Commons BY 3.0（要求署名） | 作者：Delapouite、Lorc、Skoll、Sbed、Quoting、Lord Berandas | 复制来源地址 · game-icons.net | 像素城市场景 · Luis Zuno（ansimuz）· CC0 1.0 | 底图：Synth Cities、Warped City、Warped Miami Synth | 复制来源地址 · ansimuz.itch.io | Lucide 图标 · ISC License | Lucide Contributor",
+   "shot": "h04-about-t02",
+   "result": "ui change"
+  },
+  {
+   "key": "onTap|联系我们|{}",
+   "h": "onTap",
+   "txt": "联系我们",
+   "w": 357,
+   "hgt": 50,
+   "y": 747,
+   "route": "pages/shezhi/about/index",
+   "newText": "素材署名 | game-icons.net 游戏图标 · Creative Commons BY 3.0（要求署名） | 作者：Delapouite、Lorc、Skoll、Sbed、Quoting、Lord Berandas | 复制来源地址 · game-icons.net | 像素城市场景 · Luis Zuno（ansimuz）· CC0 1.0 | 底图：Synth Cities、Warped City、Warped Miami Synth | 复制来源地址 · ansimuz.itch.io | Lucide 图标 · ISC License | Lucide Contributor",
+   "runtime": "open-type contact",
+   "shot": "h04-about-t03",
+   "result": "ui change"
+  },
+  {
+   "key": "copyAttributionLink|复制来源地址 · game-icons.net|{\"link\":\"https://game-icons.net/\"}",
+   "h": "copyAttributionLink",
+   "txt": "复制来源地址 · game-icons.net",
+   "w": 340,
+   "hgt": 20,
+   "y": 972,
+   "route": "pages/shezhi/about/index",
+   "toast": "内容已复制",
+   "newText": "来源地址已复制 | 素材署名 | game-icons.net 游戏图标 · Creative Commons BY 3.0（要求署名） | 作者：Delapouite、Lorc、Skoll、Sbed、Quoting、Lord Berandas | 复制来源地址 · game-icons.net | 像素城市场景 · Luis Zuno（ansimuz）· CC0 1.0 | 底图：Synth Cities、Warped City、Warped Miami Synth | 复制来源地址 · ansimuz.itch.io | Lucide 图标 · ISC License | Lucide C",
+   "shot": "h04-about-t04",
+   "result": "toast"
+  },
+  {
+   "key": "copyAttributionLink|复制来源地址 · ansimuz.itch.io|{\"link\":\"https://ansimuz.itch.io/\"}",
+   "h": "copyAttributionLink",
+   "txt": "复制来源地址 · ansimuz.itch.io",
+   "w": 340,
+   "hgt": 20,
+   "y": 1069,
+   "route": "pages/shezhi/about/index",
+   "toast": "内容已复制",
+   "newText": "来源地址已复制 | 素材署名 | game-icons.net 游戏图标 · Creative Commons BY 3.0（要求署名） | 作者：Delapouite、Lorc、Skoll、Sbed、Quoting、Lord Berandas | 复制来源地址 · game-icons.net | 像素城市场景 · Luis Zuno（ansimuz）· CC0 1.0 | 底图：Synth Cities、Warped City、Warped Miami Synth | 复制来源地址 · ansimuz.itch.io | Lucide 图标 · ISC License | Lucide C",
+   "shot": "h04-about-t05",
+   "result": "toast"
+  }
+ ],
+ "route": [
+  "pages/shezhi/about/index"
+ ],
+ "text": "关于 | 城瘾 | 版本 开发版本 | 发现城市，也发现新的自己 | 我的二维码 | 活动现场出示 | 玩家个人码待生成 | 用户服务协议 | 联系我们 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "text_s1": "玩家个人码待生成 | 用户服务协议 | 联系我们 | 素材署名 | game-icons.net 游戏图标 · Creative Commons BY 3.0（要求署名） | 作者：Delapouite、Lorc、Skoll、Sbed、Quoting、Lord Berandas | 复制来源地址 · game-icons.net | 像素城市场景 · Luis Zuno（ansimuz）· CC0 1.0 | 底图：Synth Cities、Warped City、Warped Miami Synth | 复制来源地址 · ansimuz.itch.io | Lucide 图标 · ISC License | Lucide Contributors；部分图形源自 Feather · Cole Bemis · MIT License。完整版权与许可声明随图标文件保留。 | 来源：lucide.dev · 许可：lucide.dev/license | 龙藏体 Long Cang · SIL Open Font License 1.1 | Copyright 2018 The LongCang Project Authors · 设计：ZhongQi。故事正文所用字体。 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "text_s2": "玩家个人码待生成 | 用户服务协议 | 联系我们 | 素材署名 | game-icons.net 游戏图标 · Creative Commons BY 3.0（要求署名） | 作者：Delapouite、Lorc、Skoll、Sbed、Quoting、Lord Berandas | 复制来源地址 · game-icons.net | 像素城市场景 · Luis Zuno（ansimuz）· CC0 1.0 | 底图：Synth Cities、Warped City、Warped Miami Synth | 复制来源地址 · ansimuz.itch.io | Lucide 图标 · ISC License | Lucide Contributors；部分图形源自 Feather · Cole Bemis · MIT License。完整版权与许可声明随图标文件保留。 | 来源：lucide.dev · 许可：lucide.dev/license | 龙藏体 Long Cang · SIL Open Font License 1.1 | Copyright 2018 The LongCang Project Authors · 设计：ZhongQi。故事正文所用字体。 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 6,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/shezhi/about/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

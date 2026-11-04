@@ -1,0 +1,8 @@
+i10-coupon-wallet route subpackageMember/coupon-wallet/index controls 6 errors 0 badNet 0
+  NO VISIBLE EFFECT noop                       ""                                   
+  back (not tapped) onBack                     ""                                   
+  NO VISIBLE EFFECT selectTab                  "全部"                                 
+  ui change        selectTab                  "待使用"                                
+  ui change        selectTab                  "已使用"                                
+  ui change        selectTab                  "已过期"                                
+TEXT: 优惠券 | 全部 | 待使用 | 已使用 | 已过期 | 这里还没有优惠券 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

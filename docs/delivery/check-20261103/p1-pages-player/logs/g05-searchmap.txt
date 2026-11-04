@@ -1,0 +1,8 @@
+g05-searchmap route pages/searchmap/index controls 6 errors 0 badNet 0
+  NO VISIBLE EFFECT onMapTap                   "定位"                                 
+  ui change        requestLocation            "定位"                                 
+  back (not tapped) goBack                     ""                                   
+  ui change        __onTap                    ""                                   
+  ui change        popShow                    ""                                   
+  ui change        openList                   "这一带还没有活动"                           
+TEXT: 定位 | 这一带还没有活动 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

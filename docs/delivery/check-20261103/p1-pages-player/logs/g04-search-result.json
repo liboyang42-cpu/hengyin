@@ -1,0 +1,141 @@
+{
+ "id": "g04-search-result",
+ "path": "pages/search2/result/index?keyword=E2E",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "onClear||{}",
+   "h": "onClear",
+   "txt": "",
+   "w": 46,
+   "hgt": 46,
+   "y": 91,
+   "route": "pages/search2/result/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "onTab|全部|{\"key\":\"all\"}",
+   "h": "onTab",
+   "txt": "全部",
+   "w": 54,
+   "hgt": 35,
+   "y": 156,
+   "route": "pages/search2/result/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "onTab|主题 1|{\"key\":\"topic\"}",
+   "h": "onTab",
+   "txt": "主题 1",
+   "w": 63,
+   "hgt": 35,
+   "y": 156,
+   "route": "pages/search2/result/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "onTab|活动 0|{\"key\":\"activity\"}",
+   "h": "onTab",
+   "txt": "活动 0",
+   "w": 65,
+   "hgt": 35,
+   "y": 156,
+   "route": "pages/search2/result/index",
+   "newText": "没有找到",
+   "result": "ui change"
+  },
+  {
+   "key": "onTab|俱乐部 0|{\"key\":\"club\"}",
+   "h": "onTab",
+   "txt": "俱乐部 0",
+   "w": 78,
+   "hgt": 35,
+   "y": 156,
+   "route": "pages/search2/result/index",
+   "newText": "没有找到",
+   "result": "ui change"
+  },
+  {
+   "key": "onTab|商家 0|{\"key\":\"merchant\"}",
+   "h": "onTab",
+   "txt": "商家 0",
+   "w": 65,
+   "hgt": 35,
+   "y": 156,
+   "route": "pages/search2/result/index",
+   "newText": "没有找到",
+   "result": "ui change"
+  },
+  {
+   "key": "onTab|主题模板 0|{\"key\":\"topicTemplate\"}",
+   "h": "onTab",
+   "txt": "主题模板 0",
+   "w": 90,
+   "hgt": 35,
+   "y": 156,
+   "route": "pages/search2/result/index",
+   "newText": "没有找到",
+   "result": "ui change"
+  },
+  {
+   "key": "onTab|玩法模板 0|{\"key\":\"gameTemplate\"}",
+   "h": "onTab",
+   "txt": "玩法模板 0",
+   "w": 90,
+   "hgt": 35,
+   "y": 156,
+   "route": "pages/search2/result/index",
+   "newText": "没有找到",
+   "result": "ui change"
+  },
+  {
+   "key": "goResult|主题 E2E 探店日一期 上海市黄浦区咖啡|{\"id\":990014,\"sceneId\":\"\",\"path\":\"/pages/topic/index/index?i",
+   "h": "goResult",
+   "txt": "主题 E2E 探店日一期 上海市黄浦区咖啡",
+   "w": 357,
+   "hgt": 258,
+   "y": 211,
+   "route": "pages/topic/index/index",
+   "newText": "自由探索 | 端到端 | 查看详情与报名 | 确认订单 | 参与人信息 | 补全姓名和手机号 | 主题信息 | 费用明细 | 票种 | 自玩通行证 | 订单金额 | 合计",
+   "shot": "g04-search-result-t01",
+   "result": "navigates"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "pages/search2/result/index"
+ ],
+ "text": "全部 | 主题 1 | 活动 0 | 俱乐部 0 | 商家 0 | 主题模板 0 | 玩法模板 0 | 主题 | E2E 探店日一期 | 上海市黄浦区咖啡 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 10,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/search2/result/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/e2e-topic-cover-9003.jpg?Expires=2109165817&OSSAccessKeyId=rigdummy&Signature=Wbu9eXiyJY1TYfVj4rh7orhVfIw%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/e2e-topic-cover-9003.jpg?Expires=2109165823&OSSAccessKeyId=rigdummy&Signature=fSyRVEXREiTY7Rg0Un1nl4qrzOU%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

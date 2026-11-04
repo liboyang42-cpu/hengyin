@@ -1,0 +1,31 @@
+{
+ "id": "e06-badge-3d",
+ "path": "subpackageP3/pages/badge-3d/index",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "goBack||{}",
+   "h": "goBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 46,
+   "y": 51,
+   "result": "back (not tapped)"
+  }
+ ],
+ "route": [
+  "subpackageP3/pages/badge-3d/index"
+ ],
+ "text": "徽章 | 徽章 | 拖动可旋转查看 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 1,
+ "report": {
+  "route": [
+   "subpackageP3/pages/badge-3d/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}
