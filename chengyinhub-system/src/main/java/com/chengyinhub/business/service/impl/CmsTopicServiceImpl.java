@@ -2651,7 +2651,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         topic.setFinishMedalImg(dto.getFinishMedalImg());
         topic.setCompleteRewardCouponId(completeRewardCouponId);
 
-        Long totalTime = calculateTotalTime(allNodes);
+        Long totalTime = totalTimeSeconds(allNodes);
         topic.setTotalTime(totalTime);
         topic.setTotalMileage(totalMileage);
         topic.setLocationCount(Convert.toLong(allNodes.size()));
@@ -3121,7 +3121,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         patch.setFinishMedalName(dto.getFinishMedalName());
         patch.setFinishMedalImg(dto.getFinishMedalImg());
         patch.setCompleteRewardCouponId(completeRewardCouponId);
-        patch.setTotalTime(calculateTotalTime(allNodes));
+        patch.setTotalTime(totalTimeSeconds(allNodes));
         patch.setTotalMileage(calculateTotalDistance(nodesForDistance(allNodes, dto.getChapters(), chapterFlowV2)));
         patch.setLocationCount(Convert.toLong(allNodes.size()));
         patch.setTemplateCount(calculateTemplateCount(allNodes));
@@ -3533,6 +3533,15 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         return BigDecimal.valueOf(totalDistance);
     }
 
+    /**
+     * cms_topic.total_time 的单位是秒(建表注释「总时长,单位秒」,种子主题与小程序/后台格式化都按秒)。
+     * 节点 nodeTime 是分钟,这里换成秒再落库 —— 之前直接落分钟和,详情页把 270 分钟读成「约 4 分钟」(R11 j3 F7)。
+     */
+    public Long totalTimeSeconds(List<NodeDTO> nodes) {
+        return calculateTotalTime(nodes) * 60L;
+    }
+
+    /** 节点建议时长之和,单位分钟(nodeTime)。 */
     public Long calculateTotalTime(List<NodeDTO> nodes) {
         if (CollectionUtils.isEmpty(nodes)) {
             return 0L;
