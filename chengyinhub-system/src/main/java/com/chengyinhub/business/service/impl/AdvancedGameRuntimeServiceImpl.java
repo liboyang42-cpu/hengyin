@@ -289,6 +289,8 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         // Server-created state only: author config cannot supply an original content identity.
         if (input.content != null) state.set("originalNodeContent", input.content.deepCopy());
         if (config.has("outcomeRules")) state.put("attemptOrdinal", 1);
+        if (ownerType == GameRuntimeSession.OWNER_PLAYER && input.activityId == 0L && shared == null)
+            for (String sensor : AdvancedActionJudgement.SKIPPABLE_SENSOR_SECTIONS) if (enabled(config.get(sensor))) state.with(sensor).put("soloNoLead", true);
         if (shared != null) {state.put("runtimeAuthorityEpoch", shared.path("authorityEpoch").asInt());state.put("originalGameSessionId",shared.path("gameSessionId").asLong());}
         else if(zeroChallenge != null || config.has("outcomeRules") && (enabled(config.path("branch")) || enabled(config.path("predict"))))state.put("originalRouteSessionId",topicRouteRuntimeService.gameplaySessionId(memberId,topicId,input.activityId));
         if (zeroChallenge != null) {state.put("zeroChallengeInstance", zeroChallenge.path("instanceId").asText()); state.set("challenge", zeroChallenge.deepCopy());}
@@ -340,6 +342,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         ObjectNode restarted = initialState(config, team, teamMembers);
         if (config.has("outcomeRules")) restarted.put("attemptOrdinal", readJson(session.getStateJson(), "Invalid attempt state").path("attemptOrdinal").asLong(1) + 1);
         for(String origin:Arrays.asList("originalRouteSessionId","originalGameSessionId","originalNodeContent"))if(objectState(session.getStateJson()).has(origin))restarted.set(origin,objectState(session.getStateJson()).get(origin).deepCopy());
+        for (String sensor : AdvancedActionJudgement.SKIPPABLE_SENSOR_SECTIONS) if (objectState(session.getStateJson()).path(sensor).path("soloNoLead").asBoolean(false)) restarted.with(sensor).put("soloNoLead", true);
         Integer epoch = runtimeEpoch(session);
         if (epoch != null) {
             gameSessionRuntimeService.assertSharedRouteWritable(memberId, session.getTopicId(), session.getActivityId(), session.getNodeId(), epoch);

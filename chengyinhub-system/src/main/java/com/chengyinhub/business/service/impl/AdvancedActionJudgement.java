@@ -1434,7 +1434,9 @@ public final class AdvancedActionJudgement {
     static String skipGrant(JsonNode config, JsonNode state, String game, Long memberId) {
         if (memberId == null) return null;
         if (config.path(game).path("allowSkip").asBoolean(false)) return "AUTHOR";
-        return state.path(game).path("releasedFor").has(String.valueOf(memberId)) ? "LEADER" : null;
+        if (state.path(game).path("releasedFor").has(String.valueOf(memberId))) return "LEADER";
+        // 第十一轮 h5:自玩通行证没有队长能放行,读不出方向两次后本人可跳(0 分、不发这一段 xp),不困在这一站。
+        return state.path(game).path("soloNoLead").asBoolean(false) ? "SOLO" : null;
     }
 
     static boolean canSkip(JsonNode config, JsonNode state, String game, Long memberId) {
