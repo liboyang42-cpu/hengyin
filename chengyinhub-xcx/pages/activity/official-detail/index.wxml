@@ -219,7 +219,7 @@
   <view wx:else class="od-loading">
     <cy-state-shell fill size="lg" kind="{{loadErrKind}}"
                     title="{{loadErrTitle}}" sub="{{loadErrSub}}"
-                    primary="{{loadErrAction}}" bind:primary="onLoadErrorAction" auto-back custom-back bind:back="onLoadErrorBack" />
+                    primary="{{loadErrAction}}" bind:primary="onLoadErrorAction" auto-back="{{loadErrKind !== 'missing-param'}}" custom-back bind:back="onLoadErrorBack" />
   </view>
   <cy-share-card show="{{shareCard.show}}" card="{{shareCard.card}}" bind:close="onShareCardClose" />
 </view>

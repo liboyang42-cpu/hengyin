@@ -276,6 +276,7 @@ Page({
             || String((res && res.msg) || '').trim() === '活动不存在';
           if (contentUnavailable) {
             this.data.loadErrActionType = 'back';
+            // R11 p1 F-6:活动没了是确定事实,画「链接已失效 · 返回活动列表」;'data' 档按业主规则是空白遮罩
             this.setData({
               e: null,
               loadErrKind: 'missing-param', // p3 F3 / j6:内容没了是终态,讲原因并返回;不是加载失败留白

@@ -17,7 +17,7 @@
   <cy-skeleton wx:if="{{loading && !team}}" type="detail" count="{{1}}" loading-label="正在读取队伍邀请" />
   <cy-state-shell wx:elif="{{error && !team}}" kind="{{errorKind}}"
                   title="{{error}}" sub="{{errorSub}}" primary="{{errorAction}}"
-                  fill size="lg" bind:primary="onErrorAction" auto-back />
+                  fill size="lg" bind:primary="onErrorAction" auto-back="{{errorKind !== 'missing-param'}}" />
   <block wx:else>
     <view class="team-refresh-state">
       <text wx:if="{{refreshing && team}}" class="team-sync" aria-role="status">正在确认邀请状态…</text>
