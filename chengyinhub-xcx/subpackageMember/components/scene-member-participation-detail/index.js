@@ -55,8 +55,12 @@ Component({
       this._cancelDisposed = false;
       this._cancelGeneration = (this._cancelGeneration || 0) + 1;
       this._syncCancellationAccount();
-      this._skipInitialShow = true; this._detailDisposed = false; this._detailGeneration = (this._detailGeneration || 0) + 1;
       const id = trimmedString(String(this.data.recordId == null ? '' : this.data.recordId))
+      // 属性观察器可能先于 attached 触发并已按这个 id 发出请求(rig 2026-11-04 实测):这时再加代号会把在途回包
+      // 判成过期,页面永远停在「加载中」。同一 id 已在途/已落定就不作废它。
+      const inFlight = !!id && String(this.data.id) === id;
+      this._skipInitialShow = true; this._detailDisposed = false;
+      if (!inFlight) this._detailGeneration = (this._detailGeneration || 0) + 1;
       if (!id) {
         // 没有 id 就永远拿不到详情:既不能停在「一直加载中」,也不能把缺参伪装成加载失败
         this.setData({
