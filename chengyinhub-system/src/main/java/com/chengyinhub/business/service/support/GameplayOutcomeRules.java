@@ -40,7 +40,7 @@ public final class GameplayOutcomeRules {
             after(row, kinds);
             costs[0] |= !row.path("costs").isEmpty();
             if (row.has("nextStepId") && !steps.contains(row.path("nextStepId").asText())) fail(path + " nextStepId 不属于本节点 branch.steps");
-            if(path.startsWith("random.items") && block.path("random").path("drawCount").asInt()>1)fail("多张抽卡请用顶层通过/没通过之后");
+            if(path.startsWith("random.items") && block.path("random").path("drawCount").asInt()>1)fail("多张翻卡请用顶层通过/没通过之后");
             if (path.startsWith("qa.options") && block.path("qa").path("multi").asBoolean()) fail("多选题仅使用顶层 pass/fail after");
         });
         if (costs[0]) {

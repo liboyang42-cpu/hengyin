@@ -38,7 +38,7 @@ const GROUPS = [
       { key: 'pricePair', icon: 'image', label: '猜图', sub: '几张图里挑出正确的那张', section: 'pricePair', validationMethod: 9 },
       { key: 'hidden', icon: 'search', label: '找东西', sub: '在你上传的图上点中藏起来的目标', section: 'hiddenObject', validationMethod: 10 },
       { key: 'predict', icon: 'flag', label: '预测', sub: '今天选一个，到期商家给答案', section: 'predict', validationMethod: 0 },
-      { key: 'random', icon: 'gift', label: '抽卡', sub: '一副卡池抽一张，翻开就是这一关的任务', section: 'random', validationMethod: 0 },
+      { key: 'random', icon: 'gift', label: '翻卡', sub: '一副卡池抽一张，翻开就是这一关的任务', section: 'random', validationMethod: 0 },
       /* 《预制人生》两段(契约 §2.1 / §2.4)。问答式交互,但结果都写进会话状态:
          建档写角色档案(后面的故事能引用),留言写给下一个来的人。 */
       { key: 'profile', icon: 'edit', label: '角色建档', sub: '设置问题，填写角色资料', section: 'profile', validationMethod: 0 },
@@ -104,7 +104,7 @@ const BASE_GAMES = [
   { key: 'choice', label: '选项问答', category: '问答', icon: 'check', forms: [form('text', '文字选项', 'qaPick'), form('image', '图片选项', 'pricePair'), form('taste', '闭眼盲品', 'blindTaste'), form('reveal', '到期揭晓', 'predict')] },
   { key: 'text', label: '文字问答', category: '问答', icon: 'edit', gameKey: 'qaText' },
   { key: 'photo', label: '拍照', category: '问答', icon: 'camera', forms: [form('checkin', '拍照打卡', 'qaShot'), form('review', '拍照审核', 'photoCheck'), form('card', '拍物成卡', 'objectCard')] },
-  { key: 'random', label: '随机结果', category: '互动', icon: 'gift', forms: [form('coin', '抛硬币', 'coin'), form('dice', '掷骰子', 'dice'), form('cards', '抽卡', 'random')] },
+  { key: 'random', label: '随机结果', category: '互动', icon: 'gift', forms: [form('coin', '抛硬币', 'coin'), form('dice', '掷骰子', 'dice'), form('cards', '翻卡', 'random')] },
   { key: 'check', label: 'D20', category: '挑战', icon: 'star', forms: [form('tier', '三档难度', 'check'), form('d20', 'D20 加值', 'd20')] },
   ...['sort', 'match', 'classify'].map(key => Object.assign({}, ALL.find(item => item.key === key), { category: '推理', gameKey: key })),
   ...['estimate', 'hidden', 'profile'].map(key => Object.assign({}, ALL.find(item => item.key === key), { category: '互动', gameKey: key })),
