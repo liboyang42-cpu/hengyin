@@ -304,8 +304,9 @@ class CityDirectorConsoleMySqlIT {
                         "名单不得带隐私字段:" + key);
             }
         }
-        assertEquals(new TreeSet<>(Set.of(PLAYER_A, MATE_A, PLAYER_B)), rosterMembers,
-                "未付费、已退队、别场的成员都不进导演台名单");
+        // 第十一轮 h4 L3(owner 工单):付了款没组队 / 已退队的玩家仍是本场玩家,一人一行进名单;未付费、别场的不进。
+        assertEquals(new TreeSet<>(Set.of(PLAYER_A, MATE_A, PLAYER_B, EXITED_B)), rosterMembers,
+                "未付费、别场的成员不进导演台名单;已付费但不在队的单独一行");
         Map<String, Object> readiness = (Map<String, Object>) club.getClub().get("readiness");
         assertEquals(Boolean.TRUE, readiness.get("teamsReady"));
         assertEquals(List.of(), readiness.get("blockers"));
@@ -386,17 +387,16 @@ class CityDirectorConsoleMySqlIT {
 
     @Test
     void broadcastReachesOnlyPaidActiveMembersInScope() {
-        // D4 全员:A 队两名已付费成员 + B 队一名;未付费 / 已退队 / 别场的一个都不投。
+        // D4 全员:本场已付费未退的玩家都投(第十一轮 h4 L3:含已退队、没组队的);未付费 / 别场的一个都不投。
         int revision = sessionRevision();
         GameCommandReceiptView all = broadcast("dc-bc-all", "ALL", null, null);
         assertEquals("APPLIED", all.getOutcome());
         Object allId = all.getResult().get("broadcastId");
-        assertEquals(new TreeSet<>(Set.of(PLAYER_A, MATE_A, PLAYER_B)), deliveredTo(allId));
-        assertEquals(3, count("select count(*) from game_broadcast_delivery where broadcast_id=? and status='REACHED'", allId));
+        assertEquals(new TreeSet<>(Set.of(PLAYER_A, MATE_A, PLAYER_B, EXITED_B)), deliveredTo(allId));
+        assertEquals(4, count("select count(*) from game_broadcast_delivery where broadcast_id=? and status='REACHED'", allId));
         assertEquals("SENT", it.db.queryForObject("select status from game_broadcast where id=?", String.class, allId));
         assertEquals(revision + 1, sessionRevision(), "广播只加一次会话版本");
         verify(im, never()).sendSystemInNestedTransaction(eq(UNPAID_A), any(), any(), any());
-        verify(im, never()).sendSystemInNestedTransaction(eq(EXITED_B), any(), any(), any());
         verify(im, never()).sendSystemInNestedTransaction(eq(OTHER_PLAYER), any(), any(), any());
 
         // D5 定向:按队伍只投本队;按角色只投持该角色者。
@@ -414,14 +414,14 @@ class CityDirectorConsoleMySqlIT {
         assertEquals(broadcasts, count("select count(*) from game_broadcast"));
         assertEquals(deliveries, count("select count(*) from game_broadcast_delivery"));
 
-        // D9 存活范围:退款的成员、退队的成员立即离开投递范围。
+        // D9 存活范围:退款的成员立即离开「全员」投递范围;退队只离开队伍,仍是本场付款玩家(第十一轮 h4 L3)。
         it.db.update("update cms_registration set payment_status=3 where member_id=?", PLAYER_B);
         it.db.update("update play_team_member set status=0 where member_id=?", MATE_A);
         Object narrowed = broadcast("dc-bc-narrow", "ALL", null, null).getResult().get("broadcastId");
-        assertEquals(new TreeSet<>(Set.of(PLAYER_A)), deliveredTo(narrowed), "退款/退队后只剩 A");
+        assertEquals(new TreeSet<>(Set.of(PLAYER_A, MATE_A, EXITED_B)), deliveredTo(narrowed), "退款的 B 不再投;退队的仍投");
 
         // 范围内一个人都没有:报错且整笔回滚(广播行不留)。
-        it.db.update("update play_team_member set status=0 where member_id=?", PLAYER_A);
+        it.db.update("update cms_registration set payment_status=3 where member_id in (?,?,?)", PLAYER_A, MATE_A, EXITED_B);
         broadcasts = count("select count(*) from game_broadcast");
         revision = sessionRevision();
         assertEquals("GAME_BROADCAST_NO_RECIPIENT", assertThrows(GameSessionException.class,
@@ -441,7 +441,7 @@ class CityDirectorConsoleMySqlIT {
         assertEquals(1, count("select count(*) from game_broadcast_delivery where broadcast_id=? and status='FAILED'", id));
         List<Map<String, Object>> reachedBefore = it.db.queryForList(
                 "select id,member_id,message_id,status from game_broadcast_delivery where broadcast_id=? and status='REACHED' order by id", id);
-        assertEquals(2, reachedBefore.size());
+        assertEquals(3, reachedBefore.size(), "A、A 队友与已退队的付款玩家(第十一轮 h4 L3)");
 
         GameSessionCommand retry = command("dc-bc-retry", "BROADCAST", null);
         retry.setExpectedRevision(first.getRevision() - 1);
