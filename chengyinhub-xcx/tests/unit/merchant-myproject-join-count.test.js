@@ -99,6 +99,9 @@ test('工作台「全部 N」== 我的项目(商家)里未结束的项目卡数,
   assert.deepEqual(rows.filter((p) => p._join).map((p) => p.id).sort(), [11, 14]);
   const join = rows.find((p) => p.id === 11);
   assert.equal(join._roleText, '承办');
+  assert.equal(join.stateText, '进行中', '状态签与工作台承接卡同源');
+  assert.equal(join._showAccept, true);
+  assert.equal(join.acceptStatusText, '我承接的', '承接卡不印 0 报名 · 0 浏览');
   assert.equal(join._canDelete || join._canToggle || join._canEdit || join._canCancel, false, '承接卡只读');
   assert.equal(list.vm.data.projectState, 'ready');
   assert.equal(list.vm.data.list.length, 3, '主题 tab 直接看到三张卡');

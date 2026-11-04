@@ -23,6 +23,8 @@ function card(row, key) {
     endTime: row.endDate || null,
     addressName: row.addressName || '',
     state: STATE_OF_LABEL[label] || 'running',
+    // 状态签与工作台承接卡同源(statusLabelOf);档期未知写关系本身「承接中」
+    stateText: label || '承接中',
     projectTypeText: '承接',
     _join: true,
   };
