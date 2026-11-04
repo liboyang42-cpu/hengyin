@@ -5,6 +5,7 @@ const roleGuard = require('../../../utils/roleGuard.js');
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
 const wizardMorph = require('../../../utils/wizard-morph.js');
 const { bizFailureMessage } = require('../../../utils/response-shape.js');
+const { memberId, retryLogin } = require('../../../utils/session/login-reload.js');
 
 // ⚠️ chip 选中判定必须由 JS 预算好。WXML 表达式**不支持方法调用**,
 // 原来的 activityPrefs.indexOf(item) >= 0 恒为假 —— 2026-09-02 截图对稿实测:
@@ -178,6 +179,8 @@ Page({
     this._bootstrapChecking = false;
     // 任一预检失败即结束本轮，避免另一条迟到回调把错误态覆盖成 ready。
     this._bootstrapEpoch = epoch + 1;
+    // p3 F2:游客没有会话,「重新检查」永远不会成功;与 club/apply 一致给登录,登录后续上。
+    if (!memberId(app)) { this.setData({ bootstrapState: 'guest', bootstrapError: '' }); return; }
     this.setData({
       bootstrapState: 'error',
       bootstrapErrorKind: kind,
@@ -186,6 +189,8 @@ Page({
   },
 
   retryBootstrap() { this.startBootstrap(); },
+
+  loginBootstrap() { retryLogin(this, app, function () { roleGuard.clear(); this.startBootstrap(); }); },
 
   goApply() {
     const redirectEpoch = (this._redirectEpoch || 0) + 1;
@@ -264,8 +269,10 @@ Page({
     var name = String(this.data.name || '').trim();
     var finish = typeof done === 'function' ? done : function () {};
     if (!name) { finish(false); return; }
-    if (this._nameCheckPending === name) return;
+    // p3 F1:输入框失焦先发起查名,紧接着的「下一步」不能被吞,挂到同一次查名上等结果。
+    if (this._nameCheckPending === name) { this._nameCheckWaiters = (this._nameCheckWaiters || []).concat(finish); return; }
     this._nameCheckPending = name;
+    this._nameCheckWaiters = [finish];
     var epoch = (this._nameCheckEpoch || 0) + 1;
     this._nameCheckEpoch = epoch;
     var that = this;
@@ -274,7 +281,9 @@ Page({
       that._nameCheckPending = '';
       if (String(that.data.name || '').trim() !== name) return;
       that.setData({ nameError: reason || '' }, that.validate);
-      finish(!reason);
+      var waiters = that._nameCheckWaiters || [];
+      that._nameCheckWaiters = [];
+      waiters.forEach(function (fn) { fn(!reason); });
     }
     app.sendRequest({
       url: '/api/club/name-check',
