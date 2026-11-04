@@ -271,7 +271,8 @@ public class ApiRegistrationController extends BaseController {
 
             Long registrationId = Convert.toLong(id, 0L);
 
-            boolean result = registrationService.cancelRegistration(registrationId, memberId, userName);
+            // 支付中(关掉支付面板)的单先查单再关,见 IRegistrationCheckoutService#cancelUnpaid
+            boolean result = registrationCheckoutService.cancelUnpaid(memberId, registrationId, userName);
             return result ? AjaxResult.success("报名已取消") : AjaxResult.error("取消失败");
         } catch (Exception e) {
             return AjaxResult.error(e.getMessage());

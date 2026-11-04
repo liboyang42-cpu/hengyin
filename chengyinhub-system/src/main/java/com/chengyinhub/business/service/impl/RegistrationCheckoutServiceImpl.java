@@ -13,6 +13,9 @@ import com.chengyinhub.business.service.PaymentPreorderException;
 import com.chengyinhub.business.service.RegistrationCheckoutException;
 import com.chengyinhub.business.service.RegistrationCheckoutResult;
 import com.chengyinhub.business.service.RegistrationRequestConflictException;
+import com.chengyinhub.business.mapper.CmsRegistrationMapper;
+import com.chengyinhub.common.constant.EntitlementInvalidReason;
+import com.chengyinhub.common.utils.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -36,6 +39,9 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
     @Autowired
     @org.springframework.beans.factory.annotation.Qualifier("wechatPaymentSdkGateway")
     private WechatPaymentOperations wechatPayService;
+    /** 只读:多票父单找支付中的主单。 */
+    @Autowired
+    private CmsRegistrationMapper cmsRegistrationMapper;
 
     @Override
     public RegistrationQuoteResult quote(Long memberId, RegistrationRequest request) {
@@ -102,6 +108,120 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
         Map<String, Object> data = mapOrder(registration, singleton(registration));
         data.put("payParams", createWechatOrder(registration, appChannel));
         return new RegistrationCheckoutResult("支付参数获取成功", data);
+    }
+
+    /**
+     * ROUND10 j6 F2:关掉微信支付面板后,单已被 beginPaymentAttempt 置为支付中(payment_status=1),
+     * 而 cancelUnpaidIfActive 只收 0/3,于是这单既取消不了、又占着票,只能等过期对账。
+     * 支付中的单不能凭本地状态直接关(用户可能正在另一处付款),这里复用过期对账
+     *(OrderCloseTask.reconcileExpiredPaying)与主办方取消活动的「先查单、后关单」同一条路:
+     * <ul>
+     *   <li>NOTPAY / PAYERROR → 先关微信侧原尝试(closePaymentAttempt 关后回查为 CLOSED 才算数),再本地关单;</li>
+     *   <li>CLOSED → 直接本地关单;</li>
+     *   <li>USERPAYING → 用户正在付款,拒绝取消;SUCCESS → 按回调同一条链路补记已支付,拒绝取消;</li>
+     *   <li>查单失败 / 原单不存在 / 单号不符 / 未知态 / 关单未确认 → 拒绝,保持原状,交给过期对账。</li>
+     * </ul>
+     * 本地关单走 settleClosedPayingOne:锁原订单并核对微信当前尝试仍是刚观察并关闭的那一个;
+     * 若其间又发起了新尝试(继续支付),它返回 false,本次取消拒绝,新尝试照常可付。
+     * 关单提交后 freezePaymentIntent 见业务单已不可支付,不会再给这单发新尝试,所以不存在「取消后又付成」的路径。
+     */
+    @Override
+    @org.springframework.transaction.annotation.Transactional(propagation = org.springframework.transaction.annotation.Propagation.NEVER)
+    public boolean cancelUnpaid(Long memberId, Long registrationId, String userName) {
+        RestoreDispatchGuard.requireDispatchAllowed();
+        requireNoActiveTransaction();
+        CmsRegistration observed = registrationService.selectCmsRegistrationById(registrationId);
+        if (observed == null) {
+            throw new RegistrationCheckoutException(404, "报名记录不存在");
+        }
+        if (memberId == null || !memberId.equals(observed.getMemberId())) {
+            throw new RegistrationCheckoutException(403, "无权取消他人报名");
+        }
+        CmsRegistration paying = isPaying(observed) ? observed : payingPrimaryOf(observed);
+        if (paying == null) {
+            return registrationService.cancelRegistration(registrationId, memberId, userName);
+        }
+        if (!memberId.equals(paying.getMemberId()) || StringUtils.isBlank(paying.getRegistrationNo())) {
+            throw new RegistrationCheckoutException(409, "该报名状态已变化,无法取消");
+        }
+        if (!wechatPayService.isReady()) {
+            throw new RegistrationCheckoutException(503, "支付结果确认中，请稍后再试");
+        }
+        Map<String, String> facts;
+        try {
+            facts = wechatPayService.queryOrderStatus(paying.getRegistrationNo());
+        } catch (RestoreDispatchGuard.Blocked paused) {
+            throw paused;
+        } catch (RuntimeException unconfirmed) {
+            // 含 WechatOrderNotExistException:NOT_FOUND 不能证明原请求未被受理。
+            throw paymentUnconfirmed();
+        }
+        String wxNo = facts == null ? null : facts.get("wx_out_trade_no");
+        String state = facts == null ? null : facts.get("trade_state");
+        if (StringUtils.isBlank(wxNo) || StringUtils.isBlank(state)
+                || !paying.getRegistrationNo().equals(facts.get("out_trade_no"))) {
+            throw paymentUnconfirmed();
+        }
+        if ("SUCCESS".equalsIgnoreCase(state)) {
+            registrationService.handleWechatPayCallback(facts);
+            throw new RegistrationCheckoutException(409, "订单已支付，如需取消请在订单详情申请");
+        }
+        if ("USERPAYING".equalsIgnoreCase(state)) {
+            throw new RegistrationCheckoutException(409, "订单正在支付中，请完成支付或稍后再取消");
+        }
+        if ("NOTPAY".equalsIgnoreCase(state) || "PAYERROR".equalsIgnoreCase(state)) {
+            boolean closed;
+            try {
+                closed = wechatPayService.closePaymentAttempt(paying.getRegistrationNo(), wxNo);
+            } catch (RestoreDispatchGuard.Blocked paused) {
+                throw paused;
+            } catch (RuntimeException uncertain) {
+                closed = false;
+            }
+            if (!closed) {
+                throw paymentUnconfirmed();
+            }
+        } else if (!"CLOSED".equalsIgnoreCase(state)) {
+            throw paymentUnconfirmed();
+        }
+        if (registrationService.settleClosedPayingOne(paying, wxNo,
+                EntitlementInvalidReason.ORGANIZER_CANCEL, userName, 3)) {
+            return true;
+        }
+        CmsRegistration current = registrationService.selectCmsRegistrationById(registrationId);
+        if (current != null && Integer.valueOf(3).equals(current.getRegistrationStatus())) {
+            return true;
+        }
+        throw new RegistrationCheckoutException(409, "该报名状态已变化,无法取消");
+    }
+
+    private static boolean isPaying(CmsRegistration r) {
+        return Integer.valueOf(1).equals(r.getPaymentStatus()) && Integer.valueOf(1).equals(r.getRegistrationStatus());
+    }
+
+    /**
+     * 多票父单的从单停在 0 态,钱付没付只有支付中的主单查单说了算(同 expiredUnpaidPredicate 的排除口径)。
+     * 从单被单独取消时转到主单走查单关单,settlePayingOne 会把从单一并关掉、一并回补。
+     */
+    private CmsRegistration payingPrimaryOf(CmsRegistration r) {
+        if (!Integer.valueOf(0).equals(r.getPaymentStatus()) || !Integer.valueOf(1).equals(r.getRegistrationStatus())
+                || StringUtils.isBlank(r.getParentOrderNo())) {
+            return null;
+        }
+        List<CmsRegistration> siblings = cmsRegistrationMapper.selectByParentOrderNo(r.getParentOrderNo());
+        if (siblings == null) {
+            return null;
+        }
+        for (CmsRegistration sibling : siblings) {
+            if (sibling != null && !r.getId().equals(sibling.getId()) && isPaying(sibling)) {
+                return sibling;
+            }
+        }
+        return null;
+    }
+
+    private static RegistrationCheckoutException paymentUnconfirmed() {
+        return new RegistrationCheckoutException(409, "支付结果确认中，请稍后再试");
     }
 
     /** 请求是否指定走原生 App 支付。大小写不敏感,空值一律按 JSAPI。 */
