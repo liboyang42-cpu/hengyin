@@ -1,0 +1,1 @@
+[{"wait":3000},{"scroll":2000},{"tap":"立即报名"},{"wait":3500},{"data":"userInfo"},{"data":"selectedAddress"},{"tap":"同意将姓名、手机号提供给主办方"},{"wait":500},{"tap":["测试甲",{"nth":0}]},{"wait":1000},{"data":"userInfo"}]

@@ -1,0 +1,2 @@
+[{"wait":3000},{"scroll":2000},{"tap":"立即报名"},{"wait":2500},{"tap":"参与人信息"},{"wait":2000},
+{"type":["input[placeholder=\"输入姓名\"]","测试甲"]},{"type":["input[placeholder=\"输入手机号\"]","13700000001"]},{"tap":"保存参与人信息"},{"wait":2500},{"route":1},{"shot":"27-p1-signup-with-participant"},{"text":900},{"net":1}]

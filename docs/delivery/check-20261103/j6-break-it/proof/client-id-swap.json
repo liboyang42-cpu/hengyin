@@ -1,0 +1,121 @@
+[
+ {
+  "n": "41-p1member-club-edit-7002",
+  "ident": "walk-player-1",
+  "url": "pages/club/edit/index?id=7002",
+  "route": "pages/club/edit/index",
+  "text": "编辑资料 | 暂无编辑权限 | 只有该俱乐部主理人或管理员可以编辑资料，请返回俱乐部页。 | 返回俱乐部 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "200 /api/club/access/me => {\"msg\":\"操作成功\",\"code\":200,\"data\":{\"active\":true,\"club\":{\"id\":7002,\"name\":\"执行俱乐部\",\"logo\":null},\"activityId\":null,\"roleCodes\":[\"CLUB_MEMBER\"],\"",
+   "200 /api/club/detail => {\"msg\":\"操作成功\",\"code\":200,\"data\":{\"id\":7002,\"memberId\":9008,\"name\":\"执行俱乐部\",\"logo\":null,\"cover\":null,\"description\":null,\"clubTypes\":null,\"acti",
+   "200 /api/club/detail => {\"msg\":\"操作成功\",\"code\":200,\"data\":{\"id\":7002,\"memberId\":9008,\"name\":\"执行俱乐部\",\"logo\":null,\"cover\":null,\"description\":null,\"clubTypes\":null,\"acti"
+  ],
+  "errs": []
+ },
+ {
+  "n": "42-p1member-club-settlement-7002",
+  "ident": "walk-player-1",
+  "url": "pages/club/settlement/index?clubId=7002",
+  "route": "pages/club/settlement/index",
+  "text": "暂时不能查看 | 当前角色没有这项权限 | 俱乐部结算 | 商家计酬 | 俱乐部直接付款 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "200 /api/club/settlement/summary => {\"msg\":\"仅主理人与联席主理人可查看分润\",\"code\":500}",
+   "200 /api/club/access/me => {\"msg\":\"操作成功\",\"code\":200,\"data\":{\"active\":true,\"club\":{\"id\":7002,\"name\":\"执行俱乐部\",\"logo\":null},\"activityId\":null,\"roleCodes\":[\"CLUB_MEMBER\"],\"",
+   "200 /api/club-direct-merchant/club?clubId=7002 => {\"msg\":\"无该俱乐部账目查看范围\",\"code\":500}",
+   "200 /api/club-direct-merchant/club?clubId=7002 => {\"msg\":\"无该俱乐部账目查看范围\",\"code\":500}",
+   "200 /api/club/settlement/summary => {\"msg\":\"仅主理人与联席主理人可查看分润\",\"code\":500}"
+  ],
+  "errs": []
+ },
+ {
+  "n": "43-p1member-club-roles-7002",
+  "ident": "walk-player-1",
+  "url": "pages/club/roles/index?clubId=7002",
+  "route": "pages/club/roles/index",
+  "text": "角色与权限 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "200 /api/club/access/me => {\"msg\":\"操作成功\",\"code\":200,\"data\":{\"active\":true,\"club\":{\"id\":7002,\"name\":\"执行俱乐部\",\"logo\":null},\"activityId\":null,\"roleCodes\":[\"CLUB_MEMBER\"],\""
+  ],
+  "errs": [
+   "agree: tap: no visible element with text \"同意并继续\""
+  ]
+ },
+ {
+  "n": "44-p1member-club-workbench-7002",
+  "ident": "walk-player-1",
+  "url": "pages/club/workbench/index?id=7002",
+  "route": "pages/club/detail/index",
+  "text": "执行俱乐部 | 城市探索 · 3 名成员 | 公开加入 | 退出 | 帖子 | 活动 | 概览 | 暂无简介 | 执行俱乐部主理人 | 主理人 | 城市探索 | 俱乐部类型 | — | 所在城市 | 俱乐部勋章 | 成员 · 3 | 执行俱乐部主理人 | 群主 | 城瘾用户 | 玩家二号 | 本团贡献榜 · 本周 | 综合 | 1 | 执行俱乐部主理人 | 0.0 分 | 欢迎加入「执行俱乐部」 | 发帖和大家聊 | 在「帖子」发动态、带上你的漫游成绩，大家都能点亮和评论 | 报名俱乐部的局 | 在「活动」报名最近的局 | 认识成员、攒贡献 | 在「概览」看成员和本周贡献榜，参加活动就会攒贡献分 | 知道了 | 去看活动 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "200 /api/club/detail => {\"msg\":\"操作成功\",\"code\":200,\"data\":{\"id\":7002,\"memberId\":9008,\"name\":\"执行俱乐部\",\"logo\":null,\"cover\":null,\"description\":null,\"clubTypes\":null,\"acti",
+   "200 /api/club/topics => {\"msg\":\"操作成功\",\"code\":200,\"data\":[{\"createBy\":\"13900000003\",\"createTime\":\"2026-11-04 12:25:51\",\"updateBy\":null,\"updateTime\":\"2026-11-04 12:26",
+   "200 /api/club/post/list => {\"msg\":\"操作成功\",\"code\":200,\"data\":[]}",
+   "200 /api/club/leaderboard => {\"msg\":\"操作成功\",\"code\":200,\"data\":[]}",
+   "200 /api/club/members => {\"msg\":\"操作成功\",\"code\":200,\"data\":[{\"createBy\":null,\"createTime\":null,\"updateBy\":null,\"updateTime\":null,\"remark\":null,\"id\":null,\"clubId\":7002,",
+   "200 /api/club/access/me => {\"msg\":\"操作成功\",\"code\":200,\"data\":{\"active\":true,\"club\":{\"id\":7002,\"name\":\"执行俱乐部\",\"logo\":null},\"activityId\":null,\"roleCodes\":[\"CLUB_MEMBER\"],\""
+  ],
+  "errs": []
+ },
+ {
+  "n": "45-p1member-club-customers-7002",
+  "ident": "walk-player-1",
+  "url": "pages/club/customers/index?clubId=7002",
+  "route": "pages/club/customers/index",
+  "text": "暂时不能查看 | 当前角色没有这项权限 | 客户 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "200 /api/club/crm/customers/list => {\"msg\":\"当前岗位没有客户查看权限\",\"code\":500}",
+   "200 /api/club/access/me => {\"msg\":\"操作成功\",\"code\":200,\"data\":{\"active\":true,\"club\":{\"id\":7002,\"name\":\"执行俱乐部\",\"logo\":null},\"activityId\":null,\"roleCodes\":[\"CLUB_MEMBER\"],\""
+  ],
+  "errs": [
+   "agree: tap: no visible element with text \"同意并继续\""
+  ]
+ },
+ {
+  "n": "46-merchant9005-ledger-order-76",
+  "ident": "e2e-openid-9005",
+  "url": "pages/merchant/ledger/order-detail/index?id=76",
+  "route": "pages/merchant/ledger/order-detail/index",
+  "text": "核销详情 | 缺少核销记录信息 | 请返回重新进入 | 返回上一页 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "200 /api/merchant/access/me => {\"msg\":\"操作成功\",\"code\":200,\"data\":{\"active\":true,\"merchant\":{\"id\":8002,\"name\":\"探店日样板书店\",\"logo\":null},\"roleCode\":\"MERCHANT_OWNER\",\"permissions\""
+  ],
+  "errs": []
+ },
+ {
+  "n": "47-player-merchant-ledger",
+  "ident": "walk-player-1",
+  "url": "pages/merchant/ledger/index",
+  "route": "pages/merchant/ledger/index",
+  "text": "核销与退款 | 当前身份不能查看这份商家账本 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "200 /api/merchant/access/me => {\"msg\":\"操作成功\",\"code\":200,\"data\":{\"active\":false,\"permissions\":[],\"canManageOperators\":false,\"applicationState\":\"NONE\"}}",
+   "200 /api/merchant/access/me => {\"msg\":\"操作成功\",\"code\":200,\"data\":{\"active\":false,\"permissions\":[],\"canManageOperators\":false,\"applicationState\":\"NONE\"}}"
+  ],
+  "errs": []
+ },
+ {
+  "n": "48-p2-coop-settlement-detail",
+  "ident": "walk-player-2",
+  "url": "pages/coop/settlement-detail/index?topicId=990014&source=finance",
+  "route": "pages/coop/settlement-detail/index",
+  "text": "结算详情 | 结算记录不可见 | 返回结算列表 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "200 /api/coop/finance => {\"msg\":\"操作成功\",\"code\":200,\"data\":{\"adjustments\":{\"pendingAmount\":0,\"executedAmount\":0,\"pendingReason\":null},\"isOwner\":true,\"topics\":[]}}",
+   "200 /api/coop/finance => {\"msg\":\"操作成功\",\"code\":200,\"data\":{\"adjustments\":{\"pendingAmount\":0,\"executedAmount\":0,\"pendingReason\":null},\"isOwner\":true,\"topics\":[]}}"
+  ],
+  "errs": []
+ },
+ {
+  "n": "49-lead9008-club-edit-7001",
+  "ident": "e2e-openid-9008",
+  "url": "pages/club/edit/index?id=7001",
+  "route": "pages/club/edit/index",
+  "text": "暂时不能查看 | 当前账号无权进入该俱乐部 | 编辑资料 | 暂无编辑权限 | 只有该俱乐部主理人或管理员可以编辑资料，请返回俱乐部页。 | 返回俱乐部 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "200 /api/club/access/me => {\"msg\":\"操作成功\",\"code\":200,\"data\":{\"active\":false,\"roleCodes\":[],\"permissions\":[],\"eventAccesses\":[],\"canManageRoles\":false}}",
+   "200 /api/club/detail => {\"msg\":\"操作成功\",\"code\":200,\"data\":{\"id\":7001,\"memberId\":9003,\"name\":\"城瘾跑团\",\"logo\":null,\"cover\":null,\"description\":null,\"clubTypes\":null,\"activ",
+   "200 /api/club/detail => {\"msg\":\"操作成功\",\"code\":200,\"data\":{\"id\":7001,\"memberId\":9003,\"name\":\"城瘾跑团\",\"logo\":null,\"cover\":null,\"description\":null,\"clubTypes\":null,\"activ"
+  ],
+  "errs": []
+ }
+]

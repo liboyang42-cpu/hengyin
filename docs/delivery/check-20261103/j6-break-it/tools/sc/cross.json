@@ -1,0 +1,9 @@
+[["41-p1member-club-edit-7002","walk-player-1","pages/club/edit/index?id=7002"],
+["42-p1member-club-settlement-7002","walk-player-1","pages/club/settlement/index?clubId=7002"],
+["43-p1member-club-roles-7002","walk-player-1","pages/club/roles/index?clubId=7002"],
+["44-p1member-club-workbench-7002","walk-player-1","pages/club/workbench/index?id=7002"],
+["45-p1member-club-customers-7002","walk-player-1","pages/club/customers/index?clubId=7002"],
+["46-merchant9005-ledger-order-76","e2e-openid-9005","pages/merchant/ledger/order-detail/index?id=76"],
+["47-player-merchant-ledger","walk-player-1","pages/merchant/ledger/index"],
+["48-p2-coop-settlement-detail","walk-player-2","pages/coop/settlement-detail/index?topicId=990014&source=finance"],
+["49-lead9008-club-edit-7001","e2e-openid-9008","pages/club/edit/index?id=7001"]]

@@ -1,0 +1,3 @@
+[{"wait":3000},{"scroll":2000},{"tap":"立即报名"},{"wait":3500},{"shot":"33-p1-reenter-checkout"},{"text":400},{"tap":"同意将姓名、手机号提供给主办方"},{"wait":500},
+{"tap":["付款",{"exact":true}]},{"wait":1500},{"tap":["13700000001",{"nth":1}]},{"wait":1200},{"net":1},
+{"pay":"success"},{"dbltap":["付款",{"exact":true}]},{"wait":1200},{"shot":"34-p1-triple-tap-pay"},{"dbltap":["继续下单",{"exact":true}]},{"wait":7000},{"route":1},{"shot":"35-p1-after-pay"},{"text":900},{"net":1}]

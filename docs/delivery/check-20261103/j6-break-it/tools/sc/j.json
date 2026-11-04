@@ -1,0 +1,1 @@
+[{"wait":3500},{"scroll":300},{"tap":["取消订单",{"exact":true}]},{"wait":1200},{"shot":"37-p1-cancel-pending-order"},{"net":1},{"dbltap":["取消订单",{"exact":true,"nth":0}]},{"wait":2500},{"shot":"38-p1-cancel-pending-result"},{"text":700},{"net":1}]
