@@ -1307,11 +1307,11 @@
   <view class="finsheet__head">
     <view class="finsheet__eyebrow" wx:if="{{finishDateLabel}}">{{finishDateLabel}}{{!(allDone || topicCompleted) && topicName ? ' · ' + topicName : ''}}</view>
     <view class="finsheet__title">{{allDone || topicCompleted ? topicName : chapter.name}}</view>
-    <view class="finsheet__result {{allDone || topicCompleted ? 'is-win' : ''}}">{{allDone || topicCompleted ? '已通关' : '本章完成'}}</view>
+    <view class="finsheet__result {{allDone || topicCompleted ? 'is-win' : ''}}">{{allDone || topicCompleted ? '已通关' : (finishChapterDone ? '本章完成' : '已结束')}}</view>
   </view>
   <!-- mode2:探索值/徽章数是经典定向的读数(且 total×12 写死),探店日只报真事实 —— 核销与集章 -->
   <view class="finsheet__grid" wx:if="{{mode!=2}}">
-    <view class="fst"><cy-icon class="fst__ic" name="pin-solid" size="36" /><text class="fst__v">{{doneCount}}</text><text class="fst__l">点亮坐标</text></view>
+    <view class="fst" wx:if="{{doneCount > 0}}"><cy-icon class="fst__ic" name="pin-solid" size="36" /><text class="fst__v">{{doneCount}}</text><text class="fst__l">点亮坐标</text></view>
     <view class="fst fst--s" wx:if="{{reviewElapsed}}"><text class="fst__v">{{reviewElapsed}}</text><text class="fst__l">用时</text></view>
     <view class="fst fst--s" wx:if="{{reviewDistance}}"><text class="fst__v">{{reviewDistance}} km</text><text class="fst__l">距离</text></view>
     <view class="fst fst--s" wx:if="{{finishPuzzleCount}}"><text class="fst__v">{{finishPuzzleScore}}</text><text class="fst__l">解谜分</text><text class="fst__sub" wx:if="{{finishPuzzleBest > 0}}">个人最佳 {{finishPuzzleBest}}</text></view>

@@ -4493,6 +4493,8 @@ Page({
       poiId: poi.id,
       // 只有服务端 roam 非商户 POI 需要这条到点校验；商家仍走既有确定性探店链路。
       canDiscover: !!(poi._roamId && poi.cat !== 'merchant' && !poi.demo),
+      // R11 g1(j4 F11):这个点本人已经确认过(服务端回执落地后 poi.state='done'),再打开也是完成态
+      confirmed: poi.state === 'done' || !!(this._foundRoamPois && poi._roamId && this._foundRoamPois[poi._roamId]),
       meaning: '',
       checkinErr: '',
       checkinRetryable: true,

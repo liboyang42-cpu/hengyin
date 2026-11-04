@@ -280,14 +280,16 @@ page{ background:var(--cy-color-bg-page); }
  *   .x 28px 圆 rgba(0,0,0,.06) #6B7280 · .act 高 36 内边距 16 圆角满 #111/#fff 13px 700
  *
  * 做法:槽的根节点加一个 topcard 类,内部沿用各自既有的类名,
- * 由下面这组映射统一换皮 —— 这样 WXML 每个槽只多一个类,结构一行没动。 */
-.topcard{ position:relative; background:#FFFFFF; color:#111111; border-radius:35rpx; /* ds-ok 原型 .topcard */
+ * 由下面这组映射统一换皮 —— 这样 WXML 每个槽只多一个类,结构一行没动。
+ * R11 g1(j4 F11,业主 2026-11-04):玩家地图上一律深色,与旁边的地点卡(roam-place-card)同一底色与字色 token;
+ * 版式、字号、圆角照原型不变,只换颜色。 */
+.topcard{ position:relative; background:var(--cy-color-play-surface-solid, #1C1C1E); color:var(--cy-color-text-primary); border-radius:35rpx; /* ds-ok 原型 .topcard */
   padding:31rpx 31rpx 27rpx; box-shadow:0 23rpx 62rpx rgba(0,0,0,.5); } /* ds-ok 原型 16/16/14 · 0 12px 32px */
 /* 标题 .t */
 .topcard .event-overlay__title,
 .topcard .pc-title,
 .topcard .zc-title,
-.topcard .roam-prompt-line{ font-size:31rpx; font-weight:800; color:#111111; } /* ds-ok 原型 .t 16px 800 */
+.topcard .roam-prompt-line{ font-size:31rpx; font-weight:800; color:var(--cy-color-text-primary); } /* ds-ok 原型 .t 16px 800 */
 /* 正文 .s */
 .topcard .event-overlay__hint,
 .topcard .event-overlay__risk,
@@ -295,28 +297,30 @@ page{ background:var(--cy-color-bg-page); }
 .topcard .pc-hint,
 .topcard .pc-demo,
 .topcard .zc-name,
-.topcard .roam-prompt-label{ font-size:23rpx; color:#5B6472; margin-top:10rpx; } /* ds-ok 原型 .s 12px / 上 5px */
+.topcard .roam-prompt-label{ font-size:23rpx; color:var(--cy-color-text-secondary); margin-top:10rpx; } /* ds-ok 原型 .s 12px / 上 5px */
 /* 眉标 .k */
 .topcard .event-overlay__k,
-.topcard .zc-tag{ font-size:19rpx; font-weight:800; letter-spacing:1rpx; color:#6B7280; text-transform:none; } /* ds-ok 原型 .k 10px 800 .6px */
+.topcard .zc-tag{ font-size:19rpx; font-weight:800; letter-spacing:1rpx; color:var(--cy-color-text-tertiary); text-transform:none; } /* ds-ok 原型 .k 10px 800 .6px */
 /* 关闭 .x —— 白卡上同样纯字形无底,只借浅色前景 */
 .topcard .event-overlay__close-glyph,
-.topcard .pc-close__glyph{ color:#6B7280; } /* ds-ok 原型 .x 28px 前景 */
+.topcard .pc-close__glyph{ color:var(--cy-color-text-secondary); } /* ds-ok 原型 .x 28px 前景 */
 .topcard .zc-close,
-.topcard .roam-prompt-close{ color:#6B7280; } /* ds-ok 原型 .x 前景 */
+.topcard .roam-prompt-close{ color:var(--cy-color-text-secondary); } /* ds-ok 原型 .x 前景 */
 /* 主动作 .act */
 .topcard .pc-action,
 .topcard .event-task__btn{ min-height:69rpx; margin-top:23rpx; padding:0 31rpx; border-radius:var(--cy-radius-pill);
-  background:#111111; color:#FFFFFF; font-size:25rpx; font-weight:700; } /* ds-ok 原型 .act 36/16/13px 700 */
-/* 白面上的其余文字一律换成白底可读的两档灰,不再读夜端 token */
+  background:var(--cy-color-action-primary-bg); color:var(--cy-color-action-primary-fg); font-size:25rpx; font-weight:700; } /* ds-ok 原型 .act 36/16/13px 700 */
+/* R11 g1(j4 F11):确认到点之后的完成态 —— 同一颗按钮的位置,次级底色,不可点 */
+.topcard .pc-action--done{ background:var(--cy-color-action-secondary-bg); color:var(--cy-color-text-secondary); }
+/* 其余文字读夜端字色 token(R11 g1 起顶部卡与地点卡同为深色) */
 .topcard .pc-meaning-label,
 .topcard .event-task__sub,
 .topcard .event-task__auto,
-.topcard .zc-demo-state{ color:#6B7280; } /* ds-ok 原型白卡次要文字 */
+.topcard .zc-demo-state{ color:var(--cy-color-text-tertiary); } /* ds-ok 原型白卡次要文字 */
 .topcard .pc-meaning-text,
-.topcard .event-task__title{ color:#111111; } /* ds-ok 原型白卡正文 */
-.topcard .pc-info{ color:#6B7280; } /* ds-ok 白面上的信息图标 */
-.topcard .pc-meaning{ border-top-color:rgba(0,0,0,.08); } /* ds-ok 白卡分隔线 */
+.topcard .event-task__title{ color:var(--cy-color-text-primary); } /* ds-ok 原型白卡正文 */
+.topcard .pc-info{ color:var(--cy-color-text-tertiary); } /* ds-ok 白面上的信息图标 */
+.topcard .pc-meaning{ border-top-color:var(--cy-color-border-subtle); } /* ds-ok 白卡分隔线 */
 /* 卡自己的底色被上面的白覆盖 —— 内层那几张深色卡不再自带底 */
 .topcard .pace-card,
 .topcard .zc-card,

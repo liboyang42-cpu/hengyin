@@ -45,5 +45,6 @@ test('milestone counts the topic the server just declared completed', () => {
 test('finish card title and result use the topic when the server declared completion', () => {
   const wxml = require('node:fs').readFileSync(path.resolve(__dirname, '../../pages/play/index.wxml'), 'utf8');
   assert.match(wxml, /finsheet__title">\{\{allDone \|\| topicCompleted \? topicName : chapter\.name\}\}/);
-  assert.match(wxml, /allDone \|\| topicCompleted \? '已通关' : '本章完成'/);
+  // R11 g1(j4 F8):「本章完成」只在本章真完成时说,其余「已结束」
+  assert.match(wxml, /allDone \|\| topicCompleted \? '已通关' : \(finishChapterDone \? '本章完成' : '已结束'\)/);
 });

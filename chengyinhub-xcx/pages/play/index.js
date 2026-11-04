@@ -589,7 +589,7 @@ Page({
     // M2 夜间提示(自玩 22:00–06:00):后端回执带 nightWarning 时在完成结果时刻出一句
     nightHint: false,
     // 通关
-    showFinish: false, celebrationEvent: '', finishScore: 0, finishPuzzleScore: 0, finishPuzzleCount: 0, finishPuzzleBest: 0,
+    showFinish: false, finishChapterDone: false, celebrationEvent: '', finishScore: 0, finishPuzzleScore: 0, finishPuzzleCount: 0, finishPuzzleBest: 0,
     finishMedals: 0, finishMedalList: [], finishAchievements: [], finishDateLabel: '', medalScreen: { show: false, items: [], title: '', sub: '', stats: [], record: null }, finishSnap: '', finishSnapError: false, finishPhotos: [], canReplayJournal: false,
     branchPath: [],
     finishRouteRecommendation: null,
@@ -5019,6 +5019,12 @@ Page({
           that._loc = { longitude: loc.longitude, latitude: loc.latitude, accuracy: loc.accuracy };
           that._noteLocAccuracy(loc.accuracy);
           if (typeof that._noteMyTrail === 'function') that._noteMyTrail(loc);
+          /* R11 g1(j4 F7):「下一站 · Xm」与罗盘距离跟着走 —— 以前只在 rebuild 时算一次,走到站上还写着出发时的距离。
+             文字没变就不 setData(取整到米 / 0.1km,每 tick 比一次很便宜)。 */
+          if (that.data.nextNode) {
+            const distText = that._distText(that.data.nextNode);
+            if (distText !== that.data.storyDistText) that.setData({ storyDistText: distText });
+          }
           // S2 陪伴态:仅 nav.active 时才把玩家位置回灌地图(箭头需要跟着走)+ 刷新剩余距离/途中气泡阈值
           // 性能:回灌地图会触发 free-map 全量 _rebuild(重画节点+circles+箭头),GPS 每 1-3s 一次太频繁,
           // 节流成"移动 ≥5 米才回灌";nav.remainM/气泡阈值仍每 tick 刷(便宜,不受影响)。
@@ -8083,8 +8089,14 @@ Page({
     }, 0);
     this._finishArtworkEpoch = (this._finishArtworkEpoch || 0) + 1;
     const finishView = this._finishViewContext();
+    /* R11 g1(j4 F8):「本章完成」只在这一章的站真的都完成时说;一站没做就收尾(长按暂停这一局)说「已结束」 */
+    const finishChapterId = this.data.chapter && this.data.chapter.id;
+    const finishChapterNodes = finishChapterId == null ? []
+      : (this.data.nodes || []).filter((n) => n && n.chapterId != null && String(n.chapterId) === String(finishChapterId));
+    const finishChapterDone = finishChapterNodes.length > 0 && finishChapterNodes.every((n) => n.done);
     this.setData({
       showFinish: true,
+      finishChapterDone,
       finishScore: earnedXp,
       finishPuzzleScore: puzzleSummary.score,
       finishPuzzleCount: puzzleSummary.count,

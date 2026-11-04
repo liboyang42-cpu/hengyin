@@ -357,7 +357,7 @@
         <view class="zc-tagrow">
           <!-- demo=演示种子点(_initWorld 造的,不是后端真商家)。必须说出来:
                否则用户会走过去打卡一家根本不存在的店。 -->
-          <text class="zc-tag">{{item.demo ? '演示点 · 非真实商家' : (item.catLabel || '附近商家')}}{{item.distM ? ' · ' + item.distM + 'M' : ''}}</text>
+          <text class="zc-tag">{{item.demo ? '演示点 · 非真实商家' : (item.catLabel || '附近商家')}}{{item.distM ? ' · ' + item.distM + ' 米' : ''}}</text>
           <!-- 拍板 9-16:距离不够就是不能打卡,按钮不可用并只提示还差多远(不产生失败态) -->
           <text class="zc-far" wx:if="{{item.canCheckin === false}}">还差 {{item.gapM || 0}} 米才能打卡</text>
           <!-- #22 逐卡集章进度:本店状态 + 附近集章数 -->
@@ -392,8 +392,10 @@
     <text class="pc-body" wx:if="{{paceCard.reason}}">{{paceCard.reason}}</text>
     <text class="pc-body" wx:if="{{paceCard.sources}}" user-select>{{paceCard.sources}}</text>
     <cy-roam-place-note wx:if="{{paceCard.tags}}" tags="{{paceCard.tags}}" bind:note="onPlaceNote" />
-    <text class="pc-hint" wx:if="{{paceCard.canDiscover && !paceCard.meaning && !paceCard.checkinErr}}">靠近后可确认地点</text>
-    <view class="pc-action" wx:if="{{paceCard.canDiscover && !paceCard.meaning && !paceCard.checkinErr}}" bindtap="discoverRoamPoi" data-id="{{paceCard.poiId}}" aria-role="button" aria-label="确认到达漫游点" hover-class="cy-pressed" hover-stay-time="80">确认到点</view>
+    <text class="pc-hint" wx:if="{{paceCard.canDiscover && !paceCard.confirmed && !paceCard.meaning && !paceCard.checkinErr}}">靠近后可确认地点</text>
+    <view class="pc-action" wx:if="{{paceCard.canDiscover && !paceCard.confirmed && !paceCard.meaning && !paceCard.checkinErr}}" bindtap="discoverRoamPoi" data-id="{{paceCard.poiId}}" aria-role="button" aria-label="确认到达漫游点" hover-class="cy-pressed" hover-stay-time="80">确认到点</view>
+    <!-- R11 g1(j4 F11):服务端确认到点后,按钮原地换成完成态 -->
+    <view class="pc-action pc-action--done" wx:if="{{paceCard.canDiscover && paceCard.confirmed}}" aria-role="text" aria-label="已到达">已到达</view>
     <!-- 只在服务器确认到点且后端返回独立审核内容时出现；无来源不留空壳。 -->
     <view class="pc-meaning" wx:if="{{paceCard.meaning}}">
       <text class="pc-meaning-label">地点记忆</text>

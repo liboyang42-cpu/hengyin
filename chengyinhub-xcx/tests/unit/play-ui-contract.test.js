@@ -321,7 +321,7 @@ test('完成页明确显示通关状态并保留照片邮票', () => {
   // 避免有人把回落删掉、让接口一挂完成页就不说自己完成没完成。
   // 2026-10-27:服务端按主题规则(主线 N 站)判了通关时(topicCompleted)同样写「已通关」,不因选做站没走完写成「本章完成」
   // 2026-10-28 完成页改版(业主定稿):标签只说本章完成 / 已通关,「你已完成第 N 个主题」进城市探索卡的里程碑标题
-  assert.match(playWxml, /class="finsheet__result \{\{allDone \|\| topicCompleted \? 'is-win' : ''\}\}">\{\{allDone \|\| topicCompleted \? '已通关' : '本章完成'\}\}/)
+  assert.match(playWxml, /class="finsheet__result \{\{allDone \|\| topicCompleted \? 'is-win' : ''\}\}">\{\{allDone \|\| topicCompleted \? '已通关' : \(finishChapterDone \? '本章完成' : '已结束'\)\}\}/)  // R11 g1(j4 F8)
   assert.match(playWxml, /class="finish-milestone__head">\s*<text>\{\{milestone\.title\}\}<\/text>/)
   assert.match(playWxml, /class="finish-stamps"[\s\S]*?wx:for="\{\{finishPhotos\}\}"/)
   assert.match(roamWxml, /class="finish-stamps"[\s\S]*?wx:for="\{\{finish\.photos\}\}"/)
@@ -570,7 +570,7 @@ test('「点亮坐标」必须取已完成数(doneCount),部分完成时不得�
   const js = readXcx('pages/play/index.js')
 
   // ① 通关卡统计格:该格的数字必须是 doneCount(2026-10-22 起格首可带一枚字形图标)
-  const cell = wxml.match(/<view class="fst">(?:<cy-icon class="fst__ic"[^>]*\/>)?<text class="fst__v">\{\{([a-zA-Z]+)\}\}<\/text><text class="fst__l">点亮坐标<\/text><\/view>/)
+  const cell = wxml.match(/<view class="fst"(?: wx:if="\{\{doneCount > 0\}\}")?>(?:<cy-icon class="fst__ic"[^>]*\/>)?<text class="fst__v">\{\{([a-zA-Z]+)\}\}<\/text><text class="fst__l">点亮坐标<\/text><\/view>/)
   assert.ok(cell, '找不到「点亮坐标」统计格')
   assert.equal(cell[1], 'doneCount', '「点亮坐标」绑的必须是 doneCount,不能是 total')
 
@@ -601,7 +601,7 @@ test('负控:「点亮坐标」退回 total 时上面那条契约必须判红', 
     '<text class="fst__v">{{doneCount}}</text><text class="fst__l">点亮坐标</text></view>',
     '<text class="fst__v">{{total}}</text><text class="fst__l">点亮坐标</text></view>')
   assert.notEqual(mutated, wxml, '负控必须真的把绑定改回 total')
-  const cell = mutated.match(/<view class="fst">(?:<cy-icon class="fst__ic"[^>]*\/>)?<text class="fst__v">\{\{([a-zA-Z]+)\}\}<\/text><text class="fst__l">点亮坐标<\/text><\/view>/)
+  const cell = mutated.match(/<view class="fst"(?: wx:if="\{\{doneCount > 0\}\}")?>(?:<cy-icon class="fst__ic"[^>]*\/>)?<text class="fst__v">\{\{([a-zA-Z]+)\}\}<\/text><text class="fst__l">点亮坐标<\/text><\/view>/)
   assert.ok(cell)
   // 断言「上面那条契约会判红」，判据是抛出 AssertionError 本身，不是它的消息文案。
   // 2026-08-27:原来写的是 /doneCount|total/ 去匹配 Node 内部的错误消息 —— 那串文案
