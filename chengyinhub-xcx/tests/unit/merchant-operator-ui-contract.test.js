@@ -918,3 +918,40 @@ test('M-15(第三轮):接受邀请只落权限,不跳页', () => {
   bad.requests[0].success({ code: 409, msg: '邀请已失效' });
   assert.deepEqual(bad.relaunches, []);
 });
+
+// 第十轮 f1 item 4(j1 F4/F22):受邀人接受前是玩家视角,预览与接受不能被 role-view-filter 吞掉;落地页说清门店与岗位。
+test('玩家视角放行员工邀请预览与接受,其余团队接口照旧不发', () => {
+  const filter = require('../../utils/transport/role-view-filter.js');
+  assert.equal(filter.isMerchantOnlyUrl('/api/merchant/operators/invite/accept'), false);
+  assert.equal(filter.isMerchantOnlyUrl('/api/merchant/operators/invite/preview'), false);
+  ['/api/merchant/operators/list', '/api/merchant/operators/invite', '/api/merchant/operators/invite/revoke',
+    '/api/merchant/operators/invite/accepted', '/api/merchant/operators/role', '/api/merchant/operators/remove',
+    '/api/merchant/operators/roles', '/api/merchant/operators?x=1'].forEach((url) => {
+    assert.equal(filter.isMerchantOnlyUrl(url), true, url);
+  });
+});
+
+test('邀请落地页凭 token 读门店名与岗位,替掉旧说明句;失效就讲失效', () => {
+  const token = 'safe-incoming-token-1234567890';
+  const h = mountTeamPage({}, { memberId: 'member-7' });
+  h.page.onLoad({ invite: token });
+  h.page.loadAccess();
+  h.requests[0].success({ code: 200, data: { active: false, applicationState: 'NONE', permissions: [], merchant: null } });
+  assert.equal(h.page.data.accessState, 'invite');
+  const preview = h.requests.find((r) => r.url === '/api/merchant/operators/invite/preview');
+  assert.ok(preview, '邀请态必须读邀请预览');
+  assert.equal(JSON.parse(preview.data).token, token);
+  preview.success({ code: 200, data: { merchantName: '梧桐里书房', roleCode: 'MERCHANT_CHECKIN', roleName: '核销员' } });
+  assert.equal(JSON.stringify(h.page.data.invitePreview), JSON.stringify({ merchantName: '梧桐里书房', roleName: '核销员' }));
+  const wxml = read('pages/merchant/team/index.wxml');
+  assert.match(wxml, /\{\{invitePreview\.merchantName\}\} · \{\{invitePreview\.roleName\}\}/);
+  assert.doesNotMatch(wxml, /接受后会获得店主分配的固定岗位/);
+
+  const gone = mountTeamPage({}, { memberId: 'member-7' });
+  gone.page.onLoad({ invite: token });
+  gone.page.loadAccess();
+  gone.requests[0].success({ code: 200, data: { active: false, applicationState: 'NONE', permissions: [], merchant: null } });
+  gone.requests.find((r) => r.url === '/api/merchant/operators/invite/preview').success({ code: 409, msg: '邀请无效或已失效' });
+  assert.equal(gone.page.data.invitePreview, null);
+  assert.equal(gone.page.data.acceptResult, '邀请无效或已失效');
+});

@@ -17,7 +17,7 @@
     <view class="tm-invite-landing">
       
       <view class="tm-invite-title">加入经营团队</view>
-      <view class="tm-invite-copy">接受后会获得店主分配的固定岗位；每个账号同一时间只能加入一个商家团队。</view>
+      <view class="tm-invite-copy" wx:if="{{invitePreview}}">{{invitePreview.merchantName}} · {{invitePreview.roleName}}</view>
       <cy-btn variant="primary" loading="{{accepting}}" bind:tap="acceptIncomingInvite">接受邀请</cy-btn>
       <view class="tm-result tm-result--error" wx:if="{{acceptResult}}">{{acceptResult}}</view>
     </view>

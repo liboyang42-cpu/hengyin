@@ -236,6 +236,7 @@ Page({
     hasIncomingInvite: false,
     accepting: false,
     acceptResult: '',
+    invitePreview: null,
     roleSheet: { show: false, mode: '', operator: null },
     submitting: false,
     createdInvite: null,
@@ -378,6 +379,7 @@ Page({
           accessState: access.active ? 'ready' : 'invite',
           accessError: '',
         });
+        if (!access.active) this.loadInvitePreview();
         if (access.canManageOperators) {
           this.loadRoles();
           this.loadTeam();
@@ -753,6 +755,32 @@ Page({
     if (!dc) { toast(ok ? '已完成' : (text || '操作失败')); return; }
     if (ok) dc.done();
     else dc.failed(text || '操作失败');
+  },
+
+  // j1 F22:落地页说清是哪家店、什么岗位。凭邀请 token 读(后端只回门店名与岗位),失效就直接讲失效。
+  loadInvitePreview() {
+    const token = this._incomingInviteToken;
+    if (!token) return;
+    const owner = String(app.getUserID() || '');
+    const current = () => !this._unloaded && token === this._incomingInviteToken && owner === String(app.getUserID() || '');
+    app.sendRequest({
+      hideLoading: true,
+      silentError: true,
+      url: '/api/merchant/operators/invite/preview',
+      method: 'POST',
+      header: { 'Content-Type': 'application/json' },
+      data: JSON.stringify({ token }),
+      success: (res) => {
+        if (!current()) return;
+        const data = res && (res.code === 200 || res.code === '200') && isRecord(res.data) ? res.data : null;
+        if (data && typeof data.merchantName === 'string' && typeof data.roleName === 'string') {
+          this.setData({ invitePreview: { merchantName: data.merchantName, roleName: data.roleName } });
+          return;
+        }
+        this.setData({ invitePreview: null, acceptResult: app.getRequestErrorMessage(res, '邀请无效或已失效') });
+      },
+      fail: () => { if (current()) this.setData({ invitePreview: null, acceptResult: '网络异常，请重试' }); },
+    });
   },
 
   acceptIncomingInvite() {

@@ -660,6 +660,45 @@ class MerchantOperatorServiceImplTest {
         return new MerchantAccessContext(OWNER, MERCHANT, OWNER, MerchantRoleCode.MERCHANT_OWNER);
     }
 
+    /** 第十轮 f1 item 4(j1 F22):受邀人只凭 token 读到门店名与岗位;失效/撤销/过期/停用一律同一句,不带邀请人与权限。 */
+    @Test
+    void invitePreviewNamesShopAndRoleOnlyForAPendingLiveToken() {
+        String token = "preview-token-abcdefghijklmnop";
+        MmsMerchant shop = activeMerchant();
+        shop.setName("梧桐里书房");
+        when(merchants.selectMmsMerchantById(MERCHANT)).thenReturn(shop);
+        when(invites.selectByTokenHash(hash(token))).thenReturn(pendingInvite(token));
+
+        java.util.Map<String, Object> out = service.invitePreview(EMPLOYEE, token);
+
+        assertEquals(java.util.Set.of("merchantName", "roleCode"), out.keySet());
+        assertEquals("梧桐里书房", out.get("merchantName"));
+        assertEquals(MerchantRoleCode.MERCHANT_CHECKIN, out.get("roleCode"));
+        verify(invites, never()).selectByTokenHashForUpdate(any());
+        verify(operators, never()).insertMerchantOperator(any());
+
+        MerchantOperatorInvite revoked = pendingInvite(token);
+        revoked.setStatus("REVOKED");
+        when(invites.selectByTokenHash(hash(token))).thenReturn(revoked);
+        assertEquals("邀请无效或已失效", assertThrows(ServiceException.class, () -> service.invitePreview(EMPLOYEE, token)).getMessage());
+
+        MerchantOperatorInvite expired = pendingInvite(token);
+        expired.setExpiresAt(new Date(System.currentTimeMillis() - 1));
+        when(invites.selectByTokenHash(hash(token))).thenReturn(expired);
+        assertThrows(ServiceException.class, () -> service.invitePreview(EMPLOYEE, token));
+
+        when(invites.selectByTokenHash(hash(token))).thenReturn(pendingInvite(token));
+        MmsMerchant disabled = activeMerchant();
+        disabled.setAccountStatus(2L);
+        when(merchants.selectMmsMerchantById(MERCHANT)).thenReturn(disabled);
+        assertThrows(ServiceException.class, () -> service.invitePreview(EMPLOYEE, token));
+
+        when(invites.selectByTokenHash(any())).thenReturn(null);
+        assertThrows(ServiceException.class, () -> service.invitePreview(EMPLOYEE, "wrong-token-abcdefghijklmnop"));
+        assertThrows(ServiceException.class, () -> service.invitePreview(EMPLOYEE, "short"));
+        assertThrows(ServiceException.class, () -> service.invitePreview(null, token));
+    }
+
     private MerchantOperatorInvite pendingInvite(String token) {
         MerchantOperatorInvite invite = new MerchantOperatorInvite();
         invite.setId(31L);

@@ -1032982,7 +1032982,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/team/index.js:657"
+        "staticSource": "pages/merchant/team/index.js:659"
       }
     },
     {
@@ -1033052,7 +1033052,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/team/index.js:410"
+        "staticSource": "pages/merchant/team/index.js:412"
       }
     },
     {
@@ -1033119,7 +1033119,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/team/index.js:519"
+        "staticSource": "pages/merchant/team/index.js:521"
       }
     },
     {
@@ -1033244,7 +1033244,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/team/index.js:521"
+        "staticSource": "pages/merchant/team/index.js:523"
       }
     },
     {
@@ -1033307,12 +1033307,14 @@
           "/api/config/features",
           "/api/login/code",
           "/api/merchant/access/me",
+          "/api/merchant/operators/invite/preview",
           "/api/merchant/operators/list",
           "/api/merchant/operators/roles",
           "/api/role/info"
         ],
         "primaryApis": [
           "/api/merchant/access/me",
+          "/api/merchant/operators/invite/preview",
           "/api/merchant/operators/list",
           "/api/merchant/operators/roles"
         ],
@@ -1033336,6 +1033338,12 @@
           },
           {
             "url": "/api/merchant/access/me",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/operators/invite/preview",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1033372,7 +1033380,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/team/index.js:407"
+        "staticSource": "pages/merchant/team/index.js:409"
       }
     },
     {
@@ -1033440,7 +1033448,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/team/index.js:666"
+        "staticSource": "pages/merchant/team/index.js:668"
       }
     },
     {
@@ -1033543,7 +1033551,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/team/index.js:671"
+        "staticSource": "pages/merchant/team/index.js:673"
       }
     },
     {
@@ -1033644,7 +1033652,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/team/index.js:671"
+        "staticSource": "pages/merchant/team/index.js:673"
       }
     },
     {
@@ -1033707,6 +1033715,7 @@
           "/api/login/code",
           "/api/merchant/access/me",
           "/api/merchant/operators/invite/accept",
+          "/api/merchant/operators/invite/preview",
           "/api/merchant/operators/list",
           "/api/merchant/operators/roles",
           "/api/role/info"
@@ -1033714,6 +1033723,7 @@
         "primaryApis": [
           "/api/merchant/access/me",
           "/api/merchant/operators/invite/accept",
+          "/api/merchant/operators/invite/preview",
           "/api/merchant/operators/list",
           "/api/merchant/operators/roles"
         ],
@@ -1033743,6 +1033753,12 @@
           },
           {
             "url": "/api/merchant/operators/invite/accept",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/operators/invite/preview",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1033779,7 +1033795,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/team/index.js:758"
+        "staticSource": "pages/merchant/team/index.js:786"
       }
     },
     {
@@ -1033846,7 +1033862,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/team/index.js:411"
+        "staticSource": "pages/merchant/team/index.js:413"
       }
     },
     {
@@ -1033909,6 +1033925,7 @@
           "/api/login/code",
           "/api/merchant/access/me",
           "/api/merchant/operators/invite/accept",
+          "/api/merchant/operators/invite/preview",
           "/api/merchant/operators/list",
           "/api/merchant/operators/roles",
           "/api/role/info"
@@ -1033916,6 +1033933,7 @@
         "primaryApis": [
           "/api/merchant/access/me",
           "/api/merchant/operators/invite/accept",
+          "/api/merchant/operators/invite/preview",
           "/api/merchant/operators/list",
           "/api/merchant/operators/roles"
         ],
@@ -1033945,6 +1033963,12 @@
           },
           {
             "url": "/api/merchant/operators/invite/accept",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/operators/invite/preview",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1033981,7 +1034005,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/team/index.js:758"
+        "staticSource": "pages/merchant/team/index.js:786"
       }
     },
     {
@@ -1034090,7 +1034114,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/team/index.js:502"
+        "staticSource": "pages/merchant/team/index.js:504"
       }
     },
     {
@@ -1034157,7 +1034181,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/team/index.js:512"
+        "staticSource": "pages/merchant/team/index.js:514"
       }
     },
     {
@@ -1034226,7 +1034250,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/team/index.js:647"
+        "staticSource": "pages/merchant/team/index.js:649"
       }
     },
     {
@@ -1034335,7 +1034359,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/team/index.js:502"
+        "staticSource": "pages/merchant/team/index.js:504"
       }
     },
     {

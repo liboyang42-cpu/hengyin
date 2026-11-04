@@ -1,10 +1,10 @@
-// G-4(2026-10-27 p89/p95):玩家视角不请求商家工作台接口、不展示商家身份报错。纯函数,视角由 request-client 注入。
-// ① 下表接口玩家视角直接不发,按 403 静默失败;共用接口(coop/list、access/me、营销同意、公开主页…)不在表里。
+// G-4:玩家视角不请求商家工作台接口、不展示商家身份报错。视角由 request-client 注入。
+// ① 下表接口玩家视角不发,按 403 静默失败;共用接口(coop/list、access/me、邀请预览/接受…)不在表里。
 // ② 任何接口在玩家视角回商家身份 403:清 msg、不 toast,打 roleViewSuppressed,页面按「没有商家数据」处理。
 var MERCHANT_ONLY_ENDPOINTS = [
   /^\/api\/merchant\/predict\//,
   /^\/api\/merchant\/relation-home(?:\?|$)/,
-  /^\/api\/merchant\/operators(?:\/|\?|$)/,
+  /^\/api\/merchant\/operators(?!\/invite\/(?:accept|preview)(?:\?|$))(?:\/|\?|$)/,
   /^\/api\/merchant\/dashboard(?:\?|$)/,
   /^\/api\/coop\/mybiz(?:\?|$)/
 ];
