@@ -1,0 +1,1 @@
+[{"hook":1},{"relaunch":"/pages/merchant/game-node/index"},{"wait":700},{"shot":"04-guest-merchant-link-no-id"},{"wait":4000},{"route":1},{"shot":"05-guest-landed-logged-in"},{"text":300},{"net":1},{"eval":"[getApp().getUserID(), window.__ls.map(s=>s.slice(0,90))]"},{"relaunch":"/pages/member/index/index"},{"wait":2000},{"shot":"06-guest-now-has-account"},{"text":300}]

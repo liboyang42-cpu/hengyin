@@ -1,0 +1,1 @@
+[{"shot":"01-guest-home"},{"net":1},{"relaunch":"/pages/merchant/game-node/index?activityId=13"},{"wait":800},{"shot":"02-guest-merchant-deeplink"},{"hook":1},{"wait":3500},{"route":1},{"shot":"03-guest-silently-logged-in"},{"text":400},{"net":1},{"eval":"[getApp().getUserID(), !!getApp().getAuthorization()]"}]

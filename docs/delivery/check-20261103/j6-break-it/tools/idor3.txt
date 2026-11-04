@@ -1,0 +1,3 @@
+9003 POST /api/club/access/me js {"clubId":7001}
+9008 POST /api/club/access/me js {"clubId":7002}
+9008 POST /api/club/settlement/summary js {"clubId":7002}

@@ -1,0 +1,1 @@
+[{"wait":1500},{"tap":"票夹"},{"wait":3500},{"shot":"13-acctA-ticket-wallet"},{"text":400},{"offline":true},{"back":1},{"wait":500},{"tap":"票夹"},{"wait":4000},{"shot":"14-wallet-offline"},{"data":"walletState"},{"text":300},{"offline":false},{"wait":500},{"tap":"重试"},{"wait":2500},{"shot":"15-wallet-after-network-back"},{"text":300}]

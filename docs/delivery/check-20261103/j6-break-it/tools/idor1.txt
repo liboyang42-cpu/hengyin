@@ -1,0 +1,17 @@
+# 9004 (stranger) against 9009's paid order 74
+9009 POST /api/registration/info form {"id":74}
+9004 POST /api/registration/info form {"id":74}
+9004 POST /api/registration/explore-completion form {"id":74}
+9004 POST /api/registration/pay form {"id":74}
+9004 POST /api/registration/cancel form {"id":74}
+9004 POST /api/registration/cancel-refund form {"id":74}
+9004 POST /api/registration/cancel-by-owner form {"id":74}
+9004 POST /api/verify/dyncode/issue form {"registrationId":74}
+9004 POST /api/verify/seat/receipt form {"registrationId":74,"seatNo":1,"activityId":13}
+9004 POST /api/registration/join_info form {"member_id":9009}
+9004 POST /api/invoice/apply js {"titleId":1,"orderIds":[74]}
+9004 POST /api/user/public-info js {"member_id":9009}
+9004 POST /api/user/public-info form {"member_id":9009}
+9004 POST /api/registration/count_by_date form {"owner_type":2,"owner_id":13}
+9005 POST /api/registration/cancel-by-owner form {"id":74}
+anon POST /api/registration/info form {"id":74}

@@ -1,0 +1,1 @@
+[{"wait":1500},{"shot":"10-acctA-9009-home"},{"tap":"票夹"},{"wait":2500},{"route":1},{"shot":"11-acctA-ticket-wallet"},{"text":500},{"storage":1},{"relaunch":"/pages/shezhi/shezhi"},{"wait":2000},{"shot":"12-acctA-settings"},{"text":500}]

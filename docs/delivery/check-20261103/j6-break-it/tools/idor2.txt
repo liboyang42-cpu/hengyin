@@ -1,0 +1,21 @@
+# club lead 9008 (club 7002) and player 9004 against club 7001 (lead 9003)
+9003 POST /api/club/settlement/summary js {"clubId":7001}
+9008 POST /api/club/settlement/summary js {"clubId":7001}
+9004 POST /api/club/settlement/withdraw js {"clubId":7001}
+9008 POST /api/club/roles/list js {"clubId":7001}
+9008 POST /api/club/roles/assign js {"clubId":7001,"targetMemberId":9008,"roleCode":"CO_HOST","requestId":"j6-assign-1"}
+9004 POST /api/club/roles/assign js {"clubId":7001,"targetMemberId":9004,"roleCode":"ADMIN","requestId":"j6-assign-2"}
+9008 POST /api/club/governance/owner/transfer js {"clubId":7001,"targetMemberId":9008,"reason":"j6","requestId":"j6-transfer-1"}
+9008 POST /api/club/governance/ban js {"clubId":7001,"targetMemberId":9004,"reason":"j6","requestId":"j6-ban-1"}
+9008 POST /api/club/governance/list js {"clubId":7001}
+9004 GET /api/club-direct-merchant/club q {"clubId":7001}
+9008 POST /api/club/membership/finance/invoices js {"clubId":7001}
+9008 POST /api/club/membership/setting/update js {"clubId":7001,"enabled":false}
+9008 POST /api/club/membership/plan/save js {"clubId":7001,"name":"j6","price":1}
+9008 POST /api/club/access/me js {"clubId":7001}
+# merchant 9005 (8002) against merchant 8001 (9002)
+9005 POST /api/merchant/aftercare/detail form {"refundId":1}
+9005 POST /api/merchant/desk/products/detail js {"productId":1}
+9004 POST /api/merchant/desk/products/detail js {"productId":1}
+9004 POST /api/merchant/aftercare/list form {}
+9004 GET /api/club-direct-merchant/merchant q {}
