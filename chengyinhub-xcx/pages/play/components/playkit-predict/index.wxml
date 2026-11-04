@@ -44,12 +44,13 @@
   </view>
 
   <!-- 提示单独放在按钮上方,不跟着内容流 —— 跟着流的话会被绝对定位的按钮压住 -->
-  <view class="pd__hint" wx:if="{{!revealKind}}">{{(closed && !myOptionKey) ? '今天这一轮已经截止' : (committed ? waitLabel : '转到想选的那张，点它')}}</view>
+  <view class="pd__hint" wx:if="{{!revealKind && !skipped}}">{{(closed && !myOptionKey) ? '今天这一轮已经截止' : (committed ? waitLabel : '转到想选的那张，点它')}}</view>
 
   <!-- R11 g1 F1:这一轮已关且没选 ⇒ 「不选，继续」,不让路线停在这里 -->
   <view wx:if="{{closed && !myOptionKey}}" class="g-btn {{skipping ? 'g-btn--disabled' : ''}}" bindtap="onCommit"
         aria-role="button" aria-label="不选，继续" hover-class="g-btn--press" hover-stay-time="80">不选，继续</view>
-  <view wx:else class="g-btn {{(committed || picked < 0) ? 'g-btn--disabled' : ''}}" bindtap="onCommit"
+  <!-- 第十一轮 g4:已经「不选，继续」过 ⇒ 不再出「就选这个」,继续由外面的「继续故事」走 -->
+  <view wx:elif="{{!skipped}}" class="g-btn {{(committed || picked < 0) ? 'g-btn--disabled' : ''}}" bindtap="onCommit"
         aria-role="button" aria-label="选定这一个" hover-class="g-btn--press" hover-stay-time="80">
     {{committed ? '已经选了' : '就选这个'}}
   </view>

@@ -753,7 +753,8 @@ page { background: var(--cy-color-bg-page); }
 .finsheet__map-fallback{ position:absolute; inset:0; width:100%; height:100%; }
 /* 第九轮 m2 第 3 项:路线分享卡 750×1000 画布,按屏宽 3:4 显示 */
 .finsheet__card{ padding:var(--cy-space-4) var(--cy-page-x) 0; }
-.finsheet__routecv{ display:block; width:100%; height:calc((100vw - 2 * var(--cy-page-x)) * 4 / 3); border-radius:var(--cy-radius-lg); overflow:hidden; background:var(--cy-color-play-surface-solid); }
+.finsheet__routecv{ --rc-w:min(calc(100vw - 2 * var(--cy-page-x)), calc((100vh - 900rpx) * 3 / 4)); display:block; width:var(--rc-w); height:calc(var(--rc-w) * 4 / 3); margin:0 auto; border-radius:var(--cy-radius-lg); overflow:hidden; background:var(--cy-color-play-surface-solid); } /* 第十一轮 g4(j4 F8):屏上预览按高度收,卡、按钮和章节标题在首屏落在固定「继续」之上;画布像素尺寸不变,导出仍是 3:4 */
+.finsheet__shade{ position:sticky; top:0; z-index:6; background:var(--cy-color-play-story-page); } /* 第十一轮 g4(j4 F8):状态栏下一条深色带,卡片标题不再滚到状态栏底下 */
 .finsheet__card-acts{ display:flex; gap:var(--cy-space-3); margin-top:var(--cy-space-4); }
 .finsheet__grid{ display:flex; margin-top:31rpx; }
 .fst{ flex:1; display:flex; flex-direction:column; align-items:center; gap:8rpx; }

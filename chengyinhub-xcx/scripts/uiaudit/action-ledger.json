@@ -1091982,7 +1091982,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-predict/index.js:171"
+        "staticSource": "pages/play/components/playkit-predict/index.js:173"
       }
     },
     {
@@ -1092106,7 +1092106,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-predict/index.js:192"
+        "staticSource": "pages/play/components/playkit-predict/index.js:194"
       }
     },
     {
@@ -1092229,11 +1092229,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-predict/index.js:176"
+        "staticSource": "pages/play/components/playkit-predict/index.js:178"
       }
     },
     {
-      "id": "pages/play/components/playkit-predict/index.wxml:52:bindtap:onCommit:3",
+      "id": "pages/play/components/playkit-predict/index.wxml:53:bindtap:onCommit:3",
       "route": "component:pages/play/components/playkit-predict/index",
       "hostRoutes": [
         "pages/play/index",
@@ -1092312,9 +1092312,9 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onCommit",
-        "line": 52,
+        "line": 53,
         "selectorHint": ".g-btn",
-        "visibleCondition": null,
+        "visibleCondition": "{{!skipped}}",
         "disabledCondition": null,
         "ariaLabel": "选定这一个",
         "ariaLabelExpression": null,
@@ -1092352,7 +1092352,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-predict/index.js:176"
+        "staticSource": "pages/play/components/playkit-predict/index.js:178"
       }
     },
     {

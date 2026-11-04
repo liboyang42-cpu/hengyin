@@ -95,6 +95,8 @@ Component({
     closed: { type: Boolean, value: false },
     /* 本站有承接商家才说「由商家给出答案」。默认 true:老服务端不下发这个字段时口径不变 */
     shopAnswers: { type: Boolean, value: true },
+    /* 第十一轮 g4:这一轮已经「不选，继续」过(服务端 predict.skipped)。不再邀请选,也不出「就选这个」 */
+    skipped: { type: Boolean, value: false },
   },
   data: {
     cards: [], picked: -1, committed: false, skipping: false, waitLabel: '',
@@ -169,7 +171,7 @@ Component({
     },
 
     onPick(e) {
-      if (this.data.committed || this.data.closed) return;
+      if (this.data.committed || this.data.closed || this.data.skipped) return;
       this.setData({ picked: Number(e.currentTarget.dataset.i) });
       this._paint();
     },

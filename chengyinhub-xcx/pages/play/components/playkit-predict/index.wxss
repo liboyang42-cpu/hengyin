@@ -92,7 +92,7 @@
   position: absolute;
   left: var(--cy-page-x);
   right: var(--cy-page-x);
-  bottom: calc(env(safe-area-inset-bottom) + 190rpx);
+  bottom: calc(env(safe-area-inset-bottom) + var(--pk-hint-bottom, 190rpx));   /* 第十一轮 g4:故事流内嵌时压在卡底,内嵌改 140rpx 落到卡与按钮之间 */
   z-index: 6;
   text-align: center;
   font-size: var(--cy-type-label);

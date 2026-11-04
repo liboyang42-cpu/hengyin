@@ -633,6 +633,8 @@ function pickPlayKit(view, now) {
         closed: seg.closed === true,
         // 本站有承接商家才说「由商家给出答案」;没有就不承诺
         shopAnswers: seg.shopAnswers !== false,
+        // 第十一轮 g4:已「不选，继续」过,卡面不再邀请选
+        skipped: seg.skipped === true,
       });
     }
     if (name === 'random') {
