@@ -179408,7 +179408,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/free-map/index.js:293"
+        "staticSource": "components/cy/free-map/index.js:297"
       }
     },
     {
@@ -179544,7 +179544,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/free-map/index.js:283"
+        "staticSource": "components/cy/free-map/index.js:287"
       }
     },
     {
@@ -179679,7 +179679,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/free-map/index.js:298"
+        "staticSource": "components/cy/free-map/index.js:302"
       }
     },
     {
@@ -179815,7 +179815,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/free-map/index.js:308"
+        "staticSource": "components/cy/free-map/index.js:312"
       }
     },
     {
@@ -179951,7 +179951,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/free-map/index.js:302"
+        "staticSource": "components/cy/free-map/index.js:306"
       }
     },
     {
@@ -180087,7 +180087,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/free-map/index.js:99"
+        "staticSource": "components/cy/free-map/index.js:105"
       }
     },
     {
@@ -180222,7 +180222,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/free-map/index.js:310"
+        "staticSource": "components/cy/free-map/index.js:314"
       }
     },
     {
@@ -180357,7 +180357,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/free-map/index.js:314"
+        "staticSource": "components/cy/free-map/index.js:318"
       }
     },
     {
@@ -180492,7 +180492,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/free-map/index.js:315"
+        "staticSource": "components/cy/free-map/index.js:319"
       }
     },
     {
@@ -1410289,13 +1410289,19 @@
           "pages/privacy/index"
         ],
         "apis": [
+          "/api/city/nodes/",
           "/api/city/nodes/{param}/favorite",
+          "/api/comment/list",
           "/api/config/features",
           "/api/login/code",
+          "/api/merchant/public-detail",
           "/api/role/info"
         ],
         "primaryApis": [
-          "/api/city/nodes/{param}/favorite"
+          "/api/city/nodes/",
+          "/api/city/nodes/{param}/favorite",
+          "/api/comment/list",
+          "/api/merchant/public-detail"
         ],
         "auxiliaryApis": [
           "/api/config/features",
@@ -1410304,7 +1410310,19 @@
         ],
         "apiContracts": [
           {
+            "url": "/api/city/nodes/",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
             "url": "/api/city/nodes/{param}/favorite",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/comment/list",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1410317,6 +1410335,12 @@
           },
           {
             "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/public-detail",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1410460,13 +1410484,19 @@
           "pages/privacy/index"
         ],
         "apis": [
+          "/api/city/nodes/",
           "/api/city/nodes/{param}/favorite",
+          "/api/comment/list",
           "/api/config/features",
           "/api/login/code",
+          "/api/merchant/public-detail",
           "/api/role/info"
         ],
         "primaryApis": [
-          "/api/city/nodes/{param}/favorite"
+          "/api/city/nodes/",
+          "/api/city/nodes/{param}/favorite",
+          "/api/comment/list",
+          "/api/merchant/public-detail"
         ],
         "auxiliaryApis": [
           "/api/config/features",
@@ -1410475,7 +1410505,19 @@
         ],
         "apiContracts": [
           {
+            "url": "/api/city/nodes/",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
             "url": "/api/city/nodes/{param}/favorite",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/comment/list",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1410488,6 +1410530,12 @@
           },
           {
             "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/public-detail",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1458059,7 +1458107,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/official-route/index.js:22"
+        "staticSource": "subpackageRoam/official-route/index.js:24"
       }
     },
     {
@@ -1458127,7 +1458175,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/official-route/index.js:45"
+        "staticSource": "subpackageRoam/official-route/index.js:47"
       }
     },
     {
@@ -1458197,7 +1458245,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/official-route/index.js:50"
+        "staticSource": "subpackageRoam/official-route/index.js:65"
       }
     },
     {

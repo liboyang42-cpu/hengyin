@@ -155,6 +155,6 @@ test('第九轮 m4:官方路线详情有好友与朋友圈分享,落到同一详
   assert.deepEqual(plain(def.onShareTimeline.call(ctx)), { title: '西湖一圈', query: 'id=12', imageUrl: 'https://img.example/r.jpg' });
   const loading = { _id: '12', data: { state: 'loading', route: null }, _shareCard: def._shareCard };
   const card = def.onShareAppMessage.call(loading);
-  assert.equal(card.title, '城瘾官方路线');
+  assert.equal(card.title, '城瘾官方线路');
   assert.ok(card.imageUrl, '没加载到时用固定封面,不让微信截屏');
 });

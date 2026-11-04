@@ -52,7 +52,7 @@ Page({
   // 第九轮 m4:好友与朋友圈分享(owner 2026-11-04 放行路线详情 GET,游客与朋友圈单页模式都能读到已上架路线)。
   _shareCard() {
     const route = this.data.state === 'ready' ? this.data.route : null
-    return { title: (route && route.name) || '城瘾官方路线', imageUrl: (route && route.cover) || ROAM_SHARE_COVER }
+    return { title: (route && route.name) || '城瘾官方线路', imageUrl: (route && route.cover) || ROAM_SHARE_COVER }
   },
   onShareAppMessage() {
     const card = this._shareCard()
