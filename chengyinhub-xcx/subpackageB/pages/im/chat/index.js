@@ -92,6 +92,7 @@ Page({
       missing: '链接已失效，请返回重新进入',
       closed: '组局已结束，不能继续聊天',
       error: '消息加载失败，点上方「重试」再试',
+      denied: '不能在这个会话发消息',
     },
     topicCache: {},
     routePickerOpen: false,
@@ -326,7 +327,7 @@ Page({
           that.recoverPending();
           return;
         }
-        that._setMessageLoadError(res);
+        that._setMessageLoadError(res, res && res.code != null && res.code != 200);
       },
       fail(res) {
         if (!current()) return;
@@ -341,7 +342,9 @@ Page({
     });
   },
 
-  _setMessageLoadError(response) {
+  // R11 p1 F-8:服务端明确拒绝(不是你的会话/已不存在)= 原因 + 返回消息列表,重试也不会变;
+  // 网络或服务异常 = 真的给「重试」(底部那句「点上方重试」才不是空话)。
+  _setMessageLoadError(response, refused) {
     if (response && response.errorCode === 'HANGOUT_CLOSED') {
       this._closedReturnPath = response.returnPath || '/subpackageB/pages/im/list/index';
       this.setData({ loadState: 'closed', loadErrorText: response.msg || '该组局已结束，聊天已关闭' });
@@ -350,7 +353,7 @@ Page({
     const msg = app.getRequestErrorMessage
       ? app.getRequestErrorMessage(response, '消息加载失败，请重试')
       : ((response && (response.msg || response.errMsg)) || '消息加载失败，请重试');
-    this.setData({ loadState: 'error', loadErrorText: msg });
+    this.setData({ loadState: refused ? 'denied' : 'error', loadErrorText: msg });
   },
 
   returnToMessageList() {

@@ -38,7 +38,8 @@
     <cy-skeleton wx:if="{{loadState === 'loading'}}" type="list" count="{{4}}" />
     <cy-empty wx:elif="{{loadState === 'missing'}}" class="chat-empty cy-fade-in" kind="missing-param" title="这个会话无法打开" sub="请返回重新进入" />
     <cy-empty wx:elif="{{loadState === 'closed'}}" class="chat-empty cy-fade-in" fill="{{true}}" size="lg" kind="not-found" title="这个组局已结束" cta="返回消息列表" bind:cta="returnToMessageList" />
-    <cy-error load-failure wx:elif="{{loadState === 'error'}}" class="chat-empty" title="消息加载失败" sub="{{loadErrorText}}" retry="重试" bind:retry="retryLoad" />
+    <cy-empty wx:elif="{{loadState === 'denied'}}" class="chat-empty cy-fade-in" fill="{{true}}" size="lg" kind="not-found" title="{{loadErrorText || '这个会话无法打开'}}" cta="返回消息列表" bind:cta="returnToMessageList" />
+    <cy-error wx:elif="{{loadState === 'error'}}" class="chat-empty" title="消息加载失败" sub="{{loadErrorText}}" retry="重试" bind:retry="retryLoad" />
     <cy-empty wx:elif="{{!msgs.length}}" class="chat-empty" kind="empty" title="还没有消息" />
 
     <block wx:for="{{msgs}}" wx:key="id">
