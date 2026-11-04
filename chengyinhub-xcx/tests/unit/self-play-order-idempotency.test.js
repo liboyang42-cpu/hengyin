@@ -237,7 +237,10 @@ test('进入主题页会把报名资料取回来缓存,建单载荷带真实姓�
   assert.equal(profile.data.member_id, 500);
   assert.equal(requests.filter(r => r.url === '/api/registration/create').length, 0,
     '取资料不该顺手建单');
-  profile.success({ code: '200', data: { name: '张三', mobilePhone: '13800001111' } });
+  // R11 j3 F8(业主 2026-11-04 第十一轮改口):姓名取参与人信息,不再取资料页的昵称(name)
+  profile.success({ code: '200', data: { name: '夜行昵称', mobilePhone: '13800001111' } });
+  requests.find(r => r.url === '/api/user/address/list')
+    .success({ code: '200', data: { rows: [{ id: 7, fullName: '张三', mobilePhone: '13800009999' }] } });
 
   vm._createSelfPlayOrder.call(vm, 500);
   const create = requests.find(r => r.url === '/api/registration/create');
@@ -254,9 +257,9 @@ test('资料不全时不打必被拒的建单，给出出路并放开在途标�
 
   vm._createSelfPlayOrder.call(vm, 500);
   // 建单前会先现取一次资料(预取可能还没回来)，那次也取不到才给提示
-  const retry = requests[requests.length - 1];
-  assert.equal(retry.url, '/api/user/info');
-  retry.fail();
+  const retry = requests.slice(-2);
+  assert.deepEqual(retry.map(r => r.url), ['/api/user/info', '/api/user/address/list']);
+  retry.forEach(r => r.fail());
 
   assert.equal(requests.filter(r => r.url === '/api/registration/create').length, 0,
     '空姓名建单必被后端拒，不该让玩家看到那句跟自己无关的报错');
@@ -278,8 +281,9 @@ test('预取没回来时，点购买现取到资料就直接建单，不误报�
   vm._signupProfile = undefined;
 
   vm._createSelfPlayOrder.call(vm, 500);
-  const retry = requests[requests.length - 1];
-  retry.success({ code: '200', data: { name: '王五', phone: '13700003333' } });
+  const [info, list] = requests.slice(-2);
+  info.success({ code: '200', data: { name: '昵称', phone: '13700003333' } });
+  list.success({ code: '200', data: { rows: [{ id: 1, fullName: '王五', isDefault: 1 }] } });
 
   const create = requests.find(r => r.url === '/api/registration/create');
   assert.ok(create, '资料其实全的人不该被推去补一个已经填好的字段');
@@ -287,16 +291,25 @@ test('预取没回来时，点购买现取到资料就直接建单，不误报�
   assert.deepEqual(modals, [], '现取成功就不该弹补全提示');
 });
 
-test('提示里确认「去补全」要把玩家送到资料页', () => {
+test('提示里确认「去补全」:缺手机号送到资料页(微信手机号),有手机号缺姓名送到参与人信息', () => {
   const { vm, requests, navigations, modalControl } = loadTopicPageWithWorkflow();
   modalControl.confirm = true;
   vm._signupProfile = undefined;
 
   vm._createSelfPlayOrder.call(vm, 500);
-  requests[requests.length - 1].fail();
+  requests.slice(-2).forEach(r => r.fail());
 
   assert.equal(requests.filter(r => r.url === '/api/registration/create').length, 0);
   assert.deepEqual(navigations, ['/pages/gerenziliao/gerenziliao']);
+
+  vm._navigating = false;
+  vm._createSelfPlayOrder.call(vm, 500);
+  const [info, list] = requests.slice(-2);
+  info.success({ code: '200', data: { name: '只是昵称', phone: '13700003333' } });
+  list.success({ code: '200', data: { rows: [] } });
+  assert.equal(requests.filter(r => r.url === '/api/registration/create').length, 0,
+    '昵称不能当姓名建单');
+  assert.equal(navigations[1], '/pages/address/address?mode=participant');
 });
 
 // 取资料必须是页面自己喂的,否则又是一条「生了没人喂」的死方法。
@@ -386,4 +399,20 @@ test('主题订阅拒绝或API失败不阻塞建单；未勾同意不请求订�
 test('已有同意的连续确认也只请求一次订阅与建单', () => {
   const h=loadTopicPageWithWorkflow();h.vm.data.info={id:500};h.vm.data.selfPlayConsentChecked=true;h.vm._hostShareConsentReady=true;
   h.vm.onSelfPlayConfirm();h.vm.onSelfPlayConfirm();assert.equal(h.subscriptions.length,1);assert.equal(h.requests.length,1);
+});
+
+// R11 j3 F8:从参与人信息/资料页回来,结算页那一行要换成新资料(原先 onShow 调的 _fillCheckoutProfile 根本不存在)
+test('结算页开着时 onShow 重新取资料并刷新姓名手机号', () => {
+  const { vm, requests } = loadTopicPageWithWorkflow();
+  assert.equal(typeof vm._fillCheckoutProfile, 'function');
+  vm.data.selfPlayCheckoutShow = true;
+  vm.data.checkout = { profileName: '', profilePhone: '' };
+  vm._startKenBurns = () => {};
+  vm.onShow.call(vm);
+  const [info, list] = requests.slice(-2);
+  assert.deepEqual([info.url, list.url], ['/api/user/info', '/api/user/address/list']);
+  info.success({ code: '200', data: { phone: '13800001111' } });
+  list.success({ code: '200', data: { rows: [{ id: 3, fullName: '赵六' }] } });
+  assert.equal(vm.data['checkout.profileName'], '赵六');
+  assert.equal(vm.data['checkout.profilePhone'], '138****1111');
 });
