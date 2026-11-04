@@ -60,7 +60,7 @@ const config = {
   isTrustedAssetUrl: trustedHttpsUrl,
   resolveRuntimeConfig: resolveRuntimeConfig,
   resolveFromWx: resolveFromWx,
-  // 第九轮 m1 第 8 项:首次进漫游的大气层转场视频(m3 制作,托管后填 https 地址)。空 = 不播。
+  // 第九轮 m1 第 8 项:首次进漫游的大气层转场视频(m3 制作)。空 = 不播。上传与填写步骤见 docs/发版checklist.md「漫游大气层转场视频」。
   roamAtmosVideoUrl: '',
 };
 

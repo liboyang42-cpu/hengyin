@@ -26,6 +26,21 @@
       并在 `docs/screenshots/README.md` 清单里补上拍摄 commit。过期截图会让人得出相反结论
       (`coop-finance-merchant-white-2026-08-04.png` 就干过一次)。
 - [ ] **微信官方包体读回**:先用开发者工具 `preview` 或 `upload` 的 `--info-output` 保存 JSON,再执行 `node scripts/wechat-release-contract.js --info <info.json>`；门禁兼容 DevTools `size.total/packages` 与 miniprogram-ci `subPackageInfo`（`__APP__`=主包、`__FULL__`=整包，数字按 bytes），逐项确认主包/每个分包 ≤2M、分包合计 ≤30M,内部主包 `<1.8M` 目标仍保留。没有 `info-output` 不得写“包体合规”。
+- [ ] **个性化地图四套样式(第九轮 m4)**:上传前对上传拷贝跑
+      `CY_MAP_SUBKEY=… CY_MAP_STYLE_BLACK=… CY_MAP_STYLE_WHITE=… CY_MAP_STYLE_PAPER=… CY_MAP_STYLE_2077=… node scripts/release-map-style.js --dir <上传拷贝> --require`
+      (序号取腾讯位置服务控制台「样式应用列表」里这四套绑到同一个 key 的序号;说明见 `components/cy/free-map/DARK_MAP.md`)。
+      仓库本身永远是空 key。
+- [ ] **漫游大气层转场视频(第九轮 m4 第 3 项)**:owner 已批第二版(地球落到中国),片子在
+      `origin/claude/map-atmos-20261103` 的 `design/atmos-entry/atmos.mp4`,**不进测试分支、不进小程序包**。
+      1. 上传到 OSS:`chengyin-oss`(oss-cn-shanghai)桶下 `static/roam/atmos-entry-v2.mp4`。文件名带版本号,
+         以后换片就换名字,不覆盖旧文件(微信与 CDN 都会缓存)。
+      2. 这个对象设 **公共读**,`Content-Type: video/mp4`,走 HTTPS。浏览器无登录直接打开
+         `https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/static/roam/atmos-entry-v2.mp4` 能播才算好。
+      3. 片子必须放在小程序能播的主机上:组件只播 `utils/config.js` `TRUSTED_ASSET_HOSTS` 里的 https 主机
+         (现在是 `www.chengyinhub.com` 与 `chengyin-oss.oss-cn-shanghai.aliyuncs.com`),别的主机一律跳过不播;
+         同时在微信后台「开发管理 → 服务器域名」的 downloadFile 合法域名里确认有这台主机。
+      4. 把地址填进 `utils/config.js` 的 `roamAtmosVideoUrl`(默认空 = 不播)。地址不是密钥,可以随发版提交。
+      5. 真机确认:首次进漫游播一次、点一下能跳过、播完先压暗再整层淡出到地图上不闪白;再进不重播;弱网 / 减弱动态直接不播。
 
 ## C. 发布三件套顺序(自有服务器 <生产库主机> / www.chengyinhub.com)
 
