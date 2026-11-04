@@ -597,18 +597,22 @@ Page({
         if (!that.currentProfileContext(context) || that._hidden || seq !== that._profileReadSeq) return;
         that._profileLoading = false;
         if (res && res.code == "200" && res.data && typeof res.data === 'object' && !Array.isArray(res.data)) {
-          that._loadedProfileName = res.data.name;
+          // j5 H5:name 空时显示 nickname,并作已存值
+          const shownName = typeof res.data.name === 'string' && res.data.name.trim() ? res.data.name
+            : (typeof res.data.nickname === 'string' ? res.data.nickname : res.data.name);
+          that._loadedProfileName = shownName;
           // 处理个人项目图片字符串转数组
           let casePicsList = [];
           if (typeof res.data.casePics === 'string' && res.data.casePics.trim() !== '') {
             casePicsList = res.data.casePics.split(';').filter(url => url.trim() !== '');
           }
 
-          that._savedName = typeof res.data.name === 'string' ? res.data.name : '';
+          that._savedName = typeof shownName === 'string' ? shownName : '';
           that.setData({
             userInfo: {
               ...that.data.userInfo,
-              ...res.data
+              ...res.data,
+              name: shownName
             },
             phoneMasked: maskPhone(res.data.phone),
             avatarSrc: avatarSrc(res.data.avatar, app.getImgUrl && app.getImgUrl.bind(app)),
