@@ -785,6 +785,43 @@ public class ApiActivityController extends BaseController {
         }
     }
 
+    /**
+     * j1 F1/F2:进「发活动」页先问一次能不能发 —— 身份、入驻审核、活动配额,与 publish 同一套判据、同一套文案,
+     * 别让人填完三步才在「发布」时被拒。只读,不占配额;拒绝一律 403(页面据此落「暂不能发布」态)。
+     */
+    @Operation(summary = "发布活动前置检查(身份/审核/配额)")
+    @PostMapping("/publish_precheck")
+    public AjaxResult publishPrecheck(String scope) {
+        Long memberId = 0L;
+        try {
+            memberId = getAppUserId();
+        } catch (Exception e) {
+        }
+        if (memberId == null || memberId <= 0) {
+            return AjaxResult.error(401, "请先登录");
+        }
+        try {
+            ActivityPublisher publisher = resolveActivityPublisher(memberId, scope);
+            if (publisher == null) {
+                return AjaxResult.error(403, "仅俱乐部主理人或商家可发布活动");
+            }
+            if (publisher.isMerchant() && !publisher.isMerchantApproved()) {
+                return AjaxResult.error(403, "商家未通过入驻审核，暂不能发布活动");
+            }
+            String quotaErr = quotaService.checkCreate(publisher.ownerMemberId(),
+                    com.chengyinhub.business.service.IQuotaService.TYPE_EVENT);
+            if (quotaErr != null) {
+                return AjaxResult.error(403, quotaErr);
+            }
+            return AjaxResult.success();
+        } catch (ServiceException se) {
+            return AjaxResult.error(403, se.getMessage());
+        } catch (Exception e) {
+            logger.error("发布活动前置检查失败: memberId={}", memberId, e);
+            return AjaxResult.error("系统繁忙，请稍后重试");
+        }
+    }
+
     @Operation(summary = "发布活动")
     @Log(title = "发布活动", businessType = BusinessType.INSERT)
     @PostMapping("/publish")
@@ -1301,10 +1338,11 @@ public class ApiActivityController extends BaseController {
             activityInfoVO.setTimeLocationLocked(cmsActivityService.countOpenSaleRegistrations(activityId) > 0);
 
             Long templateId = cmsActivity.getTemplateId();
-            // 将单个ID转换为List
-            List<Long> idTemplateList = Arrays.asList(templateId);
-            //活动模版
-            List<CmsMemberTemplate> listMemberTemplate = memberTemplateService.selectCmsMemberTemplateByIds(idTemplateList);
+            // 2026-11-04 owner:商家发活动不必带玩法 —— 没选模板(null / 0)就是没有玩法,不去查 id in (null)。
+            List<CmsMemberTemplate> listMemberTemplate = templateId == null || templateId <= 0
+                    ? new ArrayList<>()
+                    : memberTemplateService.selectCmsMemberTemplateByIds(Arrays.asList(templateId));
+            if (listMemberTemplate == null) listMemberTemplate = new ArrayList<>();
             if (listMemberTemplate.size() > 0) {
                 for (CmsMemberTemplate template : listMemberTemplate) {
                     com.chengyinhub.business.util.TemplateSecrets.strip(template);

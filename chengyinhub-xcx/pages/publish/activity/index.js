@@ -373,7 +373,6 @@ Page({
     clearError('description', nonEmpty(f.description));
     clearError('startDate', nonEmpty(f.startDate, '开始日期'));
     clearError('endDate', nonEmpty(f.endDate, '结束日期'));
-    clearError('templateId', Number(f.templateId) > 0);
     clearError('imgUrl', coverReady(d));
     clearError('categoryIds', d.selectedCategoryIds.length > 0);
     f.tickets.forEach((ticket, index) => {
@@ -400,7 +399,8 @@ Page({
         && d.selectedCategoryIds.length > 0;
     }
     if (step === 1) {
-      return nonEmpty(f.description) && coverReady(d) && Number(f.templateId) > 0;
+      // 2026-11-04 owner:商家发活动不必带玩法,模板选填。
+      return nonEmpty(f.description) && coverReady(d);
     }
     return f.tickets.length > 0
       && f.tickets.every((ticket) => nonEmpty(ticket.name) && Number(ticket.totalStock) > 0
@@ -428,7 +428,6 @@ Page({
     bag.require(nonEmpty(formData.description), 'description', '请填写活动说明')
     bag.require(nonEmpty(formData.startDate, '开始日期'), 'startDate', '请选择开始日期')
     bag.require(nonEmpty(formData.endDate, '结束日期'), 'endDate', '请选择结束日期')
-    bag.require(!!formData.templateId && formData.templateId !== 0, 'templateId', '请选择模板')
     bag.require(coverReady(this.data), 'imgUrl', nonEmpty(formData.imgUrl)
       ? '封面上传未完成，请重试或删除' : '请上传活动封面')
     bag.require(selectedCategoryIds.length > 0, 'categoryIds', '请选择至少一个活动类型')
@@ -725,8 +724,10 @@ Page({
     })
   },
 
+  // 去建玩法时本页留在栈里,编辑器发布后回到这里(temp backToActivityDraft),草稿不丢。
   createTemplate() {
-    wx.navigateTo({ url: '/pages/publish/template-intro/index' })
+    this._leftForTemplate = true
+    wx.navigateTo({ url: '/pages/publish/template-intro/index' + (this.merchantHost ? '?scope=MERCHANT' : '') })
   },
 
   // 取消按钮
@@ -825,12 +826,37 @@ Page({
       // 回包脏到判不出身份 ⇒ 停在可重试错误态。「读不懂」不能说成「没权限」,
       // 与俱乐部线 role 字段缺失同口径;真正无权的店员才给 denied。
       if (access.invalid) return this._showAccessError(res)
-      return access.canManageProjects ? onAllow() : this.rejectNonPublisher()
+      return access.canManageProjects ? this._precheckPublish(onAllow) : this.rejectNonPublisher()
     }
     if (typeof res.data.role !== 'string') {
       return this._showAccessError(res)
     }
-    return res.data.role === 'club' ? onAllow() : this.rejectNonPublisher()
+    return res.data.role === 'club' ? this._precheckPublish(onAllow) : this.rejectNonPublisher()
+  },
+
+  // j1 F1/F2:新建前再问后端能不能发(入驻审核 / 活动配额,与发布同一套判据),
+  // 拒了就在进页时停在 denied 态讲原因,不让人填完三步才在「发布」时被拒。编辑已有活动不占新配额,不问。
+  _precheckPublish(onAllow) {
+    if (this.editingActivityId) return onAllow()
+    const that = this
+    const token = this._accessRequestToken
+    const owner = memberId(app)
+    const stale = () => that._unloaded || token !== that._accessRequestToken || owner !== memberId(app)
+    const refuse = (res, status) => { if (!stale()) that._showAccessError({ code: failureStatus(res, status), msg: res && res.msg }) }
+    app.sendRequest({
+      hideLoading: true,
+      silentError: true,
+      url: '/api/activity/publish_precheck',
+      method: 'POST',
+      data: this.merchantHost ? { scope: 'MERCHANT' } : {},
+      success(res) {
+        if (stale()) return
+        if (res && res.code == '200') { onAllow(); return }
+        refuse(res)
+      },
+      fail(res, status) { if (!stale()) that._showAccessError({ code: failureStatus(res, status), msg: res && res.msg }) },
+      successStatusAbnormal: refuse
+    })
   },
 
   _showAccessError(res) {
@@ -865,7 +891,8 @@ Page({
 
   // 页面销毁:让在途发布回调失效,避免 setData / redirect after unload
   onHide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; this._hidden = true },
-  onShow() { this._hidden = false; if (this._readSessionChanged) { this._readSessionChanged = false; this.retryAccessCheck() } },
+  onShow() { this._hidden = false; if (this._readSessionChanged) { this._readSessionChanged = false; this.retryAccessCheck() }
+    if (this._leftForTemplate && this._formBootstrapped) { this._leftForTemplate = false; this.getTempList() } },
   onUnload() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
     this._unloaded = true
     this._activityIdentityToken = (this._activityIdentityToken || 0) + 1
@@ -1421,8 +1448,10 @@ Page({
 
   // 完成按钮事件 
   confirmTemp: function () {
+    // 模板选填:取消选中后点完成 = 这场不带玩法。
     if (!this.data.selectedTempInfo) {
-      cyToast('请先选择一个模板');
+      this.data.dirty = true;
+      this.setData({ popTemp: false, 'formData.templateId': 0 }, () => this.refreshPrimaryActionState());
       return;
     }
 

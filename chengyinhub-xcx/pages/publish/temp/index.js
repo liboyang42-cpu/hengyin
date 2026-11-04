@@ -3581,7 +3581,7 @@ Page({
      「节点玩法已保存」那支仍走 creation-success 的两颗按钮(它有 dismiss = 留在原地)。 */
   onResultSheetClose() {
     if (!currentEditor(this)()) return;
-    this.setData({ 'resultSheet.show': false });
+    this.setData({ 'resultSheet.show': false }); if (backToActivityDraft()) return;
     wx.reLaunch({ url: '/subpackageMember/mytemplate/mytemplate' + (this.data.operationScope === 'MERCHANT' ? '?scope=MERCHANT' : '') });
   },
 
@@ -3595,7 +3595,7 @@ Page({
     this.setData({ 'creationSuccess.show': false });
     if (flow[key] === 'dismiss') return;
     if (flow[key] === 'back') this.exitPage();
-    else if (flow[key] === 'templates') wx.reLaunch({ url: '/subpackageMember/mytemplate/mytemplate' + (this.data.operationScope === 'MERCHANT' ? '?scope=MERCHANT' : '') });
+    else if (flow[key] === 'templates' && !backToActivityDraft()) wx.reLaunch({ url: '/subpackageMember/mytemplate/mytemplate' + (this.data.operationScope === 'MERCHANT' ? '?scope=MERCHANT' : '') });
   },
 
   // ===== 回填 =====
@@ -4039,3 +4039,11 @@ Page({
     setTimeout(() => { if (current()) this.exitPage(); }, 600);
   },
 });
+// j1 F2:从「发活动」页去建玩法时,活动草稿页还在栈里 —— 建完回到它,不 reLaunch 冲掉草稿。
+function backToActivityDraft() {
+  const pages = typeof getCurrentPages === 'function' ? getCurrentPages() : [];
+  const at = pages.findIndex(page => page && page.route === 'pages/publish/activity/index');
+  if (at < 0 || at >= pages.length - 1) return false;
+  wx.navigateBack({ delta: pages.length - 1 - at });
+  return true;
+}

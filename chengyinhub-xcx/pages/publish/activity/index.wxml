@@ -116,7 +116,7 @@
       </view>
 
       <view class="li" id="field-template">
-        <view class="item-tit">选择模板<text>*</text></view>
+        <view class="item-tit">选择模板</view>
         <view class="item-cont {{errors.templateId ? 'is-error' : ''}}">
           <view class="picker picker2 flex-cb" bindtap="showTemp" hover-class="cy-pressed" hover-stay-time="80">
             <view class="tit {{selectedTempInfo ? 'selected-text' : 'placeholder-text'}}">
