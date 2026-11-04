@@ -2488,6 +2488,23 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     }
 
     /**
+     * 第十轮 f2 第 4 项(j2 F-02):编辑器从不上送主题售票截止(saleEndAt),开售终审第一句就拒。
+     * 俱乐部自己的城市定向是「主题 + 多场开一场」:每场有自己的集合时刻与报名/退款钟,主题只要在
+     * 档期内一直可售,所以售票截止跟主题结束时间走。只在调用方没给、库里也没另设(空或仍等于旧结束日)时补。
+     */
+    static void defaultClubSaleEnd(CmsTopic target, CmsTopic existing) {
+        if (target == null || target.getSaleEndAt() != null) return;
+        Long clubId = target.getClubId() != null ? target.getClubId() : existing == null ? null : existing.getClubId();
+        Integer productType = target.getProductType() != null ? target.getProductType()
+                : existing == null ? null : existing.getProductType();
+        if (clubId == null || !Integer.valueOf(ProductType.ORIENTEERING).equals(productType)) return;
+        if (existing != null && existing.getSaleEndAt() != null
+                && !existing.getSaleEndAt().equals(existing.getEndDate())) return;
+        Date end = target.getEndDate() != null ? target.getEndDate() : existing == null ? null : existing.getEndDate();
+        if (end != null) target.setSaleEndAt(end);
+    }
+
+    /**
      * 公开承接池(open_club_pool)建题落值口 —— 2026-09-15 裁决 12B:专业版与简易版统一默认开,
      * 主办仍可手动关。
      *
@@ -2688,6 +2705,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             topic.setRecruitDeadline(dto.getRecruitDeadline());
         }
         fillMerchantSignUpWindow(topic, null, new Date());
+        defaultClubSaleEnd(topic, null);
         topic.setDelFlag(0);
         // 首次写入先落兼容的 LINEAR；BRANCH_GRAPH 必须等节点取得 DB id 后再同事务重映射并发布。
         topic.setRouteMode("LINEAR");
@@ -3123,6 +3141,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             patch.setRecruitDeadline(dto.getRecruitDeadline());
         }
         fillMerchantSignUpWindow(patch, exist, new Date());
+        defaultClubSaleEnd(patch, exist);
         patch.setAddressName(firstLocationAddress(dto.getChapters()));
         patch.setUpdateBy(username);
         patch.setUpdateTime(new Date());

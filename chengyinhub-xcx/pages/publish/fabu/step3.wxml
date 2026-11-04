@@ -43,7 +43,7 @@
               </view>
               <view class="node-pill"><text>选择</text><cy-icon name="chevron-right" size="24" /></view>
             </view>
-            <block wx:if="{{formData.productType === 2}}">
+            <block wx:if="{{formData.productType === 2 || formData.openMerchantPool}}">
               <view class="node-card__hr"></view>
               <cy-date-field presentation="dropdown" mode="date" value="{{formData.recruitDeadline}}" start="{{dateList[0].date}}" bind:change="onRecruitDeadlineChange">
                 <view class="node-card__row" id="fieldRecruitDeadline">

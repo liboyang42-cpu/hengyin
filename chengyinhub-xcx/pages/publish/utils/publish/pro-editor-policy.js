@@ -176,6 +176,8 @@ function blockingIssuesOf(formData, pendingMaterials, chapterStates, categoryIds
   // 否则用户看到的是「保存失败」而不是「还差什么」。
   if (isFree && !text(formData.recruitDeadline)) {
     issues.push({ key: 'recruitDeadline', message: '自由探索必须设置招募截止时间' });
+  } else if (!isFree && formData.openMerchantPool && !text(formData.recruitDeadline)) {
+    issues.push({ key: 'recruitDeadline', message: '开放商家承接需要设置招商截止日期' });
   }
 
   if (!chapterStates.length) {

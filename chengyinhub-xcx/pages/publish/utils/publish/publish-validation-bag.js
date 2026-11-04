@@ -35,9 +35,12 @@ function buildValidationBag(state) {
     bag.require(nonEmpty(formData.imgUrl), 'imgUrl', '请上传主题封面');
     bag.require(selectedCategoryIds.length > 0, 'categoryIds', '请选择至少一个主题类别');
     const freeExplore = Number(formData.productType) === 2;
-    if (freeExplore) {
+    // 第十轮 f2 第 4 项:城市定向开了商家承接同样要招商截止 —— 后端靠它走「招募 → 锁价」,
+    // 没有它主题立项后直接进定价,合作邀约被「已锁价」拒绝,开售终审也拒(j2 F-01c / F-02)。
+    if (freeExplore || formData.openMerchantPool) {
       bag.require(nonEmpty(formData.recruitDeadline), 'recruitDeadline', '请选择招商截止日期');
-    } else if (state.completionRuleMode === 'AT_LEAST') {
+    }
+    if (!freeExplore && state.completionRuleMode === 'AT_LEAST') {
       const totalNodes = (formData.chapters || []).reduce(
         (sum, chapter) => sum + ((chapter.nodes || []).length), 0);
       const required = Number(state.completionRequiredCount);
