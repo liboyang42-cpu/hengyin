@@ -1,3 +1,4 @@
+// 2026-11-04 第十一轮 g3 F-6(官方活动「我发布的」服务端拒绝给原因与返回):official-mine/index.js 上方增 3 行,6 条 U4-DYNAMIC 与 1 条 U5 锚点仅行号位移(git diff 行号映射 + 逐行文本相同),理由与条数不变、不新增登记;F-10 baoming userInfo 零消费债务被真实消费,删除该债务、u4Field 减一;keyDigest 按门禁 baselineKeyDigest 重算。
 // 2026-11-04 第十一轮 g1(j3 F5 已通关重开回到结局与通关卡,play/index.js 首屏分派 +3 行):U5 loadMilestone 调用点 8407→8410 仅行号位移,调用行逐字相同、理由与条数不变、不新增登记;keyDigest 按门禁 baselineKeyDigest 重算。
 // 2026-11-04 第十一轮 g3(订单状态、等级名次、自玩结算姓名):topic/index.js 增 _loadSignupProfile 两路读取等 49 行(U4-DYNAMIC 2042→2091)、cy/profile 增注释 1+3 行(U4-DYNAMIC 1295→1296、2142→2145),仅行号位移(脚本逐行比对父提交与新行文本相同),理由与条数不变、不新增登记;u4Dynamic keyDigest 按门禁 baselineKeyDigest 重算。
 // 2026-11-04 第十一轮 g1(F2 编辑器补结果规则 publish/temp +2/+8 行;j4 F7/F11 roam、play 增行;j4 F8 play 完成页 +5 行):既有 U4-DYNAMIC 8 条(temp 1486→1488、1487→1489、1530→1532、2987→2995、3859→3867、3986→3994;roam 5091→5093、5149→5151)与 U5 10 条(roam 4576→4578 … 6275→6277 各 +2;play 8395→8407)仅行号位移,调用行逐字相同、理由与条数不变、不新增登记;keyDigest 按门禁 baselineKeyDigest 重算。
@@ -374,7 +375,8 @@ module.exports = {
     //   字段 toType/toId 先随页回账(149→151),随即在同批复落地时还清——index.js 三处读改回显式
     //   this.data.toType/toId,门禁实测不再命中。两条登记出账,棘轮回 149,digest 复算。
     // 2026-11-02 商家首页不再计算 revBars(页面细节优化):一条零消费债务出账,103 → 102,digest 复算。
-    "u4Field": 100,
+    // 2026-11-04 第十一轮 g3 p1 F-10:结算页积分行按 userInfo.point 显示,baoming userInfo 零消费债务真消费出账,100 → 99。
+    "u4Field": 99,
       // 2026-08-26 圈层主题接回主题货架:新增 circleTheme import,两条 _coverFail 动态 setData
       //   等量下移(269→270 / 281→282,行号取门禁实测)。调用点与强化理由不变,显式改 digest。
     // 2026-08-27 合并 #883:activity/list 三条 U4-DYNAMIC 登记行号 +2(129→131/151→153/231→233,
@@ -543,7 +545,7 @@ module.exports = {
       // 2026-09-19 批复1-a=2 还清:partner#toType/toId 两条随页复活短暂回账(151 键)后当场还债出账,
       //   key 集回到退役前那份 149,digest 按当前 key 集合实算。
 // 2026-11-03 第九轮 m1-9:merchant/apply 店铺地址预览与已提交申请的地址一点开地图,locationLat/locationLng 真被读取,两条零消费债务还清出账,u4Field 102→100,digest 按门禁 baselineKeyDigest 重算。
-"u4Debt": "726c2bff942880d6a8c874a43201b08ef666de0665be6ba9d82b87d964f7d6c5",
+"u4Debt": "9dc61be99e3abc2d82ee156865f5fb5a07a60bdaa38e162cb4a52f192267b0a6",
       // 2026-08-17 漫游 S1 施工:条数不变(65),只是 pages/roam/index.js 的两处
       //   `...this._calcArch()` 动态 setData 行号从 3263/3305 移到 3261/3303
       //   (删掉 _apiCheckin 与 /api/play/arrive 那段后整段上移)。
@@ -944,7 +946,7 @@ module.exports = {
 // 2026-11-02 走查修复 l4-counter(M-12/M-21/M-24 在 merchantinfo.js 前段 +8 行):2 条 U4-DYNAMIC 锚点仅行号位移(2433→2441、2465→2473),调用行逐字相同、理由与条数不变;digest 按门禁 baselineKeyDigest 重算。
 // 2026-11-03 集成 l4-counter 合 pay-gate/l1/l2/l3:两侧登记取并集,不新增登记;u4Dynamic digest 按门禁 baselineKeyDigest 在合并树重算。
 // 2026-11-03 Round5 l7-launch:club/apply 游客登录入口(+11 行),onInput 233→244、toggleBool 244→255 仅行号位移,调用行逐字相同、理由与条数不变;digest 按门禁同一算法重算。
-"dd3f6ba12a8610eb5b1b634b5b46307729842b47b2ac5aad6b1879debc33b981",
+"7548ee4fcff3e57676b4d63636e93704e926ca1d950cb79effbe5a1b782b3bcf",
 // 2026-10-28 模板页货架改版(#652)合 master(#610):本线删 template/index 两条 + master play 1621→1624 重锚，合并树 60 条，digest 按同一算法重算。
 // 2026-10-20 R5 尾段(#327,owner 批准 12 条重锚):fabu 729→731、898→900、2524→2530、3570→3588、3951→3969、4957→4990、5215→5248、5866→5899、5876→5909、5929→5962、6270→6303、7936→8060,逐行比对 master 原行一字未改,理由与条数 58 不变;digest 按同一算法显式重算。
       // 2026-08-20 开卡包四拍动效:u5Silent 条数不变(12),只是 play/index.js 的调用点
@@ -1134,7 +1136,7 @@ module.exports = {
       //   逐条回读仍是「只为读章节 recruitEnabled、失败不弹全局 toast」这一处,静默理由一字未改,条数 27 不变。
 // 2026-10-17 合并 master 进漫游上线分支:roam/index.js 14 条、nearby/index.js 2 条既有调用仅行号位移(按 master 源码逐行回读定位);漫游两栏改版删掉 /api/registration/list 静默读取(749),U5 29→28。digest 按同一算法显式重算。
 // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):锚点位移 + 举报半屏/AI 对话组件下沉会员分包换路径 + 本线 9 处新增登记,digest 按同一算法重算。
-"9677add28a02aa6809441aedbcc87e03c95a436bfeb5dd8814dedb345fe331dc"
+"5fb009a894400f843ad60297a5c7f15a1c34fc3fdcd77dbe727087be4ba02ae6"
 
     }
   },
@@ -1231,7 +1233,6 @@ module.exports = {
     "chengyinhub-xcx/components/cy/scene-sheet/index.js#navRight": "存量零消费债务：navRight 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/components/cy/slide-confirm/index.js#pct": "存量零消费债务：pct 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/pages/activity/baoming/baoming.js#ticketId": "存量零消费债务：ticketId 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
-    "chengyinhub-xcx/pages/activity/baoming/baoming.js#userInfo": "存量零消费债务：userInfo 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/pages/activity/baoming/baoming.js#editPhone": "存量零消费债务：editPhone 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/pages/activity/baoming/baoming.js#editRealName": "存量零消费债务：editRealName 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30",
     "chengyinhub-xcx/pages/activity/baoming/baoming.js#waitlistOfferToken": "服务端签发的短期候补令牌不展示给用户，只与 offerId 成对用于页内 JS 的可支付闸、quote 与 create payload，并在换票/退出候补时清空；owner=小程序，复核=2026-09-30",
@@ -1346,14 +1347,14 @@ module.exports = {
     "chengyinhub-xcx/pages/topic/index/index.js:2091": "buildRouteMap只提交utils/topic-route-preview.build(chaptersList)固定八个路线视图字段；每章道路独立校验，缺损退节点虚线，不展开章节任意键；路线地图/提示与JS选择消费其余七字段，routeIsRoad仅同源固定判定元数据，不声称直接渲染。owner=小程序；复核=2026-10-24",
 
     // 2026-10-19 Claude 小程序线移植到 master:本线新增 6 处动态 setData 逐项登记(棘轮/digest 待审批后同步)。
-    "chengyinhub-xcx/pages/activity/official-mine/index.js:155": "BL-80 通知复盘按卡片位置拼 broadcasts[i]._statsLoading/_statsText 路径写入「正在读取复盘」;字段在本页 wxml 该卡触达行消费;owner=小程序,复核=2026-12-31",
-    "chengyinhub-xcx/pages/activity/official-mine/index.js:163": "BL-80 通知复盘读取成功:按同一卡片路径写 _statsLoading=false 与复盘文案(读不到写后端原因+点一下重试);owner=小程序,复核=2026-12-31",
-    "chengyinhub-xcx/pages/activity/official-mine/index.js:165": "BL-80 通知复盘读取成功分支的 _statsText 动态键:复盘文案或带重试提示,在该卡触达行消费;owner=小程序,复核=2026-12-31",
-    "chengyinhub-xcx/pages/activity/official-mine/index.js:171": "BL-80 通知复盘读取网络失败:按卡片路径写 _statsLoading=false;sameItem 校验防止写到换行后的另一张卡;owner=小程序,复核=2026-12-31",
-    "chengyinhub-xcx/pages/activity/official-mine/index.js:172": "BL-80 通知复盘读取网络失败的 _statsText 动态键:写「网络连接失败，点一下重试」,在该卡触达行消费;owner=小程序,复核=2026-12-31",
+    "chengyinhub-xcx/pages/activity/official-mine/index.js:158": "BL-80 通知复盘按卡片位置拼 broadcasts[i]._statsLoading/_statsText 路径写入「正在读取复盘」;字段在本页 wxml 该卡触达行消费;owner=小程序,复核=2026-12-31",
+    "chengyinhub-xcx/pages/activity/official-mine/index.js:166": "BL-80 通知复盘读取成功:按同一卡片路径写 _statsLoading=false 与复盘文案(读不到写后端原因+点一下重试);owner=小程序,复核=2026-12-31",
+    "chengyinhub-xcx/pages/activity/official-mine/index.js:168": "BL-80 通知复盘读取成功分支的 _statsText 动态键:复盘文案或带重试提示,在该卡触达行消费;owner=小程序,复核=2026-12-31",
+    "chengyinhub-xcx/pages/activity/official-mine/index.js:174": "BL-80 通知复盘读取网络失败:按卡片路径写 _statsLoading=false;sameItem 校验防止写到换行后的另一张卡;owner=小程序,复核=2026-12-31",
+    "chengyinhub-xcx/pages/activity/official-mine/index.js:175": "BL-80 通知复盘读取网络失败的 _statsText 动态键:写「网络连接失败，点一下重试」,在该卡触达行消费;owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/pages/roam/index.js:601": "BL-70 横滑卡头像堆按命中行拼 shopStrip.rows[i].visitors 路径批量回写;只在横滑卡 poi__who 头像堆消费,epoch 丢弃迟到回包;owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:2146": "本人帖文翻页patch只用list[oldLen+i]固定列表名与响应遍历下标，其余feedErr/feedAuthError/hasMore/nodata为字面字段；服务端仅供值不供键；owner=小程序，复核=2026-09-30",
-    "chengyinhub-xcx/pages/activity/official-mine/index.js:164": "BL-80 通知复盘读取成功分支的 _canRecover 动态键:按同一卡片路径写是否可安全恢复原投递(仅 code 200 且 canRecoverInapp 为真),sameItem 校验防止写到换行后的另一张卡,在该卡「安全恢复原投递」按钮消费;owner=小程序,复核=2026-12-31",
+    "chengyinhub-xcx/pages/activity/official-mine/index.js:167": "BL-80 通知复盘读取成功分支的 _canRecover 动态键:按同一卡片路径写是否可安全恢复原投递(仅 code 200 且 canRecoverInapp 为真),sameItem 校验防止写到换行后的另一张卡,在该卡「安全恢复原投递」按钮消费;owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/pages/index/index.js:1293": "底部主题翻页只追加bottomTopicList[oldLen+i]，其余页码/状态/hasMore固定字面字段；下标来自当前列表长度和响应遍历序号；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/index/index.js:1400": "底部活动翻页只追加bottomActivityList[oldLen+i]，其余页码/状态/hasMore固定字面字段；下标来自当前列表长度和响应遍历序号；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/merchant/customer/index.js:503": "客户翻页只追加rows[oldLen+i]，其余页面状态与分群摘要为同方法固定字面字段；hasMore仍用rowCount/total主线规则；owner=小程序，复核=2026-09-30",
@@ -1473,7 +1474,7 @@ module.exports = {
     // 2026-10-19 Claude 小程序线移植到 master:本线新增 9 处 silentError 逐项登记(超冻结上限 30,棘轮/上限/digest 待审批后同步)。
     "chengyinhub-xcx/subpackageMember/components/cy/report-sheet/index.js:51": "BL-32/BL-218 举报半屏读原因:失败落 stage=loadfail 结果半屏(failText 带重试),seq 丢弃关掉重开后的旧回包;字段不以 error 命名,静态扫描证明不了;owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/subpackageMember/components/cy/report-sheet/index.js:96": "BL-32 举报提交:失败落 fail/unknown 结果半屏(含后端原因,同 requestId 可重试不重复受理),关自动 toast 免双弹;owner=小程序,复核=2026-12-31",
-    "chengyinhub-xcx/pages/activity/official-mine/index.js:158": "BL-80 通知复盘读取:失败写进该卡 _statsText 触达行并可再点重试(动态键,静态扫描不能证明);owner=小程序,复核=2026-12-31",
+    "chengyinhub-xcx/pages/activity/official-mine/index.js:161": "BL-80 通知复盘读取:失败写进该卡 _statsText 触达行并可再点重试(动态键,静态扫描不能证明);owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/pages/play/merchant/components/safety-rating-sheet/index.js:115": "BL-89 安全感受评价先按 public-home 换取商家 ID:失败经 done(null,msg) 落 submitError 半屏内 cy-inline-error,保留输入可重试;owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/pages/roam/index.js:593": "BL-70 漫游商家横滑卡打卡头像堆(/api/roam/shop/visitors):附加信息,失败或迟到回包不动卡片,不挡「去这儿」;owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/pages/roam/index.js:848": "BL-41 护照「官方活动」大卡读可参与的漫游官方活动:读不到时卡片保持原文案与原行为,不弹 toast;owner=小程序,复核=2026-12-31",
