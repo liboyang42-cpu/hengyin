@@ -37,4 +37,28 @@ class GameSessionOrganiserNamesTest {
         assertEquals("成员#990009", board.get(1).getNickname());
     }
 
+    // 第十轮 f2 walk:没组队的玩家不在成员投影里,结束后榜上是「成员#990008」「成员#990009」。
+    @Test
+    void leaderboardNamesPlayersWithoutATeamFromTheirSignup() {
+        GameSessionRuntimeServiceImpl service = new GameSessionRuntimeServiceImpl();
+        Map<String, Object> teamed = new LinkedHashMap<>();
+        teamed.put("teamId", 1L); teamed.put("memberId", PLAYER); teamed.put("memberName", "城瘾用户"); teamed.put("realNameStored", "林一帆");
+        List<Map<String, Object>> named = service.organiserNamedRows(Arrays.asList(teamed));
+        Map<String, Object> soloSignup = new LinkedHashMap<>();
+        soloSignup.put("memberId", 990008L); soloSignup.put("realNameStored", "陈小满");
+        Map<String, Object> olderSignup = new LinkedHashMap<>();
+        olderSignup.put("memberId", 990008L); olderSignup.put("realNameStored", "旧名字");
+        LeaderboardItemVO first = new LeaderboardItemVO();
+        first.setMemberId(PLAYER); first.setNickname("城瘾用户");
+        LeaderboardItemVO solo = new LeaderboardItemVO();
+        solo.setMemberId(990008L); solo.setNickname("城瘾用户");
+        LeaderboardItemVO unknown = new LeaderboardItemVO();
+        unknown.setMemberId(990010L); unknown.setNickname("城瘾用户");
+        List<LeaderboardItemVO> board = service.organiserNamedLeaderboard(Arrays.asList(first, solo, unknown), named,
+                Arrays.asList(soloSignup, olderSignup));
+        assertEquals("林一帆", board.get(0).getNickname());
+        assertEquals("陈小满", board.get(1).getNickname(), "没组队也用本场最近一张报名的姓名");
+        assertEquals("成员#990010", board.get(2).getNickname());
+    }
+
 }

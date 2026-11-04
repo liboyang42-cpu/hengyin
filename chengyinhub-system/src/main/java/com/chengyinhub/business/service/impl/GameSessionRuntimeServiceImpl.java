@@ -3771,7 +3771,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         club.put("leaderboardVisible", Boolean.TRUE.equals(session.getLeaderboardVisible()));
         if (isRouteSession(session)) {
             club.put("leaderboardRows", organiserNamedLeaderboard(safe(playerNodeProgressService.selectActivityLeaderboard(
-                    activity.getId(), null, 50)), memberRows));
+                    activity.getId(), null, 50)), memberRows, safe(runtimeMapper.selectActivitySignupNames(activity.getId()))));
         }
         club.put("leaderboardUpdatedBy", session.getLeaderboardUpdatedBy());
         club.put("leaderboardUpdatedAt", formatDate(session.getLeaderboardUpdatedAt()));
@@ -4312,16 +4312,34 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
     /** 排行榜(只在导演台这一侧)与成员同名:成员投影里有的人用同一个名字,其余按昵称兜底。 */
     List<com.chengyinhub.business.domain.vo.LeaderboardItemVO> organiserNamedLeaderboard(
             List<com.chengyinhub.business.domain.vo.LeaderboardItemVO> rows, List<Map<String, Object>> namedMembers) {
+        return organiserNamedLeaderboard(rows, namedMembers, java.util.Collections.<Map<String, Object>>emptyList());
+    }
+
+    /**
+     * 第十轮 f2 walk:没组队的玩家不在成员投影里,榜上原来回落成「成员#id」;
+     * 这时按本场已付报名的姓名(最近一张)给名字,仍没有才按昵称兜底。
+     */
+    List<com.chengyinhub.business.domain.vo.LeaderboardItemVO> organiserNamedLeaderboard(
+            List<com.chengyinhub.business.domain.vo.LeaderboardItemVO> rows, List<Map<String, Object>> namedMembers,
+            List<Map<String, Object>> signupRows) {
         Map<Long, String> names = new HashMap<>();
         for (Map<String, Object> member : namedMembers) {
             Long id = positiveLong(member.get("memberId"));
             if (id != null && member.get("memberName") != null) names.put(id, String.valueOf(member.get("memberName")));
         }
+        Map<Long, Object> signupStored = new HashMap<>();
+        for (Map<String, Object> signup : signupRows == null ? java.util.Collections.<Map<String, Object>>emptyList() : signupRows) {
+            Long id = signup == null ? null : positiveLong(signup.get("memberId"));
+            if (id != null) signupStored.putIfAbsent(id, signup.get("realNameStored"));
+        }
         for (com.chengyinhub.business.domain.vo.LeaderboardItemVO row : rows) {
             if (row == null) continue;
             String known = names.get(row.getMemberId());
-            row.setNickname(known != null ? known
-                    : com.chengyinhub.business.util.OrganiserPersonName.pick(null, row.getNickname(), row.getMemberId()));
+            if (known == null) {
+                String signupName = com.chengyinhub.business.util.OrganiserPersonName.decryptSignupName(signupStored.get(row.getMemberId()));
+                known = com.chengyinhub.business.util.OrganiserPersonName.pick(signupName, row.getNickname(), row.getMemberId());
+            }
+            row.setNickname(known);
         }
         return rows;
     }

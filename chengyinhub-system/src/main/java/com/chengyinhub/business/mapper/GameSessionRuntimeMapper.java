@@ -76,6 +76,8 @@ public interface GameSessionRuntimeMapper {
     GameTeamRoleAssignment selectRole(@Param("sessionId") Long sessionId, @Param("memberId") Long memberId);
     List<GameTeamRoleAssignment> selectRoles(Long sessionId);
     List<Map<String, Object>> selectClubMemberProjection(Long sessionId);
+    /** 第十轮 f2 walk:本场已付报名的姓名密文(没组队的玩家不在成员投影里,排行榜按它取报名姓名)。 */
+    List<Map<String, Object>> selectActivitySignupNames(@Param("activityId") Long activityId);
     List<Map<String, Object>> selectClubTeamProgressProjection(Long sessionId);
     Map<String, Object> selectClubRecapAggregate(@Param("sessionId") Long sessionId,
                                                  @Param("activityId") Long activityId);
