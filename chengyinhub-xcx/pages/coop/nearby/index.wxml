@@ -43,6 +43,7 @@
   </block>
 
   <!-- aaa 标准:未定位/空态统一垂直居中 + 放大文字图片(cy-error 原生 fill 变体,不再自己包一层) -->
+  <cy-empty class="retry-lg" size="lg" style="flex:1;min-height:0;" kind="no-permission" wx:elif="{{pageState === 'guest'}}" fill title="登录后查看" cta="登录" bind:cta="loginToView"></cy-empty>
   <cy-empty class="retry-lg" size="lg" style="flex:1;min-height:0;" kind="permission" wx:elif="{{pageState === 'permission'}}" fill title="当前无法查看附近商家" sub="{{errorText || '需要定位权限才能找附近商家'}}" cta="去设置" bind:cta="openLocationSettings"></cy-empty>
 
   <cy-empty size="lg" style="flex:1;min-height:0;" kind="missing-param" wx:elif="{{pageState === 'missing-param'}}" fill title="主题信息无效" sub="{{errorText}}" cta="返回上一页" bind:cta="goBack"></cy-empty>
