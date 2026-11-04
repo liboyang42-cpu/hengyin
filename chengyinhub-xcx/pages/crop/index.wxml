@@ -20,7 +20,7 @@
         catchtouchend="onTouchEnd"
         catchtouchcancel="onTouchEnd">
     <view class="crop__missing" wx:if="{{sourceState === 'missing'}}">
-      <cy-empty fill size="lg" kind="missing-param" title="没有可裁剪的图片" sub="请返回重新进入" />
+      <cy-empty fill size="lg" kind="missing-param" title="没有可裁剪的图片" />
     </view>
     <view class="crop__missing" wx:elif="{{sourceState === 'error'}}">
       <cy-error load-failure fill size="lg" title="图片没能打开" sub="{{sourceError}}" retry="重试" bind:retry="onRetrySource" auto-back />

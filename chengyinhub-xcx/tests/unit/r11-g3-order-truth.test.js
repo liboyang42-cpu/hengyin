@@ -94,7 +94,7 @@ test('订单详情:自玩通行证只说一次不可退款,没有核销/集合�
   assert.equal(d.info.statusText, '进行中');
   const visible = JSON.stringify([d.info.statusText, d.stateNotice, d.orderTimeline]);
   assert.ok(!/不可退款/.test(visible), visible);
-  assert.equal(d.stateNotice.tag, '');
+  assert.ok(!d.stateNotice.tag);
   assert.equal(d.orderTimeline.map((r) => r.key).join(','), 'created,paid');
   assert.equal(d.ticketPriceShown, 39);
   assert.equal(d.whenText, '2026.11.03');

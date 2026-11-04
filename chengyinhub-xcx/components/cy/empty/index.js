@@ -34,7 +34,8 @@ const KIND_DEFAULTS = {
   // ⚠️ 改法不是换成 empty 那张位图(我第一版这么干,违反本文件表头第 3-4 行:位图只留给
   // 真正的 empty,其余状态复用 cy-icon 线性图标)。走 glyph:'info' —— 与 offline/no-permission/
   // not-started 同一档做法,视觉身份也与 empty 区分得开。
-  'missing-param': { icon: '',                     glyph: 'info',    title: '链接已失效', sub: '请返回重新进入' },
+  // R11 p1 F-12:不再默认写「请返回重新进入」—— 返回键/返回按钮本身就是这句话
+  'missing-param': { icon: '',                     glyph: 'info',    title: '链接已失效', sub: '' },
   'not-found':     { icon: '',                     glyph: 'info',    title: '没有找到内容',   sub: '' },
   stale:           { icon: '',                     glyph: 'warning', title: '内容暂时未更新', sub: '' },
   loading:         { icon: '',                     glyph: '',        title: '加载中',         sub: '' },

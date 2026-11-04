@@ -109,7 +109,8 @@
 
 <!-- 深链直入报名时绕过详情组件的截止拦查:原来要填完整张表才被拒。这里在加载当刻就说明白。
      票已卖完的情况交给下面的候补卡(它有可动的出口),不叠加这张空态。 -->
-<cy-empty wx:if="{{pageState === 'ready' && signupState === 'closed' && !ticketSoldOut}}"
+<!-- R11 p1 F-10:已报名时上面那行「你已报名 · 查看我的报名」就是本页的状态,不再叠「报名已截止」与蓝框 -->
+<cy-empty wx:if="{{pageState === 'ready' && signupState === 'closed' && !ticketSoldOut && activityInfo.isSignUp !== 1}}"
   title="报名已截止" kind="not-started" />
 
 <!-- 费用明细:票种/订单金额/俱乐部权益/积分抵扣/总计 收进一个信息块。
@@ -141,7 +142,8 @@
     </view>
   </view>
   <!-- P-32:¥0 票没有可抵扣的金额,整行不出现(不留「-¥0」) -->
-  <view class="setly_li" wx:if="{{pointsUsable !== false && selectedTicket.price > 0}}">
+  <!-- R11 p1 F-10:没有积分时整行不出现(不留一个「-¥0」和点不出东西的勾) -->
+  <view class="setly_li" wx:if="{{pointsUsable !== false && selectedTicket.price > 0 && userInfo.point != 0}}">
     <view class="setly_li_left">积分抵扣<text wx:if="{{useDiscount}}">（抵扣积分{{usedPoints}}）</text></view>
     <view class="setly_li_right">
       <view class="setly_li_right_span">-{{money.amount(discountAmount)}}</view>
@@ -245,10 +247,10 @@
 <!-- 占位必须和 .bmbottom 的真实高度同算式(含安全区):写死 240rpx 会比底栏矮一个
      home indicator,正文最后一行被永久盖住 —— 实拍到「…不会重复创建订」被切。 -->
 <view wx:if="{{pageState === 'ready'}}" class="bmbottom-spacer"
-  style="--baoming-action-extra: {{submitError ? 'calc(var(--cy-btn-h) + var(--cy-space-2))' : '0rpx'}}"></view>
+  style="--baoming-action-extra: {{submitError && !(quoteRefusal && activityInfo.isSignUp === 1) ? 'calc(var(--cy-btn-h) + var(--cy-space-2))' : '0rpx'}}"></view>
 <view wx:if="{{pageState === 'ready'}}" class="bmbottom"
-  style="--baoming-action-extra: {{submitError ? 'calc(var(--cy-btn-h) + var(--cy-space-2))' : '0rpx'}}">
-  <cy-inline-error class="submit-inline-error" wx:if="{{submitError}}" kind="data"
+  style="--baoming-action-extra: {{submitError && !(quoteRefusal && activityInfo.isSignUp === 1) ? 'calc(var(--cy-btn-h) + var(--cy-space-2))' : '0rpx'}}">
+  <cy-inline-error class="submit-inline-error" wx:if="{{submitError && !(quoteRefusal && activityInfo.isSignUp === 1)}}" kind="data"
     title="{{quoteRefusal ? '暂不可报名' : '这次报名还没完成'}}" sub="{{submitError}}"
     action="{{quoteRefusal ? '' : '重新提交'}}" bind:action="handlePayment" />
   <!-- 拍板 2026-09-16 #10:商家闭店时报名入口先说清原因(点了也会被后端拒),已售不受影响。 -->

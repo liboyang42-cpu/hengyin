@@ -11,7 +11,8 @@
   </cy-nav-bar>
   <cy-page-title title="我的队伍" />
   <include src="../utils/team-recovery-panel.wxml" />
-  <view class="mt-stats cy-rise-in">
+  <!-- R11 p1 F-5:四格全是 0 时不摆一排 0,下面的空态已经说了「还没有队伍」 -->
+  <view class="mt-stats cy-rise-in" wx:if="{{!(stats[0].v === 0 && stats[1].v === 0 && stats[2].v === 0 && stats[3].v === 0)}}">
     <view class="mt-stat" wx:for="{{stats}}" wx:key="k"><text class="mt-stat__v">{{num.n(item.v)}}</text><text class="mt-stat__k">{{item.k}}</text></view>
   </view>
   <view class="mt-seg">

@@ -149,7 +149,7 @@
                 bind:input="onInputChange" data-field="name"
                 error="{{nicknameState === 'taken' || nicknameState === 'invalid'}}" errorText="{{nicknameHint}}"
                 success="{{nicknameState === 'available'}}"
-                helperText="{{nicknameState === 'taken' || nicknameState === 'invalid' ? '' : (nicknameHint || '2–24 个字，可用文字、数字和 _ # - . · 空格')}}" />
+                helperText="{{nicknameState === 'taken' || nicknameState === 'invalid' ? '' : nicknameHint}}" />
       <view wx:if="{{nicknameState === 'error'}}" class="profile-name-actions">
         <view class="profile-name-link" bindtap="retryNicknameCheck"
               aria-role="button" aria-label="重新检查昵称" hover-class="cy-pressed" hover-stay-time="80">重新检查</view>

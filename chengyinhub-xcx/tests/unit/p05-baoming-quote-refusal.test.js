@@ -107,5 +107,5 @@ test('P-31:勾选信息共享后按钮不再提示「请先勾选」', () => {
 })
 
 test('P-32:¥0 票不显示积分抵扣行', () => {
-  assert.match(WXML, /wx:if="\{\{pointsUsable !== false && selectedTicket\.price > 0\}\}"/)
+  assert.match(WXML, /wx:if="\{\{pointsUsable !== false && selectedTicket\.price > 0( && userInfo\.point != 0)?\}\}"/)   // R11 p1 F-10 另加「没积分不出」
 })

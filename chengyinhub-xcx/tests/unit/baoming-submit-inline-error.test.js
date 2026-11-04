@@ -131,11 +131,12 @@ test('提交错误在固定动作区使用可访问 inline error，并为扩展�
   assert.ok(barStart >= 0 && errorStart > barStart && payButton > errorStart,
     '持久错误必须位于付款按钮所在的固定动作区，并出现在按钮之前')
   assert.match(wxml,
-    /<cy-inline-error class="submit-inline-error"[^>]*wx:if="\{\{submitError\}\}"[^>]*title="[^"]*这次报名还没完成[^"]*"[^>]*sub="\{\{submitError\}\}"[^>]*action="[^"]*重新提交[^"]*"[^>]*bind:action="handlePayment"/s)
+    // R11 p1 F-10:已报名时服务端拒绝不再叠蓝框(上方「你已报名 · 查看我的报名」就是本页状态)
+    /<cy-inline-error class="submit-inline-error"[^>]*wx:if="\{\{submitError && !\(quoteRefusal && activityInfo\.isSignUp === 1\)\}\}"[^>]*title="[^"]*这次报名还没完成[^"]*"[^>]*sub="\{\{submitError\}\}"[^>]*action="[^"]*重新提交[^"]*"[^>]*bind:action="handlePayment"/s)
   assert.match(wxml,
-    /class="bmbottom-spacer"[\s\S]*?--baoming-action-extra: \{\{submitError \? 'calc\(var\(--cy-btn-h\) \+ var\(--cy-space-2\)\)' : '0rpx'\}\}/)
+    /class="bmbottom-spacer"[\s\S]*?--baoming-action-extra: \{\{submitError && !\(quoteRefusal && activityInfo\.isSignUp === 1\) \? 'calc\(var\(--cy-btn-h\) \+ var\(--cy-space-2\)\)' : '0rpx'\}\}/)
   assert.match(wxml,
-    /class="bmbottom"[\s\S]*?--baoming-action-extra: \{\{submitError \? 'calc\(var\(--cy-btn-h\) \+ var\(--cy-space-2\)\)' : '0rpx'\}\}/)
+    /class="bmbottom"[\s\S]*?--baoming-action-extra: \{\{submitError && !\(quoteRefusal && activityInfo\.isSignUp === 1\) \? 'calc\(var\(--cy-btn-h\) \+ var\(--cy-space-2\)\)' : '0rpx'\}\}/)
   assert.match(wxss,
     /\.bmbottom\s*,\s*\.bmbottom-spacer\s*\{[^}]*var\(--baoming-action-extra, 0rpx\)[^}]*env\(safe-area-inset-bottom\)/s,
     '错误出现时动作栏和正文占位必须使用同一高度算式')

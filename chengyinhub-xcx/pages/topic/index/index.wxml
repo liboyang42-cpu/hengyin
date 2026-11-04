@@ -116,8 +116,8 @@
           <view class="hero-fav {{faved ? 'is-on' : ''}} {{docked ? 'is-away' : ''}}" bindtap="toggleFav" aria-role="button" aria-label="{{faved ? '取消收藏' : '收藏主题'}}" hover-class="cy-pressed" hover-stay-time="80"><image class="bm-ic" src="{{faved ? '/pages/topic/images/icon_bm_on.svg' : '/pages/topic/images/icon_bm.svg'}}" mode="aspectFit" /></view>
           <!-- 2026-10-31 业主:收藏旁边放分享,进通用分享页(主题卡 + 色块 + 渠道;微信好友在那一页) -->
           <view class="hero-fav hero-share" bindtap="openShareCard" aria-role="button" aria-label="分享主题" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="share" size="35" /></view>
+          <!-- R11 p1 F-12:类型只在封面题签说一次,按钮旁只在作者看审核态时出那一枚 -->
           <text wx:if="{{ownerStateText}}" class="hero-type hero-type--held">{{ownerStateText}}</text>
-          <text wx:else class="hero-type hero-type--{{info.productType == 2 ? 'free' : 'city'}}">{{info.productType == 2 ? '自由探索' : '城市定向'}}</text>
         </view>
         <view class="bm-closed" wx:if="{{merchantClosed && is_join == 0}}" aria-role="alert">商家暂停营业，暂不可报名</view>
       </view>

@@ -324,9 +324,9 @@ test('收藏页只保留帖文与主题数据链，不回流退役活动与商�
   const entry = settings.match(/<cy-cell\b[^>]*title="我的收藏"[^>]*>/)
   const emptyNoun = read('pages/mylike/mylike.wxml').match(/title="暂无收藏的([^"]+)"/)
   assert.ok(entry && emptyNoun, '设置入口与收藏空态都必须可解析')
-  const description = entry[0].match(/description="([^"]*)"/)
-  assert.ok(description && description[1].includes(emptyNoun[1]), '设置入口描述必须跟随收藏页当前唯一数据域')
-  assert.doesNotMatch(description[1], /路线|场次/, '已退役的数据域不得继续出现在入口描述')
+  // R11 p1 F-12(业主改口):「我的收藏」不再配副标题,收藏页自己的 tab 说它收了什么
+  assert.equal(entry[0].match(/description="([^"]*)"/), null, '设置入口不再带说明副标题')
+  assert.doesNotMatch(entry[0], /路线|场次/, "已退役的数据域不得继续出现在入口")
 })
 
 test('收藏页首展由 onLoad 单独请求，第一次 onShow 不制造第二个 page=1', () => {

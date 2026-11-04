@@ -25,7 +25,7 @@
             <image class="v3-hero-motion" src="{{reducedMotion ? item.poster : item.motionSrc}}" mode="aspectFit" />
             <view class="v3-hero-copy" wx:if="{{item.title}}">
               <text class="v3-hero-action-title">{{item.title}}</text>
-              <text class="v3-hero-action-subtitle">{{item.subtitle}}</text>
+              <text wx:if="{{item.subtitle}}" class="v3-hero-action-subtitle">{{item.subtitle}}</text>
             </view>
             <view class="v3-hero-fade v3-hero-fade--action"></view>
           </swiper-item>
