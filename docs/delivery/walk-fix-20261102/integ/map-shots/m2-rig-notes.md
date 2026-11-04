@@ -1,11 +1,35 @@
 # Round 9 · lane m2-routes · rig walk notes
 
-Candidate: `40b4dcdb` (tip of `integ/launch-test-20261103`), built in its own detached worktree
+Candidate: first walk on `40b4dcdb`. **Recheck on `a726b420`, then `12d84be8`** (see "Recheck on the fix" below). Built in its own detached worktree
 (`$HOME/walk-rig/candidate`). `/home/user/hengyin` was not committed to, pushed or switched. The only files
 added there are the ones in this folder whose names start with `m2-`. **All shots come from the rig, not a
 phone.** The map in every shot is the rig's canvas stand-in, not Tencent's map.
 
-## Product bugs found
+## Recheck on the fix (`a726b420` → `12d84be8`): all three bugs FIXED
+
+- **What was rebuilt.** The candidate worktree was moved to `a726b420`, then to `12d84be8`, and the browser bundle was rebuilt from it each time.
+  - The backend jar was not rebuilt. `git diff 40b4dcdb 12d84be8` changes no Java, XML or SQL, only `chengyinhub-xcx` and docs. So the running backend is the same code.
+  - `up.sh` is pinned to `12d84be8`.
+- **The JSON shim is no longer used.** All rechecked shots and evidence come from the product code as shipped.
+- **Bug 1 (JSON) fixed.** The bundle now sends `{'content-type':'application/json'}` on consent and sync.
+  - A normal browser consent + sync returned 200 / code 200 (`m2-team-negative.txt` §13).
+  - The two-player run made 2 consent and 5 sync calls, all code 200, with no 「访问过于频繁」 (§14).
+  - Client end-of-run `finished:true` returned 200 (§15).
+- **Bug 2 (privacy) fixed.** §11 was repeated in §12: the switch was set OFF and the page's `/trail/consent` request was made to fail.
+  - The client stays `share:false` and does not poll, so no `/sync` is sent.
+  - `HGET team_trail:pts:14 990007` returns nil.
+- **Bug 3 (finish sheet) fixed** (`m2-card2.jpg`). The card now starts below the capsule, and 保存图片 / 分享 sit clear of the date line.
+  - Remaining observation: on the first screen the fixed 「继续」 button sits over the 「第1章 咖啡」 title. That is scrollable content under a fixed button, not the old overlap.
+- **Retaken without the shim:**
+  - `m2-team-a.jpg`, `m2-team-b.jpg`, `m2-team-follow.jpg`: same content as before (other team's glow line, avatar pin with 「第 1 站」 on A's view, rail, follow).
+  - `m2-route-play.jpg` and `m2-card2.jpg`.
+  - `m2-shop-share-after.jpg`: the address line is a little brighter. There is still no shop code, because WeChat is unreachable.
+  - `m2-fly-after.jpg` on `12d84be8`: the swipe card is shorter (200rpx), with a photo thumbnail.
+    - Fixture: 弄堂口咖啡 (`roam_poi` 36) was given an approved cover so that the first card has a photo.
+    - Its pin is shown enlarged as the selected one.
+    - Still seen: the shop's name tag sits partly over the player's blue dot (the player marker is not part of avoidance).
+
+## Product bugs found (first walk, on 40b4dcdb; all three fixed in a726b420, see above)
 
 1. **Same-session team routes never work on a real client (blocker).** The client sends
    `/api/team/trail/consent` and `/api/team/trail/sync` form-encoded, but the backend only accepts JSON.
@@ -73,7 +97,7 @@ Per-run seams (in the walk scripts, not in the rig):
 - `onRegionChange({type:'end', causedBy:'scale', scale, region})` stands in for a pinch, as the previous lane did.
 - Roam POIs in state `fog` were set to `seen`, the state they reach after walking past them, for the pin shots.
 - `openRoamDiscover()` was called for the shop strip. That is the handler behind the passport tile 「发现附近店铺」; it is not in 更多.
-- **JSON shim for team-trail POSTs** (`JSON_SHIM=1`): it wraps `wx.request` so `/api/team/trail/(consent|sync)` go out as
+- **JSON shim for team-trail POSTs** (`JSON_SHIM=1`; first walk only, NOT used in the recheck on `a726b420`/`12d84be8`): it wraps `wx.request` so `/api/team/trail/(consent|sync)` go out as
   `application/json`. This stands in for the missing header (bug 1). Without it no team shot is possible.
   `m2-team-a/b/follow`, `m2-route-play` and `m2-card2` were taken with it. `m2-consent` was taken without it (the sheet is the same).
 
@@ -105,7 +129,7 @@ Per-run seams (in the walk scripts, not in the rig):
 | Shot | What it shows | Notes |
 |---|---|---|
 | `m2-route-roam.jpg` | Roam after 14 `loc` steps (~320 m east then north) at scale 17: wide translucent white glow (`#FFFFFF38`, 14 px) under a bright line (`#FFFFFFF2`, 4 px), ending at the player dot | The fog's revealed blob sits a little up and left of the line (fog vs stand-in projection); the HUD shows 0.32 km |
-| `m2-route-play.jpg` | Story map (`openStoryMap`) after the same walk in play, with the run started from 游玩工具 → 开始这一局: the same two-layer glow line, the arrow at its end, the 1–4 station route | JSON shim on; no other team active at the time |
+| `m2-route-play.jpg` | Story map (`openStoryMap`) after the same walk in play, with the run started from 游玩工具 → 开始这一局: the same two-layer glow line, the arrow at its end, the 1–4 station route | Retaken on `12d84be8` without the shim; no other team active at the time |
 | `m2-consent.jpg` | The 「同场路线」 sheet: switch row 「让同场队伍看到我的路线」 (on by default) and a full-width 「开始」 | No shim. It appears after 开始游戏 → 开启定位, i.e. when location starts (`watchLocation` → `_startTeamTrail`), not from the run button. Behind it is the club-lead 「队伍集合中 0/4」 screen. The sheet has no line saying what is shared or for how long. |
 | `m2-team-a.jpg` | 9004 (晨光队) story map: own white glow route; 夜航队's green glow line; its avatar pin with 「第 1 站」; the right-side avatar rail | 夜航队's pin is drawn above its last point because of the stand-in's customCallout placement (ring + tag height). It sits right next to station 1 and the player arrow. |
 | `m2-team-b.jpg` | walk-player-1 (夜航队) sees 晨光队's line, its avatar pin (no tag: 0 stations done) and the rail | 晨光队's last point is ~35 m from station 1, so its avatar hides the 「1」 station marker. This is geography, but team pins can cover the next-stop marker. |

@@ -174,7 +174,7 @@ index e6ffacde..b3aa93cc 100644
    compressImage: function (o) { return ok(o, { tempFilePath: o.src }); },
    createAnimation: function () { var steps = [], cur = []; var api = { export: function () { var s = steps.concat(cur.length ? [cur] : []); steps = []; cur = []; return { actions: s }; }, step: function () { steps.push(cur); cur = []; return api; } }; ['opacity', 'translateX', 'translateY', 'translate', 'scale', 'rotate', 'width', 'height', 'backgroundColor', 'top', 'left'].forEach(function (k) { api[k] = function () { cur.push([k, [].slice.call(arguments)]); return api; }; }); return api; },
 diff --git a/docs/delivery/cloud-walk-20261101/rig/up.sh b/docs/delivery/cloud-walk-20261101/rig/up.sh
-index 5d6a74b8..d653622d 100755
+index 5d6a74b8..8d72d28f 100755
 --- a/docs/delivery/cloud-walk-20261101/rig/up.sh
 +++ b/docs/delivery/cloud-walk-20261101/rig/up.sh
 @@ -5,7 +5,7 @@
@@ -182,7 +182,7 @@ index 5d6a74b8..d653622d 100755
  set -euo pipefail
  export LANG=C.UTF-8 LC_ALL=C.UTF-8   # POSIX locale breaks javac on the repo's Chinese filenames
 -SHA=a1d30fb295d361122aec76fa9c180b4b496a9b0a
-+SHA=${RIG_SHA:-40b4dcdb1e9df50fa77e65632d49aacf1895981d}   # round 9 m2-routes: integ/launch-test-20261103 tip
++SHA=${RIG_SHA:-12d84be82353db6be7e562135d04cc8ae9e3f48b}   # round 9 m2-routes recheck: integ/launch-test-20261103 tip
  RIG_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
  REPO="$(git -C "$RIG_DIR" rev-parse --show-toplevel)"
  export RIG_HOME="${RIG_HOME:-$HOME/walk-rig}"

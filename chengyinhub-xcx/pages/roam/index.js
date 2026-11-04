@@ -2640,7 +2640,8 @@ Page({
     // 第九轮 m2 补充第 2 项:相关度高的先放(选中 > 参与商铺 > 有照片 > 离中心近),和已放下的任何一枚重叠的降成小圆点,
     // 拉近后自然放出来。一屏最多 MAX_PHOTO_PINS 枚照片 / 标签(cover-view 有数量上限,也压住 setData 体积)。
     const layoutRegion = pinRegion || photoPins.fallbackRegion(pinCenter, pinScale, this._fogScreenSize);
-    const placedPins = photoPins.layoutPins(pinCandidates, layoutRegion, this._fogScreenSize);
+    const placedPins = photoPins.layoutPins(pinCandidates, layoutRegion, this._fogScreenSize,
+      this._player && this.data.mapReady ? [{ lat: this._player.lat, lng: this._player.lng, size: 48 }] : []);
     let photoSlots = photoPins.MAX_PHOTO_PINS;
     pinCandidates.forEach((c) => {
       const placed = placedPins.indexOf(c) >= 0;

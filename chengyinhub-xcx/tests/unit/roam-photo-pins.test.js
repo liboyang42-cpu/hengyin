@@ -288,7 +288,7 @@ test('第九轮 m2 补充第 2 项:46 枚与 200 枚,各缩放级别都不重叠
 });
 test('第九轮 m2 补充第 2 项:漫游页所有非状态图钉都参与避让,放不下的降成小圆点', () => {
   const js = read('pages/roam/index.js');
-  assert.match(js, /photoPins\.layoutPins\(pinCandidates, layoutRegion, this\._fogScreenSize\)/);
+  assert.match(js, /photoPins\.layoutPins\(pinCandidates, layoutRegion, this\._fogScreenSize,/);
   assert.match(js, /if \(this\._icons && this\._icons\['pin-dot'\]\) c\.m\.iconPath = this\._icons\['pin-dot'\];/);
 });
 
@@ -299,4 +299,12 @@ test('第九轮 m2 补充第 3 项:拉远是热度——叠得越多越大越亮
   const js = read('pages/roam/index.js');
   assert.match(js, /this\._icons\['pin-heat' \+ lv\] = await save\(\);/);
   assert.match(js, /iconPath: icon, zIndex: 2 \+ heat\.level/);
+});
+
+test('rig 走查修正:玩家自己的点也占位,图钉不压蓝点', () => {
+  const vp = { width: 390, height: 844 };
+  const region = pins.fallbackRegion({ lat: 31.23, lng: 121.47 }, 17, vp);
+  const c = [{ id: 1, lat: 31.23, lng: 121.47, size: 44, label: 'shop', participating: true, photo: true, d: 0 }];
+  assert.strictEqual(pins.layoutPins(c, region, vp).length, 1);
+  assert.strictEqual(pins.layoutPins(c, region, vp, [{ lat: 31.23, lng: 121.47, size: 48 }]).length, 0);
 });

@@ -117,10 +117,15 @@ function fallbackRegion(center, scale, viewport) {
   return { southwest: { latitude: lat - dLat, longitude: lng - dLng }, northeast: { latitude: lat + dLat, longitude: lng + dLng } };
 }
 /** 返回放得下的候选(按相关度排好);没放下的由调用方降成小圆点 */
-function layoutPins(cands, region, viewport) {
+function layoutPins(cands, region, viewport, obstacles) {
   const sorted = (cands || []).slice().sort((a, b) => relevance(b) - relevance(a));
   if (!regionBox(region)) return sorted;
   const placed = [];
+  // 固定占位(玩家自己的点):先放进去,任何图钉都不压它(rig 走查:店名贴纸压在蓝点上)
+  (obstacles || []).forEach((o) => {
+    const s0 = o && toScreen(o.lat, o.lng, region, viewport);
+    if (s0) placed.push({ x: s0.x, y: s0.y, r: (Number(o.size) || 40) / 2 });
+  });
   const kept = [];
   sorted.forEach((c) => {
     const s = toScreen(c.lat, c.lng, region, viewport);

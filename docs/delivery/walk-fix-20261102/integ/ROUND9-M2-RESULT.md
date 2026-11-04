@@ -87,10 +87,14 @@ Proof:
 - Shots `m2-consent.jpg`, `m2-team-a.jpg` and `m2-team-b.jpg` (each account sees the other team's line, pin and rail),
   and `m2-team-follow.jpg`.
 
+Retake on the fix (`a726b420`, then `12d84be8`), without any rig shim:
+- A normal consent + sync from the page returns 200 and is stored (`m2-team-negative.txt` §13–§15). A two-player run made
+  2 consents and 5 syncs, all 200, with no rate-limit replies.
+- Switch off + consent request forced to fail: the client stays off and sends no sync; Redis has no opt row and no
+  points for that person (§12).
+- `m2-team-a.jpg`, `m2-team-b.jpg` and `m2-team-follow.jpg` were retaken and are unchanged from the first walk.
+
 Not verified:
-- **Retake pending.** The team shots and the opt-out-with-failed-request repro are being retaken without the JSON shim on
-  the fixed commit. If that section below still says pending, the first team shots were taken with a rig shim
-  standing in for the JSON fix.
 - **Phone only:**
   - `translateMarker` smoothness and avatar callout placement on Tencent's map;
   - polling on a cellular network, and pausing in the background;
@@ -110,7 +114,8 @@ Not verified:
 - **Privacy.** The first and last 150 m of the route are cut off (a quarter each for very short walks), so the card
   never shows a doorstep.
 - City comes from the existing reverse geocode. With `reducedMotion` the card appears finished.
-- Rig fix: the card now starts below the capsule, and the title row no longer slides up under the buttons.
+- Rig fix: the card now starts below the capsule, and the title row no longer slides up under the buttons
+  (retaken `m2-card2.jpg`; the fixed 「继续」 button still floats over scrolled content, as before).
 - Files: `pages/play/utils/route-card.js`, `pages/play/index.{js,wxml,wxss}`.
 - Proof: `tests/unit/route-card.test.js` (6 tests). Shot `m2-card2.jpg`.
 - Not verified: in the rig the theme code is missing (WeChat cannot be reached, 「个人码生成服务繁忙」) and the city is missing
@@ -131,7 +136,7 @@ Not verified:
   centre and scale.
 - Unit-tested at 46 and 200 markers for scales 15–18: no overlaps, and a participating shop only loses to another
   participating shop. Shots `m2-pins-46.jpg`, `m2-pins-200.jpg`.
-- Seen in the rig: the player's own dot is not part of the avoidance, so a shop tag can touch it.
+- The rig showed a shop tag sitting on the player's own dot. The player dot now takes part in the avoidance too (unit tested).
 
 ### 3. Density dots — done
 - Positions are still the real points. Dots are white cores with a soft glow, and three sizes (18/26/34 px) get
@@ -191,7 +196,7 @@ Not verified:
 
 ## Verification
 
-- **Full mini unit suite** (local, on `40b4dcdb`): 15,976 tests, 0 failures. After the rig fixes, the touched files were
+- **Full mini unit suite** (local, on `40b4dcdb`): 15,976 tests, 0 failures. The final full run is below. After the rig fixes, the touched files were
   rerun: team-trail, route-card, play-ui, monochrome, GET matrix, action ledger, roam pins and the shop strip all pass.
 - **UI gates:**
   - `ui-integrity.js`: UI-GATE-0:PASS. The baseline has only line-number moves, re-anchored line by line against the
