@@ -65,4 +65,11 @@ public interface ClubCrmMapper {
      */
     List<java.util.Map<String, Object>> selectSessionMoney(@Param("clubId") Long clubId,
                                                           @Param("activityIds") List<Long> activityIds);
+
+    /**
+     * j2 F-08:这些成员在本俱乐部(主题 / 社群活动)最近一张报名填写的姓名,密文列,按报名 id 倒序,
+     * 每人取第一行即最近一张。只供 Service 解密后给主理人一侧用。
+     */
+    List<java.util.Map<String, Object>> selectSignupNames(@Param("clubId") Long clubId,
+                                                          @Param("memberIds") java.util.Collection<Long> memberIds);
 }

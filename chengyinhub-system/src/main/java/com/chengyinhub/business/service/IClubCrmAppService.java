@@ -35,4 +35,11 @@ public interface IClubCrmAppService {
 
     /** Figma K3 核销详情 · 俱乐部端。手机号按岗位权限由服务端裁。 */
     ClubCustomerVO.CheckinDetail checkinDetail(Long principalMemberId, Long clubId, Long registrationId);
+
+    /**
+     * j2 F-08:主理人选人(成员名单、角色、转让主理人)时看到的报名姓名,memberId → 明文姓名。
+     * 与客户列表同一权限(canGovernClub);查看者不能治理本俱乐部时给空表,不解任何密文。
+     */
+    java.util.Map<Long, String> signupNamesForOrganiser(Long viewerMemberId, Long clubId,
+                                                         java.util.Collection<Long> memberIds);
 }

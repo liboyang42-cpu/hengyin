@@ -475,6 +475,25 @@ public class ClubCrmAppServiceImpl implements IClubCrmAppService {
         return out;
     }
 
+    @Override
+    public Map<Long, String> signupNamesForOrganiser(Long viewerMemberId, Long clubId,
+                                                     java.util.Collection<Long> memberIds) {
+        Map<Long, String> out = new LinkedHashMap<>();
+        if (viewerMemberId == null || clubId == null || memberIds == null || memberIds.isEmpty()) return out;
+        Club club = clubService.selectClubById(clubId);
+        if (club == null || !clubMemberService.canGovernClub(club, viewerMemberId)) return out;
+        List<Map<String, Object>> rows = clubCrmMapper.selectSignupNames(clubId, memberIds);
+        if (rows == null) return out;
+        for (Map<String, Object> row : rows) {
+            Long id = row == null ? null : toLong(row.get("memberId"));
+            if (id == null || out.containsKey(id)) continue;   // 按报名 id 倒序:第一张即最近一张
+            Object stored = row.get("realNameStored");
+            String name = stored instanceof String ? piiCryptoService.decrypt((String) stored) : null;
+            if (name != null && !name.trim().isEmpty()) out.put(id, name.trim());
+        }
+        return out;
+    }
+
     private String participantDisplayName(String storedName, String nickname, Long memberId) {
         if (storedName != null && !storedName.trim().isEmpty()) {
             // C-05(2026-11-02 用户):客户列表、报名参与者与核销详情显示报名时填写的全名,不再遮成「周*」。

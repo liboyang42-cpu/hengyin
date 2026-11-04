@@ -524,9 +524,16 @@
          order by team_id, id
     </select>
 
+    <!-- j2 F-08:导演台(主理人/本场导演)选人看报名姓名 —— 本场已付报名最近一张的姓名密文,
+         Service 解密后替换 memberName 并移除本列,不下发密文。 -->
     <select id="selectClubMemberProjection" resultType="map">
         select t.id as teamId, coalesce(t.title, '队伍') as teamName,
                m.member_id as memberId, coalesce(u.nickname, '玩家') as memberName,
+               (select name_reg.real_name from cms_registration name_reg
+                 where name_reg.member_id=m.member_id and name_reg.owner_type=2 and name_reg.owner_id=t.owner_id
+                   and name_reg.payment_status=2 and name_reg.registration_status=2
+                   and name_reg.real_name is not null and name_reg.real_name &lt;&gt; ''
+                 order by name_reg.id desc limit 1) as realNameStored,
                r.role_code as roleCode, r.role_name as roleName, r.status
           from game_session s
           join play_team t on t.owner_type=2 and t.owner_id=s.activity_id and t.status in (0,1,2)

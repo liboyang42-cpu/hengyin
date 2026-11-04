@@ -3712,7 +3712,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         Map<String, Object> club = new LinkedHashMap<>();
         club.put("readiness", readiness);
         club.put("stations", stations);
-        List<Map<String, Object>> memberRows = safe(runtimeMapper.selectClubMemberProjection(session.getId()));
+        List<Map<String, Object>> memberRows = organiserNamedRows(safe(runtimeMapper.selectClubMemberProjection(session.getId())));
         club.put("roles", memberRows);
         club.put("playMode", isRouteSession(session) ? "ROUTE" : "STORY");
         club.put("teams", clubTeams(memberRows, safe(isRouteSession(session)
@@ -3743,8 +3743,8 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         club.put("broadcastBlocker", broadcastBlocker(session, hasAudience));
         club.put("leaderboardVisible", Boolean.TRUE.equals(session.getLeaderboardVisible()));
         if (isRouteSession(session)) {
-            club.put("leaderboardRows", safe(playerNodeProgressService.selectActivityLeaderboard(
-                    activity.getId(), null, 50)));
+            club.put("leaderboardRows", organiserNamedLeaderboard(safe(playerNodeProgressService.selectActivityLeaderboard(
+                    activity.getId(), null, 50)), memberRows));
         }
         club.put("leaderboardUpdatedBy", session.getLeaderboardUpdatedBy());
         club.put("leaderboardUpdatedAt", formatDate(session.getLeaderboardUpdatedAt()));
@@ -4261,6 +4261,41 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
             values.add(value);
         }
         return values;
+    }
+
+    /**
+     * j2 F-08:导演台的队伍成员 / 定向广播收件人用报名姓名(C-05 同口径),没有就昵称,默认昵称改「成员#id」。
+     * 密文列解完即移除,不下发。
+     */
+    List<Map<String, Object>> organiserNamedRows(List<Map<String, Object>> rows) {
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Map<String, Object> raw : rows) {
+            if (raw == null) continue;
+            Map<String, Object> row = new LinkedHashMap<>(raw);
+            String signupName = com.chengyinhub.business.util.OrganiserPersonName.decryptSignupName(row.remove("realNameStored"));
+            Object nickname = row.get("memberName");
+            row.put("memberName", com.chengyinhub.business.util.OrganiserPersonName.pick(signupName,
+                    nickname == null ? null : String.valueOf(nickname), positiveLong(row.get("memberId"))));
+            out.add(row);
+        }
+        return out;
+    }
+
+    /** 排行榜(只在导演台这一侧)与成员同名:成员投影里有的人用同一个名字,其余按昵称兜底。 */
+    List<com.chengyinhub.business.domain.vo.LeaderboardItemVO> organiserNamedLeaderboard(
+            List<com.chengyinhub.business.domain.vo.LeaderboardItemVO> rows, List<Map<String, Object>> namedMembers) {
+        Map<Long, String> names = new HashMap<>();
+        for (Map<String, Object> member : namedMembers) {
+            Long id = positiveLong(member.get("memberId"));
+            if (id != null && member.get("memberName") != null) names.put(id, String.valueOf(member.get("memberName")));
+        }
+        for (com.chengyinhub.business.domain.vo.LeaderboardItemVO row : rows) {
+            if (row == null) continue;
+            String known = names.get(row.getMemberId());
+            row.setNickname(known != null ? known
+                    : com.chengyinhub.business.util.OrganiserPersonName.pick(null, row.getNickname(), row.getMemberId()));
+        }
+        return rows;
     }
 
     @SuppressWarnings("unchecked")

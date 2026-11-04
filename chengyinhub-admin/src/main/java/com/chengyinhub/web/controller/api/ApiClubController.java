@@ -128,6 +128,9 @@ public class ApiClubController extends BaseController {
     @Autowired
     private IClubLeaderService clubLeaderService;
 
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.IClubCrmAppService clubCrmAppService;
+
     @Autowired
     private IClubMemberService clubMemberService;
 
@@ -744,7 +747,34 @@ public class ApiClubController extends BaseController {
                 list.add(0, owner);
             }
         }
+        applyOrganiserNames(club, memberId, list);
         return AjaxResult.success(list);
+    }
+
+    /**
+     * j2 F-08:主理人/管理员在成员名单、角色分配、转让主理人里看到的 nickname 换成能分清人的名字 ——
+     * 主理人本人用他的主理人档案称呼,其余成员用本俱乐部报名时填写的姓名(C-05 同口径),
+     * 都没有就用昵称,默认昵称「城瘾用户」改成「成员#id」。普通成员看到的名单不变,不经过这里。
+     */
+    void applyOrganiserNames(Club club, Long viewerMemberId, List<ClubMember> list) {
+        if (club == null || list == null || list.isEmpty() || clubCrmAppService == null
+                || !clubMemberService.canGovernClub(club, viewerMemberId)) return;
+        List<Long> ids = new ArrayList<>();
+        for (ClubMember cm : list) if (cm != null && cm.getMemberId() != null) ids.add(cm.getMemberId());
+        java.util.Map<Long, String> signupNames = clubCrmAppService.signupNamesForOrganiser(viewerMemberId, club.getId(), ids);
+        for (ClubMember cm : list) {
+            if (cm == null || cm.getMemberId() == null) continue;
+            String name = signupNames == null ? null : signupNames.get(cm.getMemberId());
+            if (Boolean.TRUE.equals(cm.getIsOwner())) {
+                ClubLeader leader = clubLeaderService.selectClubLeaderByMemberId(cm.getMemberId());
+                String leaderName = leader == null ? null : leader.getLeaderName();
+                if (leaderName != null && !leaderName.trim().isEmpty()
+                        && !com.chengyinhub.business.util.OrganiserPersonName.DEFAULT_NICKNAME.equals(leaderName.trim())) {
+                    name = leaderName;
+                }
+            }
+            cm.setNickname(com.chengyinhub.business.util.OrganiserPersonName.pick(name, cm.getNickname(), cm.getMemberId()));
+        }
     }
 
     @Operation(summary = "移除俱乐部成员(创建者)")
