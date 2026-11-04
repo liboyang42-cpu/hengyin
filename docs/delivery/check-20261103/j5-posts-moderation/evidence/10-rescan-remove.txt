@@ -1,0 +1,6 @@
+switch on 200 (('true',),)
+job 200
+ club_post ((3, 2, '晚上去 qwpkzt 路线走走'),)
+ im ((4, 0, 1, '明天走 qwpkzt 路线'),)
+ hits ((20, 'RESCAN', 'CLUB_POST', 3, 'REPORT'), (21, 'RESCAN', 'CLUB_POST', 3, 'REMOVED'))
+im to 9004 ((5, 2, '内容已下架'),)

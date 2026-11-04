@@ -18,5 +18,6 @@ for (const [k, v, v2] of steps) {
   else if (k === 'photo') await w.photo(v);
   else if (k === 'eval') console.log('eval', JSON.stringify(await w.eval(v)).slice(0, 800));
   else if (k === 'resp') w.lastBody(new RegExp(v));
+  else if (k === 'xy') { await w.page.mouse.click(v, v2); await sleep(900); }
 }
 await w.finish();

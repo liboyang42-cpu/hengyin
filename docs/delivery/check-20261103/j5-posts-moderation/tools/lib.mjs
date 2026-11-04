@@ -16,7 +16,7 @@ export async function start(opts) {
     // set value like a user typing into a textarea/input inside shadow roots
     const h = await w.page.$('pierce/' + sel);
     if (!h) throw new Error('no ' + sel);
-    await h.click(); await w.page.keyboard.down('Control'); await w.page.keyboard.press('KeyA'); await w.page.keyboard.up('Control'); for (let k = 0; k < 4; k++) await w.page.keyboard.press('Backspace'); for (let k = 0; k < 120; k++) await w.page.keyboard.press('Backspace'); await h.type(String(text), { delay: 10 }); await sleep(400);
+    await h.evaluate((el) => el.scrollIntoView({ block: 'center' })); await sleep(300); await h.click(); await w.page.keyboard.press('End'); for (let k = 0; k < 120; k++) await w.page.keyboard.press('Backspace'); await h.type(String(text), { delay: 10 }); await sleep(400);
   };
   w.tapAt = async (sel, n = 0) => {
     const hs = await w.page.$$('pierce/' + sel); const h = hs[n < 0 ? hs.length + n : n];
