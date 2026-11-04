@@ -232,7 +232,9 @@ test('普通地标不是据点:地点卡不给分享、不读评分', () => {
 test('第九轮 m1 第 9 项:漫游地点卡与商家横滑卡的地址点开地图', () => {
   const wxml = read('pages/roam/index.wxml');
   assert.match(wxml, /class="pc-body cy-addr-tap"[^>]*catchtap="onAddrTap" data-lat="\{\{paceCard\.lat\}\}"/);
-  assert.match(wxml, /class="poi__addr cy-addr-tap"[^>]*catchtap="onAddrTap" data-lat="\{\{item\.lat\}\}"/);
+  // 第九轮 m2 补充第 1 项:横滑卡只剩名字、距离、动作;距离这一行点开地图
+  assert.match(wxml, /class="poi__addr poi__dist cy-addr-tap"[^>]*catchtap="onAddrTap" data-lat="\{\{item\.lat\}\}"/);
+  assert.doesNotMatch(wxml, /\{\{item\.meta\}\}/);
   const page = loadRoamPage();
   assert.deepEqual([page._paceCardFor({ lat: 31.2, lng: 121.4, address: 'A' }).lat, page._paceCardFor({ lat: 31.2, lng: 121.4 }).lng], [31.2, 121.4]);
   const opened = [];

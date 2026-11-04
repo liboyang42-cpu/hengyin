@@ -1,3 +1,4 @@
+// 2026-11-04 第九轮 m2 补充第 1 项(漫游横滑卡改深色、只留名字距离动作):roam/index.js 增减行,既有 U4-DYNAMIC / U5 锚点仅行号位移(difflib 对父提交逐行映射,调用行逐字相同),理由与条数不变、不新增登记;keyDigest 按门禁 baselineKeyDigest 重算。
 // 2026-11-04 第九轮 m2 第 3 项(路线分享卡):play/index.js 增行,既有 U4-DYNAMIC / U5 锚点仅行号位移(difflib 对父提交逐行映射,调用行逐字相同),理由与条数不变、不新增登记;keyDigest 按门禁 baselineKeyDigest 重算。
 // 2026-11-04 第九轮 m2 第 2 项(同场队伍路线):play/index.js 增行,既有 U4-DYNAMIC / U5 锚点仅行号位移(difflib 对父提交逐行映射,调用行逐字相同),理由与条数不变、不新增登记;keyDigest 按门禁 baselineKeyDigest 重算。
 // 2026-11-04 第九轮 m2 第 1 项(我走过的路:亮线加光晕):roam/index.js 与 play/index.js 增减行,既有 U4-DYNAMIC / U5 锚点仅行号位移(difflib 对父提交逐行映射,调用行逐字相同),理由与条数不变、不新增登记;keyDigest 按门禁 baselineKeyDigest 重算。
@@ -935,7 +936,7 @@ module.exports = {
 // 2026-11-02 走查修复 l4-counter(M-12/M-21/M-24 在 merchantinfo.js 前段 +8 行):2 条 U4-DYNAMIC 锚点仅行号位移(2433→2441、2465→2473),调用行逐字相同、理由与条数不变;digest 按门禁 baselineKeyDigest 重算。
 // 2026-11-03 集成 l4-counter 合 pay-gate/l1/l2/l3:两侧登记取并集,不新增登记;u4Dynamic digest 按门禁 baselineKeyDigest 在合并树重算。
 // 2026-11-03 Round5 l7-launch:club/apply 游客登录入口(+11 行),onInput 233→244、toggleBool 244→255 仅行号位移,调用行逐字相同、理由与条数不变;digest 按门禁同一算法重算。
-"857a95b5e63494ff7ef6ba6f2997b029e57a7617faa097da1c4a6c5052831396",
+"42a4b4ae0c4d45b57a99bc66befb0ff9df0dde4447930413d19fa0093e4e972f",
 // 2026-10-28 模板页货架改版(#652)合 master(#610):本线删 template/index 两条 + master play 1621→1624 重锚，合并树 60 条，digest 按同一算法重算。
 // 2026-10-20 R5 尾段(#327,owner 批准 12 条重锚):fabu 729→731、898→900、2524→2530、3570→3588、3951→3969、4957→4990、5215→5248、5866→5899、5876→5909、5929→5962、6270→6303、7936→8060,逐行比对 master 原行一字未改,理由与条数 58 不变;digest 按同一算法显式重算。
       // 2026-08-20 开卡包四拍动效:u5Silent 条数不变(12),只是 play/index.js 的调用点
@@ -1125,7 +1126,7 @@ module.exports = {
       //   逐条回读仍是「只为读章节 recruitEnabled、失败不弹全局 toast」这一处,静默理由一字未改,条数 27 不变。
 // 2026-10-17 合并 master 进漫游上线分支:roam/index.js 14 条、nearby/index.js 2 条既有调用仅行号位移(按 master 源码逐行回读定位);漫游两栏改版删掉 /api/registration/list 静默读取(749),U5 29→28。digest 按同一算法显式重算。
 // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):锚点位移 + 举报半屏/AI 对话组件下沉会员分包换路径 + 本线 9 处新增登记,digest 按同一算法重算。
-"f1dfd973ebcc7355641314287f51f481dafa01bd842bf1ce2d9dcd4a58107870"
+"370322a684f1dd58dca7f483dcfd2a7ecc335741dd388a87ab4075d036be12f5"
 
     }
   },
@@ -1342,7 +1343,7 @@ module.exports = {
     "chengyinhub-xcx/pages/activity/official-mine/index.js:165": "BL-80 通知复盘读取成功分支的 _statsText 动态键:复盘文案或带重试提示,在该卡触达行消费;owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/pages/activity/official-mine/index.js:171": "BL-80 通知复盘读取网络失败:按卡片路径写 _statsLoading=false;sameItem 校验防止写到换行后的另一张卡;owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/pages/activity/official-mine/index.js:172": "BL-80 通知复盘读取网络失败的 _statsText 动态键:写「网络连接失败，点一下重试」,在该卡触达行消费;owner=小程序,复核=2026-12-31",
-    "chengyinhub-xcx/pages/roam/index.js:596": "BL-70 横滑卡头像堆按命中行拼 shopStrip.rows[i].visitors 路径批量回写;只在横滑卡 poi__who 头像堆消费,epoch 丢弃迟到回包;owner=小程序,复核=2026-12-31",
+    "chengyinhub-xcx/pages/roam/index.js:601": "BL-70 横滑卡头像堆按命中行拼 shopStrip.rows[i].visitors 路径批量回写;只在横滑卡 poi__who 头像堆消费,epoch 丢弃迟到回包;owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:2142": "本人帖文翻页patch只用list[oldLen+i]固定列表名与响应遍历下标，其余feedErr/feedAuthError/hasMore/nodata为字面字段；服务端仅供值不供键；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/activity/official-mine/index.js:164": "BL-80 通知复盘读取成功分支的 _canRecover 动态键:按同一卡片路径写是否可安全恢复原投递(仅 code 200 且 canRecoverInapp 为真),sameItem 校验防止写到换行后的另一张卡,在该卡「安全恢复原投递」按钮消费;owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/pages/index/index.js:1293": "底部主题翻页只追加bottomTopicList[oldLen+i]，其余页码/状态/hasMore固定字面字段；下标来自当前列表长度和响应遍历序号；owner=小程序，复核=2026-09-30",
@@ -1416,19 +1417,19 @@ module.exports = {
     "chengyinhub-xcx/subpackageP3/pages/stamp-camera/index/index.js:74": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
   // (本支) "chengyinhub-xcx/pages/templatedetail/templatedetail.js:176": "onLoad 的 data 由本方法构造：先写路由参数派生的固定键，dev 环境命中 mock 时交给 patchNormalized；patchNormalized 以 info/gallery/coverUrl/capRows/detailStats/materialChips/sceneChips/isTopicTemplate/difficultyLetter/difficultyLabel 十项逐个赋值，服务端对象只作为值参与归一化，不展开为 setData 字段名；owner=小程序，复核=2026-09-30",
   // (本支) "chengyinhub-xcx/pages/templatedetail/templatedetail.js:251": "onLoad 的 data 由本方法构造：先写路由参数派生的固定键，dev 环境命中 mock 时交给 patchNormalized；patchNormalized 以 info/gallery/coverUrl/capRows/detailStats/materialChips/sceneChips/isTopicTemplate/difficultyLetter/difficultyLabel 十项逐个赋值，服务端对象只作为值参与归一化，不展开为 setData 字段名；owner=小程序，复核=2026-09-30",
-  // (本支) "chengyinhub-xcx/pages/roam/index.js:1416": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
-  // (本支) "chengyinhub-xcx/pages/roam/index.js:3452": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
-  // (本支) "chengyinhub-xcx/pages/roam/index.js:4264": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
-  // (本支) "chengyinhub-xcx/pages/roam/index.js:4314": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
+  // (本支) "chengyinhub-xcx/pages/roam/index.js:1421": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
+  // (本支) "chengyinhub-xcx/pages/roam/index.js:3457": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
+  // (本支) "chengyinhub-xcx/pages/roam/index.js:4269": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
+  // (本支) "chengyinhub-xcx/pages/roam/index.js:4319": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
   // (本支) "chengyinhub-xcx/subpackageRoam/session/index.js:145": "动态 setData 需精确登记：...this._route(s)；owner=小程序，复核=2026-09-30",
   // (本支) "chengyinhub-xcx/pages/template/index.js:276": "列表路径先经 COVER_LISTS 白名单限制为 topList/tailList，再校验整数下标、边界与稳定 id 一致，最终只写目标条目的 _coverFail；owner=小程序，复核=2026-09-30",
   // (本支) "chengyinhub-xcx/pages/template/index.js:288": "target 只允许 banner，再校验事件与当前头牌稳定 id 一致，最终只写 banner._coverFail；owner=小程序，复核=2026-09-30",
   // (本支) "chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js:1736": "可承接章节失败态只在 categoryMissing 布尔判定下二选一；两个对象分支的键均在本方法写死，state/error/allChaptersList 被 WXML 消费，loading 是已精确登记的页内控制字段；owner=小程序，复核=2026-09-30",
   // (本支) "chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js:1745": "可承接章节失败态只在 categoryMissing 布尔判定下二选一；两个对象分支的键均在本方法写死，state/error/allChaptersList 被 WXML 消费，loading 是已精确登记的页内控制字段；owner=小程序，复核=2026-09-30",
-      "chengyinhub-xcx/pages/roam/index.js:1895": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
-      "chengyinhub-xcx/pages/roam/index.js:4180": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
-      "chengyinhub-xcx/pages/roam/index.js:5064": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
-      "chengyinhub-xcx/pages/roam/index.js:5122": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
+      "chengyinhub-xcx/pages/roam/index.js:1900": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
+      "chengyinhub-xcx/pages/roam/index.js:4185": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
+      "chengyinhub-xcx/pages/roam/index.js:5069": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
+      "chengyinhub-xcx/pages/roam/index.js:5127": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
   // (本支) "chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js:1743": "可承接章节失败态只在 categoryMissing 布尔判定下二选一；两个对象分支的键均在本方法写死，state/error/allChaptersList 被 WXML 消费，loading 是已精确登记的页内控制字段；owner=小程序，复核=2026-09-30",
   // (本支) "chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js:1752": "可承接章节失败态只在 categoryMissing 布尔判定下二选一；两个对象分支的键均在本方法写死，state/error/allChaptersList 被 WXML 消费，loading 是已精确登记的页内控制字段；owner=小程序，复核=2026-09-30",
       "chengyinhub-xcx/pages/templatedetail/templatedetail.js:220": "onLoad 的 data 由本方法构造：先写路由参数派生的固定键，dev 环境命中 mock 时交给 patchNormalized；patchNormalized 以 info/gallery/coverUrl/capRows/detailStats/materialChips/sceneChips/isTopicTemplate/difficultyLetter/difficultyLabel 十项逐个赋值，服务端对象只作为值参与归一化，不展开为 setData 字段名；owner=小程序，复核=2026-09-30",
@@ -1454,8 +1455,8 @@ module.exports = {
   //   落在 4945(master 侧记 4277、本分支侧记 4968,两侧对合并树都不对)。理由一字未改,digest 重算。
   "u5Silent": {
     // 2026-10-28 p74 业主「附近活动总是有的」:漫游起始页附近为空时的两级兜底读取逐项登记。
-    "chengyinhub-xcx/pages/roam/index.js:6239": "漫游起始页「附近活动」3 公里为空时的 20 公里兜底读取(同 /api/roam/entry/nearby、同权限档):主读取已成功落定(空也是真结果),这一条只往底部卡片带补同城活动,读不到就接着读其他城市公开主题;不改地图点位、不承载写入;只写回同一次进页序号与同一身份;owner=漫游,复核=2026-10-28",
-    "chengyinhub-xcx/pages/roam/index.js:6248": "漫游起始页「附近活动」同城也为空时读其他城市公开主题(/api/topic/list 公开列表):只填底部卡片带,读不到时卡片带保持主读取给出的空态卡;不改地图点位、不承载写入;只写回同一次进页序号与同一身份;owner=漫游,复核=2026-10-28",
+    "chengyinhub-xcx/pages/roam/index.js:6244": "漫游起始页「附近活动」3 公里为空时的 20 公里兜底读取(同 /api/roam/entry/nearby、同权限档):主读取已成功落定(空也是真结果),这一条只往底部卡片带补同城活动,读不到就接着读其他城市公开主题;不改地图点位、不承载写入;只写回同一次进页序号与同一身份;owner=漫游,复核=2026-10-28",
+    "chengyinhub-xcx/pages/roam/index.js:6253": "漫游起始页「附近活动」同城也为空时读其他城市公开主题(/api/topic/list 公开列表):只填底部卡片带,读不到时卡片带保持主读取给出的空态卡;不改地图点位、不承载写入;只写回同一次进页序号与同一身份;owner=漫游,复核=2026-10-28",
     // 2026-10-25 官方地点卡片:展开详情两条背景读取逐项登记。
     "chengyinhub-xcx/subpackageRoam/nearby/index.js:1002": "官方地点卡展开时补读节点(相册 / 玩法 / 完成状态 / 评分):卡片已先用地图点位数据渲染名称、地址、介绍和封面,读不到只是少相册与玩法块,开始挑战前挑战页会重新读同一节点并在失败时给错误页和重试;只写回仍开着的同一张卡;owner=上海据点,复核=2026-10-25",
     "chengyinhub-xcx/subpackageRoam/nearby/index.js:1023": "官方地点卡评价列表背景读取:失败时不显示评价区空态文案(reviewsLoaded=false),卡片其余内容与按钮照常,重新点开卡片会重读;不承载提交;只写回仍开着的同一张卡;owner=上海据点,复核=2026-10-25",
@@ -1466,9 +1467,9 @@ module.exports = {
     "chengyinhub-xcx/subpackageMember/components/cy/report-sheet/index.js:96": "BL-32 举报提交:失败落 fail/unknown 结果半屏(含后端原因,同 requestId 可重试不重复受理),关自动 toast 免双弹;owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/pages/activity/official-mine/index.js:158": "BL-80 通知复盘读取:失败写进该卡 _statsText 触达行并可再点重试(动态键,静态扫描不能证明);owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/pages/play/merchant/components/safety-rating-sheet/index.js:115": "BL-89 安全感受评价先按 public-home 换取商家 ID:失败经 done(null,msg) 落 submitError 半屏内 cy-inline-error,保留输入可重试;owner=小程序,复核=2026-12-31",
-    "chengyinhub-xcx/pages/roam/index.js:588": "BL-70 漫游商家横滑卡打卡头像堆(/api/roam/shop/visitors):附加信息,失败或迟到回包不动卡片,不挡「去这儿」;owner=小程序,复核=2026-12-31",
-    "chengyinhub-xcx/pages/roam/index.js:843": "BL-41 护照「官方活动」大卡读可参与的漫游官方活动:读不到时卡片保持原文案与原行为,不弹 toast;owner=小程序,复核=2026-12-31",
-    "chengyinhub-xcx/pages/roam/index.js:814": "2026-10-27 P-29 护照「勋章墙」方卡读最新点亮勋章图(/api/medal/wall):只为方卡换一张图,读不到保持业主空态插画,token 丢弃迟到回包,页面无可给的重试动作,不弹 toast;owner=小程序,复核=2026-12-31",
+    "chengyinhub-xcx/pages/roam/index.js:593": "BL-70 漫游商家横滑卡打卡头像堆(/api/roam/shop/visitors):附加信息,失败或迟到回包不动卡片,不挡「去这儿」;owner=小程序,复核=2026-12-31",
+    "chengyinhub-xcx/pages/roam/index.js:848": "BL-41 护照「官方活动」大卡读可参与的漫游官方活动:读不到时卡片保持原文案与原行为,不弹 toast;owner=小程序,复核=2026-12-31",
+    "chengyinhub-xcx/pages/roam/index.js:819": "2026-10-27 P-29 护照「勋章墙」方卡读最新点亮勋章图(/api/medal/wall):只为方卡换一张图,读不到保持业主空态插画,token 丢弃迟到回包,页面无可给的重试动作,不弹 toast;owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/subpackageMember/components/cy/merchant-correction-sheet/index.js:57": "BL-67/BL-219 商家纠错半屏读纠错类型:失败落 stage=loadfail 结果态带重试,seq 丢弃关掉重开后的旧回包;owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/subpackageMember/components/cy/merchant-correction-sheet/index.js:108": "BL-67 商家纠错提交:失败落 fail/unknown 结果态(含后端原因,同键可重试),关自动 toast 免双弹;owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/subpackageMember/coupon/coupon.js:192": "BL-77 券统计卡是辅助只读信息:读取失败即不展示、不挡券列表,不弹 toast;owner=小程序,复核=2026-12-31",
@@ -1477,19 +1478,19 @@ module.exports = {
     "chengyinhub-xcx/pages/activity/list/index.js:201": "公开活动读取，失败写实例 _loadError/_loadErrorMsg 并由 applyFilter 派生 curError/errorMsg；普通500/网络失败沿既有 load-failure 留白或保留旧公开列表，公开数据可匿名读，不借私有登录态掩盖失败；owner=小程序，复核=2026-10-16",
     "chengyinhub-xcx/pages/activity/list/index.js:247": "本人参与活动读取，owner/token/seq/可见代际隔离旧回包；401/code2 显示登录单飞恢复，403 独立无权限提示，普通500/网络失败保留同主旧列表或首载 load-failure 留白，经 applyFilter 消费实例 _mineError/_mineErrorMsg；owner=小程序，复核=2026-10-16",
     "chengyinhub-xcx/utils/community-post-api.js:78": "canonical 社区受控请求对象：BASE+path 只接固定发布/编辑阶段 helper 与举报闭包的枚举路由，举报回读仅显式切至本人 /api/community-trust/reports/mine；完整目标匹配 Controller，owner/current 检查及 pipeline success/fail 可见反馈保留，取消不报成功；owner=小程序，复核=213",
-    "chengyinhub-xcx/pages/roam/index.js:6069": "漫游入口地图活动层随地图中心后台刷新:失败汇总到 entryLoadError 并提供重新加载,关闭通用 toast 避免拖图时与页内错误态重复报错;owner=小程序,复核=2026-12-31",
-    "chengyinhub-xcx/pages/roam/index.js:6076": "漫游入口地图队伍层随地图中心后台刷新:失败汇总到 entryLoadError 并提供重新加载,关闭通用 toast 避免拖图时与页内错误态重复报错;owner=小程序,复核=2026-12-31",
+    "chengyinhub-xcx/pages/roam/index.js:6074": "漫游入口地图活动层随地图中心后台刷新:失败汇总到 entryLoadError 并提供重新加载,关闭通用 toast 避免拖图时与页内错误态重复报错;owner=小程序,复核=2026-12-31",
+    "chengyinhub-xcx/pages/roam/index.js:6081": "漫游入口地图队伍层随地图中心后台刷新:失败汇总到 entryLoadError 并提供重新加载,关闭通用 toast 避免拖图时与页内错误态重复报错;owner=小程序,复核=2026-12-31",
   // (本支) "chengyinhub-xcx/pages/activity/list/index.js:105": "公共活动列表读取:失败落 loadError/errorMsg,由页面 cy-error 呈现并给重试,关掉自动 toast 是避免双弹;owner=小程序,复核=2026-12-31",
   // (本支) "chengyinhub-xcx/pages/activity/list/index.js:129": "「我发布的」列表读取:失败落 mineError/errorMsg,同页错误态承接,同上;owner=小程序,复核=2026-12-31",
-  // (本支) "chengyinhub-xcx/pages/roam/index.js:2114": "上报自己位置的心跳,30 s 一次:掉一次就是这一格没报上去,下一次覆盖它;弹错等于每走两步弹一个框,而且用户对此无事可做 —— 真失效(服务端 5 分钟收不到)的表现是自己从别人地图上消失,不是这里报错;owner=小程序,复核=2026-09-30",
-  // (本支) "chengyinhub-xcx/pages/roam/index.js:2123": "拉附近还在走的人,45 s 一次:拉不到就保留上一批不清空(见调用点注释),地图上没人是常态不是错误;这一层报错会把「附近本来就没人」说成「出问题了」;owner=小程序,复核=2026-09-30",
+  // (本支) "chengyinhub-xcx/pages/roam/index.js:2119": "上报自己位置的心跳,30 s 一次:掉一次就是这一格没报上去,下一次覆盖它;弹错等于每走两步弹一个框,而且用户对此无事可做 —— 真失效(服务端 5 分钟收不到)的表现是自己从别人地图上消失,不是这里报错;owner=小程序,复核=2026-09-30",
+  // (本支) "chengyinhub-xcx/pages/roam/index.js:2128": "拉附近还在走的人,45 s 一次:拉不到就保留上一批不清空(见调用点注释),地图上没人是常态不是错误;这一层报错会把「附近本来就没人」说成「出问题了」;owner=小程序,复核=2026-09-30",
   // (本支) "chengyinhub-xcx/pages/merchant/customer/index.js:1013": "触达历史是页面区块的 stale 刷新:2026-08-26 起有旧记录时刷新失败静默降级,旧列表留在屏上、重试靠下拉,首屏无数据时仍由整页 cy-error 兜底;owner=小程序,复核=2026-09-30",
   // (本支) "chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js:2396": "/api/topic/info-to-user 在这里只用来给「更多 → 开放报名」那一行读章节的 recruitEnabled:读不到就是那一行不带「开/关」标签,抽屉本身照常能用。为这个弹全局 toast 会让主办方以为整个抽屉出错了;owner=小程序,复核=2026-09-30",
     "chengyinhub-xcx/utils/marketing-consent-entry.js:60": "支付成功面板/订单详情上取商家营销同意状态(GET /api/merchant/crm/marketing-consents)是非必要附属请求:失败只隐藏可选的同意勾选行(fail-closed),主流程(面板自愈跳转、订单详情)不受影响;支付刚成功就弹通道默认「网络错误」会让玩家以为没付成功(2026-09-17 总控裁定,release-0917 第三阶段 C);保存同意(POST)仍不静默;owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/utils/roam-share-snapshot.js:137": "接收方读取朋友分享的足迹快照(匿名 GET,单独字面量供 GET 权限矩阵核对):服务端明确没有落整页「这条足迹已不再公开」空态,断网/网关落整页错误态带重试;通道自动 toast 会与整页状态重复;owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/utils/roam-share-snapshot.js:22": "足迹分享快照三路请求(发布/作废/接收方读取)都有专用可见反馈:发布失败在分享面板写明「足迹链接没生成」并给重试,作废失败由清空确认后的精确 toast 说明「链接暂未失效」,接收方读取失败按 gone/error 落整页空态或重试;通道自动 toast 会把同一件事报两遍;owner=小程序,复核=2026-12-31",
-      "chengyinhub-xcx/pages/roam/index.js:2738": "上报自己位置的心跳,30 s 一次:掉一次就是这一格没报上去,下一次覆盖它;弹错等于每走两步弹一个框,而且用户对此无事可做 —— 真失效(服务端 5 分钟收不到)的表现是自己从别人地图上消失,不是这里报错;owner=小程序,复核=2026-09-30",
-      "chengyinhub-xcx/pages/roam/index.js:2767": "拉附近还在走的人,45 s 一次:拉不到就保留上一批不清空(见调用点注释),地图上没人是常态不是错误;这一层报错会把「附近本来就没人」说成「出问题了」;owner=小程序,复核=2026-09-30",
+      "chengyinhub-xcx/pages/roam/index.js:2743": "上报自己位置的心跳,30 s 一次:掉一次就是这一格没报上去,下一次覆盖它;弹错等于每走两步弹一个框,而且用户对此无事可做 —— 真失效(服务端 5 分钟收不到)的表现是自己从别人地图上消失,不是这里报错;owner=小程序,复核=2026-09-30",
+      "chengyinhub-xcx/pages/roam/index.js:2772": "拉附近还在走的人,45 s 一次:拉不到就保留上一批不清空(见调用点注释),地图上没人是常态不是错误;这一层报错会把「附近本来就没人」说成「出问题了」;owner=小程序,复核=2026-09-30",
     // 2026-09-17 定向广播接线:pages/merchant/customer/index.js 在原触达历史登记点上方
     //   新增广播预览/发送两段(服务端预览失败、发送失败都落半屏内 cast.error 行,含可重试说明,
     //   属「同请求内静态证明显式处理」,不需要逐项登记),既有那条静默登记点按门禁实测
@@ -1501,23 +1502,23 @@ module.exports = {
     "chengyinhub-xcx/subpackageA/components/scene-member-invite-history/index.js:63": "邀请历史使用本地 request wrapper 将网络/异常状态归一成空响应，列表据此展示无记录而不弹全局错误；owner=小程序，复核=2026-09-15",
     "chengyinhub-xcx/utils/analytics.js:233": "埋点投递是纯副作用且不应打扰玩家，fail 只回报 onDone(false)；必须显式登记，禁止因非空回调自动安全；owner=小程序，复核=2026-09-15",
     "chengyinhub-xcx/utils/ui-state-request.js:10": "共用请求封装,静默由调用方接管:各页在 fail 分支写页内错误态与重试,禁止 request-client 再弹一次；owner=小程序，复核=2026-09-30",
-      "chengyinhub-xcx/pages/roam/index.js:1984": "官方活动到达验证提交:失败由 .then 内 _setEventFeedback 写活动叠层页内错误态(后端 msg 或「本次验证没有送达，请保持当前位置后重试」),关自动 toast 避免双弹；owner=小程序，复核=2026-09-30",
-      "chengyinhub-xcx/pages/roam/index.js:4549": "据点发现确认:失败按 net/unknown/server 分类返回,调用方写 paceCard.checkinErr 页内错误并按是否可重试给重试钮(结果未知不给重试防重复提交),关自动 toast 避免双弹；owner=小程序，复核=2026-09-30",
-      "chengyinhub-xcx/pages/roam/index.js:4763": "发现奖励卡上附带的附近探店日候选:失败或无候选返回 null,只是奖励卡少一条可选推荐,不影响主流程;弹错会打断奖励反馈；owner=小程序，复核=2026-09-30",
-      "chengyinhub-xcx/pages/roam/index.js:4848": "商家打卡提交:失败按 net/unknown/server 分类返回,_sendCheckin 只给一句 toast 并把打卡卡收起(2026-09-16 拍板「漫游打卡不存在失败态」:visit.checkinErr 与 retryCheckin 已删,距离不够在 startVisit 就被拦下),关自动 toast 避免双弹;owner=小程序,复核=2026-09-30",
-      "chengyinhub-xcx/pages/roam/index.js:4959": "三店连亮勋章配置读取:失败沿用兜底阈值与文案(SHOP_BADGE_FALLBACK_THRESHOLD),fail-open 不比改动前差;无用户可做的动作；owner=小程序，复核=2026-09-30",
-      "chengyinhub-xcx/pages/roam/index.js:5407": "漫游分享发到广场的发帖请求:失败由同一 Promise 链接管——业务失败 fail(msg) 出 toast,网络/HTTP 异常与 catch 均提示「到广场核对，暂不要重复发布」并置 squarePostUnknown;关自动 toast 是避免双弹;owner=小程序,复核=2026-09-30",
+      "chengyinhub-xcx/pages/roam/index.js:1989": "官方活动到达验证提交:失败由 .then 内 _setEventFeedback 写活动叠层页内错误态(后端 msg 或「本次验证没有送达，请保持当前位置后重试」),关自动 toast 避免双弹；owner=小程序，复核=2026-09-30",
+      "chengyinhub-xcx/pages/roam/index.js:4554": "据点发现确认:失败按 net/unknown/server 分类返回,调用方写 paceCard.checkinErr 页内错误并按是否可重试给重试钮(结果未知不给重试防重复提交),关自动 toast 避免双弹；owner=小程序，复核=2026-09-30",
+      "chengyinhub-xcx/pages/roam/index.js:4768": "发现奖励卡上附带的附近探店日候选:失败或无候选返回 null,只是奖励卡少一条可选推荐,不影响主流程;弹错会打断奖励反馈；owner=小程序，复核=2026-09-30",
+      "chengyinhub-xcx/pages/roam/index.js:4853": "商家打卡提交:失败按 net/unknown/server 分类返回,_sendCheckin 只给一句 toast 并把打卡卡收起(2026-09-16 拍板「漫游打卡不存在失败态」:visit.checkinErr 与 retryCheckin 已删,距离不够在 startVisit 就被拦下),关自动 toast 避免双弹;owner=小程序,复核=2026-09-30",
+      "chengyinhub-xcx/pages/roam/index.js:4964": "三店连亮勋章配置读取:失败沿用兜底阈值与文案(SHOP_BADGE_FALLBACK_THRESHOLD),fail-open 不比改动前差;无用户可做的动作；owner=小程序，复核=2026-09-30",
+      "chengyinhub-xcx/pages/roam/index.js:5412": "漫游分享发到广场的发帖请求:失败由同一 Promise 链接管——业务失败 fail(msg) 出 toast,网络/HTTP 异常与 catch 均提示「到广场核对，暂不要重复发布」并置 squarePostUnknown;关自动 toast 是避免双弹;owner=小程序,复核=2026-09-30",
       "chengyinhub-xcx/subpackageRoam/nearby/index.js:283": "附近主题地图层只读：当前epoch/账号有效后401与403显示登录或权限提示并清图层；普通失败进入loadError读取留白，refresh/retryNearby可回读；异步icon生成受owner/seq约束，关闭通用toast避免拖图重复反馈；owner=小程序，复核=2026-10-12",
-  // (本支) "chengyinhub-xcx/pages/roam/index.js:774": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
-  // (本支) "chengyinhub-xcx/pages/roam/index.js:1506": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
-  // (本支) "chengyinhub-xcx/pages/roam/index.js:3713": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
-  // (本支) "chengyinhub-xcx/pages/roam/index.js:3971": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
-  // (本支) "chengyinhub-xcx/pages/roam/index.js:4053": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
-  // (本支) "chengyinhub-xcx/pages/roam/index.js:4161": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
-  // (本支) "chengyinhub-xcx/pages/roam/index.js:621": "拉附近有人在组局(原型 f-hangout),120 s 一次的背景轮询:拉不到就保持上一张不闪,地图上没有局本来就是常态;这一层报错会把「附近本来就没人组局」说成「出问题了」,而且页面里没有可给的重试动作;owner=小程序,复核=2026-09-30",
+  // (本支) "chengyinhub-xcx/pages/roam/index.js:779": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
+  // (本支) "chengyinhub-xcx/pages/roam/index.js:1511": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
+  // (本支) "chengyinhub-xcx/pages/roam/index.js:3718": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
+  // (本支) "chengyinhub-xcx/pages/roam/index.js:3976": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
+  // (本支) "chengyinhub-xcx/pages/roam/index.js:4058": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
+  // (本支) "chengyinhub-xcx/pages/roam/index.js:4166": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
+  // (本支) "chengyinhub-xcx/pages/roam/index.js:626": "拉附近有人在组局(原型 f-hangout),120 s 一次的背景轮询:拉不到就保持上一张不闪,地图上没有局本来就是常态;这一层报错会把「附近本来就没人组局」说成「出问题了」,而且页面里没有可给的重试动作;owner=小程序,复核=2026-09-30",
   // (本支) "chengyinhub-xcx/subpackageRoam/nearby/index.js:399": "拉附近别人打过卡的地方(原型 h-place),跟着地图中心走的背景读取:读不到就这一次列表为空,用户换个地方拖图就会再拉一次;弹错等于每拖一下图弹一个框;owner=小程序,复核=2026-09-30",
   // (本支) "chengyinhub-xcx/subpackageRoam/nearby/index.js:434": "拉「谁在这儿打过卡」的头像与人数:半屏的名字与地址已经先渲染出来了,这一条只是往上补人;补不上就只显示名字,不该为它弹错;owner=小程序,复核=2026-09-30",
-  // (本支) "chengyinhub-xcx/pages/roam/index.js:4492": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
+  // (本支) "chengyinhub-xcx/pages/roam/index.js:4497": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
   // (本支) "chengyinhub-xcx/pages/play/index.js:5808": "已完成里程碑为可选增强，请求失败保持 milestone=null 且轴不渲染；owner=小程序，复核=2026-09-15",
   // (本支) "chengyinhub-xcx/components/cy/post-compose/index.js:383": "广场选活动报名列表读取:失败落组件 activityError,由选活动层呈现并给重试,关掉自动 toast 避免双弹;owner=小程序,复核=2026-12-31",
   // (本支) "chengyinhub-xcx/components/cy/post-compose/index.js:396": "广场选活动「我主办的」列表读取:失败汇总进同一 activityError,同上;owner=小程序,复核=2026-12-31"

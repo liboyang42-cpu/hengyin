@@ -83,6 +83,12 @@ const { currentScene, exitDecision, popScene, pushScene } = require('../../utils
 // 个性化地图(暗色底图)与 play 页共用一份配置,见 utils/map-style.js
 const { playerMapStyle } = require('../../utils/map-style.js');
 const photoPins = require('./photo-pins.js');
+function stripDistText(from, p) {
+  if (!from || from.lat == null || !p || p.lat == null) return '';
+  const m = distM({ lat: Number(from.lat), lng: Number(from.lng) }, { lat: Number(p.lat), lng: Number(p.lng) });
+  if (!Number.isFinite(m)) return '';
+  return m < 1000 ? Math.max(10, Math.round(m / 10) * 10) + ' 米' : (m / 1000).toFixed(1) + ' 公里';
+}
 const { placeShareFromEvent } = require('../../utils/place-share.js');
 const PLAYER_MAP_STYLE = playerMapStyle();
 const { getScene } = require('../../utils/scene-registry.js');
@@ -557,9 +563,8 @@ Page({
         poiId: String(p.id),   // 第九轮 m1 第 4 项:卡 ⇄ 图钉互认
         name: p.name,
         address: p.desc || '',
-        meta: p.metaLine || '商家 · 探店',
-        // 原型这枚点用颜色区分状态;现码这一层只知道「点亮没点亮」,所以只有两档。
-        dot: p.state === 'fog' ? '#C7C7C7' : '#16A34A',   /* ds-ok 原型 .poicard__dot 未知灰 / 营业绿 */
+        // 第九轮 m2 补充第 1 项:名字、距离、动作就够了,原来那行「合作商家 · 探店 · 距你很近」去掉
+        dist: stripDistText(this._player || this.data.center, p),
         img: photoPins.pinPhoto(p, MOCK_IMG) || p.imgUrl || '',
         lat: p.lat, lng: p.lng,
       }));

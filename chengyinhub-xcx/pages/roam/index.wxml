@@ -496,11 +496,7 @@
           <view class="poi__title">
             <text class="poi__name">{{item.name}}</text>
           </view>
-          <text class="poi__addr cy-addr-tap" catchtap="onAddrTap" data-lat="{{item.lat}}" data-lng="{{item.lng}}" data-name="{{item.name}}" data-address="{{item.address}}" aria-role="link" aria-label="{{item.address}}，在地图中打开" hover-class="cy-pressed" hover-stay-time="80">{{item.address}}</text>
-          <view class="poi__biz">
-            <view class="poi__dot" style="background:{{item.dot}}"></view>
-            <text>{{item.meta}}</text>
-          </view>
+          <text class="poi__addr poi__dist cy-addr-tap" wx:if="{{item.dist}}" catchtap="onAddrTap" data-lat="{{item.lat}}" data-lng="{{item.lng}}" data-name="{{item.name}}" data-address="{{item.address}}" aria-role="link" aria-label="{{item.name}} {{item.dist}}，在地图中打开" hover-class="cy-pressed" hover-stay-time="80">{{item.dist}}</text>
           <view class="poi__last">
             <view class="poi__go" catchtap="onShopStripGo" data-id="{{item.id}}"
                   aria-role="button" aria-label="去{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">去这儿</view>

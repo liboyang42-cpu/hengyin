@@ -861,7 +861,14 @@ cy-proto-cam{ position:fixed; left:0; right:0; top:0; bottom:0; z-index:58; poin
 
 /* 原型 f-fun / f-discover:读数卡让位给这条横滑白卡(规则同到店打卡)。
    位置与读数卡同一档 —— 它就是顶掉读数卡的那一层。 */
-.pois{ bottom:calc(250rpx + env(safe-area-inset-bottom)); } /* ds-ok 与读数卡同一档:原型说「读数卡让位给横滑条」 */
+.pois{ bottom:calc(250rpx + env(safe-area-inset-bottom)); }
+/* 第九轮 m2 补充第 1 项:漫游横滑卡照原型 m-fly 改深色(玩家侧),只剩名字、距离、动作 */
+.pois .poi{ background:var(--cy-color-play-surface-solid); box-shadow:0 24rpx 40rpx rgba(0,0,0,.45); border:1rpx solid rgba(255,255,255,.08); } /* ds-ok 深色卡压深色地图的投影与描边 */
+.pois .poi__name{ color:var(--cy-color-text-primary); font-size:30rpx; }
+.pois .poi__dist{ margin-top:12rpx; font-size:24rpx; color:var(--cy-color-text-secondary); }
+.pois .poi__go{ background:var(--cy-color-text-primary); color:var(--cy-color-play-surface-solid); }
+.pois .poi__face{ border-color:var(--cy-color-play-surface-solid); }
+.pois .poi__more{ color:var(--cy-color-text-secondary); } /* ds-ok 与读数卡同一档:原型说「读数卡让位给横滑条」 */
 .pois__dots{ bottom:calc(250rpx + 265rpx + 15rpx + env(safe-area-inset-bottom)); } /* ds-ok 卡高 138px + 8px 缝 */
 
 /* ══ 多人 · 谁点亮了哪块(原型 f-multi 的 topcard + terrlist)══ 1px = 1.923rpx。 */
