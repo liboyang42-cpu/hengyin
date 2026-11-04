@@ -750,6 +750,12 @@ Page({
         });
       }),
     });
+    if (this.data.chapterProject) {
+      // 生命周期未读回前不下结论(仍给「编辑」);读回后由 loadChapterProjectLifecycle 再刷一次
+      const lifecycleKnown = !!(this.data.info && this.data.info.lifecycle != null);
+      this.setData({ quickActions: this.buildQuickActions('chapterProject', null,
+        !lifecycleKnown || this.data.myChapterApplications.some(row => row.canConfigureNode)) });
+    }
   },
 
   withdrawChapterOffer(e) {
@@ -2347,8 +2353,9 @@ Page({
        再加一个本站二维码(玩法要求扫码参与时贴在店里),复用已有的本站打卡码 / 章节节点码。 */
     const QR = { key: 'stationQr', label: '二维码', iconName: 'qr' };
     if (role === 'coopPartner') return [SCAN];
-    if (role === 'chapterProject') return [SCAN, { key: 'chapterCheckin', label: '二维码', iconName: 'qr' }, CUSTOMER,
-      { key: 'chapterEdit', label: '编辑', icon: '/pages/topic/images/icon_qa_edit.svg' }];
+    /* p2 F-11(第十轮 f3):主题锁定等原因下没有一章可编辑时不给「编辑」——点了只闪一句提示,读成没反应 */
+    if (role === 'chapterProject') return [SCAN, { key: 'chapterCheckin', label: '二维码', iconName: 'qr' }, CUSTOMER]
+      .concat(canEdit === false ? [] : [{ key: 'chapterEdit', label: '编辑', icon: '/pages/topic/images/icon_qa_edit.svg' }]);
     // 承接方:编辑那一项的闸是 canEditRegistration(),但「更多」本身任何状态都能开。
     return [SCAN, QR, CUSTOMER, MORE];
   },
