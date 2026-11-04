@@ -2472,7 +2472,33 @@ public class ApiClubController extends BaseController {
             return error(isPublicJoinClub(leaderboardClub) ? "加入俱乐部后才能看贡献榜" : "通过审核后可看贡献榜");
         }
         Object sortBy = body.get("sortBy");
-        return AjaxResult.success(
-                clubMemberService.selectClubLeaderboard(clubId, sortBy == null ? null : sortBy.toString()));
+        List<Map<String, Object>> board =
+                clubMemberService.selectClubLeaderboard(clubId, sortBy == null ? null : sortBy.toString());
+        applyOrganiserNamesToBoard(leaderboardClub, viewerId, board);
+        return AjaxResult.success(board);
+    }
+
+    /**
+     * 第十一轮 h4 L4:贡献榜与成员名单同一条隐私口径(j2 F-08)——能治理本俱乐部的人看报名姓名 /
+     * 主理人档案名,默认昵称改「成员#id」;普通成员看到的仍是各人自己的昵称,不经过这里。
+     */
+    void applyOrganiserNamesToBoard(Club club, Long viewerId, List<Map<String, Object>> board) {
+        if (board == null || board.isEmpty()) return;
+        List<ClubMember> view = new ArrayList<>();
+        for (Map<String, Object> row : board) {
+            Long id = row == null ? null : badgeLong(row.get("memberId"));
+            if (id == null) continue;
+            ClubMember cm = new ClubMember();
+            cm.setMemberId(id);
+            cm.setNickname(row.get("nickname") == null ? null : String.valueOf(row.get("nickname")));
+            cm.setIsOwner(club != null && id.equals(club.getMemberId()));
+            view.add(cm);
+        }
+        applyOrganiserNames(club, viewerId, view);
+        int i = 0;
+        for (Map<String, Object> row : board) {
+            if (row == null || badgeLong(row.get("memberId")) == null) continue;
+            row.put("nickname", view.get(i++).getNickname());
+        }
     }
 }

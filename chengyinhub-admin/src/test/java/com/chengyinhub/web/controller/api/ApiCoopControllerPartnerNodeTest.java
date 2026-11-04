@@ -284,6 +284,35 @@ class ApiCoopControllerPartnerNodeTest {
         assertNull(p.getPhone(), "收到的邀约未接受前不得下发电话");
     }
 
+    /**
+     * 第十一轮 h4 L4:俱乐部主理人(无商家档案)为本俱乐部主题招商,商家原来看到「来自 城瘾用户」。
+     * 发起人就是该俱乐部主题的发布者 ⇒ 称呼用俱乐部名;未接受前联系方式照旧摘掉。
+     * 负控:主题不属于俱乐部 / 发起人不是主题发布者时仍按昵称,不冒用俱乐部名。
+     */
+    @Test
+    void list_receivedFromClubLeadWithoutMerchantProfile_namesTheClubNotTheDefaultNickname() {
+        givenClub(CLUB, "夜跑俱乐部", "张三", "13800000000");
+        CmsTopic clubTopic = new CmsTopic();
+        clubTopic.setId(TOPIC);
+        clubTopic.setMemberId(PEER);
+        clubTopic.setClubId(CLUB);
+        when(cmsTopicService.selectCmsTopicById(TOPIC)).thenReturn(clubTopic);
+        com.chengyinhub.business.domain.UmsMember lead = new com.chengyinhub.business.domain.UmsMember();
+        lead.setNickname("城瘾用户");
+        com.chengyinhub.business.service.IUmsMemberService members = mock(com.chengyinhub.business.service.IUmsMemberService.class);
+        when(members.selectUmsMemberById(PEER)).thenReturn(lead);
+        ReflectionTestUtils.setField(c, "umsMemberService", members);
+
+        CoopPartnerVO p = listReceivedPartner(receivedInviteFromPeer(0));
+        assertEquals("夜跑俱乐部", p.getName());
+        assertNull(p.getPhone(), "未接受前仍不下发电话");
+        assertNull(p.getLeaderName(), "未接受前仍不下发负责人");
+
+        clubTopic.setMemberId(ME + 999);   // 发起人不是主题发布者:不冒用俱乐部名
+        CoopPartnerVO other = listReceivedPartner(receivedInviteFromPeer(0));
+        assertEquals("城瘾用户", other.getName());
+    }
+
     /** 我收到的、已拒绝(status=2)同样不给 —— 闸是「== 1」而不是「!= 0」。 */
     @Test
     void list_receivedRejectedInvite_stripsContact() {

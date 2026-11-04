@@ -103,6 +103,33 @@ class OrganiserPersonNameTest {
         assertEquals("阿满", list.get(3).getNickname());
     }
 
+    /** 第十一轮 h4 L4:贡献榜与成员名单同口径 —— 治理者看报名姓名,普通成员看各人昵称。 */
+    @Test
+    void contributionBoardFollowsTheSameNameRuleAsTheMemberList() {
+        Map<Long, String> names = new HashMap<>();
+        names.put(PLAYER, "林一帆");
+        List<Map<String, Object>> board = new ArrayList<>();
+        for (Object[] r : new Object[][]{{LEAD, "城瘾用户"}, {PLAYER, "城瘾用户"}, {990007L, "城瘾用户"}}) {
+            Map<String, Object> row = new HashMap<>();
+            row.put("memberId", r[0]);
+            row.put("nickname", r[1]);
+            row.put("score", 1);
+            board.add(row);
+        }
+        controller(true, names).applyOrganiserNamesToBoard(club(), LEAD, board);
+        assertEquals("林小舟", board.get(0).get("nickname"));
+        assertEquals("林一帆", board.get(1).get("nickname"));
+        assertEquals("成员#990007", board.get(2).get("nickname"));
+
+        List<Map<String, Object>> plain = new ArrayList<>();
+        Map<String, Object> row = new HashMap<>();
+        row.put("memberId", PLAYER);
+        row.put("nickname", "城瘾用户");
+        plain.add(row);
+        controller(false, names).applyOrganiserNamesToBoard(club(), LEAD, plain);
+        assertEquals("城瘾用户", plain.get(0).get("nickname"), "报名姓名只给主理人一侧");
+    }
+
     @Test
     void plainMemberSeesTheListUnchanged() {
         List<ClubMember> list = new ArrayList<>(Collections.singletonList(member(PLAYER, "城瘾用户", false)));
