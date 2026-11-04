@@ -260,6 +260,10 @@ function summarizeMerchantProjection(projection) {
   if (stations.some((item) => item.status === 'PAUSED')) {
     return { state: 'paused', text: '本站已暂停', tone: 'paused', pendingVerificationCount: pending, stationCount: stations.length }
   }
+  // 第十轮 f3 第 4 项(j2 F-17):商家已点「准备完成」、只差活动开场时,不再说「本站待准备」。
+  if (stations.some((item) => item.status === 'READY')) {
+    return { state: 'setup', text: '等待活动开场', tone: 'pending', pendingVerificationCount: pending, stationCount: stations.length }
+  }
   return { state: 'setup', text: '本站待准备', tone: 'pending', pendingVerificationCount: pending, stationCount: stations.length }
 }
 

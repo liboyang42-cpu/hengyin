@@ -38,7 +38,6 @@
       <view class="gn-hero">
         <view class="gn-hero-head">
           <view class="gn-hero-copy">
-            <text class="gn-eyebrow">{{station.stationCode || '本站任务'}}</text>
             <text class="gn-title">{{station.nodeName || '未命名节点'}}</text>
           </view>
           <text class="gn-status gn-status--{{summary.tone}}">{{station.statusText}}</text>
@@ -47,7 +46,7 @@
         <view class="gn-facts">
           <view class="gn-fact"><text class="gn-fact-value">{{station.capacity != null ? station.capacity : '—'}}</text><text class="gn-fact-label">接待容量</text></view>
           <view class="gn-fact"><text class="gn-fact-value">{{station.pendingVerificationCount}}</text><text class="gn-fact-label">待核验</text></view>
-          <view class="gn-fact"><text class="gn-fact-value">{{station.playable ? '可接待' : '不可接待'}}</text><text class="gn-fact-label">玩家状态</text></view>
+          <view class="gn-fact"><text class="gn-fact-value">{{station.playable ? '可接待' : (station.status === 'READY' ? '待开场' : '不可接待')}}</text><text class="gn-fact-label">玩家状态</text></view>
         </view>
       </view>
 
@@ -64,7 +63,9 @@
         </view>
       </view>
 
-      <view class="gn-card gn-runbook">
+      <!-- 第十轮 f3 第 4 项(j2 F-17):城市定向(ROUTE)站点只打卡,没有剧情任务;
+           不再对它说「主办方尚未配置本站任务」,整张卡不出。 -->
+      <view class="gn-card gn-runbook" wx:if="{{station.playerTask || playMode !== 'ROUTE'}}">
         <view class="gn-section-head">
           <!-- 稿 469:1002 的标题是「这一站怎么接待」——「本站执行卡」是内部叫法,
                商家看不出它跟自己今晚要干的事有什么关系。 -->

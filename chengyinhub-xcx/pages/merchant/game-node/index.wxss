@@ -56,12 +56,6 @@ page {
 }
 
 .gn-hero-copy { min-width: 0; flex: 1; }
-.gn-eyebrow {
-  display: block;
-  font-size: var(--cy-font-caption);
-  color: var(--cy-text-secondary);
-  font-variant-numeric: tabular-nums;
-}
 .gn-title {
   display: block;
   margin-top: var(--cy-space-1);
