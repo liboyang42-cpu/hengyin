@@ -2174,6 +2174,7 @@ Page({
             ratingStars,
             // 探店日/自由探索(productType=2):场次块换真场次卡,不再当「阵容」花名册渲染
             isExplore: Number(res.data.productType) === 2,
+            ownerStateText: ownerStateText(res.data),
             loadError: false,
             topicLoaded: true,
             everLoaded: true,   // 成功读到过一次:之后的刷新失败留在原页给重试,不 auto-back 把人踢走
@@ -2192,11 +2193,14 @@ Page({
             that._measureHero();
           }, 300);
         } else {
+          // j5 H1:服务端明确说「主题活动不存在」(审核中 / 已下架 / 未通过,对他人不可见)是终态:讲原因并给返回,不是加载失败留白。
+          const refused = refusalOf(res);
           that.setData({
             loadError: true,
             missingTopicId: false,
-            loadErrorTitle: '主题暂时无法打开',
-            loadErrorSub: res.msg || '主题详情暂时无法加载，请稍后重试。',
+            loadRefused: !!refused,
+            loadErrorTitle: refused || '主题暂时无法打开',
+            loadErrorSub: refused ? '' : (res.msg || '主题详情暂时无法加载，请稍后重试。'),
             topicLoaded: false,
           });
         }
@@ -2206,6 +2210,7 @@ Page({
           loadError: true,
           missingTopicId: false,
           loginRequired: isLoginRequired(app, res, statusCode),
+          loadRefused: false,
           loadErrorTitle: '主题详情加载失败',
           loadErrorSub: '',
           topicLoaded: false,
@@ -2220,14 +2225,14 @@ Page({
       this.goTopicList();
       return;
     }
-    this.setData({ loadError: false, topicLoaded: false, loadErrorTitle: '', loadErrorSub: '' });
+    this.setData({ loadError: false, loadRefused: false, topicLoaded: false, loadErrorTitle: '', loadErrorSub: '' });
     this.getData();
   },
 
   // 登录引导「登录」:重登成功后重读详情
   onLoginRetry: function () {
     retryLogin(this, app, function () {
-      this.setData({ loadError: false, loginRequired: false, topicLoaded: false, loadErrorTitle: '', loadErrorSub: '' });
+      this.setData({ loadError: false, loadRefused: false, loginRequired: false, topicLoaded: false, loadErrorTitle: '', loadErrorSub: '' });
       this.getData();
     });
   },
@@ -2388,3 +2393,11 @@ Page({
     return timeline;
   }
 })
+
+function refusalOf(res) { var c = Number(res && res.code), m = String(res && res.msg || ''); return c && c !== 200 && c !== 401 && c !== 2 && m && m !== '系统繁忙，请稍后重试' ? m : ''; }
+// j5 H2:作者看自己没公开的主题要知道它没公开(机审留置 / 待审 = 审核中,人工驳回 = 未通过,其余 = 已下架)。
+function ownerStateText(info) {
+  if (!info || Number(info.isOwner) !== 1 || Number(info.userStatus) === 1) return '';
+  if (Number(info.status) === 2) return '未通过';
+  return Number(info.status) === 0 || /内容安全/.test(String(info.rejectReason || '')) ? '审核中' : '已下架';
+}
