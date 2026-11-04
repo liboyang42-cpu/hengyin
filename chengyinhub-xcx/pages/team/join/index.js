@@ -42,8 +42,11 @@ Page({
     if (this._recovery) this._recovery.dispose(); this._freshCommand = false;
     this._recovery = createRecovery({ app, platform: wx, domain: 'TEAM',
       scopeKey: 'invite:' + this.inviteCode, targetId: null,
-      changed: value => { const fresh = this._freshCommand; if (!value.busy) this._freshCommand = false; // 本页刚发出的请求在途时不弹恢复卡(按钮自带忙态);回包未知/失败、重进页面读到存档、APPLIED 回执照常显示
-        this.setData({ commandRecovery: value, recoveryShown: !!(value.state || value.busy) && !(fresh && value.busy), joining: value.busy }); },
+      changed: value => { const fresh = this._freshCommand; if (!value.busy) this._freshCommand = false; // 本页刚发出的请求在途时不弹恢复卡(按钮自带忙态);回包未知/失败、重进页面读到存档照常显示
+        // j2 F-11:入队已执行(APPLIED)是确定结果,页面会重读队伍显示已加入;不再挂一张带原请求号的卡,回执直接归档。
+        const applied = value.state === 'APPLIED' && !value.busy;
+        this.setData({ commandRecovery: value, recoveryShown: !!(value.state || value.busy) && !(fresh && value.busy) && !applied, joining: value.busy });
+        if (applied) Promise.resolve().then(() => { if (this._recovery && !this._disposed) this._recovery.acknowledge(); }); },
       terminal: () => {
         this._epoch = (this._epoch || 0) + 1;
         this._inviteLoading = false;
