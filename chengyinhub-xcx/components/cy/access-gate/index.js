@@ -2,8 +2,7 @@ const app = getApp();
 const { recoverReadSession } = require('../../../utils/session/login-reload.js');
 const { decideMerchantGate, decideClubGate } = require('../../../utils/access-gate.js');
 
-// 页面级守卫:放一个标签进页面,读 access/me,没权限就整屏盖住,弹零按钮 fail 半屏讲原因,2s 自动出去。
-// 页面自己的请求照常发(后端本来就拦),这里只负责别让用户对着一屏 toast 干瞪眼。
+// 页面级守卫:读 access/me,没权限就整屏盖住,弹 fail 半屏讲原因,2s 自动出去;state 事件报给页面。
 Component({
   properties: {
     kind: { type: String, value: 'merchant' },   // merchant | club
@@ -47,6 +46,7 @@ Component({
           reason: denied || decision.state === 'login' ? decision.reason : '',
           _sheet: false,
         }, () => { if (denied) that.setData({ _sheet: true }); });
+        that.triggerEvent('state', { state: that.data.state });
       };
       // 两条分支各自写死 /api 字面量:UI-GATE-0 的 U1 要能枚举出请求路径,变量拼的核不了。
       // 不传 silentError:request-client 的静默分支都是「没挂 fail 才弹」,本组件 fail 与

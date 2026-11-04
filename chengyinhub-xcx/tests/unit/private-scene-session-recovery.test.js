@@ -8,7 +8,7 @@ function mount(kind = 'income') {
  app.getSessionManager=()=>createSessionManager({session,isDevEnv:()=>false,wxLogin:async()=>({code:'fixture'}),exchangeCode:async()=>({code:401})});
  const paths={income:'subpackageA/components/scene-asset-income-detail/index.js',withdraw:'subpackageMember/components/cy/scene-member-withdraw-history/index.js',access:'components/cy/access-gate/index.js',predict:'pages/merchant/predict/index.js',order:'subpackageMember/components/cy/scene-member-order-history/index.js',board:'subpackageP3/pages/growthcenter/leaderboard/index.js'};
  const file=path.join(root,paths[kind]);vm.runInNewContext(fs.readFileSync(file,'utf8'),{Component:d=>definition=d,Page:d=>definition=d,getApp:()=>app,getCurrentPages:()=>[],wx,require:createRequire(file),setTimeout,clearTimeout});
- const scene=Object.assign({},definition,definition.methods,{data:JSON.parse(JSON.stringify(definition.data)),setData:p=>Object.assign(scene.data,p)});
+ const scene=Object.assign({},definition,definition.methods,{data:JSON.parse(JSON.stringify(definition.data)),setData:p=>Object.assign(scene.data,p),triggerEvent(){}});
  const load=()=>kind==='access'?scene.check():kind==='predict'?scene.loadAccess():kind==='board'?scene.loadBoard():scene.getList();
  if(kind==='access')scene.data.kind='merchant';
  const loading=()=>scene.data.loading===true||['checking','loading'].includes(scene.data.pageState||scene.data.accessState||scene.data.state);
