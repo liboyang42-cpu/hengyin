@@ -2084,7 +2084,7 @@ class GameSessionRuntimeServiceImplTest {
             row.setId(66L);
             return 1;
         });
-        when(runtimeMapper.insertBroadcastDeliveries(anyLong(), anyLong(), anyLong(), anyString(), any(), any(), any()))
+        when(runtimeMapper.insertBroadcastAllPaidDeliveries(anyLong(), anyLong(), any()))
                 .thenReturn(0);
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("targetType", "ALL");
@@ -2223,7 +2223,7 @@ class GameSessionRuntimeServiceImplTest {
             row.setId(67L);
             return 1;
         });
-        when(runtimeMapper.insertBroadcastDeliveries(anyLong(), anyLong(), anyLong(), anyString(), any(), any(), any()))
+        when(runtimeMapper.insertBroadcastAllPaidDeliveries(anyLong(), anyLong(), any()))
                 .thenReturn(1);
         com.chengyinhub.business.domain.GameBroadcastDelivery delivery =
                 new com.chengyinhub.business.domain.GameBroadcastDelivery();
@@ -2802,14 +2802,14 @@ class GameSessionRuntimeServiceImplTest {
         running.setModuleConfigSnapshotJson(runtimeConfigJson());
         when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(running);
 
-        when(runtimeMapper.countActiveTeams(ACTIVITY)).thenReturn(0);
+        when(runtimeMapper.countPaidPlayers(ACTIVITY)).thenReturn(0);
         Map<?, ?> nobody = service.view(GameActorContext.club(DIRECTOR), ACTIVITY).getClub();
         assertEquals("NO_RECIPIENT", nobody.get("broadcastBlocker"),
                 "零成员的场子必须报「没人可送达」,不能再让人点进去吃一句笼统提示");
         assertTrue(service.view(GameActorContext.club(DIRECTOR), ACTIVITY).getAvailableActions()
                 .contains("BROADCAST"), "原因码由 broadcastBlocker 承担,BROADCAST 不得整个从能力位里消失");
 
-        when(runtimeMapper.countActiveTeams(ACTIVITY)).thenReturn(1);
+        when(runtimeMapper.countPaidPlayers(ACTIVITY)).thenReturn(1);
         Map<?, ?> sendable = service.view(GameActorContext.club(DIRECTOR), ACTIVITY).getClub();
         assertEquals("", sendable.get("broadcastBlocker"), "有可送达玩家就是可发送,交空串而不是缺键");
 
@@ -2819,6 +2819,38 @@ class GameSessionRuntimeServiceImplTest {
         Map<?, ?> notRunning = service.view(GameActorContext.club(DIRECTOR), ACTIVITY).getClub();
         assertEquals("NOT_RUNNING", notRunning.get("broadcastBlocker"),
                 "没跑起来要说成场次状态,不能套用「等玩家报名」那句");
+    }
+
+    /** 第十一轮 h4 L3:付了款却没组队的玩家在导演台名单与队伍进度里一人一行,没有 teamId;「全部」广播按付款名单发。 */
+    @Test
+    @SuppressWarnings("unchecked")
+    void clubViewListsPaidPlayersWithoutTeamAndAllBroadcastReachesThem() {
+        when(clubMemberService.isTopicOwner(TOPIC, CLUB, DIRECTOR)).thenReturn(true);
+        GameSession running = runningSession(4);
+        running.setModuleConfigSnapshotJson(runtimeConfigJson());
+        when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(running);
+        when(runtimeMapper.countActiveTeams(ACTIVITY)).thenReturn(0);
+        when(runtimeMapper.countPaidPlayers(ACTIVITY)).thenReturn(1);
+        Map<String, Object> solo = new LinkedHashMap<>();
+        solo.put("memberId", 990009L);
+        solo.put("memberName", "王一舟");
+        solo.put("completedNodes", 3L);
+        solo.put("totalNodes", 3L);
+        when(runtimeMapper.selectClubUnteamedPaidMembers(SESSION)).thenReturn(Collections.singletonList(solo));
+
+        Map<?, ?> club = service.view(GameActorContext.club(DIRECTOR), ACTIVITY).getClub();
+
+        assertEquals("", club.get("broadcastBlocker"), "没组队但已付款的人也是可送达的人");
+        List<Map<String, Object>> teams = (List<Map<String, Object>>) club.get("teams");
+        Map<String, Object> row = teams.get(teams.size() - 1);
+        assertEquals(null, row.get("teamId"), "没组队的人不能被当成一队去定向");
+        assertEquals(Boolean.TRUE, row.get("unteamed"));
+        assertEquals("王一舟", row.get("teamName"));
+        assertEquals(1, row.get("memberCount"));
+        assertEquals("COMPLETED", row.get("status"));
+        List<Map<String, Object>> roles = (List<Map<String, Object>>) club.get("roles");
+        assertTrue(roles.stream().anyMatch(r -> Long.valueOf(990009L).equals(r.get("memberId")) && r.get("teamId") == null),
+                "定向广播名单来自 roles,没组队的付款玩家必须在里面");
     }
 
     @Test
@@ -3204,7 +3236,7 @@ class GameSessionRuntimeServiceImplTest {
             row.setId(broadcastId);
             return 1;
         });
-        when(runtimeMapper.insertBroadcastDeliveries(anyLong(), anyLong(), anyLong(), anyString(), any(), any(), any()))
+        when(runtimeMapper.insertBroadcastAllPaidDeliveries(anyLong(), anyLong(), any()))
                 .thenReturn(1);
         com.chengyinhub.business.domain.GameBroadcastDelivery delivery =
                 new com.chengyinhub.business.domain.GameBroadcastDelivery();

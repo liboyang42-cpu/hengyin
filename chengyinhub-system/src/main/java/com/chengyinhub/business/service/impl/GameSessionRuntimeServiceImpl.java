@@ -3263,6 +3263,9 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         if (runtimeMapper.insertBroadcast(broadcast) != 1) throw error("GAME_STATE_CONFLICT", "广播创建失败");
         int deliveries = memberIds != null
                 ? runtimeMapper.insertBroadcastMemberDeliveries(broadcast.getId(), session.getActivityId(), memberIds, clock.now())
+                // 第十一轮 h4 L3:「全部」= 本场全部已付款未退的玩家,含没组队的人;队伍 / 角色仍按队取人。
+                : "ALL".equals(targetType)
+                ? runtimeMapper.insertBroadcastAllPaidDeliveries(broadcast.getId(), session.getActivityId(), clock.now())
                 : runtimeMapper.insertBroadcastDeliveries(broadcast.getId(), session.getId(), session.getActivityId(),
                 targetType, broadcast.getTargetId(), broadcast.getRoleCode(), clock.now());
         if (deliveries < 1) {
@@ -3748,11 +3751,23 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         club.put("readiness", readiness);
         club.put("stations", stations);
         List<Map<String, Object>> memberRows = organiserNamedRows(safe(runtimeMapper.selectClubMemberProjection(session.getId())));
-        club.put("roles", memberRows);
-        club.put("playMode", isRouteSession(session) ? "ROUTE" : "STORY");
-        club.put("teams", clubTeams(memberRows, safe(isRouteSession(session)
+        // 第十一轮 h4 L3:付了款却没组队的玩家也要出现在定向广播名单与队伍进度里(一人一行,teamId 为空)。
+        List<Map<String, Object>> unteamed = organiserNamedRows(safe(runtimeMapper.selectClubUnteamedPaidMembers(session.getId())));
+        List<Map<String, Object>> teams = clubTeams(memberRows, safe(isRouteSession(session)
                 ? runtimeMapper.selectClubRouteTeamProgressProjection(session.getId())
-                : runtimeMapper.selectClubTeamProgressProjection(session.getId()))));
+                : runtimeMapper.selectClubTeamProgressProjection(session.getId())));
+        teams.addAll(unteamedRows(unteamed));
+        List<Map<String, Object>> roleRows = new ArrayList<>(memberRows);
+        for (Map<String, Object> row : unteamed) {
+            Map<String, Object> member = new LinkedHashMap<>();
+            member.put("teamId", null);
+            member.put("memberId", row.get("memberId"));
+            member.put("memberName", row.get("memberName"));
+            roleRows.add(member);
+        }
+        club.put("roles", roleRows);
+        club.put("playMode", isRouteSession(session) ? "ROUTE" : "STORY");
+        club.put("teams", teams);
         club.put("roleOptions", roleOptions(config));
         if (isRouteSession(session)) {
             List<CmsTopicChapter> chapters = routeChapters(session);
@@ -3775,7 +3790,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         }
         club.put("broadcasts", broadcastViews(safe(runtimeMapper.selectBroadcasts(session.getId()))));
         // CU-C-76:入口「能不能发」以前只由场次状态决定,零成员的场子照样让人点进去吃一句笼统提示。
-        club.put("broadcastBlocker", broadcastBlocker(session, hasAudience));
+        club.put("broadcastBlocker", broadcastBlocker(session, runtimeMapper.countPaidPlayers(activity.getId()) > 0));
         club.put("leaderboardVisible", Boolean.TRUE.equals(session.getLeaderboardVisible()));
         if (isRouteSession(session)) {
             club.put("leaderboardRows", organiserNamedLeaderboard(safe(playerNodeProgressService.selectActivityLeaderboard(
@@ -4388,6 +4403,34 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
             }
         }
         return new ArrayList<>(grouped.values());
+    }
+
+    /** 第十一轮 h4 L3:没组队的付款玩家在队伍进度里一人一行,没有 teamId(不能被当成队伍定向广播)。 */
+    static List<Map<String, Object>> unteamedRows(List<Map<String, Object>> unteamed) {
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Map<String, Object> row : unteamed) {
+            if (row == null || row.get("memberId") == null) continue;
+            Map<String, Object> solo = new LinkedHashMap<>();
+            solo.put("teamId", null);
+            solo.put("unteamed", true);
+            solo.put("teamName", row.get("memberName"));
+            solo.put("memberCount", 1);
+            Object completed = row.get("completedNodes");
+            Object total = row.get("totalNodes");
+            solo.put("completedNodes", completed);
+            solo.put("totalNodes", total);
+            int done = completed instanceof Number ? ((Number) completed).intValue() : 0;
+            int all = total instanceof Number ? ((Number) total).intValue() : 0;
+            solo.put("status", all > 0 && done >= all ? "COMPLETED" : done > 0 ? "RUNNING" : "PREPARING");
+            Map<String, Object> member = new LinkedHashMap<>();
+            member.put("memberId", row.get("memberId"));
+            member.put("memberName", row.get("memberName"));
+            List<Map<String, Object>> members = new ArrayList<>();
+            members.add(member);
+            solo.put("members", members);
+            out.add(solo);
+        }
+        return out;
     }
 
     private Map<String, Object> clubTeamProgress(Map<String, Object> progress) {

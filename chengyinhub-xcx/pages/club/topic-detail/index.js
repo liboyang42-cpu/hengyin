@@ -906,7 +906,9 @@ Page({
     const pending = '待确认';
     const rows = (this.data.teams || []).map(function (team) {
       const row = {
-        id: team.teamId != null ? team.teamId : team.nameText,
+        // 没组队的付款玩家一人一行(第十一轮 h4 L3),按人区分 id
+        id: team.teamId != null ? team.teamId
+          : (team.unteamed && team.members && team.members[0] ? 'm' + team.members[0].memberId : team.nameText),
         title: team.nameText,
         subtitle: team.issueText || team.progressText,
         value: team.statusText,

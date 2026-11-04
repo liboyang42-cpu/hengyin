@@ -933,6 +933,48 @@ test('2026-11-01 广播按人选:点头像加减,恰好整组仍按组发,否则
   assert.deepEqual(JSON.parse(JSON.stringify(writes[0].payload)), { targetType: 'MEMBERS', memberIds: [101], content: '集合' })
 })
 
+test('第十一轮 h4 L3:付款没组队的玩家也在广播名单里,可以按人选;不算一队,也不进队伍定向', async () => {
+  const writes = []
+  const projection = {
+    sessionId: 9001, activityId: 701, status: 'RUNNING', revision: 9,
+    availableActions: ['BROADCAST'], currentChapterId: 31,
+    readiness: { requiredStations: null, readyStations: null, teamsReady: null, blockers: [], canStart: false },
+    stations: [],
+    teams: [{ teamId: 11, name: '三队', memberCount: 2 }, { teamId: null, unteamed: true, teamName: '王一舟', memberCount: 1 }],
+    roles: [
+      { teamId: 11, memberId: 101, memberName: '林', roleCode: 'SCOUT', roleName: '侦察员', confirmationStatus: 'CONFIRMED' },
+      { teamId: 11, memberId: 102, memberName: '周', roleCode: 'KEEPER', roleName: '守护员', confirmationStatus: 'CONFIRMED' },
+      { teamId: null, memberId: 104, memberName: '王一舟' },
+    ],
+    roleOptions: [{ roleCode: 'SCOUT', roleName: '侦察员' }, { roleCode: 'KEEPER', roleName: '守护员' }],
+    broadcasts: [], leaderboard: null, recap: null,
+  }
+  const harness = loadDirector({
+    load() { return Promise.resolve(projection) },
+    submit(input) { writes.push(input); return Promise.resolve({ state: 'unknown-write', requestId: input.requestId }) },
+    readReceipt() { return Promise.resolve({ state: 'pending' }) },
+  })
+  harness.page.initDirector('701')
+  await settle()
+  const page = harness.page
+
+  page.openBroadcast()
+  assert.deepEqual(page.data.broadcastAudience.map((m) => m.id), ['101', '102', '104'])
+  assert.equal(page.data.broadcastCountText, '3 人 · 1 队', '没组队的人不算一队')
+  page.selectBroadcastTargetType({ detail: { id: 'TEAM' } })
+  assert.deepEqual(page.data.broadcastTargetRows.map((r) => r.title), ['三队'], '没组队的人不能被当成一队定向')
+  page.selectBroadcastTargetType({ detail: { id: 'ROLE' } })
+  assert.equal(page.data.broadcastTargetRows[0].subtitle, '1 人')
+  page.selectBroadcastTargetType({ detail: { id: 'ALL' } })
+  page.onBroadcastPersonToggle({ detail: { id: '101' } })
+  page.onBroadcastPersonToggle({ detail: { id: '102' } })
+  assert.equal(page.data.broadcastCountText, '1 人')
+  page.onBroadcastContentInput({ detail: { value: '集合' } })
+  page.confirmBroadcast()
+  await settle()
+  assert.deepEqual(JSON.parse(JSON.stringify(writes[0].payload)), { targetType: 'MEMBERS', memberIds: [104], content: '集合' })
+})
+
 test('2026-11-01 广播按队伍:一行整队加减可选两队;全部取消不能发', async () => {
   const projection = {
     sessionId: 9001, activityId: 701, status: 'RUNNING', revision: 9,

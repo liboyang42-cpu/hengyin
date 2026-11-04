@@ -196,7 +196,8 @@ function broadcastTargets(targetType, teams, roleOptions) {
 }
 
 function roleRecipientCount(roleCode, roles) {
-  const rows = roles || []
+  // 没组队的付款玩家(teamId 为空)不会有角色,不参与角色人数计算
+  const rows = (roles || []).filter(function (item) { return item && item.teamId != null })
   if (rows.length === 0) return null
   const completeAggregates = rows.every(function (item) {
     return !!item.roleCode && numeric(item.memberCount) !== null
@@ -234,7 +235,8 @@ function broadcastRoster(roles) {
     return true
   }).map(function (item) {
     const name = item.memberNameText || ''
-    return { id: String(item.memberId), teamId: String(item.teamId), roleCode: item.roleCode || '', name: name, initial: name.slice(0, 1) || '?', sub: item.roleNameText || '' }
+    // 第十一轮 h4 L3:没组队的付款玩家也在名单里,teamId 为空串(不属于任何一队)
+    return { id: String(item.memberId), teamId: item.teamId == null ? '' : String(item.teamId), roleCode: item.roleCode || '', name: name, initial: name.slice(0, 1) || '?', sub: item.roleNameText || '' }
   })
 }
 
@@ -267,7 +269,7 @@ function broadcastPayloadTarget(picked, roster, targetType, options) {
 
 function broadcastTeamCount(picked, roster) {
   const teams = {}
-  roster.forEach(function (member) { if (picked.indexOf(member.id) >= 0) teams[member.teamId] = true })
+  roster.forEach(function (member) { if (picked.indexOf(member.id) >= 0 && member.teamId) teams[member.teamId] = true })
   return Object.keys(teams).length
 }
 
