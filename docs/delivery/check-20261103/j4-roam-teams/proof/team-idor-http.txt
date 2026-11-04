@@ -1,0 +1,56 @@
+### walk-player-2 POST /api/team/info {"teamId":1}
+{"msg":"无权查看该队伍","code":500}
+### walk-player-2 GET /api/orient/team/detail?teamId=1
+{"msg":"该功能暂未开放","code":500,"errorCode":"ORIENT_DISABLED"}
+### walk-player-2 POST /api/team/applications {"teamId":1}
+{"msg":"只有队长可以操作","code":500}
+### walk-player-2 POST /api/team/kick {"teamId":1,"memberId":9004}
+{"msg":"只有队长可以操作","code":500}
+### walk-player-2 POST /api/team/disband {"teamId":1}
+{"msg":"只有队长可以操作","code":500}
+### walk-player-2 POST /api/team/join-mode {"teamId":1,"joinMode":1}
+{"msg":"只有队长可以操作","code":500}
+### walk-player-2 POST /api/team/quit {"teamId":1}
+{"msg":"你不在该队伍中","code":500}
+### walk-player-2 POST /api/team/handle {"teamId":1,"memberId":990005,"approved":true}
+{"msg":"只有队长可以操作","code":500}
+### walk-player-2 POST /api/team/command {"requestId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa01","action":"kick","targetId":1,"memberId":9004}
+{"msg":"操作成功","code":200,"data":{"requestId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa01","state":"REJECTED","message":"原请求被拒绝，请重新读取业务状态"}}
+### walk-player-2 POST /api/team/command {"requestId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa02","action":"disband","targetId":1}
+{"msg":"操作成功","code":200,"data":{"requestId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa02","state":"REJECTED","message":"原请求被拒绝，请重新读取业务状态"}}
+### walk-player-2 POST /api/team/command {"requestId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa03","action":"join-mode","targetId":1,"joinMode":1}
+{"msg":"操作成功","code":200,"data":{"requestId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa03","state":"REJECTED","message":"原请求被拒绝，请重新读取业务状态"}}
+### walk-player-2 POST /api/team/command {"requestId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa04","action":"handle","targetId":1,"memberId":990005,"approved":true}
+{"msg":"操作成功","code":200,"data":{"requestId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa04","state":"REJECTED","message":"原请求被拒绝，请重新读取业务状态"}}
+### walk-player-2 POST /api/team/command {"requestId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa05","action":"join","targetId":2,"inviteCode":"Tb_e2N1sveWyZRPmFqh17Q"}
+{"msg":"操作成功","code":200,"data":{"requestId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa05","state":"REJECTED","message":"原请求被拒绝，请重新读取业务状态"}}
+### e2e-openid-9004 POST /api/team/command/query {"requestId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa01"}
+{"msg":"操作成功","code":200,"data":{"requestId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa01","state":"UNKNOWN"}}
+### e2e-openid-9004 POST /api/team/command/cancel {"requestId":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa01"}
+{"msg":"命令参数无效","code":500}
+### e2e-openid-9004 POST /api/team/info {"teamId":2}
+{"msg":"无权查看该队伍","code":500}
+### e2e-openid-9004 GET /api/orient/team/detail?teamId=2
+{"msg":"该功能暂未开放","code":500,"errorCode":"ORIENT_DISABLED"}
+### e2e-openid-9004 POST /api/team/applications {"teamId":2}
+{"msg":"只有队长可以操作","code":500}
+### guest POST /api/team/info {"teamId":1}
+{"msg":"无权查看该队伍","code":500}
+### guest GET /api/orient/team/detail?teamId=1
+{"msg":"登录状态已失效，请重新登录","code":401}
+### guest POST /api/team/info {"inviteCode":"Tb_e2N1sveWyZRPmFqh17Q"}
+{"msg":"操作成功","code":200,"data":{"leader":false,"joined":false,"members":[{"memberId":9004,"role":1,"memberName":"玩家小城","memberAvatar":""}],"team":{"createBy":null,"createTime":"2026-11-04 15:22:56","updateBy":null,"updateTime":"2026-11-04 15:27:53","remark":null,"id":1,"ownerType":2,"ownerId":9,"leaderMemberId":9004,"inviteCode":"Tb_e2N1sveWyZRPmFqh17Q","title":null,"joinMode":2,"maxMembers":2,"joinedCount":1,"status":0,"expireTime":"2026-11-14T10:00:00.000+08:00"}}}
+### guest POST /api/team/my 
+{"msg":"登录状态已失效，请重新登录","code":401}
+### guest GET /api/team/nearby?lat=31.2304&lng=121.4737&radius=3000
+{"msg":"登录状态已失效，请重新登录","code":401}
+### e2e-openid-9009 POST /api/team/info {"teamId":1}
+{"msg":"无权查看该队伍","code":500}
+### e2e-openid-9009 POST /api/team/info {"inviteCode":"Tb_e2N1sveWyZRPmFqh17Q"}
+{"msg":"操作成功","code":200,"data":{"leader":false,"joined":false,"members":[{"memberId":9004,"role":1,"memberName":"玩家小城","memberAvatar":""}],"team":{"createBy":null,"createTime":"2026-11-04 15:22:56","updateBy":null,"updateTime":"2026-11-04 15:27:53","remark":null,"id":1,"ownerType":2,"ownerId":9,"leaderMemberId":9004,"inviteCode":"Tb_e2N1sveWyZRPmFqh17Q","title":null,"joinMode":2,"maxMembers":2,"joinedCount":1,"status":0,"expireTime":"2026-11-14T10:00:00.000+08:00"}}}
+### e2e-openid-9009 POST /api/team/apply {"teamId":2,"message":"hi"}
+{"msg":"持有这一场的票才能申请加入","code":500,"errorCode":"TICKET_REQUIRED"}
+### walk-player-4 POST /api/team/apply {"teamId":2,"message":"hi"}
+{"msg":"持有这一场的票才能申请加入","code":500,"errorCode":"TICKET_REQUIRED"}
+### walk-player-4 POST /api/team/join {"inviteCode":"s7acX47toXXbt0e358_VKQ"}
+{"msg":"持有这一场的票才能加入","code":500,"errorCode":"TICKET_REQUIRED"}
