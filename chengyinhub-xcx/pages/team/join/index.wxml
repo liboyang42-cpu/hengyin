@@ -2,15 +2,12 @@
   <view wx:if="{{recoveryShown}}" class="team-card" aria-role="status">
     <text>{{commandRecovery.label}}</text>
     <text>{{commandRecovery.message}}</text>
-    <text wx:if="{{commandRecovery.requestId}}">原请求号：{{commandRecovery.requestId}}</text>
     <block wx:if="{{commandRecovery.state === 'UNKNOWN'}}">
       <cy-btn disabled="{{commandRecovery.busy}}" bindtap="queryCommand">查询原请求</cy-btn>
       <cy-btn disabled="{{commandRecovery.busy}}" bindtap="retryCommand">按原输入重试</cy-btn>
       <cy-btn disabled="{{commandRecovery.busy}}" bindtap="cancelCommand">终止尚未执行的请求</cy-btn>
       <text>终止只针对未执行的原请求；已经提交的业务不会撤销。</text>
     </block>
-    <cy-btn wx:if="{{commandRecovery.state === 'APPLIED' || commandRecovery.state === 'REJECTED' || commandRecovery.state === 'CANCELLED'}}"
-      bindtap="acknowledgeCommand">确认结果</cy-btn>
   </view>
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
@@ -36,14 +33,13 @@
         <view class="team-meta-item"><text class="team-meta-value">{{team.joinMode == 2 ? '公开招募' : '仅邀请'}}</text><text class="team-meta-key">加入方式</text></view>
       </view>
     </view>
-    <cy-inline-error wx:if="{{joinError}}" title="暂时无法加入" sub="{{joinError}}"
-                     action="重试加入" bind:action="join" />
+    <cy-inline-error wx:if="{{joinError}}" kind="error" title="{{joinError}}" />
     <view class="team-actions">
       <view wx:if="{{joined}}" class="team-action primary" bindtap="goDetail"
             aria-role="button" aria-label="查看已加入的队伍" hover-class="cy-pressed" hover-stay-time="80">查看队伍</view>
-      <view wx:elif="{{team.status == 0}}" class="team-action primary {{joining ? 'disabled' : ''}}" bindtap="join"
+      <view wx:elif="{{team.status == 0}}" class="team-action primary {{joining || joinError ? 'disabled' : ''}}" bindtap="join"
             aria-role="button" aria-label="{{joining ? '正在加入队伍' : '接受邀请并加入'}}"
-            aria-busy="{{joining}}" aria-disabled="{{joining}}" hover-class="cy-pressed" hover-stay-time="80">{{joining ? '加入中…' : '接受邀请并加入'}}</view>
+            aria-busy="{{joining}}" aria-disabled="{{joining || !!joinError}}" hover-class="cy-pressed" hover-stay-time="80">{{joining ? '加入中…' : '接受邀请并加入'}}</view>
       <view wx:else class="team-action disabled secondary" aria-role="button" aria-disabled="true">{{team.status == 1 ? '队伍已满' : '队伍已结束'}}</view>
     </view>
   </block>

@@ -67,7 +67,7 @@ Page({
     const cur = this.data.current;
     if (cur && String(cur.teamId) === command.targetId) {
       if (cur.viewerStatus === 'LEADER') this.loadApplicants();
-      if (receipt.state === 'REJECTED') this._showFail(T.resolveTeamError(command.action, receipt));
+      if (receipt.state === 'REJECTED') this._showFail(T.resolveTeamError(command.action, { errorCode: receipt.errorCode, msg: receipt.message })); // j4 F1:回执理由在 message,resolveTeamError 认 msg
     }
   },
   reloadTeamCommands() { teamRecovery.mount(this, app, wx); },

@@ -5,15 +5,12 @@
   <view wx:if="{{recoveryShown}}" class="team-card" aria-role="status">
     <text>{{commandRecovery.label}}</text>
     <text>{{commandRecovery.message}}</text>
-    <text wx:if="{{commandRecovery.requestId}}">原请求号：{{commandRecovery.requestId}}</text>
     <block wx:if="{{commandRecovery.state === 'UNKNOWN'}}">
       <cy-btn disabled="{{commandRecovery.busy}}" bindtap="queryCommand">查询原请求</cy-btn>
       <cy-btn disabled="{{commandRecovery.busy}}" bindtap="retryCommand">按原输入重试</cy-btn>
       <cy-btn disabled="{{commandRecovery.busy}}" bindtap="cancelCommand">终止尚未执行的请求</cy-btn>
       <text>终止只针对未执行的原请求；已经提交的业务不会撤销。</text>
     </block>
-    <cy-btn wx:if="{{commandRecovery.state === 'APPLIED' || commandRecovery.state === 'REJECTED' || commandRecovery.state === 'CANCELLED'}}"
-      bindtap="acknowledgeCommand">确认结果</cy-btn>
   </view>
   <cy-nav-bar back />
   <cy-page-title title="队伍详情" safe-top="{{false}}" flush="{{true}}" />
@@ -29,7 +26,7 @@
     <view class="team-head">
       <view class="team-status {{team.status < 2 ? 'live' : ''}}">{{statusText}}</view>
       <view class="team-title">{{team.title || '一起出发的玩家队伍'}}</view>
-      <view class="team-sub">{{team.joinMode == 2 ? '公开招募' : '仅邀请'}}</view>
+      <view wx:if="{{!(leader && team.status == 0)}}" class="team-sub">{{team.joinMode == 2 ? '公开招募' : '仅邀请'}}</view>
       <view class="team-meta">
         <view class="team-meta-item"><text class="team-meta-value">{{team.joinedCount != null ? team.joinedCount : '—'}} / {{team.maxMembers != null ? team.maxMembers : '—'}}</text><text class="team-meta-key">当前成员</text></view>
         <view class="team-meta-item"><text class="team-meta-value">{{expireText || '待定'}}</text><text class="team-meta-key">场次开始</text></view>
@@ -52,7 +49,30 @@
         <cy-switch checked="{{joinModePublic}}" disabled="{{joinModeSaving}}"
                    bindchange="onJoinModeChange" accessibility-label="公开招募" />
       </view>
+      <text wx:if="{{commandReject.action === 'join-mode'}}" class="team-reject" aria-role="alert">{{commandReject.message}}</text>
     </view>
+
+    <block wx:if="{{applicantsState}}">
+      <view class="team-section-title">入队申请{{applicants.length ? ' · ' + applicants.length : ''}}</view>
+      <cy-skeleton wx:if="{{applicantsState === 'loading'}}" type="list" count="1" loading-label="正在读取入队申请" />
+      <cy-inline-error wx:elif="{{applicantsState === 'error'}}" title="入队申请没读到" action="重试" bind:action="retryApplicants" />
+      <view wx:else class="team-card">
+        <view wx:if="{{!applicants.length}}" class="team-member"><view class="team-member-main"><view class="team-member-role">暂无申请</view></view></view>
+        <view class="team-member" wx:for="{{applicants}}" wx:key="memberId">
+          <image class="team-avatar" src="{{item.avatar || '/images/d_profile.png'}}" mode="aspectFill" />
+          <view class="team-member-main">
+            <view class="team-member-name">{{item.name}}</view>
+            <view class="team-member-role">{{item.sub}}</view>
+            <view wx:if="{{item.messageText}}" class="team-member-role">{{item.messageText}}</view>
+          </view>
+          <view class="team-member-op" bindtap="rejectApplicant" data-id="{{item.memberId}}" data-name="{{item.name}}"
+                aria-role="button" aria-label="拒绝 {{item.name}}" hover-class="cy-pressed" hover-stay-time="80">拒绝</view>
+          <view class="team-member-op team-op-ok" bindtap="approveApplicant" data-id="{{item.memberId}}"
+                aria-role="button" aria-label="同意 {{item.name}}" hover-class="cy-pressed" hover-stay-time="80">同意</view>
+        </view>
+        <text wx:if="{{commandReject.action === 'handle'}}" class="team-reject" aria-role="alert">{{commandReject.message}}</text>
+      </view>
+    </block>
 
     <view class="team-section-title">队伍成员</view>
     <view class="team-card">
@@ -66,6 +86,7 @@
         <view wx:if="{{leader && item.role != 1}}" class="team-member-op" bindtap="kick" data-id="{{item.memberId}}" data-name="{{item.memberName || '这名队员'}}"
               aria-role="button" aria-label="移出队员 {{item.memberName || '城瘾玩家'}}" hover-class="cy-pressed" hover-stay-time="80">移出</view>
       </view>
+      <text wx:if="{{commandReject.action === 'kick'}}" class="team-reject" aria-role="alert">{{commandReject.message}}</text>
     </view>
 
     <!-- 定向开关关闭 / 普通队伍 / 非成员(无法确认是否定向队)不适用看板:整段不渲染,不给普通队伍挂定向提示。
@@ -102,6 +123,7 @@
       </view>
     </block>
 
+    <text wx:if="{{commandReject.action === 'quit' || commandReject.action === 'disband'}}" class="team-reject" aria-role="alert">{{commandReject.message}}</text>
     <view class="team-actions" wx:if="{{joined && team.status < 2}}">
       <view class="team-action secondary" bindtap="quit" aria-role="button"
             aria-label="{{leader ? '退出并移交队长' : '退出队伍'}}" hover-class="cy-pressed" hover-stay-time="80">{{leader ? '退出并移交队长' : '退出队伍'}}</view>
@@ -117,5 +139,6 @@
 <!-- 危险动作三段式确认:文案来自 utils/danger-actions.js,页面只给 key -->
 <cy-danger-confirm id="dcQuit" bind:confirm="onConfirmQuit" />
 <cy-danger-confirm id="dcKick" bind:confirm="onConfirmKick" />
+<cy-danger-confirm id="dcReject" bind:confirm="onConfirmReject" />
 <cy-danger-confirm id="dcDisband" bind:confirm="onConfirmDisband" bind:alt="onDisbandAlt" />
 <team-report-sheet show="{{reportShow}}" team-id="{{reportTeamId}}" bind:close="closeReport" />

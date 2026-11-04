@@ -33,10 +33,11 @@
             <text class="mt-badge mt-badge--{{item.tone}}">{{item.badge}}</text>
           </view>
           <view class="mt-card__foot">
-            <text>{{item.members}}</text>
+            <text>{{item.members}}<text wx:if="{{pending[item.teamId].text}}" class="mt-card__pending"> · {{pending[item.teamId].text}}</text><text wx:elif="{{pending[item.teamId].error}}" class="mt-card__pending"> · 申请数没读到</text></text>
             <view wx:if="{{item.action}}" class="mt-act mt-act--{{item.action.kind}}" data-index="{{index}}" data-group="{{g.key}}" catchtap="onRowAction"
                   aria-role="button" aria-label="{{item.action.text}}" hover-class="cy-pressed" hover-stay-time="80">{{item.action.text}}</view>
           </view>
+          <text wx:if="{{commandReject && commandReject.teamId == item.teamId}}" class="mt-card__err" aria-role="alert">{{commandReject.message}}</text>
         </view>
       </block>
     </block>
@@ -59,6 +60,7 @@
         <text class="mt-badge mt-badge--{{item.tone}}">{{item.badge}}</text>
       </view>
       <view class="mt-card__foot"><text>{{item.members}}</text><text class="mt-card__go">{{item.go}}</text></view>
+      <text wx:if="{{commandReject && commandReject.teamId == item.teamId}}" class="mt-card__err" aria-role="alert">{{commandReject.message}}</text>
     </view>
     <view class="mt-state" wx:if="{{!openLoading && !openError && openLoaded && !openRows.length}}">本场暂无招募中的队伍</view>
   </block>

@@ -36,7 +36,9 @@ function mount(name, values = {}) {
   }
 }
 for (const name of ['nearby','my-teams']) {
-  test(name + ': UNKNOWN freezes input, survives missing rows/reopen, retries same request and acknowledges terminal', async () => {
+  // 第十一轮 g2(j4 F1):原断言「终态回执卡留到点确认并归档」编码的是旧决定 —— 现在终态是确定结果,
+  // 共享层静默归档,面板只留结果未知的原请求。
+  test(name + ': UNKNOWN freezes input, survives missing rows/reopen, retries same request and settles terminal silently', async () => {
     const h = mount(name); await h.start()
     assert.equal(h.requests.length, 1); assert.equal(h.requests[0].url, '/api/team/command')
     const original = h.requests[0].data, command = JSON.parse(original)
@@ -54,9 +56,8 @@ for (const name of ['nearby','my-teams']) {
     cold.action('query'); assert.equal(cold.requests[0].url, '/api/team/command/query')
     cold.receipt(0,'UNKNOWN'); assert.equal(cold.page.data.teamCommandRows[0].state,'UNKNOWN')
     cold.action('retry'); assert.equal(cold.requests[1].data,original)
-    cold.receipt(1,'APPLIED'); assert.equal(cold.page.data.teamCommandRows[0].state,'APPLIED'); assert.ok(cold.reads > 0)
-    assert.equal(Object.keys(cold.values).length,1)
-    cold.action('acknowledge'); assert.equal(Object.keys(cold.values).length,0); assert.equal(cold.page.data.teamCommandRows.length,0)
+    cold.receipt(1,'APPLIED'); assert.ok(cold.reads > 0)
+    assert.equal(Object.keys(cold.values).length,0,'APPLIED 回执已归档'); assert.equal(cold.page.data.teamCommandRows.length,0,'不留回执卡')
   })
   test(name + ': hidden/account-changed callback cannot publish a result; return restores original slot', async () => {
     const h = mount(name); await h.start(); const saved = JSON.stringify(h.values)
@@ -79,7 +80,22 @@ test('nearby handle preserves exact member/boolean and cancel uses frozen full c
   h.requests[0].successStatusAbnormal(); h.action('cancel'); assert.equal(h.requests[1].data,h.requests[0].data)
   assert.equal(h.requests[1].url,'/api/team/command/cancel'); h.receipt(1,'CANCELLED')
   assert.equal(h.page.data.applicants.length,1,'cancel receipt cannot claim current applicant membership')
-  assert.equal(h.page.data.teamCommandRows[0].state,'CANCELLED')
+  assert.equal(h.page.data.teamCommandRows.length,0,'终止成功后不留回执卡')
+  assert.equal(Object.keys(h.values).length,0)
+})
+test('nearby: REJECTED shows the backend reason in the fail sheet and leaves no card', async () => {
+  const h=mount('nearby');await h.start();h.receipt(0,'REJECTED',{errorCode:'APPLY_BLOCKED',message:'暂时无法加入该队伍'})
+  assert.equal(h.page.data.teamCommandRows.length,0);assert.equal(Object.keys(h.values).length,0)
+  const sheet=h.notices.find(n=>n&&n.title);assert.ok(sheet);assert.equal(sheet.title,'暂时不能申请这支队伍')
+  const g=mount('nearby');await g.start();g.receipt(0,'REJECTED',{message:'队伍已满或已停止招募'})
+  assert.equal(g.notices.find(n=>n&&n.title).why,'队伍已满或已停止招募','无 errorCode 时显示后端理由')
+})
+test('my-teams: REJECTED puts the backend reason under the card that asked', async () => {
+  const h=mount('my-teams');await h.start();h.receipt(0,'REJECTED',{message:'申请状态已变化，请刷新后重试'})
+  assert.equal(JSON.stringify(h.page.data.commandReject),JSON.stringify({teamId:TEAM,message:'申请状态已变化，请刷新后重试'}))
+  assert.equal(h.page.data.teamCommandRows.length,0)
+  const wxml=fs.readFileSync(path.resolve(__dirname,'../../subpackageRoam/my-teams/index.wxml'),'utf8')
+  assert.match(wxml,/commandReject\.teamId == item\.teamId/)
 })
 test('wrong request id, HTTP errors and legacy success never settle a pending intention', async () => {
   for (const response of [{code:200,data:{state:'APPLIED',requestId:'f'.repeat(32)}},{code:200,data:{}},{code:403},{code:500}]) {
@@ -88,16 +104,20 @@ test('wrong request id, HTTP errors and legacy success never settle a pending in
     assert.ok(h.requests.every(r=>r.url.startsWith('/api/team/command')))
   }
 })
-test('restored terminal remains visible until confirmation without replaying a mutation', async () => {
-  const h=mount('nearby');await h.start();h.receipt(0,'REJECTED',{errorCode:'TEAM_FULL',message:'已满'})
-  h.page.onUnload();const cold=mount('nearby',h.values);cold.page.onShow()
-  assert.equal(cold.page.data.teamCommandRows[0].state,'REJECTED');assert.equal(cold.requests.length,0)
+test('a terminal receipt stored by a killed page is archived on reopen without replaying a mutation', async () => {
+  const h=mount('nearby');await h.start()
+  const key=Object.keys(h.values)[0], saved=h.values[key]
+  saved.result={requestId:saved.command.requestId,state:'REJECTED',errorCode:'TEAM_FULL',message:'已满'}
+  h.page.onUnload();const cold=mount('nearby',{[key]:saved});cold.page.onShow()
+  assert.equal(cold.page.data.teamCommandRows.length,0);assert.equal(cold.requests.length,0)
+  assert.equal(Object.keys(cold.values).length,0)
   cold.action('retry');assert.equal(cold.requests.length,0)
-  cold.action('acknowledge');assert.equal(Object.keys(cold.values).length,0)
 })
 test('recovery panel exists independently of list rows on both pages and offers all receipt operations', () => {
   const panel=fs.readFileSync(path.resolve(__dirname,'../../subpackageRoam/utils/team-recovery-panel.wxml'),'utf8')
-  for(const action of ['query','retry','cancel','acknowledge']) assert.match(panel,new RegExp('data-action="'+action+'"'))
+  for(const action of ['query','retry','cancel']) assert.match(panel,new RegExp('data-action="'+action+'"'))
+  // j4 F1:不露队伍号、请求号,不再有「确认并归档结果」
+  assert.doesNotMatch(panel,/requestId|targetId\}\}<\/text>|队伍 \{\{|data-action="acknowledge"/)
   for(const name of ['nearby','my-teams']) assert.match(fs.readFileSync(path.resolve(__dirname,'../../subpackageRoam/'+name+'/index.wxml'),'utf8'),/include src="\.\.\/utils\/team-recovery-panel.wxml"/)
 })
 
@@ -127,4 +147,19 @@ test('my-teams: hidden location request cannot hold loading or overwrite the new
   assert.equal(h.requests.length, 0)
   locations[1].success({ latitude: 31, longitude: 121 })
   assert.equal(h.requests.length, 1)
+})
+// 第十一轮 g2,j4 F4:我带的招募中队伍在「我的队伍」卡上写出待处理申请数;读不到时写「申请数没读到」。
+test('my-teams: leader card shows the pending application count, or that it could not be read', () => {
+  const h = mount('my-teams'); h.page.onShow(); h.page.loadOpen = () => {}
+  h.page._render([{ id: TEAM, leaderMemberId: '7', status: 0, joinedCount: 1, maxMembers: 3 }, { id: '55', leaderMemberId: '7', status: 0 }], [], { joined: true, apps: true })
+  const reads = h.requests.filter(r => r.url === '/api/team/applications')
+  assert.equal(reads.length, 2)
+  assert.equal(JSON.parse(reads[0].data).teamId, TEAM)
+  reads[0].success({ code: 200, data: [{ memberId: '1' }, { memberId: '2' }] })
+  reads[1].fail({})
+  assert.equal(h.page.data.pending[TEAM].text, '2 条入队申请')
+  assert.equal(h.page.data.pending['55'].error, true)
+  const wxml = fs.readFileSync(path.resolve(__dirname, '../../subpackageRoam/my-teams/index.wxml'), 'utf8')
+  assert.match(wxml, /pending\[item\.teamId\]\.text/)
+  assert.match(wxml, /申请数没读到/)
 })

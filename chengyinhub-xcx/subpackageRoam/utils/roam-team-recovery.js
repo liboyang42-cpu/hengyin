@@ -21,15 +21,16 @@ function mount(host, app, platform) {
     const targetId = exactId(value)
     if (!current() || scanError || !actor.id || !actor.token || !targetId) return null
     if (!instances.has(targetId)) {
-      const instance = createRecovery({ app, platform, domain: 'TEAM', targetId,
+      // 第十一轮 g2(j4 F1):终态回执静默归档(settle),面板只列结果未知的原请求;不露队伍号、成员号、请求号。
+      const instance = createRecovery({ app, platform, domain: 'TEAM', targetId, settle: true,
         changed(value) {
           if (!current()) return
           const input = value.input || {}
-          rows.set(targetId, { targetId, state: value.state, requestId: value.requestId,
+          rows.set(targetId, { targetId, state: value.card || value.busy ? value.state : '',
             label: value.label, message: value.message, busy: value.busy,
             terminal: FINAL.includes(value.state),
             detail: input.action === 'apply' ? String(input.message || '')
-              : input.action === 'handle' ? (input.approved ? '同意成员 ' : '拒绝成员 ') + String(input.memberId || '') : '' })
+              : input.action === 'handle' ? (input.approved ? '同意入队申请' : '拒绝入队申请') : '' })
           render()
         },
         terminal(receipt, command) { if (current()) host.afterTeamCommandTerminal(receipt, command) },

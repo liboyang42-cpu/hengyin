@@ -218,18 +218,31 @@ const DANGER_ACTIONS = {
     alt: null,
     done: { title: '已拒绝', text: '这条申请已处理。' },
   },
+  // 第十一轮 g2,j4 F9:队员退队可以凭原邀请链接回来(走查 T8),不再写「此操作不可撤销」;
+  // 只给队长看移交 / 解散那一条 —— 队长身份交出去就回不来,这才是不可撤销的部分。
   'team.quit': {
-    irreversible: true,
+    irreversible: false,
     title: '退出这支队伍?',
-    content: '退队不会同步退票,你的票仍然有效。',
+    content: '退队不会同步退票，你的票仍然有效。',
     consequences: [
       { icon: 'logout', text: '你会失去队伍群聊入口' },
-      { icon: 'mtab-customers', text: '你是队长的话,队长会移交给最早加入的队员;只剩你一人时队伍直接解散' },
-      { icon: 'warning', text: '此操作不可撤销,需要重新被邀请才能回到这支队伍' },
     ],
     confirmText: '退出队伍',
     alt: null,
-    done: { title: '已退出队伍', text: '你的票仍然有效,可以自己去核销。' },
+    done: { title: '已退出队伍', text: '你的票仍然有效，可以自己去核销。' },
+  },
+  'team.quit-leader': {
+    irreversible: true,
+    title: '退出并移交队长?',
+    content: '退队不会同步退票，你的票仍然有效。',
+    consequences: [
+      { icon: 'logout', text: '你会失去队伍群聊入口' },
+      { icon: 'mtab-customers', text: '队长会移交给最早加入的队员；只剩你一人时队伍直接解散' },
+      { icon: 'warning', text: '此操作不可撤销' },
+    ],
+    confirmText: '退出队伍',
+    alt: null,
+    done: { title: '已退出队伍', text: '你的票仍然有效，可以自己去核销。' },
   },
 
   // ===== 帖文草稿 =====

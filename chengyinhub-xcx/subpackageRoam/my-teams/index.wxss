@@ -45,3 +45,6 @@ page { background: var(--cy-color-bg-page); }
 .mt-av--3 .mt-av__i:nth-child(1) { left: 17rpx; top: 0; } .mt-av--3 .mt-av__i:nth-child(2) { left: 0; top: 34rpx; } .mt-av--3 .mt-av__i:nth-child(3) { left: 34rpx; top: 34rpx; }
 .mt-card:active .mt-av__i { transform: scale(1.06); }
 .cy-motion-reduced .mt-av__i { transition: none; }
+
+.mt-card__pending { color: var(--cy-brand); font-weight: 700; }
+.mt-card__err { display: block; margin-top: 12rpx; color: var(--cy-danger); font-size: var(--cy-type-label); }

@@ -84,8 +84,8 @@
       "endpoint": "/api/team/quit",
       "file": "pages/team/detail/index.js",
       "irreversible": true,
-      "confirmKey": "team.quit",
-      "reason": "要重新被邀请才能回来;是队长时还会触发移交或解散"
+      "confirmKey": "team.quit-leader",
+      "reason": "队长退队会移交队长或解散队伍,交出去回不来;队员退队走 team.quit(可凭原邀请回来,不标不可撤销)"
     },
     {
       "endpoint": "/api/team/kick",

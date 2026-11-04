@@ -1,4 +1,5 @@
 'use strict';
+// 第十一轮 g2(j4 F4):队长打开招募中的队伍会读入队申请;本文件不测这条读取,夹具直接答空列表,不占请求序号。
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -12,9 +13,9 @@ function boot() {
   let definition, user = '71', token = 'a';
   const requests = [], effects = [];
   const app = { globalData: {}, getUserID: () => user, getAuthorization: () => token,
-    getRequestErrorMessage: (r, f) => r && r.msg || f, sendRequest: r => requests.push(r) };
+    getRequestErrorMessage: (r, f) => r && r.msg || f, sendRequest: r => r.url === '/api/team/applications' ? r.success({ code: 200, data: [] }) : requests.push(r) };
   vm.runInNewContext(fs.readFileSync(file, 'utf8'), {
-    Page: d => { definition = d; }, getApp: () => app, wx: platform(),
+    Page: d => { definition = d; }, getApp: () => app, wx: { ...platform(), navigateBack: () => effects.push('back'), redirectTo() {} },
     require: id => id.includes('toast') ? m => effects.push(m) : createRequire(file)(id)
   });
   const dc = { close() {}, busyOn: () => effects.push('busy'), done: () => effects.push('done'), failed: () => effects.push('failed') };
@@ -28,11 +29,14 @@ function boot() {
   requests[0].success({ code: 200, data: copy(info) });
   return { page, requests, effects, info, account() { user = '72'; token = 'b'; } };
 }
-test('quit success invalidates in-flight info and reloads, old response cannot restore membership', async () => {
+// 第十一轮 g2(j4 F3):原断言「退队成功后重读队伍」编码的是旧决定 —— 退队后重读一支已看不见的队伍,
+// 页面停在「已满员 2/2」压着空名单。现在退队成功即离开本页,不再重读;在途的旧回包仍不能恢复成员身份。
+test('quit success invalidates in-flight info and leaves the page, old response cannot restore membership', async () => {
   const h = boot(); h.page.load(); const old = h.requests.at(-1);
   await h.page.onConfirmQuit(); const quit = h.requests.at(-1);
+  const count = h.requests.length;
   quit.success(receipt(quit, 'APPLIED'));
-  assert.equal(h.requests.at(-1).url, '/api/team/info'); assert.notEqual(h.requests.at(-1), old);
+  assert.equal(h.requests.length, count, '不再重读'); assert.ok(h.effects.includes('back'), '离开本页');
   assert.equal(h.page.data.joined, false); assert.equal(h.page.data.board, null);
   old.success({ code: 200, data: h.info });
   assert.equal(h.page.data.joined, false); assert.equal(h.page.data.leader, false);

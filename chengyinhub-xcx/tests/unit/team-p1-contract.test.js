@@ -77,7 +77,7 @@ function assertTeamCompliance(sources) {
 // 页面合法 require 了纯函数 utils/user-character.js 与 utils/team-event-command.js(只读入参,不碰 wx):
 // 按页面目录解析,只放行这两个真模块,其余仍 unexpected require。
 // 第七轮 C 第 3 项:分享卡固定插画常量 utils/roam-menu-share.js 也是纯常量模块。
-const PURE_MODULES = new Set([path.join(ROOT, 'utils/user-character.js'), path.join(ROOT, 'utils/team-event-command.js'), path.join(ROOT, 'utils/roam-menu-share.js')])
+const PURE_MODULES = new Set([path.join(ROOT, 'utils/user-character.js'), path.join(ROOT, 'utils/team-event-command.js'), path.join(ROOT, 'utils/roam-menu-share.js'), path.join(ROOT, 'utils/team-applicant-rows.js'), path.join(ROOT, 'utils/datetime.js')])
 function teamPageRequire(relative) {
   return (request) => {
     const resolved = path.resolve(ROOT, path.dirname(relative), request)
@@ -154,9 +154,10 @@ function assertTeamStateUx(detailWxml, joinWxml, detailJson, joinJson, teamWxss)
     '加入邀请首载必须使用同构骨架')
   assert.match(joinWxml, /<cy-state-shell\b[^>]*wx:elif="\{\{error && !team\}\}"[^>]*kind="\{\{errorKind\}\}"[^>]*primary="\{\{errorAction\}\}"[^>]*bind:primary="onErrorAction"/,
     '邀请缺参不能伪装成可无限重试的网络异常')
-  assert.match(joinWxml, /<cy-inline-error\b[^>]*wx:if="\{\{joinError\}\}"[^>]*action="重试加入"[^>]*bind:action="join"/,
-    '加入失败必须在动作附近留下可恢复状态，不能只闪 toast')
-  assert.match(joinWxml, /aria-busy="\{\{joining\}\}"[^>]*aria-disabled="\{\{joining\}\}"/,
+  // 第十一轮 g2(j4 F1):加入被拒是后端的确定结论,理由以红字贴在加入按钮上方;原「重试加入」只会再撞一次同一个拒绝,去掉。
+  assert.match(joinWxml, /<cy-inline-error\b[^>]*wx:if="\{\{joinError\}\}"[^>]*kind="error"[^>]*title="\{\{joinError\}\}"/,
+    '加入被拒必须在动作附近写出理由，不能只闪 toast')
+  assert.match(joinWxml, /aria-busy="\{\{joining\}\}"[^>]*aria-disabled="\{\{joining( \|\| !!joinError)?\}\}"/,
     '加入请求 pending 必须向辅助技术声明 busy/disabled')
 
   for (const [name, json] of [['detail', detailJson], ['join', joinJson]]) {
@@ -418,7 +419,7 @@ test('负控:退回纯文字 loading 或移除加入局部错误时，状态契�
 
   const missingJoinRecovery = join.replace(/<cy-inline-error\b[^>]*joinError[^>]*\/>/, '')
   assert.notEqual(missingJoinRecovery, join, '加入错误负控锚点失效')
-  assert.throws(() => assertTeamStateUx(detail, missingJoinRecovery, ...args.slice(2)), /加入失败/)
+  assert.throws(() => assertTeamStateUx(detail, missingJoinRecovery, ...args.slice(2)), /加入被拒/)
 })
 
 // 2026-10-15:A/B 两种组队模式都能在订单详情建队;场次开始后只建仅邀请队伍(地图不再列出)
@@ -445,4 +446,57 @@ test('F-W1-12: surviving 401/403 shows a visible login/permission state; other r
       if (denied) assert.match(harness.page.data.error, /登录后/)
     }
   }
+})
+
+// 第十一轮 g2,j4 F2:服务端明确拒绝(TEAM_INFO_REFUSED:邀请已失效、无权查看该队伍)写出理由并给返回出路,不留白;
+// 没有这个 errorCode 的失败仍是加载失败(上一条)。
+test('j4 F2: a team-info refusal shows its reason with a back action on both pages', () => {
+  for (const [relative, start, reason] of [['pages/team/detail/index.js', (page) => { page.onLoad({ teamId: '7' }); page.onShow() }, '无权查看该队伍'],
+                                           ['pages/team/join/index.js', (page) => { page.onLoad({ code: 'WRONGcode000' }) }, '邀请已失效']]) {
+    const harness = loadTeamPage(relative)
+    start(harness.page)
+    harness.requests.find((item) => item.url === '/api/team/info').success({ code: 500, msg: reason, errorCode: 'TEAM_INFO_REFUSED' })
+    assert.equal(harness.page.data.errorKind, 'missing-param', relative)
+    assert.equal(harness.page.data.error, reason, relative)
+    assert.equal(harness.page.data.errorAction, '返回上一页', relative)
+    assert.equal(harness.page.data.team, null, relative)
+  }
+})
+
+// 第十一轮 g2,j4 F4:队长在队伍详情就能看到入队申请,同意走同一条 handle 原请求;F3:退队成功后离开本页,不再重读看不见的队伍。
+test('j4 F4/F3: leader sees applications on team detail; quitting leaves the page', async () => {
+  const h = loadTeamPage('pages/team/detail/index.js')
+  h.page.onLoad({ teamId: '31' }); h.page.onShow()
+  h.requests.find((r) => r.url === '/api/team/info').success({ code: 200, data: {
+    team: { id: 31, status: 0, joinMode: 2, joinedCount: 1, maxMembers: 3, ownerId: 9, ownerType: 2 }, members: [], joined: true, leader: true } })
+  const apps = h.requests.find((r) => r.url === '/api/team/applications')
+  assert.ok(apps, '队长打开招募中的队伍要读入队申请')
+  assert.equal(JSON.parse(apps.data).teamId, 31)
+  apps.success({ code: 200, data: [{ memberId: '990007', memberName: '小D', applyMessage: '带我一个' }] })
+  assert.equal(h.page.data.applicantsState, 'ready')
+  assert.equal(h.page.data.applicants[0].name, '小D')
+  assert.equal(h.page.data.applicants[0].messageText, '“带我一个”')
+  await h.page.approveApplicant({ currentTarget: { dataset: { id: '990007' } } })
+  const command = h.requests.at(-1)
+  assert.equal(command.url, '/api/team/command')
+  const body = JSON.parse(command.data)
+  assert.equal(body.action, 'handle'); assert.equal(body.memberId, '990007'); assert.equal(body.approved, true)
+  command.success({ code: 200, data: { requestId: body.requestId, state: 'REJECTED', message: '申请状态已变化，请刷新后重试' } })
+  assert.equal(h.page.data.recoveryShown, false, '被拒不挂恢复卡')
+  assert.equal(JSON.stringify(h.page.data.commandReject), JSON.stringify({ action: 'handle', message: '申请状态已变化，请刷新后重试' }))
+  const wxml = read('pages/team/detail/index.wxml')
+  assert.match(wxml, /commandReject\.action === 'handle'/)
+
+  const q = loadTeamPage('pages/team/detail/index.js')
+  q.page.onLoad({ teamId: '31' }); q.page.onShow()
+  q.requests.find((r) => r.url === '/api/team/info').success({ code: 200, data: {
+    team: { id: 31, status: 1, joinedCount: 2, maxMembers: 2, ownerId: 9, ownerType: 2 }, members: [], joined: true, leader: false } })
+  await q.page.onConfirmQuit()
+  const quit = q.requests.at(-1); const quitBody = JSON.parse(quit.data)
+  assert.equal(quitBody.action, 'quit')
+  const before = q.requests.length
+  quit.success({ code: 200, data: { requestId: quitBody.requestId, state: 'APPLIED', message: '原请求已执行' } })
+  assert.equal(q.backs.length, 1, '退队成功回到上一页')
+  assert.equal(q.requests.slice(before).filter((r) => r.url === '/api/team/info').length, 0, '不再重读已看不见的队伍')
+  assert.equal(q.page.data.recoveryShown, false)
 })
