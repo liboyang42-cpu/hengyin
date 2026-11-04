@@ -7151,7 +7151,7 @@ Page({
    *  (那些壳是独立 sheet,套不进面板自己那层 sheet)。 */
   onAdvancedSession(e) {
     if (!this._isPlayAccountCurrent()) return;
-    const view = e.detail || {};
+    let view = e.detail || {};
     const active = this.data.advancedPlay;
     if (!active.show || !active.node
         || (view.nodeId != null && String(view.nodeId) !== String(active.node.nodeId))) return;
@@ -7200,7 +7200,8 @@ Page({
     /* 拍物成卡那一屏的「地点」:会话视图里只有 nodeId,主题名与节点名在本页手里 */
     const placeNode = this.data.advancedPlay && this.data.advancedPlay.node;
     const placeName = [this.data.topicName, placeNode && placeNode.name].filter(Boolean).join(' · ');
-    const picked = this.data.isPreview && view.previewKit ? view.previewKit : pickPlayKit(Object.assign({}, view, { placeName, plainOutcome: !((this.data.themeBag || {}).quests || []).length }), new Date());
+    view = Object.assign({}, view, { plainOutcome: !((this.data.themeBag || {}).quests || []).length }); // 没有通用局:结果反馈没过在本站重来
+    const picked = this.data.isPreview && view.previewKit ? view.previewKit : pickPlayKit(Object.assign({}, view, { placeName }), new Date());
     const kit = dailySignRevealState(previous, picked);
     if (kit && kit.type === 'album' && !kit.done && kit.sessionId === previous.sessionId && kit.version === previous.version) kit.uploaded = !!previous.uploaded;
     if (!kit) { this.setData({ playKit: { show: false, kit: null } }); return; }
