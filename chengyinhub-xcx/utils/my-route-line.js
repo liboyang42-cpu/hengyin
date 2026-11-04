@@ -25,8 +25,8 @@ function createRouteLine(style) {
       const pts = points(track)
       if (pts.length < 2) return []
       return [
-        { points: pts, color: s.glow || '#FFFFFF38', width: s.glowWidth || 14, borderWidth: 0 },
-        { points: pts, color: s.core || '#FFFFFFF2', width: s.coreWidth || 4, borderColor: '#00000052', borderWidth: 1 },
+        { points: pts, color: s.glow || '#FFFFFF38', width: s.glowWidth || 14, borderWidth: 0 }, /* ds-ok 原生 polyline 只吃字面色 */
+        { points: pts, color: s.core || '#FFFFFFF2', width: s.coreWidth || 4, borderColor: '#00000052', borderWidth: 1 }, /* ds-ok 原生 polyline 只吃字面色 */
       ]
     },
     reset() { baseLen = 0; base = []; ref = null },

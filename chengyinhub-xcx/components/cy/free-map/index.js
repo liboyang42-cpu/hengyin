@@ -130,7 +130,7 @@ Component({
         g.lineWidth = 8; g.strokeStyle = '#111111'; g.stroke();
         this._icons.player = await save();
         g.clearRect(0, 0, S, S);
-        g.beginPath(); g.arc(S / 2, S / 2, 30, 0, 7); g.fillStyle = '#111111'; g.fill();
+        g.beginPath(); g.arc(S / 2, S / 2, 30, 0, 7); g.fillStyle = '#111111'; g.fill(); /* ds-ok 队伍图钉底圆,canvas 拿不到 var() */
         this._icons.team = await save();
         // S2 方向箭头(简单三角,尖端朝上/正北;实际朝向由 marker.rotate=bearing 顺时针转出)
         g.clearRect(0, 0, S, S);

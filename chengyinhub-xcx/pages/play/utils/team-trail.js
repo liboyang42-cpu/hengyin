@@ -33,7 +33,7 @@ function teamLines(teams) {
   (teams || []).forEach((t) => {
     if (t.points.length < 2) return;
     out.push({ points: t.points, color: t.color + '42', width: 13, borderWidth: 0 });
-    out.push({ points: t.points, color: t.color, width: 4, borderColor: '#00000052', borderWidth: 1 });
+    out.push({ points: t.points, color: t.color, width: 4, borderColor: '#00000052', borderWidth: 1 }); /* ds-ok 原生 polyline 只吃字面色 */
   });
   return out;
 }
