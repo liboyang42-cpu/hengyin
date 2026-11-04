@@ -41,9 +41,10 @@ class ClubSettlementSummaryMybatisIntegrationTest {
         jdbc = new JdbcTemplate(dataSource);
         String base = new String(Files.readAllBytes(Paths.get("../sql/base_schema_20260818.sql")), StandardCharsets.UTF_8);
         // cms_topic:CU-C-40 汇总行 left join 主题名,真库 schema 要有这张表
+        // cms_activity 的 club_id 注释里有「;」,按行尾「;\n」切语句,不在注释中间截断。
         for (String table : new String[]{"coop_settlement", "coop_settlement_adjustment", "ums_member_balance_detail", "cms_topic", "cms_activity"}) {
             int start = base.indexOf("CREATE TABLE `" + table + "` (");
-            jdbc.execute(base.substring(start, base.indexOf(";", start)));
+            jdbc.execute(base.substring(start, base.indexOf(";\n", start)));
         }
         Configuration config = new Configuration(new Environment("club-summary", new SpringManagedTransactionFactory(), dataSource));
         config.getTypeAliasRegistry().registerAliases("com.chengyinhub.business.domain");
