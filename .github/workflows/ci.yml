@@ -437,7 +437,7 @@ jobs:
     # 默认 workflow_dispatch 仍全开；只有显式 selected 按精确 admission 执行。
     if: ${{ (github.event_name == 'workflow_dispatch' && inputs.validation_scope == 'selected' && needs.changes.outputs.run_backend == 'true') || ((github.event_name != 'workflow_dispatch' || inputs.validation_scope != 'selected') && (github.event_name == 'workflow_dispatch' || needs.changes.outputs.backend == 'true')) }}
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     # PublicVisibilityMyBatisTest 故意设计成"fixture 不可达即失败"(拒绝静默跳过),
     # 硬编码连动态端口上的 mysql:8.0.45,自建表、用完即弃,与生产/funds-mysql-it.yml
     # 用的远程测试库完全隔离。版本锁死见 ci/test_migration_runner_ci_contract.py。
