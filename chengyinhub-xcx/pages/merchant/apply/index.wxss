@@ -142,6 +142,8 @@ page { background: var(--cy-color-bg-page); }
 }
 .wizard-secondary { --cy-comp-btn-secondary-bg: var(--cy-color-action-secondary-bg); }
 .wizard-primary { --cy-bg-subtle: var(--cy-color-bg-surface-subtle); }
+/* j1 F10:提交成功页「返回首页」撑满底栏,与向导主按钮同宽(用类而非行内 style,不混入向导操作条契约) */
+.done-home { flex: 1; }
 
 /* ===== 提交成功 ===== */
 .success { text-align: center; padding: var(--cy-space-6) 0 var(--cy-space-4); }

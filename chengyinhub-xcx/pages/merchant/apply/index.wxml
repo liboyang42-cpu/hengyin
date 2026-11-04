@@ -14,7 +14,6 @@
             class="progress-segment {{item < step ? 'on' : ''}}"></view>
     </view>
     <view class="wizard-head__copy {{stepIn ? 'cy-rise-in' : ''}}">
-      <view class="wizard-head__eyebrow">{{stepEyebrows[step - 1]}}</view>
       <view class="wizard-head__title">{{stepHeadlines[step - 1]}}</view>
       <view class="wizard-head__legend" wx:if="{{step < 4}}">标 <text class="req" aria-hidden="true">*</text> 的是必填</view>
     </view>
@@ -23,14 +22,9 @@
   <!-- ===== 开场屏(四步之前,Figma M0) ===== -->
   <view class="intro {{morphing ? 'intro--out' : 'cy-rise-in'}}"
         wx:if="{{bootstrapState === 'ready' && mode==='form' && (introMode || morphing)}}">
-    <view class="intro__eyebrow">商家入驻</view>
+    <!-- j1 文案表(第十轮 f3):开场只留标题 + 开始入驻;步骤与进度由下一屏 1/4 进度条说明 -->
     <view class="intro__title">把你的店
 放进玩家的路线里</view>
-    <view class="intro__points">
-      <view class="intro__point"><view class="intro__dot" aria-hidden="true"></view><text>基础信息 · 经营信息 · 资质 · 确认</text></view>
-
-      <view class="intro__point"><view class="intro__dot" aria-hidden="true"></view><text>提交后可随时回来看进度与驳回原因</text></view>
-    </view>
     <view class="intro-cta"><cy-btn variant="primary" accessibilityLabel="开始入驻" bindtap="startForm">开始入驻</cy-btn></view>
     
     <view class="intro__fine intro__claim" bindtap="openClaim" aria-role="button" aria-label="认领已有门店" hover-class="cy-pressed" hover-stay-time="80">门店已在城瘾上线？认领已有门店</view>
@@ -197,7 +191,6 @@
                 aria-role="button" aria-label="添加品牌形象图" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="40" /></view>
         </view>
       </cy-card>
-      <view class="foot">最多 6 张</view>
     </view>
 
     <!-- ===== 步骤4:预览确认 ===== -->
@@ -247,7 +240,6 @@
         </view>
         <cy-consent-check class="identity-consent" checked="{{identityConsented}}" text="{{identityHint}}"
                           bind:change="onIdentityConsent" />
-        <view class="foot">用于收款实名核验</view>
       </block>
       <view class="foot" wx:else>{{identityDoneHint}}</view>
       <cy-inline-error class="submit-error" wx:if="{{submitError && step===4}}"
@@ -306,7 +298,7 @@
             style="width:100%" bindtap="onNext">{{step===4 ? (submitting ? '提交中…' : '提交申请') : '继续'}}</cy-btn>
   </view>
   <view class="bottom" wx:if="{{bootstrapState === 'ready' && mode==='form' && step===5}}">
-    <cy-btn variant="primary" style="width:100%" bindtap="onHome">返回首页</cy-btn>
+    <cy-btn class="done-home" variant="primary" bindtap="onHome">返回首页</cy-btn>
   </view>
   <cy-merchant-claim-sheet show="{{claimShow}}" bind:close="closeClaim" />
   <view class="bottom" wx:if="{{bootstrapState === 'ready' && mode==='status'}}">
