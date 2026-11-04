@@ -662,6 +662,14 @@ public class RegistrationQueryApplication {
                     usedPoints ? "可免费取消,已用积分退回账户" : "可免费取消", verdict.deadline, verdict.manualReview);
         }
         registration.setRefundInfo(verdict);
+        // check-1104 j1 F7:取消确认里给出这一单此刻能退回多少。只算单张单(多票父单的现金挂在首单,
+        // 从单金额不代表整单);现金快照未知时不推算,页面只讲规则。
+        java.math.BigDecimal wechatCash = registration.getWechatPaymentAmount();
+        registration.setCancelRefundAmount(verdict != null && verdict.refundable && !verdict.manualReview
+                && StringUtils.isEmpty(registration.getParentOrderNo())
+                && Integer.valueOf(2).equals(registration.getPaymentStatus())
+                && wechatCash != null && wechatCash.signum() > 0
+                ? com.chengyinhub.business.util.RefundPolicy.applyCashRatio(wechatCash, verdict.ratio) : null);
     }
 
     private void attachManualRefundInfo(CmsRegistration registration) {

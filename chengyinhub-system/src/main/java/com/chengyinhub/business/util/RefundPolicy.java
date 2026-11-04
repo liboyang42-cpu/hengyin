@@ -86,6 +86,17 @@ public final class RefundPolicy {
         }
     }
 
+    /**
+     * 按比例退现金:取分、向下舍入(多出的零头留给主办方,不多退)。玩家自助取消实际退款
+     * (TeamGroupServiceImpl)与订单详情「取消将退回」展示共用这一处,两边金额不会对不上。
+     */
+    public static java.math.BigDecimal applyCashRatio(java.math.BigDecimal cash, java.math.BigDecimal cashRatio) {
+        if (cash == null || cashRatio == null || cashRatio.compareTo(java.math.BigDecimal.ONE) >= 0) {
+            return cash;
+        }
+        return cash.multiply(cashRatio).setScale(2, java.math.RoundingMode.DOWN);
+    }
+
     /** P0-06 下单时冻结的政策快照,落进 cms_registration 的三列。 */
     public static final class Snapshot {
         /** 政策标识,见 {@link RefundPolicyCode}。 */

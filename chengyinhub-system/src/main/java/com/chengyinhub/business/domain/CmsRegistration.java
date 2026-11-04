@@ -251,6 +251,12 @@ public class CmsRegistration extends BaseEntity
     /** 退款可退判定(瞬态,订单详情展示用;仅主题计算,口径见 RefundPolicy,与 cancel 路径一致) */
     private com.chengyinhub.business.util.RefundPolicy.Verdict refundInfo;
 
+    /**
+     * 订单详情只读:此刻自助取消将原路退回的现金(微信实付 × 当前档位比例,向下取分),
+     * 与实际取消退款同一公式(RefundPolicy.applyCashRatio)。多票父单/现金快照未知/不可退时为 null,页面不出数。
+     */
+    private java.math.BigDecimal cancelRefundAmount;
+
     /** 最新退款申请(瞬态,玩家订单展示用；payoutStatus 是退款是否到账的唯一事实)。 */
     private RefundApplication refundApplication;
 
@@ -331,6 +337,10 @@ public class CmsRegistration extends BaseEntity
     public void setOmsTicket(OmsTicket omsTicket) {
         this.omsTicket = omsTicket;
     }
+
+    public java.math.BigDecimal getCancelRefundAmount() { return cancelRefundAmount; }
+
+    public void setCancelRefundAmount(java.math.BigDecimal cancelRefundAmount) { this.cancelRefundAmount = cancelRefundAmount; }
 
     public com.chengyinhub.business.util.RefundPolicy.Verdict getRefundInfo() {
         return refundInfo;

@@ -6,6 +6,7 @@ const { summarizeOrderState, canRequestOrderRefund, formatRefundDeadline } = req
 const { isFreeOrder, resolveActualPaidAmount } = require('../../../../utils/order-actual-pay.js');
 const cancellationFeedback = require('../../../../utils/cancellation-feedback.js');
 const subscribe = require('../../../../utils/subscribe.js');
+const refundAmount = require('../../../utils/order-refund-amount.js');
 const { isUnknownHttpStatus } = require('../../../../utils/transport/failure-envelope.js');
 const { failureStatus } = require('../../../../utils/session/login-reload.js');
 const { reader, sameReader } = require('../../../../utils/user-character.js');
@@ -578,7 +579,7 @@ Component({
       that._finishCancelPrompt = finishCancelPrompt;
       modal.show({
         dangerKey: paid ? (info.isFreeOrder ? 'order.cancel-free' : 'order.cancel-refund') : 'order.cancel',
-        dangerParams: { deadline: info.refundDeadlineDisplay || '已核销或已过开始时间不可退' },
+        dangerParams: { deadline: refundAmount.cancelConfirmDeadline(info) },
         success(res) {
           if (!finishCancelPrompt() || !isCurrent()) return;
           if (!res.confirm) return;
@@ -941,6 +942,7 @@ Component({
               }
             }
             info.canRequestRefund = canRequestOrderRefund(info);
+            info.refundAmountShown = refundAmount.refundedAmount(info);
             const isTopicOrder = Number(info.ownerType) === 1;
             // purchaseKind 非空时权威；仅存量 NULL 单回落到明确 chapterId，权益延迟到达时可补正类型。
             const isExploreOrder = resolveExploreOrder(info);

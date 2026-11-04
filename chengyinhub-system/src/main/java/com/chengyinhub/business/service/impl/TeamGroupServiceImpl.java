@@ -1599,12 +1599,9 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
         return true;
     }
 
-    /** 按比例退现金:取分、向下舍入(多出的零头留给主办方,不多退)。 */
+    /** 按比例退现金:取分、向下舍入(多出的零头留给主办方,不多退)。订单详情展示同用 RefundPolicy 这一处。 */
     private static BigDecimal applyCashRatio(BigDecimal cash, BigDecimal cashRatio) {
-        if (cash == null || cashRatio == null || cashRatio.compareTo(BigDecimal.ONE) >= 0) {
-            return cash;
-        }
-        return cash.multiply(cashRatio).setScale(2, java.math.RoundingMode.DOWN);
+        return RefundPolicy.applyCashRatio(cash, cashRatio);
     }
 
     /**
