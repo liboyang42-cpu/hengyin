@@ -194,8 +194,8 @@ test('节点深链宿主是薄壳：挂已有组件、透传 poiId、输出稳�
   // 分享/收藏输出稳定深链;onShareTimeline 只能给 query(平台不支持自定义 path)
   assert.match(hostJs, /path:\s*SHARE_PATH \+ '\?' \+ shareQuery\(this\.data\.poiId, this\._merchantId\)/)
   assert.match(hostJs, /const SHARE_PATH = '\/subpackageRoam\/poi-detail\/index'/)
-  // 第七轮 C 第 1 项:节点读接口要登录,朋友圈单页模式没有登录态,暂不实现 onShareTimeline(恢复时 query 仍只能是 shareQuery)
-  assert.doesNotMatch(hostJs.replace(/\/\/[^\n]*/g, ''), /onShareTimeline\s*\(/)
+  // 第九轮 m4:单个据点 GET 已对游客放行,朋友圈分享恢复;只给 query,且仍只能是 shareQuery,不自定义 path
+  assert.match(hostJs, /onShareTimeline\(\) \{[\s\S]{0,200}query: shareQuery\(this\.data\.poiId, this\._merchantId\)/)
   assert.match(hostJs, /onAddToFavorites\(\)\s*\{/)
 })
 
