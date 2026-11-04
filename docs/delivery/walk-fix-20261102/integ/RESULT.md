@@ -101,6 +101,73 @@ The order is the shared ledger's topological order (`ci/migration_ledger.build_m
 - No two lanes touch the same table. The only shared table is `sys_job`, used by two migrations from the same lane, l8.
 - On the clean rig DB: `build_schema` replayed 300 migrations after the snapshot with **0 migration-stage problems**, ending at 457 tables. I read back the new tables and the new `club_role_assignment.customer_phone_visible` column.
 
+## Release order and rollback (Round 10, f1 item 9; supersedes the list above for deployment)
+
+The list above is the Round 7 snapshot. Round 10 moved the two `sys_job` inserts out of the l8 files and added
+new files. Migrations new against master `c6eac3b8c` as of Round 10 f1-A, in ledger order (`ci/migration_ledger.py`):
+
+| Ledger order | File | Phase | What it changes on production data |
+|---|---|---|---|
+| 77 | `migration_20261102_merchant_industry_categories.sql` | pre-deploy | `sys_category`: unused type-1 merchant-like rows become type 6; inserts missing type-6 merchant industries |
+| 78 | `migration_20261103_content_safety_recheck.sql` | pre-deploy | new table `content_safety_recheck` only (no `sys_job` any more) |
+| 79 | `migration_20261103_sensitive_content_library.sql` | pre-deploy | 4 new `content_sensitive_*` tables, 1 `sys_config` row, 2 `sys_menu` rows (no `sys_job` any more) |
+| 80 | `migration_20261104_content_safety_jobs_post_deploy.sql` | **POST_DEPLOY** | 2 `sys_job` rows, both paused (`status='1'`) |
+| 81 | `migration_20261104_merchant_industry_categories_readback.sql` | pre-deploy | read-only assertion |
+| 109 | `migration_20261102_club_session_gather_point.sql` | pre-deploy | `cms_activity` lat/lng backfill for open future club sessions with no coordinates |
+| 110 | `migration_20261104_club_session_gather_point_readback.sql` | pre-deploy | read-only assertion |
+| 390 | `migration_20261103_settlement_rule_three_percent.sql` | pre-deploy | generic `settlement_rule` rows to 3% / 97% / 0 |
+| 395 | `migration_20261102_club_checkin_phone_visible.sql` | pre-deploy | new column `club_role_assignment.customer_phone_visible` |
+| 428 | `migration_20261104_merchant_activity_limit.sql` | pre-deploy | `user_permission` merchant default row: `can_create_event=1, max_events=3` |
+
+`migration_20261101_author_write_receipt.sql` is on master already; it is part of this release only if production
+does not have it yet (r1 F4: the rollback jar `014fc0d83` predates it).
+
+### Deploy order
+
+1. While the **old jar keeps running**, apply every pre-deploy file above in ledger order (never `ls` order), with the
+   runner (`ci/run_migration.py`), each runner assertion passing. None of them touches `sys_job`, so the old jar's
+   scheduler keeps running.
+2. Deploy and start the new jar. Wait for it to be healthy (`Started RuoYiApplication`, `/actuator/health` UP).
+3. Only then apply `migration_20261104_content_safety_jobs_post_deploy.sql`. It registers
+   `contentSafetyRecheckTask.run()` and `sensitiveContentRescanTask.run()` **paused**. An operator enables them in
+   the admin job page after reading them back.
+
+Why the post-deploy step must wait: `SysJobServiceImpl.init` (startup) and `MySqlSchedulerCoordinator` (every 2 s)
+validate the bean of every `sys_job` row whatever its status. A row naming a bean the running jar does not have
+stops that jar's whole scheduler (r1 F2) and stops the old jar from booting (r1 F1).
+
+### Rollback to the old jar
+
+1. Stop the new jar.
+2. **Before starting the old jar**, delete the two rows:
+   `DELETE FROM sys_job WHERE invoke_target IN ('contentSafetyRecheckTask.run()', 'sensitiveContentRescanTask.run()');`
+3. Start the old jar. The pre-deploy schema changes stay; the old jar boots and serves on them.
+4. Going forward again later: start the new jar, then re-run the post-deploy file (idempotent; the tasks come back paused).
+
+### Rehearsal (f1-A, real jars, scratch MySQL 8.0.45 + Redis on loopback)
+
+Old jar built from `origin/master` `c6eac3b8c` (git archive); new jar from the candidate tree with these changes.
+Baseline: master's own `build_schema.py` + `seed_fixtures.py`, plus master's three post-deploy job files (production has
+those), plus fictional rows (two club sessions, generic 10% `settlement_rule` rows). Evidence in
+`proof/round10-f1a-release/` (shell times in `steps.log` are UTC; app log times are +08:00).
+
+| Step | Result | Evidence |
+|---|---|---|
+| Old jar running, scheduler active | PASS: jobs logged at 16:45:00 | `old-1.excerpt.log` |
+| A. Pre-deploy files applied while the old jar runs | PASS: all assertions `readback=1`; 9801 filled, ended 9802 untouched; merchant 1/3; 3% rules; 0 new `sys_job` rows | `steps.log`, `readback-A.txt` |
+| B2. Old jar keeps its scheduler | PASS: runs at 16:46 and 16:47, no 「调度主会话不可用」 | `joblog-B2.txt` |
+| Negative control: post-deploy file applied while the old jar runs | reproduces r1 F2 within 1 s (「调度主会话不可用」); deleting the two rows brings the scheduler back (16:47:15 started, runs at 16:48) | `old-1.excerpt.log` |
+| B1. Old jar boots on the migrated schema | PASS: ready in 50 s, no job-target error | `old-2.excerpt.log` |
+| C. New jar comes up | PASS: ready in 40 s | `new-1.excerpt.log` |
+| D. Post-deploy file applied with the new jar live | PASS: both rows `status=1`; re-run idempotent (still 2 rows); no run of either task across their 16:51:21 / 16:52:33 slots while 8 other jobs ran; no scheduler error | `readback-D.txt`, `joblog-D.txt` |
+| Negative control: old jar with the two rows present | fails to boot: 「任务调用目标或参数无效」 (r1 F1) | `old-3-neg.excerpt.log` |
+| E. Rollback: delete the two rows, start the old jar | PASS: ready in 50 s | `old-4-rollback.excerpt.log` |
+| Forward again: new jar + re-run post-deploy | PASS: rows back, paused | `new-2.excerpt.log`, `steps.log` |
+| Negative controls for the two read-back files | gather point: session 9801's coordinates cleared → `readback=(0,)`, exit 1. Categories: type-6 rows hidden and ten type-1 「花艺N」 rows added → the old l5 assertion still passes (`1`), the new one fails `readback=(0,)`. Both pass again once restored. | run log in the f1-A report |
+
+Not covered: production's real applied state and row contents (owner's read-only precheck); a slow or failed deploy
+of the new jar under real traffic; enabling the two tasks and their actual runs.
+
 ## Test counts per lane, before and after
 
 From `proof/lane-test-counts.py`: for each lane, the test files it added or changed, counted in the lane's own commit and in the merged tree.

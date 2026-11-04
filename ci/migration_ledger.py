@@ -23,7 +23,9 @@ from sql_splitter import split_statements  # noqa: E402
 MANAGED_DIR = "chengyinhub-admin/sql"
 MIGRATION_PREFIX = "migration_"
 # Only these explicitly approved new registration repairs are deferred; historical phases remain immutable.
-POST_DEPLOY_MIGRATIONS = {"20261012_merchant_commerce_reconcile_job", "20261012_monitor_missing_jobs", "20261012_roam_presence_revoke_job"}
+# 20261104_content_safety_jobs_post_deploy: ROUND10 r1 F1/F2 - two sys_job rows whose beans only the new jar has.
+POST_DEPLOY_MIGRATIONS = {"20261012_merchant_commerce_reconcile_job", "20261012_monitor_missing_jobs", "20261012_roam_presence_revoke_job",
+                          "20261104_content_safety_jobs_post_deploy"}
 BOOTSTRAP_SQL = {
     "sql/quartz.sql",
     "sql/ry_20250522.sql",

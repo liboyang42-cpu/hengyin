@@ -1,7 +1,11 @@
 -- Round5D(2026-11-03 owner):自建敏感内容库,自动识别敏感词与已知违规图片。叠加在微信机审之前,不替代微信。
--- 只新建 4 张表 + 注册 1 个 Quartz 任务(暂停)+ 1 个开关(默认只报告)+ 后台菜单(不授权给任何角色)。
+-- 只新建 4 张表 + 1 个开关(默认只报告)+ 后台菜单(不授权给任何角色)。
 -- 不改、不删、不回填既有表。词表不随仓库提交:上线后由管理员在后台导入。可重复执行。
--- 阶段:先跑本文件,再部署含 sensitiveContentRescanTask 的新 jar;任务注册为暂停,新 jar 读回后由运维启用。
+-- 阶段:先跑本文件(旧 jar 不读这些表/开关/菜单,照常运行),再部署含 sensitiveContentRescanTask 的新 jar。
+-- 2026-11-04(ROUND10 r1 F1/F2,本文件尚未进 master、未发布,按业主批准原地修改):
+--   Quartz 注册(sys_job)已移到 migration_20261104_content_safety_jobs_post_deploy.sql,新 jar 上线后才跑。
+--   原因:SysJobServiceImpl.init 与调度主会话每 2 秒校验全部 sys_job 的 bean,旧 jar 没有这个 bean ——
+--   先插行会让正在运行的旧 jar 停掉全部定时任务,回滚到旧 jar 时启动失败。
 
 CREATE TABLE IF NOT EXISTS content_sensitive_word (
   id BIGINT NOT NULL AUTO_INCREMENT,
@@ -63,16 +67,6 @@ SELECT '敏感词存量复查自动下架', 'content.sensitive.rescan.remove', '
        'false=只报告命中(默认,owner 看过一轮结果前保持);true=命中自动下架,走内容安全自动下架同一路径'
 WHERE NOT EXISTS (SELECT 1 FROM sys_config WHERE config_key = 'content.sensitive.rescan.remove');
 
-INSERT INTO sys_job
-  (job_name, job_group, invoke_target, cron_expression, misfire_policy, concurrent, status,
-   create_by, create_time, remark)
-SELECT '敏感词存量复查', 'DEFAULT', 'sensitiveContentRescanTask.run()', '33 2/10 * * * ?',
-       '3', '1', '1', 'admin', NOW(),
-       '词库变化后复查公开文本;每轮最多 500 条;默认只报告(content.sensitive.rescan.remove)'
-WHERE NOT EXISTS (
-  SELECT 1 FROM sys_job WHERE invoke_target = 'sensitiveContentRescanTask.run()'
-);
-
 -- 后台菜单:挂在审核中心下,只建菜单与按钮权限,不授权给任何角色(由 owner 分配)。
 DROP TEMPORARY TABLE IF EXISTS tmp_cy_sensitive_menu_guard;
 CREATE TEMPORARY TABLE tmp_cy_sensitive_menu_guard(id INT NOT NULL PRIMARY KEY) ENGINE=InnoDB;
@@ -91,6 +85,5 @@ DROP TEMPORARY TABLE tmp_cy_sensitive_menu_guard;
 SELECT (SELECT COUNT(*) FROM information_schema.tables
         WHERE table_schema = DATABASE() AND engine = 'InnoDB'
           AND table_name IN ('content_sensitive_word','content_sensitive_allow','content_sensitive_image','content_sensitive_hit')) = 4
-  AND (SELECT COUNT(*) FROM sys_job WHERE invoke_target = 'sensitiveContentRescanTask.run()') = 1
   AND (SELECT COUNT(*) FROM sys_config WHERE config_key = 'content.sensitive.rescan.remove') = 1
   AND (SELECT COUNT(*) FROM sys_menu WHERE perms IN ('business:sensitive:list','business:sensitive:edit')) = 2 AS assertion_ok;

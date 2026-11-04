@@ -1,9 +1,12 @@
 -- Round5C(2026-11-03 owner):内容安全全自动。机审没给出结论(检测关闭/繁忙/缺 openid/异常)或先审带图的内容,
 -- 不再等人工:进本表自动复检,通过自动发布,违规或微信 suggest=review 自动驳回下架并通知作者,
 -- 重试有界(默认 12 次,约 16.5 小时),耗尽仍不公开并通知作者。复检期间内容只有作者可见。
--- 只新建一张队列表 + 注册一个 Quartz 任务;不改、不删、不回填既有表。
--- 阶段:先跑本文件(建表 + 注册任务),再部署含 contentSafetyRecheckTask 的新 jar;
--- 任务注册为暂停(status='1'),新 jar 部署并读回后由运维在后台启用。可重复执行。
+-- 只新建一张队列表;不改、不删、不回填既有表。可重复执行。
+-- 阶段:先跑本文件(建表,旧 jar 不读这张表,照常运行),再部署含 contentSafetyRecheckTask 的新 jar。
+-- 2026-11-04(ROUND10 r1 F1/F2,本文件尚未进 master、未发布,按业主批准原地修改):
+--   Quartz 注册(sys_job)已移到 migration_20261104_content_safety_jobs_post_deploy.sql,新 jar 上线后才跑。
+--   原因:SysJobServiceImpl.init 与调度主会话每 2 秒校验全部 sys_job 的 bean,旧 jar 没有这个 bean ——
+--   先插行会让正在运行的旧 jar 停掉全部定时任务,回滚到旧 jar 时启动失败。
 
 CREATE TABLE IF NOT EXISTS content_safety_recheck (
   id BIGINT NOT NULL AUTO_INCREMENT,
@@ -25,19 +28,8 @@ CREATE TABLE IF NOT EXISTS content_safety_recheck (
   KEY idx_content_safety_recheck_biz (biz_type, biz_id, state)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='机审未完成内容的自动复检队列(Round5C)';
 
-INSERT INTO sys_job
-  (job_name, job_group, invoke_target, cron_expression, misfire_policy, concurrent, status,
-   create_by, create_time, remark)
-SELECT '内容安全自动复检', 'DEFAULT', 'contentSafetyRecheckTask.run()', '21 1/5 * * * ?',
-       '3', '1', '1', 'admin', NOW(),
-       '每 5 分钟一轮，每轮最多 50 条；通过自动发布，违规/耗尽自动驳回并通知作者'
-WHERE NOT EXISTS (
-  SELECT 1 FROM sys_job WHERE invoke_target = 'contentSafetyRecheckTask.run()'
-);
-
 -- runner: assert=scalar-true
 SELECT (SELECT COUNT(*) FROM information_schema.tables
         WHERE table_schema = DATABASE() AND table_name = 'content_safety_recheck' AND engine = 'InnoDB') = 1
   AND (SELECT COUNT(*) FROM information_schema.columns
-        WHERE table_schema = DATABASE() AND table_name = 'content_safety_recheck') = 14
-  AND (SELECT COUNT(*) FROM sys_job WHERE invoke_target = 'contentSafetyRecheckTask.run()') = 1 AS assertion_ok;
+        WHERE table_schema = DATABASE() AND table_name = 'content_safety_recheck') = 14 AS assertion_ok;
