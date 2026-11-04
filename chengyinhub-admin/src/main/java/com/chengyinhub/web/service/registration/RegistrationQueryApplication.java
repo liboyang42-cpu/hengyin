@@ -42,8 +42,6 @@ public class RegistrationQueryApplication {
     private IRefundService refundService;
     @Autowired
     private com.chengyinhub.business.service.support.RegistrationCancellationReadService cancellationReadService;
-    @Autowired(required = false)
-    private com.chengyinhub.business.mapper.CmsRegistrationMapper cmsRegistrationMapper;
     @Autowired
     private ICmsTopicService topicService;
     @Autowired
@@ -695,7 +693,7 @@ public class RegistrationQueryApplication {
      * 多票单整单退、现金只挂首单且可能已有同单退款,不在读侧推算,页面只讲规则。整页一次 group by,不逐行查。
      */
     private void attachSoleTicketCancelAmounts(List<CmsRegistration> rows) {
-        if (rows == null || cmsRegistrationMapper == null) return;
+        if (rows == null) return;
         java.util.Set<String> parents = new java.util.HashSet<>();
         for (CmsRegistration row : rows) {
             if (row != null && StringUtils.isNotEmpty(row.getParentOrderNo())
@@ -703,7 +701,7 @@ public class RegistrationQueryApplication {
         }
         if (parents.isEmpty()) return;
         java.util.Map<String, Long> counts = new java.util.HashMap<>();
-        for (java.util.Map<String, Object> c : cmsRegistrationMapper.countByParentOrderNos(parents)) {
+        for (java.util.Map<String, Object> c : registrationService.countByParentOrderNos(parents)) {
             Object no = c.get("parentOrderNo"), cnt = c.get("cnt");
             if (no != null && cnt instanceof Number) counts.put(String.valueOf(no), ((Number) cnt).longValue());
         }

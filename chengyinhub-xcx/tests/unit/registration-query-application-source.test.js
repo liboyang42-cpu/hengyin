@@ -71,7 +71,9 @@ test('application leaf calls remain the exact existing read ports without QR/ini
     'selectMmsMerchantByMemberId', 'selectSysCategoryListByIds', 'listEntitlements', 'selectUmsMemberById',
     'selectRefundList', 'attachManualRefundInfo', 'read', 'isTopicOwner', 'require', 'selectEffectiveOrdersByTopicId',
     // 2026-11-02 走查 l2-explore:探索票进度(P-03)、俱乐部主办名(P-20)、城市定向通关勋章(P-22),均为只读端口
-    'isExploreCompleted', 'selectClubById', 'selectOne']);
+    'isExploreCompleted', 'selectClubById', 'selectOne',
+    // 第十轮 f1(j1 F7):取消确认退回额只对单票单成立,整页一次按父单号数张数(只读)
+    'countByParentOrderNos']);
   const calls = [...application.matchAll(/\b\w+(?:Service|Mapper)\.(\w+)\(/g)].map(match => match[1]);
   assert.ok(calls.length >= 20); for (const call of calls) assert.ok(permitted.has(call), call);
 });

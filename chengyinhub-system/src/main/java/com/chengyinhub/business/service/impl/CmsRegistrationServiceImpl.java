@@ -236,6 +236,11 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         return cmsRegistrationMapper.selectCountGroupByDate(ownerType, ownerId);
     }
 
+    @Override
+    public java.util.List<java.util.Map<String, Object>> countByParentOrderNos(java.util.Collection<String> parentOrderNos) {
+        return cmsRegistrationMapper.countByParentOrderNos(parentOrderNos);
+    }
+
     /**
      * 查询活动/主题报名
      *
