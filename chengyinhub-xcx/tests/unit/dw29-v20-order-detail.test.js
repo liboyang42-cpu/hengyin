@@ -51,7 +51,7 @@ test('V-20 票价显示真实单价，免费单没有快照时是 ¥0 而不是�
   vm = load({ id: 6, ownerType: 1, registrationStatus: 2, paymentStatus: 2, ticketPrice: 39.9, payableAmount: 39.9, wechatPaymentAmount: 39.9, cmsTopic: { name: 'paid' } })
   assert.equal(vm.data.ticketPriceShown, 39.9)
   const wxml = read(DIR + 'index.wxml')
-  assert.match(wxml, /<text class="orow-k">票价<\/text>\s*<text class="orow-v">\{\{money\.amount\(ticketPriceShown\)\}\} × \{\{orderQty\}\}<\/text>/)
+  assert.match(wxml, /<text class="orow-k">票价<\/text>\s*<text class="orow-v">\{\{money\.amount2?\(ticketPriceShown\)\}\} × \{\{orderQty\}\}<\/text>/)
 })
 
 // j2 F-06(第十轮):V-20 去掉的是「查看票夹」;已付进行中的订单底部改出「开始游戏」直进 play(不经票夹),

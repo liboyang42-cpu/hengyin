@@ -74,7 +74,6 @@
                       steps="{{saveSteps}}" current="{{saveSucceeded ? 1 : 0}}"
                       title="{{saveSucceeded ? '资料已保存' : '正在保存资料'}}"
                       sub="请勿离开本页" />
-  <!-- j5 L4:被拒(内容不合规等)重发同样内容没用,只有网络失败才给「重试保存」 -->
   <cy-inline-error wx:if="{{saveError}}" title="资料没有保存" sub="{{saveError}}"
                    action="{{saveRetryable ? '重试保存' : ''}}" bind:action="saveInfo" />
 </view>
