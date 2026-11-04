@@ -48,7 +48,6 @@
       <view class="team-member">
         <view class="team-member-main">
           <view class="team-member-name">公开招募</view>
-          <view class="team-member-role">{{joinModePublic ? '陌生人可在附近队伍里申请加入' : '只有拿到邀请链接的人能加入'}}</view>
         </view>
         <cy-switch checked="{{joinModePublic}}" disabled="{{joinModeSaving}}"
                    bindchange="onJoinModeChange" accessibility-label="公开招募" />
@@ -111,7 +110,6 @@
     </view>
     <view class="team-note team-report" wx:if="{{!leader}}" bindtap="openReport" aria-role="button" aria-label="举报这支队伍"
           hover-class="cy-pressed" hover-stay-time="80">举报队伍</view>
-    <view class="team-note" wx:if="{{joined}}">退队不退款，退票请到订单</view>
   </block>
   </block>
 </view>

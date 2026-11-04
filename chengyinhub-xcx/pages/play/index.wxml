@@ -473,7 +473,6 @@
     </view>
   </view>
   <view class="st-intro__go" bindtap="startStoryIntro" aria-role="button" aria-label="开始游戏" hover-class="cy-pressed" hover-stay-time="80">开始游戏</view>
-  <text class="st-intro__tip">建议戴耳机，打开声音</text>
 </view>
 <!-- 初始状态(原型 statsIntro,2026-09-24):建档交上去之后,列出这一局带着出发的数值 -->
 <view class="st-stats {{startState.out ? 'st-stats--out' : ''}}" wx:if="{{startState.show}}">

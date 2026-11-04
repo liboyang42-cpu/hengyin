@@ -21,8 +21,8 @@ const GROUPS = {
     ['pages/club/group-code/index.wxml',
       '团码仅限本场次；组队邀请码不能核销'],
     ['pages/club/group-code/index.wxml', 'title="活动核验团码"'],
-    ['pages/team/join/index.wxml',
-      '邀请码不能用于签到或核销，入队不代替报名或购票'],
+    // 第十轮 f3 第 5 项(j2 F-24):入队页这句说明按 owner「删说明小字」规则撤掉(旧锁定是被取代的旧决定);
+    // 团码页的「组队邀请码不能核销」仍在,语义不丢。
   ],
   'topic-comment-scope': [
     ['pages/topic/index/index.wxml',

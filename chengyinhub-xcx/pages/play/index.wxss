@@ -1872,7 +1872,6 @@ page { background: var(--cy-color-bg-page); }
 .st-intro__s{ font-size:25rpx; color:rgba(255,255,255,.6); } /* ds-ok 深底说明字 */
 .st-intro__go{ height:104rpx; border-radius:var(--cy-radius-pill); display:flex; align-items:center; justify-content:center; /* ds-ok 胶囊按钮,同 .pv-ending__go */
   background:#FFFFFF; color:#000000; font-size:31rpx; font-weight:700; } /* ds-ok 玩家主按钮=反色中性 */
-.st-intro__tip{ margin-top:23rpx; text-align:center; font-size:21rpx; color:rgba(255,255,255,.45); } /* ds-ok 深底小字 */
 
 /* 初始状态(原型 statsIntro,2026-09-24):与开场页同一张黑底,一行一个数值,底部同一颗白色主按钮 */
 .st-stats{ position:fixed; left:0; right:0; top:0; bottom:0; z-index:117; box-sizing:border-box; /* ds-ok 压过故事流,低于梦层 */
