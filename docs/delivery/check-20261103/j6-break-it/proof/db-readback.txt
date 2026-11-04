@@ -1,0 +1,24 @@
+id	member_id	payment_status	registration_status	payable_amount	transaction_id
+74	9009	2	2	69.00	E2E-TXN-74
+75	990013	1	1	69.00	NULL
+76	990013	4	3	69.00	RIG-TXN-76
+77	990014	2	2	69.00	RIG-TXN-77
+78	990015	2	2	69.00	RIG-TXN-78
+remaining_inventory
+16
+id	wx_open_id	create_time
+990010	walk-guest-y5sx3t	2026-11-04 12:33:35
+990011	walk-guest-xqn5bl	2026-11-04 12:34:05
+990012	walk-guest-qwk3kl	2026-11-04 12:37:21
+990013	walk-player-1	2026-11-04 12:37:39
+990014	walk-player-2	2026-11-04 12:37:39
+990015	walk-player-3	2026-11-04 12:37:39
+990016	walk-guest-2m36hi	2026-11-04 12:40:52
+990017	walk-guest-vem3az	2026-11-04 12:41:12
+990018	walk-guest-znpmyf	2026-11-04 12:59:23
+990019	walk-guest-onw7dl	2026-11-04 13:00:18
+990020	walk-guest-5790ra	2026-11-04 13:01:43
+990021	walk-guest-nni7gg	2026-11-04 13:02:18
+990022	walk-guest-mzeoa3	2026-11-04 13:03:53
+990023	walk-guest-om58cw	2026-11-04 13:04:04
+990024	walk-guest-pl0gon	2026-11-04 13:04:13

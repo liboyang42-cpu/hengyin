@@ -1,0 +1,4 @@
+[{"wait":3500},{"tap":["加入",{"exact":true}]},{"wait":2500},{"relaunch":"/pages/activity/detail/index?id=13"},{"wait":3000},{"scroll":2000},{"tap":"立即报名"},{"wait":2500},{"tap":"参与人信息"},{"wait":2000},
+{"type":["input[placeholder=\"输入姓名\"]","测试乙"]},{"type":["input[placeholder=\"输入手机号\"]","13700000002"]},{"tap":"保存参与人信息"},{"wait":3000},{"tap":"同意将姓名、手机号提供给主办方"},{"wait":500},{"tap":["付款",{"exact":true}]},{"wait":1500},{"tap":["13700000002",{"nth":1}]},{"wait":1200},{"net":1},
+{"offline":true},{"pay":"success"},{"tap":["付款",{"exact":true}]},{"wait":1200},{"tap":["继续下单",{"exact":true}]},{"wait":1000},{"shot":"80-p2-pay-offline-1s"},{"wait":5000},{"shot":"81-p2-pay-offline-6s"},{"text":500},{"net":1},
+{"offline":false},{"wait":500},{"tap":["付款",{"exact":true}]},{"wait":1200},{"tap":["继续下单",{"exact":true}]},{"wait":6000},{"route":1},{"shot":"82-p2-pay-after-network-back"},{"text":400},{"net":1}]
