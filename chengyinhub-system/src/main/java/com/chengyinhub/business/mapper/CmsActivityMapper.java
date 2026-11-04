@@ -125,6 +125,9 @@ public interface CmsActivityMapper
      */
     public int selectCmsActivityNumByMemberId(Long member_id);
 
+    /** 活动配额占用数:未删除、未取消、未结束(end_date 为空视为未结束)。 */
+    public int selectActivityQuotaUsedByMemberId(@Param("memberId") Long memberId);
+
     /** 生效 club 合作单下仍无 topic+club 带队场次的资损告警差异。 */
     List<ClubSessionGapVO> selectClubOrderTopicsWithoutClubSession();
 

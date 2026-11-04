@@ -867,6 +867,11 @@ public class CmsActivityServiceImpl implements ICmsActivityService
     public int selectCmsActivityNumByMemberId(Long member_id){
         return cmsActivityMapper.selectCmsActivityNumByMemberId(member_id);
     }
+
+    @Override
+    public int selectActivityQuotaUsedByMemberId(Long memberId){
+        return cmsActivityMapper.selectActivityQuotaUsedByMemberId(memberId);
+    }
     /**
      * 活动发布
      * @param request CmsActivityPublishRequest

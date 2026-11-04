@@ -183,4 +183,12 @@ public interface ICmsActivityService
      * @return 结果
      */
     public int selectCmsActivityNumByMemberId(Long member_id);
+
+    /**
+     * 活动配额占用数(商家/俱乐部「同时存在」上限的口径):已结束、已取消的不算。
+     *
+     * @param memberId 主办主体会员ID
+     * @return 占用数
+     */
+    public int selectActivityQuotaUsedByMemberId(Long memberId);
 }

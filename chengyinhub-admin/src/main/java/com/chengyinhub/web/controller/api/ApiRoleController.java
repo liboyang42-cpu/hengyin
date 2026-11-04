@@ -124,7 +124,8 @@ public class ApiRoleController extends BaseController {
         usage.put("themes", cmsTopicService.selectCmsTopicNumByMemberId(memberId));
         // 在架公开主题数(user_status=1,非 selfPlay):发布能力卡据此算「剩余额度=maxThemes-themesOnline」
         usage.put("themesOnline", cmsTopicService.selectOnlineThemeNumByMemberId(memberId, null));
-        usage.put("events", cmsActivityService.selectCmsActivityNumByMemberId(memberId));
+        // 与 QuotaServiceImpl 的活动上限同口径:已结束、已取消的不算
+        usage.put("events", cmsActivityService.selectActivityQuotaUsedByMemberId(memberId));
         usage.put("coupons", smsCouponService.selectSmsCouponNumByMemberId(memberId));
 
         Map<String, Object> data = new HashMap<>();
