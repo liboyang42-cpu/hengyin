@@ -64,7 +64,7 @@ function geocode(src) {
   if (!address || !app || typeof app.sendRequest !== 'function') return Promise.resolve(null);
   return new Promise((resolve) => {
     app.sendRequest({
-      url: '/api/map/geocode', method: 'POST', data: { address, region: text(src.city) }, hideLoading: true, silentError: true,
+      url: '/api/map/geocode', method: 'POST', data: { address, region: text(src.city) }, hideLoading: true, autoErrorToast: false,
       success: (res) => {
         const c = res && (res.code === 200 || res.code === '200') ? coords(res.data) : null;
         if (!c) { missed(resolve); return; }
