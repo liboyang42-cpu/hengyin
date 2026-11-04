@@ -21,7 +21,8 @@ function amount(value) {
 }
 function isIncome(row) { return !!row && Number(row.changeType) === 1; }
 function sameMonth(d, now) { return !!d && d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth(); }
-function sourceOf(row) { return SOURCE[Number(row && row.eventType)] || OTHER; }
+// 活动结算给商户的分润落 eventType=3 收入(3 的支出才是提现),按活动分润归类,不再落「其他收入」(check-1104 j1 F13)
+function sourceOf(row) { return (Number(row && row.eventType) === 3 && isIncome(row) ? SOURCE[2] : SOURCE[Number(row && row.eventType)]) || OTHER; }
 
 /** 本月收入:合计 + 最近几条(倒序) */
 function monthIncome(rows, now, limit) {

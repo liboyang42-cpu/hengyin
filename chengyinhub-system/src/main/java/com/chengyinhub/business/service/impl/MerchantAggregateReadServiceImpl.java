@@ -579,7 +579,7 @@ public class MerchantAggregateReadServiceImpl implements IMerchantAggregateReadS
         result.put("windowDays", windowDays);
         Map<String, Object> window = new LinkedHashMap<>();
         window.put("timezone", MARKETING_TIMEZONE.getId());
-        window.put("basis", "COMPLETE_CALENDAR_DAYS");
+        window.put("basis", MARKETING_WINDOW_BASIS);
         window.put("previousStartInclusive", previousStart.getTime());
         window.put("currentStartInclusive", currentStart.getTime());
         window.put("endExclusive", endExclusive.getTime());
@@ -606,12 +606,17 @@ public class MerchantAggregateReadServiceImpl implements IMerchantAggregateReadS
         return result;
     }
 
+    /** 近 N 个自然日,含今天(Asia/Shanghai)。 */
+    static final String MARKETING_WINDOW_BASIS = "DAYS_INCL_TODAY";
+
     static MarketingWindow resolveMarketingWindow(int windowDays, Clock clock) {
         if (windowDays != 7 && windowDays != 30) {
             throw new IllegalArgumentException("windowDays仅支持7或30");
         }
         LocalDate today = clock.instant().atZone(MARKETING_TIMEZONE).toLocalDate();
-        ZonedDateTime endExclusive = today.atStartOfDay(MARKETING_TIMEZONE);
+        // check-1104 p2 F-2:窗口含今天(到明天 0 点为止),与店铺参谋 / 核销台账同一规则;
+        // 原先截到今天 0 点,当天核销在营销页恒为 0。
+        ZonedDateTime endExclusive = today.plusDays(1).atStartOfDay(MARKETING_TIMEZONE);
         ZonedDateTime currentStart = endExclusive.minusDays(windowDays);
         ZonedDateTime previousStart = currentStart.minusDays(windowDays);
         return new MarketingWindow(

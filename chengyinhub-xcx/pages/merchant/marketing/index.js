@@ -45,7 +45,7 @@ function entriesForAccess(access) {
   });
 }
 
-// 4-10(S22):hero 数字来自 analytics.stages 的**窗口**计数(近 7/30 天完整自然日),
+// 4-10(S22):hero 数字来自 analytics.stages 的**窗口**计数(近 7/30 天,含今天),
 // 切窗口数字就变 —— 文案必须跟着窗口写「近 N 天报名」,写「累计」就是在说假话。
 function heroWindowLabel(windowDays) {
   return '近 ' + (Number(windowDays) === 7 ? 7 : 30) + ' 天报名';

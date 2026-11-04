@@ -73,6 +73,27 @@
         order by create_time desc, id desc
     </select>
 
+    <!-- check-1104 j1 F13:商家自有活动的验票(报名 verification_status=1)。归属 = 活动创建主体 a.member_id。
+         金额取该报名商家方的 settlement_detail(0 待结算 / 1 已结算;退款作废的 2 不取)。只读。 -->
+    <select id="selectActivityTicketScansByMerchant" resultType="com.chengyinhub.business.domain.vo.MerchantActivityTicketScan">
+        select r.id as registrationId, a.id as activityId, a.topic_id as topicId,
+               coalesce(a.name, r.activity_title) as activityTitle, r.ticket_name as ticketName,
+               r.real_name as realName, r.verification_time as verifiedAt,
+               sd.settlement_amount as settlementAmount, sd.status as settlementStatus
+        from cms_registration r
+        join cms_activity a on a.id = r.owner_id
+        left join settlement_detail sd on sd.source_type = 'registration' and sd.source_id = r.id
+             and sd.receiver_type = 'merchant' and sd.status in (0, 1)
+        where r.owner_type = 2
+          and a.member_id = #{merchantId}
+          and r.verification_status = 1
+          and r.verification_time is not null
+        <if test="registrationId != null">
+          and r.id = #{registrationId}
+        </if>
+        order by r.verification_time desc, r.id desc
+    </select>
+
     <select id="selectByMerchantAndId" resultMap="RedemptionResult">
         <include refid="selectRedemptionVo"/>
         where merchant_id = #{merchantId}
