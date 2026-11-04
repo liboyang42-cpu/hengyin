@@ -5,9 +5,9 @@
        markers="{{scene === 'explore' ? mapMarkers : markers}}"
        polyline="{{lines}}" polygons="{{mapPolygons}}"
        circles="{{scene === 'explore' ? mapCircles : circles}}"
-       rotate="{{rotate}}" show-location="{{false}}" enable-rotate="{{false}}" enable-overlooking="{{false}}"
+       rotate="{{rotate}}" show-location="{{false}}" enable-rotate="{{false}}" enable-overlooking="{{false}}" skew="{{tilt3d ? skew3d : 0}}"
        enable-zoom="{{interactive}}" enable-scroll="{{interactive}}"
-       enable-poi="{{true}}" enable-building="{{false}}"
+       enable-poi="{{true}}" enable-building="{{tilt3d}}" enable-3D="{{tilt3d}}"
        subkey="{{subkey}}" layer-style="{{layerStyle}}"
        bindupdated="onUpdated" bindmarkertap="onMarkerTap" bindcallouttap="onCalloutTap"
        bindregionchange="onRegionChange" bindpoitap="onPoiTap">

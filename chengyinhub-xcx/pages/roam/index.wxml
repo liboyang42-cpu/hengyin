@@ -224,7 +224,7 @@
 <view class="map-stack">
   <free-map id="roamMap" class="rmap" scene="explore"
        center="{{center}}" scale="{{mapScale}}" show-controls="{{false}}"
-       subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}"
+       subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}" tilt3d="{{map3d}}"
        map-markers="{{markers}}" explore-pins="{{explorePins}}" map-polyline="{{polyline}}" map-polygons="{{fogOff ? noFogPolys : fogPolys}}" map-circles="{{sparkCircles}}"
        accessibility-label="{{roamMapA11y}}" reduced-motion="{{reducedMotion}}"
        bind:updated="onMapUpdated" bind:markertap="onMarkerTap" bind:regionchange="onRegionChange" bind:poitap="onPoiTap" />

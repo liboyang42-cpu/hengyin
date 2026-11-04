@@ -2,19 +2,22 @@
 'use strict';
 
 /*
- * 上传前把个性化地图 key 与样式序号填进「上传用的那份拷贝」(第九轮 m1 第 1 项)。
+ * 上传前把个性化地图 key 与四套样式序号填进「上传用的那份拷贝」(第九轮 m1 第 1 项;m4 第 2 项改为四套)。
  *
- * 仓库里的 utils/map-style.js 永远是 subkey: ''。本脚本只改 --dir 指向的拷贝,
+ * 仓库里的 utils/map-style.js 永远是 subkey: '' 且四个序号为 0。本脚本只改 --dir 指向的拷贝,
  * 拒绝改仓库本身,也不把 key 打印出来。
  *
  *   CY_MAP_SUBKEY        腾讯位置服务的个性化地图 key(整个小程序共用这一个)
- *   CY_MAP_LAYER_STYLE   玩家暗色样式在该 key 下的绑定序号(从 1 起)
- *   CY_MAP_LIGHT_STYLE   商家 / 编辑器浅色样式在同一 key 下的绑定序号
+ *   CY_MAP_STYLE_BLACK   black:漫游、附近、玩家搜索地图,星尘 / 末世 / 没设外观的主题(旧名 CY_MAP_LAYER_STYLE 仍认)
+ *   CY_MAP_STYLE_WHITE   white:商家与编辑器地图(旧名 CY_MAP_LIGHT_STYLE 仍认)
+ *   CY_MAP_STYLE_PAPER   paper:主题外观 纸本
+ *   CY_MAP_STYLE_2077    2077:主题外观 夜城
+ *   序号 = 该样式绑到这个 key 之后的序号(从 1 起)。
  *
  *   node scripts/release-map-style.js --dir <上传拷贝目录> [--require]
  *
- * --require:三项缺任何一项就失败(发布流水线用)。不带 --require 时三项全空 = 保持官方默认底图。
- * 只给了 key 而缺浅色序号永远失败:同一个 key 下商家地图会跟着变暗。
+ * --require:五项缺任何一项就失败(发布流水线用)。不带 --require 时全空 = 保持官方默认底图。
+ * 给了 key 却缺任何一个序号永远失败:缺的那种地图会落到别的样式上。
  */
 
 const fs = require('fs');
@@ -22,7 +25,13 @@ const path = require('path');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const STYLE_FILE = path.join('utils', 'map-style.js');
-const BLOCK = /const MAP_STYLE = \{\n  subkey: '[^'\n]*',\n  layerStyle: \d+,\n  lightLayerStyle: \d+,\n\};/;
+const BLOCK = /const MAP_STYLE = \{\n  subkey: '[^'\n]*',\n  black: \d+,\n  white: \d+,\n  paper: \d+,\n  cyber: \d+,\n\};/;
+const SLOTS = [
+  ['black', 'CY_MAP_STYLE_BLACK', 'CY_MAP_LAYER_STYLE'],
+  ['white', 'CY_MAP_STYLE_WHITE', 'CY_MAP_LIGHT_STYLE'],
+  ['paper', 'CY_MAP_STYLE_PAPER'],
+  ['cyber', 'CY_MAP_STYLE_2077'],
+];
 
 function parseArgs(argv) {
   const out = { dir: '', require: false };
@@ -35,37 +44,41 @@ function parseArgs(argv) {
 }
 
 function readEnv(env) {
-  return {
-    subkey: String(env.CY_MAP_SUBKEY || '').trim(),
-    layerStyle: String(env.CY_MAP_LAYER_STYLE || '').trim(),
-    lightLayerStyle: String(env.CY_MAP_LIGHT_STYLE || '').trim(),
-  };
+  const out = { subkey: String(env.CY_MAP_SUBKEY || '').trim() };
+  SLOTS.forEach(([field, name, legacy]) => {
+    out[field] = String(env[name] || (legacy ? env[legacy] : '') || '').trim();
+  });
+  return out;
 }
 
 function validate(values, requireAll) {
   const missing = [];
   if (!values.subkey) missing.push('CY_MAP_SUBKEY');
-  if (!values.layerStyle) missing.push('CY_MAP_LAYER_STYLE');
-  if (!values.lightLayerStyle) missing.push('CY_MAP_LIGHT_STYLE');
+  SLOTS.forEach(([field, name]) => { if (!values[field]) missing.push(name); });
   if (requireAll && missing.length) throw new Error('缺少环境变量: ' + missing.join(', '));
+  const anyStyle = SLOTS.some(([field]) => values[field]);
   if (!values.subkey) {
-    if (values.layerStyle || values.lightLayerStyle) throw new Error('给了样式序号却没有 CY_MAP_SUBKEY');
+    if (anyStyle) throw new Error('给了样式序号却没有 CY_MAP_SUBKEY');
     return null;
   }
-  if (missing.length) throw new Error('给了 CY_MAP_SUBKEY 但缺少: ' + missing.join(', ') + '(商家地图会跟着变暗)');
+  if (missing.length) throw new Error('给了 CY_MAP_SUBKEY 但缺少: ' + missing.join(', ') + '(缺的那种地图会落到别的样式上)');
   if (!/^[A-Za-z0-9-]{10,64}$/.test(values.subkey)) throw new Error('CY_MAP_SUBKEY 格式不对');
-  const dark = Number(values.layerStyle);
-  const light = Number(values.lightLayerStyle);
-  if (!Number.isInteger(dark) || dark < 1) throw new Error('CY_MAP_LAYER_STYLE 必须是从 1 起的整数');
-  if (!Number.isInteger(light) || light < 1) throw new Error('CY_MAP_LIGHT_STYLE 必须是从 1 起的整数');
-  if (dark === light) throw new Error('暗色与浅色样式序号相同');
-  return { subkey: values.subkey, layerStyle: dark, lightLayerStyle: light };
+  const out = { subkey: values.subkey };
+  const seen = {};
+  SLOTS.forEach(([field, name]) => {
+    const n = Number(values[field]);
+    if (!Number.isInteger(n) || n < 1) throw new Error(name + ' 必须是从 1 起的整数');
+    if (seen[n]) throw new Error(seen[n] + ' 与 ' + name + ' 序号相同');
+    seen[n] = name;
+    out[field] = n;
+  });
+  return out;
 }
 
 function render(source, style) {
   if (!BLOCK.test(source)) throw new Error(STYLE_FILE + ' 里找不到 MAP_STYLE 配置块');
-  return source.replace(BLOCK, "const MAP_STYLE = {\n  subkey: '" + style.subkey + "',\n  layerStyle: "
-    + style.layerStyle + ',\n  lightLayerStyle: ' + style.lightLayerStyle + ',\n};');
+  return source.replace(BLOCK, "const MAP_STYLE = {\n  subkey: '" + style.subkey + "',\n"
+    + SLOTS.map(([field]) => '  ' + field + ': ' + style[field] + ',\n').join('') + '};');
 }
 
 function assertUploadCopy(dir) {
@@ -87,13 +100,13 @@ function run(argv, env) {
   const before = fs.readFileSync(file, 'utf8');
   const after = render(before, style);
   fs.writeFileSync(file, after);
-  return { changed: true, file, layerStyle: style.layerStyle, lightLayerStyle: style.lightLayerStyle };
+  return { changed: true, file, black: style.black, white: style.white, paper: style.paper, cyber: style.cyber };
 }
 
 if (require.main === module) {
   try {
     const r = run(process.argv.slice(2), process.env);
-    if (r.changed) console.log('[map-style] 已写入上传拷贝: 暗色序号 ' + r.layerStyle + ' / 浅色序号 ' + r.lightLayerStyle);
+    if (r.changed) console.log('[map-style] 已写入上传拷贝: black ' + r.black + ' / white ' + r.white + ' / paper ' + r.paper + ' / 2077 ' + r.cyber);
     else console.log('[map-style] 未配置 key,保持官方默认底图');
   } catch (e) {
     console.error('[map-style] 失败: ' + e.message);

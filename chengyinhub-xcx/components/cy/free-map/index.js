@@ -2,6 +2,7 @@ const BRAND = '#FFFFFF';
 const { getPlayMapState } = require('../../../utils/play-state-contract.js');
 const { readFontScale, mapFontSize } = require('../../../utils/font-scale.js');
 const { drawPlayStateMarker, drawNumberedMarker } = require('../../../utils/play-marker-draw.js');
+const { toneLines, toneCircle, ROAM_3D } = require('../../../utils/map-style.js');
 // 保留 marker id(非真实 nodeId),onMarkerTap 需一并过滤,避免撞上真实 nodeId 误触发 pintap
 const PLAYER_MARKER_ID = 99999;
 const ARROW_MARKER_ID = 99998;
@@ -83,10 +84,15 @@ Component({
     // 用户在控制台建好暗色样式后,把拿到的 subkey/编号通过 pages/play 的 MAP_DARK 常量传入即可点亮暗色。
     subkey:     { type: String, value: '' },
     layerStyle: { type: Number, value: 1 },
+    // 第九轮 m4 第 2 项:底图是哪一套(black / white / paper / 2077;'' = 没配 key 的官方默认底图)。
+    // 浅底上把白线白圈换成墨色,见 utils/map-style.js toneLines / toneCircle。
+    tone: { type: String, value: '', observer() { this._mergeLines(); this._rebuild(); } },
+    // 第九轮 m4:漫游 16 级以上的 3D 楼块 + 俯仰(试做,默认关;开关在 utils/map-style.js ROAM_3D)
+    tilt3d: { type: Boolean, value: false },
     showExit: { type: Boolean, value: false },
     exitTop: { type: Number, value: 52 }
   },
-  data: { markers: [], circles: [], photoCallouts: [], teamCallouts: [], lines: [] },
+  data: { markers: [], circles: [], photoCallouts: [], teamCallouts: [], lines: [], skew3d: ROAM_3D.skew },
   lifetimes: {
     attached() {
       if (this.data.scene === 'explore') { this._icons = {}; return; }
@@ -99,7 +105,7 @@ Component({
     onExitTap() { this.triggerEvent('exit'); },
     _mergeLines() {
       const base = this.data.mapPolyline || [], trail = this.data.trailPolyline || [];
-      this.setData({ lines: trail.length ? base.concat(trail) : base });
+      this.setData({ lines: toneLines(trail.length ? base.concat(trail) : base, this.data.tone) });
     },
     // 五种点位态 + 玩家图标离屏生成；定位/离线/打卡失败由地图外的状态卡承载。
     async _genIcons() {
@@ -249,14 +255,12 @@ Component({
       (this.data.nodes || []).forEach(n => {
         const isTarget = !!(t && t.nodeId != null && String(t.nodeId) === String(n.nodeId));
         if (!this.data.compact && getPlayMapState(n.state, isTarget).key === 'candidate' && n.lat && n.lng && !isTarget) {
-          circles.push({ latitude: n.lat, longitude: n.lng, radius: 22,
-            fillColor: 'rgba(255,255,255,.16)', color: 'rgba(255,255,255,.4)', strokeWidth: 1 });
+          circles.push(Object.assign({ latitude: n.lat, longitude: n.lng, radius: 22, strokeWidth: 1 }, toneCircle('candidate', this.data.tone)));
         }
       });
       // 目标光晕:选中目标放大并加高亮外圈
       if (t && t.lat && t.lng) {
-        circles.push({ latitude: t.lat, longitude: t.lng, radius: 34,
-          fillColor: 'rgba(255,255,255,.22)', color: 'rgba(255,255,255,.55)', strokeWidth: 2 });
+        circles.push(Object.assign({ latitude: t.lat, longitude: t.lng, radius: 34, strokeWidth: 2 }, toneCircle('target', this.data.tone)));
       }
       this.setData({ markers: mk, circles, photoCallouts, teamCallouts });
       this._fit(mk);

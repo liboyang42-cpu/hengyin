@@ -95,10 +95,10 @@
     <view class="fx-story__compass {{navMap ? 'fx-story__radar is-big' : ''}}" bindtap="onNavTap" aria-role="button" aria-label="{{navMap ? '小地图,轻点打开大地图' : '罗盘,轻点切到地图'}}{{storyDistText ? ',下一站 ' + storyDistText : ''}}" hover-class="cy-pressed" hover-stay-time="80">
       <view class="compass__dial" wx:if="{{!navMap}}"><view class="compass__n">N</view><view class="compass__dot"></view></view>
       <view class="radar__disc radar__disc--big" wx:else>
-        <free-map class="fx-story__radar-map" wx:if="{{!storyMap && !chapterGate.show && !sessionToolsOpen && !previewEnding.show && !themeBackpackOpen && !album.show && !playKit.show && !casebook.show && !journeyRewards.show && !advancedPlay.show && screen !== 'gamePlay'}}"
+        <free-map class="fx-story__radar-map" wx:if="{{fmStyleReady && !storyMap && !chapterGate.show && !sessionToolsOpen && !previewEnding.show && !themeBackpackOpen && !album.show && !playKit.show && !casebook.show && !journeyRewards.show && !advancedPlay.show && screen !== 'gamePlay'}}"
                   nodes="{{fmNodes}}" player="{{fmPlayer}}" target="{{nextNode}}"
                   center="{{fmPlayer && fmPlayer.lat ? fmPlayer : (nextNode && nextNode.lat ? nextNode : fmCenter)}}" scale="16" rotate="{{navHeading}}"
-                  subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}" interactive="{{false}}" show-controls="{{false}}" show-photo-callouts="{{false}}"
+                  subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}" tone="{{fmTone}}" interactive="{{false}}" show-controls="{{false}}" show-photo-callouts="{{false}}"
                   trail-polyline="{{fmTrail}}" team-pins="{{fmTeamPins}}" accessibility-label="小地图" reduced-motion="{{reducedMotion}}" compact="{{true}}" />
         <view class="radar__me"></view>
         <view class="radar__n" style="transform:rotate({{-navHeading}}deg)"><text style="transform:rotate({{navHeading}}deg)">N</text></view>
@@ -137,9 +137,9 @@
   <!-- 罗盘小地图(2026-09-23):按需挂载的一层,不是常驻舞台。这一站 / 下一站 / 我 + 走过的线;
        下一站给「导航过去」(微信地图),站内不接管导航。 -->
   <view class="story-map" wx:if="{{storyMap}}">
-    <free-map class="story-map__map" wx:if="{{storyMap}}" nodes="{{fmNodes}}" player="{{fmPlayer}}" target="{{nextNode}}"
+    <free-map class="story-map__map" wx:if="{{storyMap && fmStyleReady}}" nodes="{{fmNodes}}" player="{{fmPlayer}}" target="{{nextNode}}"
               center="{{storyMapCenter}}" scale="16" map-polyline="{{fmPolyline}}" trail-polyline="{{fmTrail}}" team-pins="{{fmTeamPins}}" fit="{{!teamFollowKey}}" fit-padding="{{[140, 48, 240, 48]}}"
-              subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}" show-controls="{{false}}" show-photo-callouts="{{false}}"
+              subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}" tone="{{fmTone}}" show-controls="{{false}}" show-photo-callouts="{{false}}"
               reduced-motion="{{reducedMotion}}" />
     <view class="team-rail" wx:if="{{teamRail.length}}" style="top:{{chrome.contentTop + 56}}px">
       <view wx:for="{{teamRail}}" wx:key="key" class="team-rail__i {{teamFollowKey === item.key ? 'is-on' : ''}}" style="border-color:{{item.color}};"
@@ -1298,9 +1298,9 @@
   </view>
   <view class="finsheet__map" wx:if="{{!routeCard.on || newLifeOS.show}}">
     <image class="finsheet__map-fallback" wx:if="{{finishSnap}}" src="{{finishSnap}}" mode="aspectFit"></image>
-    <free-map class="finsheet__map-native" nodes="{{newLifeOS.show && newLifeOS.mapNodes.length ? newLifeOS.mapNodes : fmNodes}}" player="{{fmPlayer}}"
+    <free-map class="finsheet__map-native" wx:if="{{fmStyleReady}}" nodes="{{newLifeOS.show && newLifeOS.mapNodes.length ? newLifeOS.mapNodes : fmNodes}}" player="{{fmPlayer}}"
               center="{{fmCenter}}" scale="14" map-polyline="{{fmPolyline}}" fit="{{true}}" fit-padding="{{[112, 36, 36, 36]}}"
-              subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}"
+              subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}" tone="{{fmTone}}"
               show-controls="{{false}}" show-photo-callouts="{{false}}" interactive="{{false}}" />
     <view class="os-map-label" wx:if="{{newLifeOS.show}}">3km 生活圈 · {{newLifeOS.mapAnchors.length}} 个地点</view>
     <view class="finsheet__map-error" wx:if="{{finishSnapError}}" bindtap="retryRouteThumb" hover-class="cy-pressed" hover-stay-time="80">路线预览暂未生成 · 重试</view>

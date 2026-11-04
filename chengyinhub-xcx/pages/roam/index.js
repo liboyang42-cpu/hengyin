@@ -81,7 +81,7 @@ const { normalizeRunners } = require('../../utils/roam-runners.js');
 const presencePrivacy = require('../../utils/roam-presence-privacy.js');
 const { currentScene, exitDecision, popScene, pushScene } = require('../../utils/scene-stack.js');
 // 个性化地图(暗色底图)与 play 页共用一份配置,见 utils/map-style.js
-const { playerMapStyle } = require('../../utils/map-style.js');
+const { playerMapStyle, roam3dFor } = require('../../utils/map-style.js');
 const photoPins = require('./photo-pins.js');
 function stripDistText(from, p) {
   if (!from || from.lat == null || !p || p.lat == null) return '';
@@ -323,7 +323,7 @@ Page({
     // 个性化地图透传给本页三个 <free-map>(起始预览 / 主漫游图 / 结算图),三处必须同源,
     // 否则同一次漫游里会出现一亮一暗。值在 utils/map-style.js。
     fmSubkey: PLAYER_MAP_STYLE.subkey,
-    fmLayerStyle: PLAYER_MAP_STYLE.layerStyle,
+    fmLayerStyle: PLAYER_MAP_STYLE.layerStyle, map3d: false, // 第九轮 m4:16 级以上 3D 楼块 + 俯仰(utils/map-style.js ROAM_3D,默认关)
     // 起始页(Figma 3956:12602/12809)。modeTitle 是模式名:本页恒为自由漫游,
     // 城市定向/自由探索复用同一版式时只换这三项(标题 / 卡片 / 主行动文案)。
     modeTitle: '自由漫游',
@@ -3942,7 +3942,7 @@ Page({
     if (this._zoomLock && this._fogMode === 'screen') {
       // 但 _mapScale 必须照常跟上:漏了它,动画收尾后的第一次 end 会拿旧 scale 比出
       // scaleChanged=true,把刚刚省下来的那次全黑原样加回去。
-      if (detail.scale != null) this._mapScale = detail.scale;
+      if (detail.scale != null) { this._mapScale = detail.scale; if (roam3dFor(detail.scale) !== this.data.map3d) this.setData({ map3d: roam3dFor(detail.scale) }); }
       return;
     }
     if (phase === 'begin') {
@@ -3963,7 +3963,7 @@ Page({
     if (phase !== 'end') return;
     this._schedulePinRegion(detail, byGesture);
     const scaleChanged = detail.scale != null && detail.scale !== this._mapScale;
-    if (detail.scale != null) this._mapScale = detail.scale;
+    if (detail.scale != null) { this._mapScale = detail.scale; if (roam3dFor(detail.scale) !== this.data.map3d) this.setData({ map3d: roam3dFor(detail.scale) }); }
     if (byGesture) this._hold = Date.now();
     if (this._fogMode === 'screen') {
       // 程序移动(回中跳远、程序缩放)仍按「旧帧还能不能顶着用」判;手势松手只重画、不遮。

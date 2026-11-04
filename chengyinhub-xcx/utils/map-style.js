@@ -1,65 +1,100 @@
 'use strict';
 
-// 个性化地图(暗色底图)集中配置 —— play / roam 两页共用同一份值。
-//
-// 为什么抽出来:两页各自的 <free-map> 都要透传这两个属性,分开写就会出现"改了 play 忘了 roam"
-// 的半暗半亮。改这一处两页同时生效。
-//
-// subkey     腾讯 LBS 控制台的个性化地图 key。<map> 不支持运行时动态修改,改了要重新渲染 map。
-//            ⚠️ 它会打包进前端、可被反编译取到 —— 控制台上应只给它开"微信小程序个性化地图",
-//            WebService/REST 另用一个不下发前端的 key,否则额度会被盗刷。
-// layerStyle ★ 不是样式自身的 ID,而是「该样式绑定到本 key 之后的序号」,从 1 开始。
-//            所以控制台的样式详情页看不到它 —— 要先在「个性化地图 → 我的样式 → 使用/应用」里
-//            把样式绑到这个 key(即这个应用/小程序)上,绑定列表里才有序号。只绑一个就是 1。
-//            ★★ 因此 subkey 一旦非空,layerStyle:1 就不再等于"腾讯官方标准浅色底图",
-//            而是"本 key 绑定的第 1 个样式" —— 底图会跟着变。空 subkey 时才是官方默认。
-//
-// 接入步骤与已核实的属性表见 components/cy/free-map/DARK_MAP.md。
-// ★ 当前状态(2026-08-12 决策):个性化地图【暂不启用】,subkey 保持空。
-//   月费约 400 元,而遮住地名这件事屏幕级 Canvas 迷雾已经能做(它盖在 <map> 之上,连原生文字
-//   一起遮;groundOverlay 那套在底图文字之下,才是遮不住的那个)。所以调试阶段走零成本方案,
-//   等上线/融资演示前再买一个月做最终视觉验收;若真机验证下来 Canvas 迷雾稳(手势不冲突 /
-//   同层渲染一致 / 不掉帧),这 400 元可以永远不花。
-//
-//   ⚠️ 为什么这里是空字符串而不是把 key 填上:
-//   ① 空 subkey 才等于微信 <map> 的官方默认值,底图与接线之前**逐字节一致**;一旦填了非空 key,
-//      layerStyle:1 的含义就从「官方标准浅色底图」变成「本 key 绑定的第 1 个样式」,
-//      play 页三张地图会跟着变 —— 那是没验证过的外观改动,也可能开始计量。
-//   ② key 是付费服务凭据,会打包进前端、可被反编译取到,不该在用不到的时候躺在 master 里。
-//
-//   启用步骤(那时才需要 key):
-//   1. 腾讯 LBS 控制台 → 个性化地图 → 我的样式 → 建样式 → **「使用/应用」到本小程序的 key**;
-//      序号在「样式应用列表」里才看得到,样式详情页没有。只绑一套就是 1。
-//   2. 控制台上只给这个 key 开「微信小程序个性化地图」,WebService/REST 另用一个不下发前端的 key。
-//   3. 把 key 填进 subkey、序号填进 layerStyle。接线(play 3 处 + roam 3 处)已经就位,不必再改。
-//   详见 components/cy/free-map/DARK_MAP.md。
-//
-// 2026-11-03 第九轮 m1 第 1 项:仓库里永远是空 subkey。上传前由 scripts/release-map-style.js 从环境变量
-// 往「上传用的那份拷贝」里填值,不写回仓库。
-//   玩家地图(漫游 / 游玩 / 附近 / 玩家进入的搜索地图)用 layerStyle = 暗色样式序号;
-//   商家与编辑器地图用 lightLayerStyle = 同一 key 绑定的浅色样式序号。
-// 一个小程序里的所有 <map> 共用同一个 subkey(微信 map 文档),样式只靠 layer-style 区分 ——
-// 所以商家地图不能留空 subkey、也不能用暗色序号:要在控制台给同一个 key 再绑一套浅色样式。
+// 个性化地图集中配置:所有 <map> 共用同一个 subkey,样式只靠 layer-style(该 key 下绑定样式的序号,从 1 起)区分。
+// 仓库里永远空 key、四个序号为 0;上传前由 scripts/release-map-style.js 填进上传拷贝。
+// 四套(owner 2026-11-04 定稿):black 漫游 / 附近 / 玩家搜索地图与星尘、末世、没设外观的主题;white 商家与编辑器;
+// paper 纸本;cyber 即 2077,夜城。没填 key = 微信官方默认底图。背景、费用与接入步骤见 components/cy/free-map/DARK_MAP.md。
 const MAP_STYLE = {
   subkey: '',
-  layerStyle: 1,
-  lightLayerStyle: 1,
+  black: 0,
+  white: 0,
+  paper: 0,
+  cyber: 0,
 };
 
 const DEFAULT_STYLE = { subkey: '', layerStyle: 1 };
+const KINDS = ['black', 'white', 'paper', '2077'];
+const FIELD = { black: 'black', white: 'white', paper: 'paper', 2077: 'cyber' };
 
-/** 玩家地图:暗色样式。没配 key 时就是微信官方默认底图。 */
-function playerMapStyle(style) {
+function configured(style) {
   const s = style || MAP_STYLE;
-  if (!s.subkey) return Object.assign({}, DEFAULT_STYLE);
-  return { subkey: s.subkey, layerStyle: Number(s.layerStyle) || 1 };
+  return !!s.subkey;
 }
 
-/** 商家 / 编辑器地图:同一个 key 上的浅色样式。没配 key 时同样是官方默认底图。 */
-function lightMapStyle(style) {
+/** kind: black / white / paper / 2077 → { subkey, layerStyle };没配 = 官方默认。 */
+function mapStyleFor(kind, style) {
   const s = style || MAP_STYLE;
-  if (!s.subkey) return Object.assign({}, DEFAULT_STYLE);
-  return { subkey: s.subkey, layerStyle: Number(s.lightLayerStyle) || 1 };
+  const n = Number(s[FIELD[kind] || 'black']);
+  if (!s.subkey || !Number.isInteger(n) || n < 1) return Object.assign({}, DEFAULT_STYLE);
+  return { subkey: s.subkey, layerStyle: n };
 }
 
-module.exports = { MAP_STYLE, playerMapStyle, lightMapStyle };
+/** 主题外观 → 样式:纸本 paper,夜城 2077,其余 black。 */
+function kindForLook(look) {
+  const style = look && !look.legacy ? look.style : '';
+  if (style === 'PAPER') return 'paper';
+  if (style === 'CYBER') return '2077';
+  return 'black';
+}
+
+/** 叠加层按哪种底配色;没配 key 时返回 '',配色不变。 */
+function mapToneFor(kind, style) {
+  return configured(style) && mapStyleFor(kind, style).subkey ? kind : '';
+}
+
+// 浅底上白线白圈看不见:换墨色、浅描边;队色线只加深描边。
+const LIGHT_TONES = {
+  white: { core: '#1F1F1FF2', glow: '#1F1F1F2E', edge: '#FFFFFFCC', team: '#0000008C',
+    fill: 'rgba(31,31,31,.10)', ring: 'rgba(31,31,31,.42)', targetFill: 'rgba(31,31,31,.14)', targetRing: 'rgba(31,31,31,.6)' },
+  paper: { core: '#3B2A1CF2', glow: '#3B2A1C2E', edge: '#F3EAD8CC', team: '#2A1A0E8C',
+    fill: 'rgba(59,42,28,.10)', ring: 'rgba(59,42,28,.42)', targetFill: 'rgba(59,42,28,.14)', targetRing: 'rgba(59,42,28,.6)' },
+};
+
+function isWhitish(color) {
+  const c = String(color || '').toUpperCase();
+  return /^#(F[0-9A-F]){3}/.test(c) || /^RGBA?\(\s*2[3-5]\d\s*,\s*2[3-5]\d\s*,\s*2[3-5]\d/.test(c);
+}
+function alphaOf(color) {
+  const c = String(color || '');
+  if (/^#[0-9A-Fa-f]{8}$/.test(c)) return parseInt(c.slice(7), 16) / 255;
+  const m = c.match(/^rgba\([^)]*,\s*([\d.]+)\s*\)$/i);
+  return m ? Number(m[1]) : 1;
+}
+
+/** polyline 按底配色;深底与默认底原样返回。 */
+function toneLines(lines, tone) {
+  const t = LIGHT_TONES[tone];
+  if (!t || !Array.isArray(lines)) return lines;
+  return lines.map((line) => {
+    if (!line || typeof line !== 'object') return line;
+    if (isWhitish(line.color)) {
+      const out = Object.assign({}, line, { color: alphaOf(line.color) < 0.5 ? t.glow : t.core });
+      if (line.borderWidth) out.borderColor = t.edge;
+      return out;
+    }
+    return line.borderWidth ? Object.assign({}, line, { borderColor: t.team }) : line;
+  });
+}
+
+/** 节点光圈 / 目标光晕:kind = candidate | target。 */
+function toneCircle(kind, tone) {
+  const t = LIGHT_TONES[tone];
+  if (kind === 'target') return t ? { fillColor: t.targetFill, color: t.targetRing } : { fillColor: 'rgba(255,255,255,.22)', color: 'rgba(255,255,255,.55)' };
+  return t ? { fillColor: t.fill, color: t.ring } : { fillColor: 'rgba(255,255,255,.16)', color: 'rgba(255,255,255,.4)' };
+}
+
+// 试做,默认关:漫游 16 级以上显示 3D 楼块并俯仰约 30°。
+const ROAM_3D = { on: false, minScale: 16, skew: 30 };
+
+function roam3dFor(scale, cfg) {
+  const c = cfg || ROAM_3D;
+  return !!c.on && Number(scale) >= c.minScale;
+}
+
+/** 玩家地图:black。 */
+function playerMapStyle(style) { return mapStyleFor('black', style); }
+
+/** 商家 / 编辑器地图:white。 */
+function lightMapStyle(style) { return mapStyleFor('white', style); }
+
+module.exports = { MAP_STYLE, ROAM_3D, roam3dFor, KINDS, configured, mapStyleFor, kindForLook, mapToneFor, toneLines, toneCircle, playerMapStyle, lightMapStyle };
