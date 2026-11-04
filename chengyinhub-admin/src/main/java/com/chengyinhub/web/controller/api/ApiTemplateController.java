@@ -679,12 +679,12 @@ public class ApiTemplateController extends BaseController {
 
         cmsTemplateLibrary = templateLibraryService.selectCmsTemplateLibraryById(templateId);
         if (cmsTemplateLibrary == null) {
-            return error("模版不存在");
+            return error("模板不存在");
         } else {
             if (!Integer.valueOf(0).equals(cmsTemplateLibrary.getDelFlag())
                     || !Long.valueOf(1L).equals(cmsTemplateLibrary.getStatus())
                     || !Long.valueOf(1L).equals(cmsTemplateLibrary.getPublishStatus())) {
-                return error("模版不存在");
+                return error("模板不存在");
             } else {
                 // 名字收口在 ValidationMethod#label:这串映射原本在本文件里有两份,
                 // 加一个新完成方式要改两处,漏一处就是某个入口显示空白。
@@ -750,7 +750,7 @@ public class ApiTemplateController extends BaseController {
         CmsTemplateLibrary row = templateLibraryService.selectCmsTemplateLibraryById(libraryId);
         if (row == null || !Integer.valueOf(0).equals(row.getDelFlag())
                 || !Long.valueOf(1L).equals(row.getStatus()) || !Long.valueOf(1L).equals(row.getPublishStatus())) {
-            return error("模版不存在");
+            return error("模板不存在");
         }
         return submitReport(com.chengyinhub.business.domain.AuditTask.BIZ_TEMPLATE_LIBRARY, libraryId, reporterId, reason);
     }
@@ -771,7 +771,7 @@ public class ApiTemplateController extends BaseController {
         if (template == null || !Integer.valueOf(0).equals(template.getDelFlag())
                 || !Integer.valueOf(1).equals(template.getDraftStatus())
                 || !Long.valueOf(1L).equals(template.getStatus()) || !Long.valueOf(1L).equals(template.getPublishStatus())) {
-            return error("模版不存在");
+            return error("模板不存在");
         }
         return submitReport(com.chengyinhub.business.domain.AuditTask.BIZ_TEMPLATE, templateId, reporterId, reason);
     }
@@ -823,7 +823,7 @@ public class ApiTemplateController extends BaseController {
         }
         cmsMemberTemplate = memberTemplateService.selectCmsMemberTemplateById(templateId);
         if (cmsMemberTemplate == null) {
-            return error("模版不存在");
+            return error("模板不存在");
         } else {
             boolean isOwner = ownerId != null && ownerId.equals(cmsMemberTemplate.getMemberId());
             cmsMemberTemplate.setCanEdit(isOwner);
@@ -839,7 +839,7 @@ public class ApiTemplateController extends BaseController {
                     && Long.valueOf(1L).equals(cmsMemberTemplate.getPublishStatus());
             if (!isOwner && !isPublicEligible) {
                 // 非本人只能读取已审核、已上架实体；所有私有状态与不存在保持同一外观，避免枚举。
-                return error("模版不存在");
+                return error("模板不存在");
             } else if (Integer.valueOf(2).equals(cmsMemberTemplate.getDelFlag())) {
                 return error("模版已删除");
             } else if (!isDraft && !isOwnerPending && !Long.valueOf(1L).equals(cmsMemberTemplate.getStatus())) {

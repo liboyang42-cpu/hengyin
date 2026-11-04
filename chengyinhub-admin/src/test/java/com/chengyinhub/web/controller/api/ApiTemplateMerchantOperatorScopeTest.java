@@ -392,7 +392,7 @@ class ApiTemplateMerchantOperatorScopeTest {
         when(memberTemplateService.selectCmsMemberTemplateById(74L)).thenReturn(draft(800L));
         MockMvcBuilders.standaloneSetup(controller).build().perform(post("/api/template/myinfo")
                 .param("id", "74").param("scope", "MERCHANT"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.msg").value("模版不存在"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.msg").value("模板不存在"))
                 .andExpect(jsonPath("$.data").doesNotExist());
     }
 
@@ -417,7 +417,7 @@ class ApiTemplateMerchantOperatorScopeTest {
         when(memberTemplateService.selectCmsMemberTemplateById(74L)).thenReturn(draft(OWNER));
         org.springframework.test.web.servlet.MockMvc mvc = MockMvcBuilders.standaloneSetup(controller).build();
         mvc.perform(post("/api/template/myinfo").param("id", "74"))
-                .andExpect(jsonPath("$.msg").value("模版不存在"))
+                .andExpect(jsonPath("$.msg").value("模板不存在"))
                 .andExpect(jsonPath("$.data").doesNotExist());
         when(memberTemplateService.selectCmsMemberTemplateById(74L)).thenReturn(draft(PRINCIPAL));
         mvc.perform(post("/api/template/myinfo").param("id", "74"))
@@ -456,7 +456,7 @@ class ApiTemplateMerchantOperatorScopeTest {
         when(memberTemplateService.selectCmsMemberTemplateById(74L)).thenReturn(pending);
         MockMvcBuilders.standaloneSetup(controller).build().perform(post("/api/template/myinfo")
                 .param("id", "74"))
-                .andExpect(jsonPath("$.msg").value("模版不存在"))
+                .andExpect(jsonPath("$.msg").value("模板不存在"))
                 .andExpect(jsonPath("$.data").doesNotExist());
     }
 
