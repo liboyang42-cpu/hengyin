@@ -114,7 +114,7 @@ Wrong-role access, as player 9004 and as guest (g01–g08):
 ## 2. Findings
 
 ### F-1 BLOCKER (dead end): merchant coupon management is a blank page
-- **Repro:** As merchant 9002, go to 工作台 → 更多 → 管理优惠券. The same page opens from 营销 → 优惠券. Only the title 「优惠券」 shows: no list, no 「发券」 button, no error text. The merchant cannot see or create coupons.
+- **Repro:** As merchant 9002, go to 工作台 → 更多 → 管理优惠券. 营销 → 优惠券 links to the same page (`pages/merchant/marketing/index.js:591`; that tap was not run). Only the title 「优惠券」 shows: no list, no 「发券」 button, no error text. The merchant cannot see or create coupons.
 - **Cause:**
   - `POST /api/coupon/mypublishlist` returns `{"code":500,"msg":"系统繁忙，请稍后重试"}`.
   - The server log shows `sql injection violation ... comment not allow : update sms_coupon`.
