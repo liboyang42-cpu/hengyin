@@ -65,7 +65,7 @@
             <image class="pc-lv-badge" wx:if="{{userInfo.levelId==3}}" src="/subpackageMember/images/group3.png" mode="widthFix" />
             <image class="pc-lv-badge" wx:if="{{userInfo.levelId==4}}" src="/subpackageMember/images/group4.png" mode="widthFix" />
             <image class="pc-lv-badge" wx:if="{{userInfo.levelId==5}}" src="/subpackageMember/images/group5.png" mode="widthFix" />
-            <text>Lv.{{growthLevel}} 城市探索者</text>
+            <text wx:if="{{growthLevel > 0}}">Lv.{{growthLevel}} 城市探索者</text>
           </view>
           <view class="pc-gamer-meta">
             <text class="pc-gamer-slogan" wx:if="{{subjectIsMerchant && subjectMerchant.slogan}}">{{subjectMerchant.slogan}}</text>

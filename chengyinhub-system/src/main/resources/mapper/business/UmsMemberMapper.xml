@@ -369,35 +369,36 @@
     </select>
 
     <!-- 获取用户积分排名信息 -->
+    <!-- R11 p1 F-3/F-4:与成长中心「总积分榜」(MemberLeaderboardMapper.selectPointTotalMyRank)同一口径:
+         只排玩家账号(role='player'),同分按 create_time、id 稳定次序;0 分没有名次(查不到行,服务层给 TOP0%/0 哨兵)。 -->
     <select id="selectUserRankInfo" resultType="java.util.HashMap">
         <![CDATA[
         SELECT
-            user_rank,
-            total_users,
+            ranked.user_rank,
+            ranked.total_users,
             CASE
-                WHEN user_rank_percentage <= 0.2 THEN 'TOP20%'
-                WHEN user_rank_percentage <= 0.4 THEN 'TOP40%'
-                WHEN user_rank_percentage <= 0.6 THEN 'TOP60%'
-                WHEN user_rank_percentage <= 0.8 THEN 'TOP80%'
+                WHEN ranked.user_rank / ranked.total_users <= 0.2 THEN 'TOP20%'
+                WHEN ranked.user_rank / ranked.total_users <= 0.4 THEN 'TOP40%'
+                WHEN ranked.user_rank / ranked.total_users <= 0.6 THEN 'TOP60%'
+                WHEN ranked.user_rank / ranked.total_users <= 0.8 THEN 'TOP80%'
                 ELSE 'TOP100%'
                 END as rank_percentage
         FROM (
-                 SELECT
-                     @user_rank := @user_rank + 1 as user_rank,
-                @total_users := total_users AS total_users,
-                (@user_rank / total_users) as user_rank_percentage,
-                m.id
-                 FROM
-                     ums_member m,
-                     (SELECT @user_rank := 0, @total_users := (SELECT COUNT(*) FROM ums_member WHERE del_flag = 0)) r,
-                     (SELECT COUNT(*) as total_users FROM ums_member WHERE del_flag = 0) t
-                 WHERE
-                     m.del_flag = 0
-                 ORDER BY
-                     m.point DESC, m.create_time ASC
-             ) ranked
-        WHERE
-            ranked.id = #{memberId}
+            SELECT
+                (SELECT COUNT(*) FROM ums_member x
+                  WHERE x.del_flag = 0 AND x.role = 'player'
+                    AND (IFNULL(x.point, 0) > base.s
+                         OR (IFNULL(x.point, 0) = base.s
+                             AND (x.create_time < base.created
+                                  OR (x.create_time = base.created AND x.id < base.id))))) + 1 AS user_rank,
+                (SELECT COUNT(*) FROM ums_member c
+                  WHERE c.del_flag = 0 AND c.role = 'player' AND IFNULL(c.point, 0) > 0) AS total_users
+            FROM (
+                SELECT id, IFNULL(point, 0) AS s, create_time AS created
+                  FROM ums_member
+                 WHERE id = #{memberId} AND del_flag = 0 AND role = 'player' AND IFNULL(point, 0) > 0
+            ) base
+        ) ranked
         ]]>
     </select>
 

@@ -1289,7 +1289,8 @@ Component({
         fansNum: fansNum == null ? 0 : fansNum
       };
       if (!that.data.isSelf && !followStateChanged) {
-        profilePatch.growthLevel = res.data.levelId || 1;
+        // ums_member.level_id 不是成长等级(成长等级只有本人能读),别人主页不再写一个假的 Lv.1
+        profilePatch.growthLevel = 0;
         profilePatch.primaryCta = res.data.isFollow == 1 ? '已关注' : '关注';
       }
       that.setData(profilePatch);
@@ -1342,7 +1343,8 @@ Component({
       var play = arr[0].data;
       var center = arr[1].data;
       var growth = center.growth;
-      var level = metricNumber(play.level != null ? play.level : growth.levelNo);
+      // R11 p1 F-3 / j3 F10:等级只认成长中心那一套(member_growth.level_no),play.level 是打卡次数档,两处会对不上
+      var level = metricNumber(growth.levelNo);
       var exp = metricNumber(growth.expValue);
       var points = metricNumber(center.points);
       var shops = metricNumber(play.totalCheckins);
@@ -1466,6 +1468,7 @@ Component({
           || memberId !== app.getUserID() || profileEpoch !== (that._followEpoch || 0)) return;
       var res = arr[0];
       var weekPoints = res.code == '200' && isRecord(res.data) ? metricNumber(res.data.weekPoints) : null;
+      // R11 p1 F-3/F-4:服务端这里的名次与成长中心「总积分榜」是同一条查询;0 分、非玩家账号给 TOP0% / 0 哨兵
       var rankPercentage = isRecord(res.data) ? res.data.rankPercentage : null;
       var pointsOk = weekPoints != null && typeof rankPercentage === 'string' && !!rankPercentage.trim();
       if (pointsOk) {

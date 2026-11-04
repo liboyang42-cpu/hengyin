@@ -93,7 +93,7 @@ class GrowthMissionProofMybatisIntegrationTest {
                 + " topic_id BIGINT, xp_amount INT, granted_at DATETIME, create_time DATETIME)");
         executeMigration(source, "sql/migration_20261012_exp_reward_reversal.sql");
         db.execute("CREATE TABLE ums_member(id BIGINT PRIMARY KEY, nickname VARCHAR(80), avatar VARCHAR(255),"
-                + " del_flag INT NOT NULL, create_time DATETIME NOT NULL) ENGINE=InnoDB");
+                + " del_flag INT NOT NULL, create_time DATETIME NOT NULL, role VARCHAR(20) NOT NULL DEFAULT 'player') ENGINE=InnoDB");
         executeMigration(source, "sql/migration_store_verify_growth_delivery_20260913.sql");
         executeMigration(source, "sql/migration_store_verify_growth_delivery_job_20260913.sql");
 
@@ -208,7 +208,7 @@ class GrowthMissionProofMybatisIntegrationTest {
 
     @Test
     void expWeekCountsTaskAndDirectAwardsWithStableRanksAndHalfOpenBounds() {
-        db.update("INSERT INTO ums_member VALUES(1,'one','',0,'2026-01-01'),"
+        db.update("INSERT INTO ums_member(id,nickname,avatar,del_flag,create_time) VALUES(1,'one','',0,'2026-01-01'),"
                 + "(2,'two','',0,'2026-01-01'),(3,'removed','',2,'2026-01-01'),(4,'empty','',0,'2026-01-01')");
         db.update("INSERT INTO growth_mission_progress(id,member_id,mission_code,biz_type,biz_id,progress_date,complete_count,reward_exp,create_time)"
                 + " VALUES(10,1,'TASK','','0','2026-10-12',1,10,'2026-10-12'),"
@@ -240,8 +240,30 @@ class GrowthMissionProofMybatisIntegrationTest {
     }
 
     @Test
+    void leaderboardsHoldPlayerAccountsWithPointsOnly() {
+        // R11 p1 F-4:商家/平台/俱乐部账号不上玩家榜,0 分不上榜
+        db.update("INSERT INTO ums_member(id,nickname,avatar,del_flag,create_time,role) VALUES"
+                + "(1,'player','',0,'2026-01-01','player'),(2,'shop','',0,'2026-01-01','merchant'),"
+                + "(3,'zero','',0,'2026-01-01','player')");
+        db.update("INSERT INTO member_exp_earned(member_id,exp_value,reason,earned_at) VALUES"
+                + "(1,10,'node','2026-10-15'),(2,99,'node','2026-10-15')");
+        java.util.Map<String, Object> query = expWeekQuery(1L);
+        java.util.List<com.chengyinhub.business.domain.vo.LeaderboardItemVO> top =
+                sql.selectList("com.chengyinhub.business.mapper.MemberLeaderboardMapper.selectExpWeekTop", query);
+        assertEquals(1, top.size());
+        assertEquals(Long.valueOf(1), top.get(0).getMemberId());
+        java.util.Map<String, Object> me = sql.selectOne(
+                "com.chengyinhub.business.mapper.MemberLeaderboardMapper.selectExpWeekMyRank", query);
+        assertEquals(1, ((Number) me.get("userRank")).intValue());
+        assertEquals(1, ((Number) me.get("totalUsers")).intValue());
+        query.put("memberId", 2L);
+        org.junit.jupiter.api.Assertions.assertNull(sql.selectOne(
+                "com.chengyinhub.business.mapper.MemberLeaderboardMapper.selectExpWeekMyRank", query));
+    }
+
+    @Test
     void lastMillisecondExpAwardStaysInTheWeekWhenEarned() {
-        db.update("INSERT INTO ums_member VALUES(1,'one','',0,'2026-01-01')");
+        db.update("INSERT INTO ums_member(id,nickname,avatar,del_flag,create_time) VALUES(1,'one','',0,'2026-01-01')");
         java.util.Date earnedAt = new java.util.Date(
                 java.sql.Timestamp.valueOf("2026-10-19 00:00:00").getTime() - 1);
         assertEquals(1, sql.getMapper(com.chengyinhub.business.mapper.MemberGrowthMapper.class)
@@ -511,7 +533,7 @@ class GrowthMissionProofMybatisIntegrationTest {
 
     @Test
     void completionExpKeepsOriginalWeekAndReversalUpdatesListAndMyRankTogether() {
-        db.update("INSERT INTO ums_member VALUES(1,'one','',0,'2026-01-01'),(2,'two','',0,'2026-01-02')");
+        db.update("INSERT INTO ums_member(id,nickname,avatar,del_flag,create_time) VALUES(1,'one','',0,'2026-01-01'),(2,'two','',0,'2026-01-02')");
         Long earnedId = service.addCompletionExp(1L, 40, 7L);
         org.junit.jupiter.api.Assertions.assertNotNull(earnedId);
         db.update("UPDATE member_exp_earned SET earned_at='2026-10-12 00:00:00' WHERE id=?", earnedId);

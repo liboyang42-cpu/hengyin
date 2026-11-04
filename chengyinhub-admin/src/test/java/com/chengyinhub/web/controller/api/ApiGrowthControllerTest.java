@@ -289,7 +289,17 @@ class ApiGrowthControllerTest {
 
         assertNull(vo.getMe().getRank());
         assertEquals(Long.valueOf(0L), vo.getMe().getScore());
-        assertEquals("TOP100%", vo.getMe().getRankPercentage());
+        // R11 p1 F-4(业主走查):没有名次就不给「TOP100%」这种假分桶
+        assertNull(vo.getMe().getRankPercentage());
+    }
+
+    @Test
+    void zeroScoreHasNoRank() {
+        when(leaderboardMapper.selectPointTotalTop(50)).thenReturn(Collections.emptyList());
+        when(leaderboardMapper.selectPointTotalMyRank(1001L)).thenReturn(myRank(9, 12, 0L));
+        MemberLeaderboardVO vo = service.getLeaderboard(1001L, new LeaderboardQueryDTO());
+        assertNull(vo.getMe().getRank());
+        assertNull(vo.getMe().getRankPercentage());
     }
 
     @Test

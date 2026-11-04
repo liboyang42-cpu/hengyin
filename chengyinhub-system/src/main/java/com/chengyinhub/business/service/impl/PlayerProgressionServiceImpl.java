@@ -47,6 +47,9 @@ public class PlayerProgressionServiceImpl implements IPlayerProgressionService
     @Autowired
     private ICmsTopicChapterService cmsTopicChapterService;
 
+    @Autowired(required = false)
+    private com.chengyinhub.business.mapper.CmsTopicMapper cmsTopicMapper;
+
     @Autowired
     private GrowthBadgeMapper growthBadgeMapper;
 
@@ -236,6 +239,14 @@ public class PlayerProgressionServiceImpl implements IPlayerProgressionService
         if (chapters != null) {
             for (CmsTopicChapter c : chapters) {
                 if (c.getTotalMileage() != null) sum = sum.add(c.getTotalMileage());
+            }
+        }
+        // R11 j3 F10:编辑器只把站点间距离算到主题(cms_topic.total_mileage,公里),章节列常为空。
+        // 章节没有距离时取主题那一份,否则通关后「累计距离」恒为 0。
+        if (sum.signum() == 0 && cmsTopicMapper != null) {
+            com.chengyinhub.business.domain.CmsTopic topic = cmsTopicMapper.selectCmsTopicById(topicId);
+            if (topic != null && topic.getTotalMileage() != null && topic.getTotalMileage().signum() > 0) {
+                sum = topic.getTotalMileage();
             }
         }
         return sum;
