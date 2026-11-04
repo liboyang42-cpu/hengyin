@@ -306,7 +306,12 @@ test('CU-C-92:可提现为 0 或余额未取到时禁用提现主按钮并说明
   // wxml 是真正决定按钮可不可点的一侧:禁用与提示文案都必须落在模板上
   const wxml = fs.readFileSync(path.join(root, 'pages/club/settlement/index.wxml'), 'utf8')
   assert.match(wxml, /disabled="\{\{withdrawing \|\| withdrawState !== 'positive'\}\}"/)
-  assert.match(wxml, /wx:if="\{\{withdrawState === 'zero'\}\}"[^>]*>客诉期结束后可提现/)
+  // 第十一轮 h4 LOW:¥0.00 且没有钱在客诉期里时不写「客诉期结束后可提现」;有钱在等才写。
+  assert.match(wxml, /wx:if="\{\{withdrawState === 'zero' && complaintWaiting\}\}"[^>]*>客诉期结束后可提现/)
+  vm.onStages({ detail: { known: true, positive: false } })
+  assert.equal(vm.data.complaintWaiting, false, '可提现 0 且客诉期里也没钱:不承诺客诉期后能提')
+  vm.onStages({ detail: { known: true, positive: false, waiting: true } })
+  assert.equal(vm.data.complaintWaiting, true)
   assert.match(wxml, /<cy-funds-stages[^>]*bind:stages="onStages"/, '余额事件必须真接到页面')
 })
 

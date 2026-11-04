@@ -214,7 +214,7 @@ for (const file of [DETAIL, LIST]) {
   });
   test(file + ': accept visibly confirms and submits exactly the original station; no version is invented', () => {
     const f = received(file); if (file === DETAIL) f.page.accept(); else f.page.acceptReceived({ currentTarget: { dataset: { id: '21' } } });
-    assert.equal(f.writes().length, 0); assert.equal(f.modals.length, 1); assert.match(f.modals[0].content, /102/);
+    assert.equal(f.writes().length, 0); assert.equal(f.modals.length, 1); assert.doesNotMatch(f.modals[0].content, /#102/); // 第十一轮 h4 LOW:确认框写据点名,不写行号;提交的仍是原 id(见下)
     assert.match(f.modals[0].content, /东门据点/); assert.equal(byUrl(f, '/api/coop/supply-stations').length, 0);
     f.modals[0].success({ confirm: true }); assert.equal(f.writes().length, 1);
     const command = JSON.parse(f.writes()[0].data); assert.equal(command.supplyStationId, '102'); assert.equal(String(command.id), '21'); assert.equal(command.status, 1);

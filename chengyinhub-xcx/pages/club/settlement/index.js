@@ -104,7 +104,7 @@ Page({
     withdrawing: false,
     // CU-C-92:可提现余额决定提现主按钮能不能用(unknown/positive/zero),
     // 数来自 cy-funds-stages 自己拉的 /api/wallet/stages,本页不重复请求。
-    withdrawState: 'unknown', settledK: null, // settledK:count.wxs 的进度(null=显示真值)
+    withdrawState: 'unknown', complaintWaiting: false, settledK: null, // settledK:count.wxs 的进度(null=显示真值)
   },
 
   onLoad(options) {
@@ -222,7 +222,8 @@ Page({
   onStages(e) {
     if (!this._hasCurrentData()) return
     const detail = (e && e.detail) || {}
-    this.setData({ withdrawState: !detail.known ? 'unknown' : (detail.positive ? 'positive' : 'zero') })
+    // 第十一轮 h4 LOW:「客诉期结束后可提现」只在真有钱在客诉期里等着时才说;一分都没有时不写这句。
+    this.setData({ withdrawState: !detail.known ? 'unknown' : (detail.positive ? 'positive' : 'zero'), complaintWaiting: detail.waiting === true })
   },
 
   // 2026-09-15 收款模型定稿 §3:平台不打款。本页不再跳银行卡表单页,也不自己发提现请求,

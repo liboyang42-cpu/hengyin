@@ -158,7 +158,12 @@ Component({
         const text = moneyText(item.changeBalance)
         const abs = text == null ? null : text.replace(/^-/, '')
         const isIncome = direction === 'income' ? true : (direction === 'expense' ? false : null)
+        // 第十一轮 h4 LOW:徽标原来「不是创作就是品牌」,活动分润、退款冲销也顶着「品」。
+        // 创作 1 / 品牌 2 照旧;其余按这条流水自己的原因取首字(活动分润 → 活),没有原因才用 ¥。
+        const reason = typeof item.changeReason === 'string' ? item.changeReason.trim() : ''
+        const badgeText = Number(item.eventType) === 1 ? '创' : (Number(item.eventType) === 2 ? '品' : (reason ? reason.charAt(0) : '¥'))
         return Object.assign({}, item, {
+          badgeText,
           displayDate: formatDate(item.createTime, today, yesterday),
           isIncome,
           directionKnown: direction !== 'unknown',

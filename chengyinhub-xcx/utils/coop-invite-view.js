@@ -86,7 +86,8 @@ function supplyStationView(invite) {
   const id = parseInviteId(invite.supplyStationId);
   const name = typeof invite.supplyStationName === 'string' ? invite.supplyStationName.trim() : '';
   return {
-    supplyStationText: id ? (name ? name + ' · #' + id : '据点 #' + id) : '原合同未记录归属',
+    // 第十一轮 h4 LOW:有据点名就只写名字,不再拖一个「· #14」行号;没名字才用编号兜底。
+    supplyStationText: id ? (name || '据点 #' + id) : '原合同未记录归属',
     supplyStationNote: !id ? '历史记录不自动补站，不能在接受时换站'
       : Number(invite.status) === 1 ? '已接受，归属已冻结' : '接受前请确认，接受后归属冻结',
   };

@@ -16,7 +16,7 @@
     <view class="id-list cy-fade-in" wx:elif="{{list.length}}">
       <view class="id-item" wx:for="{{list}}" wx:key="id">
         <view class="id-item-badge id-item-badge--{{item.eventType === 1 ? 'create' : 'brand'}}">
-          <text class="id-item-badge__txt">{{item.eventType === 1 ? '创' : '品'}}</text>
+          <text class="id-item-badge__txt">{{item.badgeText}}</text>
         </view>
         <view class="id-item-info">
           <text class="id-item-title">{{item.changeReason || '收益记录'}}</text>

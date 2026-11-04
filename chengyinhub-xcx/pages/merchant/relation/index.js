@@ -84,14 +84,14 @@ Page({
     error: '',
     clubError: '',
     // 2026-10-22 owner:合作 tab 看帖子,商家不看其他商家;帖子在前并为默认
-    tabs: [{ key: 'feed', label: '帖子' }, { key: 'club', label: '俱乐部' }],
+    tabs: [{ key: 'feed', label: '帖文' }, { key: 'club', label: '俱乐部' }],
     activeTab: 'feed',
     clubs: [],
     feed: [],
     feedState: 'idle',   // idle | loading | ready | empty | error | stale-error
     feedSlow: false,     // 加载超过 400ms 才显示骨架,避免闪屏
     feedError: '',
-    feedEmptyTitle: '还没有帖子',
+    feedEmptyTitle: '还没有帖文',
     feedEmptySub: '',
     // 从项目详情「找俱乐部」进来时带着主题:一路带到俱乐部主页,
     // 在那儿发起合作时主题已经定了,不用再选一遍
@@ -258,7 +258,7 @@ Page({
       that.setData({
         feedState: hasSnapshot ? 'stale-error' : 'error',
         feedSlow: false,
-        feedError: app.getRequestErrorMessage(res, '帖子加载失败，请重试'),
+        feedError: app.getRequestErrorMessage(res, '帖文加载失败，请重试'),
       });
     }
     app.sendRequest({
@@ -291,10 +291,10 @@ Page({
           feedState: rows.length ? 'ready' : 'empty',
           feedSlow: false,
           feedError: '',
-          feedEmptyTitle: noClub ? '这里还没有帖子' : '还没有帖子',
+          feedEmptyTitle: noClub ? '这里还没有帖文' : '还没有帖文',
           feedEmptySub: noClub
-            ? '帖子来自你合作过的俱乐部，谈成合作后即可看到'
-            : '你合作过的俱乐部还没有人发布帖子',
+            ? '帖文来自你合作过的俱乐部，谈成合作后即可看到'
+            : '你合作过的俱乐部还没有人发布帖文',
         });
       },
       fail,

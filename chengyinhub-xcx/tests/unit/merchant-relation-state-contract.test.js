@@ -285,7 +285,7 @@ test('俱乐部卡所有入口先去主页，保留主题上下文', () => {
 test('合作页默认帖子 tab,拉 /api/club/post/feed;骨架超过 400ms 才出', () => {
   const { page, requests } = createPage()
   page.onLoad({})
-  assert.deepEqual(page.data.tabs.map((t) => t.label), ['帖子', '俱乐部'])
+  assert.deepEqual(page.data.tabs.map((t) => t.label), ['帖文', '俱乐部'])
   assert.equal(page.data.activeTab, 'feed')
   const feedReq = requests.find((r) => r.url === '/api/club/post/feed')
   assert.ok(feedReq, '帖子流请求')
@@ -303,7 +303,7 @@ test('帖子为空/失败状态;刷新失败保留旧内容;切 tab 不重复拉
   const feedReq = () => requests.filter((r) => r.url === '/api/club/post/feed')
   feedReq()[0].success({ code: 200, data: { clubCount: 0, rows: [] } })
   assert.equal(page.data.feedState, 'empty')
-  assert.equal(page.data.feedEmptyTitle, '这里还没有帖子')
+  assert.equal(page.data.feedEmptyTitle, '这里还没有帖文')
   page.onTabChange({ detail: { key: 'club' } })
   page.onTabChange({ detail: { key: 'feed' } })
   assert.equal(feedReq().length, 1, '回到帖子 tab 不重拉,保留已有内容')

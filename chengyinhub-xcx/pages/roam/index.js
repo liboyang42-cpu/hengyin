@@ -5443,7 +5443,7 @@ Page({
           if (httpFail(res) || netFail(res)) {
             rememberUnknown();
             settleIntent('unknown');
-            return fail('发布响应异常，帖子可能已经发出，请到广场确认，暂不要重复发布');
+            return fail('发布响应异常，帖文可能已经发出，请到广场确认，暂不要重复发布');
           }
           state.settled = true;
           if (res && (res.code == '200' || res.code == 200)) {

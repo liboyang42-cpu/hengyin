@@ -215,6 +215,14 @@ test('CU-C-92:可提现余额归一化后抛给宿主页(0 ⇒ 不可提、>0 �
     pending: '', complaintPeriod: [], disputed: '', withdrawable: '12.00', amountsKnown: true,
   }), { code: 200, data: {} });
   assertStagesEvent(positive, { known: true, positive: true });
+
+  // 第十一轮 h4 LOW:只有真有钱在客诉期里等着,宿主页才说「客诉期结束后可提现」。
+  assert.strictEqual(zero[0].detail.waiting, false, '¥0 且客诉期里没钱:waiting=false');
+  const waiting = runStagesLoad(stagesSource(), () => ({
+    pending: '', complaintPeriod: [{ key: '2026-09-24', label: '客诉期中 · 9月24日可提现', amount: '45.50' }],
+    disputed: '', withdrawable: '0.00', amountsKnown: true,
+  }), { code: 200, data: {} });
+  assert.strictEqual(waiting[0].detail.waiting, true);
 });
 
 test('CU-C-92:余额算不出/取不到时 resolved 为 unknown,不得当成 0 也不得当可提', () => {
