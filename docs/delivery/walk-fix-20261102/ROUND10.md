@@ -68,7 +68,14 @@ Start after `integ/ROUND10-F3-RESULT.md` has a `STATUS:` line. The owner delegat
    Sweep `盲盒|竞猜|押|下注|赔率|赌|抽奖` across the repo's user-visible text and list every hit as changed or why not. Confirm no points or money can be staked in these games: if they can, stop and report. List any such words in seeded or stored content for me; don't change stored data.
 2. **Inviter points.** New migration turns off only `cms_points_setting` id 6 (「被邀请用户报名任意活动」, 100 points per signup, active on production), with a runner assertion; id 5 (500 points for a first purchase) stays. Prove signup, payment and settlement still work with id 6 off, including any check that a rule must exist. Remove or correct any screen copy promising the per-signup reward. No team or tiered rewards.
 3. **Paid merchant extras stay closed at launch** (`pages/merchant/decor`: 高级模板, 推广曝光位, 品牌主页, 活动定制). Find how they're gated today. If a merchant could start a payment under production config, close them with the existing switch; if there's no switch, hide the purchase entries and refuse on the backend. No new captions. The ¥30 merchant referral stays as it is.
-4. **Main package.** If item 0 of f1 wasn't done, do it now. It must end under 3,145,728 bytes by preflight's count.
+4. **Main package.** It must end under 3,145,728 bytes by preflight's count; f1 ended 7,449 over, and later lanes may have added more. Don't use my item 0 route: `de56cfa56` moved those four utils back to the main package on purpose because of the danger-action gate. Don't sink them or weaken that gate or the ceiling. Look first at `images` (343 KB in the main package): images used only by a subpackage move there, unused ones go, and oversized ones get losslessly recompressed. Then at dead code and long comments in main-package files, and at `club-direct-ledger`. No `require.async`. Report before and after, and what you moved.
+5. **f1 leads.**
+   - `RefundServiceImpl.createSettlementAdjustment` rounds each receiver's clawback separately, so a refund after settlement can be about 1 fen off per receiver. Make the parts equal the refunded amount, with a half-fen test.
+   - Extend `ci/chain_postdeploy.py` to the new post-deploy file.
+   - The order list labels a plain activity 「城市定向」.
+   - Participation detail says 「距离路线开始还剩1天」 for an activity 12 hours away.
+   - The tab bar partly covers the home project card.
+   Skip any that f3 already fixed.
 
 Write `integ/ROUND10-F4-RESULT.md`.
 
