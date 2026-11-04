@@ -394,6 +394,7 @@ Page({
     recurrences: RECURRENCES,
     recurrenceType: 'ONCE',
     topics: [],
+    topicsLoaded: false,
     topicIndex: 0,
     startDate: shanghaiToday(),
     // 集合时刻是场次退款钟(集合前 24h)的锚点,后端缺它会拒绝开场(5.9 起)。
@@ -467,6 +468,13 @@ Page({
     else wx.switchTab({ url: '/pages/talent/list/index' })
   },
   retryLoad() { this.loadAccess() },
+
+  // p3 F4:没有可开场主题、也没有系列时只给这一个出口,不画排期表单
+  goPublishTopic() {
+    if (this._navigating || !this.data.clubId) return
+    this._navigating = true
+    wx.navigateTo({ url: '/pages/publish/fabu/index?clubId=' + this.data.clubId, complete: () => { this._navigating = false } })
+  },
 
   loadAccess() {
     const that = this
@@ -557,6 +565,7 @@ Page({
         }
         that.setData({
           topics,
+          topicsLoaded: true,
           topicIndex,
           seriesRows: decorateSeriesRows(that.data.seriesRows, topics),
         })

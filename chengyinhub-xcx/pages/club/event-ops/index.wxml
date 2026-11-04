@@ -104,7 +104,11 @@
     <!-- 日期清单(Figma E1):现有「已创建系列」列表,按系列而非逐日期展示 —— 后端
          /series/list 只回 futureDates 这一份日期字符串数组,没有逐日期报名数/锁定原因/
          取消状态字段,做不出稿上「12 人已报名 · 不可编辑」那种逐行状态,PR 里说明。 -->
-    <view class="section" wx:if="{{canManage}}">
+    <!-- p3 F4:还没有可开场主题、也没有系列 ⇒ 只给空态与「发布主题」,不画用不了的排期表单 -->
+    <view class="section" wx:if="{{canManage && topicsLoaded && topics.length === 0 && seriesState === 'empty'}}">
+      <cy-empty title="暂无可开场的主题" cta="发布主题" bind:cta="goPublishTopic" />
+    </view>
+    <view class="section" wx:elif="{{canManage}}">
       <text class="section-title">日期清单</text>
       <text class="section-note">仅可修改无报名的未来场次</text>
       <view class="card">
@@ -162,7 +166,7 @@
 
     <!-- 重复方式(Figma E1):Figma 只给了「查看态」截图,没有编辑态 —— 这里保留原有的
          创建/编辑表单控件(下拉、日期选择器),因为它们同时也是这个页面创建/编辑系列的唯一入口。 -->
-    <view class="section" wx:if="{{canManage}}">
+    <view class="section" wx:if="{{canManage && !(topicsLoaded && topics.length === 0 && seriesState === 'empty')}}">
       <text class="section-title">{{editingSeriesId ? '编辑未来场次' : '重复方式'}}</text>
       
       <text class="section-note" wx:if="{{!editingSeriesId}}">最多排未来 90 天（64 期）</text>
