@@ -3600,6 +3600,31 @@ class GameSessionRuntimeServiceImplTest {
         service.assertRouteReception(ACTIVITY, NODE);
     }
 
+    /** F-13:缺上一站接待的只读预检给出同一原因、不抛异常;前面任一闸会拒或非带队路线局时不抢答。 */
+    @Test
+    void routeReceptionErrorAnswersOnlyWhenEveryEarlierGatePasses() {
+        GameSession session = runningSession(1);
+        session.setModuleConfigSnapshotJson("{\"schemaVersion\":1,\"playMode\":\"ROUTE\"}");
+        when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(session);
+        GameStationRun station = station(MERCHANT, GameStationRun.ACTIVE);
+        when(runtimeMapper.selectStation(SESSION, NODE)).thenReturn(station);
+        when(runtimeMapper.countMissingRouteReception(SESSION, NODE)).thenReturn(1);
+        assertEquals("请先由商家扫描带队主理人的团码完成上一站接待", service.routeReceptionError(ACTIVITY, NODE));
+        when(runtimeMapper.countMissingRouteReception(SESSION, NODE)).thenReturn(0);
+        assertNull(service.routeReceptionError(ACTIVITY, NODE));
+        when(runtimeMapper.countMissingRouteReception(SESSION, NODE)).thenReturn(1);
+        station.setStatus(GameStationRun.PAUSED);
+        assertNull(service.routeReceptionError(ACTIVITY, NODE), "本站未开放由原路径给出「尚未开放」");
+        station.setStatus(GameStationRun.ACTIVE);
+        session.setStatus(GameSession.FINISHED);
+        assertNull(service.routeReceptionError(ACTIVITY, NODE), "未进行中由原路径给出「尚未开局或已结束」");
+        session.setStatus("RUNNING");
+        session.setClubId(null);
+        assertNull(service.routeReceptionError(ACTIVITY, NODE));
+        assertNull(service.routeReceptionError(0L, NODE));
+        verify(runtimeMapper, never()).selectSessionByActivityForUpdate(anyLong());
+    }
+
     @Test
     void groupReceptionGuardDoesNotApplyToSelfPlayOrStoryRuntime() {
         service.assertRouteReception(0L, NODE);

@@ -2223,8 +2223,29 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         if (isSharedRoute(session)) requireOnlineRun(runControl(session));
         if (GameplaySurvivalEngine.challengeNode(sessionConfig(session).path("themeConfig"), nodeId)) return;
         if (runtimeMapper.countMissingRouteReception(session.getId(), nodeId) > 0) {
-            throw new IllegalStateException("请先由商家扫描带队主理人的团码完成上一站接待");
+            throw new IllegalStateException(ROUTE_RECEPTION_MISSING);
         }
+    }
+
+    private static final String ROUTE_RECEPTION_MISSING = "请先由商家扫描带队主理人的团码完成上一站接待";
+
+    /**
+     * F-13:assertRouteReception 在写事务里抛出,整笔回滚后客户端只见到无回执的500,只能报「结果待确认」。
+     * 写入口先用这条只读预检拿到同一拒绝原因,作为普通业务拒绝落终态回执。只在 canPlay 里
+     * assertRoutePlayable 的各闸都会放行时回答(非共享、进行中、章节已放行、本站开放),保持原拒绝顺序;
+     * 锁定后的 assertRouteReception 仍是权威判据。
+     */
+    @Override
+    public String routeReceptionError(Long activityId, Long nodeId) {
+        if (activityId == null || activityId <= 0 || nodeId == null) return null;
+        GameSession session = runtimeMapper.selectSessionByActivity(activityId);
+        if (!isRouteSession(session) || isSharedRoute(session) || session.getClubId() == null || session.getClubId() <= 0
+                || !GameSession.RUNNING.equals(session.getStatus())) return null;
+        if (GameplaySurvivalEngine.challengeNode(sessionConfig(session).path("themeConfig"), nodeId)) return null;
+        if (routeChapterGate(session, nodeId) != null) return null;
+        GameStationRun station = runtimeMapper.selectStation(session.getId(), nodeId);
+        if (station == null || !GameStationRun.ACTIVE.equals(station.getStatus())) return null;
+        return runtimeMapper.countMissingRouteReception(session.getId(), nodeId) > 0 ? ROUTE_RECEPTION_MISSING : null;
     }
 
     @Override

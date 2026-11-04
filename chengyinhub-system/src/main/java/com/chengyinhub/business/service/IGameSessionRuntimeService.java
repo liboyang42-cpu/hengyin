@@ -42,6 +42,8 @@ public interface IGameSessionRuntimeService {
     default String routeChapterGateError(Long activityId, Long nodeId) { return null; }
     void assertRoutePlayable(Long activityId, Long nodeId);
     void assertRouteReception(Long activityId, Long nodeId);
+    /** F-13:带队路线局在前面各闸都放行、只缺上一站商家接待时返回拒绝原因,不抛异常;否则 null(交原锁定路径判)。 */
+    default String routeReceptionError(Long activityId, Long nodeId) { return null; }
     List<GameMerchantEntryView> merchantEntries(GameActorContext actor);
     GameSessionView view(GameActorContext actor, Long activityId);
     Map<String, Object> exportRecap(GameActorContext actor, Long activityId);

@@ -172,6 +172,9 @@ public class PlayNodeAccessService {
         if (isDelistedNode(node) && hasCompletedNodeFact(memberId, actId, node)) return null;
         if (resolveMode(actId, topicId) == PlayMode.LINEAR_ORIENTEERING) {
             if (topicRouteRuntimeService != null) {
+                // F-13:缺上一站接待是确定拒绝,先只读预检给出原因,不让 canPlay 抛出后变成「结果待确认」。
+                String reception = gameSessionRuntimeService == null ? null : gameSessionRuntimeService.routeReceptionError(actId, node.getId());
+                if (reception != null) return reception;
                 // 业务异常交由统一异常处理返回，不能吞掉已将事务标为回滚的异常。
                 return topicRouteRuntimeService.canPlay(memberId, topicId, actId, node.getId(), routeActionId)
                         ? null : "该地点尚未解锁";
