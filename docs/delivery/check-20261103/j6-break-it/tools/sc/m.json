@@ -1,0 +1,1 @@
+[{"wait":4500},{"tap":["知道了",{"exact":true}]},{"wait":1000},{"sh":"/root/j6/expire.sh 990013"},{"net":1},{"tapSel":".profile-quit"},{"wait":1500},{"shot":"55-p1-quit-club-confirm"},{"tap":["退出俱乐部",{"exact":true}]},{"wait":4000},{"shot":"56-p1-quit-after-session-expired"},{"text":400},{"net":1}]

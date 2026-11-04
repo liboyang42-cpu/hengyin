@@ -32,8 +32,9 @@ for (const s of steps) {
     else if (k === 'storage') console.log('STORAGE', JSON.stringify(await w.eval('(()=>{const i=wx.getStorageInfoSync();const o={};for(const k of i.keys){o[k]=JSON.stringify(wx.getStorageSync(k)).slice(0,160)}return o})()')));
     else if (k === 'loc') await w.loc(v[0], v[1]);
     else if (k === 'scan') await w.scan(v);
+    else if (k === 'sh') console.log('SH', (await import('node:child_process')).execSync(v, { encoding: 'utf8' }).slice(0, 600));
   } catch (e) { console.log('STEPERR', k, JSON.stringify(v), e.message.slice(0, 200)); }
 }
 console.log('ERRORS', JSON.stringify(w.errors()).slice(0, 2000));
-console.log('CONSOLE', JSON.stringify(w.console().filter(x => x.startsWith('[error]') && !/home-banners|favicon/.test(x))).slice(0, 2500));
+console.log('CONSOLE', JSON.stringify(w.console().filter(x => x.startsWith('[error]') && !/home-banners|favicon|404 \(Not Found|oss-rig|ERR_TUNNEL/.test(x))).slice(0, 2500));
 await w.close();
