@@ -209,7 +209,9 @@ EXPECTED = {
     # ~/Documents/城瘾/小程序/修复交接材料/worktree收口_0915/暗测试真跑_报告.md。
     # 合并保留原支付事实/退款恢复两组用例，共 36 条。
     "CoopDepositRefundMybatisIntegrationTest": 36,
-    "GrowthMissionProofMybatisIntegrationTest": 25,
+    # 2026-11-04 第十一轮 g3 第 2 项(4751ec46):25 → 26,+1 = leaderboardsHoldPlayerAccountsWithPointsOnly
+    # (成长周榜 Top 与我的名次只排 role=player 且积分 > 0 的账号,商家账号查不到名次;真 XML + 真库)。
+    "GrowthMissionProofMybatisIntegrationTest": 26,
     "MerchantIdentityMybatisIntegrationTest": 21,
     # 2026-09-24 CU-M-78 +1 条(解除招牌主推显式清空 featured_id,真 XML + 真库回读),8 → 9。
     "MerchantProfilePersistenceMybatisIntegrationTest": 9,

@@ -64,7 +64,7 @@ def all_required_clean(directory):
     # 2026-09-16 晚:暗测试 23 套(197 条)首跑判绿后入闸;计数与 EXPECTED/SOURCE_FILES 同源。
     for short, tests in (
         ("CoopDepositRefundMybatisIntegrationTest", 36),
-        ("GrowthMissionProofMybatisIntegrationTest", 25),
+        ("GrowthMissionProofMybatisIntegrationTest", 26),
         ("MerchantIdentityMybatisIntegrationTest", 21),
         ("MerchantProfilePersistenceMybatisIntegrationTest", 9),
         ("StoreVerifyGrowthDeliveryTransactionTest", 4),
