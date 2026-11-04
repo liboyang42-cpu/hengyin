@@ -474,7 +474,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/access-gate/index.js:112"
+        "staticSource": "components/cy/access-gate/index.js:110"
       }
     },
     {
@@ -994,7 +994,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/access-gate/index.js:96"
+        "staticSource": "components/cy/access-gate/index.js:95"
       }
     },
     {

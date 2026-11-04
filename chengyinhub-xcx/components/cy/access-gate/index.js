@@ -5,7 +5,7 @@ const { decideMerchantGate, decideClubGate } = require('../../../utils/access-ga
 // 页面级守卫:读 access/me,没权限就整屏盖住,弹 fail 半屏讲原因,2s 自动出去;state 事件报给页面。
 Component({
   properties: {
-    kind: { type: String, value: 'merchant' },   // merchant | club | login(只要求已登录,不读 access/me)
+    kind: { type: String, value: 'merchant' },   // merchant | club | login
     need: { type: String, value: '' },           // merchant: canXxx 字段名;club: club:xxx 权限串
     clubId: { type: null, value: '' },
     activityId: { type: null, value: '' },
@@ -34,7 +34,6 @@ Component({
       const owner = String(app.getUserID && app.getUserID() || '');
       const epoch = (this._epoch || 0) + 1;
       this._epoch = epoch;
-      // 第十轮 f3(j6 F3):游客先给登录,不等范围参数 —— 否则缺 clubId 的俱乐部页对游客整屏空白。
       if (!owner || owner === '0') { this.setData({ state: 'login', reason: '', _sheet: false }); return; }
       if (kind === 'login') { this.setData({ state: 'allow' }); return; }
       if (kind === 'club' && !this.data.clubId && !this.data.activityId) return;   // 还没拿到范围,等 observer
@@ -101,7 +100,6 @@ Component({
       Promise.resolve(login).then(result => {
         this._loginPending = false;
         if (this._detached || !(app.getUserID && app.getUserID()) || (result && result.ok === false)) return;
-        // 页面自己的读请求在游客态已被 401 拒掉:登录后原地重开本页,带原参数重读,而不是只揭掉盖层。
         const page = this._page || {};
         const opts = page.options || {};
         const query = Object.keys(opts).map(k => k + '=' + encodeURIComponent(opts[k])).join('&');
