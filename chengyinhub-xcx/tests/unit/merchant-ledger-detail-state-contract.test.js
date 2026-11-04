@@ -286,9 +286,8 @@ test('核销岗位可读脱敏详情，但金额、计提与结算进度不进�
   assert.equal(mounted.page.data.detail.stateText, '核销有效')
   assert.equal(mounted.page.data.detail.timeline.length, 0)
   const wxml = read(`${PAGES.order}.wxml`)
-  // 第十轮 f3 p2 F-7:零现金(noCash)同样不画收入行;无财务权限仍一律不画
-  assert.match(wxml, /fin-hero__lab[^>]*>\{\{detail\.canReadFinance && !detail\.noCash \? detail\.title \+ ' · 我的收入' : detail\.title\}\}/)
-  assert.match(wxml, /<block wx:if="\{\{detail\.canReadFinance && !detail\.noCash\}\}">[\s\S]*?fin-hero__amt/)
+  assert.match(wxml, /fin-hero__lab[^>]*>\{\{detail\.canReadFinance \? detail\.title \+ ' · 我的收入' : detail\.title\}\}/)
+  assert.match(wxml, /<block wx:if="\{\{detail\.canReadFinance\}\}">[\s\S]*?fin-hero__amt/)
   assert.match(wxml, /detail\.canReadFinance && detail\.settlementRoute === 'COOP_ORDER'/)
   assert.match(wxml, /detail\.canReadFinance && detail\.timeline\.length/)
 })
@@ -370,9 +369,7 @@ test('资金 null/unknown 保持待定，不拼成 ¥0.00 或 ¥null；真实零
     noCashReason: '本次不产生现金结算',
   })
   assert.equal(noCashZero.amountText, null, '只有服务端明确零现金语义才隐藏金额')
-  // 第十轮 f3 p2 F-7(2026-11-04):零现金不再画「—」占位,整条收入行隐藏,由状态签说明
-  assert.equal(noCashZero.amountFallback, '')
-  assert.equal(noCashZero.noCash, true)
+  assert.equal(noCashZero.amountFallback, '—')
 })
 
 test('计提规则只在单价与人头都是真实数值时展示，unknown 不得渲染为 ¥null', () => {
