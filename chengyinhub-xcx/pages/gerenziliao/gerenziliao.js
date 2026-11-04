@@ -93,6 +93,7 @@ Page({
     loadErrorSub: '',
     saving: false,
     saveError: '',
+    saveRetryable: false,
     saveSucceeded: false,
     saveSteps: ['保存资料'],
   },
@@ -717,12 +718,14 @@ Page({
       tagIds: this.data.selectedCategoryIds.join(',')
     };
 
-    this.setData({ saving: true, saveError: '', saveSucceeded: false });
+    this.setData({ saving: true, saveError: '', saveRetryable: false, saveSucceeded: false });
 
     app.sendRequest({
       url: '/api/user/update',
       data: JSON.stringify(data),
       method: "POST",
+      // j5 L4:失败原因只在保存区说一次,请求层不再另弹 toast。
+      autoErrorToast: false,
       header: {
         'Content-Type': 'application/json'
       },
@@ -762,7 +765,7 @@ Page({
       },
       fail: function (res) {
         that.applyProfileResult(context, () => {
-          that.setData({ saving: false, saveError: '网络没连上，请检查后重试' });
+          that.setData({ saving: false, saveError: '网络没连上，请检查后重试', saveRetryable: true });
         });
       }
     });
