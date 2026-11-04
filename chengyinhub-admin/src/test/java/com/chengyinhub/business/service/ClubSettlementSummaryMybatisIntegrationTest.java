@@ -42,7 +42,9 @@ class ClubSettlementSummaryMybatisIntegrationTest {
         String base = new String(Files.readAllBytes(Paths.get("../sql/base_schema_20260818.sql")), StandardCharsets.UTF_8);
         // cms_topic:CU-C-40 汇总行 left join 主题名,真库 schema 要有这张表
         // cms_activity 的 club_id 注释里有「;」,按行尾「;\n」切语句,不在注释中间截断。
-        for (String table : new String[]{"coop_settlement", "coop_settlement_adjustment", "ums_member_balance_detail", "cms_topic", "cms_activity"}) {
+        // 第十一轮 h4 L7:场次行减去结算后退款冲销,要读 settlement_detail → refund_application → cms_registration。
+        for (String table : new String[]{"coop_settlement", "coop_settlement_adjustment", "ums_member_balance_detail", "cms_topic", "cms_activity",
+                "settlement_detail", "refund_application", "cms_registration"}) {
             int start = base.indexOf("CREATE TABLE `" + table + "` (");
             jdbc.execute(base.substring(start, base.indexOf(";\n", start)));
         }
