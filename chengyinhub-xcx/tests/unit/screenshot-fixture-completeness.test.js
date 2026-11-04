@@ -352,7 +352,8 @@ const CONTRACTS = {
   C40: {
     sources: ['pages/club/create/index.js', 'pages/club/create/index.wxml'],
     role: 'club',
-    paths: ['step', 'dots', 'typeOptions[].val', 'typeOptions[].sub', 'dirOptions'],
+    // 第十轮 f3 第 5 项:类型选项的副标题行按 owner 说明小字规则撤掉,源码不再消费 sub。
+    paths: ['step', 'dots', 'typeOptions[].val', 'dirOptions'],
     arrays: ['dots', 'dirOptions'],
     equals: { step: 1 },
   },

@@ -19,7 +19,6 @@
     </view>
 
     <view class="step-head {{stepIn ? 'cy-rise-in' : ''}}" wx:if="{{mode !== 'intro'}}">
-      <view class="eyebrow" wx:if="{{bootstrapState === 'ready' && mode==='form'}}">成为主理人</view>
       <cy-page-title title="{{mode==='done' ? '成为主理人' : stepTitle}}" safe-top="{{false}}" />
     </view>
   </view>
@@ -39,12 +38,7 @@
     
     <view class="intro__title">把你带的人，
 变成你的俱乐部</view>
-    <view class="intro__points">
-      <view class="intro__point"><view class="intro__dot" aria-hidden="true"></view><text>填完身份立即生效，不用等审核</text></view>
-      <view class="intro__point"><view class="intro__dot" aria-hidden="true"></view><text>最多可以建 2 个俱乐部</text></view>
-
-    </view>
-    <view class="intro-cta"><cy-btn variant="primary" accessibilityLabel="开始申请" bindtap="startForm">开始申请</cy-btn></view>
+    <view class="intro-cta"><cy-btn variant="primary" accessibilityLabel="成为主理人" bindtap="startForm">成为主理人</cy-btn></view>
     
   </view>
 
@@ -65,7 +59,6 @@
 
     <!-- 步骤1 主理人实名 -->
     <view class="step cy-rise-in" wx:if="{{step===1}}">
-      <view class="legend">标 <text class="req" aria-hidden="true">*</text> 的是必填</view>
       <view class="field">
         <text class="field__label">实名/昵称<text class="req" aria-hidden="true">*</text></text>
         <view class="field__box {{leaderName ? 'is-filled' : ''}}">
@@ -122,22 +115,22 @@
     <view class="step cy-rise-in" wx:if="{{step===3}}">
       <view class="cap {{canDesignRoute ? 'on' : ''}}" data-field="canDesignRoute" bindtap="toggleBool"
             aria-role="checkbox" aria-checked="{{!!canDesignRoute}}" aria-label="能设计城市路线" hover-class="cy-pressed" hover-stay-time="80">
-        <view class="cap__main"><text class="cap__t">能设计城市路线</text><text class="cap__d">选点、排顺序、控制时长</text></view>
+        <view class="cap__main"><text class="cap__t">能设计城市路线</text></view>
         <view class="cap__check" aria-hidden="true"></view>
       </view>
       <view class="cap {{canDesignTask ? 'on' : ''}}" data-field="canDesignTask" bindtap="toggleBool"
             aria-role="checkbox" aria-checked="{{!!canDesignTask}}" aria-label="能设计任务或解谜" hover-class="cy-pressed" hover-stay-time="80">
-        <view class="cap__main"><text class="cap__t">能设计任务 · 解谜</text><text class="cap__d">关卡、线索、通关判定</text></view>
+        <view class="cap__main"><text class="cap__t">能设计任务 · 解谜</text></view>
         <view class="cap__check" aria-hidden="true"></view>
       </view>
       <view class="cap {{canNpc ? 'on' : ''}}" data-field="canNpc" bindtap="toggleBool"
             aria-role="checkbox" aria-checked="{{!!canNpc}}" aria-label="能带NPC或角色" hover-class="cy-pressed" hover-stay-time="80">
-        <view class="cap__main"><text class="cap__t">能带 NPC · 角色</text><text class="cap__d">现场角色、剧情推进</text></view>
+        <view class="cap__main"><text class="cap__t">能带 NPC · 角色</text></view>
         <view class="cap__check" aria-hidden="true"></view>
       </view>
       <view class="cap {{canMerchantCoop ? 'on' : ''}}" data-field="canMerchantCoop" bindtap="toggleBool"
             aria-role="checkbox" aria-checked="{{!!canMerchantCoop}}" aria-label="能与商家联动" hover-class="cy-pressed" hover-stay-time="80">
-        <view class="cap__main"><text class="cap__t">能与商家联动</text><text class="cap__d">找店、谈条件、对接执行</text></view>
+        <view class="cap__main"><text class="cap__t">能与商家联动</text></view>
         <view class="cap__check" aria-hidden="true"></view>
       </view>
       <view class="hint">已选 {{capCount || 0}} 项</view>
@@ -147,7 +140,7 @@
     <view class="step cy-rise-in" wx:if="{{step===4}}">
       <view class="cap {{hasGuideCert ? 'on' : ''}}" data-field="hasGuideCert" bindtap="toggleBool"
             aria-role="switch" aria-checked="{{!!hasGuideCert}}" aria-label="持导游或旅游资质" hover-class="cy-pressed" hover-stay-time="80">
-        <view class="cap__main"><text class="cap__t">持导游 / 旅游资质</text><text class="cap__d">用于后续等级评定</text></view>
+        <view class="cap__main"><text class="cap__t">持导游 / 旅游资质</text></view>
         <view class="sw" aria-hidden="true"><view class="sw__knob"></view></view>
       </view>
       <view class="field mt">
@@ -174,12 +167,10 @@
   <cy-error class="done-error" wx:if="{{bootstrapState === 'ready' && mode==='done' && doneState!=='ready' && doneState!=='loading'}}" fill
     title="主理人状态未确认" retry="重新确认" bind:retry="retryLeaderStatus" />
   <scroll-view scroll-y class="body" wx:if="{{bootstrapState === 'ready' && mode==='done' && doneState==='ready'}}">
-    <view class="sec-label">已成为主理人</view>
     <view class="card status-card">
       <view class="st-row">
         <view class="st-badge ok">已生效</view>
       </view>
-      <view class="st-desc">你已成为俱乐部主理人，身份立即生效。</view>
       <view class="st-kv" wx:if="{{submissionReceipt && submissionReceipt.leaderName}}"><text class="k">主理人</text><text class="v">{{submissionReceipt.leaderName}}</text></view>
       <view class="st-kv"><text class="k">可建俱乐部</text><text class="v">最多 2 个</text></view>
     </view>

@@ -231,3 +231,6 @@
 
 /* 提交失败条:补页边并与底部 CTA 留出间隔(采纳 master #1001 的这条,不是设计冲突) */
 .cc-alert { display: block; padding: 0 var(--cy-page-x); margin-bottom: var(--cy-space-4); }
+
+/* 第十轮 f3 第 5 项:开场屏要点行撤掉后,标题与按钮之间留出原来要点区的呼吸 */
+.intro__title + .intro-cta { margin-top: var(--cy-space-6); }

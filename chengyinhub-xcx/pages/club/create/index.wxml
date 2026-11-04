@@ -33,16 +33,8 @@
   <!-- ===== 开场屏(四步之前,Figma G0) ===== -->
   <view class="intro {{morphing ? 'intro--out' : 'cy-rise-in'}}"
         wx:if="{{bootstrapState === 'ready' && submitState !== 'success' && (introMode || morphing)}}">
-    <view class="intro__eyebrow">建一个俱乐部</view>
-    <view class="intro__title">给你的人
-一个固定的落脚点</view>
-    <view class="intro__points">
-      <view class="intro__point"><view class="intro__dot" aria-hidden="true"></view><text>类型 · 方向 · 资料 · 城市，一步一问</text></view>
-      <view class="intro__point"><view class="intro__dot" aria-hidden="true"></view><text>填完立刻可用，不用等审核</text></view>
-      <view class="intro__point"><view class="intro__dot" aria-hidden="true"></view><text>每位主理人最多建 2 个俱乐部</text></view>
-    </view>
+    <view class="intro__title">建一个俱乐部</view>
     <view class="intro-cta"><cy-btn variant="primary" accessibilityLabel="开始创建" bindtap="startForm">开始创建</cy-btn></view>
-    <view class="intro__fine">之后可修改</view>
   </view>
 
   <!-- 开场胶囊 → 进度条:共享元素形变,几何与约束见 utils/wizard-morph.js -->
@@ -64,18 +56,16 @@
 
   <view class="cc-head {{stepIn ? 'cy-rise-in' : ''}}" wx:if="{{bootstrapState === 'ready' && submitState !== 'success' && !introMode}}">
     
-    <view class="cc-q cy-h1">{{step === 1 ? '选择你的俱乐部类型' : (step === 2 ? '哪些最符合你的活动方向?' : (step === 3 ? '完善俱乐部资料' : '你的俱乐部在哪座城市?'))}}</view>
-    <view class="cc-legend" wx:if="{{step === 3 || step === 4}}">标 <text class="cc-req" aria-hidden="true">*</text> 的是必填</view>
+    <view class="cc-q cy-h1">{{step === 1 ? '选择你的俱乐部类型' : (step === 2 ? '哪些最符合你的活动方向？' : (step === 3 ? '完善俱乐部资料' : '你的俱乐部在哪座城市？'))}}</view>
   </view>
 
   <!-- 步骤1:俱乐部类型(单选大类) -->
   <view wx:if="{{bootstrapState === 'ready' && submitState !== 'success' && !introMode && step === 1}}" class="cc-body cy-rise-in">
     <view class="cc-opt {{clubType === item.val ? 'sel' : ''}}"
           wx:for="{{typeOptions}}" wx:key="val" bindtap="pickType" data-val="{{item.val}}"
-          aria-role="radio" aria-checked="{{clubType === item.val}}" aria-label="{{item.val}}，{{item.sub}}" hover-class="cy-pressed" hover-stay-time="80">
+          aria-role="radio" aria-checked="{{clubType === item.val}}" aria-label="{{item.val}}" hover-class="cy-pressed" hover-stay-time="80">
       <view class="cc-opt-body">
         <view class="cc-opt-t">{{item.val}}</view>
-        <view class="cc-opt-s" wx:if="{{item.sub}}">{{item.sub}}</view>
       </view>
       <view class="cc-radio {{clubType === item.val ? 'on' : ''}}"></view>
     </view>
@@ -120,7 +110,7 @@
       <cy-inline-error class="cc-field-err" wx:if="{{nameError}}" kind="error" title="{{nameError}}" />
     </view>
     <view class="cc-field">
-      <text class="cc-field-label">一句话介绍(选填)</text>
+      <text class="cc-field-label">一句话介绍（选填）</text>
       <textarea class="cc-textarea cc-input--field {{description ? 'is-filled' : ''}}" aria-label="一句话介绍，选填" placeholder="用一句话说清你的俱乐部是做什么的" value="{{description}}" data-field="description" bindinput="onInput" maxlength="200" disabled="{{submitting}}" />
     </view>
   </view>
@@ -132,11 +122,11 @@
       <input class="cc-input cc-input--field {{city ? 'is-filled' : ''}}" aria-label="所在城市，必填" placeholder="如 上海" value="{{city}}" data-field="city" bindinput="onInput" maxlength="20" disabled="{{submitting}}" />
     </view>
     <view class="cc-field">
-      <text class="cc-field-label">核心关键词(选填)</text>
+      <text class="cc-field-label">核心关键词（选填）</text>
       <input class="cc-input cc-input--field {{keywords ? 'is-filled' : ''}}" aria-label="核心关键词，选填" placeholder="逗号分隔，如 徒步，摄影" value="{{keywords}}" data-field="keywords" bindinput="onInput" maxlength="60" disabled="{{submitting}}" />
     </view>
     <view class="cc-field">
-      <text class="cc-field-label">风格/调性(选填)</text>
+      <text class="cc-field-label">风格/调性（选填）</text>
       <input class="cc-input cc-input--field {{style ? 'is-filled' : ''}}" aria-label="风格或调性，选填" placeholder="如 沉浸剧情" value="{{style}}" data-field="style" bindinput="onInput" maxlength="30" disabled="{{submitting}}" />
     </view>
   </view>

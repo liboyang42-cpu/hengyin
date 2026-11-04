@@ -531,25 +531,28 @@ test('资质图片上传失败或仍在上传时不得提交本机临时路径',
   assert.equal(h.requests.length, 0)
 })
 
+// 第十轮 f3 第 5 项(p3 F7 / j2 F-24,owner 规则「删说明小字,靠版式说清」):
+// 开场屏两条要点、资质行「用于后续等级评定」、完成态重复三遍的「已成为主理人 / 已生效 / 身份立即生效」
+// 收成一枚「已生效」状态。旧断言要求这些说明句必须在场,是被 owner 新规则取代的旧决定,按新口径改写;
+// 「即时生效不得暗示等待审核」这条负向约束原样保留。
 function assertDirectLeaderActivationCopy(wxml) {
   assert.doesNotMatch(wxml, /有证的话审核会快一些|等待审核|待审核|审核通过后/, '即时生效的身份申请不得暗示等待审核')
-  assert.match(wxml, /填完身份立即生效，不用等审核/)
-  assert.match(wxml, /class="st-desc">你已成为俱乐部主理人，身份立即生效。/)
-  assert.match(wxml, /用于后续等级评定/)
+  assert.match(wxml, /class="st-badge ok">已生效</, '完成态必须用一枚状态说清已生效')
+  assert.doesNotMatch(wxml, /用于后续等级评定|填完身份立即生效，不用等审核|最多可以建 2 个俱乐部|标 <text class="req"/, '说明小字不得回来')
 }
 
-test('主理人身份立即生效，资质只说明后续等级评定', () => {
+test('主理人身份立即生效，完成态只留一枚已生效状态', () => {
   assertDirectLeaderActivationCopy(WXML)
 })
 
 test('负控：资质文案恢复审核提速暗示必须判红', () => {
-  const mutated = WXML.replace('用于后续等级评定', '有证的话审核会快一些')
+  const mutated = WXML.replace('<text class="cap__t">持导游 / 旅游资质</text>', '<text class="cap__t">持导游 / 旅游资质</text><text class="cap__d">有证的话审核会快一些</text>')
   assert.notEqual(mutated, WXML, '文案负控锚点必须存在')
   assert.throws(() => assertDirectLeaderActivationCopy(mutated), /即时生效的身份申请不得暗示等待审核/)
 })
 
-test('负控：完成态失去身份立即生效提示必须判红', () => {
-  const mutated = WXML.replace('你已成为俱乐部主理人，身份立即生效。', '身份申请已提交。')
+test('负控：完成态失去已生效状态必须判红', () => {
+  const mutated = WXML.replace('<view class="st-badge ok">已生效</view>', '<view class="st-badge ok">已提交</view>')
   assert.notEqual(mutated, WXML, '完成态负控锚点必须存在')
   assert.throws(() => assertDirectLeaderActivationCopy(mutated))
 })
