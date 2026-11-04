@@ -218,3 +218,26 @@ Commit `5690cf2a`.
 2. Whether 到场 should count lead check-ins only. Recommended: keep C-10 as it is (item 6).
 3. Whether ordinary members should see something other than 城瘾用户 for members without a nickname (item 7).
 4. The missing `settlement_detail` line for the kept half of a 50% refund, and that the platform isn't debited on a refund after settlement (item 1). Bookkeeping only; balances are correct.
+
+## CI
+
+No commit has all workflows green. The red jobs are listed below, with their owners.
+
+**Funds MySQL IT: green** on `aacd393c`, which contains every code commit from this lane up to `14a4e674`.
+- The first red here (`bc40b85e`) was mine. L7's new query needs three tables that the IT and an H2 test didn't build. Fixed in `21a27c0a` and `14a4e674`.
+
+**Main CI** at `c3605a27`, which contains all of this lane's code: 27 jobs passed and 3 failed.
+- **Backend tests:** `CityDirectorConsoleMySqlIT`, 3 cases. This is mine. The IT pinned the old rule that a paid player who left their team drops out of the session's roster and 全员 broadcast. L3 reverses that.
+  - Fixed in the commit after this note. Only a refund now removes a player from 全员.
+  - It passes 6/6 on real MySQL 8. No test was added or removed.
+- **Mini program static gates:** not this lane. These are the same three reds f3 named:
+  - g3's `growthcenter` `{{me.rank}}名`;
+  - g3's `session-picker` `ticketsError`;
+  - f2's `merchantinfo` `hostMerchants`.
+
+  I reran the three sub-gates locally (without their self-tests); nothing from h4 is flagged.
+- **Migration safety gate:** not this lane. 「SQL inventory is unsafe」 first appears at h2's `31222f8b`, which added a migration; the same check makes 「Isolated authenticated Redis recovery」 red from that commit on. That job was green at this lane's `20150c6b`, and this lane adds no migrations.
+
+Main CI on later heads was cancelled by other lanes' pushes. I have not seen main CI on the commit with the IT update.
+
+STATUS: PARTIAL - the merchant is never paid under 按核销付费 on club sessions, and that needs an owner money rule (item 1). No screenshots were taken. Main CI has not run green on a commit containing all of this lane's work: the red jobs left at `c3605a27` belong to other lanes, and mine is fixed after it.
