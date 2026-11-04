@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5689,
+  "controlCount": 5690,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -1398993,7 +1398993,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:503"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:520"
       }
     },
     {
@@ -1399110,7 +1399110,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:523"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:550"
       }
     },
     {
@@ -1399244,7 +1399244,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:513"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:540"
       }
     },
     {
@@ -1399382,7 +1399382,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:465"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:482"
       }
     },
     {
@@ -1399520,7 +1399520,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:476"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:493"
       }
     },
     {
@@ -1399640,7 +1399640,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:412"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:429"
       }
     },
     {
@@ -1399760,7 +1399760,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:413"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:430"
       }
     },
     {
@@ -1399921,7 +1399921,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:783"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:810"
       }
     },
     {
@@ -1400083,7 +1400083,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:810"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:837"
       }
     },
     {
@@ -1400203,7 +1400203,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:840"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:867"
       }
     },
     {
@@ -1400413,7 +1400413,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:560"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:587"
       }
     },
     {
@@ -1400540,7 +1400540,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:551"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:578"
       }
     },
     {
@@ -1400724,11 +1400724,131 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:685"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:712"
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:324:bind:cancel:onTeamSheetCancel:16",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:322:bindtap:startPlay:15",
+      "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
+      "hostRoutes": [
+        "subpackageMember/coupon-wallet/index",
+        "subpackageMember/order/order",
+        "subpackageMember/orderinfo/orderinfo",
+        "subpackageRoam/poi-detail/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-member-order-detail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/order/order",
+          "segments": [
+            {
+              "selector": "cy-scene-member-order-detail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "#roamDeepLink",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-member-order-detail",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "subpackageMember/components/cy/scene-member-order-detail/index.wxml",
+        "js": "subpackageMember/components/cy/scene-member-order-detail/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "startPlay",
+        "line": 322,
+        "selectorHint": ".primary-cta",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "开始游戏",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/play/index?"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:530"
+      }
+    },
+    {
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:327:bind:cancel:onTeamSheetCancel:17",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1400801,7 +1400921,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:cancel",
         "handler": "onTeamSheetCancel",
-        "line": 324,
+        "line": 327,
         "selectorHint": "cy-option-sheet[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1400841,11 +1400961,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:540"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:567"
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:324:bind:select:onTeamSheetSelect:15",
+      "id": "subpackageMember/components/cy/scene-member-order-detail/index.wxml:327:bind:select:onTeamSheetSelect:16",
       "route": "component:subpackageMember/components/cy/scene-member-order-detail/index",
       "hostRoutes": [
         "subpackageMember/coupon-wallet/index",
@@ -1400918,7 +1401038,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onTeamSheetSelect",
-        "line": 324,
+        "line": 327,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1400978,7 +1401098,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:527"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:554"
       }
     },
     {
@@ -1401161,7 +1401281,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:418"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:435"
       }
     },
     {
@@ -1401288,7 +1401408,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:544"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:571"
       }
     },
     {

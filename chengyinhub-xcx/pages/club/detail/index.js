@@ -2925,7 +2925,7 @@ Page({
       && (this.canGovern() || this.data.canManageActivities));
     const url = canManage
       ? '/pages/club/topic-detail/index?topicId=' + id + this.clubIdQuery()
-      : '/pages/topic/index/index?id=' + id;
+      : '/pages/topic/index/index?id=' + id + '&via=session';
     if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: url, complete: () => { this._navigating = false; } });
   },
 

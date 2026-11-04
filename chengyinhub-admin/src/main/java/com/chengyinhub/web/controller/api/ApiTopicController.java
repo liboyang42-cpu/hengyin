@@ -2040,6 +2040,22 @@ public class ApiTopicController extends BaseController {
         return merchants.size();
     }
 
+    /** j2 F-06:查看者在这些(未结束、公开可见的)场次里有没有报名成功的票;游客(0)一律否。 */
+    static boolean signedUpForAnySession(IViewRegistrationService registrations, List<CmsActivity> sessions, Long memberId) {
+        if (registrations == null || sessions == null || memberId == null || memberId <= 0) return false;
+        for (CmsActivity session : sessions) {
+            if (session == null || session.getId() == null) continue;
+            ViewRegistration mine = new ViewRegistration();
+            mine.setOwnerType(2L);
+            mine.setOwnerId(session.getId());
+            mine.setMemberId(memberId);
+            mine.setRegistrationStatus(2);
+            List<ViewRegistration> rows = registrations.selectRegistrationSummaries(mine);
+            if (rows != null && !rows.isEmpty()) return true;
+        }
+        return false;
+    }
+
     @PostMapping("/info-to-user")
     @Parameters({
             @Parameter(name = "id", description = "主题id")
@@ -2324,6 +2340,11 @@ public class ApiTopicController extends BaseController {
                 }
             }
             topicInfoVO.setActivityList(activitySummaries);
+            // j2 F-06:已付本主题某个未结束场次(活动层报名)的玩家同样是「已报名」,主按钮去票夹进场,不再推「随时开玩」。
+            if (!Integer.valueOf(1).equals(topicInfoVO.getIsSignUp())
+                    && signedUpForAnySession(viewRegistrationService, visibleActivities, memberId)) {
+                topicInfoVO.setIsSignUp(1);
+            }
 
             // 双署名 + 移交入口:回填承接俱乐部名(clubId→clubName),标记当前查看者是否为主题创建者(移交按钮门控)
             if (topicInfoVO.getClubId() != null && topicInfoVO.getClubId() > 0) {

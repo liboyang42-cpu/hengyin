@@ -174,9 +174,26 @@ function toCompletionView(vo) {
   return view
 }
 
-// V-20:订单详情不再放「查看票夹」,底部主 CTA 只剩待支付的「去支付」。
-function resolvePrimaryCta(orderStateKey) {
-  return orderStateKey === 'pending_payment' ? 'pay' : '';
+// V-20:订单详情不再放「查看票夹」。待支付是「去支付」;
+// F-06(j2):已付、还能玩的票是「开始游戏」,直接进 play(与票夹「开始游戏」同一目标),不绕票夹。
+const PLAYABLE_STATES = ['not_started', 'in_progress', 'non_refundable'];
+function resolvePrimaryCta(info) {
+  const value = info || {};
+  if (value.orderStateKey === 'pending_payment') return 'pay';
+  if (Number(value.registrationStatus) === 2 && Number(value.paymentStatus) === 2
+    && PLAYABLE_STATES.indexOf(value.orderStateKey) >= 0 && playQuery(value)) return 'play';
+  return '';
+}
+
+// 与票夹 _openTicket 同口径:场次票(ownerType=2)带 activityId,主题票带 topicId。
+function playQuery(info) {
+  const value = info || {};
+  const activity = Number(value.ownerType) === 2;
+  const ownerId = activity
+    ? ((value.cmsActivity && value.cmsActivity.id) || value.ownerId)
+    : ((value.cmsTopic && value.cmsTopic.id) || value.ownerId);
+  if (!ownerId || !value.id) return '';
+  return (activity ? 'activityId=' : 'topicId=') + ownerId;
 }
 
 function isCityOrder(info) {
@@ -509,6 +526,16 @@ Component({
     },
 
     /* V-20 业主 2026-10-29:订单详情不再放「查看票夹」,原 goSignInfo 出口随按钮一起删除。 */
+
+    startPlay() {
+      const info = this.data.info || {};
+      const query = playQuery(info);
+      if (!query || this._playNavigating) return;
+      this._playNavigating = true;
+      const name = this.data.productTitle ? '&topicName=' + encodeURIComponent(this.data.productTitle) : '';
+      wx.navigateTo({ url: '/pages/play/index?' + query + '&registrationId=' + info.id + '&entry=ticket' + name,
+        complete: () => { this._playNavigating = false; } });
+    },
 
     startOrderTeam() {
       const info = this.data.info || {}
@@ -1030,7 +1057,7 @@ Component({
             const qty = Number(info.orderNum) > 0 ? Number(info.orderNum) : 1;
             const pointAmt = Number(info.pointPaymentAmount);
             const wechatAmt = Number(info.wechatPaymentAmount);
-            const primaryCta = resolvePrimaryCta(info.orderStateKey);
+            const primaryCta = resolvePrimaryCta(info);
             // V-20:票价显示真实单价;免费报名没有票价快照时就是 ¥0,不写「—」。
             const ticketPriceRaw = info.ticketPrice;
             const ticketPriceShown = ticketPriceRaw !== undefined && ticketPriceRaw !== null && ticketPriceRaw !== ''

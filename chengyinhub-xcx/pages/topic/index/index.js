@@ -200,7 +200,7 @@ Page({
     const validTopicId = Number.isFinite(topicId) && Number.isInteger(topicId) && topicId > 0;
 
     that.getSystemInfo();
-    that.calculateScreenHeights();
+    that.calculateScreenHeights(); that._viaSession = options.via === 'session'; // j2 F-06:俱乐部场次卡进来,主按钮先给场次
 
     that.setData({
       is_join: options.is_join != undefined ? options.is_join : 0,
@@ -465,7 +465,7 @@ Page({
     this.setData({
       coverImages: motion.buildCoverImages(data), kbIdx: 0,
       publisher: motion.buildPublisher(data),
-      heroCta: motion.buildHeroCta(data, { isJoin: this.data.is_join, merchantClosed: data.merchantClosed === true, priceText }),
+      heroCta: motion.buildHeroCta(data, { isJoin: this.data.is_join, merchantClosed: data.merchantClosed === true, priceText, preferSession: this._viaSession }),
       merchantCards,
       storyCards: motion.buildStoryCards(data, merchantCards),
       storyMeta: motion.storyMeta(data),
