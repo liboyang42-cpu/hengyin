@@ -9,7 +9,7 @@
 
   <view class="sc-stage">
     <!-- 活动:封面在上,活动名、粗斜体大日期、时间地点在下 -->
-    <view class="sc-card sc-card--act" wx:if="{{kind === 'activity' || kind === 'shop'}}">
+    <view class="sc-card sc-card--act" wx:if="{{kind === 'activity'}}">
       <image class="sc-cover" wx:if="{{cover}}" src="{{cover}}" mode="aspectFill" />
       <view class="sc-in">
         <text class="sc-eb">{{label}}</text>
@@ -19,12 +19,14 @@
       </view>
     </view>
     <!-- 主题:封面铺满整张卡并压暗,大号粗斜体主题名,下面一条竖着的路线,站点编号连成线 -->
-    <view class="sc-card sc-card--theme" wx:elif="{{kind === 'theme'}}">
+    <!-- 第九轮 m2 补充第 4 项:店铺卡与主题卡同一版式 —— 店铺封面铺满压暗,店名、地址,右下是店铺码(不再是一块空色) -->
+    <view class="sc-card sc-card--theme {{kind === 'shop' ? 'sc-card--shop' : ''}}" wx:elif="{{kind === 'theme' || kind === 'shop'}}">
       <image class="sc-bgimg" wx:if="{{cover}}" src="{{cover}}" mode="aspectFill" />
       <view class="sc-shade"></view>
       <view class="sc-in">
-        <text class="sc-eb">{{meta ? '主题 · ' + meta : '主题'}}</text>
+        <text class="sc-eb">{{kind === 'shop' ? '店铺' : (meta ? '主题 · ' + meta : '主题')}}</text>
         <text class="sc-big">{{title}}</text>
+        <text class="sc-m" wx:if="{{kind === 'shop' && when}}">{{when}}</text>
         <view class="sc-line" wx:if="{{stops.length}}">
           <view class="sc-line-i" wx:for="{{stops}}" wx:key="index"><view class="sc-line-dot">{{index + 1}}</view><text class="sc-line-t">{{item}}</text></view>
         </view>

@@ -2443,7 +2443,9 @@ Component({
     if (!m || !this.data.userId) return;
     this.setData({
       shopShareShow: true,
-      shopShareCard: { kind: 'shop', id: String(this.data.userId), title: m.name || '', cover: (m.coverImage || m.logo || '').split(',')[0], when: m.address || '' },
+      // 第九轮 m2 补充第 4 项:卡面用店铺自己的照片 —— 装修封面,没有就取相册第一张,再没有用店铺头像
+      shopShareCard: { kind: 'shop', id: String(this.data.userId), title: m.name || '', when: m.address || '',
+        cover: String(m.coverImage || (this.data.merchantGallery || [])[0] || m.logo || m.avatar || '').split(',')[0] },
     });
   },
 

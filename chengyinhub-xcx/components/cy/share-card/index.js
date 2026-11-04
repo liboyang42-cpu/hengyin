@@ -165,11 +165,12 @@ Component({
       const fit = (img, x, y, w, h) => { const s = Math.max(w / img.width, h / img.height); g.drawImage(img, x + (w - img.width * s) / 2, y + (h - img.height * s) / 2, img.width * s, img.height * s); };
       g.textAlign = 'left';
       let ty = cy + 70;
-      if (d.kind === 'theme') {
+      if (d.kind === 'theme' || d.kind === 'shop') {
         if (cover) fit(cover, cx, cy, cw, ch);
         g.fillStyle = 'rgba(0,0,0,.55)'; g.fillRect(cx, cy, cw, ch); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
-        g.fillStyle = 'rgba(255,255,255,.72)'; g.font = '600 24px sans-serif'; g.fillText(d.meta ? '主题 · ' + d.meta : '主题', cx + 40, ty); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
+        g.fillStyle = 'rgba(255,255,255,.72)'; g.font = '600 24px sans-serif'; g.fillText(d.kind === 'shop' ? '店铺' : (d.meta ? '主题 · ' + d.meta : '主题'), cx + 40, ty); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
         g.fillStyle = '#FFFFFF'; g.font = 'italic 900 64px sans-serif'; g.fillText(d.title.slice(0, 8), cx + 40, ty + 84); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
+        if (d.kind === 'shop' && d.when) { g.fillStyle = 'rgba(255,255,255,.7)'; g.font = '26px sans-serif'; g.fillText(d.when.slice(0, 18), cx + 40, ty + 134); } /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
         ty += 160;
         d.stops.forEach((s, i) => {
           const y = ty + i * 76;
@@ -178,7 +179,7 @@ Component({
           g.fillStyle = '#121317'; g.font = '800 22px sans-serif'; g.textAlign = 'center'; g.fillText(String(i + 1), cx + 60, y + 8); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
           g.textAlign = 'left'; g.fillStyle = '#FFFFFF'; g.font = '600 28px sans-serif'; g.fillText(s.slice(0, 14), cx + 98, y + 10); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
         });
-      } else if (d.kind === 'activity' || d.kind === 'shop') {
+      } else if (d.kind === 'activity') {
         if (cover) fit(cover, cx, cy, cw, 420);
         ty = cy + 480;
         g.fillStyle = 'rgba(255,255,255,.6)'; g.font = '600 24px sans-serif'; g.fillText(d.label, cx + 40, ty); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
@@ -198,7 +199,8 @@ Component({
         g.textAlign = 'left';
       }
       g.fillStyle = '#FFFFFF'; g.font = '800 30px sans-serif'; g.fillText('城瘾', cx + 40, cy + ch - 48); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
-      if (qr) { g.fillStyle = '#FFFFFF'; round(cx + cw - 160, cy + ch - 160, 120, 120, 16); g.fill(); g.drawImage(qr, cx + cw - 152, cy + ch - 152, 104, 104); } /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
+      const qs = d.kind === 'shop' ? 168 : 120;
+      if (qr) { g.fillStyle = '#FFFFFF'; round(cx + cw - 40 - qs, cy + ch - 40 - qs, qs, qs, 16); g.fill(); g.drawImage(qr, cx + cw - 32 - qs, cy + ch - 32 - qs, qs - 16, qs - 16); } /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
       g.restore();
       return new Promise((resolve, reject) => wx.canvasToTempFilePath({
         canvas: cv, fileType: 'png', destWidth: cv.width, destHeight: cv.height,
