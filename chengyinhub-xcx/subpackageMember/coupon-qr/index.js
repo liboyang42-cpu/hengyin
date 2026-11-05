@@ -69,7 +69,7 @@ Page({
     const historyId = String(this.data.couponHistoryId);
     if (this._sessionOwner !== undefined
         && (this._sessionOwner !== owner || this._sessionHistoryId !== historyId)) {
-      this.setData({ useStatus: 0, useTimeText: '', coupon: {}, notStarted: false });
+      this.setData({ entryState: 'ready', useStatus: 0, useTimeText: '', coupon: {}, notStarted: false });
     }
     this._sessionOwner = owner;
     this._sessionHistoryId = historyId;
@@ -201,6 +201,7 @@ Page({
             return;
           }
           const patch = {
+            entryState: 'ready',
             qrcodeUrl: parsed.qr,
             qrState: parsed.status === 0 ? 'ready' : 'loading',
             countdown: parsed.countdown,
@@ -269,7 +270,7 @@ Page({
     if (currentOwnerId()) return true;
     this._endSession();
     this._clearRenderedCredential();
-    this.setData({ coupon: {}, useTimeText: '', useStatus: null, notStarted: false, countdown: 0, qrState: 'error', errMsg: '登录状态待确认，请登录后重试' });
+    this.setData({ entryState: 'ready', coupon: {}, useTimeText: '', useStatus: null, notStarted: false, countdown: 0, qrState: 'error', errMsg: '登录状态待确认，请登录后重试' });
     return false;
   },
 
