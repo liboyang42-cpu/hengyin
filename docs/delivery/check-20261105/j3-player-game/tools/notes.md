@@ -1,0 +1,22 @@
+# running notes
+- 990014 T1 星尘 (9008/7002), 990015 T2 纸本 反馈 (9003/7001), 990017 T4 夜城 sensors (9003/7001)
+- T3 (状态+d20, VM0) refused: 「节点 105（05 拍照审核） 玩法 photoCheck 工具 genericSettlement：尚无通用结算完成证明」
+- T5 (d20 only, my fixture w/o schemaVersion) refused 旅程数值规则版本不支持 -> my fixture error, fixed
+- probe 状态 + VM0: all +fb templates (and album) refused 「个人任务须使用真实商户到达或已验证扫码/GPS节点…」; plain ones publish
+- buy 990014 UI: checkout→参与人信息 list (address page), navigator no url in rig (HARNESS), typed phone 13800000004 but checkout 139****0004 and create sends account phone 13900000004
+- 出发 first tap during reveal = skip only
+- s1 qaPick wrong grey block 再想想 + redundant 提交 (F16 still)
+- s2 qaText: 「不对。把它清掉，再试一次。」 still; right answer no reveal text
+- s3 sort/s4 match/s5 classify PASS; instruction lines remain; classify 「都放好了，看看下面对不对」 + 分好了/继续故事 stacked
+- s6 estimate: 米 far left; one-shot result 差得有点远 ok
+- s7 predict daytime: chose B 不会 (payload B), 选 stamp drawn on card A 会 and over question text (26-t1s7-e); 今天 20:00 截止。; 继续故事 shown -> route goes on
+- s8 翻卡: loud blue panel, 换一张/就这张 overlap card, card shows label only
+- s9 coin: 「正面还是反面?」 ASCII ?; first 继续故事 tap right after flip did nothing
+- F6 still: reopen 51 m away -> arrive 500 还没到这一站附近 silently (31-f6-reopen-away); back at station auto-completes
+- s11 D20加值 「继续」 not 继续故事
+- s12 profile: title twice; 各项指标在范围内 stamp
+- s14 dailySign: NO. 0000 after claim; 你留给下一个人的 card empty (own text not shown) and covers the revealed line; two backs; light panel; 出发+继续故事
+- generic (状态/检定) themes refuse at publish with 「节点 N（name） 玩法 X 工具 genericSettlement：尚无通用结算完成证明」 for photoCheck, objectCard, hidden, random(翻卡), album+random combo; and with VM0 (无需验证, editor default) every station with outcomeRules (typeIn always, check, album, any 结果反馈) refused 「个人任务须使用真实商户到达…」
+- s15 blindTaste: 店员会把小样 line in a no-shop theme; 尝好了，松手睁眼 stays after; no verdict
+- s16 typeIn wrong: silent back to start, no feedback (37-t1s16-d)
+- s17 stopwatch: 9.696 shown 「9.70 · 早 0.30 秒」 counted miss vs ±0.300; after reopen remaining-tries count off by one: 3rd miss says 「还有 1 次机会」 + 再来一局 + 继续故事 (38-t1s17-e); route goes on
