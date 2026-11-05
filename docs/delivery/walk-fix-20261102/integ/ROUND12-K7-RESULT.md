@@ -57,8 +57,14 @@ None changed. RefundPolicy edits are punctuation in player-facing reason strings
 
 ## CI
 
-See the last section, added after the push of this file.
+Run on a commit containing all my work: GitHub CI run 41982574271 on `37857f0c` (k5's doc commit on top of my `404c31b2`; the run on `404c31b2` itself, 41982343940, was cancelled by that newer push).
+
+- **Passed:** secret scan (gitleaks), changed-area detection, migration layout gate, admin UI E2E contract gate, mini-program unit shards 1, 2, 4, 5, 6, 8, 10, 11, 14, 16, 17, 18, 19. Also green on that commit: Isolated authenticated Redis recovery, Mini followup focused regression; Funds MySQL IT was green on my `fea76d01`.
+- **Failed, not mine:** mini-program unit shards 15 (2 tests) and 20 (1 test); I could not download the job logs (blob host blocked by the proxy), but locally the only failing unit files are `mycanyu-refresh-state`, `play-chapter-story-blocks-contract`, `r10-j2-f06-session-entry` and `verification-unknown-adapters`, and all four fail on `00a4f426~1`, the commit before my first one. Static gates: DANGER-GATE selftest baseline is red on `club.joinRequest.reject` and `club.enroll.refund` having no consequences (reproduced in a throwaway worktree); none of my commits touch club pages or the danger registry.
+- **Cancelled by fail-fast, so not proven in CI:** backend tests, migration safety, SBOM, admin UI build, shards 3, 7, 9, 12, 13. Backend coverage for my Java changes is the local Maven run above.
 
 ## What only a phone proves
 
 D20 die canvas and hold-to-roll; the predict wheel's 3D transform and seal landing on a real WebView; native picker-view gestures on 猜数字; real GPS arrival and the location sheet; camera / vision for 拍照审核 in a 状态 theme; WeChat payment.
+
+STATUS: PARTIAL - N4, N1, N2, N3, N5, N6 fixed and walked in the rig with screenshots; N7–N18 and F9/F13/F14/F16/F17/F18 only partly done (N11, N12, N13, N18, F13, F17, F18 not done; N10's note relay and N16's sensor disclosures need the owner); CI on the head is red in other lanes' tests and backend CI was cancelled by fail-fast
