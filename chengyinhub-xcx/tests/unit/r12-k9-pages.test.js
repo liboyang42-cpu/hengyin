@@ -84,7 +84,8 @@ test('p1 N-9:票夹队伍胶囊按内容宽;个人介绍空时一行「未填写
 
 test('p1 N-10:会话链接没带名字时从会话列表取对方昵称;徽章没名字不在币下再写一遍「徽章」', () => {
   const js = read('subpackageB/pages/im/chat/index.js');
-  assert.match(js, /if \(!that\.data\.name && Number\(that\.data\.type\) === 1\) that\._fillPeerName\(\);/);
+  assert.match(js, /this\._needPeerName = !name && Number\(type\) === 1;/);
+  assert.match(js, /if \(that\._needPeerName && !that\.data\.name\) that\._fillPeerName\(\);/);
   assert.match(js, /_fillPeerName\(\) \{[\s\S]*?url: '\/api\/im\/conversations'[\s\S]*?this\.setData\(\{ name: nickname, heroName: nickname \}\)/);
   assert.match(read('subpackageP3/pages/badge-3d/index.wxml'), /<view class="b3__name" wx:if="\{\{name !== '徽章'\}\}">\{\{name\}\}<\/view>/);
 });

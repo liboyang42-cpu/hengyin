@@ -175,7 +175,7 @@ Page({
       moreSheetItems: readOnly ? ['隐藏会话'] : ['举报这条消息', '举报对方', '拉黑', '隐藏会话'],
       myId: app.getUserID(),
       myAvatar: app.getAvatar(),
-    });
+    }); this._needPeerName = !name && Number(type) === 1; // 第十二轮 k9(p1 N-10):链接没带对方名字时,首屏读完再去会话列表取
     // 坏链接(没有 conversationId)不是「空对话」:不打后端,也不给可用输入栏。
     if (!conversationId) { this.setData({ loadState: 'missing' }); return; }
     /* CU-M-125:系统通知(type=2,后端 ImConversation.TYPE_SYSTEM)没有收件人,走查实测发出去
@@ -336,7 +336,7 @@ Page({
             server.clientMessageId === m.clientMessageId && server.senderId == m.senderId));
           const msgs = list.concat(pending);
           that.setData({ msgs, sending: msgs.some(m => m.sending), hasMore: !!res.data.hasMore, cursor: res.data.nextCursor || 0, loadState: 'ready', loadErrorText: '', loadMoreError: '' });
-          if (!that.data.name && Number(that.data.type) === 1) that._fillPeerName();
+          if (that._needPeerName && !that.data.name) that._fillPeerName();
           // 拉黑只存服务端:重进会话按回包禁用输入框,不然能打字、一发就失败(3-22)
           const blockedByMe = res.data.blockedByMe === true;
           that._blockedByMe = blockedByMe;
