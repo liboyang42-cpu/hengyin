@@ -5,7 +5,7 @@ const N = process.env.N || 'x';
 const w = await start({ path: 'pages/club/detail/index?id=7001', identity: 'e2e-openid-9004' });
 if (process.env.JOIN) { await w.step('加入', () => w.tap('加入', { exact: true })); await sleep(1500); await w.snap(`${N}-0-joined`); console.log('early', (await w.text()).slice(0, 300)); w.lastBody(/join/); }
 try { await w.tap('知道了', { exact: true }); await sleep(600); } catch (e) {}
-await w.step('tab 帖子', () => w.tap('帖子', { exact: true })); await sleep(1000);
+await w.step('tab 帖子', () => w.tap('帖文', { exact: true })); await sleep(1000);
 for (const [i, img, text] of JSON.parse(process.env.CASES)) {
   await w.step('open composer', () => w.tap('有什么新鲜好玩的分享吗？')); await sleep(800);
   await w.step('type', () => w.typeInto('.cmp-input', text));

@@ -1,0 +1,14 @@
+# Held-theme receipt through the editor (fabu?id=<draft> → 下一步 → 预览 → 完成) with WeChat msg_sec_check answering busy (rig seam).
+# Request captured from the page (dbg_fabu.mjs): the editor's first call is the cloud-draft save.
+REQ /api/topic/v2/update {"saveDraft":1,"id":"990020", ...}
+RESP /api/topic/v2/update {"msg":"已提交审核","code":200,"data":{"topicId":990016|990017|990018|990019|990020,"reviewState":"PENDING","published":false,...}}
+# DB right after: cms_topic status=0 user_status=0 check_status=2 is_draft=1; content_safety_recheck row state=0
+# Editor then re-reads author-edit-detail to verify the save and stops with
+#   「这次还没有保存 — 云端保存的主封面与本机不一致；暂时确认不了原保存结果…」
+# HARNESS: server-draft.js imageIdentity() only strips signatures for https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/…;
+# the rig's fake OSS host never matches, so publish-draft is never sent from the editor in the rig.
+# Follow-on, over HTTP:
+p_release.py TOPIC 990020 pass         -> recheck state 0 NO_OPEN_TASK (still a draft; nothing published)
+p_publish_draft.py 990020 (WeChat ok)  -> 200 「已提交审核」 published=false; cms_topic status 0 user_status 0 is_draft 0; player: 主题活动不存在
+p_release.py TOPIC 990020 pass         -> recheck PASS; cms_topic 1/1/1; player can open it
+# Create path (non-draft), HTTP, club lead 9008, WeChat busy: see 09-held-create-receipt.txt

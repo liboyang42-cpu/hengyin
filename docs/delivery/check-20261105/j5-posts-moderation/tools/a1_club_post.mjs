@@ -2,7 +2,7 @@ import { start, sleep } from './lib.mjs';
 const N = process.env.N || 'x';
 const texts = JSON.parse(process.env.TEXTS);
 const w = await start({ path: 'pages/club/detail/index?id=7001', identity: process.env.WHO || 'e2e-openid-9003' });
-await w.step('tab 帖子', () => w.tap('帖子', { exact: true }));
+await w.step('tab 帖文', () => w.tap('帖文', { exact: true }));
 await sleep(1000);
 let i = 0;
 for (const t of texts) {

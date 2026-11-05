@@ -1,0 +1,20 @@
+# theme-bound node game: theme-side gates (HTTP with the editor's DTO; rig)
+07 node game 6006 saved on screen with made-up wqzrtk (not yet in library); word imported via /business/sensitive/words/import
+p_theme_bound.py 'j5 晚到词主题' 6006       -> create 400 主题内容包含违规信息，请修改后重试（字段：节点玩法「桥边问答 wqzrtk」.title）; no cms_topic row
+p_theme_bound.py 'j5 晚到词草稿' 6006 draft -> save draft 400 same message (draft save also checks)
+node game 6007 kxjwvb saved; theme draft 990014 saved with it; THEN word imported
+p_publish_draft.py 990014 -> 400 主题内容包含违规信息，请修改后重试（字段：节点玩法「桥边问答 kxjwvb」.title）
+editor (fabu?id=990014 → 预览 → 完成) -> /api/topic/v2/update 400 same message, shown on screen (08-theme-draft-word-1-after-publish)
+(6005, '桥边问答 zqvxlmpark', 1)
+(6006, '桥边问答 wqzrtk', 0)
+(6007, '桥边问答 kxjwvb', 0)
+--
+(990014, 'j5 先存草稿后加词', 0, 0, 0, 1)
+(990015, 'j5 江边主题', 1, 1, 0, 0)
+(990016, 'j5 繁忙时发布主题', 0, 0, 2, 1)
+(990017, 'j5 繁忙时发布主题二', 0, 0, 2, 1)
+(990018, 'j5 繁忙时发布主题三', 0, 0, 2, 1)
+(990019, 'j5 繁忙时发布主题四', 0, 0, 2, 1)
+(990020, 'j5 繁忙时发布主题五', 1, 1, 1, 0)
+(990022, 'j5 繁忙新建主题', 1, 0, 2, 0)
+--

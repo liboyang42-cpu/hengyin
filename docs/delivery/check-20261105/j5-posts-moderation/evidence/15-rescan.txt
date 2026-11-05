@@ -1,0 +1,11 @@
+post 已发布
+import {'imported': 1, 'skipped': 0}
+switch (('false',),)
+job(report) 200
+ club_post ((2, 0, '周末江边集合 qwpkzt'),)
+switch on 200
+job(remove) 200
+ club_post ((2, 2, '周末江边集合 qwpkzt'),)
+hits ((25, 'RESCAN', 'CLUB_POST', 2, 'REPORT'), (26, 'RESCAN', 'CLUB_POST', 2, 'REMOVED'))
+notice to 9003 ((3, '内容已下架'), (2, '审核通过'))
+switch off 200 (('false',),)

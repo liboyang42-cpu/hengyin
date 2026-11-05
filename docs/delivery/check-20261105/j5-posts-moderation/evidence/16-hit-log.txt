@@ -1,0 +1,6 @@
+('TEXT', 'TEXT_CHECK', 'BLOCK', 4)
+('TEXT', 'TOPIC', 'BLOCK', 8)
+('RESCAN', 'CLUB_POST', 'REPORT', 1)
+('RESCAN', 'CLUB_POST', 'REMOVED', 1)
+('IMAGE', 'UPLOAD', 'BLOCK', 2)
+--

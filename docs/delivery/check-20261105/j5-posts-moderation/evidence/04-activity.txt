@@ -1,0 +1,16 @@
+# activity publish/edit read-back (rig DB cy_e2e_51), after the 04/05/06 screen runs
+(9, 'j5 周末咖啡品鉴', '江边咖啡角', 1, 1, 0)
+(10, 'j5 放行词', 'zqvxlmpark 咖啡角', 1, 1, 0)
+(11, 'j5 繁忙时发布', '江边咖啡角', 1, 1, 1)
+(12, 'j5 繁忙时发布主题五', '上海市黄浦区', 1, 1, 0)
+--
+(1, 'ACTIVITY', 11, 1, 'PASS', 'j5 繁忙时发布\n一起尝三款手冲咖啡\n江边咖啡角\n上海市黄浦区中山东一路 1 号\n体验票')
+--
+# screen responses captured by the walk (w.lastBody):
+04-act-venue        /api/activity/publish -> 500 活动内容包含违规信息，请修改后重试 (REJECTED receipt)
+04-act-ticket       /api/activity/publish -> 500 活动内容包含违规信息，请修改后重试
+04-act-ticket-split /api/activity/publish -> 500 活动内容包含违规信息，请修改后重试
+04-act-allow        /api/activity/publish -> 200 活动发布成功 data=10
+05-actedit-ticket   /api/activity/update  -> 500 活动内容包含违规信息，请修改后重试
+05-actedit-venue    /api/activity/update  -> 500 活动内容包含违规信息，请修改后重试
+06-act-busy         /api/activity/publish -> 200 活动发布成功，请等待审核 data=11 (held status=0), then p_release.py ACTIVITY 11 pass -> recheck PASS, status=1
