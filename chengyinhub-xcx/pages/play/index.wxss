@@ -260,7 +260,6 @@ page { background: var(--cy-color-bg-page); }
 .place-hook__npc { display: block; font-size: var(--cy-type-caption); color: var(--cy-color-play-accent); letter-spacing: 2rpx; margin-bottom:var(--cy-legacy-6); } /* ds-ok Figma 实测(用户裁决字面值) */
 .place-hook__txt { font-size: var(--cy-type-body); line-height: 1.6; color: var(--cy-color-text-primary); }
 .game-card{ margin-top:var(--cy-space-4); background: var(--play-narr-surface-2); border:1rpx solid var(--cy-color-play-accent-soft); border-radius: var(--cy-radius-lg); padding:var(--cy-legacy-26) var(--cy-space-3-5); } /* ds-ok Figma 实测(用户裁决字面值) */
-.game-card .g0{ font-size: var(--cy-type-caption); color: var(--cy-color-play-accent); letter-spacing:3rpx; }
 .game-card .g1{ font-size:34rpx; margin-top:var(--cy-space-1); } /* ds-ok: 34rpx 无精确匹配字号 token */
 .game-card .g2{ font-size: var(--cy-type-label); color: var(--cy-color-text-tertiary); margin-top:var(--cy-legacy-6); } /* ds-ok Figma 实测(用户裁决字面值) */
 .sheet-note{ font-size: var(--cy-type-label); color: var(--cy-color-text-tertiary); text-align:center; margin-top:var(--cy-legacy-22); line-height:1.6; } /* ds-ok Figma 实测(用户裁决字面值) */
@@ -1867,10 +1866,6 @@ page { background: var(--cy-color-bg-page); }
 .st-intro__k{ font-size:21rpx; letter-spacing:4rpx; color:rgba(255,255,255,.6); } /* ds-ok 同 .pv-ending__k */
 .st-intro__t{ margin-top:23rpx; font-size:80rpx; font-weight:800; line-height:1.15; color:#FFFFFF; } /* ds-ok 原型开场大标题 */
 .st-intro__line{ margin-top:23rpx; font-size:29rpx; line-height:1.7; color:rgba(255,255,255,.72); } /* ds-ok 同 .pv-ending__copy */
-.st-intro__steps{ margin-top:64rpx; display:flex; flex-direction:column; gap:27rpx; }
-.st-intro__step{ display:flex; align-items:baseline; gap:23rpx; }
-.st-intro__n{ font-size:29rpx; font-weight:800; color:#FFFFFF; } /* ds-ok 深底白字 */
-.st-intro__s{ font-size:25rpx; color:rgba(255,255,255,.6); } /* ds-ok 深底说明字 */
 .st-intro__go{ height:104rpx; border-radius:var(--cy-radius-pill); display:flex; align-items:center; justify-content:center; /* ds-ok 胶囊按钮,同 .pv-ending__go */
   background:#FFFFFF; color:#000000; font-size:31rpx; font-weight:700; } /* ds-ok 玩家主按钮=反色中性 */
 

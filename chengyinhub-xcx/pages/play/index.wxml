@@ -468,10 +468,6 @@
     <text class="st-intro__k">城瘾 · {{modeLabel}}</text>
     <text class="st-intro__t">{{storyIntro.title}}</text>
     <text class="st-intro__line" wx:if="{{storyIntro.line}}">{{storyIntro.line}}</text>
-    <view class="st-intro__steps">
-      <view class="st-intro__step"><text class="st-intro__n">读</text><text class="st-intro__s">跟着故事走</text></view>
-      <view class="st-intro__step"><text class="st-intro__n">玩</text><text class="st-intro__s">到站解开玩法</text></view>
-    </view>
   </view>
   <view class="st-intro__go" bindtap="startStoryIntro" aria-role="button" aria-label="开始游戏" hover-class="cy-pressed" hover-stay-time="80">开始游戏</view>
 </view>
@@ -1038,9 +1034,8 @@
     <!-- 有节点玩法 → 开始任务 -->
     <block wx:elif="{{sheet.node.hasGame}}">
       <view class="game-card">
-        <view class="g0">本站任务</view>
         <view class="g1 serif">{{sheet.node.gameTitle}}</view>
-        <view class="g2">{{sheet.node.gameLede}}</view>
+        <view class="g2" wx:if="{{sheet.node.gameLede}}">{{sheet.node.gameLede}}</view>
         <!-- 原任务启动页(p02)的信息并进来:有则显示,无则不占位 -->
         <view class="g3" wx:if="{{sheet.node.materials}}">所需材料 · {{sheet.node.materials}}</view>
         <view class="g3" wx:if="{{sheet.node.rule}}">{{sheet.node.rule}}</view>

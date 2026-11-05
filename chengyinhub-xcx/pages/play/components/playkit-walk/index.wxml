@@ -32,7 +32,7 @@
       <view class="wk__stat"><view class="wk__dt">少排</view><view class="wk__dd">{{co2}} kg</view></view>
     </view>
 
-    <view class="wk__foot">{{mode === 'goal' ? '先设目标，再同步微信运动。' : '步数只能同步，不能填 —— 能填的话这个玩法就没意义了。'}}</view>
+    <view class="wk__foot" wx:if="{{mode === 'goal'}}">先设目标，再同步微信运动。</view>
     <view wx:if="{{readError && !skipped}}" class="wk__err" aria-role="alert">{{readError}}</view>
     <view wx:if="{{skipped}}" class="wk__foot">这一站已跳过</view>
     <view wx:elif="{{canSkip && !syncing}}" class="wk__skip" bindtap="onSkip"

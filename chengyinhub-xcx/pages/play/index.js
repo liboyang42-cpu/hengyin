@@ -4411,7 +4411,8 @@ Page({
       sortId: n.sortId != null ? n.sortId : (i + 1),
       name: n.name || ('第 ' + (i + 1) + ' 站'),
       address: n.address || '',
-      description: n.description || n.question || NODE_DESC_FALLBACK,
+      // 第十一轮 i1(j3 F14):作者没写简介就不写,不替作者编一句「走到这里，留意四周」
+      description: n.description || n.question || '',
       imgUrl: n.imgUrl || '',
       businessTime: n.businessTime || '',
       openStatus: n.openStatus || '',                       // S4 服务端营业态三态(营业中/即将打烊/已打烊);空则大卡回退客户端 inBizWindow
@@ -4537,7 +4538,8 @@ Page({
       // 2026-09-18 UI-20 返修:publish/simple、fabu 建主题时给章节写的默认名是英文占位「Chapter 1」,
       // 不再原样上屏(也不落回主题名把章节标题变成主题名),统一显示「第 N 章」。
       name: displayChapterName(c.name, 0, d.topicName || '城市探索'),
-      description: c.description || '跟着脚步走完这几处坐标，把散落的线索串成一段属于你的城市故事。',
+      // 第十一轮 i1(j3 F14):只放作者自己写的章节简介,没写就不出
+      description: c.description || '',
       cover: this._coverOf(c.imgArr ? String(c.imgArr).split(/[,;]/)[0] : (c.cover || ''), nodes),
       mileage: c.totalMileage ? (c.totalMileage + 'km') : '',
       timeText: c.totalTime ? Math.round(c.totalTime / 60) + ' 分钟' : '',
@@ -5611,7 +5613,7 @@ Page({
       bizText: biz, openText, openCol, openDot,
       hasGame: node.hasTemplate,
       // 一句话导语:取第一句,过长才截断并补省略号,不再从句子中间硬切
-      gameLede: story ? (sentence.length <= 40 ? sentence : sentence.slice(0, 38) + '…') : '到达后开启本站任务',
+      gameLede: story ? (sentence.length <= 40 ? sentence : sentence.slice(0, 38) + '…') : '',
       // 简介只是重复标题(如「结语 · 1945年以后」配「1945年以后」)时不再写一遍
       description: node.description && String(node.name || '').indexOf(String(node.description).trim()) >= 0 ? '' : node.description,
       cardHook: node.cardHook || ''
