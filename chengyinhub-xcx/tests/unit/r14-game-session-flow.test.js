@@ -169,6 +169,48 @@ test('真实同页结局链:服务端结局章含视频→读章→结局摘要�
   assert.equal(p.data.showFinish, true); assert.equal(p.data.previewEnding.show, false);
 });
 
+test('末站背包结算先读作者反馈,继续后收起任务层再播放结局章', async () => {
+  const { page: p, requests } = setup(); finishHost(p);
+  p.data.themeBackpackOpen = true; p.data.sessionToolsOpen = true;
+  p.data.r5Verdict = { show: true, text: '年份正确，两站任务完成。' };
+  p.data.sheet = { show: true, node: p.data.nodes[1] };
+  p.data.advancedPlay = { show: true, node: p.data.nodes[1] };
+  p.data.playKit = { show: true, kit: { type: 'qa', present: 'inline', nodeId: 86 } };
+  p._playKitNodeId = 86;
+  const starts = [];
+  p.playChapterVideo = () => {
+    starts.push({ chapter: p.data.chapter.id, bag: p.data.themeBackpackOpen,
+      feedback: p.data.r5Verdict.show, game: p.data.advancedPlay.show,
+      kit: p.data.playKit.show, sheet: p.data.sheet.show, tools: p.data.sessionToolsOpen });
+    return true;
+  };
+  p.openFinish();
+  requests.at(-1).success({ code: 200, data: { title: '尾声', chapter: {
+    id: 51, name: '尾声', blocks: [{ type: 'text', content: '两站之后' }], videoUrl: '/profile/ending.mp4' } } });
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(p.data.chapter.id, 50, '成功反馈未读完时不先在背包下面播放结局');
+  assert.equal(p.data.r5Verdict.show, true); assert.equal(starts.length, 0);
+  p.openFinish(); assert.equal(p.data.showFinish, false, '等待反馈仍受同局结局围栏保护');
+  p.closeR5Verdict();
+  assert.deepEqual(starts, [{ chapter: 51, bag: false, feedback: false,
+    game: false, kit: false, sheet: false, tools: false }]);
+  assert.equal(p._playKitNodeId, null);
+  p.closeR5Verdict(); assert.equal(starts.length, 1, '重复继续不重播结局');
+});
+
+for (const change of ['owner', 'session']) {
+  test('等待末站反馈时' + change + '变化不能播放旧结局', () => {
+    const { page: p } = setup();
+    p.data.r5Verdict = { show: true }; p.data.themeBackpackOpen = true;
+    let opened = 0; p.openChapterFull = () => { opened++; };
+    p._playEndingChapter({ id: 51, blocks: [] }, () => {});
+    if (change === 'owner') p._playOwner = '10';
+    else p._routeState.sessionId = '8';
+    p.closeR5Verdict();
+    assert.equal(opened, 0); assert.equal(p.data.chapter.id, 50);
+  });
+}
+
 for (const reply of [{ code: 200, data: {} }, { code: 500, msg: '读取失败' }]) {
   test('无结局或读取失败时仍进入通关卡:' + reply.code, async () => {
     const { page: p, requests } = setup(); finishHost(p);
