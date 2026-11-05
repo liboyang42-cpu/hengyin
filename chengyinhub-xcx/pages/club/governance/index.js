@@ -185,6 +185,8 @@ Page({
     selectedDurationDays: 30,
     // 稿 R6:成员与期限都是行内选择器,选中的值显示在行右侧
     memberPickerVisible: false,
+    // p3 N9:封禁与转让各选各的成员。'ban' 读写 selectedMemberId;'transfer' 选完直接进转让确认,不带封禁那边的预选
+    memberPickerFor: 'ban',
     durationPickerVisible: false,
     selectedMemberName: '',
     selectedDurationLabel: '30 天',
@@ -390,7 +392,7 @@ Page({
     this.setData({ state: this.data.members.length || this.data.bans.length ? 'ready' : 'empty' })
   },
 
-  openMemberPicker() { this.setData({ memberPickerVisible: true }) },
+  openMemberPicker() { this.setData({ memberPickerVisible: true, memberPickerFor: 'ban' }) },
   closeMemberPicker() { this.setData({ memberPickerVisible: false }) },
   openDurationPicker() { this.setData({ durationPickerVisible: true }) },
   closeDurationPicker() { this.setData({ durationPickerVisible: false }) },
@@ -398,6 +400,11 @@ Page({
   pickMember(e) {
     const memberId = positiveId(e.currentTarget.dataset.memberId)
     if (!memberId) return
+    if (this.data.memberPickerFor === 'transfer') {
+      this.setData({ memberPickerVisible: false, memberPickerFor: 'ban' })
+      this.confirmOwnerTransfer(memberId)
+      return
+    }
     const row = (this.data.members || []).find(function (m) { return String(m.memberId) === String(memberId) })
     this.setData({
       selectedMemberId: memberId,
@@ -533,7 +540,11 @@ Page({
 
   transferSelectedOwner() {
     if (this.data.actingKey || !this.data.isOwner) return
-    const memberId = positiveId(this.data.selectedMemberId)
+    this.setData({ memberPickerVisible: true, memberPickerFor: 'transfer' })
+  },
+
+  confirmOwnerTransfer(memberId) {
+    if (this.data.actingKey || !this.data.isOwner) return
     const member = this.data.members.find(function (item) { return item.memberId === memberId })
     if (!member) { toast('先选择一位成员'); return }
     const that = this
@@ -550,12 +561,12 @@ Page({
         if (!result.confirm) return
         const reason = typeof result.content === 'string' ? result.content.trim() : ''
         if (!reason) { toast('请填写交接原因'); return }
-        that.submitOwnerTransfer(memberId, reason)
+        that.submitOwnerTransfer(memberId, reason, member.nickname)
       },
     })
   },
 
-  submitOwnerTransfer(memberId, reason) {
+  submitOwnerTransfer(memberId, reason, nickname) {
     const that = this
     const key = 'transfer:' + memberId
     this.setData({ actingKey: key })
@@ -570,19 +581,23 @@ Page({
       }),
       header: jsonHeader(),
       success(res) {
-        that.setData({ actingKey: '' })
-        if (!isSuccess(res)) { toast((res && res.msg) || '转让失败'); return }
-        toast.success('主理人已转让')
+        if (!isSuccess(res)) { that.setData({ actingKey: '' }); toast((res && res.msg) || '转让失败'); return }
+        // p3 N9:提示挂在本页的 cy-toast 上,立刻离开会把它一起带走(原主理人落到首页什么也没看到)。
+        // 先在本页说完结果再走;等待期间 actingKey 不清,本页按钮保持不可点。
+        that._ownerTransferred = true
+        toast.success('主理人已转让给 ' + (nickname || '这位成员'))
         // 第十轮 f3 第 4 项(j2 F-23):转让后本页的转让/封禁控件已不归你,深链直达(栈深 1)时也要离开本页。
-        if (getCurrentPages().length > 1) wx.navigateBack({ delta: 1 })
-        else wx.redirectTo({ url: '/pages/club/detail/index?id=' + that.data.clubId })
+        setTimeout(function () {
+          if (getCurrentPages().length > 1) wx.navigateBack({ delta: 1 })
+          else wx.redirectTo({ url: '/pages/club/detail/index?id=' + that.data.clubId })
+        }, 1500)
       },
       fail() { that.setData({ actingKey: '' }); toast('网络异常，请重试') },
       successStatusAbnormal(res) {
         that.setData({ actingKey: '' })
         toast((res && res.msg) || '转让失败')
       },
-      complete() { if (that.data.actingKey === key) that.setData({ actingKey: '' }) },
+      complete() { if (!that._ownerTransferred && that.data.actingKey === key) that.setData({ actingKey: '' }) },
     })
   },
 
