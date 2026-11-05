@@ -280,7 +280,9 @@ EXPECTED = {
     "WxBillIngestionPersistenceTest": 6,
     # 2026-11-05 第十二轮 k5:俱乐部场次按核销付费的商家费(14 天、半退、团码、结算、重跑、暂扣补结、
     # 超额拒结、结算后退款冲回、主题现金基数与退款闸不吃在世俱乐部场次)。
-    "ClubSessionMerchantFeeMySqlIT": 7,
+    # 2026-11-05 第十三轮 m6:7 → 8,+1 = freeExploreSalesWithNoSettlementPathAlarmInsteadOfSittingSilent
+    # (四店 ¥69 未做 FINAL / 别家俱乐部场次:到结算时点抛错告警、不动钱;FINAL 后、全退后不告警)。
+    "ClubSessionMerchantFeeMySqlIT": 8,
 }
 
 # class 短名 -> 该测试类所在源文件(相对仓库根),供 count_test_methods() 自测用。

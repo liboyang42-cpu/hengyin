@@ -22,6 +22,9 @@ public interface CmsActivityMapper
      */
     List<CmsActivity> selectActivitiesForSettlement();
 
+    /** 第十三轮 m6:到了结算时点、场次结算又付不了的自由探索场次(只用于告警,不动钱)。 */
+    List<CmsActivity> selectFreeExploreActivitiesWithoutSettlementPath();
+
     /** 只读解析主题下未删除活动壳 ID；供证据查询先解析、后只锁 registration。 */
     List<Long> selectActiveActivityIdsByTopicId(@Param("topicId") Long topicId);
 

@@ -145,7 +145,10 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         List<CmsActivity> activities = selectActivitiesForSettlement();
         List<com.chengyinhub.business.domain.ActivitySettlementHold> releasable =
                 activitySettlementHoldMapper.selectReleasableHolds();
+        // 第十三轮 m6:到了结算时点却没有结算路径的自由探索实收,不能「没有需要结算的活动」就静默收工。
+        List<String> stranded = strandedFreeExploreSales();
         if (activities.isEmpty() && releasable.isEmpty()) {
+            if (!stranded.isEmpty()) throw strandedFailure(stranded, 0);
             logger.info("没有需要结算的活动");
             return 0;
         }
@@ -200,6 +203,7 @@ public class CmsActivityServiceImpl implements ICmsActivityService
                 failure.addSuppressed(e);
             }
         }
+        failures.addAll(stranded);
         // R9-46 §4:逐活动失败不能被吞成 SUCCESS。其余活动已各自提交,末端再抛让 Quartz 记 FAIL 并点名。
         if (!failures.isEmpty()) {
             IllegalStateException visible = new IllegalStateException("活动结算失败 " + failures.size()
@@ -245,6 +249,51 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         logger.info("活动结算费率验证通过: 平台{}, 商户{}, 设计者{}, 总计{}",
                 platformRate, merchantRate, designerRate, totalRate);
         return true;
+    }
+
+    /**
+     * 第十三轮 m6(2026-11-05):已到结算时点、场次结算又付不了的自由探索场次,按「已付未退 + 部分退款留存」
+     * 算实收;有钱就逐场点名(原因、实收),由结算任务记 FAIL 并告警,下轮仍在就继续告警。不动钱、不置已结算:
+     * 四店探店日的钱按代码本意归期级 FINAL(/business/edition-final),跨俱乐部场次代码里没有分钱规则,
+     * 都等业主拍板,见 integ/ROUND13-M6-RESULT.md。没有实收的场次不告警。
+     */
+    List<String> strandedFreeExploreSales() {
+        List<CmsActivity> rows = cmsActivityMapper.selectFreeExploreActivitiesWithoutSettlementPath();
+        List<String> stranded = new java.util.ArrayList<>();
+        if (rows == null) return stranded;
+        for (CmsActivity activity : rows) {
+            BigDecimal paid = cmsRegistrationMapper.selectTotalSalesByActivityId(activity.getId());
+            BigDecimal retained = cmsRegistrationMapper.selectRetainedSalesAfterPartialRefundByActivityId(activity.getId());
+            BigDecimal money = (paid == null ? BigDecimal.ZERO : paid).add(retained == null ? BigDecimal.ZERO : retained);
+            if (money.signum() <= 0) continue;
+            String reason = strandedReason(activity);
+            logger.error("【结算告警】自由探索实收没有结算路径,未入账 activityId={}, topicId={}, 实收={}, 原因={}",
+                    activity.getId(), activity.getTopicId(), money, reason);
+            stranded.add("activityId=" + activity.getId() + ": FREE_EXPLORE_SALE_HAS_NO_SETTLEMENT_PATH topicId="
+                    + activity.getTopicId() + ", 实收=" + money.setScale(2, java.math.RoundingMode.HALF_UP).toPlainString()
+                    + ", " + reason);
+        }
+        return stranded;
+    }
+
+    private String strandedReason(CmsActivity activity) {
+        CmsTopic topic = cmsTopicMapper.selectCmsTopicById(activity.getTopicId());
+        TopicSaleSnapshot snapshot = topic == null ? null : topicSaleSnapshotMapper.selectSnapshotByTopicId(topic.getId());
+        if (snapshot == null) return "缺冻结开售合同";
+        boolean fourStore;
+        try {
+            fourStore = com.chengyinhub.business.service.support.TopicSaleCanonicalCodec.read(
+                    snapshot.getSchemaVersion(), snapshot.getCanonicalJson(), topic.getProductType()).requiresFourStoreContract();
+        } catch (RuntimeException unreadable) {
+            return "开售合同无法读取";
+        }
+        if (fourStore) return "四店探店日(FOUR_STORE_REDEEM)待期级 FINAL,分钱规则待业主拍板";
+        return "场次俱乐部 " + activity.getClubId() + " 不是主题俱乐部 " + topic.getClubId() + ",分钱规则待业主拍板";
+    }
+
+    private IllegalStateException strandedFailure(List<String> stranded, int settledCount) {
+        return new IllegalStateException("活动结算失败 " + stranded.size() + " 个(成功 " + settledCount + " 个): "
+                + String.join("; ", stranded));
     }
 
     /**

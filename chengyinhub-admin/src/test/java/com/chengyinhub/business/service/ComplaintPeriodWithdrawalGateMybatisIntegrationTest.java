@@ -139,12 +139,15 @@ class ComplaintPeriodWithdrawalGateMybatisIntegrationTest {
     void resetSchema() throws Exception {
         execute("DROP TABLE IF EXISTS cms_activity", "DROP TABLE IF EXISTS cms_topic", "DROP TABLE IF EXISTS cms_registration",
                 "DROP TABLE IF EXISTS topic_sale_snapshot",
+                "DROP TABLE IF EXISTS topic_edition_finalization",
                 "DROP TABLE IF EXISTS ums_member", "DROP TABLE IF EXISTS ums_member_balance_detail",
                 "DROP TABLE IF EXISTS settlement_detail", "DROP TABLE IF EXISTS coop_complaint",
                 "DROP TABLE IF EXISTS cms_activity_settlement_hold", "DROP TABLE IF EXISTS ums_member_settlement_debt",
                 "DROP TABLE IF EXISTS merchant_clawback_application", "DROP TABLE IF EXISTS refund_application");
         execute(
                 "CREATE TABLE topic_sale_snapshot (topic_id BIGINT PRIMARY KEY, schema_version VARCHAR(64), canonical_json LONGTEXT) ENGINE=InnoDB",
+                // 第十三轮 m6:结算任务读四店期级 FINAL 是否已做(生产表见 migration_20260816_tandianri_batch3_funds_club_compensation.sql)
+                "CREATE TABLE topic_edition_finalization (id BIGINT PRIMARY KEY AUTO_INCREMENT, topic_id BIGINT NOT NULL UNIQUE) ENGINE=InnoDB",
                 "CREATE TABLE cms_activity (id BIGINT PRIMARY KEY, member_id BIGINT, name VARCHAR(100), description VARCHAR(255), img_url VARCHAR(255), img_arr VARCHAR(255),"
                         + "category_ids VARCHAR(255), address_name VARCHAR(255), longitude VARCHAR(64), latitude VARCHAR(64), address VARCHAR(255), status INT, publish_status INT,"
                         + "cancel_time DATETIME, cancel_reason VARCHAR(255), reason VARCHAR(255), del_flag INT, start_date DATETIME, end_date DATETIME, template_id BIGINT,"
