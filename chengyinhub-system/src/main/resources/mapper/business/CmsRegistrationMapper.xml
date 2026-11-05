@@ -190,6 +190,30 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         </choose>
     </select>
 
+    <!-- j6 N1(第十二轮 k1 第 5 项):同会员同场次还能被扣款的订单;建新单前以会员行锁串行后读 -->
+    <select id="selectChargeablePendingOrderId" resultType="java.lang.Long" useCache="false" flushCache="true">
+        select min(id) from cms_registration
+        where member_id = #{memberId} and owner_type = #{ownerType} and owner_id = #{ownerId}
+          and registration_status = 1
+          and payable_amount &gt; 0
+          and (payment_status = 1 or (payment_status = 0 and pay_expire_time &gt; now()))
+          <if test="requestId != null and requestId != ''">
+          and (request_id is null or request_id &lt;&gt; #{requestId})
+          </if>
+    </select>
+
+    <!-- j6 N1:这一单之后同会员同场次已付成功的另一笔;有则这一单不再发支付参数 -->
+    <select id="countNewerPaidSiblingOrders" resultType="int" useCache="false" flushCache="true">
+        select count(1) from cms_registration
+        where member_id = #{registration.memberId}
+          and owner_type = #{registration.ownerType} and owner_id = #{registration.ownerId}
+          and id &gt; #{registration.id}
+          and payment_status = 2
+          <if test="registration.parentOrderNo != null and registration.parentOrderNo != ''">
+          and (parent_order_no is null or parent_order_no &lt;&gt; #{registration.parentOrderNo})
+          </if>
+    </select>
+
     <select id="selectCmsRegistrationById" parameterType="Long" resultMap="CmsRegistrationResult">
         <include refid="selectCmsRegistrationVo"/>
         where id = #{id}

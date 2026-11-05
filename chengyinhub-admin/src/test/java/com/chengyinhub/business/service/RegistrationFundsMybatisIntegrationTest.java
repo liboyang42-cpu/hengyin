@@ -16,6 +16,7 @@ import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.SettlementRule;
 import com.chengyinhub.business.domain.dto.RegistrationOrderResult;
 import com.chengyinhub.business.domain.dto.RegistrationRequest;
+import com.chengyinhub.business.service.IRegistrationCreationTransaction;
 import com.chengyinhub.business.security.PiiCryptoService;
 import com.chengyinhub.business.service.impl.AlarmService;
 import com.chengyinhub.business.service.impl.CmsPointsSettingServiceImpl;
@@ -794,6 +795,59 @@ class RegistrationFundsMybatisIntegrationTest {
         assertEquals(1, number("SELECT COUNT(*) FROM ums_member_points_detail WHERE member_id=7 AND event_type=3"));
         assertEquals(1, number("SELECT COUNT(*) FROM ums_member_points_detail WHERE member_id=99 AND event_type=5"));
         assertEquals(1, number("SELECT COUNT(*) FROM ums_member_points_detail WHERE member_id=99 AND event_type=6"));
+    }
+
+    /**
+     * 第十二轮 k1 第 5 项(j6 N1):同会员同场次有一笔还能被扣款的单时,第二笔被拒并指回那一笔(待支付、支付中都挡,
+     * 不扣库存不落行);之后另一笔付成功的旧单不再发支付参数;旧单关掉后照常能再买(C-22 跨订单多张票不受影响)。
+     */
+    @Test
+    void secondOrderForSameSessionIsRefusedWhileFirstIsStillChargeable() throws Exception {
+        execute("UPDATE cms_registration SET owner_type=2,owner_id=55,ticket_id=9 WHERE id=11",
+                "UPDATE oms_ticket SET remaining_inventory=10,start_time=DATE_ADD(NOW(),INTERVAL 10 DAY),"
+                        + "end_time=DATE_ADD(NOW(),INTERVAL 11 DAY) WHERE id=9",
+                "UPDATE cms_activity SET start_date=DATE_ADD(NOW(),INTERVAL 10 DAY),"
+                        + "end_date=DATE_ADD(NOW(),INTERVAL 11 DAY) WHERE id=55");
+        IRegistrationCreationTransaction creation = (IRegistrationCreationTransaction) registrationService;
+        RegistrationRequest second = new RegistrationRequest();
+        second.setOwnerType(2);
+        second.setOwnerId(55L);
+        second.setTicketId(9L);
+        second.setIsUsePoint(0);
+        second.setRealName("同一场第二笔");
+        second.setPhone("fixture-contact");
+        long rows = number("SELECT COUNT(*) FROM cms_registration");
+
+        RegistrationPendingOrderException unpaid = assertThrows(RegistrationPendingOrderException.class,
+                () -> creation.create(7L, second, "k1-n1-a", "a".repeat(64)));
+        assertEquals(RegistrationPendingOrderException.PENDING_ORDER_EXISTS, unpaid.getErrorCode());
+        assertEquals(11L, unpaid.getRegistrationId(), "把玩家指回那一笔");
+        assertEquals(rows, number("SELECT COUNT(*) FROM cms_registration"), "不落第二笔");
+        assertEquals(10, number("SELECT remaining_inventory FROM oms_ticket WHERE id=9"), "不扣库存");
+
+        // 发起过微信支付(支付中)同样挡,哪怕本地已过期、尚未对账关单 —— 微信侧可能还能付
+        registrationService.beginPaymentAttempt(11L, 7L);
+        execute("UPDATE cms_registration SET pay_expire_time=DATE_SUB(NOW(),INTERVAL 1 MINUTE) WHERE id=11");
+        assertEquals(11L, assertThrows(RegistrationPendingOrderException.class,
+                () -> creation.create(7L, second, "k1-n1-b", "b".repeat(64))).getRegistrationId());
+        assertEquals(rows, number("SELECT COUNT(*) FROM cms_registration"));
+
+        // 历史遗留:这一单之后同场次已有一笔付成功 ⇒ 这一单不再发支付参数
+        execute("UPDATE cms_registration SET payment_status=0,pay_expire_time=DATE_ADD(NOW(),INTERVAL 30 MINUTE) WHERE id=11",
+                "INSERT INTO cms_registration(id,registration_no,owner_type,owner_id,ticket_id,member_id,point_used,payable_amount,"
+                        + "wechat_payment_amount,fee_platform_rate,payment_status,registration_status,pay_expire_time,verification_status,points_returned) "
+                        + "VALUES (12,'T20260724PAID',2,55,9,7,0,100,100,0.1000,2,2,DATE_ADD(NOW(),INTERVAL 30 MINUTE),0,0)");
+        RegistrationPendingOrderException superseded = assertThrows(RegistrationPendingOrderException.class,
+                () -> registrationService.beginPaymentAttempt(11L, 7L));
+        assertEquals(RegistrationPendingOrderException.ORDER_SUPERSEDED, superseded.getErrorCode());
+        assertEquals(0, number("SELECT payment_status FROM cms_registration WHERE id=11"), "拒绝不改状态");
+
+        // 旧单关掉后照常可买;已付的另一笔不挡新单(C-22:跨订单为不同参与人买多张)
+        execute("UPDATE cms_registration SET registration_status=3,payment_status=3 WHERE id=11");
+        java.util.List<CmsRegistration> created = creation.create(7L, second, "k1-n1-c", "c".repeat(64));
+        assertEquals(1, created.size());
+        assertEquals(rows + 2, number("SELECT COUNT(*) FROM cms_registration"));
+        assertEquals(9, number("SELECT remaining_inventory FROM oms_ticket WHERE id=9"));
     }
 
     /**
@@ -2472,6 +2526,8 @@ class RegistrationFundsMybatisIntegrationTest {
         assertEquals(64, text("SELECT request_fingerprint FROM cms_registration WHERE id="
                 + created.getPrimary().getId()).length());
 
+        // 第十二轮 k1 第 5 项(j6 N1):同场次有一笔还能扣款的单时不建第二笔;先把上一笔收掉,本用例只验指纹冲突
+        execute("UPDATE cms_registration SET registration_status=3,payment_status=3 WHERE id=" + created.getPrimary().getId());
         RegistrationRequest conflictBase = request("legacy-null-conflict");
         RegistrationOrderResult conflictOrder = createOrReplay(conflictBase);
         execute("UPDATE cms_registration SET request_fingerprint=NULL WHERE id=" + conflictOrder.getPrimary().getId());

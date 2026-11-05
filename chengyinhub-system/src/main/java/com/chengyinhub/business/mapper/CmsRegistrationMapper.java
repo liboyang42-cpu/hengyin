@@ -79,6 +79,18 @@ public interface CmsRegistrationMapper
      */
     public CmsRegistration selectCmsRegistrationById(Long id);
 
+    /**
+     * j6 N1:同一会员、同一场次(owner)上还能被扣款的订单 —— 已发起微信支付(payment_status=1,过期未对账关单也算,
+     * 微信侧可能仍可付)或尚未发起、未过期的待支付单(payment_status=0)。返回最早一笔的 id,没有返回 null。
+     */
+    public Long selectChargeablePendingOrderId(@org.apache.ibatis.annotations.Param("memberId") Long memberId,
+                                               @org.apache.ibatis.annotations.Param("ownerType") Integer ownerType,
+                                               @org.apache.ibatis.annotations.Param("ownerId") Long ownerId,
+                                               @org.apache.ibatis.annotations.Param("requestId") String requestId);
+
+    /** j6 N1:同会员同场次、比这一单更晚建且已支付成功的另一笔订单数(同一多票父单的兄弟行不算)。 */
+    public int countNewerPaidSiblingOrders(@org.apache.ibatis.annotations.Param("registration") CmsRegistration registration);
+
     /** 事务内当前读；CAS 失败后必须用它看见竞争事务刚提交的终态，不能用 RR 快照普通读。 */
     public CmsRegistration selectCmsRegistrationByIdForUpdate(Long id);
 

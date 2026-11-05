@@ -76,6 +76,9 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
             order = registrationOrderService.createOrReplay(memberId, request);
         } catch (RegistrationRequestConflictException conflict) {
             throw new RegistrationCheckoutException(409, conflict.getMessage());
+        } catch (com.chengyinhub.business.service.RegistrationPendingOrderException pending) {
+            throw new RegistrationCheckoutException(409, pending.getMessage(), pending.getErrorCode(),
+                    pending.getRegistrationId());
         }
         return finishOrder(memberId, order, isAppChannel(request));
     }
@@ -108,7 +111,20 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
         if (!wechatPayService.isReady()) {
             throw new RegistrationCheckoutException(503, "支付服务暂不可用，请稍后再试");
         }
-        CmsRegistration registration = registrationService.beginPaymentAttempt(registrationId, memberId);
+        CmsRegistration registration;
+        try {
+            registration = registrationService.beginPaymentAttempt(registrationId, memberId);
+        } catch (com.chengyinhub.business.service.RegistrationPendingOrderException superseded) {
+            // j6 N1:被之后付成功的另一笔取代的单,不发支付参数;顺手走「先查单、后关单」的取消释放票,
+            // 查单失败就留给过期对账(同一条路),只有微信确认未付/已关才本地关单,不会产生取消后又付成。
+            try {
+                cancelUnpaid(memberId, registrationId, "system");
+            } catch (RuntimeException leftForReconcile) {
+                // 拒绝本身不受影响
+            }
+            throw new RegistrationCheckoutException(409, superseded.getMessage(), superseded.getErrorCode(),
+                    superseded.getRegistrationId());
+        }
         Map<String, Object> data = mapOrder(registration, singleton(registration));
         data.put("payParams", createWechatOrder(registration, appChannel));
         return new RegistrationCheckoutResult("支付参数获取成功", data);

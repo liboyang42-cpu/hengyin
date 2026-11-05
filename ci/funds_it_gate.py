@@ -127,7 +127,9 @@ EXPECTED = {
     # 2026-11-04 第十轮 f4 第 2 项:108 → 110,+2 = 关掉「被邀请用户报名」积分后支付仍成功且只发首购奖励 / 迁移前对照组。
     # 2026-11-04 第十一轮 h3:110 → 113,+3 = 积分规则 2/3/5/6 启用照发且回调重放不重复 /
     # 停用(status=0)一分不发订单照常完成 / 已删除(del_flag≠0)一分不发。
-    "RegistrationFundsMybatisIntegrationTest": 113,
+    # 2026-11-05 第十二轮 k1 第 5 项:113 → 114,+1 = 同会员同场次有可扣款单时拒第二笔并指回、
+    # 被之后付成功的另一笔取代的旧单不再发支付参数(j6 N1)。
+    "RegistrationFundsMybatisIntegrationTest": 114,
     # 2026-09-15:9 → 10,+1 = cityNodeFrozenCouponSurvivesStockFailureAndConcurrentRetry
     # (f178b58ae 有意新增:据点冻结券在库存失败后保留权益、并发重试只发一张)。
     # 2026-09-17 release-0917 集成:fix-club-0917 拍板6 停用 verify_answer,删掉 5 条答题验票真库 IT

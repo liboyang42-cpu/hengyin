@@ -445,6 +445,12 @@ public class ApiRegistrationController extends BaseController {
     private AjaxResult checkoutError(RegistrationCheckoutException e) {
         AjaxResult result = new AjaxResult(e.getCode(), e.getMessage());
         if (e.getErrorCode() != null) result.put("errorCode", e.getErrorCode());
+        if (e.getRegistrationId() != null) {
+            // j6 N1:前端据此把玩家带去那笔订单
+            Map<String, Object> data = new HashMap<>();
+            data.put("registrationId", e.getRegistrationId());
+            result.put("data", data);
+        }
         return result;
     }
 

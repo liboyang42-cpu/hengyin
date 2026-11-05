@@ -1399,7 +1399,7 @@ Page({
               cb({ ok: false, msg: ORDER_REBUILD_REQUIRED });
               return;
             }
-            loading.hide();
+            loading.hide(); if (openPendingOrderConflict(res, cb)) return; // j6 N1:已有待支付单就带去那一笔
             if (res.code == '200' && res.data) {
               var d = res.data;
               const amount = d.payableAmount;
@@ -2400,4 +2400,12 @@ function ownerStateText(info) {
   if (!info || Number(info.isOwner) !== 1 || Number(info.userStatus) === 1) return '';
   if (Number(info.status) === 2) return '未通过';
   return Number(info.status) === 0 || /内容安全/.test(String(info.rejectReason || '')) ? '审核中' : '已下架';
+}
+
+// 第十二轮 k1 第 5 项(j6 N1):服务端拒绝第二笔(同一主题已有一笔待支付的单)时,说一句再带玩家去那一笔订单。
+function openPendingOrderConflict(res, cb) {
+  if (!res || res.errorCode !== 'PENDING_ORDER_EXISTS' || !res.data || !res.data.registrationId) return false;
+  cb({ ok: false, msg: res.msg });
+  wx.navigateTo({ url: '/subpackageMember/orderinfo/orderinfo?id=' + res.data.registrationId });
+  return true;
 }

@@ -1718,6 +1718,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             originalActivity = cmsActivityMapper.selectCmsActivityById(request.getOwnerId());
             RegistrationTopicFence.lockActivityTopic(originalActivity, cmsTopicMapper);
         }
+        rejectWhileChargeablePendingOrder(memberId, request.getOwnerType(), request.getOwnerId(), normalizedRequestId);
         ClubWaitlistClaim waitlistClaim;
         if (clubWaitlistOrderBridge == null) {
             if (request.getWaitlistOfferId() != null || request.getWaitlistOfferToken() != null) {
@@ -1749,6 +1750,27 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         }
         bindRequestFingerprint(created, normalizedRequestId, requestFingerprint);
         return created;
+    }
+
+    /**
+     * j6 N1(第十二轮 k1 第 5 项):同一会员同一场次已有一笔还能被扣款的订单时,不建第二笔,把玩家带去那一笔。
+     * 先锁会员行,让同一会员的并发建单串行(锁序与支付回调一致:主题围栏 → 会员)。
+     * 付完的订单不挡:C-22 同一人跨订单为不同参与人买多张票照常可以。
+     */
+    private void rejectWhileChargeablePendingOrder(Long memberId, Integer ownerType, Long ownerId, String requestId) {
+        if (memberId == null || ownerType == null || ownerId == null) {
+            return;
+        }
+        if (umsMemberMapper != null) {
+            umsMemberMapper.selectPointsForUpdate(memberId);
+        }
+        // 同一幂等键的那笔不算「另一笔」:并发重放要落到唯一键冲突 → 返回赢家,不能被这里拒掉
+        Long pending = cmsRegistrationMapper.selectChargeablePendingOrderId(memberId, ownerType, ownerId, requestId);
+        if (pending != null && pending > 0L) {
+            throw new com.chengyinhub.business.service.RegistrationPendingOrderException(
+                    com.chengyinhub.business.service.RegistrationPendingOrderException.PENDING_ORDER_EXISTS,
+                    pending, "这一场你还有一笔订单没有完成支付");
+        }
     }
 
     private void bindRequestFingerprint(List<CmsRegistration> created, String requestId,
@@ -1817,6 +1839,12 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             // closeExpired 是条件更新(仍待支付才关),与支付回调竞态时 0 行跳过。
             closeExpiredOne(registrationId);
             throw expired;
+        }
+        // j6 N1:这一单之后同场次已有一笔付成功,这一单不再发支付参数(防一人一场被扣两次)
+        if (cmsRegistrationMapper.countNewerPaidSiblingOrders(registration) > 0) {
+            throw new com.chengyinhub.business.service.RegistrationPendingOrderException(
+                    com.chengyinhub.business.service.RegistrationPendingOrderException.ORDER_SUPERSEDED,
+                    registration.getId(), "这一场你已有一笔付款成功的订单，这一笔不能再支付");
         }
         if (Integer.valueOf(1).equals(registration.getPaymentStatus())) {
             return registration;

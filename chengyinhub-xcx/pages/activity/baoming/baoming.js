@@ -7,6 +7,13 @@ const analytics = require('../../../utils/analytics.js');
 const subscribe = require('../../../utils/subscribe.js');
 const { createCheckoutWorkflow, hasCompletePaymentParams, isOrderExpiredFailure, isTerminalOrderConflict,
   ORDER_REBUILD_REQUIRED, ORDER_EXPIRED_USER_MESSAGE } = require('../../../utils/checkout/checkout-workflow.js');
+// j6 N1:服务端拒绝第二笔/取代旧单时带回要去的那笔订单 id(errorCode + data.registrationId)
+const PENDING_ORDER_REDIRECT = '__pending_order_redirect__';
+function pendingOrderRedirectId(res) {
+  if (!res || (res.errorCode !== 'PENDING_ORDER_EXISTS' && res.errorCode !== 'ORDER_SUPERSEDED')) return null;
+  const id = res.data && res.data.registrationId;
+  return id ? id : null;
+}
 const { createRegistrationPaymentVerifier } = require('../../../utils/checkout/registration-payment-verifier.js');
 const { isRecordList } = require('../../../utils/response-shape.js');
 const { ticketWindowPassed, sortBySessionStart } = require('../../../utils/ticket-window.js');
@@ -1382,6 +1389,13 @@ Page({
               return;
             }
             cyLoading.hide();
+            // j6 N1:这一场已有一笔还能被扣款的单 —— 服务端不建第二笔,把玩家带去那一笔
+            const pendingOrderId = pendingOrderRedirectId(res);
+            if (pendingOrderId) {
+              that.setData({ isPaying: false }, () => that.refreshPaymentState());
+              cb({ ok: false, msg: PENDING_ORDER_REDIRECT, registrationId: pendingOrderId, text: res.msg });
+              return;
+            }
             if (res.code == 409 || res.code == '409') {
               that.setData({ isPaying: false }, () => that.refreshPaymentState());
               app.tips('价格已更新，请重新确认');
@@ -1424,6 +1438,12 @@ Page({
                     cyLoading.hide();
                     if (payRes && payRes.code == '200' && hasCompletePaymentParams(payRes.data)) {
                       cb({ ok: true, data: payRes.data });
+                      return;
+                    }
+                    const supersededId = pendingOrderRedirectId(payRes);
+                    if (supersededId) {
+                      that.setData({ isPaying: false }, () => that.refreshPaymentState());
+                      cb({ ok: false, msg: PENDING_ORDER_REDIRECT, registrationId: supersededId, text: payRes.msg });
                       return;
                     }
                     that.setData({ isPaying: false }, () => that.refreshPaymentState());
@@ -1754,6 +1774,10 @@ Page({
 
     var submitted = that._workflow.submit(payload, {
       onOrderFail: function (res) {
+        if (res && res.msg === PENDING_ORDER_REDIRECT) {
+          that.openOrderForPendingConflict(res.registrationId, res.text);
+          return;
+        }
         // 拍板 #21 / fix-be-0917:旧幂等键不可用(单已过期/已取消)时先自动换新键重建一次
         // (玩家无感,不发提示);重建后仍失败才退回可见提示,防止在死循环里反复建单。
         if (res && res.msg === ORDER_REBUILD_REQUIRED) {
@@ -1836,7 +1860,8 @@ Page({
           () => that.refreshPaymentState());
         cyLoading.hide();
         app.tips('您已取消支付');
-        that.cancelPendingOrder();
+        // j6 N1:取消没落库(比如微信结果还在确认)就带玩家去那笔订单看清现状,不再无声退回详情页
+        that.cancelPendingOrder({ openOrderWhenStuck: true });
       },
       onPayFail: function (res) {
         const message = (res && res.errMsg) || '支付失败，请重试';
@@ -1950,20 +1975,49 @@ Page({
     const ids = (info.registrationIds && info.registrationIds.length)
       ? info.registrationIds
       : (info.registrationId ? [info.registrationId] : []);
+    const leave = !(options && options.stayOnPage);
+    const openWhenStuck = !!(options && options.openOrderWhenStuck);
+    let waiting = ids.length;
+    let stuckId = null;
+    const settle = function () {
+      waiting -= 1;
+      if (waiting > 0 || !leave || that._destroyed) return;
+      if (openWhenStuck && stuckId) {
+        wx.redirectTo({ url: '/subpackageMember/orderinfo/orderinfo?id=' + stuckId + '&from=signup' });
+        return;
+      }
+      app.goBack();
+    };
+    if (!ids.length) {
+      if (leave) app.goBack();
+      return;
+    }
     ids.forEach(function (rid) {
       app.sendRequest({
         url: '/api/registration/cancel',
         data: { id: rid },
         method: 'POST',
         hideLoading: true,
-        successStatusAbnormal: function () {},
+        successStatusAbnormal: function () { stuckId = stuckId || rid; settle(); },
         // 只有取消真的落库了才换幂等键:撤单成功后再用旧 requestId 重试会重放这张已取消的单
         // (/api/registration/pay 对非待支付单必拒);撤单失败则保留旧键重放原单,由 /pay 兜底继续支付。
-        success: function () { that._reqId = null; },
-        fail: function () {}
+        success: function (res) {
+          if (res && (res.code == 200 || res.code == '200')) that._reqId = null;
+          else stuckId = stuckId || rid;
+          settle();
+        },
+        fail: function () { stuckId = stuckId || rid; settle(); }
       });
     });
-    if (!(options && options.stayOnPage)) app.goBack();
+  },
+
+  /** j6 N1:同一场已有一笔待支付的单 —— 说一句,再带去那笔订单(在那里继续支付或取消)。 */
+  openOrderForPendingConflict(registrationId, text) {
+    cyLoading.hide();
+    this.setData({ isPaying: false, submitError: '' }, () => this.refreshPaymentState());
+    if (text) app.tips(text);
+    if (this._destroyed || !registrationId) return;
+    wx.redirectTo({ url: '/subpackageMember/orderinfo/orderinfo?id=' + registrationId + '&from=signup' });
   },
 
   /**
