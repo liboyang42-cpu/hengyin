@@ -156,6 +156,7 @@
   background: #F5F6F8;          /* ds-ok 签文那块的淡底 */
 }
 .ds__poem {
+  min-height: 92rpx;            /* 未领取时签文为空，刮层和直接揭示仍要能点到 */
   padding: 12rpx 18rpx 10rpx;
   font-family: "Noto Serif SC", serif;
   font-size: var(--cy-type-body);
