@@ -13,6 +13,8 @@ import com.chengyinhub.business.mapper.CmsTopicNodeMapper;
 import com.chengyinhub.business.mapper.CmsMemberTemplateMapper;
 import com.chengyinhub.business.mapper.CmsCollaboratorsMapper;
 import com.chengyinhub.business.mapper.NpcProfileMapper;
+import com.chengyinhub.business.mapper.OmsTicketMapper;
+import com.chengyinhub.business.domain.OmsTicket;
 import com.chengyinhub.business.service.ITopicContentCopyService;
 import com.chengyinhub.business.service.ICmsMemberTemplateService;
 import com.chengyinhub.business.service.IProductRoleService;
@@ -53,6 +55,7 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
     @Autowired private CmsMemberTemplateMapper cmsMemberTemplateMapper;
     @Autowired private CmsCollaboratorsMapper cmsCollaboratorsMapper;
     @Autowired private NpcProfileMapper npcProfileMapper;
+    @Autowired private OmsTicketMapper omsTicketMapper;
     @Autowired private ISysCategoryService sysCategoryService;
     @Autowired private IProductRoleService productRoleService;
     @Autowired private ICmsMemberTemplateService cmsMemberTemplateService;
@@ -123,6 +126,9 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
         }
         if (copyType >= 3) {
             copyCollaborators(id, newTopicId);
+            // p3 N6(第十二轮 k9):「应用」模板后票种丢了,草稿只剩空票务。整包复制把主题票种一起带上;
+            // 只抄票的设定,库存回满,不带场次票、报名与售出。副本是草稿,未上架,不会开卖。
+            copyTopicTicketTypes(id, newTopic);
         }
         return newTopicId;
     }
@@ -567,6 +573,50 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
             copy.setVoiceStatus(NodeNpcService.VOICE_NONE);
         }
         return copy;
+    }
+
+    private static final Long OWNER_TYPE_TOPIC = 1L;
+
+    private void copyTopicTicketTypes(Long originalTopicId, CmsTopic newTopic) {
+        if (omsTicketMapper == null) return; // 手工 new 的旧单测未注入;Spring 运行态必注入
+        OmsTicket query = new OmsTicket();
+        query.setOwnerType(OWNER_TYPE_TOPIC);
+        query.setOwnerId(originalTopicId);
+        query.setDelFlag(0);
+        for (OmsTicket source : nullToEmpty(omsTicketMapper.selectOmsTicketList(query))) {
+            OmsTicket copy = new OmsTicket();
+            copy.setMemberId(newTopic.getMemberId());
+            copy.setOwnerType(OWNER_TYPE_TOPIC);
+            copy.setOwnerId(newTopic.getId());
+            copy.setName(source.getName());
+            copy.setPrice(source.getPrice());
+            copy.setTotalInventory(source.getTotalInventory());
+            copy.setRemainingInventory(source.getTotalInventory());
+            copy.setStartTime(source.getStartTime());
+            copy.setEndTime(source.getEndTime());
+            copy.setSaleStartTime(source.getSaleStartTime());
+            copy.setSaleEndTime(source.getSaleEndTime());
+            copy.setMode(source.getMode());
+            copy.setSubType(source.getSubType());
+            copy.setMeetingPoint(source.getMeetingPoint());
+            copy.setMeetingPointAddress(source.getMeetingPointAddress());
+            copy.setTeamSize(source.getTeamSize());
+            copy.setMinPeople(source.getMinPeople());
+            copy.setMaxPeople(source.getMaxPeople());
+            copy.setSignupDeadline(source.getSignupDeadline());
+            copy.setGatherLng(source.getGatherLng());
+            copy.setGatherLat(source.getGatherLat());
+            copy.setRefundRule(source.getRefundRule());
+            copy.setRefundSupported(source.getRefundSupported());
+            copy.setSyncWithTheme(source.getSyncWithTheme());
+            copy.setNeedAudit(source.getNeedAudit());
+            copy.setDelFlag(0);
+            copy.setCreateBy("system_copy");
+            copy.setCreateTime(new Date());
+            if (omsTicketMapper.insertOmsTicket(copy) != 1) {
+                throw new IllegalStateException("复制主题票种失败");
+            }
+        }
     }
 
     private void copyCollaborators(Long originalTopicId, Long newTopicId) {
