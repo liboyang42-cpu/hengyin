@@ -1,9 +1,4 @@
-// CR-308 / 产品拍板 2026-09-15 第 27 问:主题级 BGM 残留代码清理。
-//
-// 主题级(路线)音频在 fabu 里从来没有任何 WXML 入口:只有 applyEditingTopic / applyAiDraft
-// 回填、apiData 原样上送三条残留读写(即「编辑一次就原样带回,免得清掉别处配的」)。
-// 用户裁决「删掉残留」—— 只停小程序读写,后端 cms_topic.audio_url 字段保留不删(存量数据兼容)。
-// 章节音频(chapterForm.audioUrl,一章一段旁白)是另一条链路,必须原样保留、不得被顺手删掉。
+// 2026-11-05 owner: restore one optional theme track; chapter narration stays separate.
 const { test } = require('node:test')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
@@ -84,16 +79,25 @@ function makePage() {
 
 require(PAGE)
 
-test('RED 锚点:主题级 BGM 的读写必须清零(formData.audioUrl / audioDuration 不再出现)', () => {
-  assert.doesNotMatch(CODE, /formData\.audioUrl/, '主题级读取/上送残留还在')
-  assert.doesNotMatch(CODE, /formData\.audioDuration/, '主题级时长残留还在')
-  assert.doesNotMatch(CODE, /topic\.audioUrl|sourceData\.audioUrl/, '回填路径仍在读主题级音频')
+test('主题配乐在编辑、复制与提交路径保留', () => {
+  assert.match(CODE, /'formData\.audioUrl': topic\.audioUrl/)
+  assert.match(CODE, /'formData\.audioUrl': sourceData\.audioUrl/)
+  assert.match(CODE, /audioUrl: this\.data\.formData\.audioUrl/)
+  const sheet = fs.readFileSync(path.join(ROOT, 'pages/publish/fabu/topic-detail-sheet.wxml'), 'utf8')
+  assert.match(sheet, /主题配乐/)
+  assert.match(sheet, /bindtap="uploadThemeAudio"/)
 })
 
-test('formData 初始态不再声明主题级 audioUrl / audioDuration 字段', () => {
+test('主题配乐上传、清空不改章节音频', () => {
   const page = makePage()
-  assert.ok(!('audioUrl' in page.data.formData), 'formData 不该再有主题级 audioUrl')
-  assert.ok(!('audioDuration' in page.data.formData), 'formData 不该再有主题级 audioDuration')
+  page.data.chapterForm.audioUrl = 'chapter.mp3'
+  chosenDocuments = [{ url: 'https://cdn/theme.mp3' }]
+  page.uploadThemeAudio()
+  chosenDocuments = null
+  assert.equal(page.data.formData.audioUrl, 'https://cdn/theme.mp3')
+  page.clearThemeAudio()
+  assert.equal(page.data.formData.audioUrl, '')
+  assert.equal(page.data.chapterForm.audioUrl, 'chapter.mp3')
 })
 
 test('章节音频链路保留:WXML 三个入口 + JS 方法齐备', () => {
@@ -117,7 +121,7 @@ test('章节音频行为不受清理影响:上传写 chapterForm,清空只清 ch
   }
   assert.equal(page.data.chapterForm.audioUrl, 'https://cdn/chapter.mp3')
   assert.equal(page.data.chapterForm.audioFileName, 'chapter.mp3')
-  assert.ok(!('audioUrl' in page.data.formData), '上传章节音频不得回写主题级字段')
+  assert.equal(page.data.formData.audioUrl, '', '章节音频不改主题配乐')
 
   page.clearChapterAudio()
   assert.equal(page.data.chapterForm.audioUrl, '')

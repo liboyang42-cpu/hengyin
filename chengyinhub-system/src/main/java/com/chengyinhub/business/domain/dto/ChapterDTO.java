@@ -48,6 +48,13 @@ public class ChapterDTO implements Serializable {
      */
     @Schema(description = "章节背景旁白音频地址", example = "")
     private String audioUrl;
+
+    private String videoUrl;
+    private String videoPosterUrl;
+    public String getVideoUrl() { return videoUrl; }
+    public void setVideoUrl(String value) { videoUrl = value; }
+    public String getVideoPosterUrl() { return videoPosterUrl; }
+    public void setVideoPosterUrl(String value) { videoPosterUrl = value; }
     /**
      * 章节配色(黑/蓝/红/黄/白 五档纯色,取值见 ChapterAtmospherePreset)。
      * ★2026-09-06 补上:在此之前小程序有配色选择器、这里没有字段,于是选了什么都落不进库 ——

@@ -151,6 +151,7 @@ public class CmsTopicChapterServiceImpl implements ICmsTopicChapterService
     @Transactional(rollbackFor = Exception.class)
     public int insertCmsTopicChapter(CmsTopicChapter cmsTopicChapter)
     {
+        assertVideoEditedWithTheme(cmsTopicChapter);
         assertNotCreatingRevshare(cmsTopicChapter);
         CmsTopic topic = assertTopicMutable(cmsTopicChapter == null ? null : cmsTopicChapter.getTopicId());
         assertRecruitmentConfigForInsert(cmsTopicChapter, topic);
@@ -222,6 +223,12 @@ public class CmsTopicChapterServiceImpl implements ICmsTopicChapterService
         return chapter;
     }
 
+    private void assertVideoEditedWithTheme(CmsTopicChapter chapter) {
+        if (chapter != null && ((chapter.getVideoUrl() != null && !chapter.getVideoUrl().isBlank())
+                || (chapter.getVideoPosterUrl() != null && !chapter.getVideoPosterUrl().isBlank())))
+            throw new IllegalStateException("请在专业主题编辑器配置章节视频");
+    }
+
     /**
      * 通用 add 路径上的条款形状闸。
      *
@@ -268,6 +275,7 @@ public class CmsTopicChapterServiceImpl implements ICmsTopicChapterService
     {
         CmsTopicChapter current = lockAndAssertChapterMutable(
                 cmsTopicChapter == null ? null : cmsTopicChapter.getId());
+        assertVideoEditedWithTheme(cmsTopicChapter);
         assertNotChangingSupplyTerms(cmsTopicChapter, current);
         assertRecruitmentConfigForUpdate(cmsTopicChapter, current);
         // 同 insert:通用编辑也能开招募/换品类,必须走同一道「已发布免费主题禁转商业」写后复核。

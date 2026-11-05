@@ -4997,3 +4997,5 @@ page { background: var(--cy-btn-solid-bg); }
 .sp-card__play { font-size: var(--cy-type-label); font-weight: 600; color: var(--cy-color-text-secondary); }
 .sp-card__route { flex: none; width: 68rpx; height: 68rpx; border-radius: 18rpx; display: flex; align-items: center; justify-content: center; background: var(--cy-color-text-primary); color: var(--cy-color-bg-page); } /* ds-ok P-9 原型尺寸(业主批准稿,逐字照搬) */
 @media (prefers-reduced-motion: reduce) { .sp-pop__panel, .sp-pop__mask { transition: none; } }
+
+.chapter-media-error { display: block; color: var(--cy-danger); font-size: var(--cy-font-caption); margin-top: var(--cy-space-2); }

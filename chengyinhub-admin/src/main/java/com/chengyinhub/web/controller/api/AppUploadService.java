@@ -40,7 +40,7 @@ public class AppUploadService
 {
     static final String[] IMAGE_EXTENSIONS = { "jpg", "jpeg", "png", "gif" };
     // glb:显形档 AR 的 3D 模型(2026-09-23);严格校验按 MimeTypeUtils 的 glTF 2.0 文件头放行
-    static final String[] OSS_EXTENSIONS = { "jpg", "jpeg", "png", "gif", "mp3", "m4a", "aac", "wav", "glb" };
+    static final String[] OSS_EXTENSIONS = { "jpg", "jpeg", "png", "gif", "mp3", "m4a", "aac", "wav", "glb", "mp4" };
     private static final int MAX_FILES = 9;
     private static final long MAX_TOTAL_SIZE = FileUploadUtils.DEFAULT_MAX_SIZE;
     private static final String WX_ACCESS_TOKEN_URL = "https://api.weixin.qq.com/cgi-bin/stable_token";
@@ -120,7 +120,7 @@ public class AppUploadService
         verifyContentSecurity(sanitized);
         boolean pendingMedia=!isImageFile(sanitized);
         if(pendingMedia && (memberId==null || memberId<=0 || appMediaAssetService==null))
-            throw new UploadRejectedException("音频和模型需登录后提交审核",null);
+            throw new UploadRejectedException("音频、视频和模型需登录后提交审核",null);
         try
         {
             boolean aftercareEvidence = UploadImagePolicy.MERCHANT_AFTERCARE_EVIDENCE_BIZ_TYPE.equals(bizType);
@@ -283,6 +283,8 @@ public class AppUploadService
         try
         {
             FileUploadUtils.assertAllowedStrict(file, OSS_EXTENSIONS);
+            if ("mp4".equalsIgnoreCase(FileUploadUtils.getExtension(file)))
+                com.chengyinhub.common.utils.file.ChapterVideoPolicy.validate(file);
             UploadImagePolicy.validate(file, bizType);
             return UploadImagePolicy.sanitizeMetadata(file, bizType);
         }

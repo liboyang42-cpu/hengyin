@@ -51,6 +51,7 @@ function emptyChapterForm(name = '', opening = false) {
     maxMerchant: 0,
     atmospherePreset: 'DEFAULT',
     // 章节背景旁白,一章最多一段(2026-09-04 拍板)。玩家进入本章自动播放。
+    videoUrl: '', videoPosterUrl: '',
     audioUrl: '',
     audioDuration: 0,
     audioFileName: '',
@@ -232,7 +233,9 @@ const structure = require('./theme-runtime-structure.js'); // structure
 const survivalEditor = require('./theme-runtime-survival.js'); /* survival */ const lookEditor = require('./theme-look-editor.js'); /* 主题画面风格 */
 const zeroHpEditor = require('./theme-runtime-zero-hp.js'); // R5 HP 归零面板（与 runtimeEditor 内同一组方法，直接展开便于 handler 溯源）
 const ownership = require('./theme-ownership.js'); const d20Page = require('./theme-d20-page.js'); const keysItems = require('./theme-keys-items.js'); const initialCarry = require('./theme-initial-carry.js'); // 文档二 L1;L2 线索与物品 · 物品一组;初始状态 · 开局带着
+const themeMedia = require('./theme-media.js');
 Page({
+  ...themeMedia.methods,
   ...runtimeEditor.methods, ...routeNames.methods,
   ...structure.methods, // structure
   ...survivalEditor.methods, // survival
@@ -438,6 +441,7 @@ Page({
     // 只列已经有服务端编号的站点:新建的站点只有 _localId,选了条件永远不成立且不报错。
     endingNodeOptions: [],
     formData: {
+      audioUrl: '', audioDuration: 0,
       name: '',
       subtitle: '',
       description: '',
@@ -2803,6 +2807,8 @@ Page({
       aiSimple: topic.publishMode === 'ai_simple',
       'formData.name': topic.name || '',
       'formData.subtitle': topic.subtitle || '',
+      'formData.audioUrl': topic.audioUrl || '',
+      'formData.audioDuration': topic.audioDuration || 0,
       'formData.description': topic.description || '',
       'formData.startDate': topic.startDate || '',
       'formData.endDate': topic.endDate || '',
@@ -3540,6 +3546,7 @@ Page({
     const chapters = (sourceData.chapters || []).map(ch => ({
       name: ch.name || '第1章',
       description: ch.description || '',
+      audioUrl: ch.audioUrl || '', videoUrl: ch.videoUrl || '', videoPosterUrl: ch.videoPosterUrl || '',
       atmospherePreset: normalizeAtmosphere(ch.atmospherePreset),
       schemaVersion: ch.schemaVersion,
       blocks: ch.blocks,
@@ -3605,6 +3612,8 @@ Page({
       startDateTime: restoredStartDate, endDateTime: restoredEndDate,
       'formData.name': sourceData.name || '',
       'formData.subtitle': sourceData.subtitle || '',
+      'formData.audioUrl': sourceData.audioUrl || '',
+      'formData.audioDuration': sourceData.audioDuration || 0,
       'formData.description': (sourceData.description || '') + (draft.aiTraceId ? '  [AI 辅助生成]' : ''),
       'formData.startDate': restoredStartDate,
       'formData.endDate': restoredEndDate,
@@ -3746,7 +3755,7 @@ Page({
 
     this.setData({
       popChapterAction: 0,
-      popChapter: true,
+      popChapter: true, chapterVideoError: '',
       popChapterIndex: chapterIndex,
       assignPendingLocalId: '',
       chapterForm: emptyChapterForm(defaultChapterName)
@@ -3820,7 +3829,7 @@ Page({
     });
     this.setData({
       chapterForm: chapterForm,
-      popChapter: true,
+      popChapter: true, chapterVideoError: '',
       popChapterAction: 1,
       popChapterIndex: chapterIndex,
       assignPendingLocalId: ''
@@ -4153,6 +4162,7 @@ Page({
     let newChapter = {
       ...this.data.chapterForm
     };
+    if (!newChapter.opening && !newChapter.ending) { newChapter.videoUrl = ''; newChapter.videoPosterUrl = ''; }
     newChapter.atmospherePreset = normalizeAtmosphere(newChapter.atmospherePreset);
     if (!this.normalizeChapterMerchantConfig(newChapter)) {
       return false;
@@ -5196,9 +5206,7 @@ Page({
   },
 
   // ===== 章节音频(2026-09-04 拍板:一章最多一段,挂在章节上而不是故事流的块里)=====
-  // ⚠️ 这三个方法原来写的是主题级 formData.audioUrl,但 fabu 里从来没有任何 WXML 绑定它们
-  //    (ui-integrity 把 onPreviewAudio 记成零绑定债务)。这次改挂 chapterForm ——
-  //    主题级 audioUrl 已按 2026-09-15 拍板清理(小程序不再读写;后端字段保留,存量数据不受影响)。
+  // 章节旁白与主题循环配乐各自保存。
   uploadChapterAudio() {
     const that = this;
     const chapterForm = this.data.chapterForm;
@@ -7615,6 +7623,8 @@ Page({
       name: this.data.formData.name,
       subtitle: this.data.formData.subtitle,
       description: this.data.formData.description,
+      audioUrl: this.data.formData.audioUrl || '',
+      audioDuration: this.data.formData.audioDuration || 0,
       // [P1-41] 写入点格式不一('HH:mm'/'HH:mm:ss'/纯日期),原 +':00' 对后两种拼出非法串
       startDate: this._normalizeDateTime(this.data.formData.startDate, '00:00:00'),
       endDate: this._normalizeDateTime(this.data.formData.endDate, '23:59:59'),

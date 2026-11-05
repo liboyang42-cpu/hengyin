@@ -23,6 +23,7 @@ public class MimeTypeUtils
         ALLOWED_CONTENT_TYPES.put("png", new String[] { "image/png" });
         ALLOWED_CONTENT_TYPES.put("mp3", new String[] { "audio/mpeg", "audio/mp3" });
         ALLOWED_CONTENT_TYPES.put("wav", new String[] { "audio/wav", "audio/x-wav", "audio/wave", "audio/vnd.wave" });
+        ALLOWED_CONTENT_TYPES.put("mp4", new String[] { "video/mp4", "application/octet-stream" });
         ALLOWED_CONTENT_TYPES.put("m4a", new String[] { "audio/mp4", "audio/x-m4a" });
         ALLOWED_CONTENT_TYPES.put("aac", new String[] { "audio/aac", "audio/x-aac" });
         // 显形档 AR 的 3D 模型:微信 wx.uploadFile 传不认识的类型时报 application/octet-stream,真身靠下面的文件头判
@@ -179,7 +180,7 @@ public class MimeTypeUtils
         {
             return startsAscii(header, length, "RIFF") && asciiAt(header, length, 8, "WAVE");
         }
-        if ("m4a".equals(normalized))
+        if ("m4a".equals(normalized) || "mp4".equals(normalized))
         {
             return asciiAt(header, length, 4, "ftyp");
         }

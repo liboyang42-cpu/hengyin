@@ -3,6 +3,7 @@
   "dependencies": {
     "20261104_review_wording_seeded_text": ["seed_playpack_templates_20260820", "seed_playpack_batch2_figma_20260821", "20260822_template_cover_images", "20260815_tandianri_roam_revisit_report_permission", "20260816_tandianri_batch3_funds_club_compensation", "20260816_tandianri_batch3_funds_club_payee", "20260816_tandianri_batch3_funds_player_cooldown", "20260817_tandianri_batch3_funds_club_hours_correction", "20260817_tandianri_batch5_admin_menus", "predict_void_task_register_20260915"],
     "20261105_welcome_points_fifty": [],
+    "20261105_chapter_video": [],
     "20261104_invitee_signup_points_off": [],
     "20261104_topic_total_time_seconds": [],
     "20261104_content_safety_jobs_post_deploy": ["20261103_content_safety_recheck", "20261103_sensitive_content_library"],

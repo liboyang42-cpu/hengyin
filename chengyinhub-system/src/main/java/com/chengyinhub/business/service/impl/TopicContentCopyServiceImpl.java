@@ -277,6 +277,8 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
             newChapter.setBlocksJson(originalChapter.getBlocksJson());
             newChapter.setAtmospherePreset(originalChapter.getAtmospherePreset());
             newChapter.setAudioUrl(originalChapter.getAudioUrl());
+            newChapter.setVideoUrl(originalChapter.getVideoUrl());
+            newChapter.setVideoPosterUrl(originalChapter.getVideoPosterUrl());
             newChapter.setImgArr(originalChapter.getImgArr());
             newChapter.setTotalTime(originalChapter.getTotalTime());
             newChapter.setTotalMileage(originalChapter.getTotalMileage());

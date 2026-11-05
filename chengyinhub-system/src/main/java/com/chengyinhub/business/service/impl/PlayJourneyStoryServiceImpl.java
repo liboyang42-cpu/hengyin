@@ -229,7 +229,7 @@ public class PlayJourneyStoryServiceImpl implements IPlayJourneyStoryService {
                             new com.fasterxml.jackson.core.type.TypeReference<List<Object>>() {});
                     Map<String, Object> out = new LinkedHashMap<String, Object>();
                     out.put("id", chosen.getChapterId());
-                    for (String field : new String[]{"name", "atmospherePreset", "audioUrl"})
+                    for (String field : new String[]{"name", "atmospherePreset", "audioUrl", "videoUrl", "videoPosterUrl"})
                         out.put(field, chapter.path(field).isNull() ? null : chapter.path(field).asText(null));
                     out.put("blocks", com.chengyinhub.business.util.ChapterBlockReadSupport.projectForPlayer(
                             blocks, new java.util.HashSet<Long>(state.getCompletedNodeIds()),
@@ -260,6 +260,8 @@ public class PlayJourneyStoryServiceImpl implements IPlayJourneyStoryService {
         out.put("name", chapter.getName());
         out.put("atmospherePreset", chapter.getAtmospherePreset());
         out.put("audioUrl", chapter.getAudioUrl());
+        out.put("videoUrl", chapter.getVideoUrl());
+        out.put("videoPosterUrl", chapter.getVideoPosterUrl());
         out.put("blocks", blocks);
         return out;
     }

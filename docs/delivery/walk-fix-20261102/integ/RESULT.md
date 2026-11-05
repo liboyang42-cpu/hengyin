@@ -315,3 +315,7 @@ ROUND6 said not to put the owner registration on this branch, so the architectur
 - WeChat's own compressed main-package size: only estimated.
 
 STATUS: COMPLETE
+
+## 2026-11-05 optional chapter video addition
+
+Before starting the new backend, apply `chengyinhub-admin/sql/migration_20261105_chapter_video.sql` through the existing migration flow. It adds nullable `video_url` and `video_poster_url` to `cms_topic_chapter`, is repeatable, and rewrites no existing rows. Then start the backend, then release the client. Old code ignores these columns; rollback keeps them and the authored media. No migration or deployment was performed on production by the video worker. Theme music uses existing columns.

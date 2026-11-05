@@ -411,7 +411,9 @@ const themePlans = require('./utils/theme-plans.js');
 const playerOps = require('./utils/theme-player-ops.js');
 const { loadStoryFont } = require('./utils/story-font.js'); const { storyFontUrl: STORY_FONT_URL } = require('../../utils/config.js');
 const playOverlays = require('./utils/play-hud-overlays.js'); const playTopbar = require('./utils/play-topbar.js'); const playLook = require('./utils/play-look.js'); /* 故事流顶栏:罗盘⇄地图、背包、案件册、各站奖励 */
+const chapterVideo = require('./chapter-video.js');
 Page({
+  ...chapterVideo.methods,
   ...journeyCheckRecovery.methods(req),
   ...orientLifecycle.methods((url, method, data) => {
     const header = { 'content-type': 'application/x-www-form-urlencoded' };
@@ -1019,6 +1021,7 @@ Page({
 
   onUnload() {
     audioSession.pauseAll(false);
+    this.finishChapterVideo(null, false);
     if (this._trail) this._trail.persist();
     if (this._teamTrail) this._teamTrail.pause();
     if (this._answerRightTimer) { clearTimeout(this._answerRightTimer); this._answerRightTimer = null; }
@@ -1072,6 +1075,7 @@ Page({
   // 2026-08-20 并 master:开卡包的三个 timeout 与定位无关,该清照清;
   //    只把 master 那侧的 _watching=false / offLocationChange / stopLocationUpdate 三句拿掉。
   onHide() {
+    this.finishChapterVideo();
     this._flushAnswerRight();
     if (this._trail) this._trail.persist();
     if (this._teamTrail) this._teamTrail.pause();
@@ -3826,7 +3830,7 @@ Page({
       if (!wasOpen) this._resumeStory();
       /* (行位保留:此处原有代码已移除) */
       this.measureChapter();
-      if (!this.data.chapterGate.show) this.playChapterAudio(true);
+      if (!this.data.chapterGate.show && !this.playChapterVideo()) this.playChapterAudio(true);
       this._enterThemeChapter();
     });
   },
@@ -4210,7 +4214,7 @@ Page({
     this._pendingChapterGateKey = '';
     this._withLookTransition(() => this.setData({ 'chapterGate.show': false }, () => {
       this.measureChapter();
-      this.playChapterAudio(true);
+      if (!this.playChapterVideo()) this.playChapterAudio(true);
     }));
   },
   /** 滑动核销确认:真正的核销是商家扫玩家的码,这里只是玩家侧把码亮出来并标记本次已出示。
@@ -4559,6 +4563,7 @@ Page({
       description: c.description || '',
       blocks: Array.isArray(c.blocks) ? c.blocks : null,
       audioUrl: c.audioUrl || '',
+      videoUrl: secureOwnMedia(c.videoUrl), videoPosterUrl: secureOwnMedia(c.videoPosterUrl),
       atmospherePreset: normalizeAtmosphere(this._themePalette(c.atmospherePreset)),
       atmosphereClass: atmosphereClass(this._themePalette(c.atmospherePreset)) + this._chapterTime(i),
       nodeCount: 0,   // 回填于 loadData:按 chapterId 数节点
@@ -4600,6 +4605,7 @@ Page({
       //    E1 第一版就漏在这:playChapterAudio 读 this.data.chapter.audioUrl 恒为 undefined,
       //    整条自动播放是死链,而契约测试直接给 page.data.chapter 赋值、绕过了本函数,所以是假绿。
       audioUrl: c.audioUrl || '',
+      videoUrl: secureOwnMedia(c.videoUrl), videoPosterUrl: secureOwnMedia(c.videoPosterUrl),
       // /api/play/nodes 一直在下发章节 blocks(文字/节点/图片/音频),此前本页没人读它。
       // 章节剧情屏要按作者编排的顺序铺开,所以块流必须带到这一层。
       blocks: Array.isArray(c.blocks) ? c.blocks : null
@@ -4790,6 +4796,7 @@ Page({
       timeText: card.timeText || '',
       blocks: card.blocks || null,
       audioUrl: card.audioUrl || '',
+      videoUrl: secureOwnMedia(card.videoUrl), videoPosterUrl: secureOwnMedia(card.videoPosterUrl),
       atmospherePreset: normalizeAtmosphere(this._themePalette(card.atmospherePreset)),
       atmosphereClass: atmosphereClass(this._themePalette(card.atmospherePreset)) + this._chapterTime((this.data.chapterCards || []).indexOf(card)),
     };
@@ -8153,9 +8160,9 @@ Page({
       // 局已结束时服务端回的是归档结果,结局章在 story.chapter 里(进行中的局才在顶层):两处都认,
       // 否则通关后结局章(连同作者配的结尾音乐)永远不播,只剩摘要卡。
       const ch = d.chapter || (d.story && d.story.chapter);
-      if (ch && Array.isArray(ch.blocks) && ch.blocks.length) {
+      if (ch && Array.isArray(ch.blocks) && (ch.blocks.length || ch.videoUrl)) {
         this._playEndingChapter({ id: ch.id, chapterId: ch.id, name: ch.name, blocks: ch.blocks,
-          atmospherePreset: ch.atmospherePreset, audioUrl: ch.audioUrl }, card, isCurrent);
+          atmospherePreset: ch.atmospherePreset, audioUrl: ch.audioUrl, videoUrl: ch.videoUrl, videoPosterUrl: ch.videoPosterUrl }, card, isCurrent);
         return;
       }
       card();

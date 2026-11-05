@@ -391,6 +391,7 @@ class TopicRouteRuntimeServiceImplTest {
                 + "{\"code\":\"done\",\"title\":\"结束\",\"fallback\":true,\"chapterId\":90}]}}");
         CmsTopicChapter ending = new CmsTopicChapter();
         ending.setId(90L); ending.setTopicId(10L); ending.setName("原结局");
+        ending.setVideoUrl("media-asset:51"); ending.setVideoPosterUrl("media-asset:52");
         ending.setAudioUrl("/fixture-ending.mp3"); ending.setAtmospherePreset("night");
         ending.setBlocksJson("[{\"type\":\"text\",\"content\":\"原正文\"}]");
         CmsTopicChapter foreign = new CmsTopicChapter();
@@ -402,6 +403,8 @@ class TopicRouteRuntimeServiceImplTest {
         JsonNode frozen = json.readTree(stored[0].getConfigSnapshotJson());
         assertEquals("原结局", frozen.path("endingChapters").path("90").path("name").asText());
         assertEquals("/fixture-ending.mp3", frozen.path("endingChapters").path("90").path("audioUrl").asText());
+        assertEquals("media-asset:51", frozen.path("endingChapters").path("90").path("videoUrl").asText());
+        assertEquals("media-asset:52", frozen.path("endingChapters").path("90").path("videoPosterUrl").asText());
         assertTrue(frozen.path("endingChapters").path("90").path("blocks").toString().contains("原正文"));
         assertEquals(0, frozen.path("thoughtChapters").size(), "结局不进入可推进章节");
         ending.setName("改后结局"); ending.setBlocksJson("[]");

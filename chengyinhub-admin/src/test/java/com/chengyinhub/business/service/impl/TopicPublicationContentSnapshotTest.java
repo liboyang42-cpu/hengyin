@@ -107,8 +107,12 @@ class TopicPublicationContentSnapshotTest {
         Fixture opening = new Fixture();
         opening.topic.setJourneyStoryJson("{\"schemaVersion\":1,\"openingChapterId\":20}");
         opening.chapter.setBlocksJson("[]");
+        opening.chapter.setVideoUrl("media-asset:41");
+        opening.chapter.setVideoPosterUrl("media-asset:42");
         JsonNode withOpening = JSON.readTree(opening.compiler.freezePublication(opening.topic, null));
         assertFalse(withOpening.has("contentSnapshotOnly"));
+        assertEquals("media-asset:41", withOpening.path("openingChapter").path("videoUrl").asText());
+        assertEquals("media-asset:42", withOpening.path("openingChapter").path("videoPosterUrl").asText());
         assertEquals(Long.valueOf(20L), com.chengyinhub.business.domain.JourneyStory.openingChapterId(withOpening.path("journeyStory").asText()));
         Fixture theme = new Fixture(); theme.topic.setThemeRuntimeConfigJson("{\"schemaVersion\":1,\"capacity\":0,\"endings\":[{\"id\":\"end\",\"title\":\"结束\",\"fallback\":true,\"success\":false}]}");
         JsonNode withTheme = JSON.readTree(theme.compiler.freezePublication(theme.topic, null));

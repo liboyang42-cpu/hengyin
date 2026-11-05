@@ -45,7 +45,10 @@ public class AppMediaPublicationGuard {
     }
 
     public void requireChapter(Long owner, Object chapter, boolean publish) {
-        requireFields(owner, chapter, publish, Set.of(), "audioUrl", "imgArr", "blocksJson");
+        requireFields(owner, chapter, publish, Set.of(), "audioUrl", "videoUrl", "videoPosterUrl", "imgArr", "blocksJson");
+        BeanWrapper fields = new BeanWrapperImpl(chapter);
+        if (fields.isReadableProperty("videoUrl")) references.requireMediaType((String) fields.getPropertyValue("videoUrl"), "VIDEO");
+        if (fields.isReadableProperty("videoPosterUrl")) references.requireMediaType((String) fields.getPropertyValue("videoPosterUrl"), "IMAGE");
     }
 
     public void requireNode(Long owner, Object node, boolean publish) {

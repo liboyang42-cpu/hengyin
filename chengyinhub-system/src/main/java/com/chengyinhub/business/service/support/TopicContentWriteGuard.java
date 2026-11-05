@@ -88,6 +88,16 @@ public final class TopicContentWriteGuard {
         if (audioUrl != null && audioUrl.length() > 512) {
             throw new IllegalStateException("章节音频地址不能超过 512 字符");
         }
+        if (c.getVideoUrl() != null && !c.getVideoUrl().isBlank()) {
+            if (!Boolean.TRUE.equals(c.getOpening()) && (c.getEnding() == null || c.getEnding().isNull()))
+                throw new IllegalStateException("视频只能放在序章或结局章");
+            if (c.getVideoUrl().length() > 512 || c.getVideoPosterUrl() == null
+                    || c.getVideoPosterUrl().isBlank() || c.getVideoPosterUrl().length() > 512)
+                throw new IllegalStateException("请重新上传视频和封面");
+        }
+        if ((c.getVideoUrl() == null || c.getVideoUrl().isBlank())
+                && c.getVideoPosterUrl() != null && !c.getVideoPosterUrl().isBlank())
+            throw new IllegalStateException("请同时上传视频和封面");
         Integer recruitEnabled = c.getRecruitEnabled();
         ChapterRecruitmentRules.assertRecruitEnabled(recruitEnabled);
         ChapterRecruitmentRules.assertMaxMerchant(c.getMaxMerchant());

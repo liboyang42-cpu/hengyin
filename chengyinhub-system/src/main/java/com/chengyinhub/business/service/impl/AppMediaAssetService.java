@@ -59,10 +59,10 @@ public class AppMediaAssetService {
     @Transactional
     public Map<String,Object> stage(Long memberId,String objectKey) {
         com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
-        if(memberId==null || memberId<=0 || objectKey==null || !objectKey.matches("upload/[0-9a-f]{32}\\.(mp3|m4a|aac|wav|glb|jpg|jpeg|png|gif)"))
+        if(memberId==null || memberId<=0 || objectKey==null || !objectKey.matches("upload/[0-9a-f]{32}\\.(mp3|m4a|aac|wav|glb|mp4|jpg|jpeg|png|gif)"))
             throw new ServiceException("媒体归属或文件来源无效");
         Map<String,Object> row=new LinkedHashMap<>(); row.put("memberId",memberId);row.put("objectKey",objectKey);
-        row.put("mediaType",objectKey.endsWith(".glb")?"MODEL3D":objectKey.matches(".*\\.(jpg|jpeg|png|gif)")?"IMAGE":"AUDIO");row.put("version",0);row.put("reviewState","HOLD");
+        row.put("mediaType",objectKey.endsWith(".mp4")?"VIDEO":objectKey.endsWith(".glb")?"MODEL3D":objectKey.matches(".*\\.(jpg|jpeg|png|gif)")?"IMAGE":"AUDIO");row.put("version",0);row.put("reviewState","HOLD");
         if(mapper.insert(row)!=1 || !(row.get("id") instanceof Number))throw new ServiceException("媒体审核记录保存失败");
         submit(row);
         return publicStatus(row);

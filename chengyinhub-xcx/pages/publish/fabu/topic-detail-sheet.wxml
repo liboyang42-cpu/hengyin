@@ -65,6 +65,15 @@
       </view>
     </view>
 
+    <view class="node-card" id="fieldThemeAudio">
+      <view class="node-card__row">
+        <view class="node-card__ico"><cy-icon name="play" size="32" /></view>
+        <view class="node-card__main"><text class="node-card__title">主题配乐</text></view>
+        <view wx:if="{{formData.audioUrl}}" class="node-pill" bindtap="clearThemeAudio" aria-role="button" aria-label="移除主题配乐" hover-class="cy-pressed">移除</view>
+        <view class="node-pill" bindtap="uploadThemeAudio" aria-role="button" aria-label="上传主题配乐" hover-class="cy-pressed">{{formData.audioUrl ? '更换' : '上传'}}<cy-icon name="plus" size="24" /></view>
+      </view>
+    </view>
+
     <view class="node-card" id="fieldLook" bindtap="openLookEditor" aria-role="button" aria-label="设置画面风格" hover-class="cy-pressed" hover-stay-time="80">
       <view class="node-card__row">
         <view class="node-card__ico"><cy-icon name="image" size="32" /></view>

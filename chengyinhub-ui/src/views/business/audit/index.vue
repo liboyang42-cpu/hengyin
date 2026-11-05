@@ -138,9 +138,10 @@
             <el-button size="mini" :disabled="Number(detailTask.status) !== 0" @click="openReview(detailTask, 3)" v-hasPermi="['business:audit:review']">缺证，升级审核</el-button>
           </template>
           <template v-if="detailTask.bizType === 'MEDIA_ASSET'">
-            <el-alert title="文件在审核通过前仅作者可见。请实际检查图片、音频或模型；无法检查时请拒绝并填写原因，作者可重新提审。" type="info" :closable="false" />
+            <el-alert title="文件在审核通过前仅作者可见。请实际检查图片、音频、视频或模型；无法检查时请拒绝并填写原因，作者可重新提审。" type="info" :closable="false" />
             <el-image v-if="mediaType === 'IMAGE' && mediaPreviewUrl" :src="mediaPreviewUrl" fit="contain" style="max-width: 100%; max-height: 480px" :preview-src-list="[mediaPreviewUrl]" />
             <audio v-else-if="mediaType === 'AUDIO' && mediaPreviewUrl" :src="mediaPreviewUrl" controls preload="none" />
+            <video v-else-if="mediaType === 'VIDEO' && mediaPreviewUrl" :src="mediaPreviewUrl" controls preload="metadata" style="max-width:100%" />
             <el-link v-else-if="mediaPreviewUrl" :href="mediaPreviewUrl" target="_blank" rel="noopener noreferrer">下载并检查模型文件</el-link>
           </template>
           <div v-if="appealAttachments.length" class="appeal-attachments">

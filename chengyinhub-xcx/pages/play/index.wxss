@@ -2076,3 +2076,7 @@ page { background: var(--cy-color-bg-page); }
 /* 减少动态:直接显示 */
 .play--reduced-motion .tfx__c{ transition:none; opacity:1; transform:none; filter:none; }
 .play--reduced-motion .chfull__para.tfx{ transition:none; clip-path:none; filter:none; letter-spacing:normal; }
+
+.chapter-video { position: fixed; inset: 0; z-index: 9999; background: var(--cy-color-play-page); }
+.chapter-video__film, .chapter-video__poster { position: absolute; width: 100%; height: 100%; top: 0; left: 0; }
+.chapter-video__skip { position: absolute; top: calc(env(safe-area-inset-top) + 100rpx); right: 32rpx; padding: 20rpx 28rpx; color: var(--cy-color-play-accent); background: var(--cy-color-play-surface); border-radius: var(--cy-radius-pill); }

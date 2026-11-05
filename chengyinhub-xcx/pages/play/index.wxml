@@ -1942,3 +1942,9 @@
     <cy-btn variant="primary" style="width:100%" bindtap="onTeamConsentStart" accessibility-label="开始">开始</cy-btn>
   </view>
 </cy-sheet>
+
+<view wx:if="{{chapterVideo.show}}" class="chapter-video" data-token="{{chapterVideo.token}}" catchtap="finishChapterVideo" aria-role="button" aria-label="跳过视频">
+  <video id="chapter-video" class="chapter-video__film" src="{{chapterVideo.url}}" poster="{{chapterVideo.poster}}" autoplay="{{true}}" controls="{{false}}" show-center-play-btn="{{false}}" show-play-btn="{{false}}" show-fullscreen-btn="{{false}}" enable-progress-gesture="{{false}}" object-fit="contain" data-token="{{chapterVideo.token}}" bindtap="finishChapterVideo" bindplay="onChapterVideoPlay" bindtimeupdate="onChapterVideoTime" bindwaiting="onChapterVideoWaiting" bindended="finishChapterVideo" binderror="finishChapterVideo" />
+  <cover-image wx:if="{{!chapterVideo.playing}}" class="chapter-video__poster" src="{{chapterVideo.poster}}" />
+  <cover-view class="chapter-video__skip" data-token="{{chapterVideo.token}}" bindtap="finishChapterVideo">跳过</cover-view>
+</view>

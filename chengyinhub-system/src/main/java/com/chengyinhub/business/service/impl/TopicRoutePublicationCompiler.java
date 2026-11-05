@@ -840,6 +840,7 @@ final class TopicRoutePublicationCompiler {
             frozen.put("chapterId", openingId); frozen.put("opening", true);
             frozen.put("name", opening.getName()); frozen.put("idxLabel", "序章");
             frozen.put("imgArr", opening.getImgArr()); frozen.put("audioUrl", opening.getAudioUrl());
+            frozen.put("videoUrl", opening.getVideoUrl()); frozen.put("videoPosterUrl", opening.getVideoPosterUrl());
             frozen.put("atmospherePreset", opening.getAtmospherePreset());
             frozen.set("blocks", JSON.valueToTree(ChapterBlockReadSupport.resolveFromTopicNodes(opening, liveNodes)));
         }
@@ -936,6 +937,8 @@ final class TopicRoutePublicationCompiler {
                     ending.put("name", chapter.getName());
                     ending.put("atmospherePreset", chapter.getAtmospherePreset());
                     ending.put("audioUrl", chapter.getAudioUrl());
+                    ending.put("videoUrl", chapter.getVideoUrl());
+                    ending.put("videoPosterUrl", chapter.getVideoPosterUrl());
                     ending.set("blocks", JSON.valueToTree(ChapterBlockReadSupport.resolve(
                             chapter, Collections.<CmsTopicNode>emptyList())));
                 }

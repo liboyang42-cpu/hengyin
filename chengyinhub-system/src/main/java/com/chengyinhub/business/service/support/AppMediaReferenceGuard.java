@@ -48,6 +48,13 @@ public class AppMediaReferenceGuard {
         return "media-asset:" + asset.get("id");
     }
 
+    public void requireMediaType(String reference, String mediaType) {
+        if (reference == null || reference.isBlank()) return;
+        Map<String, Object> asset = resolve(reference);
+        if (!registered(asset) || !mediaType.equals(asset.get("mediaType")))
+            throw new ServiceException("媒体类型不符合当前字段，请重新上传", 422);
+    }
+
     public String requireAttachments(Long memberId, String references, boolean publish) {
         if (references == null || references.trim().isEmpty()) return references;
         if (references.trim().startsWith("[")) return requireJsonAttachments(memberId, references, publish);
@@ -132,7 +139,7 @@ public class AppMediaReferenceGuard {
                 throw new ServiceException("媒体存储事实不可用", 422);
             return key;
         }
-        if (!key.matches("upload/[0-9a-f]{32}\\.(jpg|jpeg|png|gif|mp3|m4a|aac|wav|glb)"))
+        if (!key.matches("upload/[0-9a-f]{32}\\.(jpg|jpeg|png|gif|mp3|m4a|aac|wav|glb|mp4)"))
             throw new ServiceException("媒体存储事实不可用", 422);
         return FileOssUploadUtils.generateShortLivedPresignedUrl(key, 300);
     }
@@ -159,7 +166,7 @@ public class AppMediaReferenceGuard {
             rawPath = rawPath.substring(rawPath.indexOf("/profile/upload/"));
         }
         if (rawPath != null && rawPath.matches(LOCAL_IMAGE)) return rawPath;
-        if (rawPath == null || !rawPath.matches("/upload/[0-9a-f]{32}\\.(jpg|jpeg|png|gif|mp3|m4a|aac|wav|glb)")) return null;
+        if (rawPath == null || !rawPath.matches("/upload/[0-9a-f]{32}\\.(jpg|jpeg|png|gif|mp3|m4a|aac|wav|glb|mp4)")) return null;
         return rawPath.substring(1);
     }
 
