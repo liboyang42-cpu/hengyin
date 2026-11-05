@@ -126,4 +126,40 @@ class UserInvoiceWireContractTest {
         }
         verify(service, times(invalid.size())).applicationDetail(42L, null);
     }
+
+    @Test
+    void malformedLegacyTitleUpdateIdCannotBecomeACreate() throws Exception {
+        IUserInvoiceService service = mock(IUserInvoiceService.class);
+        MockMvc mvc = mvc(service);
+        List<Object> invalid = List.of("9223372036854775808", "-1", "0", "1e3", "1.5", 1.5,
+                true, Map.of("id", 1), List.of(1), "");
+        for (Object id : invalid) {
+            String response = mvc.perform(post("/api/invoice/titles/save").contentType(MediaType.APPLICATION_JSON)
+                    .content(json.writeValueAsBytes(Map.of("id", id, "titleType", "PERSONAL", "titleName", "Name"))))
+                    .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+            assertEquals("INVOICE_ARGUMENT_INVALID", json.readTree(response).get("errorCode").textValue());
+        }
+        String explicitNull = mvc.perform(post("/api/invoice/titles/save").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"id\":null,\"titleType\":\"PERSONAL\",\"titleName\":\"Name\"}"))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        assertEquals("INVOICE_ARGUMENT_INVALID", json.readTree(explicitNull).get("errorCode").textValue());
+        verifyNoInteractions(service);
+    }
+
+    @Test
+    void legacyTitleSaveKeepsCreateAndExactUpdateContracts() throws Exception {
+        IUserInvoiceService service = mock(IUserInvoiceService.class);
+        MockMvc mvc = mvc(service);
+        mvc.perform(post("/api/invoice/titles/save").contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsBytes(Map.of("titleType", "PERSONAL", "titleName", "New"))))
+                .andExpect(status().isOk());
+        verify(service).saveTitle(eq(42L), argThat(input -> input.getId() == null && "New".equals(input.getTitleName())));
+        mvc.perform(post("/api/invoice/titles/save").contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsBytes(Map.of("id", Long.toString(Long.MAX_VALUE),
+                        "titleType", "PERSONAL", "titleName", "Updated"))))
+                .andExpect(status().isOk());
+        verify(service).saveTitle(eq(42L), argThat(input -> Long.valueOf(Long.MAX_VALUE).equals(input.getId())
+                && "Updated".equals(input.getTitleName())));
+        verify(service, never()).saveTitleWithRequest(anyLong(), anyString(), any());
+    }
 }

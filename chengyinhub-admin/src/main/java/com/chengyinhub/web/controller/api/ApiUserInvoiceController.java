@@ -45,7 +45,12 @@ public class ApiUserInvoiceController extends BaseController {
     @Operation(summary = "新建或修改发票抬头（仅本人）")
     @PostMapping("/titles/save")
     public AjaxResult saveTitle(@RequestBody(required = false) Map<String, Object> body) {
-        return run(memberId -> invoiceService.saveTitle(memberId, titleInput(body)));
+        return run(memberId -> {
+            if (body != null && body.containsKey("id") && toLong(body, "id") == null) {
+                throw new UserInvoiceException(UserInvoiceException.ARGUMENT_INVALID, "抬头编号不合法");
+            }
+            return invoiceService.saveTitle(memberId, titleInput(body));
+        });
     }
 
     @Operation(summary = "按原请求号幂等保存本人抬头")
