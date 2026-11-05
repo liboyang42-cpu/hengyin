@@ -1,0 +1,35 @@
+{
+ "name": "G-i13-couponInfo",
+ "identity": "guest",
+ "url": "subpackageMember/couponInfo/couponInfo",
+ "route": [
+  "pages/index/index",
+  "subpackageMember/couponInfo/couponInfo"
+ ],
+ "sys": "",
+ "text": "优惠券设置 | 优惠券名称 | * | 优惠券日期 | * | 开始日期 | - | 结束日期 | 投放数 | * | 优惠券类型 | * | 请选择 | 优惠券说明 | 取消 | 发布优惠券 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "net": [
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list"
+ ],
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageMember/couponInfo/couponInfo"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

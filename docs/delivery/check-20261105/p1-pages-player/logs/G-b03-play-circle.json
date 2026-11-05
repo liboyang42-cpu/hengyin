@@ -1,0 +1,31 @@
+{
+ "name": "G-b03-play-circle",
+ "identity": "guest",
+ "url": "pages/play/circle/index",
+ "route": [
+  "pages/index/index"
+ ],
+ "sys": "",
+ "text": "成为俱乐部 | 成为商家 | 和朋友报名活动 | Hi, 旅人! | 上海市 | 编辑精选 | 暂时没有精选主题 | 附近活动 | 你附近暂时没有可点亮的节点 | 主题 | 活动 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "textScrolled": "没有更多了 | 附近活动 | 你附近暂时没有可点亮的节点 | 主题 | 活动 | 自由探索 | E2E 探店日一期 | 价格 | ¥69 起 | 时间 | 2026年11月15日 周日 09:00 | 地点 | 上海市黄浦区咖啡 | · 没有更多了 · | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "net": [
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list"
+ ],
+ "report": {
+  "route": [
+   "pages/index/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

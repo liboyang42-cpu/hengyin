@@ -1,0 +1,32 @@
+{
+ "name": "G-k04-anniversary",
+ "identity": "guest",
+ "url": "subpackageTools/anniversary/index",
+ "route": [
+  "pages/index/index",
+  "subpackageTools/anniversary/index"
+ ],
+ "sys": "",
+ "text": "那年今日 | 换一天 | 请通过现有登录流程登录后再使用 | 重试 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "net": [
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list"
+ ],
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageTools/anniversary/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

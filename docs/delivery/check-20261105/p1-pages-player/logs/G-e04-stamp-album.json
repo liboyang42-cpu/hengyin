@@ -1,0 +1,32 @@
+{
+ "name": "G-e04-stamp-album",
+ "identity": "guest",
+ "url": "subpackageP3/pages/stamp-album/index/index",
+ "route": [
+  "pages/index/index",
+  "subpackageP3/pages/stamp-album/index/index"
+ ],
+ "sys": "",
+ "text": "收集册 | 勋章 | 邮票 | 藏品 | 登录后查看自己的册子 | 去登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "net": [
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list"
+ ],
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageP3/pages/stamp-album/index/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

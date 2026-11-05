@@ -1,0 +1,292 @@
+[
+{
+"id": "A-a03-member",
+"path": "pages/member/index/index",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start|举报|report|拉黑|block|报名|signup"
+],
+"max": 30,
+"maxShots": 4
+},
+{
+"id": "A-b02-play-merchant",
+"path": "pages/play/merchant/index?nodeId=71&topicId=990014&registrationId=74",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start|举报|report|拉黑|block|报名|signup"
+],
+"max": 30,
+"maxShots": 4
+},
+{
+"id": "A-c01-activity-detail",
+"path": "pages/activity/detail/index?id=9",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start|举报|report|拉黑|block|报名|signup"
+],
+"max": 30,
+"maxShots": 4
+},
+{
+"id": "A-c04-official-detail",
+"path": "pages/activity/official-detail/index?id=2",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start|举报|report|拉黑|block|报名|signup"
+],
+"max": 30,
+"maxShots": 4
+},
+{
+"id": "A-c07-official-organizer",
+"path": "pages/activity/official-organizer/index",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start|举报|report|拉黑|block|报名|signup"
+],
+"max": 30,
+"maxShots": 4
+},
+{
+"id": "A-d03-infomationdetail",
+"path": "subpackageA/pages/infomationdetail/infomationdetail?id=1",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start|举报|report|拉黑|block|报名|signup"
+],
+"max": 30,
+"maxShots": 4
+},
+{
+"id": "A-d06-analysis",
+"path": "subpackageA/pages/assetcenter/analysis/index",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start|举报|report|拉黑|block|报名|signup"
+],
+"max": 30,
+"maxShots": 4
+},
+{
+"id": "A-e03-stamp-camera",
+"path": "subpackageP3/pages/stamp-camera/index/index",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start|举报|report|拉黑|block|报名|signup"
+],
+"max": 30,
+"maxShots": 4
+},
+{
+"id": "A-e06-badge-3d",
+"path": "subpackageP3/pages/badge-3d/index",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start|举报|report|拉黑|block|报名|signup"
+],
+"max": 30,
+"maxShots": 4
+},
+{
+"id": "A-f02-im-chat",
+"path": "subpackageB/pages/im/chat/index?conversationId=8",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start|举报|report|拉黑|block|报名|signup"
+],
+"max": 30,
+"maxShots": 4
+},
+{
+"id": "A-g03-search",
+"path": "pages/search2/index",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start|举报|report|拉黑|block|报名|signup"
+],
+"max": 30,
+"maxShots": 4
+},
+{
+"id": "A-h01-address",
+"path": "pages/address/address",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start|举报|report|拉黑|block|报名|signup"
+],
+"max": 30,
+"maxShots": 4
+},
+{
+"id": "A-h04-about",
+"path": "pages/shezhi/about/index",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start|举报|report|拉黑|block|报名|signup"
+],
+"max": 30,
+"maxShots": 4
+},
+{
+"id": "A-h07-userinfo",
+"path": "pages/userinfo/userinfo?id=9004",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start|举报|report|拉黑|block|报名|signup"
+],
+"max": 30,
+"maxShots": 4
+},
+{
+"id": "A-i01-free-explore",
+"path": "subpackageMember/free-explore/index?topicId=990014&registrationId=74",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start|举报|report|拉黑|block|报名|signup"
+],
+"max": 30,
+"maxShots": 4
+},
+{
+"id": "A-i04-invoice",
+"path": "subpackageMember/invoice/index",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start|举报|report|拉黑|block|报名|signup"
+],
+"max": 30,
+"maxShots": 4
+},
+{
+"id": "A-i07-invoice-titles",
+"path": "subpackageMember/invoice-titles/index",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start|举报|report|拉黑|block|报名|signup"
+],
+"max": 30,
+"maxShots": 4
+},
+{
+"id": "A-i10-coupon-wallet",
+"path": "subpackageMember/coupon-wallet/index",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start|举报|report|拉黑|block|报名|signup"
+],
+"max": 30,
+"maxShots": 4
+},
+{
+"id": "A-i13-couponInfo",
+"path": "subpackageMember/couponInfo/couponInfo",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start|举报|report|拉黑|block|报名|signup"
+],
+"max": 30,
+"maxShots": 4
+},
+{
+"id": "A-i16-myinvite",
+"path": "subpackageMember/myinvite/myinvite",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start|举报|report|拉黑|block|报名|signup"
+],
+"max": 30,
+"maxShots": 4
+},
+{
+"id": "A-i19-points",
+"path": "subpackageMember/points-history/index",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start|举报|report|拉黑|block|报名|signup"
+],
+"max": 30,
+"maxShots": 4
+},
+{
+"id": "A-i22-appeal-mine",
+"path": "subpackageMember/appeal-mine/index",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start|举报|report|拉黑|block|报名|signup"
+],
+"max": 30,
+"maxShots": 4
+},
+{
+"id": "A-i25-tixianjilu",
+"path": "subpackageMember/tixianjilu/tixianjilu",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start|举报|report|拉黑|block|报名|signup"
+],
+"max": 30,
+"maxShots": 4
+},
+{
+"id": "A-j03-poi-detail",
+"path": "subpackageRoam/poi-detail/index?poiId=1",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start|举报|report|拉黑|block|报名|signup"
+],
+"max": 30,
+"maxShots": 4
+},
+{
+"id": "A-j06-citystamp",
+"path": "subpackageRoam/citystamp/index",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start|举报|report|拉黑|block|报名|signup"
+],
+"max": 30,
+"maxShots": 4
+},
+{
+"id": "A-j09-official-route",
+"path": "subpackageRoam/official-route/index?id=1",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start|举报|report|拉黑|block|报名|signup"
+],
+"max": 30,
+"maxShots": 4
+},
+{
+"id": "A-k03-goals",
+"path": "subpackageTools/exploration-goals/index",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start|举报|report|拉黑|block|报名|signup"
+],
+"max": 30,
+"maxShots": 4
+},
+{
+"id": "A-l01-privacy",
+"path": "pages/privacy/index",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start|举报|report|拉黑|block|报名|signup"
+],
+"max": 30,
+"maxShots": 4
+},
+{
+"id": "A-l04-team-detail",
+"path": "pages/team/detail/index?teamId=2",
+"identity": "e2e-openid-9009",
+"skip": [
+"pay|支付|付款|提交|submit|删除|delete|注销|deregister|退款|refund|取消订单|cancel|退出登录|logout|解散|发布|publish|保存|save|发送|send|领取|claim|退队|leave|踢|kick|开始|start|举报|report|拉黑|block|报名|signup"
+],
+"max": 30,
+"maxShots": 4
+}
+]

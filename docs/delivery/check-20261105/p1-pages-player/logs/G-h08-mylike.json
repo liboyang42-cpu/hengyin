@@ -1,0 +1,40 @@
+{
+ "name": "G-h08-mylike",
+ "identity": "guest",
+ "url": "pages/mylike/mylike",
+ "route": [
+  "pages/index/index",
+  "pages/mylike/mylike"
+ ],
+ "sys": "",
+ "text": "我的收藏 | 帖文 | 主题 | 登录后查看收藏 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "net": [
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "401 GET /api/v1/community/me/bookmarks?limit=10"
+ ],
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/mylike/mylike"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/v1/community/me/bookmarks?limit=10",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ],
+  "badNet": [
+   "401 GET /__api/api/v1/community/me/bookmarks?limit=10"
+  ]
+ }
+}

@@ -1,0 +1,32 @@
+{
+ "name": "G-c04-official-detail",
+ "identity": "guest",
+ "url": "pages/activity/official-detail/index",
+ "route": [
+  "pages/index/index",
+  "pages/activity/official-detail/index"
+ ],
+ "sys": "",
+ "text": "链接已失效 | 返回活动列表 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "net": [
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list"
+ ],
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/activity/official-detail/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

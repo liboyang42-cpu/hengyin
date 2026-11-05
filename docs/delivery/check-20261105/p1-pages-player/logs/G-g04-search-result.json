@@ -1,0 +1,38 @@
+{
+ "name": "G-g04-search-result",
+ "identity": "guest",
+ "url": "pages/search2/result/index",
+ "route": [
+  "pages/index/index",
+  "pages/search2/result/index"
+ ],
+ "sys": "",
+ "text": "全部 | 主题 1 | 活动 0 | 商家 5 | 登录后搜索内容和俱乐部 | 登录 | 主题 | E2E 探店日一期 | 上海市黄浦区咖啡 | 咖啡 | 探店日样板咖啡 | 10:00-20:00 | 上海市黄浦区咖啡 | 咖啡 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "textScrolled": "10:00-20:00 | 上海市黄浦区咖啡 | 咖啡 | 探店日样板书店 | 10:00-21:00 | 上海市黄浦区书店 | 咖啡 | 探店日样板花店 | 09:30-19:00 | 上海市黄浦区花店 | 咖啡 | 探店日样板面包 | 08:00-18:00 | 上海市黄浦区面包 | 咖啡 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "net": [
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/merchant/list"
+ ],
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/search2/result/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/e2e-topic-cover-9003.jpg?Expires=2109204875&OSSAccessKeyId=rigdummy&Signature=YiCgJHaak1CAIeZzgvXsf%2BoHFQw%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ],
+  "badNet": []
+ }
+}

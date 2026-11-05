@@ -1,0 +1,88 @@
+G-a01-home pages/index/index  | 成为俱乐部 | 成为商家 | 和朋友报名活动 | Hi, 旅人! | 上海市 | 编辑精选 | 暂时没有精选主题 | 附近活动 | 你附近暂时没有可点亮的节点 | 主题 | 活动 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-a02-talent pages/talent/list/index  | 发现 | 帖文 | 俱乐部 | 创建你自己的俱乐部 | 创建俱乐部 | 城瘾跑团 | 1 位成员 | 免费加入 | 执行俱乐部 | 2 位成员 | 免费加入 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-a03-member pages/member/index/index  | 登录后查看我的主页 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-a04-roam pages/roam/index  | 漫游 | 开始漫游 | 漫游护照 | NO.01 | 开始漫游 | NO.02 | 打开地图 | 寻找组队 | 附近正在组队 | NO.03 | 我的队伍 | 附近活动 | 登录后查看附近活动与队伍 | 去登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-b01-play pages/play/index  | 输入地址 | 链接已失效，请返回重新进入 | 返回活动详情 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-b02-play-merchant pages/play/merchant/index  | 登录后查看 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-b03-play-circle pages/index/index  | 成为俱乐部 | 成为商家 | 和朋友报名活动 | Hi, 旅人! | 上海市 | 编辑精选 | 暂时没有精选主题 | 附近活动 | 你附近暂时没有可点亮的节点 | 主题 | 活动 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-b04-poi-challenge pages/play/poi-challenge/index  | 挑战暂时打不开 | 没有找到这个地点 | 重试 | 返回地图 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-c01-activity-detail pages/activity/detail/index  | 活动详情 | 活动链接无效 | 请返回重新进入 | 返回活动列表 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-c02-baoming pages/activity/baoming/baoming  | 结算 | 无法打开报名页 | 请返回重新进入 | 去发现活动 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-c03-activity-list pages/activity/list/index  | 官方活动 | 进行中 | 即将 | 已结束 | 我的 | 进行中 · 共 0 个活动 | 邀约 | 暂无进行中的活动 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-c04-official-detail pages/activity/official-detail/index  | 链接已失效 | 返回活动列表 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-c05-official-inbox pages/activity/official-inbox/index  | 登录后查看 | 登录 | 官方活动邀约 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-c06-official-mine pages/activity/official-mine/index  | 登录后查看 | 登录 | 我发布的 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-c07-official-organizer pages/activity/official-organizer/index  | 主办控制台 | 链接已失效 | 返回 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-d01-myproject subpackageA/pages/myproject/index  | 我的项目 | 主题 | 活动 | 模板 | 登录后查看我的项目 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-d02-infomation subpackageA/pages/infomation/infomation  | 城瘾玩法 | 城市定向 | 去看看 | 自由探索 | 去看看 | 漫游 | 去看看 | 现成玩法 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-d03-infomationdetail subpackageA/pages/infomationdetail/infomationdetail  | 玩法详情 | 链接已失效 | 返回 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-d04-income-detail subpackageA/pages/assetcenter/income-detail/income-detail  | 收益明细 | 全部 | 创作收益 | 品牌收益 | 主办分润 | 登录后查看收益明细 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-d05-earnings subpackageA/pages/assetcenter/earnings/index  | 账户收益 | 登录后查看账户收益 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-d06-analysis subpackageA/pages/assetcenter/analysis/index  | 分析 | 收入 | 提现 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-e01-growth subpackageP3/pages/growthcenter/index/index  | 成长中心 | 登录后查看成长记录 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-e02-leaderboard subpackageP3/pages/growthcenter/leaderboard/index  | 完整排行榜 | 周榜 | 总榜 | 积分榜 | 成长榜 | 登录后查看排行榜 | 登录后可查看完整排行榜 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-e03-stamp-camera subpackageP3/pages/stamp-camera/index/index  | 双指缩放裁切 57% | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-e04-stamp-album subpackageP3/pages/stamp-album/index/index  | 收集册 | 勋章 | 邮票 | 藏品 | 登录后查看自己的册子 | 去登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-e05-badge-wall subpackageP3/pages/badge-wall/index/index  | 登录后查看我的勋章 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-e06-badge-3d subpackageP3/pages/badge-3d/index  | 徽章 | 徽章 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-e07-object-cards subpackageP3/pages/object-cards/index/index  | 收集册 | 勋章 | 邮票 | 藏品 | 全部 | 登录后查看自己的册子 | 去登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-f01-im-list subpackageB/pages/im/list/index  | 消息 | 登录后查看消息 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-f02-im-chat subpackageB/pages/im/chat/index  | 更多 | 对话 | 这个会话无法打开 | 请返回重新进入 | 链接已失效，请返回重新进入 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-g01-topic pages/topic/index/index  | 无法打开主题 | 请返回重新进入 | 返回发布广场 | 确认订单 | 参与人信息 | 补全姓名和手机号 | 主题信息 | 费用明细 | 票种 | 自玩通行证 | 订单金额 | 合计 | 同意将姓名、手机号提供给主办方，用于报名核验 | 合计 | 立即支付 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-g02-square-detail pages/square/detail/index  | 没有找到这条帖文 | 请返回重新进入 | 返回上一页 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-g03-search pages/search2/index  | 搜索 | 筛选 | 推荐搜索 | 骑行 | 城市 | 外滩 | 书店 | 美术馆 | 摄影 | 苏州河 | 菜场 | 类别 | 城市漫步 | 咖啡 | 历史人文 | 解谜冒险 | 夜游 | 摄影打卡 | 户外徒步 | 亲子同行 | 在地图上找活动与主题节点 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-g04-search-result pages/search2/result/index  | 全部 | 主题 1 | 活动 0 | 商家 5 | 登录后搜索内容和俱乐部 | 登录 | 主题 | E2E 探店日一期 | 上海市黄浦区咖啡 | 咖啡 | 探店日样板咖啡 | 10:00-20:00 | 上海市黄浦区咖啡 | 咖啡 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-g05-searchmap pages/searchmap/index  | 定位 | 这一带还没有活动 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-h01-address pages/address/address  | 登录后查看 | 登录 | 参与人信息 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-h02-addressinfo pages/addressinfo/addressinfo  | 参与人信息 | 姓名 | * | 手机号 | * | 保存参与人信息 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-h03-shezhi pages/shezhi/shezhi  | 设置 | 登录后查看账号信息 | 成为俱乐部主理人 | 成为商家 | 城瘾玩法 | 我的收藏 | 隐私与定位 | 营销消息与优惠券 | 帖文处置与申诉 | 我的申诉 | 用户服务协议 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-h04-about pages/shezhi/about/index  | 关于 | 城瘾 | 版本 开发版本 | 我的二维码 | 玩家个人码待生成 | 用户服务协议 | 联系我们 | 素材署名 | game-icons.net 游戏图标 · Creative Commons BY 3.0（要求署名） | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-h05-marketing pages/shezhi/marketing/index  | 登录后查看 | 登录 | 营销消息与优惠券 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-h06-gerenziliao pages/gerenziliao/gerenziliao  | 登录后查看 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-h07-userinfo pages/userinfo/userinfo  | 个人主页 | 这个主页链接不完整 | 请返回重新进入 | 回到我的主页 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-h08-mylike pages/mylike/mylike  | 我的收藏 | 帖文 | 主题 | 登录后查看收藏 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-h09-crop pages/crop/index  | 裁剪 | 没有可裁剪的图片 | 返回上一页 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-i01-free-explore subpackageMember/free-explore/index  | 自由探索权益 | 请登录后重新进入本人订单 | 刷新权益与预约结果 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-i02-character subpackageMember/character/index  | 我的角色卡 | 缺少有效主题 | 请从参与详情重新进入 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-i03-orient-score subpackageMember/orient-score/index  | 链接已失效 | 返回 | ‹ | 本局计分 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-i04-invoice subpackageMember/invoice/index  | 我的发票 | 登录后查看发票 | 微信登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-i05-invoice-detail subpackageMember/invoice-detail/index  | 发票详情 | 登录后查看发票 | 微信登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-i06-invoice-apply subpackageMember/invoice-apply/index  | 申请开票 | 登录后申请开票 | 微信登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-i07-invoice-titles subpackageMember/invoice-titles/index  | 发票抬头 | 登录后管理发票抬头 | 微信登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-i08-invoice-title-edit subpackageMember/invoice-title-edit/index  | 发票抬头 | 登录后管理发票抬头 | 微信登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-i09-complaint subpackageMember/complaint/index  | 投诉与建议 | 仅限已报名并支付的活动，平台会介入处理 | 登录后发起投诉与查看进展 | 登录后可选择活动并查看自己的处理进展 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-i10-coupon-wallet subpackageMember/coupon-wallet/index  | 优惠券 | 全部 | 待使用 | 已使用 | 已过期 | 登录后查看我的优惠券 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-i11-coupon-qr subpackageMember/coupon-qr/index  | 缺少券信息 | 返回 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-i12-coupon subpackageMember/coupon/coupon  | 登录后查看 | 登录 | 优惠券 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-i13-couponInfo subpackageMember/couponInfo/couponInfo  | 优惠券设置 | 优惠券名称 | * | 优惠券日期 | * | 开始日期 | - | 结束日期 | 投放数 | * | 优惠券类型 | * | 请选择 | 优惠券说明 | 取消 | 发布优惠券 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-i14-mycanyu subpackageMember/mycanyu/mycanyu  | 我的参与 | 全部 | 未开始 | 进行中 | 已完成 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-i15-mycanyuinfo subpackageMember/mycanyuinfo/mycanyuinfo  | 参与详情 | 缺少参与记录 | 请返回重新进入 | 返回参与列表 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-i16-myinvite subpackageMember/myinvite/myinvite  | 邀请记录 | 登录后查看邀请记录 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-i17-order subpackageMember/order/order  | 我的订单 | 全部 | 待支付 | 未开始 | 进行中 | 已完成 | 退款中 | 退款成功 | 不可退款 | 人工售后 | 登录后查看订单 | 登录后可查看你的路线订单 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-i18-orderinfo subpackageMember/order/order  | 我的订单 | 全部 | 待支付 | 未开始 | 进行中 | 已完成 | 退款中 | 退款成功 | 不可退款 | 人工售后 | 登录后查看订单 | 登录后可查看你的路线订单 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-i19-points subpackageMember/points-history/index  | 积分明细 | 积分明细加载失败 | 重试 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-i20-report-mine subpackageMember/report-mine/index  | 登录后查看 | 登录 | 我的举报 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-i21-report-detail subpackageMember/report-detail/index  | 举报进度 | 链接已失效 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-i22-appeal-mine subpackageMember/appeal-mine/index  | 我的申诉 | 登录后查看申诉 | 微信登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-i23-signup subpackageMember/signup/index  | 票夹 | 登录后查看票夹 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-i24-tixian pages/index/index  | 成为俱乐部 | 成为商家 | 和朋友报名活动 | Hi, 旅人! | 上海市 | 编辑精选 | 暂时没有精选主题 | 附近活动 | 你附近暂时没有可点亮的节点 | 主题 | 活动 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-i25-tixianjilu subpackageMember/tixianjilu/tixianjilu  | 提现记录 | 登录后查看提现记录 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-j01-citynode-code subpackageRoam/citynode-code/index  | 这个核销码无法打开 | 返回 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-j02-roam-history subpackageRoam/history/index  | 登录后查看 | 登录 | 漫游记录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-j03-poi-detail subpackageRoam/poi-detail/index  | 节点详情 | 找不到这个节点 | 返回地图 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-j04-roam-session subpackageRoam/session/index  | 本次漫游 | 找不到这次漫游 | 返回漫游历史 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-j05-nearby subpackageRoam/nearby/index  | 全部 | 主题队伍 | 地点玩法 | 商家 | 登录后查看附近信息 | 去登录 | 附近 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-j06-citystamp subpackageRoam/citystamp/index  | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-j07-my-teams subpackageRoam/my-teams/index  | 地图 | 我的队伍 | — | 已通过 | — | 审核中 | — | 带队 | — | 未通过 | 我的 | 附近招募 | 队伍获取失败 · 点按重试 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-j08-official-routes subpackageRoam/official-routes/index  | 官方线路 | 还没有上架的官方线路 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-j09-official-route subpackageRoam/official-route/index  | 线路详情 | 这条线路不存在或已下架 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-k01-capsule subpackageTools/capsule/index  | 时光胶囊 | 请先登录后使用 | 重试 | 我的胶囊 | 还没有胶囊 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-k02-monthly-recap subpackageTools/monthly-recap/index  | 月度回顾 | 请先登录后使用 | 重试 | 路线 | 首次地点 | 城市签 | 这一类本月没有记录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-k03-goals subpackageTools/exploration-goals/index  | 探索目标 | 请通过现有登录流程登录后再使用 | 重试 | 我的目标 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-k04-anniversary subpackageTools/anniversary/index  | 那年今日 | 换一天 | 请通过现有登录流程登录后再使用 | 重试 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-k05-export subpackageTools/exploration-export/index  | 导出探索记录 | 请通过现有登录流程登录后再使用 | 重试 | 开始 | 结束（不含） | 准备导出 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-l01-privacy pages/privacy/index  | 隐私保护 | 查看《隐私保护指引》 | 首页城市自动定位 | 开启 | 关闭 | 附近的人位置分享 | 关闭 | 漫游定位 | 本机未在为漫游采集位置 | 撤回 | 我的待审媒体 | 查看 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-l02-agreement pages/agreement/index  | 用户服务协议 | 欢迎使用城瘾。本协议由西安吾令文化传媒有限公司（以下简称“我们”）与城瘾用户共同订立。请在注册、登录或使用服务前仔细阅读并充分理解本协议。 | 一、协议主体与生效 | 城瘾由西安吾令文化传媒有限公司运营，注册地址为陕西省西安市高新区锦业路1号绿地领海B座6层604室A043号。本协议自2026年8月12日起生效。本协议在你明确选择同意后对你生效。 | 二、账号注册与安全 | 你应使用真实、合法、有效的信息注册账号，并妥善保管登录凭证。不得出借、转让账号，不得利用账号实施违法、侵权、欺诈或扰乱平台秩序的行为。因你未妥善保管账号造成的损失，由你依法承担相应责任；因平台原因造成的损 
+G-l03-deregister pages/deregister/index  | 注销账号 | 登录后查看账号注销条件 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-l04-team-detail pages/team/detail/index  | 队伍详情 | 队伍链接不完整 | 请返回重新进入 | 返回上一页 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+G-l05-team-join pages/team/join/index  | 加入队伍 | 邀请链接不完整 | 请从队长分享的邀请重新进入 | 返回上一页 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 

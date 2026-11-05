@@ -1,0 +1,37 @@
+{
+ "name": "G-a04-roam",
+ "identity": "guest",
+ "url": "pages/roam/index",
+ "route": [
+  "pages/index/index",
+  "pages/roam/index"
+ ],
+ "sys": "",
+ "text": "漫游 | 开始漫游 | 漫游护照 | NO.01 | 开始漫游 | NO.02 | 打开地图 | 寻找组队 | 附近正在组队 | NO.03 | 我的队伍 | 附近活动 | 登录后查看附近活动与队伍 | 去登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "net": [
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "401 GET /api/roam/badge/shop-streak"
+ ],
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/roam/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/roam/badge/shop-streak",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ],
+  "badNet": [
+   "401 GET /__api/api/roam/badge/shop-streak"
+  ]
+ }
+}

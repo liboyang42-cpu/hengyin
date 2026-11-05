@@ -1,0 +1,45 @@
+{
+ "name": "G-i23-signup",
+ "identity": "guest",
+ "url": "subpackageMember/signup/index",
+ "route": [
+  "pages/index/index",
+  "subpackageMember/signup/index"
+ ],
+ "sys": "",
+ "text": "票夹 | 登录后查看票夹 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "net": [
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "401 POST /api/registration/list",
+  "401 POST /api/registration/list",
+  "401 POST /api/team/my"
+ ],
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageMember/signup/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/registration/list",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/registration/list",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/team/my",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ],
+  "badNet": [
+   "401 POST /__api/api/registration/list",
+   "401 POST /__api/api/registration/list",
+   "401 POST /__api/api/team/my"
+  ]
+ }
+}

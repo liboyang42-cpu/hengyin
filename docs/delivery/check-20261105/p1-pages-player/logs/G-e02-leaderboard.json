@@ -1,0 +1,32 @@
+{
+ "name": "G-e02-leaderboard",
+ "identity": "guest",
+ "url": "subpackageP3/pages/growthcenter/leaderboard/index",
+ "route": [
+  "pages/index/index",
+  "subpackageP3/pages/growthcenter/leaderboard/index"
+ ],
+ "sys": "",
+ "text": "完整排行榜 | 周榜 | 总榜 | 积分榜 | 成长榜 | 登录后查看排行榜 | 登录后可查看完整排行榜 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "net": [
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list"
+ ],
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageP3/pages/growthcenter/leaderboard/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

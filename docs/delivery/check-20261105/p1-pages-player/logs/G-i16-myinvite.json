@@ -1,0 +1,32 @@
+{
+ "name": "G-i16-myinvite",
+ "identity": "guest",
+ "url": "subpackageMember/myinvite/myinvite",
+ "route": [
+  "pages/index/index",
+  "subpackageMember/myinvite/myinvite"
+ ],
+ "sys": "",
+ "text": "邀请记录 | 登录后查看邀请记录 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "net": [
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list"
+ ],
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageMember/myinvite/myinvite"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}
