@@ -36,6 +36,7 @@ Page({
     // 身份
     leaderName: '',
     phone: '',
+    fieldErrors: {},
     identity: '',
     coFounders: '',
     // 经验
@@ -181,6 +182,7 @@ Page({
       step: step,
       stepTitle: STEP_TITLES[step - 1],
       backLabel: step === 1 ? '设置' : STEP_NAMES[step - 2],
+      fieldErrors: {},
       stepIn: false
     }, this.validate);
     var that = this;
@@ -226,6 +228,18 @@ Page({
     else { this.submit(); }
   },
 
+  // 置灰的「下一步」被点:把本步缺的必填写成栏下红字,不让按钮静默不动
+  onNextDisabledTap() {
+    var d = this.data, errors = {};
+    if (d.step === 1) {
+      if (!d.leaderName) errors.leaderName = '请填写称呼';
+      if (!d.phone) errors.phone = '请填写联系方式';
+    } else if (d.step === 2) {
+      if (!d.experience) errors.experience = '请选择你带过多少场';
+    }
+    this.setData({ fieldErrors: errors });
+  },
+
   validate() {
     var d = this.data, ok = false;
     if (d.step === 1) ok = !!(d.leaderName && d.phone);
@@ -241,11 +255,11 @@ Page({
 
   onInput(e) {
     var f = e.currentTarget.dataset.field;
-    this.setData({ [f]: e.detail.value }, this.validate);
+    this.setData({ [f]: e.detail.value, ['fieldErrors.' + f]: '' }, this.validate);
   },
 
   pickExp(e) {
-    this.setData({ experience: e.currentTarget.dataset.val }, this.validate);
+    this.setData({ experience: e.currentTarget.dataset.val, 'fieldErrors.experience': '' }, this.validate);
   },
 
   // 能力自评 是/否 切换(0/1)

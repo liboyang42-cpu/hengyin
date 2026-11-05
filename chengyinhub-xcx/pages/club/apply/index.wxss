@@ -169,3 +169,4 @@ page { background: var(--cy-bg-page); }
 
 /* 第十轮 f3 第 5 项:开场屏要点行撤掉后,标题与按钮之间留出原来要点区的呼吸 */
 .intro__title + .intro-cta { margin-top: var(--cy-space-6); }
+.field-err { display: block; margin-top: var(--cy-space-1); }
