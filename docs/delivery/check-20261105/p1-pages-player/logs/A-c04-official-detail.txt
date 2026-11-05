@@ -1,0 +1,5 @@
+A-c04-official-detail route pages/index/index>pages/activity/official-detail/index controls 3 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  NO VISIBLE EFFECT onAction                   "重试"                                 
+  ui change        openShareCard              ""                                   
+TEXT: 官方活动 | 城瘾官方 | 发起 | 参与 | 1 | 我的进度 | 0 | 已完成 | 活动周期 | 3小时 | 开放时间 | 11.20–11.20 | 活动范围 | 上海 | 距结束 15 天 | 外滩夜走官方场 | 沿外滩走一段夜路，在终点集合拍合照。 | 上海 | 集合与联系 | 集合信息加载失败 | 重试 | 活动奖励 | 未配置奖励 | 已报名 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

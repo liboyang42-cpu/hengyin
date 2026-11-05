@@ -1,0 +1,10 @@
+A-c02-baoming route pages/index/index>pages/activity/baoming/baoming controls 8 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  ui change        checkAndShowAddressPopup   "参与人信息*"                             
+  ui change        checkAndShowAddressPopup   "测试甲13800000009"                     
+  toast            onAddressTap               "上海市黄浦区咖啡"                         T:打开微信地图：上海市黄浦区咖啡  
+  ui change        toggleDiscount             ""                                   
+  SKIPPED (destructive / writes; walked by hand) toggleHostShare            "同意将姓名、手机号提供给主办方，用于报名核验"             
+  off-screen       __onTap                    ""                                   
+  ui change        handlePayment              "请先勾选信息共享同意"                         
+TEXT: 结算 | 参与人信息 | * | 测试甲 | 13800000009 | 活动信息 | E2E 探店日一期 | 2026年11月16日 周一 10:00 | 集合点 · 人民广场1号口 | 上海市黄浦区咖啡 | 费用明细 | 标准场次票 | ¥69 | 订单金额 | ¥69 | 积分抵扣 | -¥0 | 总计 | ¥69 | 退款规则 | 开始前 24 小时以上 | 全额退 | 开始前 24 小时内 | 退 50% | 开始后 | 不退 | 同意将姓名、手机号提供给主办方，用于报名核验 | 请先勾选信息共享同意 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

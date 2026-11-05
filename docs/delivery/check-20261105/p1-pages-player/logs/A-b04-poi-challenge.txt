@@ -1,0 +1,4 @@
+A-b04-poi-challenge route pages/index/index>pages/play/poi-challenge/index controls 2 errors 0 badNet 0
+  NO VISIBLE EFFECT onRetry                    "重试"                                 
+  navigates        exit                       "返回地图"                           -> pages/index/index    
+TEXT: 挑战暂时打不开 | 没有找到这个地点 | 重试 | 返回地图 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

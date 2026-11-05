@@ -1,0 +1,61 @@
+{
+ "id": "A-c04-official-detail",
+ "path": "pages/activity/official-detail/index?id=2",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "onAction|重试|{}",
+   "h": "onAction",
+   "txt": "重试",
+   "w": 75,
+   "hgt": 46,
+   "y": 500,
+   "route": "pages/activity/official-detail/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "openShareCard||{}",
+   "h": "openShareCard",
+   "txt": "",
+   "w": 46,
+   "hgt": 46,
+   "y": 754,
+   "route": "pages/activity/official-detail/index",
+   "newText": "个人码生成服务繁忙，请稍后重试 | 分享活动 | 活动 | 11.20 | 11.20–11.20 · 上海 | 城瘾 | 微信好友 | 朋友圈 | 小红书 | 保存图片 | 复制文案 | 更多",
+   "shot": "A-c04-official-detail-t01",
+   "result": "ui change"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "pages/activity/official-detail/index"
+ ],
+ "text": "官方活动 | 城瘾官方 | 发起 | 参与 | 1 | 我的进度 | 0 | 已完成 | 活动周期 | 3小时 | 开放时间 | 11.20–11.20 | 活动范围 | 上海 | 距结束 15 天 | 外滩夜走官方场 | 沿外滩走一段夜路，在终点集合拍合照。 | 上海 | 集合与联系 | 集合信息加载失败 | 重试 | 活动奖励 | 未配置奖励 | 已报名 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 3,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/activity/official-detail/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

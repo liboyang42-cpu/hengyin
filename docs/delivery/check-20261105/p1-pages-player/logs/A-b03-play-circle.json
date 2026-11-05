@@ -1,0 +1,69 @@
+{
+ "id": "A-b03-play-circle",
+ "path": "pages/play/circle/index?topicId=990014&registrationId=74",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onOpen|输入地址|{}",
+   "h": "onOpen",
+   "txt": "输入地址",
+   "w": 358,
+   "hgt": 44,
+   "y": 103,
+   "route": "pages/play/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "__onTap||{}",
+   "h": "__onTap",
+   "txt": "",
+   "w": 241,
+   "hgt": 46,
+   "y": 423,
+   "route": "pages/topic/index/index",
+   "newText": "自由探索 | E2E 探店日一期 | 端到端 | 查看详情与报名 | 确认订单 | 参与人信息 | 补全姓名和手机号 | 主题信息 | E2E 探店日一期 | 费用明细 | 票种 | 自玩通行证",
+   "shot": "A-b03-play-circle-t01",
+   "result": "navigates"
+  },
+  {
+   "key": "goGetPass|获取通行证|{}",
+   "h": "goGetPass",
+   "txt": "获取通行证",
+   "w": 241,
+   "hgt": 46,
+   "y": 423,
+   "route": "pages/topic/index/index",
+   "newText": "自由探索 | E2E 探店日一期 | 端到端 | 查看详情与报名 | 确认订单 | 参与人信息 | 补全姓名和手机号 | 主题信息 | E2E 探店日一期 | 费用明细 | 票种 | 自玩通行证",
+   "shot": "A-b03-play-circle-t02",
+   "result": "navigates"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "pages/play/index"
+ ],
+ "text": "输入地址 | 请先购买自玩通行证 | 获取通行证 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 3,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/play/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/e2e-topic-cover-9003.jpg?Expires=2109205442&OSSAccessKeyId=rigdummy&Signature=thmE%2Fwg49xrZ4kUTay1IQVmwGrw%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/e2e-topic-cover-9003.jpg?Expires=2109205452&OSSAccessKeyId=rigdummy&Signature=JT2QxKRvZNlTrgCguh84QdCi4zg%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

@@ -1,0 +1,110 @@
+{
+ "id": "A-c03-activity-list",
+ "path": "pages/activity/list/index",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "onTab|进行中|{\"key\":\"0\"}",
+   "h": "onTab",
+   "txt": "进行中",
+   "w": 67,
+   "hgt": 35,
+   "y": 165,
+   "route": "pages/activity/list/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "onTab|即将|{\"key\":\"1\"}",
+   "h": "onTab",
+   "txt": "即将",
+   "w": 54,
+   "hgt": 35,
+   "y": 165,
+   "route": "pages/activity/list/index",
+   "newText": "即将上线 · 共 0 个活动 | 暂无即将上线的活动",
+   "result": "ui change"
+  },
+  {
+   "key": "onTab|已结束|{\"key\":\"2\"}",
+   "h": "onTab",
+   "txt": "已结束",
+   "w": 67,
+   "hgt": 35,
+   "y": 165,
+   "route": "pages/activity/list/index",
+   "newText": "已结束 · 共 0 个活动 | 暂无已结束的活动",
+   "result": "ui change"
+  },
+  {
+   "key": "onTab|我的|{\"key\":\"3\"}",
+   "h": "onTab",
+   "txt": "我的",
+   "w": 54,
+   "hgt": 35,
+   "y": 165,
+   "route": "pages/activity/list/index",
+   "newText": "我的 · 共 1 个活动 | · —参与",
+   "result": "ui change"
+  },
+  {
+   "key": "goInbox|邀约|{}",
+   "h": "goInbox",
+   "txt": "邀约",
+   "w": 55,
+   "hgt": 46,
+   "y": 215,
+   "route": "pages/activity/official-inbox/index",
+   "newText": "官方活动邀约 | 暂无待处理的活动职责",
+   "shot": "A-c03-activity-list-t01",
+   "result": "navigates"
+  },
+  {
+   "key": "openDetail|封面暂不可用 外滩夜走官方场 距结束 15 天 · 上海 ·|{\"id\":2}",
+   "h": "openDetail",
+   "txt": "封面暂不可用 外滩夜走官方场 距结束 15 天 · 上海 ·",
+   "w": 357,
+   "hgt": 348,
+   "y": 273,
+   "route": "pages/activity/official-detail/index",
+   "newText": "城瘾官方 | 发起 | 参与 | 1 | 我的进度 | 0 | 已完成 | 活动周期 | 3小时 | 开放时间 | 11.20–11.20 | 活动范围",
+   "shot": "A-c03-activity-list-t02",
+   "result": "navigates"
+  }
+ ],
+ "route": [
+  "pages/activity/list/index"
+ ],
+ "text": "官方活动 | 进行中 | 即将 | 已结束 | 我的 | 进行中 · 共 1 个活动 | 邀约 | 封面暂不可用 | 外滩夜走官方场 | 报名中 | 距结束 15 天 | · 上海 | · 1 人参与 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 7,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/activity/list/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

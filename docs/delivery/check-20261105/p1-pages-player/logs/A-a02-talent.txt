@@ -1,0 +1,15 @@
+A-a02-talent route pages/talent/list/index controls 13 errors 0 badNet 0
+  navigates        onMsgTap                   "3"                              -> subpackageB/pages/im/list/index    
+  ui change        onTab                      "帖文"                                 
+  NO VISIBLE EFFECT onTab                      "俱乐部"                                
+  navigates        onClubApply                "创建俱乐部"                          -> pages/club/apply/index    
+  navigates        onTap                      "已加入 执行俱乐部 2 位成员 · 0 个近期团"       -> pages/club/detail/index    
+  navigates        goClubDetail               "已加入执行俱乐部2 位成员 · 0 个近期团"         -> pages/club/detail/index    
+  navigates        onTap                      "城瘾跑团 1 位成员 · 1 个近期团 免费加入"       -> pages/club/detail/index    
+  navigates        goClubDetail               "城瘾跑团1 位成员 · 1 个近期团免费加入"         -> pages/club/detail/index    
+  off-screen       onChange                   ""                                   
+  off-screen       onChange                   ""                                   
+  off-screen       onChange                   ""                                   
+  off-screen       onChange                   ""                                   
+  off-screen       onChange                   ""                                   
+TEXT: 3 | 发现 | 帖文 | 俱乐部 | 创建你自己的俱乐部 | 创建俱乐部 | 已加入 | 执行俱乐部 | 2 位成员 · 0 个近期团 | 城瘾跑团 | 1 位成员 · 1 个近期团 | 免费加入 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

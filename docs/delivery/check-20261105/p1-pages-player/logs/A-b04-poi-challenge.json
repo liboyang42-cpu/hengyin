@@ -1,0 +1,52 @@
+{
+ "id": "A-b04-poi-challenge",
+ "path": "pages/play/poi-challenge/index?nodeId=71&topicId=990014",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onRetry|重试|{}",
+   "h": "onRetry",
+   "txt": "重试",
+   "w": 75,
+   "hgt": 46,
+   "y": 208,
+   "route": "pages/play/poi-challenge/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "exit|返回地图|{}",
+   "h": "exit",
+   "txt": "返回地图",
+   "w": 357,
+   "hgt": 46,
+   "y": 295,
+   "route": "pages/index/index",
+   "newText": "成为俱乐部 | 成为商家 | 和朋友报名活动 | Hi, 玩家二号! | 玩家 | · 上海市 | 编辑精选 | 暂时没有精选主题 | 附近活动 | 你附近暂时没有可点亮的节点 | 主题 | 活动",
+   "shot": "A-b04-poi-challenge-t01",
+   "result": "navigates"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "pages/play/poi-challenge/index"
+ ],
+ "text": "挑战暂时打不开 | 没有找到这个地点 | 重试 | 返回地图 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 2,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/play/poi-challenge/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

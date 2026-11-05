@@ -1,0 +1,49 @@
+{
+ "id": "A-c07-official-organizer",
+ "path": "pages/activity/official-organizer/index",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "onCta|返回|{}",
+   "h": "onCta",
+   "txt": "返回",
+   "w": 58,
+   "hgt": 46,
+   "y": 297,
+   "route": "pages/activity/official-mine/index",
+   "newText": "我发布的 | 无官方发布权限",
+   "shot": "A-c07-official-organizer-t01",
+   "result": "navigates"
+  }
+ ],
+ "route": [
+  "pages/activity/official-organizer/index"
+ ],
+ "text": "主办控制台 | 链接已失效 | 返回 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "text_s1": "主办控制台 | 链接已失效 | 返回 | 赛事联络与到场签到 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "text_s2": "主办控制台 | 链接已失效 | 返回 | 赛事联络与到场签到 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 2,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/activity/official-organizer/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

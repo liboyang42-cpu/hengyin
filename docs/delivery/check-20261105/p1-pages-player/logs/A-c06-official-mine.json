@@ -1,0 +1,54 @@
+{
+ "id": "A-c06-official-mine",
+ "path": "pages/activity/official-mine/index",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "onCta|返回|{}",
+   "h": "onCta",
+   "txt": "返回",
+   "w": 58,
+   "hgt": 46,
+   "y": 334,
+   "route": "pages/activity/list/index",
+   "newText": "官方活动 | 进行中 | 即将 | 已结束 | 我的 | 进行中 · 共 1 个活动 | 邀约 | 封面暂不可用 | 外滩夜走官方场 | 报名中 | 距结束 15 天 | · 上海",
+   "runtime": "navigateBack:fail cannot navigate back at first page.",
+   "pageError": "Object: Object",
+   "shot": "A-c06-official-mine-t01",
+   "result": "navigates"
+  }
+ ],
+ "route": [
+  "pages/activity/official-mine/index"
+ ],
+ "text": "我发布的 | 无官方发布权限 | 返回 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 2,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/activity/official-mine/index"
+  ],
+  "pageErrors": [
+   "Object: Object /     at fail (http://127.0.0.1:8097/src/nav.js:218:194)"
+  ],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

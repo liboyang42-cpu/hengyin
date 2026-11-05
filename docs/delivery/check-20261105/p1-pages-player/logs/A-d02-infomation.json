@@ -1,0 +1,102 @@
+{
+ "id": "A-d02-infomation",
+ "path": "subpackageA/pages/infomation/infomation",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "__onTap||{}",
+   "h": "__onTap",
+   "txt": "",
+   "w": 104,
+   "hgt": 46,
+   "y": 229,
+   "route": "pages/index/index",
+   "newText": "成为俱乐部 | 成为商家 | 和朋友报名活动 | Hi, 玩家二号! | 玩家 | · 上海市 | 编辑精选 | 暂时没有精选主题 | 附近活动 | 你附近暂时没有可点亮的节点 | 主题 | 活动",
+   "shot": "A-d02-infomation-t01",
+   "result": "navigates"
+  },
+  {
+   "key": "goMode|去看看|{\"key\":\"classic\"}",
+   "h": "goMode",
+   "txt": "去看看",
+   "w": 104,
+   "hgt": 46,
+   "y": 229,
+   "route": "pages/index/index",
+   "newText": "成为俱乐部 | 成为商家 | 和朋友报名活动 | Hi, 玩家二号! | 玩家 | · 上海市 | 编辑精选 | 暂时没有精选主题 | 附近活动 | 你附近暂时没有可点亮的节点 | 主题 | 活动",
+   "shot": "A-d02-infomation-t02",
+   "result": "navigates"
+  },
+  {
+   "key": "goMode|去看看|{\"key\":\"free\"}",
+   "h": "goMode",
+   "txt": "去看看",
+   "w": 104,
+   "hgt": 46,
+   "y": 372,
+   "route": "pages/index/index",
+   "newText": "成为俱乐部 | 成为商家 | 和朋友报名活动 | Hi, 玩家二号! | 玩家 | · 上海市 | 编辑精选 | 暂时没有精选主题 | 附近活动 | 你附近暂时没有可点亮的节点 | 主题 | 活动",
+   "shot": "A-d02-infomation-t03",
+   "result": "navigates"
+  },
+  {
+   "key": "goMode|去看看|{\"key\":\"roam\"}",
+   "h": "goMode",
+   "txt": "去看看",
+   "w": 104,
+   "hgt": 46,
+   "y": 515,
+   "route": "pages/roam/index",
+   "newText": "开始漫游 | 漫游护照 | NO.01 | 开始漫游 | NO.02 | 打开地图 | 寻找组队 | NO.03 | 我的队伍 | 附近活动 | 开启定位 | E2E 探店日一期",
+   "shot": "A-d02-infomation-t04",
+   "result": "navigates"
+  },
+  {
+   "key": "onCta|去发布广场|{}",
+   "h": "onCta",
+   "txt": "去发布广场",
+   "w": 96,
+   "hgt": 46,
+   "y": 907,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  }
+ ],
+ "route": [
+  "subpackageA/pages/infomation/infomation"
+ ],
+ "text": "城瘾玩法 | 城市定向 | 去看看 | 自由探索 | 去看看 | 漫游 | 去看看 | 现成玩法 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "text_s1": "去看看 | 现成玩法 | 还没有上架的现成玩法 | 去发布广场 | 玩法文档 | 暂无玩法说明 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "text_s2": "去看看 | 现成玩法 | 还没有上架的现成玩法 | 去发布广场 | 玩法文档 | 暂无玩法说明 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 6,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageA/pages/infomation/infomation"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

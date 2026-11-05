@@ -1,0 +1,192 @@
+{
+ "id": "A-a03-member",
+ "path": "pages/member/index/index",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "goSetting||{}",
+   "h": "goSetting",
+   "txt": "",
+   "w": 46,
+   "hgt": 46,
+   "y": 46,
+   "route": "pages/shezhi/shezhi",
+   "newText": "设置 | 个人资料 | 成为俱乐部主理人 | 成为商家 | 城瘾玩法 | 我的收藏 | 隐私与定位 | 营销消息与优惠券 | 帖文处置与申诉 | 我的申诉 | 用户服务协议",
+   "shot": "A-a03-member-t01",
+   "result": "navigates"
+  },
+  {
+   "key": "onAvatarTap||{}",
+   "h": "onAvatarTap",
+   "txt": "",
+   "w": 69,
+   "hgt": 69,
+   "y": 114,
+   "route": "pages/gerenziliao/gerenziliao",
+   "newText": "更换背景 | 昵称 | 个人介绍 | 介绍一下你自己 | 手机号 | 139****0009 | 探索作品 | 未填写 | 联系二维码 | 未填写 | 路线偏好 | 未填写",
+   "shot": "A-a03-member-t02",
+   "result": "navigates"
+  },
+  {
+   "key": "goSignup|票夹|{}",
+   "h": "goSignup",
+   "txt": "票夹",
+   "w": 357,
+   "hgt": 46,
+   "y": 292,
+   "route": "subpackageMember/signup/index",
+   "newText": "11月15日 10:00 · 上海市黄浦区咖啡 · 已核销 0/4 家 | 生成中… | 我的队伍 | 周六夜行小队 | 1/4 | 开始游戏",
+   "shot": "A-a03-member-t03",
+   "result": "navigates"
+  },
+  {
+   "key": "onTab|我的|{\"key\":\"projects\"}",
+   "h": "onTab",
+   "txt": "我的",
+   "w": 89,
+   "hgt": 46,
+   "y": 349,
+   "route": "pages/member/index/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "onTab|帖文|{\"key\":\"posts\"}",
+   "h": "onTab",
+   "txt": "帖文",
+   "w": 89,
+   "hgt": 46,
+   "y": 349,
+   "route": "pages/member/index/index",
+   "newText": "操作失败 | 刚刚 | 第二次走外滩支线，记了几个适合拍照的转角。 | 刚刚 | 周末沿着苏州河走了一圈，傍晚的光线很好。 | 2",
+   "shot": "A-a03-member-t04",
+   "result": "ui change"
+  },
+  {
+   "key": "onTab|成就|{\"key\":\"achievements\"}",
+   "h": "onTab",
+   "txt": "成就",
+   "w": 89,
+   "hgt": 46,
+   "y": 349,
+   "route": "pages/member/index/index",
+   "newText": "G | 60 | 如何获取积分 | 总积分排名 | TOP60% | 累计打卡 | 4 处 | 本周 +1200 EXP | 查看详情 | 收集册 | 勋章 | 邮票",
+   "result": "ui change"
+  },
+  {
+   "key": "onTab|关于|{\"key\":\"about\"}",
+   "h": "onTab",
+   "txt": "关于",
+   "w": 89,
+   "hgt": 46,
+   "y": 349,
+   "route": "pages/member/index/index",
+   "newText": "个人介绍 | 编辑 | 还没有个人介绍 | 兴趣标签 | 添加兴趣 | 加入时间 | 2026.11.05 | 探索与更多 | 我的优惠券 | 邀请好友 | 当前权益",
+   "result": "ui change"
+  },
+  {
+   "key": "goOrder||{}",
+   "h": "goOrder",
+   "txt": "",
+   "w": 14,
+   "hgt": 46,
+   "y": 411,
+   "route": "subpackageMember/order/order",
+   "newText": "全部 | 待支付 | 未开始 | 进行中 | 已完成 | 退款中 | 退款成功 | 不可退款 | 人工售后 | 订单号： | A202611051D0429B2 | 未开始",
+   "result": "navigates"
+  },
+  {
+   "key": "onOrderPreviewTap|待开始 E2E 探店日一期 活动|{\"id\":75}",
+   "h": "onOrderPreviewTap",
+   "txt": "待开始 E2E 探店日一期 活动",
+   "w": 260,
+   "hgt": 229,
+   "y": 464,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  },
+  {
+   "key": "goEarnings|账户余额 ¥0.00|{}",
+   "h": "goEarnings",
+   "txt": "账户余额 ¥0.00",
+   "w": 357,
+   "hgt": 108,
+   "y": 768,
+   "route": "subpackageA/pages/assetcenter/earnings/index",
+   "newText": "账户收益 | 账户收益（元） | 提现 | 明细 | 分析 | 更多 | 还没有收益 | 去发布路线",
+   "result": "navigates"
+  },
+  {
+   "key": "onChange||{\"index\":0}",
+   "h": "onChange",
+   "txt": "",
+   "w": 76,
+   "hgt": 46,
+   "y": 756,
+   "result": "off-screen"
+  },
+  {
+   "key": "onChange||{\"index\":1}",
+   "h": "onChange",
+   "txt": "",
+   "w": 76,
+   "hgt": 46,
+   "y": 756,
+   "result": "off-screen"
+  },
+  {
+   "key": "onChange||{\"index\":2}",
+   "h": "onChange",
+   "txt": "",
+   "w": 76,
+   "hgt": 46,
+   "y": 756,
+   "result": "off-screen"
+  },
+  {
+   "key": "onChange||{\"index\":3}",
+   "h": "onChange",
+   "txt": "",
+   "w": 76,
+   "hgt": 46,
+   "y": 756,
+   "result": "off-screen"
+  },
+  {
+   "key": "onChange||{\"index\":4}",
+   "h": "onChange",
+   "txt": "",
+   "w": 76,
+   "hgt": 46,
+   "y": 756,
+   "result": "off-screen"
+  }
+ ],
+ "route": [
+  "pages/member/index/index"
+ ],
+ "text": "主页 | 玩家二号 | Lv.13 城市探索者 | 连续探索：0天 | 1 | 好友 | 1 | 关注 | 1 | 粉丝 | 票夹 | 我的 | 帖文 | 成就 | 关于 | 我的订单 | 待开始 | E2E 探店日一期 | 活动 | 我的资产 | 账户余额 | ¥0.00 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "text_s1": "主页 | 好友 | 关注 | 粉丝 | 票夹 | 我的 | 帖文 | 成就 | 关于 | 我的订单 | 待开始 | E2E 探店日一期 | 活动 | 我的资产 | 账户余额 | ¥0.00 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "text_s2": "主页 | 好友 | 关注 | 粉丝 | 票夹 | 我的 | 帖文 | 成就 | 关于 | 我的订单 | 待开始 | E2E 探店日一期 | 活动 | 我的资产 | 账户余额 | ¥0.00 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 15,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/member/index/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/e2e-topic-cover-9003.jpg?Expires=2109205263&OSSAccessKeyId=rigdummy&Signature=CQX4P0lse7EHzRCSilHxHDJF0ig%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

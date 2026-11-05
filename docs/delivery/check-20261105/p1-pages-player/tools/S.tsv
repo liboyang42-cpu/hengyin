@@ -1,0 +1,16 @@
+c04-official-detail-offline pages/activity/official-detail/index?id=1
+c04-official-detail-missing pages/activity/official-detail/index?id=999
+c06-official-mine pages/activity/official-mine/index
+b02-play-merchant-stale pages/play/merchant/index?nodeId=1
+g02-square-detail-missing pages/square/detail/index?id=999
+g02-square-detail-other pages/square/detail/index?id=3
+l04-team-detail-missing pages/team/detail/index?teamId=999
+l05-team-join-nocode pages/team/join/index
+i11-coupon-qr-nocoupon subpackageMember/coupon-qr/index
+f02-im-chat-notmine subpackageB/pages/im/chat/index?conversationId=1
+j03-poi-detail-missing subpackageRoam/poi-detail/index?poiId=1
+i03-orient-score-noparam subpackageMember/orient-score/index
+i15-mycanyuinfo-used subpackageMember/mycanyuinfo/mycanyuinfo?id=74
+i18-orderinfo-used subpackageMember/orderinfo/orderinfo?id=74
+c01-activity-detail-running pages/activity/detail/index?id=13
+c02-baoming-bought pages/activity/baoming/baoming?activityId=9&ticketId=76

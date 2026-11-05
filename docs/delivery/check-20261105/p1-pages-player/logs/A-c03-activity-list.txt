@@ -1,0 +1,9 @@
+A-c03-activity-list route pages/activity/list/index controls 7 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  NO VISIBLE EFFECT onTab                      "进行中"                                
+  ui change        onTab                      "即将"                                 
+  ui change        onTab                      "已结束"                                
+  ui change        onTab                      "我的"                                 
+  navigates        goInbox                    "邀约"                             -> pages/activity/official-inbox/index    
+  navigates        openDetail                 "封面暂不可用 外滩夜走官方场 距结束 15 天 · 上海 ·" -> pages/activity/official-detail/index    
+TEXT: 官方活动 | 进行中 | 即将 | 已结束 | 我的 | 进行中 · 共 1 个活动 | 邀约 | 封面暂不可用 | 外滩夜走官方场 | 报名中 | 距结束 15 天 | · 上海 | · 1 人参与 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

@@ -1,0 +1,14 @@
+A-c01-activity-detail route pages/index/index>pages/activity/detail/index controls 12 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  toast            openLocation               "集合点 上海市黄浦区咖啡"                     T:打开微信地图：上海市黄浦区咖啡  
+  navigates        goTopic                    "主题路线 查看路线"                      -> pages/topic/index/index    
+  navigates        goUserInfo                 ""                               -> pages/userinfo/userinfo    
+  navigates        onTap                      "玩"                              -> pages/userinfo/userinfo    
+  ui change        selectTicket               "标准场次票 ¥69 场次时间 11月15日 10:00 - "     
+  ui change        toggleTicket               "收起阵容"                               
+  navigates        goUserInfo                 "玩家二号"                           -> pages/userinfo/userinfo    
+  ui change        __onTap                    ""                                   
+  ui change        openComment                "写评价"                                
+  ui change        trackShare                 "分享"                                R:open-type share 
+  SKIPPED (destructive / writes; walked by hand) goPlay                     "查看报名"                               
+TEXT: 活动详情 | 未开始 | E2E 探店日一期 | 活动时间 · 11月15日 10:00 - 11月15日 23:59 | 分类 | — | 集合点 | 上海市黄浦区咖啡 | 已报名 | 1 人 | 主题路线 | 查看路线 | 关于这场活动 | 5-1 链路真跑 | 1 人已报名 | 玩 | 票种 | 标准场次票 | ¥69 | 场次时间 11月15日 10:00 - 11月15日 23:59 · 剩余 19 张 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

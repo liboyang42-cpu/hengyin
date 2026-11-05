@@ -1,0 +1,16 @@
+A-a04-roam route pages/roam/index controls 14 errors 0 badNet 0
+  navigates        goProfile                  ""                               -> pages/member/index/index    
+  ui change        openCityGuide              ""                                   
+  SKIPPED (destructive / writes; walked by hand) onTab                      "开始漫游"                               
+  ui change        onTab                      "漫游护照"                               
+  SKIPPED (destructive / writes; walked by hand) goStart                    "NO.01 开始漫游"                         
+  navigates        openNearbyMap              "NO.02 打开地图 寻找组队"                -> subpackageRoam/nearby/index    
+  navigates        openMyTeams                "NO.03 我的队伍"                     -> subpackageRoam/my-teams/index    
+  not reachable after earlier taps enableEntryLocation        "开启定位"                               
+  not reachable after earlier taps onEntryCardTap             "自由探索 E2E 探店日一期 上海市黄浦区咖啡"            
+  off-screen       onChange                   ""                                   
+  off-screen       onChange                   ""                                   
+  off-screen       onChange                   ""                                   
+  off-screen       onChange                   ""                                   
+  off-screen       onChange                   ""                                   
+TEXT: 漫游 | 开始漫游 | 漫游护照 | NO.01 | 开始漫游 | NO.02 | 打开地图 | 寻找组队 | NO.03 | 我的队伍 | 附近活动 | 开启定位 | 自由探索 | E2E 探店日一期 | 上海市黄浦区咖啡 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

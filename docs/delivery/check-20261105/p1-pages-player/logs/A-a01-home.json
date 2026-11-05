@@ -1,0 +1,195 @@
+{
+ "id": "A-a01-home",
+ "path": "pages/index/index",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onHeroBannerTap|成为俱乐部|{\"inx\":0}",
+   "h": "onHeroBannerTap",
+   "txt": "成为俱乐部",
+   "w": 390,
+   "hgt": 506,
+   "y": 0,
+   "route": "pages/index/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "onHeroBannerTap|成为商家|{\"inx\":1}",
+   "h": "onHeroBannerTap",
+   "txt": "成为商家",
+   "w": 390,
+   "hgt": 506,
+   "y": 0,
+   "route": "pages/index/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "onHeroBannerTap|和朋友报名活动|{\"inx\":2}",
+   "h": "onHeroBannerTap",
+   "txt": "和朋友报名活动",
+   "w": 390,
+   "hgt": 506,
+   "y": 0,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  },
+  {
+   "key": "goUser||{}",
+   "h": "goUser",
+   "txt": "",
+   "w": 46,
+   "hgt": 46,
+   "y": 91,
+   "route": "pages/member/index/index",
+   "newText": "主页 | 玩家二号 | Lv.13 城市探索者 | 连续探索：0天 | 1 | 好友 | 1 | 关注 | 1 | 粉丝 | 票夹 | 我的",
+   "shot": "A-a01-home-t01",
+   "result": "navigates"
+  },
+  {
+   "key": "onTapHomeCity|· 上海市|{}",
+   "h": "onTapHomeCity",
+   "txt": "· 上海市",
+   "w": 45,
+   "hgt": 20,
+   "y": 128,
+   "route": "pages/index/index",
+   "newText": "暂时无法自动识别城市，请手动选择",
+   "result": "ui change"
+  },
+  {
+   "key": "onTab|主题|{\"key\":\"0\"}",
+   "h": "onTab",
+   "txt": "主题",
+   "w": 54,
+   "hgt": 46,
+   "y": 835,
+   "route": "pages/index/index",
+   "newText": "自由探索 | E2E 探店日一期 | 价格 | ¥69 起 | 时间 | 2026年11月15日 周日 09:00 | 地点 | 上海市黄浦区咖啡",
+   "shot": "A-a01-home-t02",
+   "result": "ui change"
+  },
+  {
+   "key": "onTab|活动|{\"key\":\"1\"}",
+   "h": "onTab",
+   "txt": "活动",
+   "w": 54,
+   "hgt": 46,
+   "y": 835,
+   "route": "pages/index/index",
+   "newText": "暂时没有活动",
+   "result": "ui change"
+  },
+  {
+   "key": "goTopic|自由探索 E2E 探店日一期|{\"index\":0,\"id\":990014}",
+   "h": "goTopic",
+   "txt": "自由探索 E2E 探店日一期",
+   "w": 357,
+   "hgt": 258,
+   "y": 894,
+   "route": "pages/topic/index/index",
+   "newText": "自由探索 | E2E 探店日一期 | 端到端 | 查看详情与报名 | 确认订单 | 参与人信息 | 补全姓名和手机号 | 主题信息 | E2E 探店日一期 | 费用明细 | 票种 | 自玩通行证",
+   "shot": "A-a01-home-t03",
+   "result": "navigates"
+  },
+  {
+   "key": "goTopic|价格 ¥69 起 时间 2026年11月15日 周日 09:|{\"index\":0,\"id\":990014}",
+   "h": "goTopic",
+   "txt": "价格 ¥69 起 时间 2026年11月15日 周日 09:",
+   "w": 357,
+   "hgt": 133,
+   "y": 1155,
+   "route": "pages/topic/index/index",
+   "newText": "自由探索 | E2E 探店日一期 | 端到端 | 查看详情与报名 | 确认订单 | 参与人信息 | 补全姓名和手机号 | 主题信息 | E2E 探店日一期 | 费用明细 | 票种 | 自玩通行证",
+   "shot": "A-a01-home-t04",
+   "result": "navigates"
+  },
+  {
+   "key": "onAddressTap|地点 上海市黄浦区咖啡|{\"kind\":\"topic\",\"index\":0,\"id\":990014,\"name\":\"上海市黄浦区咖啡\",\"add",
+   "h": "onAddressTap",
+   "txt": "地点 上海市黄浦区咖啡",
+   "w": 332,
+   "hgt": 43,
+   "y": 1244,
+   "route": "pages/index/index",
+   "newText": "暂时无法定位 | 自由探索 | E2E 探店日一期 | 价格 | ¥69 起 | 时间 | 2026年11月15日 周日 09:00 | 地点 | 上海市黄浦区咖啡 | · 没有更多了 ·",
+   "result": "ui change"
+  },
+  {
+   "key": "onChange||{\"index\":0}",
+   "h": "onChange",
+   "txt": "",
+   "w": 76,
+   "hgt": 46,
+   "y": 891,
+   "route": "pages/index/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "onChange||{\"index\":1}",
+   "h": "onChange",
+   "txt": "",
+   "w": 76,
+   "hgt": 46,
+   "y": 891,
+   "route": "pages/index/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "onChange||{\"index\":2}",
+   "h": "onChange",
+   "txt": "",
+   "w": 76,
+   "hgt": 46,
+   "y": 891,
+   "route": "pages/index/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "onChange||{\"index\":3}",
+   "h": "onChange",
+   "txt": "",
+   "w": 76,
+   "hgt": 46,
+   "y": 891,
+   "route": "pages/index/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "onChange||{\"index\":4}",
+   "h": "onChange",
+   "txt": "",
+   "w": 76,
+   "hgt": 46,
+   "y": 891,
+   "route": "pages/index/index",
+   "result": "NO VISIBLE EFFECT"
+  }
+ ],
+ "route": [
+  "pages/index/index"
+ ],
+ "text": "成为俱乐部 | 成为商家 | 和朋友报名活动 | Hi, 玩家二号! | 玩家 | · 上海市 | 编辑精选 | 暂时没有精选主题 | 附近活动 | 你附近暂时没有可点亮的节点 | 主题 | 活动 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "text_s1": "没有更多了 | 附近活动 | 你附近暂时没有可点亮的节点 | 主题 | 活动 | 自由探索 | E2E 探店日一期 | 价格 | ¥69 起 | 时间 | 2026年11月15日 周日 09:00 | 地点 | 上海市黄浦区咖啡 | · 没有更多了 · | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "text_s2": "附近活动 | 你附近暂时没有可点亮的节点 | 主题 | 活动 | 自由探索 | E2E 探店日一期 | 价格 | ¥69 起 | 时间 | 2026年11月15日 周日 09:00 | 地点 | 上海市黄浦区咖啡 | · 没有更多了 · | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 15,
+ "report": {
+  "route": [
+   "pages/index/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

@@ -1,0 +1,7 @@
+A-c06-official-mine route pages/activity/official-mine/index controls 2 errors 1 badNet 0
+  back (not tapped) onBack                     ""                                   
+  navigates        onCta                      "返回"                             -> pages/activity/list/index   R:navigateBack:fail cannot navigate back at first page. E:Object: Object
+TEXT: 我发布的 | 无官方发布权限 | 返回 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+PAGEERR [
+  'Object: Object /     at fail (http://127.0.0.1:8097/src/nav.js:218:194)'
+]

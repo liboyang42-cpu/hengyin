@@ -1,0 +1,5 @@
+A-b01-play route pages/index/index>pages/play/index controls 3 errors 0 badNet 0
+  NO VISIBLE EFFECT onOpen                     "输入地址"                               
+  navigates        __onTap                    ""                               -> pages/topic/index/index    
+  navigates        goGetPass                  "获取通行证"                          -> pages/topic/index/index    
+TEXT: 输入地址 | 请先购买自玩通行证 | 获取通行证 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
