@@ -584,14 +584,9 @@ test('「点亮坐标」必须取已完成数(doneCount),部分完成时不得�
   // ③ 行为口径:doneCount 只数 done 的节点(部分完成时必然 < total)
   assert.match(js, /doneCount: nodes\.filter\(\(n\) => n\.done\)\.length/)
 
-  // ④ 「本章N处旧址已全部点亮」那句仍可用 total —— 它被 allDone 门控,此时 total===doneCount,
-  //    不是同一个 bug,别顺手改错。门控现在走 HUD 槽位(hud-slots.wxs BOTTOM_CARD),
-  //    所以这里断言「这句话只在 banner 槽里出」+「banner 槽的判据确实是 allDone」,
-  //    而不是抄一遍 wx:if 的字面量(字面量一变就假红,且证明不了门还在)。
-  // 2026-08-15 F3:banner 文案改为按 mode 三元(探店日不再念「旧址点亮」),
-  // 契约意图不变 —— 全量口径的那句话仍只出现在 allDone 门控的 banner 槽里,且仍用 total。
-  // g20(2026-11-02):整个主题走完时不再说「本章」
-  assert.match(wxml, /=== 'banner'\}\}"[\s\S]{0,260}: total \+ '处旧址已全部点亮/)
+  // ④ 互斥路线可在只完成一侧时 allDone，未选锁定站不计入点亮数。
+  // 横幅沿用 HUD 的 allDone 门控，但和通关卡、分享卡一样只显示 doneCount。
+  assert.match(wxml, /=== 'banner'\}\}"[\s\S]{0,260}: doneCount \+ '处旧址已点亮/)
   assert.match(readXcx('utils/wxs/hud-slots.wxs'), /banner:\s*!screen && !!allDone/)
 })
 

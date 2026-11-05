@@ -142,20 +142,25 @@ test('任务线性路线下一站只认服务端推荐,未选的互斥站不能�
   assert.equal(p.computeNext(p.data.nodes), null);
 });
 
-test('互斥局完成横幅只数实际完成站,不把未选锁定站说成已点亮', () => {
-  const { page: p } = setup();
-  p._applyRouteState({ routeMode: 'LINEAR', sessionId: '7', version: 2, status: 'COMPLETED',
-    nodeStates: { 85: 'COMPLETED', 86: 'DISCOVERED_LOCKED' } });
-  p._refreshNavRim = () => {}; p._measureDeal = () => {};
-  global.wx.nextTick = cb => cb(); p._productionRebuild();
-  assert.equal(p.data.allDone, true, '局完成仍只认服务端完成事实');
-  assert.equal(p.data.doneCount, 1); assert.equal(p.data.total, 2);
-  assert.equal(p.data.nodes[1].done, false, '未选站保持未完成');
+test('互斥局进行中和完成时都只数实际完成站,横幅只在整局完成后出现', () => {
   const wxml = fs.readFileSync(path.join(ROOT, 'pages/play/index.wxml'), 'utf8');
   const expression = wxml.match(/<view class="b1">\{\{(.*?)\}\}/)[1];
   const text = new Function('mode', 'total', 'doneCount', 'return (' + expression + ')');
-  assert.equal(text(p.data.mode, p.data.total, p.data.doneCount), '1处旧址已点亮');
-  assert.equal(text(2, p.data.total, p.data.doneCount), '本轮探索已完成');
+  const hud = require('../../utils/wxs/hud-slots.wxs');
+  for (const status of ['ACTIVE', 'COMPLETED']) {
+    const { page: p } = setup();
+    p._applyRouteState({ routeMode: 'LINEAR', sessionId: '7', version: 2, status,
+      nodeStates: { 85: 'COMPLETED', 86: 'DISCOVERED_LOCKED' } });
+    p._refreshNavRim = () => {}; p._measureDeal = () => {};
+    global.wx.nextTick = cb => cb(); p._productionRebuild();
+    assert.equal(p.data.allDone, status === 'COMPLETED', '局完成仍只认服务端完成事实');
+    assert.equal(p.data.doneCount, 1); assert.equal(p.data.total, 2);
+    assert.equal(p.data.nodes[1].done, false, '未选站保持未完成');
+    assert.equal(text(p.data.mode, p.data.total, p.data.doneCount), '1处旧址已点亮');
+    assert.equal(text(2, p.data.total, p.data.doneCount), '本轮探索已完成');
+    assert.equal(hud.bottomCard('', p.data.allDone, null, null, null), status === 'COMPLETED' ? 'banner' : '');
+    assert.equal(hud.bottomCard('gamePlay', p.data.allDone, null, null, null), '', '任务全屏时不出横幅');
+  }
 });
 
 function finishHost(p) {
