@@ -41,3 +41,12 @@ Cloud commits `969265a59`, `7fe672d98`, `9cdb9af4a`, `95910add7` cover the playe
 Reserved service files and `danger-actions.js` were not changed by this worker. No push to master, force push, PR merge, deployment, migration or production access occurred.
 
 STATUS: PARTIAL - source fixes and local checks are complete for the additions above; listed page leftovers, final CI and current-rig/phone acceptance remain.
+
+
+## CI nickname follow-up and expanded page pass
+
+The cloud nickname lookup at `_fillPeerName` was the thirteenth silent call in chat, but only twelve calls had reasons recorded. Reviewed this exact optional `POST /api/im/conversations`: failed network/HTTP/business reads keep the generic title and leave messages, sending and read state intact. Added one separately named reason; existing entries and frozen totals were not increased. Added a view/credential guard so a retired reply cannot rename another session. Tests invoke all failure channels, a valid peer response, and retired credential/account/page/conversation replies. A negative test adds another silent call and confirms rejection. 434 related Node tests, the root silent-error gate, UI-GATE-0 and action-ledger check pass. Controls remain 5,728.
+
+The owner has now requested the remaining page fixes and real rig walks. Those are in progress. The shared backend has been identified by the owner as source `c09b51b871d6d2311aeabb2736cd6cef57df61df`; the local template read projection is newer and cannot yet be claimed HTTP-proven on that JAR.
+
+STATUS: PARTIAL - nickname CI follow-up fixed and checked; expanded page work and rig walks in progress.

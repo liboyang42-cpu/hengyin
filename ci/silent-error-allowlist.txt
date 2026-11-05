@@ -260,3 +260,5 @@ chengyinhub-xcx/subpackageMember/signup/index.js 1  # 2026-10-28 票夹翻面入
 
 chengyinhub-xcx/subpackageA/pages/myproject/index.js 1  # W8 原申诉回执读取：失败/不匹配写 auditSheet.appealError 并保留原请求号及冻结输入供重试；离页换号回包被 same 拦截，避免通用 toast 污染新页面。
 chengyinhub-xcx/subpackageA/pages/myproject/index.js 2  # 第十轮 f1 p2 F-3 商家态承接项目两路只读(报名承接/章节承接):任一路业务/网络/畸形失败走 readFailure(project) 落页内错误态或登录/权限态,不出半截列表;迟到或换号回包被 current/seq 丢弃,通用 toast 会双弹。merchant-myproject-join-count 覆盖。
+
+chengyinhub-xcx/subpackageB/pages/im/chat/index.js 1  # 2026-11-05 _fillPeerName POST /api/im/conversations 只补链接缺失的昵称；失败保留「对话」标题，不清消息、不禁用发送、不报成功；viewGuard 与本人会话检查淘汰旧凭据/旧页面回包，本页只读一次，重进可再读。该调用单独审核，不增加既有条目或冻结基线。

@@ -6,10 +6,11 @@ function loadChat() {
   let def
   const requests = []
   const tips = []
-  global.getApp = () => ({
+  const app = {
     globalData: {}, sendRequest: o => requests.push(o), tips: t => tips.push(t),
     getUserID: () => 1, getRequestErrorMessage: (_r, f) => f,
-  })
+  };
+  global.getApp = () => app
   global.wx = { getStorageSync: () => '' }
   global.Page = c => { def = c }
   const mod = require.resolve('../../subpackageB/pages/im/chat/index.js')
@@ -20,7 +21,7 @@ function loadChat() {
   page.setData = function (patch) { Object.assign(this.data, patch) }
   page.scrollBottom = () => {}
   page.markRead = () => {}
-  return { page, requests, tips }
+  return { page, requests, tips, app }
 }
 
 test('举报:只报对方发的最近一条,不报自己刚发的', () => {
@@ -60,3 +61,66 @@ test('进会话读服务端拉黑态:对方拉黑了我 → 也禁用', () => {
   assert.equal(page.data.disabled, true)
   assert.equal(page.data.disabledText, '对方暂不可联系，无法发送消息')
 })
+
+
+function peerLookup() {
+  const h = loadChat();
+  Object.assign(h.page.data, { myId: 1, conversationId: 100, name: '', heroName: '对话',
+    loadState: 'ready', disabled: false, msgs: [{ id: 10, content: '已有消息' }] });
+  h.page._fillPeerName();
+  return h;
+}
+
+for (const channel of ['fail', 'successStatusAbnormal', 'success']) {
+  test('optional nickname failure keeps the usable chat via ' + channel, () => {
+    const h = peerLookup();
+    const before = JSON.stringify(h.page.data);
+    assert.equal(h.requests[0].url, '/api/im/conversations');
+    assert.equal(h.requests[0].silentError, true);
+    h.requests[0][channel]({ code: 500, msg: 'controlled failure' }, 503);
+    assert.equal(JSON.stringify(h.page.data), before);
+    assert.deepEqual(h.tips, []);
+    assert.equal(h.page._canSend(), true);
+    h.page._fillPeerName();
+    assert.equal(h.requests.length, 1, 'optional lookup does not loop on failure');
+  });
+}
+
+const peerResponse = { code: 200, data: [{ conversationId: 100, type: 1, counterparty: { nickname: '小城' } }] };
+test('optional nickname uses only the current peer without changing messages', () => {
+  const h = peerLookup();
+  const messages = h.page.data.msgs;
+  h.requests[0].success(peerResponse);
+  assert.equal(h.page.data.heroName, '小城');
+  assert.equal(h.page.data.name, '小城');
+  assert.equal(h.page.data.msgs, messages);
+});
+
+for (const retire of [h => { h.app.globalData.authorization = 'renewed'; },
+  h => { h.app.getUserID = () => 2; }, h => { h.page._disposed = true; },
+  h => { h.page.data.conversationId = 101; }, h => { h.page._viewEpoch = 1; }]) {
+  test('retired optional nickname response cannot replace the title: ' + retire.toString(), () => {
+    const h = peerLookup(); retire(h);
+    h.requests[0].success(peerResponse);
+    assert.equal(h.page.data.heroName, '对话');
+    assert.equal(h.page.data.name, '');
+  });
+}
+
+
+test('nickname silence has one explicit review and an extra call still fails the gate', () => {
+  const fs = require('node:fs'), path = require('node:path');
+  const gate = require('../../../ci/silent-error-gate');
+  const root = path.resolve(__dirname, '../../..');
+  const file = 'chengyinhub-xcx/subpackageB/pages/im/chat/index.js';
+  const parsed = gate.parseAllowlist(fs.readFileSync(path.join(root, 'ci/silent-error-allowlist.txt'), 'utf8'));
+  assert.deepEqual(parsed.problems, []);
+  const entry = parsed.entries.get(file);
+  const reviews = entry.lines.filter(line => line.reason.includes('_fillPeerName POST /api/im/conversations'));
+  assert.equal(reviews.length, 1);
+  assert.equal(reviews[0].count, 1);
+  const source = fs.readFileSync(path.join(root, file), 'utf8');
+  const entries = new Map([[file, entry]]);
+  assert.equal(gate.reconcile(new Map([[file, gate.findSilentErrorSites(source)]]), entries).over.length, 0);
+  assert.equal(gate.reconcile(new Map([[file, gate.findSilentErrorSites(source + '\napp.sendRequest({silentError:true})')]]), entries).over.length, 1);
+});

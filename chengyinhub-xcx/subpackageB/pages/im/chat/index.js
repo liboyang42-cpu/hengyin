@@ -238,16 +238,19 @@ Page({
     this._peerNameAsked = true;
     const conversationId = this.data.conversationId;
     const memberId = this.data.myId;
+    const current = this._viewGuard();
+    // Optional title only: failures keep the generic title and leave messages/send state intact.
     app.sendRequest({
       url: '/api/im/conversations', method: 'POST', hideLoading: true, silentError: true,
       success: (res) => {
-        if (!this._isReadContextCurrent(conversationId, memberId) || this.data.name) return;
+        if (!current() || !this._isReadContextCurrent(conversationId, memberId) || this.data.name) return;
         const rows = isBizOk(res) && isRecordList(res.data) ? res.data : [];
         const row = rows.find(item => String(item.conversationId) === String(conversationId));
         const nickname = row && Number(row.type) === 1 && row.counterparty ? String(row.counterparty.nickname || '').trim() : '';
         if (nickname) this.setData({ name: nickname, heroName: nickname });
       },
       fail() {},
+      successStatusAbnormal() {},
     });
   },
 
