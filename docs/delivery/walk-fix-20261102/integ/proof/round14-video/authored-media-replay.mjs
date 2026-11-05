@@ -30,6 +30,8 @@ const source = process.env.R14_VIDEO_RUNTIME_READY || '';
 assert.match(source,/^[0-9a-f]{40}$/,'Coordinator must signal the verified combined candidate before execution');
 const identity=process.env.R14_VIDEO_IDENTITY;
 assert.ok(['e2e-openid-9010','e2e-openid-9011'].includes(identity),'Only the two coordinator-reserved VIDEO identities are allowed');
+const expectedMember=process.env.R14_VIDEO_EXPECTED_MEMBER_ID || '';
+assert.match(expectedMember,/^[1-9][0-9]{0,18}$/,'Coordinator must confirm the actual member ID; login labels do not allocate IDs');
 const root=process.env.R14_RIG_HOME || '/private/tmp/cy-r14-rig-1105';
 const output=process.env.R14_VIDEO_OUTPUT || path.join(root,'r14-video-replay');
 fs.mkdirSync(output,{recursive:true});
@@ -37,7 +39,7 @@ process.env.RIG_WEB='http://127.0.0.1:18197'; process.env.RIG_SHOTS=output;
 const {launch}=await import(pathToFileURL(path.join(root,'docs/delivery/cloud-walk-20261101/rig/mpweb/walk.mjs')));
 const w=await launch({path:'pages/template/index',identity,agree:true,localOnly:true});
 const user=await w.page.evaluate(()=>MPWEB.getApp().getUserID());
-try { assert.equal(Number(user),Number(identity.slice('e2e-openid-'.length)),'Login must resolve to the independently reserved member'); }
+try { assert.equal(String(user),expectedMember,'Login must resolve to the independently confirmed member'); }
 catch(error) { await w.close(); throw error; }
 const history=[],readbacks=[],pendingReadbacks=[];
 w.page.on('response',response=>{
@@ -86,6 +88,7 @@ async function command(c) {
     case 'back': return w.back();
     case 'open': assert.match(c.path,/^\/?pages\//); return w.open(c.path);
     case 'loc': return w.loc(c.lat,c.lng);
+    case 'network': return w.mediaNetwork({kind:c.kind,mode:c.mode,delayMs:c.delayMs});
     case 'queueVideo': return w.page.evaluate(()=>{MPWEB.mediaQueue=[{tempFilePath:location.origin+'/build/media-fixtures/clip.mp4',
       thumbTempFilePath:location.origin+'/build/media-fixtures/poster.jpg',duration:2,size:21281,fileType:'video',width:160,height:120}];});
     case 'queueAudio': return w.page.evaluate(()=>{MPWEB.fileQueue=[{path:location.origin+'/build/media-fixtures/audio.mp3',name:'audio.mp3',size:16527,type:'file'}];});
