@@ -109,4 +109,11 @@ Everything was done through real HTTP and the real jobs 145 (分润结算), 149 
 - The debt branch of the clawback (balance too small) was not hit on the rig; k11's real-MySQL tests cover it.
 - 俱乐部结算 lists a session only after settlement; before that, the pending amount shows in 账户收益 and 提现 (same as m4 noted).
 
+### Lead's note (fired 12:03 UTC) and where it stands
+
+The lead read production (read-only): 44 自由探索 topics, 2 sessions, no sale snapshots, no paid tickets, no `club_payable`, no `topic_edition_funds`, no `club_direct_merchant_receivable`. **So no paid 自由探索 money is waiting in production today.** The owner has not chosen the rules yet; the lead's recommendation is listed there. I built none of the S1–S3 rule changes and did not touch S4. The three things asked for that don't depend on the owner's answer are done at head:
+- M2 publish: `e75d76292`. Walked on the rig.
+- Case A on the rig at head (`1972e613`): ¥29 and ¥69 runs, refunds before and after settlement, to the fen. The two fixes this needed (`80c7a6810` refund claw-back, `1972e6130` refund rule on the 门票) carry out rules already in force: 3% platform, organiser's share, and the platform giving back its share on a later refund. They don't choose a new rule.
+- Alarm: `6c369f627`. Any paid 自由探索 sale without a payout path makes the settlement job FAIL with the amount and reason, and fires 「活动结算失败」 and 「定时任务失败」. Walked on the rig with the four-store ¥69.
+
 STATUS: PARTIAL - M2 is fixed, and club-owned 自由探索 sales now go on sale, settle and refund to the fen (rig: ¥29 and ¥69; Funds gate 740/740). Four-store and cross-club sales no longer sit silent: the job alarms. Four things wait on the owner: S1 four-store money rule (recommend A), S2 cross-club sessions (recommend blocking them), S3 shop cash terms in 自由探索 (recommend paying at settlement), S4 claw-back on manual refunds of scanned tickets (recommend clawing back; needs code).
