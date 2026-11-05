@@ -754,7 +754,8 @@ Page({
     this.setData({ accessState: 'checking', accessError: '', activityLoadError: '' })
     // CU-M-05:商家主办入口带 scope=MERCHANT 进来。判据换成岗位权限(店主的「项目管理」),
     // 因为商家域里「能发活动」的人不一定是登录过商家页的人 —— 核销员没有这个权。
-    const merchantHost = !!(options && options.scope === 'MERCHANT')
+    // 商家账号从没带 scope 的链接进来(分享/老入口)也走商家主办,不再对商家说「需要俱乐部主理人身份」
+    const merchantHost = !!(options && options.scope === 'MERCHANT') || (typeof app.getUserType === 'function' && Number(app.getUserType()) === 2)
     // merchantHost 只决定「问哪个接口、说什么话」,放行与否一律由权威回包判(见 guardPublisherRole)。
     // 不进 data:页面不渲染它(2026-11-02 pay-gate 撤掉了票价说明),与 editingActivityId 同为实例字段。
     this.merchantHost = merchantHost
