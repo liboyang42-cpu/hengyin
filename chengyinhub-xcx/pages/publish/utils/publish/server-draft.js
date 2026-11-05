@@ -67,7 +67,7 @@ function sorted(obj) {
 }
 
 /* 只比作者写下的规则;编号、slotDigest、服务端编译出的字段不参与。 */
-function authoredConfig(cfg, pos) {
+function authoredConfig(cfg, pos, inferChapters) {
   const at = id => pos.get(String(id)) || ('?' + id);
   const chapters = (cfg.chapters || []).map((ch) => {
     const completion = ch.completion && ch.completion.type === 'ANY_N'
@@ -89,10 +89,30 @@ function authoredConfig(cfg, pos) {
     return at(key) + ':' + templateIdOf(value.templateId) + ':' + sorted(value.values) + sorted(value.items);
   }).sort();
   const game = cfg.gameplayRuntime || {};
+  const tasks = game.quests || [];
+  // 编译幕的编号可随章节重建；按真实任务成员核对分组，手写幕键仍逐字核对。
+  const act = key => /^chapter_[0-9]+$/.test(String(key))
+    ? 'nodes@' + tasks.filter(q => q.actKey === key).map(q => at(q.nodeId)).sort().join(',') : key;
+  let quests = tasks.map(q => at(q.nodeId) + '>' + act(q.actKey)).sort();
+  if (inferChapters && !tasks.length && ['PLAYER', 'TEAM'].includes(game.runtimeScope)) {
+    const survival = game.survival || {}, challenge = survival.zeroChallenge || {};
+    const excluded = survival.zeroHpPolicy === 'CHALLENGE' && challenge.version === 2
+      ? [challenge.challengeNodeId].concat(challenge.alternativeNodeIds || []).map(String) : [];
+    let groupIndex = 0;
+    quests = inferChapters.flatMap((chapter, ci) => {
+      const members = (chapter.nodes || []).map((node, ni) => ({ node, at: ci + '.' + ni }))
+        .filter(row => !excluded.includes(String(row.node.id)) && !excluded.includes(templateBinding.nodeKey(row.node)));
+      if (!members.length) return [];
+      const group = (game.acts || [])[groupIndex++], key = group && group.actKey;
+      const identity = key && !/^chapter_[0-9]+$/.test(String(key))
+        ? key : 'nodes@' + members.map(row => row.at).sort().join(',');
+      return members.map(row => row.at + '>' + identity);
+    }).sort();
+  }
   return {
     chapters,
     bindings,
-    quests: (game.quests || []).map(q => at(q.nodeId) + '>' + q.actKey).sort(),
+    quests,
     rations: ((game.survival || {}).rations || []).map(r => [r.actKey, r.itemId, r.quantity, r.fallbackHpCost || 0,
       r.fallback ? r.fallback.statKey + '=' + r.fallback.amount : ''].join('|')).sort(),
     items: (cfg.items || []).map(i => i.id + ':' + (i.name || '') + ':' + (i.slotCost || 1)).sort(),
@@ -358,7 +378,7 @@ function readbackIssue(sent, detail, expectDraft) {
   const sentConfig = parseConfig(sent && sent.themeRuntimeConfig);
   const gotConfig = parseConfig(detail.themeRuntimeConfig || detail.topic.themeRuntimeConfigJson);
   if (!sentConfig || !gotConfig) return '云端保存的玩法配置无法解析';
-  const want = authoredConfig(sentConfig, positionsOf(sentChapters, 'nodes', templateBinding.nodeKey));
+  const want = authoredConfig(sentConfig, positionsOf(sentChapters, 'nodes', templateBinding.nodeKey), sentChapters);
   const have = authoredConfig(gotConfig, positionsOf(got, 'cmsTopicNodeList', node => String(Number(node && node.id) || '')));
   for (const key of Object.keys(CONFIG_LABELS)) {
     if (JSON.stringify(want[key]) !== JSON.stringify(have[key])) return '云端保存的' + CONFIG_LABELS[key] + '与本机不一致';

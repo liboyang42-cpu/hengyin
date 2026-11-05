@@ -50,6 +50,30 @@ test('不同配置的OSS桶也可刷新同一对象签名，但桶和对象不�
   }
 });
 
+test('进行方式自动生成真实任务后回读按成员核对，重建编号不误报，缺站跨章额外站仍拦下', () => {
+  const sent = Object.assign({}, payload, {
+    chapters: [{ id: 10, nodes: [{ id: 101, name: '甲' }, { id: 102, name: '乙' }] }, { id: 20, nodes: [{ id: 201, name: '丙' }] }],
+    themeRuntimeConfig: JSON.stringify({ gameplayRuntime: { runtimeScope: 'PLAYER' } }),
+  });
+  const back = () => detail({
+    chapters: [{ id: 30, topicId: 501, cmsTopicNodeList: [{ id: 901, chapterId: 30, topicId: 501, name: '甲' }, { id: 902, chapterId: 30, topicId: 501, name: '乙' }] },
+      { id: 40, topicId: 501, cmsTopicNodeList: [{ id: 903, chapterId: 40, topicId: 501, name: '丙' }] }],
+    themeRuntimeConfig: { gameplayRuntime: { runtimeScope: 'PLAYER', quests: [
+      { nodeId: 901, actKey: 'chapter_30' }, { nodeId: 902, actKey: 'chapter_30' }, { nodeId: 903, actKey: 'chapter_40' },
+    ] } },
+  });
+  assert.equal(readbackIssue(sent, back(), true), '');
+  const compiled = Object.assign({}, sent, { themeRuntimeConfig: JSON.stringify({ gameplayRuntime: { runtimeScope: 'PLAYER', quests: [
+    { nodeId: 101, actKey: 'chapter_10' }, { nodeId: 102, actKey: 'chapter_10' }, { nodeId: 201, actKey: 'chapter_20' },
+  ] } }) });
+  assert.equal(readbackIssue(compiled, back(), true), '');
+  for (const change of [q => q.pop(), q => q.push({ nodeId: 999, actKey: 'chapter_30' }),
+    q => { q[1].actKey = 'chapter_40'; }, q => { q[1].actKey = 'chapter_99'; }]) {
+    const altered = back(); change(altered.themeRuntimeConfig.gameplayRuntime.quests);
+    assert.match(readbackIssue(sent, altered, true), /节点与章节/);
+  }
+});
+
 test('保存草稿：带 saveDraft=1、回读确认后才成功；连点只发一次；失败可重试；存不进去就不发布', () => {
   const calls = [];
   const saver = createServerDraftSaver({
@@ -237,6 +261,7 @@ test('回读核对：服务端合法换号通过；章节合并/顺序、玩法�
   assert.match(readbackIssue(richSent, richBack((d, c) => { delete c.chapters[1].extraNodes; }), true), /章节规则/);
   assert.match(readbackIssue(richSent, richBack((d, c) => { c.chapters[1].extraNodes[0].slot = 'other'; }), true), /章节规则/);
   assert.match(readbackIssue(richSent, richBack((d, c) => { c.chapters[0].exclusiveGroups = [[901, 903]]; }), true), /章节规则/);
+  assert.match(readbackIssue(richSent, richBack((d, c) => { c.gameplayRuntime.quests[0].actKey = 'another_act'; }), true), /节点与章节/);
   // 整段运行配置为空
   assert.match(readbackIssue(richSent, richBack(d => { d.themeRuntimeConfig = {}; }), true), /章节规则|资源对应|物品/);
   // 配给与初始状态
