@@ -3738,9 +3738,15 @@ Page({
               items.push({ kind: 'journeyCheck', nodeId: b.nodeId, mood: curMood });
               break;
             }
-            if (inlineKit && (!this._playKitNodeId || String(this._playKitNodeId) === String(b.nodeId))) {
-              items.push({ kind: 'kit', nodeId: b.nodeId, mood: curMood }); kitPlaced = true;
-              pushVoices(b.nodeId);
+            /* 第十三轮 m1 P1:本章互斥组的另一站(不是第一个未完成站,下发的块流里可能根本没有它)在玩时,玩法铺在这里 ——
+               不然故事流在第一个未完成站截断,玩家点「打开任务」什么也看不见。只铺正在玩的那一站,后面的剧情照旧不露。 */
+            const kitNode = this._playKitNodeId && String(this._playKitNodeId) !== String(b.nodeId)
+              && nodes.find((y) => String(y.nodeId) === String(this._playKitNodeId));
+            const laterKit = !!kitNode && !kitNode.done && String(kitNode.chapterId) === String((this.data.chapter || {}).id);
+            if (inlineKit && (!this._playKitNodeId || String(this._playKitNodeId) === String(b.nodeId) || laterKit)) {
+              const kitNodeId = laterKit ? this._playKitNodeId : b.nodeId;
+              items.push({ kind: 'kit', nodeId: kitNodeId, mood: curMood }); kitPlaced = true;
+              pushVoices(kitNodeId);
             } else if (n && this._isStoryGame(n)) {
               const entry = Object.assign(storyGameEntry(n, curMood), { auto: true });
               if (presentOf(n) === 'inline') autoNodeId = n.nodeId;
@@ -4706,9 +4712,10 @@ Page({
       : (fmPlayer || { lat: first.lat || 31.2304, lng: first.lng || 121.4737 });
     const branchFinished = ['COMPLETED', 'FINISHED'].includes(this._routeState.status);
     const openingPending = this._routeState.opening && !this._routeState.opening.complete;
+    // 第十三轮 m1 P1:线性路线里互斥组没走的那一站永远不会 done —— 服务端说这局完成了就是完成了
     const allDone = !openingPending && (this._routeState.routeMode === 'BRANCH_GRAPH'
       ? branchFinished
-      : nodes.length > 0 && nodes.every((x) => x.done));
+      : branchFinished || nodes.length > 0 && nodes.every((x) => x.done));
     const doneCount = nodes.filter((x) => x.done).length;
     // 凭证三态文案的唯一实现:剧本 tab 方卡与 mode2 六宫格共用 —— 别各写一份,会漂移。
     // 现场状态未知(crowded=null)给空串:WXML 里角标按「有内容才出」渲染。原来的「现场状态待同步」
@@ -5142,7 +5149,9 @@ Page({
           // 非 nav 时(含 mode1)仍走原 nextNode 逻辑,行为不变。
           const navTargetNode = that.data.nav.active ? that._nodeById(that.data.nav.targetNodeId) : null;
           const nx = that.data.nextNode;
-          const node = navTargetNode || (nx && that.data.nodes.find((n) => n.nodeId === nx.nodeId));
+          const primary = navTargetNode || (nx && that.data.nodes.find((n) => n.nodeId === nx.nodeId));
+          /* 第十三轮 m1 P1:互斥组的另一站不是「下一站」,玩家站在那儿也要能到达 —— 任务局里还差到达的站一并盯着 */
+          for (const node of [primary].concat(that._questArrivalCandidates(primary))) {
           if (node && node.lng && node.lat) {
             const d = that.haversine(that._loc.latitude, that._loc.longitude, node.lat, node.lng);
             // 仅"到点即完成(vm0)/GPS到达(vm5)"节点自动到达;答题/拍照/选项/扫码(1/2/3/4)须玩家手动完成,
@@ -5154,7 +5163,8 @@ Page({
                (2026-10-30 复核:霍山公园连线被 GPS 到达直接跳过;服务端同样以 ADVANCED_FIRST 拒)。 */
             const arrivesHere = ((node.vm === 0 || node.vm === 5) && (!node.hasAdvanced || that._advancedReadyNodeId === node.nodeId || that._questAwaitsArrival(node.nodeId)))
               || ([8, 9, 10].includes(node.vm) && that._advancedReadyNodeId === node.nodeId);
-            if (d <= 50 && !node.done && arrivesHere && playAccuracy.canAutoArrive(loc.accuracy)) that.arrive(node.nodeId, 'gps');
+            if (d <= 50 && !node.done && arrivesHere && playAccuracy.canAutoArrive(loc.accuracy)) { that.arrive(node.nodeId, 'gps'); break; }
+          }
           }
         };
         wx.onLocationChange(that._playLocationHandler);
@@ -6867,6 +6877,12 @@ Page({
     }, { reducedMotion: this.data.reducedMotion });
   },
   /** P-10/P-11 第四轮:任务型主题先到达、再开始任务、再玩 —— 本站任务只差到达时,带玩法的 0/5 站也靠近即到达(服务端同口径「已记录本局到达，请继续当前任务或操作」)。 */
+  /** 第十三轮 m1 P1:任务局里还差到达的其它站(互斥组的另一边不会是「下一站」),供定位自动到达一并判断。 */
+  _questArrivalCandidates(primary) {
+    if (!this._hasGenericProofFlow()) return [];
+    const ids = new Set(((this.data.themeBag || {}).quests || []).filter(row => row.disabledReason === 'NOT_ARRIVED').map(row => String(row.nodeId)));
+    return (this.data.nodes || []).filter(n => ids.has(String(n.nodeId)) && !n.done && !(primary && String(primary.nodeId) === String(n.nodeId)));
+  },
   _questAwaitsArrival(nodeId) {
     if (!this._hasGenericProofFlow()) return false;
     return ((this.data.themeBag || {}).quests || []).some(row => String(row.nodeId) === String(nodeId) && row.disabledReason === 'NOT_ARRIVED');
