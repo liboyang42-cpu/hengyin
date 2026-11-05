@@ -105,3 +105,5 @@ root 点名全套失败后，仅串行运行指定 GAME 文件，没有重跑全
 - 页面原视频三处可点控件补既有 `cy-pressed`，不再把跳过视频当 noop 挡板；视频层9999改为已定义的 `--cy-z-modal`，继续高于故事/章节层、低于提示与庆祝。未改原生 video/cover-view 结构或播放逻辑，真实设备堆叠仍待验。
 
 实际检查：8 个 GAME 失败/行为/按压层级文件串行 **64/64 PASS**，`proof/r14-game/owned-triage-tests.txt`；4 个音频/章节文件串行 **110/110 PASS**，`proof/r14-game/narration-tests.txt`。后者包括两项先失败后修的慢旁白加载与旧播放器/换局回调测试。按压棘轮与 z-index 基线均未修改。
+
+旁白回调隔离复核再补一处同步清理：`destroyAudio` 现在主动释放 guide 的亮屏与配乐压低，不依赖可能已被隔离的异步 stop 回调。对应原失败用例为销毁后 `_duckSources` 仍含 guide；修后 `k10-immersive-audio` 与 `play-audio-resume` 20/20 PASS（`proof/r14-game/audio-cleanup-tests.txt`）。

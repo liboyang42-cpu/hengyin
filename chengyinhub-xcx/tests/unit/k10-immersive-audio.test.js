@@ -317,7 +317,9 @@ test('慢旁白在play前显示加载,canplay不冒充已开始播放,play才清
 
 test('销毁后的旧旁白和换局前的回调不覆盖当前音频状态', () => {
   const { page, audios } = loadPlay();
-  page.initAudio(); const old = audios[0]; page.destroyAudio(); page.initAudio();
+  page.initAudio(); const old = audios[0]; old.emit('play');
+  page.destroyAudio(); assert.equal(page._duckSources.has('guide'), false, '销毁不能依赖已失效的异步stop事件清旁白压低');
+  page.initAudio();
   page.setData({ audioNodeId: 'chapter', audioLoading: true, audioPlaying: false, audioError: '' });
   old.emit('play'); old.emit('error'); old.emit('canplay');
   assert.equal(page.data.audioLoading, true); assert.equal(page.data.audioError, '');

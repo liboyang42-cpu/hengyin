@@ -9126,6 +9126,8 @@ Page({
 
   destroyAudio() {
     if (!this._audio) return;
+    audioSession.keepAwake('guideAudio', false);
+    this._duckBgm('guide', false);
     audioSession.unregister(this._audio);
     try { this._audio.destroy(); } catch (e) {}
     this._audio = null;
