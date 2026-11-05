@@ -1,0 +1,9 @@
+guideline 1 200
+word create: 200 操作成功 | publish: 400 内容未通过安全检查，请修改后重试 | id 1
+   row ((1, 'DRAFT', '今天走了江边 zqvxlm'),)
+split create: 200 操作成功 | publish: 400 内容未通过安全检查，请修改后重试 | id 2
+   row ((2, 'DRAFT', '今天走了江边 z-q.v x_l*m'),)
+allow create: 200 操作成功 | publish: 200 操作成功 | id 3
+   row ((3, 'PUBLISHED', '今天走了江边 zqvxlmpark'),)
+busy create: 200 操作成功 | publish: 200 操作成功 | id 4
+   row ((4, 'CHECKING', '今天走了江边 繁忙时发的'),)
