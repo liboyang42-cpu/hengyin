@@ -23,7 +23,7 @@ Run 2026-11-05, private branch from `integ/launch-test-20261103`. **Not a phone 
 
 ## Checks run
 - `node --test tests/unit/k10-immersive-audio.test.js`: 16 pass, 0 fail.
-- `tests/lint/ui-integrity.js`: UI-GATE-0 PASS.
+- `tests/lint/ui-integrity.js`: UI-GATE-0 PASS on my base. After the final rebase on the shared branch it FAILS with 4 violations, all in `pages/club/apply/index.js:244/255` (U4-DYNAMIC baseline entries gone stale from another lane's field-error commit `c5227c532`); none are in my files. Whoever owns that lane must re-anchor them.
 - `build-action-ledger.js --check`: PASS after `--write`.
 - `scripts/preflight-release.js`: main package 2.98 MB uncompressed (under 3,145,728); its one BLOCK was the stale ledger, fixed afterwards; not re-run to the end.
 - Full `npm run test:unit` not run (credit).
