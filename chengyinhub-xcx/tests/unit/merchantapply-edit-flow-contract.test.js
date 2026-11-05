@@ -14,6 +14,7 @@ let requests
 let tips
 let aborts
 let modals
+let navigations
 
 global.getApp = () => ({
   globalData: {},
@@ -31,6 +32,7 @@ global.getApp = () => ({
 
 global.wx = {
   navigateBack() {},
+  redirectTo(options) { navigations.push(options) },
   reLaunch() {},
   showLoading() {},
   hideLoading() {},
@@ -59,6 +61,7 @@ function loadPage() {
   tips = []
   aborts = 0
   modals = 0
+  navigations = []
   require(PAGE_PATH)
   const page = Object.assign({}, pageConfig, {
     data: JSON.parse(JSON.stringify(pageConfig.data)),
@@ -155,6 +158,93 @@ test('商家报名：可配合日期必须由 date range 半屏成对写入并�
   assert.match(wxml, /可配合日期/)
   assert.match(wxml, /每日可接待时段/)
   assert.equal(json.usingComponents['cy-date-range-sheet'], '/pages/topic/components/cy/date-range-sheet/index')
+})
+
+test('商家报名：每日时段留空仍可校验并提交，其余必填项不放宽', () => {
+  const page = loadPage()
+  page.onLoad({ topicId: '990035', nodeId: '173' })
+  page.setData({
+    address: '外滩', startDate: '2098-12-01', endDate: '2098-12-31',
+    ruleInstructions: '可接待', picUrl: '/a.png',
+  })
+  page.refreshSubmitState()
+  assert.equal(page.data.canSubmit, true)
+  assert.equal(page.validateForm(), true)
+  page.onCreateSubmit()
+  assert.equal(requests.length, 1)
+  assert.equal(requests[0].url, '/api/registration/merchant/create')
+  assert.equal(requests[0].method, 'POST')
+  assert.equal(JSON.parse(requests[0].data).cooperateDate, '')
+
+  for (const field of ['address', 'startDate', 'endDate', 'ruleInstructions', 'picUrl']) {
+    const value = page.data[field]
+    page.setData({ [field]: '' })
+    assert.equal(page.validateForm(), false, field + ' 仍为必填')
+    page.setData({ [field]: value })
+  }
+})
+
+test('商家报名编辑：空时段回填后可直接保存，不必改动其他字段激活提交', () => {
+  const page = loadPage()
+  page.onLoad({ id: '900' })
+  requests[0].success({ code: 200, data: detail({ cooperateDate: null }) })
+  assert.equal(page.data.canSubmit, true)
+  assert.equal(page.validateForm(), true)
+  page.onEditSubmit()
+  assert.equal(requests[1].url, '/api/registration/merchant/update')
+  assert.equal(JSON.parse(requests[1].data).cooperateDate, '')
+})
+
+test('商家报名：明确填写的残缺、越界或倒序时段必须拒绝且不发送请求', () => {
+  const page = loadPage()
+  page.onLoad({ topicId: '9', nodeId: '3' })
+  page.setData({
+    address: '外滩', startDate: '2098-12-01', endDate: '2098-12-31',
+    ruleInstructions: '可接待', picUrl: '/a.png',
+  })
+  for (const value of ['10:00-', '10:00', '10:00-18:xx', '10:60-18:00', '10:00-24:00', '18:00-09:00', '10:00-10:00']) {
+    page.setData({ cooperateDate: value })
+    assert.equal(page.validateForm(), false, value)
+    assert.ok(page.data.errors.cooperateDate, value)
+    page.onSubmit()
+    assert.equal(requests.length, 0, value + ' 不得发送请求')
+  }
+  page.setData({ cooperateDate: '10:00-18:30' })
+  assert.equal(page.validateForm(), true)
+  page.onSubmit()
+  assert.equal(JSON.parse(requests[0].data).cooperateDate, '10:00-18:30')
+})
+
+test('商家报名成功：查看进度进入项目承接视图，主题 id 单参数仍保留招募浏览语义', () => {
+  const page = loadPage()
+  page.onLoad({ topicId: '990035', nodeId: '173' })
+  page.setData({
+    address: '外滩', startDate: '2098-12-01', endDate: '2098-12-31',
+    cooperateDate: '10:00-18:00', ruleInstructions: '可接待', picUrl: '/a.png',
+  })
+  page.onCreateSubmit()
+  requests[0].success({ code: 200, data: 14 })
+  assert.equal(page.data.phase, 'success')
+  page.goProgress()
+  const url = new URL(navigations[0].url, 'https://local.test')
+  assert.equal(url.pathname, '/pages/topic/merchantinfo/merchantinfo')
+  assert.equal(url.searchParams.get('topicId'), '990035')
+  assert.equal(url.searchParams.get('scope'), 'MERCHANT')
+  assert.equal(url.searchParams.has('id'), false)
+
+  delete require.cache[require.resolve(DETAIL_PAGE_PATH)]
+  require(DETAIL_PAGE_PATH)
+  for (const [options, browse] of [[Object.fromEntries(url.searchParams), false], [{ id: '990035' }, true]]) {
+    const destination = Object.assign({}, pageConfig, {
+      data: JSON.parse(JSON.stringify(pageConfig.data)),
+      reloadProjectPrivate() {},
+    })
+    destination.setData = (patch) => Object.assign(destination.data, patch)
+    destination.onLoad(options)
+    assert.equal(destination.data.topicId, 990035)
+    assert.equal(destination.data.fromMerchantJoin, browse)
+    assert.equal(destination.data.operationScope, browse ? '' : 'MERCHANT')
+  }
 })
 
 test('商家报名编辑：HTTP 200 空对象不得渲染可保存空表单', () => {

@@ -343,7 +343,6 @@ Page({
         const canSubmit = !!address.trim()
           && !!startDate
           && !!endDate
-          && !!cooperateDate
           && !!ruleInstructions.trim()
           && !!picUrl;
         this.setData({
@@ -615,7 +614,12 @@ Page({
 
     if (!address.trim()) fail('address', '请选择承接地点');
     if (!startDate || !endDate) fail('availabilityRange', '请选择可配合日期');
-    if (cooperateDate === '') fail('cooperateDate', '请选择可配合时间段');
+    if (cooperateDate) {
+      const parts = cooperateDate.match(/^([01]?\d|2[0-3]):([0-5]\d)-([01]?\d|2[0-3]):([0-5]\d)$/);
+      if (!parts || !timeOptions.isEndAfterStart(
+        { hour: parts[1], minute: parts[2] }, { hour: parts[3], minute: parts[4] }
+      )) fail('cooperateDate', '请选择完整时段，结束时间必须晚于开始时间');
+    }
     if (!ruleInstructions.trim()) fail('ruleInstructions', '请输入节点接待说明');
     if (picUrl === '') fail('picUrl', '请上传节点现场图片');
 
@@ -713,7 +717,7 @@ Page({
     const topicId = this.data.topicId;
     if (!topicId) { wx.reLaunch({ url: '/pages/merchant/index/index' }); return; }
     wx.redirectTo({
-      url: '/pages/topic/merchantinfo/merchantinfo?id=' + topicId + '&scope=MERCHANT',
+      url: '/pages/topic/merchantinfo/merchantinfo?topicId=' + topicId + '&scope=MERCHANT',
       fail() { wx.reLaunch({ url: '/pages/merchant/index/index' }); },
     });
   },
