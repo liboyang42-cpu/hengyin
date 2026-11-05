@@ -333,6 +333,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="merchantSignUpEndDate != null "> and merchant_sign_up_end_date = #{merchantSignUpEndDate}</if>
             <if test="isSync != null "> and is_sync = #{isSync}</if>
             <if test="delFlag != null "> and del_flag = #{delFlag}</if>
+            <if test="excludeTemplates != null and excludeTemplates"> and is_template = 0</if>
             <if test="activeClubOnly != null and activeClubOnly">
                 and (club_id is null or club_id = 0 or exists (
                     select 1 from club active_club

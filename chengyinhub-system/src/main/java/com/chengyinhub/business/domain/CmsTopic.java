@@ -129,6 +129,8 @@ public class CmsTopic extends BaseEntity
     /** C 端通用列表专用：隐藏父俱乐部已解散的主题；后台审计查询不设置。 */
     @JsonIgnore
     private Boolean activeClubOnly;
+    /** 只取在售/草稿主题行,不含模板行(is_template=1);我的项目「主题」tab 用,模板在「模板」tab。 */
+    private Boolean excludeTemplates;
 
     /**
      * 非持久:只要「商家真的能承接」的那些主题 —— 商家侧合作中心那条池子专用。
@@ -859,6 +861,8 @@ public class CmsTopic extends BaseEntity
     public void setMerchantPoolOnly(Boolean merchantPoolOnly) { this.merchantPoolOnly = merchantPoolOnly; }
     public Boolean getActiveClubOnly() { return activeClubOnly; }
     public void setActiveClubOnly(Boolean activeClubOnly) { this.activeClubOnly = activeClubOnly; }
+    public Boolean getExcludeTemplates() { return excludeTemplates; }
+    public void setExcludeTemplates(Boolean excludeTemplates) { this.excludeTemplates = excludeTemplates; }
 
     public void setClubId(Long clubId)
     {

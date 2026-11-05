@@ -119,6 +119,17 @@ class ApiProjectAcceptStatusTest {
     }
 
     @Test
+    void my_topic_list_leaves_template_copies_to_the_template_tab() {
+        // 第十二轮 k9:另存为模板复制出的模板行不再在「主题」里多出一张同名「进行中」卡
+        when(cmsTopicService.selectCmsTopicList(any(CmsTopic.class)))
+                .thenReturn(Collections.singletonList(myTopic(1L, null, 1, 0)));
+        row(1L);
+        org.mockito.ArgumentCaptor<CmsTopic> query = org.mockito.ArgumentCaptor.forClass(CmsTopic.class);
+        verify(cmsTopicService).selectCmsTopicList(query.capture());
+        assertEquals(Boolean.TRUE, query.getValue().getExcludeTemplates());
+    }
+
+    @Test
     void personal_topic_open_without_club_coop_is_club_open() {
         when(cmsTopicService.selectCmsTopicList(any(CmsTopic.class)))
                 .thenReturn(Collections.singletonList(myTopic(1L, null, 1, 0)));
