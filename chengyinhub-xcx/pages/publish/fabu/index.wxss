@@ -4851,7 +4851,8 @@ page { background: var(--cy-btn-solid-bg); }
   border-radius: var(--cy-radius-pill); background: var(--cy-color-bg-surface-subtle);
   font-size: var(--cy-font-body); font-weight: 700; color: var(--cy-color-text-primary);
 }
-.ch-pill-row + .ch-pill-row, cy-dropdown + .ch-pill-row, .ch-pill-row + cy-dropdown, cy-dropdown + cy-dropdown { margin-top: var(--cy-space-2); display: block; }
+.ch-pill-row + .ch-pill-row, cy-dropdown + .ch-pill-row { margin-top: var(--cy-space-2); } /* 药丸行本身是 flex,不能被改成 block(否则「至少完成几站」标签和输入框上下叠开) */
+.ch-pill-row + cy-dropdown, cy-dropdown + cy-dropdown { margin-top: var(--cy-space-2); display: block; }
 .ch-pill-row__value { display: flex; align-items: center; gap: var(--cy-space-1); min-width: 0; font-weight: 400; color: var(--cy-color-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ch-pill-row__input { width: 200rpx; text-align: right; font-weight: 400; font-size: var(--cy-font-body); color: var(--cy-color-text-primary); }
 .ch-pill-btn {
