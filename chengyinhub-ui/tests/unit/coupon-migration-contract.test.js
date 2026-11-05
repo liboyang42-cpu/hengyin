@@ -13,7 +13,7 @@ function read(relativePath) {
 function loadCoupon(overrides = {}) {
   const source = read('src/views/business/coupon/index.vue')
   const script = source.match(/<script>([\s\S]*?)<\/script>/)[1]
-    .replace(/^import \{ listCoupon, getCoupon, addCoupon, updateCoupon \} from '@\/api\/business\/coupon'$/m, 'const { listCoupon, getCoupon, addCoupon, updateCoupon } = dependencies;')
+    .replace(/^import \{ listCoupon, getCoupon, updateCoupon \} from '@\/api\/business\/coupon'$/m, 'const { listCoupon, getCoupon, updateCoupon } = dependencies;')
     .replace(/^import \{ checkPermi \} from '@\/utils\/permission'$/m, 'const { checkPermi } = dependencies;')
     .replace(/^import (Cy\w+) from .+$/gm, 'const $1 = {};')
   return new Function('dependencies', script.replace(/export\s+default\s*/, 'return '))(Object.assign({

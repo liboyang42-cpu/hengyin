@@ -15,7 +15,7 @@ test('选择奖励 sheet：新建奖励收进 footer slot，正文里不再埋 C
   const at = wxml.indexOf('title="选择奖励"');
   assert.notEqual(at, -1);
   const sheet = wxml.slice(at, wxml.indexOf('</cy-sheet>', at));
-  assert.match(sheet, /footer="\{\{allowCreate\}\}"/, 'footer 闸必须随 allowCreate 开合');
+  assert.match(sheet, /footer="\{\{allowCreate && couponCreationEnabled\}\}"/, '新建闸同时遵循上线关闭配置');
   const footerAt = sheet.indexOf('slot="footer"');
   assert.notEqual(footerAt, -1, '「新建优惠券」没进 footer slot');
   assert.match(sheet.slice(footerAt, footerAt + 260), /createCoupon/, 'footer 里应是新建奖励 CTA');
@@ -34,6 +34,6 @@ test('「不发奖励」行与奖励条目同构：名称/副文案走 reward-sh
 test('创建优惠券与体验卡使用全高表单，标题与共用弹窗同级', () => {
   const wxml = read('pages/publish/components/reward-selector/index.wxml');
   const sheetWxss = read('components/cy/sheet/index.wxss');
-  assert.match(wxml, /<cy-sheet variant="full" show="\{\{creating\}\}"/);
+  assert.match(wxml, /<cy-sheet variant="full" show="\{\{creating && couponCreationEnabled\}\}"/);
   assert.match(sheetWxss, /\.sh__nav-title\s*\{[^}]*font-size:\s*var\(--cy-comp-sheet-title-size\)/);
 });

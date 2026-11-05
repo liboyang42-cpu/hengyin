@@ -1,4 +1,4 @@
-<view class="fabu theme-topic-editor">
+<view class="fabu theme-topic-editor" wx:if="{{couponCreationEnabled}}">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
