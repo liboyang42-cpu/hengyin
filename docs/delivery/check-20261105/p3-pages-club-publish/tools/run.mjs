@@ -14,6 +14,7 @@ for (const s of steps) {
   try {
     if (s.tap !== undefined) { await w.tap(s.tap, { exact: !!s.x, nth: s.nth || 0 }); }
     if (s.tapSel) await w.tapSel(s.tapSel);
+    if (s.clickAt) { const b = await w.eval(s.clickAt); if (!b) throw new Error('clickAt: no target'); await w.page.mouse.click(b.x, b.y); console.log('clicked', JSON.stringify(b)); }
     if (s.fill) { const all = [...await w.page.$$('pierce/input'), ...await w.page.$$('pierce/textarea')]; let i = 0; for (const h of all) { if (!(await h.boundingBox())) continue; if (await h.evaluate((e) => e.value)) continue; if (i >= s.fill.length) break; await h.click(); await h.type(String(s.fill[i++]), { delay: 8 }); } }
     if (s.type) await w.type(s.type[0], s.type[1]);
     if (s.modal) await w.modal(s.modal);
