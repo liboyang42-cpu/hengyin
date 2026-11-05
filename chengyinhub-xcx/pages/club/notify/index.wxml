@@ -111,7 +111,7 @@
       </button>
     </view>
 
-    <button class="send-btn" loading="{{sending}}" disabled="{{sending || previewState !== 'ready'}}" bindtap="send">
+    <button class="send-btn" loading="{{sending}}" disabled="{{sending}}" bindtap="send">
       {{sending ? '正在投递…' : '发送站内通知'}}
     </button>
   </block>

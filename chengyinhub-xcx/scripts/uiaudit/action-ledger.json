@@ -972548,7 +972548,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/notify/index.js:251"
+        "staticSource": "pages/club/notify/index.js:253"
       }
     },
     {
@@ -972578,7 +972578,7 @@
         "line": 114,
         "selectorHint": ".send-btn",
         "visibleCondition": null,
-        "disabledCondition": "{{sending || previewState !== 'ready'}}",
+        "disabledCondition": "{{sending}}",
         "ariaLabel": null,
         "ariaLabelExpression": null,
         "ariaRole": null,
@@ -972605,12 +972605,14 @@
           "pages/privacy/index"
         ],
         "apis": [
+          "/api/club/event-notification/preview",
           "/api/club/event-notification/send",
           "/api/config/features",
           "/api/login/code",
           "/api/role/info"
         ],
         "primaryApis": [
+          "/api/club/event-notification/preview",
           "/api/club/event-notification/send"
         ],
         "auxiliaryApis": [
@@ -972619,6 +972621,12 @@
           "/api/role/info"
         ],
         "apiContracts": [
+          {
+            "url": "/api/club/event-notification/preview",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
           {
             "url": "/api/club/event-notification/send",
             "method": "POST",
@@ -973255,7 +973263,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/notify/index.js:286"
+        "staticSource": "pages/club/notify/index.js:288"
       }
     },
     {

@@ -218,7 +218,9 @@ Page({
   },
 
   send() {
-    if (!this.validDraft() || this.data.previewState !== 'ready' || this.data.sending) return
+    if (!this.validDraft() || this.data.sending) return
+    // 还没预览受众就点发送:先替他预览(缺项会在栏下红字),看到人数后再点一次发送
+    if (this.data.previewState !== 'ready') { this.preview(); return }
     const that = this
     const payload = this.payload(true)
     this.setData({ sending: true, draftRequestId: payload.requestId })

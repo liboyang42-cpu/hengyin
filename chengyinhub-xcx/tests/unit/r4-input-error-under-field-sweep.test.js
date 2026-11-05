@@ -91,13 +91,13 @@ test('群发通知:标题/内容的问题写在各自字段下方', () => {
   assert.equal(page.data.titleError, '标题需为 1–80 字');
   assert.equal(page.data.contentError, '');
   const wxml = read('pages/club/notify/index.wxml');
-  assert.match(wxml, /wx:if="\{\{titleError\}\}" kind="error"/);
-  assert.match(wxml, /wx:if="\{\{contentError\}\}" kind="error"/);
+  assert.match(wxml, /wx:if="\{\{titleError\}\}" kind="field"/);
+  assert.match(wxml, /wx:if="\{\{contentError\}\}" kind="field"/);
 });
 
 test('常备权益:每栏的问题写在该栏下方', () => {
   const wxml = read('pages/merchant/decor/perks/index.wxml');
   for (const k of ['name', 'retailValue', 'unitCost', 'quota', 'validEnd']) {
-    assert.match(wxml, new RegExp('wx:if="\\{\\{fieldErrors.' + k + '\\}\\}" kind="error"'));
+    assert.match(wxml, new RegExp('wx:if="\\{\\{fieldErrors.' + k + '\\}\\}" kind="field"'));
   }
 });
