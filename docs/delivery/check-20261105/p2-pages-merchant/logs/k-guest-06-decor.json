@@ -1,0 +1,125 @@
+{
+ "name": "k-guest-06-decor",
+ "opts": {
+  "path": "pages/merchant/decor/index"
+ },
+ "steps": [
+  {
+   "shot": "k-guest-06-decor",
+   "route": "pages/merchant/decor/index",
+   "text": "登录后查看 | 登录 | 品牌中心 | 暂无装修权限 | 请切换到已审核的商家账号 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  }
+ ],
+ "errors": [],
+ "net": [
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 401,
+   "c": 401,
+   "b": "{\"msg\":\"登录状态已失效，请重新登录\",\"code\":401}"
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/coop-profile",
+   "s": 401,
+   "c": 401,
+   "b": "{\"msg\":\"登录状态已失效，请重新登录\",\"code\":401}"
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/coop/perk-template/list",
+   "s": 401,
+   "c": 401,
+   "b": "{\"msg\":\"登录状态已失效，请重新登录\",\"code\":401}"
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 401,
+   "c": 401,
+   "b": "{\"msg\":\"登录状态已失效，请重新登录\",\"code\":401}"
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/coop-profile",
+   "s": 401,
+   "c": 401,
+   "b": "{\"msg\":\"登录状态已失效，请重新登录\",\"code\":401}"
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/coop/perk-template/list",
+   "s": 401,
+   "c": 401,
+   "b": "{\"msg\":\"登录状态已失效，请重新登录\",\"code\":401}"
+  }
+ ],
+ "bad": [
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 401,
+   "c": 401,
+   "b": "{\"msg\":\"登录状态已失效，请重新登录\",\"code\":401}"
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/coop-profile",
+   "s": 401,
+   "c": 401,
+   "b": "{\"msg\":\"登录状态已失效，请重新登录\",\"code\":401}"
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/coop/perk-template/list",
+   "s": 401,
+   "c": 401,
+   "b": "{\"msg\":\"登录状态已失效，请重新登录\",\"code\":401}"
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 401,
+   "c": 401,
+   "b": "{\"msg\":\"登录状态已失效，请重新登录\",\"code\":401}"
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/coop-profile",
+   "s": 401,
+   "c": 401,
+   "b": "{\"msg\":\"登录状态已失效，请重新登录\",\"code\":401}"
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/coop/perk-template/list",
+   "s": 401,
+   "c": 401,
+   "b": "{\"msg\":\"登录状态已失效，请重新登录\",\"code\":401}"
+  }
+ ],
+ "console": [
+  "[error] HTTP 401 http://127.0.0.1:8097/__api/api/merchant/access/me",
+  "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+  "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] HTTP 401 http://127.0.0.1:8097/__api/api/merchant/coop-profile",
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico",
+  "[error] HTTP 401 http://127.0.0.1:8097/__api/api/coop/perk-template/list",
+  "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+  "[error] HTTP 401 http://127.0.0.1:8097/__api/api/merchant/access/me",
+  "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+  "[error] HTTP 401 http://127.0.0.1:8097/__api/api/coop/perk-template/list",
+  "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+  "[error] HTTP 401 http://127.0.0.1:8097/__api/api/merchant/coop-profile",
+  "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+ ]
+}

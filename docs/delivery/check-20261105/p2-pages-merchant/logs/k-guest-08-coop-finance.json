@@ -1,0 +1,28 @@
+{
+ "name": "k-guest-08-coop-finance",
+ "opts": {
+  "path": "pages/coop/finance/index"
+ },
+ "steps": [
+  {
+   "shot": "k-guest-08-coop-finance",
+   "route": "pages/coop/finance/index",
+   "text": "分润明细 | 登录后查看主办分润 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  }
+ ],
+ "errors": [],
+ "net": [
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  }
+ ],
+ "bad": [],
+ "console": [
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+ ]
+}

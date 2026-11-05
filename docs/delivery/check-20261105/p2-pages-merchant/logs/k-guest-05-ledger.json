@@ -1,0 +1,77 @@
+{
+ "name": "k-guest-05-ledger",
+ "opts": {
+  "path": "pages/merchant/ledger/index"
+ },
+ "steps": [
+  {
+   "shot": "k-guest-05-ledger",
+   "route": "pages/merchant/ledger/index",
+   "text": "核销与退款 | 当前身份不能查看这份商家账本 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  }
+ ],
+ "errors": [],
+ "net": [
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 401,
+   "c": 401,
+   "b": "{\"msg\":\"登录状态已失效，请重新登录\",\"code\":401}"
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 401,
+   "c": 401,
+   "b": "{\"msg\":\"登录状态已失效，请重新登录\",\"code\":401}"
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 401,
+   "c": 401,
+   "b": "{\"msg\":\"登录状态已失效，请重新登录\",\"code\":401}"
+  }
+ ],
+ "bad": [
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 401,
+   "c": 401,
+   "b": "{\"msg\":\"登录状态已失效，请重新登录\",\"code\":401}"
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 401,
+   "c": 401,
+   "b": "{\"msg\":\"登录状态已失效，请重新登录\",\"code\":401}"
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 401,
+   "c": 401,
+   "b": "{\"msg\":\"登录状态已失效，请重新登录\",\"code\":401}"
+  }
+ ],
+ "console": [
+  "[error] HTTP 401 http://127.0.0.1:8097/__api/api/merchant/access/me",
+  "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] HTTP 401 http://127.0.0.1:8097/__api/api/merchant/access/me",
+  "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+  "[error] HTTP 401 http://127.0.0.1:8097/__api/api/merchant/access/me",
+  "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+ ]
+}

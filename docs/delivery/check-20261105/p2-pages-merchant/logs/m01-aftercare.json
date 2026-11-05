@@ -1,0 +1,83 @@
+{
+ "name": "m01-aftercare",
+ "opts": {
+  "path": "pages/merchant/aftercare/index",
+  "identity": "e2e-openid-9002"
+ },
+ "steps": [
+  {
+   "shot": "m01-aftercare-processing",
+   "route": "pages/merchant/aftercare/index",
+   "text": "退款售后 | 待回应 | 处理中 | 已完成 | 今天 | ¥39.00 | 城瘾用户 | 02:52 · | 退款处理中 | 周六手冲咖啡体验 | ¥39.00 | 已经到底了 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "m02-aftercare-done",
+   "route": "pages/merchant/aftercare/index",
+   "text": "退款售后 | 待回应 | 处理中 | 已完成 | 还没有已完成售后 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  }
+ ],
+ "errors": [],
+ "net": [
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/aftercare/list?bucket=PENDING&pageNum=1&pageSize=20",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/aftercare/list?bucket=PROCESSING&pageNum=1&pageSize=20",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/aftercare/list?bucket=COMPLETED&pageNum=1&pageSize=20",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  }
+ ],
+ "bad": [],
+ "console": [
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico"
+ ]
+}

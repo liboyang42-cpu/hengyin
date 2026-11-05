@@ -1,0 +1,45 @@
+{
+ "name": "k-guest-01-customer-detail",
+ "opts": {
+  "path": "pages/merchant/customer/detail/index"
+ },
+ "steps": [
+  {
+   "shot": "k-guest-01-customer-detail",
+   "route": "pages/merchant/customer/detail/index",
+   "text": "登录后查看 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  }
+ ],
+ "errors": [],
+ "net": [
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 401,
+   "c": 401,
+   "b": "{\"msg\":\"登录状态已失效，请重新登录\",\"code\":401}"
+  }
+ ],
+ "bad": [
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 401,
+   "c": 401,
+   "b": "{\"msg\":\"登录状态已失效，请重新登录\",\"code\":401}"
+  }
+ ],
+ "console": [
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico",
+  "[error] HTTP 401 http://127.0.0.1:8097/__api/api/merchant/access/me",
+  "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+ ]
+}

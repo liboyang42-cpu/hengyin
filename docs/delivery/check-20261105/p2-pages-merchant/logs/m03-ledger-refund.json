@@ -1,0 +1,219 @@
+{
+ "name": "m03-ledger-refund",
+ "opts": {
+  "path": "pages/merchant/ledger/index",
+  "identity": "e2e-openid-9002"
+ },
+ "steps": [
+  {
+   "shot": "m03-ledger-pending-tab",
+   "route": "pages/merchant/ledger/index",
+   "text": "核销与退款 | 全部 | 待处理 | 已处理 | 不结现金 | 本月核销 | 5 笔 | 待结算 | ¥75.66 | 已入账 | ¥0.00 | 11 月 05 日 | 周六手冲咖啡体验 · 单人体验 | 测试玩家甲 | 02:52 | 待结算 | +¥37.83 | 退款 · 城瘾用户 | 02:52 | 退款处理中 | −¥39.00 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "m04-ledger-scrolled",
+   "route": "pages/merchant/ledger/index",
+   "text": "核销与退款 | 全部 | 待处理 | 已处理 | 不结现金 | 本月核销 | 5 笔 | 待结算 | ¥75.66 | 已入账 | ¥0.00 | 11 月 05 日 | E2E 探店日一期 · 第1章 咖啡 | 测试玩家丙 | 10:31 | 权益已履约 · 无现金结算 | E2E 探店日一期 · 第1章 咖啡 | 测试玩家乙 | 10:27 | 权益已履约 · 无现金结算 | E2E 探店日一期 · 第1章 咖啡 | 测试玩家甲 | 10:26 | 权益已履约 · 无现金结算 | E2E 探店日一期 · 第1章 咖啡 | E2E 玩家二号 | 10:15 | 权益已履约 · 无现金结算 | 周六手冲咖啡体验 · 单人体验 | 测试玩家甲 | 02:52 | 待结算 | +¥37.83 | 退款 · 城瘾用户 | 02:52 | 退款处理中 | −¥39.00 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "m05-refund-row-tap",
+   "route": "pages/merchant/aftercare/detail/index",
+   "text": "¥39.00 | 报名退款 · 周六手冲咖啡体验 | 平台审核已结束，不能再追加商家意见。 | 平台处理 | 退款处理中 | 商家意见 | 等待商家意见 | 款项结果 | 尚未确认退回 | 退款单号 | RF82 | 申请时间 | 2026-11-05 02:52 | 申请原因 | 用户申请退款 | 客户 | 昵称 | 城瘾用户 | 处理记录 | 玩家提交退款申请 | 2026-11-05 02:52 | 平台已批准退款 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "m06-refund-detail-scrolled",
+   "route": "pages/merchant/aftercare/detail/index",
+   "text": "平台处理 | 退款处理中 | 商家意见 | 等待商家意见 | 款项结果 | 尚未确认退回 | 退款单号 | RF82 | 申请时间 | 2026-11-05 02:52 | 申请原因 | 用户申请退款 | 客户 | 昵称 | 城瘾用户 | 处理记录 | 玩家提交退款申请 | 2026-11-05 02:52 | 平台已批准退款 | 退款处理中 | 平台已批准，款项仍在处理 | 联系平台客服 | 退款审核与款项问题由平台处理 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  }
+ ],
+ "errors": [],
+ "net": [
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/finance/redemptions",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/aftercare/list?bucket=PENDING&pageNum=1&pageSize=20",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/aftercare/list?bucket=PROCESSING&pageNum=1&pageSize=20",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/aftercare/list?bucket=COMPLETED&pageNum=1&pageSize=20",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/finance/redemptions",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/aftercare/list?bucket=PENDING&pageNum=1&pageSize=20",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/aftercare/list?bucket=PROCESSING&pageNum=1&pageSize=20",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/aftercare/list?bucket=COMPLETED&pageNum=1&pageSize=20",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/finance/redemptions",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/aftercare/list?bucket=PENDING&pageNum=1&pageSize=20",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/aftercare/list?bucket=PROCESSING&pageNum=1&pageSize=20",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/aftercare/list?bucket=COMPLETED&pageNum=1&pageSize=20",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/finance/redemptions",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/aftercare/list?bucket=PENDING&pageNum=1&pageSize=20",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/aftercare/list?bucket=PROCESSING&pageNum=1&pageSize=20",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/aftercare/list?bucket=COMPLETED&pageNum=1&pageSize=20",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/aftercare/detail?refundId=2",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  }
+ ],
+ "bad": [],
+ "console": [
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+ ]
+}
