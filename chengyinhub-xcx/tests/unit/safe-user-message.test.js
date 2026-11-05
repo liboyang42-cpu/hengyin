@@ -118,5 +118,5 @@ test('m3:Spring 序列化报错与缺环境变量的原文不给玩家看', () =
 
 test('m3:模板选了扫码参与就存 validationMethod=4(否则发布被服务端拒)', () => {
   const src = require('node:fs').readFileSync(require('node:path').join(__dirname, '../../pages/publish/temp/index.js'), 'utf8')
-  assert.match(src, /gameKey === 'qaShot'\) formData\.validationMethod = 2; else if \(this\.data\.advanced && this\.data\.advanced\.scan && this\.data\.advanced\.scan\.enabled\) formData\.validationMethod = 4;/)
+  assert.match(src, /gameKey === 'qaShot'\) \{ if \(!\[4, 5\]\.includes\(Number\(formData\.validationMethod\)\)\) formData\.validationMethod = 2;[^\n]*\} else if \(this\.data\.advanced && this\.data\.advanced\.scan && this\.data\.advanced\.scan\.enabled\) formData\.validationMethod = 4;/)
 })

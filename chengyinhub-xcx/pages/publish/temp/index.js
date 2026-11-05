@@ -3066,7 +3066,7 @@ Page({
     formData.categoryIds = this.data.selectedCategoryIds.join(',');
     formData.imgArr = formData.imgUrl;
 
-    if (this.data.gameKey === 'qaShot') formData.validationMethod = 2; else if (this.data.advanced && this.data.advanced.scan && this.data.advanced.scan.enabled) formData.validationMethod = 4; // 扫码参与存成 4;读回来只靠 scan.enabled 显示「扫码」,存的却是旧值 2,发布时被服务端拒(第十三轮 m3)
+    if (this.data.gameKey === 'qaShot') { if (![4, 5].includes(Number(formData.validationMethod))) formData.validationMethod = 2; /* 选了定位到达就保留 5:有进行方式的主题里站点要先「到达」才能开始任务,存成 2 的拍照站永远到不了(第十三轮 m3) */ } else if (this.data.advanced && this.data.advanced.scan && this.data.advanced.scan.enabled) formData.validationMethod = 4; // 扫码参与存成 4;读回来只靠 scan.enabled 显示「扫码」,存的却是旧值 2,发布时被服务端拒(第十三轮 m3)
     // 完成方式模块:未添加则清空相关字段
 
       // 旧编辑器把高级问答保存成空旧题；重存时接回高级判题后的服务端收尾。
