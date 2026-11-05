@@ -38,7 +38,7 @@ class PricingDepositDueTest {
         ReflectionTestUtils.setField(service, "coopOrderMapper", coopOrderMapper);
         ReflectionTestUtils.setField(service, "coopPerkMapper", mock(CoopPerkMapper.class));
         ReflectionTestUtils.setField(service, "offerMapper", mock(MerchantChapterOfferMapper.class));
-        ReflectionTestUtils.setField(service, "settlementRuleService", mock(ISettlementRuleService.class));
+        ReflectionTestUtils.setField(service, "settlementRuleService", PricingTestRules.ruleService());
         ReflectionTestUtils.setField(service, "omsTicketMapper", ticketMapper);
     }
 

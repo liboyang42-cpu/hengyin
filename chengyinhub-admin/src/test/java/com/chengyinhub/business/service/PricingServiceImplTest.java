@@ -66,8 +66,9 @@ class PricingServiceImplTest {
                 () -> svc.compute(new BigDecimal("0.90"), BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, PLATFORM));
     }
 
+    /** 第十二轮 k1 第 7 项(p3 N2):没有规则就拒绝,不再静默按 10% 计价。 */
     @Test
-    void platformRateDefaultIs10Percent() {
-        assertEquals(0, new BigDecimal("0.10").compareTo(svc.platformRate()));
+    void platformRateWithoutRuleRefuses() {
+        assertThrows(IllegalStateException.class, svc::platformRate);
     }
 }

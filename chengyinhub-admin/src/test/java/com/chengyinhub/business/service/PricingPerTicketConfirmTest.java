@@ -58,7 +58,7 @@ class PricingPerTicketConfirmTest {
         ReflectionTestUtils.setField(service, "omsTicketMapper", ticketMapper);
         ReflectionTestUtils.setField(service, "coopPerkMapper", mock(CoopPerkMapper.class));
         ReflectionTestUtils.setField(service, "offerMapper", mock(MerchantChapterOfferMapper.class));
-        ReflectionTestUtils.setField(service, "settlementRuleService", mock(ISettlementRuleService.class));
+        ReflectionTestUtils.setField(service, "settlementRuleService", PricingTestRules.ruleService());
 
         CmsTopic topic = new CmsTopic();
         topic.setId(TOPIC); topic.setMemberId(900001L); topic.setLifecycle(2);

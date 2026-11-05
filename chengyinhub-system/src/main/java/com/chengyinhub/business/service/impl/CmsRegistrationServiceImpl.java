@@ -2837,17 +2837,8 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
      * 只返回 0,订单照常完成。
      */
     private int pointsSettingValue(Long settingId) {
-        CmsPointsSetting setting = cmsPointsSettingService.selectCmsPointsSettingById(settingId);
-        if (setting == null || setting.getValue() == null) {
-            return 0;
-        }
-        if (!Long.valueOf(1L).equals(setting.getStatus())) {
-            return 0;
-        }
-        if (setting.getDelFlag() != null && setting.getDelFlag() != 0L) {
-            return 0;
-        }
-        return setting.getValue().intValue();
+        return com.chengyinhub.business.service.support.PointsRuleSwitch.activeValue(
+                cmsPointsSettingService.selectCmsPointsSettingById(settingId));
     }
 
     /** 先用奖励业务键抢占流水，再更新余额；任一步失败由支付回调外层事务整体回滚。 */

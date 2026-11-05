@@ -100,7 +100,7 @@ class CoopSettlementTest {
         cmsTopicMapper = mock(CmsTopicMapper.class);
         coopOrderMapper = mock(CoopOrderMapper.class);
         coopSettlementMapper = mock(CoopSettlementMapper.class);
-        pricingService = new PricingServiceImpl(); // 用真实保底率/平台率(纯计算)
+        pricingService = com.chengyinhub.business.service.PricingTestRules.withTopicRule(new PricingServiceImpl()); // 用真实保底率/平台率(纯计算)
         umsMemberService = mock(IUmsMemberService.class);
         umsMemberMapper = mock(UmsMemberMapper.class);
         balanceDetailService = mock(IUmsMemberBalanceDetailService.class);

@@ -22,7 +22,7 @@ class RequiredChapterSupplyGateTest
     @Test
     void freeExploreCannotConfirmPriceWithMissingRequiredChapterSupply()
     {
-        PricingServiceImpl service = new PricingServiceImpl();
+        PricingServiceImpl service = PricingTestRules.withTopicRule(new PricingServiceImpl());
         CmsTopicMapper topicMapper = mock(CmsTopicMapper.class);
         MerchantChapterOfferMapper offerMapper = mock(MerchantChapterOfferMapper.class);
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);

@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.business.service.support.PointsRuleSwitch;
+
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
@@ -553,7 +555,7 @@ public class ApiLoginController extends BaseController {
             umsMember.setWxOpenId("");
             umsMember.setStatus(1L);
             umsMember.setDelFlag(0);
-            umsMember.setPoint(Long.valueOf(50));
+            umsMember.setPoint(welcomePoints());
             int rows = umsMemberService.insertUmsMember(umsMember);
             if (rows > 0) {
                 umsMember = new UmsMember();
@@ -568,24 +570,7 @@ public class ApiLoginController extends BaseController {
                 ajax.put(Constants.TOKEN, token);
                 ajax.put("data", LoginResponseVO.from(member));
 
-                int points = 0;
-                CmsPointsSetting cmsPointsSetting = cmsPointsSettingService.selectCmsPointsSettingById(1L);
-                if (cmsPointsSetting != null) {
-                    points = cmsPointsSetting.getValue().intValue();
-                }
-
-                UmsMemberPointsDetail umsMemberPointsDetail = new UmsMemberPointsDetail();
-                umsMemberPointsDetail.setMemberId(member.getId());
-                umsMemberPointsDetail.setCurrentPoints(Long.valueOf(points));
-                umsMemberPointsDetail.setAfterPoints(Long.valueOf(points));
-                umsMemberPointsDetail.setChangePoints(Long.valueOf(points));
-                umsMemberPointsDetail.setChangeReason("注册赠送");
-                umsMemberPointsDetail.setEventType(Long.valueOf(1));
-                umsMemberPointsDetail.setEventId(Long.valueOf(0));
-                umsMemberPointsDetail.setChangeType(1L);
-                umsMemberPointsDetail.setDelFlag(0);
-                umsMemberPointsDetail.setCreateTime(new Date());
-                umsMemberPointsDetailService.insertUmsMemberPointsDetail(umsMemberPointsDetail);
+                grantRegisterPoints(member.getId(), member.getPoint());
 
                 return ajax;
             } else {
@@ -719,7 +704,7 @@ public class ApiLoginController extends BaseController {
         }
         umsMember.setStatus(1L);
         umsMember.setDelFlag(0);
-        umsMember.setPoint(Long.valueOf(50));
+        umsMember.setPoint(welcomePoints());
         int rows = umsMemberService.insertUmsMember(umsMember);
         if (rows <= 0) {
             return AjaxResult.error("注册失败");
@@ -731,7 +716,7 @@ public class ApiLoginController extends BaseController {
         ajax.put(Constants.TOKEN, token);
         ajax.put("data", LoginResponseVO.from(umsMember));
 
-        grantRegisterPoints(umsMember.getId());
+        grantRegisterPoints(umsMember.getId(), umsMember.getPoint());
         return ajax;
     }
 
@@ -802,7 +787,7 @@ public class ApiLoginController extends BaseController {
         }
         umsMember.setStatus(1L);
         umsMember.setDelFlag(0);
-        umsMember.setPoint(Long.valueOf(50));
+        umsMember.setPoint(welcomePoints());
         int rows = umsMemberService.insertUmsMember(umsMember);
         if (rows <= 0) {
             return AjaxResult.error("注册失败");
@@ -813,21 +798,29 @@ public class ApiLoginController extends BaseController {
         ajax.put(Constants.TOKEN, token);
         ajax.put("data", LoginResponseVO.from(umsMember));
 
-        grantRegisterPoints(umsMember.getId());
+        grantRegisterPoints(umsMember.getId(), umsMember.getPoint());
         return ajax;
     }
 
     /**
+     * 注册赠送分数的唯一读法:规则 1 启用时取其 value(业主定 50),停用/删除发 0。
+     * 第十二轮 k1 第 3 项:余额与流水必须同取这一个数,不再余额写死 50、流水读规则 1。
+     */
+    private long welcomePoints() {
+        return PointsRuleSwitch.activeValue(cmsPointsSettingService.selectCmsPointsSettingById(1L));
+    }
+
+    /**
      * 写注册赠送积分明细(与 logincode/loginPhone 同款逻辑,抽出复用)。
-     * 注:50 分已在新建用户时通过 setPoint 落库,此处仅记积分明细流水。
+     * 余额已在新建用户时按 {@link #welcomePoints()} 落库,此处按同一个数记流水;0 分不写流水。
      *
      * @param memberId 新用户ID
+     * @param credited 新建时已记入余额的分数
      */
-    private void grantRegisterPoints(Long memberId) {
-        int points = 0;
-        CmsPointsSetting cmsPointsSetting = cmsPointsSettingService.selectCmsPointsSettingById(1L);
-        if (cmsPointsSetting != null) {
-            points = cmsPointsSetting.getValue().intValue();
+    private void grantRegisterPoints(Long memberId, Long credited) {
+        long points = credited == null ? 0L : credited;
+        if (points <= 0) {
+            return;
         }
 
         UmsMemberPointsDetail umsMemberPointsDetail = new UmsMemberPointsDetail();

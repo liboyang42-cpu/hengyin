@@ -38,18 +38,12 @@ public class PricingServiceImpl implements IPricingService {
     private com.chengyinhub.business.mapper.MerchantChapterOfferMapper offerMapper;
 
     /**
-     * [P0-28 批1] 费率兜底值 —— **不是真源**,真源是 settlement_rule。
-     *
-     * <p>这三个数原本是硬编码常量(注释还写着「后续拍板改此常量或提配置」——配置没提),
-     * 于是调一次抽成要走一遍发版,而库里 settlement_rule.platform_commission_rate 是同一概念的另一份、
-     * 后台可改 ⇒ 运营在后台调成 0.15,这里还是 0.10,定出的地板价低 5 个点 → 结算 margin<0 → 拒结悬空。
-     *
-     * <p>现在只在**查不到规则行**时兜底(并打 error)。取值刻意等于原硬编码值,保证 fallback 时行为不变。
+     * 第十二轮 k1 第 7 项(p3 N2):费率真源只有 settlement_rule(merchant_id=0, biz_type=topic)。
+     * 原来查不到规则行、读库出错或字段为空时静默回落硬编码 10% / 5% / 2% / 5 家 —— 生产已是 3%,
+     * 一回落就按 10% 定价、冻快照、结算。现在一律拒绝(抛 IllegalStateException),不再有兜底常量。
+     * 生产库这三列 NOT NULL DEFAULT(migration_fee_snapshot_20260716),只有规则行缺失才会触发。
      */
-    private static final BigDecimal FALLBACK_PLATFORM_RATE = new BigDecimal("0.10");
-    private static final BigDecimal FALLBACK_GUARANTEE_BASE = new BigDecimal("0.05");
-    private static final BigDecimal FALLBACK_GUARANTEE_STEP = new BigDecimal("0.02");
-    private static final int FALLBACK_GUARANTEE_MAX_MERCHANT = 5;
+    static final String RULE_MISSING = "平台费率规则缺失(settlement_rule merchant_id=0, biz_type=topic),拒绝按默认费率计价";
 
     /** 主题费率规则的坐标:平台默认行(merchant_id=0) + 主题业务线。 */
     private static final Long PLATFORM_DEFAULT_MERCHANT = 0L;
@@ -83,25 +77,14 @@ public class PricingServiceImpl implements IPricingService {
      */
     @Override
     public BigDecimal platformRate() {
-        SettlementRule rule = topicRule();
-        if (rule == null || rule.getPlatformCommissionRate() == null) {
-            logger.error("settlement_rule 查不到 (merchant_id=0, biz_type=topic) 的平台抽成率,"
-                    + "回落硬编码 {} —— 单真源名存实亡,请补上这一行", FALLBACK_PLATFORM_RATE);
-            return FALLBACK_PLATFORM_RATE;
-        }
-        return rule.getPlatformCommissionRate();
+        return requireTopicRule().getPlatformCommissionRate();
     }
 
     @Override
     public BigDecimal initiatorGuaranteeRate(int verifiedMerchantCount) {
-        SettlementRule rule = topicRule();
-        BigDecimal base = rule != null && rule.getGuaranteeBaseRate() != null
-                ? rule.getGuaranteeBaseRate() : FALLBACK_GUARANTEE_BASE;
-        BigDecimal step = rule != null && rule.getGuaranteeStepRate() != null
-                ? rule.getGuaranteeStepRate() : FALLBACK_GUARANTEE_STEP;
-        int max = rule != null && rule.getGuaranteeMaxMerchant() != null
-                ? rule.getGuaranteeMaxMerchant() : FALLBACK_GUARANTEE_MAX_MERCHANT;
-        return guaranteeRate(base, step, max, verifiedMerchantCount);
+        SettlementRule rule = requireTopicRule();
+        return guaranteeRate(rule.getGuaranteeBaseRate(), rule.getGuaranteeStepRate(),
+                rule.getGuaranteeMaxMerchant(), verifiedMerchantCount);
     }
 
     /**
@@ -167,13 +150,21 @@ public class PricingServiceImpl implements IPricingService {
                 + " ≥ 票价 ⇒ 每张票必亏。请提高票价、降低人头费、或把部分章节改成权益档/引流档。";
     }
 
-    private SettlementRule topicRule() {
+    /** 规则行与四个费率字段必须齐全;缺任何一个都拒绝,不回落任何默认值。 */
+    private SettlementRule requireTopicRule() {
+        SettlementRule rule;
         try {
-            return settlementRuleService.getActiveRule(PLATFORM_DEFAULT_MERCHANT, BIZ_TYPE_TOPIC);
-        } catch (Exception e) {
-            logger.error("读 settlement_rule 失败,回落硬编码费率", e);
-            return null;
+            rule = settlementRuleService.getActiveRule(PLATFORM_DEFAULT_MERCHANT, BIZ_TYPE_TOPIC);
+        } catch (RuntimeException e) {
+            logger.error("读 settlement_rule 失败,拒绝计价", e);
+            throw new IllegalStateException(RULE_MISSING, e);
         }
+        if (rule == null || rule.getPlatformCommissionRate() == null || rule.getGuaranteeBaseRate() == null
+                || rule.getGuaranteeStepRate() == null || rule.getGuaranteeMaxMerchant() == null) {
+            logger.error(RULE_MISSING);
+            throw new IllegalStateException(RULE_MISSING);
+        }
+        return rule;
     }
 
     /**
@@ -183,15 +174,11 @@ public class PricingServiceImpl implements IPricingService {
      * 那正是快照要防的「改一个数追溯改写已售未结订单」。
      */
     private void applyFeeSnapshot(CmsTopic upd) {
-        SettlementRule feeRule = topicRule();
-        upd.setFeePlatformRate(feeRule != null && feeRule.getPlatformCommissionRate() != null
-                ? feeRule.getPlatformCommissionRate() : FALLBACK_PLATFORM_RATE);
-        upd.setFeeGuaranteeBaseRate(feeRule != null && feeRule.getGuaranteeBaseRate() != null
-                ? feeRule.getGuaranteeBaseRate() : FALLBACK_GUARANTEE_BASE);
-        upd.setFeeGuaranteeStepRate(feeRule != null && feeRule.getGuaranteeStepRate() != null
-                ? feeRule.getGuaranteeStepRate() : FALLBACK_GUARANTEE_STEP);
-        upd.setFeeGuaranteeMaxMerchant(feeRule != null && feeRule.getGuaranteeMaxMerchant() != null
-                ? feeRule.getGuaranteeMaxMerchant() : FALLBACK_GUARANTEE_MAX_MERCHANT);
+        SettlementRule feeRule = requireTopicRule();
+        upd.setFeePlatformRate(feeRule.getPlatformCommissionRate());
+        upd.setFeeGuaranteeBaseRate(feeRule.getGuaranteeBaseRate());
+        upd.setFeeGuaranteeStepRate(feeRule.getGuaranteeStepRate());
+        upd.setFeeGuaranteeMaxMerchant(feeRule.getGuaranteeMaxMerchant());
     }
 
     @Override

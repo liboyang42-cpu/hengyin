@@ -247,8 +247,9 @@ class ProductSourceWiringTest {
                 "旧的业务真源常量 PLATFORM_RATE 必须消失(FALLBACK_PLATFORM_RATE 是兜底,不算)");
         assertEquals(1, countOccurrences(src, "settlementRuleService.getActiveRule("),
                 "费率必须来自 settlement_rule —— 这就是「调价不用发版」的全部内容");
-        assertEquals(1, countOccurrences(src, "FALLBACK_PLATFORM_RATE = new BigDecimal(\"0.10\")"),
-                "兜底值应保留且等于原硬编码值,保证查不到规则时行为不变");
+        // 第十二轮 k1 第 7 项(p3 N2):查不到规则拒绝,不再有任何硬编码兜底费率
+        assertEquals(0, countOccurrences(src, "FALLBACK_"),
+                "费率不得静默回落到硬编码值(原 FALLBACK_PLATFORM_RATE = 0.10)");
     }
 
     /** 主理人财务页也读快照 —— 否则页面显示的钱和结算实际算的钱对不上。 */

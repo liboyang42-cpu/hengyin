@@ -49,6 +49,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.chengyinhub.common.core.text.Convert;
 import com.chengyinhub.common.exception.ServiceException;
+import com.chengyinhub.common.utils.OwnershipUtils;
 import com.chengyinhub.common.utils.DateUtils;
 import com.chengyinhub.common.utils.DistanceCalculatorUtils;
 import com.chengyinhub.common.utils.StringUtils;
@@ -2030,9 +2031,28 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         return cmsTopicMapper.selectTopicIsTemplate(id);
     }
 
+    /**
+     * p3 N1:旧实现把在售主题本身置 is_template=1,主题从此离开在售口径、无路可回。
+     * 现在复制主题 + 章节 + 节点(copyType 2,不带票、场次、名单与协作者)成一条新模板行,
+     * 副本沿用原主题已通过的审核态并上架到模板库;原主题一个字段都不改。
+     */
     @Override
-    public int saveAsTemplate(Long id, Long memberId, Integer flag) {
-        return cmsTopicMapper.updateTopicIsTemplate(id, memberId, flag);
+    @Transactional(rollbackFor = Exception.class)
+    public Long saveAsTemplate(Long id, Long memberId) {
+        CmsTopic source = cmsTopicMapper.selectCmsTopicById(id);
+        if (source == null || OwnershipUtils.notOwner(source.getMemberId(), memberId)
+                || Integer.valueOf(2).equals(source.getDelFlag())) {
+            throw new ServiceException("只能把自己的主题另存为模板");
+        }
+        Map<String, Object> params = new HashMap<>();
+        params.put("copyType", 2);
+        params.put("memberId", memberId);
+        Long templateId = copyCmsTopic(id, params);
+        if (templateId == null || templateId <= 0L
+                || cmsTopicMapper.markTopicTemplateCopy(templateId, memberId, source.getCheckStatus()) != 1) {
+            throw new ServiceException("另存为模板失败");
+        }
+        return templateId;
     }
 
     @Override

@@ -10,6 +10,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -104,28 +105,27 @@ class FeeSnapshotTest {
         assertEquals(0, new BigDecimal("0.0500").compareTo(service.initiatorGuaranteeRate(-3)));
     }
 
-    /** 查不到规则行 ⇒ 回落硬编码(= 落库前的行为),不崩。 */
+    /** 第十二轮 k1 第 7 项(p3 N2):查不到规则行 ⇒ 拒绝,不再回落 10% / 5% / 2% / 5 家。 */
     @Test
-    void missingRule_fallsBackToLegacyConstants() {
+    void missingRule_refuses() {
         when(ruleService.getActiveRule(anyLong(), anyString())).thenReturn(null);
-        assertEquals(0, new BigDecimal("0.10").compareTo(service.platformRate()),
-                "查不到规则要回落到原硬编码值,保证 fallback 时行为不变");
-        assertEquals(0, new BigDecimal("0.15").compareTo(service.initiatorGuaranteeRate(9)));
+        assertThrows(IllegalStateException.class, () -> service.platformRate());
+        assertThrows(IllegalStateException.class, () -> service.initiatorGuaranteeRate(9));
     }
 
-    /** 读库抛异常 ⇒ 同样回落,不把定价页面炸掉。 */
+    /** 读库抛异常 ⇒ 同样拒绝,不按默认费率定价。 */
     @Test
-    void ruleLookupThrows_fallsBack() {
+    void ruleLookupThrows_refuses() {
         when(ruleService.getActiveRule(anyLong(), anyString())).thenThrow(new RuntimeException("库炸了"));
-        assertEquals(0, new BigDecimal("0.10").compareTo(service.platformRate()));
+        assertThrows(IllegalStateException.class, () -> service.platformRate());
     }
 
-    /** 规则行存在但字段为空(老行没回填)⇒ 逐字段回落,不 NPE。 */
+    /** 规则行存在但字段为空 ⇒ 拒绝(生产四列 NOT NULL DEFAULT,只有脏行会走到这里)。 */
     @Test
-    void ruleWithNullFields_fallsBackPerField() {
+    void ruleWithNullFields_refuses() {
         givenRule("0.0300", null, null, null);
-        assertEquals(0, new BigDecimal("0.0300").compareTo(service.platformRate()), "有值的用库里的");
-        assertEquals(0, new BigDecimal("0.15").compareTo(service.initiatorGuaranteeRate(9)), "空的逐个回落");
+        assertThrows(IllegalStateException.class, () -> service.platformRate());
+        assertThrows(IllegalStateException.class, () -> service.initiatorGuaranteeRate(9));
     }
 
     // ---------------------------------------------------------- 病2:锁价快照(核心)

@@ -1278,14 +1278,24 @@ class GenericGameplayHttpE2eIT {
         rejected(notTemplate);assertEquals("该主题不是可用模板",notTemplate.path("msg").asText());
         assertEquals(rows,database.queryForObject("SELECT COUNT(*) FROM cms_topic",Integer.class));
         String before=database.queryForObject("SELECT theme_runtime_config_json FROM cms_topic WHERE id=?",String.class,topicId);
-        success(form("/api/template/topic-template/save-as",topicId,headers));JsonNode source=persistedTopic(topicId,"marked-as-template");
-        assertEquals(1,database.queryForObject("SELECT is_template FROM cms_topic WHERE id=?",Integer.class,topicId));
-        assertEquals(0,database.queryForObject("SELECT COUNT(*) FROM cms_topic_template_meta WHERE topic_id=? AND template_status='VERIFIED' AND del_flag=0",Integer.class,topicId));
-        assertEquals(before,database.queryForObject("SELECT theme_runtime_config_json FROM cms_topic WHERE id=?",String.class,topicId));
-        JsonNode copied=success(form("/api/template/topic-template/use",topicId,headers));
-        long copyId=copied.path("topicId").asLong();
-        assertTrue(copyId>0&&copyId!=topicId,copied.toString());
+        java.util.Map<String,Object> liveBefore=database.queryForMap("SELECT status,user_status,is_template,del_flag FROM cms_topic WHERE id=?",topicId);
+        int activitiesBefore=database.queryForObject("SELECT COUNT(*) FROM cms_activity WHERE topic_id=?",Integer.class,topicId);
+        JsonNode saved=success(form("/api/template/topic-template/save-as",topicId,headers));JsonNode source=persistedTopic(topicId,"saved-as-template");
+        long templateId=saved.path("templateId").asLong();
+        assertTrue(templateId>0&&templateId!=topicId,saved.toString());
+        // p3 N1:另存为模板是复制;原主题在售口径、场次一个都不动
+        assertEquals(liveBefore,database.queryForMap("SELECT status,user_status,is_template,del_flag FROM cms_topic WHERE id=?",topicId));
+        assertEquals(0,database.queryForObject("SELECT is_template FROM cms_topic WHERE id=?",Integer.class,topicId));
+        assertEquals(activitiesBefore,database.queryForObject("SELECT COUNT(*) FROM cms_activity WHERE topic_id=?",Integer.class,topicId));
+        assertEquals(1,database.queryForObject("SELECT is_template FROM cms_topic WHERE id=?",Integer.class,templateId));
         assertEquals(rows+1,database.queryForObject("SELECT COUNT(*) FROM cms_topic",Integer.class));
+        assertEquals(0,database.queryForObject("SELECT COUNT(*) FROM cms_topic_template_meta WHERE topic_id=? AND template_status='VERIFIED' AND del_flag=0",Integer.class,templateId));
+        assertEquals(before,database.queryForObject("SELECT theme_runtime_config_json FROM cms_topic WHERE id=?",String.class,topicId));
+        rejected(form("/api/template/topic-template/use",topicId,headers));
+        JsonNode copied=success(form("/api/template/topic-template/use",templateId,headers));
+        long copyId=copied.path("topicId").asLong();
+        assertTrue(copyId>0&&copyId!=topicId&&copyId!=templateId,copied.toString());
+        assertEquals(rows+2,database.queryForObject("SELECT COUNT(*) FROM cms_topic",Integer.class));
         assertEquals(source.path("memberId").asLong(),database.queryForObject("SELECT member_id FROM cms_topic WHERE id=?",Long.class,copyId));
         assertEquals(before,database.queryForObject("SELECT theme_runtime_config_json FROM cms_topic WHERE id=?",String.class,topicId));
     }

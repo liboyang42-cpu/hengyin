@@ -294,8 +294,11 @@ public interface ICmsTopicService
     /** T7 读某主题是否为模板 */
     public Integer selectTopicIsTemplate(Long id);
 
-    /** T7 另存为模板/取消(仅作者本人),flag=1 标记 / 0 取消 */
-    public int saveAsTemplate(Long id, Long memberId, Integer flag);
+    /**
+     * T7 另存为模板(仅作者本人):复制一份新主题作为模板,原主题不动(仍在售、场次与名单不变)。
+     * 返回模板副本 id;不是本人的或已删除的主题抛错。
+     */
+    public Long saveAsTemplate(Long id, Long memberId);
 
     /** B1 草稿:置位 is_draft(flag=1 草稿 / 0 取消草稿) */
     public int updateTopicDraftState(Long id, Integer flag);
