@@ -1,0 +1,56 @@
+{
+  "at": 1793907492128,
+  "player": 990015,
+  "run": "9",
+  "bag": false,
+  "verdict": false,
+  "full": true,
+  "chapter": {
+    "id": 130,
+    "opening": false,
+    "idxLabel": "结局",
+    "name": "R14-VIDEO-雨停结局",
+    "description": "",
+    "cover": "",
+    "mileage": "",
+    "timeText": "",
+    "atmospherePreset": "DEFAULT",
+    "atmosphereClass": "atmosphere--default",
+    "routeGeometry": null,
+    "audioUrl": "https://rig-offline.oss-cn-shanghai.aliyuncs.com/upload/9813ac0046ab4a699e2e0ea4bbb9775a.mp3",
+    "videoUrl": "https://rig-offline.oss-cn-shanghai.aliyuncs.com/upload/2a7e4ec0443d4f3aa500630f4bae0168.mp4",
+    "videoPosterUrl": "https://rig-offline.oss-cn-shanghai.aliyuncs.com/upload/68dd8b2efd264e4b8376166c638d2b3f.jpg",
+    "blocks": [
+      {
+        "key": "lid13",
+        "type": "text",
+        "content": "R14-VIDEO：红色天光，雨停的结局。"
+      }
+    ],
+    "ending": true
+  },
+  "media": [
+    {
+      "kind": "audio",
+      "id": 5,
+      "src": "https://rig-offline.oss-cn-shanghai.aliyuncs.com/upload/a91e653bf6c54f258ce86b8011ba7a8e.mp3",
+      "paused": true,
+      "currentTime": 0.186507,
+      "readyState": 4,
+      "volume": 0.25
+    },
+    {
+      "kind": "video",
+      "id": 6,
+      "src": "/__oss/upload/2a7e4ec0443d4f3aa500630f4bae0168.mp4",
+      "paused": false,
+      "currentTime": 0.157981,
+      "readyState": 4,
+      "volume": 1
+    }
+  ],
+  "viewport": {
+    "w": 390,
+    "h": 844
+  }
+}

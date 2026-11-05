@@ -1,0 +1,19 @@
+{
+  "sourceSha": "1c60516771a6e2d50290ab44134005bdfe96c109",
+  "authorId": 9008,
+  "status": 200,
+  "code": 200,
+  "topicId": 990033,
+  "auditTaskId": 34,
+  "reviewState": "PENDING",
+  "bundledTemplateIds": [
+    6044
+  ],
+  "published": true,
+  "playerId": 990010,
+  "registrationId": 88,
+  "activityId": 25,
+  "activityTicketId": 106,
+  "runId": 6,
+  "advancedSessionId": 14
+}

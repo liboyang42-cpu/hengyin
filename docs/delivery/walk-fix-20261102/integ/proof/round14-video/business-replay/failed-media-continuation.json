@@ -1,0 +1,54 @@
+{
+  "at": 1793906820394,
+  "chapter": 130,
+  "full": true,
+  "video": {
+    "show": false
+  },
+  "load": false,
+  "playing": false,
+  "error": "音频加载失败",
+  "bag": false,
+  "videoEvents": [
+    {
+      "t": 1793906820383,
+      "id": 15,
+      "event": "error",
+      "src": "/__oss/upload/2a7e4ec0443d4f3aa500630f4bae0168.mp4",
+      "currentTime": 0,
+      "paused": true,
+      "readyState": 0,
+      "volume": 1,
+      "error": 4
+    }
+  ],
+  "audioEvents": [
+    {
+      "t": 1793906819418,
+      "id": 14,
+      "event": "error",
+      "src": "https://rig-offline.oss-cn-shanghai.aliyuncs.com/upload/a91e653bf6c54f258ce86b8011ba7a8e.mp3",
+      "currentTime": 0,
+      "paused": false,
+      "readyState": 0,
+      "volume": 0.25,
+      "error": 4
+    },
+    {
+      "t": 1793906820386,
+      "id": 16,
+      "event": "error",
+      "src": "https://rig-offline.oss-cn-shanghai.aliyuncs.com/upload/9813ac0046ab4a699e2e0ea4bbb9775a.mp3",
+      "currentTime": 0,
+      "paused": false,
+      "readyState": 0,
+      "volume": 1,
+      "error": 4
+    }
+  ],
+  "after": {
+    "chapterFull": false,
+    "showFinish": true,
+    "observedThrough": "normal ending chapter continue, ending card continue"
+  }
+}

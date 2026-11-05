@@ -1,93 +1,67 @@
 # ROUND14 VIDEO — 2026-11-05
 
-Source baseline: `4aff0697d715b0ecb278b7fb0a631e65484fd84e`, public hengyin checkout `codex-video-20261105`. Frontend commit: `d8f83ccc5` (`[skip ci]`), ready for coordinator cherry-pick; no push. This lane did not edit `pages/play/index.js`, `index.wxml` or `index.wxss` (GAME owns them).
+**VIDEO implementation and assigned browser UAT complete.** This is not phone/headphone acceptance, four-look signoff, unified CI, deployment or WeChat release. Four-look QA is assigned by root to BRANCH; no duplicate look draft was created.
 
-## Delivered
+## Source and ownership
 
-- `pages/play/chapter-video.js`: isolate active/seen videos by account owner, topic, activity, route session and chapter/media identity. A pending/visible clip from an earlier chapter no longer prevents the next chapter's clip from starting. Its late poster, native events, timeout and asynchronous finish callback cannot start narration in a newer chapter/session or a disposed page.
-- A five-second deadline now measures **advancing video time**. Repeated `play`, `waiting`, or identical `timeupdate` events cannot keep a stalled overlay alive indefinitely. The poster remains until time advances; a play event alone is not claimed as decoded playback. Existing error/skip/30-second fallback remains.
-- Chapter switches within the same session preserve background music through the new video without reviving the previous chapter's narration. No additional audio context, dependency, caption or visual design was introduced.
-- Focused video tests cover missing/failed/slow poster or video, repeated stall events, advancing frames, stale events, same-chapter new route session, chapter replacement, account invalidation, disposal, asynchronous finish races and music carry-over.
-- `r14-video-response.test.js` executes the real `_loadLifeEnding` → `_playEndingChapter` → `buildChapter` → `openChapterFull` consumers with platform I/O stubs. It checks both immediate `chapter` and archived `story.chapter`, with the old story already open or closed, then text/continuation recovery on missing/failed/slow media and discarded late responses after session switch. A requested autoplay or narration is not actual media playback.
+- Public hengyin baseline `4aff0697d715b0ecb278b7fb0a631e65484fd84e`; own branch `liboyang42-cpu/codex-video-20261105`; no push or merge.
+- Owned production fix `d8f83ccc5`: `pages/play/chapter-video.js` and isolated tests. Owned audio-contract regression fix `4ac651eb1`. No edit to GAME-owned `pages/play/index.js`, `index.wxml` or `index.wxss`.
+- Initial actual author/player run used frontend/backend `1c60516771a6e2d50290ab44134005bdfe96c109`, jar SHA256 `3ca8a7e4ad1db43dcb1f56431211be1bd9357297d0861ef983fc11c383e16dcf`, dedicated test database `cy_e2e_51`, Redis 9. Root owns the runtime and tunnels.
+- Final fresh-player UAT independently read `/build/source-identity.json`: frontend `d0cd6eec9b72f0db0c06be3f374f4cc3b76d9a19`, bundle SHA256 `7b79f2926aad86ea99074e3a5bfacf616680d1f52655fd4d1adab8f3500ba21f`; backend remained the unchanged `1c605...` build. This is a composite source receipt, not a claim that the backend embeds d0cd.
 
-## Chain inspection and ending finding
+## Delivered behavior and root cause
 
-The current source retains opening/ending video, poster and chapter audio through all inspected stages:
+The video helper scopes active/seen clips to account, topic, activity, route session, chapter and media pathname. A previous pending/active clip no longer blocks a later chapter; stale poster/native events/timers/asynchronous completion cannot revive narration in a new session or disposed page. The five-second stall deadline resets only when video time advances, so repeated play/waiting/duplicate-time events cannot hold gameplay indefinitely. Same-session chapter replacement preserves background music without restarting prior narration. No new dependency, audio context, helper caption or redesign was added.
 
-| Stage | Existing implementation / evidence |
+DTO/entity/mapper, professional author save, publication compiler, live/frozen ending projection and player buildChapter all retain audio/video/poster in the inspected source. Completed runs return the ending under `data.story.chapter`; this response shape is exercised by both regression tests and the actual runs below. No backend product-code or schema change was needed.
+
+Actual UAT found a separate visibility defect: after the last task was settled from the backpack, `themeBackpackOpen=true` and the final PASS feedback remained above the ending chapter. The native video played underneath them, and the ending Continue button's DOM hit was `tb-sheet`. This explains a real “video missing” observation without claiming native playback events prove visibility. Evidence: [covered state](proof/round14-video/business-replay/ending-covered-state.json), [covered screenshot](proof/round14-video/business-replay/ending-covered.png).
+
+GAME fixed the shared transition in `bbd23683a`, integrated by root as d0cd: preserve the author's final feedback, queue the ending behind it with owner/session fences, then close backpack/tools/node sheet/advanced play/playKit before opening the ending. GAME also owns narration loading/error/stale-callback feedback and the audio-only ending condition. No duplicate implementation was introduced by VIDEO.
+
+## Actual author → publication → player evidence
+
+All product changes below used normal rendered UI controls and ordinary test-account authentication. Native picker, GPS and browser media-request seams simulated device input; no product fields, roles, database completion, clocks or session progress were injected. OPS independently performed exact normal media/theme moderation.
+
+| Stage | Verified result |
 |---|---|
-| Professional editor upload/reopen | `pages/publish/fabu/theme-media.js` stores reviewed asset references; `fabu/index.js` restores audio/video/poster to `chapterForm`. Existing CODEX-VIDEO-RESULT records editor-authored save/reload/publish proof; not rerun here. |
-| Author save | `ChapterDTO` and `CmsTopicChapter` expose all three media fields; `TopicContentGraphAuthoringServiceImpl` copies DTO properties in both legacy and block-flow paths. `CmsTopicChapterMapper.xml` selects/inserts/updates both video columns. |
-| Frozen publication | `TopicRoutePublicationCompiler` freezes opening video/poster and `endingChapters` audio/video/poster. Existing `TopicRouteRuntimeServiceImplTest.a01EndingBodyIsFrozenSeparatelyFromPlayableChapters` asserts all three and continuation snapshot stability. |
-| Server ending response | `PlayJourneyStoryServiceImpl.endingChapter` retains media in both live and frozen projections. Completed archived sessions return `result.story.chapter`. This lane adds assertions for real service projection and freeze → archive → reopen. |
-| Player projection | `buildChapter` includes `audioUrl`, `videoUrl`, `videoPosterUrl`; `_loadLifeEnding` accepts both response shapes and forwards them. The new behavior tests run these actual consumers. |
+| Professional author | Actual author **9008**, role club, created only `R14-VIDEO-雨停之后1105`, topic **990033**; GAME's fixtures were preserved. Wrote opening, one normal TYPE/GPS station, fallback ending, free ticket and theme BGM through the editor. |
+| Media save/readback | Distinct blue opening video and red ending video, separate intro/ending narration, regular chapter narration and BGM survived save and author-saved-detail readback. Approved assets: BGM15; opening audio24/video26/poster25; regular audio32; ending audio27/video29/poster28. |
+| Publication | Normal publish-draft HTTP200/code200 returned task34/PENDING/bundled template6044. OPS approved task34, record48; immutable audit snapshot config11/published1 and independent CMS projection preserve the exact asset refs/pathnames. Final chapters128/129/130, node157. [Independent publication readback](proof/round14-video/business-replay/independent-publication-snapshot.json). |
+| First independent player | Actual player **990010** (login label9010), free registration88/activity25/activity ticket106/run6. Explicit participant-sharing consent; normal location consent + Start this run + native GPS arrival; real TYPE answer “雨停”, advanced action COMPLETED/session14, task settlement and reward confirmation. No money was charged. |
+| Initial ending/reopen | Actual journey/ending HTTP200/code200 success COMPLETED contains `story.chapter130` with video29/poster28/audio27. Native opening and ending video each advanced to 2 seconds and ended; ending narration then really played to 2 seconds. Initial live visibility failed because of the retained overlays. Normal order → Start game reopened the completed run with an unobscured red video and ending narration. |
+| Final fresh player | On d0cd, normal new login label9020 returned actual player **990015**, role player; free registration91/run9 on the same topic. The real TYPE/GPS/task/reward flow was repeated independently. Before feedback Continue: author PASS visible, ending queued, red-video playing count **0**. After Continue: backpack, verdict, tools, node sheet and advanced play all **false**; native red video at 0.166 seconds/readyState4 and visible screenshot; video ended at 2 seconds, followed by ending narration playing/ending at 2 seconds; chapter → ending card → finish succeeded. |
+| Final-source archived reopen | Normal back to order → Start game reopened run9 on the same d0cd page bundle. Visible red video at 0.158 seconds, no backpack/verdict, ending narration completed again, then finish succeeded. Both full ending HTTP responses retained media. Browser errors: **[]**. |
 
-No backend product-code or schema change is justified by the inspected source. The historical ROUND13 report's absent ending video is **not** explained or closed merely by finding those fields in current source or by unit tests. Before marking it fixed, capture the same UI-authored theme's saved chapter, publication/session ending snapshot and actual `/api/play/journey/ending` response on the coordinator's verified combined runtime, then observe decoded ending frames live and after reopen. Do not backfill an active/frozen session from mutable author data.
+Final evidence: [feedback waits](proof/round14-video/business-replay/final-source/feedback-before-ending.png), [visible live frame](proof/round14-video/business-replay/final-source/live-ending-visible.png), [visible archived frame](proof/round14-video/business-replay/final-source/archived-final-source.png), [acceptance receipt](proof/round14-video/business-replay/final-source/final-source-acceptance.json), [actual ending responses](proof/round14-video/business-replay/final-source/ending-responses.json).
 
-## Coordination
+## Slow/failing media and stale continuation
 
-Sent to coordinator for GAME: set chapter narration loading state **before** play, reflect loading/error in the existing story sound button, clear loading on actual play rather than `canplay`, and ignore destroyed/stale guide callbacks. Keep the single shared guide context. This lane does not claim that shared-page fix is delivered until GAME's commit is integrated and verified.
+These actual browser checks ran on the initial 1c605 candidate; the video helper is unchanged in d0cd. Root explicitly accepted these receipts and requested only the fresh live-visibility rerun on the final bundle.
 
-Also sent an exact audio-only ending gap: `_loadLifeEnding` currently accepts a chapter only when `ch.blocks.length || ch.videoUrl`. An ending with configured audio, empty blocks and no video is skipped. GAME should include `|| ch.audioUrl` and cover that response in a behavior test. No shared-page edit was made here.
+- **Narration delayed 8 seconds:** chapter130 had `audioLoading=true`, `audioPlaying=false`, native time0/readyState0, existing sound button ARIA “旁白加载中”. After 8.27 seconds, native playing occurred and loading became false. [Loading state](proof/round14-video/business-replay/slow-audio-loading.json), [actual playing](proof/round14-video/business-replay/slow-audio-playing.json), [screenshot](proof/round14-video/business-replay/slow-audio-loading.png).
+- **Video and audio HTTP503:** native video error at time0 dismissed the video; narration loading cleared with “音频加载失败”; normal chapter/ending-card Continue reached `showFinish=true`. No media failure blocked completion. [Receipt](proof/round14-video/business-replay/failed-media-continuation.json).
+- **Video delayed 10 seconds:** exactly 5000 ms without advancing frames dismissed the overlay and left chapter text/continuation available. Normal back to the order page before the delayed bytes arrived left active media empty, with no late playback. [Receipt](proof/round14-video/business-replay/slow-video-and-late-route-callback.json).
+- Missing media, stalled time, stale poster/native/finish callbacks, chapter replacement, owner changes and session switches also have focused behavior regressions. These are unit checks, not additional real-player/device passes.
 
-The video module itself now replaces an earlier chapter's active clip. GAME need not add a second video implementation. Live last-station completion/blank story remains with GAME.
+The first GPS checkpoint was not a product defect: location had not been authorized/started. GAME supplied the normal Tools → automatic track → location consent → Start this run path; then native GPS produced actual arrive200. Native viewport/click timing and an initially wrong detail route were corrected without product-state mutation. No stale screenshot was used as final-source acceptance.
 
-## Checks
+## Checks and private harness
 
-On frontend commit `d8f83ccc5`:
+- `node --test chengyinhub-xcx/tests/unit/chapter-video.test.js chengyinhub-xcx/tests/unit/r14-video-response.test.js chengyinhub-xcx/tests/unit/k10-immersive-audio.test.js chengyinhub-xcx/tests/unit/play-chapter-story-blocks-contract.test.js chengyinhub-xcx/tests/unit/play-audio-resume.test.js chengyinhub-xcx/tests/unit/play-audio-level-contract.test.js`: **123/123 PASS**, zero failed/skipped; includes actual live/archived response consumers and video transitions.
+- `node --test chengyinhub-xcx/tests/unit/play-mechanisms-contract.test.js chengyinhub-xcx/tests/unit/audio-session.test.js`: **14/14 PASS**. The mechanisms tests run the real GPS callback with valid/invalid/missing precision and negative controls, and require all six audible contexts to register while the unique raw preload stays silent and is destroyed. Root's integrated index also passed the seven mechanisms checks.
+- Initial owned source: JS syntax and `git diff --check` PASS; `node tests/lint/ui-integrity.js --warn-as-error`: **UI-GATE-0:PASS**. Action ledger `--check` reported drift to root; VIDEO did not weaken it or claim unified gate completion.
+- Coordinator VPS receipt for owned `PlayJourneyStoryServiceImplTest`: **27 tests, 0 failures/errors/skips, 0.435 seconds**, exact root 53-file manifest. Adds live media assertions and freeze → archived reopen without mutable live mapper reads. **This Java file remains unstaged/uncommitted here at root's explicit request for its unified commit.** No local Java/Maven/Docker/MySQL/Redis ran.
+- GAME's overlay fix has its own 56 focused passing checks and three before-fix failures; the final-source actual rerun above validates the integration independently.
 
-```sh
-node --check chengyinhub-xcx/pages/play/chapter-video.js
-node --test chengyinhub-xcx/tests/unit/chapter-video.test.js chengyinhub-xcx/tests/unit/r14-video-response.test.js chengyinhub-xcx/tests/unit/k10-immersive-audio.test.js chengyinhub-xcx/tests/unit/play-chapter-story-blocks-contract.test.js chengyinhub-xcx/tests/unit/play-audio-resume.test.js chengyinhub-xcx/tests/unit/play-audio-level-contract.test.js
-```
+Root assigned the private rig's runtime.js/nav.js/walk.mjs adaptation: real HTML video/native audio events, token-bound callbacks, native resource teardown, byte-preserving media picker/upload seams and browser-only delayed/failed requests. The isolated synthetic harness self-check was **13/13 PASS**, distinct from the actual business evidence. [Adapter diff](proof/round14-video/media-rig-adapter.diff), [self-check](proof/round14-video/media-selfcheck.json). Root owns server.mjs and runtime/tunnels; VIDEO never restarted them.
 
-Result: **123/123 PASS**, zero failed/skipped; includes 15 focused video/response tests. Pre-commit JS/JSON syntax PASS; `git diff --check` PASS. Staged diff reviewed/scanned for private-key blocks and common credential patterns, with no findings.
+Root later requested one narrow filename fix after the static server served MP4 as octet-stream: preserve the selected filename suffix, with MIME fallback. The focused check retained exact 21281 selected bytes and `rig-upload.mp4`; GAME and VIDEO then uploaded actual MP4s successfully. [Supplemental pointfix](proof/round14-video/mp4-filename-pointfix.diff). No further harness feature or broad test rerun was added.
 
-From `chengyinhub-xcx`:
+All owned Chrome/Node replay clients and temporary self-check listeners were closed. Shared servers, tunnels, proxy settings and other lanes' resources were preserved.
 
-- `node tests/lint/ui-integrity.js --warn-as-error`: **UI-GATE-0:PASS**, zero legacy errors/warnings; no gate or baseline changed.
-- `node scripts/uiaudit/build-action-ledger.js --check`: **FAIL: 台账缺失或已漂移**. Reported to coordinator; shared inventory must be regenerated and reviewed against the combined GAME/VIDEO source. This lane did not replace or waive the gate.
+## Remaining outside this lane
 
-Backend test source: `chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayJourneyStoryServiceImplTest.java`. Adds media assertions to the existing live ending projection test and `endingMediaSurvivesFrozenProjectionAndArchivedReopenWithoutReadingLiveChapter`. Not a funds-gated suite; no expected-count change. **Coordinator VPS r2 receipt: 27 tests, 0 failures, 0 errors, 0 skipped, 0.435 seconds**. Root confirmed its exact 53-file source manifest included this unchanged test. Source: `/home/ubuntu/previews/cy-r14-integration-1105/source`; receipt: `chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.impl.PlayJourneyStoryServiceImplTest.xml`. The Java patch is intentionally unstaged/uncommitted here at root's request for its unified commit; no redundant build while the r3 budget lock is held. No Java/Maven/Docker/MySQL/Redis was run locally.
-
-## Coordinator-requested private rig adaptation
-
-Coordinator assigned the temporary rig's `runtime.js`, `nav.js`, `walk.mjs` and isolated self-check to this lane while Java validation runs. `server.mjs`, backend process, database, tunnels and proxy were untouched.
-
-- Actual HTML video now backs the rig's WXML video wrapper. Native play/waiting/timeupdate/ended/error events carry the wrapper's token into existing page handlers. `setData` retains the native element; context stop/seek and detach cleanup operate on it.
-- `MPWEB.audioLog`, `videoLog`, `mediaState()` and driver `w.media()` provide native progress/state traces with query strings removed. Audio `onPlay` waits for native `playing`, rather than the browser accepting a pending `play()` call.
-- `MPWEB.mediaQueue` / `fileQueue` are explicit native-picker seams. No queued video means cancel. Local selected MP4/MP3 bytes are uploaded unchanged as multipart with the proper extension. The old unsupported-file path no longer silently substitutes a generated JPEG. Same-origin files work; unapproved remote file origins fail.
-- `proof/round14-video/media-rig-adapter.diff` records only these temporary harness changes. `media-selfcheck.mjs` and `media-selfcheck.json` are reproducible harness proof, **not business or phone acceptance**.
-
-Self-check: **13/13 PASS** in headless macOS Chrome, with synthetic two-second video/audio served by an isolated ephemeral listener on `127.0.0.1`. It observed decoded 160px frames and increasing time, token-bound play/ended/error, stable media identity across render, HTTP503 failure, no invented progress during delayed video delivery, audio `onPlay` only after delayed bytes actually play, context/resource cleanup, explicit video picker/cancel, and exact multipart MP4/MP3 bytes and filenames. The actual replay driver also rejects off-origin requests before dispatch; authored replay opts into that restriction. No business backend request or product-data injection occurred; the fixture server and owned Chrome closed in `finally`. The first added driver-origin probe timed out because the isolated fixture did not recognize the driver URL with an empty query; routing by pathname corrected the fixture, then all 12 checks passed. A final browser-local request-failure/delay probe had completed before the coordinator froze harness work; it raised the final isolated self-check to 13/13. It changes only this browser's media requests and leaves the shared object store/backend untouched. No further harness features were added after that freeze. The driver now also closes its browser if initial boot fails.
-
-To reproduce, copy the self-check script to the private rig root (which has `mpweb/node_modules/puppeteer-core`), apply the adapter diff to the coordinator's matching pre-adaptation rig, and generate its two fixtures:
-
-```sh
-mkdir -p media-selfcheck-assets
-ffmpeg -hide_banner -loglevel error -f lavfi -i color=c=blue:s=160x120:r=12 -f lavfi -i sine=frequency=660:sample_rate=44100 -t 2 -c:v libx264 -pix_fmt yuv420p -c:a aac -movflags +faststart -y media-selfcheck-assets/clip.mp4
-ffmpeg -hide_banner -loglevel error -f lavfi -i sine=frequency=440:sample_rate=44100 -t 2 -c:a libmp3lame -y media-selfcheck-assets/audio.mp3
-node media-selfcheck.mjs
-```
-
-After checking the initial login-label mismatch, coordinator assigned existing author **9008** (`e2e-openid-9008`, role `club`) and independent player **990010** (`e2e-openid-9010`, role `player`) for fresh `R14-VIDEO-` fixtures. GAME shares author 9008 with its own `R14-GAME-` prefix; its IDs remain outside VIDEO ownership; the driver reads the returned member ID and compares it with `R14_VIDEO_EXPECTED_MEMBER_ID` explicitly confirmed by the coordinator, never a numeric suffix assumption. `proof/round14-video/authored-media-replay.mjs` is prepared, with syntax, `--plan` and evidence-sanitizer `--selfcheck` passing. Execution is gated by `R14_VIDEO_RUNTIME_READY=<coordinator-verified combined SHA>` and has **not begun** while the old backend is running. It accepts JSON UI operations on stdin, keeps one browser session, supports explicit native media queues and captures full targeted ending/author read responses rather than the rig's truncated network text. Product fields cannot be injected through an eval command. Coordinator owns media/theme HOLD review checkpoints; this lane does no review bypass or SQL completion.
-
-Full-suite audio triage: baseline `play-mechanisms-contract.test.js` failed its stale exact arrival-source assertion and hard-coded six-context count. Coordinator then assigned that test to VIDEO. It now runs the actual production location callback across known/unknown/invalid precision and station/quest states, with a mutation removing the precision guard required to fail. It retains strict six-of-six audible-context registration, separately runs the actual unique silent preload and asserts volume zero, no play, and canplay/error/20-second destruction. Negative controls reject an extra raw context, preload playback, and nonzero preload volume. No production registration or gate was weakened.
-
-`node --test chengyinhub-xcx/tests/unit/play-mechanisms-contract.test.js chengyinhub-xcx/tests/unit/audio-session.test.js`: **14/14 PASS**. The corrected seven mechanisms tests were also run serially against the coordinator's current integrated index source via a temporary test copy: **7/7 PASS**. No shared-source file was written for that check.
-
-## Unverified / remaining
-
-- Combined new-source runtime live ending and reopen with decoded ending video; actual saved/frozen/HTTP response comparison to locate the historical missing video.
-- GAME narration loading/error feedback and last-station completion fixes after integration.
-- Four-look rendering of the changed loading/error states, media poster/native video composition and all phone/headphone behavior. This lane changed no look styles; historical screenshots are not new-source acceptance.
-- Overall unified backend validation/CI, ledger refresh and final release checks (the owned Java projection class has passed 27/27). No unified CI, service restart, tunnel/proxy change, production access, deployment or WeChat DevTools interaction from this lane.
-
-
-## Read-only selector preflight (not business acceptance)
-
-The first authorized preflight could not log in: HTTP/business 502, `connect ECONNREFUSED 127.0.0.1:18199`. Root restored the maintained forward. A second attempt using the exact instructed `rig-e2e-openid-9010` code returned actual member **990010**, role `player`, userType 1, and the privacy page above the publish tab. It did not establish an author allocation at ID 9010. The browser stopped before accepting consent or selecting author controls and closed; root was given the actual identity for fixture correction/confirmation. No role/access/DB change or authored theme save was attempted. The login itself appears to have followed normal automatic registration for that openid; this is recorded rather than treated as an existing-author proof.
-
-Coordinator subsequently confirmed author 9008/role club and authorized real fixture privacy consent. A separate browser verified member 9008 **before** clicking consent, then reached a blank professional editor through actual rendered controls: `[aria-label="发布"]` → `[aria-label="发布城市定向"]` → `[aria-label="专业手动"]`. The plus is supplied by the tab bar for this club view, so `#publish-fab` is absent; that initial selector was corrected from the observed DOM. Blank editor name/id were empty, chapter count zero, and topic create/update/draft/save/publish requests were empty. Opening `[aria-label="打开主题详情"]` showed the actual `[aria-label="上传主题配乐"]` control and the look picker. Three inspected screenshots and `selector-preflight.json` retain this limited evidence. No topic values were entered, no chapter created, no upload/save/publish/play attempted; the owned browser and Node client closed. Opening/ending upload selectors cannot be honestly exercised until a chapter is authored on the final candidate.
-
-STATUS: PARTIAL — video lifecycle code and JS behavior checks complete; combined runtime ending playback, shared-page narration feedback, unified validation and device acceptance remain unverified.
+- Four-look visual signoff belongs to BRANCH/root on the combined source; VIDEO directly observed the default/star story, feedback, loading/error and ending views only. Historical four-look screenshots are not new-source acceptance.
+- Phone/WeChat native autoplay, real headphones/loudspeaker output and device calibration remain unverified; browser native progress and screenshots do not establish those.
+- Root owns unified CI, ledger refresh, unified Java commit and overall launch acceptance. No production access, push, merge, deployment or WeChat DevTools interaction occurred in this lane.
