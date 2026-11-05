@@ -32,4 +32,25 @@ Branch `m2-editor-polish`, cut from `origin/integ/launch-test-20261103`. Run 202
 - Related unit tests (1051): 1050 pass. The one that failed (`action-ledger.test.js` 「release 前重建 inventory」) failed because the ledger was stale after my last WXML edit; I rebuilt it (`--write`, 5727 controls) and the `--check` re-run was still running when I stopped, so that result is **not confirmed**.
 - Owner rule received during the run: `[skip ci]` on every commit, push at once, no waiting on CI. Followed.
 
-STATUS: PARTIAL - code for every item is in with unit tests, but only E6 was walked on the rig (E4, E12, E13, E2, P1, P3, P4, L1, backpack chip not seen on screen); Java test for P1 not run; main-package size not measured; action-ledger check after the rebuild unconfirmed; 「仅确认这一站的任务码」 kept because a test pins it
+## Second pass: rig walks and checks (this branch's own jar, rebuilt in the rig)
+
+Rig built from this branch (jar included), not the pinned master. All shots viewed, under `fix-shots/m2-*`. Not a phone.
+
+| Item | Walked? | What I saw |
+|---|---|---|
+| E4 主题详情 | Yes | `m2-after-detail-s2/s3.jpg`, `m2-mode-sheet.jpg`: 值域 row gone, 允许再玩一次 has no caption, 进行方式 cards are name-only. 玩法支持 line still there (pinned by a test) |
+| E4 编辑章节 | Yes | `m2-after-chedit2.jpg`: no grey hints. Reason lines (e.g. 请先在主题详情里选进行方式并保存) stay |
+| P1 | Yes (editor) | `m2-after-detail-s2.jpg`: with 进行方式 未选择, 同场路线 is on; `m2-after-solo.jpg`: after choosing 个人独立进行 it is off. A solo theme that never picks a mode still defaults on |
+| L1 | Yes (state set through the real page, not a played run) | `m2-after-intro-{star,paper,survival,cyber}.jpg`: opening screen keeps pure black in 星尘, warm dark with cream button in 纸本, blue-black in 末世, near-black in 夜城. I forced the page state, since a story theme with a started run needs the full K10 authoring |
+| E6 | Yes | earlier pair |
+| E12, E13 | No | need saved stations (a saved theme). Unit tests only |
+| E2 | No | needs the audio picker and review queue |
+| P3, P4, backpack chip | No | need a started story run with a station and a photo/scan kit; setting the chip's state had no effect without a running story. Unit tests and code only |
+
+Checks:
+- **P1 Java test** (`TeamTrailServiceImplTest`, run in the cloud rig container with UTF-8 locale): passed, exit 0.
+- **action-ledger `--check`**: PASS, 5741 controls (rebuilt after the rebase; it had drifted because of upstream changes).
+- **ui-integrity.js**: passed on my tree before the last rebase; after it, two entries in `pages/merchant/apply/index.js` (another lane's, line 359 vs 360) fail. Not mine, left alone.
+- **Main package size**: 2.98 MB uncompressed by `preflight-release.js`, under the 3.00 MB (3,145,728 byte) limit. Preflight still ends with one BLOCK, 「Action Ledger 动态证据未完成:pending=5741」, the release-time evidence run that is not done on this branch; it is not something this lane changes.
+
+STATUS: PARTIAL - E4, P1, L1 and E6 walked on the rig and the P1 Java test, ledger check and package size pass; E12, E13, E2, P3, P4 and the backpack chip were not walked (they need a saved theme or a running story, which I did not build); ui-integrity has two failures from another lane's merchant/apply lines
