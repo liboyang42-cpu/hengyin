@@ -1,0 +1,33 @@
+{
+ "id": "A-h05-marketing",
+ "path": "pages/shezhi/marketing/index",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  }
+ ],
+ "route": [
+  "pages/shezhi/marketing/index"
+ ],
+ "text": "营销消息与优惠券 | 主 | 主理人策划工作室 | 站内活动消息 | 商家优惠券 | 探 | 探店日样板面包 | 站内活动消息 | 商家优惠券 | 探 | 探店日样板花店 | 站内活动消息 | 商家优惠券 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "text_s1": "站内活动消息 | 商家优惠券 | 探 | 探店日样板花店 | 站内活动消息 | 商家优惠券 | 探 | 探店日样板书店 | 站内活动消息 | 商家优惠券 | 探 | 探店日样板咖啡 | 站内活动消息 | 商家优惠券 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "text_s2": "站内活动消息 | 商家优惠券 | 探 | 探店日样板花店 | 站内活动消息 | 商家优惠券 | 探 | 探店日样板书店 | 站内活动消息 | 商家优惠券 | 探 | 探店日样板咖啡 | 站内活动消息 | 商家优惠券 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 1,
+ "report": {
+  "route": [
+   "pages/shezhi/marketing/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

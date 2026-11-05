@@ -1,0 +1,4 @@
+A-k04-anniversary route subpackageTools/anniversary/index controls 2 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  ui change        open                       ""                                   
+TEXT: 那年今日 | 11.05 | 换一天 | 这一天还没有回忆 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

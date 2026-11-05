@@ -1,0 +1,4 @@
+A-i21-report-detail route pages/index/index>subpackageMember/report-detail/index controls 2 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  SKIPPED (destructive / writes; walked by hand) goMine                     "查看我的全部举报"                           
+TEXT: 举报进度 | 内容举报 · 垃圾广告或站外导流 | 已提交 | 平台已收到举报，等待受理 | 编号 1 · 提交于 2026-11-05 02:19 | 被举报方看不到你的身份和举报内容 | 你的举报说明 | 疑似广告 | 处理进度 | 举报已提交 | 2026-11-05 02:19 | · | 举报已受理 | 查看我的全部举报 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

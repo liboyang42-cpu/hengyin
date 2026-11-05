@@ -1,0 +1,8 @@
+A-i18-orderinfo route pages/index/index>subpackageMember/orderinfo/orderinfo controls 6 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  toast            openMeetingPoint           "集合点 人民广场1号口 · 查看"                 T:打开微信地图：人民广场1号口  
+  SKIPPED (destructive / writes; walked by hand) startOrderTeam             "叫上队友"                               
+  SKIPPED (destructive / writes; walked by hand) cancelRegistration         "取消并退款"                              
+  toast            copyOrderNo                "复制订单号"                            T:内容已复制  
+  SKIPPED (destructive / writes; walked by hand) startPlay                  "开始游戏"                               
+TEXT: ¥69.00 | E2E 探店日一期 | 11-15 10:00–23:59 | 未开始 | 已核销 0/4 家 | 订单明细 | 订单号 | A202611051D0429B2 | 票种 | 标准场次票 × 1 | 日期与时间 | 11-15 10:00–23:59 | 集合点 | 人民广场1号口 · 查看 | 支付明细 | 票价 | ¥69.00 × 1 | 微信实付 | ¥69.00 | 合计 | ¥69.00 | 和队友一起出发 | 开始游戏 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

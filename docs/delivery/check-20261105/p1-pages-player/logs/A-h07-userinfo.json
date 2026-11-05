@@ -1,0 +1,120 @@
+{
+ "id": "A-h07-userinfo",
+ "path": "pages/userinfo/userinfo?id=9004",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "goBack||{}",
+   "h": "goBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 46,
+   "y": 46,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "onAvatarTap||{}",
+   "h": "onAvatarTap",
+   "txt": "",
+   "w": 69,
+   "hgt": 69,
+   "y": 114,
+   "route": "pages/userinfo/userinfo",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "onPrimaryCta|已关注|{}",
+   "h": "onPrimaryCta",
+   "txt": "已关注",
+   "w": 147,
+   "hgt": 46,
+   "y": 291,
+   "route": "pages/userinfo/userinfo",
+   "newText": "已取消关注 | 0",
+   "result": "ui change"
+  },
+  {
+   "key": "onStartChat|发消息|{}",
+   "h": "onStartChat",
+   "txt": "发消息",
+   "w": 147,
+   "hgt": 46,
+   "y": 291,
+   "route": "subpackageB/pages/im/chat/index",
+   "newText": "更多 | 玩家小城 · 02:13 | 你好，周六那场还有位置吗？ | 有的，我已经报名了，可以一起。 | 好，那到时见。",
+   "shot": "A-h07-userinfo-t01",
+   "result": "navigates"
+  },
+  {
+   "key": "openMoreMenu||{}",
+   "h": "openMoreMenu",
+   "txt": "",
+   "w": 46,
+   "hgt": 46,
+   "y": 291,
+   "route": "pages/userinfo/userinfo",
+   "newText": "选项 | 分享主页 | 举报",
+   "result": "ui change"
+  },
+  {
+   "key": "onTab|帖文|{\"key\":\"posts\"}",
+   "h": "onTab",
+   "txt": "帖文",
+   "w": 119,
+   "hgt": 46,
+   "y": 347,
+   "route": "pages/userinfo/userinfo",
+   "newText": "刚刚 | 新天地附近有家安静的咖啡店，下午人不多。",
+   "result": "ui change"
+  },
+  {
+   "key": "onTab|成就|{\"key\":\"achievements\"}",
+   "h": "onTab",
+   "txt": "成就",
+   "w": 119,
+   "hgt": 46,
+   "y": 347,
+   "route": "pages/userinfo/userinfo",
+   "newText": "发布内容 | 获赞",
+   "result": "ui change"
+  },
+  {
+   "key": "onTab|关于|{\"key\":\"about\"}",
+   "h": "onTab",
+   "txt": "关于",
+   "w": 119,
+   "hgt": 46,
+   "y": 347,
+   "route": "pages/userinfo/userinfo",
+   "result": "NO VISIBLE EFFECT"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "pages/userinfo/userinfo"
+ ],
+ "text": "主页 | 玩家小城 | 1 | 好友 | 1 | 关注 | 1 | 粉丝 | 已关注 | 发消息 | 帖文 | 成就 | 关于 | 个人介绍 | 还没有个人介绍 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 8,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/userinfo/userinfo"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

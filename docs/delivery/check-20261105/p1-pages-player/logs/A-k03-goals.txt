@@ -1,0 +1,4 @@
+A-k03-goals route subpackageTools/exploration-goals/index controls 2 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  ui change        toggleCreate               ""                                   
+TEXT: 探索目标 | 我的目标 | 还没有探索目标 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

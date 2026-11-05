@@ -1,0 +1,10 @@
+A-h07-userinfo route pages/index/index>pages/userinfo/userinfo controls 8 errors 0 badNet 0
+  back (not tapped) goBack                     ""                                   
+  NO VISIBLE EFFECT onAvatarTap                ""                                   
+  ui change        onPrimaryCta               "已关注"                                
+  navigates        onStartChat                "发消息"                            -> subpackageB/pages/im/chat/index    
+  ui change        openMoreMenu               ""                                   
+  ui change        onTab                      "帖文"                                 
+  ui change        onTab                      "成就"                                 
+  NO VISIBLE EFFECT onTab                      "关于"                                 
+TEXT: 主页 | 玩家小城 | 1 | 好友 | 1 | 关注 | 1 | 粉丝 | 已关注 | 发消息 | 帖文 | 成就 | 关于 | 个人介绍 | 还没有个人介绍 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

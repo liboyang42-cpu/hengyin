@@ -1,0 +1,266 @@
+{
+ "id": "A-g01-topic",
+ "path": "pages/topic/index/index?id=990014",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "goBack||{}",
+   "h": "goBack",
+   "txt": "",
+   "w": 40,
+   "hgt": 40,
+   "y": 49,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "scrollToSecond|查看详情与报名|{}",
+   "h": "scrollToSecond",
+   "txt": "查看详情与报名",
+   "w": 175,
+   "hgt": 48,
+   "y": 698,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  },
+  {
+   "key": "onTap|城|{}",
+   "h": "onTap",
+   "txt": "城",
+   "w": 25,
+   "hgt": 25,
+   "y": 1392,
+   "route": "pages/topic/index/index",
+   "newText": "城 | 城瘾跑团 | 发布 | 去票夹 | 主题徽章 | 有效期 | 41 | 天 | 参与商家 | 4 | 家 | 路线",
+   "shot": "A-g01-topic-t01",
+   "result": "ui change"
+  },
+  {
+   "key": "onHeroCta|去票夹|{}",
+   "h": "onHeroCta",
+   "txt": "去票夹",
+   "w": 150,
+   "hgt": 50,
+   "y": 1526,
+   "route": "pages/topic/index/index",
+   "newText": "城 | 城瘾跑团 | 发布 | 去票夹 | 主题徽章 | 有效期 | 41 | 天 | 参与商家 | 4 | 家 | 路线",
+   "shot": "A-g01-topic-t02",
+   "result": "ui change"
+  },
+  {
+   "key": "toggleFav||{}",
+   "h": "toggleFav",
+   "txt": "",
+   "w": 50,
+   "hgt": 50,
+   "y": 1526,
+   "route": "pages/topic/index/index",
+   "newText": "城 | 城瘾跑团 | 发布 | 去票夹 | 主题徽章 | 有效期 | 41 | 天 | 参与商家 | 4 | 家 | 路线",
+   "shot": "A-g01-topic-t03",
+   "result": "ui change"
+  },
+  {
+   "key": "openShareCard||{}",
+   "h": "openShareCard",
+   "txt": "",
+   "w": 50,
+   "hgt": 50,
+   "y": 1526,
+   "route": "pages/topic/index/index",
+   "newText": "城 | 城瘾跑团 | 发布 | 去票夹 | 主题徽章 | 有效期 | 41 | 天 | 参与商家 | 4 | 家 | 路线",
+   "shot": "A-g01-topic-t04",
+   "result": "ui change"
+  },
+  {
+   "key": "onOpen|主题徽章|{}",
+   "h": "onOpen",
+   "txt": "主题徽章",
+   "w": 74,
+   "hgt": 57,
+   "y": 1617,
+   "route": "pages/topic/index/index",
+   "newText": "城 | 城瘾跑团 | 发布 | 去票夹 | 主题徽章 | 有效期 | 41 | 天 | 参与商家 | 4 | 家 | 路线",
+   "result": "ui change"
+  },
+  {
+   "key": "switchTab|详情|{\"index\":\"0\"}",
+   "h": "switchTab",
+   "txt": "详情",
+   "w": 130,
+   "hgt": 47,
+   "y": 1688,
+   "result": "off-screen"
+  },
+  {
+   "key": "switchTab|故事|{\"index\":\"1\"}",
+   "h": "switchTab",
+   "txt": "故事",
+   "w": 130,
+   "hgt": 47,
+   "y": 1688,
+   "result": "off-screen"
+  },
+  {
+   "key": "switchTab|地点|{\"index\":\"2\"}",
+   "h": "switchTab",
+   "txt": "地点",
+   "w": 130,
+   "hgt": 47,
+   "y": 1688,
+   "result": "off-screen"
+  },
+  {
+   "key": "goTemplateDetail|到店打卡·拍一张你的咖啡 1-4人 15分钟|{\"id\":6001}",
+   "h": "goTemplateDetail",
+   "txt": "到店打卡·拍一张你的咖啡 1-4人 15分钟",
+   "w": 150,
+   "hgt": 161,
+   "y": 1892,
+   "route": "pages/topic/index/index",
+   "newText": "主题徽章 | 有效期 | 41 | 天 | 参与商家 | 4 | 家 | 路线 | 不限 | 任意顺序 | 已参加 | 1",
+   "result": "ui change"
+  },
+  {
+   "key": "goTemplateDetail|到店打卡·拍一张你选的书 1-4人 15分钟|{\"id\":6002}",
+   "h": "goTemplateDetail",
+   "txt": "到店打卡·拍一张你选的书 1-4人 15分钟",
+   "w": 150,
+   "hgt": 161,
+   "y": 1892,
+   "route": "pages/topic/index/index",
+   "newText": "主题徽章 | 有效期 | 41 | 天 | 参与商家 | 4 | 家 | 路线 | 不限 | 任意顺序 | 已参加 | 1",
+   "result": "ui change"
+  },
+  {
+   "key": "goTemplateDetail|到店打卡·拍一束你挑的花 1-4人 15分钟|{\"id\":6003}",
+   "h": "goTemplateDetail",
+   "txt": "到店打卡·拍一束你挑的花 1-4人 15分钟",
+   "w": 150,
+   "hgt": 161,
+   "y": 1892,
+   "route": "pages/topic/index/index",
+   "newText": "主题徽章 | 有效期 | 41 | 天 | 参与商家 | 4 | 家 | 路线 | 不限 | 任意顺序 | 已参加 | 1",
+   "result": "ui change"
+  },
+  {
+   "key": "goTemplateDetail|到店打卡·拍一只你选的面包 1-4人 15分钟|{\"id\":6004}",
+   "h": "goTemplateDetail",
+   "txt": "到店打卡·拍一只你选的面包 1-4人 15分钟",
+   "w": 150,
+   "hgt": 161,
+   "y": 1892,
+   "route": "pages/topic/index/index",
+   "newText": "主题徽章 | 有效期 | 41 | 天 | 参与商家 | 4 | 家 | 路线 | 不限 | 任意顺序 | 已参加 | 1",
+   "result": "ui change"
+  },
+  {
+   "key": "bmClick|标准场次票 11-05 10:14–23:59 / 11-1|{\"id\":75}",
+   "h": "bmClick",
+   "txt": "标准场次票 11-05 10:14–23:59 / 11-1",
+   "w": 332,
+   "hgt": 160,
+   "y": 2272,
+   "route": "pages/topic/index/index",
+   "newText": "详情 | 故事 | 地点 | 到店打卡·拍一张你的咖啡 | 1-4人 | 15分钟 | 到店打卡·拍一张你选的书 | 1-4人 | 15分钟 | 到店打卡·拍一束你挑的花 | 1-4人 | 15分钟",
+   "result": "ui change"
+  },
+  {
+   "key": "onLineupTap|城瘾跑团 俱乐部|{\"kind\":\"club\",\"id\":7001}",
+   "h": "onLineupTap",
+   "txt": "城瘾跑团 俱乐部",
+   "w": 358,
+   "hgt": 71,
+   "y": 2526,
+   "route": "pages/topic/index/index",
+   "newText": "详情 | 故事 | 地点 | 到店打卡·拍一张你的咖啡 | 1-4人 | 15分钟 | 到店打卡·拍一张你选的书 | 1-4人 | 15分钟 | 到店打卡·拍一束你挑的花 | 1-4人 | 15分钟",
+   "result": "ui change"
+  },
+  {
+   "key": "voteClick|还没有评价|{}",
+   "h": "voteClick",
+   "txt": "还没有评价",
+   "w": 358,
+   "hgt": 68,
+   "y": 2658,
+   "route": "pages/topic/index/index",
+   "newText": "详情 | 故事 | 地点 | 到店打卡·拍一张你的咖啡 | 1-4人 | 15分钟 | 到店打卡·拍一张你选的书 | 1-4人 | 15分钟 | 到店打卡·拍一束你挑的花 | 1-4人 | 15分钟",
+   "result": "ui change"
+  },
+  {
+   "key": "goPoint|评论积分须符合参与及首评条件，以实际积分记录为准|{}",
+   "h": "goPoint",
+   "txt": "评论积分须符合参与及首评条件，以实际积分记录为准",
+   "w": 358,
+   "hgt": 16,
+   "y": 2735,
+   "route": "pages/topic/index/index",
+   "newText": "详情 | 故事 | 地点 | 到店打卡·拍一张你的咖啡 | 1-4人 | 15分钟 | 到店打卡·拍一张你选的书 | 1-4人 | 15分钟 | 到店打卡·拍一束你挑的花 | 1-4人 | 15分钟",
+   "result": "ui change"
+  },
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 37,
+   "hgt": 37,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "onProfile|补全姓名和手机号|{}",
+   "h": "onProfile",
+   "txt": "补全姓名和手机号",
+   "w": 357,
+   "hgt": 52,
+   "y": 139,
+   "route": "pages/topic/index/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "onTap|同意将姓名、手机号提供给主办方，用于报名核验|{}",
+   "h": "onTap",
+   "txt": "同意将姓名、手机号提供给主办方，用于报名核验",
+   "w": 357,
+   "hgt": 46,
+   "y": 513,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  },
+  {
+   "key": "onPay|立即支付|{}",
+   "h": "onPay",
+   "txt": "立即支付",
+   "w": 125,
+   "hgt": 50,
+   "y": 748,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "pages/topic/index/index"
+ ],
+ "text": "自由探索 | E2E 探店日一期 | 端到端 | 查看详情与报名 | 确认订单 | 参与人信息 | 补全姓名和手机号 | 主题信息 | E2E 探店日一期 | 费用明细 | 票种 | 自玩通行证 | 订单金额 | 合计 | 同意将姓名、手机号提供给主办方，用于报名核验 | 合计 | 立即支付 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "text_s1": "查看详情与报名 | 城 | 城瘾跑团 | 发布 | E2E 探店日一期 | 端到端 | 去票夹 | 确认订单 | 参与人信息 | 补全姓名和手机号 | 主题信息 | E2E 探店日一期 | 费用明细 | 票种 | 自玩通行证 | 订单金额 | 合计 | 同意将姓名、手机号提供给主办方，用于报名核验 | 合计 | 立即支付 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "text_s2": "E2E 探店日一期 | 城 | 城瘾跑团 | 发布 | E2E 探店日一期 | 端到端 | 去票夹 | 主题徽章 | 有效期 | 41 | 天 | 参与商家 | 4 | 家 | 路线 | 不限 | 任意顺序 | 已参加 | 1 | 人 | 详情 | 故事 | 地点 | E2E 探店日一期 | 端到端 | 节点介绍 | 到店打卡·拍一张你的咖啡 | 1-4人 | 15分钟 | 到店打卡·拍一张你选的书 | 1-4人 | 15分钟 | 到店打卡·拍一束你挑的花 | 1-4人 | 15分钟 | 到店打卡·拍一只你选的面包 | 1-4人 | 15分钟 | 活动内容 | 5-1 链路真跑 | 场次 | 确认订单 | 参与人信息 | 补全姓名和手机号 | 主题信息 | E2E 探店日一期 | 费用明细 | 票种 | 自玩通行证 | 订单金额 | 合计 | 同意将姓名、手机号提供给主办方，用于报名核验 | 合计 | 立即支付 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 22,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/topic/index/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/e2e-topic-cover-9003.jpg?Expires=2109205768&OSSAccessKeyId=rigdummy&Signature=QNVkBiEh3O%2BDWy7FLG2lWqd9HD8%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/e2e-topic-cover-9003.jpg?Expires=2109205781&OSSAccessKeyId=rigdummy&Signature=5LQ%2BrDLbGh5alli4vajIxTlFjN0%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

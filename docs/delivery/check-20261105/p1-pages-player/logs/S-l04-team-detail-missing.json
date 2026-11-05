@@ -1,0 +1,44 @@
+{
+ "name": "S-l04-team-detail-missing",
+ "identity": "e2e-openid-9009",
+ "url": "pages/team/detail/index?teamId=999",
+ "route": [
+  "pages/index/index",
+  "pages/team/detail/index"
+ ],
+ "sys": "",
+ "text": "队伍详情 | 队伍不存在 | 返回上一页 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "net": [
+  "200 POST /api/user/info",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/user/info",
+  "200 POST /api/map/reverse-geocode",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/map/reverse-geocode",
+  "200 POST /api/team/info"
+ ],
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/team/detail/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

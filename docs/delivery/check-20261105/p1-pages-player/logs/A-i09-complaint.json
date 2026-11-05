@@ -1,0 +1,95 @@
+{
+ "id": "A-i09-complaint",
+ "path": "subpackageMember/complaint/index",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "openPickerSheet|请选择要投诉的活动|{\"picker\":\"topic\"}",
+   "h": "openPickerSheet",
+   "txt": "请选择要投诉的活动",
+   "w": 324,
+   "hgt": 33,
+   "y": 225,
+   "route": "subpackageMember/complaint/index",
+   "newText": "选择投诉活动 | E2E 探店日一期",
+   "result": "ui change"
+  },
+  {
+   "key": "openPickerSheet|请选择投诉类型（可选）|{\"picker\":\"type\"}",
+   "h": "openPickerSheet",
+   "txt": "请选择投诉类型（可选）",
+   "w": 324,
+   "hgt": 33,
+   "y": 320,
+   "route": "subpackageMember/complaint/index",
+   "newText": "选择投诉类型 | 服务与履约 | 费用与退款 | 安全与纠纷 | 虚假宣传 | 其他",
+   "shot": "A-i09-complaint-t01",
+   "result": "ui change"
+  },
+  {
+   "key": "__onTap||{}",
+   "h": "__onTap",
+   "txt": "",
+   "w": 357,
+   "hgt": 46,
+   "y": 689,
+   "route": "subpackageMember/complaint/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "submit|提交投诉|{}",
+   "h": "submit",
+   "txt": "提交投诉",
+   "w": 357,
+   "hgt": 46,
+   "y": 689,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  },
+  {
+   "key": "loadHistory|刷新进展|{}",
+   "h": "loadHistory",
+   "txt": "刷新进展",
+   "w": 83,
+   "hgt": 46,
+   "y": 793,
+   "route": "subpackageMember/complaint/index",
+   "result": "NO VISIBLE EFFECT"
+  }
+ ],
+ "route": [
+  "subpackageMember/complaint/index"
+ ],
+ "text": "投诉与建议 | 仅限已报名并支付的活动，平台会介入处理 | 投诉活动 | * | 请选择要投诉的活动 | 投诉类型 | 请选择投诉类型（可选） | 投诉内容 | * | 联系方式 | 提交投诉 | 我的处理进展 | 刷新进展 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 6,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageMember/complaint/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED http://127.0.0.1:8097/__api/api/coop/complaint/topics net::ERR_ABORTED",
+   "[error] FAILED http://127.0.0.1:8097/__api/api/coop/complaint/mine net::ERR_ABORTED",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

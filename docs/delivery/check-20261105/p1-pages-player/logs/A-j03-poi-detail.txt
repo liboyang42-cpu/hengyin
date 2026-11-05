@@ -1,0 +1,6 @@
+A-j03-poi-detail route pages/index/index>subpackageRoam/poi-detail/index controls 4 errors 0 badNet 0
+  NO VISIBLE EFFECT onMask                     ""                                   
+  NO VISIBLE EFFECT noop                       "节点详情"                               
+  navigates        onClose                    ""                               -> pages/index/index    
+  navigates        onCta                      "返回地图"                           -> pages/index/index    
+TEXT: 节点详情 | 节点未开放或已下线 | 返回地图 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

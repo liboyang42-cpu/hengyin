@@ -1,0 +1,5 @@
+A-k01-capsule route subpackageTools/capsule/index controls 3 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  ui change        lockedTip                  "2026-11-05 写下 365 天 2027-11-05"     
+  ui change        toggleCompose              ""                                   
+TEXT: 时光胶囊 | 我的胶囊 | 1 枚 | 2026-11-05 写下 | 365 天 | 2027-11-05 开启 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

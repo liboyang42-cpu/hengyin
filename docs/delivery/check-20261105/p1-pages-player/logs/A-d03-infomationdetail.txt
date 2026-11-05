@@ -1,0 +1,4 @@
+A-d03-infomationdetail route pages/index/index>subpackageA/pages/infomationdetail/infomationdetail controls 2 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  navigates        onCta                      "返回玩法列表"                         -> pages/index/index    
+TEXT: 玩法详情 | 这篇玩法说明不在了 | 返回玩法列表 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

@@ -1,0 +1,52 @@
+{
+ "name": "S-c02-baoming-bought",
+ "identity": "e2e-openid-9009",
+ "url": "pages/activity/baoming/baoming?activityId=9&ticketId=76",
+ "route": [
+  "pages/index/index",
+  "pages/activity/baoming/baoming"
+ ],
+ "sys": "",
+ "text": "结算 | 你已报名这场活动 | 查看我的报名 | 参与人信息 | * | 测试甲 | 13800000009 | 活动信息 | E2E 探店日一期 | 2026年11月15日 周日 10:00 | 集合点 · 人民广场1号口 | 上海市黄浦区咖啡 | 费用明细 | 标准场次票 | ¥69 | 订单金额 | ¥69 | 积分抵扣 | -¥0 | 总计 | ¥69 | 退款规则 | 开始前 24 小时以上 | 全额退 | 开始前 24 小时内 | 退 50% | 同意将姓名、手机号提供给主办方，用于报名核验 | 请先勾选信息共享同意 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "textScrolled": "结算 | 测试甲 | 13800000009 | 活动信息 | E2E 探店日一期 | 2026年11月15日 周日 10:00 | 集合点 · 人民广场1号口 | 上海市黄浦区咖啡 | 费用明细 | 标准场次票 | ¥69 | 订单金额 | ¥69 | 积分抵扣 | -¥0 | 总计 | ¥69 | 退款规则 | 开始前 24 小时以上 | 全额退 | 开始前 24 小时内 | 退 50% | 开始后 | 不退 | 同意将姓名、手机号提供给主办方，用于报名核验 | 请先勾选信息共享同意 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "net": [
+  "200 POST /api/user/info",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/user/info",
+  "200 POST /api/map/reverse-geocode",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/map/reverse-geocode",
+  "200 POST /api/user/info",
+  "200 POST /api/activity/info",
+  "200 POST /api/user/address/list",
+  "200 POST /api/registration/quote",
+  "200 POST /api/club/event-ops/waitlist/status",
+  "200 POST /api/registration/payment-readiness"
+ ],
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/activity/baoming/baoming"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/e2e-topic-cover-9003.jpg?Expires=2109207031&OSSAccessKeyId=rigdummy&Signature=YIaAQmBI%2FvLT5z8vOsJiC8ShxOI%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ],
+  "badNet": []
+ }
+}

@@ -1,0 +1,256 @@
+{
+ "id": "A-g03-search",
+ "path": "pages/search2/index",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "__onTap||{}",
+   "h": "__onTap",
+   "txt": "",
+   "w": 60,
+   "hgt": 46,
+   "y": 161,
+   "route": "pages/search2/index",
+   "newText": "日期 | 今天 | 明天 | 选择日期 | 价格 | 最低区间 | 最高区间 | 价格区间：¥0 - ¥1000 | 排序 | 最近 | 重置",
+   "shot": "A-g03-search-t01",
+   "result": "ui change"
+  },
+  {
+   "key": "popShow|筛选|{}",
+   "h": "popShow",
+   "txt": "筛选",
+   "w": 60,
+   "hgt": 46,
+   "y": 161,
+   "route": "pages/search2/index",
+   "newText": "日期 | 今天 | 明天 | 选择日期 | 价格 | 最低区间 | 最高区间 | 价格区间：¥0 - ¥1000 | 排序 | 最近 | 重置",
+   "shot": "A-g03-search-t02",
+   "result": "ui change"
+  },
+  {
+   "key": "onHotKeyClick|骑行|{\"index\":0,\"keyword\":\"骑行\"}",
+   "h": "onHotKeyClick",
+   "txt": "骑行",
+   "w": 52,
+   "hgt": 46,
+   "y": 279,
+   "route": "pages/search2/result/index",
+   "newText": "全部 | 主题 0 | 活动 0 | 俱乐部 0 | 商家 0 | 主题模板 0 | 玩法模板 0 | 没有找到",
+   "shot": "A-g03-search-t03",
+   "result": "navigates"
+  },
+  {
+   "key": "onHotKeyClick|城市|{\"index\":1,\"keyword\":\"城市\"}",
+   "h": "onHotKeyClick",
+   "txt": "城市",
+   "w": 52,
+   "hgt": 46,
+   "y": 279,
+   "route": "pages/search2/result/index",
+   "newText": "全部 | 主题 0 | 活动 0 | 俱乐部 0 | 商家 0 | 主题模板 0 | 玩法模板 0 | 没有找到",
+   "shot": "A-g03-search-t04",
+   "result": "navigates"
+  },
+  {
+   "key": "onHotKeyClick|外滩|{\"index\":2,\"keyword\":\"外滩\"}",
+   "h": "onHotKeyClick",
+   "txt": "外滩",
+   "w": 52,
+   "hgt": 46,
+   "y": 279,
+   "route": "pages/search2/result/index",
+   "newText": "全部 | 主题 0 | 活动 0 | 俱乐部 0 | 商家 0 | 主题模板 0 | 玩法模板 0 | 没有找到",
+   "result": "navigates"
+  },
+  {
+   "key": "onHotKeyClick|书店|{\"index\":3,\"keyword\":\"书店\"}",
+   "h": "onHotKeyClick",
+   "txt": "书店",
+   "w": 52,
+   "hgt": 46,
+   "y": 279,
+   "route": "pages/search2/result/index",
+   "newText": "全部 | 主题 0 | 活动 0 | 俱乐部 0 | 商家 1 | 主题模板 0 | 玩法模板 0 | 探店日样板书店 | 10:00-21:00 | 上海市黄浦区书店",
+   "result": "navigates"
+  },
+  {
+   "key": "onHotKeyClick|美术馆|{\"index\":4,\"keyword\":\"美术馆\"}",
+   "h": "onHotKeyClick",
+   "txt": "美术馆",
+   "w": 64,
+   "hgt": 46,
+   "y": 279,
+   "route": "pages/search2/result/index",
+   "newText": "全部 | 主题 0 | 活动 0 | 俱乐部 0 | 商家 0 | 主题模板 0 | 玩法模板 0 | 没有找到",
+   "result": "navigates"
+  },
+  {
+   "key": "onHotKeyClick|摄影|{\"index\":5,\"keyword\":\"摄影\"}",
+   "h": "onHotKeyClick",
+   "txt": "摄影",
+   "w": 52,
+   "hgt": 46,
+   "y": 335,
+   "route": "pages/search2/result/index",
+   "newText": "全部 | 主题 0 | 活动 0 | 俱乐部 0 | 商家 0 | 主题模板 0 | 玩法模板 0 | 没有找到",
+   "result": "navigates"
+  },
+  {
+   "key": "onHotKeyClick|苏州河|{\"index\":6,\"keyword\":\"苏州河\"}",
+   "h": "onHotKeyClick",
+   "txt": "苏州河",
+   "w": 64,
+   "hgt": 46,
+   "y": 335,
+   "route": "pages/search2/result/index",
+   "newText": "全部 | 主题 0 | 活动 0 | 俱乐部 0 | 商家 0 | 主题模板 0 | 玩法模板 0 | 没有找到",
+   "result": "navigates"
+  },
+  {
+   "key": "onHotKeyClick|菜场|{\"index\":7,\"keyword\":\"菜场\"}",
+   "h": "onHotKeyClick",
+   "txt": "菜场",
+   "w": 52,
+   "hgt": 46,
+   "y": 335,
+   "route": "pages/search2/result/index",
+   "newText": "全部 | 主题 0 | 活动 0 | 俱乐部 0 | 商家 0 | 主题模板 0 | 玩法模板 0 | 没有找到",
+   "result": "navigates"
+  },
+  {
+   "key": "onCategoryClick|城市漫步|{\"category\":{\"createBy\":null,\"createTime\":null,\"updateBy\":nu",
+   "h": "onCategoryClick",
+   "txt": "城市漫步",
+   "w": 183,
+   "hgt": 60,
+   "y": 463,
+   "route": "pages/search2/result/index",
+   "newText": "全部 | 主题 0 | 活动 0 | 俱乐部 0 | 商家 0 | 主题模板 0 | 玩法模板 0 | 没有找到",
+   "result": "navigates"
+  },
+  {
+   "key": "onCategoryClick|咖啡|{\"category\":{\"createBy\":null,\"createTime\":null,\"updateBy\":nu",
+   "h": "onCategoryClick",
+   "txt": "咖啡",
+   "w": 183,
+   "hgt": 60,
+   "y": 463,
+   "route": "pages/search2/result/index",
+   "newText": "全部 | 主题 0 | 活动 0 | 俱乐部 0 | 商家 5 | 主题模板 0 | 玩法模板 0 | 探店日样板咖啡 | 10:00-20:00 | 上海市黄浦区咖啡 | 探店日样板书店 | 10:00-21:00",
+   "result": "navigates"
+  },
+  {
+   "key": "onCategoryClick|历史人文|{\"category\":{\"createBy\":null,\"createTime\":null,\"updateBy\":nu",
+   "h": "onCategoryClick",
+   "txt": "历史人文",
+   "w": 183,
+   "hgt": 60,
+   "y": 524,
+   "route": "pages/search2/result/index",
+   "newText": "全部 | 主题 0 | 活动 0 | 俱乐部 0 | 商家 0 | 主题模板 0 | 玩法模板 0 | 没有找到",
+   "result": "navigates"
+  },
+  {
+   "key": "onCategoryClick|解谜冒险|{\"category\":{\"createBy\":null,\"createTime\":null,\"updateBy\":nu",
+   "h": "onCategoryClick",
+   "txt": "解谜冒险",
+   "w": 183,
+   "hgt": 60,
+   "y": 524,
+   "route": "pages/search2/result/index",
+   "newText": "全部 | 主题 0 | 活动 0 | 俱乐部 0 | 商家 0 | 主题模板 0 | 玩法模板 0 | 没有找到",
+   "result": "navigates"
+  },
+  {
+   "key": "onCategoryClick|夜游|{\"category\":{\"createBy\":null,\"createTime\":null,\"updateBy\":nu",
+   "h": "onCategoryClick",
+   "txt": "夜游",
+   "w": 183,
+   "hgt": 60,
+   "y": 584,
+   "route": "pages/search2/result/index",
+   "newText": "全部 | 主题 0 | 活动 0 | 俱乐部 0 | 商家 0 | 主题模板 0 | 玩法模板 0 | 没有找到",
+   "result": "navigates"
+  },
+  {
+   "key": "onCategoryClick|摄影打卡|{\"category\":{\"createBy\":null,\"createTime\":null,\"updateBy\":nu",
+   "h": "onCategoryClick",
+   "txt": "摄影打卡",
+   "w": 183,
+   "hgt": 60,
+   "y": 584,
+   "route": "pages/search2/result/index",
+   "newText": "全部 | 主题 0 | 活动 0 | 俱乐部 0 | 商家 0 | 主题模板 0 | 玩法模板 0 | 没有找到",
+   "result": "navigates"
+  },
+  {
+   "key": "onCategoryClick|户外徒步|{\"category\":{\"createBy\":null,\"createTime\":null,\"updateBy\":nu",
+   "h": "onCategoryClick",
+   "txt": "户外徒步",
+   "w": 183,
+   "hgt": 60,
+   "y": 644,
+   "route": "pages/search2/result/index",
+   "newText": "全部 | 主题 0 | 活动 0 | 俱乐部 0 | 商家 0 | 主题模板 0 | 玩法模板 0 | 没有找到",
+   "result": "navigates"
+  },
+  {
+   "key": "onCategoryClick|亲子同行|{\"category\":{\"createBy\":null,\"createTime\":null,\"updateBy\":nu",
+   "h": "onCategoryClick",
+   "txt": "亲子同行",
+   "w": 183,
+   "hgt": 60,
+   "y": 644,
+   "route": "pages/search2/result/index",
+   "newText": "全部 | 主题 0 | 活动 0 | 俱乐部 0 | 商家 0 | 主题模板 0 | 玩法模板 0 | 没有找到",
+   "result": "navigates"
+  },
+  {
+   "key": "goMap|在地图上找活动与主题节点|{}",
+   "h": "goMap",
+   "txt": "在地图上找活动与主题节点",
+   "w": 365,
+   "hgt": 46,
+   "y": 729,
+   "route": "pages/searchmap/index",
+   "newText": "定位 | 这一带还没有活动",
+   "result": "navigates"
+  }
+ ],
+ "route": [
+  "pages/search2/index"
+ ],
+ "text": "搜索 | 筛选 | 推荐搜索 | 骑行 | 城市 | 外滩 | 书店 | 美术馆 | 摄影 | 苏州河 | 菜场 | 类别 | 城市漫步 | 咖啡 | 历史人文 | 解谜冒险 | 夜游 | 摄影打卡 | 户外徒步 | 亲子同行 | 在地图上找活动与主题节点 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 20,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/search2/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

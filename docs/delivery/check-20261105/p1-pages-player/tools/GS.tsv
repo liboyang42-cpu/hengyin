@@ -1,0 +1,9 @@
+g01-topic pages/topic/index/index?id=990014
+c01-activity-detail pages/activity/detail/index?id=9
+c04-official-detail pages/activity/official-detail/index?id=2
+g02-square-detail pages/square/detail/index?id=1
+h07-userinfo pages/userinfo/userinfo?id=9009
+l05-team-join pages/team/join/index?code=C7o6SycXJV5gLXXhOHPyqg
+l04-team-detail pages/team/detail/index?teamId=2
+c03-activity-list pages/activity/list/index
+j07-my-teams subpackageRoam/my-teams/index

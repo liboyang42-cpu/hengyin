@@ -1,0 +1,5 @@
+A-i15-mycanyuinfo route pages/index/index>subpackageMember/mycanyuinfo/mycanyuinfo controls 3 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  SKIPPED (destructive / writes; walked by hand) goPlay                     "开始玩"                                
+  SKIPPED (destructive / writes; walked by hand) cancelParticipation        "取消参与"                               
+TEXT: 参与详情 | E2E 探店日一期 | 2026.11.15 - 2026.11.15 | 线下活动 | 未开始 | 5-1 链路真跑 | 开始玩 | 取消参与 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

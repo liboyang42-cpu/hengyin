@@ -1,0 +1,62 @@
+{
+ "id": "A-h08-mylike",
+ "path": "pages/mylike/mylike",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "onTab|帖文|{\"key\":\"posts\"}",
+   "h": "onTab",
+   "txt": "帖文",
+   "w": 178,
+   "hgt": 46,
+   "y": 161,
+   "route": "pages/mylike/mylike",
+   "newText": "玩家小城 | 刚刚 | 新天地附近有家安静的咖啡店，下午人不多。 | 1 | 玩家二号 | 刚刚 | 周末沿着苏州河走了一圈，傍晚的光线很好。 | 2 | 2 | 已加载全部帖文",
+   "shot": "A-h08-mylike-t01",
+   "result": "ui change"
+  },
+  {
+   "key": "onTab|主题|{\"key\":\"topics\"}",
+   "h": "onTab",
+   "txt": "主题",
+   "w": 178,
+   "hgt": 46,
+   "y": 161,
+   "route": "pages/mylike/mylike",
+   "newText": "暂无收藏的主题",
+   "result": "ui change"
+  }
+ ],
+ "route": [
+  "pages/mylike/mylike"
+ ],
+ "text": "我的收藏 | 帖文 | 主题 | 暂无收藏的主题 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 3,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/mylike/mylike"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

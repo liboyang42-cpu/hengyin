@@ -1,0 +1,4 @@
+A-j04-roam-session route subpackageRoam/session/index controls 2 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  navigates        onCta                      "返回漫游历史"                         -> pages/roam/index    
+TEXT: 本次漫游 | 找不到这次漫游 | 返回漫游历史 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

@@ -1,0 +1,7 @@
+A-e04-stamp-album route subpackageP3/pages/stamp-album/index/index controls 5 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  navigates        go                         "勋章"                             -> subpackageP3/pages/badge-wall/index/index    
+  NO VISIBLE EFFECT go                         "邮票"                                 
+  navigates        go                         "藏品"                             -> subpackageP3/pages/object-cards/index/index    
+  navigates        onCta                      "打开集邮相机"                         -> subpackageP3/pages/stamp-camera/index/index    
+TEXT: 收集册 | 勋章 | 邮票 | 藏品 | 0 | 枚 | 还没有邮票 | 打开集邮相机 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

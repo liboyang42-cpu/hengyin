@@ -1,0 +1,167 @@
+{
+ "id": "A-g02-square-detail",
+ "path": "pages/square/detail/index?id=1",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "goUserInfoClcik||{}",
+   "h": "goUserInfoClcik",
+   "txt": "",
+   "w": 42,
+   "hgt": 42,
+   "y": 102,
+   "route": "pages/square/detail/index",
+   "newText": "访问个人主页",
+   "result": "ui change"
+  },
+  {
+   "key": "openPostActions||{}",
+   "h": "openPostActions",
+   "txt": "",
+   "w": 46,
+   "hgt": 46,
+   "y": 100,
+   "route": "pages/square/detail/index",
+   "newText": "帖文操作 | 编辑",
+   "result": "ui change"
+  },
+  {
+   "key": "lickClick|1|{\"type\":\"1\"}",
+   "h": "lickClick",
+   "txt": "1",
+   "w": 32,
+   "hgt": 46,
+   "y": 197,
+   "route": "pages/square/detail/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "focusCommentInput|2|{}",
+   "h": "focusCommentInput",
+   "txt": "2",
+   "w": 35,
+   "hgt": 46,
+   "y": 197,
+   "route": "pages/square/detail/index",
+   "newText": "请输入评论",
+   "result": "ui change"
+  },
+  {
+   "key": "favoriteClick||{}",
+   "h": "favoriteClick",
+   "txt": "",
+   "w": 27,
+   "hgt": 46,
+   "y": 197,
+   "route": "pages/square/detail/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "commentFollowClick||{\"index\":0}",
+   "h": "commentFollowClick",
+   "txt": "",
+   "w": 16,
+   "hgt": 16,
+   "y": 280,
+   "route": "pages/square/detail/index",
+   "newText": "不能关注自己",
+   "result": "ui change"
+  },
+  {
+   "key": "commentLikeClick||{\"index\":0}",
+   "h": "commentLikeClick",
+   "txt": "",
+   "w": 46,
+   "hgt": 46,
+   "y": 302,
+   "route": "pages/square/detail/index",
+   "newText": "1",
+   "result": "ui change"
+  },
+  {
+   "key": "msgClick||{\"item\":{\"like_count\":0,\"create_time\":\"2026-11-05T10:13:18\",",
+   "h": "msgClick",
+   "txt": "",
+   "w": 46,
+   "hgt": 46,
+   "y": 302,
+   "route": "pages/square/detail/index",
+   "newText": "回复评论 | 完成",
+   "result": "ui change"
+  },
+  {
+   "key": "reportComment|举报|{\"index\":0}",
+   "h": "reportComment",
+   "txt": "举报",
+   "w": 46,
+   "hgt": 46,
+   "y": 302,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  },
+  {
+   "key": "deleteComment|删除|{\"index\":0}",
+   "h": "deleteComment",
+   "txt": "删除",
+   "w": 46,
+   "hgt": 46,
+   "y": 302,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  },
+  {
+   "key": "commentLikeClick||{\"index\":1}",
+   "h": "commentLikeClick",
+   "txt": "",
+   "w": 46,
+   "hgt": 46,
+   "y": 410,
+   "route": "pages/square/detail/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "reportComment|举报|{\"index\":1}",
+   "h": "reportComment",
+   "txt": "举报",
+   "w": 46,
+   "hgt": 46,
+   "y": 410,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "pages/square/detail/index"
+ ],
+ "text": "玩家二号 | 16分前 | 周末沿着苏州河走了一圈，傍晚的光线很好。 | 1 | 2 | 玩家二号 | 16分前 | 欢迎，周六一起。 | 举报 | 删除 | 玩家小城 | 16分前 | 这条路线我也想走一次。 | 举报 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 13,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/square/detail/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

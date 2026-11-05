@@ -1,0 +1,7 @@
+A-e02-leaderboard route subpackageP3/pages/growthcenter/leaderboard/index controls 5 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  ui change        onTab                      "周榜"                                 
+  NO VISIBLE EFFECT onTab                      "总榜"                                 
+  NO VISIBLE EFFECT onTab                      "积分榜"                                
+  ui change        onTab                      "成长榜"                                
+TEXT: 完整排行榜 | 周榜 | 总榜 | 2 | 城瘾用户 | 50 | 积分 | 1 | 玩家二号 | 60 | 积分 | 积分榜 | 成长榜 | 1 | 玩家二号 | 我 | 60 | 积分 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

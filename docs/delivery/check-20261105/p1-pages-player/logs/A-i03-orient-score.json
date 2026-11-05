@@ -1,0 +1,42 @@
+{
+ "id": "A-i03-orient-score",
+ "path": "subpackageMember/orient-score/index",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onCta|返回|{}",
+   "h": "onCta",
+   "txt": "返回",
+   "w": 58,
+   "hgt": 46,
+   "y": 298,
+   "route": "pages/member/index/index",
+   "newText": "主页 | 玩家二号 | Lv.13 城市探索者 | 连续探索：0天 | 0 | 好友 | 0 | 关注 | 1 | 粉丝 | 票夹 | 我的",
+   "runtime": "navigateBack:fail cannot navigate back at first page.",
+   "pageError": "Object: Object",
+   "shot": "A-i03-orient-score-t01",
+   "result": "navigates"
+  }
+ ],
+ "route": [
+  "subpackageMember/orient-score/index"
+ ],
+ "text": "链接已失效 | 返回 | 本局计分 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 1,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageMember/orient-score/index"
+  ],
+  "pageErrors": [
+   "Object: Object /     at fail (http://127.0.0.1:8097/src/nav.js:218:194)"
+  ],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

@@ -1,0 +1,50 @@
+{
+ "name": "S-i18-orderinfo-used",
+ "identity": "e2e-openid-9009",
+ "url": "subpackageMember/orderinfo/orderinfo?id=74",
+ "route": [
+  "pages/index/index",
+  "subpackageMember/orderinfo/orderinfo"
+ ],
+ "sys": "",
+ "text": "¥69.00 | E2E 探店日一期 | 11-05 10:14–23:59 | 已完成 | 本次订单已核销 | 订单明细 | 订单号 | A2026110571CAC8D5 | 票种 | 标准场次票 × 1 | 日期与时间 | 11-05 10:14–23:59 | 集合点 | 人民广场1号口 · 查看 | 支付明细 | 票价 | ¥69.00 × 1 | 微信实付 | ¥69.00 | 合计 | ¥69.00 | 和队友一起出发 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "textScrolled": "微信实付 | ¥69.00 | 合计 | ¥69.00 | 和队友一起出发 | 组队与否不影响活动举行，也不改变订单与退款规则。 | 仅邀请可加入 | 叫上队友 | 订单进度 | 订单已创建 | 2026-11-05 10:11 | 付款成功 | 2026-11-05 10:11 | 权益已核销 | 2026-11-05 02:14 | 支付信息 | 支付时间 | 2026-11-05 10:11 | 支付方式 | 微信 | 微信实付 | ¥69.00 | 微信交易单号 | E2E-TXN-74 | 报名人信息 | 姓名 | E2E 玩家二号 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "net": [
+  "200 POST /api/user/info",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/user/info",
+  "200 POST /api/map/reverse-geocode",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/map/reverse-geocode",
+  "200 POST /api/registration/info",
+  "200 POST /api/registration/explore-completion",
+  "200 POST /api/invoice/orders/eligible"
+ ],
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageMember/orderinfo/orderinfo"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

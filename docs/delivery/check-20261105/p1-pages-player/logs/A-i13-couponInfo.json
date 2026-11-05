@@ -1,0 +1,94 @@
+{
+ "id": "A-i13-couponInfo",
+ "path": "subpackageMember/couponInfo/couponInfo",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "showStartTimePicker|开始日期 - 结束日期|{}",
+   "h": "showStartTimePicker",
+   "txt": "开始日期 - 结束日期",
+   "w": 336,
+   "hgt": 42,
+   "y": 276,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  },
+  {
+   "key": "openCouponTypeSheet|请选择|{}",
+   "h": "openCouponTypeSheet",
+   "txt": "请选择",
+   "w": 336,
+   "hgt": 42,
+   "y": 443,
+   "route": "subpackageMember/couponInfo/couponInfo",
+   "newText": "选择优惠券类型 | 礼品券 | 9折券 | 8折券 | 体验卡",
+   "result": "ui change"
+  },
+  {
+   "key": "__onTap||{}",
+   "h": "__onTap",
+   "txt": "",
+   "w": 88,
+   "hgt": 46,
+   "y": 754,
+   "route": "pages/index/index",
+   "newText": "成为俱乐部 | 成为商家 | 和朋友报名活动 | Hi, 玩家二号! | 玩家 | · 上海市 | 编辑精选 | 暂时没有精选主题 | 附近活动 | 你附近暂时没有可点亮的节点 | 主题 | 活动",
+   "shot": "A-i13-couponInfo-t01",
+   "result": "navigates"
+  },
+  {
+   "key": "onCancel|取消|{}",
+   "h": "onCancel",
+   "txt": "取消",
+   "w": 88,
+   "hgt": 46,
+   "y": 754,
+   "route": "pages/index/index",
+   "newText": "成为俱乐部 | 成为商家 | 和朋友报名活动 | Hi, 玩家二号! | 玩家 | · 上海市 | 编辑精选 | 暂时没有精选主题 | 附近活动 | 你附近暂时没有可点亮的节点 | 主题 | 活动",
+   "shot": "A-i13-couponInfo-t02",
+   "result": "navigates"
+  },
+  {
+   "key": "onSubmit|发布优惠券|{}",
+   "h": "onSubmit",
+   "txt": "发布优惠券",
+   "w": 264,
+   "hgt": 46,
+   "y": 754,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  }
+ ],
+ "route": [
+  "subpackageMember/couponInfo/couponInfo"
+ ],
+ "text": "优惠券设置 | 优惠券名称 | * | 优惠券日期 | * | 开始日期 | - | 结束日期 | 投放数 | * | 优惠券类型 | * | 请选择 | 优惠券说明 | 取消 | 发布优惠券 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 6,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageMember/couponInfo/couponInfo"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

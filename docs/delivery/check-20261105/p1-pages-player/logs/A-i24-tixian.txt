@@ -1,0 +1,6 @@
+A-i24-tixian route subpackageMember/tixian/tixian controls 4 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  ui change        openWithdrawHistory        "提现记录"                               
+  ui change        __onTap                    ""                                   
+  SKIPPED (destructive / writes; walked by hand) saveData                   "联系客服提现"                             
+TEXT: 提现申请 | 提现记录 | 可提现余额 | ¥0.00 | 联系客服提现 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

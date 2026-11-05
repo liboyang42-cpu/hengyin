@@ -1,0 +1,10 @@
+A-i10-coupon-wallet route subpackageMember/coupon-wallet/index controls 8 errors 0 badNet 0
+  NO VISIBLE EFFECT noop                       ""                                   
+  back (not tapped) onBack                     ""                                   
+  NO VISIBLE EFFECT selectTab                  "全部"                                 
+  NO VISIBLE EFFECT selectTab                  "待使用"                                
+  ui change        selectTab                  "已使用"                                
+  ui change        selectTab                  "已过期"                                
+  ui change        openCode                   "到店赠饮一杯 到店出示即可 上海市黄浦区咖啡 有效期至 20"     
+  ui change        openShop                   "上海市黄浦区咖啡"                           
+TEXT: 优惠券 | 全部 | 待使用 | 已使用 | 已过期 | 到店赠饮一杯 | 待使用 | 到店出示即可 | 上海市黄浦区咖啡 | 有效期至 2026.12.31 | 出示核销码 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

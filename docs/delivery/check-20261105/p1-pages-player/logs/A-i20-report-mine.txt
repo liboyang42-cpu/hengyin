@@ -1,0 +1,7 @@
+A-i20-report-mine route subpackageMember/report-mine/index controls 5 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  NO VISIBLE EFFECT onTab                      "全部"                                 
+  NO VISIBLE EFFECT onTab                      "处理中"                                
+  ui change        onTab                      "已有结论"                               
+  SKIPPED (destructive / writes; walked by hand) openDetail                 "内容举报 · 垃圾广告或站外导流 已提交 编号 1 · 20"     
+TEXT: 我的举报 | 全部 | 处理中 | 已有结论 | 内容举报 · 垃圾广告或站外导流 | 已提交 | 编号 1 · 2026-11-05 02:19 | 已经到底了 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

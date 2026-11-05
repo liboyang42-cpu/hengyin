@@ -1,0 +1,51 @@
+{
+ "id": "A-d03-infomationdetail",
+ "path": "subpackageA/pages/infomationdetail/infomationdetail?id=1",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "onCta|返回玩法列表|{}",
+   "h": "onCta",
+   "txt": "返回玩法列表",
+   "w": 108,
+   "hgt": 46,
+   "y": 480,
+   "route": "pages/index/index",
+   "newText": "成为俱乐部 | 成为商家 | 和朋友报名活动 | Hi, 玩家二号! | 玩家 | · 上海市 | 编辑精选 | 暂时没有精选主题 | 附近活动 | 你附近暂时没有可点亮的节点 | 主题 | 活动",
+   "shot": "A-d03-infomationdetail-t01",
+   "result": "navigates"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "subpackageA/pages/infomationdetail/infomationdetail"
+ ],
+ "text": "玩法详情 | 这篇玩法说明不在了 | 返回玩法列表 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 2,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageA/pages/infomationdetail/infomationdetail"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

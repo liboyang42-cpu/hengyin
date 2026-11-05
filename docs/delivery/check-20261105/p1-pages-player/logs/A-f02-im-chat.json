@@ -1,0 +1,84 @@
+{
+ "id": "A-f02-im-chat",
+ "path": "subpackageB/pages/im/chat/index?conversationId=8",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "onMore|更多|{}",
+   "h": "onMore",
+   "txt": "更多",
+   "w": 50,
+   "hgt": 46,
+   "y": 46,
+   "route": "subpackageB/pages/im/chat/index",
+   "newText": "举报这条消息 | 举报对方 | 拉黑 | 隐藏会话",
+   "result": "ui change"
+  },
+  {
+   "key": "onTap||{}",
+   "h": "onTap",
+   "txt": "",
+   "w": 33,
+   "hgt": 33,
+   "y": 158,
+   "route": "subpackageB/pages/im/chat/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "onPlus||{}",
+   "h": "onPlus",
+   "txt": "",
+   "w": 46,
+   "hgt": 46,
+   "y": 764,
+   "route": "subpackageB/pages/im/chat/index",
+   "newText": "发送 | 图片 | 位置 | 路线",
+   "result": "ui change"
+  },
+  {
+   "key": "onSend||{}",
+   "h": "onSend",
+   "txt": "",
+   "w": 46,
+   "hgt": 46,
+   "y": 764,
+   "route": "subpackageB/pages/im/chat/index",
+   "result": "NO VISIBLE EFFECT"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "subpackageB/pages/im/chat/index"
+ ],
+ "text": "更多 | 对话 | 02:13 | 你好，周六那场还有位置吗？ | 有的，我已经报名了，可以一起。 | 好，那到时见。 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 5,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageB/pages/im/chat/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

@@ -1,0 +1,71 @@
+{
+ "id": "A-l03-deregister",
+ "path": "pages/deregister/index",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "onMask||{}",
+   "h": "onMask",
+   "txt": "",
+   "w": 390,
+   "hgt": 844,
+   "y": 0,
+   "route": "pages/deregister/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "noop||{}",
+   "h": "noop",
+   "txt": "",
+   "w": 390,
+   "hgt": 675,
+   "y": 169,
+   "route": "pages/deregister/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "__onTap||{}",
+   "h": "__onTap",
+   "txt": "",
+   "w": 324,
+   "hgt": 46,
+   "y": 316,
+   "route": "pages/deregister/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "recheck|我已处理，重新检查|{}",
+   "h": "recheck",
+   "txt": "我已处理，重新检查",
+   "w": 324,
+   "hgt": 46,
+   "y": 316,
+   "route": "pages/deregister/index",
+   "result": "NO VISIBLE EFFECT"
+  }
+ ],
+ "route": [
+  "pages/deregister/index"
+ ],
+ "text": "注销账号 | 暂时无法注销 | 请先处理以下事项： | · 存在待支付或未核销的有效报名 | 我已处理，重新检查 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 5,
+ "report": {
+  "route": [
+   "pages/deregister/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

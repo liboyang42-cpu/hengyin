@@ -1,0 +1,8 @@
+A-i09-complaint route subpackageMember/complaint/index controls 6 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  ui change        openPickerSheet            "请选择要投诉的活动"                          
+  ui change        openPickerSheet            "请选择投诉类型（可选）"                        
+  NO VISIBLE EFFECT __onTap                    ""                                   
+  SKIPPED (destructive / writes; walked by hand) submit                     "提交投诉"                               
+  NO VISIBLE EFFECT loadHistory                "刷新进展"                               
+TEXT: 投诉与建议 | 仅限已报名并支付的活动，平台会介入处理 | 投诉活动 | * | 请选择要投诉的活动 | 投诉类型 | 请选择投诉类型（可选） | 投诉内容 | * | 联系方式 | 提交投诉 | 我的处理进展 | 刷新进展 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

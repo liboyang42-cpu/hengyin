@@ -1,0 +1,7 @@
+A-d04-income-detail route subpackageA/pages/assetcenter/income-detail/income-detail controls 5 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  NO VISIBLE EFFECT onTab                      "全部"                                 
+  ui change        onTab                      "创作收益"                               
+  ui change        onTab                      "品牌收益"                               
+  ui change        onTab                      "主办分润"                               
+TEXT: 收益明细 | 全部 | 创作收益 | 品牌收益 | 主办分润 | 还没有收益记录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

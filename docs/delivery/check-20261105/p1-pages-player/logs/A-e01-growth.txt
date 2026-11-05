@@ -1,0 +1,5 @@
+A-e01-growth route subpackageP3/pages/growthcenter/index/index controls 3 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  navigates        goLeaderboard              "总积分榜 · 第 1 名 查看榜单"              -> subpackageP3/pages/growthcenter/leaderboard/index    
+  ui change        onBadgeTap                 "E E2E 探店日一期 · 通关 查看获得时刻 查看"         
+TEXT: 成长中心 | 玩家二号 | 60 | 积分 | 总积分榜 · 第 1 名 | 查看榜单 | 我的足迹 | Lv.13 | 探索值 | 1,200 | EXP | 徽章 | 1 | 枚 | 完成主题 | 1 | 个 | 累计距离 | 4.4 | km | 我的徽章 | 1 | E | E2E 探店日一期 · 通关 | 查看获得时刻 | 查看 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

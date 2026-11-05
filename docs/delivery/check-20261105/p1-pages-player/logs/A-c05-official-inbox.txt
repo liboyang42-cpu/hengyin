@@ -1,0 +1,3 @@
+A-c05-official-inbox route pages/activity/official-inbox/index controls 1 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+TEXT: 官方活动邀约 | 暂无待处理的活动职责 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

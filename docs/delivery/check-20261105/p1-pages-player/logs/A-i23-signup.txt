@@ -1,0 +1,6 @@
+A-i23-signup route subpackageMember/signup/index controls 4 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  NO VISIBLE EFFECT onCardTap                  "E2E 探店日一期 11月15日 10:00 · 上海市黄浦"     
+  navigates        goMyTeam                   "我的队伍 周六夜行小队 1/4"                -> pages/team/detail/index    
+  SKIPPED (destructive / writes; walked by hand) goTicket                   "开始游戏"                               
+TEXT: 票夹 | E2E 探店日一期 | 11月15日 10:00 · 上海市黄浦区咖啡 · 已核销 0/4 家 | E2E 探店日一期 | 生成中… | 我的队伍 | 周六夜行小队 | 1/4 | 开始游戏 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

@@ -1,0 +1,8 @@
+A-j07-my-teams route subpackageRoam/my-teams/index controls 6 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  navigates        openMap                    "地图"                             -> subpackageRoam/nearby/index    
+  NO VISIBLE EFFECT switchTab                  "我的"                                 
+  ui change        switchTab                  "附近招募"                               
+  SKIPPED (destructive / writes; walked by hand) openRow                    "周六夜行小队 11/15 10:00 开始 队长 已组 1/"     
+  navigates        onRowAction                "进入队伍"                           -> pages/team/detail/index    
+TEXT: 地图 | 我的队伍 | 0 | 已通过 | 0 | 审核中 | 1 | 带队 | 0 | 未通过 | 我的 | 附近招募 | 我带的队 | 周六夜行小队 | 11/15 10:00 开始 | 队长 | 已组 1/4 | 进入队伍 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

@@ -1,0 +1,8 @@
+A-h04-about route pages/shezhi/about/index controls 6 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  ui change        onTap                      "用户服务协议"                             
+  ui change        openAgreement              "用户服务协议"                             
+  ui change        onTap                      "联系我们"                              R:open-type contact 
+  toast            copyAttributionLink        "复制来源地址 · game-icons.net"          T:内容已复制  
+  toast            copyAttributionLink        "复制来源地址 · ansimuz.itch.io"         T:内容已复制  
+TEXT: 关于 | 城瘾 | 版本 开发版本 | 我的二维码 | 玩家个人码待生成 | 用户服务协议 | 联系我们 | 素材署名 | game-icons.net 游戏图标 · Creative Commons BY 3.0（要求署名） | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

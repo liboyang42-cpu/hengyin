@@ -1,0 +1,51 @@
+{
+ "name": "S-i15-mycanyuinfo-used",
+ "identity": "e2e-openid-9009",
+ "url": "subpackageMember/mycanyuinfo/mycanyuinfo?id=74",
+ "route": [
+  "pages/index/index",
+  "subpackageMember/mycanyuinfo/mycanyuinfo"
+ ],
+ "sys": "",
+ "text": "参与详情 | E2E 探店日一期 | 2026.11.05 - 2026.11.05 | 线下活动 | 已完成 | 5-1 链路真跑 | 开始玩 | 联系客服 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "textScrolled": "E2E 探店日一期 | 2026.11.05 - 2026.11.05 | 线下活动 | 已完成 | 5-1 链路真跑 | 开始玩 | 联系客服 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "net": [
+  "200 POST /api/user/info",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/user/info",
+  "200 POST /api/map/reverse-geocode",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/map/reverse-geocode",
+  "200 POST /api/registration/info",
+  "200 GET /api/play/character?topicId=990014"
+ ],
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageMember/mycanyuinfo/mycanyuinfo"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/e2e-topic-cover-9003.jpg?Expires=2109207018&OSSAccessKeyId=rigdummy&Signature=GybwP7XvYHD6S5Hrbg3a3bjfokY%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ],
+  "badNet": []
+ }
+}

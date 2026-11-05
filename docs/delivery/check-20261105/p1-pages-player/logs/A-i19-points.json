@@ -1,0 +1,68 @@
+{
+ "id": "A-i19-points",
+ "path": "subpackageMember/points-history/index",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "onTab|全部|{\"key\":\"all\"}",
+   "h": "onTab",
+   "txt": "全部",
+   "w": 54,
+   "hgt": 35,
+   "y": 168,
+   "route": "subpackageMember/points-history/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "onTab|获得|{\"key\":\"income\"}",
+   "h": "onTab",
+   "txt": "获得",
+   "w": 54,
+   "hgt": 35,
+   "y": 168,
+   "route": "subpackageMember/points-history/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "onTab|使用|{\"key\":\"expense\"}",
+   "h": "onTab",
+   "txt": "使用",
+   "w": 54,
+   "hgt": 35,
+   "y": 168,
+   "route": "subpackageMember/points-history/index",
+   "result": "NO VISIBLE EFFECT"
+  }
+ ],
+ "route": [
+  "subpackageMember/points-history/index"
+ ],
+ "text": "积分明细 | 全部 | 获得 | 使用 | 2026年11月 | 报名抵扣 | 11月5日 10:16 | -10 | 余额 60 | 发布帖文 | 11月5日 10:13 | +20 | 余额 70 | 完成主题 E2E 探店日一期 | 11月5日 10:05 | +50 | 余额 50 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 4,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageMember/points-history/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

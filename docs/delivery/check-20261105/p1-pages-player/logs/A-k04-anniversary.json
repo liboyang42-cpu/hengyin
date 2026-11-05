@@ -1,0 +1,47 @@
+{
+ "id": "A-k04-anniversary",
+ "path": "subpackageTools/anniversary/index",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "open||{}",
+   "h": "open",
+   "txt": "",
+   "w": 72,
+   "hgt": 34,
+   "y": 234,
+   "route": "subpackageTools/anniversary/index",
+   "newText": "选择日期 | 完成 | 2025 | 2026 | 2027 | 2028 | 2029 | 01 | 02 | 03 | 04 | 05",
+   "shot": "A-k04-anniversary-t01",
+   "result": "ui change"
+  }
+ ],
+ "route": [
+  "subpackageTools/anniversary/index"
+ ],
+ "text": "那年今日 | 11.05 | 换一天 | 这一天还没有回忆 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 2,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageTools/anniversary/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

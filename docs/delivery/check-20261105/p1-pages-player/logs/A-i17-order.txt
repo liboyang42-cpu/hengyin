@@ -1,0 +1,19 @@
+A-i17-order route subpackageMember/order/order controls 17 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  NO VISIBLE EFFECT onTab                      "全部"                                 
+  SKIPPED (destructive / writes; walked by hand) onTab                      "待支付"                                
+  SKIPPED (destructive / writes; walked by hand) onTab                      "未开始"                                
+  ui change        onTab                      "进行中"                                
+  NO VISIBLE EFFECT onTab                      "已完成"                                
+  SKIPPED (destructive / writes; walked by hand) onTab                      "退款中"                                
+  SKIPPED (destructive / writes; walked by hand) onTab                      "退款成功"                               
+  SKIPPED (destructive / writes; walked by hand) onTab                      "不可退款"                               
+  SKIPPED (destructive / writes; walked by hand) onTab                      "人工售后"                               
+  SKIPPED (destructive / writes; walked by hand) openDetail                 "订单号：A202611051D0429B2 未开始 自由探索"     
+  toast            onAddressTap               "上海市黄浦区咖啡"                         T:打开微信地图：上海市黄浦区咖啡  
+  SKIPPED (destructive / writes; walked by hand) cancelOrder                "申请退款"                               
+  ui change        openDetail                 "查看详情"                               
+  ui change        openDetail                 "订单号：A2026110571CAC8D5 已完成 自由探索"     
+  toast            onAddressTap               "上海市黄浦区咖啡"                         T:打开微信地图：上海市黄浦区咖啡  
+  ui change        openDetail                 "查看详情"                               
+TEXT: 我的订单 | 全部 | 待支付 | 未开始 | 进行中 | 已完成 | 退款中 | 退款成功 | 不可退款 | 人工售后 | 订单号： | A202611051D0429B2 | 未开始 | 自由探索 | E2E 探店日一期 | 11.15 10:00 - 11.15 23:59 | 上海市黄浦区咖啡 | 实付款： | ¥69 | 申请退款 | 查看详情 | 订单号： | A2026110571CAC8D5 | 已完成 | 自由探索 | E2E 探店日一期 | 11.05 10:14 - 11.05 23:59 | 上海市黄浦区咖啡 | 实付款： | ¥69 | 查看详情 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

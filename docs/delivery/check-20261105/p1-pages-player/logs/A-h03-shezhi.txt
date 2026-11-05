@@ -1,0 +1,29 @@
+A-h03-shezhi route pages/shezhi/shezhi controls 27 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  navigates        onTap                      "个人资料"                           -> pages/gerenziliao/gerenziliao    
+  navigates        goUserInfo                 "个人资料"                           -> pages/gerenziliao/gerenziliao    
+  navigates        onTap                      "成为俱乐部主理人"                       -> pages/club/apply/index    
+  navigates        pickClub                   "成为俱乐部主理人"                       -> pages/club/apply/index    
+  navigates        onTap                      "成为商家"                           -> pages/merchant/apply/index    
+  navigates        pickMerchant               "成为商家"                           -> pages/merchant/apply/index    
+  navigates        onTap                      "城瘾玩法"                           -> subpackageA/pages/infomation/infomation    
+  navigates        goInfomation               "城瘾玩法"                           -> subpackageA/pages/infomation/infomation    
+  navigates        onTap                      "我的收藏"                           -> pages/mylike/mylike    
+  navigates        goMylike                   "我的收藏"                           -> pages/mylike/mylike    
+  ui change        onTap                      "隐私与定位"                              
+  ui change        goPrivacy                  "隐私与定位"                              
+  navigates        onTap                      "营销消息与优惠券"                       -> pages/shezhi/marketing/index    
+  navigates        openMarketingConsent       "营销消息与优惠券"                       -> pages/shezhi/marketing/index    
+  ui change        onTap                      "帖文处置与申诉"                            
+  ui change        openPostGovernance         "帖文处置与申诉"                            
+  navigates        onTap                      "我的申诉"                           -> subpackageMember/appeal-mine/index    
+  navigates        goAppeals                  "我的申诉"                           -> subpackageMember/appeal-mine/index    
+  ui change        onTap                      "用户服务协议"                             
+  ui change        goUserAgreement            "用户服务协议"                             
+  SKIPPED (destructive / writes; walked by hand) onTap                      "账号注销"                               
+  SKIPPED (destructive / writes; walked by hand) goDeregister               "账号注销"                               
+  navigates        onTap                      "关于"                             -> pages/shezhi/about/index    
+  navigates        goAbout                    "关于"                             -> pages/shezhi/about/index    
+  ui change        __onTap                    ""                                   
+  SKIPPED (destructive / writes; walked by hand) logout                     "退出账号"                               
+TEXT: 设置 | 个人资料 | 成为俱乐部主理人 | 成为商家 | 城瘾玩法 | 我的收藏 | 隐私与定位 | 营销消息与优惠券 | 帖文处置与申诉 | 我的申诉 | 用户服务协议 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

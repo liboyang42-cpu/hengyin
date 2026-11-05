@@ -1,0 +1,91 @@
+{
+ "id": "A-j02-roam-history",
+ "path": "subpackageRoam/history/index",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "openTool|那年今日|{\"key\":\"anniversary\"}",
+   "h": "openTool",
+   "txt": "那年今日",
+   "w": 113,
+   "hgt": 46,
+   "y": 161,
+   "route": "subpackageTools/anniversary/index",
+   "newText": "11.05 | 换一天 | 这一天还没有回忆",
+   "shot": "A-j02-roam-history-t01",
+   "result": "navigates"
+  },
+  {
+   "key": "openTool|月度回顾|{\"key\":\"recap\"}",
+   "h": "openTool",
+   "txt": "月度回顾",
+   "w": 113,
+   "hgt": 46,
+   "y": 161,
+   "route": "subpackageTools/monthly-recap/index",
+   "newText": "2026 年 11 月 | 路线 | 首次地点 | 城市签 | 这一类本月没有记录",
+   "shot": "A-j02-roam-history-t02",
+   "result": "navigates"
+  },
+  {
+   "key": "openTool|导出|{\"key\":\"export\"}",
+   "h": "openTool",
+   "txt": "导出",
+   "w": 113,
+   "hgt": 46,
+   "y": 161,
+   "route": "subpackageTools/exploration-export/index",
+   "newText": "导出探索记录 | 近 30 天 | 今年 | 近一年 | 开始 | 2026-10-07 | 结束（不含） | 2026-11-06 | 准备导出",
+   "shot": "A-j02-roam-history-t03",
+   "result": "navigates"
+  },
+  {
+   "key": "onCta|出发第一次漫游|{}",
+   "h": "onCta",
+   "txt": "出发第一次漫游",
+   "w": 121,
+   "hgt": 46,
+   "y": 559,
+   "route": "pages/index/index",
+   "newText": "成为俱乐部 | 成为商家 | 和朋友报名活动 | Hi, 玩家二号! | 玩家 | · 上海市 | 编辑精选 | 暂时没有精选主题 | 附近活动 | 你附近暂时没有可点亮的节点 | 主题 | 活动",
+   "shot": "A-j02-roam-history-t04",
+   "result": "navigates"
+  }
+ ],
+ "route": [
+  "subpackageRoam/history/index"
+ ],
+ "text": "漫游记录 | 那年今日 | 月度回顾 | 导出 | 还没有漫游记录 | 出发第一次漫游 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 5,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageRoam/history/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

@@ -1,0 +1,4 @@
+A-l05-team-join route pages/index/index>pages/team/join/index controls 2 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  navigates        goDetail                   "查看队伍"                           -> pages/team/detail/index    
+TEXT: 加入队伍 | 周六夜行小队 | 1 / 4 | 当前成员 | 仅邀请 | 加入方式 | 查看队伍 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

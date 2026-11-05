@@ -1,0 +1,8 @@
+A-d05-earnings route subpackageA/pages/assetcenter/earnings/index controls 6 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  ui change        openWithdraw               "提现"                                 
+  navigates        openIncomeDetail           "明细"                             -> subpackageA/pages/assetcenter/income-detail/income-detail    
+  navigates        openAnalysis               "分析"                             -> subpackageA/pages/assetcenter/analysis/index    
+  ui change        openMore                   "更多"                                 
+  SKIPPED (destructive / writes; walked by hand) onCta                      "去发布路线"                              
+TEXT: 账户收益 | 账户收益（元） | ¥0.00 | 提现 | 明细 | 分析 | 更多 | 还没有收益 | 去发布路线 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

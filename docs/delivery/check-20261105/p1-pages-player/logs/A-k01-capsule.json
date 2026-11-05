@@ -1,0 +1,61 @@
+{
+ "id": "A-k01-capsule",
+ "path": "subpackageTools/capsule/index",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "lockedTip|2026-11-05 写下 365 天 2027-11-05|{\"id\":\"1\"}",
+   "h": "lockedTip",
+   "txt": "2026-11-05 写下 365 天 2027-11-05",
+   "w": 358,
+   "hgt": 129,
+   "y": 231,
+   "route": "subpackageTools/capsule/index",
+   "newText": "尚未到开启时间",
+   "result": "ui change"
+  },
+  {
+   "key": "toggleCompose||{}",
+   "h": "toggleCompose",
+   "txt": "",
+   "w": 56,
+   "hgt": 56,
+   "y": 720,
+   "route": "subpackageTools/capsule/index",
+   "newText": "胶囊正文 | 0 / 4000 | 附一张照片 | 可选 | 开启日期 | 2027-11-05 | 1 个月后 | 半年后 | 1 年后 | 自定义 | 封存胶囊 | 先不写",
+   "shot": "A-k01-capsule-t01",
+   "result": "ui change"
+  }
+ ],
+ "route": [
+  "subpackageTools/capsule/index"
+ ],
+ "text": "时光胶囊 | 我的胶囊 | 1 枚 | 2026-11-05 写下 | 365 天 | 2027-11-05 开启 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 3,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageTools/capsule/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

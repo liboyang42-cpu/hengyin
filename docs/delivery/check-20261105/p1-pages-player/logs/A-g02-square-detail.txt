@@ -1,0 +1,15 @@
+A-g02-square-detail route pages/index/index>pages/square/detail/index controls 13 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  ui change        goUserInfoClcik            ""                                   
+  ui change        openPostActions            ""                                   
+  NO VISIBLE EFFECT lickClick                  "1"                                  
+  ui change        focusCommentInput          "2"                                  
+  NO VISIBLE EFFECT favoriteClick              ""                                   
+  ui change        commentFollowClick         ""                                   
+  ui change        commentLikeClick           ""                                   
+  ui change        msgClick                   ""                                   
+  SKIPPED (destructive / writes; walked by hand) reportComment              "举报"                                 
+  SKIPPED (destructive / writes; walked by hand) deleteComment              "删除"                                 
+  NO VISIBLE EFFECT commentLikeClick           ""                                   
+  SKIPPED (destructive / writes; walked by hand) reportComment              "举报"                                 
+TEXT: 玩家二号 | 16分前 | 周末沿着苏州河走了一圈，傍晚的光线很好。 | 1 | 2 | 玩家二号 | 16分前 | 欢迎，周六一起。 | 举报 | 删除 | 玩家小城 | 16分前 | 这条路线我也想走一次。 | 举报 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

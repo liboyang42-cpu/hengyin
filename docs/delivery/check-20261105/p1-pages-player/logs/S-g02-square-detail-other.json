@@ -1,0 +1,48 @@
+{
+ "name": "S-g02-square-detail-other",
+ "identity": "e2e-openid-9009",
+ "url": "pages/square/detail/index?id=3",
+ "route": [
+  "pages/index/index",
+  "pages/square/detail/index"
+ ],
+ "sys": "",
+ "text": "玩家小城 | 36分前 | 关注 | 新天地附近有家安静的咖啡店，下午人不多。 | 1 | 还没有评论 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "net": [
+  "200 POST /api/user/info",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/user/info",
+  "200 POST /api/map/reverse-geocode",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/map/reverse-geocode",
+  "200 GET /api/v1/community/posts/3",
+  "200 GET /api/v1/community/posts/3/comments?limit=10"
+ ],
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/square/detail/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

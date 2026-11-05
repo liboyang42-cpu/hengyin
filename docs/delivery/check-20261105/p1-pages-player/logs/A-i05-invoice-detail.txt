@@ -1,0 +1,3 @@
+A-i05-invoice-detail route pages/index/index>subpackageMember/invoice-detail/index controls 1 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+TEXT: 发票详情 | 发票功能暂未开放 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

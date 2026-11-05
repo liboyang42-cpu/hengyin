@@ -1,0 +1,5 @@
+A-h02-addressinfo route pages/addressinfo/addressinfo controls 3 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  ui change        __onTap                    ""                                   
+  SKIPPED (destructive / writes; walked by hand) saveAddress                "保存参与人信息"                            
+TEXT: 参与人信息 | 姓名 | * | 手机号 | * | 保存参与人信息 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

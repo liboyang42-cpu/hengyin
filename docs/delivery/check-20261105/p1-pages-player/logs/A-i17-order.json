@@ -1,0 +1,206 @@
+{
+ "id": "A-i17-order",
+ "path": "subpackageMember/order/order",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "onTab|全部|{\"key\":\"0\"}",
+   "h": "onTab",
+   "txt": "全部",
+   "w": 54,
+   "hgt": 35,
+   "y": 168,
+   "route": "subpackageMember/order/order",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "onTab|待支付|{\"key\":\"pending_payment\"}",
+   "h": "onTab",
+   "txt": "待支付",
+   "w": 67,
+   "hgt": 35,
+   "y": 168,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  },
+  {
+   "key": "onTab|未开始|{\"key\":\"not_started\"}",
+   "h": "onTab",
+   "txt": "未开始",
+   "w": 67,
+   "hgt": 35,
+   "y": 168,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  },
+  {
+   "key": "onTab|进行中|{\"key\":\"in_progress\"}",
+   "h": "onTab",
+   "txt": "进行中",
+   "w": 67,
+   "hgt": 35,
+   "y": 168,
+   "route": "subpackageMember/order/order",
+   "newText": "当前筛选暂无订单",
+   "result": "ui change"
+  },
+  {
+   "key": "onTab|已完成|{\"key\":\"completed\"}",
+   "h": "onTab",
+   "txt": "已完成",
+   "w": 67,
+   "hgt": 35,
+   "y": 168,
+   "route": "subpackageMember/order/order",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "onTab|退款中|{\"key\":\"refunding\"}",
+   "h": "onTab",
+   "txt": "退款中",
+   "w": 67,
+   "hgt": 35,
+   "y": 168,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  },
+  {
+   "key": "onTab|退款成功|{\"key\":\"refunded\"}",
+   "h": "onTab",
+   "txt": "退款成功",
+   "w": 79,
+   "hgt": 35,
+   "y": 168,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  },
+  {
+   "key": "onTab|不可退款|{\"key\":\"non_refundable\"}",
+   "h": "onTab",
+   "txt": "不可退款",
+   "w": 79,
+   "hgt": 35,
+   "y": 168,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  },
+  {
+   "key": "onTab|人工售后|{\"key\":\"manual_refund\"}",
+   "h": "onTab",
+   "txt": "人工售后",
+   "w": 79,
+   "hgt": 35,
+   "y": 168,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  },
+  {
+   "key": "openDetail|订单号：A202611051D0429B2 未开始 自由探索|{\"id\":75}",
+   "h": "openDetail",
+   "txt": "订单号：A202611051D0429B2 未开始 自由探索",
+   "w": 357,
+   "hgt": 278,
+   "y": 227,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  },
+  {
+   "key": "onAddressTap|上海市黄浦区咖啡|{\"id\":75,\"address\":\"上海市黄浦区咖啡\",\"lat\":\"31.230416\",\"lng\":\"121.4",
+   "h": "onAddressTap",
+   "txt": "上海市黄浦区咖啡",
+   "w": 184,
+   "hgt": 20,
+   "y": 383,
+   "route": "subpackageMember/order/order",
+   "toast": "打开微信地图：上海市黄浦区咖啡",
+   "newText": "打开微信地图：上海市黄浦区咖啡",
+   "result": "toast"
+  },
+  {
+   "key": "cancelOrder|申请退款|{\"id\":75,\"index\":0,\"status\":2}",
+   "h": "cancelOrder",
+   "txt": "申请退款",
+   "w": 77,
+   "hgt": 46,
+   "y": 433,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  },
+  {
+   "key": "openDetail|查看详情|{\"id\":75}",
+   "h": "openDetail",
+   "txt": "查看详情",
+   "w": 83,
+   "hgt": 46,
+   "y": 433,
+   "route": "subpackageMember/order/order",
+   "newText": "¥69.00 | 11-15 10:00–23:59 | 已核销 0/4 家 | 订单明细 | 订单号 | 票种 | 标准场次票 × 1 | 日期与时间 | 11-15 10:00–23:59 | 集合点 | 人民广场1号口 · 查看 | 支付明细",
+   "shot": "A-i17-order-t01",
+   "result": "ui change"
+  },
+  {
+   "key": "openDetail|订单号：A2026110571CAC8D5 已完成 自由探索|{\"id\":74}",
+   "h": "openDetail",
+   "txt": "订单号：A2026110571CAC8D5 已完成 自由探索",
+   "w": 357,
+   "hgt": 278,
+   "y": 529,
+   "route": "subpackageMember/order/order",
+   "newText": "¥69.00 | 11-05 10:14–23:59 | 本次订单已核销 | 订单明细 | 订单号 | 票种 | 标准场次票 × 1 | 日期与时间 | 11-05 10:14–23:59 | 集合点 | 人民广场1号口 · 查看 | 支付明细",
+   "shot": "A-i17-order-t02",
+   "result": "ui change"
+  },
+  {
+   "key": "onAddressTap|上海市黄浦区咖啡|{\"id\":74,\"address\":\"上海市黄浦区咖啡\",\"lat\":\"31.230416\",\"lng\":\"121.4",
+   "h": "onAddressTap",
+   "txt": "上海市黄浦区咖啡",
+   "w": 184,
+   "hgt": 20,
+   "y": 685,
+   "route": "subpackageMember/order/order",
+   "toast": "打开微信地图：上海市黄浦区咖啡",
+   "newText": "打开微信地图：上海市黄浦区咖啡",
+   "result": "toast"
+  },
+  {
+   "key": "openDetail|查看详情|{\"id\":74}",
+   "h": "openDetail",
+   "txt": "查看详情",
+   "w": 83,
+   "hgt": 46,
+   "y": 735,
+   "route": "subpackageMember/order/order",
+   "newText": "¥69.00 | 11-05 10:14–23:59 | 本次订单已核销 | 订单明细 | 订单号 | 票种 | 标准场次票 × 1 | 日期与时间 | 11-05 10:14–23:59 | 集合点 | 人民广场1号口 · 查看 | 支付明细",
+   "shot": "A-i17-order-t03",
+   "result": "ui change"
+  }
+ ],
+ "route": [
+  "subpackageMember/order/order"
+ ],
+ "text": "我的订单 | 全部 | 待支付 | 未开始 | 进行中 | 已完成 | 退款中 | 退款成功 | 不可退款 | 人工售后 | 订单号： | A202611051D0429B2 | 未开始 | 自由探索 | E2E 探店日一期 | 11.15 10:00 - 11.15 23:59 | 上海市黄浦区咖啡 | 实付款： | ¥69 | 申请退款 | 查看详情 | 订单号： | A2026110571CAC8D5 | 已完成 | 自由探索 | E2E 探店日一期 | 11.05 10:14 - 11.05 23:59 | 上海市黄浦区咖啡 | 实付款： | ¥69 | 查看详情 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 17,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageMember/order/order"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/e2e-topic-cover-9003.jpg?Expires=2109206237&OSSAccessKeyId=rigdummy&Signature=w%2BL4EpG%2B40acBTOb1%2FTilTN%2B3gs%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] FAILED https://oss-rig.invalid/upload/e2e-topic-cover-9003.jpg?Expires=2109206237&OSSAccessKeyId=rigdummy&Signature=w%2BL4EpG%2B40acBTOb1%2FTilTN%2B3gs%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/e2e-topic-cover-9003.jpg?Expires=2109206256&OSSAccessKeyId=rigdummy&Signature=JxyTiMtiZcakRN7XyJTQb16KEdc%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] FAILED https://oss-rig.invalid/upload/e2e-topic-cover-9003.jpg?Expires=2109206260&OSSAccessKeyId=rigdummy&Signature=k40GPeMFW%2BeZynXHcXlayZlIA08%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ],
+  "badNet": []
+ }
+}

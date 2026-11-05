@@ -1,0 +1,7 @@
+A-f02-im-chat route pages/index/index>subpackageB/pages/im/chat/index controls 5 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  ui change        onMore                     "更多"                                 
+  NO VISIBLE EFFECT onTap                      ""                                   
+  ui change        onPlus                     ""                                   
+  NO VISIBLE EFFECT onSend                     ""                                   
+TEXT: 更多 | 对话 | 02:13 | 你好，周六那场还有位置吗？ | 有的，我已经报名了，可以一起。 | 好，那到时见。 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

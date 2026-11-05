@@ -1,0 +1,5 @@
+A-d06-analysis route subpackageA/pages/assetcenter/analysis/index controls 3 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  NO VISIBLE EFFECT switchMode                 "收入"                                 
+  ui change        switchMode                 "提现"                                 
+TEXT: 分析 | 收入 | 提现 | 11月收入 | ¥0.00 | 6月 | 7月 | 8月 | 9月 | 10月 | 11月 | 收入来源 | 这个月还没有收入 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

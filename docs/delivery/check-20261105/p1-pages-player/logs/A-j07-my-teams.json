@@ -1,0 +1,97 @@
+{
+ "id": "A-j07-my-teams",
+ "path": "subpackageRoam/my-teams/index",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "openMap|地图|{}",
+   "h": "openMap",
+   "txt": "地图",
+   "w": 78,
+   "hgt": 37,
+   "y": 50,
+   "route": "subpackageRoam/nearby/index",
+   "newText": "全部 | 主题队伍 | 地点玩法 | 商家 | 附近 · 0 支队伍 · 6 处地点 | 热门活动 | E2E 探店日一期 | 上海市黄浦区咖啡 · 2m | 热门活动 | E2E 探店日一期 | 上海市黄浦区咖啡 · 2m | 热门活动",
+   "shot": "A-j07-my-teams-t01",
+   "result": "navigates"
+  },
+  {
+   "key": "switchTab|我的|{\"tab\":\"mine\"}",
+   "h": "switchTab",
+   "txt": "我的",
+   "w": 176,
+   "hgt": 37,
+   "y": 259,
+   "route": "subpackageRoam/my-teams/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "switchTab|附近招募|{\"tab\":\"open\"}",
+   "h": "switchTab",
+   "txt": "附近招募",
+   "w": 176,
+   "hgt": 37,
+   "y": 259,
+   "route": "subpackageRoam/my-teams/index",
+   "newText": "附近暂时没有在招募的队伍",
+   "result": "ui change"
+  },
+  {
+   "key": "openRow|周六夜行小队 11/15 10:00 开始 队长 已组 1/|{\"index\":0,\"group\":\"lead\"}",
+   "h": "openRow",
+   "txt": "周六夜行小队 11/15 10:00 开始 队长 已组 1/",
+   "w": 358,
+   "hgt": 126,
+   "y": 365,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  },
+  {
+   "key": "onRowAction|进入队伍|{\"index\":0,\"group\":\"lead\"}",
+   "h": "onRowAction",
+   "txt": "进入队伍",
+   "w": 78,
+   "hgt": 34,
+   "y": 443,
+   "route": "pages/team/detail/index",
+   "newText": "队伍详情 | 招募中 | 1 / 4 | 当前成员 | 11月15日 02:00 | 场次开始 | 邀请队友 | 公开招募 | 入队申请 | 暂无申请 | 队伍成员 | 玩家二号",
+   "shot": "A-j07-my-teams-t02",
+   "result": "navigates"
+  }
+ ],
+ "route": [
+  "subpackageRoam/my-teams/index"
+ ],
+ "text": "地图 | 我的队伍 | 0 | 已通过 | 0 | 审核中 | 1 | 带队 | 0 | 未通过 | 我的 | 附近招募 | 我带的队 | 周六夜行小队 | 11/15 10:00 开始 | 队长 | 已组 1/4 | 进入队伍 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 6,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageRoam/my-teams/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

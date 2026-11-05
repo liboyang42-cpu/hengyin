@@ -1,0 +1,5 @@
+A-l04-team-detail route pages/index/index>pages/team/detail/index controls 3 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  ui change        quit                       "退出并移交队长"                            
+  SKIPPED (destructive / writes; walked by hand) disband                    "解散队伍"                               
+TEXT: 队伍详情 | 招募中 | 周六夜行小队 | 1 / 4 | 当前成员 | 11月15日 02:00 | 场次开始 | 邀请队友 | 公开招募 | 入队申请 | 暂无申请 | 队伍成员 | 玩家二号 | 队长 | 退出并移交队长 | 解散队伍 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

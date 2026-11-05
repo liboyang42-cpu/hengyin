@@ -1,0 +1,32 @@
+{
+ "id": "A-i04-invoice",
+ "path": "subpackageMember/invoice/index",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  }
+ ],
+ "route": [
+  "subpackageMember/invoice/index"
+ ],
+ "text": "我的发票 | 发票功能暂未开放 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 1,
+ "report": {
+  "route": [
+   "subpackageMember/invoice/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED http://127.0.0.1:8097/__api/api/invoice/list net::ERR_ABORTED"
+  ],
+  "badNet": []
+ }
+}

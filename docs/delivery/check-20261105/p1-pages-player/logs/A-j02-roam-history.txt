@@ -1,0 +1,7 @@
+A-j02-roam-history route subpackageRoam/history/index controls 5 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  navigates        openTool                   "那年今日"                           -> subpackageTools/anniversary/index    
+  navigates        openTool                   "月度回顾"                           -> subpackageTools/monthly-recap/index    
+  navigates        openTool                   "导出"                             -> subpackageTools/exploration-export/index    
+  navigates        onCta                      "出发第一次漫游"                        -> pages/index/index    
+TEXT: 漫游记录 | 那年今日 | 月度回顾 | 导出 | 还没有漫游记录 | 出发第一次漫游 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

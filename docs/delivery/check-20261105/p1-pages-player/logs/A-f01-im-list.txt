@@ -1,0 +1,13 @@
+A-f01-im-list route subpackageB/pages/im/list/index controls 11 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  NO VISIBLE EFFECT onTab                      "收件箱"                                
+  ui change        onTab                      "发件箱"                                
+  navigates        onRowRead                  "标已读"                            -> subpackageB/pages/im/chat/index    
+  navigates        onRowMute                  "免打扰"                            -> subpackageB/pages/im/chat/index    
+  SKIPPED (destructive / writes; walked by hand) onRowDelete                "删除"                                 
+  SKIPPED (destructive / writes; walked by hand) openChat                   "系统通知 02:16 报名成功 2"                  
+  navigates        onRowRead                  "标已读"                            -> subpackageB/pages/im/chat/index    
+  navigates        onRowMute                  "免打扰"                            -> subpackageB/pages/im/chat/index    
+  SKIPPED (destructive / writes; walked by hand) onRowDelete                "删除"                                 
+  navigates        openChat                   "玩家小城 02:13 好，那到时见。"             -> subpackageB/pages/im/chat/index    
+TEXT: 消息 | 收件箱 | 2 | 发件箱 | 标已读 | 免打扰 | 删除 | 系统通知 | 02:16 | 报名成功 | 2 | 标已读 | 免打扰 | 删除 | 玩家小城 | 02:13 | 好，那到时见。 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

@@ -1,0 +1,8 @@
+A-k02-monthly-recap route subpackageTools/monthly-recap/index controls 6 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  ui change        prevMonth                  ""                                   
+  NO VISIBLE EFFECT nextMonth                  ""                                   
+  NO VISIBLE EFFECT pickKind                   "路线"                                 
+  NO VISIBLE EFFECT pickKind                   "首次地点"                               
+  NO VISIBLE EFFECT pickKind                   "城市签"                                
+TEXT: 月度回顾 | 2026 年 11 月 | 路线 | 首次地点 | 城市签 | 这一类本月没有记录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

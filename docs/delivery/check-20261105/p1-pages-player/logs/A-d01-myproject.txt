@@ -1,0 +1,7 @@
+A-d01-myproject route subpackageA/pages/myproject/index controls 5 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  NO VISIBLE EFFECT onTab                      "主题"                                 
+  ui change        onTab                      "活动"                                 
+  ui change        onTab                      "模板"                                 
+  SKIPPED (destructive / writes; walked by hand) onCta                      "去发布"                                
+TEXT: 我的项目 | 主题 | 活动 | 模板 | 还没有主题 | 去发布 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

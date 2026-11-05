@@ -1,0 +1,51 @@
+{
+ "id": "A-l05-team-join",
+ "path": "pages/team/join/index?code=C7o6SycXJV5gLXXhOHPyqg",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "goDetail|查看队伍|{}",
+   "h": "goDetail",
+   "txt": "查看队伍",
+   "w": 357,
+   "hgt": 46,
+   "y": 339,
+   "route": "pages/team/detail/index",
+   "newText": "队伍详情 | 招募中 | 11月15日 02:00 | 场次开始 | 邀请队友 | 公开招募 | 入队申请 | 暂无申请 | 队伍成员 | 玩家二号 | 队长 | 退出并移交队长",
+   "shot": "A-l05-team-join-t01",
+   "result": "navigates"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "pages/team/join/index"
+ ],
+ "text": "加入队伍 | 周六夜行小队 | 1 / 4 | 当前成员 | 仅邀请 | 加入方式 | 查看队伍 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 2,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/team/join/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

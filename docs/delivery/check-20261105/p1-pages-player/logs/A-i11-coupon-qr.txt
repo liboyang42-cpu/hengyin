@@ -1,0 +1,7 @@
+A-i11-coupon-qr route pages/index/index>subpackageMember/coupon-qr/index controls 5 errors 0 badNet 0
+  ui change        onMask                     ""                                   
+  ui change        noop                       "到店赠饮一杯"                             
+  navigates        onClose                    ""                               -> pages/index/index    
+  ui change        noop                       ""                                   
+  ui change        onSecondary                "刷新二维码"                              
+TEXT: 到店赠饮一杯 | 二维码 52s 后自动刷新 | 出示给商家扫码核销 | 刷新二维码 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

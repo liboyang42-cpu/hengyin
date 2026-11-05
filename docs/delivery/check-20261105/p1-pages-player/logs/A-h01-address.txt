@@ -1,0 +1,10 @@
+A-h01-address route pages/address/address controls 5 errors 1 badNet 0
+  back (not tapped) onBack                     ""                                   
+  navigates        selectAddress              "测试甲13800000009 编辑"              -> pages/member/index/index   R:navigateBack:fail cannot navigate back at first page. E:Object: Object
+  navigates        goEditAddress              "编辑"                             -> pages/addressinfo/addressinfo    
+  SKIPPED (destructive / writes; walked by hand) deleteAddress              ""                                   
+  NO VISIBLE EFFECT __onTap                    ""                                   
+TEXT: 参与人信息 | 测试甲 | 13800000009 | 编辑 | 新增参与人信息 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+PAGEERR [
+  'Object: Object /     at fail (http://127.0.0.1:8097/src/nav.js:218:194)'
+]

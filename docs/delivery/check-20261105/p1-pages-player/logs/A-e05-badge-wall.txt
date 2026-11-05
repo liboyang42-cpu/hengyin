@@ -1,0 +1,8 @@
+A-e05-badge-wall route subpackageP3/pages/badge-wall/index/index controls 6 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  NO VISIBLE EFFECT go                         "勋章"                                 
+  navigates        go                         "邮票"                             -> subpackageP3/pages/stamp-album/index/index    
+  navigates        go                         "藏品"                             -> subpackageP3/pages/object-cards/index/index    
+  NO VISIBLE EFFECT onFbTap                    "E2E 探店日一期 · 通关 2026-11-05"          
+  NO VISIBLE EFFECT closeSheet                 ""                                   
+TEXT: 收集册 | 勋章 | 邮票 | 藏品 | 1 | 共 1 | 已点亮 | E2E 探店日一期 · 通关 | 2026-11-05 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

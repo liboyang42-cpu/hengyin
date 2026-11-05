@@ -1,0 +1,6 @@
+A-i19-points route subpackageMember/points-history/index controls 4 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  NO VISIBLE EFFECT onTab                      "全部"                                 
+  NO VISIBLE EFFECT onTab                      "获得"                                 
+  NO VISIBLE EFFECT onTab                      "使用"                                 
+TEXT: 积分明细 | 全部 | 获得 | 使用 | 2026年11月 | 报名抵扣 | 11月5日 10:16 | -10 | 余额 60 | 发布帖文 | 11月5日 10:13 | +20 | 余额 70 | 完成主题 E2E 探店日一期 | 11月5日 10:05 | +50 | 余额 50 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
