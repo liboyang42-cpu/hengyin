@@ -82,6 +82,7 @@ class MerchantNumbersAgreeMyBatisTest {
                 "cms_topic", "cms_topic_node", "cms_registration_merchant", "tms_browse_record", "settlement_detail",
                 "refund_application", "coop_settlement", "coop_complaint", "redemption", "merchant_payable",
                 "merchant_payable_batch");
+        db.execute("CREATE TABLE IF NOT EXISTS topic_sale_snapshot (topic_id BIGINT PRIMARY KEY, schema_version VARCHAR(64), canonical_json LONGTEXT)");
         P0AcceptanceSchema.migrations(source, "migration_complaint_period_funds_gate_20260917.sql");
         sql = P0AcceptanceSchema.sql(source, "RedemptionMapper", "ActivitySettlementHoldMapper", "CmsRegistrationMapper",
                 "SettlementDetailMapper", "UmsMemberBalanceDetailMapper", "CoopSettlementMapper", "MerchantPayableMapper",

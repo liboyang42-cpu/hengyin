@@ -124,6 +124,9 @@ class FreeExplorePriceLockAcceptanceTest {
     @Test
     void confirm_persistsExactlyTheDraftPricesInventoryAndFeeSnapshot_withoutTouchingLifecycle() {
         CmsTopic topic = freeExploreTopic(2);
+        topic.setStartDate(new java.util.Date(1_800_000_000_000L));
+        topic.setEndDate(new java.util.Date(1_800_086_400_000L));
+        topic.setSaleEndAt(new java.util.Date(1_800_082_800_000L));
 
         service.confirmPrice(TOPIC_ID, new BigDecimal("128.00"), new BigDecimal("66.60"), 37,
                 new BigDecimal("100"), 4);
@@ -152,6 +155,9 @@ class FreeExplorePriceLockAcceptanceTest {
         assertEquals(TOPIC_ID, guided.getOwnerId());
         assertEquals("guided", guided.getSubType());
         assertEquals(OWNER_ID, guided.getMemberId());
+        assertEquals(topic.getStartDate(), guided.getStartTime());
+        assertEquals(topic.getEndDate(), guided.getEndTime());
+        assertEquals(topic.getSaleEndAt(), guided.getSignupDeadline());
         assertEquals(ProductType.toTicketMode(ProductType.FREE_EXPLORE), guided.getMode(),
                 "开售路径插的票 mode 必须跟主题 product_type,不能造混票");
         verify(ticketMapper, never()).updateOmsTicket(any(OmsTicket.class));

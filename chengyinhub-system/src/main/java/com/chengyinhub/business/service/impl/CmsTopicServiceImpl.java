@@ -2537,7 +2537,8 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         Long clubId = target.getClubId() != null ? target.getClubId() : existing == null ? null : existing.getClubId();
         Integer productType = target.getProductType() != null ? target.getProductType()
                 : existing == null ? null : existing.getProductType();
-        if (clubId == null || !Integer.valueOf(ProductType.ORIENTEERING).equals(productType)) return;
+        if (clubId == null || clubId <= 0 || (!Integer.valueOf(ProductType.ORIENTEERING).equals(productType)
+                && !Integer.valueOf(ProductType.FREE_EXPLORE).equals(productType))) return;
         if (existing != null && existing.getSaleEndAt() != null
                 && !existing.getSaleEndAt().equals(existing.getEndDate())) return;
         Date end = target.getEndDate() != null ? target.getEndDate() : existing == null ? null : existing.getEndDate();

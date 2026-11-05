@@ -163,10 +163,10 @@ public class ClubSessionServiceImpl implements IClubSessionService {
         // 结算中 / 已关闭也不再开。口径与俱乐部页「开一场」入口(pages/club/detail sellable)一致:
         // 无生命周期(老主题、纯 UGC)、草稿、售票中、进行中可开。
         boolean clubOrder = hasEffectiveClubOrder(request.getTopicId(), request.getClubId());
+        boolean clubOwned = topic.getClubId() != null && topic.getClubId().equals(request.getClubId());
         requireTopicOpenForSessions(topic.getLifecycle(),
                 Integer.valueOf(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE).equals(topic.getProductType())
-                        && clubOrder);
-        boolean clubOwned = topic.getClubId() != null && topic.getClubId().equals(request.getClubId());
+                        && (clubOwned || clubOrder));
         if (!clubOwned && !clubOrder) {
             throw new IllegalArgumentException("该俱乐部对本主题没有生效的合作单");
         }

@@ -95,6 +95,7 @@ class ClubSessionMerchantFeeMySqlIT {
     private CoopSettlementOriginalMapper originalMapper;
     private UmsMemberMapper umsMemberMapper;
     private TransactionTemplate tx;
+    private com.chengyinhub.business.domain.CmsTopic topic;
     private com.chengyinhub.business.service.impl.RefundServiceImpl refundService;
     private AlarmService refundAlarms;
     private CmsRegistrationMapper registrationMapper;
@@ -163,13 +164,15 @@ class ClubSessionMerchantFeeMySqlIT {
         ReflectionTestUtils.setField(activityService, "settlementDetailMapper", detailMapper);
         ReflectionTestUtils.setField(activityService, "activitySettlementHoldMapper", template.getMapper(ActivitySettlementHoldMapper.class));
         CmsTopicMapper topicMapper = mock(CmsTopicMapper.class);
-        com.chengyinhub.business.domain.CmsTopic topic = new com.chengyinhub.business.domain.CmsTopic();
+        topic = new com.chengyinhub.business.domain.CmsTopic();
         topic.setId(TOPIC);
         topic.setMemberId(PRINCIPAL);
         topic.setProductType(1);
         topic.setClubId(CLUB);
         when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic);
         ReflectionTestUtils.setField(activityService, "cmsTopicMapper", topicMapper);
+        ReflectionTestUtils.setField(activityService, "topicSaleSnapshotMapper",
+                template.getMapper(com.chengyinhub.business.mapper.TopicSaleSnapshotMapper.class));
         ReflectionTestUtils.setField(activityService, "cmsSettingMapper", settingMapper);
         ReflectionTestUtils.setField(activityService, "umsMemberService", memberService);
         ReflectionTestUtils.setField(activityService, "umsMemberBalanceDetailService", detailService);
@@ -199,7 +202,9 @@ class ClubSessionMerchantFeeMySqlIT {
 
     @BeforeEach
     void resetSchema() throws Exception {
+        topic.setProductType(1);
         execute("DROP TABLE IF EXISTS cms_activity", "DROP TABLE IF EXISTS cms_topic", "DROP TABLE IF EXISTS cms_registration",
+                "DROP TABLE IF EXISTS topic_sale_snapshot",
                 "DROP TABLE IF EXISTS ums_member", "DROP TABLE IF EXISTS ums_member_balance_detail",
                 "DROP TABLE IF EXISTS settlement_detail", "DROP TABLE IF EXISTS coop_complaint",
                 "DROP TABLE IF EXISTS cms_activity_settlement_hold", "DROP TABLE IF EXISTS ums_member_settlement_debt",
@@ -208,6 +213,8 @@ class ClubSessionMerchantFeeMySqlIT {
                 "DROP TABLE IF EXISTS cms_registration_seat", "DROP TABLE IF EXISTS club_lead_checkin",
                 "DROP TABLE IF EXISTS club_event_attendance_correction", "DROP TABLE IF EXISTS player_node_progress");
         execute(
+                "CREATE TABLE topic_sale_snapshot (id BIGINT PRIMARY KEY AUTO_INCREMENT, topic_id BIGINT UNIQUE, schema_version VARCHAR(64),"
+                        + "parameter_version BIGINT, source_review_task_id BIGINT, canonical_json LONGTEXT, frozen_at DATETIME) ENGINE=InnoDB",
                 "CREATE TABLE cms_activity (id BIGINT PRIMARY KEY, member_id BIGINT, name VARCHAR(100), description VARCHAR(255), img_url VARCHAR(255), img_arr VARCHAR(255),"
                         + "category_ids VARCHAR(255), address_name VARCHAR(255), longitude VARCHAR(64), latitude VARCHAR(64), address VARCHAR(255), status INT, publish_status INT,"
                         + "cancel_time DATETIME, cancel_reason VARCHAR(255), reason VARCHAR(255), del_flag INT, start_date DATETIME, end_date DATETIME, template_id BIGINT,"
@@ -630,11 +637,75 @@ class ClubSessionMerchantFeeMySqlIT {
         assertEquals(0, new BigDecimal(expected).compareTo(actual), "expected " + expected + " but was " + actual);
     }
 
+    @Test
+    void clubOwnedFreeExploreSettlesTwoTwentyNineYuanTicketsAndRefundsToTheFen() throws Exception {
+        seedSession(ACTIVITY, 13);
+        seedPaid(74L, ACTIVITY);
+        seedPaid(75L, ACTIVITY);
+        topic.setProductType(2);
+        execute("UPDATE cms_topic SET product_type=2 WHERE id=" + TOPIC,
+                "UPDATE cms_registration SET payable_amount=29.00 WHERE id IN (74,75)",
+                "UPDATE settlement_detail SET gross_amount=CASE WHEN receiver_type='platform' THEN 0.87 ELSE 28.13 END,"
+                        + "settlement_amount=CASE WHEN receiver_type='platform' THEN 0.87 ELSE 28.13 END WHERE source_id IN (74,75)");
+        var canonical = TopicSaleCanonicalTestFixture.canonical();
+        canonical.getCompletionPolicy().put("evidenceRule", "ALL_REQUIRED_STAMPS");
+        var snapshot = new com.chengyinhub.business.domain.TopicSaleSnapshot();
+        snapshot.setTopicId(TOPIC);
+        snapshot.setSchemaVersion(com.chengyinhub.business.domain.snapshot.TopicSaleCanonicalV1.SCHEMA_VERSION);
+        snapshot.setParameterVersion(1L);
+        snapshot.setSourceReviewTaskId(1L);
+        snapshot.setFrozenAt(new java.util.Date());
+        snapshot.setCanonicalJson(com.chengyinhub.business.service.support.TopicSaleCanonicalCodec.write(canonical, 2));
+        SqlSessionTemplate sql = new SqlSessionTemplate(buildFactory(dataSource));
+        sql.getMapper(com.chengyinhub.business.mapper.TopicSaleSnapshotMapper.class).insertSnapshot(snapshot);
+
+        var pending = sql.getMapper(ActivitySettlementHoldMapper.class).selectUnsettledActivityFundsByMember(PRINCIPAL);
+        assertEquals(1, pending.size());
+        assertMoney("58.00", pending.get(0).getNormalSales());
+        assertEquals(0, activityService.executeActivitySettlement(), "结束后未满14天不能入余额");
+        assertMoney("0.00", balance(PLATFORM).add(balance(PRINCIPAL)));
+
+        execute("UPDATE cms_activity SET start_date=DATE_SUB(NOW(),INTERVAL 16 DAY),end_date=DATE_SUB(NOW(),INTERVAL 15 DAY) WHERE id=" + ACTIVITY);
+        assertEquals(1, activityService.executeActivitySettlement());
+        assertMoney("1.74", balance(PLATFORM));
+        assertMoney("56.26", balance(PRINCIPAL));
+        assertMoney("0.00", balance(MERCHANT));
+        assertEquals(0, activityService.executeActivitySettlement());
+        assertMoney("58.00", balance(PLATFORM).add(balance(PRINCIPAL)));
+
+        RefundApplication refund = new RefundApplication();
+        refund.setId(603L);
+        refund.setSourceType("registration");
+        refund.setSourceId(75L);
+        refund.setPaidAmount(new BigDecimal("29.00"));
+        refund.setRefundAmount(new BigDecimal("29.00"));
+        Method clawback = refundService.getClass().getDeclaredMethod("clawBackSettledShares", RefundApplication.class,
+                com.chengyinhub.business.domain.CmsRegistration.class);
+        clawback.setAccessible(true);
+        tx.executeWithoutResult(s -> {
+            try {
+                clawback.invoke(refundService, refund, registrationMapper.selectCmsRegistrationById(75L));
+                clawback.invoke(refundService, refund, registrationMapper.selectCmsRegistrationById(75L));
+            } catch (Exception e) { throw new IllegalStateException(e); }
+        });
+        assertMoney("0.87", balance(PLATFORM));
+        assertMoney("28.13", balance(PRINCIPAL));
+        assertMoney("-29.00", money("SELECT SUM(change_balance) FROM ums_member_balance_detail WHERE event_type=6 AND event_id=603"));
+
+        // 四店合同及缺快照不进入普通场次选单，不能抢它的专用 FINAL 结算。
+        execute("UPDATE cms_activity SET is_settlement=0 WHERE id=" + ACTIVITY,
+                "UPDATE topic_sale_snapshot SET canonical_json=JSON_SET(canonical_json,'$.completionPolicy.evidenceRule','FOUR_STORE_REDEEM')");
+        assertTrue(sql.getMapper(CmsActivityMapper.class).selectActivitiesForSettlement().isEmpty());
+        execute("DELETE FROM topic_sale_snapshot");
+        assertTrue(sql.getMapper(CmsActivityMapper.class).selectActivitiesForSettlement().isEmpty());
+    }
+
     private SqlSessionFactory buildFactory(DataSource ds) throws Exception {
         Configuration configuration = new Configuration(new Environment("club-session-fee-it",
                 new SpringManagedTransactionFactory(), ds));
         configuration.getTypeAliasRegistry().registerAliases("com.chengyinhub.business.domain");
         addMapper(configuration, CmsRegistrationMapper.class, "mapper/business/CmsRegistrationMapper.xml");
+        addMapper(configuration, com.chengyinhub.business.mapper.TopicSaleSnapshotMapper.class, "mapper/business/TopicSaleSnapshotMapper.xml");
         addMapper(configuration, CmsActivityMapper.class, "mapper/business/CmsActivityMapper.xml");
         addMapper(configuration, UmsMemberMapper.class, "mapper/business/UmsMemberMapper.xml");
         addMapper(configuration, UmsMemberBalanceDetailMapper.class, "mapper/business/UmsMemberBalanceDetailMapper.xml");

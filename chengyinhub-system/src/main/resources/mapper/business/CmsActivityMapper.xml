@@ -506,6 +506,16 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                   SELECT 1 FROM cms_topic topic
                   WHERE topic.id = activity.topic_id
                     AND topic.product_type = 2
+                    AND NOT (
+                        COALESCE(topic.club_id, 0) > 0 AND COALESCE(activity.club_id, 0) = topic.club_id
+                        AND EXISTS (
+                            SELECT 1 FROM topic_sale_snapshot ss WHERE ss.topic_id = topic.id
+                              AND ss.schema_version = 'CANONICAL_15_V1'
+                              AND CASE WHEN JSON_VALID(ss.canonical_json) THEN
+                                  JSON_UNQUOTE(JSON_EXTRACT(ss.canonical_json, '$.completionPolicy.evidenceRule'))
+                                  ELSE NULL END <> 'FOUR_STORE_REDEEM'
+                        )
+                    )
               )
           )
         ]]>

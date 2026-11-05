@@ -30,7 +30,7 @@ class ClubSaleEndDefaultTest {
     }
 
     @Test
-    void givenSaleEnd_nonClubTheme_andFreeExplore_areLeftAlone() {
+    void givenSaleEndAndNonClubThemeAreLeftAlone_butClubFreeExploreGetsADeadline() {
         CmsTopic given = clubCity();
         Date chosen = new Date(end.getTime() - 86_400_000L);
         given.setSaleEndAt(chosen);
@@ -45,7 +45,7 @@ class ClubSaleEndDefaultTest {
         CmsTopic explore = clubCity();
         explore.setProductType(ProductType.FREE_EXPLORE);
         CmsTopicServiceImpl.defaultClubSaleEnd(explore, null);
-        assertNull(explore.getSaleEndAt());
+        assertEquals(end, explore.getSaleEndAt());
     }
 
     @Test

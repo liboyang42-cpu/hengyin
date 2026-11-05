@@ -90,7 +90,19 @@
         LEFT JOIN (<include refid="openComplaintRegistrations"/>) oc ON oc.registration_id = r.id
         WHERE a.member_id = #{memberId} AND a.del_flag = 0 AND a.status = 1 AND a.is_settlement = 0
           AND (a.topic_id IS NULL
-               OR NOT EXISTS (SELECT 1 FROM cms_topic t WHERE t.id = a.topic_id AND t.product_type = 2))
+               OR NOT EXISTS (
+                   SELECT 1 FROM cms_topic t WHERE t.id = a.topic_id AND t.product_type = 2
+                     AND NOT (
+                         COALESCE(t.club_id, 0) > 0 AND COALESCE(a.club_id, 0) = t.club_id
+                         AND EXISTS (
+                             SELECT 1 FROM topic_sale_snapshot ss WHERE ss.topic_id = t.id
+                               AND ss.schema_version = 'CANONICAL_15_V1'
+                               AND CASE WHEN JSON_VALID(ss.canonical_json) THEN
+                                   JSON_UNQUOTE(JSON_EXTRACT(ss.canonical_json, '$.completionPolicy.evidenceRule'))
+                                   ELSE NULL END &lt;&gt; 'FOUR_STORE_REDEEM'
+                         )
+                     )
+               ))
         GROUP BY a.id, a.topic_id, a.end_date
     </select>
 

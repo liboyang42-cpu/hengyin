@@ -79,6 +79,9 @@ public class CmsActivityServiceImpl implements ICmsActivityService
     @Autowired
     private CmsTopicMapper cmsTopicMapper;
 
+    @Autowired
+    private com.chengyinhub.business.mapper.TopicSaleSnapshotMapper topicSaleSnapshotMapper;
+
     /** 9-15 拍板:已发布免费主题的派生活动不能加收费票(= 转商业)。 */
     @Autowired
     private CommercialTopicPolicy commercialTopicPolicy;
@@ -250,11 +253,7 @@ public class CmsActivityServiceImpl implements ICmsActivityService
     private boolean settleActivity(CmsActivity activity, CmsSetting setting, SettlementRule rule) {
         CmsTopic topic = activity.getTopicId() == null
                 ? null : cmsTopicMapper.selectCmsTopicById(activity.getTopicId());
-        if (topic != null && Integer.valueOf(ProductType.FREE_EXPLORE).equals(topic.getProductType())) {
-            throw new ServiceException("FREE_EXPLORE_LEGACY_SETTLEMENT_FORBIDDEN: activityId="
-                    + activity.getId() + ", topicId=" + activity.getTopicId()
-                    + ", productType=" + (topic == null ? null : topic.getProductType()));
-        }
+        requireSessionSettlementContract(activity, topic);
         // HF-02(A-29): 原子领取——仅当 is_settlement 由 0 翻 1 成功才继续,防并发/重复触发导致重复入账
         if (cmsActivityMapper.claimActivityForSettlement(activity.getId()) == 0) {
             logger.info("活动 {} 已被结算或正在结算,跳过", activity.getId());
@@ -376,6 +375,8 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         if (activity == null) {
             throw new ServiceException("暂扣补结的活动不存在 holdId=" + hold.getId());
         }
+        requireSessionSettlementContract(activity, activity.getTopicId() == null
+                ? null : cmsTopicMapper.selectCmsTopicById(activity.getTopicId()));
         requireUsablePlatformSettlementAccount(setting, rule, activity.getId());
         ActivitySettlementDTO settlement = calculateActivityCommissions(activity, sales, rule);
         Long payee = activityPayee(activity);
@@ -442,6 +443,22 @@ public class CmsActivityServiceImpl implements ICmsActivityService
             return activity.getMemberId();
         }
         return clubPrincipalPayee.forActivity(activity);
+    }
+
+    private void requireSessionSettlementContract(CmsActivity activity, CmsTopic topic) {
+        if (topic == null || !Integer.valueOf(ProductType.FREE_EXPLORE).equals(topic.getProductType())) return;
+        if (topic.getClubId() == null || topic.getClubId() <= 0 || !topic.getClubId().equals(activity.getClubId())) {
+            throw new ServiceException("FREE_EXPLORE_LEGACY_SETTLEMENT_FORBIDDEN: activityId=" + activity.getId());
+        }
+        TopicSaleSnapshot snapshot = topicSaleSnapshotMapper.selectSnapshotByTopicId(topic.getId());
+        if (snapshot == null || !topic.getId().equals(snapshot.getTopicId())) {
+            throw new ServiceException("自由探索缺少冻结开售合同，拒绝结算 activityId=" + activity.getId());
+        }
+        // 四店专用合同仍走原 FINAL；普通俱乐部自由探索按场次结算，不能按产品编号一并拒绝。
+        if (com.chengyinhub.business.service.support.TopicSaleCanonicalCodec.read(
+                snapshot.getSchemaVersion(), snapshot.getCanonicalJson(), topic.getProductType()).requiresFourStoreContract()) {
+            throw new ServiceException("FREE_EXPLORE_LEGACY_SETTLEMENT_FORBIDDEN: activityId=" + activity.getId());
+        }
     }
 
     private void requireUsablePlatformSettlementAccount(CmsSetting setting, SettlementRule rule, Long activityId) {

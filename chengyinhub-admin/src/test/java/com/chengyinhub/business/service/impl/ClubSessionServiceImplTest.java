@@ -256,6 +256,17 @@ class ClubSessionServiceImplTest {
         verify(activityService).insertCmsActivity(any());
     }
 
+    @Test
+    void clubOwnedFreeExploreInSaleReviewOpensWithoutInvitingItself() {
+        topic.setProductType(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE);
+        topic.setLifecycle(2);
+        topic.setClubId(CLUB_ID);
+        when(orderMapper.selectEffectiveOrdersByTopicId(TOPIC_ID)).thenReturn(java.util.Collections.emptyList());
+
+        assertEquals(Long.valueOf(51L), service.open(request(), OWNER_ID, "主理人"));
+        verify(activityService).insertCmsActivity(any());
+    }
+
     /** 第十一轮 i1:放行只给「自由探索 + 开售审核 + 本俱乐部生效合作单」,其余仍按 h4 规则拒。 */
     @Test
     void saleReviewException_isNarrow_otherProductsStagesAndOrderlessStillRefused() {

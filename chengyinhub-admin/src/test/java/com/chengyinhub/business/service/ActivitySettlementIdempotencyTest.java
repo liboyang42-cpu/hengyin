@@ -155,6 +155,28 @@ class ActivitySettlementIdempotencyTest {
         verify(settlementDetailMapper, never()).markActivityRegistrationDetailsSettled(anyLong());
     }
 
+    @Test
+    void clubFreeExploreWithoutSnapshotOrWithFourStoreContractStillRefusesBeforeClaim() {
+        var topic = new com.chengyinhub.business.domain.CmsTopic();
+        topic.setId(200L);
+        topic.setClubId(7L);
+        topic.setProductType(ProductType.FREE_EXPLORE);
+        when(cmsTopicMapper.selectCmsTopicById(200L)).thenReturn(topic);
+        CmsActivity activity = new CmsActivity();
+        activity.setId(100L);
+        activity.setTopicId(200L);
+        activity.setClubId(7L);
+        when(cmsActivityMapper.selectActivitiesForSettlement()).thenReturn(Collections.singletonList(activity));
+        var snapshots = mock(com.chengyinhub.business.mapper.TopicSaleSnapshotMapper.class);
+        ReflectionTestUtils.setField(svc, "topicSaleSnapshotMapper", snapshots);
+        for (var snapshot : java.util.Arrays.asList(null, TopicSaleCanonicalTestFixture.snapshot(200L))) {
+            when(snapshots.selectSnapshotByTopicId(200L)).thenReturn(snapshot);
+            assertThrows(IllegalStateException.class, svc::executeActivitySettlement);
+        }
+        verify(cmsActivityMapper, never()).claimActivityForSettlement(anyLong());
+        verify(umsMemberService, never()).addBalance(anyLong(), any());
+    }
+
     /**
      * 0-5 裁决:关联主题 product_type=NULL 且**零销售**时,允许一次性收口
      * (领取把 is_settlement 置 1,不再每轮重扫),但绝不能借这条路出任何钱或积分。

@@ -489,6 +489,12 @@ public class PricingServiceImpl implements IPricingService {
                 t.setPrice(guidedPrice);
                 t.setTotalInventory((long) inv);
                 t.setRemainingInventory((long) inv);
+                if (Integer.valueOf(ProductType.FREE_EXPLORE).equals(topic.getProductType())) {
+                    OmsTicket original = existing.get(0);
+                    if (original.getStartTime() == null) t.setStartTime(topic.getStartDate());
+                    if (original.getEndTime() == null) t.setEndTime(topic.getEndDate());
+                    if (original.getSignupDeadline() == null) t.setSignupDeadline(topic.getSaleEndAt());
+                }
                 t.setUpdateTime(DateUtils.getNowDate());
                 if (omsTicketMapper.updateOmsTicket(t) != 1) {
                     // updateOmsTicket 的库存谓词拒绝时，不能继续把主题报成“已开售”。
@@ -512,6 +518,11 @@ public class PricingServiceImpl implements IPricingService {
                 t.setPrice(guidedPrice);
                 t.setTotalInventory((long) inv);
                 t.setRemainingInventory((long) inv);
+                if (Integer.valueOf(ProductType.FREE_EXPLORE).equals(topic.getProductType())) {
+                    t.setStartTime(topic.getStartDate());
+                    t.setEndTime(topic.getEndDate());
+                    t.setSignupDeadline(topic.getSaleEndAt());
+                }
                 t.setDelFlag(0);
                 t.setCreateBy("pricing");
                 t.setCreateTime(DateUtils.getNowDate());
