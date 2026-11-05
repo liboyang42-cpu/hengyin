@@ -1,0 +1,2158 @@
+[
+ {
+  "i": 0,
+  "p": "pages/index/index",
+  "route": "pages/index/index",
+  "text": "成为俱乐部 | 成为商家 | 和朋友报名活动 | Hi, 旅人! | 上海市 | 编辑精选 | 暂时没有精选主题 | 附近活动 | 你附近暂时没有可点亮的节点 | 主题 | 活动 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "200 POST /api/topic/list",
+   "200 POST /api/activity/list",
+   "200 POST /api/activity/list",
+   "200 POST /api/topic/list",
+   "200 POST /api/activity/list"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": [
+   "[error] HTTP 404 http://127.0.0.1:8097/__api/profile/home-banners/home-banner-club.gif",
+   "[error] HTTP 404 http://127.0.0.1:8097/__api/profile/home-banners/home-banner-merchant.gif",
+   "[error] HTTP 404 http://127.0.0.1:8097/__api/profile/home-banners/home-banner-friends.gif"
+  ]
+ },
+ {
+  "i": 1,
+  "p": "pages/template/index",
+  "route": "pages/template/index",
+  "text": "主题 | 玩法 | 搜索主题与玩法模板 | 还没有可复用的主题模板 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "200 POST /api/template/topic-template/list",
+   "200 POST /api/template/list",
+   "200 POST /api/template/topic-template/list",
+   "200 POST /api/template/list",
+   "401 POST /api/publish/home"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": [
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/publish/home",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ]
+ },
+ {
+  "i": 2,
+  "p": "pages/talent/list/index",
+  "route": "pages/talent/list/index",
+  "text": "发现 | 帖文 | 俱乐部 | 创建你自己的俱乐部 | 创建俱乐部 | 城瘾跑团 | 1 位成员 | 免费加入 | 执行俱乐部 | 2 位成员 | 免费加入 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "200 POST /api/club/list"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 3,
+  "p": "pages/member/index/index",
+  "route": "pages/member/index/index",
+  "text": "登录后查看我的主页 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 4,
+  "p": "pages/roam/index",
+  "route": "pages/roam/index",
+  "text": "漫游 | 开始漫游 | 漫游护照 | NO.01 | 开始漫游 | NO.02 | 打开地图 | 寻找组队 | 附近正在组队 | NO.03 | 我的队伍 | 附近活动 | 登录后查看附近活动与队伍 | 去登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "401 GET /api/roam/badge/shop-streak",
+   "200 POST /api/config/features"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": [
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/roam/badge/shop-streak",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ]
+ },
+ {
+  "i": 5,
+  "p": "pages/play/index",
+  "route": "pages/play/index",
+  "text": "输入地址 | 链接已失效，请返回重新进入 | 返回活动详情 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "200 POST /api/config/features"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 6,
+  "p": "pages/play/merchant/index",
+  "route": "pages/play/merchant/index",
+  "text": "登录后查看 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 7,
+  "p": "pages/play/circle/index",
+  "route": "pages/index/index",
+  "text": "成为俱乐部 | 成为商家 | 和朋友报名活动 | Hi, 旅人! | 上海市 | 编辑精选 | 暂时没有精选主题 | 附近活动 | 你附近暂时没有可点亮的节点 | 主题 | 活动 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "200 POST /api/topic/list",
+   "200 POST /api/activity/list",
+   "200 POST /api/activity/list",
+   "200 POST /api/topic/list",
+   "200 POST /api/activity/list"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": [
+   "[error] HTTP 404 http://127.0.0.1:8097/__api/profile/home-banners/home-banner-club.gif",
+   "[error] HTTP 404 http://127.0.0.1:8097/__api/profile/home-banners/home-banner-merchant.gif",
+   "[error] HTTP 404 http://127.0.0.1:8097/__api/profile/home-banners/home-banner-friends.gif"
+  ]
+ },
+ {
+  "i": 8,
+  "p": "pages/play/poi-challenge/index",
+  "route": "pages/play/poi-challenge/index",
+  "text": "挑战暂时打不开 | 没有找到这个地点 | 重试 | 返回地图 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 9,
+  "p": "pages/activity/detail/index",
+  "route": "pages/activity/detail/index",
+  "text": "活动详情 | 活动链接无效 | 请返回重新进入 | 返回活动列表 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 10,
+  "p": "pages/activity/baoming/baoming",
+  "route": "pages/activity/baoming/baoming",
+  "text": "结算 | 无法打开报名页 | 请返回重新进入 | 去发现活动 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 11,
+  "p": "pages/activity/list/index",
+  "route": "pages/activity/list/index",
+  "text": "官方活动 | 进行中 | 即将 | 已结束 | 我的 | 进行中 · 共 0 个活动 | 邀约 | 暂无进行中的活动 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "200 GET /api/official/events"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 12,
+  "p": "pages/activity/official-detail/index",
+  "route": "pages/activity/official-detail/index",
+  "text": "链接已失效 | 返回活动列表 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 13,
+  "p": "pages/activity/official-inbox/index",
+  "route": "pages/activity/official-inbox/index",
+  "text": "登录后查看 | 登录 | 官方活动邀约 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "401 GET /api/official/v2/party-inbox"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": [
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/official/v2/party-inbox",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ]
+ },
+ {
+  "i": 14,
+  "p": "pages/activity/official-mine/index",
+  "route": "pages/activity/official-mine/index",
+  "text": "登录后查看 | 登录 | 我发布的 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "401 GET /api/official/my-published"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": [
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/official/my-published",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ]
+ },
+ {
+  "i": 15,
+  "p": "pages/activity/official-organizer/index",
+  "route": "pages/activity/official-organizer/index",
+  "text": "主办控制台 | 链接已失效 | 返回 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 16,
+  "p": "subpackageA/pages/myproject/index",
+  "route": "subpackageA/pages/myproject/index",
+  "text": "我的项目 | 主题 | 活动 | 模板 | 登录后查看我的项目 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 17,
+  "p": "subpackageA/pages/infomation/infomation",
+  "route": "subpackageA/pages/infomation/infomation",
+  "text": "城瘾玩法 | 城市定向 | 去看看 | 自由探索 | 去看看 | 漫游 | 去看看 | 现成玩法 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "200 POST /api/template/homeData",
+   "200 POST /api/common/infomation_list"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 18,
+  "p": "subpackageA/pages/infomationdetail/infomationdetail",
+  "route": "subpackageA/pages/infomationdetail/infomationdetail",
+  "text": "玩法详情 | 链接已失效 | 返回 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 19,
+  "p": "subpackageA/pages/assetcenter/income-detail/income-detail",
+  "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
+  "text": "收益明细 | 全部 | 创作收益 | 品牌收益 | 主办分润 | 登录后查看收益明细 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 20,
+  "p": "subpackageA/pages/assetcenter/earnings/index",
+  "route": "subpackageA/pages/assetcenter/earnings/index",
+  "text": "账户收益 | 登录后查看账户收益 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 21,
+  "p": "subpackageA/pages/assetcenter/analysis/index",
+  "route": "subpackageA/pages/assetcenter/analysis/index",
+  "text": "分析 | 收入 | 提现 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "401 POST /api/user/balance/list"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": [
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/user/balance/list",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ]
+ },
+ {
+  "i": 22,
+  "p": "subpackageP3/pages/growthcenter/index/index",
+  "route": "subpackageP3/pages/growthcenter/index/index",
+  "text": "成长中心 | 登录后查看成长记录 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 23,
+  "p": "subpackageP3/pages/growthcenter/leaderboard/index",
+  "route": "subpackageP3/pages/growthcenter/leaderboard/index",
+  "text": "完整排行榜 | 周榜 | 总榜 | 积分榜 | 成长榜 | 登录后查看排行榜 | 登录后可查看完整排行榜 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 24,
+  "p": "subpackageP3/pages/stamp-camera/index/index",
+  "route": "subpackageP3/pages/stamp-camera/index/index",
+  "text": "双指缩放裁切 57% | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 25,
+  "p": "subpackageP3/pages/stamp-album/index/index",
+  "route": "subpackageP3/pages/stamp-album/index/index",
+  "text": "收集册 | 勋章 | 邮票 | 藏品 | 登录后查看自己的册子 | 去登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 26,
+  "p": "subpackageP3/pages/badge-wall/index/index",
+  "route": "subpackageP3/pages/badge-wall/index/index",
+  "text": "登录后查看我的勋章 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 27,
+  "p": "subpackageP3/pages/badge-3d/index",
+  "route": "subpackageP3/pages/badge-3d/index",
+  "text": "徽章 | 徽章 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 28,
+  "p": "subpackageP3/pages/object-cards/index/index",
+  "route": "subpackageP3/pages/object-cards/index/index",
+  "text": "收集册 | 勋章 | 邮票 | 藏品 | 全部 | 登录后查看自己的册子 | 去登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 29,
+  "p": "subpackageB/pages/im/list/index",
+  "route": "subpackageB/pages/im/list/index",
+  "text": "消息 | 登录后查看消息 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "401 POST /api/im/conversations",
+   "401 POST /api/coop/list",
+   "200 POST /api/config/features"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": [
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/im/conversations",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/coop/list",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ]
+ },
+ {
+  "i": 30,
+  "p": "subpackageB/pages/im/chat/index",
+  "route": "subpackageB/pages/im/chat/index",
+  "text": "更多 | 对话 | 这个会话无法打开 | 请返回重新进入 | 链接已失效，请返回重新进入 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 31,
+  "p": "pages/publish/fabu/index",
+  "route": "pages/publish/fabu/index",
+  "text": "登录后创建主题 | 去登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 32,
+  "p": "pages/publish/simple/index",
+  "route": "pages/publish/simple/index",
+  "text": "快速配置 | 登录后配置路线 | 去登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 33,
+  "p": "pages/publish/temp/index",
+  "route": "pages/publish/temp/index",
+  "text": "编辑玩法模板 | 登录后编辑玩法模板 | 去登录 | 保存草稿 | 查看预览 | 发布玩法 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 34,
+  "p": "pages/publish/activity/index",
+  "route": "pages/publish/activity/index",
+  "text": "发布活动 | 登录后发布活动 | 去登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 35,
+  "p": "pages/publish/topicadd/topicadd",
+  "route": "pages/publish/fabu/index",
+  "text": "登录后创建主题 | 去登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 36,
+  "p": "pages/publish/template-intro/index",
+  "route": "pages/publish/template-intro/index",
+  "text": "暂无精选示例 | 把你玩过的一段路 | 做成别人也能走的玩法 | 开始创建 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "200 POST /api/template/homeData"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 37,
+  "p": "pages/club/apply/index",
+  "route": "pages/club/apply/index",
+  "text": "登录后申请成为主理人 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "401 POST /api/merchant/access/me",
+   "401 POST /api/role/info"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": [
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/role/info",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/merchant/access/me",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ]
+ },
+ {
+  "i": 38,
+  "p": "pages/club/badges/index",
+  "route": "pages/talent/list/index",
+  "text": "发现 | 帖文 | 俱乐部 | 创建你自己的俱乐部 | 创建俱乐部 | 城瘾跑团 | 1 位成员 | 免费加入 | 执行俱乐部 | 4 位成员 | 免费加入 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "200 POST /api/club/list"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 39,
+  "p": "pages/club/create/index",
+  "route": "pages/club/create/index",
+  "text": "登录后创建俱乐部 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "401 POST /api/role/info",
+   "401 POST /api/club/my"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": [
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/role/info",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/club/my",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ]
+ },
+ {
+  "i": 40,
+  "p": "pages/club/customer-detail/index",
+  "route": "pages/club/customer-detail/index",
+  "text": "登录后查看 | 登录 | 客户 | 链接已失效 | 返回 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 41,
+  "p": "pages/club/customers/index",
+  "route": "pages/club/customers/index",
+  "text": "登录后查看 | 登录 | 客户 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 42,
+  "p": "pages/club/detail/index",
+  "route": "pages/club/detail/index",
+  "text": "链接已失效 | 请返回重新进入 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 43,
+  "p": "pages/club/edit/index",
+  "route": "pages/club/edit/index",
+  "text": "登录后查看 | 登录 | 编辑资料 | 没有指定俱乐部 | 没有指定要编辑的俱乐部，请返回俱乐部页重新进入。 | 返回俱乐部 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 44,
+  "p": "pages/club/enroll/index",
+  "route": "pages/club/enroll/index",
+  "text": "登录后查看 | 登录 | 报名名册 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "401 POST /api/club/my"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": [
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/club/my",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ]
+ },
+ {
+  "i": 45,
+  "p": "pages/club/checkin-detail/index",
+  "route": "pages/club/checkin-detail/index",
+  "text": "登录后查看 | 登录 | 核销详情 | 链接已失效 | 返回 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 46,
+  "p": "pages/club/event-ops/index",
+  "route": "pages/club/event-ops/index",
+  "text": "登录后查看 | 登录 | 活动运营 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 47,
+  "p": "pages/club/governance/index",
+  "route": "pages/club/governance/index",
+  "text": "登录后查看 | 登录 | 成员治理 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 48,
+  "p": "pages/club/group-code/index",
+  "route": "pages/club/group-code/index",
+  "text": "团核销码 | 请从俱乐部管理进入具体场次 | 缺少路线或场次信息 | 进入俱乐部管理 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 49,
+  "p": "pages/club/join-requests/index",
+  "route": "pages/club/join-requests/index",
+  "text": "登录后查看 | 登录 | 入会申请 | 无法打开入会申请 | 缺少俱乐部信息，请返回俱乐部列表后重新进入 | 返回俱乐部 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 50,
+  "p": "pages/club/notify/index",
+  "route": "pages/club/notify/index",
+  "text": "登录后查看 | 登录 | 群发通知 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 51,
+  "p": "pages/club/roles/index",
+  "route": "pages/club/roles/index",
+  "text": "登录后查看 | 登录 | 角色与权限 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 52,
+  "p": "pages/club/settlement/index",
+  "route": "pages/club/settlement/index",
+  "text": "登录后查看 | 登录 | 俱乐部结算 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 53,
+  "p": "pages/club/topic-detail/index",
+  "route": "pages/club/topic-detail/index",
+  "text": "登录后查看 | 登录 | 链接已失效 | 返回 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 54,
+  "p": "pages/club/topic-story/index",
+  "route": "pages/club/topic-story/index",
+  "text": "剧情与玩法 | 路线 | 玩法 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 55,
+  "p": "pages/club/workbench/index",
+  "route": "pages/club/detail/index",
+  "text": "登录后查看俱乐部 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "401 POST /api/club/my"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": [
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/club/my",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ]
+ },
+ {
+  "i": 56,
+  "p": "pages/topic/index/index",
+  "route": "pages/topic/index/index",
+  "text": "无法打开主题 | 请返回重新进入 | 返回发布广场 | 确认订单 | 参与人信息 | 补全姓名和手机号 | 主题信息 | 费用明细 | 票种 | 自玩通行证 | 订单金额 | 合计 | 同意将姓名、手机号提供给主办方，用于报名核验 | 合计 | 立即支付 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 57,
+  "p": "pages/topic/merchantinfo/merchantinfo",
+  "route": "pages/topic/merchantinfo/merchantinfo",
+  "text": "链接已失效 | 返回上一页 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": [
+   "[error] HTTP 404 http://127.0.0.1:8097/mp/components/cy/npc-avatar/px1:p01",
+   "[error] HTTP 404 http://127.0.0.1:8097/mp/components/cy/npc-avatar/px1:p04",
+   "[error] HTTP 404 http://127.0.0.1:8097/mp/components/cy/npc-avatar/px1:p07",
+   "[error] HTTP 404 http://127.0.0.1:8097/mp/components/cy/npc-avatar/px1:p10",
+   "[error] HTTP 404 http://127.0.0.1:8097/mp/components/cy/npc-avatar/px1:p13",
+   "[error] HTTP 404 http://127.0.0.1:8097/mp/components/cy/npc-avatar/px1:p17",
+   "[error] HTTP 404 http://127.0.0.1:8097/mp/components/cy/npc-avatar/px1:p18",
+   "[error] HTTP 404 http://127.0.0.1:8097/mp/components/cy/npc-avatar/px1:p23",
+   "[error] HTTP 404 http://127.0.0.1:8097/mp/components/cy/npc-avatar/px1:p25",
+   "[error] HTTP 404 http://127.0.0.1:8097/mp/components/cy/npc-avatar/px1:p27",
+   "[error] HTTP 404 http://127.0.0.1:8097/mp/components/cy/npc-avatar/px1:p31",
+   "[error] HTTP 404 http://127.0.0.1:8097/mp/components/cy/npc-avatar/px1:p36"
+  ]
+ },
+ {
+  "i": 58,
+  "p": "pages/topic/merchantapply/index",
+  "route": "pages/topic/merchantapply/index",
+  "text": "商家报名 | 登录后填写报名 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 59,
+  "p": "pages/topic/pricing/index",
+  "route": "pages/topic/pricing/index",
+  "text": "确认终价 | 缺少主题信息 | 请返回重新进入 | 返回上一页 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 60,
+  "p": "pages/topic/pricing/partner/index",
+  "route": "pages/topic/pricing/partner/index",
+  "text": "合作方 | 合作链接已失效 | 链接已失效，请返回重新进入 | 返回上一页 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 61,
+  "p": "pages/merchant/index/index",
+  "route": "pages/merchant/index/index",
+  "text": "登录后查看经营台 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 62,
+  "p": "pages/merchant/apply/index",
+  "route": "pages/merchant/apply/index",
+  "text": "登录后申请商家入驻 | 登录后即可提交商家入驻申请 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "401 POST /api/role/info"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": [
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/role/info",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ]
+ },
+ {
+  "i": 63,
+  "p": "pages/merchant/ledger/index",
+  "route": "pages/merchant/ledger/index",
+  "text": "核销与退款 | 当前身份不能查看这份商家账本 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "401 POST /api/merchant/access/me"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": [
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/merchant/access/me",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ]
+ },
+ {
+  "i": 64,
+  "p": "pages/merchant/ledger/order-detail/index",
+  "route": "pages/merchant/ledger/order-detail/index",
+  "text": "登录后查看 | 登录 | 核销详情 | 缺少核销记录信息 | 请返回重新进入 | 返回上一页 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 65,
+  "p": "pages/merchant/ledger/batch-detail/index",
+  "route": "pages/merchant/ledger/batch-detail/index",
+  "text": "登录后查看 | 登录 | 对公结算 | 缺少结算批次信息 | 请返回重新进入 | 返回上一页 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 66,
+  "p": "pages/merchant/aftercare/index",
+  "route": "pages/merchant/aftercare/index",
+  "text": "登录后查看 | 登录 | 退款售后 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "401 POST /api/merchant/access/me"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": [
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/merchant/access/me",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ]
+ },
+ {
+  "i": 67,
+  "p": "pages/merchant/predict/index",
+  "route": "pages/merchant/predict/index",
+  "text": "预测待答 | 登录后查看预测 | 去登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 68,
+  "p": "pages/merchant/aftercare/detail/index",
+  "route": "pages/merchant/aftercare/index",
+  "text": "登录后查看 | 登录 | 退款售后 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "401 POST /api/merchant/access/me"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": [
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/merchant/access/me",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ]
+ },
+ {
+  "i": 69,
+  "p": "pages/merchant/profile/index",
+  "route": "pages/merchant/profile/index",
+  "text": "商家主页 | 链接已失效 | 请返回重新进入 | 回首页 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 70,
+  "p": "pages/merchant/marketing/index",
+  "route": "pages/merchant/marketing/index",
+  "text": "营销 | 登录后查看营销 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 71,
+  "p": "pages/merchant/reviews/index",
+  "route": "pages/merchant/reviews/index",
+  "text": "口碑 | 商家信息不完整 | 返回 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 72,
+  "p": "pages/merchant/marketing/ai-insight/index",
+  "route": "pages/merchant/marketing/ai-insight/index",
+  "text": "登录后查看 | 登录 | 店铺参谋 | 请先登录 | 请先登录后查看店铺数据 | 重新登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 73,
+  "p": "pages/merchant/relation/index",
+  "route": "pages/merchant/relation/index",
+  "text": "登录后查看 | 登录 | 合作 | 帖文 | 俱乐部 | 登录后查看合作 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 74,
+  "p": "pages/merchant/citynode/index",
+  "route": "pages/merchant/citynode/index",
+  "text": "登录后查看 | 登录 | 成为节点 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "401 POST /api/merchant/access/me"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": [
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/merchant/access/me",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ]
+ },
+ {
+  "i": 75,
+  "p": "pages/merchant/citynode/create/index",
+  "route": "pages/merchant/citynode/create/index",
+  "text": "报名成为节点 | 登录后配置节点 | 去登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 76,
+  "p": "pages/merchant/decor/index",
+  "route": "pages/merchant/decor/index",
+  "text": "登录后查看 | 登录 | 品牌中心 | 暂无装修权限 | 请切换到已审核的商家账号 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "401 POST /api/merchant/access/me",
+   "401 POST /api/merchant/coop-profile",
+   "401 POST /api/coop/perk-template/list"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": [
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/merchant/access/me",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/merchant/coop-profile",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/coop/perk-template/list",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ]
+ },
+ {
+  "i": 77,
+  "p": "pages/merchant/decor/ai-npc/index",
+  "route": "pages/merchant/decor/ai-npc/index",
+  "text": "登录后查看 | 登录 | 它是你的店在城瘾里的分身 | 出现在漫游地图和店铺主页上，替你招呼路过的玩家 | 下一步 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "401 POST /api/merchant/npc/profile",
+   "401 POST /api/merchant/coop-profile"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": [
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/merchant/npc/profile",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/merchant/coop-profile",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ]
+ },
+ {
+  "i": 78,
+  "p": "pages/merchant/decor/coop-setting/index",
+  "route": "pages/merchant/decor/coop-setting/index",
+  "text": "登录后查看 | 登录 | 当前账号不能编辑承接设置 | 请切换到已审核的商家账号 | 返回 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "401 POST /api/merchant/coop-profile"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": [
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/merchant/coop-profile",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ]
+ },
+ {
+  "i": 79,
+  "p": "pages/merchant/decor/gallery/index",
+  "route": "pages/merchant/decor/gallery/index",
+  "text": "门店相册 | 登录后编辑门店相册 | 去登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 80,
+  "p": "pages/merchant/decor/perks/index",
+  "route": "pages/merchant/decor/perks/index",
+  "text": "登录后查看 | 登录 | 常备权益 | 暂无编辑权限 | 请切换到已审核的商家账号 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "401 POST /api/coop/perk-template/list"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": [
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/coop/perk-template/list",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ]
+ },
+ {
+  "i": 81,
+  "p": "pages/merchant/coop-center/index",
+  "route": "pages/merchant/coop-center/index",
+  "text": "登录后查看 | 登录 | 合作中心 | 官方活动 | 广场 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "401 POST /api/merchant/marketing-home",
+   "200 GET /api/official/events"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": [
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/merchant/marketing-home",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ]
+ },
+ {
+  "i": 82,
+  "p": "pages/merchant/customer/index",
+  "route": "pages/merchant/customer/index",
+  "text": "客户 | 筛选 | 管理 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "401 POST /api/merchant/access/me"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": [
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/merchant/access/me",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ]
+ },
+ {
+  "i": 83,
+  "p": "pages/merchant/game-node/index",
+  "route": "pages/merchant/index/index",
+  "text": "登录后查看经营台 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 84,
+  "p": "pages/merchant/customer/detail/index",
+  "route": "pages/merchant/customer/detail/index",
+  "text": "登录后查看 | 登录 | 找不到这位客户 | 返回客户列表 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 85,
+  "p": "pages/merchant/verify-records/index",
+  "route": "pages/merchant/index/index",
+  "text": "登录后查看经营台 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "401 POST /api/merchant/access/me"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": [
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/merchant/access/me",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ]
+ },
+ {
+  "i": 86,
+  "p": "pages/merchant/crm-campaigns/index",
+  "route": "pages/merchant/index/index",
+  "text": "登录后查看经营台 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "401 POST /api/merchant/access/me"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": [
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/merchant/access/me",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ]
+ },
+ {
+  "i": 87,
+  "p": "pages/merchant/team/index",
+  "route": "pages/merchant/team/index",
+  "text": "经营团队 | 登录后查看经营团队 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 88,
+  "p": "pages/coop/list/index",
+  "route": "pages/coop/list/index",
+  "text": "协作邀请 | 登录后查看协作邀请 | 去登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 89,
+  "p": "pages/coop/invite-detail/index",
+  "route": "pages/coop/invite-detail/index",
+  "text": "登录后查看 | 登录 | 协作详情 | 无法打开这条邀约 | 回协作邀请 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 90,
+  "p": "pages/coop/invite/index",
+  "route": "pages/coop/invite/index",
+  "text": "发起协作邀请 | 登录后发起协作邀请 | 去登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 91,
+  "p": "pages/coop/nearby/index",
+  "route": "pages/coop/nearby/index",
+  "text": "附近商家 | 登录后查看 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "401 POST /api/merchant/nearby"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": [
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/merchant/nearby",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ]
+ },
+ {
+  "i": 92,
+  "p": "pages/coop/finance/index",
+  "route": "pages/coop/finance/index",
+  "text": "分润明细 | 登录后查看主办分润 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 93,
+  "p": "pages/coop/settlement-detail/index",
+  "route": "pages/coop/settlement-detail/index",
+  "text": "登录后查看 | 登录 | 结算详情 | 缺少结算记录信息 | 请返回重新进入 | 返回上一页 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 94,
+  "p": "pages/coop/withdraw/index",
+  "route": "pages/coop/withdraw/index",
+  "text": "登录后查看 | 登录 | 提现方式已调整 | 联系平台客服提现 | 添加客服微信，线下处理 | 联系平台客服提现 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 95,
+  "p": "pages/coop/withdraw/records/index",
+  "route": "subpackageMember/tixianjilu/tixianjilu",
+  "text": "提现记录 | 登录后查看提现记录 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 96,
+  "p": "pages/square/detail/index",
+  "route": "pages/square/detail/index",
+  "text": "没有找到这条帖文 | 请返回重新进入 | 返回上一页 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 97,
+  "p": "pages/search2/index",
+  "route": "pages/search2/index",
+  "text": "搜索 | 筛选 | 推荐搜索 | 骑行 | 城市 | 外滩 | 书店 | 美术馆 | 摄影 | 苏州河 | 菜场 | 类别 | 城市漫步 | 咖啡 | 历史人文 | 解谜冒险 | 夜游 | 摄影打卡 | 户外徒步 | 亲子同行 | 在地图上找活动与主题节点 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "200 POST /api/category/list"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 98,
+  "p": "pages/search2/result/index",
+  "route": "pages/search2/result/index",
+  "text": "全部 | 主题 1 | 活动 0 | 商家 5 | 登录后搜索内容和俱乐部 | 登录 | 主题 | E2E 探店日一期 | 上海市黄浦区咖啡 | 咖啡 | 探店日样板咖啡 | 10:00-20:00 | 上海市黄浦区咖啡 | 咖啡 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "200 POST /api/topic/list",
+   "200 POST /api/activity/list",
+   "200 POST /api/merchant/list"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 99,
+  "p": "pages/searchmap/index",
+  "route": "pages/searchmap/index",
+  "text": "定位 | 这一带还没有活动 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "200 POST /api/activity/list"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 100,
+  "p": "pages/templatedetail/templatedetail",
+  "route": "pages/templatedetail/templatedetail",
+  "text": "链接已失效 | 返回 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": [
+   "[error] onReady pages/templatedetail/templatedetail JSHandle@error"
+  ]
+ },
+ {
+  "i": 101,
+  "p": "pages/templatedetail/topic-preview/index",
+  "route": "pages/templatedetail/topic-preview/index",
+  "text": "缺少模板ID | 返回 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "200 POST /api/template/topic-template/info"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 102,
+  "p": "pages/templatedetail/topic-detail/index",
+  "route": "pages/templatedetail/topic-detail/index",
+  "text": "链接已失效 | 返回 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 103,
+  "p": "pages/address/address",
+  "route": "pages/address/address",
+  "text": "登录后查看 | 登录 | 参与人信息 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "401 POST /api/user/address/list"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": [
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/user/address/list",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ]
+ },
+ {
+  "i": 104,
+  "p": "pages/addressinfo/addressinfo",
+  "route": "pages/addressinfo/addressinfo",
+  "text": "参与人信息 | 姓名 | * | 手机号 | * | 保存参与人信息 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 105,
+  "p": "pages/shezhi/shezhi",
+  "route": "pages/shezhi/shezhi",
+  "text": "设置 | 登录后查看账号信息 | 成为俱乐部主理人 | 成为商家 | 城瘾玩法 | 我的收藏 | 隐私与定位 | 营销消息与优惠券 | 帖文处置与申诉 | 我的申诉 | 用户服务协议 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "200 POST /api/config/features"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 106,
+  "p": "pages/shezhi/about/index",
+  "route": "pages/shezhi/about/index",
+  "text": "关于 | 城瘾 | 版本 开发版本 | 我的二维码 | 玩家个人码待生成 | 用户服务协议 | 联系我们 | 素材署名 | game-icons.net 游戏图标 · Creative Commons BY 3.0（要求署名） | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 107,
+  "p": "pages/shezhi/marketing/index",
+  "route": "pages/shezhi/marketing/index",
+  "text": "登录后查看 | 登录 | 营销消息与优惠券 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "401 GET /api/merchant/crm/marketing-consents"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": [
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/merchant/crm/marketing-consents",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ]
+ },
+ {
+  "i": 108,
+  "p": "pages/gerenziliao/gerenziliao",
+  "route": "pages/gerenziliao/gerenziliao",
+  "text": "登录后查看 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "401 POST /api/user/info"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": [
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/user/info",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ]
+ },
+ {
+  "i": 109,
+  "p": "pages/userinfo/userinfo",
+  "route": "pages/userinfo/userinfo",
+  "text": "个人主页 | 这个主页链接不完整 | 请返回重新进入 | 回到我的主页 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 110,
+  "p": "pages/mylike/mylike",
+  "route": "pages/mylike/mylike",
+  "text": "我的收藏 | 帖文 | 主题 | 登录后查看收藏 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "401 GET /api/v1/community/me/bookmarks?limit=10"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": [
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/v1/community/me/bookmarks?limit=10",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ]
+ },
+ {
+  "i": 111,
+  "p": "pages/crop/index",
+  "route": "pages/crop/index",
+  "text": "裁剪 | 没有可裁剪的图片 | 返回上一页 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 112,
+  "p": "subpackageMember/free-explore/index",
+  "route": "subpackageMember/free-explore/index",
+  "text": "自由探索权益 | 请登录后重新进入本人订单 | 刷新权益与预约结果 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 113,
+  "p": "subpackageMember/character/index",
+  "route": "subpackageMember/character/index",
+  "text": "我的角色卡 | 缺少有效主题 | 请从参与详情重新进入 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 1,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 114,
+  "p": "subpackageMember/orient-score/index",
+  "route": "subpackageMember/orient-score/index",
+  "text": "链接已失效 | 返回 | 本局计分 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 115,
+  "p": "subpackageMember/invoice/index",
+  "route": "subpackageMember/invoice/index",
+  "text": "我的发票 | 登录后查看发票 | 微信登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 116,
+  "p": "subpackageMember/invoice-detail/index",
+  "route": "subpackageMember/invoice-detail/index",
+  "text": "发票详情 | 登录后查看发票 | 微信登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 117,
+  "p": "subpackageMember/invoice-apply/index",
+  "route": "subpackageMember/invoice-apply/index",
+  "text": "申请开票 | 登录后申请开票 | 微信登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 118,
+  "p": "subpackageMember/invoice-titles/index",
+  "route": "subpackageMember/invoice-titles/index",
+  "text": "发票抬头 | 登录后管理发票抬头 | 微信登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 119,
+  "p": "subpackageMember/invoice-title-edit/index",
+  "route": "subpackageMember/invoice-title-edit/index",
+  "text": "发票抬头 | 登录后管理发票抬头 | 微信登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 120,
+  "p": "subpackageMember/complaint/index",
+  "route": "subpackageMember/complaint/index",
+  "text": "投诉与建议 | 仅限已报名并支付的活动，平台会介入处理 | 登录后发起投诉与查看进展 | 登录后可选择活动并查看自己的处理进展 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 1,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 121,
+  "p": "subpackageMember/coupon-wallet/index",
+  "route": "subpackageMember/coupon-wallet/index",
+  "text": "优惠券 | 全部 | 待使用 | 已使用 | 已过期 | 登录后查看我的优惠券 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 122,
+  "p": "subpackageMember/coupon-qr/index",
+  "route": "subpackageMember/coupon-qr/index",
+  "text": "缺少券信息 | 返回 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 1,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 123,
+  "p": "subpackageMember/coupon/coupon",
+  "route": "subpackageMember/coupon/coupon",
+  "text": "登录后查看 | 登录 | 优惠券 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 1,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 124,
+  "p": "subpackageMember/couponInfo/couponInfo",
+  "route": "subpackageMember/couponInfo/couponInfo",
+  "text": "优惠券设置 | 优惠券名称 | * | 优惠券日期 | * | 开始日期 | - | 结束日期 | 投放数 | * | 优惠券类型 | * | 请选择 | 优惠券说明 | 取消 | 发布优惠券 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 125,
+  "p": "subpackageMember/mycanyu/mycanyu",
+  "route": "subpackageMember/mycanyu/mycanyu",
+  "text": "我的参与 | 全部 | 未开始 | 进行中 | 已完成 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "401 POST /api/registration/my-joined"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 1,
+  "errs": [],
+  "cons": [
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/registration/my-joined",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ]
+ },
+ {
+  "i": 126,
+  "p": "subpackageMember/mycanyuinfo/mycanyuinfo",
+  "route": "subpackageMember/mycanyuinfo/mycanyuinfo",
+  "text": "参与详情 | 缺少参与记录 | 请返回重新进入 | 返回参与列表 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 127,
+  "p": "subpackageMember/myinvite/myinvite",
+  "route": "subpackageMember/myinvite/myinvite",
+  "text": "邀请记录 | 登录后查看邀请记录 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 128,
+  "p": "subpackageMember/mytemplate/mytemplate",
+  "route": "subpackageMember/mytemplate/mytemplate",
+  "text": "我的节点玩法 | 登录后查看我的节点玩法 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 1,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 129,
+  "p": "subpackageMember/order/order",
+  "route": "subpackageMember/order/order",
+  "text": "我的订单 | 全部 | 待支付 | 未开始 | 进行中 | 已完成 | 退款中 | 退款成功 | 不可退款 | 人工售后 | 登录后查看订单 | 登录后可查看你的路线订单 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 130,
+  "p": "subpackageMember/orderinfo/orderinfo",
+  "route": "subpackageMember/order/order",
+  "text": "我的订单 | 全部 | 待支付 | 未开始 | 进行中 | 已完成 | 退款中 | 退款成功 | 不可退款 | 人工售后 | 登录后查看订单 | 登录后可查看你的路线订单 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 131,
+  "p": "subpackageMember/points-history/index",
+  "route": "subpackageMember/points-history/index",
+  "text": "积分明细 | 积分明细加载失败 | 重试 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "401 POST /api/points/list"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": [
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/points/list",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ]
+ },
+ {
+  "i": 132,
+  "p": "subpackageMember/report-mine/index",
+  "route": "subpackageMember/report-mine/index",
+  "text": "登录后查看 | 登录 | 我的举报 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "401 GET /api/community-trust/reports/mine",
+   "401 GET /api/community-trust/reports/taxonomy"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": [
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/community-trust/reports/mine",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/community-trust/reports/taxonomy",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ]
+ },
+ {
+  "i": 133,
+  "p": "subpackageMember/report-detail/index",
+  "route": "subpackageMember/report-detail/index",
+  "text": "举报进度 | 链接已失效 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 134,
+  "p": "subpackageMember/appeal-mine/index",
+  "route": "subpackageMember/appeal-mine/index",
+  "text": "我的申诉 | 登录后查看申诉 | 微信登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 135,
+  "p": "subpackageMember/signup/index",
+  "route": "subpackageMember/signup/index",
+  "text": "票夹 | 登录后查看票夹 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "401 POST /api/registration/list",
+   "401 POST /api/registration/list",
+   "401 POST /api/team/my"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": [
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/registration/list",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/registration/list",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/team/my",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ]
+ },
+ {
+  "i": 136,
+  "p": "subpackageMember/tixian/tixian",
+  "route": "pages/merchant/index/index",
+  "text": "登录后查看经营台 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "401 POST /api/wallet/stages",
+   "401 POST /api/role/info"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": [
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/wallet/stages",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/role/info",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ]
+ },
+ {
+  "i": 137,
+  "p": "subpackageMember/tixianjilu/tixianjilu",
+  "route": "subpackageMember/tixianjilu/tixianjilu",
+  "text": "提现记录 | 登录后查看提现记录 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 138,
+  "p": "subpackageRoam/citynode-code/index",
+  "route": "subpackageRoam/citynode-code/index",
+  "text": "这个核销码无法打开 | 返回 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 139,
+  "p": "subpackageRoam/history/index",
+  "route": "subpackageRoam/history/index",
+  "text": "登录后查看 | 登录 | 漫游记录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 140,
+  "p": "subpackageRoam/poi-detail/index",
+  "route": "subpackageRoam/poi-detail/index",
+  "text": "节点详情 | 找不到这个节点 | 返回地图 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 141,
+  "p": "subpackageRoam/session/index",
+  "route": "subpackageRoam/session/index",
+  "text": "本次漫游 | 找不到这次漫游 | 返回漫游历史 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 142,
+  "p": "subpackageRoam/nearby/index",
+  "route": "subpackageRoam/nearby/index",
+  "text": "全部 | 主题队伍 | 地点玩法 | 商家 | 登录后查看附近信息 | 去登录 | 附近 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 143,
+  "p": "subpackageRoam/citystamp/index",
+  "route": "subpackageRoam/citystamp/index",
+  "text": "9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 144,
+  "p": "subpackageRoam/my-teams/index",
+  "route": "subpackageRoam/my-teams/index",
+  "text": "地图 | 我的队伍 | — | 已通过 | — | 审核中 | — | 带队 | — | 未通过 | 我的 | 附近招募 | 队伍获取失败 · 点按重试 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "401 POST /api/team/my",
+   "401 POST /api/team/my-applications"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": [
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/team/my",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/team/my-applications",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ]
+ },
+ {
+  "i": 145,
+  "p": "subpackageRoam/official-routes/index",
+  "route": "subpackageRoam/official-routes/index",
+  "text": "官方线路 | 还没有上架的官方线路 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [
+   "200 GET /api/preset/route/list"
+  ],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 146,
+  "p": "subpackageRoam/official-route/index",
+  "route": "subpackageRoam/official-route/index",
+  "text": "线路详情 | 这条线路不存在或已下架 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 147,
+  "p": "subpackageTools/capsule/index",
+  "route": "subpackageTools/capsule/index",
+  "text": "时光胶囊 | 请先登录后使用 | 重试 | 我的胶囊 | 还没有胶囊 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 148,
+  "p": "subpackageTools/monthly-recap/index",
+  "route": "subpackageTools/monthly-recap/index",
+  "text": "月度回顾 | 请先登录后使用 | 重试 | 路线 | 首次地点 | 城市签 | 这一类本月没有记录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 149,
+  "p": "subpackageTools/exploration-goals/index",
+  "route": "subpackageTools/exploration-goals/index",
+  "text": "探索目标 | 请通过现有登录流程登录后再使用 | 重试 | 我的目标 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 150,
+  "p": "subpackageTools/anniversary/index",
+  "route": "subpackageTools/anniversary/index",
+  "text": "那年今日 | 换一天 | 请通过现有登录流程登录后再使用 | 重试 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 151,
+  "p": "subpackageTools/exploration-export/index",
+  "route": "subpackageTools/exploration-export/index",
+  "text": "导出探索记录 | 请通过现有登录流程登录后再使用 | 重试 | 开始 | 结束（不含） | 准备导出 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 152,
+  "p": "pages/privacy/index",
+  "route": "pages/privacy/index",
+  "text": "隐私保护 | 查看《隐私保护指引》 | 首页城市自动定位 | 开启 | 关闭 | 附近的人位置分享 | 关闭 | 漫游定位 | 本机未在为漫游采集位置 | 撤回 | 我的待审媒体 | 查看 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 153,
+  "p": "pages/agreement/index",
+  "route": "pages/agreement/index",
+  "text": "用户服务协议 | 欢迎使用城瘾。本协议由西安吾令文化传媒有限公司（以下简称“我们”）与城瘾用户共同订立。请在注册、登录或使用服务前仔细阅读并充分理解本协议。 | 一、协议主体与生效 | 城瘾由西安吾令文化传媒有限公司运营，注册地址为陕西省西安市高新区锦业路1号绿地领海B座6层604室A043号。本协议自2026年8月12日起生效。本协议在你明确选择同意后对你生效。 | 二、账号注册与安全 | 你应使用真实、合法、有效的信息注册账号，并妥善保管登录凭证。不得出借、转让账号，不得利用账号实施违法、侵权、欺诈或扰乱平台秩序的行为。因你未妥善保管账号造成的损失，由你依法承担相应责任；因平台原因造成的损失，平台依法承担责任。 | 三、服务内容 | 城瘾提供城市探索、城市定向、主题与活动、地点打卡、俱乐部、商家合作、社区内容、订单及页面实际展示的其他功能。具体服务内容、开放范围、费用和规则以相应页面为准。我们可以因业务调整、维护或安全需要依法变更服务，并通过合理方式通知。 | 四、用户行为与内容管理 | 你对上传、发布和使用的文字、图片等内容负责，并应确保拥有相应权利。不得发布违法违规、侵权、虚假",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 154,
+  "p": "pages/deregister/index",
+  "route": "pages/deregister/index",
+  "text": "注销账号 | 登录后查看账号注销条件 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 155,
+  "p": "pages/team/detail/index",
+  "route": "pages/team/detail/index",
+  "text": "队伍详情 | 队伍链接不完整 | 请返回重新进入 | 返回上一页 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ },
+ {
+  "i": 156,
+  "p": "pages/team/join/index",
+  "route": "pages/team/join/index",
+  "text": "加入队伍 | 邀请链接不完整 | 请从队长分享的邀请重新进入 | 返回上一页 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+  "net": [],
+  "wxLogin": 0,
+  "loggedIn": false,
+  "newGuestMembers": 0,
+  "errs": [],
+  "cons": []
+ }
+]
