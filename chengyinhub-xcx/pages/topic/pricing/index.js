@@ -58,7 +58,7 @@ Page({
     saving: false,
     submitError: '',
     canConfirmPrice: false,
-    phaseBlocked: false, priced: false, // P-34:priced = 已过定价阶段(终价已确认/开售后),与「还没到定价阶段」分开说
+    themeClass: 'theme-merchant', phaseBlocked: false, priced: false, // P-34:priced = 已过定价阶段(终价已确认/开售后),与「还没到定价阶段」分开说
     // CU-C-70:成团人数为空/0 时的输入提示(与按钮禁用态同一把尺子)。
     teamSizeError: '',
     lineup: [], tickets: [], // 第四轮:作者的几张票逐张确认终价(≥2 张才显示逐张栏)
@@ -70,7 +70,7 @@ Page({
       this.setData({ loading: false, errorText: '缺少主题信息' });
       return;
     }
-    this.setData({ topicId: topicId });
+    this.setData({ topicId: topicId, themeClass: options.club === '1' ? 'theme-dark' : 'theme-merchant' }); // 第十二轮 k4(j2 N-15):俱乐部主理人进来用深色
     this.preview();
   },
 

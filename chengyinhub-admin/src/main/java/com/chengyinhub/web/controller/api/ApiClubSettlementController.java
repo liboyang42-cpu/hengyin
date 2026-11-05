@@ -241,8 +241,9 @@ public class ApiClubSettlementController extends BaseController {
     /** 钱的显示口径只有这一处真源，前端不做二次拼装。 */
     private static String money(BigDecimal v) {
         if (v == null) throw new IllegalArgumentException("金额未核验");
-        BigDecimal x = v;
-        return "¥ " + x.setScale(2, BigDecimal.ROUND_HALF_UP).toPlainString();
+        // 第十二轮 k4(j2 N-13、ROUND8 线索):与小程序同一写法 ——「¥151.32」不带空格,负数「−¥2.00」(减号 U+2212)
+        BigDecimal x = v.setScale(2, BigDecimal.ROUND_HALF_UP);
+        return (x.signum() < 0 ? "\u2212¥" : "¥") + x.abs().toPlainString();
     }
 
     private static String topicName(ClubSettlementSummaryRow row) {

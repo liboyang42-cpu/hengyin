@@ -179,7 +179,6 @@
           <view class="gn-info-row"><text>正常完成 / 保底完成</text><text>{{recap.normalCompletedCount}} / {{recap.fallbackCompletedCount}}</text></view>
           <view class="gn-info-row"><text>暂停事件</text><text>{{recap.pauseEventCount}}</text></view>
           <view class="gn-info-row"><text>公开授权内容</text><text>{{recap.authorizedContentCount}}</text></view>
-          <text class="gn-muted">仅显示本站安全聚合，不公开玩家内容。</text>
         </block>
         <text class="gn-muted" wx:else>复盘数据待确认</text>
       </view>

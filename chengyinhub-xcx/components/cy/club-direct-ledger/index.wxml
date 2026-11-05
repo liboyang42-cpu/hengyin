@@ -1,4 +1,5 @@
-<view class="direct-ledger">
+<!-- 第十二轮 k4(j2 N-13):俱乐部结算页上,一条计酬核销都没有(如引流合作)就不摆这一块,免得三格 ¥0.00 看着像欠了钱 -->
+<view class="direct-ledger" wx:if="{{!(kind === 'club' && state === 'ready' && ledger && !ledger.rows.length)}}">
   <view class="direct-head">
     <text class="direct-title">{{kind === 'club' ? '商家计酬' : '俱乐部计酬'}}</text>
     <text class="direct-count" wx:if="{{ledger}}">{{ledger.activeCount != null ? ledger.activeCount + ' 人次' : '—'}}</text>

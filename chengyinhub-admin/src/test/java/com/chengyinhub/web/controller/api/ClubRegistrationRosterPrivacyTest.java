@@ -80,7 +80,7 @@ class ClubRegistrationRosterPrivacyTest {
         AjaxResult result = controller.topicRegistrations(request());
 
         assertEquals("仅主理人或管理员可查看报名名册", result.get("msg"));
-        verify(registrationService, never()).selectRegistrationSummaries(any());
+        verify(registrationService, never()).selectRosterSummaries(any());
     }
 
     /**
@@ -158,7 +158,7 @@ class ClubRegistrationRosterPrivacyTest {
             }
             return Collections.emptyList();
         });
-        when(registrationService.selectRegistrationSummaries(any())).thenReturn(Collections.emptyList());
+        when(registrationService.selectRosterSummaries(any())).thenReturn(Collections.emptyList());
 
         AjaxResult result = controller.topicRegistrations(request());
 
@@ -245,7 +245,7 @@ class ClubRegistrationRosterPrivacyTest {
         registration.setTransactionId("WX-SECRET-TRANSACTION");
         registration.setVerificationCode("VERIFY-SECRET");
         registration.setQrcodeUrl("https://cdn/secret-qr.png");
-        when(registrationService.selectRegistrationSummaries(any()))
+        when(registrationService.selectRosterSummaries(any()))
                 .thenReturn(Collections.singletonList(registration));
 
         AjaxResult result = controller.topicRegistrations(request());

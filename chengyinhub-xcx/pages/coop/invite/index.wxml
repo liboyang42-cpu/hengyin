@@ -51,7 +51,7 @@
   </view>
 
   <view class="card">
-    <view class="card-tit">② 合作条款<text class="card-tit-n">对方接受并成单后锁定</text></view>
+    <view class="card-tit">② 合作条款</view>
     <view class="terms-options">
       <view class="terms-option {{shareMode === 0 ? 'on' : ''}}" bindtap="switchShareMode" data-mode="0" aria-role="radio" aria-checked="{{shareMode === 0}}" aria-label="引流合作，不产生现金结算" hover-class="cy-pressed" hover-stay-time="80">
         <text>引流合作（不产生现金结算）</text>

@@ -353,7 +353,7 @@ Page({
     const flipped = !this.data.flipped;
     this.setData({ flipped });
     const item = (this.data.ticketList || [])[index];
-    if (!flipped || !item) return;
+    if (!flipped || !item || item.topicCompleted === true) return;
     if (String(item.id) !== this._qrFor || !(this._qrExpiresAt > Date.now() + QR_REFRESH_LEAD_MS)) this._loadQr(item);
     else if (!this._qrTimer) this._scheduleQrRefresh(item, this._qrExpiresAt - Date.now() - QR_REFRESH_LEAD_MS);
   },
@@ -721,7 +721,8 @@ function walletCard(item) {
   // P-27:场次票卡面写「几点 · 在哪」,到期留在背面(wExpiry);读不到开场时间才回落「场次 · 剩几天」
   const session = item.kind === 'activity' ? sessionLine(item.cmsActivity) : '';
   const head = item.topicCompleted === true ? '已通关' : (session || (days === null ? item.wType : item.wType + (days === 0 ? ' · 今天过期' : ' · 剩 ' + days + ' 天')));
-  return Object.assign(item, { wSub: head + progress, wExpiry: passExpiryText(item.wUntil) });
+  // 第十二轮 k4(j2 F-22):已通关的票不再出入场码,也不写「今天过期」
+  return Object.assign(item, { wSub: head + progress, wExpiry: item.topicCompleted === true ? '' : passExpiryText(item.wUntil) });
 }
 /* 场次开场时间(服务端 yyyy-MM-dd HH:mm:ss,北京时间)+ 地点;缺开场时间返回空串 */
 function sessionLine(a) {

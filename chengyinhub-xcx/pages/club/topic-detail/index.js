@@ -1248,7 +1248,7 @@ Page({
     if (!this._topicId) return;
     this.setData({ settingSheetVisible: false });
     if (this._navigating) return; this._navigating = true; wx.navigateTo({
-      url: '/pages/topic/pricing/index?topicId=' + this._topicId,
+      url: '/pages/topic/pricing/index?topicId=' + this._topicId + '&club=1',
       complete: () => { this._navigating = false; } });
   },
 

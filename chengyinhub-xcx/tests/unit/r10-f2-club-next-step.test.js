@@ -64,7 +64,7 @@ test('定价中 → 确认终价,主按钮打开定价页', () => {
   owner(page, [{ id: 11, name: '喷泉报时', productType: 1, lifecycle: 2 }])
   assert.deepEqual([page.data.ownerStage, page.data.ownerPrimaryLabel], ['price', '确认终价'])
   page.onOwnerPrimary()
-  assert.deepEqual(page.navigations, ['/pages/topic/pricing/index?topicId=11'])
+  assert.deepEqual(page.navigations, ['/pages/topic/pricing/index?topicId=11&club=1'])
 })
 
 // 第十轮 f2 walk:确认终价成功后主题仍是 lifecycle 2,「现在要做」原来照旧叫人「确认终价」。

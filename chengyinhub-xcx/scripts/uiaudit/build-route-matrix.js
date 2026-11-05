@@ -46,6 +46,8 @@ const MERCHANT_HINT = /merchant-theme|theme-merchant|merchantPageShow/;
 // 账户收益 / 分析 / 收益明细是玩家资金页;商家经 ?theme=merchant 进同一页的浅色版,根节点的 theme-merchant 只是条件类。
 const ROLE_OVERRIDES = new Map([
   ['pages/activity/official-detail/index', 'merchant'],
+  // 第十二轮 k4:定价页根类改为按入口切换(俱乐部主理人深色、商家浅色),默认仍是商家侧
+  ['pages/topic/pricing/index', 'merchant'],
   ['subpackageA/pages/assetcenter/earnings/index', 'player'],
   ['subpackageA/pages/assetcenter/analysis/index', 'player'],
   ['subpackageA/pages/assetcenter/income-detail/income-detail', 'player'],

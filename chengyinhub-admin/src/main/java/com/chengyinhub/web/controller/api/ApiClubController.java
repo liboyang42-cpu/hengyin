@@ -1804,7 +1804,8 @@ public class ApiClubController extends BaseController {
             ViewRegistration rq = new ViewRegistration();
             rq.setTicketId(tk.getId());
             rq.setRegistrationStatus(2); // 已支付
-            List<ViewRegistration> registrations = viewRegistrationService.selectRegistrationSummaries(rq);
+            // 第十二轮 k4(j2 N-03):公开摘要不带姓名与报名时刻,名册取专用摘要,否则姓名永远回落「城瘾用户」
+            List<ViewRegistration> registrations = viewRegistrationService.selectRosterSummaries(rq);
             List<ClubRegistrationRosterVO.Registration> safeRegistrations = new ArrayList<>();
             if (registrations != null) {
                 for (ViewRegistration registration : registrations) {

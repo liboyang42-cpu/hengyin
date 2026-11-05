@@ -224,7 +224,7 @@ class ApiClubSettlementControllerTest {
         AjaxResult summary = controller.summary(clubBody());
         @SuppressWarnings("unchecked")
         Map<String, Object> data = (Map<String, Object>) summary.get(AjaxResult.DATA_TAG);
-        assertEquals("¥ 148.00", data.get("settledAmountText"));
+        assertEquals("¥148.00", data.get("settledAmountText"));
 
         AjaxResult result = controller.withdraw(clubBody());
 

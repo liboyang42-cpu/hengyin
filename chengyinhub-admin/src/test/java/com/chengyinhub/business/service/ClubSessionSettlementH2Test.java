@@ -121,10 +121,10 @@ class ClubSessionSettlementH2Test {
         assertEquals(9L, row.get("activityId"));
         assertEquals("人民广场 · 喷泉报时", row.get("name"));
         assertEquals("11月4日", row.get("dateText"));
-        assertEquals("¥ 156.00", row.get("grossText"));
-        assertEquals("¥ 4.68", row.get("feeText"));
+        assertEquals("¥156.00", row.get("grossText"));
+        assertEquals("¥4.68", row.get("feeText"));
         assertEquals("3%", row.get("feeRateText"));
-        assertEquals("¥ 151.32", row.get("netText"), "提现那笔支出不得混进到账");
+        assertEquals("¥151.32", row.get("netText"), "提现那笔支出不得混进到账");
         assertEquals("已入你的账户", row.get("payeeText"));
     }
 
@@ -147,9 +147,9 @@ class ClubSessionSettlementH2Test {
         refundAfterSettlement(502, 80, 10, "40.00", "1.00", 1);   // 别的俱乐部场次
         refundAfterSettlement(503, 75, 9, "5.00", "0.10", 0);     // 未落定(status=0)不算
         Map<String, Object> row = sessions(summary()).get(0);
-        assertEquals("¥ 136.50", row.get("grossText"));
-        assertEquals("¥ 4.10", row.get("feeText"));
-        assertEquals("¥ 132.40", row.get("netText"));
+        assertEquals("¥136.50", row.get("grossText"));
+        assertEquals("¥4.10", row.get("feeText"));
+        assertEquals("¥132.40", row.get("netText"));
     }
 
     @Test
@@ -157,7 +157,7 @@ class ClubSessionSettlementH2Test {
         club.setMemberId(CURRENT);
         viewer = CURRENT;
         Map<String, Object> row = sessions(summary()).get(0);
-        assertEquals("¥ 151.32", row.get("netText"));
+        assertEquals("¥151.32", row.get("netText"));
         assertEquals("已入原主理人账户", row.get("payeeText"));
     }
 }

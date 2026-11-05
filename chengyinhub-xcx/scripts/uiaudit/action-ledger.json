@@ -951253,7 +951253,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1002:bind:close:closeChoiceSheet:143",
+      "id": "pages/club/detail/index.wxml:1003:bind:close:closeChoiceSheet:143",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -951276,7 +951276,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeChoiceSheet",
-        "line": 1002,
+        "line": 1003,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -951320,7 +951320,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1005:bindtap:onChoiceSheetSelect:144",
+      "id": "pages/club/detail/index.wxml:1006:bindtap:onChoiceSheetSelect:144",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -951343,7 +951343,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onChoiceSheetSelect",
-        "line": 1005,
+        "line": 1006,
         "selectorHint": ".gc-item",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -951387,7 +951387,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1021:bind:close:onCloseGroupCode:145",
+      "id": "pages/club/detail/index.wxml:1022:bind:close:onCloseGroupCode:145",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -951410,7 +951410,7 @@
         "tag": "cy-qr-voucher",
         "event": "bind:close",
         "handler": "onCloseGroupCode",
-        "line": 1021,
+        "line": 1022,
         "selectorHint": "cy-qr-voucher[bind:close]",
         "visibleCondition": "{{groupCodeVisible && groupCodeState !== 'selecting'}}",
         "disabledCondition": null,
@@ -951454,7 +951454,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1022:bind:retry:onGroupCodeRetry:146",
+      "id": "pages/club/detail/index.wxml:1023:bind:retry:onGroupCodeRetry:146",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -951477,7 +951477,7 @@
         "tag": "cy-qr-voucher",
         "event": "bind:retry",
         "handler": "onGroupCodeRetry",
-        "line": 1022,
+        "line": 1023,
         "selectorHint": "cy-qr-voucher[bind:retry]",
         "visibleCondition": "{{groupCodeVisible && groupCodeState !== 'selecting'}}",
         "disabledCondition": null,
@@ -951574,7 +951574,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1032:bindtap:onJoin:147",
+      "id": "pages/club/detail/index.wxml:1033:bindtap:onJoin:147",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -951597,7 +951597,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onJoin",
-        "line": 1032,
+        "line": 1033,
         "selectorHint": ".join-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -951710,7 +951710,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1040:bind:close:closeWelcome:148",
+      "id": "pages/club/detail/index.wxml:1041:bind:close:closeWelcome:148",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -951733,7 +951733,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeWelcome",
-        "line": 1040,
+        "line": 1041,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -951777,7 +951777,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1055:bindtap:closeWelcome:149",
+      "id": "pages/club/detail/index.wxml:1056:bindtap:closeWelcome:149",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -951800,7 +951800,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeWelcome",
-        "line": 1055,
+        "line": 1056,
         "selectorHint": ".cy-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -951844,7 +951844,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1056:bindtap:welcomeGoEvents:150",
+      "id": "pages/club/detail/index.wxml:1057:bindtap:welcomeGoEvents:150",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -951867,7 +951867,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "welcomeGoEvents",
-        "line": 1056,
+        "line": 1057,
         "selectorHint": ".cy-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -951911,7 +951911,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1066:bind:afterleave:onSceneNativeBackGuard:151",
+      "id": "pages/club/detail/index.wxml:1067:bind:afterleave:onSceneNativeBackGuard:151",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -951934,7 +951934,7 @@
         "tag": "page-container",
         "event": "bind:afterleave",
         "handler": "onSceneNativeBackGuard",
-        "line": 1066,
+        "line": 1067,
         "selectorHint": "page-container[bind:afterleave]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -951978,7 +951978,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1068:catchtouchmove:blockSceneTouch:152",
+      "id": "pages/club/detail/index.wxml:1069:catchtouchmove:blockSceneTouch:152",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -952001,7 +952001,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 1068,
+        "line": 1069,
         "selectorHint": ".club-scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'club-edit'}}",
         "disabledCondition": null,
@@ -952046,7 +952046,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1069:bind:back:requestSceneClose:154",
+      "id": "pages/club/detail/index.wxml:1070:bind:back:requestSceneClose:154",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -952069,7 +952069,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:back",
         "handler": "requestSceneClose",
-        "line": 1069,
+        "line": 1070,
         "selectorHint": "cy-scene-sheet[bind:back]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -952113,7 +952113,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1069:bind:requestclose:requestSceneClose:153",
+      "id": "pages/club/detail/index.wxml:1070:bind:requestclose:requestSceneClose:153",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -952136,7 +952136,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:requestclose",
         "handler": "requestSceneClose",
-        "line": 1069,
+        "line": 1070,
         "selectorHint": "cy-scene-sheet[bind:requestclose]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -952180,7 +952180,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1070:bind:back:closeScene:155",
+      "id": "pages/club/detail/index.wxml:1071:bind:back:closeScene:155",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -952203,7 +952203,7 @@
         "tag": "cy-scene-club-edit",
         "event": "bind:back",
         "handler": "closeScene",
-        "line": 1070,
+        "line": 1071,
         "selectorHint": "cy-scene-club-edit[bind:back]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -952247,7 +952247,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1070:bind:dirtychange:onSceneDirtyChange:159",
+      "id": "pages/club/detail/index.wxml:1071:bind:dirtychange:onSceneDirtyChange:159",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -952270,7 +952270,7 @@
         "tag": "cy-scene-club-edit",
         "event": "bind:dirtychange",
         "handler": "onSceneDirtyChange",
-        "line": 1070,
+        "line": 1071,
         "selectorHint": "cy-scene-club-edit[bind:dirtychange]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -952314,7 +952314,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1070:bind:dissolved:onClubDissolved:157",
+      "id": "pages/club/detail/index.wxml:1071:bind:dissolved:onClubDissolved:157",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -952337,7 +952337,7 @@
         "tag": "cy-scene-club-edit",
         "event": "bind:dissolved",
         "handler": "onClubDissolved",
-        "line": 1070,
+        "line": 1071,
         "selectorHint": "cy-scene-club-edit[bind:dissolved]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -952385,7 +952385,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1070:bind:saved:onClubEdited:156",
+      "id": "pages/club/detail/index.wxml:1071:bind:saved:onClubEdited:156",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -952408,7 +952408,7 @@
         "tag": "cy-scene-club-edit",
         "event": "bind:saved",
         "handler": "onClubEdited",
-        "line": 1070,
+        "line": 1071,
         "selectorHint": "cy-scene-club-edit[bind:saved]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -952510,7 +952510,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1070:bind:transferowner:goClubGovernance:158",
+      "id": "pages/club/detail/index.wxml:1071:bind:transferowner:goClubGovernance:158",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -952533,7 +952533,7 @@
         "tag": "cy-scene-club-edit",
         "event": "bind:transferowner",
         "handler": "goClubGovernance",
-        "line": 1070,
+        "line": 1071,
         "selectorHint": "cy-scene-club-edit[bind:transferowner]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -952581,7 +952581,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1073:bind:cancel:cancelSceneDiscard:161",
+      "id": "pages/club/detail/index.wxml:1074:bind:cancel:cancelSceneDiscard:161",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -952604,7 +952604,7 @@
         "tag": "cy-modal",
         "event": "bind:cancel",
         "handler": "cancelSceneDiscard",
-        "line": 1073,
+        "line": 1074,
         "selectorHint": "cy-modal[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -952648,7 +952648,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1073:bind:confirm:confirmSceneDiscard:160",
+      "id": "pages/club/detail/index.wxml:1074:bind:confirm:confirmSceneDiscard:160",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -952671,7 +952671,7 @@
         "tag": "cy-modal",
         "event": "bind:confirm",
         "handler": "confirmSceneDiscard",
-        "line": 1073,
+        "line": 1074,
         "selectorHint": "cy-modal[bind:confirm]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -952715,7 +952715,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1078:bind:settled:onPrivacyGateSettled:162",
+      "id": "pages/club/detail/index.wxml:1079:bind:settled:onPrivacyGateSettled:162",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -952738,7 +952738,7 @@
         "tag": "cy-privacy-gate",
         "event": "bind:settled",
         "handler": "onPrivacyGateSettled",
-        "line": 1078,
+        "line": 1079,
         "selectorHint": "cy-privacy-gate[bind:settled]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -952782,7 +952782,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1081:bind:confirm:onConfirmDeletePost:163",
+      "id": "pages/club/detail/index.wxml:1082:bind:confirm:onConfirmDeletePost:163",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -952805,7 +952805,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmDeletePost",
-        "line": 1081,
+        "line": 1082,
         "selectorHint": "#dcPost",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -952918,7 +952918,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1082:bind:confirm:onConfirmDeleteComment:164",
+      "id": "pages/club/detail/index.wxml:1083:bind:confirm:onConfirmDeleteComment:164",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -952941,7 +952941,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmDeleteComment",
-        "line": 1082,
+        "line": 1083,
         "selectorHint": "#dcComment",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -953062,7 +953062,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1083:bind:alt:onQuitAlt:166",
+      "id": "pages/club/detail/index.wxml:1084:bind:alt:onQuitAlt:166",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -953085,7 +953085,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:alt",
         "handler": "onQuitAlt",
-        "line": 1083,
+        "line": 1084,
         "selectorHint": "#dcQuit",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -953130,7 +953130,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1083:bind:confirm:onConfirmQuit:165",
+      "id": "pages/club/detail/index.wxml:1084:bind:confirm:onConfirmQuit:165",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -953153,7 +953153,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmQuit",
-        "line": 1083,
+        "line": 1084,
         "selectorHint": "#dcQuit",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -958103,7 +958103,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:414:bindtap:onOwnerPrimary:52",
+      "id": "pages/club/detail/index.wxml:415:bindtap:onOwnerPrimary:52",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -958126,9 +958126,9 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onOwnerPrimary",
-        "line": 414,
+        "line": 415,
         "selectorHint": ".manage-now-btn",
-        "visibleCondition": null,
+        "visibleCondition": "{{ownerStage !== 'review' && ownerStage !== 'saleReview'}}",
         "disabledCondition": null,
         "ariaLabel": null,
         "ariaLabelExpression": "{{ownerPrimaryLabel}}",
@@ -958249,7 +958249,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:417:bindtap:onOpenClubSession:53",
+      "id": "pages/club/detail/index.wxml:418:bindtap:onOpenClubSession:53",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -958272,7 +958272,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onOpenClubSession",
-        "line": 417,
+        "line": 418,
         "selectorHint": ".manage-now-btn",
         "visibleCondition": "{{club.isOwner && ownerCanOpenSession}}",
         "disabledCondition": null,
@@ -958319,7 +958319,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:454:bindtap:goManageTopic:56",
+      "id": "pages/club/detail/index.wxml:455:bindtap:goManageTopic:56",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -958342,7 +958342,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goManageTopic",
-        "line": 454,
+        "line": 455,
         "selectorHint": ".manage-project",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -958433,7 +958433,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:463:catchtap:goGameDirector:57",
+      "id": "pages/club/detail/index.wxml:464:catchtap:goGameDirector:57",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -958456,7 +958456,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "goGameDirector",
-        "line": 463,
+        "line": 464,
         "selectorHint": ".manage-project-director",
         "visibleCondition": "{{club.isOwner && item.id && item.gameModuleEnabled}}",
         "disabledCondition": null,
@@ -958544,7 +958544,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:465:catchtap:goGameDirector:58",
+      "id": "pages/club/detail/index.wxml:466:catchtap:goGameDirector:58",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -958567,7 +958567,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "goGameDirector",
-        "line": 465,
+        "line": 466,
         "selectorHint": ".manage-project-director",
         "visibleCondition": "{{club.viewerIsAdmin && item.id && item.gameModuleEnabled}}",
         "disabledCondition": null,
@@ -958655,7 +958655,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:467:catchtap:openActivityTools:59",
+      "id": "pages/club/detail/index.wxml:468:catchtap:openActivityTools:59",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -958678,7 +958678,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "openActivityTools",
-        "line": 467,
+        "line": 468,
         "selectorHint": ".manage-project-director",
         "visibleCondition": "{{club.isOwner || club.viewerIsAdmin || canManageActivities || canOperateEvents || hasEventScope}}",
         "disabledCondition": null,
@@ -958768,7 +958768,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:472:bind:cta:onCreateTeam:60",
+      "id": "pages/club/detail/index.wxml:473:bind:cta:onCreateTeam:60",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -958791,7 +958791,7 @@
         "tag": "cy-empty",
         "event": "bind:cta",
         "handler": "onCreateTeam",
-        "line": 472,
+        "line": 473,
         "selectorHint": "cy-empty[bind:cta]",
         "visibleCondition": "{{club.isOwner || canManageActivities}}",
         "disabledCondition": null,
@@ -958839,7 +958839,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:474:catchtap:onCreateTeam:61",
+      "id": "pages/club/detail/index.wxml:475:catchtap:onCreateTeam:61",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -958862,7 +958862,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onCreateTeam",
-        "line": 474,
+        "line": 475,
         "selectorHint": ".manage-add-row",
         "visibleCondition": "{{club.isOwner || canManageActivities}}",
         "disabledCondition": null,
@@ -958910,7 +958910,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:481:catchtap:toggleManageSection:62",
+      "id": "pages/club/detail/index.wxml:482:catchtap:toggleManageSection:62",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -958933,7 +958933,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "toggleManageSection",
-        "line": 481,
+        "line": 482,
         "selectorHint": ".manage-fold-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -959020,7 +959020,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:500:catchtap:stopShareBubble:64",
+      "id": "pages/club/detail/index.wxml:501:catchtap:stopShareBubble:64",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -959043,7 +959043,7 @@
         "tag": "button",
         "event": "catchtap",
         "handler": "stopShareBubble",
-        "line": 500,
+        "line": 501,
         "selectorHint": ".manage-project-share",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -959088,7 +959088,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:505:bind:cta:loadShareEditions:65",
+      "id": "pages/club/detail/index.wxml:506:bind:cta:loadShareEditions:65",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -959111,7 +959111,7 @@
         "tag": "cy-empty",
         "event": "bind:cta",
         "handler": "loadShareEditions",
-        "line": 505,
+        "line": 506,
         "selectorHint": "cy-empty[bind:cta]",
         "visibleCondition": "{{shareEditionEmptyRetry}}",
         "disabledCondition": null,
@@ -959205,7 +959205,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:511:catchtap:toggleManageSection:66",
+      "id": "pages/club/detail/index.wxml:512:catchtap:toggleManageSection:66",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -959228,7 +959228,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "toggleManageSection",
-        "line": 511,
+        "line": 512,
         "selectorHint": ".manage-fold-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -959315,7 +959315,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:521:catchtap:goCoopList:67",
+      "id": "pages/club/detail/index.wxml:522:catchtap:goCoopList:67",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -959338,7 +959338,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "goCoopList",
-        "line": 521,
+        "line": 522,
         "selectorHint": ".cset-panel-act",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -959385,7 +959385,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:522:bind:input:onMerchantKeyword:68",
+      "id": "pages/club/detail/index.wxml:523:bind:input:onMerchantKeyword:68",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -959408,7 +959408,7 @@
         "tag": "cy-search",
         "event": "bind:input",
         "handler": "onMerchantKeyword",
-        "line": 522,
+        "line": 523,
         "selectorHint": ".merchant-search",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -959452,7 +959452,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:531:bind:tap:goMerchantProfile:69",
+      "id": "pages/club/detail/index.wxml:532:bind:tap:goMerchantProfile:69",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -959475,7 +959475,7 @@
         "tag": "cy-merchant-card",
         "event": "bind:tap",
         "handler": "goMerchantProfile",
-        "line": 531,
+        "line": 532,
         "selectorHint": ".mcard",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -959522,7 +959522,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:554:catchtap:toggleManageSection:71",
+      "id": "pages/club/detail/index.wxml:555:catchtap:toggleManageSection:71",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -959545,7 +959545,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "toggleManageSection",
-        "line": 554,
+        "line": 555,
         "selectorHint": ".manage-fold-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -959632,7 +959632,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:582:catchtap:applyCoopPool:73",
+      "id": "pages/club/detail/index.wxml:583:catchtap:applyCoopPool:73",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -959655,7 +959655,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "applyCoopPool",
-        "line": 582,
+        "line": 583,
         "selectorHint": ".pool-card-cta",
         "visibleCondition": "{{item.canApply}}",
         "disabledCondition": null,
@@ -959753,7 +959753,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:588:catchtap:goCoopSent:74",
+      "id": "pages/club/detail/index.wxml:589:catchtap:goCoopSent:74",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -959776,7 +959776,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "goCoopSent",
-        "line": 588,
+        "line": 589,
         "selectorHint": ".pool-card-cta",
         "visibleCondition": "{{item.applyId}}",
         "disabledCondition": null,
@@ -959823,7 +959823,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:599:catchtap:toggleManageSection:75",
+      "id": "pages/club/detail/index.wxml:600:catchtap:toggleManageSection:75",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -959846,7 +959846,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "toggleManageSection",
-        "line": 599,
+        "line": 600,
         "selectorHint": ".manage-fold-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -959933,7 +959933,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:615:catchtap:goCoopList:77",
+      "id": "pages/club/detail/index.wxml:616:catchtap:goCoopList:77",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -959956,7 +959956,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "goCoopList",
-        "line": 615,
+        "line": 616,
         "selectorHint": ".manage-message",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -960003,7 +960003,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:628:catchtap:toggleManageSection:78",
+      "id": "pages/club/detail/index.wxml:629:catchtap:toggleManageSection:78",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -960026,7 +960026,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "toggleManageSection",
-        "line": 628,
+        "line": 629,
         "selectorHint": ".manage-fold-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -960113,7 +960113,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:641:bindtap:goCooperation:80",
+      "id": "pages/club/detail/index.wxml:642:bindtap:goCooperation:80",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -960136,7 +960136,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goCooperation",
-        "line": 641,
+        "line": 642,
         "selectorHint": ".manage-invite",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -960183,7 +960183,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:663:bind:close:closeComposer:81",
+      "id": "pages/club/detail/index.wxml:664:bind:close:closeComposer:81",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -960206,7 +960206,7 @@
         "tag": "cy-post-compose",
         "event": "bind:close",
         "handler": "closeComposer",
-        "line": 663,
+        "line": 664,
         "selectorHint": "cy-post-compose[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -960250,7 +960250,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:663:bind:published:onComposePublished:82",
+      "id": "pages/club/detail/index.wxml:664:bind:published:onComposePublished:82",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -960273,7 +960273,7 @@
         "tag": "cy-post-compose",
         "event": "bind:published",
         "handler": "onComposePublished",
-        "line": 663,
+        "line": 664,
         "selectorHint": "cy-post-compose[bind:published]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -960375,7 +960375,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:664:bind:refclear:onClearPostRef:84",
+      "id": "pages/club/detail/index.wxml:665:bind:refclear:onClearPostRef:84",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -960398,7 +960398,7 @@
         "tag": "cy-post-compose",
         "event": "bind:refclear",
         "handler": "onClearPostRef",
-        "line": 664,
+        "line": 665,
         "selectorHint": "cy-post-compose[bind:refclear]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -960442,7 +960442,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:664:bind:refpick:openPostRefPicker:83",
+      "id": "pages/club/detail/index.wxml:665:bind:refpick:openPostRefPicker:83",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -960465,7 +960465,7 @@
         "tag": "cy-post-compose",
         "event": "bind:refpick",
         "handler": "openPostRefPicker",
-        "line": 664,
+        "line": 665,
         "selectorHint": "cy-post-compose[bind:refpick]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -960551,7 +960551,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:667:bind:close:closePostRefPicker:85",
+      "id": "pages/club/detail/index.wxml:668:bind:close:closePostRefPicker:85",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -960574,7 +960574,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closePostRefPicker",
-        "line": 667,
+        "line": 668,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -960618,7 +960618,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:673:catchtap:onPickPostRef:87",
+      "id": "pages/club/detail/index.wxml:674:catchtap:onPickPostRef:87",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -960641,7 +960641,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onPickPostRef",
-        "line": 673,
+        "line": 674,
         "selectorHint": ".post-ref-opt",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -960685,7 +960685,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:686:bind:close:closeSettings:88",
+      "id": "pages/club/detail/index.wxml:687:bind:close:closeSettings:88",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -960708,7 +960708,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeSettings",
-        "line": 686,
+        "line": 687,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -960752,7 +960752,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:689:catchtap:goCustomers:89",
+      "id": "pages/club/detail/index.wxml:690:catchtap:goCustomers:89",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -960775,7 +960775,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "goCustomers",
-        "line": 689,
+        "line": 690,
         "selectorHint": ".cset-row",
         "visibleCondition": "{{club.isOwner || club.viewerIsAdmin}}",
         "disabledCondition": null,
@@ -960822,7 +960822,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:700:catchtap:goEnroll:90",
+      "id": "pages/club/detail/index.wxml:701:catchtap:goEnroll:90",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -960845,7 +960845,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "goEnroll",
-        "line": 700,
+        "line": 701,
         "selectorHint": ".cset-row",
         "visibleCondition": "{{club.isOwner || club.viewerIsAdmin}}",
         "disabledCondition": null,
@@ -960892,7 +960892,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:713:bindtap:goEventOps:91",
+      "id": "pages/club/detail/index.wxml:714:bindtap:goEventOps:91",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -960915,7 +960915,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goEventOps",
-        "line": 713,
+        "line": 714,
         "selectorHint": ".cset-row",
         "visibleCondition": "{{club.isOwner || canManageActivities}}",
         "disabledCondition": null,
@@ -960962,7 +960962,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:718:catchtap:toggleSettingsPanel:92",
+      "id": "pages/club/detail/index.wxml:719:catchtap:toggleSettingsPanel:92",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -960985,7 +960985,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "toggleSettingsPanel",
-        "line": 718,
+        "line": 719,
         "selectorHint": ".cset-row",
         "visibleCondition": "{{club.isOwner || club.viewerIsAdmin || canManageActivities || canOperateEvents || hasEventScope}}",
         "disabledCondition": null,
@@ -961029,7 +961029,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:728:catchtap:onCreateTeam:93",
+      "id": "pages/club/detail/index.wxml:729:catchtap:onCreateTeam:93",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -961052,7 +961052,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onCreateTeam",
-        "line": 728,
+        "line": 729,
         "selectorHint": ".manage-tool",
         "visibleCondition": "{{club.isOwner}}",
         "disabledCondition": null,
@@ -961100,7 +961100,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:729:catchtap:onOpenClubSession:94",
+      "id": "pages/club/detail/index.wxml:730:catchtap:onOpenClubSession:94",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -961123,7 +961123,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onOpenClubSession",
-        "line": 729,
+        "line": 730,
         "selectorHint": ".manage-tool",
         "visibleCondition": "{{club.isOwner}}",
         "disabledCondition": null,
@@ -961170,7 +961170,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:734:catchtap:onClubAiOpen:95",
+      "id": "pages/club/detail/index.wxml:735:catchtap:onClubAiOpen:95",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -961193,7 +961193,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onClubAiOpen",
-        "line": 734,
+        "line": 735,
         "selectorHint": ".manage-tool",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -961237,7 +961237,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:738:catchtap:goJoinRequests:96",
+      "id": "pages/club/detail/index.wxml:739:catchtap:goJoinRequests:96",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -961260,7 +961260,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "goJoinRequests",
-        "line": 738,
+        "line": 739,
         "selectorHint": ".cset-row",
         "visibleCondition": "{{club.isOwner || canApproveMembers}}",
         "disabledCondition": null,
@@ -961364,7 +961364,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:753:catchtap:toggleSettingsPanel:97",
+      "id": "pages/club/detail/index.wxml:754:catchtap:toggleSettingsPanel:97",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -961387,7 +961387,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "toggleSettingsPanel",
-        "line": 753,
+        "line": 754,
         "selectorHint": ".cset-row",
         "visibleCondition": "{{club.isOwner || canReadMembers || canManageMembers || canManageRoles}}",
         "disabledCondition": null,
@@ -961431,7 +961431,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:768:catchtap:goMemberProfile:100",
+      "id": "pages/club/detail/index.wxml:769:catchtap:goMemberProfile:100",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -961454,7 +961454,7 @@
         "tag": "cy-avatar",
         "event": "catchtap",
         "handler": "goMemberProfile",
-        "line": 768,
+        "line": 769,
         "selectorHint": ".member-avatar",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -961656,7 +961656,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:769:catchtap:goMemberProfile:101",
+      "id": "pages/club/detail/index.wxml:770:catchtap:goMemberProfile:101",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -961679,7 +961679,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "goMemberProfile",
-        "line": 769,
+        "line": 770,
         "selectorHint": ".member-info",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -961881,7 +961881,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:774:catchtap:goMemberRoles:102",
+      "id": "pages/club/detail/index.wxml:775:catchtap:goMemberRoles:102",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -961904,7 +961904,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "goMemberRoles",
-        "line": 774,
+        "line": 775,
         "selectorHint": ".member-role-btn",
         "visibleCondition": "{{club.isOwner || canManageRoles}}",
         "disabledCondition": null,
@@ -961951,7 +961951,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:775:catchtap:goMemberGovernance:103",
+      "id": "pages/club/detail/index.wxml:776:catchtap:goMemberGovernance:103",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -961974,7 +961974,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "goMemberGovernance",
-        "line": 775,
+        "line": 776,
         "selectorHint": ".member-governance-btn",
         "visibleCondition": "{{club.isOwner || club.viewerIsAdmin || canManageMembers}}",
         "disabledCondition": null,
@@ -962021,7 +962021,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:776:catchtap:removeMember:104",
+      "id": "pages/club/detail/index.wxml:777:catchtap:removeMember:104",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -962044,7 +962044,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "removeMember",
-        "line": 776,
+        "line": 777,
         "selectorHint": ".member-remove",
         "visibleCondition": "{{(club.isOwner || canManageMembers || (club.viewerIsAdmin && item.role != 1)) && item.memberId !== club.memberId}}",
         "disabledCondition": null,
@@ -962155,7 +962155,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:785:bindtap:goClubRoles:105",
+      "id": "pages/club/detail/index.wxml:786:bindtap:goClubRoles:105",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -962178,7 +962178,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goClubRoles",
-        "line": 785,
+        "line": 786,
         "selectorHint": ".cset-row",
         "visibleCondition": "{{club.isOwner || canManageRoles}}",
         "disabledCondition": null,
@@ -962294,7 +962294,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:795:catchtap:goClubGovernance:106",
+      "id": "pages/club/detail/index.wxml:796:catchtap:goClubGovernance:106",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -962317,7 +962317,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "goClubGovernance",
-        "line": 795,
+        "line": 796,
         "selectorHint": ".cset-row",
         "visibleCondition": "{{club.isOwner || club.viewerIsAdmin || canManageMembers}}",
         "disabledCondition": null,
@@ -962365,7 +962365,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:799:catchtap:goClubNotify:107",
+      "id": "pages/club/detail/index.wxml:800:catchtap:goClubNotify:107",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -962388,7 +962388,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "goClubNotify",
-        "line": 799,
+        "line": 800,
         "selectorHint": ".cset-row",
         "visibleCondition": "{{club.isOwner || canSendNotify}}",
         "disabledCondition": null,
@@ -962435,7 +962435,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:805:catchtap:goClubBadges:108",
+      "id": "pages/club/detail/index.wxml:806:catchtap:goClubBadges:108",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -962458,7 +962458,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "goClubBadges",
-        "line": 805,
+        "line": 806,
         "selectorHint": ".cset-row",
         "visibleCondition": "{{club.isOwner}}",
         "disabledCondition": null,
@@ -962505,7 +962505,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:814:catchtap:togglePublicVisible:109",
+      "id": "pages/club/detail/index.wxml:815:catchtap:togglePublicVisible:109",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -962528,7 +962528,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "togglePublicVisible",
-        "line": 814,
+        "line": 815,
         "selectorHint": ".cset-row",
         "visibleCondition": "{{club.isOwner}}",
         "disabledCondition": null,
@@ -962615,7 +962615,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:823:bind:action:togglePublicVisible:110",
+      "id": "pages/club/detail/index.wxml:824:bind:action:togglePublicVisible:110",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -962638,7 +962638,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "togglePublicVisible",
-        "line": 823,
+        "line": 824,
         "selectorHint": ".cset-inline-error",
         "visibleCondition": "{{openSettingErrorKey === 'publicVisible'}}",
         "disabledCondition": null,
@@ -962725,7 +962725,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:825:catchtap:toggleMerchantCoop:111",
+      "id": "pages/club/detail/index.wxml:826:catchtap:toggleMerchantCoop:111",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -962748,7 +962748,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "toggleMerchantCoop",
-        "line": 825,
+        "line": 826,
         "selectorHint": ".cset-row",
         "visibleCondition": "{{club.isOwner}}",
         "disabledCondition": null,
@@ -962835,7 +962835,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:834:bind:action:toggleMerchantCoop:112",
+      "id": "pages/club/detail/index.wxml:835:bind:action:toggleMerchantCoop:112",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -962858,7 +962858,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "toggleMerchantCoop",
-        "line": 834,
+        "line": 835,
         "selectorHint": ".cset-inline-error",
         "visibleCondition": "{{openSettingErrorKey === 'merchantCoop'}}",
         "disabledCondition": null,
@@ -962945,7 +962945,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:836:catchtap:toggleMemberPost:113",
+      "id": "pages/club/detail/index.wxml:837:catchtap:toggleMemberPost:113",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -962968,7 +962968,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "toggleMemberPost",
-        "line": 836,
+        "line": 837,
         "selectorHint": ".cset-row",
         "visibleCondition": "{{club.isOwner}}",
         "disabledCondition": null,
@@ -963055,7 +963055,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:845:bind:action:toggleMemberPost:114",
+      "id": "pages/club/detail/index.wxml:846:bind:action:toggleMemberPost:114",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -963078,7 +963078,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "toggleMemberPost",
-        "line": 845,
+        "line": 846,
         "selectorHint": ".cset-inline-error",
         "visibleCondition": "{{openSettingErrorKey === 'memberPost'}}",
         "disabledCondition": null,
@@ -963165,7 +963165,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:848:catchtap:editWelcomeNote:115",
+      "id": "pages/club/detail/index.wxml:849:catchtap:editWelcomeNote:115",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -963188,7 +963188,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "editWelcomeNote",
-        "line": 848,
+        "line": 849,
         "selectorHint": ".cset-row",
         "visibleCondition": "{{club.isOwner}}",
         "disabledCondition": null,
@@ -963276,7 +963276,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:857:bind:action:editWelcomeNote:116",
+      "id": "pages/club/detail/index.wxml:858:bind:action:editWelcomeNote:116",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -963299,7 +963299,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "editWelcomeNote",
-        "line": 857,
+        "line": 858,
         "selectorHint": ".cset-inline-error",
         "visibleCondition": "{{openSettingErrorKey === 'welcomeNote'}}",
         "disabledCondition": null,
@@ -963386,7 +963386,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:860:catchtap:goClubFinance:117",
+      "id": "pages/club/detail/index.wxml:861:catchtap:goClubFinance:117",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -963409,7 +963409,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "goClubFinance",
-        "line": 860,
+        "line": 861,
         "selectorHint": ".cset-row",
         "visibleCondition": "{{club.isOwner}}",
         "disabledCondition": null,
@@ -963456,7 +963456,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:872:catchtap:openClubEdit:118",
+      "id": "pages/club/detail/index.wxml:873:catchtap:openClubEdit:118",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -963479,7 +963479,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "openClubEdit",
-        "line": 872,
+        "line": 873,
         "selectorHint": ".cset-row",
         "visibleCondition": "{{club.isOwner || club.viewerIsAdmin}}",
         "disabledCondition": null,
@@ -963562,7 +963562,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:884:bind:close:closeOwnerPicker:119",
+      "id": "pages/club/detail/index.wxml:885:bind:close:closeOwnerPicker:119",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -963585,7 +963585,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeOwnerPicker",
-        "line": 884,
+        "line": 885,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -963633,7 +963633,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:885:catchtap:onPickOwnerClub:120",
+      "id": "pages/club/detail/index.wxml:886:catchtap:onPickOwnerClub:120",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -963656,7 +963656,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onPickOwnerClub",
-        "line": 885,
+        "line": 886,
         "selectorHint": ".owner-picker-item",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -963846,7 +963846,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:890:bind:close:closePostEdit:121",
+      "id": "pages/club/detail/index.wxml:891:bind:close:closePostEdit:121",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -963869,7 +963869,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closePostEdit",
-        "line": 890,
+        "line": 891,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -963913,7 +963913,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:890:bind:requestclose:requestClosePostEdit:122",
+      "id": "pages/club/detail/index.wxml:891:bind:requestclose:requestClosePostEdit:122",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -963936,7 +963936,7 @@
         "tag": "cy-sheet",
         "event": "bind:requestclose",
         "handler": "requestClosePostEdit",
-        "line": 890,
+        "line": 891,
         "selectorHint": "cy-sheet[bind:requestclose]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -963980,7 +963980,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:892:bindinput:onPostEditText:123",
+      "id": "pages/club/detail/index.wxml:893:bindinput:onPostEditText:123",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -964003,7 +964003,7 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "onPostEditText",
-        "line": 892,
+        "line": 893,
         "selectorHint": ".post-edit-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -964047,7 +964047,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:895:bindtap:submitPostEdit:124",
+      "id": "pages/club/detail/index.wxml:896:bindtap:submitPostEdit:124",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -964070,7 +964070,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "submitPostEdit",
-        "line": 895,
+        "line": 896,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -964183,7 +964183,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:897:bind:cancel:cancelDiscardPostEdit:126",
+      "id": "pages/club/detail/index.wxml:898:bind:cancel:cancelDiscardPostEdit:126",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -964206,7 +964206,7 @@
         "tag": "cy-modal",
         "event": "bind:cancel",
         "handler": "cancelDiscardPostEdit",
-        "line": 897,
+        "line": 898,
         "selectorHint": "cy-modal[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -964250,7 +964250,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:897:bind:confirm:confirmDiscardPostEdit:125",
+      "id": "pages/club/detail/index.wxml:898:bind:confirm:confirmDiscardPostEdit:125",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -964273,7 +964273,7 @@
         "tag": "cy-modal",
         "event": "bind:confirm",
         "handler": "confirmDiscardPostEdit",
-        "line": 897,
+        "line": 898,
         "selectorHint": "cy-modal[bind:confirm]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -964314,73 +964314,6 @@
       "evidence": {
         "status": "pending",
         "staticSource": "pages/club/detail/index.js:2027"
-      }
-    },
-    {
-      "id": "pages/club/detail/index.wxml:899:bind:close:closePostHistory:127",
-      "route": "pages/club/detail/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "club",
-      "entry": {
-        "wxml": "pages/club/detail/index.wxml",
-        "js": "pages/club/detail/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-sheet",
-        "event": "bind:close",
-        "handler": "closePostHistory",
-        "line": 899,
-        "selectorHint": "cy-sheet[bind:close]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2152"
       }
     },
     {
@@ -964454,6 +964387,73 @@
       }
     },
     {
+      "id": "pages/club/detail/index.wxml:900:bind:close:closePostHistory:127",
+      "route": "pages/club/detail/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "club",
+      "entry": {
+        "wxml": "pages/club/detail/index.wxml",
+        "js": "pages/club/detail/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-sheet",
+        "event": "bind:close",
+        "handler": "closePostHistory",
+        "line": 900,
+        "selectorHint": "cy-sheet[bind:close]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/club/detail/index.js:2152"
+      }
+    },
+    {
       "id": "pages/club/detail/index.wxml:91:bind:change:switchTab:4",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
@@ -964521,7 +964521,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:912:bind:close:onClubAiClose:128",
+      "id": "pages/club/detail/index.wxml:913:bind:close:onClubAiClose:128",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -964544,7 +964544,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "onClubAiClose",
-        "line": 912,
+        "line": 913,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -964588,7 +964588,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:916:catchtap:onClubAiChip:129",
+      "id": "pages/club/detail/index.wxml:917:catchtap:onClubAiChip:129",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -964611,7 +964611,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onClubAiChip",
-        "line": 916,
+        "line": 917,
         "selectorHint": ".ai-plan-chip",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -964655,7 +964655,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:919:bindinput:onClubAiIdea:130",
+      "id": "pages/club/detail/index.wxml:920:bindinput:onClubAiIdea:130",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -964678,7 +964678,7 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "onClubAiIdea",
-        "line": 919,
+        "line": 920,
         "selectorHint": ".ai-plan-idea",
         "visibleCondition": null,
         "disabledCondition": "{{aiState === 'generating'}}",
@@ -964722,7 +964722,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:924:bindinput:onClubAiStyle:131",
+      "id": "pages/club/detail/index.wxml:925:bindinput:onClubAiStyle:131",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -964745,7 +964745,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onClubAiStyle",
-        "line": 924,
+        "line": 925,
         "selectorHint": ".ai-plan-input",
         "visibleCondition": null,
         "disabledCondition": "{{aiState === 'generating'}}",
@@ -964789,7 +964789,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:927:bindinput:onClubAiDuration:132",
+      "id": "pages/club/detail/index.wxml:928:bindinput:onClubAiDuration:132",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -964812,7 +964812,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onClubAiDuration",
-        "line": 927,
+        "line": 928,
         "selectorHint": ".ai-plan-input",
         "visibleCondition": null,
         "disabledCondition": "{{aiState === 'generating'}}",
@@ -964856,7 +964856,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:936:catchtap:onClubAiCancel:133",
+      "id": "pages/club/detail/index.wxml:937:catchtap:onClubAiCancel:133",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -964879,7 +964879,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onClubAiCancel",
-        "line": 936,
+        "line": 937,
         "selectorHint": ".ai-plan-ghost",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -964923,7 +964923,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:939:catchtap:onClubAiGenerate:134",
+      "id": "pages/club/detail/index.wxml:940:catchtap:onClubAiGenerate:134",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -964946,7 +964946,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onClubAiGenerate",
-        "line": 939,
+        "line": 940,
         "selectorHint": ".ai-plan-gen",
         "visibleCondition": "{{aiCanRetry}}",
         "disabledCondition": null,
@@ -965035,7 +965035,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:942:catchtap:onClubAiGenerate:135",
+      "id": "pages/club/detail/index.wxml:943:catchtap:onClubAiGenerate:135",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -965058,7 +965058,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onClubAiGenerate",
-        "line": 942,
+        "line": 943,
         "selectorHint": ".ai-plan-gen",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -965147,7 +965147,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:965:bindtap:onAddressTap:136",
+      "id": "pages/club/detail/index.wxml:966:bindtap:onAddressTap:136",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -965170,7 +965170,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onAddressTap",
-        "line": 965,
+        "line": 966,
         "selectorHint": ".ai-plan-node-addr",
         "visibleCondition": "{{item.address}}",
         "disabledCondition": null,
@@ -965282,7 +965282,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:976:catchtap:onClubAiCopy:137",
+      "id": "pages/club/detail/index.wxml:977:catchtap:onClubAiCopy:137",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -965305,7 +965305,7 @@
         "tag": "text",
         "event": "catchtap",
         "handler": "onClubAiCopy",
-        "line": 976,
+        "line": 977,
         "selectorHint": ".ai-plan-copy",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -965359,7 +965359,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:981:catchtap:onClubAiAdopt:138",
+      "id": "pages/club/detail/index.wxml:982:catchtap:onClubAiAdopt:138",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -965382,7 +965382,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onClubAiAdopt",
-        "line": 981,
+        "line": 982,
         "selectorHint": ".ai-plan-adopt",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -965430,7 +965430,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:989:bind:close:onCloseGroupCode:139",
+      "id": "pages/club/detail/index.wxml:990:bind:close:onCloseGroupCode:139",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -965453,7 +965453,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "onCloseGroupCode",
-        "line": 989,
+        "line": 990,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -965497,7 +965497,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:991:bindtap:onGroupCodeSelectActivity:140",
+      "id": "pages/club/detail/index.wxml:992:bindtap:onGroupCodeSelectActivity:140",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -965520,7 +965520,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onGroupCodeSelectActivity",
-        "line": 991,
+        "line": 992,
         "selectorHint": ".gc-item",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -965609,7 +965609,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:995:bind:close:closeDirectorActivityPicker:141",
+      "id": "pages/club/detail/index.wxml:996:bind:close:closeDirectorActivityPicker:141",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -965632,7 +965632,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeDirectorActivityPicker",
-        "line": 995,
+        "line": 996,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -965676,7 +965676,7 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:998:bindtap:onDirectorActivitySelect:142",
+      "id": "pages/club/detail/index.wxml:999:bindtap:onDirectorActivitySelect:142",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -965699,7 +965699,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onDirectorActivitySelect",
-        "line": 998,
+        "line": 999,
         "selectorHint": ".gc-item",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1036493,7 +1036493,7 @@
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:189:bind:close:closeDeclineSheet:22",
+      "id": "pages/merchant/game-node/index.wxml:188:bind:close:closeDeclineSheet:22",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1036516,7 +1036516,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeDeclineSheet",
-        "line": 189,
+        "line": 188,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1036560,7 +1036560,7 @@
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:194:bindtap:onDeclineReasonTap:23",
+      "id": "pages/merchant/game-node/index.wxml:193:bindtap:onDeclineReasonTap:23",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1036583,7 +1036583,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onDeclineReasonTap",
-        "line": 194,
+        "line": 193,
         "selectorHint": ".gn-choice",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1036627,7 +1036627,7 @@
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:196:bindtap:submitDecline:24",
+      "id": "pages/merchant/game-node/index.wxml:195:bindtap:submitDecline:24",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1036650,7 +1036650,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "submitDecline",
-        "line": 196,
+        "line": 195,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1036694,7 +1036694,7 @@
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:200:bind:close:closePauseSheet:25",
+      "id": "pages/merchant/game-node/index.wxml:199:bind:close:closePauseSheet:25",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1036717,7 +1036717,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closePauseSheet",
-        "line": 200,
+        "line": 199,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1036761,7 +1036761,7 @@
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:205:bindtap:onPauseReasonTap:26",
+      "id": "pages/merchant/game-node/index.wxml:204:bindtap:onPauseReasonTap:26",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1036784,7 +1036784,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPauseReasonTap",
-        "line": 205,
+        "line": 204,
         "selectorHint": ".gn-choice",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1036828,7 +1036828,7 @@
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:210:bind:change:onResumeDateChange:27",
+      "id": "pages/merchant/game-node/index.wxml:209:bind:change:onResumeDateChange:27",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1036851,7 +1036851,7 @@
         "tag": "cy-date-field",
         "event": "bind:change",
         "handler": "onResumeDateChange",
-        "line": 210,
+        "line": 209,
         "selectorHint": ".gn-time-picker",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1036895,7 +1036895,7 @@
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:211:bind:change:onResumeTimeChange:28",
+      "id": "pages/merchant/game-node/index.wxml:210:bind:change:onResumeTimeChange:28",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1036918,7 +1036918,7 @@
         "tag": "cy-date-field",
         "event": "bind:change",
         "handler": "onResumeTimeChange",
-        "line": 211,
+        "line": 210,
         "selectorHint": ".gn-time-picker",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1036962,7 +1036962,7 @@
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:216:bind:change:onFallbackChange:29",
+      "id": "pages/merchant/game-node/index.wxml:215:bind:change:onFallbackChange:29",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1036985,7 +1036985,7 @@
         "tag": "cy-dropdown",
         "event": "bind:change",
         "handler": "onFallbackChange",
-        "line": 216,
+        "line": 215,
         "selectorHint": "cy-dropdown[bind:change]",
         "visibleCondition": "{{fallbackOptions.length}}",
         "disabledCondition": null,
@@ -1037029,7 +1037029,7 @@
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:230:bindtap:submitPause:30",
+      "id": "pages/merchant/game-node/index.wxml:229:bindtap:submitPause:30",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1037052,7 +1037052,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "submitPause",
-        "line": 230,
+        "line": 229,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!pauseDraft.reasonCode || !pauseDraft.resumeDate}}",
@@ -1037096,7 +1037096,7 @@
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:234:bind:close:closeVerifySheet:31",
+      "id": "pages/merchant/game-node/index.wxml:233:bind:close:closeVerifySheet:31",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1037119,7 +1037119,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeVerifySheet",
-        "line": 234,
+        "line": 233,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1037163,7 +1037163,7 @@
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:239:bindinput:onSubmissionIdInput:32",
+      "id": "pages/merchant/game-node/index.wxml:238:bindinput:onSubmissionIdInput:32",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1037186,7 +1037186,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onSubmissionIdInput",
-        "line": 239,
+        "line": 238,
         "selectorHint": ".gn-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1037297,7 +1037297,74 @@
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:242:bindtap:onVerifyDecisionTap:33",
+      "id": "pages/merchant/game-node/index.wxml:241:bindtap:onVerifyDecisionTap:33",
+      "route": "pages/merchant/game-node/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/game-node/index.wxml",
+        "js": "pages/merchant/game-node/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onVerifyDecisionTap",
+        "line": 241,
+        "selectorHint": ".gn-segment-item",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/game-node/index.js:632"
+      }
+    },
+    {
+      "id": "pages/merchant/game-node/index.wxml:242:bindtap:onVerifyDecisionTap:34",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1037364,74 +1037431,7 @@
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:243:bindtap:onVerifyDecisionTap:34",
-      "route": "pages/merchant/game-node/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/merchant/game-node/index.wxml",
-        "js": "pages/merchant/game-node/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "onVerifyDecisionTap",
-        "line": 243,
-        "selectorHint": ".gn-segment-item",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:632"
-      }
-    },
-    {
-      "id": "pages/merchant/game-node/index.wxml:247:bindtap:onRejectReasonTap:35",
+      "id": "pages/merchant/game-node/index.wxml:246:bindtap:onRejectReasonTap:35",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1037454,7 +1037454,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onRejectReasonTap",
-        "line": 247,
+        "line": 246,
         "selectorHint": ".gn-choice",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1037498,7 +1037498,7 @@
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:249:bindtap:submitVerification:36",
+      "id": "pages/merchant/game-node/index.wxml:248:bindtap:submitVerification:36",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1037521,7 +1037521,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "submitVerification",
-        "line": 249,
+        "line": 248,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1037565,7 +1037565,7 @@
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:258:bind:confirm:onServiceTimeConfirm:37",
+      "id": "pages/merchant/game-node/index.wxml:257:bind:confirm:onServiceTimeConfirm:37",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1037588,7 +1037588,7 @@
         "tag": "cy-time-range",
         "event": "bind:confirm",
         "handler": "onServiceTimeConfirm",
-        "line": 258,
+        "line": 257,
         "selectorHint": "cy-time-range[bind:confirm]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1037632,7 +1037632,7 @@
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:259:bind:cancel:closeServiceTime:38",
+      "id": "pages/merchant/game-node/index.wxml:258:bind:cancel:closeServiceTime:38",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1037655,7 +1037655,7 @@
         "tag": "cy-time-range",
         "event": "bind:cancel",
         "handler": "closeServiceTime",
-        "line": 259,
+        "line": 258,
         "selectorHint": "cy-time-range[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1037699,7 +1037699,7 @@
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:261:bind:settled:onPrivacyGateSettled:39",
+      "id": "pages/merchant/game-node/index.wxml:260:bind:settled:onPrivacyGateSettled:39",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1037722,7 +1037722,7 @@
         "tag": "cy-privacy-gate",
         "event": "bind:settled",
         "handler": "onPrivacyGateSettled",
-        "line": 261,
+        "line": 260,
         "selectorHint": "cy-privacy-gate[bind:settled]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1037766,7 +1037766,7 @@
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:271:bind:close:closeLiveCheckin:40",
+      "id": "pages/merchant/game-node/index.wxml:270:bind:close:closeLiveCheckin:40",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1037789,7 +1037789,7 @@
         "tag": "cy-qr-voucher",
         "event": "bind:close",
         "handler": "closeLiveCheckin",
-        "line": 271,
+        "line": 270,
         "selectorHint": "cy-qr-voucher[bind:close]",
         "visibleCondition": "{{checkinVisible}}",
         "disabledCondition": null,
@@ -1037833,7 +1037833,7 @@
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:272:bind:retry:issueLiveCheckin:41",
+      "id": "pages/merchant/game-node/index.wxml:271:bind:retry:issueLiveCheckin:41",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1037856,7 +1037856,7 @@
         "tag": "cy-qr-voucher",
         "event": "bind:retry",
         "handler": "issueLiveCheckin",
-        "line": 272,
+        "line": 271,
         "selectorHint": "cy-qr-voucher[bind:retry]",
         "visibleCondition": "{{checkinVisible}}",
         "disabledCondition": null,
@@ -1372913,7 +1372913,7 @@
       }
     },
     {
-      "id": "pages/topic/merchantapply/index.wxml:136:bindtap:openAvailabilityPicker:14",
+      "id": "pages/topic/merchantapply/index.wxml:135:bindtap:openAvailabilityPicker:14",
       "route": "pages/topic/merchantapply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1372936,7 +1372936,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openAvailabilityPicker",
-        "line": 136,
+        "line": 135,
         "selectorHint": "#field-date-range",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1372980,7 +1372980,7 @@
       }
     },
     {
-      "id": "pages/topic/merchantapply/index.wxml:145:bindtap:handleTimePopup:15",
+      "id": "pages/topic/merchantapply/index.wxml:144:bindtap:handleTimePopup:15",
       "route": "pages/topic/merchantapply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1373003,7 +1373003,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "handleTimePopup",
-        "line": 145,
+        "line": 144,
         "selectorHint": "#field-time",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1373047,7 +1373047,7 @@
       }
     },
     {
-      "id": "pages/topic/merchantapply/index.wxml:160:bindblur:onFieldBlur:18",
+      "id": "pages/topic/merchantapply/index.wxml:159:bindblur:onFieldBlur:18",
       "route": "pages/topic/merchantapply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1373070,7 +1373070,7 @@
         "tag": "input",
         "event": "bindblur",
         "handler": "onFieldBlur",
-        "line": 160,
+        "line": 159,
         "selectorHint": ".ma-inp",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1373114,7 +1373114,7 @@
       }
     },
     {
-      "id": "pages/topic/merchantapply/index.wxml:160:bindfocus:onFieldFocus:17",
+      "id": "pages/topic/merchantapply/index.wxml:159:bindfocus:onFieldFocus:17",
       "route": "pages/topic/merchantapply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1373137,7 +1373137,7 @@
         "tag": "input",
         "event": "bindfocus",
         "handler": "onFieldFocus",
-        "line": 160,
+        "line": 159,
         "selectorHint": ".ma-inp",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1373181,7 +1373181,7 @@
       }
     },
     {
-      "id": "pages/topic/merchantapply/index.wxml:160:bindinput:onLimitNumChange:16",
+      "id": "pages/topic/merchantapply/index.wxml:159:bindinput:onLimitNumChange:16",
       "route": "pages/topic/merchantapply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1373204,7 +1373204,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onLimitNumChange",
-        "line": 160,
+        "line": 159,
         "selectorHint": ".ma-inp",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1373248,7 +1373248,7 @@
       }
     },
     {
-      "id": "pages/topic/merchantapply/index.wxml:166:bind:action:onSubmit:19:variant:create",
+      "id": "pages/topic/merchantapply/index.wxml:165:bind:action:onSubmit:19:variant:create",
       "route": "pages/topic/merchantapply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1373279,7 +1373279,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "onSubmit",
-        "line": 166,
+        "line": 165,
         "selectorHint": "cy-inline-error[bind:action]",
         "visibleCondition": "{{submitError}}",
         "disabledCondition": null,
@@ -1373343,7 +1373343,7 @@
       }
     },
     {
-      "id": "pages/topic/merchantapply/index.wxml:166:bind:action:onSubmit:19:variant:edit",
+      "id": "pages/topic/merchantapply/index.wxml:165:bind:action:onSubmit:19:variant:edit",
       "route": "pages/topic/merchantapply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1373376,7 +1373376,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "onSubmit",
-        "line": 166,
+        "line": 165,
         "selectorHint": "cy-inline-error[bind:action]",
         "visibleCondition": "{{submitError}}",
         "disabledCondition": null,
@@ -1373440,7 +1373440,7 @@
       }
     },
     {
-      "id": "pages/topic/merchantapply/index.wxml:200:bind:disabledtap:onSubmitDisabledTap:21",
+      "id": "pages/topic/merchantapply/index.wxml:199:bind:disabledtap:onSubmitDisabledTap:21",
       "route": "pages/topic/merchantapply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1373463,7 +1373463,7 @@
         "tag": "cy-btn",
         "event": "bind:disabledtap",
         "handler": "onSubmitDisabledTap",
-        "line": 200,
+        "line": 199,
         "selectorHint": "cy-btn[bind:disabledtap]",
         "visibleCondition": "{{registrationId}}",
         "disabledCondition": "{{!canSubmit}}",
@@ -1373507,7 +1373507,7 @@
       }
     },
     {
-      "id": "pages/topic/merchantapply/index.wxml:200:bindtap:onEditSubmit:20:variant:edit",
+      "id": "pages/topic/merchantapply/index.wxml:199:bindtap:onEditSubmit:20:variant:edit",
       "route": "pages/topic/merchantapply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1373540,7 +1373540,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "onEditSubmit",
-        "line": 200,
+        "line": 199,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": "{{registrationId}}",
         "disabledCondition": "{{!canSubmit}}",
@@ -1373604,7 +1373604,7 @@
       }
     },
     {
-      "id": "pages/topic/merchantapply/index.wxml:202:bind:disabledtap:onSubmitDisabledTap:23",
+      "id": "pages/topic/merchantapply/index.wxml:201:bind:disabledtap:onSubmitDisabledTap:23",
       "route": "pages/topic/merchantapply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1373627,7 +1373627,7 @@
         "tag": "cy-btn",
         "event": "bind:disabledtap",
         "handler": "onSubmitDisabledTap",
-        "line": 202,
+        "line": 201,
         "selectorHint": "cy-btn[bind:disabledtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canSubmit}}",
@@ -1373671,7 +1373671,7 @@
       }
     },
     {
-      "id": "pages/topic/merchantapply/index.wxml:202:bindtap:onCreateSubmit:22:variant:create",
+      "id": "pages/topic/merchantapply/index.wxml:201:bindtap:onCreateSubmit:22:variant:create",
       "route": "pages/topic/merchantapply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1373702,7 +1373702,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "onCreateSubmit",
-        "line": 202,
+        "line": 201,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canSubmit}}",
@@ -1373766,7 +1373766,7 @@
       }
     },
     {
-      "id": "pages/topic/merchantapply/index.wxml:205:bindtap:goProgress:24",
+      "id": "pages/topic/merchantapply/index.wxml:204:bindtap:goProgress:24",
       "route": "pages/topic/merchantapply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1373789,7 +1373789,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "goProgress",
-        "line": 205,
+        "line": 204,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1373837,7 +1373837,7 @@
       }
     },
     {
-      "id": "pages/topic/merchantapply/index.wxml:206:bindtap:goHome:25",
+      "id": "pages/topic/merchantapply/index.wxml:205:bindtap:goHome:25",
       "route": "pages/topic/merchantapply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1373860,7 +1373860,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "goHome",
-        "line": 206,
+        "line": 205,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1373907,7 +1373907,7 @@
       }
     },
     {
-      "id": "pages/topic/merchantapply/index.wxml:211:bindtap:goProgress:26",
+      "id": "pages/topic/merchantapply/index.wxml:210:bindtap:goProgress:26",
       "route": "pages/topic/merchantapply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1373930,7 +1373930,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "goProgress",
-        "line": 211,
+        "line": 210,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1373978,7 +1373978,7 @@
       }
     },
     {
-      "id": "pages/topic/merchantapply/index.wxml:218:bind:cancel:cancelAvailabilityPicker:27",
+      "id": "pages/topic/merchantapply/index.wxml:217:bind:cancel:cancelAvailabilityPicker:27",
       "route": "pages/topic/merchantapply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1374001,7 +1374001,7 @@
         "tag": "cy-date-range-sheet",
         "event": "bind:cancel",
         "handler": "cancelAvailabilityPicker",
-        "line": 218,
+        "line": 217,
         "selectorHint": "#availabilityDateRange",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1374045,7 +1374045,7 @@
       }
     },
     {
-      "id": "pages/topic/merchantapply/index.wxml:218:bind:confirm:confirmAvailabilityPicker:28",
+      "id": "pages/topic/merchantapply/index.wxml:217:bind:confirm:confirmAvailabilityPicker:28",
       "route": "pages/topic/merchantapply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1374068,7 +1374068,7 @@
         "tag": "cy-date-range-sheet",
         "event": "bind:confirm",
         "handler": "confirmAvailabilityPicker",
-        "line": 218,
+        "line": 217,
         "selectorHint": "#availabilityDateRange",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1374112,7 +1374112,7 @@
       }
     },
     {
-      "id": "pages/topic/merchantapply/index.wxml:221:bind:close:handleTimePopup:29",
+      "id": "pages/topic/merchantapply/index.wxml:220:bind:close:handleTimePopup:29",
       "route": "pages/topic/merchantapply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1374135,7 +1374135,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "handleTimePopup",
-        "line": 221,
+        "line": 220,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1374179,7 +1374179,7 @@
       }
     },
     {
-      "id": "pages/topic/merchantapply/index.wxml:228:bindchange:onStartTimeChange:30",
+      "id": "pages/topic/merchantapply/index.wxml:227:bindchange:onStartTimeChange:30",
       "route": "pages/topic/merchantapply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1374202,7 +1374202,7 @@
         "tag": "picker-view",
         "event": "bindchange",
         "handler": "onStartTimeChange",
-        "line": 228,
+        "line": 227,
         "selectorHint": ".time-picker-view",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1374246,7 +1374246,7 @@
       }
     },
     {
-      "id": "pages/topic/merchantapply/index.wxml:242:bindchange:onEndTimeChange:31",
+      "id": "pages/topic/merchantapply/index.wxml:241:bindchange:onEndTimeChange:31",
       "route": "pages/topic/merchantapply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1374269,7 +1374269,7 @@
         "tag": "picker-view",
         "event": "bindchange",
         "handler": "onEndTimeChange",
-        "line": 242,
+        "line": 241,
         "selectorHint": ".time-picker-view",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1374313,7 +1374313,7 @@
       }
     },
     {
-      "id": "pages/topic/merchantapply/index.wxml:255:bindtap:handleTimePopup:32",
+      "id": "pages/topic/merchantapply/index.wxml:254:bindtap:handleTimePopup:32",
       "route": "pages/topic/merchantapply/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1374336,7 +1374336,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "handleTimePopup",
-        "line": 255,
+        "line": 254,
         "selectorHint": ".time-picker-confirm",
         "visibleCondition": null,
         "disabledCondition": null,

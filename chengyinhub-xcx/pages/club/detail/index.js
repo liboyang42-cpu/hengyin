@@ -1590,7 +1590,7 @@ Page({
     if ((stage === 'recruit' || stage === 'price' || stage === 'contract') && this._stageTopic && this._stageTopic.id) {
       const url = stage !== 'price'
         ? '/pages/topic/merchantinfo/merchantinfo?topicId=' + this._stageTopic.id + '&scope=CLUB&open=merchant'
-        : '/pages/topic/pricing/index?topicId=' + this._stageTopic.id;
+        : '/pages/topic/pricing/index?topicId=' + this._stageTopic.id + '&club=1';
       if (this._navigating) return; this._navigating = true;
       wx.navigateTo({ url: url, complete: () => { this._navigating = false; } });
       return;

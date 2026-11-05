@@ -411,7 +411,8 @@
         <!-- 管理员没有经营动作:邀商家 / 发布主题 / 开一场都是主理人的事。
              说明已经并进 ownerStageHint 的 admin 文案,这里不再重复一段。 -->
         <view class="manage-now-acts" wx:if="{{club.isOwner}}">
-          <view class="manage-now-btn cy-btn cy-btn--primary {{ownerStage === 'loading' ? 'disabled' : ''}}" bindtap="onOwnerPrimary"
+          <!-- 第十二轮 k4(j2 N-15):审核中两档只能等平台,标题已经说了,不再放一颗同名、点了也只是停在本页的主按钮 -->
+          <view wx:if="{{ownerStage !== 'review' && ownerStage !== 'saleReview'}}" class="manage-now-btn cy-btn cy-btn--primary {{ownerStage === 'loading' ? 'disabled' : ''}}" bindtap="onOwnerPrimary"
                 aria-role="button" aria-disabled="{{ownerStage === 'loading'}}" aria-label="{{ownerPrimaryLabel}}"
                 hover-class="{{ownerStage === 'loading' ? 'none' : 'cy-pressed'}}" hover-stay-time="80">{{ownerPrimaryLabel}}</view>
           <view wx:if="{{club.isOwner && ownerCanOpenSession}}" class="manage-now-btn manage-now-btn--minor cy-btn cy-btn--ghost" bindtap="onOpenClubSession"

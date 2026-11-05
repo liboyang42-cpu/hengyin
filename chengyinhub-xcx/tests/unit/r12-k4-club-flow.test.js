@@ -71,3 +71,14 @@ test('N-09:主题已开售、商家已接受时「现在要做」是开一场', 
   const js = read('pages/club/detail/index.js')
   assert.match(js, /else if \(stage === 'accepted' && topics\.some\(function \(item\) \{ const lc = lifecycleOf\(item\); return lc === 3 \|\| lc === 4; \}\)\) stage = 'run';/)
 })
+
+test('N-02:场次入口归一化保留 invitedCount(rig 走查发现原来被丢掉,首页卡永远看不到「待接受邀请」)', () => {
+  const client = require('../../utils/game-session-client.js')
+  const normalize = client.normalizeMerchantEntry || (client.__test && client.__test.normalizeMerchantEntry)
+  if (normalize) {
+    assert.equal(normalize({ activityId: 9, topicId: 990015, activityName: '夜行定向', stationCount: 1, invitedCount: 1 }).invitedCount, 1)
+    assert.equal(normalize({ activityId: 9, topicId: 990015, activityName: '夜行定向', stationCount: 1 }).invitedCount, 0)
+  } else {
+    assert.match(read('utils/game-session-client.js'), /invitedCount: Number\.isSafeInteger\(Number\(raw\.invitedCount\)\)/)
+  }
+})

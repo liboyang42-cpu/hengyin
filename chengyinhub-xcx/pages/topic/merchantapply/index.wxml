@@ -130,7 +130,6 @@
            它们回答的是同一个问题「这一站能接多少团、什么时候接」,散在地点那张卡里读不出这层意思 -->
       <view class="ma-group-head">
         <text class="ma-group-t">可配合的时间</text>
-        <text class="ma-group-s">决定这一站能接多少团、什么时候接</text>
       </view>
       <view class="ma-card wizard-card cy-rise-in">
         <view class="ma-row" id="field-date-range" hover-class="cy-pressed" hover-stay-time="80" bindtap="openAvailabilityPicker" aria-role="button" aria-label="选择可配合日期区间">
