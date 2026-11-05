@@ -1183,7 +1183,7 @@
           <view class="chapter-audio__head"><text>{{chapterForm.opening ? '开场视频' : '结尾视频'}}</text></view>
           <view class="chapter-audio__empty" bindtap="uploadChapterVideo" aria-role="button" aria-label="上传章节视频" hover-class="cy-pressed"><cy-icon name="plus" size="28" /><text>{{chapterForm.videoUrl ? '更换视频' : '添加视频'}}</text></view>
           <view wx:if="{{chapterForm.videoUrl}}" class="chapter-audio__del" bindtap="clearChapterVideo" aria-role="button" aria-label="移除章节视频" hover-class="cy-pressed">移除</view>
-          <text wx:if="{{chapterVideoError}}" class="chapter-media-error">{{chapterVideoError}}</text>
+          <cy-inline-error wx:if="{{chapterVideoError}}" class="chapter-media-error" kind="field" title="{{chapterVideoError}}" />
         </view>
 
         <view class="chapter-atmosphere" wx:if="{{formData.productType === 1 && !lookView.themed}}"> <!-- 设了主题配色就统一用它,章节里不再单设 -->

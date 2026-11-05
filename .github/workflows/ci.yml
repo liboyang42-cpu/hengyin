@@ -836,6 +836,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Ensure ripgrep for static scanning
+        run: |
+          if ! command -v rg >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install --no-install-recommends -y ripgrep
+          fi
+          rg --version
       - name: Verify mini program unit discovery manifest
         # 必须在 node --test 之外先跑；否则 glob 漏掉 smoke 本身时仍可假绿。
         run: node ci/xcx-unit-manifest.js --selftest

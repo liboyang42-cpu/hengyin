@@ -3,6 +3,7 @@ package com.chengyinhub.business.service.support;
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.OmsTicket;
 import com.chengyinhub.common.constant.ProductType;
+import com.chengyinhub.common.exception.ServiceException;
 
 import java.math.BigDecimal;
 import java.util.Collection;
@@ -17,6 +18,14 @@ import java.util.Date;
 public final class TopicSaleTimeValidator {
 
     private TopicSaleTimeValidator() {
+    }
+
+    /** 立项只拒绝已确定的无售卖窗口，未来招募与未完成定价仍可提交。 */
+    public static void assertRecruitmentSaleWindow(CmsTopic topic) {
+        if (topic.getRecruitDeadline() != null && topic.getSaleEndAt() != null
+                && !topic.getRecruitDeadline().before(topic.getSaleEndAt())) {
+            throw new ServiceException("招商截止日期必须早于售票截止时间", 400);
+        }
     }
 
     public static void assertValid(CmsTopic topic, Collection<OmsTicket> tickets, Date sellingStartedAt) {

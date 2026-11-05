@@ -86,6 +86,44 @@ class TopicCreateBusinessErrorPassthroughTest {
     }
 
     @Test
+    void dateRefusalIsDeterministicBadRequestForBothCreateEntrypoints() {
+        com.chengyinhub.business.domain.CmsTopic invalid = new com.chengyinhub.business.domain.CmsTopic();
+        invalid.setRecruitDeadline(new java.util.Date(2000L));
+        invalid.setSaleEndAt(new java.util.Date(2000L));
+        ServiceException refusal = org.junit.jupiter.api.Assertions.assertThrows(ServiceException.class,
+                () -> com.chengyinhub.business.service.support.TopicSaleTimeValidator.assertRecruitmentSaleWindow(invalid));
+        when(topicService.createTopic(any(), anyLong(), anyString())).thenThrow(refusal);
+        when(topicService.createTopicV2WithReview(any(), anyLong(), anyString())).thenThrow(refusal);
+
+        for (AjaxResult result : new AjaxResult[] {
+                controller.createTopic(freeExploreDto()), controller.createTopicV2(freeExploreDto())}) {
+            assertEquals(400, result.get(AjaxResult.CODE_TAG));
+            assertEquals("招商截止日期必须早于售票截止时间", result.get(AjaxResult.MSG_TAG));
+        }
+        org.mockito.Mockito.verify(topicService).createTopic(any(), anyLong(), anyString());
+        org.mockito.Mockito.verify(topicService).createTopicV2WithReview(any(), anyLong(), anyString());
+        IWxContentSecurityService security = (IWxContentSecurityService)
+                ReflectionTestUtils.getField(controller, "wxContentSecurityService");
+        org.mockito.Mockito.verify(security, org.mockito.Mockito.never())
+                .submitMediaCheck(org.mockito.ArgumentMatchers.anyInt(), anyLong(), any(), any());
+    }
+
+    @Test
+    void businessBadRequestAndForbiddenPreserveTheirCodesAndSanitizeMessages() {
+        when(topicService.createTopic(any(), anyLong(), anyString()))
+                .thenThrow(new ServiceException("Error querying database. Cause: java.sql.SQLException", 400));
+        AjaxResult sanitized = controller.createTopic(freeExploreDto());
+        assertEquals(400, sanitized.get(AjaxResult.CODE_TAG));
+        assertEquals("主题发布失败，请稍后重试", sanitized.get(AjaxResult.MSG_TAG));
+
+        org.mockito.Mockito.doThrow(new ServiceException("无权操作", 403))
+                .when(topicService).createTopic(any(), anyLong(), anyString());
+        AjaxResult forbidden = controller.createTopic(freeExploreDto());
+        assertEquals(403, forbidden.get(AjaxResult.CODE_TAG));
+        assertEquals("无权操作", forbidden.get(AjaxResult.MSG_TAG));
+    }
+
+    @Test
     void clubLeaderGate_reachesTheUserVerbatim() {
         when(topicService.createTopic(any(), anyLong(), anyString()))
                 .thenThrow(new IllegalStateException("只有俱乐部主理人可以开放商家招商;如需招商请先注册主理人并绑定俱乐部"));
@@ -153,7 +191,9 @@ class TopicCreateBusinessErrorPassthroughTest {
         when(topicService.createTopic(any(), anyLong(), anyString()))
                 .thenThrow(new NullPointerException("Cannot invoke \"String.trim()\" because \"in\" is null"));
 
-        assertEquals("主题发布失败，请稍后重试", msgOf(controller.createTopic(freeExploreDto())),
+        AjaxResult result = controller.createTopic(freeExploreDto());
+        assertEquals(500, result.get(AjaxResult.CODE_TAG));
+        assertEquals("主题发布失败，请稍后重试", msgOf(result),
                 "技术异常仍必须走稳定兜底文案,不许把内部细节泄给用户");
     }
 

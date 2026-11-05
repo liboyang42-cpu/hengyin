@@ -23,6 +23,34 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class TopicSaleTimeValidatorTest {
 
     @Test
+    void projectDatesRejectEqualOrReversedRecruitmentAndSaleDeadlines() {
+        CmsTopic topic = sellableTopic();
+        for (long offset : new long[] {0, 1}) {
+            topic.setRecruitDeadline(new Date(topic.getSaleEndAt().getTime() + offset));
+            com.chengyinhub.common.exception.ServiceException failure = assertThrows(
+                    com.chengyinhub.common.exception.ServiceException.class,
+                    () -> TopicSaleTimeValidator.assertRecruitmentSaleWindow(topic));
+            assertTrue(failure.getMessage().contains("招商截止日期")
+                    && failure.getMessage().contains("售票截止时间"));
+            assertNoFieldNames(failure.getMessage());
+        }
+    }
+
+    @Test
+    void projectDatesAllowFutureRecruitmentWithoutPricingOrAStartDateRestriction() {
+        CmsTopic topic = new CmsTopic();
+        topic.setStartDate(at("2099-01-01T00:00:00Z"));
+        topic.setRecruitDeadline(at("2099-01-02T00:00:00Z"));
+        topic.setSaleEndAt(at("2099-01-03T00:00:00Z"));
+        assertDoesNotThrow(() -> TopicSaleTimeValidator.assertRecruitmentSaleWindow(topic));
+        topic.setSaleEndAt(null);
+        assertDoesNotThrow(() -> TopicSaleTimeValidator.assertRecruitmentSaleWindow(topic));
+        topic.setSaleEndAt(at("2099-01-03T00:00:00Z"));
+        topic.setRecruitDeadline(null);
+        assertDoesNotThrow(() -> TopicSaleTimeValidator.assertRecruitmentSaleWindow(topic));
+    }
+
+    @Test
     void recruitmentDeadlineMayEqualSellingStartButNotBeMissingForOpenRecruitment() {
         CmsTopic topic = sellableTopic();
         Date start = at("2026-08-11T01:00:00Z");

@@ -168,18 +168,25 @@ class JourneyNarrativeSecuritySaveTest {
         ReflectionTestUtils.setField(controller, "wxContentSecurityService", security);
         ReflectionTestUtils.setField(controller, "umsMemberService", mock(IUmsMemberService.class));
 
-        CmsTemplatePublishRequest request = new CmsTemplatePublishRequest();
-        request.setTitle("到店互动");
-        request.setAdvancedConfigJson("{\"schemaVersion\":1,\"check\":{\"enabled\":true,"
-                + "\"checkId\":\"ask_arong\",\"tier\":\"easy\",\"skill\":\"察言\","
-                + "\"successText\":\"违规检定文案\"}}");
+        // 原始 JSON 先送检；转义文字需解码后命中，定位到首个违规字段。
+        for (String[] sample : new String[][] {
+                {"违规检定文案", "advancedConfigJson"},
+                {"\\u8fdd\\u89c4检定文案", "advancedConfigJson.check.successText"}
+        }) {
+            CmsTemplatePublishRequest request = new CmsTemplatePublishRequest();
+            request.setTitle("到店互动");
+            request.setAdvancedConfigJson("{\"schemaVersion\":1,\"check\":{\"enabled\":true,"
+                    + "\"checkId\":\"ask_arong\",\"tier\":\"easy\",\"skill\":\"察言\","
+                    + "\"successText\":\"" + sample[0] + "\"}}");
 
-        AjaxResult result = controller.publish(request);
+            AjaxResult result = controller.publish(request);
 
-        assertEquals(500, result.get(AjaxResult.CODE_TAG));
-        assertTrue(String.valueOf(result.get(AjaxResult.MSG_TAG)).contains("blockConfig.check.successText"),
-                String.valueOf(result.get(AjaxResult.MSG_TAG)));
-        verify(publishService, never()).publishTemplateWithTransaction(any(), anyLong(), anyString());
+            assertEquals(500, result.get(AjaxResult.CODE_TAG));
+            assertEquals("内容包含违规信息（字段：" + sample[1] + "）", result.get(AjaxResult.MSG_TAG));
+            verify(security).checkText(eq(request.getAdvancedConfigJson()), any());
+            verify(publishService, never()).publishTemplateWithTransaction(any(), anyLong(), anyString());
+        }
+        verify(security).checkText(eq("违规检定文案"), any());
     }
 
     @Test

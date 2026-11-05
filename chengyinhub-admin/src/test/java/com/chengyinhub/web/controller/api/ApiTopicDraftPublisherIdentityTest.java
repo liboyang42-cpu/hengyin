@@ -88,6 +88,54 @@ class ApiTopicDraftPublisherIdentityTest {
         when(identity.checkRegistered(901L)).thenReturn(null);
         assertEquals(200, publish().get("code")); verify(identity).checkRegistered(901L); verify(topics).publishDraftWithReview(7001L, 901L);
     }
+    @Test void dateRefusalReturns400ThroughActualSimpleAndProDraftMvcEntries() throws Exception {
+        price(BigDecimal.ZERO);
+        draft.setRecruitDeadline(new java.util.Date(2000L));
+        draft.setSaleEndAt(new java.util.Date(2000L));
+        when(topics.publishDraftWithReview(7001L, 901L)).thenAnswer(call -> {
+            com.chengyinhub.business.service.support.TopicSaleTimeValidator.assertRecruitmentSaleWindow(draft);
+            throw new AssertionError("无售卖窗口不得继续发布");
+        });
+        when(topics.publishDraft(7001L, 901L)).thenAnswer(call -> {
+            com.chengyinhub.business.service.support.TopicSaleTimeValidator.assertRecruitmentSaleWindow(draft);
+            throw new AssertionError("无售卖窗口不得继续发布");
+        });
+        when(quota.runWithThemeOnlineGuard(eq(901L), eq(7001L), any())).thenAnswer(call ->
+                ((java.util.function.Supplier<?>) call.getArgument(2)).get());
+        var mvc = org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup(controller)
+                .setControllerAdvice(new com.chengyinhub.framework.web.exception.GlobalExceptionHandler())
+                .setMessageConverters(new org.springframework.http.converter.json.MappingJackson2HttpMessageConverter())
+                .build();
+
+        for (String mode : new String[] {"simple", "pro"}) {
+            draft.setPublishMode(mode);
+            mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                            .post("/api/topic/publish-draft").param("id", "7001"))
+                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.code").value(400))
+                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.msg")
+                            .value("招商截止日期必须早于售票截止时间"));
+        }
+        verify(topics).publishDraft(7001L, 901L);
+        verify(topics).publishDraftWithReview(7001L, 901L);
+        verify(topics, never()).updateCmsTopic(any());
+    }
+
+    @Test void draftTechnicalFailureKeeps500AndSafeMessage() throws Exception {
+        price(BigDecimal.ZERO);
+        when(topics.publishDraftWithReview(7001L, 901L)).thenThrow(
+                new NullPointerException("java.lang.NullPointerException: private implementation"));
+        var mvc = org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup(controller)
+                .setControllerAdvice(new com.chengyinhub.framework.web.exception.GlobalExceptionHandler())
+                .setMessageConverters(new org.springframework.http.converter.json.MappingJackson2HttpMessageConverter())
+                .build();
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                        .post("/api/topic/publish-draft").param("id", "7001"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.code").value(500))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.msg")
+                        .value("系统繁忙，请稍后重试"));
+        verify(topics, never()).updateCmsTopic(any());
+    }
+
     @Test void ownershipAndDraftGuardsRemainFirst() {
         draft.setMemberId(902L); assertEquals(500, publish().get("code")); verifyNoInteractions(identity, tickets);
         draft.setMemberId(901L); when(topics.selectTopicIsDraft(7001L)).thenReturn(0);

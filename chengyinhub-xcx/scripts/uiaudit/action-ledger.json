@@ -187388,6 +187388,15 @@
           "route": "pages/publish/fabu/index",
           "segments": [
             {
+              "selector": "cy-inline-error.chapter-media-error",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/fabu/index",
+          "segments": [
+            {
               "selector": "cy-inline-error.node-binding__error",
               "index": 0
             }
@@ -1159356,9 +1159365,9 @@
         "selectorHint": "#chapter-video",
         "visibleCondition": null,
         "disabledCondition": null,
-        "ariaLabel": null,
+        "ariaLabel": "跳过视频",
         "ariaLabelExpression": null,
-        "ariaRole": null,
+        "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
         "ariaDisabledExpression": null,
@@ -1159433,9 +1159442,9 @@
         "selectorHint": "#chapter-video",
         "visibleCondition": null,
         "disabledCondition": null,
-        "ariaLabel": null,
+        "ariaLabel": "跳过视频",
         "ariaLabelExpression": null,
-        "ariaRole": null,
+        "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
         "ariaDisabledExpression": null,
@@ -1159510,9 +1159519,9 @@
         "selectorHint": "#chapter-video",
         "visibleCondition": null,
         "disabledCondition": null,
-        "ariaLabel": null,
+        "ariaLabel": "跳过视频",
         "ariaLabelExpression": null,
-        "ariaRole": null,
+        "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
         "ariaDisabledExpression": null,
@@ -1159578,9 +1159587,9 @@
         "selectorHint": "#chapter-video",
         "visibleCondition": null,
         "disabledCondition": null,
-        "ariaLabel": null,
+        "ariaLabel": "跳过视频",
         "ariaLabelExpression": null,
-        "ariaRole": null,
+        "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
         "ariaDisabledExpression": null,
@@ -1159655,9 +1159664,9 @@
         "selectorHint": "#chapter-video",
         "visibleCondition": null,
         "disabledCondition": null,
-        "ariaLabel": null,
+        "ariaLabel": "跳过视频",
         "ariaLabelExpression": null,
-        "ariaRole": null,
+        "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
         "ariaDisabledExpression": null,
@@ -1159732,9 +1159741,9 @@
         "selectorHint": "#chapter-video",
         "visibleCondition": null,
         "disabledCondition": null,
-        "ariaLabel": null,
+        "ariaLabel": "跳过视频",
         "ariaLabelExpression": null,
-        "ariaRole": null,
+        "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
         "ariaDisabledExpression": null,

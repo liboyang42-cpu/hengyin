@@ -1,6 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
 import com.chengyinhub.business.domain.CmsActivity;
+import com.chengyinhub.business.domain.CmsMemberTemplate;
 import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.domain.OmsTicket;
 import com.chengyinhub.business.domain.UmsMember;
@@ -9,6 +10,7 @@ import com.chengyinhub.business.domain.dto.CmsActivityPublishRequest;
 import com.chengyinhub.business.mapper.CmsActivityMapper;
 import com.chengyinhub.business.mapper.CmsRegistrationMapper;
 import com.chengyinhub.business.mapper.OmsTicketMapper;
+import com.chengyinhub.business.service.ICmsMemberTemplateService;
 import com.chengyinhub.business.service.IRoleService;
 import com.chengyinhub.business.service.IUmsMemberService;
 import com.chengyinhub.business.service.impl.CmsActivityServiceImpl;
@@ -81,6 +83,14 @@ class ActivityAppUpdateTest {
         org.mockito.Mockito.doReturn("me").when(controller).getAppUserName();
         org.springframework.test.util.ReflectionTestUtils.setField(controller, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(controller, "cmsActivityService", service);
+        // 绑定玩法也送内容安全闸；改单锁用例提供干净的已存在模板桩。
+        ICmsMemberTemplateService templates = org.mockito.Mockito.mock(ICmsMemberTemplateService.class);
+        CmsMemberTemplate template = new CmsMemberTemplate();
+        template.setId(5L);
+        template.setTitle("正常活动玩法");
+        template.setDelFlag(0);
+        when(templates.selectCmsMemberTemplateById(5L)).thenReturn(template);
+        ReflectionTestUtils.setField(controller, "memberTemplateService", templates);
         ReflectionTestUtils.setField(controller, "wxContentSecurityService", org.mockito.Mockito.mock(com.chengyinhub.business.service.IWxContentSecurityService.class));
         // /update 走统一门禁 + 分级(AUDIT-G1-2):本类只测改单锁,门禁放行、配置为空 ⇒ 先发后审。
         com.chengyinhub.business.service.IContentSafetyGate gate =

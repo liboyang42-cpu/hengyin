@@ -13,6 +13,7 @@ import com.chengyinhub.business.service.support.CommercialTopicPolicy;
 import com.chengyinhub.business.service.support.MerchantPublishedTopicTransferGate;
 import com.chengyinhub.business.service.support.TopicSaleCanonicalBuilder;
 import com.chengyinhub.business.service.support.TopicSaleCanonicalCodec;
+import com.chengyinhub.business.service.support.TopicSaleTimeValidator;
 import com.chengyinhub.business.domain.snapshot.TopicSaleCanonicalV1;
 import com.chengyinhub.common.constant.ProductType;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -57,6 +58,7 @@ public class TopicCommercialReviewServiceImpl implements ITopicCommercialReviewS
             throw new IllegalArgumentException("立项审核目标只允许 RECRUITING 或 PRICING");
         }
         CmsTopic topic = lockedTopic(topicId);
+        TopicSaleTimeValidator.assertRecruitmentSaleWindow(topic);
         TopicLifecycleState state = TopicLifecycleState.fromCode(topic.getLifecycle());
         CommercialTopicPolicy.Evaluation evaluation = commercialTopicPolicy.evaluate(topicId);
         if (!evaluation.isCommercial()) {

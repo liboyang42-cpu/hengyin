@@ -163,10 +163,10 @@ Component({
   },
   pageLifetimes: {
     show() {
-      this._hidden = false; this._navigating = false
+      const wasHidden = this._hidden; this._hidden = false; this._navigating = false
       if (this.data.activityId && this._activityReadOwner !== this._activityReadIdentity()) this.load(this.data.activityId)
-      // j6 F4:从俱乐部页加入后返回,「加入后查看」闸要重读,不能停在旧结论上
-      else if (this.data.activityId && this.data.state === 'gate') { this._loadingId = ''; this._loadedId = ''; this.load(this.data.activityId) }
+      // 报名或加入俱乐部后返回须重读；首次 show 保留 attached/observer 的读取去重。
+      else if (this.data.activityId && (wasHidden || this.data.state === 'gate')) { this._loadingId = ''; this._loadedId = ''; this.load(this.data.activityId) }
     },
     hide() { this._hidden = true },
   },

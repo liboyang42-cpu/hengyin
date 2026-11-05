@@ -74,6 +74,48 @@ class TopicCommercialReviewServiceImplTest {
     }
 
     @Test
+    void determinedNoSaleWindowIsRejectedBeforeAnyProjectSubmissionWrite() {
+        CmsTopic topic = topic(TopicLifecycleState.DRAFT);
+        topic.setProductType(com.chengyinhub.common.constant.ProductType.ORIENTEERING);
+        topic.setMerchantStatus(1);
+        topic.setSaleEndAt(java.util.Date.from(java.time.Instant.parse("2099-01-03T00:00:00Z")));
+        when(topicMapper.selectCmsTopicByIdForUpdate(9L)).thenReturn(topic);
+        for (long offset : new long[] {0, 1}) {
+            topic.setRecruitDeadline(new java.util.Date(topic.getSaleEndAt().getTime() + offset));
+            for (TopicLifecycleState target : new TopicLifecycleState[] {
+                    TopicLifecycleState.RECRUITING, TopicLifecycleState.PRICING}) {
+                com.chengyinhub.common.exception.ServiceException failure = assertThrows(
+                        com.chengyinhub.common.exception.ServiceException.class,
+                        () -> service.submitProjectReview(9L, 3L, target));
+                assertTrue(failure.getMessage().contains("招商截止日期必须早于售票截止时间"));
+            }
+        }
+        verify(topicMapper, org.mockito.Mockito.times(4)).selectCmsTopicByIdForUpdate(9L);
+        org.mockito.Mockito.verifyNoMoreInteractions(topicMapper);
+        org.mockito.Mockito.verifyNoInteractions(auditTaskService, lifecycleService);
+    }
+
+    @Test
+    void futureRecruitmentCanSubmitBeforePricesAndSkusAreComplete() {
+        CmsTopic topic = topic(TopicLifecycleState.DRAFT);
+        topic.setStartDate(java.util.Date.from(java.time.Instant.parse("2099-01-01T00:00:00Z")));
+        topic.setRecruitDeadline(java.util.Date.from(java.time.Instant.parse("2099-01-02T00:00:00Z")));
+        topic.setSaleEndAt(java.util.Date.from(java.time.Instant.parse("2099-01-03T00:00:00Z")));
+        when(topicMapper.selectCmsTopicByIdForUpdate(9L)).thenReturn(topic);
+        CommercialTopicPolicy.Evaluation evaluation = CommercialTopicPolicy.Evaluation.freeExplore();
+        when(policy.evaluate(9L)).thenReturn(evaluation);
+        when(policy.projectParameters(same(topic), same(evaluation)))
+                .thenReturn(java.util.Collections.<String, Object>singletonMap("topicId", 9L));
+        when(lifecycleService.transition(9L, TopicLifecycleState.DRAFT, TopicLifecycleState.PENDING_REVIEW))
+                .thenReturn(true);
+        when(auditTaskService.submitCommercialReview(eq(AuditTask.BIZ_TOPIC_PROJECT_REVIEW), eq(9L), eq(3L),
+                contains("RECRUITING"))).thenReturn(74L);
+
+        assertEquals(74L, service.submitProjectReview(9L, 3L, TopicLifecycleState.RECRUITING));
+        verify(lifecycleService).transition(9L, TopicLifecycleState.DRAFT, TopicLifecycleState.PENDING_REVIEW);
+    }
+
+    @Test
     void pureUgcTakesRequestedDraftExitWithoutCreatingAuditTask() {
         when(policy.evaluate(9L)).thenReturn(CommercialTopicPolicy.Evaluation.ugc());
         when(lifecycleService.transition(9L, TopicLifecycleState.DRAFT, TopicLifecycleState.PRICING)).thenReturn(true);

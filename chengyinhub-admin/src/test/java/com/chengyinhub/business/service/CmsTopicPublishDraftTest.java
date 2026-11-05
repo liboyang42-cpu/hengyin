@@ -319,6 +319,41 @@ class CmsTopicPublishDraftTest {
     }
 
     @Test
+    void draftPublicationUsesRealProjectDateGateBeforePublicStateOrAuditWrites() {
+        CmsTopic topic = new CmsTopic();
+        topic.setId(8L); topic.setMemberId(100L); topic.setName("城市招商草稿");
+        topic.setPublishMode("pro"); topic.setImgUrl("media-asset:901");
+        topic.setLifecycle(com.chengyinhub.business.domain.enums.TopicLifecycleState.DRAFT.getCode());
+        topic.setProductType(com.chengyinhub.common.constant.ProductType.ORIENTEERING);
+        topic.setMerchantStatus(1);
+        topic.setRecruitDeadline(new java.util.Date(2000L));
+        topic.setSaleEndAt(new java.util.Date(2000L));
+        when(cmsTopicMapper.clearDraftIfDraft(8L)).thenReturn(1);
+        when(cmsTopicMapper.selectCmsTopicById(8L)).thenReturn(topic);
+        when(cmsTopicMapper.selectCmsTopicByIdForUpdate(8L)).thenReturn(topic);
+        ITopicLifecycleService lifecycle = mock(ITopicLifecycleService.class);
+        com.chengyinhub.business.service.impl.TopicCommercialReviewServiceImpl realReview =
+                new com.chengyinhub.business.service.impl.TopicCommercialReviewServiceImpl(
+                        cmsTopicMapper, lifecycle, auditTaskService,
+                        (com.chengyinhub.business.service.support.CommercialTopicPolicy)
+                                com.chengyinhub.business.service.support.TopicPublicationTestWiring.get(svc, "commercialTopicPolicy"),
+                        mock(com.chengyinhub.business.service.support.MerchantPublishedTopicTransferGate.class),
+                        mock(com.chengyinhub.business.mapper.TopicSaleSnapshotMapper.class),
+                        mock(com.chengyinhub.business.service.support.TopicSaleCanonicalBuilder.class));
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(svc, "topicCommercialReviewService", realReview);
+
+        ServiceException failure = assertThrows(ServiceException.class,
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraft(8L));
+
+        assertEquals("招商截止日期必须早于售票截止时间", failure.getMessage());
+        verify(cmsTopicMapper, never()).updateCmsTopic(any());
+        verify(cmsTopicMapper, never()).publishRouteSnapshot(anyLong(), nullable(String.class), any(java.util.Date.class));
+        org.mockito.Mockito.verifyNoInteractions(lifecycle, auditTaskService);
+        verify(topicBundleReviewService, never()).freezeForSubmission(anyLong(), anyLong());
+        verify(cmsActivityMapper, never()).insertCmsActivity(any());
+    }
+
+    @Test
     void draftAiSimple_publishesOnline() {
         when(cmsTopicMapper.clearDraftIfDraft(3L)).thenReturn(1);
         when(cmsTopicMapper.publishRouteSnapshot(eq(3L), any(String.class), any(java.util.Date.class))).thenReturn(1);
