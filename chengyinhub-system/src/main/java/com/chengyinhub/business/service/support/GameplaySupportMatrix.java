@@ -22,7 +22,7 @@ public final class GameplaySupportMatrix {
         add("album", "album", null, "PRESENTATION", false, false);
         add("qaText", "qa", "TYPE", "PROOF", true, false);
         add("qaPick", "qa", "PICK", "PROOF", true, false);
-        add("qaShot", "qa", "SHOT", "NO_BRIDGE", false, false);
+        add("qaShot", "qa", "SHOT", "PROOF", false, false);
         add("branch", "branch", null, "NO_BRIDGE", false, false);
         for (String key : Arrays.asList("sort", "match", "classify")) add(key, key, null, "PROOF", true, false);
         add("estimate", "estimate", null, "NO_BRIDGE", false, false);

@@ -720,7 +720,7 @@ final class TopicRoutePublicationCompiler {
             Map.Entry<String,JsonNode> field=fields.next();if(!field.getValue().path("enabled").asBoolean())continue;
             if(GameplaySupportMatrix.addon(field.getKey()))continue;
             if(!Arrays.asList("qa","sort","match","classify").contains(field.getKey()))throw new IllegalArgumentException("任务只支持问答、排序、连线与分类客观题组");
-            if ("qa".equals(field.getKey()) && (!Arrays.asList("TYPE","PICK").contains(field.getValue().path("mode").asText()) || field.getValue().path("maxTries").asInt()>0)) throw new IllegalArgumentException("任务问答须可免费重答且有服务端答案");
+            if ("qa".equals(field.getKey()) && (!Arrays.asList("TYPE","PICK","SHOT").contains(field.getValue().path("mode").asText()) || field.getValue().path("maxTries").asInt()>0)) throw new IllegalArgumentException("问答须可免费重答；拍照须通过上传归属校验");
             if ("sort".equals(field.getKey()) && field.getValue().path("maxAttempts").asInt()>0) throw new IllegalArgumentException("任务排序须可免费重答");
             objective=true;
         }

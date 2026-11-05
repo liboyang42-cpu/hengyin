@@ -35,7 +35,7 @@ class AdvancedActionJudgementTest {
     }
 
     @Test void photoQaReturnsAnExplicitUploadReferenceRequirementWithoutInvokingAnExternalGuard() throws Exception {
-        JsonNode config=json.readTree("{\"qa\":{\"enabled\":true,\"mode\":\"PHOTO\",\"xp\":2},\"outcomeRules\":{\"version\":1}}");
+        JsonNode config=json.readTree("{\"qa\":{\"enabled\":true,\"mode\":\"SHOT\",\"xp\":2}}");
         ObjectNode original=json.createObjectNode();
         Plan plan=judge().evaluate(Action.SUBMIT_QA,new Input(config,original,Map.of("imageUrl","owned-reference"),5,7L));
         assertEquals(new PhotoEvidence("owned-reference",7L),plan.photoEvidence());

@@ -141,7 +141,7 @@ test('模板详情加载显示旧组合原因且不改写；添加/切主玩法�
   p.openGameSheet(); assert.match(p.data.supportReasons.uses,/无法确认是否完成/);
   assert.equal(p.data.r5Editor.toolOptions.some(item => item.key === 'trade'), false);
   p.openToolSheet(tap('trade')); assert.equal(p.data.toolSheetOpen,false);
-  p.data.gameKey='qaText'; p.pickGame(tap('qaShot')); assert.equal(p.data.gameKey,'qaText');
+  p.data.gameKey='qaText'; p.pickGame(tap('photoCheck')); assert.equal(p.data.gameKey,'qaText');
   assert.deepEqual(p.data.advanced,loaded);
   p.saveDraft(); assert.equal(sent.filter(r=>r.url==='/api/template/draft').length,0);
   assert.match(p.data.errors.advanced,/无法确认是否完成/);
@@ -422,4 +422,13 @@ test('fabu 主题详情半屏说明支持状态来源,反馈/工单是独立渠�
   assert.match(card, /支持状态以玩法支持矩阵为准。反馈或工单是独立渠道，提交后不会改变支持状态。/);
   const row = card.match(/<view class="node-card__row">[^\n]*玩法支持[^\n]*\n/)[0];
   assert.doesNotMatch(row, /bind(?:tap|change)|catchtap|<cy-switch|<input/, '只改文案，不加开关或动作');
+});
+
+// 拍照现在沿真实上传凭据链结算，作者端须允许它与章节状态、消耗一起使用。
+test('普通拍照模板具备通用结算证明，仍不充当归零挑战', () => {
+  const row = matrix.types.find(row => row.key === 'qaShot');
+  assert.equal(row.completionProof, true);
+  assert.equal(row.tools.zeroChallenge, 'UNSUPPORTED');
+  const p = page('temp'); p.data.advanced = { qa:{enabled:true,mode:'TYPE'}, ...cost }; p.data.gameKey='qaText';
+  p.pickGame(tap('qaShot')); assert.equal(p.data.gameKey,'qaShot');
 });

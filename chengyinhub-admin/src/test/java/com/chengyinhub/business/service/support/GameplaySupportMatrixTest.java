@@ -52,6 +52,7 @@ public class GameplaySupportMatrixTest {
         ObjectNode config = JSON.createObjectNode().put("schemaVersion", 1);
         ObjectNode block = config.putObject(section).put("enabled", true);
         switch (key) {
+            case "qaShot": block.put("mode", "SHOT").put("title", "拍照").put("maxTries", 0); break;
             case "qaText": block.put("mode", "TYPE").put("title", "输入口令").put("answerText", "key").put("maxTries", 0); break;
             case "qaPick":
                 block.put("mode", "PICK").put("title", "选择口令").put("maxTries", 0);

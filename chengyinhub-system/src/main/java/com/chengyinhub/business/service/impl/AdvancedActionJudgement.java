@@ -751,7 +751,7 @@ public final class AdvancedActionJudgement {
                地址要留痕 —— 商家事后想看「玩家到底交了什么」时,这是唯一的证据。 */
             String imageUrl = text(payload, "imageUrl");
             if (imageUrl.isEmpty()) throw new IllegalArgumentException("请先拍一张");
-            if(config.path("outcomeRules").path("version").asInt()==1)score.photoEvidence = new PhotoEvidence(imageUrl, memberId);
+            score.photoEvidence = new PhotoEvidence(imageUrl, memberId);
             node.put("lastImageUrl", imageUrl);
             correct = true;
         }

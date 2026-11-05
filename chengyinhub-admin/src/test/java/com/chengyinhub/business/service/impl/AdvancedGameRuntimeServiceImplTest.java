@@ -2048,11 +2048,11 @@ class AdvancedGameRuntimeServiceImplTest {
         service.act(MEMBER_ID,51L,0,"first:"+kit,action,payload);service.act(MEMBER_ID,51L,1,"replay:"+kit,action,payload);
         org.mockito.ArgumentCaptor<com.fasterxml.jackson.databind.JsonNode> decision=org.mockito.ArgumentCaptor.forClass(com.fasterxml.jackson.databind.JsonNode.class);verify(route).recordGameplayOutcome(any(),any(),any(),any(),any(),org.mockito.ArgumentMatchers.eq("advanced:51:1"),decision.capture(),any());assertEquals("PASS",decision.getValue().path("outcome").asText());
     }
-    @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(strings={"SHOT","REVIEW","CARD","ALBUM"})
+    @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(strings={"SHOT","LEGACY_SHOT","REVIEW","CARD","ALBUM"})
     void r5PhotoMustVerifyExistingUploadBeforeAccepting(String mode) throws Exception {
         com.fasterxml.jackson.databind.ObjectMapper json=new com.fasterxml.jackson.databind.ObjectMapper();com.fasterxml.jackson.databind.node.ObjectNode config=json.createObjectNode().put("schemaVersion",1);String action;
-        if("SHOT".equals(mode)){config.putObject("qa").put("enabled",true).put("mode","SHOT");action="SUBMIT_QA";}else if("ALBUM".equals(mode)){config.putObject("album").put("enabled",true);action="SUBMIT_ALBUM";}else{config.putObject("photoCheck").put("enabled",true).put("mode","CARD".equals(mode)?"CARD":"").put("minConfidence",60);action="SUBMIT_PHOTO_CHECK";}
-        config.putObject("outcomeRules").put("version",1).putObject("pass");if(!"ALBUM".equals(mode))config.with("outcomeRules").putObject("fail");
+        if("SHOT".equals(mode)||"LEGACY_SHOT".equals(mode)){config.putObject("qa").put("enabled",true).put("mode","SHOT");action="SUBMIT_QA";}else if("ALBUM".equals(mode)){config.putObject("album").put("enabled",true);action="SUBMIT_ALBUM";}else{config.putObject("photoCheck").put("enabled",true).put("mode","CARD".equals(mode)?"CARD":"").put("minConfidence",60);action="SUBMIT_PHOTO_CHECK";}
+        if(!"LEGACY_SHOT".equals(mode)){config.putObject("outcomeRules").put("version",1).putObject("pass");if(!"ALBUM".equals(mode))config.with("outcomeRules").putObject("fail");}
         ITopicRouteRuntimeService route=mock(ITopicRouteRuntimeService.class);ReflectionTestUtils.setField(service,"topicRouteRuntimeService",route);when(route.genericPlayer(any(),any(),any())).thenReturn(true);when(route.canPlay(any(),any(),any(),any())).thenReturn(true);when(route.gameplayInstance(any(),any(),any(),any())).thenReturn("quest:r5");when(route.nodeRuntimeConfig(any(),any(),any(),any())).thenReturn(config);
         GameRuntimeSession session=runningSession(config.toString(),"{\"attemptOrdinal\":1}");session.setPlayInstanceId("quest:r5");when(sessionMapper.selectAccessibleById(51L,MEMBER_ID)).thenReturn(session);when(sessionMapper.updateStateCas(any())).thenReturn(1);
         if ("SUBMIT_PHOTO_CHECK".equals(action)) AdvancedActionTestFixtures.photos(service,
@@ -2178,6 +2178,31 @@ class AdvancedGameRuntimeServiceImplTest {
         verify(route).recordGameplayOutcome(any(), any(), any(), any(), org.mockito.ArgumentMatchers.eq("quest:r5"), org.mockito.ArgumentMatchers.eq("advanced:51:1"), result.capture(), any());
         assertEquals("FAIL", result.getValue().path("outcome").asText());
         verify(route, never()).recordNodeResult(any(), any(), any(), any(), any(), any(), any(), org.mockito.ArgumentMatchers.anyBoolean(), org.mockito.ArgumentMatchers.anyInt(), any());
+    }
+
+    @Test void ordinaryPhotoVerifiesUploadBeforeRecordingGenericTaskFact() throws Exception {
+        com.fasterxml.jackson.databind.JsonNode config = new com.fasterxml.jackson.databind.ObjectMapper().readTree(
+                "{\"schemaVersion\":1,\"qa\":{\"enabled\":true,\"mode\":\"SHOT\",\"title\":\"拍下路灯\",\"maxTries\":0}}");
+        ITopicRouteRuntimeService route = mock(ITopicRouteRuntimeService.class);
+        ReflectionTestUtils.setField(service, "topicRouteRuntimeService", route);
+        when(route.genericPlayer(any(), any(), any())).thenReturn(true);
+        when(route.canPlay(any(), any(), any(), any())).thenReturn(true);
+        when(route.gameplayInstance(any(), any(), any(), any())).thenReturn("quest:photo");
+        when(route.nodeRuntimeConfig(any(), any(), any(), any())).thenReturn(config);
+        GameRuntimeSession session = runningSession(config.toString(), "{}"); session.setPlayInstanceId("quest:photo");
+        when(sessionMapper.selectAccessibleById(51L, MEMBER_ID)).thenReturn(session);
+        java.util.concurrent.atomic.AtomicInteger checked = new java.util.concurrent.atomic.AtomicInteger();
+        ReflectionTestUtils.setField(service, "photoEvidenceVerifier", (java.util.function.BiConsumer<String, Long>) (url, member) -> {
+            assertEquals("owned-photo", url); assertEquals(MEMBER_ID, member); checked.incrementAndGet();
+        });
+        when(sessionMapper.updateStateCas(any())).thenAnswer(call -> { assertEquals(1, checked.get()); return 1; });
+        assertThrows(IllegalArgumentException.class, () -> service.act(MEMBER_ID, 51L, 0, "no-photo", "SUBMIT_QA", Collections.emptyMap()));
+        verify(sessionMapper, never()).updateStateCas(any());
+        service.act(MEMBER_ID, 51L, 0, "photo", "SUBMIT_QA", Collections.singletonMap("imageUrl", "owned-photo"));
+        assertEquals(1, checked.get());
+        verify(route).recordNodeResult(any(), any(), any(), any(), org.mockito.ArgumentMatchers.eq("quest:photo"),
+                org.mockito.ArgumentMatchers.eq("photo"), org.mockito.ArgumentMatchers.eq(true), org.mockito.ArgumentMatchers.eq(false), org.mockito.ArgumentMatchers.eq(0), any());
+        assertEquals("owned-photo", new com.fasterxml.jackson.databind.ObjectMapper().readTree(session.getStateJson()).path("qa").path("lastImageUrl").asText());
     }
 
     @Test void genericPersonalObjectiveIgnoresMultiplayerModifierForOwnerAndCompletion() throws Exception {
