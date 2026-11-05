@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5718,
+  "controlCount": 5719,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -43082,74 +43082,6 @@
           "segments": [
             {
               "selector": "cy-access-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
-              "selector": "cy-error.mp-empty",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.rs__act",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
-              "selector": "cy-error.mp-empty",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.rs__act",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
-              "selector": "cy-error.mp-empty",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
-              "selector": "cy-error.mp-empty",
               "index": 0
             },
             {
@@ -98900,23 +98832,6 @@
           "route": "pages/play/merchant/index",
           "segments": [
             {
-              "selector": "cy-error.mp-empty",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-consent-check",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
               "selector": "cy-safety-rating-sheet",
               "index": 0
             },
@@ -154051,6 +153966,15 @@
           ]
         },
         {
+          "route": "pages/play/merchant/index",
+          "segments": [
+            {
+              "selector": "cy-empty.mp-empty",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "pages/play/poi-challenge/index",
           "segments": [
             {
@@ -157993,7 +157917,6 @@
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
-        "pages/play/merchant/index",
         "pages/play/poi-challenge/index",
         "pages/publish/activity/index",
         "pages/publish/fabu/index",
@@ -161154,15 +161077,6 @@
             {
               "selector": "cy-error.cy-fade-in",
               "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
-              "selector": "cy-error.mp-empty",
-              "index": 0
             }
           ]
         },
@@ -165134,7 +165048,6 @@
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
-        "pages/play/merchant/index",
         "pages/play/poi-challenge/index",
         "pages/publish/activity/index",
         "pages/publish/fabu/index",
@@ -168295,15 +168208,6 @@
             {
               "selector": "cy-error.cy-fade-in",
               "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
-              "selector": "cy-error.mp-empty",
-              "index": 0
             }
           ]
         },
@@ -172275,7 +172179,6 @@
         "pages/mylike/mylike",
         "pages/play/circle/index",
         "pages/play/index",
-        "pages/play/merchant/index",
         "pages/play/poi-challenge/index",
         "pages/publish/activity/index",
         "pages/publish/fabu/index",
@@ -175436,15 +175339,6 @@
             {
               "selector": "cy-error.cy-fade-in",
               "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
-              "selector": "cy-error.mp-empty",
-              "index": 0
             }
           ]
         },
@@ -325159,19 +325053,6 @@
           "route": "pages/play/merchant/index",
           "segments": [
             {
-              "selector": "cy-error.mp-empty",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
               "selector": "cy-safety-rating-sheet",
               "index": 0
             },
@@ -338943,19 +338824,6 @@
           "segments": [
             {
               "selector": "cy-access-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
-              "selector": "cy-error.mp-empty",
               "index": 0
             },
             {
@@ -352751,19 +352619,6 @@
           "route": "pages/play/merchant/index",
           "segments": [
             {
-              "selector": "cy-error.mp-empty",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
               "selector": "cy-safety-rating-sheet",
               "index": 0
             },
@@ -366547,19 +366402,6 @@
           "route": "pages/play/merchant/index",
           "segments": [
             {
-              "selector": "cy-error.mp-empty",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
               "selector": "cy-safety-rating-sheet",
               "index": 0
             },
@@ -380331,19 +380173,6 @@
           "segments": [
             {
               "selector": "cy-access-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
-              "selector": "cy-error.mp-empty",
               "index": 0
             },
             {
@@ -448985,40 +448814,6 @@
           "route": "pages/play/merchant/index",
           "segments": [
             {
-              "selector": "cy-error.mp-empty",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
-              "selector": "cy-error.mp-empty",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
               "selector": "cy-safety-rating-sheet",
               "index": 0
             },
@@ -489024,40 +488819,6 @@
           "segments": [
             {
               "selector": "cy-access-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
-              "selector": "cy-error.mp-empty",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
-              "selector": "cy-error.mp-empty",
               "index": 0
             },
             {
@@ -529094,40 +528855,6 @@
           "route": "pages/play/merchant/index",
           "segments": [
             {
-              "selector": "cy-error.mp-empty",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
-              "selector": "cy-error.mp-empty",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
               "selector": "cy-safety-rating-sheet",
               "index": 0
             },
@@ -569132,40 +568859,6 @@
           "segments": [
             {
               "selector": "cy-access-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
-              "selector": "cy-error.mp-empty",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
-              "selector": "cy-error.mp-empty",
               "index": 0
             },
             {
@@ -609202,40 +608895,6 @@
           "route": "pages/play/merchant/index",
           "segments": [
             {
-              "selector": "cy-error.mp-empty",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
-              "selector": "cy-error.mp-empty",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
               "selector": "cy-safety-rating-sheet",
               "index": 0
             },
@@ -649240,40 +648899,6 @@
           "segments": [
             {
               "selector": "cy-access-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
-              "selector": "cy-error.mp-empty",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
-              "selector": "cy-error.mp-empty",
               "index": 0
             },
             {
@@ -689311,40 +688936,6 @@
           "route": "pages/play/merchant/index",
           "segments": [
             {
-              "selector": "cy-error.mp-empty",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
-              "selector": "cy-error.mp-empty",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
               "selector": "cy-safety-rating-sheet",
               "index": 0
             },
@@ -729350,40 +728941,6 @@
           "segments": [
             {
               "selector": "cy-access-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
-              "selector": "cy-error.mp-empty",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
-              "selector": "cy-error.mp-empty",
               "index": 0
             },
             {
@@ -769421,40 +768978,6 @@
           "route": "pages/play/merchant/index",
           "segments": [
             {
-              "selector": "cy-error.mp-empty",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
-              "selector": "cy-error.mp-empty",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
               "selector": "cy-safety-rating-sheet",
               "index": 0
             },
@@ -809460,40 +808983,6 @@
           "segments": [
             {
               "selector": "cy-access-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
-              "selector": "cy-error.mp-empty",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
-              "selector": "cy-error.mp-empty",
               "index": 0
             },
             {
@@ -849531,40 +849020,6 @@
           "route": "pages/play/merchant/index",
           "segments": [
             {
-              "selector": "cy-error.mp-empty",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
-              "selector": "cy-error.mp-empty",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
               "selector": "cy-safety-rating-sheet",
               "index": 0
             },
@@ -889570,40 +889025,6 @@
           "segments": [
             {
               "selector": "cy-access-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
-              "selector": "cy-error.mp-empty",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
-              "selector": "cy-error.mp-empty",
               "index": 0
             },
             {
@@ -1181818,7 +1181239,7 @@
       }
     },
     {
-      "id": "pages/play/merchant/index.wxml:104:bindtap:retryProofReadback:12",
+      "id": "pages/play/merchant/index.wxml:104:bindtap:retryProofReadback:13",
       "route": "pages/play/merchant/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1181924,11 +1181345,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/merchant/index.js:365"
+        "staticSource": "pages/play/merchant/index.js:366"
       }
     },
     {
-      "id": "pages/play/merchant/index.wxml:111:bindtap:openMap:13",
+      "id": "pages/play/merchant/index.wxml:111:bindtap:openMap:14",
       "route": "pages/play/merchant/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1182001,11 +1181422,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/merchant/index.js:259"
+        "staticSource": "pages/play/merchant/index.js:260"
       }
     },
     {
-      "id": "pages/play/merchant/index.wxml:115:bindtap:retryProofReadback:14",
+      "id": "pages/play/merchant/index.wxml:115:bindtap:retryProofReadback:15",
       "route": "pages/play/merchant/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1182111,11 +1181532,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/merchant/index.js:365"
+        "staticSource": "pages/play/merchant/index.js:366"
       }
     },
     {
-      "id": "pages/play/merchant/index.wxml:117:bindtap:scanArrival:15",
+      "id": "pages/play/merchant/index.wxml:117:bindtap:scanArrival:16",
       "route": "pages/play/merchant/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1182244,11 +1181665,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/merchant/index.js:271"
+        "staticSource": "pages/play/merchant/index.js:272"
       }
     },
     {
-      "id": "pages/play/merchant/index.wxml:118:bindtap:uploadProof:16",
+      "id": "pages/play/merchant/index.wxml:118:bindtap:uploadProof:17",
       "route": "pages/play/merchant/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1182401,11 +1181822,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/merchant/index.js:285"
+        "staticSource": "pages/play/merchant/index.js:286"
       }
     },
     {
-      "id": "pages/play/merchant/index.wxml:119:bindtap:openVerifyCode:17",
+      "id": "pages/play/merchant/index.wxml:119:bindtap:openVerifyCode:18",
       "route": "pages/play/merchant/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1182492,11 +1181913,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/merchant/index.js:407"
+        "staticSource": "pages/play/merchant/index.js:408"
       }
     },
     {
-      "id": "pages/play/merchant/index.wxml:122:bindtap:openSafetyRating:18",
+      "id": "pages/play/merchant/index.wxml:122:bindtap:openSafetyRating:19",
       "route": "pages/play/merchant/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1182559,11 +1181980,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/merchant/index.js:252"
+        "staticSource": "pages/play/merchant/index.js:253"
       }
     },
     {
-      "id": "pages/play/merchant/index.wxml:129:bind:settled:onPrivacyGateSettled:19",
+      "id": "pages/play/merchant/index.wxml:129:bind:settled:onPrivacyGateSettled:20",
       "route": "pages/play/merchant/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1182630,7 +1182051,7 @@
       }
     },
     {
-      "id": "pages/play/merchant/index.wxml:130:bind:close:closeSafetyRating:20",
+      "id": "pages/play/merchant/index.wxml:130:bind:close:closeSafetyRating:21",
       "route": "pages/play/merchant/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1182693,11 +1182114,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/merchant/index.js:257"
+        "staticSource": "pages/play/merchant/index.js:258"
       }
     },
     {
-      "id": "pages/play/merchant/index.wxml:15:bindtap:goBack:0",
+      "id": "pages/play/merchant/index.wxml:15:bindtap:goBack:1",
       "route": "pages/play/merchant/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1182763,11 +1182184,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/merchant/index.js:247"
+        "staticSource": "pages/play/merchant/index.js:248"
       }
     },
     {
-      "id": "pages/play/merchant/index.wxml:49:bindtap:revokeMerchantConsent:1",
+      "id": "pages/play/merchant/index.wxml:49:bindtap:revokeMerchantConsent:2",
       "route": "pages/play/merchant/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1182855,11 +1182276,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/merchant/index.js:453"
+        "staticSource": "pages/play/merchant/index.js:454"
       }
     },
     {
-      "id": "pages/play/merchant/index.wxml:54:bindtap:openMap:2",
+      "id": "pages/play/merchant/index.wxml:54:bindtap:openMap:3",
       "route": "pages/play/merchant/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1182932,11 +1182353,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/merchant/index.js:259"
+        "staticSource": "pages/play/merchant/index.js:260"
       }
     },
     {
-      "id": "pages/play/merchant/index.wxml:61:bindtap:closeSheets:4",
+      "id": "pages/play/merchant/index.wxml:61:bindtap:closeSheets:5",
       "route": "pages/play/merchant/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1182999,11 +1182420,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/merchant/index.js:240"
+        "staticSource": "pages/play/merchant/index.js:241"
       }
     },
     {
-      "id": "pages/play/merchant/index.wxml:61:catchtouchmove:noop:3",
+      "id": "pages/play/merchant/index.wxml:61:catchtouchmove:noop:4",
       "route": "pages/play/merchant/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1183067,11 +1182488,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/merchant/index.js:512"
+        "staticSource": "pages/play/merchant/index.js:513"
       }
     },
     {
-      "id": "pages/play/merchant/index.wxml:68:bindtap:onGamePick:5",
+      "id": "pages/play/merchant/index.wxml:68:bindtap:onGamePick:6",
       "route": "pages/play/merchant/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1183134,11 +1182555,81 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/merchant/index.js:165"
+        "staticSource": "pages/play/merchant/index.js:166"
       }
     },
     {
-      "id": "pages/play/merchant/index.wxml:72:bindinput:onGameInput:6",
+      "id": "pages/play/merchant/index.wxml:7:bind:cta:goBackOrHome:0",
+      "route": "pages/play/merchant/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/play/merchant/index.wxml",
+        "js": "pages/play/merchant/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-empty",
+        "event": "bind:cta",
+        "handler": "goBackOrHome",
+        "line": 7,
+        "selectorHint": ".mp-empty",
+        "visibleCondition": "{{notFound}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "event-contract",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/index/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/merchant/index.js:73"
+      }
+    },
+    {
+      "id": "pages/play/merchant/index.wxml:72:bindinput:onGameInput:7",
       "route": "pages/play/merchant/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1183201,11 +1182692,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/merchant/index.js:166"
+        "staticSource": "pages/play/merchant/index.js:167"
       }
     },
     {
-      "id": "pages/play/merchant/index.wxml:75:bindtap:retryGameReadback:7",
+      "id": "pages/play/merchant/index.wxml:75:bindtap:retryGameReadback:8",
       "route": "pages/play/merchant/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1183268,11 +1182759,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/merchant/index.js:234"
+        "staticSource": "pages/play/merchant/index.js:235"
       }
     },
     {
-      "id": "pages/play/merchant/index.wxml:78:bindtap:submitGame:8",
+      "id": "pages/play/merchant/index.wxml:78:bindtap:submitGame:9",
       "route": "pages/play/merchant/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1183353,11 +1182844,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/merchant/index.js:167"
+        "staticSource": "pages/play/merchant/index.js:168"
       }
     },
     {
-      "id": "pages/play/merchant/index.wxml:82:bindtap:closeGame:9",
+      "id": "pages/play/merchant/index.wxml:82:bindtap:closeGame:10",
       "route": "pages/play/merchant/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1183420,11 +1182911,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/merchant/index.js:159"
+        "staticSource": "pages/play/merchant/index.js:160"
       }
     },
     {
-      "id": "pages/play/merchant/index.wxml:94:bindtap:taskGoPhoto:10",
+      "id": "pages/play/merchant/index.wxml:94:bindtap:taskGoPhoto:11",
       "route": "pages/play/merchant/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1183577,11 +1183068,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/merchant/index.js:241"
+        "staticSource": "pages/play/merchant/index.js:242"
       }
     },
     {
-      "id": "pages/play/merchant/index.wxml:95:bindtap:closeTaskCard:11",
+      "id": "pages/play/merchant/index.wxml:95:bindtap:closeTaskCard:12",
       "route": "pages/play/merchant/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1183644,7 +1183135,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/merchant/index.js:239"
+        "staticSource": "pages/play/merchant/index.js:240"
       }
     },
     {
