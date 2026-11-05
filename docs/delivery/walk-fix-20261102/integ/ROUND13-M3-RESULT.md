@@ -28,4 +28,13 @@ Run 2026-11-05, private branch from `integ/launch-test-20261103`. **Not a phone 
 - `scripts/preflight-release.js`: main package 2.98 MB uncompressed (under 3,145,728); its one BLOCK was the stale ledger, fixed afterwards; not re-run to the end.
 - Full `npm run test:unit` not run (credit).
 
-STATUS: PARTIAL - rig fixture chain broken on this head, so no throttled-media or four-look walk; code fixes for voice-error toast, music retry and next-station preload are in with unit tests only
+## Second pass (10:10 instruction)
+
+- **merchant_club 「lifecycle 应为 2=PRICING」: the rig was stale, not a product bug.** The deadline job logs `平台费率规则缺失(settlement_rule merchant_id=0, biz_type=topic),拒绝按默认费率计价` (PricingServiceImpl, the intended k1 item 7 behaviour: no silent 10%), skips the topic, and lifecycle stays 1. My rig was built from a commit before `ci/chain_acceptance.py` got `FIXTURE_TOPIC_RATE_SQL`, which seeds the 3% rule on an empty database. I inserted that row by hand and re-ran `chains.py player`: all four chains PASS (topic 990015, activities 9-13). Production has the rule, per that code comment (not re-checked by me).
+- **Order screen raw error: FIXED.** The 「Could not write JSON: 对象存储配置缺失: CHENGYIN_OSS_BUCKET_NAME」 text was the topic page's load-error line (`pages/topic/index/index.js`, two places) printing `res.msg` as is. It now goes through `safeUserMessage`, and `utils/transport/safe-user-message.js` now turns Spring serialization errors and `CHENGYIN_*` / 配置缺失 text into 「服务开小差了，请稍后重试」. Unit test added; `safe-user-message.test.js` 10 pass. Not re-walked on screen.
+- **Walks: still NOT done.** With the fixture in place I tried the play page. Player 9009 holds the only registration (activity 13) and opens straight to 「本轮探索已完成」, because the chain already scanned its ticket (8 scan rows); deleting its progress rows did not change that. Player 9004 has no registration, and buying the pass through the order screen did not reach a playable run in the few tries I allowed. The k10 on-screen authoring scripts (a long editor session) were not run. Result: no throttled or failing media walk, no four-looks walk, no rig audio log this round. I set up the stand-in media server (ok / slow trickle / 500 / hang) and set theme and chapter audio on topic 990015, but nothing was played through it.
+- Also seen: opening the topic's 自由探索 gate before buying shows a black screen with only the title and one button; the fixture has no cover, so I can't say whether a real topic looks the same.
+
+To finish the walks someone needs a rig player with an unstarted run: a fresh registration on activity 13 for 9004 (through the order screen with the pay stub, or SQL), then the media stand-in at `127.0.0.1:8765` and `look_json` switched per look.
+
+STATUS: PARTIAL - merchant_club answered (stale rig) and raw order error fixed; throttled-media and four-look walks still not done because no rig player could start a fresh run
