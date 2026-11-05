@@ -71,7 +71,7 @@ public class TopicBundleReviewService {
      * 因此允许「零玩法」提交，但仅当每个未配玩法的站点都落在开放承接(recruitEnabled=1)的章节里；
      * 商家玩法在入驻时走供给审核，不绕过审核。owner 2026-10-20 决定(#299)。
      */
-    static boolean awaitsMerchantGameplay(CmsTopic topic, List<CmsTopicChapter> chapters, List<CmsTopicNode> nodes) {
+    public static boolean awaitsMerchantGameplay(CmsTopic topic, List<CmsTopicChapter> chapters, List<CmsTopicNode> nodes) {
         if (topic == null || !Integer.valueOf(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE).equals(topic.getProductType())) {
             return false;
         }

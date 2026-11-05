@@ -44,6 +44,28 @@ class TopicPublicationContentSnapshotTest {
         assertFalse(answer.path("nodePresentation").has("checkinCode"));
     }
 
+    /** m6 M2:自由探索开放招商可零节点发布进招商,商家建点过审后再刷新快照;其余零节点仍拒。 */
+    @Test void freeExploreRecruitmentPublishesWithoutNodesButOtherThemesStillNeedOne() throws Exception {
+        Fixture f = new Fixture();
+        when(f.nodes.selectCmsTopicNodeList(any())).thenReturn(Collections.emptyList());
+        f.topic.setProductType(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE);
+        f.chapter.setRecruitEnabled(1);
+        JsonNode frozen = JSON.readTree(f.compiler.freezePublication(f.topic, null));
+        assertEquals(0, frozen.path("routeStations").size());
+        assertFalse(frozen.has("startNodeId"));
+
+        f.chapter.setRecruitEnabled(0);
+        IllegalArgumentException noRecruit = assertThrows(IllegalArgumentException.class,
+                () -> f.compiler.freezePublication(f.topic, null));
+        assertEquals("主题没有可运行节点", noRecruit.getMessage());
+        f.chapter.setRecruitEnabled(1);
+        f.topic.setProductType(1);
+        assertThrows(IllegalArgumentException.class, () -> f.compiler.freezePublication(f.topic, null));
+        f.topic.setProductType(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE);
+        when(f.chapters.selectCmsTopicChapterList(any())).thenReturn(Collections.emptyList());
+        assertThrows(IllegalArgumentException.class, () -> f.compiler.freezePublication(f.topic, null));
+    }
+
     @Test void legitimateNonTemplateStationHasNoInventedTemplateIdentity() throws Exception {
         Fixture f = new Fixture(); f.node.setTemplateId(null);
         JsonNode answer = JSON.readTree(f.compiler.freezePublication(f.topic, null)).path("nodeAnswers").path("11");

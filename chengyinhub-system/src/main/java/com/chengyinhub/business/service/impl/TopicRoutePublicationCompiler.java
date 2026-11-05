@@ -567,7 +567,11 @@ final class TopicRoutePublicationCompiler {
 
     private String freezeCurrentPublication(CmsTopic topic, String routeSnapshot) {
         List<CmsTopicNode> liveNodes = nodes(topic.getId());
-        if (liveNodes.isEmpty()) throw new IllegalArgumentException("主题没有可运行节点");
+        // 自由探索开放招商:站点由发布后入驻的商家建,商家节点过审时 ChapterMerchantNodeServiceImpl 再刷新发布快照。
+        // 与提审前检(TopicBundleReviewService.awaitsMerchantGameplay)同一判据,其余主题仍须有节点。
+        if (liveNodes.isEmpty() && !com.chengyinhub.business.service.support.TopicBundleReviewService
+                .awaitsMerchantGameplay(topic, runtimeChapters(topic.getId()), liveNodes))
+            throw new IllegalArgumentException("主题没有可运行节点");
         JourneyTemplateProbe publicationProbe=new JourneyTemplateProbe(liveNodes);
         com.chengyinhub.business.service.support.AdvancedGameConfigValidator authorValidator=new com.chengyinhub.business.service.support.AdvancedGameConfigValidator();
         for(Map.Entry<Long,String> entry:publicationProbe.configs().entrySet())if(entry.getValue()!=null && validator.readTree(entry.getValue()).path("outcomeRules").path("version").asInt()==1)entry.setValue(authorValidator.validateAndNormalize(entry.getValue()));
