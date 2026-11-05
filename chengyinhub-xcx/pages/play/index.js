@@ -8247,7 +8247,7 @@ Page({
       // 局已结束时服务端回的是归档结果,结局章在 story.chapter 里(进行中的局才在顶层):两处都认,
       // 否则通关后结局章(连同作者配的结尾音乐)永远不播,只剩摘要卡。
       const ch = d.chapter || (d.story && d.story.chapter);
-      if (ch && Array.isArray(ch.blocks) && (ch.blocks.length || ch.videoUrl)) {
+      if (ch && Array.isArray(ch.blocks) && (ch.blocks.length || ch.videoUrl || ch.audioUrl)) {
         this._playEndingChapter({ id: ch.id, chapterId: ch.id, name: ch.name, blocks: ch.blocks,
           atmospherePreset: ch.atmospherePreset, audioUrl: ch.audioUrl, videoUrl: ch.videoUrl, videoPosterUrl: ch.videoPosterUrl }, card, isCurrent);
         return;

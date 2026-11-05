@@ -87,3 +87,9 @@ node --test tests/unit/r14-game-session-flow.test.js tests/unit/r14-scan-session
 已打开并检查既有 `fix-shots/m3-u-12.jpg` 与 `m3-r-07.jpg`，确为有导航工具、正文空白的旧截图；没有产生新走查截图。没有改地图样式、接管共享 rig 或打开 DevTools。
 
 STATUS: PARTIAL - 源码/Node已交付；branch/QR Java结果、运行时全游戏同页通关及原生设备验收待协调器统一执行
+
+## VIDEO 协同补充：纯音频尾声
+
+VIDEO 指出的真实遗漏已复现：`blocks=[]`、无视频、只有 `audioUrl` 的 ending DTO 被 `_loadLifeEnding` 排除，实际仍停旧 chapter50 而非52。已仅把音频加入既有“有可播内容”的条件，复用原 `_playEndingChapter` 和 `playChapterAudio`；新行为测试直接执行两者，确认进入章52，重铺只自动播放一次。`node --test tests/unit/r14-game-session-flow.test.js tests/unit/k10-immersive-audio.test.js` 29/29 PASS，日志 `proof/r14-game/audio-only-ending-tests.txt`。这里仍是源码测试，未听到真实声音。
+
+协调器已分配 GAME 作者9008/玩家9004、`R14-GAME-` 新内容前缀和共享前端18197；后端当时仍是旧6feddc，明确要求等统一新 JAR 后才能开始本轮实际证据。已提交的 `proof/r14-game/REPLAY.md` 是复验操作脚本，尚无实跑结果。
