@@ -179,11 +179,12 @@ function toCompletionView(vo) {
 // V-20:订单详情不再放「查看票夹」。待支付是「去支付」;
 // F-06(j2):已付、还能玩的票是「开始游戏」,直接进 play(与票夹「开始游戏」同一目标),不绕票夹。
 const PLAYABLE_STATES = ['not_started', 'in_progress', 'non_refundable'];
+const { ticketHasGame } = require('../../../../utils/ticket-game.js');   // 第十二轮 k2(j1 N1):没有游戏的场次票不出「开始游戏」
 function resolvePrimaryCta(info) {
   const value = info || {};
   if (value.orderStateKey === 'pending_payment') return 'pay';
   if (Number(value.registrationStatus) === 2 && Number(value.paymentStatus) === 2
-    && PLAYABLE_STATES.indexOf(value.orderStateKey) >= 0 && playQuery(value)) return 'play';
+    && PLAYABLE_STATES.indexOf(value.orderStateKey) >= 0 && playQuery(value) && ticketHasGame(value)) return 'play';
   return '';
 }
 

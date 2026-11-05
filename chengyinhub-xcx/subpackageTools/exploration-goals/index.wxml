@@ -1,5 +1,5 @@
 <!-- 探索目标:漫游护照方卡进入。进度来自服务端已完成记录;创建/取消/原操作重试沿用归档 exploration-goals(index.js)。 -->
-<view class="tu theme-dark {{reducedMotion ? 'cy-motion-reduced' : ''}}">
+<view class="tu theme-dark {{reducedMotion ? 'cy-motion-reduced' : ''}}"><cy-access-gate kind="login" />
   <cy-modal-host id="cy-modal-host" />
   <cy-nav-bar plain />
   <cy-page-title title="探索目标" />

@@ -84,7 +84,7 @@
       <cy-icon name="arrow-right" size="24" />
     </view>
   </view>
-  <view class="wl-start {{entering ? 'wl-start--go' : ''}} {{startLit ? 'wl-start--lit' : ''}}" wx:if="{{walletState === 'ready' && ticketList.length}}" bindtap="goTicket" data-index="{{currentSwiperTicket}}" data-go="1" aria-role="button" aria-label="{{ticketList[currentSwiperTicket].topicCompleted ? '查看记录' : '开始游戏'}}：{{ticketList[currentSwiperTicket].wTitle}}" hover-class="cy-pressed" hover-stay-time="80">
+  <view class="wl-start {{entering ? 'wl-start--go' : ''}} {{startLit ? 'wl-start--lit' : ''}}" wx:if="{{walletState === 'ready' && ticketList.length && !ticketList[currentSwiperTicket].wNoGame}}" bindtap="goTicket" data-index="{{currentSwiperTicket}}" data-go="1" aria-role="button" aria-label="{{ticketList[currentSwiperTicket].topicCompleted ? '查看记录' : '开始游戏'}}：{{ticketList[currentSwiperTicket].wTitle}}" hover-class="cy-pressed" hover-stay-time="80">
     <view class="wl-start__fill"></view><view class="wl-start__shine" wx:if="{{!reduced}}"></view>
     <view class="wl-start__lbl"><image class="wl-start__play" src="./icon_play.svg" mode="aspectFit" /><text>{{ticketList[currentSwiperTicket].topicCompleted ? '查看记录' : '开始游戏'}}</text></view>
   </view>

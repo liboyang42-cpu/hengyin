@@ -1,5 +1,5 @@
 <!-- 导出探索记录:漫游记录标题右侧「导出」进入。准备范围、逐块读取、全部读完才可保存/分享;沿用归档 exploration-export(index.js)。 -->
-<view class="tu theme-dark {{reducedMotion ? 'cy-motion-reduced' : ''}}">
+<view class="tu theme-dark {{reducedMotion ? 'cy-motion-reduced' : ''}}"><cy-access-gate kind="login" />
   <cy-toast id="cy-toast" />
   <cy-modal-host id="cy-modal-host" />
   <cy-nav-bar plain />

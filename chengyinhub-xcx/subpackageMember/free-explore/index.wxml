@@ -1,4 +1,4 @@
-<view class="theme-dark bundle-page">
+<view class="theme-dark bundle-page"><cy-access-gate kind="login" />
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />

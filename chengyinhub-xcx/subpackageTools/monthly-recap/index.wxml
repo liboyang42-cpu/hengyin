@@ -1,5 +1,5 @@
 <!-- 月度回顾:漫游记录月份标题右侧进入。读数与分页沿用归档 monthly-recap(index.js);周柱只由已读完的当月记录算,不补造。 -->
-<view class="tu theme-dark {{reducedMotion ? 'cy-motion-reduced' : ''}}">
+<view class="tu theme-dark {{reducedMotion ? 'cy-motion-reduced' : ''}}"><cy-access-gate kind="login" />
   <cy-nav-bar plain />
   <cy-page-title title="月度回顾" />
 

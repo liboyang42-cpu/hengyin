@@ -2,6 +2,7 @@
      数据:/api/team/my + /api/team/my-applications + /api/team/nearby;没有队伍的人也能直接看到附近在招募的队伍。 -->
 <wxs src="../../utils/wxs/num.wxs" module="num" />
 <view class="mt theme-dark {{reducedMotion ? 'cy-motion-reduced' : ''}}">
+  <cy-access-gate kind="login" />
   <cy-modal-host id="cy-modal-host" />
   <cy-toast id="cy-toast" />
   <cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />

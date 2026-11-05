@@ -46,9 +46,17 @@
         "pages/play/merchant/index",
         "pages/shezhi/marketing/index",
         "subpackageMember/coupon/coupon",
+        "subpackageMember/free-explore/index",
         "subpackageMember/mycanyu/mycanyu",
+        "subpackageMember/points-history/index",
         "subpackageMember/report-mine/index",
-        "subpackageRoam/history/index"
+        "subpackageRoam/history/index",
+        "subpackageRoam/my-teams/index",
+        "subpackageTools/anniversary/index",
+        "subpackageTools/capsule/index",
+        "subpackageTools/exploration-export/index",
+        "subpackageTools/exploration-goals/index",
+        "subpackageTools/monthly-recap/index"
       ],
       "hostComponentPaths": [
         {
@@ -394,7 +402,25 @@
           ]
         },
         {
+          "route": "subpackageMember/free-explore/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/mycanyu/mycanyu",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/points-history/index",
           "segments": [
             {
               "selector": "cy-access-gate",
@@ -413,6 +439,60 @@
         },
         {
           "route": "subpackageRoam/history/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/anniversary/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-export/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-goals/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/monthly-recap/index",
           "segments": [
             {
               "selector": "cy-access-gate",
@@ -529,9 +609,17 @@
         "pages/play/merchant/index",
         "pages/shezhi/marketing/index",
         "subpackageMember/coupon/coupon",
+        "subpackageMember/free-explore/index",
         "subpackageMember/mycanyu/mycanyu",
+        "subpackageMember/points-history/index",
         "subpackageMember/report-mine/index",
-        "subpackageRoam/history/index"
+        "subpackageRoam/history/index",
+        "subpackageRoam/my-teams/index",
+        "subpackageTools/anniversary/index",
+        "subpackageTools/capsule/index",
+        "subpackageTools/exploration-export/index",
+        "subpackageTools/exploration-goals/index",
+        "subpackageTools/monthly-recap/index"
       ],
       "hostComponentPaths": [
         {
@@ -877,7 +965,25 @@
           ]
         },
         {
+          "route": "subpackageMember/free-explore/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/mycanyu/mycanyu",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/points-history/index",
           "segments": [
             {
               "selector": "cy-access-gate",
@@ -896,6 +1002,60 @@
         },
         {
           "route": "subpackageRoam/history/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/anniversary/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-export/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-goals/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/monthly-recap/index",
           "segments": [
             {
               "selector": "cy-access-gate",
@@ -2828,7 +2988,8 @@
         "subpackageTools/anniversary/index",
         "subpackageTools/capsule/index",
         "subpackageTools/exploration-export/index",
-        "subpackageTools/exploration-goals/index"
+        "subpackageTools/exploration-goals/index",
+        "subpackageTools/monthly-recap/index"
       ],
       "hostComponentPaths": [
         {
@@ -72427,6 +72588,74 @@
           "route": "subpackageMember/free-explore/index",
           "segments": [
             {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/free-explore/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/free-explore/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/free-explore/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/free-explore/index",
+          "segments": [
+            {
               "selector": "cy-btn",
               "index": 0
             }
@@ -76235,6 +76464,74 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/points-history/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/points-history/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/points-history/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/points-history/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -80095,6 +80392,74 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -86897,6 +87262,74 @@
           "route": "subpackageTools/anniversary/index",
           "segments": [
             {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/anniversary/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/anniversary/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/anniversary/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/anniversary/index",
+          "segments": [
+            {
               "selector": "cy-date-field",
               "index": 0
             },
@@ -87117,6 +87550,74 @@
           "route": "subpackageTools/capsule/index",
           "segments": [
             {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
               "selector": "cy-date-field",
               "index": 0
             },
@@ -87337,6 +87838,74 @@
           "route": "subpackageTools/exploration-export/index",
           "segments": [
             {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-export/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-export/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-export/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-export/index",
+          "segments": [
+            {
               "selector": "cy-date-field",
               "index": 0
             },
@@ -87777,6 +88346,74 @@
           "route": "subpackageTools/exploration-goals/index",
           "segments": [
             {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-goals/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-goals/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-goals/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-goals/index",
+          "segments": [
+            {
               "selector": "cy-date-field",
               "index": 0
             },
@@ -88038,6 +88675,74 @@
             {
               "selector": "cy-date-sheet",
               "index": 1
+            },
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/monthly-recap/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/monthly-recap/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/monthly-recap/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/monthly-recap/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
             },
             {
               "selector": "cy-btn",
@@ -90069,7 +90774,8 @@
         "subpackageTools/anniversary/index",
         "subpackageTools/capsule/index",
         "subpackageTools/exploration-export/index",
-        "subpackageTools/exploration-goals/index"
+        "subpackageTools/exploration-goals/index",
+        "subpackageTools/monthly-recap/index"
       ],
       "hostComponentPaths": [
         {
@@ -103978,6 +104684,23 @@
           ]
         },
         {
+          "route": "subpackageMember/free-explore/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-consent-check",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/invoice-apply/index",
           "segments": [
             {
@@ -104665,6 +105388,23 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-consent-check",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/points-history/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -105561,6 +106301,23 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-consent-check",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -107031,7 +107788,62 @@
           ]
         },
         {
+          "route": "subpackageTools/anniversary/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-consent-check",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-consent-check",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-consent-check",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-export/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -107055,11 +107867,7 @@
           "route": "subpackageTools/exploration-export/index",
           "segments": [
             {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -107102,6 +107910,40 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-consent-check",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-goals/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-consent-check",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/monthly-recap/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -150107,10 +150949,16 @@
         "subpackageP3/pages/stamp-album/index/index",
         "subpackageRoam/citynode-code/index",
         "subpackageRoam/history/index",
+        "subpackageRoam/my-teams/index",
         "subpackageRoam/official-route/index",
         "subpackageRoam/official-routes/index",
         "subpackageRoam/poi-detail/index",
-        "subpackageRoam/session/index"
+        "subpackageRoam/session/index",
+        "subpackageTools/anniversary/index",
+        "subpackageTools/capsule/index",
+        "subpackageTools/exploration-export/index",
+        "subpackageTools/exploration-goals/index",
+        "subpackageTools/monthly-recap/index"
       ],
       "hostComponentPaths": [
         {
@@ -155505,6 +156353,19 @@
           "route": "subpackageMember/free-explore/index",
           "segments": [
             {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-empty",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/free-explore/index",
+          "segments": [
+            {
               "selector": "cy-empty",
               "index": 0
             }
@@ -155946,6 +156807,19 @@
           "route": "subpackageMember/points-history/index",
           "segments": [
             {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-empty",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/points-history/index",
+          "segments": [
+            {
               "selector": "cy-empty.cy-fill-state",
               "index": 0
             }
@@ -156225,6 +157099,19 @@
         },
         {
           "route": "subpackageRoam/history/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-empty",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/my-teams/index",
           "segments": [
             {
               "selector": "cy-access-gate",
@@ -156901,6 +157788,71 @@
             },
             {
               "selector": "cy-empty.session-state-fill",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/anniversary/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-empty",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-empty",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-export/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-empty",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-goals/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-empty",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/monthly-recap/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-empty",
               "index": 0
             }
           ]
@@ -317812,7 +318764,8 @@
         "subpackageTools/anniversary/index",
         "subpackageTools/capsule/index",
         "subpackageTools/exploration-export/index",
-        "subpackageTools/exploration-goals/index"
+        "subpackageTools/exploration-goals/index",
+        "subpackageTools/monthly-recap/index"
       ],
       "hostComponentPaths": [
         {
@@ -328783,6 +329736,19 @@
           ]
         },
         {
+          "route": "subpackageMember/free-explore/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/invoice-apply/index",
           "segments": [
             {
@@ -329312,6 +330278,19 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/points-history/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -330032,6 +331011,19 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -331215,7 +332207,50 @@
           ]
         },
         {
+          "route": "subpackageTools/anniversary/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-export/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -331235,11 +332270,7 @@
           "route": "subpackageTools/exploration-export/index",
           "segments": [
             {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -331274,6 +332305,32 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-goals/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/monthly-recap/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -331503,7 +332560,8 @@
         "subpackageTools/anniversary/index",
         "subpackageTools/capsule/index",
         "subpackageTools/exploration-export/index",
-        "subpackageTools/exploration-goals/index"
+        "subpackageTools/exploration-goals/index",
+        "subpackageTools/monthly-recap/index"
       ],
       "hostComponentPaths": [
         {
@@ -342474,6 +343532,19 @@
           ]
         },
         {
+          "route": "subpackageMember/free-explore/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/invoice-apply/index",
           "segments": [
             {
@@ -343003,6 +344074,19 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/points-history/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -343723,6 +344807,19 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -344906,7 +346003,50 @@
           ]
         },
         {
+          "route": "subpackageTools/anniversary/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-export/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -344926,11 +346066,7 @@
           "route": "subpackageTools/exploration-export/index",
           "segments": [
             {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -344965,6 +346101,32 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-goals/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/monthly-recap/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -345194,7 +346356,8 @@
         "subpackageTools/anniversary/index",
         "subpackageTools/capsule/index",
         "subpackageTools/exploration-export/index",
-        "subpackageTools/exploration-goals/index"
+        "subpackageTools/exploration-goals/index",
+        "subpackageTools/monthly-recap/index"
       ],
       "hostComponentPaths": [
         {
@@ -356165,6 +357328,19 @@
           ]
         },
         {
+          "route": "subpackageMember/free-explore/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/invoice-apply/index",
           "segments": [
             {
@@ -356694,6 +357870,19 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/points-history/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -357414,6 +358603,19 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -358597,7 +359799,50 @@
           ]
         },
         {
+          "route": "subpackageTools/anniversary/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-export/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -358617,11 +359862,7 @@
           "route": "subpackageTools/exploration-export/index",
           "segments": [
             {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -358656,6 +359897,32 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-goals/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/monthly-recap/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -358885,7 +360152,8 @@
         "subpackageTools/anniversary/index",
         "subpackageTools/capsule/index",
         "subpackageTools/exploration-export/index",
-        "subpackageTools/exploration-goals/index"
+        "subpackageTools/exploration-goals/index",
+        "subpackageTools/monthly-recap/index"
       ],
       "hostComponentPaths": [
         {
@@ -369856,6 +371124,19 @@
           ]
         },
         {
+          "route": "subpackageMember/free-explore/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/invoice-apply/index",
           "segments": [
             {
@@ -370385,6 +371666,19 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/points-history/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -371105,6 +372399,19 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -372288,7 +373595,50 @@
           ]
         },
         {
+          "route": "subpackageTools/anniversary/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-export/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -372308,11 +373658,7 @@
           "route": "subpackageTools/exploration-export/index",
           "segments": [
             {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -372347,6 +373693,32 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-goals/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/monthly-recap/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -372576,7 +373948,8 @@
         "subpackageTools/anniversary/index",
         "subpackageTools/capsule/index",
         "subpackageTools/exploration-export/index",
-        "subpackageTools/exploration-goals/index"
+        "subpackageTools/exploration-goals/index",
+        "subpackageTools/monthly-recap/index"
       ],
       "hostComponentPaths": [
         {
@@ -383547,6 +384920,19 @@
           ]
         },
         {
+          "route": "subpackageMember/free-explore/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/invoice-apply/index",
           "segments": [
             {
@@ -384076,6 +385462,19 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/points-history/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -384796,6 +386195,19 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -385979,7 +387391,50 @@
           ]
         },
         {
+          "route": "subpackageTools/anniversary/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-export/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -385999,11 +387454,7 @@
           "route": "subpackageTools/exploration-export/index",
           "segments": [
             {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -386038,6 +387489,32 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-goals/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/monthly-recap/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -428794,7 +430271,8 @@
         "subpackageTools/anniversary/index",
         "subpackageTools/capsule/index",
         "subpackageTools/exploration-export/index",
-        "subpackageTools/exploration-goals/index"
+        "subpackageTools/exploration-goals/index",
+        "subpackageTools/monthly-recap/index"
       ],
       "hostComponentPaths": [
         {
@@ -461678,6 +463156,40 @@
           ]
         },
         {
+          "route": "subpackageMember/free-explore/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/free-explore/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/invoice-apply/index",
           "segments": [
             {
@@ -463117,6 +464629,40 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/points-history/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/points-history/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -464999,6 +466545,40 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -468188,6 +469768,40 @@
           ]
         },
         {
+          "route": "subpackageTools/anniversary/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/anniversary/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageTools/capsule/index",
           "segments": [
             {
@@ -468230,6 +469844,40 @@
           ]
         },
         {
+          "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageTools/exploration-export/index",
           "segments": [
             {
@@ -468259,6 +469907,40 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-export/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-export/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -468343,6 +470025,74 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-goals/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-goals/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/monthly-recap/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/monthly-recap/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -468576,7 +470326,8 @@
         "subpackageTools/anniversary/index",
         "subpackageTools/capsule/index",
         "subpackageTools/exploration-export/index",
-        "subpackageTools/exploration-goals/index"
+        "subpackageTools/exploration-goals/index",
+        "subpackageTools/monthly-recap/index"
       ],
       "hostComponentPaths": [
         {
@@ -501460,6 +503211,40 @@
           ]
         },
         {
+          "route": "subpackageMember/free-explore/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/free-explore/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/invoice-apply/index",
           "segments": [
             {
@@ -502899,6 +504684,40 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/points-history/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/points-history/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -504781,6 +506600,40 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -507970,6 +509823,40 @@
           ]
         },
         {
+          "route": "subpackageTools/anniversary/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/anniversary/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageTools/capsule/index",
           "segments": [
             {
@@ -508012,6 +509899,40 @@
           ]
         },
         {
+          "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageTools/exploration-export/index",
           "segments": [
             {
@@ -508041,6 +509962,40 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-export/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-export/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -508125,6 +510080,74 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-goals/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-goals/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/monthly-recap/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/monthly-recap/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -508357,7 +510380,8 @@
         "subpackageTools/anniversary/index",
         "subpackageTools/capsule/index",
         "subpackageTools/exploration-export/index",
-        "subpackageTools/exploration-goals/index"
+        "subpackageTools/exploration-goals/index",
+        "subpackageTools/monthly-recap/index"
       ],
       "hostComponentPaths": [
         {
@@ -541241,6 +543265,40 @@
           ]
         },
         {
+          "route": "subpackageMember/free-explore/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/free-explore/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/invoice-apply/index",
           "segments": [
             {
@@ -542680,6 +544738,40 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/points-history/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/points-history/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -544562,6 +546654,40 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -547751,6 +549877,40 @@
           ]
         },
         {
+          "route": "subpackageTools/anniversary/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/anniversary/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageTools/capsule/index",
           "segments": [
             {
@@ -547793,6 +549953,40 @@
           ]
         },
         {
+          "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageTools/exploration-export/index",
           "segments": [
             {
@@ -547822,6 +550016,40 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-export/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-export/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -547906,6 +550134,74 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-goals/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-goals/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/monthly-recap/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/monthly-recap/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -548138,7 +550434,8 @@
         "subpackageTools/anniversary/index",
         "subpackageTools/capsule/index",
         "subpackageTools/exploration-export/index",
-        "subpackageTools/exploration-goals/index"
+        "subpackageTools/exploration-goals/index",
+        "subpackageTools/monthly-recap/index"
       ],
       "hostComponentPaths": [
         {
@@ -581022,6 +583319,40 @@
           ]
         },
         {
+          "route": "subpackageMember/free-explore/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/free-explore/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/invoice-apply/index",
           "segments": [
             {
@@ -582461,6 +584792,40 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/points-history/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/points-history/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -584343,6 +586708,40 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -587532,6 +589931,40 @@
           ]
         },
         {
+          "route": "subpackageTools/anniversary/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/anniversary/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageTools/capsule/index",
           "segments": [
             {
@@ -587574,6 +590007,40 @@
           ]
         },
         {
+          "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageTools/exploration-export/index",
           "segments": [
             {
@@ -587603,6 +590070,40 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-export/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-export/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -587687,6 +590188,74 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-goals/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-goals/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/monthly-recap/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/monthly-recap/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -587919,7 +590488,8 @@
         "subpackageTools/anniversary/index",
         "subpackageTools/capsule/index",
         "subpackageTools/exploration-export/index",
-        "subpackageTools/exploration-goals/index"
+        "subpackageTools/exploration-goals/index",
+        "subpackageTools/monthly-recap/index"
       ],
       "hostComponentPaths": [
         {
@@ -620803,6 +623373,40 @@
           ]
         },
         {
+          "route": "subpackageMember/free-explore/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/free-explore/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/invoice-apply/index",
           "segments": [
             {
@@ -622242,6 +624846,40 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/points-history/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/points-history/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -624124,6 +626762,40 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -627313,6 +629985,40 @@
           ]
         },
         {
+          "route": "subpackageTools/anniversary/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/anniversary/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageTools/capsule/index",
           "segments": [
             {
@@ -627355,6 +630061,40 @@
           ]
         },
         {
+          "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageTools/exploration-export/index",
           "segments": [
             {
@@ -627384,6 +630124,40 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-export/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-export/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -627468,6 +630242,74 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-goals/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-goals/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/monthly-recap/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/monthly-recap/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -627700,7 +630542,8 @@
         "subpackageTools/anniversary/index",
         "subpackageTools/capsule/index",
         "subpackageTools/exploration-export/index",
-        "subpackageTools/exploration-goals/index"
+        "subpackageTools/exploration-goals/index",
+        "subpackageTools/monthly-recap/index"
       ],
       "hostComponentPaths": [
         {
@@ -660584,6 +663427,40 @@
           ]
         },
         {
+          "route": "subpackageMember/free-explore/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/free-explore/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/invoice-apply/index",
           "segments": [
             {
@@ -662023,6 +664900,40 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/points-history/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/points-history/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -663905,6 +666816,40 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -667094,6 +670039,40 @@
           ]
         },
         {
+          "route": "subpackageTools/anniversary/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/anniversary/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageTools/capsule/index",
           "segments": [
             {
@@ -667136,6 +670115,40 @@
           ]
         },
         {
+          "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageTools/exploration-export/index",
           "segments": [
             {
@@ -667165,6 +670178,40 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-export/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-export/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -667249,6 +670296,74 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-goals/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-goals/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/monthly-recap/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/monthly-recap/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -667482,7 +670597,8 @@
         "subpackageTools/anniversary/index",
         "subpackageTools/capsule/index",
         "subpackageTools/exploration-export/index",
-        "subpackageTools/exploration-goals/index"
+        "subpackageTools/exploration-goals/index",
+        "subpackageTools/monthly-recap/index"
       ],
       "hostComponentPaths": [
         {
@@ -700366,6 +703482,40 @@
           ]
         },
         {
+          "route": "subpackageMember/free-explore/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/free-explore/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/invoice-apply/index",
           "segments": [
             {
@@ -701805,6 +704955,40 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/points-history/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/points-history/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -703687,6 +706871,40 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -706876,6 +710094,40 @@
           ]
         },
         {
+          "route": "subpackageTools/anniversary/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/anniversary/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageTools/capsule/index",
           "segments": [
             {
@@ -706918,6 +710170,40 @@
           ]
         },
         {
+          "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageTools/exploration-export/index",
           "segments": [
             {
@@ -706947,6 +710233,40 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-export/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-export/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -707031,6 +710351,74 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-goals/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-goals/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/monthly-recap/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/monthly-recap/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -707264,7 +710652,8 @@
         "subpackageTools/anniversary/index",
         "subpackageTools/capsule/index",
         "subpackageTools/exploration-export/index",
-        "subpackageTools/exploration-goals/index"
+        "subpackageTools/exploration-goals/index",
+        "subpackageTools/monthly-recap/index"
       ],
       "hostComponentPaths": [
         {
@@ -740148,6 +743537,40 @@
           ]
         },
         {
+          "route": "subpackageMember/free-explore/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/free-explore/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/invoice-apply/index",
           "segments": [
             {
@@ -741587,6 +745010,40 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/points-history/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/points-history/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -743469,6 +746926,40 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -746658,6 +750149,40 @@
           ]
         },
         {
+          "route": "subpackageTools/anniversary/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/anniversary/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageTools/capsule/index",
           "segments": [
             {
@@ -746700,6 +750225,40 @@
           ]
         },
         {
+          "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageTools/exploration-export/index",
           "segments": [
             {
@@ -746729,6 +750288,40 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-export/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-export/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -746813,6 +750406,74 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-goals/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-goals/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/monthly-recap/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/monthly-recap/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -747046,7 +750707,8 @@
         "subpackageTools/anniversary/index",
         "subpackageTools/capsule/index",
         "subpackageTools/exploration-export/index",
-        "subpackageTools/exploration-goals/index"
+        "subpackageTools/exploration-goals/index",
+        "subpackageTools/monthly-recap/index"
       ],
       "hostComponentPaths": [
         {
@@ -779930,6 +783592,40 @@
           ]
         },
         {
+          "route": "subpackageMember/free-explore/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/free-explore/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/invoice-apply/index",
           "segments": [
             {
@@ -781369,6 +785065,40 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/points-history/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/points-history/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -783251,6 +786981,40 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -786440,6 +790204,40 @@
           ]
         },
         {
+          "route": "subpackageTools/anniversary/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/anniversary/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageTools/capsule/index",
           "segments": [
             {
@@ -786482,6 +790280,40 @@
           ]
         },
         {
+          "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageTools/exploration-export/index",
           "segments": [
             {
@@ -786511,6 +790343,40 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-export/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-export/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -786595,6 +790461,74 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-goals/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-goals/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/monthly-recap/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/monthly-recap/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -786828,7 +790762,8 @@
         "subpackageTools/anniversary/index",
         "subpackageTools/capsule/index",
         "subpackageTools/exploration-export/index",
-        "subpackageTools/exploration-goals/index"
+        "subpackageTools/exploration-goals/index",
+        "subpackageTools/monthly-recap/index"
       ],
       "hostComponentPaths": [
         {
@@ -819712,6 +823647,40 @@
           ]
         },
         {
+          "route": "subpackageMember/free-explore/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/free-explore/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/invoice-apply/index",
           "segments": [
             {
@@ -821151,6 +825120,40 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/points-history/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/points-history/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -823033,6 +827036,40 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -826222,6 +830259,40 @@
           ]
         },
         {
+          "route": "subpackageTools/anniversary/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/anniversary/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageTools/capsule/index",
           "segments": [
             {
@@ -826264,6 +830335,40 @@
           ]
         },
         {
+          "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageTools/exploration-export/index",
           "segments": [
             {
@@ -826293,6 +830398,40 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-export/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-export/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -826377,6 +830516,74 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-goals/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-goals/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/monthly-recap/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/monthly-recap/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -826610,7 +830817,8 @@
         "subpackageTools/anniversary/index",
         "subpackageTools/capsule/index",
         "subpackageTools/exploration-export/index",
-        "subpackageTools/exploration-goals/index"
+        "subpackageTools/exploration-goals/index",
+        "subpackageTools/monthly-recap/index"
       ],
       "hostComponentPaths": [
         {
@@ -859494,6 +863702,40 @@
           ]
         },
         {
+          "route": "subpackageMember/free-explore/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/free-explore/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/invoice-apply/index",
           "segments": [
             {
@@ -860933,6 +865175,40 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/points-history/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/points-history/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -862815,6 +867091,40 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -866004,6 +870314,40 @@
           ]
         },
         {
+          "route": "subpackageTools/anniversary/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/anniversary/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageTools/capsule/index",
           "segments": [
             {
@@ -866046,6 +870390,40 @@
           ]
         },
         {
+          "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageTools/exploration-export/index",
           "segments": [
             {
@@ -866075,6 +870453,40 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-export/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-export/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -866159,6 +870571,74 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-goals/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-goals/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/monthly-recap/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/monthly-recap/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -866392,7 +870872,8 @@
         "subpackageTools/anniversary/index",
         "subpackageTools/capsule/index",
         "subpackageTools/exploration-export/index",
-        "subpackageTools/exploration-goals/index"
+        "subpackageTools/exploration-goals/index",
+        "subpackageTools/monthly-recap/index"
       ],
       "hostComponentPaths": [
         {
@@ -899276,6 +903757,40 @@
           ]
         },
         {
+          "route": "subpackageMember/free-explore/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/free-explore/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/invoice-apply/index",
           "segments": [
             {
@@ -900715,6 +905230,40 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/points-history/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/points-history/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -902597,6 +907146,40 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -905786,6 +910369,40 @@
           ]
         },
         {
+          "route": "subpackageTools/anniversary/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/anniversary/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageTools/capsule/index",
           "segments": [
             {
@@ -905828,6 +910445,40 @@
           ]
         },
         {
+          "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/capsule/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageTools/exploration-export/index",
           "segments": [
             {
@@ -905857,6 +910508,40 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-export/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-export/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -905941,6 +910626,74 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-goals/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/exploration-goals/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/monthly-recap/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageTools/monthly-recap/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
               "index": 0
             },
             {
@@ -1416270,7 +1421023,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:524"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:525"
       }
     },
     {
@@ -1416387,7 +1421140,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:554"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:555"
       }
     },
     {
@@ -1416521,7 +1421274,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:544"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:545"
       }
     },
     {
@@ -1416659,7 +1421412,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:486"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:487"
       }
     },
     {
@@ -1416797,7 +1421550,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:497"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:498"
       }
     },
     {
@@ -1416917,7 +1421670,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:433"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:434"
       }
     },
     {
@@ -1417037,7 +1421790,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:434"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:435"
       }
     },
     {
@@ -1417198,7 +1421951,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:814"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:815"
       }
     },
     {
@@ -1417360,7 +1422113,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:841"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:842"
       }
     },
     {
@@ -1417480,7 +1422233,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:871"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:872"
       }
     },
     {
@@ -1417690,7 +1422443,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:591"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:592"
       }
     },
     {
@@ -1417817,7 +1422570,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:582"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:583"
       }
     },
     {
@@ -1418001,7 +1422754,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:716"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:717"
       }
     },
     {
@@ -1418121,7 +1422874,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:534"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:535"
       }
     },
     {
@@ -1418238,7 +1422991,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:571"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:572"
       }
     },
     {
@@ -1418375,7 +1423128,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:558"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:559"
       }
     },
     {
@@ -1418558,7 +1423311,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:439"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:440"
       }
     },
     {
@@ -1418685,7 +1423438,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:575"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:576"
       }
     },
     {
@@ -1458512,14 +1463265,14 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
+      "actionClass": "write",
       "interactionMode": "event-contract",
-      "baseActionClass": "read",
+      "baseActionClass": "write",
       "effectClasses": [
-        "read",
+        "write",
         "state"
       ],
-      "accessBoundary": null,
+      "accessBoundary": "owned-resource",
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
@@ -1458530,10 +1463283,12 @@
           "/api/config/features",
           "/api/login/code",
           "/api/registration/info",
-          "/api/role/info"
+          "/api/role/info",
+          "/api/verify/dyncode/issue"
         ],
         "primaryApis": [
-          "/api/registration/info"
+          "/api/registration/info",
+          "/api/verify/dyncode/issue"
         ],
         "auxiliaryApis": [
           "/api/config/features",
@@ -1458564,22 +1463319,31 @@
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
+          },
+          {
+            "url": "/api/verify/dyncode/issue",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
           }
         ],
-        "writeApis": []
+        "writeApis": [
+          "/api/verify/dyncode/issue"
+        ]
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
         "success",
         "error",
         "timeout",
-        "duplicate-trigger"
+        "duplicate-trigger",
+        "forbidden-owner"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:209"
+        "staticSource": "subpackageMember/signup/index.js:212"
       }
     },
     {
@@ -1458621,14 +1463385,14 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
+      "actionClass": "write",
       "interactionMode": "event-contract",
-      "baseActionClass": "read",
+      "baseActionClass": "write",
       "effectClasses": [
-        "read",
+        "write",
         "state"
       ],
-      "accessBoundary": null,
+      "accessBoundary": "owned-resource",
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
@@ -1458640,11 +1463404,13 @@
           "/api/login/code",
           "/api/registration/info",
           "/api/registration/list",
-          "/api/role/info"
+          "/api/role/info",
+          "/api/verify/dyncode/issue"
         ],
         "primaryApis": [
           "/api/registration/info",
-          "/api/registration/list"
+          "/api/registration/list",
+          "/api/verify/dyncode/issue"
         ],
         "auxiliaryApis": [
           "/api/config/features",
@@ -1458681,22 +1463447,31 @@
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
+          },
+          {
+            "url": "/api/verify/dyncode/issue",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
           }
         ],
-        "writeApis": []
+        "writeApis": [
+          "/api/verify/dyncode/issue"
+        ]
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
         "success",
         "error",
         "timeout",
-        "duplicate-trigger"
+        "duplicate-trigger",
+        "forbidden-owner"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:397"
+        "staticSource": "subpackageMember/signup/index.js:407"
       }
     },
     {
@@ -1458764,7 +1463539,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:403"
+        "staticSource": "subpackageMember/signup/index.js:413"
       }
     },
     {
@@ -1458806,32 +1463581,77 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "write",
       "interactionMode": "event-contract",
-      "baseActionClass": "state",
+      "baseActionClass": "write",
       "effectClasses": [
+        "write",
         "state"
       ],
-      "accessBoundary": null,
+      "accessBoundary": "owned-resource",
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info",
+          "/api/verify/dyncode/issue"
+        ],
+        "primaryApis": [
+          "/api/verify/dyncode/issue"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/verify/dyncode/issue",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": [
+          "/api/verify/dyncode/issue"
+        ]
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success"
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:666"
+        "staticSource": "subpackageMember/signup/index.js:676"
       }
     },
     {
@@ -1458873,32 +1463693,77 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "write",
       "interactionMode": "event-contract",
-      "baseActionClass": "state",
+      "baseActionClass": "write",
       "effectClasses": [
+        "write",
         "state"
       ],
-      "accessBoundary": null,
+      "accessBoundary": "owned-resource",
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info",
+          "/api/verify/dyncode/issue"
+        ],
+        "primaryApis": [
+          "/api/verify/dyncode/issue"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/verify/dyncode/issue",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": [
+          "/api/verify/dyncode/issue"
+        ]
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success"
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:666"
+        "staticSource": "subpackageMember/signup/index.js:676"
       }
     },
     {
@@ -1458965,7 +1463830,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:647"
+        "staticSource": "subpackageMember/signup/index.js:657"
       }
     },
     {
@@ -1459032,7 +1463897,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:640"
+        "staticSource": "subpackageMember/signup/index.js:650"
       }
     },
     {
@@ -1459144,7 +1464009,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:339"
+        "staticSource": "subpackageMember/signup/index.js:349"
       }
     },
     {
@@ -1459256,7 +1464121,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:350"
+        "staticSource": "subpackageMember/signup/index.js:360"
       }
     },
     {
@@ -1459326,7 +1464191,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:457"
+        "staticSource": "subpackageMember/signup/index.js:467"
       }
     },
     {
@@ -1459355,7 +1464220,7 @@
         "handler": "goTicket",
         "line": 87,
         "selectorHint": ".wl-start",
-        "visibleCondition": "{{walletState === 'ready' && ticketList.length}}",
+        "visibleCondition": "{{walletState === 'ready' && ticketList.length && !ticketList[currentSwiperTicket].wNoGame}}",
         "disabledCondition": null,
         "ariaLabel": null,
         "ariaLabelExpression": "{{ticketList[currentSwiperTicket].topicCompleted ? '查看记录' : '开始游戏'}}：{{ticketList[currentSwiperTicket].wTitle}}",
@@ -1459398,7 +1464263,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:323"
+        "staticSource": "subpackageMember/signup/index.js:326"
       }
     },
     {
@@ -1469558,7 +1474423,7 @@
       }
     },
     {
-      "id": "subpackageRoam/my-teams/index.wxml:10:bindtap:openMap:1",
+      "id": "subpackageRoam/my-teams/index.wxml:11:bindtap:openMap:1",
       "route": "subpackageRoam/my-teams/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1469581,7 +1474446,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openMap",
-        "line": 10,
+        "line": 11,
         "selectorHint": ".mt-map",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1469628,7 +1474493,7 @@
       }
     },
     {
-      "id": "subpackageRoam/my-teams/index.wxml:19:bindtap:switchTab:2",
+      "id": "subpackageRoam/my-teams/index.wxml:20:bindtap:switchTab:2",
       "route": "subpackageRoam/my-teams/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1469653,7 +1474518,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "switchTab",
-        "line": 19,
+        "line": 20,
         "selectorHint": ".mt-seg__i",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1469755,7 +1474620,7 @@
       }
     },
     {
-      "id": "subpackageRoam/my-teams/index.wxml:20:bindtap:switchTab:3",
+      "id": "subpackageRoam/my-teams/index.wxml:21:bindtap:switchTab:3",
       "route": "subpackageRoam/my-teams/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1469780,7 +1474645,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "switchTab",
-        "line": 20,
+        "line": 21,
         "selectorHint": ".mt-seg__i",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1469882,7 +1474747,7 @@
       }
     },
     {
-      "id": "subpackageRoam/my-teams/index.wxml:25:bindtap:reload:4",
+      "id": "subpackageRoam/my-teams/index.wxml:26:bindtap:reload:4",
       "route": "subpackageRoam/my-teams/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1469907,7 +1474772,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "reload",
-        "line": 25,
+        "line": 26,
         "selectorHint": ".mt-err",
         "visibleCondition": "{{mineError}}",
         "disabledCondition": null,
@@ -1470033,7 +1474898,7 @@
       }
     },
     {
-      "id": "subpackageRoam/my-teams/index.wxml:29:bindtap:openRow:5",
+      "id": "subpackageRoam/my-teams/index.wxml:30:bindtap:openRow:5",
       "route": "subpackageRoam/my-teams/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1470056,7 +1474921,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openRow",
-        "line": 29,
+        "line": 30,
         "selectorHint": ".mt-card",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1470103,7 +1474968,7 @@
       }
     },
     {
-      "id": "subpackageRoam/my-teams/index.wxml:38:catchtap:onRowAction:6",
+      "id": "subpackageRoam/my-teams/index.wxml:39:catchtap:onRowAction:6",
       "route": "subpackageRoam/my-teams/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1470126,7 +1474991,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onRowAction",
-        "line": 38,
+        "line": 39,
         "selectorHint": ".mt-act",
         "visibleCondition": "{{item.action}}",
         "disabledCondition": null,
@@ -1470175,7 +1475040,7 @@
       }
     },
     {
-      "id": "subpackageRoam/my-teams/index.wxml:48:bindtap:openMap:7",
+      "id": "subpackageRoam/my-teams/index.wxml:49:bindtap:openMap:7",
       "route": "subpackageRoam/my-teams/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1470198,7 +1475063,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openMap",
-        "line": 48,
+        "line": 49,
         "selectorHint": ".mt-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1470245,7 +1475110,7 @@
       }
     },
     {
-      "id": "subpackageRoam/my-teams/index.wxml:56:bindtap:loadOpen:8",
+      "id": "subpackageRoam/my-teams/index.wxml:57:bindtap:loadOpen:8",
       "route": "subpackageRoam/my-teams/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1470270,7 +1475135,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "loadOpen",
-        "line": 56,
+        "line": 57,
         "selectorHint": ".mt-err",
         "visibleCondition": "{{openError}}",
         "disabledCondition": null,
@@ -1470372,7 +1475237,7 @@
       }
     },
     {
-      "id": "subpackageRoam/my-teams/index.wxml:57:bindtap:openLobbyTeam:9",
+      "id": "subpackageRoam/my-teams/index.wxml:58:bindtap:openLobbyTeam:9",
       "route": "subpackageRoam/my-teams/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1470395,7 +1475260,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openLobbyTeam",
-        "line": 57,
+        "line": 58,
         "selectorHint": ".mt-card",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1470442,74 +1475307,7 @@
       }
     },
     {
-      "id": "subpackageRoam/my-teams/index.wxml:7:bind:settled:onPrivacyGateSettled:0",
-      "route": "subpackageRoam/my-teams/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageRoam/my-teams/index.wxml",
-        "js": "subpackageRoam/my-teams/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-privacy-gate",
-        "event": "bind:settled",
-        "handler": "onPrivacyGateSettled",
-        "line": 7,
-        "selectorHint": "cy-privacy-gate[bind:settled]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageRoam/my-teams/index.js:72"
-      }
-    },
-    {
-      "id": "subpackageRoam/my-teams/index.wxml:71:bindtap:loadOpen:10",
+      "id": "subpackageRoam/my-teams/index.wxml:72:bindtap:loadOpen:10",
       "route": "subpackageRoam/my-teams/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1470534,7 +1475332,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "loadOpen",
-        "line": 71,
+        "line": 72,
         "selectorHint": ".mt-err",
         "visibleCondition": "{{openError}}",
         "disabledCondition": null,
@@ -1470636,7 +1475434,7 @@
       }
     },
     {
-      "id": "subpackageRoam/my-teams/index.wxml:72:bindtap:openNearbyTeam:11",
+      "id": "subpackageRoam/my-teams/index.wxml:73:bindtap:openNearbyTeam:11",
       "route": "subpackageRoam/my-teams/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1470659,7 +1475457,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openNearbyTeam",
-        "line": 72,
+        "line": 73,
         "selectorHint": ".mt-card",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1470703,6 +1475501,73 @@
       "evidence": {
         "status": "pending",
         "staticSource": "subpackageRoam/my-teams/index.js:218"
+      }
+    },
+    {
+      "id": "subpackageRoam/my-teams/index.wxml:8:bind:settled:onPrivacyGateSettled:0",
+      "route": "subpackageRoam/my-teams/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageRoam/my-teams/index.wxml",
+        "js": "subpackageRoam/my-teams/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-privacy-gate",
+        "event": "bind:settled",
+        "handler": "onPrivacyGateSettled",
+        "line": 8,
+        "selectorHint": "cy-privacy-gate[bind:settled]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageRoam/my-teams/index.js:72"
       }
     },
     {

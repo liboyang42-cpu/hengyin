@@ -15,6 +15,9 @@ function exactRegistrationId(value) {
 // UI-17 返修(2026-09-18):cy-nav-bar 是 fixed(fixed 导航不占文档流),页面正文必须自己让出
 // 导航实高,否则卡片顶端会钻到导航底下被截掉一截(总控截图实证)。拿不到 globalData 时用兜底值。
 const appGlobal = (app && app.globalData) || {};
+// 第十二轮 k2(j1 N1):与 utils/ticket-game.js activityHasGame 同口径(本页由沙箱测试加载,不多加 require)。
+function activityHasGame(a) { return !a || typeof a !== 'object' || Number(a.topicId) > 0 || Number(a.templateId) > 0; }
+
 Page({
 
   /**
@@ -162,7 +165,7 @@ Page({
       this._focusLookupSeq = (this._focusLookupSeq || 0) + 1;
       this._focusLookupPending = null;
       this.setData({ currentSwiperTicket: i,
-        focusState: this._explicitFocus ? 'ready' : '', focusError: '' });
+        focusState: this._explicitFocus ? 'ready' : '', focusError: '' }); this._showQrIfNoGame();
       this.syncCurrentTeam();
       return;
     }
@@ -280,7 +283,7 @@ Page({
         wKey: 'activity-' + item.id,
         wTitle: a.name || '—',
         wImg: a.imgUrl || '/images/route_city_cover.png',
-        wType: '场次', wColor: '#E8B86B', wUntil: a.endTime || a.endDate || '', wProgress: exploreProgressOf(item), // ds-ok v13 卡角色
+        wType: '场次', wColor: '#E8B86B', wUntil: a.endTime || a.endDate || '', wProgress: exploreProgressOf(item), wNoGame: !activityHasGame(a), // ds-ok v13 卡角色;k2 j1 N1 没有游戏的票直接出码
       });
     });
     const seen = new Set();
@@ -315,7 +318,7 @@ Page({
       walletErrorMsg: (this._topic || {}).err || (this._activity || {}).err || '',
     });
     if (!this._entering && (state !== 'ready' || this._entered)) this._deckLay(); this._bgTo(cur.wImg); // 入场 / 新卡落入动画进行中不重排,否则第二路列表回来会把动画打断
-    if (this._focusId) this._tryFocusTicket(); if (state === 'ready' && this._arrive) { this._arrive = false; this._entered = true; this._playArrive(); } else if (state === 'ready' && !this._entered) { this._entered = true; this._playEnter(false); }
+    this._showQrIfNoGame(); if (this._focusId) this._tryFocusTicket(); if (state === 'ready' && this._arrive) { this._arrive = false; this._entered = true; this._playArrive(); } else if (state === 'ready' && !this._entered) { this._entered = true; this._playEnter(false); }
   },
 
   /* 点开一张票。两种票的落点不同,由 kind 分流 —— 这就是合并列表之后
@@ -336,6 +339,13 @@ Page({
   },
 
   /* 2026-10-28 业主:点卡片 = 翻到背面看入场码,再点翻回。拖动换卡时不算点(onDeckEnd 先清掉 _moved)。 */
+  // 第十二轮 k2(j1 N1):没有游戏的票,票面就是入场码 —— 落到它时直接翻到码面,不需要玩家先猜「点一下」
+  _showQrIfNoGame() {
+    const item = (this.data.ticketList || [])[this.data.currentSwiperTicket];
+    if (!item || !item.wNoGame || this.data.flipped) return;
+    this.setData({ flipped: true });
+    if (String(item.id) !== this._qrFor || !(this._qrExpiresAt > Date.now() + QR_REFRESH_LEAD_MS)) this._loadQr(item);
+  },
   onCardTap(e) {
     if (this._moved || this._throwing || this.data.entering) return;
     const index = Number(e.currentTarget.dataset.index);
@@ -678,7 +688,7 @@ Page({
     const next = (thrown + 1) % n;
     this._throwing = true;
     this._clearQrTimer(); this._qrFor = '';
-    this.setData({ currentSwiperTicket: next, flipped: false, qrState: 'idle', qrUrl: '' });
+    this.setData({ currentSwiperTicket: next, flipped: false, qrState: 'idle', qrUrl: '' }); this._showQrIfNoGame();
     this._deckLay();
     this.setData({ ['deckPoses[' + thrown + ']']: out });
     this._bgTo(list[next] && list[next].wImg);
