@@ -43,4 +43,34 @@ Bug 4: no player can start the photo station in the published game. The next ste
 ## Checks
 `node --test tests/unit/safe-user-message.test.js` 11 pass; `tests/unit/*temp*.test.js` 436 pass. Not run: `tests/lint/ui-integrity.js` (no line-anchored edits except one same-line change), `build-action-ledger.js --check`, preflight, because only one line of `pages/publish/temp/index.js` changed in place.
 
-STATUS: PARTIAL - game authored, published and started on screen with media logged; no full run because the photo station could not start (fix pushed, not re-walked) and the QR station cannot coexist with a branch (engine gap, named); throttled-media and four-look passes not done
+## Second round (second theme, same day)
+
+Rig rebuilt on head `121630463` (jar and bundle), stand-ins restarted (`~/walk-rig/start-all.sh`). I authored a second theme on screen with the photo station on 定位到达 and a result rule on every station. It published, review approved, two players signed up on screen (9009, 9004).
+
+| Requirement | Result | Seen |
+|---|---|---|
+| Photo station on 定位到达 | **Works** (fix `2e60d1bc9`) | Templates saved with `validation_method` 5. With 开启定位 on and the location at the station the quest started, 打开任务 showed 「拍一张」, the photo was accepted (「拍好了」, `m3-q-05`), 结算任务 and 确认装载 settled it. Log: station voice (id 2) 1.0, station music (id 3) at 0.14 under it, theme music paused. A volume-0 context was created and destroyed for the next station: the preload runs. |
+| Branch, side 旧码头 (run A, player 9009) | Works up to the end of the station | 旧码头 text question showed after m1's fix `2ca541cc2` (before it, 打开任务 showed nothing: `playKit.show` false). 「答对了」, settled, server returned the success reply 「码头认出了你。」 |
+| Branch, side 老电台 (run B, player 9004) | **Blocked** | After 报亭, the backpack task list shows only 旧码头 (「尚未到达」); 老电台 is not listed at all and the next-station marker points at it. Same hole as before, for a photo member of the group. For player 9009, once 旧码头 was done the 老电台 row was empty (no state, no button). |
+| Chapter and run completion | **Blocked (m1's lane)** | After 旧码头 the server says nodes 122 and 123 COMPLETED, 124 (老电台) PLAYABLE, route status ACTIVE, theme quest 124 NOT_ARRIVED. The story screen went blank after 「继续」 (`m3-r-07`: no text, no button) and on reopen the chapter starts again with 老电台 as the next station. So the run never reached the ending. |
+| Egg | Fired | `events: 雨中便条 RECORDED` for 9009 (it took several minutes in the chapter). Miss run not done: both runs passed one minute in chapter 1. |
+| Ending video and music, reopen at the end | Not reached | Because of the completion block. |
+| Opening video, theme music, narration in play | Seen again | Video decoded; theme music paused for it and resumed at 0.25; narration at 1.0 with theme music at 0.1. |
+| Slow and failing media | Not done | Credit and the completion block; stand-in media server (`/tmp/media_srv.py`) is up. |
+| Four looks | Partly | Story page and station sheet in 星尘, 纸本, 末世, 夜城 (`m3-looks-contact.jpg`; set with `look_json` in the rig database, not through the editor). The sheet is the same dark card with white text in all four, readable; only the background texture and particles differ (rain in 末世, dim blue in 夜城, warm blur in 纸本). The backpack shot missed (the click hit the page), and the photo, scan, finish card and error screens were not seen in the other looks. |
+
+## More bugs and observations
+- **Fixed, pushed (`121630463`)** (bug 7, publish half). The editor said 「网络中断，暂时确认不了是否已发布」 when the server had refused publishing with a clear reason (e.g. 「「报亭」：…个人任务的这一站玩法要带结果规则…」). The page treated a business refusal (body code 500) as a lost reply. It now shows the server's reason first. The real fix for the cause is that the 拍照打卡/文字问答 template needs 成功反馈 turned on; the editor does not say so before publishing.
+- **Bug 7, save half, found but not fixed.** After a successful 保存草稿 the same editing session still thinks a saved exclusive group is unsaved: 添加序章 shows only a toast 「互斥选项须先保存，且必须属于本章」 (`theme-runtime.js:138`) until the page is reopened with the draft id. Reopening is the workaround. I could not find the stale-id cause by reading; the saved node ids are probably not refreshed in the chapter rows after a save.
+- **After publishing** a club author lands on `merchantinfo` and sees 「当前账号无权查看」 because `/api/project/home` answers 403 「商家身份无效或权限不足」 for an author who is not a registered publisher. Not fixed.
+- **First run never asks for location.** Starting a new run showed no 开启定位 sheet; arrival only worked after leaving and reopening the page (the sheet appears on resume). Not confirmed as a product bug: the first-open path may rely on a permission the rig does not model.
+- **Backpack task list.** The 开始任务 / 打开任务 / 结算任务 button of the last row sits at or under the bottom edge (y 833 to 986 on an 844 px screen) until the panel is scrolled, so a player may not see it.
+- **One bug in my first round's table is solved:** the photo station arrival (bug 4) is confirmed fixed.
+- QR station: left alone, waiting for m7.
+
+## To continue
+1. m1: the sibling of a finished branch member must close (or complete) on the server, the chapter and run must complete, and the screen must never go blank. Evidence above (route-state and theme/state values). With that, run B (老电台 side), the ending video and music, and reopen can be walked.
+2. Slow and failing media (media server on 127.0.0.1:8765, `/tmp/media_srv.py`), egg miss, and the photo, finish card and error screens in the four looks.
+3. Bug 7 save half.
+
+STATUS: PARTIAL - second theme authored, published and played to the first branch member with logs; photo-on-定位到达 fix proven; run blocked at chapter completion (sibling station left playable, screen blank), so the second branch side, ending, throttled media and most look screens are not done
