@@ -19,11 +19,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -115,6 +118,25 @@ class RefundPlatformShareClawbackTest {
         verify(details).insertAdjustment(any());
         verify(members, never()).deductBalance(anyLong(), any());
         verify(alarms).alarm(eq("退款冲销平台份额无实收人"), anyString());
+    }
+
+    @Test
+    void ambiguousOrInvalidPlatformIncomeRefusesBeforeAnyDebit() {
+        CmsRegistration reg = registration(2L, 77L);
+        CmsActivity activity = new CmsActivity();
+        activity.setId(77L);
+        activity.setIsSettlement(1);
+        when(activities.selectCmsActivityById(77L)).thenReturn(activity);
+        when(details.selectSettledDetails("registration", 10L)).thenReturn(List.of(detail("platform", 0L, "2.93")));
+        for (List<Long> recipients : List.of(List.of(PLATFORM_MEMBER, 9001L), List.of(0L))) {
+            when(flows.selectIncomeMemberIdsByEventTypeAndEventId(7L, 77L)).thenReturn(recipients);
+
+            InvocationTargetException error = assertThrows(InvocationTargetException.class,
+                    () -> clawBack(reg, "97.50", "97.50"));
+            assertInstanceOf(IllegalStateException.class, error.getCause());
+        }
+        verify(details, never()).insertAdjustment(any());
+        verify(members, never()).deductBalance(anyLong(), any());
     }
 
     /** 主题报名(owner_type=1,无合作单):平台分项从不入余额 ⇒ 不扣平台会员。 */

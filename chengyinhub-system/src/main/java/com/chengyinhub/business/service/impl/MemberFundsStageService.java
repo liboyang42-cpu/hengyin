@@ -67,7 +67,7 @@ public class MemberFundsStageService {
 
     /** 第十二轮 k5:俱乐部场次按核销付费的商家费估算(主理人份额里减、商家那边加)。纯单元装配可不注入。 */
     @org.springframework.beans.factory.annotation.Autowired(required = false)
-    private com.chengyinhub.business.mapper.ClubSessionMerchantFeeMapper sessionFeeMapper;
+    private com.chengyinhub.business.mapper.SettlementDetailMapper sessionFeeMapper;
 
     public Map<String, Object> stages(Long memberId, Date now) {
         String today = day(now);

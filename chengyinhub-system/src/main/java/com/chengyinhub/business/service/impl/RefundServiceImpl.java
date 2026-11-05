@@ -1108,6 +1108,10 @@ public class RefundServiceImpl implements IRefundService {
                     + " 已结算但查不到平台分润入账(event_type=7),平台份额只记冲销台账 detailId=" + settled.getId());
             return null;
         }
+        // 活动结算和客诉补结之间可能换过平台账户，不能把最近入账人当作这一张票的实收人。
+        if (actual.size() != 1 || actual.get(0) == null || actual.get(0) <= 0) {
+            throw new IllegalStateException("平台原入账人不唯一或无效，请人工核实 activityId=" + registration.getOwnerId());
+        }
         return actual.get(0);
     }
 

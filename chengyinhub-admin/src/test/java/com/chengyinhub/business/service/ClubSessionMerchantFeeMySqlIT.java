@@ -10,7 +10,7 @@ import com.chengyinhub.business.domain.vo.ClubSessionSettlementRow;
 import com.chengyinhub.business.domain.vo.MerchantSessionFeeLine;
 import com.chengyinhub.business.mapper.ActivitySettlementHoldMapper;
 import com.chengyinhub.business.mapper.ClubMapper;
-import com.chengyinhub.business.mapper.ClubSessionMerchantFeeMapper;
+import com.chengyinhub.business.mapper.SettlementDetailMapper;
 import com.chengyinhub.business.mapper.CmsActivityMapper;
 import com.chengyinhub.business.mapper.CmsRegistrationMapper;
 import com.chengyinhub.business.mapper.CmsSettingMapper;
@@ -20,7 +20,6 @@ import com.chengyinhub.business.mapper.CoopSettlementEvidenceMapper;
 import com.chengyinhub.business.mapper.CoopSettlementMapper;
 import com.chengyinhub.business.mapper.CoopSettlementOriginalMapper;
 import com.chengyinhub.business.mapper.SettlementClaimMapper;
-import com.chengyinhub.business.mapper.SettlementDetailMapper;
 import com.chengyinhub.business.mapper.UmsMemberBalanceDetailMapper;
 import com.chengyinhub.business.mapper.UmsMemberMapper;
 import com.chengyinhub.business.mapper.UmsMemberSettlementDebtMapper;
@@ -88,7 +87,7 @@ class ClubSessionMerchantFeeMySqlIT {
 
     private DataSource dataSource;
     private CmsActivityServiceImpl activityService;
-    private ClubSessionMerchantFeeMapper feeMapper;
+    private SettlementDetailMapper feeMapper;
     private SettlementDetailMapper detailMapper;
     private CoopSettlementMapper coopSettlementMapper;
     private CoopSettlementEvidenceMapper evidenceMapper;
@@ -115,7 +114,7 @@ class ClubSessionMerchantFeeMySqlIT {
         UmsMemberBalanceDetailMapper balanceMapper = template.getMapper(UmsMemberBalanceDetailMapper.class);
         SettlementDebtLedger debtLedger = new SettlementDebtLedger(template.getMapper(UmsMemberSettlementDebtMapper.class),
                 umsMemberMapper, balanceMapper);
-        feeMapper = template.getMapper(ClubSessionMerchantFeeMapper.class);
+        feeMapper = template.getMapper(SettlementDetailMapper.class);
         detailMapper = template.getMapper(SettlementDetailMapper.class);
         coopSettlementMapper = template.getMapper(CoopSettlementMapper.class);
         evidenceMapper = template.getMapper(CoopSettlementEvidenceMapper.class);
@@ -151,7 +150,6 @@ class ClubSessionMerchantFeeMySqlIT {
         ReflectionTestUtils.setField(payee, "clubMapper", clubMapper);
 
         ClubSessionMerchantFee fee = new ClubSessionMerchantFee();
-        ReflectionTestUtils.setField(fee, "feeMapper", feeMapper);
         ReflectionTestUtils.setField(fee, "coopOrderMapper", template.getMapper(CoopOrderMapper.class));
         ReflectionTestUtils.setField(fee, "settlementDetailMapper", detailMapper);
         ReflectionTestUtils.setField(fee, "settlementClaimService",
@@ -712,7 +710,6 @@ class ClubSessionMerchantFeeMySqlIT {
         addMapper(configuration, SettlementDetailMapper.class, "mapper/business/SettlementDetailMapper.xml");
         addMapper(configuration, ActivitySettlementHoldMapper.class, "mapper/business/ActivitySettlementHoldMapper.xml");
         addMapper(configuration, UmsMemberSettlementDebtMapper.class, "mapper/business/UmsMemberSettlementDebtMapper.xml");
-        addMapper(configuration, ClubSessionMerchantFeeMapper.class, "mapper/business/ClubSessionMerchantFeeMapper.xml");
         addMapper(configuration, CoopOrderMapper.class, "mapper/business/CoopOrderMapper.xml");
         addMapper(configuration, SettlementClaimMapper.class, "mapper/business/SettlementClaimMapper.xml");
         addMapper(configuration, CoopSettlementMapper.class, "mapper/business/CoopSettlementMapper.xml");

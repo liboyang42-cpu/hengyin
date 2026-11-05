@@ -17,13 +17,12 @@ import com.chengyinhub.business.domain.UmsMemberBalanceDetail;
 import com.chengyinhub.business.domain.vo.ClubSessionFeeRegistration;
 import com.chengyinhub.business.mapper.ActivitySettlementHoldMapper;
 import com.chengyinhub.business.mapper.ClubMapper;
-import com.chengyinhub.business.mapper.ClubSessionMerchantFeeMapper;
+import com.chengyinhub.business.mapper.SettlementDetailMapper;
 import com.chengyinhub.business.mapper.CmsActivityMapper;
 import com.chengyinhub.business.mapper.CmsRegistrationMapper;
 import com.chengyinhub.business.mapper.CmsSettingMapper;
 import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.mapper.CoopOrderMapper;
-import com.chengyinhub.business.mapper.SettlementDetailMapper;
 import com.chengyinhub.business.service.IPointsAwardService;
 import com.chengyinhub.business.service.ISettlementClaimService;
 import com.chengyinhub.business.service.ISettlementRuleService;
@@ -70,7 +69,7 @@ class ClubSessionMerchantFeeSettlementTest {
 
     private CmsActivityMapper activities;
     private CmsRegistrationMapper registrations;
-    private ClubSessionMerchantFeeMapper feeMapper;
+    private SettlementDetailMapper feeMapper;
     private CoopOrderMapper orders;
     private SettlementDetailMapper details;
     private ISettlementClaimService claims;
@@ -86,9 +85,9 @@ class ClubSessionMerchantFeeSettlementTest {
     void setUp() {
         activities = mock(CmsActivityMapper.class);
         registrations = mock(CmsRegistrationMapper.class);
-        feeMapper = mock(ClubSessionMerchantFeeMapper.class);
+        feeMapper = mock(SettlementDetailMapper.class);
         orders = mock(CoopOrderMapper.class);
-        details = mock(SettlementDetailMapper.class);
+        details = feeMapper;
         claims = mock(ISettlementClaimService.class);
         members = mock(IUmsMemberService.class);
         balanceDetails = mock(IUmsMemberBalanceDetailService.class);
@@ -121,7 +120,6 @@ class ClubSessionMerchantFeeSettlementTest {
         when(topics.selectCmsTopicById(TOPIC)).thenReturn(topic);
 
         ClubSessionMerchantFee fee = new ClubSessionMerchantFee();
-        ReflectionTestUtils.setField(fee, "feeMapper", feeMapper);
         ReflectionTestUtils.setField(fee, "coopOrderMapper", orders);
         ReflectionTestUtils.setField(fee, "settlementDetailMapper", details);
         ReflectionTestUtils.setField(fee, "settlementClaimService", claims);

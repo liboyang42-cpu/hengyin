@@ -63,7 +63,7 @@ public class MerchantFinanceQueryService {
     @Autowired private IMmsMerchantService merchantService;
     @Autowired private PiiCryptoService piiCryptoService;
     /** 第十二轮 k5:俱乐部场次结算付给本商家的核销费(按场次一行)。 */
-    @Autowired(required = false) private com.chengyinhub.business.mapper.ClubSessionMerchantFeeMapper sessionFeeMapper;
+    @Autowired(required = false) private com.chengyinhub.business.mapper.SettlementDetailMapper sessionFeeMapper;
     /** 个人账户「待结算」与资产页同源(/api/wallet/stages),见 personalPending。 */
     @Autowired(required = false) private MemberFundsStageService fundsStageService;
 

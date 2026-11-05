@@ -9,9 +9,8 @@ import com.chengyinhub.business.domain.SettlementClaim;
 import com.chengyinhub.business.domain.SettlementDetail;
 import com.chengyinhub.business.domain.enums.SettlementDetailState;
 import com.chengyinhub.business.domain.vo.ClubSessionFeeRegistration;
-import com.chengyinhub.business.mapper.ClubSessionMerchantFeeMapper;
-import com.chengyinhub.business.mapper.CoopOrderMapper;
 import com.chengyinhub.business.mapper.SettlementDetailMapper;
+import com.chengyinhub.business.mapper.CoopOrderMapper;
 import com.chengyinhub.business.service.ISettlementClaimService;
 import com.chengyinhub.business.service.impl.AlarmService;
 import com.chengyinhub.common.exception.ServiceException;
@@ -57,9 +56,6 @@ public class ClubSessionMerchantFee {
     public static final long EVENT_TYPE_SESSION_MERCHANT_FEE = 95L;
     /** settlement_detail.receiver_type:合作商家的场次核销费;不能用 merchant(那是场次收款人)。 */
     public static final String RECEIVER_TYPE = "coop_merchant";
-
-    @Autowired
-    private ClubSessionMerchantFeeMapper feeMapper;
 
     @Autowired
     private CoopOrderMapper coopOrderMapper;
@@ -169,7 +165,7 @@ public class ClubSessionMerchantFee {
                 || activity.getClubId() <= 0 || activity.getTopicId() == null) {
             return EMPTY;
         }
-        List<CoopGroupVerify> scans = feeMapper.selectGroupVerifiesByActivity(activity.getId());
+        List<CoopGroupVerify> scans = settlementDetailMapper.selectGroupVerifiesByActivity(activity.getId());
         if (scans == null || scans.isEmpty()) {
             return EMPTY;
         }
@@ -217,7 +213,7 @@ public class ClubSessionMerchantFee {
                 continue;
             }
             if (registrations == null) {
-                registrations = feeMapper.selectFeeRegistrationsForUpdate(activity.getId(), registrationId);
+                registrations = settlementDetailMapper.selectFeeRegistrationsForUpdate(activity.getId(), registrationId);
                 if (registrations == null) registrations = Collections.emptyList();
             }
             List<RegistrationFee> fees = new ArrayList<>();
@@ -253,7 +249,7 @@ public class ClubSessionMerchantFee {
         for (Charge charge : plan.getCharges()) {
             for (RegistrationFee reg : charge.getRegistrations()) {
                 if (reg.getAmount().signum() <= 0) continue;
-                List<SettlementDetail> lines = feeMapper.selectPayeeLinesForUpdate(reg.getRegistrationId());
+                List<SettlementDetail> lines = settlementDetailMapper.selectPayeeLinesForUpdate(reg.getRegistrationId());
                 if (lines == null || lines.size() != 1) {
                     throw refuse(activity, "PRINCIPAL_LEDGER_LINE_UNPROVEN",
                             "报名 " + reg.getRegistrationId() + " 的主理人分账行有 " + (lines == null ? 0 : lines.size())
@@ -266,7 +262,7 @@ public class ClubSessionMerchantFee {
                                     + ",本场不结算,请人工处理");
                 }
                 if (!Integer.valueOf(SettlementDetailState.PENDING.getCode()).equals(line.getStatus())
-                        || feeMapper.reducePayeeLine(line.getId(), reg.getAmount()) != 1) {
+                        || settlementDetailMapper.reducePayeeLine(line.getId(), reg.getAmount()) != 1) {
                     throw refuse(activity, "MERCHANT_FEE_EXCEEDS_PRINCIPAL_LINE",
                             "报名 " + reg.getRegistrationId() + " 的商家核销费 " + reg.getAmount()
                                     + " 超过该报名的主理人分账 " + line.getSettlementAmount()
