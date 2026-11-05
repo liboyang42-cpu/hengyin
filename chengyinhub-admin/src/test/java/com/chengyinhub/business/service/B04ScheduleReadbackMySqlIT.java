@@ -101,6 +101,8 @@ class B04ScheduleReadbackMySqlIT {
         for (String table : Arrays.asList("club_event_series", "club_event_occurrence", "club_event_waitlist")) createTable(migration, table);
         createTable(Files.readString(Paths.get("sql/migration_club_role_assignment_20260823.sql"),
                 StandardCharsets.UTF_8), "club_role_assignment");
+        // migration_20261102_club_checkin_phone_visible.sql (C-05): ClubRoleAssignmentMapper reads this column.
+        jdbc.execute("ALTER TABLE club_role_assignment ADD COLUMN customer_phone_visible TINYINT NOT NULL DEFAULT 0 AFTER version");
         Configuration configuration = new Configuration(new Environment("e01", new SpringManagedTransactionFactory(), dataSource()));
         configuration.getTypeAliasRegistry().registerAliases("com.chengyinhub.business.domain");
         for (String name : Arrays.asList("ClubEventOps", "Club", "ClubMember", "ClubRoleAssignment", "CmsActivity", "UmsMember")) {
