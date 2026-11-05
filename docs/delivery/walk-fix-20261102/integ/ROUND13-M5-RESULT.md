@@ -146,4 +146,19 @@ Rig rebuilt. I ran `proof/k5-walk/s0`..`s7` (with `PYTHONPATH` pointing at the r
 
 Rig tap note: on three screens (settlement rows, prediction card, topic CTA) a real mouse tap did not run the page's handler in the rig while calling the same handler did. I used the handler and say so above; I could not prove it is rig-only.
 
-STATUS: PARTIAL - game node and prediction walked with real data and 4 more bugs fixed (10–13); coop settlement detail has no row to open on this scenario (exact step above); p2 N-17 duplicate actions and p3 N18 not confirmed
+
+## Sixth pass (last items and regression walk on the current head)
+
+Head when walked: `121630463` plus the pull at that moment; the mini-program bundle was rebuilt from it. The backend jar is the one built from `0d82371f1`: about 56 Java/XML files changed since, almost all play and editor code. So this walk proves the pages on the current head against that jar, not the newest backend.
+
+| Item | Result |
+|---|---|
+| p2 N-17 (duplicate 扫码) | CONFIRMED fixed. Merchant 9005, whose only role is an accepted 引流 station, opens the project page: one row of quick actions (扫码 · 二维码 · 客户 · 更多) and the bottom button is 查看结算报告; no second 扫码. The reversed date 「11月5日 – 10月21日」 on that page comes from my fixture's shifted session dates, not the product. |
+| p3 N18 (editor preview overlap) | Not reproduced; the notes do not say which preview they mean. Another worker's commit `088c6bfd8` ("编辑器预览内嵌玩法在深色底上看得见题干…") now covers the editor preview, so I left it alone. |
+| Regression walk, new player on the current head | PASS, nothing new found. Guest: home, club page, 发现 and 消息 (one 「登录后查看消息」, no banner); a missing theme says plainly 「主题活动不存在」; the club 加入 asks 「登录后继续」. Sign-up through that pop-up: 积分明细 「注册赠送 +50, 余额 50」. Ticket: 结算 → 参与人信息 → 付款 → order ¥69.00. 票夹 shows the ticket. Refund: dialog says ¥69.00 and the free-cancel deadline; after confirming 「报名已取消，现金退款正在派发」. 消息 收件箱 shows 「系统通知 · 报名成功」. |
+| Player-facing commits of the last four hours I read | Topic load failure no longer shows backend text (`5ea8403f1`), safe-user-message, monthly recap, coupon QR, club create/notify, play-page sound/video work. Only the topic-missing page was in my journey, and it reads correctly. Play-page changes are another lane's. |
+| Left as is | The refund dialog title 「取消报名?」 still has a half-width question mark. It lives in `utils/danger-actions.js` (a protected file) and `cy-modal-host-sink-contract.test.js` pins the exact string, so I did not change it. Suggest the owner of that file does it with the test. |
+
+No code changed in this pass, so no ledger or gate rerun was needed.
+
+STATUS: PARTIAL - p2 N-17 confirmed fixed, p3 N18 not reproduced, and the guest, sign-up, ticket, refund and messages walk is clean on the current head; coop settlement detail still has no row to open on this rig, the final WeChat deregistration step and phone-only checks are not walked
