@@ -5,7 +5,7 @@
 //   · 不挡地图:页面先把地图铺好再挂本组件;加载中整层透明,START_TIMEOUT_MS 内没开播就放弃。
 //   · 减弱动态、2G/3G/无网、地址不是受信 https 都直接放弃,不提示。
 //   · app 想重播时调 resetSeen()(或给 force=true)。
-const SEEN_KEY = 'cy_roam_atmos_seen_v1'
+const SEEN_STORAGE_NAME = 'cy_roam_atmos_seen_v1'
 const START_TIMEOUT_MS = 1500
 const MAX_PLAY_MS = 6000
 const FADE_MS = 600
@@ -18,9 +18,9 @@ function trusted(src) {
     return typeof config.isTrustedAssetUrl === 'function' ? config.isTrustedAssetUrl(src) : /^https:\/\//.test(String(src || ''))
   } catch (e) { return false }
 }
-function readSeen() { try { return !!wx.getStorageSync(SEEN_KEY) } catch (e) { return true } }
-function markSeen() { try { wx.setStorageSync(SEEN_KEY, 1) } catch (e) { /* 存不下就当没看过,下次再说 */ } }
-function resetSeen() { try { wx.removeStorageSync(SEEN_KEY) } catch (e) { /* 无副作用 */ } }
+function readSeen() { try { return !!wx.getStorageSync(SEEN_STORAGE_NAME) } catch (e) { return true } }
+function markSeen() { try { wx.setStorageSync(SEEN_STORAGE_NAME, 1) } catch (e) { /* 存不下就当没看过,下次再说 */ } }
+function resetSeen() { try { wx.removeStorageSync(SEEN_STORAGE_NAME) } catch (e) { /* 无副作用 */ } }
 
 Component({
   properties: {
@@ -86,4 +86,4 @@ Component({
   },
 })
 
-module.exports = { SEEN_KEY, resetSeen, START_TIMEOUT_MS, DIM_MS, FADE_MS }
+module.exports = { SEEN_STORAGE_NAME, resetSeen, START_TIMEOUT_MS, DIM_MS, FADE_MS }
