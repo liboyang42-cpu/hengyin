@@ -494,6 +494,7 @@ public class PricingServiceImpl implements IPricingService {
                     if (original.getStartTime() == null) t.setStartTime(topic.getStartDate());
                     if (original.getEndTime() == null) t.setEndTime(topic.getEndDate());
                     if (original.getSignupDeadline() == null) t.setSignupDeadline(topic.getSaleEndAt());
+                    if ((original.getRefundRule() == null || original.getRefundRule().trim().isEmpty())) t.setRefundRule(freeExploreRefundRule());
                 }
                 t.setUpdateTime(DateUtils.getNowDate());
                 if (omsTicketMapper.updateOmsTicket(t) != 1) {
@@ -522,6 +523,7 @@ public class PricingServiceImpl implements IPricingService {
                     t.setStartTime(topic.getStartDate());
                     t.setEndTime(topic.getEndDate());
                     t.setSignupDeadline(topic.getSaleEndAt());
+                    t.setRefundRule(freeExploreRefundRule());
                 }
                 t.setDelFlag(0);
                 t.setCreateBy("pricing");
@@ -563,5 +565,15 @@ public class PricingServiceImpl implements IPricingService {
 
     private static BigDecimal nz(BigDecimal v) {
         return v == null ? BigDecimal.ZERO : v;
+    }
+
+    /**
+     * 第十三轮 m6:确认终价生成的自由探索「门票」原来不带退款规则,开售合同(canonical-15 的 ticketPolicies)
+     * 要求每张票有 refundRule ⇒ 平台存开售草稿恒拒 SALE_SNAPSHOT_MISSING_REFUND_RESCHEDULE_POLICY,而定价后
+     * 票已冻结、后台改不了,俱乐部自有自由探索永远开不了售。2026-11-03 业主:③ 探索票与场次票同三档
+     * (RefundPolicy.snapshotOnPurchase → START_24H_100_50_0,钟 = 场次开始),文字沿用同一条既有规则句,不另写。
+     */
+    private static String freeExploreRefundRule() {
+        return com.chengyinhub.business.util.RefundPolicy.SESSION_REFUND_RULE_TEXT;
     }
 }

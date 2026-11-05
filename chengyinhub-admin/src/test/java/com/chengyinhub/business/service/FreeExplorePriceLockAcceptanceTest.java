@@ -158,6 +158,8 @@ class FreeExplorePriceLockAcceptanceTest {
         assertEquals(topic.getStartDate(), guided.getStartTime());
         assertEquals(topic.getEndDate(), guided.getEndTime());
         assertEquals(topic.getSaleEndAt(), guided.getSignupDeadline());
+        // 第十三轮 m6:开售合同要求每张票有退款规则;③ 与场次票同三档(2026-11-03),沿用同一条规则句。
+        assertEquals(com.chengyinhub.business.util.RefundPolicy.SESSION_REFUND_RULE_TEXT, guided.getRefundRule());
         assertEquals(ProductType.toTicketMode(ProductType.FREE_EXPLORE), guided.getMode(),
                 "开售路径插的票 mode 必须跟主题 product_type,不能造混票");
         verify(ticketMapper, never()).updateOmsTicket(any(OmsTicket.class));
