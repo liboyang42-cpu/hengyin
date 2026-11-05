@@ -154,6 +154,66 @@ public class UserInvoiceServiceImpl implements IUserInvoiceService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Map<String, Object> deleteTitleWithRequest(Long memberId, String requestId, Long titleId) {
+        return executeCommand(memberId, requestId, "DELETE_TITLE", titleId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Map<String, Object> cancelWithRequest(Long memberId, String requestId, Long applicationId) {
+        return executeCommand(memberId, requestId, "CANCEL_APPLICATION", applicationId);
+    }
+
+    private Map<String, Object> executeCommand(Long memberId, String requestId, String operation, Long targetId) {
+        requireMember(memberId);
+        requireRequestId(requestId);
+        if (targetId == null || targetId <= 0) {
+            throw new UserInvoiceException(UserInvoiceException.ARGUMENT_INVALID, "操作目标不合法");
+        }
+        // Unique owner/request reservation serializes contenders before any business mutation.
+        mapper.reserveCommandReceipt(memberId, requestId, operation, targetId);
+        Map<String, Object> receipt = mapper.lockCommandReceipt(memberId, requestId);
+        if (receipt == null || !operation.equals(receipt.get("operation"))
+                || !targetId.toString().equals(String.valueOf(receipt.get("targetId")))) {
+            throw new UserInvoiceException(UserInvoiceException.REQUEST_REUSED, "请求标识已用于另一项操作");
+        }
+        // Replay before inspecting the target's current state: deletion/cancellation is already terminal.
+        if (receipt.get("outcome") != null) return commandReceiptView(receipt);
+        String outcome;
+        if ("DELETE_TITLE".equals(operation)) {
+            deleteTitle(memberId, targetId);
+            outcome = "DELETED";
+        } else {
+            cancel(memberId, targetId);
+            outcome = "CANCELLED";
+        }
+        // The reservation, original mutation (including order release), and result share this transaction.
+        if (mapper.finishCommandReceipt(memberId, requestId, operation, targetId, outcome) != 1) {
+            throw new UserInvoiceException(UserInvoiceException.STATE_CONFLICT, "操作回执无法确认");
+        }
+        return Map.of("requestId", requestId, "operation", operation,
+                "targetId", targetId.toString(), "outcome", outcome);
+    }
+
+    @Override
+    public Map<String, Object> commandReceipt(Long memberId, String requestId) {
+        requireMember(memberId);
+        requireRequestId(requestId);
+        Map<String, Object> receipt = mapper.selectCommandReceipt(memberId, requestId);
+        if (receipt == null) throw new UserInvoiceException(UserInvoiceException.NOT_FOUND, "暂未查到原操作回执");
+        return commandReceiptView(receipt);
+    }
+
+    private static Map<String, Object> commandReceiptView(Map<String, Object> receipt) {
+        if (receipt.get("outcome") == null) {
+            throw new UserInvoiceException(UserInvoiceException.REQUEST_IN_PROGRESS, "原操作结果待确认");
+        }
+        return Map.of("requestId", receipt.get("requestId"), "operation", receipt.get("operation"),
+                "targetId", receipt.get("targetId").toString(), "outcome", receipt.get("outcome"));
+    }
+
+    @Override
     public void deleteTitle(Long memberId, Long titleId) {
         requireMember(memberId);
         if (titleId == null || mapper.deleteTitle(memberId, titleId) != 1) {

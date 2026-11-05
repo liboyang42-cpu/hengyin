@@ -1,6 +1,31 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.chengyinhub.business.mapper.UserInvoiceMapper">
+    <resultMap id="CommandReceipt" type="java.util.HashMap">
+        <result property="requestId" column="request_id"/>
+        <result property="operation" column="operation"/>
+        <result property="targetId" column="target_id" javaType="java.lang.Long"/>
+        <result property="outcome" column="outcome"/>
+    </resultMap>
+    <insert id="reserveCommandReceipt">
+        insert into user_invoice_command_receipt(member_id, request_id, operation, target_id, create_time)
+        values(#{memberId}, #{requestId}, #{operation}, #{targetId}, now())
+        on duplicate key update member_id = member_id
+    </insert>
+    <select id="lockCommandReceipt" resultMap="CommandReceipt" useCache="false" flushCache="true">
+        select request_id, operation, target_id, outcome from user_invoice_command_receipt
+        where member_id=#{memberId} and request_id=#{requestId} for update
+    </select>
+    <select id="selectCommandReceipt" resultMap="CommandReceipt" useCache="false" flushCache="true">
+        select request_id, operation, target_id, outcome from user_invoice_command_receipt
+        where member_id=#{memberId} and request_id=#{requestId}
+    </select>
+    <update id="finishCommandReceipt">
+        update user_invoice_command_receipt set outcome=#{outcome}, completed_at=now()
+        where member_id=#{memberId} and request_id=#{requestId} and operation=#{operation}
+          and target_id=#{targetId} and outcome is null
+    </update>
+
     <select id="selectInvoiceRegistrationById" resultMap="InvoiceRegistration" useCache="false" flushCache="true">
         select <include refid="registrationLockColumns"/> from cms_registration where id=#{id}
     </select>
