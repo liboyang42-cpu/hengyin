@@ -287,6 +287,33 @@
         )
     </sql>
 
+    <!--
+      第十二轮 k9(p2 N-16):客户分层的「待核销」与「异常 · 发生退款」。
+      · 退款只记在收了这笔票款的店(HostPaidRegistration):玩家向主办方退了自由探索票,
+        参与的每家店都没收过这笔钱,不再在每家店都标「发生退款」。
+      · 场次 / 主题已经结束还没核销的报名不再算「待核销」:人没来,活动也过去了,商家没有可核的了。
+        活动看 cms_activity.end_date(到点即结束),主题看 cms_topic.end_date(按天,过了那天才算结束)。
+    -->
+    <sql id="RegistrationEventEnded">
+        (
+          (r.owner_type = 2 and exists (select 1 from cms_activity ended_a
+                                         where ended_a.id = r.owner_id and ended_a.end_date is not null
+                                           and ended_a.end_date &lt;= current_timestamp))
+          or (r.owner_type = 1 and exists (select 1 from cms_topic ended_t
+                                            where ended_t.id = r.owner_id and ended_t.end_date is not null
+                                              and ended_t.end_date &lt; current_date))
+        )
+    </sql>
+
+    <sql id="PendingRegistration">
+        (r.payment_status = 2 and (r.verification_status is null or r.verification_status &lt;&gt; 1)
+          and not <include refid="RegistrationEventEnded"/>)
+    </sql>
+
+    <sql id="HostRefundedRegistration">
+        (r.payment_status = 4 and <include refid="HostPaidRegistration"/>)
+    </sql>
+
     <sql id="OwnedResponsiblePhoneExpression">
         coalesce(
           nullif(max(case when <include refid="MerchantResponsibleRegistration"/> then r.phone end), ''),
@@ -334,8 +361,8 @@
         max(case when <include refid="FreeExploreShopRegistration"/> then 1 else 0 end)
           as free_explore_shop_contact,
         sum(case when r.payment_status = 2 and r.verification_status = 1 then 1 else 0 end) as arrived_count,
-        sum(case when r.payment_status = 2 and (r.verification_status is null or r.verification_status &lt;&gt; 1) then 1 else 0 end) as pending_count,
-        sum(case when r.payment_status = 4 then 1 else 0 end) as refunded_count,
+        sum(case when <include refid="PendingRegistration"/> then 1 else 0 end) as pending_count,
+        sum(case when <include refid="HostRefundedRegistration"/> then 1 else 0 end) as refunded_count,
         coalesce(sum(case when r.payment_status = 2 and <include refid="HostPaidRegistration"/> then coalesce(r.payable_amount, r.total_amount, 0) else 0 end), 0) as paid_amount,
         max(coalesce(r.verification_time, r.create_time)) as last_time,
         case when min(r.owner_type) = max(r.owner_type) and min(r.owner_type) = 1 then 'TOPIC'
@@ -355,10 +382,10 @@
 
     <sql id="OwnedCustomerSegmentHaving">
         <if test="query.segment == 'pending'">
-            having sum(case when r.payment_status = 2 and (r.verification_status is null or r.verification_status &lt;&gt; 1) then 1 else 0 end) &gt; 0
+            having sum(case when <include refid="PendingRegistration"/> then 1 else 0 end) &gt; 0
         </if>
         <if test="query.segment == 'abnormal'">
-            having sum(case when r.payment_status = 4 then 1 else 0 end) &gt; 0
+            having sum(case when <include refid="HostRefundedRegistration"/> then 1 else 0 end) &gt; 0
         </if>
         <if test="query.segment == 'dormant'">
             having max(coalesce(r.verification_time, r.create_time)) &lt; timestampadd(day, -60, current_timestamp)
@@ -367,8 +394,8 @@
             having sum(case when r.payment_status = 2 and r.verification_status = 1 then 1 else 0 end) &gt;= 2
         </if>
         <if test="query.segment == 'new'">
-            having sum(case when r.payment_status = 2 and (r.verification_status is null or r.verification_status &lt;&gt; 1) then 1 else 0 end) = 0
-               and sum(case when r.payment_status = 4 then 1 else 0 end) = 0
+            having sum(case when <include refid="PendingRegistration"/> then 1 else 0 end) = 0
+               and sum(case when <include refid="HostRefundedRegistration"/> then 1 else 0 end) = 0
                and max(coalesce(r.verification_time, r.create_time)) &gt;= timestampadd(day, -60, current_timestamp)
                and sum(case when r.payment_status = 2 and r.verification_status = 1 then 1 else 0 end) &lt; 2
         </if>
@@ -388,8 +415,8 @@
                   and note.member_id = r.member_id and note.hidden = 0
                 order by note.create_time desc, note.id desc limit 1) as latest_note,
                case
-                 when sum(case when r.payment_status = 2 and (r.verification_status is null or r.verification_status &lt;&gt; 1) then 1 else 0 end) &gt; 0 then 'pending'
-                 when sum(case when r.payment_status = 4 then 1 else 0 end) &gt; 0 then 'abnormal'
+                 when sum(case when <include refid="PendingRegistration"/> then 1 else 0 end) &gt; 0 then 'pending'
+                 when sum(case when <include refid="HostRefundedRegistration"/> then 1 else 0 end) &gt; 0 then 'abnormal'
                  when max(coalesce(r.verification_time, r.create_time)) &lt; timestampadd(day, -60, current_timestamp) then 'dormant'
                  when sum(case when r.payment_status = 2 and r.verification_status = 1 then 1 else 0 end) &gt;= 2 then 'repeat'
                  else 'new'
@@ -469,8 +496,8 @@
                      and note.member_id = r.member_id and note.hidden = 0
                  ) then 1 else 0 end as has_note,
                  case
-                   when sum(case when r.payment_status = 2 and (r.verification_status is null or r.verification_status &lt;&gt; 1) then 1 else 0 end) &gt; 0 then 'pending'
-                   when sum(case when r.payment_status = 4 then 1 else 0 end) &gt; 0 then 'abnormal'
+                   when sum(case when <include refid="PendingRegistration"/> then 1 else 0 end) &gt; 0 then 'pending'
+                   when sum(case when <include refid="HostRefundedRegistration"/> then 1 else 0 end) &gt; 0 then 'abnormal'
                    when max(coalesce(r.verification_time, r.create_time)) &lt; timestampadd(day, -60, current_timestamp) then 'dormant'
                    when sum(case when r.payment_status = 2 and r.verification_status = 1 then 1 else 0 end) &gt;= 2 then 'repeat'
                    else 'new'
@@ -571,8 +598,8 @@
                coalesce(nullif(max(u.nickname), ''), '未留姓名') as display_name,
                max(u.avatar) as avatar,
                sum(case when r.payment_status = 2 and r.verification_status = 1 then 1 else 0 end) as arrived_count,
-               sum(case when r.payment_status = 2 and (r.verification_status is null or r.verification_status &lt;&gt; 1) then 1 else 0 end) as pending_count,
-               sum(case when r.payment_status = 4 then 1 else 0 end) as refunded_count,
+               sum(case when <include refid="PendingRegistration"/> then 1 else 0 end) as pending_count,
+               sum(case when <include refid="HostRefundedRegistration"/> then 1 else 0 end) as refunded_count,
                coalesce(sum(case when r.payment_status = 2 and <include refid="HostPaidRegistration"/> then coalesce(r.payable_amount, r.total_amount, 0) else 0 end), 0) as paid_amount,
                max(coalesce(r.verification_time, r.create_time)) as last_interaction_time
         from cms_registration r
