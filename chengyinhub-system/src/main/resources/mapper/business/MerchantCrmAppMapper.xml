@@ -269,6 +269,24 @@
         )
     </sql>
 
+    <!--
+      第十二轮 k6(p2 N-2):「累计实付」只算本商家收了这笔票款的报名 —— 自己主办的活动(含自由探索活动壳的主办)
+      或自己的主题。自由探索的参与商家、主题上的合作商家没收到玩家的票款,同一张 ¥69 不再在每家店都算一遍。
+    -->
+    <sql id="HostPaidRegistration">
+        (
+          (r.owner_type = 2 and not <include refid="FreeExploreShopRegistration"/>
+            and exists (select 1 from cms_activity paid_a
+                         where paid_a.id = r.owner_id
+                           and (paid_a.member_id = #{ownerMemberId}
+                                or exists (select 1 from cms_topic paid_ft
+                                            where paid_ft.id = paid_a.topic_id and paid_ft.product_type = 2
+                                              and paid_ft.member_id = #{ownerMemberId}))))
+          or (r.owner_type = 1 and exists (select 1 from cms_topic paid_t
+                                            where paid_t.id = r.owner_id and paid_t.member_id = #{ownerMemberId}))
+        )
+    </sql>
+
     <sql id="OwnedResponsiblePhoneExpression">
         coalesce(
           nullif(max(case when <include refid="MerchantResponsibleRegistration"/> then r.phone end), ''),
@@ -318,7 +336,7 @@
         sum(case when r.payment_status = 2 and r.verification_status = 1 then 1 else 0 end) as arrived_count,
         sum(case when r.payment_status = 2 and (r.verification_status is null or r.verification_status &lt;&gt; 1) then 1 else 0 end) as pending_count,
         sum(case when r.payment_status = 4 then 1 else 0 end) as refunded_count,
-        coalesce(sum(case when r.payment_status = 2 then coalesce(r.payable_amount, r.total_amount, 0) else 0 end), 0) as paid_amount,
+        coalesce(sum(case when r.payment_status = 2 and <include refid="HostPaidRegistration"/> then coalesce(r.payable_amount, r.total_amount, 0) else 0 end), 0) as paid_amount,
         max(coalesce(r.verification_time, r.create_time)) as last_time,
         case when min(r.owner_type) = max(r.owner_type) and min(r.owner_type) = 1 then 'TOPIC'
              when min(r.owner_type) = max(r.owner_type) and min(r.owner_type) = 2 then 'ACTIVITY'
@@ -555,7 +573,7 @@
                sum(case when r.payment_status = 2 and r.verification_status = 1 then 1 else 0 end) as arrived_count,
                sum(case when r.payment_status = 2 and (r.verification_status is null or r.verification_status &lt;&gt; 1) then 1 else 0 end) as pending_count,
                sum(case when r.payment_status = 4 then 1 else 0 end) as refunded_count,
-               coalesce(sum(case when r.payment_status = 2 then coalesce(r.payable_amount, r.total_amount, 0) else 0 end), 0) as paid_amount,
+               coalesce(sum(case when r.payment_status = 2 and <include refid="HostPaidRegistration"/> then coalesce(r.payable_amount, r.total_amount, 0) else 0 end), 0) as paid_amount,
                max(coalesce(r.verification_time, r.create_time)) as last_interaction_time
         from cms_registration r
         join ums_member u on u.id = r.member_id and u.del_flag = 0

@@ -102,12 +102,18 @@ class MerchantCrmFreeExploreRosterMySqlIT {
             assertEquals("138****8061", hostRow.getPhone());
             MerchantCrmContactVO hostContact = service.revealContact(OPERATOR, BUYER, "call");
             assertEquals(BUYER_PHONE, hostContact.getPhone());
+            // 第十二轮 k6(p2 N-2):主题方(活动壳主办)收了这张 ¥39 的票款,累计实付 ¥39。
+            assertEquals(0, new java.math.BigDecimal("39.00").compareTo(hostRow.getPaidAmount()), "主题方累计实付");
 
             // ② 审核通过的参与商家:同一买家在名册,号码不下发,揭示 403。
             stubOwner(SHOP, 802L);
             MerchantCrmCustomerRowVO shopRow = only(service.listCustomers(OPERATOR, query()), BUYER);
             assertNull(shopRow.getPhone(), "参与商家不经通用名册拿号码");
             assertEquals("联系方式在主题名单按客户授权查看", shopRow.getContactHint());
+            // 第十二轮 k6(p2 N-2):参与商家没收到这张票款,累计实付不再是买家整张票价(列表与详情同口径)。
+            assertEquals(0, java.math.BigDecimal.ZERO.compareTo(shopRow.getPaidAmount()), "参与商家累计实付应为 0");
+            assertEquals(0, java.math.BigDecimal.ZERO.compareTo(
+                    mapper.selectOwnedCustomerSummary(SHOP, BUYER).getPaidAmount()), "客户详情累计实付同口径");
             ServiceException shopReveal = assertThrows(ServiceException.class,
                     () -> service.revealContact(OPERATOR, BUYER, "call"));
             assertEquals(403, shopReveal.getCode());
@@ -164,6 +170,11 @@ class MerchantCrmFreeExploreRosterMySqlIT {
             stubOwner(SHOP, 802L);
             MerchantCrmCustomerRowVO plainRow = only(service.listCustomers(OPERATOR, query()), PLAIN_BUYER);
             assertEquals("客户未授权联系方式共享", plainRow.getContactHint());
+            assertEquals(0, java.math.BigDecimal.ZERO.compareTo(plainRow.getPaidAmount()),
+                    "普通主题上的合作商家同样没收到票款");
+            stubOwner(HOST, 801L);
+            assertEquals(0, new java.math.BigDecimal("20.00").compareTo(
+                    only(service.listCustomers(OPERATOR, query()), PLAIN_BUYER).getPaidAmount()), "主题方自己的主题票款照算");
         } finally {
             ReflectionTestUtils.setField(PiiCryptoService.class, "instance", previous);
             dropAndVerifyGone(database);
@@ -303,7 +314,8 @@ class MerchantCrmFreeExploreRosterMySqlIT {
                 statement.execute("CREATE TABLE cms_registration (id BIGINT PRIMARY KEY, member_id BIGINT NOT NULL,"
                         + " phone VARCHAR(512), payment_status INT, verification_status INT,"
                         + " payable_amount DECIMAL(12,2), total_amount DECIMAL(12,2), verification_time DATETIME,"
-                        + " create_time DATETIME, owner_type INT, owner_id BIGINT, activity_title VARCHAR(255)"
+                        + " create_time DATETIME, owner_type INT, owner_id BIGINT, activity_title VARCHAR(255),"
+                        + " real_name VARCHAR(512)"
                         + " ) ENGINE=InnoDB");
                 statement.execute("CREATE TABLE merchant_chapter_application (id BIGINT PRIMARY KEY AUTO_INCREMENT,"
                         + " topic_id BIGINT, chapter_id BIGINT, merchant_id BIGINT, status TINYINT, del_flag TINYINT)"
