@@ -65,3 +65,19 @@ id | refund_no | source_type | source_id | owner_type | owner_id | member_id | m
 1 | RF77 | registration | 77 | 2 | 9 | 990009 | 990005 | 39.00 | 39.00 | 1 | 主理人取消报名并退款 | 主理人取消报名并退款 | 0 | 2026-11-05 11:22:35 | 0 | registration:77 | 0 | 2026-11-05 03:22:34 | 2026-11-05 03:22:35 |  | 6 | LEGACY_RECONCILE |  |  |  |  |  |  | 原路退款结果未知,等待按确定性退款号查单 |  |  |  |  | 2026-11-05 03:22:34.897926
 id | member_id
 990004 | 990006
+owner 990006
+identity {"msg": "实名信息已登记", "code": 200, "data": {"registered": true}, "_status": 200}
+cover True
+{"msg": "主题发布成功", "code": 200, "data": {"topicId": 990015, "auditTaskId": 8, "reviewState": "PENDING", "bundledTemplateIds": [], "published": true, "commercialAwaitingReview": true, "commercialNextStep": "已提交立项审核，审核与定价完成前尚未开售"}, "_status": 200}
+((990015, 990004, 2, 7, datetime.datetime(2026, 11, 5, 23, 59, 59), datetime.datetime(2026, 11, 5, 11, 26, 30), datetime.datetime(2026, 11, 5, 23, 59, 59)),)
+((44, '第1章 咖啡', 1), (45, '第2章 书店', 1))
+149 {"msg": "操作成功", "code": 200, "_status": 200}
+((990015, 2, datetime.datetime(2026, 11, 4, 3, 35, 48), Decimal('0.0300')),)
+((70622, '0', '双死线-招募到期判定 总共耗时：62毫秒 jobId=149 jobRunId=7c306175d87b4fbf9c6be9fd2e361918', ''),)
+id | lifecycle
+990015 | 2
+id | name | price | owner_id | owner_type
+77 | 有人带 | 29.00 | 990015 | 1
+id | biz_type | status
+7 | TOPIC_PROJECT_REVIEW | 1
+8 | TOPIC | 1

@@ -1,5 +1,5 @@
 diff --git a/docs/delivery/cloud-walk-20261101/rig/app.py b/docs/delivery/cloud-walk-20261101/rig/app.py
-index 6d94c96b2..4f7f8af65 100755
+index 6d94c96b..4f7f8af6 100755
 --- a/docs/delivery/cloud-walk-20261101/rig/app.py
 +++ b/docs/delivery/cloud-walk-20261101/rig/app.py
 @@ -32,6 +32,9 @@ def env():
@@ -13,7 +13,7 @@ index 6d94c96b2..4f7f8af65 100755
  
  
 diff --git a/docs/delivery/cloud-walk-20261101/rig/mpweb-seed/tools/compile.mjs b/docs/delivery/cloud-walk-20261101/rig/mpweb-seed/tools/compile.mjs
-index 3098b6817..519bbf866 100644
+index 3098b681..519bbf86 100644
 --- a/docs/delivery/cloud-walk-20261101/rig/mpweb-seed/tools/compile.mjs
 +++ b/docs/delivery/cloud-walk-20261101/rig/mpweb-seed/tools/compile.mjs
 @@ -130,7 +130,10 @@ function compileNode(el, file, ctx) {
@@ -29,7 +29,7 @@ index 3098b6817..519bbf866 100644
    for (const [k, v] of el.attrs) {
      if (k === 'wx:if') node.if = compileValue(v);
 diff --git a/docs/delivery/cloud-walk-20261101/rig/mpweb/src/nav.js b/docs/delivery/cloud-walk-20261101/rig/mpweb/src/nav.js
-index 5f970336a..1c1eaad66 100644
+index 5f970336..1c1eaad6 100644
 --- a/docs/delivery/cloud-walk-20261101/rig/mpweb/src/nav.js
 +++ b/docs/delivery/cloud-walk-20261101/rig/mpweb/src/nav.js
 @@ -137,7 +137,15 @@ MP.setLocation = function (lat, lng) {
@@ -50,7 +50,7 @@ index 5f970336a..1c1eaad66 100644
  setInterval(function () { if ((MP.compassListeners || []).length) MP.setHeading(CFG.heading || 0); }, 500);
  wx.scanCode = function (o) {
 diff --git a/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js b/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js
-index e6ffacde8..c0f9d7229 100644
+index e6ffacde..c0f9d722 100644
 --- a/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js
 +++ b/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js
 @@ -192,7 +192,7 @@ function infoOf(file) {
@@ -62,8 +62,30 @@ index e6ffacde8..c0f9d7229 100644
    return info;
  }
  function rootScope(data, info, extraWxs) {
+diff --git a/docs/delivery/cloud-walk-20261101/rig/mpweb/walk.mjs b/docs/delivery/cloud-walk-20261101/rig/mpweb/walk.mjs
+index 8d3c49fb..d17acd1b 100644
+--- a/docs/delivery/cloud-walk-20261101/rig/mpweb/walk.mjs
++++ b/docs/delivery/cloud-walk-20261101/rig/mpweb/walk.mjs
+@@ -21,7 +21,7 @@ const SHOTS = process.env.RIG_SHOTS || path.join(process.cwd(), 'shots');
+ const CHROME = process.env.CHROME || ['/usr/bin/google-chrome', '/opt/pw-browsers/chromium-1243/chrome-linux/chrome'].find((p) => fs.existsSync(p));
+ 
+ export async function launch(opts = {}) {
+-  const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, args: ['--no-sandbox', '--disable-dev-shm-usage', '--autoplay-policy=no-user-gesture-required', '--lang=zh-CN'] });
++  const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, args: ['--no-sandbox', '--disable-dev-shm-usage', '--autoplay-policy=no-user-gesture-required', '--lang=zh-CN', '--no-proxy-server', '--ignore-certificate-errors' /* j2 second pass: OSS stand-in */] });
+   const page = await browser.newPage();
+   await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1, isMobile: false, hasTouch: false });
+   const consoleLog = [], pageErrors = [];
+@@ -125,7 +125,7 @@ function findText(text, exact, nth) {
+     }
+   }
+   walk(document);
+-  const r = hits[nth]; if (!r) return null;
++  const r = hits[nth < 0 ? hits.length + nth : nth]; if (!r) return null; /* j2 second pass: negative nth = from the end */
+   const x = r.left + r.width / 2, y = r.top + r.height / 2;
+   return { x, y };
+ }
 diff --git a/docs/delivery/cloud-walk-20261101/rig/up.sh b/docs/delivery/cloud-walk-20261101/rig/up.sh
-index 5d6a74b83..59bac629f 100755
+index 5d6a74b8..bc788c76 100755
 --- a/docs/delivery/cloud-walk-20261101/rig/up.sh
 +++ b/docs/delivery/cloud-walk-20261101/rig/up.sh
 @@ -5,7 +5,7 @@
@@ -71,7 +93,7 @@ index 5d6a74b83..59bac629f 100755
  set -euo pipefail
  export LANG=C.UTF-8 LC_ALL=C.UTF-8   # POSIX locale breaks javac on the repo's Chinese filenames
 -SHA=a1d30fb295d361122aec76fa9c180b4b496a9b0a
-+SHA=8b78f5ca3c06f486631e827827e973cbb47e3094
++SHA=573c463b3b457b77544e63be4271a07d5d565e09
  RIG_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
  REPO="$(git -C "$RIG_DIR" rev-parse --show-toplevel)"
  export RIG_HOME="${RIG_HOME:-$HOME/walk-rig}"
