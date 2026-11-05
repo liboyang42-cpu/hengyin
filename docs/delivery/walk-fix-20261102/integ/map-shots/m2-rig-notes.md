@@ -191,3 +191,13 @@ Walked (390x844, headless Chrome, not a phone):
 - E6: `pages/publish/temp/index` as 9003, picked 选项问答 → 完成, scrolled to the end. Before: the last card sits right on the bar edge. After: clear space under 添加互动工具. Shots `integ/fix-shots/m2-before-temp-bottom2.jpg`, `m2-after-temp-bottom2.jpg` (both viewed).
 
 Not walked (needs a saved theme with chapters/stations and a story theme for the player; the K10 theme 990017 and its rig diff are not in this rig run): E4 in 主题详情/编辑章节, E12, E13, E2, P1, P3, P4, L1, backpack chip. Covered by unit tests and code reading only.
+
+## Video worker, 2026-11-05: own test runtime
+
+Media code `9307c39df`, reopen correction `29856bc38`. See `../CODEX-VIDEO-RESULT.md` for item statuses and `../proof/codex-video/` for viewed screenshots and actual playback traces. This is a browser-rig walk, not a phone or full-game PASS.
+
+Used the owner's authorized Puppeteer harness, privately copied from `/private/tmp/codex-k10-rig-20261105/harness/mpweb/walk.mjs`. Own Mac frontend18108/admin18118, own VPS backend18119/MySQL18116/Redis18112; schema `cy_video_walk_20261105`. GitHub JARs da9 (author/publish/photo/opening) and ce84 (poster/skip/reopen/slow/error) had checksums and embedded SHAs verified. External wx/OSS stand-ins were reused, not restarted. Native storage persistence was corrected in the private harness so reload preserves the exact UI-written draft; no form injection.
+
+Author9003 created theme990032 with both videos, all chapter audio, theme music, two templates/nodes and a TIME text egg through UI. Admin approved actual media and topic task38 through UI. Players9004/9009 separately used free checkout. Actual opening video ended at3s; BGM paused/resumed, narration started. Viewed poster-first, decoded, tap-skip and re-entry shots. An8.5s MP4 delay fell back at5009ms; an aborted MP4 emitted error and returned to text. Photo upload/proof completed node124; QR node125 remains unfinished. Branches/ending playback and phone sound remain unverified. Nothing was heard.
+
+My shared-daemon clone/import attempt caused its512MiB MySQL container to OOM. The owner was informed and assigned shared restoration to play; I used only my independent MySQL afterward. The complete pre-incident fixture dump survives privately at `/private/tmp/codex-video-rig-20261105/fixture.private.sql`; no database material is committed. Cleanup state is in the video result.
