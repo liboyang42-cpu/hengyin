@@ -28,7 +28,7 @@ const KIT_TYPES = [
   'profile', 'photocheck', 'note', 'typein',
 ];
 
-const LIGHT_KITS = ['estimate', 'countdown', 'stopwatch', 'dailysign', 'diceroll', 'bingo'];
+const LIGHT_KITS = ['estimate', 'countdown', 'stopwatch', 'diceroll', 'bingo'];
 
 Component({
   properties: {
