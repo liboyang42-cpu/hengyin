@@ -933470,7 +933470,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/addressinfo/addressinfo.js:60"
+        "staticSource": "pages/addressinfo/addressinfo.js:79"
       }
     },
     {
@@ -933579,7 +933579,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/addressinfo/addressinfo.js:121"
+        "staticSource": "pages/addressinfo/addressinfo.js:140"
       }
     },
     {
@@ -933646,11 +933646,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/addressinfo/addressinfo.js:128"
+        "staticSource": "pages/addressinfo/addressinfo.js:147"
       }
     },
     {
-      "id": "pages/addressinfo/addressinfo.wxml:29:bindinput:onInputChange:4",
+      "id": "pages/addressinfo/addressinfo.wxml:31:bindinput:onInputChange:4",
       "route": "pages/addressinfo/addressinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -933673,7 +933673,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onInputChange",
-        "line": 29,
+        "line": 31,
         "selectorHint": "input[bindinput]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -933713,11 +933713,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/addressinfo/addressinfo.js:128"
+        "staticSource": "pages/addressinfo/addressinfo.js:147"
       }
     },
     {
-      "id": "pages/addressinfo/addressinfo.wxml:48:bind:action:saveAddress:5",
+      "id": "pages/addressinfo/addressinfo.wxml:50:bind:action:saveAddress:5",
       "route": "pages/addressinfo/addressinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -933740,7 +933740,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "saveAddress",
-        "line": 48,
+        "line": 50,
         "selectorHint": "cy-inline-error[bind:action]",
         "visibleCondition": "{{saveError}}",
         "disabledCondition": null,
@@ -933827,11 +933827,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/addressinfo/addressinfo.js:167"
+        "staticSource": "pages/addressinfo/addressinfo.js:186"
       }
     },
     {
-      "id": "pages/addressinfo/addressinfo.wxml:52:bind:disabledtap:onSaveDisabledTap:7",
+      "id": "pages/addressinfo/addressinfo.wxml:54:bind:disabledtap:onSaveDisabledTap:7",
       "route": "pages/addressinfo/addressinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -933854,7 +933854,7 @@
         "tag": "cy-btn",
         "event": "bind:disabledtap",
         "handler": "onSaveDisabledTap",
-        "line": 52,
+        "line": 54,
         "selectorHint": "cy-btn[bind:disabledtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canSubmit}}",
@@ -933894,11 +933894,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/addressinfo/addressinfo.js:159"
+        "staticSource": "pages/addressinfo/addressinfo.js:178"
       }
     },
     {
-      "id": "pages/addressinfo/addressinfo.wxml:52:bindtap:saveAddress:6",
+      "id": "pages/addressinfo/addressinfo.wxml:54:bindtap:saveAddress:6",
       "route": "pages/addressinfo/addressinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -933921,7 +933921,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "saveAddress",
-        "line": 52,
+        "line": 54,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canSubmit}}",
@@ -934008,7 +934008,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/addressinfo/addressinfo.js:167"
+        "staticSource": "pages/addressinfo/addressinfo.js:186"
       }
     },
     {
@@ -934078,7 +934078,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/addressinfo/addressinfo.js:60"
+        "staticSource": "pages/addressinfo/addressinfo.js:79"
       }
     },
     {
@@ -1463228,7 +1463228,7 @@
       }
     },
     {
-      "id": "subpackageMember/signup/index.wxml:75:bindtap:goMyTeam:9",
+      "id": "subpackageMember/signup/index.wxml:76:bindtap:goMyTeam:9",
       "route": "subpackageMember/signup/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1463251,7 +1463251,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goMyTeam",
-        "line": 75,
+        "line": 76,
         "selectorHint": ".team-entry",
         "visibleCondition": "{{currentTeam}}",
         "disabledCondition": null,
@@ -1463298,7 +1463298,7 @@
       }
     },
     {
-      "id": "subpackageMember/signup/index.wxml:87:bindtap:goTicket:10",
+      "id": "subpackageMember/signup/index.wxml:88:bindtap:goTicket:10",
       "route": "subpackageMember/signup/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1463321,7 +1463321,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goTicket",
-        "line": 87,
+        "line": 88,
         "selectorHint": ".wl-start",
         "visibleCondition": "{{walletState === 'ready' && ticketList.length && !ticketList[currentSwiperTicket].wNoGame}}",
         "disabledCondition": null,
