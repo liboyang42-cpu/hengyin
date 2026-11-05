@@ -275,6 +275,7 @@ class RedemptionRewardClawbackMyBatisTest {
 
         com.chengyinhub.business.domain.CmsPointsSetting rule = new com.chengyinhub.business.domain.CmsPointsSetting();
         rule.setPointsNum(5);
+        rule.setStatus(1L); // 第十二轮 k1 第 11 项:award 只取启用的规则
         com.chengyinhub.business.service.ICmsPointsSettingService settings = mock(com.chengyinhub.business.service.ICmsPointsSettingService.class);
         when(settings.selectCmsPointsSettingList(any())).thenReturn(java.util.Collections.singletonList(rule));
         com.chengyinhub.business.service.IUmsMemberService memberService = mock(com.chengyinhub.business.service.IUmsMemberService.class);

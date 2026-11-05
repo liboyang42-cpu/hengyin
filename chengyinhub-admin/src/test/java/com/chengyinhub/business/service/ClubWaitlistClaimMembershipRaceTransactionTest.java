@@ -192,6 +192,9 @@ class ClubWaitlistClaimMembershipRaceTransactionTest {
         ReflectionTestUtils.setField(target, "clubMemberMapper", dataBackedMemberMapper());
         ReflectionTestUtils.setField(target, "omsTicketMapper", tickets);
         ReflectionTestUtils.setField(target, "clubWaitlistOrderBridge", bridge);
+        // 第十二轮 k1 第 5 项:建单先查「同场次还能扣款的另一笔」;本用例没有这样的单
+        ReflectionTestUtils.setField(target, "cmsRegistrationMapper",
+                mock(com.chengyinhub.business.mapper.CmsRegistrationMapper.class));
 
         ProxyFactory factory = new ProxyFactory(target);
         factory.setInterfaces(IRegistrationCreationTransaction.class);
