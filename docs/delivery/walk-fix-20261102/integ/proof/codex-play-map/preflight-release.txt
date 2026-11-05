@@ -1,0 +1,13 @@
+────────────────────────────────────────────────────────
+ 城瘾小程序 发版前自检 (SYS-S2)
+────────────────────────────────────────────────────────
+⛔ BLOCK Action Ledger 动态证据未完成:pending=5719,nonPassed=0
+ℹ️  INFO  release 固定 https://www.chengyinhub.com/prod-api
+ℹ️  INFO  develop/trial 未配 ext.json 测试服时回落生产 HTTPS —— 其写请求会真落生产库,本脚本无门禁
+ℹ️  INFO  无明文 http/localhost 生产命中
+ℹ️  INFO  主包页数 5(分包 28)
+ℹ️  INFO  主包未压缩 2.98MB(棘轮 3.00MB;大头 utils 0.89MB / components 0.81MB / pages 0.70MB)
+ℹ️  INFO  用户协议与注销须知已替换为提审文本
+ℹ️  INFO  体验版/正式版会清理开发视角残留
+────────────────────────────────────────────────────────
+结果:❌ 1 个 BLOCK 级问题,禁止发版
