@@ -96,6 +96,15 @@ try {
     await driver.page.evaluate(()=>fetch('https://example.invalid/no-external-dispatch').catch(()=>null));
     assert.ok(driver.console().some(line=>line.includes('blocked outside rig origin')));
     checks.push('actual replay driver blocks off-origin requests before network dispatch');
+    driver.mediaNetwork({kind:'video',mode:'fail'});
+    await driver.page.evaluate(()=>{probe.events=[];probe.setData({src:location.origin+'/clip.mp4?failure=1',token:9});});
+    await driver.page.waitForFunction(()=>probe.events.some(e=>e.type==='error'&&e.token===9),{timeout:10000});
+    driver.mediaNetwork({kind:'video',mode:'slow',delayMs:1200});
+    await driver.page.evaluate(()=>{probe.events=[];probe.setData({src:location.origin+'/clip.mp4?delay=1',token:10});});
+    await new Promise(resolve=>setTimeout(resolve,400));
+    assert.equal(await driver.page.evaluate(()=>probe.events.some(e=>e.type==='timeupdate'&&e.time>0)),false);
+    await driver.page.waitForFunction(()=>probe.events.some(e=>e.type==='timeupdate'&&e.time>0&&e.token===10),{timeout:10000});
+    checks.push('driver media faults and delays affect only its browser and preserve native error/progress events');
   } finally { await driver.close(); }
   const result={status:'PASS',scope:'harness-only, synthetic localhost media; no business/device acceptance',checks,requests,
     trace};
