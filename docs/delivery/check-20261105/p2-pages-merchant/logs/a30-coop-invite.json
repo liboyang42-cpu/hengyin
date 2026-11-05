@@ -1,0 +1,64 @@
+{
+ "name": "a30-coop-invite",
+ "opts": {
+  "path": "pages/coop/invite/index",
+  "identity": "e2e-openid-9002"
+ },
+ "steps": [
+  {
+   "shot": "a30-coop-invite",
+   "route": "pages/coop/invite/index",
+   "text": "发起协作邀请 | ① 关联主题 | * | 还没有可关联的主题 | 先发布主题后再发起协作邀请 | 先发布主题 | ② 合作条款 | 对方接受并成单后锁定 | 引流合作（不产生现金结算） | 按核销人头付带队费 | ③ 邀请对象 | 城瘾跑团 | 1 位成员 | 邀请 | 执行俱乐部 | 2 位成员 | 邀请 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  }
+ ],
+ "errors": [],
+ "net": [
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/topic/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/clubs",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  }
+ ],
+ "bad": [],
+ "console": [
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+ ]
+}

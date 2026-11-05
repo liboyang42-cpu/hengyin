@@ -1,0 +1,78 @@
+{
+ "name": "e13-marketing-after-scans",
+ "opts": {
+  "path": "pages/merchant/marketing/index",
+  "identity": "e2e-openid-9002"
+ },
+ "steps": [
+  {
+   "shot": "e13-marketing-after-scans",
+   "route": "pages/merchant/marketing/index",
+   "text": "营销 | 近 30 天报名 | 0 | 核销 3 | 店铺参谋 | 店铺装修 | 发主题 | 发活动 | 我的内容 | 管理 | 0 | 主题 | 0 | 活动 | 优惠券 | 还没有优惠券 | 合作机会 | 1 个开放商机 | 进入合作中心 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  }
+ ],
+ "errors": [],
+ "net": [
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/marketing-home?windowDays=30",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/marketing-home?windowDays=30",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  }
+ ],
+ "bad": [],
+ "console": [
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico"
+ ]
+}

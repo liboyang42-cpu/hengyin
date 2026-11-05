@@ -1,0 +1,64 @@
+{
+ "name": "a15-merchant-citynode-create",
+ "opts": {
+  "path": "pages/merchant/citynode/create/index",
+  "identity": "e2e-openid-9002"
+ },
+ "steps": [
+  {
+   "shot": "a15-merchant-citynode-create",
+   "route": "pages/merchant/citynode/create/index",
+   "text": "报名成为节点 | 配一个自己店铺的玩法就行，商家信息用你的入驻资料 | 配置玩法 | 确认店址 | 提交申请 | 平台审核 | ① 店铺玩法 | 去配置玩法 | ② 确认店址 | 请在地图上选择店门口 | 在地图上标店址 | 提交投放申请 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  }
+ ],
+ "errors": [],
+ "net": [
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/info",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  }
+ ],
+ "bad": [],
+ "console": [
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico"
+ ]
+}

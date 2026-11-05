@@ -1,0 +1,214 @@
+{
+ "name": "b10-customer",
+ "opts": {
+  "path": "pages/merchant/index/index",
+  "identity": "e2e-openid-9002"
+ },
+ "steps": [
+  {
+   "shot": "b10-customer",
+   "route": "pages/merchant/customer/index",
+   "text": "客户 | 1 位 · 本月新增 1 | 筛选 | 管理 | 玩家二号 | 新客 | 最近已到店 · 今天 | 联系方式在主题名单按客户授权查看 | 共 1 位客户 · 已全部显示 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "b11-customer-detail",
+   "route": "pages/merchant/customer/detail/index",
+   "text": "玩家二号 | 最近互动 11月5日 | 累计实付 | ¥69.00 | 客户概览 | 1 | 到店次数 | 0 | 待核销 | 0 | 已退款 | 参与记录 | 05 | 11月 | E2E 探店日一期 | 已核销 · 报名记录 | 标签与备注 | 已到店 | 编辑 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "b12-customer-detail-scrolled",
+   "route": "pages/merchant/customer/detail/index",
+   "text": "玩家二号 | 最近互动 11月5日 | 累计实付 | ¥69.00 | 客户概览 | 1 | 到店次数 | 0 | 待核销 | 0 | 已退款 | 参与记录 | 05 | 11月 | E2E 探店日一期 | 已核销 · 报名记录 | 标签与备注 | 已到店 | 编辑 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "b13-customer-filter",
+   "route": "pages/merchant/customer/index",
+   "text": "客户 | 1 位 · 本月新增 1 | 筛选 | 管理 | 玩家二号 | 新客 | 最近已到店 · 今天 | 联系方式在主题名单按客户授权查看 | 共 1 位客户 · 已全部显示 | 取消 | 筛选客户 | 重置 | 客户类型 | 全部 | 回头客 | 新客 | 有备注 | 客户来源 | 全部 | 主题 | 活动 | 来源时间 | 开始日期 | 至 | 结束日期 | 存为分群 | 查看 1 位客户 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  }
+ ],
+ "errors": [],
+ "net": [
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/info",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/user/info",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "GET",
+   "u": "/__api/api/game/session/merchant/entries",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/upcoming-runs",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/dashboard",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/todo-summary",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/im/conversations",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/coop/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/events",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/registration/merchant/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/chapter-application/mine",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/project/my",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/crm/customers/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "GET",
+   "u": "/__api/api/merchant/crm/segments",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/crm/customers/9009/detail",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/crm/customers/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "GET",
+   "u": "/__api/api/merchant/crm/segments",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  }
+ ],
+ "bad": [],
+ "console": [
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico",
+  "[error] FAILED https://oss-rig.example.invalid/upload/e2e-topic-cover-9003.jpg?Expires=2109205389&OSSAccessKeyId=rig-dummy&Signature=Bzt0cyjtd1ojj1ddH5jut9nXcXo%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+  "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+ ]
+}

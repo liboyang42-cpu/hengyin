@@ -1,0 +1,85 @@
+{
+ "name": "a17-merchant-decor-ai-npc",
+ "opts": {
+  "path": "pages/merchant/decor/ai-npc/index",
+  "identity": "e2e-openid-9002"
+ },
+ "steps": [
+  {
+   "shot": "a17-merchant-decor-ai-npc",
+   "route": "pages/merchant/decor/ai-npc/index",
+   "text": "AI 店铺角色 | 给角色起个名字 | 角色形象 | 未设置 | 角色声音 | 未录制 | 名字 | * | 未填写 | 招呼语 | 未填写 | 性格设定 | 选择性格 | 店铺知识 | 菜单与招牌 | 漫游落点 | 尚未选择地图位置 | 编辑 | 它是你的店在城瘾里的分身 | 出现在漫游地图和店铺主页上，替你招呼路过的玩家 | 下一步 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  }
+ ],
+ "errors": [],
+ "net": [
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/npc/profile",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/coop-profile",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/npc/voice/status",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "GET",
+   "u": "/__api/api/merchant/npc/review",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  }
+ ],
+ "bad": [],
+ "console": [
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+ ]
+}

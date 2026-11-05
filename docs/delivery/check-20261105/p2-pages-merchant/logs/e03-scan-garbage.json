@@ -1,0 +1,148 @@
+{
+ "name": "e03-scan-garbage",
+ "opts": {
+  "path": "pages/merchant/index/index",
+  "identity": "e2e-openid-9002"
+ },
+ "steps": [
+  {
+   "shot": "e03-scan-garbage-result",
+   "route": "pages/merchant/index/index",
+   "text": "Hi， | 探店日样板咖啡 | 营业中 | 探 | 累计收入 | ¥0.00 | 扫码 | 客户 | 财务 | 更多 | 项目 | 全部 1 | 报名中 | E2E 探店日一期 | 第1章 咖啡 | 今天 09:26 · 2 人已报名 | 未核销 | 这不是城瘾的核销码 | 完成 | 继续扫码 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "e03-scan-garbage-result2",
+   "route": "pages/merchant/index/index",
+   "text": "Hi， | 探店日样板咖啡 | 营业中 | 探 | 累计收入 | ¥0.00 | 扫码 | 客户 | 财务 | 更多 | 项目 | 全部 1 | 报名中 | E2E 探店日一期 | 第1章 咖啡 | 今天 09:26 · 2 人已报名 | 未核销 | 这不是城瘾的核销码 | 完成 | 继续扫码 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  }
+ ],
+ "errors": [],
+ "net": [
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/info",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/user/info",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "GET",
+   "u": "/__api/api/game/session/merchant/entries",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/upcoming-runs",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/dashboard",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/todo-summary",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/im/conversations",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/coop/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/events",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/registration/merchant/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/chapter-application/mine",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/project/my",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  }
+ ],
+ "bad": [],
+ "console": [
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] FAILED https://oss-rig.example.invalid/upload/e2e-topic-cover-9003.jpg?Expires=2109205626&OSSAccessKeyId=rig-dummy&Signature=RnZg6Feqc4FGjHUZf7SCtjLyXcI%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+  "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+ ]
+}

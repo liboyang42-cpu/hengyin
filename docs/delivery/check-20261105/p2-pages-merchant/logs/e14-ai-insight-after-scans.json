@@ -1,0 +1,87 @@
+{
+ "name": "e14-ai-insight-after-scans",
+ "opts": {
+  "path": "pages/merchant/marketing/ai-insight/index",
+  "identity": "e2e-openid-9002"
+ },
+ "steps": [
+  {
+   "shot": "e14-ai-insight-after-scans",
+   "route": "pages/merchant/marketing/ai-insight/index",
+   "text": "店铺参谋 | 早上好， | 探店日样板咖啡 | 探 | 近30天，城瘾为你带来 | 3 | 位玩家到店 | 上期 0位 | 近7天 | 近30天 | 近90天 | 10-07 | 今天 | 到店 | 3 | 打卡 | 3 | 核销 | 3 | 近30天打卡 3 次 · 核销 3 次 | 到店时段 | 100% | 0% | 0% | 0% | 早 | 午 | 晚 | 夜 | 早上到店最多 | 共 3 次打卡 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  }
+ ],
+ "errors": [],
+ "net": [
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/ai/merchant/insight",
+   "s": 200,
+   "c": null,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/ai/merchant/insight",
+   "s": 200,
+   "c": null,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/info",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/coop/pool/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  }
+ ],
+ "bad": [],
+ "console": [
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] FAILED https://oss-rig.example.invalid/upload/e2e-topic-cover-9003.jpg?Expires=2109205702&OSSAccessKeyId=rig-dummy&Signature=Aaz7wbPhPdfmso5BnvlymUUQVMI%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+  "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+ ]
+}
