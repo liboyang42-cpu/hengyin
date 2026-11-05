@@ -1,0 +1,74 @@
+# 第十一轮 i1 第 1 项:rig chains.py player(jar/脚本 = 831f40b1)
+platform       PASS     topic=990014 exit=0 1.9s problems=[]
+merchant_club  PASS     topic=990014 exit=0 8.3s problems=[]
+sale_close     PASS     topic=990014 exit=0 1.7s problems=[]
+player         PASS     topic=990014 exit=0 172.5s problems=[]
+
+## sale_close.log
+
+──────── 步骤 1:执行俱乐部主理人:通过真实入口登记发布者实名(开场次同属发布行为)
+   publisher/identity                 {"msg": "实名信息已登记", "code": 200, "data": {"registered": true}, "_status": 200}
+
+──────── 步骤 2:俱乐部开团:一天一场,开 4 场(POST /api/club/open-session)
+   open-session 2026-11-15            {"msg": "开团成功", "code": 200, "data": {"activityId": 9}, "_status": 200}
+   open-session 2026-11-16            {"msg": "开团成功", "code": 200, "data": {"activityId": 10}, "_status": 200}
+   open-session 2026-11-17            {"msg": "开团成功", "code": 200, "data": {"activityId": 11}, "_status": 200}
+   open-session 2026-11-18            {"msg": "开团成功", "code": 200, "data": {"activityId": 12}, "_status": 200}
+   [库回读] cms_activity             ((9, 990014, 7002, datetime.datetime(2026, 11, 15, 10, 0), datetime.datetime(2026, 11, 15, 23, 59, 59), 1, 1), (10, 990014, 7002, datetime.datetime(2026, 11, 16, 10, 0), datetime.datetime(2026, 11, 16, 23, 59, 59), 1, 1), (11, 990014, 7002, datetime.datetime(2026, 11, 17, 10, 0), datetime.datetime(2026, 11, 17, 23, 59, 59), 1, 1), (12, 990014, 7002, datetime.datetime(2026, 11, 18, 10, 0), datetime.datetime(2026, 11, 18, 23, 59, 59), 1, 1))
+   [库回读] 四个不同日期各一场                (('2026-11-15', 1), ('2026-11-16', 1), ('2026-11-17', 1), ('2026-11-18', 1))
+   [库回读] 活动票投影(每场应与主题票同数)         ((9, 1), (10, 1), (11, 1), (12, 1))
+
+──────── 步骤 3:俱乐部对公收款人:建资料 → 审核通过(SALE_PAYEE_NOT_VERIFIED 就是缺它)
+   PII fixture 预检                     ABSENT
+   saveProfile                        {"msg": "操作成功", "code": 200, "data": {"id": 1, "clubId": 7002, "version": 1, "verifyStatus": "PENDING", "legalName": "E2E 测试俱乐部有限公司", "unifiedSocialCreditCode": "E2****E0", "bankAc
+   verify                             {"msg": "操作成功", "code": 200, "data": {"id": 1, "clubId": 7002, "version": 1, "verifyStatus": "VERIFIED", "legalName": "E2E 测试俱乐部有限公司", "unifiedSocialCreditCode": "E2****E0", "bankA
+   [库回读] 对公收款人                    ((1, 7002, 1, 1, 'VERIFIED'),)
+
+──────── 步骤 4:平台后台:逐章填写商家工作包六项(真实章节写入口)
+   work-package chapter 42            {"msg": "操作成功", "code": 200, "_status": 200}
+   work-package chapter 43            {"msg": "操作成功", "code": 200, "_status": 200}
+   work-package chapter 44            {"msg": "操作成功", "code": 200, "_status": 200}
+   work-package chapter 45            {"msg": "操作成功", "code": 200, "_status": 200}
+   [库回读] 商家工作包(API)               ((42, '店员1名', 30, '柜台'), (43, '店员1名', 30, '柜台'), (44, '店员1名', 30, '柜台'), (45, '店员1名', 30, '柜台'))
+
+──────── 步骤 5:四类计划工时 H_plan(缺一类即 EDITION_HOURS_PLAN_INCOMPLETE 并点名)
+   PREP                               操作成功
+   CONTENT                            操作成功
+   ONSITE                             操作成功
+   REVIEW                             操作成功
+   [库回读] club_edition_hours       (('CONTENT', Decimal('6.00'), 'UNREPORTED'), ('ONSITE', Decimal('12.00'), 'UNREPORTED'), ('PREP', Decimal('8.00'), 'UNREPORTED'), ('REVIEW', Decimal('4.00'), 'UNREPORTED'))
+
+──────── 步骤 6:当期成本版本 topic_edition_cost(固定补偿必须 ≥ 合同下界,低了会点名下界数字)
+   saveCost                           操作成功
+   [库回读] topic_edition_cost       ((1, 1, Decimal('2000.00'), 1),)
+
+──────── 步骤 7:声明 ORGANIZER actor(SALE_SNAPSHOT_MISSING_ORGANIZER_ACTOR 就是缺它)
+   organizer-actor                    操作成功
+
+──────── 步骤 8:canonical15 人工事实草稿(PUT /business/audit/topic/{id}/sale-canonical-draft)
+   PUT sale-canonical-draft           {"msg": "操作成功", "code": 200, "data": {"topicId": 990014, "schemaVersion": "CANONICAL_15_V1", "parameterVersion": 1, "canonicalJson": "{\"storeCount\":4,\"ticketPricingPolicy\":{\"pointsAllowed\":false
+   [库回读] 草稿行                      ((990014, 'CANONICAL_15_V1', 1),)
+
+──────── 步骤 9:开售提审 → 审核通过 → SELLING
+   sale-submit                        {"msg": "已提交开售审核", "lifecycle": "PRICING", "code": 200, "taskId": 3, "reviewRequired": true, "_status": 200}
+   review 3                           {"msg": "审核处理成功", "code": 200, "_status": 200}
+   [库回读] lifecycle/selling_started_at ((3, datetime.datetime(2026, 11, 5, 8, 38, 10)),)
+
+──────── 步骤 10:★开售快照 15 项非空回读(真 SQL 直读 canonical_json,不问接口)
+   1. storeCount                   ✓非空  4
+   2. ticketPricingPolicy          ✓非空  {"pointsAllowed": false, "discountMode": "NONE", "tickets": [{"id": 75, "name": 
+   3. salesTargetTotal             ✓非空  20
+   4. sessionWindows               ✓非空  {"startDate": 1794704400000, "endDate": 1797296400000, "saleEndAt": 179643240000
+   5. participationUnitPolicy      ✓非空  {"adultCount": 1, "petMax": 1, "childrenPolicy": "WITH_GUARDIAN", "extraAdultPol
+   6. sessionVenues                ✓非空  {"adultCapacity": 120, "petCapacity": 120, "authorization": "asset://venue-auth"
+   7. merchantCashSettlementMode   ✓非空  {"merchantDepositRequired": false, "chapters": [{"id": 42, "name": "第1章 咖啡", "de
+   8. storeCluster                 ✓非空  [{"nodeId": 71, "chapterId": 42, "merchantMemberId": 9002, "address": "上海市黄浦区样板咖
+   9. microExperienceCatalog       ✓非空  {"chapters": [{"id": 42, "name": "第1章 咖啡", "description": "本章一店(咖啡):进店按规则完成一次到店体
+  10. merchantWorkPackage          ✓非空  {"chapters": [{"id": 42, "name": "第1章 咖啡", "description": "本章一店(咖啡):进店按规则完成一次到店体
+  11. clubWorkPackage              ✓非空  {"opening": "开场", "patrol": "巡场", "photoWrap": "摄影收口", "closing": "闭场", "communi
+  12. contentRightsPackage         ✓非空  {"assetRef": "asset://rights", "owner": "merchant-alliance", "licensedEntity": "
+  13. completionPolicy             ✓非空  {"evidenceRule": "FOUR_STORE_REDEEM", "requiredChapterIds": [42, 43, 44, 45]}
+  14. relationshipPolicy           ✓非空  {"platformTransaction": true, "clubCommunityOptIn": true, "forcedFollow": false,
+  15. refundReschedulePolicy       ✓非空  {"rescheduleDeadline": 800, "rescheduleLimit": 1, "cancellationPolicy": "REFUND_
+
+  15/15 非空: True | 顶层字段数: 15 | 字段顺序与持久化合同一致: True
