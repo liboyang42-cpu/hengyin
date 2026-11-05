@@ -740,7 +740,7 @@ Page({
       wx.reLaunch({ url: '/pages/index/index' });
       return;
     }
-    if (this._themeBgm && this.data.themeBgmOn) { try { this._themeBgm.play(); } catch (e) {} }
+    audioSession.resumeAll();
     this.restoreGuardAppeal();
     this._syncCommunityEntry();
     this._themeHidden = false; this._startThemePoll();
