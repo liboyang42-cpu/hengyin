@@ -55,6 +55,7 @@ function setup() {
   p.refreshThemeBackpack = () => Promise.resolve(true); p._productionRebuild = p.rebuild; p.rebuild = () => {};
   p._autoStationVoice = () => {}; p._syncStationBgm = () => {}; p._stopStationBgm = () => {};
   p._onKaccha = () => {}; p._restartFailedQuest = () => {}; p._applyR5PlainOutcome = () => {};
+  p._productionChapterAudio = p.playChapterAudio;
   p.showChapterGate = () => {}; p.playChapterVideo = () => false; p.playChapterAudio = () => {}; p._enterThemeChapter = () => {};
   p.measureChapter = () => {}; p._resumeStory = () => {}; p._syncStoryScene = () => {};
   p.stopAudio = () => {}; p.loadData = () => { p.nodeReloads = (p.nodeReloads || 0) + 1; };
@@ -191,4 +192,19 @@ test('结束章已在读时后台路线刷新不能退回上一章未读收尾',
   global.wx.nextTick = cb => cb();
   p._productionRebuild();
   assert.equal(p.data.chapter.id, 51); assert.equal(p._chapterTrailNext, null);
+});
+
+
+test('纯音频尾声空blocks无视频也进入结局章,重铺只自动播放一次', async () => {
+  const { page: p, requests } = setup(); finishHost(p);
+  let plays = 0;
+  p._audio = { stop() {}, play() { plays++; } }; p.initAudio = () => {};
+  p.playChapterAudio = p._productionChapterAudio;
+  p.openFinish();
+  requests.at(-1).success({ code: 200, data: { title: '雨停了', chapter: {
+    id: 52, name: '纯音频尾声', blocks: [], audioUrl: '/profile/ending-audio.mp3' } } });
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(p.data.chapter.id, 52);
+  assert.equal(plays, 1);
+  p.openChapterFull(); assert.equal(plays, 1);
 });
