@@ -1,0 +1,45 @@
+{
+ "name": "N-h06-gerenziliao",
+ "identity": "walk-player-1",
+ "url": "pages/gerenziliao/gerenziliao",
+ "route": [
+  "pages/index/index",
+  "pages/gerenziliao/gerenziliao"
+ ],
+ "sys": "",
+ "text": "更换背景 | 城瘾用户 | 昵称 | 城瘾用户 | 个人介绍 | 介绍一下你自己 | 手机号 | 未绑定 | 探索作品 | 未填写 | 联系二维码 | 未填写 | 路线偏好 | 未填写 | 保存 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "net": [
+  "200 POST /api/user/info",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/user/info",
+  "200 POST /api/map/reverse-geocode",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/map/reverse-geocode",
+  "200 POST /api/user/info",
+  "200 GET /api/user/profile/review"
+ ],
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/gerenziliao/gerenziliao"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

@@ -1,0 +1,50 @@
+{
+ "name": "N-a04-roam",
+ "identity": "walk-player-1",
+ "url": "pages/roam/index",
+ "route": [
+  "pages/index/index",
+  "pages/roam/index"
+ ],
+ "sys": "",
+ "text": "漫游 | 开始漫游 | 漫游护照 | NO.01 | 开始漫游 | NO.02 | 打开地图 | 寻找组队 | NO.03 | 我的队伍 | 附近活动 | 开启定位 | 自由探索 | E2E 探店日一期 | 上海市黄浦区咖啡 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "net": [
+  "200 POST /api/user/info",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/user/info",
+  "200 POST /api/map/reverse-geocode",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/map/reverse-geocode",
+  "200 POST /api/topic/list",
+  "200 GET /api/roam/passport/summary",
+  "200 POST /api/analytics/events/batch",
+  "200 GET /api/roam/badge/shop-streak",
+  "200 GET /api/roam/passport/summary",
+  "200 GET /api/official/active-for-roam",
+  "200 POST /api/medal/wall"
+ ],
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/roam/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

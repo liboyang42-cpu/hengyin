@@ -1,0 +1,47 @@
+{
+ "name": "N-h04-about",
+ "identity": "walk-player-1",
+ "url": "pages/shezhi/about/index",
+ "route": [
+  "pages/index/index",
+  "pages/shezhi/about/index"
+ ],
+ "sys": "",
+ "text": "关于 | 城瘾 | 版本 开发版本 | 我的二维码 | 玩家个人码待生成 | 用户服务协议 | 联系我们 | 素材署名 | game-icons.net 游戏图标 · Creative Commons BY 3.0（要求署名） | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "textScrolled": "玩家个人码待生成 | 用户服务协议 | 联系我们 | 素材署名 | game-icons.net 游戏图标 · Creative Commons BY 3.0（要求署名） | 作者：Delapouite、Lorc、Skoll、Sbed、Quoting、Lord Berandas | 复制来源地址 · game-icons.net | 像素城市场景 · Luis Zuno（ansimuz）· CC0 1.0 | 底图：Synth Cities、Warped City、Warped Miami Synth | 复制来源地址 · ansimuz.itch.io | Lucide 图标 · ISC License | Lucide Contributors；部分图形源自 Feather · Cole Bemis · MIT License。完整版权与许可声明随图标文件保留。 | 来源：lucide.dev · 许可：lucide.dev/license | 龙藏体 Long Cang · SIL Open Font License 1.1 | Copyright 2018 The LongCang Project Authors · 设计：ZhongQi。故事正文所用字体。 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "net": [
+  "200 POST /api/user/info",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/user/info",
+  "200 POST /api/map/reverse-geocode",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/map/reverse-geocode"
+ ],
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/shezhi/about/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

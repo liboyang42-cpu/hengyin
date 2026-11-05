@@ -1,0 +1,46 @@
+{
+ "name": "N-e05-badge-wall",
+ "identity": "walk-player-1",
+ "url": "subpackageP3/pages/badge-wall/index/index",
+ "route": [
+  "pages/index/index",
+  "subpackageP3/pages/badge-wall/index/index"
+ ],
+ "sys": "",
+ "text": "还没有点亮勋章 | 去探索 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "net": [
+  "200 POST /api/user/info",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/user/info",
+  "200 POST /api/map/reverse-geocode",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/map/reverse-geocode",
+  "200 POST /api/medal/wall",
+  "200 POST /api/badge/wall-v2"
+ ],
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageP3/pages/badge-wall/index/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

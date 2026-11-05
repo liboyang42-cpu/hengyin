@@ -1,0 +1,47 @@
+{
+ "name": "N-e01-growth",
+ "identity": "walk-player-1",
+ "url": "subpackageP3/pages/growthcenter/index/index",
+ "route": [
+  "pages/index/index",
+  "subpackageP3/pages/growthcenter/index/index"
+ ],
+ "sys": "",
+ "text": "成长中心 | 城瘾用户 | 50 | 积分 | 总积分榜 · 第 2 名 | 查看榜单 | 我的足迹 | Lv.1 | 探索值 | 0 | EXP | 徽章 | 0 | 枚 | 完成主题 | 0 | 个 | 累计距离 | 0 | km | 我的徽章 | 0 | 还没有点亮任何徽章 | 去探索 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "net": [
+  "200 POST /api/user/info",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/user/info",
+  "200 POST /api/map/reverse-geocode",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/map/reverse-geocode",
+  "200 POST /api/growth/center",
+  "200 POST /api/play/growth",
+  "200 POST /api/play/my-completed",
+  "200 POST /api/growth/leaderboard"
+ ],
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageP3/pages/growthcenter/index/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

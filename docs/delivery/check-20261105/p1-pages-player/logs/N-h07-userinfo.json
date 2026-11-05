@@ -1,0 +1,46 @@
+{
+ "name": "N-h07-userinfo",
+ "identity": "walk-player-1",
+ "url": "pages/userinfo/userinfo?id=9004",
+ "route": [
+  "pages/index/index",
+  "pages/userinfo/userinfo"
+ ],
+ "sys": "",
+ "text": "主页 | 玩家小城 | 0 | 好友 | 1 | 关注 | 0 | 粉丝 | 关注 | 发消息 | 帖文 | 成就 | 关于 | 个人介绍 | 还没有个人介绍 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "net": [
+  "200 POST /api/user/info",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/user/info",
+  "200 POST /api/map/reverse-geocode",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/map/reverse-geocode",
+  "200 POST /api/common/banner",
+  "200 POST /api/merchant/public-home",
+  "200 POST /api/user/public-info"
+ ],
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/userinfo/userinfo"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

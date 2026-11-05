@@ -1,0 +1,54 @@
+N-a03-member pages/member/index/index  | 主页 | 城瘾用户 | Lv.1 城市探索者 | 连续探索：0天 | 0 | 好友 | 0 | 关注 | 0 | 粉丝 | 票夹 | 我的 | 帖文 | 成就 | 关于 | 我的资产 | 账户余额 | ¥0.00 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-a02-talent pages/talent/list/index  | 发现 | 帖文 | 俱乐部 | 创建你自己的俱乐部 | 创建俱乐部 | 城瘾跑团 | 1 位成员 · 1 个近期团 | 免费加入 | 执行俱乐部 | 2 位成员 · 0 个近期团 | 免费加入 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-a01-home pages/index/index  | 成为俱乐部 | 成为商家 | 和朋友报名活动 | Hi, 城瘾用户! | 玩家 | · 上海市 | 编辑精选 | 暂时没有精选主题 | 附近活动 | 你附近暂时没有可点亮的节点 | 主题 | 活动 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-a04-roam pages/roam/index  | 漫游 | 开始漫游 | 漫游护照 | NO.01 | 开始漫游 | NO.02 | 打开地图 | 寻找组队 | NO.03 | 我的队伍 | 附近活动 | 开启定位 | 自由探索 | E2E 探店日一期 | 上海市黄浦区咖啡 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-b01-play pages/play/index  | 输入地址 | 请先购买自玩通行证 | 获取通行证 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-b02-play-merchant pages/play/merchant/index  | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-b03-play-circle pages/play/index  | 输入地址 | 请先购买自玩通行证 | 获取通行证 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-b04-poi-challenge pages/play/poi-challenge/index  | 挑战暂时打不开 | 没有找到这个地点 | 重试 | 返回地图 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-c01-activity-detail pages/activity/detail/index  | 活动详情 | 这一场由「执行俱乐部」执行，加入后查看 | 去加入俱乐部 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-c02-baoming pages/activity/baoming/baoming  | 结算 | 这一场由「执行俱乐部」执行，加入后查看 | 入会后可报名 | 去加入俱乐部 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-c03-activity-list pages/activity/list/index  | 官方活动 | 进行中 | 即将 | 已结束 | 我的 | 进行中 · 共 1 个活动 | 邀约 | 封面暂不可用 | 外滩夜走官方场 | 报名中 | 距结束 15 天 | · 上海 | · 1 人参与 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-c04-official-detail pages/activity/official-detail/index  | 官方活动 | 城瘾官方 | 发起 | 参与 | 1 | 活动周期 | 3小时 | 开放时间 | 11.20–11.20 | 活动范围 | 上海 | 距结束 15 天 | 外滩夜走官方场 | 沿外滩走一段夜路，在终点集合拍合照。 | 上海 | 集合与联系 | 集合信息加载失败 | 重试 | 活动奖励 | 未配置奖励 | 立即报名 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-c05-official-inbox pages/activity/official-inbox/index  | 官方活动邀约 | 暂无待处理的活动职责 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-c06-official-mine pages/activity/official-mine/index  | 我发布的 | 无官方发布权限 | 返回 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-c07-official-organizer pages/activity/official-organizer/index  | 主办控制台 | 链接已失效 | 返回 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-d01-myproject subpackageA/pages/myproject/index  | 我的项目 | 主题 | 活动 | 模板 | 还没有主题 | 去发布 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-d02-infomation subpackageA/pages/infomation/infomation  | 城瘾玩法 | 城市定向 | 去看看 | 自由探索 | 去看看 | 漫游 | 去看看 | 现成玩法 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-d03-infomationdetail subpackageA/pages/infomationdetail/infomationdetail  | 玩法详情 | 这篇玩法说明不在了 | 返回玩法列表 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-d04-income-detail subpackageA/pages/assetcenter/income-detail/income-detail  | 收益明细 | 全部 | 创作收益 | 品牌收益 | 主办分润 | 还没有收益记录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-d05-earnings subpackageA/pages/assetcenter/earnings/index  | 账户收益 | 账户收益（元） | ¥0.00 | 提现 | 明细 | 分析 | 更多 | 还没有收益 | 去发布路线 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-d06-analysis subpackageA/pages/assetcenter/analysis/index  | 分析 | 收入 | 提现 | 11月收入 | ¥0.00 | 6月 | 7月 | 8月 | 9月 | 10月 | 11月 | 收入来源 | 这个月还没有收入 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-e01-growth subpackageP3/pages/growthcenter/index/index  | 成长中心 | 城瘾用户 | 50 | 积分 | 总积分榜 · 第 2 名 | 查看榜单 | 我的足迹 | Lv.1 | 探索值 | 0 | EXP | 徽章 | 0 | 枚 | 完成主题 | 0 | 个 | 累计距离 | 0 | km | 我的徽章 | 0 | 还没有点亮任何徽章 | 去探索 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-e02-leaderboard subpackageP3/pages/growthcenter/leaderboard/index  | 完整排行榜 | 周榜 | 总榜 | 2 | 城瘾用户 | 50 | 积分 | 1 | 玩家二号 | 60 | 积分 | 积分榜 | 成长榜 | 2 | 城瘾用户 | 我 | 50 | 积分 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-e03-stamp-camera subpackageP3/pages/stamp-camera/index/index  | 双指缩放裁切 57% | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-e04-stamp-album subpackageP3/pages/stamp-album/index/index  | 收集册 | 勋章 | 邮票 | 藏品 | 0 | 枚 | 还没有邮票 | 打开集邮相机 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-e05-badge-wall subpackageP3/pages/badge-wall/index/index  | 还没有点亮勋章 | 去探索 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-e06-badge-3d subpackageP3/pages/badge-3d/index  | 徽章 | 徽章 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-e07-object-cards subpackageP3/pages/object-cards/index/index  | 收集册 | 勋章 | 邮票 | 藏品 | 全部 | 还没有收过东西 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-f01-im-list subpackageB/pages/im/list/index  | 消息 | 收件箱 | 发件箱 | 还没有消息 | 去发现找人 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-f02-im-chat subpackageB/pages/im/chat/index  | 更多 | 对话 | 无权查看该会话 | 返回消息列表 | 不能在这个会话发消息 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-g01-topic pages/topic/index/index  | 自由探索 | E2E 探店日一期 | 端到端 | 查看详情与报名 | 确认订单 | 参与人信息 | 补全姓名和手机号 | 主题信息 | E2E 探店日一期 | 费用明细 | 票种 | 自玩通行证 | 订单金额 | 合计 | 同意将姓名、手机号提供给主办方，用于报名核验 | 合计 | 立即支付 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-g02-square-detail pages/square/detail/index  | 玩家二号 | 45分前 | 关注 | 周末沿着苏州河走了一圈，傍晚的光线很好。 | 2 | 2 | 玩家二号 | 44分前 | 欢迎，周六一起。 | 1 | 举报 | 玩家小城 | 44分前 | 这条路线我也想走一次。 | 1 | 举报 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-g03-search pages/search2/index  | 搜索 | 筛选 | 推荐搜索 | 骑行 | 城市 | 外滩 | 书店 | 美术馆 | 摄影 | 苏州河 | 菜场 | 类别 | 城市漫步 | 咖啡 | 历史人文 | 解谜冒险 | 夜游 | 摄影打卡 | 户外徒步 | 亲子同行 | 在地图上找活动与主题节点 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-g04-search-result pages/search2/result/index  | 全部 | 主题 1 | 活动 0 | 俱乐部 0 | 商家 0 | 主题模板 0 | 玩法模板 0 | 主题 | E2E 探店日一期 | 上海市黄浦区咖啡 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-g05-searchmap pages/searchmap/index  | 定位 | 这一带还没有活动 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-h01-address pages/address/address  | 参与人信息 | 还没有参与人信息 | 新增参与人信息 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-h02-addressinfo pages/addressinfo/addressinfo  | 参与人信息 | 姓名 | * | 手机号 | * | 保存参与人信息 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-h03-shezhi pages/shezhi/shezhi  | 设置 | 个人资料 | 成为俱乐部主理人 | 成为商家 | 城瘾玩法 | 我的收藏 | 隐私与定位 | 营销消息与优惠券 | 帖文处置与申诉 | 我的申诉 | 用户服务协议 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-h04-about pages/shezhi/about/index  | 关于 | 城瘾 | 版本 开发版本 | 我的二维码 | 玩家个人码待生成 | 用户服务协议 | 联系我们 | 素材署名 | game-icons.net 游戏图标 · Creative Commons BY 3.0（要求署名） | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-h05-marketing pages/shezhi/marketing/index  | 营销消息与优惠券 | 还没有商家消息 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-h06-gerenziliao pages/gerenziliao/gerenziliao  | 更换背景 | 城瘾用户 | 昵称 | 城瘾用户 | 个人介绍 | 介绍一下你自己 | 手机号 | 未绑定 | 探索作品 | 未填写 | 联系二维码 | 未填写 | 路线偏好 | 未填写 | 保存 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-h07-userinfo pages/userinfo/userinfo  | 主页 | 玩家小城 | 0 | 好友 | 1 | 关注 | 0 | 粉丝 | 关注 | 发消息 | 帖文 | 成就 | 关于 | 个人介绍 | 还没有个人介绍 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-h08-mylike pages/mylike/mylike  | 我的收藏 | 帖文 | 主题 | 暂无收藏的帖文 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-h09-crop pages/crop/index  | 裁剪 | 没有可裁剪的图片 | 返回上一页 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-i01-free-explore subpackageMember/free-explore/index  | 自由探索权益 | 自由探索套票暂未开放 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-i02-character subpackageMember/character/index  | 我的角色卡 | 角色模板 | 尚未建卡 | 以下为角色模板的初始属性，尚未创建角色 | 模板暂无可展示属性 | 该主题尚未配置可见属性 | 刷新角色卡 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-i03-orient-score subpackageMember/orient-score/index  | 链接已失效 | 返回 | ‹ | 本局计分 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-i04-invoice subpackageMember/invoice/index  | 我的发票 | 发票功能暂未开放 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-i05-invoice-detail subpackageMember/invoice-detail/index  | 发票详情 | 发票功能暂未开放 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-i06-invoice-apply subpackageMember/invoice-apply/index  | 申请开票 | 发票功能暂未开放 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-i07-invoice-titles subpackageMember/invoice-titles/index  | 发票抬头 | 发票功能暂未开放 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-i08-invoice-title-edit subpackageMember/invoice-title-edit/index  | 发票抬头 | 发票功能暂未开放 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-i09-complaint subpackageMember/complaint/index  | 投诉与建议 | 仅限已报名并支付的活动，平台会介入处理 | 暂无可投诉的活动 | 我的处理进展 | 刷新进展 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 
+N-i10-coupon-wallet subpackageMember/coupon-wallet/index  | 优惠券 | 全部 | 待使用 | 已使用 | 已过期 | 这里还没有优惠券 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉ 

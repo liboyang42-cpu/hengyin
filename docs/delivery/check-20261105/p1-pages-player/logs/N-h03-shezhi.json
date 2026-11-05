@@ -1,0 +1,45 @@
+{
+ "name": "N-h03-shezhi",
+ "identity": "walk-player-1",
+ "url": "pages/shezhi/shezhi",
+ "route": [
+  "pages/index/index",
+  "pages/shezhi/shezhi"
+ ],
+ "sys": "",
+ "text": "设置 | 个人资料 | 成为俱乐部主理人 | 成为商家 | 城瘾玩法 | 我的收藏 | 隐私与定位 | 营销消息与优惠券 | 帖文处置与申诉 | 我的申诉 | 用户服务协议 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "textScrolled": "成为俱乐部主理人 | 成为商家 | 城瘾玩法 | 我的收藏 | 隐私与定位 | 营销消息与优惠券 | 帖文处置与申诉 | 我的申诉 | 用户服务协议 | 账号注销 | 关于 | 退出账号 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "net": [
+  "200 POST /api/user/info",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/user/info",
+  "200 POST /api/map/reverse-geocode",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/map/reverse-geocode",
+  "200 POST /api/user/info"
+ ],
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/shezhi/shezhi"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

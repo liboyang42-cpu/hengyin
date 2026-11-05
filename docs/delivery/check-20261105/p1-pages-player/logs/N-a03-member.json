@@ -1,0 +1,57 @@
+{
+ "name": "N-a03-member",
+ "identity": "walk-player-1",
+ "url": "pages/member/index/index",
+ "route": [
+  "pages/index/index",
+  "pages/member/index/index"
+ ],
+ "sys": "",
+ "text": "主页 | 城瘾用户 | Lv.1 城市探索者 | 连续探索：0天 | 0 | 好友 | 0 | 关注 | 0 | 粉丝 | 票夹 | 我的 | 帖文 | 成就 | 关于 | 我的资产 | 账户余额 | ¥0.00 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "net": [
+  "200 POST /api/user/info",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/user/info",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/map/reverse-geocode",
+  "200 POST /api/common/banner",
+  "200 POST /api/user/info",
+  "200 POST /api/role/info",
+  "200 POST /api/play/growth",
+  "200 POST /api/growth/center",
+  "200 POST /api/play/my-completed",
+  "200 POST /api/medal/wall",
+  "200 POST /api/merchant/access/me",
+  "200 POST /api/registration/join_info",
+  "200 POST /api/user/points/statistics",
+  "200 POST /api/growth/leaderboard",
+  "200 POST /api/registration/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/publish/home"
+ ],
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/member/index/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}
