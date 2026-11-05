@@ -182,8 +182,7 @@ The "06:00" time on the merchant rows is the rig DB's UTC clock (HARNESS).
 ### CI
 
 On `58641850`, ci.yml and Funds MySQL IT started, then were cancelled by later pushes from other lanes; that is the
-branch's concurrency setting. The result on a later head that contains both commits is in the "CI" line at the end of
-this file.
+branch's concurrency setting. Results on later heads that contain both code commits are at the end of this file.
 
 ## Files
 
@@ -222,6 +221,21 @@ No migration: no table or column was added. `receiver_type` is `varchar(32)` and
   session with an alarm. Recommended default: also refuse `shareMode 1` invitations on club themes at `/api/coop/invite`
   with a plain reason, as the club page already does.
 
-CI: see the last line.
+CI on a commit that contains all my work:
+- **Funds MySQL IT: green** on `ca1ddd82` (contains `943b7f67` and `58641850`). The real-MySQL gate step ran for 4 min
+  and includes the new `ClubSessionMerchantFeeMySqlIT`.
+- **GitHub CI (ci.yml): red** on `2f9daae1` (my docs head; run 41979418953). **None of the failures are from k5's
+  changes.**
+  - Backend: two `P0Deregistration`/`WechatMemberRegistration` welcome-points cases (k1 `748f6519`, rule 1 fixture
+    status). `ClubAttendanceTimeMappingMyBatisIT` fails with 「Unknown column 'create_time'」 in `ClubEventOpsMapper.xml`
+    (k3 `b9df1ecd`).
+  - Mini static: the danger-confirm selftest asks for consequences for `club.joinRequest.reject` / `club.enroll.refund`
+    (k3/k4 screens).
+  - Mini unit (reproduced locally, 5 of 16,211): the action-ledger count pin 5719 vs 5718, plus play, ticket-wallet,
+    play-ending and club-detail cases.
+  - Run alone, my tests pass: `k5-club-session-merchant-fee`, `club-settlement-page-contract`,
+    `merchant-ledger-display-contract`, `k6-merchant-screens`.
+  - `build-action-ledger.js --check` passes at this head.
+  - I did not touch these files; they are for their lanes.
 
 STATUS: COMPLETE
