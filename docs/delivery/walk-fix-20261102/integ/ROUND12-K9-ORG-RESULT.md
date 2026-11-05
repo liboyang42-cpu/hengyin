@@ -159,6 +159,17 @@ My last code push was `f40ceac30`. About 15 other commits from k7, k8, k10 and k
   - Reproduced locally with `mvn -o -DskipTests test-compile`.
   - I fixed it in the commit that carries this section (`new java.util.Date()`, one word). `test-compile` is now clean.
 - **Another lane fixed the IT fixture for my N-16 change:** `a8fb71f46`, 「客户名册真库夹具补齐既有结束时间字段」, adds the `end_date` column that my CRM tag rule reads to `MerchantCrmFreeExploreRosterMySqlIT`'s fixture. I hadn't run that IT locally because it needs MySQL.
-- **CI on the commit with this section:** see the last line.
+- **CI on `35b3dc6df`** (my last push; it contains all my work and the `ThemeRuntimeMySqlIT` fix):
+  - Funds MySQL IT run 42000681273: **success**.
+  - Mini followup focused regression run 42000681497: **success**.
+  - Isolated authenticated Redis recovery run 42000681322: **success**.
+  - GitHub CI run 42000681356: **failure**, 6 of 31 jobs. None is in a file this lane changed:
+    - **Backend tests:** 16500 run, 2 failures and 1 error. They are `AdvancedGameRuntimeServiceImpl.journeyVitals`, `TopicRoutePublicationOutcomeScopeTest` (「通用局章节彩蛋触发尚未接通」) and `ApiTopicSaveDraftContractTest` (`mapper` null). These are game runtime, chapter easter egg and editor draft, other lanes' areas.
+    - **Mini unit shard 9:** `w8-author-media-recovery` (editor read-back URL).
+    - **Mini unit shard 11:** 7 × `fabu-cloud-autosave` (editor autosave). Reproduced locally with `--test-shard=11/20` on `35b3dc6df`.
+    - **Mini unit shard 12:** `action-ledger.test.js` 「release 前重建 inventory」. The ledger drifted from commits pushed after mine; at the current head `build-action-ledger.js --check` passes with 5741 controls.
+    - **Mini static gates:** ledger drift (same as above), and UI-GATE-0 U4 on `pages/merchant/apply/index.js:359-360`, from another lane's `b63919693` (phone validation on 商家入驻). The page-theme sub-gate was also red.
+    - **SBOM + dependency scan:** the grype download returned HTTP 504 (infrastructure).
+  - My own test files at the current head all pass: `r12-k9-org-leftovers` 3/3, `coop-invited-partner-project-view` 18/18, `club-governance-ui-contract` 16/16, `club-join-request-confirm-name-contract` 4/4, `club-topic-detail-status-truth` 9/9, `pr10-review-ui-fixes` 19/19.
 
-STATUS: PARTIAL - all code, tests, rig walks and screenshots are in. No full GitHub CI run has finished on a commit containing all my work: they keep getting cancelled by newer pushes, and the newest heads were red from another lane's compile error, fixed in the commit that adds this line. predict, coop settlement-detail and batch-detail with data are not reachable in the rig.
+STATUS: PARTIAL - code, tests, rig walks and screenshots are in. On 35b3dc6df (all my work), Funds MySQL IT, Mini followup and Redis recovery are green. GitHub CI is red only in other lanes' areas (editor autosave and draft, game runtime, merchant-apply UI gate, ledger drift after my push, grype 504). predict, coop settlement-detail and batch-detail with data are not reachable in the rig.
