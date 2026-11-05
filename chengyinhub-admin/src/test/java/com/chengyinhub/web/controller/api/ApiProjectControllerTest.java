@@ -135,6 +135,30 @@ class ApiProjectControllerTest {
         verify(merchantAccessService, never()).require(anyLong(), anyString());
     }
 
+    /** 第十三轮 m1 P5:个人入口发布完跳项目页,商家身份不可用时回到本人的项目;明确的商家入口照旧拒绝。 */
+    @Test
+    void personalScopeFallsBackToSelfWhenMerchantIdentityIsUnavailable() {
+        MmsMerchant merchant = new MmsMerchant();
+        merchant.setMemberId(ME);
+        when(mmsMerchantService.selectMmsMerchantByMemberId(ME)).thenReturn(merchant);
+        when(merchantAccessService.require(ME, MerchantPermission.PROJECT_MANAGE))
+                .thenThrow(new com.chengyinhub.common.exception.ServiceException("商家身份无效或权限不足", 403));
+        Map<String, Object> expected = Collections.<String, Object>singletonMap("role", "host");
+        when(projectHomeReadService.getProjectHome(ME, SELF_TOPIC_ID)).thenReturn(expected);
+        Map<String, Object> body = new java.util.HashMap<>();
+        body.put("topicId", SELF_TOPIC_ID);
+        body.put("scope", "");
+
+        AjaxResult response = controller.home(body);
+        assertEquals(200, response.get("code"));
+        assertEquals(expected, response.get("data"));
+        verify(projectHomeReadService).getProjectHome(ME, SELF_TOPIC_ID);
+
+        body.put("scope", "MERCHANT");
+        assertEquals(403, controller.home(body).get("code"));
+        verify(projectHomeReadService).getProjectHome(ME, SELF_TOPIC_ID);
+    }
+
     @Test
     void member_tab_returns_personal_topic_and_self_activity_only() {
         List<Map<String, Object>> rows = rows(call("member"));

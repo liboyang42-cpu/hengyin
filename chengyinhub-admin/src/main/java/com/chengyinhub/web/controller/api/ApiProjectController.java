@@ -110,10 +110,19 @@ public class ApiProjectController extends BaseController {
             Long scopedMemberId = memberId;
             String scope = scopeOf(body);
             MmsMerchant merchant = mmsMerchantService.selectMmsMerchantByMemberId(memberId);
-            if (MerchantOperationScope.isMerchant(scope)
-                    || (merchant != null && !MerchantOperationScope.isClub(scope))) {
+            if (MerchantOperationScope.isMerchant(scope)) {
                 scopedMemberId = merchantAccessService.require(
                         memberId, MerchantPermission.PROJECT_MANAGE).getOwnerMemberId();
+            } else if (merchant != null && !MerchantOperationScope.isClub(scope)) {
+                // 第十三轮 m1 P5:个人入口(没带 MERCHANT)下,商家身份可用就照旧按商家;商家身份不可用
+                // (例如账号角色不是商家)时与主题编辑器同口径回到本人 —— 只读本人自己的项目,不扩大范围。
+                // 原来直接 403,作者在个人入口发布完跳过来就是「当前账号无权查看」。
+                try {
+                    scopedMemberId = merchantAccessService.require(
+                            memberId, MerchantPermission.PROJECT_MANAGE).getOwnerMemberId();
+                } catch (ServiceException merchantUnavailable) {
+                    scopedMemberId = memberId;
+                }
             }
             return AjaxResult.success(projectHomeReadService.getProjectHome(scopedMemberId, topicId));
         } catch (ServiceException e) {
