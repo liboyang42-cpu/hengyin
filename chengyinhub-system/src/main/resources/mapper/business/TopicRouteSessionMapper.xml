@@ -87,6 +87,11 @@
           recommended_node_id=#{recommendedNodeId},completed_at=#{completedAt},version=version+1,update_time=#{updateTime}
         where id=#{id} and member_id=#{memberId} and version=#{version} and status=0
     </update>
+    <update id="updateCompletedClaimCas" parameterType="com.chengyinhub.business.domain.TopicRouteSession">
+        update topic_route_session set state_json=#{stateJson},version=version+1,update_time=#{updateTime}
+        where id=#{id} and member_id=#{memberId} and version=#{version} and status=1
+          and #{status}=1
+    </update>
     <select id="selectActionByAction" resultMap="RouteAction">
         select id,session_id,member_id,node_id,action_id,receipt_id,outcome_code,response_json,create_time
         from topic_route_action where session_id=#{sessionId} and member_id=#{memberId} and action_id=#{actionId} limit 1

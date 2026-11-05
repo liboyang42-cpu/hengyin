@@ -947,6 +947,11 @@ class JourneyFullFlowMySqlIT {
         }
 
         @Override
+        public int updateCompletedClaimCas(TopicRouteSession session) {
+            return real.updateCompletedClaimCas(session);
+        }
+
+        @Override
         public TopicRouteAction selectActionByReceipt(Long sessionId, String receiptId) {
             return real.selectActionByReceipt(sessionId, receiptId);
         }

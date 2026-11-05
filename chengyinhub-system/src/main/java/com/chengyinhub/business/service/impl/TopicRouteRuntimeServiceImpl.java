@@ -3841,7 +3841,8 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             return JSON.convertValue(validator.readTree(winner.getResponseJson()),new TypeReference<Map<String,Object>>(){});
         }
         if (scoreActive) orientRouteSettlement.beforePersist(session, state);
-        if(routeMapper.updateStateCas(session)!=1)throw new ServiceException("本局已更新，请刷新",409);
+        int updated = restricted ? routeMapper.updateCompletedClaimCas(session) : routeMapper.updateStateCas(session);
+        if(updated!=1)throw new ServiceException("本局已更新，请刷新",409);
         session.setVersion(version+1);
         if (scoreActive) orientRouteSettlement.complete(session, state);
         Map<String,Object> result=themeViewOf(session);

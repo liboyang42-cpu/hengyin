@@ -437,6 +437,8 @@ class PersonalGameplayRuntimeServiceTest {
     }
 
     @Test void completedPendingClaimWorksAfterReplayAndRejectsOtherActions() throws Exception {
+        when(mapper.updateCompletedClaimCas(any())).thenReturn(1);
+        clearInvocations(mapper);
         ObjectNode frozen=(ObjectNode)json.readTree(session.getConfigSnapshotJson());((ObjectNode)frozen.path("themeConfig")).put("capacity",1);session.setConfigSnapshotJson(frozen.toString());
         ObjectNode state=(ObjectNode)stored();state.put("status","COMPLETED");state.with("themeRuntime").with("sources").put("chapter:0:END:food",true);state.with("themeRuntime").with("pending").putObject("chapter:0:END:food").put("itemId","food").put("quantity",1);state.with("themeRuntime").putObject("result").put("hp",5);session.setStateJson(state.toString());session.setStatus(TopicRouteSession.STATUS_COMPLETED);
         TopicRouteSession newer=new TopicRouteSession();newer.setId(100L);when(mapper.selectCurrentByOwner(0L,10L,7L)).thenReturn(newer);
@@ -446,6 +448,81 @@ class PersonalGameplayRuntimeServiceTest {
         assertEquals(1,stored().path("themeRuntime").path("inventory").path("food").asInt());assertTrue(stored().path("themeRuntime").path("pending").isEmpty());assertEquals(state.path("themeRuntime").path("result"),stored().path("themeRuntime").path("result"));assertEquals(state.path("variables").path("sys.hp"),stored().path("variables").path("sys.hp"));
         assertEquals(json.writeValueAsString(receipt),json.writeValueAsString(service.themeAction(7L,99L,version,"claim-after","RECEIVE","chapter:0:END:food",owned)));
         assertThrows(ServiceException.class,()->service.themeAction(7L,99L,version,"claim-after","RECEIVE","chapter:0:END:food",null));
+        verify(mapper,times(1)).updateCompletedClaimCas(session);
+        verify(mapper,never()).updateStateCas(any());
+        assertEquals(TopicRouteSession.STATUS_COMPLETED,session.getStatus());
+        assertEquals(version+1,session.getVersion());
+    }
+
+    @Test void completedClaimKeepsSettlementOrderAndReplayDoesNotSettleAgain() throws Exception {
+        prepareCompletedClaim();
+        OrientRouteSettlement bridge=mock(OrientRouteSettlement.class);
+        org.springframework.test.util.ReflectionTestUtils.setField(service,"orientRouteSettlement",bridge);
+        when(bridge.active(topic)).thenReturn(true);when(bridge.lock(session)).thenReturn(session);
+        when(mapper.updateCompletedClaimCas(any())).thenReturn(1);
+        int version=session.getVersion();
+        Map<String,Object> first=service.themeAction(7L,99L,version,"claim-bridge","RECEIVE","claim-food");
+        var order=inOrder(bridge,mapper);
+        order.verify(bridge).lock(session);
+        order.verify(mapper).insertAction(any());
+        order.verify(bridge).beforePersist(eq(session),any());
+        order.verify(mapper).updateCompletedClaimCas(session);
+        order.verify(bridge).complete(eq(session),any());
+        order.verify(mapper).updateActionResponse(anyLong(),anyString());
+        assertEquals(TopicRouteSession.STATUS_COMPLETED,session.getStatus());
+        clearInvocations(mapper,bridge);
+        Map<String,Object> replay=service.themeAction(7L,99L,version,"claim-bridge","RECEIVE","claim-food");
+        assertEquals(json.writeValueAsString(first),json.writeValueAsString(replay));
+        verify(mapper,never()).updateCompletedClaimCas(any());
+        verify(mapper,never()).updateStateCas(any());
+        verifyNoInteractions(bridge);
+    }
+
+    @Test void completedClaimCasConflictDoesNotFinalizeReceipt() throws Exception {
+        prepareCompletedClaim();
+        int version=session.getVersion();
+        when(mapper.updateCompletedClaimCas(any())).thenReturn(0);
+        ServiceException failure=assertThrows(ServiceException.class,
+                ()->service.themeAction(7L,99L,version,"claim-conflict","RECEIVE","claim-food"));
+        assertEquals(Integer.valueOf(409),failure.getCode());
+        verify(mapper,times(1)).updateCompletedClaimCas(session);
+        verify(mapper,never()).updateStateCas(any());
+        verify(mapper,never()).updateActionResponse(anyLong(),anyString());
+        assertEquals(version,session.getVersion());
+        // Mockito does not implement transaction rollback; database rollback is a separate test.
+    }
+
+    @Test void completedClaimRejectsStaleVersionAndForeignOwnerBeforeWrites() throws Exception {
+        prepareCompletedClaim();
+        int version=session.getVersion();
+        ServiceException stale=assertThrows(ServiceException.class,
+                ()->service.themeAction(7L,99L,version-1,"claim-stale","RECEIVE","claim-food"));
+        assertEquals(Integer.valueOf(409),stale.getCode());
+        ServiceException foreign=assertThrows(ServiceException.class,
+                ()->service.themeAction(8L,99L,version,"claim-foreign","RECEIVE","claim-food"));
+        assertEquals(Integer.valueOf(403),foreign.getCode());
+        verify(mapper,never()).insertAction(any());
+        verify(mapper,never()).updateCompletedClaimCas(any());
+        verify(mapper,never()).updateStateCas(any());
+    }
+
+    @Test void otherTerminalStatesCannotUseCompletedClaimCas() throws Exception {
+        for(int terminal:new int[]{2,3}) {
+            prepareCompletedClaim();session.setStatus(terminal);
+            assertThrows(ServiceException.class,
+                    ()->service.themeAction(7L,99L,session.getVersion(),"claim-terminal-"+terminal,"RECEIVE","claim-food"));
+            verify(mapper,never()).insertAction(any());
+            verify(mapper,never()).updateCompletedClaimCas(any());
+            verify(mapper,never()).updateStateCas(any());
+        }
+    }
+
+    private void prepareCompletedClaim() throws Exception {
+        ObjectNode state=(ObjectNode)stored();state.put("status","COMPLETED");
+        state.with("themeRuntime").with("sources").put("claim-food",true);
+        state.with("themeRuntime").with("pending").putObject("claim-food").put("itemId","food").put("quantity",1);
+        session.setStateJson(state.toString());session.setStatus(TopicRouteSession.STATUS_COMPLETED);
+        clearInvocations(mapper);
     }
 
     @Test void personalCostOptionReadbackAndCommandUseOnlyFrozenGroup() throws Exception {
