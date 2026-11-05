@@ -108,4 +108,21 @@ Pulled the head, read `CODEX-PAGES-RESULT.md` and `ROUND12-K9-RESULT.md`, and sk
 | Organiser/merchant details (p2 N-14 rest, N-16 tags, N-17 rest), editor preview overlap (p3 N18), data-filled pages (game node, coop settlement, batch detail, prediction), carried L2/L5-L8/L10 | NOT done and NOT walked. They need journey fixtures I did not have time to build. |
 | Owner and write-contract decisions | Not touched. One plain line each, with a launch recommendation, is in `ROUND13-OWNER-DECISIONS.md`. |
 
-STATUS: PARTIAL - group-code caption fixed and the missing-param pages walked; owner decisions written up; publish-page content leftovers, organiser/merchant leftovers and data-filled pages not done (need fixtures and more credit)
+
+## Fourth pass (fixtures and the remaining leftovers)
+
+Rig rebuilt again (it stops between sessions). The seed chains pass once the platform fee-rule rows are in. For the publish pages I set `ums_member.role = 'club'` for 9003 and 9008 in the rig database (rig fixture only), so a club lead could open them.
+
+| Item | Result |
+|---|---|
+| Publish activity, club lead, step 1 with nothing filled | WALKED. Four red lines under their fields. |
+| Publish activity, step 2: cover error | **Bug fixed (8).** 「请上传活动封面」 was drawn inside the red cover box, on its bottom edge. Moved under the box like every other field. `pages/publish/activity/index.wxml`; `m5-publish-cover-before/after.jpg`; 185 related tests pass. |
+| Publish activity, step 3: summary over 添加票单 | WALKED, not reproduced. With ticket errors showing, the 「发布前摘要」 sits above 添加票单 and covers nothing; errors are red text under each field. |
+| Publish deep link without `scope` (j5 N11) | **Bug fixed (9).** A merchant opening 发布活动 without `scope=MERCHANT` was told 「发布单场活动需要俱乐部主理人身份」, a dead end for a merchant who is allowed to publish. A merchant account now goes through merchant hosting even without the parameter. Club lead and player behaviour re-checked (lead opens the form, player is still refused). `m5-merchant-publish-noscope-before/after.jpg`. |
+| Batch detail (对公结算) | WALKED with one fixture row I inserted (¥128.50, status 待对账). Header, 待对账 / 未开票 chips, 「本批次没有可列明的条目」 and the 打款进度 steps read plainly. The empty entry list beside a ¥128.50 total is my fixture, not a product number. With no batch id the page says 「缺少结算批次信息」 and 返回上一页. |
+| Coop settlement detail | NOT walked with data. This rig's only coop order is 引流 (pays nothing), so no real settlement exists; the settlement jobs ran and made none. A row I inserted by hand was refused with 「结算记录不可见」, which is the right behaviour for a made-up row. With no id: 「缺少结算记录信息」. |
+| Game node (merchant station page) | NOT walked with data. It opens from a club director session's 「站点邀请」. This rig's seed theme is a 自由探索 theme, and `/api/club/lead/start` answers 「该场次不是带领场」; there is no game session in the database. |
+| Prediction (预测待答) | NOT walked with data. It needs a prediction node with player answers; the rig has none. Empty state reads 「没有等你给答案的预测」. |
+| Organiser invite wording (p2 N-14 rest), customer tags (N-16), N-17 rest, p3 N18 editor preview overlap | NOT done. I opened the coop list as the receiving club lead (card reads 「已接受 · 来自 城瘾跑团 · 接收俱乐部：执行俱乐部 · 引流型 · 无分成」) and found nothing I could name as wrong against the notes, but the notes do not say which lines they meant. |
+
+STATUS: PARTIAL - two more bugs fixed (publish cover error, merchant publish link without scope) and batch detail walked; coop settlement, game node and prediction need real money/director/prediction flows the rig cannot produce, and p2 N-14/N-16/N-17 and p3 N18 were not done
