@@ -2352,7 +2352,7 @@ Page({
     /* 走查 v2 R15(业主 2026-10-30):承办方不给「俱乐部 / 商家」—— 那是主办的事;只留扫码、客户,
        再加一个本站二维码(玩法要求扫码参与时贴在店里),复用已有的本站打卡码 / 章节节点码。 */
     const QR = { key: 'stationQr', label: '二维码', iconName: 'qr' };
-    if (role === 'coopPartner') return [SCAN];
+    if (role === 'coopPartner') return []; // k9(p2 N-17):底栏已有唯一的「扫码核销」,快捷格不再放第二个扫码
     /* p2 F-11(第十轮 f3):主题锁定等原因下没有一章可编辑时不给「编辑」——点了只闪一句提示,读成没反应 */
     if (role === 'chapterProject') return [SCAN, { key: 'chapterCheckin', label: '二维码', iconName: 'qr' }, CUSTOMER]
       .concat(canEdit === false ? [] : [{ key: 'chapterEdit', label: '编辑', icon: '/pages/topic/images/icon_qa_edit.svg' }]);

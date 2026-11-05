@@ -68,7 +68,7 @@
   </view>
 
   <!-- ===== 四个关系入口 ===== -->
-  <view class="qa">
+  <view class="qa" wx:if="{{ quickActions.length }}">
     <view class="qa-btn" wx:for="{{ quickActions }}" wx:key="key"
           data-key="{{ item.key }}" bindtap="emit" data-act="onQuickAction" aria-role="button" aria-label="{{item.label}}" hover-class="qa-btn--tap">
       <view class="qa-ico"><cy-icon wx:if="{{item.iconName}}" name="{{item.iconName}}" size="40" /><image wx:else class="qa-ico-img" src="{{ item.icon }}" mode="aspectFit" /></view>
