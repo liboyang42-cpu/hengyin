@@ -126,6 +126,19 @@ class ApiTopicChapterFlowV2ControllerTest
         assertEquals("扫码到达和 GPS 到达请添加为地点", result.get(AjaxResult.MSG_TAG));
     }
 
+    /** 第十三轮 m1 P2:发布闸拒绝(事务回滚、没写入)是确定拒绝 → 400,作者端才能改好再存,而不是停在「待确认」。 */
+    @Test
+    void gameplayGateRefusalIsADefiniteBadRequest()
+    {
+        when(topicService.updateTopicByOwnerV2WithReview(any(), anyLong(), anyString()))
+                .thenThrow(new IllegalArgumentException("「左巷 · 硬币摊」的抛硬币：请在这一站重新打开玩法设置，保存一次后再发布"));
+
+        AjaxResult result = controller.updateTopicV2(new TopicUpdateDTO());
+
+        assertEquals(HttpStatus.BAD_REQUEST, result.get(AjaxResult.CODE_TAG));
+        assertEquals("「左巷 · 硬币摊」的抛硬币：请在这一站重新打开玩法设置，保存一次后再发布", result.get(AjaxResult.MSG_TAG));
+    }
+
     @Test
     void optionalStoryChapterReturnsBadRequest()
     {
@@ -186,7 +199,8 @@ class ApiTopicChapterFlowV2ControllerTest
         });
 
         AjaxResult response = controller.updateTopicV2(dto);
-        assertEquals(HttpStatus.ERROR, response.get(AjaxResult.CODE_TAG));
+        // 第十三轮 m1 P2:映射拒绝是事务内的校验拒绝,确定没写入 → 400(原为 500,作者端只能当结果未知)
+        assertEquals(HttpStatus.BAD_REQUEST, response.get(AjaxResult.CODE_TAG));
         assertTrue(response.get(AjaxResult.MSG_TAG).toString().contains("client:foreign-node"));
     }
 

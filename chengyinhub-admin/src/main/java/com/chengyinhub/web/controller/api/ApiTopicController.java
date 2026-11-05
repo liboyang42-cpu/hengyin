@@ -814,6 +814,11 @@ public class ApiTopicController extends BaseController {
             if (attributeError != null) return attributeError;
             logger.warn("主题保存被业务闸拒绝: topicId={}, reason={}", dto.getId(), e.getMessage());
             return businessRefusal(e, e.getMessage());
+        } catch (IllegalArgumentException e) {
+            // 第十三轮 m1 P2:发布闸 / 配置校验拒绝(事务已回滚、什么也没写)是确定拒绝,按 400 回;
+            // 原来落到下面的 500,作者端只能按「结果未知」处理,改好了也存不进去、一直停在待确认。
+            logger.warn("主题保存被校验拒绝: topicId={}, reason={}", dto.getId(), e.getMessage());
+            return AjaxResult.error(HttpStatus.BAD_REQUEST, e.getMessage());
         } catch (RuntimeException e) {
             AjaxResult attributeError = authorAttributeError(e);
             if (attributeError != null) return attributeError;
