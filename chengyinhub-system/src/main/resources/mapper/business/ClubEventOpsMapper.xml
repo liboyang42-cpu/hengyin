@@ -792,7 +792,43 @@
         order by r.member_id asc
     </select>
 
-    <!-- INACTIVE = 正常成员/owner 在本俱乐部最近 90 天没有已支付活动报名。 -->
+    <!-- INACTIVE = 正常成员/owner 近 90 天既没入会(建俱乐部),在本俱乐部也没有报名成功的已支付单。
+         第十二轮 k9(p3 N16):原来只认挂 club_id 的活动场次单、只认 payment_time,
+         今天入会、今天买了本俱乐部主题票(owner_type=1)或主题自办场次票的成员也被算成「未活跃」。
+         报名归属与 ClubCrmMapper.ClubRegistrationScope 及本文件名册同口径:本俱乐部主题 / 本俱乐部场次 /
+         本俱乐部主题发布者自办(club_id 为空)的场次。调用方先把候选集命名为 members。 -->
+    <sql id="inactiveMemberCondition">
+        not exists (
+          select 1 from club_member jm
+          where jm.club_id = #{clubId} and jm.member_id = members.member_id
+            and jm.status = 1 and jm.del_flag = 0
+            and jm.join_time &gt;= date_sub(now(), interval 90 day)
+        )
+        and not exists (
+          select 1 from club jc
+          where jc.id = #{clubId} and jc.member_id = members.member_id
+            and jc.create_time &gt;= date_sub(now(), interval 90 day)
+        )
+        and not exists (
+          select 1 from cms_registration r
+          where r.member_id = members.member_id
+            and r.payment_status = 2 and r.registration_status = 2
+            and coalesce(r.payment_time, r.create_time) &gt;= date_sub(now(), interval 90 day)
+            and (
+              (r.owner_type = 2 and exists (
+                select 1 from cms_activity a
+                where a.id = r.owner_id and a.del_flag = 0
+                  and (a.club_id = #{clubId} or (a.club_id is null and exists (
+                    select 1 from cms_topic t
+                    where t.id = a.topic_id and t.club_id = #{clubId} and t.member_id = a.member_id)))))
+              or
+              (r.owner_type = 1 and exists (
+                select 1 from cms_topic t
+                where t.id = r.owner_id and t.del_flag = 0 and t.club_id = #{clubId}))
+            )
+        )
+    </sql>
+
     <select id="selectInactiveRecipients" resultType="long">
         select members.member_id
         from (
@@ -802,13 +838,7 @@
           select cm.member_id from club_member cm
           where cm.club_id = #{clubId} and cm.status = 1 and cm.del_flag = 0
         ) members
-        where not exists (
-          select 1 from cms_registration r
-          inner join cms_activity a on a.id = r.owner_id and a.club_id = #{clubId} and a.del_flag = 0
-          where r.owner_type = 2 and r.member_id = members.member_id
-            and r.payment_status = 2 and r.registration_status = 2
-            and r.payment_time &gt;= date_sub(now(), interval 90 day)
-        )
+        where <include refid="inactiveMemberCondition"/>
         order by members.member_id asc
     </select>
 
@@ -1013,14 +1043,7 @@
                       and cm.member_id = #{recipientMemberId}
                       <include refid="notificationRecipientNotBanned"/>
                   ) members
-                  where not exists (
-                    select 1 from cms_registration r
-                    inner join cms_activity a on a.id = r.owner_id
-                      and a.club_id = #{clubId} and a.del_flag = 0
-                    where r.owner_type = 2 and r.member_id = members.member_id
-                      and r.payment_status = 2 and r.registration_status = 2
-                      and r.payment_time &gt;= date_sub(now(), interval 90 day)
-                  )
+                  where <include refid="inactiveMemberCondition"/>
                 )
             </when>
             <otherwise>select 0</otherwise>
