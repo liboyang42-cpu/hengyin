@@ -79,8 +79,8 @@ test('参与人信息:姓名/手机号的问题各自写在该栏下方', () => 
   page.onInputChange({ currentTarget: { dataset: { field: 'fullName' } }, detail: { value: '许' } });
   assert.equal(page.data.fieldErrors.fullName, '');
   const wxml = read('pages/addressinfo/addressinfo.wxml');
-  assert.match(wxml, /wx:if="\{\{fieldErrors.fullName\}\}" kind="error"/);
-  assert.match(wxml, /wx:if="\{\{fieldErrors.mobilePhone\}\}" kind="error"/);
+  assert.match(wxml, /wx:if="\{\{fieldErrors.fullName\}\}" kind="field"/);
+  assert.match(wxml, /wx:if="\{\{fieldErrors.mobilePhone\}\}" kind="field"/);
 });
 
 test('群发通知:标题/内容的问题写在各自字段下方', () => {
