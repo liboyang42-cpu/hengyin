@@ -24,7 +24,7 @@ Root assigned only `JourneyReviewTexts.java` and `BoundTemplateReviewTextsTest.j
 | File | SHA256 |
 | --- | --- |
 | `chengyinhub-system/src/main/java/com/chengyinhub/business/util/JourneyReviewTexts.java` | `42ab4afe838079f131276278fe35dc46138480648657c5265e660953085df9ab` |
-| `chengyinhub-admin/src/test/java/com/chengyinhub/business/util/BoundTemplateReviewTextsTest.java` | `acf39b3a3b1290fa47f423fb06389c6ad6b45a9639792cfd9e0e4b7cad4895f8` |
+| `chengyinhub-admin/src/test/java/com/chengyinhub/business/util/BoundTemplateReviewTextsTest.java` | `432ca2dcb5634a4221b2b0759a2e69d646522fc86adcbe7edba0a93062a20de9` |
 
 Root and the active POLICY Dispatch were notified. Root owns copying the overlay, compiling and running `BoundTemplateReviewTextsTest`, `ActivityBoundGameContentSafetyTest`, `ThemeBoundTemplateTextSafetyTest`, `JourneyReviewTextsTest`, `JourneyReviewTextsPlainFieldTest`, `TopicTextSafetyTest` and the original activity/admin/verification suites on the final union source.
 
@@ -40,3 +40,5 @@ Root and the active POLICY Dispatch were notified. Root owns copying the overlay
 Verdict: fix 1 first. The corrective overlay is ready, but its compile/tests and integrated runtime evidence remain pending root.
 
 Not checked: final JVM execution, real moderation provider, database transaction/state readback, screenshots, phone acceptance, concurrent game mutation, or final combined CI. No real funds action occurred.
+
+Coordinator follow-up: the VPS raw-text behavior cases passed, while the existing reflection fixture failed when setting static final `MEDAL_STYLE_GLOW`. Only both test reflection loops were narrowed to instance String fields; no production change or assertion on an instance field was removed. The updated test hash above was computed/read back by `shasum`; final rerun remains coordinator-owned.
