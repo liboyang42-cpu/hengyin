@@ -1,0 +1,3 @@
+#!/bin/bash
+# led.sh <lat> <lng> <prefix> '<extra steps>'
+timeout 500 node /root/j3t/drive.mjs "{\"identity\":\"j3-led-1\",\"path\":\"pages/play/index?topicId=990048&activityId=25\",\"lat\":$1,\"lng\":$2}" "[\"wait:3000\",\"tapx:开始游戏\",\"tapx:继续游戏\",\"wait:9000\",\"tapn:开启定位|1\",\"wait:1500\",\"tapx:继续探索\",\"wait:6000\",\"tapx:继续探索\",\"wait:3000\",\"tapn:开启定位|1\",\"wait:1500\",\"tapx:开始\",\"wait:3000\",\"say:pre\",\"shot:$3-a\"${4:+,$4}]" 2>&1 | grep -E "RLOG|TEXT|MISS|NET.*/api/(play/(answer|arrive|advanced|puzzle)|game/session/command)" | grep -v 'MISS tapn:开启定位\|MISS tapx:继续游戏\|MISS tapx:继续探索' | cut -c1-900

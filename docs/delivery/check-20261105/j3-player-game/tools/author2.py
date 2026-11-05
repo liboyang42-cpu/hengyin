@@ -9,16 +9,19 @@ print('become-leader', J(cl.http("POST", "/api/club/become-leader", token=tok, j
 st = cl.http("POST", "/api/publisher/identity/status", token=tok, json_body={})
 if not (st.get('data') or {}).get('registered'):
     print('identity', J(cl.http("POST", "/api/publisher/identity", token=tok, json_body={"realName": "周晓岚", "idCard": idcard('31010419880512003'), "consent": True, "source": "topic_publish"})))
+VMS = {k: (int(k.split('@')[1]) if '@' in k else int(os.environ.get('VM', '0'))) for k in keys.split(',')}
+keys_raw = keys
+keys = ','.join(k.split('@')[0] for k in keys.split(','))
 cfg = json.loads(subprocess.run(['node', '/root/j3t/gencfg2.js', '/profile/upload/2026/11/05/j3cat.png', keys], capture_output=True, text=True, check=True).stdout)
-klist = keys.split(',')
+klist = keys_raw.split(',')
 prev = (state().get(skey) or {}).get('templates') or {}
 tids = []
 for k in klist:
     if prev.get(k): tids.append(prev[k]); continue
-    v = cfg[k]
+    v = cfg[k.split('@')[0]]
     if v['err']: print('CFGERR', k, v['err']); tids.append(None); continue
     time.sleep(3)
-    body = {"title": v['label'] + '·' + name[:6], "description": v['label'], "validationMethod": int(os.environ.get("VM", "0")), "isSync": 0, "advancedConfigJson": v['json']}
+    body = {"title": v['label'] + '·' + name[:6], "description": v['label'], "validationMethod": VMS[k], "isSync": 0, "advancedConfigJson": v['json']}
     r = cl.http("POST", "/api/template/draft", token=tok, json_body=body)
     d = r.get('data'); tid = d if isinstance(d, int) else (d or {}).get('id') if isinstance(d, dict) else None
     print('template', k, tid, (r.get('msg') or '')[:120]); tids.append(tid)
@@ -43,7 +46,7 @@ for gi, g in enumerate(groups):
     for k in g:
         t = tids[klist.index(k)]
         if not t: continue
-        nodes.append({"name": "%02d %s" % (n + 1, cfg[k]['label']), "address": "上海市黄浦区中山东一路%d号" % (n + 1),
+        nodes.append({"name": "%02d %s" % (n + 1, cfg[k.split('@')[0]]['label']), "address": "上海市黄浦区中山东一路%d号" % (n + 1),
                       "longitude": "%.6f" % (121.4900 + n * 0.0004), "latitude": "%.6f" % (31.2380 + n * 0.0003),
                       "nodeTime": 10, "templateId": t})
         blocks.append({"type": "node", "nodeIndex": len(nodes) - 1}); n += 1

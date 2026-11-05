@@ -18,6 +18,7 @@ class H(http.server.BaseHTTPRequestHandler):
     def do_PUT(self):
         b = self._body(); n = len(b)
         open(self._path(), 'wb').write(b)
+        import json as _j; _j.dump({k: v for k, v in self.headers.items() if k.lower().startswith('x-oss-meta-') or k.lower()=='content-type'}, open(self._path()+'.meta','w'))
         et = '"%s"' % hashlib.md5(b).hexdigest().upper()
         self.send_response(200); self.send_header('ETag', et); self.send_header('x-oss-request-id', 'rig'); self.send_header('Content-Length', '0'); self.end_headers()
         sys.stderr.write('PUT %s %d\n' % (self.path, n))
@@ -26,12 +27,16 @@ class H(http.server.BaseHTTPRequestHandler):
         if not os.path.exists(f):
             self.send_response(404); self.send_header('Content-Length', '0'); self.end_headers(); return
         b = open(f, 'rb').read()
-        self.send_response(200); self.send_header('Content-Type', 'image/jpeg'); self.send_header('Content-Length', str(len(b))); self.send_header('ETag', '"%s"' % hashlib.md5(b).hexdigest().upper()); self.send_header('x-oss-request-id', 'rig'); self.end_headers()
+        import json as _j; meta = _j.load(open(f+'.meta')) if os.path.exists(f+'.meta') else {}
+        self.send_response(200)
+        for mk, mv in meta.items(): self.send_header(mk, mv)
+        if not any(k.lower()=='content-type' for k in meta): self.send_header('Content-Type', 'image/jpeg')
+        self.send_header('Last-Modified', 'Thu, 05 Nov 2026 03:00:00 GMT'); self.send_header('Content-Length', str(len(b))); self.send_header('ETag', '"%s"' % hashlib.md5(b).hexdigest().upper()); self.send_header('x-oss-request-id', 'rig'); self.end_headers()
         if not head: self.wfile.write(b)
     def do_HEAD(self): self.do_GET(head=True)
     def log_message(self, *a): pass
 import ssl
-s = http.server.ThreadingHTTPServer(('127.0.0.1', 9443), H)
+s = http.server.ThreadingHTTPServer((os.environ.get('OSS_BIND','127.0.0.1'), int(os.environ.get('OSS_PORT','9443'))), H)
 ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER); ctx.load_cert_chain(os.path.join(os.path.dirname(ROOT),'cert.pem'), os.path.join(os.path.dirname(ROOT),'key.pem'))
 s.socket = ctx.wrap_socket(s.socket, server_side=True)
 s.serve_forever()

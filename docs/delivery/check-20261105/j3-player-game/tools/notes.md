@@ -20,3 +20,13 @@
 - s15 blindTaste: 店员会把小样 line in a no-shop theme; 尝好了，松手睁眼 stays after; no verdict
 - s16 typeIn wrong: silent back to start, no feedback (37-t1s16-d)
 - s17 stopwatch: 9.696 shown 「9.70 · 早 0.30 秒」 counted miss vs ±0.300; after reopen remaining-tries count off by one: 3rd miss says 「还有 1 次机会」 + 再来一局 + 继续故事 (38-t1s17-e); route goes on
+- T2 纸本 反馈 s1 qaPick+fb wrong: full-screen saturated RED 「失败 / 没过，再看看四周。 / 继续」 (50-t2s1-d), status bar teal; then second screen 「本次玩法未通过 / 得分 0 / 已完成 0 项 / 再看看叶子。/ 原结果已保留，重新进入不会重置进度。/ 重新开始本次玩法 / 关闭」 (50-t2s1-f); retry -> right: full-screen GREEN ✓ 「对了，这一站过了。」 magenta status bar (50-t2s1-h); then 继续故事. Look 纸本 not applied to these screens.
+- T2 s3 sort+fb wrong -> fail screens; 关闭 returns to story, reopen shows fail screen with retry (no strand)
+- T2 s6 estimate+fb: far guess = FAIL (in T1 without 反馈 same guess completes). After 重新开始本次玩法 the 就这个数 button is dead (no request) until leaving and reopening the station (55-t2s6-g/h). Cause: playkit-estimate/index.js:102 `locked: !!result || this.data.locked` never clears on retry. picker-view wheel driven via its own bindchange (rig has no gesture)
+- T2 typeIn+fb wrong: no fail screen, author fail reply not shown, silently back to 开始 (56-t2s7)
+- T2 album: CTA 「拍照或选择照片完成相册」 styled as plain text; first OSS stand-in on :9443 refused (照片地址无效, port) and then 照片缺少上传归属信息 (no x-oss-meta) — HARNESS, fixed stand-in; then 照片已提交 ok; 继续故事 hidden behind album panel until 收起相册 (57-t2s8-d)
+- T2 finish card fine (59-t2-ending2)
+- T4 夜城 sensors: compass 2 failed reads -> 跳过这一站 -> 这一站已跳过 + 继续故事 OK; 弹球 same (stale 动作读取已中断 line stays); 安静挑战 passed (rig mic 0.03) — copy 「仅比较本机相对 PCM 振幅与校准阈值，不是分贝读数」「已校准 · 本机阈值 21%（相对满幅振幅，不是分贝）」; 喊一嗓子 passed with mic 0.9 — 「本机相对 PCM 峰值持续过线 5 秒」; 计步 WeRun denied -> 「需要授权微信运动才能计步」 + 跳过这一站 OK; 少排 0.00 kg
+- T4 predict chose A: 选 stamp on centred B 不会 card (65-t4s6-d) -> confirmed stamp lands on the wrong card both ways
+- LED (topic 990048, activity 25, lead 9008, player j3-led-1, director runtime PREPARE+START): header 「到场 0/1 人 · 第一章 迟到的电报」「队长带队中」; 同场路线 sheet with toggle + 开始 before stations; ch1 s1/s2 answered; then 「等待放行」 screen + 返回地图 (73-led-s2-c) — F4 fixed. 返回地图 -> map 「下一站 · 192m 乍浦路桥 导航过去」 points at the locked chapter's station (74-led-map). At s3 location still wait screen (75). After lead UNLOCK_CHAPTER 112 (APPLIED) and reopen -> s3 sheet, answer 1927 ok; s4 ok; finish card 4 坐标 400 解谜分; after finish the title says 「第一章 迟到的电报」 over chapter 2 text (77-led-end). Live release while the wait screen stays open: NOT VERIFIED (released on reopen).
+- legacy text Q: 「当前最高 100 解谜分 · 不影响探索值」 still (F14)

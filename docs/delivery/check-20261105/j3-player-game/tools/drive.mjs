@@ -68,6 +68,9 @@ await run(Object.assign({ agree: true }, opts), async (w) => {
       }
       else if (k === 'click') { const [x, y] = v.split(',').map(Number); await w.page.mouse.click(x, y); await S(900); }
       else if (k === 'log') { const l = w.log ? await w.log() : []; console.log('RLOG', JSON.stringify(l.slice(-(+v || 20))).slice(0, 3000)); }
+      else if (k === 'pickview') { // rig: picker-view has no gesture; fire its own bindchange with the value a scroll would emit (as j2 did for picker wheels)
+        const [cls, idx] = v.split('|');
+        console.log('PICKVIEW', JSON.stringify(await w.eval(`(function(){var hit=null;(function walk(r){r.querySelectorAll('*').forEach(function(el){if(el.shadowRoot)walk(el.shadowRoot);if(!hit&&el.__tag==='picker-view'&&String(el.className||'').indexOf('${cls}')>=0)hit=el;});})(document);if(!hit)return 'no picker-view';MPWEB.fire(hit,'change',{value:[${+idx}]});return 'fired';})()`))); await S(800); }
       else if (k === 'route') console.log('ROUTENOW', JSON.stringify(await w.route()));
       else console.log('UNKNOWN', st);
       if (['tap', 'tapx', 'tapn', 'sel'].includes(k)) await S(1200);
