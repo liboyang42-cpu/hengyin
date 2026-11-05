@@ -13,10 +13,19 @@ function count(n) {
   return Number.isFinite(v) && v > 0 ? v : 0;
 }
 
+// 普通 CITY 发布后可以合法停在 lifecycle=0；这里只区分展示，不改商业生命周期或资格。
+function isPublishedOrdinaryCity(topic) {
+  const src = topic || {};
+  return [1, '1'].includes(src.productType) && [1, '1'].includes(src.status)
+    && [1, '1'].includes(src.userStatus) && [0, '0'].includes(src.lifecycle);
+}
+
 function buildHostSteps(input) {
   const src = input || {};
   const lifecycle = Number(src.lifecycle);
-  const stage = Object.prototype.hasOwnProperty.call(STAGE_BY_LIFECYCLE, lifecycle) ? STAGE_BY_LIFECYCLE[lifecycle] : 1;
+  const ordinaryPublished = isPublishedOrdinaryCity(src);
+  const stage = ordinaryPublished ? 2
+    : (Object.prototype.hasOwnProperty.call(STAGE_BY_LIFECYCLE, lifecycle) ? STAGE_BY_LIFECYCLE[lifecycle] : 1);
   const nodeTotal = count(src.nodeTotal);
   const nodeFilled = count(src.nodeFilled);
   const pending = count(src.pendingCount);
@@ -56,6 +65,7 @@ function buildHostSteps(input) {
       subs: state === 'run' ? (step.subs || []) : [],
     };
   });
+  if (ordinaryPublished) return mapped.slice(0, 2);
   if (!freeExplore) return mapped;
   /* 走查 v2 R14(业主 2026-10-30):自由探索要先有 1 家俱乐部承办才能开售(后端开售闸
      SALE_EXECUTING_CLUB_UNRESOLVED)。发布之后插一步「邀请俱乐部承办」;没人接受时它是当前步,后面全部等着。 */
@@ -77,6 +87,7 @@ function buildHostSteps(input) {
    动作全部复用工作台现有派发;售票 / 进行中就是「去核销」,点了直接扫码。 */
 function hostPrimary(input) {
   const src = input || {};
+  if (isPublishedOrdinaryCity(src)) return { text: '查看客户', act: 'onQuickAction', key: 'customer', disabled: false };
   const lifecycle = Number(src.lifecycle);
   if (lifecycle === 7) return { text: '等待审核中', act: '', key: '', disabled: true };
   if (lifecycle === 0) return { text: '继续编辑', act: 'goAddStations', key: '', disabled: false };
@@ -91,4 +102,4 @@ function hostPrimary(input) {
   return { text: '', act: '', key: '', disabled: true };
 }
 
-module.exports = { buildHostSteps, hostPrimary };
+module.exports = { buildHostSteps, hostPrimary, isPublishedOrdinaryCity };

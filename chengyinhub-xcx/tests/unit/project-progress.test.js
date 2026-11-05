@@ -1,7 +1,23 @@
 // 走查 v2 R04/R16(2026-10-30):主题工作台底部进度按 lifecycle 推进,子项只指向工作台已有入口。
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { buildHostSteps } = require('../../pages/topic/utils/project-progress.js');
+const { buildHostSteps, hostPrimary, isPublishedOrdinaryCity } = require('../../pages/topic/utils/project-progress.js');
+
+test('R15 普通 CITY 已发布投影严格使用四个权威字段，不猜商业阶段', () => {
+  const topic = { productType: 1, status: 1, userStatus: 1, lifecycle: 0 };
+  assert.equal(isPublishedOrdinaryCity(topic), true);
+  assert.equal(isPublishedOrdinaryCity({ productType: '1', status: '1', userStatus: '1', lifecycle: '0' }), true);
+  for (const field of Object.keys(topic)) {
+    for (const value of [undefined, null, '', false, true, 99, field === 'lifecycle' ? 7 : 2]) {
+      assert.equal(isPublishedOrdinaryCity({ ...topic, [field]: value }), false, field + ': ' + value);
+    }
+  }
+  assert.deepEqual(buildHostSteps(topic).map(s => [s.key, s.state]), [['config', 'done'], ['publish', 'done']]);
+  assert.equal(hostPrimary(topic).key, 'customer');
+  assert.equal(hostPrimary({ ...topic, productType: 2 }).text, '继续编辑');
+  assert.equal(hostPrimary({ ...topic, status: 0 }).text, '继续编辑');
+  assert.equal(hostPrimary({ ...topic, userStatus: 0 }).text, '继续编辑');
+});
 
 test('招募中:招商是当前步,子项写俱乐部与商家进度并指向招商/俱乐部弹窗', () => {
   const steps = buildHostSteps({ lifecycle: 1, productType: 1, nodeTotal: 4, nodeFilled: 2, pendingCount: 1, clubCount: 1, paidCount: 0 });

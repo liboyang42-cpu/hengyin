@@ -21,6 +21,7 @@ const { resolveMenuChrome } = require('../../../utils/nav-safe-area.js');
 const mediaPreview = require('../../../utils/media-preview.js');
 const codeTextUtil = require('../utils/code-text.js');
 const hostLayers = require('./host-layers.js'); // 2026-10-31 P-6:主办工作台叠层(邀约 / 主页 / 档位 / 附近商家)
+const { isPublishedOrdinaryCity } = require('../utils/project-progress.js');
 
 function recruitBoundaryLabel(allowed, maxXp) {
   const parts = [];
@@ -2161,6 +2162,7 @@ Page({
       recruitStations: hostLayers.decorateStations(host.recruitChapters),
       hostTopic: {
         status: topic.status,
+        userStatus: topic.userStatus,
         productType: topic.productType,
         lifecycle: topic.lifecycle,
         name: topic.name || '未命名路线',
@@ -2534,9 +2536,9 @@ Page({
       : (kept.length ? [{ key: filter, title: '', rows: kept }] : []);
     /* F7:没开放售票哪来的客户 —— 主题还没开售(草稿 / 立项待审 / 招募 / 待定价)且一单没有时,
        这里就写「未售票」,汇总格写「—」,不摆三个 0 让人以为卖了却没人买。开售后的 0 是真 0,照常显示。 */
-    const lifecycle = Number((this.data.hostTopic && this.data.hostTopic.lifecycle != null)
-      ? this.data.hostTopic.lifecycle : (this.data.info && this.data.info.lifecycle));
-    const notSelling = !shopDay && !rows.length && [0, 7, 1, 2].indexOf(lifecycle) > -1;
+    const topic = (this.data.hostTopic && this.data.hostTopic.lifecycle != null) ? this.data.hostTopic : this.data.info;
+    const lifecycle = Number(topic && topic.lifecycle);
+    const notSelling = !shopDay && !rows.length && !isPublishedOrdinaryCity(topic) && [0, 7, 1, 2].indexOf(lifecycle) > -1;
     // CU-C-125:空态判据是**筛完之后**的 kept,不是未筛的 rows —— 拿 rows 判,一单没卖时
     // 四个 Tab 会说同一句「还没有人下单」,而选中「待核销」时真正要回答的是这一档有没有记录。
     // 「全部客户都已核销」这类说法也一起换掉:已接洽的人既不在待核销也不在已核销,

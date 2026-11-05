@@ -54,7 +54,8 @@ Component({
       // 2026-11-01:城市定向也按 lifecycle 走 —— 原来只看审核态,开售后胶囊仍写「招募中」,和底部「去核销」对不上。
       // 招募中招满了仍写「已招满」;没下发 lifecycle 的旧数据退回审核态口径。
       const filled = recruit && recruit.nodeTotal > 0 && recruit.nodeFilled >= recruit.nodeTotal;
-      if (Number.isInteger(lifecycle) && lifecycle >= 0 && lifecycle < FREE_STATUS.length) {
+      if (projectProgress.isPublishedOrdinaryCity(topic)) text = '已发布';
+      else if (Number.isInteger(lifecycle) && lifecycle >= 0 && lifecycle < FREE_STATUS.length) {
         text = lifecycle === 1 && filled && Number(topic.productType) !== 2 ? '已招满' : FREE_STATUS[lifecycle];
       } else if (Number(topic.productType) === 2) {
         text = '状态待确认';
@@ -96,12 +97,14 @@ Component({
         needExecutorClub: needClub,
         // 2026-11-01 业主:与俱乐部活动详情同一套 —— 开售后出「核销」三格,底部主键按状态变
         showVerify: [3, 4, 5, 6].indexOf(Number(topic && topic.lifecycle)) >= 0,
-        hostPrimary: projectProgress.hostPrimary({ lifecycle: topic && topic.lifecycle, needExecutorClub: needClub }),
+        hostPrimary: projectProgress.hostPrimary(Object.assign({}, topic, { needExecutorClub: needClub })),
         topicStructure: [Number(topic && topic.productType) === 2 ? '自由探索' : '城市定向', total ? total + ' 站' : ''].filter(Boolean).join(' · '),
         // 走查 v2 R04/R16:底部进度,只用这几份已有数据派生
         hostProgress: projectProgress.buildHostSteps({
           lifecycle: topic && topic.lifecycle,
           productType: topic && topic.productType,
+          status: topic && topic.status,
+          userStatus: topic && topic.userStatus,
           nodeTotal: total,
           nodeFilled: filled,
           pendingCount: recruit && recruit.pendingCount,
