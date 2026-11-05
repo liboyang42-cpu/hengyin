@@ -1,0 +1,22 @@
+# same-session routes, negative cases at 573c463b (session 9 started, topic 990014 author switch on)
+## before: HKEYS team_trail:pts:9 = 9004 990005 
+## e2e-openid-9009 state
+{"msg":"操作成功","code":200,"data":{"available":false}}
+## e2e-openid-9009 sync
+{"msg":"操作成功","code":200,"data":{"available":false}}
+## walk-player-4 state
+{"msg":"操作成功","code":200,"data":{"available":false}}
+## walk-player-4 sync
+{"msg":"操作成功","code":200,"data":{"available":false}}
+## guest state
+{"msg":"登录状态已失效，请重新登录","code":401}
+## guest sync
+{"msg":"登录状态已失效，请重新登录","code":401}
+## 9004 asks about session 13 (not in it)
+{"msg":"操作成功","code":200,"data":{"available":false}}
+## walk-player-3 (paid, session 9) opts out
+{"msg":"操作成功","code":200,"data":{"available":true,"share":false,"decided":true}}
+{"msg":"操作成功","code":200,"data":{"available":true,"share":false,"teams":[]}}
+## 9004 sync: what it gets back
+{"msg":"操作成功","code":200,"data":{"available":true,"share":true,"teams":[{"key":"71da38dbff27","done":0,"name":"城瘾用户","avatar":"","pts":[[31.2301,121.4759],[31.2302,121.4759],[31.2303,121.4758],[31.2304,121.4757],[31.2305,121.4756],[31.2306,121.4756],[31.2307,121.4755],[31.2308,121.4754],[31.2309,121.4753],[31.231,121.4753],[31.2311,121.4752],[31.2312,121.4751],[31.2313,121.475],[31.2314,121.475],[31.2315,121.4749],[31.2316,121.4748]],"ago":61}]}}
+## after: HKEYS team_trail:pts:9 = 9004 990005 ; team_trail:pts:13 =  

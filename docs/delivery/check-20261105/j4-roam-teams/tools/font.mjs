@@ -1,0 +1,15 @@
+import { launch } from '/root/rig/docs/delivery/cloud-walk-20261101/rig/mpweb/walk.mjs';
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+const w = await launch({ path: 'pages/roam/index', identity: 'walk-player-1', agree: true, lat: 31.2304, lng: 121.4737, font: 22, settle: 3500 });
+const big = `(()=>{const p=getCurrentPages().slice(-1)[0];p.__host.style.cssText+=';'+(p.data.fontScaleStyle||'');return getComputedStyle(p.__host).getPropertyValue('--cy-type-scale')+'|'+p.data.fontScaleStyle})()`;
+console.log('scale', await w.eval(big));
+await w.tap('开启定位'); await sleep(3500); await w.eval(big);
+await w.shot('76-entry-largest-font');
+await w.tap('开始漫游', { nth: 1 }); await sleep(2000); await w.tap('同意并开启'); await sleep(6000);
+await w.eval(big);
+await w.eval('MPWEB.mapTrueScale=true');
+await w.eval(`(()=>{const p=getCurrentPages().slice(-1)[0];(p._pois||[]).forEach(x=>{if(x.state==='fog')x.state='seen'});const s=16,lat=31.2304,lng=121.4737;const mpp=156543.03*Math.cos(lat*Math.PI/180)/Math.pow(2,s);const dLat=844*mpp/111000/2,dLng=390*mpp/(111000*Math.cos(lat*Math.PI/180))/2;p.setData({mapScale:s});p.onRegionChange({detail:{type:'end',causedBy:'scale',scale:s,region:{southwest:{latitude:lat-dLat,longitude:lng-dLng},northeast:{latitude:lat+dLat,longitude:lng+dLng}}}});return 1})()`);
+await sleep(2500);
+await w.shot('77-map-largest-font-z16');
+console.log('labels', await w.eval(`JSON.stringify((getCurrentPages().slice(-1)[0].data.pinLabels||getCurrentPages().slice(-1)[0].data.photoPins||[]).slice(0,3))`));
+await w.close();

@@ -1,0 +1,294 @@
+diff --git a/docs/delivery/cloud-walk-20261101/rig/app.py b/docs/delivery/cloud-walk-20261101/rig/app.py
+index 6d94c96b..b2aa20cc 100755
+--- a/docs/delivery/cloud-walk-20261101/rig/app.py
++++ b/docs/delivery/cloud-walk-20261101/rig/app.py
+@@ -23,6 +23,12 @@ LOG = RIG_HOME / "out" / "application.log"
+ def env():
+     work = RIG_HOME / "work"
+     e = ca.app_env(dict(os.environ), work)
++    # M2-ROUTES RIG PATCH: optional public media base (admin image uploads register approved LOCAL images against it)
++    if os.environ.get("APP_MEDIA_PUBLIC_BASE_URL"):
++        e["APP_MEDIA_PUBLIC_BASE_URL"] = os.environ["APP_MEDIA_PUBLIC_BASE_URL"]
++    # J4-1105 HARNESS: JVM opts (trust store for the local weather stub)
++    if os.environ.get("RIG_JAVA_TOOL_OPTIONS"):
++        e["JAVA_TOOL_OPTIONS"] = os.environ["RIG_JAVA_TOOL_OPTIONS"]
+     sf = RIG_HOME / "secrets.env"
+     if sf.exists():
+         for line in sf.read_text().splitlines():
+@@ -52,7 +58,11 @@ def start(fail_path=""):
+     # [SEAM] login: profile "local" lets the product's own non-prod switch send jscode2session to the rig's fake
+     # WeChat endpoint (mpweb/server.mjs on 8097). Only /sns/jscode2session uses this base URL.
+     cmd += ["--spring.profiles.active=druid,local",
+-            "--chengyin.test.wechat-api-base-url=http://127.0.0.1:%s" % os.environ.get("RIG_WEB_PORT", "8097")]
++            "--chengyin.test.wechat-api-base-url=http://127.0.0.1:%s" % os.environ.get("RIG_WEB_PORT", "8097"),
++            # j6 HARNESS: dummy OSS config so URL builders do not throw (no OSS is reachable from the rig)
++            "--CHENGYIN_OSS_ENDPOINT=oss-rig.invalid", "--CHENGYIN_OSS_ACCESS_KEY_ID=rigdummy",
++            "--CHENGYIN_OSS_ACCESS_KEY_SECRET=rigdummysecret", "--CHENGYIN_OSS_BUCKET_NAME=rig-bucket"]
++    cmd += [a for a in os.environ.get("RIG_APP_ARGS", "").split() if a]  # J4-1105 HARNESS
+     log = open(LOG, "ab")
+     p = subprocess.Popen(cmd, cwd=str(RIG_HOME / "work"), env=env(), stdout=log, stderr=subprocess.STDOUT,
+                          start_new_session=True)
+diff --git a/docs/delivery/cloud-walk-20261101/rig/mpweb-seed/tools/compile.mjs b/docs/delivery/cloud-walk-20261101/rig/mpweb-seed/tools/compile.mjs
+index 3098b681..519bbf86 100644
+--- a/docs/delivery/cloud-walk-20261101/rig/mpweb-seed/tools/compile.mjs
++++ b/docs/delivery/cloud-walk-20261101/rig/mpweb-seed/tools/compile.mjs
+@@ -130,7 +130,10 @@ function compileNode(el, file, ctx) {
+   }
+   if (el.tag === 'include' || el.tag === 'import') { node.src = resolve(file, a.src, '.wxml'); return node; }
+   if (el.tag === 'template' && a.name) { node.name = a.name; node.c = el.c.map((c) => compileNode(c, file)).filter(Boolean); return node; }
+-  if (el.tag === 'template' && a.is != null) { node.is = compileValue(a.is); if (a.data != null) node.data = compileValue(a.data, true); return node; }
++  if (el.tag === 'template' && a.is != null) { node.is = compileValue(a.is); if (a.data != null) node.data = compileValue(a.data, true);
++    /* CLUB-WALK HARNESS PATCH: keep wx:for / wx:if on <template is> */
++    for (const [k, v] of el.attrs) { if (k === 'wx:if') node.if = compileValue(v); else if (k === 'wx:elif') node.elif = compileValue(v); else if (k === 'wx:else') node.else = 1; else if (k === 'wx:for' || k === 'wx:for-items') node.for = compileValue(v); else if (k === 'wx:for-item') node.fi = v; else if (k === 'wx:for-index') node.fx = v; else if (k === 'wx:key') node.key = v; }
++    return node; }
+   const props = {};
+   for (const [k, v] of el.attrs) {
+     if (k === 'wx:if') node.if = compileValue(v);
+diff --git a/docs/delivery/cloud-walk-20261101/rig/mpweb/shell.html b/docs/delivery/cloud-walk-20261101/rig/mpweb/shell.html
+index bbcd2f62..0bbe9001 100644
+--- a/docs/delivery/cloud-walk-20261101/rig/mpweb/shell.html
++++ b/docs/delivery/cloud-walk-20261101/rig/mpweb/shell.html
+@@ -60,6 +60,7 @@ mp-page::-webkit-scrollbar{display:none}
+     scanPayload: q.get('scan') || '',
+     loc: q.get('lat') ? { lat: +q.get('lat'), lng: +q.get('lng') } : null,
+     heading: +(q.get('heading') || 0),
++    font: +(q.get('font') || 17), locdeny: q.get('locdeny') === '1', /* J4 RIG: font size + location refused */
+   };
+   window.__RIG_START = { path: q.get('path') || '', identity: q.get('identity') || '', scene: +(q.get('scene') || 1001) };
+   try { var st = q.get('storage'); if (st) window.__RIG_STORAGE = JSON.parse(st); } catch (e) {}
+diff --git a/docs/delivery/cloud-walk-20261101/rig/mpweb/src/nav.js b/docs/delivery/cloud-walk-20261101/rig/mpweb/src/nav.js
+index 5f970336..8f4d8480 100644
+--- a/docs/delivery/cloud-walk-20261101/rig/mpweb/src/nav.js
++++ b/docs/delivery/cloud-walk-20261101/rig/mpweb/src/nav.js
+@@ -352,6 +352,7 @@ MP.pickerSeam = function (el) {
+    marker data are visible. Tiles, gestures and native callouts are NOT VERIFIED. */
+ (function () {
+ var MP = window.MPWEB;
++MP.lastMapView = function () { var best = null; (MP.__mapEls || []).forEach(function (e) { if (e.isConnected && e.__mapView && (!best || e.__mapView.W * e.__mapView.H > best.W * best.H)) best = e.__mapView; }); return best; };
+ MP.drawMap = function (el, p) {
+   var cv = el.__mapCv;
+   if (!cv) { cv = el.__mapCv = document.createElement('canvas'); cv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0'; el.insertBefore(cv, el.firstChild); if (getComputedStyle(el).position === 'static') el.style.position = 'relative'; }
+@@ -361,27 +362,77 @@ MP.drawMap = function (el, p) {
+     el.__mapRaf = 0; var p = el.__mapProps || {};
+     var W = el.clientWidth, H = el.clientHeight; if (!W || !H) { setTimeout(function () { MP.drawMap(el, p); }, 200); return; }
+     cv.width = W * 2; cv.height = H * 2; var g = cv.getContext('2d'); g.setTransform(2, 0, 0, 2, 0, 0);
+-    g.fillStyle = '#1a1d21'; g.fillRect(0, 0, W, H);
++    /* J4-1105 HARNESS: tint the stand-in base by layer-style (rig slots 1 black, 2 white, 3 paper, 4 2077) so overlay contrast can be judged */
++    var LS = +(p['layer-style'] || p.layerStyle || 0), BASE = { 2: ['#f1f1ef', '#dcdcd8', '#cfcfca'], 3: ['#efe4cc', '#ddd0b2', '#cdbd9a'], 4: ['#120c22', '#2a1f4a', '#3a2a66'] }[LS] || ['#1a1d21', '#262a30', '#30353c'];
++    g.fillStyle = BASE[0]; g.fillRect(0, 0, W, H);
+     var seed = 11; function rnd() { seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
+-    for (var i = 0; i < 18; i++) { g.save(); g.translate(W * rnd(), H * rnd()); g.rotate(rnd() * Math.PI); g.fillStyle = i % 4 ? '#262a30' : '#30353c'; g.fillRect(-W * 2, -2, W * 4, i % 4 ? 3 : 6); g.restore(); }
++    for (var i = 0; i < 18; i++) { g.save(); g.translate(W * rnd(), H * rnd()); g.rotate(rnd() * Math.PI); g.fillStyle = i % 4 ? BASE[1] : BASE[2]; g.fillRect(-W * 2, -2, W * 4, i % 4 ? 3 : 6); g.restore(); }
+     var markers = (p.markers || []).filter(function (m) { return m && m.latitude != null && m.longitude != null; });
+     var lines = (p.polyline || []); var circles = p.circles || [];
+-    var pts = markers.map(function (m) { return [+m.latitude, +m.longitude]; });
+-    lines.forEach(function (l) { (l.points || []).forEach(function (q) { pts.push([+q.latitude, +q.longitude]); }); });
+-    var c0 = [+(p.latitude || (pts[0] || [31.23])[0]), +(p.longitude || (pts[0] || [0, 121.47])[1])];
+-    if (!pts.length) pts.push(c0);
+-    var la = pts.map(function (x) { return x[0]; }), ln = pts.map(function (x) { return x[1]; });
+-    var cx = (p['include-points'] || pts.length > 1) ? (Math.min.apply(0, ln) + Math.max.apply(0, ln)) / 2 : c0[1];
+-    var cy = (p['include-points'] || pts.length > 1) ? (Math.min.apply(0, la) + Math.max.apply(0, la)) / 2 : c0[0];
+-    var scale = +(p.scale || 16); var span = Math.max(Math.max.apply(0, ln) - Math.min.apply(0, ln), Math.max.apply(0, la) - Math.min.apply(0, la), 360 / Math.pow(2, scale) * 1.5);
+-    var k = Math.min(W, H) * 0.72 / span;
+-    function P(lat, lng) { return [W / 2 + (lng - cx) * k, H / 2 - (lat - cy) * k * 1.17]; }
+-    lines.forEach(function (l) { var ps = l.points || []; if (ps.length < 2) return; g.strokeStyle = l.color || '#5A90D6'; g.lineWidth = Math.max(2, +(l.width || 4) / 2); if (l.dottedLine) g.setLineDash([6, 5]); g.beginPath(); ps.forEach(function (q, j) { var xy = P(+q.latitude, +q.longitude); j ? g.lineTo(xy[0], xy[1]) : g.moveTo(xy[0], xy[1]); }); g.stroke(); g.setLineDash([]); });
+-    circles.forEach(function (c) { var xy = P(+c.latitude, +c.longitude); var r = (+c.radius || 50) / 111000 * k; g.strokeStyle = c.color || 'rgba(90,144,214,.8)'; g.fillStyle = c.fillColor || 'rgba(90,144,214,.15)'; g.beginPath(); g.arc(xy[0], xy[1], r, 0, 6.283); g.fill(); g.stroke(); });
+-    markers.forEach(function (m) { var xy = P(+m.latitude, +m.longitude); g.fillStyle = '#e5e7eb'; g.beginPath(); g.arc(xy[0], xy[1], 7, 0, 6.283); g.fill(); g.strokeStyle = '#5A90D6'; g.lineWidth = 2; g.stroke();
+-      var t = (m.callout && m.callout.content) || (m.label && m.label.content) || m.title || ''; if (t) { g.font = '600 11px -apple-system,sans-serif'; g.fillStyle = 'rgba(0,0,0,.65)'; var tw = g.measureText(t).width; g.fillRect(xy[0] - tw / 2 - 4, xy[1] - 26, tw + 8, 16); g.fillStyle = '#fff'; g.textAlign = 'center'; g.fillText(t, xy[0], xy[1] - 14); } });
+-    if (p['show-location'] && MP.cfg && MP.location) { var me = MP.location(); var xy2 = P(me.lat, me.lng); g.fillStyle = 'rgba(74,222,128,.25)'; g.beginPath(); g.arc(xy2[0], xy2[1], 14, 0, 6.283); g.fill(); g.fillStyle = '#4ADE80'; g.beginPath(); g.arc(xy2[0], xy2[1], 5, 0, 6.283); g.fill(); }
+-    g.fillStyle = 'rgba(255,255,255,.35)'; g.font = '10px sans-serif'; g.textAlign = 'left'; g.fillText('rig map stand-in · ' + markers.length + ' markers', 6, H - 6);
++    /* M2-ROUTES STAND-IN PATCH: when the page drives the view (custom callouts, or MP.mapTrueScale) project with
++       the page's own centre + scale (Web Mercator, 256 px tiles) instead of fitting all points. */
++    var hasCallouts = markers.some(function (m) { return m.customCallout; });
++    var trueScale = (hasCallouts || MP.mapTrueScale) && !MP.mapFitAll && p.latitude != null && p.longitude != null;
++    var P;
++    if (trueScale) {
++      var z = +(p.scale || 16), ppd = 256 * Math.pow(2, z) / 360;
++      var my = function (lat) { var r = lat * Math.PI / 180; return Math.log(Math.tan(Math.PI / 4 + r / 2)) * 180 / Math.PI; };
++      /* J4-1105 HARNESS: moveToLocation moves the stand-in camera until the page sets a new centre */
++      var ck = p.latitude + ',' + p.longitude; if (el.__lastCk !== ck) { el.__lastCk = ck; if (MP.flyTo && MP.flyTo.ck === ck) {} else if (MP.flyTo && MP.flyTo.ck) MP.flyTo = null; }
++      if (MP.flyTo && !MP.flyTo.ck) MP.flyTo.ck = ck;
++      var clat = +(MP.flyTo ? MP.flyTo.lat : p.latitude), clng = +(MP.flyTo ? MP.flyTo.lng : p.longitude), cmy = my(clat);
++      P = function (lat, lng) { return [W / 2 + (lng - clng) * ppd, H / 2 - (my(lat) - cmy) * ppd]; };
++      el.__mapView = { W: W, H: H, ppd: ppd, clat: clat, clng: clng, scale: z };
++      (MP.__mapEls || (MP.__mapEls = [])).indexOf(el) < 0 && MP.__mapEls.push(el);
++    } else {
++      var pts = markers.map(function (m) { return [+m.latitude, +m.longitude]; });
++      lines.forEach(function (l) { (l.points || []).forEach(function (q) { pts.push([+q.latitude, +q.longitude]); }); });
++      var c0 = [+(p.latitude || (pts[0] || [31.23])[0]), +(p.longitude || (pts[0] || [0, 121.47])[1])];
++      if (!pts.length) pts.push(c0);
++      var la = pts.map(function (x) { return x[0]; }), ln = pts.map(function (x) { return x[1]; });
++      var cx = (p['include-points'] || pts.length > 1) ? (Math.min.apply(0, ln) + Math.max.apply(0, ln)) / 2 : c0[1];
++      var cy = (p['include-points'] || pts.length > 1) ? (Math.min.apply(0, la) + Math.max.apply(0, la)) / 2 : c0[0];
++      var scale = +(p.scale || 16); var span = Math.max(Math.max.apply(0, ln) - Math.min.apply(0, ln), Math.max.apply(0, la) - Math.min.apply(0, la), 360 / Math.pow(2, scale) * 1.5);
++      var k = Math.min(W, H) * 0.72 / span;
++      P = function (lat, lng) { return [W / 2 + (lng - cx) * k, H / 2 - (lat - cy) * k * 1.17]; };
++      el.__mapView = null;
++    }
++    // polylines: real width (px), colour incl. #RRGGBBAA, border, round caps
++    lines.forEach(function (l) { var ps = l.points || []; if (ps.length < 2) return;
++      var path = function () { g.beginPath(); ps.forEach(function (q, j) { var xy = P(+q.latitude, +q.longitude); j ? g.lineTo(xy[0], xy[1]) : g.moveTo(xy[0], xy[1]); }); };
++      var w = Math.max(1, +(l.width || 4)), bw = +(l.borderWidth || 0);
++      g.lineCap = 'round'; g.lineJoin = 'round'; if (l.dottedLine) g.setLineDash([6, 5]);
++      if (bw > 0 && l.borderColor) { path(); g.strokeStyle = l.borderColor; g.lineWidth = w + bw * 2; g.stroke(); }
++      path(); g.strokeStyle = l.color || '#5A90D6'; g.lineWidth = w; g.stroke(); g.setLineDash([]); });
++    circles.forEach(function (c) { var xy = P(+c.latitude, +c.longitude); var r = trueScale ? (+c.radius || 50) / 111000 * el.__mapView.ppd : (+c.radius || 50) / 111000 * k; g.strokeStyle = c.color || 'rgba(90,144,214,.8)'; g.fillStyle = c.fillColor || 'rgba(90,144,214,.15)'; g.lineWidth = +(c.strokeWidth || 1); g.beginPath(); g.arc(xy[0], xy[1], r, 0, 6.283); g.fill(); g.stroke(); });
++    // markers: draw iconPath at width/height/anchor; fall back to a dot. Images load async → redraw once loaded.
++    var imgs = el.__mapImgs || (el.__mapImgs = {}); var pending = false; var byId = {};
++    markers.slice().sort(function (a, b) { return (+a.zIndex || 0) - (+b.zIndex || 0); }).forEach(function (m) { var xy = P(+m.latitude, +m.longitude);
++      var mw = +(m.width || 30), mh = +(m.height || mw), an = m.anchor || { x: .5, y: 1 };
++      byId[m.id] = { x: xy[0], y: xy[1], w: mw, h: mh, ax: an.x == null ? .5 : +an.x, ay: an.y == null ? 1 : +an.y, cc: m.customCallout };
++      var drawn = false;
++      if (m.iconPath) { var src = MP.assetUrl ? MP.assetUrl(m.iconPath) : m.iconPath; var im = imgs[src];
++        if (!im) { im = imgs[src] = new Image(); im.onload = im.onerror = function () { MP.drawMap(el, el.__mapProps); }; im.src = src; }
++        if (im.complete && im.naturalWidth) { g.save(); g.globalAlpha = m.alpha == null ? 1 : +m.alpha; g.drawImage(im, xy[0] - mw * byId[m.id].ax, xy[1] - mh * byId[m.id].ay, mw, mh); g.restore(); drawn = true; }
++        else if (!im.complete) pending = true; }
++      if (!drawn) { g.fillStyle = '#e5e7eb'; g.beginPath(); g.arc(xy[0], xy[1], 7, 0, 6.283); g.fill(); g.strokeStyle = '#5A90D6'; g.lineWidth = 2; g.stroke(); }
++      var t = (m.callout && m.callout.content) || (m.label && m.label.content) || ''; if (t && !m.customCallout) { g.font = '600 11px -apple-system,sans-serif'; g.fillStyle = 'rgba(0,0,0,.65)'; var tw = g.measureText(t).width; g.fillRect(xy[0] - tw / 2 - 4, xy[1] - mh * byId[m.id].ay - 18, tw + 8, 16); g.fillStyle = '#fff'; g.textAlign = 'center'; g.fillText(t, xy[0], xy[1] - mh * byId[m.id].ay - 6); } });
++    // cover-view callouts (slot="callout", child marker-id) → absolutely placed above their marker, like customCallout:
++    // bottom-centre at (marker x + anchorX, marker top + anchorY). Callouts without a visible marker are hidden.
++    var slot = null; for (var ci = 0; ci < el.children.length; ci++) { if (el.children[ci].getAttribute && el.children[ci].getAttribute('slot') === 'callout') slot = el.children[ci]; }
++    if (slot) { slot.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:1;overflow:hidden';
++      var sc = MP.scale || 1;
++      Array.prototype.forEach.call(slot.children, function (c) { var mid = (c.__vp || {})['marker-id']; var mk = byId[mid];
++        if (!mk || !mk.cc) { c.style.display = 'none'; return; }
++        c.style.display = ''; c.style.position = 'absolute'; c.style.pointerEvents = 'auto';
++        var r = c.getBoundingClientRect(); var cw = r.width / sc, ch = r.height / sc;
++        var top = mk.y - mk.h * mk.ay + (+mk.cc.anchorY || 0) - ch, left = mk.x + (+mk.cc.anchorX || 0) - cw / 2;
++        c.style.left = left.toFixed(1) + 'px'; c.style.top = top.toFixed(1) + 'px'; c.style.margin = '0'; });
++      if (el.__calloutFor !== p) { el.__calloutFor = p; setTimeout(function () { if (el.__mapProps === p) MP.drawMap(el, p); }, 400); }
++    }
++    /* M2-ROUTES STAND-IN PATCH: the native map fires bindupdated after each render; pages use it as a first-frame watchdog */
++    if (MP.fire) setTimeout(function () { MP.fire(el, 'updated', {}); }, 0);
++    g.fillStyle = 'rgba(255,255,255,.35)'; g.font = '10px sans-serif'; g.textAlign = 'left'; g.fillText('rig map stand-in · ' + markers.length + ' markers' + (trueScale ? ' · scale ' + (+p.scale || 16) : ''), 6, H - 6);
+   });
+ };
+ })();
+diff --git a/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js b/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js
+index e6ffacde..e5bb6142 100644
+--- a/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js
++++ b/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js
+@@ -40,6 +40,7 @@ function rpxStr(s) {
+ MP.rpxStr = rpxStr;
+ function assetUrl(p, dir) {
+   if (!p || typeof p !== 'string') return p;
++  if (MP.fsFiles && MP.fsFiles[p]) return MP.fsFiles[p]; /* M2-ROUTES HARNESS PATCH: in-memory user files */
+   if (/^(https?:|data:|blob:|wxfile:)/.test(p)) return MP.mapRemote ? MP.mapRemote(p) : p;
+   var path;
+   if (p[0] === '/') path = p.slice(1);
+@@ -192,7 +193,7 @@ function infoOf(file) {
+     if (n.g === 'import') { var sub = infoOf(n.src); for (var t in sub.tpl) info.tpl[t] = sub.tpl[t]; }
+   });
+   // nested wxs (inside blocks) too
+-  (function walk(list) { list.forEach(function (n) { if (n.g === 'wxs' && !info.wxs[n.m]) info.wxs[n.m] = n.src ? reqWxs(n.src) : reqWxs(n.inlineId); if (n.c && n.g !== 'template') walk(n.c); }); })(nodes);
++  (function walk(list) { list.forEach(function (n) { if (n.g === 'wxs' && !info.wxs[n.m]) info.wxs[n.m] = n.src ? reqWxs(n.src) : reqWxs(n.inlineId); if (n.g === 'template' && n.name && !info.tpl[n.name]) info.tpl[n.name] = { nodes: n.c, file: file }; /* CLUB-WALK HARNESS PATCH: nested <template name> */ if (n.c && n.g !== 'template') walk(n.c); }); })(nodes);
+   return info;
+ }
+ function rootScope(data, info, extraWxs) {
+@@ -908,7 +909,8 @@ MP.bootApp = function (launch) {
+ // ---------------- wx ----------------
+ var storage = {};
+ var DEV = window.__DEVICE || { w: 390, h: 844, sb: 47 };
+-var SYS = { windowWidth: DEV.w, windowHeight: DEV.h, screenWidth: DEV.w, screenHeight: DEV.h, statusBarHeight: DEV.sb, pixelRatio: Math.min(3, window.devicePixelRatio || 2), platform: 'ios', model: 'iPhone 14', system: 'iOS 17.5', brand: 'iPhone', SDKVersion: '3.6.0', version: '8.0.53', language: 'zh_CN', theme: 'dark', safeArea: { top: 47, left: 0, right: 390, bottom: 810, width: 390, height: 763 }, screenTop: 0, benchmarkLevel: 40, enableDebug: false, fontSizeSetting: 17 };
++var SYS = { windowWidth: DEV.w, windowHeight: DEV.h, screenWidth: DEV.w, screenHeight: DEV.h, statusBarHeight: DEV.sb, pixelRatio: Math.min(3, window.devicePixelRatio || 2), platform: 'ios', model: 'iPhone 14', system: 'iOS 17.5', brand: 'iPhone', SDKVersion: '3.6.0', version: '8.0.53', language: 'zh_CN', theme: 'dark', safeArea: { top: 47, left: 0, right: 390, bottom: 810, width: 390, height: 763 }, screenTop: 0, benchmarkLevel: 40, enableDebug: false, fontSizeSetting: (window.__RIG && window.__RIG.font) || 17 };
++function fail(o, msg) { var r = { errMsg: msg, errCode: 2 }; rST(function () { if (o && o.fail) o.fail(r); if (o && o.complete) o.complete(r); }, 0); return Promise.reject(r); }
+ function ok(o, res) { rST(function () { if (o && o.success) o.success(res || { errMsg: 'ok' }); if (o && o.complete) o.complete(res || {}); }, 0); return Promise.resolve(res || {}); }
+ function audioCtx() {
+   var a = new Audio(); a.preload = 'auto';
+@@ -939,7 +941,7 @@ var wxImpl = {
+   getSystemInfoSync: function () { return Object.assign({}, SYS); }, getWindowInfo: function () { return Object.assign({}, SYS); },
+   getDeviceInfo: function () { return Object.assign({}, SYS); }, getAppBaseInfo: function () { return Object.assign({}, SYS); },
+   getSystemInfo: function (o) { return ok(o, Object.assign({}, SYS)); }, getSystemSetting: function () { return { locationEnabled: true, wifiEnabled: true }; },
+-  getAppAuthorizeSetting: function () { return { cameraAuthorized: 'authorized', locationAuthorized: 'authorized', microphoneAuthorized: 'authorized' }; },
++  getAppAuthorizeSetting: function () { return { cameraAuthorized: 'authorized', locationAuthorized: (window.__RIG && window.__RIG.locdeny) ? 'denied' : 'authorized', microphoneAuthorized: 'authorized' }; },
+   getMenuButtonBoundingClientRect: function () { return { width: 87, height: 32, top: 51, left: 296, right: 383, bottom: 83 }; },
+   getAccountInfoSync: function () { return { miniProgram: { envVersion: 'develop', appId: 'demo' } }; },
+   getExtConfigSync: function () { return {}; }, getLaunchOptionsSync: function () { return { scene: 1001, query: {} }; }, getEnterOptionsSync: function () { return { scene: 1001, query: {} }; },
+@@ -964,11 +966,12 @@ var wxImpl = {
+   scanCode: function (o) { MP.ui.scan(o); },
+   chooseMedia: function (o) { MP.ui.choosePhoto(function (p) { o.success && o.success({ tempFiles: [{ tempFilePath: p, size: 1000, fileType: 'image' }], type: 'image' }); o.complete && o.complete(); }); },
+   chooseImage: function (o) { MP.ui.choosePhoto(function (p) { o.success && o.success({ tempFilePaths: [p], tempFiles: [{ path: p }] }); o.complete && o.complete(); }); },
+-  getLocation: function (o) { var l = MP.location(); return ok(o, { latitude: l.lat, longitude: l.lng, accuracy: 12, speed: 1, altitude: 4 }); },
+-  startLocationUpdate: function (o) { return ok(o); }, startLocationUpdateBackground: function (o) { return ok(o); }, stopLocationUpdate: function (o) { return ok(o); },
++  getRandomValues: function (o) { var a = new Uint8Array((o && o.length) || 16); crypto.getRandomValues(a); return ok(o, { randomValues: a.buffer }); }, /* J4 RIG: missing API */
++  getLocation: function (o) { if (window.__RIG && window.__RIG.locdeny) return fail(o, 'getLocation:fail auth deny'); var l = MP.location(); return ok(o, { latitude: l.lat, longitude: l.lng, accuracy: 12, speed: 1, altitude: 4 }); },
++  startLocationUpdate: function (o) { if (window.__RIG && window.__RIG.locdeny) return fail(o, 'startLocationUpdate:fail auth deny'); return ok(o); }, startLocationUpdateBackground: function (o) { if (window.__RIG && window.__RIG.locdeny) return fail(o, 'startLocationUpdateBackground:fail auth deny'); return ok(o); }, stopLocationUpdate: function (o) { return ok(o); },
+   onLocationChange: function (f) { MP.locListeners.push(f); }, offLocationChange: function (f) { MP.locListeners = MP.locListeners.filter(function (x) { return x !== f; }); },
+-  getSetting: function (o) { return ok(o, { authSetting: { 'scope.userLocation': true, 'scope.camera': true, 'scope.record': true, 'scope.werun': false, 'scope.writePhotosAlbum': true } }); },
+-  authorize: function (o) { return ok(o); }, openSetting: function (o) { return ok(o, { authSetting: {} }); },
++  getSetting: function (o) { return ok(o, { authSetting: { 'scope.userLocation': !(window.__RIG && window.__RIG.locdeny), 'scope.camera': true, 'scope.record': true, 'scope.werun': false, 'scope.writePhotosAlbum': true } }); },
++  authorize: function (o) { if (window.__RIG && window.__RIG.locdeny && o && /userLocation/.test(o.scope||'')) return fail(o, 'authorize:fail auth deny'); return ok(o); }, openSetting: function (o) { return ok(o, { authSetting: {} }); },
+   getWeRunData: function (o) { rST(function () { o.fail && o.fail({ errMsg: 'getWeRunData:fail auth deny' }); o.complete && o.complete(); }, 0); },
+   login: function (o) { return ok(o, { code: 'demo' }); }, checkSession: function (o) { return ok(o); },
+   request: function (o) { rST(function () { o.fail && o.fail({ errMsg: 'request:fail demo offline' }); o.complete && o.complete({}); }, 20); return { abort: function () {} }; },
+@@ -985,7 +988,12 @@ var wxImpl = {
+   loadFontFace: function (o) { var fam = String(o.family || ''); var p = document.fonts && document.fonts.load ? document.fonts.load('16px "' + fam + '"', '城瘾故事') : Promise.resolve([]); p.then(function (list) { if (list && list.length) { o.success && o.success({ status: 'loaded' }); } else { o.fail && o.fail({ errMsg: 'loadFontFace:fail' }); } o.complete && o.complete(); }, function () { o.fail && o.fail({ errMsg: 'loadFontFace:fail' }); o.complete && o.complete(); }); },
+   canIUse: function () { return true; }, isVKSupport: function () { return false; },
+   createCameraContext: function () { return { takePhoto: function (o) { MP.ui.choosePhoto(function (p) { o.success && o.success({ tempImagePath: p }); }); }, onCameraFrame: function () { return { start: function () {}, stop: function () {} }; } }; },
+-  createMapContext: function () { return { moveToLocation: function () {}, includePoints: function () {}, getCenterLocation: function (o) { o && o.success && o.success({ latitude: 31.25, longitude: 121.5 }); }, getScale: function (o) { o && o.success && o.success({ scale: 16 }); }, translateMarker: function () {}, addMarkers: function () {}, removeMarkers: function () {}, moveAlong: function () {}, setBoundary: function () {}, initMarkerCluster: function () {}, on: function () {} }; },
++  createMapContext: function () { return { /* M2-ROUTES HARNESS PATCH: getRegion/getScale from the stand-in's last true-scale view */
++    getRegion: function (o) { var v = MP.lastMapView && MP.lastMapView(); if (!v) { o && o.fail && o.fail({ errMsg: 'getRegion:fail' }); return; }
++      var dLng = v.W / 2 / v.ppd, dLat = v.H / 2 / v.ppd * Math.cos(v.clat * Math.PI / 180);
++      var r = { southwest: { latitude: v.clat - dLat, longitude: v.clng - dLng }, northeast: { latitude: v.clat + dLat, longitude: v.clng + dLng } };
++      setTimeout(function () { o && o.success && o.success(r); o && o.complete && o.complete(r); }, 0); },
++    moveToLocation: function (o) { /* J4-1105 HARNESS: record the fly-to and move the stand-in camera */ try { (window.MPWEB = window.MPWEB || {}).moves = (window.MPWEB.moves || []).concat([{ lat: o && o.latitude, lng: o && o.longitude, t: Date.now() }]); window.MPWEB.flyTo = o ? { lat: o.latitude, lng: o.longitude } : null; (window.MPWEB.__mapEls || []).forEach(function (e) { window.MPWEB.drawMap(e, e.__mapProps); }); } catch (e) {} }, includePoints: function () {}, getCenterLocation: function (o) { o && o.success && o.success({ latitude: 31.25, longitude: 121.5 }); }, getScale: function (o) { o && o.success && o.success({ scale: 16 }); }, translateMarker: function () {}, addMarkers: function () {}, removeMarkers: function () {}, moveAlong: function () {}, setBoundary: function () {}, initMarkerCluster: function () {}, on: function () {} }; },
+   getRecorderManager: function () {
+     if (recorder) return recorder;
+     var L = { start: [], stop: [], frame: [], error: [], pause: [], resume: [] }; var timer = null;
+@@ -1010,7 +1018,12 @@ var wxImpl = {
+   openPrivacyContract: function (o) { return ok(o); }, getPrivacySetting: function (o) { return ok(o, { needAuthorization: false }); }, onNeedPrivacyAuthorization: function () {}, requirePrivacyAuthorize: function (o) { return ok(o); },
+   reportAnalytics: function () {}, reportEvent: function () {}, getRealtimeLogManager: function () { return { info: function () {}, warn: function () {}, error: function () {}, setFilterMsg: function () {}, addFilterMsg: function () {} }; },
+   getLogManager: function () { return { log: function () {}, info: function () {}, warn: function () {}, debug: function () {} }; }, getPerformance: function () { return { now: function () { return Date.now(); }, createObserver: function () { return { observe: function () {}, disconnect: function () {} }; } }; },
+-  getFileSystemManager: function () { return { readFile: function (o) { o.fail && o.fail({}); }, writeFile: function (o) { o.success && o.success({}); }, access: function (o) { o.fail && o.fail({}); }, readFileSync: function () { return ''; }, getFileInfo: function (o) { o.success && o.success({ size: 1000 }); }, saveFile: function (o) { o.success && o.success({ savedFilePath: o.tempFilePath }); } }; },
++  getFileSystemManager: function () { /* M2-ROUTES HARNESS PATCH: writeFileSync/unlink keep files in memory (MP.fsFiles) as data: URLs */
++    var fsf = MP.fsFiles || (MP.fsFiles = {});
++    var mime = function (pth) { return /\.png$/i.test(pth) ? 'image/png' : /\.jpe?g$/i.test(pth) ? 'image/jpeg' : 'application/octet-stream'; };
++    var put = function (pth, data, enc) { fsf[pth] = enc === 'base64' ? 'data:' + mime(pth) + ';base64,' + data : 'data:text/plain;charset=utf-8,' + encodeURIComponent(String(data)); };
++    return { writeFileSync: function (pth, data, enc) { put(pth, data, enc); }, unlinkSync: function (pth) { delete fsf[pth]; }, unlink: function (o) { delete fsf[o.filePath]; o.success && o.success({}); }, accessSync: function (pth) { if (!fsf[pth]) throw new Error('no such file'); }, readdirSync: function () { return []; },
++      readFile: function (o) { o.fail && o.fail({}); }, writeFile: function (o) { put(o.filePath, o.data, o.encoding); o.success && o.success({}); }, access: function (o) { o.fail && o.fail({}); }, readFileSync: function () { return ''; }, getFileInfo: function (o) { o.success && o.success({ size: 1000 }); }, saveFile: function (o) { o.success && o.success({ savedFilePath: o.tempFilePath }); } }; },
+   getImageInfo: function (o) { var im = new Image(); im.onload = function () { o.success && o.success({ width: im.naturalWidth, height: im.naturalHeight, path: o.src }); o.complete && o.complete(); }; im.onerror = function () { o.fail && o.fail({ errMsg: 'fail' }); }; im.src = assetUrl(o.src); },
+   compressImage: function (o) { return ok(o, { tempFilePath: o.src }); },
+   createAnimation: function () { var steps = [], cur = []; var api = { export: function () { var s = steps.concat(cur.length ? [cur] : []); steps = []; cur = []; return { actions: s }; }, step: function () { steps.push(cur); cur = []; return api; } }; ['opacity', 'translateX', 'translateY', 'translate', 'scale', 'rotate', 'width', 'height', 'backgroundColor', 'top', 'left'].forEach(function (k) { api[k] = function () { cur.push([k, [].slice.call(arguments)]); return api; }; }); return api; },
+diff --git a/docs/delivery/cloud-walk-20261101/rig/mpweb/walk.mjs b/docs/delivery/cloud-walk-20261101/rig/mpweb/walk.mjs
+index 8d3c49fb..4f28ccda 100644
+--- a/docs/delivery/cloud-walk-20261101/rig/mpweb/walk.mjs
++++ b/docs/delivery/cloud-walk-20261101/rig/mpweb/walk.mjs
+@@ -23,14 +23,14 @@ const CHROME = process.env.CHROME || ['/usr/bin/google-chrome', '/opt/pw-browser
+ export async function launch(opts = {}) {
+   const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, args: ['--no-sandbox', '--disable-dev-shm-usage', '--autoplay-policy=no-user-gesture-required', '--lang=zh-CN'] });
+   const page = await browser.newPage();
+-  await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1, isMobile: false, hasTouch: false });
++  await page.setViewport({ width: 390, height: 844, deviceScaleFactor: +(process.env.RIG_DSF||1), isMobile: false, hasTouch: false });
+   const consoleLog = [], pageErrors = [];
+   page.on('console', (m) => consoleLog.push(`[${m.type()}] ${m.text()}`.slice(0, 2000)));
+   page.on('response', (r) => { if (r.status() >= 400) consoleLog.push(`[error] HTTP ${r.status()} ${r.url()}`.slice(0, 400)); });
+   page.on('requestfailed', (r) => consoleLog.push(`[error] FAILED ${r.url().slice(0, 300)} ${r.failure() && r.failure().errorText}`));
+   page.on('pageerror', (e) => pageErrors.push(String(e && e.stack || e).slice(0, 2000)));
+   const q = new URLSearchParams();
+-  for (const k of ['path', 'identity', 'env', 'lat', 'lng', 'heading', 'scan', 'scene']) if (opts[k] != null && opts[k] !== '') q.set(k, String(opts[k]));
++  for (const k of ['path', 'identity', 'env', 'lat', 'lng', 'heading', 'scan', 'scene', 'font', 'locdeny']) if (opts[k] != null && opts[k] !== '') q.set(k, String(opts[k]));
+   await page.goto(`${BASE}/?${q}`, { waitUntil: 'load', timeout: 120000 });
+   await page.waitForFunction(() => window.MPWEB && (window.MPWEB.booted || window.MPWEB.bootError), { timeout: 60000 });
+   const bootError = await page.evaluate(() => window.MPWEB.bootError || '');
+@@ -87,7 +87,7 @@ export async function launch(opts = {}) {
+     async shot(name) {
+       fs.mkdirSync(SHOTS, { recursive: true });
+       const file = path.join(SHOTS, name.endsWith('.jpg') ? name : name + '.jpg');
+-      const buf = await page.screenshot({ type: 'jpeg', quality: 70, clip: { x: 0, y: 0, width: 390, height: 844 }, captureBeyondViewport: false });
++      let q = 70, buf; do { buf = await page.screenshot({ type: 'jpeg', quality: q, clip: { x: 0, y: 0, width: 390, height: 844 }, captureBeyondViewport: false }); q -= 8; } while (buf.length > 195000 && q > 20); /* J4: 2x via RIG_DSF, under 200 KB */
+       fs.writeFileSync(file, buf); return file;
+     },
+     async text() { return page.evaluate(visibleText); },
+diff --git a/docs/delivery/cloud-walk-20261101/rig/up.sh b/docs/delivery/cloud-walk-20261101/rig/up.sh
+index 5d6a74b8..15c0b483 100755
+--- a/docs/delivery/cloud-walk-20261101/rig/up.sh
++++ b/docs/delivery/cloud-walk-20261101/rig/up.sh
+@@ -5,7 +5,7 @@
+ #        RIG_SKIP_BUILD=1 bash up.sh   # reuse existing candidate jar
+ set -euo pipefail
+ export LANG=C.UTF-8 LC_ALL=C.UTF-8   # POSIX locale breaks javac on the repo's Chinese filenames
+-SHA=a1d30fb295d361122aec76fa9c180b4b496a9b0a
++SHA=${RIG_SHA:-ecef2f078ae3cb53fa41621c71d5fea3cf9124e4}   # j4 check 1104
+ RIG_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ REPO="$(git -C "$RIG_DIR" rev-parse --show-toplevel)"
+ export RIG_HOME="${RIG_HOME:-$HOME/walk-rig}"

@@ -1,0 +1,14 @@
+import { launch } from '/root/rig/docs/delivery/cloud-walk-20261101/rig/mpweb/walk.mjs';
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+const w = await launch({ path: 'pages/publish/fabu/index?id=990014', identity: 'e2e-openid-9003', agree: true, settle: 6000 });
+await w.tap('主题详情'); await sleep(2500);
+const find = `(()=>{const walk=(r)=>{for(const el of r.querySelectorAll('*')){if(el.shadowRoot){const f=walk(el.shadowRoot);if(f)return f}if(el.childElementCount===0&&el.textContent.trim()==='同场路线')return el}return null};const el=walk(document);if(!el)return 'none';el.scrollIntoView({block:'center'});return 'ok'})()`;
+console.log('scroll', await w.eval(find)); await sleep(1200);
+await w.shot('54-author-team-trail-on');
+console.log('before', await w.data('themeTeamTrail'), String(await w.data('formData.themeRuntimeConfig')).slice(0, 200));
+await w.tapSel('[aria-label="同场路线"], [accessibility-label="同场路线"]').catch(e => console.log('tapSel fail', e.message));
+await sleep(1200);
+console.log('after', await w.data('themeTeamTrail'), String(await w.data('formData.themeRuntimeConfig')).slice(0, 300));
+await w.shot('55-author-team-trail-off');
+console.log((await w.text()).slice(0, 600));
+await w.close();
