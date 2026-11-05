@@ -37,4 +37,15 @@ Run 2026-11-05, private branch from `integ/launch-test-20261103`. **Not a phone 
 
 To finish the walks someone needs a rig player with an unstarted run: a fresh registration on activity 13 for 9004 (through the order screen with the pay stub, or SQL), then the media stand-in at `127.0.0.1:8765` and `look_json` switched per look.
 
-STATUS: PARTIAL - merchant_club answered (stale rig) and raw order error fixed; throttled-media and four-look walks still not done because no rig player could start a fresh run
+## Third pass (10:21 instruction): what exactly blocks the walks
+
+Done in my own rig database only, no product code changed:
+- Reset player 9009 on activity 13: registration 74 `verification_status` 1→0, deleted its `cms_registration_scan`, `redemption`, `store_verify_growth_delivery`, `player_run_session` and `player_node_progress` rows. The play page still opens on 「本轮探索已完成 · 看看这一天的收获」. Reason: activity 13 is the chain's 探店日 (自由探索 shop-day) session, a different game from the theme journey. `index.wxml:987` shows that text for `mode==2`, and `/api/play/journey/casebook` answers 「这一局还没开始」. It has no chapters, narration or station audio to play. It cannot carry the media walk.
+- Player 9004 on topic 990015 (no activity id): the play page shows 「请先购买自玩通行证 · 获取通行证」. That button opens the topic page, whose 立即报名 sheet lists only the four ¥69 club sessions (11.5, 11.15 to 11.17). There is no self-play pass ticket seeded on this topic, so no free or paid solo ticket can be bought on screen. The order text I saw earlier belonged to a hidden sheet layer.
+- A solo journey topic with chapters, narration, station voice and music (k10's 990017, codex's 990027) was made by authoring on screen (k10 `s_*.js`, a long editor session) or by SQL that was never saved to the repo. I did not repeat the authoring in the 30 minutes.
+
+Needed to finish: either replay k10's `proof/k10-walk/s_reg.js` through `s_ticket.js` (author, publish, free ticket) on this rig, or seed a solo 自玩通行证 ticket on topic 990015 and set `cms_topic_chapter.audio_url` / the template audio. The stand-in media server (`127.0.0.1:8765`: fast, slow trickle, 500, hang) is ready and the `look_json` switch is a single UPDATE.
+
+Still not walked: throttled and failing narration, station voice, station and theme music, images, video; the four looks on station sheets, photo, scan, finish card and error states. Nothing was heard.
+
+STATUS: PARTIAL - code fixes and the merchant_club answer done; media and four-look walks blocked because the rig has no solo journey topic and no solo ticket to start a fresh run
