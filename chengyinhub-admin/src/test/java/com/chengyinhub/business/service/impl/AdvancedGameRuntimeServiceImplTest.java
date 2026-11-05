@@ -2205,14 +2205,16 @@ class AdvancedGameRuntimeServiceImplTest {
 
     @Test void photoOrScanCompletionUsesOnlyTheCurrentServerSessionProof() throws Exception {
         GameRuntimeSession session = runningSession("{\"qa\":{\"enabled\":true,\"mode\":\"SHOT\"}}",
-                "{\"qa\":{\"finished\":true,\"passed\":true,\"lastImageUrl\":\"owned\",\"photoUploaderMemberId\":42}}");
+                "{\"qa\":{\"finished\":true,\"passed\":true,\"lastImageUrl\":\"owned\"}}");
         when(sessionMapper.selectPlayerByOwner(ACTIVITY_ID, TOPIC_ID, NODE_ID, MEMBER_ID)).thenReturn(session);
         java.util.List<Long> uploaders = new java.util.ArrayList<>();
         ReflectionTestUtils.setField(service, "photoEvidenceVerifier", (java.util.function.BiConsumer<String,Long>)(url, member) -> { assertEquals("owned",url); uploaders.add(member); });
         assertTrue(service.hasStationGameProof(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID));
-        assertEquals(Collections.singletonList(42L), uploaders);
+        assertEquals(Collections.singletonList(MEMBER_ID), uploaders);
         ReflectionTestUtils.setField(service, "photoEvidenceVerifier", (java.util.function.BiConsumer<String,Long>)(url, member) -> { throw new IllegalArgumentException("照片凭据无效"); });
         assertThrows(IllegalArgumentException.class, () -> service.hasStationGameProof(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID));
+        session.setStateJson("{\"qa\":{\"finished\":true,\"passed\":true,\"lastImageUrl\":\"expired-owned-url\",\"photoUploaderMemberId\":"+MEMBER_ID+"}}");
+        assertTrue(service.hasStationGameProof(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID), "新局已核验照片不因签名过期再要一份证明");
         session.setConfigSnapshotJson("{\"scan\":{\"enabled\":true}}"); session.setStateJson("{\"scan\":{\"scanned\":true}}");
         assertTrue(service.hasStationGameProof(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID));
         session.setStateJson("{}"); assertFalse(service.hasStationGameProof(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID));

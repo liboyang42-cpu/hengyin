@@ -3357,9 +3357,9 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         if (!readyForBase(session, config, state)) return false;
         if (enabled(config.get("qa")) && "SHOT".equals(config.path("qa").path("mode").asText())
                 && state.path("qa").path("passed").asBoolean()) {
-            Long uploader = state.path("qa").has("photoUploaderMemberId")
-                    ? state.path("qa").path("photoUploaderMemberId").asLong() : memberId;
-            photoEvidenceVerifier.accept(state.path("qa").path("lastImageUrl").asText(), uploader);
+            // 该字段只随通过上传校验的服务端计划落库；签名过期不能抹掉已核验的本局事实。
+            if (!state.path("qa").has("photoUploaderMemberId"))
+                photoEvidenceVerifier.accept(state.path("qa").path("lastImageUrl").asText(), memberId);
             return true;
         }
         return enabled(config.get("scan")) && state.path("scan").path("scanned").asBoolean();
