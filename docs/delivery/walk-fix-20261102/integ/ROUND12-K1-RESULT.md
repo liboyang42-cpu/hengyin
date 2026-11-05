@@ -180,14 +180,20 @@ j1 N4, p2 N-1…N-5, j1 N3 untouched. No time left after items 1–7, 9–11.
 
 ## Verification
 
-- Java: full `chengyinhub-admin` suite at `49a3b0fe` (without DB credentials): 13,077 run; the only non-DB failures were mine
-  (fixed). Targeted sets after each change all green. Real MySQL 8.0.45 (loopback container): RegistrationFunds 114/114,
-  MerchantIdentity 21/21, ComplaintPeriod, SettlementGenerateBatch, TandianriBatch0, PublicActivityScopeGate,
-  ClubEditionCompensation and the other 7-day classes green. A second full run with all funds ITs is in the section
-  below if it finished.
-- Mini-program: `ui-integrity.js` → `UI-GATE-0:PASS`; `build-action-ledger.js --write` rebuilt twice (line shifts and
-  the new order-detail route only); unit files touched: 106 + 195 pass.
-- CI: see below.
+- Java, full `chengyinhub-admin` suite with all funds ITs on local MySQL 8.0.45, at `03620206`: 11,824 run, 4 failures,
+  5 errors. Mine and fixed in `b77d772c` / `1467da34`: `MerchantIdentityMybatisIntegrationTest` (rule-7 fixture had no
+  `status`), `RedemptionRewardClawbackMyBatisTest` (award fixture had no `status`),
+  `ClubWaitlistClaimMembershipRaceTransactionTest` (service built without the registration mapper the new guard reads);
+  each rerun green. Environment only, not mine: `B03AssetMybatisIntegrationTest` and four `longrun.*` classes need
+  `CHENGYIN_TEST_MYSQL_DATABASE_BASE`/suffix settings I didn't set.
+- Real MySQL 8.0.45: RegistrationFunds 114/114, MerchantIdentity 21/21, ComplaintPeriodWithdrawalGate,
+  SettlementGenerateBatch, TandianriBatch0Funds, PublicActivityScopeGate, ClubEditionCompensation green.
+- Mini-program full unit run (16,175): 10 failures, all from my changes in two files (`batch10-api-contract`: save-as
+  contract now asserts the copy; `coop-supply-station-contract`: the page stub didn't know `utils/price-input.js`);
+  fixed, both files 20/20. `ui-integrity.js` → `UI-GATE-0:PASS`; action ledger rebuilt (line shifts and the new
+  order-detail route only).
+- CI: Funds MySQL IT at `636faf87` was red only on the two MerchantIdentity cases above (732 run). The final CI result
+  for the last commit is in the owner notification; this file was written before it finished.
 
 ## Not done / not verified
 
