@@ -100,7 +100,7 @@ const methods = {
   _pruneSurvivalActRefs: pruneActRefs,
   _refreshSurvivalSummary(c = this._runtimeConfig()) {
     const game = c.gameplayRuntime || {}, rows = (game.survival || {}).recoveries || [], rations = (game.survival || {}).rations || [], facilities = game.facilities || [];
-    this.setData({ themeReplayEnabled: c.replayEnabled === true, themeTeamTrail: c.teamTrail !== false, survivalSummary: { recoveryText: rows.length || rations.length ? '休整 ' + rows.filter(r => r.kind === 'REST').length + ' · 救助 ' + rows.filter(r => r.kind === 'RESCUE').length + ' · 配给 ' + rations.length : '未配置', facilityText: facilities.length ? '独立 ' + facilities.filter(f => !f.facilityKey.startsWith('tpl_node_')).length + ' · 节点生成 ' + facilities.filter(f => f.facilityKey.startsWith('tpl_node_')).length : '未配置', cardText: c.card ? '已自定义' : '默认' } });
+    this.setData({ themeReplayEnabled: c.replayEnabled === true, themeTeamTrail: c.teamTrail === true || (c.teamTrail !== false && ((c.gameplayRuntime || {}).runtimeScope) !== 'PLAYER'), survivalSummary: { recoveryText: rows.length || rations.length ? '休整 ' + rows.filter(r => r.kind === 'REST').length + ' · 救助 ' + rows.filter(r => r.kind === 'RESCUE').length + ' · 配给 ' + rations.length : '未配置', facilityText: facilities.length ? '独立 ' + facilities.filter(f => !f.facilityKey.startsWith('tpl_node_')).length + ' · 节点生成 ' + facilities.filter(f => f.facilityKey.startsWith('tpl_node_')).length : '未配置', cardText: c.card ? '已自定义' : '默认' } });
   },
   openSurvivalEditor(e) {
     this._survivalDraft = clone(this._runtimeConfig()); this._survivalDirty = {};
@@ -206,7 +206,9 @@ const methods = {
   },
   toggleThemeTeamTrail(e) {
     const c = this._runtimeConfig(), value = e.detail.value === true;
-    if (value) delete c.teamTrail; else c.teamTrail = false;
+    // 个人独立进行的单人主题默认关:作者打开要明写 true;队伍玩法默认开,开 = 不写
+    if (value && (c.gameplayRuntime || {}).runtimeScope === 'PLAYER') c.teamTrail = true;
+    else if (value) delete c.teamTrail; else c.teamTrail = false;
     this._saveRuntime(c);
     this.setData({ themeTeamTrail: value }); return true;
   },

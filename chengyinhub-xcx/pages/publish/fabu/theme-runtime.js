@@ -227,7 +227,8 @@ const methods = {
     const valueRows = purposeOptions(c, initial.parse(this.data.formData.journeyRules)).filter(row => row.key === 'HP' || values.COUNTER.test(row.key || ''));
     const fallbackKey = row && row.fallback && row.fallback.statKey ? row.fallback.statKey : 'HP';
     const valueIndex = Math.max(0, valueRows.findIndex(v => v.key === fallbackKey));
-    const reason = !game.runtimeScope ? '请先选择进行方式' : !actKey ? '请先保存本章节点' : !items.length ? '请先在主题里添加物品' : '';
+    const savedCount = this._chapterSavedNodes(index).length;
+    const reason = !game.runtimeScope ? '请先选择进行方式' : !actKey ? (savedCount ? '本章节点还没有绑定玩法' : '请先保存本章节点') : !items.length ? '请先在主题里添加物品' : '';
     this.setData({ runtimeChapterRation: {
       enabled: !!row, actKey, rationKey: row ? row.rationKey : '', itemIndex, itemLabel: itemIndex >= 0 ? items[itemIndex].name : '请选择',
       quantity: String(row ? row.quantity : 1), fallback: String(row ? (row.fallback ? row.fallback.amount : row.fallbackHpCost || 0) : 0), values: valueRows, valueIndex, items, reason,
@@ -285,6 +286,20 @@ const methods = {
     this._saveRuntime(c);
   },
   // 「全部完成」开关:开 = 全部完成(默认);关 = 至少完成填写的站数
+  /* 有互斥组时「全部完成」只能是「每组选一个、其余都做」:按组计数的单位数落成 ANY_N,开关不再停在开 */
+  _groupUnits(groups) {
+    const rules = this.data.runtimeChapterRules, extra = (rules.extraNodes || []).length;
+    return rules.nodes.length - extra - groups.reduce((total, ids) => total + Math.max(0, ids.length - 1), 0);
+  },
+  _syncGroupCompletion() {
+    const rules = this.data.runtimeChapterRules, ids = rules.groups.map(group => group.ids).filter(list => list.length >= 2);
+    if (!ids.length) return;
+    const patch = {};
+    if (rules.completionType !== 'ANY_N') patch['runtimeChapterRules.completionType'] = 'ANY_N';
+    patch['runtimeChapterRules.quantity'] = String(Math.max(1, this._groupUnits(ids)));
+    this.setData(patch);
+    this._refreshOverflowOptions();
+  },
   onChapterCompleteAll(e) {
     const all = !!e.detail.value;
     this.setData({ 'runtimeChapterRules.completionType': all ? 'ALL' : 'ANY_N', 'runtimeChapterRules.overflowSlot': all ? '' : this.data.runtimeChapterRules.overflowSlot });
@@ -328,6 +343,7 @@ const methods = {
     group.ids = group.ids.includes(id) ? group.ids.filter(value => value !== id) : group.ids.concat(id);
     group.options.forEach(option => { option.selected = group.ids.includes(option.id); });
     this.setData({ 'runtimeChapterRules.groups': groups });
+    this._syncGroupCompletion();
   },
   removeChapterExclusiveGroup(e) {
     const groups = this.data.runtimeChapterRules.groups.slice(); groups.splice(Number(e.currentTarget.dataset.index), 1);
@@ -404,6 +420,8 @@ const methods = {
     if (!this._saveChapterRation()) return false;
     this._saveChapterCosts(this.data.runtimeChapterRules.index, costs.patch);
     const draft = this.data.runtimeChapterRules, index = draft.index;
+    const groupIds = draft.groups.map(group => group.ids).filter(list => list.length >= 2);
+    if (groupIds.length && draft.completionType !== 'ANY_N') { draft.completionType = 'ANY_N'; draft.quantity = String(Math.max(1, this._groupUnits(groupIds))); }
     const completion = draft.completionType === 'ANY_N' ? { type: 'ANY_N', quantity: Number(draft.quantity) } : null;
     if (completion && String(draft.overflowSlot || '').trim()) completion.overflowSlot = String(draft.overflowSlot).trim();
     const exclusiveGroups = draft.groups.map(group => group.ids);

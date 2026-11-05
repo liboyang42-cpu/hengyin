@@ -603,3 +603,35 @@ test('章末配给不足时可扣自定义数值（温度），扣 0 不要求�
   p._openChapterRules(0);
   assert.equal(p.data.runtimeChapterRation.fallback, '2'); assert.equal(p.data.runtimeChapterRation.values[p.data.runtimeChapterRation.valueIndex].key, 'counter.temp');
 });
+
+test('M2 E12:选了互斥组后「全部完成」落成按组计数,不再停在开', () => {
+  const p = page();
+  p.data.formData.chapters[0].nodes = [{ id: 101, name: '甲' }, { id: 102, name: '乙' }, { id: 103, name: '丙' }];
+  p._openChapterRules(0);
+  assert.equal(p.data.runtimeChapterRules.completionType, 'ALL');
+  p.addChapterExclusiveGroup();
+  p.toggleChapterExclusiveNode({ currentTarget: { dataset: { index: 0, id: 101 } } });
+  p.toggleChapterExclusiveNode({ currentTarget: { dataset: { index: 0, id: 102 } } });
+  assert.equal(p.data.runtimeChapterRules.completionType, 'ANY_N');
+  assert.equal(p.data.runtimeChapterRules.quantity, '2');
+  assert.equal(p._saveChapterRules(), true);
+  assert.deepEqual(p._runtimeConfig().chapters[0].completion, { type: 'ANY_N', quantity: 2 });
+});
+
+test('M2 E13:本章节点已保存时,章末配给不再说「请先保存本章节点」', () => {
+  const p = page();
+  p.data.formData.chapters[0].nodes = [{ id: 101, name: '甲' }];
+  p._openChapterRules(0);
+  assert.notEqual(p.data.runtimeChapterRation.reason, '请先保存本章节点');
+});
+
+test('M2 P1:个人独立进行的单人主题,同场路线默认关,作者打开才明写 true', () => {
+  const p = page();
+  Object.assign(p, require('../../pages/publish/fabu/theme-runtime-survival.js').methods);
+  const c = p._runtimeConfig(); c.gameplayRuntime = { runtimeScope: 'PLAYER' }; p._saveRuntime(c);
+  p._refreshSurvivalSummary();
+  assert.equal(p.data.themeTeamTrail, false);
+  p.toggleThemeTeamTrail({ detail: { value: true } });
+  assert.equal(p._runtimeConfig().teamTrail, true);
+  assert.equal(p.data.themeTeamTrail, true);
+});

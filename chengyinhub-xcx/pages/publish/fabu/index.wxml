@@ -1089,7 +1089,7 @@
              版式与位置照 Figma J3(5221:19016):紧跟章节名称(稿中「本章阶段」的位置),粗体小标题 + 同行灰字说明,下面整宽灰药丸。
              完成要求 = 一个「全部完成」开关,默认开;关掉才填至少完成几站。 -->
         <view class="ch-sec">
-          <view class="ch-sec__head"><text class="ch-sec__title">完成要求</text><text class="ch-sec__desc">关闭后可设最少完成节点数</text></view>
+          <view class="ch-sec__head"><text class="ch-sec__title">完成要求</text></view>
           <view class="ch-pill-row">
             <text>全部完成</text>
             <cy-switch checked="{{runtimeChapterRules.completionType !== 'ANY_N'}}" bindchange="onChapterCompleteAll" accessibility-label="全部完成" />
@@ -1102,11 +1102,10 @@
             <cy-dropdown topic-editor range="{{runtimeOverflowOptions}}" range-key="label" value="{{-1}}" bind:change="onChapterOverflowPick">
               <view class="ch-pill-row"><text>超出后补做一站</text><view class="ch-pill-row__value"><text>{{runtimeOverflowLabel}}</text><cy-icon name="chevron-right" size="24" /></view></view>
             </cy-dropdown>
-            <text class="ch-sec__note">补做一个节点占一份额度，与额外节点共用</text>
           </block>
         </view>
         <view class="ch-sec">
-          <view class="ch-sec__head"><text class="ch-sec__title">章末配给</text><text class="ch-sec__desc">本章结束时消耗物品，不够时扣数值</text></view>
+          <view class="ch-sec__head"><text class="ch-sec__title">章末配给</text></view>
           <view class="ch-pill-row">
             <text>{{runtimeChapterRation.enabled ? '已开启' : '不消耗物品'}}</text>
             <cy-switch checked="{{runtimeChapterRation.enabled}}" disabled="{{!!runtimeChapterRation.reason && !runtimeChapterRation.enabled}}" bindchange="onChapterRationToggle" accessibility-label="章末配给" />
@@ -1132,7 +1131,7 @@
         <!-- 章末数值消耗(通用,不分主题):本章结束时扣的生命/幸运/自定义数值。运行端在章末照此扣除,
              所以存量非零消耗必须在这里看得见、改得了;停用的数值标出来,不静默删。 -->
         <view class="ch-sec" wx:if="{{runtimeChapterCostRows.length || runtimeChapterCostOptions.length}}">
-          <view class="ch-sec__head"><text class="ch-sec__title">章末消耗</text><text class="ch-sec__desc">本章结束时扣除的数值</text></view>
+          <view class="ch-sec__head"><text class="ch-sec__title">章末消耗</text></view>
           <view class="ch-pill-row" wx:for="{{runtimeChapterCostRows}}" wx:for-item="cost" wx:for-index="ci" wx:key="key">
             <text>{{cost.label}}{{cost.inactive ? '（数值未启用）' : ''}}</text>
             <view class="ch-pill-row__value">
@@ -1145,7 +1144,7 @@
           </cy-dropdown>
         </view>
         <view class="ch-sec">
-          <view class="ch-sec__head"><text class="ch-sec__title">互斥选项</text><text class="ch-sec__desc">同组节点只能完成其中一个</text></view>
+          <view class="ch-sec__head"><text class="ch-sec__title">互斥选项</text></view>
           <view class="ch-group" wx:for="{{runtimeChapterRules.groups}}" wx:for-item="group" wx:for-index="gi" wx:key="*this">
             <view class="ch-group__head"><text>第{{gi + 1}}组</text><text class="ch-group__del" data-index="{{gi}}" bindtap="removeChapterExclusiveGroup" aria-role="button" aria-label="移除第{{gi + 1}}组" hover-class="cy-pressed" hover-stay-time="80">移除</text></view>
             <view class="node-chips">
@@ -1153,7 +1152,6 @@
             </view>
           </view>
           <view class="ch-pill-btn" bindtap="addChapterExclusiveGroup" aria-role="button" aria-label="添加互斥组" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="24" /><text>添加互斥组</text></view>
-          <text class="ch-sec__note" wx:if="{{!runtimeChapterRules.nodes.length}}">先保存草稿，再选择本章节点。</text>
         </view>
         <!-- 2026-09-04 拍板:音频从故事流的可重复块升成【章节的一个属性】,一章最多一段。
              它是这一章的背景旁白 —— 玩家进入本章时自动播放,所以它没有"插在第几段"这回事,

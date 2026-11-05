@@ -17,7 +17,7 @@ const { shouldUseAr, arSupported, pillOf } = require('./ar-gate.js');
 // C1:扫码比对节点静态码 —— 只证明码对得上,不证明人在现场
 const { SCAN_MATCH_NOTE } = require('../../utils/sensor-contract.js');
 
-const TITLE = '扫一下门口的码';
+const TITLE = '扫描这一站的二维码';
 // AR 迟迟放不下 / 认不出:15 秒后自动回落屏幕叠加 —— 服务端早已算过这一站,画面不能一直卡在「找地面」
 const AR_GIVE_UP_MS = 15000;
 

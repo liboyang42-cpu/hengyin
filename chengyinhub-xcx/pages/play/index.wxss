@@ -1861,19 +1861,19 @@ page { background: var(--cy-color-bg-page); }
 /* 开场页(原型 game-intro,2026-09-24):黑底,主题名大字,读/玩/梦三行,底部白色主按钮;点下整页 .4s 淡出 */
 .st-intro{ position:fixed; left:0; right:0; top:0; bottom:0; z-index:121; box-sizing:border-box; /* ds-ok 压过开机层 */
   padding:0 46rpx calc(env(safe-area-inset-bottom) + 48rpx); display:flex; flex-direction:column;
-  background:#000000; opacity:1; transition:opacity .4s ease; } /* ds-ok 故事流同一张黑底 */
+  background:var(--atmo-bg, #000000); opacity:1; transition:opacity .4s ease; } /* ds-ok 跟着所选画面风格的默认章节底色(星尘=纯黑) */
 .st-intro--out{ opacity:0; }
 .st-intro__body{ flex:1; display:flex; flex-direction:column; justify-content:center; }
-.st-intro__k{ font-size:21rpx; letter-spacing:4rpx; color:rgba(255,255,255,.6); } /* ds-ok 同 .pv-ending__k */
-.st-intro__t{ margin-top:23rpx; font-size:80rpx; font-weight:800; line-height:1.15; color:#FFFFFF; } /* ds-ok 原型开场大标题 */
-.st-intro__line{ margin-top:23rpx; font-size:29rpx; line-height:1.7; color:rgba(255,255,255,.72); } /* ds-ok 同 .pv-ending__copy */
+.st-intro__k{ font-size:21rpx; letter-spacing:4rpx; color:var(--atmo-muted, rgba(255,255,255,.6)); } /* ds-ok 同 .pv-ending__k */
+.st-intro__t{ margin-top:23rpx; font-size:80rpx; font-weight:800; line-height:1.15; color:var(--atmo-text, #FFFFFF); } /* ds-ok 原型开场大标题 */
+.st-intro__line{ margin-top:23rpx; font-size:29rpx; line-height:1.7; color:var(--atmo-muted, rgba(255,255,255,.72)); } /* ds-ok 同 .pv-ending__copy */
 .st-intro__go{ height:104rpx; border-radius:var(--cy-radius-pill); display:flex; align-items:center; justify-content:center; /* ds-ok 胶囊按钮,同 .pv-ending__go */
-  background:#FFFFFF; color:#000000; font-size:31rpx; font-weight:700; } /* ds-ok 玩家主按钮=反色中性 */
+  background:var(--atmo-text, #FFFFFF); color:var(--atmo-bg, #000000); font-size:31rpx; font-weight:700; } /* ds-ok 玩家主按钮=反色中性,跟画面风格 */
 
 /* 初始状态(原型 statsIntro,2026-09-24):与开场页同一张黑底,一行一个数值,底部同一颗白色主按钮 */
 .st-stats{ position:fixed; left:0; right:0; top:0; bottom:0; z-index:117; box-sizing:border-box; /* ds-ok 压过故事流,低于梦层 */
   padding:0 46rpx calc(env(safe-area-inset-bottom) + 48rpx); display:flex; flex-direction:column;
-  background:#000000; opacity:1; transition:opacity .4s ease; } /* ds-ok 故事流同一张黑底 */
+  background:var(--atmo-bg, #000000); opacity:1; transition:opacity .4s ease; } /* ds-ok 跟着所选画面风格的默认章节底色(星尘=纯黑) */
 .st-stats--out{ opacity:0; }
 .st-stats__body{ flex:1; display:flex; flex-direction:column; justify-content:center; gap:27rpx; }
 .st-stats__k{ font-size:21rpx; letter-spacing:4rpx; color:rgba(255,255,255,.6); } /* ds-ok 同 .st-intro__k */

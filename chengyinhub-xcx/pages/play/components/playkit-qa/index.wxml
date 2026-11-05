@@ -53,7 +53,7 @@
 
       <!-- ③ 拍照打卡:提示词大字摆在正中,那句话就是这一屏 -->
       <block wx:else>
-        <view class="qa__shot-lead pe pe--blur" style="--pe-d:.3s">{{shotLead}}</view>
+        <view class="{{shotLead === title ? 'qa__shot-lead' : 'qa__lead'}} pe pe--blur" style="--pe-d:.3s">{{shotLead}}</view>
         <view class="qa__shot-note" wx:if="{{shotNote}}">{{shotNote}}</view>
       </block>
 

@@ -35,7 +35,7 @@ page {
   /* fill 用 backwards 不用 both：both 会常驻 100% 帧的 transform，给 fixed 后代（cy-sheet）建 containing block 把弹层裁进本页容器 */
   animation: cg-rise var(--cy-motion-slow) var(--cy-ease-out) var(--cy-motion-fast) backwards;
 }
-.cg-scroll-pad { height: 220rpx; }
+.cg-scroll-pad { height: calc(260rpx + env(safe-area-inset-bottom)); } /* 固定底栏 + 失败说明条之上要能把最后一行滚出来 */
 
 @keyframes cg-rise {
   0% { opacity: 0; transform: translateY(16rpx); }

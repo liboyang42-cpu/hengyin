@@ -783,7 +783,10 @@ App({
             if (r.ok) {
               typeof callback == 'function' && callback(r.results);
             } else {
-              that.showModal({ content: '上传失败：' + ((r.failures[0] && r.failures[0].msg) || '') });
+              const first = r.failures[0] || {};
+              // 音频等进审核队列不是失败:直说「已提交审核」,不挂「上传失败」
+              const waiting = first.status === 'review_pending' && !first.rejected;
+              that.showModal({ content: waiting ? (first.msg || '文件已提交审核，通过后请重试此文件') : '上传失败：' + (first.msg || '') });
             }
           }
         }));

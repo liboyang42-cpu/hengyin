@@ -25,13 +25,11 @@
      <view class="node-card__ico mode-opt__ico"><cy-icon name="{{item.icon}}" size="32" /></view>
      <view class="node-card__main">
       <text class="node-card__title mode-opt__name">{{item.label}}</text>
-      <text class="mode-opt__desc">{{item.summary}}</text>
       <text wx:if="{{item.reason}}" class="node-binding__error">{{item.reason}}</text>
      </view>
      <view class="mode-opt__mark {{item.selected ? 'is-on' : ''}}" aria-hidden="true" />
     </view>
    </view>
-   <text class="story-initial__example">与票务人数、自由探索的设置互不影响。</text>
   </block>
 
   <block wx:elif="{{structureEditor.kind === 'endings'}}">

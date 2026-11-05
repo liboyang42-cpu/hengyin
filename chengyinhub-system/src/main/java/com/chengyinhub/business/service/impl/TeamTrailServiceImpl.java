@@ -207,12 +207,17 @@ public class TeamTrailServiceImpl implements ITeamTrailService {
         return ttl;
     }
 
-    /** 作者在主题配置里 teamTrail=false 时整场关掉;没配置 = 开。 */
+    /** 作者在主题配置里 teamTrail=false 时整场关掉。没配置:写明个人独立进行(PLAYER,单人主题) = 关,作者显式打开 teamTrail=true 才开;其余 = 开。 */
     static boolean authorAllows(String publishedConfig) {
         if (publishedConfig == null || publishedConfig.trim().isEmpty()) return true;
         try {
             JSONObject c = JSON.parseObject(publishedConfig);
-            return c == null || !Boolean.FALSE.equals(c.getBoolean("teamTrail"));
+            if (c == null) return true;
+            Boolean flag = c.getBoolean("teamTrail");
+            if (flag != null) return flag;
+            JSONObject game = c.getJSONObject("gameplayRuntime");
+            String scope = game == null ? null : game.getString("runtimeScope");
+            return !"PLAYER".equals(scope);
         } catch (Exception e) {
             return true;
         }

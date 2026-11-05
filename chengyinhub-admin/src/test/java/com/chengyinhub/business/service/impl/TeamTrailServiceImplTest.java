@@ -248,6 +248,16 @@ class TeamTrailServiceImplTest {
     }
 
     @Test
+    void soloThemeIsOffUnlessAuthorTurnsItOn() {
+        topic.setPublishedThemeRuntimeConfigJson("{\"schemaVersion\":1,\"gameplayRuntime\":{\"runtimeScope\":\"PLAYER\"}}");
+        assertEquals(false, service.state(1L, 10L).get("available"));
+        topic.setPublishedThemeRuntimeConfigJson("{\"schemaVersion\":1,\"teamTrail\":true,\"gameplayRuntime\":{\"runtimeScope\":\"PLAYER\"}}");
+        assertEquals(true, service.state(1L, 10L).get("available"));
+        topic.setPublishedThemeRuntimeConfigJson("{\"schemaVersion\":1,\"gameplayRuntime\":{\"runtimeScope\":\"TEAM\"}}");
+        assertEquals(true, service.state(1L, 10L).get("available"));
+    }
+
+    @Test
     void authorSwitchOffDeletesTheCallersStoredPoints() {
         service.sync(1L, 10L, walk(31.2, 3), 0, false);
         service.sync(3L, 10L, walk(31.3, 3), 0, false);

@@ -3502,7 +3502,7 @@ Page({
               submitError: '',
               creationSuccess: {
                 show: true, eyebrow: '节点玩法已保存', title: tpl.title || '新玩法', icon: that._gameIcon(),
-                detail: '已绑定当前主题，将随主题一起审核。',
+                detail: '',
                 // 故事玩法不出人数 / 时长(W-04),表单里那两个是默认值,作者从没填过 —— 不印
                 metaPrimary: '',
                 metaSecondary: '',
