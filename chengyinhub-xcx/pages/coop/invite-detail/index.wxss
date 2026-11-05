@@ -151,8 +151,8 @@
 .card-title { margin-bottom: var(--cy-space-2); font-size: var(--cy-type-section-title); font-weight: 700; color: var(--cy-text-title); }
 .kv { align-items: center; min-height: 96rpx; border-bottom: 1rpx solid var(--cy-border-card); }
 .kv:last-child { border-bottom: 0; }
-.kv .k { font-size: var(--cy-font-label); color: var(--cy-text-secondary); }
-.kv .v { font-size: var(--cy-font-label); font-weight: 600; color: var(--cy-text-title); }
+.kv .k { flex-shrink: 0; font-size: var(--cy-font-label); color: var(--cy-text-secondary); }
+.kv .v { flex: 1; min-width: 0; word-break: break-all; font-size: var(--cy-font-label); font-weight: 600; color: var(--cy-text-title); }
 .kv .v--muted { flex: 1; min-width: 0; font-weight: 500; color: var(--cy-text-tertiary); }
 .kv-contact { display: flex; align-items: center; gap: var(--cy-space-2); }
 .meta-copy { padding: 6rpx 18rpx; border-radius: var(--cy-radius-pill); background: var(--cy-bg-card-2); font-size: var(--cy-font-caption); font-weight: 600; }

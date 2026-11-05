@@ -4951,7 +4951,7 @@ page { background: var(--cy-btn-solid-bg); }
 .sp-lock { flex: none; width: 88rpx; height: 88rpx; display: flex; align-items: center; justify-content: center; color: var(--cy-color-text-tertiary); }
 .sp-fixed { flex: none; font-size: 26rpx; font-weight: 600; color: var(--cy-color-text-secondary); } /* ds-ok P-9 原型尺寸(业主批准稿,逐字照搬) */
 .sp-look { display: flex; flex-direction: column; gap: 16rpx; }
-.sp-look__pv { display: block; height: 240rpx; border-radius: var(--cy-radius-lg); overflow: hidden; }
+.sp-look__pv { display: block; border-radius: var(--cy-radius-lg); overflow: hidden; }
 .sp-story { border-radius: var(--cy-radius-lg); overflow: hidden; background: var(--cy-color-bg-elevated); }
 .sp-chrow { display: flex; align-items: center; gap: 24rpx; min-height: 116rpx; padding: 0 24rpx 0 28rpx; border-bottom: 1rpx solid var(--cy-color-border-subtle); }
 .sp-chrow__no { flex: none; width: 52rpx; height: 52rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--cy-color-text-primary); color: var(--cy-color-bg-page); font-size: 26rpx; font-weight: 800; } /* ds-ok P-9 原型尺寸(业主批准稿,逐字照搬) */
