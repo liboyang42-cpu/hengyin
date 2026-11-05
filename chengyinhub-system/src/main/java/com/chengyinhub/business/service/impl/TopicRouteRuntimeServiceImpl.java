@@ -3314,15 +3314,36 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     @Override
     public boolean pendingCompassCheck(Long memberId,Long topicId,Long activityId,Long nodeId) {
         TopicRouteSession session=currentSession(memberId,topicId,activityId);
-        if(session==null || genericPlayer(session))return false;
+        JsonNode config=legacyCompassCheck(session,nodeId);
+        if(config==null)return false;
+        TopicRouteAction receipt=findCheckAction(session,memberId,nodeId,config.path("check").path("checkId").asText(),JourneyCheckActionId.STEP_SETTLE);
+        return receipt==null || !readReceipt(receipt).isSettled();
+    }
+
+    private JsonNode legacyCompassCheck(TopicRouteSession session,Long nodeId) {
+        if(session==null || genericPlayer(session))return null;
         TopicRouteEngine.State state=readEngineState(session.getStateJson());
-        if(state.getCompletedNodeIds().contains(nodeId))return false;
+        if(state.getCompletedNodeIds().contains(nodeId))return null;
         JsonNode config=validator.readTree(session.getConfigSnapshotJson()).path("nodeConfigs").path(String.valueOf(nodeId));
         if(config.has("outcomeRules") || !config.path("compass").path("enabled").asBoolean()
-                || !config.path("check").path("enabled").asBoolean())return false;
-        String checkId=config.path("check").path("checkId").asText();
-        TopicRouteAction receipt=findCheckAction(session,memberId,nodeId,checkId,JourneyCheckActionId.STEP_SETTLE);
-        return receipt==null || !readReceipt(receipt).isSettled();
+                || !config.path("check").path("enabled").asBoolean())return null;
+        return config;
+    }
+
+    @Override
+    public boolean completeCompassCheckArrival(Long memberId,Long topicId,Long activityId,Long nodeId,
+            Integer puzzleScore,String completionMode) {
+        TopicRouteSession session=currentSession(memberId,topicId,activityId);
+        JsonNode config=legacyCompassCheck(session,nodeId);
+        if(config==null)return false;
+        TopicRouteAction receipt=findCheckAction(session,memberId,nodeId,config.path("check").path("checkId").asText(),JourneyCheckActionId.STEP_SETTLE);
+        if(receipt==null || !readReceipt(receipt).isSettled())return false;
+        // 到达只建 status=0 的事实；前置玩法通过且本局检定已结算后，才由完成链转正。
+        PlayerNodeProgress progress=new PlayerNodeProgress();
+        progress.setMemberId(memberId);progress.setActivityId(session.getActivityId());
+        progress.setTopicId(topicId);progress.setNodeId(nodeId);progress.setPlayInstanceId(session.getPlayInstanceId());
+        progress.setPuzzleScore(puzzleScore);progress.setCompletionMode(completionMode);
+        return progressMapper.markGameplayQuestDone(progress)>0;
     }
 
     @Override

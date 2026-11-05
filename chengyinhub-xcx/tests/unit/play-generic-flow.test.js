@@ -154,12 +154,12 @@ test('正式结算只显示本次服务端正数 XP，不回退配置 points', (
   assert.equal(notDone.data.nodes[0].done, false); assert.equal(notDone.data.flyScore, false);
 });
 test('有高级配置仍用既有 startGame 高级分支，基础文字与选项保留原题面', async () => {
-  for (const [vm, advanced] of [[1,false],[3,false],[4,false],[3,true]]) {
-    const { page } = loadPage(); page.stopAudio = () => {}; page.data.nodes = [{ nodeId: 41, vm, hasAdvanced: advanced, question: '现场选择', options: { A: '第一项', B: '第二项' } }];
+  for (const [vm, advanced] of [[1,false],[2,false],[3,false],[4,false],[3,true]]) {
+    const { page } = loadPage(); page.stopAudio = () => {}; page.data.photoTaken = true; page.data.nodes = [{ nodeId: 41, vm, hasAdvanced: advanced, question: '现场选择', options: { A: '第一项', B: '第二项' } }];
     page.data.themeBag = backpack.present({ sessionId: 7, version: 9, status: 'ACTIVE', activeQuest: 'q', quests: [{ questKey: 'q', nodeId: 41 }], allowedActions: [{ operation: 'QUEST_CANCEL', contentId: 'q' }] }, []);
     await page.onThemeGameplayAction({ currentTarget: { dataset: { index: 0 } } });
     if (advanced) assert.equal(page.data.advancedPlay.show, true);
-    else { assert.equal(page.data.screen, 'gamePlay'); assert.equal(page.data.game.vm, vm); if (vm === 3) assert.deepEqual(page.data.game.opts.map(o => o.v), ['第一项', '第二项']); }
+    else { assert.equal(page.data.screen, 'gamePlay'); assert.equal(page.data.game.vm, vm); assert.equal(page.data.photoTaken, false); if (vm === 3) assert.deepEqual(page.data.game.opts.map(o => o.v), ['第一项', '第二项']); }
   }
 });
 
@@ -202,8 +202,21 @@ test('co-located compass resumes arrival only after a settled check in the same 
     const {page}=loadPage();let arrivals=0;
     page._playOwner='7';page._sessionKey=()=>same?'run':'changed';page._isPlayAccountCurrent=()=>true;
     page._compassCheckResume={owner:'7',sessionKey:'run',nodeId:41};
-    page.data.journeyCheck={show:true,r5:false,present:'fullscreen',receipt:{settled}};
+    page.data.journeyCheck={show:true,nodeId:41,r5:false,present:'fullscreen',receipt:{settled}};
     page.arrive=id=>{assert.equal(id,41);arrivals++;};
     page.closeJourneyCheck();await new Promise(resolve=>setImmediate(resolve));assert.equal(arrivals,expected);
   }
+});
+
+test('reopening a co-located compass check restores continuation from the owned encounter', async () => {
+  const {page,app}=loadPage();const node={nodeId:41,done:false,advancedConfig:{compass:{enabled:true}}};
+  page.data.topicId=9;page.data.nodes=[node];page.data.sheet={show:true,node};
+  page._playOwner='7';page._sessionKey=()=> 'run';page._isPlayAccountCurrent=()=>true;page._restoreJourneyCheck=()=>{};
+  app.sendRequest=o=>o.success({code:200,data:{allowedActions:['check'],check:{checkId:'check-41',present:'fullscreen'}}});
+  page._probeJourneyCheck(node);await new Promise(resolve=>setImmediate(resolve));
+  assert.deepEqual(page._compassCheckResume,{nodeId:41,owner:'7',sessionKey:'run'});
+  page.data.journeyCheck.receipt={settled:true};let arrived=0;page.arrive=()=>arrived++;
+  page.closeJourneyCheck();await new Promise(resolve=>setImmediate(resolve));assert.equal(arrived,1);
+  page._compassCheckResume={nodeId:99,owner:'7',sessionKey:'run'};
+  page.closeJourneyCheck();await new Promise(resolve=>setImmediate(resolve));assert.equal(arrived,1,'another station must not consume the old continuation');
 });

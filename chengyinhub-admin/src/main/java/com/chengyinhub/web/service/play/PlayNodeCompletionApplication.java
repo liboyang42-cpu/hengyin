@@ -364,6 +364,11 @@ public class PlayNodeCompletionApplication {
             if (rows == 0 && shopDay && shopDayProofService.markGameDone(memberId, actId, node.getTopicId(), node.getId())) {
                 rows = 1;
             }
+            if (rows == 0 && !shopDay && topicRouteRuntimeService != null
+                    && topicRouteRuntimeService.completeCompassCheckArrival(memberId,node.getTopicId(),actId,
+                            node.getId(),puzzleScore,completionMode)) {
+                rows = 1;
+            }
         }
         boolean firstTime = (rows > 0);
         // 原局锁由命令入口持有；进度赢家先入账，再进入既有 member 奖励锁。

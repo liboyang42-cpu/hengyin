@@ -6201,7 +6201,7 @@ Page({
         puzzleScoring: !!node.puzzleScoring,
         medalName: node.medalName, medalImg: node.medalImg, couponId: node.couponId
       },
-      answerInput: '', answerSel: '', gWrong: false, gRight: null,
+      answerInput: '', answerSel: '', photoTaken: false, gWrong: false, gRight: null,
       gNetErr: this._gameWriteUnknown ? this._gameWriteUnknownMessage : '',
       gNetRetryable: false, gWriteUnknown: !!this._gameWriteUnknown,
       shownHints: node.usedHints || [], revealed: false, wrongCount: 0,
@@ -7889,6 +7889,9 @@ Page({
       }
       const kit = pickJourneyCheck(r.data);
       if (!kit) return;
+      const compass = currentNode.advancedConfig && currentNode.advancedConfig.compass;
+      this._compassCheckResume = !kit.blocked && compass && compass.enabled
+        ? { nodeId: currentNode.nodeId, owner: this._playOwner, sessionKey: this._sessionKey() } : null;
       this.setData({ journeyCheck: Object.assign({ show: true, nodeId: node.nodeId, receipt: null }, kit) });
       this._restoreJourneyCheck();
       if (kit.present === 'inline' && !kit.blocked) {
@@ -7928,10 +7931,12 @@ Page({
     const resume = this._compassCheckResume;
     const settled = this.data.journeyCheck.receipt && this.data.journeyCheck.receipt.settled;
     this.setData({ 'journeyCheck.show': false });
-    if (resume && settled && resume.owner === this._playOwner && resume.sessionKey === this._sessionKey()) {
+    if (!this.data.journeyCheck.r5 && resume && settled && resume.nodeId === this.data.journeyCheck.nodeId
+        && resume.owner === this._playOwner && resume.sessionKey === this._sessionKey()) {
       this._compassCheckResume = null;
       this.refreshRouteState().then(ok => {
-        if (ok && this._isPlayAccountCurrent() && resume.owner === this._playOwner && resume.sessionKey === this._sessionKey()) this.arrive(resume.nodeId);
+        if (ok && this._isPlayAccountCurrent() && resume.owner === this._playOwner && resume.sessionKey === this._sessionKey()
+            && resume.nodeId === this.data.journeyCheck.nodeId) this.arrive(resume.nodeId);
       });
     }
     if (inline && this.data.chapterFull) {

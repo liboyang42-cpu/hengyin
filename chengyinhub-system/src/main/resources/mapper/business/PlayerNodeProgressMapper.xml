@@ -64,6 +64,8 @@
 
     <update id="markGameplayQuestDone" parameterType="PlayerNodeProgress">
         update player_node_progress set status = 1, checkin_time = now()
+        <if test="puzzleScore != null">, puzzle_score = #{puzzleScore}</if>
+        <if test="completionMode != null">, completion_mode = #{completionMode}</if>
         where member_id = #{memberId} and activity_id = #{activityId} and topic_id = #{topicId}
           and node_id = #{nodeId} and play_instance_id = #{playInstanceId} and status = 0 and del_flag = 0
     </update>
