@@ -1627,6 +1627,12 @@ public class ApiTopicController extends BaseController {
             if (attributeError != null) return attributeError;
             throw error;
         }
+        catch (IllegalArgumentException refusal) {
+            // 发布内容闸(如通用运行规则对某一站的要求)的拒绝:整笔已回滚,给 4xx 和原因(指名哪一站),
+            // 不让它落到通用 500 分支被客户端当成「网络中断,结果不明」(第十三轮 m2)。
+            logger.warn("发布被内容闸拒绝 topic={}: {}", id, refusal.getMessage());
+            return AjaxResult.error(HttpStatus.BAD_REQUEST, UserSafeMessage.of(refusal.getMessage(), "发布内容未通过检查，请检查章节和站点设置"));
+        }
     }
 
     private AjaxResult publishDraftBound(String id, String scope, Long configVersion, String registryVersion) {

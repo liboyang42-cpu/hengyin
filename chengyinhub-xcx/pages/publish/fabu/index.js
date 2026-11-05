@@ -8219,7 +8219,10 @@ Page({
     }
     const issue = res.stage === 'save' && !res.networkError && publishIssueTarget.fromMessage(reason,
       this.data.formData.chapters, this._templateDetailsById);
-    this.setData({ draftSaving: false, submitting: false, submitError: reason, submitErrorNeedsEdit: publishIssueTarget.isContentRejection(reason),
+    // 服务端点了某一站(「豆浆摊」：…)就给「去修改」直达这一站
+    const station = res.stage === 'publish' && !res.unknown ? this._stationFromReason(reason) : null;
+    this._submitErrorStation = station;
+    this.setData({ draftSaving: false, submitting: false, submitError: reason, submitErrorNeedsEdit: !!station || publishIssueTarget.isContentRejection(reason),
       themeSaveState: saveState, themeSaveLabel: SAVE_STATE_LABELS[saveState] });
     if (issue) {
       this._showBackendPublishIssue(issue);
@@ -8307,7 +8310,22 @@ Page({
   // 稿 S15/S16 的「为什么会这样」:出错时除了那一句结果,还得能展开看到人能照做的下一步。
   editRejectedContent() {
     this.closePublishCheck();
+    const station = this._submitErrorStation;
+    this._submitErrorStation = null;
     this.setData({ submitError: '', submitErrorNeedsEdit: false });
+    if (station) this.showEditNodes({ currentTarget: { dataset: { chapterindex: station.chapterIndex, nodeindex: station.nodeIndex } } });
+  },
+
+  /* 服务端发布被拒的原因以「站名」开头时,找到这一站(同名取第一个) */
+  _stationFromReason(reason) {
+    const hit = /^「([^」]{1,40})」/.exec(String(reason || ''));
+    if (!hit) return null;
+    const chapters = this.data.formData.chapters || [];
+    for (let chapterIndex = 0; chapterIndex < chapters.length; chapterIndex++) {
+      const nodeIndex = ((chapters[chapterIndex] && chapters[chapterIndex].nodes) || []).findIndex(node => node && node.name === hit[1]);
+      if (nodeIndex >= 0) return { chapterIndex, nodeIndex };
+    }
+    return null;
   },
 
   toggleSubmitErrorWhy() { this.setData({ submitErrorWhy: !this.data.submitErrorWhy }); },

@@ -252,3 +252,18 @@ test('real retry-load entry invalidates in-flight update callback and preserves 
   assert.equal(JSON.stringify(page.data), pageBefore);
   assert.deepEqual(navigations, []);
 });
+
+// 第十三轮 m2:服务端发布内容闸拒绝(点名某一站)是确定失败,原因原样给作者,「去修改」直达这一站,不再说「网络中断」。
+test('M2 发布被拒绝的原因指名某一站:找得到这一站,「去修改」打开它', () => {
+  const page = makePage();
+  page.data.formData.chapters = [{ nodes: [{ name: '豆浆摊' }, { name: '油条摊' }] }];
+  assert.deepEqual(page._stationFromReason('「油条摊」：这一站的参与方式要选「定位到达」或「扫码」，或绑定承接商家'), { chapterIndex: 0, nodeIndex: 1 });
+  assert.equal(page._stationFromReason('「不存在」：x'), null);
+  assert.equal(page._stationFromReason('网络中断'), null);
+  const opened = [];
+  page.showEditNodes = (e) => opened.push(e.currentTarget.dataset);
+  page.closePublishCheck = () => {};
+  page._submitErrorStation = { chapterIndex: 0, nodeIndex: 1 };
+  page.editRejectedContent();
+  assert.deepEqual(opened, [{ chapterindex: 0, nodeindex: 1 }]);
+});

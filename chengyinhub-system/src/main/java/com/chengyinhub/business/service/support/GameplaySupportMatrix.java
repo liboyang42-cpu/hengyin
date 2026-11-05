@@ -230,7 +230,7 @@ public final class GameplaySupportMatrix {
             {"blindTaste","闭眼盲品"},{"dailySign","今日城市签"},{"timer","计时"},{"leaderboard","排行榜"},{"multiplayer","多人协作"},{"timeWindow","限时开放"},
             {"silentOrder","默契点单"},{"diyName","起名"},{"musicCorner","音乐角"},{"slowTask","慢任务"},{"none","这一站"}};
         for (String[] row : labels) GAME_LABELS.put(row[0], row[1]);
-        REASONS.put("尚无通用结算完成证明", "开了状态或 d20 检定的主题里，这种玩法还不能确认玩家是否完成，请换一种玩法");
+        REASONS.put("尚无通用结算完成证明", "这种玩法还不能确认玩家是否完成，请换一种玩法");
         REASONS.put("没有归零挑战恢复桥", "这种玩法不能用作归零挑战");
         REASONS.put("归零挑战不能配置普通结算工具", "归零挑战不能再设置扣费、次数或效果");
         REASONS.put("归零挑战不能配置普通结果费用或奖励", "归零挑战的结果反馈不能再设置扣费或奖励");
@@ -254,7 +254,7 @@ public final class GameplaySupportMatrix {
     private static void fail(long nodeId, String name, String type, String tool, String reason) {
         JsonNode row = TYPES.get(type);
         String plain = "尚无通用结算完成证明".equals(reason) && row != null && row.path("r5CompletionProof").asBoolean()
-                ? "开了状态或 d20 检定的主题里，这种玩法要带结果规则才能确认完成。请在这一站重新打开玩法设置，保存一次后再发布"
+                ? "这种玩法要带结果规则才能确认完成。请在这一站重新打开玩法设置，保存一次后再发布"
                 : REASONS.getOrDefault(reason, reason);
         throw new Refusal(stationLabel(nodeId, name) + "的" + gameLabel(type) + "：" + plain,
                 "节点 " + nodeId + (name == null ? "" : "（" + name + "）") + " 玩法 " + type + " 工具 " + tool + "：" + reason);
