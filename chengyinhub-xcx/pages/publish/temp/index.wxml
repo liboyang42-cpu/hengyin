@@ -357,7 +357,7 @@
     <view class="cg-qa-sec cg-qa-sec--first" wx:if="{{segmentOn.qa}}">问答<view class="cg-seg-del" data-section="qa" bindtap="removeSegment" aria-role="button" aria-label="移除问答这一段" hover-class="cy-pressed" hover-stay-time="80">移除</view></view>
     <view class="cg-qa-sec cg-qa-sec--first">题目</view>
     <view class="cg-cfg-label">题干 <text class="req" aria-hidden="true">*</text></view>
-    <input class="cg-cfg-input" value="{{advanced.qa.title}}" placeholder="例如 这座桥建于哪一年?" data-section="qa" data-field="title" bindinput="onAdvancedField" />
+    <input class="cg-cfg-input" value="{{advanced.qa.title}}" placeholder="例如 这座桥建于哪一年？" data-section="qa" data-field="title" bindinput="onAdvancedField" />
     <view class="cg-cfg-label">前置说明 <text class="req" wx:if="{{advanced.qa.mode === 'SHOT'}}" aria-hidden="true">*</text></view>
     <input class="cg-cfg-input" value="{{advanced.qa.lead}}" placeholder="例如 先闭上眼睛尝一口" data-section="qa" data-field="lead" bindinput="onAdvancedField" />
     <block wx:if="{{advanced.qa.mode === 'SHOT'}}">
