@@ -2,14 +2,14 @@
 ## owner 9002 (8001) makes resources
 9002 POST /api/merchant/crm/customers/list "" -> HTTP 200 {"msg": "操作成功", "code": 200, "data": {"rows": [{"memberId": 990008, "name": "城瘾用户", "avatar": "", "phone": null, "contactHint": "联系方式在主题名单按客户授权查看", "arrivedCount": 0, "pendingCount": 0, "refundedCount": 1, "paidAmount": 0.0, "lastTime": "2026-11-05T10:25:39.000+08:00", "lastAction": "发生退款", "latestNote": null, "tier": "abnormal", "sourceType": "ACTIVITY", "t
 9002 POST /api/merchant/crm/customers/9009/notes {"content": "喜欢靠窗", "requestId": "ea9d91e8-c17d-4531-8549-51b1fd01da3a"} -> HTTP 200 {"msg": "操作成功", "code": 200, "data": {"id": 1, "correctsNoteId": null, "content": "喜欢靠窗", "hidden": 0, "deletedAt": null, "version": 0, "createTime": "2026-11-05T02:27:40.000+08:00"}}
-9002 POST /api/merchant/crm/exports {"type": "CUSTOMERS", "requestId": "49dea446-a36a-4678-90d5-37f7d7f7699d"} -> HTTP 200 {"msg": "操作成功", "code": 200, "data": {"id": 1, "status": "PENDING", "rowCount": 0, "errorMessage": null, "expiresAt": "2026-11-05T10:42:40.000+08:00", "downloadToken": "Afkf54DfYwSw0qRIGZcg7wRNJ1i8px9mc5dVYCg4iic"}}
+9002 POST /api/merchant/crm/exports {"type": "CUSTOMERS", "requestId": "49dea446-a36a-4678-90d5-37f7d7f7699d"} -> HTTP 200 {"msg": "操作成功", "code": 200, "data": {"id": 1, "status": "PENDING", "rowCount": 0, "errorMessage": null, "expiresAt": "2026-11-05T10:42:40.000+08:00", "downloadToken": "<export-token-redacted>"}}
 1	8001 | 
 ## other merchant 9005 (8002) with 8001 ids
 9005 POST /api/merchant/crm/customers/9009/detail "" -> HTTP 200 {"msg": "操作成功", "code": 200, "data": {"summary": {"customerMemberId": 9009, "displayName": "玩家二号", "avatar": "", "arrivedCount": 1, "pendingCount": 0, "refundedCount": 0, "paidAmount": 69.0, "lastInteractionTime": "2026-11-05T02:14:00.000+08:00"}, "systemTags": [{"code": "ARRIVED", "label": "已到店"}], "merchantTags": [], "tags": [], "timeline": [{"key": "regis
 9005 POST /api/merchant/crm/customers/9009/notes/hide {"noteId": 1, "version": 0, "requestId": "0571d480-18b2-463a-9d92-1cdbfa70ecac"} -> HTTP 200 {"msg": "备注版本无效", "code": 400}
 9005 POST /api/merchant/crm/customers/9009/notes {"content": "越权写", "requestId": "6f89acd2-88cb-4774-95c3-c075a61bdfd5"} -> HTTP 200 {"msg": "操作成功", "code": 200, "data": {"id": 2, "correctsNoteId": null, "content": "越权写", "hidden": 0, "deletedAt": null, "version": 0, "createTime": "2026-11-05T02:27:49.000+08:00"}}
 9005 POST /api/merchant/crm/exports/1/status "" -> HTTP 200 {"msg": "导出任务不存在或不属于当前商家", "code": 404}
-9005 GET /api/merchant/crm/exports/1/download {"token": "Afkf54DfYwSw0qRIGZcg7wRNJ1i8px9mc5dVYCg4iic"} -> HTTP 404 {"msg": "导出任务不存在或不属于当前商家", "code": 404}
+9005 GET /api/merchant/crm/exports/1/download {"token": "<export-token-redacted>"} -> HTTP 404 {"msg": "导出任务不存在或不属于当前商家", "code": 404}
 9005 POST /api/merchant/crm/customers/9009/tags {"tag": "越权", "requestId": "c271c15d-ea97-4a44-a900-67a0e6dd12fd"} -> HTTP 200 {"msg": "请填写标签名称", "code": 400}
 ## clerk 9004 (MERCHANT_CHECKIN at 8001) on owner-only actions
 9004 POST /api/merchant/operators/list "" -> HTTP 200 {"msg": "商家身份无效或权限不足", "code": 403}
@@ -27,7 +27,7 @@
 9004 POST /api/merchant/crm/broadcast/preview {"content": "hi"} -> HTTP 200 {"msg": "商家身份无效或权限不足", "code": 403}
 9004 POST /api/merchant/orders/ledger "" -> HTTP 200 {"msg": "商家身份无效或权限不足", "code": 403}
 9004 POST /api/merchant/verification-records "" -> HTTP 200 {"msg": "操作成功", "code": 200, "data": [{"createBy": null, "createTime": "2026-11-05 10:25:39", "updateBy": null, "updateTime": null, "remark": null, "id": "48", "registrationId": 80, "memberId": 9002, "validationMethod": 2, "questionAnswer": null, "feedbackText": null, "status": 0, "registrationMerchant": null, "memberTemplate": null, "smsCoupon": null, "mmsM
-9004 GET /api/merchant/crm/exports/1/download {"token": "Afkf54DfYwSw0qRIGZcg7wRNJ1i8px9mc5dVYCg4iic"} -> HTTP 403 {"msg": "商家身份无效或权限不足", "code": 403}
+9004 GET /api/merchant/crm/exports/1/download {"token": "<export-token-redacted>"} -> HTTP 403 {"msg": "商家身份无效或权限不足", "code": 403}
 8001	探店日样板咖啡
 
 ## 9005 (8002) against members with no order touching 8002
