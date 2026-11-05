@@ -1,6 +1,6 @@
 # Round 12, lanes k7, k8 and k9
 
-Rules and owner decisions: `ROUND12.md`. Read `integ/ROUND12-K2-RESULT.md` and `ROUND12-K3-RESULT.md`. Private local branch, `pull --rebase` and `git show --stat` before each push, no force-push, never push to master, merge a PR or touch production. If you add or remove a `@Test` in a gated suite, update `EXPECTED` in `ci/funds_it_gate.py` and its fixture in the same commit. k2 had no Docker daemon, so it walked nothing: **start Docker first (see `integ/map-shots/m2-rig-notes.md`), and if the container has none, say so at once in your result and stop rather than reporting unit tests as walks.** k5 owns settlement code; k6 owns merchant money screens; k4 owns the club flow.
+Rules and owner decisions: `ROUND12.md`. Read `integ/ROUND12-K2-RESULT.md` and `ROUND12-K3-RESULT.md`. Private local branch, `pull --rebase` and `git show --stat` before each push, no force-push, never push to master, merge a PR or touch production. If you add or remove a `@Test` in a gated suite, update `EXPECTED` in `ci/funds_it_gate.py` and its fixture in the same commit. **Try to start Docker for the rig (`integ/map-shots/m2-rig-notes.md`). If it can't start, do not stop and do not work around the refusal: do all the code fixes with unit tests and MySQL-free checks, and mark each item plainly as not walked. A later lane will walk them.** Never report unit tests as walks. k5 owns settlement code; k6 owns merchant money screens; k4 owns the club flow.
 
 ## Lane k7-map
 
