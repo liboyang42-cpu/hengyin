@@ -96,10 +96,11 @@ class Wp04OriginalProducerMySqlIT {
         assertThrows(IllegalStateException.class,()->db.tx.executeWithoutResult(status->manual.requireNoOpenCase(11L)));
         assertEquals(new BigDecimal("0.00"),db.db.queryForObject("SELECT SUM(balance) FROM ums_member",BigDecimal.class));
     }
-    @Test void clubSelfPlaySettlementFreezesOriginalsAndPaidRefundDebitsPrincipalExactlyOnce() {
+    @Test void clubSelfPlaySettlementFreezesOriginalsAndPaidRefundDebitsPrincipalExactlyOnce() throws Exception {
+        P0AcceptanceSchema.migrations(db.source,"migration_20260919_cms_registration_selfplay_ticket_columns_nullable.sql");
         db.db.update("DELETE FROM coop_settlement");
         db.db.update("UPDATE cms_topic SET club_id=42,is_settlement=1 WHERE id=11");
-        db.db.update("UPDATE cms_registration SET purchase_kind=2,ticket_id=NULL WHERE owner_type=1 AND owner_id=11");
+        db.db.update("UPDATE cms_registration SET purchase_kind=2,ticket_id=NULL,ticket_price=NULL WHERE owner_type=1 AND owner_id=11");
         topic.setClubId(42L);topic.setMemberId(7L);topic.setEndDate(new Date());
         var service=new CmsTopicServiceImpl();
         ReflectionTestUtils.setField(service,"coopSettlementMapper",sql.getMapper(CoopSettlementMapper.class));
