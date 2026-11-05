@@ -3869,6 +3869,7 @@ Page({
     this._stationVoiceDone = this._stationVoiceDone || new Set();
     if (this._stationVoiceDone.has(key)) return;
     this._stationVoiceDone.add(key);
+    this._preloadNextStationAudio(node);
     this.initAudio();
     const audio = this._audio;
     audio.stop();
@@ -3885,12 +3886,49 @@ Page({
     ctx.src = secureOwnMedia(url);
     ctx.loop = true;
     ctx.volume = this._duckSources && this._duckSources.size ? BGM_DUCKED.theme : BGM_VOLUME.theme;
-    ctx.onError(() => { this._stopThemeBgm(); });
+    ctx.onError(() => this._retryBgm(ctx, '_themeBgm', () => this._stopThemeBgm()));
     this._themeBgm = ctx;
     ctx.play();
   },
+  /** 配乐出错(弱网 / 断流):不让它无声地死掉。最多重试两次(3 秒、8 秒后),重试用同一个播放器,
+   *  期间玩法照常;两次都不行才收掉,不弹窗、不挡玩 —— 配乐只是氛围。 */
+  _retryBgm(ctx, slot, giveUp) {
+    if (this[slot] !== ctx) return;
+    const n = (ctx._cyRetry = (ctx._cyRetry || 0) + 1);
+    if (n > 2) { giveUp(); return; }
+    if (ctx._cyRetryTimer) clearTimeout(ctx._cyRetryTimer);
+    ctx._cyRetryTimer = setTimeout(() => {
+      ctx._cyRetryTimer = null;
+      if (this[slot] !== ctx || this.data.themeBgmOn === false) return;
+      try { const src = ctx.src; ctx.src = src; ctx.play(); } catch (e) { giveUp(); }
+    }, n === 1 ? 3000 : 8000);
+  },
+  /** 下一站的语音预热:只在 wifi/4g/5g 下、只提前一首、每站一次,不抢当前播放,也不阻塞任何流程。 */
+  _preloadNextStationAudio(node) {
+    try {
+      if (this.data.isPreview || typeof wx.getNetworkType !== 'function') return;
+      const nodes = this.data.nodes || [];
+      const i = nodes.findIndex((n) => String(n.nodeId) === String(node && node.nodeId));
+      const next = nodes.slice(i + 1).find((n) => n && !n.done && n.audio);
+      if (!next) return;
+      this._preloaded = this._preloaded || new Set();
+      const key = String(next.nodeId);
+      if (this._preloaded.has(key)) return;
+      wx.getNetworkType({ success: (r) => {
+        if (!r || ['wifi', '4g', '5g'].indexOf(r.networkType) < 0 || this._preloaded.has(key)) return;
+        this._preloaded.add(key);
+        const ctx = wx.createInnerAudioContext();   // 不进 audioSession:不抢焦点、不保持亮屏
+        ctx.volume = 0;
+        const done = () => { try { ctx.destroy(); } catch (e) {} };
+        ctx.onCanplay(done); ctx.onError(done);
+        ctx.src = secureOwnMedia(next.audio);
+        setTimeout(done, 20000);
+      }, fail: () => {} });
+    } catch (e) {}
+  },
   _stopThemeBgm() {
     if (!this._themeBgm) return;
+    if (this._themeBgm._cyRetryTimer) clearTimeout(this._themeBgm._cyRetryTimer);
     audioSession.unregister(this._themeBgm);
     try { this._themeBgm.stop(); this._themeBgm.destroy(); } catch (e) {}
     this._themeBgm = null;
@@ -3911,12 +3949,13 @@ Page({
     ctx.src = secureOwnMedia(src);
     ctx.loop = music.loop !== false;
     ctx.volume = this._duckSources && this._duckSources.size ? BGM_DUCKED.station : BGM_VOLUME.station;
-    ctx.onError(() => { this._stopStationBgm(); });
+    ctx.onError(() => this._retryBgm(ctx, '_stationBgm', () => this._stopStationBgm()));
     this._stationBgm = ctx; this._stationBgmSrc = src;
     ctx.play();
   },
   _stopStationBgm() {
     if (!this._stationBgm) return;
+    if (this._stationBgm._cyRetryTimer) clearTimeout(this._stationBgm._cyRetryTimer);
     audioSession.unregister(this._stationBgm);
     try { this._stationBgm.stop(); this._stationBgm.destroy(); } catch (e) {}
     this._stationBgm = null; this._stationBgmSrc = '';
@@ -8928,11 +8967,12 @@ Page({
       that.setData({ audioPlaying: false, audioLoading: false });
     });
     audio.onError((err) => {
-      const msg = (err && err.errMsg) ? err.errMsg : '音频加载失败';
+      // 原生 errMsg(如 "MediaError:..." / 网络码)不给玩家看;面板上已有「播放失败，点此重试」,提示只说人话且不挡玩法
+      const msg = '音频加载失败';
       audioSession.keepAwake('guideAudio', false);
       that._duckBgm('guide', false);
       that.setData({ audioPlaying: false, audioLoading: false, audioError: msg });
-      cyToast(msg);
+      cyToast('这段音频放不出来，点一下再试');
     });
     audio.onWaiting(() => {
       that.setData({ audioLoading: true, audioError: '' });
