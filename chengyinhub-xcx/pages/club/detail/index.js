@@ -1513,6 +1513,8 @@ Page({
         if (recruitingTopic) { stage = 'recruit'; this._stageTopic = recruitingTopic; }
         else if (pricingTopic) { stage = pricingTopic.saleReviewPending === true ? 'saleReview' : 'price'; this._stageTopic = pricingTopic; }
         else if (stage === 'run' && !sellable && projectReviewing) stage = 'review';
+        // 第十二轮 k4(j2 N-09):本俱乐部的主题已开售、商家也已接受,眼下的事是开一场,不是「管理项目」
+        else if (stage === 'accepted' && topics.some(function (item) { const lc = lifecycleOf(item); return lc === 3 || lc === 4; })) stage = 'run';
         const holdTopic = topics.find(function (item) {
           const lc = lifecycleOf(item);
           return (lc === 1 || lc === 2) && Array.isArray(item.uncontractedStations) && item.uncontractedStations.length > 0;

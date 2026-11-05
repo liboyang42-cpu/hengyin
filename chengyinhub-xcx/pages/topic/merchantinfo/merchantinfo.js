@@ -2061,9 +2061,9 @@ Page({
             return;
           }
           cyToast(approved ? '已通过申请' : '已婉拒申请');
+          that.loadProjectHome(); // 第十二轮 k4(j2 N-07):先发主页读,再强制重读两张审核表 —— 反过来主页读会作废这两条在途读,列表停在旧态
           that.loadOwnerChapterApplications(true);
           that.loadPendingMerchantNodes(true);
-          that.loadProjectHome();
         },
         fail(res) { app.tips(app.getRequestErrorMessage(res, '审核失败')); },
         complete() { that._chapterApplicationAuditing = false; },

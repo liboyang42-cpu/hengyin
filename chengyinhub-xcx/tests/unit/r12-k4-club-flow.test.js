@@ -61,3 +61,13 @@ test('N-03:名册行点开就是报名与退款详情;不再显示下线的「�
   const js = read('pages/club/enroll/index.js')
   assert.match(js, /tk\.hideEmpty = anySignup && !\(tk\.signups > 0\)/)
 })
+
+test('N-07:章节申请审核后先读项目主页、再强制重读两张审核表(否则主页读作废在途重读,列表停在旧态)', () => {
+  const js = read('pages/topic/merchantinfo/merchantinfo.js')
+  assert.match(js, /that\.loadProjectHome\(\); \/\/ 第十二轮 k4[^\n]*\n\s*that\.loadOwnerChapterApplications\(true\);\n\s*that\.loadPendingMerchantNodes\(true\);/)
+})
+
+test('N-09:主题已开售、商家已接受时「现在要做」是开一场', () => {
+  const js = read('pages/club/detail/index.js')
+  assert.match(js, /else if \(stage === 'accepted' && topics\.some\(function \(item\) \{ const lc = lifecycleOf\(item\); return lc === 3 \|\| lc === 4; \}\)\) stage = 'run';/)
+})
