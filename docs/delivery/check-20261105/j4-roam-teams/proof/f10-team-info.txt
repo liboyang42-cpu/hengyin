@@ -1,0 +1,7 @@
+# F10 recheck at 573c463b: POST /api/team/info by invite code
+## guest
+{"msg":"操作成功","code":200,"data":{"leader":false,"joined":false,"members":[{"role":1,"memberName":"玩家小城","memberAvatar":""},{"role":0,"memberName":"城瘾用户","memberAvatar":""}],"team":{"id":2,"title":null,"status":1,"joinMode":2,"joinedCount":2,"maxMembers":2}}}
+## 9009 (paid, other session 13)
+{"msg":"操作成功","code":200,"data":{"leader":false,"joined":false,"members":[{"role":1,"memberName":"玩家小城","memberAvatar":""},{"role":0,"memberName":"城瘾用户","memberAvatar":""}],"team":{"id":2,"title":null,"status":1,"joinMode":2,"joinedCount":2,"maxMembers":2}}}
+## member 990005
+{"msg":"操作成功","code":200,"data":{"leader":false,"joined":true,"members":[{"memberId":9004,"role":1,"memberName":"玩家小城","memberAvatar":""},{"memberId":990005,"role":0,"memberName":"城瘾用户","memberAvatar":""}],"team":{"createBy":null,"createTime":"2026-11-05 02:16:45","updateBy":null,"updateTime":"2026-11-05 02:22:15","remark":null,"id":2,"ownerType":2,"ownerId":9,"leaderMemberId":9004,"inviteCode":"kZYrD1ey3quxdeGDiJ7SYw","title":null,"joinMode":2,"maxMembers":2,"joinedCount":2,"status":1,"expireTime":"2026-11-05T15:15:43.000+08:00"}}}
