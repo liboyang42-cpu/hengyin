@@ -1,0 +1,99 @@
+{
+ "name": "h40-citynode",
+ "opts": {
+  "path": "pages/merchant/citynode/create/index",
+  "identity": "e2e-openid-9002"
+ },
+ "steps": [
+  {
+   "shot": "h40-citynode-config-game",
+   "route": "pages/publish/temp/index",
+   "text": "编辑玩法模板 | 添加一步 | 参与方式 | 直接参与 | 玩法 | 移除 | 选择玩法 | 选择 | 完成奖励 | 移除 | 优惠券 | 勋章 | 互动工具 | 添加互动工具 | 查看预览 | 保存玩法 | 退出 | 选择玩法 | 完成 | 问答 | 推理 | 互动 | 挑战 | 问答 | 选项问答 | 文字问答 | 猜图 | 拍照打卡 | 闭眼盲品 | 拍照审核 | 预测 | 拍物成卡 | 推理 | 排序 | 连线 | 分类 | 互动 | 抛硬币 | 找东西 | 相册 | 掷骰子 | 角色建档 | 九宫格 | 翻卡 | 留言 | 猜数字 | 今日城市签 | 挑战 | D20 | 弹球 | 倒计时 | D20 加值 | 安静挑战 | 精准停表 | 计步挑战 | 罗盘指向 | 输入挑战 | 变色就点 | 喊一嗓子 | 在主题里配置 | 九宫格 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  }
+ ],
+ "errors": [],
+ "net": [
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/info",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "GET",
+   "u": "/__api/api/play/theme/support-matrix",
+   "s": 200,
+   "c": null,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/user/info",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/common/dict",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/role/info",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  }
+ ],
+ "bad": [],
+ "console": [
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+ ]
+}

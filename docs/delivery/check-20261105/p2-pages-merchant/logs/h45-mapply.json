@@ -1,0 +1,96 @@
+{
+ "name": "h45-mapply",
+ "opts": {
+  "path": "pages/topic/merchantapply/index",
+  "identity": "e2e-openid-9002"
+ },
+ "steps": [
+  {
+   "shot": "h45-mapply-990013",
+   "route": "pages/topic/merchantapply/index",
+   "text": "商家报名 | 你的门店 | 探店日样板咖啡 | 上海市黄浦区咖啡 | 承接地点 | * | 用于地图与到场导航，拒绝不影响填写 | 承接说明 | * | 0/500 | 承接图片 | * | 上传现场照片 | 5:3 横图，1–9 张 | 提交报名 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "h46-mapply-empty-submit",
+   "route": "pages/topic/merchantapply/index",
+   "text": "商家报名 | 你的门店 | 探店日样板咖啡 | 上海市黄浦区咖啡 | 承接地点 | * | 请输入活动地点 | 用于地图与到场导航，拒绝不影响填写 | 承接说明 | * | 0/500 | 请输入节点接待说明 | 清除 | 提交报名 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "h47-mapply-location",
+   "route": "pages/topic/merchantapply/index",
+   "text": "商家报名 | 你的门店 | 探店日样板咖啡 | 上海市黄浦区咖啡 | 承接地点 | * | 请输入活动地点 | 用于地图与到场导航，拒绝不影响填写 | 承接说明 | * | 0/500 | 请输入节点接待说明 | 清除 | 提交报名 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "h48-mapply-photo",
+   "route": "pages/topic/merchantapply/index",
+   "text": "商家报名 | 你的门店 | 探店日样板咖啡 | 上海市黄浦区咖啡 | 承接地点 | * | 请输入活动地点 | 用于地图与到场导航，拒绝不影响填写 | 承接说明 | * | 24/500 | 承接图片 | * | 上传现场照片 | 提交报名 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "h49-mapply-filled",
+   "route": "pages/topic/merchantapply/index",
+   "text": "商家报名 | 你的门店 | 探店日样板咖啡 | 上海市黄浦区咖啡 | 承接地点 | * | 请输入活动地点 | 用于地图与到场导航，拒绝不影响填写 | 承接说明 | * | 24/500 | 承接图片 | * | 上传现场照片 | 提交报名 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "h50-mapply-after-submit",
+   "route": "pages/topic/merchantapply/index",
+   "text": "商家报名 | 你的门店 | 探店日样板咖啡 | 上海市黄浦区咖啡 | 承接地点 | * | 请输入活动地点 | 用于地图与到场导航，拒绝不影响填写 | 承接说明 | * | 24/500 | 承接图片 | * | 上传现场照片 | 提交报名 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  }
+ ],
+ "errors": [],
+ "net": [
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/info",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/info",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/info",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  }
+ ],
+ "bad": [],
+ "console": [
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+ ]
+}

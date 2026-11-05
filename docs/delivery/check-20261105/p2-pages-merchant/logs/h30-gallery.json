@@ -1,0 +1,98 @@
+{
+ "name": "h30-gallery",
+ "opts": {
+  "path": "pages/merchant/decor/gallery/index",
+  "identity": "e2e-openid-9002"
+ },
+ "steps": [
+  {
+   "shot": "h30-gallery-crop",
+   "route": "pages/crop/index",
+   "text": "裁剪 | 取消 | 还原 | 选取 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "h31-gallery-one-photo",
+   "route": "pages/merchant/decor/gallery/index",
+   "text": "提示 | 安全检查服务异常，请稍后重试 | 确定 | 门店相册 | 保存相册 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "h32-gallery-after-save",
+   "route": "pages/merchant/decor/gallery/index",
+   "text": "提示 | 安全检查服务异常，请稍后重试 | 确定 | 门店相册 | 保存相册 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  }
+ ],
+ "errors": [],
+ "net": [
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/coop-profile",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/coop-profile",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "UPLOAD",
+   "u": "/__api/api/common/uploadOSS",
+   "s": 503,
+   "c": 503,
+   "b": "{\"msg\":\"安全检查服务异常，请稍后重试\",\"code\":503}"
+  }
+ ],
+ "bad": [
+  {
+   "m": "UPLOAD",
+   "u": "/__api/api/common/uploadOSS",
+   "s": 503,
+   "c": 503,
+   "b": "{\"msg\":\"安全检查服务异常，请稍后重试\",\"code\":503}"
+  }
+ ],
+ "console": [
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] HTTP 503 http://127.0.0.1:8097/__api/api/common/uploadOSS",
+  "[error] Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+ ]
+}

@@ -1,0 +1,88 @@
+{
+ "name": "h01-perk",
+ "opts": {
+  "path": "pages/merchant/decor/perks/index",
+  "identity": "e2e-openid-9002"
+ },
+ "steps": [
+  {
+   "shot": "h01-perk-form",
+   "route": "pages/merchant/decor/perks/index",
+   "text": "添加常备权益 | 权益类型 | * | 礼品 | 权益名称 | * | 权益零售价 | * | 成本价 | · 仅自己可见 | 可接待份数 | * | 有效期 | 请选择日期 | 保存权益 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "h03-perk-filled",
+   "route": "pages/merchant/decor/perks/index",
+   "text": "添加常备权益 | 权益类型 | * | 礼品 | 权益名称 | * | 权益零售价 | * | 成本价 | · 仅自己可见 | 可接待份数 | * | 有效期 | 请选择日期 | 保存权益 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "h04-perk-after-save",
+   "route": "pages/merchant/decor/perks/index",
+   "text": "常备权益 | 双人手冲体验券 | 礼品 | 零售价 ¥58 | 成本 ¥20 | 可接待 30 份 | 删除 | 到店赠美式一杯 | 优惠券 | 零售价 ¥32 | 成本 ¥12 | 可接待 200 份 | 有效期至 2099-12-31 | 删除 | 常备权益已保存 | 添加权益 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  }
+ ],
+ "errors": [],
+ "net": [
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/coop/perk-template/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/coop/perk-template/save",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/coop/perk-template/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  }
+ ],
+ "bad": [],
+ "console": [
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+ ]
+}

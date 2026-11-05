@@ -1,0 +1,105 @@
+{
+ "name": "h22-coupon",
+ "opts": {
+  "path": "subpackageMember/coupon/coupon",
+  "identity": "e2e-openid-9002"
+ },
+ "steps": [
+  {
+   "shot": "h22-coupon-date-picked",
+   "route": "subpackageMember/couponInfo/couponInfo",
+   "text": "优惠券设置 | 优惠券名称 | * | 优惠券日期 | * | 开始日期 | - | 结束日期 | 投放数 | * | 优惠券类型 | * | 请选择 | 优惠券说明 | 取消 | 发布优惠券 | 选择优惠券有效期 | 完成 | 共 9 小时 | 开始 | 11 月 5 日 09:00 | 结束 | 11 月 5 日 18:00 | 11月5日 | 11月6日 | 11月7日 | 11月8日 | 11月9日 | 11月10日 | 11月11日 | 11月12日 | 11月13日 | 11月14日 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "h23-coupon-type-sheet",
+   "route": "subpackageMember/couponInfo/couponInfo",
+   "text": "优惠券设置 | 优惠券名称 | * | 优惠券日期 | * | 11月5日 09:00 | - | 11月5日 18:00 | 投放数 | * | 优惠券类型 | * | 请选择 | 优惠券说明 | 取消 | 发布优惠券 | 选择优惠券类型 | 请选择 | 礼品券 | 9折券 | 8折券 | 体验卡 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "h24-coupon-type-picked",
+   "route": "subpackageMember/couponInfo/couponInfo",
+   "text": "优惠券设置 | 优惠券名称 | * | 优惠券日期 | * | 11月5日 09:00 | - | 11月5日 18:00 | 投放数 | * | 优惠券类型 | * | 礼品券 | 优惠券说明 | 取消 | 发布优惠券 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "h25-coupon-filled",
+   "route": "subpackageMember/couponInfo/couponInfo",
+   "text": "优惠券设置 | 优惠券名称 | * | 优惠券日期 | * | 11月5日 09:00 | - | 11月5日 18:00 | 投放数 | * | 优惠券类型 | * | 礼品券 | 优惠券说明 | 取消 | 发布优惠券 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "h26-coupon-after-submit",
+   "route": "subpackageMember/coupon/coupon",
+   "text": "优惠券 | 到店立减 5 元 | 2026.11.05 09:00 – 2026.11.05 18:00 | 到店出示即可使用 | 礼品券 | 库存数 | 50 | 发布优惠券 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  }
+ ],
+ "errors": [],
+ "net": [
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/coupon/mypublishlist",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/coupon/mypublishlist",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/coupon/publish",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/analytics/events/batch",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/coupon/mypublishlist",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  }
+ ],
+ "bad": [],
+ "console": [
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico"
+ ]
+}

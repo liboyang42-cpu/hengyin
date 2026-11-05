@@ -1,0 +1,124 @@
+{
+ "name": "h33-npc",
+ "opts": {
+  "path": "pages/merchant/decor/ai-npc/index",
+  "identity": "e2e-openid-9002"
+ },
+ "steps": [
+  {
+   "shot": "h33-npc-form",
+   "route": "pages/merchant/decor/ai-npc/index",
+   "text": "AI 店铺角色 | 给角色起个名字 | 角色形象 | 未设置 | 角色声音 | 未录制 | 名字 | * | 未填写 | 招呼语 | 未填写 | 性格设定 | 选择性格 | 店铺知识 | 菜单与招牌 | 漫游落点 | 尚未选择地图位置 | 编辑 | 起个名字、选个性格就能用 | 温柔、可爱、毒舌，随时可改 | 知道了 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "h34-npc-name-editor",
+   "route": "pages/merchant/decor/ai-npc/index",
+   "text": "AI 店铺角色 | 给角色起个名字 | 角色形象 | 上传 / 更换 | 角色声音 | 未录制 | 名字 | * | 未填写 | 招呼语 | 未填写 | 性格设定 | 选择性格 | 店铺知识 | 菜单与招牌 | 漫游落点 | 尚未选择地图位置 | 完成编辑 | 角色名字 | 0/32 | 保存 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "h34b-npc-name-typed",
+   "route": "pages/merchant/decor/ai-npc/index",
+   "text": "AI 店铺角色 | 给角色起个名字 | 角色形象 | 上传 / 更换 | 角色声音 | 未录制 | 名字 | * | 未填写 | 招呼语 | 未填写 | 性格设定 | 选择性格 | 店铺知识 | 菜单与招牌 | 漫游落点 | 尚未选择地图位置 | 完成编辑 | 角色名字 | 2/32 | 保存 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "h35-npc-personality",
+   "route": "pages/merchant/decor/ai-npc/index",
+   "text": "AI 店铺角色 | 小咖 | 审核中 | 玩家现在能看到这个形象 | 角色形象 | 上传 / 更换 | 角色声音 | 未录制 | 名字 | * | 小咖 | 招呼语 | 未填写 | 性格设定 | 选择性格 | 店铺知识 | 菜单与招牌 | 漫游落点 | 尚未选择地图位置 | 完成编辑 | 温柔 | 可爱 | 毒舌 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "h36-npc-filled",
+   "route": "pages/merchant/decor/ai-npc/index",
+   "text": "角色已更新 | AI 店铺角色 | 小咖 | 审核中 | 玩家现在能看到这个形象 | 角色形象 | 上传 / 更换 | 角色声音 | 未录制 | 名字 | * | 小咖 | 招呼语 | 未填写 | 性格设定 | 温柔 | 店铺知识 | 菜单与招牌 | 漫游落点 | 尚未选择地图位置 | 完成编辑 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "h37-npc-after-save",
+   "route": "pages/merchant/decor/ai-npc/index",
+   "text": "AI 店铺角色 | 小咖 | 审核中 | 玩家现在能看到这个形象 | 角色形象 | 上传 / 更换 | 角色声音 | 未录制 | 名字 | * | 小咖 | 招呼语 | 未填写 | 性格设定 | 温柔 | 店铺知识 | 菜单与招牌 | 漫游落点 | 尚未选择地图位置 | 完成编辑 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  }
+ ],
+ "errors": [],
+ "net": [
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/npc/profile",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/coop-profile",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/npc/voice/status",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "GET",
+   "u": "/__api/api/merchant/npc/review",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/npc/save",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/npc/save",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  }
+ ],
+ "bad": [],
+ "console": [
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico"
+ ]
+}

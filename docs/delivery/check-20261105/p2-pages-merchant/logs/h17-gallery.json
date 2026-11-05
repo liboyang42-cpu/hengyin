@@ -1,0 +1,82 @@
+{
+ "name": "h17-gallery",
+ "opts": {
+  "path": "pages/merchant/decor/gallery/index",
+  "identity": "e2e-openid-9002"
+ },
+ "steps": [
+  {
+   "shot": "h17-gallery-crop",
+   "route": "pages/crop/index",
+   "text": "裁剪 | 取消 | 还原 | 选取 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "h18-gallery-one-photo",
+   "route": "pages/crop/index",
+   "text": "裁剪 | 取消 | 还原 | 选取 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "h17-gallery-err",
+   "route": "pages/crop/index",
+   "text": "裁剪 | 取消 | 还原 | 选取 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  }
+ ],
+ "error": "Error: tap: no visible element with text \"保存相册\"\n    at Object.tap (file:///root/rig/docs/delivery/cloud-walk-20261101/rig/mpweb/walk.mjs:61:22)\n    at async file:///root/p2/h_write2.mjs:20:59\n    at async go (file:///root/p2/go.mjs:11:9)\n    at async file:///root/p2/h_write2.mjs:16:26",
+ "errors": [],
+ "net": [
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/coop-profile",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/coop-profile",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  }
+ ],
+ "bad": [],
+ "console": [
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico"
+ ]
+}
