@@ -37,10 +37,10 @@ class ChannelFoundationTest {
         assertFalse(category.lifecycleAllowsMessageWrite());
         assertThrows(IllegalArgumentException.class, () -> channel(11,0,0,0,CATEGORY,"分类",false,1,ACTIVE,false,null));
     }
-    @Test void allFiveGuildSourcesAreAccepted() {
-        for (int source = 1; source <= 5; source++)
+    @Test void allSevenGuildSourcesKeepOriginalNumericCodes() {
+        for (int source = 1; source <= 7; source++)
             assertNotNull(channel(12,source,7,0,TEXT,"文字",true,0,ACTIVE,false,null));
-        assertThrows(IllegalArgumentException.class, () -> channel(12,6,7,0,TEXT,"文字",true,0,ACTIVE,false,null));
+        assertThrows(IllegalArgumentException.class, () -> channel(12,8,7,0,TEXT,"文字",true,0,ACTIVE,false,null));
     }
     @Test void directSystemAndSupportHaveNoGuild() {
         for (var kind : new ChannelDefinition.Kind[] {DIRECT, SYSTEM, SUPPORT}) {
@@ -130,5 +130,23 @@ class ChannelFoundationTest {
         assertEquals("0x1FFFFFF", ChannelPermissionOverwrite.hex(0x1FFFFFFL));
         assertEquals("0x0", ChannelPermissionOverwrite.hex(0));
         assertThrows(IllegalArgumentException.class, () -> ChannelPermissionOverwrite.hex(-1));
+    }
+    @Test void pendingAndFinalDeletionDenyContentEvenBeforeDelFlagChanges() {
+        for (var status : new ChannelDefinition.Status[] {PENDING_DELETE, DELETED}) {
+            var row = channel(12,1,7,0,TEXT,"hidden",false,1,status,false,null);
+            assertFalse(row.lifecycleAllowsHistory());
+            assertFalse(row.lifecycleAllowsMessageWrite());
+            assertThrows(SecurityException.class, () -> ChannelLifecycleAdmission.requireContentRead(row));
+            assertThrows(SecurityException.class, () -> ChannelLifecycleAdmission.requireMessageWrite(row));
+        }
+        assertEquals(0, ACTIVE.code()); assertEquals(1, ARCHIVED.code()); assertEquals(2, BANNED.code());
+        assertEquals(3, PENDING_DELETE.code()); assertEquals(4, DELETED.code());
+    }
+    @Test void inaccessibleAncestorCannotPassLiveParentValidation() {
+        var child=channel(12,1,7,11,TEXT,"child",false,1,ACTIVE,false,null);
+        for (var status : new ChannelDefinition.Status[] {BANNED,PENDING_DELETE,DELETED}) {
+            var parent=channel(11,1,7,0,CATEGORY,"hidden",false,1,status,false,null);
+            assertThrows(IllegalArgumentException.class,()->child.requireParent(parent));
+        }
     }
 }

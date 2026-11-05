@@ -25,7 +25,7 @@ public record ChannelDefinition(long id, int guildKind, long guildId, long paren
     }
 
     public enum Status {
-        ACTIVE(0), ARCHIVED(1), BANNED(2);
+        ACTIVE(0), ARCHIVED(1), BANNED(2), PENDING_DELETE(3), DELETED(4);
         private final int code;
         Status(int code) { this.code = code; }
         public int code() { return code; }
@@ -36,7 +36,7 @@ public record ChannelDefinition(long id, int guildKind, long guildId, long paren
         require(kind != null && status != null, "Kind and status are required");
         require(parentId >= 0 && parentId != id, "Invalid parent ID");
         if (kind.hasGuild()) {
-            require(guildKind >= 1 && guildKind <= 5 && guildId > 0, "Guild is required");
+            require(guildKind >= 1 && guildKind <= 7 && guildId > 0, "Guild is required");
         } else {
             require(guildKind == 0 && guildId == 0, "Direct/system/support has no guild");
             require(parentId == 0, "Non-guild channel has no category");
@@ -76,12 +76,12 @@ public record ChannelDefinition(long id, int guildKind, long guildId, long paren
             return;
         }
         require(parent != null && parent.id == parentId && parent.kind == Kind.CATEGORY
-                && parent.guildKind == guildKind && parent.guildId == guildId && !parent.deleted,
+                && parent.guildKind == guildKind && parent.guildId == guildId && parent.lifecycleAllowsHistory(),
                 "Parent must be a live category in the same guild");
     }
 
     /** Only a lifecycle restriction: true never grants VIEW or history/search access. */
-    public boolean lifecycleAllowsHistory() { return !deleted && status != Status.BANNED; }
+    public boolean lifecycleAllowsHistory() { return !deleted && (status == Status.ACTIVE || status == Status.ARCHIVED); }
 
     /** Only a lifecycle restriction: announcement/system/member permissions must still be checked. */
     public boolean lifecycleAllowsMessageWrite() {
