@@ -44,7 +44,7 @@ function validate(c, rules, policies) {
   const survivalIssue = require('./theme-runtime-survival.js').validate(c, undefined, rules); if (survivalIssue) return survivalIssue; // survival
   for (const key of ['hpName', 'luckName', 'actionName']) if (String(c[key] || '').length > 20) return '数值名称不能超过 20 字';
   const zeroIssue = zeroHp.validate(c, rules, policies); if (zeroIssue) return zeroIssue;
-  if (!Number.isInteger(c.capacity) || c.capacity < 1 || c.capacity > 999) return '物品容量请输入 1 到 999 的整数';
+  if (!Number.isInteger(c.capacity) || c.capacity < (c.items.length ? 1 : 0) || c.capacity > 999) return '物品容量请输入 1 到 999 的整数';
   for (const i of c.items) {
     if (!String(i.name || '').trim()) return '请输入物品或勋章名称';
     if (i.slotCost != null && (i.kind !== 'ITEM' || !Number.isInteger(i.slotCost) || i.slotCost < 1 || i.slotCost > 999)) return '每件占格请输入 1 到 999 的整数';

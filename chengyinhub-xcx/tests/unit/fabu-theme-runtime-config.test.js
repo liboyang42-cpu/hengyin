@@ -33,6 +33,27 @@ function roleEvent(p, nodeId, value) {
   return { currentTarget: { dataset: { nodeid: nodeId } }, detail: { value: p.data.storyRoleOptions.findIndex(o => o.value === value) } };
 }
 
+test('个人进行方式的空背包容量 0 不阻断时间或步数彩蛋保存，有物品仍要求容量', () => {
+  const structure = require('../../pages/publish/fabu/theme-runtime-structure.js');
+  for (const trigger of [0, 1]) {
+    const p = page();
+    p.data.formData.themeRuntimeConfig = JSON.stringify(structure.setMode('', 'PLAYER', p.data.formData.chapters, p.data.supportMatrix).value);
+    p.data.runtimeEditor = { kind: 'eggs', index: 0 };
+    p.addRuntimeEgg();
+    for (const [field, value] of Object.entries({ name: '夜航', content: '听见了风', trigger })) {
+      p.onRuntimeEgg({ currentTarget: { dataset: { index: 0, field } }, detail: { value } });
+    }
+    assert.equal(p._validateRuntimeConfig(), '');
+    const saved = JSON.parse(p._runtimePayload());
+    assert.equal(saved.capacity, 0);
+    assert.equal(saved.chapters[0].eggs[0].trigger, trigger ? 'STEPS' : 'TIME');
+    p._saveRuntime({ ...saved, items: [{ id: 'reward', kind: 'ITEM', name: '纪念', image: 'https://example.com/reward.png' }] });
+    assert.match(p._validateRuntimeConfig(), /物品容量/);
+    p._saveRuntime({ ...p._runtimeConfig(), capacity: 1 });
+    assert.equal(p._validateRuntimeConfig(), '');
+  }
+});
+
 test('归零策略使用服务器矩阵，通用局回填 BLOCK_PAID，旧局保留 LEGACY_END', () => {
   const p = page();
   p.data.formData.themeRuntimeConfig = JSON.stringify({ gameplayRuntime: { runtimeScope: 'PLAYER', survival: { zeroHpPolicy: 'BLOCK_PAID' } } });
