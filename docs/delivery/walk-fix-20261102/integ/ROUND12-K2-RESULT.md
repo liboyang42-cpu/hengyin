@@ -13,7 +13,8 @@ Branch `integ/launch-test-20261103`. I worked on a private local branch, ran `gi
 | `a86f47169` | 3. j6 N2, N3, N5, N6; j5 N1, N2; p1 N-3; p1 N-4 (square post) |
 | `07294f66f` | 3. p1 N-5 and the guest deep-link list; 5. j1 N1; this file |
 | `f95dac2fd` | Ledger test counts after rebasing onto k3 (5716 / 2767; my two cta changes cancel out) |
-| next commit | p1 N-4 play/merchant; the read-only SQL moved to `.md` (inventory gate); ledger 5717 / 2768 |
+| `94f753257`, `848878ccc` | p1 N-4 play/merchant; the read-only SQL moved to `.md` (inventory gate); ledger re-pin |
+| next commit | CI follow-ups listed under CI |
 
 ## 1. Solved station counts as completed on reopen (j3 F6). Status: fixed, unit-proved, not walked.
 
@@ -80,6 +81,15 @@ Map (j4 N1–N10, F14–F16), i1's leftovers (dead 提交 on a FAILED generic ga
 
 ## CI
 
-Pending.
+The branch moves every few minutes (four lanes), so most main-CI runs were cancelled by the next push. Runs that finished on commits holding my work:
+
+- `f95dac2fd`: mini followup regression and Funds MySQL IT green. Isolated Redis recovery **red because of me**: my read-only SQL sat in `docs/` as a `.sql` file, and `ci/migration_ledger.py` refuses SQL outside `chengyinhub-admin/sql` (「SQL inventory is unsafe」). Fixed by moving it into `k2-club-post-contact-scan.md`; Redis recovery green again on `848878ccc` and `00a4f426f`.
+- `2f9daae1e` (GitHub CI run 41979418953, the first full main run after my push): **red**. Mine, fixed in the commit after this file's previous version:
+  - 5 mini unit tests pinned behaviour my items change on purpose, or used fixtures my rules read differently: `r10-j2-f06-session-entry` (its session ticket had no game data, now given a theme), `mycanyu-refresh-state` (a wallet row with no activity data was read as no-game; fixed in the code: unknown now means "has a game"), `play-chapter-story-blocks-contract` (pinned 「地点与GPS玩法仍要求定位」 for solved stations; rewritten to the 11-05 rule, unsolved stations still pinned), `verification-unknown-adapters` (`memberId` from a sandbox-stubbed module in club `onShow`; now reads `app.getUserID`), `action-ledger` (count pinned at 5719 after a later lane removed a control; re-pinned at 5718).
+  - Not mine, left for their lanes and listed here so nobody mistakes them for k2:
+    - Mini static gates: `danger-confirm-gate` D3 on `club.joinRequest.reject` and `club.enroll.refund` (confirmations lost their consequence line; k3's caption pass).
+    - Fast gates, architecture: `NEW_TABLE_WRITER` / `NEW_UNOWNED_BOUNDARY` for `ClubSessionMerchantFeeMapper` (k1's merchant fee). Reproduced locally with the CI event shape; it is the only finding.
+    - Backend: `ClubAttendanceTimeMappingMyBatisIT` (`ClubEventOpsMapper.xml`: unknown column `create_time`), `P0DeregistrationMySqlIT` and `WechatMemberRegistrationMySqlIT` (welcome-points ledger row; k1 item 3).
+- The commit that carries this version of the file: CI result to be read on the PR; I did not wait for a full green main run because the other lanes' reds above keep it red until they land their fixes.
 
 STATUS: PARTIAL - items 1–3 mostly fixed with tests and j1 N1 fixed; no rig walk or screenshots (no Docker daemon); item 4, most of 5, item 6 and parts of 3 (p1 N-4 mycanyuinfo, leaderboard and team-detail guest wording) not done.

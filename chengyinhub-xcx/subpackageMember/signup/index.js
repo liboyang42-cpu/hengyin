@@ -283,7 +283,7 @@ Page({
         wKey: 'activity-' + item.id,
         wTitle: a.name || '—',
         wImg: a.imgUrl || '', // 第十二轮 k8 F13:没封面就不出图,不拿通用路线示意图(假路线 + 灰条)充数
-        wType: '场次', wColor: '#E8B86B', wUntil: a.endTime || a.endDate || '', wProgress: exploreProgressOf(item), wNoGame: !activityHasGame(a), // ds-ok v13 卡角色;k2 j1 N1 没有游戏的票直接出码
+        wType: '场次', wColor: '#E8B86B', wUntil: a.endTime || a.endDate || '', wProgress: exploreProgressOf(item), wNoGame: !activityHasGame(item.cmsActivity), // ds-ok v13 卡角色;k2 j1 N1 没有游戏的票直接出码
       });
     });
     const seen = new Set();

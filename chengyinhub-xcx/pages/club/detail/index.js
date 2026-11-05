@@ -795,7 +795,7 @@ Page({
     if (myAvatar !== this.data.myAvatar) this.setData({ myAvatar });
     const myNickname = (app.getNickname && app.getNickname()) || '';
     if (myNickname !== this.data.myNickname) this.setData({ myNickname });
-    const me = memberId(app) || null;   // j6 N2:别处登录 / 退出后回来,登录态以 app 为准
+    const me = (app.getUserID && app.getUserID()) || null;   // j6 N2:别处登录 / 退出后回来,登录态以 app 为准
     if (String(me || '') !== String(this.data.myMemberId || '')) this.setData({ myMemberId: me });
     if (!this._hasShown) { this._hasShown = true; return; }
     if (this.data.clubId && this.data.club) {

@@ -56,7 +56,7 @@ test('F-06 ① 从俱乐部场次卡进来:主按钮去选场次,不是「随时
 
 test('F-06 ③ 订单页:已付未开始的场次票底部「开始游戏」直进 play', () => {
   const vm = load({ id: 74, ownerType: 2, ownerId: 9, registrationStatus: 2, paymentStatus: 2, verificationStatus: 0,
-    refundInfo: { refundable: true }, cmsActivity: { id: 9, name: '沪上慢走', startDate: future, endDate: '2099-11-04 18:00:00' } })
+    refundInfo: { refundable: true }, cmsActivity: { id: 9, name: '沪上慢走', topicId: 5, startDate: future, endDate: '2099-11-04 18:00:00' } })   // 第十二轮 k2:有游戏的场次(没有游戏的票不出「开始游戏」,见 k2-no-game-ticket)
   assert.equal(vm.data.info.orderStateKey, 'not_started')
   assert.equal(vm.data.primaryCta, 'play')
   vm.startPlay()
