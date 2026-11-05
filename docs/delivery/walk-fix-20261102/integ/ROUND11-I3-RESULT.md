@@ -56,9 +56,7 @@ hint / answer 两条只在本分支红(本分支运行 [41957583233](https://git
 ## 证据
 
 - 修复提交 `f997cb0d`,architecture-day-lead-admission 批次绿:[41964756564](https://github.com/liboyang42-cpu/hengyin/actions/runs/41964756564)。日志为 `PlayLeadAdmissionFailureMySqlIT: PASS 4/4 (skipped=0, cleanup CLEAN)`,PlayHintUnlockMySqlIT 也绿。
-- architecture-day-integrated-changes 批次 @`f997cb0d`:见下方「integrated-changes」行。
+- architecture-day-integrated-changes 批次 @`f997cb0d` 全批绿(含 PlayLeadAdmissionFailureMySqlIT,Batch summary success):[41965105204](https://github.com/liboyang42-cpu/hengyin/actions/runs/41965105204)。
 - 修复前:master 2/4 红 [41956731939](https://github.com/liboyang42-cpu/hengyin/actions/runs/41956731939);本分支 4/4 红 [41957583233](https://github.com/liboyang42-cpu/hengyin/actions/runs/41957583233)。
 
-integrated-changes: 待填
-
-STATUS: PARTIAL - 待 integrated-changes 结论
+STATUS: COMPLETE
