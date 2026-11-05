@@ -1,0 +1,10 @@
+{
+  "source": "6feddc67180d1c1a0431362d3e0357942f998365",
+  "sha256": "1a64a61e4ac0fb93981a2405da0a5cd0642dfb9af31d8e011b15e6308caa5cee",
+  "size": 119643040,
+  "checksum": true,
+  "zipCRC": true,
+  "embeddedSource": true,
+  "run": 42016631260,
+  "frontendBundleSha256": "a2df04effac372887ce486288c4dbe13dff9e8b21afcb65a0a77ad6edced78c5"
+}

@@ -1,0 +1,33 @@
+✔ video picker refuses wrong type, unknown limits, >30s and >10MB before any upload (0.349041ms)
+✔ video pauses music; decoded frames replace poster; skip restores music and chapter narration once (0.331708ms)
+✔ a slow network falls back in five seconds; stale video events cannot close the next chapter (0.806875ms)
+✔ missing poster or video leaves chapter text available immediately (0.04175ms)
+✔ poster must load before video appears; poster failure returns to text without pausing music (0.079125ms)
+✔ 共享 PROOF_PENDING 不受粗粒度 availableActions 放行，不提供结算写按钮 (0.576542ms)
+✔ trustedPass 只证明凭证通过，QUEST_RESOLVE 是否可结算仍遵从 enabled (0.121583ms)
+✔ 服务器未完成的共享/个人到达凭证不置 done、不发默认 XP，改读任务状态 (26.008167ms)
+✔ 待审核照片成功回包不是正式结算，不飞 XP、不庆祝 (1.152083ms)
+✔ 正式完成零 XP 或无 XP 不用节点 points 或默认 12 补奖励 (3.861875ms)
+✔ 个人 OPEN_QUEST 用 ValidationMethod 的 1/3/4/5 既有校验入口，无空高级配置 (5.012667ms)
+✔ 共享结算未知或失败回读原请求 receipt，待确认期间再次点击不重写 (3.7755ms)
+✔ 共享未知结算读到匹配 APPLIED 才解锁，个人没有 receipt GET 只读状态而不重写 (2.597459ms)
+✔ 通用到达请求响应丢失立刻权威读回，不留可重写的网络重试 (3.3785ms)
+✔ 待审核禁结算但仍可打开原拍照校验，trustedPass 通过后不再提供重做入口 (1.508541ms)
+✔ 结算回读拿到其他 action 的 receipt 不解锁或显示奖励 (1.461583ms)
+✔ 通用拍照未知只回读，保留照片与输入，不显示重新上传且不重写 (2.793792ms)
+✔ 正式结算只显示本次服务端正数 XP，不回退配置 points (3.165292ms)
+✔ 有高级配置仍用既有 startGame 高级分支，基础文字与选项保留原题面 (5.344084ms)
+✔ 通用线性路线完成只消费服务器 nodeStates，trustedPass 不会点亮节点 (1.555125ms)
+✔ 通用凭证成功空回包不作完成；明确业务拒绝仍回读并保留输入 (1.568083ms)
+✔ 相机取消或权限失败尚未发出到达请求，不锁定通用写域 (1.632625ms)
+✔ 凭证状态回读失败不能用旧 trustedPass 解锁未知写入 (1.117583ms)
+✔ co-located compass resumes arrival only after a settled check in the same run (4.078208ms)
+✔ reopening a co-located compass check restores continuation from the owned encounter (2.254167ms)
+ℹ tests 25
+ℹ suites 0
+ℹ pass 25
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1204.2215

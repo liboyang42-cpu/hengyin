@@ -1,0 +1,26 @@
+{
+  "source": "f559c3aec53caa1702f20704825b208be31da289",
+  "budget": {
+    "exitCode": 0,
+    "reason": "completed",
+    "containerId": "f42f7ee2353d0aa10f189c84e3ae37d8d23df94e51782266f57fa7e448804ec9"
+  },
+  "tests": [
+    {
+      "name": "com.chengyinhub.business.service.impl.TopicRouteCompassCompletionTest",
+      "tests": "3",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "time": "0.886"
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.ApiPlayProgressIdempotencyTest",
+      "tests": "31",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "time": "6.002"
+    }
+  ]
+}
