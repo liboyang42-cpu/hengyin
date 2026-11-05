@@ -160,3 +160,15 @@ ERROR 1054 (42S22) at line 1: Unknown column 'registration_id' in 'field list'
 | 42 |      9002 |           20.00 |         15.00 |          -5.00 | 退款冲销                                             |          6 |        1 |                      NULL |           2 |        0 | NULL      | 2026-11-05 14:38:51 | NULL      | NULL        |
 | 43 |    990005 |          131.32 |         98.49 |         -32.83 | 退款冲销                                             |          6 |        1 |                      NULL |           2 |        0 | NULL      | 2026-11-05 14:38:51 | NULL      | NULL        |
 +----+-----------+-----------------+---------------+----------------+------------------------------------------------------+------------+----------+---------------------------+-------------+----------+-----------+---------------------+-----------+-------------+
+
+--- k9 own walks (jar + bundle rebuilt from f1bd03ccc, then e495f79d1; same database) ---
+FIXTURE club 990004 join_policy 0 -> 1 (to get a pending join request); applicant k9-applicant (member 990010) via real /api/club/join
+POST /api/club/join-request/reject {"clubId":990004,"memberId":990010} -> 200 已拒绝入会申请 (one sheet, no extra confirm)
+POST /api/club/governance/owner/transfer {"clubId":990004,"targetMemberId":990007} -> 200; toast 「主理人已转让给 周小雨」 shown on the page before it left (route -> pages/club/detail/index)
+POST /api/club/event-notification/audience-counts {"clubId":990004} -> 全部成员 4 · 管理员 1 · 近 90 天未活跃 0 (all joined/paid today)
+POST /api/template/topic-template/save-as {id:990014} as 990005 -> templateId 990016 (no tickets on the template row, k1 design)
+FIXTURE oms_ticket 78 on template 990016 (owner_type 1, 领队场 ¥39 ×20) to stand for a template that carries ticket types (legacy in-place templates and official templates do)
+POST /api/template/topic-template/use {id:990016} as 990007 -> draft 990018; editor data: selectedCategoryIds ["21"], clubId 990004, tickets [["领队场",39,20]]
+  主题详情 「还有 1 项未填」 = subtitle (source theme 990014 has an empty subtitle; not a copy loss)
+GET /api/project/my as 990005: before e495f79d1 two rows [990016 template copy, 990014]; after: one row [990014]
+pages/merchant/game-node?activityId=9 as 9002: station 1 CLOSED, recap 到站玩家 2, 正常完成 0/0 (all four players answered station 1 in i1)

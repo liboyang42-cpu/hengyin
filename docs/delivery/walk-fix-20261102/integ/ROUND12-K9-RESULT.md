@@ -1,5 +1,7 @@
 # Round 12, lane k9-pages: result
 
+> The second k9 worker (lane k9-org-leftovers: p3 N6 tickets, N9, N13, N16, N19, p2 N-14/N-16/N-17, item 5 coverage by fixture, names walk) reports in `ROUND12-K9-ORG-RESULT.md`.
+
 Branch `integ/launch-test-20261103`. I worked on a private local branch and ran `git pull --rebase` and `git show --stat` before each push. I did not force-push, touch master, merge a PR or touch production. There are no keys in the diff.
 
 **Rig: yes, Docker ran this time.** `dockerd` started in the container. It ran the rig on `claude/cloud-walk-20261101-rig` with the club lane's harness patch, a real jar (MySQL 8, Redis 7) and the real mini-program in headless Chrome at 390×844.

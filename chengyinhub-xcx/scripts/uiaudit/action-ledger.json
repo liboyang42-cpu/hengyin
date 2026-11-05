@@ -987179,7 +987179,7 @@
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:79:bindtap:copyPhone:5",
+      "id": "pages/coop/invite-detail/index.wxml:81:bindtap:copyPhone:5",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -987202,7 +987202,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "copyPhone",
-        "line": 79,
+        "line": 81,
         "selectorHint": ".meta-copy",
         "visibleCondition": "{{invite.partnerPhone}}",
         "disabledCondition": null,
