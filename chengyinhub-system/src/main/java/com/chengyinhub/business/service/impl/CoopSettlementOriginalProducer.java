@@ -50,15 +50,17 @@ public class CoopSettlementOriginalProducer {
 
     @Transactional(propagation=Propagation.MANDATORY,rollbackFor=Exception.class)
     public void freezeOriginals(CmsTopic observed, TopicSettlementCashBasis basis, Date frozenAt) {
-        freezeOriginals(observed,basis,frozenAt,false);
+        freezeOriginals(observed,basis,frozenAt,false,null);
     }
 
     @Transactional(propagation=Propagation.MANDATORY,rollbackFor=Exception.class)
-    public void freezeClubSelfPlayOriginals(CmsTopic observed, TopicSettlementCashBasis basis, Date frozenAt) {
-        freezeOriginals(observed,basis,frozenAt,true);
+    public void freezeClubSelfPlayOriginals(CmsTopic observed, TopicSettlementCashBasis basis, Date frozenAt, BigDecimal platformRate) {
+        if(platformRate==null || platformRate.signum()<0 || platformRate.compareTo(BigDecimal.ONE)>0)
+            throw repair("CLUB_SELF_PLAY_PLATFORM_RATE_REQUIRED");
+        freezeOriginals(observed,basis,frozenAt,true,platformRate);
     }
 
-    private void freezeOriginals(CmsTopic observed, TopicSettlementCashBasis basis, Date frozenAt, boolean clubSelfPlay) {
+    private void freezeOriginals(CmsTopic observed, TopicSettlementCashBasis basis, Date frozenAt, boolean clubSelfPlay, BigDecimal platformRate) {
         if(!TransactionSynchronizationManager.isActualTransactionActive() || TransactionSynchronizationManager.isCurrentTransactionReadOnly())
             throw repair("ORIGINAL_PRODUCER_TRANSACTION_REQUIRED");
         if(observed==null || observed.getId()==null || basis==null || frozenAt==null) throw repair("ORIGINAL_PRODUCER_SCOPE_REQUIRED");
@@ -66,8 +68,8 @@ public class CoopSettlementOriginalProducer {
         if(topic==null || !observed.getId().equals(topic.getId())) throw repair("ORIGINAL_TOPIC_FENCE_REQUIRED");
         if(clubSelfPlay && (topic.getClubId()==null || topic.getClubId()<=0)) throw repair("CLUB_SELF_PLAY_SCOPE_REQUIRED");
         if(!Integer.valueOf(1).equals(topic.getIsSettlement())) throw repair("ORIGINAL_SETTLEMENT_CLAIM_REQUIRED");
-        if(topic.getMemberId()==null || topic.getFeePlatformRate()==null || topic.getFeeGuaranteeBaseRate()==null
-                || topic.getFeeGuaranteeStepRate()==null || topic.getFeeGuaranteeMaxMerchant()==null) throw repair("FROZEN_TOPIC_FIELDS_REQUIRED");
+        if(topic.getMemberId()==null || !clubSelfPlay && (topic.getFeePlatformRate()==null || topic.getFeeGuaranteeBaseRate()==null
+                || topic.getFeeGuaranteeStepRate()==null || topic.getFeeGuaranteeMaxMerchant()==null)) throw repair("FROZEN_TOPIC_FIELDS_REQUIRED");
         manual.requireNoOpenCase(topic.getId());
         List<CmsRegistration> current=originals.selectOriginalRegistrationsForUpdate(topic.getId());
         if(current==null) throw repair("CURRENT_ORIGINAL_ROWS_REQUIRED");
@@ -138,6 +140,8 @@ public class CoopSettlementOriginalProducer {
         }
         if(clubSelfPlay && (heads.size()!=2 || !accounting.containsKey("PLATFORM") || !accounting.containsKey("INITIATOR_MARGIN")))
             throw repair("CLUB_SELF_PLAY_HEAD_SET_REQUIRED");
+        if(clubSelfPlay && accounting.get("PLATFORM").getAmount().compareTo(sales.multiply(platformRate).setScale(2,RoundingMode.HALF_UP))!=0)
+            throw repair("CLUB_SELF_PLAY_PLATFORM_RATE_CONFLICT");
         for(String kind:List.of("PLATFORM","INITIATOR_GUARANTEE")) {
             if(clubSelfPlay && "INITIATOR_GUARANTEE".equals(kind)) continue; // No co-op order: the existing self-play split has no guarantee head.
             CoopSettlement head=accounting.get(kind);if(head==null) throw repair("ORIGINAL_ACCOUNTING_HEAD_REQUIRED:"+kind);
@@ -181,8 +185,8 @@ public class CoopSettlementOriginalProducer {
         CoopSettlementCashClose close=new CoopSettlementCashClose();close.setTopicId(topic.getId());close.setCommercialContextType("TOPIC_EDITION");close.setCommercialContextId(topic.getId());
         close.setCloseKind("POSITIVE_SALES");close.setInitiatorMemberId(topic.getMemberId());close.setOriginalSalesBasis(sales);
         close.setOriginalContributionCount(contributions.size());close.setOriginalVerifiedMerchantCount(verifiedMerchants.size());
-        close.setPlatformRate(topic.getFeePlatformRate());close.setGuaranteeBaseRate(topic.getFeeGuaranteeBaseRate());
-        close.setGuaranteeStepRate(topic.getFeeGuaranteeStepRate());close.setGuaranteeMaxMerchant(topic.getFeeGuaranteeMaxMerchant());close.setOriginCalculationVersion(VERSION);
+        close.setPlatformRate(clubSelfPlay?platformRate:topic.getFeePlatformRate());close.setGuaranteeBaseRate(clubSelfPlay?BigDecimal.ZERO:topic.getFeeGuaranteeBaseRate());
+        close.setGuaranteeStepRate(clubSelfPlay?BigDecimal.ZERO:topic.getFeeGuaranteeStepRate());close.setGuaranteeMaxMerchant(clubSelfPlay?0:topic.getFeeGuaranteeMaxMerchant());close.setOriginCalculationVersion(VERSION);
         CoopSettlementCashClose prior=cash.selectCloseForUpdate(topic.getId());close.setClosedAt(prior==null?frozenAt:prior.getClosedAt());
         Map<String,Object> contract=new TreeMap<>();contract.put("version",VERSION);contract.put("payerCash",weights);contract.put("verifiedSeatFacts",seatSnapshot);
         contract.put("headIds",heads.stream().map(CoopSettlement::getId).sorted().toList());

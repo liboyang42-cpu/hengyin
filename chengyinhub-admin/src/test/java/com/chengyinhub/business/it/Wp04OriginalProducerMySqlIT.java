@@ -99,7 +99,7 @@ class Wp04OriginalProducerMySqlIT {
     @Test void clubSelfPlaySettlementFreezesOriginalsAndPaidRefundDebitsPrincipalExactlyOnce() throws Exception {
         P0AcceptanceSchema.migrations(db.source,"migration_20260919_cms_registration_selfplay_ticket_columns_nullable.sql");
         db.db.update("DELETE FROM coop_settlement");
-        db.db.update("UPDATE cms_topic SET club_id=42,is_settlement=1 WHERE id=11");
+        db.db.update("UPDATE cms_topic SET club_id=42,is_settlement=1,fee_platform_rate=NULL,fee_guarantee_base_rate=NULL,fee_guarantee_step_rate=NULL,fee_guarantee_max_merchant=NULL WHERE id=11");
         db.db.update("UPDATE cms_registration SET purchase_kind=2,ticket_id=NULL,ticket_price=NULL WHERE owner_type=1 AND owner_id=11");
         topic.setClubId(42L);topic.setMemberId(7L);topic.setEndDate(new Date());
         var service=new CmsTopicServiceImpl();
@@ -113,6 +113,7 @@ class Wp04OriginalProducerMySqlIT {
         ReflectionTestUtils.setField(service,"clubPrincipalPayee",payee);
         db.tx.executeWithoutResult(status->assertEquals(Boolean.TRUE,ReflectionTestUtils.invokeMethod(service,"settleClubSelfPlayTopic",topic)));
         assertEquals(4,count("coop_settlement_original_component"));
+        assertEquals(0,new BigDecimal("0.10").compareTo(db.db.queryForObject("SELECT platform_rate FROM coop_settlement_cash_close",BigDecimal.class)));
         Long head=db.db.queryForObject("SELECT id FROM coop_settlement WHERE line_type='INITIATOR_MARGIN'",Long.class);
         assertEquals(new BigDecimal("18.00"),db.db.queryForObject("SELECT amount FROM coop_settlement WHERE id=?",BigDecimal.class,head));
         // Historical payout fixture; the actual original-refund owner below must verify this credit before debiting.

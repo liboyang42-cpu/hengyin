@@ -638,7 +638,7 @@ class SettlementRateConvergenceTest {
         com.chengyinhub.business.service.impl.CoopSettlementOriginalProducer originals =
                 (com.chengyinhub.business.service.impl.CoopSettlementOriginalProducer)
                         ReflectionTestUtils.getField(topicSvc, "coopSettlementOriginalProducer");
-        verify(originals).freezeClubSelfPlayOriginals(eq(topic), any(), any());
+        verify(originals).freezeClubSelfPlayOriginals(eq(topic), any(), any(), eq(new BigDecimal("0.03")));
         verify(topicMember, never()).addBalance(anyLong(), any());
         verify(pointsAwardService).awardPublisherSettlement(88L, 200L);
     }
