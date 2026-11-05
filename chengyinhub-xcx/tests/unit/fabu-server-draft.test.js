@@ -39,6 +39,17 @@ test('封面回读只忽略本站同一对象的完整OSS签名，保留对象�
     detail({ topic: { imgUrl: 'https://external.example/p.png?Signature=two' } }), true), /主封面/);
 });
 
+test('不同配置的OSS桶也可刷新同一对象签名，但桶和对象不能改变', () => {
+  const asset = 'https://author-media.oss-cn-beijing.aliyuncs.com/upload/' + 'c'.repeat(32) + '.png';
+  const before = asset + '?Expires=100&OSSAccessKeyId=old&Signature=one';
+  const after = asset + '?Signature=two&Expires=200&OSSAccessKeyId=new';
+  const sent = Object.assign({}, payload, { imgUrl: before });
+  assert.equal(readbackIssue(sent, detail({ topic: { imgUrl: after } }), true), '');
+  for (const changed of [after.replace('author-media.', 'other-media.'), after.replace('oss-cn-beijing', 'oss-cn-shanghai'), after + '&versionId=2']) {
+    assert.match(readbackIssue(sent, detail({ topic: { imgUrl: changed } }), true), /主封面/);
+  }
+});
+
 test('保存草稿：带 saveDraft=1、回读确认后才成功；连点只发一次；失败可重试；存不进去就不发布', () => {
   const calls = [];
   const saver = createServerDraftSaver({

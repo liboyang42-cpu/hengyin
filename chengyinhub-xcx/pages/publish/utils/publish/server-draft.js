@@ -233,10 +233,10 @@ function storedBlock(block, nodes, submitted, keepKey) {
   return row;
 }
 
-// 本站已审核图片会按每次读取重新签名；只去掉传输签名，保留对象及其它查询参数。
+// OSS 图片会按每次读取重新签名；只去掉完整传输签名，保留桶、对象及其它查询参数。
 function imageIdentity(raw) {
   const value = raw == null ? '' : String(raw);
-  const match = value.match(/^(https:\/\/chengyin-oss\.oss-cn-shanghai\.aliyuncs\.com\/upload\/[0-9a-f]{32}\.(?:jpg|jpeg|png|gif))\?([^#]+)$/);
+  const match = value.match(/^(https:\/\/[a-z0-9][a-z0-9-]{1,61}[a-z0-9]\.oss-[a-z0-9-]+\.aliyuncs\.com\/upload\/[0-9a-f]{32}\.(?:jpg|jpeg|png|gif))\?([^#]+)$/);
   if (!match) return value;
   const signed = {}, rest = [];
   for (const pair of match[2].split('&')) {
