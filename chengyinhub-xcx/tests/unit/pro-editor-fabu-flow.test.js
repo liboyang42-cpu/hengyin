@@ -1040,7 +1040,7 @@ test('legacy multiple thoughts can be reduced without silently removing story or
 test('保存失败提示和原因都在章节滚动容器内，不盖住章节动作', () => {
   const wxml = fs.readFileSync(path.join(ROOT, 'pages/publish/fabu/index.wxml'), 'utf8')
   const css = fs.readFileSync(path.join(ROOT, 'pages/publish/fabu/index.wxss'), 'utf8')
-  const errorAt = wxml.indexOf('<cy-inline-error class="slopes-submit-error"')
+  const errorAt = wxml.indexOf('class="slopes-submit-error"')
   assert.ok(wxml.lastIndexOf('<scroll-view', errorAt) > wxml.lastIndexOf('</scroll-view>', errorAt))
   assert.ok(wxml.indexOf('submit-error-why', errorAt) < wxml.indexOf('</scroll-view>', errorAt))
   assert.doesNotMatch(css.match(/\.slopes-submit-error\s*\{([^}]+)\}/)[1], /position:\s*fixed/)
