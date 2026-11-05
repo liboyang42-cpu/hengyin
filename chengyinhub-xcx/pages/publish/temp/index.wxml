@@ -81,7 +81,7 @@
           <input class="cg-title-input {{errors.title ? 'err' : ''}}" bindinput="onTitleChange" value="{{ formData.title }}"
           maxlength="20" placeholder="给这个玩法起个名字" placeholder-class="cg-ph" />
         </view>
-        <cy-inline-error kind="error" class="cg-inline-error" wx:if="{{errors.title}}" title="{{errors.title}}" action="清除" data-field="title" bind:action="clearBasicField" />
+        <cy-inline-error kind="field" class="cg-inline-error" wx:if="{{errors.title}}" title="{{errors.title}}" />
       </view>
     </view>
 
@@ -102,7 +102,7 @@
         </view>
         <textarea class="cg-textarea sm {{errors.description ? 'err' : ''}}" value="{{ formData.description }}" bindinput="onDescriptionChange"
           maxlength="{{descriptionMaxLength}}" placeholder="一句话介绍这个玩法的看点" placeholder-class="cg-ph" />
-        <cy-inline-error kind="error" class="cg-inline-error" wx:if="{{errors.description}}" title="{{errors.description}}" action="清除" data-field="description" bind:action="clearBasicField" />
+        <cy-inline-error kind="field" class="cg-inline-error" wx:if="{{errors.description}}" title="{{errors.description}}" />
       </view>
 
       <!-- 2026-10-10 主人裁定：独立模板不再配置玩家人数 / 玩法时长（人数不需要配置；时长在购买主题时按整个主题各站时长汇总展示）。旧模板已存的值后端原样保留回读。 -->
@@ -133,7 +133,7 @@
           </view>
           <view class="cg-chip-add" bindtap="navigateToCategorySelect" aria-role="button" aria-label="添加玩法类别" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加类别</view>
         </view>
-        <cy-inline-error kind="error" class="cg-inline-error" wx:if="{{errors.categoryIds}}" title="{{errors.categoryIds}}" />
+        <cy-inline-error kind="field" class="cg-inline-error" wx:if="{{errors.categoryIds}}" title="{{errors.categoryIds}}" />
       </view>
 
       <view class="cg-sq-row">
@@ -147,7 +147,7 @@
       <view class="cg-field cg-divider" wx:if="{{ from === 'citynode' }}">
         <view class="cg-label">玩法形态 <text class="req">*</text></view>
         <cy-dropdown portal="{{false}}" range="{{ interactionTypes }}" range-key="label" value="{{ opt.idx(interactionTypes, interactionType) }}" bind:change="onPickInteraction"><view class="cg-pick {{ interactionType ? '' : 'empty' }} {{ errors.interactionType ? 'err' : '' }}"><text>{{ opt.label(interactionTypes, interactionType) }}</text><view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown>
-        <cy-inline-error kind="error" class="cg-inline-error" wx:if="{{errors.interactionType}}" title="{{errors.interactionType}}" />
+        <cy-inline-error kind="field" class="cg-inline-error" wx:if="{{errors.interactionType}}" title="{{errors.interactionType}}" />
       </view>
     </cy-card>
 

@@ -133,7 +133,12 @@ function shapeAftercareDetail(raw) {
       || optionalText(source.platformTakeoverAt) === null) return null;
   const platformTakeoverText = formatMinute(source.platformTakeoverAt);
   const processing = PROCESSING[source.processing];
-  const opinion = OPINIONS[source.merchantOpinion];
+  // 第十二轮 k3(p2 N-7):平台审核已结束、商家又没留意见时,不再写「等待商家意见」——
+  // 同一屏上方刚说过「不能再追加商家意见」。
+  const reviewClosed = source.merchantOpinion === 'PENDING' && source.canRespond === false
+    && source.processing !== 'WAITING_PLATFORM_REVIEW'
+    && !(Array.isArray(source.allowedDecisions) && source.allowedDecisions.length > 0);
+  const opinion = reviewClosed ? { text: '商家未提交意见', hint: '', variant: 'neutral' } : OPINIONS[source.merchantOpinion];
   const refunded = source.processing === 'REFUNDED';
   const responses = source.responses.map(row => shapeResponse(row, refundId));
   if (responses.some(row => row == null)) return null;

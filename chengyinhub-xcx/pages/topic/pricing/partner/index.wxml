@@ -5,7 +5,7 @@
   <cy-modal-host id="cy-modal-host" />
   <cy-nav-bar title="{{pageTitle}}" custom-back bind:back="goBack" />
 
-  <cy-empty wx:if="{{invalidLink}}" fill kind="missing-param" title="合作链接已失效" sub="{{loadError}}"
+  <cy-empty wx:if="{{invalidLink}}" fill kind="missing-param" title="合作链接已失效"
             cta="返回上一页" bind:cta="goBack" />
   <cy-error load-failure wx:elif="{{loadError}}" fill title="合作信息加载失败" sub="{{loadError}}"
             retry="重试" bind:retry="retryProfile" />

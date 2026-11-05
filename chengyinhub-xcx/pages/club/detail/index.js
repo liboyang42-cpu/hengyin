@@ -64,7 +64,7 @@ const OWNER_STAGE_COPY = {
   coopInvite: { label: '查看合作邀约', hint: '' },
   // 第十一轮 h4 LOW:不再承诺过审就能开场(商业主题过审后还要招商、定价、开售),提示行留空。
   review: { label: '主题审核中', hint: '' },
-  run: { label: '开一场', hint: '选好日期和集合时间' },
+  run: { label: '开一场', hint: '' },   // 第十二轮 k3(p3 N11):不再挂说明行
   // 第十轮 f2 第 1 项(j2 F-05 / F-14):开了商家承接的主题先招商、再定价、开售后才开一场;提示行写主题名。
   recruit: { label: '去招商', hint: '' },
   price: { label: '确认终价', hint: '' },

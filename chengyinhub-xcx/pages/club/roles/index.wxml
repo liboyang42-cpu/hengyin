@@ -25,7 +25,6 @@
         <view class="row">
           <view class="row-text">
             <text class="row-title">{{ownerName || '主理人'}}</text>
-            <text class="row-desc">全部权限，不可撤销</text>
           </view>
           <text class="row-value row-value--primary">主理人</text>
         </view>

@@ -3182,7 +3182,7 @@ Page({
     // 也只要求标题)。公共玩法库那条路一条不松。
     const storyGame = this.data.from === 'fabu';
     if (!storyGame) {
-      if (!f.description || !f.description.trim()) errors.description = '请填写玩法描述';
+      if (!f.description || !f.description.trim()) errors.description = '请填写玩法看点';
       else if (f.description.length > this.data.descriptionMaxLength) errors.description = `玩法描述不超过${this.data.descriptionMaxLength}字`;
       if (this.data.selectedCategoryIds.length === 0) errors.categoryIds = '请选择至少一个玩法类别';
     } else if (f.description && f.description.length > this.data.descriptionMaxLength) errors.description = `玩法描述不超过${this.data.descriptionMaxLength}字`;

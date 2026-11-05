@@ -722,8 +722,9 @@ Page({
     // CU-M-05:商家主办的活动记在主体店主名下,不带 scope 回列表会读成个人/俱乐部那一份,
     // 刚发的那场根本不在里面(/api/project/my 的 scope 就是按这个分流)。
     wx.redirectTo({
-      url: '/subpackageA/pages/myproject/index'
-        + (this.merchantHost ? '?scope=MERCHANT' : '')
+      // 第十二轮 k3(j1 N6):落在「活动」tab,刚发的这场就在眼前,不再停在空的「主题」tab。
+      url: '/subpackageA/pages/myproject/index?type=club_activity'
+        + (this.merchantHost ? '&scope=MERCHANT' : '')
     })
   },
 

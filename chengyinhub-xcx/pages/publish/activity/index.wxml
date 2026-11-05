@@ -35,7 +35,7 @@
         <view class="item-cont {{focusField === 'name' ? 'is-focused' : ''}} {{errors.name ? 'is-error' : ''}}">
           <input type="text" placeholder="活动标题" placeholder-class="fld-ph" value="{{formData.name}}" bindinput="onInputChange" bindfocus="onFieldFocus" bindblur="onFieldBlur" data-field="name" />
         </view>
-        <cy-inline-error class="form-inline-error" kind="error" wx:if="{{errors.name}}" title="{{errors.name}}" action="清除" data-field="name" bind:action="clearFormField" />
+        <cy-inline-error class="form-inline-error" kind="field" wx:if="{{errors.name}}" title="{{errors.name}}" />
       </view>
 
       <view class="li" id="field-address">
@@ -43,8 +43,7 @@
         <view class="item-cont {{errors.addressName ? 'is-error' : ''}} {{timeLocationLocked ? 'is-sold-locked' : ''}}" bindtap="choosePoiForNode" aria-role="button" aria-label="选择活动地点" hover-class="cy-pressed" hover-stay-time="80">
           <input type="text" placeholder="选择活动地点" placeholder-class="fld-ph" value="{{formData.addressName}}" disabled   data-field="addressName" />
         </view>
-        <cy-inline-error class="form-inline-error" kind="error" wx:if="{{errors.addressName}}" title="{{errors.addressName}}" />
-        <view class="field-purpose">用于地图与到场导航，拒绝不影响填写</view>
+        <cy-inline-error class="form-inline-error" kind="field" wx:if="{{errors.addressName}}" title="{{errors.addressName}}" />
       </view>
 
       <view class="ul flex-b date-type-fields" id="field-date">
@@ -63,7 +62,7 @@
               <image lazy-load="true" src="/pages/publish/images/icon_date3.png" mode="widthFix" />
             </view>
           </view>
-          <cy-inline-error class="form-inline-error" kind="error" wx:if="{{errors.startDate || errors.endDate}}" title="{{errors.startDate || errors.endDate}}" />
+          <cy-inline-error class="form-inline-error" kind="field" wx:if="{{errors.startDate || errors.endDate}}" title="{{errors.startDate || errors.endDate}}" />
           <!-- CR-63:已售出(有已支付报名)后时间与地点锁死。服务端为准,这里说明原因。 -->
           <view class="field-purpose field-purpose--locked" wx:if="{{timeLocationLocked}}">已售出，时间和地点不可改</view>
         </view>
@@ -81,7 +80,7 @@
               </view>
             </view>
           </view>
-          <cy-inline-error class="form-inline-error" kind="error" wx:if="{{errors.categoryIds}}" title="{{errors.categoryIds}}" />
+          <cy-inline-error class="form-inline-error" kind="field" wx:if="{{errors.categoryIds}}" title="{{errors.categoryIds}}" />
         </view>
       </view>
       </view>
@@ -92,7 +91,7 @@
         <view class="item-cont item-cont2 {{focusField === 'description' ? 'is-focused' : ''}} {{errors.description ? 'is-error' : ''}}">
           <textarea style="width: 100%;" value="{{formData.description}}" auto-height placeholder="活动说明" placeholder-class="fld-ph" bindinput="onInputChange" bindfocus="onFieldFocus" bindblur="onFieldBlur" data-field="description" />
         </view>
-        <cy-inline-error class="form-inline-error" kind="error" wx:if="{{errors.description}}" title="{{errors.description}}" action="清除" data-field="description" bind:action="clearFormField" />
+        <cy-inline-error class="form-inline-error" kind="field" wx:if="{{errors.description}}" title="{{errors.description}}" />
       </view>
 
       <view class="li" id="field-cover">
@@ -111,7 +110,7 @@
             bind:preview="onCoverPreview"
             bind:retry="retryCoverUpload"
           />
-          <cy-inline-error class="form-inline-error" kind="error" wx:if="{{errors.imgUrl}}" title="{{errors.imgUrl}}" />
+          <cy-inline-error class="form-inline-error" kind="field" wx:if="{{errors.imgUrl}}" title="{{errors.imgUrl}}" />
         </view>
       </view>
 
@@ -127,7 +126,7 @@
             </view>
           </view>
         </view>
-        <cy-inline-error class="form-inline-error" kind="error" wx:if="{{errors.templateId}}" title="{{errors.templateId}}" />
+        <cy-inline-error class="form-inline-error" kind="field" wx:if="{{errors.templateId}}" title="{{errors.templateId}}" />
       </view>
       </view>
 
@@ -164,7 +163,7 @@
           <view class="item-cont {{focusField === 'ticketName' + ticketIndex ? 'is-focused' : ''}} {{errors['ticketName' + ticketIndex] ? 'is-error' : ''}}">
             <input type="text" placeholder="请输入票单名称" placeholder-class="fld-ph" value="{{ticket.name}}" bindinput="onTicketChange" bindfocus="onFieldFocus" bindblur="onFieldBlur" data-focuskey="ticketName{{ticketIndex}}" data-field="name" data-index="{{ticketIndex}}" />
           </view>
-          <cy-inline-error class="form-inline-error" kind="error" wx:if="{{errors['ticketName' + ticketIndex]}}" title="{{errors['ticketName' + ticketIndex]}}" action="清除" data-ticket-index="{{ticketIndex}}" data-ticket-field="name" data-error-key="ticketName{{ticketIndex}}" bind:action="clearFormField" />
+          <cy-inline-error class="form-inline-error" kind="field" wx:if="{{errors['ticketName' + ticketIndex]}}" title="{{errors['ticketName' + ticketIndex]}}" />
         </view>
 
         <view class="ul flex-b">
@@ -173,7 +172,7 @@
             <view class="item-cont {{focusField === 'ticketPrice' + ticketIndex ? 'is-focused' : ''}} {{errors['ticketPrice' + ticketIndex] ? 'is-error' : ''}}">
               <input type="digit" placeholder="请输入价格" placeholder-class="fld-ph" value="{{ticket.price}}" bindinput="onTicketChange" bindfocus="onFieldFocus" bindblur="onFieldBlur" data-focuskey="ticketPrice{{ticketIndex}}" data-field="price" data-index="{{ticketIndex}}" />
             </view>
-            <cy-inline-error class="form-inline-error" kind="error" wx:if="{{errors['ticketPrice' + ticketIndex]}}" title="{{errors['ticketPrice' + ticketIndex]}}" />
+            <cy-inline-error class="form-inline-error" kind="field" wx:if="{{errors['ticketPrice' + ticketIndex]}}" title="{{errors['ticketPrice' + ticketIndex]}}" />
           </view>
 
           <view class="li">
@@ -181,7 +180,7 @@
             <view class="item-cont {{focusField === 'ticketStock' + ticketIndex ? 'is-focused' : ''}} {{errors['ticketStock' + ticketIndex] ? 'is-error' : ''}}">
               <input type="number" placeholder="请输入库存" placeholder-class="fld-ph" value="{{ticket.totalStock}}" bindinput="onTicketChange" bindfocus="onFieldFocus" bindblur="onFieldBlur" data-focuskey="ticketStock{{ticketIndex}}" data-field="totalStock" data-index="{{ticketIndex}}" />
             </view>
-            <cy-inline-error class="form-inline-error" kind="error" wx:if="{{errors['ticketStock' + ticketIndex]}}" title="{{errors['ticketStock' + ticketIndex]}}" action="清除" data-ticket-index="{{ticketIndex}}" data-ticket-field="totalStock" data-error-key="ticketStock{{ticketIndex}}" bind:action="clearFormField" />
+            <cy-inline-error class="form-inline-error" kind="field" wx:if="{{errors['ticketStock' + ticketIndex]}}" title="{{errors['ticketStock' + ticketIndex]}}" />
           </view>
         </view>
       </view>

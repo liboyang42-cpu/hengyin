@@ -24,6 +24,7 @@ cy-page-title + .section { margin-top: 0; } /* 2026-11-02 r2:页标题直接接�
 .divider { height: 1rpx; margin: 0 var(--cy-space-4); background: var(--cy-border-card); }
 
 .field-label { display: block; margin: var(--cy-space-3) 0 var(--cy-space-1-5); color: var(--cy-color-text-secondary); font-size: var(--cy-font-label); font-weight: 600; }
+.field-label-value { float: right; color: var(--cy-color-text-tertiary); font-weight: 400; }
 .field-hint { display: block; margin-top: var(--cy-space-1-5); color: var(--cy-color-text-tertiary); font-size: var(--cy-font-caption); line-height: 1.5; }
 .field-picker, .field-input { min-height: 84rpx; box-sizing: border-box; padding: 0 var(--cy-space-2-5); border: 1rpx solid var(--cy-border-card); border-radius: var(--cy-radius-sm); background: var(--cy-bg-card-2); color: var(--cy-color-text-primary); font-size: var(--cy-font-body); }
 .field-picker { display: flex; align-items: center; justify-content: space-between; }

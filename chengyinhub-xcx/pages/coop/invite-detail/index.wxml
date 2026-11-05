@@ -114,12 +114,11 @@
 
       <block wx:if="{{inputKind}}">
         <text class="field-label">{{inputLabel}}</text>
-        <textarea class="field" value="{{draft}}" placeholder="{{inputPlaceholder}}" placeholder-class="field-ph"
-                  maxlength="100" bindinput="onDraftInput" auto-height="{{false}}" />
-        <cy-inline-error wx:if="{{draftError}}" kind="error" title="{{inputKind === 'withdraw' ? '撤回要写个理由' : '拒绝要写个理由'}}" sub="{{draftError}}" />
+        <textarea id="inviteDraftField" class="field" value="{{draft}}" placeholder="{{inputPlaceholder}}" placeholder-class="field-ph"
+                  maxlength="100" bindinput="onDraftInput" auto-height="{{false}}" focus="{{draftFocus}}" />
+        <cy-inline-error wx:if="{{draftError}}" kind="field" title="{{draftError}}" />
         <text class="field-count">{{draft.length}} / 100</text>
       </block>
-      <text wx:elif="{{invite.status === 1}}" class="bubble-empty">需要对齐事项时，请点击上方“联系合作方”进入单聊。</text>
       <!-- CU-C-124:失效邀约不再在这里补一句「不能再留言」—— 上面那条「还没有留言」已经把
            这一栏说清，页底动作条还留着唯一一句「没有可执行的操作」对应实际可做的事。 -->
     </view>

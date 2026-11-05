@@ -246,6 +246,7 @@ Page({
     hasIncomingInvite: false,
     accepting: false,
     acceptResult: '',
+    acceptOk: false,
     invitePreview: null,
     roleSheet: { show: false, mode: '', operator: null },
     submitting: false,
@@ -792,7 +793,7 @@ Page({
 
   acceptIncomingInvite() {
     if (!this._incomingInviteToken || this.data.accepting) return;
-    this.setData({ accepting: true, acceptResult: '' });
+    this.setData({ accepting: true, acceptResult: '', acceptOk: false });
     const reqId = this._acceptInviteRequestId || requestId('merchant-accept');
     this._acceptInviteRequestId = reqId;
     app.sendRequest({
@@ -817,7 +818,7 @@ Page({
         this._acceptInviteRequestId = '';
         this._incomingInviteToken = '';
         clearInviteHandoff();
-        this.setData({ hasIncomingInvite: false, acceptResult: '已加入经营团队' });
+        this.setData({ hasIncomingInvite: false, acceptResult: '已加入经营团队', acceptOk: true });
         toast.success('已加入团队');
         this.loadAccess();
       },

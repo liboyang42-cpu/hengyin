@@ -107,6 +107,11 @@ public class CmsTopic extends BaseEntity
     private transient String sessionMeetingPoint;
     public BigDecimal getSessionPrice() { return sessionPrice; }
     public void setSessionPrice(BigDecimal sessionPrice) { this.sessionPrice = sessionPrice; }
+    /** 第十二轮 k3(p3 N11):开一场按票种数决定是否给「容量」栏(多票种沿用各票容量,不再写一行解释)。不落库。 */
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private transient Integer sessionTicketCount;
+    public Integer getSessionTicketCount() { return sessionTicketCount; }
+    public void setSessionTicketCount(Integer sessionTicketCount) { this.sessionTicketCount = sessionTicketCount; }
     public String getSessionMeetingPoint() { return sessionMeetingPoint; }
     public void setSessionMeetingPoint(String sessionMeetingPoint) { this.sessionMeetingPoint = sessionMeetingPoint; }
     @JsonIgnore

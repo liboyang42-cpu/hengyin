@@ -19,7 +19,7 @@
       <view class="tm-invite-title">加入经营团队</view>
       <view class="tm-invite-copy" wx:if="{{invitePreview}}">{{invitePreview.merchantName}} · {{invitePreview.roleName}}</view>
       <cy-btn variant="primary" loading="{{accepting}}" bind:tap="acceptIncomingInvite">接受邀请</cy-btn>
-      <view class="tm-result tm-result--error" wx:if="{{acceptResult}}">{{acceptResult}}</view>
+      <view class="tm-result {{acceptOk ? 'tm-result--ok' : 'tm-result--error'}}" wx:if="{{acceptResult}}">{{acceptResult}}</view>
     </view>
   </view>
 
@@ -44,7 +44,7 @@
       </view>
       <view class="tm-text-action" bindtap="acceptIncomingInvite" aria-role="button" aria-label="接受团队邀请" hover-class="{{accepting ? 'none' : 'cy-pressed'}}" hover-stay-time="80">接受</view>
     </view>
-    <view class="tm-result tm-result--error" wx:if="{{acceptResult}}">{{acceptResult}}</view>
+    <view class="tm-result {{acceptOk ? 'tm-result--ok' : 'tm-result--error'}}" wx:if="{{acceptResult}}">{{acceptResult}}</view>
 
     <block wx:if="{{access.canManageOperators}}">
       <view class="tm-share-card" wx:if="{{createdInvite}}">
@@ -109,7 +109,6 @@
     <view class="tm-self-card" wx:else>
       <text class="tm-self-title">你的岗位权限</text>
       <text class="tm-self-role">{{access.roleName}}</text>
-      <text class="tm-self-copy">岗位调整或离职由店主操作，立即生效。</text>
       <cy-btn variant="primary" bind:tap="goWorkbench">进入工作台</cy-btn>
     </view>
 

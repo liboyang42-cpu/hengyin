@@ -294,8 +294,10 @@ public class ClubSessionServiceImpl implements IClubSessionService {
         if (tickets == null) return;
         java.math.BigDecimal min = null;
         String meeting = null;
+        int count = 0;
         for (OmsTicket ticket : tickets) {
             if (ticket == null) continue;
+            count++;
             if (ticket.getPrice() != null && (min == null || ticket.getPrice().compareTo(min) < 0)) min = ticket.getPrice();
             if (meeting == null) {
                 String name = ticket.getMeetingPoint() == null ? "" : ticket.getMeetingPoint().trim();
@@ -306,6 +308,7 @@ public class ClubSessionServiceImpl implements IClubSessionService {
         }
         topic.setSessionPrice(min);
         topic.setSessionMeetingPoint(meeting);
+        topic.setSessionTicketCount(count);
     }
 
     /** 取主题票(owner_type=1)里第一张带完整集合点坐标的票,写到场次 latitude/longitude。 */

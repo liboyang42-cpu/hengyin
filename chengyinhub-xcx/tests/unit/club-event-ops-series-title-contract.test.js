@@ -260,7 +260,8 @@ test('实现参数与内部编号不再出现在活动运营页面上（CU-C-150
   assert.doesNotMatch(wxml, /当前版本 \{\{expectedVersion\}\}/, '编辑态同理')
   assert.doesNotMatch(wxml, /系列 #\{\{editingSeriesId\}\}/, '自增主键不进文案')
   assert.doesNotMatch(wxml, /成员 #\{\{item\.memberId\}\}/, '成员卡用姓名，不用主键')
-  assert.match(wxml, /wx:if="\{\{offerWindowText\}\}"/, '未形成合法时长时不显示空回显')
+  // 第十二轮 k3(p3 N11):「当前为 1 天。」回显是说明行,已撤;输入框里的分钟数就是值。
+  assert.doesNotMatch(wxml, /当前为 \{\{offerWindowText\}\}/, '不再挂时长回显说明行')
   assert.doesNotMatch(wxml, /默认 1440 = 一天/, '库字段单位与默认值不当标签')
   // 候补开关这个真信息要留着,别把修文案修成把状态也删了
   assert.match(wxml, /候补\{\{item\.waitlistEnabled \? '开启' : '关闭'\}\}/)

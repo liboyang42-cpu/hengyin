@@ -87,8 +87,7 @@
           <view class="ma-row-cont {{focusField === 'address' ? 'is-focused' : ''}} {{errors.address ? 'is-error' : ''}} {{address ? 'is-filled' : ''}}">
             <input class="ma-inp" disabled type="text" placeholder="点击选择承接地点" placeholder-class="ma-ph" value="{{address}}" />
           </view>
-          <cy-inline-error class="ma-inline-error" kind="error" wx:if="{{errors.address}}" title="{{errors.address}}" />
-          <text class="ma-hint ma-purpose">用于地图与到场导航，拒绝不影响填写</text>
+          <cy-inline-error class="ma-inline-error" kind="field" wx:if="{{errors.address}}" title="{{errors.address}}" />
         </view>
       </view>
 
@@ -100,7 +99,7 @@
             bindinput="onRuleInstructionsChange" bindfocus="onFieldFocus" bindblur="onFieldBlur" data-focuskey="ruleInstructions" maxlength="500" />
           <view class="ma-count">{{ruleInstructions.length}}/500</view>
         </view>
-        <cy-inline-error class="ma-inline-error" kind="error" wx:if="{{errors.ruleInstructions}}" title="{{errors.ruleInstructions}}" action="清除" bind:action="clearRuleInstructions" />
+        <cy-inline-error class="ma-inline-error" kind="field" wx:if="{{errors.ruleInstructions}}" title="{{errors.ruleInstructions}}" />
       </view>
 
       <view class="ma-card wizard-card cy-rise-in" id="field-pic">
@@ -124,7 +123,7 @@
             <text class="ma-pgrid-txt">添加照片</text>
           </view>
         </view>
-        <cy-inline-error class="ma-inline-error" kind="error" wx:if="{{errors.picUrl}}" title="{{errors.picUrl}}" />
+        <cy-inline-error class="ma-inline-error" kind="field" wx:if="{{errors.picUrl}}" title="{{errors.picUrl}}" />
       </view>
 
       <!-- 可配合的时间:稿 133:310 把这三项收成一组,并给了组说明 ——
@@ -140,7 +139,7 @@
             <text class="{{startDate && endDate ? '' : 'ma-ph'}}">{{startDate && endDate ? startDate + '  至  ' + endDate : '点击选择日期区间'}}</text>
             <cy-icon name="calendar" size="28" />
           </view>
-          <cy-inline-error class="ma-inline-error" kind="error" wx:if="{{errors.availabilityRange}}" title="{{errors.availabilityRange}}" />
+          <cy-inline-error class="ma-inline-error" kind="field" wx:if="{{errors.availabilityRange}}" title="{{errors.availabilityRange}}" />
         </view>
 
         <view class="ma-row" id="field-time" hover-class="cy-pressed" hover-stay-time="80" bindtap="handleTimePopup" data-action="open">
@@ -151,7 +150,7 @@
           <view class="ma-row-cont {{errors.cooperateDate ? 'is-error' : (cooperateDate ? 'is-filled' : '')}}">
             <text class="{{cooperateDate ? '' : 'ma-ph'}}">{{cooperateDate || '点击选择时段'}}</text>
           </view>
-          <cy-inline-error class="ma-inline-error" kind="error" wx:if="{{errors.cooperateDate}}" title="{{errors.cooperateDate}}" />
+          <cy-inline-error class="ma-inline-error" kind="field" wx:if="{{errors.cooperateDate}}" title="{{errors.cooperateDate}}" />
         </view>
 
         <view class="ma-row">

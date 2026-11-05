@@ -150,7 +150,7 @@ Page({
     const clickedIdentity = identityKey();
     const that = this;
     modal.show({
-      dangerKey: 'club.enroll.refund', dangerParams: { name: d.displayName || '该玩家' },
+      dangerKey: 'club.enroll.refund', dangerParams: { name: d.displayName || '该玩家', amount: d.paidAmountText || '实付金额' },
       success(r) {
         if (!r.confirm || that.data.refunding) return;
         // 确认弹窗期间可能已经换了人登录,换了就不能把回执算到这个人头上

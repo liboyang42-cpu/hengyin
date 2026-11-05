@@ -613,7 +613,7 @@ Page({
     const order = [];
     const fail = (key, msg) => { errors[key] = msg; order.push(key); };
 
-    if (!address.trim()) fail('address', '请输入活动地点');
+    if (!address.trim()) fail('address', '请选择承接地点');
     if (!startDate || !endDate) fail('availabilityRange', '请选择可配合日期');
     if (cooperateDate === '') fail('cooperateDate', '请选择可配合时间段');
     if (!ruleInstructions.trim()) fail('ruleInstructions', '请输入节点接待说明');

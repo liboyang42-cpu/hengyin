@@ -61,6 +61,7 @@ Page({
     inputPlaceholder: '',
     draft: '',
     draftError: '',
+    draftFocus: false,
     submitting: false,
     // 已接受的履约动作(卡片上搬来):行内回执/说明 + 保证金入口可见性
     actionReceipt: '',
@@ -291,6 +292,12 @@ Page({
     });
   },
 
+  _showDraftError(text) {
+    this.setData({ draftError: text, draftFocus: false }, () => {
+      this.setData({ draftFocus: true });
+      if (wx.pageScrollTo) wx.pageScrollTo({ selector: '#inviteDraftField', offsetTop: -120, duration: 200 });
+    });
+  },
   onDraftInput(e) { this.setData({ draft: e.detail.value, draftError: '' }); },
 
   copyPhone() {
@@ -321,7 +328,9 @@ Page({
   },
   reject() {
     if (!String(this.data.draft || '').trim()) {
-      this.setData({ draftError: '请说明拒绝理由，让对方知道如何调整。' });
+      // 第十二轮 k3(p2 N-8):从页顶点拒绝时理由栏在屏外,原来只在屏外出一块粉底提示,看起来像没反应。
+      // 现在栏下红字 + 滚到理由栏并聚焦。
+      this._showDraftError('请写拒绝理由');
       return;
     }
     this.setData({ draftError: '' });
@@ -330,8 +339,7 @@ Page({
   },
   withdraw() {
     if (!String(this.data.draft || '').trim()) {
-      // 长说明落在字段旁边(draftError),toast 只做一句短提示 —— 门禁的 16 字上限就是这个意思
-      this.setData({ draftError: '对方拿着这句话才知道下一步该怎么改。' });
+      this._showDraftError('请写撤回理由');
       return;
     }
     this.setData({ draftError: '' });

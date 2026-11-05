@@ -512,6 +512,8 @@ Page({
       if (this._recoveryNext) labels.push('更多记录');
       if (before !== null) labels.push('返回最新记录');
       if (items.length || before !== null) this._showAiHistory(labels);
+      // p3 F11:没有任何记录时原来什么都不发生,看起来像按钮坏了。
+      else if (retainedOkay && this._recoveryEmpty) require('../../../utils/toast.js')('还没有起草记录');
     };
     ctx.transport = app.sendRequest({ url: '/api/ai/theme/draft/recovery', method: 'GET', data: before === null ? {} : { beforeId: before },
       header: { 'Content-Type': 'application/json' }, hideLoading: true, autoErrorToast: false,

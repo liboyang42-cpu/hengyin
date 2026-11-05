@@ -52,7 +52,7 @@ Page({
     floorText: '—',
     finalPrice: 0,
     sliderMax: 100,
-    referenceText: '样本不足，暂不展示参考价',
+    referenceText: '',
     referencePrice: null,
     referenceDeltaText: '',
     saving: false,
@@ -155,7 +155,7 @@ Page({
           referencePrice: reference,
           referenceText: reference && sample > 0
             ? city + '同类已开售均价 ¥' + money(reference) + '（' + sample + ' 个样本）'
-            : '样本不足，暂不展示参考价',
+            : '',   // 第十二轮 k3(p3 N11):没有参考价就不画参考价框,不写「样本不足」
         });
         that.updateDelta(start);
         that.loadLineupNames();
@@ -324,8 +324,9 @@ Page({
               complete() { that.goBack(); } });
             return;
           }
-          toast.success(msg);
-          setTimeout(function () { that.goBack(); }, 500);
+          // 第十二轮 k3(p3 N14):原来 0.5 秒就返回,下一步(等开售审核)读不完。
+          toast.success(msg, { duration: 2500 });
+          setTimeout(function () { that.goBack(); }, 2500);
         } else that.setData({ submitError: (res && res.msg) || '确认失败，请重试' });
       },
       fail(res) { that.setData({ submitError: app.getRequestErrorMessage(res, '网络异常，请稍后重试') }); },

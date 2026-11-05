@@ -30,6 +30,17 @@ function positiveId(value) {
 // 表单里明明写着今天,回包却说「场次日期不能早于今天」。
 function shanghaiToday() { return chinaDateKey(new Date()) }
 // 「仅改未来」的服务端边界是上海明日 00:00:今天的场次不在编辑范围内,表单也不能回填或选今天。
+// 第十二轮 k3(p3 N8):默认集合时间不能是已经过去的「今天 09:00」。取上海时间下一个整点再往后一小时;
+// 晚于 21:00 就给明天 09:00。
+function defaultSlot(now) {
+  const at = now === undefined ? Date.now() : now
+  const clock = chinaParts(new Date(at))
+  if (!clock) return { date: shanghaiToday(), time: '09:00' }
+  const hour = clock.hours + 2
+  if (hour > 21) return { date: chinaDateKey(new Date(at + 24 * 60 * 60 * 1000)), time: '09:00' }
+  if (hour < 9) return { date: chinaDateKey(new Date(at)), time: '09:00' }
+  return { date: chinaDateKey(new Date(at)), time: (hour < 10 ? '0' : '') + hour + ':00' }
+}
 function shanghaiTomorrow() { return chinaDateKey(new Date(Date.now() + 24 * 60 * 60 * 1000)) }
 // CU-C-35:日期=今天且集合时刻已过 —— 「今天」这一档由后端拒绝,用户看到的日期又没错,
 // 前后端都没人拦在提交之前。这里用同一个上海钟提前判出来,文案直说时刻。
@@ -456,7 +467,9 @@ Page({
       this.setData({ state: 'error', errorText: '缺少俱乐部信息' })
       return
     }
-    this.setData({ clubId, activityId, recurrenceType })
+    const slot = defaultSlot()
+    const startDate = slot.date < this.data.minDate ? this.data.minDate : slot.date
+    this.setData({ clubId, activityId, recurrenceType, startDate, startTime: slot.time, customDates: [startDate] })
     this.loadAccess()
   },
 
@@ -550,6 +563,7 @@ Page({
           id: positiveId(item.id),
           name: typeof item.name === 'string' && item.name.trim() ? item.name.trim() : ('主题 #' + item.id),
           dropdownLabel: topicDropdownLabel(item, that.data.clubId),
+          ticketCount: Number.isInteger(item.sessionTicketCount) ? item.sessionTicketCount : 1,
           // C-17:玩家结账页上的票价与集合点,开场前只读给主理人看
           factsText: sessionFactsText(item),
           // C-02:付费主题且不能在线收款时提示主理人(L3 管玩家侧)
@@ -732,14 +746,15 @@ Page({
 
   resetSeriesForm() {
     this._expectedVersion = null
-    const today = this.data.minDate
+    const slot = defaultSlot()
+    const today = slot.date < this.data.minDate ? this.data.minDate : slot.date
     this.setData({
       editingSeriesId: null,
       editingTopicId: null,
       recurrenceType: 'ONCE',
       topicIndex: 0,
       startDate: today,
-      startTime: '09:00',
+      startTime: slot.time,
       occurrenceCount: 4,
       customDates: [today],
       capacity: '',

@@ -25,15 +25,17 @@ const FILES = {
   'pages/topic/components/cy/date-range-sheet/index.wxml': null,
 };
 
-test('字段校验提示一律 kind="error"(红),不再用默认蓝色 data 档', () => {
+// 第十二轮 k3(j1 N9/F11、p2 N-10、业主规则「输入错误是栏下红字」):栏下红字是 kind="field"(无底色无图标);
+// kind="error" 仍是红,但带粉底与图标,只留给非字段的操作失败。两者都不许回到蓝色 data 档。
+test('字段校验提示一律红色(kind="field" 栏下红字或 kind="error"),不再用默认蓝色 data 档', () => {
   for (const [file, allowed] of Object.entries(FILES)) {
     for (const t of tags(file)) {
       if (/load-failure/.test(t) || (allowed && allowed.test(t))) continue;
-      assert.match(t, /kind="error"/, file + ' 里的输入问题必须是红色: ' + t.slice(0, 120));
+      assert.match(t, /kind="(error|field)"/, file + ' 里的输入问题必须是红色: ' + t.slice(0, 120));
     }
   }
   assert.match(read('pages/activity/official-organizer/index.wxml'), /formError.action === 'resume'\}\}" kind="error"/);
-  assert.match(read('pages/coop/invite-detail/index.wxml'), /wx:if="\{\{draftError\}\}" kind="error"/);
+  assert.match(read('pages/coop/invite-detail/index.wxml'), /wx:if="\{\{draftError\}\}" kind="field"/);
   assert.match(read('pages/merchant/customer/detail/index.wxml'), /wx:if="\{\{noteError\}\}"\s+kind="error"/);
 });
 

@@ -88,7 +88,6 @@
             hover-class="{{refunding || refundErrorUnknown ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
         {{refunding ? '正在退款…' : '清退并退款'}}
       </view>
-      <text class="ckd-foot-note">已核销订单不可退款</text>
     </view>
   </block>
 </view>

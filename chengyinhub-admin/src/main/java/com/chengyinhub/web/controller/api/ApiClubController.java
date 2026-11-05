@@ -1699,6 +1699,12 @@ public class ApiClubController extends BaseController {
                     safeRegistrations.add(safe);
                 }
             }
+            // 第十二轮 k3(p3 N5):主题票(owner_type=1)只是开场时复制的母版,不是一场。已经开过场、
+            // 母版上又没人报名时,不再在名册里冒出一行「领队场 0 / 20 · 还没有人报名」。
+            if (Long.valueOf(1L).equals(tk.getOwnerType()) && safeRegistrations.isEmpty()
+                    && sessions != null && !sessions.isEmpty()) {
+                continue;
+            }
             ClubRegistrationRosterVO.Ticket safeTicket = new ClubRegistrationRosterVO.Ticket();
             safeTicket.setId(tk.getId());
             safeTicket.setName(tk.getName());

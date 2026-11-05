@@ -40,7 +40,6 @@
         <!-- CU-C-99:「乙-2」是内部条款编号,不该出现在给主理人看的标题里。 -->
         <text class="pg-kicker">最低价</text>
         <text class="pg-money">{{money.amount2(floorText)}}</text>
-        <text class="pg-note">终价不可低于此值</text>
       </view>
 
       <!-- 第四轮(业主:多票价):作者发了几张票时逐张确认终价,每张预填作者的价、各自对地板校验;一张票照旧用滑块。 -->
@@ -52,7 +51,7 @@
                  aria-label="{{item.name || '票种 ' + (index + 1)}}终价" bindinput="onTicketPriceInput" />
           <text class="pg-field-err" wx:if="{{item.error}}" aria-role="alert">{{item.error}}</text>
         </view>
-        <view class="pg-reference"><text>{{referenceText}}</text></view>
+        <view class="pg-reference" wx:if="{{referenceText}}"><text>{{referenceText}}</text></view>
       </view>
 
       <view class="pg-card cy-rise-in" wx:else>
@@ -64,7 +63,7 @@
                 activeColor="var(--cy-color-action-primary-bg)" backgroundColor="var(--cy-color-border-subtle)"
                 block-size="24" bindchange="onSliderChange" />
         <view class="pg-range"><text>地板 {{money.amount2(floorText)}}</text><text>最高 {{money.amount2(sliderMax)}}</text></view>
-        <view class="pg-reference">
+        <view class="pg-reference" wx:if="{{referenceText}}">
           <text>{{referenceText}}</text>
           <text wx:if="{{referenceDeltaText}}" class="pg-delta">{{referenceDeltaText}}</text>
         </view>

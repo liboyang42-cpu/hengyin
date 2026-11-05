@@ -2849,7 +2849,7 @@ Page({
     this.captureEntryTicketSnapshot();
     this._captureLockedSnapshot();
     this.updateAllStatistics();
-    this.refreshRouteGraph();
+    this.refreshRouteGraph(); reconcileClubPick(this);   // 第十二轮 k3(p3 N6):草稿回填的空 clubId 不能盖掉唯一俱乐部的默认选中
     this._syncMerchantPoolEligibility();   // 回填之后复核:存量主题可能是无资格者开的池
     this._finishEditingDraftBootstrap(detail);
     try {
@@ -7505,7 +7505,7 @@ Page({
     }
 
     // 经典定向团(含 mode==1 票种)且拥有俱乐部时,必须选归属俱乐部(D3/D12 一人多俱乐部)
-    const isCityOrienteering = Number(this.data.formData.productType) === 1;
+    const isCityOrienteering = Number(this.data.formData.productType) === 1; reconcileClubPick(this);
     if (isCityOrienteering && this.data.myClubs.length > 0 && !this.data.formData.clubId) {
       this._scrollSheetTo('fieldClub');
       cyToast('请选择路线归属的俱乐部');
@@ -9396,4 +9396,26 @@ Page({
 function pickedNodeAt(page, chapterIndex, nodeIndex) {
   const chapter = ((page.data.formData && page.data.formData.chapters) || [])[chapterIndex] || {};
   return (chapter.nodes || [])[nodeIndex] || {};
+}
+
+/**
+ * 第十二轮 k3(p3 N6):归属俱乐部的「看上去选中」(clubIndex)与「提交值」(formData.clubId)必须是同一件事。
+ * 模板复制出的草稿没有 clubId,草稿回填晚于 loadMyClubs 时把默认选中的值清空,而行上仍显示该俱乐部,
+ * 点完成却被要求「请选择路线归属的俱乐部」。按两者现状对齐:有 id 就定位下标;没 id 但只有一个俱乐部就选它;
+ * 否则显示未选。(放文件尾:上方 UI 基线按行号锚定,不挪既有行)
+ */
+function reconcileClubPick(page) {
+  const clubs = page.data.myClubs || [];
+  const id = page.data.formData && page.data.formData.clubId;
+  if (id) {
+    let idx = -1;
+    for (let i = 0; i < clubs.length; i++) if (String(clubs[i].id) === String(id)) { idx = i; break; }
+    if (idx >= 0 && idx !== page.data.clubIndex) page.setData({ clubIndex: idx });
+    return;
+  }
+  if (clubs.length === 1) {
+    page.setData({ clubIndex: 0, 'formData.clubId': clubs[0].id }, () => page.refreshPrimaryActionState());
+  } else if (page.data.clubIndex !== -1) {
+    page.setData({ clubIndex: -1 });
+  }
 }

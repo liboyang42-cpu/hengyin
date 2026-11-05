@@ -107,10 +107,7 @@ const DANGER_ACTIONS = {
     // 可逆:拒绝后对方可以重新提交申请。
     irreversible: false,
     title: '拒绝「{name}」的入会申请?',
-    consequences: [
-      { icon: 'bell', text: '对方会收到未通过通知;下一步可选填原因一并告知' },
-      { icon: 'clock', text: '对方之后仍可以重新提交申请' },
-    ],
+    consequences: [],
     confirmText: '拒绝申请',
     alt: { text: '先放着不处理', hint: '申请会留在列表里,想清楚再决定' },
     done: { title: '已拒绝申请', text: '' },
@@ -473,12 +470,9 @@ const DANGER_ACTIONS = {
   'club.enroll.refund': {
     irreversible: true,
     title: '取消「{name}」的报名?',
-    content: '取消对方的报名资格，符合规则的退款按原支付记录处理。',
-    consequences: [
-      { icon: 'finance', text: '现金退款、积分返还以实际支付记录和查询结果为准' },
-      { icon: 'mtab-customers', text: '对方从本团名册移出,群码失效' },
-      { icon: 'warning', text: '此操作不可撤销,清退后需要对方重新报名' },
-    ],
+    // 第十二轮 k3(p3 N7):原来四行说明里没有金额,主理人看不出要退多少。改为一行带金额的事实。
+    content: '原路退还 {amount}，对方从本团名册移出。此操作不可撤销。',
+    consequences: [],
     confirmText: '退款并清退',
     alt: null,
     done: { title: '清退请求已受理', text: '请查看订单确认取消及退款进度。' },
@@ -548,8 +542,7 @@ const DANGER_ACTIONS = {
     title: '取消报名?',
     content: '取消后报名资格失效，现金退款和积分返还按本单实际支付记录处理。{deadline}。',
     consequences: [
-      { icon: 'finance', text: '本单如有现金退款或积分返还，进度以订单查询结果为准' },
-      { icon: 'calendar', text: '名额释放,错过后需要重新报名' },
+      { icon: 'calendar', text: '名额释放，错过后需要重新报名' },
       { icon: 'warning', text: '此操作不可撤销，取消后这张票作废' },
     ],
     confirmText: '取消并退款',
