@@ -303,11 +303,11 @@ class MerchantCrmFreeExploreRosterMySqlIT {
                         + " ADD COLUMN scope_id BIGINT NULL AFTER scope_type");
                 statement.execute("CREATE TABLE ums_member (id BIGINT PRIMARY KEY, nickname VARCHAR(64),"
                         + " avatar VARCHAR(255), phone VARCHAR(512), del_flag INT) ENGINE=InnoDB");
-                statement.execute("CREATE TABLE cms_topic (id BIGINT PRIMARY KEY, member_id BIGINT,"
+                statement.execute("CREATE TABLE cms_topic (id BIGINT PRIMARY KEY, member_id BIGINT, end_date DATETIME,"
                         + " club_id BIGINT, product_type INT, del_flag INT) ENGINE=InnoDB");
                 statement.execute("CREATE TABLE cms_registration_merchant (id BIGINT PRIMARY KEY AUTO_INCREMENT,"
                         + " topic_id BIGINT, member_id BIGINT, audit_status INT, del_flag INT) ENGINE=InnoDB");
-                statement.execute("CREATE TABLE cms_activity (id BIGINT PRIMARY KEY, member_id BIGINT,"
+                statement.execute("CREATE TABLE cms_activity (id BIGINT PRIMARY KEY, member_id BIGINT, end_date DATETIME,"
                         + " topic_id BIGINT, del_flag INT) ENGINE=InnoDB");
                 statement.execute("CREATE TABLE coop_invite (id BIGINT PRIMARY KEY AUTO_INCREMENT,"
                         + " topic_id BIGINT, to_type VARCHAR(16), status INT, del_flag INT) ENGINE=InnoDB");
