@@ -1323253,7 +1323253,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1323321,7 +1323321,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1323474,7 +1323474,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1323541,7 +1323541,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1323609,7 +1323609,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1323679,7 +1323679,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1323746,7 +1323746,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1323813,7 +1323813,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1323880,7 +1323880,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1323947,7 +1323947,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1324014,7 +1324014,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1324081,7 +1324081,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1324148,7 +1324148,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1324215,7 +1324215,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1324282,7 +1324282,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1324350,7 +1324350,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1324417,7 +1324417,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1324484,7 +1324484,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1324551,7 +1324551,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1324618,7 +1324618,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1324686,7 +1324686,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1324753,7 +1324753,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1324820,7 +1324820,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1324887,7 +1324887,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1325048,7 +1325048,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1325115,7 +1325115,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1325182,7 +1325182,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1325249,7 +1325249,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1325316,7 +1325316,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1325383,7 +1325383,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1325450,7 +1325450,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1325517,7 +1325517,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1325586,7 +1325586,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1325747,7 +1325747,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1325919,7 +1325919,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1326095,7 +1326095,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1326165,7 +1326165,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1326326,7 +1326326,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1326393,7 +1326393,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1326460,7 +1326460,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1326621,7 +1326621,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1326688,7 +1326688,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "merchant",
+      "role": "player",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"

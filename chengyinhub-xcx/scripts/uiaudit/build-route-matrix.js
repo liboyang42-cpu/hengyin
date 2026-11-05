@@ -51,6 +51,8 @@ const ROLE_OVERRIDES = new Map([
   ['subpackageA/pages/assetcenter/earnings/index', 'player'],
   ['subpackageA/pages/assetcenter/analysis/index', 'player'],
   ['subpackageA/pages/assetcenter/income-detail/income-detail', 'player'],
+  // 第十二轮 k8:搜索地图是玩家页;k7-map(j4 N6)让商家打开时根节点换 theme-merchant,只是条件类
+  ['pages/searchmap/index', 'player'],
 ]);
 
 // These existing factories enforce identity in onShow before constructing a client.

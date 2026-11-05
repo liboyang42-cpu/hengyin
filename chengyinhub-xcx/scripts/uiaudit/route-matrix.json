@@ -1263,7 +1263,7 @@
       "pagePath": "pages/searchmap/index",
       "pkg": "pages/searchmap",
       "tabBar": false,
-      "role": "merchant",
+      "role": "player",
       "needsLogin": true,
       "needsData": false,
       "dataKeys": [],
