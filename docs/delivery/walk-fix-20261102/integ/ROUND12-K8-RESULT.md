@@ -1,5 +1,7 @@
 # Round 12, lane k8-play: result (second start)
 
+> Lane k8-map-player (a different session) wrote its result to `ROUND12-K8-MAP-PLAYER-RESULT.md`.
+
 This replaces the first start's result. The first start stopped when it couldn't start Docker. This time `dockerd` started.
 
 - Branch: `integ/launch-test-20261103`, worked on a private local branch, with `pull --rebase` and `git show --stat` before every push. No force-push.
