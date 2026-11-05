@@ -1,3 +1,4 @@
+// 2026-11-05 m4(成为主理人表单加栏下红字提示 +14 行):club/apply U4-DYNAMIC 两条 onInput/toggleBool 调用点 244→258、255→269 仅行号位移,理由与条数不变,不新增登记;u4Dynamic digest 按门禁实测更新。
 // 2026-11-05 play-map verification: merchant onInput unchanged; anchor359→360, same reason/count; u4Dynamic digest recomputed.
 // 2026-11-05 视频与主题配乐:既有 fabu/play 调用点按逐字相同行迁锚,条数与理由不变。
 // K10 后台音频和一次证明增行：U4 1813→1819、U5 8524→8540；已与 de904 原行逐字核对，理由和条数不变。
