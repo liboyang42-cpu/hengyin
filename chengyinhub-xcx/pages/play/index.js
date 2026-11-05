@@ -7763,7 +7763,7 @@ Page({
       this._restoreJourneyCheck();
       if (kit.present === 'inline' && !kit.blocked) {
         this.setData({ 'sheet.show': false });
-        this.openChapterFull();
+        this.openChapterFull(); this._guardInlineCheck();   // 第十二轮 k7 N4:量不到就换整屏检定卡
       }
     }).catch(() => {});
   },

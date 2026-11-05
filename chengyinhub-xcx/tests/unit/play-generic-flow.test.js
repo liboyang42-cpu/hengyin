@@ -27,7 +27,9 @@ function loadPage() {
 
 test('共享 PROOF_PENDING 不受粗粒度 availableActions 放行，不提供结算写按钮', () => {
   const row = gameplay.actionRows(pending, [])[0];
-  assert.equal(row.enabled, false); assert.match(row.disabledText, /待审核/); assert.notEqual(row.actionText, '完成任务');
+  assert.equal(row.enabled, false); assert.notEqual(row.actionText, '完成任务');
+  // 第十二轮 k7 N3:PROOF_PENDING 只是「本站玩法还没过」,不写「待审核 / 凭证未通过」;主按钮回到原任务
+  assert.equal(row.actionText, '打开任务'); assert.equal(row.disabledText, ''); assert.equal(row.openable, true);
 });
 test('trustedPass 只证明凭证通过，QUEST_RESOLVE 是否可结算仍遵从 enabled', () => {
   const row = gameplay.actionRows(passed, [])[0];

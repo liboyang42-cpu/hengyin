@@ -81,7 +81,7 @@
      卡头那个展开钮打开。上面是章节标题,中间那块(稿上 390×473 实线框)只放正文:
      一次一段、居中,向上滑时字从小变大 + 渐显,滑走的渐隐 —— 与旅程手记(Tesseract)同一套观感。
      下面三格读数与三键栏沿用运行栈,不另做一套。 -->
-<view class="chfull {{storyChat ? 'is-chat' : ''}} {{navMap ? 'is-navmap' : ''}} {{lookLit ? 'is-lit' : ''}} {{lookOn ? chapter.atmosphereClass : ''}}" wx:if="{{chapterFull}}" hidden="{{screen === 'gamePlay' || album.show || playKit.show || (advancedPlay.show && !playKit.kit)}}">
+<view class="chfull {{storyChat ? 'is-chat' : ''}} {{navMap ? 'is-navmap' : ''}} {{lookLit ? 'is-lit' : ''}} {{lookOn ? chapter.atmosphereClass : ''}}" wx:if="{{chapterFull}}" hidden="{{screen === 'gamePlay' || album.show || playKit.show || (advancedPlay.show && !playKit.kit && !(journeyCheck.show && journeyCheck.present === 'inline'))}}">
   <!-- P-09 第四轮(业主):猜数字的题目和返回、微信胶囊在同一行(返回右边、胶囊左边,最多两行),不再单独一行压在圆钮下面 -->
   <view class="fx-story__hd {{advancedPlay.show && playKit.kit ? 'is-kit' : ''}} {{advancedPlay.show && playKit.kit.type === 'estimate' ? 'is-kitq' : ''}}" style="{{advancedPlay.show && playKit.kit.type === 'estimate' ? 'padding-top:' + chrome.kitTop + 'px;padding-right:' + chrome.actionRight + 'px' : 'padding-top:' + chrome.contentTop + 'px'}}">
     <!-- P-09(2026-11-02 业主):整屏玩法在场时不显示左上地图与主题标题,换成返回;题目由玩法自己写在屏上 -->

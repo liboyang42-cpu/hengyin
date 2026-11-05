@@ -99,7 +99,10 @@ Component({
   observers: {
     'submitted, tier, guess, answer, reveal, unit': function (submitted, tier, guess, answer, reveal, unit) {
       const result = resultLine({ submitted, tier, guess, answer, reveal, unit });
-      this.setData({ result, locked: !!result || this.data.locked });
+      // 第十二轮 k7 N2:服务端把这一局重开了(回执从「交过」回到「没交」)⇒ 解锁,「就这个数」重新能交。
+      // 以前 locked 只增不减,重开后按钮要么不见、要么点了不发,只能退出再进
+      const reset = !result && !!this.data.result;
+      this.setData({ result, locked: !!result || (!reset && this.data.locked), feedback: reset ? '' : this.data.feedback });
     },
     'show, min, max': function (show, min, max) {
       if (!show) return;

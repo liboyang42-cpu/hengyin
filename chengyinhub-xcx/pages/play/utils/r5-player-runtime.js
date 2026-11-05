@@ -73,9 +73,12 @@ function methods() {
       if (!isR5(view)) return false;
       if (view.config.check && view.config.check.enabled === true) {
         this._r5CheckView = view;
-        this.setData({ journeyCheck: checkView(view, this.data.themeBag), playKit: { show: false, kit: null } });
+        const check = checkView(view, this.data.themeBag);
+        // 第十二轮 k7 N4:内嵌检定只铺在故事流里;故事流没开(从地图/背包直接进)就改用整屏检定卡,不让这一站什么都不画
+        if (check.present === 'inline' && !this.data.chapterFull) check.present = 'fullscreen';
+        this.setData({ journeyCheck: check, playKit: { show: false, kit: null } });
         this.refreshThemeBackpack();
-        if (view.present === 'inline' && this.data.chapterFull) this.openChapterFull();
+        if (check.present === 'inline') { this.openChapterFull(); this._guardInlineCheck(); }
         return true;
       }
       if (this.data.journeyCheck.r5 && this.data.journeyCheck.show) {
@@ -83,6 +86,19 @@ function methods() {
       }
       this.refreshThemeBackpack();
       return false;
+    },
+    /* 第十二轮 k7 N4:内嵌检定的那一段要等故事流量到它在屏内才显形(_settleStory)。量不到(层被藏、几何为 0、
+       页面换了)时段落永远 in:false,检定卡就一直是透明的 —— 玩家看见整屏黑。等一会儿还没显形就换成整屏检定卡。 */
+    _guardInlineCheck() {
+      clearTimeout(this._inlineCheckTimer);
+      this._inlineCheckTimer = setTimeout(() => {
+        const kit = this.data.journeyCheck || {};
+        if (!kit.show || kit.present !== 'inline') return;
+        const para = (this.data.chapterParas || []).find(p => p.kind === 'journeyCheck');
+        if (para && para.in && this.data.chapterFull) return;
+        const chapterParas = (this.data.chapterParas || []).filter(p => p.kind !== 'journeyCheck').map((p, i) => Object.assign({}, p, { i }));
+        this.setData({ 'journeyCheck.present': 'fullscreen', chapterParas });
+      }, 2500);
     },
     // 没有通用局回执的主题(themeBag 无 quests):判完那一次直接摆作者写的结果反馈;进页第一份视图只记下,不补弹。
     _applyR5PlainOutcome(view) {

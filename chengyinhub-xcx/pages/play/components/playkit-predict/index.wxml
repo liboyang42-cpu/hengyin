@@ -24,6 +24,14 @@
           </view>
         </view>
       </view>
+      <!-- 押定的火漆印:歪着砸下去、压扁、回弹(原型 .pvseal + sealdrop)。
+           正着盖看着像个标签,歪的才像章;淡入的印章像贴纸。
+           第十二轮 k7 N1:印盖在转盘正中那张上(选定时转盘已把选中的那张摆正、停住),不再钉在屏幕右上角压到别的卡和题目 -->
+      <view class="pd__seal" wx:if="{{committed}}" aria-hidden="true">
+        <view class="pd__seal-wax"></view>
+        <view class="pd__seal-rim"></view>
+        <view class="pd__seal-ch">选</view>
+      </view>
     </view>
 
   </view>
@@ -35,13 +43,6 @@
     <view class="pd__reveal-t">{{revealText}}</view>
   </view>
 
-  <!-- 押定的火漆印:歪着砸下去、压扁、回弹(原型 .pvseal + sealdrop)。
-       正着盖看着像个标签,歪的才像章;淡入的印章像贴纸。 -->
-  <view class="pd__seal" wx:if="{{committed}}" aria-hidden="true">
-    <view class="pd__seal-wax"></view>
-    <view class="pd__seal-rim"></view>
-    <view class="pd__seal-ch">选</view>
-  </view>
 
   <!-- 提示单独放在按钮上方,不跟着内容流 —— 跟着流的话会被绝对定位的按钮压住 -->
   <view class="pd__hint" wx:if="{{!revealKind && !skipped}}">{{(closed && !myOptionKey) ? '今天这一轮已经截止' : (committed ? waitLabel : '转到想选的那张，点它')}}</view>

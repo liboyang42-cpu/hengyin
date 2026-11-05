@@ -44,6 +44,17 @@ function cardAngle(i, angle, n) {
   return a;
 }
 
+/** 从当前角度转到第 i 张正中还差多少度(走近路;周期 N×STEP)。 */
+function parkDelta(angle, i, n) {
+  return cardAngle(i, angle, n || 1);
+}
+
+/** 服务端记下的本人选项在第几张;没有或对不上就是 -1。 */
+function mineIndex(options, key) {
+  if (!key) return -1;
+  return (options || []).findIndex((o, i) => String(o.key || ('k' + i)) === String(key));
+}
+
 /** 一张卡的十条竖条。每条里放一份整张卡,往左错开自己那一格再裁掉多余的。 */
 function slicesFor() {
   const out = [];
@@ -114,24 +125,29 @@ Component({
         revealText: reveal.revealText,
       });
     },
-    'show, options, closeAtHour, revealDays, revealHour, shopAnswers': function (show) {
+    'show, options, closeAtHour, revealDays, revealHour, shopAnswers, myOptionKey': function (show) {
       if (!show) { this._stop(); return; }
       const d = this.data;
       this._angle = 0;
       this._n = (d.options || []).length || 1;
       this._slices = slicesFor();
+      // 第十二轮 k7 N1:服务端已记下本人选的那一张 ⇒ 转盘停在那张上、印盖在那张上,屏上就是发出去的那个
+      const mine = mineIndex(d.options, d.myOptionKey);
+      if (mine >= 0) this._angle = mine * STEP;
       this.setData({
-        picked: -1, committed: false, skipping: false,
+        picked: mine, committed: mine >= 0, skipping: false,
         waitLabel: waitLabelOf(d.closeAtHour, d.revealDays, d.revealHour, d.shopAnswers),
       });
       this._paint();
-      if (!d.reducedMotion) this._spin();
+      if (!d.reducedMotion && mine < 0) this._spin();
     },
   },
   lifetimes: { detached() { this._stop(); } },
   pageLifetimes: { hide() { this._stop(); } },
   methods: {
     _speedAt: speedAt,        // 纯算法出口,供单测
+    _parkDelta: parkDelta,
+    _mineIndex: mineIndex,
     _cardAngle: cardAngle,
     _slicesFor: slicesFor,
     _geometry: () => ({ ARC, GAP, STEP, CW, CH, K, R: Number(R.toFixed(2)) }),
@@ -144,9 +160,19 @@ Component({
       this._stop();
       this._timer = setInterval(() => {
         if (this.data.committed) return;
-        this._angle += speedAt(this._angle);
+        // 第十二轮 k7 N1:点中一张后转盘把它转到正中停住,不再自己转走 ——
+        // 「选」印盖在正中那张上,停住才保证印下就是点中、发出去的那一张
+        if (this.data.picked >= 0) {
+          const left = parkDelta(this._angle, this.data.picked, this._n);
+          if (Math.abs(left) < 0.01) return;
+          this._angle += Math.sign(left) * Math.min(Math.abs(left), V_MAX * 4);
+        } else this._angle += speedAt(this._angle);
         this._paint();
       }, TICK_MS);
+    },
+    /** 停到第 i 张(降低动态时直接停到位,不转) */
+    _park(i) {
+      if (this.data.reducedMotion || !this._timer) { this._angle = i * STEP; this._paint(); }
     },
 
     _paint() {
@@ -172,7 +198,9 @@ Component({
 
     onPick(e) {
       if (this.data.committed || this.data.closed || this.data.skipped) return;
-      this.setData({ picked: Number(e.currentTarget.dataset.i) });
+      const i = Number(e.currentTarget.dataset.i);
+      this.setData({ picked: i });
+      this._park(i);
       this._paint();
     },
     onCommit() {
@@ -187,6 +215,9 @@ Component({
       // 「做成了」= 押定这一下。它不可逆,给 medium
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
       this._stop();
+      // 印只盖在正中那张上:先把点中的那张摆正再落印(还在转向途中也一样)
+      this._angle = this.data.picked * STEP;
+      this._paint();
       this.setData({ committed: true });
       const opt = (this.data.options || [])[this.data.picked] || {};
       this.triggerEvent('submit', { key: opt.key, index: this.data.picked });
