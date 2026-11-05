@@ -157,7 +157,7 @@
       <!-- 原型:序号是个圆点,画在输入框**外面**左侧;每步一个自增高的输入框 + 删除。
            整份规则仍然存在 formData.ruleInstructions 里(一行一步),没有新建后端字段。 -->
       <view class="cg-steps">
-        <view class="cg-step" wx:for="{{ ruleSteps }}" wx:key="*this" wx:for-index="si">
+        <view class="cg-step" wx:for="{{ ruleSteps }}" wx:key="index" wx:for-index="si">
           <view class="cg-step-no">{{ si + 1 }}</view>
           <view class="cg-step-field">
             <textarea class="cg-step-ta" value="{{ item }}" data-index="{{ si }}" bindinput="onRuleStepInput"
@@ -1603,7 +1603,7 @@
             <view class="cg-audio__inner">
               <view class="cg-audio-play" bindtap="onPreviewAudio" aria-role="button" aria-label="{{audioPreviewPlaying?'暂停导览音频':'播放导览音频'}}" hover-class="cy-pressed" hover-stay-time="80">{{audioPreviewPlaying?'暂停':'播放'}}</view>
               <view class="cg-audio-meta">
-                <view class="cg-audio-name">{{formData.audioFileName||'导览音频'}}{{formData.audioFormat?'.'+formData.audioFormat:''}}</view>
+                <view class="cg-audio-name">{{formData.audioFileName||'导览音频'}}</view>
               </view>
               <view class="cg-audio-del" bindtap="clearAudio" aria-role="button" aria-label="删除导览音频" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view>
             </view>

@@ -1,0 +1,13 @@
+const find = (t) => w.page.evaluate((t) => { const out = []; (function walk(root) { for (const el of root.querySelectorAll('*')) { if (el.shadowRoot) walk(el.shadowRoot); if (el.childElementCount === 0 && el.textContent.trim() === t) { const b = el.getBoundingClientRect(); if (b.height > 0) out.push([b.x + b.width / 2, b.y + b.height / 2]); } } })(document); return out; }, t);
+let p = await find("编辑章节");
+await w.page.mouse.click(p[0][0], p[0][1]); await sleep(1300);
+await h.sc(1500);
+p = await find("删除章节"); await w.page.mouse.click(p[0][0], p[0][1]); await sleep(900);
+await h.tap("确定", { exact: true }); await sleep(1500);
+p = await find("编辑章节");
+await w.page.mouse.click(p[0][0], p[0][1]); await sleep(1300);
+const up = await h.up("添加音频", "k10-intro.mp3");
+await w.page.mouse.click(336, 123); await sleep(1500);
+await h.tap("保存草稿"); await sleep(4000);
+const n = await w.net();
+return [up.slice(-60), (await w.data("formData.chapters")).map(c => [c.id, c.name, c.audioUrl ? 1 : 0]), n.filter(x => /topic\/v2/.test(x.url)).slice(-1).map(x => [x.status, String(x.resBody).slice(0, 200)])];

@@ -19,7 +19,7 @@
 <cy-advanced-game id="advancedGame" hide-panel="{{(!!playKit.kit && (chapterFull || playKit.show)) || (journeyCheck.r5 && journeyCheck.show)}}" show="{{advancedPlay.show}}" node="{{advancedPlay.node}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)"
   activity-id="{{activityId}}" topic-id="{{topicId}}" preview="{{isPreview}}" mock="{{isMock}}"
   bind:ready="onAdvancedReady" bind:close="onAdvancedClose" bind:session="onAdvancedSession"
-  bind:actionfail="onAdvancedActionFail" />
+  bind:actionfail="onAdvancedActionFail" bind:bgm="onAdvancedBgm" />
 
 <!-- 预览态返回(2026-09-24 用户:左上角就是返回,没有其它字,没有跳过)。
      下一章 / 看结局改由故事流底部的「继续探索」接上(continueChapterStory 在试玩里走 advancePreview)。 -->

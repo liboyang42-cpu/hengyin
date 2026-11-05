@@ -106,32 +106,41 @@ function loadAdvancedGame(audios) {
   return { definition, instance };
 }
 
-test('背景音乐:开局按配置播放并循环;同一首不重复起;收起 / 切后台 / 销毁就停', () => {
+// k10(2026-11-05):弹层玩法不再自己开一个播放器 —— 与页面的主题配乐 / 旁白各放各的,会两首同响、
+// 不跟「背景音乐」开关、不进音频会话(来电不暂停)、切后台后不再续上。改为把曲子交给页面那一路站点配乐。
+function withEvents(instance) {
+  instance.events = [];
+  instance.triggerEvent = (name, detail) => instance.events.push([name, detail]);
+  return instance;
+}
+test('背景音乐:交给页面唯一的站点配乐通道;同一首(签名参数不同)不重发;收起就收回;切后台不自己停', () => {
   const audios = [];
   const { definition, instance } = loadAdvancedGame(audios);
-  instance.syncBackgroundMusic({ audioUrl: 'https://cdn.example.com/tea.mp3', loop: true });
-  assert.equal(audios.length, 1);
-  assert.equal(audios[0].src, 'https://cdn.example.com/tea.mp3');
-  assert.equal(audios[0].loop, true);
-  assert.equal(audios[0].plays, 1);
-  instance.syncBackgroundMusic({ audioUrl: 'https://cdn.example.com/tea.mp3', loop: true });
-  assert.equal(audios.length, 1, '同一首不重新创建播放器');
+  withEvents(instance);
+  instance.syncBackgroundMusic({ audioUrl: 'https://cdn.example.com/tea.mp3?Expires=1&Signature=a', loop: true });
+  assert.equal(audios.length, 0, '组件自己不建播放器');
+  assert.deepEqual(instance.events, [['bgm', { music: { audioUrl: 'https://cdn.example.com/tea.mp3?Expires=1&Signature=a', loop: true } }]]);
+  instance.syncBackgroundMusic({ audioUrl: 'https://cdn.example.com/tea.mp3?Expires=2&Signature=b', loop: true });
+  assert.equal(instance.events.length, 1, '同一个文件只是重签名,不让页面从头再放');
   definition.pageLifetimes.hide.call(instance);
-  assert.equal(audios[0].stopped && audios[0].destroyed, true, '切后台就停');
-  instance.syncBackgroundMusic({ audioUrl: 'https://cdn.example.com/tea.mp3', loop: false });
-  assert.equal(audios[1].loop, false, 'loop=false 只播一遍');
+  assert.equal(instance.events.length, 1, '切后台由页面的音频会话暂停与续播,组件不收回');
   definition.observers['show,node.nodeId'].call(instance, false, 1);
-  assert.equal(audios[1].destroyed, true, '收起玩法就停');
+  assert.deepEqual(instance.events[1], ['bgm', { music: null }], '收起玩法就让页面停掉站点配乐');
+  instance.data.show = true;
+  instance.syncBackgroundMusic({ audioUrl: 'https://cdn.example.com/rain.mp3', loop: false });
+  assert.deepEqual(instance.events[2], ['bgm', { music: { audioUrl: 'https://cdn.example.com/rain.mp3', loop: false } }], 'loop=false 原样交给页面');
 });
 
 test('背景音乐:没配或玩法没打开时不播', () => {
   const audios = [];
   const { instance } = loadAdvancedGame(audios);
+  withEvents(instance);
   instance.syncBackgroundMusic(undefined);
   instance.syncBackgroundMusic({ title: '无音频' });
   instance.data.show = false;
   instance.syncBackgroundMusic({ audioUrl: 'https://cdn.example.com/tea.mp3' });
   assert.equal(audios.length, 0);
+  assert.equal(instance.events.length, 0);
 });
 
 test('试玩台里原来没法试玩的三屏(闭眼盲品 / 今日城市签 / D20 三档)现在都能试玩,并照样判定', () => {

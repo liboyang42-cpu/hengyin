@@ -155,7 +155,8 @@ function hasCategory(categoryIds) {
  * 「第 2 章第 1 个节点缺地点」才能把用户送到那一行。
  */
 function chapterHasRequiredNodes(formData, chapter) {
-  return !!chapter && (chapter.opening === true || (chapter.nodes || []).length > 0
+  // 结局章不在路线里(通关时按条件挑一章播),和序章一样只放剧情与音频,不要求节点。
+  return !!chapter && (chapter.opening === true || !!chapter.ending || (chapter.nodes || []).length > 0
     || Number(formData.productType) === FREE_EXPLORE && Number(chapter.recruitEnabled) === 1);
 }
 

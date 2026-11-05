@@ -22,3 +22,34 @@
 若编辑器配不出任一必需项，记录具体入口和缺失控件，先交回修复，不用接口或数据库代填。真机结果应和 rig、单测分别列出。
 
 STATUS: PARTIAL - 脚本已提供，尚无本轮真机执行或听感证据。
+
+
+---
+
+## 第二份(同一轮 k10 的云端 rig 版,另一个工作者;上面一份保留不动)
+
+### k10 phone script: what only a phone with headphones can prove
+
+For the owner, on a real phone, with wired or Bluetooth headphones, outdoors.
+Use a theme with an opening chapter that has 章节音频, a station whose 玩法模板 has 语音讲解 and 背景音乐, a QR station, and a 结局 chapter with 章节音频 (the test theme 「磁带雨夜」 in the rig has exactly this; build the same in production or use 990068/990069).
+Write down, for each step, what you hear and what you see. "OK" or one line of what went wrong is enough.
+
+1. Turn the phone's silent switch ON (iPhone) and set volume to about half. Open the theme, tap 开始游戏, then 开始游戏 again. You should hear the chapter narration through the headphones. Note whether the narration is silent with the silent switch on.
+2. Let the narration finish. Note what you hear while you walk to the first station: silence, or music.
+3. At the first station tap 开始任务. You should hear the station's voice (语音讲解) start by itself, with the station music underneath and clearly quieter than the voice. When the voice ends, the music should come back up a little. Note if the music is too loud or too quiet under the voice, and if the silent switch mutes the music but not the voice.
+4. Take the in-story photo (拍一张). The music must keep playing and must not start again from the beginning.
+5. On the second sheet (拍照上传) take the photo with the real camera, crop, tap 选取. When you come back, the music must carry on from where it was, and the station must count as done. If the sheet stays empty, write that down: that is the bug fixed in this round.
+6. Lock the screen for 30 seconds with the phone in your pocket. Note what you hear: today the code pauses all game audio when the screen locks (no background audio mode). Unlock: the music and any unfinished narration should continue from where they stopped.
+7. Switch to WeChat chats for 20 seconds, then back. Same as step 6.
+8. Ask someone to call you during the station voice. During the call nothing from the game should play. After hanging up the voice should continue from the same point.
+9. Walk to the QR station. Check that the station is detected by real GPS (the distance at the top goes down as you walk, and the station opens when you arrive). Note how many metres away it opened.
+10. Scan the printed station QR with the real camera in the in-story scan. Then scan it again on the second sheet if one appears. Note whether you had to scan twice.
+11. While you scan, note whether the station music or voice stops and comes back when the camera closes.
+12. Finish the last station. The ending chapter should open as a story page with its ending music. Note if you only see a card with no music (the bug fixed in this round).
+13. On the finish card, tap 保存图片 and check the picture is in the photo album. Tap 分享 and check the share sheet opens.
+14. Close the game and open it again from the order. The finished state and the ending should show again without errors.
+15. Turn 背景音乐 off in the game menu (… → the music switch). All music must stop at once and must not come back at the next station. Turn it on again and check it returns at the next station.
+16. Play with Bluetooth headphones, then pull them out (or switch them off) mid-narration. Note whether the sound jumps to the phone speaker in public.
+17. Overall: write one line on the balance between music and voice, one line on any moment of silence you did not expect, and one line on anything that looked out of style for the theme's look (星尘 / 纸本 / 末世 / 夜城).
+
+What this script does not cover: the editor (done in the rig) and money.

@@ -205,7 +205,7 @@ const methods = {
       } else {
         editor.nodeId = Number(this.data.nodesForm.id);
         const quest = (config.gameplayRuntime?.quests || []).find(row => row.nodeId === editor.nodeId);
-        if (!error && !quest) error = '请先保存本站草稿；归零挑战不设置普通任务到达关系';
+        if (!error && !quest) error = editor.nodeId > 0 ? '归零挑战站不设置到达与引导' : '先点「完成」保存这个节点，再设置到达与引导';
         editor.quest = quest ? copy(quest) : null;
       }
     }

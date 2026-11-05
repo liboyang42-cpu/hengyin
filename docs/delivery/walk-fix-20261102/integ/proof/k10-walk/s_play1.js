@@ -1,0 +1,17 @@
+const A = async () => { const a = await h.audio(); return { st: a.state.map(s => [s.id, s.src.slice(0, 8), s.paused ? 'paused' : 'PLAY', s.volume, s.t]), log: a.log.map(l => [l.id, l.ev, l.at, l.v, (l.src || '').slice(0, 8)].filter(x => x != null && x !== '')) }; };
+const clr = () => w.page.evaluate(() => { window.MPWEB.audioLog.length = 0; });
+const out = {};
+await w.page.evaluate(() => { window.MPWEB.nativeHideShow = true; window.MPWEB.audioLog.length = 0; });
+await w.loc(31.2330, 121.4760);
+await h.tap("开始游戏"); await sleep(4000);
+await h.tap("开始游戏"); await sleep(5000);
+await w.shot("k10-r01-chapter"); out.chapterOpen = await A(); await clr();
+await h.tap("开启定位", { exact: true, nth: 1 }).catch(async () => { await h.tap("开启定位", { exact: true }).catch(() => {}); }); await sleep(2000);
+await h.tap("开始", { exact: true }).catch(() => {}); await sleep(1200);
+await w.loc(31.2330, 121.4760); await sleep(2500);
+await h.tap("继续探索").catch(() => {}); await sleep(2500);
+await w.shot("k10-r02-sheet");
+await h.tap("开始任务"); await sleep(4000);
+await w.shot("k10-r03-task"); out.taskOpen = await A(); await clr();
+await sleep(3000); out.after3s = await A(); await clr();
+return out;

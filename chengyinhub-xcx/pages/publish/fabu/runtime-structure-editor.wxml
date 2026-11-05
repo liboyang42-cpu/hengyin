@@ -55,6 +55,10 @@
 
   <!-- 10-28 原型 A e-quest：三组列表，说明都删掉；换个方式的开关就在行里，打开的那一行下面直接是要填的；
        备用节点点开就地多选。不按节点设分（A5）。 -->
+  <!-- 还没保存的站没有到达关系:原来整层空白(提示写在下面那块里,块不渲染),现在把原因放出来。 -->
+  <block wx:elif="{{structureEditor.kind === 'quests' && !structureEditor.quest}}">
+   <cy-inline-error kind="error" wx:if="{{structureError}}" title="{{structureError}}" />
+  </block>
   <block wx:elif="{{structureEditor.kind === 'quests' && structureEditor.quest}}">
    <cy-inline-error kind="error" wx:if="{{structureError}}" title="{{structureError}}" />
    <cy-list-group>

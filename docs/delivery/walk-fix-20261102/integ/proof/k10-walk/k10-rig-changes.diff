@@ -1,0 +1,207 @@
+diff --git a/docs/delivery/cloud-walk-20261101/rig/app.py b/docs/delivery/cloud-walk-20261101/rig/app.py
+index 6d94c96b..6399b21b 100755
+--- a/docs/delivery/cloud-walk-20261101/rig/app.py
++++ b/docs/delivery/cloud-walk-20261101/rig/app.py
+@@ -32,6 +32,9 @@ def env():
+     else:
+         sf.write_text("".join("%s=%s\n" % (k, e[k]) for k in SECRET_KEYS))
+         os.chmod(sf, 0o600)
++    # [j2 rig seam] offline dummy OSS settings (as GenericGameplayHttpE2eIT does) so cover URLs can be signed; uploads still cannot reach OSS
++    for k, v in os.environ.items():
++        if k.startswith('CHENGYIN_OSS_'): e[k] = v
+     return e
+ 
+ 
+@@ -51,6 +54,8 @@ def start(fail_path=""):
+     cmd = ca.java_command(RIG_HOME / "work" / "app", fail_path)
+     # [SEAM] login: profile "local" lets the product's own non-prod switch send jscode2session to the rig's fake
+     # WeChat endpoint (mpweb/server.mjs on 8097). Only /sns/jscode2session uses this base URL.
++    # [j3 rig seam] JVM trusts the local OSS / api.weixin.qq.com stand-ins through a private copy of cacerts (RIG_TRUSTSTORE)
++    if os.environ.get("RIG_TRUSTSTORE"): cmd.insert(1, "-Djavax.net.ssl.trustStore=" + os.environ["RIG_TRUSTSTORE"])
+     cmd += ["--spring.profiles.active=druid,local",
+             "--chengyin.test.wechat-api-base-url=http://127.0.0.1:%s" % os.environ.get("RIG_WEB_PORT", "8097")]
+     log = open(LOG, "ab")
+diff --git a/docs/delivery/cloud-walk-20261101/rig/mpweb-seed/tools/compile.mjs b/docs/delivery/cloud-walk-20261101/rig/mpweb-seed/tools/compile.mjs
+index 3098b681..519bbf86 100644
+--- a/docs/delivery/cloud-walk-20261101/rig/mpweb-seed/tools/compile.mjs
++++ b/docs/delivery/cloud-walk-20261101/rig/mpweb-seed/tools/compile.mjs
+@@ -130,7 +130,10 @@ function compileNode(el, file, ctx) {
+   }
+   if (el.tag === 'include' || el.tag === 'import') { node.src = resolve(file, a.src, '.wxml'); return node; }
+   if (el.tag === 'template' && a.name) { node.name = a.name; node.c = el.c.map((c) => compileNode(c, file)).filter(Boolean); return node; }
+-  if (el.tag === 'template' && a.is != null) { node.is = compileValue(a.is); if (a.data != null) node.data = compileValue(a.data, true); return node; }
++  if (el.tag === 'template' && a.is != null) { node.is = compileValue(a.is); if (a.data != null) node.data = compileValue(a.data, true);
++    /* CLUB-WALK HARNESS PATCH: keep wx:for / wx:if on <template is> */
++    for (const [k, v] of el.attrs) { if (k === 'wx:if') node.if = compileValue(v); else if (k === 'wx:elif') node.elif = compileValue(v); else if (k === 'wx:else') node.else = 1; else if (k === 'wx:for' || k === 'wx:for-items') node.for = compileValue(v); else if (k === 'wx:for-item') node.fi = v; else if (k === 'wx:for-index') node.fx = v; else if (k === 'wx:key') node.key = v; }
++    return node; }
+   const props = {};
+   for (const [k, v] of el.attrs) {
+     if (k === 'wx:if') node.if = compileValue(v);
+diff --git a/docs/delivery/cloud-walk-20261101/rig/mpweb/src/nav.js b/docs/delivery/cloud-walk-20261101/rig/mpweb/src/nav.js
+index 5f970336..d72aa174 100644
+--- a/docs/delivery/cloud-walk-20261101/rig/mpweb/src/nav.js
++++ b/docs/delivery/cloud-walk-20261101/rig/mpweb/src/nav.js
+@@ -85,7 +85,7 @@ wx.uploadFile = function (o) {
+   getBlob.then(function (blob) {
+     var fd = new FormData(); var fm = o.formData || {};
+     for (var k in fm) fd.append(k, fm[k]);
+-    fd.append(o.name || 'file', blob, 'rig-upload.' + ((blob.type || '').split('/')[1] || 'jpg'));
++    fd.append(o.name || 'file', blob, (MP.fileNames && MP.fileNames[src]) || ('rig-upload.' + ((blob.type || '').split('/')[1] || 'jpg')));
+     var h = Object.assign({}, o.header || {}); for (var hk in h) if (hk.toLowerCase() === 'content-type') delete h[hk];
+     return fetch(url, { method: 'POST', headers: h, body: fd });
+   }).then(function (r) { return r.text().then(function (t) {
+@@ -95,6 +95,8 @@ wx.uploadFile = function (o) {
+   }); }).catch(function (e) { entry.status = -1; entry.resBody = 'FAIL ' + e.message; o.fail && o.fail({ errMsg: 'uploadFile:fail ' + e.message }); o.complete && o.complete({}); });
+   return task;
+ };
++MP.fileNames = {}; MP.nextFiles = null;
++wx.chooseMessageFile = function (o) { var f = MP.nextFiles; MP.nextFiles = null; setTimeout(function () { if (!f) { o.fail && o.fail({ errMsg: 'chooseMessageFile:fail cancel' }); o.complete && o.complete({}); return; } f.forEach(function (x) { MP.fileNames[x.path] = x.name; }); var r = { tempFiles: f.map(function (x) { return { path: x.path, name: x.name, size: x.size || 1000, type: 'file', time: 0 }; }), errMsg: 'chooseMessageFile:ok' }; o.success && o.success(r); o.complete && o.complete(r); }, 30); };
+ wx.downloadFile = function (o) {
+   var url = mapUrl(o.url);
+   fetch(url).then(function (r) { return r.blob().then(function (b) { var res = { tempFilePath: URL.createObjectURL(b), statusCode: r.status, errMsg: 'downloadFile:ok' }; o.success && o.success(res); o.complete && o.complete(res); }); })
+@@ -137,7 +139,15 @@ MP.setLocation = function (lat, lng) {
+ };
+ wx.getLocation = function (o) { var l = MP.location(); var r = { latitude: l.lat, longitude: l.lng, accuracy: 8, speed: 0.8, altitude: 4, horizontalAccuracy: 8, errMsg: 'getLocation:ok' }; setTimeout(function () { o && o.success && o.success(r); o && o.complete && o.complete(r); }, 20); return Promise.resolve(r); };
+ wx.getFuzzyLocation = wx.getLocation;
+-wx.chooseLocation = function (o) { var l = MP.location(); var r = { name: '模拟位置', address: '上海市', latitude: l.lat, longitude: l.lng, errMsg: 'chooseLocation:ok' }; setTimeout(function () { o && o.success && o.success(r); o && o.complete && o.complete(r); }, 20); };
++// [j2 rig seam] wx.getRandomValues (base library 2.22+) backed by WebCrypto
++wx.getRandomValues = function (o) { var n = (o && o.length) || 16; var a = new Uint8Array(n); crypto.getRandomValues(a); var r = { randomValues: a.buffer, errMsg: 'getRandomValues:ok' }; setTimeout(function () { o && o.success && o.success(r); o && o.complete && o.complete(r); }, 5); };
++wx.chooseLocation = function (o) {
++  // [j2 rig seam] MP.locQueue: list of {name,address,lat,lng}; each call takes one; when the queue is set but empty the user "cancels".
++  var q = window.MPWEB && window.MPWEB.locQueue; var r;
++  if (q) { var n = q.shift(); if (!n) { r = { errMsg: 'chooseLocation:fail cancel' }; setTimeout(function () { o && o.fail && o.fail(r); o && o.complete && o.complete(r); }, 20); return; }
++    r = { name: n.name, address: n.address, latitude: n.lat, longitude: n.lng, errMsg: 'chooseLocation:ok' }; }
++  else { var l = MP.location(); r = { name: '模拟位置', address: '上海市', latitude: l.lat, longitude: l.lng, errMsg: 'chooseLocation:ok' }; }
++  setTimeout(function () { o && o.success && o.success(r); o && o.complete && o.complete(r); }, 20); };
+ MP.setHeading = function (deg) { CFG.heading = +deg; (MP.compassListeners || []).slice().forEach(function (f) { try { f({ direction: +deg, accuracy: 'high' }); } catch (e) {} }); };
+ setInterval(function () { if ((MP.compassListeners || []).length) MP.setHeading(CFG.heading || 0); }, 500);
+ wx.scanCode = function (o) {
+@@ -205,6 +215,8 @@ function navBar(page) {
+   var sb = document.getElementById('statusBar');
+   if (sb) sb.style.color = custom ? '' : ((conf.navigationBarTextStyle || win.navigationBarTextStyle) === 'black' ? '#000' : '#fff');
+ }
++MP.appHide = function () { var p = cur(); if (!p) return; window.__alog && 0; MP.audioLog.push({ t: Date.now(), id: 0, ev: 'app:hide' }); try { p.onHide && p.onHide(); } catch (e) { console.error('onHide', e); } MP.allInsts(p.__host).forEach(function (i) { (i.__m.pl.hide || []).forEach(function (f) { try { f.call(i); } catch (e) { console.error(e); } }); }); };
++MP.appShow = function () { var p = cur(); if (!p) return; MP.audioLog.push({ t: Date.now(), id: 0, ev: 'app:show' }); try { p.onShow && p.onShow(); } catch (e) { console.error('onShow', e); } MP.allInsts(p.__host).forEach(function (i) { (i.__m.pl.show || []).forEach(function (f) { try { f.call(i); } catch (e) { console.error(e); } }); }); };
+ MP.refreshNav = function () { var p = cur(); if (p) navBar(p); };
+ function hide(page) { if (!page) return; page.__host.style.display = 'none'; try { page.onHide && page.onHide(); } catch (e) { console.error('onHide', e); } if (page.__compPage) page.__m.pl.hide.forEach(function (f) { try { f.call(page); } catch (e) {} }); }
+ function show(page, first) { page.__host.style.display = ''; MP.curPage = page; navBar(page); if (!first) { try { page.onShow && page.onShow(); } catch (e) { console.error('onShow', e); } if (page.__compPage) page.__m.pl.show.forEach(function (f) { try { f.call(page); } catch (e) {} }); } }
+diff --git a/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js b/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js
+index e6ffacde..08161b17 100644
+--- a/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js
++++ b/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js
+@@ -192,7 +192,7 @@ function infoOf(file) {
+     if (n.g === 'import') { var sub = infoOf(n.src); for (var t in sub.tpl) info.tpl[t] = sub.tpl[t]; }
+   });
+   // nested wxs (inside blocks) too
+-  (function walk(list) { list.forEach(function (n) { if (n.g === 'wxs' && !info.wxs[n.m]) info.wxs[n.m] = n.src ? reqWxs(n.src) : reqWxs(n.inlineId); if (n.c && n.g !== 'template') walk(n.c); }); })(nodes);
++  (function walk(list) { list.forEach(function (n) { if (n.g === 'wxs' && !info.wxs[n.m]) info.wxs[n.m] = n.src ? reqWxs(n.src) : reqWxs(n.inlineId); if (n.g === 'template' && n.name && !info.tpl[n.name]) info.tpl[n.name] = { nodes: n.c, file: file }; /* CLUB-WALK HARNESS PATCH: nested <template name> */ if (n.c && n.g !== 'template') walk(n.c); }); })(nodes);
+   return info;
+ }
+ function rootScope(data, info, extraWxs) {
+@@ -578,7 +578,7 @@ function installEvents(el) {
+         }
+         if (type === 'tap' && el.__suppressClick) { el.__suppressClick = false; return; }
+         if (type === 'tap' && el.__tag === 'button' && isOn((el.__vp || {}).disabled)) return;
+-        if (type === 'touchstart' && (el.__on.touchmove || el.__on.touchend)) { try { el.setPointerCapture(e.pointerId); } catch (x) {} }
++        /* [j3 rig fix] capture only when the toucher itself is the target, else the click is retargeted to the ancestor */ if (type === 'touchstart' && e.target === el && (el.__on.touchmove || el.__on.touchend)) { try { el.setPointerCapture(e.pointerId); } catch (x) {} }
+         if (type === 'touchmove' && !(e.buttons || e.pointerType === 'touch')) return;
+         if (b.c) e.stopPropagation();
+         callHandler(el, b, mkEvent(el, type, null, e, e.target && e.target.__ds ? e.target : el));
+@@ -910,8 +910,15 @@ var storage = {};
+ var DEV = window.__DEVICE || { w: 390, h: 844, sb: 47 };
+ var SYS = { windowWidth: DEV.w, windowHeight: DEV.h, screenWidth: DEV.w, screenHeight: DEV.h, statusBarHeight: DEV.sb, pixelRatio: Math.min(3, window.devicePixelRatio || 2), platform: 'ios', model: 'iPhone 14', system: 'iOS 17.5', brand: 'iPhone', SDKVersion: '3.6.0', version: '8.0.53', language: 'zh_CN', theme: 'dark', safeArea: { top: 47, left: 0, right: 390, bottom: 810, width: 390, height: 763 }, screenTop: 0, benchmarkLevel: 40, enableDebug: false, fontSizeSetting: 17 };
+ function ok(o, res) { rST(function () { if (o && o.success) o.success(res || { errMsg: 'ok' }); if (o && o.complete) o.complete(res || {}); }, 0); return Promise.resolve(res || {}); }
++MP.audioLog = []; MP.audioLive = new Map(); var __aid = 0;
++function alog(id, ev, extra) { var e = { t: Date.now(), id: id, ev: ev }; if (extra) for (var k in extra) e[k] = extra[k]; MP.audioLog.push(e); }
++MP.audioState = function () { var out = []; MP.audioLive.forEach(function (a, id) { out.push({ id: id, src: String(a.__src || '').split('/').pop(), paused: a.paused, volume: Math.round(a.volume * 100) / 100, loop: a.loop, t: Math.round(a.currentTime * 10) / 10 }); }); return out; };
+ function audioCtx() {
+-  var a = new Audio(); a.preload = 'auto';
++  var a = new Audio(); a.preload = 'auto'; var id = ++__aid; MP.audioLive.set(id, a); alog(id, 'create');
++  a.addEventListener('playing', function () { alog(id, 'el:playing', { src: String(a.__src || '').split('/').pop(), vol: a.volume }); });
++  a.addEventListener('pause', function () { alog(id, 'el:pause', { at: Math.round(a.currentTime * 10) / 10 }); });
++  a.addEventListener('ended', function () { alog(id, 'el:ended'); });
++  a.addEventListener('error', function () { alog(id, 'el:error', { src: String(a.__src || '') }); });
+   var L = { play: [], pause: [], ended: [], error: [], timeupdate: [], canplay: [], waiting: [], stop: [], seeked: [], seeking: [] };
+   function emit(t, arg) { (L[t] || []).slice().forEach(function (f) { try { f(arg); } catch (e) {} }); }
+   a.addEventListener('play', function () { emit('play'); }); a.addEventListener('pause', function () { if (!a.__stopping) emit('pause'); });
+@@ -919,22 +926,26 @@ function audioCtx() {
+   a.addEventListener('timeupdate', function () { emit('timeupdate'); }); a.addEventListener('canplay', function () { emit('canplay'); });
+   a.addEventListener('waiting', function () { emit('waiting'); }); a.addEventListener('seeked', function () { emit('seeked'); });
+   var ctx = {
+-    get src() { return a.__src || ''; }, set src(v) { a.__src = v; a.src = assetUrl(v); },
++    get src() { return a.__src || ''; }, set src(v) { alog(id, 'src', { src: String(v || '').split('/').pop() }); a.__src = v; a.src = assetUrl(v); },
+     get duration() { return isFinite(a.duration) ? a.duration : 0; }, get currentTime() { return a.currentTime; },
+-    get paused() { return a.paused; }, get volume() { return a.volume; }, set volume(v) { a.volume = v; },
++    get paused() { return a.paused; }, get volume() { return a.volume; }, set volume(v) { alog(id, 'volume', { v: v }); a.volume = v; },
+     get loop() { return a.loop; }, set loop(v) { a.loop = !!v; }, get autoplay() { return a.autoplay; }, set autoplay(v) { a.autoplay = !!v; if (v) a.play().catch(function () {}); },
+     obeyMuteSwitch: false, startTime: 0, playbackRate: 1, buffered: 0,
+-    play: function () { MP.audioEls.add(a); a.playbackRate = 1; a.play().catch(function (e) { MP.log.push('audio play blocked ' + e.message); }); },
+-    pause: function () { a.pause(); }, stop: function () { a.__stopping = true; a.pause(); try { a.currentTime = 0; } catch (e) {} a.__stopping = false; emit('stop'); },
+-    seek: function (t) { try { a.currentTime = t; } catch (e) {} }, destroy: function () { a.pause(); a.removeAttribute('src'); MP.audioEls.delete(a); },
++    play: function () { alog(id, 'play()', { at: Math.round(a.currentTime * 10) / 10 }); MP.audioEls.add(a); a.playbackRate = 1; a.play().catch(function (e) { MP.log.push('audio play blocked ' + e.message); }); },
++    pause: function () { alog(id, 'pause()'); a.pause(); }, stop: function () { alog(id, 'stop()'); a.__stopping = true; a.pause(); try { a.currentTime = 0; } catch (e) {} a.__stopping = false; emit('stop'); },
++    seek: function (t) { try { a.currentTime = t; } catch (e) {} }, destroy: function () { alog(id, 'destroy()'); MP.audioLive.delete(id); a.pause(); a.removeAttribute('src'); MP.audioEls.delete(a); },
+   };
+   ['Play', 'Pause', 'Ended', 'Error', 'TimeUpdate', 'Canplay', 'Waiting', 'Stop', 'Seeked', 'Seeking'].forEach(function (n) {
+     var t = n.toLowerCase(); ctx['on' + n] = function (f) { L[t].push(f); }; ctx['off' + n] = function (f) { L[t] = f ? L[t].filter(function (x) { return x !== f; }) : []; };
+   });
+   return ctx;
+ }
+-MP.audioEls = new Set();
++MP.audioEls = new Set(); MP.intrBegin = []; MP.intrEnd = [];
++MP.interrupt = function (phase) { alog(0, 'interruption:' + phase); (phase === 'begin' ? MP.intrBegin : MP.intrEnd).forEach(function (f) { try { f({}); } catch (e) { console.error(e); } }); };
++MP.allInsts = function (root) { var res = []; (function walk(n) { if (!n) return; if (n.__inst) res.push(n.__inst); var kids = n.__inst ? (n.__inst.__root.__kids || []) : (n.__kids || n.childNodes || []); for (var i = 0; i < kids.length; i++) walk(kids[i]); if (n.shadowRoot) walk(n.shadowRoot); })(root); return res; };
+ var recorder = null;
++// WeChat fires page onHide/onShow around native camera/scan pages; MPWEB.nativeHideShow mirrors that.
++function nativeWrap(o) { if (!(window.MPWEB && window.MPWEB.nativeHideShow) || !o) return o; MP.appHide(); var shown = false; function sh() { if (!shown) { shown = true; MP.appShow(); } } var w = Object.assign({}, o); ['success', 'fail'].forEach(function (k) { w[k] = function (r) { sh(); if (o[k]) return o[k](r); }; }); w.complete = function (r) { sh(); if (o.complete) return o.complete(r); }; return w; }
+ var wxImpl = {
+   getSystemInfoSync: function () { return Object.assign({}, SYS); }, getWindowInfo: function () { return Object.assign({}, SYS); },
+   getDeviceInfo: function () { return Object.assign({}, SYS); }, getAppBaseInfo: function () { return Object.assign({}, SYS); },
+@@ -961,9 +972,9 @@ var wxImpl = {
+   showActionSheet: function (o) { MP.ui.actionSheet(o); },
+   setNavigationBarColor: function (o) { MP.ui.statusColor(o.frontColor); return ok(o); }, setNavigationBarTitle: function (o) { return ok(o); },
+   setKeepScreenOn: function (o) { return ok(o); }, setScreenBrightness: function (o) { return ok(o); }, getScreenBrightness: function (o) { return ok(o, { value: 0.6 }); },
+-  scanCode: function (o) { MP.ui.scan(o); },
+-  chooseMedia: function (o) { MP.ui.choosePhoto(function (p) { o.success && o.success({ tempFiles: [{ tempFilePath: p, size: 1000, fileType: 'image' }], type: 'image' }); o.complete && o.complete(); }); },
+-  chooseImage: function (o) { MP.ui.choosePhoto(function (p) { o.success && o.success({ tempFilePaths: [p], tempFiles: [{ path: p }] }); o.complete && o.complete(); }); },
++  scanCode: function (o) { MP.ui.scan(nativeWrap(o)); },
++  chooseMedia: function (o) { o = nativeWrap(o); MP.ui.choosePhoto(function (p) { o.success && o.success({ tempFiles: [{ tempFilePath: p, size: 1000, fileType: 'image' }], type: 'image' }); o.complete && o.complete(); }); },
++  chooseImage: function (o) { o = nativeWrap(o); MP.ui.choosePhoto(function (p) { o.success && o.success({ tempFilePaths: [p], tempFiles: [{ path: p }] }); o.complete && o.complete(); }); },
+   getLocation: function (o) { var l = MP.location(); return ok(o, { latitude: l.lat, longitude: l.lng, accuracy: 12, speed: 1, altitude: 4 }); },
+   startLocationUpdate: function (o) { return ok(o); }, startLocationUpdateBackground: function (o) { return ok(o); }, stopLocationUpdate: function (o) { return ok(o); },
+   onLocationChange: function (f) { MP.locListeners.push(f); }, offLocationChange: function (f) { MP.locListeners = MP.locListeners.filter(function (x) { return x !== f; }); },
+@@ -1003,7 +1014,7 @@ var wxImpl = {
+   startAccelerometer: function (o) { return ok(o); }, stopAccelerometer: function (o) { return ok(o); }, onAccelerometerChange: function () {}, offAccelerometerChange: function () {},
+   startCompass: function (o) { return ok(o); }, stopCompass: function (o) { return ok(o); }, onCompassChange: function (f) { MP.compassListeners.push(f); }, offCompassChange: function () { MP.compassListeners = []; },
+   startDeviceMotionListening: function (o) { return ok(o); }, stopDeviceMotionListening: function (o) { return ok(o); }, onDeviceMotionChange: function () {}, offDeviceMotionChange: function () {},
+-  onAudioInterruptionBegin: function () {}, onAudioInterruptionEnd: function () {}, offAudioInterruptionBegin: function () {}, offAudioInterruptionEnd: function () {},
++  onAudioInterruptionBegin: function (f) { MP.intrBegin.push(f); }, onAudioInterruptionEnd: function (f) { MP.intrEnd.push(f); }, offAudioInterruptionBegin: function () {}, offAudioInterruptionEnd: function () {},
+   onAppShow: function () {}, onAppHide: function () {}, offAppShow: function () {}, offAppHide: function () {}, onNetworkStatusChange: function () {}, offNetworkStatusChange: function () {},
+   getNetworkType: function (o) { return ok(o, { networkType: 'wifi' }); }, onMemoryWarning: function () {}, onKeyboardHeightChange: function () {}, offKeyboardHeightChange: function () {},
+   requestSubscribeMessage: function (o) { return ok(o, {}); }, showShareMenu: function (o) { return ok(o); }, hideShareMenu: function (o) { return ok(o); }, updateShareMenu: function (o) { return ok(o); },
+diff --git a/docs/delivery/cloud-walk-20261101/rig/mpweb/walk.mjs b/docs/delivery/cloud-walk-20261101/rig/mpweb/walk.mjs
+index 8d3c49fb..3c4eb6e0 100644
+--- a/docs/delivery/cloud-walk-20261101/rig/mpweb/walk.mjs
++++ b/docs/delivery/cloud-walk-20261101/rig/mpweb/walk.mjs
+@@ -21,7 +21,7 @@ const SHOTS = process.env.RIG_SHOTS || path.join(process.cwd(), 'shots');
+ const CHROME = process.env.CHROME || ['/usr/bin/google-chrome', '/opt/pw-browsers/chromium-1243/chrome-linux/chrome'].find((p) => fs.existsSync(p));
+ 
+ export async function launch(opts = {}) {
+-  const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, args: ['--no-sandbox', '--disable-dev-shm-usage', '--autoplay-policy=no-user-gesture-required', '--lang=zh-CN'] });
++  const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, args: ['--no-sandbox', '--disable-dev-shm-usage', '--autoplay-policy=no-user-gesture-required', '--ignore-certificate-errors', '--no-proxy-server', '--lang=zh-CN'] });
+   const page = await browser.newPage();
+   await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1, isMobile: false, hasTouch: false });
+   const consoleLog = [], pageErrors = [];
+diff --git a/docs/delivery/cloud-walk-20261101/rig/up.sh b/docs/delivery/cloud-walk-20261101/rig/up.sh
+index 5d6a74b8..5c639a89 100755
+--- a/docs/delivery/cloud-walk-20261101/rig/up.sh
++++ b/docs/delivery/cloud-walk-20261101/rig/up.sh
+@@ -5,7 +5,7 @@
+ #        RIG_SKIP_BUILD=1 bash up.sh   # reuse existing candidate jar
+ set -euo pipefail
+ export LANG=C.UTF-8 LC_ALL=C.UTF-8   # POSIX locale breaks javac on the repo's Chinese filenames
+-SHA=a1d30fb295d361122aec76fa9c180b4b496a9b0a
++SHA="${RIG_SHA:-$(git -C "${CAND:-$HOME/walk-rig/candidate}" rev-parse HEAD)}"
+ RIG_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ REPO="$(git -C "$RIG_DIR" rev-parse --show-toplevel)"
+ export RIG_HOME="${RIG_HOME:-$HOME/walk-rig}"

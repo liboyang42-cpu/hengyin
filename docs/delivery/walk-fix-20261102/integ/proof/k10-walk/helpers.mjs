@@ -1,0 +1,14 @@
+export default (w, sleep) => {
+const h = {
+  async setAt(i, text) { const list = await h.inputs(); const t = list[i]; if (!t) throw new Error('no input ' + i); await w.page.mouse.click(t.x, t.y); await sleep(200); await w.page.keyboard.down('Control'); await w.page.keyboard.press('A'); await w.page.keyboard.up('Control'); await w.page.keyboard.press('Backspace'); await sleep(150); await w.page.keyboard.sendCharacter(String(text)); await sleep(400); return t; },
+  async approve() { const { execSync } = await import('node:child_process'); return execSync('/root/walk-rig/venv/bin/python /tmp/claude-0/k10/tools/approve.py').toString(); },
+  async up(label, name, mime = 'audio/mpeg', nth = 0) { await h.file(name, mime); await h.tap(label, { nth }); await sleep(2500); let t = await h.say(); if (/通过后请重试/.test(t)) { await h.tap('确定', { exact: true }); await sleep(400); await h.approve(); await h.file(name, mime); await h.tap(label, { nth }); await sleep(2500); t = await h.say(); } return t.slice(-200); },
+  async sc(dy, x = 195, y = 600) { await w.page.mouse.move(x, y); await w.page.mouse.wheel({ deltaY: dy }); await sleep(600); },
+  async tap(t, o) { let e; for (let i = 0; i < 8; i++) { try { return await w.tap(t, o); } catch (x) { e = x; await sleep(400); } } throw e; },
+  async say() { return (await w.text()).replace(/ \| 9:41.*$/, ''); },
+  async inputs() { return w.page.evaluate(() => { const out = []; (function walk(root) { for (const el of root.querySelectorAll('input,textarea')) { const r = el.getBoundingClientRect(); if (r.width > 0 && r.height > 0 && r.top < 844 && r.bottom > 0) out.push({ ph: el.placeholder || (el.closest('[placeholder]') || {}).getAttribute?.('placeholder') || '', v: el.value, x: Math.round(r.x + r.width / 2), y: Math.round(r.y + r.height / 2) }); } for (const el of root.querySelectorAll('*')) if (el.shadowRoot) walk(el.shadowRoot); })(document); return out; }); },
+  async typeAt(i, text, clear) { const list = await h.inputs(); const t = list[i]; if (!t) throw new Error('no input ' + i); await w.page.mouse.click(t.x, t.y); await sleep(200); if (clear) { await w.page.keyboard.down('Control'); await w.page.keyboard.press('A'); await w.page.keyboard.up('Control'); await w.page.keyboard.press('Backspace'); } await w.page.keyboard.type(String(text), { delay: 10 }); await sleep(300); return t; },
+  async file(name, mime) { const fs = await import('node:fs'); const b = fs.readFileSync('/root/walk-rig/media/' + name).toString('base64'); const path = 'data:' + mime + ';base64,' + b; await w.page.evaluate((p, n) => { window.MPWEB.nextFiles = [{ path: p, name: n, size: 30000 }]; }, path, name); return name; },
+  async audio() { return w.page.evaluate(() => ({ state: window.MPWEB.audioState(), log: window.MPWEB.audioLog.slice(-40) })); },
+};
+return h; };
