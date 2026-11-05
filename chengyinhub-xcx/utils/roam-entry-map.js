@@ -1,7 +1,7 @@
 'use strict';
 
 const H = require('./roam-hangout.js');
-const { toTimestamp } = require('./datetime.js');
+const { toTimestamp, chinaParts } = require('./datetime.js');
 
 const FALLBACK_TEAM_ICON = '/images/d_profile.png';
 const TEAM_MARKER_TAG = 4;
@@ -52,6 +52,15 @@ function buildPostMarkers(rows, getImgUrl) {
   }));
 }
 
+// 第十二轮 k7(j4 N5):同一主题的几场卡片靠场次开始时刻分开(真数据,不是说明行)。只给场次,不给主题。
+function sessionWhen(row) {
+  if (!row || row.kind !== 'activity') return '';
+  const d = row.startDate ? chinaParts(row.startDate) : null;
+  if (!d) return '';
+  const pad = (n) => (n < 10 ? '0' : '') + n;
+  return d.month + '月' + d.day + '日 ' + pad(d.hours) + ':' + pad(d.minutes);
+}
+
 function activityView(row, teams, getImgUrl) {
   // 与 ActivityLifecycle.timeBucket 一致：结束时刻已过且尚未开始条件不成立。
   const now = Date.now();
@@ -73,7 +82,7 @@ function activityView(row, teams, getImgUrl) {
     title: String((row && row.name) || '未命名活动'),
     cover: coverOf(row, getImgUrl),
     tag: free ? '自由探索' : '城市定向',
-    meta: [ended && '已结束', distance && ('距你 ' + distance), !ended && linkedTeams.length && (linkedTeams.length + ' 支队伍招募')].filter(Boolean).join(' · '),
+    meta: [ended && '已结束', sessionWhen(row), distance && ('距你 ' + distance), !ended && linkedTeams.length && (linkedTeams.length + ' 支队伍招募')].filter(Boolean).join(' · '),
     address: String((row && row.addressName) || ''),
     participantFaces,
     participantCount,
@@ -121,4 +130,4 @@ function parseMarker(markerId) {
 
 function hasLayerError(errors) { return !!(errors && (errors.activities || errors.teams)); }
 
-module.exports = { build, activityView, parseMarker, hasLayerError };
+module.exports = { build, activityView, sessionWhen, parseMarker, hasLayerError };

@@ -3,6 +3,13 @@ const { getPlayMapState } = require('../../../utils/play-state-contract.js');
 const { readFontScale, mapFontSize } = require('../../../utils/font-scale.js');
 const { drawPlayStateMarker, drawNumberedMarker } = require('../../../utils/play-marker-draw.js');
 const { toneLines, toneCircle, ROAM_3D } = require('../../../utils/map-style.js');
+const TEAM_PIN_NEAR_NODE_M = 40;
+const TEAM_PIN_NUDGE_PX = 42;
+function nearM(lat1, lng1, lat2, lng2) {
+  const k = Math.cos(((lat1 + lat2) / 2) * Math.PI / 180);
+  const dy = (lat2 - lat1) * 111320, dx = (lng2 - lng1) * 111320 * k;
+  return Math.sqrt(dx * dx + dy * dy);
+}
 // 保留 marker id(非真实 nodeId),onMarkerTap 需一并过滤,避免撞上真实 nodeId 误触发 pintap
 const PLAYER_MARKER_ID = 99999;
 const ARROW_MARKER_ID = 99998;
@@ -245,10 +252,12 @@ Component({
       (this.data.teamPins || []).forEach((tp) => {
         if (!tp || !Number.isFinite(Number(tp.lat)) || !Number.isFinite(Number(tp.lng)) || !this._icons.team) return;
         const tsz = this.data.compact ? 18 : 30;
+        // 第十二轮 k7(j4 F16):队伍头像落在某一站旁边时往右让开一个头像宽,不盖住站号
+        const nearNode = (this.data.nodes || []).some((n) => n && n.lat && n.lng && nearM(Number(tp.lat), Number(tp.lng), Number(n.lat), Number(n.lng)) < TEAM_PIN_NEAR_NODE_M);
         mk.push({ id: Number(tp.id), latitude: Number(tp.lat), longitude: Number(tp.lng), width: tsz, height: tsz,
           anchor: { x: .5, y: .5 }, iconPath: this._icons.team, zIndex: 8,
-          customCallout: { display: 'ALWAYS', anchorX: 0, anchorY: tsz } });
-        teamCallouts.push({ id: Number(tp.id), img: tp.img || '', color: tp.color || '', tag: this.data.compact ? '' : (tp.tag || '') });
+          customCallout: { display: 'ALWAYS', anchorX: nearNode && !this.data.compact ? TEAM_PIN_NUDGE_PX : 0, anchorY: tsz } });
+        teamCallouts.push({ id: Number(tp.id), img: tp.img || '', initial: tp.img ? '' : (tp.initial || ''), color: tp.color || '', tag: this.data.compact ? '' : (tp.tag || '') });
       });
       const circles = [];
       // 非强制候选用柔光外圈，与当前目标/已完成/受限态区分。

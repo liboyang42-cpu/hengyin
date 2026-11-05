@@ -5,7 +5,8 @@
 const core = require('./weather-core.js')
 
 const RAIN = 'rgba(205,216,235,.42)'
-const SNOW = 'rgba(240,244,252,.72)'
+// 第十二轮 k7(j4 N3):雪点比地图上的地点小圆更淡、更散,大小不一,不和白色地点点混成一片
+const SNOW = 'rgba(232,238,250,.34)'
 
 function weatherKey(w) { return w ? w.kind + ':' + w.intensity : '' }
 
@@ -130,14 +131,14 @@ Component({
     _drawParticles() {
       const ctx = this._ctx, w = this._weather
       ctx.clearRect(0, 0, this._w, this._h)
-      ctx.globalAlpha = 0.55 + 0.45 * w.intensity
+      ctx.globalAlpha = w.kind === 'snow' ? 0.5 + 0.3 * w.intensity : 0.55 + 0.45 * w.intensity
       if (w.kind === 'rain') {
         ctx.strokeStyle = RAIN; ctx.lineWidth = 1; ctx.beginPath()
         for (const p of this._parts) { ctx.moveTo(p.x, p.y); ctx.lineTo(p.x - 2.4, p.y + 13 * p.v) }
         ctx.stroke()
       } else {
         ctx.fillStyle = SNOW
-        for (const p of this._parts) { ctx.beginPath(); ctx.arc(p.x, p.y, 1 + p.s * 1.6, 0, 7); ctx.fill() }
+        for (const p of this._parts) { ctx.beginPath(); ctx.arc(p.x, p.y, 2 + p.s * 3, 0, 7); ctx.fill() }
       }
       ctx.globalAlpha = 1
     },

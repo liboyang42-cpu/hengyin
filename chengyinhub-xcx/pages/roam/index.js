@@ -339,7 +339,7 @@ Page({
       { key: 'start', icon: 'route', title: '开始漫游', sub: '' },
       { key: 'map', nav: '/subpackageRoam/nearby/index', icon: 'map', title: '打开地图', sub: '寻找组队' },
       { key: 'my-teams', nav: '/subpackageRoam/nearby/index?sheet=mine', icon: 'tab-club', title: '我的队伍', sub: '' },
-    ], introStartLive: '', introTeamsLive: '附近正在组队', // 卡片实时行只放页面已有真数据;空串=隐藏,不摆占位
+    ], introStartLive: '', introTeamsLive: '', // 卡片实时行只放页面已有真数据;空串=隐藏,不摆占位
     boundEvent: null, // 官方活动绑定横幅(带 eventId 进入时显示)
     // V2 活动叠层只在玩家显式从活动进入或重新打开时显示；关闭后不影响日常漫游。
     eventOverlay: { show: false, missions: [], points: [], feedback: null },
@@ -553,10 +553,14 @@ Page({
   /* 原型 f-fun(查找附近好玩的)与 f-discover(发现商家)是同一条横滑白卡:
      数据就是地图上那批附近商家,不另拉一份接口 —— 地图上看得见的,卡上就看得见。
      原型的规则是「读数卡让位给横滑条」,所以它在时读数卡不渲染(见 wxml 的 wx:if)。 */
-  openShopStrip() {
-    const rows = (this._pois || [])
-      .filter((p) => p.cat === 'merchant' && p.lat && p.lng)
-      .slice(0, 8)
+  openShopStrip(focus) {
+    // 第十二轮 k7(j4 N1):点商家照片图钉 / 「附近 N 个地点」也开这条;点的那家一定在条里,并停在它那张
+    const shops = (this._pois || []).filter((p) => p.cat === 'merchant' && p.lat && p.lng);
+    const pick = focus && focus.id != null && shops.indexOf(focus) >= 0 ? focus : null;
+    let list = shops.slice(0, 8);
+    if (pick && list.indexOf(pick) < 0) list = list.slice(0, 7).concat(pick);
+    const idx = pick ? list.indexOf(pick) : 0;
+    const rows = list
       .map((p) => ({
         ...(visitorSourceOf(p) || {}),
         id: String(p.regId || p.nodeId || p.name),
@@ -571,10 +575,11 @@ Page({
     if (!rows.length) { cyToast('这一片还没有合作商家'); return; }
     this.closeScene();
     if (this.data.placeCard) this.closePlaceCard();
-    this.setData({ shopStrip: { rows, idx: 0 } });
+    this.setData({ shopStrip: { rows, idx } });
     this._loadShopStripVisitors(rows);
-    this._flyToPin((this._pois || []).find((p) => String(p.id) === rows[0].poiId));
+    this._flyToPin((this._pois || []).find((p) => String(p.id) === rows[idx].poiId));
   },
+  onPinCountTap() { this.openShopStrip(); },
   closeShopStrip() {
     this._shopStripEpoch = (this._shopStripEpoch || 0) + 1;
     this._pinFocusId = null;
@@ -950,7 +955,7 @@ Page({
       // 这屏有输入框:提示栈整体让到白框下面,不和它抢同一条位置带(§6.6)
       promptTop = chrome.contentTop + 12 + SEARCH_ROW_H;
       searchTop = chrome.contentTop;
-      this._win = { w: w.windowWidth, h: w.windowHeight, dpr: w.pixelRatio || 2 };
+      this._win = { w: w.windowWidth, h: w.windowHeight, dpr: w.pixelRatio || 2, safeBottom: w.safeArea && w.screenHeight ? Math.max(0, w.screenHeight - w.safeArea.bottom) : 0 };
     } catch (e) { this._win = { w: 375, h: 750, dpr: 2 }; }
     this._introSeenKey = this.buildRoamIntroSeenKey();
     // 2026-08-10 走查 B04：进页不再自动弹玩法说明。玩法说明仍随时可看，
@@ -2497,6 +2502,15 @@ Page({
     this._rollTimers = {};
   },
 
+  /* 第十二轮 k7(j4 N2):地图上被挡住的上下两条(px)。上:搜索栏下沿;
+     下:底部读数卡 / 横滑卡的上沿(.pcard bottom 250rpx + 高 246rpx,外加安全区)。 */
+  _pinSafeArea() {
+    const win = this._win || {};
+    const w = Number(win.w) || 390, h = Number(win.h) || 844;
+    const bottom = Math.round((250 + 246 + 16) * w / 750) + (Number(win.safeBottom) || 0);
+    return { top: Number(this.data.promptTop) || 100, bottom, width: w, height: h };
+  },
+
   _syncMarkers() {
     const mk = [];
     // 原生气泡不吃 --cy-type-scale:按手机字号同一倍率算出字号(1~1.3,只放大)
@@ -2511,6 +2525,7 @@ Page({
     const pinCenter = this.data.center || null;
     const pinCandidates = [];
     const explorePins = [];
+    const pinSafe = this._pinSafeArea();
     (this._pois || []).forEach((p) => {
       if (p.state === 'fog') return;
       const stateKey = getRoamPoiState(p, visit);
@@ -2521,7 +2536,7 @@ Page({
          其余拉远时只当小圆点,拉近时按视口贴边 / 隐藏。 */
       const critical = stateKey === 'target' || stateKey === 'checkin-failed' || stateKey === 'redeem-pending';
       if (!critical && pinMode === 'dots') return;
-      const place = critical ? { kind: 'in', lat: p.lat, lng: p.lng } : photoPins.placeInView(p.lat, p.lng, pinRegion);
+      const place = critical ? { kind: 'in', lat: p.lat, lng: p.lng } : photoPins.placeInView(p.lat, p.lng, pinRegion, pinSafe);
       if (place.kind === 'far') return;
       // 有玩法 = 这个点挂着主题(topicId)。星星只认这一件事,和去没去过无关。
       const hasGame = !!p.topicId;
@@ -4391,6 +4406,8 @@ Page({
     // 探店进行中、或这一站是打卡状态反馈时,照原路直接进详情,不插一张卡。
     const stateKey = getRoamPoiState(poi, this.data.visit || {});
     const critical = stateKey === 'target' || stateKey === 'checkin-failed' || stateKey === 'redeem-pending';
+    // 第十二轮 k7(j4 N1):报名商家的图钉开横滑卡并停在这家(卡上距离点开地图、「去这儿」进详情)
+    if (!critical && !(this.data.visit && this.data.visit.active) && poi.cat === 'merchant' && poi.lat && poi.lng) { this.openShopStrip(poi); return; }
     if (!critical && !(this.data.visit && this.data.visit.active)) { this._openPlaceCard(poi); return; }
     this._openPlaceDetail(poi);
   },
@@ -6057,7 +6074,7 @@ Page({
   _entryIdentity() { return [readSession.memberId(getApp()), (getApp().globalData || {}).authorization || ''].join('|'); },
   _clearEntryRead() {
     this._entryItems = []; this._entryTeams = [];
-    this.setData({ introTeamsLive: '附近正在组队', entryMarkers: [], entryCards: [], searchPlaces: [], entryActivity: null, entryTeam: null, entrySheet: '' });
+    this.setData({ introTeamsLive: '', entryMarkers: [], entryCards: [], searchPlaces: [], entryActivity: null, entryTeam: null, entrySheet: '' });
   },
   loginForEntryRead() {
     if (this.data.entryReadAccess === 'denied') return;
@@ -6113,7 +6130,7 @@ Page({
     const app = getApp();
     const getImgUrl = typeof app.getImgUrl === 'function' ? app.getImgUrl.bind(app) : (url) => url;
     const view = entryMap.build(this._entryItems, this._entryTeams, this.data.entryLayers, getImgUrl);
-    this.setData({ entryMarkers: view.markers, entryCards: view.cards, searchPlaces: view.searchPlaces, introTeamsLive: this._entryTeams.length ? '附近 ' + this._entryTeams.length + ' 支队伍在组队' : '附近正在组队' }); if (!view.cards.length && this._entryErrors && !this._entryErrors.activities) this._loadEntryFallback(); else if (view.cards.length) this.setData({ entryFarCards: [], entryLoading: false }); // 2026-10-28 附近为空走兜底
+    this.setData({ entryMarkers: view.markers, entryCards: view.cards, searchPlaces: view.searchPlaces, introTeamsLive: this._entryTeams.length ? '附近 ' + this._entryTeams.length + ' 支队伍在组队' : '' }); if (!view.cards.length && this._entryErrors && !this._entryErrors.activities) this._loadEntryFallback(); else if (view.cards.length) this.setData({ entryFarCards: [], entryLoading: false }); // 2026-10-28 附近为空走兜底
   },
   _showEntrySheet(entrySheet, entryActivity) {
     this.setData({ entrySheet, entryActivity: entryActivity || null, entryTeam: null, entrySheetView: 'main', entrySheetIn: false }, () => {

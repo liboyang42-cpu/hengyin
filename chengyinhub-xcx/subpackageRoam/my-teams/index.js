@@ -15,7 +15,13 @@ const TEAM_PAGE = '/pages/team/detail/index';
 const RADIUS = 3000;
 
 // 队伍名与队伍详情页同一口径(title,缺省「一起出发的玩家队伍」);场次名放到副标题,不顶替队名
-function nameOf(t) { return String((t && t.title) || '').trim() || '一起出发的玩家队伍'; }
+// 第十二轮 k7(j4 F15):没起名的队伍按队长昵称区分(「阿青的队伍」),读不到队长才落回统一的缺省名
+function nameOf(t) {
+  const title = String((t && t.title) || '').trim();
+  if (title) return title;
+  const leader = String((t && t.leaderName) || '').trim();
+  return leader ? leader + '的队伍' : '一起出发的玩家队伍';
+}
 // 队伍头像叠层:有真头像用真头像,不够的用默认 Memoji 补到成员数(最多 3 个),不再用首字
 const FACE = '/images/d_profile.png';
 function avatarsOf(list, count) { const real = (list || []).filter(Boolean).slice(0, 3); const n = Math.max(1, Math.min(3, Math.max(real.length, Number(count) || 1))); const out = real.slice(); while (out.length < n) out.push(FACE); return out.map((src, k) => ({ k, src })); }

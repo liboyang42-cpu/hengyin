@@ -31,7 +31,8 @@
   </view>
 </template>
 
-<view class="theme-dark">
+<!-- 第十二轮 k7(j4 N6):商家身份看的是浅色底图,返回 / 搜索 / 筛选也跟着用商家浅色 -->
+<view class="{{merchantView ? 'theme-merchant' : 'theme-dark'}}">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />

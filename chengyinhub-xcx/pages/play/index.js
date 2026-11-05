@@ -4962,7 +4962,7 @@ Page({
   _applyTeams(teams) {
     this._teams = Array.isArray(teams) ? teams : [];
     const pins = teamTrailKit.teamPins(this._teams);
-    const rail = this._teams.map((t) => ({ key: t.key, img: t.avatar, color: t.color, name: t.name }));
+    const rail = this._teams.map((t) => ({ key: t.key, img: t.avatar, color: t.color, name: t.name, initial: t.avatar ? '' : teamTrailKit.initialOf(t.name) }));
     const follow = this.data.teamFollowKey && this._teams.find((t) => t.key === this.data.teamFollowKey);
     if (this._themeHidden) { this._teamPatchPending = true; return; }
     this.setData({ fmTeamPins: pins, teamRail: rail, teamFollowKey: follow ? follow.key : '' });

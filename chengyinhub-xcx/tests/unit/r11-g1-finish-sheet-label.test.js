@@ -12,7 +12,7 @@ test('结果标签:通关 / 本章真完成 / 其余一律「已结束」', () =
 })
 
 test('点亮坐标为 0 时整格不渲染', () => {
-  assert.match(wxml, /<view class="fst" wx:if="\{\{doneCount > 0\}\}">[^\n]*点亮坐标/)
+  assert.match(wxml, /<view class="fst fst--hero" wx:if="\{\{doneCount > 0\}\}">[^\n]*点亮坐标/)  // 第十二轮 k7(j4 N9):整行大字只给这一格
 })
 
 test('finishChapterDone 按本章节点全部完成计算', () => {

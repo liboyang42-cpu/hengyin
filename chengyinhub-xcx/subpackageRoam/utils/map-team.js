@@ -31,7 +31,11 @@ function statusOf(t) {
 }
 
 function teamName(t) {
-  return String((t && t.title) || '').trim() || '玩家队伍';
+  // 第十二轮 k7(j4 F15):没起名的队伍按队长昵称区分
+  const title = String((t && t.title) || '').trim();
+  if (title) return title;
+  const leader = String((t && t.leaderName) || '').trim();
+  return leader ? leader + '的队伍' : '玩家队伍';
 }
 
 /** P2/P3/P4/P5/被拒/已加入 → 卡片该出什么。按钮对象 { text, action };null = 不出。 */

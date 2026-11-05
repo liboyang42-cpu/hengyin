@@ -26,6 +26,7 @@
       <cover-view wx:for="{{teamCallouts}}" wx:key="id" marker-id="{{item.id}}" class="fmap-tpin">
         <cover-view class="fmap-tpin__ring" style="border-color:{{item.color}};">
           <cover-image wx:if="{{item.img}}" class="fmap-tpin__img" src="{{item.img}}"></cover-image>
+          <cover-view wx:elif="{{item.initial}}" class="fmap-tpin__ini" style="color:{{item.color}};">{{item.initial}}</cover-view>
         </cover-view>
         <cover-view wx:if="{{item.tag}}" class="fmap-tpin__tag" style="background-color:{{item.color}};">{{item.tag}}</cover-view>
       </cover-view>

@@ -1823,6 +1823,7 @@ page { background: var(--cy-color-bg-page); }
 .team-rail__i{ width:88rpx; height:88rpx; border-radius:50%; border:6rpx solid; box-sizing:border-box; overflow:hidden; background:var(--cy-color-play-surface-solid); transition:transform var(--cy-motion-fast) ease-out; }
 .team-rail__i.is-on{ transform:scale(1.12); }
 .team-rail__img{ width:100%; height:100%; }
+.team-rail__ini{ display:flex; width:100%; height:100%; align-items:center; justify-content:center; font-size:var(--cy-type-body); font-weight:700; line-height:1; }
 .team-consent{ min-height:0; padding-bottom:var(--cy-space-6); }
 .team-consent__row{ display:flex; align-items:center; justify-content:space-between; min-height:112rpx; margin-bottom:var(--cy-space-5); }
 .team-consent__label{ font-size:var(--cy-type-body); }
@@ -1921,11 +1922,12 @@ page { background: var(--cy-color-bg-page); }
 .finsheet .finsheet__result.is-win{ background:#FFFFFF; color:#000000; } /* ds-ok 定稿 */
 .finsheet .finsheet__grid{ display:grid; grid-template-columns:repeat(3,1fr); column-gap:15rpx; margin:54rpx 38rpx 0; }
 .finsheet .fst{ align-items:flex-start; gap:4rpx; min-width:0; }
-.finsheet .fst:first-child{ grid-column:1 / -1; margin-bottom:46rpx; }
-.finsheet .fst:first-child .fst__ic{ display:none; }
+/* 第十二轮 k7(j4 N9):整行大数字只给「点亮坐标」;一站没做时用时 / 距离照三格排,不再是被「继续」压住的 216rpx 巨字 */
+.finsheet .fst--hero{ grid-column:1 / -1; margin-bottom:46rpx; }
+.finsheet .fst--hero .fst__ic{ display:none; }
 .finsheet .fst__v{ font-family:"DIN Alternate","DIN Condensed",-apple-system,sans-serif; font-style:italic; font-weight:800; font-variant-numeric:tabular-nums; }
-.finsheet .fst:first-child .fst__v{ font-size:216rpx; line-height:.86; } /* ds-ok 定稿 NRC 大数字 */
-.finsheet .fst:first-child .fst__l{ font-size:29rpx; margin-top:12rpx; } /* ds-ok 定稿字号 */
+.finsheet .fst--hero .fst__v{ font-size:216rpx; line-height:.86; } /* ds-ok 定稿 NRC 大数字 */
+.finsheet .fst--hero .fst__l{ font-size:29rpx; margin-top:12rpx; } /* ds-ok 定稿字号 */
 .finsheet .fst--s .fst__v{ font-size:58rpx; line-height:1; } /* ds-ok 定稿字号 */
 .finsheet .fst--s .fst__l{ font-size:25rpx; } /* ds-ok 定稿字号 */
 .finsheet .finsheet__game-ending{ margin:54rpx 38rpx 0; padding:31rpx; border-left:0; border-radius:31rpx; background:#1C1C1E; } /* ds-ok 定稿分组卡 */

@@ -40,10 +40,16 @@ function teamLines(teams) {
 
 /** 头像图钉的 marker id 段:与节点 id、玩家/箭头保留 id 都不撞 */
 const PIN_BASE = 880000000;
+// 第十二轮 k7(j4 F16):没头像的队不再是一枚空黑圆,圆里写队名(或队长昵称)的第一个字,用队色
+function initialOf(name) {
+  const s = String(name || '').trim();
+  return s ? Array.from(s)[0] : '';
+}
+
 function teamPins(teams) {
   return (teams || []).map((t, i) => ({
     id: PIN_BASE + i, key: t.key, lat: t.last.latitude, lng: t.last.longitude,
-    img: t.avatar, color: t.color, tag: t.tag,
+    img: t.avatar, color: t.color, tag: t.tag, initial: t.avatar ? '' : initialOf(t.name),
   }));
 }
 
@@ -124,4 +130,4 @@ function createTeamTrail(opts) {
   };
 }
 
-module.exports = { createTeamTrail, shapeTeams, teamLines, teamPins, PIN_BASE, INTERVAL_MS, MAX_INTERVAL_MS };
+module.exports = { createTeamTrail, shapeTeams, teamLines, teamPins, initialOf, PIN_BASE, INTERVAL_MS, MAX_INTERVAL_MS };

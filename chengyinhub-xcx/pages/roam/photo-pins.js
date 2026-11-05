@@ -32,17 +32,31 @@ function regionBox(region) {
   return { s, w, n, e, h: n - s, wd: e - w };
 }
 
-function placeInView(lat, lng, region) {
+/* 第十二轮 k7(j4 N2):贴边图钉只收进「看得见的那块地图」——搜索栏下沿到底部卡片上沿之间,
+   左右至少留半枚图钉加一道缝。safe = { top, bottom, width, height }(px,bottom 为底部被挡住的高度);
+   不给时退回原来的四边 6%。 */
+const EDGE_SIDE_PX = 24;
+function safeInsets(safe) {
+  const h = Number(safe && safe.height), w = Number(safe && safe.width);
+  if (!(h > 0) || !(w > 0)) return { top: EDGE_INSET, bottom: EDGE_INSET, side: EDGE_INSET };
+  const top = Math.max(EDGE_INSET, (Number(safe.top) || 0) / h + EDGE_SIZE / 2 / h);
+  const bottom = Math.max(EDGE_INSET, (Number(safe.bottom) || 0) / h + EDGE_SIZE / 2 / h);
+  const side = Math.max(EDGE_INSET, EDGE_SIDE_PX / w);
+  if (top + bottom >= 0.9) return { top: EDGE_INSET, bottom: EDGE_INSET, side };
+  return { top, bottom, side };
+}
+
+function placeInView(lat, lng, region, safe) {
   const b = regionBox(region);
   if (!b) return { kind: 'in', lat, lng };
   if (lat >= b.s && lat <= b.n && lng >= b.w && lng <= b.e) return { kind: 'in', lat, lng };
   const padLat = b.h * NEAR_SPAN, padLng = b.wd * NEAR_SPAN;
   if (lat < b.s - padLat || lat > b.n + padLat || lng < b.w - padLng || lng > b.e + padLng) return { kind: 'far' };
-  const insetLat = b.h * EDGE_INSET, insetLng = b.wd * EDGE_INSET;
+  const ins = safeInsets(safe);
   return {
     kind: 'edge',
-    lat: Math.min(b.n - insetLat, Math.max(b.s + insetLat, lat)),
-    lng: Math.min(b.e - insetLng, Math.max(b.w + insetLng, lng)),
+    lat: Math.min(b.n - b.h * ins.top, Math.max(b.s + b.h * ins.bottom, lat)),
+    lng: Math.min(b.e - b.wd * ins.side, Math.max(b.w + b.wd * ins.side, lng)),
   };
 }
 
@@ -168,6 +182,6 @@ function markerSignature(markers, pins) {
 
 module.exports = {
   DOT_SCALE, PIN_SIZE, PIN_SIZE_NEAR, PIN_SIZE_FOCUS, EDGE_SIZE, DEMOTED_SIZE, MAX_PHOTO_PINS, COUNT_MIN,
-  pinPhoto, isParticipating, placeInView, densityMode, bucketDots, nearbyCountLabel, markerSignature, regionBox, toScreen, declutter,
+  pinPhoto, isParticipating, placeInView, safeInsets, densityMode, bucketDots, nearbyCountLabel, markerSignature, regionBox, toScreen, declutter,
   layoutPins, fallbackRegion, footprint, PIN_GAP, heatLevel,
 };

@@ -1163,6 +1163,7 @@ Page({
     this.setData({
       mapSubkey: mapStyle.subkey,
       mapLayerStyle: mapStyle.layerStyle,
+      merchantView: isMerchantView(),
       statusBarHeight: app.globalData.statusBarHeight || 20,
       navTop: navRow.navTop,
       navRight: navRow.navRight,

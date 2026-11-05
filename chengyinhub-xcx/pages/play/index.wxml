@@ -146,6 +146,7 @@
       <view wx:for="{{teamRail}}" wx:key="key" class="team-rail__i {{teamFollowKey === item.key ? 'is-on' : ''}}" style="border-color:{{item.color}};"
             data-key="{{item.key}}" bindtap="onTeamRailTap" aria-role="button" aria-label="{{teamFollowKey === item.key ? '不再跟随' : '跟随'}}{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">
         <image wx:if="{{item.img}}" class="team-rail__img" src="{{item.img}}" mode="aspectFill"></image>
+        <text wx:elif="{{item.initial}}" class="team-rail__ini" style="color:{{item.color}};" aria-hidden="true">{{item.initial}}</text>
       </view>
     </view>
     <view class="story-map__back" style="top:{{chrome.contentTop}}px" bindtap="closeStoryMap" aria-role="button" aria-label="收起地图，回到故事" hover-class="cy-pressed" hover-stay-time="80">
@@ -1307,7 +1308,7 @@
   </view>
   <!-- mode2:探索值/徽章数是经典定向的读数(且 total×12 写死),探店日只报真事实 —— 核销与集章 -->
   <view class="finsheet__grid" wx:if="{{mode!=2}}">
-    <view class="fst" wx:if="{{doneCount > 0}}"><cy-icon class="fst__ic" name="pin-solid" size="36" /><text class="fst__v">{{doneCount}}</text><text class="fst__l">点亮坐标</text></view>
+    <view class="fst fst--hero" wx:if="{{doneCount > 0}}"><cy-icon class="fst__ic" name="pin-solid" size="36" /><text class="fst__v">{{doneCount}}</text><text class="fst__l">点亮坐标</text></view>
     <view class="fst fst--s" wx:if="{{reviewElapsed}}"><text class="fst__v">{{reviewElapsed}}</text><text class="fst__l">用时</text></view>
     <view class="fst fst--s" wx:if="{{reviewDistance}}"><text class="fst__v">{{reviewDistance}} km</text><text class="fst__l">距离</text></view>
     <view class="fst fst--s" wx:if="{{finishPuzzleCount}}"><text class="fst__v">{{finishPuzzleScore}}</text><text class="fst__l">解谜分</text><text class="fst__sub" wx:if="{{finishPuzzleBest > 0}}">个人最佳 {{finishPuzzleBest}}</text></view>
@@ -1353,7 +1354,7 @@
     </view>
   </view>
   <view class="finsheet__grid" wx:if="{{mode==2}}">
-    <view class="fst"><cy-icon class="fst__ic" name="check" size="36" /><text class="fst__v">{{doneCount}}/{{total}}</text><text class="fst__l">玩法完成</text></view>
+    <view class="fst fst--hero"><cy-icon class="fst__ic" name="check" size="36" /><text class="fst__v">{{doneCount}}/{{total}}</text><text class="fst__l">玩法完成</text></view>
     <view class="fst"><cy-icon class="fst__ic" name="walk" size="36" /><text class="fst__v">{{finishStamps.length}}</text><text class="fst__l">本期足迹</text></view>
   </view>
   <!-- 文档二 L5 A p-finish:RPG 小结(主题开着 d20 才有),同一 .finsheet__grid 三格 -->

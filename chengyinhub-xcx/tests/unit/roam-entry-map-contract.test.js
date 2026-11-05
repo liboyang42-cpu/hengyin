@@ -35,9 +35,9 @@ test('附近活动只横滑且保持完整轮廓，失败空态留在抽屉内',
   assert.match(WXML, /<cy-state-shell wx:if="\{\{entryReadAccess\}\}" kind="no-permission"/)
   assert.match(WXML, /<cy-error wx:elif="\{\{entryLoadError\}\}" load-failure="\{\{true\}\}"\s*\/>/)
   assert.match(WXSS, /\.entry-peek\s*\{[^}]*position:relative[^}]*linear-gradient/s)
-  assert.match(WXSS, /\.entry-peek__head\s*\{[^}]*font-size:29rpx/s)
+  assert.match(WXSS, /\.entry-peek__head\s*\{[^}]*font-size:calc\(29rpx \* var\(--cy-type-scale, 1\)\)/s)  // 第十二轮 k7(j4 F14):跟手机字号走
   assert.match(WXSS, /\.entry-card\s*\{[^}]*height:242rpx/s)
-  assert.match(WXSS, /\.entry-card__title\s*\{[^}]*font-size:27rpx/s)
+  assert.match(WXSS, /\.entry-card__title\s*\{[^}]*font-size:calc\(27rpx \* var\(--cy-type-scale, 1\)\)/s)
 })
 
 test('活动详情使用紧凑摘要卡，不再使用整幅英雄图', () => {
