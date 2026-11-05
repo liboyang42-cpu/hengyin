@@ -422,7 +422,10 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
                 session.getActivityId()!=null && session.getActivityId()>0 ? session.getActivityId() : session.getTopicId(),null,clock.now());
         requireActivityWindow(session.getActivityId(), session.getTopicId());
         if (gameSessionRuntimeService != null) gameSessionRuntimeService.assertRoutePlayable(session.getActivityId(), session.getNodeId());
-        requireRouteNodeAccess(memberId, session.getActivityId(), session.getTopicId(), session.getNodeId());
+        // 第十三轮 m1 P6:已结束的玩法只会回放原结果或报「已结束」,不写任何东西;这时本局可能已通关,
+        // 路线闸会误报「请先完成上一站」。只在还要写(进行中或重试)时过路线闸。
+        if (Integer.valueOf(GameRuntimeSession.STATUS_RUNNING).equals(session.getStatus()) || "RETRY".equalsIgnoreCase(StringUtils.defaultString(action).trim()))
+            requireRouteNodeAccess(memberId, session.getActivityId(), session.getTopicId(), session.getNodeId());
         JsonNode sharedRun = gameSessionRuntimeService == null ? null : gameSessionRuntimeService.sharedRouteSnapshot(memberId, session.getTopicId(), session.getActivityId(), session.getNodeId());
         if (zeroChallengeSession && "RETRY".equalsIgnoreCase(StringUtils.defaultString(action).trim())) {
             return retryZeroChallenge(session, memberId, expectedVersion, idempotencyKey, requestFingerprint, sharedRun);
@@ -453,7 +456,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         }
         if (!Integer.valueOf(GameRuntimeSession.STATUS_RUNNING).equals(session.getStatus())) {
             if(readJson(session.getConfigSnapshotJson(),"玩法配置不可用").has("outcomeRules") && objectState(session.getStateJson()).has("gameplayDecision")){Map<String,Object> completed=toView(session,memberId);appendJourneyWorld(completed,memberId,session);return completed;}
-            throw new IllegalStateException("高级玩法已结束");
+            throw new IllegalStateException(Integer.valueOf(GameRuntimeSession.STATUS_COMPLETED).equals(session.getStatus()) ? "这一站已经完成了" : "高级玩法已结束");
         }
         if (expectedVersion == null || !expectedVersion.equals(session.getVersion())) {
             throw versionConflict(session, memberId);

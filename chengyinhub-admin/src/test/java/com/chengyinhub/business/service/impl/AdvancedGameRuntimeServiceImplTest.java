@@ -311,6 +311,21 @@ class AdvancedGameRuntimeServiceImplTest {
         verifyNoInteractions(templateMapper, attemptMapper);
     }
 
+    /* 第十三轮 m1 P6:本局已通关(路线不再放行)后再点「再摇一次」:不写任何东西,说「这一站已经完成了」,不再误报「请先完成上一站」 */
+    @Test
+    void finishedRunReflipOfCompletedCoinSaysDoneAndWritesNothing() throws Exception {
+        var route = frozenBasicRoute(new com.fasterxml.jackson.databind.ObjectMapper().readTree(coinOnlyConfig()));
+        when(route.canPlay(MEMBER_ID, TOPIC_ID, ACTIVITY_ID, NODE_ID)).thenReturn(false);
+        GameRuntimeSession session = runningSession(coinOnlyConfig(), "{\"coinFlip\":{\"flipped\":true,\"side\":\"HEADS\"}}");
+        session.setStatus(GameRuntimeSession.STATUS_COMPLETED);
+        when(sessionMapper.selectAccessibleById(51L, MEMBER_ID)).thenReturn(session);
+        assertEquals("这一站已经完成了", assertThrows(IllegalStateException.class,
+                () -> service.act(MEMBER_ID, 51L, 1, "reflip", "FLIP_COIN", Collections.emptyMap())).getMessage());
+        verify(sessionMapper, never()).updateStateCas(any());
+        verify(route, never()).recordNodeResult(any(), any(), any(), any(), any(), any(), any(), org.mockito.ArgumentMatchers.anyBoolean(), org.mockito.ArgumentMatchers.anyInt(), any());
+        verify(route, never()).recordGameplayOutcome(any(), any(), any(), any(), any(), any(), any(), any());
+    }
+
     @Test
     void emptyBasicConfigCannotReplaceAnExistingUnfinishedAdvancedSession() {
         frozenBasicRoute(new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode());
