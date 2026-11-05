@@ -1,0 +1,4 @@
+[{"wait":3000},{"scroll":2000},{"tap":"立即报名"},{"wait":3500},{"tap":"参与人信息"},{"wait":2000},
+{"type":["input[placeholder=输入姓名]","测试乙"]},{"type":["input[inputmode]","13700000002"]},{"tap":"保存参与人信息"},{"wait":2500},{"route":1},{"shot":"04-p2-checkout-with-participant"},
+{"tap":"同意将姓名、手机号提供给主办方"},{"wait":500},{"tap":["付款",{"exact":true}]},{"wait":3000},{"shot":"05-p2-after-pay-tap"},{"text":600},
+{"tap":["继续下单",{"exact":true}]},{"wait":1500},{"pay":"cancel"},{"wait":5000},{"route":1},{"shot":"06-p2-after-pay-sheet-closed"},{"text":900},{"net":1}]

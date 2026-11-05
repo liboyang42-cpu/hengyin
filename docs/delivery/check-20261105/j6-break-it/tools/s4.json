@@ -1,0 +1,1 @@
+[{"wait":2500},{"eval":"(()=>{const r=[];const walk=(n)=>{for(const c of n.querySelectorAll(\"*\")){if(/input/i.test(c.tagName))r.push(c.tagName+\"|\"+[...c.attributes].map(a=>a.name).join(\",\"));if(c.shadowRoot)walk(c.shadowRoot)}};walk(document);return r.slice(0,10)})()"}]

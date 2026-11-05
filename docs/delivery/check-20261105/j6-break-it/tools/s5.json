@@ -1,0 +1,3 @@
+[{"wait":3000},{"scroll":2000},{"tap":"立即报名"},{"wait":3500},{"shot":"07-p2-checkout-autoselected"},{"text":300},
+{"tap":"同意将姓名、手机号提供给主办方"},{"wait":500},{"pay":"cancel"},{"tap":["付款",{"exact":true}]},{"wait":6000},{"route":1},{"shot":"08-p2-pay-sheet-closed"},{"text":900},{"net":1},
+{"wait":3000},{"shot":"09-p2-pay-sheet-closed-later"},{"text":600}]

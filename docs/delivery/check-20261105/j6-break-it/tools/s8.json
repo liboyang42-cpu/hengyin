@@ -1,0 +1,1 @@
+[{"wait":3000},{"scroll":2000},{"tap":"立即报名"},{"wait":3500},{"route":1},{"shot":"15-p2-rebuy-checkout"},{"text":400},{"tap":"同意将姓名、手机号提供给主办方"},{"wait":500},{"tap":["付款",{"exact":true}]},{"wait":5000},{"route":1},{"shot":"16-p2-rebuy-result"},{"text":500},{"net":1}]

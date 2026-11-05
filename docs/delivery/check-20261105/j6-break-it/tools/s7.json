@@ -1,0 +1,1 @@
+[{"wait":3500},{"scroll":1500},{"wait":500},{"tap":"取消订单"},{"wait":1200},{"tap":["取消订单",{"exact":true,"nth":0}]},{"wait":800},{"shot":"13-p2-cancel-result"},{"text":300},{"wait":3500},{"route":1},{"shot":"14-p2-cancel-result-later"},{"text":500},{"net":1}]

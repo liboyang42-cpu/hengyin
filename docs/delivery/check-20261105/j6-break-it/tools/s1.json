@@ -1,0 +1,1 @@
+[{"wait":3000},{"shot":"01-p2-activity12"},{"scroll":2000},{"tap":"立即报名"},{"wait":3500},{"route":1},{"shot":"02-p2-checkout"},{"text":1500},{"net":1}]
