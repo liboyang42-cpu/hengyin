@@ -1281,7 +1281,8 @@
              ⚠️ 此前这一段没有任何 wx:if:玩家和商家也看得到整套控件,开了要到发布时才被后端拒。 -->
         <!-- 2026-10-31 业主批准 P-6/P-9:商家主办的自由探索也逐站招商(权益 / 引流两档,后端开放招商 V1 不看主理人身份),
              否则预览里打开「商家承接」后补品类时会跳到一个看不到的区块。 -->
-        <view class="chapter-recruit" wx:if="{{merchantPoolEditable || (operationScope === 'MERCHANT' && formData.productType === 2)}}">
+        <!-- 城市定向只开放主题级招商；保留旧误选的关闭入口。 -->
+        <view class="chapter-recruit" wx:if="{{(merchantPoolEditable || operationScope === 'MERCHANT') && (formData.productType === 2 || chapterForm.recruitEnabled)}}">
           <view class="chapter-recruit__head">
             <text>商家承接</text>
           </view>
