@@ -465,6 +465,19 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where member_id = #{memberId} and del_flag = 0
           and cancel_time is null
           and (end_date is null or end_date &gt; now())
+          <!-- 2026-11-05 业主:俱乐部开的场次(挂主题、且场次或主题属于俱乐部)不占「同时 3 个活动」名额(j6 N7);
+               商家与俱乐部自己发布的活动(不挂主题)、商家主题的自办场次照常计数 -->
+          and not (
+              topic_id is not null and topic_id &gt; 0
+              and (
+                  (club_id is not null and club_id &gt; 0)
+                  or exists (
+                      select 1 from cms_topic quota_topic
+                      where quota_topic.id = cms_activity.topic_id
+                        and quota_topic.club_id is not null and quota_topic.club_id &gt; 0
+                  )
+              )
+          )
     </select>
 
     <!-- 查询需要结算的活动；product_type=2 来自 ProductType.FREE_EXPLORE -->
