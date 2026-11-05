@@ -1986,7 +1986,8 @@ Page({
   onEditPost(e) {
     const post = this.findPost(e.currentTarget.dataset.id);
     if (!post) return;
-    const isAuthor = String(post.authorMemberId) === String(this.data.myMemberId);
+    // 第十二轮 k7(走查 k2 游客俱乐部页):游客投影里作者 id 与自己的 id 都是空,空 == 空不算本人
+    const isAuthor = !!this.data.myMemberId && post.authorMemberId != null && String(post.authorMemberId) === String(this.data.myMemberId);
     if (!isAuthor && !(this.data.canModerateContent && Number(post.type) === 2)) return;
     this._postEditOrigin = post.content || '';
     this.setData({

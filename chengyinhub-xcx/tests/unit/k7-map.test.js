@@ -195,3 +195,12 @@ test('F15:队伍详情的标题与列表同一口径(没起名按队长昵称)',
   assert.match(js, /return name \? name \+ '的队伍' : '一起出发的玩家队伍';/);
   assert.match(read('pages/team/detail/index.wxml'), /<view class="team-title">\{\{teamTitle \|\| team\.title \|\| '一起出发的玩家队伍'\}\}<\/view>/);
 });
+
+test('游客俱乐部页:作者 id 与自己的 id 都是空时不算本人,不出编辑 / 删除', () => {
+  const wxml = read('pages/club/detail/index.wxml');
+  assert.match(wxml, /wx:if="\{\{\(myMemberId && item\.authorMemberId == myMemberId\) \|\| \(canModerateContent && item\.type == 2\)\}\}" catchtap="onEditPost"/);
+  assert.match(wxml, /wx:if="\{\{canModerateContent \|\| \(myMemberId && item\.authorMemberId == myMemberId\)\}\}" catchtap="onDeletePost"/);
+  assert.match(wxml, /wx:if="\{\{canModerateContent \|\| \(myMemberId && cm\.memberId == myMemberId\)\}\}" catchtap="onDeleteComment"/);
+  assert.doesNotMatch(wxml, /\{\{item\.authorMemberId == myMemberId/);
+  assert.match(read('pages/club/detail/index.js'), /const isAuthor = !!this\.data\.myMemberId && post\.authorMemberId != null && String\(post\.authorMemberId\) === String\(this\.data\.myMemberId\);/);
+});

@@ -122,10 +122,10 @@
             <view slot="special" class="post-ref-unavailable" wx:if="{{item.refUnavailable}}">引用不可用</view>
             <!-- 转发条目的原帖可能在别的俱乐部:本俱乐部的编辑/置顶/删除不作用在它上面 -->
             <view slot="moderation" class="post-moderation" wx:if="{{!item.isRepostItem}}">
-              <view class="post-moderation__action" wx:if="{{item.authorMemberId == myMemberId || (canModerateContent && item.type == 2)}}" catchtap="onEditPost" data-id="{{item.id}}" aria-role="button" aria-label="编辑动态" hover-class="cy-pressed" hover-stay-time="80">编辑</view>
+              <view class="post-moderation__action" wx:if="{{(myMemberId && item.authorMemberId == myMemberId) || (canModerateContent && item.type == 2)}}" catchtap="onEditPost" data-id="{{item.id}}" aria-role="button" aria-label="编辑动态" hover-class="cy-pressed" hover-stay-time="80">编辑</view>
               <view class="post-moderation__action" wx:if="{{canModerateContent && item.type == 2}}" catchtap="onTogglePin" data-id="{{item.id}}" aria-role="button" aria-label="{{item.isPinned ? '取消置顶公告' : '置顶公告'}}" hover-class="cy-pressed" hover-stay-time="80">{{item.isPinned ? '取消置顶' : '置顶'}}</view>
               <view class="post-moderation__action" wx:if="{{item.version > 0}}" catchtap="onViewPostHistory" data-id="{{item.id}}" aria-role="button" aria-label="查看动态编辑历史" hover-class="cy-pressed" hover-stay-time="80">历史</view>
-              <view class="post-moderation__action" wx:if="{{canModerateContent || item.authorMemberId == myMemberId}}" catchtap="onDeletePost" data-id="{{item.id}}" aria-role="button" aria-label="删除动态" hover-class="cy-pressed" hover-stay-time="80">删除</view>
+              <view class="post-moderation__action" wx:if="{{canModerateContent || (myMemberId && item.authorMemberId == myMemberId)}}" catchtap="onDeletePost" data-id="{{item.id}}" aria-role="button" aria-label="删除动态" hover-class="cy-pressed" hover-stay-time="80">删除</view>
               <!-- CU-C-52:自己的帖子不给举报入口 —— 编辑/删除都有作者条件,只这一行漏了,
                    点下去会走完「举报 → 确认 → 已举报」,作者举报自己没有任何用途。
                    口径与成员行 :337 的成员举报一致(绝不报自己)。 -->
@@ -136,7 +136,7 @@
             <view class="comment" wx:for="{{comments}}" wx:for-item="cm" wx:key="id">
               <text class="comment-name">{{cm.nickname || '城瘾玩家'}}：</text>
               <text class="comment-text">{{cm.content}}</text>
-              <text wx:if="{{canModerateContent || cm.memberId == myMemberId}}" catchtap="onDeleteComment" data-id="{{cm.id}}" class="comment-mod" aria-role="button" aria-label="删除评论" hover-class="cy-pressed" hover-stay-time="80">删除</text>
+              <text wx:if="{{canModerateContent || (myMemberId && cm.memberId == myMemberId)}}" catchtap="onDeleteComment" data-id="{{cm.id}}" class="comment-mod" aria-role="button" aria-label="删除评论" hover-class="cy-pressed" hover-stay-time="80">删除</text>
               <!-- CU-C-138:本人评论不给举报 —— 上面动态 :162、成员 :337 都有作者闸,只有这一行漏了,
                    点下去走完「举报 → 确认 → 已举报」,给自己开一张无意义审核单。删除入口保留。 -->
               <text wx:if="{{cm.memberId != myMemberId}}" catchtap="onReportComment" data-id="{{cm.id}}" class="comment-mod" aria-role="button" aria-label="举报评论" hover-class="cy-pressed" hover-stay-time="80">举报</text>

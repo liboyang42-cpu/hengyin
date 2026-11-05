@@ -780,6 +780,13 @@ public class ApiClubController extends BaseController {
         return guestCanViewClub(club) && isPublicJoinClub(club);
     }
 
+    static String guestJoinTime(java.util.Date t) {
+        if (t == null) return null;
+        java.text.SimpleDateFormat f = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        f.setTimeZone(java.util.TimeZone.getTimeZone("Asia/Shanghai"));
+        return f.format(t);
+    }
+
     /** 游客名单投影:不带会员 id、入会留言、审核信息、手机号。 */
     static List<Map<String, Object>> guestMemberRows(List<ClubMember> list) {
         List<Map<String, Object>> rows = new ArrayList<>();
@@ -792,7 +799,9 @@ public class ApiClubController extends BaseController {
             row.put("role", cm.getRole());
             row.put("isOwner", Boolean.TRUE.equals(cm.getIsOwner()));
             row.put("levelId", cm.getLevelId());
-            row.put("joinTime", cm.getJoinTime());
+            // 第十二轮 k7(走查 k2 游客俱乐部页):Map 里的 Date 会按 ISO 序列化成「2026-11-05T14:41:17.000+08:00」原样上屏;
+            // 与登录成员名单(ClubMember.joinTime 的 @JsonFormat)同一格式。
+            row.put("joinTime", guestJoinTime(cm.getJoinTime()));
             rows.add(row);
         }
         return rows;

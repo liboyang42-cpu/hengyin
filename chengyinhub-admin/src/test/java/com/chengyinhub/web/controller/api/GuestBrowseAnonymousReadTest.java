@@ -242,6 +242,7 @@ class GuestBrowseAnonymousReadTest {
         row.setNickname("阿城");
         row.setJoinMessage("我的手机号 13800000000");
         row.setReviewReason("内部备注");
+        row.setJoinTime(new java.util.Date(1793860877000L)); // 2026-11-05 14:41:17 北京时间
         when(members.selectClubMemberList(any())).thenReturn(new ArrayList<>(Collections.singletonList(row)));
         com.chengyinhub.business.domain.ClubMember body = new com.chengyinhub.business.domain.ClubMember();
         body.setClubId(5L);
@@ -254,6 +255,8 @@ class GuestBrowseAnonymousReadTest {
         assertEquals(1, rows.size());
         assertEquals("阿城", rows.get(0).get("nickname"));
         assertEquals(Boolean.TRUE, rows.get(0).get("isOwner"));
+        // 第十二轮 k7:与登录成员名单同一格式,不是 ISO 原样
+        assertEquals("2026-11-05 14:41:17", rows.get(0).get("joinTime"));
         for (String hidden : new String[]{"memberId", "joinMessage", "reviewReason", "reviewerMemberId", "phone", "id"}) {
             assertFalse(rows.get(0).containsKey(hidden), hidden + " 不得给游客");
         }
