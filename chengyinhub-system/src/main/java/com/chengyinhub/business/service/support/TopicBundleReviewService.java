@@ -132,7 +132,7 @@ public class TopicBundleReviewService {
             sortNodes(nodes);
             validateMerchantReferences(topic, nodes, merchantOwners);
         }
-        if (chapters.isEmpty() || nodes.isEmpty()) {
+        if (chapters.isEmpty() || (nodes.isEmpty() && !awaitsMerchantGameplay(topic, chapters, nodes))) {
             throw new IllegalArgumentException("专业主题至少需要一个章节和一个节点");
         }
 
