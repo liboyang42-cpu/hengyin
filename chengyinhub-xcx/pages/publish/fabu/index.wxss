@@ -3857,8 +3857,12 @@ page { background: var(--cy-btn-solid-bg); }
 }
 
 .slopes-submit-error {
-  display: block;
-  margin: var(--cy-space-3) var(--cy-page-x) 0;
+  position: fixed;
+  left: var(--cy-page-x);
+  right: var(--cy-page-x);
+  bottom: calc(210rpx + env(safe-area-inset-bottom) + var(--cy-space-3));
+  z-index: var(--cy-z-sheet);
+  background: var(--cy-color-bg-page);
 }
 
 .slopes-tabbar__tabs {
@@ -4958,7 +4962,7 @@ page { background: var(--cy-btn-solid-bg); }
 .sp-end__t { display: block; font-size: var(--cy-type-label); color: var(--cy-color-text-tertiary); }
 .sp-end__n { display: block; margin-top: 4rpx; font-size: var(--cy-type-section-title); font-weight: 700; color: var(--cy-color-text-primary); }
 .sp-bottom { height: calc(80rpx + env(safe-area-inset-bottom)); }
-.sp-top { position: absolute; left: 0; right: 0; top: 0; z-index: 2; height: 88rpx; box-sizing: content-box; display: flex; align-items: center; justify-content: space-between; padding-left: 24rpx; padding-right: 204rpx; }
+.sp-top { background: var(--cy-color-bg-page); position: absolute; left: 0; right: 0; top: 0; z-index: 2; height: 88rpx; box-sizing: content-box; display: flex; align-items: center; justify-content: space-between; padding-left: 24rpx; padding-right: 204rpx; }
 .sp-x { width: 88rpx; height: 88rpx; display: flex; align-items: center; justify-content: center; }
 .sp-x__c { width: 68rpx; height: 68rpx; border-radius: 50%; background: var(--cy-color-bg-glass); display: flex; align-items: center; justify-content: center; }
 /* 剧情弹窗:与编辑器同一套浅色(浅灰底 + 白色图卡) */

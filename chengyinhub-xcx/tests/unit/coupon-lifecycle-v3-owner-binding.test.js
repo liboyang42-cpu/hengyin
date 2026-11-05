@@ -342,3 +342,16 @@ test('负控:场景 refresh 不校验独立 seq 时旧回调必须能覆盖(证�
   done(old, 'OLD-TOKEN')
   assert.throws(() => assert.equal(instance.data.qr, 'NEW-TOKEN'), assert.AssertionError)
 })
+
+test('独立券页：归属拒绝清掉旧码，给返回而不是重试', () => {
+  for (const callback of ['success', 'successStatusAbnormal', 'fail']) {
+    const h = mount(QR_PAGE, 'page');
+    h.instance.onLoad({ couponHistoryId: '88' });
+    h.instance.onShow();
+    h.instance.data.qrcodeUrl = 'OLD-CREDENTIAL';
+    h.requests[0].opts[callback]({ code: 500, msg: '无权查看该券' });
+    assert.equal(h.instance.data.entryState, 'notmine', callback);
+    assert.equal(h.instance.data.qrcodeUrl, '', callback);
+    assert.equal(h.instance.data.countdown, 0, callback);
+  }
+});

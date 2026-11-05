@@ -283,3 +283,18 @@ test('俱乐部主理人发布后回列表不带 scope(负控)', () => {
   page.onResultSheetClose();
   assert.deepEqual(navigations, ['redirect:' + PROJECT_LIST + '?type=club_activity']);
 });
+
+test('活动聚合内容拒绝落在内容区域，网络失败仍可重试', () => {
+  const page = makePage();
+  let handlers;
+  page.getPublishWorkflow = () => ({ submit: (_, h) => { handlers = h; return true; } });
+  page.data.step = 2;
+  page.sendData({});
+  handlers.onFail({ msg: '活动内容包含违规信息，请修改后重试' });
+  assert.equal(page.data.step, 1);
+  assert.equal(page.data.errors.content, '活动内容包含违规信息，请修改后重试');
+  assert.equal(page.data.submitError, '');
+  page.sendData({});
+  handlers.onFail({ networkError: true, msg: '连接中断' });
+  assert.equal(page.data.submitError, '连接中断');
+});

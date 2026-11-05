@@ -13,7 +13,7 @@
     <cy-error load-failure fill="{{true}}" title="暂时无法确认身份" sub="{{accessError}}" bind:retry="retryAccessCheck" auto-back />
   </view>
   <view class="publish-access-state" wx:elif="{{accessState === 'denied'}}">
-    <cy-error fill size="lg" title="暂时不能发布活动" sub="{{deniedReason}}" retry="" bind:back="onNavBack" auto-back custom-back />
+    <cy-empty title="暂时不能发布活动" sub="{{deniedReason}}" cta="返回" bind:cta="onNavBack" />
   </view>
   <block wx:elif="{{accessState === 'ready'}}">
   <view class="publish-access-state" wx:if="{{activityLoadError}}">
@@ -85,7 +85,8 @@
       </view>
       </view>
 
-      <view wx:if="{{step === 1}}">
+      <view wx:if="{{step === 1}}" id="field-content">
+      <cy-inline-error class="form-inline-error" kind="field" wx:if="{{errors.content}}" title="{{errors.content}}" />
       <view class="li li2" id="field-description">
         <view class="item-tit">活动说明<text>*</text></view>
         <view class="item-cont item-cont2 {{focusField === 'description' ? 'is-focused' : ''}} {{errors.description ? 'is-error' : ''}}">
@@ -185,6 +186,16 @@
         </view>
       </view>
 
+    <view class="publish-review" wx:if="{{step === 2}}">
+      <!-- CU-C-103:这是编辑已有活动的**保存**页,不是发布页。原来不分新建/编辑都写
+           「发布前摘要」+「发布后会在活动列表展示,继续即按当前公开范围发布」,
+           用户会以为保存=重新发布或改公开范围(后端 /api/activity/update 只改内容,
+           不碰 publish_status,也不重新送审)。 -->
+      <view class="publish-review__title">{{editingActivityId ? '修改摘要' : '发布前摘要'}}</view>
+      <view class="publish-review__text">{{publishSummary}}</view>
+      <!-- j1 F6 / 文案表(第十轮 f3):新建那一路的「默认公开…」提示删去,摘要框变矮;编辑态仍说明保存不改公开范围 -->
+      <view class="publish-review__visibility" wx:if="{{editingActivityId}}">本次保存只更新上面这些内容，不会改变活动的公开范围。</view>
+    </view>
       <view>
         <cy-btn variant="secondary" style="width:268rpx;margin:20rpx auto 0 auto" bindtap="addTicket"><cy-icon name="plus" size="28" /> 添加票单</cy-btn>
       </view>
@@ -254,16 +265,6 @@
   </cy-sheet>
 
   <view class="fabu-btn safebot">
-    <view class="publish-review" wx:if="{{step === 2}}">
-      <!-- CU-C-103:这是编辑已有活动的**保存**页,不是发布页。原来不分新建/编辑都写
-           「发布前摘要」+「发布后会在活动列表展示,继续即按当前公开范围发布」,
-           用户会以为保存=重新发布或改公开范围(后端 /api/activity/update 只改内容,
-           不碰 publish_status,也不重新送审)。 -->
-      <view class="publish-review__title">{{editingActivityId ? '修改摘要' : '发布前摘要'}}</view>
-      <view class="publish-review__text">{{publishSummary}}</view>
-      <!-- j1 F6 / 文案表(第十轮 f3):新建那一路的「默认公开…」提示删去,摘要框变矮;编辑态仍说明保存不改公开范围 -->
-      <view class="publish-review__visibility" wx:if="{{editingActivityId}}">本次保存只更新上面这些内容，不会改变活动的公开范围。</view>
-    </view>
     <cy-inline-error wx:if="{{submitError}}" title="{{editingActivityId ? '修改没有保存' : '活动尚未发布'}}" sub="{{submitError}}" action="重试" bind:action="submitForm" />
     <view class="wrap flex-cb">
       <cy-btn wx:if="{{step === 0}}" variant="secondary" style="width:170rpx" bindtap="onCancel">取消</cy-btn>

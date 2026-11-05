@@ -35,7 +35,7 @@ const SEGMENTS = [
 
 const TIER_TEXT = {
   pending: '待核销',
-  abnormal: '异常',
+  abnormal: '有退款',
   dormant: '沉睡',
   repeat: '复购',
   new: '新客',

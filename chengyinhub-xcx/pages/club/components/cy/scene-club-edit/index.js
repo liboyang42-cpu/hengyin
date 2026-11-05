@@ -95,7 +95,7 @@ Component({
       this.setData({ loadState: 'loading', loadErrorText: '' });
       if (this.data.clubId) { this.fetchDetail(); return; }
       // 多俱乐部下不能猜 owned[0]：深链缺参时选错对象比打不开更危险。
-      that.setData({ loadState: 'missing-param', loadErrorText: '没有指定要编辑的俱乐部，请返回俱乐部页重新进入。' });
+      that.setData({ loadState: 'missing-param', loadErrorText: '' });
     },
 
     fetchDetail() {

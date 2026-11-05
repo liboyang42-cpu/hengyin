@@ -882,3 +882,14 @@ test('N5：保存在途新增未完成规则表单，正向回读也不能清掉
  assert.equal(t.page.data.themeSaveState,'local');
  assert.ok(Object.values(t.stored).some(v=>v && v.editorMeta && v.editorMeta.routeRuleDrafts.a));
 });
+
+test('内容安全拒绝的修改动作保留草稿，不重新提交原文', () => {
+  const { page, sent } = loadPage();
+  let closed = 0, submitted = 0;
+  page.closePublishCheck = () => closed++;
+  page.submitForm = () => submitted++;
+  page.data.submitError = '内容未通过安全检查，请修改后重试';
+  page.editRejectedContent();
+  assert.equal(closed, 1); assert.equal(submitted, 0); assert.equal(sent.length, 0);
+  assert.equal(page.data.formData.name, '寒冬');
+});

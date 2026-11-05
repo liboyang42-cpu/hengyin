@@ -8,7 +8,7 @@
       <text class="lp__kick">{{sample.kick}}</text>
       <text class="lp__title">{{sample.title}}</text>
       <view class="lp__story tfx tfx--{{fx}} {{fxIn ? 'is-in' : ''}}"><text wx:if="{{chars}}" wx:for="{{chars}}" wx:for-item="c" wx:key="i" class="tfx__c {{c.raw ? 'is-raw' : ''}}" style="--i:{{c.i}};--r:{{c.r}};--dx:{{c.dx}}px;--dy:{{c.dy}}px">{{c.ch}}</text><block wx:if="{{!chars}}">{{sample.story}}</block></view>
-      <view class="lp__opt"><text class="lp__opt-k">A</text><text>{{sample.opt}}</text></view>
+      <view class="lp__opt" wx:if="{{sample.opt}}"><text class="lp__opt-k">A</text><text>{{sample.opt}}</text></view>
     </view>
     <canvas type="2d" id="lpfront" class="lp__fx lp__fx--front"></canvas>
   </view>

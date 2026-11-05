@@ -513,6 +513,7 @@ Page({
     editLoadIsAccess: false,
     submitting: false,
     submitError: '',
+    submitErrorNeedsEdit: false,
     /* 动作结果面板(cy-result-sheet)。loading 不自愈,终态 2s 自收。
        duration=0 表示不自愈 —— 失败原因要留够读的时间。 */
     resultSheet: { show: false, kind: 'success', title: '', sub: '', why: '', duration: 2000 },
@@ -689,7 +690,7 @@ Page({
     this._draftAutosaveReady = true;
     this._resultSheetNext = '';
     const reason = '本次提交的结果已确认，但当前修改未能保存到本机。请勿退出，腾出存储空间后继续编辑以重试保存。';
-    this.setData({ submitting: false, draftSaving: false, editIsDraft: false, submitError: reason,
+    this.setData({ submitting: false, draftSaving: false, editIsDraft: false, submitError: reason, submitErrorNeedsEdit: publishIssueTarget.isContentRejection(reason),
       themeSaveState: 'localFailed', themeSaveLabel: SAVE_STATE_LABELS.localFailed,
       resultSheet: { show: true, kind: 'fail', title: rejected ? '审核未通过，修改尚未保存' : '后续修改尚未保存',
         sub: '请勿离开本页', meta: '当前修改尚未保存',
@@ -6700,6 +6701,8 @@ Page({
       ],
       switches,
       look: look.look || null,
+      lookSample: { kick: fd.name || '', title: ((fd.chapters || [])[0] || {}).name || '',
+        story: ((fd.chapters || [])[0] || {}).description || '', opt: '' },
       lookRows: [
         { k: '风格', v: lookOn(look.styles) },
         { k: '主题配色', v: lookOn(look.palettes) },
@@ -7871,13 +7874,13 @@ Page({
         const issue = publishIssueTarget.fromMessage(message,
           that.data.formData.chapters, that._templateDetailsById);
         if (issue) {
-          that.setData({ submitting: false, submitError: reason });
+          that.setData({ submitting: false, submitError: reason, submitErrorNeedsEdit: publishIssueTarget.isContentRejection(reason) });
           that._showBackendPublishIssue(issue);
           return;
         }
         that.setData({
           submitting: false,
-          submitError: reason,
+          submitError: reason, submitErrorNeedsEdit: publishIssueTarget.isContentRejection(reason),
           // 面板只负责「说清楚发生了什么」,它自愈;重试出口是页内那条 cy-inline-error,
           // 它跟着 submitError 一直留在页上 —— 把恢复动作放进会自己消失的面板里是丢出口。
           // meta 带「草稿仍在本机」(稿 D):失败这一刻用户最想知道的是"我白写了吗",
@@ -8206,7 +8209,7 @@ Page({
     }
     const issue = res.stage === 'save' && !res.networkError && publishIssueTarget.fromMessage(reason,
       this.data.formData.chapters, this._templateDetailsById);
-    this.setData({ draftSaving: false, submitting: false, submitError: reason,
+    this.setData({ draftSaving: false, submitting: false, submitError: reason, submitErrorNeedsEdit: publishIssueTarget.isContentRejection(reason),
       themeSaveState: saveState, themeSaveLabel: SAVE_STATE_LABELS[saveState] });
     if (issue) {
       this._showBackendPublishIssue(issue);
@@ -8276,7 +8279,7 @@ Page({
     const reason = this.data.editingTopicId
       ? '发布结果暂时无法确认，请到项目列表确认原主题。采用已保存版本前不会再次发布，本地草稿已保留。'
       : '发布结果暂时无法确认，请到项目列表确认。为避免重复创建，当前草稿不会再次发布，内容仍在本机。';
-    this.setData({ submitting: false, submitError: reason,
+    this.setData({ submitting: false, submitError: reason, submitErrorNeedsEdit: publishIssueTarget.isContentRejection(reason),
       resultSheet: { show: true, kind: 'fail', title: '发布结果待确认',
         sub: '请先确认项目列表', meta: '草稿仍在本机', why: reason, duration: RESULT_SHEET_MS } });
   },
@@ -8292,6 +8295,11 @@ Page({
   },
 
   // 稿 S15/S16 的「为什么会这样」:出错时除了那一句结果,还得能展开看到人能照做的下一步。
+  editRejectedContent() {
+    this.closePublishCheck();
+    this.setData({ submitError: '', submitErrorNeedsEdit: false });
+  },
+
   toggleSubmitErrorWhy() { this.setData({ submitErrorWhy: !this.data.submitErrorWhy }); },
 
   /**

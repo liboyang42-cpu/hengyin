@@ -414,18 +414,6 @@
 
     <include src="./step3.wxml" />
 
-  <cy-inline-error class="slopes-submit-error" wx:if="{{submitError}}" kind="network"
-    title="这次还没有保存" sub="{{submitError}}" action="重试" bind:action="submitForm" />
-  <!-- 稿 S16:错误那一句之外还有一条可展开的「为什么会这样」。一句结果只说了"失败了",
-       人下一步该动哪儿仍然不知道;展开里写的是**能照着做的那一步**。 -->
-  <view class="submit-error-why" wx:if="{{submitError}}">
-    <view class="submit-error-why__toggle" bindtap="toggleSubmitErrorWhy"
-          aria-role="button" aria-label="为什么会这样" hover-class="cy-pressed" hover-stay-time="80">
-      <text>为什么会这样</text>
-      <cy-icon name="{{submitErrorWhy ? 'collapse' : 'expand'}}" size="24" />
-    </view>
-    <text class="submit-error-why__body" wx:if="{{submitErrorWhy}}">草稿已存本机，可稍后重试</text>
-  </view>
     <view class="slopes-sheet-bottom"></view>
   </scroll-view>
 
@@ -704,6 +692,23 @@
   </view>
 
 
+
+  <view class="slopes-submit-error" wx:if="{{submitError}}">
+  <cy-inline-error wx:if="{{submitErrorNeedsEdit}}" kind="network"
+    title="这次还没有保存" sub="{{submitError}}" action="去修改" bind:action="editRejectedContent" />
+  <cy-inline-error wx:else kind="network"
+    title="这次还没有保存" sub="{{submitError}}" action="重试" bind:action="submitForm" />
+  <!-- 稿 S16:错误那一句之外还有一条可展开的「为什么会这样」。一句结果只说了"失败了",
+       人下一步该动哪儿仍然不知道;展开里写的是**能照着做的那一步**。 -->
+  <view class="submit-error-why" wx:if="{{submitError}}">
+    <view class="submit-error-why__toggle" bindtap="toggleSubmitErrorWhy"
+          aria-role="button" aria-label="为什么会这样" hover-class="cy-pressed" hover-stay-time="80">
+      <text>为什么会这样</text>
+      <cy-icon name="{{submitErrorWhy ? 'collapse' : 'expand'}}" size="24" />
+    </view>
+    <text class="submit-error-why__body" wx:if="{{submitErrorWhy}}">{{submitErrorNeedsEdit ? '修改后重试' : '草稿已存本机，可稍后重试'}}</text>
+  </view>
+  </view>
 
   <!-- 底部导航条(Figma 4028:13649):左侧两个 tab 切「内容 / 地图」,右侧一颗药丸是主动作。
        取代原来的「顶部进度条 + 下一步/上一步」—— 三个控件干同一件事(换页),留一个就够。
@@ -1357,7 +1362,7 @@
   <!-- P-9(2026-10-31 业主批准):主页面浅色,与专业主题编辑器同一套;封面 / 标题 / 详情 / 票务 / 主题设置 /
        发布后的合作 / 画面风格 / 剧情都在主页面上,每一行点了回到编辑器里那一项。只有「看剧情」用弹窗(也是浅色)。
        挡住发布的问题列在封面下面,写清在哪里,「去修改」直接定位;票务行 / 章节行同步标红。 -->
-  <view class="sp" wx:if="{{publishCheck.show}}" catchtouchmove="noop">
+  <view class="sp" style="padding-top: {{statusBarHeight + navBarHeight}}px; box-sizing: border-box;" wx:if="{{publishCheck.show}}" catchtouchmove="noop">
     <scroll-view class="sp-scroll" scroll-y enhanced show-scrollbar="{{false}}">
       <view class="sp-hero">
         <image wx:if="{{publishCheck.preview.cover}}" class="sp-hero__img" src="{{publishCheck.preview.cover}}" mode="aspectFill" />
@@ -1418,7 +1423,7 @@
 
         <view class="sp-sec">画面风格</view>
         <view class="sp-look" data-target="look" bindtap="onPreviewEdit" aria-role="button" aria-label="画面风格，去修改" hover-class="cy-pressed" hover-stay-time="80">
-          <cy-look-preview class="sp-look__pv" embedded="{{true}}" show="{{publishCheck.show && !storyPop.show}}" look="{{publishCheck.preview.look}}" />
+          <cy-look-preview class="sp-look__pv" embedded="{{true}}" show="{{publishCheck.show && !storyPop.show}}" look="{{publishCheck.preview.look}}" content="{{publishCheck.preview.lookSample}}" />
           <view class="sp-group">
             <view class="sp-row" wx:for="{{publishCheck.preview.lookRows}}" wx:key="k">
               <text class="sp-row__k">{{item.k}}</text><text class="sp-row__v">{{item.v}}</text><cy-icon name="chevron-right" size="24" />
@@ -1443,7 +1448,7 @@
         <view class="sp-bottom"></view>
       </view>
     </scroll-view>
-    <view class="sp-top" style="padding-top: {{statusBarHeight}}px;">
+    <view class="sp-top" style="height: {{navBarHeight}}px; padding-top: {{statusBarHeight}}px;">
       <view class="sp-x" bindtap="closePublishCheck" aria-role="button" aria-label="退出预览，回到配置" hover-class="cy-pressed" hover-stay-time="80"><view class="sp-x__c"><cy-icon name="close" size="32" /></view></view>
       <cy-btn class="sp-done" variant="primary" size="sm" loading="{{submitting}}" disabled="{{!!publishCheck.blocking.length}}" aria-disabled="{{!!publishCheck.blocking.length}}"
               bind:disabledtap="onPublishCheckDisabledTap" bindtap="confirmPublishCheck">完成</cy-btn>

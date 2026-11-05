@@ -4,6 +4,7 @@ const authorWrites = require('../../../utils/author-write-recovery.js');
 const mediaPreview = require('../../../utils/media-preview.js');
 const cyToast = require('../../../utils/toast.js');
 const { isAlbumTemplate, ALBUM_ONLY_IN_STORY } = require('../../../utils/album-template.js');
+const { isContentRejection } = require('../utils/publish/publish-issue-target.js')
 const app = getApp()
 const { memberId, failureStatus, retryLogin, waitForInitialSession, recoverReadSession } = require('../../../utils/session/login-reload.js')
 const publisherIdentity = require('../../../utils/publisher-identity.js')
@@ -34,7 +35,7 @@ const STEPS = [
   { key: 'basic', title: '基本信息', heading: '这场活动叫什么、在哪儿办？',
     fields: ['name', 'addressName', 'startDate', 'endDate', 'categoryIds'] },
   { key: 'content', title: '活动内容', heading: '这场活动玩什么？',
-    fields: ['description', 'imgUrl', 'templateId'] },
+    fields: ['content', 'description', 'imgUrl', 'templateId'] },
   { key: 'ticket', title: '票务与合作', heading: '这场活动怎么卖票？',
     fields: ['ticket*'] },
 ]
@@ -486,6 +487,7 @@ Page({
       startDate: '#field-date',
       endDate: '#field-date',
       categoryIds: '#field-category',
+      content: '#field-content',
       description: '#field-description',
       imgUrl: '#field-cover',
       templateId: '#field-template'
@@ -706,7 +708,12 @@ Page({
         const message = res && res.networkError
           ? (res.msg || '还没确认是否保存成功，再提交一次即可，不会重复保存')
           : (app.getRequestErrorMessage ? app.getRequestErrorMessage(res, that.editingActivityId ? '保存失败，请重试' : '发布失败，请重试') : ((res && res.msg) || (that.editingActivityId ? '保存失败，请重试' : '发布失败，请重试')))
-        that.setData({ submitting: false, submitError: message })
+        if (!(res && res.networkError) && isContentRejection(message)) {
+          that.setData({ submitting: false, submitError: '', 'errors.content': message })
+          that.scrollToError('content')
+        } else {
+          that.setData({ submitting: false, submitError: message })
+        }
       }
     })
     // submit 在途会返回 false(防重),仅真正发起时点亮 loading

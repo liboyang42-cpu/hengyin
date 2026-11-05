@@ -10,7 +10,7 @@
 
   <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="3" loading-label="正在加载入会申请" />
   <cy-empty wx:elif="{{state === 'missing-param'}}" fill size="lg" kind="missing-param" title="无法打开入会申请"
-            sub="{{errorText}}" cta="返回俱乐部" bind:cta="goBack" />
+            sub="" cta="返回俱乐部" bind:cta="goBack" />
   <cy-error load-failure class="cy-fade-in" wx:elif="{{state === 'business-error'}}" title="入会申请加载失败" sub="{{errorText}}" retry="重新加载" bind:retry="loadRequests" />
   <cy-error load-failure wx:elif="{{state === 'network-error'}}" title="网络连接失败" sub="{{errorText}}" retry="重新加载" bind:retry="loadRequests" />
 
