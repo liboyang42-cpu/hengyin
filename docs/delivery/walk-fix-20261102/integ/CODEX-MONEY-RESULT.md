@@ -21,7 +21,8 @@
 - [自玩原始分项真库回归](https://github.com/liboyang42-cpu/hengyin/actions/runs/41994563030)：候选 `6cd4e2572`，4/4，零跳过，独立清理回读 CLEAN。真实结算服务生成原分项；受控历史打款夹具后，真实退款分项入口扣主理人 9 元，重试不重复扣。不是 HTTP 或真机走查。
 - `9f2bee366` 的后端执行记录：四个关联类共 38 条通过（费率收敛 24、原始分项 9、中文字段 2、主题绑定文本安全 3）。后端整体当时仍红，不能当作全量通过。
 - 资金修复前两轮 VPS 定点单测分别 75 条、31 条通过；提交钩子编译在测试 VPS 执行，没有在 Mac 运行 Java。
-- `a8b142029` 的五类资金关联 VPS 定点请求在测试执行前遇到 `Java heap space`，不能记为通过。保留日志后准备复用 Play 现有脚本的 1 GB 堆／256 MB 元空间／SerialGC 参数；请求实际被 `another_build_holds_lock` 拒绝（75，containerId=null），未启动。helper 的 1.5 GB 总内存、1 CPU、离线模式及互斥锁不变。协调人已将下一空档留给 Play 的 7 套测试＋共享 JAR，root 不继续抢锁。资金重试脚本在 VPS 的 `codex-launch-fixes-20261105/money-a8b142029/money-focused-1g.sh`；需等共享候选更新后再安排。
+- `a8b142029` 的五类资金关联 VPS 定点请求在测试执行前遇到 `Java heap space`，不能记为通过。保留日志后准备复用 Play 现有脚本的 1 GB 堆／256 MB 元空间／SerialGC 参数；请求实际被 `another_build_holds_lock` 拒绝（75，containerId=null），未启动。helper 的 1.5 GB 总内存、1 CPU、离线模式及互斥锁不变。root 不继续抢锁；预算入口只用于 Java 单测，JAR 不再在 VPS 排队。资金重试脚本在 VPS 的 `codex-launch-fixes-20261105/money-a8b142029/money-focused-1g.sh`；需等当前单测锁释放后安排。
+- [GitHub JAR 构建 42006455345](https://github.com/liboyang42-cpu/hengyin/actions/runs/42006455345) 成功，来源 `da9b30f1dd770ce0c4cc55b278e9d08e1ad99a7f`。下载后校验附带 SHA256、SOURCE_SHA、内嵌 git 提交号与 ZIP CRC 均通过，[核验收据](proof/codex-money-20261105/backend-jar-da9-verification.json)。SHA256 为 `f4c1fe89441cf2cba7feb03addf3774c17aed23fe6bff17e6d5d1a02c681f429`，下载目录 `/tmp/codex-launch-backend-jar-da9b30f1dd770ce0c4cc55b278e9d08e1ad99a7f`。artifact 保留 1 天；没有重复触发构建、没有部署、没有执行 Java 测试。产物已交给 Play 这一共享应用管理者；root 未新建后端，也未复制进或重启 Play 容器。运行态 SHA 仍须重启后独立读回，构建成功不等于运行态已更新。
 - 真库登记负控 92 条通过；130 个登记类源码预检无漂移。统一真库计划按类去重，不重复执行重叠批次来凑并行数。
 - 两个旧走查请求编号的密钥误报只按具体路径和完整原行放行；22 个负控通过，换值、改成凭据字段、追加凭据或换路径仍拒绝。候选历史扫描零发现。
 
