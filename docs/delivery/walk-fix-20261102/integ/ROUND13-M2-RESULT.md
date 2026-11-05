@@ -113,6 +113,6 @@ Checks on the pushed commit: ledger `--check` 5743 controls PASS before the fina
 
 **Story-flow game list previews.** From a new draft's node sheet (新建故事玩法) I pressed 预览 on 13 rows in turn (the supported ones, such as 选项问答, 拍照打卡, 分支剧情, 排序, 连线, 分类, 猜数字, and the unsupported 角色建档 and 拍照审核). Each opened the preview and went back to the list. A script checked every visible text in each preview for contrast against its background (below 1.6 would be flagged): none flagged. I did not look at each preview by eye; I did not press 配置 on the rows or walk the rest of the list. This list shows 「这种玩法暂时无法确认是否完成（通用结算）」 under unsupported games; left as is (a disabled reason).
 
-Checks: `b02-publish-write-unknown` 13 pass; ledger and `ui-integrity.js` not re-run after the last two commits.
+Checks: `b02-publish-write-unknown` 13 pass; ledger `--check` PASS (5743 controls) and `ui-integrity.js` PASS after moving one baseline key (fabu/index.js 9344→9362, same code) and its digest.
 
-STATUS: PARTIAL - the masked publish error is fixed (server 400 with the plain reason, station named, 「去修改」 opens it) and walked; P1, L1 and the backpack chip are walked in a real run; P3 is not (the scan station never opened its scan screen in the rig), the story-flow list previews were only checked by script for 13 rows, and the ledger and ui-integrity were not re-run
+STATUS: PARTIAL - the masked publish error is fixed (server 400 with the plain reason, station named, 「去修改」 opens it) and walked; P1, L1 and the backpack chip are walked in a real run; P3 is not (the scan station never opened its scan screen in the rig), the story-flow list previews were only checked by script for 13 rows

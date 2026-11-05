@@ -1214115,7 +1214115,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9056"
+        "staticSource": "pages/publish/fabu/index.js:9074"
       }
     },
     {
@@ -1218269,7 +1218269,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9017"
+        "staticSource": "pages/publish/fabu/index.js:9035"
       }
     },
     {
@@ -1220630,7 +1220630,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8300"
+        "staticSource": "pages/publish/fabu/index.js:8303"
       }
     },
     {
@@ -1228133,32 +1228133,99 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "write",
       "interactionMode": "event-contract",
-      "baseActionClass": "state",
+      "baseActionClass": "write",
       "effectClasses": [
+        "write",
         "state"
       ],
-      "accessBoundary": null,
+      "accessBoundary": "owned-resource",
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/play/theme/support-matrix",
+          "/api/publisher/identity",
+          "/api/publisher/identity/status",
+          "/api/role/info",
+          "/api/template/author-myinfo"
+        ],
+        "primaryApis": [
+          "/api/play/theme/support-matrix",
+          "/api/publisher/identity",
+          "/api/publisher/identity/status",
+          "/api/template/author-myinfo"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/theme/support-matrix",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/publisher/identity",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/publisher/identity/status",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/template/author-myinfo",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success"
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8308"
+        "staticSource": "pages/publish/fabu/index.js:8311"
       }
     },
     {
@@ -1228415,7 +1228482,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8313"
+        "staticSource": "pages/publish/fabu/index.js:8331"
       }
     },
     {
@@ -1228483,7 +1228550,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9017"
+        "staticSource": "pages/publish/fabu/index.js:9035"
       }
     },
     {
@@ -1228641,7 +1228708,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9017"
+        "staticSource": "pages/publish/fabu/index.js:9035"
       }
     },
     {
@@ -1232683,7 +1232750,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9017"
+        "staticSource": "pages/publish/fabu/index.js:9035"
       }
     },
     {
@@ -1234510,7 +1234577,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8441"
+        "staticSource": "pages/publish/fabu/index.js:8459"
       }
     },
     {
@@ -1234578,7 +1234645,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9017"
+        "staticSource": "pages/publish/fabu/index.js:9035"
       }
     },
     {
@@ -1234645,7 +1234712,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8441"
+        "staticSource": "pages/publish/fabu/index.js:8459"
       }
     },
     {
@@ -1234712,7 +1234779,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8395"
+        "staticSource": "pages/publish/fabu/index.js:8413"
       }
     },
     {
@@ -1234779,7 +1234846,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8448"
+        "staticSource": "pages/publish/fabu/index.js:8466"
       }
     },
     {
@@ -1234913,7 +1234980,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9044"
+        "staticSource": "pages/publish/fabu/index.js:9062"
       }
     },
     {
@@ -1235081,7 +1235148,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8542"
+        "staticSource": "pages/publish/fabu/index.js:8560"
       }
     },
     {
@@ -1235401,7 +1235468,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9212"
+        "staticSource": "pages/publish/fabu/index.js:9230"
       }
     },
     {
@@ -1235527,7 +1235594,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8994"
+        "staticSource": "pages/publish/fabu/index.js:9012"
       }
     },
     {
@@ -1235652,7 +1235719,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9019"
+        "staticSource": "pages/publish/fabu/index.js:9037"
       }
     },
     {
@@ -1235788,7 +1235855,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8802"
+        "staticSource": "pages/publish/fabu/index.js:8820"
       }
     },
     {
@@ -1235873,7 +1235940,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8790"
+        "staticSource": "pages/publish/fabu/index.js:8808"
       }
     },
     {
@@ -1235940,7 +1236007,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8871"
+        "staticSource": "pages/publish/fabu/index.js:8889"
       }
     },
     {
@@ -1236823,7 +1236890,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9056"
+        "staticSource": "pages/publish/fabu/index.js:9074"
       }
     },
     {
@@ -1236959,7 +1237026,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9056"
+        "staticSource": "pages/publish/fabu/index.js:9074"
       }
     },
     {
@@ -1237076,7 +1237143,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8712"
+        "staticSource": "pages/publish/fabu/index.js:8730"
       }
     },
     {
@@ -1237193,7 +1237260,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9094"
+        "staticSource": "pages/publish/fabu/index.js:9112"
       }
     },
     {
@@ -1237275,7 +1237342,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8517"
+        "staticSource": "pages/publish/fabu/index.js:8535"
       }
     },
     {
@@ -1237357,7 +1237424,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8517"
+        "staticSource": "pages/publish/fabu/index.js:8535"
       }
     },
     {
@@ -1237439,7 +1237506,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8517"
+        "staticSource": "pages/publish/fabu/index.js:8535"
       }
     },
     {
@@ -1240138,7 +1240205,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8378"
+        "staticSource": "pages/publish/fabu/index.js:8396"
       }
     },
     {
@@ -1240272,7 +1240339,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8384"
+        "staticSource": "pages/publish/fabu/index.js:8402"
       }
     },
     {
@@ -1240339,7 +1240406,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8375"
+        "staticSource": "pages/publish/fabu/index.js:8393"
       }
     },
     {
