@@ -2,6 +2,7 @@ const modal = require('../../../utils/modal.js');
 const toast = require('../../../utils/toast.js'); function openAddress() { return require('../../../utils/open-address.js') }
 const app = getApp();
 const roleGuard = require('../../../utils/roleGuard.js');
+const { isValidMobile } = require('../../../utils/form-state.js');
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const merchantIdentity = require('../../../utils/merchant-identity-policy.js');
 const { isLoginRequired, retryLogin } = require('../../../utils/session/login-reload.js');
@@ -370,6 +371,7 @@ Page({
       // M-16(l5):行业类型必填,同样写在该行下方红字
       if (!d.industryIds.length) errors.industryIds = '请选择行业类型';
       if (!d.phone) errors.phone = '请填写联系电话';
+      else if (!isValidMobile(d.phone)) errors.phone = '请填写11位手机号';
     } else if (d.step === 2) {
       if (!d.address) errors.address = '请填写店铺地址';
       if (!d.businessTime) errors.businessTime = '请选择营业时间';
@@ -443,7 +445,7 @@ Page({
 
   validate() {
     var d = this.data, ok = false;
-    if (d.step === 1) ok = !!(d.name && d.phone && d.industryIds.length);
+    if (d.step === 1) ok = !!(d.name && isValidMobile(d.phone) && d.industryIds.length);
     else if (d.step === 2) ok = !!(d.address && d.businessTime);
     else if (d.step === 3) ok = !!d.businessLicense;
     // 预览确认页的硬性缺项只有实名:姓名 + 身份证号 + 单独同意三项齐了「提交申请」才亮
