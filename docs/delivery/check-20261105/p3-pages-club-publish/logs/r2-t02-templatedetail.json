@@ -1,0 +1,91 @@
+{
+ "id": "r2-t02-templatedetail",
+ "path": "pages/templatedetail/templatedetail?id=6005&scope=my",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "__onTap||{}",
+   "h": "__onTap",
+   "txt": "",
+   "w": 299,
+   "hgt": 46,
+   "y": 252,
+   "route": "pages/publish/temp/index",
+   "newText": "编辑玩法模板 | 上传玩法封面 | * | 模板信息 | 玩法看点 | * | 34/34 | 所需材料 | 商铺类型 | 户外 | 保存草稿 | 查看预览",
+   "shot": "r2-t02-templatedetail-t01",
+   "result": "navigates"
+  },
+  {
+   "key": "goPrimary|继续编辑|{}",
+   "h": "goPrimary",
+   "txt": "继续编辑",
+   "w": 299,
+   "hgt": 46,
+   "y": 252,
+   "route": "pages/publish/temp/index",
+   "newText": "编辑玩法模板 | 上传玩法封面 | * | 模板信息 | 玩法看点 | * | 34/34 | 所需材料 | 商铺类型 | 户外 | 保存草稿 | 查看预览",
+   "shot": "r2-t02-templatedetail-t02",
+   "result": "navigates"
+  },
+  {
+   "key": "onTab|详情|{\"key\":\"details\"}",
+   "h": "onTab",
+   "txt": "详情",
+   "w": 54,
+   "hgt": 46,
+   "y": 331,
+   "route": "pages/templatedetail/templatedetail",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "onTab|能力|{\"key\":\"capabilities\"}",
+   "h": "onTab",
+   "txt": "能力",
+   "w": 54,
+   "hgt": 46,
+   "y": 331,
+   "route": "pages/templatedetail/templatedetail",
+   "newText": "方式 | 节点预览 | 场景 | 户外 | 这是玩法模板，不能直接开团 | 这是你的玩法模板，可以继续编辑；玩家要在活动发布后才能玩到。",
+   "shot": "r2-t02-templatedetail-t03",
+   "result": "ui change"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "pages/templatedetail/templatedetail"
+ ],
+ "text": "喷泉的水柱 | 玩家二号 | 继续编辑 | 详情 | 能力 | 简介 | 人民广场音乐喷泉中央最高的那根水柱旁，有几盏地灯围成一圈？（填数字） | 0 | 采用次数 | 0 | 评分 | 8 分钟 | 预计时长 | 怎么验证 | 核验方式 | 文字验证 | 节点题面 | 人民广场音乐喷泉中央最高的那根水柱旁，有几盏地灯围成一圈？（填数字） | 难度 普通 | 8 分钟 | 2-4人 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "text_s1": "核验方式 | 文字验证 | 节点题面 | 人民广场音乐喷泉中央最高的那根水柱旁，有几盏地灯围成一圈？（填数字） | 难度 普通 | 8 分钟 | 2-4人 | 分类与适用场景 | 户外 | 包含内容 | 喷泉的水柱 · 标准玩法 | 评价 | 0 | 来自真实到店玩家 | 这是玩法模板，不能直接开团 | 这是你的玩法模板，可以继续编辑；玩家要在活动发布后才能玩到。 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 5,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/templatedetail/templatedetail"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] onReady pages/templatedetail/templatedetail JSHandle@error",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207837&OSSAccessKeyId=rigdummy&Signature=6eYiHLRXeSF2YZRzetdayYGLx1M%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] onReady pages/templatedetail/templatedetail JSHandle@error",
+   "[error] setData cb JSHandle@error",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

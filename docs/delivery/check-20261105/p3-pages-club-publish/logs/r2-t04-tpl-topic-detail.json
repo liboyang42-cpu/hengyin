@@ -1,0 +1,90 @@
+{
+ "id": "r2-t04-tpl-topic-detail",
+ "path": "pages/templatedetail/topic-detail/index?id=990015",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "__onTap||{}",
+   "h": "__onTap",
+   "txt": "",
+   "w": 299,
+   "hgt": 46,
+   "y": 252,
+   "route": "pages/publish/fabu/index",
+   "newText": "* | 主题详情 | 还有 1 项未填 | * | 模式 | 城市定向 | 切换 | 票务 | 票务设置 | 编辑 | 剧情已写 | 2 节点",
+   "shot": "r2-t04-tpl-topic-detail-t01",
+   "result": "navigates"
+  },
+  {
+   "key": "useTemplate|应用|{}",
+   "h": "useTemplate",
+   "txt": "应用",
+   "w": 299,
+   "hgt": 46,
+   "y": 252,
+   "route": "pages/publish/fabu/index",
+   "newText": "* | 主题详情 | 还有 1 项未填 | * | 模式 | 城市定向 | 切换 | 票务 | 票务设置 | 编辑 | 剧情已写 | 2 节点",
+   "shot": "r2-t04-tpl-topic-detail-t02",
+   "result": "navigates"
+  },
+  {
+   "key": "onTab|详情|{\"key\":\"details\"}",
+   "h": "onTab",
+   "txt": "详情",
+   "w": 54,
+   "hgt": 46,
+   "y": 331,
+   "route": "pages/templatedetail/topic-detail/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "onTab|能力|{\"key\":\"capabilities\"}",
+   "h": "onTab",
+   "txt": "能力",
+   "w": 54,
+   "hgt": 46,
+   "y": 331,
+   "route": "pages/templatedetail/topic-detail/index",
+   "newText": "城市定向 | 3 个玩法 | 3 站 | 约 45 分钟 | 喷泉的水柱 | 到达人民广场音乐喷泉附近开始答题。 | 约 8 分钟 | 博物馆的鼎 | 到达上海博物馆附近开始答题。 | 约 8 分钟 | 大世界的塔楼 | 到达大世界附近开始答题。",
+   "shot": "r2-t04-tpl-topic-detail-t03",
+   "result": "ui change"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "pages/templatedetail/topic-detail/index"
+ ],
+ "text": "人民广场 · 喷泉报时 | 城瘾 | 应用 | 详情 | 能力 | 剧情 | 90 分钟城市定向：人民广场出发，经上海博物馆，在大世界收尾。2 章 3 站，适合 2–4 人一队。 | 第一章 广场的回声 | 傍晚的人民广场，喷泉开始报时。跟着水声找到第一条线索。 | 1 | 人民广场音乐喷泉 | 2 | 上海博物馆 | 第二章 大世界的灯 | 线索指向东边的老游乐场。塔楼的灯一盏盏亮起来。 | 3 | 大世界 | 2 | 章节 | 3 | 节点 | 45 分钟 | 总时长 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 5,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/templatedetail/topic-detail/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207751&OSSAccessKeyId=rigdummy&Signature=X4z7UJG%2BXRrJAx66RO1dWDyjrT4%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207754&OSSAccessKeyId=rigdummy&Signature=ADBjvSzMHlyxllJ0MLB0IbZxsgk%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207761&OSSAccessKeyId=rigdummy&Signature=b1YkNLXFSE%2Fg%2F1S9HYuQTqvobbs%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

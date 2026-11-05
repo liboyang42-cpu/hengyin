@@ -1,0 +1,113 @@
+{
+ "id": "r2-t07-mytemplate",
+ "path": "subpackageMember/mytemplate/mytemplate",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "goInfo|喷 0 0 次引用|{\"index\":0}",
+   "h": "goInfo",
+   "txt": "喷 0 0 次引用",
+   "w": 332,
+   "hgt": 266,
+   "y": 178,
+   "route": "pages/templatedetail/templatedetail",
+   "newText": "玩家二号 | 继续编辑 | 详情 | 能力 | 简介 | 采用次数 | 8 分钟 | 预计时长 | 怎么验证 | 核验方式 | 文字验证 | 节点题面",
+   "shot": "r2-t07-mytemplate-t01",
+   "result": "navigates"
+  },
+  {
+   "key": "toggleDropdown||{\"index\":0}",
+   "h": "toggleDropdown",
+   "txt": "",
+   "w": 46,
+   "hgt": 46,
+   "y": 454,
+   "route": "subpackageMember/mytemplate/mytemplate",
+   "newText": "提交广场审核 | 删除节点玩法",
+   "result": "ui change"
+  },
+  {
+   "key": "goInfo|博 0 0 次引用|{\"index\":1}",
+   "h": "goInfo",
+   "txt": "博 0 0 次引用",
+   "w": 332,
+   "hgt": 266,
+   "y": 825,
+   "route": "pages/templatedetail/templatedetail",
+   "newText": "博物馆的鼎 | 玩家二号 | 继续编辑 | 详情 | 能力 | 简介 | 上海博物馆的建筑外形像哪一件古代器物？ | 采用次数 | 8 分钟 | 预计时长 | 怎么验证 | 核验方式",
+   "shot": "r2-t07-mytemplate-t02",
+   "result": "navigates"
+  },
+  {
+   "key": "toggleDropdown||{\"index\":1}",
+   "h": "toggleDropdown",
+   "txt": "",
+   "w": 46,
+   "hgt": 46,
+   "y": 1102,
+   "route": "subpackageMember/mytemplate/mytemplate",
+   "newText": "博物馆的鼎 | 上海博物馆的建筑外形像哪一件古代器物？ | 提交广场审核 | 删除节点玩法 | 大",
+   "shot": "r2-t07-mytemplate-t03",
+   "result": "ui change"
+  },
+  {
+   "key": "goInfo|大 0 0 次引用|{\"index\":2}",
+   "h": "goInfo",
+   "txt": "大 0 0 次引用",
+   "w": 332,
+   "hgt": 266,
+   "y": 1450,
+   "route": "pages/templatedetail/templatedetail",
+   "newText": "大世界的塔楼 | 玩家二号 | 继续编辑 | 详情 | 能力 | 简介 | 大世界转角塔楼一共有几层？（填数字） | 采用次数 | 8 分钟 | 预计时长 | 怎么验证 | 核验方式",
+   "result": "navigates"
+  },
+  {
+   "key": "toggleDropdown||{\"index\":2}",
+   "h": "toggleDropdown",
+   "txt": "",
+   "w": 46,
+   "hgt": 46,
+   "y": 1726,
+   "route": "subpackageMember/mytemplate/mytemplate",
+   "newText": "大 | 大世界的塔楼 | 大世界转角塔楼一共有几层？（填数字） | 提交广场审核 | 删除节点玩法",
+   "result": "ui change"
+  }
+ ],
+ "route": [
+  "subpackageMember/mytemplate/mytemplate"
+ ],
+ "text": "我的节点玩法 | 喷 | 0 | 0 次引用 | 喷泉的水柱 | 人民广场音乐喷泉中央最高的那根水柱旁，有几盏地灯围成一圈？（填数字） | 评分 | 0 | 个人审核 | 个人审核通过 | 模板广场 | 未提交广场 | 时长 | 8分钟 | 创建时间 | 2026-11-05 10:18:46 | 博 | 0 | 0 次引用 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "text_s1": "时长 | 8分钟 | 创建时间 | 2026-11-05 10:18:46 | 博 | 0 | 0 次引用 | 博物馆的鼎 | 上海博物馆的建筑外形像哪一件古代器物？ | 评分 | 0 | 个人审核 | 个人审核通过 | 模板广场 | 未提交广场 | 时长 | 8分钟 | 创建时间 | 2026-11-05 10:18:46 | 大 | 0 | 0 次引用 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 7,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageMember/mytemplate/mytemplate"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] onReady pages/templatedetail/templatedetail JSHandle@error",
+   "[error] setData cb JSHandle@error",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207806&OSSAccessKeyId=rigdummy&Signature=Mt3CaHoUbiRXuwZLOPALqwBuD9I%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207815&OSSAccessKeyId=rigdummy&Signature=czjCHfr3ukfN8y%2FGwCNkz1h4ruE%3D net::ERR_TUNNEL_CONNECTION_FAILED"
+  ],
+  "badNet": []
+ }
+}

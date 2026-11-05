@@ -1,0 +1,161 @@
+{
+ "id": "r2-p05-publish-topicadd",
+ "path": "pages/publish/topicadd/topicadd",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "goBack||{}",
+   "h": "goBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 46,
+   "y": 55,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "openTopicDetail|主题详情 * 还有 4 项未填|{}",
+   "h": "openTopicDetail",
+   "txt": "主题详情 * 还有 4 项未填",
+   "w": 357,
+   "hgt": 70,
+   "y": 181,
+   "route": "pages/publish/fabu/index",
+   "newText": "取消 | 未命名主题 | 主题描述 | 编辑 | 主题类别 | 选择类别 | 竖版封面 | 上传 3:4 | 横版封面 | 上传 16:9 | 画面风格 | 星尘 · 黑 · 手写",
+   "shot": "r2-p05-publish-topicadd-t01",
+   "result": "ui change"
+  },
+  {
+   "key": "openModePicker|模式 城市定向 切换|{}",
+   "h": "openModePicker",
+   "txt": "模式 城市定向 切换",
+   "w": 172,
+   "hgt": 160,
+   "y": 268,
+   "route": "pages/publish/fabu/index",
+   "newText": "退出 | 使用此模式 | 主题模式 | 这个主题怎么玩？ | 固定集合时间与地点 | 自由探索 | 有效期内自由前往 | 切换后另存为新草稿，原稿保留",
+   "shot": "r2-p05-publish-topicadd-t02",
+   "result": "ui change"
+  },
+  {
+   "key": "switchEditorPage|票务 票务设置 * 还有 5 项未填|{\"page\":\"2\"}",
+   "h": "switchEditorPage",
+   "txt": "票务 票务设置 * 还有 5 项未填",
+   "w": 172,
+   "hgt": 160,
+   "y": 268,
+   "route": "pages/publish/fabu/index",
+   "newText": "档期 | 还有 2 项未填 | 开始日期 | 选择开始日期 | 选择 | 结束日期 | 选择结束日期 | 选择 | 俱乐部承接 | 邀请俱乐部带队 | 玩家组队 | 支持组队",
+   "shot": "r2-p05-publish-topicadd-t03",
+   "result": "ui change"
+  },
+  {
+   "key": "__onTap||{}",
+   "h": "__onTap",
+   "txt": "",
+   "w": 118,
+   "hgt": 46,
+   "y": 637,
+   "route": "pages/publish/fabu/index",
+   "newText": "第1章 | 缺剧情 | 0 节点 | 编辑故事流 | 编辑章节 | 添加章节 | 退出 | 第1章 · 故事流",
+   "result": "ui change"
+  },
+  {
+   "key": "onTapPrimaryStarter|＋ 创建章节|{}",
+   "h": "onTapPrimaryStarter",
+   "txt": "＋ 创建章节",
+   "w": 118,
+   "hgt": 46,
+   "y": 637,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  },
+  {
+   "key": "switchViewMode||{\"mode\":\"list\"}",
+   "h": "switchViewMode",
+   "txt": "",
+   "w": 24,
+   "hgt": 33,
+   "y": 758,
+   "route": "pages/publish/fabu/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "switchViewMode||{\"mode\":\"map\"}",
+   "h": "switchViewMode",
+   "txt": "",
+   "w": 24,
+   "hgt": 33,
+   "y": 758,
+   "route": "pages/publish/fabu/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "saveServerDraft|保存草稿|{}",
+   "h": "saveServerDraft",
+   "txt": "保存草稿",
+   "w": 100,
+   "hgt": 46,
+   "y": 752,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  },
+  {
+   "key": "switchEditorPage|下一步|{\"page\":\"2\"}",
+   "h": "switchEditorPage",
+   "txt": "下一步",
+   "w": 120,
+   "hgt": 46,
+   "y": 752,
+   "route": "pages/publish/fabu/index",
+   "newText": "档期 | 还有 2 项未填 | 开始日期 | 选择开始日期 | 选择 | 结束日期 | 选择结束日期 | 选择 | 俱乐部承接 | 邀请俱乐部带队 | 玩家组队 | 支持组队",
+   "result": "ui change"
+  },
+  {
+   "key": "closeNarrativeEditor||{}",
+   "h": "closeNarrativeEditor",
+   "txt": "",
+   "w": 46,
+   "hgt": 46,
+   "y": 72,
+   "route": "pages/index/index",
+   "newText": "成为俱乐部 | 成为商家 | 和朋友报名活动 | Hi, 玩家二号! | 玩家 | · 上海市 | 编辑精选 | 暂时没有精选主题 | 附近活动",
+   "result": "navigates"
+  },
+  {
+   "key": "saveNarrativeEditor|完成|{}",
+   "h": "saveNarrativeEditor",
+   "txt": "完成",
+   "w": 340,
+   "hgt": 46,
+   "y": 750,
+   "route": "pages/publish/fabu/index",
+   "newText": "先给主题起个名字，再保存草稿",
+   "result": "ui change"
+  }
+ ],
+ "route": [
+  "pages/publish/fabu/index"
+ ],
+ "text": "* | 已存本机 | 主题详情 | 还有 4 项未填 | * | 模式 | 城市定向 | 切换 | 票务 | 票务设置 | 还有 5 项未填 | * | 章节 | 还没有章节 | ＋ 创建章节 | 保存草稿 | 下一步 | 文字说明 | 未命名地点 | 完成 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 12,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/publish/fabu/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207744&OSSAccessKeyId=rigdummy&Signature=Uu6jE7Mz52ssivOTsBQlYWfHNzw%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207754&OSSAccessKeyId=rigdummy&Signature=ADBjvSzMHlyxllJ0MLB0IbZxsgk%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

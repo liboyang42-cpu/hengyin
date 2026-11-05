@@ -1,0 +1,9 @@
+r2-t07-mytemplate route subpackageMember/mytemplate/mytemplate controls 7 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  navigates        goInfo                     "喷 0 0 次引用"                      -> pages/templatedetail/templatedetail    
+  ui change        toggleDropdown             ""                                   
+  navigates        goInfo                     "博 0 0 次引用"                      -> pages/templatedetail/templatedetail    
+  ui change        toggleDropdown             ""                                   
+  navigates        goInfo                     "大 0 0 次引用"                      -> pages/templatedetail/templatedetail    
+  ui change        toggleDropdown             ""                                   
+TEXT: 我的节点玩法 | 喷 | 0 | 0 次引用 | 喷泉的水柱 | 人民广场音乐喷泉中央最高的那根水柱旁，有几盏地灯围成一圈？（填数字） | 评分 | 0 | 个人审核 | 个人审核通过 | 模板广场 | 未提交广场 | 时长 | 8分钟 | 创建时间 | 2026-11-05 10:18:46 | 博 | 0 | 0 次引用 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

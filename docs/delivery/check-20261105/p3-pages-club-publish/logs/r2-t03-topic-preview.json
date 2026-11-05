@@ -1,0 +1,96 @@
+{
+ "id": "r2-t03-topic-preview",
+ "path": "pages/templatedetail/topic-preview/index?id=990015",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "tapCard|封面暂不可用 人民广场 · 喷泉报时 1 喷泉的水柱 2 博|{\"index\":0}",
+   "h": "tapCard",
+   "txt": "封面暂不可用 人民广场 · 喷泉报时 1 喷泉的水柱 2 博",
+   "w": 171,
+   "hgt": 171,
+   "y": 139,
+   "route": "pages/templatedetail/topic-preview/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "tapCard|封面暂不可用 喷泉的水柱 1 读档案 2 做任务，拿证据 3|{\"index\":1}",
+   "h": "tapCard",
+   "txt": "封面暂不可用 喷泉的水柱 1 读档案 2 做任务，拿证据 3",
+   "w": 174,
+   "hgt": 174,
+   "y": 143,
+   "route": "pages/templatedetail/topic-preview/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "tapCard|封面暂不可用 博物馆的鼎 1 读档案 2 做任务，拿证据 3|{\"index\":2}",
+   "h": "tapCard",
+   "txt": "封面暂不可用 博物馆的鼎 1 读档案 2 做任务，拿证据 3",
+   "w": 172,
+   "hgt": 172,
+   "y": 150,
+   "route": "pages/templatedetail/topic-preview/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "tapCard|封面暂不可用 大世界的塔楼 1 汇总证据 2 三选一结局 3|{\"index\":3}",
+   "h": "tapCard",
+   "txt": "封面暂不可用 大世界的塔楼 1 汇总证据 2 三选一结局 3",
+   "w": 174,
+   "hgt": 174,
+   "y": 143,
+   "route": "pages/templatedetail/topic-preview/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "goDetail|查看详情|{}",
+   "h": "goDetail",
+   "txt": "查看详情",
+   "w": 357,
+   "hgt": 50,
+   "y": 731,
+   "route": "pages/templatedetail/topic-detail/index",
+   "newText": "城瘾 | 应用 | 详情 | 能力 | 剧情 | 90 分钟城市定向：人民广场出发，经上海博物馆，在大世界收尾。2 章 3 站，适合 2–4 人一队。 | 第一章 广场的回声 | 傍晚的人民广场，喷泉开始报时。跟着水声找到第一条线索。 | 人民广场音乐喷泉 | 上海博物馆 | 第二章 大世界的灯 | 线索指向东边的老游乐场。塔楼的灯一盏盏亮起来。",
+   "shot": "r2-t03-topic-preview-t01",
+   "result": "navigates"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "pages/templatedetail/topic-preview/index"
+ ],
+ "text": "封面暂不可用 | 人民广场 · 喷泉报时 | 1 | 喷泉的水柱 | 2 | 博物馆的鼎 | 3 | 大世界的塔楼 | 45 分钟 | 封面暂不可用 | 喷泉的水柱 | 1 | 读档案 | 2 | 做任务，拿证据 | 3 | 解锁下一关 | 8 分钟 | 封面暂不可用 | 博物馆的鼎 | 1 | 读档案 | 2 | 做任务，拿证据 | 3 | 解锁下一关 | 8 分钟 | 封面暂不可用 | 大世界的塔楼 | 1 | 汇总证据 | 2 | 三选一结局 | 3 | 领取勋章 | 8 分钟 | 人民广场 · 喷泉报时 | 3 关剧情，每关一个玩法 | 最后一关三选一结局 | 约 45 分钟 | 查看详情 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 6,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/templatedetail/topic-preview/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109208008&OSSAccessKeyId=rigdummy&Signature=62kjWB9UxzhQR07Pb5zRRodFX6k%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109208011&OSSAccessKeyId=rigdummy&Signature=AQbFGbjT51PBbEs8nU4mo0UJ1fY%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109208025&OSSAccessKeyId=rigdummy&Signature=wV53CpGiaqi%2BIcnu2U%2FipAyLDEo%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

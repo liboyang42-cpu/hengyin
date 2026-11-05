@@ -1,0 +1,7 @@
+r2-t05-pricing route pages/index/index>pages/topic/pricing/index controls 5 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  NO VISIBLE EFFECT onTab                      "有人带"                                
+  ui change        onTab                      "无人带"                                
+  ui change        __onTap                    ""                                   
+  SKIPPED (destructive / writes; walked by hand) confirmPrice               "确认终价并提交开售审核"                        
+TEXT: 确认终价 | 有人带 | 无人带 | 最低价 | ¥0.00 | 终价不可低于此值 | 你的终价 | ¥39.00 | 地板 ¥0.00 | 最高 ¥100.00 | 样本不足，暂不展示参考价 | 终价已确认 | 确认终价并提交开售审核 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

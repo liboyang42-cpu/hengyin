@@ -1,0 +1,5 @@
+r2-p06-publish-template-intro route pages/publish/template-intro/index controls 3 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  navigates        __onTap                    ""                               -> pages/publish/temp/index    
+  SKIPPED (destructive / writes; walked by hand) goCreate                   "开始创建"                               
+TEXT: 暂无精选示例 | 把你玩过的一段路 | 做成别人也能走的玩法 | 开始创建 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

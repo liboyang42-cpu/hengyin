@@ -1,0 +1,55 @@
+{
+ "id": "r2-t06-pricing-partner",
+ "path": "pages/topic/pricing/partner/index?topicId=990015&toType=MERCHANT&toId=8001",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "onCta|返回上一页|{}",
+   "h": "onCta",
+   "txt": "返回上一页",
+   "w": 96,
+   "hgt": 46,
+   "y": 249,
+   "route": "pages/index/index",
+   "newText": "成为俱乐部 | 成为商家 | 和朋友报名活动 | Hi, 玩家二号! | 玩家 | · 上海市 | 编辑精选 | 暂时没有精选主题 | 附近活动",
+   "shot": "r2-t06-pricing-partner-t01",
+   "result": "navigates"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "pages/topic/pricing/partner/index"
+ ],
+ "text": "合作方 | 合作链接已失效 | 链接已失效，请返回重新进入 | 返回上一页 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 2,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/topic/pricing/partner/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109208041&OSSAccessKeyId=rigdummy&Signature=3r5K1KmA%2BrpdzKKiFwslWnQHnJE%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109208053&OSSAccessKeyId=rigdummy&Signature=Qkulpg8kF9TV%2FUtsjO11IEAR5fw%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ],
+  "badNet": []
+ }
+}

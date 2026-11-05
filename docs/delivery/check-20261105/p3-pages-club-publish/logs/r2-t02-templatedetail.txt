@@ -1,0 +1,7 @@
+r2-t02-templatedetail route pages/index/index>pages/templatedetail/templatedetail controls 5 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  navigates        __onTap                    ""                               -> pages/publish/temp/index    
+  navigates        goPrimary                  "继续编辑"                           -> pages/publish/temp/index    
+  NO VISIBLE EFFECT onTab                      "详情"                                 
+  ui change        onTab                      "能力"                                 
+TEXT: 喷泉的水柱 | 玩家二号 | 继续编辑 | 详情 | 能力 | 简介 | 人民广场音乐喷泉中央最高的那根水柱旁，有几盏地灯围成一圈？（填数字） | 0 | 采用次数 | 0 | 评分 | 8 分钟 | 预计时长 | 怎么验证 | 核验方式 | 文字验证 | 节点题面 | 人民广场音乐喷泉中央最高的那根水柱旁，有几盏地灯围成一圈？（填数字） | 难度 普通 | 8 分钟 | 2-4人 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

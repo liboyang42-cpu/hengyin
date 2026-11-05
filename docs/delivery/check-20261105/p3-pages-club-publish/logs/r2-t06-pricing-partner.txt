@@ -1,0 +1,4 @@
+r2-t06-pricing-partner route pages/index/index>pages/topic/pricing/partner/index controls 2 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  navigates        onCta                      "返回上一页"                          -> pages/index/index    
+TEXT: 合作方 | 合作链接已失效 | 链接已失效，请返回重新进入 | 返回上一页 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

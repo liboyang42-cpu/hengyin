@@ -1,0 +1,58 @@
+{
+ "id": "r2-p06-publish-template-intro",
+ "path": "pages/publish/template-intro/index",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "__onTap||{}",
+   "h": "__onTap",
+   "txt": "",
+   "w": 357,
+   "hgt": 46,
+   "y": 748,
+   "route": "pages/publish/temp/index",
+   "newText": "编辑玩法模板 | 添加一步 | 参与方式 | 直接参与 | 玩法 | 移除 | 选择玩法 | 选择 | 完成奖励 | 移除 | 优惠券 | 勋章",
+   "shot": "r2-p06-publish-template-intro-t01",
+   "result": "navigates"
+  },
+  {
+   "key": "goCreate|开始创建|{}",
+   "h": "goCreate",
+   "txt": "开始创建",
+   "w": 357,
+   "hgt": 46,
+   "y": 748,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  }
+ ],
+ "route": [
+  "pages/publish/template-intro/index"
+ ],
+ "text": "暂无精选示例 | 把你玩过的一段路 | 做成别人也能走的玩法 | 开始创建 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 3,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/publish/template-intro/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207993&OSSAccessKeyId=rigdummy&Signature=l%2Beu%2FBdX8n5zEHPpn1pj%2BQRbuvA%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ],
+  "badNet": []
+ }
+}

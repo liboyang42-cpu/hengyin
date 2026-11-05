@@ -1,0 +1,7 @@
+r2-t04-tpl-topic-detail route pages/index/index>pages/templatedetail/topic-detail/index controls 5 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  navigates        __onTap                    ""                               -> pages/publish/fabu/index    
+  navigates        useTemplate                "应用"                             -> pages/publish/fabu/index    
+  NO VISIBLE EFFECT onTab                      "详情"                                 
+  ui change        onTab                      "能力"                                 
+TEXT: 人民广场 · 喷泉报时 | 城瘾 | 应用 | 详情 | 能力 | 剧情 | 90 分钟城市定向：人民广场出发，经上海博物馆，在大世界收尾。2 章 3 站，适合 2–4 人一队。 | 第一章 广场的回声 | 傍晚的人民广场，喷泉开始报时。跟着水声找到第一条线索。 | 1 | 人民广场音乐喷泉 | 2 | 上海博物馆 | 第二章 大世界的灯 | 线索指向东边的老游乐场。塔楼的灯一盏盏亮起来。 | 3 | 大世界 | 2 | 章节 | 3 | 节点 | 45 分钟 | 总时长 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

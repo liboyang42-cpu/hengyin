@@ -1,0 +1,8 @@
+r2-t03-topic-preview route pages/index/index>pages/templatedetail/topic-preview/index controls 6 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  NO VISIBLE EFFECT tapCard                    "封面暂不可用 人民广场 · 喷泉报时 1 喷泉的水柱 2 博"     
+  NO VISIBLE EFFECT tapCard                    "封面暂不可用 喷泉的水柱 1 读档案 2 做任务，拿证据 3"     
+  NO VISIBLE EFFECT tapCard                    "封面暂不可用 博物馆的鼎 1 读档案 2 做任务，拿证据 3"     
+  NO VISIBLE EFFECT tapCard                    "封面暂不可用 大世界的塔楼 1 汇总证据 2 三选一结局 3"     
+  navigates        goDetail                   "查看详情"                           -> pages/templatedetail/topic-detail/index    
+TEXT: 封面暂不可用 | 人民广场 · 喷泉报时 | 1 | 喷泉的水柱 | 2 | 博物馆的鼎 | 3 | 大世界的塔楼 | 45 分钟 | 封面暂不可用 | 喷泉的水柱 | 1 | 读档案 | 2 | 做任务，拿证据 | 3 | 解锁下一关 | 8 分钟 | 封面暂不可用 | 博物馆的鼎 | 1 | 读档案 | 2 | 做任务，拿证据 | 3 | 解锁下一关 | 8 分钟 | 封面暂不可用 | 大世界的塔楼 | 1 | 汇总证据 | 2 | 三选一结局 | 3 | 领取勋章 | 8 分钟 | 人民广场 · 喷泉报时 | 3 关剧情，每关一个玩法 | 最后一关三选一结局 | 约 45 分钟 | 查看详情 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
