@@ -113,7 +113,7 @@ class ThemeBoundTemplateTextSafetyTest {
         AjaxResult result = controller.createTopic(dto);
 
         assertEquals(400, result.get(AjaxResult.CODE_TAG), String.valueOf(result));
-        assertTrue(String.valueOf(result.get(AjaxResult.MSG_TAG)).contains("节点玩法「桥边问答」.questionName"),
+        assertTrue(String.valueOf(result.get(AjaxResult.MSG_TAG)).contains("节点玩法「桥边问答」的题目"),
                 String.valueOf(result.get(AjaxResult.MSG_TAG)));
         verify(topicService, never()).createTopic(any(), anyLong(), anyString());
         verify(topicService, never()).createTopicV2WithReview(any(), anyLong(), anyString());
@@ -147,7 +147,7 @@ class ThemeBoundTemplateTextSafetyTest {
         AjaxResult result = controller.publishDraft("990014", null, null, null);
 
         assertEquals(400, result.get(AjaxResult.CODE_TAG), String.valueOf(result));
-        assertTrue(String.valueOf(result.get(AjaxResult.MSG_TAG)).contains("hint2"),
+        assertTrue(String.valueOf(result.get(AjaxResult.MSG_TAG)).contains("节点玩法「桥边问答」的二级提示"),
                 String.valueOf(result.get(AjaxResult.MSG_TAG)));
         verify(topicService, never()).publishDraft(anyLong(), anyLong());
         verify(topicService, never()).publishDraftWithReview(anyLong(), anyLong());

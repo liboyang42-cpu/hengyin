@@ -11,6 +11,8 @@ class JourneyReviewTextsPlainFieldTest {
     void namedFieldDropsInternalKey() {
         assertEquals("节点玩法「桥边问答 kxjwvb」的标题", JourneyReviewTexts.plainField("节点玩法「桥边问答 kxjwvb」.title"));
         assertEquals("节点玩法「桥边问答」的选项", JourneyReviewTexts.plainField("节点玩法「桥边问答」.blockConfig.options[]"));
+        assertEquals("节点玩法「桥边问答」的题目", JourneyReviewTexts.plainField("节点玩法「桥边问答」.questionName"));
+        assertEquals("节点玩法「桥边问答」的二级提示", JourneyReviewTexts.plainField("节点玩法「桥边问答」.hint2"));
         assertEquals("节点玩法「桥边问答」", JourneyReviewTexts.plainField("节点玩法「桥边问答」.blockConfig.weird"));
     }
 

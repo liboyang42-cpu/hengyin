@@ -835,6 +835,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
                         + " lineType=" + line.getLineType());
             }
         }
+        coopSettlementOriginalProducer.freezeClubSelfPlayOriginals(topic, basis, now);
         pointsAwardService.awardPublisherSettlement(topic.getMemberId(), topic.getId());
         logger.info("俱乐部自有主题自玩结算: topicId={} 销售额={} 平台={}(率{}) 主理人{}应收={}",
                 topic.getId(), totalSales, platformAmount, platformRate, principal, principalAmount);

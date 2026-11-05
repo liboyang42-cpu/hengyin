@@ -192,7 +192,7 @@ class RegistryContractTest(unittest.TestCase):
     def test_original_producer_keeps_both_exact_scratch_admissions(self):
         reg = registry()
         fqcn = 'com.chengyinhub.business.it.Wp04OriginalProducerMySqlIT'
-        self.assertEqual(3, reg['classes'][fqcn]['tests'])
+        self.assertEqual(4, reg['classes'][fqcn]['tests'])
         workflow = WORKFLOW.read_text()
         self.assertIn("WP04_ORIGINAL_PRODUCER_DDL_APPROVED: ${{ matrix.simple == 'Wp04OriginalProducerMySqlIT' && '1' || '' }}", workflow)
         source = (_HERE.parent / 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04OriginalProducerMySqlIT.java').read_text()
@@ -202,7 +202,7 @@ class RegistryContractTest(unittest.TestCase):
         self.assertEqual(flags, rs.child_env(flags, {}))
         facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
         self.assertEqual([], problems)
-        self.assertEqual(3, facts['declared_tests'])
+        self.assertEqual(4, facts['declared_tests'])
 
     def test_manual_case_read_keeps_exact_scratch_admission(self):
         reg = registry()
@@ -531,14 +531,14 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-topic-cash-fence": 5,
                     "architecture-day-scheduler-two-process": 3,
                     "architecture-day-cash-recovery": 10,
-                    "architecture-day-funds-closure": 292,  # 第十二轮 k1:RegistrationFunds +1
+                    "architecture-day-funds-closure": 293,  # RegistrationFunds +1, club self-play original producer +1
                     "architecture-day-npc-voice-asr": 14,
                     "architecture-day-clm-commerce-proof": 8,
                     "architecture-day-media-retry-budget": 8,
                     "architecture-day-before-start-notice": 12,
                     "architecture-day-commerce-generic-guard": 6,
                     "architecture-day-refund-lifecycle": 76,
-                    "architecture-day-integrated-changes": 946,  # 第十二轮 k1:RegistrationFunds +1
+                    "architecture-day-integrated-changes": 947,  # RegistrationFunds +1, club self-play original producer +1
                     "payment-intent-correctness": 30}
         reg = registry()
         totals = {name: sum(reg["classes"][fqcn]["tests"] for fqcn in batch["classes"])

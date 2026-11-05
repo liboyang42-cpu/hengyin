@@ -608,10 +608,13 @@ public final class JourneyReviewTexts {
             case "name": label = "名称"; break;
             case "desc": case "description": case "intro": label = "说明"; break;
             case "content": case "text": case "body": label = "内容"; break;
-            case "question": case "prompt": label = "题目"; break;
+            case "question": case "questionName": case "prompt": label = "题目"; break;
             case "answer": case "answers": label = "答案"; break;
             case "options": case "option": label = "选项"; break;
             case "hint": case "hints": label = "提示"; break;
+            case "hint1": label = "一级提示"; break;
+            case "hint2": label = "二级提示"; break;
+            case "hint3": label = "三级提示"; break;
             case "line": case "lines": label = "台词"; break;
             default: label = ""; break;
         }

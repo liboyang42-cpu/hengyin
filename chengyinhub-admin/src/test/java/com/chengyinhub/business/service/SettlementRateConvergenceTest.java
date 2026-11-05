@@ -635,6 +635,10 @@ class SettlementRateConvergenceTest {
         assertEquals(Long.valueOf(9008L), principal.getMerchantId());
         assertEquals(0, new BigDecimal("133.86").compareTo(principal.getAmount()));
         assertEquals(Integer.valueOf(0), principal.getStatus());
+        com.chengyinhub.business.service.impl.CoopSettlementOriginalProducer originals =
+                (com.chengyinhub.business.service.impl.CoopSettlementOriginalProducer)
+                        ReflectionTestUtils.getField(topicSvc, "coopSettlementOriginalProducer");
+        verify(originals).freezeClubSelfPlayOriginals(eq(topic), any(), any());
         verify(topicMember, never()).addBalance(anyLong(), any());
         verify(pointsAwardService).awardPublisherSettlement(88L, 200L);
     }

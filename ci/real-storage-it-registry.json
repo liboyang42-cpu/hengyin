@@ -1735,12 +1735,12 @@
       "note": "9b28: source-owned cy_deposit_it base and class UUID suffix; AfterAll DROP plus schema-absence assertion. Runner independently checks all leftover schemas."
     },
     "com.chengyinhub.business.it.Wp04OriginalProducerMySqlIT": {
-      "tests": 3,
+      "tests": 4,
       "storage": [
         "mysql"
       ],
       "gates": {},
-      "note": "G 54c524ca source: actual producer/ledger/mapper and post-rollback manual evidence, inherited exact original-refund scratch admission plus own producer flag. NOT_RUN; no provider or production DDL."
+      "note": "G 54c524ca source: actual producer/ledger/mapper and post-rollback manual evidence, inherited exact original-refund scratch admission plus own producer flag. NOT_RUN; no provider or production DDL. Launch follow-up: club self-play settlement freezes original components and a successful paid refund debits the principal once."
     },
     "com.chengyinhub.business.it.CoopSettlementManualCaseReadMySqlIT": {
       "tests": 3,
