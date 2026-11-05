@@ -1,0 +1,27 @@
+# j4 N10 over real HTTP on the rig jar (0f5a383b backend), session 9, 2026-11-05T06:55:36Z
+## walk-player-2 consent share=true
+{"msg":"操作成功","code":200,"data":{"available":true,"share":true,"decided":true}}
+## walk-player-1 consent share=true
+{"msg":"操作成功","code":200,"data":{"available":true,"share":true,"decided":true}}
+## both sync points
+{"msg":"操作成功","code":200,"data":{"available":true,"share":true,"teams":[]}}
+
+{"msg":"操作成功","code":200,"data":{"available":true,"share":true,"teams":[{"key":"c6388c9461a5","done":0,"name":"阿青","avatar":"","pts":[[31.2313,121.4745],[31.2314,121.4746],[31.2315,121.4747],[31.2316,121.4748],[31.2318,121.4749],[31.2313,121.4745],[31.2314,121.4746],[31.2315,121.4747],[3
+## HKEYS team_trail:pts:9 (before)
+990005
+990006
+## author turns 同场路线 off (fixture copy into published_theme_runtime_config_json, as j4 R6)
+published_theme_runtime_config_json
+{"schemaVersion":1,"teamTrail":false}
+## walk-player-2 sync finished=true (the 结束 that used to return before the delete)
+{"msg":"操作成功","code":200,"data":{"available":false}}
+## HKEYS after walk-player-2
+990005
+## walk-player-1 GET state (author still off)
+{"msg":"操作成功","code":200,"data":{"available":false}}
+## HKEYS after walk-player-1 (empty = both removed)
+
+0
+## restore author switch
+published_theme_runtime_config_json
+NULL

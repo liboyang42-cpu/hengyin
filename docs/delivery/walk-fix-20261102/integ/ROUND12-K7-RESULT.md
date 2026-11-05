@@ -1,5 +1,7 @@
 # Round 12, lane k7-game-fixes: result
 
+> Lane **k7-map** (`ROUND12K7.md`: j4 map items and k2's unwalked work) wrote its result to `ROUND12-K7-MAP-RESULT.md`, so this file is not overwritten.
+
 Report fixed: `docs/delivery/check-20261105/j3-player-game/REPORT.md` (j3 second pass, tested at `573c463b3`).
 Work started at `integ/launch-test-20261103` head `1467da34`, private local branch, `git pull --rebase` before every push.
 Commits: `68f6661a`-line (N4 N1 N2 N3 part), `fea76d01` (N3 N5 N6 N7–N10 N14 N15), `fdaa614f` (N6 detail, F14, F16, N16, editor), and this doc.
