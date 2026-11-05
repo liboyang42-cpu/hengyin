@@ -30,6 +30,11 @@ public interface IAdvancedGameRuntimeService {
     /** 完成节点门禁，并返回终点声明的稳定 outcomeCode；无分支玩法时返回 null。 */
     String completeGate(Long memberId, Long activityId, Long topicId, Long nodeId);
 
+    /** 本人这一站的玩法已过(与会话视图 readyForBase 同一判定)。只读;为 true 时到站收尾不再要现场定位证明。 */
+    default boolean solvedForArrival(Long memberId, Long activityId, Long topicId, Long nodeId) {
+        return false;
+    }
+
     /**
      * C1 可信边界(选项 A):本节点当前局的完成是否只由设备自报成绩、拍照兜底放行或静态节点码撑着。
      * 为 true 时节点奖励只许探索值与徽章(不发积分、券、掉落)。只读,按 memberId 取本人局。

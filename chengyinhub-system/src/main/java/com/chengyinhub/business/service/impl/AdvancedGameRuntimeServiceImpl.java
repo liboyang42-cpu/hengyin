@@ -3320,11 +3320,29 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         if(config.has("outcomeRules") && enabled(config.get("check")))view.put("check",checkView(session,state,actorMemberId));
         Map<String, Object> authored = authoredOutcomeFeedback(config, state);
         if (authored != null) view.put("outcomeFeedback", authored);
-        view.put("readyForBase", state.has("zeroChallengeInstance") ? state.path("challenge").path("success").asBoolean()
+        view.put("readyForBase", readyForBase(session, config, state));
+        return view;
+    }
+
+    /** 页面「继续故事」与到站收尾共用的「这一站玩法已过」判定(第十二轮 k2:同一口径,不另写一套)。 */
+    private boolean readyForBase(GameRuntimeSession session, JsonNode config, ObjectNode state) {
+        return state.has("zeroChallengeInstance") ? state.path("challenge").path("success").asBoolean()
                 : Integer.valueOf(GameRuntimeSession.STATUS_COMPLETED).equals(session.getStatus())
                 || (Integer.valueOf(GameRuntimeSession.STATUS_RUNNING).equals(session.getStatus())
-                && (config.has("outcomeRules")?"PASS".equals(state.path("gameplayDecision").path("outcome").asText()):mechanicsReady(config, state))));
-        return view;
+                && (config.has("outcomeRules")?"PASS".equals(state.path("gameplayDecision").path("outcome").asText()):mechanicsReady(config, state)));
+    }
+
+    /**
+     * 第十二轮 k2(业主 2026-11-05:「解开的站重进即算完成,玩家不用走回去」):本人这一站的玩法已过
+     * (与会话视图 readyForBase 同一判定)时,到站收尾不再要现场定位证明。只读,不改会话状态。
+     */
+    @Override
+    public boolean solvedForArrival(Long memberId, Long activityId, Long topicId, Long nodeId) {
+        if (memberId == null || memberId <= 0L || topicId == null || nodeId == null) return false;
+        GameRuntimeSession session = existingSession(memberId, activityId == null ? 0L : activityId, topicId, nodeId);
+        if (session == null) return false;
+        JsonNode config = readJson(session.getConfigSnapshotJson(), "高级玩法配置不可用");
+        return readyForBase(session, config, objectState(session.getStateJson()));
     }
 
     /**

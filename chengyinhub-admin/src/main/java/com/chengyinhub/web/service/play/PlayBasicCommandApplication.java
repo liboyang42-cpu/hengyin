@@ -622,7 +622,11 @@ public class PlayBasicCommandApplication {
         boolean hasNodeCoord = StringUtils.isNotBlank(targetLongitude) && StringUtils.isNotBlank(targetLatitude);
         boolean gpsNode = Integer.valueOf(5).equals(arriveValidationMethod);
         if (gpsNode && !hasNodeCoord) return error("站点未设坐标，暂时无法打卡");
-        if (hasNodeCoord) {
+        // 第十二轮 k2(业主 2026-11-05):这一站的玩法本人已解开 ⇒ 重进即算完成,解开本身就是到站证明,
+        // 不再要现场定位(玩家不用走回去)。只看服务端会话事实;没解开的站仍走下面原围栏与守卫。
+        boolean solvedGame = advancedGameRuntimeService != null
+                && advancedGameRuntimeService.solvedForArrival(memberId, actId, ctx.topicId, node.getId());
+        if (hasNodeCoord && !solvedGame) {
             if (StringUtils.isBlank(longitude) || StringUtils.isBlank(latitude)) return error("请开启定位");
             // R10-10:Double.parseDouble 接受 "NaN"/"Infinity",而 NaN 与任何数比较恒 false,
             // 旧写法让无效坐标绕过围栏直接落入 advanceProgress 拿进度和奖励。玩家输入与站点配置

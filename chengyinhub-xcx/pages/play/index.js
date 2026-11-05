@@ -5510,7 +5510,9 @@ Page({
     const node = this.data.sheet.node;
     if (this.data.isPreview && node) { this.arrive(node.nodeId, 'preview'); return; }
     const navHere = this.data.nav.active && node && this.data.nav.targetNodeId === node.nodeId;
-    if (this.data.mode === 2 && node && !node.done && node.lat && node.lng && !navHere) { this.startNav(node); return; }
+    // 第十二轮 k2:玩法已解开的站直接收尾,不再开导航让玩家走回去(业主 2026-11-05)
+    const solved = node && this._advancedReadyNodeId === node.nodeId;
+    if (this.data.mode === 2 && node && !node.done && node.lat && node.lng && !navHere && !solved) { this.startNav(node); return; }
     this.onArriveTap();
   },
   // 进入陪伴态:记录目标 + 路程基准(totalM=当前直线距离),隐藏 peek/卡堆。
@@ -5734,8 +5736,8 @@ Page({
     const node = this._arriveTarget();
     if (!node) return;
     if (this._arrivalWriteUnknown) return;
-    // 高级玩法已通过且本站没有坐标时直接收尾；真实地点和GPS任务仍要求定位。
-    const needsLocation = node.lat || node.lng || node.vm === 5 || this._advancedReadyNodeId !== node.nodeId;
+    // 高级玩法已通过:解开本身就是到站证明,直接收尾,不再要定位(第十二轮 k2,业主 2026-11-05)。
+    const needsLocation = this._advancedReadyNodeId !== node.nodeId;
     if (!this.data.gpsOk && !this._isStoryGame(node) && needsLocation) { this.requestPlayLocation(); return; }
     this.arrive(node.nodeId, 'arrive');
   },
