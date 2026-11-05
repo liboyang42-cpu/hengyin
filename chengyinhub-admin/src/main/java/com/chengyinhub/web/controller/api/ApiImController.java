@@ -220,16 +220,20 @@ public class ApiImController extends BaseController
         }
     }
 
+    public AjaxResult block(String target_member_id)
+    {
+        return block(target_member_id, null);
+    }
+
     @Operation(summary = "拉黑")
     @PostMapping("/block")
-    public AjaxResult block(String target_member_id)
+    public AjaxResult block(
+            @RequestParam(value = "target_member_id", required = false) String target_member_id,
+            @RequestParam(value = "peer_id", required = false) String peer_id)
     {
         try
         {
-            Long targetId;
-            try { targetId = Long.valueOf(target_member_id == null ? "" : target_member_id.trim()); }
-            catch (NumberFormatException invalidTarget) { throw new ServiceException("参数有误", 400); }
-            if (targetId <= 0) throw new ServiceException("参数有误", 400);
+            Long targetId = resolveBlockTarget(target_member_id, peer_id);
             imService.block(getAppUserId(), targetId);
             return AjaxResult.success("已拉黑");
         }
@@ -244,16 +248,20 @@ public class ApiImController extends BaseController
         }
     }
 
+    public AjaxResult unblock(String target_member_id)
+    {
+        return unblock(target_member_id, null);
+    }
+
     @Operation(summary = "取消拉黑")
     @PostMapping("/unblock")
-    public AjaxResult unblock(String target_member_id)
+    public AjaxResult unblock(
+            @RequestParam(value = "target_member_id", required = false) String target_member_id,
+            @RequestParam(value = "peer_id", required = false) String peer_id)
     {
         try
         {
-            Long targetId;
-            try { targetId = Long.valueOf(target_member_id == null ? "" : target_member_id.trim()); }
-            catch (NumberFormatException invalidTarget) { throw new ServiceException("参数有误", 400); }
-            if (targetId <= 0) throw new ServiceException("参数有误", 400);
+            Long targetId = resolveBlockTarget(target_member_id, peer_id);
             imService.unblock(getAppUserId(), targetId);
             return AjaxResult.success("已取消");
         }
@@ -266,6 +274,28 @@ public class ApiImController extends BaseController
             logger.error("IM 取消拉黑异常", e);
             return AjaxResult.error("操作失败，请稍后重试");
         }
+    }
+
+    /** Both names address the same member; never silently prefer one conflicting target. */
+    private static long resolveBlockTarget(String legacyTarget, String peerId)
+    {
+        if (legacyTarget == null && peerId == null) throw new ServiceException("参数有误", 400);
+        Long legacy = legacyTarget == null ? null : parseBlockTarget(legacyTarget);
+        Long peer = peerId == null ? null : parseBlockTarget(peerId);
+        if (legacy != null && peer != null && !legacy.equals(peer))
+            throw new ServiceException("参数有误", 400);
+        return legacy == null ? peer : legacy;
+    }
+
+    private static long parseBlockTarget(String value)
+    {
+        try
+        {
+            long target = Long.parseLong(value.trim());
+            if (target > 0) return target;
+        }
+        catch (NumberFormatException invalidTarget) { }
+        throw new ServiceException("参数有误", 400);
     }
 
     @Operation(summary = "举报消息")
