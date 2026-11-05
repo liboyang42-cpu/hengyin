@@ -149,4 +149,16 @@ At the head of my last push (see CI):
 
 ## CI
 
-(filled in after the push)
+My last code push was `f40ceac30`. About 15 other commits from k7, k8, k10 and k9-pages landed on top of it within the hour. Each push cancels the previous GitHub CI run, so no full GitHub CI run has finished on a commit that contains my work.
+
+- **Earlier heads containing my work:**
+  - At `9c1f301de` (my first push): Mini followup regression and Isolated Redis recovery passed.
+  - At `6f63e08d3` / `eebece374`: Mini followup regression and Redis recovery passed. The GitHub CI run on `eebece374` was cancelled by a newer push.
+- **At `a8fb71f46` (09:04 UTC), every Java workflow was red.** The cause is a test compile error that isn't mine: `ThemeRuntimeMySqlIT.java:101` reads 「reference to Date is ambiguous」 (`java.sql.*` and `java.util.*` are both imported). It came from `de904286c`, the combination-station lane.
+  - Workflows hit: Mini followup regression, Funds MySQL IT, Isolated Redis recovery and Real Storage IT.
+  - Reproduced locally with `mvn -o -DskipTests test-compile`.
+  - I fixed it in the commit that carries this section (`new java.util.Date()`, one word). `test-compile` is now clean.
+- **Another lane fixed the IT fixture for my N-16 change:** `a8fb71f46`, 「客户名册真库夹具补齐既有结束时间字段」, adds the `end_date` column that my CRM tag rule reads to `MerchantCrmFreeExploreRosterMySqlIT`'s fixture. I hadn't run that IT locally because it needs MySQL.
+- **CI on the commit with this section:** see the last line.
+
+STATUS: PARTIAL - all code, tests, rig walks and screenshots are in. No full GitHub CI run has finished on a commit containing all my work: they keep getting cancelled by newer pushes, and the newest heads were red from another lane's compile error, fixed in the commit that adds this line. predict, coop settlement-detail and batch-detail with data are not reachable in the rig.

@@ -98,7 +98,7 @@ class ThemeRuntimeMySqlIT {
         try(Connection c=ds.getConnection();PreparedStatement p=c.prepareStatement("UPDATE topic_route_session SET config_snapshot_json=? WHERE id=?")){p.setString(1,snapshot.toString());p.setLong(2,id);p.executeUpdate();}
         assertTrue(runtime.pendingCompassCheck(7L,10L,0L,11L));
         assertFalse(runtime.pendingCompassCheck(7L,10L,0L,12L));
-        TopicRouteAction receipt=new TopicRouteAction();receipt.setSessionId(id);receipt.setMemberId(7L);receipt.setNodeId(11L);receipt.setActionId("check:11:compass-check:roll");receipt.setReceiptId("roll");receipt.setOutcomeCode("CHECK_ROLL");receipt.setResponseJson("{\"settled\":false}");receipt.setCreateTime(new Date());
+        TopicRouteAction receipt=new TopicRouteAction();receipt.setSessionId(id);receipt.setMemberId(7L);receipt.setNodeId(11L);receipt.setActionId("check:11:compass-check:roll");receipt.setReceiptId("roll");receipt.setOutcomeCode("CHECK_ROLL");receipt.setResponseJson("{\"settled\":false}");receipt.setCreateTime(new java.util.Date());
         sql.getMapper(TopicRouteSessionMapper.class).insertAction(receipt);assertTrue(runtime.pendingCompassCheck(7L,10L,0L,11L));
         receipt.setId(null);receipt.setActionId("check:11:compass-check:settle");receipt.setReceiptId("settle");receipt.setOutcomeCode("CHECK_SETTLE");receipt.setResponseJson("{\"settled\":true}");
         sql.getMapper(TopicRouteSessionMapper.class).insertAction(receipt);assertFalse(runtime.pendingCompassCheck(7L,10L,0L,11L));
