@@ -119,4 +119,15 @@ Full table and SQL: `k4-fe-LOG.md`.
   - Later pushes by other lanes cancel the ci.yml runs on this branch within minutes, so I have no completed ci.yml conclusion for a commit holding all my work.
   - I didn't record whether the other three workflows finished on `7d004e02`.
 
-STATUS: PARTIAL - j2's findings are fixed and shown in the rig, but a club-owned 自由探索 sale cannot settle (blocker in k1's settlement code, reported above), it reached sale only with three labelled DB fixtures, and there is no completed CI run on a commit with all my work.
+## Where it stopped (for Codex)
+
+Work stopped here because cloud credit ran low.
+- Nothing is half-done, and every change is pushed.
+- The next steps are for root and k1:
+  - B0: settlement path for club 自由探索.
+  - Then gates 2 to 4, in that order.
+- The rest of the open work:
+  - Re-walk N-07, N-15 and F-22.
+  - Get a completed CI run on a commit containing all of this lane's work.
+
+STATUS: PARTIAL - cloud stopped for credit. j2's findings are fixed and shown in the rig, but a club-owned 自由探索 sale cannot settle (blocker in k1's settlement code, reported above). It reached sale only with three labelled DB fixtures, and there is no completed CI run on a commit with all my work.
