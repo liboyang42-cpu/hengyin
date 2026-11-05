@@ -37,7 +37,7 @@ test('play 页:答对走 _answerRight,题卡有「对了」与继续键,离页�
   const wxml = fs.readFileSync(path.join(root, 'index.wxml'), 'utf8');
   assert.match(js, /that\._answerRight\(g\.nodeId, r\.data, r\.msg\)/);
   assert.doesNotMatch(js, /if \(r\.msg\) cyToast\(r\.msg\); that\.onComplete\(g\.nodeId, r\.data\)/);
-  assert.match(js, /onHide\(\) \{\n    this\._flushAnswerRight\(\);/);
+  assert.match(js.slice(js.indexOf('  onHide() {'), js.indexOf('  _clearTransientUiTimers() {')), /this\._flushAnswerRight\(\);/);
   assert.match(wxml, /<text>\{\{gRight\.text \|\| '对了'\}\}<\/text>/);
   assert.match(wxml, /bindtap="continueAfterRight"[^>]*>继续</);
   assert.match(wxml, /gp2__input \{\{gWrong \? 'is-wrong' : ''\}\}/);

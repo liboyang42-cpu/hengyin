@@ -16,5 +16,5 @@ test('详情卡开始任务先开始本站任务,再进玩法', () => {
   assert.match(body, /row\.kind === 'QUEST'[\s\S]*row\.operation === 'QUEST_START'/);
   assert.match(body, /this\._hasGenericProofFlow\(\)/, '只对通用局主题');
   assert.match(body, /themeCostChoice: \{ row: questStart, selected: -1 \}/, '要选费用组时走背包同一张选择单');
-  assert.match(body, /ok === true && this\._questStartFor === String\(node\.nodeId\)\) this\.startGame\(node\)/, '开始成功才进玩法');
+  assert.match(body, /ok === true && this\._questStartFor === String\(node\.nodeId\)[\s\S]*context\.owner === this\._playOwner[\s\S]*context\.sessionKey === this\._sessionKey\(\)[\s\S]*context\.epoch === this\._playLoadEpoch\) this\.startGame\(node\)/, '开始成功才进玩法');
 });

@@ -18,7 +18,7 @@ function harness() {
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../../utils/location/bg-tracker.js'), 'utf8'), { wx, module, setTimeout, clearTimeout });
   const bgTracker = module.exports;
   const source = fs.readFileSync(path.join(__dirname, '../../pages/play/index.js'), 'utf8');
-  const context = { wx, bgTracker, playLocationOwnerSequence: 0, app: { getUserID: () => 9 } };
+  const context = { wx, bgTracker, audioSession: { pauseAll() {} }, playLocationOwnerSequence: 0, app: { getUserID: () => 9 } };
   const page = { data: { topicId: 31, nav: { active: false }, nodes: [], nextNode: null },
     setData(patch) { Object.assign(this.data, patch); }, _persistRunSession() {},
     _pauseSessionClock() {}, _clearRunSessionEverywhere() {}, _syncRunState() {} };

@@ -93,3 +93,15 @@ STATUS: PARTIAL - 源码/Node已交付；branch/QR Java结果、运行时全游�
 VIDEO 指出的真实遗漏已复现：`blocks=[]`、无视频、只有 `audioUrl` 的 ending DTO 被 `_loadLifeEnding` 排除，实际仍停旧 chapter50 而非52。已仅把音频加入既有“有可播内容”的条件，复用原 `_playEndingChapter` 和 `playChapterAudio`；新行为测试直接执行两者，确认进入章52，重铺只自动播放一次。`node --test tests/unit/r14-game-session-flow.test.js tests/unit/k10-immersive-audio.test.js` 29/29 PASS，日志 `proof/r14-game/audio-only-ending-tests.txt`。这里仍是源码测试，未听到真实声音。
 
 协调器已分配 GAME 作者9008/玩家9004、`R14-GAME-` 新内容前缀和共享前端18197；后端当时仍是旧6feddc，明确要求等统一新 JAR 后才能开始本轮实际证据。已提交的 `proof/r14-game/REPLAY.md` 是复验操作脚本，尚无实跑结果。
+
+## 集成失败定位与旁白/视频控件补充
+
+root 点名全套失败后，仅串行运行指定 GAME 文件，没有重跑全套：
+
+- 基线已有三个测试宿主/格式过时点：`onHide` 第一行已是 `finishChapterVideo`，仍保留 `_flushAnswerRight`；定位生命周期抽取宿主遗漏真实 `_endRunSession` 所用的 `audioSession.pauseAll`；撤回同意证据宿主遗漏真实 `_questArrivalCandidates` 及 `_hasGenericProofFlow`。现在补真实辅助函数或该宿主既有依赖，安全断言完整保留。
+- 本轮两处格式合同随代码同步：扫码 session-id 移至属性行，保留外壳原前两行结构；QUEST_START 的静态断言明确要求 owner/session/epoch 新守卫，并增真实方法正例“当前局成功开站/拒绝不开站”，与原迟到反例配套。没有删除/跳过测试。
+- `play-mechanisms-contract.test.js` 由 VIDEO 接管；本 worker 临时的本地试修已撤回，不进 GAME 提交。它的 GPS 大括号/无声预热数量问题留 VIDEO 负责。
+- 旁白 `playChapterAudio` 在 `play()` 前设置 `audioLoading/audioNodeId`，`onPlay` 才清加载；不再以 `canplay` 当作已播放。既有声音按钮以 clock/warning 图标和无障碍名称展示加载/错误，不加说明文字。音频回调校验播放器身份、账号与原局，换局重新绑定播放器。
+- 页面原视频三处可点控件补既有 `cy-pressed`，不再把跳过视频当 noop 挡板；视频层9999改为已定义的 `--cy-z-modal`，继续高于故事/章节层、低于提示与庆祝。未改原生 video/cover-view 结构或播放逻辑，真实设备堆叠仍待验。
+
+实际检查：8 个 GAME 失败/行为/按压层级文件串行 **64/64 PASS**，`proof/r14-game/owned-triage-tests.txt`；4 个音频/章节文件串行 **110/110 PASS**，`proof/r14-game/narration-tests.txt`。后者包括两项先失败后修的慢旁白加载与旧播放器/换局回调测试。按压棘轮与 z-index 基线均未修改。
