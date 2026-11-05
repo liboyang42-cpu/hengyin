@@ -1515,7 +1515,7 @@
       "note": "Default paused exact task seeds, preserved existing definitions, real original IM/XP/badge effects and MySQL task fence; no real cron/operator/provider claim"
     },
     "com.chengyinhub.business.service.RegistrationFundsMybatisIntegrationTest": {
-      "tests": 108,
+      "tests": 113,
       "storage": [
         "mysql"
       ],
