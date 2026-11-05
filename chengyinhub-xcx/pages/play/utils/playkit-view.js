@@ -173,6 +173,16 @@ function buildDailySign(seg, now) {
   };
 }
 
+/** 第十二轮 k8 N2:猜数字终局屏那一行「你猜 X · 实际 Y」。真值只有交过之后服务端才给;缺任一项就不出这一行。 */
+function estimateTerminalDetail(seg) {
+  const s = seg || {};
+  const fmt = (v) => String(Math.round(Number(v) * 100) / 100);
+  if (!s.submitted || s.guess == null || s.answer == null || s.guess === '' || s.answer === ''
+    || !Number.isFinite(Number(s.guess)) || !Number.isFinite(Number(s.answer))) return '';
+  const unit = s.unit ? ' ' + s.unit : '';
+  return '你猜 ' + fmt(s.guess) + unit + ' · 实际 ' + fmt(s.answer) + unit;
+}
+
 function segmentComplete(name, seg) {
   // 走到终点那一步就算这段剧情完了 —— 终点没有选项,再弹一次也没得选
   if (name === 'branch') return !!(seg.currentStep && seg.currentStep.terminal);
@@ -726,6 +736,8 @@ function pickPlayKit(view, now) {
       guess: seg.submitted && Number.isFinite(Number(seg.guess)) ? Number(seg.guess) : 0,
       answer: seg.submitted && Number.isFinite(Number(seg.answer)) ? Number(seg.answer) : 0,
       reveal: seg.submitted ? (seg.reveal || '') : '',
+      // 第十二轮 k8 N2:没过的终局屏也给出你猜的数和真值(不带结果反馈时那一行本来就有)
+      ...(base.terminal ? { terminalDetail: estimateTerminalDetail(seg) } : {}),
     });
   }
   /* ===== R3 排序 / 连线 / 分类 =====
