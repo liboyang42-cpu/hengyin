@@ -94,13 +94,6 @@ test('p1 N-11:结算的「订单金额」只在有减项时出现', () => {
   assert.match(wxml, /<view wx:if="\{\{clubMemberDiscountAmount > 0 \|\| \(pointsUsable !== false && selectedTicket\.price > 0 && userInfo\.point != 0\)\}\}" class="setly_li">\s*<view class="setly_li_left">订单金额<\/view>/);
 });
 
-test('p1 N-12:申请开票的登录 / 未开放门态用大标题', () => {
-  const wxml = read('subpackageMember/invoice-apply/index.wxml');
-  assert.match(wxml, /<cy-nav-bar title="\{\{login \|\| unavailable \? '' : '申请开票'\}\}"/);
-  assert.match(wxml, /<cy-page-title wx:if="\{\{login \|\| unavailable\}\}" title="申请开票" \/>/);
-  assert.equal(JSON.parse(read('subpackageMember/invoice-apply/index.json')).usingComponents['cy-page-title'], '/components/cy/page-title/index');
-});
-
 test('p1 N-13:别人的券 → 「这张券不在你的券包里 · 返回」,不是「稍后重试」', () => {
   const js = read('subpackageMember/components/cy/scene-qr-coupon/index.js');
   assert.match(js, /\/无权查看该券\/\.test\(String\(res\.msg \|\| ''\)\)\) \{ this\._qrOwner = undefined; this\.clearTimers\(\); this\.setData\(\{ state: 'notmine'/);
@@ -200,4 +193,10 @@ test('j6 F9:没付的单不写「微信实付」;取消待支付订单用中文�
   const da = read('utils/danger-actions.js');
   assert.match(da, /'订单关闭，不再保留名额'/);
   assert.match(da, /'此操作不可撤销，需要时请重新下单'/);
+});
+
+test('p3 游客扫页:剧情与玩法缺主题 → 「链接已失效 · 返回」,不是只剩两个页签的空白', () => {
+  const wxml = read('pages/club/topic-story/index.wxml');
+  assert.match(wxml, /<cy-empty wx:if="\{\{missingParam\}\}" fill size="lg" kind="missing-param" title="链接已失效" cta="返回" bind:cta="onRetry" \/>/);
+  assert.match(wxml, /<cy-tabs wx:if="\{\{!missingParam\}\}"/);
 });

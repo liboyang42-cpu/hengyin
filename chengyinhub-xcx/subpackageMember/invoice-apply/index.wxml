@@ -5,10 +5,8 @@
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
-<!-- 第十二轮 k9(p1 N-12):登录 / 未开放这两个门态和发票其它四页一样用大标题;表单本身仍照结算页用导航栏小标题 -->
-<cy-nav-bar title="{{login || unavailable ? '' : '申请开票'}}" custom-back bind:back="onBack" />
-<cy-page-title wx:if="{{login || unavailable}}" title="申请开票" />
-<cy-nav-spacer wx:else />
+<cy-nav-bar title="申请开票" custom-back bind:back="onBack" />
+<cy-nav-spacer />
 
 <cy-empty class="page-terminal" wx:if="{{login}}" fill size="lg" kind="no-permission" title="登录后申请开票" cta="微信登录" bind:cta="login" />
 <cy-empty class="page-terminal" wx:elif="{{unavailable}}" fill size="lg" kind="no-permission" title="发票功能暂未开放" />

@@ -1,0 +1,64 @@
+== pages/club/apply/index
+ 登录后申请成为主理人 登录 9:41 ▮▮▮ ◔ ▭ ··· ◉ 
+== pages/club/badges/index
+ 俱乐部勋章 链接已失效 勋章名 * 0/120 说明（选填） 0/255 创建 9:41 ▮▮▮ ◔ ▭ ··· ◉ 
+== pages/club/checkin-detail/index
+ 登录后查看 登录 核销详情 链接已失效 返回 9:41 ▮▮▮ ◔ ▭ ··· ◉ 
+== pages/club/create/index
+ 登录后创建俱乐部 登录 9:41 ▮▮▮ ◔ ▭ ··· ◉ 
+== pages/club/customer-detail/index
+ 登录后查看 登录 客户 链接已失效 返回 9:41 ▮▮▮ ◔ ▭ ··· ◉ 
+== pages/club/customers/index
+ 登录后查看 登录 客户 9:41 ▮▮▮ ◔ ▭ ··· ◉ 
+== pages/club/detail/index?id=7002
+ 执行俱乐部 城市探索 · 2 名成员 公开加入 帖文 活动 概览 暂无简介 执行俱乐部主理人 主理人 城市探索 俱乐部类型 — 
+== pages/club/edit/index
+ 登录后查看 登录 编辑资料 没有指定俱乐部 没有指定要编辑的俱乐部，请返回俱乐部页重新进入。 返回俱乐部 校园社团
+== pages/club/enroll/index
+ 登录后查看 登录 报名名册 9:41 ▮▮▮ ◔ ▭ ··· ◉ 
+== pages/club/event-ops/index
+ 登录后查看 登录 活动运营 9:41 ▮▮▮ ◔ ▭ ··· ◉ 
+== pages/club/governance/index
+ 登录后查看 登录 成员治理 7 天 选择 30 天 已选 90 天 选择 9:41 ▮▮▮ ◔ ▭ ··· ◉ 
+== pages/club/group-code/index
+ 团核销码 请从俱乐部管理进入具体场次 缺少路线或场次信息 进入俱乐部管理 9:41 ▮▮▮ ◔ ▭ ··· ◉ 
+== pages/club/join-requests/index
+ 登录后查看 登录 入会申请 无法打开入会申请 缺少俱乐部信息，请返回俱乐部列表后重新进入 返回俱乐部 9:41 ▮▮▮ ◔
+== pages/club/notify/index
+ 登录后查看 登录 群发通知 9:41 ▮▮▮ ◔ ▭ ··· ◉ 
+== pages/club/roles/index
+ 登录后查看 登录 角色与权限 链接已失效 返回 暂无成员 9:41 ▮▮▮ ◔ ▭ ··· ◉ 
+== pages/club/settlement/index
+ 登录后查看 登录 俱乐部结算 9:41 ▮▮▮ ◔ ▭ ··· ◉ 
+== pages/club/topic-detail/index
+ 登录后查看 登录 链接已失效 返回 剧情与玩法 核销记录 退出与暂停规则 集合日期 选择日期 集合时间 选择时间 退款截�
+== pages/club/topic-story/index
+ 剧情与玩法 路线 玩法 9:41 ▮▮▮ ◔ ▭ ··· ◉ 
+== pages/club/workbench/index
+ 登录后查看俱乐部 登录 取消 新建帖文 城瘾玩家 0/8000 发布 草稿 还没有草稿 写到一半退出时会自动存成草稿，回到这里
+== pages/publish/activity/index
+ 发布活动 登录后发布活动 去登录 9:41 ▮▮▮ ◔ ▭ ··· ◉ 
+== pages/publish/fabu/index
+ 登录后创建主题 去登录 9:41 ▮▮▮ ◔ ▭ ··· ◉ 
+== pages/publish/simple/index
+ 快速配置 登录后配置路线 去登录 9:41 ▮▮▮ ◔ ▭ ··· ◉ 
+== pages/publish/temp/index
+ 编辑玩法模板 登录后编辑玩法模板 去登录 保存草稿 查看预览 发布玩法 保存 9:41 ▮▮▮ ◔ ▭ ··· ◉ 
+== pages/publish/template-intro/index
+ 暂无精选示例 把你玩过的一段路 做成别人也能走的玩法 开始创建 9:41 ▮▮▮ ◔ ▭ ··· ◉ 
+== pages/publish/topicadd/topicadd
+ 登录后创建主题 去登录 9:41 ▮▮▮ ◔ ▭ ··· ◉ 
+== pages/template/index
+ 主题 玩法 搜索主题与玩法模板 封面暂不可用 自由探索 E2E 探店日一期 实验模板 · 4 章 · 4 个玩法 · 2 小时 全部 两小时
+== pages/templatedetail/templatedetail
+ 链接已失效 返回 该玩法验证方式为「其他」，请报名参与活动后体验。 9:41 ▮▮▮ ◔ ▭ ··· ◉ 
+== pages/templatedetail/topic-detail/index
+ 链接已失效 返回 9:41 ▮▮▮ ◔ ▭ ··· ◉ 
+== pages/templatedetail/topic-preview/index
+ 缺少模板ID 返回 9:41 ▮▮▮ ◔ ▭ ··· ◉ 
+== pages/topic/pricing/index
+ 确认终价 缺少主题信息 返回上一页 9:41 ▮▮▮ ◔ ▭ ··· ◉ 
+== pages/topic/pricing/partner/index
+ 合作方 合作链接已失效 返回上一页 9:41 ▮▮▮ ◔ ▭ ··· ◉ 
+== subpackageMember/mytemplate/mytemplate
+ 我的节点玩法 登录后查看我的节点玩法 登录 9:41 ▮▮▮ ◔ ▭ ··· ◉ 
