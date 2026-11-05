@@ -14,6 +14,15 @@ const requestId = value => {
 
 const STATUS_TEXT = ['招募中', '已满员', '进行中', '已结束', '已解散'];
 
+// 第十二轮 k7(j4 F15):没起名的队伍按队长昵称叫,与「我的队伍」、附近招募同一口径
+function teamTitleOf(team, members) {
+  const title = String((team && team.title) || '').trim();
+  if (title) return title;
+  const lead = (members || []).find((m) => m && Number(m.role) === 1);
+  const name = String((lead && (lead.memberName || lead.name)) || '').trim();
+  return name ? name + '的队伍' : '一起出发的玩家队伍';
+}
+
 Page({
   data: {
     statusBarHeight: app.globalData.statusBarHeight,
@@ -176,6 +185,7 @@ Page({
             loading: false,
             refreshing: false,
             team: team,
+            teamTitle: teamTitleOf(team, res.data.members || []),
             members: res.data.members || [],
             joined: !!res.data.joined,
             leader: !!res.data.leader,
@@ -304,6 +314,7 @@ Page({
         this.setData({ members: d.members.map(m => ({ memberId: exactId(m.memberId),
           memberName: m.name || '城瘾玩家', memberAvatar: m.avatar || '', role: m.role })),
           'team.joinedCount': d.threshold.activeCount,
+          teamTitle: teamTitleOf(this.data.team, d.members.map(m => ({ name: m.name, role: m.role }))),
           joined: true, leader: self.role == null ? this.data.leader : self.role == 1 });
         // Only project server completion facts; never infer team completion from member counts.
         const tasks = d.tasks.map(t => ({ taskId: exactId(t.taskId), name: t.name || '未命名任务',

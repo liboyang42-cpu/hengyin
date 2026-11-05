@@ -1597,8 +1597,22 @@ public class ApiClubController extends BaseController {
                 if (PlayMode.isLinear(tk.getMode())) { t.setTeamStatus(tk.getTeamStatus()); break; }
             }
         }
+        publicTopicAudit(topics);
         if (viewerId == null || viewerId <= 0L) guestTopicProjection(topics);
         return AjaxResult.success(topics);
+    }
+
+    /**
+     * 第十二轮 k7(走查 k2 游客俱乐部页):RuoYi 审计列 createBy / updateBy 存的是登录名(手机号),
+     * 俱乐部主题列表对任何查看者都不带出(页面不读这两列;主题公开列表本来就不出)。
+     */
+    static void publicTopicAudit(List<CmsTopic> topics) {
+        if (topics == null) return;
+        for (CmsTopic t : topics) {
+            if (t == null) continue;
+            t.setCreateBy(null);
+            t.setUpdateBy(null);
+        }
     }
 
     /** 第十二轮 k2:游客主题投影:不带作者会员 id 与按查看者算的标记。 */

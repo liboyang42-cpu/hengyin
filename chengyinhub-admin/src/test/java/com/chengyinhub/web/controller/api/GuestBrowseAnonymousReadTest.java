@@ -355,6 +355,18 @@ class GuestBrowseAnonymousReadTest {
         assertNull(topic.getIsLike());
     }
 
+    @Test
+    void clubTopicListNeverCarriesTheAuthorsLoginName() {
+        CmsTopic topic = new CmsTopic();
+        topic.setName("公开主题");
+        topic.setCreateBy("13900000003");
+        topic.setUpdateBy("13900000003");
+        ApiClubController.publicTopicAudit(Collections.singletonList(topic));
+        assertEquals("公开主题", topic.getName());
+        assertNull(topic.getCreateBy());
+        assertNull(topic.getUpdateBy());
+    }
+
     // ---------- 广场动态详情 ----------
 
     @Test

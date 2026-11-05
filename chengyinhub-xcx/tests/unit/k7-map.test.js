@@ -188,3 +188,10 @@ test('F16:没头像的队伍图钉与侧栏写队名首字;落在站点旁时让
   const fm = read('components/cy/free-map/index.js');
   assert.match(fm, /anchorX: nearNode && !this\.data\.compact \? TEAM_PIN_NUDGE_PX : 0/);
 });
+
+test('F15:队伍详情的标题与列表同一口径(没起名按队长昵称)', () => {
+  const js = read('pages/team/detail/index.js');
+  assert.match(js, /teamTitle: teamTitleOf\(team, res\.data\.members \|\| \[\]\)/);
+  assert.match(js, /return name \? name \+ '的队伍' : '一起出发的玩家队伍';/);
+  assert.match(read('pages/team/detail/index.wxml'), /<view class="team-title">\{\{teamTitle \|\| team\.title \|\| '一起出发的玩家队伍'\}\}<\/view>/);
+});

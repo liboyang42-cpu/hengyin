@@ -238,6 +238,8 @@ class ApiClubTopicVisibilityTest {
         published.setJourneyStoryJson("{\"endings\":[]}");
         published.setCompleteRuleJson("{\"mode\":\"ALL\"}");
         published.setName("人民广场 · 喷泉报时");
+        published.setCreateBy("13900000003");
+        published.setUpdateBy("13900000003");
         when(topicService.selectPublicCmsTopicList(any())).thenReturn(Collections.singletonList(published));
         ApiClubController controller = new ApiClubController();
         ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
@@ -270,6 +272,9 @@ class ApiClubTopicVisibilityTest {
         assertEquals(null, row.getCompleteRuleJson());
         assertTrue(row.getGameModuleEnabled(), "开关先按原配置算好再清掉配置");
         assertEquals("人民广场 · 喷泉报时", row.getName());
+        // 第十二轮 k7(走查 k2 游客俱乐部页):审计列是作者登录名(手机号),不出列表
+        assertEquals(null, row.getCreateBy());
+        assertEquals(null, row.getUpdateBy());
     }
 
     // 第十轮 f2 walk:确认终价后仍是 lifecycle 2,团卡要能分出「开售审核在等平台」,驳回后回到待定价。
