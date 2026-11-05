@@ -62,8 +62,8 @@ public class TopicSaleFinalizationServiceImpl implements ITopicSaleFinalizationS
     @Autowired(required = false) private com.chengyinhub.business.mapper.CmsRegistrationMerchantMapper registrationMerchantMapper;
     @Autowired(required = false) private com.chengyinhub.business.mapper.CmsTopicNodeMapper topicNodeMapper;
 
-    /** A1 已拍板：活动结束后 T+7 收齐证据。 */
-    private static final long EVIDENCE_DUE_DAYS = 7L;
+    /** A1 证据截止 = 活动结束后 N 天;2026-11-05 业主把所有路径的可提现等待统一为 14 天(FundsHoldPolicy)。 */
+    private static final long EVIDENCE_DUE_DAYS = com.chengyinhub.business.support.FundsHoldPolicy.WITHDRAWABLE_AFTER_END_DAYS;
 
     private final CmsTopicMapper topicMapper;
     private final OmsTicketMapper ticketMapper;

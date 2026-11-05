@@ -108,8 +108,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         for update
     </select>
 
-    <!-- FX-13(9-15 拍板):主题级票(owner_type=1)只能在主题 end_date + 7 天之后归批;end_date 为空视为未结束。
-         口径与 CmsTopicServiceImpl.settleCoopTopic 的 payable_time(end_date+7 天)一致。
+    <!-- FX-13(9-15 拍板):主题级票(owner_type=1)只能在主题 end_date + N 天之后归批;end_date 为空视为未结束。
+         N = FundsHoldPolicy.WITHDRAWABLE_AFTER_END_DAYS(2026-11-05 起 14 天),与 CmsTopicServiceImpl 的 payable_time 同源。
          selectPendingByMerchant 与 bindBatch 共用本片段,保证读快照和真绑定同一口径。 -->
     <sql id="topicTicketNotYetSettleable">
         and not exists (
@@ -118,7 +118,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             where settlement_detail.source_type = 'registration'
               and r.id = settlement_detail.source_id
               and r.owner_type = 1
-              and (t.end_date is null or t.end_date &gt; date_sub(now(), interval 7 day))
+              and (t.end_date is null or t.end_date &gt; date_sub(now(), interval ${@com.chengyinhub.business.support.FundsHoldPolicy@WITHDRAWABLE_AFTER_END_DAYS} day))
         )
     </sql>
 

@@ -8,6 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -26,11 +27,13 @@ class SettlementRefundDeadlineGateSqlTest {
         assertTrue(sql.contains("coalesce(r.refund_deadline, date_sub(activity.start_date, interval 24 hour)) > now()"), sql);
     }
 
-    /** 2026-09-16 晚拍板第 1 条:客诉期 = 活动结束后 7 天,满 7 天才结算入余额(真库见 ComplaintPeriodWithdrawalGateMybatisIntegrationTest)。 */
+    /** 2026-09-16 晚拍板第 1 条:客诉期满才结算入余额;2026-11-05 业主改为结束后 14 天(真库见 ComplaintPeriodWithdrawalGateMybatisIntegrationTest)。 */
     @Test
     void activitySettlementSelectionWaitsForTheSevenDayComplaintPeriod() throws Exception {
         String sql = select("mapper/business/CmsActivityMapper.xml", "selectActivitiesForSettlement");
-        assertTrue(sql.contains("activity.end_date <= date_sub(now(), interval 7 day)"), sql);
+        assertTrue(sql.contains("activity.end_date <= date_sub(now(), interval ${@com.chengyinhub.business.support.fundsholdpolicy@withdrawable_after_end_days} day)"), sql);
+        assertEquals(14, com.chengyinhub.business.support.FundsHoldPolicy.WITHDRAWABLE_AFTER_END_DAYS,
+                "2026-11-05 业主:所有路径结束后 14 天可提现");
     }
 
     @Test

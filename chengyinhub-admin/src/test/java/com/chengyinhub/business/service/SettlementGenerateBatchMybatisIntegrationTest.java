@@ -207,24 +207,24 @@ class SettlementGenerateBatchMybatisIntegrationTest {
     }
 
     /**
-     * FX-13(9-15 拍板):主题级票(owner_type=1)只能在主题 end_date + 7 天之后进结算批次。
+     * FX-13(9-15 拍板):主题级票(owner_type=1)只能在主题 end_date + N 天之后进结算批次(2026-11-05 起 N=14)。
      * 修复前 selectPendingByMerchant/bindBatch 只看 merchant/batch_id/status,主题还没结束就能被归批、
      * confirmBatch 后置 status=1 —— 退款时 voidPendingBySource 作废不到它。
-     * 未满 7 天(含 end_date 为空)的主题票留在 batch_id=0;满 7 天的主题票、场次票照常归批。
+     * 未满 14 天(含 end_date 为空)的主题票留在 batch_id=0;满 14 天的主题票、场次票照常归批。
      */
     @Test
     void topicTicketsStayOutOfBatchUntilSevenDaysAfterTopicEnd() throws Exception {
         execute("INSERT INTO cms_topic (id, end_date) VALUES "
-                        + "(501, DATE_ADD(NOW(), INTERVAL 3 DAY)), (502, DATE_SUB(NOW(), INTERVAL 6 DAY)), "
-                        + "(503, NULL), (504, DATE_SUB(NOW(), INTERVAL 8 DAY))",
+                        + "(501, DATE_ADD(NOW(), INTERVAL 3 DAY)), (502, DATE_SUB(NOW(), INTERVAL 13 DAY)), "
+                        + "(503, NULL), (504, DATE_SUB(NOW(), INTERVAL 15 DAY))",
                 "INSERT INTO cms_registration (id, owner_type, owner_id) VALUES "
                         + "(9001, 1, 501), (9002, 1, 502), (9003, 1, 503), (9004, 1, 504), (9005, 2, 501)",
                 "INSERT INTO settlement_detail (batch_id, merchant_id, source_type, source_id, receiver_type, receiver_id, "
                         + "gross_amount, commission_amount, settlement_amount, status, idempotency_key) VALUES "
                         + "(0, 30, 'registration', 9001, 'merchant', 30, 10.00, 0.00, 10.00, 0, 'REG-NOT-ENDED'), "
-                        + "(0, 30, 'registration', 9002, 'merchant', 30, 10.00, 0.00, 10.00, 0, 'REG-ENDED-6D'), "
+                        + "(0, 30, 'registration', 9002, 'merchant', 30, 10.00, 0.00, 10.00, 0, 'REG-ENDED-13D'), "
                         + "(0, 30, 'registration', 9003, 'merchant', 30, 10.00, 0.00, 10.00, 0, 'REG-NO-END'), "
-                        + "(0, 30, 'registration', 9004, 'merchant', 30, 10.00, 0.00, 10.00, 0, 'REG-ENDED-8D'), "
+                        + "(0, 30, 'registration', 9004, 'merchant', 30, 10.00, 0.00, 10.00, 0, 'REG-ENDED-15D'), "
                         + "(0, 30, 'registration', 9005, 'merchant', 30, 10.00, 0.00, 10.00, 0, 'REG-ACTIVITY')");
         SettlementGenerateDTO request = new SettlementGenerateDTO();
         request.setMerchantId(30L);
@@ -234,9 +234,9 @@ class SettlementGenerateBatchMybatisIntegrationTest {
         Long batchId = settlementService.generateBatch(request);
 
         assertEquals(0, number("SELECT COUNT(*) FROM settlement_detail WHERE batch_id<>0 AND idempotency_key IN "
-                + "('REG-NOT-ENDED','REG-ENDED-6D','REG-NO-END')"), "主题 end_date+7 天前的主题票不能进结算批次");
+                + "('REG-NOT-ENDED','REG-ENDED-13D','REG-NO-END')"), "主题 end_date+14 天前的主题票不能进结算批次");
         assertEquals(4, number("SELECT COUNT(*) FROM settlement_detail WHERE batch_id=" + batchId),
-                "两条 order + 满 7 天的主题票 + 场次票照常归批");
+                "两条 order + 满 14 天的主题票 + 场次票照常归批");
         assertEquals(0, new BigDecimal("220.00").compareTo(
                 decimal("SELECT total_amount FROM settlement_batch WHERE id=" + batchId)));
     }

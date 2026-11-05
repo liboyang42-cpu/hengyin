@@ -121,7 +121,7 @@ class TandianriBatch0FundsMybatisIntegrationTest {
                         + "UNIQUE KEY uk_group_verify_activity_merchant (activity_id, merchant_member_id), KEY idx_group_verify_topic (topic_id), KEY idx_group_verify_activity (activity_id))",
                 "INSERT INTO cms_topic(id,name,product_type,del_flag,status,is_settlement,end_date) VALUES (7001,'FREE_EXPLORE',2,0,1,0,DATE_SUB(NOW(),INTERVAL 1 DAY)),(7002,'经典定向',1,0,1,0,DATE_SUB(NOW(),INTERVAL 1 DAY)),(7003,'类型未决主题',NULL,0,1,0,DATE_SUB(NOW(),INTERVAL 1 DAY))",
                 // 2026-09-17 客诉期:活动结束满 7 天才入结算选单,活动夹具统一放在结束 8 天前。
-                "INSERT INTO cms_activity(id,topic_id,member_id,name,del_flag,status,is_settlement,end_date) VALUES (7101,7001,1,'FREE_EXPLORE壳',0,1,0,DATE_SUB(NOW(),INTERVAL 8 DAY)),(7102,7002,1,'经典活动',0,1,0,DATE_SUB(NOW(),INTERVAL 8 DAY)),(7103,NULL,1,'独立旧活动',0,1,0,DATE_SUB(NOW(),INTERVAL 8 DAY)),(7104,7003,1,'类型未决活动壳',0,1,0,DATE_SUB(NOW(),INTERVAL 8 DAY))",
+                "INSERT INTO cms_activity(id,topic_id,member_id,name,del_flag,status,is_settlement,end_date) VALUES (7101,7001,1,'FREE_EXPLORE壳',0,1,0,DATE_SUB(NOW(),INTERVAL 15 DAY)),(7102,7002,1,'经典活动',0,1,0,DATE_SUB(NOW(),INTERVAL 15 DAY)),(7103,NULL,1,'独立旧活动',0,1,0,DATE_SUB(NOW(),INTERVAL 15 DAY)),(7104,7003,1,'类型未决活动壳',0,1,0,DATE_SUB(NOW(),INTERVAL 15 DAY))",
                 "INSERT INTO cms_registration(id,owner_type,owner_id,member_id,payable_amount,payment_status,registration_status,verification_status,purchase_kind,verification_time) VALUES (7301,1,7001,7401,69.00,2,2,1,1,NOW()),(7302,2,7101,7402,100.00,2,2,1,3,NOW()),(7303,2,7102,7403,88.00,2,2,1,3,NOW())",
                 "INSERT INTO cms_registration_scan(registration_id,member_id,registration_type,create_time) VALUES (7301,7201,1,NOW()),(7302,7201,1,NOW())",
                 "INSERT INTO coop_group_member_verify(registration_id,topic_id,activity_id,verify_time) VALUES (7301,7001,7101,NOW()),(7302,7001,7101,NOW())",
@@ -201,9 +201,9 @@ class TandianriBatch0FundsMybatisIntegrationTest {
     void activitySettlementWaitsUntilEveryPaidTicketIsPastItsRefundDeadline() throws Exception {
         execute(
                 "INSERT INTO cms_activity(id,topic_id,member_id,name,del_flag,status,is_settlement,end_date,start_date) VALUES "
-                        + "(7105,NULL,1,'结束早于集合',0,1,0,DATE_SUB(NOW(),INTERVAL 8 DAY),DATE_ADD(NOW(),INTERVAL 3 DAY)),"
-                        + "(7106,NULL,1,'结束早于集合但已核销',0,1,0,DATE_SUB(NOW(),INTERVAL 8 DAY),DATE_ADD(NOW(),INTERVAL 3 DAY)),"
-                        + "(7107,NULL,1,'集合已过但快照截止未到',0,1,0,DATE_SUB(NOW(),INTERVAL 8 DAY),DATE_SUB(NOW(),INTERVAL 9 DAY))",
+                        + "(7105,NULL,1,'结束早于集合',0,1,0,DATE_SUB(NOW(),INTERVAL 15 DAY),DATE_ADD(NOW(),INTERVAL 3 DAY)),"
+                        + "(7106,NULL,1,'结束早于集合但已核销',0,1,0,DATE_SUB(NOW(),INTERVAL 15 DAY),DATE_ADD(NOW(),INTERVAL 3 DAY)),"
+                        + "(7107,NULL,1,'集合已过但快照截止未到',0,1,0,DATE_SUB(NOW(),INTERVAL 15 DAY),DATE_SUB(NOW(),INTERVAL 16 DAY))",
                 "INSERT INTO cms_registration(id,owner_type,owner_id,member_id,payable_amount,payment_status,registration_status,verification_status,purchase_kind,refund_deadline) VALUES "
                         + "(7305,2,7105,7405,100.00,2,2,0,3,NULL),"
                         + "(7306,2,7106,7406,100.00,2,2,1,3,NULL),"

@@ -968,7 +968,7 @@ class TopicSaleFinalizationServiceImplTest {
     private static final Date EXPECTED_FULFILLMENT_END_AT = Date.from(Instant.parse("2026-08-13T16:00:00Z"));
     /** T+7 的权威起点 = 上面那个瞬间。 */
     private static final Date EXPECTED_EVIDENCE_DUE_AT =
-            Date.from(Instant.parse("2026-08-13T16:00:00Z").plus(7, java.time.temporal.ChronoUnit.DAYS));
+            Date.from(Instant.parse("2026-08-13T16:00:00Z").plus(14, java.time.temporal.ChronoUnit.DAYS));
 
     @Test
     void shopDayFreezesCompensationTermsWithTheAuthoritativeEditionEndPlusSevenDays() {
@@ -979,7 +979,7 @@ class TopicSaleFinalizationServiceImplTest {
         service.finalizeForSale(TOPIC_ID);
 
         // endDate=2026-08-13T00:00Z ⇒ Asia/Shanghai 的 2026-08-13 ⇒ 窗口结束 2026-08-14T00:00+08:00
-        // = 2026-08-13T16:00Z；T+7 = 2026-08-20T16:00Z。不是 JVM 默认时区、不是 new Date()。
+        // = 2026-08-13T16:00Z；T+14 = 2026-08-27T16:00Z(2026-11-05 业主:所有路径结束后 14 天)。不是 JVM 默认时区、不是 new Date()。
         verify(compensationService).freezeTermsForSale(TOPIC_ID, 7L, Date.from(NOW), EXPECTED_EVIDENCE_DUE_AT,
                 EXPECTED_FULFILLMENT_END_AT);
     }

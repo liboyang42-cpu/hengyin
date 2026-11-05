@@ -823,9 +823,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         BigDecimal platformAmount = totalSales.multiply(platformRate).setScale(2, java.math.RoundingMode.HALF_UP);
         BigDecimal principalAmount = totalSales.subtract(platformAmount);
         Date now = new Date();
-        Date payable = topic.getEndDate() != null
-                ? new Date(topic.getEndDate().getTime() + 7L * 24 * 3600 * 1000)
-                : new Date(now.getTime() + 7L * 24 * 3600 * 1000);
+        Date payable = com.chengyinhub.business.support.FundsHoldPolicy.payableAfterEnd(topic.getEndDate(), now);
         String regIds = joinVerifiedRegIds(basis.getVerifiedRegistrationIds());
         CoopSettlement platformLine = newSettlementLine(topic, null, platformAmount, "PLATFORM", "platform", 1,
                 payable, now, basis.getVerifiedHeads(), basis.getVerifiedSales(), regIds);
@@ -938,9 +936,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         String verifiedRegIds = joinVerifiedRegIds(cashBasis.getVerifiedRegistrationIds());
 
         Date now = new Date();
-        Date payable = topic.getEndDate() != null
-                ? new Date(topic.getEndDate().getTime() + 7L * 24 * 3600 * 1000)
-                : new Date(now.getTime() + 7L * 24 * 3600 * 1000);
+        Date payable = com.chengyinhub.business.support.FundsHoldPolicy.payableAfterEnd(topic.getEndDate(), now);
 
         // 第一遍:只算不写。承接方/商家分项行(LEAD_FEE=俱乐部带队 / MERCHANT_VERIFY=商家核销),
         // 累计应收 + 统计"有真实核销的被邀商家数"(发起人保底 +2n% 挂钩)。跳过已挂单(防重复)。
