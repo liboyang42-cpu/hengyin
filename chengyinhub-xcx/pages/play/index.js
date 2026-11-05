@@ -7484,7 +7484,7 @@ Page({
        wx.login → getWeRunData 拿密文这条路,不能直接 action 空手发。
        ⚠️ 早先只认 'refresh'(旧 steps 屏的事件名)—— 换屏之后那两个动作会掉进
        下面的通用分支,发出去一个没有 encryptedData 的 SUBMIT_STEPS,服务端解不开。 */
-    if (kit.type === 'walk' || action === 'refresh') { this._submitSteps(); return; }
+    if ((kit.type === 'walk' && action !== 'readfail' && action !== 'skip') || action === 'refresh') { this._submitSteps(); return; }
     /* 拍照问答:照片得先上传拿到地址,再连地址一起提交。
        组件手里只有临时路径 —— 那个路径出了这台手机就不存在,发给服务端等于发了个空。 */
     if (action === 'shoot') { this._submitQaPhoto(detail); return; }
@@ -7805,13 +7805,24 @@ Page({
       success: (login) => {
         if (!isCurrent()) return;
         if (!login || !login.code) { cyToast('微信登录态获取失败'); return; }
-        wx.getWeRunData({
-          success: (run) => {
-            if (!isCurrent()) return;
-            game.action('SUBMIT_STEPS', { code: login.code, encryptedData: run.encryptedData, iv: run.iv });
-          },
-          fail: () => { if (isCurrent()) cyToast('需要授权微信运动才能计步'); },
-        });
+        /* 第十一轮 i1:读不到微信运动(拒了授权、这台设备没有)要在屏上说清楚,不能静默;
+           拒授权等同罗盘读不出数,报给服务端记到门槛,之后服务端给「跳过这一站」。 */
+        const weRunDenied = () => {
+          if (!isCurrent()) return;
+          this.setData({ 'playKit.kit.readError': '需要授权微信运动才能计步' });
+          game.action('REPORT_SENSOR_FAILURE', { game: 'steps', denied: true });
+        };
+        if (typeof wx.getWeRunData !== 'function') { weRunDenied(); return; }
+        try {
+          wx.getWeRunData({
+            success: (run) => {
+              if (!isCurrent()) return;
+              if (this._kit().readError) this.setData({ 'playKit.kit.readError': '' });
+              game.action('SUBMIT_STEPS', { code: login.code, encryptedData: run.encryptedData, iv: run.iv });
+            },
+            fail: weRunDenied,
+          });
+        } catch (error) { weRunDenied(); }
       },
       fail: () => { if (isCurrent()) cyToast('微信登录态获取失败'); },
     });

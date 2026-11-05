@@ -144,6 +144,12 @@ function buildSteps(seg) {
     steps: seg.todaySteps > 0 ? seg.todaySteps : 0,
     goal: seg.goal > 0 ? seg.goal : 0,
     goalLocked: true,
+    // 第十一轮 i1:微信运动读不到时的出路,与罗盘同口径,只听服务端。计步只在读不到微信运动时报失败,
+    // 所以「报过失败、还没同步到步数」就是读不到 —— 重建 kit 后这句话也不能丢
+    readError: Number(seg.failedReads) > 0 && !(seg.todaySteps > 0) && !seg.reached && seg.skipped !== true
+      ? '需要授权微信运动才能计步' : '',
+    canSkip: seg.canSkip === true,
+    skipped: seg.skipped === true,
   };
 }
 
@@ -192,7 +198,7 @@ function segmentComplete(name, seg) {
   if (name === 'hiddenObject') return ((seg.foundIds || []).length >= (seg.total || 0));
   if (name === 'blindTaste') return !!seg.solved;
   if (name === 'diyName') return !!String(seg.name || '').trim();
-  if (name === 'steps') return !!seg.reached;
+  if (name === 'steps') return !!seg.reached || seg.skipped === true;
   if (name === 'slowTask') return !!seg.claimed;
   if (name === 'dailySign') return !!seg.claimedDate;
   /* 九宫格全亮就算这段完了 —— 它垫底且只呈现进度,没有"再做一次"的动作;
@@ -217,7 +223,7 @@ function segmentComplete(name, seg) {
     return !!seg.passed || (tries > 0 && (Number(seg.attempts) || 0) >= tries);
   }
   if (name === 'reaction' || name === 'ballShake' || name === 'quietHold'
-      || name === 'shout' || name === 'countdown' || name === 'stopwatch') return !!seg.submitted;
+      || name === 'shout' || name === 'countdown' || name === 'stopwatch') return !!seg.submitted || seg.skipped === true;
   // 罗盘:对准过一次就算走完 —— 没有对错、没有次数上限(契约 §3.4)
   if (name === 'compass') return !!seg.done;
   return false;
@@ -826,6 +832,8 @@ function pickPlayKit(view, now) {
       goal: seg.goal || 0,
       timed: !!seg.timed,
       seconds: seg.seconds || 0,
+      canSkip: seg.canSkip === true,
+      skipped: seg.skipped === true,
     }, sensorContract.kitFields(seg));
   }
   if (name === 'quietHold') {
@@ -833,6 +841,8 @@ function pickPlayKit(view, now) {
       kicker: seg.kicker || '',
       sub: seg.sub || '',
       seconds: seg.seconds || 0,
+      canSkip: seg.canSkip === true,
+      skipped: seg.skipped === true,
     }, sensorContract.kitFields(seg));
   }
   /* 罗盘指向:bearing/tolerance/holdSeconds 全是题面(服务端开局就下发),
@@ -855,6 +865,8 @@ function pickPlayKit(view, now) {
     return Object.assign(base, {
       kicker: seg.kicker || '',
       seconds: seg.seconds || 0,
+      canSkip: seg.canSkip === true,
+      skipped: seg.skipped === true,
     }, sensorContract.kitFields(seg));
   }
   if (name === 'countdown') {
@@ -970,6 +982,18 @@ const ACTION_OF = {
   /* P-23:读不出方向报一次失败;服务端记够两次、且作者允许或队长放行后,才收「跳过这一站」 */
   'compass:readfail': 'REPORT_SENSOR_FAILURE',
   'compass:skip': 'SKIP_SENSOR_STATION',
+  /* 第十一轮 i1:弹球、安静挑战、喊一嗓子、计步同一条规则。拒了麦克风 / 微信运动 = 拒了权限,
+     服务端一次就记到门槛(payload.denied);读不出数照常每次记一次。 */
+  'ballshake:readfail': 'REPORT_SENSOR_FAILURE',
+  'ballshake:skip': 'SKIP_SENSOR_STATION',
+  'quiethold:readfail': 'REPORT_SENSOR_FAILURE',
+  'quiethold:micdenied': 'REPORT_SENSOR_FAILURE',
+  'quiethold:skip': 'SKIP_SENSOR_STATION',
+  'shout:readfail': 'REPORT_SENSOR_FAILURE',
+  'shout:micdenied': 'REPORT_SENSOR_FAILURE',
+  'shout:skip': 'SKIP_SENSOR_STATION',
+  'walk:readfail': 'REPORT_SENSOR_FAILURE',
+  'walk:skip': 'SKIP_SENSOR_STATION',
   'shout:submit': 'SUBMIT_SHOUT',
   'countdown:finish': 'SUBMIT_COUNTDOWN',
   'stopwatch:submit': 'SUBMIT_STOPWATCH',
@@ -1015,6 +1039,15 @@ const CHALLENGE_GAME = {
   typein: 'typeIn',
 };
 
+/** 可跳过的传感器屏 → 服务端玩法段名(SKIPPABLE_SENSOR_SECTIONS) */
+const SENSOR_GAME_OF = {
+  compass: 'compass',
+  ballshake: 'ballShake',
+  quiethold: 'quietHold',
+  shout: 'shout',
+  walk: 'steps',
+};
+
 function serverAction(type, action) {
   return ACTION_OF[type + ':' + action] || '';
 }
@@ -1032,7 +1065,8 @@ function serverPayload(type, action, detail) {
     const game = CHALLENGE_GAME[type];
     return game ? { game: game } : {};
   }
-  if (type === 'compass' && (action === 'readfail' || action === 'skip')) return { game: 'compass' };
+  if (SENSOR_GAME_OF[type] && (action === 'readfail' || action === 'skip')) return { game: SENSOR_GAME_OF[type] };
+  if (SENSOR_GAME_OF[type] && action === 'micdenied') return { game: SENSOR_GAME_OF[type], denied: true };
   switch (type + ':' + action) {
     case 'estimate:submit': return { value: d.guess };
     case 'pricepair:submit': return { pickId: d.pickId };

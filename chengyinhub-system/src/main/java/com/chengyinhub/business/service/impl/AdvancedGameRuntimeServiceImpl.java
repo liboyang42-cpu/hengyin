@@ -1184,7 +1184,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         for (String section : AdvancedActionJudgement.SKIPPABLE_SENSOR_SECTIONS) if (enabled(config.get(section))) { game = section; break; }
         if (game == null) throw new ServiceException("这一站不是传感器玩法，不能放行", 409);
         ObjectNode state = objectState(session.getStateJson());
-        if (state.path(game).path("done").asBoolean(false)) throw new ServiceException("这一站已经完成了", 409);
+        if (AdvancedActionJudgement.sensorSectionFinished(state, game)) throw new ServiceException("这一站已经完成了", 409);
         ObjectNode released = state.with(game).with("releasedFor");
         if (released.has(String.valueOf(memberId))) return;   // 重复放行:幂等
         released.putObject(String.valueOf(memberId)).put("by", leaderMemberId).put("at", clock.now().getTime());
@@ -1207,7 +1207,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
                 JsonNode config = readJson(session.getConfigSnapshotJson(), "玩法配置不可用");
                 for (String game : AdvancedActionJudgement.SKIPPABLE_SENSOR_SECTIONS) {
                     JsonNode node = state.path(game);
-                    if (!enabled(config.get(game)) || node.path("done").asBoolean(false)) continue;
+                    if (!enabled(config.get(game)) || AdvancedActionJudgement.sensorSectionFinished(state, game)) continue;
                     // 作者已允许跳过的站,成员自己就能跳,不必再麻烦队长
                     if (config.path(game).path("allowSkip").asBoolean(false) || node.path("releasedFor").has(String.valueOf(memberId))) continue;
                     if (AdvancedActionJudgement.failedReads(state, game, memberId) >= AdvancedActionJudgement.SKIP_AFTER_FAILED_READS) {
@@ -1923,6 +1923,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             GameRuntimeSession session, Long memberId) {
         JsonNode cfg = config.get("steps");
         if (!enabled(cfg)) throw new IllegalArgumentException("该玩法未开启计步挑战");
+        AdvancedActionJudgement.requireNotSkipped(state, "steps");
         int todaySteps;long timestamp;
         if(config.path("outcomeRules").path("version").asInt()==1) {
             com.chengyinhub.business.service.support.WeRunDecryptor.VerifiedWeRunReading run=verifiedWeRunService.verify(memberId,objectMapper.valueToTree(payload),clock.now().getTime());
@@ -2448,10 +2449,18 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         if (st.has("bestDiffMs")) value.put("bestDiffMs", st.path("bestDiffMs").asLong(0L));
         // C1:服务端挑战身份 + 证据口径。设备自报那几段只算娱乐成绩,奖励上限由这里说了算,界面照着显示
         actionJudgement().putAttempt(value, state, game, actorMemberId);
+        if (AdvancedActionJudgement.SKIPPABLE_SENSOR_SECTIONS.contains(game)) putSensorSkip(value, config, state, game, actorMemberId);
         boolean selfReported = SELF_REPORTED_SECTIONS.contains(game);
         value.put("evidence", selfReported ? "SELF_REPORTED" : "SERVER_TIMED");
         value.put("rewardCeiling", (selfReported ? RewardPolicy.XP_BADGE_ONLY : RewardPolicy.FULL).name());
         kit.put(game, value);
+    }
+
+    /** 第十一轮 i1:传感器段读不出数时的出路,与罗盘同一组字段;只告诉本人自己的失败次数与能不能跳。 */
+    private void putSensorSkip(Map<String, Object> value, JsonNode config, ObjectNode state, String game, Long actorMemberId) {
+        value.put("skipped", state.path(game).path("skipped").asBoolean(false));
+        value.put("failedReads", AdvancedActionJudgement.failedReads(state, game, actorMemberId));
+        value.put("canSkip", AdvancedActionJudgement.canSkip(config, state, game, actorMemberId));
     }
 
     private void copyField(Map<String, Object> value, JsonNode cfg, String field) {
@@ -2554,6 +2563,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             value.put("xp", cfg.path("xp").asInt(0));
             value.put("todaySteps", state.path("steps").path("todaySteps").asInt(0));
             value.put("reached", state.path("steps").path("reached").asBoolean(false));
+            putSensorSkip(value, config, state, "steps", actorMemberId);
             kit.put("steps", value);
         }
         if (enabled(config.path("slowTask"))) {

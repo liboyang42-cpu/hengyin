@@ -33,6 +33,10 @@
     </view>
 
     <view class="wk__foot">{{mode === 'goal' ? '先设目标，再同步微信运动。' : '步数只能同步，不能填 —— 能填的话这个玩法就没意义了。'}}</view>
+    <view wx:if="{{readError && !skipped}}" class="wk__err" aria-role="alert">{{readError}}</view>
+    <view wx:if="{{skipped}}" class="wk__foot">这一站已跳过</view>
+    <view wx:elif="{{canSkip && !syncing}}" class="wk__skip" bindtap="onSkip"
+          aria-role="button" aria-label="跳过这一站" hover-class="wk__skip--press" hover-stay-time="80">跳过这一站</view>
   </view>
 
   <view class="wk__cta {{syncing ? 'wk__cta--busy' : ''}}" bindtap="onCta"

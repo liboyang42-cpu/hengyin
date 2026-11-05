@@ -133,3 +133,22 @@
 }
 .wk__cta--press { opacity: .88; }
 .wk__cta--busy { opacity: .55; }
+
+/* 第十一轮 i1:微信运动读不到时的红字(输入错误同一处理:红字贴在内容下面)与「跳过这一站」次要按钮 */
+.wk__err {
+  margin-top: var(--cy-space-3);
+  color: var(--cy-color-status-danger);
+  font-size: var(--cy-type-label);
+}
+.wk__skip {
+  margin-top: var(--cy-space-3);
+  min-height: 88rpx;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--cy-radius-pill);
+  box-shadow: inset 0 0 0 2rpx currentColor;
+  font-size: var(--cy-type-label);
+  font-weight: 700;
+  opacity: .8;
+  transition: opacity .16s ease;
+}
+.wk__skip--press { opacity: .6; }

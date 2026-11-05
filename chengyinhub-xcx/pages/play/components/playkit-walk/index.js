@@ -52,6 +52,10 @@ Component({
     // 服务端解密回来的步数。客户端拿不到明文,所以这个值只会从外面进来
     steps: { type: Number, value: 0 },
     syncing: { type: Boolean, value: false },
+    // 第十一轮 i1:微信运动读不到(拒了授权等)时说清楚,并给与罗盘同口径的出路;能不能跳只听服务端
+    readError: { type: String, value: '' },
+    canSkip: { type: Boolean, value: false },
+    skipped: { type: Boolean, value: false },
   },
   data: {
     mode: 'goal',              // goal 设目标 / run 数步数
@@ -118,6 +122,14 @@ Component({
       }
       // 只发「去同步」这个意图,拿数据和解密都在外面 —— 客户端读不到明文
       this.triggerEvent('sync', { goal: this._goal });
+    },
+
+    /* 跳过由服务端判(拒授权、读不出两次、作者开关或队长放行都在服务端),这里只发请求 */
+    onSkip() {
+      if (!this.data.canSkip || this.data.skipped || this.data.syncing || this._skipping) return;
+      this._skipping = true;
+      setTimeout(() => { this._skipping = false; }, 1500);
+      this.triggerEvent('skip');
     },
 
     onClose() { this.triggerEvent('close'); },

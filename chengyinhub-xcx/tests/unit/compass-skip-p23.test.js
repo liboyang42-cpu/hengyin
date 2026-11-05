@@ -25,9 +25,9 @@ test('读取失败与跳过各对应一个服务端动作,只带 game=compass', 
   assert.equal(serverAction('compass', 'skip'), 'SKIP_SENSOR_STATION');
   assert.deepEqual(serverPayload('compass', 'readfail', { anything: 1 }), { game: 'compass' });
   assert.deepEqual(serverPayload('compass', 'skip', {}), { game: 'compass' });
-  // 别的玩法没有跳过动作:不在册就不发
+  // 别的玩法没有跳过动作:不在册就不发(第十一轮 i1 起喊一嗓子也是传感器站,非传感器换成反应测试)
   assert.equal(serverAction('qa', 'skip'), '');
-  assert.equal(serverAction('shout', 'skip'), '');
+  assert.equal(serverAction('reaction', 'skip'), '');
 });
 
 test('跳过按钮只听服务端的 canSkip;跳过过的站显示「已跳过」', () => {

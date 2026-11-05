@@ -31,6 +31,9 @@ Component({
     // C1:服务端开表发的挑战身份(0 = 没有)与奖励上限(空 = 服务端没说,什么都不承诺)
     attemptId: { type: Number, value: 0 },
     rewardCeiling: { type: String, value: '' },
+    // 第十一轮 i1:读不出声音或拒了麦克风时的出路,与罗盘同口径 —— 能不能跳、是不是跳过的,都只听服务端
+    canSkip: { type: Boolean, value: false },
+    skipped: { type: Boolean, value: false },
   },
   data: { left: '15.0', band: 'ok', running: false, preparing: false, stageKeys: [0],
     // calibration: '' 未校准 / 'calibrating' 正在听环境音 / 'calibrated' 已校准(切走、重开即作废)
@@ -108,6 +111,8 @@ Component({
         && !this._hidden && !this._closed && !this._detached;
       if (denied(error)) { if (canReport()) this.triggerEvent('micdenied'); return; }
       cyToast('声音读取失败，请重试或退出');
+      // 失败次数由服务端记,够两次后它才会给出「跳过这一站」
+      if (canReport()) this.triggerEvent('readfail');
       if (typeof wx.getSetting === 'function') {
         try { wx.getSetting({
           success: (res) => {
@@ -252,6 +257,14 @@ Component({
     onVerdict(e) {
       const attempt = this._eventAttempt(e);
       if (attempt && attempt.reporting) this.triggerEvent('verdict', e.detail);
+    },
+    /* 跳过由服务端判(次数、拒权限、作者开关或队长放行都在服务端),这里只发请求 */
+    onSkip() {
+      if (!this.data.canSkip || this.data.skipped || this.data.running || this.data.preparing
+        || this._attempt || this._skipping) return;
+      this._skipping = true;
+      setTimeout(() => { this._skipping = false; }, 1500);
+      this.triggerEvent('skip');
     },
     onClose(e) {
       if (e && (!e.currentTarget || !e.currentTarget.dataset || String(e.currentTarget.dataset.stageKey) !== String(this.data.stageKeys[0]))) return;

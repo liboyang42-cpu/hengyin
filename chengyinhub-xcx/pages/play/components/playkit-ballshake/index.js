@@ -61,6 +61,9 @@ Component({
     sharedChallenge: { type: Boolean, value: false },
     // C1:服务端发的挑战身份(0 = 没有,照旧只交撞击数)
     attemptId: { type: Number, value: 0 },
+    // 第十一轮 i1:读不出动作时的出路,与罗盘同口径 —— 能不能跳、是不是跳过的,都只听服务端
+    canSkip: { type: Boolean, value: false },
+    skipped: { type: Boolean, value: false },
   },
   data: {
     stageKeys: [0],
@@ -143,6 +146,16 @@ Component({
       if (!this._current(attempt) || attempt.phase !== 'running') return;
       this._interrupt(null, notice);
       cyToast('动作读取中断，请重新开始');
+      // 失败次数由服务端记,够两次后它才会给出「跳过这一站」
+      this.triggerEvent('readfail');
+    },
+    /* 跳过由服务端判(次数、作者开关或队长放行都在服务端),这里只发请求 */
+    onSkip() {
+      if (!this.data.canSkip || this.data.skipped || this.data.running || this.data.awaitingResult
+        || this._attempt && this._attempt.phase !== 'finished' || this._skipping) return;
+      this._skipping = true;
+      setTimeout(() => { this._skipping = false; }, 1500);
+      this.triggerEvent('skip');
     },
     _armWatchdog(attempt) {
       if (this._watchdog) clearTimeout(this._watchdog);

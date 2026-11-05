@@ -97,10 +97,10 @@ public final class AdvancedActionJudgement {
             case ROLL_DICE -> rollDice(config, state);
             case START_CHALLENGE -> startChallenge(config, state, payload, input.memberId());
             case SUBMIT_REACTION -> submitReaction(config, state, payload);
-            case SUBMIT_BALL_SHAKE -> submitBallShake(config, state, payload);
-            case SUBMIT_QUIET_HOLD -> submitQuietHold(config, state, payload);
-            case SUBMIT_COMPASS -> submitCompass(config, state, payload, score);
-            case SUBMIT_SHOUT -> submitShout(config, state, payload);
+            case SUBMIT_BALL_SHAKE -> { requireNotSkipped(state, "ballShake"); submitBallShake(config, state, payload); }
+            case SUBMIT_QUIET_HOLD -> { requireNotSkipped(state, "quietHold"); submitQuietHold(config, state, payload); }
+            case SUBMIT_COMPASS -> { requireNotSkipped(state, "compass"); submitCompass(config, state, payload, score); }
+            case SUBMIT_SHOUT -> { requireNotSkipped(state, "shout"); submitShout(config, state, payload); }
             case SUBMIT_COUNTDOWN -> submitCountdown(config, state);
             case SUBMIT_STOPWATCH -> submitStopwatch(config, state, payload);
             case SUBMIT_QA -> choices.addAll(submitQa(config, state, payload, score, input.memberId()));
@@ -152,7 +152,10 @@ public final class AdvancedActionJudgement {
      * P-23(2026-11-02 业主批准):传感器读不出数时的出路。只对这几段开放 —— 它们的完成全靠本机传感器,
      * 设备没有这个传感器就永远过不去。有对错的玩法(问答、排序……)不在这里,跳过等于送答案。
      */
-    static final List<String> SKIPPABLE_SENSOR_SECTIONS = Collections.unmodifiableList(Arrays.asList("compass"));
+    static final List<String> SKIPPABLE_SENSOR_SECTIONS = Collections.unmodifiableList(
+            // 第十一轮 i1:弹球(加速度)、安静挑战 / 喊一嗓子(麦克风)、计步(微信运动)同罗盘一条规则 ——
+            // 设备读不出数或玩家拒了权限,站点不能把人困住(业主规则:站点永远不许把玩家困住)。
+            Arrays.asList("compass", "ballShake", "quietHold", "shout", "steps"));
     /** 本人连续读取失败几次后才许跳过 */
     static final int SKIP_AFTER_FAILED_READS = 2;
     /** 失败次数只为跨过门槛,封顶免得刷成大数 */
@@ -224,7 +227,8 @@ public final class AdvancedActionJudgement {
         if (enabled(config.get("diyName"))
                 && state.path("diyName").path("name").asText("").isEmpty()) return false;
         if (enabled(config.get("steps"))
-                && !state.path("steps").path("reached").asBoolean(false)) return false;
+                && !state.path("steps").path("reached").asBoolean(false)
+                && !state.path("steps").path("skipped").asBoolean(false)) return false;
         if (enabled(config.get("dailySign"))
                 && state.path("dailySign").path("claimedDate").asText("").isEmpty()) return false;
         if (enabled(config.get("slowTask"))
@@ -285,7 +289,8 @@ public final class AdvancedActionJudgement {
            玩家只会退出而不是重来 —— 与猜数字同一条口径(施工文档 §1.3)。 */
         for (String game : new String[] { "reaction", "ballShake", "quietHold", "shout", "countdown", "stopwatch" }) {
             if (enabled(config.get(game))
-                    && !state.path(game).path("submitted").asBoolean(false)) return false;
+                    && !state.path(game).path("submitted").asBoolean(false)
+                    && !state.path(game).path("skipped").asBoolean(false)) return false;
         }
         // 罗盘:对准过一次就算走完 —— 与估数同口径,没有对错、可以一直转(现场感契约 §3.4)
         if (enabled(config.get("compass"))
@@ -1195,6 +1200,7 @@ public final class AdvancedActionJudgement {
     private void startChallenge(JsonNode config, ObjectNode state, Map<String, Object> payload, Long memberId) {
         String game = challengeKey(payload);
         if (!enabled(config.path(game))) throw new IllegalArgumentException("该玩法未开启这一项");
+        requireNotSkipped(state, game);
         ObjectNode node = state.with(game);
         if (node.path("submitted").asBoolean(false)) throw new IllegalStateException("这一局已经交过了");
         node.put("startedAtMs", clock.now().getTime());
@@ -1440,7 +1446,7 @@ public final class AdvancedActionJudgement {
     }
 
     static boolean canSkip(JsonNode config, JsonNode state, String game, Long memberId) {
-        return !state.path(game).path("done").asBoolean(false)
+        return !sensorSectionFinished(state, game)
                 && skipGrant(config, state, game, memberId) != null
                 && failedReads(state, game, memberId) >= SKIP_AFTER_FAILED_READS;
     }
@@ -1452,17 +1458,36 @@ public final class AdvancedActionJudgement {
     }
 
     /**
+     * 这一段已经走完(不再计失败、不再许跳、不再许放行):罗盘看 done,计步看 reached,
+     * 挑战类看 submitted(与 mechanicsReady 同口径),跳过的一律算走完。
+     */
+    static boolean sensorSectionFinished(JsonNode state, String game) {
+        JsonNode node = state.path(game);
+        if (node.path("done").asBoolean(false) || node.path("skipped").asBoolean(false)) return true;
+        if ("steps".equals(game)) return node.path("reached").asBoolean(false);
+        return !"compass".equals(game) && node.path("submitted").asBoolean(false);
+    }
+
+    /** 跳过的那一段不再收成绩:0 分就是 0 分,事后补交不能再领这一段的 xp。 */
+    static void requireNotSkipped(JsonNode state, String game) {
+        if (state.path(game).path("skipped").asBoolean(false)) throw new IllegalStateException("这一站已经跳过了");
+    }
+
+    /**
      * 客户端报「这台设备没读出数」。只计数,不改完成;本人各计各的,队友的失败不替本人攒门槛。
      * 已经完成的一段不再计。
      */
-    private static void reportSensorFailure(JsonNode config, ObjectNode state, Map<String, Object> payload, Long memberId) {
+    static void reportSensorFailure(JsonNode config, ObjectNode state, Map<String, Object> payload, Long memberId) {
         String game = skippableSection(config, payload);
         if (memberId == null) throw new IllegalArgumentException("参数有误");
         ObjectNode node = state.with(game);
-        if (node.path("done").asBoolean(false)) return;
+        if (sensorSectionFinished(state, game)) return;
         ObjectNode reads = node.with("failedReads");
         String key = String.valueOf(memberId);
-        reads.put(key, Math.min(MAX_COUNTED_FAILED_READS, reads.path(key).asInt(0) + 1));
+        int next = reads.path(key).asInt(0) + 1;
+        // 第十一轮 i1:玩家拒了麦克风 / 微信运动权限,再读几次也是零,一次就到门槛(与「读不出两次」同等)
+        if (payload != null && Boolean.TRUE.equals(payload.get("denied"))) next = Math.max(next, SKIP_AFTER_FAILED_READS);
+        reads.put(key, Math.min(MAX_COUNTED_FAILED_READS, next));
     }
 
     /**
@@ -1473,7 +1498,7 @@ public final class AdvancedActionJudgement {
         String game = skippableSection(config, payload);
         if (memberId == null) throw new IllegalArgumentException("参数有误");
         ObjectNode node = state.with(game);
-        if (node.path("done").asBoolean(false)) {
+        if (sensorSectionFinished(state, game)) {
             if (node.path("skipped").asBoolean(false)) return;   // 重放:已经跳过了
             throw new IllegalStateException("这一站已经完成了");
         }

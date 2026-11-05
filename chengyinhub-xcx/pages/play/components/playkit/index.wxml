@@ -85,12 +85,16 @@
   show="{{show}}" inline="{{inline}}" kicker="{{kit.kicker}}" goal="{{kit.goal}}"
   challenge="{{kit.challenge}}" shared-challenge="{{kit.challengeShared}}"
   timed="{{kit.timed}}" seconds="{{kit.seconds}}" attempt-id="{{kit.attemptId}}"
-  bind:start="onStart" bind:submit="onSubmit" bind:verdict="onVerdict" bind:close="onClose" />
+  can-skip="{{kit.canSkip}}" skipped="{{kit.skipped}}"
+  bind:start="onStart" bind:submit="onSubmit" bind:verdict="onVerdict" bind:close="onClose"
+  bind:readfail="onReadFail" bind:skip="onSkip" />
 
 <cy-playkit-quiethold wx:elif="{{kit.type === 'quiethold'}}"
   show="{{show}}" kicker="{{kit.kicker}}" sub="{{kit.sub}}" seconds="{{kit.seconds}}"
   attempt-id="{{kit.attemptId}}" reward-ceiling="{{kit.rewardCeiling}}"
-  bind:start="onStart" bind:submit="onSubmit" bind:verdict="onVerdict" bind:micdenied="onMicDenied" bind:close="onClose" />
+  can-skip="{{kit.canSkip}}" skipped="{{kit.skipped}}"
+  bind:start="onStart" bind:submit="onSubmit" bind:verdict="onVerdict" bind:micdenied="onMicDenied" bind:close="onClose"
+  bind:readfail="onReadFail" bind:skip="onSkip" />
 
 <cy-playkit-compass wx:elif="{{kit.type === 'compass'}}"
   show="{{show}}" kicker="{{kit.kicker}}" target="{{kit.bearing}}" tolerance="{{kit.tolerance}}"
@@ -103,7 +107,9 @@
 <cy-playkit-shout wx:elif="{{kit.type === 'shout'}}"
   show="{{show}}" kicker="{{kit.kicker}}" seconds="{{kit.seconds}}"
   attempt-id="{{kit.attemptId}}" reward-ceiling="{{kit.rewardCeiling}}"
-  bind:start="onStart" bind:submit="onSubmit" bind:verdict="onVerdict" bind:micdenied="onMicDenied" bind:close="onClose" />
+  can-skip="{{kit.canSkip}}" skipped="{{kit.skipped}}"
+  bind:start="onStart" bind:submit="onSubmit" bind:verdict="onVerdict" bind:micdenied="onMicDenied" bind:close="onClose"
+  bind:readfail="onReadFail" bind:skip="onSkip" />
 
 <cy-playkit-countdown wx:elif="{{kit.type === 'countdown'}}"
   show="{{show}}" kicker="{{kit.kicker}}" seconds="{{kit.seconds}}" done-text="{{kit.doneText}}"
@@ -183,8 +189,10 @@
 
 <cy-playkit-walk wx:elif="{{kit.type === 'walk'}}"
   show="{{show}}" goal="{{kit.goal}}" steps="{{kit.steps}}" syncing="{{kit.syncing}}"
-  goal-locked="{{kit.goalLocked}}"
-  bind:goalchange="onGoalChange" bind:sync="onSync" bind:claim="onClaim" bind:close="onClose" />
+  goal-locked="{{kit.goalLocked}}" read-error="{{kit.readError}}"
+  can-skip="{{kit.canSkip}}" skipped="{{kit.skipped}}"
+  bind:goalchange="onGoalChange" bind:sync="onSync" bind:claim="onClaim" bind:close="onClose"
+  bind:skip="onSkip" />
 
 <!-- ===== 《预制人生》四个新段(契约 §2;§2.3 的 check 已作废)===== -->
 <cy-playkit-profile wx:elif="{{kit.type === 'profile'}}"

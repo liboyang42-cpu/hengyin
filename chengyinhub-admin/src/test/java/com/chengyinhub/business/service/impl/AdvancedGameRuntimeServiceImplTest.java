@@ -3165,7 +3165,8 @@ class AdvancedGameRuntimeServiceImplTest {
 
     @Test
     void leaderCannotReleaseANonSensorStation() {
-        GameRuntimeSession session = runningSession(quietConfig(), "{}");
+        // 第十一轮 i1:安静挑战(麦克风)起也算传感器站(业主规则:站点不许困住玩家),非传感器站换成反应测试。
+        GameRuntimeSession session = runningSession(reactionConfig(), "{}");
         when(sessionMapper.selectPlayerByOwner(ACTIVITY_ID, TOPIC_ID, NODE_ID, MEMBER_ID)).thenReturn(session);
         when(sessionMapper.selectByIdForUpdate(51L)).thenReturn(session);
 
