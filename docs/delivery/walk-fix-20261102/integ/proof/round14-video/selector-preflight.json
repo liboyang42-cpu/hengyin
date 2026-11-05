@@ -1,0 +1,53 @@
+{
+  "scope": "READ_ONLY_SELECTORS_NOT_BUSINESS_ACCEPTANCE",
+  "runtime": "coordinator reported old 6f backend; rebuilt cac4 frontend",
+  "author": {
+    "memberId": 9008,
+    "role": "club",
+    "loginLabel": "e2e-openid-9008"
+  },
+  "player": {
+    "memberId": 990010,
+    "role": "player",
+    "loginLabel": "e2e-openid-9010"
+  },
+  "privacy": "Real UI consent authorized by coordinator, after member verification",
+  "confirmedCommands": [
+    {
+      "op": "aria",
+      "label": "发布"
+    },
+    {
+      "op": "aria",
+      "label": "发布城市定向"
+    },
+    {
+      "op": "aria",
+      "label": "专业手动"
+    },
+    {
+      "op": "aria",
+      "label": "打开主题详情"
+    }
+  ],
+  "confirmedVisibleControls": [
+    "上传主题配乐",
+    "设置画面风格"
+  ],
+  "blankEditor": {
+    "name": "",
+    "editingTopicId": "",
+    "chapterCount": 0,
+    "editLoadError": ""
+  },
+  "topicWriteRequests": [],
+  "unverified": [
+    "opening/ending media upload controls after authored chapter creation",
+    "save/publish/playback/frozen/ending-response/reopen on final candidate"
+  ],
+  "screenshots": [
+    "selector-publish-menu.jpg",
+    "selector-blank-editor.jpg",
+    "selector-theme-music.jpg"
+  ]
+}

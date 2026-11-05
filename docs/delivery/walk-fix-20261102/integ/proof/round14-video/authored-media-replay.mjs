@@ -6,11 +6,11 @@ import assert from 'node:assert/strict';
 import { pathToFileURL } from 'node:url';
 
 const plan = [
-  'Author 9010: 发布 → 城市定向 → 专业手动; create a new R14-VIDEO-prefixed theme through the editor.',
+  'Author 9008: 发布 → 城市定向 → 专业手动; create a new R14-VIDEO-prefixed theme through the editor; preserve R14-GAME rows.',
   'Fill required details, opening text/audio/video, one ordinary question station with a real result rule, ending text/audio/video, theme music and a free ticket.',
   'Pause at media/theme HOLD and give the coordinator only the owned review IDs; this lane performs no moderation.',
   'Save/reopen through UI; retain author-edit-detail media fields and theme ID; publish through UI after review.',
-  'Player 9011: open the authored topic, free signup through checkout, play the actual station to server-confirmed completion.',
+  'Player 990010 (login label 9010): open the authored topic, free signup through checkout, play the actual station to server-confirmed completion.',
   'Record native opening/ending frames and audio events, actual ending response and coordinator frozen-snapshot readback; continue to finish and reopen.',
   'Repeat native request-delay/error interception and four looks without altering completed session data; phone/headphone acceptance stays pending.',
 ];
@@ -29,7 +29,7 @@ if (process.argv.includes('--plan')) {
 const source = process.env.R14_VIDEO_RUNTIME_READY || '';
 assert.match(source,/^[0-9a-f]{40}$/,'Coordinator must signal the verified combined candidate before execution');
 const identity=process.env.R14_VIDEO_IDENTITY;
-assert.ok(['e2e-openid-9010','e2e-openid-9011'].includes(identity),'Only the two coordinator-reserved VIDEO identities are allowed');
+assert.ok(['e2e-openid-9008','e2e-openid-9010'].includes(identity),'Only the coordinator-verified author/player login identities are allowed');
 const expectedMember=process.env.R14_VIDEO_EXPECTED_MEMBER_ID || '';
 assert.match(expectedMember,/^[1-9][0-9]{0,18}$/,'Coordinator must confirm the actual member ID; login labels do not allocate IDs');
 const root=process.env.R14_RIG_HOME || '/private/tmp/cy-r14-rig-1105';
@@ -37,9 +37,14 @@ const output=process.env.R14_VIDEO_OUTPUT || path.join(root,'r14-video-replay');
 fs.mkdirSync(output,{recursive:true});
 process.env.RIG_WEB='http://127.0.0.1:18197'; process.env.RIG_SHOTS=output;
 const {launch}=await import(pathToFileURL(path.join(root,'docs/delivery/cloud-walk-20261101/rig/mpweb/walk.mjs')));
-const w=await launch({path:'pages/template/index',identity,agree:true,localOnly:true});
+const w=await launch({path:'pages/template/index',identity,localOnly:true});
 const user=await w.page.evaluate(()=>MPWEB.getApp().getUserID());
-try { assert.equal(String(user),expectedMember,'Login must resolve to the independently confirmed member'); }
+try {
+  assert.equal(String(user),expectedMember,'Login must resolve to the independently confirmed member');
+  if ((await w.route()).at(-1)==='pages/privacy/index') {
+    await w.tap('我已阅读并同意'); await w.tap('同意并继续');
+  }
+}
 catch(error) { await w.close(); throw error; }
 const history=[],readbacks=[],pendingReadbacks=[];
 w.page.on('response',response=>{
