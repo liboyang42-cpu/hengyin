@@ -1,0 +1,2 @@
+[{"clear":1},{"wait":1500},{"clear":1},{"shot":"24-rollback-old-jar-home"},{"open":"/subpackageMember/signup/index"},{"wait":4000},{"shot":"25-rollback-old-jar-wallet"},{"dump":1},
+ {"open":"/subpackageMember/orderinfo/orderinfo?id=75"},{"wait":4000},{"route":1},{"shot":"26-rollback-old-jar-order-75"},{"dump":1}]

@@ -1,0 +1,2 @@
+[{"clear":1},{"wait":1500},{"clear":1},{"open":"/pages/topic/index/index?id=990025"},{"wait":4000},{"tapSel":".hero-cta"},{"wait":3000},{"route":1},{"shot":"06-old-explore-scanned-wallet-empty"},{"dump":1},
+ {"open":"/subpackageMember/orderinfo/orderinfo?id=74"},{"wait":4000},{"route":1},{"shot":"07-old-order-detail-74"},{"dump":1},{"scroll":700},{"wait":1000},{"shot":"08-old-order-detail-74-lower"},{"dump":1}]

@@ -1,0 +1,3 @@
+[{"clear":1},{"wait":1500},{"clear":1},{"open":"/subpackageMember/signup/index"},{"wait":4500},{"shot":"27-old-wallet-after-1of4-scan"},{"dump":1},
+ {"eval":"(getCurrentPages().slice(-1)[0].data.ticketList||[]).map(t=>t.id+' '+t.wTitle+' '+t.wUntil)"},
+ {"open":"/subpackageMember/orderinfo/orderinfo?id=76"},{"wait":4000},{"shot":"28-old-order-76-after-1of4-scan"},{"dump":1}]

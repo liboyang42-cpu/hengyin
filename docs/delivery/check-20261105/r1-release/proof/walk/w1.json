@@ -1,0 +1,1 @@
+[{"clear":1},{"wait":1500},{"clear":1},{"shot":"01-old-guest-home"},{"dump":1},{"tap":"我的"},{"wait":2500},{"clear":1},{"shot":"02-old-guest-mine"},{"dump":1}]

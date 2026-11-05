@@ -1,0 +1,5 @@
+scan ch58 by merchant 9002: {"msg": "核销成功", "code": 200, "data": {"perkName": "到店赠美式一杯", "chapterId": 58, "redemptionId": 5, "chapterName": "第1章 咖啡"}, "_status": 200}
+readback reg ((76, 1, datetime.datetime(2026, 11, 5, 2, 44, 8)),)
+readback entitlements ((58, 1), (59, 0), (60, 0), (61, 0))
+{'id': 76, 'verificationStatus': 1, 'exploreProgress': {'redeemed': 1, 'required': 4, 'completed': False, 'ended': False, 'active': True}}
+{'id': 75, 'verificationStatus': 0, 'exploreProgress': {'redeemed': 0, 'required': 4, 'completed': False, 'ended': False, 'active': True}}

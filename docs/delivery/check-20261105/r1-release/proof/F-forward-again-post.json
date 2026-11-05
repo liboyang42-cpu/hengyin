@@ -1,0 +1,440 @@
+{
+ "at_utc": "2026-11-05T02:38:37",
+ "step": "F-forward-again-post",
+ "runs": [
+  {
+   "migration": "20261104_content_safety_jobs_post_deploy",
+   "exit": 0,
+   "asserts": [
+    "[1/4] -- runner: assert=scalar-true SELECT (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND engine = 'InnoDB' AND table_name IN ('content_safety_recheck','content_sensitiv",
+    "断言通过:scalar-true; readback=1",
+    "[4/4] -- runner: assert=scalar-true SELECT (SELECT COUNT(*) FROM sys_job WHERE invoke_target = 'contentSafetyRecheckTask.run()') = 1 AND (SELECT COUNT(*) FROM sys_job WHERE invoke_target = 'sensitiveContent",
+    "断言通过:scalar-true; readback=1"
+   ],
+   "tail": ""
+  }
+ ],
+ "state": {
+  "settlement_rule": [
+   [
+    9801,
+    "activity",
+    0,
+    "0.0300",
+    "0.9700",
+    "0.0000",
+    1
+   ],
+   [
+    9802,
+    "topic",
+    0,
+    "0.0300",
+    "0.9700",
+    "0.0000",
+    1
+   ],
+   [
+    9803,
+    "topic_club",
+    0,
+    "0.0300",
+    "0.9700",
+    "0.0000",
+    1
+   ],
+   [
+    9804,
+    "activity",
+    8001,
+    "0.0500",
+    "0.9500",
+    "0.0000",
+    1
+   ],
+   [
+    9805,
+    "activity",
+    0,
+    "0.2000",
+    "0.8000",
+    "0.0000",
+    0
+   ]
+  ],
+  "sys_category": [
+   [
+    9811,
+    6,
+    "茶馆"
+   ],
+   [
+    9812,
+    1,
+    "书店"
+   ],
+   [
+    9813,
+    6,
+    "手作工坊"
+   ],
+   [
+    9814,
+    6,
+    "古着中古"
+   ],
+   [
+    9815,
+    6,
+    "文创杂货"
+   ],
+   [
+    9816,
+    6,
+    "花店"
+   ],
+   [
+    9817,
+    6,
+    "烘焙甜品"
+   ],
+   [
+    9818,
+    6,
+    "酒馆小酌"
+   ],
+   [
+    9819,
+    6,
+    "宠物友好"
+   ]
+  ],
+  "gather": [
+   [
+    9801,
+    "31.230400",
+    "121.473700"
+   ],
+   [
+    9802,
+    null,
+    null
+   ],
+   [
+    9803,
+    "30.100000",
+    "120.100000"
+   ],
+   [
+    9804,
+    null,
+    null
+   ],
+   [
+    9805,
+    null,
+    null
+   ]
+  ],
+  "club_role_assignment": [
+   [
+    9831,
+    "EVENT_CHECKIN",
+    0
+   ]
+  ],
+  "user_permission": [
+   [
+    "club",
+    null,
+    1,
+    3
+   ],
+   [
+    "merchant",
+    null,
+    1,
+    3
+   ],
+   [
+    "player",
+    null,
+    0,
+    0
+   ]
+  ],
+  "points": [
+   [
+    1,
+    "注册赠送",
+    "10.00",
+    1,
+    0
+   ],
+   [
+    2,
+    "报名活动",
+    "10.00",
+    1,
+    0
+   ],
+   [
+    3,
+    "报名额外(停用)",
+    "5.00",
+    0,
+    0
+   ],
+   [
+    4,
+    "评价",
+    "5.00",
+    1,
+    0
+   ],
+   [
+    5,
+    "邀请1位完成首次购买的用户",
+    "500.00",
+    1,
+    0
+   ],
+   [
+    6,
+    "被邀请用户报名任意活动",
+    "0.00",
+    0,
+    0
+   ],
+   [
+    7,
+    "推荐商户注册",
+    "30.00",
+    1,
+    0
+   ]
+  ],
+  "total_time": [
+   [
+    9831,
+    "reh minutes all",
+    1800
+   ],
+   [
+    9832,
+    "reh seed seconds",
+    5400
+   ],
+   [
+    9833,
+    "reh minutes host-only",
+    600
+   ],
+   [
+    9834,
+    "reh edge host1 merchant59",
+    3600
+   ],
+   [
+    9835,
+    "reh zero",
+    0
+   ],
+   [
+    990013,
+    "E2E 探店日一期",
+    0
+   ],
+   [
+    990024,
+    "E2E 探店日一期",
+    7200
+   ],
+   [
+    990025,
+    "E2E 探店日一期",
+    7200
+   ]
+  ],
+  "wording_topic": [
+   [
+    9851,
+    "三个随机卡",
+    "三个「随机卡袋子」,每个"
+   ],
+   [
+    9852,
+    "三个盲盒(后台改过)",
+    null
+   ],
+   [
+    9853,
+    "穿搭盲配",
+    null
+   ],
+   [
+    9854,
+    "三个盲盒",
+    null
+   ]
+  ],
+  "wording_node": [
+   [
+    9851,
+    "随机卡一:观察"
+   ],
+   [
+    9851,
+    "随机卡二:拍照"
+   ],
+   [
+    9854,
+    "盲盒一:观察"
+   ]
+  ],
+  "wording_tpl": [
+   [
+    9861,
+    "玩法包·随机卡之观察"
+   ],
+   [
+    9862,
+    "玩法包·盲盒之观察"
+   ]
+  ],
+  "wording_chapter": [
+   [
+    9853,
+    "随机卡衣柜"
+   ]
+  ],
+  "wording_menu": [
+   [
+    2541,
+    "自由探索实际工时确认",
+    "A2：确认俱乐部实际工时；宽"
+   ],
+   [
+    2542,
+    "自由探索额外工时审批",
+    "A2：事前预审批与更正；追认"
+   ],
+   [
+    2543,
+    "自由探索质量奖励确认",
+    "A1：三维逐项一次确认，每维"
+   ],
+   [
+    2544,
+    "自由探索质量奖励过错排除",
+    "A1：已证明由商家/平台造成"
+   ],
+   [
+    2545,
+    "自由探索期级FINAL结算",
+    "F3：FINAL 只消费已确"
+   ],
+   [
+    2546,
+    "俱乐部应付批次确认",
+    "F3：批次确认人不得兼任付款"
+   ],
+   [
+    2547,
+    "俱乐部应付付款登记",
+    "F3：付款登记人不得兼任批次"
+   ],
+   [
+    2548,
+    "俱乐部对公收款人审核",
+    "自由探索A4：财务一次审核；"
+   ],
+   [
+    2549,
+    "俱乐部对公收款人付款解密",
+    "自由探索A4：受控完整解密，"
+   ],
+   [
+    2550,
+    "玩家投诉补偿冷静期改写",
+    "自由探索A3：改冷静期小时数"
+   ],
+   [
+    2551,
+    "自由探索已确认工时更正",
+    "A2：把已确认工时退回重确认"
+   ]
+  ],
+  "sys_job_new": [
+   [
+    "内容安全自动复检",
+    "contentSafetyRecheckTask.run()",
+    "21 1/5 * * * ?",
+    "1"
+   ],
+   [
+    "预测轮次超时作废",
+    "predictVoidExpiredTask.run()",
+    "0 0 3 * * ?",
+    "0"
+   ],
+   [
+    "敏感词存量复查",
+    "sensitiveContentRescanTask.run()",
+    "33 2/10 * * * ?",
+    "1"
+   ]
+  ],
+  "config": [
+   [
+    "content.sensitive.rescan.remove",
+    "false"
+   ]
+  ],
+  "menus_sensitive": [
+   [
+    "敏感内容库维护",
+    "business:sensitive:edit",
+    0
+   ],
+   [
+    "敏感内容库",
+    "business:sensitive:list",
+    0
+   ]
+  ],
+  "new_tables": [
+   [
+    "app_author_write_receipt",
+    "InnoDB"
+   ],
+   [
+    "content_safety_recheck",
+    "InnoDB"
+   ],
+   [
+    "content_sensitive_allow",
+    "InnoDB"
+   ],
+   [
+    "content_sensitive_hit",
+    "InnoDB"
+   ],
+   [
+    "content_sensitive_image",
+    "InnoDB"
+   ],
+   [
+    "content_sensitive_word",
+    "InnoDB"
+   ]
+  ]
+ },
+ "fingerprint": {
+  "tables": 457,
+  "columns": 6298,
+  "index_cols": 2451,
+  "col_digest": "d96db8f3ec5af59a",
+  "idx_digest": "e9418fe5bca0bf70"
+ }
+}

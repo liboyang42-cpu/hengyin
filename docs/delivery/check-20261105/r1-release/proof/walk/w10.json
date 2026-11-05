@@ -1,0 +1,2 @@
+[{"clear":1},{"wait":1500},{"clear":1},{"open":"/pages/topic/index/index?id=990025"},{"wait":4000},{"scroll":900},{"wait":1500},{"data":"heroCta"},{"shot":"06a-old-explore-scanned-topic-go-wallet"},
+ {"eval":"(function(){var p=getCurrentPages().slice(-1)[0];p.onHeroCta();return 'ok'})()"},{"wait":4000},{"route":1},{"shot":"06b-old-explore-scanned-wallet-empty"},{"dump":1}]

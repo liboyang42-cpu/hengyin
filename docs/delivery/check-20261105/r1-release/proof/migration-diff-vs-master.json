@@ -1,0 +1,245 @@
+{
+  "base": "c6eac3b8cebf7311e8f00f208d294c3c8212aaec",
+  "head": "573c463b3b457b77544e63be4271a07d5d565e09",
+  "headMigrationCount": 599,
+  "changes": [
+    {
+      "change": "ADDED",
+      "migrationId": "20261102_merchant_industry_categories",
+      "path": "chengyinhub-admin/sql/migration_20261102_merchant_industry_categories.sql",
+      "sha256": "c70540359608fc96adad3db06ffcfa7622964004e40b23ae93c46996f9726312",
+      "baseSha256": null,
+      "order": 77,
+      "dependsOn": [
+        "20261101_theme_categories"
+      ],
+      "applied": "UNKNOWN",
+      "needsOwnerApproval": true,
+      "idempotency": "IDEMPOTENT_STATIC",
+      "idempotencyIssues": [],
+      "informationSchemaGuard": false,
+      "destructiveStatements": [],
+      "gateProblems": []
+    },
+    {
+      "change": "ADDED",
+      "migrationId": "20261103_content_safety_recheck",
+      "path": "chengyinhub-admin/sql/migration_20261103_content_safety_recheck.sql",
+      "sha256": "75f8503da9afea023160e94d36c718690bd8ca241d915083340804ed976d61da",
+      "baseSha256": null,
+      "order": 78,
+      "dependsOn": [],
+      "applied": "UNKNOWN",
+      "needsOwnerApproval": true,
+      "idempotency": "IDEMPOTENT_STATIC",
+      "idempotencyIssues": [],
+      "informationSchemaGuard": true,
+      "destructiveStatements": [],
+      "gateProblems": []
+    },
+    {
+      "change": "ADDED",
+      "migrationId": "20261103_sensitive_content_library",
+      "path": "chengyinhub-admin/sql/migration_20261103_sensitive_content_library.sql",
+      "sha256": "348a2bae288368d7828b12241de83d145ef94f20a2113bd98826a1330af67b52",
+      "baseSha256": null,
+      "order": 79,
+      "dependsOn": [],
+      "applied": "UNKNOWN",
+      "needsOwnerApproval": true,
+      "idempotency": "IDEMPOTENT_STATIC",
+      "idempotencyIssues": [],
+      "informationSchemaGuard": true,
+      "destructiveStatements": [],
+      "gateProblems": []
+    },
+    {
+      "change": "ADDED",
+      "migrationId": "20261104_content_safety_jobs_post_deploy",
+      "path": "chengyinhub-admin/sql/migration_20261104_content_safety_jobs_post_deploy.sql",
+      "sha256": "be344f9cf2e58df2418f4d47fa28bcb38f39910eeea97d13b672b7416b526ea5",
+      "baseSha256": null,
+      "order": 80,
+      "dependsOn": [
+        "20261103_content_safety_recheck",
+        "20261103_sensitive_content_library"
+      ],
+      "applied": "UNKNOWN",
+      "needsOwnerApproval": true,
+      "idempotency": "IDEMPOTENT_STATIC",
+      "idempotencyIssues": [],
+      "informationSchemaGuard": true,
+      "destructiveStatements": [],
+      "gateProblems": []
+    },
+    {
+      "change": "ADDED",
+      "migrationId": "20261104_invitee_signup_points_off",
+      "path": "chengyinhub-admin/sql/migration_20261104_invitee_signup_points_off.sql",
+      "sha256": "4eb15de47dd07b9ecd7a776c809d075dc7e00d12b6bdb4083ff9f81d9236c95b",
+      "baseSha256": null,
+      "order": 81,
+      "dependsOn": [],
+      "applied": "UNKNOWN",
+      "needsOwnerApproval": true,
+      "idempotency": "IDEMPOTENT_STATIC",
+      "idempotencyIssues": [],
+      "informationSchemaGuard": false,
+      "destructiveStatements": [],
+      "gateProblems": []
+    },
+    {
+      "change": "ADDED",
+      "migrationId": "20261104_merchant_industry_categories_readback",
+      "path": "chengyinhub-admin/sql/migration_20261104_merchant_industry_categories_readback.sql",
+      "sha256": "ed7513dd00180390cb091b2458d9289027bc844cebebf99bae8ff9ee82f5636b",
+      "baseSha256": null,
+      "order": 82,
+      "dependsOn": [
+        "20261102_merchant_industry_categories"
+      ],
+      "applied": "UNKNOWN",
+      "needsOwnerApproval": true,
+      "idempotency": "IDEMPOTENT_STATIC",
+      "idempotencyIssues": [],
+      "informationSchemaGuard": false,
+      "destructiveStatements": [],
+      "gateProblems": []
+    },
+    {
+      "change": "ADDED",
+      "migrationId": "20261104_topic_total_time_seconds",
+      "path": "chengyinhub-admin/sql/migration_20261104_topic_total_time_seconds.sql",
+      "sha256": "f70aae4bdbce87d7e5b23da9aec91b2a225f1aa3592e67db77f3ade8b28f4bbe",
+      "baseSha256": null,
+      "order": 83,
+      "dependsOn": [],
+      "applied": "UNKNOWN",
+      "needsOwnerApproval": true,
+      "idempotency": "IDEMPOTENT_STATIC",
+      "idempotencyIssues": [],
+      "informationSchemaGuard": false,
+      "destructiveStatements": [],
+      "gateProblems": []
+    },
+    {
+      "change": "ADDED",
+      "migrationId": "20261102_club_session_gather_point",
+      "path": "chengyinhub-admin/sql/migration_20261102_club_session_gather_point.sql",
+      "sha256": "a4901b23460ce852955706482a685de00bb252eb4425b2edfa487afc2b7f7c51",
+      "baseSha256": null,
+      "order": 111,
+      "dependsOn": [
+        "c3_team_fields"
+      ],
+      "applied": "UNKNOWN",
+      "needsOwnerApproval": true,
+      "idempotency": "IDEMPOTENT_STATIC",
+      "idempotencyIssues": [],
+      "informationSchemaGuard": false,
+      "destructiveStatements": [],
+      "gateProblems": []
+    },
+    {
+      "change": "ADDED",
+      "migrationId": "20261104_club_session_gather_point_readback",
+      "path": "chengyinhub-admin/sql/migration_20261104_club_session_gather_point_readback.sql",
+      "sha256": "d07210b85e870e8c56681393fd28c52422839d246f22960d4c5c2824b75df391",
+      "baseSha256": null,
+      "order": 112,
+      "dependsOn": [
+        "20261102_club_session_gather_point"
+      ],
+      "applied": "UNKNOWN",
+      "needsOwnerApproval": true,
+      "idempotency": "IDEMPOTENT_STATIC",
+      "idempotencyIssues": [],
+      "informationSchemaGuard": false,
+      "destructiveStatements": [],
+      "gateProblems": []
+    },
+    {
+      "change": "ADDED",
+      "migrationId": "20261103_settlement_rule_three_percent",
+      "path": "chengyinhub-admin/sql/migration_20261103_settlement_rule_three_percent.sql",
+      "sha256": "73b9a8e4eb3ed2731eac2ae24e98bf42a374eedce7875bf943f7f67581943ef2",
+      "baseSha256": null,
+      "order": 392,
+      "dependsOn": [
+        "20260815_tandianri_h8_rate_convergence",
+        "p3_phase_c_web_rules_refund"
+      ],
+      "applied": "UNKNOWN",
+      "needsOwnerApproval": true,
+      "idempotency": "IDEMPOTENT_STATIC",
+      "idempotencyIssues": [],
+      "informationSchemaGuard": false,
+      "destructiveStatements": [],
+      "gateProblems": []
+    },
+    {
+      "change": "ADDED",
+      "migrationId": "20261102_club_checkin_phone_visible",
+      "path": "chengyinhub-admin/sql/migration_20261102_club_checkin_phone_visible.sql",
+      "sha256": "494130841727ccd9a7e3731ae965fcc0fd23581617d0abaaec57a7e8b8a9e8e8",
+      "baseSha256": null,
+      "order": 397,
+      "dependsOn": [
+        "club_role_assignment_20260823"
+      ],
+      "applied": "UNKNOWN",
+      "needsOwnerApproval": true,
+      "idempotency": "GUARDED_INFORMATION_SCHEMA",
+      "idempotencyIssues": [],
+      "informationSchemaGuard": true,
+      "destructiveStatements": [],
+      "gateProblems": []
+    },
+    {
+      "change": "ADDED",
+      "migrationId": "20261104_merchant_activity_limit",
+      "path": "chengyinhub-admin/sql/migration_20261104_merchant_activity_limit.sql",
+      "sha256": "e0e247caa5f15e633f6a1eea4ea679a00536f5db7eba37a3720eba5137468a1c",
+      "baseSha256": null,
+      "order": 430,
+      "dependsOn": [
+        "20261012_missing_role_permission_defaults",
+        "p1_rbac_permission_defaults"
+      ],
+      "applied": "UNKNOWN",
+      "needsOwnerApproval": true,
+      "idempotency": "IDEMPOTENT_STATIC",
+      "idempotencyIssues": [],
+      "informationSchemaGuard": false,
+      "destructiveStatements": [],
+      "gateProblems": []
+    },
+    {
+      "change": "ADDED",
+      "migrationId": "20261104_review_wording_seeded_text",
+      "path": "chengyinhub-admin/sql/migration_20261104_review_wording_seeded_text.sql",
+      "sha256": "4f7b17900ea8f10e841248a7fe2b6898550f0616a63bf8be0487db58928af9b5",
+      "baseSha256": null,
+      "order": 571,
+      "dependsOn": [
+        "20260815_tandianri_roam_revisit_report_permission",
+        "20260816_tandianri_batch3_funds_club_compensation",
+        "20260816_tandianri_batch3_funds_club_payee",
+        "20260816_tandianri_batch3_funds_player_cooldown",
+        "20260817_tandianri_batch3_funds_club_hours_correction",
+        "20260817_tandianri_batch5_admin_menus",
+        "20260822_template_cover_images",
+        "predict_void_task_register_20260915",
+        "seed_playpack_batch2_figma_20260821",
+        "seed_playpack_templates_20260820"
+      ],
+      "applied": "UNKNOWN",
+      "needsOwnerApproval": true,
+      "idempotency": "IDEMPOTENT_STATIC",
+      "idempotencyIssues": [],
+      "informationSchemaGuard": false,
+      "destructiveStatements": [],
+      "gateProblems": []
+    }
+  ]
+}

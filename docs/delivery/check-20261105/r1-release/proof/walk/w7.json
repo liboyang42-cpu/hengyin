@@ -1,0 +1,4 @@
+[{"clear":1},{"wait":1500},{"clear":1},{"open":"/subpackageMember/signup/index"},{"wait":4000},{"route":1},{"shot":"19-old-wallet-9004"},{"dump":1},
+ {"tap":"开始游戏"},{"wait":7000},{"clear":1},{"route":1},{"shot":"20-old-play-open"},{"dump":1},
+ {"loc":[31.2304,121.4737]},{"tap":"我到了"},{"wait":1500},{"shot":"21-old-gather-consent"},{"tap":"定位并签到"},{"wait":3500},{"shot":"22-old-play-arrived"},{"dump":1},
+ {"eval":"window.MPWEB.net.slice(-6).map(x=>x.status+' '+String(x.url).replace(/^.*__api\\/api/,'').slice(0,60)+' '+String(x.resBody||'').slice(0,160))"}]

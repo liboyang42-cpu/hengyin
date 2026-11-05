@@ -1,0 +1,5 @@
+[{"clear":1},{"wait":1500},{"clear":1},{"shot":"03-old-home-9009"},{"scroll":600},{"wait":1000},{"shot":"04-old-home-9009-list"},{"dump":1},
+ {"open":"/pages/topic/index/index?id=990025"},{"wait":4000},{"shot":"05-old-topic-990025"},{"scroll":900},{"wait":1500},
+ {"eval":"(function(){var p=getCurrentPages().slice(-1)[0];p.onHeroCta();return p.data.sessionPicker&&Object.keys(p.data.sessionPicker)})()"},
+ {"wait":2500},{"shot":"06-old-session-picker"},{"tap":"11.15"},{"wait":2500},{"shot":"07-old-session-tickets"},{"tap":"标准场次票"},{"wait":800},
+ {"tap":"下一步 · 去结算"},{"wait":4500},{"route":1},{"shot":"08-old-checkout"},{"dump":1}]
