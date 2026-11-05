@@ -1,10 +1,10 @@
 <template name="terminal-result">
   <view class="pk-terminal">
     <text class="pk-terminal__title">{{kit.sessionStatus === 'EXPIRED' ? '本次玩法已超时' : '本次玩法未通过'}}</text>
-    <text wx:if="{{kit.sessionScore !== undefined}}">得分 {{kit.sessionScore}}</text>
-    <text wx:if="{{kit.completedUnits !== undefined}}">已完成 {{kit.completedUnits}} 项</text>
+    <!-- 第十二轮 k7 N7:没得分、没完成项不摆「得分 0 / 已完成 0 项」;去掉「原结果已保留…」说明行 -->
+    <text wx:if="{{kit.sessionScore > 0}}">得分 {{kit.sessionScore}}</text>
+    <text wx:if="{{kit.completedUnits > 0}}">已完成 {{kit.completedUnits}} 项</text>
     <text wx:if="{{kit.feedback}}">{{kit.feedback}}</text>
-    <text>原结果已保留，重新进入不会重置进度。</text>
     <cy-btn wx:if="{{kit.canRetry === true}}" variant="primary" bindtap="onRetry">{{kit.retryLabel}}</cy-btn>
     <cy-btn variant="secondary" bindtap="onClose">关闭</cy-btn>
   </view>

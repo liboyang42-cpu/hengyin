@@ -40,14 +40,17 @@ class GameplaySupportMatrixRuntimeTest {
         ObjectNode config = JSON.readTree(template.getAdvancedConfigJson()).deepCopy(); config.remove("scan");
         config.putObject("ballShake").put("enabled", true).put("goal", 10).put("timed", false).put("seconds", 12);
         template.setAdvancedConfigJson(new AdvancedGameConfigValidator().validateAndNormalize(config.toString()));
-        String message = assertThrows(IllegalArgumentException.class, () -> f.publish(GameplayReskinFixture.variants().get(0))).getMessage();
+        IllegalArgumentException refused = assertThrows(IllegalArgumentException.class, () -> f.publish(GameplayReskinFixture.variants().get(0)));
+        String message = refused.toString();
         assertTrue(message.matches("节点 [0-9]+.*玩法 shake 工具 costs.*"), message);
+        // 第十二轮 k7 N5:作者看到的那句只有站名、玩法中文名和人话原因,不露内部英文与节点编号
+        assertTrue(refused.getMessage().contains("的弹球：") && !refused.getMessage().matches(".*(shake|costs|genericSettlement|节点 [0-9]).*"), refused.getMessage());
     }
 
     @Test void legacyChallengeAnswerWithoutAdvancedProofCannotPublishAndFixedReferenceCanBeJudged() throws Exception {
         GameplayReskinFixture f = new GameplayReskinFixture();
         f.templates.get(505L).setAdvancedConfigJson("{\"schemaVersion\":1}");
-        String message = assertThrows(IllegalArgumentException.class, () -> f.publish(GameplayReskinFixture.variants().get(0))).getMessage();
+        String message = assertThrows(IllegalArgumentException.class, () -> f.publish(GameplayReskinFixture.variants().get(0))).toString();
         assertTrue(message.matches("节点 [0-9]+.*恢复问答.*zeroChallenge.*"), message);
         GameplayReskinFixture fixed = new GameplayReskinFixture(); fixed.publish(GameplayReskinFixture.variants().get(0));
         ObjectNode answers = JSON.createObjectNode(); answers.putObject("qa").put("input", "错误口令");

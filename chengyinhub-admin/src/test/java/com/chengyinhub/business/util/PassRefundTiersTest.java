@@ -57,7 +57,7 @@ class PassRefundTiersTest {
         RefundPolicy.Verdict started = explore(code, START, new Date(START.getTime() + 60_000L));
         assertFalse(started.refundable);
         assertFalse(started.manualReview);
-        assertEquals("已开始,不可退款", started.reason);
+        assertEquals("已开始，不可退款", started.reason);
     }
 
     /** 存量 ③ 单(EXPLORE_END_100_0)当初答应「有效期截止前全额」:开始后、截止前仍全额,不追溯。 */

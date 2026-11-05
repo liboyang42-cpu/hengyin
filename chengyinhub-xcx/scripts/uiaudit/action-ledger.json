@@ -1057756,7 +1057756,7 @@
       }
     },
     {
-      "id": "pages/play/components/advanced-game/index.wxml:57:bindtap:retry:11",
+      "id": "pages/play/components/advanced-game/index.wxml:56:bindtap:retry:11",
       "route": "component:pages/play/components/advanced-game/index",
       "hostRoutes": [
         "pages/play/index"
@@ -1057791,7 +1057791,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "retry",
-        "line": 57,
+        "line": 56,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": "{{state.canRetry === true && (state.status === 'FAILED' || state.status === 'EXPIRED')}}",
         "disabledCondition": "{{loading || acting || unknown}}",
@@ -1057911,7 +1057911,7 @@
       }
     },
     {
-      "id": "pages/play/components/advanced-game/index.wxml:61:bindtap:continueBase:12",
+      "id": "pages/play/components/advanced-game/index.wxml:60:bindtap:continueBase:12",
       "route": "component:pages/play/components/advanced-game/index",
       "hostRoutes": [
         "pages/play/index"
@@ -1057946,7 +1057946,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "continueBase",
-        "line": 61,
+        "line": 60,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!state.readyForBase}}",
@@ -1108290,7 +1108290,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-stopwatch/index.js:187"
+        "staticSource": "pages/play/components/playkit-stopwatch/index.js:188"
       }
     },
     {
@@ -1108537,7 +1108537,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-stopwatch/index.js:186"
+        "staticSource": "pages/play/components/playkit-stopwatch/index.js:187"
       }
     },
     {
@@ -1109157,7 +1109157,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit-typein/index.wxml:38:bindconfirm:onSubmit:8",
+      "id": "pages/play/components/playkit-typein/index.wxml:39:bindconfirm:onSubmit:8",
       "route": "component:pages/play/components/playkit-typein/index",
       "hostRoutes": [
         "pages/play/index",
@@ -1109236,7 +1109236,7 @@
         "tag": "input",
         "event": "bindconfirm",
         "handler": "onSubmit",
-        "line": 38,
+        "line": 39,
         "selectorHint": ".ti__input",
         "visibleCondition": null,
         "disabledCondition": "{{locked || phase !== 'run'}}",
@@ -1109280,7 +1109280,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit-typein/index.wxml:38:bindinput:onInput:7",
+      "id": "pages/play/components/playkit-typein/index.wxml:39:bindinput:onInput:7",
       "route": "component:pages/play/components/playkit-typein/index",
       "hostRoutes": [
         "pages/play/index",
@@ -1109359,7 +1109359,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onInput",
-        "line": 38,
+        "line": 39,
         "selectorHint": ".ti__input",
         "visibleCondition": null,
         "disabledCondition": "{{locked || phase !== 'run'}}",
@@ -1109403,7 +1109403,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit-typein/index.wxml:45:bindtap:onStart:9",
+      "id": "pages/play/components/playkit-typein/index.wxml:46:bindtap:onStart:9",
       "route": "component:pages/play/components/playkit-typein/index",
       "hostRoutes": [
         "pages/play/index",
@@ -1109482,7 +1109482,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onStart",
-        "line": 45,
+        "line": 46,
         "selectorHint": ".g-btn",
         "visibleCondition": "{{phase === 'intro' && !locked}}",
         "disabledCondition": null,
@@ -1109526,7 +1109526,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit-typein/index.wxml:47:bindtap:onSubmit:10",
+      "id": "pages/play/components/playkit-typein/index.wxml:48:bindtap:onSubmit:10",
       "route": "component:pages/play/components/playkit-typein/index",
       "hostRoutes": [
         "pages/play/index",
@@ -1109605,7 +1109605,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onSubmit",
-        "line": 47,
+        "line": 48,
         "selectorHint": ".g-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1189103,7 +1189103,7 @@
         "handler": "onThemeGameplayAction",
         "line": 44,
         "selectorHint": ".tb-button",
-        "visibleCondition": null,
+        "visibleCondition": "{{!item.hideAction}}",
         "disabledCondition": null,
         "ariaLabel": null,
         "ariaLabelExpression": "{{item.actionText}}",
@@ -1255263,7 +1255263,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:225"
+        "staticSource": "pages/publish/temp/r5-editor.js:227"
       }
     },
     {
@@ -1255345,7 +1255345,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:233"
+        "staticSource": "pages/publish/temp/r5-editor.js:235"
       }
     },
     {
@@ -1255428,7 +1255428,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:239"
+        "staticSource": "pages/publish/temp/r5-editor.js:241"
       }
     },
     {
@@ -1255557,7 +1255557,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:234"
+        "staticSource": "pages/publish/temp/r5-editor.js:236"
       }
     },
     {
@@ -1255624,7 +1255624,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:204"
+        "staticSource": "pages/publish/temp/r5-editor.js:206"
       }
     },
     {
@@ -1255758,7 +1255758,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:204"
+        "staticSource": "pages/publish/temp/r5-editor.js:206"
       }
     },
     {
@@ -1256835,7 +1256835,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:267"
+        "staticSource": "pages/publish/temp/r5-editor.js:269"
       }
     },
     {
@@ -1257706,7 +1257706,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:267"
+        "staticSource": "pages/publish/temp/r5-editor.js:269"
       }
     },
     {
@@ -1258547,7 +1258547,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:275"
+        "staticSource": "pages/publish/temp/r5-editor.js:277"
       }
     },
     {
@@ -1258614,7 +1258614,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:278"
+        "staticSource": "pages/publish/temp/r5-editor.js:280"
       }
     },
     {
@@ -1258681,7 +1258681,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:256"
+        "staticSource": "pages/publish/temp/r5-editor.js:258"
       }
     },
     {
@@ -1261730,7 +1261730,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:257"
+        "staticSource": "pages/publish/temp/r5-editor.js:259"
       }
     },
     {
@@ -1261812,7 +1261812,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:258"
+        "staticSource": "pages/publish/temp/r5-editor.js:260"
       }
     },
     {
@@ -1262013,7 +1262013,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:276"
+        "staticSource": "pages/publish/temp/r5-editor.js:278"
       }
     },
     {
@@ -1262462,7 +1262462,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:277"
+        "staticSource": "pages/publish/temp/r5-editor.js:279"
       }
     },
     {
@@ -1262679,7 +1262679,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:284"
+        "staticSource": "pages/publish/temp/r5-editor.js:286"
       }
     },
     {
@@ -1262746,7 +1262746,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:280"
+        "staticSource": "pages/publish/temp/r5-editor.js:282"
       }
     },
     {
@@ -1262895,7 +1262895,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:283"
+        "staticSource": "pages/publish/temp/r5-editor.js:285"
       }
     },
     {
@@ -1263000,7 +1263000,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:282"
+        "staticSource": "pages/publish/temp/r5-editor.js:284"
       }
     },
     {
@@ -1263067,7 +1263067,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:281"
+        "staticSource": "pages/publish/temp/r5-editor.js:283"
       }
     },
     {
@@ -1263150,7 +1263150,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:291"
+        "staticSource": "pages/publish/temp/r5-editor.js:293"
       }
     },
     {
@@ -1266517,7 +1266517,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:303"
+        "staticSource": "pages/publish/temp/r5-editor.js:305"
       }
     },
     {
@@ -1266584,7 +1266584,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:293"
+        "staticSource": "pages/publish/temp/r5-editor.js:295"
       }
     },
     {
@@ -1266651,7 +1266651,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:207"
+        "staticSource": "pages/publish/temp/r5-editor.js:209"
       }
     },
     {
@@ -1266772,7 +1266772,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:206"
+        "staticSource": "pages/publish/temp/r5-editor.js:208"
       }
     },
     {
@@ -1271123,7 +1271123,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:242"
+        "staticSource": "pages/publish/temp/r5-editor.js:244"
       }
     },
     {
@@ -1272080,7 +1272080,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:267"
+        "staticSource": "pages/publish/temp/r5-editor.js:269"
       }
     },
     {
@@ -1420126,7 +1420126,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:525"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:526"
       }
     },
     {
@@ -1420243,7 +1420243,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:555"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:556"
       }
     },
     {
@@ -1420377,7 +1420377,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:545"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:546"
       }
     },
     {
@@ -1420515,7 +1420515,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:487"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:488"
       }
     },
     {
@@ -1420653,7 +1420653,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:498"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:499"
       }
     },
     {
@@ -1420773,7 +1420773,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:434"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:435"
       }
     },
     {
@@ -1420893,7 +1420893,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:435"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:436"
       }
     },
     {
@@ -1421054,7 +1421054,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:815"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:816"
       }
     },
     {
@@ -1421216,7 +1421216,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:842"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:843"
       }
     },
     {
@@ -1421336,7 +1421336,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:872"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:873"
       }
     },
     {
@@ -1421546,7 +1421546,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:592"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:593"
       }
     },
     {
@@ -1421673,7 +1421673,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:583"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:584"
       }
     },
     {
@@ -1421857,7 +1421857,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:717"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:718"
       }
     },
     {
@@ -1421977,7 +1421977,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:535"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:536"
       }
     },
     {
@@ -1422094,7 +1422094,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:572"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:573"
       }
     },
     {
@@ -1422231,7 +1422231,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:559"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:560"
       }
     },
     {
@@ -1422414,7 +1422414,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:440"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:441"
       }
     },
     {
@@ -1422541,7 +1422541,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:576"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:577"
       }
     },
     {
@@ -1422691,7 +1422691,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:279"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:283"
       }
     },
     {
@@ -1422801,7 +1422801,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:308"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:312"
       }
     },
     {
@@ -1422909,7 +1422909,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:296"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:300"
       }
     },
     {
@@ -1423017,7 +1423017,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:303"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:307"
       }
     },
     {
@@ -1423166,7 +1423166,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:274"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:278"
       }
     },
     {
@@ -1423274,7 +1423274,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:303"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:307"
       }
     },
     {
@@ -1423450,7 +1423450,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:322"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:326"
       }
     },
     {
@@ -1423622,7 +1423622,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:464"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:468"
       }
     },
     {
@@ -1423798,7 +1423798,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:322"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:326"
       }
     },
     {
@@ -1423906,7 +1423906,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:296"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:300"
       }
     },
     {
@@ -1424014,7 +1424014,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:296"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:300"
       }
     },
     {

@@ -59,7 +59,7 @@ test('没停准还有机会:phase=over,偏差单列,还剩次数取自台面', (
   const vm = load(3);
   stopAt(vm, 7600);
   assert.equal(vm.data.phase, 'over');
-  assert.match(vm.data.dev, /^早 2\.\d\d 秒$/);
+  assert.match(vm.data.dev, /^早 2\.\d\d\d 秒$/);
   assert.equal(vm.data.left, 2);
   assert.deepEqual(vm.calls, [], '没停准且还有机会，不出判定屏');
 });

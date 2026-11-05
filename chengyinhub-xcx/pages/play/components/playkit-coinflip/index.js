@@ -44,7 +44,7 @@ Component({
     faceA: '', faceB: '',
     coinStyle: '',
     idle: true,
-    big: '正面还是反面?',
+    big: '正面还是反面？',
     lab: '',
     hint: '摇一摇手机',
     burstKey: '',   // 换值即重播一次彩片,不靠计时器清场

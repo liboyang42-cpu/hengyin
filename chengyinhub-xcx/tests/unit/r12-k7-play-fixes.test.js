@@ -144,3 +144,67 @@ test('N3:当前任务还没过(PROOF_PENDING)读作「打开任务」,不写待�
   assert.ok(!wxml.includes('打开原任务'), '不再并排一颗「打开原任务」')
   assert.match(wxml, /data-open="\{\{!item\.enabled && item\.openable\}\}"/)
 })
+
+test('N6:自玩通行证开了局(首次到站)没通关、没到期 ⇒ 进行中,不读已完成;有效期一个日期、不写 00:00', () => {
+  const os = require(path.join(ROOT, 'utils/order-status.js'))
+  const pass = { registrationStatus: 2, paymentStatus: 2, purchaseKind: 2, ownerType: 1, expiresAt: '2026-12-06 00:00:00',
+    firstSuccessfulScanAt: '2026-11-05 12:40:00', refundInfo: { refundable: false, reason: '已开始，不可退款' }, cmsTopic: {} }
+  const s = os.summarizeOrderState(pass, Date.parse('2026-11-05T05:00:00Z'))
+  assert.equal(s.key, 'in_progress')
+  assert.notEqual(s.firstScanCompleted, true)
+  assert.equal(os.summarizeOrderState(Object.assign({}, pass, { topicCompleted: true })).key, 'completed')
+  assert.equal(os.passUntilText('2026-12-06 00:00:00'), '可玩至 12 月 5 日')
+  assert.equal(os.passUntilText('2026-12-06 18:30:00'), '可玩至 12 月 6 日')
+  // 活动单首扫仍是已完成(原口径不变)
+  assert.equal(os.summarizeOrderState({ registrationStatus: 2, paymentStatus: 2, ownerType: 2, firstSuccessfulScanAt: '2026-11-05 12:40:00', cmsActivity: {} }).key, 'completed')
+  const src = fs.readFileSync(path.join(ROOT, 'subpackageMember/components/cy/scene-member-order-detail/index.js'), 'utf8')
+  assert.match(src, /isSelfPlayPass\(value\) \? '开始游玩' : '首次扫码成功'/)
+})
+
+test('N3:状态主题任务站判没过(FAILED、不给原地重开)⇒ 取消任务 → 重新开始 → 重开本站玩法;每局只做一次', async () => {
+  const runtime = require(path.join(ROOT, 'pages/play/utils/r5-player-runtime.js'))
+  const sent = [], opened = []
+  const page = { data: { themeBag: { actionRows: [{ kind: 'QUEST', key: 'node_77', nodeId: 77, cancelable: true, costOptions: [] }] } },
+    setData(p) { Object.assign(this.data, p) }, refreshThemeBackpack() { return Promise.resolve(true) },
+    _themeGameplayCommand(input) { sent.push(input.operation); return Promise.resolve(true) },
+    _nodeById(id) { return { nodeId: id } }, startGame(node) { opened.push(node.nodeId) } }
+  page.setData = function (p, cb) { Object.assign(this.data, p); if (cb) cb() }
+  Object.assign(page, runtime.methods())
+  const view = { sessionId: 11, nodeId: 77, status: 'FAILED', canRetry: false, config: { outcomeRulesVersion: 1 } }
+  await page._restartFailedQuest(view)
+  assert.deepEqual(sent, ['QUEST_CANCEL', 'QUEST_START'])
+  assert.deepEqual(opened, [77])
+  assert.equal(page._restartFailedQuest(view), false, '同一局不再重复')
+  assert.equal(page._restartFailedQuest(Object.assign({}, view, { sessionId: 12, canRetry: true })), false, '能原地重开的不动')
+  // 要选费用组的任务:不替玩家选,打开背包任务页
+  page.data.themeBag.actionRows[0].costOptions = [{ label: '体力' }]
+  page._restartFailedQuest(Object.assign({}, view, { sessionId: 13 }))
+  assert.equal(page.data.themeBackpackOpen, true); assert.equal(page.data.themeBackpackTab, 'game')
+})
+
+test('N5:任务站(状态 / 检定主题)编辑器:连结果规则都结算不了的玩法说人话;能结算的不灰;参与方式不给直接参与;选中自动落结果规则', () => {
+  const matrix = require(path.join(ROOT, 'pages/publish/utils/publish/gameplay-support-matrix.js'))
+  const m = { types: [{ key: 'pricePair', section: 'pricePair', tools: {}, completionProof: false, r5CompletionProof: false },
+    { key: 'photoCheck', section: 'photoCheck', tools: {}, completionProof: false, r5CompletionProof: true }], addons: [] }
+  assert.equal(matrix.choice(m, 'pricePair', {}, { settled: true }), '开了状态或 d20 检定的主题里不能用这种玩法')
+  assert.equal(matrix.choice(m, 'photoCheck', { outcomeRules: { version: 1 } }, { settled: true }), '')
+  const { view } = require(path.join(ROOT, 'pages/publish/temp/r5-editor.js'))
+  const cfg = require(path.join(ROOT, 'pages/publish/utils/publish/advanced-game-config.js'))
+  const v = view(cfg.defaultConfig(), 0, null, { settled: true })
+  assert.match(v.participationOptions.find(r => r.key === 'direct').reason, /定位到达或扫码/)
+  assert.equal(view(cfg.defaultConfig(), 0, null, {}).participationOptions.find(r => r.key === 'direct').reason, '')
+  const src = fs.readFileSync(path.join(ROOT, 'pages/publish/temp/index.js'), 'utf8')
+  assert.match(src, /supportMatrix\.settleOutcome\(this\._supportMatrix, this\._supportContext, advanced, game\.section\)/)
+  assert.match(src, /'formData\.validationMethod': 5/)
+})
+
+test('N5:任务站选中服务端能结算的玩法自动落结果规则;非任务站、已有规则、结算不了的玩法不动', () => {
+  const matrix = require(path.join(ROOT, 'pages/publish/utils/publish/gameplay-support-matrix.js'))
+  const m = { types: [{ key: 'photoCheck', section: 'photoCheck', tools: {}, r5CompletionProof: true }, { key: 'pricePair', section: 'pricePair', tools: {}, r5CompletionProof: false }], addons: [] }
+  const a = matrix.settleOutcome(m, { settled: true }, { photoCheck: { enabled: true } }, 'photoCheck')
+  assert.equal(a.outcomeRules.version, 1)
+  assert.equal(matrix.settleOutcome(m, {}, { photoCheck: { enabled: true } }, 'photoCheck').outcomeRules, undefined)
+  assert.equal(matrix.settleOutcome(m, { settled: true }, { pricePair: { enabled: true } }, 'pricePair').outcomeRules, undefined)
+  assert.equal(matrix.pickAs({}, { settled: true }).outcomeRules.version, 1)
+  assert.equal(matrix.pickAs({}, {}).outcomeRules, undefined)
+})

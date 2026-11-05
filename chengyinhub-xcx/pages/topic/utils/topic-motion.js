@@ -216,7 +216,9 @@ function passWindow(opts) {
     if (!until) until = ninety;
   }
   const days = Math.max(0, Math.ceil((until.getTime() - now.getTime()) / 86400000));
-  const m = until.getMonth() + 1, dd = until.getDate();
+  // 第十二轮 k7 N6:到期落在零点 = 能玩的最后一天是前一天;与订单页「可玩至」同一个日期
+  const last = until.getHours() === 0 && until.getMinutes() === 0 && until.getSeconds() === 0 ? new Date(until.getTime() - 1) : until;
+  const m = last.getMonth() + 1, dd = last.getDate();
   return {
     untilText: pad2(m) + '/' + pad2(dd),
     daysText: String(days),

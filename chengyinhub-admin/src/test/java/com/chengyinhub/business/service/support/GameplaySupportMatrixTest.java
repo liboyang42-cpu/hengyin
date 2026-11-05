@@ -28,7 +28,7 @@ public class GameplaySupportMatrixTest {
         ObjectNode theme = theme("TEAM"), sensor = JSON.createObjectNode();
         sensor.putObject("ballShake").put("enabled", true).put("target", 100);
         assertDoesNotThrow(() -> GameplaySupportMatrix.validateNode(theme, 11, "恢复挑战", sensor, 0, true));
-        assertTrue(assertThrows(IllegalArgumentException.class, () -> GameplaySupportMatrix.validateNode(theme, 11, "恢复挑战", sensor, 0)).getMessage().contains("完成证明"));
+        assertTrue(assertThrows(IllegalArgumentException.class, () -> GameplaySupportMatrix.validateNode(theme, 11, "恢复挑战", sensor, 0)).toString().contains("完成证明"));
         ObjectNode unsupported = JSON.createObjectNode(); unsupported.putObject("estimate").put("enabled", true);
         assertThrows(IllegalArgumentException.class, () -> GameplaySupportMatrix.validateNode(theme, 11, "站点", unsupported, 0, true));
     }
@@ -192,7 +192,7 @@ public class GameplaySupportMatrixTest {
         ObjectNode sensor = JSON.createObjectNode(); sensor.putObject("ballShake").put("enabled", true).put("goal", 10);
         assertDoesNotThrow(() -> GameplaySupportMatrix.validateNode(theme, 11, "站点", sensor, 0));
         ObjectNode configs = JSON.createObjectNode(); configs.set("11", sensor);
-        String message = assertThrows(IllegalArgumentException.class, () -> GameplaySupportMatrix.validateChallenge(theme, configs)).getMessage();
+        String message = assertThrows(IllegalArgumentException.class, () -> GameplaySupportMatrix.validateChallenge(theme, configs)).toString();
         assertTrue(message.contains("11") && message.contains("shake") && message.contains("zeroChallenge"), message);
         challenge.putArray("alternativeNodeIds").add(12); configs.set("12", config("qaPick"));
         assertDoesNotThrow(() -> GameplaySupportMatrix.validateChallenge(theme, configs));
@@ -215,7 +215,7 @@ public class GameplaySupportMatrixTest {
         if ("costs".equals(parts[1])) after.putArray("costs").addObject().put("statKey", "sys.hp").put("amount", 1);
         else after.putArray("effects").addObject().put("var", "counter.energy").put("op", "INC").put("value", 1);
         String message = assertThrows(IllegalArgumentException.class,
-                () -> GameplaySupportMatrix.validateNode(theme, 11, "恢复题组", config, 0)).getMessage();
+                () -> GameplaySupportMatrix.validateNode(theme, 11, "恢复题组", config, 0)).toString();
         assertTrue(message.contains("11") && message.contains("归零挑战不能配置普通结果费用或奖励"), message);
     }
 
@@ -226,7 +226,7 @@ public class GameplaySupportMatrixTest {
         assertDoesNotThrow(() -> GameplaySupportMatrix.validateNode(JSON.createObjectNode(), 11, "旧站", JSON.createObjectNode().set("estimate", JSON.createObjectNode().put("enabled", true)), 8));
     }
     private static void rejected(JsonNode theme, JsonNode config, int method, String type, String tool) {
-        String message = assertThrows(IllegalArgumentException.class, () -> GameplaySupportMatrix.validateNode(theme, 11, "站点", config, method)).getMessage();
+        String message = assertThrows(IllegalArgumentException.class, () -> GameplaySupportMatrix.validateNode(theme, 11, "站点", config, method)).toString();
         assertTrue(message.contains("11") && message.contains(type) && message.contains(tool), message);
     }
 }

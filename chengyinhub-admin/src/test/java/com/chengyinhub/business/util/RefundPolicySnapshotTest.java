@@ -172,7 +172,7 @@ class RefundPolicySnapshotTest {
 
         assertFalse(v.refundable, "不自动退");
         assertTrue(v.manualReview, "**转人工** —— 已核销不等于不该退");
-        assertEquals("已核销订单需人工核实,请联系客服", v.reason);
+        assertEquals("已核销订单需人工核实，请联系客服", v.reason);
     }
 
     /**

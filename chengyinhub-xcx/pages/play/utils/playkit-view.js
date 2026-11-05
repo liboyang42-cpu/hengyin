@@ -164,7 +164,7 @@ function buildDailySign(seg, now) {
     signer: seg.signer || '',
     leftAt: seg.leftAt || '',
     photoUrl: seg.photoUrl || '',          // 上一个人拍的,印在票上;没给就不印
-    serialLabel: 'NO. ' + pad4(seg.serial),
+    serialLabel: Number(seg.serial) > 0 ? 'NO. ' + pad4(seg.serial) : '',   // 第十二轮 k7 N10:服务端没给签号就不印「NO. 0000」
     textMax: Number(seg.textMax) || 40,
     myText: seg.myText || '',
     myPhotoUrl: seg.myPhotoUrl || '',

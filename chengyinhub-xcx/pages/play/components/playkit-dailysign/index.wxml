@@ -39,7 +39,7 @@
           <view class="ds__hr"></view>
           <view class="ds__od">
             <view class="ds__od-c"><text class="ds__k">出发</text><text wx:if="{{address}}" class="ds__addr cy-addr-tap" catchtap="onAddressTap" aria-role="button" aria-label="在地图中打开 {{address}}" hover-class="cy-pressed" hover-stay-time="80">{{address}}</text><text class="ds__sm">{{timeLabel}}</text></view>
-            <view class="ds__od-c ds__od-c--r"><text class="ds__k">签号</text><text class="ds__big">{{serialLabel}}</text><text class="ds__sm">你是第几位</text></view>
+            <view class="ds__od-c ds__od-c--r" wx:if="{{serialLabel}}"><text class="ds__k">签号</text><text class="ds__big">{{serialLabel}}</text><text class="ds__sm">你是第几位</text></view>
           </view>
           <view class="ds__hr"></view>
           <view class="ds__grid">
@@ -81,13 +81,13 @@
     <view class="ds__hint">
       <text>{{hint}}</text>
       <view class="ds__alt" wx:if="{{printed && !printing && !torn}}" bindtap="onTearTap"
-            aria-role="button" aria-label="直接撕下小票" hover-class="cy-pressed" hover-stay-time="80">撕不下来?点这里</view>
+            aria-role="button" aria-label="直接撕下小票" hover-class="cy-pressed" hover-stay-time="80">撕不下来？点这里</view>
     </view>
 
     <!-- 留言条:压在小票下半段上的第二张纸,刮开之后从底部滑上来。
          写的时候是 textarea + 顺手拍一张;留过之后只读回看,按钮变「出发」。
          adjust-position 关掉、自己按键盘高度抬(fixed 浮层不跟系统的页面上推走) -->
-    <view class="ds__note {{(writing || claimed) ? 'is-on' : ''}}" style="{{noteStyle}}" wx:if="{{torn}}">
+    <view class="ds__note {{(writing || claimed) ? 'is-on' : ''}}" style="{{noteStyle}}" wx:if="{{torn && (!claimed || myText || text || myPhotoUrl)}}">
       <view class="ds__note-h">
         <view class="ds__note-hl">
           <text class="ds__note-t">{{claimed ? '你留给下一个人的' : '给下一个来这里的人留一句'}}</text>
@@ -101,7 +101,7 @@
         </view>
       </view>
       <block wx:if="{{claimed}}">
-        <text class="ds__note-my">{{myText}}</text>
+        <text class="ds__note-my">{{myText || text}}</text>
         <image wx:if="{{myPhotoUrl}}" class="ds__note-img" src="{{myPhotoUrl}}" mode="aspectFill" aria-label="你拍的照片" />
         <view class="ds__save {{saving ? 'is-off' : ''}}" bindtap="onSave"
               aria-role="button" aria-label="{{saving ? '签卡生成中，请稍候' : '保存签卡到相册'}}"

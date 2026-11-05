@@ -233,7 +233,7 @@
         <text class="orow-v">{{verificationTimeText}}</text>
       </view>
       <view class="orow" wx:if="{{expiresAtText}}">
-        <text class="orow-k">权益到期</text>
+        <text class="orow-k">{{expiresIsPass ? '可玩至' : '权益到期'}}</text>
         <text class="orow-v">{{expiresAtText}}</text>
       </view>
     </view>

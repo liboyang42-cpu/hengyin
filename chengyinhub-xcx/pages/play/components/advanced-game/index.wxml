@@ -53,7 +53,6 @@
         <view class="ag__error" wx:if="{{leaderboardError}}">榜单暂时读不到 · 点「刷新」再试</view>
         <cy-empty wx:elif="{{!leaderboard.length}}" size="sm" title="还没有排名数据" />
       </view>
-      <view class="ag__ended" wx:if="{{state.status !== 'RUNNING' && state.status !== 'COMPLETED'}}">本次玩法已结束，重新进入会保留原结果。</view>
       <cy-btn wx:if="{{state.canRetry === true && (state.status === 'FAILED' || state.status === 'EXPIRED')}}" variant="secondary" disabled="{{loading || acting || unknown}}" bindtap="retry">{{state.ownerType === 2 ? '队长重新开始本次玩法' : '重新开始本次玩法'}}</cy-btn>
     </block>
     <view class="ag__pad"></view>

@@ -2531,7 +2531,7 @@ Page({
         : supportMatrix.condition(matrix, this.data.gameKey, tool.key);
     });
     nodeGameCatalog.ALL.forEach(game => {
-      reasons[game.key] = supportMatrix.choice(matrix, game.key, advanced, this._supportContext);
+      reasons[game.key] = supportMatrix.choice(matrix, game.key, supportMatrix.pickAs(advanced, this._supportContext), this._supportContext);   // 第十二轮 k7 N5:任务站按会自动落结果规则判
     });
     if (this._refreshR5Editor) this._refreshR5Editor();
     this.setData({ supportReasons: reasons, supportConditions: conditions,
@@ -2782,7 +2782,7 @@ Page({
     const game = nodeGameCatalog.findGame(key);
     if (!game) return;
     const locked = (this.data.lockedGames || {})[key]
-      || supportMatrix.choice(this._supportMatrix, key, this.data.advanced, this._supportContext);
+      || supportMatrix.choice(this._supportMatrix, key, supportMatrix.pickAs(this.data.advanced, this._supportContext), this._supportContext);   // 第十二轮 k7 N5
     if (locked) { toast(locked); return; }
     /* 整段 advanced 一次写回,不用「advanced.xx.enabled」这种拼出来的路径 ——
        拼路径的写法过不了零消费门禁,也让人看不出到底动了哪几段。 */
@@ -2798,14 +2798,14 @@ Page({
        (主题开了检定时 check 也能走旅程检定;带上结果规则两条路都开得了局。) */
     if (advanced && OUTCOME_REQUIRED_SECTIONS.includes(game.section) && !advanced.outcomeRules) {
       advanced.outcomeRules = Object.assign({ version: 1, pass: {} }, require('../utils/publish/outcome-after.js').once(advanced) ? {} : { fail: {} });
-    }
+    } supportMatrix.settleOutcome(this._supportMatrix, this._supportContext, advanced, game.section);   // 第十二轮 k7 N5:状态 / 检定主题的任务站,能结算的玩法选中就落结果规则
     /* R14 检定的 checkId 是这一处检定的稳定标识。选中时就在本地模型里落一个 ——
        拖到保存时才由 normalize 补,会让同一次编辑里两次存盘生成两个不同的 id。 */
     if (advanced && advanced.check && advanced.check.enabled && !advanced.check.checkId) {
       advanced.check.checkId = rowId('check');
     }
     // validationMethod 只由参与方式修改；主玩法判定由 enabled section 决定。
-    const present = this._presentPatch(advanced, game.section);
+    const present = this._presentPatch(advanced, game.section); if (this._supportContext && this._supportContext.settled && ![4, 5].includes(Number(this.data.formData.validationMethod)) && !this._r5ParticipationChanged) this._setFormState({ 'formData.validationMethod': 5 });   // 第十二轮 k7 N5:任务站参与方式默认定位到达
     this.setData({
       advanced: advanced,
       gameKey: key,

@@ -164,7 +164,7 @@ class TopicContentGraphMySqlIT {
         TopicUpdateDTO unsupported=f.update(true,1);unsupported.getChapters().get(1).getNodes().get(0).setId(null);
         unsupported.setRouteMode("LINEAR");unsupported.setConfigVersion(7L);unsupported.setThemeRuntimeConfig(runtime.toString());
         assertTrue(f.failure("resource-costs-without-proof",()->f.update(unsupported,true))
-                .getMessage().contains("尚无通用结算完成证明"));f.unchanged();
+                .toString().contains("尚无通用结算完成证明"));f.unchanged();
         // This fixture's nodes have GPS coordinates. Method 5 is the existing GPS completion bridge.
         assertEquals(1,f.db.update("update cms_member_template set validation_method=5 where id=701"));f.mark();
         f.success("runtime-bindings",()->f.update(dto,true));

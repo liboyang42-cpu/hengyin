@@ -98,7 +98,9 @@ function actionRows(view, nodes) {
       disabledText: proofPending ? '' : status.disabledText || (ended ? '本局已结束，仅可领取待领奖励' : ''),
       frozenText: active && costOptions[frozenQuest] ? costOptions[frozenQuest].label + ' · ' + costOptions[frozenQuest].amountText : '',
       chargeNote: !ended && active ? '任务进行中不扣费用，结算时才按实际扣除' : '',
-      cancelable: !ended && active && !!allowed('QUEST_CANCEL', key) });
+      cancelable: !ended && active && !!allowed('QUEST_CANCEL', key),
+      // 第十二轮 k7 N3:次数用完的任务不再摆一颗「开始任务」,也不重复「剩 0 次」
+      hideAction: source.disabledReason === 'LIMIT_REACHED', ...(source.disabledReason === 'LIMIT_REACHED' ? { remainingText: '' } : {}) });
   }
   const tools = personal ? view.tools || [] : (view.interactionTools || []).filter(tool => tool.kind === 'FACILITY');
   for (const tool of tools) {

@@ -71,6 +71,7 @@ function methods() {
         return false;
       }
       if (!isR5(view)) return false;
+      this._restartFailedQuest(view);
       if (view.config.check && view.config.check.enabled === true) {
         this._r5CheckView = view;
         const check = checkView(view, this.data.themeBag);
@@ -86,6 +87,33 @@ function methods() {
       }
       this.refreshThemeBackpack();
       return false;
+    },
+    /* 第十二轮 k7 N3:状态 / 检定主题里,这一站的任务进行中而玩法判了没过(FAILED,服务端不给原地重开 canRetry),
+       屏上那道题还能点「提交」却什么都不发生 —— 以前唯一的路是 背包 → 任务 → 取消 → 开始任务 → 打开原任务。
+       这里替玩家走同一条路:取消本站任务(进行中不扣费用)→ 重新开始 → 重开本站玩法,屏上那道题就是新的一局。
+       要选费用组的任务不替玩家选,改为打开背包的任务页。每个玩法局只做一次。 */
+    _restartFailedQuest(view) {
+      if (!view || view.status !== 'FAILED' || view.canRetry === true || view.challenge || view.sessionId == null) return false;
+      const bag = this.data.themeBag || {};
+      const row = (bag.actionRows || []).find(item => item.kind === 'QUEST' && String(item.nodeId) === String(view.nodeId) && item.cancelable);
+      if (!row) return false;
+      this._questRestarted = this._questRestarted || {};
+      const key = String(view.sessionId);
+      if (this._questRestarted[key]) return false;
+      this._questRestarted[key] = true;
+      if ((row.costOptions || []).length) { this.setData({ themeBackpackOpen: true, themeBackpackTab: 'game' }); return true; }
+      const node = this._nodeById ? this._nodeById(Number(row.nodeId)) : null;
+      // 判没过之后背包的版本号刚往前走:每一步都等在途回读落地再读一次新的,带最新版本号发
+      const fresh = () => Promise.resolve(this._themeLoading).then(() => this.refreshThemeBackpack());
+      return fresh()
+        .then(() => this._themeGameplayCommand({ operation: 'QUEST_CANCEL', contentId: row.key }))
+        .then(ok => ok && fresh().then(() => this._themeGameplayCommand({ operation: 'QUEST_START', contentId: row.key })))
+        .then(ok => {
+          // 刚在这一站判没过:重开本站玩法,屏上那道题换成新的一局(旧局的提交服务端已不收)
+          // 同一站的玩法面板已开着时 advancedPlay 不变就不会重读:先收起再开,新局才会去服务端开
+          if (ok && node) this.setData({ advancedPlay: { show: false, node: null }, playKit: { show: false, kit: null } }, () => this.startGame(node));
+          return !!ok;
+        });
     },
     /* 第十二轮 k7 N4:内嵌检定的那一段要等故事流量到它在屏内才显形(_settleStory)。量不到(层被藏、几何为 0、
        页面换了)时段落永远 in:false,检定卡就一直是透明的 —— 玩家看见整屏黑。等一会儿还没显形就换成整屏检定卡。 */

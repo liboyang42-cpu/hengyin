@@ -9,8 +9,8 @@ const DETAIL = path.join(__dirname, '../../subpackageMember/components/cy/scene-
 
 test('取消确认:服务端给了 cancelRefundAmount 就在规则前写明退回金额', () => {
   assert.strictEqual(view.cancelConfirmDeadline({
-    cancelRefundAmount: 19.5, refundDeadlineDisplay: '集合前 24 小时内取消,退实付的 50%,原路退回(预计1-3个工作日)',
-  }), '本次取消将原路退回 ¥19.50，集合前 24 小时内取消,退实付的 50%,原路退回(预计1-3个工作日)');
+    cancelRefundAmount: 19.5, refundDeadlineDisplay: '集合前 24 小时内取消，退实付的 50%，原路退回(预计1-3个工作日)',
+  }), '本次取消将原路退回 ¥19.50，集合前 24 小时内取消，退实付的 50%，原路退回(预计1-3个工作日)');
   assert.strictEqual(view.cancelConfirmDeadline({ cancelRefundAmount: '69.90', refundDeadlineDisplay: '可免费取消至 11月6日 19:00' }),
     '本次取消将原路退回 ¥69.90，可免费取消至 11月6日 19:00');
   // 没给金额(多票从单 / 现金未知)只讲规则,不在前端推算

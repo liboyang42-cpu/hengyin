@@ -198,7 +198,53 @@ public final class GameplaySupportMatrix {
         if (tools.has("votePolicy") || tools.path("plans").size() > 0) return "vote";
         return challenge ? "zeroChallenge" : "genericSettlement";
     }
+    /* 第十二轮 k7 N5:作者在发布时看到的拒绝原因只说人话 —— 哪一站、哪种玩法、为什么、怎么改;
+       不再露 photoCheck / genericSettlement / TEAM/WORLD_SHARED / validationMethod 这类内部名与节点内部编号。 */
+    private static final Map<String, String> GAME_LABELS = new HashMap<>();
+    private static final Map<String, String> REASONS = new LinkedHashMap<>();
+    static {
+        String[][] labels = {{"qaText","文字问答"},{"qaPick","选项问答"},{"qaShot","拍照问答"},{"sort","排序"},{"match","连线"},{"classify","分类"},
+            {"estimate","猜数字"},{"pricePair","比一比"},{"hidden","找东西"},{"predict","预测"},{"random","翻卡"},{"profile","角色建档"},{"note","留言"},
+            {"objectCard","拍物成卡"},{"bingo","九宫格"},{"steps","计步"},{"react","变色就点"},{"shake","弹球"},{"quiet","安静挑战"},{"compass","罗盘"},
+            {"shout","喊一嗓子"},{"countdown","倒计时"},{"stopwatch","精准停表"},{"photoCheck","拍照审核"},{"check","D20 检定"},{"d20","D20 加值"},
+            {"typeIn","输入挑战"},{"coin","抛硬币"},{"dice","掷骰子"},{"scan","扫码"},{"album","相册"},{"branch","分支剧情"},{"GPS","定位到达"},
+            {"blindTaste","闭眼盲品"},{"dailySign","今日城市签"},{"timer","计时"},{"leaderboard","排行榜"},{"multiplayer","多人协作"},{"timeWindow","限时开放"},
+            {"silentOrder","默契点单"},{"diyName","起名"},{"musicCorner","音乐角"},{"slowTask","慢任务"},{"none","这一站"}};
+        for (String[] row : labels) GAME_LABELS.put(row[0], row[1]);
+        REASONS.put("尚无通用结算完成证明", "开了状态或 d20 检定的主题里，这种玩法还不能确认玩家是否完成，请换一种玩法");
+        REASONS.put("没有归零挑战恢复桥", "这种玩法不能用作归零挑战");
+        REASONS.put("归零挑战不能配置普通结算工具", "归零挑战不能再设置扣费、次数或效果");
+        REASONS.put("归零挑战不能配置普通结果费用或奖励", "归零挑战的结果反馈不能再设置扣费或奖励");
+        REASONS.put("须允许免费重答 maxTries=0", "这里的问答不能限制尝试次数");
+        REASONS.put("须允许免费重答 maxAttempts=0", "这里的排序不能限制尝试次数");
+        REASONS.put("扫码证明须使用 validationMethod=4", "扫码玩法的参与方式要选「扫码」");
+        REASONS.put("跨队范围仅支持 TEAM/WORLD_SHARED", "跨队计次数只能用在全场共享的组队主题里");
+        REASONS.put("跨队目标仅支持 TEAM/WORLD_SHARED", "作用到别的队只能用在全场共享的组队主题里");
+        REASONS.put("仅支持 TEAM/WORLD_SHARED", "交易和投票只能用在全场共享的组队主题里");
+        REASONS.put("传感器须配置服务端客观题备选节点", "感应类玩法用作归零挑战时，还要有一站可作答的备选玩法");
+    }
+    /** 作者看得懂的玩法名;不认识的玩法退回「这一站的玩法」,不露内部 key。 */
+    public static String gameLabel(String key) {
+        String base = key == null ? "" : key.split(":")[0];
+        return GAME_LABELS.getOrDefault(base, "这一站的玩法");
+    }
+    /** 「01 拍照审核」这样的站名;没有站名才退回节点编号。 */
+    public static String stationLabel(long nodeId, String name) {
+        return name == null || name.trim().isEmpty() ? "节点 " + nodeId : "「" + name.trim() + "」";
+    }
     private static void fail(long nodeId, String name, String type, String tool, String reason) {
-        throw new IllegalArgumentException("节点 " + nodeId + (name == null ? "" : "（" + name + "）") + " 玩法 " + type + " 工具 " + tool + "：" + reason);
+        JsonNode row = TYPES.get(type);
+        String plain = "尚无通用结算完成证明".equals(reason) && row != null && row.path("r5CompletionProof").asBoolean()
+                ? "开了状态或 d20 检定的主题里，这种玩法要带结果规则才能确认完成。请在这一站重新打开玩法设置，保存一次后再发布"
+                : REASONS.getOrDefault(reason, reason);
+        throw new Refusal(stationLabel(nodeId, name) + "的" + gameLabel(type) + "：" + plain,
+                "节点 " + nodeId + (name == null ? "" : "（" + name + "）") + " 玩法 " + type + " 工具 " + tool + "：" + reason);
+    }
+    /** 发布闸拒绝:getMessage() 是给作者看的人话;toString() 保留工程诊断(节点编号、玩法 key、工具、原因码)供日志与测试。 */
+    public static final class Refusal extends IllegalArgumentException {
+        private final String diagnostic;
+        Refusal(String message, String diagnostic) { super(message); this.diagnostic = diagnostic; }
+        public String diagnostic() { return diagnostic; }
+        @Override public String toString() { return diagnostic + " | " + getMessage(); }
     }
 }

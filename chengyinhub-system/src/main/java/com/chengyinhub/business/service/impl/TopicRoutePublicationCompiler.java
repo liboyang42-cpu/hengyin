@@ -654,20 +654,34 @@ final class TopicRoutePublicationCompiler {
             if (!questNodes.add(nodeId)) throw new IllegalArgumentException("任务须独占节点");
             boolean merchant=false;
             for (JsonNode station:frozen.path("routeStations")) if (station.path("nodeId").asLong()==nodeId && station.path("merchantMemberId").asLong()>0) merchant=true;
-            if (!team && !merchant && !hasVerifiedPublicationArrival(frozen,nodeId)) throw new IllegalArgumentException("个人任务须使用真实商户到达或已验证扫码/GPS节点，工作人员点位请建队伍场次");
+            if (!team && !merchant && !hasVerifiedPublicationArrival(frozen,nodeId)) throw new IllegalArgumentException(personalArrivalRefusal(frozen,nodeId));
             if(!team && quest.has("facilityKey"))for(JsonNode facility:game.path("facilities"))if(facility.path("facilityKey").asText().equals(quest.path("facilityKey").asText()) && (!"OWNER".equals(facility.path("scope").asText()) || !"OWNER".equals(facility.path("targetScope").asText()) || facility.has("arrivalLocationKey")))throw new IllegalArgumentException("个人任务只绑定无需工作人员到达核验的OWNER设施");
             validateGameplayNode(frozen,nodeId);
         }
         if(!team)for(JsonNode facility:game.path("facilities"))if(facility.has("arrivalLocationKey"))throw new IllegalArgumentException("个人设施没有工作人员到达核验通道");
         for(JsonNode facility:game.path("facilities"))if(facility.has("operationNodeId")) {
             validateGameplayNode(frozen,facility.path("operationNodeId").asLong());
-            if(!team) {boolean merchant=false;for(JsonNode station:frozen.path("routeStations"))if(station.path("nodeId").asLong()==facility.path("operationNodeId").asLong() && station.path("merchantMemberId").asLong()>0)merchant=true;if(!merchant && !hasVerifiedPublicationArrival(frozen,facility.path("operationNodeId").asLong()))throw new IllegalArgumentException("个人设施操作须使用真实商户到达或已验证扫码/GPS节点");}
+            if(!team) {boolean merchant=false;for(JsonNode station:frozen.path("routeStations"))if(station.path("nodeId").asLong()==facility.path("operationNodeId").asLong() && station.path("merchantMemberId").asLong()>0)merchant=true;if(!merchant && !hasVerifiedPublicationArrival(frozen,facility.path("operationNodeId").asLong()))throw new IllegalArgumentException(personalArrivalRefusal(frozen,facility.path("operationNodeId").asLong()));}
         }
         for (JsonNode plan:game.path("plans")) if (plan.has("operationNodeId")) validateGameplayNode(frozen,plan.path("operationNodeId").asLong());
         for (JsonNode act:game.path("acts")) if ("ANY_N".equals(act.path("completionRule").path("type").asText())) for (JsonNode chapter:theme.path("chapters")) {
             boolean overlaps=false;for (JsonNode q:game.path("quests")) if (q.path("actKey").asText().equals(act.path("actKey").asText()) && containsNode(chapter.path("binding").path("nodeIds"),q.path("nodeId").asLong())) overlaps=true;
             if (overlaps && !com.chengyinhub.business.service.support.GameplayTaskEngine.chapterMatchesAct(theme,chapter,act)) throw new IllegalArgumentException("任选幕的章节绑定须完整匹配本幕任务节点");
         }
+    }
+
+    /* 第十二轮 k7 N5:状态 / 检定主题里一站过不了发布闸时,说清是哪一站、要怎么改:
+       这一站的玩法没有结算规则(选玩法时没配上)就重开这一站的玩法存一次;参与方式不是定位或扫码就改参与方式。 */
+    static String personalArrivalRefusal(JsonNode frozen,long nodeId) {
+        String name=null;for(JsonNode station:frozen.path("routeStations"))if(station.path("nodeId").asLong()==nodeId)name=station.path("nodeName").asText(null);
+        String where=GameplaySupportMatrix.stationLabel(nodeId,name);
+        JsonNode config=frozen.path("nodeConfigs").path(String.valueOf(nodeId));
+        int method=frozen.path(NodeJourneySnapshot.NODE_ANSWERS_KEY).path(String.valueOf(nodeId)).path("validationMethod").asInt(-1);
+        if(config.path("outcomeRules").path("version").asInt()!=1)
+            return where+"：开了状态或 d20 检定的主题里，个人任务的这一站玩法要带结果规则才能确认完成。请在这一站重新打开玩法设置，保存一次后再发布";
+        if(method!=4 && method!=5)
+            return where+"：开了状态或 d20 检定的主题里，个人任务的这一站参与方式要选「定位到达」或「扫码」，或绑定承接商家";
+        return where+"：个人任务的这一站还不能确认玩家到过，请把参与方式改为「定位到达」或「扫码」";
     }
 
     static String basicCompletionKind(JsonNode frozen,Long nodeId) {

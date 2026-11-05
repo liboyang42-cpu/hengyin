@@ -69,9 +69,9 @@ test('24 小时内只退 50%:弹窗用后端 reason,不说「可免费取消至�
   const dialog = openCancelDialog({
     id: 1, registrationStatus: 2, paymentStatus: 2,
     refundInfo: { refundable: true, ratio: 0.5, deadline: '2026-11-03T16:35:00.000+08:00',
-      reason: '集合前 24 小时内取消,退实付的 50%,原路退回(预计1-3个工作日)' },
+      reason: '集合前 24 小时内取消，退实付的 50%，原路退回(预计1-3个工作日)' },
   })
-  assert.equal(dialog.dangerParams.deadline, '集合前 24 小时内取消,退实付的 50%,原路退回(预计1-3个工作日)')
+  assert.equal(dialog.dangerParams.deadline, '集合前 24 小时内取消，退实付的 50%，原路退回(预计1-3个工作日)')
   assert.doesNotMatch(String(dialog.dangerParams.deadline), /可免费取消/)
 })
 

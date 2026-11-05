@@ -138,7 +138,7 @@ class FreeSessionCancelReleaseV2Test {
         activityStartsIn(-60_000L);
 
         RuntimeException e = assertThrows(RuntimeException.class, () -> service.cancelPaidRegistration(REG, MEMBER));
-        assertEquals("场次已开始,不可退款", e.getMessage());
+        assertEquals("场次已开始，不可退款", e.getMessage());
         verify(ticketMapper, never()).restoreInventory(anyLong(), anyLong());
         verify(regMapper, never()).claimRegistrationRefunded(anyLong(), anyString(), any(Date.class));
     }

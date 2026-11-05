@@ -123,7 +123,8 @@ function summarizeOrderState(row, now) {
   }
 
   const refundInfo = value.refundInfo || {};
-  if (Number(value.paymentStatus) === 2 && !Number.isNaN(toTimestamp(value.firstSuccessfulScanAt))) {
+  // 第十二轮 k7 N6:自玩通行证的「首次扫码」只是开局(到第一站),没通关、没到期就还在进行中,不读「已完成」
+  if (Number(value.paymentStatus) === 2 && !Number.isNaN(toTimestamp(value.firstSuccessfulScanAt)) && !isSelfPlayPass(value)) {
     return { key: 'completed', text: '已完成', refundText: refundInfo.reason || (free ? freeText : ''), firstScanCompleted: true };
   }
   // R11 j3 F9:自玩通行证的状态是能不能玩(未开始/进行中/已结束),「不可退款」只在退款卡说一次。
@@ -163,4 +164,14 @@ function formatRefundDeadline(value) {
     : day + ' ' + pad(date.hours) + ':' + pad(date.minutes);
 }
 
-module.exports = { summarizeOrderState, canRequestOrderRefund, formatRefundDeadline, orderClockNow, exploreProgressOf, isSelfPlayPass, endOf };
+/* 第十二轮 k7 N6:通行证只有一个有效日期 —— 「可玩至 M 月 D 日」。expiresAt 落在零点(下一天 00:00)时,
+   能玩的最后一天是前一天;只写日期,不写 00:00。与主题页购买半屏(topic-motion passWindow)同一口径。 */
+function passUntilText(expiresAt) {
+  const ts = toTimestamp(expiresAt);
+  if (Number.isNaN(ts)) return '';
+  const p = chinaParts(ts);
+  const last = p && p.hours === 0 && p.minutes === 0 && ts % 60000 === 0 ? chinaParts(ts - 1) : p;
+  return last ? '可玩至 ' + last.month + ' 月 ' + last.day + ' 日' : '';
+}
+
+module.exports = { passUntilText, summarizeOrderState, canRequestOrderRefund, formatRefundDeadline, orderClockNow, exploreProgressOf, isSelfPlayPass, endOf };

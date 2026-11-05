@@ -3,7 +3,7 @@
 //   ② 「和队友一起出发」卡排在支付明细之后,不打断稿 578:2298 的顺序
 //   ③ 支付信息卡里的微信交易单号是纯值,动作不进信息卡(与订单号行一致)
 //   ④ 退款态的状态卡副文案 / 「退款与客服」卡说退款事实,不被 refundInfo 的可退政策
-//      「可全额退款,原路退回(预计1-3个工作日)」顶掉
+//      「可全额退款，原路退回(预计1-3个工作日)」顶掉
 const { beforeEach, test } = require('node:test')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
@@ -99,7 +99,7 @@ test('T3f ④ 退款态文案取退款事实,不被可退政策里的「预计1-
   infoReq().success({ code: '200', data: {
     id: 1001, ownerType: 1, registrationStatus: 3, paymentStatus: 4,
     refundApplication: { status: 1, payoutStatus: 0, refundAmount: 69 },
-    refundInfo: { refundable: true, reason: '可全额退款,原路退回(预计1-3个工作日)', deadline: '2026-09-20 10:00:00' },
+    refundInfo: { refundable: true, reason: '可全额退款，原路退回(预计1-3个工作日)', deadline: '2026-09-20 10:00:00' },
   } })
   assert.equal(vm.data.loadState, 'ready')
   const fact = vm.data.info.refundDisplayText

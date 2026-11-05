@@ -2,7 +2,7 @@ const modal = require('../../../../utils/modal.js'); const pageMotion = require(
 const cyLoading = require('../../../../utils/loading.js');
 const toast = require('../../../../utils/toast.js');
 const app = getApp();
-const { summarizeOrderState, canRequestOrderRefund, formatRefundDeadline, isSelfPlayPass } = require('../../../../utils/order-status.js');
+const { summarizeOrderState, canRequestOrderRefund, formatRefundDeadline, isSelfPlayPass, passUntilText } = require('../../../../utils/order-status.js');
 const { isFreeOrder, resolveActualPaidAmount } = require('../../../../utils/order-actual-pay.js');
 const cancellationFeedback = require('../../../../utils/cancellation-feedback.js');
 const subscribe = require('../../../../utils/subscribe.js');
@@ -231,7 +231,8 @@ function buildOrderTimeline(info) {
 
   const scanTime = toDisplayTime(value.firstSuccessfulScanAt);
   if (scanTime) {
-    rows.push({ key: 'first_scan', label: '首次扫码成功', time: scanTime, state: 'done' });
+    // 第十二轮 k7 N6:自玩通行证没有扫码这回事,这一刻是开局到第一站
+    rows.push({ key: 'first_scan', label: isSelfPlayPass(value) ? '开始游玩' : '首次扫码成功', time: scanTime, state: 'done' });
   }
 
   if (stateKey === 'refunding' || stateKey === 'refunded') {
@@ -310,7 +311,7 @@ Component({
       participateDateText: '',
       verificationTimeText: '',
       orderTimeline: [],
-      expiresAtText: '',
+      expiresAtText: '', expiresIsPass: false,
       primaryCta: '',
       ticketPriceShown: '',
       // 稿 578:2298:头图上的金额行/时间行与状态药丸,退款状态卡
@@ -1101,7 +1102,8 @@ Component({
               participateDateText: toDisplayTime(info.participateDate) || (info.participateDate || ''),
               verificationTimeText: Number(info.verificationStatus) === 1 ? toDisplayTime(info.verificationTime) : '',
               orderTimeline: buildOrderTimeline(info),
-              expiresAtText: toDisplayTime(info.expiresAt),
+              expiresAtText: isSelfPlayPass(info) ? passUntilText(info.expiresAt).replace(/^可玩至 /, '') : toDisplayTime(info.expiresAt),
+              expiresIsPass: isSelfPlayPass(info),
               primaryCta: primaryCta,
               ticketPriceShown: ticketPriceShown,
               loadState: 'ready', loadErrorText: '', loadFailureVisible: false

@@ -167,13 +167,13 @@ public final class RefundPolicy {
     private static Verdict tieredPassVerdict(Date start, Date now) {
         java.math.BigDecimal ratio = sessionRefundRatioAt(start, now);
         if (ratio == null || ratio.signum() == 0) {
-            return new Verdict(false, "已开始,不可退款", start);
+            return new Verdict(false, "已开始，不可退款", start);
         }
         if (ratio.compareTo(java.math.BigDecimal.ONE) < 0) {
-            return new Verdict(true, "开始前 24 小时内取消,退实付的 50%,原路退回(预计1-3个工作日)",
+            return new Verdict(true, "开始前 24 小时内取消，退实付的 50%，原路退回(预计1-3个工作日)",
                     start, false, ratio);
         }
-        return new Verdict(true, "可全额退款,原路退回(预计1-3个工作日)", sessionRefundDeadline(start));
+        return new Verdict(true, "可全额退款，原路退回(预计1-3个工作日)", sessionRefundDeadline(start));
     }
 
     /**
@@ -205,7 +205,7 @@ public final class RefundPolicy {
             return null;
         }
         if (purchaseKind != null && purchaseKind == PurchaseKind.EXPLORE_PASS) {
-            return new Verdict(false, "已核销订单需人工核实,请联系客服", null, true);
+            return new Verdict(false, "已核销订单需人工核实，请联系客服", null, true);
         }
         return new Verdict(false, "已核销报名不可退款", null);
     }
@@ -307,19 +307,19 @@ public final class RefundPolicy {
             //
             // 算不出截止点时,系统没资格替业务决定退不退 ⇒ 不自动退、转人工。这是「两头堵」的兜底那头;
             // 另一头是发布器保证时间必落库(saveTickets),两头都上了才不会让人工队列被淹。
-            return new Verdict(false, "退款截止时间缺失,需人工核实,请联系客服", null, true);
+            return new Verdict(false, "退款截止时间缺失，需人工核实，请联系客服", null, true);
         }
         if (now != null && now.after(deadline)) {
             // 2026-11-02 退款档位:场次票过了「集合前 24 小时」但还没开始 ⇒ 退 50%。
             // ③ 快照单(snapshotDeadline)的钟不是集合时间,不进这一档。
             if (snapshotDeadline == null && ownerType != null && ownerType == 2L
                     && activityStartTime != null && now.before(activityStartTime)) {
-                return new Verdict(true, "集合前 24 小时内取消,退实付的 50%,原路退回(预计1-3个工作日)",
+                return new Verdict(true, "集合前 24 小时内取消，退实付的 50%，原路退回(预计1-3个工作日)",
                         activityStartTime, false, SESSION_LATE_REFUND_RATIO);
             }
             return new Verdict(false, refusalReason(ownerType, ticketMode, snapshotDeadline != null), deadline);
         }
-        return new Verdict(true, "可全额退款,原路退回(预计1-3个工作日)", deadline);
+        return new Verdict(true, "可全额退款，原路退回(预计1-3个工作日)", deadline);
     }
 
     /**
@@ -369,13 +369,13 @@ public final class RefundPolicy {
         try {
             window = FulfillmentWindowResolver.resolve(topic, ticket);
         } catch (IllegalStateException e) {
-            return new Verdict(false, "退款履约窗缺失,需人工核实,请联系客服", null, true);
+            return new Verdict(false, "退款履约窗缺失，需人工核实，请联系客服", null, true);
         }
         Date deadline = window.getStartInclusive();
         if (now == null || !now.before(deadline)) {
-            return new Verdict(false, "已进入履约窗,不可退款", deadline);
+            return new Verdict(false, "已进入履约窗，不可退款", deadline);
         }
-        return new Verdict(true, "可全额退款,原路退回(预计1-3个工作日)", deadline);
+        return new Verdict(true, "可全额退款，原路退回(预计1-3个工作日)", deadline);
     }
 
     /** 按业务类型解析"可退截止点"。 */
@@ -413,15 +413,15 @@ public final class RefundPolicy {
      */
     private static String refusalReason(Long ownerType, Integer ticketMode, boolean fromSnapshot) {
         if (fromSnapshot) {
-            return "已错过退款截止时间,不可退款";
+            return "已错过退款截止时间，不可退款";
         }
         if (ownerType != null && ownerType == 2L) {
-            return "场次已开始,不可退款";
+            return "场次已开始，不可退款";
         }
         if (ticketMode != null && ticketMode == 2) {
-            return "已错过主题有效期,不可退款";
+            return "已错过主题有效期，不可退款";
         }
-        return "已错过集合时间,不可退款";
+        return "已错过集合时间，不可退款";
     }
 
     /**

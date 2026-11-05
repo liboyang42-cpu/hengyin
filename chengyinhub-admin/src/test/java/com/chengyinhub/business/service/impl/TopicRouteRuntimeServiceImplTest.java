@@ -233,11 +233,11 @@ class TopicRouteRuntimeServiceImplTest {
         JsonNode frozen = json.readTree(runtime.freezePublication(topic, null));
         assertNull(com.chengyinhub.business.service.support.GameplaySupportMatrix.basicCompletionKind(frozen.path("nodeConfigs").path("1"), 5));
         topic = personalR5Topic(0, true); final CmsTopic direct = topic;
-        assertTrue(assertThrows(IllegalArgumentException.class, () -> runtime.freezePublication(direct, null)).getMessage().contains("个人任务"));
+        assertTrue(assertThrows(IllegalArgumentException.class, () -> runtime.freezePublication(direct, null)).toString().contains("个人任务"));
         topic = personalR5Topic(4, false); final CmsTopic noCode = topic;
-        assertTrue(assertThrows(IllegalArgumentException.class, () -> runtime.freezePublication(noCode, null)).getMessage().contains("真实节点码"));
+        assertTrue(assertThrows(IllegalArgumentException.class, () -> runtime.freezePublication(noCode, null)).toString().contains("真实节点码"));
         topic = personalR5Topic(5, false); final CmsTopic noCoordinates = topic;
-        assertTrue(assertThrows(IllegalArgumentException.class, () -> runtime.freezePublication(noCoordinates, null)).getMessage().contains("有效站点坐标"));
+        assertTrue(assertThrows(IllegalArgumentException.class, () -> runtime.freezePublication(noCoordinates, null)).toString().contains("有效站点坐标"));
     }
 
     @Test
@@ -308,7 +308,7 @@ class TopicRouteRuntimeServiceImplTest {
         config.putObject("interactionTools").put("allowTrade", true);
         recovery.setAdvancedConfigJson(config.toString());
         assertTrue(assertThrows(IllegalArgumentException.class, () -> runtime.freezePublication(topic, null))
-                .getMessage().contains("归零挑战不能配置普通结算工具"));
+                .toString().contains("归零挑战不能配置普通结算工具"));
 
         config.remove("interactionTools"); recovery.setAdvancedConfigJson(config.toString());
         ObjectNode compiled = (ObjectNode) json.readTree(runtime.compileTemplateRules(topic));
@@ -317,7 +317,7 @@ class TopicRouteRuntimeServiceImplTest {
         ((ObjectNode) compiled.with("gameplayRuntime").withArray("acts").get(0)).withArray("questKeys").add("node_2");
         topic.setThemeRuntimeConfigJson(compiled.toString());
         assertTrue(assertThrows(IllegalArgumentException.class, () -> runtime.freezePublication(topic, null))
-                .getMessage().contains("归零挑战不能配置普通结算工具"));
+                .toString().contains("归零挑战不能配置普通结算工具"));
     }
 
     @Test
@@ -328,7 +328,7 @@ class TopicRouteRuntimeServiceImplTest {
                 json.readTree("{\"challengeNodeId\":2,\"alternativeNodeIds\":[3],\"restoreTo\":4,\"limit\":2}"));
         topic.setThemeRuntimeConfigJson(author.toString());
         assertTrue(assertThrows(IllegalArgumentException.class, () -> runtime.compileTemplateRules(topic))
-                .getMessage().contains("归零挑战不能配置普通结算工具"));
+                .toString().contains("归零挑战不能配置普通结算工具"));
         assertFalse(json.readTree(topic.getThemeRuntimeConfigJson()).path("gameplayRuntime")
                 .path("survival").path("zeroChallenge").has("version"));
         ObjectNode game = author.with("gameplayRuntime");

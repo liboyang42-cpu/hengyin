@@ -147,6 +147,8 @@ function choice(matrix, key, advanced, ctx = {}) {
   if (ctx.challenge) return !['SUPPORTED', 'CHALLENGE_ONLY'].includes(row.tools.zeroChallenge) && !(ctx.challengeVersion === 2 && row.r5CompletionProof)
     ? '这种玩法不能用作归零挑战' : generic(advanced) ? '归零挑战不能再设置扣费、次数或效果' : '';
   if (!ctx.settled && effectOnly(advanced)) return row.effectSlotSupport === false ? '这种玩法暂不支持所需数值资源' : '';
+  // 第十二轮 k7 N5:任务站里连带结果规则都结算不了的玩法,直接说这种主题里不能用
+  if (ctx.settled && !row.r5CompletionProof && !row.completionProof) return '开了状态或 d20 检定的主题里不能用这种玩法';
   return (ctx.settled || generic(advanced)) && !(advanced.outcomeRules?.version === 1 ? row.r5CompletionProof : row.completionProof) ? '这种玩法暂时无法确认是否完成' : '';
 }
 function challengeChoices(matrix, nodes, version) {
@@ -167,4 +169,17 @@ function challengeError(matrix, nodes, zero) {
     return '节点 ' + zero.challengeNodeId + '：' + matrix.constraints.CHALLENGE_ONLY;
   return '';
 }
-module.exports = { ZERO_CHALLENGE_GAMEPLAYS, load, parse, config, mains, generic, effectOnly, effectSlotPolicy, zeroHpPolicies, toolPolicy, condition, validate, context, choice, challengeChoices, challengeError };
+/* 第十二轮 k7 N5:状态 / d20 检定主题的任务站(ctx.settled)。服务端只认带结果规则的玩法完成(TopicRoutePublicationCompiler)。
+   pickAs:玩法列表与选中前的判断按「会自动落结果规则」判,能结算的玩法不灰。
+   settleOutcome:选中服务端能结算(r5CompletionProof)的玩法时落一份结果规则,形状同输入挑战 / D20 / 相册。 */
+function pickAs(advanced, ctx) {
+  return ctx && ctx.settled && advanced && !advanced.outcomeRules ? Object.assign({}, advanced, { outcomeRules: { version: 1 } }) : advanced;
+}
+function settleOutcome(matrix, ctx, advanced, section) {
+  if (!matrix || !ctx || !ctx.settled || !advanced || advanced.outcomeRules) return advanced;
+  const row = matrix.types.concat(matrix.addons).find(r => r.section === section && (!r.mode || r.mode === (advanced[section] && advanced[section].mode)));
+  if (row && row.r5CompletionProof) advanced.outcomeRules = Object.assign({ version: 1, pass: {} }, require('./outcome-after.js').once(advanced) ? {} : { fail: {} });
+  return advanced;
+}
+
+module.exports = { pickAs, settleOutcome, ZERO_CHALLENGE_GAMEPLAYS, load, parse, config, mains, generic, effectOnly, effectSlotPolicy, zeroHpPolicies, toolPolicy, condition, validate, context, choice, challengeChoices, challengeError };

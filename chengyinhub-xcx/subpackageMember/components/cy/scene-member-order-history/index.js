@@ -16,7 +16,7 @@ const { isUnknownHttpStatus } = require('../../../../utils/transport/failure-env
 // 页面壳与场景弹窗的差别只有一处:打开订单详情时往哪走(见 openDetail 的 open 事件)。
 const app = getApp()
 const policy = require('../../../../utils/identity/identity-policy.js')
-const { summarizeOrderState, canRequestOrderRefund, formatRefundDeadline } = require('../../../../utils/order-status.js')
+const { summarizeOrderState, canRequestOrderRefund, formatRefundDeadline, isSelfPlayPass, passUntilText } = require('../../../../utils/order-status.js')
 const { resolveActualPaidAmount, isFreeOrder } = require('../../../../utils/order-actual-pay.js')
 const refundAmount = require('../../../utils/order-refund-amount.js')
 const { createCheckoutWorkflow, hasCompletePaymentParams, isCompletedZeroAmountOrder } = require('../../../../utils/checkout/checkout-workflow.js')
@@ -65,7 +65,9 @@ function formatActivityTime(value) {
   try {
     const date = new Date(String(value).replace(/-/g, '/'))
     const pad = (n) => String(n).padStart(2, '0')
-    return `${pad(date.getMonth() + 1)}.${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
+    const day = `${pad(date.getMonth() + 1)}.${pad(date.getDate())}`
+    // 第十二轮 k7 N6:只有日期的值(零点)只写日期,不写 00:00
+    return date.getHours() === 0 && date.getMinutes() === 0 ? day : `${day} ${pad(date.getHours())}:${pad(date.getMinutes())}`
   } catch (e) {
     return ''
   }
@@ -232,6 +234,8 @@ Component({
               if (item.cmsTopic && item.cmsTopic.startDate && item.cmsTopic.endDate) {
                 item.cmsTopic.timeRangeFormatted = formatActivityTimeRange(item.cmsTopic.startDate, item.cmsTopic.endDate)
               }
+              // 第十二轮 k7 N6:自玩通行证只有一个有效日期(可玩至几号),不摆主题的起止日
+              if (item.cmsTopic && isSelfPlayPass(item) && item.expiresAt) item.cmsTopic.timeRangeFormatted = passUntilText(item.expiresAt)
               const summary = summarizeOrderState(item)
               item.orderStateKey = summary.key
               item.orderStateText = summary.text

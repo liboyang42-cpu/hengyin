@@ -60,7 +60,7 @@ class RefundPolicyTest {
         Verdict v = RefundPolicy.evaluate(2L, 2, 0, null, null, null, past, now);
         assertFalse(v.refundable);
         // 2026-11-02 退款档位:开始后不退;24 小时内退 50% 另有用例。
-        assertEquals("场次已开始,不可退款", v.reason);
+        assertEquals("场次已开始，不可退款", v.reason);
     }
 
     @Test
@@ -342,7 +342,7 @@ class RefundPolicyTest {
         Date start = new Date(1_800_000_000_000L);
         Verdict v = sessionAt(start, new Date(start.getTime() + 60_000L));
         assertFalse(v.refundable);
-        assertEquals("场次已开始,不可退款", v.reason);
+        assertEquals("场次已开始，不可退款", v.reason);
     }
 
     @Test

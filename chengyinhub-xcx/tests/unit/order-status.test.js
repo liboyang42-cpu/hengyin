@@ -23,7 +23,7 @@ function registration(extra) {
     registrationStatus: 2,
     verificationStatus: 0,
     cmsTopic: { startDate: '2026-07-21 13:00:00', endDate: '2026-07-21 18:00:00' },
-    refundInfo: { refundable: true, reason: '可全额退款,原路退回(预计1-3个工作日)' }
+    refundInfo: { refundable: true, reason: '可全额退款，原路退回(预计1-3个工作日)' }
   }, extra || {});
 }
 
@@ -111,11 +111,11 @@ test('零元单(退款额 ≤ 0)不出任何退款承诺', () => {
 test('仍在进行的已支付订单错过退款窗口时显示不可退款', () => {
   const row = registration({
     cmsTopic: { startDate: '2026-07-21 10:00:00', endDate: '2026-07-21 18:00:00' },
-    refundInfo: { refundable: false, reason: '已错过主题有效期,不可退款' }
+    refundInfo: { refundable: false, reason: '已错过主题有效期，不可退款' }
   });
   const summary = summarizeOrderState(row, NOW);
   assert.equal(summary.key, 'non_refundable');
-  assert.equal(summary.refundText, '已错过主题有效期,不可退款');
+  assert.equal(summary.refundText, '已错过主题有效期，不可退款');
 });
 
 

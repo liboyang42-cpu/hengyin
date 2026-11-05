@@ -70,7 +70,7 @@ class SessionRefundCopyTest {
         r.setOwnerType(ownerType);
         r.setPurchaseKind(purchaseKind);
         r.setPaymentStatus(2);
-        RefundPolicy.Verdict v = new RefundPolicy.Verdict(true, "可全额退款,原路退回(预计1-3个工作日)",
+        RefundPolicy.Verdict v = new RefundPolicy.Verdict(true, "可全额退款，原路退回(预计1-3个工作日)",
                 new Date(now.getTime() + 3 * H));
         return RegistrationDetailDisplay.refundDeadlineDisplay(v, r);
     }
@@ -136,7 +136,7 @@ class SessionRefundCopyTest {
         RefundPolicy.Verdict v = RefundPolicy.evaluate(2L, 2, 0, null, null, null,
                 new Date(now.getTime() - H), now);
         assertFalse(v.refundable);
-        assertEquals("场次已开始,不可退款", v.reason);
+        assertEquals("场次已开始，不可退款", v.reason);
         RefundPolicy.Verdict late = RefundPolicy.evaluate(2L, 2, 0, null, null, null,
                 new Date(now.getTime() + H), now);
         assertTrue(late.partial());
