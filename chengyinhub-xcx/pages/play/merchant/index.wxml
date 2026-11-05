@@ -4,7 +4,7 @@
   <cy-access-gate kind="login" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
-  <cy-error class="mp-empty" wx:if="{{notFound}}" load-failure="{{true}}" style="padding-top:{{statusBarHeight + 120}}px" />
+  <cy-empty class="mp-empty" wx:if="{{notFound}}" kind="missing-param" title="链接已失效" cta="返回" bind:cta="goBackOrHome" style="padding-top:{{statusBarHeight + 120}}px" /><!-- 第十二轮 k2(p1 N-4):只能从游玩页进,链接直达给「链接已失效 · 返回」 -->
 
   <block wx:else>
     <view class="mp-hero">

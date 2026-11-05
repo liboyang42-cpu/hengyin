@@ -8,10 +8,12 @@ Branch `integ/launch-test-20261103`. I worked on a private local branch, ran `gi
 
 | Commit | Items |
 |---|---|
-| `6aae23b68` | 1. Solved station on reopen |
-| `4d2b7d04f` | 2. Guests on club pages, read-only SQL |
-| `c4a1fcbf3` | 3. j6 N2, N3, N5, N6; j5 N1, N2; p1 N-3; p1 N-4 (square post) |
-| next commit | 3. p1 N-5 and the guest deep-link list; 5. j1 N1 |
+| `b1616412e` | 1. Solved station on reopen |
+| `1bcf8f78d` | 2. Guests on club pages, read-only SQL |
+| `a86f47169` | 3. j6 N2, N3, N5, N6; j5 N1, N2; p1 N-3; p1 N-4 (square post) |
+| `07294f66f` | 3. p1 N-5 and the guest deep-link list; 5. j1 N1; this file |
+| `f95dac2fd` | Ledger test counts after rebasing onto k3 (5716 / 2767; my two cta changes cancel out) |
+| next commit | p1 N-4 play/merchant; the read-only SQL moved to `.md` (inventory gate); ledger 5717 / 2768 |
 
 ## 1. Solved station counts as completed on reopen (j3 F6). Status: fixed, unit-proved, not walked.
 
@@ -36,7 +38,7 @@ Branch `integ/launch-test-20261103`. I worked on a private local branch, ran `gi
   - Posts have no unpublished state in `club_post` other than `del_flag`; deleted posts were already excluded.
 - **Page** (`pages/club/detail`): the 「登录后查看 · 登录」 row is gone; guests load members and leaderboard. A guest tapping a person gets the login prompt (no member id to open). The owner's 11-04 test `r10-f3-guest-login-gate` was rewritten to the 11-05 rule.
 - **Tests:** `GuestBrowseAnonymousReadTest` (annotation scope now 8 handlers; projections; closed / private / review-join clubs refused; no member list or board read for them), `PublicReadEndpointsSecurityChainTest` (4 new anonymous 200s, 12 new sibling 401s), `ApiClubTopicVisibilityTest` fixtures marked live. Java: 555 run, 0 failures in the club/security set.
-- **Read-only SQL for the owner:** `integ/k2-club-post-contact-scan.sql`. One `SELECT`, counts live posts with phone numbers or WeChat ids, and how many of those guests would see. It was not run against any database here.
+- **Read-only SQL for the owner:** `integ/k2-club-post-contact-scan.md` (a Markdown file holding the SQL: a `.sql` file outside `chengyinhub-admin/sql` fails the repo's SQL inventory gate, which is why the Redis-recovery workflow went red on `f95dac2fd`). One `SELECT`, counts live posts with phone numbers or WeChat ids, and how many of those guests would see. It was not run against any database here.
 - **Club owner's name / nickname everywhere** is k3's item; I did not touch `applyOrganiserNames`.
 - **Unverified:** rig walk as a guest on club 7002; the leaderboard's zero-fill for members with no score does not happen for guests (it joins on member id, which guests don't get), so a guest sees only members with a score.
 
@@ -52,7 +54,8 @@ Branch `integ/launch-test-20261103`. I worked on a private local branch, ran `gi
 | j5 N2 club feed | fixed | `cy/profile` sends `/api/club/post/feed` as JSON. **Sweep:** a scanner listed every client call to a backend `@RequestBody` POST/PUT/DELETE/PATCH endpoint (506 endpoints) with no JSON hint nearby: 93 call sites in 28 files. Each was traced to its final request. All others already go out as JSON through a wrapper, or are GETs with a matching `@GetMapping`. This was the only one. | `k2-club-feed-json.test.js` |
 | p1 N-3 official event | fixed | `official-detail` renders 集合与签到 only for V2 events (V1 events got a permanent 「加载失败 · 重试」 from 「仅支持官方V2赛事」). No rewards → the 活动奖励 section is not drawn (no 「未配置奖励」). V1 「我的进度」 drops its 「已完成」 sub-label. The stats row is a horizontal scroll by design; not changed. | `official-detail-f22-contract` |
 | p1 N-4 square post gone | fixed | `square/detail`: 内容不存在 / 已删除 / 审核中 / 数据不存在 / bad id → 「链接已失效 · 返回」 instead of a blank auto-back error. | `k2-square-detail-gone.test.js` |
-| p1 N-4 play/merchant by link, mycanyuinfo not owner | not done | — | — |
+| p1 N-4 play/merchant by link | fixed | `pages/play/merchant`: the stop is only known from the play page; opened by a link it now shows 「链接已失效 · 返回」 (back, or home when there is no page behind) instead of an untitled error. | `k2-square-detail-gone.test.js`, `play-merchant-a11y-state-contract` updated |
+| p1 N-4 mycanyuinfo not owner | not done | — | — |
 | p1 N-5 我的队伍 guest | fixed | `subpackageRoam/my-teams` gets the login gate. | `r10-f3-guest-login-gate` |
 | p1 N-5 deep links | fixed for 7 pages | Login gate on 积分明细, 时光胶囊, 月度回顾, 导出, 探索目标, 那年今日, 自由探索权益. Not done: 排行榜 double line, 队伍详情 guest wording. | `r10-f3-guest-login-gate` |
 
@@ -71,7 +74,7 @@ Map (j4 N1–N10, F14–F16), i1's leftovers (dead 提交 on a FAILED generic ga
 ## Gates
 
 - `node chengyinhub-xcx/tests/lint/ui-integrity.js`: `UI-GATE-0:PASS`. Three baseline anchors moved by line shifts only (play/index.js U5 8444→8446, square/detail U4 1281→1285, signup U5 415→425); digests recomputed, no new entries.
-- `build-action-ledger.js --check`: PASS after rebuild. Control count 5723 (−1 club 「登录后查看」 cta, +1 square 「返回」 cta); event contracts 2774. signup U5 anchor 415→425, line shift only.
+- `build-action-ledger.js --check`: PASS after rebuild. After rebasing onto k3 (which removed 7 「清除」 keys): control count 5716, event contracts 2767. My changes net to zero (−1 club 「登录后查看」 cta, +1 square 「返回」 cta). `action-ledger.test.js` 46/46 on the merged tree. signup U5 anchor 415→425, line shift only.
 - Java and node tests named above, run locally in this container.
 - CI: see the CI section below.
 
@@ -79,4 +82,4 @@ Map (j4 N1–N10, F14–F16), i1's leftovers (dead 提交 on a FAILED generic ga
 
 Pending.
 
-STATUS: PARTIAL - items 1–3 mostly fixed with tests and j1 N1 fixed; no rig walk or screenshots (no Docker daemon); item 4, most of 5, item 6 and parts of 3 (p1 N-4 play/merchant and mycanyuinfo, leaderboard and team-detail guest wording) not done.
+STATUS: PARTIAL - items 1–3 mostly fixed with tests and j1 N1 fixed; no rig walk or screenshots (no Docker daemon); item 4, most of 5, item 6 and parts of 3 (p1 N-4 mycanyuinfo, leaderboard and team-detail guest wording) not done.
