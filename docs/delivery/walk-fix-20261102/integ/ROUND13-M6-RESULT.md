@@ -97,7 +97,8 @@ Everything was done through real HTTP and the real jobs 145 (分润结算), 149 
 
 - Funds MySQL gate (`ci/funds-mysql-it-gate.sh`, scratch MySQL 8.0.45 in this container):
   - First run on `6c369f627`: 740 tests, 13 red, all `video_url` (fixed in `2d4541cab`, then those three suites 13/13 green).
-  - Final run: see the line below.
+  - Final run, started on `1972e6130` (all my code): **740 tests, 0 failures, 0 errors, 0 skipped**. The gate's own read-back passed: 「资金 MySQL IT 门禁通过」.
+  - This was run in this container, not in GitHub CI.
 - Targeted unit and real-MySQL runs after each change, all zero failures, errors and skips: `ClubSessionMerchantFeeMySqlIT` 8, `ComplaintPeriodWithdrawalGateMybatisIntegrationTest` 7, `TandianriBatch0` 17, `RegistrationFunds` 114, `RefundRetryAndRemainder` 10, `ActivitySettlementIdempotencyTest` 8, `ExploreNeverSettledWholeOrderTest` 5, `SettlementEntryServiceImplTest` 16, `CriticalPathContractTest` 3, `TopicPublicationContentSnapshotTest` 7, `TopicBundleReviewServiceTest` 25, `FreeExplorePriceLockAcceptanceTest` 19, and the pricing suites.
 - `ci/test_funds_it_gate.py`: 45 OK.
 
@@ -107,3 +108,5 @@ Everything was done through real HTTP and the real jobs 145 (分润结算), 149 
 - No phone and no CI run; the rig browser is not a phone. Withdrawal stays 联系客服 by owner decision.
 - The debt branch of the clawback (balance too small) was not hit on the rig; k11's real-MySQL tests cover it.
 - 俱乐部结算 lists a session only after settlement; before that, the pending amount shows in 账户收益 and 提现 (same as m4 noted).
+
+STATUS: PARTIAL - M2 is fixed, and club-owned 自由探索 sales now go on sale, settle and refund to the fen (rig: ¥29 and ¥69; Funds gate 740/740). Four-store and cross-club sales no longer sit silent: the job alarms. Four things wait on the owner: S1 four-store money rule (recommend A), S2 cross-club sessions (recommend blocking them), S3 shop cash terms in 自由探索 (recommend paying at settlement), S4 claw-back on manual refunds of scanned tickets (recommend clawing back; needs code).
