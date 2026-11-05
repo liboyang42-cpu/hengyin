@@ -359,17 +359,18 @@ Page({
   },
 
   onShow() {
+    const resumed = this._hidden;
     this._hidden = false;
     if (this._projectReadOwner !== undefined && this._projectReadOwner !== projectSessionKey()) {
       this.clearProjectPrivate(!projectMemberId());
       this.reloadProjectPrivate();
-    } else if (this._readSessionChanged) {
+    } else if (this._readSessionChanged || resumed || this._clubSheetReturn) {
       this._readSessionChanged = false;
       this.reloadProjectPrivate();
     }
     const reducedMotion = readReducedMotion();
     if (this.data.reducedMotion !== reducedMotion) this.setData({ reducedMotion });
-    this._resumeCategoryReturn(); if (this._clubSheetReturn) { this._clubSheetReturn = false; this.loadProjectHome(); if (this.data.clubSheet.show) this.loadClubCandidates(); if (this.data.merchantSheet.show) this.loadRegApplies(); } merchantTheme.merchantPageShow(); this._navigating = false;
+    this._resumeCategoryReturn(); if (this._clubSheetReturn) { this._clubSheetReturn = false; if (this.data.clubSheet.show) this.loadClubCandidates(); if (this.data.merchantSheet.show) this.loadRegApplies(); } merchantTheme.merchantPageShow(); this._navigating = false;
   },
   onHide() { this._hidden = true; merchantTheme.merchantPageRestore(); },
   onUnload() {

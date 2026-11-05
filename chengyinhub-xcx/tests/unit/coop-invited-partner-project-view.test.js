@@ -232,3 +232,38 @@ test('换号返回主办页立即清理旧私产并按当前身份回读',()=>{
  assert.equal(requests.length,before+1);
  assert.equal(requests.at(-1).url,'/api/project/home');
 });
+
+test('同会话返回项目只刷新一次，已接受邀约替换旧候选状态并收起发邀约入口',()=>{
+ const p=makePage();p.onLoad({topicId:'990035',scope:'CLUB'});
+ const homes=()=>requests.filter(r=>r.url==='/api/project/home');
+ const old=homes()[0];p.onShow();assert.equal(homes().length,1,'首屏不重复读取');
+ const home=inviteState=>({role:'host',topic:{id:990035,productType:1},host:{merchants:[{
+  registrationId:14,memberId:9002,auditStatus:1,status:1,name:'咖啡店',inviteState,
+ }]}});
+ old.success({code:200,data:home('none')});
+ const wxml=fs.readFileSync(path.resolve(__dirname,'../../pages/topic/components/project-host/index.wxml'),'utf8');
+ const condition=wxml.match(/wx:if="\{\{([^}]+)\}\}"[^>]+data-act="sendTermsInviteRow"/)[1];
+ const canSend=new Function('item','return ('+condition+')');
+ assert.equal(p.data.hostMerchants[0].statusText,'未发邀约');assert.equal(canSend(p.data.hostMerchants[0]),true);
+ p.onHide();p.onShow();assert.equal(homes().length,2,'同身份同会话返回必须重读');
+ assert.equal(JSON.parse(homes()[1].data).scope,'CLUB','保留操作域');
+ homes()[1].success({code:200,data:home('accepted')});
+ assert.equal(p.data.hostMerchants[0].statusText,'已中标');assert.equal(canSend(p.data.hostMerchants[0]),false);
+ old.success({code:200,data:home('none')});
+ assert.equal(p.data.hostMerchants[0].inviteState,'accepted','旧回包不能覆盖返回后的刷新');
+ p.onShow();assert.equal(homes().length,2,'没有再次隐藏就不重复刷新');
+});
+
+for(const recovery of ['ordinary','read-session','owner'])test('返回刷新与既有'+recovery+'恢复和抽屉返回标记合并一次',()=>{
+ const p=makePage();p.onLoad({topicId:'990035',scope:'CLUB'});
+ p.setData({role:'host','clubSheet.show':true,'merchantSheet.show':true});
+ let clubs=0,merchants=0;p.loadClubCandidates=()=>clubs++;p.loadRegApplies=()=>merchants++;
+ p.onHide();p._clubSheetReturn=true;
+ if(recovery==='read-session')p._readSessionChanged=true;
+ if(recovery==='owner')actor=2;
+ p.onShow();
+ assert.equal(requests.filter(r=>r.url==='/api/project/home').length,2,'返回只增加一次主页读');
+ assert.equal(p._clubSheetReturn,false);
+ assert.equal(clubs,recovery==='owner'?0:1);assert.equal(merchants,recovery==='owner'?0:1);
+ p.onShow();assert.equal(requests.filter(r=>r.url==='/api/project/home').length,2,'标记已消费');
+});
