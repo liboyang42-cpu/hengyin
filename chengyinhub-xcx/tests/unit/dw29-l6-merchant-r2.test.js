@@ -168,8 +168,8 @@ test('M-32:商家账户收益读俱乐部计酬并进明细;结算明细页不�
   const ledgerWxml = read('pages/merchant/ledger/index.wxml');
   assert.doesNotMatch(ledgerWxml, /cy-club-direct-ledger/);
   assert.doesNotMatch(read('pages/merchant/ledger/index.json'), /cy-club-direct-ledger/);
-  // 俱乐部侧的「商家计酬」不动
-  assert.match(read('pages/club/settlement/index.wxml'), /<cy-club-direct-ledger class="section" wx:if="\{\{clubId\}\}" kind="club"/);
+  // 当前授权俱乐部账目保留；历史收款人的个人投影不得挂整个俱乐部应收账本。
+  assert.match(read('pages/club/settlement/index.wxml'), /<cy-club-direct-ledger class="section" wx:if="\{\{summary && !summary\.personal && clubId\}\}" kind="club"/);
 });
 
 function loadOverview(requests, merchant) {
