@@ -1,0 +1,271 @@
+== a01-merchant-index [pages/merchant/index/index]
+Hi， | 探店日样板咖啡 | 营业中 | 探 | 累计收入 | ¥0.00 | 扫码 | 客户 | 财务 | 更多 | 项目 | 全部 1 | 报名中 | E2E 探店日一期 | 第1章 咖啡 | 今天 10:15 · 1 人已报名 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+
+badNet []
+pageErrors 0 []
+consoleErr [error] Failed to load resource: the server responded with a status of 404 (Not Found)
+[error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+[error] FAILED https://oss-rig.example.invalid/upload/e2e-topic-cover-9003.jpg?Expires=2109204999&OSSAccessKeyId=rig-dummy&Signature=5ex0cCalX4ocN%2Fcg3wUmP3MuYls%3D net::ERR_TUNNEL_CONNECTION_FAILED
+[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED
+== a02-merchant-apply [pages/merchant/apply/index]
+审核状态 | 商家入驻申请 | 已生效 | 商家身份已生效，可以进入商家中心使用经营功能。 | 店铺名称 | 探店日样板咖啡 | 联系电话 | — | 店铺地址 | 上海市黄浦区咖啡 | 提交申请 | 2026-11-05 02:11:59 | 资料初审 | 已完成 | 审核结果 | 已生效 | 返回 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+
+badNet []
+pageErrors 0 []
+consoleErr [error] Failed to load resource: the server responded with a status of 404 (Not Found)
+[error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+== a03-merchant-ledger [pages/merchant/ledger/index]
+核销与退款 | 全部 | 待处理 | 已处理 | 不结现金 | 本月核销 | 1 笔 | 待结算 | ¥0.00 | 已入账 | ¥0.00 | 11 月 05 日 | E2E 探店日一期 · 第1章 咖啡 | E2E 玩家二号 | 10:15 | 权益已履约 · 无现金结算 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+
+badNet []
+pageErrors 0 []
+consoleErr [error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+[error] Failed to load resource: the server responded with a status of 404 (Not Found)
+== a04-merchant-ledger-order-detail [pages/merchant/ledger/order-detail/index]
+核销详情 | 缺少核销记录信息 | 请返回重新进入 | 返回上一页 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+
+badNet []
+pageErrors 0 []
+consoleErr [error] Failed to load resource: the server responded with a status of 404 (Not Found)
+[error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+== a05-merchant-ledger-batch-detail [pages/merchant/ledger/batch-detail/index]
+对公结算 | 缺少结算批次信息 | 请返回重新进入 | 返回上一页 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+
+badNet []
+pageErrors 0 []
+consoleErr [error] Failed to load resource: the server responded with a status of 404 (Not Found)
+[error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+== a06-merchant-aftercare [pages/merchant/aftercare/index]
+退款售后 | 待回应 | 处理中 | 已完成 | 没有待回应售后 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+
+badNet []
+pageErrors 0 []
+consoleErr [error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+[error] Failed to load resource: the server responded with a status of 404 (Not Found)
+== a07-merchant-predict [pages/merchant/predict/index]
+预测待答 | 没有等你给答案的预测 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+
+badNet []
+pageErrors 0 []
+consoleErr [error] Failed to load resource: the server responded with a status of 404 (Not Found)
+[error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+== a08-merchant-aftercare-detail [pages/merchant/aftercare/index]
+退款售后 | 待回应 | 处理中 | 已完成 | 没有待回应售后 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+
+badNet []
+pageErrors 0 []
+consoleErr [error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+[error] Failed to load resource: the server responded with a status of 404 (Not Found)
+== a09-merchant-profile [pages/userinfo/userinfo]
+主页 | 探 | 探店日样板咖啡 | 街角咖啡补给站 | 0 | 好友 | 0 | 关注 | 0 | 粉丝 | 核销 | 我的 | 帖文 | 关于 | 品牌故事 | 适合小团到店体验与城市漫步中途补给。 | 品类 | 咖啡 | 营业信息 | 营业状态 | 营业中 | 门店地址 | 上海市黄浦区咖啡 | 真实评价 | 核销用户评价与商家回复 | 承接能力 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+
+badNet []
+pageErrors 0 []
+consoleErr [error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+[error] Failed to load resource: the server responded with a status of 404 (Not Found)
+== a10-merchant-marketing [pages/merchant/marketing/index]
+营销 | 近 30 天报名 | 0 | 核销 1 | 店铺参谋 | 店铺装修 | 发主题 | 发活动 | 我的内容 | 管理 | 0 | 主题 | 0 | 活动 | 优惠券 | 还没有优惠券 | 合作机会 | 1 个开放商机 | 进入合作中心 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+
+badNet []
+pageErrors 0 []
+consoleErr [error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+[error] Failed to load resource: the server responded with a status of 404 (Not Found)
+== a11-merchant-reviews [pages/merchant/reviews/index]
+口碑 | 商家信息不完整 | 返回 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+
+badNet []
+pageErrors 0 []
+consoleErr [error] Failed to load resource: the server responded with a status of 404 (Not Found)
+[error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+== a12-merchant-marketing-ai-insight [pages/merchant/marketing/ai-insight/index]
+店铺参谋 | 早上好， | 探店日样板咖啡 | 探 | 近30天，城瘾为你带来 | 1 | 位玩家到店 | 上期 0位 | 近7天 | 近30天 | 近90天 | 10-07 | 今天 | 到店 | 1 | 打卡 | 1 | 核销 | 1 | 近30天打卡 1 次 · 核销 1 次 | 到店时段 | 100% | 0% | 0% | 0% | 早 | 午 | 晚 | 夜 | 早上到店最多 | 共 1 次打卡 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+
+badNet []
+pageErrors 0 []
+consoleErr [error] Failed to load resource: the server responded with a status of 404 (Not Found)
+[error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+[error] FAILED https://oss-rig.example.invalid/upload/e2e-topic-cover-9003.jpg?Expires=2109205089&OSSAccessKeyId=rig-dummy&Signature=igOqCs812jnDM7fLe8uMMvFdCiQ%3D net::ERR_TUNNEL_CONNECTION_FAILED
+[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED
+== a13-merchant-relation [pages/merchant/relation/index]
+合作 | 帖文 | 俱乐部 | 这里还没有帖文 | 帖文来自你合作过的俱乐部，谈成合作后即可看到 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+
+badNet []
+pageErrors 0 []
+consoleErr [error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+[error] Failed to load resource: the server responded with a status of 404 (Not Found)
+== a14-merchant-citynode [pages/merchant/citynode/index]
+成为节点 | 在架节点 0/3 | 投放节点 | 认领节点 | 扫码核销 | 我的节点 | 0 条 | 还没有节点 | 申请上漫游地图 | 投放节点 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+
+badNet []
+pageErrors 0 []
+consoleErr [error] Failed to load resource: the server responded with a status of 404 (Not Found)
+[error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+== a15-merchant-citynode-create [pages/merchant/citynode/create/index]
+报名成为节点 | 配一个自己店铺的玩法就行，商家信息用你的入驻资料 | 配置玩法 | 确认店址 | 提交申请 | 平台审核 | ① 店铺玩法 | 去配置玩法 | ② 确认店址 | 请在地图上选择店门口 | 在地图上标店址 | 提交投放申请 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+
+badNet []
+pageErrors 0 []
+consoleErr [error] Failed to load resource: the server responded with a status of 404 (Not Found)
+[error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+== a16-merchant-decor [pages/merchant/decor/index]
+品牌中心 | 探 | 探店日样板咖啡 | 添加店铺封面 | 营业中 | 看公开主页 | 门店信息 | 品牌介绍 | 门店相册 | 0 张照片 | AI 店铺角色 | 合作经营 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+
+badNet []
+pageErrors 0 []
+consoleErr [error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+[error] Failed to load resource: the server responded with a status of 404 (Not Found)
+== a17-merchant-decor-ai-npc [pages/merchant/decor/ai-npc/index]
+AI 店铺角色 | 给角色起个名字 | 角色形象 | 未设置 | 角色声音 | 未录制 | 名字 | * | 未填写 | 招呼语 | 未填写 | 性格设定 | 选择性格 | 店铺知识 | 菜单与招牌 | 漫游落点 | 尚未选择地图位置 | 编辑 | 它是你的店在城瘾里的分身 | 出现在漫游地图和店铺主页上，替你招呼路过的玩家 | 下一步 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+
+badNet []
+pageErrors 0 []
+consoleErr [error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+[error] Failed to load resource: the server responded with a status of 404 (Not Found)
+== a18-merchant-decor-coop-setting [pages/merchant/decor/coop-setting/index]
+承接设置 | 接待人数 | 24 人 | 可承接时间 | 10:00-20:00 | 收费方式 | 免费承接 | 合作诉求 | 想要什么样的合作 | 编辑 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+
+badNet []
+pageErrors 0 []
+consoleErr [error] Failed to load resource: the server responded with a status of 404 (Not Found)
+[error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+== a19-merchant-decor-gallery [pages/merchant/decor/gallery/index]
+门店相册 | 保存相册 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+
+badNet []
+pageErrors 0 []
+consoleErr [error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+[error] Failed to load resource: the server responded with a status of 404 (Not Found)
+== a20-merchant-decor-perks [pages/merchant/decor/perks/index]
+常备权益 | 到店赠美式一杯 | 优惠券 | 零售价 ¥32 | 成本 ¥12 | 可接待 200 份 | 有效期至 2099-12-31 | 删除 | 添加权益 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+
+badNet []
+pageErrors 0 []
+consoleErr [error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+[error] Failed to load resource: the server responded with a status of 404 (Not Found)
+== a21-merchant-coop-center [pages/merchant/coop-center/index]
+合作中心 | 官方活动 | 广场 | 自由探索 | E2E 探店日一期 | 看详情 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+
+badNet []
+pageErrors 0 []
+consoleErr [error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+[error] Failed to load resource: the server responded with a status of 404 (Not Found)
+== a22-merchant-customer [pages/merchant/customer/index]
+客户 | 1 位 · 本月新增 1 | 筛选 | 管理 | 玩家二号 | 新客 | 最近已到店 · 今天 | 联系方式在主题名单按客户授权查看 | 共 1 位客户 · 已全部显示 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+
+badNet []
+pageErrors 0 []
+consoleErr [error] Failed to load resource: the server responded with a status of 404 (Not Found)
+[error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+== a23-merchant-game-node [pages/merchant/index/index]
+Hi， | 探店日样板咖啡 | 营业中 | 探 | 累计收入 | ¥0.00 | 扫码 | 客户 | 财务 | 更多 | 项目 | 全部 1 | 报名中 | E2E 探店日一期 | 第1章 咖啡 | 今天 10:15 · 1 人已报名 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+
+badNet []
+pageErrors 0 []
+consoleErr [error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+[error] Failed to load resource: the server responded with a status of 404 (Not Found)
+[error] FAILED https://oss-rig.example.invalid/upload/e2e-topic-cover-9003.jpg?Expires=2109205177&OSSAccessKeyId=rig-dummy&Signature=0yau6QmWF7tdPkRkl8%2Fctdk00Ic%3D net::ERR_TUNNEL_CONNECTION_FAILED
+[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED
+== a24-merchant-customer-detail [pages/merchant/customer/detail/index]
+找不到这位客户 | 返回客户列表 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+
+badNet []
+pageErrors 0 []
+consoleErr [error] Failed to load resource: the server responded with a status of 404 (Not Found)
+[error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+== a25-merchant-verify-records [pages/merchant/verify-records/index]
+核销记录 | 已核销 1 | 已撤销 0 | 2026-11-05 | 1 条 | 第1章 咖啡 | 10:15 · | 已核销 | E2E 探店日一期 | 已经到底了 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+
+badNet []
+pageErrors 0 []
+consoleErr [error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+[error] Failed to load resource: the server responded with a status of 404 (Not Found)
+== a26-merchant-crm-campaigns [pages/merchant/crm-campaigns/index]
+触达记录 | 还没有触达记录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+
+badNet []
+pageErrors 0 []
+consoleErr [error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+[error] Failed to load resource: the server responded with a status of 404 (Not Found)
+== a27-merchant-team [pages/merchant/team/index]
+经营团队 | 探 | 探店日样板咖啡 | 当前岗位 · 店主 | 详情 | 团队成员 | 0 人 | 邀请员工 | 还没有员工 | 邀请员工 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+
+badNet []
+pageErrors 0 []
+consoleErr [error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+[error] Failed to load resource: the server responded with a status of 404 (Not Found)
+== a28-coop-list [pages/coop/list/index]
+协作邀请 | 收到的 | 我发出的 | 还没有收到协作邀请 | 去发起邀请 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+
+badNet []
+pageErrors 0 []
+consoleErr [error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+[error] Failed to load resource: the server responded with a status of 404 (Not Found)
+== a29-coop-invite-detail [pages/coop/invite-detail/index]
+协作详情 | 无法打开这条邀约 | 回协作邀请 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+
+badNet []
+pageErrors 0 []
+consoleErr [error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+[error] Failed to load resource: the server responded with a status of 404 (Not Found)
+== a30-coop-invite [pages/coop/invite/index]
+发起协作邀请 | ① 关联主题 | * | 还没有可关联的主题 | 先发布主题后再发起协作邀请 | 先发布主题 | ② 合作条款 | 对方接受并成单后锁定 | 引流合作（不产生现金结算） | 按核销人头付带队费 | ③ 邀请对象 | 城瘾跑团 | 1 位成员 | 邀请 | 执行俱乐部 | 2 位成员 | 邀请 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+
+badNet []
+pageErrors 0 []
+consoleErr [error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+[error] Failed to load resource: the server responded with a status of 404 (Not Found)
+== a31-coop-nearby [pages/coop/nearby/index]
+附近商家 | 附近暂无商家 | 刷新附近商家 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+
+badNet []
+pageErrors 0 []
+consoleErr [error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+[error] Failed to load resource: the server responded with a status of 404 (Not Found)
+== a32-coop-finance [pages/coop/finance/index]
+分润明细 | 已入账分润 | ¥0.00 | 可提现 | ¥0.00 | 联系平台客服提现 | 还没有已入账分润 | 还没有合作结算 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+
+badNet []
+pageErrors 0 []
+consoleErr [error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+[error] Failed to load resource: the server responded with a status of 404 (Not Found)
+== a33-coop-settlement-detail [pages/coop/settlement-detail/index]
+结算详情 | 缺少结算记录信息 | 请返回重新进入 | 返回上一页 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+
+badNet []
+pageErrors 0 []
+consoleErr [error] Failed to load resource: the server responded with a status of 404 (Not Found)
+[error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+== a34-coop-withdraw [pages/coop/withdraw/index]
+提现方式已调整 | 联系平台客服提现 | 添加客服微信，线下处理 | 联系平台客服提现 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+
+badNet []
+pageErrors 0 []
+consoleErr [error] Failed to load resource: the server responded with a status of 404 (Not Found)
+[error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+== a35-coop-withdraw-records [subpackageMember/tixianjilu/tixianjilu]
+提现记录 | 还没有发起提现 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+
+badNet []
+pageErrors 0 []
+consoleErr [error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+[error] Failed to load resource: the server responded with a status of 404 (Not Found)
+== a36-topic-merchantapply [pages/topic/merchantapply/index]
+商家报名 | 你的门店 | 探店日样板咖啡 | 上海市黄浦区咖啡 | 承接地点 | * | 用于地图与到场导航，拒绝不影响填写 | 承接说明 | * | 0/500 | 承接图片 | * | 上传现场照片 | 5:3 横图，1–9 张 | 提交报名 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+
+badNet []
+pageErrors 0 []
+consoleErr [error] Failed to load resource: the server responded with a status of 404 (Not Found)
+[error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+== a37-topic-merchantinfo-merchantinfo [pages/topic/merchantinfo/merchantinfo]
+链接已失效 | 返回上一页 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+
+badNet []
+pageErrors 0 []
+consoleErr [error] Failed to load resource: the server responded with a status of 404 (Not Found)
+[error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+[error] HTTP 404 http://127.0.0.1:8097/mp/components/cy/npc-avatar/px1:p01
+[error] Failed to load resource: the server responded with a status of 404 (Not Found)
+[error] HTTP 404 http://127.0.0.1:8097/mp/components/cy/npc-avatar/px1:p04
+[error] Failed to load resource: the server responded with a status of 404 (Not Found)
+[error] HTTP 404 http://127.0.0.1:8097/mp/components/cy/npc-avatar/px1:p07
+[error] Failed to load resource: the server responded with a status of 404 (Not Found)
