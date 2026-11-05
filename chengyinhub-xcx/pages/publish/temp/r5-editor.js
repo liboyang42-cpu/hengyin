@@ -5,6 +5,8 @@ const matrix = require('../utils/publish/gameplay-support-matrix.js');
 const clone = value => JSON.parse(JSON.stringify(value));
 const PARTICIPATION = [{ key: 'direct', label: '直接参与', value: 0, sub: '直接开始', reason: '' }, { key: 'gps', label: '定位到达', value: 5, sub: '到达节点后开始', reason: '' }, { key: 'scan', label: '扫码参与', value: 4, sub: '扫现场码后开始', reason: '' }];
 const REMOVED = ['branch', 'silentOrder', 'diyName', 'musicCorner', 'slowTask', 'multiplayer'];
+const NEW_GAME_DEFAULTS = { 'ballShake.seconds': 12, 'typeIn.seconds': 10, 'photoCheck.maxTries': 3 };
+const LEGACY_LABELS = { 'ballShake.timed': '旧限时开关', 'ballShake.seconds': '旧限时秒数', 'typeIn.seconds': '旧输入限时秒数', 'sort.maxAttempts': '旧排序次数', 'qa.maxTries': '旧答题次数', 'photoCheck.maxTries': '旧拍照次数', 'estimate.maxTries': '旧估值次数', 'pricePair.maxTries': '旧比价次数', 'hiddenObject.maxTries': '旧找物次数' };
 function legacyRows(config) {
   const rows = [];
   const add = (path, label) => { const value = after.get(config, path); if (value != null) rows.push({ path, label, value: clone(value), displayValue: typeof value === 'object' ? JSON.stringify(value) : String(value), readOnly: true }); };
@@ -12,7 +14,8 @@ function legacyRows(config) {
   REMOVED.filter(key => config[key]?.enabled).forEach(key => add(key, '旧规则：' + key));
   for (const path of ['ballShake.timed', 'ballShake.seconds', 'typeIn.seconds', 'sort.maxAttempts', 'qa.maxTries', 'photoCheck.maxTries', 'estimate.maxTries', 'pricePair.maxTries', 'hiddenObject.maxTries']) {
     const value = after.get(config, path);
-    if (config[path.split('.')[0]]?.enabled && value !== 0 && value !== '' && value !== false && !(path === 'qa.maxTries' && config.qa.mode === 'PICK')) add(path, '旧设置：' + path);
+    // 新建玩法自带的默认值不是「旧设置」,不列出来;作者改过或老数据里的非默认值才只读展示,标签用中文不露字段名
+    if (config[path.split('.')[0]]?.enabled && value !== 0 && value !== '' && value !== false && value !== NEW_GAME_DEFAULTS[path] && !(path === 'qa.maxTries' && config.qa.mode === 'PICK')) add(path, LEGACY_LABELS[path] || ('旧设置：' + path));
   }
   if (config.variants?.length) add('variants', '旧放宽条件');
   return rows;

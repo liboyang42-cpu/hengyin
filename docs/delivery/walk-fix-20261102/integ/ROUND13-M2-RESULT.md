@@ -53,4 +53,21 @@ Checks:
 - **ui-integrity.js**: passed on my tree before the last rebase; after it, two entries in `pages/merchant/apply/index.js` (another lane's, line 359 vs 360) fail. Not mine, left alone.
 - **Main package size**: 2.98 MB uncompressed by `preflight-release.js`, under the 3.00 MB (3,145,728 byte) limit. Preflight still ends with one BLOCK, 「Action Ledger 动态证据未完成:pending=5741」, the release-time evidence run that is not done on this branch; it is not something this lane changes.
 
-STATUS: PARTIAL - E4, P1, L1 and E6 walked on the rig and the P1 Java test, ledger check and package size pass; E12, E13, E2, P3, P4 and the backpack chip were not walked (they need a saved theme or a running story, which I did not build); ui-integrity has two failures from another lane's merchant/apply lines
+## Third pass: game library walk (editor screens only)
+
+Rig rebuilt from this branch. I opened every game in the 选择玩法 sheet of the template editor (32 games: 选项问答, 文字问答, 猜图, 拍照打卡, 闭眼盲品, 拍照审核, 预测, 拍物成卡, 排序, 连线, 分类, 抛硬币, 找东西, 相册, 掷骰子, 角色建档, 九宫格, 翻卡, 留言, 猜数字, 今日城市签, D20, 弹球, 倒计时, D20 加值, 安静挑战, 精准停表, 计步挑战, 罗盘指向, 输入挑战, 变色就点, 喊一嗓子), picked it, and read the page with a script (not by eye, except the shots listed): helper captions, controls under the bottom bar at the end of the scroll, ASCII `?` in placeholders, typing into the first inputs, and 查看预览.
+
+Found and fixed:
+- Placeholder 「例如 这座桥建于哪一年?」 (ASCII question mark) in 选项问答/文字问答/拍照打卡: now a full-width ？.
+- 「旧设置：photoCheck.maxTries：3」 (also ballShake.seconds, typeIn.seconds) shown as a raw-key caption on a **new** 拍照审核, 拍物成卡, 弹球 and 输入挑战. Now the engine's own new-game defaults are not listed, and a real old value shows with a Chinese label (e.g. 旧拍照次数) instead of the field name. Checked: 拍照审核 no longer shows the block. Tests that pin the old-setting rows (typeIn.seconds 19, slowTask) still pass.
+- 「再加一段题目」, 「按这份配置试玩」, 「可触发的结果」 and the result row ran edge to edge, outside the card margin: now they use the same page margin as the cards (shot `m2-after-lib-layout2.jpg`, viewed).
+- No game had a button hidden under the bottom bar at the end of the scroll (checked by script and in the shots I viewed).
+
+Seen but not a product bug: the 设为正确答案 circle is blank in the rig because the rig does not draw WeChat's native `icon`.
+
+Not done:
+- Preview: 查看预览 on a blank template answers with 「请填写玩法看点」 and 「请先保存为我的玩法」 (validation), so I did not preview configured games. I did not fill and save each game's form on screen. I did not view every game's shot; the others were read by script only.
+- The typing probe reported the 「这一段的反馈内容」 box as empty after typing in 30 games. I could not reproduce it by hand (the box was not found in the page in the follow-up probe), so I cannot say if it is a real input bug or a probe mistake. **Unverified.**
+- E12, E13, E2, P3, P4 and the backpack chip are still not walked (they need a saved theme or a started run).
+
+STATUS: PARTIAL - editor screens of all 32 library games were opened and scanned, with fixes for the ASCII placeholder, the raw 旧设置 captions and the edge-to-edge blocks; but no game was configured, saved and previewed end to end, the feedback-box typing probe is unresolved, and E12, E13, E2, P3, P4 and the backpack chip remain unwalked

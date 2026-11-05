@@ -1619,6 +1619,8 @@ page {
 .cg-inline-cfg > .cg-sec + .cg-gcfg, .cg-inline-cfg > .cg-sec + .cg-inline-error + .cg-gcfg { margin-top: var(--cy-space-2-5); }
 .cg-card { margin-left: var(--cy-page-x); margin-right: var(--cy-page-x); --cy-comp-card-pad: var(--cy-space-4); --cy-comp-card-radius: var(--cy-radius-lg); } /* 打磨第 3 轮:页边与圆角对齐全站(原 13px / 14px) */
 .cg-inline-cfg > .cg-gcfg, .cg-inline-cfg > .cg-cfg { margin-left: var(--cy-page-x); margin-right: var(--cy-page-x); padding: var(--cy-space-4); border-radius: var(--cy-radius-lg); } /* 同上 */
+.cg-inline-cfg > .cg-outcome-contract, .cg-inline-cfg > .cg-try, .cg-inline-cfg > .cg-adv-add, .cg-inline-cfg > cy-dropdown { display: block; margin-left: var(--cy-page-x); margin-right: var(--cy-page-x); } /* 卡片之外的整行块(再加一段题目 / 试玩 / 可触发的结果)与卡片同页边,不贴屏幕边 */
+.cg-inline-cfg > .cg-outcome-contract { display: flex; }
 .cg-line { display: flex; align-items: center; min-height: 88rpx; margin-top: var(--cy-space-4); padding-top: var(--cy-space-1-5); } /* ds-ok 原型 .frow.line 44px */
 .cg-scan-reply { padding-top: var(--cy-space-1); }
 .cg-game-opts { margin-top: var(--cy-space-4); }
