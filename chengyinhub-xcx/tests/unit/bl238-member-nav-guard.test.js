@@ -92,10 +92,11 @@ function mountPage(rel) {
   return { page, navs }
 }
 
-test('券列表 「新建」连点只跳一次;onShow 兜底清锁', () => {
+test('上线关闭新建券时连点旧 handler 也不跳转', () => {
   const { page, navs } = mountPage('subpackageMember/coupon/coupon.js')
   page.getList = () => {}; page.loadSummary = () => {}
-  onceThenAgain(navs, () => page.GoAdd(), '/subpackageMember/couponInfo/couponInfo', () => page.onShow())
+  page.GoAdd(); page.GoAdd(); page.onShow(); page.GoAdd()
+  assert.equal(navs.length, 0)
 })
 
 test('我的模板 封面连点只跳一次;onShow 兜底清锁', () => {

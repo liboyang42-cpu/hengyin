@@ -63,7 +63,6 @@ function buildBenefits(p) {
   return [
     // 2026-10-30 V-19 业主定 B:每行换成对应的线条图标(不再是勾 / 锁占位),没解锁的行尾一把锁
     { text: '发布路线 · 上限 ' + (max == null ? '不限' : (max || 0)), unlocked: (max == null || max > 0), icon: 'route' },
-    { text: '发布优惠券', unlocked: p.canPublishCoupon === true, icon: 'coupon' },
     { text: '到店核销', unlocked: p.canRedeemCoupon === true, icon: 'scan' },
     { text: '分支 / 条件玩法', unlocked: p.canBranch === true, icon: 'switch-chapter' },
     { text: '博弈机制（竞速/对抗/协作）', unlocked: p.canGameMechanic === true, icon: 'flag' },

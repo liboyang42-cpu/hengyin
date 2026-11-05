@@ -1,0 +1,52 @@
+{
+  "baseCommit": "4aff0697d715b0ecb278b7fb0a631e65484fd84e",
+  "lane": "POLICY",
+  "state": "frozen-uncommitted-java-for-coordinator",
+  "files": [
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java",
+      "sha256": "95c11fd25a3e813bbc66927b110dc8b8ccdf9010e109defb5940a5573857f235"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsActivityController.java",
+      "sha256": "f9049bbac91498fac92177dcea2b5137b197da00c9d92bf7f2d0f44f7faf6135"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/util/JourneyReviewTexts.java",
+      "sha256": "e3b463636980f84e37a74c2e06d8c838f43a7c3965d2bb337404cf1c4b4fbb71"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ActivityBoundGameContentSafetyTest.java",
+      "sha256": "80b765f30cf0d87c7f1c78ccd783ef44af16dab849df0db70c001f5c7a675ee4"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/util/BoundTemplateReviewTextsTest.java",
+      "sha256": "322c5dfb457f659eef0d631ce5ec10c52dc573e775bef6e097b3ddddac6f5338"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ThemeBoundTemplateTextSafetyTest.java",
+      "sha256": "f0e26a385c78ca85859053868ba58f24c8797080a683b145d13f52573382c321"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/CmsActivityAdminReviewGateTest.java",
+      "sha256": "0a601fb3873edec4c02f1f3f270916b763461c4754b60bb758c26765a4fabe12"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiVerifyGroupCodeTest.java",
+      "sha256": "37fe91adb919f5840eff6a317cd8fbe0d07acd1fa142851281e0da2508daf2e7"
+    }
+  ],
+  "testSuites": [
+    "ActivityBoundGameContentSafetyTest",
+    "BoundTemplateReviewTextsTest",
+    "ActivityPublishReviewModeTest",
+    "ActivityPublishRoleGateTest",
+    "ThemeBoundTemplateTextSafetyTest",
+    "CmsActivityAdminReviewGateTest",
+    "JourneyReviewTextsTest",
+    "JourneyReviewTextsPlainFieldTest",
+    "TopicTextSafetyTest",
+    "ApiVerifyGroupCodeTest",
+    "RegistrationVerifyAndSettleTest"
+  ]
+}

@@ -13,6 +13,7 @@ Page({
    * 页面的初始数据
    */
   data: {
+    couponCreationEnabled: couponForm.CREATION_ENABLED,
     startdate: '开始日期',
     enddate: '结束日期',
     array2: couponForm.COUPON_TYPE_LABELS,
@@ -58,6 +59,7 @@ Page({
    * 生命周期函数--监听页面加载
    */
   onLoad(options) {
+    if (!couponForm.CREATION_ENABLED) { this.exitPage(); return; }
     var that = this 
     this._disposed = false;
     this._visible = true;
@@ -244,6 +246,7 @@ Page({
 
   // 提交表单
   onSubmit() {
+    if (!couponForm.CREATION_ENABLED) return;
     const that = this;
     // M0-4 发券防重:前端防抖,提交中直接拦掉重复点击
     if (that.data.isSubmitting || that._disposed || that._visible === false) return;
