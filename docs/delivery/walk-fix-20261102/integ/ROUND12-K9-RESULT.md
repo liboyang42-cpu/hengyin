@@ -9,6 +9,8 @@ Branch `integ/launch-test-20261103`. I worked on a private local branch and ran 
 - **This is not a phone.** The rig's MySQL and Chrome run in UTC, and covers and QR codes don't load (HARNESS).
 - I looked at every shot named below. All shots are under `integ/fix-shots/k9-*`.
 
+**A second k9 worker pushed to the same branch while I worked.** Commits `918c6380c`, `5a9a5975e`, `fe10e9cc5`, `8d05beed7`, `393e079f1`, `4f86c7503` and `9c1f301de` are labelled 第十二轮 k9. They are not mine. They cover p3 N6 tickets, N9, N13, N16 and N19. I rebased onto them; the only conflicts were the action ledger and its counts, which I rebuilt. Where my table below says "listed" for those items, read "done by the other k9 worker, see its commits". I didn't re-walk that work.
+
 No migrations. No new endpoints. No write contract or money rule changed. No gated `@Test` added or removed, so `ci/funds_it_gate.py` is unchanged.
 
 ## k2's leftovers
@@ -43,7 +45,7 @@ No migrations. No new endpoints. No write contract or money rule changed. No gat
 | ID | Status | Notes |
 |---|---|---|
 | p3 N6 lost category | **not a copy bug** | Rig read-back: `/use` of template 990015 made draft 990016 with `category_ids=1`, the same as its source (`k9` api run). The editor only shows ids that exist in the live category list; the rig's seed id `1` isn't one (live ids start at 21). So 主题详情 「还有 1 项未填」 comes from category data, not from the copy. |
-| p3 N6 lost tickets | **listed for owner** | `copyCmsTopic` copyType 3 copies chapters, nodes and collaborators, not tickets. The controller comment says 票种, but the code never did. Copying tickets creates priced rows: that is a write contract, so I didn't change it. |
+| p3 N6 lost tickets | done by the other k9 worker | `918c6380c`: 应用 now copies the theme's own tickets. I would have listed it for you, since it creates priced rows; please check it. |
 | p3 N6 each 应用 makes a draft | fixed | If this page already made a draft, tapping 应用 again reopens that draft. The in-flight lock was already there. File `pages/templatedetail/topic-detail/index.js`; test. |
 | p2 N-9 wrong role / guest leftovers | fixed | (1) The shared login gate (`cy-access-gate`) now starts below the nav bar, so the back arrow shows on every guest gate. It was hidden on all of them, not only decor: `k9-p2N9-decor-guest-*`. (2) 客户 and 核销与退款 get the login gate for guests: `k9-p2N9-customer-guest-*`, `k9-p2N9-ledger-guest-*`. (3) A player opening a customer page reads 「当前账号不能查看客户 · 返回」, not 「联系店主开通」: `k9-p2N9-customer-detail-player-after`. (4) `merchantinfo?topicId=` for an unrelated account shows 「链接已失效 · 返回上一页」 instead of a blank page: `k9-p2N9-merchantinfo-wrong-param-*` (9002 on 990013). |
 | p2 N-13 coupon form | fixed (part) | 投放数 no longer pre-fills a fake 「0」. **Listed for owner:** no value field. Adding an amount to coupons is a write contract. The default validity window is the picker's default and was not changed. |
@@ -53,9 +55,9 @@ No migrations. No new endpoints. No write contract or money rule changed. No gat
 | j1 「授权状态待确认，可点击申请」 | fixed | When nothing has been asked yet, there is no sub-line. The switch is the action. |
 | j1 「长按卡片管理」 | **needs owner** | The owner's design 260:369 says "no buttons on cards". A ··· on the card contradicts it. Default: keep. |
 | j1 N8 verifier id | **listed for owner** | Recording the clerk instead of the shop is a data model / write change. |
-| p3 N9 transfer | **listed** | The success toast already shows. The former owner losing 俱乐部结算 (their 可提现) is a product question, k1's area. |
-| p3 N13 reject in three taps, N16 群发 counts | **listed** | N16: `selectInactiveRecipients` counts members with no paid club-session sign-up in 90 days. New members and members whose payments aren't club-session rows count as inactive. Changing who a broadcast reaches needs a rule. My default: exclude members who joined within 90 days. |
-| p3 N18, N19 | not done | N18 may be the rig; N19 is a time-shifted fixture lead. |
+| p3 N9 transfer | done by the other k9 worker (`fe10e9cc5`) | Still open: the former owner losing 俱乐部结算 (their 可提现) is a product question, k1's area. |
+| p3 N13, N16 | done by the other k9 worker (`8d05beed7`, `5a9a5975e`) | |
+| p3 N18, N19 | N19 done by the other k9 worker (`393e079f1`); N18 not done | N18 may be the rig. |
 | p2 N-11 early redeem, N-12 invite without `shareMode` | **listed** | Money rule and write contract, as k3 said. |
 | p2 N-14 rest, N-16, N-17 rest | not done | |
 | Item 5: "not covered" by fixture | partly | I walked **all 32 p3 pages as a guest** at `a00c2114e` (bundle). The visible text of each is in `fix-shots/k9-p3-guest-sweep.txt`. Every page shows a login gate, 链接已失效 or real public content, with two exceptions. (1) 剧情与玩法 with no theme was blank under its two tabs: **fixed** (`pages/club/topic-story`, test). (2) 俱乐部勋章 with no id uses the auto-back missing-param shell: by design. Still showing helper lines in missing-param states: club/edit 「没有指定要编辑的俱乐部，请返回俱乐部页重新进入。」, join-requests 「缺少俱乐部信息，请返回俱乐部列表后重新进入」, group-code 「请从俱乐部管理进入具体场次」. **Not done.** game-node, coop settlement-detail, batch-detail and predict with data still need the j2 journey fixtures: **not done**. |
