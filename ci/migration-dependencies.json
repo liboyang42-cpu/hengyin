@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "dependencies": {
+    "20261105_l4_invoice_command_receipt": [],
     "20261101_author_write_receipt": [],
     "20261101_theme_categories": [],
     "20261101_prefab_life_template_copy": ["seed_prefab_life_20260918"],
