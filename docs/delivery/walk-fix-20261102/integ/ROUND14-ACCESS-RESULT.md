@@ -104,3 +104,11 @@ Root additionally assigned read-only POLICY review, then authorized a correction
 - Keep existing end+14-day hold and production payout method; do not infer this read-only projection authorizes a new automatic withdrawal product or any old liability reassignment.
 
 STATUS: PARTIAL — source and frontend focused checks prepared; frontend commit delivered; final VPS receipt, coordinator joint Java commit, real-MySQL execution, unified ledger/CI and runtime/device acceptance pending.
+
+## Authored executable replay and latest test receipt
+
+Delivered `proof/round14-access/replay.mjs` and its README for allocated independently authenticated 9014/9015/9016. It uses normal app login, authenticated read endpoints and rendered governance UI; the only governance writes are 9014→9015→9014, keeping 9016 a stranger. It reads back actual transfer record IDs, requires historical payee fixtures and exact runtime-ready source first, follows the real account earnings entry/detail and compares scoped money rows before/after. It never creates SQL fixtures, adjusts dates, writes earnings/transfer records directly, calls a money endpoint or starts infrastructure. Private receipts omit tokens/full network dumps; all browsers close in finally.
+
+`node replay.mjs --self-check` and `node --check replay.mjs`: PASS, no browser/network/session/governance action. No runtime-ready signal was received and the business replay has **NOT RUN**. Missing normal historical earnings/eligible membership/source-verification seams explicitly stop as UNVERIFIED_PREREQUISITE before a transfer. No fake historical funds are supplied to make the flow pass.
+
+Coordinator reports the four ACCESS focused suites passed in the VPS 683-test run; that batch was not fully green because of separate fixture errors. POLICY's new raw-text behavior cases passed, while an existing reflection test tried to write static final MEDAL_STYLE_GLOW. Only the two reflection filters were corrected to retain all instance String assertions; production collector is unchanged. Updated BoundTemplateReviewTextsTest SHA256 was tool-read back as 432ca2dcb5634a4221b2b0759a2e69d646522fc86adcbe7edba0a93062a20de9. Final corrected-fixture rerun/XML receipt, true MySQL execution and runtime/device proof still belong to root.
