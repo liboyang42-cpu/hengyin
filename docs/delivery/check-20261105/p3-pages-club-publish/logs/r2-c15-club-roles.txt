@@ -1,0 +1,7 @@
+r2-c15-club-roles route pages/index/index>pages/club/roles/index controls 5 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  SKIPPED (destructive / writes; walked by hand) revokeRole                 "撤销"                                 
+  ui change        openMemberPicker           "选择成员 未选择"                           
+  ui change        openRolePicker             "角色 未选择"                             
+  NO VISIBLE EFFECT assignRole                 "分配"                                 
+TEXT: 角色与权限 | 当前委派 | 林测试 | 全部权限，不可撤销 | 主理人 | 周小雨 | 可管理内容、入会审核与成员通知；活动与现场权限按场次单独委派 · | 撤销 | 俱乐部运营 | 分配固定角色 | 选择成员 | 未选择 | 角色 | 未选择 | 分配 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

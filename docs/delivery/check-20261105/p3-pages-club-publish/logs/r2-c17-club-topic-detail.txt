@@ -1,0 +1,10 @@
+r2-c17-club-topic-detail route pages/index/index>pages/club/topic-detail/index controls 8 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  navigates        onQuickAction              "商家"                             -> pages/topic/merchantinfo/merchantinfo    
+  ui change        onQuickAction              "报名参与者"                              
+  navigates        onQuickAction              "团码"                             -> pages/club/group-code/index    
+  ui change        onQuickAction              "更多"                                 
+  navigates        goStory                    "人民广场 · 喷泉报时 2 章 · 3 站 打开剧情与玩法"  -> pages/club/topic-story/index    
+  ui change        goRules                    "退出与暂停规则"                            
+  ui change        onPrimary                  "开始准备"                               
+TEXT: 已确认 | 人民广场 · 喷泉报时 | 11月5日 – 1月4日 | 商家 | 报名参与者 | 团码 | 更多 | 主题 | 人民广场 · 喷泉报时 | 2 章 · 3 站 | 打开剧情与玩法 | 退出与暂停规则 | 开始准备 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

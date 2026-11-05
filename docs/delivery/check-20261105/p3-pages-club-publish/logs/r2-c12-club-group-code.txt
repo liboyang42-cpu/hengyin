@@ -1,0 +1,7 @@
+r2-c12-club-group-code route pages/index/index>pages/club/group-code/index controls 5 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  navigates        onMask                     ""                               -> pages/index/index    
+  NO VISIBLE EFFECT noop                       "活动核验团码"                             
+  navigates        onClose                    ""                               -> pages/index/index    
+  NO VISIBLE EFFECT onRetry                    "重试"                                 
+TEXT: 活动核验团码 | 该场次不可带队核销 | 重试 | 人民广场 · 喷泉报时 · 11月5日 10:18 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

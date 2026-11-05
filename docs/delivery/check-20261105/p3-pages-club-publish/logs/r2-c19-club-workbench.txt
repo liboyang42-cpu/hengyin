@@ -1,0 +1,18 @@
+r2-c19-club-workbench route pages/index/index>pages/club/detail/index controls 16 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  ui change        onSettings                 ""                                   
+  ui change        onTab                      "帖文"                                 
+  ui change        onTab                      "活动"                                 
+  ui change        onTab                      "概览"                                 
+  NO VISIBLE EFFECT onTab                      "管理"                                 
+  ui change        onClubScan                 "扫码"                                 
+  ui change        onClubGroupCode            "出示二维码"                              
+  navigates        goClubFinance              "结算"                             -> pages/club/settlement/index    
+  ui change        onSettings                 "设置"                                 
+  SKIPPED (destructive / writes; walked by hand) onOwnerPrimary             "发布主题"                               
+  ui change        toggleManageSection        "自由探索期次"                             
+  ui change        toggleManageSection        "可对接商家"                              
+  ui change        toggleManageSection        "可对接的活动"                             
+  ui change        toggleManageSection        "收到的合作邀约"                            
+  ui change        toggleManageSection        "我发出的邀约"                             
+TEXT: 夜行者二测社 | 兴趣社群 · 3 名成员 | 需审核加入 | 帖文 | 活动 | 概览 | 管理 | 扫码 | 出示二维码 | 分享 | 结算 | 设置 | 现在要做 | 发布主题 | 发布主题 | 自由探索期次 | 可对接商家 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

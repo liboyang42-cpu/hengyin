@@ -1,0 +1,210 @@
+{
+ "id": "r2-c19-club-workbench",
+ "path": "pages/club/workbench/index?clubId=990004",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "onSettings||{}",
+   "h": "onSettings",
+   "txt": "",
+   "w": 46,
+   "hgt": 46,
+   "y": 46,
+   "route": "pages/club/detail/index",
+   "newText": "俱乐部设置 | 客户与项目 | 查看客户 | 3 人 | 报名名册 | 1 个团 | 活动运营 | 项目工具 | 成员与权限 | 入会申请 | 成员管理 | 3",
+   "shot": "r2-c19-club-workbench-t01",
+   "result": "ui change"
+  },
+  {
+   "key": "onTab|帖文|{\"key\":\"posts\"}",
+   "h": "onTab",
+   "txt": "帖文",
+   "w": 54,
+   "hgt": 46,
+   "y": 361,
+   "route": "pages/club/detail/index",
+   "newText": "玩家二号 | 有什么新鲜好玩的分享吗？ | 暂无帖文",
+   "result": "ui change"
+  },
+  {
+   "key": "onTab|活动|{\"key\":\"events\"}",
+   "h": "onTab",
+   "txt": "活动",
+   "w": 54,
+   "hgt": 46,
+   "y": 361,
+   "route": "pages/club/detail/index",
+   "newText": "发布 | 暂时俱乐部还没有活动",
+   "result": "ui change"
+  },
+  {
+   "key": "onTab|概览|{\"key\":\"overview\"}",
+   "h": "onTab",
+   "txt": "概览",
+   "w": 54,
+   "hgt": 46,
+   "y": 361,
+   "route": "pages/club/detail/index",
+   "newText": "暂无简介 | 林测试 | 主理人 | 兴趣社群 | 俱乐部类型 | 上海 | 所在城市 | 俱乐部勋章 | 成员 · 3 | 邀请成员 | 林测试 | 主理人",
+   "shot": "r2-c19-club-workbench-t02",
+   "result": "ui change"
+  },
+  {
+   "key": "onTab|管理|{\"key\":\"manage\"}",
+   "h": "onTab",
+   "txt": "管理",
+   "w": 54,
+   "hgt": 46,
+   "y": 361,
+   "route": "pages/club/detail/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "onClubScan|扫码|{}",
+   "h": "onClubScan",
+   "txt": "扫码",
+   "w": 71,
+   "hgt": 74,
+   "y": 433,
+   "route": "pages/club/detail/index",
+   "newText": "可对接的活动",
+   "result": "ui change"
+  },
+  {
+   "key": "onClubGroupCode|出示二维码|{}",
+   "h": "onClubGroupCode",
+   "txt": "出示二维码",
+   "w": 71,
+   "hgt": 74,
+   "y": 433,
+   "route": "pages/club/detail/index",
+   "newText": "还没有项目，先发布一个主题 | 可对接的活动",
+   "result": "ui change"
+  },
+  {
+   "key": "goClubFinance|结算|{}",
+   "h": "goClubFinance",
+   "txt": "结算",
+   "w": 71,
+   "hgt": 74,
+   "y": 433,
+   "route": "pages/club/settlement/index",
+   "newText": "俱乐部结算 | 商家计酬 | 0 人次 | 俱乐部直接付款 | 待结清 | ¥0.00 | 已结清 | ¥0.00 | 待退回 | ¥0.00 | 还没有计酬核销记录 | 可提现",
+   "shot": "r2-c19-club-workbench-t03",
+   "result": "navigates"
+  },
+  {
+   "key": "onSettings|设置|{}",
+   "h": "onSettings",
+   "txt": "设置",
+   "w": 71,
+   "hgt": 74,
+   "y": 433,
+   "route": "pages/club/detail/index",
+   "newText": "可对接的活动 | 俱乐部设置 | 客户与项目 | 查看客户 | 3 人 | 报名名册 | 1 个团 | 活动运营 | 项目工具 | 成员与权限 | 入会申请 | 成员管理",
+   "result": "ui change"
+  },
+  {
+   "key": "onOwnerPrimary|发布主题|{}",
+   "h": "onOwnerPrimary",
+   "txt": "发布主题",
+   "w": 322,
+   "hgt": 46,
+   "y": 605,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  },
+  {
+   "key": "toggleManageSection|自由探索期次|{\"key\":\"editions\"}",
+   "h": "toggleManageSection",
+   "txt": "自由探索期次",
+   "w": 357,
+   "hgt": 48,
+   "y": 696,
+   "route": "pages/club/detail/index",
+   "newText": "本俱乐部还没有承接自由探索期次 | 可对接的活动 | 收到的合作邀约 | 我发出的邀约",
+   "result": "ui change"
+  },
+  {
+   "key": "toggleManageSection|可对接商家|{\"key\":\"merchants\"}",
+   "h": "toggleManageSection",
+   "txt": "可对接商家",
+   "w": 357,
+   "hgt": 48,
+   "y": 774,
+   "route": "pages/club/detail/index",
+   "newText": "我的合作 | 场地免费 | 可承接 24 人 | 探店日样板咖啡 | 10:00-20:00 | 上海市黄浦区咖啡 | 探店日 · City Walk",
+   "result": "ui change"
+  },
+  {
+   "key": "toggleManageSection|可对接的活动|{\"key\":\"coop-pool\"}",
+   "h": "toggleManageSection",
+   "txt": "可对接的活动",
+   "w": 357,
+   "hgt": 48,
+   "y": 852,
+   "route": "pages/club/detail/index",
+   "newText": "可对接的活动 | 暂无开放承接的主题 | 收到的合作邀约 | 我发出的邀约",
+   "result": "ui change"
+  },
+  {
+   "key": "toggleManageSection|收到的合作邀约|{\"key\":\"received\"}",
+   "h": "toggleManageSection",
+   "txt": "收到的合作邀约",
+   "w": 357,
+   "hgt": 48,
+   "y": 931,
+   "route": "pages/club/detail/index",
+   "newText": "可对接的活动 | 收到的合作邀约 | 暂无合作邀约 | 我发出的邀约",
+   "result": "ui change"
+  },
+  {
+   "key": "toggleManageSection|我发出的邀约|{\"key\":\"sent\"}",
+   "h": "toggleManageSection",
+   "txt": "我发出的邀约",
+   "w": 357,
+   "hgt": 48,
+   "y": 1009,
+   "route": "pages/club/detail/index",
+   "newText": "可对接的活动 | 收到的合作邀约 | 我发出的邀约 | 还没有发出邀约",
+   "result": "ui change"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "pages/club/detail/index"
+ ],
+ "text": "夜行者二测社 | 兴趣社群 · 3 名成员 | 需审核加入 | 帖文 | 活动 | 概览 | 管理 | 扫码 | 出示二维码 | 分享 | 结算 | 设置 | 现在要做 | 发布主题 | 发布主题 | 自由探索期次 | 可对接商家 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "text_s1": "兴趣社群 · 3 名成员 | 需审核加入 | 帖文 | 活动 | 概览 | 管理 | 扫码 | 出示二维码 | 分享 | 结算 | 设置 | 现在要做 | 发布主题 | 发布主题 | 自由探索期次 | 可对接商家 | 可对接的活动 | 收到的合作邀约 | 我发出的邀约 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 16,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/club/detail/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207477&OSSAccessKeyId=rigdummy&Signature=NyQmfuDhh57UBjQpqWajK%2Fy%2BBpM%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207489&OSSAccessKeyId=rigdummy&Signature=FXaKmoCqn3Yyki71ZjUEnlkYIR0%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

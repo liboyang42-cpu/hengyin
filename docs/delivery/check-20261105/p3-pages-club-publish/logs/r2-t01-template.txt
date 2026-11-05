@@ -1,0 +1,17 @@
+r2-t01-template route pages/template/index controls 15 errors 0 badNet 0
+  navigates        goInbox                    ""                               -> subpackageB/pages/im/list/index    
+  NO VISIBLE EFFECT onTab                      "主题"                                 
+  ui change        onTab                      "玩法"                                 
+  navigates        goSearch                   "搜索主题与玩法模板"                      -> pages/search2/index    
+  navigates        openTopic                  "封面暂不可用 城市定向 人民广场 · 喷泉报时 实验模板 ·" -> pages/templatedetail/topic-preview/index    
+  NO VISIBLE EFFECT pickTag                    "全部"                                 
+  ui change        openAllTags                "全部分类"                               
+  navigates        openTopic                  "封面暂不可用 人民广场 · 喷泉报时 城市定向 实验模板 ·" -> pages/templatedetail/topic-preview/index    
+  navigates        openTopic                  "封面暂不可用 人民广场 · 喷泉报时 实验模板 · 2 章 " -> pages/templatedetail/topic-preview/index    
+  off-screen       onChange                   ""                                   
+  off-screen       onChange                   ""                                   
+  off-screen       onChange                   ""                                   
+  off-screen       onChange                   ""                                   
+  off-screen       onChange                   ""                                   
+  ui change        openPublishSheet           ""                                   
+TEXT: 主题 | 玩法 | 搜索主题与玩法模板 | 封面暂不可用 | 城市定向 | 人民广场 · 喷泉报时 | 实验模板 · 2 章 · 3 个玩法 · 45 分钟 | 全部 | 全部分类 | 全部主题 | 封面暂不可用 | 人民广场 · 喷泉报时 | 城市定向 | 实验模板 · 2 章 · 3 个玩法 · 45 分钟 | 两小时内玩完 | 封面暂不可用 | 人民广场 · 喷泉报时 | 实验模板 · 2 章 · 3 个玩法 · 45 分钟 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

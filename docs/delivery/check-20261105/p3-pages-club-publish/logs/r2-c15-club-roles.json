@@ -1,0 +1,86 @@
+{
+ "id": "r2-c15-club-roles",
+ "path": "pages/club/roles/index?clubId=990004",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "revokeRole|撤销|{\"id\":1,\"version\":0}",
+   "h": "revokeRole",
+   "txt": "撤销",
+   "w": 23,
+   "hgt": 14,
+   "y": 333,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  },
+  {
+   "key": "openMemberPicker|选择成员 未选择|{}",
+   "h": "openMemberPicker",
+   "txt": "选择成员 未选择",
+   "w": 328,
+   "hgt": 50,
+   "y": 423,
+   "route": "pages/club/roles/index",
+   "newText": "陈小满 | 选择 | 选择",
+   "result": "ui change"
+  },
+  {
+   "key": "openRolePicker|角色 未选择|{}",
+   "h": "openRolePicker",
+   "txt": "角色 未选择",
+   "w": 328,
+   "hgt": 51,
+   "y": 473,
+   "route": "pages/club/roles/index",
+   "newText": "选择角色 | 副主理人 | 可维护俱乐部资料、成员与活动；不能分配角色 | 选择 | 可管理内容、入会审核与成员通知；活动与现场权限按场次单独委派 | 选择",
+   "shot": "r2-c15-club-roles-t01",
+   "result": "ui change"
+  },
+  {
+   "key": "assignRole|分配|{}",
+   "h": "assignRole",
+   "txt": "分配",
+   "w": 324,
+   "hgt": 50,
+   "y": 541,
+   "route": "pages/club/roles/index",
+   "result": "NO VISIBLE EFFECT"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "pages/club/roles/index"
+ ],
+ "text": "角色与权限 | 当前委派 | 林测试 | 全部权限，不可撤销 | 主理人 | 周小雨 | 可管理内容、入会审核与成员通知；活动与现场权限按场次单独委派 · | 撤销 | 俱乐部运营 | 分配固定角色 | 选择成员 | 未选择 | 角色 | 未选择 | 分配 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 5,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/club/roles/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207507&OSSAccessKeyId=rigdummy&Signature=ry1sYUEsdRn9OsAPPwibYAnMkEE%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207518&OSSAccessKeyId=rigdummy&Signature=QGRPyaIM7heRJ04O%2B24Gk4O50ro%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

@@ -1,0 +1,124 @@
+{
+ "id": "r2-c17-club-topic-detail",
+ "path": "pages/club/topic-detail/index?topicId=990015&clubId=990004",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "onQuickAction|商家|{\"key\":\"merchant\"}",
+   "h": "onQuickAction",
+   "txt": "商家",
+   "w": 94,
+   "hgt": 91,
+   "y": 416,
+   "route": "pages/topic/merchantinfo/merchantinfo",
+   "newText": "售票中 | 周四 11月5日 - 周一 1月4日 | 主办 | 客户 | 二维码 | 售卖 | 结算 | 0 | 已售份数 | 0 | 已招节点 | 核销",
+   "shot": "r2-c17-club-topic-detail-t01",
+   "result": "navigates"
+  },
+  {
+   "key": "onQuickAction|报名参与者|{\"key\":\"customer\"}",
+   "h": "onQuickAction",
+   "txt": "报名参与者",
+   "w": 94,
+   "hgt": 91,
+   "y": 416,
+   "route": "pages/club/topic-detail/index",
+   "newText": "已售 2 | 待核销 0 | 已核销 2 | 全部 | 待核销 | 已接洽 | 已核销 | 林 | 林一帆 | 2026-10-27 22:00 | 13900000004 | 已核销",
+   "shot": "r2-c17-club-topic-detail-t02",
+   "result": "ui change"
+  },
+  {
+   "key": "onQuickAction|团码|{\"key\":\"groupcode\"}",
+   "h": "onQuickAction",
+   "txt": "团码",
+   "w": 94,
+   "hgt": 91,
+   "y": 416,
+   "route": "pages/club/group-code/index",
+   "newText": "该场次不可带队核销 | 活动核验团码 | 该场次不可带队核销 | 重试 | 本团",
+   "shot": "r2-c17-club-topic-detail-t03",
+   "result": "navigates"
+  },
+  {
+   "key": "onQuickAction|更多|{\"key\":\"more\"}",
+   "h": "onQuickAction",
+   "txt": "更多",
+   "w": 94,
+   "hgt": 91,
+   "y": 416,
+   "route": "pages/club/topic-detail/index",
+   "newText": "剧情与玩法 | 核销记录 | 场次管理 | 已开卖 | 编辑主题内容 | 承接审核 | 开放商家对接 | 开放商家承接 | 第一章 广场的回声 | 未开放",
+   "result": "ui change"
+  },
+  {
+   "key": "goStory|人民广场 · 喷泉报时 2 章 · 3 站 打开剧情与玩法|{}",
+   "h": "goStory",
+   "txt": "人民广场 · 喷泉报时 2 章 · 3 站 打开剧情与玩法",
+   "w": 357,
+   "hgt": 121,
+   "y": 578,
+   "route": "pages/club/topic-story/index",
+   "newText": "剧情与玩法 | 路线 | 玩法 | 第一章 广场的回声 | 2 站 | 1 | 人民广场音乐喷泉 | 上海市黄浦区人民大道 | 5min 步行 | 2 | 上海博物馆 | 上海市黄浦区人民大道201号",
+   "result": "navigates"
+  },
+  {
+   "key": "goRules|退出与暂停规则|{}",
+   "h": "goRules",
+   "txt": "退出与暂停规则",
+   "w": 390,
+   "hgt": 30,
+   "y": 697,
+   "route": "pages/club/topic-detail/index",
+   "newText": "退出俱乐部 | 主理人不能直接退出。要先在成员治理里转让主理人，或解散俱乐部。 | 退出会一并终止会籍。会一并处理未到期的会籍：列出已取消的期数、被拦下的账单、待审条数与不可退条数，并告诉你打款是否已完成。 | 群聊清理与退出一起完成。群聊权限没清理干净就不会退出，不会出现「退了但群还在」。 | 退出队伍 | 最后一人退出 = 队伍解散。同时关闭队伍群聊。 | 队长退出会自动移交。移交给最早加入的其他在队成员，并通知他已成为队长。 | 不在队里就退不了。只有当前在队的成员能退出。 | 退出以后的钱 | 已核销不退。已核销的报名不可退款；自由探索是唯一例外，需人工核实，请联系客服。 | 过了时点",
+   "result": "ui change"
+  },
+  {
+   "key": "onPrimary|开始准备|{}",
+   "h": "onPrimary",
+   "txt": "开始准备",
+   "w": 357,
+   "hgt": 57,
+   "y": 740,
+   "route": "pages/club/topic-detail/index",
+   "newText": "当前不能进入准备",
+   "result": "ui change"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "pages/club/topic-detail/index"
+ ],
+ "text": "已确认 | 人民广场 · 喷泉报时 | 11月5日 – 1月4日 | 商家 | 报名参与者 | 团码 | 更多 | 主题 | 人民广场 · 喷泉报时 | 2 章 · 3 站 | 打开剧情与玩法 | 退出与暂停规则 | 开始准备 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 8,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/club/topic-detail/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207440&OSSAccessKeyId=rigdummy&Signature=j1fZA5fIWExAFYoFG7EXOSjxfNg%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207444&OSSAccessKeyId=rigdummy&Signature=dPxDcvDs%2FzTuSOUBTu%2FzXuNLXRM%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] HTTP 404 http://127.0.0.1:8097/mp/components/cy/npc-avatar/px1:p01",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] HTTP 404 http://127.0.0.1:8097/mp/components/cy/npc-avatar/px1:p04",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

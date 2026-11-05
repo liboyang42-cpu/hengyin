@@ -1,0 +1,90 @@
+{
+ "id": "r2-c18-club-topic-story",
+ "path": "pages/club/topic-story/index?topicId=990015&clubId=990004",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "onTab|路线|{\"key\":\"route\"}",
+   "h": "onTab",
+   "txt": "路线",
+   "w": 54,
+   "hgt": 46,
+   "y": 91,
+   "route": "pages/club/topic-story/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "onTab|玩法|{\"key\":\"play\"}",
+   "h": "onTab",
+   "txt": "玩法",
+   "w": 54,
+   "hgt": 46,
+   "y": 91,
+   "route": "pages/club/topic-story/index",
+   "newText": "本章剧情 | 傍晚的人民广场，喷泉开始报时。跟着水声找到第一条线索。 | 展开全文 ▾ | 本章玩法 | 2 个 | 文字作答 | 喷泉的水柱 | 第 1 站 人民广场音乐喷泉 · 2-4人 · 8 分钟 · 难度普通 | 看看模板 | 查看答案 | 选项问答 | 博物馆的鼎",
+   "shot": "r2-c18-club-topic-story-t01",
+   "result": "ui change"
+  },
+  {
+   "key": "onAddressTap|上海市黄浦区人民大道|{\"lat\":\"31.231700\",\"lng\":\"121.475200\",\"name\":\"人民广场音乐喷泉\",\"add",
+   "h": "onAddressTap",
+   "txt": "上海市黄浦区人民大道",
+   "w": 158,
+   "hgt": 17,
+   "y": 295,
+   "route": "pages/club/topic-story/index",
+   "toast": "打开微信地图：人民广场音乐喷泉",
+   "newText": "打开微信地图：人民广场音乐喷泉",
+   "result": "toast"
+  },
+  {
+   "key": "onAddressTap|上海市黄浦区人民大道201号|{\"lat\":\"31.228400\",\"lng\":\"121.475500\",\"name\":\"上海博物馆\",\"addres",
+   "h": "onAddressTap",
+   "txt": "上海市黄浦区人民大道201号",
+   "w": 158,
+   "hgt": 34,
+   "y": 440,
+   "route": "pages/club/topic-story/index",
+   "toast": "打开微信地图：上海博物馆",
+   "newText": "打开微信地图：上海博物馆",
+   "result": "toast"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "pages/club/topic-story/index"
+ ],
+ "text": "剧情与玩法 | 路线 | 玩法 | 第一章 广场的回声 | 2 站 | 1 | 人民广场音乐喷泉 | 上海市黄浦区人民大道 | 5min 步行 | 2 | 上海博物馆 | 上海市黄浦区人民大道201号 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 5,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/club/topic-story/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207544&OSSAccessKeyId=rigdummy&Signature=OGQSC0VZPM1o%2FmOJ6u6zcruM1rs%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207558&OSSAccessKeyId=rigdummy&Signature=8OKZYL0MMcHuvdCIQg9SD6ZasmA%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

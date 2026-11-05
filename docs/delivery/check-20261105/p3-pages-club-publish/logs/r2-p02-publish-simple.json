@@ -1,0 +1,192 @@
+{
+ "id": "r2-p02-publish-simple",
+ "path": "pages/publish/simple/index",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "toggleInterest|咖啡|{\"key\":\"coffee\"}",
+   "h": "toggleInterest",
+   "txt": "咖啡",
+   "w": 78,
+   "hgt": 78,
+   "y": 306,
+   "route": "pages/publish/simple/index",
+   "newText": "选了 1 个",
+   "result": "ui change"
+  },
+  {
+   "key": "toggleInterest|美食|{\"key\":\"food\"}",
+   "h": "toggleInterest",
+   "txt": "美食",
+   "w": 69,
+   "hgt": 69,
+   "y": 265,
+   "route": "pages/publish/simple/index",
+   "newText": "选了 1 个",
+   "result": "ui change"
+  },
+  {
+   "key": "toggleInterest|拍照|{\"key\":\"photo\"}",
+   "h": "toggleInterest",
+   "txt": "拍照",
+   "w": 73,
+   "hgt": 73,
+   "y": 317,
+   "route": "pages/publish/simple/index",
+   "newText": "选了 1 个",
+   "result": "ui change"
+  },
+  {
+   "key": "toggleInterest|老建筑|{\"key\":\"story\"}",
+   "h": "toggleInterest",
+   "txt": "老建筑",
+   "w": 67,
+   "hgt": 67,
+   "y": 270,
+   "route": "pages/publish/simple/index",
+   "newText": "选了 1 个",
+   "result": "ui change"
+  },
+  {
+   "key": "toggleInterest|夜游|{\"key\":\"night\"}",
+   "h": "toggleInterest",
+   "txt": "夜游",
+   "w": 67,
+   "hgt": 67,
+   "y": 405,
+   "route": "pages/publish/simple/index",
+   "newText": "选了 1 个",
+   "result": "ui change"
+  },
+  {
+   "key": "toggleInterest|散步|{\"key\":\"walk\"}",
+   "h": "toggleInterest",
+   "txt": "散步",
+   "w": 73,
+   "hgt": 73,
+   "y": 389,
+   "route": "pages/publish/simple/index",
+   "newText": "选了 1 个",
+   "result": "ui change"
+  },
+  {
+   "key": "toggleInterest|公园|{\"key\":\"park\"}",
+   "h": "toggleInterest",
+   "txt": "公园",
+   "w": 69,
+   "hgt": 69,
+   "y": 405,
+   "route": "pages/publish/simple/index",
+   "newText": "选了 1 个",
+   "result": "ui change"
+  },
+  {
+   "key": "__onTap||{}",
+   "h": "__onTap",
+   "txt": "",
+   "w": 129,
+   "hgt": 46,
+   "y": 521,
+   "route": "pages/publish/simple/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "openAiHistory|历史起草记录|{}",
+   "h": "openAiHistory",
+   "txt": "历史起草记录",
+   "w": 129,
+   "hgt": 46,
+   "y": 521,
+   "route": "pages/publish/simple/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "openLocalAiHistory|本机保留记录|{}",
+   "h": "openLocalAiHistory",
+   "txt": "本机保留记录",
+   "w": 129,
+   "hgt": 46,
+   "y": 521,
+   "route": "pages/publish/simple/index",
+   "newText": "这次没能继续 | 当前账号没有本机保留记录。",
+   "result": "ui change"
+  },
+  {
+   "key": "useAiPrompt|老城建筑与咖啡|{\"text\":\"老城建筑与咖啡\"}",
+   "h": "useAiPrompt",
+   "txt": "老城建筑与咖啡",
+   "w": 121,
+   "hgt": 46,
+   "y": 657,
+   "route": "pages/publish/simple/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "useAiPrompt|周末亲子探险|{\"text\":\"周末亲子探险\"}",
+   "h": "useAiPrompt",
+   "txt": "周末亲子探险",
+   "w": 108,
+   "hgt": 46,
+   "y": 657,
+   "route": "pages/publish/simple/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "useAiPrompt|雨天室内漫游|{\"text\":\"雨天室内漫游\"}",
+   "h": "useAiPrompt",
+   "txt": "雨天室内漫游",
+   "w": 108,
+   "hgt": 46,
+   "y": 657,
+   "route": "pages/publish/simple/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "generateAiPlan||{}",
+   "h": "generateAiPlan",
+   "txt": "",
+   "w": 58,
+   "hgt": 58,
+   "y": 735,
+   "route": "pages/publish/simple/index",
+   "newText": "这次没能继续 | 先说说你想做什么路线。",
+   "result": "ui change"
+  }
+ ],
+ "route": [
+  "pages/publish/simple/index"
+ ],
+ "text": "快速配置 | 城市定向 · 集合式路线 | 嗨，想做一条什么样的路线？ | 咖啡 | 美食 | 拍照 | 老建筑 | 夜游 | 散步 | 公园 | 历史起草记录 | 本机保留记录 | 老城建筑与咖啡 | 周末亲子探险 | 雨天室内漫游 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 15,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/publish/simple/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207599&OSSAccessKeyId=rigdummy&Signature=OfyA6MJo%2BehAYEjFvhHK0nj8TEE%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207608&OSSAccessKeyId=rigdummy&Signature=hrcN%2F%2F8gwBFJoggG5W4P9ffwvdY%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

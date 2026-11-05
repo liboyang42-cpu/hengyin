@@ -1,0 +1,7 @@
+r2-c18-club-topic-story route pages/index/index>pages/club/topic-story/index controls 5 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  NO VISIBLE EFFECT onTab                      "路线"                                 
+  ui change        onTab                      "玩法"                                 
+  toast            onAddressTap               "上海市黄浦区人民大道"                       T:打开微信地图：人民广场音乐喷泉  
+  toast            onAddressTap               "上海市黄浦区人民大道201号"                   T:打开微信地图：上海博物馆  
+TEXT: 剧情与玩法 | 路线 | 玩法 | 第一章 广场的回声 | 2 站 | 1 | 人民广场音乐喷泉 | 上海市黄浦区人民大道 | 5min 步行 | 2 | 上海博物馆 | 上海市黄浦区人民大道201号 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

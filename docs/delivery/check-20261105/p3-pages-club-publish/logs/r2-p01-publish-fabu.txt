@@ -1,0 +1,14 @@
+r2-p01-publish-fabu route pages/index/index>pages/publish/fabu/index controls 12 errors 0 badNet 0
+  back (not tapped) goBack                     ""                                   
+  ui change        openTopicDetail            "主题详情 * 还有 4 项未填"                    
+  ui change        openModePicker             "模式 城市定向 切换"                         
+  ui change        switchEditorPage           "票务 票务设置 * 还有 5 项未填"                 
+  ui change        __onTap                    ""                                   
+  SKIPPED (destructive / writes; walked by hand) onTapPrimaryStarter        "＋ 创建章节"                             
+  NO VISIBLE EFFECT switchViewMode             ""                                   
+  NO VISIBLE EFFECT switchViewMode             ""                                   
+  SKIPPED (destructive / writes; walked by hand) saveServerDraft            "保存草稿"                               
+  ui change        switchEditorPage           "下一步"                                
+  navigates        closeNarrativeEditor       ""                               -> pages/index/index    
+  ui change        saveNarrativeEditor        "完成"                                 
+TEXT: * | 已存本机 | 主题详情 | 还有 4 项未填 | * | 模式 | 城市定向 | 切换 | 票务 | 票务设置 | 还有 5 项未填 | * | 章节 | 还没有章节 | ＋ 创建章节 | 保存草稿 | 下一步 | 文字说明 | 未命名地点 | 完成 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

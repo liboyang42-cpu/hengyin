@@ -1,0 +1,17 @@
+r2-p02-publish-simple route pages/publish/simple/index controls 15 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  ui change        toggleInterest             "咖啡"                                 
+  ui change        toggleInterest             "美食"                                 
+  ui change        toggleInterest             "拍照"                                 
+  ui change        toggleInterest             "老建筑"                                
+  ui change        toggleInterest             "夜游"                                 
+  ui change        toggleInterest             "散步"                                 
+  ui change        toggleInterest             "公园"                                 
+  NO VISIBLE EFFECT __onTap                    ""                                   
+  NO VISIBLE EFFECT openAiHistory              "历史起草记录"                             
+  ui change        openLocalAiHistory         "本机保留记录"                             
+  NO VISIBLE EFFECT useAiPrompt                "老城建筑与咖啡"                            
+  NO VISIBLE EFFECT useAiPrompt                "周末亲子探险"                             
+  NO VISIBLE EFFECT useAiPrompt                "雨天室内漫游"                             
+  ui change        generateAiPlan             ""                                   
+TEXT: 快速配置 | 城市定向 · 集合式路线 | 嗨，想做一条什么样的路线？ | 咖啡 | 美食 | 拍照 | 老建筑 | 夜游 | 散步 | 公园 | 历史起草记录 | 本机保留记录 | 老城建筑与咖啡 | 周末亲子探险 | 雨天室内漫游 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

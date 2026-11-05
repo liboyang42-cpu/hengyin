@@ -1,0 +1,191 @@
+{
+ "id": "r2-t01-template",
+ "path": "pages/template/index",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "goInbox||{}",
+   "h": "goInbox",
+   "txt": "",
+   "w": 46,
+   "hgt": 46,
+   "y": 46,
+   "route": "subpackageB/pages/im/list/index",
+   "newText": "消息 | 收件箱 | 7 | 发件箱 | 标已读 | 免打扰 | 删除 | 系统通知 | 02:20 | 审核通过 | 7",
+   "shot": "r2-t01-template-t01",
+   "result": "navigates"
+  },
+  {
+   "key": "onTab|主题|{\"key\":\"topic\"}",
+   "h": "onTab",
+   "txt": "主题",
+   "w": 42,
+   "hgt": 70,
+   "y": 95,
+   "route": "pages/template/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "onTab|玩法|{\"key\":\"game\"}",
+   "h": "onTab",
+   "txt": "玩法",
+   "w": 42,
+   "hgt": 70,
+   "y": 95,
+   "route": "pages/template/index",
+   "newText": "还没有玩法模板",
+   "result": "ui change"
+  },
+  {
+   "key": "goSearch|搜索主题与玩法模板|{}",
+   "h": "goSearch",
+   "txt": "搜索主题与玩法模板",
+   "w": 242,
+   "hgt": 46,
+   "y": 106,
+   "route": "pages/search2/index",
+   "newText": "搜索 | 筛选 | 推荐搜索 | 骑行 | 城市 | 外滩 | 书店 | 美术馆 | 摄影 | 苏州河 | 菜场 | 类别",
+   "shot": "r2-t01-template-t02",
+   "result": "navigates"
+  },
+  {
+   "key": "openTopic|封面暂不可用 城市定向 人民广场 · 喷泉报时 实验模板 ·|{\"item\":{\"id\":990015,\"name\":\"人民广场 · 喷泉报时\",\"sub\":\"\",\"desc\":\"9",
+   "h": "openTopic",
+   "txt": "封面暂不可用 城市定向 人民广场 · 喷泉报时 实验模板 ·",
+   "w": 323,
+   "hgt": 191,
+   "y": 178,
+   "route": "pages/templatedetail/topic-preview/index",
+   "newText": "1 | 喷泉的水柱 | 2 | 博物馆的鼎 | 3 | 大世界的塔楼 | 45 分钟 | 喷泉的水柱 | 1 | 读档案 | 2 | 做任务，拿证据",
+   "shot": "r2-t01-template-t03",
+   "result": "navigates"
+  },
+  {
+   "key": "pickTag|全部|{\"key\":\"all\"}",
+   "h": "pickTag",
+   "txt": "全部",
+   "w": 54,
+   "hgt": 31,
+   "y": 407,
+   "route": "pages/template/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "openAllTags|全部分类|{}",
+   "h": "openAllTags",
+   "txt": "全部分类",
+   "w": 81,
+   "hgt": 31,
+   "y": 407,
+   "route": "pages/template/index",
+   "newText": "时长 | 一小时内",
+   "result": "ui change"
+  },
+  {
+   "key": "openTopic|封面暂不可用 人民广场 · 喷泉报时 城市定向 实验模板 ·|{\"item\":{\"id\":990015,\"name\":\"人民广场 · 喷泉报时\",\"sub\":\"\",\"desc\":\"9",
+   "h": "openTopic",
+   "txt": "封面暂不可用 人民广场 · 喷泉报时 城市定向 实验模板 ·",
+   "w": 323,
+   "hgt": 81,
+   "y": 507,
+   "route": "pages/templatedetail/topic-preview/index",
+   "newText": "1 | 喷泉的水柱 | 2 | 博物馆的鼎 | 3 | 大世界的塔楼 | 45 分钟 | 喷泉的水柱 | 1 | 读档案 | 2 | 做任务，拿证据",
+   "result": "navigates"
+  },
+  {
+   "key": "openTopic|封面暂不可用 人民广场 · 喷泉报时 实验模板 · 2 章 |{\"item\":{\"id\":990015,\"name\":\"人民广场 · 喷泉报时\",\"sub\":\"\",\"desc\":\"9",
+   "h": "openTopic",
+   "txt": "封面暂不可用 人民广场 · 喷泉报时 实验模板 · 2 章 ",
+   "w": 220,
+   "hgt": 177,
+   "y": 660,
+   "route": "pages/templatedetail/topic-preview/index",
+   "newText": "1 | 喷泉的水柱 | 2 | 博物馆的鼎 | 3 | 大世界的塔楼 | 45 分钟 | 喷泉的水柱 | 1 | 读档案 | 2 | 做任务，拿证据",
+   "result": "navigates"
+  },
+  {
+   "key": "onChange||{\"index\":0}",
+   "h": "onChange",
+   "txt": "",
+   "w": 76,
+   "hgt": 46,
+   "y": 756,
+   "result": "off-screen"
+  },
+  {
+   "key": "onChange||{\"index\":1}",
+   "h": "onChange",
+   "txt": "",
+   "w": 76,
+   "hgt": 46,
+   "y": 756,
+   "result": "off-screen"
+  },
+  {
+   "key": "onChange||{\"index\":2}",
+   "h": "onChange",
+   "txt": "",
+   "w": 76,
+   "hgt": 46,
+   "y": 756,
+   "result": "off-screen"
+  },
+  {
+   "key": "onChange||{\"index\":3}",
+   "h": "onChange",
+   "txt": "",
+   "w": 76,
+   "hgt": 46,
+   "y": 756,
+   "result": "off-screen"
+  },
+  {
+   "key": "onChange||{\"index\":4}",
+   "h": "onChange",
+   "txt": "",
+   "w": 76,
+   "hgt": 46,
+   "y": 756,
+   "result": "off-screen"
+  },
+  {
+   "key": "openPublishSheet||{}",
+   "h": "openPublishSheet",
+   "txt": "",
+   "w": 54,
+   "hgt": 54,
+   "y": 689,
+   "route": "pages/template/index",
+   "newText": "自由探索 | 互动 | 返回",
+   "result": "ui change"
+  }
+ ],
+ "route": [
+  "pages/template/index"
+ ],
+ "text": "主题 | 玩法 | 搜索主题与玩法模板 | 封面暂不可用 | 城市定向 | 人民广场 · 喷泉报时 | 实验模板 · 2 章 · 3 个玩法 · 45 分钟 | 全部 | 全部分类 | 全部主题 | 封面暂不可用 | 人民广场 · 喷泉报时 | 城市定向 | 实验模板 · 2 章 · 3 个玩法 · 45 分钟 | 两小时内玩完 | 封面暂不可用 | 人民广场 · 喷泉报时 | 实验模板 · 2 章 · 3 个玩法 · 45 分钟 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "text_s1": "封面暂不可用 | 城市定向 | 人民广场 · 喷泉报时 | 实验模板 · 2 章 · 3 个玩法 · 45 分钟 | 全部 | 全部分类 | 全部主题 | 封面暂不可用 | 人民广场 · 喷泉报时 | 城市定向 | 实验模板 · 2 章 · 3 个玩法 · 45 分钟 | 两小时内玩完 | 封面暂不可用 | 人民广场 · 喷泉报时 | 实验模板 · 2 章 · 3 个玩法 · 45 分钟 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 15,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/template/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207637&OSSAccessKeyId=rigdummy&Signature=9nxKZFvCKqpUTFe6rzU4Lks0AQc%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207640&OSSAccessKeyId=rigdummy&Signature=7Sav3MOkE4WmPHDwBvaMR0%2FQ7NU%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207649&OSSAccessKeyId=rigdummy&Signature=6pul5OH3kk0GkwxYAvKFkneDIok%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207653&OSSAccessKeyId=rigdummy&Signature=PkufiikoFV3HfV9OeS81ZQtNYog%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ],
+  "badNet": []
+ }
+}
