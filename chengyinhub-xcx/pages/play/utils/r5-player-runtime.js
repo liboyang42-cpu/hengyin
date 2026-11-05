@@ -119,6 +119,21 @@ function methods() {
        页面换了)时段落永远 in:false,检定卡就一直是透明的 —— 玩家看见整屏黑。等一会儿还没显形就换成整屏检定卡。 */
     _guardInlineCheck() {
       clearTimeout(this._inlineCheckTimer);
+      /* 第十二轮 k8 N4:内嵌检定卡铺在故事流里时和内嵌玩法一样对准它(scroll-into-view)。以前不对准,
+         rig 实走卡头停在屏幕中下方,骰子和「按住摇骰」都在一屏之外,玩家看见的只有「检定 · 简单 标准 困难」。
+         先清空再设:同值 setData 不会让 scroll-view 再对准;1.2 秒后再对准一次(长距离滚动途中上方段落还在重排)。 */
+      const nodeId = (this.data.journeyCheck || {}).nodeId;
+      if (nodeId != null) {
+        const anchor = 'chapter-game-' + nodeId;
+        const aim = () => {
+          const kit = this.data.journeyCheck || {};
+          if (!kit.show || kit.present !== 'inline' || !this.data.chapterFull || String(kit.nodeId) !== String(nodeId)) return;
+          this.setData({ chapterGameAnchor: '' }, () => this.setData({ chapterGameAnchor: anchor }));
+        };
+        aim();
+        clearTimeout(this._inlineCheckAimTimer);
+        this._inlineCheckAimTimer = setTimeout(aim, 1200);
+      }
       this._inlineCheckTimer = setTimeout(() => {
         const kit = this.data.journeyCheck || {};
         if (!kit.show || kit.present !== 'inline') return;

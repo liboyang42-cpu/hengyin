@@ -41,3 +41,26 @@ test('N7:独立弹出的结果反馈走暗底,判定颜色只落在对勾和两�
   assert.match(rule('.pv--closable .pv__word'), /--cy-color-status-danger/)
   assert.match(rule('.pv--closable .pv__cta'), /--cy-color-bg-elevated/)
 })
+
+test('N4:内嵌检定卡铺进故事流就对准它(和内嵌玩法同一个 chapter-game 锚点),骰子与「按住摇骰」不再停在一屏之外', () => {
+  const runtime = require('../../pages/play/utils/r5-player-runtime.js')
+  const timers = []
+  const realSet = global.setTimeout, realClear = global.clearTimeout
+  global.setTimeout = (fn) => { timers.push(fn); return timers.length }
+  global.clearTimeout = () => {}
+  try {
+    const anchors = []
+    const page = { data: { chapterFull: true, chapterGameAnchor: '', journeyCheck: { show: true, present: 'inline', nodeId: 73 },
+      chapterParas: [{ i: 0, kind: 'journeyCheck', in: true }] },
+    setData(p, cb) { Object.assign(this.data, p); if ('chapterGameAnchor' in p) anchors.push(p.chapterGameAnchor); if (cb) cb() } }
+    Object.assign(page, runtime.methods())
+    page._guardInlineCheck()
+    assert.deepEqual(anchors, ['', 'chapter-game-73'])
+    timers[0]()   // 1.2 秒后再对准一次
+    assert.deepEqual(anchors, ['', 'chapter-game-73', '', 'chapter-game-73'])
+    // 换成整屏卡后不再拉故事流
+    page.data.journeyCheck.present = 'fullscreen'
+    timers[0]()
+    assert.equal(anchors.length, 4)
+  } finally { global.setTimeout = realSet; global.clearTimeout = realClear }
+})
