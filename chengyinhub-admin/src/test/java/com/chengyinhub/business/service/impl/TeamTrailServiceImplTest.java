@@ -248,6 +248,18 @@ class TeamTrailServiceImplTest {
     }
 
     @Test
+    void authorSwitchOffDeletesTheCallersStoredPoints() {
+        service.sync(1L, 10L, walk(31.2, 3), 0, false);
+        service.sync(3L, 10L, walk(31.3, 3), 0, false);
+        assertTrue(hashes.get("team_trail:pts:10").containsKey("1"));
+        topic.setPublishedThemeRuntimeConfigJson("{\"schemaVersion\":1,\"teamTrail\":false}");
+        assertEquals(false, service.sync(1L, 10L, walk(31.2, 1), 0, true).get("available"));
+        assertFalse(hashes.get("team_trail:pts:10").containsKey("1"));
+        assertEquals(false, service.state(3L, 10L).get("available"));
+        assertFalse(hashes.get("team_trail:pts:10").containsKey("3"));
+    }
+
+    @Test
     void defaultIsOnAndIsOneConfigValue() {
         Map<String, Object> s = service.state(1L, 10L);
         assertEquals(true, s.get("share"));

@@ -189,7 +189,12 @@ public class TeamTrailServiceImpl implements ITeamTrailService {
         if (activity == null || (activity.getDelFlag() != null && !"0".equals(String.valueOf(activity.getDelFlag())))) return 0L;
         if (activity.getTopicId() == null) return 0L;
         CmsTopic topic = topicMapper.selectCmsTopicById(activity.getTopicId());
-        if (topic == null || !authorAllows(topic.getPublishedThemeRuntimeConfigJson())) return 0L;
+        if (topic == null) return 0L;
+        if (!authorAllows(topic.getPublishedThemeRuntimeConfigJson())) {
+            // 第十二轮 k7(j4 N10):作者关掉后,调用者自己已存的点当场删掉,不等过期。
+            redisCache.deleteCacheMapValue(PTS + activityId, String.valueOf(memberId));
+            return 0L;
+        }
         long now = System.currentTimeMillis();
         // 第十二轮 k2(j6 N5):开场前不收也不回别队轨迹(集合前的位置不是游戏进度)。
         if (activity.getStartDate() != null && now < activity.getStartDate().getTime()) return 0L;
