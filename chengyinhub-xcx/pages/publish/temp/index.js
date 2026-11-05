@@ -2521,7 +2521,20 @@ Page({
         this.setData({ supportMatrixLoading: false,
       supportMatrixLoadError: matrix ? '' : '玩法支持信息未加载，请重试' }); this._refreshSupportMatrix(); });
   },
+  /* 第十三轮 m1:主题后来加了互斥选项或完成要求,每一站都成了任务站。重新打开已存的玩法时,
+     能结算的玩法按选中时同一口径补上结果规则,参与方式没选定位或扫码的默认定位到达;作者点一次保存就落库。 */
+  _settleLoadedGame: function () {
+    const ctx = this._supportContext, advanced = this.data.advanced;
+    if (!this._supportMatrix || !ctx || !ctx.settled || ctx.challenge || this.data.previewMode || !this.data.gameSection || !advanced || advanced.outcomeRules) return;
+    const next = supportMatrix.settleOutcome(this._supportMatrix, ctx, JSON.parse(JSON.stringify(advanced)), this.data.gameSection);
+    if (!next.outcomeRules) return;
+    const patch = { advanced: next };
+    if (![4, 5].includes(Number(this.data.formData.validationMethod)) && !this._r5ParticipationChanged) patch['formData.validationMethod'] = 5;
+    this._setFormState(patch);
+    this._settledOnLoad = true;
+  },
   _refreshSupportMatrix: function () {
+    this._settleLoadedGame();
     const matrix = this._supportMatrix, advanced = this.data.advanced;
     const reasons = {}, conditions = {};
     templateTools.TOOLS.forEach(tool => {
@@ -3681,8 +3694,9 @@ Page({
         selectedCategoryNamesStr: selectedNames.join('，')
       });
     }
+    this._settledOnLoad = false;
     this.fillFormWithTemplateData(data);
-    this.data.dirty = false;
+    this.data.dirty = this._settledOnLoad === true;   // 第十三轮 m1:打开时补了结果规则,离开前要存
     this.setData({ editorLoading: false, loadError: '' });
   },
 

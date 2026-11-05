@@ -1,3 +1,4 @@
+// 2026-11-05 第十三轮 m1(玩法编辑页打开已存玩法时补结果规则 +13 行):publish/temp U4-DYNAMIC 调用点 2995→3008、3867→3881、3994→4008 仅行号位移,调用行逐字相同、理由与条数不变、不新增登记;u4Dynamic keyDigest 按门禁 baselineKeyDigest 重算。
 // 2026-11-05 legacy compass resume: unchanged milestone anchor8586→8591, reason/count unchanged.
 // 2026-11-05 m4(成为主理人表单加栏下红字提示 +14 行):club/apply U4-DYNAMIC 两条 onInput/toggleBool 调用点 244→258、255→269 仅行号位移,理由与条数不变,不新增登记;u4Dynamic digest 按门禁实测更新。
 // 2026-11-05 play-map verification: merchant onInput unchanged; anchor359→360, same reason/count; u4Dynamic digest recomputed.
@@ -959,7 +960,7 @@ module.exports = {
 // 2026-11-02 走查修复 l4-counter(M-12/M-21/M-24 在 merchantinfo.js 前段 +8 行):2 条 U4-DYNAMIC 锚点仅行号位移(2433→2441、2465→2473),调用行逐字相同、理由与条数不变;digest 按门禁 baselineKeyDigest 重算。
 // 2026-11-03 集成 l4-counter 合 pay-gate/l1/l2/l3:两侧登记取并集,不新增登记;u4Dynamic digest 按门禁 baselineKeyDigest 在合并树重算。
 // 2026-11-03 Round5 l7-launch:club/apply 游客登录入口(+11 行),onInput 233→244、toggleBool 244→255 仅行号位移,调用行逐字相同、理由与条数不变;digest 按门禁同一算法重算。
-"1820ce526d9e3bf097432008e758240806344f6b47c9dce6757ac951d2a809cb",
+"c76be5448483eaef3580901d1f294c409c048bf67a5e9989528f9a5cfb56f2be",
 // 2026-10-28 模板页货架改版(#652)合 master(#610):本线删 template/index 两条 + master play 1621→1624 重锚，合并树 60 条，digest 按同一算法重算。
 // 2026-10-20 R5 尾段(#327,owner 批准 12 条重锚):fabu 729→731、898→900、2524→2530、3570→3588、3951→3969、4957→4990、5215→5248、5866→5899、5876→5909、5929→5962、6270→6303、7936→8060,逐行比对 master 原行一字未改,理由与条数 58 不变;digest 按同一算法显式重算。
       // 2026-08-20 开卡包四拍动效:u5Silent 条数不变(12),只是 play/index.js 的调用点
@@ -1427,9 +1428,9 @@ module.exports = {
     "chengyinhub-xcx/pages/publish/temp/index.js:1489": "listName 的当前调用点只枚举 difficultyOptions 固定列表名（R5已移除人数/时长选择器），接口结果先验证为记录数组后才写标签数组，不允许请求数据决定字段名；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/publish/temp/index.js:1488": "listName + Data 与上一条共享同一有限调用集，当前只落 difficultyOptionsData 固定字段（R5已移除人数/时长选择器）；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/publish/temp/index.js:1532": "_setFormState 是本页私有写入入口，全部调用点传本文件构造的字段 patch（高级玩法动态路径也来自 WXML 固定 section/field），函数只克隆该 patch 并追加固定 submitError，不展开后端对象键；owner=小程序，复核=2026-09-30",
-    "chengyinhub-xcx/pages/publish/temp/index.js:2995": "玩家预览 patch 先固定写 pvStep/pvStepKey/pvStepLabel 与四个临时态，仅按 story/challenge 枚举追加 pvBeats 或任务展示字段；步骤 key 不参与字段名拼接；owner=小程序，复核=2026-09-30",
-    "chengyinhub-xcx/pages/publish/temp/index.js:3867": "couponPatch 在同方法内从空对象开始，只可能追加 selectedCouponId 与 selectedCouponName 两个固定奖励展示字段，再展开进固定回填对象；owner=小程序，复核=2026-09-30",
-    "chengyinhub-xcx/pages/publish/temp/index.js:3994": "模板回填 patch 只逐项追加 durationIndex/Text、difficultyIndex/Label、playersIndex/Text 六个固定选择器字段，且仅在字典中找到匹配值时写入；owner=小程序，复核=2026-09-30",
+    "chengyinhub-xcx/pages/publish/temp/index.js:3008": "玩家预览 patch 先固定写 pvStep/pvStepKey/pvStepLabel 与四个临时态，仅按 story/challenge 枚举追加 pvBeats 或任务展示字段；步骤 key 不参与字段名拼接；owner=小程序，复核=2026-09-30",
+    "chengyinhub-xcx/pages/publish/temp/index.js:3881": "couponPatch 在同方法内从空对象开始，只可能追加 selectedCouponId 与 selectedCouponName 两个固定奖励展示字段，再展开进固定回填对象；owner=小程序，复核=2026-09-30",
+    "chengyinhub-xcx/pages/publish/temp/index.js:4008": "模板回填 patch 只逐项追加 durationIndex/Text、difficultyIndex/Label、playersIndex/Text 六个固定选择器字段，且仅在字典中找到匹配值时写入；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/search2/index.js:459": "动态 setData 需精确登记：[field]: selected；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/searchmap/index.js:968": "动态 setData 需精确登记：[field]: selected；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js:665": "可承接章节失败态只在 categoryMissing 布尔判定下二选一；两个对象分支的键均在本方法写死，state/error/allChaptersList 被 WXML 消费，loading 是已精确登记的页内控制字段；owner=小程序，复核=2026-09-30",

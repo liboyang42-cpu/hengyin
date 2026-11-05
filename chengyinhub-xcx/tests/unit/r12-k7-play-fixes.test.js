@@ -186,7 +186,7 @@ test('N5:任务站(状态 / 检定主题)编辑器:连结果规则都结算不�
   const matrix = require(path.join(ROOT, 'pages/publish/utils/publish/gameplay-support-matrix.js'))
   const m = { types: [{ key: 'pricePair', section: 'pricePair', tools: {}, completionProof: false, r5CompletionProof: false },
     { key: 'photoCheck', section: 'photoCheck', tools: {}, completionProof: false, r5CompletionProof: true }], addons: [] }
-  assert.equal(matrix.choice(m, 'pricePair', {}, { settled: true }), '开了状态或 d20 检定的主题里不能用这种玩法')
+  assert.equal(matrix.choice(m, 'pricePair', {}, { settled: true }), '这种主题里每一站都要能确认玩家完成，这种玩法确认不了，请换一种玩法')
   assert.equal(matrix.choice(m, 'photoCheck', { outcomeRules: { version: 1 } }, { settled: true }), '')
   const { view } = require(path.join(ROOT, 'pages/publish/temp/r5-editor.js'))
   const cfg = require(path.join(ROOT, 'pages/publish/utils/publish/advanced-game-config.js'))

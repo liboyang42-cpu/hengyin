@@ -8484,7 +8484,7 @@ Page({
     const options = matrix ? nodeGameCatalog.ALL.filter(item =>
       !ctx.settled && !ctx.challenge || ['profile', 'typeIn', 'photoCheck', 'note', 'd20'].includes(item.key)
       || matrix.types.some(row => row.key === item.key && (ctx.challenge
-        ? ['SUPPORTED', 'CHALLENGE_ONLY'].includes(row.tools.zeroChallenge) : row.completionProof))) : this.data.storyGameOptions;
+        ? ['SUPPORTED', 'CHALLENGE_ONLY'].includes(row.tools.zeroChallenge) : row.completionProof || row.r5CompletionProof && !supportMatrix.choice(matrix, item.key, {}, ctx)))) : this.data.storyGameOptions;   // 第十三轮 m1:任务站也列出选中就会带上结果规则的玩法
     const reasons = list => {
       const out = {};
       (list || []).forEach(item => {

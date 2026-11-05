@@ -414,6 +414,26 @@ const methods = {
     const rolePatch = this._storyRolePatch(c);
     this.setData({ storyNodeRoles: rolePatch.storyNodeRoles, storyRoleOptions: rolePatch.storyRoleOptions });
   },
+  /* 第十三轮 m1:章节有了完成要求、互斥组或额外站点,保存时每一站都编成任务,玩法要能确认完成。
+     加规则的当下就按站名说清:哪一站的玩法在这里用不了(不让加),哪几站要重新打开玩法存一次。 */
+  _chapterTaskStations(c) {
+    const matrix = this.data.supportMatrix, out = { blocked: '', resave: [] };
+    if (!matrix || !supportMatrix.chapterTasks(c)) return out;
+    (this.data.formData.chapters || []).forEach(ch => (ch.nodes || []).forEach(node => {
+      const template = (this._templateDetailsById || {})[node.templateId] || node.templateInfo;
+      if (out.blocked || !template || !Object.prototype.hasOwnProperty.call(template, 'advancedConfigJson')) return;
+      const ctx = supportMatrix.context(c, node);
+      if (ctx.challenge || !supportMatrix.validate(matrix, template, ctx)) return;
+      const advanced = supportMatrix.config(template), name = node.name || '这一站';
+      const row = supportMatrix.mains(matrix, advanced)[0];
+      const cannot = row && row.key && supportMatrix.choice(matrix, row.key, supportMatrix.pickAs(advanced, ctx), ctx);
+      const plain = !Object.keys(advanced).some(key => advanced[key] && advanced[key].enabled === true);
+      if (!row && plain) out.blocked = '「' + name + '」：这一站的参与方式要选「定位到达」或「扫码」';
+      else if (cannot || !row) out.blocked = '「' + name + '」：' + (cannot || '这一站的玩法确认不了玩家完成，请先换一种玩法');
+      else out.resave.push(name);
+    }));
+    return out;
+  },
   _saveChapterRules() {
     const costs = this._chapterCostsPatch();
     if (costs.error) { toast(costs.error); return false; }
@@ -437,7 +457,10 @@ const methods = {
     if (completion) row.completion = completion; else if (hadRules) row.completion = { type: 'ALL' }; else delete row.completion;
     if (exclusiveGroups.length) row.exclusiveGroups = exclusiveGroups; else delete row.exclusiveGroups;
     if (extraNodes.length) row.extraNodes = extraNodes; else delete row.extraNodes;
+    const tasks = this._chapterTaskStations(c);
+    if (tasks.blocked) { toast(tasks.blocked); return false; }
     this._saveRuntime(c);
+    if (tasks.resave.length) wx.showModal({ title: '还差一步', content: tasks.resave.map(name => '「' + name + '」').join('') + '要重新打开玩法，点一次保存，才能和这一章的设置一起用', showCancel: false, confirmText: '知道了' });
     if (this._applyStructureChapterCompletion) this._applyStructureChapterCompletion(index, completion); // structure
     return true;
   },

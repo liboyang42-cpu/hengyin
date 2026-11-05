@@ -83,6 +83,40 @@ class TopicRoutePublicationOutcomeScopeTest {
         }
     }
 
+    /* 第十三轮 m1:章节有互斥组又有途中彩蛋的个人主题,每种带结果规则、定位到达的玩法都能保存并冻结(作者重开玩法存一次后的形状) */
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings={"coinFlip","diceRoll","random","estimate","pricePair","hiddenObject","profile","note","typeIn","album","photoCheck"})
+    void resavedGameWithBranchAndEggSavesAndFreezes(String kit) throws Exception {
+        Fixture f = new Fixture(TopicRoutePublicationOutcomeScopeTest.settledConfig(kit));
+        CmsTopicChapter chapter = new CmsTopicChapter(); chapter.setId(21L); chapter.setTopicId(10L); chapter.setSortId(0L); chapter.setName("分岔");
+        when(f.chapters.selectCmsTopicChapterList(any())).thenReturn(Collections.singletonList(chapter));
+        f.nodes.selectCmsTopicNodeList(new CmsTopicNode()).get(0).setChapterId(21L);
+        f.topic.setThemeRuntimeConfigJson("{\"schemaVersion\":1,\"capacity\":0,\"chapters\":[{\"index\":0,\"hpCost\":0,\"luckCost\":0,\"grants\":[],\"completion\":{\"type\":\"ALL\"},\"eggs\":[{\"id\":\"egg1\",\"name\":\"涂鸦\",\"content\":\"墙上的猫\",\"trigger\":\"TIME\",\"threshold\":1,\"rewards\":[]}]}]}");
+        String saved = f.compiler.compileTemplateRules(f.topic);
+        assertEquals(1, quests(saved)); f.topic.setThemeRuntimeConfigJson(saved);
+        assertDoesNotThrow(() -> f.compiler.freezePublication(f.topic, null));
+    }
+
+    static String settledConfig(String kit) {
+        String game;
+        switch (kit) {
+            case "coinFlip": game = "\"coinFlip\":{\"enabled\":true,\"title\":\"抛\",\"heads\":{\"label\":\"正面\",\"action\":\"往左\"},\"tails\":{\"label\":\"反面\",\"action\":\"往右\"}}"; break;
+            case "diceRoll": game = "\"diceRoll\":{\"enabled\":true,\"mode\":\"d6\",\"title\":\"掷\",\"count\":1,\"faces\":[\"1\",\"2\",\"3\",\"4\",\"5\",\"6\"]}"; break;
+            case "random": game = "\"random\":{\"enabled\":true,\"drawCount\":1,\"items\":[{\"id\":\"a\",\"label\":\"甲\",\"weight\":1},{\"id\":\"b\",\"label\":\"乙\",\"weight\":1}]}"; break;
+            case "estimate": game = "\"estimate\":{\"enabled\":true,\"title\":\"猜\",\"min\":0,\"max\":100,\"answer\":50,\"tolerance\":5}"; break;
+            case "pricePair": game = "\"pricePair\":{\"enabled\":true,\"title\":\"挑\",\"items\":[{\"id\":\"a\",\"name\":\"甲\",\"correct\":true},{\"id\":\"b\",\"name\":\"乙\",\"correct\":false},{\"id\":\"c\",\"name\":\"丙\",\"correct\":false}]}"; break;
+            case "hiddenObject": game = "\"hiddenObject\":{\"enabled\":true,\"title\":\"找\",\"imageUrl\":\"https://static.chengyinhub.com/a.png\",\"hotspots\":[{\"id\":\"h1\",\"label\":\"一\",\"x\":0.2,\"y\":0.2,\"r\":0.1},{\"id\":\"h2\",\"label\":\"二\",\"x\":0.8,\"y\":0.8,\"r\":0.1},{\"id\":\"h3\",\"label\":\"三\",\"x\":0.5,\"y\":0.5,\"r\":0.1}]}"; break;
+            case "profile": game = "\"profile\":{\"enabled\":true,\"questions\":[{\"key\":\"name\",\"label\":\"名字\",\"kind\":\"text\"}]}"; break;
+            case "note": game = "\"note\":{\"enabled\":true,\"title\":\"留一句\",\"prompt\":\"写给下一个人\",\"maxLength\":40}"; break;
+            case "typeIn": game = "\"typeIn\":{\"enabled\":true,\"title\":\"打字\",\"target\":\"hello\",\"seconds\":10}"; break;
+            case "check": game = "\"check\":{\"enabled\":true,\"checkId\":\"c1\",\"tiers\":[{\"dc\":10}]}"; break;
+            case "album": game = "\"album\":{\"enabled\":true,\"images\":[{\"url\":\"https://static.chengyinhub.com/a.png\"}]}"; break;
+            default: game = "\"photoCheck\":{\"enabled\":true,\"title\":\"拍门牌\",\"requirement\":\"拍到门牌号\",\"minConfidence\":60,\"maxTries\":3,\"fallback\":\"retake\"}";
+        }
+        boolean once = java.util.Arrays.asList("profile", "album", "note").contains(kit);
+        return "{\"schemaVersion\":1," + game + ",\"outcomeRules\":{\"version\":1,\"pass\":{}" + (once ? "" : ",\"fail\":{}") + "}}";
+    }
+
     private static int quests(String compiled) throws Exception {
         return compiled == null ? 0 : JSON.readTree(compiled).path("gameplayRuntime").path("quests").size();
     }
