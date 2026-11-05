@@ -1,0 +1,182 @@
+{
+  "status": "HISTORICAL_ONLY_DATABASE_LOST",
+  "incident": {
+    "atUtc": "2026-11-05T10:00:17Z",
+    "oldDatabase": "cy_e2e_51",
+    "oldServerUuid": "76fd666f-d8ef-11f1-b090-d26bfff2310e",
+    "oldTableCount": 457,
+    "afterRestartObservedUuid": "17dd1d4a-d900-11f1-9fed-4e788b42da82",
+    "afterRestartError": "1049 Unknown database cy_e2e_51",
+    "sharedAccess": "HALTED until owner announces new UUID and da9 actuator proof",
+    "replayWarning": "Do not replay old numeric IDs or import into shared MySQL. Recreate through own authenticated identities only after new target verification."
+  },
+  "oldRuntime": {
+    "activeSourceSha": "a2285b3dd558d40357462a87cd43a70b8d538548",
+    "web": "127.0.0.1:18100",
+    "backend": "127.0.0.1:18099",
+    "laterObservedClasspath": "app-da9b30f1dd770ce0c4cc55b278e9d08e1ad99a7f",
+    "limitation": "Backend changed during the historical window; no per-request final-source attestation. Repeat against one verified source/UUID after recovery."
+  },
+  "actors": [
+    {
+      "fixtureOpenid": "K9-CODEX-1105-author",
+      "oldMemberId": 990005,
+      "fixtureRole": "club",
+      "oldClubId": 990004,
+      "clubName": "K9-CODEX-1105-Club",
+      "setup": "real app login; own role/club_leader fixture; real club create"
+    },
+    {
+      "fixtureOpenid": "K9-CODEX-1105-merchant",
+      "oldMemberId": 990006,
+      "fixtureRole": "merchant",
+      "oldMerchantId": 8006,
+      "merchantName": "K9-CODEX-1105-Shop",
+      "setup": "real app login; own active merchant fixture"
+    }
+  ],
+  "template": {
+    "originalCreatePayload": {
+      "name": "K9-CODEX-1105-Original",
+      "saveDraft": 1,
+      "publishMode": "pro",
+      "productType": 1,
+      "clubId": 990004,
+      "chapters": []
+    },
+    "oldOriginalId": 990020,
+    "publication": "fixture state status=1 user_status=1 is_draft=0, NOT actual moderation acceptance",
+    "saveAsRequest": {
+      "path": "/api/template/topic-template/save-as",
+      "id": 990020
+    },
+    "saveAsReply": {
+      "code": 200,
+      "templateId": 990023
+    },
+    "myProjectRows": [
+      {
+        "id": 990020,
+        "isTemplate": false
+      },
+      {
+        "id": 990023,
+        "isTemplate": true
+      }
+    ]
+  },
+  "couponOwnership": {
+    "oldHistoryId": 7,
+    "ownerMemberId": 990005,
+    "couponId": 0,
+    "validity": "ownership-only fixture; no real coupon definition/issuance/redemption",
+    "readerMemberId": 990006,
+    "serverReply": {
+      "code": 500,
+      "msg": "无权查看该券"
+    },
+    "ui": "这张券不在你的券包里 / 返回"
+  },
+  "cooperation": {
+    "oldInviteId": 990025,
+    "oldTopicId": 990020,
+    "fromMemberId": 990005,
+    "toMemberId": 990006,
+    "setup": "pending historical fixture without station, shareMode=0; not an acceptance/settlement fixture",
+    "message": "K9-CODEX-1105-reply",
+    "realUiOperation": "recipient rejects and confirms",
+    "readback": {
+      "status": 2,
+      "handleReason": "K9-CODEX-1105 今天无法到场"
+    },
+    "counterpartReadback": "both actors see the reason with correct speaker and 已拒绝 footer"
+  },
+  "registrationFixtures": [
+    {
+      "id": 84,
+      "registrationNo": "K9-CODEX-1105-ENDED",
+      "ownerType": 2,
+      "oldActivityId": 17,
+      "oldMemberId": 990005,
+      "paymentStatus": 2,
+      "registrationStatus": 2,
+      "verificationStatus": 0,
+      "amount": 0,
+      "fixtureOnly": true
+    },
+    {
+      "id": 85,
+      "registrationNo": "K9-CODEX-1105-REFUND",
+      "ownerType": 2,
+      "oldActivityId": 17,
+      "oldMemberId": 990006,
+      "paymentStatus": 4,
+      "registrationStatus": 4,
+      "amount": 0,
+      "fixtureOnly": true
+    },
+    {
+      "id": 86,
+      "registrationNo": "K9-CODEX-1105-LEADER",
+      "ownerType": 2,
+      "oldActivityId": 18,
+      "oldMemberId": 990005,
+      "paymentStatus": 2,
+      "registrationStatus": 2,
+      "verificationStatus": 0,
+      "amount": 0,
+      "fixtureOnly": true
+    }
+  ],
+  "activities": [
+    {
+      "oldId": 17,
+      "name": "K9-CODEX-1105-Ended",
+      "oldPublisherMemberId": 990006,
+      "timeFixture": "start now-2d, end now-1d"
+    },
+    {
+      "oldId": 18,
+      "name": "K9-CODEX-1105-InviteSession",
+      "oldPublisherMemberId": 990006,
+      "oldTopicId": 990020,
+      "timeFixture": "start now+2d, end now+3d",
+      "ticketFixture": "K9-CODEX-1105-Free, price=0, inventory=20; no purchase performed"
+    }
+  ],
+  "team": {
+    "createRequest": {
+      "path": "/api/team/create",
+      "ownerType": 2,
+      "ownerId": 18,
+      "maxMembers": 4,
+      "joinMode": 1
+    },
+    "createReply": {
+      "code": 200,
+      "teamId": 1,
+      "leaderMemberId": 990005,
+      "joinedCount": 1,
+      "maxMembers": 4
+    },
+    "inviteCode": "OMITTED; create a fresh invite for replay",
+    "actualJoinByMemberId": 990006,
+    "joinOutcome": {
+      "errorCode": "TICKET_REQUIRED",
+      "message": "持有这一场的票才能加入"
+    },
+    "nonmemberPreview": {
+      "id": 1,
+      "title": null,
+      "status": 0,
+      "joinMode": 1,
+      "joinedCount": 1,
+      "maxMembers": 4
+    },
+    "purchasePath": "BLOCKED: ownerType/ownerId intentionally absent; preserve play/privacy contract"
+  },
+  "cleanup": {
+    "oldTaskCreatedDraft990019": "soft-deleted with exact id/member/name/draft guard; no preexisting 9003 row changed"
+  },
+  "currentHealthClaim": false
+}

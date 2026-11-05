@@ -1,0 +1,187 @@
+{
+  "status": "PARTIAL_STOPPED_AT_WEEKLY_LIMIT_8_PERCENT",
+  "frontendSource": "a5596e405f8d211b277fae9d351f5df78df6b4a4",
+  "bundleSha256": "1dff0f0257ecb2ffc32389c14a36cc2e4e00434f966517e0fb31ee4ec9ae20d1",
+  "backendSource": "65a1e33df848c3c225d13b58f8235a54feb2e100",
+  "database": "cy_e2e_51",
+  "serverUuid": "19025e57-d901-11f1-b086-9ae8535e5aec",
+  "actors": {
+    "author": 990006,
+    "player": 990008,
+    "other": 990009,
+    "coopMerchant": 9005
+  },
+  "fixtures": {
+    "author": 990006,
+    "club": 990004,
+    "topic": 990023,
+    "monthlyTopic": 990025,
+    "monthVersion": 2,
+    "cityTopic": 990027,
+    "activity": 16,
+    "registration": 81,
+    "player": 990008,
+    "team": 1,
+    "teamTopic": 990029,
+    "teamAudit": 17,
+    "teamActivity": 18,
+    "teamRegistration": 82,
+    "other": 990009,
+    "coopInvite": "990024",
+    "gift": 15,
+    "giftQA": 6041,
+    "giftTopic": 990031,
+    "giftAudit": 20,
+    "giftActivity": 20,
+    "giftRegistration": 83,
+    "giftHistory": 7,
+    "crmActivity": 22,
+    "crmRefundRegistration": 84,
+    "replyInvite": "990025",
+    "naturalEndActivity": 23,
+    "naturalEndRegistration": 85
+  },
+  "monthly": {
+    "activityId": 16,
+    "registrationId": 81,
+    "nodeId": 112,
+    "answerCode": 200,
+    "completed": true,
+    "badgeCode": "TOPIC_FINISH_990027",
+    "sourceType": 2,
+    "noTopicRouteSession": true,
+    "uiRouteCount": 1
+  },
+  "team": {
+    "registrationId": 82,
+    "teamId": 1,
+    "joinedCount": 1,
+    "maxMembers": 4,
+    "noTicketActor": 990009,
+    "joinOutcome": "TICKET_REQUIRED",
+    "ticketRequired": true,
+    "previewOwnerFieldsAbsent": true,
+    "purchaseCTAAbsent": true
+  },
+  "coupon": {
+    "couponId": 15,
+    "templateId": 6041,
+    "topicId": 990031,
+    "activityId": 20,
+    "registrationId": 83,
+    "historyId": 7,
+    "ownerMemberId": 990008,
+    "otherMemberId": 990009,
+    "normalQACompletion": true,
+    "holderQrReady": true,
+    "foreignStatus": {
+      "code": 500,
+      "msg": "无权查看该券"
+    },
+    "foreignUiNotmine": true,
+    "returnRoute": "pages/member/index/index",
+    "realMoneyOrRedemption": false
+  },
+  "cooperation": {
+    "inviteId": "990024",
+    "merchantMemberId": 9005,
+    "shareMode": 0,
+    "status": 1,
+    "acceptedViaUI": true,
+    "singleScanCTA": true
+  },
+  "classification": {
+    "beforeFix": {
+      "source": "65a1e33df848c3c225d13b58f8235a54feb2e100",
+      "originalId": 990023,
+      "copyId": 990024,
+      "copyMissingFromProjectAPI": true
+    },
+    "afterFix": {
+      "source": "3756bc35ce109a370f995ecde3373e758ee111fb",
+      "originalRetained": true,
+      "copyInTemplatesOnly": true,
+      "cardOpensOwnDetail": true
+    }
+  },
+  "limitations": [
+    "test WeChat/content-security stubs; no real external moderation, money, native device or release acceptance",
+    "No shared DB imports or SQL writes; own returned fixtures only",
+    "Merchant draft request as seed9005 refused current identity; no grant or bypass"
+  ],
+  "newRuntime": "6feddc67180d1c1a0431362d3e0357942f998365",
+  "finalTemplateProof": {
+    "source": "3756bc35ce109a370f995ecde3373e758ee111fb",
+    "frontendBundle": "a2df04effac372887ce486288c4dbe13dff9e8b21afcb65a0a77ad6edced78c5",
+    "backend": "127.0.0.1:18101",
+    "web": "127.0.0.1:18100",
+    "container": "cy-pages-k9-3756-app",
+    "memoryMiB": 768,
+    "apiRows": [
+      {
+        "id": 990024,
+        "isTemplate": true
+      },
+      {
+        "id": 990023,
+        "isTemplate": false
+      }
+    ],
+    "templateCardOpensOwnDetail": true
+  },
+  "crm": {
+    "merchantMemberId": 990009,
+    "merchantFixture": "normal admin merchant profile; role changed after earlier player refusal walks",
+    "zeroActivity": 22,
+    "zeroRegistration": 84,
+    "zeroCancellation": {
+      "status": "CANCELLED",
+      "cashRefundStatus": "NOT_NEEDED",
+      "cashRefundAmount": 0
+    },
+    "uiRefundedCount": 1,
+    "uiTag": "有退款",
+    "naturalEndActivity": 23,
+    "naturalEndRegistration": 85,
+    "startDate": "2026-11-05 19:35:41",
+    "endDate": "2026-11-05 19:36:42",
+    "pendingBeforeEnd": 1,
+    "pendingAfterEndOn3756": 1,
+    "bug": "DB session UTC current_timestamp compared with Shanghai DATETIME",
+    "expectedAfterClockFix": 0
+  },
+  "reply": {
+    "inviteId": "990025",
+    "recipient": 990009,
+    "reason": "K9-CODEX-1105-R3 今天无法到场",
+    "ownRuntimeWriteError": "内容审核暂时不可用，请联系平台",
+    "normalSharedHandleCode": 200,
+    "status": 2,
+    "counterpartSpeakersCorrect": true,
+    "footer": "这条邀约已拒绝"
+  },
+  "clockFix": {
+    "source": "ed7fbb6f3040323bc0c7f1a05ff99e6948fd49c4",
+    "javaTests": 14,
+    "failures": 0,
+    "errors": 0,
+    "readOnlyMySqlBoundaryCases": 5,
+    "manualJarRun": 42022570700,
+    "jarSha256": "4490c540b5802ab157bc5f9d47225fd7fd9fc75afc897708b2cbd5fab4dc9e75",
+    "installed": false,
+    "httpAfterFix": "NOT_WALKED_STOPPED_AT_8_PERCENT",
+    "next": "Use checked JAR in stopped owned container, verify source/UUID, reread merchant990009 customer990008 registration85/activity23 pendingCount=0"
+  },
+  "cleanup": {
+    "ownBackend": "cy-pages-k9-3756-app stopped, OOMKilled=false",
+    "browserClosed": true,
+    "frontend18100Stopped": true,
+    "ownTunnel18101Stopped": true,
+    "sharedResourcesUntouched": true
+  },
+  "finalChecks": {
+    "uiIntegrity": "PASS",
+    "nodeFocused": 17,
+    "actionLedger": "FAIL drift after upstream rebase; not changed at stop threshold"
+  }
+}
