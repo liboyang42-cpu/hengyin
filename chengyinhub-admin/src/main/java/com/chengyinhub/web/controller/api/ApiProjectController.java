@@ -270,6 +270,8 @@ public class ApiProjectController extends BaseController {
         // 2) 我发布的活动
         CmsActivity actQuery = new CmsActivity();
         actQuery.setMemberId(memberId);
+        // 第十二轮 k6(j1 N3):删除场次后不再留在我的项目和商家首页「全部 N」;与营销「活动」同口径。
+        actQuery.setDelFlag(0);
         actQuery.setActiveClubOnly(true);
         List<CmsActivity> acts = cmsActivityService.selectCmsActivityList(actQuery);
         if (acts != null) {
