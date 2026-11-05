@@ -201,3 +201,18 @@ Used the owner's authorized Puppeteer harness, privately copied from `/private/t
 Author9003 created theme990032 with both videos, all chapter audio, theme music, two templates/nodes and a TIME text egg through UI. Admin approved actual media and topic task38 through UI. Players9004/9009 separately used free checkout. Actual opening video ended at3s; BGM paused/resumed, narration started. Viewed poster-first, decoded, tap-skip and re-entry shots. An8.5s MP4 delay fell back at5009ms; an aborted MP4 emitted error and returned to text. Photo upload/proof completed node124; QR node125 remains unfinished. Branches/ending playback and phone sound remain unverified. Nothing was heard.
 
 My shared-daemon clone/import attempt caused its512MiB MySQL container to OOM. The owner was informed and assigned shared restoration to play; I used only my independent MySQL afterward. The complete pre-incident fixture dump survives privately at `/private/tmp/codex-video-rig-20261105/fixture.private.sql`; no database material is committed. Cleanup state is in the video result.
+## Round 13 · m1-game-matrix (2026-11-05)
+
+Not a phone. Results: `integ/ROUND13-M1-RESULT.md`. Shots: `integ/fix-shots/r13-m1-*.jpg` (all viewed).
+
+- Rig: `git worktree add $HOME/rig origin/claude/cloud-walk-20261101-rig` (`592aa21b`), with k10's `proof/k10-walk/k10-rig-changes.diff` applied as it is (audio log, file picker, Chrome without proxy, `RIG_SHA`, OSS env pass-through, truststore).
+- Docker: `dockerd` started by hand, 29.9.2, overlayfs. MySQL 8.0.45 and Redis 7.4 from the pinned digests. `up.sh` schema PASS, 457 tables.
+- Candidate: `$HOME/walk-rig/candidate`, first at `35b3dc6df`, then at my local commit on top of `982020e3f`. The jar was built with `-Dmaven.test.skip=true`, because test compile is not needed for the rig. Then `plan`/`precheck`/`explode` into `out2` and `app.py start`.
+- Stand-ins (local only, dummy values):
+  - `/etc/hosts`: `api.weixin.qq.com` → 127.0.0.2 (`wxfake.py`, token + image check) and `chengyin-oss.oss-cn-shanghai.aliyuncs.com` → 127.0.0.3 (`fakeoss.py`).
+  - A self-signed cert imported into a private truststore copy (`RIG_TRUSTSTORE`).
+  - `CHENGYIN_OSS_*` set to `rig-offline-*` values.
+- DB: the branch's `migration_20261105_chapter_video.sql`, applied after the rebase (the new jar reads `video_url`).
+- Review: topic 990014 approved through the real `/business/audit/review` (k10's `approve.py`, path adjusted).
+- Logins: author 9003, players 9009 and 9004 (fixture identities). The player token for the replay checks came from `seed-walk.py token`, which is the real `/api/login/code`.
+- Driver: k10's `repl.mjs`/`helpers.mjs`, plus a `rowBtn(label, button)` helper that taps the button in the same row as a label.
