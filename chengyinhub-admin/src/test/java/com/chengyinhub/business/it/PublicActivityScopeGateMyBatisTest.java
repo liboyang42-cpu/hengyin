@@ -142,6 +142,32 @@ class PublicActivityScopeGateMyBatisTest {
         }
     }
 
+    /**
+     * 第十二轮 k1 第 4 项(j6 N7,2026-11-05 业主):俱乐部开的场次不占「同时 3 个活动」名额。
+     * 场次 = 挂主题(topic_id)的活动;场次本身挂 club_id,或所挂主题属于俱乐部(公开自办场次不挂 club_id)都算俱乐部场次。
+     * 商家与俱乐部自己发布的活动(不挂主题,含挂 club_id 的社群活动)、商家主题的自办场次仍计数。
+     */
+    @Test
+    void clubSessionsDoNotTakeActivityQuota() throws Exception {
+        try (SqlSession session = factory().openSession(true);
+             Statement statement = session.getConnection().createStatement()) {
+            recreateTables(statement);
+            seed(statement);
+            statement.execute("INSERT INTO cms_topic (id, club_id, del_flag) VALUES (80, 700, 0), (81, NULL, 0)");
+            statement.execute("INSERT INTO cms_activity (id,member_id,name,status,publish_status,del_flag,"
+                    + "cancel_time,end_date,topic_id,club_id,create_time) VALUES "
+                    + "(11,7,'俱乐部场次·挂 club_id',1,1,0,NULL,DATE_ADD(NOW(), INTERVAL 3 DAY),80,700,NOW()),"
+                    + "(12,7,'俱乐部场次·挂 club_id',1,1,0,NULL,DATE_ADD(NOW(), INTERVAL 4 DAY),80,700,NOW()),"
+                    + "(13,7,'俱乐部公开主题自办场次',1,1,0,NULL,DATE_ADD(NOW(), INTERVAL 5 DAY),80,NULL,NOW()),"
+                    + "(14,7,'商家主题自办场次',1,1,0,NULL,DATE_ADD(NOW(), INTERVAL 6 DAY),81,NULL,NOW())");
+            CmsActivityServiceImpl service = new CmsActivityServiceImpl();
+            ReflectionTestUtils.setField(service, "cmsActivityMapper", session.getMapper(CmsActivityMapper.class));
+            // seed 里未结束·公域 + 未结束·社群(不挂主题的俱乐部活动,照常计数)= 2;商家主题自办场次 +1;三条俱乐部场次不算
+            assertEquals(3, service.selectActivityQuotaUsedByMemberId(7L),
+                    "俱乐部场次不占名额;发布的活动与商家主题场次照常计数");
+        }
+    }
+
     private List<Long> ids(List<CmsActivity> rows) {
         return rows.stream().map(CmsActivity::getId).sorted().collect(Collectors.toList());
     }
