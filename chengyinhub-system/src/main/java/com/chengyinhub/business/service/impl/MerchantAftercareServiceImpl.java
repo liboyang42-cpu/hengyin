@@ -48,6 +48,7 @@ public class MerchantAftercareServiceImpl implements IMerchantAftercareService {
     @Autowired private BusinessAuditEventMapper businessAuditEventMapper;
     @Autowired private MerchantAftercareEvidenceUrlSigner evidenceUrlSigner;
     @Autowired private INotifyService notifyService;
+    @Autowired private com.chengyinhub.business.service.ICmsActivityService activityService;
 
     @Override
     public MerchantAftercareListVO list(Long principalMemberId, String bucket,
@@ -304,7 +305,34 @@ public class MerchantAftercareServiceImpl implements IMerchantAftercareService {
         out.setActivityTitle(row.getActivityTitle());
         out.setCustomerNickname(visibleNickname(access, row.getCustomerNickname()));
         out.setPlatformTakeoverAt(row.getPlatformTakeoverAt());
+        if (Integer.valueOf(1).equals(row.getStatus())) out.setMerchantNetAmount(merchantNet(access, row.getId()));
         return out;
+    }
+
+    /**
+     * 第十二轮 k6(j1 N4 / p2 N-3):台账里退款行的商家金额。用与「待结算」同一个口径
+     * (ICmsActivityService.estimateMerchantShare,即 settleActivity 的费率)算,台账行才能与表头对上。
+     * 没有财务读权限、不是自有活动票、费率规则缺失 ⇒ null(前端不画金额,也不画玩家退款额的负数)。
+     */
+    java.math.BigDecimal merchantNet(MerchantAccessContext access, Long refundId) {
+        if (access == null || !access.hasPermission(MerchantPermission.FINANCE_READ) || activityService == null) return null;
+        com.chengyinhub.business.domain.MerchantRefundShareFacts facts = merchantAftercareMapper
+                .selectOwnedActivityRefundShareFacts(access.getMerchantId(), access.getOwnerMemberId(), refundId);
+        if (facts == null || facts.getPayableAmount() == null) return null;
+        java.math.BigDecimal refunded = facts.getRefundedAmount() == null ? java.math.BigDecimal.ZERO : facts.getRefundedAmount();
+        java.math.BigDecimal retained = facts.getPayableAmount().subtract(refunded);
+        if (retained.signum() < 0) retained = java.math.BigDecimal.ZERO;
+        com.chengyinhub.business.domain.CmsActivity activity = new com.chengyinhub.business.domain.CmsActivity();
+        activity.setId(facts.getActivityId());
+        activity.setTopicId(facts.getTopicId());
+        java.math.BigDecimal kept = retained.signum() == 0 ? java.math.BigDecimal.ZERO
+                : activityService.estimateMerchantShare(activity, retained);
+        if (kept == null) return null;
+        kept = kept.setScale(2, java.math.RoundingMode.HALF_UP);
+        if (!Integer.valueOf(1).equals(facts.getVerificationStatus())) return kept;
+        // 已核销的单在台账里已有一行原份额,退款行只记少掉的那部分。
+        java.math.BigDecimal original = activityService.estimateMerchantShare(activity, facts.getPayableAmount());
+        return original == null ? null : kept.subtract(original.setScale(2, java.math.RoundingMode.HALF_UP));
     }
 
     private void applyDisplay(MerchantAccessContext access, MerchantAftercareListRow display,

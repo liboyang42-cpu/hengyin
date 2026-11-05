@@ -189,6 +189,22 @@
         <include refid="aftercareBucketFilter"/>
     </select>
 
+    <!-- 第十二轮 k6(j1 N4 / p2 N-3):台账退款行显示「这单商家还剩多少」,不再把玩家拿回的钱当成从商家扣走。
+         只认已同意(status = 1)的退款、报名属于本 owner 自己发布的活动;已退金额按该报名全部已同意退款合计。 -->
+    <select id="selectOwnedActivityRefundShareFacts" resultType="com.chengyinhub.business.domain.MerchantRefundShareFacts">
+        select reg.id as registrationId, a.id as activityId, a.topic_id as topicId,
+               reg.payable_amount as payableAmount, reg.verification_status as verificationStatus,
+               (select coalesce(sum(x.refund_amount), 0) from refund_application x
+                 where x.source_type = 'registration' and x.source_id = reg.id
+                   and x.status = 1 and x.del_flag = 0) as refundedAmount
+        from refund_application r
+        inner join cms_registration reg on reg.id = r.source_id and reg.owner_type = 2
+        inner join cms_activity a on a.id = reg.owner_id and a.member_id = #{ownerMemberId}
+        where r.id = #{refundId} and <include refid="exactMerchantRefundScope"/>
+          and r.source_type = 'registration' and r.status = 1 and r.del_flag = 0
+        limit 1
+    </select>
+
     <select id="selectResponses" resultMap="ResponseResult">
         select id, refund_application_id, merchant_id, merchant_owner_member_id, actor_member_id,
                actor_role_code, decision, content, evidence_url, request_id, create_time

@@ -54,4 +54,10 @@ public interface MerchantAftercareMapper {
                                           @Param("refundId") Long refundId);
 
     int insertResponse(MerchantAftercareResponse response);
+
+    /** 第十二轮 k6:已同意退款对应的商家自有活动报名事实;不是本 owner 自己的活动票则为 null。 */
+    com.chengyinhub.business.domain.MerchantRefundShareFacts selectOwnedActivityRefundShareFacts(
+            @org.apache.ibatis.annotations.Param("merchantId") Long merchantId,
+            @org.apache.ibatis.annotations.Param("ownerMemberId") Long ownerMemberId,
+            @org.apache.ibatis.annotations.Param("refundId") Long refundId);
 }

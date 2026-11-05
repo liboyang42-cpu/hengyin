@@ -28,6 +28,14 @@ public class MerchantAftercareListItemVO {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date platformTakeoverAt;
 
+    /**
+     * 第十二轮 k6(j1 N4 / p2 N-3):这笔退款落到商家自己钱上的结果,仅财务读权限且是商家自有活动的已同意退款才下发。
+     * 未核销的单 = 退款后这单商家还剩的那一份(全退为 0);已核销的单 = 相对原份额少了多少(负数)。其他情况 null。
+     */
+    private BigDecimal merchantNetAmount;
+
+    public BigDecimal getMerchantNetAmount() { return merchantNetAmount; }
+    public void setMerchantNetAmount(BigDecimal merchantNetAmount) { this.merchantNetAmount = merchantNetAmount; }
     public String getActivityTitle() { return activityTitle; }
     public void setActivityTitle(String activityTitle) { this.activityTitle = activityTitle; }
     public String getCustomerNickname() { return customerNickname; }

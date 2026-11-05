@@ -470,8 +470,12 @@ Page({
   // 标题与状态都带「退款」前缀 —— 混在核销记录里必须一眼看出这是退款,点进售后详情。
   refundRow(row, canReadFinance) {
     const item = Object.assign({}, row);
-    const amount = row.amountCents == null ? null : (row.amountCents / 100).toFixed(2);
+    const refundAmount = row.amountCents == null ? null : (row.amountCents / 100).toFixed(2);
+    // 第十二轮 k6(j1 N4 / p2 N-3):右列只放商家自己的钱。玩家拿回的钱从来不是从商家扣走的,
+    // 服务端给出「这单商家还剩多少 / 少了多少」(merchantNetAmount)才画;拿不到就不画,不再画玩家退款额的负数。
+    const net = canReadFinance === false ? null : money(row.merchantNetAmount);
     const title = row.titleText || row.refundNoText || ('#' + row.refundId);
+    const status = row.statusText || '状态待确认';
     return Object.assign(item, {
       recordKey: 'aftercare:' + row.refundId,
       recordType: 'aftercare',
@@ -482,13 +486,13 @@ Page({
       timeText: row.timeText,
       dayKey: row.dateKey,
       sortKey: row.createTimeText,
-      // j1 F21(第十轮 f3):状态本身以「退款」开头时不再叠前缀(原「退款 · 退款处理中」)
-      stateText: /^退款/.test(row.statusText || '') ? row.statusText : '退款 · ' + (row.statusText || '状态待确认'),
+      // 状态签带玩家退回的金额,和右列商家金额分开:「退款 ¥14.99 · 已退回」。
+      // j1 F21:状态本身以「退款」开头时不再叠前缀。
+      stateText: '退款' + (refundAmount == null ? '' : ' ' + yuan(refundAmount)) + ' · ' + status.replace(/^退款\s*/, ''),
       stateVariant: row.statusTone || 'neutral',
-      amountText: amount,
-      // j1 F21:退款是流出,红字同时带负号(−¥),与核销行的 +¥ 对称
-      amountDisplay: canReadFinance === false ? null : (amount == null ? '待定' : yuan(Number(amount) > 0 ? '-' + amount : amount)),
-      amountTone: amount == null ? 'mute' : 'neg',
+      amountText: net,
+      amountDisplay: net == null ? null : yuan(net, { signed: true }),
+      amountTone: net == null || Number(net) === 0 ? 'mute' : (Number(net) < 0 ? 'neg' : 'pos'),
     });
   },
   redemptionRow(row, canReadFinance) {

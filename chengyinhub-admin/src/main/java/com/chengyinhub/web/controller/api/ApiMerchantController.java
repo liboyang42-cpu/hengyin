@@ -2028,6 +2028,7 @@ public class ApiMerchantController extends BaseController {
         row.setSettlementAmount(null);
         row.setSettlementState(null);
         row.setSettlementRoute(null);
+        row.setDestination(null);
         row.setDisplayState(null);
         row.setNoCashReason(null);
         row.setPublicSettlement(null);

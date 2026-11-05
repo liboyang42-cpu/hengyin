@@ -175,6 +175,8 @@ public class MerchantFinanceQueryService {
             if (!blank(name)) row.setCustomerDisplayName(name.trim());
         }
         row.setSettlementRoute("ACTIVITY");
+        // 第十二轮 k6(j1 N4):活动票由 settleActivity 结进商家 App 内余额(可提现),不是平台打款。
+        row.setDestination("PERSONAL_ACCOUNT");
         if (scan.getSettlementAmount() == null) {
             // 支付时没落商家账本(老单/免费票):金额未成立,显示「待定」,不伪造 0。
             row.setSettlementState("PENDING");

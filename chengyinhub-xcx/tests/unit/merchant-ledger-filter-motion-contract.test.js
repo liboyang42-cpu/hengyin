@@ -320,11 +320,22 @@ test('退款行映射成台账条目:标题/状态带退款前缀,仍路由售�
   assert.equal(row.refundId, 9)
   assert.equal(row.recordKey, 'aftercare:9')
   assert.equal(row.title, '退款 · 张三')
-  assert.equal(row.stateText, '退款 · 待回应')
-  // 第十轮 f3 j1 F21:退款是流出,红字带负号
-  assert.equal(row.amountDisplay, '−¥12.00')
-  assert.equal(page.refundRow({ refundId: 10, statusText: '退款处理中', amountCents: 500 }, true).stateText, '退款处理中',
+  // 第十二轮 k6(j1 N4 / p2 N-3):状态签带玩家退回的金额;右列只放商家自己的钱,服务端没给就不画
+  assert.equal(row.stateText, '退款 ¥12.00 · 待回应')
+  assert.equal(row.amountDisplay, null, '玩家退款额不是从商家扣走的钱,不画成 −¥')
+  assert.equal(page.refundRow({ refundId: 10, statusText: '退款处理中', amountCents: 500 }, true).stateText, '退款 ¥5.00 · 处理中',
     '状态自带「退款」时不叠前缀')
+  const half = page.refundRow({ refundId: 11, statusText: '已退回', amountCents: 1499, merchantNetAmount: 14.55 }, true)
+  assert.equal(half.amountDisplay, '+¥14.55', '退一半:这单商家还剩的那一份,台账行与「已入账」能加起来')
+  assert.equal(half.amountTone, 'pos')
+  const full = page.refundRow({ refundId: 12, statusText: '已退回', amountCents: 6995, merchantNetAmount: 0 }, true)
+  assert.equal(full.amountDisplay, '¥0.00')
+  assert.equal(full.amountTone, 'mute')
+  const scanned = page.refundRow({ refundId: 13, statusText: '已退回', amountCents: 1000, merchantNetAmount: -9.70 }, true)
+  assert.equal(scanned.amountDisplay, '−¥9.70')
+  assert.equal(scanned.amountTone, 'neg')
+  assert.equal(page.refundRow({ refundId: 14, statusText: '已退回', amountCents: 1000, merchantNetAmount: 5 }, false).amountDisplay, null,
+    '无财务读权限不画金额')
   assert.equal(row.dayKey, '2026-09-18')
   assert.equal(row.sortKey, '2026-09-18 10:00')
 
