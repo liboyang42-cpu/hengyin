@@ -1,0 +1,15 @@
+Round 12 k3 rig read-backs (cloud rig, not a phone). Jar and browser bundle built from da7770d0 on integ/launch-test-20261103.
+Rig MySQL runs in UTC, so join/apply times print 8 hours early (HARNESS, same as p2 H-5).
+Rig fixtures (throwaway DB): ums_member 9003 role -> 'club' (seed lead of club 7001 still had role 'player'; real leads get 'club' on approval);
+nicknames of 9001/9006/9007/9009 set to the default 城瘾用户; club 7001 join_policy 1 for the join-request part; join times staggered.
+Rig only: docs/delivery/walk-fix-20261102/integ/k2-club-post-contact-scan.sql removed from the candidate worktree because build_schema refuses
+"UNMANAGED_SQL_LOCATION" for it (k2's file, not changed in the repo by this lane).
+
+POST /api/club/join-requests (as lead 9003, clubId 7001)
+  [[9006, "城瘾用户"], [9004, "玩家小城"], [9007, "城瘾用户"]]      <- row shows 「申请于 …」 itself; reject dialog adds the time
+POST /api/club/members (as lead 9003)
+  [[9003, "俱乐部主理人"], [9009, "城瘾用户 · 11月5日 13:30 加入"], [9001, "城瘾用户 · 11月5日 12:43 加入"]]
+  owner row = owner's nickname (not club_leader.leader_name)
+POST /api/club/governance/ban 9001 then /api/club/governance/list
+  [[9001, "城瘾用户"]]   (card shows ban time; previously a different name could show — p3 g04)
+POST /api/template/topic-template/save-as {id: 990013} -> {"templateId": 990014}; preview of 990014 shows no invented claims (k3-09)
