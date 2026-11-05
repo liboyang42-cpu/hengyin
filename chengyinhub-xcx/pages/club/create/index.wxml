@@ -69,6 +69,7 @@
       </view>
       <view class="cc-radio {{clubType === item.val ? 'on' : ''}}"></view>
     </view>
+    <cy-inline-error class="cc-field-err" wx:if="{{typeError}}" kind="field" title="{{typeError}}" />
   </view>
 
   <!-- 步骤2:活动方向(多选≤3) -->
@@ -121,6 +122,7 @@
       <text class="cc-field-label">城市<text class="cc-req" aria-hidden="true">*</text></text>
       <input class="cc-input cc-input--field {{city ? 'is-filled' : ''}}" aria-label="所在城市，必填" placeholder="如 上海" value="{{city}}" data-field="city" bindinput="onInput" maxlength="20" disabled="{{submitting}}" />
     </view>
+    <cy-inline-error class="cc-field-err" wx:if="{{cityError}}" kind="field" title="{{cityError}}" />
     <view class="cc-field">
       <text class="cc-field-label">核心关键词（选填）</text>
       <input class="cc-input cc-input--field {{keywords ? 'is-filled' : ''}}" aria-label="核心关键词，选填" placeholder="逗号分隔，如 徒步，摄影" value="{{keywords}}" data-field="keywords" bindinput="onInput" maxlength="60" disabled="{{submitting}}" />
@@ -138,7 +140,7 @@
   <!-- 底部 CTA -->
   <view class="cc-bottom" wx:if="{{bootstrapState === 'ready' && submitState !== 'success' && !introMode}}">
     <cy-btn variant="primary" loading="{{submitting}}"
-      disabled="{{!canNext || submitting}}" accessibilityLabel="{{step < 4 ? '下一步' : '创建俱乐部'}}"
+      disabled="{{!canNext || submitting}}" bind:disabledtap="onNextDisabledTap" accessibilityLabel="{{step < 4 ? '下一步' : '创建俱乐部'}}"
       bindtap="onNext">{{step < 4 ? '下一步' : (submitting ? '创建中…' : '创建俱乐部')}}</cy-btn>
   </view>
 </view>

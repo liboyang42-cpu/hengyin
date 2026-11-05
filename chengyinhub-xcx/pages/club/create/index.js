@@ -51,6 +51,8 @@ Page({
     name: '',
     // C-14:离开名称框或点「下一步」时查名的结果;非空时名称下方显示红 * 与原因
     nameError: '',
+    typeError: '',
+    cityError: '',
     logo: '',
     cover: '',
     description: '',
@@ -298,6 +300,14 @@ Page({
     });
   },
 
+  // 置灰的「下一步」被点:缺的必填写成栏下红字,不让按钮静默不动
+  onNextDisabledTap() {
+    var d = this.data;
+    if (d.step === 1 && !d.clubType) this.setData({ typeError: '请选择俱乐部类型' });
+    else if (d.step === 3 && !d.name) this.setData({ nameError: '请给俱乐部起个名字' });
+    else if (d.step === 4 && !d.city) this.setData({ cityError: '请填写所在城市' });
+  },
+
   validate() {
     var d = this.data, ok = false;
     if (d.step === 1) ok = !!d.clubType;
@@ -321,14 +331,14 @@ Page({
       else this.setData({ name: value, nameError: '' }, this.validate);
     }
     else if (f === 'description') this.setData({ description: value }, this.validate);
-    else if (f === 'city') this.setData({ city: value }, this.validate);
+    else if (f === 'city') this.setData({ city: value, cityError: '' }, this.validate);
     else if (f === 'keywords') this.setData({ keywords: value }, this.validate);
     else if (f === 'style') this.setData({ style: value }, this.validate);
   },
 
   pickType(e) {
     var val = e.currentTarget.dataset.val;
-    this.setData({ clubType: this.data.clubType === val ? '' : val }, this.validate);
+    this.setData({ clubType: this.data.clubType === val ? '' : val, typeError: '' }, this.validate);
   },
 
   toggleDir(e) {
