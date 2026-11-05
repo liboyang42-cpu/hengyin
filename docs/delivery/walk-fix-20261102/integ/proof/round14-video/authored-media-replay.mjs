@@ -35,7 +35,7 @@ const output=process.env.R14_VIDEO_OUTPUT || path.join(root,'r14-video-replay');
 fs.mkdirSync(output,{recursive:true});
 process.env.RIG_WEB='http://127.0.0.1:18197'; process.env.RIG_SHOTS=output;
 const {launch}=await import(pathToFileURL(path.join(root,'docs/delivery/cloud-walk-20261101/rig/mpweb/walk.mjs')));
-const w=await launch({path:'pages/template/index',identity,agree:true});
+const w=await launch({path:'pages/template/index',identity,agree:true,localOnly:true});
 const user=await w.page.evaluate(()=>MPWEB.getApp().getUserID());
 try { assert.equal(Number(user),Number(identity.slice('e2e-openid-'.length)),'Login must resolve to the independently reserved member'); }
 catch(error) { await w.close(); throw error; }

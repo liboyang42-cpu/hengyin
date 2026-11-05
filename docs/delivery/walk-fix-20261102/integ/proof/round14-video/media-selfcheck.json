@@ -12,7 +12,8 @@
     "explicit native picker queue preserves chosen video metadata",
     "empty video queue cancels rather than inventing a selected image",
     "multipart uploads preserve actual MP4/MP3 bytes and correct file extensions",
-    "selected same-origin MP4 uploads original bytes instead of an image fallback"
+    "selected same-origin MP4 uploads original bytes instead of an image fallback",
+    "actual replay driver blocks off-origin requests before network dispatch"
   ],
   "requests": [
     "/",
@@ -27,12 +28,16 @@
     "/upload",
     "/upload",
     "/clip.mp4",
-    "/upload"
+    "/upload",
+    "/?",
+    "/runtime.js",
+    "/nav.js",
+    "/clip.mp4"
   ],
   "trace": {
     "audio": [
       {
-        "t": 1793901276499,
+        "t": 1793902508315,
         "id": 2,
         "event": "create",
         "src": "",
@@ -43,10 +48,10 @@
         "error": null
       },
       {
-        "t": 1793901276499,
+        "t": 1793902508315,
         "id": 2,
         "event": "src",
-        "src": "http://127.0.0.1:49197/slow.mp3",
+        "src": "http://127.0.0.1:55627/slow.mp3",
         "currentTime": 0,
         "paused": true,
         "readyState": 0,
@@ -54,10 +59,10 @@
         "error": null
       },
       {
-        "t": 1793901276499,
+        "t": 1793902508315,
         "id": 2,
         "event": "play()",
-        "src": "http://127.0.0.1:49197/slow.mp3",
+        "src": "http://127.0.0.1:55627/slow.mp3",
         "currentTime": 0,
         "paused": true,
         "readyState": 0,
@@ -65,10 +70,10 @@
         "error": null
       },
       {
-        "t": 1793901276500,
+        "t": 1793902508315,
         "id": 2,
         "event": "play",
-        "src": "http://127.0.0.1:49197/slow.mp3",
+        "src": "http://127.0.0.1:55627/slow.mp3",
         "currentTime": 0,
         "paused": false,
         "readyState": 0,
@@ -76,10 +81,10 @@
         "error": null
       },
       {
-        "t": 1793901276500,
+        "t": 1793902508315,
         "id": 2,
         "event": "waiting",
-        "src": "http://127.0.0.1:49197/slow.mp3",
+        "src": "http://127.0.0.1:55627/slow.mp3",
         "currentTime": 0,
         "paused": false,
         "readyState": 0,
@@ -87,10 +92,10 @@
         "error": null
       },
       {
-        "t": 1793901276500,
+        "t": 1793902508315,
         "id": 2,
         "event": "loadstart",
-        "src": "http://127.0.0.1:49197/slow.mp3",
+        "src": "http://127.0.0.1:55627/slow.mp3",
         "currentTime": 0,
         "paused": false,
         "readyState": 0,
@@ -98,10 +103,10 @@
         "error": null
       },
       {
-        "t": 1793901278010,
+        "t": 1793902509820,
         "id": 2,
         "event": "canplay",
-        "src": "http://127.0.0.1:49197/slow.mp3",
+        "src": "http://127.0.0.1:55627/slow.mp3",
         "currentTime": 0,
         "paused": false,
         "readyState": 4,
@@ -109,10 +114,10 @@
         "error": null
       },
       {
-        "t": 1793901278010,
+        "t": 1793902509820,
         "id": 2,
         "event": "playing",
-        "src": "http://127.0.0.1:49197/slow.mp3",
+        "src": "http://127.0.0.1:55627/slow.mp3",
         "currentTime": 0,
         "paused": false,
         "readyState": 4,
@@ -120,21 +125,21 @@
         "error": null
       },
       {
-        "t": 1793901278031,
+        "t": 1793902509830,
         "id": 2,
         "event": "destroy()",
-        "src": "http://127.0.0.1:49197/slow.mp3",
-        "currentTime": 0.00617,
+        "src": "http://127.0.0.1:55627/slow.mp3",
+        "currentTime": 0.006264,
         "paused": false,
         "readyState": 4,
         "volume": 1,
         "error": null
       },
       {
-        "t": 1793901278032,
+        "t": 1793902509830,
         "id": 2,
         "event": "timeupdate",
-        "src": "http://127.0.0.1:49197/slow.mp3",
+        "src": "http://127.0.0.1:55627/slow.mp3",
         "currentTime": 0,
         "paused": true,
         "readyState": 0,
@@ -144,7 +149,7 @@
     ],
     "video": [
       {
-        "t": 1793901272532,
+        "t": 1793902504315,
         "id": 1,
         "event": "create",
         "src": "",
@@ -155,10 +160,10 @@
         "error": null
       },
       {
-        "t": 1793901272541,
+        "t": 1793902504318,
         "id": 1,
         "event": "loadstart",
-        "src": "http://127.0.0.1:49197/clip.mp4",
+        "src": "http://127.0.0.1:55627/clip.mp4",
         "currentTime": 0,
         "paused": true,
         "readyState": 0,
@@ -166,10 +171,10 @@
         "error": null
       },
       {
-        "t": 1793901272620,
+        "t": 1793902504400,
         "id": 1,
         "event": "canplay",
-        "src": "http://127.0.0.1:49197/clip.mp4",
+        "src": "http://127.0.0.1:55627/clip.mp4",
         "currentTime": 0,
         "paused": false,
         "readyState": 4,
@@ -177,10 +182,10 @@
         "error": null
       },
       {
-        "t": 1793901272620,
+        "t": 1793902504400,
         "id": 1,
         "event": "play",
-        "src": "http://127.0.0.1:49197/clip.mp4",
+        "src": "http://127.0.0.1:55627/clip.mp4",
         "currentTime": 0,
         "paused": false,
         "readyState": 4,
@@ -188,10 +193,10 @@
         "error": null
       },
       {
-        "t": 1793901272620,
+        "t": 1793902504400,
         "id": 1,
         "event": "playing",
-        "src": "http://127.0.0.1:49197/clip.mp4",
+        "src": "http://127.0.0.1:55627/clip.mp4",
         "currentTime": 0,
         "paused": false,
         "readyState": 4,
@@ -199,87 +204,87 @@
         "error": null
       },
       {
-        "t": 1793901272871,
+        "t": 1793902504662,
         "id": 1,
         "event": "timeupdate",
-        "src": "http://127.0.0.1:49197/clip.mp4",
-        "currentTime": 0.17054,
+        "src": "http://127.0.0.1:55627/clip.mp4",
+        "currentTime": 0.182807,
         "paused": false,
         "readyState": 4,
         "volume": 1,
         "error": null
       },
       {
-        "t": 1793901273137,
+        "t": 1793902504927,
         "id": 1,
         "event": "timeupdate",
-        "src": "http://127.0.0.1:49197/clip.mp4",
-        "currentTime": 0.436026,
+        "src": "http://127.0.0.1:55627/clip.mp4",
+        "currentTime": 0.44765,
         "paused": false,
         "readyState": 4,
         "volume": 1,
         "error": null
       },
       {
-        "t": 1793901273402,
+        "t": 1793902505191,
         "id": 1,
         "event": "timeupdate",
-        "src": "http://127.0.0.1:49197/clip.mp4",
-        "currentTime": 0.701547,
+        "src": "http://127.0.0.1:55627/clip.mp4",
+        "currentTime": 0.711997,
         "paused": false,
         "readyState": 4,
         "volume": 1,
         "error": null
       },
       {
-        "t": 1793901273667,
+        "t": 1793902505459,
         "id": 1,
         "event": "timeupdate",
-        "src": "http://127.0.0.1:49197/clip.mp4",
-        "currentTime": 0.966742,
+        "src": "http://127.0.0.1:55627/clip.mp4",
+        "currentTime": 0.979841,
         "paused": false,
         "readyState": 4,
         "volume": 1,
         "error": null
       },
       {
-        "t": 1793901273933,
+        "t": 1793902505722,
         "id": 1,
         "event": "timeupdate",
-        "src": "http://127.0.0.1:49197/clip.mp4",
-        "currentTime": 1.232226,
+        "src": "http://127.0.0.1:55627/clip.mp4",
+        "currentTime": 1.243344,
         "paused": false,
         "readyState": 4,
         "volume": 1,
         "error": null
       },
       {
-        "t": 1793901274199,
+        "t": 1793902505989,
         "id": 1,
         "event": "timeupdate",
-        "src": "http://127.0.0.1:49197/clip.mp4",
-        "currentTime": 1.498532,
+        "src": "http://127.0.0.1:55627/clip.mp4",
+        "currentTime": 1.50971,
         "paused": false,
         "readyState": 4,
         "volume": 1,
         "error": null
       },
       {
-        "t": 1793901274464,
+        "t": 1793902506254,
         "id": 1,
         "event": "timeupdate",
-        "src": "http://127.0.0.1:49197/clip.mp4",
-        "currentTime": 1.76317,
+        "src": "http://127.0.0.1:55627/clip.mp4",
+        "currentTime": 1.775157,
         "paused": false,
         "readyState": 4,
         "volume": 1,
         "error": null
       },
       {
-        "t": 1793901274704,
+        "t": 1793902506500,
         "id": 1,
         "event": "timeupdate",
-        "src": "http://127.0.0.1:49197/clip.mp4",
+        "src": "http://127.0.0.1:55627/clip.mp4",
         "currentTime": 2,
         "paused": true,
         "readyState": 4,
@@ -287,10 +292,10 @@
         "error": null
       },
       {
-        "t": 1793901274704,
+        "t": 1793902506500,
         "id": 1,
         "event": "pause",
-        "src": "http://127.0.0.1:49197/clip.mp4",
+        "src": "http://127.0.0.1:55627/clip.mp4",
         "currentTime": 2,
         "paused": true,
         "readyState": 4,
@@ -298,10 +303,10 @@
         "error": null
       },
       {
-        "t": 1793901274704,
+        "t": 1793902506500,
         "id": 1,
         "event": "ended",
-        "src": "http://127.0.0.1:49197/clip.mp4",
+        "src": "http://127.0.0.1:55627/clip.mp4",
         "currentTime": 2,
         "paused": true,
         "readyState": 4,
@@ -309,10 +314,10 @@
         "error": null
       },
       {
-        "t": 1793901274714,
+        "t": 1793902506515,
         "id": 1,
         "event": "timeupdate",
-        "src": "http://127.0.0.1:49197/failed.mp4",
+        "src": "http://127.0.0.1:55627/failed.mp4",
         "currentTime": 0,
         "paused": true,
         "readyState": 0,
@@ -320,10 +325,10 @@
         "error": null
       },
       {
-        "t": 1793901274715,
+        "t": 1793902506515,
         "id": 1,
         "event": "loadstart",
-        "src": "http://127.0.0.1:49197/failed.mp4",
+        "src": "http://127.0.0.1:55627/failed.mp4",
         "currentTime": 0,
         "paused": true,
         "readyState": 0,
@@ -331,10 +336,10 @@
         "error": null
       },
       {
-        "t": 1793901274716,
+        "t": 1793902506517,
         "id": 1,
         "event": "error",
-        "src": "http://127.0.0.1:49197/failed.mp4",
+        "src": "http://127.0.0.1:55627/failed.mp4",
         "currentTime": 0,
         "paused": true,
         "readyState": 0,
@@ -342,10 +347,10 @@
         "error": 4
       },
       {
-        "t": 1793901274730,
+        "t": 1793902506532,
         "id": 1,
         "event": "loadstart",
-        "src": "http://127.0.0.1:49197/slow.mp4",
+        "src": "http://127.0.0.1:55627/slow.mp4",
         "currentTime": 0,
         "paused": true,
         "readyState": 0,
@@ -353,10 +358,10 @@
         "error": null
       },
       {
-        "t": 1793901276238,
+        "t": 1793902508036,
         "id": 1,
         "event": "canplay",
-        "src": "http://127.0.0.1:49197/slow.mp4",
+        "src": "http://127.0.0.1:55627/slow.mp4",
         "currentTime": 0,
         "paused": false,
         "readyState": 4,
@@ -364,10 +369,10 @@
         "error": null
       },
       {
-        "t": 1793901276238,
+        "t": 1793902508036,
         "id": 1,
         "event": "play",
-        "src": "http://127.0.0.1:49197/slow.mp4",
+        "src": "http://127.0.0.1:55627/slow.mp4",
         "currentTime": 0,
         "paused": false,
         "readyState": 4,
@@ -375,10 +380,10 @@
         "error": null
       },
       {
-        "t": 1793901276238,
+        "t": 1793902508036,
         "id": 1,
         "event": "playing",
-        "src": "http://127.0.0.1:49197/slow.mp4",
+        "src": "http://127.0.0.1:55627/slow.mp4",
         "currentTime": 0,
         "paused": false,
         "readyState": 4,
@@ -386,76 +391,76 @@
         "error": null
       },
       {
-        "t": 1793901276496,
+        "t": 1793902508300,
         "id": 1,
         "event": "timeupdate",
-        "src": "http://127.0.0.1:49197/slow.mp4",
-        "currentTime": 0.172287,
+        "src": "http://127.0.0.1:55627/slow.mp4",
+        "currentTime": 0.177766,
         "paused": false,
         "readyState": 4,
         "volume": 1,
         "error": null
       },
       {
-        "t": 1793901276762,
+        "t": 1793902508566,
         "id": 1,
         "event": "timeupdate",
-        "src": "http://127.0.0.1:49197/slow.mp4",
-        "currentTime": 0.437984,
+        "src": "http://127.0.0.1:55627/slow.mp4",
+        "currentTime": 0.444104,
         "paused": false,
         "readyState": 4,
         "volume": 1,
         "error": null
       },
       {
-        "t": 1793901277028,
+        "t": 1793902508832,
         "id": 1,
         "event": "timeupdate",
-        "src": "http://127.0.0.1:49197/slow.mp4",
-        "currentTime": 0.704326,
+        "src": "http://127.0.0.1:55627/slow.mp4",
+        "currentTime": 0.709543,
         "paused": false,
         "readyState": 4,
         "volume": 1,
         "error": null
       },
       {
-        "t": 1793901277293,
+        "t": 1793902509097,
         "id": 1,
         "event": "timeupdate",
-        "src": "http://127.0.0.1:49197/slow.mp4",
-        "currentTime": 0.969418,
+        "src": "http://127.0.0.1:55627/slow.mp4",
+        "currentTime": 0.975015,
         "paused": false,
         "readyState": 4,
         "volume": 1,
         "error": null
       },
       {
-        "t": 1793901277559,
+        "t": 1793902509362,
         "id": 1,
         "event": "timeupdate",
-        "src": "http://127.0.0.1:49197/slow.mp4",
-        "currentTime": 1.235203,
+        "src": "http://127.0.0.1:55627/slow.mp4",
+        "currentTime": 1.240355,
         "paused": false,
         "readyState": 4,
         "volume": 1,
         "error": null
       },
       {
-        "t": 1793901277825,
+        "t": 1793902509629,
         "id": 1,
         "event": "timeupdate",
-        "src": "http://127.0.0.1:49197/slow.mp4",
-        "currentTime": 1.50127,
+        "src": "http://127.0.0.1:55627/slow.mp4",
+        "currentTime": 1.507022,
         "paused": false,
         "readyState": 4,
         "volume": 1,
         "error": null
       },
       {
-        "t": 1793901278032,
+        "t": 1793902509830,
         "id": 1,
         "event": "timeupdate",
-        "src": "http://127.0.0.1:49197/slow.mp4",
+        "src": "http://127.0.0.1:55627/slow.mp4",
         "currentTime": 0,
         "paused": true,
         "readyState": 1,
@@ -463,10 +468,10 @@
         "error": null
       },
       {
-        "t": 1793901278032,
+        "t": 1793902509830,
         "id": 1,
         "event": "pause",
-        "src": "http://127.0.0.1:49197/slow.mp4",
+        "src": "http://127.0.0.1:55627/slow.mp4",
         "currentTime": 0,
         "paused": true,
         "readyState": 1,
@@ -474,10 +479,10 @@
         "error": null
       },
       {
-        "t": 1793901278035,
+        "t": 1793902509830,
         "id": 1,
         "event": "timeupdate",
-        "src": "http://127.0.0.1:49197/slow.mp4",
+        "src": "http://127.0.0.1:55627/slow.mp4",
         "currentTime": 0,
         "paused": true,
         "readyState": 4,
@@ -485,10 +490,10 @@
         "error": null
       },
       {
-        "t": 1793901278035,
+        "t": 1793902509830,
         "id": 1,
         "event": "canplay",
-        "src": "http://127.0.0.1:49197/slow.mp4",
+        "src": "http://127.0.0.1:55627/slow.mp4",
         "currentTime": 0,
         "paused": true,
         "readyState": 4,

@@ -14,10 +14,11 @@ window.__F=[s=>s.src,s=>s.token]; window.__T={'probe.wxml':[{g:'video',i:'v',p:{
 window.__M={'probe.js':function(module,exports,require,Component,Page){Page({data:{src:location.origin+'/clip.mp4',token:1},events:[],record(e){this.events.push({type:e.type,time:e.detail.currentTime,token:e.currentTarget.dataset.token});}})}};
 window.__C={probe:{page:true}}; window.__CSS={}; window.__APPCSS='';
 </script><script src="/runtime.js"></script><script src="/nav.js"></script><script>
-window.probe=MPWEB.openPage('probe',{},document.getElementById('pages'));
+window.probe=MPWEB.openPage('probe',{},document.getElementById('pages')); MPWEB.booted=true;
 </script>`;
 const server = http.createServer((req, res) => {
   requests.push(req.url);
+  req.url=new URL(req.url,'http://fixture').pathname;
   if (req.url === '/upload') {
     const chunks=[]; req.on('data',chunk=>chunks.push(chunk)); req.on('end',()=>{
       uploads.push(Buffer.concat(chunks)); res.setHeader('content-type','application/json');res.end('{"code":200}');
@@ -86,8 +87,18 @@ try {
   assert.equal(localUpload,200); assert.ok(uploads.at(-1).includes(fs.readFileSync(path.join(assets,'clip.mp4'))));
   checks.push('selected same-origin MP4 uploads original bytes instead of an image fallback');
   assert.deepEqual(errors,[]);
+  const trace=await page.evaluate(()=>({audio:MPWEB.audioLog,video:MPWEB.videoLog}));
+  await browser.close(); browser=null;
+  process.env.RIG_WEB=origin;
+  const {launch}=await import('./docs/delivery/cloud-walk-20261101/rig/mpweb/walk.mjs');
+  const driver=await launch({localOnly:true,settle:0});
+  try {
+    await driver.page.evaluate(()=>fetch('https://example.invalid/no-external-dispatch').catch(()=>null));
+    assert.ok(driver.console().some(line=>line.includes('blocked outside rig origin')));
+    checks.push('actual replay driver blocks off-origin requests before network dispatch');
+  } finally { await driver.close(); }
   const result={status:'PASS',scope:'harness-only, synthetic localhost media; no business/device acceptance',checks,requests,
-    trace:await page.evaluate(()=>({audio:MPWEB.audioLog,video:MPWEB.videoLog}))};
+    trace};
   fs.writeFileSync(path.join(root,'media-selfcheck.json'),JSON.stringify(result,null,2)+'\n');
   console.log(JSON.stringify({status:'PASS',checks:checks.length,report:path.join(root,'media-selfcheck.json')}));
 } finally {
