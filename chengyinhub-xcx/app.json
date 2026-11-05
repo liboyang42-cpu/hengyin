@@ -412,6 +412,7 @@
   "sitemapLocation": "sitemap.json",
   "lazyCodeLoading": "requiredComponents",
   "requiredBackgroundModes": [
-    "location"
+    "location",
+    "audio"
   ]
 }

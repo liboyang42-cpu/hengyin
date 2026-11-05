@@ -228,14 +228,26 @@ test('作者编辑器:玩法草稿没有封面时也有占位卡,选中有描边
 })
 
 test('拍照扫码玩法做完沿可信收尾，通用局回任务结算，不再打开旧凭证页', async () => {
-  for (const generic of [false,true]) {
+  for (const config of [{qa:{enabled:true,mode:'SHOT'}},{scan:{enabled:true}}]) for (const generic of [false,true]) {
     const {page} = loadPlay(); let arrived=0, legacy=0, refreshed=0;
     page._playOwner=9; page._playLoadEpoch=1; page._isPlayAccountCurrent=()=>true;
     page._boundPlayOwner=()=>9; page._sessionKey=()=> 'run'; page._advancedGameComponent=()=>null;
     page._hasGenericProofFlow=()=>generic; page._routeState=null;
     page.onArriveTap=()=>arrived++; page.startGame=()=>legacy++; page.refreshThemeBackpack=()=>refreshed++;
-    page.data.advancedPlay={show:true,node:{nodeId:12,vm:2,advancedConfig:{qa:{enabled:true,mode:'SHOT'}}}};
+    page.data.advancedPlay={show:true,node:{nodeId:12,vm:2,advancedConfig:config}};
     await page.onAdvancedReady({detail:{nodeId:12}});
     assert.equal(legacy,0); assert.equal(arrived,generic?0:1); assert.equal(refreshed,generic?1:0);
   }
+});
+
+test('活跃一局切后台保留音乐，离开或已结束时暂停', () => {
+  const {page,audios}=loadPlay();
+  for (const name of ['_flushAnswerRight','suspendOrientLifecycle','_stopTopbar','_stopThemePoll','_stopZeroHpTimer','_stopStoryDust','_clearPackTimers','_stopShopNpcVoice','_stopLeadPoll','_pauseSessionClock','_persistRunSession']) page[name]=()=>{};
+  page._syncStationBgm({audioUrl:'https://x.test/upload/loop.mp3'});
+  const music=audios[0]; page.initAudio(); page._audio.play();
+  page._runStarted=true; page.onHide();
+  assert.equal(music.paused,false); assert.equal(music.obeyMuteSwitch,false);
+  assert.equal(page._audio.paused,false);
+  page._runStarted=false; page.onHide(); assert.equal(music.paused,true); assert.equal(page._audio.paused,true);
+  page.destroyAudio(); page._stopStationBgm();
 });

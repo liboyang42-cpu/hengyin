@@ -19,7 +19,7 @@ test('启用微信隐私检查,并按后台定位形态完整声明', () => {
   const appConfig = require('../../app.json');
 
   assert.equal(appConfig.__usePrivacyCheck__, true);
-  assert.deepEqual(appConfig.requiredBackgroundModes, ['location'],
+  assert.deepEqual(appConfig.requiredBackgroundModes, ['location', 'audio'],
     '声明了后台定位私有接口就必须同时声明 requiredBackgroundModes,否则接口调不起来');
   assert.equal(appConfig.requiredPrivateInfos.includes('startLocationUpdateBackground'), true);
   assert.equal(appConfig.requiredPrivateInfos.includes('getLocation'), true);

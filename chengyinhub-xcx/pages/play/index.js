@@ -1018,6 +1018,7 @@ Page({
   },
 
   onUnload() {
+    audioSession.pauseAll(false);
     if (this._trail) this._trail.persist();
     if (this._teamTrail) this._teamTrail.pause();
     if (this._answerRightTimer) { clearTimeout(this._answerRightTimer); this._answerRightTimer = null; }
@@ -1086,7 +1087,11 @@ Page({
     if (this._chMeasureTimer) clearTimeout(this._chMeasureTimer);
     if (this._settleTimer) clearTimeout(this._settleTimer);
     this._storyAt = null;
-    this._clearPackTimers(); this.pauseAudio(); audioSession.pauseAll(); audioSession.releaseAwake(); this._stopShopNpcVoice(); this._stopLeadPoll(); this._pauseSessionClock(); this._persistRunSession(); },
+    this._clearPackTimers();
+    const stack = typeof getCurrentPages === 'function' ? getCurrentPages() : [];
+    const leaving = stack.length && stack[stack.length - 1] !== this;
+    if (!this._runStarted || this._playDisposed || leaving || this.data.isPreview || this.data.isMock) this.pauseAudio();
+    audioSession.releaseAwake(); this._stopShopNpcVoice(); this._stopLeadPoll(); this._pauseSessionClock(); this._persistRunSession(); },
 
   _clearTransientUiTimers() {
     ['_navBubbleTimer', '_burstTimer', '_couponTimer',
@@ -1221,6 +1226,7 @@ Page({
    *  R1:通关有多条入口(末站完成 / 勋章层关闭 / 继续),只清快照不够 —— 不清 _runStarted 的话,
    *  onHide/onUnload 的落盘又会把已结束的行程写回去,重进时被当成暂停恢复。 */
   _endRunSession() {
+    audioSession.pauseAll(false);
     this._stopTracking();
     this._pauseSessionClock();
     this._runStarted = false;
