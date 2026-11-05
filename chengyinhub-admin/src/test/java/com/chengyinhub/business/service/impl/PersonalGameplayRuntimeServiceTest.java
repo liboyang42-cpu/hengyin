@@ -517,6 +517,132 @@ class PersonalGameplayRuntimeServiceTest {
         }
     }
 
+    @Test void completedClaimCommitsStateAndReceiptAndReplaysThroughRealTransaction() throws Exception {
+        prepareCompletedClaim();
+        try (CompletedClaimDatabase db = new CompletedClaimDatabase()) {
+            int version = session.getVersion();
+            String before = session.getStateJson();
+            Map<String,Object> first = db.runtime.themeAction(7L, session.getId(), version,
+                    "database-claim", "RECEIVE", "claim-food");
+            TopicRouteSession saved = db.row();
+            assertEquals(version + 1, saved.getVersion());
+            assertEquals(TopicRouteSession.STATUS_COMPLETED, saved.getStatus());
+            assertEquals(session.getCompletedAt(), saved.getCompletedAt());
+            assertNotEquals(before, saved.getStateJson());
+            assertFalse(json.readTree(saved.getStateJson()).path("themeRuntime").path("pending").has("claim-food"));
+            TopicRouteAction receipt = db.real.selectActionByAction(session.getId(), 7L, "theme:database-claim");
+            assertNotNull(receipt);
+            assertEquals(json.valueToTree(first), json.readTree(receipt.getResponseJson()));
+            Map<String,Object> replay = db.runtime.themeAction(7L, session.getId(), version,
+                    "database-claim", "RECEIVE", "claim-food");
+            assertEquals(json.valueToTree(first), json.valueToTree(replay));
+            assertEquals(1, db.actionCount());
+            assertEquals(saved.getStateJson(), db.row().getStateJson());
+            assertEquals(saved.getVersion(), db.row().getVersion());
+            verify(db.boundary, times(1)).updateCompletedClaimCas(any());
+            verify(db.boundary, never()).updateStateCas(any());
+        }
+    }
+
+    @Test void completedClaimCasFailureRollsBackInsertedReceiptInRealTransaction() throws Exception {
+        prepareCompletedClaim();
+        try (CompletedClaimDatabase db = new CompletedClaimDatabase()) {
+            doReturn(0).when(db.boundary).updateCompletedClaimCas(any());
+            ServiceException failure = assertThrows(ServiceException.class,
+                    () -> db.runtime.themeAction(7L, session.getId(), session.getVersion(),
+                            "database-conflict", "RECEIVE", "claim-food"));
+            assertEquals(Integer.valueOf(409), failure.getCode());
+            verify(db.boundary).insertAction(any());
+            verify(db.boundary, never()).updateActionResponse(anyLong(), anyString());
+            assertEquals(0, db.actionCount(), "the actual inserted receipt must roll back, not remain as {}");
+            db.assertOriginalState();
+        }
+    }
+
+    @Test void completedClaimReceiptFinalizationFailureRollsBackStateAndReceiptInRealTransaction() throws Exception {
+        prepareCompletedClaim();
+        try (CompletedClaimDatabase db = new CompletedClaimDatabase()) {
+            doAnswer(invocation -> {
+                assertEquals(1, db.real.updateActionResponse(invocation.getArgument(0), invocation.getArgument(1)));
+                throw new IllegalStateException("injected failure after receipt SQL");
+            }).when(db.boundary).updateActionResponse(anyLong(), anyString());
+            IllegalStateException failure = assertThrows(IllegalStateException.class,
+                    () -> db.runtime.themeAction(7L, session.getId(), session.getVersion(),
+                            "database-finalization", "RECEIVE", "claim-food"));
+            assertEquals("injected failure after receipt SQL", failure.getMessage());
+            verify(db.boundary).updateCompletedClaimCas(any());
+            verify(db.boundary).updateActionResponse(anyLong(), anyString());
+            assertEquals(0, db.actionCount());
+            db.assertOriginalState();
+        }
+    }
+
+    /** Real service transaction and mapper XML; topic/arrival collaborators remain the existing test stubs.
+     * This verifies H2 state/receipt atomicity, not MySQL concurrency or external reward settlement. */
+    private final class CompletedClaimDatabase implements AutoCloseable {
+        final org.apache.ibatis.datasource.pooled.PooledDataSource dataSource;
+        final TopicRouteSessionMapper real;
+        final TopicRouteSessionMapper boundary;
+        final com.chengyinhub.business.service.ITopicRouteRuntimeService runtime;
+        final String originalState = session.getStateJson();
+        final Integer originalVersion = session.getVersion();
+
+        CompletedClaimDatabase() throws Exception {
+            dataSource = new org.apache.ibatis.datasource.pooled.PooledDataSource("org.h2.Driver",
+                    "jdbc:h2:mem:claim_service_" + UUID.randomUUID() + ";MODE=MySQL", "sa", "");
+            org.apache.ibatis.session.Configuration cfg = new org.apache.ibatis.session.Configuration();
+            cfg.setEnvironment(new org.apache.ibatis.mapping.Environment("claim-service",
+                    new org.mybatis.spring.transaction.SpringManagedTransactionFactory(), dataSource));
+            String resource = "mapper/business/TopicRouteSessionMapper.xml";
+            try (java.io.InputStream in = org.apache.ibatis.io.Resources.getResourceAsStream(resource)) {
+                new org.apache.ibatis.builder.xml.XMLMapperBuilder(in, cfg, resource, cfg.getSqlFragments()).parse();
+            }
+            try (java.sql.Connection connection = dataSource.getConnection(); java.sql.Statement st = connection.createStatement()) {
+                st.execute("create table topic_route_session(id bigint auto_increment primary key,activity_id bigint,"
+                        + "topic_id bigint,member_id bigint,play_instance_id varchar(100),config_version bigint,"
+                        + "config_snapshot_json clob,state_json clob,status int,current_node_id bigint,"
+                        + "recommended_node_id bigint,seed bigint,version int,completed_at timestamp,"
+                        + "create_time timestamp,update_time timestamp)");
+                st.execute("create table topic_route_action(id bigint auto_increment primary key,session_id bigint,"
+                        + "member_id bigint,node_id bigint,action_id varchar(100),receipt_id varchar(200),"
+                        + "outcome_code varchar(50),response_json clob,create_time timestamp,"
+                        + "unique(session_id,member_id,action_id),unique(session_id,receipt_id))");
+            }
+            org.mybatis.spring.SqlSessionTemplate sql = new org.mybatis.spring.SqlSessionTemplate(
+                    new org.apache.ibatis.session.SqlSessionFactoryBuilder().build(cfg));
+            real = sql.getMapper(TopicRouteSessionMapper.class);
+            session.setCompletedAt(new Date(1793494800000L));
+            assertEquals(1, real.insertSession(session));
+            boundary = mock(TopicRouteSessionMapper.class, org.mockito.AdditionalAnswers.delegatesTo(real));
+            org.springframework.test.util.ReflectionTestUtils.setField(service, "routeMapper", boundary);
+            org.springframework.aop.framework.ProxyFactory factory = new org.springframework.aop.framework.ProxyFactory(service);
+            factory.setInterfaces(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
+            factory.addAdvice(new org.springframework.transaction.interceptor.TransactionInterceptor(
+                    new org.springframework.jdbc.datasource.DataSourceTransactionManager(dataSource),
+                    new org.springframework.transaction.annotation.AnnotationTransactionAttributeSource()));
+            runtime = (com.chengyinhub.business.service.ITopicRouteRuntimeService) factory.getProxy();
+        }
+
+        TopicRouteSession row() { return real.selectAccessibleById(session.getId(), 7L); }
+
+        int actionCount() throws Exception {
+            try (java.sql.Connection connection = dataSource.getConnection(); java.sql.Statement st = connection.createStatement();
+                 java.sql.ResultSet rs = st.executeQuery("select count(*) from topic_route_action")) {
+                assertTrue(rs.next()); return rs.getInt(1);
+            }
+        }
+
+        void assertOriginalState() {
+            TopicRouteSession saved = row();
+            assertEquals(originalState, saved.getStateJson());
+            assertEquals(originalVersion, saved.getVersion());
+            assertEquals(TopicRouteSession.STATUS_COMPLETED, saved.getStatus());
+            assertEquals(session.getCompletedAt(), saved.getCompletedAt());
+        }
+
+        @Override public void close() { dataSource.forceCloseAll(); }
+    }
+
     private void prepareCompletedClaim() throws Exception {
         ObjectNode state=(ObjectNode)stored();state.put("status","COMPLETED");
         state.with("themeRuntime").with("sources").put("claim-food",true);
