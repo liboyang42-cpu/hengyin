@@ -50,3 +50,8 @@ The cloud nickname lookup at `_fillPeerName` was the thirteenth silent call in c
 The owner has now requested the remaining page fixes and real rig walks. Those are in progress. The shared backend has been identified by the owner as source `c09b51b871d6d2311aeabb2736cd6cef57df61df`; the local template read projection is newer and cannot yet be claimed HTTP-proven on that JAR.
 
 STATUS: PARTIAL - nickname CI follow-up fixed and checked; expanded page work and rig walks in progress.
+
+
+Monthly recap source follow-up: added the server's existing `TOPIC_FINISH_<topicId>` first-completion facts for themes absent from route sessions that month. Badge ownership/type/code/deletion/date, current topic visibility, and a valid owned paid registration are checked. Existing completed route sessions take precedence for the same theme/month. Badge cursors are negative so two source tables cannot collide; large IDs stay strings. No completion, reward, payment or write rule changed. Twenty monthly client/date tests pass, with added negative-cursor isolation tests; Java SQL/service tests were added. HTTP proof still requires the shared JAR to advance from c09b51b.
+
+STATUS: PARTIAL - monthly source fix ready; expanded page fixes and current-JAR walks continue.

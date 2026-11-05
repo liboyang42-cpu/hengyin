@@ -19,3 +19,15 @@ test('invalid item does not replace confirmed snapshot',async()=>{const s=setup(
 test('current 403 refresh clears titles whose access may have been revoked',async()=>{const s=setup();let p=s.client.load('2026-10');ok(s.sent[0],result());await p;p=s.client.load('2026-10');s.sent[1].success({code:403,msg:'denied'});await assert.rejects(p);assert.equal(s.client.snapshot(),null);});
 
 test('next page replaces previous facts whose visibility was not revalidated',async()=>{const s=setup();let p=s.client.load('2026-10');ok(s.sent[0],result({hasMore:true,nextBeforeId:'99'}));await p;p=s.client.next();ok(s.sent[1],result({items:[]}));assert.deepEqual((await p).items,[]);assert.deepEqual(s.client.snapshot().items,[]);});
+
+test('first-theme-completion cursor cannot collide with a route session cursor',async()=>{
+  const s=setup();let p=s.client.load('2026-10');
+  ok(s.sent[0],result({items:[{id:'9'},{id:'-9'}],hasMore:true,nextBeforeId:'-9'}));
+  assert.deepEqual((await p).items.map(row=>row.id),['9','-9']);
+  p=s.client.next();assert.equal(s.sent[1].data.beforeId,'-9');
+  ok(s.sent[1],result({items:[{id:'-9007199254740999'}]}));
+  assert.equal((await p).items[0].id,'-9007199254740999');
+});
+for(const kind of ['places','stamps'])test('negative completion cursor is rejected for '+kind,async()=>{
+  const s=setup(),p=s.client.load('2026-10',kind);ok(s.sent[0],result({kind,items:[{id:'-9'}]}));await assert.rejects(p,/编号/);
+});

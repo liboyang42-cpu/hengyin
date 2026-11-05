@@ -24,6 +24,35 @@
                 and (a.member_id=#{memberId} or exists (select 1 from club_member active_member
                   where active_member.club_id=a.club_id and active_member.member_id=#{memberId}
                     and active_member.status=1 and active_member.del_flag=0))))))
+        union all
+        <!-- Negative cursors distinguish first-theme-completion facts from route session IDs. -->
+        select -b.id as id,cast(b.source_id as char) as objectId,cms_topic.name as title,
+          date_format(b.obtain_time,'%Y-%m-%d %H:%i:%s') as occurredAt
+        from player_badge b join cms_topic on cms_topic.id=b.source_id
+        where b.member_id=#{memberId} and b.source_type=2 and b.del_flag=0
+          and b.badge_code=concat('TOPIC_FINISH_',b.source_id)
+          and b.obtain_time &gt;= #{start} and b.obtain_time &lt; #{end}
+          and cms_topic.status=1 and cms_topic.user_status=1 and cms_topic.del_flag=0 and cms_topic.is_draft=0
+          and (cms_topic.club_id is null or cms_topic.club_id=0 or exists (
+            select 1 from club live_club where live_club.id=cms_topic.club_id and live_club.del_flag=0))
+          and <include refid="com.chengyinhub.business.mapper.CmsTopicMapper.primaryCirclePublicGate"/>
+          and <include refid="com.chengyinhub.business.mapper.CmsTopicMapper.clubMemberOnlyGate"/>
+          and not exists (select 1 from topic_route_session completed_route
+            where completed_route.member_id=b.member_id and completed_route.topic_id=b.source_id
+              and completed_route.status=1 and completed_route.completed_at &gt;= #{start}
+              and completed_route.completed_at &lt; #{end})
+          and (exists (select 1 from cms_registration registration
+            where registration.member_id=#{memberId} and registration.owner_type=1
+              and registration.owner_id=b.source_id and registration.payment_status=2 and registration.registration_status=2)
+            or exists (select 1 from cms_registration registration join cms_activity a
+              on registration.owner_type=2 and registration.owner_id=a.id
+            where registration.member_id=#{memberId} and registration.payment_status=2 and registration.registration_status=2
+              and a.topic_id=b.source_id and a.status=1 and a.publish_status=1 and a.del_flag=0 and a.cancel_time is null
+              and (a.club_id is null or a.club_id=0 or (exists (
+                select 1 from club active_club where active_club.id=a.club_id and active_club.del_flag=0)
+                and (a.member_id=#{memberId} or exists (select 1 from club_member active_member
+                  where active_member.club_id=a.club_id and active_member.member_id=#{memberId}
+                    and active_member.status=1 and active_member.del_flag=0))))))
       </when>
       <when test="kind == 'places'">
         select f.id,cast(f.poi_id as char) as objectId,p.name as title,
