@@ -1,0 +1,24 @@
+{
+ "lead": 990005,
+ "cover": "media-asset:1",
+ "club": 990004,
+ "topic": 990014,
+ "session": 9,
+ "regs": {
+  "m6-fe29-p1": {
+   "member": 990006,
+   "reg": 74,
+   "name": "钱小满"
+  },
+  "m6-fe29-p2": {
+   "member": 990007,
+   "reg": 75,
+   "name": "孙一禾"
+  },
+  "m6-fe29-p3": {
+   "member": 990008,
+   "reg": 76,
+   "name": "白若川"
+  }
+ }
+}
