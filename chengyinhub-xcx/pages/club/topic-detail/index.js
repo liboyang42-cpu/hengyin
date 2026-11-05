@@ -383,7 +383,9 @@ Page({
     this._canViewVerify = stats.canViewVerify === true;
     const statusKey = (auditKey === 'reviewing' || auditKey === 'rejected')
       ? auditKey
-      : (this._directorStatusKey || auditKey);
+      : (this._directorStatusKey ? this.sessionOverKey(this._directorStatusKey) : auditKey);
+    // 统计晚于 projection 到达时,p3 N19 的「已取消」也要在这里补上
+    if (statusKey === 'ended' && this._directorStatusKey && this.sessionOverCancelled(this._directorStatusKey)) this._sessionCancelled = true;
     const state = STATES[statusKey] || STATES.reviewing;
     const plan = this.resolvePrimary(state, statusKey, raw);
     this.setData({
@@ -638,13 +640,14 @@ Page({
 
   // 导演台每次拉到 projection 都回调这里:场次状态 → 页面六态。审核中/未通过仍以审核态为准。
   applyProjectionStatus(status) {
-    const key = SESSION_STATUS_KEYS[String(status || '').toUpperCase()];
-    if (!key) return;
-    this._directorStatusKey = key;
+    const projected = SESSION_STATUS_KEYS[String(status || '').toUpperCase()];
+    if (!projected) return;
+    this._directorStatusKey = projected;
     if (this._auditKey === 'reviewing' || this._auditKey === 'rejected') return;
+    const key = this.sessionOverKey(projected);
     const state = STATES[key];
     // 已取消的场次按「已结束」渲染,但不开核销区(取消场没有可核销的人)
-    const cancelled = String(status || '').toUpperCase() === 'CANCELLED';
+    const cancelled = String(status || '').toUpperCase() === 'CANCELLED' || this.sessionOverCancelled(projected);
     this._sessionCancelled = cancelled;
     // 开始准备/开始活动/结束活动是导演台写动作,只给 canDirect;已结束的主键是结算报告,不归导演台
     const directorAction = key !== 'ended';
@@ -655,6 +658,17 @@ Page({
     });
     this.applyVerifyVisibility();
   },
+
+  // 第十二轮 k9(p3 N19):从没开过局的场次(导演台 projection 恒为 NOT_PREPARED)过了结束时间或被取消后,
+  // 主键仍是「开始准备」,点下去什么也做不成。topic-manage-stats 的本场 sessionStatus 按服务端时钟
+  // 已经判它 FINISHED / CANCELLED(没有 game_session 时才会这样落)—— 这时按已结束渲染,主键回到结算报告。
+  sessionOverStatus(projectedKey) {
+    if (projectedKey !== 'confirmed' || !this._directorActivityId) return '';
+    const s = String((this._manageStats || {}).sessionStatus || '').toUpperCase();
+    return s === 'FINISHED' || s === 'CANCELLED' ? s : '';
+  },
+  sessionOverKey(projectedKey) { return this.sessionOverStatus(projectedKey) ? 'ended' : projectedKey; },
+  sessionOverCancelled(projectedKey) { return this.sessionOverStatus(projectedKey) === 'CANCELLED'; },
 
   // 底部主键在**没场次**时的出口(§5-断6)。导演台的状态流转(开始准备/开始活动/结束活动)
   // 都以一场具体场次为对象(onPrimary 的 _directorActivityId 闸),主题下没有这一场时它
