@@ -1,0 +1,183 @@
+--- a/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js
++++ b/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js
+@@ -315,6 +315,19 @@
+   else if (tag === 'input') { el = document.createElement('wx-input'); var ip = document.createElement('input'); el.appendChild(ip); el.__inp = ip; el.__anchorStart = ip; bindInput(el, ip); }
+   else if (tag === 'textarea') { el = document.createElement('wx-textarea'); var ta = document.createElement('textarea'); el.appendChild(ta); el.__inp = ta; el.__anchorStart = ta; bindInput(el, ta); }
+   else if (tag === 'image' || tag === 'cover-image') { el = document.createElement('wx-image'); var bg = document.createElement('div'); el.appendChild(bg); el.__bg = bg; el.__anchorStart = bg; }
++  else if (tag === 'video') {
++    el = document.createElement('wx-video');
++    var video = document.createElement('video'); video.playsInline = true;
++    video.style.cssText = 'display:block;width:100%;height:100%;object-fit:contain';
++    el.appendChild(video); el.__media = video; el.__anchorStart = video;
++    observeMedia(video, 'video');
++    ['play', 'waiting', 'ended', 'error', 'loadedmetadata', 'timeupdate'].forEach(function (event) {
++      video.addEventListener(event, function () {
++        fire(el, event, { currentTime: video.currentTime, duration: Number.isFinite(video.duration) ? video.duration : 0,
++          width: video.videoWidth, height: video.videoHeight, errMsg: video.error ? 'video:fail ' + video.error.code : '' });
++      });
++    });
++  }
+   else if (tag === 'swiper') { el = document.createElement('wx-swiper'); var tr = document.createElement('div'); tr.className = 'mp-track'; el.appendChild(tr); el.__track = tr; }
+   else el = document.createElement('wx-' + tag);
+   el.__tag = tag; el.__k = vn.k; el.__owner = owner;
+@@ -344,6 +357,7 @@
+   el.remove();
+ }
+ function detachTree(el) {
++  if (el.__media) { el.__media.pause(); el.__media.removeAttribute('src'); el.__media.load(); MP.videoLive.delete(el.__media.__mediaId); }
+   if (el.__io) { el.__io.forEach(function (o) { o.disconnect(); }); }
+   var kids = el.__kids || [];
+   kids.forEach(function (k) { if (k.nodeType === 1) detachTree(k); });
+@@ -434,7 +448,14 @@
+ }
+ function afterProps(el, vn, owner, isNew) {
+   var p = vn.props, tag = el.__tag;
+-  if (tag === 'image' || tag === 'cover-image') {
++  if (tag === 'video') {
++    var video = el.__media, source = assetUrl(p.src, dirOf(owner.__path));
++    video.autoplay = isOn(p.autoplay); video.controls = isOn(p.controls); video.muted = isOn(p.muted); video.loop = isOn(p.loop);
++    video.style.objectFit = p['object-fit'] || 'contain';
++    var poster = p.poster ? assetUrl(p.poster, dirOf(owner.__path)) : '';
++    if (poster && video.getAttribute('poster') !== poster) video.poster = poster;
++    if (video.__src !== source) { video.__src = source; video.src = source; }
++  } else if (tag === 'image' || tag === 'cover-image') {
+     var src = assetUrl(p.src, dirOf(owner.__path));
+     var mode = p.mode || 'scaleToFill';
+     if (el.__src !== src) {
+@@ -911,23 +932,45 @@
+ var DEV = window.__DEVICE || { w: 390, h: 844, sb: 47 };
+ var SYS = { windowWidth: DEV.w, windowHeight: DEV.h, screenWidth: DEV.w, screenHeight: DEV.h, statusBarHeight: DEV.sb, pixelRatio: Math.min(3, window.devicePixelRatio || 2), platform: 'ios', model: 'iPhone 14', system: 'iOS 17.5', brand: 'iPhone', SDKVersion: '3.6.0', version: '8.0.53', language: 'zh_CN', theme: 'dark', safeArea: { top: 47, left: 0, right: 390, bottom: 810, width: 390, height: 763 }, screenTop: 0, benchmarkLevel: 40, enableDebug: false, fontSizeSetting: 17 };
+ function ok(o, res) { rST(function () { if (o && o.success) o.success(res || { errMsg: 'ok' }); if (o && o.complete) o.complete(res || {}); }, 0); return Promise.resolve(res || {}); }
++MP.audioLog = []; MP.videoLog = []; MP.audioLive = new Map(); MP.videoLive = new Map();
++var mediaId = 0;
++function logMedia(kind, a, event) {
++  MP[kind + 'Log'].push({ t: Date.now(), id: a.__mediaId, event: event,
++    src: String(a.__src || '').split('?')[0], currentTime: a.currentTime, paused: a.paused,
++    readyState: a.readyState, volume: a.volume, error: a.error ? a.error.code : null });
++}
++function observeMedia(a, kind) {
++  a.__mediaId = ++mediaId; MP[kind + 'Live'].set(a.__mediaId, a); logMedia(kind, a, 'create');
++  ['loadstart', 'play', 'playing', 'pause', 'waiting', 'canplay', 'timeupdate', 'ended', 'error'].forEach(function (event) {
++    a.addEventListener(event, function () { logMedia(kind, a, event); });
++  });
++}
++MP.mediaState = function () {
++  var out = [];
++  ['audio', 'video'].forEach(function (kind) { MP[kind + 'Live'].forEach(function (a, id) {
++    out.push({ kind: kind, id: id, src: String(a.__src || '').split('?')[0], paused: a.paused,
++      currentTime: a.currentTime, readyState: a.readyState, volume: a.volume });
++  }); });
++  return out;
++};
+ function audioCtx() {
+-  var a = new Audio(); a.preload = 'auto';
++  var a = new Audio(); a.preload = 'auto'; observeMedia(a, 'audio');
+   var L = { play: [], pause: [], ended: [], error: [], timeupdate: [], canplay: [], waiting: [], stop: [], seeked: [], seeking: [] };
+   function emit(t, arg) { (L[t] || []).slice().forEach(function (f) { try { f(arg); } catch (e) {} }); }
+-  a.addEventListener('play', function () { emit('play'); }); a.addEventListener('pause', function () { if (!a.__stopping) emit('pause'); });
++  // wx onPlay represents started audio, not the browser accepting a pending play() request.
++  a.addEventListener('playing', function () { emit('play'); }); a.addEventListener('pause', function () { if (!a.__stopping) emit('pause'); });
+   a.addEventListener('ended', function () { emit('ended'); }); a.addEventListener('error', function () { emit('error', { errCode: 10001, errMsg: 'error' }); });
+   a.addEventListener('timeupdate', function () { emit('timeupdate'); }); a.addEventListener('canplay', function () { emit('canplay'); });
+   a.addEventListener('waiting', function () { emit('waiting'); }); a.addEventListener('seeked', function () { emit('seeked'); });
+   var ctx = {
+-    get src() { return a.__src || ''; }, set src(v) { a.__src = v; a.src = assetUrl(v); },
++    get src() { return a.__src || ''; }, set src(v) { a.__src = v; logMedia('audio', a, 'src'); a.src = assetUrl(v); },
+     get duration() { return isFinite(a.duration) ? a.duration : 0; }, get currentTime() { return a.currentTime; },
+-    get paused() { return a.paused; }, get volume() { return a.volume; }, set volume(v) { a.volume = v; },
++    get paused() { return a.paused; }, get volume() { return a.volume; }, set volume(v) { a.volume = v; logMedia('audio', a, 'volume'); },
+     get loop() { return a.loop; }, set loop(v) { a.loop = !!v; }, get autoplay() { return a.autoplay; }, set autoplay(v) { a.autoplay = !!v; if (v) a.play().catch(function () {}); },
+     obeyMuteSwitch: false, startTime: 0, playbackRate: 1, buffered: 0,
+-    play: function () { MP.audioEls.add(a); a.playbackRate = 1; a.play().catch(function (e) { MP.log.push('audio play blocked ' + e.message); }); },
+-    pause: function () { a.pause(); }, stop: function () { a.__stopping = true; a.pause(); try { a.currentTime = 0; } catch (e) {} a.__stopping = false; emit('stop'); },
+-    seek: function (t) { try { a.currentTime = t; } catch (e) {} }, destroy: function () { a.pause(); a.removeAttribute('src'); MP.audioEls.delete(a); },
++    play: function () { logMedia('audio', a, 'play()'); MP.audioEls.add(a); a.playbackRate = 1; a.play().catch(function (e) { MP.log.push('audio play blocked ' + e.message); }); },
++    pause: function () { logMedia('audio', a, 'pause()'); a.pause(); }, stop: function () { logMedia('audio', a, 'stop()'); a.__stopping = true; a.pause(); try { a.currentTime = 0; } catch (e) {} a.__stopping = false; emit('stop'); },
++    seek: function (t) { try { a.currentTime = t; } catch (e) {} }, destroy: function () { logMedia('audio', a, 'destroy()'); a.pause(); a.removeAttribute('src'); a.load(); MP.audioEls.delete(a); MP.audioLive.delete(a.__mediaId); },
+   };
+   ['Play', 'Pause', 'Ended', 'Error', 'TimeUpdate', 'Canplay', 'Waiting', 'Stop', 'Seeked', 'Seeking'].forEach(function (n) {
+     var t = n.toLowerCase(); ctx['on' + n] = function (f) { L[t].push(f); }; ctx['off' + n] = function (f) { L[t] = f ? L[t].filter(function (x) { return x !== f; }) : []; };
+@@ -952,6 +995,16 @@
+   createIntersectionObserver: function (comp, opts) { return new IObserver(comp && comp.__root ? comp : null, opts); },
+   nextTick: function (f) { Promise.resolve().then(function () { rST(f, 0); }); },
+   createInnerAudioContext: audioCtx, getBackgroundAudioManager: audioCtx,
++  createVideoContext: function (id, owner) {
++    function media() { var root = owner && owner.__root || MP.curPage && MP.curPage.__root || document;
++      var host = root.querySelector('#' + CSS.escape(id)); return host && host.__media; }
++    return {
++      play: function () { var a = media(); if (a) a.play().catch(function (e) { MP.log.push('video play blocked ' + e.message); }); },
++      pause: function () { var a = media(); if (a) a.pause(); },
++      stop: function () { var a = media(); if (a) { a.pause(); try { a.currentTime = 0; } catch (_) {} } },
++      seek: function (time) { var a = media(); if (a) a.currentTime = time; },
++    };
++  },
+   setInnerAudioOption: function (o) { return ok(o); },
+   createOffscreenCanvas: function (o) { var c = document.createElement('canvas'); c.width = (o && o.width) || 300; c.height = (o && o.height) || 150; return canvasNode(c); },
+   vibrateShort: function (o) { try { navigator.vibrate && navigator.vibrate(12); } catch (e) {} MP.ui.haptic && MP.ui.haptic(); return ok(o); },
+--- a/docs/delivery/cloud-walk-20261101/rig/mpweb/src/nav.js
++++ b/docs/delivery/cloud-walk-20261101/rig/mpweb/src/nav.js
+@@ -81,13 +81,17 @@
+   var url = mapUrl(o.url);
+   var entry = { t: Date.now(), method: 'UPLOAD', url: url, reqBody: o.name, status: 0, ms: 0, resBody: '' }; MP.net.push(entry);
+   var src = String(o.filePath || '');
+-  var getBlob = /^data:/.test(src) || /^blob:/.test(src) || /^\//.test(src) || /^mp\//.test(src) ? fetch(/^(data|blob):/.test(src) ? src : MP.assetUrl(src)).then(function (r) { return r.blob(); })
+-    : fetch(MP.samplePhoto()).then(function (r) { return r.blob(); });
++  var fileUrl = /^(data|blob):/.test(src) ? src : /^https?:/.test(src) ? mapUrl(src)
++    : /^\/(build|mp)\//.test(src) ? src : MP.assetUrl(src);
++  var localFile = /^(data|blob):/.test(fileUrl) || new URL(fileUrl, location.href).origin === location.origin;
++  var getBlob = localFile ? fetch(fileUrl).then(function (r) { if (!r.ok) throw new Error('selected file HTTP ' + r.status); return r.blob(); })
++    : Promise.reject(new Error('selected file is outside approved rig origin'));
+   var task = { abort: function () {}, onProgressUpdate: function () {}, offProgressUpdate: function () {}, onHeadersReceived: function () {} };
+   getBlob.then(function (blob) {
+     var fd = new FormData(); var fm = o.formData || {};
+     for (var k in fm) fd.append(k, fm[k]);
+-    fd.append(o.name || 'file', blob, 'rig-upload.' + ((blob.type || '').split('/')[1] || 'jpg'));
++    var extension = { 'audio/mpeg': 'mp3', 'video/mp4': 'mp4', 'image/jpeg': 'jpg' }[blob.type] || ((blob.type || '').split('/')[1] || 'jpg');
++    fd.append(o.name || 'file', blob, 'rig-upload.' + extension);
+     var h = Object.assign({}, o.header || {}); for (var hk in h) if (hk.toLowerCase() === 'content-type') delete h[hk];
+     return fetch(url, { method: 'POST', headers: h, body: fd });
+   }).then(function (r) { return r.text().then(function (t) {
+@@ -176,7 +180,23 @@
+ };
+ wx.requestVirtualPayment = wx.requestPayment;
+ wx.requestOrderPayment = wx.requestPayment;
+-wx.chooseMedia = function (o) { var p = MP.samplePhoto(); setTimeout(function () { var r = { tempFiles: [{ tempFilePath: p, size: 40000, fileType: 'image', width: 640, height: 480 }], type: 'image', errMsg: 'chooseMedia:ok' }; o.success && o.success(r); o.complete && o.complete(r); }, 50); };
++// [SEAM] Explicit queued files stand in for the native picker; bytes/upload/review stay real.
++wx.chooseMedia = function (o) {
++  var file = (MP.mediaQueue || []).shift();
++  if (!file && (o.mediaType || []).includes('video')) {
++    setTimeout(function () { var r = { errMsg: 'chooseMedia:fail cancel' }; o.fail && o.fail(r); o.complete && o.complete(r); }, 50); return;
++  }
++  var picked = file || { tempFilePath: MP.samplePhoto(), size: 40000, fileType: 'image', width: 640, height: 480 };
++  setTimeout(function () { var r = { tempFiles: [picked], type: picked.fileType || 'image', errMsg: 'chooseMedia:ok' }; o.success && o.success(r); o.complete && o.complete(r); }, 50);
++};
++wx.chooseMessageFile = function (o) {
++  var file = (MP.fileQueue || []).shift();
++  setTimeout(function () {
++    var r = file ? { tempFiles: [file], errMsg: 'chooseMessageFile:ok' } : { errMsg: 'chooseMessageFile:fail cancel' };
++    if (file) { o.success && o.success(r); } else { o.fail && o.fail(r); }
++    o.complete && o.complete(r);
++  }, 50);
++};
+ wx.chooseImage = function (o) { var p = MP.samplePhoto(); setTimeout(function () { var r = { tempFilePaths: [p], tempFiles: [{ path: p, size: 40000 }], errMsg: 'chooseImage:ok' }; o.success && o.success(r); o.complete && o.complete(r); }, 50); };
+ wx.getImageInfo = function (o) { var im = new Image(); im.onload = function () { var r = { width: im.naturalWidth, height: im.naturalHeight, path: o.src, type: 'jpeg', orientation: 'up' }; o.success && o.success(r); o.complete && o.complete(r); }; im.onerror = function () { var f = { errMsg: 'getImageInfo:fail' }; o.fail && o.fail(f); o.complete && o.complete(f); }; im.src = /^data:|^blob:/.test(o.src) ? o.src : MP.assetUrl(o.src); };
+ wx.cropImage = function (o) { setTimeout(function () { o.success && o.success({ tempFilePath: o.src }); o.complete && o.complete({}); }, 20); };
+--- a/docs/delivery/cloud-walk-20261101/rig/mpweb/walk.mjs
++++ b/docs/delivery/cloud-walk-20261101/rig/mpweb/walk.mjs
+@@ -18,7 +18,7 @@
+
+ const BASE = process.env.RIG_WEB || 'http://127.0.0.1:8097';
+ const SHOTS = process.env.RIG_SHOTS || path.join(process.cwd(), 'shots');
+-const CHROME = process.env.CHROME || ['/usr/bin/google-chrome', '/opt/pw-browsers/chromium-1243/chrome-linux/chrome'].find((p) => fs.existsSync(p));
++const CHROME = process.env.CHROME || ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/usr/bin/google-chrome', '/opt/pw-browsers/chromium-1243/chrome-linux/chrome'].find((p) => fs.existsSync(p));
+
+ export async function launch(opts = {}) {
+   const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, args: ['--no-sandbox', '--disable-dev-shm-usage', '--autoplay-policy=no-user-gesture-required', '--lang=zh-CN'] });
+@@ -41,6 +41,7 @@
+     console: () => consoleLog.slice(), errors: () => pageErrors.slice(),
+     net: () => page.evaluate(() => window.MPWEB.net.slice()),
+     log: () => page.evaluate(() => window.MPWEB.log.slice()),
++    media: () => page.evaluate(() => ({ state: MPWEB.mediaState(), audio: MPWEB.audioLog.slice(), video: MPWEB.videoLog.slice() })),
+     route: () => page.evaluate(() => getCurrentPages().map((p) => p.route)),
+     data: (expr) => page.evaluate((e) => { const p = getCurrentPages().slice(-1)[0]; return e ? new Function('d', 'return d.' + e)(p.data) : p.data; }, expr || ''),
+     eval: (js) => page.evaluate(js),
