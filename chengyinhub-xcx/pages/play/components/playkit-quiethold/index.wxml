@@ -21,6 +21,7 @@
           aria-role="button" aria-label="开始安静挑战" hover-class="qt__b--press" hover-stay-time="80">
       {{running ? '安静中' : (preparing ? '准备中' : '开始')}}
     </view>
+    <view wx:if="{{micDenied && !skipped && !running}}" class="qt__s" aria-live="polite">需要授权麦克风才能开始</view>
     <view wx:if="{{skipped}}" class="qt__s">这一站已跳过</view>
     <view wx:elif="{{canSkip && !running && !preparing}}" class="qt__skip" bindtap="onSkip"
           aria-role="button" aria-label="跳过这一站" hover-class="qt__skip--press" hover-stay-time="80">跳过这一站</view>

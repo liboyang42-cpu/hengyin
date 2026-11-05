@@ -64,3 +64,34 @@ test('N4:内嵌检定卡铺进故事流就对准它(和内嵌玩法同一个 cha
     assert.equal(anchors.length, 4)
   } finally { global.setTimeout = realSet; global.clearTimeout = realClear }
 })
+
+test('N4 rig 复走:检定点数正好等于难度读「正好过线」,不写「过线 0 点」', () => {
+  const prev = { Behavior: global.Behavior, Component: global.Component }
+  let c = null
+  global.Behavior = (b) => b; global.Component = (x) => { c = x }
+  try { require('../../pages/play/components/playkit-journey-check/index.js') } finally { Object.assign(global, prev) }
+  const m = c.methods._marginText
+  assert.equal(m({ total: 13, dc: 13, success: true }), '正好过线')
+  assert.equal(m({ total: 15, dc: 13, success: true }), '过线 2 点')
+  assert.equal(m({ total: 9, dc: 13, success: false }), '差 4 点')
+})
+
+for (const [comp, fail] of [['playkit-quiethold', '_micFailure'], ['playkit-shout', '_failure']]) {
+  test(`k2 第 5 项遗留:${comp} 麦克风被拒时屏上写原因,重新开始时清掉`, () => {
+    const prev = { Behavior: global.Behavior, Component: global.Component, wx: global.wx }
+    let c = null
+    global.Behavior = (b) => b; global.Component = (x) => { c = x }; global.wx = global.wx || {}
+    try { delete require.cache[require.resolve(path.join(ROOT, `pages/play/components/${comp}/index.js`))]; require(path.join(ROOT, `pages/play/components/${comp}/index.js`)) } finally { Object.assign(global, prev) }
+    const events = []
+    const ctx = Object.assign({ data: Object.assign({}, c.data, { show: true }), setData(p) { Object.assign(this.data, p) },
+      triggerEvent(n) { events.push(n) } }, c.methods)
+    ctx._micDenied()
+    assert.equal(ctx.data.micDenied, true)
+    assert.deepEqual(events, ['micdenied'])
+    const wxml = fs.readFileSync(path.join(ROOT, `pages/play/components/${comp}/index.wxml`), 'utf8')
+    assert.match(wxml, /wx:if="\{\{micDenied && !skipped && !running\}\}"[^>]*>需要授权麦克风才能开始</)
+    const src = fs.readFileSync(path.join(ROOT, `pages/play/components/${comp}/index.js`), 'utf8')
+    assert.ok(!src.includes("this.triggerEvent('micdenied')\n") && src.includes('this._micDenied()'))
+    assert.match(src, /onStart\(\) \{\n\s+if \(this\.data\.skipped\) return;[^\n]*\n\s+if \(this\.data\.micDenied\) this\.setData\(\{ micDenied: false \}\)/)
+  })
+}

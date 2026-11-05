@@ -37,7 +37,7 @@ Component({
   },
   data: { left: '15.0', band: 'ok', running: false, preparing: false, stageKeys: [0],
     // calibration: '' 未校准 / 'calibrating' 正在听环境音 / 'calibrated' 已校准(切走、重开即作废)
-    calibration: '', thresholdText: '', rewardNote: '' },
+    calibration: '', thresholdText: '', rewardNote: '', micDenied: false },
   observers: {
     rewardCeiling(value) { this.setData({ rewardNote: rewardNote(value) }); },
     'show, seconds': function (show, seconds) {
@@ -103,20 +103,26 @@ Component({
         calibration: '', thresholdText: '',
         stageKeys: [key] }, () => { if (after && this.data.stageKeys[0] === key && !this._detached) after(); });
     },
+    /** 第十二轮 k8(k2 第 5 项遗留):麦克风被拒时屏上写出原因(与计步「需要授权微信运动才能计步」同口径),
+     *  失败次数照旧报给服务端,够了才出「跳过这一站」。重新开始时这句清掉。 */
+    _micDenied() {
+      this.setData({ micDenied: true });
+      this.triggerEvent('micdenied');
+    },
     _micFailure(attempt, error) {
       if (!this._current(attempt) || attempt.phase === 'finished') return;
       this._abort();
       const key = this.data.stageKeys[0];
       const canReport = () => !this._attempt && this.data.stageKeys[0] === key && this.data.show
         && !this._hidden && !this._closed && !this._detached;
-      if (denied(error)) { if (canReport()) this.triggerEvent('micdenied'); return; }
+      if (denied(error)) { if (canReport()) this._micDenied(); return; }
       cyToast('声音读取失败，请重试或退出');
       // 失败次数由服务端记,够两次后它才会给出「跳过这一站」
       if (canReport()) this.triggerEvent('readfail');
       if (typeof wx.getSetting === 'function') {
         try { wx.getSetting({
           success: (res) => {
-            if (canReport() && res && res.authSetting && res.authSetting['scope.record'] === false) this.triggerEvent('micdenied');
+            if (canReport() && res && res.authSetting && res.authSetting['scope.record'] === false) this._micDenied();
           },
           fail() { /* failure is already visible; unknown permission is not denial */ },
         }); } catch (settingError) { /* permission remains unknown; failure is already visible */ }
@@ -132,6 +138,7 @@ Component({
     },
     onStart() {
       if (this.data.skipped) return;   // 第十一轮 i1:跳过的站不再开局(服务端也拒)
+      if (this.data.micDenied) this.setData({ micDenied: false });   // 第十二轮 k8:重新开始时清掉上一次的拒绝原因
       if (!this.data.show || this._hidden || this._closed || this._detached) return;
       if (this._attempt && this._attempt.phase === 'finished') { this._abort(() => this.onStart()); return; }
       if (this._attempt) return;
