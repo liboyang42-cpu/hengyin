@@ -245,7 +245,7 @@ public class ProjectHomeReadServiceImpl implements IProjectHomeReadService {
         }
         host.put("recruit", buildRecruit(topic, invites));
         host.put("clubs", buildHostClubs(invites));
-        host.put("merchants", buildHostMerchants(topic));
+        host.put("merchants", buildHostMerchants(topic, invites));
         host.put("players", buildPlayers(topic.getId()));
         // 2026-10-31 业主:俱乐部 / 商家招商在发布之后做,发布时的开关决定工作台能用什么 —— 关着的那颗按钮灰掉。
         // 城市定向看公开承接池;自由探索看有没有开了商家承接的站(章节 recruit_enabled)。
@@ -407,7 +407,7 @@ public class ProjectHomeReadServiceImpl implements IProjectHomeReadService {
     }
 
     /** 主办方看得到承接商家的联系方式 —— 履约要靠他去催。 */
-    private List<Map<String, Object>> buildHostMerchants(CmsTopic topic) {
+    private List<Map<String, Object>> buildHostMerchants(CmsTopic topic, List<CoopInvite> invites) {
         CmsRegistrationMerchant rq = new CmsRegistrationMerchant();
         rq.setTopicId(topic.getId());
         rq.setDelFlag(0);
@@ -433,6 +433,14 @@ public class ProjectHomeReadServiceImpl implements IProjectHomeReadService {
             // 这个标记留着是为了**存量**:闸之前落库的自接记录仍在,前端要能标出来,
             // 别让它混在别人的报名里看不出。
             row.put("isSelf", r.getMemberId() != null && r.getMemberId().equals(topic.getMemberId()));
+            // 第十二轮 k4(j2 N-01):已中标的商家要等主办方再发一张带条款的邀约、他接受才有合作单。
+            // 确认后离开邀约页就再也回不去 —— 这里把「邀约到哪一步了」随行下发,招商弹窗据此给「发邀约」。
+            if (Long.valueOf(1L).equals(r.getAuditStatus()) && r.getMemberId() != null) {
+                CoopInvite termsInvite = termsInviteTo(invites, r.getMemberId());
+                row.put("inviteState", termsInvite == null ? "none"
+                        : (Integer.valueOf(INVITE_ACCEPTED).equals(termsInvite.getStatus()) ? "accepted" : "sent"));
+                if (termsInvite != null) row.put("inviteId", termsInvite.getId());
+            }
             out.add(row);
         }
         return out;
@@ -533,6 +541,47 @@ public class ProjectHomeReadServiceImpl implements IProjectHomeReadService {
         probe.setDelFlag(0);
         List<CmsRegistrationMerchant> list = registrationMerchantService.selectCmsRegistrationMerchantList(probe);
         return list == null ? new ArrayList<CmsRegistrationMerchant>() : list;
+    }
+
+    /** 发给该商家、还活着(待确认 / 已接受)的带条款邀约;已接受优先。历史节点邀约(inviteType=2)不算。 */
+    public static CoopInvite termsInviteTo(List<CoopInvite> invites, Long merchantMemberId) {
+        CoopInvite pending = null;
+        for (CoopInvite i : invites == null ? new ArrayList<CoopInvite>() : invites) {
+            if (i == null || !"merchant".equals(i.getToType()) || !merchantMemberId.equals(i.getToId())
+                    || Integer.valueOf(CoopInvite.TYPE_LEGACY_MERCHANT_NODE).equals(i.getInviteType())) continue;
+            if (Integer.valueOf(INVITE_ACCEPTED).equals(i.getStatus())) return i;
+            if (pending == null && Integer.valueOf(INVITE_PENDING).equals(i.getStatus())) pending = i;
+        }
+        return pending;
+    }
+
+    /**
+     * 第十二轮 k4(j2 N-01):城市定向里已中标(承接报名审核通过且选定)、却还没有已接受的带条款邀约的站名。
+     * 与开售闸 {@code TopicSaleFinalizationServiceImpl.assertStationMerchantsContracted} 同一批中标行;
+     * 只给主题主办方看(调用方负责判人),让他知道是哪一站卡着开售。
+     */
+    @Override
+    public List<String> uncontractedStationNames(CmsTopic topic) {
+        List<String> out = new ArrayList<>();
+        if (topic == null || topic.getId() == null
+                || !Integer.valueOf(com.chengyinhub.common.constant.ProductType.ORIENTEERING).equals(topic.getProductType())) return out;
+        CmsRegistrationMerchant rq = new CmsRegistrationMerchant();
+        rq.setTopicId(topic.getId());
+        rq.setAuditStatus(1L);
+        rq.setStatus(1L);
+        rq.setDelFlag(0);
+        List<CmsRegistrationMerchant> winners = registrationMerchantService.selectCmsRegistrationMerchantList(rq);
+        if (winners == null || winners.isEmpty()) return out;
+        List<CoopInvite> invites = livingInvites(topic.getId());
+        for (CmsRegistrationMerchant w : winners) {
+            if (w == null || w.getMemberId() == null) continue;
+            CoopInvite inv = termsInviteTo(invites, w.getMemberId());
+            if (inv != null && Integer.valueOf(INVITE_ACCEPTED).equals(inv.getStatus())) continue;
+            CmsTopicNode node = w.getNodeId() == null || w.getNodeId() == 0L ? null : topicNodeService.selectCmsTopicNodeById(w.getNodeId());
+            String name = node == null || node.getName() == null || node.getName().trim().isEmpty() ? "未命名站点" : node.getName().trim();
+            if (!out.contains(name)) out.add(name);
+        }
+        return out;
     }
 
     /** 只有待确认和已接受算「还活着」;拒绝/取消/顶替/过期都不是合作方。 */

@@ -1,6 +1,9 @@
 package com.chengyinhub.business.service;
 
+import java.util.List;
 import java.util.Map;
+
+import com.chengyinhub.business.domain.CmsTopic;
 
 /**
  * 项目主页聚合读。
@@ -17,4 +20,12 @@ public interface IProjectHomeReadService {
      * @return role=host/join 及对应身份需要的数据;都不是则抛异常(浏览态走原有主题详情)
      */
     Map<String, Object> getProjectHome(Long memberId, Long topicId);
+
+    /**
+     * 第十二轮 k4(j2 N-01):城市定向主题里已中标、但还没有已接受的带条款邀约(没有合作单)的站名。
+     * 只给主办方看,调用方负责判人。
+     */
+    default List<String> uncontractedStationNames(CmsTopic topic) {
+        return java.util.Collections.emptyList();
+    }
 }

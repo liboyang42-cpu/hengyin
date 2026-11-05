@@ -1406,8 +1406,16 @@ public class ApiCoopController extends BaseController {
                         return Long.compare(ib, ia);
                     });
                 }
+                List<CoopInvite> topicInvites = null;
                 for (Map<String, Object> row : registrationRows(registrations)) {
                     if (rows.size() >= RECEIVED_CANDIDATE_ROW_LIMIT) { hasMore = true; break; }
+                    // 第十二轮 k4(j2 N-01):已中标行带上带条款邀约的进度,「我的合作 · 收到的」据此给「发邀约」
+                    if (coopInviteService != null && Long.valueOf(1L).equals(row.get("auditStatus")) && row.get("memberId") instanceof Long) {
+                        if (topicInvites == null) topicInvites = livingTermsInvites(topic.getId());
+                        CoopInvite inv = com.chengyinhub.business.service.impl.ProjectHomeReadServiceImpl
+                                .termsInviteTo(topicInvites, (Long) row.get("memberId"));
+                        row.put("inviteState", inv == null ? "none" : (Integer.valueOf(1).equals(inv.getStatus()) ? "accepted" : "sent"));
+                    }
                     row.put("topicId", topic.getId());
                     row.put("topicName", topic.getName() == null ? "" : topic.getName());
                     rows.add(row);
@@ -1419,6 +1427,18 @@ public class ApiCoopController extends BaseController {
         d.put("rows", rows);
         d.put("hasMore", hasMore);
         return AjaxResult.success(d);
+    }
+
+    /** 本主题还活着(待确认 / 已接受)的邀约。 */
+    private List<CoopInvite> livingTermsInvites(Long topicId) {
+        CoopInvite q = new CoopInvite();
+        q.setTopicId(topicId);
+        List<CoopInvite> all = coopInviteService.selectCoopInviteList(q);
+        List<CoopInvite> out = new ArrayList<>();
+        for (CoopInvite i : all == null ? new ArrayList<CoopInvite>() : all) {
+            if (i != null && (Integer.valueOf(0).equals(i.getStatus()) || Integer.valueOf(1).equals(i.getStatus()))) out.add(i);
+        }
+        return out;
     }
 
     /** 候选池报名行统一装配:只给公开展示身份,不透出联系方式。 */

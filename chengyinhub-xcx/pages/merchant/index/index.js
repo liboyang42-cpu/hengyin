@@ -1221,6 +1221,11 @@ Page({
     const key = String(((e && e.currentTarget && e.currentTarget.dataset) || {}).key || '');
     const item = (this.data.inboxItems || []).find((row) => row.key === key);
     if (!item) return; if (!this.data.msgOpen && this.data.inboxItems.length > 1) { this.setData({ msgOpen: true }); return; } // 叠着时先展开(业主 10-23:像券包一样分层叠放、点开展开)
+    if (item.kind === 'event' && item.gameActivityId) {
+      if (this._navigating) return; this._navigating = true;
+      wx.navigateTo({ url: '/pages/merchant/game-node/index?activityId=' + item.gameActivityId, complete: () => { this._navigating = false; } });
+      return;
+    }
     if (item.kind === 'event') { this.goEvent({ currentTarget: { dataset: { type: item.type } } }); return; }
     if (this._navigating) return;
     let url = '';

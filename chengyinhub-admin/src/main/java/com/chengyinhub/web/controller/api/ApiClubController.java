@@ -198,6 +198,9 @@ public class ApiClubController extends BaseController {
     @Autowired
     private IAuditTaskService auditTaskService;
 
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.IProjectHomeReadService projectHomeReadService;
+
     @Autowired
     private IWxContentSecurityService wxContentSecurityService;
 
@@ -821,6 +824,21 @@ public class ApiClubController extends BaseController {
             p.setViewerCanManage(null);
         }
         if (reposts != null) for (ClubPostRepostItemVO r : reposts) if (r != null) r.setReposterMemberId(null);
+    }
+
+    /** 自由探索主题已确认终价:定价页锁价时写下的主题级「有人带」票(sub_type=guided)已带价。 */
+    private boolean freeExplorePriceConfirmed(Long topicId) {
+        if (topicId == null || omsTicketService == null) return false;
+        OmsTicket q = new OmsTicket();
+        q.setOwnerType(1L);
+        q.setOwnerId(topicId);
+        q.setSubType("guided");
+        List<OmsTicket> rows = omsTicketService.selectOmsTicketList(q);
+        if (rows == null) return false;
+        for (OmsTicket row : rows) {
+            if (row != null && row.getPrice() != null && !Integer.valueOf(2).equals(row.getDelFlag())) return true;
+        }
+        return false;
     }
 
     /**
@@ -1517,8 +1535,22 @@ public class ApiClubController extends BaseController {
                 saleQuery.setBizId(t.getId());
                 List<com.chengyinhub.business.domain.AuditTask> sale = auditTaskService.selectAuditTaskList(saleQuery);
                 Integer latest = sale == null || sale.isEmpty() || sale.get(0) == null ? null : sale.get(0).getStatus();
-                t.setSaleReviewPending(com.chengyinhub.business.domain.AuditTask.STATUS_PENDING.equals(latest)
-                        || com.chengyinhub.business.domain.AuditTask.STATUS_ESCALATED.equals(latest));
+                boolean waiting = com.chengyinhub.business.domain.AuditTask.STATUS_PENDING.equals(latest)
+                        || com.chengyinhub.business.domain.AuditTask.STATUS_ESCALATED.equals(latest);
+                // 第十二轮 k4(j2 N-05):自由探索锁价后不自动提审(运营先存 canonical15 草稿再提交,ApiPricingController),
+                // 没有审核单也已经在等平台 —— 锁价时插的「有人带」票(sub_type=guided,带价)就是终价已确认的事实。
+                // 一旦有过审核单就只看最新那条(驳回后回到「确认终价」)。
+                if (!waiting && latest == null
+                        && Integer.valueOf(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE).equals(t.getProductType())) {
+                    waiting = freeExplorePriceConfirmed(t.getId());
+                }
+                t.setSaleReviewPending(waiting);
+            }
+            // 第十二轮 k4(j2 N-01):招募 / 定价中的主题,已中标却没合作单的站名只给发布者本人 —— 他才看得到「现在要做 · 发邀约」。
+            if (projectHomeReadService != null && viewerId != null && viewerId.equals(t.getMemberId())
+                    && (Integer.valueOf(1).equals(t.getLifecycle()) || Integer.valueOf(2).equals(t.getLifecycle()))) {
+                List<String> missing = projectHomeReadService.uncontractedStationNames(t);
+                if (missing != null && !missing.isEmpty()) t.setUncontractedStations(missing);
             }
             CmsRegistration rq = new CmsRegistration();
             rq.setOwnerType(1L);

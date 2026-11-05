@@ -55,12 +55,13 @@ test('导演台:卡在商家(待商家接受 / 没有合作单)时露出「联�
   assert.equal(other.data.merchantHoldBlocked, false);
 });
 
-test('开始活动被服务端拒:原因写进准备总览,不再无声', () => {
+test('开始活动被服务端拒:原因贴在底栏开始按钮上方(第十二轮 k4,j2 N-04),不再无声', () => {
   const js = read('pages/club/topic-detail/director.js');
   assert.match(js, /if \(action === 'START' && reason\) return reason/);
   assert.match(js, /if \(command\.action === 'START'\) that\.setData\(\{ startFailText: rejectedText \? '没能开始：' \+ rejectedText/);
   const wxml = read('pages/club/topic-detail/index.wxml');
-  assert.match(wxml, /caption="\{\{writeMessage \|\| startFailText \|\| blockerText\}\}"/);
+  assert.match(wxml, /<text class="ctd-footbar__err" wx:if="\{\{startFailText && statusKey === 'preparing'\}\}">\{\{startFailText\}\}<\/text>\s*<view\s+wx:if="\{\{primary\.text\}\}"/);
+  assert.match(wxml, /caption="\{\{writeMessage \|\| blockerText\}\}"/, '准备总览不再重复同一句');
   const page = director({ status: 'READY', readiness: { blockers: [] }, stations: [], teams: [] });
   page.data.startFailText = '没能开始：当前不在活动服务时段';
   page.applyProjection({ status: 'READY', readiness: { blockers: [] }, stations: [], teams: [] });

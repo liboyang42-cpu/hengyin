@@ -2581,7 +2581,12 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
             throw error("GAME_STATION_NOT_READY", "开局条件未满足：" + String.join("；", blockers));
         }
         Date now = clock.now();
-        requireActivityServiceWindow(activity, now);
+        // 第十二轮 k4(j2 N-04):开局被时段挡下时说清本场几点到几点,主理人才知道等到什么时候
+        if (!isWithinActivityServiceWindow(activity, now)) {
+            String window = activity == null || activity.getStartDate() == null || activity.getEndDate() == null ? ""
+                    : "（本场 " + minuteText(activity.getStartDate()) + " 至 " + minuteText(activity.getEndDate()) + "）";
+            throw error("GAME_ACTIVITY_OUTSIDE_SERVICE_WINDOW", "当前不在活动服务时段" + window);
+        }
         List<GameStationRun> stations = safe(runtimeMapper.selectStations(session.getId()));
         List<String> stationBlockers = startStationBlockers(stations, now);
         if (!stationBlockers.isEmpty()) {
@@ -4248,8 +4253,8 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
                 continue;
             }
             if (!isWithinStationServiceWindow(station, now)) {
-                blockers.add(name + "（站点服务时段：" + formatDate(station.getServiceStartAt())
-                        + " 至 " + formatDate(station.getServiceEndAt()) + "）");
+                blockers.add(name + "（站点服务时段：" + minuteText(station.getServiceStartAt())
+                        + " 至 " + minuteText(station.getServiceEndAt()) + "）");
             }
         }
         return blockers;
@@ -5159,6 +5164,14 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
             decoded[i / 2] = (byte) ((high << 4) | low);
         }
         return decoded;
+    }
+
+    /** 给人看的时刻:到分钟,同年省去年份(「11-05 11:14」)。 */
+    private String minuteText(Date value) {
+        if (value == null) return "待定";
+        String full = DateUtils.parseDateToStr("yyyy-MM-dd HH:mm", value);
+        String year = DateUtils.parseDateToStr("yyyy", clock.now());
+        return full.startsWith(year + "-") ? full.substring(5) : full;
     }
 
     private String formatDate(Date value) {

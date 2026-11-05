@@ -356,6 +356,7 @@
             <view class="dr-copy" catchtap="emit" data-act="copyText" data-text="{{ item.phone }}" aria-role="button" aria-label="复制电话" hover-class="cy-pressed" hover-stay-time="80"><image class="dr-copy-img" src="/pages/topic/images/icon_copy.svg" mode="aspectFit" /></view>
           </view>
         </view>
+        <view class="cs-pill" wx:if="{{ item.inviteState === 'none' && !item.isSelf }}" catchtap="emit" data-act="sendTermsInviteRow" data-id="{{ item.registrationId }}" aria-role="button" aria-label="给 {{ item.name }} 发邀约" hover-class="cy-pressed" hover-stay-time="80">发邀约</view>
       </view>
       </view>
     </block>

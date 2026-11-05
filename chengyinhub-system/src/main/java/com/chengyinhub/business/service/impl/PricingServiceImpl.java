@@ -500,7 +500,8 @@ public class PricingServiceImpl implements IPricingService {
                 t.setMemberId(topic.getMemberId());
                 t.setOwnerType(1L);
                 t.setOwnerId(topicId);
-                t.setName("有人带");
+                // 第十二轮 k4(j2 N-05):自由探索没有带队,票名不能叫「有人带」(详情又写「场次内自由顺序，不带队」)
+                t.setName(Integer.valueOf(ProductType.FREE_EXPLORE).equals(topic.getProductType()) ? "门票" : "有人带");
                 t.setSubType("guided");
                 // [P0-02] 跟主题真源走,别硬编码 —— saveTickets 只覆盖创建路径,而这里是**开售时**
                 // 插的第二条票产生路径。硬编码 1 会在一个 product_type=2 的主题上当场造出混票,

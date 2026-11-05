@@ -256,7 +256,7 @@
       station-title="节点状态" station-sub="{{readinessText}}" stations="{{stations}}"
       team-title="队伍进度" team-sub="{{sessionStatusText}}" teams="{{directorTeamRows}}"
       primary-text="" primary-disabled="{{!readiness.canStart || writeLocked}}"
-      caption="{{writeMessage || startFailText || blockerText}}" caption-tone="{{writeState === 'unknown-write' || (!writeMessage && (startFailText || blockerText)) ? 'warning' : 'muted'}}"
+      caption="{{writeMessage || blockerText}}" caption-tone="{{writeState === 'unknown-write' || (!writeMessage && blockerText) ? 'warning' : 'muted'}}"
       bind:primary="onStartSession" />
     <view wx:if="{{statusKey === 'preparing' && merchantHoldBlocked}}" class="ctd-sec">
       <view class="tset-row" bindtap="goStationMerchants"
@@ -331,6 +331,8 @@
         <text class="ctd-footbar__note-txt">退出与暂停规则</text>
         <cy-icon name="slide-arrow" size="24" />
       </view>
+      <!-- 第十二轮 k4(j2 N-04):开始活动被拒的原因贴在按钮上方,不再只印在队伍进度下面看不见的地方 -->
+      <text class="ctd-footbar__err" wx:if="{{startFailText && statusKey === 'preparing'}}">{{startFailText}}</text>
       <view
         wx:if="{{primary.text}}"
         class="ctd-footbar__cta {{primary.disabled ? 'is-disabled' : ''}}"

@@ -8,6 +8,7 @@ import com.chengyinhub.business.domain.vo.TopicChapterVO;
 import com.chengyinhub.system.domain.SysCategory;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -99,6 +100,13 @@ public class CmsTopic extends BaseEntity
     private transient Boolean saleReviewPending;
     public Boolean getSaleReviewPending() { return saleReviewPending; }
     public void setSaleReviewPending(Boolean saleReviewPending) { this.saleReviewPending = saleReviewPending; }
+
+    /** 第十二轮 k4(j2 N-01):已中标却还没有合作单的站名,只对主题发布者本人下发(俱乐部「现在要做」用);不落库。 */
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private transient java.util.List<String> uncontractedStations;
+    public java.util.List<String> getUncontractedStations() { return uncontractedStations; }
+    public void setUncontractedStations(java.util.List<String> uncontractedStations) { this.uncontractedStations = uncontractedStations; }
 
     /** C-17:开一场时只读展示的票价(最低价,元)与集合点,取自主题票;不落库。 */
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)

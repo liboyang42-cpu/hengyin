@@ -70,6 +70,8 @@ const OWNER_STAGE_COPY = {
   price: { label: '确认终价', hint: '' },
   // 第十轮 f2 walk:终价已提交、开售审核在等平台 —— 不再叫主理人再去确认终价。
   saleReview: { label: '开售审核中', hint: '' },
+  // 第十二轮 k4(j2 N-01):已中标的站还没有合作单(带条款邀约没发或没被接受),开售会被拦 —— 提示行写站名。
+  contract: { label: '发邀约', hint: '' },
   loading: { label: '读取管理进度…', hint: '正在确认项目与邀请状态' },
   error: { label: '重试管理进度', hint: '暂时无法确认当前阶段' },
   // 管理员没有经营阶段:邀商家/发布主题/开一场都是主理人的事。
@@ -1511,6 +1513,11 @@ Page({
         if (recruitingTopic) { stage = 'recruit'; this._stageTopic = recruitingTopic; }
         else if (pricingTopic) { stage = pricingTopic.saleReviewPending === true ? 'saleReview' : 'price'; this._stageTopic = pricingTopic; }
         else if (stage === 'run' && !sellable && projectReviewing) stage = 'review';
+        const holdTopic = topics.find(function (item) {
+          const lc = lifecycleOf(item);
+          return (lc === 1 || lc === 2) && Array.isArray(item.uncontractedStations) && item.uncontractedStations.length > 0;
+        });
+        if (holdTopic && ['recruit', 'price', 'saleReview'].indexOf(stage) >= 0) { stage = 'contract'; this._stageTopic = holdTopic; }
       }
       receivedPending = (this.data.messages || []).filter(function (item) {
         return Number(item.status) === 0 && item.toType === 'club' && String(item.toId) === String(clubId);
@@ -1521,6 +1528,9 @@ Page({
       ? OWNER_STAGE_COPY.executionAccepted : OWNER_STAGE_COPY[stage];
     if (stage === 'coopInvite') copy = { label: copy.label, hint: '有 ' + receivedPending + ' 条合作邀约待确认' };
     if ((stage === 'recruit' || stage === 'price' || stage === 'saleReview') && this._stageTopic) copy = { label: copy.label, hint: this._stageTopic.name || '' };
+    if (stage === 'contract' && this._stageTopic) {
+      copy = { label: copy.label, hint: this._stageTopic.uncontractedStations.join('、') + ' 还没有合作单，不能开售' };
+    }
     const timeline = this._hasAcceptedExecutionProject
       ? { nodes: [], summary: '' } : this.buildLeadTimeline(stage);
     this.setData({
@@ -1575,8 +1585,8 @@ Page({
     const stage = this.data.ownerStage;
     if (stage === 'accepted' && this._hasAcceptedExecutionProject) { this.goEventOps(); return; }
     if (stage === 'run') { this.goEventOps(); return; }
-    if ((stage === 'recruit' || stage === 'price') && this._stageTopic && this._stageTopic.id) {
-      const url = stage === 'recruit'
+    if ((stage === 'recruit' || stage === 'price' || stage === 'contract') && this._stageTopic && this._stageTopic.id) {
+      const url = stage !== 'price'
         ? '/pages/topic/merchantinfo/merchantinfo?topicId=' + this._stageTopic.id + '&scope=CLUB&open=merchant'
         : '/pages/topic/pricing/index?topicId=' + this._stageTopic.id;
       if (this._navigating) return; this._navigating = true;

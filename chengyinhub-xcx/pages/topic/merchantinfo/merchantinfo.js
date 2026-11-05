@@ -2185,7 +2185,7 @@ Page({
       hostMerchants: (host.merchants || []).map(function (m) {
         return Object.assign({}, m, {
           initial: (m.name || '?').slice(0, 1),
-          statusText: Number(m.auditStatus) === 1 ? '已中标'
+          statusText: Number(m.auditStatus) === 1 ? (m.inviteState === 'none' ? '未发邀约' : (m.inviteState === 'sent' ? '邀约待接受' : '已中标')) // 第十二轮 k4(j2 N-01)
             : (Number(m.status) === 2 ? '已驳回' : (Number(m.status) === 1 ? '已通过' : '待审核')),
         });
       }),
@@ -2660,9 +2660,17 @@ Page({
     });
   },
 
-  goTermsInvite(regId, name) {
+  // 第十二轮 k4(j2 N-01):「已确认」里还没发邀约的商家,随时可以从这一行再进带条款的邀约页
+  sendTermsInviteRow(e) {
+    const ds = (e && e.currentTarget && e.currentTarget.dataset) || {};
+    const m = (this.data.hostMerchants || []).find((item) => String(item.registrationId) === String(ds.id));
+    if (!m || !m.memberId) return;
+    this.goTermsInvite(null, m.name, { memberId: m.memberId, name: m.name, logo: m.logo });
+  },
+
+  goTermsInvite(regId, name, known) {
     const topicId = Number(this.data.topicId || (this.data.info && this.data.info.topicId));
-    const row = ((this.data.regApplies && this.data.regApplies.rows) || []).find((item) => String(item.id) === String(regId));
+    const row = known || ((this.data.regApplies && this.data.regApplies.rows) || []).find((item) => String(item.id) === String(regId));
     const toId = row && row.memberId;
     if (!topicId || !toId) return;
     if (this._navigating) return; this._navigating = true;
@@ -3464,7 +3472,7 @@ Page({
       closeClubSheet: 1, closePlayerSheet: 1, closeMerchantSheet: 1,
       closeMoreSheet: 1, onMorePick: 1,
       copyText: 1, goInviteClub: 1, onPlayerFilter: 1, inviteClubRow: 1, openClubHome: 1, loadClubCandidates: 1,
-      loadRegApplies: 1, confirmRegRow: 1, selfTakeNode: 1, recruitNode: 1, contactHost: 1, openBroadcast: 1, openClubNotify: 1,
+      loadRegApplies: 1, confirmRegRow: 1, sendTermsInviteRow: 1, selfTakeNode: 1, recruitNode: 1, contactHost: 1, openBroadcast: 1, openClubNotify: 1,
       // 2026-11-01 定向广播叠层与客户多选
       closeBroadcast: 1, onBroadcastInput: 1, sendBroadcast: 1, pickBroadcastRow: 1, setBroadcastScope: 1, clearBroadcastPicks: 1, togglePlayerPick: 1, pickPlayerRow: 1,
       // CU-C-67:客户名单读失败后的局部重试(错态与零单分开之后要有恢复动作)

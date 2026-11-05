@@ -411,6 +411,10 @@ Page({
             }).length,
           };
         });
+        // 第十二轮 k4(j2 N-03):本团有人报名的票种在,就不再把没人报名的模板票块(「领队场 0 / 20 · 还没有人报名」)
+        // 摆在真实场次名单上面;一个人都没有时照旧全列出来。
+        const anySignup = tickets.some(function (tk) { return tk.signups > 0; });
+        tickets.forEach(function (tk) { tk.hideEmpty = anySignup && !(tk.signups > 0); });
         const summary = tickets.reduce(function (acc, tk) {
           acc.paidCount += tk.paidCount;
           acc.refundableCount += tk.refundableCount;
@@ -467,11 +471,6 @@ Page({
     return (this.data.teams || []).findIndex(function (team) {
       return String(team.id) === String(topicId);
     });
-  },
-
-  goUserInfo(e) {
-    const id = e.currentTarget.dataset.id;
-    if (id) wx.navigateTo({ url: '/pages/userinfo/userinfo?userId=' + id });
   },
 
   // 2026-09-09:退款入口按用户裁决从名册行内挪到了核销详情底部,

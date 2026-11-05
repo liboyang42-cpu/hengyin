@@ -318,6 +318,7 @@ function attachMerchantGameEntries(cards, entries, stateByActivity) {
     topicId: positiveId(entry && entry.topicId),
     activityName: safeText(entry && entry.activityName, 120),
     stationCount: positiveId(entry && entry.stationCount),
+    invitedCount: positiveId(entry && entry.invitedCount) || 0,
     startAt: safeText(entry && entry.startAt, 32),
     endAt: safeText(entry && entry.endAt, 32),
   })).filter((entry) => entry.activityId && entry.topicId && entry.activityName && entry.stationCount)
@@ -362,8 +363,10 @@ function attachMerchantGameEntries(cards, entries, stateByActivity) {
       roleName: '承接',
       roleLabel: '我承接的',
       title: entry.activityName,
-      meta: entry.startAt || '',
-      statusLabel: '',
+      // 第十二轮 k4(j2 N-02):时间到分钟;还有站待接受邀请时卡上写明,并排到最前(见下)
+      meta: minuteText(entry.startAt),
+      statusLabel: entry.invitedCount > 0 ? '待接受邀请' : '',
+      statusTone: entry.invitedCount > 0 ? 'fix' : '',
       catLabel: '活动',
       thumb: '',
       id: entry.activityId,
@@ -377,7 +380,15 @@ function attachMerchantGameEntries(cards, entries, stateByActivity) {
       msgCount: 0,
       gameEntries: [decorateEntry(entry)],
     }))
-  return decoratedCards.concat(missingCards)
+  const waiting = missingCards.filter((card) => card.statusLabel)
+  const rest = missingCards.filter((card) => !card.statusLabel)
+  return waiting.concat(decoratedCards, rest)
+}
+
+// 'yyyy-MM-dd HH:mm:ss' → 'yyyy-MM-dd HH:mm';别的形状原样返回
+function minuteText(value) {
+  const text = String(value || '')
+  return /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(text) ? text.slice(0, 16) : text
 }
 
 function hasStation(projection, station) {

@@ -328,6 +328,8 @@ class GameSessionRuntimeServiceImplTest {
                 command("start-before-window", 2, "START", Collections.emptyMap())));
 
         assertEquals("GAME_ACTIVITY_OUTSIDE_SERVICE_WINDOW", error.getErrorCode());
+        // 第十二轮 k4(j2 N-04):拒绝原因带上本场时段,主理人知道等到几点
+        assertEquals("当前不在活动服务时段（本场 08-23 10:00 至 08-23 18:00）", error.getMessage());
         verify(runtimeMapper, never()).activateReadyStations(anyLong(), any());
     }
 
@@ -358,7 +360,9 @@ class GameSessionRuntimeServiceImplTest {
 
         assertEquals("GAME_STATION_NOT_READY", error.getErrorCode());
         assertTrue(error.getMessage().contains("旧档案馆"));
-        assertTrue(error.getMessage().contains("13:00:00"));
+        // 第十二轮 k4(j2 N-04):给人看的时刻到分钟,同年省去年份
+        assertTrue(error.getMessage().contains("站点服务时段：08-23 13:00"), error.getMessage());
+        assertFalse(error.getMessage().contains("13:00:00"), error.getMessage());
         verify(runtimeMapper, never()).activateReadyStations(anyLong(), any());
         verify(runtimeMapper, never()).updateSessionCas(anyLong(), anyInt(), anyString(), anyString(), any(), any(), any());
     }

@@ -381,7 +381,8 @@
                a.name as activityName,
                a.start_date as startAt,
                a.end_date as endAt,
-               count(distinct r.id) as stationCount
+               count(distinct r.id) as stationCount,
+               count(distinct case when r.status='INVITED' then r.id end) as invitedCount
           from game_station_run r
           join game_session s on s.id=r.game_session_id and s.activity_id=r.activity_id
           join cms_activity a on a.id=r.activity_id and a.del_flag=0

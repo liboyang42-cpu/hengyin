@@ -183,6 +183,7 @@
   background: var(--cy-color-bg-surface);
   border-top: 2rpx solid var(--cy-color-border-subtle);
 }
+.ctd-footbar__err { display: block; padding: 16rpx 32rpx 0; font-size: var(--ctd-type-meta); line-height: 1.4; color: var(--cy-color-status-danger); }
 .ctd-footbar__note { display: flex; align-items: center; justify-content: center; gap: 10rpx; padding: 24rpx 0 0; color: var(--cy-color-text-placeholder); }
 .ctd-footbar__note-txt { font-size: var(--ctd-type-meta); line-height: 1.35; color: var(--cy-color-text-placeholder); }
 .ctd-footbar__cta {

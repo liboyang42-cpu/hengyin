@@ -92,6 +92,11 @@ import com.chengyinhub.common.utils.OwnershipUtils;
 @Tag(name = "商户相关")
 @RequestMapping("/api/merchant")
 public class ApiMerchantController extends BaseController {
+
+    /** 第十二轮 k4(j2 N-02):站点待接受邀请进「我的消息」。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.IGameSessionRuntimeService gameSessionRuntimeService;
+
     @Autowired
     private com.chengyinhub.business.service.support.UgcSubmissionSafety submissionSafety;
 
@@ -1722,6 +1727,29 @@ public class ApiMerchantController extends BaseController {
                 e.put("_scan", s);
                 e.put("time", fmt.format(s.getCreateTime()));
                 events.add(e);
+            }
+        }
+        // 第十二轮 k4(j2 N-02):场次里有本店站点待接受邀请 —— 主理人开局被「待商家接受」挡着,商家却毫无察觉。
+        // 由真实站点行(game_station_run.status=INVITED)派生,不另建消息表;排在最前。
+        if (gameSessionRuntimeService != null && (access.hasPermission(MerchantPermission.VERIFY)
+                || access.hasPermission(MerchantPermission.PROJECT_MANAGE))) {
+            try {
+                for (com.chengyinhub.business.domain.dto.GameMerchantEntryView entry : gameSessionRuntimeService.merchantEntries(
+                        com.chengyinhub.business.domain.dto.GameActorContext.merchant(principalMemberId, access))) {
+                    if (entry == null || entry.getInvitedCount() == null || entry.getInvitedCount() <= 0) continue;
+                    Map<String, Object> e = new HashMap<>();
+                    e.put("type", "stationInvite");
+                    e.put("label", "站点邀请");
+                    e.put("content", "「" + entry.getActivityName() + "」有 " + entry.getInvitedCount() + " 个站点待接受邀请");
+                    e.put("ownerType", 2L);
+                    e.put("ownerId", entry.getActivityId());
+                    e.put("gameActivityId", entry.getActivityId());
+                    e.put("_t", Long.MAX_VALUE);
+                    e.put("time", entry.getStartAt() == null ? "" : fmt.format(entry.getStartAt()));
+                    events.add(e);
+                }
+            } catch (RuntimeException unavailable) {
+                // 站点入口读不到不影响其它动态
             }
         }
         events.sort((a, b) -> Long.compare((Long) b.get("_t"), (Long) a.get("_t")));
