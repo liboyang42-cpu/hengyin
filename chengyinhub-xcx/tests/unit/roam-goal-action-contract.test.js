@@ -213,7 +213,8 @@ test('弱网长目标在固定卡高中换成两行，且正常与空态仍保�
     + titleLines * tokenNumber('cy-type-body') * tightLeading
   // 读数区 = 数字(62rpx 行高 1)+ 标签上边距 + 标签,取自照原型搬来的 .pstat__v / .pstat__l
   const statValue = Number(cssRule('.pstat__v').match(/font-size:\s*(\d+)rpx/)[1])
-  const statLabel = Number(cssRule('.pstat__l').match(/font-size:\s*(\d+)rpx/)[1])
+  // 第十二轮 k7(j4 F14):标签跟手机字号走,写成 calc(21rpx * var(--cy-type-scale, 1)),这里按基准值量
+  const statLabel = Number(cssRule('.pstat__l').match(/font-size:\s*(?:calc\()?(\d+)rpx/)[1])
   const statGap = Number(cssRule('.pstat__l').match(/margin-top:\s*(\d+)rpx/)[1])
   const rowHeight = statValue + statGap + statLabel
   // 原型没有「弱网长目标」这一态,而两行标题 + 读数区在原型的 246rpx 里实测装不下。

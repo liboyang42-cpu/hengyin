@@ -89,7 +89,16 @@ Branch `integ/launch-test-20261103`. I worked on a private local branch, ran `gi
 
 ## Full suite
 
-Not finished. `node --test "tests/unit/**/*.test.js"` was running when the owner's wrap-up notice came (cloud credit). Only the related suites listed above were run to the end. **Next step:** run the full suite on the pushed commit.
+I ran `node --test "tests/unit/**/*.test.js"` on my tree before the rebase: 16,234 tests, 16,228 pass, 6 fail.
+
+- **Mine, fixed in the follow-up commit:** these contract tests pinned what I changed. Both suites now pass.
+  - `play-ui-contract` 「点亮坐标」 and its negative control: the regex now allows `fst--hero`.
+  - `roam-goal-action-contract` 弱网长目标: it reads the base value out of `calc(21rpx * …)`.
+- **Not from my files:**
+  - `merchant-theme-route-contract`: `pages/topic/pricing/index` has no `theme-merchant` root. I did not touch that page.
+  - `route-matrix-freshness`: the generated route matrix is stale against `app.json`. I did not change `app.json`.
+  - `action-ledger` 「release 前重建 inventory」: the same file passed 46/46 when run alone earlier. This run overlapped two ledger rebuilds, so I count it as unconfirmed and it needs a rerun.
+- **Not run:** the full suite after the rebase.
 
 ## CI
 
@@ -100,7 +109,7 @@ Not waited for, per the wrap-up notice. The pushed commit containing all of this
 - Done: every j4 item in the k7 list, with before/after rig shots. k2's guest club walk, stale login, 我的参与 as a guest and the no-game ticket, plus the three bugs the guest walk found.
 - Not done:
   - The solved-station-on-reopen walk. There is no advanced-game station in the rig seed.
-  - The full unit suite. `action-ledger.test.js` was still running on the rebased tree; other lanes changed the counts, so recheck its tap and control totals.
+  - The full unit suite after the rebase. Also recheck `action-ledger.test.js` tap and control totals on the rebased tree, since other lanes changed the counts.
   - CI.
   - Checking whether the club page's floating 「加入」 button paints on a phone.
 
