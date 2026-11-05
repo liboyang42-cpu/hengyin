@@ -173,7 +173,32 @@ The 14-day wait on the screens:
   - `build-action-ledger.js --write`: line shifts in `baoming.js` only, then no diff after rebasing onto k3.
   - New `k6-merchant-screens.test.js` (4). `merchant-ledger-filter-motion-contract`, `ui-token-funds-contract`, `merchant-ledger-detail-state-contract`, `cu-m-copy-merchant-empty-states-contract`, `scene-merchant-profit-truth-contract`, `funds-stages-owner-only-contract` and every unit file that names `baoming`, `project-join` or `coop/invite-detail` pass.
 - **Rig:** all of the above, at 390×844 2×, every shot under 200 KB.
-- **CI:** see below.
+- **CI:** see the CI section below.
+
+## CI
+
+Other lanes kept pushing, so the main `ci.yml` runs on my own commits `a284764b0` and `d36638a3c` were cancelled by newer pushes.
+
+**On `3ee591fc6` (contains all my product commits), all green:**
+- Funds MySQL IT, run 41977440026
+- Mini followup focused regression, run 41977440061
+- Isolated authenticated Redis recovery, run 41977440029
+
+**On `2f9daae1e` (contains all my work), `ci.yml` run 41979418953 is red. 7 jobs failed; none is in a file k6 touched:**
+- Backend:
+  - `P0DeregistrationMySqlIT:199` and `WechatMemberRegistrationMySqlIT:116`: no welcome-points ledger line in their fixtures. This follows from k1 items 3 and 11, where a disabled or missing rule 1 grants nothing.
+  - `ClubAttendanceTimeMappingMyBatisIT:98`: `Unknown column 'create_time'` in `ClubEventOpsMapper.xml` (club lanes).
+- Mini program:
+  - danger-confirm selftest: `club.joinRequest.reject` and `club.enroll.refund` have no consequences written (club pages).
+- Unit tests failing locally at `2f9daae1e`:
+  - `action-ledger` #37 (ledger drift from later lanes; the ledger was clean after my rebase)
+  - `mycanyu-refresh-state`
+  - `play-chapter-story-blocks-contract`
+  - `r10-j2-f06-session-entry`
+  - `verification-unknown-adapters` (club detail)
+- Every unit file I touched or added passes at that commit.
+
+I did not fix other lanes' failures.
 
 ## Not done / not verified
 
@@ -182,3 +207,5 @@ The 14-day wait on the screens:
 - Submitting 发布活动 with 39.99, and the published-activity side of the quota.
 - The four ledger limits listed under j1 N4.
 - The 另存为模板 duplicate card in 主题 (finding above, for the owner).
+
+STATUS: COMPLETE
