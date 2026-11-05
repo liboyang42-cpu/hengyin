@@ -6043,10 +6043,12 @@ Page({
       ? ((this.data.themeBag || {}).actionRows || []).find(row => row.kind === 'QUEST'
         && String(row.nodeId) === String(node.nodeId) && row.operation === 'QUEST_START') : null;
     if (questStart) {
-      const bag = { 'sheet.show': false, themeBackpackOpen: true, themeBackpackTab: 'game' };
-      if (!questStart.enabled || this._themeSending) { this.setData(bag); return; }
+      if (!questStart.enabled || this._themeSending) {
+        this.setData({ 'sheet.show': false, themeBackpackOpen: true, themeBackpackTab: 'game' }); return;
+      }
       if (questStart.costOptions && questStart.costOptions.length && questStart.frozenIndex < 0) {
-        this.setData(Object.assign(bag, { themeCostChoice: { row: questStart, selected: -1 } })); return;
+        this.setData({ 'sheet.show': false, themeBackpackOpen: true, themeBackpackTab: 'game',
+          themeCostChoice: { row: questStart, selected: -1 } }); return;
       }
       this._questStartFor = String(node.nodeId);
       return Promise.resolve(this._themeGameplayCommand({ operation: 'QUEST_START', contentId: questStart.key }))
