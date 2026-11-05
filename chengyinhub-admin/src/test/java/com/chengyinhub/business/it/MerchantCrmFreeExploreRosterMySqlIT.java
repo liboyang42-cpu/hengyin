@@ -336,13 +336,14 @@ class MerchantCrmFreeExploreRosterMySqlIT {
                 statement.execute("INSERT INTO ums_member VALUES (61,'自由探索买家','',NULL,0),"
                         + "(62,'普通主题买家','','13900000062',0)");
                 // 81:主题方 88 发布的自由探索;82:主题方 88 的普通主题。
-                statement.execute("INSERT INTO cms_topic VALUES (81,88,0,2,0),(82,88,0,NULL,0)");
+                statement.execute("INSERT INTO cms_topic (id,member_id,club_id,product_type,del_flag)"
+                        + " VALUES (81,88,0,2,0),(82,88,0,NULL,0)");
                 statement.execute("INSERT INTO cms_registration_merchant (topic_id,member_id,audit_status,del_flag)"
                         + " VALUES (81,66,1,0),(81,67,0,0),(82,66,1,0)");
                 statement.execute("INSERT INTO merchant_chapter_application (topic_id,chapter_id,merchant_id,status,del_flag)"
                         + " VALUES (81,9001,68,1,0),(81,9002,67,0,0)");
                 // 自由探索的票挂在主题方建的活动壳 501 上(owner_type = 2,与生产购票路径一致)。
-                statement.execute("INSERT INTO cms_activity VALUES (501,88,81,0)");
+                statement.execute("INSERT INTO cms_activity (id,member_id,topic_id,del_flag) VALUES (501,88,81,0)");
                 // 401:已付款且已核销(扫码)的自由探索票;402:普通主题票。
                 statement.execute("INSERT INTO cms_registration (id,member_id,phone,payment_status,"
                         + " verification_status,payable_amount,total_amount,verification_time,create_time,"
