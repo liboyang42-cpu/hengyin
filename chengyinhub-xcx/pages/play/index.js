@@ -7319,9 +7319,9 @@ Page({
     const ready = canContinue(view);
     /* 分支走到结局时不自动接着走:结局那段话就是这一站的全部回报,0.9 秒就被翻走等于没看到
        (2026-10-27 生产实测:南京路结案三选一,选完直接跳进附录章节卡)。玩家读完点下面的「继续」。 */
-    /* 抽卡 / 音乐角 / 相册首屏就「可继续」,但结果本身就是要看的:自动接走会 0.9 秒把抽到的卡翻走(实走 A18)。 */
+    /* 抛硬币 / 抽卡 / 音乐角 / 相册首屏就「可继续」,但结果本身就是要看的:自动接走会 0.9 秒把抽到的卡翻走(实走 A18)。 */
     const advanceStory = this.data.chapterFull && this._storyOpenNode && ready && !this.data.playKit.readyForBase
-      && !['branch', 'random', 'musiccorner', 'album'].includes(kit.type) && !!previous.type && (previous.sessionId == null || kit.sessionId == null || String(previous.sessionId) === String(kit.sessionId)); /* 另外只在这一站的玩法已在屏上、从未就绪变成就绪时接着走;换了局也不翻 */
+      && !['branch', 'random', 'musiccorner', 'album', 'coinflip'].includes(kit.type) && !!previous.type && (previous.sessionId == null || kit.sessionId == null || String(previous.sessionId) === String(kit.sessionId)); /* 另外只在这一站的玩法已在屏上、从未就绪变成就绪时接着走;换了局也不翻 */
     // 填了一半的草稿按「账号 + 局 + 站」存本地(建档 / 留言组件自取);试玩不存
     if (kit.type === 'profile') this._profileNodeId = String(active.node.nodeId);
     if ((kit.type === 'profile' || kit.type === 'note') && !this.data.isPreview && !this.data.isMock) kit.draftKey = storyResume.draftKey(this._runSessionScope(), active.node.nodeId);
