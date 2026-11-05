@@ -70,8 +70,7 @@
       "endpoint": "/api/club/join-request/reject",
       "file": "pages/club/join-requests/index.js",
       "irreversible": false,
-      "confirmKey": "club.joinRequest.reject",
-      "reason": "对方之后仍可以原样重新提交申请"
+      "reason": "对方之后仍可以原样重新提交申请。2026-11-05 第十二轮 k9(p3 N13):拒绝只走一个弹层(标题指名道姓 + 选填原因 + 确认拒绝),不再先过危险确认层"
     },
     {
       "endpoint": "/api/club/roles/revoke",

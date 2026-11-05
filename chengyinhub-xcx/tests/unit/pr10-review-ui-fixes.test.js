@@ -327,7 +327,7 @@ test('F-L3-09 modal-host multiline:editable 时渲染多行 textarea,maxlength /
 
 test('F-L3-09 入会申请拒绝原因用多行框,保留 500 字上限与校验', () => {
   const js = read('pages/club/join-requests/index.js')
-  const block = js.slice(js.indexOf('askRejectReason(memberId) {'), js.indexOf('retryReview(e)'))
+  const block = js.slice(js.indexOf('askRejectReason(memberId, name) {'), js.indexOf('retryReview(e)'))
   assert.match(block, /editable: true,/)
   assert.match(block, /multiline: true,/)
   assert.match(block, /maxlength: 500,/)

@@ -142,24 +142,23 @@ Page({
     // 第十二轮 k3(p3 N4):默认昵称分不出人时,确认层带上申请时刻(与卡片上「申请于」同一个值)。
     const baseName = (row && row.nickname) || '城瘾玩家'
     const name = baseName === '城瘾用户' && row && row.requestTimeText ? baseName + ' · ' + row.requestTimeText + ' 申请' : baseName
-    modal.show(approve ? {
+    // 第十二轮 k9(p3 N13):拒绝原来要点三次(拒绝 → 危险确认 → 原因弹层 → 确认拒绝)。拒绝可逆、原因选填,
+    // 并成一个弹层:标题指名道姓,原因可不填,点「确认拒绝」就发。
+    if (!approve) { this.askRejectReason(memberId, name); return }
+    modal.show({
       title: '通过「' + name + '」的入会申请',
       content: '通过后，对方将成为正式成员，可查看成员名单并使用成员功能。',
       confirmText: '通过',
       cancelText: '取消',
       success(result) { if (result.confirm) that.review(memberId, approve) },
-    } : {
-      dangerKey: 'club.joinRequest.reject',   // 登记表 scripts/danger-action-registry.json 指向的确认层
-      dangerParams: { name },
-      success(result) { if (result.confirm) that.askRejectReason(memberId) },
     })
   },
 
   // F-L3-09:拒绝原因选填,随「入会申请未通过」通知发给申请人;后端同样限 500 字并做内容检查。
-  askRejectReason(memberId) {
+  askRejectReason(memberId, name) {
     const that = this
     modal.show({
-      title: '拒绝原因（选填）',
+      title: '拒绝「' + (name || '城瘾玩家') + '」的入会申请?',
       editable: true,
       // PR10 F-L3-09:500 字原因用多行框,不再挤在单行 input 里
       multiline: true,

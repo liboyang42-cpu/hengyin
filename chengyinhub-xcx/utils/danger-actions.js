@@ -103,16 +103,6 @@ const DANGER_ACTIONS = {
     done: { title: '已提交不同意意见', text: '' },
   },
 
-  'club.joinRequest.reject': {
-    // 可逆:拒绝后对方可以重新提交申请。
-    irreversible: false,
-    title: '拒绝「{name}」的入会申请?',
-    consequences: [],
-    confirmText: '拒绝申请',
-    alt: { text: '先放着不处理', hint: '申请会留在列表里,想清楚再决定' },
-    done: { title: '已拒绝申请', text: '' },
-  },
-
   // ===== 小队 =====
   // ===== 线索与物品(主题状态键 / 主题物品) =====
   'topic.stateKey.delete': {
