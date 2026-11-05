@@ -268,7 +268,8 @@ test('负控:本页若自己打 /withdraw,合同必须判红', () => {
   assert.ok(!/url:\s*'\/api\/club\/settlement\/withdraw'/.test(code),
     '本页又自己发提现请求了 —— 绕开了 withdrawal-preflight 的四要素校验')
   // 判据不是瞎的:summary 那条只读调用照样认得出来
-  assert.ok(/url:\s*'\/api\/club\/settlement\/summary'/.test(code), '判据认不出同形状的调用')
+  assert.ok(/url:[^\n]*'\/api\/club\/settlement\/summary'/.test(code), '判据认不出同形状的调用')
+  assert.ok(/url:[^\n]*'\/api\/club\/settlement\/withdraw'/.test(code.replace('/api/club/settlement/summary', '/api/club/settlement/withdraw')), '负控必须识别真实调用变为提现')
 })
 
 // CU-C-92(用户裁决 A):可提现为 0 时禁用提现主按钮并写明可提现条件。
@@ -353,4 +354,42 @@ test('F-16 场次行缺字段或 sessions 缺失时整页拒收，不按 0 显�
     assert.equal(vm.data.state, 'error', JSON.stringify(sessions))
     assert.equal(vm.data.summary, null)
   }
+})
+
+
+test('本人历史结算列表从账户收益进入，只导航当前身份真实返回的俱乐部', () => {
+  const h = mount(); h.vm.onLoad({ mine: '1' })
+  assert.equal(h.requests[0].url, '/api/club/settlement/mine')
+  h.requests[0].success({ code: 200, data: [{ clubId: 7, name: '原俱乐部' }] })
+  assert.equal(h.vm.data.state, 'clubs')
+  h.vm.openClubSettlement({ currentTarget: { dataset: { id: 8 } } })
+  assert.equal(h.navigations.length, 0)
+  h.vm.openClubSettlement({ currentTarget: { dataset: { id: 7 } } })
+  assert.equal(h.navigations[0], '/pages/club/settlement/index?clubId=7&personal=1')
+  h.app.globalData.user_id = 999
+  h.vm.openClubSettlement({ currentTarget: { dataset: { id: 7 } } })
+  assert.equal(h.navigations.length, 1)
+  h.vm.onShow(); const fresh = h.requests.at(-1)
+  h.requests[0].success({ code: 200, data: [{ clubId: 9, name: '旧身份' }] })
+  assert.deepEqual(h.vm.data.clubs, [])
+  fresh.success({ code: 200, data: [] }); assert.equal(h.vm.data.state, 'empty')
+})
+
+test('本人视角保留服务端自身金额、客服提现和明细范围，不补全俱乐部账目', () => {
+  const h = mount(); h.vm.onLoad({ clubId: 7, personal: '1' })
+  assert.deepEqual(JSON.parse(h.requests[0].data), { clubId: 7, personal: true })
+  h.requests[0].success({ code: 200, data: { ...VALID_SUMMARY, personal: true, isOwner: false,
+    sessions: [{ activityId: 1, name: '原场次', dateText: '11月5日', netText: '¥30.00', payeeText: '已入你的账户' }] } })
+  assert.equal(h.vm.data.state, 'ready')
+  assert.equal(h.vm.data.summary.personal, true)
+  assert.equal(h.vm.data.summary.sessions[0].grossText, undefined)
+  assert.equal(h.vm.data.summary.sessions[0].netText, '¥30.00')
+  h.vm.goTopicSettlement({ currentTarget: { dataset: { id: 31, topicId: 9001 } } })
+  assert.match(h.navigations[0], /&personal=1$/)
+  const wxml = fs.readFileSync(path.join(root, 'pages/club/settlement/index.wxml'), 'utf8')
+  assert.match(wxml, /kind="login"/)
+  assert.match(wxml, /summary && !summary.personal && clubId/)
+  assert.match(wxml, /summary.isOwner \|\| summary.personal/)
+  const earnings = fs.readFileSync(path.join(root, 'subpackageA/components/scene-asset-earnings/index.js'), 'utf8')
+  assert.match(earnings, /openClubSettlement\(\).*_hasCurrentBalance\(\).*mine=1/)
 })

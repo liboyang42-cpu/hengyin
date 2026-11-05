@@ -23,7 +23,7 @@ function isPermissionFailure(value, statusCode) {
   const message = String(value && (value.msg || value.message) || '');
   return String(code) === '2' || String(code) === '401' || String(code) === '403'
     || String(statusCode) === '2' || String(statusCode) === '401' || String(statusCode) === '403'
-    || message === '请先登录' || message === '仅主理人与联席主理人可查看分润';
+    || message === '请先登录' || message === '仅主理人与联席主理人可查看分润' || message === '没有本人的历史结算记录';
 }
 
 function isPositiveInteger(value) {
@@ -116,6 +116,7 @@ Page({
     this._hidden = false;
     // CU-C-41(用户裁决 A):来源三档 —— ledger(商家台账 /api/coop/mybiz)、
     // finance(主办分润 /api/coop/finance)、club(俱乐部分润 /api/club/settlement/summary)。
+    this._personal = options && options.personal === '1';
     const raw = options && options.source;
     const source = raw === 'finance' || raw === 'club' ? raw : 'ledger';
     // 俱乐部汇总是「一条 coop_settlement 一行」,同一主题可能多行 ⇒ 有 id 就按 id 取(topicId 只作旧链接兜底)
@@ -160,7 +161,7 @@ Page({
 
   onNavBack() {
     if (getCurrentPages().length > 1) wx.navigateBack();
-    else if (this.data.source === 'club') wx.reLaunch({ url: '/pages/club/settlement/index?clubId=' + this._clubId });
+    else if (this.data.source === 'club') wx.reLaunch({ url: '/pages/club/settlement/index?clubId=' + this._clubId + (this._personal ? '&personal=1' : '') });
     else wx.reLaunch({ url: this.data.source === 'finance' ? '/pages/coop/finance/index' : '/pages/merchant/ledger/index?view=settlement&source=coop' });
   },
 
@@ -225,7 +226,7 @@ Page({
       hideLoading: true,
       url: club ? '/api/club/settlement/summary' : (finance ? '/api/coop/finance' : '/api/coop/mybiz'),
       method: 'POST',
-      data: club ? JSON.stringify({ clubId: this._clubId }) : JSON.stringify({}),
+      data: club ? JSON.stringify(this._personal ? { clubId: this._clubId, personal: true } : { clubId: this._clubId }) : JSON.stringify({}),
       header: { 'Content-Type': 'application/json' },
       success: (res) => {
         const key = this._recordKey || (source === 'ledger' ? 'id' : 'topicId');
