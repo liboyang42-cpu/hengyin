@@ -16,7 +16,7 @@
 
 ## 其他 lane 的最新已知边界
 
-- Play/map：`f559c3aec` 的定点 34/34 通过；管理者报告重建后的 17/17、11/11、N13、每日签、N3、相册先于卡片已走。当前只剩更新后指南针最终完成收据的 UI 复验，未收到整单结束通知。旧库截图／读回仅为历史证据。
+- Play/map：最终交接 `ec860c315` 已读，报告 STATUS: COMPLETE。指南针跳过后仍需 D20，原 settle／arrive 返回 200，SQL 为 status1／score0／SKIPPED，稳定重开完成 1/1；N3、相册先于卡片、重建 17/17 与 11/11、无结尾和音频均有该 lane 的记录。Java 34/34、前端 25/25、ledger 5743／UI-GATE-0 通过。其分配的源码与 rig 走查已结束，原生能力和统一验收仍不在此完成结论内。旧库截图／读回仅为历史证据。见 [Play/map 最终报告](CODEX-PLAY-MAP-RESULT.md)。
 - K10：新身份经真实主理人／建俱乐部 UI 后 canBranch/canGameMechanic 均为 true；990026 已通过 UI 保存照片、两选项分支、TIME 彩蛋和图片道具。分支仍被 m1 的 NO_BRIDGE 完成路径挡住，不能宣称泛化完整发布／游玩。报告仍 PARTIAL。K10 报告 65a、6f 的五套相关 Java 零失败／错误／跳过，ce84 后 UI gate PASS；这不是全产品同提交通过。
 - Pages：最后结果仍 PARTIAL，扩展页修复和 R2 夹具／走查的最终交接未到；此前可见 `pages-k9-precommit` 预算任务，随后已退出。以前的 322／434 等定点结果、LOW 清单和动态证据欠账均不冒充最后完成。见 [Pages 结果](CODEX-PAGES-RESULT.md)。
 - Video：`9307c39df` 已交代码，报告仍 PARTIAL；有中间 Java／JS 回归、包体和静态门禁证据，没有可听见的手机音视频或完整混合创作／保存／发布／游玩证明。旧 E17 断言失败须按最后集成确认，不能把旧失败或旧通过直接贴给当前 head。见 [Video 结果](CODEX-VIDEO-RESULT.md)。
@@ -29,6 +29,9 @@
 10:00:17Z 的旧 tmpfs 数据已确认丢失；旧 990029／旧 K10 asset12 等不再有效。root 的 R2 角色／俱乐部是新分配的 990005，主题 990018；数值巧合不是旧数据恢复。root 没有操作生产、重启共享应用或数据库，也没有导入快照恢复作者内容。
 
 私有持久保全目录为 `/Users/arlan/Documents/Codex-Recovery/chengyin-shared-rig-20261105/`：root-money、root-money-r2、k10-immersive、k10-immersive-a47cd65。后者 36 项清单、原 32 项不变及全部 37 文件复制均已逐一校验；没有把原文、登录存储或凭据推到公开仓库。这些 UI 快照不是完整 DB dump。
+
+
+资金修正 JAR 已就绪：[手动构建 42018704010](https://github.com/liboyang42-cpu/hengyin/actions/runs/42018704010)，来源 `59613c315bac97c11266c8bcea3fadf2c35cb67d`（含 Pages 3756、Play/map 最终交接与本次资金修正）。下载后附带校验和、SOURCE_SHA、ZIP CRC、内嵌提交号均通过，[产物收据](proof/codex-money-r2-20261105/backend-jar-596-verification.json)。119643027 字节，SHA256 `a43d8b1904c6ff4477a7553ab1dc0a04053a0d6fef92b0f9a006b62d7c4ada92`；Mac 目录 `/tmp/codex-launch-backend-jar-59613c315bac97c11266c8bcea3fadf2c35cb67d/`，artifact 保留 1 天。只构建，未运行 Java 测试、HTTP／恢复夹具或统一 CI。共享应用仍为管理者已验证的 6f，root 未复制入或重启该容器；待唯一共享应用管理者协调更新后，仅复验现有资金发布阻塞，不开新走查。
 
 ## 后续只做这些
 

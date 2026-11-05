@@ -57,6 +57,9 @@ root 已保存六个编辑器存储项和当前界面草稿到 `/private/tmp/cod
 
 活动统一内容审核只返回汇总裁决，没有可复用的具体字段元数据；已向 Pages 说明，未猜测标题／正文命中位置，也未增加逐字段供应商调用。
 
+
+资金修正 JAR 已就绪：[手动构建 42018704010](https://github.com/liboyang42-cpu/hengyin/actions/runs/42018704010)，来源 `59613c315bac97c11266c8bcea3fadf2c35cb67d`（含 Pages 3756、Play/map 最终交接与本次资金修正）。下载后附带校验和、SOURCE_SHA、ZIP CRC、内嵌提交号均通过，[产物收据](proof/codex-money-r2-20261105/backend-jar-596-verification.json)。119643027 字节，SHA256 `a43d8b1904c6ff4477a7553ab1dc0a04053a0d6fef92b0f9a006b62d7c4ada92`；Mac 目录 `/tmp/codex-launch-backend-jar-59613c315bac97c11266c8bcea3fadf2c35cb67d/`，artifact 保留 1 天。只构建，未运行 Java 测试、HTTP／恢复夹具或统一 CI。共享应用仍为管理者已验证的 6f，root 未复制入或重启该容器；待唯一共享应用管理者协调更新后，仅复验现有资金发布阻塞，不开新走查。
+
 ## 尚未完成
 
 1. 用定点测试读回最新资金分支与上述测试夹具。真实存储用例的运行准入保持原样，不能把 VPS 冒充 GitHub-hosted runner。
