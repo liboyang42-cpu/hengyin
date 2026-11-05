@@ -186748,6 +186748,42 @@
           ]
         },
         {
+          "route": "pages/merchant/game-node/index",
+          "segments": [
+            {
+              "selector": "cy-inline-error",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/game-node/index",
+          "segments": [
+            {
+              "selector": "cy-inline-error",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/game-node/index",
+          "segments": [
+            {
+              "selector": "cy-inline-error",
+              "index": 2
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/game-node/index",
+          "segments": [
+            {
+              "selector": "cy-inline-error",
+              "index": 3
+            }
+          ]
+        },
+        {
           "route": "pages/merchant/index/index",
           "segments": [
             {
@@ -1036878,7 +1036914,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:400"
+        "staticSource": "pages/merchant/game-node/index.js:402"
       }
     },
     {
@@ -1036945,7 +1036981,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:388"
+        "staticSource": "pages/merchant/game-node/index.js:390"
       }
     },
     {
@@ -1037012,11 +1037048,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:350"
+        "staticSource": "pages/merchant/game-node/index.js:351"
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:120:bindinput:onCapacityInput:12",
+      "id": "pages/merchant/game-node/index.wxml:121:bindinput:onCapacityInput:12",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1037039,7 +1037075,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onCapacityInput",
-        "line": 120,
+        "line": 121,
         "selectorHint": ".gn-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1037079,11 +1037115,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:359"
+        "staticSource": "pages/merchant/game-node/index.js:360"
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:124:bind:change:onServiceDateChange:13",
+      "id": "pages/merchant/game-node/index.wxml:126:bind:change:onServiceDateChange:13",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1037106,7 +1037142,7 @@
         "tag": "cy-date-field",
         "event": "bind:change",
         "handler": "onServiceDateChange",
-        "line": 124,
+        "line": 126,
         "selectorHint": "cy-date-field[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1037146,11 +1037182,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:362"
+        "staticSource": "pages/merchant/game-node/index.js:363"
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:130:bindtap:openServiceTime:14",
+      "id": "pages/merchant/game-node/index.wxml:133:bindtap:openServiceTime:14",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1037173,7 +1037209,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openServiceTime",
-        "line": 130,
+        "line": 133,
         "selectorHint": ".gn-time-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1037213,11 +1037249,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:367"
+        "staticSource": "pages/merchant/game-node/index.js:368"
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:138:bindinput:onReadyNoteInput:15",
+      "id": "pages/merchant/game-node/index.wxml:142:bindinput:onReadyNoteInput:15",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1037240,7 +1037276,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onReadyNoteInput",
-        "line": 138,
+        "line": 142,
         "selectorHint": ".gn-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1037280,11 +1037316,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:384"
+        "staticSource": "pages/merchant/game-node/index.js:386"
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:140:bindtap:submitReady:16",
+      "id": "pages/merchant/game-node/index.wxml:144:bindtap:submitReady:16",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1037307,7 +1037343,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "submitReady",
-        "line": 140,
+        "line": 144,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{writeState !== 'idle'}}",
@@ -1037347,7 +1037383,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:428"
+        "staticSource": "pages/merchant/game-node/index.js:430"
       }
     },
     {
@@ -1037414,11 +1037450,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:736"
+        "staticSource": "pages/merchant/game-node/index.js:746"
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:150:bindtap:resumeStation:17",
+      "id": "pages/merchant/game-node/index.wxml:154:bindtap:resumeStation:17",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1037441,7 +1037477,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "resumeStation",
-        "line": 150,
+        "line": 154,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": "{{station.canResume}}",
         "disabledCondition": "{{writeState !== 'idle'}}",
@@ -1037481,11 +1037517,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:507"
+        "staticSource": "pages/merchant/game-node/index.js:517"
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:155:bindtap:showLiveCheckin:18",
+      "id": "pages/merchant/game-node/index.wxml:159:bindtap:showLiveCheckin:18",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1037508,7 +1037544,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "showLiveCheckin",
-        "line": 155,
+        "line": 159,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": "{{station.playable}}",
         "disabledCondition": "{{writeState !== 'idle'}}",
@@ -1037590,223 +1037626,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:541"
-      }
-    },
-    {
-      "id": "pages/merchant/game-node/index.wxml:156:bindtap:openPauseSheet:19",
-      "route": "pages/merchant/game-node/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/merchant/game-node/index.wxml",
-        "js": "pages/merchant/game-node/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-btn",
-        "event": "bindtap",
-        "handler": "openPauseSheet",
-        "line": 156,
-        "selectorHint": ".gn-verify-actions",
-        "visibleCondition": "{{station.canPause}}",
-        "disabledCondition": "{{writeState !== 'idle'}}",
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:446"
-      }
-    },
-    {
-      "id": "pages/merchant/game-node/index.wxml:158:bindtap:openManualVerification:20",
-      "route": "pages/merchant/game-node/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/merchant/game-node/index.wxml",
-        "js": "pages/merchant/game-node/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-btn",
-        "event": "bindtap",
-        "handler": "openManualVerification",
-        "line": 158,
-        "selectorHint": ".gn-action",
-        "visibleCondition": null,
-        "disabledCondition": "{{writeState !== 'idle'}}",
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:535"
-      }
-    },
-    {
-      "id": "pages/merchant/game-node/index.wxml:159:bindtap:scanSubmission:21",
-      "route": "pages/merchant/game-node/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/merchant/game-node/index.wxml",
-        "js": "pages/merchant/game-node/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {
-        "cancelled": "scanCode",
-        "denied": "scanCode"
-      },
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-btn",
-        "event": "bindtap",
-        "handler": "scanSubmission",
-        "line": 159,
-        "selectorHint": ".gn-action",
-        "visibleCondition": null,
-        "disabledCondition": "{{writeState !== 'idle'}}",
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "external",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [
-        "scanCode"
-      ],
-      "successCapabilities": [
-        "scanCode"
-      ],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger",
-        "cancelled",
-        "denied"
-      ],
-      "requiredPlatforms": [
-        "ios",
-        "android"
-      ],
-      "externalGate": "real-device-required",
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:519"
+        "staticSource": "pages/merchant/game-node/index.js:551"
       }
     },
     {
@@ -1037873,11 +1037693,227 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:774"
+        "staticSource": "pages/merchant/game-node/index.js:784"
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:188:bind:close:closeDeclineSheet:22",
+      "id": "pages/merchant/game-node/index.wxml:160:bindtap:openPauseSheet:19",
+      "route": "pages/merchant/game-node/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/game-node/index.wxml",
+        "js": "pages/merchant/game-node/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bindtap",
+        "handler": "openPauseSheet",
+        "line": 160,
+        "selectorHint": ".gn-verify-actions",
+        "visibleCondition": "{{station.canPause}}",
+        "disabledCondition": "{{writeState !== 'idle'}}",
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/game-node/index.js:456"
+      }
+    },
+    {
+      "id": "pages/merchant/game-node/index.wxml:162:bindtap:openManualVerification:20",
+      "route": "pages/merchant/game-node/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/game-node/index.wxml",
+        "js": "pages/merchant/game-node/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bindtap",
+        "handler": "openManualVerification",
+        "line": 162,
+        "selectorHint": ".gn-action",
+        "visibleCondition": null,
+        "disabledCondition": "{{writeState !== 'idle'}}",
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/game-node/index.js:545"
+      }
+    },
+    {
+      "id": "pages/merchant/game-node/index.wxml:163:bindtap:scanSubmission:21",
+      "route": "pages/merchant/game-node/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/game-node/index.wxml",
+        "js": "pages/merchant/game-node/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {
+        "cancelled": "scanCode",
+        "denied": "scanCode"
+      },
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bindtap",
+        "handler": "scanSubmission",
+        "line": 163,
+        "selectorHint": ".gn-action",
+        "visibleCondition": null,
+        "disabledCondition": "{{writeState !== 'idle'}}",
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "external",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [
+        "scanCode"
+      ],
+      "successCapabilities": [
+        "scanCode"
+      ],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "cancelled",
+        "denied"
+      ],
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/game-node/index.js:529"
+      }
+    },
+    {
+      "id": "pages/merchant/game-node/index.wxml:192:bind:close:closeDeclineSheet:22",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1037900,7 +1037936,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeDeclineSheet",
-        "line": 188,
+        "line": 192,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1037940,11 +1037976,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:405"
+        "staticSource": "pages/merchant/game-node/index.js:407"
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:193:bindtap:onDeclineReasonTap:23",
+      "id": "pages/merchant/game-node/index.wxml:197:bindtap:onDeclineReasonTap:23",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1037967,7 +1038003,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onDeclineReasonTap",
-        "line": 193,
+        "line": 197,
         "selectorHint": ".gn-choice",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1038007,11 +1038043,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:409"
+        "staticSource": "pages/merchant/game-node/index.js:411"
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:195:bindtap:submitDecline:24",
+      "id": "pages/merchant/game-node/index.wxml:199:bindtap:submitDecline:24",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1038034,7 +1038070,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "submitDecline",
-        "line": 195,
+        "line": 199,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1038074,11 +1038110,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:415"
+        "staticSource": "pages/merchant/game-node/index.js:417"
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:199:bind:close:closePauseSheet:25",
+      "id": "pages/merchant/game-node/index.wxml:203:bind:close:closePauseSheet:25",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1038101,7 +1038137,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closePauseSheet",
-        "line": 199,
+        "line": 203,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1038141,11 +1038177,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:451"
+        "staticSource": "pages/merchant/game-node/index.js:461"
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:204:bindtap:onPauseReasonTap:26",
+      "id": "pages/merchant/game-node/index.wxml:208:bindtap:onPauseReasonTap:26",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1038168,7 +1038204,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPauseReasonTap",
-        "line": 204,
+        "line": 208,
         "selectorHint": ".gn-choice",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1038208,11 +1038244,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:455"
+        "staticSource": "pages/merchant/game-node/index.js:465"
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:209:bind:change:onResumeDateChange:27",
+      "id": "pages/merchant/game-node/index.wxml:213:bind:change:onResumeDateChange:27",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1038235,7 +1038271,7 @@
         "tag": "cy-date-field",
         "event": "bind:change",
         "handler": "onResumeDateChange",
-        "line": 209,
+        "line": 213,
         "selectorHint": ".gn-time-picker",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1038275,11 +1038311,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:463"
+        "staticSource": "pages/merchant/game-node/index.js:473"
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:210:bind:change:onResumeTimeChange:28",
+      "id": "pages/merchant/game-node/index.wxml:214:bind:change:onResumeTimeChange:28",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1038302,7 +1038338,7 @@
         "tag": "cy-date-field",
         "event": "bind:change",
         "handler": "onResumeTimeChange",
-        "line": 210,
+        "line": 214,
         "selectorHint": ".gn-time-picker",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1038342,11 +1038378,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:466"
+        "staticSource": "pages/merchant/game-node/index.js:476"
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:215:bind:change:onFallbackChange:29",
+      "id": "pages/merchant/game-node/index.wxml:219:bind:change:onFallbackChange:29",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1038369,7 +1038405,7 @@
         "tag": "cy-dropdown",
         "event": "bind:change",
         "handler": "onFallbackChange",
-        "line": 215,
+        "line": 219,
         "selectorHint": "cy-dropdown[bind:change]",
         "visibleCondition": "{{fallbackOptions.length}}",
         "disabledCondition": null,
@@ -1038409,11 +1038445,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:469"
+        "staticSource": "pages/merchant/game-node/index.js:479"
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:229:bindtap:submitPause:30",
+      "id": "pages/merchant/game-node/index.wxml:233:bindtap:submitPause:30",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1038436,7 +1038472,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "submitPause",
-        "line": 229,
+        "line": 233,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!pauseDraft.reasonCode || !pauseDraft.resumeDate}}",
@@ -1038476,11 +1038512,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:480"
+        "staticSource": "pages/merchant/game-node/index.js:490"
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:233:bind:close:closeVerifySheet:31",
+      "id": "pages/merchant/game-node/index.wxml:237:bind:close:closeVerifySheet:31",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1038503,7 +1038539,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeVerifySheet",
-        "line": 233,
+        "line": 237,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1038543,74 +1038579,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:628"
-      }
-    },
-    {
-      "id": "pages/merchant/game-node/index.wxml:238:bindinput:onSubmissionIdInput:32",
-      "route": "pages/merchant/game-node/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/merchant/game-node/index.wxml",
-        "js": "pages/merchant/game-node/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "input",
-        "event": "bindinput",
-        "handler": "onSubmissionIdInput",
-        "line": 238,
-        "selectorHint": ".gn-input",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:623"
+        "staticSource": "pages/merchant/game-node/index.js:638"
       }
     },
     {
@@ -1038677,11 +1038646,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:251"
+        "staticSource": "pages/merchant/game-node/index.js:252"
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:241:bindtap:onVerifyDecisionTap:33",
+      "id": "pages/merchant/game-node/index.wxml:242:bindinput:onSubmissionIdInput:32",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1038701,77 +1038670,77 @@
       "requestMode": "ordered",
       "confirmationMode": null,
       "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "onVerifyDecisionTap",
-        "line": 241,
-        "selectorHint": ".gn-segment-item",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:632"
-      }
-    },
-    {
-      "id": "pages/merchant/game-node/index.wxml:242:bindtap:onVerifyDecisionTap:34",
-      "route": "pages/merchant/game-node/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/merchant/game-node/index.wxml",
-        "js": "pages/merchant/game-node/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "onVerifyDecisionTap",
+        "tag": "input",
+        "event": "bindinput",
+        "handler": "onSubmissionIdInput",
         "line": 242,
+        "selectorHint": ".gn-input",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/game-node/index.js:633"
+      }
+    },
+    {
+      "id": "pages/merchant/game-node/index.wxml:245:bindtap:onVerifyDecisionTap:33",
+      "route": "pages/merchant/game-node/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/game-node/index.wxml",
+        "js": "pages/merchant/game-node/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onVerifyDecisionTap",
+        "line": 245,
         "selectorHint": ".gn-segment-item",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1038811,11 +1038780,78 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:632"
+        "staticSource": "pages/merchant/game-node/index.js:642"
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:246:bindtap:onRejectReasonTap:35",
+      "id": "pages/merchant/game-node/index.wxml:246:bindtap:onVerifyDecisionTap:34",
+      "route": "pages/merchant/game-node/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/game-node/index.wxml",
+        "js": "pages/merchant/game-node/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onVerifyDecisionTap",
+        "line": 246,
+        "selectorHint": ".gn-segment-item",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/game-node/index.js:642"
+      }
+    },
+    {
+      "id": "pages/merchant/game-node/index.wxml:250:bindtap:onRejectReasonTap:35",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1038838,7 +1038874,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onRejectReasonTap",
-        "line": 246,
+        "line": 250,
         "selectorHint": ".gn-choice",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1038878,11 +1038914,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:639"
+        "staticSource": "pages/merchant/game-node/index.js:649"
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:248:bindtap:submitVerification:36",
+      "id": "pages/merchant/game-node/index.wxml:252:bindtap:submitVerification:36",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1038905,7 +1038941,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "submitVerification",
-        "line": 248,
+        "line": 252,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1038945,11 +1038981,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:647"
+        "staticSource": "pages/merchant/game-node/index.js:657"
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:257:bind:confirm:onServiceTimeConfirm:37",
+      "id": "pages/merchant/game-node/index.wxml:261:bind:confirm:onServiceTimeConfirm:37",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1038972,8 +1039008,75 @@
         "tag": "cy-time-range",
         "event": "bind:confirm",
         "handler": "onServiceTimeConfirm",
-        "line": 257,
+        "line": 261,
         "selectorHint": "cy-time-range[bind:confirm]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/game-node/index.js:376"
+      }
+    },
+    {
+      "id": "pages/merchant/game-node/index.wxml:262:bind:cancel:closeServiceTime:38",
+      "route": "pages/merchant/game-node/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/game-node/index.wxml",
+        "js": "pages/merchant/game-node/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-time-range",
+        "event": "bind:cancel",
+        "handler": "closeServiceTime",
+        "line": 262,
+        "selectorHint": "cy-time-range[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
@@ -1039016,74 +1039119,7 @@
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:258:bind:cancel:closeServiceTime:38",
-      "route": "pages/merchant/game-node/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/merchant/game-node/index.wxml",
-        "js": "pages/merchant/game-node/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-time-range",
-        "event": "bind:cancel",
-        "handler": "closeServiceTime",
-        "line": 258,
-        "selectorHint": "cy-time-range[bind:cancel]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:374"
-      }
-    },
-    {
-      "id": "pages/merchant/game-node/index.wxml:260:bind:settled:onPrivacyGateSettled:39",
+      "id": "pages/merchant/game-node/index.wxml:264:bind:settled:onPrivacyGateSettled:39",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1039106,7 +1039142,7 @@
         "tag": "cy-privacy-gate",
         "event": "bind:settled",
         "handler": "onPrivacyGateSettled",
-        "line": 260,
+        "line": 264,
         "selectorHint": "cy-privacy-gate[bind:settled]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1039146,11 +1039182,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:201"
+        "staticSource": "pages/merchant/game-node/index.js:202"
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:270:bind:close:closeLiveCheckin:40",
+      "id": "pages/merchant/game-node/index.wxml:274:bind:close:closeLiveCheckin:40",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1039173,7 +1039209,7 @@
         "tag": "cy-qr-voucher",
         "event": "bind:close",
         "handler": "closeLiveCheckin",
-        "line": 270,
+        "line": 274,
         "selectorHint": "cy-qr-voucher[bind:close]",
         "visibleCondition": "{{checkinVisible}}",
         "disabledCondition": null,
@@ -1039213,11 +1039249,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:548"
+        "staticSource": "pages/merchant/game-node/index.js:558"
       }
     },
     {
-      "id": "pages/merchant/game-node/index.wxml:271:bind:retry:issueLiveCheckin:41",
+      "id": "pages/merchant/game-node/index.wxml:275:bind:retry:issueLiveCheckin:41",
       "route": "pages/merchant/game-node/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1039240,7 +1039276,7 @@
         "tag": "cy-qr-voucher",
         "event": "bind:retry",
         "handler": "issueLiveCheckin",
-        "line": 271,
+        "line": 275,
         "selectorHint": "cy-qr-voucher[bind:retry]",
         "visibleCondition": "{{checkinVisible}}",
         "disabledCondition": null,
@@ -1039322,7 +1039358,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:567"
+        "staticSource": "pages/merchant/game-node/index.js:577"
       }
     },
     {
@@ -1039389,7 +1039425,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:343"
+        "staticSource": "pages/merchant/game-node/index.js:344"
       }
     },
     {
@@ -1039498,7 +1039534,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:541"
+        "staticSource": "pages/merchant/game-node/index.js:551"
       }
     },
     {
@@ -1039565,7 +1039601,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:446"
+        "staticSource": "pages/merchant/game-node/index.js:456"
       }
     },
     {
@@ -1039632,7 +1039668,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:535"
+        "staticSource": "pages/merchant/game-node/index.js:545"
       }
     },
     {
@@ -1039714,7 +1039750,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/game-node/index.js:519"
+        "staticSource": "pages/merchant/game-node/index.js:529"
       }
     },
     {

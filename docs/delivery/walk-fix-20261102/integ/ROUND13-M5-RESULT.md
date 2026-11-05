@@ -125,4 +125,25 @@ Rig rebuilt again (it stops between sessions). The seed chains pass once the pla
 | Prediction (预测待答) | NOT walked with data. It needs a prediction node with player answers; the rig has none. Empty state reads 「没有等你给答案的预测」. |
 | Organiser invite wording (p2 N-14 rest), customer tags (N-16), N-17 rest, p3 N18 editor preview overlap | NOT done. I opened the coop list as the receiving club lead (card reads 「已接受 · 来自 城瘾跑团 · 接收俱乐部：执行俱乐部 · 引流型 · 无分成」) and found nothing I could name as wrong against the notes, but the notes do not say which lines they meant. |
 
-STATUS: PARTIAL - two more bugs fixed (publish cover error, merchant publish link without scope) and batch detail walked; coop settlement, game node and prediction need real money/director/prediction flows the rig cannot produce, and p2 N-14/N-16/N-17 and p3 N18 were not done
+
+## Fifth pass (real flows from the m4 scripts)
+
+Rig rebuilt. I ran `proof/k5-walk/s0`..`s7` (with `PYTHONPATH` pointing at the rig's `pay.py`) on this rig: a club (外滩夜跑社) with a city-orienteering theme, two merchant stations (one ¥8 per verified person, one 引流), two sessions, five paid players, a 50% refund, the 14-day wait and the real settlement job. I also gave the rig the dummy OSS settings (rig `app.py` only), without which the coop list showed a blank page. I only read money; no settlement code or rule was touched.
+
+| Item | Result |
+|---|---|
+| Club settlement (俱乐部结算), read only | WALKED as the club lead. Two session rows: ¥59.66 (销售额 78.00, 平台服务费 3% 2.34, 商家核销费 16.00) and ¥78.57 (97.50, 2.93, 16.00), 可提现 ¥138.23. 78.00 − 2.34 − 16.00 = 59.66 and 97.50 − 2.93 − 16.00 = 78.57, so the screen adds up. Same figures as m4. |
+| Coop settlement detail (per-theme) | NOT walkable. The page opens from 「各主题结算」 on 俱乐部结算, and that section is empty: the settlement job wrote per-registration lines (platform, merchant, coop_merchant) but no per-theme `coop_settlement` row for a ¥8-per-head terms order, so there is nothing to open. Step: run job 145 and 146 after the s0–s7 scripts; result `coop_settlement` has 0 rows. With no id the page says 「缺少结算记录信息」; with a made-up id 「结算记录不可见」. This is the same gap as m4's M1 (not mine to change). |
+| Game node (merchant station page) | WALKED with data. Steps: as the lead, `/api/game/session/command` `PREPARE` on session 14 (script `/tmp`-style helper, same call the director page makes); the merchant's home then lists a 「待接受邀请」 card, and the station page shows 「待接受邀请 · 拒绝邀请 / 接受邀请」. Accepted as the merchant: 「已接受 · 待准备」 with the preparation form, 最近操作 row 「接受邀请 · 已应用」. |
+| Game node: 「第 1 版」 under every 最近操作 row | **Bug fixed (10).** A version number meant nothing to a shop. Removed; only 「已处理过」 shows when a command was a repeat. `pages/merchant/game-node/index.wxml`. |
+| Game node: confirming 准备完成 with the form empty | **Bug fixed (11).** Nothing visible happened (a toast that is gone quickly). Errors now show as red text under 接待容量, 服务日期, 服务时段 (and under the checklist when unticked). `index.js`, `index.wxml`, `index.json`; `m5-gamenode-ready-errors-after.jpg`; 66 related tests pass. |
+| Prediction (预测待答) | WALKED with data. The rig has no prediction node, so I fixed the data in the rig database: station template 6005 got a prediction question with two options, node 75 was linked to merchant 9002, and one open round with two player answers was inserted (rows written directly, labelled as fixture). The inbox shows 「共 1 轮等你给答案 · 外滩钟楼 · 还剩 1 天 · 2 个人选了这一轮」; 给答案 opens the options, 就是这个 asks 「公布答案「少于 20 杯」？ … 只能公布一次」, 公布并结算 empties the inbox. I did not read back points paid. |
+| Prediction confirm title | **Bug fixed (12).** It ended with a half-width 「?」; now 「？」. `pages/merchant/predict/index.wxml`. |
+| Coop invite wording (p2 N-14) | **Bug fixed (13).** The accepted invite said 「已接受，归属已冻结」 (and 「接受后归属冻结」 before accepting). Now 「已接受，据点不能再换」 / 「接受前请确认，接受后据点不能再换」. `utils/coop-invite-view.js`; 65 related tests pass; `m5-coop-invite-detail-after.jpg`. Not touched: 评价 timing (owner), and the 联系方式 row shows only the sender's name when no phone is released (the page's own rule for an accepted invite). |
+| Customer tags (p2 N-16) | WALKED, nothing wrong seen. 客户 for the shop shows one customer with 「新客 · 最近已到店 · 今天」, 「1 位 · 本月新增 1」. The k5 players are group scans, so the shop's CRM has no refund customers to show; the refund tag rule itself remains covered by k9's tests only. |
+| Duplicate quick actions (p2 N-17) | NOT re-checked; needs a shop that only accepted an invite and has a project open on merchantinfo. |
+| Editor preview overlap (p3 N18) | NOT reproduced. In the topic editor the story-flow sheet has its own 「下一步 →」 button at the bottom by design; the main screen's buttons are hidden under the sheet. I could not find another preview sheet that overlapped, and the notes do not say which one. |
+
+Rig tap note: on three screens (settlement rows, prediction card, topic CTA) a real mouse tap did not run the page's handler in the rig while calling the same handler did. I used the handler and say so above; I could not prove it is rig-only.
+
+STATUS: PARTIAL - game node and prediction walked with real data and 4 more bugs fixed (10–13); coop settlement detail has no row to open on this scenario (exact step above); p2 N-17 duplicate actions and p3 N18 not confirmed
