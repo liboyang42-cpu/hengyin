@@ -3857,11 +3857,8 @@ page { background: var(--cy-btn-solid-bg); }
 }
 
 .slopes-submit-error {
-  position: fixed;
-  right: var(--cy-page-x);
-  bottom: calc(var(--cy-tabbar-h) + var(--cy-safe-bottom) + var(--cy-space-3));
-  left: var(--cy-page-x);
-  z-index: 121;
+  display: block;
+  margin: var(--cy-space-3) var(--cy-page-x) 0;
 }
 
 .slopes-tabbar__tabs {

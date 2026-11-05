@@ -7966,7 +7966,7 @@ Page({
             }
             cb(result);
           }, isEditingTopicPayload);
-          app.sendRequest({ url: '/api/topic/author-edit-detail', hideLoading: true,
+          app.sendRequest({ url: '/api/topic/author-saved-detail', hideLoading: true,
             method: 'POST',
             data: { id: topicId, scope: this.data.operationScope },
             success: handlers.success,

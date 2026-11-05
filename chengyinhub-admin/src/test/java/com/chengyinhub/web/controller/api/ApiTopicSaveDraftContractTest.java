@@ -211,6 +211,20 @@ class ApiTopicSaveDraftContractTest {
         return (java.util.Map<String, Object>) result.get(AjaxResult.DATA_TAG);
     }
 
+    @Test
+    void publishedStartedThemeCanBeReadBackWithoutOpeningItsEditWindow() {
+        editDetail(1, 0);
+        CmsTopic topic = topicService.selectCmsTopicById(TOPIC_ID);
+        topic.setStartDate(new java.util.Date(System.currentTimeMillis() - 60_000));
+        assertNotEquals(200, controller.authorEditDetail(String.valueOf(TOPIC_ID), null).get(AjaxResult.CODE_TAG));
+        AjaxResult saved = controller.authorSavedDetail(String.valueOf(TOPIC_ID), null);
+        assertEquals(200, saved.get(AjaxResult.CODE_TAG));
+        java.util.Map<?, ?> data = (java.util.Map<?, ?>) saved.get(AjaxResult.DATA_TAG);
+        assertEquals(false, data.get("isDraft")); assertEquals("NONE", data.get("editScope"));
+        topic.setMemberId(999L);
+        assertNotEquals(200, controller.authorSavedDetail(String.valueOf(TOPIC_ID), null).get(AjaxResult.CODE_TAG));
+    }
+
     private static final String REQUEST_ID = "draftAbc123456789XY";
     private static final String REQUEST_KEY = "topic:draft-request:" + MEMBER + ":" + REQUEST_ID;
 

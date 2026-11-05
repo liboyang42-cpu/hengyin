@@ -1035,3 +1035,13 @@ test('legacy multiple thoughts can be reduced without silently removing story or
   assert.deepEqual(saved.map(row => row.key), ['old_a']);
   assert.equal(saved[0].desc, '保留文字');
 });
+
+// 失败信息随内容滚动，作者仍可回到章节按钮修正输入。
+test('保存失败提示和原因都在章节滚动容器内，不盖住章节动作', () => {
+  const wxml = fs.readFileSync(path.join(ROOT, 'pages/publish/fabu/index.wxml'), 'utf8')
+  const css = fs.readFileSync(path.join(ROOT, 'pages/publish/fabu/index.wxss'), 'utf8')
+  const errorAt = wxml.indexOf('<cy-inline-error class="slopes-submit-error"')
+  assert.ok(wxml.lastIndexOf('<scroll-view', errorAt) > wxml.lastIndexOf('</scroll-view>', errorAt))
+  assert.ok(wxml.indexOf('submit-error-why', errorAt) < wxml.indexOf('</scroll-view>', errorAt))
+  assert.doesNotMatch(css.match(/\.slopes-submit-error\s*\{([^}]+)\}/)[1], /position:\s*fixed/)
+})

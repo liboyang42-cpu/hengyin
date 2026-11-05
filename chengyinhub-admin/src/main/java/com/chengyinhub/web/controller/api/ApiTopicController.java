@@ -997,7 +997,17 @@ public class ApiTopicController extends BaseController {
     @PostMapping("/author-edit-detail")
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public AjaxResult authorEditDetail(String id, String scope) {
-        AjaxResult result = topicEditDetail(id, scope);
+        return authorDetailWire(topicEditDetail(id, scope));
+    }
+
+    /** 保存/发布回读仍校验创作者归属，但不授予已开始主题的编辑权。 */
+    @PostMapping("/author-saved-detail")
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
+    public AjaxResult authorSavedDetail(String id, String scope) {
+        return authorDetailWire(topicEditDetail(id, scope, true));
+    }
+
+    private AjaxResult authorDetailWire(AjaxResult result) {
         if (Integer.valueOf(200).equals(result.get(AjaxResult.CODE_TAG))) {
             Map<String, Object> data = new HashMap<>((Map<String, Object>) result.get(AjaxResult.DATA_TAG));
             data.put("topic", new com.chengyinhub.business.domain.dto.TopicAuthorEditDTO((CmsTopic) data.get("topic")));
@@ -1010,6 +1020,10 @@ public class ApiTopicController extends BaseController {
     @Parameters({@Parameter(name = "id", description = "主题id")})
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public AjaxResult topicEditDetail(String id, String scope) {
+        return topicEditDetail(id, scope, false);
+    }
+
+    private AjaxResult topicEditDetail(String id, String scope, boolean readback) {
         Long topicId = Convert.toLong(id, 0L);
         if (topicId < 1) {
             return error("参数不合规");
@@ -1042,7 +1056,8 @@ public class ApiTopicController extends BaseController {
             editWindowScope = com.chengyinhub.business.util.TopicEditWindow.resolve(
                     topic, isDraft, new Date());
         } catch (RuntimeException e) {
-            return error(e.getMessage());
+            if (!readback) return error(e.getMessage());
+            editWindowScope = null;
         }
 
         CmsTopicChapter chapterQ = new CmsTopicChapter();
@@ -1088,7 +1103,7 @@ public class ApiTopicController extends BaseController {
         data.put("tickets", topicTickets);
         data.put("collaboratorIds", collaboratorIds);
         // 前端据此决定「结构/票价能不能编」:WHITELIST 档只许改文案与图
-        data.put("editScope", editWindowScope.name());
+        data.put("editScope", editWindowScope == null ? "NONE" : editWindowScope.name());
         // 服务端草稿（is_draft=1）：编辑器据此继续「保存草稿 / 发布草稿」，而不是按已发布主题处理
         data.put("isDraft", Integer.valueOf(1).equals(isDraft));
         return success(data);

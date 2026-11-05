@@ -414,6 +414,18 @@
 
     <include src="./step3.wxml" />
 
+  <cy-inline-error class="slopes-submit-error" wx:if="{{submitError}}" kind="network"
+    title="这次还没有保存" sub="{{submitError}}" action="重试" bind:action="submitForm" />
+  <!-- 稿 S16:错误那一句之外还有一条可展开的「为什么会这样」。一句结果只说了"失败了",
+       人下一步该动哪儿仍然不知道;展开里写的是**能照着做的那一步**。 -->
+  <view class="submit-error-why" wx:if="{{submitError}}">
+    <view class="submit-error-why__toggle" bindtap="toggleSubmitErrorWhy"
+          aria-role="button" aria-label="为什么会这样" hover-class="cy-pressed" hover-stay-time="80">
+      <text>为什么会这样</text>
+      <cy-icon name="{{submitErrorWhy ? 'collapse' : 'expand'}}" size="24" />
+    </view>
+    <text class="submit-error-why__body" wx:if="{{submitErrorWhy}}">草稿已存本机，可稍后重试</text>
+  </view>
     <view class="slopes-sheet-bottom"></view>
   </scroll-view>
 
@@ -691,18 +703,7 @@
     <text class="pending-undo__action" bindtap="undoPendingRemoval" hover-class="cy-pressed" hover-stay-time="80">撤销</text>
   </view>
 
-  <cy-inline-error class="slopes-submit-error" wx:if="{{submitError}}" kind="network"
-    title="这次还没有保存" sub="{{submitError}}" action="重试" bind:action="submitForm" />
-  <!-- 稿 S16:错误那一句之外还有一条可展开的「为什么会这样」。一句结果只说了"失败了",
-       人下一步该动哪儿仍然不知道;展开里写的是**能照着做的那一步**。 -->
-  <view class="submit-error-why" wx:if="{{submitError}}">
-    <view class="submit-error-why__toggle" bindtap="toggleSubmitErrorWhy"
-          aria-role="button" aria-label="为什么会这样" hover-class="cy-pressed" hover-stay-time="80">
-      <text>为什么会这样</text>
-      <cy-icon name="{{submitErrorWhy ? 'collapse' : 'expand'}}" size="24" />
-    </view>
-    <text class="submit-error-why__body" wx:if="{{submitErrorWhy}}">草稿已存本机，可稍后重试</text>
-  </view>
+
 
   <!-- 底部导航条(Figma 4028:13649):左侧两个 tab 切「内容 / 地图」,右侧一颗药丸是主动作。
        取代原来的「顶部进度条 + 下一步/上一步」—— 三个控件干同一件事(换页),留一个就够。
