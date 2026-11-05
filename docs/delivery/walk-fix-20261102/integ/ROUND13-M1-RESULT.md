@@ -64,7 +64,7 @@ Tests:
 
 ## Verify
 
-- CI: the push of the fix commit (plus this doc) to `integ/launch-test-20261103` is the CI run for this lane. I did not wait for it.
+- CI: pushed at 11:32 UTC as `54df2df65` (fix) and `1dc29f8f0` (this doc). The doc commit is `[skip ci]`, like the branch's other batched pushes, so that push started no CI run. Every check listed above was run locally on the rebased tree. **No CI result for this lane yet.**
 - No migration added. The rig DB needed the branch's existing `migration_20261105_chapter_video.sql` (applied as is).
 - Secret scan of the diff: no keys. The rig stand-ins use dummy values.
 
