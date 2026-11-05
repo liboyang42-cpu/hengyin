@@ -71,7 +71,7 @@ test('existing coupons and passes still load and can be selected and cleared', (
 
 test('all rendered creation surfaces are gated and admin directory only saves existing coupons', () => {
   assert.doesNotMatch(read('subpackageMember/coupon/coupon.wxml'), /GoAdd|发布优惠券|发一张到店券/);
-  assert.match(read('subpackageMember/couponInfo/couponInfo.wxml'), /theme-topic-editor" wx:if="\{\{couponCreationEnabled\}\}"/);
+  assert.match(read('subpackageMember/couponInfo/couponInfo.wxml'), /<block wx:if="\{\{couponCreationEnabled\}\}">/);
   const reward = read('pages/publish/components/reward-selector/index.wxml');
   assert.match(reward, /wx:if="\{\{allowCreate && couponCreationEnabled\}\}" slot="footer"/);
   assert.match(reward, /show="\{\{creating && couponCreationEnabled\}\}"/);

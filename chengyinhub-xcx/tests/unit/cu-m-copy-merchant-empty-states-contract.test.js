@@ -78,7 +78,7 @@ test('CU-M-142 优惠券空态不重复券的用途说明', () => {
   const empties = (wxml.match(/<cy-empty\b[^>]*\/>/g) || []).filter((tag) => /title="还没有优惠券"/.test(tag))
   assert.equal(empties.length, 1)
   // 2026-10-27 业主 M-07 推翻「空态不许长出 sub」:没有券时要有一句提示;仍不许重复券的用途说明(下一行)
-  assert.match(empties[0], /\bsub="发一张到店券，把看过的人带进门"/)
+  assert.doesNotMatch(empties[0], /\bsub=/, 'R14 暂关新建优惠券，空态不再劝商家发券')
   // RUN-009 / D-006：移除结构介绍，空态保持简洁。
   assert.equal((wxml.match(/可用于主题、节点与到店核销/g) || []).length, 0)
 })

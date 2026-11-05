@@ -1147,9 +1147,9 @@
   ]
  },
  "D15": {
-  "selector": ".fabu, .theme-topic-editor",
+  "selector": ".coupon-creation-closed",
   "min": 1,
-  "weak": true
+  "_why": "R14 暂关新建优惠券，深链检查关闭状态与返回导航；不再以恒渲染外壳冒充表单可用。"
  },
  "D16": {
   "selector": ".cq-page",

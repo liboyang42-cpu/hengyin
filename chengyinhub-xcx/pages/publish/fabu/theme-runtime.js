@@ -1,5 +1,6 @@
 const app = getApp();
 const toast = require('../../../utils/toast.js');
+const modal = require('../../../utils/modal.js');
 const initial = require('../utils/publish/story-initial-state.js');
 const supportMatrix = require('../utils/publish/gameplay-support-matrix.js');
 const values = require('./theme-values.js');
@@ -460,7 +461,7 @@ const methods = {
     const tasks = this._chapterTaskStations(c);
     if (tasks.blocked) { toast(tasks.blocked); return false; }
     this._saveRuntime(c);
-    if (tasks.resave.length) wx.showModal({ title: '还差一步', content: tasks.resave.map(name => '「' + name + '」').join('') + '要重新打开玩法，点一次保存，才能和这一章的设置一起用', showCancel: false, confirmText: '知道了' });
+    if (tasks.resave.length) modal.show({ title: '还差一步', content: tasks.resave.map(name => '「' + name + '」').join('') + '要重新打开玩法，点一次保存，才能和这一章的设置一起用', showCancel: false, confirmText: '知道了' });
     if (this._applyStructureChapterCompletion) this._applyStructureChapterCompletion(index, completion); // structure
     return true;
   },
