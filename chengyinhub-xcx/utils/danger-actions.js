@@ -461,8 +461,10 @@ const DANGER_ACTIONS = {
     irreversible: true,
     title: '取消「{name}」的报名?',
     // 第十二轮 k3(p3 N7):原来四行说明里没有金额,主理人看不出要退多少。改为一行带金额的事实。
-    content: '原路退还 {amount}，对方从本团名册移出。此操作不可撤销。',
-    consequences: [],
+    content: '',
+    consequences: [
+      { icon: 'finance', text: '原路退还 {amount}，对方从本团名册移出。此操作不可撤销。' },
+    ],
     confirmText: '退款并清退',
     alt: null,
     done: { title: '清退请求已受理', text: '请查看订单确认取消及退款进度。' },
