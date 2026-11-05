@@ -70,6 +70,12 @@ ffmpeg -hide_banner -loglevel error -f lavfi -i sine=frequency=440:sample_rate=4
 node media-selfcheck.mjs
 ```
 
+Coordinator then reserved author/player 9010/9011 for a fresh `R14-VIDEO-` UI-authored replay. Exact login seam identities are `e2e-openid-9010` and `e2e-openid-9011`; the driver reads and checks the returned member ID before acting. `proof/round14-video/authored-media-replay.mjs` is prepared, with syntax, `--plan` and evidence-sanitizer `--selfcheck` passing. Execution is gated by `R14_VIDEO_RUNTIME_READY=<coordinator-verified combined SHA>` and has **not begun** while the old backend is running. It accepts JSON UI operations on stdin, keeps one browser session, supports explicit native media queues and captures full targeted ending/author read responses rather than the rig's truncated network text. Product fields cannot be injected through an eval command. Coordinator owns media/theme HOLD review checkpoints; this lane does no review bypass or SQL completion.
+
+Full-suite audio triage: baseline `play-mechanisms-contract.test.js` failed its stale exact arrival-source assertion and hard-coded six-context count. Coordinator then assigned that test to VIDEO. It now runs the actual production location callback across known/unknown/invalid precision and station/quest states, with a mutation removing the precision guard required to fail. It retains strict six-of-six audible-context registration, separately runs the actual unique silent preload and asserts volume zero, no play, and canplay/error/20-second destruction. Negative controls reject an extra raw context, preload playback, and nonzero preload volume. No production registration or gate was weakened.
+
+`node --test chengyinhub-xcx/tests/unit/play-mechanisms-contract.test.js chengyinhub-xcx/tests/unit/audio-session.test.js`: **14/14 PASS**. The corrected seven mechanisms tests were also run serially against the coordinator's current integrated index source via a temporary test copy: **7/7 PASS**. No shared-source file was written for that check.
+
 ## Unverified / remaining
 
 - Combined new-source runtime live ending and reopen with decoded ending video; actual saved/frozen/HTTP response comparison to locate the historical missing video.
