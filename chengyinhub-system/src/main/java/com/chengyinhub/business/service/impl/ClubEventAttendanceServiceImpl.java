@@ -224,7 +224,7 @@ public class ClubEventAttendanceServiceImpl implements IClubEventAttendanceServi
         row.remove("email");
         row.remove("address");
         // C-05:名册行以报名时填写的姓名示人(带队现场按名单点人);没填姓名时退回昵称,
-        // 默认昵称「城瘾用户」分不出人,改用「成员#id」。密文只在服务端解,不下发。
+        // 默认昵称「城瘾用户」分不出人时带报名时刻。密文只在服务端解,不下发。
         Object stored = row.remove("realNameStored");
         String realName = null;
         if (stored instanceof String && !((String) stored).trim().isEmpty()) {
@@ -239,8 +239,10 @@ public class ClubEventAttendanceServiceImpl implements IClubEventAttendanceServi
         }
         Object nickname = row.get("nickname");
         String nick = nickname == null ? "" : String.valueOf(nickname).trim();
-        row.put("displayName", realName != null ? realName
-                : (nick.isEmpty() || "城瘾用户".equals(nick) ? "成员#" + row.get("memberId") : nick));
+        // 第十二轮 k3(p3 N4):兜底不再给「成员#id」,默认昵称带报名时刻。
+        Object signedAt = row.get("createTime") instanceof java.util.Date ? row.get("createTime") : row.get("registrationTime");
+        row.put("displayName", com.chengyinhub.business.util.OrganiserPersonName.pick(realName, nick, null,
+                signedAt instanceof java.util.Date ? (java.util.Date) signedAt : null, "报名"));
         return row;
     }
 

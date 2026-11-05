@@ -43,7 +43,7 @@ import static org.mockito.Mockito.when;
 /**
  * 第十轮 f2 · j2 F-08:主理人要选人的地方(成员名单、角色、定向广播、排行榜、转让主理人及其不可撤回的确认)
  * 每个人都是「城瘾用户」。名字来源 = 本俱乐部 / 本场报名时填写的姓名(C-05 已在报名参与者里这样显示),
- * 主理人本人 = 主理人档案称呼;都没有用昵称,默认昵称改「成员#id」。只对能治理本俱乐部的人生效。
+ * 主理人本人 = 昵称(业主 11-05);都没有用昵称,默认昵称带加入时刻(第十二轮,不给编号)。只对能治理本俱乐部的人生效。
  */
 class OrganiserPersonNameTest {
 
@@ -55,8 +55,20 @@ class OrganiserPersonNameTest {
     void pickPrefersSignupNameThenRealNicknameThenMemberNumber() {
         assertEquals("林一帆", OrganiserPersonName.pick(" 林一帆 ", "城瘾用户", PLAYER));
         assertEquals("小舟", OrganiserPersonName.pick(null, "小舟", PLAYER));
-        assertEquals("成员#990006", OrganiserPersonName.pick("", "城瘾用户", PLAYER));
-        assertEquals("成员#990006", OrganiserPersonName.pick(null, null, PLAYER));
+        // 第十二轮 k3(p3 N4):不再给「成员#id」;默认昵称带上本俱乐部里的时刻,没有时刻只给「城瘾用户」。
+        assertEquals("城瘾用户", OrganiserPersonName.pick("", "城瘾用户", PLAYER));
+        assertEquals("城瘾用户", OrganiserPersonName.pick(null, null, PLAYER));
+        java.util.Date joined = java.util.Date.from(java.time.ZonedDateTime.of(2026, 11, 5, 10, 21, 0, 0,
+                java.time.ZoneId.of("Asia/Shanghai")).toInstant());
+        assertEquals("城瘾用户 · 11月5日 10:21 加入", OrganiserPersonName.pick(null, "城瘾用户", PLAYER, joined, "加入"));
+        assertEquals("小舟", OrganiserPersonName.pick(null, "小舟", PLAYER, joined, "加入"));
+    }
+
+    /** 业主 2026-11-05:主理人在所有地方都用昵称。 */
+    @Test
+    void ownerNameIsTheNickname() {
+        assertEquals("阿舟", OrganiserPersonName.ownerName(" 阿舟 "));
+        assertEquals("城瘾用户", OrganiserPersonName.ownerName(null));
     }
 
     private static ClubMember member(long id, String nickname, boolean owner) {
@@ -91,15 +103,18 @@ class OrganiserPersonNameTest {
     }
 
     @Test
-    void organiserMemberListShowsSignupNamesAndTheLeadsOwnName() {
-        List<ClubMember> list = new ArrayList<>(Arrays.asList(member(LEAD, "城瘾用户", true),
+    void organiserMemberListShowsSignupNamesAndTheLeadsNickname() {
+        List<ClubMember> list = new ArrayList<>(Arrays.asList(member(LEAD, "阿舟", true),
                 member(PLAYER, "城瘾用户", false), member(990007L, "城瘾用户", false), member(990008L, "阿满", false)));
+        list.get(2).setJoinTime(java.util.Date.from(java.time.ZonedDateTime.of(2026, 11, 5, 10, 21, 0, 0,
+                java.time.ZoneId.of("Asia/Shanghai")).toInstant()));
+        list.get(2).setStatus(1);
         Map<Long, String> names = new HashMap<>();
         names.put(PLAYER, "林一帆");
         controller(true, names).applyOrganiserNames(club(), LEAD, list);
-        assertEquals("林小舟", list.get(0).getNickname(), "主理人本人那一行与资料卡同名");
+        assertEquals("阿舟", list.get(0).getNickname(), "业主 11-05:主理人用昵称,不用主理人档案里的真实姓名");
         assertEquals("林一帆", list.get(1).getNickname(), "转让确认「转让主理人给 …」读的就是这个名字");
-        assertEquals("成员#990007", list.get(2).getNickname(), "没报过名的成员至少分得清");
+        assertEquals("城瘾用户 · 11月5日 10:21 加入", list.get(2).getNickname(), "没报过名的成员分得清,且不给编号");
         assertEquals("阿满", list.get(3).getNickname());
     }
 
@@ -109,7 +124,7 @@ class OrganiserPersonNameTest {
         Map<Long, String> names = new HashMap<>();
         names.put(PLAYER, "林一帆");
         List<Map<String, Object>> board = new ArrayList<>();
-        for (Object[] r : new Object[][]{{LEAD, "城瘾用户"}, {PLAYER, "城瘾用户"}, {990007L, "城瘾用户"}}) {
+        for (Object[] r : new Object[][]{{LEAD, "阿舟"}, {PLAYER, "城瘾用户"}, {990007L, "城瘾用户"}}) {
             Map<String, Object> row = new HashMap<>();
             row.put("memberId", r[0]);
             row.put("nickname", r[1]);
@@ -117,9 +132,9 @@ class OrganiserPersonNameTest {
             board.add(row);
         }
         controller(true, names).applyOrganiserNamesToBoard(club(), LEAD, board);
-        assertEquals("林小舟", board.get(0).get("nickname"));
+        assertEquals("阿舟", board.get(0).get("nickname"));
         assertEquals("林一帆", board.get(1).get("nickname"));
-        assertEquals("成员#990007", board.get(2).get("nickname"));
+        assertEquals("城瘾用户", board.get(2).get("nickname"));
 
         List<Map<String, Object>> plain = new ArrayList<>();
         Map<String, Object> row = new HashMap<>();

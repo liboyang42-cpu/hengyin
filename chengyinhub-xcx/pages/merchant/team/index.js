@@ -162,6 +162,16 @@ function formatDate(value) {
   return `${p.year}-${pad(p.month)}-${pad(p.day)} ${pad(p.hours)}:${pad(p.minutes)}`;
 }
 
+// 第十二轮 k3(p2 N-6、j1 N12):两位店员都叫「城瘾用户」时店主分不清,默认昵称带上加入时刻(不给编号)。
+function operatorName(source) {
+  const nick = typeof source.nickname === 'string' ? source.nickname.trim() : '';
+  if (nick && nick !== '城瘾用户') return nick;
+  const p = chinaParts(source.acceptedAt);
+  if (!p) return '城瘾用户';
+  const pad = (n) => (n < 10 ? `0${n}` : String(n));
+  return `城瘾用户 · ${p.month}月${p.day}日 ${pad(p.hours)}:${pad(p.minutes)} 加入`;
+}
+
 function shapeOperator(row) {
   const source = row;
   if (!isStrictPositiveId(source && source.id)
@@ -173,7 +183,7 @@ function shapeOperator(row) {
       || !nullableString(source.avatar)) return null;
   return {
     id: source.id,
-    nickname: typeof source.nickname === 'string' && source.nickname.trim() ? source.nickname.trim() : '未设置昵称',
+    nickname: operatorName(source),
     avatar: typeof source.avatar === 'string' ? source.avatar : '',
     roleCode: source.roleCode || '',
     roleName: roleName(source.roleCode),
@@ -649,7 +659,8 @@ Page({
     // 三段式第一段:文案改由 utils/danger-actions.js 统一给(原来只有一句话,不列后果)
     this._dangerConfirm = { show: false, type: 'operator', target, title: '', content: '' };
     const dc = this.selectComponent && this.selectComponent('#dc');
-    if (dc) dc.open('merchant.operator.remove', { name: target.nickname });
+    // 第十二轮 k3:移除确认带上岗位,店主不会点错人。
+    if (dc) dc.open('merchant.operator.remove', { name: target.nickname + ' · ' + target.roleName });
   },
 
   askRevokeInvite(event) {

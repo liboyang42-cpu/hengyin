@@ -395,7 +395,7 @@ public class ProjectHomeReadServiceImpl implements IProjectHomeReadService {
             row.put("clubId", i.getToId());
             row.put("name", club == null ? "" : club.getName());
             row.put("logo", club == null ? null : club.getLogo());
-            row.put("leaderName", club == null ? null : club.getLeaderName());
+            row.put("leaderName", club == null ? null : clubService.ownerDisplayName(club));
             row.put("phone", club == null ? null : club.getPhone());
             row.put("status", i.getStatus());
             row.put("terms", termsOf(i));
@@ -508,7 +508,7 @@ public class ProjectHomeReadServiceImpl implements IProjectHomeReadService {
             row.put("clubId", i.getToId());
             row.put("name", club == null ? "" : club.getName());
             row.put("logo", club == null ? null : club.getLogo());
-            row.put("leaderName", club == null ? null : club.getLeaderName());
+            row.put("leaderName", club == null ? null : clubService.ownerDisplayName(club));
             row.put("phone", club == null ? null : club.getPhone());
             out.add(row);
         }

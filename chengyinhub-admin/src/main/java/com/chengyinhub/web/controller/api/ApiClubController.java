@@ -424,10 +424,10 @@ public class ApiClubController extends BaseController {
             // CU-C-98:小程序建团入口的 payload 里没有 leaderName ⇒ club.leader_name 一直是 NULL,
             // 详情页「主理人」只能显示占位符 —— 而主理人档案里本来就有名字。
             // 不写库,只在读出时兜底(与 level/tags 同一处),与同一屏的成员名单(合成 owner 行)口径一致。
-            if (StringUtils.isEmpty(club.getLeaderName())) {
-                club.setLeaderName(leader.getLeaderName());
-            }
         }
+        // 业主 2026-11-05:主理人名一律用昵称,不发布 club.leader_name / 主理人档案里的真实姓名
+        // (替换 CU-C-98 的档案名兜底;只改出参,不写库)。
+        club.setLeaderName(clubService.ownerDisplayName(club));
     }
 
     private void attachTopicCounts(List<Club> clubs) {
@@ -752,9 +752,10 @@ public class ApiClubController extends BaseController {
     }
 
     /**
-     * j2 F-08:主理人/管理员在成员名单、角色分配、转让主理人里看到的 nickname 换成能分清人的名字 ——
-     * 主理人本人用他的主理人档案称呼,其余成员用本俱乐部报名时填写的姓名(C-05 同口径),
-     * 都没有就用昵称,默认昵称「城瘾用户」改成「成员#id」。普通成员看到的名单不变,不经过这里。
+     * j2 F-08:主理人/管理员在成员名单、角色分配、转让主理人、入会申请里看到的 nickname 换成能分清人的名字 ——
+     * 主理人本人用昵称(业主 2026-11-05),其余成员用本俱乐部报名时填写的姓名(C-05 同口径),
+     * 都没有就用昵称,默认昵称「城瘾用户」带上加入 / 申请时刻(第十二轮 k3,不再给「成员#id」)。
+     * 普通成员看到的名单不变,不经过这里。
      */
     void applyOrganiserNames(Club club, Long viewerMemberId, List<ClubMember> list) {
         if (club == null || list == null || list.isEmpty() || clubCrmAppService == null
@@ -764,16 +765,15 @@ public class ApiClubController extends BaseController {
         java.util.Map<Long, String> signupNames = clubCrmAppService.signupNamesForOrganiser(viewerMemberId, club.getId(), ids);
         for (ClubMember cm : list) {
             if (cm == null || cm.getMemberId() == null) continue;
-            String name = signupNames == null ? null : signupNames.get(cm.getMemberId());
+            // 业主 2026-11-05:主理人在所有地方都用昵称(不用主理人档案里的真实姓名,也不用报名姓名),
+            // 与俱乐部头部「昵称 · 主理人」一致。
             if (Boolean.TRUE.equals(cm.getIsOwner())) {
-                ClubLeader leader = clubLeaderService.selectClubLeaderByMemberId(cm.getMemberId());
-                String leaderName = leader == null ? null : leader.getLeaderName();
-                if (leaderName != null && !leaderName.trim().isEmpty()
-                        && !com.chengyinhub.business.util.OrganiserPersonName.DEFAULT_NICKNAME.equals(leaderName.trim())) {
-                    name = leaderName;
-                }
+                cm.setNickname(com.chengyinhub.business.util.OrganiserPersonName.ownerName(cm.getNickname()));
+                continue;
             }
-            cm.setNickname(com.chengyinhub.business.util.OrganiserPersonName.pick(name, cm.getNickname(), cm.getMemberId()));
+            String name = signupNames == null ? null : signupNames.get(cm.getMemberId());
+            cm.setNickname(com.chengyinhub.business.util.OrganiserPersonName.pick(name, cm.getNickname(),
+                    cm.getMemberId(), cm.getJoinTime(), Integer.valueOf(0).equals(cm.getStatus()) ? "申请" : "加入"));
         }
     }
 
@@ -1012,7 +1012,10 @@ public class ApiClubController extends BaseController {
         try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
         if (body.getClubId() == null) return error("缺少俱乐部ID");
         try {
-            return AjaxResult.success(clubMemberService.selectPendingJoinRequests(body.getClubId(), memberId));
+            List<ClubMember> pending = clubMemberService.selectPendingJoinRequests(body.getClubId(), memberId);
+            // 第十二轮 k3(p3 N4):入会申请与成员名单同一套名字(报名姓名 → 昵称 → 「城瘾用户 · 时刻 申请」)。
+            applyOrganiserNames(clubService.selectClubById(body.getClubId()), memberId, pending);
+            return AjaxResult.success(pending);
         } catch (IllegalArgumentException e) {
             return error(e.getMessage());
         }
@@ -1686,7 +1689,11 @@ public class ApiClubController extends BaseController {
                     safe.setId(registration.getId());
                     safe.setMemberId(registration.getMemberId());
                     safe.setAvatar(registration.getAvatar());
-                    safe.setNickname(registration.getNickname());
+                    // 第十二轮 k3(p3 N4):名册只给能治理本俱乐部的人,用报名时填写的姓名(C-05 同口径),
+                    // 没填才回落昵称;默认昵称带报名时刻,不再出现三个一样的「城瘾用户」。
+                    safe.setNickname(com.chengyinhub.business.util.OrganiserPersonName.pick(
+                            com.chengyinhub.business.util.OrganiserPersonName.decryptSignupName(registration.getRealName()),
+                            registration.getNickname(), registration.getMemberId(), registration.getCreateTime(), "报名"));
                     safe.setPaymentStatus(registration.getPaymentStatus());
                     safe.setVerificationStatus(registration.getVerificationStatus());
                     safeRegistrations.add(safe);

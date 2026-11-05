@@ -8,6 +8,9 @@ import java.util.Date;
 public class MerchantCrmCustomerRowVO {
     private Long memberId;
     private String name;
+    /** 第十二轮 k3(p2 N-6):本店负责联系的报名里填写的姓名(已解密);只在服务端判权后用来替换 name,不下发。 */
+    @JsonIgnore
+    private String signupName;
     private String avatar;
     private String phone;
     private Boolean merchantResponsibleForContact;
@@ -33,6 +36,9 @@ public class MerchantCrmCustomerRowVO {
     public void setMemberId(Long value) { memberId = value; }
     public String getName() { return name; }
     public void setName(String value) { name = value; }
+    @JsonIgnore
+    public String getSignupName() { return signupName; }
+    public void setSignupName(String value) { signupName = value; }
     public String getAvatar() { return avatar; }
     public void setAvatar(String value) { avatar = value; }
     public String getPhone() { return phone; }

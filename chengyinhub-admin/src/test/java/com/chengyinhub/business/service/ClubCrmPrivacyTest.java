@@ -366,16 +366,19 @@ class ClubCrmPrivacyTest {
 
     /** F-W1-08:客户列表与详情不再把所有人显示成默认昵称「城瘾用户」。 */
     @Test
-    void defaultNicknameInCustomerListAndDetailFallsBackToMemberNumber() {
+    void defaultNicknameInCustomerListAndDetailFallsBackToLastSeenTimeNotMemberNumber() {
         ClubCustomerVO.RawCustomer raw = rawCustomer();
         raw.setDisplayName("城瘾用户");
+        // 第十二轮 k3(p3 N4):不再给「成员#id」,带最近一次时刻。
+        raw.setLastInteractionTime(java.util.Date.from(java.time.ZonedDateTime.of(2026, 11, 5, 10, 21, 0, 0,
+                java.time.ZoneId.of("Asia/Shanghai")).toInstant()));
         when(mapper.selectClubCustomers(eq(CLUB), anyString(), anyString(), anyInt()))
                 .thenReturn(Collections.singletonList(raw));
         when(mapper.selectProfiles(CLUB)).thenReturn(Collections.<ClubCustomerVO.Profile>emptyList());
-        assertEquals("成员#" + raw.getMemberId(),
+        assertEquals("城瘾用户 · 11月5日 10:21",
                 service.listCustomers(OWNER, CLUB, "all", "").getItems().get(0).getDisplayName());
         when(mapper.selectClubCustomerSummary(CLUB, CUSTOMER)).thenReturn(raw);
-        assertEquals("成员#" + raw.getMemberId(),
+        assertEquals("城瘾用户 · 11月5日 10:21",
                 service.customerDetail(OWNER, CLUB, CUSTOMER).getSummary().getDisplayName());
     }
 

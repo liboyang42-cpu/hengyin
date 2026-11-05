@@ -27,7 +27,7 @@
 
     <sql id="ClubCustomerAggregate">
         r.member_id as member_id,
-        coalesce(nullif(max(u.nickname), ''), concat('成员#', r.member_id)) as display_name,
+        coalesce(nullif(max(u.nickname), ''), '城瘾用户') as display_name,
         max(u.avatar) as avatar,
         max(u.phone) as phone,
         sum(case when r.payment_status = 2 and r.verification_status = 1 then 1 else 0 end) as verified_count,
@@ -212,7 +212,7 @@
             r.point_used as point_used,
             r.payable_amount as payable_amount,
             r.member_id as member_id,
-            coalesce(nullif(u.nickname, ''), concat('成员#', r.member_id)) as display_name,
+            coalesce(nullif(u.nickname, ''), '城瘾用户') as display_name,
             u.avatar as avatar,
             u.phone as phone,
             r.parent_order_no as order_no,
@@ -364,7 +364,7 @@
             r.real_name as participant_name,
             r.registration_status as registration_status,
             r.point_used as point_used,
-            coalesce(nullif(u.nickname, ''), concat('成员#', r.member_id)) as display_name,
+            coalesce(nullif(u.nickname, ''), '城瘾用户') as display_name,
             u.avatar as avatar,
             u.phone as phone,
             r.parent_order_no as order_no,

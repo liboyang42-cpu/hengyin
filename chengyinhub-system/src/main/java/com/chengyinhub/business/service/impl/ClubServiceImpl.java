@@ -726,4 +726,13 @@ public class ClubServiceImpl implements IClubService
         result.setSettlements(clubMapper.selectUnpaidSettlementsByClub(clubId));
         return result;
     }
+
+    @Override
+    public String ownerDisplayName(Club club)
+    {
+        if (club == null) return null;
+        com.chengyinhub.business.domain.UmsMember owner = club.getMemberId() == null ? null
+                : umsMemberService.selectUmsMemberById(club.getMemberId());
+        return com.chengyinhub.business.util.OrganiserPersonName.ownerName(owner == null ? null : owner.getNickname());
+    }
 }

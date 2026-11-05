@@ -111,6 +111,14 @@ public class MerchantCrmAppServiceImpl implements IMerchantCrmAppService {
                 // 导出「手机号(脱敏)」同一口径,三处都是服务端脱敏。
                 row.setPhone(PiiCryptoService.maskPhone(row.getPhone()));
             }
+            // 第十二轮 k3(p2 N-6):三位「城瘾用户」在客户列表里分不清。有敏感信息权限、且本店负责联系的客户
+            // 显示报名时填写的姓名(与核销与退款同一个人同一个名字);其余用昵称,默认昵称带最近一次时刻。
+            String signupName = sensitive && Boolean.TRUE.equals(row.getMerchantResponsibleForContact())
+                    ? row.getSignupName() : null;
+            row.setSignupName(null);
+            String nick = "未留姓名".equals(row.getName()) ? null : row.getName();
+            row.setName(com.chengyinhub.business.util.OrganiserPersonName.pick(
+                    signupName, nick, row.getMemberId(), row.getLastTime(), null));
             row.setLastAction(lastAction(row));
             // 角色码翻成中文给分组标题用。认不出的码留 null —— 宁可这一档少一个分组,
             // 也别把 NAVIGATOR 这种内部码直接摆到商家的分组标题上。

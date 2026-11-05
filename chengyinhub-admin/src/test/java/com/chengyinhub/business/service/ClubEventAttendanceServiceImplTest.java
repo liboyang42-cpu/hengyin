@@ -106,7 +106,7 @@ class ClubEventAttendanceServiceImplTest {
         assertEquals(false, ((Map<?, ?>) ((List<?>) plain.get("arrived")).get(0)).containsKey("phone"));
     }
 
-    /** C-05(2026-11-02):名册以报名姓名示人;没填姓名、昵称是默认「城瘾用户」时给「成员#id」,不下发密文列。 */
+    /** C-05(2026-11-02):名册以报名姓名示人;没填姓名、昵称是默认「城瘾用户」时不给编号(第十二轮 k3),不下发密文列。 */
     @Test
     void rosterShowsSignupNameAndNeverTheStoredColumn() {
         Map<String, Object> named = row(51L, "城瘾用户", NOW, null, 0);
@@ -122,7 +122,7 @@ class ClubEventAttendanceServiceImplTest {
         assertEquals("周晓舟", arrivedRow.get("displayName"));
         assertEquals(false, arrivedRow.containsKey("realNameStored"));
         List<?> noShow = (List<?>) roster.get("noShow");
-        assertEquals("成员#52", ((Map<?, ?>) noShow.get(0)).get("displayName"));
+        assertEquals("城瘾用户", ((Map<?, ?>) noShow.get(0)).get("displayName"));
         assertEquals("阿舟", ((Map<?, ?>) noShow.get(1)).get("displayName"));
     }
 

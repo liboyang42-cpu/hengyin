@@ -344,7 +344,7 @@ Page({
     })
     const assignments = this.data.assignments.map(function (assignment) {
       return Object.assign({}, assignment, {
-        memberName: memberNames[String(assignment.targetMemberId)] || ('成员 #' + assignment.targetMemberId),
+        memberName: memberNames[String(assignment.targetMemberId)] || '城瘾用户',
         roleName: roleNames[assignment.roleCode] || '角色',
         roleSummary: (roleSummaries[assignment.roleCode] || '')
           + (assignment.customerPhoneVisible === true ? ' · 可见客户手机号' : ''),

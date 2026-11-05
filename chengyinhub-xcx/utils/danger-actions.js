@@ -370,9 +370,8 @@ const DANGER_ACTIONS = {
     title: '移除团队成员「{name}」?',
     content: '移除后对方的商家权限立即失效。',
     consequences: [
-      { icon: 'lock', text: '对方立即失去这个店铺的全部经营权限' },
-      { icon: 'finance', text: '已经产生的经营记录与流水保留,不会被删掉' },
-      { icon: 'warning', text: '此操作不可撤销;要恢复只能重新邀请一次' },
+      { icon: 'finance', text: '已经产生的经营记录与流水保留，不会被删掉' },
+      { icon: 'warning', text: '此操作不可撤销；要恢复只能重新邀请一次' },
     ],
     confirmText: '移除成员',
     alt: null,

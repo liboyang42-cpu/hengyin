@@ -89,4 +89,13 @@ public interface IClubService
 
     /** 主理人专用：读取即使父对象已软删仍必须处理的资金阻断逐笔明细。 */
     public ClubDissolutionBlockers selectDissolutionBlockers(Long clubId, Long ownerId);
+
+    /**
+     * 业主 2026-11-05:对外展示的主理人名一律是主理人当前账号的昵称,不发布入驻时填的真实姓名
+     * (club.leader_name 留给平台审核后台)。club 为空给 null。
+     */
+    default String ownerDisplayName(Club club)
+    {
+        return club == null ? null : com.chengyinhub.business.util.OrganiserPersonName.ownerName(null);
+    }
 }

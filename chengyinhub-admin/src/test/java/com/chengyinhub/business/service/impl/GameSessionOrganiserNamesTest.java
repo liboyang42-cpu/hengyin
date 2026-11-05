@@ -25,7 +25,7 @@ class GameSessionOrganiserNamesTest {
         b.put("teamId", 1L); b.put("memberId", 990008L); b.put("memberName", "城瘾用户"); b.put("realNameStored", null);
         List<Map<String, Object>> named = service.organiserNamedRows(Arrays.asList(a, b));
         assertEquals("林一帆", named.get(0).get("memberName"));
-        assertEquals("成员#990008", named.get(1).get("memberName"));
+        assertEquals("城瘾用户", named.get(1).get("memberName"));
         assertFalse(named.get(0).containsKey("realNameStored"), "密文列不下发");
 
         LeaderboardItemVO first = new LeaderboardItemVO();
@@ -34,7 +34,7 @@ class GameSessionOrganiserNamesTest {
         other.setMemberId(990009L); other.setNickname("城瘾用户");
         List<LeaderboardItemVO> board = service.organiserNamedLeaderboard(Arrays.asList(first, other), named);
         assertEquals("林一帆", board.get(0).getNickname());
-        assertEquals("成员#990009", board.get(1).getNickname());
+        assertEquals("城瘾用户", board.get(1).getNickname());
     }
 
     // 第十轮 f2 walk:没组队的玩家不在成员投影里,结束后榜上是「成员#990008」「成员#990009」。
@@ -58,7 +58,7 @@ class GameSessionOrganiserNamesTest {
                 Arrays.asList(soloSignup, olderSignup));
         assertEquals("林一帆", board.get(0).getNickname());
         assertEquals("陈小满", board.get(1).getNickname(), "没组队也用本场最近一张报名的姓名");
-        assertEquals("成员#990010", board.get(2).getNickname());
+        assertEquals("城瘾用户", board.get(2).getNickname());
     }
 
 }

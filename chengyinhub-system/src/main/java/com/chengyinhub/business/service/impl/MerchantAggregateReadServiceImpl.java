@@ -221,7 +221,7 @@ public class MerchantAggregateReadServiceImpl implements IMerchantAggregateReadS
             item.put("cover", club.getCover());
             item.put("clubType", club.getClubType());
             item.put("level", club.getLevel());
-            item.put("leaderName", club.getLeaderName());
+            item.put("leaderName", clubService.ownerDisplayName(club));
             item.put("leaderLevel", club.getLeaderLevel());
             item.put("leaderTags", club.getLeaderTags());
             item.put("canDesignRoute", club.getCanDesignRoute());

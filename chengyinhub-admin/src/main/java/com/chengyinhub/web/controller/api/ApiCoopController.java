@@ -1536,7 +1536,7 @@ public class ApiCoopController extends BaseController {
 
     private CoopPartnerVO partnerOfClub(Long clubId) {
         Club club = clubId == null ? null : clubService.selectClubById(clubId);
-        return club == null ? null : CoopPartnerVO.of(club.getName(), club.getLeaderName(), club.getPhone());
+        return club == null ? null : CoopPartnerVO.of(club.getName(), clubService.ownerDisplayName(club), club.getPhone());
     }
 
     /** 会员侧合作方:优先商家档案(商家之间认的是店名),没档案退回昵称、且没有联系方式可给。 */

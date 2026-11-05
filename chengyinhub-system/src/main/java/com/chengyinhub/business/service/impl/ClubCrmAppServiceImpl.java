@@ -84,7 +84,8 @@ public class ClubCrmAppServiceImpl implements IClubCrmAppService {
             ClubCustomerVO.Profile profile = profiles.get(raw.getMemberId());
             ClubCustomerVO.Row row = new ClubCustomerVO.Row();
             row.setMemberId(raw.getMemberId());
-            row.setDisplayName(participantDisplayName(raw.getParticipantName(), raw.getDisplayName(), raw.getMemberId()));
+            row.setDisplayName(participantDisplayName(raw.getParticipantName(), raw.getDisplayName(), raw.getMemberId(),
+                    raw.getLastInteractionTime()));
             row.setAvatar(raw.getAvatar());
             row.setVerifiedCount(nullToZero(raw.getVerifiedCount()));
             row.setPendingCount(nullToZero(raw.getPendingCount()));
@@ -120,7 +121,8 @@ public class ClubCrmAppServiceImpl implements IClubCrmAppService {
 
         ClubCustomerVO.Summary summary = new ClubCustomerVO.Summary();
         summary.setMemberId(raw.getMemberId());
-        summary.setDisplayName(participantDisplayName(raw.getParticipantName(), raw.getDisplayName(), raw.getMemberId()));
+        summary.setDisplayName(participantDisplayName(raw.getParticipantName(), raw.getDisplayName(), raw.getMemberId(),
+                raw.getLastInteractionTime()));
         summary.setAvatar(raw.getAvatar());
         summary.setPhoneText(phoneText(raw.getPhone(), canSeeFullPhone, canSeePhone));
         summary.setPhoneCallable(canSeeFullPhone && isCallable(raw.getPhone()));
@@ -495,16 +497,17 @@ public class ClubCrmAppServiceImpl implements IClubCrmAppService {
     }
 
     private String participantDisplayName(String storedName, String nickname, Long memberId) {
+        return participantDisplayName(storedName, nickname, memberId, null);
+    }
+
+    private String participantDisplayName(String storedName, String nickname, Long memberId, java.util.Date lastSeen) {
         if (storedName != null && !storedName.trim().isEmpty()) {
             // C-05(2026-11-02 用户):客户列表、报名参与者与核销详情显示报名时填写的全名,不再遮成「周*」。
             String name = piiCryptoService.decrypt(storedName);
             if (name != null && !name.trim().isEmpty()) return name.trim();
         }
-        String fallback = nickname == null ? "" : nickname.trim();
-        if (fallback.isEmpty() || "城瘾用户".equals(fallback)) {
-            return memberId == null ? "参与人" : "成员#" + memberId;
-        }
-        return fallback;
+        // 第十二轮 k3(p3 N4):不再回落「成员#id」,与成员名单同一个兜底。
+        return com.chengyinhub.business.util.OrganiserPersonName.pick(null, nickname, memberId, lastSeen, null);
     }
 
     private static String topicStatusCode(ClubCustomerVO.RawTopicRow raw) {

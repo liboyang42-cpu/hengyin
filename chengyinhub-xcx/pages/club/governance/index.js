@@ -93,7 +93,7 @@ function shapeBans(raw, clubId) {
       sourceType,
       sourceText: sourceType === 'PLATFORM' ? '平台治理' : '俱乐部治理',
       targetNickname: typeof row.targetNickname === 'string' && row.targetNickname.trim()
-        ? row.targetNickname.trim() : ('成员 #' + targetMemberId),
+        ? row.targetNickname.trim() : '城瘾用户',
       statusText: row.status === 'ACTIVE' ? '封禁中' : (row.status === 'EXPIRED' ? '已到期' : '已解封'),
       expiresText: platformPermanent ? '平台永久封禁' : ('至 ' + displayDate(row.expiresAt)),
       bannedAtText: displayDate(row.bannedAt) || '时间未知',

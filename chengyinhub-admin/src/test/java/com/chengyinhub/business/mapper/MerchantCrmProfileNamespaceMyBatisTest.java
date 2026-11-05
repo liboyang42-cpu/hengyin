@@ -362,7 +362,7 @@ class MerchantCrmProfileNamespaceMyBatisTest {
             statement.execute("create table cms_registration(id bigint primary key, member_id bigint not null, "
                     + "phone varchar(32), payment_status int not null, verification_status int, "
                     + "payable_amount decimal(18,2), total_amount decimal(18,2), verification_time timestamp, "
-                    + "create_time timestamp not null, owner_type int not null, owner_id bigint not null)");
+                    + "create_time timestamp not null, owner_type int not null, owner_id bigint not null, real_name varchar(128) invisible)");
             statement.execute("create table cms_topic(id bigint primary key, member_id bigint not null, "
                     + "club_id bigint, product_type int, del_flag int not null)");
             statement.execute("create table cms_registration_merchant(id bigint primary key, topic_id bigint not null, "

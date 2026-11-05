@@ -108,9 +108,11 @@ class ApiCoopControllerPartnerNodeTest {
         Club club = new Club();
         club.setId(clubId);
         club.setName(name);
-        club.setLeaderName(leader);
+        club.setLeaderName("入驻实名");
         club.setPhone(phone);
         when(clubService.selectClubById(clubId)).thenReturn(club);
+        // 业主 2026-11-05:对外的主理人名一律是主理人昵称(IClubService.ownerDisplayName),不是入驻时的 leader_name。
+        when(clubService.ownerDisplayName(club)).thenReturn(leader);
     }
 
     /** 我发出的一条邀约(from=我),用于 /list 的 sent 分支。 */

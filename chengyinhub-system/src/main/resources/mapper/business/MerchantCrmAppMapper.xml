@@ -22,6 +22,7 @@
     <resultMap id="CustomerRow" type="com.chengyinhub.business.domain.vo.MerchantCrmCustomerRowVO">
         <result property="memberId" column="member_id"/>
         <result property="name" column="customer_name"/>
+        <result property="signupName" column="customer_signup_name" typeHandler="com.chengyinhub.business.security.PiiCryptoTypeHandler"/>
         <result property="avatar" column="avatar"/>
         <result property="phone" column="phone" typeHandler="com.chengyinhub.business.security.PiiCryptoTypeHandler"/>
         <result property="merchantResponsibleForContact" column="merchant_responsible_contact"/>
@@ -306,6 +307,8 @@
     <sql id="OwnedCustomerAggregateColumns">
         r.member_id as member_id,
         coalesce(nullif(max(u.nickname), ''), '未留姓名') as customer_name,
+        max(case when <include refid="MerchantResponsibleRegistration"/> then nullif(r.real_name, '') end)
+          as customer_signup_name,
         max(u.avatar) as avatar,
         <include refid="OwnedResponsiblePhoneExpression"/> as phone,
         max(case when <include refid="MerchantResponsibleRegistration"/> then 1 else 0 end)

@@ -130,7 +130,7 @@ function roleView(role) {
   const labels = { CONFIRMED: '已确认', PENDING: '待确认', REJECTED: '未接受' }
   labels.ASSIGNED = '待确认'
   return Object.assign({}, item, {
-    memberNameText: item.memberName || item.name || (item.memberId == null ? '成员更新中' : '成员 #' + item.memberId),
+    memberNameText: item.memberName || item.name || (item.memberId == null ? '成员更新中' : '城瘾用户'),
     roleNameText: item.roleName || item.roleLabel || item.roleCode || '角色待分配',
     confirmationStatus: status,
     confirmationText: !item.roleCode ? '待分配' : (labels[status] || '确认状态更新中'),
