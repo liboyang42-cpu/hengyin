@@ -66,7 +66,7 @@
         <text class="orow-k">票种</text>
         <text class="orow-v">{{info.ticketName}} × {{orderQty}}</text>
       </view>
-      <view class="orow" wx:if="{{whenText}}">
+      <view class="orow" wx:if="{{whenText && !expiresIsPass}}">
         <text class="orow-k">日期与时间</text>
         <text class="orow-v">{{whenText}}</text>
       </view>

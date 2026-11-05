@@ -29,7 +29,7 @@
     <view class="wk__stats pe pe--up" style="--pe-d:.75s">
       <view class="wk__stat"><view class="wk__dt">目标</view><view class="wk__dd">{{goalText}}</view></view>
       <view class="wk__stat"><view class="wk__dt">已走</view><view class="wk__dd">{{stepsText}}</view></view>
-      <view class="wk__stat"><view class="wk__dt">少排</view><view class="wk__dd">{{co2}} kg</view></view>
+      <view class="wk__stat" wx:if="{{co2 > 0}}"><view class="wk__dt">少排</view><view class="wk__dd">{{co2}} kg</view></view>
     </view>
 
     <view class="wk__foot" wx:if="{{mode === 'goal'}}">先设目标，再同步微信运动。</view>

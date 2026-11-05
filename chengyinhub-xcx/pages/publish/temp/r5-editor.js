@@ -23,7 +23,7 @@ function view(config, validationMethod, support, context, category = '全部') {
   const section = catalog.findGame(catalog.detectGame(config))?.section;
   const gameItems = catalog.BASE_GAMES.filter(item => category === '全部' || item.category === category).map(item => {
     const key = item.gameKey || item.forms?.[0].gameKey;
-    const reason = item.reason || matrix.choice(support, key, config, context);
+    const reason = item.reason || matrix.choice(support, key, matrix.pickAs(config, context), context);
     return Object.assign({}, item, { sub: item.sub || '', disabled: !!reason, reason });
   });
   const predictNoShop = section === 'predict' && !(context && context.shop) && config.outcomeRules == null; /* 第十一轮 g4 第 5 项:预测站没有承接商家就不提供结果反馈(有了 outcomeRules 要等商家给答案才算完,没商家永远完不了);已配过的旧模板照常列出,作者还能关掉 */ const rows = section && !predictNoShop ? after.paths(config).filter(path => path.startsWith('outcomeRules.') || path.startsWith(section + '.') && !(section === 'qa' && config.qa.mode !== 'PICK') && !(section === 'diceRoll' && config.diceRoll.mode === 'd20')).map(path => {
@@ -38,11 +38,11 @@ function view(config, validationMethod, support, context, category = '全部') {
   // 2026-10-23 主人:选择玩法照原型 —— 每个玩法自己一枚标签(选项问答 / 猜图 / 闭眼盲品 / 竞猜 …),
   // 不再先选一类再在卡里挑「形式」。有形式的那几类按形式摊开,标签 key 用玩法 key。
   const flat = item => (item.forms || []).length ? item.forms.map(f => { const g = catalog.findGame(f.gameKey) || {}; return { key: f.gameKey, pickKey: f.gameKey, label: g.label || f.label, icon: g.icon || item.icon, sub: g.sub || '', category: item.category }; }) : [Object.assign({}, item, { pickKey: item.gameKey || '' })];
-  const gameGroups = catalog.CATEGORIES.filter(title => title !== '全部').map(title => ({ title, items: [].concat(...catalog.BASE_GAMES.filter(item => item.category === title).map(flat)).map(item => Object.assign({}, item, { sub: item.sub || '', reason: item.reason || (item.pickKey ? matrix.choice(support, item.pickKey, config, context) : '') })) })).filter(group => group.items.length);
+  const gameGroups = catalog.CATEGORIES.filter(title => title !== '全部').map(title => ({ title, items: [].concat(...catalog.BASE_GAMES.filter(item => item.category === title).map(flat)).map(item => Object.assign({}, item, { sub: item.sub || '', reason: item.reason || (item.pickKey ? matrix.choice(support, item.pickKey, matrix.pickAs(config, context), context) : '') })) })).filter(group => group.items.length);
   gameGroups.forEach(group => { group.rows = tagRows(group.items); });
   // 玩法图标按分类上一层浅色(2026-10-22 原型定稿:只有玩法有图标,颜色不用渐变)
   const tint = { 问答: 'qa', 推理: 'logic', 互动: 'play', 挑战: 'challenge' }[(catalog.BASE_GAMES.find(item => item.key === selected.baseKey) || {}).category] || 'plain';
-  selected.forms = selected.forms.map(item => Object.assign({}, item, { sub: '', reason: matrix.choice(support, item.gameKey, config, context) }));
+  selected.forms = selected.forms.map(item => Object.assign({}, item, { sub: '', reason: matrix.choice(support, item.gameKey, matrix.pickAs(config, context), context) }));
   return Object.assign(selected, { toolRows, toolOptions, gameSummary: game ? game.label + ((selected.forms.find(item => item.key === selected.formKey)?.label) ? ' · ' + selected.forms.find(item => item.key === selected.formKey).label : '') + ' · ' + summary(config.outcomeRules?.pass) : '未选择玩法', scanSummary: config.scan?.kind === 'VOICE' ? '语音回复' : config.scan?.kind === 'IMAGE' ? '图片回复' : config.scan?.reply || '未配置扫码回复', participation, participationOptions: context && context.settled ? PARTICIPATION.map(row => row.key === 'direct' ? Object.assign({}, row, { reason: '开了状态或 d20 检定的主题里要选定位到达或扫码' }) : row) : PARTICIPATION, category, categories: catalog.CATEGORIES, gameItems, gameGroups, afterRows: rows, fbRows: feedbackRows(config, rows), optionAfterRows: rows.filter(row => !FB_KEYS[row.path]).map(row => Object.assign({}, row, { label: afterLabel(config, row.path, row.label) })), fbSteps: feedbackSteps(config, section, after.once(config)), gameTint: tint, valueSlots: tools.slotsOf(config).filter(slot => slot.kind === 'VALUE'), legacyRows: legacyRows(config), nextStepOptions, feedbackStepOptions: nextStepOptions.slice(1).map(({ key, label }) => ({ key, label })), nextDisabledReason: support?.outcomeRules?.nextStepId === 'SETTLED_FEEDBACK' ? '' : '暂未开放', error: '' });
 }
 // 结果反馈(2026-10-22 主人定稿):三步说明 + 成功/失败各一行;其余「选了某项之后」单独列出,标签写清是哪一项。

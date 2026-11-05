@@ -97,7 +97,7 @@ test('订单详情:自玩通行证只说一次不可退款,没有核销/集合�
   assert.ok(!d.stateNotice.tag);
   assert.equal(d.orderTimeline.map((r) => r.key).join(','), 'created,paid');
   assert.equal(d.ticketPriceShown, 39);
-  assert.equal(d.whenText, '2026.11.03');
+  assert.equal(d.whenText, '可玩至 12 月 4 日');   // 第十二轮 k7 N6:通行证只有「可玩至」一个日期,不再摆主题开始日
 });
 
 test('订单详情:状态不在卡上重复,核销时间为 date-only 时不补 00:00,未发生的步骤不写「完成后更新」', () => {

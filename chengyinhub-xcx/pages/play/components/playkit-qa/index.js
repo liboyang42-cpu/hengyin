@@ -21,6 +21,7 @@ const KEYS = ['A', 'B', 'C', 'D'];
    而人还有下一次机会。 */
 const HEAD_OK = '答对了';
 const HEAD_NO = '再想想';
+const HEAD_SHOT = '拍好了';   // 第十二轮 k7 F16:拍照打卡没有对错,交了照片不说「答对了」
 /* 打字题答错的固定说法(原型写死这一句)。服务端给了话就用服务端的 */
 const RETRY_TEXT = '不对。把它清掉，再试一次。';
 /* 一进来题目占满一屏,一秒后选项才淡进来 */
@@ -175,7 +176,7 @@ Component({
         shownFeedbackImages: (passed || finished || this.data.attempts > 0)
           ? (this.data.feedbackImages || []).slice() : [],
         submitted: false,
-        fbHead: passed ? HEAD_OK : HEAD_NO, playing: false, intro: !passed && !finished,
+        fbHead: passed ? (mode === 'shot' ? HEAD_SHOT : HEAD_OK) : HEAD_NO, playing: false, intro: !passed && !finished,
         burning: fresh ? false : !!this.data.burning,
         triesCap: this.data.judge === false || finished ? 0 : cappedTries(this.data.maxTries, opts.length),
         ctaLabel: passed ? '继续' : (confirmPick ? '确认选择' : (mode === 'shot' ? '拍一张' : '提交')),
@@ -319,7 +320,7 @@ Component({
           });
         }
         this.setData({
-          feedback: d.feedback || '', fbHead: HEAD_OK,
+          feedback: d.feedback || '', fbHead: this.data.mode === 'shot' ? HEAD_SHOT : HEAD_OK,
           ctaLabel: '继续', ctaDisabled: true,
         });
         if (stage) stage.win(d.feedback || '');

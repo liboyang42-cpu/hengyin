@@ -4,7 +4,6 @@
                bind:back="onClose">
   <view class="g-col so {{reducedMotion ? 'so--reduced' : ''}}">
     <view class="so__prompt pe pe--blur" style="--pe-d:.05s">{{prompt}}</view>
-    <view class="so__hint pe pe--blur" style="--pe-d:.15s" wx:if="{{verdict !== 'ok'}}">按住一行上下拖，或者先点一行再点另一行换位置</view>
 
     <view class="so__list">
       <!-- 回执只有整体对错:判错时**不**逐行标红(服务端不给逐位置对错,

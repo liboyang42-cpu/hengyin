@@ -1078,7 +1078,7 @@ Component({
                  ⚠️ 时间这一行头图与「订单明细」里的「日期与时间」是同一个事实,
                     所以只算一次:有场次时间槽(探店日票种快照)就用它,否则用日期 · 时间。
                     两处各拼一遍必然有一天分叉。 */
-              whenText: info.sessionTimeText || [eventDate, eventTime].filter(Boolean).join(' · '),
+              whenText: isSelfPlayPass(info) ? passUntilText(info.expiresAt) : (info.sessionTimeText || [eventDate, eventTime].filter(Boolean).join(' · ')),   // 第十二轮 k7 N6:通行证只有「可玩至」一个日期
               statusTone: STATUS_TONE[info.orderStateKey] || 'neutral',
               /* 稿 578:2313 那张卡:标题 / 一句话 / 右上角一个状态词。
                  ⚠️ 退款中那档含「待平台审核」,标题只能说「退款申请已提交」,没批准前不说「已受理」;
