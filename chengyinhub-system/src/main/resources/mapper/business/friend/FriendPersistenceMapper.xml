@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.friend.FriendPersistenceMapper">
+    <resultMap id="pair" type="com.chengyinhub.business.domain.friend.FriendPersistenceRow">
+        <id property="id" column="id"/>
+        <result property="lowMemberId" column="low_member_id"/>
+        <result property="highMemberId" column="high_member_id"/>
+        <result property="requesterId" column="requester_id"/>
+        <result property="status" column="status"/>
+        <result property="version" column="version"/>
+        <result property="expireTime" column="expire_time"/>
+        <result property="friendSince" column="friend_since"/>
+    </resultMap>
+
+    <sql id="pairPredicate">
+        #{actorId} &gt; 0 AND #{peerId} &gt; 0 AND #{actorId} != #{peerId}
+        AND low_member_id = LEAST(#{actorId}, #{peerId})
+        AND high_member_id = GREATEST(#{actorId}, #{peerId})
+    </sql>
+    <sql id="pendingVersion">
+        <include refid="pairPredicate"/>
+        AND status = 0 AND expire_time &gt; CURRENT_TIMESTAMP
+        AND version = #{expectedVersion} AND #{expectedVersion} &gt;= 0
+        AND version &lt; 9223372036854775807
+    </sql>
+
+    <select id="selectPairForUpdate" resultMap="pair">
+        SELECT id, low_member_id, high_member_id, requester_id, status, version,
+               expire_time, friend_since FROM member_friend
+        WHERE <include refid="pairPredicate"/> FOR UPDATE
+    </select>
+
+    <insert id="insertPending">
+        INSERT INTO member_friend(low_member_id, high_member_id, requester_id,
+            request_msg, source_type, source_id, expire_time)
+        SELECT LEAST(#{actorId}, #{peerId}), GREATEST(#{actorId}, #{peerId}),
+            #{actorId}, #{message}, #{sourceType}, #{sourceId},
+            DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY)
+        WHERE #{actorId} &gt; 0 AND #{peerId} &gt; 0 AND #{actorId} != #{peerId}
+          AND CHAR_LENGTH(TRIM(#{message})) BETWEEN 1 AND 60
+          AND #{sourceType} BETWEEN 0 AND 5
+    </insert>
+
+    <update id="acceptIncoming">
+        UPDATE member_friend SET status=1, friend_since=CURRENT_TIMESTAMP,
+            acted_time=CURRENT_TIMESTAMP, reject_reason=NULL, version=version+1
+        WHERE <include refid="pendingVersion"/> AND requester_id=#{peerId}
+    </update>
+    <update id="rejectIncoming">
+        UPDATE member_friend SET status=2, acted_time=CURRENT_TIMESTAMP,
+            reject_reason=#{reason}, version=version+1
+        WHERE <include refid="pendingVersion"/> AND requester_id=#{peerId}
+          AND #{reason} IN (1,2,9)
+    </update>
+    <update id="withdrawOwn">
+        UPDATE member_friend SET status=3, acted_time=CURRENT_TIMESTAMP, version=version+1
+        WHERE <include refid="pendingVersion"/> AND requester_id=#{actorId}
+    </update>
+    <update id="removeFriend">
+        UPDATE member_friend SET status=3, acted_time=CURRENT_TIMESTAMP, version=version+1
+        WHERE <include refid="pairPredicate"/> AND status=1
+          AND version=#{expectedVersion} AND #{expectedVersion} &gt;= 0
+          AND version &lt; 9223372036854775807
+    </update>
+
+    <delete id="clearPairMetadata">
+        DELETE FROM member_friend_meta
+        WHERE #{actorId} &gt; 0 AND #{peerId} &gt; 0 AND #{actorId} != #{peerId}
+          AND ((member_id=#{actorId} AND friend_member_id=#{peerId})
+            OR (member_id=#{peerId} AND friend_member_id=#{actorId}))
+    </delete>
+    <select id="selectOwnMetadata" resultType="java.util.LinkedHashMap">
+        SELECT friend_member_id AS peer_id, remark, group_id, starred, muted, progress_scope
+        FROM member_friend_meta
+        WHERE member_id=#{actorId} AND friend_member_id=#{peerId}
+          AND #{actorId} &gt; 0 AND #{peerId} &gt; 0 AND #{actorId} != #{peerId}
+    </select>
+</mapper>

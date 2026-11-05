@@ -1,5 +1,15 @@
 package com.chengyinhub.business.it;
 
+import com.chengyinhub.business.mapper.friend.FriendPersistenceMapper;
+import java.io.InputStream;
+import org.apache.ibatis.builder.xml.XMLMapperBuilder;
+import org.apache.ibatis.datasource.unpooled.UnpooledDataSource;
+import org.apache.ibatis.mapping.Environment;
+import org.apache.ibatis.session.Configuration;
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.apache.ibatis.session.SqlSessionFactoryBuilder;
+import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
@@ -19,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class FriendFoundationSchemaMySqlIT
 {
     private static String url;
+    private static SqlSessionFactory sessions;
     private static Path migration;
 
     @BeforeAll static void createIsolatedSchema() throws Exception
@@ -34,6 +45,16 @@ class FriendFoundationSchemaMySqlIT
         migration = root.resolve("sql/migration_20261105_l9_friend_foundation.sql");
         url = MybatisItDatabase.url("l9_friend_foundation");
         try (Connection c = connection()) { migrate(c); }
+        UnpooledDataSource source = new UnpooledDataSource("com.mysql.cj.jdbc.Driver", url,
+                MybatisItDatabase.user(), MybatisItDatabase.password());
+        Configuration config = new Configuration(new Environment("friend-it", new JdbcTransactionFactory(), source));
+        String resource = "mapper/business/friend/FriendPersistenceMapper.xml";
+        try (InputStream in = FriendFoundationSchemaMySqlIT.class.getClassLoader().getResourceAsStream(resource))
+        {
+            if (in == null) throw new IllegalStateException("Friend mapper XML not found");
+            new XMLMapperBuilder(in, config, resource, config.getSqlFragments()).parse();
+        }
+        sessions = new SqlSessionFactoryBuilder().build(config);
     }
 
     @BeforeEach void clearOnlyThisSuiteTables() throws Exception
@@ -122,6 +143,119 @@ class FriendFoundationSchemaMySqlIT
             assertThrows(SQLException.class, () -> s.executeUpdate("INSERT INTO member_friend_group(member_id,name) VALUES(1,'cycling')"));
             assertThrows(SQLException.class, () -> s.executeUpdate("UPDATE member_friend_group SET is_default=2 WHERE member_id=1"));
             assertEquals(2, scalar(s, "SELECT COUNT(*) FROM member_friend_group"));
+        }
+    }
+
+    @Test void mapperAcceptsOnlyIncomingActorAndRejectsStaleWrites() throws Exception
+    {
+        try (SqlSession session = sessions.openSession(true))
+        {
+            FriendPersistenceMapper mapper = session.getMapper(FriendPersistenceMapper.class);
+            assertEquals(1, mapper.insertPending(1, 2, "hello", 0, null));
+            assertEquals(0, mapper.acceptIncoming(1, 2, 0));
+            assertEquals(0, mapper.acceptIncoming(3, 2, 0));
+            assertEquals(1, mapper.acceptIncoming(2, 1, 0));
+            assertEquals(0, mapper.rejectIncoming(2, 1, 0, 2));
+            var row = mapper.selectPairForUpdate(2, 1);
+            assertEquals(Long.valueOf(1), row.getRequesterId());
+            assertEquals(Long.valueOf(1), row.getVersion());
+            assertEquals(Integer.valueOf(1), row.getStatus());
+            assertNotNull(row.getFriendSince());
+            assertNull(mapper.selectPairForUpdate(3, 1));
+        }
+    }
+
+    @Test void mapperRejectWithdrawAndExpiryRespectRequestDirection() throws Exception
+    {
+        try (SqlSession session = sessions.openSession(true);
+             Connection c = connection(); Statement s = c.createStatement())
+        {
+            FriendPersistenceMapper mapper = session.getMapper(FriendPersistenceMapper.class);
+            assertEquals(1, mapper.insertPending(1, 2, "hello", 0, null));
+            assertEquals(0, mapper.withdrawOwn(2, 1, 0));
+            assertEquals(0, mapper.rejectIncoming(1, 2, 0, 2));
+            assertEquals(0, mapper.rejectIncoming(2, 1, 0, 3));
+            assertEquals(1, mapper.rejectIncoming(2, 1, 0, 9));
+            assertEquals(1, mapper.insertPending(3, 4, "hello", 0, null));
+            assertEquals(1, mapper.withdrawOwn(3, 4, 0));
+            assertEquals(0, mapper.acceptIncoming(4, 3, 1));
+            assertEquals(1, mapper.insertPending(5, 6, "hello", 0, null));
+            s.executeUpdate("UPDATE member_friend SET expire_time=DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 1 SECOND) WHERE low_member_id=5");
+            assertEquals(0, mapper.acceptIncoming(6, 5, 0));
+            assertEquals(0, mapper.rejectIncoming(6, 5, 0, 2));
+            assertEquals(0, mapper.removeFriend(5, 6, 0));
+        }
+    }
+
+    @Test void mapperRefusesInvalidInsertAndVersionOverflow() throws Exception
+    {
+        try (SqlSession session = sessions.openSession(true);
+             Connection c = connection(); Statement s = c.createStatement())
+        {
+            FriendPersistenceMapper mapper = session.getMapper(FriendPersistenceMapper.class);
+            assertEquals(0, mapper.insertPending(1, 1, "hello", 0, null));
+            assertEquals(0, mapper.insertPending(0, 2, "hello", 0, null));
+            assertEquals(0, mapper.insertPending(1, 2, " ", 0, null));
+            assertEquals(0, mapper.insertPending(1, 2, null, 0, null));
+            assertEquals(0, mapper.insertPending(1, 2, "hello", 6, null));
+            assertEquals(1, mapper.insertPending(1, 2, "hello", 0, null));
+            s.executeUpdate("UPDATE member_friend SET version=9223372036854775807");
+            assertEquals(0, mapper.acceptIncoming(2, 1, Long.MAX_VALUE));
+            assertEquals(0, mapper.withdrawOwn(1, 2, Long.MAX_VALUE));
+            assertEquals(0, mapper.rejectIncoming(2, 1, Long.MAX_VALUE, 2));
+        }
+    }
+
+    @Test void mapperMetadataReadNeverReturnsReverseOwnersRemark() throws Exception
+    {
+        try (Connection c = connection(); Statement s = c.createStatement();
+             SqlSession session = sessions.openSession(true))
+        {
+            s.executeUpdate("INSERT INTO member_friend_meta(member_id,friend_member_id,remark) VALUES(1,2,'private one'),(2,1,'private two')");
+            FriendPersistenceMapper mapper = session.getMapper(FriendPersistenceMapper.class);
+            assertEquals("private one", mapper.selectOwnMetadata(1, 2).get("remark"));
+            assertEquals("private two", mapper.selectOwnMetadata(2, 1).get("remark"));
+            assertNull(mapper.selectOwnMetadata(3, 2));
+            assertNull(mapper.selectOwnMetadata(1, 1));
+        }
+    }
+
+    @Test void mapperRelationAndBothMetadataEdgesRollbackTogether() throws Exception
+    {
+        try (SqlSession setup = sessions.openSession(true);
+             Connection c = connection(); Statement s = c.createStatement())
+        {
+            FriendPersistenceMapper mapper = setup.getMapper(FriendPersistenceMapper.class);
+            assertEquals(1, mapper.insertPending(1, 2, "hello", 0, null));
+            assertEquals(1, mapper.acceptIncoming(2, 1, 0));
+            s.executeUpdate("INSERT INTO member_friend_meta(member_id,friend_member_id) VALUES(1,2),(2,1),(3,4)");
+        }
+        try (SqlSession transaction = sessions.openSession(false))
+        {
+            FriendPersistenceMapper mapper = transaction.getMapper(FriendPersistenceMapper.class);
+            assertNotNull(mapper.selectPairForUpdate(1, 2));
+            assertEquals(1, mapper.removeFriend(1, 2, 1));
+            assertEquals(2, mapper.clearPairMetadata(1, 2));
+            transaction.rollback();
+        }
+        try (Connection c = connection(); Statement s = c.createStatement())
+        {
+            assertEquals(1, scalar(s, "SELECT status FROM member_friend"));
+            assertEquals(3, scalar(s, "SELECT COUNT(*) FROM member_friend_meta"));
+        }
+        try (SqlSession transaction = sessions.openSession(false))
+        {
+            FriendPersistenceMapper mapper = transaction.getMapper(FriendPersistenceMapper.class);
+            assertNotNull(mapper.selectPairForUpdate(2, 1));
+            assertEquals(1, mapper.removeFriend(2, 1, 1));
+            assertEquals(2, mapper.clearPairMetadata(2, 1));
+            transaction.commit();
+        }
+        try (Connection c = connection(); Statement s = c.createStatement())
+        {
+            assertEquals(3, scalar(s, "SELECT status FROM member_friend"));
+            assertEquals(1, scalar(s, "SELECT COUNT(*) FROM member_friend_meta WHERE member_id=3"));
+            assertEquals(1, scalar(s, "SELECT COUNT(*) FROM member_friend_meta"));
         }
     }
 
