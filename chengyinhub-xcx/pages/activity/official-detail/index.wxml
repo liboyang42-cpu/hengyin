@@ -1,4 +1,4 @@
-<view class="theme-merchant od-root">
+<view class="{{isMerchantViewer ? 'theme-merchant' : 'theme-dark'}} od-root">
   <view wx:if="{{recoveryShown}}" class="od-card" aria-role="status">
     <text>{{commandRecovery.label}}</text>
     <text>{{commandRecovery.message}}</text>
@@ -16,7 +16,7 @@
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
   <cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />
-  <cy-nav-bar overlay="{{!!e}}" scrolled="{{navScrolled}}" pill="{{!!e && !navScrolled}}" pillDark="{{!!e && !navScrolled}}" tint="{{(!e || navScrolled) ? 'dark' : 'light'}}" />
+  <cy-nav-bar overlay="{{!!e}}" scrolled="{{navScrolled}}" pill="{{!!e && !navScrolled}}" pillDark="{{!!e && !navScrolled}}" tint="{{(!e || navScrolled) && isMerchantViewer ? 'dark' : 'light'}}" />
 
   <view class="od-page" wx:if="{{e}}">
     <text class="od-refresh-state" wx:if="{{loading}}" aria-role="status">正在更新活动详情…</text>

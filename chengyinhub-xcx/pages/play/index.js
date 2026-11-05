@@ -6039,8 +6039,9 @@ Page({
     }
     /* 第十一轮 i1:通用局主题里本站任务还没开始时,详情卡的「开始任务」先替玩家开始任务(与背包「开始任务」
        同一条命令、同一套费用选择),成功后再进玩法;原来直接进玩法,服务端回「请先开始当前任务」。 */
-    const questStart = !node.done && this._hasGenericProofFlow() && this._questStartFor !== String(node.nodeId)
-      ? ((this.data.themeBag || {}).actionRows || []).find(row => row.kind === 'QUEST'
+    const bagRows = (this.data.themeBag || {}).actionRows || [];
+    const questStart = !node.done && bagRows.length && this._questStartFor !== String(node.nodeId) && this._hasGenericProofFlow()
+      ? bagRows.find(row => row.kind === 'QUEST'
         && String(row.nodeId) === String(node.nodeId) && row.operation === 'QUEST_START') : null;
     if (questStart) {
       if (!questStart.enabled || this._themeSending) {
@@ -7504,7 +7505,8 @@ Page({
        wx.login → getWeRunData 拿密文这条路,不能直接 action 空手发。
        ⚠️ 早先只认 'refresh'(旧 steps 屏的事件名)—— 换屏之后那两个动作会掉进
        下面的通用分支,发出去一个没有 encryptedData 的 SUBMIT_STEPS,服务端解不开。 */
-    if ((kit.type === 'walk' && action !== 'readfail' && action !== 'skip') || action === 'refresh') { this._submitSteps(); return; }
+    // 第十一轮 i1:计步的「跳过这一站」与读不到上报走通用动作,其余计步动作走微信运动密文那条路
+    if (kit.type === 'walk' && action !== 'readfail' && action !== 'skip' || action === 'refresh') { this._submitSteps(); return; }
     /* 拍照问答:照片得先上传拿到地址,再连地址一起提交。
        组件手里只有临时路径 —— 那个路径出了这台手机就不存在,发给服务端等于发了个空。 */
     if (action === 'shoot') { this._submitQaPhoto(detail); return; }

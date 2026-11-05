@@ -1,6 +1,6 @@
 <!-- 主办控制台:只有 publish-check 放行(服务端认定可读本场受控数据)才渲染任何控件。
      每个命令(发布/暂停/恢复):前端按状态置灰 + 必填校验 → cy-danger-confirm 确认 → 服务端回包 → 回读核对。 -->
-<view class="oo-page theme-merchant">
+<view class="oo-page {{isMerchantViewer ? 'theme-merchant' : 'theme-dark'}}">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />

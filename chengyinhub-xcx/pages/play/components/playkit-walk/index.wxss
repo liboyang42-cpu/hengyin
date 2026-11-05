@@ -136,9 +136,8 @@
 
 /* 第十一轮 i1:微信运动读不到时的红字(输入错误同一处理:红字贴在内容下面)与「跳过这一站」次要按钮 */
 .wk__err {
+  display: block;
   margin-top: var(--cy-space-3);
-  color: var(--cy-color-status-danger);
-  font-size: var(--cy-type-label);
 }
 .wk__skip {
   margin-top: var(--cy-space-3);

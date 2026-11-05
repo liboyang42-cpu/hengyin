@@ -74,12 +74,15 @@ test('编辑章节使用浅色内容高度弹窗与二次确认删除', () => {
   assert.match(js, /确认删除章节/)
 })
 
-test('商家官方活动保留现有结构并使用商家浅色主题', () => {
+// 第十一轮 i1(p1 F-9,业主规则:玩家深色、商家浅色):官方活动详情原先对所有人固定浅色;
+// 现在与「我发布的」同一口径,商家仍是浅色,玩家改深色,样式改用按类作用的商家浅色表
+test('商家官方活动保留现有结构:商家浅色、玩家深色', () => {
   const wxml = read('pages/activity/official-detail/index.wxml')
   const wxss = read('pages/activity/official-detail/index.wxss')
-  assert.match(wxml, /theme-merchant/)
-  assert.match(wxss, /merchant-light\.wxss/)
-  assert.doesNotMatch(wxml, /theme-dark/)
+  assert.match(wxml, /isMerchantViewer \? 'theme-merchant' : 'theme-dark'/)
+  assert.match(wxss, /merchant-light-scope\.wxss/)
+  const js = read('pages/activity/official-detail/index.js')
+  assert.match(js, /policy\.isMerchantView\(/)
 })
 
 test('协作对象列表是裸行头像样式，确认页回显锁定对象与拟议条款', () => {

@@ -43,7 +43,7 @@ test('组件:读不出数报 readfail,跳过只发请求;分发器把两件事�
     assert.match(js, /onSkip\(\)/, c);
     assert.match(read(`pages/play/components/playkit-${c}/index.wxml`), /bindtap="onSkip"[\s\S]*跳过这一站/, c);
   }
-  assert.match(read('pages/play/components/playkit-walk/index.wxml'), /\{\{readError\}\}/);
+  assert.match(read('pages/play/components/playkit-walk/index.wxml'), /<cy-inline-error[^>]*kind="field" title="\{\{readError\}\}"/);
   assert.match(read('pages/play/components/playkit-walk/index.wxml'), /bindtap="onSkip"/);
   const dispatcher = read('pages/play/components/playkit/index.wxml');
   for (const tag of ['cy-playkit-ballshake', 'cy-playkit-quiethold', 'cy-playkit-shout', 'cy-playkit-walk']) {
@@ -55,7 +55,7 @@ test('组件:读不出数报 readfail,跳过只发请求;分发器把两件事�
 
 test('计步:跳过与报失败不走微信运动同步那条路;读不到微信运动在屏上说并报给服务端', () => {
   const page = read('pages/play/index.js');
-  assert.match(page, /kit\.type === 'walk' && action !== 'readfail' && action !== 'skip'/);
+  assert.match(page, /kit\.type === 'walk' && action !== 'readfail' && action !== 'skip' \|\| action === 'refresh'/);
   assert.match(page, /'playKit\.kit\.readError': '需要授权微信运动才能计步'/);
   assert.match(page, /REPORT_SENSOR_FAILURE', \{ game: 'steps', denied: true \}/);
 });

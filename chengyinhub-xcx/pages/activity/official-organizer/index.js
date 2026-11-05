@@ -8,6 +8,7 @@
 const toast = require('../../../utils/toast.js');
 const { activityStatusText } = require('../../../utils/activity-status');
 const merchantTheme = require('../../../utils/merchant-theme.js');
+const policy = require('../../../utils/identity/identity-policy.js');
 const rules = require('./organizer-rules.js');
 const { exactId, reader, sameReader } = require('../../../utils/user-character.js');
 const { createRecovery } = require('../../../utils/team-event-command.js');
@@ -46,6 +47,7 @@ function stringList(value) {
 Page({
   data: {
     attendanceEventId: '',
+    isMerchantViewer: false,
     commandRecovery: null, recoveryShown: false,
     phase: 'loading', // loading | missing | denied | error | ready
     refreshing: false,
@@ -67,10 +69,25 @@ Page({
   showPrivacyGate() { this.setData({ privacyGateShow: true }); },
   onPrivacyGateSettled() { this.setData({ privacyGateShow: false }); },
 
+  // 第十一轮 i1(p1 F-9,业主规则:玩家深色、商家浅色):与「我发布的」同一口径,按身份选主题
+  syncViewerTheme() {
+    let isMerchantViewer = false;   // 读不到身份按玩家(深色),与 C 端默认一致
+    try {
+      isMerchantViewer = policy.isMerchantView({
+        role: app.getUserRole(),
+        userType: app.getUserType(),
+        debugView: wx.getStorageSync('debug_user_view'),
+      });
+    } catch (e) { isMerchantViewer = false; }
+    if (isMerchantViewer !== this.data.isMerchantViewer) this.setData({ isMerchantViewer });
+    if (isMerchantViewer) merchantTheme.merchantPageShow();
+    else merchantTheme.merchantPageRestore();
+  },
+
   onLoad(q) {
     const raw = q && q.id;
     const id = exactId(raw);
-    merchantTheme.merchantPageShow();
+    this.syncViewerTheme();
     this._unloaded = false;
     this._reader = reader(app);
     if (!id) {
@@ -84,7 +101,7 @@ Page({
   },
 
   onShow() {
-    merchantTheme.merchantPageShow();
+    this.syncViewerTheme();
     const reload = this._needsReload || this._reader && !sameReader(app, this._reader);
     if (reload) this._clearAccount();
     if (this._id) this._openRecovery();
