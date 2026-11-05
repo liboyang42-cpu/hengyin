@@ -85,12 +85,14 @@ class TopicRoutePublicationOutcomeScopeTest {
 
     /* 第十三轮 m1:章节有互斥组又有途中彩蛋的个人主题,每种带结果规则、定位到达的玩法都能保存并冻结(作者重开玩法存一次后的形状) */
     @org.junit.jupiter.params.ParameterizedTest
-    @org.junit.jupiter.params.provider.ValueSource(strings={"coinFlip","diceRoll","random","estimate","pricePair","hiddenObject","profile","note","typeIn","album","photoCheck"})
+    @org.junit.jupiter.params.provider.ValueSource(strings={"coinFlip","diceRoll","random","estimate","pricePair","hiddenObject","profile","note","typeIn","album","photoCheck","check","d20","steps"})
     void resavedGameWithBranchAndEggSavesAndFreezes(String kit) throws Exception {
         Fixture f = new Fixture(TopicRoutePublicationOutcomeScopeTest.settledConfig(kit));
         CmsTopicChapter chapter = new CmsTopicChapter(); chapter.setId(21L); chapter.setTopicId(10L); chapter.setSortId(0L); chapter.setName("分岔");
         when(f.chapters.selectCmsTopicChapterList(any())).thenReturn(Collections.singletonList(chapter));
         f.nodes.selectCmsTopicNodeList(new CmsTopicNode()).get(0).setChapterId(21L);
+        // D20 三档要主题打开「d20 检定」才放行(assertCheckStationsEnabled)
+        if ("check".equals(kit)) f.topic.setJourneyRulesJson("{\"schemaVersion\":1,\"checkEnabled\":true,\"modCap\":6}");
         f.topic.setThemeRuntimeConfigJson("{\"schemaVersion\":1,\"capacity\":0,\"chapters\":[{\"index\":0,\"hpCost\":0,\"luckCost\":0,\"grants\":[],\"completion\":{\"type\":\"ALL\"},\"eggs\":[{\"id\":\"egg1\",\"name\":\"涂鸦\",\"content\":\"墙上的猫\",\"trigger\":\"TIME\",\"threshold\":1,\"rewards\":[]}]}]}");
         String saved = f.compiler.compileTemplateRules(f.topic);
         assertEquals(1, quests(saved)); f.topic.setThemeRuntimeConfigJson(saved);
@@ -135,7 +137,9 @@ class TopicRoutePublicationOutcomeScopeTest {
             case "profile": game = "\"profile\":{\"enabled\":true,\"questions\":[{\"key\":\"name\",\"label\":\"名字\",\"kind\":\"text\"}]}"; break;
             case "note": game = "\"note\":{\"enabled\":true,\"title\":\"留一句\",\"prompt\":\"写给下一个人\",\"maxLength\":40}"; break;
             case "typeIn": game = "\"typeIn\":{\"enabled\":true,\"title\":\"打字\",\"target\":\"hello\",\"seconds\":10}"; break;
-            case "check": game = "\"check\":{\"enabled\":true,\"checkId\":\"c1\",\"tiers\":[{\"dc\":10}]}"; break;
+            case "check": game = "\"check\":{\"enabled\":true,\"checkId\":\"c1\",\"tier\":\"easy\",\"skill\":\"察言\",\"successText\":\"看出来了\",\"failText\":\"没看出来\"}"; break;
+            case "d20": game = "\"diceRoll\":{\"enabled\":true,\"mode\":\"d20\",\"dc\":15,\"modifier\":2,\"rollMode\":\"normal\",\"successText\":\"发现暗门\",\"failText\":\"绕路前往下一站\"}"; break;
+            case "steps": game = "\"steps\":{\"enabled\":true,\"goal\":6000}"; break;
             case "album": game = "\"album\":{\"enabled\":true,\"images\":[{\"url\":\"https://static.chengyinhub.com/a.png\"}]}"; break;
             default: game = "\"photoCheck\":{\"enabled\":true,\"title\":\"拍门牌\",\"requirement\":\"拍到门牌号\",\"minConfidence\":60,\"maxTries\":3,\"fallback\":\"retake\"}";
         }
