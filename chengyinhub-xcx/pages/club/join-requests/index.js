@@ -139,7 +139,9 @@ Page({
     const row = this.data.requests.find(function (item) {
       return String(item.memberId) === String(memberId)
     })
-    const name = (row && row.nickname) || '城瘾玩家'
+    // 第十二轮 k3(p3 N4):默认昵称分不出人时,确认层带上申请时刻(与卡片上「申请于」同一个值)。
+    const baseName = (row && row.nickname) || '城瘾玩家'
+    const name = baseName === '城瘾用户' && row && row.requestTimeText ? baseName + ' · ' + row.requestTimeText + ' 申请' : baseName
     modal.show(approve ? {
       title: '通过「' + name + '」的入会申请',
       content: '通过后，对方将成为正式成员，可查看成员名单并使用成员功能。',

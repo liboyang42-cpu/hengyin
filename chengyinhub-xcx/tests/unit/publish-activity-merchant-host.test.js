@@ -272,7 +272,8 @@ test('发布成功面板收掉 → 回「我的项目」必须带 scope=MERCHANT
   page.onLoad({ scope: 'MERCHANT' });
   page.onResultSheetClose();
 
-  assert.deepEqual(navigations, ['redirect:' + PROJECT_LIST + '?scope=MERCHANT'],
+  // 第十二轮 k3(j1 N6):落在「活动」tab(type=club_activity),scope 仍必须带。
+  assert.deepEqual(navigations, ['redirect:' + PROJECT_LIST + '?type=club_activity&scope=MERCHANT'],
     '商家活动记在店主名下，不带 scope 回列表读的是个人/俱乐部那一份，刚发的那场不在里面');
 });
 
@@ -280,5 +281,5 @@ test('俱乐部主理人发布后回列表不带 scope(负控)', () => {
   const page = makePage();
   page.onLoad({});
   page.onResultSheetClose();
-  assert.deepEqual(navigations, ['redirect:' + PROJECT_LIST]);
+  assert.deepEqual(navigations, ['redirect:' + PROJECT_LIST + '?type=club_activity']);
 });

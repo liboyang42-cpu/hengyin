@@ -844,8 +844,10 @@ public class ApiClubController extends BaseController {
                 continue;
             }
             String name = signupNames == null ? null : signupNames.get(cm.getMemberId());
+            // 待审申请行本身就有「申请于 …」一行,不在名字里重复时刻(确认弹窗由页面带上申请时刻)。
+            boolean pendingRequest = Integer.valueOf(0).equals(cm.getStatus());
             cm.setNickname(com.chengyinhub.business.util.OrganiserPersonName.pick(name, cm.getNickname(),
-                    cm.getMemberId(), cm.getJoinTime(), Integer.valueOf(0).equals(cm.getStatus()) ? "申请" : "加入"));
+                    cm.getMemberId(), pendingRequest ? null : cm.getJoinTime(), pendingRequest ? null : "加入"));
         }
     }
 

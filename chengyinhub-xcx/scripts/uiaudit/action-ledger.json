@@ -971724,7 +971724,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/join-requests/index.js:177"
+        "staticSource": "pages/club/join-requests/index.js:179"
       }
     },
     {
@@ -971819,7 +971819,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/join-requests/index.js:177"
+        "staticSource": "pages/club/join-requests/index.js:179"
       }
     },
     {

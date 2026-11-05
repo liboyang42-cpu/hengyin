@@ -223,7 +223,7 @@
         <view class="temp-list">
           <cy-skeleton wx:if="{{templateLoadState === 'loading' && !tempList.length}}" type="card" count="2" />
           <cy-error load-failure wx:elif="{{templateLoadState === 'error'}}" title="模板加载失败" sub="{{templateError}}" bind:retry="getTempList" />
-          <cy-empty wx:elif="{{templateLoadState === 'empty'}}" kind="empty" title="还没有可用模板" sub="先创建节点玩法，再回来选择。" cta="创建节点玩法" bind:cta="createTemplate" />
+          <cy-empty wx:elif="{{templateLoadState === 'empty'}}" kind="empty" title="还没有可用模板" cta="创建节点玩法" bind:cta="createTemplate" />
           <view class="ul flex-w" wx:else>
             <view bindtap="selectTemp" class="li {{selectedTempId === item.id ? 'selected' : ''}}" wx:for="{{tempList}}" wx:key="id" data-item="{{item}}" aria-role="radio" aria-checked="{{selectedTempId === item.id}}" aria-label="选择模板 {{item.title}}" hover-class="cy-pressed" hover-stay-time="80">
               <view class="item">
