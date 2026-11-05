@@ -3311,6 +3311,20 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         return validator.readTree(session.getConfigSnapshotJson()).path("nodeConfigs").get(String.valueOf(nodeId));
     }
     @Override
+    public boolean pendingCompassCheck(Long memberId,Long topicId,Long activityId,Long nodeId) {
+        TopicRouteSession session=currentSession(memberId,topicId,activityId);
+        if(session==null || genericPlayer(session))return false;
+        TopicRouteEngine.State state=readEngineState(session.getStateJson());
+        if(state.getCompletedNodeIds().contains(nodeId))return false;
+        JsonNode config=validator.readTree(session.getConfigSnapshotJson()).path("nodeConfigs").path(String.valueOf(nodeId));
+        if(config.has("outcomeRules") || !config.path("compass").path("enabled").asBoolean()
+                || !config.path("check").path("enabled").asBoolean())return false;
+        String checkId=config.path("check").path("checkId").asText();
+        TopicRouteAction receipt=findCheckAction(session,memberId,nodeId,checkId,JourneyCheckActionId.STEP_SETTLE);
+        return receipt==null || !readReceipt(receipt).isSettled();
+    }
+
+    @Override
     public String gameplayInstance(Long memberId,Long topicId,Long activityId,Long nodeId) {
         TopicRouteSession session=currentSession(memberId,topicId,activityId);
         if(!genericPlayer(session))return playInstance(memberId,topicId,activityId);
@@ -3769,6 +3783,16 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         if (scoreActive) orientRouteSettlement.beforePersist(session, state);
         if(routeMapper.updateStateCas(session)!=1)throw new ServiceException("本局已更新，请刷新",409);
         if (scoreActive) orientRouteSettlement.complete(session, state);
+        if ("QUEST_RESOLVE".equals(operation)) {
+            long nodeId = gameplayTasks.quest(config, contentId).path("nodeId").asLong();
+            if (state.getCompletedNodeIds().contains(nodeId)) {
+                PlayerNodeProgress progress = new PlayerNodeProgress();
+                progress.setMemberId(memberId); progress.setTopicId(session.getTopicId());
+                progress.setActivityId(session.getActivityId()); progress.setPlayInstanceId(session.getPlayInstanceId());
+                progress.setNodeId(nodeId);
+                progressMapper.markGameplayQuestDone(progress);
+            }
+        }
         session.setVersion(version+1);Map<String,Object> view=themeViewOf(session);
         JourneyInitialState.redactHidden(rules,result);view.put("settlement",JSON.convertValue(result,new TypeReference<Map<String,Object>>(){}));
         String savedResponse=write(view);

@@ -515,9 +515,11 @@ function pickPlayKit(view, now) {
   const feedback = feedbackBranch(view);
   const present = KIT_PRIORITY.filter((name) => !!playKit[name]
     && (name !== 'branch' || !isR5(view) || !!feedback)
-    && (name !== 'album' || isR5(view)));
+    && (name !== 'album' || isR5(view) || !!playKit.random));
   if (!present.length) return null;
-  const name = feedback ? 'branch' : present.find((item) => !segmentComplete(item, playKit[item])) || present[0];
+  const albumBeforeCard = !isR5(view) && !!playKit.album && !!playKit.random;
+  const name = albumBeforeCard && !playKit.album.done ? 'album'
+    : feedback ? 'branch' : present.find((item) => !segmentComplete(item, playKit[item])) || (albumBeforeCard ? 'random' : present[0]);
   const seg = playKit[name];
 
   // sessionId / version 必须跟着走:提交动作要用它们做幂等键与 CAS
@@ -615,7 +617,9 @@ function pickPlayKit(view, now) {
         answerId: seg.answerId || '', lastPickId: seg.lastPickId || '',
       });
     }
-    if (name === 'album') return Object.assign(base, albumKit(seg));
+    if (name === 'album') return Object.assign(base, albumBeforeCard
+      ? { title: '相册', images: seg.images || [], completionEnabled: false, beforeCard: true, done: !!seg.done }
+      : albumKit(seg));
     if (name === 'branch') {
       const step = (feedback || seg).currentStep || {};
       return Object.assign(base, {
@@ -956,6 +960,7 @@ const ACTION_OF = {
   'walk:sync': 'SUBMIT_STEPS',
   'walk:claim': 'SUBMIT_STEPS',
   'dailysign:accept': 'CLAIM_DAILY_SIGN',
+  'album:ack': 'SUBMIT_ALBUM',
   /* 时段限定的开播提醒:玩家在前端点过订阅按钮,服务端才知道该不该给他推。
      以前这一条不在册,票面上的「已开启」只活在内存里。 */
   'timewindow:subscribe': 'SUBSCRIBE_TIME_WINDOW',
@@ -1113,6 +1118,7 @@ function serverPayload(type, action, detail) {
     /* 接力签:留下的那句和可选照片。现网 CLAIM_DAILY_SIGN 还不消费这两字段,多带无害;
        后端接上之后不必再改小程序。 */ 
     case 'dailysign:accept': return {};
+    case 'album:ack': return { viewed: true };
     // 抽卡不带参数:抽哪一件由服务端按权重定,客户端说了不算
     case 'random:draw': return {};
     // C1:设备自报玩法带上服务端发的挑战身份(组件没给就不带,服务端照旧复核)

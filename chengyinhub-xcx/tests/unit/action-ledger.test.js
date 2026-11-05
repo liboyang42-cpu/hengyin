@@ -1,3 +1,4 @@
+// 2026-11-05 play launch: remove daily-sign note input, keyboard and photo contracts; regenerate on current integ, preserving all other controls.
 // 2026-10-28 整批公共合并源9a330f5a：原hosted生成器实测5553控件，非external的tap2414/event2718；全部证据仍pending，不代业务或设备验收。
 // 2026-10-20 修复并集实测：城市定位开关2个tap、四处登录/重试CTA、隐私与录音动作重分类；差异逐项见 docs/plans/mini-completion-20261020/anchor-receipt.json。
 // 2026-10-05 弹窗整合后按最终源码重建实测，精确分母同步；动作验收要求不变。
@@ -402,7 +403,7 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 并 master 前它那边是:2026-09-10 再 +1:开放设置补第二个开关「开放商家承接」,1423 → 1424。
   // 并 master 前它那边是:2026-09-10 帖子引用:发帖框的「带上一次游玩记录」入口 / 撤掉它 / 选择半屏里的选项,1424 → 1427。
   // 并 master 前它那边是:2026-09-10 开放设置补第三个开关「俱乐部公开可见」(生产库早有这一列),1427 → 1428。 */
-  // 并 master 前它那边是:assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 1967)  /* rebase 后按重建实测 1406 → 1408 */  /* rebase 后按重建实测 1416 → 1406 */  /* 2026-09-06 空态收编:5 个空态里的裸按钮改成 cy-empty 的 cta 事件合同,1422 → 1417 */  /* rebase 后按重建实测 1424 → 1422 */  /* 2026-09-06 #1007 option-sheet 自身两个点击 + im/chat「+」入口改本地态,1421 → 1424 */  /* 2026-09-03 rebase 后重算 */  /* 2026-09-11 并入 master:两边各自动过这三个冻结数,不是二选一,按合并后重建实测重算 */
+  // 并 master 前它那边是:assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 2519)  /* rebase 后按重建实测 1406 → 1408 */  /* rebase 后按重建实测 1416 → 1406 */  /* 2026-09-06 空态收编:5 个空态里的裸按钮改成 cy-empty 的 cta 事件合同,1422 → 1417 */  /* rebase 后按重建实测 1424 → 1422 */  /* 2026-09-06 #1007 option-sheet 自身两个点击 + im/chat「+」入口改本地态,1421 → 1424 */  /* 2026-09-03 rebase 后重算 */  /* 2026-09-11 并入 master:两边各自动过这三个冻结数,不是二选一,按合并后重建实测重算 */
   // 2026-09-08 二次合 master(#1047 专业发布页 / #1048 途中彩蛋整条下线)。两侧数字对合并结果
   //   都不对,按 audit:actions:update 重建实测填。
   // 并 master 前它那边是:assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 1785)  /* 2026-09-08 完成奖励选择器加「优惠券/体验卡」两档筛选 +1 */
@@ -692,7 +693,7 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 并 master 前它那边是:1760 → 1765。
   // 并 master 前它那边是:2026-09-11 复查整改:俱乐部页与达人页各补一条 bind:play(模板卡「试玩」原来渲染了没人接,
   // 并 master 前它那边是:点了不会发生任何事),1765 → 1767。tap 仍是 1601。 */
-  // 并 master 前它那边是:assert.equal(local.filter((item) => item.interactionMode === 'event-contract').length, 2301)  /* rebase 后按重建实测 1735 → 1739 */  /* rebase 后按重建实测 1731 → 1735 */  /* rebase 后按重建实测 1754 → 1731 */  /* rebase 后按重建实测 1753 → 1754 */  /* 2026-09-06 空态收编:5 个 cy-empty cta 事件合同,1747 → 1752 */  /* 2026-09-06 #1007 九处宿主 select/cancel + option-sheet 自身 close/requestclose,1727 → 1747 */  /* 2026-09-06 俱乐部拒绝入会改走 cy-danger-confirm 事件合同,1726 → 1727 */  // 2026-08-26 模板页拆两 tab:L1 用 cy-tabs 承载「主题/游戏」切换,bind:change 是新的一条事件合同,1583 → 1584  // 2026-08-26 营销页重做:三条刷新失败横幅随 #856 退役(-3),全零业务空态的 cy-empty
+  // 并 master 前它那边是:assert.equal(local.filter((item) => item.interactionMode === 'event-contract').length, 2772)  /* rebase 后按重建实测 1735 → 1739 */  /* rebase 后按重建实测 1731 → 1735 */  /* rebase 后按重建实测 1754 → 1731 */  /* rebase 后按重建实测 1753 → 1754 */  /* 2026-09-06 空态收编:5 个 cy-empty cta 事件合同,1747 → 1752 */  /* 2026-09-06 #1007 九处宿主 select/cancel + option-sheet 自身 close/requestclose,1727 → 1747 */  /* 2026-09-06 俱乐部拒绝入会改走 cy-danger-confirm 事件合同,1726 → 1727 */  // 2026-08-26 模板页拆两 tab:L1 用 cy-tabs 承载「主题/游戏」切换,bind:change 是新的一条事件合同,1583 → 1584  // 2026-08-26 营销页重做:三条刷新失败横幅随 #856 退役(-3),全零业务空态的 cy-empty
   // 2026-09-08 二次合 master(#1047 专业发布页 / #1048 途中彩蛋整条下线)。两侧数字对合并结果
   //   都不对,按 audit:actions:update 重建实测填。
   // 并 master 前它那边是:assert.equal(local.filter((item) => item.interactionMode === 'event-contract').length, 2321)  /* 2026-09-08 完成奖励改开关:+1 bindchange */
@@ -1444,7 +1445,7 @@ test('合并后可达动作 variant 全部进入台账且 handler 真源可定�
   // 并 master 前它那边是:2026-09-10 帖子引用:选择器入口/撤销/选项 + 半屏的 cy-error 重试与 cy-sheet close,3381 → 3386。
   // 并 master 前它那边是:2026-09-10 第三个开关(整行 tap + 它自己的 cy-inline-error 重试),3386 → 3388。 */
   /* 2026-09-11 同上,+5 条事件合同,3388 → 3393;复查整改再 +2 条 bind:play,3393 → 3395。 */
-  // 并 master 前它那边是:assert.equal(ledger.controlCount, 4625)  /* rebase 后按重建实测 3347 → 3353 */  /* rebase 后按重建实测 3343 → 3347 */  /* rebase 后按重建实测 3376 → 3343 */  /* rebase 后按重建实测 3375 → 3376 */  /* rebase 后按重建实测 3377 → 3375 */  /* 2026-09-06 #1007 cy-option-sheet 引入 +26 −2,合到危险确认批之后重建实测 3353 → 3377 */  /* 2026-09-06 危险确认收编重建实测 3352 → 3353 */
+  // 并 master 前它那边是:assert.equal(ledger.controlCount, 5727)  /* rebase 后按重建实测 3347 → 3353 */  /* rebase 后按重建实测 3343 → 3347 */  /* rebase 后按重建实测 3376 → 3343 */  /* rebase 后按重建实测 3375 → 3376 */  /* rebase 后按重建实测 3377 → 3375 */  /* 2026-09-06 #1007 cy-option-sheet 引入 +26 −2,合到危险确认批之后重建实测 3353 → 3377 */  /* 2026-09-06 危险确认收编重建实测 3352 → 3353 */
   // 2026-09-08 二次合 master(#1047 专业发布页 / #1048 途中彩蛋整条下线)。两侧数字对合并结果
   //   都不对,按 audit:actions:update 重建实测填。
   // 并 master 前它那边是:assert.equal(ledger.controlCount, 3381)  /* 同上 */

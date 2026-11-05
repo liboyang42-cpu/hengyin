@@ -681,6 +681,11 @@ public class PlayBasicCommandApplication {
             if(personalArrival)data.put("themeRuntime",topicRouteRuntimeService.recordPlayerArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId,expectedRouteVersion,"GPS"));
             if(sharedArrival!=null)data.put("sharedRuntime",gameSessionRuntimeService.recordSharedBasicArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId,"GPS",runtimeInstance,authorityEpoch));
             recordFirstSuccessfulScan(memberId,ctx);return AjaxResult.success("已记录本局到达，请继续当前任务或操作",data);}
+        if (solvedGame && topicRouteRuntimeService != null
+                && topicRouteRuntimeService.pendingCompassCheck(memberId,ctx.topicId,actId,node.getId())) {
+            shopDayProofService.markArrived(memberId,actId,node);
+            return error("请先完成本站 D20 检定").put("errorCode","CHECK_REQUIRED");
+        }
         // 玩法没过就到达:原闸在完成链里以异常拒绝,小程序收不到明确回执会把到达记成「结果待确认」,
         // 之后玩法做完「我已到达此站」也点不动,只能退出重进(2026-10-30 开发者工具复核)。
         // 这里先按同一闸判一次,拒绝时给出明确的业务回执。

@@ -205,6 +205,8 @@ public final class AdvancedActionJudgement {
     }
 
     static boolean mechanicsReady(JsonNode config, ObjectNode state) {
+        if (enabled(config.get("album")) && enabled(config.get("random"))
+                && !state.path("album").path("done").asBoolean()) return false;
         if (enabled(config.get("random"))
                 && state.path("draws").size() < config.path("random").path("drawCount").asInt()) return false;
         if (enabled(config.get("branch"))) {
@@ -1665,6 +1667,8 @@ public final class AdvancedActionJudgement {
     private void draw(JsonNode config, ObjectNode state) {
         JsonNode randomConfig = config.get("random");
         if (!enabled(randomConfig)) throw new IllegalArgumentException("该玩法未开启随机卡");
+        if (enabled(config.get("album")) && !state.path("album").path("done").asBoolean())
+            throw new IllegalStateException("请先查看相册");
         ArrayNode draws = state.withArray("draws");
         int drawCount = randomConfig.path("drawCount").asInt();
         if (draws.size() >= drawCount) throw new IllegalStateException("卡片已经全部翻开");

@@ -195,3 +195,15 @@ test('凭证状态回读失败不能用旧 trustedPass 解锁未知写入', asyn
   assert.equal(await page._readGenericProof(41, '', 'game'), true); assert.equal(page._gameWriteUnknown, false); assert.equal(page.data.nodes[0].done, false); assert.equal(page.data.flyScore, false);
   page._gameWriteUnknown = true; assert.equal(await page._readGenericProof(null, '', 'game'), false); assert.equal(page._gameWriteUnknown, true);
 });
+
+// The compass skip changes only the sensor step; the existing D20 receipt still owns continuation.
+test('co-located compass resumes arrival only after a settled check in the same run', async () => {
+  for (const [settled, same, expected] of [[false,true,0],[true,false,0],[true,true,1]]) {
+    const {page}=loadPage();let arrivals=0;
+    page._playOwner='7';page._sessionKey=()=>same?'run':'changed';page._isPlayAccountCurrent=()=>true;
+    page._compassCheckResume={owner:'7',sessionKey:'run',nodeId:41};
+    page.data.journeyCheck={show:true,r5:false,present:'fullscreen',receipt:{settled}};
+    page.arrive=id=>{assert.equal(id,41);arrivals++;};
+    page.closeJourneyCheck();await new Promise(resolve=>setImmediate(resolve));assert.equal(arrivals,expected);
+  }
+});

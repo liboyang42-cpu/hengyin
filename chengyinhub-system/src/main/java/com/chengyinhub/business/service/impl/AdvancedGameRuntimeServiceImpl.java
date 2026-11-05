@@ -1097,6 +1097,8 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             throw new ServiceException("请先完成高级玩法");
         }
         session = expireIfNeeded(session,memberId);
+        if (topicRouteRuntimeService != null && topicRouteRuntimeService.pendingCompassCheck(memberId,topicId,actId,nodeId))
+            throw new ServiceException("请先完成本站 D20 检定",409);
         if (Integer.valueOf(GameRuntimeSession.STATUS_COMPLETED).equals(session.getStatus())) {
             return terminalOutcome(readJson(session.getConfigSnapshotJson(), "高级玩法配置不可用"),
                     objectState(session.getStateJson()));
@@ -2290,6 +2292,11 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
      * 降级放行与次数用尽兜底放行都返回 null —— 前者没审、后者没拍到达标,铸出卡来就是把假结论落成实物。
      */
     private void submitAlbum(JsonNode config,ObjectNode state,Map<String,Object> payload,Long memberId) {
+        if (!config.has("outcomeRules") && enabled(config.path("album")) && enabled(config.path("random"))) {
+            if (!Boolean.TRUE.equals(payload.get("viewed"))) throw new IllegalArgumentException("请先查看相册");
+            state.with("album").put("done", true);
+            return;
+        }
         if(config.path("outcomeRules").path("version").asInt()!=1 || !enabled(config.path("album")))throw new IllegalArgumentException("本局未开启相册提交");
         JsonNode images=objectMapper.valueToTree(payload.get("imageUrls"));
         if(!images.isArray() || images.size()<1 || images.size()>20)throw new IllegalArgumentException("相册需提交1至20张照片");

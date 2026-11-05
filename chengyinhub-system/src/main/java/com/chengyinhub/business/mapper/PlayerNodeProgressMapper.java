@@ -35,6 +35,9 @@ public interface PlayerNodeProgressMapper
     int markShopDayGameDone(@Param("memberId") Long memberId, @Param("activityId") Long activityId,
             @Param("topicId") Long topicId, @Param("nodeId") Long nodeId);
 
+    /** 任务已结算后的进度投影，只更新本人的同一局到达行，不发奖。 */
+    int markGameplayQuestDone(PlayerNodeProgress scope);
+
     /** 已完成全部谜题节点的各场次总分中最高值；未形成完整谜题局时返回 null。 */
     Integer selectPuzzlePersonalBest(@Param("memberId") Long memberId, @Param("topicId") Long topicId);
 

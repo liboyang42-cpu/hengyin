@@ -79,5 +79,17 @@ class AdvancedActionJudgementTest {
         assertThrows(IllegalArgumentException.class,()->AdvancedGameRuntimeServiceImpl.verifyObjectiveAnswers(config,answers));
     }
 
+    @Test void combinedAlbumMustBeAcknowledgedBeforeDrawingAndBeforeCompletion() throws Exception {
+        JsonNode config=json.readTree("{\"album\":{\"enabled\":true},\"random\":{\"enabled\":true,\"drawCount\":1,\"items\":[{\"id\":\"a\",\"weight\":1,\"label\":\"label\",\"content\":\"body\"}]}}");
+        ObjectNode state=json.createObjectNode();
+        assertFalse(AdvancedActionJudgement.mechanicsReady(config,state));
+        assertThrows(IllegalStateException.class,()->judge().evaluate(Action.DRAW,new Input(config,state,Map.of(),0,7L)));
+        state.putObject("album").put("done",true);
+        assertFalse(AdvancedActionJudgement.mechanicsReady(config,state));
+        Plan draw=judge().evaluate(Action.DRAW,new Input(config,state,Map.of(),0,7L));
+        assertTrue(AdvancedActionJudgement.mechanicsReady(config,draw.state()));
+        assertEquals("body",draw.state().path("draws").path(0).path("content").asText());
+    }
+
     private AdvancedActionJudgement judge() {return new AdvancedActionJudgement(json,()->new Date(100_000),bound->0,()->42);}
 }

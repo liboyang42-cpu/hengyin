@@ -89,6 +89,21 @@ class ThemeRuntimeMySqlIT {
             exec(c,"INSERT INTO cms_registration(member_id,owner_type,owner_id,topic_id,registration_status,ticket_id,purchase_kind,create_time) VALUES(7,1,10,10,2,1,0,NOW())");
         }
     }
+    @Test void legacyCompassWaitsForItsOwnSettledCheckReceipt() throws Exception {
+        long id=runtime.state(7L,10L,0L).getSessionId();
+        TopicRouteSession row=sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L);
+        com.fasterxml.jackson.databind.node.ObjectNode snapshot=(com.fasterxml.jackson.databind.node.ObjectNode)JSON.readTree(row.getConfigSnapshotJson());
+        com.fasterxml.jackson.databind.node.ObjectNode block=snapshot.with("nodeConfigs").with("11");
+        block.putObject("compass").put("enabled",true);block.putObject("check").put("enabled",true).put("checkId","compass-check");
+        try(Connection c=ds.getConnection();PreparedStatement p=c.prepareStatement("UPDATE topic_route_session SET config_snapshot_json=? WHERE id=?")){p.setString(1,snapshot.toString());p.setLong(2,id);p.executeUpdate();}
+        assertTrue(runtime.pendingCompassCheck(7L,10L,0L,11L));
+        assertFalse(runtime.pendingCompassCheck(7L,10L,0L,12L));
+        TopicRouteAction receipt=new TopicRouteAction();receipt.setSessionId(id);receipt.setMemberId(7L);receipt.setNodeId(11L);receipt.setActionId("check:11:compass-check:roll");receipt.setReceiptId("roll");receipt.setOutcomeCode("CHECK_ROLL");receipt.setResponseJson("{\"settled\":false}");receipt.setCreateTime(new Date());
+        sql.getMapper(TopicRouteSessionMapper.class).insertAction(receipt);assertTrue(runtime.pendingCompassCheck(7L,10L,0L,11L));
+        receipt.setId(null);receipt.setActionId("check:11:compass-check:settle");receipt.setReceiptId("settle");receipt.setOutcomeCode("CHECK_SETTLE");receipt.setResponseJson("{\"settled\":true}");
+        sql.getMapper(TopicRouteSessionMapper.class).insertAction(receipt);assertFalse(runtime.pendingCompassCheck(7L,10L,0L,11L));
+    }
+
     private Map<String,Object> personalTask() throws Exception {return personalTask(false);}
     @Test void oneTemplateResourceSlotsPublishFreezeAndChargeDifferentThemes() throws Exception {
         String rules = GameplayTemplateSlotRuntimeTest.journeyRules();
@@ -600,9 +615,17 @@ class ThemeRuntimeMySqlIT {
     @Test void choiceOnlyTaskSettlesFromControlledFrozenAnswerProof() throws Exception {basicTaskFromArrival(3);}
     private void basicTaskFromArrival(int method) throws Exception {
         Map<String,Object> initial=personalTask(false,method);long id=((Number)initial.get("sessionId")).longValue();
+        String instance=sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L).getPlayInstanceId();
+        try(Connection c=ds.getConnection();PreparedStatement p=c.prepareStatement("INSERT INTO player_node_progress(member_id,activity_id,topic_id,node_id,play_instance_id,status,del_flag) VALUES(7,0,10,11,?,0,0),(8,0,10,11,?,0,0),(7,0,10,11,'other-run',0,0)")) {
+            p.setString(1,instance);p.setString(2,instance);p.executeUpdate();
+        }
         Map<String,Object> start=runtime.gameplayAction(7L,id,((Number)initial.get("version")).intValue(),"basic-start","QUEST_START","north",null);
         assertEquals("quest:",runtime.gameplayInstance(7L,10L,0L,11L).substring(0,6));Map<String,Object> done=runtime.gameplayAction(7L,id,((Number)start.get("version")).intValue(),"basic-done","QUEST_RESOLVE","north",null);
         assertEquals("COMPLETED",done.get("status"));assertEquals(5,((Number)done.get("hp")).intValue());assertEquals(2,((Number)done.get("used")).intValue());
+        try(Connection c=ds.getConnection();PreparedStatement p=c.prepareStatement("SELECT member_id,play_instance_id,status FROM player_node_progress ORDER BY id")) {
+            try(ResultSet rows=p.executeQuery()){int count=0;while(rows.next()){count++;assertEquals(rows.getLong(1)==7 && instance.equals(rows.getString(2))?1:0,rows.getInt(3));}assertEquals(3,count);}
+        }
+        assertEquals(JSON.valueToTree(done),JSON.valueToTree(runtime.gameplayAction(7L,id,((Number)start.get("version")).intValue(),"basic-done","QUEST_RESOLVE","north",null)));
         if(method==5)assertEquals("121.47",runtime.nodeArrivalConfig(7L,10L,0L,11L).path("longitude").asText());
         com.fasterxml.jackson.databind.JsonNode stored=JSON.readTree(sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L).getStateJson());assertEquals("gameplay:basic-done",stored.path("themeRuntime").path("gameplay").path("arrivalFacts").path("11").path("consumedBy").asText());
     }

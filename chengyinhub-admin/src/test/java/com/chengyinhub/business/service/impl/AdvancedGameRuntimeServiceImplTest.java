@@ -105,6 +105,17 @@ class AdvancedGameRuntimeServiceImplTest {
         when(teamMapper.hasPaidRegistration(MEMBER_ID, 2, ACTIVITY_ID)).thenReturn(1);
     }
 
+    @Test void legacyAlbumReadAcknowledgementDoesNotPretendToUploadEvidence() throws Exception {
+        com.fasterxml.jackson.databind.ObjectMapper json=new com.fasterxml.jackson.databind.ObjectMapper();
+        JsonNode config=json.readTree("{\"album\":{\"enabled\":true},\"random\":{\"enabled\":true}}");
+        com.fasterxml.jackson.databind.node.ObjectNode state=json.createObjectNode();
+        assertThrows(IllegalArgumentException.class,()->ReflectionTestUtils.invokeMethod(service,"submitAlbum",config,state,Map.of(),MEMBER_ID));
+        ReflectionTestUtils.invokeMethod(service,"submitAlbum",config,state,Map.of("viewed",true),MEMBER_ID);
+        assertTrue(state.path("album").path("done").asBoolean());
+        assertFalse(state.path("album").has("images"));
+        assertThrows(IllegalArgumentException.class,()->ReflectionTestUtils.invokeMethod(service,"submitAlbum",json.readTree("{\"album\":{\"enabled\":true}}"),json.createObjectNode(),Map.of("viewed",true),MEMBER_ID));
+    }
+
     @Test
     void startFreezesConfigInitializesBranchAndUsesServerDeadline() {
         when(templateMapper.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(template(fullConfig()));
@@ -515,6 +526,18 @@ class AdvancedGameRuntimeServiceImplTest {
 
         assertEquals("高级玩法尚未完成", error.getMessage());
         verify(sessionMapper, never()).updateStateCas(any());
+    }
+
+    @Test void completedCompassCannotBypassTheCoLocatedOriginalCheck() throws Exception {
+        JsonNode config=new com.fasterxml.jackson.databind.ObjectMapper().readTree(compassConfigSkippable(true));
+        ITopicRouteRuntimeService route=frozenBasicRoute(config);
+        GameRuntimeSession session=runningSession(config.toString(),"{\"compass\":{\"done\":true,\"skipped\":true}}");
+        session.setStatus(GameRuntimeSession.STATUS_COMPLETED);
+        when(sessionMapper.selectPlayerByOwner(ACTIVITY_ID,TOPIC_ID,NODE_ID,MEMBER_ID)).thenReturn(session);
+        when(route.pendingCompassCheck(MEMBER_ID,TOPIC_ID,ACTIVITY_ID,NODE_ID)).thenReturn(true);
+        assertEquals("请先完成本站 D20 检定",assertThrows(ServiceException.class,()->service.completeGate(MEMBER_ID,ACTIVITY_ID,TOPIC_ID,NODE_ID)).getMessage());
+        when(route.pendingCompassCheck(MEMBER_ID,TOPIC_ID,ACTIVITY_ID,NODE_ID)).thenReturn(false);
+        service.completeGate(MEMBER_ID,ACTIVITY_ID,TOPIC_ID,NODE_ID);
     }
 
     // ── v5.1 玩法必须真闸住 completeGate(修复前 mechanicsReady 只查 random/branch/multiplayer,

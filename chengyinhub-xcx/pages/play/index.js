@@ -5911,6 +5911,14 @@ Page({
           if (that.data.mode === 2) { that.onShopDayArrived(nodeId, r.data); return; }
           that.onComplete(nodeId, r.data);
         }
+        else if (r.errorCode === 'CHECK_REQUIRED') {
+          that._resolveRouteAction('arrive', nodeId);
+          const node = that._nodeById(Number(nodeId));
+          if (!node) return;
+          that._compassCheckResume = { nodeId: node.nodeId, owner: that._playOwner, sessionKey: that._sessionKey() };
+          that.setData({ 'sheet.show': true, 'sheet.node': node });
+          that._probeJourneyCheck(node);
+        }
         else if (that._handleRouteConflict(r, 'arrive', nodeId)) return;
         else if (r.httpFail) that.recordArrivalHttpUnknown(r.msg, nodeId);
         else if (r.netFail) that.recordArrivalNetworkFailure('打卡请求没有送达', { type: 'arrive', nodeId, via });
@@ -7478,6 +7486,7 @@ Page({
       // 纯本地:关闭 / 改草稿 / 切筛选 / 播放器 —— 这些没有服务端可裁决的东西
       case 'close':
       case 'requestclose':
+        if (evt.type === 'album' && this._kit().beforeCard) { this._submitPlayKitAction('ack', {}); return; }
         this.closePlayKit();
         return;
       case 'namechange':
@@ -7854,7 +7863,15 @@ Page({
       this._r5CheckView = null;
       this.setData({ advancedPlay: { show: false, node: null }, themeBackpackOpen: !!pending, themeBackpackTab: 'game' });
     }
+    const resume = this._compassCheckResume;
+    const settled = this.data.journeyCheck.receipt && this.data.journeyCheck.receipt.settled;
     this.setData({ 'journeyCheck.show': false });
+    if (resume && settled && resume.owner === this._playOwner && resume.sessionKey === this._sessionKey()) {
+      this._compassCheckResume = null;
+      this.refreshRouteState().then(ok => {
+        if (ok && this._isPlayAccountCurrent() && resume.owner === this._playOwner && resume.sessionKey === this._sessionKey()) this.arrive(resume.nodeId);
+      });
+    }
     if (inline && this.data.chapterFull) {
       const chapterParas = (this.data.chapterParas || []).filter((p) => p.kind !== 'journeyCheck')
         .map((p, i) => Object.assign({}, p, { i }));

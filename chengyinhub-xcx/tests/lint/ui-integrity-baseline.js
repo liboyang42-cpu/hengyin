@@ -1,3 +1,4 @@
+// 2026-11-05 play followup: unchanged loadMilestone silent read moved 8507 -> 8524; reason/count unchanged.
 // 2026-11-05 第十二轮 k10(站点语音讲解自动讲、配乐压低、章节旁白只自动播一次等 play/index.js 增行):U4-DYNAMIC 章节显形 patch 调用点 1808→1813、U5 loadMilestone 调用点 8446→8507 仅行号位移,调用行逐字相同、理由与条数不变、不新增登记;u4Dynamic / u5Silent keyDigest 按门禁 baselineKeyDigest 重算。
 // 2026-11-05 第十二轮 k7(j4 N1/N2/N4 roam、F16 play 增行):roam/index.js 与 play/index.js 既有 U4-DYNAMIC / U5 锚点共 20 条仅行号位移(脚本按 git diff 行号映射,调用行逐字相同),理由与条数不变、不新增登记;u4Dynamic、u5Silent keyDigest 按门禁 baselineKeyDigest 重算。
 // 2026-11-05 第十二轮 k2(j1 N1 没有游戏的票直接出码 +10 行):signup U5 调用点 415→425 仅行号位移,调用行逐字相同、理由与条数不变、不新增登记;u5Silent keyDigest 按门禁 baselineKeyDigest 重算。
@@ -1143,7 +1144,7 @@ module.exports = {
       //   逐条回读仍是「只为读章节 recruitEnabled、失败不弹全局 toast」这一处,静默理由一字未改,条数 27 不变。
 // 2026-10-17 合并 master 进漫游上线分支:roam/index.js 14 条、nearby/index.js 2 条既有调用仅行号位移(按 master 源码逐行回读定位);漫游两栏改版删掉 /api/registration/list 静默读取(749),U5 29→28。digest 按同一算法显式重算。
 // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):锚点位移 + 举报半屏/AI 对话组件下沉会员分包换路径 + 本线 9 处新增登记,digest 按同一算法重算。
-"3a1bb04cc16fc966f70bf60ffa355c67343b9cba3c5a2fe7d9fa4ac2003ebfe3"
+"539494c73c8f788e7773771e4abf656bc017d16bf7943481c91b99e9c542398b"
 
     }
   },
@@ -1548,7 +1549,7 @@ module.exports = {
       //   2026-11-02 合 master(master 侧 8072→8082):合并树同一调用行 8218。
       //   2026-11-02 round3 P-08(放行时由门自己接着进 +10 行)、P-10(文字反馈只在答对时用 +2 行):8218→8230,调用与理由未改。
       //   2026-11-03 round5D P-08(「返回地图」三个方法 + 放行对账抽成 _syncChapterHold,上方净增 29 行):8236→8265,调用与理由未改。
-      "chengyinhub-xcx/pages/play/index.js:8507": "已完成里程碑为可选增强，请求失败保持 milestone=null 且轴不渲染；owner=小程序，复核=2026-09-15",
+      "chengyinhub-xcx/pages/play/index.js:8524": "已完成里程碑为可选增强，请求失败保持 milestone=null 且轴不渲染；owner=小程序，复核=2026-09-15",
     "chengyinhub-xcx/pages/topic/pricing/index.js:184": "合作阵容行补名是 best-effort 装饰读取:拉不到名字就保留「合作俱乐部/承接商家」类型兜底,条款摘要照常、点开合作方页自有错误态;为补名弹全局 toast 会让主办方以为整页定价坏了;owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/pages/merchant/relation/index.js:265": "合作 tab 帖文流读取(2026-10-22 业主:合作 tab 看帖文):失败经同函数内具名 fail() 落 feedState=error/stale-error 与 feedError,页面 cy-error 呈现并给重试,关通道 toast 避免双重反馈;owner=小程序,复核=2026-11-30",
     "chengyinhub-xcx/subpackageB/utils/predict-entry.js:15": "消息页「竞猜待答」入口显隐读取(2026-10-22 业主:无待答不出入口):读失败照样显示入口(宁可多一行,不让 48 小时期限提醒消失),不是用户动作,无需弹错;owner=小程序,复核=2026-11-30",

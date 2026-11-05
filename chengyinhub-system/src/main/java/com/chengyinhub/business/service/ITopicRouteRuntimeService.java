@@ -16,6 +16,7 @@ import java.util.Set;
 public interface ITopicRouteRuntimeService {
     default JsonNode trustedGuidedRouteEffects(JsonNode frozen,Long nodeId,JsonNode verifiedAnswers) { throw new UnsupportedOperationException(); }
     default boolean verifyGuidedRouteAnswer(JsonNode frozen, Long nodeId, JsonNode answers) { throw new UnsupportedOperationException(); }
+    default boolean pendingCompassCheck(Long memberId,Long topicId,Long activityId,Long nodeId) { return false; }
     default boolean genericPlayer(Long memberId, Long topicId, Long activityId) { return false; }
     default JsonNode zeroChallenge(Long memberId,Long topicId,Long activityId,Long nodeId) { return null; }
     default JsonNode recordZeroChallengeResult(Long memberId,Long topicId,Long activityId,Long nodeId,String instance,String submissionId,boolean passed,Long hits,boolean retry) { throw new UnsupportedOperationException(); }
