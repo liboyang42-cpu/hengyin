@@ -73,4 +73,45 @@ Rig rebuilt on head `121630463` (jar and bundle), stand-ins restarted (`~/walk-r
 2. Slow and failing media (media server on 127.0.0.1:8765, `/tmp/media_srv.py`), egg miss, and the photo, finish card and error screens in the four looks.
 3. Bug 7 save half.
 
-STATUS: PARTIAL - second theme authored, published and played to the first branch member with logs; photo-on-定位到达 fix proven; run blocked at chapter completion (sibling station left playable, screen blank), so the second branch side, ending, throttled media and most look screens are not done
+## Third round: theme without a branch, played to the end, then failing and slow media
+
+Rig restarted again (the container had reset), a third theme authored on screen (opening chapter with video and audio, theme music, two stations with result rules, a timed egg, ending chapter with audio and video, no branch). It published, was approved, and players 9009, 9004 and 9001 signed up on screen. The publish landed on the project page (no more 「无权查看」, thanks to `e987977b4`).
+
+| Requirement (no-branch theme) | Result | Seen |
+|---|---|---|
+| Opening video, theme music, narration | Works | Log: theme music 0.25, paused for the video, resumed; narration 1.0 with theme music 0.1. |
+| Station voice and station music | Works | Voice 1.0, music 0.14 under it, theme music paused; next-station preload context created and destroyed. |
+| Photo station (定位到达) | Works | Settled with 结算任务 and 确认装载; green result page 「拍到了…继续」 (`m3-u-02`). |
+| Text station | Works after a reload | See bug A. 「答对了」, settled. |
+| Egg | Not checked on screen in this run | |
+| Last station done, in the same session | **Blocked** | Panel says 「本局已结束」, the chapter shows 「2处旧址已全部点亮 · 领取你的城市足迹卡」 in the page text but the screen is blank (`m3-u-12`): the text exists at y 723 to 775, opacity 1, but nothing is drawn and a tap there does nothing. No ending chapter, no card. |
+| Reopen | Works | Reopen opens the ending chapter 「尾声」 with its audio playing (id 1, volume 1, at 27 s); 继续 gave 「本局结局」 with 「本局档案：走过 · 报亭 · 旧码头」 (`m3-u-18`), then the finish card 「全部完成 · 磁带雨夜 · 2 坐标 · 02:28 用时 · 继续 / 保存通关卡」 (`m3-u-20`). |
+| Ending video | **Not seen** | No `<video>` in the page at reopen and no video call. Not played live either, because the live path is the blank screen above. |
+| Ending music | Seen on reopen | audio id 1 playing at volume 1. |
+
+### Failing media (every audio, video and image GET answers 503; rig object store)
+- Theme music: `play`, `error`, retry after about 3 s (`src` then `play`), error again; the later retry cannot be seen in the part of the log I kept. The game was not affected.
+- Opening video fails: the opening text is shown at once, button 出发 works (`m3-v-01`); no toast was visible.
+- Chapter narration: `error`, then silence; nothing blocks.
+- Station voice and music: voice `error`, silent. Music retried twice and then stopped and destroyed (3 s, 8 s), as built.
+- Photo submit: the server answered 「对象存储查询失败: No body in response, http status code 503」 (server also reads the object store). The player saw a dark sheet with red 「操作失败 · 点击重新读取」 and a greyed 「先完成上面的玩法」 and no photo button (`m3-v-02`). Tapping the red line after the store was back restored the 「拍一张」 task. The raw server text was not shown. The sheet is nearly empty and the retry is a plain red line, easy to miss.
+
+### Slow media (about 5 KB/s)
+Opening: 「序章 · 轻点跳过」 with 跳过, then text after about 6 s (video gave up), 出发 usable. Narration `src` and `play()` called, no `playing` yet at 12 s: silent without a loading indicator. Nothing blocked. I did not time the station phase in slow mode.
+
+### Four looks (set with `look_json` in the rig database, not through the editor)
+- Story page, station sheet (previous round), the ending chapter page and the finish card and sheet in 星尘, 纸本, 末世, 夜城 (`m3-looks-contact.jpg`, `m3-looks-finish-contact.jpg`). The ending chapter page differs per look (rain in 末世, warm blur in 纸本, dim blue in 夜城, stars in 星尘). The finish card and the sheet are identical in all four looks.
+- **Fixed, pushed (`0bec380d8`)**: on the finish card the kicker 「全部完成」 and the 「坐标 / 用时」 labels were 30% white on #1F1F21, too faint to read. They use 56% now (the value the card's own description line already uses).
+- Not seen in other looks: photo screen, scan screen, error sheets. Scan: no scan station exists yet.
+
+### Bugs this round
+- **A. Next station does nothing after finishing the previous one (same session).** After the first station was done, 开始任务 on the 旧码头 card closed the sheet and the question never appeared (kit view `show` false); after reopening the page the same tap showed the question at once. It needs a reload.
+- **B. Blank screen after the last station** (above). Same family as m1's completion blocker, now also without a branch.
+- **C.** Reopen after finishing shows the privacy sheet again in the rig; ignored.
+- Open from before: bug 7 save half; backpack bottom button row below the fold (the 开始任务 of the last row is at y 833+ on an 844 px screen and the panel only scrolls when the pointer is over the list).
+
+## Status of the table
+Done: authoring of the whole game (except QR), publish, signup, opening video and music, station voice and music, photo and text stations, reopen, ending music on reopen, finish card, failing and slow media (opening, narration, music, photo error), four looks on story, ending page and finish card.
+Not done: ending video playing, a live ending, both branch sides, egg miss and find, photo/scan/error screens in other looks, QR station (m7).
+
+STATUS: PARTIAL - no-branch theme played end to end except the live ending (blank screen after the last station) and the ending video; failing and slow media and most look screens done; branch replay and QR wait for m1 and m7
