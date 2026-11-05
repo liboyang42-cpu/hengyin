@@ -2,11 +2,19 @@
 
 2026-11-05。只改公开仓库的集成候选；未合并、未部署、未接触生产。此报告是中间交接，不能作为上线通过记录。
 
-**共享 rig 事故后的当前状态：** 环境管理者已确认 `2026-11-05 10:00:17Z` MySQL OOM（exit 137）后数据丢失：原 datadir 是 512 MiB cgroup 内的 3 GiB tmpfs，重启后 schemaCount=0、UUID 已变，未找到自有数据 dump。管理者仅替换这个空的原 MySQL 容器，保持名称、固定镜像、23316 端口、512 MiB，改用 VPS 持久 bind；没有第二套 DB，Redis 未动。应用保持停止，基线 schema／seed 恢复中，完整新 UUID 与 da9 运行版本仍待独立核验和重新开放通知。root 未发起新的共享 HTTP／SQL，浏览器离线且页面 JS 已禁用，自己的前端 18096 已停止并确认无监听。root `990029`、K10 旧主题／asset12、Pages 旧 fixture ID 均不再是有效的写入或审批目标；旧 UUID 和以下读回仅为历史证据。root 未重启、重建或恢复数据库，未启动新预算请求，不声明健康运行态或恢复成功。
+**恢复后 R2 已重新开放：** 管理者报告已独立验证 da9 actuator／JAR，正常管理员与玩家登录，以及持久 bind 重启后的基线。root 另通过原唯一 MySQL 只读确认 `cy_e2e_51` 的新 UUID `19025e57-d901-11f1-b086-9ae8535e5aec`、457 张表、9 个基线账号和 `/home/ubuntu/previews/codex-play-map-followup-20261105/persistent-mysql` 挂载。原 `990029` 等自定义夹具确已丢失；旧浏览器继续离线／禁用 JS。新 root 前端源 `a47cd65aefc85cf2341ed880c3d60697bb3be7cd`、端口 18096，使用全新浏览器和 `codex-money-20261105-r2-owner` 身份，开始经 UI 重建 `MONEY-CODEX-1105-R2`；未导入旧草稿或重放旧写请求，未重启共享应用／DB。避开 Play 保留的 9008／9004／7002。R2 业务闭环仍待实际走查，恢复就绪不是业务验收。
+
+**R2 当前停止位置：** 主理人／俱乐部和主题 `990018` 均由 UI 创建；新库重新分配 member/club `990005`，数值巧合不代表旧数据恢复。root 已认证 actuator 为 `65a1e33df848c3c225d13b58f8235a54feb2e100`、health=UP，新 UUID 未变。原 a47 前端封面换签名阻塞在刷新为 ce84（含 08c9a00df）并经 UI 手工补填后解除；一次回读网络失败也通过真实“重试”恢复。独立数据库读回两章 PERK、29 元票均已保存。当前发布被“专业主题至少需要一个章节和一个节点”阻断：自由探索的商家节点必须在发布招商后提供。root 正在共享 TopicBundleReviewService 中让零节点前检复用既有 awaitsMerchantGameplay 例外，保留普通专业主题／非招商／空章节的拒绝，未改鉴权、游戏能力或开售资金规则。六类定点单测 67 条零失败／错误／跳过，远端两份源码哈希已与本机核对一致；新 JAR 及修正后的 UI 发布仍待，修正尚未运行在 rig。详见 [R2 记录](proof/codex-money-r2-20261105/README.md)。没有发布、付款、核销或结算 PASS。
+
+业主已明确允许时间夹具：全部内容经 UI 创建后，只能改 root 自有测试行的截止／结束日期，必须标注；生命周期、状态和金额必须由真实 job／endpoint 推进，不许 SQL 设置。目前尚未应用 SQL 日期变更。`a47cd65` 的五类／43 条资金关联单测请求实际返回 `75 / another_build_holds_lock / containerId=null`，未执行，不排队打 JAR，也不启动统一 CI。
+
+**事故记录（恢复前）：** 环境管理者已确认 `2026-11-05 10:00:17Z` MySQL OOM（exit 137）后数据丢失：原 datadir 是 512 MiB cgroup 内的 3 GiB tmpfs，重启后 schemaCount=0、UUID 已变，未找到自有数据 dump。管理者仅替换这个空的原 MySQL 容器，保持名称、固定镜像、23316 端口、512 MiB，改用 VPS 持久 bind；没有第二套 DB，Redis 未动。恢复期间应用保持停止、root 暂停共享 HTTP／SQL，旧浏览器离线并禁用 JS，旧前端 18096 曾停止并确认无监听。root `990029`、K10 旧主题／asset12、Pages 旧 fixture ID 均不再是有效的写入或审批目标；旧 UUID 和以下读回仅为历史证据。root 未重启、重建或恢复数据库，未启动新预算请求；不以事故前证据声明恢复成功。
 
 root 已保存六个编辑器存储项和当前界面草稿到 `/private/tmp/codex-money-recovery-20261105/browser-drafts-offline.json`，并保留原 `/tmp/codex-money-draft-990029-backup.json` 的独立副本；两份文件已复制到持久私有目录 `/Users/arlan/Documents/Codex-Recovery/chengyin-shared-rig-20261105/root-money/` 并逐一校验 SHA256。目录权限 700、文件 600，附清单，未导出登录存储或提交草稿原文。自己的本机与 VPS 任务目录未找到此共享库的完整 SQL dump；源码 migration／测试 seed 不能当成数据库备份。
 
 已收到 K10 保全完成回执：浏览器先离线导出后禁用页面 JS，自有 18098／18102 前端停止，外部 standin 保留运行。root 已校验原 MANIFEST 的 32 项，并将整个 33 文件目录独立复制校验至 `/Users/arlan/Documents/Codex-Recovery/chengyin-shared-rig-20261105/k10-immersive/`，附 `COPY-VERIFICATION.json`；未将快照原文推到公开仓库。K10 当前快照只有 2 章／0 正式节点，早先照片模板／单节点仅余历史截图，并非完整 DB dump；asset12 没有本次审批证明。root 与 K10 快照不能证明数据库恢复，明确重新开放前继续停止共享 HTTP／SQL 写入。
+
+后续 K10 交接 `cbc857d9da1d1d94b8e060f5f4219f9ed61e25cb`／结果 `a47cd65aefc85cf2341ed880c3d60697bb3be7cd` 已读，仍为 PARTIAL，非整单完成。追加清单 36 项全部校验，原 32 项未变；含 MANIFEST 的完整 37 文件另存至 `.../chengyin-shared-rig-20261105/k10-immersive-a47cd65/`，旧持久快照不覆盖。该 lane 报告 JS 111、ledger 5743 通过；之后又报告 65a 的五套相关 Java 零失败／错误／跳过，ce84 后 UI gate PASS。完整泛化分支保存／发布／游玩仍依赖 m1 的真实完成路径，手机验收未完成；未由 root 接管 Pages 或游戏改动。
 
 ## 已提交的修复
 
@@ -19,9 +27,13 @@ root 已保存六个编辑器存储项和当前界面草稿到 `/private/tmp/cod
 | 自玩主题结算后人工退款缺原始分项 | 无合作单的俱乐部自玩结算复用既有原始分项凭证；仍只有平台与主理人两条原应付。缺费率快照时先走既有冻结入口；没有放宽凭证与主题费率的一致性校验。 | `5cff928c8`、`6cd4e2572`、`f4245f5b2` |
 | 清退退款确认缺后果清单 | 原有退款与移出名册文案进入既有危险确认清单。 | `3deea7cc2` |
 
+发布招商补充修正：`TopicBundleReviewService` 的零节点前检复用既有 `awaitsMerchantGameplay`，让自由探索可先提交招商审核，再由商家创建节点。正控验证零节点快照可提交和审核；负控保留普通专业主题、非招商章节及空章节的拒绝。只改一行生产判断，未调整角色／金额／能力矩阵。
+
 未新增依赖、表或 migration。自玩原始分项修复覆盖新结算；历史已结算且缺原始分项的订单未补账，生产存量也未查询。
 
 ## 已取得的证据
+
+- 最新 [VPS 定点收据](proof/codex-money-r2-20261105/unit-summary.json)：六类共 67 条（原资金五类实际 42＋发布审核 25），零失败／错误／跳过。使用正式 budget212、离线 Maven、1 CPU／1.5 GB 总内存，1 GB JVM 堆；未打 JAR、未用共享 DB。包含最新缺快照冻结入口的单测与零节点招商发布／审核正反例。两个修改文件的远端 SHA256 与本机一致。它不是最新真 MySQL 运行或整轮 CI。
 
 - [Funds 真 MySQL 回归](https://github.com/liboyang42-cpu/hengyin/actions/runs/41988658683)：候选 `76d1a3b5c`，739 条，失败／错误／跳过均为 0。包含自有自由探索 2×29 元，平台 1.74、主理人 56.26，14 天前不结算，退款与重复执行不重复扣款。这是该中间候选的证据。
 - [自玩原始分项真库回归](https://github.com/liboyang42-cpu/hengyin/actions/runs/41994563030)：候选 `6cd4e2572`，4/4，零跳过，独立清理回读 CLEAN。真实结算服务生成原分项；受控历史打款夹具后，真实退款分项入口扣主理人 9 元，重试不重复扣。不是 HTTP 或真机走查。
@@ -41,7 +53,7 @@ root 已保存六个编辑器存储项和当前界面草稿到 `/private/tmp/cod
 - 主题绑定玩法拒绝提示补“题目、一级／二级／三级提示”映射，保留文本拦截断言。
 - `PublicVisibilityMyBatisTest` 给手工控制器注入同一真实 SQL 会话的模板 Mapper；后续单测阶段已不再报此错误。
 - 客户名册夹具补既有主题／活动 `end_date`（`a8fb71f46`）；完整真实 MySQL 阶段尚待复跑。
-- `ThemeRuntimeMySqlIT` 的 `Date` 歧义由 Play 与 root 并行修正（`35b3dc6df`、`abfa99068`、`52a084f76`）。收到的后续预算构建已越过编译并执行 285 条；仍有 K10 所有的 2 个失败、1 个错误，不能当作通过或新 JAR。
+- `ThemeRuntimeMySqlIT` 的 `Date` 歧义由 Play 与 root 并行修正（`35b3dc6df`、`abfa99068`、`52a084f76`）。当时后续预算构建已越过编译并执行 285 条，出现 K10 所有的 2 个失败、1 个错误；后续 K10 报告 65a 的修正后五套相关 Java 零失败／错误／跳过，但不代表 root 最新资金分支或全量已通过。
 
 活动统一内容审核只返回汇总裁决，没有可复用的具体字段元数据；已向 Pages 说明，未猜测标题／正文命中位置，也未增加逐字段供应商调用。
 

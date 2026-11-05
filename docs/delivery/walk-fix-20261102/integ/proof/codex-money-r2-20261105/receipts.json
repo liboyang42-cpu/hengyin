@@ -1,0 +1,136 @@
+{
+  "databaseUUID": "19025e57-d901-11f1-b086-9ae8535e5aec",
+  "frontendSource": "a47cd65aefc85cf2341ed880c3d60697bb3be7cd",
+  "createdThroughUI": true,
+  "fixture": {
+    "memberId": 990005,
+    "clubId": 990005,
+    "topicId": 990018
+  },
+  "coverComparison": {
+    "httpStatus": 200,
+    "sameFull": false,
+    "sameOrigin": true,
+    "samePath": true,
+    "host": "rig-offline.oss-cn-shanghai.aliyuncs.com",
+    "path": "/upload/fc1ff89d29004b6f89c9e0e820f6782a.png",
+    "differentQueryKeys": [
+      "Expires",
+      "Signature"
+    ]
+  },
+  "timeFixture": {
+    "ownerAuthorizedDateChangesOnly": true,
+    "dateChangesAppliedBySQL": false,
+    "lifecycleStatusAmountsWrittenBySQL": false
+  },
+  "status": "PARTIAL: cloud save confirmed after UI retry; publish rejected by zero-node recruitment cycle; no sale/payment/settlement PASS",
+  "backendSourceAtR2StartReported": "da9b30f1dd770ce0c4cc55b278e9d08e1ad99a7f",
+  "backendSourceForRetriedCoverReadback": "65a1e33df848c3c225d13b58f8235a54feb2e100",
+  "walkSourceBoundary": "Shared app changed during this walk; earlier steps are not claimed all on65a.",
+  "localBeforeRefresh": {
+    "name": "MONEY-CODEX-1105-R2两店慢逛",
+    "chapters": [
+      {
+        "name": "第1章咖啡",
+        "category": "咖啡",
+        "recruitEnabled": 1,
+        "termsMode": "PERK"
+      },
+      {
+        "name": "第2章书店",
+        "category": "书店",
+        "recruitEnabled": 1,
+        "termsMode": "PERK"
+      }
+    ],
+    "start": "11月5日 09:00",
+    "end": "11月8日 18:00",
+    "price": [
+      29
+    ]
+  },
+  "serverReadbackBeforeRefresh": {
+    "lifecycle": 0,
+    "status": 0,
+    "chapters": [
+      {
+        "id": 51,
+        "name": "第1章",
+        "recruitEnabled": 0,
+        "termsMode": "PERK"
+      }
+    ],
+    "tickets": [
+      {
+        "id": 82,
+        "name": "自由探索票",
+        "price": "0.00"
+      }
+    ]
+  },
+  "currentFrontend": "ce84d219dc7c49f03acdff7aef967c836b82142d",
+  "coverSignatureIssue": "Resolved after08c9a00df frontend refresh and normal UI re-entry; prior comparison retained as historical repro",
+  "currentSavedAuthorData": {
+    "name": "MONEY-CODEX-1105-R2两店慢逛",
+    "start": "2026-11-05 00:00:00",
+    "end": "2026-11-06 23:59:59",
+    "recruitDeadline": "2026-11-05 23:59:59",
+    "chapters": [
+      {
+        "name": "第1章咖啡",
+        "category": "咖啡",
+        "recruitEnabled": 1,
+        "termsMode": "PERK",
+        "nodeCount": 0
+      },
+      {
+        "name": "第2章书店",
+        "category": "书店",
+        "recruitEnabled": 1,
+        "termsMode": "PERK",
+        "nodeCount": 0
+      }
+    ],
+    "tickets": [
+      {
+        "name": "自由探索票",
+        "price": 29
+      }
+    ]
+  },
+  "currentDatabaseReadback": {
+    "topicId": 990018,
+    "lifecycle": 0,
+    "status": 0,
+    "userStatus": 0,
+    "chapters": [
+      {
+        "id": 75,
+        "name": "第1章咖啡",
+        "recruitEnabled": 1,
+        "termsMode": "PERK"
+      },
+      {
+        "id": 76,
+        "name": "第2章书店",
+        "recruitEnabled": 1,
+        "termsMode": "PERK"
+      }
+    ],
+    "tickets": [
+      {
+        "id": 82,
+        "price": "29.00"
+      }
+    ]
+  },
+  "publicationBlock": "发布前检查未通过：专业主题至少需要一个章节和一个节点",
+  "pendingFix": {
+    "file": "TopicBundleReviewService.java",
+    "scope": "reuse existing awaitsMerchantGameplay when node list is empty",
+    "patchDigest": "f03084b46c56ae7d10ec5c6a074086bfb92bd828dde5cc5d4cac786cd5a1170b",
+    "unitResult": "PASS: six classes,67 tests,0failures/errors/skips; source hashes match",
+    "liveInRig": false
+  }
+}
