@@ -109,3 +109,9 @@ test('sale gate diagnostics become a readable message', () => {
   }
   assert.equal(safeUserMessage('该场次已开始，停止报名'), '该场次已开始，停止报名')
 })
+
+test('m3:Spring 序列化报错与缺环境变量的原文不给玩家看', () => {
+  const { safeUserMessage } = require('../../utils/transport/safe-user-message.js')
+  assert.equal(safeUserMessage('Could not write JSON: 对象存储配置缺失: CHENGYIN_OSS_BUCKET_NAME', 'x'), '服务开小差了，请稍后重试')
+  assert.equal(safeUserMessage('活动已满员', 'x'), '活动已满员')
+})

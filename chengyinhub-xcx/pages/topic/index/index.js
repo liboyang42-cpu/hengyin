@@ -1,4 +1,4 @@
-const modal = require('../../../utils/modal.js');
+const modal = require('../../../utils/modal.js'); const { safeUserMessage } = require('../../../utils/transport/safe-user-message.js');
 const loading = require('../../../utils/loading.js');
 const toast = require('../../../utils/toast.js');
 const app = getApp();
@@ -2119,7 +2119,7 @@ Page({
               loadError: true,
               missingTopicId: false,
               loadErrorTitle: '主题暂时无法打开',
-              loadErrorSub: res.msg || '主题详情暂时无法加载，请稍后重试。',
+              loadErrorSub: safeUserMessage(res.msg, '主题详情暂时无法加载，请稍后重试。'),
               topicLoaded: false,
             });
             return;
@@ -2200,7 +2200,7 @@ Page({
             missingTopicId: false,
             loadRefused: !!refused,
             loadErrorTitle: refused || '主题暂时无法打开',
-            loadErrorSub: refused ? '' : (res.msg || '主题详情暂时无法加载，请稍后重试。'),
+            loadErrorSub: refused ? '' : safeUserMessage(res.msg, '主题详情暂时无法加载，请稍后重试。'),
             topicLoaded: false,
           });
         }
