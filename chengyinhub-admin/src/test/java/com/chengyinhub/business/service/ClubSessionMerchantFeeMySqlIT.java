@@ -181,6 +181,17 @@ class ClubSessionMerchantFeeMySqlIT {
         ReflectionTestUtils.setField(activityService, "clubPrincipalPayee", payee);
         ReflectionTestUtils.setField(activityService, "clubSessionMerchantFee", fee);
         ReflectionTestUtils.setField(activityService, "transactionManager", manager);
+        // 第十三轮 m6:俱乐部自有自由探索场次结算时补记逐张分账行,走真实 SettlementEntryServiceImpl。
+        com.chengyinhub.business.service.impl.SettlementEntryServiceImpl entries =
+                new com.chengyinhub.business.service.impl.SettlementEntryServiceImpl();
+        ReflectionTestUtils.setField(entries, "settlementDetailMapper", detailMapper);
+        ReflectionTestUtils.setField(entries, "settlementRuleService", ruleService);
+        ReflectionTestUtils.setField(entries, "cmsTopicMapper", topicMapper);
+        ReflectionTestUtils.setField(entries, "cmsActivityMapper", template.getMapper(CmsActivityMapper.class));
+        ReflectionTestUtils.setField(entries, "coopOrderMapper", template.getMapper(CoopOrderMapper.class));
+        ReflectionTestUtils.setField(entries, "settlementClaimService",
+                new SettlementClaimServiceImpl(template.getMapper(SettlementClaimMapper.class)));
+        ReflectionTestUtils.setField(activityService, "settlementEntryService", entries);
 
         // 第十二轮 k11:结算后退款走真实的 RefundServiceImpl 冲销(真表的分账行、余额、余额流水、欠款)。
         registrationMapper = template.getMapper(CmsRegistrationMapper.class);
@@ -644,10 +655,11 @@ class ClubSessionMerchantFeeMySqlIT {
         seedPaid(74L, ACTIVITY);
         seedPaid(75L, ACTIVITY);
         topic.setProductType(2);
+        // ③ 探索票支付时不落分账行(SettlementEntryServiceImpl.recordOnPayment 跳过 EXPLORE_PASS);
+        // 第十三轮 m6 起由场次结算补记,结算后退款才有行可冲。
         execute("UPDATE cms_topic SET product_type=2 WHERE id=" + TOPIC,
-                "UPDATE cms_registration SET payable_amount=29.00 WHERE id IN (74,75)",
-                "UPDATE settlement_detail SET gross_amount=CASE WHEN receiver_type='platform' THEN 0.87 ELSE 28.13 END,"
-                        + "settlement_amount=CASE WHEN receiver_type='platform' THEN 0.87 ELSE 28.13 END WHERE source_id IN (74,75)");
+                "UPDATE cms_registration SET payable_amount=29.00, purchase_kind=3, fee_platform_rate=0.0300 WHERE id IN (74,75)",
+                "DELETE FROM settlement_detail WHERE source_id IN (74,75)");
         var canonical = TopicSaleCanonicalTestFixture.canonical();
         canonical.getCompletionPolicy().put("evidenceRule", "ALL_REQUIRED_STAMPS");
         var snapshot = new com.chengyinhub.business.domain.TopicSaleSnapshot();
@@ -673,6 +685,9 @@ class ClubSessionMerchantFeeMySqlIT {
         assertMoney("0.00", balance(MERCHANT));
         assertEquals(0, activityService.executeActivitySettlement());
         assertMoney("58.00", balance(PLATFORM).add(balance(PRINCIPAL)));
+        assertEquals(4, scalarInt("SELECT COUNT(*) FROM settlement_detail WHERE source_id IN (74,75) AND status=1"
+                + " AND ((receiver_type='merchant' AND receiver_id=" + PRINCIPAL + " AND settlement_amount=28.13)"
+                + " OR (receiver_type='platform' AND receiver_id=0 AND settlement_amount=0.87))"), "结算时补记、重跑不重复");
 
         RefundApplication refund = new RefundApplication();
         refund.setId(603L);
@@ -713,9 +728,8 @@ class ClubSessionMerchantFeeMySqlIT {
         seedPaid(74L, ACTIVITY);
         topic.setProductType(2);
         execute("UPDATE cms_topic SET product_type=2 WHERE id=" + TOPIC,
-                "UPDATE cms_registration SET payable_amount=69.00 WHERE id=74",
-                "UPDATE settlement_detail SET gross_amount=CASE WHEN receiver_type='platform' THEN 2.07 ELSE 66.93 END,"
-                        + "settlement_amount=CASE WHEN receiver_type='platform' THEN 2.07 ELSE 66.93 END WHERE source_id=74");
+                "UPDATE cms_registration SET payable_amount=69.00, purchase_kind=3, fee_platform_rate=0.0300 WHERE id=74",
+                "DELETE FROM settlement_detail WHERE source_id=74");
         var canonical = TopicSaleCanonicalTestFixture.canonical();
         canonical.getCompletionPolicy().put("evidenceRule", "FOUR_STORE_REDEEM");
         var snapshot = new com.chengyinhub.business.domain.TopicSaleSnapshot();
@@ -753,9 +767,8 @@ class ClubSessionMerchantFeeMySqlIT {
                 "UPDATE cms_activity SET club_id=" + (CLUB + 1) + " WHERE id=" + ACTIVITY);
         seedSession(other, 15);
         seedPaid(76L, other);
-        execute("UPDATE cms_registration SET payable_amount=29.00 WHERE id=76",
-                "UPDATE settlement_detail SET gross_amount=CASE WHEN receiver_type='platform' THEN 0.87 ELSE 28.13 END,"
-                        + "settlement_amount=CASE WHEN receiver_type='platform' THEN 0.87 ELSE 28.13 END WHERE source_id=76");
+        execute("UPDATE cms_registration SET payable_amount=29.00, purchase_kind=3, fee_platform_rate=0.0300 WHERE id=76",
+                "DELETE FROM settlement_detail WHERE source_id=76");
         IllegalStateException crossClub = assertThrows(IllegalStateException.class, () -> activityService.executeActivitySettlement());
         assertTrue(crossClub.getMessage().contains("成功 1 个"), crossClub.getMessage());
         assertTrue(crossClub.getMessage().contains("场次俱乐部 " + (CLUB + 1) + " 不是主题俱乐部 " + CLUB), crossClub.getMessage());

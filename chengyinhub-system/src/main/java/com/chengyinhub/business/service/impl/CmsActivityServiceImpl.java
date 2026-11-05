@@ -82,6 +82,10 @@ public class CmsActivityServiceImpl implements ICmsActivityService
     @Autowired
     private com.chengyinhub.business.mapper.TopicSaleSnapshotMapper topicSaleSnapshotMapper;
 
+    /** 第十三轮 m6:俱乐部自有自由探索场次结算时补记逐张分账行(结算后退款按它冲回)。 */
+    @Autowired
+    private com.chengyinhub.business.service.ISettlementEntryService settlementEntryService;
+
     /** 9-15 拍板:已发布免费主题的派生活动不能加收费票(= 转商业)。 */
     @Autowired
     private CommercialTopicPolicy commercialTopicPolicy;
@@ -312,6 +316,7 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         // 1. 计算活动总销售额（已支付且未退款的报名记录，owner_type=2）
         // 客诉期提现闸(9-16 拍板第 3 条):还有未结客诉的报名单只暂扣它自己那部分,其余照放。
         activitySettlementHoldMapper.holdOpenComplaintRegistrations(activity.getId());
+        recordFreeExploreSessionLedger(activity, topic);
         BigDecimal totalSales = cmsRegistrationMapper.selectTotalSalesByActivityId(activity.getId());
         // 2026-11-02 退款档位:集合前 24 小时内退 50% 的报名,未退回的那一半归主办方,在这里补回。
         BigDecimal retainedSales = cmsRegistrationMapper.selectRetainedSalesAfterPartialRefundByActivityId(activity.getId());
@@ -492,6 +497,32 @@ public class CmsActivityServiceImpl implements ICmsActivityService
             return activity.getMemberId();
         }
         return clubPrincipalPayee.forActivity(activity);
+    }
+
+    /**
+     * 第十三轮 m6(2026-11-05):俱乐部自有自由探索的 ③ 探索票支付时不落分账行(SettlementEntryServiceImpl
+     * 「执行商家逐章核销才定」),于是本场按整场票款结给主理人与平台之后,结算后退款找不到可冲销的行,
+     * 主理人与平台的份额一分不退(rig 走查:¥69 退款后两边余额不动)。这里在本场结算事务里、
+     * 已过 requireSessionSettlementContract 之后,给每张已付未退的票按支付时同一口径补记主理人 / 平台两行,
+     * 随本场一起置已结算(涉诉暂扣的那张留待补结时再置),之后的退款就走既有 clawBackSettledShares 按比例冲回。
+     */
+    private void recordFreeExploreSessionLedger(CmsActivity activity, CmsTopic topic) {
+        if (topic == null || !Integer.valueOf(ProductType.FREE_EXPLORE).equals(topic.getProductType())) return;
+        if (settlementEntryService == null) {
+            throw new ServiceException("FREE_EXPLORE_SESSION_LEDGER_UNWIRED: 自由探索场次分账组件未装配,拒绝结算 activityId="
+                    + activity.getId());
+        }
+        Long payee = activityPayee(activity);
+        List<Long> ids = cmsRegistrationMapper.selectPaidUnrefundedIdsByActivityId(activity.getId());
+        if (ids == null) return;
+        for (Long id : ids) {
+            CmsRegistration registration = cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(id);
+            if (registration == null || !Integer.valueOf(2).equals(registration.getPaymentStatus())
+                    || !Integer.valueOf(2).equals(registration.getRegistrationStatus())) {
+                continue;
+            }
+            settlementEntryService.recordClubFreeExploreSessionSettlement(registration, payee);
+        }
     }
 
     private void requireSessionSettlementContract(CmsActivity activity, CmsTopic topic) {

@@ -882,6 +882,17 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </select>
 
 
+    <!-- 第十三轮 m6:俱乐部自有自由探索场次结算时补记逐张分账行用;口径同 selectTotalSalesByActivityId(已付未退)。 -->
+    <select id="selectPaidUnrefundedIdsByActivityId" parameterType="Long" resultType="java.lang.Long">
+        SELECT id
+        FROM cms_registration
+        WHERE owner_id = #{activityId}
+          AND owner_type = 2
+          AND payment_status = 2
+          AND registration_status = 2
+        ORDER BY id
+    </select>
+
     <select id="selectTotalSalesByActivityId" parameterType="Long" resultType="java.math.BigDecimal">
         SELECT COALESCE(SUM(payable_amount), 0)
         FROM cms_registration

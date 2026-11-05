@@ -94,6 +94,9 @@ public interface CmsRegistrationMapper
     /** 事务内当前读；CAS 失败后必须用它看见竞争事务刚提交的终态，不能用 RR 快照普通读。 */
     public CmsRegistration selectCmsRegistrationByIdForUpdate(Long id);
 
+    /** 第十三轮 m6:场次已付未退的报名 id(与 selectTotalSalesByActivityId 同口径)。 */
+    List<Long> selectPaidUnrefundedIdsByActivityId(Long activityId);
+
     /** Parent scope is already locked; current read in stable order, independent of an older RR view. */
     List<CmsRegistration> selectCancellationRowsForUpdate(@Param("ownerType") Long ownerType,
                                                          @Param("ownerId") Long ownerId);
