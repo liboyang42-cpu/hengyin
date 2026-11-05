@@ -87,14 +87,16 @@ test('编辑预填失败不会伪装成空白新增表单，并可原地重试',
   h.page.onLoad({ id: '7' })
   assert.equal(h.page.data.bootstrapping, true)
   h.page.retryBootstrap()
-  assert.equal(h.requests.length, 1)
-  h.requests[0].fail()
+  // 第十二轮 k8 N12:onLoad 另读一次绑定手机号(/api/user/info),这里只数参与人详情读
+  const infoReqs = () => h.requests.filter(r => r.url === '/api/user/address/info')
+  assert.equal(infoReqs().length, 1)
+  infoReqs()[0].fail()
   assert.equal(h.page.data.bootstrapping, false)
   assert.equal(h.page.data.bootstrapErrorKind, 'network')
   assert.match(h.page.data.bootstrapError, /网络|参与人/)
   h.page.retryBootstrap()
-  assert.equal(h.requests.length, 2)
-  h.requests[1].success({
+  assert.equal(infoReqs().length, 2)
+  infoReqs()[1].success({
     code: 200,
     data: { fullName: '玩家甲', mobilePhone: '13800138000', province: '', detailAddress: '' },
   })

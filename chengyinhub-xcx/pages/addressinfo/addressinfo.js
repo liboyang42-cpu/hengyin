@@ -27,6 +27,7 @@ Page({
       detailAddress: '', // 详细地址
       isDefault: 0 // 是否默认地址
     },
+    boundPhone: '', // 账号绑定的微信手机号;有就只读、随参与人保存(第十二轮 k8 N12)
     isEdit: false, // 是否是编辑模式
     canSubmit: false,
     saving: false,
@@ -43,6 +44,7 @@ Page({
    * 生命周期函数--监听页面加载
    */
   onLoad(options) {
+    this.loadBoundPhone();
     // 判断是编辑还是新增
     if (options.id) {
       this.setData({
@@ -52,6 +54,23 @@ Page({
       });
       this.getAddressInfo(options.id);
     }
+  },
+
+  // 第十二轮 k8 N12:建单用的是账号绑定的微信手机号(通行证结算读 /api/user/info),
+  // 这里不再让玩家另填一个会被忽略的号;没绑过才保留手填(报名页仍读参与人手机号)。
+  loadBoundPhone: function () {
+    const that = this;
+    app.sendRequest({
+      hideLoading: true, autoErrorToast: false,
+      url: '/api/user/info', method: 'POST', data: { member_id: app.getUserID && app.getUserID() },
+      success: function (res) {
+        const d = res && res.code == '200' && res.data && typeof res.data === 'object' ? res.data : null;
+        const phone = d ? String(d.phone || d.mobilePhone || '').trim() : '';
+        if (!isValidMobile(phone)) return;
+        that.setData({ boundPhone: phone, 'form.mobilePhone': phone, 'fieldErrors.mobilePhone': '' },
+          () => that.refreshSubmitState());
+      }
+    });
   },
 
   // 栈首页(深链/直达)时 navigateBack 会失败;不兜底就是个点了不动的死箭头。
@@ -86,7 +105,7 @@ Page({
           const address = res.data;
           that.setData({
             'form.fullName': address.fullName,
-            'form.mobilePhone': address.mobilePhone,
+            'form.mobilePhone': that.data.boundPhone || address.mobilePhone,
             'form.province': address.province || '',
             'form.detailAddress': address.detailAddress || '',
             'form.isDefault': address.isDefault || 0,

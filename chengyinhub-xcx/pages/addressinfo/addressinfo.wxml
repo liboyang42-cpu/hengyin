@@ -25,7 +25,9 @@
     <view class="add_li">
       <view class="add_li_left">手机号<text class="req" aria-hidden="true">*</text></view>
       <view class="add_li_right">
-        <input type="number" placeholder="输入手机号" placeholder-class="fld-ph"
+        <!-- 第十二轮 k8 N12:手机号只认绑定的微信手机号(业主定稿),绑过就只读显示那一个 -->
+        <input wx:if="{{boundPhone}}" type="number" disabled value="{{boundPhone}}" />
+        <input wx:else type="number" placeholder="输入手机号" placeholder-class="fld-ph"
                value="{{form.mobilePhone}}" bindinput="onInputChange" data-field="mobilePhone" />
       </view>
     </view>
