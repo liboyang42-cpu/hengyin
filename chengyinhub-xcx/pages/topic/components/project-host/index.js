@@ -76,10 +76,10 @@ Component({
       this._circleConfigOpen = !!show;
     },
     // 招商顶部三格:j2 F-09 起与下面的列表同一来源(数字 = 列表行数),见 utils/recruit-summary.js
-    'recruitStations, ownerChapterApplications, hostRecruit, regApplies, hostTopic, hostMerchants': function (rows, apps, recruit, applies, topic, merchants) {
+    'recruitStations, ownerChapterApplications, hostRecruit, regApplies, hostTopic, hostMerchants': function (rows, apps, recruit, applies, topic, hostMerchants) {
       this.setData({
         stationSum: recruitSum.recruitSummary({ stations: rows, chapterApps: apps, recruit, applies, topic }),
-        confirmedMerchants: recruitSum.confirmedMerchants(merchants),
+        confirmedMerchants: recruitSum.confirmedMerchants(hostMerchants),
       });
     },
     // 派生量放 observer 而不是让页面再多存两个字段:它们只有这个视图用得上

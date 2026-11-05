@@ -61,7 +61,7 @@ test('session-picker:门卡渲染加入引导,不再报「票种没读出来」'
   requests[0].success({ code: 200, data: GATE })
 
   assert.equal(vm.data.ticketsState, 'gate')
-  assert.match(vm.data.ticketsError, /加入后查看/)
+  assert.match(vm.data.ticketsGateText, /加入后查看/)
   assert.equal(vm.data.gateClubId, 77)
   assert.deepEqual(vm.data.tickets, [])
 

@@ -211,6 +211,6 @@ test('P-19:场次卡写执行俱乐部名,门卡沿用服务端点名的原因',
   assert.equal(vm.data.days[1].detailText, '14:05 · 周日场')
   vm.onPickDay({ currentTarget: { dataset: { id: 9 } } })
   requests.at(-1).success({ code: 200, data: { gate: true, clubId: 7002, clubName: '执行俱乐部', message: '这一场由「执行俱乐部」执行，加入后查看' } })
-  assert.equal(vm.data.ticketsError, '这一场由「执行俱乐部」执行，加入后查看')
+  assert.equal(vm.data.ticketsGateText, '这一场由「执行俱乐部」执行，加入后查看')
   assert.equal(vm.data.gateClubId, 7002)
 })

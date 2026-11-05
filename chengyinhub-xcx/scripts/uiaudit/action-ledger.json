@@ -1347967,7 +1347967,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/cy/session-picker/index.js:140"
+        "staticSource": "pages/topic/components/cy/session-picker/index.js:141"
       }
     },
     {
@@ -1348046,7 +1348046,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/cy/session-picker/index.js:235"
+        "staticSource": "pages/topic/components/cy/session-picker/index.js:238"
       }
     },
     {
@@ -1348126,7 +1348126,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/cy/session-picker/index.js:247"
+        "staticSource": "pages/topic/components/cy/session-picker/index.js:250"
       }
     },
     {
@@ -1348208,7 +1348208,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/cy/session-picker/index.js:229"
+        "staticSource": "pages/topic/components/cy/session-picker/index.js:232"
       }
     },
     {
@@ -1348329,7 +1348329,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/cy/session-picker/index.js:249"
+        "staticSource": "pages/topic/components/cy/session-picker/index.js:252"
       }
     },
     {

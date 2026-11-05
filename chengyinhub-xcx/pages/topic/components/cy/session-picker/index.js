@@ -92,6 +92,7 @@ Component({
     tickets: [],
     ticketsState: 'idle',   // idle | loading | ready | error | empty | gate
     ticketsError: '',
+    ticketsGateText: '',
     // M1-3 门卡:后端对非俱乐部成员返回 {gate:true, clubId, message}。
     // 这一档不是「票种没读出来」,重试再多次也读不出来 —— 唯一出口是去加入俱乐部。
     gateClubId: 0,
@@ -167,7 +168,9 @@ Component({
             that.setData({
               tickets: [],
               ticketsState: 'gate',
-              ticketsError: d.message || '来自俱乐部的活动，加入后查看',
+              // 门卡是「只对俱乐部成员开放」的说明,不是读取错误:单独字段,不进错误文案
+              ticketsGateText: d.message || '来自俱乐部的活动，加入后查看',
+              ticketsError: '',
               gateClubId: Number(d.clubId) || 0,
               pickedTicketId: 0,
               totalText: '',

@@ -23,7 +23,7 @@
     <cy-skeleton wx:if="{{ticketsState === 'loading'}}" type="list" count="{{2}}" />
     <!-- M1-3 门卡:不是读不出来,是这一场只对俱乐部成员开放 —— 重试无意义,出口是加入俱乐部 -->
     <!-- R11 p1 F-11:半屏里不放空态大图,一行原因,出口在底栏「去加入俱乐部」(原来第二行被底栏压住) -->
-    <view wx:elif="{{ticketsState === 'gate'}}" class="sp-gate" aria-role="alert">{{ticketsError}}</view>
+    <view wx:elif="{{ticketsState === 'gate'}}" class="sp-gate" aria-role="alert">{{ticketsGateText}}</view>
     <!-- 读不到 ≠ 这场没票可买:分开说,否则玩家会以为卖光了 -->
     <cy-error load-failure wx:elif="{{ticketsState === 'error'}}" title="票种没读出来"
               sub="{{ticketsError}}" retry="重试" bind:retry="retryTickets" />
