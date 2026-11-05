@@ -310,6 +310,13 @@ class ApiCoopControllerPartnerNodeTest {
         assertNull(p.getPhone(), "未接受前仍不下发电话");
         assertNull(p.getLeaderName(), "未接受前仍不下发负责人");
 
+        givenPeerMerchant("作者兼有的商店", "13922222222");
+        CoopPartnerVO dualRole = listReceivedPartner(receivedInviteFromPeer(0));
+        assertEquals("夜跑俱乐部", dualRole.getName(), "俱乐部主题不能显示成作者的商店");
+        assertNull(dualRole.getPhone(), "兼有商家档案也不能绕过未接受时的隐私闸");
+        assertNull(dualRole.getLeaderName());
+
+        when(mmsMerchantService.selectMmsMerchantByMemberId(PEER)).thenReturn(null);
         clubTopic.setMemberId(ME + 999);   // 发起人不是主题发布者:不冒用俱乐部名
         CoopPartnerVO other = listReceivedPartner(receivedInviteFromPeer(0));
         assertEquals("城瘾用户", other.getName());

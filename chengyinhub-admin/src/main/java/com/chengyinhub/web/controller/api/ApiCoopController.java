@@ -1535,16 +1535,8 @@ public class ApiCoopController extends BaseController {
 
     private CoopPartnerVO partnerOfInviter(CoopInvite inv) {
         if ("club".equals(inv.getFromType())) return partnerOfClub(inv.getFromId());
-        // 第十一轮 h4 L4:俱乐部主理人用个人身份为俱乐部主题招商时,发起方没有商家档案,
-        // 原来退回昵称 ⇒ 商家看到「来自 城瘾用户」。这一条邀约代表的是那家俱乐部(主题属于该俱乐部、
-        // 发起人就是主题发布者),对商家公开的称呼用俱乐部名;联系方式仍按 fillPartner 的 §3.8 闸摘取。
-        MmsMerchant merchant = null;
-        try {
-            merchant = inv.getFromId() == null ? null : mmsMerchantService.selectMmsMerchantByMemberId(inv.getFromId());
-        } catch (Exception e) {
-            log.warn("[coop] 发起方商家档案读取失败 fromId={} reason={}", inv.getFromId(), e.getClass().getSimpleName());
-        }
-        if (merchant == null && inv.getTopicId() != null && inv.getFromId() != null) {
+        // 主题所属俱乐部优先于作者兼有的商家档案；联系方式仍由 fillPartner 按接受状态摘取。
+        if (inv.getTopicId() != null && inv.getFromId() != null) {
             CmsTopic topic = cmsTopicService.selectCmsTopicById(inv.getTopicId());
             if (topic != null && topic.getClubId() != null && inv.getFromId().equals(topic.getMemberId())) {
                 CoopPartnerVO club = partnerOfClub(topic.getClubId());
