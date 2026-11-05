@@ -221,8 +221,8 @@ class ApiTopicSaveDraftContractTest {
         assertNotEquals(200, controller.authorEditDetail(String.valueOf(TOPIC_ID), null).get(AjaxResult.CODE_TAG));
         AjaxResult saved = controller.authorSavedDetail(String.valueOf(TOPIC_ID), null);
         assertEquals(200, saved.get(AjaxResult.CODE_TAG));
-        java.util.Map<?, ?> data = (java.util.Map<?, ?>) saved.get(AjaxResult.DATA_TAG);
-        assertEquals(false, data.get("isDraft")); assertEquals("NONE", data.get("editScope"));
+        com.fasterxml.jackson.databind.JsonNode data = (com.fasterxml.jackson.databind.JsonNode) saved.get(AjaxResult.DATA_TAG);
+        assertEquals(false, data.path("isDraft").asBoolean()); assertEquals("NONE", data.path("editScope").asText());
         topic.setMemberId(999L);
         assertNotEquals(200, controller.authorSavedDetail(String.valueOf(TOPIC_ID), null).get(AjaxResult.CODE_TAG));
     }

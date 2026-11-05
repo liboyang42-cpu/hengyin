@@ -70,6 +70,7 @@ class TopicRoutePublicationOutcomeScopeTest {
         CmsTopicChapter chapter = new CmsTopicChapter(); chapter.setId(21L); chapter.setTopicId(10L); chapter.setSortId(0L); chapter.setName("起点");
         when(f.chapters.selectCmsTopicChapterList(any())).thenReturn(Collections.singletonList(chapter));
         f.nodes.selectCmsTopicNodeList(new CmsTopicNode()).get(0).setChapterId(21L);
+        f.nodes.selectCmsTopicNodeList(new CmsTopicNode()).get(0).setName("路灯照片");
         f.templates.selectCmsMemberTemplateByIds(Collections.singletonList(701L)).get(0).setValidationMethod(2);
         for (String eggs : new String[]{"[{\"id\":\"egg1\",\"name\":\"来信\",\"content\":\"灯亮了\",\"trigger\":\"TIME\",\"threshold\":1,\"rewards\":[]}]", "[]"}) {
             f.topic.setThemeRuntimeConfigJson("{\"schemaVersion\":1,\"capacity\":0,\"chapters\":[{\"index\":0,\"hpCost\":0,\"luckCost\":0,\"grants\":[],\"eggs\":" + eggs + ",\"completion\":{\"type\":\"ALL\"}}]}");

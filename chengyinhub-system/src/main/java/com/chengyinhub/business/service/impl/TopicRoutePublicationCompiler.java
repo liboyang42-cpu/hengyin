@@ -692,8 +692,15 @@ final class TopicRoutePublicationCompiler {
 
     private boolean hasVerifiedPublicationArrival(JsonNode frozen, Long nodeId) {
         if (basicCompletionKind(frozen, nodeId) != null) return true;
-        if (frozen.path("nodeConfigs").path(String.valueOf(nodeId)).path("outcomeRules").path("version").asInt() != 1) return false;
+        JsonNode config = frozen.path("nodeConfigs").path(String.valueOf(nodeId));
         int method = frozen.path(NodeJourneySnapshot.NODE_ANSWERS_KEY).path(String.valueOf(nodeId)).path("validationMethod").asInt(-1);
+        // 拍照由高级运行时核验上传原件和归属后记任务事实，无需再配定位或结果规则。
+        if (method == 2 && config.path("qa").path("enabled").asBoolean()
+                && "SHOT".equals(config.path("qa").path("mode").asText())) {
+            validateObjectiveGroup(config);
+            return true;
+        }
+        if (config.path("outcomeRules").path("version").asInt() != 1) return false;
         if (method != 4 && method != 5) return false;
         // 参与方式只证明到达，不替代 R5 玩法的服务端结算。
         validateParticipationNode(frozen, nodeId, method == 4 ? "SCAN" : "GPS");
