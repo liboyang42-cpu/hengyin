@@ -3339,7 +3339,12 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
     @Override
     public boolean solvedForArrival(Long memberId, Long activityId, Long topicId, Long nodeId) {
         if (memberId == null || memberId <= 0L || topicId == null || nodeId == null) return false;
-        GameRuntimeSession session = existingSession(memberId, activityId == null ? 0L : activityId, topicId, nodeId);
+        GameRuntimeSession session;
+        // 第十二轮 k8:带状态 / 检定的主题(通用个人局)里,这一站的任务还没开始时查不到任务实例,gameplayInstance 抛 409
+        // 「请先开始当前任务」。这里只是只读地问「解开了没有」:查不到实例就是没解开,照原围栏走;
+        // 以前把 409 抛给到站,到站失败 ⇒ 任务又因「尚未到达」开不了,首站死锁。
+        try { session = existingSession(memberId, activityId == null ? 0L : activityId, topicId, nodeId); }
+        catch (ServiceException noInstance) { if (Integer.valueOf(409).equals(noInstance.getCode())) return false; throw noInstance; }
         if (session == null) return false;
         JsonNode config = readJson(session.getConfigSnapshotJson(), "高级玩法配置不可用");
         return readyForBase(session, config, objectState(session.getStateJson()));
