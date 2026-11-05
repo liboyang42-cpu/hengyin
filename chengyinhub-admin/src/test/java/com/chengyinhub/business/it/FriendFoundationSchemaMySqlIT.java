@@ -40,9 +40,9 @@ class FriendFoundationSchemaMySqlIT
             throw new IllegalStateException("Requires GitHub Actions job-local MySQL on 127.0.0.1");
         Path root = Path.of("").toAbsolutePath();
         while (root != null && !Files.isRegularFile(root.resolve(
-                "sql/migration_20261105_l9_friend_foundation.sql"))) root = root.getParent();
+                "chengyinhub-admin/sql/migration_20261105_l9_friend_foundation.sql"))) root = root.getParent();
         if (root == null) throw new IllegalStateException("Friend foundation migration not found");
-        migration = root.resolve("sql/migration_20261105_l9_friend_foundation.sql");
+        migration = root.resolve("chengyinhub-admin/sql/migration_20261105_l9_friend_foundation.sql");
         url = MybatisItDatabase.url("l9_friend_foundation");
         try (Connection c = connection()) { migrate(c); }
         UnpooledDataSource source = new UnpooledDataSource("com.mysql.cj.jdbc.Driver", url,
