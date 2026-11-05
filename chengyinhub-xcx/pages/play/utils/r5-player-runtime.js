@@ -145,7 +145,7 @@ function methods() {
     },
     // 没有通用局回执的主题(themeBag 无 quests):判完那一次直接摆作者写的结果反馈;进页第一份视图只记下,不补弹。
     _applyR5PlainOutcome(view) {
-      if (!isR5(view) || view.sessionId == null || ((this.data.themeBag || {}).quests || []).length) return;
+      if (!isR5(view) || view.status === 'FAILED' && view.canRetry === true || view.sessionId == null || ((this.data.themeBag || {}).quests || []).length) return;
       const fb = view.outcomeFeedback, seen = this._r5PlainSeen || (this._r5PlainSeen = {}), key = String(view.sessionId);
       const id = fb ? key + ':' + view.version : '';
       if (!(key in seen) || !fb || seen[key] === id) { seen[key] = id; return; }

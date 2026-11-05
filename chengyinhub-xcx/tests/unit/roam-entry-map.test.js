@@ -97,3 +97,12 @@ test('j4 F6: a session card counts only its own teams; the topic card counts all
   assert.equal(s12.registered, false, '别的场次的票不算本场已报名')
   assert.match(topic.meta, /2 支队伍招募/)
 })
+
+test('j4 N5:同主题的场次卡显示各自的真实开场时间', () => {
+  const base = { kind: 'activity', name: '同一主题', topicId: 3 };
+  const first = entryMap.activityView({ ...base, startDate: '2026-12-01 09:30:00' }, []);
+  const second = entryMap.activityView({ ...base, startDate: '2026-12-02 14:00:00' }, []);
+  assert.match(first.meta, /2026.12.01 09:30/);
+  assert.match(second.meta, /2026.12.02 14:00/);
+  assert.doesNotMatch(entryMap.activityView(base, []).meta, /NaN|1970/);
+});

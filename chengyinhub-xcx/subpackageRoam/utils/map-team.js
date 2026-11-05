@@ -31,7 +31,7 @@ function statusOf(t) {
 }
 
 function teamName(t) {
-  return String((t && t.title) || '').trim() || '玩家队伍';
+  return String((t && t.title) || '').trim() || (t && t.leaderName ? t.leaderName + '的队伍' : '玩家队伍');
 }
 
 /** P2/P3/P4/P5/被拒/已加入 → 卡片该出什么。按钮对象 { text, action };null = 不出。 */

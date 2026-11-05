@@ -1161,6 +1161,7 @@ Page({
     const navRow = this.readNavRow();
     const mapStyle = isMerchantView() ? lightMapStyle() : playerMapStyle();
     this.setData({
+      merchantView: isMerchantView(),
       mapSubkey: mapStyle.subkey,
       mapLayerStyle: mapStyle.layerStyle,
       statusBarHeight: app.globalData.statusBarHeight || 20,

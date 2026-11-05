@@ -308,3 +308,28 @@ test('rig 走查修正:玩家自己的点也占位,图钉不压蓝点', () => {
   assert.strictEqual(pins.layoutPins(c, region, vp).length, 1);
   assert.strictEqual(pins.layoutPins(c, region, vp, [{ lat: 31.23, lng: 121.47, size: 48 }]).length, 0);
 });
+
+test('j4 N1:商家图钉直接打开横滑条,第九家也能成为选中卡;地点仍开地点卡', () => {
+  const page = loadRoamPage();
+  page._pois = Array.from({ length: 10 }, (_, i) => poi(i + 1, 31.21, 121.41, { cat: 'merchant' }));
+  page.closeScene = () => {};
+  page.closePlaceCard = () => {};
+  page._loadShopStripVisitors = () => {};
+  page._flyToPin = p => { page.flown = p.id; };
+  page.onMarkerTap({ detail: { markerId: 10 } });
+  assert.equal(page.data.shopStrip.rows[0].poiId, '10');
+  assert.equal(page.flown, 10);
+  assert.match(read('pages/roam/index.wxml'), /class="pin-count"[^>]*bindtap="openShopStrip"[^>]*aria-role="button"/);
+  assert.equal(page.data.introTeamsLive, '');
+});
+
+test('j4 N2:屏外图钉留在搜索栏下、底部卡上,左右留完整半径', () => {
+  const viewport = { width: 390, height: 844, top: 150, bottom: 300 };
+  for (const [lat, lng] of [[31.225, 121.41], [31.195, 121.41], [31.21, 121.425], [31.21, 121.395]]) {
+    const edge = pins.placeInView(lat, lng, REGION, viewport);
+    const point = pins.toScreen(edge.lat, edge.lng, REGION, viewport);
+    assert.equal(edge.kind, 'edge');
+    assert.ok(point.y >= 149.9 && point.y <= 544.1);
+    assert.ok(point.x >= 19.9 && point.x <= 370.1);
+  }
+});

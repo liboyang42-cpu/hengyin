@@ -1,7 +1,7 @@
 'use strict';
 
 const H = require('./roam-hangout.js');
-const { toTimestamp } = require('./datetime.js');
+const { toTimestamp, formatMinuteDots } = require('./datetime.js');
 
 const FALLBACK_TEAM_ICON = '/images/d_profile.png';
 const TEAM_MARKER_TAG = 4;
@@ -73,7 +73,7 @@ function activityView(row, teams, getImgUrl) {
     title: String((row && row.name) || '未命名活动'),
     cover: coverOf(row, getImgUrl),
     tag: free ? '自由探索' : '城市定向',
-    meta: [ended && '已结束', distance && ('距你 ' + distance), !ended && linkedTeams.length && (linkedTeams.length + ' 支队伍招募')].filter(Boolean).join(' · '),
+    meta: [row && row.kind === 'activity' && Number.isFinite(toTimestamp(row.startDate)) && formatMinuteDots(row.startDate), ended && '已结束', distance && ('距你 ' + distance), !ended && linkedTeams.length && (linkedTeams.length + ' 支队伍招募')].filter(Boolean).join(' · '),
     address: String((row && row.addressName) || ''),
     participantFaces,
     participantCount,

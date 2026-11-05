@@ -339,7 +339,7 @@ Page({
       { key: 'start', icon: 'route', title: '开始漫游', sub: '' },
       { key: 'map', nav: '/subpackageRoam/nearby/index', icon: 'map', title: '打开地图', sub: '寻找组队' },
       { key: 'my-teams', nav: '/subpackageRoam/nearby/index?sheet=mine', icon: 'tab-club', title: '我的队伍', sub: '' },
-    ], introStartLive: '', introTeamsLive: '附近正在组队', // 卡片实时行只放页面已有真数据;空串=隐藏,不摆占位
+    ], introStartLive: '', introTeamsLive: '', // 卡片实时行只放页面已有真数据;空串=隐藏,不摆占位
     boundEvent: null, // 官方活动绑定横幅(带 eventId 进入时显示)
     // V2 活动叠层只在玩家显式从活动进入或重新打开时显示；关闭后不影响日常漫游。
     eventOverlay: { show: false, missions: [], points: [], feedback: null },
@@ -553,9 +553,10 @@ Page({
   /* 原型 f-fun(查找附近好玩的)与 f-discover(发现商家)是同一条横滑白卡:
      数据就是地图上那批附近商家,不另拉一份接口 —— 地图上看得见的,卡上就看得见。
      原型的规则是「读数卡让位给横滑条」,所以它在时读数卡不渲染(见 wxml 的 wx:if)。 */
-  openShopStrip() {
+  openShopStrip(focusId) {
     const rows = (this._pois || [])
       .filter((p) => p.cat === 'merchant' && p.lat && p.lng)
+      .sort((a, b) => Number(String(b.id) === String(focusId)) - Number(String(a.id) === String(focusId)))
       .slice(0, 8)
       .map((p) => ({
         ...(visitorSourceOf(p) || {}),
@@ -2521,7 +2522,10 @@ Page({
          其余拉远时只当小圆点,拉近时按视口贴边 / 隐藏。 */
       const critical = stateKey === 'target' || stateKey === 'checkin-failed' || stateKey === 'redeem-pending';
       if (!critical && pinMode === 'dots') return;
-      const place = critical ? { kind: 'in', lat: p.lat, lng: p.lng } : photoPins.placeInView(p.lat, p.lng, pinRegion);
+      const place = critical ? { kind: 'in', lat: p.lat, lng: p.lng } : photoPins.placeInView(p.lat, p.lng, pinRegion, Object.assign({}, this._fogScreenSize, {
+        top: ((this.data.chrome || {}).contentTop || 80) + 70,
+        bottom: 280 + ((this.data.chrome || {}).safeBottom || 0),
+      }));
       if (place.kind === 'far') return;
       // 有玩法 = 这个点挂着主题(topicId)。星星只认这一件事,和去没去过无关。
       const hasGame = !!p.topicId;
@@ -4391,7 +4395,11 @@ Page({
     // 探店进行中、或这一站是打卡状态反馈时,照原路直接进详情,不插一张卡。
     const stateKey = getRoamPoiState(poi, this.data.visit || {});
     const critical = stateKey === 'target' || stateKey === 'checkin-failed' || stateKey === 'redeem-pending';
-    if (!critical && !(this.data.visit && this.data.visit.active)) { this._openPlaceCard(poi); return; }
+    if (!critical && !(this.data.visit && this.data.visit.active)) {
+      if (poi.cat === 'merchant') this.openShopStrip(poi.id);
+      else this._openPlaceCard(poi);
+      return;
+    }
     this._openPlaceDetail(poi);
   },
 
@@ -6057,7 +6065,7 @@ Page({
   _entryIdentity() { return [readSession.memberId(getApp()), (getApp().globalData || {}).authorization || ''].join('|'); },
   _clearEntryRead() {
     this._entryItems = []; this._entryTeams = [];
-    this.setData({ introTeamsLive: '附近正在组队', entryMarkers: [], entryCards: [], searchPlaces: [], entryActivity: null, entryTeam: null, entrySheet: '' });
+    this.setData({ introTeamsLive: '', entryMarkers: [], entryCards: [], searchPlaces: [], entryActivity: null, entryTeam: null, entrySheet: '' });
   },
   loginForEntryRead() {
     if (this.data.entryReadAccess === 'denied') return;
@@ -6113,7 +6121,7 @@ Page({
     const app = getApp();
     const getImgUrl = typeof app.getImgUrl === 'function' ? app.getImgUrl.bind(app) : (url) => url;
     const view = entryMap.build(this._entryItems, this._entryTeams, this.data.entryLayers, getImgUrl);
-    this.setData({ entryMarkers: view.markers, entryCards: view.cards, searchPlaces: view.searchPlaces, introTeamsLive: this._entryTeams.length ? '附近 ' + this._entryTeams.length + ' 支队伍在组队' : '附近正在组队' }); if (!view.cards.length && this._entryErrors && !this._entryErrors.activities) this._loadEntryFallback(); else if (view.cards.length) this.setData({ entryFarCards: [], entryLoading: false }); // 2026-10-28 附近为空走兜底
+    this.setData({ entryMarkers: view.markers, entryCards: view.cards, searchPlaces: view.searchPlaces, introTeamsLive: this._entryTeams.length ? '附近 ' + this._entryTeams.length + ' 支队伍在组队' : '' }); if (!view.cards.length && this._entryErrors && !this._entryErrors.activities) this._loadEntryFallback(); else if (view.cards.length) this.setData({ entryFarCards: [], entryLoading: false }); // 2026-10-28 附近为空走兜底
   },
   _showEntrySheet(entrySheet, entryActivity) {
     this.setData({ entrySheet, entryActivity: entryActivity || null, entryTeam: null, entrySheetView: 'main', entrySheetIn: false }, () => {

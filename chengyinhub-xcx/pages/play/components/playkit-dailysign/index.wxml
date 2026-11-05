@@ -4,7 +4,7 @@
   <view class="ds__bg" aria-hidden="true"></view>
   <view class="ds__stage" style="{{stagePadTop && !inline ? 'padding-top:' + stagePadTop + 'px;' : ''}}" catchtap="noop">
     <view class="ds__nav">
-      <view class="ds__navbtn" bindtap="onClose"
+      <view wx:if="{{!inline}}" class="ds__navbtn" bindtap="onClose"
             aria-role="button" aria-label="关闭今日城市签" hover-class="cy-pressed" hover-stay-time="80">
         <cy-icon name="back" size="32" />
       </view>
@@ -110,7 +110,7 @@
       <textarea wx:else class="ds__ta" value="{{text}}" maxlength="{{textMax}}" placeholder="比如：巷口那家豆浆七点才开，别去早了"
                 placeholder-class="ds__ta-ph" adjust-position="{{false}}" fixed="{{true}}"
                 bindinput="onTextInput" bindkeyboardheightchange="onKeyboard" aria-label="给下一个人留一句" />
-      <view class="ds__cta">
+      <view class="ds__cta" wx:if="{{!claimed || !inline}}">
         <cy-btn variant="primary" disabled="{{ctaDisabled}}" bindtap="onAccept">{{cta}}</cy-btn>
       </view>
     </view>

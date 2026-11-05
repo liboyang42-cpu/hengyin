@@ -25,7 +25,7 @@
   <block wx:if="{{team}}">
     <view class="team-head">
       <view class="team-status {{team.status < 2 ? 'live' : ''}}">{{statusText}}</view>
-      <view class="team-title">{{team.title || '一起出发的玩家队伍'}}</view>
+      <view class="team-title">{{team.title || (team.leaderName ? team.leaderName + '的队伍' : '玩家队伍')}}</view>
       <view wx:if="{{!(leader && team.status == 0)}}" class="team-sub">{{team.joinMode == 2 ? '公开招募' : '仅邀请'}}</view>
       <view class="team-meta">
         <view class="team-meta-item"><text class="team-meta-value">{{team.joinedCount != null ? team.joinedCount : '—'}} / {{team.maxMembers != null ? team.maxMembers : '—'}}</text><text class="team-meta-key">当前成员</text></view>

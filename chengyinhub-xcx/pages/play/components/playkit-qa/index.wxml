@@ -69,11 +69,12 @@
           <image class="qa__img" src="{{item}}" mode="aspectFill" />
         </view>
       </view>
+      <view wx:if="{{finished && answerText}}" class="qa__fb" aria-live="polite">{{answerText}}</view>
     </view>
   </view>
 
   <!-- 故事流内嵌且已答对:下面就是「继续故事」,这里不再叠一枚同义的「继续」(实走复核:两枚白按钮上下摞着) -->
-  <view wx:if="{{!(inline && passed)}}" class="g-btn {{ctaDisabled ? 'g-btn--disabled' : ''}} {{intro ? 'qa__cta--hold' : ''}} {{burning ? 'qa__cta--burn' : ''}}"
+  <view wx:if="{{!(inline && (passed || finished))}}" class="g-btn {{ctaDisabled ? 'g-btn--disabled' : ''}} {{intro ? 'qa__cta--hold' : ''}} {{burning ? 'qa__cta--burn' : ''}}"
         bindtap="onCta"
         aria-role="button" aria-label="{{ctaLabel}}" hover-class="g-btn--press" hover-stay-time="80">
     {{ctaLabel}}

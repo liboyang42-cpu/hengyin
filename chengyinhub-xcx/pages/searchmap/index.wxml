@@ -31,7 +31,7 @@
   </view>
 </template>
 
-<view class="theme-dark">
+<view class="{{merchantView ? 'theme-merchant theme-light' : 'theme-dark'}}">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />

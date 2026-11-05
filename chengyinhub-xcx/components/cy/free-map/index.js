@@ -247,8 +247,8 @@ Component({
         const tsz = this.data.compact ? 18 : 30;
         mk.push({ id: Number(tp.id), latitude: Number(tp.lat), longitude: Number(tp.lng), width: tsz, height: tsz,
           anchor: { x: .5, y: .5 }, iconPath: this._icons.team, zIndex: 8,
-          customCallout: { display: 'ALWAYS', anchorX: 0, anchorY: tsz } });
-        teamCallouts.push({ id: Number(tp.id), img: tp.img || '', color: tp.color || '', tag: this.data.compact ? '' : (tp.tag || '') });
+          customCallout: { display: 'ALWAYS', anchorX: tsz + 12, anchorY: tsz } });
+        teamCallouts.push({ id: Number(tp.id), img: tp.img || '', initial: tp.initial || '队', color: tp.color || '', tag: this.data.compact ? '' : (tp.tag || '') });
       });
       const circles = [];
       // 非强制候选用柔光外圈，与当前目标/已完成/受限态区分。
@@ -262,7 +262,7 @@ Component({
       if (t && t.lat && t.lng) {
         circles.push(Object.assign({ latitude: t.lat, longitude: t.lng, radius: 34, strokeWidth: 2 }, toneCircle('target', this.data.tone)));
       }
-      this.setData({ markers: mk, circles, photoCallouts, teamCallouts });
+      this.setData({ markers: mk, circles, photoCallouts, teamCallouts, stickerFontSize: mapFontSize(11, fontScale) });
       this._fit(mk);
       this._ensureNumIcons(Array.from(new Set(needNum)));
     },

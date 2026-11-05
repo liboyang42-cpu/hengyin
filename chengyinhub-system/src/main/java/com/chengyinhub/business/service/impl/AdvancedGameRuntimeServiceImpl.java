@@ -2762,6 +2762,10 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             }
             // 答案只在判完(且商家同意亮)之后才有这些字段;不判断对错时保留的答案设置一律不下发
             boolean judged = cfg.path("judge").asBoolean(true);
+            if (judged && "TYPE".equals(cfg.path("mode").asText("TYPE"))
+                    && cfg.path("reveal").asBoolean(false) && st.path("finished").asBoolean(false)) {
+                putText(value, "answerText", cfg);
+            }
             if (judged && st.has("answerId")) value.put("answerId", st.path("answerId").asText(""));
             if (judged && st.has("answerIds")) {
                 List<String> answerIds = new ArrayList<>();

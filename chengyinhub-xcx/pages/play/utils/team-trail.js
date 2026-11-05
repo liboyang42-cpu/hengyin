@@ -43,7 +43,7 @@ const PIN_BASE = 880000000;
 function teamPins(teams) {
   return (teams || []).map((t, i) => ({
     id: PIN_BASE + i, key: t.key, lat: t.last.latitude, lng: t.last.longitude,
-    img: t.avatar, color: t.color, tag: t.tag,
+    img: t.avatar, initial: String(t.name || '队').slice(0, 1), color: t.color, tag: t.tag,
   }));
 }
 

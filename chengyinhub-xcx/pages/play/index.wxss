@@ -1904,7 +1904,7 @@ page { background: var(--cy-color-bg-page); }
 /* ===== 2026-10-28 完成页改版(业主定稿 claude.ai/artifact/DF1tPhSNWFrzQhDu8hoUAy):整屏深色,NRC 跑步总结 + Revolut 分组卡 =====
    做法:在 .finsheet 作用域里把它本来就在用的 play-story 色值换成深色,版式只改布局;390 宽稿按 1.923rpx/px 移植。 */
 .finmask{ display:none; }
-.finsheet{ position:fixed; inset:0; height:auto; max-height:none; border-radius:0; padding:0 0 calc(230rpx + env(safe-area-inset-bottom));
+.finsheet{ position:fixed; inset:0; height:auto; max-height:none; border-radius:0; padding:0 0 calc(var(--cy-space-5) + env(safe-area-inset-bottom));
   --cy-color-play-story-page:#000000; --cy-color-play-story-text:#FFFFFF; --cy-color-play-story-muted:rgba(235,235,245,.6); /* ds-ok 定稿深色 */
   --cy-color-play-story-line:rgba(255,255,255,.08); --cy-color-play-story-surface:#1C1C1E; --cy-color-play-story-accent:#FFFFFF; /* ds-ok 定稿深色 */
   --cy-color-play-story-accent-soft:rgba(255,255,255,.16); --cy-color-play-story-cta-fg:#000000; --cy-color-play-ink-muted:rgba(235,235,245,.6); /* ds-ok 定稿深色 */
@@ -1949,7 +1949,7 @@ page { background: var(--cy-color-bg-page); }
 .finsheet .finish-journal-entry{ margin:19rpx 38rpx 0; padding:31rpx; border:0; border-radius:31rpx; background:#1C1C1E; } /* ds-ok 定稿分组卡 */
 .finsheet .finsheet__records + .finish-journal-entry{ margin-top:19rpx; }
 .finsheet .finsheet__retry{ margin:31rpx 38rpx 0; }
-.finsheet .finsheet__cta{ position:fixed; z-index:5; left:38rpx; right:38rpx; bottom:calc(65rpx + env(safe-area-inset-bottom)); margin:0; height:104rpx; background:#FFFFFF; color:#000000; box-shadow:0 0 80rpx 70rpx #000000; } /* ds-ok 白色主按钮,黑色渐隐托底 */
+.finsheet .finsheet__cta{ position:relative; margin:var(--cy-space-5) 38rpx 0; height:104rpx; background:#FFFFFF; color:#000000; } /* ds-ok 白色主按钮,黑色渐隐托底 */
 
 /* ===== 主题画面风格(pages/play/utils/theme-look.js;作者在发布页「画面风格」里选) =====
    根节点挂 look--<风格> look-<参数>--<值> story-font--<字体>;没配置 = 星尘 + 手写,与原来一致。

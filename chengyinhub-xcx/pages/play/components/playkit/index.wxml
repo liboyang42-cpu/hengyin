@@ -6,7 +6,8 @@
     <text wx:if="{{kit.terminalDetail}}">{{kit.terminalDetail}}</text>
     <text wx:if="{{kit.sessionScore > 0}}">得分 {{kit.sessionScore}}</text>
     <text wx:if="{{kit.completedUnits > 0}}">已完成 {{kit.completedUnits}} 项</text>
-    <text wx:if="{{kit.feedback}}">{{kit.feedback}}</text>
+    <text wx:if="{{kit.terminalFeedback || kit.feedback}}">{{kit.terminalFeedback || kit.feedback}}</text>
+    <image wx:for="{{kit.terminalImages}}" wx:key="*this" src="{{item}}" mode="widthFix" />
     <cy-btn wx:if="{{kit.canRetry === true}}" variant="primary" bindtap="onRetry">{{kit.retryLabel}}</cy-btn>
     <cy-btn variant="secondary" bindtap="onClose">关闭</cy-btn>
   </view>
@@ -129,7 +130,7 @@
   image-url="{{kit.imageUrl}}" audio-url="{{kit.audioUrl}}" lead="{{kit.lead}}"
   options="{{kit.options}}" shot-lead="{{kit.shotLead}}" shot-note="{{kit.shotNote}}"
   limit-seconds="{{kit.limitSeconds}}" max-tries="{{kit.maxTries}}" reveal="{{kit.reveal}}"
-  answer-id="{{kit.answerId}}" answer-ids="{{kit.answerIds}}" judge="{{kit.judge !== false}}"
+  answer-text="{{kit.answerText}}" answer-id="{{kit.answerId}}" answer-ids="{{kit.answerIds}}" judge="{{kit.judge !== false}}"
   last-option-id="{{kit.lastOptionId}}" last-option-ids="{{kit.lastOptionIds}}"
   feedback-images="{{kit.feedbackImages}}" failure-seq="{{kit.failureSeq}}"
   multi="{{kit.multi}}" attempts="{{kit.attempts}}" feedback-text="{{kit.feedback}}" authored-outcome="{{kit.authoredOutcome}}"

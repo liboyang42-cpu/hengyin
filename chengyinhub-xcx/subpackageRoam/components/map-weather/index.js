@@ -5,7 +5,7 @@
 const core = require('./weather-core.js')
 
 const RAIN = 'rgba(205,216,235,.42)'
-const SNOW = 'rgba(240,244,252,.72)'
+const SNOW = 'rgba(240,244,252,.28)'
 
 function weatherKey(w) { return w ? w.kind + ':' + w.intensity : '' }
 

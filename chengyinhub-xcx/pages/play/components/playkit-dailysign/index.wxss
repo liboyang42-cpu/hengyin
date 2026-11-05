@@ -14,7 +14,7 @@
 .ds__bg {
   position: absolute;
   left: 0; right: 0; top: 0; bottom: 0;
-  background: linear-gradient(180deg, #F6F7F9 0%, #EEF0F3 45%, #E6E8EC 100%);   /* ds-ok 纸的台面,浅灰渐变 */
+  background: var(--cy-color-play-page);   /* ds-ok 纸的台面,浅灰渐变 */
 }
 .ds__stage {
   position: relative;
@@ -24,7 +24,7 @@
   min-height: 0;
   padding: calc(var(--cy-safe-top, 0px) + 96rpx) var(--cy-page-x) calc(var(--cy-space-4) + var(--cy-safe-bottom, 0px));
   box-sizing: border-box;
-  color: #17191C;                                   /* ds-ok 纸上的墨 */
+  color: var(--cy-color-text-primary);
 }
 
 /* ── 顶栏:圆按钮 + 居中标题 ── */
@@ -261,3 +261,6 @@
 .ds--embed { position: relative; left: auto; right: auto; top: auto; bottom: auto; z-index: auto;
   min-height: 1100rpx; margin: 0 var(--cy-page-x); border-radius: var(--cy-radius-lg); overflow: hidden; }
 .ds--embed .ds__stage { padding-top: var(--cy-space-6); }
+
+.ds__note { color:var(--cy-color-text-inverse); }
+.ds--embed .ds__note { position:relative; left:auto; right:auto; bottom:auto; transform:none; margin-top:var(--cy-space-4); flex-shrink:0; }

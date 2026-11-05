@@ -2593,6 +2593,21 @@ class AdvancedGameRuntimeServiceImplTest {
     }
 
     @Test
+    void textQaRevealsOnlyAfterFinishAndOnlyWhenAuthorEnabledIt() {
+        String config = "{\"schemaVersion\":1,\"qa\":{\"enabled\":true,\"mode\":\"TYPE\","
+                + "\"title\":\"文字问答\",\"answerText\":\"钟楼\",\"reveal\":true}}";
+        GameRuntimeSession session = runningSession(config, "{}");
+        when(sessionMapper.selectAccessibleById(51L, MEMBER_ID)).thenReturn(session);
+        assertFalse(playKit(service.state(MEMBER_ID, 51L), "qa").containsKey("answerText"));
+        session.setStateJson("{\"qa\":{\"finished\":true,\"passed\":false}}");
+        assertEquals("钟楼", playKit(service.state(MEMBER_ID, 51L), "qa").get("answerText"));
+        GameRuntimeSession hidden = runningSession(config.replace("\"reveal\":true", "\"reveal\":false"),
+                "{\"qa\":{\"finished\":true,\"passed\":false}}");
+        when(sessionMapper.selectAccessibleById(52L, MEMBER_ID)).thenReturn(hidden);
+        assertFalse(playKit(service.state(MEMBER_ID, 52L), "qa").containsKey("answerText"));
+    }
+
+    @Test
     void advancedQaCompletionRequiresTheServerFinishedStateForTextAndChoice() {
         String textConfig = "{\"schemaVersion\":1,\"qa\":{\"enabled\":true,\"mode\":\"TYPE\","
                 + "\"title\":\"本地回归题\",\"answerText\":\"CY150\"}}";

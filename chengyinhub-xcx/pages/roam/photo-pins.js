@@ -32,16 +32,22 @@ function regionBox(region) {
   return { s, w, n, e, h: n - s, wd: e - w };
 }
 
-function placeInView(lat, lng, region) {
+function placeInView(lat, lng, region, viewport) {
   const b = regionBox(region);
   if (!b) return { kind: 'in', lat, lng };
   if (lat >= b.s && lat <= b.n && lng >= b.w && lng <= b.e) return { kind: 'in', lat, lng };
   const padLat = b.h * NEAR_SPAN, padLng = b.wd * NEAR_SPAN;
   if (lat < b.s - padLat || lat > b.n + padLat || lng < b.w - padLng || lng > b.e + padLng) return { kind: 'far' };
-  const insetLat = b.h * EDGE_INSET, insetLng = b.wd * EDGE_INSET;
+  const height = Number(viewport && viewport.height) || 844;
+  const width = Number(viewport && viewport.width) || 390;
+  const top = Math.min(0.4, (Number(viewport && viewport.top) || 0) / height);
+  const bottom = Math.min(0.4, (Number(viewport && viewport.bottom) || 0) / height);
+  const insetLng = b.wd * Math.max(EDGE_INSET, 20 / width);
+  const topLat = b.h * Math.max(EDGE_INSET, top);
+  const bottomLat = b.h * Math.max(EDGE_INSET, bottom);
   return {
     kind: 'edge',
-    lat: Math.min(b.n - insetLat, Math.max(b.s + insetLat, lat)),
+    lat: Math.min(b.n - topLat, Math.max(b.s + bottomLat, lat)),
     lng: Math.min(b.e - insetLng, Math.max(b.w + insetLng, lng)),
   };
 }

@@ -240,7 +240,14 @@ class TeamTrailServiceImplTest {
 
     @Test
     void authorCanTurnItOff() {
+        service.sync(1L, 10L, walk(31.2, 2), 0, false);
+        service.sync(3L, 10L, walk(31.3, 2), 0, false);
         topic.setPublishedThemeRuntimeConfigJson("{\"schemaVersion\":1,\"teamTrail\":false}");
+        assertEquals(false, service.sync(1L, 10L, null, 0, true).get("available"));
+        assertFalse(hashes.get(TeamTrailServiceImpl.PTS + 10L).containsKey("1"));
+        assertTrue(hashes.get(TeamTrailServiceImpl.PTS + 10L).containsKey("3"));
+        service.state(3L, 10L);
+        assertFalse(hashes.get(TeamTrailServiceImpl.PTS + 10L).containsKey("3"));
         assertEquals(false, service.state(1L, 10L).get("available"));
         assertEquals(false, service.sync(1L, 10L, walk(31.2, 2), 0, false).get("available"));
         topic.setPublishedThemeRuntimeConfigJson("{\"schemaVersion\":1}");

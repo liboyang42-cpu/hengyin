@@ -25,7 +25,7 @@
   <block wx:if="{{team}}">
     <view class="team-head">
 
-      <view class="team-title">{{team.title || '一起出发的玩家队伍'}}</view>
+      <view class="team-title">{{team.title || (team.leaderName ? team.leaderName + '的队伍' : '玩家队伍')}}</view>
     </view>
     <view class="team-card">
       <view class="team-meta">

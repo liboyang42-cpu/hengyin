@@ -534,6 +534,9 @@ function pickPlayKit(view, now) {
   if ((['FAILED', 'EXPIRED'].includes(view.status) || view.status === 'COMPLETED' && view.challenge && view.canRetry === true)
       && (!isR5(view) || !!view.challenge || view.plainOutcome === true)) { // 没有通用局的主题:结果反馈没过就在本站重来
     base.terminal = true;
+    base.terminalFeedback = view.outcomeFeedback && view.outcomeFeedback.reply || '';
+    base.terminalImages = view.outcomeFeedback && view.outcomeFeedback.images || [];
+    if (playKit.qa && playKit.qa.finished && playKit.qa.answerText) base.terminalDetail = playKit.qa.answerText;
     base.sessionStatus = view.status;
     base.canRetry = view.canRetry === true;
     base.retryLabel = view.challenge ? (view.ownerType === 2 ? '队长再次挑战' : '再次挑战')
@@ -560,6 +563,7 @@ function pickPlayKit(view, now) {
         multi: seg.judge !== false && !!seg.multi,
         judge: seg.judge !== false,
         failureSeq: 0,
+        answerText: seg.finished ? (seg.answerText || '') : '',
         lastOptionId: seg.lastOptionId || '',
         lastOptionIds: seg.lastOptionIds || [],
         // 每个所选选项最多 3 张已由服务端逐项校验;多选按选择顺序拼接,这里不再合计截断

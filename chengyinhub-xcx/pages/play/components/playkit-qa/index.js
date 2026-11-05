@@ -77,6 +77,7 @@ Component({
        服务端只在「商家开了答错亮答案 + 次数用完」时才给(见 AdvancedGameRuntimeServiceImpl
        的 submitQa),给了就意味着可以亮。此前 answerIndex 在这个文件里被读、
        却从来没有人写过 —— 恒 undefined,于是「亮出正确答案」一次也没亮过。 */
+    answerText: { type: String, value: '' },
     answerId: { type: String, value: '' },
     /* 多选揭晓:服务端在同样的条件下给 answerIds(全部正确选项)。与 answerId 一样,给了才亮。 */
     answerIds: { type: Array, value: [] },

@@ -180,24 +180,23 @@ const DANGER_ACTIONS = {
   },
   'team.disband': {
     irreversible: true,
-    title: '解散这支队伍?',
-    content: '队伍解散后群聊关闭,队员各自回到未组队状态。',
+    title: '解散这支队伍？',
     consequences: [
-      { icon: 'mtab-customers', text: '全部队员会被移出队伍,队伍群聊同时关闭' },
-      { icon: 'coupon', text: '不会触发任何退款;队员各自的票仍然有效,需要自己去核销' },
-      { icon: 'warning', text: '此操作不可撤销,队伍与聊天记录无法恢复' },
+      { icon: 'mtab-customers', text: '全部队员会被移出队伍，队伍群聊同时关闭' },
+      { icon: 'coupon', text: '不会触发任何退款；队员各自的票仍然有效，需要自己去核销' },
+      { icon: 'warning', text: '此操作不可撤销，队伍与聊天记录无法恢复' },
     ],
     confirmText: '解散队伍',
-    alt: { text: '改为退出队伍', hint: '队长会移交给最早加入的队员,队伍留着' },
+    alt: { text: '改为退出队伍', hint: '队长会移交给最早加入的队员，队伍留着' },
     done: { title: '队伍已解散', text: '队员已收到通知。' },
   },
   'team.kick': {
     irreversible: true,
-    title: '把「{name}」移出队伍?',
+    title: '把「{name}」移出队伍？',
     consequences: [
-      { icon: 'bell', text: '对方会收到站内通知,并失去队伍群聊入口' },
-      { icon: 'coupon', text: '移出不同步退票,对方的票仍然有效' },
-      { icon: 'warning', text: '此操作不可撤销;被移出的人不能用邀请码回来,也不能再次申请加入' },
+      { icon: 'bell', text: '对方会收到站内通知，并失去队伍群聊入口' },
+      { icon: 'coupon', text: '移出不同步退票，对方的票仍然有效' },
+      { icon: 'warning', text: '此操作不可撤销；被移出的人不能用邀请码回来，也不能再次申请加入' },
     ],
     confirmText: '移出队员',
     alt: null,
@@ -206,10 +205,10 @@ const DANGER_ACTIONS = {
   // 2026-10-15:地图队长卡「拒绝」申请。被拒后对方不能再申请这支队伍(服务端 REJECTED 终态),回不来
   'team.reject': {
     irreversible: true,
-    title: '拒绝「{name}」的申请?',
+    title: '拒绝「{name}」的申请？',
     consequences: [
       { icon: 'bell', text: '对方会在「我的队伍」里看到「未通过」' },
-      { icon: 'warning', text: '此操作不可撤销;对方不能再申请加入这支队伍' },
+      { icon: 'warning', text: '此操作不可撤销；对方不能再申请加入这支队伍' },
     ],
     confirmText: '拒绝申请',
     alt: null,
@@ -219,7 +218,7 @@ const DANGER_ACTIONS = {
   // 只给队长看移交 / 解散那一条 —— 队长身份交出去就回不来,这才是不可撤销的部分。
   'team.quit': {
     irreversible: false,
-    title: '退出这支队伍?',
+    title: '退出这支队伍？',
     content: '退队不会同步退票，你的票仍然有效。',
     consequences: [
       { icon: 'logout', text: '你会失去队伍群聊入口' },

@@ -15,7 +15,7 @@ const TEAM_PAGE = '/pages/team/detail/index';
 const RADIUS = 3000;
 
 // 队伍名与队伍详情页同一口径(title,缺省「一起出发的玩家队伍」);场次名放到副标题,不顶替队名
-function nameOf(t) { return String((t && t.title) || '').trim() || '一起出发的玩家队伍'; }
+function nameOf(t) { return String((t && t.title) || '').trim() || (t && t.leaderName ? t.leaderName + '的队伍' : '玩家队伍'); }
 // 队伍头像叠层:有真头像用真头像,不够的用默认 Memoji 补到成员数(最多 3 个),不再用首字
 const FACE = '/images/d_profile.png';
 function avatarsOf(list, count) { const real = (list || []).filter(Boolean).slice(0, 3); const n = Math.max(1, Math.min(3, Math.max(real.length, Number(count) || 1))); const out = real.slice(); while (out.length < n) out.push(FACE); return out.map((src, k) => ({ k, src })); }
