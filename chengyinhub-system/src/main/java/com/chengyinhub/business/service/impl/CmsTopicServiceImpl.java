@@ -815,6 +815,11 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             logger.info("俱乐部自有主题 {} 无自玩现金,跳过结算", topic.getId());
             return true;
         }
+        if (topic.getFeePlatformRate() == null) {
+            // 存量自玩主题仍用既有规则，但原始退款凭证必须绑定本次实际冻结的四项费率。
+            pricingService.freezeFeeSnapshot(topic.getId());
+            topic = cmsTopicMapper.selectCmsTopicByIdForUpdate(topic.getId());
+        }
         Long principal = clubPrincipalPayee.forTopic(topic);
         BigDecimal platformRate = settlementPlatformRate(topic);
         if (platformRate == null || platformRate.signum() < 0 || platformRate.compareTo(BigDecimal.ONE) > 0) {
@@ -835,7 +840,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
                         + " lineType=" + line.getLineType());
             }
         }
-        coopSettlementOriginalProducer.freezeClubSelfPlayOriginals(topic, basis, now, platformRate);
+        coopSettlementOriginalProducer.freezeClubSelfPlayOriginals(topic, basis, now);
         pointsAwardService.awardPublisherSettlement(topic.getMemberId(), topic.getId());
         logger.info("俱乐部自有主题自玩结算: topicId={} 销售额={} 平台={}(率{}) 主理人{}应收={}",
                 topic.getId(), totalSales, platformAmount, platformRate, principal, principalAmount);

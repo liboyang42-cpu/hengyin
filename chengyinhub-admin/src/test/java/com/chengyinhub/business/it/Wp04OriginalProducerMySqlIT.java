@@ -23,6 +23,7 @@ class Wp04OriginalProducerMySqlIT {
     CoopSettlementOriginalProducer producer;
     CoopSettlementManualCases manual;
     CoopSettlementOriginalMapper original;
+    CmsTopicMapper topics;
     CmsTopic topic;
     List<CmsRegistration> registrations;
     @BeforeEach void originalFactsAndHeads() throws Exception {
@@ -48,9 +49,9 @@ class Wp04OriginalProducerMySqlIT {
             });
         }
         db.db.update("INSERT INTO coop_settlement(id,topic_id,merchant_id,cash_head_kind,line_type,payee_type,status,amount,del_flag) VALUES(11,11,NULL,'ACCOUNTING','PLATFORM','platform',1,2,0),(12,11,7,'MEMBER','INITIATOR_GUARANTEE','initiator',0,1,0),(13,11,7,'MEMBER','INITIATOR_MARGIN','initiator',0,17,0)");
-        CmsTopicMapper topics=mock(CmsTopicMapper.class);
-        when(topics.selectCmsTopicByIdForUpdate(11L)).thenAnswer(call->db.db.queryForObject("SELECT id,member_id,fee_platform_rate,fee_guarantee_base_rate,fee_guarantee_step_rate,fee_guarantee_max_merchant,is_settlement,club_id FROM cms_topic WHERE id=11 FOR UPDATE",(rs,n)->{
-            CmsTopic t=new CmsTopic();t.setId(rs.getLong(1));t.setMemberId(rs.getLong(2));t.setFeePlatformRate(rs.getBigDecimal(3));t.setFeeGuaranteeBaseRate(rs.getBigDecimal(4));t.setFeeGuaranteeStepRate(rs.getBigDecimal(5));t.setFeeGuaranteeMaxMerchant(rs.getInt(6));t.setIsSettlement(rs.getInt(7));t.setClubId(rs.getObject(8)==null?null:rs.getLong(8));return t;
+        topics=mock(CmsTopicMapper.class);
+        when(topics.selectCmsTopicByIdForUpdate(11L)).thenAnswer(call->db.db.queryForObject("SELECT id,member_id,fee_platform_rate,fee_guarantee_base_rate,fee_guarantee_step_rate,fee_guarantee_max_merchant,is_settlement,club_id,end_date FROM cms_topic WHERE id=11 FOR UPDATE",(rs,n)->{
+            CmsTopic t=new CmsTopic();t.setId(rs.getLong(1));t.setMemberId(rs.getLong(2));t.setFeePlatformRate(rs.getBigDecimal(3));t.setFeeGuaranteeBaseRate(rs.getBigDecimal(4));t.setFeeGuaranteeStepRate(rs.getBigDecimal(5));t.setFeeGuaranteeMaxMerchant(rs.getInt(6));t.setIsSettlement(rs.getInt(7));t.setClubId(rs.getObject(8)==null?null:rs.getLong(8));t.setEndDate(rs.getTimestamp(9));return t;
         }));
         original=spy(sql.getMapper(CoopSettlementOriginalMapper.class));
         var cash=sql.getMapper(CoopSettlementCashEvidenceMapper.class);
@@ -99,21 +100,33 @@ class Wp04OriginalProducerMySqlIT {
     @Test void clubSelfPlaySettlementFreezesOriginalsAndPaidRefundDebitsPrincipalExactlyOnce() throws Exception {
         P0AcceptanceSchema.migrations(db.source,"migration_20260919_cms_registration_selfplay_ticket_columns_nullable.sql");
         db.db.update("DELETE FROM coop_settlement");
-        db.db.update("UPDATE cms_topic SET club_id=42,is_settlement=1,fee_platform_rate=NULL,fee_guarantee_base_rate=NULL,fee_guarantee_step_rate=NULL,fee_guarantee_max_merchant=NULL WHERE id=11");
+        db.db.update("UPDATE cms_topic SET club_id=42,is_settlement=1,end_date=NOW(),fee_platform_rate=NULL,fee_guarantee_base_rate=NULL,fee_guarantee_step_rate=NULL,fee_guarantee_max_merchant=NULL WHERE id=11");
         db.db.update("UPDATE cms_registration SET purchase_kind=2,ticket_id=NULL,ticket_price=NULL WHERE owner_type=1 AND owner_id=11");
         topic.setClubId(42L);topic.setMemberId(7L);topic.setEndDate(new Date());
         var service=new CmsTopicServiceImpl();
+        ReflectionTestUtils.setField(service,"cmsTopicMapper",topics);
         ReflectionTestUtils.setField(service,"coopSettlementMapper",sql.getMapper(CoopSettlementMapper.class));
         ReflectionTestUtils.setField(service,"coopSettlementEvidenceMapper",sql.getMapper(CoopSettlementEvidenceMapper.class));
         ReflectionTestUtils.setField(service,"coopSettlementOriginalProducer",producer);
         ReflectionTestUtils.setField(service,"pointsAwardService",mock(IPointsAwardService.class));
-        var pricing=mock(IPricingService.class);when(pricing.platformRateOf(topic)).thenReturn(new BigDecimal("0.10"));
+        when(topics.selectCmsTopicById(11L)).thenAnswer(call->topics.selectCmsTopicByIdForUpdate(11L));
+        when(topics.updateCmsTopic(any())).thenAnswer(call->{CmsTopic patch=call.getArgument(0);
+            return db.db.update("UPDATE cms_topic SET fee_platform_rate=?,fee_guarantee_base_rate=?,fee_guarantee_step_rate=?,fee_guarantee_max_merchant=? WHERE id=?",
+                    patch.getFeePlatformRate(),patch.getFeeGuaranteeBaseRate(),patch.getFeeGuaranteeStepRate(),patch.getFeeGuaranteeMaxMerchant(),patch.getId());});
+        var pricing=new PricingServiceImpl();
+        ReflectionTestUtils.setField(pricing,"cmsTopicMapper",topics);
+        var rates=mock(ISettlementRuleService.class);var rule=new SettlementRule();
+        rule.setPlatformCommissionRate(new BigDecimal("0.10"));rule.setGuaranteeBaseRate(new BigDecimal("0.05"));
+        rule.setGuaranteeStepRate(new BigDecimal("0.02"));rule.setGuaranteeMaxMerchant(5);
+        when(rates.getActiveRule(0L,"topic")).thenReturn(rule);
+        ReflectionTestUtils.setField(pricing,"settlementRuleService",rates);
         ReflectionTestUtils.setField(service,"pricingService",pricing);
-        var payee=mock(ClubPrincipalPayee.class);when(payee.forTopic(topic)).thenReturn(7L);
+        var payee=mock(ClubPrincipalPayee.class);when(payee.forTopic(any(CmsTopic.class))).thenReturn(7L);
         ReflectionTestUtils.setField(service,"clubPrincipalPayee",payee);
         db.tx.executeWithoutResult(status->assertEquals(Boolean.TRUE,ReflectionTestUtils.invokeMethod(service,"settleClubSelfPlayTopic",topic)));
         assertEquals(4,count("coop_settlement_original_component"));
         assertEquals(0,new BigDecimal("0.10").compareTo(db.db.queryForObject("SELECT platform_rate FROM coop_settlement_cash_close",BigDecimal.class)));
+        assertEquals(0,new BigDecimal("0.05").compareTo(db.db.queryForObject("SELECT guarantee_base_rate FROM coop_settlement_cash_close",BigDecimal.class)));
         Long head=db.db.queryForObject("SELECT id FROM coop_settlement WHERE line_type='INITIATOR_MARGIN'",Long.class);
         assertEquals(new BigDecimal("18.00"),db.db.queryForObject("SELECT amount FROM coop_settlement WHERE id=?",BigDecimal.class,head));
         // Historical payout fixture; the actual original-refund owner below must verify this credit before debiting.
