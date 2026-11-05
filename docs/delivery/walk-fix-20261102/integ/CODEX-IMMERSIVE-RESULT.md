@@ -1,4 +1,4 @@
-Immersive K10 result — PARTIAL; shared database incident has stopped the walk
+Immersive K10 result — PARTIAL; R2 walk resumed after the shared database was rebuilt
 
 Cloud K10 6de347d40 and K8 2a316fe1f were read and rebased. Their fixes are retained. I waited the requested 25 minutes before the cloud result arrived. No production connection, deployment, master push, PR merge, schema reset or game-authoring SQL/API shortcut was used.
 
@@ -34,7 +34,7 @@ Validation so far
 - Play owner subsequently ran 285 related tests on source35b3dc6df. Two failed and one errored: my new action assertion expected the client key rather than the scoped hash, my readback fixture lacked the injected ObjectMapper, and the generic compiler still rejected eggs. a8b142029 corrects the first two fixtures and connects the actual personal generic egg tick; a new runtime test covers TIME reward, initial step baseline, step delta reward and replay without duplicate reward. That correction has not yet been executed. Actual shared log: /home/ubuntu/previews/codex-play-map-followup-20261105/source/.play-map-rig/out/combined-tests.log.
 - The existing pre-commit hook unexpectedly started a non-budget remote compile. I stopped exactly its own cy-uifeat-hook-58771. Subsequent backend commits use a per-command hook copy retaining JS/JSON syntax, protected-file and DS checks while delegating compilation to budget212/CI. The shared hook was not changed.
 
-Shared rig incident and preservation
+Historical shared rig incident and preservation
 
 At 2026-11-05 10:00:17Z the shared MySQL cy-chain-play-map-20261105-1-mysql reportedly exited 137/OOMKilled. Restart reported Unknown database cy_e2e_51. Play stopped the app. This lane has made no DB creation, restart, restore, schema reset, asset-12 approval or shared HTTP/SQL writes in response. There is no claim that the former UUID, data or runtime is present or healthy.
 
@@ -67,8 +67,32 @@ Video worker owns opening/ending video and the theme music row. Cloud m1 owns ot
 
 Phone/review limit: audio background declaration may require WeChat review before release. The browser rig cannot prove iOS/Android lock screen playback, simultaneous real music/narration, the physical silent switch, call interruption, headphones, actual camera or scanner behavior. Those remain phone checks. No claim of phone or production acceptance is made.
 
-Final code SHA: cbc857d9da1d1d94b8e060f5f4219f9ed61e25cb. GitHub artifact source is da9b30f1dd770ce0c4cc55b278e9d08e1ad99a7f, a different checkpoint. All changes are source/test work on integ, with no production deployment or WeChat release.
+R2 resumption after owner confirmation
 
-My list is NOT finished. Remaining: execute the corrected focused Java tests; verify E16/E18/E21 through actual author-UI save/reopen/publish on a verified recovered rig; complete one ordinary UI-authored game with photo, QR, branches, TIME/STEPS text-and-reward eggs and all approved media, then play its completion/rewards/ending. Coordinate the TEAM egg boundary with m1. Real-phone background/lock-screen/silent-switch/interruption checks remain. No authoring DB/API shortcuts may replace these walks.
+The coordinator restored a new test baseline, not the former custom themes. Independently read back cy_e2e_51 UUID 19025e57-d901-11f1-b086-9ae8535e5aec and 457 tables. Play alone refreshed the shared app, without a DB restart; authenticated actuator now reports 65a1e33df848c3c225d13b58f8235a54feb2e100. Filtered play proof: /home/ubuntu/previews/codex-play-map-followup-20261105/artifacts/runtime-65a-verified.json. This new baseline does not recover the former themes or asset12.
 
-STATUS: PARTIAL - shared database incident halted all writes and walks; snapshots preserved, source fixes delivered, corrected Java tests and full UI-authored end-to-end/phone acceptance remain unverified.
+08c9a00df fixes actual R2 cover readback: OSS signature refreshes compare by the same complete bucket/region/object identity. Changing bucket, region, object, unrelated query/version parameters or arbitrary external host remains a mismatch. No test hostname was added to production source. 43 focused server-draft JS tests passed. Root hit the same test-bucket issue; this fix is already on integ.
+
+65a1e33df fixes the actual focused-test discovery: ordinary qaShot validationMethod2 may use the existing authenticated-upload task fact as its arrival proof; it does not require an unrelated GPS/outcome rule. Objective-group validation and runtime upload ownership checks remain. The readback fixture now asserts its real JsonNode wire type. Budget212 focused5 rerun on full SHA 65a1e33df848c3c225d13b58f8235a54feb2e100 passed 5/5, failures0/errors0/skipped0; lock released. Filtered report outside repo: source-checks/focused5-recovery.json. The earlier a47 run actually had 3 pass/1 failure/1 error and is superseded by this successful correction run.
+
+GitHub JAR 42011272034 source65a was independently verified by supplied SHA256, ZIP CRC and embedded git commit: 119642526 bytes, SHA256 26ae02cb955bae5518c0135ee55447c089a1a9afc531bc33cadf018b11da34d4. Evidence /private/tmp/codex-k10-rig-20261105/github-jar-65a/VERIFIED.json. Earlier head-a47 JAR42009813801 was also checksum/CRC/commit verified but is not the current app. One mistakenly typed SHA request42011234462 was cancelled immediately and replaced with correct request42011272034; no invalid artifact was used.
+
+Latest UI integrity passed after the shared ce84 baseline reconciliation. Log /private/tmp/k10-final-ui-r2.log. Earlier four club/apply baseline errors are superseded by this actual PASS. Focused JS111 and ledger5743 evidence remain bounded to their recorded checkpoint; no release-ready or unified-CI claim.
+
+Normal author UI, not a seed permission bypass
+
+R2 9003 theme990017 was authored on screen with a new photo template and a TIME egg. Cover/readback now confirms saved. The UI sequence ANY_N=1 then restore ALL also saved; a prior committed ANY_N residue followed by reopen still needs a separate walk. 9003 has role=player/canBranch=false after recovery, so it cannot author the legacy branch game. No seed permissions were changed. This fixture remains a focused photo/egg candidate, not the complete game.
+
+Own NEW identity codex-k10-20261105-r2-owner used the real /pages/club/apply/index UI: name/contact, experience1-5, merchant-linkage capability; then created its own K10夜航R2俱乐部 through UI. Real role/info returned role=club,isClubLeader=true,canBranch=true,canGameMechanic=true. Root money owner/club/theme were not used.
+
+That own author created theme990026 K10-R2夜航完整体验 through the professional editor. It contains a photo station, an authored branch station with two options and distinct terminal feedback, a TIME text egg, and an uploaded-image-backed 夜航记号 reward item. Photo+branch+egg contents saved and confirmed by author-saved-detail. Reward selection remains under final UI verification. No authoring DB/API shortcuts, imports or stale asset approvals.
+
+Actual full-game blocker: all three normal mode choices are disabled with 夜航分岔：这种玩法暂时无法确认是否完成. Scope is still unset. The current branch completion remains NO_BRIDGE, owned by cloud m1. This is an actual UI refusal with an entitled author, not a missing role or successful generic settlement. Do not flip the capability flag or claim the complete game published/played. Outside-repo proof: /private/tmp/codex-k10-recovery-20261105/r2-verified/author-990026-ui.json and business-readbacks-990026.json; screenshot r2-14-branch-mode-block. Full author window is preserved offline with JS disabled while a separate own window verifies the photo path.
+
+Own admin frontend18102 uses only the loopback18099 backend. Its initial login403 was independently diagnosed as Invalid CORS request. The temporary frontend proxy now omits the browser Origin when doing server forwarding, matching the existing mpweb rig proxy; no backend CORS, host DNS, system proxy or auth permission was changed. Normal test admin login through UI succeeded. No login storage was exported and the temporary private credential file was deleted. No asset has been approved by this lane.
+
+Final own code SHA: 65a1e33df848c3c225d13b58f8235a54feb2e100. Frontend checkout additionally includes f559c3aec53caa1702f20704825b208be31da289 from play; its shared-app refresh remains owned by play. No production deployment or WeChat release.
+
+My list is NOT finished. Remaining: actual generic qaShot player upload/fact/settlement proof; E18 committed-residue save/reopen; E21 actual publish readback; full ordinary UI-authored photo/QR/branch/TIME-STEPS reward/media game publish and play. Legacy branch completion depends on m1. Media moderation, ending and phone background/lock-screen/silent-switch/interruption checks remain. The final requested m3 slow-media/failing-media runs and four-look station/photo/scan/finish/error screenshots have NOT been done; they follow a successfully playable combined theme. If weekly limit reaches8% first, preserve/push this partial result and stop.
+
+STATUS: PARTIAL - corrected focused Java5/5 and source fixes delivered; R2 UI-authored combination saved, but legacy branch completion blocks mode selection and full end-to-end/phone/media-failure acceptance remains unverified.
