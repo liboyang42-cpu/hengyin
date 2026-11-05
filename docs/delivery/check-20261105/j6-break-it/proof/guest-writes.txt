@@ -1,0 +1,56 @@
+g01-topic-buy TAPFAIL "立即支付"
+## g01-topic-buy | prompt: false | route after: pages/topic/index/index
+   prompt text: 城 | 城瘾跑团 | 发布 | E2E 探店日一期 | 端到端 | 立即报名 | 主题徽章 | 有效期 | 41 | 天 | 参与商家 | 4 | 家 | 路线 | 不限 | 任意顺序 | 已参加 | 3 | 人 | 详情 | 故事 | 地点 | 确认订单 | 参与人信息 | 补全姓名和手机号 | 主题信息 | E2E
+   after text : 城 | 城瘾跑团 | 发布 | E2E 探店日一期 | 端到端 | 立即报名 | 主题徽章 | 有效期 | 41 | 天 | 参与商家 | 4 | 家 | 路线 | 不限 | 任意顺序 | 已参加 | 3 | 人 | 详情 | 故事 | 地点 | 确认订单 | 参与人信息 | 补全姓名和手机号 | 主题信息 | E2E 探店日一期 | 费用明细 | 票种 | 自玩通行证 | 订单金额 | 合计 | 同意将姓名、手机号提供给主办方，用于报名核验 | 合计 | 立即支付 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+   net:
+     
+   errors: []
+## g02-activity-join-club | prompt: false | route after: pages/activity/detail/index>pages/club/detail/index
+   prompt text: 执行俱乐部 | 城市探索 · 6 名成员 | 公开加入 | 帖文 | 活动 | 概览 | 暂无简介 | 执行俱乐部主理人 | 主理人 | 城市探索 | 俱乐部类型 | — | 所在城市 | 登录后查看 | 登录 | 加入 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+   after text : 执行俱乐部 | 城市探索 · 6 名成员 | 公开加入 | 帖文 | 活动 | 概览 | 暂无简介 | 执行俱乐部主理人 | 主理人 | 城市探索 | 俱乐部类型 | — | 所在城市 | 登录后查看 | 登录 | 加入 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+   net:
+     200 /api/club/detail {"id":7002} => {"msg":"操作成功","code":200,"data":{"id":7002,"memberId":9008,"name":"执行俱乐部","logo":null,"cov
+     401 /api/club/topics {"id":7002} => {"msg":"登录状态已失效，请重新登录","code":401}
+     401 /api/club/post/list {"id":7002,"clubId":7002,"limit":20} => {"msg":"登录状态已失效，请重新登录","code":401}
+   errors: []
+## g03-club-join | prompt: false | route after: pages/club/detail/index
+   prompt text: 执行俱乐部 | 城市探索 · 6 名成员 | 公开加入 | 帖文 | 活动 | 概览 | 暂无简介 | 执行俱乐部主理人 | 主理人 | 城市探索 | 俱乐部类型 | — | 所在城市 | 登录后查看 | 登录 | 加入 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+   after text : 执行俱乐部 | 城市探索 · 6 名成员 | 公开加入 | 帖文 | 活动 | 概览 | 暂无简介 | 执行俱乐部主理人 | 主理人 | 城市探索 | 俱乐部类型 | — | 所在城市 | 登录后查看 | 登录 | 加入 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+   net:
+     
+   errors: []
+## g04-club-login-row | prompt: false | route after: pages/club/detail/index
+   prompt text: 执行俱乐部 | 城市探索 · 6 名成员 | 公开加入 | 帖文 | 活动 | 概览 | 暂无简介 | 执行俱乐部主理人 | 主理人 | 城市探索 | 俱乐部类型 | — | 所在城市 | 登录后查看 | 登录 | 加入 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+   after text : 执行俱乐部 | 城市探索 · 6 名成员 | 公开加入 | 帖文 | 活动 | 概览 | 暂无简介 | 执行俱乐部主理人 | 主理人 | 城市探索 | 俱乐部类型 | — | 所在城市 | 登录后查看 | 登录 | 加入 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+   net:
+     
+   errors: []
+## g05-team-join | prompt: true | route after: pages/team/join/index
+   prompt text: 登录后继续 | 登录后即可创建或加入队伍 | 暂不登录 | 微信登录 | 加入队伍 | 甲队 | 2 / 3 | 当前成员 | 仅邀请 | 加入方式 | 接受邀请并加入 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+   after text : 加入队伍 | 甲队 | 2 / 3 | 当前成员 | 仅邀请 | 加入方式 | 持有这一场的票才能加入 | 接受邀请并加入 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+   net:
+     200 /api/login/code code=rig-walk-guest-ycpcxb => {"msg":"操作成功","code":200,"data":{"id":990009,"userType":1,"avatar":"","nickname":"城瘾用户","r
+     200 /api/team/command {"inviteCode":"<invite-code>","targetId":"1","actio => {"msg":"操作成功","code":200,"data":{"requestId":"6f9f9ec967a3e8c12839b6df443efb69","state":"R
+     200 /api/team/info {"inviteCode":"<invite-code>"} => {"msg":"操作成功","code":200,"data":{"leader":false,"joined":false,"members":[{"role":1,"membe
+   errors: []
+## g06-talent-join | prompt: false | route after: pages/talent/list/index>pages/club/detail/index
+   prompt text: 城瘾跑团 | 城市探索 · 1 名成员 | 公开加入 | 帖文 | 活动 | 概览 | 暂无简介 | 俱乐部主理人 | 主理人 | 城市探索 | 俱乐部类型 | — | 所在城市 | 登录后查看 | 登录 | 加入 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+   after text : 城瘾跑团 | 城市探索 · 1 名成员 | 公开加入 | 帖文 | 活动 | 概览 | 暂无简介 | 俱乐部主理人 | 主理人 | 城市探索 | 俱乐部类型 | — | 所在城市 | 登录后查看 | 登录 | 加入 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+   net:
+     200 /api/club/detail {"id":7001} => {"msg":"操作成功","code":200,"data":{"id":7001,"memberId":9003,"name":"城瘾跑团","logo":null,"cove
+     401 /api/club/topics {"id":7001} => {"msg":"登录状态已失效，请重新登录","code":401}
+     401 /api/club/post/list {"id":7001,"clubId":7001,"limit":20} => {"msg":"登录状态已失效，请重新登录","code":401}
+   errors: []
+## g07-clerk-invite | prompt: false | route after: pages/merchant/team/index
+   prompt text: 经营团队 | 登录后查看邀请 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+   after text : 经营团队 | 登录后查看邀请 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+   net:
+     
+   errors: []
+g08-publish-tab TAPFAIL "和朋友报名活动"
+## g08-publish-tab | prompt: false | route after: pages/index/index
+   prompt text: 成为俱乐部 | 成为商家 | 和朋友报名活动 | Hi, 旅人! | 上海市 | 编辑精选 | 暂时没有精选主题 | 附近活动 | 你附近暂时没有可点亮的节点 | 主题 | 活动 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+   after text : 成为俱乐部 | 成为商家 | 和朋友报名活动 | Hi, 旅人! | 上海市 | 编辑精选 | 暂时没有精选主题 | 附近活动 | 你附近暂时没有可点亮的节点 | 主题 | 活动 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+   net:
+     
+   errors: []

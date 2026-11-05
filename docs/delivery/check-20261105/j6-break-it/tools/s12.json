@@ -1,0 +1,1 @@
+[{"wait":3500},{"shot":"24-f4-member-gate"},{"tap":"去加入俱乐部"},{"wait":3000},{"tap":["加入",{"exact":true}]},{"wait":3000},{"tap":["知道了",{"exact":true}]},{"wait":1000},{"back":1},{"wait":3500},{"route":1},{"shot":"25-f4-activity-after-join-back"},{"text":600}]

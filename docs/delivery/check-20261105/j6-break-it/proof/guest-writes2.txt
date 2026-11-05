@@ -1,0 +1,42 @@
+## g02-activity-join-club | prompt: true | route after: pages/activity/detail/index>pages/club/detail/index
+   prompt text: 登录后继续 | 登录后即可加入俱乐部 | 暂不登录 | 微信登录 | 执行俱乐部 | 城市探索 · 6 名成员 | 公开加入 | 帖文 | 活动 | 概览 | 暂无简介 | 执行俱乐部主理人 | 主理人 | 城市探索 | 俱乐部类型 | — | 所在城市 | 登录后查看 | 登录 | 加入 | 9:41 | ▮▮▮ ◔
+   after text : 执行俱乐部 | 城市探索 · 7 名成员 | 公开加入 | 退出 | 帖文 | 活动 | 概览 | 暂无简介 | 执行俱乐部主理人 | 主理人 | 城市探索 | 俱乐部类型 | — | 所在城市 | 俱乐部勋章 | 登录后查看 | 登录 | 欢迎加入「执行俱乐部」 | 发帖文和大家聊 | 报名俱乐部的局 | 认识成员、攒贡献 | 知道了 | 去看活动 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+   net:
+     200 /api/club/detail {"id":7002} => {"msg":"操作成功","code":200,"data":{"id":7002,"memberId":9008,"name":"执行俱乐部","logo":null,"cov
+     401 /api/club/topics {"id":7002} => {"msg":"登录状态已失效，请重新登录","code":401}
+     401 /api/club/post/list {"id":7002,"clubId":7002,"limit":20} => {"msg":"登录状态已失效，请重新登录","code":401}
+     200 /api/login/code code=rig-walk-guest-rruz27 => {"msg":"操作成功","code":200,"data":{"id":990010,"userType":1,"avatar":"","nickname":"城瘾用户","r
+     200 /api/club/join {"id":7002,"joinMessage":""} => {"msg":"加入成功","code":200,"data":{"state":"joined"}}
+     200 /api/club/detail {"id":7002} => {"msg":"操作成功","code":200,"data":{"id":7002,"memberId":9008,"name":"执行俱乐部","logo":null,"cov
+     200 /api/club/members {"clubId":7002} => {"msg":"操作成功","code":200,"data":[{"createBy":null,"createTime":null,"updateBy":null,"updat
+     200 /api/club/access/me {"clubId":7002} => {"msg":"操作成功","code":200,"data":{"active":true,"club":{"id":7002,"name":"执行俱乐部","logo":nul
+   errors: []
+## g03-club-join | prompt: true | route after: pages/club/detail/index
+   prompt text: 登录后继续 | 登录后即可加入俱乐部 | 暂不登录 | 微信登录 | 执行俱乐部 | 城市探索 · 7 名成员 | 公开加入 | 帖文 | 活动 | 概览 | 暂无简介 | 执行俱乐部主理人 | 主理人 | 城市探索 | 俱乐部类型 | — | 所在城市 | 登录后查看 | 登录 | 加入 | 9:41 | ▮▮▮ ◔
+   after text : 执行俱乐部 | 城市探索 · 8 名成员 | 公开加入 | 退出 | 帖文 | 活动 | 概览 | 暂无简介 | 执行俱乐部主理人 | 主理人 | 城市探索 | 俱乐部类型 | — | 所在城市 | 俱乐部勋章 | 登录后查看 | 登录 | 欢迎加入「执行俱乐部」 | 发帖文和大家聊 | 报名俱乐部的局 | 认识成员、攒贡献 | 知道了 | 去看活动 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+   net:
+     200 /api/login/code code=rig-walk-guest-ctbdqe => {"msg":"操作成功","code":200,"data":{"id":990011,"userType":1,"avatar":"","nickname":"城瘾用户","r
+     200 /api/club/join {"id":7002,"joinMessage":""} => {"msg":"加入成功","code":200,"data":{"state":"joined"}}
+     200 /api/club/detail {"id":7002} => {"msg":"操作成功","code":200,"data":{"id":7002,"memberId":9008,"name":"执行俱乐部","logo":null,"cov
+     200 /api/club/members {"clubId":7002} => {"msg":"操作成功","code":200,"data":[{"createBy":null,"createTime":null,"updateBy":null,"updat
+     200 /api/club/access/me {"clubId":7002} => {"msg":"操作成功","code":200,"data":{"active":true,"club":{"id":7002,"name":"执行俱乐部","logo":nul
+   errors: []
+## g04-club-login-row | prompt: false | route after: pages/club/detail/index
+   prompt text: 执行俱乐部 | 城市探索 · 8 名成员 | 公开加入 | 帖文 | 活动 | 概览 | 暂无简介 | 执行俱乐部主理人 | 主理人 | 城市探索 | 俱乐部类型 | — | 所在城市 | 成员 · 8 | 执行俱乐部主理人 | 主理人 | 城瘾用户 | 城瘾用户 | 城瘾用户 | +4 | 本团贡献榜 · 本周 | 
+   after text : 执行俱乐部 | 城市探索 · 8 名成员 | 公开加入 | 帖文 | 活动 | 概览 | 暂无简介 | 执行俱乐部主理人 | 主理人 | 城市探索 | 俱乐部类型 | — | 所在城市 | 成员 · 8 | 执行俱乐部主理人 | 主理人 | 城瘾用户 | 城瘾用户 | 城瘾用户 | +4 | 本团贡献榜 · 本周 | 综合 | 1 | 执行俱乐部主理人 | 0 场 · 0.0 km · 用时 0分 | 0.0 分 | 2 | 城瘾用户 | 0.0 分 | 加入 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+   net:
+     200 /api/login/code code=rig-walk-guest-107exf => {"msg":"操作成功","code":200,"data":{"id":990012,"userType":1,"avatar":"","nickname":"城瘾用户","r
+     200 /api/club/detail {"id":7002} => {"msg":"操作成功","code":200,"data":{"id":7002,"memberId":9008,"name":"执行俱乐部","logo":null,"cov
+     200 /api/club/topics {"id":7002} => {"msg":"操作成功","code":200,"data":[{"createBy":"13900000003","createTime":"2026-11-05 10:11:
+     200 /api/club/post/list {"id":7002,"clubId":7002,"limit":20} => {"msg":"操作成功","code":200,"data":[]}
+     200 /api/club/leaderboard {"id":7002,"sortBy":"composite"} => {"msg":"操作成功","code":200,"data":[]}
+     200 /api/club/members {"clubId":7002} => {"msg":"操作成功","code":200,"data":[{"createBy":null,"createTime":null,"updateBy":null,"updat
+   errors: []
+## g07-clerk-invite | prompt: false | route after: pages/merchant/team/index
+   prompt text: 经营团队 | 加入经营团队 | 探店日样板咖啡 · 核销员 | 接受邀请 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+   after text : 经营团队 | 加入经营团队 | 探店日样板咖啡 · 核销员 | 接受邀请 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+   net:
+     200 /api/login/code code=rig-walk-guest-1a4qp3 => {"msg":"操作成功","code":200,"data":{"id":990013,"userType":1,"avatar":"","nickname":"城瘾用户","r
+     200 /api/merchant/access/me  => {"msg":"操作成功","code":200,"data":{"active":false,"permissions":[],"canManageOperators":fals
+     200 /api/merchant/operators/invite/preview {"token":"<invite-token-redacted>"} => {"msg":"操作成功","code":200,"data":{"merchantName":"探店日样板咖啡","roleCode":"MERCHANT_CHECKIN","r
+   errors: []

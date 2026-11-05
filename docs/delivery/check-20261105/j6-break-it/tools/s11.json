@@ -1,0 +1,1 @@
+[{"wait":3500},{"shot":"21-g-activity-gate"},{"tap":"去加入俱乐部"},{"wait":3000},{"tap":["加入",{"exact":true}]},{"wait":1500},{"tap":["微信登录",{"exact":true}]},{"wait":5000},{"tap":["知道了",{"exact":true}]},{"wait":1200},{"scroll":600},{"wait":800},{"shot":"22-g-club-after-join"},{"text":600},{"back":1},{"wait":3500},{"route":1},{"shot":"23-g-activity-after-join-back"},{"text":600}]

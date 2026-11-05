@@ -1,0 +1,3 @@
+import { open, sleep } from '/root/j6/drv.mjs';
+const cases = [['topic','pages/topic/index/index?id=990014'],['activity','pages/activity/detail/index?id=12'],['club','pages/club/detail/index?id=7002'],['team','pages/team/join/index?code=<invite-code>'],['talent','pages/talent/list/index'],['invite','pages/merchant/team/index?invite=<invite-token-redacted>'],['home','pages/index/index']];
+for (const [k,p] of cases) { const w = await open({ path: p, agree: true }); await sleep(3500); console.log('##', k, (await w.route()).join('>')); console.log((await w.text()).slice(0, 700)); await w.close(); }

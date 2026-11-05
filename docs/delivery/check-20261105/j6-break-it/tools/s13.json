@@ -1,0 +1,1 @@
+[{"wait":3500},{"tap":"去加入俱乐部"},{"wait":3000},{"tap":["加入",{"exact":true}]},{"wait":3000},{"tap":["知道了",{"exact":true}]},{"wait":1000},{"net":1},{"back":1},{"wait":4000},{"route":1},{"text":300},{"net":1},{"eval":"(()=>{const p=getCurrentPages().pop();return {route:p.route}})()"}]
