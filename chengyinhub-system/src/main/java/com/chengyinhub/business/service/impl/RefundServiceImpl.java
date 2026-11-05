@@ -60,6 +60,10 @@ import java.util.function.Predicate;
 public class RefundServiceImpl implements IRefundService {
     /** 系统自动退款的审核人(与 TeamGroupServiceImpl.SYSTEM_OPERATOR 同值)。 */
     private static final Long SYSTEM_OPERATOR = 0L;
+    /** 账本平台行的 receiver_type。 */
+    static final String PLATFORM_RECEIVER = "platform";
+    /** 活动结算给平台账户入账的余额事件(CmsActivityServiceImpl.payActivityCommission)。 */
+    static final Long PLATFORM_ACTIVITY_INCOME_EVENT = 7L;
 
     private static final Logger logger = LoggerFactory.getLogger(RefundServiceImpl.class);
 
@@ -751,8 +755,22 @@ public class RefundServiceImpl implements IRefundService {
         // P0-B 多方分账退款漏冲:一笔支付拆 merchant/platform/creator 多条明细,必须逐条负向冲销。
         // 旧 selectSettledDetail 的 `order by id desc limit 1` 只冲最大 id 一条(商家 id 最小 → 永远漏冲),
         // 改用 selectSettledDetails 取全部已结算明细逐条冲销;退款比例按订单口径统一算一次再套到每条。
-        List<SettlementDetail> settledList = originalComponentOwner ? java.util.Collections.emptyList()
-                : settlementDetailMapper.selectSettledDetails(refund.getSourceType(), refund.getSourceId());
+        if (!originalComponentOwner) {
+            clawBackSettledShares(refund, registration);
+        }
+        // 无论是否产生冲销,退款后都必须作废遗留 status=0,防后续批次把已退款报名重新纳入。
+        settlementDetailMapper.voidPendingBySource(refund.getSourceType(), refund.getSourceId());
+        return rows;
+    }
+
+    /**
+     * 结算后退款的逐收款方冲销(P0-B / HF-04 / 第十轮 f4 / 第十二轮 k11):按退款比例给每条已结算分账行写负数冲销,
+     * 已真实打款的收款方(含平台)从余额扣回,扣不够记欠款。幂等:同一退款同一收款方只冲一次。
+     * 调用方须在资金事务内、已锁报名行。
+     */
+    void clawBackSettledShares(RefundApplication refund, CmsRegistration registration) {
+        List<SettlementDetail> settledList =
+                settlementDetailMapper.selectSettledDetails(refund.getSourceType(), refund.getSourceId());
         if (settledList != null && !settledList.isEmpty()) {
             settledList = new ArrayList<>(settledList);
             settledList.sort(Comparator.comparing(SettlementDetail::getReceiverId,
@@ -786,9 +804,6 @@ public class RefundServiceImpl implements IRefundService {
                 createSettlementAdjustment(refund, system1Paid, settled, amounts[i], debitMember);
             }
         }
-        // 无论是否产生冲销,退款后都必须作废遗留 status=0,防后续批次把已退款报名重新纳入。
-        settlementDetailMapper.voidPendingBySource(refund.getSourceType(), refund.getSourceId());
-        return rows;
     }
 
     private CmsRegistration loadRegistration(RefundApplication refund) {
@@ -1057,6 +1072,9 @@ public class RefundServiceImpl implements IRefundService {
      */
     private Long actualDebitMember(CmsRegistration registration, SettlementDetail settled) {
         Long ledgerReceiver = settled.getReceiverId();
+        if (PLATFORM_RECEIVER.equals(settled.getReceiverType())) {
+            return platformDebitMember(registration, settled);
+        }
         if (registration == null || !Long.valueOf(2L).equals(registration.getOwnerType())
                 || registration.getOwnerId() == null || !"merchant".equals(settled.getReceiverType())) {
             return ledgerReceiver;
@@ -1068,6 +1086,28 @@ public class RefundServiceImpl implements IRefundService {
         }
         logger.info("退款扣回按实际入账人 refundSourceActivity={} ledgerReceiver={} actualReceiver={}",
                 registration.getOwnerId(), ledgerReceiver, actual.get(0));
+        return actual.get(0);
+    }
+
+    /**
+     * 第十二轮 k11(2026-11-05 业主):结算后退款,平台也按同一比例退回它那份。
+     * 平台行在账本上的 receiver_id 是 0,真实收款人是结算时收到 event_type=7(活动平台分润)、
+     * event_id=活动 id 的那个会员(cms_setting.platform_member_id 事后改了也按当时实收人扣)。
+     * 只有活动路(owner_type=2)给平台入过余额;主题/合作路的平台分项是 ACCOUNTING 头,从不入余额,
+     * 由原分项冲回处理。查不到实收人 = 平台这单没入过余额,不扣,只告警。
+     */
+    private Long platformDebitMember(CmsRegistration registration, SettlementDetail settled) {
+        if (registration == null || !Long.valueOf(2L).equals(registration.getOwnerType())
+                || registration.getOwnerId() == null) {
+            return null;
+        }
+        List<Long> actual = umsMemberBalanceDetailMapper.selectIncomeMemberIdsByEventTypeAndEventId(
+                PLATFORM_ACTIVITY_INCOME_EVENT, registration.getOwnerId());
+        if (actual == null || actual.isEmpty()) {
+            alarm("退款冲销平台份额无实收人", "活动 " + registration.getOwnerId()
+                    + " 已结算但查不到平台分润入账(event_type=7),平台份额只记冲销台账 detailId=" + settled.getId());
+            return null;
+        }
         return actual.get(0);
     }
 
@@ -1238,7 +1278,7 @@ public class RefundServiceImpl implements IRefundService {
      *       错扣 = 本 P0(商家凭空少钱,且商家自己发现不了);
      *       错不扣 = 账面留在冲销台账上,对账查得出来、追得回来。两种错的代价不对称。</li>
      * </ul>
-     * receiverType='platform'(receiverId=0)不必特判:{@code debitReceiverBalance} 自身就 no-op。
+     * receiverType='platform':活动路按实收平台会员扣回(第十二轮 k11),其余路平台分项只记账。
      */
     private Predicate<SettlementDetail> resolveSystem1PaidCheck(CmsRegistration registration,
                                                                  List<SettlementDetail> settledList) {
@@ -1304,13 +1344,18 @@ public class RefundServiceImpl implements IRefundService {
         return income != null && income.compareTo(BigDecimal.ZERO) > 0;
     }
 
-    /** 已打款的收款方（商家/创作者）在冲销时把对应金额扣回；平台账(receiverId=0)只记账。 */
+    /**
+     * 已打款的收款方(商家/创作者/合作商家/平台)在冲销时把对应金额扣回。
+     * 平台:receiverId 已由 {@link #platformDebitMember} 换成实收平台会员;换不到(null)就只记账。
+     */
     private void debitReceiverBalance(String receiverType, Long receiverId, BigDecimal amount, Long refundId) {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             return;
         }
         // 第十二轮 k5:coop_merchant = 俱乐部场次结算付给合作商家的核销费,退款按同一比例从商家余额扣回。
+        // 第十二轮 k11:平台份额同样从实收平台会员余额扣回,扣不够同一欠款规则。
         boolean toMemberBalance = ("merchant".equals(receiverType) || "creator".equals(receiverType)
+                || PLATFORM_RECEIVER.equals(receiverType)
                 || com.chengyinhub.business.service.support.ClubSessionMerchantFee.RECEIVER_TYPE.equals(receiverType))
                 && receiverId != null && receiverId > 0;
         if (!toMemberBalance) {

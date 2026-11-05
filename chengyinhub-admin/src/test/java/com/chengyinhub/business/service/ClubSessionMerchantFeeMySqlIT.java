@@ -64,8 +64,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -92,6 +95,9 @@ class ClubSessionMerchantFeeMySqlIT {
     private CoopSettlementOriginalMapper originalMapper;
     private UmsMemberMapper umsMemberMapper;
     private TransactionTemplate tx;
+    private com.chengyinhub.business.service.impl.RefundServiceImpl refundService;
+    private AlarmService refundAlarms;
+    private CmsRegistrationMapper registrationMapper;
 
     @BeforeAll
     void createDatabaseAndService() throws Exception {
@@ -173,6 +179,22 @@ class ClubSessionMerchantFeeMySqlIT {
         ReflectionTestUtils.setField(activityService, "clubPrincipalPayee", payee);
         ReflectionTestUtils.setField(activityService, "clubSessionMerchantFee", fee);
         ReflectionTestUtils.setField(activityService, "transactionManager", manager);
+
+        // 第十二轮 k11:结算后退款走真实的 RefundServiceImpl 冲销(真表的分账行、余额、余额流水、欠款)。
+        registrationMapper = template.getMapper(CmsRegistrationMapper.class);
+        refundAlarms = mock(AlarmService.class);
+        refundService = new com.chengyinhub.business.service.impl.RefundServiceImpl();
+        ReflectionTestUtils.setField(refundService, "settlementDetailMapper", detailMapper);
+        ReflectionTestUtils.setField(refundService, "cmsActivityMapper", template.getMapper(CmsActivityMapper.class));
+        ReflectionTestUtils.setField(refundService, "cmsTopicMapper", topicMapper);
+        ReflectionTestUtils.setField(refundService, "cmsRegistrationMapper", registrationMapper);
+        ReflectionTestUtils.setField(refundService, "coopOrderMapper", template.getMapper(CoopOrderMapper.class));
+        ReflectionTestUtils.setField(refundService, "coopSettlementMapper", coopSettlementMapper);
+        ReflectionTestUtils.setField(refundService, "activitySettlementHoldMapper", template.getMapper(ActivitySettlementHoldMapper.class));
+        ReflectionTestUtils.setField(refundService, "settlementDebtLedger", debtLedger);
+        ReflectionTestUtils.setField(refundService, "umsMemberMapper", umsMemberMapper);
+        ReflectionTestUtils.setField(refundService, "umsMemberBalanceDetailMapper", balanceMapper);
+        ReflectionTestUtils.setField(refundService, "alarmService", refundAlarms);
     }
 
     @BeforeEach
@@ -439,6 +461,121 @@ class ClubSessionMerchantFeeMySqlIT {
         assertEquals(List.of(ACTIVITY), evidenceMapper.selectLiveClubSessionIdsByTopicId(TOPIC));
         List<Long> blocking = tx.execute(s -> originalMapper.selectApprovedRegistrationRefundIdsForOriginalCloseForUpdate(TOPIC));
         assertEquals(List.of(702L, 703L), blocking, "在世俱乐部场次的退款归场次结算,不挡主题原单关账");
+    }
+
+    /**
+     * 第十二轮 k11(2026-11-05 业主:结算后退款,平台也按比例退回它那份)。k5 表里的 ¥39 退款,
+     * 走真实 RefundServiceImpl 冲销:余额 平台 −1.17、主理人 −29.83、商家 −8.00,合计 −39.00;
+     * 重试不重复扣;俱乐部结算行读到的平台服务费与平台余额一致。
+     */
+    @Test
+    void refundAfterSettlementDebitsPlatformPrincipalAndMerchantBalances() throws Exception {
+        // k5 表 S1:四人 ¥39,程一苇集合前退一半(¥19.50),三人计核销费 ¥8
+        seedSession(ACTIVITY, 15);
+        for (long reg = 74; reg <= 77; reg++) seedPaid(reg, ACTIVITY);
+        leadCheckin(74L);
+        ticketVerified(75L);
+        nodeProgress(76L);
+        leadCheckin(77L);
+        execute("UPDATE cms_registration SET payment_status=4, registration_status=3 WHERE id=77",
+                "INSERT INTO refund_application(id,source_type,source_id,paid_amount,refund_amount,status,del_flag)"
+                        + " VALUES (601,'registration',77,39.00,19.50,1,0)",
+                "UPDATE settlement_detail SET status=2 WHERE source_id=77",
+                "INSERT INTO coop_group_verify(topic_id,activity_id,coop_order_id,merchant_member_id,leader_member_id,verify_time)"
+                        + " VALUES (" + TOPIC + "," + ACTIVITY + "," + ORDER + "," + MERCHANT + "," + PRINCIPAL + ",NOW())");
+        assertEquals(1, activityService.executeActivitySettlement());
+        assertMoney("4.10", balance(PLATFORM));
+        assertMoney("108.40", balance(PRINCIPAL));
+        assertMoney("24.00", balance(MERCHANT));
+
+        execute("INSERT INTO refund_application(id,source_type,source_id,paid_amount,refund_amount,status,del_flag)"
+                + " VALUES (602,'registration',76,39.00,39.00,1,0)");
+        clawBack(602L, 76L, "39.00", "39.00");
+
+        assertMoney("2.93", balance(PLATFORM));    // 4.10 − 1.17
+        assertMoney("78.57", balance(PRINCIPAL));  // 108.40 − 29.83
+        assertMoney("16.00", balance(MERCHANT));   // 24.00 − 8.00
+        assertMoney("-1.17", refundDebit(PLATFORM, 602L));
+        assertMoney("-29.83", refundDebit(PRINCIPAL, 602L));
+        assertMoney("-8.00", refundDebit(MERCHANT, 602L));
+        assertMoney("-39.00", money("SELECT SUM(change_balance) FROM ums_member_balance_detail WHERE event_type=6 AND event_id=602"));
+        assertMoney("-39.00", money("SELECT SUM(settlement_amount) FROM settlement_detail WHERE source_type='refund' AND source_id=602"));
+        assertEquals(0, scalarInt("SELECT COUNT(*) FROM ums_member_settlement_debt"), "余额够,不记欠款");
+
+        // 重试:同一退款再冲一次,不重复扣
+        clawBack(602L, 76L, "39.00", "39.00");
+        assertMoney("2.93", balance(PLATFORM));
+        assertMoney("78.57", balance(PRINCIPAL));
+        assertMoney("16.00", balance(MERCHANT));
+        assertEquals(3, scalarInt("SELECT COUNT(*) FROM ums_member_balance_detail WHERE event_type=6 AND event_id=602"));
+
+        // 俱乐部结算行 = 余额:平台服务费 2.93,到账 78.57,商家核销费 16.00(销售额 97.50)
+        ClubSessionSettlementRow row = coopSettlementMapper.selectClubSessionSettlements(CLUB).get(0);
+        assertMoney("2.93", row.getPlatformAmount());
+        assertMoney("78.57", row.getNetAmount());
+        assertMoney("16.00", row.getMerchantFeeAmount());
+    }
+
+    /**
+     * 第十二轮 k11:没有商家费的俱乐部场次,平台余额已被提走一部分时,扣能扣的、差额记平台欠款(同一欠款规则),
+     * 告警;重试不重复记;平台下一笔分润先抵这笔欠款。
+     */
+    @Test
+    void platformShortBalanceRecordsDebtAndNextPlatformShareOffsetsIt() throws Exception {
+        seedSession(ACTIVITY, 15);
+        seedPaid(74L, ACTIVITY);
+        seedPaid(75L, ACTIVITY);
+        assertEquals(1, activityService.executeActivitySettlement());
+        assertMoney("2.34", balance(PLATFORM));
+        assertMoney("75.66", balance(PRINCIPAL));
+        assertMoney("0.00", balance(MERCHANT));
+
+        execute("UPDATE ums_member SET balance=0.50 WHERE id=" + PLATFORM); // 平台账户已提走 1.84
+        execute("INSERT INTO refund_application(id,source_type,source_id,paid_amount,refund_amount,status,del_flag)"
+                + " VALUES (610,'registration',74,39.00,39.00,1,0)");
+        clawBack(610L, 74L, "39.00", "39.00");
+        assertMoney("0.00", balance(PLATFORM));
+        assertMoney("37.83", balance(PRINCIPAL));
+        assertMoney("-0.50", refundDebit(PLATFORM, 610L));
+        assertMoney("0.67", money("SELECT amount FROM ums_member_settlement_debt WHERE member_id=" + PLATFORM
+                + " AND source_type='refund:platform' AND source_id=610"));
+        verify(refundAlarms, atLeastOnce()).alarm(eq("退款冲销扣款不足"), anyString());
+
+        clawBack(610L, 74L, "39.00", "39.00");
+        assertMoney("0.00", balance(PLATFORM));
+        assertEquals(1, scalarInt("SELECT COUNT(*) FROM ums_member_settlement_debt WHERE member_id=" + PLATFORM));
+
+        // 下一场结算:平台分润 1.17 先抵 0.67 欠款
+        seedSession(10L, 15);
+        seedPaid(80L, 10L);
+        assertEquals(1, activityService.executeActivitySettlement());
+        assertMoney("0.50", balance(PLATFORM));
+        assertMoney("0.67", money("SELECT repaid_amount FROM ums_member_settlement_debt WHERE member_id=" + PLATFORM
+                + " AND source_id=610"));
+    }
+
+    private void clawBack(long refundId, long registrationId, String paid, String refunded) throws Exception {
+        RefundApplication refund = new RefundApplication();
+        refund.setId(refundId);
+        refund.setSourceType("registration");
+        refund.setSourceId(registrationId);
+        refund.setPaidAmount(new BigDecimal(paid));
+        refund.setRefundAmount(new BigDecimal(refunded));
+        Method m = com.chengyinhub.business.service.impl.RefundServiceImpl.class.getDeclaredMethod("clawBackSettledShares",
+                RefundApplication.class, com.chengyinhub.business.domain.CmsRegistration.class);
+        m.setAccessible(true);
+        tx.executeWithoutResult(status -> {
+            try {
+                m.invoke(refundService, refund, registrationMapper.selectCmsRegistrationByIdForUpdate(registrationId));
+            } catch (ReflectiveOperationException e) {
+                throw new IllegalStateException(e.getCause() == null ? e : e.getCause());
+            }
+        });
+    }
+
+    private BigDecimal refundDebit(long memberId, long refundId) throws Exception {
+        return money("SELECT COALESCE(SUM(change_balance),0) FROM ums_member_balance_detail WHERE member_id=" + memberId
+                + " AND event_type=6 AND event_id=" + refundId);
     }
 
     private static BigDecimal[][] allocateClawback(List<SettlementDetail> details, RefundApplication refund) throws Exception {

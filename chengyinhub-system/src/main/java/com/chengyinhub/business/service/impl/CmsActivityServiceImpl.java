@@ -305,6 +305,9 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         // 4. 分配平台分润（打入平台账户）。前置校验失败会抛异常并回滚本活动的原子领取。
         payActivityCommission(setting.getPlatformMemberId(), settlement.getPlatformCommissionAmount(),
                 "活动平台分润 - " + activity.getName(), 7L, activity.getId());
+        // 第十二轮 k11:平台结算后退款扣不够记的欠款,与其他收款方同一规则,从后续平台分润先抵。
+        settlementDebtLedger.offsetFromSettlement(setting.getPlatformMemberId(),
+                settlement.getPlatformCommissionAmount(), activity.getId());
 
         // 5. 同步纯账本:系统1是唯一真实打款方,打款成功后把本次覆盖的报名明细置已结算。
         // 与余额更新同处本活动事务;任一步失败都会连同 is_settlement 领取一起回滚。
@@ -388,6 +391,8 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         payMerchantFees(activity, feePlan, "(客诉结案补结)");
         payActivityCommission(setting.getPlatformMemberId(), settlement.getPlatformCommissionAmount(),
                 "活动平台分润(客诉结案补结) - " + activity.getName(), 7L, activity.getId());
+        settlementDebtLedger.offsetFromSettlement(setting.getPlatformMemberId(),
+                settlement.getPlatformCommissionAmount(), activity.getId());
         settlementDetailMapper.markRegistrationDetailsSettled(registration.getId());
         return true;
     }
