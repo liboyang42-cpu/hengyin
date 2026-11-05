@@ -6035,6 +6035,22 @@ Page({
       this.openMerchantFromSheet();
       return;
     }
+    /* 第十一轮 i1:通用局主题里本站任务还没开始时,详情卡的「开始任务」先替玩家开始任务(与背包「开始任务」
+       同一条命令、同一套费用选择),成功后再进玩法;原来直接进玩法,服务端回「请先开始当前任务」。 */
+    const questStart = !node.done && this._hasGenericProofFlow() && this._questStartFor !== String(node.nodeId)
+      ? ((this.data.themeBag || {}).actionRows || []).find(row => row.kind === 'QUEST'
+        && String(row.nodeId) === String(node.nodeId) && row.operation === 'QUEST_START') : null;
+    if (questStart) {
+      const bag = { 'sheet.show': false, themeBackpackOpen: true, themeBackpackTab: 'game' };
+      if (!questStart.enabled || this._themeSending) { this.setData(bag); return; }
+      if (questStart.costOptions && questStart.costOptions.length && questStart.frozenIndex < 0) {
+        this.setData(Object.assign(bag, { themeCostChoice: { row: questStart, selected: -1 } })); return;
+      }
+      this._questStartFor = String(node.nodeId);
+      return Promise.resolve(this._themeGameplayCommand({ operation: 'QUEST_START', contentId: questStart.key }))
+        .then(ok => { if (ok === true && this._questStartFor === String(node.nodeId)) this.startGame(node); })
+        .finally(() => { if (this._questStartFor === String(node.nodeId)) this._questStartFor = ''; });
+    }
     if (String(this._playKitNodeId) !== String(node.nodeId)) {
       this._playKitNodeId = node.nodeId;
       this.setData({ playKit: { show: false, kit: null } });
