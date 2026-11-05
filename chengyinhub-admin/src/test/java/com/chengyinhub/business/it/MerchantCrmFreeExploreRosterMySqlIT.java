@@ -109,7 +109,7 @@ class MerchantCrmFreeExploreRosterMySqlIT {
             stubOwner(SHOP, 802L);
             MerchantCrmCustomerRowVO shopRow = only(service.listCustomers(OPERATOR, query()), BUYER);
             assertNull(shopRow.getPhone(), "参与商家不经通用名册拿号码");
-            assertEquals("联系方式在主题名单按客户授权查看", shopRow.getContactHint());
+            assertNull(shopRow.getContactHint(), "第十二轮 k9(p2 N-17):列表不再逐行复述单店授权说明");
             // 第十二轮 k6(p2 N-2):参与商家没收到这张票款,累计实付不再是买家整张票价(列表与详情同口径)。
             assertEquals(0, java.math.BigDecimal.ZERO.compareTo(shopRow.getPaidAmount()), "参与商家累计实付应为 0");
             assertEquals(0, java.math.BigDecimal.ZERO.compareTo(

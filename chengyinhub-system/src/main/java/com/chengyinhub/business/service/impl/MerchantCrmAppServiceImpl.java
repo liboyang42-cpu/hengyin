@@ -98,8 +98,10 @@ public class MerchantCrmAppServiceImpl implements IMerchantCrmAppService {
                 row.setContactHint("需要客户敏感信息权限");
             } else if (!Boolean.TRUE.equals(row.getMerchantResponsibleForContact())) {
                 row.setPhone(null);
+                // 第十二轮 k9(p2 N-17):自由探索的参与店每一行都挂同一句「联系方式在主题名单按客户授权查看」,
+                // 列表不再逐行复述;要联系时揭示接口仍回这句原因。
                 row.setContactHint(Boolean.TRUE.equals(row.getFreeExploreShopContact())
-                        ? FREE_EXPLORE_SHOP_CONTACT_HINT : "由俱乐部带团，联系请找俱乐部负责人");
+                        ? null : "由俱乐部带团，联系请找俱乐部负责人");
             } else if (row.getPhone() != null && !hasCurrentDataSharingConsent(row.getMemberId())) {
                 row.setPhone(null);
                 row.setContactHint("客户未授权联系方式共享");
