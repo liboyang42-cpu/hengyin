@@ -3334,6 +3334,8 @@ Page({
   onToggleComments(e) {
     const id = (e.detail && e.detail.postId) || e.currentTarget.dataset.id;
     if (this.data.openCommentPost === id) { this.setData({ openCommentPost: null, comments: [], commentsLoaded: false, commentsError: '' }); return; }
+    // 游客不开评论(服务端 401):先走登录,不再把游客的 401 显示成「网络异常」
+    if (app.ensureLoginFor && !app.ensureLoginFor('post', () => this.onToggleComments(e), { owner: this, target: () => [this.data.clubId, id] })) return;
     this.setData({ openCommentPost: id, comments: [], commentsLoaded: false, commentsError: '', commentText: '' });
     this.loadComments(id);
   },
