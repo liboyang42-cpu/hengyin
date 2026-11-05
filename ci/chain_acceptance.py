@@ -489,6 +489,14 @@ def execute(sql, args=()):
 FIXTURE_OPENID_SQL = ("UPDATE ums_member SET wx_open_id=CONCAT('e2e-openid-', id) "
                       "WHERE id BETWEEN 9001 AND 9009 AND (wx_open_id IS NULL OR wx_open_id='')")
 
+# 平台主题费率规则:PricingServiceImpl 缺规则时拒绝计价(第十二轮 k1 第 7 项,不再静默 10%),
+# 生产库有这条 3% 规则而空库没有;同样由门禁在建库后补,不动被钉住的 seed_fixtures.py。
+FIXTURE_TOPIC_RATE_SQL = (
+    "INSERT INTO settlement_rule (merchant_id,biz_type,rule_name,platform_commission_rate,merchant_rate,status,del_flag) "
+    "SELECT 0,'topic','平台默认-主题',0.0300,0.9700,1,0 FROM dual "
+    "WHERE NOT EXISTS (SELECT 1 FROM settlement_rule WHERE merchant_id=0 AND biz_type='topic' "
+    "AND status=1 AND del_flag=0)")
+
 
 def jsonable(rows):
     return [[value if isinstance(value, (int, str, type(None))) else str(value) for value in row] for row in rows]
@@ -1082,6 +1090,7 @@ def cmd_schema(args, environ):
     readback = {}
     if not problems:
         readback["fixture_openid_bound"] = execute(FIXTURE_OPENID_SQL)
+        readback["fixture_topic_rate_seeded"] = execute(FIXTURE_TOPIC_RATE_SQL)
         expected = {
             "tables": ("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=%s", (SCHEMA,), None),
             "sys_user": ("SELECT COUNT(*) FROM sys_user WHERE del_flag='0'", (), None),
