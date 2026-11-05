@@ -1,0 +1,4 @@
+r2-c16-club-settlement route pages/index/index>pages/club/settlement/index controls 2 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  ui change        goWithdraw                 "联系平台客服提现"                           
+TEXT: 俱乐部结算 | 商家计酬 | 0 人次 | 俱乐部直接付款 | 待结清 | ¥0.00 | 已结清 | ¥0.00 | 待退回 | ¥0.00 | 还没有计酬核销记录 | 可提现 | ¥75.66 | 联系平台客服提现 | 各场次结算 | 人民广场 · 喷泉报时 | ¥ 75.66 | 10月27日 | 销售额 ¥ 78.00 | 平台服务费 3% ¥ 2.34 | 已入你的账户 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

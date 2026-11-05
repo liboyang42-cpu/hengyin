@@ -1,0 +1,8 @@
+r2-c11-club-governance route pages/index/index>pages/club/governance/index controls 6 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  SKIPPED (destructive / writes; walked by hand) unbanMember                "解封"                                 
+  ui change        openMemberPicker           "选择成员 未选择"                           
+  ui change        openDurationPicker         "选择期限 30 天"                          
+  SKIPPED (destructive / writes; walked by hand) banSelectedMember          "封禁原因 填写原因并封禁"                       
+  SKIPPED (destructive / writes; walked by hand) transferSelectedOwner      "转让主理人 转让后你将失去主理人权限 转让给所选成员"         
+TEXT: 成员治理 | 治理记录 | 成员「玩家小城」 | 俱乐部治理 · 2026-11-05 10:48 · 至 2026-12-05 10:48 | 封禁中 | 解封 | 对成员执行 | 选择成员 | 未选择 | 选择期限 | 30 天 | 封禁原因 | 填写原因并封禁 | 转让主理人 | 转让后你将失去主理人权限 | 转让给所选成员 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

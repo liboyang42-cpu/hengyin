@@ -1,0 +1,13 @@
+r2-c06-club-customers route pages/index/index>pages/club/customers/index controls 11 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  NO VISIBLE EFFECT onFilterTap                "全部"                                 
+  ui change        onFilterTap                "回头客"                                
+  NO VISIBLE EFFECT onFilterTap                "新客"                                 
+  ui change        onFilterTap                "有备注"                                
+  navigates        openCustomer               "陈小满 核销 0 次 · 最近 11-05"          -> pages/club/customer-detail/index    
+  navigates        onTap                      "陈"                              -> pages/club/customer-detail/index    
+  navigates        openCustomer               "林一帆 核销 1 次 · 最近 11-05 13900000" -> pages/club/customer-detail/index    
+  navigates        onTap                      "林"                              -> pages/club/customer-detail/index    
+  navigates        openCustomer               "周小雨 核销 1 次 · 最近 11-05"          -> pages/club/customer-detail/index    
+  navigates        onTap                      "周"                              -> pages/club/customer-detail/index    
+TEXT: 客户 | 3 位 · 本月新增 3 | 全部 | 回头客 | 新客 | 有备注 | 陈 | 陈小满 | 核销 0 次 · 最近 11-05 | 林 | 林一帆 | 核销 1 次 · 最近 11-05 | 13900000004 | 周 | 周小雨 | 核销 1 次 · 最近 11-05 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

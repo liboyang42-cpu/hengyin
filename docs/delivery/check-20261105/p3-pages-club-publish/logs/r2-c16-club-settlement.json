@@ -1,0 +1,55 @@
+{
+ "id": "r2-c16-club-settlement",
+ "path": "pages/club/settlement/index?clubId=990004",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "goWithdraw|联系平台客服提现|{}",
+   "h": "goWithdraw",
+   "txt": "联系平台客服提现",
+   "w": 357,
+   "hgt": 46,
+   "y": 424,
+   "route": "pages/club/settlement/index",
+   "newText": "客服微信号：18018571626 添加客服微信，确认金额后线下处理 | 返回 | 复制",
+   "shot": "r2-c16-club-settlement-t01",
+   "result": "ui change"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "pages/club/settlement/index"
+ ],
+ "text": "俱乐部结算 | 商家计酬 | 0 人次 | 俱乐部直接付款 | 待结清 | ¥0.00 | 已结清 | ¥0.00 | 待退回 | ¥0.00 | 还没有计酬核销记录 | 可提现 | ¥75.66 | 联系平台客服提现 | 各场次结算 | 人民广场 · 喷泉报时 | ¥ 75.66 | 10月27日 | 销售额 ¥ 78.00 | 平台服务费 3% ¥ 2.34 | 已入你的账户 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 2,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/club/settlement/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207451&OSSAccessKeyId=rigdummy&Signature=wLzkG7yH53cCTAn8ZjJav7jevR4%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207463&OSSAccessKeyId=rigdummy&Signature=CtxL4xoks6apmLnp4j9c04XDZ4U%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ],
+  "badNet": []
+ }
+}

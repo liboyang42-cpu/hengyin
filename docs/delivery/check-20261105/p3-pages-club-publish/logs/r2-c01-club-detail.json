@@ -1,0 +1,296 @@
+{
+ "id": "r2-c01-club-detail",
+ "path": "pages/club/detail/index?id=990004",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "onSettings||{}",
+   "h": "onSettings",
+   "txt": "",
+   "w": 46,
+   "hgt": 46,
+   "y": 46,
+   "route": "pages/club/detail/index",
+   "newText": "俱乐部设置 | 客户与项目 | 查看客户 | 3 人 | 报名名册 | 1 个团 | 活动运营 | 项目工具 | 成员与权限 | 入会申请 | 成员管理 | 3",
+   "shot": "r2-c01-club-detail-t01",
+   "result": "ui change"
+  },
+  {
+   "key": "onTab|帖文|{\"key\":\"posts\"}",
+   "h": "onTab",
+   "txt": "帖文",
+   "w": 54,
+   "hgt": 46,
+   "y": 361,
+   "route": "pages/club/detail/index",
+   "newText": "玩家二号 | 有什么新鲜好玩的分享吗？ | 暂无帖文",
+   "result": "ui change"
+  },
+  {
+   "key": "onTab|活动|{\"key\":\"events\"}",
+   "h": "onTab",
+   "txt": "活动",
+   "w": 54,
+   "hgt": 46,
+   "y": 361,
+   "route": "pages/club/detail/index",
+   "newText": "发布 | 暂时俱乐部还没有活动 | 发布主题",
+   "result": "ui change"
+  },
+  {
+   "key": "onTab|概览|{\"key\":\"overview\"}",
+   "h": "onTab",
+   "txt": "概览",
+   "w": 54,
+   "hgt": 46,
+   "y": 361,
+   "route": "pages/club/detail/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "onTab|管理|{\"key\":\"manage\"}",
+   "h": "onTab",
+   "txt": "管理",
+   "w": 54,
+   "hgt": 46,
+   "y": 361,
+   "route": "pages/club/detail/index",
+   "newText": "扫码 | 出示二维码 | 分享 | 结算 | 设置 | 现在要做 | 发布主题 | 发布主题 | 自由探索期次 | 可对接商家",
+   "shot": "r2-c01-club-detail-t02",
+   "result": "ui change"
+  },
+  {
+   "key": "goClubBadges|俱乐部勋章|{}",
+   "h": "goClubBadges",
+   "txt": "俱乐部勋章",
+   "w": 357,
+   "hgt": 46,
+   "y": 541,
+   "route": "pages/club/badges/index",
+   "newText": "创建勋章 | 还没有俱乐部勋章",
+   "shot": "r2-c01-club-detail-t03",
+   "result": "navigates"
+  },
+  {
+   "key": "goMemberProfile|林测试 主理人|{\"memberId\":9009}",
+   "h": "goMemberProfile",
+   "txt": "林测试 主理人",
+   "w": 62,
+   "hgt": 92,
+   "y": 647,
+   "route": "pages/club/detail/index",
+   "newText": "· 加入 2026-11-05 10:30:19 | · 加入 2026-11-05 10:30:15 | 本团贡献榜 · 本周 | 综合 | 1 | 你 | 我 | 0 场 · 0.0 km · 用时 0分 | 0.0 分 | 0.0 分 | 查看该成员 | 客户档案",
+   "result": "ui change"
+  },
+  {
+   "key": "goMemberProfile|陈小满|{\"memberId\":990007}",
+   "h": "goMemberProfile",
+   "txt": "陈小满",
+   "w": 62,
+   "hgt": 72,
+   "y": 647,
+   "route": "pages/club/detail/index",
+   "newText": "· 加入 2026-11-05 10:30:19 | · 加入 2026-11-05 10:30:15 | 本团贡献榜 · 本周 | 综合 | 1 | 你 | 我 | 0 场 · 0.0 km · 用时 0分 | 0.0 分 | 查看该成员 | 客户档案",
+   "result": "ui change"
+  },
+  {
+   "key": "goMemberProfile|周小雨|{\"memberId\":990006}",
+   "h": "goMemberProfile",
+   "txt": "周小雨",
+   "w": 62,
+   "hgt": 72,
+   "y": 647,
+   "route": "pages/club/detail/index",
+   "newText": "· 加入 2026-11-05 10:30:19 | · 加入 2026-11-05 10:30:15 | 本团贡献榜 · 本周 | 综合 | 1 | 你 | 我 | 0 场 · 0.0 km · 用时 0分 | 0.0 分 | 查看该成员 | 客户档案",
+   "result": "ui change"
+  },
+  {
+   "key": "onTap||{}",
+   "h": "onTap",
+   "txt": "",
+   "w": 46,
+   "hgt": 46,
+   "y": 782,
+   "route": "pages/club/detail/index",
+   "newText": "· 加入 2026-11-05 10:30:19 | · 加入 2026-11-05 10:30:15 | 本团贡献榜 · 本周 | 综合 | 1 | 你 | 我 | 0 场 · 0.0 km · 用时 0分 | 0.0 分 | 2 | 0 场 · 0.0 km · 用时 0分 | 0.0 分",
+   "result": "ui change"
+  },
+  {
+   "key": "goMemberProfile||{\"memberId\":9009}",
+   "h": "goMemberProfile",
+   "txt": "",
+   "w": 37,
+   "hgt": 37,
+   "y": 782,
+   "route": "pages/club/detail/index",
+   "newText": "· 加入 2026-11-05 10:30:19 | · 加入 2026-11-05 10:30:15 | 本团贡献榜 · 本周 | 综合 | 1 | 你 | 我 | 0 场 · 0.0 km · 用时 0分 | 0.0 分 | 2 | 0 场 · 0.0 km · 用时 0分 | 0.0 分",
+   "result": "ui change"
+  },
+  {
+   "key": "goMemberProfile|林测试主理人 Lv.1 · 公开资料 · 创建俱乐部|{\"memberId\":9009}",
+   "h": "goMemberProfile",
+   "txt": "林测试主理人 Lv.1 · 公开资料 · 创建俱乐部",
+   "w": 309,
+   "hgt": 45,
+   "y": 778,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  },
+  {
+   "key": "goMemberProfile||{\"memberId\":990007}",
+   "h": "goMemberProfile",
+   "txt": "",
+   "w": 37,
+   "hgt": 37,
+   "y": 845,
+   "route": "pages/club/detail/index",
+   "newText": "· 加入 2026-11-05 10:30:19 | · 加入 2026-11-05 10:30:15 | 本团贡献榜 · 本周 | 综合 | 1 | 你 | 我 | 0 场 · 0.0 km · 用时 0分 | 0.0 分 | 2 | 0 场 · 0.0 km · 用时 0分 | 0.0 分",
+   "result": "ui change"
+  },
+  {
+   "key": "goMemberProfile|陈小满 Lv.1 · 公开资料 · 加入 2026-11-0|{\"memberId\":990007}",
+   "h": "goMemberProfile",
+   "txt": "陈小满 Lv.1 · 公开资料 · 加入 2026-11-0",
+   "w": 267,
+   "hgt": 45,
+   "y": 841,
+   "route": "pages/club/detail/index",
+   "newText": "· 加入 2026-11-05 10:30:19 | · 加入 2026-11-05 10:30:15 | 本团贡献榜 · 本周 | 综合 | 1 | 你 | 我 | 0 场 · 0.0 km · 用时 0分 | 0.0 分 | 2 | 0 场 · 0.0 km · 用时 0分 | 0.0 分",
+   "result": "ui change"
+  },
+  {
+   "key": "reportClubMember|举报|{\"memberId\":990007,\"nickname\":\"陈小满\"}",
+   "h": "reportClubMember",
+   "txt": "举报",
+   "w": 42,
+   "hgt": 46,
+   "y": 840,
+   "route": "pages/club/governance/index",
+   "newText": "成员举报 | 向平台提交治理举报 | 举报目标 | 成员「陈小满」 | 请提交可核实的事实 | 填写事实并提交平台 | 我的平台工单 | 暂无已提交工单",
+   "result": "navigates"
+  },
+  {
+   "key": "goMemberProfile||{\"memberId\":990006}",
+   "h": "goMemberProfile",
+   "txt": "",
+   "w": 37,
+   "hgt": 37,
+   "y": 908,
+   "route": "pages/club/detail/index",
+   "newText": "· 加入 2026-11-05 10:30:19 | · 加入 2026-11-05 10:30:15 | 本团贡献榜 · 本周 | 综合 | 1 | 你 | 我 | 0 场 · 0.0 km · 用时 0分 | 0.0 分 | 2 | 0 场 · 0.0 km · 用时 0分 | 0.0 分",
+   "result": "ui change"
+  },
+  {
+   "key": "goMemberProfile|周小雨 Lv.1 · 公开资料 · 加入 2026-11-0|{\"memberId\":990006}",
+   "h": "goMemberProfile",
+   "txt": "周小雨 Lv.1 · 公开资料 · 加入 2026-11-0",
+   "w": 267,
+   "hgt": 45,
+   "y": 904,
+   "route": "pages/club/detail/index",
+   "newText": "· 加入 2026-11-05 10:30:19 | · 加入 2026-11-05 10:30:15 | 本团贡献榜 · 本周 | 综合 | 1 | 你 | 我 | 0 场 · 0.0 km · 用时 0分 | 0.0 分 | 2 | 0 场 · 0.0 km · 用时 0分 | 0.0 分",
+   "result": "ui change"
+  },
+  {
+   "key": "reportClubMember|举报|{\"memberId\":990006,\"nickname\":\"周小雨\"}",
+   "h": "reportClubMember",
+   "txt": "举报",
+   "w": 42,
+   "hgt": 46,
+   "y": 904,
+   "route": "pages/club/governance/index",
+   "newText": "成员举报 | 向平台提交治理举报 | 举报目标 | 成员「周小雨」 | 请提交可核实的事实 | 填写事实并提交平台 | 我的平台工单 | 暂无已提交工单",
+   "result": "navigates"
+  },
+  {
+   "key": "onRankSortTap|综合|{}",
+   "h": "onRankSortTap",
+   "txt": "综合",
+   "w": 36,
+   "hgt": 46,
+   "y": 964,
+   "route": "pages/club/detail/index",
+   "newText": "· 加入 2026-11-05 10:30:19 | · 加入 2026-11-05 10:30:15 | 本团贡献榜 · 本周 | 综合 | 1 | 你 | 我 | 0 场 · 0.0 km · 用时 0分 | 0.0 分 | 2 | 0 场 · 0.0 km · 用时 0分 | 0.0 分",
+   "result": "ui change"
+  },
+  {
+   "key": "goMemberProfile|1 你 我 0 场 · 0.0 km · 用时 0分 0.0|{\"memberId\":9009}",
+   "h": "goMemberProfile",
+   "txt": "1 你 我 0 场 · 0.0 km · 用时 0分 0.0",
+   "w": 357,
+   "hgt": 72,
+   "y": 1017,
+   "route": "pages/club/detail/index",
+   "newText": "· 加入 2026-11-05 10:30:19 | · 加入 2026-11-05 10:30:15 | 本团贡献榜 · 本周 | 综合 | 1 | 你 | 我 | 0 场 · 0.0 km · 用时 0分 | 0.0 分 | 2 | 0 场 · 0.0 km · 用时 0分 | 0.0 分",
+   "result": "ui change"
+  },
+  {
+   "key": "goMemberProfile|2 陈小满 0 场 · 0.0 km · 用时 0分 0.0|{\"memberId\":990007}",
+   "h": "goMemberProfile",
+   "txt": "2 陈小满 0 场 · 0.0 km · 用时 0分 0.0",
+   "w": 357,
+   "hgt": 72,
+   "y": 1089,
+   "route": "pages/club/detail/index",
+   "newText": "· 加入 2026-11-05 10:30:19 | · 加入 2026-11-05 10:30:15 | 本团贡献榜 · 本周 | 综合 | 1 | 你 | 我 | 0 场 · 0.0 km · 用时 0分 | 0.0 分 | 2 | 0 场 · 0.0 km · 用时 0分 | 0.0 分",
+   "result": "ui change"
+  },
+  {
+   "key": "goMemberProfile|3 周小雨 0 场 · 0.0 km · 用时 0分 0.0|{\"memberId\":990006}",
+   "h": "goMemberProfile",
+   "txt": "3 周小雨 0 场 · 0.0 km · 用时 0分 0.0",
+   "w": 357,
+   "hgt": 72,
+   "y": 1162,
+   "route": "pages/club/detail/index",
+   "newText": "· 加入 2026-11-05 10:30:19 | · 加入 2026-11-05 10:30:15 | 本团贡献榜 · 本周 | 综合 | 1 | 你 | 我 | 0 场 · 0.0 km · 用时 0分 | 0.0 分 | 2 | 0 场 · 0.0 km · 用时 0分 | 0.0 分",
+   "result": "ui change"
+  },
+  {
+   "key": "goClubAppeal|封禁申诉|{}",
+   "h": "goClubAppeal",
+   "txt": "封禁申诉",
+   "w": 50,
+   "hgt": 46,
+   "y": 1282,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "pages/club/detail/index"
+ ],
+ "text": "夜行者二测社 | 兴趣社群 · 3 名成员 | 需审核加入 | 帖文 | 活动 | 概览 | 管理 | 暂无简介 | 林测试 | 主理人 | 兴趣社群 | 俱乐部类型 | 上海 | 所在城市 | 俱乐部勋章 | 成员 · 3 | 邀请成员 | 林测试 | 主理人 | 陈小满 | 周小雨 | 林测试 | 主理人 | Lv.1 · | 公开资料 | · 创建俱乐部 | 陈小满 | 举报 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "text_s1": "俱乐部勋章 | 成员 · 3 | 邀请成员 | 林测试 | 主理人 | 陈小满 | 周小雨 | 林测试 | 主理人 | Lv.1 · | 公开资料 | · 创建俱乐部 | 陈小满 | Lv.1 · | 公开资料 | · 加入 2026-11-05 10:30:19 | 举报 | 周小雨 | Lv.1 · | 公开资料 | · 加入 2026-11-05 10:30:15 | 举报 | 本团贡献榜 · 本周 | 综合 | 1 | 你 | 我 | 0 场 · 0.0 km · 用时 0分 | 0.0 分 | 2 | 陈小满 | 0 场 · 0.0 km · 用时 0分 | 0.0 分 | 3 | 周小雨 | 0 场 · 0.0 km · 用时 0分 | 0.0 分 | 治理与安全 | 封禁申诉 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 24,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/club/detail/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207049&OSSAccessKeyId=rigdummy&Signature=%2FHm6zZ%2BCLLDDgw90dYEoQunHVzA%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207061&OSSAccessKeyId=rigdummy&Signature=i2oKg6OfAjBwLWFtmQiKPH%2BDSnc%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

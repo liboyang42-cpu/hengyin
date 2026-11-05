@@ -1,0 +1,26 @@
+r2-c01-club-detail route pages/index/index>pages/club/detail/index controls 24 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  ui change        onSettings                 ""                                   
+  ui change        onTab                      "帖文"                                 
+  ui change        onTab                      "活动"                                 
+  NO VISIBLE EFFECT onTab                      "概览"                                 
+  ui change        onTab                      "管理"                                 
+  navigates        goClubBadges               "俱乐部勋章"                          -> pages/club/badges/index    
+  ui change        goMemberProfile            "林测试 主理人"                            
+  ui change        goMemberProfile            "陈小满"                                
+  ui change        goMemberProfile            "周小雨"                                
+  ui change        onTap                      ""                                   
+  ui change        goMemberProfile            ""                                   
+  SKIPPED (destructive / writes; walked by hand) goMemberProfile            "林测试主理人 Lv.1 · 公开资料 · 创建俱乐部"         
+  ui change        goMemberProfile            ""                                   
+  ui change        goMemberProfile            "陈小满 Lv.1 · 公开资料 · 加入 2026-11-0"     
+  navigates        reportClubMember           "举报"                             -> pages/club/governance/index    
+  ui change        goMemberProfile            ""                                   
+  ui change        goMemberProfile            "周小雨 Lv.1 · 公开资料 · 加入 2026-11-0"     
+  navigates        reportClubMember           "举报"                             -> pages/club/governance/index    
+  ui change        onRankSortTap              "综合"                                 
+  ui change        goMemberProfile            "1 你 我 0 场 · 0.0 km · 用时 0分 0.0"     
+  ui change        goMemberProfile            "2 陈小满 0 场 · 0.0 km · 用时 0分 0.0"     
+  ui change        goMemberProfile            "3 周小雨 0 场 · 0.0 km · 用时 0分 0.0"     
+  SKIPPED (destructive / writes; walked by hand) goClubAppeal               "封禁申诉"                               
+TEXT: 夜行者二测社 | 兴趣社群 · 3 名成员 | 需审核加入 | 帖文 | 活动 | 概览 | 管理 | 暂无简介 | 林测试 | 主理人 | 兴趣社群 | 俱乐部类型 | 上海 | 所在城市 | 俱乐部勋章 | 成员 · 3 | 邀请成员 | 林测试 | 主理人 | 陈小满 | 周小雨 | 林测试 | 主理人 | Lv.1 · | 公开资料 | · 创建俱乐部 | 陈小满 | 举报 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

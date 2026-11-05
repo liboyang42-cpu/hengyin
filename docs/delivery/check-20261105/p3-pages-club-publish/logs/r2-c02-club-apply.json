@@ -1,0 +1,66 @@
+{
+ "id": "r2-c02-club-apply",
+ "path": "pages/club/apply/index",
+ "identity": "e2e-openid-9004",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "__onTap||{}",
+   "h": "__onTap",
+   "txt": "",
+   "w": 357,
+   "hgt": 46,
+   "y": 739,
+   "route": "pages/club/apply/index",
+   "newText": "1 / 4 | 先认识一下你 | 实名/昵称 | * | 联系方式 | * | 身份说明（选填） | 联合创始人（选填） | 联系方式不对外展示 | 下一步",
+   "shot": "r2-c02-club-apply-t01",
+   "result": "ui change"
+  },
+  {
+   "key": "startForm|成为主理人|{}",
+   "h": "startForm",
+   "txt": "成为主理人",
+   "w": 357,
+   "hgt": 46,
+   "y": 739,
+   "route": "pages/club/apply/index",
+   "newText": "1 / 4 | 先认识一下你 | 实名/昵称 | * | 联系方式 | * | 身份说明（选填） | 联合创始人（选填） | 联系方式不对外展示 | 下一步",
+   "shot": "r2-c02-club-apply-t02",
+   "result": "ui change"
+  }
+ ],
+ "route": [
+  "pages/club/apply/index"
+ ],
+ "text": "把你带的人， 变成你的俱乐部 | 成为主理人 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 3,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/club/apply/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207265&OSSAccessKeyId=rigdummy&Signature=Nt1L3pxMmnMQXRrfnChhDd7mdng%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207275&OSSAccessKeyId=rigdummy&Signature=6XdLjE5FpxEU9lGvHLI%2FqCX%2FFjg%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ],
+  "badNet": []
+ }
+}

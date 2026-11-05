@@ -1,0 +1,77 @@
+{
+ "id": "r2-c05-club-customer-detail",
+ "path": "pages/club/customer-detail/index?clubId=990004&memberId=990006",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "onTap|周|{}",
+   "h": "onTap",
+   "txt": "周",
+   "w": 58,
+   "hgt": 58,
+   "y": 108,
+   "route": "pages/club/customer-detail/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "openRecord|5 11月 人民广场 · 喷泉报时 已核销 · 查看活动|{\"topicId\":990015}",
+   "h": "openRecord",
+   "txt": "5 11月 人民广场 · 喷泉报时 已核销 · 查看活动",
+   "w": 357,
+   "hgt": 77,
+   "y": 457,
+   "route": "pages/topic/index/index",
+   "newText": "城市定向 | 查看详情与报名 | 确认订单 | 参与人信息 | 补全姓名和手机号 | 主题信息 | 费用明细 | 票种 | 自玩通行证 | 订单金额 | 合计 | 同意将姓名、手机号提供给主办方，用于报名核验",
+   "shot": "r2-c05-club-customer-detail-t01",
+   "result": "navigates"
+  },
+  {
+   "key": "startEdit|编辑|{}",
+   "h": "startEdit",
+   "txt": "编辑",
+   "w": 58,
+   "hgt": 33,
+   "y": 612,
+   "route": "pages/club/customer-detail/index",
+   "newText": "编辑标签与备注 | 取消 | 添加 | 保存",
+   "result": "ui change"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "pages/club/customer-detail/index"
+ ],
+ "text": "客户 | 周小雨 | 周 | 最近互动 11月5日 | 累计实付 | ¥39 | 客户概览 | 1 | 到店次数 | 0 | 待核销 | 0 | 已退款 | 参与记录 | 5 | 11月 | 人民广场 · 喷泉报时 | 已核销 | · 查看活动 | 标签与备注 | 还没有备注 | 编辑 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 4,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/club/customer-detail/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207303&OSSAccessKeyId=rigdummy&Signature=0Ycn9TrOIX8qzIJP6os%2BnfoYzkg%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207315&OSSAccessKeyId=rigdummy&Signature=MrVGdAMjSCq5%2BcBUuTiN6god04s%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207317&OSSAccessKeyId=rigdummy&Signature=VSca611TRH2vXrrkaPom84%2FeNXE%3D net::ERR_TUNNEL_CONNECTION_FAILED"
+  ],
+  "badNet": []
+ }
+}

@@ -1,0 +1,38 @@
+{
+ "id": "r2-c08-club-enroll",
+ "path": "pages/club/enroll/index?clubId=990004&topicId=990015",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "pages/club/enroll/index"
+ ],
+ "text": "报名名册 | 我的俱乐部 · 0 个团 | 还没有城市定向团 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 1,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/club/enroll/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207341&OSSAccessKeyId=rigdummy&Signature=P0BrJys5peSFix%2BFhlYi6YdU2JI%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ],
+  "badNet": []
+ }
+}

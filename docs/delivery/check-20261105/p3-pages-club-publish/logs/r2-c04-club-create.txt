@@ -1,0 +1,5 @@
+r2-c04-club-create route pages/club/create/index>pages/club/apply/index controls 3 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  ui change        __onTap                    ""                                   
+  ui change        startForm                  "成为主理人"                              
+TEXT: 把你带的人， 变成你的俱乐部 | 成为主理人 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

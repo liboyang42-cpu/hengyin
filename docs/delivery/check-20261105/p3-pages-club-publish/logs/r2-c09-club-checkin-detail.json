@@ -1,0 +1,66 @@
+{
+ "id": "r2-c09-club-checkin-detail",
+ "path": "pages/club/checkin-detail/index?clubId=990004&registrationId=75",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "onTap||{}",
+   "h": "onTap",
+   "txt": "",
+   "w": 50,
+   "hgt": 50,
+   "y": 174,
+   "route": "pages/club/checkin-detail/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "callParticipant||{}",
+   "h": "callParticipant",
+   "txt": "",
+   "w": 46,
+   "hgt": 46,
+   "y": 218,
+   "route": "pages/club/checkin-detail/index",
+   "toast": "拨打 13900000004",
+   "newText": "拨打 13900000004",
+   "result": "toast"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "pages/club/checkin-detail/index"
+ ],
+ "text": "核销详情 | 林一帆 | 2026-10-27 22:00 | 13900000004 | 已核销 | 02:44 | 2026-10-27 22:00 | 人民广场 · 喷泉报时 | 单号 P202611055F0A8DE4 | 票种 | 领队场 ×1 | 下单时间 | 11-05 10:32 | 实付 | ¥39.00 | 核销时间 | 11-05 02:44 | 核销门店 | — | 操作人 | — | 已报名 | 已接洽 | 已核销 | 已评价 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 3,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/club/checkin-detail/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207424&OSSAccessKeyId=rigdummy&Signature=ksapE9n0IVp1lthmkdxIgu41sPs%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207427&OSSAccessKeyId=rigdummy&Signature=kzjc6719QuIRs4LtDLjBf2MFe7M%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207437&OSSAccessKeyId=rigdummy&Signature=7KJ5SKkBZxJFE7OVm2MI8AjWIAs%3D net::ERR_TUNNEL_CONNECTION_FAILED"
+  ],
+  "badNet": []
+ }
+}

@@ -1,0 +1,77 @@
+{
+ "id": "r2-c10-club-event-ops",
+ "path": "pages/club/event-ops/index?clubId=990004",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "beginEditSeries|主题 #990015 · 单次 候补开启 编辑未来场次|{\"seriesId\":1}",
+   "h": "beginEditSeries",
+   "txt": "主题 #990015 · 单次 候补开启 编辑未来场次",
+   "w": 357,
+   "hgt": 62,
+   "y": 225,
+   "route": "pages/club/event-ops/index",
+   "newText": "编辑中 | 已锁定主题与负责人策略；退出编辑可换系列 | 退出编辑 | 保存未来场次",
+   "shot": "r2-c10-club-event-ops-t01",
+   "result": "ui change"
+  },
+  {
+   "key": "toggleSeriesDates|日期清单（含已过去与已取消的场次）|{\"seriesId\":1}",
+   "h": "toggleSeriesDates",
+   "txt": "日期清单（含已过去与已取消的场次）",
+   "w": 357,
+   "hgt": 37,
+   "y": 287,
+   "route": "pages/club/event-ops/index",
+   "newText": "10月27日 周二 22:00 | 2 人已报名 · 不可编辑 | 已结束",
+   "result": "ui change"
+  },
+  {
+   "key": "resetSeriesForm|添加日期 按重复方式批量生成|{}",
+   "h": "resetSeriesForm",
+   "txt": "添加日期 按重复方式批量生成",
+   "w": 357,
+   "hgt": 62,
+   "y": 325,
+   "route": "pages/club/event-ops/index",
+   "result": "NO VISIBLE EFFECT"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "pages/club/event-ops/index"
+ ],
+ "text": "活动运营 | 日期清单 | 仅可修改无报名的未来场次 | 主题 #990015 · 单次 | 候补开启 | 编辑未来场次 | 日期清单（含已过去与已取消的场次） | 添加日期 | 按重复方式批量生成 | 重复方式 | 最多排未来 90 天（64 期） | 暂无可开场的主题 | 先发布主题或完成商家合作 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 4,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/club/event-ops/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207396&OSSAccessKeyId=rigdummy&Signature=7LgE50NCjXHyQXHYVrwlpTlSrVY%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207408&OSSAccessKeyId=rigdummy&Signature=NAiYO7LQA6ayhtgHMV6ikP91x%2FE%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

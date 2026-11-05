@@ -1,0 +1,94 @@
+{
+ "id": "r2-c14-club-notify",
+ "path": "pages/club/notify/index?clubId=990004",
+ "identity": "e2e-openid-9009",
+ "controls": [
+  {
+   "key": "onBack||{}",
+   "h": "onBack",
+   "txt": "",
+   "w": 46,
+   "hgt": 44,
+   "y": 47,
+   "result": "back (not tapped)"
+  },
+  {
+   "key": "chooseAudience|全部成员 3 人 已选|{\"value\":\"ALL_MEMBERS\"}",
+   "h": "chooseAudience",
+   "txt": "全部成员 3 人 已选",
+   "w": 328,
+   "hgt": 50,
+   "y": 201,
+   "route": "pages/club/notify/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "chooseAudience|管理员 2 人 选择|{\"value\":\"ADMINS\"}",
+   "h": "chooseAudience",
+   "txt": "管理员 2 人 选择",
+   "w": 328,
+   "hgt": 51,
+   "y": 251,
+   "route": "pages/club/notify/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "chooseAudience|近 90 天未活跃 2 人 选择|{\"value\":\"INACTIVE\"}",
+   "h": "chooseAudience",
+   "txt": "近 90 天未活跃 2 人 选择",
+   "w": 328,
+   "hgt": 51,
+   "y": 303,
+   "route": "pages/club/notify/index",
+   "result": "NO VISIBLE EFFECT"
+  },
+  {
+   "key": "preview|预览受众|{}",
+   "h": "preview",
+   "txt": "预览受众",
+   "w": 357,
+   "hgt": 37,
+   "y": 690,
+   "route": "pages/club/notify/index",
+   "newText": "标题需为 1–80 字 | 内容需为 1–1000 字",
+   "result": "ui change"
+  },
+  {
+   "key": "send|发送站内通知|{}",
+   "h": "send",
+   "txt": "发送站内通知",
+   "w": 357,
+   "hgt": 46,
+   "y": 748,
+   "result": "SKIPPED (destructive / writes; walked by hand)"
+  }
+ ],
+ "route": [
+  "pages/index/index",
+  "pages/club/notify/index"
+ ],
+ "text": "群发通知 | 选择受众 | 全部成员 | 3 人 | 已选 | 管理员 | 2 人 | 选择 | 近 90 天未活跃 | 2 人 | 选择 | 内容 | 标题 | * | 内容 | * | 预览受众 | 发送站内通知 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "controlCount": 6,
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/club/notify/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207393&OSSAccessKeyId=rigdummy&Signature=dg8F0Dp7IrfE6ntYUF%2B%2BCjmfj7U%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] FAILED https://oss-rig.invalid/upload/j2-topic-cover-9009.jpg?Expires=2109207407&OSSAccessKeyId=rigdummy&Signature=UM0YGCih0e5cjeIS3kVZglqqi7g%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

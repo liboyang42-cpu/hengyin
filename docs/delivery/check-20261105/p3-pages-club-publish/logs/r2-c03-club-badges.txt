@@ -1,0 +1,5 @@
+r2-c03-club-badges route pages/index/index>pages/club/badges/index controls 3 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  ui change        __onTap                    ""                                   
+  SKIPPED (destructive / writes; walked by hand) openCreate                 "创建勋章"                               
+TEXT: 俱乐部勋章 | 夜行者二测社 | 创建勋章 | 还没有俱乐部勋章 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

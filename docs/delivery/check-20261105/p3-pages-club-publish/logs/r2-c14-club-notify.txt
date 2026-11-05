@@ -1,0 +1,8 @@
+r2-c14-club-notify route pages/index/index>pages/club/notify/index controls 6 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+  NO VISIBLE EFFECT chooseAudience             "全部成员 3 人 已选"                        
+  NO VISIBLE EFFECT chooseAudience             "管理员 2 人 选择"                         
+  NO VISIBLE EFFECT chooseAudience             "近 90 天未活跃 2 人 选择"                   
+  ui change        preview                    "预览受众"                               
+  SKIPPED (destructive / writes; walked by hand) send                       "发送站内通知"                             
+TEXT: 群发通知 | 选择受众 | 全部成员 | 3 人 | 已选 | 管理员 | 2 人 | 选择 | 近 90 天未活跃 | 2 人 | 选择 | 内容 | 标题 | * | 内容 | * | 预览受众 | 发送站内通知 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉

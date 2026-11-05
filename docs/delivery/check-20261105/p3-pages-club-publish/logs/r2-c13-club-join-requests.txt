@@ -1,0 +1,3 @@
+r2-c13-club-join-requests route pages/index/index>pages/club/join-requests/index controls 1 errors 0 badNet 0
+  back (not tapped) onBack                     ""                                   
+TEXT: 入会申请 | 暂无待审申请 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
