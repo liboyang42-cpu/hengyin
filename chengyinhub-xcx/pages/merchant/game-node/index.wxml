@@ -114,16 +114,19 @@
           <text class="gn-check-label">{{item.label}}</text>
         </view>
 
+        <cy-inline-error kind="field" wx:if="{{readyErrors.checklist}}" title="{{readyErrors.checklist}}" />
         <view class="gn-field">
           <text class="gn-label">接待容量<text class="form-required" aria-hidden="true">*</text></text>
           <input class="gn-input" type="number" value="{{readyDraft.capacity}}" placeholder="每个时段最多接待人数"
                  bindinput="onCapacityInput" maxlength="4" />
+          <cy-inline-error kind="field" wx:if="{{readyErrors.capacity}}" title="{{readyErrors.capacity}}" />
         </view>
         <view class="gn-field">
           <text class="gn-label">服务日期<text class="form-required" aria-hidden="true">*</text></text>
           <cy-date-field mode="date" value="{{readyDraft.serviceDate}}" bind:change="onServiceDateChange">
             <view class="gn-picker-value">{{readyDraft.serviceDate || '选择服务日期'}}</view>
           </cy-date-field>
+          <cy-inline-error kind="field" wx:if="{{readyErrors.date}}" title="{{readyErrors.date}}" />
         </view>
         <view class="gn-field">
           <text class="gn-label">服务时段<text class="form-required" aria-hidden="true">*</text></text>
@@ -132,6 +135,7 @@
                 aria-label="选择服务时段，当前 {{readyDraft.serviceStartTime && readyDraft.serviceEndTime ? readyDraft.serviceStartTime + ' 至 ' + readyDraft.serviceEndTime : '未选'}}">
             <view class="gn-picker-value">{{readyDraft.serviceStartTime && readyDraft.serviceEndTime ? readyDraft.serviceStartTime + ' 至 ' + readyDraft.serviceEndTime : '选择服务时段'}}</view>
           </view>
+          <cy-inline-error kind="field" wx:if="{{readyErrors.time}}" title="{{readyErrors.time}}" />
         </view>
         <view class="gn-field">
           <text class="gn-label">准备备注（选填）</text>
@@ -163,7 +167,7 @@
       <view class="gn-card">
         <view class="gn-section-head"><view><text class="gn-section-title">最近操作</text></view></view>
         <view class="gn-receipt" wx:for="{{recentReceipts}}" wx:key="requestId">
-          <view><text class="gn-receipt-title">{{item.actionText}}</text><text class="gn-receipt-sub">第 {{item.revision}} 版{{item.replayed ? ' · 已处理' : ''}}</text></view>
+          <view><text class="gn-receipt-title">{{item.actionText}}</text><text class="gn-receipt-sub" wx:if="{{item.replayed}}">已处理过</text></view>
           <text class="gn-receipt-outcome">{{item.outcomeText}}</text>
         </view>
         <cy-empty wx:if="{{!recentReceipts.length}}" size="sm" title="本次进入页面后还没有已确认操作" />

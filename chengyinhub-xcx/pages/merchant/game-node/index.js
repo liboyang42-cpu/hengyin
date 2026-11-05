@@ -165,6 +165,7 @@ Page({
     summary: null,
     recap: null,
     readyDraft: defaultReadyDraft(),
+    readyErrors: {},
     serviceTimeShow: false,
     serviceTimeValue: [],
     declineReasons: DECLINE_REASONS,
@@ -353,14 +354,14 @@ Page({
     const checklist = this.data.readyDraft.checklist.map((item, itemIndex) => Object.assign({}, item, {
       checked: itemIndex === index ? !item.checked : item.checked,
     }))
-    this.setData({ readyDraft: Object.assign({}, this.data.readyDraft, { checklist }) })
+    this.setData({ readyDraft: Object.assign({}, this.data.readyDraft, { checklist }), 'readyErrors.checklist': '' })
   },
 
   onCapacityInput(event) {
-    this.setData({ readyDraft: Object.assign({}, this.data.readyDraft, { capacity: event.detail.value }) })
+    this.setData({ readyDraft: Object.assign({}, this.data.readyDraft, { capacity: event.detail.value }), 'readyErrors.capacity': '' })
   },
   onServiceDateChange(event) {
-    this.setData({ readyDraft: Object.assign({}, this.data.readyDraft, { serviceDate: event.detail.value }) })
+    this.setData({ readyDraft: Object.assign({}, this.data.readyDraft, { serviceDate: event.detail.value }), 'readyErrors.date': '' })
   },
   /* 服务时段从两个独立的时间滚轮换成一次选完 —— 原来「结束早于开始」没有任何拦截,
      而 serviceStartAt/serviceEndAt 是直接拼给后端的。校验现在收在 cy-time-range 里。 */
@@ -378,6 +379,7 @@ Page({
       readyDraft: Object.assign({}, this.data.readyDraft, {
         serviceStartTime: v[0] || '', serviceEndTime: v[1] || '',
       }),
+      'readyErrors.time': '',
       serviceTimeShow: false,
     })
   },
@@ -438,7 +440,15 @@ Page({
       }, requestId)
       return this._submitCommand(command)
     } catch (e) {
-      toast('请勾完清单并填好容量与时段')
+      // 错误写在各自的栏下面(红字),不再弹一句总提示
+      const d = this.data.readyDraft
+      const errors = {}
+      if (!d.checklist.every(item => item.checked)) errors.checklist = '请先勾完准备清单'
+      if (!(Number(d.capacity) > 0)) errors.capacity = '请填写接待容量'
+      if (!d.serviceDate) errors.date = '请选择服务日期'
+      if (!d.serviceStartTime || !d.serviceEndTime) errors.time = '请选择服务时段'
+      if (!Object.keys(errors).length) errors.capacity = '请检查接待容量和服务时段'
+      this.setData({ readyErrors: errors })
       return false
     }
   },
