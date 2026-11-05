@@ -363,6 +363,22 @@ class ClubSessionMerchantFeeSettlementTest {
         assertMoney("14.91", half[1][2]); // 主理人取余数:19.50 − 0.59 − 4.00
     }
 
+    /** 商家财务:场次核销费(95 收入)和结算后退款扣回(6 支出)都进个人账户流水;95 的支出方向与提现不算收入。 */
+    @Test
+    void merchantFinanceListsTheSessionFeeAndItsRefundClawback() {
+        assertTrue(MerchantFinanceQueryService.isPersonalEarningRow(flow(95L, 1L)));
+        assertTrue(MerchantFinanceQueryService.isPersonalEarningRow(flow(6L, 2L)));
+        assertTrue(!MerchantFinanceQueryService.isPersonalEarningRow(flow(95L, 2L)));
+        assertTrue(!MerchantFinanceQueryService.isPersonalEarningRow(flow(3L, 2L)));
+    }
+
+    private static UmsMemberBalanceDetail flow(long eventType, long changeType) {
+        UmsMemberBalanceDetail d = new UmsMemberBalanceDetail();
+        d.setEventType(eventType);
+        d.setChangeType(changeType);
+        return d;
+    }
+
     private static SettlementDetail line(String type, long receiver, String amount) {
         SettlementDetail d = new SettlementDetail();
         d.setReceiverType(type);

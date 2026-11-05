@@ -507,7 +507,8 @@ public class MerchantFinanceQueryService {
             BigDecimal signed = detail.getChangeBalance();
             MerchantSettlementEntry entry = base("balance:" + detail.getId(), "REGISTRATION_SPLIT",
                     signed.signum() < 0 ? "CLAWBACK" : "EARNING",
-                    detail.getEventType().longValue() == 5L
+                    detail.getEventType().longValue() == 6L ? "REFUND_CLAWBACK"
+                            : detail.getEventType().longValue() == 5L
                             || detail.getEventType().longValue() == com.chengyinhub.business.service.support.ClubSessionMerchantFee.EVENT_TYPE_SESSION_MERCHANT_FEE
                             ? "COOP_SHARE" : "ACTIVITY_SHARE",
                     String.valueOf(detail.getEventId()), "PERSONAL_ACCOUNT", signed, detail.getCreateTime(),
@@ -675,6 +676,11 @@ public class MerchantFinanceQueryService {
         // 第十二轮 k5:95 = 俱乐部场次结算付的合作商家核销费(只有收入方向)。
         if (type == com.chengyinhub.business.service.support.ClubSessionMerchantFee.EVENT_TYPE_SESSION_MERCHANT_FEE) {
             return row.getChangeType() != null && row.getChangeType().longValue() == 1L;
+        }
+        // 第十二轮 k5:6 + 支出 = 结算后退款按比例从本账户扣回(RefundServiceImpl.debitReceiverBalance「退款冲销」)。
+        // 不列它,财务里「已入账」就比余额多出被扣回的那部分。
+        if (type == 6L) {
+            return row.getChangeType() != null && row.getChangeType().longValue() == 2L;
         }
         return type == 3L && row.getChangeType() != null && row.getChangeType().longValue() == 1L;
     }
