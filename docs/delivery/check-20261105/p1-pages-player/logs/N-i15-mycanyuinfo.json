@@ -1,0 +1,47 @@
+{
+ "name": "N-i15-mycanyuinfo",
+ "identity": "walk-player-1",
+ "url": "subpackageMember/mycanyuinfo/mycanyuinfo?id=75",
+ "route": [
+  "pages/index/index",
+  "subpackageMember/mycanyuinfo/mycanyuinfo"
+ ],
+ "sys": "",
+ "text": "参与详情 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "textScrolled": "9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "net": [
+  "200 POST /api/user/info",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/user/info",
+  "200 POST /api/map/reverse-geocode",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/map/reverse-geocode",
+  "200 POST /api/registration/info"
+ ],
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageMember/mycanyuinfo/mycanyuinfo"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

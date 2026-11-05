@@ -1,0 +1,33 @@
+{
+ "name": "GS-l04-team-detail",
+ "identity": "guest",
+ "url": "pages/team/detail/index?teamId=2",
+ "route": [
+  "pages/index/index",
+  "pages/team/detail/index"
+ ],
+ "sys": "",
+ "text": "队伍详情 | 登录后查看队伍 | 请重新登录后再打开这支队伍 | 登录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "net": [
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/team/info"
+ ],
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/team/detail/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

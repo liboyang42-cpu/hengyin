@@ -1,0 +1,45 @@
+{
+ "name": "N-i22-appeal-mine",
+ "identity": "walk-player-1",
+ "url": "subpackageMember/appeal-mine/index",
+ "route": [
+  "pages/index/index",
+  "subpackageMember/appeal-mine/index"
+ ],
+ "sys": "",
+ "text": "我的申诉 | 账号信誉 | 正常 | 还没有申诉记录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "net": [
+  "200 POST /api/user/info",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/user/info",
+  "200 POST /api/map/reverse-geocode",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/map/reverse-geocode",
+  "200 GET /api/member/reputation",
+  "200 GET /api/orient/scoring/mine?pageSize=50"
+ ],
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageMember/appeal-mine/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

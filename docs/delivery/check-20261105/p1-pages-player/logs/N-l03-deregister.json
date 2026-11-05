@@ -1,0 +1,45 @@
+{
+ "name": "N-l03-deregister",
+ "identity": "walk-player-1",
+ "url": "pages/deregister/index",
+ "route": [
+  "pages/index/index",
+  "pages/deregister/index"
+ ],
+ "sys": "",
+ "text": "注销账号 | 注销后账号无法恢复；公开内容将匿名化，依法需要留存的交易记录将停止用于其他目的。 | 查看《账号注销须知》 | 我已阅读并理解注销后果 | 此账号未绑定手机号，提交时将通过微信重新确认本人。 | 微信确认并申请注销 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "net": [
+  "200 POST /api/user/info",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/user/info",
+  "200 POST /api/map/reverse-geocode",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/map/reverse-geocode",
+  "200 GET /api/user/deregister/status",
+  "200 POST /api/user/deregister/precheck"
+ ],
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/deregister/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

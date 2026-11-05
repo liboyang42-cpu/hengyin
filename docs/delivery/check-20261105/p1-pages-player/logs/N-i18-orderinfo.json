@@ -1,0 +1,45 @@
+{
+ "name": "N-i18-orderinfo",
+ "identity": "walk-player-1",
+ "url": "subpackageMember/orderinfo/orderinfo?id=75",
+ "route": [
+  "pages/index/index",
+  "subpackageMember/order/order"
+ ],
+ "sys": "",
+ "text": "我的订单 | 全部 | 待支付 | 未开始 | 进行中 | 已完成 | 退款中 | 退款成功 | 不可退款 | 人工售后 | 还没有城市路线订单 | 去发现城市路线 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "net": [
+  "200 POST /api/user/info",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/user/info",
+  "200 POST /api/map/reverse-geocode",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/map/reverse-geocode",
+  "200 POST /api/registration/info",
+  "200 POST /api/registration/list"
+ ],
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageMember/order/order"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

@@ -1,0 +1,34 @@
+{
+ "name": "GS-g02-square-detail",
+ "identity": "guest",
+ "url": "pages/square/detail/index?id=1",
+ "route": [
+  "pages/index/index",
+  "pages/square/detail/index"
+ ],
+ "sys": "",
+ "text": "玩家二号 | 52分前 | 关注 | 周末沿着苏州河走了一圈，傍晚的光线很好。 | 2 | 2 | 玩家二号 | 51分前 | 欢迎，周六一起。 | 1 | 举报 | 玩家小城 | 51分前 | 这条路线我也想走一次。 | 1 | 举报 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "net": [
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 GET /api/v1/community/posts/1",
+  "200 GET /api/v1/community/posts/1/comments?limit=10"
+ ],
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/square/detail/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

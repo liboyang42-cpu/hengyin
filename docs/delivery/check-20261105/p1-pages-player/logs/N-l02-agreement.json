@@ -1,0 +1,44 @@
+{
+ "name": "N-l02-agreement",
+ "identity": "walk-player-1",
+ "url": "pages/agreement/index",
+ "route": [
+  "pages/index/index",
+  "pages/agreement/index"
+ ],
+ "sys": "",
+ "text": "用户服务协议 | 欢迎使用城瘾。本协议由西安吾令文化传媒有限公司（以下简称“我们”）与城瘾用户共同订立。请在注册、登录或使用服务前仔细阅读并充分理解本协议。 | 一、协议主体与生效 | 城瘾由西安吾令文化传媒有限公司运营，注册地址为陕西省西安市高新区锦业路1号绿地领海B座6层604室A043号。本协议自2026年8月12日起生效。本协议在你明确选择同意后对你生效。 | 二、账号注册与安全 | 你应使用真实、合法、有效的信息注册账号，并妥善保管登录凭证。不得出借、转让账号，不得利用账号实施违法、侵权、欺诈或扰乱平台秩序的行为。因你未妥善保管账号造成的损失，由你依法承担相应责任；因平台原因造成的损失，平台依法承担责任。 | 三、服务内容 | 城瘾提供城市探索、城市定向、主题与活动、地点打卡、俱乐部、商家合作、社区内容、订单及页面实际展示的其他功能。具体服务内容、开放范围、费用和规则以相应页面为准。我们可以因业务调整、维护或安全需要依法变更服务，并通过合理方式通知。 | 四、用户行为与内容管理 | 你对上传、发布和使用的文字、图片等内容负责，并应确保拥有相应权利。不得发布违法违规、侵权、虚假、欺诈、危害人身安全或扰乱平台秩序的内容。我们可以依法对违规内容采取限制展示、删除、限制账号功能或终止服务等措施；你可以通过平台投诉渠道提出申诉。 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "textScrolled": "城瘾提供城市探索、城市定向、主题与活动、地点打卡、俱乐部、商家合作、社区内容、订单及页面实际展示的其他功能。具体服务内容、开放范围、费用和规则以相应页面为准。我们可以因业务调整、维护或安全需要依法变更服务，并通过合理方式通知。 | 四、用户行为与内容管理 | 你对上传、发布和使用的文字、图片等内容负责，并应确保拥有相应权利。不得发布违法违规、侵权、虚假、欺诈、危害人身安全或扰乱平台秩序的内容。我们可以依法对违规内容采取限制展示、删除、限制账号功能或终止服务等措施；你可以通过平台投诉渠道提出申诉。 | 五、人工智能辅助功能 | 部分创作或漫游功能可能提供人工智能辅助。人工智能生成内容可能不准确、不完整或不适合直接使用，你应在发布或据此行动前自行审查。不得利用相关功能生成或传播违法、侵权、危险或虚假内容。涉及个人信息的处理规则以《小程序用户隐私保护指引》为准。 | 六、交易、支付与退款 | 涉及付费服务时，商品或服务内容、价格、履约方式、退款条件及预计到账时间以订单页和具体业务规则为准。你应在支付前核对订单信息。平台不会通过本协议排除或限制消费者依法享有的权利；退款、提现或结算中的款项应先处理完毕再申请注销。 | 七、个人信息与位置权限 | 我们依照《小程序用户隐私保护指引》处理个人信息。位置权限仅在你主动使用地图、附近地点、到点打卡或轨迹相关功能时申请；不使用相关功能时不会在后台持续采集。你可以拒绝或在系统设置中撤回授权，但依赖位置的功能可能无法使用。 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "net": [
+  "200 POST /api/user/info",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/user/info",
+  "200 POST /api/map/reverse-geocode",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/map/reverse-geocode"
+ ],
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/agreement/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

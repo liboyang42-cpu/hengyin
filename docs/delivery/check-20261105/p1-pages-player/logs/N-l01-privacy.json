@@ -1,0 +1,44 @@
+{
+ "name": "N-l01-privacy",
+ "identity": "walk-player-1",
+ "url": "pages/privacy/index",
+ "route": [
+  "pages/index/index",
+  "pages/privacy/index"
+ ],
+ "sys": "",
+ "text": "隐私保护 | 查看《隐私保护指引》 | 首页城市自动定位 | 开启 | 关闭 | 附近的人位置分享 | 关闭 | 漫游定位 | 本机未在为漫游采集位置 | 撤回 | 我的待审媒体 | 查看 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "net": [
+  "200 POST /api/user/info",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/user/info",
+  "200 POST /api/map/reverse-geocode",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/map/reverse-geocode",
+  "200 GET /api/media/asset/list"
+ ],
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/privacy/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}

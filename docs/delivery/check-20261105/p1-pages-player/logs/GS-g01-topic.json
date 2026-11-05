@@ -1,0 +1,45 @@
+{
+ "name": "GS-g01-topic",
+ "identity": "guest",
+ "url": "pages/topic/index/index?id=990014",
+ "route": [
+  "pages/index/index",
+  "pages/topic/index/index"
+ ],
+ "sys": "",
+ "text": "自由探索 | E2E 探店日一期 | 端到端 | 查看详情与报名 | 确认订单 | 参与人信息 | 补全姓名和手机号 | 主题信息 | E2E 探店日一期 | 费用明细 | 票种 | 自玩通行证 | 订单金额 | 合计 | 同意将姓名、手机号提供给主办方，用于报名核验 | 合计 | 立即支付 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "textScrolled": "查看详情与报名 | 城 | 城瘾跑团 | 发布 | E2E 探店日一期 | 端到端 | 立即报名 | 确认订单 | 参与人信息 | 补全姓名和手机号 | 主题信息 | E2E 探店日一期 | 费用明细 | 票种 | 自玩通行证 | 订单金额 | 合计 | 同意将姓名、手机号提供给主办方，用于报名核验 | 合计 | 立即支付 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "net": [
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/info-to-user",
+  "401 POST /api/user/info",
+  "401 POST /api/user/address/list"
+ ],
+ "report": {
+  "route": [
+   "pages/index/index",
+   "pages/topic/index/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/user/address/list",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+   "[error] HTTP 401 http://127.0.0.1:8097/__api/api/user/info",
+   "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+   "[error] FAILED https://oss-rig.invalid/upload/e2e-topic-cover-9003.jpg?Expires=2109207895&OSSAccessKeyId=rigdummy&Signature=X0wM%2BhWy6eWUUal8Iiznar2iSLo%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+   "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+  ],
+  "badNet": [
+   "401 POST /__api/api/user/info",
+   "401 POST /__api/api/user/address/list"
+  ]
+ }
+}

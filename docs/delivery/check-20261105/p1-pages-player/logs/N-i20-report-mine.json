@@ -1,0 +1,45 @@
+{
+ "name": "N-i20-report-mine",
+ "identity": "walk-player-1",
+ "url": "subpackageMember/report-mine/index",
+ "route": [
+  "pages/index/index",
+  "subpackageMember/report-mine/index"
+ ],
+ "sys": "",
+ "text": "我的举报 | 还没有举报记录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉",
+ "net": [
+  "200 POST /api/user/info",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/user/info",
+  "200 POST /api/map/reverse-geocode",
+  "200 POST /api/user/info",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/topic/list",
+  "200 POST /api/activity/list",
+  "200 POST /api/map/reverse-geocode",
+  "200 GET /api/community-trust/reports/mine",
+  "200 GET /api/community-trust/reports/taxonomy"
+ ],
+ "report": {
+  "route": [
+   "pages/index/index",
+   "subpackageMember/report-mine/index"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "badNet": []
+ }
+}
