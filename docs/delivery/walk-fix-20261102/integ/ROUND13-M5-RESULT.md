@@ -96,4 +96,16 @@ The rig had stopped between sessions, so I rebuilt it (fresh database, same fixt
 - A free theme played to the end. The only finished run in the rig is the ¥69 ticket theme from the chain; reopen behaves the same on its order, but I did not build and play a free theme from scratch.
 - Everything on a real phone, and a real content-review hold on posts.
 
-STATUS: PARTIAL - team create/join/full/kick/leave/transfer/disband and reopen of a finished run walked and one more bug fixed; deregistration's WeChat confirm, a free theme played from scratch, and all phone-only checks not walked
+
+## Third pass (taking over the pages leftovers)
+
+Pulled the head, read `CODEX-PAGES-RESULT.md` and `ROUND12-K9-RESULT.md`, and skipped what the log shows as done. The rig had stopped again; I rebuilt it.
+
+| Item | Result |
+|---|---|
+| Missing-param pages: club 编辑资料, 入会申请, 团核销码 opened with no id as a club lead | WALKED. 编辑资料 「没有指定俱乐部 · 返回俱乐部」 and 入会申请 「无法打开入会申请 · 返回俱乐部」 are plain with a button and no helper line. 团核销码 had a second line 「当前账号不能出示这一场的团码」 on its no-permission screen, repeating the error under it; removed (`pages/club/group-code/index.wxml`, pushed). |
+| Publish page for a club lead (activity publish) | NOT WALKED. In the rig the club lead account has no 主理人 role rows, so the page refuses with 「发布单场活动需要俱乐部主理人身份」; I did not build role fixtures. So the content-screen leftovers (j5 N5, N6 field-level error placement, summary over the ticket button, N11) are NOT done. |
+| Organiser/merchant details (p2 N-14 rest, N-16 tags, N-17 rest), editor preview overlap (p3 N18), data-filled pages (game node, coop settlement, batch detail, prediction), carried L2/L5-L8/L10 | NOT done and NOT walked. They need journey fixtures I did not have time to build. |
+| Owner and write-contract decisions | Not touched. One plain line each, with a launch recommendation, is in `ROUND13-OWNER-DECISIONS.md`. |
+
+STATUS: PARTIAL - group-code caption fixed and the missing-param pages walked; owner decisions written up; publish-page content leftovers, organiser/merchant leftovers and data-filled pages not done (need fixtures and more credit)
