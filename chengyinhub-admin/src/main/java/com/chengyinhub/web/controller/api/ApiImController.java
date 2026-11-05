@@ -226,7 +226,11 @@ public class ApiImController extends BaseController
     {
         try
         {
-            imService.block(getAppUserId(), Convert.toLong(target_member_id, 0L));
+            Long targetId;
+            try { targetId = Long.valueOf(target_member_id == null ? "" : target_member_id.trim()); }
+            catch (NumberFormatException invalidTarget) { throw new ServiceException("参数有误", 400); }
+            if (targetId <= 0) throw new ServiceException("参数有误", 400);
+            imService.block(getAppUserId(), targetId);
             return AjaxResult.success("已拉黑");
         }
         catch (ServiceException e)
@@ -246,7 +250,11 @@ public class ApiImController extends BaseController
     {
         try
         {
-            imService.unblock(getAppUserId(), Convert.toLong(target_member_id, 0L));
+            Long targetId;
+            try { targetId = Long.valueOf(target_member_id == null ? "" : target_member_id.trim()); }
+            catch (NumberFormatException invalidTarget) { throw new ServiceException("参数有误", 400); }
+            if (targetId <= 0) throw new ServiceException("参数有误", 400);
+            imService.unblock(getAppUserId(), targetId);
             return AjaxResult.success("已取消");
         }
         catch (ServiceException e)
