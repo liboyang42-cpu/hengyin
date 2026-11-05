@@ -83,6 +83,12 @@ class ClubPrincipalPayeeSettlementTest {
         ReflectionTestUtils.setField(svc, "activitySettlementHoldMapper", mock(ActivitySettlementHoldMapper.class));
         ReflectionTestUtils.setField(svc, "settlementDebtLedger", debtLedger);
         ReflectionTestUtils.setField(svc, "clubPrincipalPayee", payee);
+        // 第十二轮 k5:俱乐部场次要装配商家核销费组件;本类场次没有团码记录 ⇒ 不付商家费。
+        com.chengyinhub.business.service.support.ClubSessionMerchantFee merchantFee =
+                new com.chengyinhub.business.service.support.ClubSessionMerchantFee();
+        ReflectionTestUtils.setField(merchantFee, "feeMapper",
+                mock(com.chengyinhub.business.mapper.ClubSessionMerchantFeeMapper.class));
+        ReflectionTestUtils.setField(svc, "clubSessionMerchantFee", merchantFee);
 
         activity = new CmsActivity();
         activity.setId(ACTIVITY_ID);

@@ -15,6 +15,17 @@ public interface CoopSettlementEvidenceMapper {
     /** 包括已删活动壳；当前锁读真实父关系及报名，不复用普通 COUNT 的 RR/缓存结果。 */
     List<com.chengyinhub.business.domain.CmsRegistration> selectTopicActivityCashRowsForUpdate(@Param("topicId") Long topicId);
 
+    /**
+     * 第十二轮 k5:主题下除「在世俱乐部场次」以外的活动报名(锁读)。在世俱乐部场次(del_flag=0 且 club_id>0)
+     * 由活动结算按场次结(含商家核销费),不进主题现金基数;其余活动壳上的已付钱仍按
+     * ACTIVITY_CASH_BASIS_UNSUPPORTED 拒结。调用前须已用 selectTopicActivityCashRowsForUpdate 锁过全部场次报名。
+     */
+    List<com.chengyinhub.business.domain.CmsRegistration> selectTopicNonClubSessionCashRowsForUpdate(@Param("topicId") Long topicId);
+
+    /** 第十二轮 k5:本主题在世俱乐部场次的 id(按场次结算、商家费在活动结算里付)。只读。 */
+    List<Long> selectLiveClubSessionIdsByTopicId(@Param("topicId") Long topicId);
+
+
     /** 旧只读证据计数；不能用作结算现金准入。 */
     int countPaidActivityRegistrations(@Param("topicId") Long topicId);
     List<Long> selectCashBasisBlockingRefundIdsForUpdate(@Param("topicId") Long topicId);

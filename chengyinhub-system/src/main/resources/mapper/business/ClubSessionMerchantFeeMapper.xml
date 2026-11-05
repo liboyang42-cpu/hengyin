@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 第十二轮 k5(2026-11-05 业主):俱乐部场次按核销付费的商家费。 -->
+<mapper namespace="com.chengyinhub.business.mapper.ClubSessionMerchantFeeMapper">
+
+    <!-- 参加 = 本场名册的到场事实(C-10,同 ClubEventOpsMapper.selectPaidRoster / 复盘 arrivedPlayers):
+         最新一条到场更正优先;没有更正时 领队签到 或 本场已付票被核销 或 有节点进度 任一成立。r 为本场报名。 -->
+    <sql id="tookPart">
+        coalesce(
+            (select c.new_arrived from club_event_attendance_correction c
+              where c.id = (select max(c2.id) from club_event_attendance_correction c2
+                             where c2.activity_id = r.owner_id and c2.member_id = r.member_id)),
+            case when exists (select 1 from club_lead_checkin ck
+                               where ck.activity_id = r.owner_id and ck.member_id = r.member_id)
+                   or exists (select 1 from cms_registration v
+                               where v.owner_type = 2 and v.owner_id = r.owner_id and v.member_id = r.member_id
+                                 and v.payment_status = 2 and v.registration_status = 2 and v.verification_status = 1)
+                   or exists (select 1 from player_node_progress p
+                               where p.activity_id = r.owner_id and p.member_id = r.member_id
+                                 and p.status = 1 and p.del_flag = 0)
+                 then 1 else 0 end) = 1
+    </sql>
+
+    <select id="selectGroupVerifiesByActivity" resultType="com.chengyinhub.business.domain.CoopGroupVerify">
+        select id, topic_id as topicId, activity_id as activityId, coop_order_id as coopOrderId,
+               merchant_member_id as merchantMemberId, leader_member_id as leaderMemberId, verify_time as verifyTime
+        from coop_group_verify
+        where activity_id = #{activityId}
+        order by id
+    </select>
+
+    <select id="selectFeeRegistrationsForUpdate" useCache="false" flushCache="true"
+            resultType="com.chengyinhub.business.domain.vo.ClubSessionFeeRegistration">
+        select r.id as registrationId, r.order_num as orderNum,
+               (select count(1) from cms_registration_seat s
+                 where s.registration_id = r.id and s.status = 1) as verifiedSeats
+        from cms_registration r
+        where r.owner_type = 2 and r.owner_id = #{activityId}
+          and r.payment_status = 2 and r.registration_status = 2
+          and <include refid="tookPart"/>
+          and not exists (
+              select 1 from refund_application ra
+              where ra.source_type = 'registration' and ra.source_id = r.id
+                and ra.status = 1 and ra.del_flag = 0)
+        <choose>
+            <when test="registrationId != null">
+                and r.id = #{registrationId}
+            </when>
+            <otherwise>
+                and not exists (
+                    select 1 from cms_activity_settlement_hold h
+                    where h.registration_id = r.id and h.activity_id = r.owner_id and h.status = 0)
+            </otherwise>
+        </choose>
+        order by r.id
+        for update
+    </select>
+
+    <select id="selectPayeeLinesForUpdate" useCache="false" flushCache="true"
+            resultType="com.chengyinhub.business.domain.SettlementDetail">
+        select id, claim_id as claimId, merchant_id as merchantId, source_type as sourceType, source_id as sourceId,
+               receiver_type as receiverType, receiver_id as receiverId, gross_amount as grossAmount,
+               commission_amount as commissionAmount, settlement_amount as settlementAmount, status
+        from settlement_detail
+        where source_type = 'registration' and source_id = #{registrationId}
+          and receiver_type = 'merchant' and status in (0, 1)
+        order by id
+        for update
+    </select>
+
+    <update id="reducePayeeLine">
+        update settlement_detail
+        set gross_amount = gross_amount - #{fee}, settlement_amount = settlement_amount - #{fee}, update_time = now()
+        where id = #{id} and status = 0 and receiver_type = 'merchant'
+          and settlement_amount &gt;= #{fee} and gross_amount &gt;= #{fee}
+    </update>
+
+    <select id="selectSessionFeeLinesByMerchant" resultType="com.chengyinhub.business.domain.vo.MerchantSessionFeeLine">
+        select d.id as detailId, r.id as registrationId, a.id as activityId, a.topic_id as topicId,
+               coalesce(a.name, r.activity_title) as activityTitle, r.ticket_name as ticketName,
+               coalesce(d.update_time, d.create_time) as occurredAt,
+               d.settlement_amount as feeAmount, o.fixed_fee as unitFee,
+               (select coalesce(sum(adj.settlement_amount), 0)
+                  from settlement_detail adj
+                  join refund_application ra on ra.id = adj.source_id and ra.source_type = 'registration'
+                 where adj.source_type = 'refund' and adj.status = 1
+                   and adj.receiver_type = 'coop_merchant' and adj.receiver_id = d.receiver_id
+                   and ra.source_id = r.id) as clawbackAmount,
+               d.status as status
+        from settlement_detail d
+        join cms_registration r on r.id = d.source_id
+        join cms_activity a on a.id = r.owner_id
+        left join settlement_claim c on c.id = d.claim_id
+        left join coop_order o on c.source_contract_type = 'COOP_ORDER' and o.id = c.source_contract_id
+        where d.source_type = 'registration' and d.receiver_type = 'coop_merchant'
+          and d.receiver_id = #{merchantMemberId} and d.status = 1
+          and r.owner_type = 2
+        <if test="activityId != null">
+          and a.id = #{activityId}
+        </if>
+        order by d.id desc
+    </select>
+    <select id="selectUnsettledFeeEstimates" resultType="com.chengyinhub.business.domain.vo.ClubSessionFeeEstimate">
+        select gv.activity_id as activityId, gv.merchant_member_id as merchantMemberId, a.end_date as endDate,
+               o.fixed_fee * (
+                   select coalesce(sum(case when seat.n &gt; 0 then seat.n else coalesce(r.order_num, 1) end), 0)
+                   from cms_registration r
+                   left join (select s.registration_id, count(1) as n from cms_registration_seat s
+                              where s.status = 1 group by s.registration_id) seat on seat.registration_id = r.id
+                   where r.owner_type = 2 and r.owner_id = gv.activity_id
+                     and r.payment_status = 2 and r.registration_status = 2
+                     and <include refid="tookPart"/>
+                     and not exists (
+                         select 1 from refund_application ra
+                         where ra.source_type = 'registration' and ra.source_id = r.id
+                           and ra.status = 1 and ra.del_flag = 0)
+               ) as amount
+        from coop_group_verify gv
+        join cms_activity a on a.id = gv.activity_id
+        join coop_order o on o.id = gv.coop_order_id and o.to_type = 'merchant'
+             and o.to_id = gv.merchant_member_id and o.status = 0 and o.del_flag = 0 and o.share_mode = 2
+        where a.is_settlement = 0 and a.del_flag = 0 and a.status = 1 and a.club_id &gt; 0
+        <if test="merchantMemberId != null">
+          and gv.merchant_member_id = #{merchantMemberId}
+        </if>
+        <if test="activityIds != null and activityIds.size() > 0">
+          and gv.activity_id in
+          <foreach collection="activityIds" item="activityId" open="(" separator="," close=")">#{activityId}</foreach>
+        </if>
+        order by gv.activity_id, gv.merchant_member_id
+    </select>
+</mapper>

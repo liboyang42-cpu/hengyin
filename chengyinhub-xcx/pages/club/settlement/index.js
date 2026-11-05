@@ -87,8 +87,11 @@ function normalizeSessions(raw) {
     const activityId = positiveId(row.activityId)
     const texts = ['name', 'dateText', 'grossText', 'feeText', 'netText', 'payeeText'].map(k => nonEmptyString(row[k]))
     if (!activityId || texts.some(t => !t) || !(row.feeRateText === null || nonEmptyString(row.feeRateText))) return null
+    // 第十二轮 k5:合作商家核销费(没有为 null,不出这一行)
+    if (!(row.merchantFeeText == null || nonEmptyString(row.merchantFeeText))) return null
     const [name, dateText, grossText, feeText, netText, payeeText] = texts
     out.push({ activityId, name, dateText, grossText, feeText, netText, payeeText,
+      merchantFeeText: row.merchantFeeText || '',
       feeLabel: row.feeRateText ? '平台服务费 ' + row.feeRateText : '平台服务费' })
   }
   return out

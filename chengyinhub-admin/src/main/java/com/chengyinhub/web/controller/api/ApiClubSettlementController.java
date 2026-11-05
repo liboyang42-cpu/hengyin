@@ -142,7 +142,8 @@ public class ApiClubSettlementController extends BaseController {
             if (row == null || row.getActivityId() == null || row.getNetAmount() == null
                     || row.getPlatformAmount() == null || row.getPayeeMinMemberId() == null
                     || row.getPayeeMaxMemberId() == null) return null;
-            BigDecimal net = row.getNetAmount(), fee = row.getPlatformAmount(), gross = net.add(fee);
+            BigDecimal merchantFee = row.getMerchantFeeAmount() == null ? BigDecimal.ZERO : row.getMerchantFeeAmount();
+            BigDecimal net = row.getNetAmount(), fee = row.getPlatformAmount(), gross = net.add(fee).add(merchantFee);
             Map<String, Object> s = new LinkedHashMap<>();
             s.put("activityId", row.getActivityId());
             String name = row.getActivityName();
@@ -152,6 +153,8 @@ public class ApiClubSettlementController extends BaseController {
             s.put("feeText", money(fee));
             s.put("feeRateText", feeRate(gross, fee));
             s.put("netText", money(net));
+            // 第十二轮 k5:按核销付费的合作商家从主理人份额里拿的钱;没有就不出这一行。
+            s.put("merchantFeeText", merchantFee.signum() == 0 ? null : money(merchantFee));
             Long payee = row.getPayeeMinMemberId();
             s.put("payeeText", !payee.equals(row.getPayeeMaxMemberId()) ? "分笔入账"
                     : payee.equals(viewerId) ? "已入你的账户"

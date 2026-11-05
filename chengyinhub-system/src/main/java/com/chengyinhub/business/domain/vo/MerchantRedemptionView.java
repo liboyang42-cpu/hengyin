@@ -24,6 +24,9 @@ public class MerchantRedemptionView {
     private String refundState;
     private Date occurredAt;
     private Map<String, Object> publicSettlement;
+    /** 第十二轮 k5:俱乐部场次核销费的冻结单价(¥/人)与计费人数;其它记录为空。 */
+    private String unitFee;
+    private Integer headCount;
 
     public String getRecordKey() { return recordKey; }
     public void setRecordKey(String value) { recordKey = value; }
@@ -61,4 +64,8 @@ public class MerchantRedemptionView {
     public void setOccurredAt(Date value) { occurredAt = value; }
     public Map<String, Object> getPublicSettlement() { return publicSettlement; }
     public void setPublicSettlement(Map<String, Object> value) { publicSettlement = value; }
+    public String getUnitFee() { return unitFee; }
+    public void setUnitFee(String value) { unitFee = value; }
+    public Integer getHeadCount() { return headCount; }
+    public void setHeadCount(Integer value) { headCount = value; }
 }

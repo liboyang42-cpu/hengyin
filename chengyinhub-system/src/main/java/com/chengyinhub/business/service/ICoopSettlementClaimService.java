@@ -7,6 +7,9 @@ import com.chengyinhub.business.domain.dto.CoopSettlementPlan;
 import java.util.Date;
 
 public interface ICoopSettlementClaimService {
+    /** 第十二轮 k5:主题级无可证履约、商家费由俱乐部场次在活动结算里付;主题结算跳过,不落账。 */
+    String ROUTE_SETTLED_PER_SESSION = "SETTLED_PER_SESSION";
+
     /** 外层无业务事务：保留已关账2/1原SUCCESS待处理身份；false不代表支付未执行。 */
     boolean retainClosedPaidHalfStateSuccess(Long registrationId, com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference reference);
     /** 原topic资金事务内、支付修复/CAS之前重验；不得以外层观察代替此栅栏。 */

@@ -964,11 +964,16 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             if (plansByOrder.putIfAbsent(order.getId(), plan) != null)
                 throw new IllegalStateException("MANUAL_REPAIR:DUPLICATE_EFFECTIVE_COOP_ORDER");
         }
-        com.chengyinhub.business.service.support.CoopSettlementContract.requireIndependentOrderScopes(
-                new ArrayList<>(plansByOrder.values()));
+        // 第十二轮 k5:商家费按俱乐部场次付的单不进主题级计划(不落 claim、不付钱),其余照旧校验。
+        List<CoopSettlementPlan> topicPlans = new ArrayList<>();
+        for (CoopSettlementPlan plan : plansByOrder.values()) {
+            if (!ICoopSettlementClaimService.ROUTE_SETTLED_PER_SESSION.equals(plan.getRoute())) topicPlans.add(plan);
+        }
+        com.chengyinhub.business.service.support.CoopSettlementContract.requireIndependentOrderScopes(topicPlans);
         Set<Long> verifiedMerchantPayees = new HashSet<>();
         for (CoopOrder o : effectiveOrders) {
             CoopSettlementPlan claimPlan = plansByOrder.get(o.getId());
+            if (ICoopSettlementClaimService.ROUTE_SETTLED_PER_SESSION.equals(claimPlan.getRoute())) continue;
             if (coopSettlementMapper.countByOrderId(o.getId()) > 0) continue; // Already validated, never silently exempt a contract.
             boolean isClub = "club".equals(o.getToType());
             if ("NONE".equals(claimPlan.getRoute())) {
@@ -1077,11 +1082,16 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     private TopicSettlementCashBasis lockTopicCashBasis(Long topicId) {
         List<CmsRegistration> topicRows = coopSettlementEvidenceMapper.selectTopicCashRowsForUpdate(topicId);
         List<CmsRegistration> activityRows = coopSettlementEvidenceMapper.selectTopicActivityCashRowsForUpdate(topicId);
-        if (topicRows == null || activityRows == null) {
+        // 第十二轮 k5:在世俱乐部场次的票由活动结算按场次结(含商家核销费),不进主题现金基数;
+        // 其余活动壳的报名照旧交给基数(上面有已付钱仍按 ACTIVITY_CASH_BASIS_UNSUPPORTED 拒结)。
+        // 全部场次报名已在上一句锁住,锁序不变。
+        List<CmsRegistration> shellRows = activityRows == null ? null
+                : coopSettlementEvidenceMapper.selectTopicNonClubSessionCashRowsForUpdate(topicId);
+        if (topicRows == null || activityRows == null || shellRows == null) {
             throw new IllegalStateException("MANUAL_REPAIR:CURRENT_CASH_ROWS_REQUIRED");
         }
         List<CmsRegistration> locked = new ArrayList<>(topicRows);
-        locked.addAll(activityRows);
+        locked.addAll(shellRows);
         CoopSettlementOriginalLedger.requireNoApprovedRefundsForOriginalClose(coopSettlementOriginalMapper, topicId);
         TopicSettlementCashBasis basis = TopicSettlementCashBasis.fromLockedRows(topicId, locked);
         List<Long> refunds = coopSettlementEvidenceMapper.selectCashBasisBlockingRefundIdsForUpdate(topicId);
@@ -1094,6 +1104,13 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     /** 零现金也必须校验冻结来源、合法路径与封窗；未证正报酬不以零终态消耗合同。 */
     private void validateZeroCashCoopContracts(CmsTopic topic, List<CoopOrder> orders) {
         if (orders.isEmpty()) return;
+        if (settledPerClubSession(topic)) {
+            // 第十二轮 k5:主题级没有现金、钱全在俱乐部场次上 ⇒ 商家按场次在活动结算里拿核销费,
+            // 这里不准备主题级计划(那必然 NO_PROVEN_FULFILLMENT),也不改合作单状态
+            // (场次可能晚于主题结算,仍要按生效合作单付费)。主题照常关账,不告警、不重复付钱。
+            logger.info("主题 {} 无主题级现金、由俱乐部场次按场结算,合作单 {} 张不在主题级结算", topic.getId(), orders.size());
+            return;
+        }
         if (coopSettlementClaimService == null) {
             throw new IllegalStateException("MANUAL_REPAIR:COOP_CLAIM_SERVICE_REQUIRED");
         }
@@ -1114,6 +1131,13 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         }
         com.chengyinhub.business.service.support.CoopSettlementContract.requireIndependentOrderScopes(plans);
         for (CoopSettlementPlan plan : plans) coopSettlementClaimService.persist(plan, null);
+    }
+
+    /** 第十二轮 k5:本主题有在世俱乐部场次(场次票由活动结算按场结,商家核销费在那里付)。 */
+    private boolean settledPerClubSession(CmsTopic topic) {
+        if (topic == null || topic.getId() == null || coopSettlementEvidenceMapper == null) return false;
+        List<Long> sessions = coopSettlementEvidenceMapper.selectLiveClubSessionIdsByTopicId(topic.getId());
+        return sessions != null && !sessions.isEmpty();
     }
 
     /** 旧主题票现金总额不覆盖活动壳；不得把活动履约归入 TOPIC_EDITION 或按零元关账。 */

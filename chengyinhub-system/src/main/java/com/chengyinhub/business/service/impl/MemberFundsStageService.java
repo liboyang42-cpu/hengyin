@@ -65,6 +65,10 @@ public class MemberFundsStageService {
         this.frozenAmountResolver = frozenAmountResolver;
     }
 
+    /** 第十二轮 k5:俱乐部场次按核销付费的商家费估算(主理人份额里减、商家那边加)。纯单元装配可不注入。 */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.chengyinhub.business.mapper.ClubSessionMerchantFeeMapper sessionFeeMapper;
+
     public Map<String, Object> stages(Long memberId, Date now) {
         String today = day(now);
         BigDecimal pending = BigDecimal.ZERO;
@@ -72,12 +76,18 @@ public class MemberFundsStageService {
         TreeMap<String, BigDecimal> byDate = new TreeMap<>();
         boolean amountsKnown = true;
 
-        for (MemberActivityFundsRow row : holdMapper.selectUnsettledActivityFundsByMember(memberId)) {
+        List<MemberActivityFundsRow> unsettled = holdMapper.selectUnsettledActivityFundsByMember(memberId);
+        Map<Long, BigDecimal> feesByActivity = sessionFeesByActivity(unsettled);
+        for (MemberActivityFundsRow row : unsettled) {
             BigDecimal normal = share(row, row.getNormalSales());
             BigDecimal dispute = share(row, row.getDisputedSales());
             if (normal == null || dispute == null) {
                 amountsKnown = false;
                 continue;
+            }
+            BigDecimal fee = feesByActivity.get(row.getActivityId());
+            if (fee != null && fee.signum() > 0) {
+                normal = normal.subtract(fee).max(BigDecimal.ZERO);
             }
             if (row.getEndDate() == null || row.getEndDate().after(now)) {
                 pending = pending.add(normal).add(dispute);
@@ -100,6 +110,19 @@ public class MemberFundsStageService {
             // 客诉已结、等结算任务下一轮补结的暂扣单
             addOn(byDate, today, normal);
             disputed = disputed.add(dispute);
+        }
+        // 第十二轮 k5:本人作为合作商家在未结算俱乐部场次上的核销费(场次结束 14 天后结算入账)。
+        if (sessionFeeMapper != null) {
+            for (com.chengyinhub.business.domain.vo.ClubSessionFeeEstimate fee
+                    : sessionFeeMapper.selectUnsettledFeeEstimates(memberId, null)) {
+                if (fee == null || fee.getAmount() == null || fee.getAmount().signum() <= 0) continue;
+                if (fee.getEndDate() == null || fee.getEndDate().after(now)) {
+                    pending = pending.add(fee.getAmount());
+                } else {
+                    addOn(byDate, laterDay(day(new Date(fee.getEndDate().getTime() + COMPLAINT_PERIOD_MS)), today),
+                            fee.getAmount());
+                }
+            }
         }
         for (CoopSettlement line : coopSettlementMapper.selectByMerchant(memberId)) {
             if (line.getStatus() == null || line.getStatus() != 0) {
@@ -144,6 +167,19 @@ public class MemberFundsStageService {
         d.put("disputed", disputed);
         d.put("withdrawable", withdrawable);
         return d;
+    }
+
+    private Map<Long, BigDecimal> sessionFeesByActivity(List<MemberActivityFundsRow> rows) {
+        Map<Long, BigDecimal> out = new java.util.HashMap<>();
+        if (sessionFeeMapper == null || rows == null || rows.isEmpty()) return out;
+        List<Long> ids = new ArrayList<>();
+        for (MemberActivityFundsRow row : rows) if (row != null && row.getActivityId() != null) ids.add(row.getActivityId());
+        if (ids.isEmpty()) return out;
+        for (com.chengyinhub.business.domain.vo.ClubSessionFeeEstimate fee : sessionFeeMapper.selectUnsettledFeeEstimates(null, ids)) {
+            if (fee == null || fee.getActivityId() == null || fee.getAmount() == null) continue;
+            out.merge(fee.getActivityId(), fee.getAmount(), BigDecimal::add);
+        }
+        return out;
     }
 
     private BigDecimal share(MemberActivityFundsRow row, BigDecimal sales) {

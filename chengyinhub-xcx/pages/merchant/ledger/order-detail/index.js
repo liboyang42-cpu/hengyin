@@ -2,7 +2,7 @@ const app = getApp();
 const merchantTheme = require('../../../../utils/merchant-theme.js'); const pageMotion = require('../../../../utils/page-motion.js');
 const { isFinanceObjectPayload, money, yuan } = require('../../utils/merchant-finance.js');
 
-const RECORD_TYPES = ['redemption', 'activity_ticket'];
+const RECORD_TYPES = ['redemption', 'activity_ticket', 'session_fee'];
 
 Page({
   data: {
@@ -17,6 +17,7 @@ Page({
   },
   onLoad(options) {
     // 第十二轮 k6(p2 N-1):商家自有活动的验票行(activity_ticket)同样打开详情,不再落到「缺少核销记录信息」。
+    // 第十二轮 k5:俱乐部场次核销费(session_fee,按场次一行)也有详情。
     const recordType = options && RECORD_TYPES.indexOf(options.recordType) >= 0 ? options.recordType : '';
     const recordId = options && options.recordId ? String(options.recordId) : '';
     this.setData({

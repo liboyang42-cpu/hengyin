@@ -71,13 +71,15 @@
         from wx_payment_callback_outbox where idempotency_key=#{key} for update
     </select>
     <!-- Raw current refund history, including legacy owner and soft-deleted financial evidence.
-         Scope comes from the actual registration/activity parent, never redundant refund.owner_* or existing originals. -->
+         Scope comes from the actual registration/activity parent, never redundant refund.owner_* or existing originals.
+         第十二轮 k5:在世俱乐部场次(del_flag=0 且 club_id>0)的退款归活动结算与其冲销,不挡主题原单关账;其余照旧挡。 -->
     <select id="selectApprovedRegistrationRefundIdsForOriginalCloseForUpdate" resultType="long" useCache="false" flushCache="true">
         select refund.id from refund_application refund
         join cms_registration r on refund.source_type='registration' and r.id=refund.source_id
         left join cms_activity a on r.owner_type=2 and a.id=r.owner_id
         where refund.status=1 and ((r.owner_type=1 and r.owner_id=#{topicId})
-            or (r.owner_type=2 and a.topic_id=#{topicId}))
+            or (r.owner_type=2 and a.topic_id=#{topicId}
+                and (coalesce(a.del_flag,0) &lt;&gt; 0 or coalesce(a.club_id,0) &lt;= 0)))
         order by refund.id for update
     </select>
     <select id="selectOriginalRegistrationsForUpdate" resultType="com.chengyinhub.business.domain.CmsRegistration" useCache="false" flushCache="true">

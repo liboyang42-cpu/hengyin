@@ -1309,7 +1309,9 @@ public class RefundServiceImpl implements IRefundService {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             return;
         }
-        boolean toMemberBalance = ("merchant".equals(receiverType) || "creator".equals(receiverType))
+        // 第十二轮 k5:coop_merchant = 俱乐部场次结算付给合作商家的核销费,退款按同一比例从商家余额扣回。
+        boolean toMemberBalance = ("merchant".equals(receiverType) || "creator".equals(receiverType)
+                || com.chengyinhub.business.service.support.ClubSessionMerchantFee.RECEIVER_TYPE.equals(receiverType))
                 && receiverId != null && receiverId > 0;
         if (!toMemberBalance) {
             return;

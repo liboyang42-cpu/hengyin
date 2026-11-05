@@ -973042,7 +973042,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/settlement/index.js:222"
+        "staticSource": "pages/club/settlement/index.js:225"
       }
     },
     {
@@ -973119,11 +973119,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/settlement/index.js:231"
+        "staticSource": "pages/club/settlement/index.js:234"
       }
     },
     {
-      "id": "pages/club/settlement/index.wxml:63:bindtap:goTopicSettlement:5",
+      "id": "pages/club/settlement/index.wxml:64:bindtap:goTopicSettlement:5",
       "route": "pages/club/settlement/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -973146,7 +973146,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goTopicSettlement",
-        "line": 63,
+        "line": 64,
         "selectorHint": ".topic-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -973190,7 +973190,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/settlement/index.js:206"
+        "staticSource": "pages/club/settlement/index.js:209"
       }
     },
     {
@@ -973260,7 +973260,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/settlement/index.js:130"
+        "staticSource": "pages/club/settlement/index.js:133"
       }
     },
     {
@@ -1045143,7 +1045143,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/ledger/order-detail/index.js:126"
+        "staticSource": "pages/merchant/ledger/order-detail/index.js:127"
       }
     },
     {
@@ -1045213,7 +1045213,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/ledger/order-detail/index.js:127"
+        "staticSource": "pages/merchant/ledger/order-detail/index.js:128"
       }
     },
     {
@@ -1045283,7 +1045283,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/ledger/order-detail/index.js:38"
+        "staticSource": "pages/merchant/ledger/order-detail/index.js:39"
       }
     },
     {
@@ -1045353,7 +1045353,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/ledger/order-detail/index.js:38"
+        "staticSource": "pages/merchant/ledger/order-detail/index.js:39"
       }
     },
     {
@@ -1045423,7 +1045423,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/ledger/order-detail/index.js:38"
+        "staticSource": "pages/merchant/ledger/order-detail/index.js:39"
       }
     },
     {

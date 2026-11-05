@@ -97,6 +97,7 @@ def all_required_clean(directory):
         ("RoamShareSnapshotConcurrencyMySqlIT", 3),
         ("ClubEventTransferCancellationMySqlIT", 14),
         ("RefundRetryAndRemainderMySqlIT", 10),
+        ("ClubSessionMerchantFeeMySqlIT", 4),
         ("SignupNoticeAfterCommitPersistenceMySqlIT", 18),
         ("TopicLikeDesiredStateMySqlIT", 3),
         ("MonitorMissingJobsMySqlIT", 3),

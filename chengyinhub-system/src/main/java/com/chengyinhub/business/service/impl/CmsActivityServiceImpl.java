@@ -119,6 +119,10 @@ public class CmsActivityServiceImpl implements ICmsActivityService
     @Autowired
     private com.chengyinhub.business.service.support.SettlementDebtLedger settlementDebtLedger;
 
+    /** 第十二轮 k5:俱乐部场次按核销付费的商家费,从主理人份额里付。 */
+    @Autowired
+    private com.chengyinhub.business.service.support.ClubSessionMerchantFee clubSessionMerchantFee;
+
     /**
      * 获取需要结算的活动列表
      */
@@ -286,10 +290,17 @@ public class CmsActivityServiceImpl implements ICmsActivityService
 
         // 3. 分配商户分润（活动收款人:俱乐部场次给当前主理人,其余给创建人,见 ClubPrincipalPayee）
         Long payee = activityPayee(activity);
-        payActivityCommission(payee, settlement.getMerchantCommissionAmount(),
+        // 第十二轮 k5(2026-11-05 业主):俱乐部场次上按核销付费的商家,按参加人数从主理人份额里拿冻结单价。
+        com.chengyinhub.business.service.support.ClubSessionMerchantFee.Plan feePlan =
+                merchantFeePlan(activity, payee, null);
+        if (!feePlan.isEmpty()) {
+            clubSessionMerchantFee().requireWithinPayeeShare(activity, feePlan, settlement.getMerchantCommissionAmount());
+        }
+        BigDecimal payeeAmount = settlement.getMerchantCommissionAmount().subtract(feePlan.total());
+        payActivityCommission(payee, payeeAmount,
                 "活动分润 - " + activity.getName(), 3L, activity.getId());
-        settlementDebtLedger.offsetFromSettlement(payee,
-                settlement.getMerchantCommissionAmount(), activity.getId());
+        settlementDebtLedger.offsetFromSettlement(payee, payeeAmount, activity.getId());
+        payMerchantFees(activity, feePlan, "");
 
         // 4. 分配平台分润（打入平台账户）。前置校验失败会抛异常并回滚本活动的原子领取。
         payActivityCommission(setting.getPlatformMemberId(), settlement.getPlatformCommissionAmount(),
@@ -365,14 +376,56 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         requireUsablePlatformSettlementAccount(setting, rule, activity.getId());
         ActivitySettlementDTO settlement = calculateActivityCommissions(activity, sales, rule);
         Long payee = activityPayee(activity);
-        payActivityCommission(payee, settlement.getMerchantCommissionAmount(),
+        com.chengyinhub.business.service.support.ClubSessionMerchantFee.Plan feePlan =
+                merchantFeePlan(activity, payee, registration.getId());
+        if (!feePlan.isEmpty()) {
+            clubSessionMerchantFee().requireWithinPayeeShare(activity, feePlan, settlement.getMerchantCommissionAmount());
+        }
+        BigDecimal payeeAmount = settlement.getMerchantCommissionAmount().subtract(feePlan.total());
+        payActivityCommission(payee, payeeAmount,
                 "活动分润(客诉结案补结) - " + activity.getName(), 3L, activity.getId());
-        settlementDebtLedger.offsetFromSettlement(payee,
-                settlement.getMerchantCommissionAmount(), activity.getId());
+        settlementDebtLedger.offsetFromSettlement(payee, payeeAmount, activity.getId());
+        payMerchantFees(activity, feePlan, "(客诉结案补结)");
         payActivityCommission(setting.getPlatformMemberId(), settlement.getPlatformCommissionAmount(),
                 "活动平台分润(客诉结案补结) - " + activity.getName(), 7L, activity.getId());
         settlementDetailMapper.markRegistrationDetailsSettled(registration.getId());
         return true;
+    }
+
+    /** 俱乐部场次才有商家费;其余活动不碰合作单(纯单元装配未注入时也照旧)。 */
+    private com.chengyinhub.business.service.support.ClubSessionMerchantFee.Plan merchantFeePlan(
+            CmsActivity activity, Long payee, Long registrationId) {
+        if (activity.getClubId() == null || activity.getClubId() <= 0 || activity.getTopicId() == null) {
+            return com.chengyinhub.business.service.support.ClubSessionMerchantFee.emptyPlan();
+        }
+        return clubSessionMerchantFee().plan(activity, payee, registrationId);
+    }
+
+    private com.chengyinhub.business.service.support.ClubSessionMerchantFee clubSessionMerchantFee() {
+        if (clubSessionMerchantFee == null) {
+            // 俱乐部场次的商家费不能因为装配缺失被静默跳过(那会把商家的钱整笔记给主理人)。
+            throw new ServiceException("CLUB_SESSION_MERCHANT_FEE_UNWIRED: 俱乐部场次商家费组件未装配,拒绝结算");
+        }
+        return clubSessionMerchantFee;
+    }
+
+    /**
+     * 商家费:先写账本(主理人分账行减额 + 商家行),再按商家入余额(event_type=95,event_id=活动 id)并先抵欠款。
+     * 账本行随后与本场其它分账行一起置已结算。
+     */
+    private void payMerchantFees(CmsActivity activity,
+                                 com.chengyinhub.business.service.support.ClubSessionMerchantFee.Plan plan,
+                                 String reasonSuffix) {
+        if (plan == null || plan.isEmpty()) {
+            return;
+        }
+        clubSessionMerchantFee().writeLedger(activity, plan);
+        for (Map.Entry<Long, BigDecimal> e : plan.byMerchant().entrySet()) {
+            payActivityCommission(e.getKey(), e.getValue(), "合作商家核销费" + reasonSuffix + " - " + activity.getName(),
+                    com.chengyinhub.business.service.support.ClubSessionMerchantFee.EVENT_TYPE_SESSION_MERCHANT_FEE,
+                    activity.getId());
+            settlementDebtLedger.offsetFromSettlement(e.getKey(), e.getValue(), activity.getId());
+        }
     }
 
     /**

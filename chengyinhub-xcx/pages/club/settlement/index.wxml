@@ -51,6 +51,7 @@
             <text class="topic-row-meta-line">{{item.dateText}}</text>
             <text class="topic-row-meta-line">销售额 {{item.grossText}}</text>
             <text class="topic-row-meta-line">{{item.feeLabel}} {{item.feeText}}</text>
+            <text wx:if="{{item.merchantFeeText}}" class="topic-row-meta-line">商家核销费 {{item.merchantFeeText}}</text>
             <text class="topic-row-meta-line">{{item.payeeText}}</text>
           </view>
         </view>

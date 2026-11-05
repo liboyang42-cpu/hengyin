@@ -86,6 +86,16 @@ public class TopicSettlementEvidenceService {
                 .selectActiveActivityIdsByTopicId(snapshot.getTopicId());
         List<CoopSettlementCandidate> candidates = evidenceMapper.selectTopicEvidenceCandidatesForUpdate(snapshot,
                 activityIds == null ? Collections.<Long>emptyList() : activityIds, settlementCutoff);
+        // 第十二轮 k5:在世俱乐部场次的报名由活动结算按场次付商家核销费,主题级计划不再算它们(算了就付两遍)。
+        java.util.Set<Long> clubSessions = liveClubSessionIds(snapshot.getTopicId());
+        if (candidates != null && !clubSessions.isEmpty()) {
+            List<CoopSettlementCandidate> kept = new java.util.ArrayList<>();
+            for (CoopSettlementCandidate c : candidates) {
+                if (c != null && Long.valueOf(2L).equals(c.getOwnerType()) && clubSessions.contains(c.getOwnerId())) continue;
+                kept.add(c);
+            }
+            candidates = kept;
+        }
         if ("FIXED_PER_FULFILLMENT".equals(snapshot.getCompensationMode()) && candidates != null
                 && candidates.stream().anyMatch(c -> c != null && c.isOrganizerScopeCovered())) {
             // All original registrations are already locked. Reuse the canonical mapper-only current-read owner.
@@ -172,6 +182,12 @@ public class TopicSettlementEvidenceService {
             selected.add(candidate);
         }
         return selected;
+    }
+
+    /** 第十二轮 k5:本主题在世俱乐部场次 id。 */
+    public java.util.Set<Long> liveClubSessionIds(Long topicId) {
+        List<Long> ids = topicId == null ? null : evidenceMapper.selectLiveClubSessionIdsByTopicId(topicId);
+        return ids == null ? java.util.Collections.<Long>emptySet() : new java.util.HashSet<>(ids);
     }
 
     /** 在报名锁之后当前读退款事实；已批准退款的净额/调整链尚未接通，也须拒结。 */
