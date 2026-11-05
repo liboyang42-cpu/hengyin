@@ -907,6 +907,14 @@ Page({
     return !(next.sessionId && next.sessionId === previous.sessionId && previousKnown
       && (!this._routeStateVersionKnown(input) || next.version < previous.version));
   },
+  _nodesForRoute(catalog, routeState) {
+    const nodes = applyRouteStateToNodes(catalog, routeState);
+    if (routeState.routeMode !== 'LINEAR' || !this._hasGenericProofFlow()) return nodes;
+    return nodes.map(node => {
+      const state = routeState.nodeStates[String(node.nodeId)];
+      return state ? Object.assign({}, node, { done: state === 'COMPLETED', playable: state === 'PLAYABLE', locked: state === 'DISCOVERED_LOCKED', routeNodeState: state }) : node;
+    });
+  },
   _applyRouteState(routeStateInput, callback) {
     if (!this._acceptRouteStateProjection(routeStateInput)) {
       if (callback) callback(false);
@@ -919,18 +927,24 @@ Page({
       if (callback) callback(false);
       return false;
     }
+    const previousNodes = this.data.nodes || [];
     const catalog = this._mergeRouteCatalogCurrent();
     this._routeNodeCatalog = catalog;
-    let nodes = applyRouteStateToNodes(catalog, routeState);
-    if (routeState.routeMode === 'LINEAR' && this._hasGenericProofFlow()) nodes = nodes.map(node => {
-      const state = routeState.nodeStates[String(node.nodeId)];
-      return state ? Object.assign({}, node, { done: state === 'COMPLETED', playable: state === 'PLAYABLE', locked: state === 'DISCOVERED_LOCKED', routeNodeState: state }) : node;
-    });
+    let nodes = this._nodesForRoute(catalog, routeState);
     if (routeState.routeMode === 'BRANCH_GRAPH' && routeState.status !== 'ACTIVE') {
       const message = this._routeNoticeForState(routeState) || '路线状态异常，当前不可继续';
       nodes = nodes.map((node) => node.done || node.routeNodeState === 'COMPLETED' ? node : Object.assign({}, node, {
         playable: false, locked: true, routeNodeState: 'DISCOVERED_LOCKED', lockReason: message,
       }));
+    }
+    const newlyDone = nodes.some(node => node.done
+      && previousNodes.some(previous => String(previous.nodeId) === String(node.nodeId) && !previous.done));
+    const activeNode = this.data.advancedPlay && this.data.advancedPlay.node;
+    const activeDone = activeNode && nodes.some(node => String(node.nodeId) === String(activeNode.nodeId) && node.done);
+    if (activeDone) {
+      this._advancedReadyIntent = null;
+      this._playKitNodeId = null;
+      this.setData({ advancedPlay: { show: false, node: null }, playKit: { show: false, kit: null }, 'journeyCheck.show': false });
     }
     this._routeState = routeState;
     this._versionedRouteState = versionKnown ? routeState : null;
@@ -944,6 +958,8 @@ Page({
     }, () => {
       this.rebuild();
       this.refreshThemeBackpack();
+      // 任务结算只回路线状态；新正文与结局仍须重读原 nodes 投影。
+      if (newlyDone && !this.data.isPreview && !this.data.isMock) this.loadData(false);
       if (callback) callback(true);
     });
     return true;
@@ -4367,13 +4383,13 @@ Page({
       const routeInput = d.routeState || { routeMode: d.routeMode };
       const acceptProjection = that._acceptRouteStateProjection(routeInput);
       const routeState = acceptProjection ? normalizeRouteState(routeInput) : that._routeState;
-      const nodes = applyRouteStateToNodes(catalog, routeState);
+      const nodes = that._nodesForRoute(catalog, routeState);
       that._routeState = routeState;
       if (acceptProjection) that._versionedRouteState = that._routeStateVersionKnown(routeInput) ? routeState : null;
       that._routeNodeCatalog = catalog;
       if (routeState.thoughtCount > 0) that._askWeRunOnce();
       // 加载/轮询不是原命令终态，不能清除待确认身份。
-      const chapter = that.buildChapter(d, nodes);
+      const chapter = that._afterEndingChapter ? that.data.chapter : that.buildChapter(d, nodes);
       // 成功已落地:此后回调里的后处理(rebuild / 会话时钟 / 角色卡)再抛错,不该冒充「加载失败」
       // 把已经渲染出来的首屏盖成错误页 —— 重试只会重跑同一段计算,用户永远出不去。异常仍打 console。
       that._loadCommitted = true;
@@ -4701,7 +4717,7 @@ Page({
       mapA11yLabel: targetState.readerLabel,
     });
     let activeChapter = this.data.chapter;
-    if (mode === 1 && rawNextNode && !this.data.isPreview
+    if (mode === 1 && rawNextNode && !this._afterEndingChapter && !this.data.isPreview
         && !(this._routeState.opening && !this._routeState.opening.complete)) {
       const activeNode = this._nodeById(rawNextNode.nodeId);
       const card = (this.data.chapterCards || []).find((item) => activeNode && item.id != null
@@ -4792,7 +4808,7 @@ Page({
     }
     let trailHold = 'none';
     const trailPrevId = this._lastActiveChapterId;
-    if (mode === 1 && !this.data.isPreview && trailPrevId != null && String(trailPrevId) !== String(activeChapter.id)) {
+    if (mode === 1 && !this._afterEndingChapter && !this.data.isPreview && trailPrevId != null && String(trailPrevId) !== String(activeChapter.id)) {
       const prevCard = trailCards.find((c) => c && c.id != null && String(c.id) === String(trailPrevId));
       const trailRead = Object.assign({}, storyResume.read(this._runSessionScope()).trails, this._chapterTrailRead);
       trailHold = chapterTrail.trailState(prevCard, nodes, trailRead, this._trailDoneAtLoad);
@@ -4859,7 +4875,12 @@ Page({
     if (!undone.length) return null;
     let pick = undone[0], reason = '';
     if (mode === 1) {
-      const next = resolveNextRouteNode(nodes, this._routeState);
+      const state = this._routeState;
+      const next = this._hasGenericProofFlow() && state.routeMode === 'LINEAR'
+        ? state.status === 'ACTIVE' && nodes.find(node =>
+          [state.recommendedNodeId, state.currentNodeId].some(id => id != null && String(id) === String(node.nodeId))
+          && state.nodeStates[String(node.nodeId)] === 'PLAYABLE')
+        : resolveNextRouteNode(nodes, state);
       if (!next) return null;
       pick = { x: next, i: nodes.findIndex((node) => node && String(node.nodeId) === String(next.nodeId)) };
     } else {
@@ -6166,9 +6187,15 @@ Page({
         this.setData({ 'sheet.show': false, themeBackpackOpen: true, themeBackpackTab: 'game',
           themeCostChoice: { row: questStart, selected: -1 } }); return;
       }
+      const context = { owner: this._boundPlayOwner(), sessionKey: this._sessionKey(),
+        sessionId: String((this._routeState || {}).sessionId || ''), epoch: this._playLoadEpoch };
       this._questStartFor = String(node.nodeId);
       return Promise.resolve(this._themeGameplayCommand({ operation: 'QUEST_START', contentId: questStart.key }))
-        .then(ok => { if (ok === true && this._questStartFor === String(node.nodeId)) this.startGame(node); })
+        .then(ok => {
+          if (ok === true && this._questStartFor === String(node.nodeId) && this._isPlayAccountCurrent()
+              && context.owner === this._playOwner && context.sessionKey === this._sessionKey()
+              && context.sessionId === String((this._routeState || {}).sessionId || '') && context.epoch === this._playLoadEpoch) this.startGame(node);
+        })
         .finally(() => { if (this._questStartFor === String(node.nodeId)) this._questStartFor = ''; });
     }
     if (String(this._playKitNodeId) !== String(node.nodeId)) {
@@ -6890,7 +6917,7 @@ Page({
   _hasGenericProofFlow() {
     const bag = this.data.themeBag || {};
     return !this.data.isPreview && !this.data.isMock && !!bag.sessionId
-      && ((bag.quests || []).length > 0 || bag.activeQuest || bag.gameplay && bag.gameplay.activeQuest || bag.activeOperation && bag.activeOperation.operationKey);
+      && (bag.runtimeScope === 'PLAYER' || (bag.quests || []).length > 0 || bag.activeQuest || bag.gameplay && bag.gameplay.activeQuest || bag.activeOperation && bag.activeOperation.operationKey);
   },
   _readGenericProof(nodeId, message, domain) {
     const epoch = this._themeEpoch || 0;
@@ -8208,7 +8235,7 @@ Page({
     const isCurrent = () => this._isPlayAccountCurrent() && sequence === this._lifeEndingReadSequence
       && params.topicId === this.data.topicId && params.activityId === (this.data.activityId || 0)
       && routeSessionId === String((this._routeState || {}).sessionId || '');
-    const finish = () => { if (isCurrent()) next(); };
+    const finish = () => { if (isCurrent()) { this._lifeEndingPendingScope = ''; next(); } };
     req('/api/play/journey/ending', 'GET', params, undefined, true).then((res) => {
       if (!isCurrent()) return;
       const d = res && (res.code == 200 || res.code == '200') ? res.data : null;
@@ -8232,19 +8259,30 @@ Page({
   _playEndingChapter(chapter, after, isCurrent) {
     const current = () => typeof isCurrent !== 'function' || isCurrent();
     if (!current()) return;
+    this._chapterTrailNext = null;
     this._afterEndingChapter = () => { if (current()) after(); };
     this.stopAudio();
     const built = Object.assign(this.buildChapter({ chapters: [chapter] }, this.data.nodes), { ending: true, idxLabel: '结局' });
     this.setData({ chapter: built, chapterGameAnchor: '' }, () => { if (current()) this.openChapterFull(); });
   },
   continueLifeEnding() {
-    const done = () => this.setData({ 'previewEnding.show': false }, () => this.openFinish());
+    const scope = this._lifeEndingShownScope;
+    const owner = this._boundPlayOwner(), sessionKey = this._sessionKey();
+    const routeSessionId = String((this._routeState || {}).sessionId || '');
+    const current = () => this._isPlayAccountCurrent() && owner === this._playOwner
+      && sessionKey === this._sessionKey() && routeSessionId === String((this._routeState || {}).sessionId || '')
+      && scope === this._lifeEndingShownScope;
+    const done = () => {
+      if (!current()) return;
+      this._lifeEndingPendingScope = '';
+      this.setData({ 'previewEnding.show': false }, () => { if (current()) this.openFinish(); });
+    };
     if (this.data.reducedMotion) { done(); return; }
     if (this.data.previewEnding.off) return;   // 关机动画进行中,别重复点
     // 结束「关机」(原型 bootout):整屏压成一条亮线,再收掉,然后进完成页
     this.setData({ 'previewEnding.off': 'off' });
     this._fxTimers = (this._fxTimers || []).concat(
-      setTimeout(() => this.setData({ 'previewEnding.off': 'gone' }), 480),
+      setTimeout(() => { if (current()) this.setData({ 'previewEnding.off': 'gone' }); }, 480),
       setTimeout(done, 820));
   },
   _finishViewContext() {
@@ -8266,9 +8304,10 @@ Page({
     // 只有故事流主题(本章有块流)才配得出结局;经典路线照旧直接进完成页
     const storyTopic = Array.isArray(this.data.chapter && this.data.chapter.blocks);
     const lifeEndingScope = JSON.stringify([this._boundPlayOwner(), this._sessionKey(), String((this._routeState || {}).sessionId || '')]);
+    if (this._lifeEndingPendingScope === lifeEndingScope) return;
     if (storyTopic && !this.data.isPreview && !this.data.isMock && this.data.mode !== 2
         && (!this._lifeEndingShown || this._lifeEndingShownScope !== lifeEndingScope)) {
-      this._lifeEndingShown = true; this._lifeEndingShownScope = lifeEndingScope;
+      this._lifeEndingShown = true; this._lifeEndingShownScope = lifeEndingScope; this._lifeEndingPendingScope = lifeEndingScope;
       this._loadLifeEnding(() => this.openFinish());
       return;
     }

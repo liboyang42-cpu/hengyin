@@ -184,7 +184,7 @@
   full-reward="{{kit.fullReward}}" limit-seconds="{{kit.limitSeconds}}"
   bind:verdict="onVerdict" bind:close="onClose" />
 
-<cy-playkit-scan wx:elif="{{kit.type === 'scan'}}"
+<cy-playkit-scan wx:elif="{{kit.type === 'scan'}}" session-id="{{kit.sessionId}}"
   show="{{show}}" inline="{{inline}}" title="{{kit.title}}" kind="{{kit.kind}}" reply="{{kit.reply}}"
   audio-url="{{kit.audioUrl}}" seconds="{{kit.audioSeconds || 0}}" image-url="{{kit.imageUrl}}"
   overlay-url="{{kit.overlayUrl}}" overlay-scale="{{kit.overlayScale}}"
