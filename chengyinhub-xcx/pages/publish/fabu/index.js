@@ -8179,7 +8179,7 @@ Page({
     const creating = !this.data.editingTopicId;
     const reason = res.unknown
       ? (res.stage === 'publish'
-        ? '网络中断，暂时确认不了是否已发布；稍后重试会先查询真实状态'
+        ? (res.msg ? res.msg + '；回读时仍是草稿，改好后重试会先查询真实状态' : '网络中断，暂时确认不了是否已发布；稍后重试会先查询真实状态') // 服务端说了拒绝原因就先给原因,别说成网络中断
         : creating ? '网络中断，暂时确认不了是否已保存；已保留原请求和内容，请勿另建草稿'
           : (res.msg ? res.msg + '；' : '') + '暂时确认不了原保存结果；重试只核对原主题，当前修改仍在本机')
       : res.networkError ? '网络暂时不可用，当前内容仍在本机，请重试'

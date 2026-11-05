@@ -120,3 +120,8 @@ test('m3:模板选了扫码参与就存 validationMethod=4(否则发布被服务
   const src = require('node:fs').readFileSync(require('node:path').join(__dirname, '../../pages/publish/temp/index.js'), 'utf8')
   assert.match(src, /gameKey === 'qaShot'\) \{ if \(!\[4, 5\]\.includes\(Number\(formData\.validationMethod\)\)\) formData\.validationMethod = 2;[^\n]*\} else if \(this\.data\.advanced && this\.data\.advanced\.scan && this\.data\.advanced\.scan\.enabled\) formData\.validationMethod = 4;/)
 })
+
+test('m3:发布被服务端拒绝并带了原因时,编辑器先给原因而不是「网络中断」', () => {
+  const src = require('node:fs').readFileSync(require('node:path').join(__dirname, '../../pages/publish/fabu/index.js'), 'utf8')
+  assert.match(src, /\? \(res\.msg \? res\.msg \+ '；回读时仍是草稿/)
+})
