@@ -21,7 +21,6 @@
              ② 加载与空态不同屏(微信设计指南:一页不超过一个加载动画) -->
         <cy-skeleton wx:if="{{!loaded}}" type="list" count="{{1}}" loading-label="合作信息加载中" />
         <cy-empty class="cy-fade-in" wx:elif="{{!name && !detailItems.length}}" kind="missing-param" title="缺少合作方信息"
-                  sub="请返回重新进入"
                   cta="返回上一页" bind:cta="goBack" />
         <block wx:else>
         <view class="pr-name-row" wx:if="{{name}}">

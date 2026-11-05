@@ -4222,7 +4222,7 @@ Page({
     this._loadCommitted = false;   // 每轮加载重新武装:上一轮的成功不能替这一轮的失败背书
     // 缺场次参数 ≠ 加载失败:reloadPlay 会再次命中这一行 return,给「重新加载」等于给一个
     // 物理上永远回到同一状态的假按钮。单独落 missing,只留真的走得通的出口(回活动详情)。
-    if (!this.data.activityId && !this.data.topicId) { this.setData({ loading: false, emptyTip: '链接已失效，请返回重新进入', emptyKind: 'missing' }); return; }
+    if (!this.data.activityId && !this.data.topicId) { this.setData({ loading: false, emptyTip: '链接已失效', emptyKind: 'missing' }); return; }
     req('/api/play/nodes', 'GET', this._sessionParams()).then((res) => {
       if (!isCurrent()) return;
       if (res.code == 402 || res.code == '402') {

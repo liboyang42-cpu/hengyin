@@ -16,8 +16,8 @@
 
   <!-- D 无客户权限(Figma 71:442) -->
   <cy-empty wx:elif="{{pageState === 'no-permission'}}" fill size="lg" kind="no-permission"
-            title="当前岗位没有客户查看权限" sub="请联系店主开通"
-            cta="返回客户列表" bind:cta="onNavBack" />
+            title="{{notMerchant ? '当前账号不能查看客户' : '当前岗位没有客户查看权限'}}" sub="{{notMerchant ? '' : '请联系店主开通'}}"
+            cta="{{notMerchant ? '返回' : '返回客户列表'}}" bind:cta="onNavBack" />
 
   <scroll-view wx:elif="{{pageState === 'ready'}}" scroll-y class="cd-scroll cy-fade-in" enhanced show-scrollbar="{{false}}">
     <!-- 客户身份(Figma 71:287) -->

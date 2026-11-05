@@ -112,7 +112,7 @@ Page({
       this.setData({
         invalidLink: true,
         loaded: true,
-        loadError: '链接已失效，请返回重新进入',
+        loadError: '链接已失效',
       });
       return;
     }

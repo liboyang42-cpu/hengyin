@@ -41,7 +41,7 @@
         <view class="li">
           <view class="item-tit">投放数<text>*</text></view>
           <view class="item-cont">
-            <input class="davidinp2" type="number" placeholder="请输入投放数量" value="{{formData.publishCount}}"
+            <input class="davidinp2" type="number" placeholder="请输入投放数量" value="{{formData.publishCount || ''}}"
               bindinput="onPublishCountInput" />
             <image lazy-load="true" class="davidyu" src="/subpackageMember/images/d_yhqadd2.png" mode="widthFix" />
           </view>

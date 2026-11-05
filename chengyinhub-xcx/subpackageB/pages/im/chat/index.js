@@ -89,7 +89,7 @@ Page({
     // 站点各写一次)是为了不漏:loadState 的落点很多,漏一处就又变成"没有原因的死输入栏"。
     sendBlockedMap: {
       loading: '消息加载中…',
-      missing: '链接已失效，请返回重新进入',
+      missing: '',
       closed: '组局已结束，不能继续聊天',
       error: '消息加载失败，点上方「重试」再试',
       denied: '不能在这个会话发消息',
@@ -232,6 +232,25 @@ Page({
     this._reportUnreadIds = [];
   },
 
+  // 第十二轮 k9(p1 N-10):链接直达没带 name 时,从会话列表(只读)取对方昵称,不停在通用的「对话」。
+  _fillPeerName() {
+    if (this._peerNameAsked) return;
+    this._peerNameAsked = true;
+    const conversationId = this.data.conversationId;
+    const memberId = this.data.myId;
+    app.sendRequest({
+      url: '/api/im/conversations', method: 'POST', hideLoading: true, silentError: true,
+      success: (res) => {
+        if (!this._isReadContextCurrent(conversationId, memberId) || this.data.name) return;
+        const rows = isBizOk(res) && isRecordList(res.data) ? res.data : [];
+        const row = rows.find(item => String(item.conversationId) === String(conversationId));
+        const nickname = row && Number(row.type) === 1 && row.counterparty ? String(row.counterparty.nickname || '').trim() : '';
+        if (nickname) this.setData({ name: nickname, heroName: nickname });
+      },
+      fail() {},
+    });
+  },
+
   // 会话身份兜底:只按会话类型给通用称呼,绝不臆造对方昵称。
   _heroName(name, type) {
     if (name) return name;
@@ -317,6 +336,7 @@ Page({
             server.clientMessageId === m.clientMessageId && server.senderId == m.senderId));
           const msgs = list.concat(pending);
           that.setData({ msgs, sending: msgs.some(m => m.sending), hasMore: !!res.data.hasMore, cursor: res.data.nextCursor || 0, loadState: 'ready', loadErrorText: '', loadMoreError: '' });
+          if (!that.data.name && Number(that.data.type) === 1) that._fillPeerName();
           // 拉黑只存服务端:重进会话按回包禁用输入框,不然能打字、一发就失败(3-22)
           const blockedByMe = res.data.blockedByMe === true;
           that._blockedByMe = blockedByMe;

@@ -14,6 +14,7 @@ Page({
     refreshing: false,
     joining: false,
     joinError: '',
+    ticketRequired: false,
     error: '',
     errorKind: 'network',
     errorSub: '',
@@ -47,7 +48,9 @@ Page({
       changed: value => { const fresh = this._freshCommand; if (!value.busy) this._freshCommand = false;
         const rejected = value.outcome && value.outcome.state === 'REJECTED' ? value.outcome.message || '暂时无法加入该队伍' : '';
         this.setData({ commandRecovery: value, recoveryShown: !!(value.card || value.busy) && !(fresh && value.busy), joining: value.busy,
-          joinError: value.busy ? '' : rejected }); },
+          joinError: value.busy ? '' : rejected,
+          // 第十二轮 k9(p1 N-14):没有这一场的票被拒时,按钮换成去买票,不留一个灰掉的「接受邀请并加入」
+          ticketRequired: !value.busy && !!rejected && value.outcome.errorCode === 'TICKET_REQUIRED' }); },
       terminal: () => {
         this._epoch = (this._epoch || 0) + 1;
         this._inviteLoading = false;
@@ -170,6 +173,13 @@ Page({
     if (!this._recovery || this._recovery.pending() || !exactId(this.teamId)) return;
     this._recovery.setTarget(this.teamId);
     this._freshCommand = true; return this._recovery.start('join', { inviteCode: this.inviteCode });
+  },
+
+  goBuyTicket() {
+    const team = this.data.team;
+    const activityId = team && Number(team.ownerType) === 2 && exactId(team.ownerId) ? team.ownerId : null;
+    if (!activityId || this._hidden || this._disposed) return;
+    wx.navigateTo({ url: '/pages/activity/baoming/baoming?activityId=' + activityId });
   },
 
   goDetail() {

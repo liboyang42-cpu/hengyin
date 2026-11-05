@@ -3,6 +3,7 @@
   "navigationStyle": "custom",
   "navigationBarTextStyle": "white",
   "usingComponents": {
+    "cy-page-title": "/components/cy/page-title/index",
     "cy-sheet": "/components/cy/sheet/index",
     "cy-btn": "/components/cy/btn/index",
     "cy-icon": "/components/cy/icon/index",

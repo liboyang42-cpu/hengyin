@@ -36,7 +36,7 @@
 
     <!-- 四态分流:加载中 / 坏链接 / 失败 / 真的没消息。原来只有最后一条,前三种全被说成「还没有消息」。 -->
     <cy-skeleton wx:if="{{loadState === 'loading'}}" type="list" count="{{4}}" />
-    <cy-empty wx:elif="{{loadState === 'missing'}}" class="chat-empty cy-fade-in" kind="missing-param" title="这个会话无法打开" sub="请返回重新进入" />
+    <cy-empty wx:elif="{{loadState === 'missing'}}" class="chat-empty cy-fade-in" kind="missing-param" title="这个会话无法打开" cta="返回消息列表" bind:cta="returnToMessageList" />
     <cy-empty wx:elif="{{loadState === 'closed'}}" class="chat-empty cy-fade-in" fill="{{true}}" size="lg" kind="not-found" title="这个组局已结束" cta="返回消息列表" bind:cta="returnToMessageList" />
     <cy-empty wx:elif="{{loadState === 'denied'}}" class="chat-empty cy-fade-in" fill="{{true}}" size="lg" kind="not-found" title="{{loadErrorText || '这个会话无法打开'}}" cta="返回消息列表" bind:cta="returnToMessageList" />
     <cy-error wx:elif="{{loadState === 'error'}}" class="chat-empty" title="消息加载失败" sub="{{loadErrorText}}" retry="重试" bind:retry="retryLoad" />
@@ -182,7 +182,7 @@
        用户看不到任何原因,视觉上等于"这会话可以发消息"。现在两类原因共用这一行。 -->
   <!-- M-01 补:只读会话(系统通知)底部只留输入栏那一行说明,不再叠一行同义的禁用提示。 -->
   <block wx:if="{{type != 2}}">
-  <view wx:if="{{disabled || loadState !== 'ready'}}" class="disabled-tip" style="bottom: {{inputH}}px;">{{disabled ? disabledText : sendBlockedMap[loadState]}}</view>
+  <view wx:if="{{disabled || (loadState !== 'ready' && sendBlockedMap[loadState])}}" class="disabled-tip" style="bottom: {{inputH}}px;">{{disabled ? disabledText : sendBlockedMap[loadState]}}</view>
   </block>
 
   <!-- 输入栏。「+」仍留在框外(位置/路线等城瘾特有发送项,Airbnb 无对应物,保留原位不臆造新位置);

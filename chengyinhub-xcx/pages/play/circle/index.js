@@ -63,7 +63,7 @@ Page({
         loading: false,
         errorText: '探索链接不完整',
         errorKind: 'missing-param',
-        errorSub: '请返回重新进入',
+        errorSub: '',
         errorAction: '返回首页'
       })
       return

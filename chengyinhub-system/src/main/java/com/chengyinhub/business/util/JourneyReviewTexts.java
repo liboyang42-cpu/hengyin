@@ -590,6 +590,34 @@ public final class JourneyReviewTexts {
         return batch.isEmpty() ? null : checkBatch(securityService, openid, batch);
     }
 
+    /**
+     * 第十二轮 k9(j5 N5):拒绝提示里的字段名给作者看。「节点玩法「桥边问答」.title」这种
+     * 「人能认的名字 + 内部键」只留名字,内部键换成中文(认不出的键就只留名字);
+     * 没有人能认的名字的字段保持原样,不丢定位信息。
+     */
+    public static String plainField(String field) {
+        if (field == null) return "";
+        int close = field.lastIndexOf('」');
+        if (close < 0 || close == field.length() - 1) return field;
+        String head = field.substring(0, close + 1);
+        String tail = field.substring(close + 1);
+        String key = tail.substring(tail.lastIndexOf('.') + 1).replace("[]", "");
+        String label;
+        switch (key) {
+            case "title": label = "标题"; break;
+            case "name": label = "名称"; break;
+            case "desc": case "description": case "intro": label = "说明"; break;
+            case "content": case "text": case "body": label = "内容"; break;
+            case "question": case "prompt": label = "题目"; break;
+            case "answer": case "answers": label = "答案"; break;
+            case "options": case "option": label = "选项"; break;
+            case "hint": case "hints": label = "提示"; break;
+            case "line": case "lines": label = "台词"; break;
+            default: label = ""; break;
+        }
+        return label.isEmpty() ? head : head + "的" + label;
+    }
+
     private static String checkBatch(IWxContentSecurityService securityService, String openid, List<Entry> batch) {
         String[] parts = new String[batch.size()];
         for (int i = 0; i < batch.size(); i++) {
@@ -602,7 +630,7 @@ public final class JourneyReviewTexts {
         for (Entry entry : batch) {
             String one = securityService.checkText(entry.getText(), openid);
             if (one != null && !IWxContentSecurityService.isDetectionUnavailable(one)) {
-                return one + "（字段：" + entry.getField() + "）";
+                return one + "（字段：" + plainField(entry.getField()) + "）";
             }
         }
         return msg;

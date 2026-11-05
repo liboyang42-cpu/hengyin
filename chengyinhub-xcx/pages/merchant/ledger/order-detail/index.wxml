@@ -55,7 +55,7 @@
     <cy-skeleton type="card" count="{{1}}" />
   </block>
   <cy-empty class="order-detail__state" wx:elif="{{loadState === 'missing-param'}}" kind="missing-param"
-    size="lg" fill title="缺少核销记录信息" sub="请返回重新进入"
+    size="lg" fill title="缺少核销记录信息"
     cta="返回上一页" bind:cta="onNavBack" />
   <cy-empty class="order-detail__state" wx:elif="{{loadState === 'missing-record'}}" kind="empty"
     size="lg" fill title="核销记录不可见"

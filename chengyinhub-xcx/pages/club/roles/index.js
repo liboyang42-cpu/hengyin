@@ -185,10 +185,11 @@ Page({
   },
 
   onLoad(options) {
-    const clubId = positiveId(options && options.clubId)
+    // 第十二轮 k9(j6 N4):俱乐部页之间的深链习惯用 id;缺了就是坏链接,给「链接已失效 · 返回」,不是空白的加载失败
+    const clubId = positiveId(options && (options.clubId || options.id))
     const activityId = positiveId(options && options.activityId)
     if (!clubId) {
-      this.setData({ state: 'error', errorText: '缺少俱乐部ID' })
+      this.setData({ state: 'missing', errorText: '' })
       return
     }
     this._requestedMemberId = positiveId(options && options.memberId)

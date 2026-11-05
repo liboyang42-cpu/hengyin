@@ -227,7 +227,7 @@ Page({
       this._errorReasonCode = 'GAME_ACTIVITY_ID_REQUIRED'
       this.setData({
         viewState: 'business-error',
-        errorMessage: '链接已失效，请返回重新进入',
+        errorMessage: '链接已失效',
       })
       return
     }

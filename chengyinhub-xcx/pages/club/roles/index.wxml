@@ -8,6 +8,7 @@
   <cy-page-title title="角色与权限" subtitle="{{activitySubtitle}}" safe-top="{{false}}" />
 
   <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="4" />
+  <cy-empty wx:elif="{{state === 'missing'}}" fill size="lg" kind="missing-param" title="链接已失效" cta="返回" bind:cta="goBack" />
   <!-- 2026-08-26:权限拒绝原来和加载失败共用一个 error 态,渲染成「暂时不可用 + 重新加载」——
        给了一个永远点不成功的重试按钮,用户不会知道是权限问题。现在拆成三条。 -->
   <cy-error wx:elif="{{state === 'no-permission'}}" fill size="lg" retry=""

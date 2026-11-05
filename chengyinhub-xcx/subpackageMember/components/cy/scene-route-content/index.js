@@ -182,7 +182,7 @@ Component({
         return
       }
       if (config.requiresId && !config.data.id) {
-        this.setData({ state: 'error', errorText: '链接已失效，请返回重新进入' })
+        this.setData({ state: 'error', errorText: '链接已失效' })
         return
       }
       if (sceneId === 'settings-likes') {

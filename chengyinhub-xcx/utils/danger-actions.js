@@ -558,8 +558,8 @@ const DANGER_ACTIONS = {
     title: '取消这个待支付订单?',
     content: '',
     consequences: [
-      { icon: 'close', text: '订单关闭,不再保留名额' },
-      { icon: 'warning', text: '此操作不可撤销,需要时请重新下单' },
+      { icon: 'close', text: '订单关闭，不再保留名额' },
+      { icon: 'warning', text: '此操作不可撤销，需要时请重新下单' },
     ],
     confirmText: '取消订单',
     alt: null,

@@ -1858,7 +1858,7 @@ Page({
       header: { 'Content-Type': 'application/json' },
       success(res) {
         if (current.handle(res)) return;
-        if (!current()) return;
+        if (!current()) return; if (res && res.code != '200' && /既不是该主题的发布者/.test(String(res.msg || ''))) { that.setData({ missingParam: true }); return; } // 第十二轮 k9(p2 N-9):与本主题无关的账号拿到链接 = 链接已失效,不留空白页
         if (res.code != '200' || !res.data || typeof res.data !== 'object' || Array.isArray(res.data)) {
           that.setData({ loadFailed: true });
           return;

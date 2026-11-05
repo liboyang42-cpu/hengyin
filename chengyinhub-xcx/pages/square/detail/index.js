@@ -1192,9 +1192,9 @@ Page({
         result += minutes + '分';
       }
   
-      if(hours==0 && minutes==0){
-        result= '刚刚';
-      }
+      // 第十二轮 k9(j5 N8):「刚刚」本身就是时间,不再接「前」(原来读成「刚刚前」);
+      // 时钟略快的负差也算刚刚
+      if (hours <= 0 && minutes <= 0) return '刚刚';
     }
     return result + '前';
   },

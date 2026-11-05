@@ -202,7 +202,7 @@ Page({
           this._activeQueryKey = '';
           this._renderedQueryKey = '';
           this._clearScopedData('', true);
-          this.setData({ loading: false, noPermission: true });
+          this.setData({ loading: false, noPermission: true, notMerchant: !access.active });
           return;
         }
         this.setData({

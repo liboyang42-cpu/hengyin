@@ -146,7 +146,9 @@ test('期望:失效/无效分享链接显示明确状态(如「俱乐部不存�
   assert.doesNotMatch(gone[0], /load-failure/, '失效态不能是空白占位')
   assert.match(gone[0], /title="\{\{clubGoneText\}\}"/)
   // 返回入口 = 导航栏常驻返回(goBack;分享直达页栈只有一页时 switchTab 回发现页),失效态不另加按钮
-  assert.match(gone[0], /sub="[^"]*返回[^"]*"/, '失效态要指明怎么返回')
+  // 第十二轮 k9(p1 N-6):不写「请返回重新进入」副行,给一个真的「返回」按钮
+  assert.doesNotMatch(gone[0], /请返回重新进入/)
+  assert.match(gone[0], /retry="返回" bind:retry="goBack"/, '失效态要有返回出口')
   assert.match(wxml, /<cy-nav-bar custom-back bind:back="goBack" wx:if="\{\{!\(groupCodeVisible && groupCodeState !== 'selecting'\)\}\}">/)
   h.page.goBack()
   assert.deepEqual(h.nav, ['back', '/pages/talent/list/index'], '分享直达(无上一页)也必须能回去')

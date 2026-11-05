@@ -181,6 +181,8 @@ Page({
     if (this._using) { cyToast('正在配置，请稍候'); return; }
     if (!this._id) return;
     const that = this;
+    // 第十二轮 k9(p3 N6):本页已经复制出一份草稿,从编辑器回来再点「应用」就回到那一份,不再每点一次多一份草稿
+    if (this._copiedId) { this._openCopiedDraft(this._copiedId); return; }
     this._using = true;
     app.sendRequest({
       url: '/api/template/topic-template/use',
@@ -191,9 +193,8 @@ Page({
         if (that._unloaded) return; // 复制回包晚于离开本页:不再把用户拉去编辑器
         const copiedId = res && res.code == '200' && res.data && res.data.topicId;
         if (!copiedId) { cyToast((res && res.msg) || '使用模板失败'); return; }
-        const qs = ['id=' + copiedId];
-        if (that._scope) qs.push('scope=' + that._scope);
-        wx.navigateTo({ url: '/pages/publish/fabu/index?' + qs.join('&') });
+        that._copiedId = copiedId;
+        that._openCopiedDraft(copiedId);
       },
       fail() {
         that._using = false;
@@ -201,6 +202,12 @@ Page({
         cyToast('网络错误，请重试');
       }
     });
+  },
+
+  _openCopiedDraft(copiedId) {
+    const qs = ['id=' + copiedId];
+    if (this._scope) qs.push('scope=' + this._scope);
+    wx.navigateTo({ url: '/pages/publish/fabu/index?' + qs.join('&') });
   },
 
   onShareAppMessage() {

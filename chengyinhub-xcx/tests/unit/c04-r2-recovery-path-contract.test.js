@@ -237,7 +237,7 @@ test('负控:把缺参数档的动作标签清空(退回 R1 的纯文字终态)�
 test('负控:把「重试」档也改成跳转(标签与行为不符)必须判红', () => {
   const source = read(`${MYCANYUINFO_C}.js`)
   const mutated = source.replace(
-    /      if \(!this\.data\.id\) \{\n        this\.backToList\(\);\n        return;\n      \}\n/,
+    /      if \(!this\.data\.id \|\| this\.data\.loadState === 'missing-param'\) \{\n        this\.backToList\(\);\n        return;\n      \}\n/,
     '      this.backToList();\n      if (true) return;\n',
   )
   assert.notEqual(mutated, source, '变异锚点失效:未找到 onErrorAction 的分档守卫')

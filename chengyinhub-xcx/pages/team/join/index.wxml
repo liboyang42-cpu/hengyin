@@ -37,6 +37,8 @@
     <view class="team-actions">
       <view wx:if="{{joined}}" class="team-action primary" bindtap="goDetail"
             aria-role="button" aria-label="查看已加入的队伍" hover-class="cy-pressed" hover-stay-time="80">查看队伍</view>
+      <view wx:elif="{{team.status == 0 && ticketRequired && team.ownerType == 2}}" class="team-action primary" bindtap="goBuyTicket"
+            aria-role="button" aria-label="去买这一场的票" hover-class="cy-pressed" hover-stay-time="80">去买这一场的票</view>
       <view wx:elif="{{team.status == 0}}" class="team-action primary {{joining || joinError ? 'disabled' : ''}}" bindtap="join"
             aria-role="button" aria-label="{{joining ? '正在加入队伍' : '接受邀请并加入'}}"
             aria-busy="{{joining}}" aria-disabled="{{joining || !!joinError}}" hover-class="cy-pressed" hover-stay-time="80">{{joining ? '加入中…' : '接受邀请并加入'}}</view>

@@ -22,7 +22,8 @@
     <!-- glow=勋章墙同一台波点引擎渲染单枚(用户裁决:不是 CSS 光圈,是那种波点) -->
     <canvas wx:elif="{{!unsupported}}" type="webgl" id="glowcv" class="b3__xr {{renderState === 'ready' ? '' : 'b3__xr--loading'}}"></canvas>
   </view>
-  <view class="b3__name">{{name}}</view>
+  <!-- 第十二轮 k9(p1 N-10):没带名字时不在币下再写一遍导航栏的「徽章」 -->
+  <view class="b3__name" wx:if="{{name !== '徽章'}}">{{name}}</view>
   <view class="b3__sub" wx:if="{{sub}}">{{sub}}</view>
   <view class="b3__hint" wx:if="{{motionReduced && renderState === 'ready'}}">已减少动态效果</view>
   <view class="b3__hint" aria-live="polite">{{renderState === 'loading' ? (style === 'glow' ? '正在准备发光徽章…' : '正在准备 3D 徽章…') : (renderState === 'fallback' ? '静态预览' : (style === 'glow' ? '' : (style === 'pin' ? '点一下转一圈，左右拖动' : '')))}}</view>

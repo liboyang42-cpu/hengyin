@@ -1380,7 +1380,7 @@
   <!-- P-40(2026-10-27):预览底部的保存 / 发布栏删掉后,发布(据点「保存玩法」、主题「保存并绑定」)和失败说明挪到编辑态底部 -->
   <view class="cg-submit-error" wx:if="{{!previewMode && !previewVisible && submitError}}">
     <cy-inline-error wx:if="{{submitError}}" kind="network"
-      title="{{from === 'citynode' ? '玩法没有保存成功' : (lastSubmitAction === 'draft' ? '草稿没有保存成功' : '玩法没有发布成功')}}"
+      title="{{from === 'citynode' || from === 'fabu' ? '玩法没有保存成功' : (lastSubmitAction === 'draft' ? '草稿没有保存成功' : '玩法没有发布成功')}}"
       sub="{{submitError}}" action="重试" bind:action="retrySubmit" />
   </view>
   <view class="cg-bottombar" wx:if="{{!editorLoading && !loadError}}">

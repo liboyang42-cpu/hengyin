@@ -213,7 +213,7 @@ Page({
         loadError: true,
         missingTopicId: true,
         loadErrorTitle: '无法打开主题',
-        loadErrorSub: '请返回重新进入',
+        loadErrorSub: '',
         topicLoaded: false,
       });
       return;

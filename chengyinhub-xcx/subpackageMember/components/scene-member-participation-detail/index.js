@@ -13,6 +13,7 @@ const { summarizeOrderState, canRequestOrderRefund } = require('../../../utils/o
 const { isFreeOrder } = require('../../../utils/order-actual-pay.js');
 const cancellationFeedback = require('../../../utils/cancellation-feedback.js');
 const { isUnknownHttpStatus } = require('../../../utils/transport/failure-envelope.js');
+const GONE_RECORD_MSG = /无权查看该报名信息|报名记录不存在/;
 
 function nonNegativeNumberOrNull(value) {
   if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return null;
@@ -46,6 +47,7 @@ Component({
       // loadState: loading | missing-param | error | ready —— 四态互斥由 WXML 承接。
       loadState: 'loading',
       loadErrorText: '',
+      missingTitle: '缺少参与记录',
       // R2-C04:错误态动作槽的**标签**。cy-error 只有一个动作位,所以标签必须跟着这一档
       // 真正能做的事变:有 id ⇒ 「重试」,缺 id ⇒ 「返回参与列表」。
       // ⚠️ 不许再退回 R1 的 retry="{{id ? '重试' : ''}}" —— 空标签 = 缺参数时整屏无按钮,
@@ -243,7 +245,7 @@ Component({
     },
     // 错误态唯一动作位:标签与行为一一对应,不出现「叫重试却在跳转」
     onErrorAction() {
-      if (!this.data.id) {
+      if (!this.data.id || this.data.loadState === 'missing-param') {
         this.backToList();
         return;
       }
@@ -362,6 +364,11 @@ Component({
               resultEntryError: entry || !character.hasTopicRelation(info) ? '' : '无法确认当前账号的报名与主题关联，请重新加载参与详情；若仍不可用请联系客服。' });
             if (entry) that._probeCharacter(entry.topicId, reader);
           } else {
+            // 第十二轮 k9(p1 N-4):别人的参与记录 / 已不存在的记录 = 链接失效,给「链接已失效 · 返回」,不是空白的加载失败
+            if (res && res.code != "200" && GONE_RECORD_MSG.test(String(res.msg || ''))) {
+              that.setData({ loadState: 'missing-param', missingTitle: '链接已失效', errorActionText: '返回' });
+              return;
+            }
             const fallback = res && res.code == "200" ? '参与详情数据暂不可用' : '获取参与详情失败，请重试';
             const msg = app.getRequestErrorMessage
               ? app.getRequestErrorMessage(res, fallback)

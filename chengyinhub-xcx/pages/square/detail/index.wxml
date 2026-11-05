@@ -17,7 +17,7 @@
     <cy-empty class="fill-slot" fill="{{true}}" size="lg" kind="missing-param" title="链接已失效" cta="返回" bind:cta="goBack" />
   </view>
   <view class="detail-state" wx:elif="{{detailState === 'missing-param'}}">
-    <cy-empty class="fill-slot" fill="{{true}}" size="lg" kind="missing-param" title="没有找到这条帖文" sub="请返回重新进入" cta="返回上一页" bind:cta="goBack" />
+    <cy-empty class="fill-slot" fill="{{true}}" size="lg" kind="missing-param" title="没有找到这条帖文" cta="返回上一页" bind:cta="goBack" />
   </view>
   <view class="detail-state" wx:elif="{{detailState === 'closed'}}">
     <cy-empty class="fill-slot" fill="{{true}}" size="lg" kind="empty" title="社区暂未开放" sub="" cta="返回上一页" bind:cta="goBack" />

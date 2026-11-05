@@ -17,7 +17,7 @@
 <cy-nav-spacer />
 
 <cy-empty class="page-terminal" wx:if="{{pageState === 'missing-param'}}" fill size="lg" kind="missing-param"
-  title="无法打开报名页" sub="请返回重新进入"
+  title="无法打开报名页"
   cta="去发现活动" bind:cta="goDiscoverActivities" />
 
 <!-- 你已经报过名了。
@@ -130,7 +130,8 @@
     <view class="setly_li_left">{{selectedTicket.name}}</view>
     <view class="setly_li_right"><text>{{money.amount(selectedTicket.price)}}</text></view>
   </view>
-  <view class="setly_li">
+  <!-- 第十二轮 k9(p1 N-11):订单金额只在下面有减项时出现;一张票没有优惠时它和票种行、总计是同一个数 -->
+  <view wx:if="{{clubMemberDiscountAmount > 0 || (pointsUsable !== false && selectedTicket.price > 0 && userInfo.point != 0)}}" class="setly_li">
     <view class="setly_li_left">订单金额</view>
     <view class="setly_li_right"><text>{{money.amount(selectedTicket.price)}}</text></view>
   </view>

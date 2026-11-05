@@ -13,7 +13,7 @@
     <cy-error load-failure fill="{{true}}" title="暂时无法确认身份" sub="{{accessError}}" bind:retry="retryAccessCheck" auto-back />
   </view>
   <view class="publish-access-state" wx:elif="{{accessState === 'denied'}}">
-    <cy-error fill size="lg" title="当前身份不能发布活动" sub="{{deniedReason}}" retry="" bind:back="onNavBack" auto-back custom-back />
+    <cy-error fill size="lg" title="暂时不能发布活动" sub="{{deniedReason}}" retry="" bind:back="onNavBack" auto-back custom-back />
   </view>
   <block wx:elif="{{accessState === 'ready'}}">
   <view class="publish-access-state" wx:if="{{activityLoadError}}">
@@ -264,7 +264,7 @@
       <!-- j1 F6 / 文案表(第十轮 f3):新建那一路的「默认公开…」提示删去,摘要框变矮;编辑态仍说明保存不改公开范围 -->
       <view class="publish-review__visibility" wx:if="{{editingActivityId}}">本次保存只更新上面这些内容，不会改变活动的公开范围。</view>
     </view>
-    <cy-inline-error wx:if="{{submitError}}" title="活动尚未发布" sub="{{submitError}}" action="重试" bind:action="submitForm" />
+    <cy-inline-error wx:if="{{submitError}}" title="{{editingActivityId ? '修改没有保存' : '活动尚未发布'}}" sub="{{submitError}}" action="重试" bind:action="submitForm" />
     <view class="wrap flex-cb">
       <cy-btn wx:if="{{step === 0}}" variant="secondary" style="width:170rpx" bindtap="onCancel">取消</cy-btn>
       <cy-btn wx:else variant="secondary" style="width:170rpx" bindtap="prevStep">上一步</cy-btn>

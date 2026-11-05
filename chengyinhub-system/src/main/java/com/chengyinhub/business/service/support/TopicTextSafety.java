@@ -107,7 +107,7 @@ public final class TopicTextSafety {
         for (JourneyReviewTexts.Entry entry : batch) {
             SafetyDecision one = decide(gate, memberId, openid, contentId, entry.getText());
             if (one == null || one.isBlock()) {
-                return new Verdict(BLOCK_MESSAGE + "（字段：" + entry.getField() + "）", null);
+                return new Verdict(BLOCK_MESSAGE + "（字段：" + JourneyReviewTexts.plainField(entry.getField()) + "）", null);
             }
         }
         return blocked ? new Verdict(BLOCK_MESSAGE, null) : new Verdict(null, reviewReason(whole));

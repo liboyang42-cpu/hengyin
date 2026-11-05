@@ -638,7 +638,7 @@ Page({
           } else if (settings && settings.mainSwitch === true && (item === 'reject' || item === 'ban')) {
             finish('not_allowed', '此微信通知尚未获允许');
           } else {
-            finish('unknown', '授权状态待确认，可点击申请');
+            finish('unknown', ''); // 第十二轮 k9(j1):还没问过就不写说明,开关本身就是「可点击申请」
           }
         },
         fail: () => finish('unknown', '暂未读到授权状态，可重试'),

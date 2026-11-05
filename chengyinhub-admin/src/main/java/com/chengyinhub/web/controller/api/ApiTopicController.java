@@ -2488,7 +2488,9 @@ public class ApiTopicController extends BaseController {
                     return new AjaxResult(e.getCode(), e.getMessage());
                 }
             } else {
-                return error("请先登录");
+                // 第十二轮 k9(j6 N8):会话过期时答业务 401,小程序请求层才会静默重登并重试这一次;
+                // 原来答 500「请先登录」,「我的」页这一块空到下次进来。
+                return AjaxResult.error(401, "请先登录");
             }
         }
         // 公开分支原先设 isNew=1(→ SQL 加 end_date > now())。那道闸对主题是错的:

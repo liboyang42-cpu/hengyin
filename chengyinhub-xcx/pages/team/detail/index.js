@@ -64,7 +64,7 @@ Page({
         refreshing: false,
         error: '队伍链接不完整',
         errorKind: 'missing-param',
-        errorSub: '请返回重新进入',
+        errorSub: '',
         errorAction: '返回上一页'
       });
     }
@@ -211,7 +211,7 @@ Page({
             refreshing: false,
             error: authDenied ? '登录后查看队伍' : refused ? app.getRequestErrorMessage(res, '无法查看这支队伍') : hasTeam ? '队伍状态暂未更新' : '队伍暂时不可用',
             errorKind: authDenied ? 'no-permission' : refused ? 'missing-param' : 'data',
-            errorSub: authDenied ? '请重新登录后再打开这支队伍' : refused ? '' : app.getRequestErrorMessage(res, hasTeam ? '已保留上次确认的队伍信息' : '请稍后重新加载'),
+            errorSub: authDenied ? '' : refused ? '' : app.getRequestErrorMessage(res, hasTeam ? '已保留上次确认的队伍信息' : '请稍后重新加载'),
             boardState: needLogin ? 'login' : 'error',
             boardMessage: '队伍成员资格暂未确认，请重新加载',
             errorAction: needLogin ? '登录' : refused ? '返回上一页' : '重新加载'

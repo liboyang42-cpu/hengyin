@@ -496,6 +496,8 @@ Page({
         },
         overviewState: state,
         overviewLoaded: hadOverview || successCount > 0,
+        // 第十二轮 k9(p1 N-7):新玩家的足迹四行全是 0 时不画这一节,空的徽章卡已经说明还没开始
+        footprintEmpty: allSuccess && (overview.stats || []).every((item) => !Number(item && item.value)),
         badges: nextBadges,
         expandedBadge: nextExpandedBadge,
         badgeCountText: nextBadgeCountText,

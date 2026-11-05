@@ -5,6 +5,7 @@
   "navigationBarTextStyle": "black",
   "backgroundColor": "#F3F4F4",
   "usingComponents": {
+    "cy-access-gate": "/components/cy/access-gate/index",
     "cy-empty": "/components/cy/empty/index",
     "cy-error": "/components/cy/error/index",
     "cy-inline-error": "/components/cy/inline-error/index",

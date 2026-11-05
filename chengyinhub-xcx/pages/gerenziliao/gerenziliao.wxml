@@ -39,9 +39,13 @@
   <view class="rv-row" bindtap="openPop4" aria-role="button" aria-label="编辑昵称" hover-class="cy-pressed" hover-stay-time="80">
     <text class="rv-row__k">昵称</text><text class="rv-row__v {{userInfo.name ? '' : 'is-empty'}}">{{userInfo.name || '未填写'}}</text><cy-icon class="rv-row__cv" name="chevron-right" size="32" />
   </view>
-  <view class="rv-row rv-row--stack" bindtap="openPop" aria-role="button" aria-label="编辑个人介绍" hover-class="cy-pressed" hover-stay-time="80">
+  <!-- 第十二轮 k9(p1 N-9):没写介绍时与其它行一样一行「未填写」;「介绍一下你自己」只在编辑框里做占位 -->
+  <view wx:if="{{userInfo.introduction}}" class="rv-row rv-row--stack" bindtap="openPop" aria-role="button" aria-label="编辑个人介绍" hover-class="cy-pressed" hover-stay-time="80">
     <view class="rv-row__line"><text class="rv-row__k">个人介绍</text><cy-icon class="rv-row__cv" name="chevron-right" size="32" /></view>
-    <text class="rv-row__intro {{userInfo.introduction ? '' : 'is-empty'}}">{{userInfo.introduction || '介绍一下你自己'}}</text>
+    <text class="rv-row__intro">{{userInfo.introduction}}</text>
+  </view>
+  <view wx:else class="rv-row" bindtap="openPop" aria-role="button" aria-label="编辑个人介绍" hover-class="cy-pressed" hover-stay-time="80">
+    <text class="rv-row__k">个人介绍</text><text class="rv-row__v is-empty">未填写</text><cy-icon class="rv-row__cv" name="chevron-right" size="32" />
   </view>
 </view>
 <view class="rv-group">

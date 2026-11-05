@@ -140,13 +140,14 @@ test('负控:有报名行的承接方仍走原来那条完整链路,不落到受
     '有报名行就要回到既有的承接详情链路，数字与玩法才有来源');
 });
 
-test('负控:后端没认这层关系时(接口拒)照旧是整页失败态,不渲染半屏假承接', () => {
+test('负控:后端没认这层关系时(接口拒)是整页「链接已失效 · 返回上一页」,不渲染半屏假承接', () => {
   const page = makePage();
   page.onLoad({ topicId: '990030', scope: 'MERCHANT' });
   requests.find((r) => r.url === '/api/project/home')
     .success({ code: 500, msg: '你既不是该主题的发布者,也没有承接记录' });
 
-  assert.equal(page.data.loadFailed, true);
+  // 第十二轮 k9(p2 N-9):原来落 loadFailed(空白占位),店长拿错链接只看到一页空白
+  assert.equal(page.data.missingParam, true);
   assert.equal(page.data.coopPartner, null);
 });
 

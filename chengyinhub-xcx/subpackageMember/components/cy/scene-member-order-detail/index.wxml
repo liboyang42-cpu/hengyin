@@ -90,8 +90,9 @@
         <text class="orow-k">积分抵扣{{info.pointUsed ? '（' + info.pointUsed + ' 积分）' : ''}}</text>
         <text class="orow-v">-{{money.amount2(info.pointPaymentAmount)}}</text>
       </view>
+      <!-- 第十二轮 k9(j6 F9 / N8):还没付的单不写「实付」 -->
       <view class="orow" wx:if="{{showWechatPay}}">
-        <text class="orow-k">微信实付</text>
+        <text class="orow-k">{{info.paymentStatus == 2 || info.orderStateKey === 'refunding' || info.orderStateKey === 'refunded' ? '微信实付' : '微信待付'}}</text>
         <text class="orow-v">{{money.amount2(info.wechatPaymentAmount)}}</text>
       </view>
       <view class="orow orow--total">

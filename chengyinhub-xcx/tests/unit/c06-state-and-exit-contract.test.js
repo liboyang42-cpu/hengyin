@@ -577,8 +577,8 @@ test('C06-5 行为:缺场次参数落 missing,且重试证明无效(故不得给
 
 test('negative control: 把缺参改回 emptyKind:error ⇒ 缺参又被渲染成可重试的加载失败', () => {
   const { page } = loadPage('pages/play/index.js', null, (src) => src.replace(
-    "emptyTip: '链接已失效，请返回重新进入', emptyKind: 'missing'",
-    "emptyTip: '链接已失效，请返回重新进入', emptyKind: 'error'",
+    "emptyTip: '链接已失效', emptyKind: 'missing'",
+    "emptyTip: '链接已失效', emptyKind: 'error'",
   ))
   page.data.activityId = ''
   page.data.topicId = ''

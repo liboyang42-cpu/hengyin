@@ -10,7 +10,7 @@
 <cy-empty wx:if="{{loadState === 'loading'}}" kind="loading" title="参与详情加载中" fill class="cy-fill-state" size="lg" />
 <!-- 缺参 ≠ 加载失败：缺参走 missing-param（info 图标 + 返回），真错误才走 cy-error。
      R2 动作槽：缺 id 给「返回参与列表」，有 id 给「重试」，标签与行为一一对应。 -->
-<cy-empty wx:elif="{{loadState === 'missing-param'}}" kind="missing-param" title="缺少参与记录" sub="请返回重新进入" cta="返回参与列表" bind:cta="onErrorAction" fill class="cy-fill-state" size="lg" />
+<cy-empty wx:elif="{{loadState === 'missing-param'}}" kind="missing-param" title="{{missingTitle}}" cta="{{errorActionText}}" bind:cta="onErrorAction" fill class="cy-fill-state" size="lg" />
 <cy-error load-failure wx:elif="{{loadState === 'error'}}" title="参与详情没能打开" sub="{{loadErrorText}}" retry="{{errorActionText}}" bind:retry="onErrorAction" fill class="cy-fill-state" size="lg" />
 
 <block wx:else>
@@ -123,7 +123,7 @@
     <text class="cyinfobottom_scan_txt">核验扫码</text>
   </view>
   <view class="cyinfobottom_box">
-    <view class="cyinfobottom_box_but" bindtap="goPlay" hover-class="cy-pressed" hover-stay-time="80">开始玩</view>
+    <view class="cyinfobottom_box_but" bindtap="goPlay" hover-class="cy-pressed" hover-stay-time="80">开始游戏</view>
     <!-- R1-C04:此处原有一颗品牌紫实底 + 描边的「公告」按钮,是全屏视觉权重最高的元素,
          但 WXML 上没有任何 bindtap/catchtap —— 点下去什么都不发生,是一颗假按钮。
          删除同时消掉三条违规:品牌紫当主 CTA(§10-2)、实底+描边双外沿(§3.5)、假按钮。

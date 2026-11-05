@@ -75,7 +75,8 @@ Page({
         const access = normalizeMerchantAccess(res.data);
         this._merchantAccess = access;
         if (!access.active || !access.canReadCrm) {
-          this.setData({ pageState: 'no-permission', detail: null, canEdit: false });
+          // 第十二轮 k9(p2 N-9):玩家没有岗位,不叫他「联系店主开通」
+          this.setData({ pageState: 'no-permission', notMerchant: !access.active, detail: null, canEdit: false });
           return;
         }
         this.setData({ canEdit: access.canSegmentCrm === true });
