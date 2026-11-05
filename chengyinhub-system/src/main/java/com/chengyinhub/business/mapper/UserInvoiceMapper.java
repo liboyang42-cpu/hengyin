@@ -12,6 +12,14 @@ import java.util.Map;
 
 /** DOC2 F7 用户发票。所有会员侧读写都带 member_id，越权读写在 SQL 层就命中 0 行。 */
 public interface UserInvoiceMapper {
+    int reserveCommandReceipt(@Param("memberId") Long memberId, @Param("requestId") String requestId,
+                              @Param("operation") String operation, @Param("targetId") Long targetId);
+    Map<String, Object> lockCommandReceipt(@Param("memberId") Long memberId, @Param("requestId") String requestId);
+    Map<String, Object> selectCommandReceipt(@Param("memberId") Long memberId, @Param("requestId") String requestId);
+    int finishCommandReceipt(@Param("memberId") Long memberId, @Param("requestId") String requestId,
+                             @Param("operation") String operation, @Param("targetId") Long targetId,
+                             @Param("outcome") String outcome);
+
     CmsRegistration selectInvoiceRegistrationById(@Param("id") Long id);
     List<Long> resolveInvoiceIssuers(@Param("orderIds") List<Long> orderIds);
     List<Map<String,Object>> selectInvoiceIssuerPreviews(@Param("orderIds") List<Long> orderIds);

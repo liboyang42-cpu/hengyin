@@ -162,4 +162,56 @@ class UserInvoiceWireContractTest {
                 && "Updated".equals(input.getTitleName())));
         verify(service, never()).saveTitleWithRequest(anyLong(), anyString(), any());
     }
+
+    @Test
+    void commandRoutesKeepExactTargetAndTokenOwnerAndDoNotUseLegacyWriters() throws Exception {
+        IUserInvoiceService service = mock(IUserInvoiceService.class);
+        MockMvc mvc = mvc(service);
+        String body = json.writeValueAsString(Map.of("requestId", "original", "id", Long.toString(Long.MAX_VALUE), "memberId", 99L));
+        mvc.perform(post("/api/invoice/titles/delete-request").contentType(MediaType.APPLICATION_JSON).content(body)).andExpect(status().isOk());
+        mvc.perform(post("/api/invoice/cancel-request").contentType(MediaType.APPLICATION_JSON).content(body)).andExpect(status().isOk());
+        verify(service).deleteTitleWithRequest(42L, "original", Long.MAX_VALUE);
+        verify(service).cancelWithRequest(42L, "original", Long.MAX_VALUE);
+        verify(service, never()).deleteTitle(anyLong(), anyLong());
+        verify(service, never()).cancel(anyLong(), anyLong());
+        Map<String,Object> receipt = Map.of("requestId", "original", "operation", "DELETE_TITLE", "targetId", Long.toString(Long.MAX_VALUE), "outcome", "DELETED");
+        when(service.commandReceipt(42L, "original")).thenReturn(receipt);
+        String result = mvc.perform(post("/api/invoice/commands/request").contentType(MediaType.APPLICATION_JSON).content(body))
+                .andReturn().getResponse().getContentAsString();
+        assertEquals(json.valueToTree(receipt), json.readTree(result).get("data"));
+        verify(service).commandReceipt(42L, "original");
+    }
+
+    @Test
+    void newCommandRoutesPreserveFeatureAndLoginGuards() throws Exception {
+        IUserInvoiceService service = mock(IUserInvoiceService.class);
+        ComplianceFeatureSwitches switches = mock(ComplianceFeatureSwitches.class);
+        ApiUserInvoiceController controller = new ApiUserInvoiceController(service, switches) {
+            @Override public Long getAppUserId() { return null; }
+        };
+        MockMvc mvc = MockMvcBuilders.standaloneSetup(controller).build();
+        for (String route : List.of("titles/delete-request", "cancel-request", "commands/request")) {
+            when(switches.userInvoiceOn()).thenReturn(false);
+            String off = mvc.perform(post("/api/invoice/" + route).contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"requestId\":\"original\",\"id\":\"1\"}")).andReturn().getResponse().getContentAsString();
+            assertEquals("INVOICE_FEATURE_OFF", json.readTree(off).get("errorCode").textValue());
+            when(switches.userInvoiceOn()).thenReturn(true);
+            String anonymous = mvc.perform(post("/api/invoice/" + route).contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"requestId\":\"original\",\"id\":\"1\"}")).andReturn().getResponse().getContentAsString();
+            assertNotEquals(200, json.readTree(anonymous).get("code").intValue());
+        }
+        verifyNoInteractions(service);
+    }
+
+    @Test
+    void legacyDeleteAndCancelStillUseTheirOriginalContracts() throws Exception {
+        IUserInvoiceService service = mock(IUserInvoiceService.class);
+        MockMvc mvc = mvc(service);
+        String body = "{\"id\":\"1\",\"requestId\":\"ignored-by-legacy\",\"memberId\":99}";
+        mvc.perform(post("/api/invoice/titles/delete").contentType(MediaType.APPLICATION_JSON).content(body)).andExpect(status().isOk());
+        mvc.perform(post("/api/invoice/cancel").contentType(MediaType.APPLICATION_JSON).content(body)).andExpect(status().isOk());
+        verify(service).deleteTitle(42L,1L);
+        verify(service).cancel(42L,1L);
+        verifyNoMoreInteractions(service);
+    }
 }

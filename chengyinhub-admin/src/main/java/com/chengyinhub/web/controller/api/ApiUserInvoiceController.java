@@ -82,6 +82,24 @@ public class ApiUserInvoiceController extends BaseController {
         return run(memberId -> invoiceService.titleSaveReceipt(memberId, requestId));
     }
 
+    @Operation(summary = "按原请求号幂等删除本人抬头")
+    @PostMapping("/titles/delete-request")
+    public AjaxResult deleteTitleRequest(@RequestBody(required = false) Map<String, Object> body) {
+        return run(memberId -> invoiceService.deleteTitleWithRequest(memberId, text(body, "requestId"), toLong(body, "id")));
+    }
+
+    @Operation(summary = "按原请求号幂等撤回本人发票申请")
+    @PostMapping("/cancel-request")
+    public AjaxResult cancelRequest(@RequestBody(required = false) Map<String, Object> body) {
+        return run(memberId -> invoiceService.cancelWithRequest(memberId, text(body, "requestId"), toLong(body, "id")));
+    }
+
+    @Operation(summary = "回读本人原删除或撤回命令回执；未查到不代表未提交")
+    @PostMapping("/commands/request")
+    public AjaxResult commandReceipt(@RequestBody(required = false) Map<String, Object> body) {
+        return run(memberId -> invoiceService.commandReceipt(memberId, text(body, "requestId")));
+    }
+
     @Operation(summary = "删除发票抬头（仅本人）")
     @PostMapping("/titles/delete")
     public AjaxResult deleteTitle(@RequestBody(required = false) Map<String, Object> body) {

@@ -22,6 +22,14 @@ public interface IUserInvoiceService {
 
     Map<String, Object> titleSaveReceipt(Long memberId, String requestId);
 
+    /** Opt-in immutable command receipt; legacy writes retain their existing meaning. */
+    Map<String, Object> deleteTitleWithRequest(Long memberId, String requestId, Long titleId);
+
+    Map<String, Object> cancelWithRequest(Long memberId, String requestId, Long applicationId);
+
+    /** Missing receipt is unknown, not proof that a command never committed. */
+    Map<String, Object> commandReceipt(Long memberId, String requestId);
+
     void deleteTitle(Long memberId, Long titleId);
 
     List<UserInvoiceOrderLine> listInvoiceableOrders(Long memberId);
