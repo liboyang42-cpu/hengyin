@@ -3348,6 +3348,24 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
      * (与会话视图 readyForBase 同一判定)时,到站收尾不再要现场定位证明。只读,不改会话状态。
      */
     @Override
+    public boolean hasStationGameProof(Long memberId, Long activityId, Long topicId, Long nodeId) {
+        if (memberId == null || memberId <= 0L || topicId == null || nodeId == null) return false;
+        GameRuntimeSession session = existingSession(memberId, activityId == null ? 0L : activityId, topicId, nodeId);
+        if (session == null) return false;
+        JsonNode config = readJson(session.getConfigSnapshotJson(), "高级玩法配置不可用");
+        ObjectNode state = objectState(session.getStateJson());
+        if (!readyForBase(session, config, state)) return false;
+        if (enabled(config.get("qa")) && "SHOT".equals(config.path("qa").path("mode").asText())
+                && state.path("qa").path("passed").asBoolean()) {
+            Long uploader = state.path("qa").has("photoUploaderMemberId")
+                    ? state.path("qa").path("photoUploaderMemberId").asLong() : memberId;
+            photoEvidenceVerifier.accept(state.path("qa").path("lastImageUrl").asText(), uploader);
+            return true;
+        }
+        return enabled(config.get("scan")) && state.path("scan").path("scanned").asBoolean();
+    }
+
+    @Override
     public boolean solvedForArrival(Long memberId, Long activityId, Long topicId, Long nodeId) {
         if (memberId == null || memberId <= 0L || topicId == null || nodeId == null) return false;
         GameRuntimeSession session;

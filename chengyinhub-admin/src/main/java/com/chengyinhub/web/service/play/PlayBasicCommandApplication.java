@@ -595,6 +595,7 @@ public class PlayBasicCommandApplication {
         // 验证方式闸：答题(1)/拍照(2)/选项(3)/扫码(4) 类节点必须走对应接口完成，
         // 不能用"到达/到点"绕过任务白拿分+券+勋章+通关(反作弊)。仅 0/null(到点即完成) 或 5(GPS) 放行。
         Integer arriveValidationMethod = null;
+        boolean stationGameProof = false;
         if (node.getTemplateId() != null && node.getTemplateId() > 0L) {
             // R18-FREEZE:完成方式按开局快照判定;老局快照没有该键时回退实时模板
             CmsMemberTemplate vmTpl = playNodeContext.effectiveTemplate(memberId, ctx.topicId, ctx.actId, node, originalRun);
@@ -604,7 +605,11 @@ public class PlayBasicCommandApplication {
                 return error("该站配置异常，暂时无法打卡");
             }
             arriveValidationMethod = vmTpl.getValidationMethod();
-            if (!ValidationMethod.completesOnArrive(vmTpl.getValidationMethod())) {
+            if ((Integer.valueOf(2).equals(arriveValidationMethod) || Integer.valueOf(4).equals(arriveValidationMethod))
+                    && advancedGameRuntimeService != null) {
+                stationGameProof = advancedGameRuntimeService.hasStationGameProof(memberId, actId, ctx.topicId, node.getId());
+            }
+            if (!ValidationMethod.completesOnArrive(vmTpl.getValidationMethod()) && !stationGameProof) {
                 // 白名单判据见 ValidationMethod#completesOnArrive:
                 // 原来这里逐个列"要拒的 vm",新增完成方式会默认从这条路放行,
                 // 等于绕过它自己的判定且零报错。
@@ -624,7 +629,7 @@ public class PlayBasicCommandApplication {
         if (gpsNode && !hasNodeCoord) return error("站点未设坐标，暂时无法打卡");
         // 第十二轮 k2(业主 2026-11-05):这一站的玩法本人已解开 ⇒ 重进即算完成,解开本身就是到站证明,
         // 不再要现场定位(玩家不用走回去)。只看服务端会话事实;没解开的站仍走下面原围栏与守卫。
-        boolean solvedGame = advancedGameRuntimeService != null
+        boolean solvedGame = stationGameProof || advancedGameRuntimeService != null
                 && advancedGameRuntimeService.solvedForArrival(memberId, actId, ctx.topicId, node.getId());
         if (hasNodeCoord && !solvedGame) {
             if (StringUtils.isBlank(longitude) || StringUtils.isBlank(latitude)) return error("请开启定位");

@@ -35,6 +35,11 @@ public interface IAdvancedGameRuntimeService {
         return false;
     }
 
+    /** 当前局的拍照/扫码玩法本身已有可信证明，可替代旧拍照/扫码收尾。 */
+    default boolean hasStationGameProof(Long memberId, Long activityId, Long topicId, Long nodeId) {
+        return false;
+    }
+
     /**
      * C1 可信边界(选项 A):本节点当前局的完成是否只由设备自报成绩、拍照兜底放行或静态节点码撑着。
      * 为 true 时节点奖励只许探索值与徽章(不发积分、券、掉落)。只读,按 memberId 取本人局。

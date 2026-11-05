@@ -6194,6 +6194,16 @@ Page({
     this.setData({ advancedPlay: closed, playKit: { show: false, kit: null }, 'sheet.node': node }, () => {
       if (!scopeCurrent() || this.data.advancedPlay !== closed) return;
       this._advancedReadyIntent = null;
+      if (this._hasGenericProofFlow()) {
+        this.setData({ themeBackpackOpen: true, themeBackpackTab: 'game' });
+        this.refreshThemeBackpack();
+        return;
+      }
+      const config = node.advancedConfig || {};
+      if ((config.qa && config.qa.enabled && config.qa.mode === 'SHOT') || (config.scan && config.scan.enabled)) {
+        this.onArriveTap();
+        return;
+      }
       /* vm 0/5 靠到达收尾;8/9/10(猜数字/猜图/找东西)也是 —— 后端
          ValidationMethod.completesOnArrive 白名单就把这三个算作「arrive 收尾」。
        以前只放 0/5 过,其余全被塞进 startGame:守卫刚被 _advancedReadyNodeId

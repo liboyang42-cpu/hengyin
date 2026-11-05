@@ -437,6 +437,20 @@ class ApiPlayGpsGeofenceValidationTest
         assertEquals(200, BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), null, null, null, null, null, "500").get("code"), "无坐标节点不走坐标判定,精度闸不适用");
     }
 
+    @Test
+    void verifiedPhotoGameReplacesTheOldPhotoSheetButNoProofStillRefuses() {
+        node.setTemplateId(60L);
+        CmsMemberTemplate template = new CmsMemberTemplate(); template.setValidationMethod(2);
+        when(templateService.selectCmsMemberTemplateById(60L)).thenReturn(template);
+        com.chengyinhub.business.service.IAdvancedGameRuntimeService advanced = mock(com.chengyinhub.business.service.IAdvancedGameRuntimeService.class);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "advancedGameRuntimeService", advanced);
+        assertEquals("该站需完成对应任务后才能打卡", arrive(null, null).get("msg"));
+        verifyNoProgressAndNoReward();
+        when(advanced.hasStationGameProof(PLAYER, ACTIVITY, TOPIC, NODE)).thenReturn(true);
+        assertEquals(200, arrive(null, null).get("code"));
+        verify(progressionService).onNodeDone(PLAYER);
+    }
+
     private void stubGpsValidationNode()
     {
         node.setTemplateId(60L);

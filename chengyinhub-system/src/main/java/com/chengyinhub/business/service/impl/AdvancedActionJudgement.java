@@ -755,6 +755,7 @@ public final class AdvancedActionJudgement {
             if (imageUrl.isEmpty()) throw new IllegalArgumentException("请先拍一张");
             score.photoEvidence = new PhotoEvidence(imageUrl, memberId);
             node.put("lastImageUrl", imageUrl);
+            node.put("photoUploaderMemberId", memberId);
             correct = true;
         }
 

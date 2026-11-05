@@ -2203,6 +2203,21 @@ class AdvancedGameRuntimeServiceImplTest {
         verify(route, never()).recordNodeResult(any(), any(), any(), any(), any(), any(), any(), org.mockito.ArgumentMatchers.anyBoolean(), org.mockito.ArgumentMatchers.anyInt(), any());
     }
 
+    @Test void photoOrScanCompletionUsesOnlyTheCurrentServerSessionProof() throws Exception {
+        GameRuntimeSession session = runningSession("{\"qa\":{\"enabled\":true,\"mode\":\"SHOT\"}}",
+                "{\"qa\":{\"finished\":true,\"passed\":true,\"lastImageUrl\":\"owned\",\"photoUploaderMemberId\":42}}");
+        when(sessionMapper.selectPlayerByOwner(ACTIVITY_ID, TOPIC_ID, NODE_ID, MEMBER_ID)).thenReturn(session);
+        java.util.List<Long> uploaders = new java.util.ArrayList<>();
+        ReflectionTestUtils.setField(service, "photoEvidenceVerifier", (java.util.function.BiConsumer<String,Long>)(url, member) -> { assertEquals("owned",url); uploaders.add(member); });
+        assertTrue(service.hasStationGameProof(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID));
+        assertEquals(Collections.singletonList(42L), uploaders);
+        ReflectionTestUtils.setField(service, "photoEvidenceVerifier", (java.util.function.BiConsumer<String,Long>)(url, member) -> { throw new IllegalArgumentException("照片凭据无效"); });
+        assertThrows(IllegalArgumentException.class, () -> service.hasStationGameProof(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID));
+        session.setConfigSnapshotJson("{\"scan\":{\"enabled\":true}}"); session.setStateJson("{\"scan\":{\"scanned\":true}}");
+        assertTrue(service.hasStationGameProof(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID));
+        session.setStateJson("{}"); assertFalse(service.hasStationGameProof(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID));
+    }
+
     @Test void ordinaryPhotoVerifiesUploadBeforeRecordingGenericTaskFact() throws Exception {
         com.fasterxml.jackson.databind.JsonNode config = new com.fasterxml.jackson.databind.ObjectMapper().readTree(
                 "{\"schemaVersion\":1,\"qa\":{\"enabled\":true,\"mode\":\"SHOT\",\"title\":\"拍下路灯\",\"maxTries\":0}}");
