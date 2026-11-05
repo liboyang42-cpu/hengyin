@@ -95,3 +95,30 @@ for (const [comp, fail] of [['playkit-quiethold', '_micFailure'], ['playkit-shou
     assert.match(src, /onStart\(\) \{\n\s+if \(this\.data\.skipped\) return;[^\n]*\n\s+if \(this\.data\.micDenied\) this\.setData\(\{ micDenied: false \}\)/)
   })
 }
+
+test('N11:相册主动作画成主按钮,收起相册退成次按钮;开着相册交完照片后自动收起,重开已完成的相册不自动收', () => {
+  const wxml = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit-album/index.wxml'), 'utf8')
+  assert.match(wxml, /bindtap="onCta" class="album__cta"/)
+  assert.match(wxml, /album__back \{\{completionEnabled && !done \? 'album__back--ghost' : ''\}\}/)
+  const prev = { Component: global.Component }
+  let c = null
+  global.Component = (x) => { c = x }
+  try { delete require.cache[require.resolve(path.join(ROOT, 'pages/play/components/playkit-album/index.js'))]; require(path.join(ROOT, 'pages/play/components/playkit-album/index.js')) } finally { Object.assign(global, prev) }
+  const timers = []
+  const realSet = global.setTimeout
+  global.setTimeout = (fn) => { timers.push(fn); return timers.length }
+  try {
+    const events = []
+    const ctx = Object.assign({ data: { show: true, done: false }, setData(p) { Object.assign(this.data, p) }, triggerEvent(n) { events.push(n) } }, c.methods)
+    ctx._shownAt = Date.now() - 5000
+    ctx.data.done = true
+    c.properties.done.observer.call(ctx, true, false)
+    timers.pop()()
+    assert.deepEqual(events, ['close'])
+    // 重开已完成的相册:show 与 done 同时到 ⇒ 不收
+    const again = Object.assign({ data: { show: true, done: true }, setData(p) { Object.assign(this.data, p) }, triggerEvent(n) { events.push(n) } }, c.methods)
+    c.properties.show.observer.call(again, true)
+    c.properties.done.observer.call(again, true, false)
+    assert.equal(timers.length, 0)
+  } finally { global.setTimeout = realSet }
+})
