@@ -36,6 +36,8 @@ test('video pauses music; decoded frames replace poster; skip restores music and
   assert.equal(p._themeBgm.paused, false);
   assert.equal(p.narrations, 1);
   assert.equal(p.playChapterVideo(), false, 'same mounted chapter does not loop');
+  assert.equal(p.playChapterVideo(true), true, 'explicitly reopening this chapter replays its clip');
+  p.finishChapterVideo();
   const reopened = page();
   assert.equal(reopened.playChapterVideo(), true, 'fresh page replays on reopen');
   reopened.finishChapterVideo();

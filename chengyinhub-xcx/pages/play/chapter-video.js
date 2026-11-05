@@ -1,11 +1,12 @@
 'use strict';
 const methods = {
-  playChapterVideo() {
+  playChapterVideo(reopened = false) {
     const chapter = this.data.chapter || {};
     if (this.data.chapterVideo && (this.data.chapterVideo.show || this.data.chapterVideo.pending)) return true;
     if (!chapter.videoUrl || !chapter.videoPosterUrl) return false;
     const key = String(chapter.id) + '|' + String(chapter.videoUrl).split('?')[0];
     this._seenChapterVideos = this._seenChapterVideos || new Set();
+    if (reopened) this._seenChapterVideos.delete(key);
     if (this._seenChapterVideos.has(key)) return false;
     this._seenChapterVideos.add(key);
     const token = this._chapterVideoToken = (this._chapterVideoToken || 0) + 1;

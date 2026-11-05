@@ -3830,7 +3830,7 @@ Page({
       if (!wasOpen) this._resumeStory();
       /* (行位保留:此处原有代码已移除) */
       this.measureChapter();
-      if (!this.data.chapterGate.show && !this.playChapterVideo()) this.playChapterAudio(true);
+      if (!this.data.chapterGate.show && !this.playChapterVideo(!wasOpen)) this.playChapterAudio(true);
       this._enterThemeChapter();
     });
   },
