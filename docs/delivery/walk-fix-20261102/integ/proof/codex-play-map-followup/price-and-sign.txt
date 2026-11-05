@@ -1,0 +1,41 @@
+TEXT[wrong] 哪张是这家店的招牌？ | 图1 | 不是 | 图2 | 图3 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT after-price-wrong
+KIT {"show":false,"kit":{"type":"pricepair","sessionId":10,"version":1,"present":"inline","title":"哪张是这家店的招牌？","items":[{"id":"pic_1","name":"图1","imageUrl":"http://127.0.0.1:28099/profile/upload/2026/11/05/j3cat.png"},{"id":"pic_2","name":"图2","imageUrl":"http://127.0.0.1:28099/profile/upload/2026/11/05/j3cat.png"},{"id":"pic_3","name":"图3","imageUrl":"http://127.0.0.1:28099/profile/upload/2026/11/05/j3cat.png"}],"maxTries":0,"limitSeconds":0,"attempts":1,"finished":false,"passed":false,"answerId":"","lastPickId":"pic_2"},"readyForBase":false}
+TEXT[correct] 哪张是这家店的招牌？ | 就是它 | 图1 | 图2 | 图3 | 继续故事 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT after-price-correct
+TEXT[daily] 今日城市签 | 11 / 05 | 今日城市签 | 11 / 05 | 出发 | 17:30 | 留签人 | 城隍 | 留于 | 这一站开场 | 留给你的一句 | 直接揭示 | 先撕下来 | 按住小票，往下拉 | 撕不下来？点这里 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT daily-before-sign
+NOTE_INPUT_COUNT []
+ROUTE ["pages/play/index"]
+ERRORS []
+CONSOLE_ERR ["[error] Failed to load resource: the server responded with a status of 404 (Not Found)","[error] HTTP 404 http://127.0.0.1:18097/__api/profile/upload/2026/11/05/j3street.png","[error] Failed to load resource: the server responded with a status of 404 (Not Found)","[error] HTTP 404 http://127.0.0.1:18097/__api/profile/upload/2026/11/05/j3street.png","[error] Failed to load resource: the server responded with a status of 404 (Not Found)","[error] HTTP 404 http://127.0.0.1:18097/__api/profile/upload/2026/11/05/j3cat.png","[error] Failed to load resource: the server responded with a status of 404 (Not Found)"]
+NET GET /api/play/run-session?topicId=990028 200 200 操作成功 
+NET GET /api/play/theme/state?topicId=990028 200 200 操作成功 
+NET GET /api/orient/scoring/session/5 200 500 城市定向计分暂未开放 
+NET GET /api/orient/scoring/session/5/leaderboard 200 500 城市定向计分暂未开放 
+NET POST /api/config/features 200 200 操作成功 
+NET POST /api/compliance/consents 200 200 操作成功 {"docType":"privacy_policy","scene":"app_launch","eventType":"AGREE","requestId":"consent-1793870996009-i6m7j43a"}
+NET POST /api/compliance/consents 200 200 操作成功 {"docType":"user_service_agreement","scene":"app_launch","eventType":"AGREE","requestId":"consent-1793870996009-2x2iyx0n"}
+NET POST /api/play/journey/opening/complete 200 200 操作成功 {"topicId":990028,"chapterId":75,"expectedVersion":0}
+NET GET /api/play/nodes?topicId=990028 200   
+NET GET /api/play/journey/casebook?topicId=990028 200 200 操作成功 
+NET GET /api/play/run-session?topicId=990028 200 200 操作成功 
+NET GET /api/play/theme/state?topicId=990028 200 200 操作成功 
+NET GET /api/orient/scoring/session/5 200 500 城市定向计分暂未开放 
+NET GET /api/orient/scoring/session/5/leaderboard 200 500 城市定向计分暂未开放 
+NET GET /api/play/encounter?topicId=990028&activityId=0&nodeId=113 200 200 操作成功 
+NET POST /api/play/advanced/start 200 200 操作成功 {"activityId":"0","topicId":"990028","nodeId":"113"}
+NET POST /api/play/advanced/action 200 200 操作成功 {"sessionId":10,"version":0,"idempotencyKey":"TEST_ACTION","action":"SUBMIT_PRICE_PAIR","payload":{"pickId":"pic_2"}}
+NET POST /api/play/advanced/action 200 200 操作成功 {"sessionId":10,"version":1,"idempotencyKey":"TEST_ACTION","action":"SUBMIT_PRICE_PAIR","payload":{"pickId":"pic_1"}}
+NET GET /api/play/route-state?topicId=990028 200 200 操作成功 
+NET GET /api/play/theme/state?topicId=990028 200 200 操作成功 
+NET GET /api/play/action-context?topicId=990028&nodeId=113 200 200 操作成功 
+NET POST /api/play/arrive 200 200 已到达，打卡成功 topicId=990028&nodeId=113&routeActionId=route-mw3chicy-74kpfzyzfi&expectedRouteVersion=1&routeSessionId=5
+NET GET /api/play/nodes?topicId=990028 200   
+NET GET /api/play/journey/casebook?topicId=990028 200 200 操作成功 
+NET GET /api/play/run-session?topicId=990028 200 200 操作成功 
+NET GET /api/play/theme/state?topicId=990028 200 200 操作成功 
+NET GET /api/orient/scoring/session/5 200 500 城市定向计分暂未开放 
+NET GET /api/orient/scoring/session/5/leaderboard 200 500 城市定向计分暂未开放 
+NET GET /api/play/encounter?topicId=990028&activityId=0&nodeId=114 200 200 操作成功 
+NET POST /api/play/advanced/start 200 200 操作成功 {"activityId":"0","topicId":"990028","nodeId":"114"}

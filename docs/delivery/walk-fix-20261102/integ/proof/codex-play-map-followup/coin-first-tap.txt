@@ -1,0 +1,45 @@
+FLOW 0 输入地址 | 城瘾 · 城市定向 | PLAY-MAP-1105-coin2 | 一个人的外滩夜游。 | 开始游戏 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 1 N | PLAY-MAP-1105-coin2 · 序章 | 出发 | 序 | 章 | 轻点跳过 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 2 N | PLAY-MAP-1105-coin2 · 序章 | 雨停了。老周留下一张字条：去外滩，钟声会告诉你下一步。 | 出发 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 3 N | PLAY-MAP-1105-coin2 · 第一章 江边1 | 继续探索 | 第 | 1 | 章 | / | 共 | 1 | 章 | 第 | 一 | 章 | 江 | 边 | 1 | 第 | 1 | 章 | 开 | 始 | 了 | 。 | 1 | 坐 | 标 | 轻点跳过 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 4 N | PLAY-MAP-1105-coin2 · 第一章 江边1 | 第1章开始了。沿着江边往北走。 | 继续探索 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 5 N | PLAY-MAP-1105-coin2 · 第一章 江边1 | 第1章开始了。沿着江边往北走。 | 继续探索 | 第 1 站 | 01 抛硬币 | 上海市黄浦区中山东一路1号 | 抛硬币·PLAY-M | 开始任务 | 在地图中查看路线 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 6 正面 · 向左走 反面 · 向右走 | 摇一摇手机 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT coin2-result
+PRE {"ready":true,"state":{"sessionId":7,"activityId":0,"topicId":990027,"nodeId":112,"ownerType":1,"ownerId":9004,"status":"RUNNING","canRetry":false,"score":0,"completedUnits":0,"version":1,"startedAt":1793870724948,"deadlineAt":null,"completedAt":null,"config":{"timer":{"enabled":false},"random":{"enabled":false},"branch":{"enabled":false},"leaderboard":{"enabled":false},"multiplayer":{"enabled":false},"schemaVersion":1},"present":"inline","playKit":{"coinFlip":{"heads":{"label":"正面","action":"向左走"},"tails":{"label":"反面","action":"向右走"},"xp":0,"flipped":true,"side":"HEADS","action":"向左走","awarded":true}},"readyForBase":true,"hp":10,"luck":3,"encounter":{"nodeId":112,"runId":4,"stateVersion":1,"arrived":false,"locked":false,"missingKeys":[],"presentation":{"title":"抛硬币·PLAY-M","hook":null,"storyText":null,"npc":null,"revisit":false},"allowedActions":[],"check":null,"outcomeContract":{"outcomeCodes":[],"outcomes":[]},"fallbackPlan":{"canSkip":false,"manualVerify":false,"message":null},"preload":[],"beat":"route"},"stateVersion":1,"draws":[],"multiplayer":{"members":[],"completedUnitIds":[],"turnIndex":0}},"rect":{"x":20.796875,"y":349.21875,"width":348.40625,"height":45.75,"top":349.21875,"right":369.203125,"bottom":394.96875,"left":20.796875},"hit":"mp-pagehost"}
+SHOT coin2-button
+TEXT[after-one-tap] N | PLAY-MAP-1105-coin2 · 尾声 | 钟声响了十二下。老周的字条到这里就齐了。 | 继续 | 1处旧址已全部点亮 | 领取你的城市足迹卡 | 11月5日 周四 | PLAY-MAP-1105-coin2 | 已通关 | 1 | 点亮坐标 | 00:22 | 用时 | 成就 | 首 | 首达 | 01 抛硬币 | 城市探索 | 继续 | 全 | 部 | 完 | 成 | P | L | A | Y | - | M | A | P | - | 1 | 1 | 0 | 5 | - | c | o | i | n | 2 | 1 | 坐 | 标 | 0 | 0 | : | 2 | 2 | 用 | 时 | 继续 | 保存通关卡 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT coin2-one-tap
+ROUTE ["pages/play/index"]
+ERRORS []
+CONSOLE_ERR ["[error] Failed to load resource: the server responded with a status of 404 (Not Found)","[error] HTTP 404 http://127.0.0.1:18097/mp/profile/upload/2026/11/05/j3street.png","[error] Failed to load resource: the server responded with a status of 404 (Not Found)","[error] HTTP 404 http://127.0.0.1:18097/mp/profile/upload/2026/11/05/j3street.png","[error] Failed to load resource: the server responded with a status of 404 (Not Found)","[error] HTTP 404 http://127.0.0.1:18097/mp/profile/upload/2026/11/05/j3street.png","[error] Failed to load resource: the server responded with a status of 404 (Not Found)"]
+NET GET /api/play/theme/state?topicId=990027 200 200 操作成功 
+NET GET /api/orient/scoring/session/4 200 500 城市定向计分暂未开放 
+NET GET /api/orient/scoring/session/4/leaderboard 200 500 城市定向计分暂未开放 
+NET POST /api/config/features 200 200 操作成功 
+NET POST /api/compliance/consents 200 200 操作成功 {"docType":"privacy_policy","scene":"app_launch","eventType":"AGREE","requestId":"consent-1793870712151-tyicbfry"}
+NET POST /api/compliance/consents 200 200 操作成功 {"docType":"user_service_agreement","scene":"app_launch","eventType":"AGREE","requestId":"consent-1793870712151-d04r8vmn"}
+NET POST /api/play/journey/opening/complete 200 200 操作成功 {"topicId":990027,"chapterId":72,"expectedVersion":0}
+NET GET /api/play/nodes?topicId=990027 200 200 操作成功 
+NET GET /api/play/journey/casebook?topicId=990027 200 200 操作成功 
+NET GET /api/play/run-session?topicId=990027 200 200 操作成功 
+NET GET /api/play/theme/state?topicId=990027 200 200 操作成功 
+NET GET /api/orient/scoring/session/4 200 500 城市定向计分暂未开放 
+NET GET /api/orient/scoring/session/4/leaderboard 200 500 城市定向计分暂未开放 
+NET GET /api/play/encounter?topicId=990027&activityId=0&nodeId=112 200 200 操作成功 
+NET POST /api/play/advanced/start 200 200 操作成功 {"activityId":"0","topicId":"990027","nodeId":"112"}
+NET POST /api/play/advanced/action 200 200 操作成功 {"sessionId":7,"version":0,"idempotencyKey":"TEST_ACTION","action":"FLIP_COIN","payload":{}}
+NET GET /api/play/route-state?topicId=990027 200 200 操作成功 
+NET GET /api/play/theme/state?topicId=990027 200 200 操作成功 
+NET GET /api/play/action-context?topicId=990027&nodeId=112 200 200 操作成功 
+NET POST /api/play/arrive 200 200 已到达，打卡成功 topicId=990027&nodeId=112&routeActionId=route-mw3cbfcb-nt8hvq8hp&expectedRouteVersion=1&routeSessionId=4
+NET GET /api/play/nodes?topicId=990027 200 200 操作成功 
+NET GET /api/play/journey/casebook?topicId=990027 200 200 操作成功 
+NET GET /api/play/journey/ending?topicId=990027&activityId=0 200 200 操作成功 
+NET GET /api/play/theme/state?topicId=990027 200 200 操作成功 
+NET GET /api/orient/scoring/session/4 200 500 城市定向计分暂未开放 
+NET GET /api/orient/scoring/session/4/leaderboard 200 500 城市定向计分暂未开放 
+NET POST /api/play/run-session/clear 200 200 操作成功 savedAt=1793870732859&topicId=990027
+NET POST /api/play/my-completed 200 200 操作成功 
+NET POST /api/play/run-session/clear 200 200 操作成功 savedAt=1793870732859&topicId=990027
+NET POST /api/play/run-session/clear 200 200 操作成功 savedAt=1793870733170&topicId=990027

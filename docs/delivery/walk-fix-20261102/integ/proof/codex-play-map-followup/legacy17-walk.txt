@@ -1,0 +1,103 @@
+FLOW 0 输入地址 | 城瘾 · 城市定向 | PLAY-MAP-1105-legacy-68 | 一个人的外滩夜游。 | 开始游戏 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 1 开启定位 | 仅在你主动开始游玩后，持续获取位置，用于显示当前位置和自动判断到点。锁屏或切到后台仍会获取；暂停、结束本次或离开游玩页后停止。未开启时仍可扫码到达。 | 先用扫码 | 开启定位 | N | 15m | PLAY-MAP-1105-legacy-68 · 合成章节 2 | 继续探索 | 第 | 1 | 章 | · | 完 | 成 | 合 | 成 | 章 | 节 | 1 | 9 | / | 9 | 坐 | 标 | 2 | 0 | 0 | 解 | 谜 | 分 | 轻点跳过 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 2 N | 132m | PLAY-MAP-1105-legacy-68 · 合成章节 2 | 继续探索 | 轻点跳过 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 3 N | 132m | PLAY-MAP-1105-legacy-68 · 合成章节 2 | 仅用于存量结构走查的合成内容。 | 继续探索 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 4 N | 132m | PLAY-MAP-1105-legacy-68 · 合成章节 2 | 仅用于存量结构走查的合成内容。 | 继续探索 | 第 8 站 | 合成站 10 | 上海市黄浦区中山东一路1号 | 我已到达此站 | 定位已开启 · 靠近后会自动点亮 | 在地图中查看路线 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 5 N | 15m | PLAY-MAP-1105-legacy-68 · 合成章节 2 | 仅用于存量结构走查的合成内容。 | 合成站手记。 | 继续探索 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 6 N | 15m | PLAY-MAP-1105-legacy-68 · 合成章节 2 | 仅用于存量结构走查的合成内容。 | 合成站手记。 | 继续探索 | 第 9 站 | 合成站 11 | 上海市黄浦区中山东一路1号 | PLAY-MAP-1105-legacy-68-11 | 合成站手记。 | 开始任务 | 在地图中查看路线 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 7 钟面直径大约几米？ | 10 | 11 | 12 | 米 | 就这个数 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT legacy-990021-estimate
+FLOW 8 钟面直径大约几米？ | 4 | 5 | 6 | 米 | 猜中了 | 正好 5 米 | 约 5 米。 | 继续故事 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 9 N | 29m | PLAY-MAP-1105-legacy-68 · 合成章节 2 | 合成站手记。 | 合成站手记。 | 继续探索 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 10 N | 29m | PLAY-MAP-1105-legacy-68 · 合成章节 2 | 合成站手记。 | 合成站手记。 | 继续探索 | 第 10 站 | 合成站 12 | 上海市黄浦区中山东一路1号 | PLAY-MAP-1105-legacy-68-12 | 合成站手记。 | 开始任务 | 在地图中查看路线 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 11 找出画里的猫 | 猫1 | 猫2 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT legacy-990021-hidden
+TEXT[hidden-result] 找出画里的猫 | 猫1 | 猫2 | 猫3 | 0 / 3 | 点一下你觉得藏着的地方。 | 继续故事 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+ROUTE ["pages/play/index"]
+ERRORS []
+CONSOLE_ERR ["[error] Failed to load resource: the server responded with a status of 404 (Not Found)","[error] HTTP 404 http://127.0.0.1:18097/__api/profile/upload/2026/11/05/j3street.png","[error] Failed to load resource: the server responded with a status of 404 (Not Found)","[error] Failed to load resource: the server responded with a status of 404 (Not Found)"]
+NET POST /api/config/features 200 200 操作成功 
+NET GET /api/play/nodes?topicId=990021 200   
+NET POST /api/config/features 200 200 操作成功 
+NET GET /api/play/journey/casebook?topicId=990021 200 500 这一局还没开始 
+NET GET /api/play/run-session?topicId=990021 200 200 操作成功 
+NET POST /api/config/features 200 200 操作成功 
+NET POST /api/compliance/consents 200 200 操作成功 {"docType":"privacy_policy","scene":"app_launch","eventType":"AGREE","requestId":"consent-1793871521441-n4czs50n"}
+NET POST /api/compliance/consents 200 200 操作成功 {"docType":"user_service_agreement","scene":"app_launch","eventType":"AGREE","requestId":"consent-1793871521441-epa60e2i"}
+NET GET /api/play/encounter?topicId=990021&activityId=0&nodeId=90 200 500 这一局还没开始 
+NET GET /api/play/action-context?topicId=990021&nodeId=90 200 200 操作成功 
+NET POST /api/play/arrive 200 200 已到达，打卡成功 topicId=990021&nodeId=90&longitude=121.4909&latitude=31.2389&accuracy=8&routeActionId=route-mw3cskb3-8xipcdpxao&expectedRouteVersion=0&routeSessionId=0
+NET GET /api/play/nodes?topicId=990021 200   
+NET GET /api/play/journey/casebook?topicId=990021 200 500 这一局还没开始 
+NET GET /api/play/run-session?topicId=990021 200 200 操作成功 
+NET GET /api/play/encounter?topicId=990021&activityId=0&nodeId=91 200 500 这一局还没开始 
+NET POST /api/play/advanced/start 200 200 操作成功 {"activityId":"0","topicId":"990021","nodeId":"91"}
+NET POST /api/play/advanced/action 200 200 操作成功 {"sessionId":12,"version":0,"idempotencyKey":"TEST_ACTION","action":"SUBMIT_ESTIMATE","payload":{"value":5}}
+NET GET /api/play/action-context?topicId=990021&nodeId=91 200 200 操作成功 
+NET POST /api/play/arrive 200 200 已到达，打卡成功 topicId=990021&nodeId=91&longitude=121.4909&latitude=31.2389&accuracy=8&routeActionId=route-mw3css47-3n6lrjbteo&expectedRouteVersion=0&routeSessionId=0
+NET GET /api/play/nodes?topicId=990021 200   
+NET GET /api/play/journey/casebook?topicId=990021 200 500 这一局还没开始 
+NET GET /api/play/run-session?topicId=990021 200 200 操作成功 
+NET GET /api/play/encounter?topicId=990021&activityId=0&nodeId=92 200 500 这一局还没开始 
+NET POST /api/play/advanced/start 200 200 操作成功 {"activityId":"0","topicId":"990021","nodeId":"92"}
+NET POST /api/play/advanced/action 200 200 操作成功 {"sessionId":13,"version":0,"idempotencyKey":"TEST_ACTION","action":"SUBMIT_HIDDEN_OBJECT","payload":{"x":0.2473,"y":0.2978}}
+NET POST /api/play/advanced/action 200 200 操作成功 {"sessionId":13,"version":1,"idempotencyKey":"TEST_ACTION","action":"SUBMIT_HIDDEN_OBJECT","payload":{"x":0.698,"y":0.4475}}
+NET POST /api/play/advanced/action 200 200 操作成功 {"sessionId":13,"version":2,"idempotencyKey":"TEST_ACTION","action":"SUBMIT_HIDDEN_OBJECT","payload":{"x":0.4483,"y":0.7498}}
+FLOW 12 找出画里的猫 | 猫1 | 猫2 | 猫3 | 0 / 3 | 点一下你觉得藏着的地方。 | 继续故事 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 13 N | 44m | PLAY-MAP-1105-legacy-68 · 合成章节 2 | 合成站手记。 | 合成站手记。 | 继续探索 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 14 N | 44m | PLAY-MAP-1105-legacy-68 · 合成章节 2 | 合成站手记。 | 合成站手记。 | 继续探索 | 第 11 站 | 合成站 13 | 上海市黄浦区中山东一路1号 | 我已到达此站 | 定位已开启 · 靠近后会自动点亮 | 在地图中查看路线 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 15 N | 15m | PLAY-MAP-1105-legacy-68 · 合成章节 2 | 合成站手记。 | 合成站手记。 | 合成站手记。 | 继续探索 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 16 N | 15m | PLAY-MAP-1105-legacy-68 · 合成章节 2 | 合成站手记。 | 合成站手记。 | 合成站手记。 | 继续探索 | 第 12 站 | 合成站 14 | 上海市黄浦区中山东一路1号 | 合成站：1873 或选 A | PLAY-MAP-1105-legacy-68-14 | 合成站手记。 | 开始任务 | 在地图中查看路线 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 17 PLAY-MAP-1105-legacy-68-14 | 合成站：1873 或选 A | 当前最高 100 解谜分 | 提交 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT legacy-990021-text-reveal
+FLOW 18 PLAY-MAP-1105-legacy-68-14 | 合成站：1873 或选 A | 合成完成反馈。 | 合成揭示：1873 是这题的正确答案。 | 当前最高 100 解谜分 | 继续 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 19 N | 29m | PLAY-MAP-1105-legacy-68 · 合成章节 2 | 合成站手记。 | 合成站手记。 | 合成站手记。 | 合成站手记。 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SEAM open existing next-station sheet
+FLOW 20 N | 0m | PLAY-MAP-1105-legacy-68 · 合成章节 2 | 合成站手记。 | 合成站手记。 | 合成站手记。 | 合成站手记。 | 第 13 站 | 合成站 15 | 上海市黄浦区中山东一路1号 | PLAY-MAP-1105-legacy-68-15 | 合成站手记。 | 开始任务 | 在地图中查看路线 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 21 PLAY-MAP-1105-legacy-68-15 | 拍摄测试图片 | 拍照上传 | 拍照上传 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 22 裁剪 | 取消 | 还原 | 选取 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 23 N | 15m | PLAY-MAP-1105-legacy-68 · 合成章节 2 | +450 探索值 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SEAM open existing next-station sheet
+FLOW 24 N | 15m | PLAY-MAP-1105-legacy-68 · 合成章节 2 | 合成站手记。 | 合成站手记。 | 合成站手记。 | 合成站手记。 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SEAM open existing next-station sheet
+FLOW 25 N | 0m | PLAY-MAP-1105-legacy-68 · 合成章节 2 | 合成站手记。 | 合成站手记。 | 合成站手记。 | 合成站手记。 | 第 15 站 | 合成站 17 | 上海市黄浦区中山东一路1号 | PLAY-MAP-1105-legacy-68-17 | 合成站手记。 | 开始任务 | 在地图中查看路线 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 26 钟面直径大约几米？ | 10 | 11 | 12 | 米 | 就这个数 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT legacy-990021-estimate
+FLOW 27 钟面直径大约几米？ | 4 | 5 | 6 | 米 | 猜中了 | 正好 5 米 | 约 5 米。 | 继续故事 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 28 N | PLAY-MAP-1105-legacy-68 · 合成章节 1 | 17处旧址已全部点亮 | 领取你的城市足迹卡 | 保存图片 | 分享 | 11月5日 周四 | PLAY-MAP-1105-legacy-68 | 已通关 | 17 | 点亮坐标 | 继续 | 继续 | 保存通关卡 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT legacy-990021-step28
+STATE {"sheet":{"show":false,"node":{"nodeId":97,"num":17,"sortId":17,"name":"合成站 17","address":"上海市黄浦区中山东一路1号","description":"","imgUrl":"","businessTime":"","openStatus":"","lng":121.49159999999999,"lat":31.2396,"done":false,"doneAt":0,"picUrl":"","arrived":false,"arrivedAt":null,"gameDone":false,"selfReported":false,"hasGame":true,"gameKind":"play","crowded":null,"serviceCapacity":null,"quantityUnavailable":false,"chapterId":58,"hookText":"","merchantId":0,"locked":false,"paused":false,"runtimeStatus":"","unlockAfterNodeId":0,"hasTemplate":true,"hasAdvanced":true,"advancedConfig":{"schemaVersion":1,"present":"inline","timer":{"enabled":false},"random":{"enabled":false},"branch":{"enabled":false},"leaderboard":{"enabled":false},"multiplayer":{"enabled":false},"timeWindow":{"enabled":false},"blindTaste":{"enabled":false},"silentOrder":{"enabled":false},"diyName":{"enabled":false},"musicCorner":{"enabled":false},"steps":{"enabled":false},"dailySign":{"enabled":false},"slowTask":{"enabled":false},"estimate":{"enabled":true,"title":"钟面直径大约几米？","unit":"米","min":1,"max":20,"xp":0},"pricePair":{"enabled":false},"hiddenObject":{"enabled":false},"predict":{"enabled":false},"coinFlip":{"enabled":false},"diceRoll":{"enabled":false},"reaction":{"enabled":false},"ballShake":{"enabled":false},"quietHold":{"enabled":false},"compass":{"enabled":false},"shout":{"enabled":false},"countdown":{"enabled":false},"stopwatch":{"enabled":false},"qa":{"enabled":false},"scan":{"enabled":false},"sort":{"enabled":false},"match":{"enabled":false},"classify":{"enabled":false},"compare":{"enabled":false},"profile":{"enabled":false},"photoCheck":{"enabled":false},"note":{"enabled":false},"typeIn":{"enabled":false},"check":{"enabled":false}},"vm":8,"question":"","options":null,"questionImg":"","questionAudio":"","optionMedia":null,"points":450,"gameTitle":"PLAY-MAP-1105-legacy-68-17","duration":"","difficulty":"","players":"","materials":"","rule":"","story":"合成站手记。","cover":"","cardHook":"","fragmentText":"","hint1":"","hint2":"","reveal":"","hintLocked":false,"hintCost":0,"hintCount":0,"puzzleScoring":false,"puzzleHintLevel":0,"puzzleScoreCap":100,"usedHints":[],"puzzleScore":null,"completionMode":"","feedback":"答案还没咬合,再看看四周……","passText":"合成完成反馈。","photoDesc":"拍摄测试图片","audio":"","audioDur":"","medalName":"","medalImg":"","medalStyle":"glow","couponId":0,"coupon":null,"npc":null,"perk":null,"placeNum":15,"metaLine":"上海市黄浦区中山东一路1号","bizText":"","openText":"","openCol":"","openDot":"","gameLede":"合成站手记。"},"continueText":"前往下一站"},"chapterFull":true,"next":null,"game":{"nodeId":95,"num":15,"vm":2,"title":"PLAY-MAP-1105-legacy-68-15","cover":"","chips":[],"story":"合成站手记。","rule":"","materials":"","qname":"依据现场线索作答","opts":[],"qImg":"","qAudio":"","audio":"","audioDur":"","photoDesc":"拍摄测试图片","feedback":"答案还没咬合,再看看四周……","passText":"合成完成反馈。","reveal":"","hint1":"","hint2":"","hintLocked":false,"hintCost":0,"hintCount":0,"puzzleScoring":false,"medalName":"","medalImg":"","couponId":0}}
+AUDIO [{"src":"http://127.0.0.1:18097/__oss/upload/f7c74512777c454d8941ea27ee7b9955.mp3","paused":true,"time":2.287973,"duration":3,"ready":4}]
+ROUTE ["pages/play/index"]
+ERRORS []
+CONSOLE_ERR ["[error] Failed to load resource: the server responded with a status of 404 (Not Found)","[error] HTTP 404 http://127.0.0.1:18097/__api/profile/upload/2026/11/05/j3street.png","[error] Failed to load resource: the server responded with a status of 404 (Not Found)","[error] Failed to load resource: the server responded with a status of 404 (Not Found)","[error] HTTP 404 http://127.0.0.1:18097/__api/profile/upload/2026/11/05/j3street.png","[error] Failed to load resource: the server responded with a status of 404 (Not Found)"]
+NET GET /api/play/run-session?topicId=990021 200 200 操作成功 
+NET GET /api/play/action-context?topicId=990021&nodeId=95 200 200 操作成功 
+NET POST /api/play/photo 200 200 已提交,打卡成功 topicId=990021&nodeId=95&picUrl=TEST_OSS_ASSET
+NET GET /api/play/nodes?topicId=990021 200   
+NET GET /api/play/journey/casebook?topicId=990021 200 500 这一局还没开始 
+NET GET /api/play/run-session?topicId=990021 200 200 操作成功 
+NET GET /api/play/action-context?topicId=990021&nodeId=96 200 200 操作成功 
+NET POST /api/play/arrive 200 200 已到达，打卡成功 topicId=990021&nodeId=96&longitude=121.49149999999999&latitude=31.2395&accuracy=8&routeActionId=route-mw3ctme4-i1jaq91kef&expectedRouteVersion=0&routeSessionId=
+NET GET /api/play/encounter?topicId=990021&activityId=0&nodeId=96 200 500 这一局还没开始 
+NET GET /api/play/nodes?topicId=990021 200   
+NET GET /api/play/journey/casebook?topicId=990021 200 500 这一局还没开始 
+NET GET /api/play/run-session?topicId=990021 200 200 操作成功 
+NET GET /api/play/encounter?topicId=990021&activityId=0&nodeId=97 200 500 这一局还没开始 
+NET POST /api/play/advanced/start 200 200 操作成功 {"activityId":"0","topicId":"990021","nodeId":"97"}
+NET POST /api/play/advanced/action 200 200 操作成功 {"sessionId":14,"version":0,"idempotencyKey":"TEST_ACTION","action":"SUBMIT_ESTIMATE","payload":{"value":5}}
+NET GET /api/play/action-context?topicId=990021&nodeId=97 200 200 操作成功 
+NET POST /api/play/arrive 200 200 已到达，打卡成功 topicId=990021&nodeId=97&longitude=121.49159999999999&latitude=31.2396&accuracy=8&routeActionId=route-mw3ctvkx-vtk5t8e5gz&expectedRouteVersion=0&routeSessionId=
+NET GET /api/play/nodes?topicId=990021 200   
+NET GET /api/play/journey/casebook?topicId=990021 200 500 这一局还没开始 
+NET GET /api/play/journey/ending?topicId=990021&activityId=0 200 500 本主题未配置剧情 
+NET POST /api/play/run-session/clear 200 200 操作成功 savedAt=1793871593779&topicId=990021
+NET POST /api/play/my-completed 200 200 操作成功 
+NET POST /api/topic/share-code 200 500 微信未返回个人码 id=990021
+NET POST /api/map/reverse-geocode 200 200 操作成功 latitude=31.239&longitude=121.491
+NET POST /api/play/my-completed 200 200 操作成功 
+NET POST /api/play/run-session/clear 200 200 操作成功 savedAt=1793871593779&topicId=990021
+NET POST /api/topic/share-code 200 500 微信未返回个人码 id=990021
+NET POST /api/map/reverse-geocode 200 200 操作成功 latitude=31.239&longitude=121.491
+NET POST /api/play/run-session/clear 200 200 操作成功 savedAt=1793871593869&topicId=990021
+NET POST /api/play/run-session/clear 200 200 操作成功 savedAt=1793871594225&topicId=990021
