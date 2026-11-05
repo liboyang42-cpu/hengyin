@@ -1155,6 +1155,9 @@ Page({
             clubMemberDiscountAmount: parseFloat(clubDiscount.toFixed(2)),
             clubPrioritySignupEnabled: res.data.prioritySignupEnabled === true,
             isClubMember: res.data.clubMember === true,
+            // 第十二轮 k6(p1 N-1):服务端说这单不能抵积分(自由探索、可抵 0)就收起整行;没下发(旧 jar)保持原样。
+            pointsUsable: res.data.pointsUsable === false ? false
+              : (res.data.pointsUsable === true ? true : that.data.pointsUsable),
             paymentReady: pay <= 0 ? true : that.data.paymentReady
           }, () => that.refreshPaymentState());
           that._quoteRefundableNow = refundableNow;

@@ -195,7 +195,7 @@
 
   <!-- 供给申报勾选浮层:随卡片动作从 pages/coop/list 搬来,口径原样(ds 主题宿主 class 同样兜住变量继承) -->
   <cy-sheet variant="full" class="theme-merchant" show="{{showPerkPick}}" title="申报本次供给" handle closable maskClosable bind:close="closePerkPick">
-  <view class="pk-hint">勾选本次提供的权益，按核销人数结算</view>
+  <!-- 第十二轮 k6(p2 N-5):删去申报浮层的结算说明句:引流型合同不结算,标题「申报本次供给」已说清要做什么 -->
   <cy-skeleton wx:if="{{perkState === 'loading'}}" type="list" count="3" />
   <cy-error load-failure wx:elif="{{perkState === 'error'}}" title="常备权益加载失败" sub="{{perkErrorText}}" bind:retry="retryPerkPick" />
   <scroll-view wx:elif="{{perkState === 'ready'}}" scroll-y class="pk-list">

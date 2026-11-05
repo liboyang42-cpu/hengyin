@@ -612,7 +612,9 @@ function assertProfitPresentation(wxml, wxss, js) {
   assert.match(button[0], /disabled="\{\{!canWithdraw\}\}"/)
   assert.match(button[0], /aria-disabled="\{\{!canWithdraw\}\}"/)
   assert.match(wxml, /<text class="withdraw-reason"\s+wx:if="\{\{withdrawState === 'unknown'\}\}">已入账金额待确认<\/text>/)
-  assert.match(wxml, /<text class="withdraw-reason"\s+wx:elif="\{\{withdrawState === 'zero'\}\}">还没有已入账分润<\/text>/)
+  // 第十二轮 k6(p2 N-4):合法 0 不再加一句「还没有已入账分润」,灰按钮 + ¥0.00 已经说清;没有合作结算时整组不画,只给空状态
+  assert.doesNotMatch(wxml, /withdrawState === 'zero'\}\}">还没有已入账分润/)
+  assert.match(wxml, /<block wx:if="\{\{topics\.length\}\}">\s*<cy-stat-card/)
   assert.doesNotMatch(wxml, /wx:if="\{\{!canWithdraw\}\}"[^>]*>暂无可提现金额/, 'unknown 与合法 0 不得共用同一句结论')
   assert.match(rule(wxss, '.withdraw-reason'), /color:\s*var\(--cy-text-secondary\)/)
   assert.match(js, /canWithdraw:\s*false/)

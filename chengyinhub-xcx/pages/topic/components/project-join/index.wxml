@@ -351,7 +351,8 @@
           <text class="prep-label">达成时间</text>
           <text class="prep-text">{{ coopPartner.acceptedText }}</text>
         </view>
-        <view class="sec-empty">{{ coopPartner.note || '这一屏没有节点可列:你接的是整条路线的合作（到店核销与分成）,不针对某一站。' }}</view>
+        <!-- 第十二轮 k6(p2 N-5):删去兜底说明句(说「分成」,而引流型合同没有分成;也是说明文案) -->
+        <view class="sec-empty" wx:if="{{ coopPartner.note }}">{{ coopPartner.note }}</view>
       </view>
     </view>
   </view>

@@ -1060,6 +1060,8 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         // P-07/C-07(l3):报价必须读下单时会冻结的同一个点。③ 票缺开始时间时,下单冻结的是旧口径
         // (有效期截止前全额),这里记下那个截止点,报价按它说,别再按集合钟说。
         Date purchaseRefundDeadline = null;
+        // 第十二轮 k6(p1 N-1):这单若开积分最多能抵多少的基数(会员价后的票面);用来告诉结算页要不要画积分抵扣行。
+        BigDecimal pointsDeductBase = BigDecimal.ZERO;
 
         if (tickets == null || tickets.isEmpty()) {
             // 单票模式
@@ -1084,6 +1086,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             pointsUsed = c.pointUsed;
             pointsDeduct = c.pointDeductAmount;
             memberDiscountYuan = c.memberDiscountAmount;
+            pointsDeductBase = c.totalAmount;
             ticketsKey.append(ticketId).append(':').append(1);
             if (inventoryHold != null) ticketsKey.append("@offer:").append(inventoryHold.getOfferId());
         } else {
@@ -1114,6 +1117,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             }
             // qty 传 1：orderTotal 已是整单票面，computePrice 内部再乘 qty 会重复计数
             PriceCalc c = computePrice(orderTotal, memberPriceTotal, 1, userPoint, usePoint);
+            pointsDeductBase = c.totalAmount;
             aggregatePayable = c.payableAmount;
             pointsUsed = c.pointUsed;
             pointsDeduct = c.pointDeductAmount;
@@ -1130,6 +1134,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                 couponDeductYuan, quoteSign,
                 memberDiscountYuan.setScale(2, BigDecimal.ROUND_HALF_UP), clubBenefit.isMember,
                 clubBenefit.prioritySignupEnabled);
+        result.setPointsUsable(pointsUsable(sellerTopic, usePoint, pointsDeduct, pointsDeductBase, userPoint));
         // 1-22 附注(拍板 2026-09-19 第6条):开场前 24h 内的 ¥ 单,下单确认弹层必须写明「本单不可退」。
         // 截止点只许从 RefundPolicy 唯一场次钟取,报价侧不参与 quoteSign(它是展示性字段,
         // 不随时间翻转而使已发出的报价失效)。非场次单(主题路径)不下发 ⇒ 前端 tri-state 保持默认。
@@ -1235,6 +1240,21 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
      * 金额/积分抵扣/支付方式计算（M0-1 抽取）：createRegistration 与 quoteRegistration 共用，
      * 保证「报价 = 实付」分毫不差。逻辑与原 createRegistration 内联段完全等价。
      */
+    /**
+     * 第十二轮 k6(p1 N-1):这单能不能用积分抵扣。自由探索不收积分(assertShopDayPointsUnsupported),
+     * 票面为 0、玩家没积分、按抵扣规则算下来是 0 ⇒ false,结算页就不画「积分抵扣 -¥0」那一行。
+     * 不参与 quoteSign:只是展示开关,真正的抵扣仍以下单时重算为准。
+     */
+    private Boolean pointsUsable(CmsTopic sellerTopic, int usePoint, BigDecimal pointsDeduct,
+                                 BigDecimal deductBase, long userPoint) {
+        if (sellerTopic != null && Integer.valueOf(ProductType.FREE_EXPLORE).equals(sellerTopic.getProductType())) {
+            return Boolean.FALSE;
+        }
+        if (usePoint == 1) return pointsDeduct != null && pointsDeduct.signum() > 0;
+        if (deductBase == null || deductBase.signum() <= 0 || userPoint <= 0) return Boolean.FALSE;
+        return computePrice(deductBase, deductBase, 1, userPoint, 1).pointDeductAmount.signum() > 0;
+    }
+
     private PriceCalc computePrice(BigDecimal ticketPrice, int qty, long userPoint, Integer isUsePoint) {
         return computePrice(ticketPrice, ticketPrice, qty, userPoint, isUsePoint);
     }

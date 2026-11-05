@@ -5,6 +5,9 @@
 
   <!-- 入账口径以服务端 myIncomeArrived 为准；已结算不等于已入账。 -->
   <block wx:elif="{{!loadErr}}">
+    <!-- 第十二轮 k6(p2 N-4):还没有任何合作结算时只给一个空状态 —— 不再同屏出现「已入账分润 ¥0.00」、余额「可提现」、
+         灰掉的提现按钮和两句「还没有…」;玩家与无财务权限的店员也就看不到这组假零。 -->
+    <block wx:if="{{topics.length}}">
     <cy-stat-card class="stat-grid" items="{{statItems}}" columns="{{1}}" count-k="{{pfK}}" />
     <!-- 9-16 晚拍板第 5 条 + 9-17 总控:余额三段只给主体本人,员工不显示(isOwner 由 /api/coop/finance 判定) -->
     <cy-funds-stages class="funds" wx:if="{{isOwner}}" />
@@ -13,8 +16,8 @@
     <view class="withdraw-entry">
       <cy-btn variant="{{canWithdraw ? 'primary' : 'secondary'}}" disabled="{{!canWithdraw}}" aria-disabled="{{!canWithdraw}}" aria-label="{{canWithdraw ? '联系平台客服提现' : (withdrawState === 'unknown' ? '联系平台客服提现，已入账金额待确认' : '联系平台客服提现，还没有已入账分润')}}" bind:tap="goWithdraw">联系平台客服提现</cy-btn>
       <text class="withdraw-reason" wx:if="{{withdrawState === 'unknown'}}">已入账金额待确认</text>
-      <text class="withdraw-reason" wx:elif="{{withdrawState === 'zero'}}">还没有已入账分润</text>
     </view>
+    </block>
 
     <block wx:if="{{topics.length}}">
       <view class="sec-title cy-h2">各主题结算</view>

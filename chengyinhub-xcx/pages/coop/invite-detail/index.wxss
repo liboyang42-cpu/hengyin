@@ -77,7 +77,6 @@
 .inline-state--error { color: var(--cy-color-status-danger); }
 
 /* 供给申报勾选浮层(随动作从 pages/coop/list 搬来,口径不变) */
-.pk-hint { margin-top: var(--cy-legacy-10); font-size: var(--cy-font-label); color: var(--cy-text-secondary); line-height: 1.45; }
 .pk-list { margin-top: var(--cy-space-2-5); flex: 1; }
 .pk-item {
   display: flex;

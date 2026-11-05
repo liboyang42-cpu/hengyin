@@ -923818,7 +923818,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1308"
+        "staticSource": "pages/activity/baoming/baoming.js:1311"
       }
     },
     {
@@ -923905,7 +923905,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1500"
+        "staticSource": "pages/activity/baoming/baoming.js:1503"
       }
     },
     {
@@ -924100,7 +924100,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1500"
+        "staticSource": "pages/activity/baoming/baoming.js:1503"
       }
     },
     {
@@ -924253,7 +924253,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1500"
+        "staticSource": "pages/activity/baoming/baoming.js:1503"
       }
     },
     {
@@ -924671,7 +924671,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1500"
+        "staticSource": "pages/activity/baoming/baoming.js:1503"
       }
     },
     {
@@ -924999,7 +924999,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1500"
+        "staticSource": "pages/activity/baoming/baoming.js:1503"
       }
     },
     {
@@ -925339,7 +925339,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1500"
+        "staticSource": "pages/activity/baoming/baoming.js:1503"
       }
     },
     {
@@ -925601,7 +925601,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1500"
+        "staticSource": "pages/activity/baoming/baoming.js:1503"
       }
     },
     {
@@ -925760,7 +925760,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1243"
+        "staticSource": "pages/activity/baoming/baoming.js:1246"
       }
     },
     {
@@ -925848,7 +925848,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1255"
+        "staticSource": "pages/activity/baoming/baoming.js:1258"
       }
     },
     {
@@ -925919,7 +925919,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/activity/baoming/baoming.js:1279"
+        "staticSource": "pages/activity/baoming/baoming.js:1282"
       }
     },
     {
@@ -1044546,7 +1044546,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/ledger/index.js:585"
+        "staticSource": "pages/merchant/ledger/index.js:589"
       }
     },
     {
@@ -1044632,7 +1044632,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/ledger/index.js:646"
+        "staticSource": "pages/merchant/ledger/index.js:650"
       }
     },
     {
@@ -1045036,7 +1045036,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/ledger/index.js:580"
+        "staticSource": "pages/merchant/ledger/index.js:584"
       }
     },
     {
@@ -1045106,7 +1045106,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/ledger/index.js:586"
+        "staticSource": "pages/merchant/ledger/index.js:590"
       }
     },
     {
@@ -1045255,7 +1045255,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/ledger/index.js:549"
+        "staticSource": "pages/merchant/ledger/index.js:553"
       }
     },
     {
@@ -1045323,7 +1045323,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/ledger/index.js:568"
+        "staticSource": "pages/merchant/ledger/index.js:572"
       }
     },
     {
@@ -1045651,7 +1045651,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/ledger/order-detail/index.js:123"
+        "staticSource": "pages/merchant/ledger/order-detail/index.js:126"
       }
     },
     {
@@ -1045721,7 +1045721,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/ledger/order-detail/index.js:124"
+        "staticSource": "pages/merchant/ledger/order-detail/index.js:127"
       }
     },
     {
@@ -1045791,7 +1045791,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/ledger/order-detail/index.js:35"
+        "staticSource": "pages/merchant/ledger/order-detail/index.js:38"
       }
     },
     {
@@ -1045861,7 +1045861,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/ledger/order-detail/index.js:35"
+        "staticSource": "pages/merchant/ledger/order-detail/index.js:38"
       }
     },
     {
@@ -1045931,7 +1045931,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/ledger/order-detail/index.js:35"
+        "staticSource": "pages/merchant/ledger/order-detail/index.js:38"
       }
     },
     {
@@ -1364895,7 +1364895,7 @@
       }
     },
     {
-      "id": "pages/topic/components/project-join/index.wxml:370:bindtap:emit:22",
+      "id": "pages/topic/components/project-join/index.wxml:371:bindtap:emit:22",
       "route": "component:pages/topic/components/project-join/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -1364930,7 +1364930,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "emit",
-        "line": 370,
+        "line": 371,
         "selectorHint": ".rules",
         "visibleCondition": "{{ !coopPartner }}",
         "disabledCondition": null,
@@ -1364975,7 +1364975,7 @@
       }
     },
     {
-      "id": "pages/topic/components/project-join/index.wxml:383:bindtap:emit:23",
+      "id": "pages/topic/components/project-join/index.wxml:384:bindtap:emit:23",
       "route": "component:pages/topic/components/project-join/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -1365010,7 +1365010,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "emit",
-        "line": 383,
+        "line": 384,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": "{{ coopPartner }}",
         "disabledCondition": null,
@@ -1365055,7 +1365055,7 @@
       }
     },
     {
-      "id": "pages/topic/components/project-join/index.wxml:385:bindtap:emit:24",
+      "id": "pages/topic/components/project-join/index.wxml:386:bindtap:emit:24",
       "route": "component:pages/topic/components/project-join/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -1365090,7 +1365090,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "emit",
-        "line": 385,
+        "line": 386,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{ primaryDisabled }}",
@@ -1365135,7 +1365135,7 @@
       }
     },
     {
-      "id": "pages/topic/components/project-join/index.wxml:393:bind:close:emitCloseMore:25",
+      "id": "pages/topic/components/project-join/index.wxml:394:bind:close:emitCloseMore:25",
       "route": "component:pages/topic/components/project-join/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -1365170,7 +1365170,7 @@
         "tag": "project-drawer",
         "event": "bind:close",
         "handler": "emitCloseMore",
-        "line": 393,
+        "line": 394,
         "selectorHint": "project-drawer[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1365215,7 +1365215,7 @@
       }
     },
     {
-      "id": "pages/topic/components/project-join/index.wxml:397:catchtap:emit:26",
+      "id": "pages/topic/components/project-join/index.wxml:398:catchtap:emit:26",
       "route": "component:pages/topic/components/project-join/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -1365250,7 +1365250,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "emit",
-        "line": 397,
+        "line": 398,
         "selectorHint": ".dpick",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1365295,7 +1365295,7 @@
       }
     },
     {
-      "id": "pages/topic/components/project-join/index.wxml:412:bind:close:emitCloseChapter:27",
+      "id": "pages/topic/components/project-join/index.wxml:413:bind:close:emitCloseChapter:27",
       "route": "component:pages/topic/components/project-join/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -1365330,7 +1365330,7 @@
         "tag": "project-drawer",
         "event": "bind:close",
         "handler": "emitCloseChapter",
-        "line": 412,
+        "line": 413,
         "selectorHint": "project-drawer[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1365375,7 +1365375,7 @@
       }
     },
     {
-      "id": "pages/topic/components/project-join/index.wxml:426:catchtap:emit:29",
+      "id": "pages/topic/components/project-join/index.wxml:427:catchtap:emit:29",
       "route": "component:pages/topic/components/project-join/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -1365410,7 +1365410,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "emit",
-        "line": 426,
+        "line": 427,
         "selectorHint": ".cs-story-more",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1365455,7 +1365455,7 @@
       }
     },
     {
-      "id": "pages/topic/components/project-join/index.wxml:445:catchtap:emit:30",
+      "id": "pages/topic/components/project-join/index.wxml:446:catchtap:emit:30",
       "route": "component:pages/topic/components/project-join/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -1365490,7 +1365490,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "emit",
-        "line": 445,
+        "line": 446,
         "selectorHint": ".cs-node",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1365535,7 +1365535,7 @@
       }
     },
     {
-      "id": "pages/topic/components/project-join/index.wxml:481:bind:action:emitDrawerAction:32",
+      "id": "pages/topic/components/project-join/index.wxml:482:bind:action:emitDrawerAction:32",
       "route": "component:pages/topic/components/project-join/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -1365570,7 +1365570,7 @@
         "tag": "project-drawer",
         "event": "bind:action",
         "handler": "emitDrawerAction",
-        "line": 481,
+        "line": 482,
         "selectorHint": "project-drawer[bind:action]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1365615,7 +1365615,7 @@
       }
     },
     {
-      "id": "pages/topic/components/project-join/index.wxml:481:bind:close:emitCloseNode:31",
+      "id": "pages/topic/components/project-join/index.wxml:482:bind:close:emitCloseNode:31",
       "route": "component:pages/topic/components/project-join/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -1365650,7 +1365650,7 @@
         "tag": "project-drawer",
         "event": "bind:close",
         "handler": "emitCloseNode",
-        "line": 481,
+        "line": 482,
         "selectorHint": "project-drawer[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1365695,7 +1365695,7 @@
       }
     },
     {
-      "id": "pages/topic/components/project-join/index.wxml:538:bind:action:emitDrawerAction:34",
+      "id": "pages/topic/components/project-join/index.wxml:539:bind:action:emitDrawerAction:34",
       "route": "component:pages/topic/components/project-join/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -1365730,7 +1365730,7 @@
         "tag": "project-drawer",
         "event": "bind:action",
         "handler": "emitDrawerAction",
-        "line": 538,
+        "line": 539,
         "selectorHint": "project-drawer[bind:action]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1365775,7 +1365775,7 @@
       }
     },
     {
-      "id": "pages/topic/components/project-join/index.wxml:538:bind:close:emitCloseClub:33",
+      "id": "pages/topic/components/project-join/index.wxml:539:bind:close:emitCloseClub:33",
       "route": "component:pages/topic/components/project-join/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -1365810,7 +1365810,7 @@
         "tag": "project-drawer",
         "event": "bind:close",
         "handler": "emitCloseClub",
-        "line": 538,
+        "line": 539,
         "selectorHint": "project-drawer[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1365855,7 +1365855,7 @@
       }
     },
     {
-      "id": "pages/topic/components/project-join/index.wxml:553:catchtap:emit:35",
+      "id": "pages/topic/components/project-join/index.wxml:554:catchtap:emit:35",
       "route": "component:pages/topic/components/project-join/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -1365890,7 +1365890,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "emit",
-        "line": 553,
+        "line": 554,
         "selectorHint": ".dr-copy",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1365935,7 +1365935,7 @@
       }
     },
     {
-      "id": "pages/topic/components/project-join/index.wxml:565:bind:close:emitClosePlayer:36",
+      "id": "pages/topic/components/project-join/index.wxml:566:bind:close:emitClosePlayer:36",
       "route": "component:pages/topic/components/project-join/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -1365970,7 +1365970,7 @@
         "tag": "project-drawer",
         "event": "bind:close",
         "handler": "emitClosePlayer",
-        "line": 565,
+        "line": 566,
         "selectorHint": "project-drawer[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1366015,7 +1366015,7 @@
       }
     },
     {
-      "id": "pages/topic/components/project-join/index.wxml:583:catchtap:emit:37",
+      "id": "pages/topic/components/project-join/index.wxml:584:catchtap:emit:37",
       "route": "component:pages/topic/components/project-join/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -1366050,7 +1366050,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "emit",
-        "line": 583,
+        "line": 584,
         "selectorHint": ".dfil-item",
         "visibleCondition": "{{ item.key !== 'contacted' || playerSheet.summary.contactedCount }}",
         "disabledCondition": null,
@@ -1366095,7 +1366095,7 @@
       }
     },
     {
-      "id": "pages/topic/components/project-join/index.wxml:601:catchtap:emit:38",
+      "id": "pages/topic/components/project-join/index.wxml:602:catchtap:emit:38",
       "route": "component:pages/topic/components/project-join/index",
       "hostRoutes": [
         "pages/topic/merchantinfo/merchantinfo"
@@ -1366130,7 +1366130,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "emit",
-        "line": 601,
+        "line": 602,
         "selectorHint": ".dr-copy",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1385323,7 +1385323,7 @@
       }
     },
     {
-      "id": "subpackageA/components/scene-merchant-profit/index.wxml:14:bind:tap:goWithdraw:0",
+      "id": "subpackageA/components/scene-merchant-profit/index.wxml:17:bind:tap:goWithdraw:0",
       "route": "component:subpackageA/components/scene-merchant-profit/index",
       "hostRoutes": [
         "pages/coop/finance/index",
@@ -1385431,7 +1385431,7 @@
         "tag": "cy-btn",
         "event": "bind:tap",
         "handler": "goWithdraw",
-        "line": 14,
+        "line": 17,
         "selectorHint": "cy-btn[bind:tap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canWithdraw}}",
@@ -1385485,7 +1385485,7 @@
       }
     },
     {
-      "id": "subpackageA/components/scene-merchant-profit/index.wxml:22:bindtap:goSettlementDetail:1",
+      "id": "subpackageA/components/scene-merchant-profit/index.wxml:25:bindtap:goSettlementDetail:1",
       "route": "component:subpackageA/components/scene-merchant-profit/index",
       "hostRoutes": [
         "pages/coop/finance/index",
@@ -1385593,7 +1385593,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goSettlementDetail",
-        "line": 22,
+        "line": 25,
         "selectorHint": ".fc-card",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1385641,7 +1385641,7 @@
       }
     },
     {
-      "id": "subpackageA/components/scene-merchant-profit/index.wxml:45:bind:retry:onRetry:2",
+      "id": "subpackageA/components/scene-merchant-profit/index.wxml:48:bind:retry:onRetry:2",
       "route": "component:subpackageA/components/scene-merchant-profit/index",
       "hostRoutes": [
         "pages/coop/finance/index",
@@ -1385749,7 +1385749,7 @@
         "tag": "cy-error",
         "event": "bind:retry",
         "handler": "onRetry",
-        "line": 45,
+        "line": 48,
         "selectorHint": "cy-error[bind:retry]",
         "visibleCondition": null,
         "loadFailureCondition": "{{!authRequired && !accessDenied}}",
