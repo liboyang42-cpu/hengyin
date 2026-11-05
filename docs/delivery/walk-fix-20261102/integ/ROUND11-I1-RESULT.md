@@ -27,7 +27,20 @@ On `ceb518f9`, which holds every code change except the registry count:
 - Mini followup focused regression run **41948022414**: green.
 - Real Storage IT (manual, batch `extra-storage`) run 41948014974: **red at its own static precheck**, before any test ran. See item 3. Fixed in the commit that carries this file, and dispatched again on it.
 
-The final commit is the one that carries this file. Its run ids are not written here, because they start after the push.
+On `573c463b` (all code plus this file, before this update):
+- GitHub CI run **41950298244**: green, all jobs.
+- Funds MySQL IT run **41950298330**: green.
+- Isolated authenticated Redis recovery run **41950298381**: green.
+- Mini followup focused regression run **41950298256**: green.
+- Real Storage IT (manual, batch `extra-storage`) run 41950279540: past the precheck. **`UmsMemberRankMySqlIT` passes**, as do 31 other classes. Four classes are red:
+  - `CoopServiceRealDbIT`: `acceptWithLock_realDb…:141` throws 「关联主题不存在」.
+  - `E01_10Test`: 3 failures.
+  - `B04ScheduleReadbackMySqlIT`: 1 failure of 9.
+  - `GameplayReskinMySqlIT`: 1 error.
+
+  This batch had not run on this branch since 2026-10-30 (the last run was on another branch), and none of the four touches a file this lane changed. **Not fixed here; open for the next lane.**
+
+This update is docs only.
 
 ## 1. 自由探索 sale deadlock. Status: fixed and proved.
 
@@ -118,7 +131,7 @@ The final commit is the one that carries this file. Its run ids are not written 
 - **`real-storage-it.yml` `UmsMemberRankMySqlIT`:** dispatched at `ceb518f9` (batch `extra-storage`). It stopped at the workflow's own registry precheck: 「源码声明 113 条 @Test，登记 108 条」.
   - Cause: f4 (+2) and h3 (+3) added tests to `RegistrationFundsMybatisIntegrationTest` and updated `ci/funds_it_gate.py`, but not `ci/real-storage-it-registry.json`.
   - Fixed: the registry says 113, and the batch totals in `ci/test_real_storage_it.py` are +5 (registration-write 137, funds-closure 291, integrated-changes 945). 92/92 locally.
-  - Dispatched again on the final commit.
+  - Dispatched again on `573c463b`: the precheck passes and `UmsMemberRankMySqlIT` is green. Four other classes in that batch are red (see CI).
 - No `@Test` was added or removed in a funds-gated suite, and `EXPECTED` is untouched.
 
 ## 4. Walks. Status: partly done.
@@ -170,4 +183,4 @@ The final commit is the one that carries this file. Its run ids are not written 
 - Secrets: the diffs were grepped, and the read-back files hold no tokens.
 - Local gitleaks could not be downloaded in this container, so CI's gitleaks job is the proof.
 
-STATUS: PARTIAL - items 1 and 3 done and green; item 2 done except the dead 提交 on a FAILED generic game, the mic-denial message and a re-walk of the hidden main button; item 4 walks other than items 1–2 not done; item 5 F-9 and part of F14 done, F13/F16/F17/F18, f2 captions and the pink error blocks not done; the final commit's CI runs after this push
+STATUS: PARTIAL - items 1 and 3 done and green; item 2 done except the dead 提交 on a FAILED generic game, the mic-denial message and a re-walk of the hidden main button; item 4 walks other than items 1–2 not done; item 5 F-9 and part of F14 done, F13/F16/F17/F18, f2 captions and the pink error blocks not done; the PR CI is green on 573c463b; Real Storage IT extra-storage has 4 red classes (CoopServiceRealDbIT, E01_10Test, B04ScheduleReadbackMySqlIT, GameplayReskinMySqlIT) that this lane did not touch and did not fix
