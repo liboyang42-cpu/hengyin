@@ -1078893,7 +1078893,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-ballshake/index.js:292"
+        "staticSource": "pages/play/components/playkit-ballshake/index.js:293"
       }
     },
     {
@@ -1078978,7 +1078978,7 @@
         "handler": "onStart",
         "line": 40,
         "selectorHint": ".bl__b",
-        "visibleCondition": null,
+        "visibleCondition": "{{!skipped}}",
         "disabledCondition": null,
         "ariaLabel": "开始弹球",
         "ariaLabelExpression": null,
@@ -1079139,7 +1079139,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-ballshake/index.js:301"
+        "staticSource": "pages/play/components/playkit-ballshake/index.js:302"
       }
     },
     {
@@ -1079262,7 +1079262,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-ballshake/index.js:193"
+        "staticSource": "pages/play/components/playkit-ballshake/index.js:194"
       }
     },
     {
@@ -1079385,7 +1079385,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-ballshake/index.js:294"
+        "staticSource": "pages/play/components/playkit-ballshake/index.js:295"
       }
     },
     {
@@ -1095218,7 +1095218,7 @@
         "handler": "onStart",
         "line": 20,
         "selectorHint": ".qt__b",
-        "visibleCondition": null,
+        "visibleCondition": "{{!skipped}}",
         "disabledCondition": null,
         "ariaLabel": "开始安静挑战",
         "ariaLabelExpression": null,
@@ -1095390,7 +1095390,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-quiethold/index.js:262"
+        "staticSource": "pages/play/components/playkit-quiethold/index.js:263"
       }
     },
     {
@@ -1095513,7 +1095513,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-quiethold/index.js:269"
+        "staticSource": "pages/play/components/playkit-quiethold/index.js:270"
       }
     },
     {
@@ -1095646,7 +1095646,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-quiethold/index.js:216"
+        "staticSource": "pages/play/components/playkit-quiethold/index.js:217"
       }
     },
     {
@@ -1095770,7 +1095770,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-quiethold/index.js:211"
+        "staticSource": "pages/play/components/playkit-quiethold/index.js:212"
       }
     },
     {
@@ -1095903,7 +1095903,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-quiethold/index.js:226"
+        "staticSource": "pages/play/components/playkit-quiethold/index.js:227"
       }
     },
     {
@@ -1096027,7 +1096027,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-quiethold/index.js:257"
+        "staticSource": "pages/play/components/playkit-quiethold/index.js:258"
       }
     },
     {
@@ -1100090,7 +1100090,7 @@
         "handler": "onStart",
         "line": 17,
         "selectorHint": ".sh__b",
-        "visibleCondition": null,
+        "visibleCondition": "{{!skipped}}",
         "disabledCondition": null,
         "ariaLabel": "开始喊一嗓子",
         "ariaLabelExpression": null,
@@ -1100262,7 +1100262,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-shout/index.js:226"
+        "staticSource": "pages/play/components/playkit-shout/index.js:227"
       }
     },
     {
@@ -1100385,7 +1100385,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-shout/index.js:233"
+        "staticSource": "pages/play/components/playkit-shout/index.js:234"
       }
     },
     {
@@ -1100518,7 +1100518,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-shout/index.js:185"
+        "staticSource": "pages/play/components/playkit-shout/index.js:186"
       }
     },
     {
@@ -1100642,7 +1100642,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-shout/index.js:180"
+        "staticSource": "pages/play/components/playkit-shout/index.js:181"
       }
     },
     {
@@ -1100775,7 +1100775,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-shout/index.js:192"
+        "staticSource": "pages/play/components/playkit-shout/index.js:193"
       }
     },
     {
@@ -1100899,7 +1100899,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-shout/index.js:224"
+        "staticSource": "pages/play/components/playkit-shout/index.js:225"
       }
     },
     {
@@ -1104971,7 +1104971,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-walk/index.js:135"
+        "staticSource": "pages/play/components/playkit-walk/index.js:136"
       }
     },
     {
@@ -1105095,7 +1105095,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-walk/index.js:128"
+        "staticSource": "pages/play/components/playkit-walk/index.js:129"
       }
     },
     {
@@ -1105180,7 +1105180,7 @@
         "handler": "onCta",
         "line": 42,
         "selectorHint": ".wk__cta",
-        "visibleCondition": null,
+        "visibleCondition": "{{!skipped}}",
         "disabledCondition": null,
         "ariaLabel": null,
         "ariaLabelExpression": "{{ctaLabel}}",

@@ -17,7 +17,7 @@
     <!-- 按钮在这一屏是**跟着内容流**的,不绝对定位:整屏只有三行东西,
          把按钮钉到底边会让中间空出一大块,读起来像还没加载完。
          底色是浅绿不是白 —— 白在这块深绿上太跳,而这一屏要人静下来。 -->
-    <view class="qt__b {{running || preparing ? 'qt__b--busy' : ''}} pe pe--up" style="--pe-d:.9s" bindtap="onStart"
+    <view wx:if="{{!skipped}}" class="qt__b {{running || preparing ? 'qt__b--busy' : ''}} pe pe--up" style="--pe-d:.9s" bindtap="onStart"
           aria-role="button" aria-label="开始安静挑战" hover-class="qt__b--press" hover-stay-time="80">
       {{running ? '安静中' : (preparing ? '准备中' : '开始')}}
     </view>

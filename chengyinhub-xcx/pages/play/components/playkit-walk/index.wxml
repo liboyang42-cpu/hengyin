@@ -39,7 +39,7 @@
           aria-role="button" aria-label="跳过这一站" hover-class="wk__skip--press" hover-stay-time="80">跳过这一站</view>
   </view>
 
-  <view class="wk__cta {{syncing ? 'wk__cta--busy' : ''}}" bindtap="onCta"
+  <view wx:if="{{!skipped}}" class="wk__cta {{syncing ? 'wk__cta--busy' : ''}}" bindtap="onCta"
         aria-role="button" aria-label="{{ctaLabel}}" hover-class="wk__cta--press" hover-stay-time="80">
     {{ctaLabel}}
   </view>

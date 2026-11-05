@@ -14,7 +14,7 @@
     <view class="sh__s pe pe--up" style="--pe-d:.55s">使用舒适音量，不适请停止，勿持续大声喊叫</view>
     <view class="sh__s pe pe--up" style="--pe-d:.55s" wx:if="{{rewardNote}}">{{rewardNote}}</view>
 
-    <view class="sh__b {{running || preparing ? 'sh__b--busy' : ''}} pe pe--up" style="--pe-d:.85s" bindtap="onStart"
+    <view wx:if="{{!skipped}}" class="sh__b {{running || preparing ? 'sh__b--busy' : ''}} pe pe--up" style="--pe-d:.85s" bindtap="onStart"
           aria-role="button" aria-label="开始喊一嗓子" hover-class="sh__b--press" hover-stay-time="80">
       {{preparing ? '准备中' : (running ? '测量中' : '开始')}}
     </view>

@@ -131,6 +131,7 @@ Component({
         && Date.now() - attempt.lastFrame < FRAME_GAP_MS;
     },
     onStart() {
+      if (this.data.skipped) return;   // 第十一轮 i1:跳过的站不再开局(服务端也拒)
       if (!this.data.show || this._hidden || this._closed || this._detached) return;
       if (this._attempt && this._attempt.phase === 'finished') { this._abort(() => this.onStart()); return; }
       if (this._attempt) return;

@@ -174,6 +174,7 @@ Component({
     },
 
     onStart() {
+      if (this.data.skipped) return;   // 第十一轮 i1:跳过的站不再开局(服务端也拒)
       if (this._hidden || this._detached || this._closed || !this.data.show || this._attempt && this._attempt.phase !== 'finished'
         || this.data.running || this.data.awaitingResult
         || this.data.challenge && (this.data.challenge.success || this.data.challenge.disabledReason)) return;

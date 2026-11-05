@@ -111,6 +111,7 @@ Component({
     },
 
     onCta() {
+      if (this.data.skipped) return;   // 第十一轮 i1:跳过的站不再开局(服务端也拒)
       if (this.data.syncing) return;
       if (this.data.done) {
         // 「做成了」= 归零落章那一刻,不是同步按钮按下去那一下

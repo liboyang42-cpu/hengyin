@@ -59,3 +59,10 @@ test('计步:跳过与报失败不走微信运动同步那条路;读不到微信
   assert.match(page, /'playKit\.kit\.readError': '需要授权微信运动才能计步'/);
   assert.match(page, /REPORT_SENSOR_FAILURE', \{ game: 'steps', denied: true \}/);
 });
+
+test('跳过之后主按钮收起、开局入口不再响应(rig 走查:跳过后「开始」仍可点,服务端回「这一站已经跳过了」)', () => {
+  for (const [c, cls, h] of [['ballshake', 'bl__b', 'onStart'], ['quiethold', 'qt__b', 'onStart'], ['shout', 'sh__b', 'onStart'], ['walk', 'wk__cta', 'onCta']]) {
+    assert.match(read(`pages/play/components/playkit-${c}/index.wxml`), new RegExp(`wx:(?:el)?if="\\{\\{!skipped\\}\\}" class="${cls} `), c);
+    assert.match(read(`pages/play/components/playkit-${c}/index.js`), new RegExp(`${h}\\(\\) \\{\\n      if \\(this\\.data\\.skipped\\) return;`), c);
+  }
+});
