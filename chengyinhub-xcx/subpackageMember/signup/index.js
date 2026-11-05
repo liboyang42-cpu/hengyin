@@ -273,7 +273,7 @@ Page({
         kind: 'topic',
         wKey: 'topic-' + item.id,
         wTitle: t.name || '—',
-        wImg: t.imgUrl || '/images/route_city_cover.png', wType: Number(t.productType) === 2 ? '自由探索' : '城市定向', wColor: Number(t.productType) === 2 ? '#7CF0A0' : '#5AA9FF', wUntil: item.expiresAt || t.endDate || '', // ds-ok v13 类型色
+        wImg: t.imgUrl || '', wType: Number(t.productType) === 2 ? '自由探索' : '城市定向', wColor: Number(t.productType) === 2 ? '#7CF0A0' : '#5AA9FF', wUntil: item.expiresAt || t.endDate || '', // ds-ok v13 类型色
       });
     });
     const activities = ((this._activity && this._activity.list) || []).map(function (item) {
@@ -282,7 +282,7 @@ Page({
         kind: 'activity',
         wKey: 'activity-' + item.id,
         wTitle: a.name || '—',
-        wImg: a.imgUrl || '/images/route_city_cover.png',
+        wImg: a.imgUrl || '', // 第十二轮 k8 F13:没封面就不出图,不拿通用路线示意图(假路线 + 灰条)充数
         wType: '场次', wColor: '#E8B86B', wUntil: a.endTime || a.endDate || '', wProgress: exploreProgressOf(item), wNoGame: !activityHasGame(a), // ds-ok v13 卡角色;k2 j1 N1 没有游戏的票直接出码
       });
     });

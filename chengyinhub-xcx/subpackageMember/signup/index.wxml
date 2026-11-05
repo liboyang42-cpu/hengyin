@@ -53,7 +53,7 @@
           <view class="wc__face wc__front">
             <view class="wc__go" style="background: {{item.wColor}};"><image src="./icon_go.svg" mode="aspectFit" /></view>
             <view class="wc__t"><text class="wc__b">{{item.wTitle}}</text><text class="wc__s">{{item.wSub}}</text></view>
-            <view class="wc__im"><image lazy-load="true" src="{{item.wImg}}" mode="aspectFill" /></view>
+            <view class="wc__im" wx:if="{{item.wImg}}"><image lazy-load="true" src="{{item.wImg}}" mode="aspectFill" /></view>
           </view>
           <view class="wc__face wc__back" wx:if="{{index === currentSwiperTicket}}">
             <text class="wc__bn ep1">{{item.wTitle}}</text>
@@ -61,7 +61,8 @@
               <!-- 2026-10-29 业主:码居中、码心黑色 logo、彩色波动效(cy-dot-qr);翻到背面才挂画布 -->
               <cy-dot-qr wx:if="{{qrState === 'ready' && flipped}}" src="{{qrUrl}}" size="{{360}}" reduced-motion="{{reduced}}" />
               <text wx:elif="{{qrState === 'error'}}" class="wc__qr-tip" catchtap="retryQr" aria-role="button" aria-label="重新生成入场码" hover-class="cy-pressed" hover-stay-time="80">重新生成</text>
-              <text wx:else class="wc__qr-tip">生成中…</text>
+              <!-- 第十二轮 k8 F13:只在真的在取码时写「生成中…」,没翻面(idle)不留一句永远不会填上的话 -->
+              <text wx:elif="{{qrState === 'loading'}}" class="wc__qr-tip">生成中…</text>
             </view>
             <text wx:if="{{item.wExpiry}}" class="wc__exp">{{item.wExpiry}}</text>
           </view>
