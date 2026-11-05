@@ -63,3 +63,5 @@ id | balance
 990005 | 113.49
 id | refund_no | source_type | source_id | owner_type | owner_id | member_id | merchant_id | paid_amount | refund_amount | status | reason | reject_reason | reviewer_id | reviewed_at | adjustment_created | idempotency_key | del_flag | create_time | update_time | platform_takeover_at | payout_status | payout_submission_state | payout_method | payout_receipt_url | payout_handler_id | payout_handled_at | payout_reviewer2_id | payout_reviewed2_at | payout_remark | payout_lease_token | payout_lease_owner | payout_lease_expires_at | created_by_user_id | fulfillment_sync_queue_at
 1 | RF77 | registration | 77 | 2 | 9 | 990009 | 990005 | 39.00 | 39.00 | 1 | 主理人取消报名并退款 | 主理人取消报名并退款 | 0 | 2026-11-05 11:22:35 | 0 | registration:77 | 0 | 2026-11-05 03:22:34 | 2026-11-05 03:22:35 |  | 6 | LEGACY_RECONCILE |  |  |  |  |  |  | 原路退款结果未知,等待按确定性退款号查单 |  |  |  |  | 2026-11-05 03:22:34.897926
+id | member_id
+990004 | 990006
