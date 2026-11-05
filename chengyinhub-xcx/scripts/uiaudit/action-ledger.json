@@ -1375672,7 +1375672,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:496"
+        "staticSource": "pages/topic/merchantapply/index.js:495"
       }
     },
     {
@@ -1375739,7 +1375739,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:505"
+        "staticSource": "pages/topic/merchantapply/index.js:504"
       }
     },
     {
@@ -1375860,7 +1375860,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:496"
+        "staticSource": "pages/topic/merchantapply/index.js:495"
       }
     },
     {
@@ -1375927,7 +1375927,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:514"
+        "staticSource": "pages/topic/merchantapply/index.js:513"
       }
     },
     {
@@ -1375994,7 +1375994,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:562"
+        "staticSource": "pages/topic/merchantapply/index.js:561"
       }
     },
     {
@@ -1376061,7 +1376061,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:491"
+        "staticSource": "pages/topic/merchantapply/index.js:490"
       }
     },
     {
@@ -1376128,7 +1376128,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:487"
+        "staticSource": "pages/topic/merchantapply/index.js:486"
       }
     },
     {
@@ -1376195,7 +1376195,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:481"
+        "staticSource": "pages/topic/merchantapply/index.js:480"
       }
     },
     {
@@ -1376290,7 +1376290,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:630"
+        "staticSource": "pages/topic/merchantapply/index.js:634"
       }
     },
     {
@@ -1376387,7 +1376387,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:630"
+        "staticSource": "pages/topic/merchantapply/index.js:634"
       }
     },
     {
@@ -1376454,7 +1376454,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:416"
+        "staticSource": "pages/topic/merchantapply/index.js:415"
       }
     },
     {
@@ -1376551,7 +1376551,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:690"
+        "staticSource": "pages/topic/merchantapply/index.js:694"
       }
     },
     {
@@ -1376618,7 +1376618,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:416"
+        "staticSource": "pages/topic/merchantapply/index.js:415"
       }
     },
     {
@@ -1376713,7 +1376713,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:685"
+        "staticSource": "pages/topic/merchantapply/index.js:689"
       }
     },
     {
@@ -1376767,7 +1376767,7 @@
       "targets": {
         "routes": [
           "pages/merchant/index/index",
-          "pages/topic/merchantinfo/merchantinfo?id="
+          "pages/topic/merchantinfo/merchantinfo?topicId="
         ],
         "apis": [],
         "primaryApis": [],
@@ -1376784,7 +1376784,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:712"
+        "staticSource": "pages/topic/merchantapply/index.js:716"
       }
     },
     {
@@ -1376854,7 +1376854,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:721"
+        "staticSource": "pages/topic/merchantapply/index.js:725"
       }
     },
     {
@@ -1376908,7 +1376908,7 @@
       "targets": {
         "routes": [
           "pages/merchant/index/index",
-          "pages/topic/merchantinfo/merchantinfo?id="
+          "pages/topic/merchantinfo/merchantinfo?topicId="
         ],
         "apis": [],
         "primaryApis": [],
@@ -1376925,7 +1376925,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:712"
+        "staticSource": "pages/topic/merchantapply/index.js:716"
       }
     },
     {
@@ -1376992,7 +1376992,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:517"
+        "staticSource": "pages/topic/merchantapply/index.js:516"
       }
     },
     {
@@ -1377059,7 +1377059,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:520"
+        "staticSource": "pages/topic/merchantapply/index.js:519"
       }
     },
     {
@@ -1377126,7 +1377126,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:562"
+        "staticSource": "pages/topic/merchantapply/index.js:561"
       }
     },
     {
@@ -1377193,7 +1377193,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:598"
+        "staticSource": "pages/topic/merchantapply/index.js:597"
       }
     },
     {
@@ -1377260,7 +1377260,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:603"
+        "staticSource": "pages/topic/merchantapply/index.js:602"
       }
     },
     {
@@ -1377327,7 +1377327,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:562"
+        "staticSource": "pages/topic/merchantapply/index.js:561"
       }
     },
     {
@@ -1377397,7 +1377397,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:430"
+        "staticSource": "pages/topic/merchantapply/index.js:429"
       }
     },
     {
@@ -1377468,7 +1377468,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:425"
+        "staticSource": "pages/topic/merchantapply/index.js:424"
       }
     },
     {
@@ -1377539,7 +1377539,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:436"
+        "staticSource": "pages/topic/merchantapply/index.js:435"
       }
     },
     {
@@ -1377656,7 +1377656,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:380"
+        "staticSource": "pages/topic/merchantapply/index.js:379"
       }
     },
     {
@@ -1377726,7 +1377726,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:724"
+        "staticSource": "pages/topic/merchantapply/index.js:728"
       }
     },
     {
@@ -1377794,7 +1377794,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:457"
+        "staticSource": "pages/topic/merchantapply/index.js:456"
       }
     },
     {
@@ -1377881,7 +1377881,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:459"
+        "staticSource": "pages/topic/merchantapply/index.js:458"
       }
     },
     {
@@ -1377948,7 +1377948,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:491"
+        "staticSource": "pages/topic/merchantapply/index.js:490"
       }
     },
     {
@@ -1378015,7 +1378015,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:487"
+        "staticSource": "pages/topic/merchantapply/index.js:486"
       }
     },
     {
@@ -1378082,7 +1378082,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/merchantapply/index.js:484"
+        "staticSource": "pages/topic/merchantapply/index.js:483"
       }
     },
     {
