@@ -2,9 +2,11 @@
 
 2026-11-05。只改公开仓库的集成候选；未合并、未部署、未接触生产。此报告是中间交接，不能作为上线通过记录。
 
-**共享 rig 事故后的当前状态：** Play 报告 MySQL 于 `2026-11-05 10:00:17Z` OOM（exit 137），同容器重启后 `cy_e2e_51` 不存在，应用已由其管理者停止。root 未独立复现 SQL，遵守停写：浏览器已设置离线，自己的前端 18096 已停止并确认无监听。旧 UUID、账号／主题 ID 与以下数据库读回均只作为事故前历史证据，不代表当前数据仍存在；没有健康运行态或恢复成功声明。未重启、重建或恢复数据库，未启动新预算请求。
+**共享 rig 事故后的当前状态：** 环境管理者已确认 `2026-11-05 10:00:17Z` MySQL OOM（exit 137）后数据丢失：原 datadir 是 512 MiB cgroup 内的 3 GiB tmpfs，重启后 schemaCount=0、UUID 已变，未找到自有数据 dump。管理者仅替换这个空的原 MySQL 容器，保持名称、固定镜像、23316 端口、512 MiB，改用 VPS 持久 bind；没有第二套 DB，Redis 未动。应用保持停止，基线 schema／seed 恢复中，完整新 UUID 与 da9 运行版本仍待独立核验和重新开放通知。root 未发起新的共享 HTTP／SQL，浏览器离线且页面 JS 已禁用，自己的前端 18096 已停止并确认无监听。root `990029`、K10 旧主题／asset12、Pages 旧 fixture ID 均不再是有效的写入或审批目标；旧 UUID 和以下读回仅为历史证据。root 未重启、重建或恢复数据库，未启动新预算请求，不声明健康运行态或恢复成功。
 
-root 已保存六个编辑器存储项和当前界面草稿到 `/private/tmp/codex-money-recovery-20261105/browser-drafts-offline.json`，并保留原 `/tmp/codex-money-draft-990029-backup.json` 的独立副本；两份文件已复制到持久私有目录 `/Users/arlan/Documents/Codex-Recovery/chengyin-shared-rig-20261105/root-money/` 并逐一校验 SHA256。目录权限 700、文件 600，附清单，未导出登录存储或提交草稿原文。自己的本机与 VPS 任务目录未找到此共享库的完整 SQL dump；源码 migration／测试 seed 不能当成数据库备份。K10 停写与保全通知已提交，收到的是终端输入接受回执，尚未取得其保全完成回执。恢复验收前继续停止共享 HTTP／SQL 写入。
+root 已保存六个编辑器存储项和当前界面草稿到 `/private/tmp/codex-money-recovery-20261105/browser-drafts-offline.json`，并保留原 `/tmp/codex-money-draft-990029-backup.json` 的独立副本；两份文件已复制到持久私有目录 `/Users/arlan/Documents/Codex-Recovery/chengyin-shared-rig-20261105/root-money/` 并逐一校验 SHA256。目录权限 700、文件 600，附清单，未导出登录存储或提交草稿原文。自己的本机与 VPS 任务目录未找到此共享库的完整 SQL dump；源码 migration／测试 seed 不能当成数据库备份。
+
+已收到 K10 保全完成回执：浏览器先离线导出后禁用页面 JS，自有 18098／18102 前端停止，外部 standin 保留运行。root 已校验原 MANIFEST 的 32 项，并将整个 33 文件目录独立复制校验至 `/Users/arlan/Documents/Codex-Recovery/chengyin-shared-rig-20261105/k10-immersive/`，附 `COPY-VERIFICATION.json`；未将快照原文推到公开仓库。K10 当前快照只有 2 章／0 正式节点，早先照片模板／单节点仅余历史截图，并非完整 DB dump；asset12 没有本次审批证明。root 与 K10 快照不能证明数据库恢复，明确重新开放前继续停止共享 HTTP／SQL 写入。
 
 ## 已提交的修复
 
