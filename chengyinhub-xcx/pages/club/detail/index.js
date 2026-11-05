@@ -793,6 +793,8 @@ Page({
     if (myAvatar !== this.data.myAvatar) this.setData({ myAvatar });
     const myNickname = (app.getNickname && app.getNickname()) || '';
     if (myNickname !== this.data.myNickname) this.setData({ myNickname });
+    const me = memberId(app) || null;   // j6 N2:别处登录 / 退出后回来,登录态以 app 为准
+    if (String(me || '') !== String(this.data.myMemberId || '')) this.setData({ myMemberId: me });
     if (!this._hasShown) { this._hasShown = true; return; }
     if (this.data.clubId && this.data.club) {
       if (this.canGovern() || this.data.canUseManageTab) this.loadAll();
@@ -2198,6 +2200,7 @@ Page({
         if (requestedTab) that._requestedTab = '';
         if (!canSeeRoster) that._memberRequestSeq = (that._memberRequestSeq || 0) + 1;
         that.setData({
+          myMemberId: memberId(app) || null,   // j6 N2:写前登录回到本页后,自我识别(榜单「我」、帖文作者)跟上登录态
           club: club,
           canSeeMembers: canSee,
           canSeeRoster: canSeeRoster,

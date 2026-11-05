@@ -1,5 +1,6 @@
 <wxs src="../../utils/wxs/img.wxs" module="img" />
 <view class="theme-dark">
+  <cy-access-gate kind="login" />
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />

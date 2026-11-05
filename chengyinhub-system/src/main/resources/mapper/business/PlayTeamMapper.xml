@@ -278,7 +278,10 @@
                (select t.title from play_team t
                   join play_team_member tm on tm.team_id = t.id and tm.member_id = r.member_id and tm.status = 1
                  where t.owner_type = 2 and t.owner_id = #{activityId} and t.status in (0, 1, 2)
-                 order by t.id asc limit 1) as teamTitle
+                 order by t.id asc limit 1) as teamTitle,
+               (select count(distinct p.node_id) from player_node_progress p
+                 where p.member_id = r.member_id and p.activity_id = #{activityId}
+                   and p.status = 1 and p.del_flag = 0) as done
         from cms_registration r
         join ums_member m on m.id = r.member_id
         where r.owner_type = 2 and r.owner_id = #{activityId}

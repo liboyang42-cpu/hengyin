@@ -240,6 +240,48 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         if (mapper.updateContentCas(replacement, expectedVersion, decision.getLifecycle(), now) != 1) stale();
         replaceRelations(replacement, request, now);
         mapper.upsertSearchDocument(postId, "HIDDEN", now);
+        // 第十二轮 k2(j5 N1,业主「自动检测,不靠人」):改一条已发布的帖文,与新发帖同一道机审。
+        // 拦 → 整次编辑回滚、原帖照旧在线;过 → 新内容直接在线;机审说「待定」才转人审(与新发帖同口径)。
+        if (CommunityPost.LIFECYCLE_PUBLISHED.equals(current.getLifecycle())
+                && CommunityPost.LIFECYCLE_CHECKING.equals(decision.getLifecycle())) {
+            PublishSafetyRequest safety = new PublishSafetyRequest();
+            safety.setContentType(AuditTask.BIZ_COMMUNITY_POST);
+            safety.setContentId(postId);
+            safety.setMemberId(memberId);
+            safety.setOpenid(mapper.selectMemberWxOpenId(memberId));
+            safety.setText(((replacement.getTitle() == null ? "" : replacement.getTitle() + "\n")
+                    + (replacement.getBody() == null ? "" : replacement.getBody())).trim());
+            List<Map<String, Object>> media = mediaForRead(mapper.selectMediaForSafety(postId));
+            List<String> mediaUrls = new ArrayList<>();
+            for (Map<String, Object> row : media) {
+                Object url = value(row, "derived_object_key");
+                if (url != null && !blank(url.toString())) mediaUrls.add(url.toString());
+            }
+            safety.setMediaUrls(mediaUrls);
+            safety.setHasGeo(!"NONE".equals(replacement.getLocationPrecision()));
+            Map<String, Object> safetySnapshot = new HashMap<>();
+            safetySnapshot.put("post", replacement);
+            safetySnapshot.put("media", media);
+            safety.setSnapshot(json(safetySnapshot));
+            safety.setReviewMode(PublishSafetyRequest.ReviewMode.PRE_REVIEW.name());
+            SafetyDecision safetyDecision = safetyGate.decide(safety);
+            if (safetyDecision == null || safetyDecision.isBlock()) {
+                throw error("内容未通过安全检查，请修改后重试", 400);
+            }
+            if (safetyDecision.isPass()) {
+                if (mapper.transitionCas(postId, CommunityPost.LIFECYCLE_CHECKING, CommunityPost.LIFECYCLE_PUBLISHED,
+                        decision.getVersion(), null, null, null, null, null, now) != 1) stale();
+                mapper.updateMediaReviewState(postId, "PASS", now);
+                mapper.updateAuditMarks(postId, AUDIT_LEVEL_MACHINE, null, safetyDecision.isFlagged() ? 1 : null, now);
+                mapper.upsertSearchDocument(postId, "VISIBLE", now);
+                submitMediaForAsyncCheck(postId, safety.getOpenid(), mediaUrls);
+            } else {
+                mapper.updateMediaReviewState(postId, "HOLD", now);
+                if (safetyDecision.isFlagged()) mapper.updateAuditMarks(postId, null, null, 1, now);
+            }
+            outbox(postId, "POST_EDITED", payload("version", expectedVersion + 1), now);
+            return detail(memberId, postId);
+        }
         if (CommunityPost.LIFECYCLE_CHECKING.equals(decision.getLifecycle())) {
             replacement.setVersion(decision.getVersion());
             replacement.setLifecycle(decision.getLifecycle());

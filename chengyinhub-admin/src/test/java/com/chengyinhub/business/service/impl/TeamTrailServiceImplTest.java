@@ -99,6 +99,7 @@ class TeamTrailServiceImplTest {
                 row.put("avatar", "https://img/" + id + ".png");
                 row.put("teamId", teamOf.get(id));
                 row.put("teamTitle", teamOf.get(id) == null ? null : "队" + teamOf.get(id));
+                row.put("done", serverDone.getOrDefault(id, 0L));
                 rows.add(row);
             }
             return rows;
@@ -112,7 +113,11 @@ class TeamTrailServiceImplTest {
         paid.put(10L, new HashSet<>(Arrays.asList(1L, 2L, 3L, 4L)));
         paid.put(11L, new HashSet<>(Arrays.asList(9L)));
         teamOf.put(1L, 100L); teamOf.put(2L, 100L); teamOf.put(3L, 200L);
+        serverDone.put(3L, 2L);
     }
+
+    /** 第十二轮 k2(j6 N5):本场已完成站数的服务端事实(player_node_progress),按会员。 */
+    private final Map<Long, Long> serverDone = new java.util.HashMap<>();
 
     private static List<List<Double>> walk(double lat0, int n) {
         List<List<Double>> pts = new ArrayList<>();
@@ -140,6 +145,23 @@ class TeamTrailServiceImplTest {
         assertFalse(t.containsKey("memberId"));
         assertFalse(String.valueOf(t).contains("200=") || String.valueOf(t.get("key")).equals("200"));
         assertEquals(12, String.valueOf(t.get("key")).length());
+    }
+
+    @Test
+    void progressComesFromServerNotFromTheClient() {
+        service.sync(3L, 10L, walk(31.20, 5), 999, false);
+        Map<String, Object> out = service.sync(1L, 10L, walk(31.22, 3), 1, false);
+        assertEquals(2, teams(out).get(0).get("done"), "客户端报 999,别队看到的仍是服务端完成的 2 站");
+    }
+
+    @Test
+    void nothingIsTakenOrServedBeforeTheSessionStarts() {
+        activity.setStartDate(new Date(System.currentTimeMillis() + 12L * 24L * 3600_000L));
+        assertEquals(false, service.sync(3L, 10L, walk(31.20, 5), 2, false).get("available"));
+        assertEquals(false, service.state(3L, 10L).get("available"));
+        assertFalse(hashes.containsKey(TeamTrailServiceImpl.PTS + 10L));
+        activity.setStartDate(new Date(System.currentTimeMillis() - 60_000L));
+        assertEquals(true, service.sync(3L, 10L, walk(31.20, 5), 2, false).get("available"));
     }
 
     @Test

@@ -157,7 +157,8 @@ public class TeamTrailServiceImpl implements ITeamTrailService {
                 groups.put(group, g);
                 g.put("done", 0);
             }
-            g.put("done", Math.max(((Number) g.get("done")).intValue(), row.getIntValue("d")));
+            // 第十二轮 k2(j6 N5):进度取服务端完成事实(本场已完成站数),不信客户端上报的 d。
+            g.put("done", Math.max(((Number) g.get("done")).intValue(), serverDone(p.get("done"))));
             if (!latest.containsKey(group) || t > latest.get(group)) {
                 latest.put(group, t);
                 Object title = p.get("teamTitle");
@@ -174,8 +175,13 @@ public class TeamTrailServiceImpl implements ITeamTrailService {
         return out.size() > MAX_TEAMS ? new ArrayList<>(out.subList(0, MAX_TEAMS)) : out;
     }
 
+    static int serverDone(Object value) {
+        if (!(value instanceof Number)) return 0;
+        return Math.max(0, Math.min(999, ((Number) value).intValue()));
+    }
+
     /**
-     * 能用就返回存储过期毫秒数,不能用返回 0:未登录、不是这一场已付费的人、场次已结束、作者关掉了都算不能用。
+     * 能用就返回存储过期毫秒数,不能用返回 0:未登录、不是这一场已付费的人、场次还没开始、场次已结束、作者关掉了都算不能用。
      */
     long eligibleTtl(Long memberId, Long activityId) {
         if (memberId == null || memberId <= 0L || activityId == null || activityId <= 0L) return 0L;
@@ -185,6 +191,8 @@ public class TeamTrailServiceImpl implements ITeamTrailService {
         CmsTopic topic = topicMapper.selectCmsTopicById(activity.getTopicId());
         if (topic == null || !authorAllows(topic.getPublishedThemeRuntimeConfigJson())) return 0L;
         long now = System.currentTimeMillis();
+        // 第十二轮 k2(j6 N5):开场前不收也不回别队轨迹(集合前的位置不是游戏进度)。
+        if (activity.getStartDate() != null && now < activity.getStartDate().getTime()) return 0L;
         long ttl = MAX_TTL_MS;
         if (activity.getEndDate() != null) {
             ttl = Math.min(ttl, activity.getEndDate().getTime() + AFTER_END_MS - now);

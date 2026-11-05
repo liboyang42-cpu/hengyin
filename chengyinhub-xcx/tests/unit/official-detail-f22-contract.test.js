@@ -173,9 +173,10 @@ test('F22 奖励:settleXp=0 / 假值不得凭空造奖励', () => {
   assert.deepEqual(page._rewards({ rewardJson: JSON.stringify({ settleXp: '0' }) }), [])
 })
 
-test('F22 奖励:模板只在确有奖励时展示,无奖时如实说明', () => {
-  assert.match(WXML, /wx:if="\{\{rewards\.length\}\}"/, '奖励列表/提示要按实际配置开关')
-  assert.match(WXML, /未配置奖励|没有配置奖励/, '无奖时要如实表达')
+// 第十二轮 k2(p1 N-3,业主去占位标签规则):无奖时整段不出,不再摆「未配置奖励」;仍不摆默认承诺。
+test('F22 奖励:模板只在确有奖励时展示,无奖时整段不出', () => {
+  assert.match(WXML, /<view wx:if="\{\{rewards\.length\}\}" class="od-section od-section--divided">\s*<text class="od-heading">活动奖励<\/text>/)
+  assert.doesNotMatch(WXML.replace(/<!--[\s\S]*?-->/g, ''), /未配置奖励/)
 })
 
 // ── P2-1 奖励逐字段正整数校验(后端契约:couponId=long / settleXp=int,fastjson 收数字字符串)──

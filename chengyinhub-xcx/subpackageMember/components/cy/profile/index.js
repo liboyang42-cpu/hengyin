@@ -74,11 +74,11 @@ function buildBenefits(p) {
   ];
 }
 
-function req(url, data) {
+function req(url, data, header) {
   return new Promise(function (resolve) {
     community.request({
       url: url,
-      method: 'POST',
+      method: 'POST', header: header,
       data: data || {},
       hideLoading: true,
       success: function (res) { resolve(res || {}); },
@@ -2167,7 +2167,8 @@ Component({
   // 排在社区帖文之后;两路都空才算「还没有帖文」。俱乐部帖文的可见性、删除与拉黑仍由后端判。
   loadMyClubPosts: function (read, generation) {
     var that = this;
-    return req('/api/club/post/feed', { scope: 'all', author: 'me', limit: 20 }).then(function (res) {
+    // j5 N2:后端 @RequestBody,必须发 JSON(表单编码会被 415 拒,页面只剩「还没有帖文」)
+    return req('/api/club/post/feed', { scope: 'all', author: 'me', limit: 20 }, { 'content-type': 'application/json' }).then(function (res) {
       if (!that._currentProfileRead(read, res) || generation !== that._postsRequestGeneration) return;
       var rows = res && res.code == 200 && isRecord(res.data) && isRecordList(res.data.rows) ? res.data.rows : [];
       that.setData({ clubPostList: rows.map(function (p) {

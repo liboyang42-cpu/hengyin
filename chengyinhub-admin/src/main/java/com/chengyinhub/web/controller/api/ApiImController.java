@@ -143,6 +143,10 @@ public class ApiImController extends BaseController
             else imService.markRead(getAppUserId(), Convert.toLong(conversation_id, 0L), Convert.toLong(read_to, -1L));
             return AjaxResult.success();
         }
+        catch (ServiceException e)
+        {
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
+        }
         catch (Exception e)
         {
             logger.error("IM 标记已读异常", e);
@@ -158,6 +162,10 @@ public class ApiImController extends BaseController
         {
             imService.deleteConversation(getAppUserId(), Convert.toLong(conversation_id, 0L));
             return AjaxResult.success();
+        }
+        catch (ServiceException e)
+        {
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         catch (Exception e)
         {

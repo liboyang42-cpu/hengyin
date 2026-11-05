@@ -64,6 +64,7 @@ const LOGIN_ONLY_PAGES = [
   'pages/play/merchant/index', 'pages/address/address', 'pages/shezhi/marketing/index', 'pages/gerenziliao/gerenziliao',
   'subpackageMember/coupon/coupon', 'subpackageMember/report-mine/index', 'subpackageRoam/history/index',
   'pages/coop/invite-detail/index',
+  'subpackageMember/mycanyu/mycanyu',   // 第十二轮 k2(j6 N3):我的参与游客空白页
 ];
 
 test('游客空白页逐页挂 login 守卫(或已挂 club/merchant 守卫)并注册组件', () => {
