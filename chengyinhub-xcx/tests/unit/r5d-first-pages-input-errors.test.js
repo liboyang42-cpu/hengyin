@@ -252,19 +252,19 @@ test('商家入驻:报过错再改正后提交,载荷与直接填对完全一致
     'description', 'id', 'locationLat', 'locationLng', 'name', 'phone'].sort(), '载荷字段不增不减')
 })
 
-test('商家入驻页面结构:每个必填栏有红色 * 和其下方 kind="error" 的 cy-inline-error,供 pageScrollTo 定位的 id', () => {
+test('商家入驻页面结构:每个必填栏有红色 * 和其下方 kind="field" 的 cy-inline-error,供 pageScrollTo 定位的 id', () => {
   const wxml = fs.readFileSync(APPLY_WXML, 'utf8')
   for (const key of ['name', 'industryIds', 'phone', 'address', 'businessTime', 'businessLicense', 'realName', 'idCard']) {
     const start = wxml.indexOf(`id="apply-field-${key}"`)
     assert.ok(start > 0, `缺少 #apply-field-${key}`)
     const block = wxml.slice(start, start + 2000)
     assert.match(block, /class="req" aria-hidden="true">\*</, `${key} 标签缺红色 *`)
-    assert.ok(block.includes(`<cy-inline-error class="field-err" wx:if="{{fieldErrors.${key}}}" kind="error" title="{{fieldErrors.${key}}}" />`),
+    assert.ok(block.includes(`<cy-inline-error class="field-err" wx:if="{{fieldErrors.${key}}}" kind="field" title="{{fieldErrors.${key}}}" />`),
       `${key} 下方缺红字`)
   }
   assert.match(wxml, /<view class="hp-label">经营日<text class="req" aria-hidden="true">\*<\/text><\/view>/)
-  assert.match(wxml, /<cy-inline-error class="hp-err" wx:if="\{\{hoursErrors\.days\}\}" kind="error"/)
-  assert.match(wxml, /<cy-inline-error class="hp-err" wx:if="\{\{hoursErrors\.time\}\}" kind="error"/)
+  assert.match(wxml, /<cy-inline-error class="hp-err" wx:if="\{\{hoursErrors\.days\}\}" kind="field"/)
+  assert.match(wxml, /<cy-inline-error class="hp-err" wx:if="\{\{hoursErrors\.time\}\}" kind="field"/)
   const js = fs.readFileSync(APPLY_JS, 'utf8')
   for (const text of ['请填写店铺名称', '请填写联系电话', '请上传营业执照', '至少选择一个经营日', '开始与结束时间不能相同']) {
     assert.ok(!js.includes(`toast('${text}')`) && !js.includes(`toast(!d.name ? '${text}'`), `${text} 不应再走弹窗`)
@@ -400,11 +400,11 @@ test('结算页:单独同意未勾选仍按原样弹提示(同意类不转)', ()
   assert.equal(page.data.participantError, '')
 })
 
-test('结算页结构:参与人信息标签带红色 *,其下方是 kind="error" 的 cy-inline-error', () => {
+test('结算页结构:参与人信息标签带红色 *,其下方是 kind="field" 的 cy-inline-error', () => {
   const wxml = fs.readFileSync(BAOMING_WXML, 'utf8')
   assert.match(wxml, /<view class="set_left">参与人信息<text class="form-required" aria-hidden="true">\*<\/text><\/view>/)
   const row = wxml.indexOf('class="address-info"')
-  const err = wxml.indexOf('<cy-inline-error class="participant-err" wx:if="{{pageState === \'ready\' && participantError}}" kind="error" title="{{participantError}}" />')
+  const err = wxml.indexOf('<cy-inline-error class="participant-err" wx:if="{{pageState === \'ready\' && participantError}}" kind="field" title="{{participantError}}" />')
   assert.ok(row > 0 && err > row, '红字在参与人信息一栏下方')
   const sheet = wxml.indexOf('<cy-sheet footer show="{{showAddressPopup}}"')
   assert.ok(err < sheet, '红字在页面上,不在选择弹层里')

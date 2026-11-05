@@ -179,5 +179,5 @@ test('资料晚于参与人回包:已选参与人的姓名/手机保留,付款�
   assert.equal(page.data.participantError, '', '已选了有姓名的参与人,不得报「需要包含姓名」')
   assert.ok(latestHandlers, '校验通过后必须进入下单')
   const wxml = fs.readFileSync(path.join(PAGE_DIR, 'baoming.wxml'), 'utf8')
-  assert.match(wxml, /<cy-inline-error class="participant-err" wx:if="\{\{pageState === 'ready' && participantError\}\}" kind="error"/)
+  assert.match(wxml, /<cy-inline-error class="participant-err" wx:if="\{\{pageState === 'ready' && participantError\}\}" kind="field"/)
 })

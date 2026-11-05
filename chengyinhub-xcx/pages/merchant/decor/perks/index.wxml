@@ -133,7 +133,7 @@
           bindinput="onInput"
           aria-label="权益名称"
         />
-          <cy-inline-error class="dp-field-err" wx:if="{{fieldErrors.name}}" kind="error" title="{{fieldErrors.name}}" />
+          <cy-inline-error class="dp-field-err" wx:if="{{fieldErrors.name}}" kind="field" title="{{fieldErrors.name}}" />
       </view>
       <view class="dp-pair">
         <view class="dp-field">
@@ -150,7 +150,7 @@
             bindinput="onInput"
             aria-label="权益零售价"
           />
-          <cy-inline-error class="dp-field-err" wx:if="{{fieldErrors.retailValue}}" kind="error" title="{{fieldErrors.retailValue}}" />
+          <cy-inline-error class="dp-field-err" wx:if="{{fieldErrors.retailValue}}" kind="field" title="{{fieldErrors.retailValue}}" />
         </view>
         <view class="dp-field">
           <view class="dp-field-label" aria-label="成本价（可选，仅自己可见）">
@@ -166,7 +166,7 @@
             bindinput="onInput"
             aria-label="成本价"
           />
-          <cy-inline-error class="dp-field-err" wx:if="{{fieldErrors.unitCost}}" kind="error" title="{{fieldErrors.unitCost}}" />
+          <cy-inline-error class="dp-field-err" wx:if="{{fieldErrors.unitCost}}" kind="field" title="{{fieldErrors.unitCost}}" />
         </view>
       </view>
       <view class="dp-pair">
@@ -184,7 +184,7 @@
             bindinput="onInput"
             aria-label="可接待份数"
           />
-          <cy-inline-error class="dp-field-err" wx:if="{{fieldErrors.quota}}" kind="error" title="{{fieldErrors.quota}}" />
+          <cy-inline-error class="dp-field-err" wx:if="{{fieldErrors.quota}}" kind="field" title="{{fieldErrors.quota}}" />
         </view>
         <view class="dp-field">
           <view class="dp-field-label">有效期</view>
@@ -201,7 +201,7 @@
           >
             <view class="dp-input dp-date">{{form.validEnd || '请选择日期'}}</view>
           </cy-date-field>
-          <cy-inline-error class="dp-field-err" wx:if="{{fieldErrors.validEnd}}" kind="error" title="{{fieldErrors.validEnd}}" />
+          <cy-inline-error class="dp-field-err" wx:if="{{fieldErrors.validEnd}}" kind="field" title="{{fieldErrors.validEnd}}" />
         </view>
       </view>
       <cy-inline-error

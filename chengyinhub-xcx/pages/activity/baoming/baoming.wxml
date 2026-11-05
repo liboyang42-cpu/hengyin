@@ -54,7 +54,7 @@
   </view>
 </view>
 <!-- 第五轮 D:参与人信息的输入问题写在这一栏下方 -->
-<cy-inline-error class="participant-err" wx:if="{{pageState === 'ready' && participantError}}" kind="error" title="{{participantError}}" />
+<cy-inline-error class="participant-err" wx:if="{{pageState === 'ready' && participantError}}" kind="field" title="{{participantError}}" />
  
 
 <!-- 详情加载中:给一条可见提示,避免页面只剩参与人信息一行像加载完了 -->
