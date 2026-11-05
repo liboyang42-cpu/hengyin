@@ -1,0 +1,2 @@
+FIXTURE TIME SHIFT cms_activity 9: 2026-11-05 12:00:00..2026-11-05 23:59:59 -> 2026-11-05 11:14:37..2026-11-05 23:14:36 (Shanghai wall time; mysql NOW()=2026-11-05 02:54:37 UTC)
+Redis caches may hold the old window; if a page still says 未开始, re-open it.
