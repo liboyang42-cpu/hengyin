@@ -1,0 +1,222 @@
+{
+ "name": "f03-accept",
+ "opts": {
+  "path": "pages/index/index",
+  "identity": "walk-player-2"
+ },
+ "steps": [
+  {
+   "shot": "f21-invitee-landing",
+   "route": "pages/merchant/team/index",
+   "text": "经营团队 | 加入经营团队 | 探店日样板咖啡 · 核销员 | 接受邀请 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "f21-invitee-after-accept",
+   "route": "pages/merchant/team/index",
+   "text": "经营团队 | 探 | 探店日样板咖啡 | 当前岗位 · 核销员 | 详情 | 已加入经营团队 | 你的岗位权限 | 核销员 | 岗位调整或离职由店主操作，立即生效。 | 进入工作台 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  }
+ ],
+ "errors": [],
+ "net": [
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/user/info",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/user/info",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/topic/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/activity/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/activity/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents/latest",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/topic/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/activity/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/user/info",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/user/info",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/topic/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/activity/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/activity/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents/latest",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/topic/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/activity/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents/latest",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/map/reverse-geocode",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/operators/invite/preview",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/operators/invite/accept",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  }
+ ],
+ "bad": [],
+ "console": [
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] HTTP 404 http://127.0.0.1:8097/__api/profile/home-banners/home-banner-merchant.gif",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] HTTP 404 http://127.0.0.1:8097/__api/profile/home-banners/home-banner-club.gif",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] HTTP 404 http://127.0.0.1:8097/__api/profile/home-banners/home-banner-friends.gif",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+ ]
+}

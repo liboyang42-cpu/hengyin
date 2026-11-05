@@ -1,0 +1,149 @@
+{
+ "name": "f18-clerk-scan",
+ "opts": {
+  "path": "pages/merchant/index/index",
+  "identity": "walk-player-2"
+ },
+ "steps": [
+  {
+   "shot": "f18-clerk-scan-err",
+   "route": "pages/member/index/index",
+   "text": "主页 | 城瘾用户 | Lv.1 城市探索者 | 连续探索：0天 | 0 | 好友 | 0 | 关注 | 0 | 粉丝 | 票夹 | 我的 | 帖文 | 成就 | 关于 | 我的订单 | 待开始 | E2E 探店日一期 | 活动 | 待核销 | E2E 探店日一期 | 活动 | 我的资产 | 账户余额 | ¥0.00 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  }
+ ],
+ "error": "Error: tap: no visible element with text \"扫码\"\n    at Object.tap (file:///root/rig/docs/delivery/cloud-walk-20261101/rig/mpweb/walk.mjs:61:22)\n    at async file:///root/p2/f_staff.mjs:24:53\n    at async go (file:///root/p2/go.mjs:11:9)\n    at async file:///root/p2/f_staff.mjs:23:27",
+ "errors": [],
+ "net": [
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/common/banner",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/user/info",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/role/info",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/play/growth",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/growth/center",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/play/my-completed",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/medal/wall",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/registration/join_info",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/user/points/statistics",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/growth/leaderboard",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/registration/list",
+   "s": 200,
+   "c": null,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/topic/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/publish/home",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  }
+ ],
+ "bad": [],
+ "console": [
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+ ]
+}

@@ -1,0 +1,116 @@
+{
+ "name": "f31-remove",
+ "opts": {
+  "path": "pages/merchant/team/index",
+  "identity": "e2e-openid-9002"
+ },
+ "steps": [
+  {
+   "shot": "f31-team-two-members",
+   "route": "pages/merchant/team/index",
+   "text": "经营团队 | 探 | 探店日样板咖啡 | 当前岗位 · 店主 | 详情 | 团队成员 | 2 人 | 邀请员工 | 城瘾用户 | 核销员 · 2026-11-05 10:31 加入 | 改岗 | 移除 | 城瘾用户 | 店长 · 2026-11-05 10:29 加入 | 改岗 | 移除 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "f32-remove-confirm",
+   "route": "pages/merchant/team/index",
+   "text": "经营团队 | 探 | 探店日样板咖啡 | 当前岗位 · 店主 | 详情 | 团队成员 | 2 人 | 邀请员工 | 城瘾用户 | 核销员 · 2026-11-05 10:31 加入 | 改岗 | 移除 | 城瘾用户 | 店长 · 2026-11-05 10:29 加入 | 改岗 | 移除 | 移除团队成员「城瘾用户」? | 移除后对方的商家权限立即失效。 | 对方立即失去这个店铺的全部经营权限 | 已经产生的经营记录与流水保留,不会被删掉 | 此操作不可撤销;要恢复只能重新邀请一次 | 取消 | 移除成员 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "f33-after-remove",
+   "route": "pages/merchant/team/index",
+   "text": "经营团队 | 探 | 探店日样板咖啡 | 当前岗位 · 店主 | 详情 | 团队成员 | 1 人 | 邀请员工 | 城瘾用户 | 店长 · 2026-11-05 10:29 加入 | 改岗 | 移除 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  }
+ ],
+ "errors": [],
+ "net": [
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/operators/roles",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/operators/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/operators/roles",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/operators/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/operators/remove",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/operators/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  }
+ ],
+ "bad": [],
+ "console": [
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+ ]
+}

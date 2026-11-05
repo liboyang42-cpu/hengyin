@@ -1,0 +1,516 @@
+{
+ "name": "f06-clerk",
+ "opts": {
+  "path": "pages/index/index",
+  "identity": "walk-player-1"
+ },
+ "steps": [
+  {
+   "shot": "f06-clerk-home-tab",
+   "route": "pages/index/index",
+   "text": "成为俱乐部 | 成为商家 | 和朋友报名活动 | Hi, 城瘾用户! | 玩家 | · 上海市 | 编辑精选 | 暂时没有精选主题 | 附近活动 | 你附近暂时没有可点亮的节点 | 主题 | 活动 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "f07-clerk-merchant-home",
+   "route": "pages/merchant/index/index",
+   "text": "Hi， | 探店日样板咖啡 | 营业中 | 探 | 扫码 | 客户 | 更多 | 项目 | 全部 1 | 报名中 | E2E 探店日一期 | 第1章 咖啡 | 今天 09:26 · 2 人已报名 | 我的消息 | 全部 | 核销 | 3分钟前 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "f08-clerk-more",
+   "route": "pages/merchant/index/index",
+   "text": "Hi， | 探店日样板咖啡 | 营业中 | 探 | 扫码 | 客户 | 更多 | 项目 | 全部 1 | 报名中 | E2E 探店日一期 | 第1章 咖啡 | 今天 09:26 · 2 人已报名 | 我的消息 | 全部 | 核销 | 3分钟前 | 更多 | 协作邀请 | 退款售后 | 核销记录 | 管理优惠券 | 品牌资料 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "f09-clerk-verify-records",
+   "route": "pages/merchant/verify-records/index",
+   "text": "核销记录 | 已核销 3 | 已撤销 0 | 2026-11-05 | 3 条 | 第1章 咖啡 | 10:27 · | 已核销 | E2E 探店日一期 | 第1章 咖啡 | 10:26 · | 已核销 | E2E 探店日一期 | 第1章 咖啡 | 10:15 · | 已核销 | E2E 探店日一期 | 已经到底了 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "f10-clerk-ledger",
+   "route": "pages/merchant/ledger/index",
+   "text": "核销与退款 | 本月核销 | 3 笔 | 11 月 05 日 | E2E 探店日一期 · 第1章 咖啡 | 测试玩家乙 | 10:27 | 核销有效 | E2E 探店日一期 · 第1章 咖啡 | 测试玩家甲 | 10:26 | 核销有效 | E2E 探店日一期 · 第1章 咖啡 | E2E 玩家二号 | 10:15 | 核销有效 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "f11-clerk-customer",
+   "route": "pages/merchant/customer/index",
+   "text": "客户 | 4 位 · 本月新增 4 | 筛选 | 管理 | 城瘾用户 | 异常 | 发生退款 · 今天 | 联系方式在主题名单按客户授权查看 | 城瘾用户 | 新客 | 最近已到店 · 今天 | 联系方式在主题名单按客户授权查看 | 城瘾用户 | 新客 | 最近已到店 · 今天 | 联系方式在主题名单按客户授权查看 | 玩家二号 | 新客 | 最近已到店 · 今天 | 联系方式在主题名单按客户授权查看 | 共 4 位客户 · 已全部显示 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "f12-clerk-team",
+   "route": "pages/merchant/team/index",
+   "text": "经营团队 | 探 | 探店日样板咖啡 | 当前岗位 · 店长 | 详情 | 你的岗位权限 | 店长 | 岗位调整或离职由店主操作，立即生效。 | 进入工作台 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "f13-clerk-decor",
+   "route": "pages/merchant/decor/index",
+   "text": "品牌中心 | 探 | 探店日样板咖啡 | 添加店铺封面 | 营业中 | 看公开主页 | 门店信息 | 品牌介绍 | 门店相册 | 0 张照片 | AI 店铺角色 | 合作经营 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "f14-clerk-coop-finance",
+   "route": "pages/coop/finance/index",
+   "text": "分润明细 | 已入账分润 | ¥0.00 | 联系平台客服提现 | 还没有已入账分润 | 还没有合作结算 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "f15-clerk-aftercare",
+   "route": "pages/merchant/aftercare/index",
+   "text": "退款售后 | 待回应 | 处理中 | 已完成 | 没有待回应售后 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "f16-clerk-marketing",
+   "route": "pages/merchant/marketing/index",
+   "text": "营销 | 近 30 天报名 | 0 | 核销 3 | 店铺参谋 | 店铺装修 | 发主题 | 发活动 | 我的内容 | 管理 | 0 | 主题 | 0 | 活动 | 优惠券 | 还没有优惠券 | 合作机会 | 1 个开放商机 | 进入合作中心 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "f17-clerk-workbench",
+   "route": "pages/topic/merchantinfo/merchantinfo",
+   "text": "9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  }
+ ],
+ "errors": [],
+ "net": [
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/user/info",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/user/info",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/topic/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/activity/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/activity/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents/latest",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/topic/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/activity/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/user/info",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/map/reverse-geocode",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/user/info",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/topic/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/activity/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/activity/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents/latest",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/topic/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/activity/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/map/reverse-geocode",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/info",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/user/info",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "GET",
+   "u": "/__api/api/game/session/merchant/entries",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/upcoming-runs",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/todo-summary",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/im/conversations",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/coop/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/events",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/registration/merchant/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/chapter-application/mine",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/project/my",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/finance/redemptions",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/finance/redemptions",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/aftercare/list?bucket=PENDING&pageNum=1&pageSize=20",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/aftercare/list?bucket=PROCESSING&pageNum=1&pageSize=20",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/aftercare/list?bucket=COMPLETED&pageNum=1&pageSize=20",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/crm/customers/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "GET",
+   "u": "/__api/api/merchant/crm/segments",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/coop-profile",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/coop/perk-template/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/commerce/capabilities",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/subscription",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/coop/finance",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/aftercare/list?bucket=PENDING&pageNum=1&pageSize=20",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/marketing-home?windowDays=30",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/project/home",
+   "s": 200,
+   "c": 500,
+   "b": "{\"msg\":\"你既不是该主题的发布者,也没有承接记录\",\"code\":500}"
+  }
+ ],
+ "bad": [
+  {
+   "m": "POST",
+   "u": "/__api/api/project/home",
+   "s": 200,
+   "c": 500,
+   "b": "{\"msg\":\"你既不是该主题的发布者,也没有承接记录\",\"code\":500}"
+  }
+ ],
+ "console": [
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico",
+  "[error] HTTP 404 http://127.0.0.1:8097/__api/profile/home-banners/home-banner-merchant.gif",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] HTTP 404 http://127.0.0.1:8097/__api/profile/home-banners/home-banner-friends.gif",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] HTTP 404 http://127.0.0.1:8097/__api/profile/home-banners/home-banner-club.gif",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] FAILED https://oss-rig.example.invalid/upload/e2e-topic-cover-9003.jpg?Expires=2109205801&OSSAccessKeyId=rig-dummy&Signature=cXsa3LV51cFilDF%2Bj7aURq9T4po%3D net::ERR_TUNNEL_CONNECTION_FAILED",
+  "[error] Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED",
+  "[error] HTTP 404 http://127.0.0.1:8097/mp/components/cy/npc-avatar/px1:p01",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] HTTP 404 http://127.0.0.1:8097/mp/components/cy/npc-avatar/px1:p04",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] HTTP 404 http://127.0.0.1:8097/mp/components/cy/npc-avatar/px1:p07",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] HTTP 404 http://127.0.0.1:8097/mp/components/cy/npc-avatar/px1:p10",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] HTTP 404 http://127.0.0.1:8097/mp/components/cy/npc-avatar/px1:p13",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] HTTP 404 http://127.0.0.1:8097/mp/components/cy/npc-avatar/px1:p17",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] HTTP 404 http://127.0.0.1:8097/mp/components/cy/npc-avatar/px1:p18",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] HTTP 404 http://127.0.0.1:8097/mp/components/cy/npc-avatar/px1:p23",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] HTTP 404 http://127.0.0.1:8097/mp/components/cy/npc-avatar/px1:p25",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] HTTP 404 http://127.0.0.1:8097/mp/components/cy/npc-avatar/px1:p27",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] HTTP 404 http://127.0.0.1:8097/mp/components/cy/npc-avatar/px1:p31",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] HTTP 404 http://127.0.0.1:8097/mp/components/cy/npc-avatar/px1:p36",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+ ]
+}

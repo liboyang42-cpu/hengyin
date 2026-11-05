@@ -1,0 +1,350 @@
+{
+ "name": "f22-checkin-clerk",
+ "opts": {
+  "path": "pages/merchant/index/index",
+  "identity": "walk-player-2"
+ },
+ "steps": [
+  {
+   "shot": "f22-checkin-clerk-home",
+   "route": "pages/merchant/index/index",
+   "text": "Hi， | 探店日样板咖啡 | 营业中 | 探 | 扫码 | 更多 | 我的消息 | 全部 | 核销 | 完成一笔到店核销 | 1分钟前 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "f23-checkin-clerk-more",
+   "route": "pages/merchant/index/index",
+   "text": "Hi， | 探店日样板咖啡 | 营业中 | 探 | 扫码 | 更多 | 我的消息 | 全部 | 核销 | 完成一笔到店核销 | 1分钟前 | 更多 | 核销记录 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "f28-checkin-clerk-verify-records",
+   "route": "pages/merchant/verify-records/index",
+   "text": "核销记录 | 已核销 4 | 已撤销 0 | 2026-11-05 | 4 条 | 第1章 咖啡 | 10:31 · | 已核销 | E2E 探店日一期 | 第1章 咖啡 | 10:27 · | 已核销 | E2E 探店日一期 | 第1章 咖啡 | 10:26 · | 已核销 | E2E 探店日一期 | 第1章 咖啡 | 10:15 · | 已核销 | E2E 探店日一期 | 已经到底了 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "f29-checkin-clerk-customer",
+   "route": "pages/merchant/customer/index",
+   "text": "客户 | 当前岗位没有客户查看权限 | 请联系店主开通 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "f30-checkin-clerk-ledger",
+   "route": "pages/merchant/ledger/index",
+   "text": "核销与退款 | 本月核销 | 4 笔 | 11 月 05 日 | E2E 探店日一期 · 第1章 咖啡 | 测试玩家丙 | 10:31 | 核销有效 | E2E 探店日一期 · 第1章 咖啡 | 测试玩家乙 | 10:27 | 核销有效 | E2E 探店日一期 · 第1章 咖啡 | 测试玩家甲 | 10:26 | 核销有效 | E2E 探店日一期 · 第1章 咖啡 | E2E 玩家二号 | 10:15 | 核销有效 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  }
+ ],
+ "errors": [],
+ "net": [
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/user/info",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "GET",
+   "u": "/__api/api/game/session/merchant/entries",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/upcoming-runs",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/todo-summary",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/im/conversations",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/events",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/user/info",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "GET",
+   "u": "/__api/api/game/session/merchant/entries",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/upcoming-runs",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/todo-summary",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/im/conversations",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/events",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/user/info",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "GET",
+   "u": "/__api/api/game/session/merchant/entries",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/upcoming-runs",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/todo-summary",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/im/conversations",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/events",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/user/info",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "GET",
+   "u": "/__api/api/game/session/merchant/entries",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/upcoming-runs",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/todo-summary",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/im/conversations",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/events",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/user/info",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "GET",
+   "u": "/__api/api/game/session/merchant/entries",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/upcoming-runs",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/todo-summary",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/im/conversations",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/events",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/finance/redemptions",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/access/me",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/finance/redemptions",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  }
+ ],
+ "bad": [],
+ "console": [
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico",
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+ ]
+}
