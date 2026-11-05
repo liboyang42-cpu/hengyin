@@ -1,3 +1,4 @@
+const priceInput = require('../../../utils/price-input.js')
 const modal = require('../../../utils/modal.js');
 const authorWrites = require('../../../utils/author-write-recovery.js');
 const mediaPreview = require('../../../utils/media-preview.js');
@@ -281,8 +282,9 @@ Page({
     const value = e.detail.value
 
     this.data.dirty = true
-    const fieldValue = field === 'price' && String(value).trim() === ''
-      ? '' : (field === 'price' || field === 'totalStock' ? Number(value) : value)
+    // j1 N2:价格打字时保留字符串(只留数字、一个小数点、两位小数),提交时再数值化
+    const fieldValue = field === 'price' ? priceInput.typingPrice(value)
+      : (field === 'totalStock' ? Number(value) : value)
     if (field === 'name') {
       this.setData({
         [`formData.tickets[${index}].${field}`]: fieldValue,
@@ -536,6 +538,7 @@ Page({
       collaborators: this.data.formData.collaborators,
       tickets: this.data.formData.tickets.map(ticket => ({
         ...ticket,
+        price: String(ticket.price).trim() === '' ? ticket.price : Number(ticket.price),
         startTime: this.data.formData.startDate,
         endTime: this.data.formData.endDate
       }))
@@ -559,8 +562,8 @@ Page({
   },
 
   validTicketPrice(price) {
-    return (typeof price === 'number' || (typeof price === 'string' && price.trim() !== ''))
-      && Number.isFinite(Number(price)) && Number(price) >= 0
+    return (typeof price === 'number' && Number.isFinite(price) && price >= 0 && priceInput.isValidPrice(String(price)))
+      || (typeof price === 'string' && priceInput.isValidPrice(price))
   },
 
   activityIdentityForm() {

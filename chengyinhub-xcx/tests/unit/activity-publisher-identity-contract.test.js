@@ -142,7 +142,8 @@ test('清空价格保留未填写态，按钮不可继续；输入0才恢复免�
   assert.equal(h.page.data.formData.tickets[0].price, '')
   assert.equal(h.page.data.canContinue, false)
   h.page.onTicketChange({ currentTarget: { dataset: { field: 'price', index: 0 } }, detail: { value: '0' } })
-  assert.equal(h.page.data.formData.tickets[0].price, 0)
+  // 第十二轮 k1 第 9 项(j1 N2):打字时保留字符串,提交时才数值化
+  assert.equal(h.page.data.formData.tickets[0].price, '0')
   assert.equal(h.page.data.identityRequired, false)
   assert.equal(h.page.data.canContinue, true)
 })
