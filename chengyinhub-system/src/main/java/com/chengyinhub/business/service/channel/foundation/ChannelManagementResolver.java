@@ -23,7 +23,7 @@ public final class ChannelManagementResolver {
     // management capability through a channel override while its legacy mask is disputed.
     private static final long MANAGEMENT = (0x7FFL << 12) | (1L << 24);
     private static final long FORBIDDEN_ALLOW = 0x6BC00L | MANAGEMENT;
-    private static final long MESSAGE_WRITE = (1L<<1)|(1L<<2)|(1L<<3)|(1L<<4)|(1L<<5)|(1L<<7);
+    private static final long READ_ONLY = VIEW | (1L<<6) | (1L<<23);
 
     public record Role(long id, int status, boolean deleted, long permissions) {
         public Role { if (id<=0 || (status!=0 && status!=1)) invalid(); bits(permissions); }
@@ -121,7 +121,7 @@ public final class ChannelManagementResolver {
         boolean visible=(effective & VIEW)!=0;
         boolean archive=visible && (effective & MANAGE_CHANNEL)!=0;
         long content=visible ? effective & ~MANAGEMENT : 0;
-        if (archived) content &= ~MESSAGE_WRITE;
+        if (archived) content &= READ_ONLY;
         if ((content & (1L<<1))==0) content &= ~((1L<<2)|(1L<<4)|(1L<<7));
         // visibility/private flags and member-settings row existence never create grants.
         return new Resolution(s.actor(),s.guildKind(),s.guildId(),target,content,archive);

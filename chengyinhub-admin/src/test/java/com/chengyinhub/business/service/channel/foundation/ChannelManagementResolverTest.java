@@ -119,4 +119,11 @@ class ChannelManagementResolverTest {
         assertFalse(resolve(snapshot(VIEW,List.of(new Role(2,1,false,MANAGE_CHANNEL)),
                 List.of(grant(2,Scope.CHANNEL,12)),parent,child)).mayArchive());
     }
+    @Test void archiveContentProjectionRetainsOnlyReadCapabilities() {
+        var archived=new Layer(channel(12,0,ChannelDefinition.Kind.TEXT,ChannelDefinition.Status.ARCHIVED),List.of());
+        var r=resolve(snapshot(ALL,List.of(),List.of(),archived));
+        assertTrue(r.mayArchive());
+        assertEquals(VIEW|(1L<<6)|(1L<<23),r.contentPermissions());
+        assertEquals(0,r.contentPermissions() & ((1L<<8)|(1L<<9)|(1L<<10)|(1L<<11)));
+    }
 }
