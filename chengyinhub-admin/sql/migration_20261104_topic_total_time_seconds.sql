@@ -12,7 +12,12 @@
 -- 不改什么:其他列;没有节点或节点没填时长的主题(total_time = 0);cms_topic_chapter.total_time
 --   (没有任何写入方,恒为空)。
 --
--- 可重跑:改过的行 = 分钟和 × 60 ≠ 分钟和,第二次命中 0 行。
+-- 已经是「节点分钟和 × 60」的行一律不动(第十二轮 k1 第 10 项,r1 F2):
+--   - 本文件换算过的行恰好是「它命中的那个分钟和 × 60」,所以第二次执行命中 0 行,不会 1 → 60 → 3600;
+--   - 同时等于「全部分钟和」与「主办方分钟和 × 60」的行(商家节点分钟和是主办方的 59 倍)分不清是分钟还是秒,
+--     留着不动、也不算断言失败;发布前用 r1 的只读预检 [3] 数一下这类行(生产预计为 0)。
+-- 发布阶段:新 jar 起来之后(POST_DEPLOY,ci/migration_ledger.py)。旧 jar 的编辑器仍按分钟写,
+--   先跑会在窗口期留下分钟行;回退期间旧 jar 写的分钟行,再前滚时重跑本文件即可补换算(可重跑)。
 -- 回退:执行前 SELECT id, total_time 留档;回退按留档逐行写回(或对本次命中的 id 执行 total_time = total_time / 60)。
 
 UPDATE cms_topic t
@@ -26,7 +31,9 @@ JOIN (
 ) n ON n.topic_id = t.id
 SET t.total_time = t.total_time * 60
 WHERE t.total_time > 0
-  AND (t.total_time = n.all_minutes OR t.total_time = n.host_minutes);
+  AND (t.total_time = n.all_minutes OR t.total_time = n.host_minutes)
+  AND t.total_time <> n.all_minutes * 60
+  AND t.total_time <> n.host_minutes * 60;
 
 -- runner: assert=scalar-true
 SELECT COUNT(*) = 0 AS topic_total_time_in_seconds
@@ -40,4 +47,6 @@ JOIN (
     GROUP BY topic_id
 ) n ON n.topic_id = t.id
 WHERE t.total_time > 0
-  AND (t.total_time = n.all_minutes OR t.total_time = n.host_minutes);
+  AND (t.total_time = n.all_minutes OR t.total_time = n.host_minutes)
+  AND t.total_time <> n.all_minutes * 60
+  AND t.total_time <> n.host_minutes * 60;

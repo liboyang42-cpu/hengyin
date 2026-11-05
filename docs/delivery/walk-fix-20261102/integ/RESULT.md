@@ -101,6 +101,65 @@ The order is the shared ledger's topological order (`ci/migration_ledger.build_m
 - No two lanes touch the same table. The only shared table is `sys_job`, used by two migrations from the same lane, l8.
 - On the clean rig DB: `build_schema` replayed 300 migrations after the snapshot with **0 migration-stage problems**, ending at 457 tables. I read back the new tables and the new `club_role_assignment.customer_phone_visible` column.
 
+## Release order and rollback (Round 12, k1 item 10; supersedes both lists below)
+
+This replaces the Round 10 table below, which left out three files (r1 F1) and had stale ledger numbers. The order is
+`python3 ci/release_manifest.py diff --base c6eac3b8cebf7311e8f00f208d294c3c8212aaec --head <release commit>` at k1's
+commit: 14 files ADDED against master, 0 modified, 0 deleted, out of 600. Re-run that command on the exact release
+commit: other Round 12 lanes may still add files, and every new file must appear here with a phase.
+
+| Ledger order | File (`migration_…sql`) | Phase | What it changes on production data | On rollback to the old jar |
+|---|---|---|---|---|
+| 77 | `20261102_merchant_industry_categories` | pre-deploy | `sys_category`: unused type-1 merchant-like rows become type 6; missing type-6 rows inserted | stays; old jar reads it |
+| 78 | `20261103_content_safety_recheck` | pre-deploy | new table `content_safety_recheck` | stays, unused |
+| 79 | `20261103_sensitive_content_library` | pre-deploy | 4 `content_sensitive_*` tables, `sys_config content.sensitive.rescan.remove=false`, 2 `sys_menu` rows granted to nobody | stays, unused |
+| 80 | `20261104_content_safety_jobs_post_deploy` | **POST_DEPLOY** | 2 `sys_job` rows, paused | **delete both rows before starting the old jar** (see below) |
+| 81 | `20261104_invitee_signup_points_off` | pre-deploy (safe either side) | `cms_points_setting` id 6 → `status 0, value 0` | stays; rule 6 is off on both jars (`value = 0`) |
+| 82 | `20261104_merchant_industry_categories_readback` | pre-deploy | read-only assertion | – |
+| 83 | `20261104_topic_total_time_seconds` | **POST_DEPLOY** (k1 item 10, r1 F2) | `cms_topic.total_time` of editor-made themes: minutes → seconds | stays in seconds; the old jar writes minutes again on save. Going forward again, re-run this file: it now converts only rows still in minutes and is a no-op on rows it already converted |
+| 84 | `20261105_welcome_points_fifty` | pre-deploy (safe either side) | `cms_points_setting` id 1 `value` → 50 | stays; the old jar credits 50 to the balance and writes the ledger line from rule 1 (now 50), so they agree on both jars |
+| 112 | `20261102_club_session_gather_point` | pre-deploy | `cms_activity` lat/lng backfill for open future club sessions | stays |
+| 113 | `20261104_club_session_gather_point_readback` | pre-deploy | read-only assertion | – |
+| 393 | `20261103_settlement_rule_three_percent` | pre-deploy | generic `settlement_rule` → 3% / 97% / 0 | stays; the old jar settles at 3%. Undo with the file's own 回退 line only if the owner wants 10% back |
+| 398 | `20261102_club_checkin_phone_visible` | pre-deploy | new column `club_role_assignment.customer_phone_visible` | stays, unused |
+| 431 | `20261104_merchant_activity_limit` | pre-deploy | `user_permission` merchant default → `1 / 3` | stays. On the old jar `QuotaServiceImpl` counts every undeleted activity ever, so a merchant with three past activities is blocked there (before the release they were blocked anyway at 0) |
+| 572 | `20261104_review_wording_seeded_text` | pre-deploy (safe either side) | seeded 盲盒 / 探店日 / 竞猜 text; `sys_job` predict job name and remark only | stays |
+| (74) | `20261101_author_write_receipt` | pre-deploy, **only if production lacks it** | new receipt table | stays. It is on master but not in the rollback jar `014fc0d83`; r1's read-only precheck [1] says whether production has it |
+
+### Behaviour changes with no migration (r1 F3)
+
+- **Points 停用 switch.** From the moment the new jar starts, a rule with `status ≠ 1` or `del_flag ≠ 0` pays nothing.
+  This now covers rules 1 (注册赠送), 2, 3, 4 (评价/投票), 5, 6, 7 (推荐商户注册) and the `event_type` rules 11, 12, 13
+  (k1 item 11; 2/3/5/6 were h3). Before deploying, read `status` for ids 1–7 and the event-type 11/12/13 rows
+  (r1 precheck [5]): a row that is disabled today with a value above 0 **pays today and stops on the new jar**, and pays
+  again after a rollback. Production has them all on, per the owner.
+- **Platform rate.** A missing `settlement_rule (merchant_id=0, biz_type=topic)` row now refuses pricing and fee
+  snapshots instead of silently using 10% (k1 item 7). Production has the row (3%); r1 precheck [3] confirms it.
+- **14 days.** Settlement and payouts wait 14 days after the event ends (k1 item 2). Rows already written with a 7-day
+  `coop_settlement.payable_time` keep that date; only settlements run by the new jar use 14 days. On rollback the
+  old jar waits 7 days again.
+
+### Deploy order
+
+1. Owner runs r1's `production-readonly-precheck.sql` (read-only) and keeps the output. Stop if production is not at
+   master, if any pre-assertion would fail, or if precheck [5] shows a points row that pays today and would stop.
+2. **Old jar still running:** apply, in ledger order with `ci/run_migration.py`, every pre-deploy file above:
+   77, 78, 79, 81, 82, 84, 112, 113, 393, 398, 431, 572 (+74 if precheck [1] says it is missing). Each runner assertion
+   must pass.
+3. **Ship the mini-program together with the jar** (r1 F5): the old bundle hides a 自由探索 ticket from 票夹 after its
+   first shop scan, and there is no server-side minimum version. Submit the new bundle for review so it can be released
+   the same day the jar goes live, and release it as soon as the jar is healthy.
+4. Deploy and start the new jar. Wait for `Started RuoYiApplication` and `/actuator/health` UP.
+5. **New jar live:** apply 80 (two jobs, paused) and then 83 (`total_time`). Both are re-runnable.
+
+### Rollback to the old jar
+
+1. Stop the new jar.
+2. Before starting the old jar: `DELETE FROM sys_job WHERE invoke_target IN ('contentSafetyRecheckTask.run()', 'sensitiveContentRescanTask.run()');`
+3. Start the old jar. Schema and data changes stay (see the last column of the table). Decide per row whether to run a
+   file's own 回退 line; none of them stops the old jar.
+4. Forward again: new jar, then 80 and 83 again.
+
 ## Release order and rollback (Round 10, f1 item 9; supersedes the list above for deployment)
 
 The list above is the Round 7 snapshot. Round 10 moved the two `sys_job` inserts out of the l8 files and added
