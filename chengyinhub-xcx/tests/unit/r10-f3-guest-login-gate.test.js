@@ -77,13 +77,16 @@ test('游客空白页逐页挂 login 守卫(或已挂 club/merchant 守卫)并�
   }
 });
 
-test('j6 F7:游客看俱乐部,成员与贡献榜整块在登录后,只留一行「登录后查看 · 登录」;游客不读成员与榜单', () => {
-  const wxml = read('pages/club/detail/index.wxml');
-  assert.match(wxml, /<block wx:if="\{\{myMemberId\}\}">\s*\n\s*<!-- MembersHead/);
-  assert.match(wxml, /<\/block>\s*\n\s*<!-- j6 F7[^\n]*\n\s*<cy-empty wx:else size="sm" kind="no-permission" title="登录后查看" cta="登录" bind:cta="onLoginRetry" \/>/);
+// 第十二轮 k2:业主 2026-11-05 改判(取代 11-04 的「登录后查看」):游客可看俱乐部页的主题、帖文、成员、贡献榜,
+// 服务端回公开投影;页面不再整块换成「登录后查看」,游客与已登录非成员同一口径读成员与榜单,点人先登录。
+test('k2:游客看俱乐部的成员与贡献榜,不再出「登录后查看」;点人先登录', () => {
+  const wxml = read('pages/club/detail/index.wxml').replace(/<!--[\s\S]*?-->/g, '');
+  assert.doesNotMatch(wxml, /title="登录后查看"/);
+  assert.doesNotMatch(wxml, /<block wx:if="\{\{myMemberId\}\}">/);
   const js = read('pages/club/detail/index.js');
-  assert.match(js, /const canSeeRoster = !!memberId\(app\) && canSeeClubRoster\(club\);/);
-  assert.match(js, /loadLeaderboard\(\) \{\n\s*if \(!memberId\(app\)\) return;/);
+  assert.match(js, /const canSeeRoster = canSeeClubRoster\(club\);/);
+  assert.doesNotMatch(js, /loadLeaderboard\(\) \{\n\s*if \(!memberId\(app\)\) return;/);
+  assert.match(js, /if \(!memberId\) \{ if \(!this\.data\.myMemberId\) this\.onLoginRetry\(\); return; \}/);
 });
 
 test('申诉页的游客态不能用加载失败类 kind(会被渲染成空白)', () => {

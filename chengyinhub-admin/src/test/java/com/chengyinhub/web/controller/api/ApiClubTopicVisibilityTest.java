@@ -63,6 +63,7 @@ class ApiClubTopicVisibilityTest {
         IClubService clubService = mock(IClubService.class);
         Club activeClub = new Club();
         activeClub.setId(73L);
+        activeClub.setStatus(1L); // 第十二轮 k2:游客只看在营业的俱乐部
         when(clubService.selectClubById(73L)).thenReturn(activeClub);
         ReflectionTestUtils.setField(controller, "clubService", clubService);
 
@@ -87,6 +88,7 @@ class ApiClubTopicVisibilityTest {
         IClubService clubService = mock(IClubService.class);
         Club activeClub = new Club();
         activeClub.setId(73L);
+        activeClub.setStatus(1L); // 第十二轮 k2:游客只看在营业的俱乐部
         when(clubService.selectClubById(73L)).thenReturn(activeClub);
         ReflectionTestUtils.setField(controller, "clubService", clubService);
 
@@ -215,6 +217,7 @@ class ApiClubTopicVisibilityTest {
         IClubService clubService = mock(IClubService.class);
         Club club = new Club();
         club.setId(73L);
+        club.setStatus(1L); // 第十二轮 k2:游客只看在营业的俱乐部
         when(clubService.selectClubById(73L)).thenReturn(club);
         ReflectionTestUtils.setField(controller, "clubService", clubService);
 
@@ -252,6 +255,7 @@ class ApiClubTopicVisibilityTest {
         IClubService clubService = mock(IClubService.class);
         Club club = new Club();
         club.setId(73L);
+        club.setStatus(1L); // 第十二轮 k2:游客只看在营业的俱乐部
         when(clubService.selectClubById(73L)).thenReturn(club);
         ReflectionTestUtils.setField(controller, "clubService", clubService);
 
@@ -301,6 +305,7 @@ class ApiClubTopicVisibilityTest {
         IClubService clubService = mock(IClubService.class);
         Club club = new Club();
         club.setId(73L);
+        club.setStatus(1L); // 第十二轮 k2:游客只看在营业的俱乐部
         when(clubService.selectClubById(73L)).thenReturn(club);
         ReflectionTestUtils.setField(controller, "clubService", clubService);
         Club body = new Club();

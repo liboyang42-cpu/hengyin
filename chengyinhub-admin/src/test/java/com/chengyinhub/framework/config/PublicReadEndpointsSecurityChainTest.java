@@ -268,14 +268,19 @@ class PublicReadEndpointsSecurityChainTest {
         // owner 2026-10-24「游客可浏览，写入时弹窗登录」:四条公开读走 @Anonymous(同 GuestBrowseProbeController),
         // 真实控制器上的注解范围由 GuestBrowseAnonymousReadTest 逐方法钉住。
         for (String route : new String[]{"/api/topic/info-to-user", "/api/club/detail", "/api/club/list",
+                "/api/club/topics", "/api/club/post/list", "/api/club/members", "/api/club/leaderboard",
                 "/api/creativesquare/info"}) {
             mockMvc.perform(post(route)).andExpect(status().isOk()).andExpect(jsonPath("$.code").value(200));
         }
         // 负控:写兄弟与本人数据接口照旧 401;放行不能顺着前缀吃进去。
-        for (String route : new String[]{"/api/club/join", "/api/club/quit", "/api/club/home", "/api/club/members",
+        for (String route : new String[]{"/api/club/join", "/api/club/quit", "/api/club/home",
                 "/api/club/post/create", "/api/club/post/like", "/api/topic/like", "/api/topic/info-to-merchant",
                 "/api/creativesquare/like", "/api/creativesquare/action", "/api/comment/add",
-                "/api/registration/create", "/api/club/detail/extra", "/api/topic/info-to-user/extra"}) {
+                "/api/registration/create", "/api/club/detail/extra", "/api/topic/info-to-user/extra",
+                "/api/club/post/comment/list", "/api/club/post/update", "/api/club/post/delete",
+                "/api/club/member/remove", "/api/club/topic-registrations",
+                "/api/club/members/extra", "/api/club/topics/extra", "/api/club/post/list/extra",
+                "/api/club/leaderboard/extra"}) {
             mockMvc.perform(post(route)).andExpect(status().isUnauthorized())
                     .andExpect(jsonPath("$.code").value(401));
         }
@@ -396,10 +401,30 @@ class PublicReadEndpointsSecurityChainTest {
         @PostMapping("/api/creativesquare/info")
         AjaxResult squareInfo() { return AjaxResult.success(); }
 
-        @PostMapping({"/api/club/join", "/api/club/quit", "/api/club/home", "/api/club/members",
+        @com.chengyinhub.common.annotation.Anonymous
+        @PostMapping("/api/club/topics")
+        AjaxResult clubTopics() { return AjaxResult.success(); }
+
+        @com.chengyinhub.common.annotation.Anonymous
+        @PostMapping("/api/club/post/list")
+        AjaxResult clubPosts() { return AjaxResult.success(); }
+
+        @com.chengyinhub.common.annotation.Anonymous
+        @PostMapping("/api/club/members")
+        AjaxResult clubMembers() { return AjaxResult.success(); }
+
+        @com.chengyinhub.common.annotation.Anonymous
+        @PostMapping("/api/club/leaderboard")
+        AjaxResult clubLeaderboard() { return AjaxResult.success(); }
+
+        @PostMapping({"/api/club/join", "/api/club/quit", "/api/club/home",
                 "/api/club/post/create", "/api/club/post/like", "/api/topic/like", "/api/topic/info-to-merchant",
                 "/api/creativesquare/like", "/api/creativesquare/action", "/api/comment/add",
-                "/api/registration/create", "/api/club/detail/extra", "/api/topic/info-to-user/extra"})
+                "/api/registration/create", "/api/club/detail/extra", "/api/topic/info-to-user/extra",
+                "/api/club/post/comment/list", "/api/club/post/update", "/api/club/post/delete",
+                "/api/club/member/remove", "/api/club/topic-registrations",
+                "/api/club/members/extra", "/api/club/topics/extra", "/api/club/post/list/extra",
+                "/api/club/leaderboard/extra"})
         AjaxResult siblings() { return AjaxResult.success(); }
     }
 

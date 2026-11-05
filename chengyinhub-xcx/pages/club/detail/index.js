@@ -1725,7 +1725,6 @@ Page({
   // sortBy: composite(综合分,默认) / mileage(里程) / duration(完成用时,升序)。排序在后端做,
   // 因为综合分的权重是后端常量 —— 前端自己排会两边口径漂移。
   loadLeaderboard() {
-    if (!memberId(app)) return;   // j6 F7:游客不读榜单(要登录),由「登录后查看」一行承接
     const that = this;
     const sortBy = this._leaderboardSort || 'composite';
     app.sendRequest({
@@ -2188,7 +2187,7 @@ Page({
         if (!isCurrent()) return;
         const club = enrichClub((res.code == '200' && res.data) || null);
         const canSee = !!(club && (club.isOwner || club.isJoined));
-        const canSeeRoster = !!memberId(app) && canSeeClubRoster(club);   // j6 F7:游客不读成员/榜单(都要登录)
+        const canSeeRoster = canSeeClubRoster(club);   // 第十二轮 k2:游客与已登录非成员同一口径(服务端回公开投影)
         const legacyCanGovern = that.canGovern(club);
         const sameClub = !!club && that.data.club && String(that.data.club.id) === String(club.id);
         const immediateCanUseManageTab = legacyCanGovern || (sameClub && that.data.canUseManageTab);
@@ -2343,7 +2342,8 @@ Page({
           return;
         }
         // V-15:成员头像是后端 http 签名链接 / 相对路径时真机拒载,入列前过 getImgUrl
-        const members = res.data.map((m) => (m && m.avatar && app.getImgUrl ? Object.assign({}, m, { avatar: app.getImgUrl(m.avatar) }) : m));
+        const members = res.data.map((m) => (m && m.avatar && app.getImgUrl ? Object.assign({}, m, { avatar: app.getImgUrl(m.avatar) }) : m))
+          .map((m, i) => (m && m.id == null && m.memberId == null ? Object.assign({}, m, { id: 'guest-' + i }) : m));   // 游客投影没有行 id,给 wx:key 一个本页序号
         that.setData({ members: members, membersState: 'ready', memberStrip: buildMemberStrip(members, that.data.club && that.data.club.memberCount) });
         if (that._leaderboardRows) that.setData({ leaderboard: that.composeLeaderboard() });
       },
@@ -2498,7 +2498,8 @@ Page({
   //    现在两个入口都摆明,点哪个去哪个。
   goMemberProfile(e) {
     const memberId = e.currentTarget.dataset.memberId;
-    if (!memberId) return;
+    // 游客的名单 / 榜单是公开投影,不带会员 id:点人先登录,登录后回到本页
+    if (!memberId) { if (!this.data.myMemberId) this.onLoginRetry(); return; }
     const that = this;
     const goPublic = () => { if (that._navigating) return; that._navigating = true; wx.navigateTo({ url: '/pages/userinfo/userinfo?userId=' + memberId, complete: () => { that._navigating = false; } }); };
     if (!this.canReadCustomerProfile()) { goPublic(); return; }

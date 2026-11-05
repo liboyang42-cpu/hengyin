@@ -701,16 +701,21 @@ public class ApiClubController extends BaseController {
 
     @Operation(summary = "俱乐部成员列表")
     @PostMapping("/members")
+    // 第十二轮 k2(业主 2026-11-05):游客可看在营业、对外可见、公开加入的俱乐部名单,走 guestMemberRows 投影。
+    @Anonymous
     public AjaxResult members(@RequestBody ClubMember body) {
         if (body.getClubId() == null) return error("缺少俱乐部ID");
-        Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        Long memberId = viewerOrGuest();
         Club club = clubService.selectClubById(body.getClubId());
         if (club == null) return error("俱乐部不存在");
-        boolean isOwner = OwnershipUtils.isOwner(club.getMemberId(), memberId);
-        boolean isMember = clubMemberService.selectByClubAndMember(body.getClubId(), memberId) != null;
-        if (!isOwner && !isMember && !canBrowsePublicRoster(club, memberId)) {
-            return error(isPublicJoinClub(club) ? "仅俱乐部成员可查看成员名单" : "通过审核后可看成员名单");
+        if (memberId == null) {
+            if (!guestCanBrowseRoster(club)) return error(guestCanViewClub(club) ? "通过审核后可看成员名单" : "这个俱乐部只对成员开放");
+        } else {
+            boolean isOwner = OwnershipUtils.isOwner(club.getMemberId(), memberId);
+            boolean isMember = clubMemberService.selectByClubAndMember(body.getClubId(), memberId) != null;
+            if (!isOwner && !isMember && !canBrowsePublicRoster(club, memberId)) {
+                return error(isPublicJoinClub(club) ? "仅俱乐部成员可查看成员名单" : "通过审核后可看成员名单");
+            }
         }
         ClubMember q = new ClubMember();
         q.setClubId(body.getClubId());
@@ -747,8 +752,75 @@ public class ApiClubController extends BaseController {
                 list.add(0, owner);
             }
         }
+        if (memberId == null) return AjaxResult.success(guestMemberRows(list));
         applyOrganiserNames(club, memberId, list);
         return AjaxResult.success(list);
+    }
+
+    /** 已登录会员 id;未登录(游客)回 null。 */
+    private Long viewerOrGuest() {
+        try {
+            Long id = currentMemberId();
+            return id != null && id > 0L ? id : null;
+        } catch (Exception notLoggedIn) {
+            return null;
+        }
+    }
+
+    /** 第十二轮 k2:游客只看在营业(status=1)且对外可见的俱乐部。 */
+    private boolean guestCanViewClub(Club club) {
+        return club != null && club.getStatus() != null && club.getStatus() == 1L && canViewClub(club);
+    }
+
+    /** 游客看名单 / 贡献榜:与已登录非成员同一条口径(公开加入的团),只是没有本人封禁可查。 */
+    private boolean guestCanBrowseRoster(Club club) {
+        return guestCanViewClub(club) && isPublicJoinClub(club);
+    }
+
+    /** 游客名单投影:不带会员 id、入会留言、审核信息、手机号。 */
+    static List<Map<String, Object>> guestMemberRows(List<ClubMember> list) {
+        List<Map<String, Object>> rows = new ArrayList<>();
+        if (list == null) return rows;
+        for (ClubMember cm : list) {
+            if (cm == null) continue;
+            Map<String, Object> row = new java.util.LinkedHashMap<>();
+            row.put("nickname", cm.getNickname());
+            row.put("avatar", cm.getAvatar());
+            row.put("role", cm.getRole());
+            row.put("isOwner", Boolean.TRUE.equals(cm.getIsOwner()));
+            row.put("levelId", cm.getLevelId());
+            row.put("joinTime", cm.getJoinTime());
+            rows.add(row);
+        }
+        return rows;
+    }
+
+    /** 游客贡献榜投影:去掉会员 id,其余成绩列原样。 */
+    static List<Map<String, Object>> guestBoardRows(List<Map<String, Object>> board) {
+        List<Map<String, Object>> rows = new ArrayList<>();
+        if (board == null) return rows;
+        for (Map<String, Object> source : board) {
+            if (source == null) continue;
+            Map<String, Object> row = new java.util.LinkedHashMap<>(source);
+            row.remove("memberId");
+            row.remove("member_id");
+            row.remove("phone");
+            rows.add(row);
+        }
+        return rows;
+    }
+
+    /** 游客帖文投影:去掉作者 / 转发人会员 id 与按查看者算的标记。 */
+    static void guestPostProjection(List<ClubPost> posts, List<ClubPostRepostItemVO> reposts) {
+        if (posts != null) for (ClubPost p : posts) {
+            if (p == null) continue;
+            p.setAuthorMemberId(null);
+            p.setIsLiked(null);
+            p.setViewerReposted(null);
+            p.setIsFollowTheUser(null);
+            p.setViewerCanManage(null);
+        }
+        if (reposts != null) for (ClubPostRepostItemVO r : reposts) if (r != null) r.setReposterMemberId(null);
     }
 
     /**
@@ -1405,11 +1477,14 @@ public class ApiClubController extends BaseController {
 
     @Operation(summary = "俱乐部办的经典定向团")
     @PostMapping("/topics")
+    // 第十二轮 k2(业主 2026-11-05):游客可看在营业、对外可见的俱乐部主题;已上架主题才出(publicTopicListWhere)。
+    @Anonymous
     public AjaxResult topics(@RequestBody Club body) {
         if (body.getId() == null) return error("缺少俱乐部ID");
         Club club = clubService.selectClubById(body.getId());
         if (club == null) return error("俱乐部不存在");
         if (!canViewClub(club)) return error("这个俱乐部只对成员开放");
+        if (viewerOrGuest() == null && !guestCanViewClub(club)) return error("这个俱乐部只对成员开放");
         CmsTopic probe = new CmsTopic();
         probe.setClubId(body.getId());
         // 这个端点不要求登录(游客也能看俱乐部主页),拿不到人就当非成员 —— fail-closed。
@@ -1488,7 +1563,21 @@ public class ApiClubController extends BaseController {
                 if (PlayMode.isLinear(tk.getMode())) { t.setTeamStatus(tk.getTeamStatus()); break; }
             }
         }
+        if (viewerId == null || viewerId <= 0L) guestTopicProjection(topics);
         return AjaxResult.success(topics);
+    }
+
+    /** 第十二轮 k2:游客主题投影:不带作者会员 id 与按查看者算的标记。 */
+    static void guestTopicProjection(List<CmsTopic> topics) {
+        if (topics == null) return;
+        for (CmsTopic t : topics) {
+            if (t == null) continue;
+            t.setMemberId(null);
+            t.setViewerMemberId(null);
+            t.setIsLike(null);
+            t.setIsLikeMemberId(null);
+            t.setIsFollowTheUser(null);
+        }
     }
 
     @Operation(summary = "主理人查询可开团的生效合作主题")
@@ -1775,11 +1864,15 @@ public class ApiClubController extends BaseController {
 
     @Operation(summary = "俱乐部动态列表(公开)")
     @PostMapping("/post/list")
+    // 第十二轮 k2(业主 2026-11-05):游客可看在营业、对外可见的俱乐部帖文,走 guestPostProjection。不开评论与任何写。
+    @Anonymous
     public AjaxResult postList(@RequestBody ClubPost body) {
         if (body.getClubId() == null) return error("缺少俱乐部ID");
         Club club = clubService.selectClubById(body.getClubId());
         if (club == null) return error("俱乐部不存在");
         if (!canViewClub(club)) return error("这个俱乐部只对成员开放");
+        boolean guest = viewerOrGuest() == null;
+        if (guest && !guestCanViewClub(club)) return error("这个俱乐部只对成员开放");
         // P0-82:按页取,不再整俱乐部全量拉。首页=置顶帖+最新 limit 条;翻页带 beforeId(上一页最后一条非置顶帖)。
         // 回包仍是数组,老客户端不传 limit 时按上限取首页。
         int limit = body.getLimit() == null ? POST_PAGE_MAX : Math.max(1, Math.min(POST_PAGE_MAX, body.getLimit()));
@@ -1811,6 +1904,7 @@ public class ApiClubController extends BaseController {
             markViewerReposted(all, memberId);
             markViewerFollows(all, memberId);
         } catch (Exception ignore) { /* 未登录不标 isLiked / viewerReposted / isFollowTheUser */ }
+        if (guest) guestPostProjection(all, reposts);
         List<Object> items = new ArrayList<>(pinned);
         items.addAll(mergeByTime(rest, reposts));
         return AjaxResult.success(items);
@@ -2472,13 +2566,19 @@ public class ApiClubController extends BaseController {
      */
     @Operation(summary = "俱乐部本团贡献榜")
     @PostMapping("/leaderboard")
+    // 第十二轮 k2(业主 2026-11-05):游客与已登录非成员同一口径可看,走 guestBoardRows 投影。
+    @Anonymous
     public AjaxResult leaderboard(@RequestBody Map<String, Object> body) {
         Long clubId = badgeLong(body.get("id"));
         if (clubId == null) return error("缺少俱乐部ID");
-        Long viewerId;
-        try { viewerId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        Long viewerId = viewerOrGuest();
         Club leaderboardClub = clubService.selectClubById(clubId);
         if (leaderboardClub == null) return error("俱乐部不存在");
+        if (viewerId == null) {
+            if (!guestCanBrowseRoster(leaderboardClub)) return error(guestCanViewClub(leaderboardClub) ? "通过审核后可看贡献榜" : "这个俱乐部只对成员开放");
+            Object guestSort = body.get("sortBy");
+            return AjaxResult.success(guestBoardRows(clubMemberService.selectClubLeaderboard(clubId, guestSort == null ? null : guestSort.toString())));
+        }
         boolean boardOwner = OwnershipUtils.isOwner(leaderboardClub.getMemberId(), viewerId);
         boolean boardMember = clubMemberService.selectByClubAndMember(clubId, viewerId) != null;
         if (!boardOwner && !boardMember && !canBrowsePublicRoster(leaderboardClub, viewerId)) {
