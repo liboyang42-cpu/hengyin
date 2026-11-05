@@ -72,11 +72,14 @@ class TopicRoutePublicationOutcomeScopeTest {
         f.nodes.selectCmsTopicNodeList(new CmsTopicNode()).get(0).setChapterId(21L);
         f.nodes.selectCmsTopicNodeList(new CmsTopicNode()).get(0).setName("路灯照片");
         f.templates.selectCmsMemberTemplateByIds(Collections.singletonList(701L)).get(0).setValidationMethod(2);
-        for (String eggs : new String[]{"[{\"id\":\"egg1\",\"name\":\"来信\",\"content\":\"灯亮了\",\"trigger\":\"TIME\",\"threshold\":1,\"rewards\":[]}]", "[]"}) {
-            f.topic.setThemeRuntimeConfigJson("{\"schemaVersion\":1,\"capacity\":0,\"chapters\":[{\"index\":0,\"hpCost\":0,\"luckCost\":0,\"grants\":[],\"eggs\":" + eggs + ",\"completion\":{\"type\":\"ALL\"}}]}");
-            String saved = f.compiler.compileTemplateRules(f.topic);
-            assertEquals(1, quests(saved)); f.topic.setThemeRuntimeConfigJson(saved);
-            assertDoesNotThrow(() -> f.compiler.freezePublication(f.topic, null));
+        for (String completion : new String[]{"", ",\"completion\":{\"type\":\"ALL\"}"}) {
+            for (String eggs : new String[]{"[{\"id\":\"egg1\",\"name\":\"来信\",\"content\":\"灯亮了\",\"trigger\":\"TIME\",\"threshold\":1,\"rewards\":[]}]", "[]"}) {
+                f.topic.setThemeRuntimeConfigJson("{\"schemaVersion\":1,\"capacity\":0,\"gameplayRuntime\":{\"runtimeScope\":\"PLAYER\",\"survival\":{\"zeroHpPolicy\":\"BLOCK_HP_COST\",\"actionLimitPolicy\":\"BLOCK_OVERFLOW\"}},\"chapters\":[{\"index\":0,\"hpCost\":0,\"luckCost\":0,\"grants\":[],\"eggs\":" + eggs + completion + "}]}");
+                String saved = f.compiler.compileTemplateRules(f.topic);
+                assertEquals(1, quests(saved)); f.topic.setThemeRuntimeConfigJson(saved);
+                assertEquals(1, JSON.readTree(saved).path("gameplayRuntime").path("acts").size());
+                assertDoesNotThrow(() -> f.compiler.freezePublication(f.topic, null));
+            }
         }
     }
 

@@ -257,7 +257,10 @@ final class TopicRoutePublicationCompiler {
             ObjectNode sceneDefinition=ThemeRuntimeConfig.parseDraft(topic.getThemeRuntimeConfigJson());
             for(JsonNode scene:sceneDefinition.path("scenes"))for(JsonNode block:scene.path("nodeConfigs"))configured |= hasTemplateInteraction(block, stateRules);
         }
-        boolean regenerateQuests = authored != null && authored.path("gameplayRuntime").path("acts").size() > 0 && authored.path("gameplayRuntime").path("quests").size() == 0;
+        boolean regenerateQuests = authored != null
+                && (Arrays.asList("PLAYER", "TEAM").contains(authored.path("gameplayRuntime").path("runtimeScope").asText())
+                    || authored.path("gameplayRuntime").path("acts").size() > 0)
+                && authored.path("gameplayRuntime").path("quests").size() == 0;
         boolean effectSlots=false;for(JsonNode config:configs)effectSlots |= config.path("interactionRules").has("resourceSlots");
         if (!configured && !chapterRequirements && !regenerateQuests && effectSlots) {
             ObjectNode definition=ThemeRuntimeConfig.parseDraft(topic.getThemeRuntimeConfigJson());
