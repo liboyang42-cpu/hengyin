@@ -3,7 +3,7 @@
      ⚠️ 逐值抄自 playkit.html 的 #kit2 .phone/.screen/.mid/.chip/.giant/.pill/.cap/.bar。
      台面那三件(退出 / 还能错几次 / 判定屏)仍走 cy-play-stage:十九个玩法共用一套,
      这是先前的产品拍板,不因这一屏例外。原型 375px 画布,1px = 2rpx。 -->
-<cy-play-stage id="cy-play-stage" skin="glass" show="{{show}}" back-label="退出" tries="{{tries}}" count-in
+<cy-play-stage id="cy-play-stage" skin="glass" show="{{show}}" back-label="退出" tries="{{tries}}" used="{{used}}" count-in
                bind:back="onClose" bind:run="onRun" bind:verdict="onVerdict">
   <view class="sw">
     <!-- 背景景深:玻璃要有东西可透,不然「毛玻璃」只是一块灰 -->

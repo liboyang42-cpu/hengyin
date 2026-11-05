@@ -52,6 +52,7 @@ Component({
     targetSeconds: { type: Number, value: 10 },
     toleranceMs: { type: Number, value: 300 },
     tries: { type: Number, value: 0 },      // 0 = 不限
+    used: { type: Number, value: 0 },       // 第十二轮 k8 N9:服务端已记的失手次数(重进不从满格算)
     // C1:服务端开表发的挑战身份(0 = 没有)与奖励上限(空 = 服务端没说,什么都不承诺)
     attemptId: { type: Number, value: 0 },
     rewardCeiling: { type: String, value: '' },

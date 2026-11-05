@@ -894,6 +894,7 @@ function pickPlayKit(view, now) {
       targetSeconds: seg.targetSeconds || 0,
       toleranceMs: seg.toleranceMs || 0,
       tries: seg.tries || 0,
+      used: Number(seg.attempts) > 0 ? Number(seg.attempts) : 0,   // 第十二轮 k8 N9:已用掉的次数,重进时剩余次数从这里扣
     }, sensorContract.kitFields(seg));
   }
   /* 推理类三玩法:答案字段(answerOrder/pairs/answer)服务端不投影,这里也没有。

@@ -122,3 +122,24 @@ test('N11:相册主动作画成主按钮,收起相册退成次按钮;开着相�
     assert.equal(timers.length, 0)
   } finally { global.setTimeout = realSet }
 })
+
+test('N9:精准停表重进时剩余次数扣掉服务端已记的失手(以前每次重进都从满格算,第三次失手还说「还有 1 次机会」)', () => {
+  const kit = pickPlayKit({ sessionId: 5, version: 4, status: 'RUNNING',
+    playKit: { stopwatch: { targetSeconds: 10, toleranceMs: 300, tries: 3, attempts: 2, submitted: false } } }, new Date())
+  assert.equal(kit.tries, 3)
+  assert.equal(kit.used, 2)
+  const prev = { Behavior: global.Behavior, Component: global.Component, wx: global.wx }
+  let c = null
+  global.Behavior = (b) => b; global.Component = (x) => { c = x }; global.wx = global.wx || {}
+  try { delete require.cache[require.resolve(path.join(ROOT, 'pages/play/components/play-stage/index.js'))]; require(path.join(ROOT, 'pages/play/components/play-stage/index.js')) } finally { Object.assign(global, prev) }
+  const ctx = Object.assign({ data: Object.assign({}, c.data), setData(p) { Object.assign(this.data, p) } }, c.methods)
+  const key = Object.keys(c.observers).find((k) => k.includes('tries'))
+  assert.match(key, /used/)
+  c.observers[key].call(ctx, true, 3, 0, 2)
+  assert.equal(ctx.data.triesTotal, 3)
+  assert.equal(ctx.data.triesLeft, 1)
+  c.observers[key].call(ctx, true, 3, 0, 0)
+  assert.equal(ctx.data.triesLeft, 3)
+  const wxml = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit-stopwatch/index.wxml'), 'utf8')
+  assert.match(wxml, /tries="\{\{tries\}\}" used="\{\{used\}\}"/)
+})

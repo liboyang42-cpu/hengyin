@@ -119,7 +119,7 @@
 
 <cy-playkit-stopwatch wx:elif="{{kit.type === 'stopwatch'}}"
   show="{{show}}" kicker="{{kit.kicker}}" target-seconds="{{kit.targetSeconds}}"
-  tolerance-ms="{{kit.toleranceMs}}" tries="{{kit.tries}}"
+  tolerance-ms="{{kit.toleranceMs}}" tries="{{kit.tries}}" used="{{kit.used}}"
   attempt-id="{{kit.attemptId}}" reward-ceiling="{{kit.rewardCeiling}}"
   bind:start="onStart" bind:submit="onSubmit" bind:verdict="onVerdict" bind:close="onClose" />
 
