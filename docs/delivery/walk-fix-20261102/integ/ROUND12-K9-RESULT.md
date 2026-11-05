@@ -136,4 +136,11 @@ Every full GitHub CI run I watched on this branch was cancelled by the next push
 
 J2 (the field label) is still unit-proven only.
 
-STATUS: PARTIAL - k2's leftovers and most of p1's LOW list are fixed and walked in the rig; p2 N-9 and several j1/j5/j6 LOW items are fixed. Several items are listed for you as write contracts, money rules or owner design calls. Some LOW items are not done (p1 N-12, N-7 counter; j5 N11, carried L-items; p2 N-14/16/17 rest; p3 N18; j6 stamp-camera; the missing-param helper lines on club/edit, join-requests and group-code). Item 5 has only the p3 guest sweep. The full GitHub CI was cancelled by other lanes' pushes and is not confirmed.
+## Where it stopped
+
+All my work is on `integ/launch-test-20261103`. Nothing is half-done or on a private branch. Codex can pick up from the tables above:
+- every row marked **listed**, **needs owner** or **not done**;
+- the missing-param helper lines on club/edit, join-requests and group-code;
+- p1 N-12 (needs re-classifying in the two title inventories).
+
+STATUS: PARTIAL - cloud stopped for credit. The k2 and p1 leftovers and most LOW items are fixed and walked in the rig. Several items are listed for you, and some LOW items are not done (see the tables). The full GitHub CI was cancelled by other lanes' pushes and is not confirmed.
