@@ -295,13 +295,14 @@
         活动看 cms_activity.end_date(到点即结束),主题看 cms_topic.end_date(按天,过了那天才算结束)。
     -->
     <sql id="RegistrationEventEnded">
+        <!-- 业务 DATETIME 存上海墙钟；数据库会话可能是 UTC，不能直接用会话当前时间比较。 -->
         (
           (r.owner_type = 2 and exists (select 1 from cms_activity ended_a
                                          where ended_a.id = r.owner_id and ended_a.end_date is not null
-                                           and ended_a.end_date &lt;= current_timestamp))
+                                           and ended_a.end_date &lt;= timestampadd(hour, 8, utc_timestamp())))
           or (r.owner_type = 1 and exists (select 1 from cms_topic ended_t
                                             where ended_t.id = r.owner_id and ended_t.end_date is not null
-                                              and ended_t.end_date &lt; current_date))
+                                              and ended_t.end_date &lt; date(timestampadd(hour, 8, utc_timestamp()))))
         )
     </sql>
 

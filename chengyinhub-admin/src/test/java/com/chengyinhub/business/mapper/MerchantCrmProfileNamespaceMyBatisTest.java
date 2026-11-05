@@ -397,6 +397,8 @@ class MerchantCrmProfileNamespaceMyBatisTest {
     private void createSchema(SqlSession session) throws Exception {
         try (Statement statement = session.getConnection().createStatement()) {
             statement.execute("drop all objects");
+            statement.execute("create alias UTC_TIMESTAMP as $$ java.time.LocalDateTime utcTimestamp() {"
+                    + " return java.time.LocalDateTime.now(java.time.ZoneOffset.UTC); } $$");
             statement.execute("create table merchant_customer_profile("
                     + "id bigint auto_increment primary key, merchant_id bigint not null, "
                     + "merchant_scope_version int not null, member_id bigint not null, member_nickname varchar(100), "
