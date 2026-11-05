@@ -74,6 +74,26 @@ test('进行方式自动生成真实任务后回读按成员核对，重建编�
   }
 });
 
+test('未选进行方式先保存互斥章节，接受编译器默认个人任务但仍核对完整成员和显式模式', () => {
+  const sent = { name: '双路', chapters: [{ name: '街角', nodes: [{ id: 10, name: '左' }, { id: 11, name: '右' }] }],
+    themeRuntimeConfig: { chapters: [{ index: 0, exclusiveGroups: [[10, 11]] }] } };
+  const back = () => ({ isDraft: true, topic: { id: 501, status: 0, name: '双路' },
+    chapters: [{ id: 20, topicId: 501, name: '街角', cmsTopicNodeList: [
+      { id: 30, chapterId: 20, topicId: 501, name: '左' }, { id: 31, chapterId: 20, topicId: 501, name: '右' }] }],
+    themeRuntimeConfig: { chapters: [{ index: 0, exclusiveGroups: [[30, 31]] }],
+      gameplayRuntime: { runtimeScope: 'PLAYER', quests: [{ nodeId: 30, actKey: 'chapter_20' }, { nodeId: 31, actKey: 'chapter_20' }] } } });
+  assert.equal(readbackIssue(sent, back(), true), '');
+  for (const mutate of [g => g.quests.pop(), g => { g.quests[1].nodeId = 99; },
+    g => { g.quests[1].actKey = 'chapter_99'; }, g => { g.runtimeScope = 'TEAM'; }]) {
+    const changed = back(); mutate(changed.themeRuntimeConfig.gameplayRuntime);
+    assert.notEqual(readbackIssue(sent, changed, true), '');
+  }
+  for (const runtimeScope of ['TEAM', '', null]) {
+    const explicit = structuredClone(sent); explicit.themeRuntimeConfig.gameplayRuntime = { runtimeScope };
+    assert.notEqual(readbackIssue(explicit, back(), true), '');
+  }
+});
+
 test('保存草稿：带 saveDraft=1、回读确认后才成功；连点只发一次；失败可重试；存不进去就不发布', () => {
   const calls = [];
   const saver = createServerDraftSaver({

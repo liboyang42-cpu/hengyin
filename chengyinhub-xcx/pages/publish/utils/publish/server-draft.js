@@ -375,9 +375,16 @@ function readbackIssue(sent, detail, expectDraft) {
       } catch (error) { return '云端保存的路线配置无法确认'; }
     }
   }
-  const sentConfig = parseConfig(sent && sent.themeRuntimeConfig);
+  let sentConfig = parseConfig(sent && sent.themeRuntimeConfig);
   const gotConfig = parseConfig(detail.themeRuntimeConfig || detail.topic.themeRuntimeConfigJson);
   if (!sentConfig || !gotConfig) return '云端保存的玩法配置无法解析';
+  // 章节完成规则会让编译器补默认个人任务；显式进行方式仍须逐字核对。
+  const sentGame = sentConfig.gameplayRuntime || {};
+  if (!Object.prototype.hasOwnProperty.call(sentGame, 'runtimeScope')
+      && (gotConfig.gameplayRuntime || {}).runtimeScope === 'PLAYER'
+      && (sentConfig.chapters || []).some(ch => ch.completion || ch.exclusiveGroups || ch.extraNodes)) {
+    sentConfig = Object.assign({}, sentConfig, { gameplayRuntime: Object.assign({ runtimeScope: 'PLAYER' }, sentGame) });
+  }
   const want = authoredConfig(sentConfig, positionsOf(sentChapters, 'nodes', templateBinding.nodeKey), sentChapters);
   const have = authoredConfig(gotConfig, positionsOf(got, 'cmsTopicNodeList', node => String(Number(node && node.id) || '')));
   for (const key of Object.keys(CONFIG_LABELS)) {
