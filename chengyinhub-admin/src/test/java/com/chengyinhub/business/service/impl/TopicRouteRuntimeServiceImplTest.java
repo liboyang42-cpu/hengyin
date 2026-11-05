@@ -233,7 +233,7 @@ class TopicRouteRuntimeServiceImplTest {
         JsonNode frozen = json.readTree(runtime.freezePublication(topic, null));
         assertNull(com.chengyinhub.business.service.support.GameplaySupportMatrix.basicCompletionKind(frozen.path("nodeConfigs").path("1"), 5));
         topic = personalR5Topic(0, true); final CmsTopic direct = topic;
-        assertTrue(assertThrows(IllegalArgumentException.class, () -> runtime.freezePublication(direct, null)).toString().contains("个人任务"));
+        assertTrue(assertThrows(IllegalArgumentException.class, () -> runtime.freezePublication(direct, null)).toString().contains("参与方式要选「定位到达」或「扫码」"));
         topic = personalR5Topic(4, false); final CmsTopic noCode = topic;
         assertTrue(assertThrows(IllegalArgumentException.class, () -> runtime.freezePublication(noCode, null)).toString().contains("真实节点码"));
         topic = personalR5Topic(5, false); final CmsTopic noCoordinates = topic;

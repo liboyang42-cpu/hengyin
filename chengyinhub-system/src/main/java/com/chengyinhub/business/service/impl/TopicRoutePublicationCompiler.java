@@ -686,7 +686,7 @@ final class TopicRoutePublicationCompiler {
         JsonNode config=frozen.path("nodeConfigs").path(String.valueOf(nodeId));
         int method=frozen.path(NodeJourneySnapshot.NODE_ANSWERS_KEY).path(String.valueOf(nodeId)).path("validationMethod").asInt(-1);
         if(config.path("outcomeRules").path("version").asInt()!=1)
-            return where+"：这一站的玩法要带结果规则才能确认完成。请在这一站重新打开玩法设置，保存一次后再发布";
+            return where+"：请重新打开这一站的玩法，保存一次再发布";   // 第十三轮 m1:短到小程序 60 字安全闸内
         if(method!=4 && method!=5)
             return where+"：这一站的参与方式要选「定位到达」或「扫码」，或绑定承接商家";
         return where+"：个人任务的这一站还不能确认玩家到过，请把参与方式改为「定位到达」或「扫码」";

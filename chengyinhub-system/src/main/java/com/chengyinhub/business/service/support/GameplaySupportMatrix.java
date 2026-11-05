@@ -254,7 +254,7 @@ public final class GameplaySupportMatrix {
     private static void fail(long nodeId, String name, String type, String tool, String reason) {
         JsonNode row = TYPES.get(type);
         String plain = "尚无通用结算完成证明".equals(reason) && row != null && row.path("r5CompletionProof").asBoolean()
-                ? "这种玩法要带结果规则才能确认完成。请在这一站重新打开玩法设置，保存一次后再发布"
+                ? "请重新打开这一站的玩法，保存一次再发布"   // 第十三轮 m1:短到小程序 60 字安全闸内,站名长了也不会变成「操作失败」
                 : REASONS.getOrDefault(reason, reason);
         throw new Refusal(stationLabel(nodeId, name) + "的" + gameLabel(type) + "：" + plain,
                 "节点 " + nodeId + (name == null ? "" : "（" + name + "）") + " 玩法 " + type + " 工具 " + tool + "：" + reason);
