@@ -1,0 +1,217 @@
+{
+ "name": "g20-accept",
+ "opts": {
+  "path": "pages/coop/list/index",
+  "identity": "e2e-openid-9002"
+ },
+ "steps": [
+  {
+   "shot": "g20-coop-list-two",
+   "route": "pages/coop/list/index",
+   "text": "协作邀请 | 收到的 | 我发出的 | 待确认 | 来自 主理人策划工作室 | E2E 探店日一期 | 主题发布者 → 商家 · 邀约剩 1 天有效 | 引流型 · 无分成 | 想请你们做第 1 站的补给点 | 拒绝 | 接受合作 | 已拒绝 | 来自 主理人策划工作室 | E2E 探店日一期 | 主题发布者 → 商家 | 想请你们做第 1 站的补给点 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "g21-invite-detail-drainage",
+   "route": "pages/coop/invite-detail/index",
+   "text": "协作详情 | 待确认 | 来自 主理人策划工作室 · 11-05 10:36 | E2E 探店日一期 | 主题发布者 → 商家 | 邀约剩 1 天有效 | 查看主题 | 章节、节点与玩法 | 主题详情 | 合作条款 | 联系方式 | 接受合作后可查看联系方式 | 合作双方 | 主题发布者 → 商家 | 分润 | 引流型 · 无分成 | 保证金 | 无 | 留言 | 拒绝 | 接受合作 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "g22-accept-confirm",
+   "route": "pages/coop/invite-detail/index",
+   "text": "接受合作 | 接受后条款锁定，按这张单结算 | 取消 | 接受合作 | 协作详情 | 待确认 | 来自 主理人策划工作室 · 11-05 10:36 | E2E 探店日一期 | 主题发布者 → 商家 | 邀约剩 1 天有效 | 查看主题 | 章节、节点与玩法 | 主题详情 | 合作条款 | 联系方式 | 接受合作后可查看联系方式 | 合作双方 | 主题发布者 → 商家 | 分润 | 引流型 · 无分成 | 保证金 | 无 | 留言 | 拒绝 | 接受合作 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "g23-after-accept",
+   "route": "pages/coop/invite-detail/index",
+   "text": "协作详情 | 已接受 | 来自 主理人策划工作室 · 11-05 10:36 | E2E 探店日一期 | 主题发布者 → 商家 | 查看主题 | 章节、节点与玩法 | 主题详情 | 合作条款 | 联系方式 | 对方没有留联系方式，可用下方「联系合作方」站内沟通 | 合作双方 | 主题发布者 → 商家 | 分润 | 引流型 · 无分成 | 保证金 | 无 | 留言 | 想请你们做第 1 站的补给点 | 合作进行中 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  },
+  {
+   "shot": "g24-after-accept-scrolled",
+   "route": "pages/coop/invite-detail/index",
+   "text": "保证金 | 无 | 留言 | 想请你们做第 1 站的补给点 | 对方 · 11-05 10:36 | 需要对齐事项时，请点击上方“联系合作方”进入单聊。 | 合作操作 | 进入项目 | 联系合作方 | 申报供给 | 评价 | 取消合作 | 合作进行中 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉"
+  }
+ ],
+ "errors": [],
+ "net": [
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/coop/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/coop/pool/received",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/coop/pool/mine",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/chapter-application/owner-mine",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/chapter-application/mine",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "GET",
+   "u": "/__api/api/official/merchant-invites",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/coop/candidates/received",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/config/features",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/compliance/consents",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/coop/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/coop/pool/received",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/coop/pool/mine",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/chapter-application/owner-mine",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/merchant/chapter-application/mine",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "GET",
+   "u": "/__api/api/official/merchant-invites",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/coop/candidates/received",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/coop/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/coop/credit",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/coop/invite/read",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/coop/handle",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/coop/list",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/coop/review/summary",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  },
+  {
+   "m": "POST",
+   "u": "/__api/api/coop/credit",
+   "s": 200,
+   "c": 200,
+   "b": ""
+  }
+ ],
+ "bad": [],
+ "console": [
+  "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "[error] HTTP 404 http://127.0.0.1:8097/favicon.ico"
+ ]
+}
